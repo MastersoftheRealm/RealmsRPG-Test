@@ -9,9 +9,9 @@ import * as React from 'react';
 import { cn } from '@/lib/utils/cn';
 
 export interface CheckboxProps extends Omit<React.InputHTMLAttributes<HTMLInputElement>, 'type'> {
-  label?: string;
-  description?: string;
-  error?: string;
+  label?: string | undefined;
+  description?: string | undefined;
+  error?: string | undefined;
 }
 
 const Checkbox = React.forwardRef<HTMLInputElement, CheckboxProps>(
@@ -22,19 +22,17 @@ const Checkbox = React.forwardRef<HTMLInputElement, CheckboxProps>(
 
     return (
       <div className="flex items-start">
-        <div className="flex items-center h-5">
+        <div className="flex h-5 items-center">
           <input
             type="checkbox"
             id={checkboxId}
             ref={ref}
             className={cn(
-              'h-4 w-4 rounded border text-primary-link-fg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-outline-border focus-visible:ring-offset-0',
-              'transition-colors cursor-pointer',
+              'h-4 w-4 rounded border text-primary-link-fg focus-visible:ring-2 focus-visible:ring-primary-outline-border focus-visible:ring-offset-0 focus-visible:outline-none',
+              'cursor-pointer transition-colors',
               'disabled:cursor-not-allowed disabled:opacity-50',
-              error
-                ? 'border-danger'
-                : 'border-border-light',
-              className
+              error ? 'border-danger' : 'border-border-light',
+              className,
             )}
             aria-invalid={error ? 'true' : undefined}
             aria-describedby={error ? errorId : undefined}
@@ -47,16 +45,14 @@ const Checkbox = React.forwardRef<HTMLInputElement, CheckboxProps>(
               <label
                 htmlFor={checkboxId}
                 className={cn(
-                  'text-sm font-medium cursor-pointer',
-                  error ? 'text-danger-fg' : 'text-text-primary'
+                  'cursor-pointer text-sm font-medium',
+                  error ? 'text-danger-fg' : 'text-text-primary',
                 )}
               >
                 {label}
               </label>
             )}
-            {description && (
-              <p className="text-sm text-text-muted">{description}</p>
-            )}
+            {description && <p className="text-sm text-text-muted">{description}</p>}
             {error && (
               <p id={errorId} className="mt-1 text-sm text-danger-fg">
                 {error}
@@ -66,7 +62,7 @@ const Checkbox = React.forwardRef<HTMLInputElement, CheckboxProps>(
         )}
       </div>
     );
-  }
+  },
 );
 
 Checkbox.displayName = 'Checkbox';

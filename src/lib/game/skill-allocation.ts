@@ -12,6 +12,7 @@
 import type { DefenseSkills } from '@/types';
 import type { Item } from '@/types/equipment';
 import type { CoreRulesMap, SkillsAndDefensesRules } from '@/types/core-rules';
+import { calculateSkillPointsForEntity } from './formulas';
 
 // =============================================================================
 // Constants (defaults — match SKILLS_AND_DEFENSES seed / Supabase core_rules)
@@ -31,21 +32,13 @@ export const CREATURE_SKILL_POINTS = {
   perLevel: 3,
 } as const;
 
-/**
- * @deprecated Use CHARACTER_SKILL_POINTS_PER_LEVEL and CREATURE_SKILL_POINTS instead.
- */
-export const SKILL_POINTS_PER_LEVEL = {
-  character: 3,
-  creature: 3, // corrected: creatures get 5 at L1 + 3/level (use getTotalSkillPoints)
-} as const;
-
 /** Species grants 2 permanent skills (don't cost points) */
 export const SPECIES_SKILL_COUNT = 2;
 
 /** Match species skill refs (codex id or name) to skill row ids on the character sheet. */
 export function buildSpeciesSkillIdSet(
   speciesSkillRefs: string[],
-  skills: Array<{ id?: string; name?: string }>
+  skills: Array<{ id?: string | undefined; name?: string | undefined }>,
 ): Set<string> {
   const set = new Set<string>();
   for (const ref of speciesSkillRefs.filter((id) => id !== '0')) {
@@ -66,21 +59,25 @@ export function buildSpeciesSkillIdSet(
 export function mergeEquipmentIntoInventory(existing: Item[], incoming: Item[]): Item[] {
   const next = [...existing];
   for (const item of incoming) {
-    const nameKey = String(item.name ?? '').trim().toLowerCase();
+    const nameKey = String(item.name ?? '')
+      .trim()
+      .toLowerCase();
     const idx = next.findIndex(
       (e) =>
         String(e.id) === String(item.id) ||
         (nameKey &&
           String(e.name ?? '')
             .trim()
-            .toLowerCase() === nameKey)
+            .toLowerCase() === nameKey),
     );
     if (idx >= 0) {
+      const existing = next[idx];
+      if (existing === undefined) continue;
       const addQty = item.quantity ?? 1;
       next[idx] = {
-        ...next[idx],
+        ...existing,
         ...item,
-        quantity: (next[idx].quantity ?? 1) + addQty,
+        quantity: (existing.quantity ?? 1) + addQty,
       };
     } else {
       next.push({ ...item, quantity: item.quantity ?? 1 });
@@ -95,7 +92,11 @@ export function mergeEquipmentIntoInventory(existing: Item[], incoming: Item[]):
 
 export type SkillAllocationRules = Pick<
   SkillsAndDefensesRules,
-  'maxSkillValue' | 'baseSkillPastCapCost' | 'subSkillPastCapCost' | 'defenseIncreaseCost' | 'gainProficiencyCost'
+  | 'maxSkillValue'
+  | 'baseSkillPastCapCost'
+  | 'subSkillPastCapCost'
+  | 'defenseIncreaseCost'
+  | 'gainProficiencyCost'
 >;
 
 export const DEFAULT_SKILL_ALLOCATION_RULES: SkillAllocationRules = {
@@ -112,10 +113,14 @@ export function resolveSkillAllocationRules(rules?: Partial<CoreRulesMap>): Skil
   if (!sd) return DEFAULT_SKILL_ALLOCATION_RULES;
   return {
     maxSkillValue: sd.maxSkillValue ?? DEFAULT_SKILL_ALLOCATION_RULES.maxSkillValue,
-    baseSkillPastCapCost: sd.baseSkillPastCapCost ?? DEFAULT_SKILL_ALLOCATION_RULES.baseSkillPastCapCost,
-    subSkillPastCapCost: sd.subSkillPastCapCost ?? DEFAULT_SKILL_ALLOCATION_RULES.subSkillPastCapCost,
-    defenseIncreaseCost: sd.defenseIncreaseCost ?? DEFAULT_SKILL_ALLOCATION_RULES.defenseIncreaseCost,
-    gainProficiencyCost: sd.gainProficiencyCost ?? DEFAULT_SKILL_ALLOCATION_RULES.gainProficiencyCost,
+    baseSkillPastCapCost:
+      sd.baseSkillPastCapCost ?? DEFAULT_SKILL_ALLOCATION_RULES.baseSkillPastCapCost,
+    subSkillPastCapCost:
+      sd.subSkillPastCapCost ?? DEFAULT_SKILL_ALLOCATION_RULES.subSkillPastCapCost,
+    defenseIncreaseCost:
+      sd.defenseIncreaseCost ?? DEFAULT_SKILL_ALLOCATION_RULES.defenseIncreaseCost,
+    gainProficiencyCost:
+      sd.gainProficiencyCost ?? DEFAULT_SKILL_ALLOCATION_RULES.gainProficiencyCost,
   };
 }
 
@@ -126,16 +131,14 @@ export function resolveSkillAllocationRules(rules?: Partial<CoreRulesMap>): Skil
 /**
  * Get total skill points for an entity at a given level.
  * Characters: 3 * level. Creatures: 5 + 3 * (level - 1).
+ * Delegates to `calculateSkillPointsForEntity` so there is one implementation.
  */
 export function getTotalSkillPoints(
   level: number,
-  entityType: 'character' | 'creature'
+  entityType: 'character' | 'creature',
+  rules?: Partial<CoreRulesMap>,
 ): number {
-  const parsedLevel = Math.max(1, Math.floor(level));
-  if (entityType === 'creature') {
-    return CREATURE_SKILL_POINTS.base + CREATURE_SKILL_POINTS.perLevel * (parsedLevel - 1);
-  }
-  return CHARACTER_SKILL_POINTS_PER_LEVEL * parsedLevel;
+  return calculateSkillPointsForEntity(level, entityType, rules);
 }
 
 /**
@@ -146,7 +149,7 @@ export function getTotalSkillPoints(
 export function getSkillValueIncreaseCost(
   currentValue: number,
   isSubSkill: boolean,
-  skillRules?: SkillAllocationRules
+  skillRules?: SkillAllocationRules,
 ): number {
   const r = skillRules ?? DEFAULT_SKILL_ALLOCATION_RULES;
   if (currentValue < r.maxSkillValue) return 1;
@@ -154,79 +157,23 @@ export function getSkillValueIncreaseCost(
 }
 
 /**
- * Cost to gain proficiency in a skill.
- * Base skill: 1 pt. Sub-skill: 1 pt (and grants +1 skill value).
- */
-export function getProficiencyCost(skillRules?: SkillAllocationRules): number {
-  return (skillRules ?? DEFAULT_SKILL_ALLOCATION_RULES).gainProficiencyCost;
-}
-
-/**
- * Cost to decrease skill value by 1.
- * Decreasing from 1 to 0 for a proficient skill = remove proficiency (refunds 1 pt).
- */
-export function getSkillValueDecreaseRefund(currentValue: number): number {
-  if (currentValue <= 1) return 1; // Removing proficiency
-  return 1; // Decreasing value
-}
-
-// =============================================================================
-// Validation
-// =============================================================================
-
-/**
- * Can we increase this skill's value?
- * - Must be proficient (or we spend point on proficiency first)
- * - Must have enough points
- */
-export function canIncreaseSkillValue(
-  currentValue: number,
-  isProficient: boolean,
-  isSubSkill: boolean,
-  baseSkillProficient: boolean,
-  availablePoints: number,
-  isSpeciesSkill: boolean,
-  skillRules?: SkillAllocationRules
-): boolean {
-  const r = skillRules ?? DEFAULT_SKILL_ALLOCATION_RULES;
-  if (isSpeciesSkill) {
-    return availablePoints >= getSkillValueIncreaseCost(currentValue, isSubSkill, r);
-  }
-  if (!isProficient) {
-    if (isSubSkill && !baseSkillProficient) return false;
-    return availablePoints >= r.gainProficiencyCost;
-  }
-  return availablePoints >= getSkillValueIncreaseCost(currentValue, isSubSkill, r);
-}
-
-/**
- * Can we decrease this skill's value?
- * - Species skills: can decrease value but not below 0 (0 = proficient with 0 value)
- */
-export function canDecreaseSkillValue(
-  currentValue: number,
-  isSpeciesSkill: boolean
-): boolean {
-  if (currentValue <= 0) return false;
-  if (isSpeciesSkill) return currentValue > 0; // Can decrease to 0 (proficient, value 0)
-  return true;
-}
-
-/**
  * Can we increase a defense bonus?
  * - Costs defenseIncreaseCost skill points
- * - Defense bonus from skill points cannot exceed level
+ * - Only the Skill-Point portion of the Defense Bonus is capped at character level;
+ *   the ability-derived portion is unrestricted (GAME_RULES "Defense bonus cap").
+ *
+ * @param currentSkillPointDefense Defense Bonus bought with Skill Points (not including the Ability).
+ * @param abilityBonus Accepted for call-site compatibility; deliberately not part of the cap.
  */
 export function canIncreaseDefense(
-  currentDefenseBonus: number,
+  currentSkillPointDefense: number,
   level: number,
   abilityBonus: number,
   availablePoints: number,
-  skillRules?: SkillAllocationRules
+  skillRules?: SkillAllocationRules,
 ): boolean {
   const r = skillRules ?? DEFAULT_SKILL_ALLOCATION_RULES;
-  const totalBonus = currentDefenseBonus + abilityBonus;
-  if (totalBonus >= level) return false;
+  if (currentSkillPointDefense >= level) return false;
   return availablePoints >= r.defenseIncreaseCost;
 }
 
@@ -235,20 +182,18 @@ export function canIncreaseDefense(
 // =============================================================================
 
 type CharacterSheetSkillRow = {
-  id?: string;
-  skill_val?: number;
-  prof?: boolean;
-  baseSkill?: string;
-  baseSkillId?: number;
-  selectedBaseSkillId?: string;
+  id?: string | undefined;
+  skill_val?: number | undefined;
+  prof?: boolean | undefined;
+  baseSkill?: string | undefined;
+  baseSkillId?: number | undefined;
+  selectedBaseSkillId?: string | undefined;
 };
 
 /**
  * Map character sheet skill rows to creator-style allocations for spent calculation.
  */
-export function characterSkillsToAllocations(
-  skills: CharacterSheetSkillRow[]
-): {
+export function characterSkillsToAllocations(skills: CharacterSheetSkillRow[]): {
   allocations: Record<string, number>;
   skillMeta: Map<string, { isSubSkill: boolean }>;
 } {
@@ -259,9 +204,7 @@ export function characterSkillsToAllocations(
     const id = String(skill.id ?? '');
     if (!id) continue;
     const isSubSkill =
-      Boolean(skill.baseSkill) ||
-      skill.baseSkillId != null ||
-      skill.selectedBaseSkillId != null;
+      Boolean(skill.baseSkill) || skill.baseSkillId != null || skill.selectedBaseSkillId != null;
     skillMeta.set(id, { isSubSkill });
     if (!skill.prof) continue;
     const val = skill.skill_val ?? 0;
@@ -279,7 +222,7 @@ export function calculateCharacterSkillPointsSpent(
   skills: CharacterSheetSkillRow[],
   speciesSkillIds: Set<string>,
   defenseSkills?: DefenseSkills,
-  rules?: Partial<CoreRulesMap>
+  rules?: Partial<CoreRulesMap>,
 ): number {
   const skillRules = resolveSkillAllocationRules(rules);
   const { allocations, skillMeta } = characterSkillsToAllocations(skills);
@@ -288,60 +231,8 @@ export function calculateCharacterSkillPointsSpent(
     speciesSkillIds,
     skillMeta,
     defenseSkills,
-    skillRules
+    skillRules,
   );
-}
-
-/**
- * Calculate skill points spent on skills (excluding species skills).
- * Species skills count their value increases but not the initial proficiency.
- */
-export function calculateSkillPointsSpent(
-  allocations: Record<string, number>,
-  defenseSkills: DefenseSkills,
-  speciesSkillIds: Set<string>,
-  skillData: {
-    id: string;
-    isSubSkill: boolean;
-    baseSkillId?: string;
-  }[],
-  skillRules?: SkillAllocationRules
-): number {
-  const r = skillRules ?? DEFAULT_SKILL_ALLOCATION_RULES;
-  let spent = 0;
-
-  for (const skill of skillData) {
-    const value = allocations[skill.id] ?? 0;
-    if (value <= 0) continue;
-
-    const isSpecies = speciesSkillIds.has(skill.id);
-    if (isSpecies) {
-      for (let v = 1; v <= value; v++) {
-        spent += getSkillValueIncreaseCost(v - 1, skill.isSubSkill, r);
-      }
-      continue;
-    }
-
-    if (skill.isSubSkill) {
-      const effectiveValue = value;
-      if (effectiveValue >= 1) {
-        spent += r.gainProficiencyCost;
-        for (let v = 2; v <= effectiveValue; v++) {
-          spent += getSkillValueIncreaseCost(v - 1, true, r);
-        }
-      }
-    } else {
-      spent += r.gainProficiencyCost;
-      for (let v = 1; v <= value; v++) {
-        spent += getSkillValueIncreaseCost(v - 1, false, r);
-      }
-    }
-  }
-
-  const defenseTotal = Object.values(defenseSkills || {}).reduce((a, b) => a + b, 0);
-  spent += defenseTotal * r.defenseIncreaseCost;
-
-  return spent;
 }
 
 /**
@@ -354,7 +245,7 @@ export function calculateSimpleSkillPointsSpent(
   speciesSkillIds: Set<string>,
   skillMeta: Map<string, { isSubSkill: boolean }>,
   defenseSkills?: DefenseSkills,
-  skillRules?: SkillAllocationRules
+  skillRules?: SkillAllocationRules,
 ): number {
   const r = skillRules ?? DEFAULT_SKILL_ALLOCATION_RULES;
   let spent = 0;
@@ -380,7 +271,10 @@ export function calculateSimpleSkillPointsSpent(
     }
   }
   if (defenseSkills) {
-    const defenseTotal = Object.values(defenseSkills).reduce((a, b) => a + b, 0);
+    const defenseTotal = Object.values(defenseSkills).reduce(
+      (sum: number, value) => sum + (Number.isFinite(value) ? value : 0),
+      0,
+    );
     spent += defenseTotal * r.defenseIncreaseCost;
   }
   return spent;

@@ -9,9 +9,15 @@
 
 'use client';
 
-import { useState, useCallback, useEffect } from 'react';
-import { PageContainer, PageHeader, TabNavigation, TabContentPanel, useTabGroup, Button } from '@/components/ui';
-import { CodexCharacterFilter } from '@/components/codex';
+import { useState, useCallback } from 'react';
+import {
+  PageContainer,
+  PageHeader,
+  TabNavigation,
+  TabContentPanel,
+  useTabGroup,
+  Button,
+} from '@/components/ui';
 import { CodexFeatsTab } from './CodexFeatsTab';
 import { CodexSkillsTab } from './CodexSkillsTab';
 import { CodexSpeciesTab } from './CodexSpeciesTab';
@@ -23,19 +29,25 @@ import { CodexCreatureFeatsTab } from './CodexCreatureFeatsTab';
 import { CodexArchetypesTab } from './CodexArchetypesTab';
 import { ChevronDown, ChevronUp } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { SegmentedControl } from '@/components/shared';
+import { SegmentedControl } from '@/components/patterns';
 
 type CodexMode = 'public' | 'my';
 
-type TabId = 'feats' | 'skills' | 'species' | 'archetypes' | 'equipment' | 'properties' | 'parts' | 'traits' | 'creature_feats';
-
-/** localStorage key for the persisted "view as character" selection. */
-const CODEX_CHARACTER_FILTER_KEY = 'codex:characterFilterId';
+type TabId =
+  | 'feats'
+  | 'skills'
+  | 'species'
+  | 'archetypes'
+  | 'equipment'
+  | 'properties'
+  | 'parts'
+  | 'traits'
+  | 'creature_feats';
 
 const MAIN_TAB_IDS: TabId[] = ['feats', 'skills', 'species', 'archetypes', 'equipment'];
 const ADVANCED_TAB_IDS: TabId[] = ['parts', 'properties', 'creature_feats', 'traits'];
 
-const TAB_META: { id: TabId; label: string; labelMobile?: string }[] = [
+const TAB_META: { id: TabId; label: string; labelMobile?: string | undefined }[] = [
   { id: 'feats', label: 'Feats' },
   { id: 'skills', label: 'Skills' },
   { id: 'species', label: 'Species' },
@@ -52,27 +64,6 @@ export default function CodexPage() {
   const [codexMode, setCodexMode] = useState<CodexMode>('public');
   const [activeTab, setActiveTab] = useState<TabId>('feats');
   const [showAdvanced, setShowAdvanced] = useState(false);
-  // "View as character" selection — shared across all tabs and persisted locally.
-  const [characterFilterId, setCharacterFilterId] = useState('');
-
-  useEffect(() => {
-    try {
-      const stored = window.localStorage.getItem(CODEX_CHARACTER_FILTER_KEY);
-      if (stored) setCharacterFilterId(stored);
-    } catch {
-      // ignore storage access errors (private mode, etc.)
-    }
-  }, []);
-
-  const handleCharacterFilterChange = useCallback((id: string) => {
-    setCharacterFilterId(id);
-    try {
-      if (id) window.localStorage.setItem(CODEX_CHARACTER_FILTER_KEY, id);
-      else window.localStorage.removeItem(CODEX_CHARACTER_FILTER_KEY);
-    } catch {
-      // ignore storage access errors
-    }
-  }, []);
 
   const visibleTabIds = showAdvanced ? [...MAIN_TAB_IDS, ...ADVANCED_TAB_IDS] : MAIN_TAB_IDS;
   const tabs = visibleTabIds
@@ -80,12 +71,9 @@ export default function CodexPage() {
     .filter(Boolean)
     .map((tab) => ({ id: tab!.id, label: tab!.label, labelMobile: tab!.labelMobile }));
 
-  const onTabChange = useCallback(
-    (tabId: string) => {
-      setActiveTab(tabId as TabId);
-    },
-    []
-  );
+  const onTabChange = useCallback((tabId: string) => {
+    setActiveTab(tabId as TabId);
+  }, []);
 
   const toggleAdvanced = useCallback(() => {
     setShowAdvanced((prev) => {
@@ -101,7 +89,7 @@ export default function CodexPage() {
 
   return (
     <PageContainer size="xl">
-      <div className="flex flex-wrap items-start justify-between gap-4 mb-4">
+      <div className="mb-4 flex flex-wrap items-start justify-between gap-4">
         <PageHeader
           title={isPublic ? 'Realms Codex' : 'My Codex'}
           description={
@@ -110,11 +98,10 @@ export default function CodexPage() {
               : 'Your custom species and other codex content appear here. Create species in the Species Creator.'
           }
         />
-        <div className="flex items-center gap-2">
-        </div>
+        <div className="flex items-center gap-2"></div>
       </div>
 
-      <div className="mb-4 flex flex-wrap items-end gap-4 min-w-0">
+      <div className="mb-4 flex min-w-0 flex-wrap items-end gap-4">
         <SegmentedControl
           value={codexMode}
           onChange={setCodexMode}
@@ -125,67 +112,64 @@ export default function CodexPage() {
           aria-label="Codex scope"
           className="flex-shrink-0"
         />
-        <CodexCharacterFilter
-          value={characterFilterId}
-          onChange={handleCharacterFilterChange}
+      </div>
+
+      <div className="mb-6 min-w-0">
+        <TabNavigation
+          tabs={tabs}
+          activeTab={activeTab}
+          onTabChange={onTabChange}
+          variant="underline"
+          tabGroupId={tabGroupId}
+          sharedTabPanelId={sharedPanelId}
+          trailing={
+            <Button
+              variant="outline"
+              onClick={toggleAdvanced}
+              className={cn(
+                'gap-1.5',
+                showAdvanced && 'border-primary-subtle-border bg-primary-subtle-bg',
+              )}
+              aria-pressed={showAdvanced}
+            >
+              {showAdvanced ? (
+                <ChevronUp className="h-4 w-4" />
+              ) : (
+                <ChevronDown className="h-4 w-4" />
+              )}
+              Advanced
+            </Button>
+          }
         />
       </div>
 
-      <div className="min-w-0 mb-6">
-        <div className="flex items-center gap-2 min-w-0">
-          <div className="flex-1 min-w-0">
-            <TabNavigation
-              tabs={tabs}
-              activeTab={activeTab}
-              onTabChange={onTabChange}
-              variant="underline"
-              tabGroupId={tabGroupId}
-              sharedTabPanelId={sharedPanelId}
-            />
-          </div>
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={toggleAdvanced}
-            className={cn(
-              'gap-1.5 flex-shrink-0 min-h-[44px]',
-              showAdvanced && 'bg-primary-subtle-bg border-primary-subtle-border'
-            )}
-            aria-pressed={showAdvanced}
-          >
-            {showAdvanced ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
-            Advanced
-          </Button>
-        </div>
-      </div>
-
       <TabContentPanel tabGroupId={tabGroupId} id={sharedPanelId} activeTab={activeTab}>
-      {isPublic && (
-        <>
-          {activeTab === 'feats' && <CodexFeatsTab codexMode="public" characterId={characterFilterId} />}
-          {activeTab === 'skills' && <CodexSkillsTab codexMode="public" />}
-          {activeTab === 'species' && <CodexSpeciesTab codexMode="public" />}
-          {activeTab === 'archetypes' && <CodexArchetypesTab codexMode="public" />}
-          {activeTab === 'equipment' && <CodexEquipmentTab codexMode="public" />}
-          {activeTab === 'properties' && <CodexPropertiesTab codexMode="public" />}
-          {activeTab === 'parts' && <CodexPartsTab codexMode="public" />}
-          {activeTab === 'traits' && <CodexTraitsTab codexMode="public" />}
-          {activeTab === 'creature_feats' && <CodexCreatureFeatsTab codexMode="public" />}
-        </>
-      )}
-      {!isPublic && (
-        <>
-          {activeTab === 'feats' && <CodexFeatsTab codexMode="my" characterId={characterFilterId} />}
-          {activeTab === 'skills' && <CodexSkillsTab codexMode="my" />}
-          {activeTab === 'species' && <CodexSpeciesTab codexMode="my" />}
-          {activeTab === 'archetypes' && <CodexArchetypesTab codexMode="my" />}
-          {activeTab === 'equipment' && <CodexEquipmentTab codexMode="my" />}
-          {activeTab === 'properties' && <CodexPropertiesTab codexMode="my" />}
-          {activeTab === 'parts' && <CodexPartsTab codexMode="my" />}
-          {activeTab === 'traits' && <CodexTraitsTab codexMode="my" />}
-          {activeTab === 'creature_feats' && <CodexCreatureFeatsTab codexMode="my" />}
-        </>
-      )}
+        {isPublic && (
+          <>
+            {activeTab === 'feats' && <CodexFeatsTab codexMode="public" />}
+            {activeTab === 'skills' && <CodexSkillsTab codexMode="public" />}
+            {activeTab === 'species' && <CodexSpeciesTab codexMode="public" />}
+            {activeTab === 'archetypes' && <CodexArchetypesTab codexMode="public" />}
+            {activeTab === 'equipment' && <CodexEquipmentTab codexMode="public" />}
+            {activeTab === 'properties' && <CodexPropertiesTab codexMode="public" />}
+            {activeTab === 'parts' && <CodexPartsTab codexMode="public" />}
+            {activeTab === 'traits' && <CodexTraitsTab codexMode="public" />}
+            {activeTab === 'creature_feats' && <CodexCreatureFeatsTab codexMode="public" />}
+          </>
+        )}
+        {!isPublic && (
+          <>
+            {activeTab === 'feats' && <CodexFeatsTab codexMode="my" />}
+            {activeTab === 'skills' && <CodexSkillsTab codexMode="my" />}
+            {activeTab === 'species' && <CodexSpeciesTab codexMode="my" />}
+            {activeTab === 'archetypes' && <CodexArchetypesTab codexMode="my" />}
+            {activeTab === 'equipment' && <CodexEquipmentTab codexMode="my" />}
+            {activeTab === 'properties' && <CodexPropertiesTab codexMode="my" />}
+            {activeTab === 'parts' && <CodexPartsTab codexMode="my" />}
+            {activeTab === 'traits' && <CodexTraitsTab codexMode="my" />}
+            {activeTab === 'creature_feats' && <CodexCreatureFeatsTab codexMode="my" />}
+          </>
+        )}
       </TabContentPanel>
     </PageContainer>
   );

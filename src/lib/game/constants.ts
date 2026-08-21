@@ -5,13 +5,12 @@
  * Ported from public/js/shared/game-formulas.js
  */
 
-import type { ArchetypeCategory, ArchetypeConfig } from '@/types';
+import type { ArchetypeCategory, ArchetypeConfig, DefenseName } from '@/types';
 
 /** Shared constants for characters and creatures */
 export const SHARED_CONSTANTS = {
   BASE_ABILITY_POINTS: 7,
   ABILITY_POINTS_PER_3_LEVELS: 1,
-  BASE_SKILL_POINTS: 2,
   SKILL_POINTS_PER_LEVEL: 3,
   BASE_PROFICIENCY: 2,
   PROFICIENCY_PER_5_LEVELS: 1,
@@ -21,9 +20,13 @@ export const SHARED_CONSTANTS = {
 /** Player character specific constants */
 export const PLAYER_CONSTANTS = {
   BASE_HIT_ENERGY: 18,
+  BASE_HEALTH: 8,
   BASE_TRAINING_POINTS: 22,
   TP_PER_LEVEL_MULTIPLIER: 2,
 } as const;
+
+/** Level-1 starting Currency (GAME_RULES). Shared by Guided + Legacy creators. */
+export const CHARACTER_STARTING_CURRENCY = 200;
 
 /** Creature/NPC specific constants */
 export const CREATURE_CONSTANTS = {
@@ -50,35 +53,29 @@ export const ABILITY_LIMITS = {
   COST_INCREASE_THRESHOLD: 4,
 } as const;
 
-/** Skill limits */
-export const SKILL_LIMITS = {
-  MAX_PER_SKILL: 3,
-  DEFENSE_MAX: 3,
-} as const;
-
 /** Archetype configurations (level 1 starting values) */
 export const ARCHETYPE_CONFIGS: Record<ArchetypeCategory, ArchetypeConfig> = {
   power: {
-    featLimit: 0,           // No bonus archetype feats (total = level)
-    armamentMax: 3,         // Martial Prof 0 → Armament Prof 3
-    innateEnergy: 8,        // Innate Threshold 8
+    featLimit: 0, // No bonus archetype feats (total = level)
+    armamentMax: 3, // Martial Prof 0 → Armament Prof 3
+    innateEnergy: 16, // L1 Innate Energy budget (Threshold 8 × Pools 2)
     innateThreshold: 8,
     innatePools: 2,
     proficiency: { martial: 0, power: 2 },
     trainingPointBonus: 0,
   },
   'powered-martial': {
-    featLimit: 1,           // +1 bonus from martial proficiency joining
-    armamentMax: 8,         // Martial Prof 1 → Armament Prof 8
-    innateEnergy: 6,        // Innate Threshold 6
+    featLimit: 1, // +1 bonus from martial proficiency joining
+    armamentMax: 8, // Martial Prof 1 → Armament Prof 8
+    innateEnergy: 6, // L1 Innate Energy (Threshold 6 × Pools 1)
     innateThreshold: 6,
     innatePools: 1,
     proficiency: { martial: 1, power: 1 },
     trainingPointBonus: 0,
   },
   martial: {
-    featLimit: 2,           // +2 bonus archetype feats at level 1
-    armamentMax: 12,        // Martial Prof 2 → Armament Prof 12
+    featLimit: 2, // +2 bonus archetype feats at level 1
+    armamentMax: 12, // Martial Prof 2 → Armament Prof 12
     innateEnergy: 0,
     innateThreshold: 0,
     innatePools: 0,
@@ -87,21 +84,44 @@ export const ARCHETYPE_CONFIGS: Record<ArchetypeCategory, ArchetypeConfig> = {
   },
 } as const;
 
-/** All game constants grouped */
-export const GAME_CONSTANTS = {
-  SHARED: SHARED_CONSTANTS,
-  PLAYER: PLAYER_CONSTANTS,
-  CREATURE: CREATURE_CONSTANTS,
-  ABILITY: ABILITY_LIMITS,
-  SKILL: SKILL_LIMITS,
-  ARCHETYPE: ARCHETYPE_CONFIGS,
+/** Item property derivation (range spaces from Range property level). */
+export const ITEM_PROPERTY_CONSTANTS = {
+  RANGE_BASE_SPACES: 8,
+  RANGE_SPACES_PER_LEVEL: 8,
 } as const;
+
+/**
+ * Martial proficiency → max armament Training Points.
+ * Extends beyond L1 archetype tiers (martial prof 3+).
+ */
+export const ARMAMENT_PROFICIENCY_TABLE: ReadonlyArray<{
+  martialProf: number;
+  armamentMax: number;
+}> = [
+  { martialProf: 0, armamentMax: ARCHETYPE_CONFIGS.power.armamentMax },
+  { martialProf: 1, armamentMax: ARCHETYPE_CONFIGS['powered-martial'].armamentMax },
+  { martialProf: 2, armamentMax: ARCHETYPE_CONFIGS.martial.armamentMax },
+  { martialProf: 3, armamentMax: 15 },
+  { martialProf: 4, armamentMax: 18 },
+  { martialProf: 5, armamentMax: 21 },
+  { martialProf: 6, armamentMax: 24 },
+];
 
 /** Default combat values */
 export const COMBAT_DEFAULTS = {
   BASE_SPEED: 6,
   BASE_EVASION: 10,
   BASE_DEFENSE: 10,
+  /** Score = 10 + Bonus (GAME_RULES "The Score Pattern"): Defense, Potency, Skill Score. */
+  BASE_SCORE: 10,
+  /** Critical Range is +10 over the target Defense / Evasion (GAME_RULES "Critical Hits"). */
+  CRITICAL_RANGE_OVER_TARGET: 10,
+} as const;
+
+/** Action Points: 4 per round (GAME_RULES "Action Points"); tracker allows a headroom cap. */
+export const ACTION_POINT_DEFAULTS = {
+  PER_ROUND: 4,
+  MAX_TRACKED: 10,
 } as const;
 
 /** Six Abilities + Six Defenses for feat requirements and sorting. Display names per GAME_RULES. */
@@ -122,5 +142,25 @@ export const ABILITIES_AND_DEFENSES = [
 
 /** Map from draft ability key (lowercase) to full display name for character creator / finalize step. */
 export const ABILITY_DISPLAY_NAMES: Record<string, string> = Object.fromEntries(
-  ABILITIES_AND_DEFENSES.slice(0, 6).map((name) => [name.toLowerCase(), name])
+  ABILITIES_AND_DEFENSES.slice(0, 6).map((name) => [name.toLowerCase(), name]),
 );
+
+/** Defense keys in GAME_RULES / `ABILITIES_AND_DEFENSES` order. */
+export const DEFENSE_DISPLAY_ORDER: readonly DefenseName[] = [
+  'might',
+  'fortitude',
+  'reflex',
+  'discernment',
+  'mentalFortitude',
+  'resolve',
+] as const;
+
+/** Defense display names — SoT is `ABILITIES_AND_DEFENSES` (no "Mental Fort." / "Reflex"). */
+export const DEFENSE_DISPLAY_NAMES: Record<DefenseName, string> = {
+  might: ABILITIES_AND_DEFENSES[6],
+  fortitude: ABILITIES_AND_DEFENSES[7],
+  reflex: ABILITIES_AND_DEFENSES[8],
+  discernment: ABILITIES_AND_DEFENSES[9],
+  mentalFortitude: ABILITIES_AND_DEFENSES[10],
+  resolve: ABILITIES_AND_DEFENSES[11],
+};

@@ -26,7 +26,9 @@ export const PART_IDS = {
   POWER_QUICK_OR_FREE_ACTION: 83,
 
   // Weapon/Attack Parts
-  ADD_WEAPON_ATTACK: 7,
+  // id 7 is named "Add Weapon to Technique" in codex_parts (was historically
+  // referenced as "Add Weapon Attack" in code).
+  ADD_WEAPON_TO_TECHNIQUE: 7,
   ADD_WEAPON_TO_POWER: 369,
   RECKLESS: 8,
   PASS_THROUGH: 9,
@@ -70,11 +72,11 @@ export const PART_IDS = {
 
   // Duration Parts
   DURATION_ROUND: 378,
-  DURATION_MINUTE: 379,
+  DURATION_MINUTE: 377,
   DURATION_HOUR: 376,
   DURATION_DAYS: 375,
   DURATION_PERMANENT: 306,
-  
+
   // Duration Modifiers
   DURATION_ENDS_ON_ACTIVATION: 302,
   DURATION_NO_HARM: 303,
@@ -264,12 +266,23 @@ export const GENERAL_PROPERTY_IDS: Set<number> = new Set([
 
 // General property names for backwards compatibility
 export const GENERAL_PROPERTY_NAMES = new Set([
-  'Shield Base', 'Armor Base', 'Range', 'Two-Handed',
-  'Split Damage Dice', 'Damage Reduction', 'Weapon Damage',
+  'Shield Base',
+  'Armor Base',
+  'Range',
+  'Two-Handed',
+  'Split Damage Dice',
+  'Damage Reduction',
+  'Weapon Damage',
   'Agility Reduction',
-  'Weapon Strength Requirement', 'Weapon Agility Requirement', 'Weapon Vitality Requirement',
-  'Weapon Acuity Requirement', 'Weapon Intelligence Requirement', 'Weapon Charisma Requirement',
-  'Armor Strength Requirement', 'Armor Agility Requirement', 'Armor Vitality Requirement',
+  'Weapon Strength Requirement',
+  'Weapon Agility Requirement',
+  'Weapon Vitality Requirement',
+  'Weapon Acuity Requirement',
+  'Weapon Intelligence Requirement',
+  'Weapon Charisma Requirement',
+  'Armor Strength Requirement',
+  'Armor Agility Requirement',
+  'Armor Vitality Requirement',
 ]);
 
 // =============================================================================
@@ -277,8 +290,8 @@ export const GENERAL_PROPERTY_NAMES = new Set([
 // =============================================================================
 
 export interface HasIdAndName {
-  id?: string | number;
-  name?: string;
+  id?: string | number | undefined;
+  name?: string | undefined;
 }
 
 /**
@@ -287,7 +300,7 @@ export interface HasIdAndName {
  */
 export function findByIdOrName<T extends HasIdAndName>(
   db: T[],
-  ref: { id?: number | string; name?: string }
+  ref: { id?: number | string | undefined; name?: string | undefined },
 ): T | undefined {
   if (!Array.isArray(db) || !ref) return undefined;
 
@@ -309,7 +322,12 @@ export function findByIdOrName<T extends HasIdAndName>(
   // so legacy string-named refs still resolve to their codex entry).
   if (ref.name) {
     const refName = String(ref.name).trim().toLowerCase();
-    return db.find((item) => String(item.name ?? '').trim().toLowerCase() === refName);
+    return db.find(
+      (item) =>
+        String(item.name ?? '')
+          .trim()
+          .toLowerCase() === refName,
+    );
   }
 
   return undefined;
@@ -321,7 +339,7 @@ export function findByIdOrName<T extends HasIdAndName>(
  */
 export function findByIdOrNameValue<T extends HasIdAndName>(
   db: T[],
-  idOrName: number | string
+  idOrName: number | string,
 ): T | undefined {
   if (!Array.isArray(db) || idOrName === undefined || idOrName === null) {
     return undefined;
@@ -356,10 +374,7 @@ export function findByIdOrNameValue<T extends HasIdAndName>(
  * Normalize a reference to always have an ID.
  * For backwards compatibility with old saves that only have names.
  */
-export function normalizeRef<T extends HasIdAndName>(
-  db: T[],
-  ref: HasIdAndName
-): HasIdAndName {
+export function normalizeRef<T extends HasIdAndName>(db: T[], ref: HasIdAndName): HasIdAndName {
   if (!ref) return ref;
 
   const found = findByIdOrName(db, ref);
@@ -375,7 +390,7 @@ export function normalizeRef<T extends HasIdAndName>(
  */
 export function normalizeRefsArray<T extends HasIdAndName>(
   items: HasIdAndName[],
-  db: T[]
+  db: T[],
 ): HasIdAndName[] {
   if (!Array.isArray(items)) return [];
   return items.map((item) => normalizeRef(db, item));

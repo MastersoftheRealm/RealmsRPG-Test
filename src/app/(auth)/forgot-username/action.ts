@@ -14,7 +14,9 @@ export async function submitForgotUsernameAction(_email: string): Promise<{ supp
   const ip = resolveClientIp(headerList);
   const normalized = _email.trim().toLowerCase();
   const keyUser = normalized.includes('@') ? normalized : ip;
-  const { success } = authActionLimiter.check(buildRateLimitKey('auth-forgot-username', { ip, userId: keyUser }));
+  const { success } = await authActionLimiter.check(
+    buildRateLimitKey('auth-forgot-username', { ip, userId: keyUser }),
+  );
   if (!success) {
     throw new Error('Too many requests. Please try again later.');
   }

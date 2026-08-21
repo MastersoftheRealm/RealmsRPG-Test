@@ -36,6 +36,19 @@ In Vercel → Project → Settings → Environment Variables, add:
 | `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_DEFAULT_KEY` | All | Anon/public key (safe for client) |
 | `SUPABASE_SERVICE_ROLE_KEY` | All | **Server-only** — never expose to client |
 
+**Optional — durable rate limiting (TASK-645 / TASK-669):** Live on Vercel as of 2026-08-13 via marketplace Upstash Redis (`upstash-kv-cordovan-notebook`, free). The app reads `KV_REST_API_URL` + `KV_REST_API_TOKEN` (or `UPSTASH_REDIS_REST_URL` + `UPSTASH_REDIS_REST_TOKEN`). Without them, limiters fall back to per-instance in-memory windows (weaker on Vercel).
+
+| Variable | Scope | Notes |
+|----------|-------|-------|
+| `KV_REST_API_URL` | Server | Injected by Upstash marketplace (production + preview + development) |
+| `KV_REST_API_TOKEN` | Server | Injected by Upstash marketplace |
+| `UPSTASH_REDIS_REST_URL` | Server | Alternate names; not required if `KV_REST_API_*` is set |
+| `UPSTASH_REDIS_REST_TOKEN` | Server | Alternate names; not required if `KV_REST_API_*` is set |
+
+**Error monitoring (TASK-745):** Live on Vercel as of 2026-08-13 via marketplace Sentry (`sentry-copper-canvas`, Developer $0). `NEXT_PUBLIC_SENTRY_DSN` is injected on production + preview. The app no-ops when unset. `getSentryEnvironment()` already uses `VERCEL_ENV`.
+
+**Canonical site URL:** Production `NEXT_PUBLIC_SITE_URL=https://realmsrpg.com` (auth redirects + CSRF origin allowlist). Preview uses the request host.
+
 **Never** use `NEXT_PUBLIC_` prefix for `SUPABASE_SERVICE_ROLE_KEY`. `DATABASE_URL` / `DIRECT_URL` are optional for the Next.js app; they are **required for local full-database backups** (`npm run db:backup`).
 
 ### Local database backup
@@ -47,6 +60,16 @@ npm run db:backup
 ```
 
 Writes `backups/supabase-<timestamp>/` (`roles.sql`, `schema.sql`, `data.sql`). **Postgres client tools** (`pg_dump` on PATH) or **Supabase CLI** (+ Docker for CLI dumps) must be installed. This backs up the database only — not Storage. See [scripts/README.md](../../scripts/README.md).
+
+### Generated Database types
+
+After applying schema migrations, regenerate checked-in Postgres row types:
+
+```bash
+npm run db:types
+```
+
+Writes `src/types/database.types.ts` (ADR-0020). Review the git diff; do not hand-edit that file. Optional `SUPABASE_PROJECT_ID` override. This is type generation, not a data backup.
 
 ### Local Storage backup (files)
 
@@ -160,9 +183,23 @@ On the free tier, watch **Edge Requests**, **Fast Data Transfer** (CDN → users
 
 ### Step 3: Deploy
 
-1. **Deployments** → **Redeploy** (or push to `main` to trigger auto-deploy).
+1. **Deployments** → **Redeploy** (or push to `master` to trigger auto-deploy).
 2. After build, visit your Vercel URL (e.g. `realms-rpg-next.vercel.app`) or your custom domain (e.g. **realmsrpg.com**).
 3. Test: sign in, create a character, upload a portrait.
+
+**Ignored builds (docs/test-only):** `vercel.json` runs `scripts/vercel-ignore-build.sh` so commits that only touch docs/agent/task-queue paths (`src/docs/`, `*.md`, `.cursor/`, `.github/`, `sql/`, seed/codex CSV) **or** Playwright tests/snapshots (`tests/`, `playwright.*.config.ts`) **skip** Vercel builds. This avoids Hobby **Deployment rate limited — retry in 24 hours** failures from rapid docs-only or visual-baseline merges. App/`src` code changes still deploy. If master shows a red Vercel check with that rate-limit message while GitHub Actions are green, production is usually still on the last successful app deploy — wait for the window or upgrade; do not treat it as an app build break.
+
+### Step 3b: Web Analytics (optional but recommended)
+
+App code mounts Vercel Web Analytics in the root layout (`src/app/layout.tsx` → `<Analytics />` from `@vercel/analytics/next`). No env vars are required.
+
+1. In the Vercel project → **Analytics** → **Enable** Web Analytics (Dashboard-only; see **DEV-006** in `DEVELOPER_TASK_QUEUE.md`).
+2. Deploy (or wait for the next production deploy) so `/_vercel/insights/*` routes are provisioned.
+3. Verify: open the live site, DevTools → Network → look for a same-origin `…/view` (or `/_vercel/insights/view`) request after navigation.
+4. **CSP:** `next.config.ts` allows `https://va.vercel-scripts.com` on `script-src` / `connect-src` for local/dev debug scripts. Production uses same-origin `/_vercel/insights/*` (`'self'`). Sentry browser envelopes need `https://*.sentry.io`, `https://*.ingest.sentry.io`, and `https://*.ingest.us.sentry.io` on `connect-src` (TASK-802; CSP `*` is one label). Do not remove those hosts without re-checking analytics / error reporting in both environments.
+5. Privacy copy: `/privacy` discloses anonymous usage analytics via the host (see `privacy-copy.ts`).
+
+Speed Insights is **not** installed unless separately prioritized (different package + CSP considerations).
 
 ### Step 4: Custom domain (e.g. realmsrpg.com)
 

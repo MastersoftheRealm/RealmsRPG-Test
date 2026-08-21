@@ -1,8 +1,10 @@
 /**
- * useModalListState — Shared search + sort state for list modals
- * ==============================================================
- * Use in add-X modals, load modals, and selection modals to keep
- * search/sort logic in one place. Composes useSort with search filtering.
+ * useModalListState — Shared search + sort state for rare non-USM list shells
+ * ==========================================================================
+ * Prefer `UnifiedSelectionModal` for add-X / load / catalog selection modals
+ * (it owns search/sort). Use this hook only for custom shells that cannot use
+ * USM — e.g. AdminTraits choice-option picker (inline editor chrome inside an
+ * edit Modal; TASK-572). Composes useSort with search filtering.
  *
  * Apply modal-specific filters to items before passing in; this hook
  * handles search and sort only.
@@ -17,9 +19,9 @@ export interface UseModalListStateOptions<T> {
   /** Object keys to search in (e.g. ['name', 'description']) */
   searchFields: (keyof T)[];
   /** Initial sort column key (default 'name') */
-  initialSortKey?: string;
+  initialSortKey?: string | undefined;
   /** Optional: custom string for search (overrides searchFields) */
-  getSearchableString?: (item: T) => string;
+  getSearchableString?: ((item: T) => string) | undefined;
 }
 
 export function useModalListState<T extends object>({

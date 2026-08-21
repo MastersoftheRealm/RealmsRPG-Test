@@ -6,7 +6,7 @@
  */
 
 import Link from 'next/link';
-import type React from 'react';
+import type { ReactNode } from 'react';
 import { ChevronLeft, Cloud, CloudOff } from 'lucide-react';
 import { PageHeader } from '@/components/ui';
 
@@ -15,8 +15,7 @@ export type EncounterTypeLabel = 'Combat' | 'Skill' | 'Mixed';
 export interface EncounterPageHeaderProps {
   encounterType: EncounterTypeLabel;
   name: string;
-  description?: string;
-  actions?: React.ReactNode;
+  description?: string | undefined;
   isEditingName: boolean;
   nameInput: string;
   onNameInputChange: (value: string) => void;
@@ -25,6 +24,7 @@ export interface EncounterPageHeaderProps {
   onCancelEdit: () => void;
   isSaving: boolean;
   hasUnsavedChanges: boolean;
+  actions?: ReactNode | undefined;
 }
 
 const TITLE_INPUT_CLASS =
@@ -34,7 +34,6 @@ export function EncounterPageHeader({
   encounterType,
   name,
   description,
-  actions,
   isEditingName,
   nameInput,
   onNameInputChange,
@@ -43,6 +42,7 @@ export function EncounterPageHeader({
   onCancelEdit,
   isSaving,
   hasUnsavedChanges,
+  actions,
 }: EncounterPageHeaderProps) {
   const typeLine = `${encounterType} Encounter${description ? ` \u2014 ${description}` : ''}`;
 
@@ -50,9 +50,9 @@ export function EncounterPageHeader({
     <div className="mb-6">
       <Link
         href="/encounters"
-        className="inline-flex items-center gap-1 text-text-secondary hover:text-primary-fg-hover mb-2 text-sm"
+        className="mb-2 inline-flex items-center gap-1 text-sm text-text-secondary hover:text-primary-fg-hover"
       >
-        <ChevronLeft className="w-4 h-4" aria-hidden />
+        <ChevronLeft className="h-4 w-4" aria-hidden />
         Back to Encounters
       </Link>
       <div className="min-w-0 flex-1">
@@ -71,32 +71,30 @@ export function EncounterPageHeader({
             autoFocus
           />
         ) : (
-          <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-            <PageHeader
-              title={name}
-              description={typeLine}
-              className="mb-0"
-              onTitleClick={onStartEditingName}
-              titleAriaLabel="Encounter name. Click to edit."
-            />
-            {actions && <div className="flex flex-wrap gap-2 sm:justify-end">{actions}</div>}
-          </div>
+          <PageHeader
+            title={name}
+            description={typeLine}
+            className="mb-0"
+            onTitleClick={onStartEditingName}
+            titleAriaLabel="Encounter name. Click to edit."
+            actions={actions}
+          />
         )}
         {!isEditingName && (
-          <p className="text-xs mt-1 flex items-center gap-1">
+          <p className="mt-1 flex items-center gap-1 text-xs">
             {isSaving ? (
-              <span className="text-warning-fg flex items-center gap-1">
-                <CloudOff className="w-3 h-3" aria-hidden />
+              <span className="flex items-center gap-1 text-warning-fg">
+                <CloudOff className="h-3 w-3" aria-hidden />
                 Saving...
               </span>
             ) : hasUnsavedChanges ? (
-              <span className="text-warning-fg flex items-center gap-1">
-                <CloudOff className="w-3 h-3" aria-hidden />
+              <span className="flex items-center gap-1 text-warning-fg">
+                <CloudOff className="h-3 w-3" aria-hidden />
                 Unsaved changes
               </span>
             ) : (
-              <span className="text-success-fg flex items-center gap-1">
-                <Cloud className="w-3 h-3" aria-hidden />
+              <span className="flex items-center gap-1 text-success-fg">
+                <Cloud className="h-3 w-3" aria-hidden />
                 Saved to cloud
               </span>
             )}

@@ -5,25 +5,25 @@
 import type { CodexEquipmentItem } from '@/types/codex';
 import type { LibraryItem } from '@/types/library';
 import type { PathItemRecommendation, PathLoadout } from '@/types/archetype';
+import { flattenLoadoutEntries } from '@/lib/game/loadout-entries';
+import { normalizeId } from '@/lib/utils';
 
 export type LoadoutItemCategory = 'weapon' | 'armor' | 'equipment';
 
 export interface EquipmentLookupEntry {
   id: string;
   name: string;
-  description?: string;
+  description?: string | undefined;
   category: LoadoutItemCategory;
-  statsLine?: string;
 }
 
 export interface ResolvedLoadoutItem {
   id: string;
   quantity: number;
   name: string;
-  description?: string;
+  description?: string | undefined;
   category: LoadoutItemCategory;
   categoryLabel: string;
-  statsLine?: string;
   resolved: boolean;
 }
 
@@ -33,10 +33,6 @@ const CATEGORY_LABELS: Record<LoadoutItemCategory, string> = {
   equipment: 'Gear',
 };
 
-function normalizeId(id: string): string {
-  return String(id).trim().toLowerCase();
-}
-
 function mapLibraryType(type: string | undefined): LoadoutItemCategory {
   const t = String(type ?? '').toLowerCase();
   if (t === 'armor') return 'armor';
@@ -44,57 +40,45 @@ function mapLibraryType(type: string | undefined): LoadoutItemCategory {
   return 'weapon';
 }
 
-function formatDamage(damage: LibraryItem['damage']): string | undefined {
-  if (!Array.isArray(damage) || damage.length === 0) return undefined;
-  const first = damage[0];
-  if (!first) return undefined;
-  const amount = first.amount ?? '';
-  const size = first.size ?? '';
-  const type = first.type ?? '';
-  const dice = amount && size ? `${amount}d${size}` : '';
-  return [dice, type].filter(Boolean).join(' ').trim() || undefined;
-}
-
 function entryFromOfficial(item: LibraryItem): EquipmentLookupEntry {
-  const category = mapLibraryType(item.type);
-  const statsLine =
-    category === 'armor' && item.damageReduction != null
-      ? `DR ${item.damageReduction}`
-      : formatDamage(item.damage);
   return {
     id: String(item.id),
     name: String(item.name ?? item.id),
     description: item.description?.trim() || undefined,
-    category,
-    statsLine,
+    category: mapLibraryType(item.type),
   };
 }
 
 function entryFromCodex(item: CodexEquipmentItem): EquipmentLookupEntry {
-  const category = item.type === 'armor' ? 'armor' : item.type === 'equipment' ? 'equipment' : 'weapon';
-  const statsLine =
-    category === 'armor' && item.armor_value != null
-      ? `DR ${item.armor_value}`
-      : item.damage?.trim() || undefined;
   return {
     id: String(item.id),
     name: item.name,
     description: item.description?.trim() || undefined,
-    category,
-    statsLine,
+    category: item.type === 'armor' ? 'armor' : item.type === 'equipment' ? 'equipment' : 'weapon',
   };
+}
+
+function indexLookupEntry(
+  map: Map<string, EquipmentLookupEntry>,
+  entry: EquipmentLookupEntry,
+  extraKeys: Array<string | number | null | undefined> = [],
+) {
+  for (const raw of [entry.id, ...extraKeys]) {
+    const key = normalizeId(String(raw ?? ''));
+    if (key) map.set(key, entry);
+  }
 }
 
 export function buildEquipmentLookup(
   officialItems: LibraryItem[] = [],
-  codexEquipment: CodexEquipmentItem[] = []
+  codexEquipment: CodexEquipmentItem[] = [],
 ): Map<string, EquipmentLookupEntry> {
   const map = new Map<string, EquipmentLookupEntry>();
   for (const item of codexEquipment) {
-    map.set(normalizeId(String(item.id)), entryFromCodex(item));
+    indexLookupEntry(map, entryFromCodex(item));
   }
   for (const item of officialItems) {
-    map.set(normalizeId(String(item.id)), entryFromOfficial(item));
+    indexLookupEntry(map, entryFromOfficial(item), [item.docId]);
   }
   return map;
 }
@@ -102,7 +86,7 @@ export function buildEquipmentLookup(
 export function resolveEquipmentRef(
   ref: PathItemRecommendation,
   lookup: Map<string, EquipmentLookupEntry>,
-  unresolvedLabel = 'Unknown item'
+  unresolvedLabel = 'Unknown item',
 ): ResolvedLoadoutItem {
   const key = normalizeId(ref.id);
   const entry = lookup.get(key);
@@ -114,53 +98,170 @@ export function resolveEquipmentRef(
     description: entry?.description,
     category,
     categoryLabel: CATEGORY_LABELS[category],
-    statsLine: entry?.statsLine,
     resolved: Boolean(entry),
   };
-}
-
-export function flattenLoadoutEntries(loadout: PathLoadout): PathItemRecommendation[] {
-  return [
-    ...(loadout.armaments ?? []),
-    ...(loadout.armor ?? []),
-    ...(loadout.equipment ?? []),
-  ];
 }
 
 export function resolveLoadoutItems(
   loadout: PathLoadout,
   lookup: Map<string, EquipmentLookupEntry>,
-  unresolvedLabel = 'Unknown item'
+  unresolvedLabel = 'Unknown item',
 ): ResolvedLoadoutItem[] {
   return flattenLoadoutEntries(loadout).map((ref) =>
-    resolveEquipmentRef(ref, lookup, unresolvedLabel)
+    resolveEquipmentRef(ref, lookup, unresolvedLabel),
   );
 }
 
-export function loadoutDraftFromSelection(loadout: PathLoadout): {
-  armaments: PathItemRecommendation[];
+/** Phased weapon+armor buckets when present; otherwise legacy `armaments`. */
+export function draftArmamentRefs(draft: {
+  loadoutWeapons?: PathItemRecommendation[] | undefined;
+  loadoutArmor?: PathItemRecommendation[] | undefined;
+  armaments?: PathItemRecommendation[] | undefined;
+}): PathItemRecommendation[] {
+  const merged = mergeLoadoutArmaments({
+    loadoutWeapons: draft.loadoutWeapons ?? [],
+    loadoutArmor: draft.loadoutArmor ?? [],
+  });
+  return merged.length > 0 ? merged : (draft.armaments ?? []);
+}
+
+export function resolveDraftArmaments(
+  draft: {
+    loadoutWeapons?: PathItemRecommendation[] | undefined;
+    loadoutArmor?: PathItemRecommendation[] | undefined;
+    armaments?: PathItemRecommendation[] | undefined;
+  },
+  lookup: Map<string, EquipmentLookupEntry>,
+  unresolvedLabel = 'Unknown item',
+): ResolvedLoadoutItem[] {
+  return draftArmamentRefs(draft).map((ref) => resolveEquipmentRef(ref, lookup, unresolvedLabel));
+}
+
+export function loadoutDraftFromSelection(
+  loadout: PathLoadout,
+  lookup?: Map<string, EquipmentLookupEntry>,
+): {
+  loadoutWeapons: PathItemRecommendation[];
+  loadoutArmor: PathItemRecommendation[];
   equipment: PathItemRecommendation[];
+  armaments: PathItemRecommendation[];
 } {
+  const loadoutWeapons: PathItemRecommendation[] = [];
+  const loadoutArmor: PathItemRecommendation[] = [...(loadout.armor ?? [])];
+  const armorIds = new Set(loadoutArmor.map((ref) => normalizeId(String(ref.id))));
+
+  for (const ref of loadout.armaments ?? []) {
+    const key = normalizeId(String(ref.id));
+    const category = lookup?.get(key)?.category;
+    // Live path kits often nest armor inside `armaments[]` (no separate `armor` field).
+    if (category === 'armor') {
+      if (!armorIds.has(key)) {
+        loadoutArmor.push(ref);
+        armorIds.add(key);
+      }
+      continue;
+    }
+    loadoutWeapons.push(ref);
+  }
+
   return {
-    armaments: [...(loadout.armaments ?? []), ...(loadout.armor ?? [])],
+    loadoutWeapons,
+    loadoutArmor,
     equipment: loadout.equipment ?? [],
+    armaments: [...loadoutWeapons, ...loadoutArmor],
   };
 }
 
+/**
+ * Drop draft loadout refs that no longer resolve in the library/codex lookup
+ * (stale kit auto-apply, renamed ids, etc.).
+ */
+export function pruneUnresolvedLoadoutRefs(
+  refs: PathItemRecommendation[],
+  lookup: Map<string, EquipmentLookupEntry>,
+): PathItemRecommendation[] {
+  if (lookup.size === 0) return refs;
+  return refs.filter((ref) => lookup.has(normalizeId(String(ref.id))));
+}
+
+/**
+ * Re-classify draft weapon/armor buckets using the library lookup.
+ * Fixes path recommendations that nest armor inside `armaments[]`.
+ */
+export function rebucketLoadoutByLookup(
+  loadoutWeapons: PathItemRecommendation[],
+  loadoutArmor: PathItemRecommendation[],
+  lookup: Map<string, EquipmentLookupEntry>,
+): {
+  loadoutWeapons: PathItemRecommendation[];
+  loadoutArmor: PathItemRecommendation[];
+  armaments: PathItemRecommendation[];
+} {
+  if (lookup.size === 0) {
+    return {
+      loadoutWeapons,
+      loadoutArmor,
+      armaments: [...loadoutWeapons, ...loadoutArmor],
+    };
+  }
+
+  const weapons: PathItemRecommendation[] = [];
+  const armor: PathItemRecommendation[] = [];
+  const seenArmor = new Set<string>();
+
+  const pushArmor = (ref: PathItemRecommendation) => {
+    const key = normalizeId(String(ref.id));
+    if (seenArmor.has(key)) return;
+    seenArmor.add(key);
+    armor.push(ref);
+  };
+
+  for (const ref of loadoutWeapons) {
+    const key = normalizeId(String(ref.id));
+    if (lookup.get(key)?.category === 'armor') pushArmor(ref);
+    else weapons.push(ref);
+  }
+  for (const ref of loadoutArmor) {
+    const key = normalizeId(String(ref.id));
+    if (lookup.get(key)?.category === 'weapon') weapons.push(ref);
+    else pushArmor(ref);
+  }
+
+  return {
+    loadoutWeapons: weapons,
+    loadoutArmor: armor,
+    armaments: [...weapons, ...armor],
+  };
+}
+
+/** Keep legacy `armaments` in sync with phased weapon + armor selections. */
+export function mergeLoadoutArmaments(draft: {
+  loadoutWeapons: PathItemRecommendation[];
+  loadoutArmor: PathItemRecommendation[];
+}): PathItemRecommendation[] {
+  return [...draft.loadoutWeapons, ...draft.loadoutArmor];
+}
+
 export function groupResolvedItemsByCategory(
-  items: ResolvedLoadoutItem[]
+  items: ResolvedLoadoutItem[],
 ): Array<{ id: 'weapons' | 'armor' | 'gear'; label: string; items: ResolvedLoadoutItem[] }> {
   const weapons = items.filter((i) => i.category === 'weapon');
   const armor = items.filter((i) => i.category === 'armor');
   const gear = items.filter((i) => i.category === 'equipment');
-  const groups: Array<{ id: 'weapons' | 'armor' | 'gear'; label: string; items: ResolvedLoadoutItem[] }> = [];
+  const groups: Array<{
+    id: 'weapons' | 'armor' | 'gear';
+    label: string;
+    items: ResolvedLoadoutItem[];
+  }> = [];
   if (weapons.length > 0) groups.push({ id: 'weapons', label: 'Weapons', items: weapons });
   if (armor.length > 0) groups.push({ id: 'armor', label: 'Armor', items: armor });
   if (gear.length > 0) groups.push({ id: 'gear', label: 'Gear', items: gear });
   return groups;
 }
 
-export function inventoryTypeForResolvedItem(item: ResolvedLoadoutItem): 'weapon' | 'armor' | 'equipment' {
+export function inventoryTypeForResolvedItem(
+  item: ResolvedLoadoutItem,
+): 'weapon' | 'armor' | 'equipment' {
   if (item.category === 'armor') return 'armor';
   if (item.category === 'weapon') return 'weapon';
   return 'equipment';

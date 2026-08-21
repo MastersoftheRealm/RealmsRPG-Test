@@ -13,7 +13,7 @@ import { Header, Footer } from '@/components/layout';
 import { Button, PageHeader } from '@/components/ui';
 
 interface ErrorProps {
-  error: Error & { digest?: string };
+  error: Error & { digest?: string | undefined };
   reset: () => void;
 }
 
@@ -23,11 +23,11 @@ export default function RootError({ error, reset }: ErrorProps) {
   }, [error]);
 
   return (
-    <div className="min-h-screen flex flex-col bg-background">
+    <div className="flex min-h-screen flex-col bg-background">
       <Header />
-      <main id="main-content" className="flex-1 flex items-center justify-center px-4 py-16">
-        <div className="flex flex-col items-center gap-4 max-w-md text-center w-full">
-          <AlertCircle className="w-12 h-12 text-danger-fg" aria-hidden />
+      <main id="main-content" className="flex flex-1 items-center justify-center px-4 py-16">
+        <div className="flex w-full max-w-md flex-col items-center gap-4 text-center">
+          <AlertCircle className="h-12 w-12 text-danger-fg" aria-hidden />
           <PageHeader
             title="Something went wrong"
             size="sm"
@@ -35,18 +35,18 @@ export default function RootError({ error, reset }: ErrorProps) {
             description="An unexpected error occurred. You can try again, or return to the home page."
           />
           {process.env.NODE_ENV === 'development' && (
-            <pre className="text-xs text-left bg-surface-alt p-3 rounded-lg w-full overflow-auto max-h-40 border border-border-light text-text-secondary">
+            <pre className="max-h-40 w-full overflow-auto rounded-lg border border-border-light bg-surface-alt p-3 text-left text-xs text-text-secondary">
               {error.message}
             </pre>
           )}
           <div className="flex items-center gap-3">
             <Button variant="primary" size="md" onClick={reset}>
-              <RefreshCw className="w-4 h-4 mr-1.5" />
+              <RefreshCw className="mr-1.5 h-4 w-4" />
               Try Again
             </Button>
             <Link href="/">
               <Button variant="secondary" size="md">
-                <Home className="w-4 h-4 mr-1.5" />
+                <Home className="mr-1.5 h-4 w-4" />
                 Home
               </Button>
             </Link>

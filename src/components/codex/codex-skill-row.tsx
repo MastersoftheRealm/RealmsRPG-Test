@@ -1,7 +1,7 @@
 'use client';
 
 import type { ReactNode } from 'react';
-import { GridListRow } from '@/components/shared';
+import { GridListRow } from '@/components/patterns';
 import type { Skill } from '@/hooks';
 import { getSkillExtraDescriptionDetailSections } from '@/lib/skill-extra-descriptions';
 import { SKILL_GRID_COLUMNS } from '@/lib/codex/skill-list';
@@ -11,11 +11,13 @@ export function CodexSkillRow({
   skillIdToName,
   rightSlot,
   variant = 'codex',
+  nameChipLabels,
 }: {
   skill: Skill;
   skillIdToName: Map<string, string>;
-  rightSlot?: ReactNode;
-  variant?: 'codex' | 'admin';
+  rightSlot?: ReactNode | undefined;
+  variant?: 'codex' | 'admin' | undefined;
+  nameChipLabels?: string[] | undefined;
 }) {
   const isSubSkill = skill.base_skill_id !== undefined && skill.base_skill_id !== 0;
   const baseSkillName =
@@ -29,10 +31,9 @@ export function CodexSkillRow({
   if (skill.description?.trim()) descriptionParts.push(skill.description.trim());
   if (variant === 'codex' && isSubSkill) descriptionParts.push(`Sub-skill of: ${baseSkillName}`);
   const description = descriptionParts.length > 0 ? descriptionParts.join('\n\n') : undefined;
-  const detailSections =
-    variant === 'codex' ? getSkillExtraDescriptionDetailSections(skill) : [];
-  const displayName =
-    variant === 'codex' && isSubSkill ? `↳ ${skill.name}` : skill.name;
+  const detailSections = variant === 'codex' ? getSkillExtraDescriptionDetailSections(skill) : [];
+  const displayName = variant === 'codex' && isSubSkill ? `↳ ${skill.name}` : skill.name;
+  const nameChips = nameChipLabels?.length ? nameChipLabels.map((label) => ({ label })) : undefined;
 
   return (
     <GridListRow
@@ -45,6 +46,8 @@ export function CodexSkillRow({
         { key: 'Base Skill', value: baseSkillName, highlight: variant === 'codex' && isSubSkill },
       ]}
       detailSections={detailSections.length > 0 ? detailSections : undefined}
+      badges={nameChips}
+      showBadgesInName={Boolean(nameChips)}
       rightSlot={rightSlot}
     />
   );

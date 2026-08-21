@@ -5,29 +5,34 @@
 'use client';
 
 import type { ReactNode } from 'react';
+import { cn } from '@/lib/utils';
 import { GuidedStepFooter } from './guided-step-footer';
 import { useGuidedCreatorStore, type GuidedSubStep } from '@/stores/guided-creator-store';
 
 export interface GuidedStepLayoutProps {
   subStep: GuidedSubStep;
   title: string;
-  description?: ReactNode;
-  guidance?: ReactNode;
+  /** Optional help beside the title (e.g. InfoTippy). */
+  titleAddon?: ReactNode | undefined;
+  description?: ReactNode | undefined;
+  guidance?: ReactNode | undefined;
   children: ReactNode;
-  canContinue?: boolean;
-  continueLabel?: string;
-  completionHint?: ReactNode;
-  primaryAction?: ReactNode;
+  canContinue?: boolean | undefined;
+  continueLabel?: string | undefined;
+  completionHint?: ReactNode | undefined;
+  primaryAction?: ReactNode | undefined;
   /** Override default footer back (e.g. ancestry micro-flow). */
-  footerBack?: () => void;
+  footerBack?: (() => void) | undefined;
   /** Override default footer continue (e.g. ancestry micro-flow). */
-  footerContinue?: () => void;
-  hideBack?: boolean;
+  footerContinue?: (() => void) | undefined;
+  /** Continue chrome: primary forward (default) or outline shallower (e.g. loadout L2). */
+  continueTone?: 'progress' | 'previous' | undefined;
+  hideBack?: boolean | undefined;
 }
 
 export function GuidedStepLayout({
-  subStep,
   title,
+  titleAddon,
   description,
   guidance,
   children,
@@ -38,20 +43,26 @@ export function GuidedStepLayout({
   hideBack,
   footerBack,
   footerContinue,
+  continueTone,
 }: GuidedStepLayoutProps) {
   const { prevSubStep, nextSubStep } = useGuidedCreatorStore();
 
   return (
-    <div className="flex flex-col pb-24">
+    <div className={cn('flex flex-col', completionHint ? 'pb-32 sm:pb-24' : 'pb-24')}>
       <header className="mb-4">
-        <h2 className="font-display text-2xl sm:text-3xl font-bold text-text-primary">{title}</h2>
+        <div className="flex items-center gap-1">
+          <h2 className="font-display text-2xl font-bold text-text-primary sm:text-3xl">{title}</h2>
+          {titleAddon}
+        </div>
         {description && (
-          <p className="mt-2 font-nunito text-base text-text-secondary leading-relaxed">{description}</p>
+          <p className="mt-2 font-nunito text-base leading-relaxed text-text-secondary">
+            {description}
+          </p>
         )}
       </header>
 
       {guidance && (
-        <div className="mb-5 rounded-card border border-border-light dark:border-border bg-primary-subtle-bg/50 px-4 py-3 font-nunito text-sm text-text-secondary">
+        <div className="mb-5 rounded-card border border-border-light bg-primary-subtle-bg/50 px-4 py-3 font-nunito text-sm text-text-secondary dark:border-border">
           {guidance}
         </div>
       )}
@@ -63,6 +74,7 @@ export function GuidedStepLayout({
         onContinue={primaryAction ? undefined : (footerContinue ?? nextSubStep)}
         continueDisabled={!canContinue}
         continueLabel={continueLabel ?? 'Continue'}
+        continueTone={continueTone}
         backLabel="Back"
         completionHint={completionHint}
         primaryAction={primaryAction}

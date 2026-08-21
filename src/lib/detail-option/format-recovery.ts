@@ -1,0 +1,10 @@
+/** Shared recovery-period labels for trait/feat limited uses (deep-dive rows). */
+
+export function formatTraitRecoveryLabel(recPeriod: string | undefined): string | null {
+  const raw = recPeriod?.trim();
+  if (!raw) return null;
+  const lower = raw.toLowerCase();
+  if (lower.includes('full')) return 'Full Recovery';
+  if (lower.includes('partial') || lower.includes('short')) return 'Partial Recovery';
+  return raw;
+}

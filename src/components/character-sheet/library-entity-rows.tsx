@@ -6,17 +6,19 @@
 
 import type { ReactNode } from 'react';
 import {
+  formatDurationCompact,
   formatSavedActionTypeForDisplay,
   formatListCellLabel,
-  normalizeRangeDisplay,
 } from '@/lib/utils';
+import { calculateCriticalRange, calculateEvasion } from '@/lib/game/calculations';
+import { resolveWeaponRangeDisplay, type ItemPropertyPayload } from '@/lib/calculators';
 import {
   InnateToggle,
   RollButton,
   EquipToggle,
   QuantitySelector,
   type ColumnValue,
-} from '@/components/shared';
+} from '@/components/patterns';
 import type {
   EntityPowerRow,
   EntityTechniqueRow,
@@ -24,14 +26,16 @@ import type {
   EntityShieldRow,
   EntityArmorRow,
   EntityEquipmentRow,
-} from '@/components/shared/entity-library-sections';
+} from '@/components/patterns/list/entity-library-sections';
 import {
   POWER_GRID,
+  CHARACTER_SHEET_TECHNIQUE_GRID,
   CHARACTER_SHEET_WEAPON_GRID,
   CHARACTER_SHEET_SHIELD_GRID,
-} from '@/components/shared/entity-library-sections';
-import type { useRollsOptional } from './roll-context';
+} from '@/components/patterns/list/entity-library-sections';
+import type { useRollsOptional } from '@/components/rolls';
 import type { Abilities, CharacterPower, CharacterTechnique, Item } from '@/types';
+import { resolveListRowThumbnail } from '@/lib/list-row-image';
 import {
   type CodexPart,
   type CodexProperty,
@@ -40,71 +44,122 @@ import {
   propertiesToPartData,
   partDataToChips,
   formatArea,
-  formatDuration,
   formatDamageType,
   getWeaponAttackBonus,
   resolveItemProperties,
-  splitDamageDiceAndType,
+  deriveArmorItemCombatStats,
 } from './library-list-helpers';
+import { splitDamageDiceAndType } from '@/lib/utils';
 import {
-  buildArmorRequirementMetadataChips,
-  buildPartsAndMetadataDetailSections,
+  glrSurfaceDetailSections,
   mergeDetailSections,
   metadataDetailSection,
+  partsProficienciesSection,
   propertiesProficienciesSection,
 } from '@/lib/chip/list-row-metadata';
-
+import { rangeFactChip } from '@/lib/detail-option/compact-facts';
+import { derivePowerDisplay, formatPowerDamage } from '@/lib/calculators/power-calc';
+import { deriveTechniqueDisplay } from '@/lib/calculators/technique-calc';
+import { calculateItemCosts, type ItemPropertyTpRow } from '@/lib/calculators/item-calc';
+import type { PowerPart, TechniquePart } from '@/hooks/codex-types';
+import {
+  libraryItemToPowerDocument,
+  libraryItemToTechniqueDocument,
+} from '@/lib/library-selectable-builders';
+import {
+  derivePartCategories,
+  formatPartCategoriesColumn,
+  powerHasDamageCategory,
+  withDamageCategory,
+} from '@/lib/library/power-technique-categories';
 type RollContext = ReturnType<typeof useRollsOptional>;
 
 export type LibraryEntityRowContext = {
   powerPartsDb: CodexPart[];
   techniquePartsDb: CodexPart[];
   itemPropertiesDb: CodexProperty[];
-  abilities?: Abilities;
-  martialProficiency?: number;
-  powerAttackBonus?: number;
-  currentEnergy?: number;
+  abilities?: Abilities | undefined;
+  martialProficiency?: number | undefined;
+  powerAttackBonus?: number | undefined;
+  currentEnergy?: number | undefined;
   showLibraryEditControls: boolean;
   rollContext: RollContext;
   hasMissingForEntry: (params: {
-    powers?: CharacterPower[];
-    techniques?: CharacterTechnique[];
-    weapons?: Item[];
-    shields?: Item[];
-    armor?: Item[];
+    powers?: CharacterPower[] | undefined;
+    techniques?: CharacterTechnique[] | undefined;
+    weapons?: Item[] | undefined;
+    shields?: Item[] | undefined;
+    armor?: Item[] | undefined;
   }) => boolean;
-  onUsePower?: (id: string | number, energyCost: number) => void;
-  onRemovePower?: (id: string | number) => void;
-  onTogglePowerInnate?: (id: string | number, isInnate: boolean) => void;
-  onUseTechnique?: (id: string | number, energyCost: number) => void;
-  onRemoveTechnique?: (id: string | number) => void;
-  onRemoveWeapon?: (id: string | number) => void;
-  onToggleEquipWeapon?: (id: string | number) => void;
-  onRemoveShield?: (id: string | number) => void;
-  onToggleEquipShield?: (id: string | number) => void;
-  onRemoveArmor?: (id: string | number) => void;
-  onToggleEquipArmor?: (id: string | number) => void;
-  onRemoveEquipment?: (id: string | number) => void;
-  onEquipmentQuantityChange?: (id: string | number, delta: number) => void;
+  onUsePower?: ((id: string | number, energyCost: number) => void) | undefined;
+  onRemovePower?: ((id: string | number) => void) | undefined;
+  onTogglePowerInnate?: ((id: string | number, isInnate: boolean) => void) | undefined;
+  onUseTechnique?: ((id: string | number, energyCost: number) => void) | undefined;
+  onRemoveTechnique?: ((id: string | number) => void) | undefined;
+  onRemoveWeapon?: ((id: string | number) => void) | undefined;
+  onToggleEquipWeapon?: ((id: string | number) => void) | undefined;
+  onRemoveShield?: ((id: string | number) => void) | undefined;
+  onToggleEquipShield?: ((id: string | number) => void) | undefined;
+  onRemoveArmor?: ((id: string | number) => void) | undefined;
+  onToggleEquipArmor?: ((id: string | number) => void) | undefined;
+  onRemoveEquipment?: ((id: string | number) => void) | undefined;
+  onEquipmentQuantityChange?: ((id: string | number, delta: number) => void) | undefined;
 };
+
+function categoryFactValue(categories: string[]): string | undefined {
+  if (categories.length === 0) return undefined;
+  const text = formatPartCategoriesColumn(categories);
+  if (!text || text === '—' || text === '-') return undefined;
+  return text;
+}
+
+function partsForCategories(
+  parts: CharacterPower['parts'] | CharacterTechnique['parts'],
+): Array<{ id?: string | number | undefined; name?: string | undefined }> {
+  if (!parts) return [];
+  return parts.map((part) => (typeof part === 'string' ? { name: part } : part));
+}
+
+function sheetItemCostFacts(item: Item, ctx: LibraryEntityRowContext) {
+  const propsPayload = (resolveItemProperties(item as ItemWithLibrarySource) ??
+    []) as ItemPropertyPayload[];
+  const costs = calculateItemCosts(propsPayload, ctx.itemPropertiesDb as ItemPropertyTpRow[]);
+  const storedCost = item.cost != null && item.cost > 0 ? item.cost : undefined;
+  const derivedCurrency = Math.round(costs.totalCurrency);
+  const storedTp = (item as Item & { tp?: number | undefined }).tp;
+  return {
+    rarity: item.rarity,
+    currency: storedCost ?? (derivedCurrency > 0 ? derivedCurrency : undefined),
+    trainingPoints:
+      Math.round(costs.totalTP) ||
+      (typeof storedTp === 'number' && storedTp > 0 ? Math.round(storedTp) : undefined),
+  };
+}
 
 function needsProfBadge(
   ctx: LibraryEntityRowContext,
-  params: Parameters<LibraryEntityRowContext['hasMissingForEntry']>[0]
+  params: Parameters<LibraryEntityRowContext['hasMissingForEntry']>[0],
 ) {
   return ctx.hasMissingForEntry(params)
     ? ([{ label: 'Needs Proficiency', color: 'red' as const }] as EntityPowerRow['badges'])
     : undefined;
 }
 
+/**
+ * Energy cost control for play-sheet powers/techniques.
+ * Cost appears ONLY here (rightSlot) — never also as a static Energy column.
+ * View-only (no onUse): same chrome, disabled — do not pass noop handlers.
+ */
 function buildEnergyButton(
   energyCost: number,
   canUse: boolean,
   onUse: ((id: string | number, cost: number) => void) | undefined,
   id: string | number,
-  variant: 'primary' | 'success'
+  variant: 'primary' | 'success',
 ): ReactNode {
-  if (onUse && energyCost > 0) {
+  if (energyCost <= 0) return null;
+
+  if (onUse) {
     return (
       <RollButton
         value={energyCost}
@@ -113,52 +168,97 @@ function buildEnergyButton(
         disabled={!canUse}
         variant={variant}
         size="sm"
-        title={canUse ? `Use (costs ${energyCost} EP)` : 'Not enough energy'}
+        title={canUse ? `Spend ${energyCost} Energy` : 'Not enough energy'}
       />
     );
   }
-  if (energyCost > 0) {
-    return <span className="text-sm font-medium text-text-secondary">{energyCost}</span>;
-  }
-  return null;
+
+  return (
+    <RollButton
+      value={energyCost}
+      displayValue={String(energyCost)}
+      disabled
+      variant={variant}
+      size="sm"
+      title={`Energy cost ${energyCost}`}
+    />
+  );
 }
 
-export function mapPowerRows(powers: CharacterPower[], ctx: LibraryEntityRowContext): EntityPowerRow[] {
+export function mapPowerRows(
+  powers: CharacterPower[],
+  ctx: LibraryEntityRowContext,
+): EntityPowerRow[] {
   return powers.map((power, i) => {
     const id = power.id || String(i);
     const isInnate = power.innate === true;
-    const energyCost = power.cost ?? 0;
+    const powerIsReaction = (power as CharacterPower & { isReaction?: boolean | undefined })
+      .isReaction;
+    const display = derivePowerDisplay(
+      libraryItemToPowerDocument({
+        name: power.name,
+        description: power.description,
+        parts: power.parts,
+        damage: Array.isArray(power.damage) ? power.damage : undefined,
+        actionType: power.actionType,
+        isReaction: powerIsReaction,
+      }),
+      ctx.powerPartsDb as PowerPart[],
+    );
+    const energyCost =
+      typeof display.energy === 'number' && display.energy > 0 ? display.energy : (power.cost ?? 0);
     const canUse = ctx.currentEnergy !== undefined && ctx.currentEnergy >= energyCost;
     const partChips = partDataToChips(partsToPartData(power.parts, ctx.powerPartsDb));
-    const powerTotalTP = partChips.reduce((sum, p) => sum + (p.cost ?? 0), 0);
+    const partsSection = partsProficienciesSection(partChips, 'power');
+    const categories = withDamageCategory(
+      derivePartCategories(partsForCategories(power.parts), ctx.powerPartsDb),
+      powerHasDamageCategory(Array.isArray(power.damage) ? power.damage : undefined),
+    );
+    const damageStr =
+      formatPowerDamage(Array.isArray(power.damage) ? power.damage : undefined) ||
+      formatDamageType(typeof power.damage === 'string' ? power.damage : undefined);
+    const rangeValue =
+      typeof power.range === 'string' && power.range.trim()
+        ? power.range
+        : typeof power.range === 'number'
+          ? power.range
+          : display.range && display.range !== '-'
+            ? display.range
+            : undefined;
 
     const damageCell =
-      power.damage && ctx.rollContext?.rollDamage ? (
+      damageStr && damageStr !== '-' && ctx.rollContext?.rollDamage ? (
         <RollButton
           value={ctx.powerAttackBonus ?? 0}
-          displayValue={formatDamageType(power.damage)}
+          displayValue={damageStr}
           variant="danger"
           size="sm"
-          onClick={() =>
-            ctx.rollContext!.rollDamage(
-              power.damage as string,
-              ctx.powerAttackBonus ?? 0
-            )
-          }
+          onClick={() => ctx.rollContext!.rollDamage(damageStr, ctx.powerAttackBonus ?? 0)}
           title="Roll damage (includes Power Bonus)"
         />
       ) : (
-        formatDamageType(power.damage)
+        damageStr
       );
 
-    const powerIsReaction = (power as CharacterPower & { isReaction?: boolean }).isReaction;
-    const actionDisplay = formatSavedActionTypeForDisplay(power.actionType, powerIsReaction);
+    const actionDisplay =
+      display.actionType || formatSavedActionTypeForDisplay(power.actionType, powerIsReaction);
 
     const columns: ColumnValue[] = [
       { key: 'action', value: actionDisplay, align: 'center' },
       { key: 'damage', value: damageCell, align: 'center' },
-      { key: 'area', value: formatArea(power.area), align: 'center' },
-      { key: 'duration', value: formatDuration(power.duration), align: 'center' },
+      {
+        key: 'area',
+        value: display.area && display.area !== '-' ? display.area : formatArea(power.area),
+        align: 'center',
+      },
+      {
+        key: 'duration',
+        value:
+          display.duration && display.duration !== '-'
+            ? display.duration
+            : formatDurationCompact(power.duration),
+        align: 'center',
+      },
     ];
 
     const innateToggle =
@@ -170,20 +270,25 @@ export function mapPowerRows(powers: CharacterPower[], ctx: LibraryEntityRowCont
         />
       ) : undefined;
 
-    const detailSections = buildPartsAndMetadataDetailSections({
-      range: power.range,
-      partChips,
-    });
+    const detailSections = glrSurfaceDetailSections(
+      'character-sheet-power-play',
+      {
+        category: categoryFactValue(categories),
+        range: rangeValue,
+        trainingPoints: display.tp > 0 ? display.tp : undefined,
+      },
+      partsSection ? [partsSection] : undefined,
+    );
 
     return {
       id,
       name: power.name,
       description: power.description,
+      thumbnail: resolveListRowThumbnail('power', power, power.name),
       columns,
       gridColumns: POWER_GRID,
       detailSections: detailSections.length > 0 ? detailSections : undefined,
       badges: needsProfBadge(ctx, { powers: [power] }),
-      totalTp: powerTotalTP > 0 ? powerTotalTP : undefined,
       innate: isInnate,
       hideInnateBadge: isInnate,
       leftSlot: innateToggle,
@@ -196,45 +301,77 @@ export function mapPowerRows(powers: CharacterPower[], ctx: LibraryEntityRowCont
 
 export function mapTechniqueRows(
   techniques: CharacterTechnique[],
-  ctx: LibraryEntityRowContext
+  ctx: LibraryEntityRowContext,
 ): EntityTechniqueRow[] {
   return techniques.map((tech, i) => {
     const id = tech.id || String(i);
-    const energyCost = tech.cost ?? 0;
+    const techIsReaction = (tech as CharacterTechnique & { isReaction?: boolean | undefined })
+      .isReaction;
+    const display = deriveTechniqueDisplay(
+      libraryItemToTechniqueDocument({
+        name: tech.name,
+        description: tech.description,
+        parts: tech.parts,
+        damage: tech.damage,
+        weaponName: tech.weaponName,
+        actionType: tech.actionType,
+        isReaction: techIsReaction,
+      }),
+      ctx.techniquePartsDb as TechniquePart[],
+    );
+    const energyCost =
+      typeof display.energy === 'number' && display.energy > 0 ? display.energy : (tech.cost ?? 0);
     const canUse = ctx.currentEnergy !== undefined && ctx.currentEnergy >= energyCost;
-    const partChips = partDataToChips(partsToPartData(tech.parts, ctx.techniquePartsDb, 'technique'));
-    const techTP = (tech as { tp?: number }).tp;
-    const totalTP =
-      typeof techTP === 'number' ? techTP : typeof techTP === 'string' ? parseFloat(techTP) : undefined;
-
-    const techIsReaction = (tech as CharacterTechnique & { isReaction?: boolean }).isReaction;
-    const actionDisplay = formatSavedActionTypeForDisplay(tech.actionType, techIsReaction);
-
-    const detailSections = buildPartsAndMetadataDetailSections({
-      range: tech.range,
-      damage: tech.damage,
-      partChips,
-    });
+    const partChips = partDataToChips(
+      partsToPartData(tech.parts, ctx.techniquePartsDb, 'technique'),
+    );
+    const partsSection = partsProficienciesSection(partChips, 'technique');
+    const techTP = (tech as { tp?: number | undefined }).tp;
+    const storedTp =
+      typeof techTP === 'number' ? techTP : typeof techTP === 'string' ? parseFloat(techTP) : 0;
+    const totalTP = display.tp > 0 ? display.tp : storedTp;
+    const actionDisplay =
+      display.actionType || formatSavedActionTypeForDisplay(tech.actionType, techIsReaction);
+    const categories = derivePartCategories(partsForCategories(tech.parts), ctx.techniquePartsDb);
+    const damageValue =
+      display.damageStr && display.damageStr !== '-'
+        ? display.damageStr
+        : tech.damage
+          ? String(tech.damage)
+          : undefined;
+    const rangeChip = rangeFactChip(tech.range);
+    const extraSections = mergeDetailSections(
+      rangeChip ? metadataDetailSection([rangeChip]) : undefined,
+      partsSection ? [partsSection] : undefined,
+    );
+    const detailSections = glrSurfaceDetailSections(
+      'character-sheet-technique-play',
+      {
+        category: categoryFactValue(categories),
+        damage: damageValue,
+        trainingPoints: totalTP > 0 ? totalTP : undefined,
+      },
+      extraSections,
+    );
 
     return {
       id,
       name: tech.name,
       description: tech.description,
       actionType: actionDisplay,
+      thumbnail: resolveListRowThumbnail('technique', tech, tech.name),
       columns: [
         { key: 'action', value: actionDisplay, align: 'center' },
-        { key: 'energy', value: energyCost, align: 'center' },
         {
           key: 'weapon',
-          value: tech.weaponName || '-',
-          highlight: tech.weaponName !== undefined,
+          value: display.weaponName || tech.weaponName || '-',
+          highlight: Boolean(display.weaponName || tech.weaponName),
           align: 'center',
         },
-        { key: 'tp', value: techTP ?? '-', align: 'center' },
       ],
+      gridColumns: CHARACTER_SHEET_TECHNIQUE_GRID,
       detailSections: detailSections.length > 0 ? detailSections : undefined,
       badges: needsProfBadge(ctx, { techniques: [tech] }),
-      totalTp: totalTP && totalTP > 0 ? totalTP : undefined,
       rightSlot: buildEnergyButton(energyCost, canUse, ctx.onUseTechnique, id, 'success'),
       onDelete:
         ctx.showLibraryEditControls && ctx.onRemoveTechnique
@@ -250,13 +387,23 @@ export function mapWeaponRows(weapons: Item[], ctx: LibraryEntityRowContext): En
     const { bonus: attackBonus, abilityName } = getWeaponAttackBonus(
       item,
       ctx.abilities,
-      ctx.martialProficiency
+      ctx.martialProficiency,
     );
     const propertyChips = partDataToChips(
-      propertiesToPartData(resolveItemProperties(item as ItemWithLibrarySource), ctx.itemPropertiesDb)
+      propertiesToPartData(
+        resolveItemProperties(item as ItemWithLibrarySource),
+        ctx.itemPropertiesDb,
+      ),
     );
-    const rangeValue = normalizeRangeDisplay((item as Item & { range?: string }).range) || 'Melee';
-    const { dice: damageDice, type: damageType, rollStr: damageRollStr } = splitDamageDiceAndType(item.damage);
+    const rangeValue = resolveWeaponRangeDisplay(
+      (item as Item & { range?: string | undefined }).range,
+      (resolveItemProperties(item as ItemWithLibrarySource) ?? []) as ItemPropertyPayload[],
+    );
+    const {
+      dice: damageDice,
+      type: damageType,
+      rollStr: damageRollStr,
+    } = splitDamageDiceAndType(item.damage);
 
     const attackButton =
       ctx.rollContext?.canRoll !== false && ctx.rollContext ? (
@@ -267,7 +414,7 @@ export function mapWeaponRows(weapons: Item[], ctx: LibraryEntityRowContext): En
           title={`Roll attack (${abilityName})`}
         />
       ) : (
-        <span className="text-sm font-medium text-text-muted dark:text-text-secondary">
+        <span className="text-sm font-medium text-text-muted">
           {attackBonus >= 0 ? '+' : ''}
           {attackBonus}
         </span>
@@ -285,43 +432,50 @@ export function mapWeaponRows(weapons: Item[], ctx: LibraryEntityRowContext): En
             title="Roll damage"
           />
           {damageType && (
-            <span className="text-[10px] text-text-muted dark:text-text-secondary leading-none">{damageType}</span>
+            <span className="text-[10px] leading-none text-text-muted">{damageType}</span>
           )}
         </div>
       ) : (
         <div className="flex flex-col items-center gap-0.5">
-          <span className="text-sm font-medium text-text-muted dark:text-text-secondary">{damageDice}</span>
+          <span className="text-sm font-medium text-text-muted">{damageDice}</span>
           {damageType && (
-            <span className="text-[10px] text-text-muted dark:text-text-secondary leading-none">{damageType}</span>
+            <span className="text-[10px] leading-none text-text-muted">{damageType}</span>
           )}
         </div>
       );
 
-    const propertySection = propertiesProficienciesSection(propertyChips);
+    const propertySection = propertiesProficienciesSection(propertyChips, 'weapon');
+    const detailSections = glrSurfaceDetailSections(
+      'character-sheet-weapon-play',
+      sheetItemCostFacts(item, ctx),
+      propertySection ? [propertySection] : undefined,
+    );
 
     return {
       id,
       name: item.name,
       description: item.description,
+      thumbnail: resolveListRowThumbnail('equipment', item, item.name),
       columns: [
         { key: 'range', value: rangeValue, align: 'center' },
         { key: 'attack', value: attackButton, align: 'center' },
         { key: 'damage', value: damageButton, align: 'center' },
       ],
       gridColumns: CHARACTER_SHEET_WEAPON_GRID,
-      detailSections: propertySection ? [propertySection] : undefined,
+      detailSections: detailSections.length > 0 ? detailSections : undefined,
       badges: needsProfBadge(ctx, { weapons: [item] }),
       equipped: item.equipped,
-      leftSlot:
-        ctx.onToggleEquipWeapon ? (
-          <EquipToggle
-            isEquipped={item.equipped || false}
-            onToggle={() => ctx.onToggleEquipWeapon!(id)}
-            label={item.equipped ? 'Unequip' : 'Equip'}
-          />
-        ) : undefined,
+      leftSlot: ctx.onToggleEquipWeapon ? (
+        <EquipToggle
+          isEquipped={item.equipped || false}
+          onToggle={() => ctx.onToggleEquipWeapon!(id)}
+          label={item.equipped ? 'Unequip' : 'Equip'}
+        />
+      ) : undefined,
       onDelete:
-        ctx.showLibraryEditControls && ctx.onRemoveWeapon ? () => ctx.onRemoveWeapon!(id) : undefined,
+        ctx.showLibraryEditControls && ctx.onRemoveWeapon
+          ? () => ctx.onRemoveWeapon!(id)
+          : undefined,
     };
   });
 }
@@ -329,21 +483,39 @@ export function mapWeaponRows(weapons: Item[], ctx: LibraryEntityRowContext): En
 export function mapShieldRows(shields: Item[], ctx: LibraryEntityRowContext): EntityShieldRow[] {
   return shields.map((item, i) => {
     const id = item.id ?? item.name ?? i;
-    const enriched = item as Item & { shieldAmount?: string; shieldDamage?: string | null };
+    const enriched = item as Item & {
+      shieldAmount?: string | undefined;
+      shieldDamage?: string | null | undefined;
+    };
     const shieldBlock = enriched.shieldAmount ?? '-';
     const shieldDamageStr = enriched.shieldDamage ?? (item.damage ? String(item.damage) : '-');
-    const { bonus: attackBonus } = getWeaponAttackBonus(item, ctx.abilities, ctx.martialProficiency);
-    const rangeValue = normalizeRangeDisplay((item as Item & { range?: string }).range) || 'Melee';
+    const { bonus: attackBonus } = getWeaponAttackBonus(
+      item,
+      ctx.abilities,
+      ctx.martialProficiency,
+    );
+    const rangeValue = resolveWeaponRangeDisplay(
+      (item as Item & { range?: string | undefined }).range,
+      (resolveItemProperties(item as ItemWithLibrarySource) ?? []) as ItemPropertyPayload[],
+    );
     const {
       dice: shieldDamageDice,
       type: shieldDamageType,
       rollStr: shieldDamageRollStr,
     } = splitDamageDiceAndType(shieldDamageStr !== '-' ? String(shieldDamageStr) : item.damage);
     const propertyChips = partDataToChips(
-      propertiesToPartData(resolveItemProperties(item as ItemWithLibrarySource), ctx.itemPropertiesDb)
-      );
+      propertiesToPartData(
+        resolveItemProperties(item as ItemWithLibrarySource),
+        ctx.itemPropertiesDb,
+      ),
+    );
 
-    const propertySection = propertiesProficienciesSection(propertyChips);
+    const propertySection = propertiesProficienciesSection(propertyChips, 'shield');
+    const detailSections = glrSurfaceDetailSections(
+      'character-sheet-shield-play',
+      sheetItemCostFacts(item, ctx),
+      propertySection ? [propertySection] : undefined,
+    );
 
     const attackCell =
       shieldDamageStr !== '-' && ctx.rollContext?.canRoll !== false && ctx.rollContext ? (
@@ -373,14 +545,14 @@ export function mapShieldRows(shields: Item[], ctx: LibraryEntityRowContext): En
             title="Roll damage"
           />
           {shieldDamageType && (
-            <span className="text-[10px] text-text-muted dark:text-text-secondary leading-none">{shieldDamageType}</span>
+            <span className="text-[10px] leading-none text-text-muted">{shieldDamageType}</span>
           )}
         </div>
       ) : (
         <div className="flex flex-col items-center gap-0.5">
-          <span className="text-sm font-medium text-text-muted dark:text-text-secondary">{shieldDamageDice}</span>
+          <span className="text-sm font-medium text-text-muted">{shieldDamageDice}</span>
           {shieldDamageType && (
-            <span className="text-[10px] text-text-muted dark:text-text-secondary leading-none">{shieldDamageType}</span>
+            <span className="text-[10px] leading-none text-text-muted">{shieldDamageType}</span>
           )}
         </div>
       );
@@ -389,6 +561,7 @@ export function mapShieldRows(shields: Item[], ctx: LibraryEntityRowContext): En
       id,
       name: item.name,
       description: item.description,
+      thumbnail: resolveListRowThumbnail('equipment', item, item.name),
       columns: [
         { key: 'range', value: rangeValue, align: 'center' },
         { key: 'attack', value: attackCell, align: 'center' },
@@ -403,7 +576,11 @@ export function mapShieldRows(shields: Item[], ctx: LibraryEntityRowContext): En
                   displayValue={String(shieldBlock)}
                   variant="primary"
                   onClick={() =>
-                    ctx.rollContext!.rollDamage(String(shieldBlock) + ' Bludgeoning', 0, 'Shield block')
+                    ctx.rollContext!.rollDamage(
+                      String(shieldBlock) + ' Bludgeoning',
+                      0,
+                      'Shield block',
+                    )
                   }
                   size="sm"
                   title="Roll shield block amount"
@@ -417,19 +594,20 @@ export function mapShieldRows(shields: Item[], ctx: LibraryEntityRowContext): En
         },
       ],
       gridColumns: CHARACTER_SHEET_SHIELD_GRID,
-      detailSections: propertySection ? [propertySection] : undefined,
+      detailSections: detailSections.length > 0 ? detailSections : undefined,
       badges: needsProfBadge(ctx, { shields: [item] }),
       equipped: item.equipped,
-      leftSlot:
-        ctx.onToggleEquipShield ? (
-          <EquipToggle
-            isEquipped={item.equipped || false}
-            onToggle={() => ctx.onToggleEquipShield!(id)}
-            label={item.equipped ? 'Unequip' : 'Equip'}
-          />
-        ) : undefined,
+      leftSlot: ctx.onToggleEquipShield ? (
+        <EquipToggle
+          isEquipped={item.equipped || false}
+          onToggle={() => ctx.onToggleEquipShield!(id)}
+          label={item.equipped ? 'Unequip' : 'Equip'}
+        />
+      ) : undefined,
       onDelete:
-        ctx.showLibraryEditControls && ctx.onRemoveShield ? () => ctx.onRemoveShield!(id) : undefined,
+        ctx.showLibraryEditControls && ctx.onRemoveShield
+          ? () => ctx.onRemoveShield!(id)
+          : undefined,
     };
   });
 }
@@ -438,43 +616,46 @@ export function mapArmorRows(armor: Item[], ctx: LibraryEntityRowContext): Entit
   return armor.map((item, i) => {
     const id = item.id ?? item.name ?? i;
     const propertyChips = partDataToChips(
-      propertiesToPartData(resolveItemProperties(item as ItemWithLibrarySource), ctx.itemPropertiesDb)
+      propertiesToPartData(
+        resolveItemProperties(item as ItemWithLibrarySource),
+        ctx.itemPropertiesDb,
+      ),
     );
-    const abilityReq = (item as Item & { abilityRequirement?: { name?: string; level?: number } }).abilityRequirement;
-    const agilityRed = (item as Item & { agilityReduction?: number }).agilityReduction;
-
-    const itemWithArmor = item as { armorValue?: number; armor?: number };
-    let damageReduction = itemWithArmor.armorValue ?? itemWithArmor.armor ?? 0;
-    let critRangeBonus = 0;
-    const armorProps = resolveItemProperties(item as ItemWithLibrarySource);
-    if (armorProps) {
-      for (const prop of armorProps) {
-        if (!prop) continue;
-        const propName = typeof prop === 'string' ? prop : prop.name || '';
-        const op1Lvl =
-          typeof prop === 'object' && 'op_1_lvl' in prop ? Number((prop as Record<string, unknown>).op_1_lvl) || 0 : 0;
-        if (propName === 'Damage Reduction' && damageReduction === 0) {
-          damageReduction = 1 + op1Lvl;
-        }
-        if (propName === 'Critical Range +1') {
-          critRangeBonus = 1 + op1Lvl;
-        }
+    const abilityReq = (
+      item as Item & {
+        abilityRequirement?: { name?: string | undefined; level?: number | undefined };
       }
-    }
-    const agility = ctx.abilities?.agility ?? 0;
-    const baseEvasion = 10 + agility;
-    const critThreshold = critRangeBonus > 0 ? baseEvasion + 10 + critRangeBonus : undefined;
+    ).abilityRequirement;
+    const agilityRed = (item as Item & { agilityReduction?: number | undefined }).agilityReduction;
 
-    const armorMeta = metadataDetailSection(
-      buildArmorRequirementMetadataChips({ abilityRequirement: abilityReq, agilityReduction: agilityRed })
+    const { damageReduction, criticalRangeIncrease } = deriveArmorItemCombatStats(
+      item as ItemWithLibrarySource,
     );
-    const propertySection = propertiesProficienciesSection(propertyChips);
-    const detailSections = mergeDetailSections(armorMeta, propertySection ? [propertySection] : undefined);
+    const evasion = calculateEvasion(ctx.abilities?.agility ?? 0);
+    const critThreshold =
+      criticalRangeIncrease > 0
+        ? calculateCriticalRange(evasion, criticalRangeIncrease)
+        : undefined;
+
+    const propertySection = propertiesProficienciesSection(propertyChips, 'armor');
+    const detailSections = glrSurfaceDetailSections(
+      'character-sheet-armor',
+      {
+        ...sheetItemCostFacts(item, ctx),
+        abilityRequirement:
+          abilityReq?.name && abilityReq.level != null
+            ? { name: abilityReq.name, level: abilityReq.level }
+            : undefined,
+        agilityReduction: agilityRed,
+      },
+      propertySection ? [propertySection] : undefined,
+    );
 
     return {
       id,
       name: item.name,
       description: item.description,
+      thumbnail: resolveListRowThumbnail('equipment', item, item.name),
       columns: [
         {
           key: 'dr',
@@ -487,28 +668,34 @@ export function mapArmorRows(armor: Item[], ctx: LibraryEntityRowContext): Entit
       detailSections: detailSections.length > 0 ? detailSections : undefined,
       badges: needsProfBadge(ctx, { armor: [item] }),
       equipped: item.equipped,
-      leftSlot:
-        ctx.onToggleEquipArmor ? (
-          <EquipToggle
-            isEquipped={item.equipped || false}
-            onToggle={() => ctx.onToggleEquipArmor!(id)}
-            label={item.equipped ? 'Unequip' : 'Equip'}
-          />
-        ) : undefined,
+      leftSlot: ctx.onToggleEquipArmor ? (
+        <EquipToggle
+          isEquipped={item.equipped || false}
+          onToggle={() => ctx.onToggleEquipArmor!(id)}
+          label={item.equipped ? 'Unequip' : 'Equip'}
+        />
+      ) : undefined,
       onDelete:
         ctx.showLibraryEditControls && ctx.onRemoveArmor ? () => ctx.onRemoveArmor!(id) : undefined,
     };
   });
 }
 
-export function mapEquipmentRows(equipment: Item[], ctx: LibraryEntityRowContext): EntityEquipmentRow[] {
+export function mapEquipmentRows(
+  equipment: Item[],
+  ctx: LibraryEntityRowContext,
+): EntityEquipmentRow[] {
   return equipment.map((item, i) => {
     const itemId = item.id ?? item.name ?? i;
     const propertyChips = partDataToChips(
-      propertiesToPartData(resolveItemProperties(item as ItemWithLibrarySource), ctx.itemPropertiesDb)
+      propertiesToPartData(
+        resolveItemProperties(item as ItemWithLibrarySource),
+        ctx.itemPropertiesDb,
+      ),
     );
-    const propertySection = propertiesProficienciesSection(propertyChips);
+    const propertySection = propertiesProficienciesSection(propertyChips, 'item');
     const itemType = formatListCellLabel(item.type);
+    const itemCategory = (item as Item & { category?: string | undefined }).category;
     const qty = item.quantity ?? 1;
     const quantityStepper = ctx.onEquipmentQuantityChange ? (
       <div className="flex items-center justify-center" onClick={(e) => e.stopPropagation()}>
@@ -524,32 +711,25 @@ export function mapEquipmentRows(equipment: Item[], ctx: LibraryEntityRowContext
       qty
     );
 
-    const badges: EntityEquipmentRow['badges'] = [];
-    if (item.rarity && item.rarity !== 'common') {
-      const rarityColor =
-        item.rarity === 'legendary'
-          ? 'amber'
-          : item.rarity === 'epic'
-            ? 'purple'
-            : item.rarity === 'rare'
-              ? 'blue'
-              : 'green';
-      badges.push({ label: item.rarity.charAt(0).toUpperCase() + item.rarity.slice(1), color: rarityColor });
-    }
-    if (item.cost !== undefined && item.cost > 0) {
-      badges.push({ label: `${item.cost}g`, color: 'amber' });
-    }
+    const detailSections = glrSurfaceDetailSections(
+      'character-sheet-gear',
+      {
+        category: itemCategory,
+        ...sheetItemCostFacts(item, ctx),
+      },
+      propertySection ? [propertySection] : undefined,
+    );
 
     return {
       id: itemId,
       name: item.name,
       description: item.description,
+      thumbnail: resolveListRowThumbnail('equipment', item, item.name),
       columns: [
         { key: 'type', value: itemType, align: 'center' },
         { key: 'quantity', value: quantityStepper, align: 'center' },
       ],
-      detailSections: propertySection ? [propertySection] : undefined,
-      badges,
+      detailSections: detailSections.length > 0 ? detailSections : undefined,
       onDelete:
         ctx.showLibraryEditControls && ctx.onRemoveEquipment
           ? () => ctx.onRemoveEquipment!(itemId)

@@ -5,20 +5,37 @@
 
 'use client';
 
-import { useState, useEffect, useMemo, useCallback, useId } from 'react';
-import { useCodexFeats, useCodexSkills, type Feat, type Skill } from '@/hooks';
+import { useState, useMemo, useCallback, useId } from 'react';
+import { useCodexFeats, useCodexSkills, usePathListFilter, type Feat } from '@/hooks';
 import { checkFeatRequirements } from '@/lib/game/feat-requirements';
-import { buildFeatDetailSections } from '@/lib/codex/feat-list';
+import {
+  featFamilyIdsMatchingPath,
+  featPathChipNames,
+  featSelectColumns,
+  featSelectDetailSections,
+  featSelectHeaderColumns,
+  FEAT_SELECT_GRID_COLUMNS,
+} from '@/lib/codex/feat-list';
+import { buildSkillIdToName } from '@/lib/codex/skill-list';
 import { normalizeFeatAbilities } from '@/lib/codex/feat-ability';
-import { getFeatFamilyId, getFeatLevel, groupFeatFamilies, formatFeatName } from '@/lib/leveled-feats';
+import {
+  getFeatFamilyId,
+  getFeatLevel,
+  groupFeatFamilies,
+  formatFeatName,
+} from '@/lib/leveled-feats';
 import { Alert } from '@/components/ui';
-import { UnifiedSelectionModal, type SelectableItem } from '@/components/shared/unified-selection-modal';
+import {
+  UnifiedSelectionModal,
+  type SelectableItem,
+} from '@/components/patterns/select/unified-selection-modal';
+import { ArchetypePathFilter } from '@/components/patterns/filters';
+import { pathFilterEmptyTitle } from '@/lib/game/path-recommendation-index';
 import type { Character } from '@/types';
-import { formatListCellLabel } from '@/lib/utils';
 
 interface FeatModal extends Feat {
-  effect?: string;
-  max_uses?: number;
+  effect?: string | undefined;
+  max_uses?: number | undefined;
 }
 
 interface AddFeatModalProps {
@@ -35,26 +52,24 @@ function featToSelectableItem(
   familyLevels: FeatModal[],
   disabled: boolean,
   warningMessage: string | undefined,
-  skillIdToName: Map<string, string>
+  skillIdToName: Map<string, string>,
+  nameBadges?: { label: string }[],
+  showBadgesInName?: boolean,
 ): SelectableItem {
-  const detailSections = buildFeatDetailSections(feat, skillIdToName, familyLevels, {
+  const detailSections = featSelectDetailSections(feat, skillIdToName, familyLevels, {
     isCharacterFeat: feat.char_feat,
   });
 
-  const usesVal = feat.uses_per_rec ?? (feat as FeatModal).max_uses;
-  const usesDisplay = (usesVal === 0 || usesVal === undefined) ? '-' : String(usesVal);
   return {
     id: String(feat.id),
     name: formatFeatName(feat),
     description: feat.description || (feat as FeatModal).effect,
-    columns: [
-      { key: 'uses_per_rec', label: 'Uses', value: usesDisplay, align: 'center' as const },
-      { key: 'rec_period', label: 'Recovery', value: formatListCellLabel(feat.rec_period), align: 'center' as const },
-      { key: 'category', label: 'Category', value: formatListCellLabel(feat.category), align: 'center' as const },
-    ],
+    columns: featSelectColumns(feat),
     detailSections: detailSections.length > 0 ? detailSections : undefined,
     disabled,
     warningMessage: warningMessage || undefined,
+    badges: nameBadges,
+    showBadgesInName: Boolean(showBadgesInName && nameBadges?.length),
     data: feat,
   };
 }
@@ -87,26 +102,17 @@ export function AddFeatModal({
     }));
   }, [codexFeats]);
 
-  useEffect(() => {
-    if (isOpen) {
-      setSelectedCategory('');
-      setSelectedAbility('');
-      setShowStateFeats(false);
-      setShowBlocked(false);
-      setShowUpgradeableOnly(false);
-    }
-  }, [isOpen]);
+  const { selectedPathIds, setSelectedPathIds, pathIndex, pathRecommendedIds, pathFilterActive } =
+    usePathListFilter({ entities: feats, kind: 'feats', enabled: isOpen });
 
-  const skillIdToName = useMemo(() => {
-    const map = new Map<string, string>();
-    (codexSkills as Skill[]).forEach((s) => map.set(String(s.id), s.name));
-    return map;
-  }, [codexSkills]);
+  // Filter state seeds empty; parent remounts via key={featType} / conditional open.
+
+  const skillIdToName = useMemo(() => buildSkillIdToName(codexSkills), [codexSkills]);
 
   const { categories, abilities } = useMemo(() => {
     const cats = new Set<string>();
     const abils = new Set<string>();
-    feats.forEach(f => {
+    feats.forEach((f) => {
       if (featType === 'character' && !f.char_feat) return;
       if (featType === 'archetype' && f.char_feat) return;
       if (f.category) cats.add(f.category);
@@ -115,10 +121,13 @@ export function AddFeatModal({
     return { categories: Array.from(cats).sort(), abilities: Array.from(abils).sort() };
   }, [feats, featType]);
 
-  const checkRequirements = useCallback((feat: FeatModal): { meets: boolean; warning?: string } => {
-    const { met, reason } = checkFeatRequirements(feat, character, codexSkills, feats);
-    return { meets: met, warning: reason };
-  }, [character, codexSkills, feats]);
+  const checkRequirements = useCallback(
+    (feat: FeatModal): { meets: boolean; warning?: string | undefined } => {
+      const { met, reason } = checkFeatRequirements(feat, character, codexSkills, feats);
+      return { meets: met, warning: reason };
+    },
+    [character, codexSkills, feats],
+  );
 
   const ownedFamilyIds = useMemo(() => {
     const families = new Set<string>();
@@ -130,21 +139,28 @@ export function AddFeatModal({
   }, [existingFeatIds, feats]);
 
   const items = useMemo((): SelectableItem[] => {
-    const baseFiltered = feats
-      .filter(feat => {
-        if (featType === 'state') {
-          if (!feat.state_feat) return false;
-        } else if (featType === 'character' && !feat.char_feat) return false;
-        else if (featType === 'archetype' && feat.char_feat) return false;
-        // Id-only matching: leveled feats can share the same name.
-        if (existingFeatIds.includes(feat.id)) return false;
-        if (featType !== 'state' && !showStateFeats && feat.state_feat) return false;
-        const { meets } = checkRequirements(feat);
-        if (!meets && !showBlocked) return false;
-        if (selectedCategory && feat.category !== selectedCategory) return false;
-        if (selectedAbility && !normalizeFeatAbilities(feat.ability).includes(selectedAbility)) return false;
-        return true;
-      });
+    const typeFiltered = feats.filter((feat) => {
+      if (featType === 'state') return Boolean(feat.state_feat);
+      if (featType === 'character') return Boolean(feat.char_feat);
+      return !feat.char_feat;
+    });
+    const pathFamilyIds = featFamilyIdsMatchingPath(typeFiltered, pathRecommendedIds);
+    const typedLevelsByFamily = new Map(
+      groupFeatFamilies(typeFiltered).map((family) => [family.familyId, family.levels]),
+    );
+
+    const baseFiltered = typeFiltered.filter((feat) => {
+      if (existingFeatIds.includes(feat.id)) return false;
+      if (featType !== 'state' && !showStateFeats && feat.state_feat) return false;
+      const { meets } = checkRequirements(feat);
+      if (!meets && !showBlocked) return false;
+      if (selectedCategory && feat.category !== selectedCategory) return false;
+      if (selectedAbility && !normalizeFeatAbilities(feat.ability).includes(selectedAbility)) {
+        return false;
+      }
+      if (pathFamilyIds && !pathFamilyIds.has(getFeatFamilyId(feat))) return false;
+      return true;
+    });
 
     const families = groupFeatFamilies(baseFiltered);
     const existingFeatIdSet = new Set(existingFeatIds.map((id) => String(id)));
@@ -158,76 +174,125 @@ export function AddFeatModal({
           .sort((a, b) => getFeatLevel(b) - getFeatLevel(a));
         if (selectableLevels.length === 0) return null;
         const displayFeat = selectableLevels[0];
+        if (!displayFeat) return null;
         const { meets, warning } = checkRequirements(displayFeat);
-        return featToSelectableItem(displayFeat, levels, !meets && !showBlocked, warning, skillIdToName);
+        const pathLabels = pathFilterActive
+          ? featPathChipNames(pathIndex, displayFeat, selectedPathIds)
+          : [];
+        return featToSelectableItem(
+          displayFeat,
+          typedLevelsByFamily.get(familyId) ?? levels,
+          !meets && !showBlocked,
+          warning,
+          skillIdToName,
+          pathLabels.map((label) => ({ label })),
+          Boolean(pathLabels.length),
+        );
       })
       .filter((item): item is SelectableItem => item !== null);
-  }, [feats, featType, existingFeatIds, showStateFeats, showBlocked, showUpgradeableOnly, ownedFamilyIds, selectedCategory, selectedAbility, checkRequirements, skillIdToName]);
+  }, [
+    feats,
+    featType,
+    existingFeatIds,
+    showStateFeats,
+    showBlocked,
+    showUpgradeableOnly,
+    ownedFamilyIds,
+    selectedCategory,
+    selectedAbility,
+    checkRequirements,
+    skillIdToName,
+    pathFilterActive,
+    pathIndex,
+    selectedPathIds,
+    pathRecommendedIds,
+  ]);
 
   const error = queryError ? `Failed to load feats: ${queryError.message}` : null;
 
   const filterContent = (
-    <div className="flex flex-wrap items-center gap-3">
-      <div className="flex items-center gap-2">
-        <label htmlFor={categorySelectId} className="text-sm text-text-muted dark:text-text-secondary">Category:</label>
-        <select
-          id={categorySelectId}
-          value={selectedCategory}
-          onChange={(e) => setSelectedCategory(e.target.value)}
-          className="text-sm px-2 py-1 rounded-lg border border-border-light bg-surface text-text-primary focus:outline-none focus:ring-2 focus:ring-primary-outline-border"
-        >
-          <option value="">All</option>
-          {categories.map(cat => <option key={cat} value={cat}>{cat}</option>)}
-        </select>
-      </div>
-      <div className="flex items-center gap-2">
-        <label htmlFor={abilitySelectId} className="text-sm text-text-muted dark:text-text-secondary">Ability:</label>
-        <select
-          id={abilitySelectId}
-          value={selectedAbility}
-          onChange={(e) => setSelectedAbility(e.target.value)}
-          className="text-sm px-2 py-1 rounded-lg border border-border-light bg-surface text-text-primary focus:outline-none focus:ring-2 focus:ring-primary-outline-border"
-        >
-          <option value="">All</option>
-          {abilities.map(abil => <option key={abil} value={abil}>{abil}</option>)}
-        </select>
-      </div>
-      <label className="flex items-center gap-2 text-sm text-text-muted dark:text-text-secondary">
-        <input
-          type="checkbox"
-          checked={showStateFeats}
-          onChange={(e) => setShowStateFeats(e.target.checked)}
-          className="rounded border-border-light"
-        />
-        Show state feats
-      </label>
-      <label className="flex items-center gap-2 text-sm text-text-muted dark:text-text-secondary">
-        <input
-          type="checkbox"
-          checked={showBlocked}
-          onChange={(e) => setShowBlocked(e.target.checked)}
-          className="rounded border-border-light"
-        />
-        Show blocked
-      </label>
-      {featType !== 'state' && (
-        <label className="flex items-center gap-2 text-sm text-text-muted dark:text-text-secondary">
+    <div className="space-y-3">
+      <div className="flex flex-wrap items-center gap-3">
+        <div className="flex items-center gap-2">
+          <label htmlFor={categorySelectId} className="text-sm text-text-secondary">
+            Category:
+          </label>
+          <select
+            id={categorySelectId}
+            value={selectedCategory}
+            onChange={(e) => setSelectedCategory(e.target.value)}
+            className="rounded-lg border border-border-light bg-surface px-2 py-1 text-sm text-text-primary focus:ring-2 focus:ring-primary-outline-border focus:outline-none"
+          >
+            <option value="">All</option>
+            {categories.map((cat) => (
+              <option key={cat} value={cat}>
+                {cat}
+              </option>
+            ))}
+          </select>
+        </div>
+        <div className="flex items-center gap-2">
+          <label htmlFor={abilitySelectId} className="text-sm text-text-secondary">
+            Ability:
+          </label>
+          <select
+            id={abilitySelectId}
+            value={selectedAbility}
+            onChange={(e) => setSelectedAbility(e.target.value)}
+            className="rounded-lg border border-border-light bg-surface px-2 py-1 text-sm text-text-primary focus:ring-2 focus:ring-primary-outline-border focus:outline-none"
+          >
+            <option value="">All</option>
+            {abilities.map((abil) => (
+              <option key={abil} value={abil}>
+                {abil}
+              </option>
+            ))}
+          </select>
+        </div>
+        <label className="flex items-center gap-2 text-sm text-text-secondary">
           <input
             type="checkbox"
-            checked={showUpgradeableOnly}
-            onChange={(e) => setShowUpgradeableOnly(e.target.checked)}
+            checked={showStateFeats}
+            onChange={(e) => setShowStateFeats(e.target.checked)}
             className="rounded border-border-light"
           />
-          Owned feats (can level up)
+          Show state feats
         </label>
-      )}
+        <label className="flex items-center gap-2 text-sm text-text-secondary">
+          <input
+            type="checkbox"
+            checked={showBlocked}
+            onChange={(e) => setShowBlocked(e.target.checked)}
+            className="rounded border-border-light"
+          />
+          Show blocked
+        </label>
+        {featType !== 'state' && (
+          <label className="flex items-center gap-2 text-sm text-text-secondary">
+            <input
+              type="checkbox"
+              checked={showUpgradeableOnly}
+              onChange={(e) => setShowUpgradeableOnly(e.target.checked)}
+              className="rounded border-border-light"
+            />
+            Owned feats (can level up)
+          </label>
+        )}
+      </div>
+      <div className="grid grid-cols-1 items-start gap-4 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+        <ArchetypePathFilter
+          options={pathIndex.options}
+          selectedPathIds={selectedPathIds}
+          onChange={setSelectedPathIds}
+        />
+      </div>
     </div>
   );
 
   return (
     <>
       {error && isOpen && (
-        <Alert variant="danger" className="fixed top-4 left-1/2 -translate-x-1/2 z-toast max-w-md">
+        <Alert variant="danger" className="fixed top-4 left-1/2 z-toast max-w-md -translate-x-1/2">
           {error}
         </Alert>
       )}
@@ -235,25 +300,39 @@ export function AddFeatModal({
         isOpen={isOpen}
         onClose={onClose}
         title={`Add ${featType === 'state' ? 'State' : featType === 'archetype' ? 'Archetype' : 'Character'} Feat`}
-        description="Select feats to add to your character. Feats are filtered by your level and requirements. Click a row (or the + button) to select, then click Add Selected."
+        description="Filtered by your level and requirements."
         items={items}
         isLoading={loading}
-        onConfirm={(selected) => onAdd(selected.map(i => i.data as FeatModal))}
-        columns={[
-          { key: 'name', label: 'Name' },
-          { key: 'uses_per_rec', label: 'Uses' },
-          { key: 'rec_period', label: 'Recovery' },
-          { key: 'category', label: 'Category' },
-        ]}
-        gridColumns="1.5fr 0.6fr 0.6fr 0.8fr"
+        onConfirm={(selected) => onAdd(selected.map((i) => i.data as FeatModal))}
+        columns={featSelectHeaderColumns()}
+        gridColumns={FEAT_SELECT_GRID_COLUMNS}
         itemLabel="feat"
-        emptyMessage={error ?? 'No feats match your filters.'}
+        emptyMessage={
+          error ??
+          (pathFilterActive ? pathFilterEmptyTitle('feats') : 'No feats match your filters.')
+        }
         searchPlaceholder="Search feats by name, description, or tags..."
         filterContent={filterContent}
         showFilters={true}
+        optionsActiveCount={
+          (selectedCategory ? 1 : 0) +
+          (selectedAbility ? 1 : 0) +
+          (showStateFeats ? 1 : 0) +
+          (showBlocked ? 1 : 0) +
+          (featType !== 'state' && showUpgradeableOnly ? 1 : 0) +
+          (pathFilterActive ? 1 : 0)
+        }
+        optionsSummary={
+          [
+            selectedCategory && `Category: ${selectedCategory}`,
+            selectedAbility && `Ability: ${selectedAbility}`,
+          ]
+            .filter(Boolean)
+            .join(' · ') || undefined
+        }
         hideDisabled={false}
         size="xl"
-        className="max-h-[85vh]"
+        className="md:max-h-[85vh]"
       />
     </>
   );

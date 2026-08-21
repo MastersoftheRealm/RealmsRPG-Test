@@ -25,6 +25,16 @@ Open [http://localhost:3000](http://localhost:3000) with your browser to see the
 
 You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
 
+## Pre-commit hooks
+
+After `npm install`, Husky runs `lint-staged` on every commit: staged `*.{js,jsx,mjs,cjs,ts,tsx}` files get ESLint (`--max-warnings 0`) then Prettier; staged CSS/JSON get Prettier (TASK-772). Markdown, SQL dumps, lockfile, and `data/` are ignored.
+
+A **pre-push** hook then runs `npm run typecheck` and `npm test` on the whole project. The previous per-commit scoped typecheck was removed because it was unsound — its temporary `tsconfig` included only the staged files, so a changed type's *consumers* went unchecked. Whole-project checks on push cost a few seconds and actually catch that.
+
+- Bypass pre-commit once (emergency only): `git commit --no-verify`
+- Bypass pre-push once (emergency only): `REALMS_SKIP_PREPUSH=1 git push`
+- Run the same checks manually: `npx lint-staged`, `npm run typecheck`, `npm test`
+
 This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
 
 ## Learn More

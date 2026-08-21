@@ -4,6 +4,17 @@
  * Centralized string manipulation functions
  */
 
+import { normalizeFeatAbilities } from '@/lib/codex/feat-ability';
+
+/**
+ * Truncate text to maxLength with ellipsis (list row descriptions).
+ */
+export function truncateText(text: string | undefined, maxLength: number): string {
+  if (!text) return '';
+  if (text.length <= maxLength) return text;
+  return text.substring(0, maxLength).trim() + '...';
+}
+
 /**
  * Capitalize the first letter of a string.
  */
@@ -89,13 +100,11 @@ export function formatListCellLabel(value: unknown): string {
 }
 
 /**
- * Safely format a damage value for display.
- * Handles both string damage values and damage objects.
- * Prevents React Error #31 (objects as children).
+ * Item damage display SoT (string, `{ amount, size, type }`, or array of those).
+ * Capitalizes the damage type. Prevents React Error #31 (objects as children).
+ * Item-calc `deriveItemDisplay` delegates here — do not add a second join.
  */
-export function formatDamageDisplay(
-  damage: unknown
-): string {
+export function formatDamageDisplay(damage: unknown): string {
   // Already a string — capitalize damage type (e.g. "2d6 slashing" → "2d6 Slashing")
   if (typeof damage === 'string') {
     const trimmed = damage.trim();
@@ -107,10 +116,10 @@ export function formatDamageDisplay(
     }
     return trimmed;
   }
-  
+
   // Null/undefined
   if (damage == null) return '';
-  
+
   // Single damage object: { amount, size, type }
   if (typeof damage === 'object' && !Array.isArray(damage)) {
     const d = damage as Record<string, unknown>;
@@ -125,7 +134,7 @@ export function formatDamageDisplay(
   if (Array.isArray(damage)) {
     const formatted = damage
       .filter((d): d is Record<string, unknown> => d && typeof d === 'object')
-      .map(d => {
+      .map((d) => {
         if (d.amount && d.size) {
           const typeStr = d.type && d.type !== 'none' ? ` ${capitalize(String(d.type))}` : '';
           return `${d.amount}d${d.size}${typeStr}`;
@@ -140,6 +149,30 @@ export function formatDamageDisplay(
 }
 
 /**
+ * Split a damage display into dice / type / full roll string for list cells and roll buttons.
+ * Canonical helper — do not fork in sheet/library/quick-armament modules.
+ */
+export function splitDamageDiceAndType(damage: unknown): {
+  dice: string;
+  type: string;
+  rollStr: string;
+} {
+  if (!damage) return { dice: '-', type: '', rollStr: '-' };
+  if (typeof damage === 'string') {
+    const str = damage.trim();
+    const match = str.match(/^([\dd+\-\s]+)(?:\s+(.+))?$/);
+    if (!match) return { dice: str, type: '', rollStr: str };
+    return { dice: (match[1] ?? str).trim(), type: (match[2] ?? '').trim(), rollStr: str };
+  }
+  const formatted = formatDamageDisplay(damage);
+  const str = formatted ? String(formatted).trim() : '';
+  if (!str) return { dice: '-', type: '', rollStr: '-' };
+  const match = str.match(/^([\dd+\-\s]+)(?:\s+(.+))?$/);
+  if (!match) return { dice: str, type: '', rollStr: str };
+  return { dice: (match[1] ?? str).trim(), type: (match[2] ?? '').trim(), rollStr: str };
+}
+
+/**
  * Normalize range display for consistent spacing and casing across list/detail/library views (TASK-290).
  * Trims, collapses multiple spaces to one, and standardizes "Spaces"/"Space" to lowercase.
  */
@@ -150,7 +183,16 @@ export function normalizeRangeDisplay(range: string | number | null | undefined)
   return s.replace(/\bSpaces\b/g, 'spaces').replace(/\bSpace\b/g, 'space');
 }
 
-import { normalizeFeatAbilities } from '@/lib/codex/feat-ability';
+/**
+ * Compact an already-resolved weapon range for dense table cells ("16 spaces" → "16 sp").
+ * Callers with properties should use `formatWeaponRangeDisplayCompact` from item-calc first.
+ */
+export function compactResolvedWeaponRange(resolved: string): string {
+  if (!resolved || /^melee$/i.test(resolved)) return 'Melee';
+  const match = resolved.match(/^(\d+(?:\.\d+)?)\s*(?:spaces?|sp)?$/i);
+  if (match) return `${match[1]} sp`;
+  return resolved.replace(/\bspaces?\b/gi, 'sp');
+}
 
 /**
  * Format feat ability (sorting) for list display: "Strength, Intelligence" etc.

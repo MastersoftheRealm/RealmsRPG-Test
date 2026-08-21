@@ -5,19 +5,19 @@ import { Button } from '@/components/ui';
 import { cn } from '@/lib/utils';
 
 export interface CreatorStepFooterProps {
-  onBack?: () => void;
-  onContinue?: () => void;
-  continueLabel?: string;
-  backLabel?: string;
-  continueDisabled?: boolean;
-  backDisabled?: boolean;
+  onBack?: (() => void) | undefined;
+  onContinue?: (() => void) | undefined;
+  continueLabel?: string | undefined;
+  backLabel?: string | undefined;
+  continueDisabled?: boolean | undefined;
+  backDisabled?: boolean | undefined;
   /** Replaces the default Continue button (e.g. Create Character). */
-  primaryAction?: ReactNode;
+  primaryAction?: ReactNode | undefined;
   /** Optional completion indicator shown between Back and Continue (e.g. "2 / 3 feats"). */
-  completionHint?: ReactNode;
+  completionHint?: ReactNode | undefined;
   /** `inline` = button row only (parent provides surrounding chrome). */
-  variant?: 'sticky' | 'inline';
-  className?: string;
+  variant?: 'sticky' | 'inline' | undefined;
+  className?: string | undefined;
 }
 
 /**
@@ -41,29 +41,20 @@ export function CreatorStepFooter({
   const actions = (
     <>
       {onBack ? (
-        <Button
-          variant="secondary"
-          onClick={onBack}
-          disabled={backDisabled}
-          className="min-h-11 min-w-11"
-        >
+        <Button variant="secondary" onClick={onBack} disabled={backDisabled}>
           {backLabel}
         </Button>
       ) : !soloPrimary ? (
         <span />
       ) : null}
       {completionHint && (
-        <div className="hidden sm:flex items-center text-sm text-text-secondary self-center mx-auto">
+        <div className="mx-auto hidden items-center self-center text-sm text-text-secondary sm:flex">
           {completionHint}
         </div>
       )}
       {primaryAction ??
         (onContinue ? (
-          <Button
-            onClick={onContinue}
-            disabled={continueDisabled}
-            className="min-h-11 min-w-11"
-          >
+          <Button size="lg" onClick={onContinue} disabled={continueDisabled}>
             {continueLabel}
           </Button>
         ) : null)}
@@ -71,25 +62,21 @@ export function CreatorStepFooter({
   );
 
   if (variant === 'inline') {
-    return (
-      <div className={cn('flex justify-between gap-4 w-full', className)}>
-        {actions}
-      </div>
-    );
+    return <div className={cn('flex w-full justify-between gap-4', className)}>{actions}</div>;
   }
 
   return (
     <div
       data-testid="creator-step-footer"
       className={cn(
-        'fixed bottom-0 inset-x-0 z-30 pointer-events-none px-4 sm:px-6 lg:px-8 pb-4 pt-2',
-        className
+        'pointer-events-none fixed inset-x-0 bottom-0 z-30 px-4 pt-2 pb-4 sm:px-6 lg:px-8',
+        className,
       )}
     >
       <div
         className={cn(
-          'mx-auto max-w-[var(--container-wide)] lg:px-24 flex gap-4 pointer-events-auto',
-          soloPrimary ? 'justify-end' : 'justify-between'
+          'pointer-events-auto mx-auto flex max-w-[var(--container-wide)] gap-4 lg:px-24',
+          soloPrimary ? 'justify-end' : 'justify-between',
         )}
       >
         {actions}

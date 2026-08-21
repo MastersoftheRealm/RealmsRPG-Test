@@ -21,7 +21,10 @@ function areEqual(a: unknown, b: unknown): boolean {
  * Builds a compact top-level diff for quick list display.
  * Full snapshots are still persisted in before_data/after_data.
  */
-export function computeChangedFields(beforeData: JsonLike, afterData: JsonLike): Record<string, unknown>[] {
+export function computeChangedFields(
+  beforeData: JsonLike,
+  afterData: JsonLike,
+): Record<string, unknown>[] {
   const before = beforeData ?? {};
   const after = afterData ?? {};
   const keys = new Set<string>([...Object.keys(before), ...Object.keys(after)]);
@@ -54,7 +57,16 @@ export async function recordCodexChange(input: RecordCodexChangeInput): Promise<
     changed_fields: changedFields,
   });
 
+  // Never throw: the audit trail must not be able to fail a mutation that already
+  // succeeded. Throwing here made createCodexDoc report failure after the entity was
+  // written, so a retry allocated a new id and produced a duplicate official entity.
+  // Callers treat changelog loss as a logged warning, matching the admin role-update path.
   if (error) {
-    throw new Error(`Failed to write codex changelog: ${error.message}`);
+    console.error('[codex-changelog] Failed to write changelog entry:', {
+      entityType: input.entityType,
+      entityId: input.entityId,
+      operation: input.operation,
+      message: error.message,
+    });
   }
 }

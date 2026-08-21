@@ -1,5 +1,16 @@
-import type { UserItem, UserPower, UserTechnique, LibraryPower, LibraryTechnique, LibraryItem } from '@/types/library';
-import { normalizePublicItem, normalizePublicPower, normalizePublicTechnique } from './normalize-public';
+import type {
+  UserItem,
+  UserPower,
+  UserTechnique,
+  LibraryPower,
+  LibraryTechnique,
+  LibraryItem,
+} from '@/types/library';
+import {
+  normalizePublicItem,
+  normalizePublicPower,
+  normalizePublicTechnique,
+} from './normalize-public';
 import type { AddLibraryItemType, EqItem, WithSource } from './types';
 
 export interface RawItemsInput {
@@ -7,7 +18,15 @@ export interface RawItemsInput {
   userPowers: UserPower[];
   userTechniques: UserTechnique[];
   userItems: UserItem[];
-  codexEquipment: Array<{ id: string; name?: string; description?: string; damage?: unknown; armor_value?: number; properties?: string[]; type?: string }>;
+  codexEquipment: Array<{
+    id: string;
+    name?: string | undefined;
+    description?: string | undefined;
+    damage?: unknown | undefined;
+    armor_value?: number | undefined;
+    properties?: string[] | undefined;
+    type?: string | undefined;
+  }>;
   publicPowers: LibraryPower[];
   publicTechniques: LibraryTechnique[];
   publicItems: LibraryItem[];
@@ -22,19 +41,34 @@ export interface RawItemsInput {
   };
 }
 
-export function loadRawItemsForType(input: RawItemsInput): { rawItems: unknown[]; isLoading: boolean } {
+export function loadRawItemsForType(input: RawItemsInput): {
+  rawItems: unknown[];
+  isLoading: boolean;
+} {
   const { itemType, loading } = input;
 
   switch (itemType) {
     case 'power': {
       const my = input.userPowers.map((i): WithSource<UserPower> => ({ ...i, _source: 'my' }));
-      const pub = input.publicPowers.map((p): WithSource<UserPower> => ({ ...normalizePublicPower(p), _source: 'public' }));
-      return { rawItems: [...my, ...pub], isLoading: loading.powersLoading || loading.publicPowersLoading };
+      const pub = input.publicPowers.map(
+        (p): WithSource<UserPower> => ({ ...normalizePublicPower(p), _source: 'public' }),
+      );
+      return {
+        rawItems: [...my, ...pub],
+        isLoading: loading.powersLoading || loading.publicPowersLoading,
+      };
     }
     case 'technique': {
-      const my = input.userTechniques.map((i): WithSource<UserTechnique> => ({ ...i, _source: 'my' }));
-      const pub = input.publicTechniques.map((t): WithSource<UserTechnique> => ({ ...normalizePublicTechnique(t), _source: 'public' }));
-      return { rawItems: [...my, ...pub], isLoading: loading.techniquesLoading || loading.publicTechniquesLoading };
+      const my = input.userTechniques.map(
+        (i): WithSource<UserTechnique> => ({ ...i, _source: 'my' }),
+      );
+      const pub = input.publicTechniques.map(
+        (t): WithSource<UserTechnique> => ({ ...normalizePublicTechnique(t), _source: 'public' }),
+      );
+      return {
+        rawItems: [...my, ...pub],
+        isLoading: loading.techniquesLoading || loading.publicTechniquesLoading,
+      };
     }
     case 'weapon': {
       const my = input.userItems
@@ -42,8 +76,16 @@ export function loadRawItemsForType(input: RawItemsInput): { rawItems: unknown[]
         .map((i): WithSource<UserItem> => ({ ...i, _source: 'my' }));
       const pub = input.publicItems
         .filter((i) => (i.type || '').toString().toLowerCase() === 'weapon')
-        .map((i): WithSource<UserItem> => ({ ...normalizePublicItem(i) as UserItem, _source: 'public' }));
-      return { rawItems: [...my, ...pub], isLoading: loading.itemsLoading || loading.publicItemsLoading };
+        .map(
+          (i): WithSource<UserItem> => ({
+            ...(normalizePublicItem(i) as UserItem),
+            _source: 'public',
+          }),
+        );
+      return {
+        rawItems: [...my, ...pub],
+        isLoading: loading.itemsLoading || loading.publicItemsLoading,
+      };
     }
     case 'armor': {
       const my = input.userItems
@@ -51,8 +93,16 @@ export function loadRawItemsForType(input: RawItemsInput): { rawItems: unknown[]
         .map((i): WithSource<UserItem> => ({ ...i, _source: 'my' }));
       const pub = input.publicItems
         .filter((i) => (i.type || '').toString().toLowerCase() === 'armor')
-        .map((i): WithSource<UserItem> => ({ ...normalizePublicItem(i) as UserItem, _source: 'public' }));
-      return { rawItems: [...my, ...pub], isLoading: loading.itemsLoading || loading.publicItemsLoading };
+        .map(
+          (i): WithSource<UserItem> => ({
+            ...(normalizePublicItem(i) as UserItem),
+            _source: 'public',
+          }),
+        );
+      return {
+        rawItems: [...my, ...pub],
+        isLoading: loading.itemsLoading || loading.publicItemsLoading,
+      };
     }
     case 'shield': {
       const my = input.userItems
@@ -60,13 +110,25 @@ export function loadRawItemsForType(input: RawItemsInput): { rawItems: unknown[]
         .map((i): WithSource<UserItem> => ({ ...i, _source: 'my' }));
       const pub = input.publicItems
         .filter((i) => (i.type || '').toString().toLowerCase() === 'shield')
-        .map((i): WithSource<UserItem> => ({ ...normalizePublicItem(i) as UserItem, _source: 'public' }));
-      return { rawItems: [...my, ...pub], isLoading: loading.itemsLoading || loading.publicItemsLoading };
+        .map(
+          (i): WithSource<UserItem> => ({
+            ...(normalizePublicItem(i) as UserItem),
+            _source: 'public',
+          }),
+        );
+      return {
+        rawItems: [...my, ...pub],
+        isLoading: loading.itemsLoading || loading.publicItemsLoading,
+      };
     }
     case 'equipment': {
-      const codexEquip = input.codexEquipment.filter((e) => (e.type || 'equipment') === 'equipment');
+      const codexEquip = input.codexEquipment.filter(
+        (e) => (e.type || 'equipment') === 'equipment',
+      );
       const userEquip = input.userItems.filter((i) => (i.type || '').toLowerCase() === 'equipment');
-      const publicEquip = input.publicItems.filter((i) => (i.type || 'equipment').toString().toLowerCase() === 'equipment').map(normalizePublicItem);
+      const publicEquip = input.publicItems
+        .filter((i) => (i.type || 'equipment').toString().toLowerCase() === 'equipment')
+        .map(normalizePublicItem);
       const merged: WithSource<EqItem>[] = [
         ...codexEquip.map(
           (e): WithSource<EqItem> => ({
@@ -77,7 +139,7 @@ export function loadRawItemsForType(input: RawItemsInput): { rawItems: unknown[]
             armorValue: e.armor_value,
             properties: e.properties ?? [],
             _source: 'public',
-          })
+          }),
         ),
         ...userEquip.map(
           (i): WithSource<EqItem> => ({
@@ -88,7 +150,7 @@ export function loadRawItemsForType(input: RawItemsInput): { rawItems: unknown[]
             armorValue: i.armorValue,
             properties: (i.properties || []) as EqItem['properties'],
             _source: 'my',
-          })
+          }),
         ),
         ...publicEquip.map(
           (i): WithSource<EqItem> => ({
@@ -99,7 +161,7 @@ export function loadRawItemsForType(input: RawItemsInput): { rawItems: unknown[]
             armorValue: (i as UserItem).armorValue,
             properties: ((i as UserItem).properties || []) as EqItem['properties'],
             _source: 'public',
-          })
+          }),
         ),
       ];
       return {
@@ -125,7 +187,11 @@ export function loadEmpoweredRawItems(input: {
   ];
   const seen = new Set<string>();
   return merged.filter((technique) => {
-    const id = String((technique as { docId?: string; id?: string }).docId ?? (technique as { id?: string }).id ?? '');
+    const id = String(
+      (technique as { docId?: string | undefined; id?: string | undefined }).docId ??
+        (technique as { id?: string | undefined }).id ??
+        '',
+    );
     if (!id || seen.has(id)) return false;
     seen.add(id);
     return true;

@@ -2,1408 +2,277 @@
  * Power Creator Page
  * ==================
  * Tool for creating custom powers using the power parts system.
- * 
+ *
  * Features:
  * - Select power parts from Codex API (Supabase)
  * - Configure option levels for each part
  * - Calculate energy and training point costs
  * - Save to user's library (Supabase)
+ *
+ * Structure (TASK-381): bootstrap gate in Content → workspace shell here →
+ * state in use-power-creator-workspace → editor islands in power-creator-editor.
  */
 
 'use client';
 
-import { useState, useMemo, useCallback, useEffect, useRef, Suspense } from 'react';
+import { useState, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
-import Link from 'next/link';
-import { Plus, Wand2, Zap, Target, Info, Trash2 } from 'lucide-react';
-import { cn } from '@/lib/utils';
+import { Wand2, Zap, Target } from 'lucide-react';
 import {
   usePowerParts,
-  useUserItems,
-  useItemProperties,
   useAdmin,
-  useCreatorSave,
   useLoadModalLibrary,
-  useOfficialLibrary,
-  useCreatorWeaponOptions,
   type PowerPart,
-  type CreatorWeaponOption,
+  type UseLoadModalLibraryReturn,
 } from '@/hooks';
 import { useAuthStore } from '@/stores';
-import { LoginPromptModal, ConfirmActionModal, ErrorDisplay } from '@/components/shared';
-import { CreatorSaveToolbar, CreatorLayout, CreatorWeaponPicker, AdvancedCalculationsPanel } from '@/components/creator';
-import { LoadingState, Checkbox, Button, Input, Textarea, Alert, PageContainer, Card } from '@/components/ui';
-import { LoadFromLibraryModal } from '@/components/creator/LoadFromLibraryModal';
-import { SourceFilter } from '@/components/shared/filters/source-filter';
-import type { SourceFilterValue } from '@/components/shared/filters/source-filter';
-import { ValueStepper, SectionCostBadge } from '@/components/shared';
-import { CreatorSummaryPanel, CollapsibleSection } from '@/components/creator';
+import { SourceFilter, sourceFilterSummary } from '@/components/patterns/filters/source-filter';
 import {
-  calculatePowerCosts,
-  computePowerActionTypeFromSelection,
-  buildMechanicParts,
-  deriveRange,
-  deriveArea,
-  deriveDuration,
-  formatPowerRangeFromSteps,
-  getAreaPartForDisplay,
-  formatAreaForDisplay,
-  type PowerPartPayload,
-  type AreaConfig,
-  type DurationConfig,
-} from '@/lib/calculators';
-import { PART_IDS, findByIdOrName } from '@/lib/id-constants';
+  CreatorPageShell,
+  AdvancedCalculationsPanel,
+  CreatorSummaryPanel,
+} from '@/components/creator';
+import { LoadingState } from '@/components/ui';
 import {
-  ACTION_OPTIONS,
-  POWER_DAMAGE_TYPES as DAMAGE_TYPES,
-  DIE_SIZES,
-  AREA_TYPES,
-  DURATION_TYPES,
-  DURATION_VALUES,
-} from '@/lib/game/creator-constants';
-import { formatDurationFromTypeAndValue } from '@/lib/utils/duration';
-import type { SelectedPart, AdvancedPart, DamageConfig, RangeConfig } from './power-creator-types';
-import { POWER_CREATOR_CACHE_KEY, ADVANCED_CATEGORIES, EXCLUDED_PARTS } from './power-creator-constants';
-import { PowerPartCard } from '@/components/creator';
-import { shouldPersistCreatorWeaponId } from '@/lib/creator-weapon-persistence';
-
-// =============================================================================
-// Main Component
-// =============================================================================
-
-// Cache interface for localStorage
-interface PowerCreatorCache {
-  name: string;
-  description: string;
-  selectedParts: Array<{
-    partId: string | number;
-    op_1_lvl: number;
-    op_2_lvl: number;
-    op_3_lvl: number;
-    applyDuration: boolean;
-    selectedCategory: string;
-  }>;
-  selectedAdvancedParts: Array<{
-    partId: string | number;
-    op_1_lvl: number;
-    op_2_lvl: number;
-    op_3_lvl: number;
-    applyDuration: boolean;
-  }>;
-  actionType: string;
-  isReaction: boolean;
-  damage: DamageConfig | DamageConfig[];
-  range: RangeConfig;
-  area: AreaConfig;
-  duration: DurationConfig;
-  weaponId: string | number;
-  timestamp: number;
-}
-
-const DEFAULT_WEAPON_OPTIONS: CreatorWeaponOption[] = [
-  { id: 0, name: 'Unarmed Prowess', tp: 0, weaponLibrary: 'builtin' },
-];
+  bootstrapPowerCreatorFormState,
+  type PowerCreatorFormState,
+  type PowerLibraryRecord,
+} from './power-creator-bootstrap';
+import { PowerCreatorEditor } from './power-creator-editor';
+import { usePowerCreatorWorkspace } from './use-power-creator-workspace';
+import { PowerCreatorHelp } from './power-creator-help';
 
 function PowerCreatorContent() {
   const { user } = useAuthStore();
   const { isAdmin } = useAdmin();
   const searchParams = useSearchParams();
   const editPowerId = searchParams.get('edit');
-  const editLoadedRef = useRef(false);
-  
-  // State
-  const [isInitialized, setIsInitialized] = useState(false);
-  const [showLoginPrompt, setShowLoginPrompt] = useState(false);
-  const [name, setName] = useState('');
-  const [description, setDescription] = useState('');
-  const [selectedParts, setSelectedParts] = useState<SelectedPart[]>([]);
-  const [selectedAdvancedParts, setSelectedAdvancedParts] = useState<AdvancedPart[]>([]);
-  const [actionType, setActionType] = useState('basic');
-  const [isReaction, setIsReaction] = useState(false);
-  const [damages, setDamages] = useState<DamageConfig[]>([{ amount: 0, size: 6, type: 'none', applyDuration: false }]);
-  const damage = damages[0] ?? { amount: 0, size: 6, type: 'none' };
-  // Range state (0 = melee/1 space, 1+ = ranged increments)
-  const [range, setRange] = useState<RangeConfig>({ steps: 0 });
-  // Area of effect state
-  const [area, setArea] = useState<AreaConfig>({ type: 'none', level: 1, applyDuration: false });
-  // Duration state
-  const [duration, setDuration] = useState<DurationConfig>({
-    type: 'instant',
-    value: 1,
-    applyDuration: false,
-    focus: false,
-    noHarm: false,
-    endsOnActivation: false,
-    sustain: 0,
-  });
-  const [weapon, setWeapon] = useState<CreatorWeaponOption>(DEFAULT_WEAPON_OPTIONS[0]);
-  const [weaponLibrarySource, setWeaponLibrarySource] = useState<SourceFilterValue>('my');
   const load = useLoadModalLibrary('power');
 
-  // Fetch power parts
   const { data: powerParts = [], isLoading, error, refetch } = usePowerParts();
-  const { data: userItems = [] } = useUserItems();
-  const { data: itemPropertiesDb = [] } = useItemProperties();
-  const { data: officialItems = [] } = useOfficialLibrary('items');
 
-  const { fullOptions: allWeaponOptions, visibleOptions } = useCreatorWeaponOptions({
-    defaults: DEFAULT_WEAPON_OPTIONS,
-    userItems,
-    officialWeaponItems: officialItems,
-    itemPropertiesDb,
-    librarySource: weaponLibrarySource,
-  });
+  const sessionKey = editPowerId ?? 'draft';
+  // Settle when the parts query finishes (empty/error OK — shell chrome must still
+  // render for chrome audits / offline-less CI). In ?edit= mode also wait for library.
+  const bootstrapReady = !isLoading && (!editPowerId || !load.isLoading);
 
-  // Load cached state from localStorage on mount
-  useEffect(() => {
-    // Prevent re-running after initial load to avoid overwriting user input
-    if (isInitialized || powerParts.length === 0 || editPowerId) return;
-    
-    try {
-      const cached = localStorage.getItem(POWER_CREATOR_CACHE_KEY);
-      if (cached) {
-        const parsed: PowerCreatorCache = JSON.parse(cached);
-        // Only use cache if it's less than 30 days old
-        const thirtyDays = 30 * 24 * 60 * 60 * 1000;
-        if (Date.now() - parsed.timestamp < thirtyDays) {
-          setName(parsed.name || '');
-          setDescription(parsed.description || '');
-          setActionType(parsed.actionType || 'basic');
-          setIsReaction(parsed.isReaction || false);
-          const d = parsed.damage;
-          setDamages(
-            Array.isArray(d) && d.length > 0
-              ? d.map((x: DamageConfig) => ({ ...x, applyDuration: x.applyDuration ?? false }))
-              : d && !Array.isArray(d)
-                ? [{ ...d, amount: d.amount ?? 0, size: d.size ?? 6, type: d.type ?? 'none', applyDuration: (d as DamageConfig).applyDuration ?? false }]
-                : [{ amount: 0, size: 6, type: 'none', applyDuration: false }]
-          );
-          setRange(parsed.range || { steps: 0 });
-          setArea(parsed.area || { type: 'none', level: 1, applyDuration: false });
-          setDuration(parsed.duration || {
-            type: 'instant',
-            value: 1,
-            applyDuration: false,
-            focus: false,
-            noHarm: false,
-            endsOnActivation: false,
-            sustain: 0,
-          });
-          if (parsed.weaponId !== undefined) {
-            const restoredWeapon = allWeaponOptions.find((option) => String(option.id) === String(parsed.weaponId));
-            if (restoredWeapon) setWeapon(restoredWeapon);
-          }
-          
-          // Restore selected parts by finding them in powerParts
-          if (parsed.selectedParts && parsed.selectedParts.length > 0) {
-            const restoredParts: SelectedPart[] = [];
-            for (const savedPart of parsed.selectedParts) {
-              const foundPart = powerParts.find((p: PowerPart) => String(p.id) === String(savedPart.partId));
-              if (foundPart) {
-                restoredParts.push({
-                  part: foundPart,
-                  op_1_lvl: savedPart.op_1_lvl,
-                  op_2_lvl: savedPart.op_2_lvl,
-                  op_3_lvl: savedPart.op_3_lvl,
-                  applyDuration: savedPart.applyDuration,
-                  selectedCategory: savedPart.selectedCategory,
-                });
-              }
-            }
-            setSelectedParts(restoredParts);
-          }
-          
-          // Restore advanced parts
-          if (parsed.selectedAdvancedParts && parsed.selectedAdvancedParts.length > 0) {
-            const restoredAdvanced: AdvancedPart[] = [];
-            for (const savedPart of parsed.selectedAdvancedParts) {
-              const foundPart = powerParts.find((p: PowerPart) => String(p.id) === String(savedPart.partId));
-              if (foundPart) {
-                restoredAdvanced.push({
-                  part: foundPart,
-                  op_1_lvl: savedPart.op_1_lvl,
-                  op_2_lvl: savedPart.op_2_lvl,
-                  op_3_lvl: savedPart.op_3_lvl,
-                  applyDuration: savedPart.applyDuration,
-                  selectedCategory: foundPart.category || 'any',
-                });
-              }
-            }
-            setSelectedAdvancedParts(restoredAdvanced);
-          }
-        } else {
-          localStorage.removeItem(POWER_CREATOR_CACHE_KEY);
-        }
-      }
-    } catch {
-    }
-    setIsInitialized(true);
-  }, [powerParts, allWeaponOptions, isInitialized, editPowerId]);
-
-  // Auto-save to localStorage when state changes
-  useEffect(() => {
-    if (!isInitialized) return;
-    
-    try {
-      const cache: PowerCreatorCache = {
-        name,
-        description,
-        selectedParts: selectedParts.map(sp => ({
-          partId: sp.part.id,
-          op_1_lvl: sp.op_1_lvl,
-          op_2_lvl: sp.op_2_lvl,
-          op_3_lvl: sp.op_3_lvl,
-          applyDuration: sp.applyDuration,
-          selectedCategory: sp.selectedCategory,
-        })),
-        selectedAdvancedParts: selectedAdvancedParts.map(ap => ({
-          partId: ap.part.id,
-          op_1_lvl: ap.op_1_lvl,
-          op_2_lvl: ap.op_2_lvl,
-          op_3_lvl: ap.op_3_lvl,
-          applyDuration: ap.applyDuration,
-        })),
-        actionType,
-        isReaction,
-        damage: damages,
-        range,
-        area,
-        duration,
-        weaponId: weapon.id,
-        timestamp: Date.now(),
-      };
-      localStorage.setItem(POWER_CREATOR_CACHE_KEY, JSON.stringify(cache));
-    } catch {
-    }
-  }, [isInitialized, name, description, selectedParts, selectedAdvancedParts, actionType, isReaction, damages, range, area, duration, weapon.id]);
-
-  // Filter out mechanic parts for the "Add Part" dropdown
-  // Mechanic parts are handled by basic mechanics UI (action, damage, range, area, duration)
-  // or the Power Mechanics section
-  const nonMechanicParts = useMemo(
-    () => powerParts.filter((p: PowerPart) => !p.mechanic),
-    [powerParts]
-  );
-
-  // Mechanic parts for Power Mechanics section (same parts as old Advanced Mechanics, excluded from hardcoded UI)
-  const mechanicPartsForList = useMemo(
-    () => powerParts.filter((p: PowerPart) => p.mechanic && !EXCLUDED_PARTS.has(p.name)),
-    [powerParts]
-  );
-
-  // Build mechanic parts using unified builder (powerDamage array supports applyDuration per row)
-  const mechanicParts = useMemo(
-    () => buildMechanicParts({
-      creatorType: 'power',
-      partsDb: powerParts,
-      action: { type: actionType, isReaction },
-      powerDamage: damages.map((d) => ({
-        type: d.type,
-        diceAmount: d.amount,
-        dieSize: d.size,
-        applyDuration: d.applyDuration ?? false,
-      })),
-      range: { steps: range.steps },
-      area: area.type !== 'none' ? { type: area.type, level: area.level, applyDuration: area.applyDuration ?? false } : undefined,
-      duration: duration.type !== 'instant' ? {
-        type: duration.type,
-        value: duration.value,
-        applyDuration: duration.applyDuration ?? false,
-        focus: duration.focus,
-        noHarm: duration.noHarm,
-        endsOnActivation: duration.endsOnActivation,
-        sustain: duration.sustain,
-      } : undefined,
-    }),
-    [actionType, isReaction, damages, range, area, duration, powerParts]
-  );
-
-  const addWeaponToPowerPart = useMemo(() => {
-    if ((weapon.tp ?? 0) < 1) return null;
-    const part = findByIdOrName(powerParts, {
-      id: PART_IDS.ADD_WEAPON_TO_POWER,
-      name: 'Add Weapon to Power',
-    });
-    if (!part) return null;
-    return {
-      id: part.id,
-      name: part.name,
-      op_1_lvl: Math.max(0, (weapon.tp ?? 1) - 1),
-      op_2_lvl: 0,
-      op_3_lvl: 0,
-      applyDuration: false,
-    };
-  }, [weapon.tp, powerParts]);
-
-  const shouldPersistSelectedWeapon = useMemo(
-    () =>
-      shouldPersistCreatorWeaponId({
-        weaponId: weapon.id,
-        allowNoAttack: true,
+  // One-time render adjust per sessionKey: compute the initial form state exactly
+  // once when data is ready (no hydrate effect, no recompute on later re-renders).
+  const [bootstrapState, setBootstrapState] = useState<{
+    key: string;
+    form: PowerCreatorFormState;
+  } | null>(null);
+  if (bootstrapReady && bootstrapState?.key !== sessionKey) {
+    setBootstrapState({
+      key: sessionKey,
+      form: bootstrapPowerCreatorFormState({
+        editPowerId,
+        powerParts,
+        rawItems: load.rawItems,
       }),
-    [weapon.id]
-  );
-
-  // Convert selected parts to payload format for calculator
-  const partsPayload: PowerPartPayload[] = useMemo(
-    () => [
-      // Regular parts
-      ...selectedParts.map((sp) => ({
-        part: sp.part,
-        op_1_lvl: sp.op_1_lvl,
-        op_2_lvl: sp.op_2_lvl,
-        op_3_lvl: sp.op_3_lvl,
-        applyDuration: sp.applyDuration,
-      })),
-      // Advanced mechanic parts
-      ...selectedAdvancedParts.map((ap) => ({
-        part: ap.part,
-        op_1_lvl: ap.op_1_lvl,
-        op_2_lvl: ap.op_2_lvl,
-        op_3_lvl: ap.op_3_lvl,
-        applyDuration: ap.applyDuration,
-      })),
-      // Auto-generated mechanic parts from action type / damage selections
-      ...mechanicParts,
-      ...(addWeaponToPowerPart ? [addWeaponToPowerPart] : []),
-    ],
-    [selectedParts, selectedAdvancedParts, mechanicParts, addWeaponToPowerPart]
-  );
-
-  // Calculate costs
-  const costs = useMemo(
-    () => calculatePowerCosts(partsPayload, powerParts),
-    [partsPayload, powerParts]
-  );
-  const advancedCalcRows = useMemo(
-    () => [
-      { label: 'Energy (raw)', value: costs.energyRaw.toFixed(2) },
-      { label: 'Energy (final)', value: `ceil(${costs.energyRaw.toFixed(2)}) = ${costs.totalEnergy}` },
-      { label: 'Training points (raw)', value: costs.tpRaw.toFixed(2) },
-      { label: 'Training points (final)', value: `floor per part → ${costs.totalTP}` },
-    ],
-    [costs.energyRaw, costs.totalEnergy, costs.totalTP, costs.tpRaw]
-  );
-
-  // Derived display values
-  const actionTypeDisplay = useMemo(
-    () => computePowerActionTypeFromSelection(actionType, isReaction),
-    [actionType, isReaction]
-  );
-
-  const rangeDisplay = useMemo(() => deriveRange(partsPayload), [partsPayload]);
-  const areaDisplay = useMemo(() => deriveArea(partsPayload), [partsPayload]);
-  const durationDisplay = useMemo(() => deriveDuration(partsPayload), [partsPayload]);
-
-  // Format range for collapsed summary (from UI state)
-  const rangeSummary = useMemo(() => {
-    if (range.steps === 0) return '1 Space / Melee';
-    const formatted = formatPowerRangeFromSteps(range.steps);
-    return formatted.replace(/\bspaces\b/, 'Spaces').replace(/\bspace\b/, 'Space');
-  }, [range.steps]);
-
-  // Area part for description display when area is selected
-  const areaPartInfo = useMemo(
-    () => (area.type !== 'none' ? getAreaPartForDisplay(area.type, area.level, powerParts) : null),
-    [area.type, area.level, powerParts]
-  );
-
-  // Format damage for collapsed summary
-  const damageSummary = useMemo(() => {
-    const valid = damages.filter((d) => d.type !== 'none' && d.amount > 0);
-    if (valid.length === 0) return 'No damage';
-    return valid.map((d) => `${d.amount}d${d.size} ${d.type}`).join(', ');
-  }, [damages]);
-
-  // Power parts summary (first few part names + EN/TP)
-  const powerPartsSummary = useMemo(() => {
-    if (selectedParts.length === 0) return 'No parts';
-    const names = selectedParts.slice(0, 5).map((sp) => sp.part.name);
-    const more = selectedParts.length > 5 ? ` +${selectedParts.length - 5} more` : '';
-    return `${names.join(', ')}${more}`;
-  }, [selectedParts]);
-
-  // Power mechanics summary
-  const powerMechanicsSummary = useMemo(() => {
-    if (selectedAdvancedParts.length === 0) return 'No mechanics';
-    const names = selectedAdvancedParts.slice(0, 5).map((ap) => ap.part.name);
-    const more = selectedAdvancedParts.length > 5 ? ` +${selectedAdvancedParts.length - 5} more` : '';
-    return `${names.join(', ')}${more}`;
-  }, [selectedAdvancedParts]);
-
-  // Duration summary for collapsed state
-  const durationSummary = useMemo(() => {
-    if (duration.type === 'instant') return 'Instant';
-    if (duration.type === 'permanent') return 'Permanent';
-    return formatDurationFromTypeAndValue(duration.type, duration.value);
-  }, [duration.type, duration.value]);
-
-  // Section costs for display (EN/TP contribution per section)
-  const sectionCosts = useMemo(() => {
-    const toPayload = (mp: { id: number | string; name: string; op_1_lvl: number; op_2_lvl: number; op_3_lvl: number }) =>
-      ({ id: mp.id, name: mp.name, op_1_lvl: mp.op_1_lvl, op_2_lvl: mp.op_2_lvl, op_3_lvl: mp.op_3_lvl });
-    const rangeParts = mechanicParts.filter((mp) => mp.name === 'Power Range').map(toPayload);
-    const areaNames = ['Sphere of Effect', 'Cylinder of Effect', 'Cone of Effect', 'Line of Effect', 'Trail of Effect'];
-    const areaParts = mechanicParts.filter((mp) => areaNames.includes(mp.name)).map(toPayload);
-    const durationNames = ['Duration (Round)', 'Duration (Minute)', 'Duration (Hour)', 'Duration (Days)', 'Duration (Permanent)', 'Focus for Duration', 'No Harm or Adaptation for Duration', 'Duration Ends On Activation', 'Sustain for Duration'];
-    const durationParts = mechanicParts.filter((mp) => durationNames.includes(mp.name)).map(toPayload);
-    const damageNames = ['Magic Damage', 'Light Damage', 'Elemental Damage', 'Poison or Necrotic Damage', 'Sonic Damage', 'Spiritual Damage', 'Psychic Damage', 'Physical Damage', 'Power Split Damage Dice'];
-    const damageParts = mechanicParts.filter((mp) => damageNames.includes(mp.name)).map(toPayload);
-    const actionNames = ['Power Reaction', 'Power Quick or Free Action', 'Power Long Action'];
-    const actionParts = mechanicParts.filter((mp) => actionNames.includes(mp.name)).map(toPayload);
-    const partsPayload = selectedParts.map((sp) => ({
-      part: sp.part,
-      op_1_lvl: sp.op_1_lvl,
-      op_2_lvl: sp.op_2_lvl,
-      op_3_lvl: sp.op_3_lvl,
-    }));
-    const mechanicPayload = selectedAdvancedParts.map((ap) => ({
-      part: ap.part,
-      op_1_lvl: ap.op_1_lvl,
-      op_2_lvl: ap.op_2_lvl,
-      op_3_lvl: ap.op_3_lvl,
-    }));
-    return {
-      action: calculatePowerCosts(actionParts, powerParts),
-      weapon: calculatePowerCosts(addWeaponToPowerPart ? [addWeaponToPowerPart] : [], powerParts),
-      range: calculatePowerCosts(rangeParts, powerParts),
-      area: calculatePowerCosts(areaParts, powerParts),
-      duration: calculatePowerCosts(durationParts, powerParts),
-      damage: calculatePowerCosts(damageParts, powerParts),
-      powerParts: calculatePowerCosts(partsPayload, powerParts),
-      powerMechanics: calculatePowerCosts(mechanicPayload, powerParts),
-    };
-  }, [mechanicParts, powerParts, selectedParts, selectedAdvancedParts, addWeaponToPowerPart]);
-
-  // Actions
-  const addPart = useCallback(() => {
-    if (nonMechanicParts.length === 0) return;
-    setSelectedParts((prev) => [
-      ...prev,
-      {
-        part: nonMechanicParts[0],
-        op_1_lvl: 0,
-        op_2_lvl: 0,
-        op_3_lvl: 0,
-        applyDuration: false,
-        selectedCategory: 'any',
-      },
-    ]);
-  }, [nonMechanicParts]);
-
-  const removePart = useCallback((index: number) => {
-    setSelectedParts((prev) => prev.filter((_, i) => i !== index));
-  }, []);
-
-  const updatePart = useCallback((index: number, updates: Partial<SelectedPart>) => {
-    setSelectedParts((prev) =>
-      prev.map((sp, i) => (i === index ? { ...sp, ...updates } : sp))
-    );
-  }, []);
-
-  // Advanced part actions
-  const addMechanicPart = useCallback(() => {
-    if (mechanicPartsForList.length === 0) return;
-    const first = mechanicPartsForList[0];
-    if (selectedAdvancedParts.some((ap) => ap.part.id === first.id)) return;
-    setSelectedAdvancedParts((prev) => [
-      ...prev,
-      {
-        part: first,
-        op_1_lvl: 0,
-        op_2_lvl: 0,
-        op_3_lvl: 0,
-        applyDuration: false,
-        selectedCategory: 'any',
-      },
-    ]);
-  }, [mechanicPartsForList, selectedAdvancedParts]);
-
-  const removeAdvancedPart = useCallback((index: number) => {
-    setSelectedAdvancedParts((prev) => prev.filter((_, i) => i !== index));
-  }, []);
-
-  const updateAdvancedPart = useCallback((index: number, updates: Partial<AdvancedPart>) => {
-    setSelectedAdvancedParts((prev) =>
-      prev.map((ap, i) => (i === index ? { ...ap, ...updates } : ap))
-    );
-  }, []);
-
-  const getPayload = useCallback(() => {
-    const partsToSave = [
-      ...selectedParts.map((sp) => ({
-        id: Number(sp.part.id),
-        name: sp.part.name,
-        op_1_lvl: sp.op_1_lvl,
-        op_2_lvl: sp.op_2_lvl,
-        op_3_lvl: sp.op_3_lvl,
-        applyDuration: sp.applyDuration,
-      })),
-      ...selectedAdvancedParts.map((ap) => ({
-        id: Number(ap.part.id),
-        name: ap.part.name,
-        op_1_lvl: ap.op_1_lvl,
-        op_2_lvl: ap.op_2_lvl,
-        op_3_lvl: ap.op_3_lvl,
-        applyDuration: ap.applyDuration,
-        isAdvanced: true,
-      })),
-      ...mechanicParts.map((mp) => ({
-        id: mp.id,
-        name: mp.name,
-        op_1_lvl: mp.op_1_lvl,
-        op_2_lvl: mp.op_2_lvl,
-        op_3_lvl: mp.op_3_lvl,
-        applyDuration: mp.applyDuration,
-        isMechanic: true,
-      })),
-      ...(addWeaponToPowerPart
-        ? [{
-            id: addWeaponToPowerPart.id,
-            name: addWeaponToPowerPart.name,
-            op_1_lvl: addWeaponToPowerPart.op_1_lvl,
-            op_2_lvl: addWeaponToPowerPart.op_2_lvl,
-            op_3_lvl: addWeaponToPowerPart.op_3_lvl,
-            applyDuration: false,
-            isMechanic: true,
-          }]
-        : []),
-    ];
-    const damageToSave = damages
-      .filter((d) => d.type !== 'none' && d.amount > 0)
-      .map((d) => ({ amount: d.amount, size: d.size, type: d.type, applyDuration: d.applyDuration ?? false }));
-    return {
-      name: name.trim(),
-      data: {
-        name: name.trim(),
-        description: description.trim(),
-        parts: partsToSave,
-        damage: damageToSave,
-        actionType,
-        isReaction,
-        range,
-        area,
-        duration,
-        weapon: shouldPersistSelectedWeapon ? weapon : null,
-      },
-    };
-  }, [name, description, selectedParts, selectedAdvancedParts, mechanicParts, addWeaponToPowerPart, damages, actionType, isReaction, range, area, duration, shouldPersistSelectedWeapon, weapon]);
-
-  const save = useCreatorSave({
-    type: 'powers',
-    getPayload,
-    requirePublishConfirm: true,
-    publishConfirmTitle: 'Publish to Realms Library',
-    publishConfirmDescription: (n, { existingInPublic }) =>
-      existingInPublic
-        ? `Are you sure you want to override "${n}" (power)? The existing public power with this name will be replaced.`
-        : `Are you sure you wish to publish this power "${n}" to the Realms Library? All users will be able to see and use it.`,
-    successMessage: 'Power saved successfully!',
-    publicSuccessMessage: 'Power saved to Realms Library!',
-    onSaveSuccess: () => {
-      setName('');
-      setDescription('');
-      setSelectedParts([]);
-      setSelectedAdvancedParts([]);
-      setActionType('basic');
-      setIsReaction(false);
-      setDamages([{ amount: 0, size: 6, type: 'none', applyDuration: false }]);
-      setRange({ steps: 0 });
-      setArea({ type: 'none', level: 1, applyDuration: false });
-      setDuration({
-        type: 'instant',
-        value: 1,
-        applyDuration: false,
-        focus: false,
-        noHarm: false,
-        endsOnActivation: false,
-        sustain: 0,
-      });
-      setWeapon(DEFAULT_WEAPON_OPTIONS[0]);
-    },
-  });
-
-  const handleSave = useCallback(async () => {
-    if (!user) {
-      setShowLoginPrompt(true);
-      return;
-    }
-    await save.handleSave();
-  }, [user, save]);
-
-  const handleReset = useCallback(() => {
-    setName('');
-    setDescription('');
-    setSelectedParts([]);
-    setSelectedAdvancedParts([]);
-    setActionType('basic');
-    setIsReaction(false);
-    setDamages([{ amount: 0, size: 6, type: 'none', applyDuration: false }]);
-    setRange({ steps: 0 });
-    setArea({ type: 'none', level: 1, applyDuration: false });
-    setDuration({
-      type: 'instant',
-      value: 1,
-      applyDuration: false,
-      focus: false,
-      noHarm: false,
-      endsOnActivation: false,
-      sustain: 0,
     });
-    setWeapon(DEFAULT_WEAPON_OPTIONS[0]);
-    save.setSaveMessage(null);
-    // Clear localStorage cache
-    try {
-      localStorage.removeItem(POWER_CREATOR_CACHE_KEY);
-    } catch {
-    }
-  }, [save]);
-
-  // Load a power from the library
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const handleLoadPower = useCallback((power: any) => {
-    // Reset all state first to avoid corruption from any existing edits
-    handleReset();
-    // Set name and description
-    setName(power.name || '');
-    setDescription(power.description || '');
-    
-    // Load parts - the data structure from API may vary
-    const savedParts = (power.parts || power.powerParts || []) as Array<{
-      id?: number | string;
-      name?: string;
-      op_1_lvl?: number;
-      op_2_lvl?: number;
-      op_3_lvl?: number;
-      applyDuration?: boolean;
-      isAdvanced?: boolean;
-    }>;
-    
-    const loadedParts: SelectedPart[] = [];
-    const loadedAdvancedParts: AdvancedPart[] = [];
-    
-    for (const savedPart of savedParts) {
-      // Find the matching part in powerParts by id or name
-      const matchedPart = powerParts.find(
-        (p: PowerPart) => p.id === String(savedPart.id) || p.name === savedPart.name
-      );
-      
-      if (matchedPart) {
-        // Skip parts that are handled by basic mechanics UI
-        // (these are now auto-generated from actionType, damage, range, area, duration)
-        if (EXCLUDED_PARTS.has(matchedPart.name)) {
-          continue;
-        }
-        
-        const partData = {
-          part: matchedPart,
-          op_1_lvl: savedPart.op_1_lvl || 0,
-          op_2_lvl: savedPart.op_2_lvl || 0,
-          op_3_lvl: savedPart.op_3_lvl || 0,
-          applyDuration: savedPart.applyDuration || false,
-        };
-        
-        // Check if it's an advanced mechanic part
-        if (savedPart.isAdvanced || (matchedPart.mechanic && ADVANCED_CATEGORIES.includes(matchedPart.category as typeof ADVANCED_CATEGORIES[number]))) {
-          loadedAdvancedParts.push({
-            ...partData,
-            selectedCategory: matchedPart.category || 'any',
-          });
-        } else if (!matchedPart.mechanic) {
-          // Only add non-mechanic parts to regular parts section
-          loadedParts.push({
-            ...partData,
-            selectedCategory: matchedPart.category || 'any',
-          });
-        }
-      }
-    }
-    setSelectedParts(loadedParts);
-    setSelectedAdvancedParts(loadedAdvancedParts);
-    
-    // Load damage - handle both array and object formats
-    let damageData: Array<{ amount?: number; size?: number; type?: string; applyDuration?: boolean }> = [];
-    if (Array.isArray(power.damage)) {
-      damageData = power.damage;
-    } else if (power.damage && typeof power.damage === 'object') {
-      // Convert object format to array
-      const d = power.damage as { dice?: number; amount?: number; sides?: number; size?: number; type?: string; applyDuration?: boolean };
-      damageData = [{
-        amount: d.dice ?? d.amount ?? 0,
-        size: d.sides ?? d.size ?? 6,
-        type: d.type ?? 'none',
-        applyDuration: d.applyDuration ?? false,
-      }];
-    }
-    
-    if (damageData.length > 0) {
-      setDamages(
-        damageData.map((dmg) => ({
-          amount: dmg.amount ?? 0,
-          size: dmg.size ?? 6,
-          type: dmg.type ?? 'none',
-          applyDuration: (dmg as { applyDuration?: boolean }).applyDuration ?? false,
-        }))
-      );
-    } else {
-      setDamages([{ amount: 0, size: 6, type: 'none', applyDuration: false }]);
-    }
-    
-    // Load action type and reaction
-    setActionType(power.actionType || 'basic');
-    setIsReaction(power.isReaction || false);
-
-    // Load Add Weapon selection
-    if (power.weapon) {
-      const weaponMatch = allWeaponOptions.find(
-        (option) =>
-          String(option.id) === String(power.weapon.id) ||
-          option.name === power.weapon.name
-      );
-      if (weaponMatch) {
-        setWeapon(weaponMatch);
-      }
-    } else {
-      const addWeaponPart = savedParts.find((savedPart) => {
-        const byId = String(savedPart.id) === String(PART_IDS.ADD_WEAPON_TO_POWER);
-        const byName = savedPart.name === 'Add Weapon to Power';
-        return byId || byName;
-      });
-      if (addWeaponPart) {
-        const requiredTp = (addWeaponPart.op_1_lvl || 0) + 1;
-        const tpMatch = allWeaponOptions.find((option) => (option.tp ?? 0) === requiredTp);
-        setWeapon(tpMatch || DEFAULT_WEAPON_OPTIONS[0]);
-      } else {
-        setWeapon(DEFAULT_WEAPON_OPTIONS[0]);
-      }
-    }
-    
-    // Load range
-    if (power.range) {
-      setRange({
-        steps: power.range.steps || 0,
-      });
-    } else {
-      setRange({ steps: 0 });
-    }
-    
-    // Load area of effect
-    if (power.area) {
-      setArea({
-        type: power.area.type || 'none',
-        level: power.area.level || 1,
-        applyDuration: power.area.applyDuration || false,
-      });
-    } else {
-      setArea({ type: 'none', level: 1, applyDuration: false });
-    }
-    
-    // Load duration
-    if (power.duration) {
-      setDuration({
-        type: power.duration.type || 'instant',
-        value: power.duration.value || 1,
-        applyDuration: power.duration.applyDuration || false,
-        focus: power.duration.focus || false,
-        noHarm: power.duration.noHarm || false,
-        endsOnActivation: power.duration.endsOnActivation || false,
-        sustain: power.duration.sustain || 0,
-      });
-    } else {
-      setDuration({
-        type: 'instant',
-        value: 1,
-        applyDuration: false,
-        focus: false,
-        noHarm: false,
-        endsOnActivation: false,
-        sustain: 0,
-      });
-    }
-    
-    save.setSaveMessage({ type: 'success', text: 'Power loaded successfully!' });
-    setTimeout(() => save.setSaveMessage(null), 2000);
-  }, [powerParts, allWeaponOptions, handleReset, save]);
-
-  // Load power for editing from URL parameter (?edit=<id>)
-  useEffect(() => {
-    if (!editPowerId || !load.rawItems.length || powerParts.length === 0 || editLoadedRef.current) return;
-    const powerToEdit = load.rawItems.find(
-      (p: { docId?: string; id?: string }) => String(p.docId) === editPowerId || String(p.id) === editPowerId
-    ) as Parameters<typeof handleLoadPower>[0] | undefined;
-    editLoadedRef.current = true;
-    if (!powerToEdit) {
-      setIsInitialized(true);
-      return;
-    }
-    handleLoadPower(powerToEdit);
-    localStorage.removeItem(POWER_CREATOR_CACHE_KEY);
-    setIsInitialized(true);
-  }, [editPowerId, load.rawItems, powerParts, handleLoadPower]);
-
-  if (isLoading) {
-    return (
-      <PageContainer size="xl">
-        <LoadingState message="Loading power parts..." />
-      </PageContainer>
-    );
   }
+  const initialFormState = bootstrapState?.key === sessionKey ? bootstrapState.form : null;
 
-  if (error) {
+  if (!initialFormState) {
     return (
-      <PageContainer size="xl">
-        <ErrorDisplay
-          message={`Failed to load power parts: ${error.message}`}
-          onRetry={() => { void refetch(); }}
-        />
-      </PageContainer>
+      <div className="min-h-screen bg-background">
+        <LoadingState message="Loading power parts..." padding="lg" />
+      </div>
     );
   }
 
   return (
-    <CreatorLayout
-      icon={<Wand2 className="w-8 h-8 text-primary-link-fg" />}
+    <PowerCreatorWorkspace
+      key={sessionKey}
+      initialFormState={initialFormState}
+      editPowerId={editPowerId}
+      user={user}
+      isAdmin={isAdmin}
+      powerParts={powerParts}
+      load={load}
+      isLoading={isLoading}
+      error={error}
+      refetch={refetch}
+    />
+  );
+}
+
+interface PowerCreatorWorkspaceProps {
+  initialFormState: PowerCreatorFormState;
+  editPowerId: string | null;
+  user: ReturnType<typeof useAuthStore.getState>['user'];
+  isAdmin: boolean;
+  powerParts: PowerPart[];
+  load: UseLoadModalLibraryReturn;
+  isLoading: boolean;
+  error: Error | null;
+  refetch: () => void;
+}
+
+function PowerCreatorWorkspace({
+  initialFormState,
+  editPowerId,
+  user,
+  isAdmin,
+  powerParts,
+  load,
+  isLoading,
+  error,
+  refetch,
+}: PowerCreatorWorkspaceProps) {
+  const ws = usePowerCreatorWorkspace({
+    initialFormState,
+    editPowerId,
+    powerParts,
+  });
+
+  return (
+    <CreatorPageShell
+      icon={<Wand2 className="h-8 w-8 text-primary-link-fg" />}
       title="Power Creator"
       description="Design custom powers by combining power parts. Each part contributes to the total energy cost and training point requirements."
-      actions={
-        <div className="flex items-center gap-2">
-          <CreatorSaveToolbar
-            saveTarget={save.saveTarget}
-            onSaveTargetChange={save.setSaveTarget}
-            onSave={handleSave}
-            onLoad={() => (user ? load.openLoadModal() : setShowLoginPrompt(true))}
-            onReset={handleReset}
-            saving={save.saving}
-            saveDisabled={!name.trim()}
-            showPublicPrivate={isAdmin}
-            user={user}
-          />
-        </div>
-      }
+      user={user}
+      auth={{ returnPath: '/power-creator', contentType: 'power' }}
+      showPublicPrivate={isAdmin}
+      saveTarget={ws.save.saveTarget}
+      onSaveTargetChange={ws.save.setSaveTarget}
+      onSave={ws.save.handleSave}
+      onLoad={load.openLoadModal}
+      onReset={ws.handleReset}
+      toolbarHelp={{
+        load: <PowerCreatorHelp topic="load" />,
+        reset: <PowerCreatorHelp topic="reset" />,
+      }}
+      saving={ws.save.saving}
+      saveDisabled={!ws.name.trim()}
+      loading={{
+        isLoading,
+        loadingMessage: 'Loading power parts...',
+        error: error ?? null,
+        onRetry: () => {
+          void refetch();
+        },
+        errorMessage: error ? `Failed to load power parts: ${error.message}` : undefined,
+      }}
+      publish={{
+        isOpen: ws.save.showPublishConfirm,
+        onClose: () => ws.save.setShowPublishConfirm(false),
+        onConfirm: () => ws.save.confirmPublish(),
+        title: ws.save.publishConfirmTitle,
+        description:
+          ws.save.publishConfirmDescription?.(ws.name.trim(), {
+            existingInPublic: ws.save.publishExistingInPublic,
+          }) ?? '',
+      }}
+      loadModal={{
+        isOpen: load.showLoadModal,
+        onClose: load.closeLoadModal,
+        selectableItems: load.selectableItems,
+        columns: load.columns,
+        gridColumns: load.gridColumns,
+        headerExtra: <SourceFilter value={load.source} onChange={load.setSource} />,
+        optionsSummary: sourceFilterSummary(load.source),
+        optionsActiveCount: load.source !== 'all' ? 1 : 0,
+        emptyMessage: load.emptyMessage,
+        emptySubMessage: load.emptySubMessage,
+        searchPlaceholder: 'Search powers...',
+        isLoading: load.isLoading,
+        error: load.error,
+        title: 'Load Power from Library',
+        onSelect: (selected) => ws.handleLoadPower(selected.data as PowerLibraryRecord),
+      }}
       sidebar={
-        <div className="self-start sticky top-24 max-h-[calc(100vh-7rem)] overflow-y-auto space-y-6">
-          <CreatorSummaryPanel
-            title="Power Summary"
-            costStats={[
-              { label: 'Energy Cost', value: costs.totalEnergy, icon: <Zap className="w-6 h-6" />, color: 'energy' },
-              { label: 'Training Points', value: costs.totalTP, icon: <Target className="w-6 h-6" />, color: 'tp' },
-            ]}
-            statRows={[
-              { label: 'Action', value: actionTypeDisplay },
-              { label: 'Weapon', value: weapon.name },
-              { label: 'Range', value: rangeDisplay },
-              { label: 'Area', value: areaDisplay },
-              { label: 'Duration', value: durationDisplay },
-            ]}
-            breakdowns={costs.tpSources.length > 0 ? [
-              { title: 'TP Breakdown', items: costs.tpSources }
-            ] : undefined}
-          >
-            <AdvancedCalculationsPanel
-              rows={advancedCalcRows}
-              ruleText="Rule: Final energy is the ceiling of raw energy; TP sums part contributions."
-            />
-          </CreatorSummaryPanel>
-        </div>
-      }
-      modals={
-        <>
-          <LoadFromLibraryModal
-            isOpen={load.showLoadModal}
-            onClose={load.closeLoadModal}
-            selectableItems={load.selectableItems}
-            columns={load.columns}
-            gridColumns={load.gridColumns}
-            headerExtra={<SourceFilter value={load.source} onChange={load.setSource} />}
-            emptyMessage={load.emptyMessage}
-            emptySubMessage={load.emptySubMessage}
-            searchPlaceholder="Search powers..."
-            isLoading={load.isLoading}
-            error={load.error}
-            title="Load Power from Library"
-            onSelect={(selected) => handleLoadPower(selected.data as Parameters<typeof handleLoadPower>[0])}
+        <CreatorSummaryPanel
+          title="Power Summary"
+          costStats={[
+            {
+              label: 'Energy Cost',
+              value: ws.costs.totalEnergy,
+              icon: <Zap className="h-6 w-6" />,
+              color: 'energy',
+              help: <PowerCreatorHelp topic="energy" tone="current" />,
+            },
+            {
+              label: 'Training Points',
+              value: ws.costs.totalTP,
+              icon: <Target className="h-6 w-6" />,
+              color: 'tp',
+              help: <PowerCreatorHelp topic="tp" tone="current" />,
+            },
+          ]}
+          costHelp={
+            <div className="flex items-center gap-1.5 text-sm text-text-secondary">
+              <span>Innate Power</span>
+              <PowerCreatorHelp topic="innate" />
+            </div>
+          }
+          statRows={[
+            { label: 'Action', value: ws.actionTypeDisplay },
+            { label: 'Attack', value: ws.attackModeLabel },
+            { label: 'Range', value: ws.rangeDisplay },
+            { label: 'Area', value: ws.areaDisplay },
+            { label: 'Duration', value: ws.durationDisplay },
+          ]}
+          breakdowns={
+            ws.costs.tpSources.length > 0
+              ? [{ title: 'TP Breakdown', items: ws.costs.tpSources }]
+              : undefined
+          }
+        >
+          <AdvancedCalculationsPanel
+            rows={ws.advancedCalcRows}
+            ruleText="Rule: Final energy is the ceiling of raw energy; TP sums part contributions."
           />
-          <LoginPromptModal
-            isOpen={showLoginPrompt}
-            onClose={() => setShowLoginPrompt(false)}
-            returnPath="/power-creator"
-            contentType="power"
-          />
-          <ConfirmActionModal
-            isOpen={save.showPublishConfirm}
-            onClose={() => save.setShowPublishConfirm(false)}
-            onConfirm={() => save.confirmPublish()}
-            title={save.publishConfirmTitle}
-            description={save.publishConfirmDescription?.(name.trim(), { existingInPublic: save.publishExistingInPublic }) ?? ''}
-            confirmLabel="Publish"
-            icon="publish"
-          />
-        </>
+        </CreatorSummaryPanel>
       }
     >
-      {/* Main Editor */}
-          {/* Name & Description */}
-          <Card className="shadow-md p-6">
-            <div className="space-y-4">
-              <div className="flex flex-wrap items-center justify-between gap-2">
-                <p className="text-sm text-text-secondary">
-                  Building a hybrid? Use the dedicated empowered creator for combined power + technique rules.
-                </p>
-                <Link
-                  href="/empowered-technique-creator"
-                  className="inline-flex items-center rounded-lg border border-border-light bg-surface-alt px-3 py-2 text-sm font-medium text-text-primary hover:bg-surface min-h-[44px]"
-                >
-                  Open Empowered Creator
-                </Link>
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-text-secondary mb-1">
-                  Power Name *
-                </label>
-                <Input
-                  type="text"
-                  value={name}
-                  onChange={(e) => setName(e.target.value)}
-                  placeholder="Enter power name..."
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-text-secondary mb-1">
-                  Description
-                </label>
-                <Textarea
-                  value={description}
-                  onChange={(e) => setDescription(e.target.value)}
-                  placeholder="Describe what your power does..."
-                  rows={3}
-                />
-              </div>
-            </div>
-          </Card>
-
-          {/* Action Type */}
-          <CollapsibleSection
-            title="Action Type"
-            collapsedSummary={actionTypeDisplay}
-            defaultExpanded={true}
-            rightSlot={<SectionCostBadge en={sectionCosts.action.energyRaw} tp={sectionCosts.action.totalTP} />}
-          >
-            <div className="flex flex-wrap gap-4">
-              <select
-                aria-label="Action type"
-                value={actionType}
-                onChange={(e) => setActionType(e.target.value)}
-                className="px-4 py-2 border border-border-light rounded-lg text-text-primary bg-surface"
-              >
-                {ACTION_OPTIONS.map((opt) => (
-                  <option key={opt.value} value={opt.value}>
-                    {opt.label}
-                  </option>
-                ))}
-              </select>
-              <Checkbox
-                  checked={isReaction}
-                  onChange={(e) => setIsReaction(e.target.checked)}
-                  label="Reaction"
-                />
-            </div>
-          </CollapsibleSection>
-
-          {/* Add Weapon to Power */}
-          <CollapsibleSection
-            title="Add Weapon to Power"
-            collapsedSummary={weapon.name}
-            defaultExpanded={true}
-            rightSlot={<SectionCostBadge en={sectionCosts.weapon.energyRaw} tp={sectionCosts.weapon.totalTP} />}
-          >
-            <CreatorWeaponPicker
-              librarySource={weaponLibrarySource}
-              onLibrarySourceChange={setWeaponLibrarySource}
-              fullOptions={allWeaponOptions}
-              visibleOptions={visibleOptions}
-              weapon={weapon}
-              onWeaponChange={setWeapon}
-              label="Weapon"
-              ariaLabel="Power weapon"
-            />
-            <p className="mt-2 text-sm text-text-secondary">
-              Uses the Add Weapon to Power mechanic and scales from the selected weapon&apos;s TP.
-            </p>
-          </CollapsibleSection>
-
-          {/* Range */}
-          <CollapsibleSection
-            title="Range"
-            collapsedSummary={rangeSummary}
-            defaultExpanded={true}
-            rightSlot={<SectionCostBadge en={sectionCosts.range.energyRaw} tp={sectionCosts.range.totalTP} />}
-          >
-            <div className="flex flex-wrap items-center gap-4">
-              <ValueStepper
-                value={range.steps}
-                onChange={(v) => setRange((r) => ({ ...r, steps: v }))}
-                label="Range:"
-                min={0}
-                max={10}
-              />
-              <span className="text-sm text-text-secondary">
-                {range.steps === 0 ? '(1 Space / Melee)' : `(${range.steps * 3} spaces)`}
-              </span>
-            </div>
-          </CollapsibleSection>
-
-          {/* Area of Effect */}
-          <CollapsibleSection
-            title="Area of Effect"
-            collapsedSummary={area.type === 'none' ? 'Single target' : formatAreaForDisplay(area.type, area.level)}
-            defaultExpanded={true}
-            rightSlot={<SectionCostBadge en={sectionCosts.area.energyRaw} tp={sectionCosts.area.totalTP} />}
-          >
-            <div className="flex flex-wrap items-center gap-4 mb-4">
-              <select
-                aria-label="Area of effect"
-                value={area.type}
-                onChange={(e) => setArea((a) => ({ ...a, type: e.target.value as AreaConfig['type'] }))}
-                className="px-4 py-2 border border-border-light rounded-lg text-text-primary bg-surface"
-              >
-                {AREA_TYPES.map((opt) => (
-                  <option key={opt.value} value={opt.value}>
-                    {opt.label}
-                  </option>
-                ))}
-              </select>
-              {area.type !== 'none' && (
-                <ValueStepper
-                  value={area.level}
-                  onChange={(v) => setArea((a) => ({ ...a, level: v }))}
-                  label="Level:"
-                  min={1}
-                  max={10}
-                />
-              )}
-            </div>
-            {area.type !== 'none' && (
-              <div className="mt-4">
-                <Checkbox
-                  checked={area.applyDuration ?? false}
-                  onChange={(e) => setArea((a) => ({ ...a, applyDuration: e.target.checked }))}
-                  label="Apply duration"
-                />
-              </div>
-            )}
-            {areaPartInfo && (
-              <div className="mt-4 p-4 rounded-lg bg-surface-alt border border-border-light">
-                <p className="text-sm text-text-primary leading-relaxed">{areaPartInfo.description}</p>
-                {areaPartInfo.op1Desc && areaPartInfo.op1Level > 0 && (
-                  <div className="mt-3 pt-3 border-t border-border-light">
-                    <p className="text-sm font-medium text-text-secondary dark:text-text-primary mb-1">
-                      Option 1 (Level {areaPartInfo.op1Level + 1}):
-                    </p>
-                    <p className="text-sm text-text-primary">{areaPartInfo.op1Desc}</p>
-                  </div>
-                )}
-              </div>
-            )}
-          </CollapsibleSection>
-
-          {/* Duration */}
-          <CollapsibleSection
-            title="Duration"
-            collapsedSummary={durationSummary}
-            defaultExpanded={true}
-            rightSlot={<SectionCostBadge en={sectionCosts.duration.energyRaw} tp={sectionCosts.duration.totalTP} />}
-          >
-            <div className="flex flex-wrap items-center gap-4 mb-4">
-              <select
-                aria-label="Duration type"
-                value={duration.type}
-                onChange={(e) => {
-                  const newType = e.target.value as DurationConfig['type'];
-                  // Reset value to first option when changing type
-                  const newValue = DURATION_VALUES[newType]?.[0]?.value || 1;
-                  // Clear duration modifiers if duration is less than 2 rounds
-                  const isShortDuration = newType === 'instant' || (newType === 'rounds' && newValue === 1);
-                  if (isShortDuration) {
-                    setDuration({
-                      type: newType,
-                      value: newValue,
-                      applyDuration: false,
-                      focus: false,
-                      noHarm: false,
-                      endsOnActivation: false,
-                      sustain: 0,
-                    });
-                  } else {
-                    setDuration((d) => ({ ...d, type: newType, value: newValue }));
-                  }
-                }}
-                className="px-4 py-2 border border-border-light rounded-lg text-text-primary bg-surface"
-              >
-                {DURATION_TYPES.map((opt) => (
-                  <option key={opt.value} value={opt.value}>
-                    {opt.label}
-                  </option>
-                ))}
-              </select>
-              {duration.type !== 'instant' && duration.type !== 'permanent' && DURATION_VALUES[duration.type] && (
-                <select
-                  aria-label="Duration value"
-                  value={duration.value}
-                  onChange={(e) => {
-                    const newValue = parseInt(e.target.value);
-                    // Clear duration modifiers if duration becomes 1 round
-                    if (duration.type === 'rounds' && newValue === 1) {
-                      setDuration({
-                        type: duration.type,
-                        value: newValue,
-                        applyDuration: duration.applyDuration ?? false,
-                        focus: false,
-                        noHarm: false,
-                        endsOnActivation: false,
-                        sustain: 0,
-                      });
-                    } else {
-                      setDuration((d) => ({ ...d, value: newValue }));
-                    }
-                  }}
-                  className="px-4 py-2 border border-border-light rounded-lg text-text-primary bg-surface"
-                >
-                  {DURATION_VALUES[duration.type].map((opt) => (
-                    <option key={opt.value} value={opt.value}>
-                      {opt.label}
-                    </option>
-                  ))}
-                </select>
-              )}
-            </div>
-            {/* Duration Modifiers - only enabled for durations of 2+ rounds */}
-            {(() => {
-              const isShortDuration = duration.type === 'instant' || (duration.type === 'rounds' && duration.value === 1);
-              return (
-                <div className={cn(
-                  'flex flex-wrap items-center gap-4 pt-3 border-t border-border-light',
-                  isShortDuration && 'opacity-50'
-                )}>
-                  <Checkbox
-                    checked={duration.focus || false}
-                    onChange={(e) => setDuration((d) => ({ ...d, focus: e.target.checked }))}
-                    label="Focus"
-                    disabled={isShortDuration}
-                  />
-                  <Checkbox
-                    checked={duration.noHarm || false}
-                    onChange={(e) => setDuration((d) => ({ ...d, noHarm: e.target.checked }))}
-                    label="No Harm or Adaptation Parts"
-                    disabled={isShortDuration}
-                  />
-                  <Checkbox
-                    checked={duration.endsOnActivation || false}
-                    onChange={(e) => setDuration((d) => ({ ...d, endsOnActivation: e.target.checked }))}
-                    label="Ends on Activation"
-                    disabled={isShortDuration}
-                  />
-                  <div className="flex items-center gap-2">
-                    <span className="text-sm font-medium text-text-secondary">Sustain:</span>
-                    <select
-                      aria-label="Sustain cost in action points"
-                      value={duration.sustain || 0}
-                      onChange={(e) => setDuration((d) => ({ ...d, sustain: parseInt(e.target.value) }))}
-                      className="px-2 py-1 border border-border-light rounded text-sm text-text-primary bg-surface disabled:opacity-50 disabled:cursor-not-allowed"
-                      disabled={isShortDuration}
-                    >
-                      <option value={0}>None</option>
-                      <option value={1}>1 AP</option>
-                      <option value={2}>2 AP</option>
-                      <option value={3}>3 AP</option>
-                      <option value={4}>4 AP</option>
-                    </select>
-                  </div>
-                  {isShortDuration && (
-                    <span className="text-xs text-text-muted dark:text-text-secondary italic">
-                      (Requires 2+ rounds)
-                    </span>
-                  )}
-                </div>
-              );
-            })()}
-          </CollapsibleSection>
-
-          {/* Power Parts */}
-          <CollapsibleSection
-            title={`Power Parts (${selectedParts.length})`}
-            collapsedSummary={powerPartsSummary}
-            defaultExpanded={true}
-            rightSlot={
-              <>
-                <SectionCostBadge en={sectionCosts.powerParts.energyRaw} tp={sectionCosts.powerParts.totalTP} />
-                <Button type="button" variant="primary" size="sm" className="flex items-center gap-1" onClick={addPart}>
-                  <Plus className="w-4 h-4" />
-                  Add Part
-                </Button>
-              </>
-            }
-          >
-            {selectedParts.length === 0 ? (
-              <div className="text-center py-8 text-text-muted dark:text-text-secondary">
-                <Info className="w-12 h-12 mx-auto mb-2 opacity-50" />
-                <p>No parts added yet. Click &quot;Add Part&quot; to begin building your power.</p>
-              </div>
-            ) : (
-              <div className="space-y-4">
-                {selectedParts.map((sp, idx) => (
-                  <PowerPartCard
-                    key={idx}
-                    selectedPart={sp}
-                    _index={idx}
-                    onRemove={() => removePart(idx)}
-                    onUpdate={(updates) => updatePart(idx, updates as Partial<SelectedPart>)}
-                    allParts={nonMechanicParts}
-                  />
-                ))}
-              </div>
-            )}
-          </CollapsibleSection>
-
-          {/* Power Mechanics — same add/select UX as Power Parts */}
-          <CollapsibleSection
-            title={`Power Mechanics (${selectedAdvancedParts.length})`}
-            collapsedSummary={powerMechanicsSummary}
-            defaultExpanded={true}
-            rightSlot={
-              <>
-                <SectionCostBadge en={sectionCosts.powerMechanics.energyRaw} tp={sectionCosts.powerMechanics.totalTP} />
-                <Button type="button" variant="primary" size="sm" className="flex items-center gap-1" onClick={addMechanicPart}>
-                  <Plus className="w-4 h-4" />
-                  Add Part
-                </Button>
-              </>
-            }
-          >
-            {selectedAdvancedParts.length === 0 ? (
-              <div className="text-center py-8 text-text-muted dark:text-text-secondary">
-                <Info className="w-12 h-12 mx-auto mb-2 opacity-50" />
-                <p>No mechanics added yet. Click &quot;Add Part&quot; to add range, area, duration modifiers, and other mechanic parts.</p>
-              </div>
-            ) : (
-              <div className="space-y-4">
-                {selectedAdvancedParts.map((sp, idx) => (
-                  <PowerPartCard
-                    key={idx}
-                    selectedPart={sp}
-                    _index={idx}
-                    onRemove={() => removeAdvancedPart(idx)}
-                    onUpdate={(updates) => updateAdvancedPart(idx, updates as Partial<AdvancedPart>)}
-                    allParts={mechanicPartsForList}
-                  />
-                ))}
-              </div>
-            )}
-          </CollapsibleSection>
-
-          {/* Damage — multiple rows (TASK-286) */}
-          <CollapsibleSection
-            title="Damage"
-            collapsedSummary={damageSummary}
-            defaultExpanded={true}
-            rightSlot={<SectionCostBadge en={sectionCosts.damage.energyRaw} tp={sectionCosts.damage.totalTP} />}
-          >
-            {damages.map((d, index) => (
-              <div key={index} className="flex flex-wrap items-center gap-4 mb-4 p-3 rounded-lg bg-surface-alt border border-border-light">
-                {d.type !== 'none' && d.amount > 0 && (
-                  <Checkbox
-                    checked={d.applyDuration ?? false}
-                    onChange={(e) =>
-                      setDamages((prev) =>
-                        prev.map((x, i) => (i === index ? { ...x, applyDuration: e.target.checked } : x))
-                      )
-                    }
-                    label="Apply duration"
-                  />
-                )}
-                <ValueStepper
-                  value={d.amount}
-                  onChange={(v) =>
-                    setDamages((prev) =>
-                      prev.map((x, i) => (i === index ? { ...x, amount: v } : x))
-                    )
-                  }
-                  label="Dice:"
-                  min={0}
-                  max={20}
-                />
-                <div className="flex items-center gap-1">
-                  <span className="font-bold text-lg">d</span>
-                  <select
-                    aria-label={`Damage die size, row ${index + 1}`}
-                    value={d.size}
-                    onChange={(e) =>
-                      setDamages((prev) =>
-                        prev.map((x, i) =>
-                          i === index ? { ...x, size: parseInt(e.target.value) } : x
-                        )
-                      )
-                    }
-                    className="px-3 py-2 border border-border-light rounded-lg text-text-primary bg-surface"
-                  >
-                    {DIE_SIZES.map((size) => (
-                      <option key={size} value={size}>
-                        {size}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-                <select
-                  aria-label={`Damage type, row ${index + 1}`}
-                  value={d.type}
-                  onChange={(e) =>
-                    setDamages((prev) =>
-                      prev.map((x, i) => (i === index ? { ...x, type: e.target.value } : x))
-                    )
-                  }
-                  className="px-3 py-2 border border-border-light rounded-lg text-text-primary bg-surface"
-                >
-                  {DAMAGE_TYPES.map((type) => (
-                    <option key={type} value={type}>
-                      {type === 'none' ? 'No damage' : type.charAt(0).toUpperCase() + type.slice(1)}
-                    </option>
-                  ))}
-                </select>
-                {damages.length > 1 && (
-                  <button
-                    type="button"
-                    onClick={() =>
-                      setDamages((prev) => prev.filter((_, i) => i !== index))
-                    }
-                    className="p-2 rounded-lg text-danger-fg hover:bg-danger-100 dark:hover:bg-danger-900/30 min-h-[44px] min-w-[44px] flex items-center justify-center"
-                    aria-label={`Remove damage type row ${index + 1}`}
-                  >
-                    <Trash2 className="w-5 h-5" />
-                  </button>
-                )}
-              </div>
-            ))}
-            <Button
-              type="button"
-              variant="secondary"
-              size="sm"
-              onClick={() =>
-                setDamages((prev) => [...prev, { amount: 0, size: 6, type: 'none', applyDuration: false }])
-              }
-              className="mt-2 min-h-[44px]"
-            >
-              <Plus className="w-4 h-4 mr-1 inline" aria-hidden />
-              Add damage type
-            </Button>
-            {damages.some((d) => d.type !== 'none' && d.amount > 0) && (
-              <p className="mt-2 text-sm text-text-secondary">
-                {damages
-                  .filter((d) => d.type !== 'none' && d.amount > 0)
-                  .map((d) => `${d.amount}d${d.size} ${d.type}`)
-                  .join(', ')}
-              </p>
-            )}
-          </CollapsibleSection>
-    </CreatorLayout>
+      <PowerCreatorEditor
+        isAdmin={isAdmin}
+        name={ws.name}
+        onNameChange={ws.setName}
+        description={ws.description}
+        onDescriptionChange={ws.setDescription}
+        imageId={ws.imageId}
+        imageUrl={ws.imageUrl}
+        onImageChange={(selection) => {
+          ws.setImageId(selection.imageId);
+          ws.setImageUrl(selection.imageUrl);
+        }}
+        actionType={ws.actionType}
+        onActionTypeChange={ws.setActionType}
+        isReaction={ws.isReaction}
+        onIsReactionChange={ws.setIsReaction}
+        actionTypeDisplay={ws.actionTypeDisplay}
+        attackMode={ws.attackMode}
+        onAttackModeChange={ws.setAttackMode}
+        range={ws.range}
+        onRangeChange={ws.setRange}
+        rangeSummary={ws.rangeSummary}
+        area={ws.area}
+        onAreaChange={ws.setArea}
+        areaPartInfo={ws.areaPartInfo}
+        duration={ws.duration}
+        onDurationChange={ws.setDuration}
+        durationSummary={ws.durationSummary}
+        selectedParts={ws.selectedParts}
+        nonMechanicParts={ws.nonMechanicParts}
+        powerPartsSummary={ws.powerPartsSummary}
+        onAddPart={ws.addPart}
+        onRemovePart={ws.removePart}
+        onUpdatePart={ws.updatePart}
+        selectedAdvancedParts={ws.selectedAdvancedParts}
+        mechanicPartsForList={ws.mechanicPartsForList}
+        powerMechanicsSummary={ws.powerMechanicsSummary}
+        onAddMechanicPart={ws.addMechanicPart}
+        onRemoveAdvancedPart={ws.removeAdvancedPart}
+        onUpdateAdvancedPart={ws.updateAdvancedPart}
+        damages={ws.damages}
+        onDamagesChange={ws.setDamages}
+        damageSummary={ws.damageSummary}
+        sectionCosts={ws.sectionCosts}
+      />
+    </CreatorPageShell>
   );
 }
 

@@ -7,9 +7,9 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { DeleteConfirmModal, OfficialCreatureList } from '@/components/shared';
+import { DeleteConfirmModal, OfficialCreatureList } from '@/components/patterns';
 import { useToast } from '@/components/ui';
-import { useOfficialLibrary } from '@/hooks';
+import { officialLibraryKeys, useOfficialLibrary } from '@/hooks';
 import { useQueryClient } from '@tanstack/react-query';
 import { apiFetch } from '@/lib/api-client';
 import { Users } from 'lucide-react';
@@ -30,6 +30,7 @@ export function AdminPublicCreaturesTab() {
         method: 'DELETE',
       });
       queryClient.invalidateQueries({ queryKey: QUERY_KEY });
+      queryClient.invalidateQueries({ queryKey: officialLibraryKeys.counts });
       await queryClient.refetchQueries({ queryKey: QUERY_KEY });
       setDeleteConfirm(null);
     } catch (e) {
@@ -43,10 +44,12 @@ export function AdminPublicCreaturesTab() {
         items={items}
         isLoading={isLoading}
         error={error}
-        onRetry={() => { void refetch(); }}
+        onRetry={() => {
+          void refetch();
+        }}
         errorMessage="Failed to load official creatures"
         sectionTitle="Official Creatures"
-        emptyIcon={<Users className="w-8 h-8" />}
+        emptyIcon={<Users className="h-8 w-8" />}
         emptyTitle="No official creatures"
         emptyMessage="Add one from the header or publish from a creator."
         variant="admin"

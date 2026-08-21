@@ -1,15 +1,17 @@
 /** Part/property chip payload (powers, techniques, items). */
 export interface PartData {
   name: string;
-  text?: string;
-  description?: string;
-  tpCost?: number;
-  energyCost?: number;
-  optionLevels?: {
-    opt1?: number;
-    opt2?: number;
-    opt3?: number;
-  };
-  category?: string;
-  options?: Array<{ label: string; description?: string; level: number }>;
+  text?: string | undefined;
+  description?: string | undefined;
+  tpCost?: number | undefined;
+  energyCost?: number | undefined;
+  optionLevels?:
+    | {
+        opt1?: number | undefined;
+        opt2?: number | undefined;
+        opt3?: number | undefined;
+      }
+    | undefined;
+  category?: string | undefined;
+  options?: Array<{ label: string; description?: string | undefined; level: number }> | undefined;
 }

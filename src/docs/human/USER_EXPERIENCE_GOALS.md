@@ -69,8 +69,7 @@ Future **Archetypes** (ready-to-play character builds) will live in Realms Libra
 
 ### 2.4 Post-signup and onboarding
 
-- **Welcome banner:** For logged-in users on home, dismissible banner (once per session): “Welcome! Finish your character, browse Realms Library, or join the community” with links to Create character, Realms Library, Join Discord. Includes “Take a quick tour” to open the guided tour.
-- **Guided tour:** Optional 4-step modal (Welcome → Codex → Library → Character creator & save) with **Skip** and “Don’t show again” (localStorage). Triggered from welcome banner only (no auto-pop). Component: `OnboardingTour` in `@/components/shared`.
+- **Welcome / post-activation:** Pre-creation home tour removed (TASK-387). Post-save guidance shipped (TASK-388): play-together, optional sheet tour, level-up milestone highlight cards, tutorials on/off — see `REALMS_PRODUCT_OVERVIEW.md` §11.
 
 ### 2.5 Community and campaigns
 
@@ -91,18 +90,17 @@ Future **Archetypes** (ready-to-play character builds) will live in Realms Libra
 - [x] **Landing and CTAs:** Hero tagline; feature cards for Create a character, Browse Codex, Browse Realms Library (→ `/codex`, `/library`); “Join the Community” (Discord) on home and in nav/footer/About.
 - [x] **Character creator defaults:** Source filter default “Realms Library” in powers, equipment, species steps; modal copy “Choose from Realms Library or your library” and “Create your own” secondary; guest flow intact; “Create account to save” on finalize when not logged in.
 - [x] **Realms Library without login:** Library page (`/library`) shows Realms content read-only to guests via `LibraryPublicContent` with `readOnly`; My-Library toggle + Add button hidden until login. (Former `/browse` route consolidated here — redirects to `/library`, TASK-336.)
-- [x] **Post-signup welcome:** Dismissible welcome banner on home for logged-in users (sessionStorage); links to Create character, Realms Library, Join Discord, and “Take a quick tour.”
+- [x] **Landing rebuild:** Pre-creation `OnboardingTour` + welcome tour link removed (TASK-387); home is CTA-led (**Create Character** → `/characters/new`; TASK-763). How-it-works: Create a character → Find a table (Discord) → Start playing.
+- [x] **Post-activation onboarding (TASK-388):** Play-together after save; optional sheet tour; milestone level-up highlight cards; tutorials on/off (My Account; localStorage).
 - [x] **Progression/dopamine:** “Step X of 9” on character creator page; success toast “Your character is ready!” on save; Library add-toast “Added to My Library. You can use it as-is or edit a copy.”
 - [x] **Quick start placeholder:** Character creator shows a short callout that ready-to-play Archetypes (e.g. Martial striker, Power caster) will be available soon in Realms Library; for now, choose from Codex and Realms Library in each step.
 - [x] **Discord and community links:** “Join the Community” in header nav (external), footer, About, and home CTAs; single Discord invite URL used everywhere.
-- [x] **Guided tutorial:** `OnboardingTour` component (4 steps, Skip, “Don’t show again”); triggered from welcome banner “Take a quick tour”; localStorage key `realms_tour_completed`.
 
 ---
 
 ## 4. What Still Needs to Be Done (Backlog)
 
 - [ ] **Archetypes in Realms Library:** Ready-to-play character builds (species, archetype, sample feats/skills/powers/techniques) in Realms Library; “Quick start” in character creator would load one and let user name/tweak. Requires data model and UI for Archetype entities and “Start from Archetype” flow.
-- [ ] **Optional auto-show tour:** Currently tour is trigger-only from “Take a quick tour.” Plan suggested optional one-time auto-show after first login; could be added later with same “Don’t show again” and skip.
 - [ ] **Dismissible first-visit hints:** Optional short line on first visit to Codex/Library/Creator (“New here? The Codex has all species, feats, skills…” or “Use as-is or add to My Library to customize”) with dismiss and localStorage.
 - [ ] **“Find a group” / “Run a campaign” prominence:** Campaigns page could highlight these CTAs more for RMs; optional link to Discord or future LFG page.
 - [ ] **First-time milestone toasts (optional):** E.g. “You added your first power from Realms Library,” “Character saved—you can edit anytime,” only once per user, dismissible. Low priority; keep light.
@@ -119,10 +117,10 @@ When implementing or reviewing **any** UI, copy, or flow that touches onboarding
 |-------|----------|
 | **UX goals, terminology, done/backlog** | This file: `src/docs/USER_EXPERIENCE_GOALS.md` |
 | **Full UX plan (source)** | Plan doc (e.g. `realms_ux_retention_onboarding_*.plan.md`) — goals, personas, journey, priorities |
-| **Mobile and touch** | `src/docs/MOBILE_UX.md` — breakpoints, 44px touch targets, fullScreenOnMobile, side-scroll/collapse |
+| **Responsive / touch** | `src/docs/MOBILE_UX.md` (ADR-0023) — six-width contracts, tiered touch targets, fullScreenOnMobile, side-scroll/collapse |
 | **Accessibility and contrast** | `src/docs/ACCESSIBILITY.md`, `.cursor/rules/realms-accessibility.mdc` — WCAG 2.1 AA, labels, headings, modals |
 | **Game rules and terminology** | `src/docs/GAME_RULES.md` — ability names, formulas, display conventions |
-| **Owner feedback and tasks** | `src/docs/ALL_FEEDBACK_CLEAN.md` (curated + raw log), `src/docs/ai/AI_TASK_QUEUE.md` |
+| **Owner feedback and tasks** | `src/docs/ALL_FEEDBACK_CLEAN.md` (curated + raw log), `src/docs/ai/ACTIVE_TASKS.md` (process: `AI_TASK_QUEUE.md`) |
 
 ### 5.2 Checklist for UX-sensitive changes
 
@@ -131,25 +129,25 @@ When implementing or reviewing **any** UI, copy, or flow that touches onboarding
 - **Character creator:** Keep guest flow; default to Realms Library/Codex in selection steps; show “Create account to save” when not logged in; keep step progress and success message on save.
 - **CTAs:** Any new landing or nav should consider “Create a character,” “Browse Codex,” “Browse Realms Library,” and “Join the Community” (Discord) where relevant.
 - **Tone:** Epic but not childish; avoid heavy gamification or “Achievement unlocked!” style copy.
-- **Mobile:** New pages/modals follow MOBILE_UX.md (fullScreenOnMobile for large modals, 44px touch targets, side-scroll or collapse for dense sections).
+- **Responsive:** New pages/modals follow MOBILE_UX.md (fullScreenOnMobile for large modals, tiered touch targets, C1–C6 layout contracts; verify at 360 / 390 / 768 / 1024 / 1280 / 1440).
 - **Accessibility:** New controls have labels or aria-label; status/copy use contrast-safe tokens (see ACCESSIBILITY.md).
 
 ### 5.3 Where to record UX feedback and work
 
 - **Raw owner feedback:** Append to `src/docs/ALL_FEEDBACK_CLEAN.md` under “Raw Feedback Log” (date, context, priority, feedback text, expected behavior). See `.cursor/rules/realms-tasks.mdc` Feedback Processing Protocol.
-- **New tasks:** Add to `src/docs/ai/AI_TASK_QUEUE.md` with next TASK-### ID; reference this doc in description if the task is UX/onboarding/retention.
+- **New tasks:** Add to `src/docs/ai/ACTIVE_TASKS.md` with next TASK-### ID (process: `AI_TASK_QUEUE.md`); reference this doc in description if the task is UX/onboarding/retention.
 - **Done work:** Update task status; add notes and PR link; append to `src/docs/ai/AI_CHANGELOG.md`. If a backlog item in this doc is completed, update Section 4 and Section 3 accordingly.
 
 ### 5.4 Key files (implementation)
 
 | Area | Files |
 |------|--------|
-| Home and CTAs | `src/app/(main)/home-page.tsx` |
+| Home and CTAs | `src/app/(main)/page.tsx` |
 | Realms Library (guest read-only) | `src/app/(main)/library/page.tsx`, `src/app/(main)/library/LibraryPublicContent.tsx` (former `/browse` redirects here) |
 | Character creator | `src/app/(main)/characters/new/page.tsx`, `src/components/character-creator/steps/*.tsx`, `src/stores/character-creator-store.ts` |
-| Welcome banner & tour | `src/app/(main)/home-page.tsx`, `src/components/shared/onboarding-tour.tsx` |
+| Home / landing | `src/app/(main)/page.tsx` (post-activation onboarding shipped — TASK-388) |
 | Header / footer / Discord | `src/components/layout/header.tsx`, `src/components/layout/footer.tsx` |
-| Library and Codex labels | `src/app/(main)/library/page.tsx`, `src/app/(main)/codex/page.tsx`, `src/components/shared/filters/source-filter.tsx` |
+| Library and Codex labels | `src/app/(main)/library/page.tsx`, `src/app/(main)/codex/page.tsx`, `src/components/patterns/filters/source-filter.tsx` |
 
 ---
 

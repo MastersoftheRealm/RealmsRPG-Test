@@ -2,323 +2,30 @@
  * My Account Page
  * ===============
  * User profile and account settings page.
- * Uses Supabase Auth, Database, and Storage.
+ * Facade (TASK-666): state/handlers in `use-my-account-page`; cards under `_components/`.
  */
 
 'use client';
 
-import { useState, useEffect, useMemo } from 'react';
-import { useRouter } from 'next/navigation';
-import type { AuthUser } from '@/types/auth';
-import { createClient } from '@/lib/supabase/client';
-import { changeUsernameAction, getUserProfileAction, deleteAccountAction } from '@/app/(auth)/actions';
-import { useAuthStore } from '@/stores';
-import { useAdmin } from '@/hooks';
+import { User as UserIcon } from 'lucide-react';
 import { ProtectedRoute } from '@/components/layout';
-import { cn } from '@/lib/utils';
-import { apiFetch } from '@/lib/api-client';
-import { LoadingState, Button, Input, Alert, PageContainer, Spinner, Card, PageHeader } from '@/components/ui';
-import { ImageUploadModal } from '@/components/shared';
-import { User as UserIcon, Mail, Lock, Trash2, AlertTriangle, AtSign, Camera } from 'lucide-react';
-
-function hasPasswordProvider(authUser: AuthUser | null): boolean {
-  if (!authUser) return false;
-  return authUser.provider === 'email' || authUser.provider === 'password';
-}
-
-function getAuthProviderLabel(authUser: AuthUser | null): string {
-  if (!authUser) return 'Unknown';
-  const p = authUser.provider;
-  if (p === 'google' || p === 'google.com') return 'Google';
-  if (p === 'apple' || p === 'apple.com') return 'Apple';
-  if (p === 'email' || p === 'password') return 'Email/Password';
-  return p ? p.replace('.com', '') : 'Unknown';
-}
-
-interface UserProfile {
-  username?: string;
-  email?: string;
-  createdAt?: Date;
-  photoURL?: string;
-  role?: 'new_player' | 'playtester' | 'developer' | 'admin';
-  rolePolicy?: {
-    maxCampaigns: number;
-    maxPlayersPerCampaign: number;
-    maxCharacters: number;
-    maxPowers: number;
-    maxTechniques: number;
-    maxArmaments: number;
-    maxCreatures: number;
-    canUploadProfilePicture: boolean;
-  };
-}
+import { LoadingState, Button, Alert, PageContainer, PageHeader } from '@/components/ui';
+import { ImageUploadModal, RealmsImagePicker } from '@/components/patterns';
+import { useMyAccountPage } from './_components/use-my-account-page';
+import { AccountRoleLimitsCard } from './_components/account-role-limits-card';
+import { AccountProfileCard } from './_components/account-profile-card';
+import { AccountTutorialsCard, AccountUsernameCard } from './_components/account-preferences-cards';
+import {
+  AccountEmailCard,
+  AccountPasswordCard,
+  AccountOauthNoticeCard,
+} from './_components/account-security-cards';
+import { AccountDangerZoneCard } from './_components/account-danger-zone-card';
 
 function AccountContent() {
-  const router = useRouter();
-  const { user } = useAuthStore();
-  const { isAdmin } = useAdmin();
+  const model = useMyAccountPage();
 
-  const canChangeEmailPassword = useMemo(() => hasPasswordProvider(user), [user]);
-  const authProviderLabel = useMemo(() => getAuthProviderLabel(user), [user]);
-
-  const [profile, setProfile] = useState<UserProfile | null>(null);
-  const [loading, setLoading] = useState(true);
-
-  const [newEmail, setNewEmail] = useState('');
-  const [emailPassword, setEmailPassword] = useState('');
-  const [emailChanging, setEmailChanging] = useState(false);
-  const [emailMessage, setEmailMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
-
-  const [currentPassword, setCurrentPassword] = useState('');
-  const [newPassword, setNewPassword] = useState('');
-  const [confirmPassword, setConfirmPassword] = useState('');
-  const [passwordChanging, setPasswordChanging] = useState(false);
-  const [passwordMessage, setPasswordMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
-
-  const [showPictureModal, setShowPictureModal] = useState(false);
-  const [uploadingPicture, setUploadingPicture] = useState(false);
-  const [pictureMessage, setPictureMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
-
-  const [newUsername, setNewUsername] = useState('');
-  const [usernameChanging, setUsernameChanging] = useState(false);
-  const [usernameMessage, setUsernameMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
-
-  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
-  const [deletePassword, setDeletePassword] = useState('');
-  const [deleteConfirmText, setDeleteConfirmText] = useState('');
-  const [deleting, setDeleting] = useState(false);
-  const [deleteError, setDeleteError] = useState<string | null>(null);
-
-  useEffect(() => {
-    async function loadProfile() {
-      if (!user) return;
-
-      try {
-        const { profile: p } = await getUserProfileAction();
-        if (p) {
-          const rawPhoto = (p.photoUrl as string) ?? undefined;
-          const photoURL = rawPhoto
-            ? `${rawPhoto}?t=${p.updatedAt ? new Date(p.updatedAt as string | number | Date).getTime() : Date.now()}`
-            : (user.photoURL ?? undefined);
-          setProfile({
-            username: (p.usernameDisplay as string | undefined) ?? (p.username as string | undefined) ?? undefined,
-            email: (p.email as string | undefined) ?? user.email ?? undefined,
-            createdAt: p.createdAt instanceof Date ? p.createdAt : p.createdAt ? new Date(p.createdAt as string | number | Date) : undefined,
-            photoURL,
-            role: (p.role as UserProfile['role']) ?? undefined,
-            rolePolicy: (p.rolePolicy as UserProfile['rolePolicy']) ?? undefined,
-          });
-        } else {
-          setProfile({
-            email: user.email ?? undefined,
-            photoURL: user.photoURL ?? undefined,
-          });
-        }
-      } catch {
-      } finally {
-        setLoading(false);
-      }
-    }
-
-    loadProfile();
-  }, [user]);
-
-  const handleProfilePictureUpload = async (blob: Blob) => {
-    if (!user) return;
-    setUploadingPicture(true);
-    setPictureMessage(null);
-    try {
-      const file = new File([blob], 'profile.jpg', { type: 'image/jpeg' });
-      const formData = new FormData();
-      formData.append('file', file);
-
-      const res = await fetch('/api/upload/profile-picture', {
-        method: 'POST',
-        body: formData,
-      });
-
-      if (!res.ok) {
-        const err = await res.json().catch(() => ({ error: res.statusText }));
-        throw new Error((err as { error?: string }).error ?? 'Upload failed');
-      }
-
-      const { url } = (await res.json()) as { url: string };
-      // Cache-bust so the browser shows the new image (same path is overwritten in storage)
-      setProfile((prev) => (prev ? { ...prev, photoURL: `${url}?t=${Date.now()}` } : null));
-      setPictureMessage({ type: 'success', text: 'Profile picture updated!' });
-      // Sync to Supabase Auth so header and any useAuth() consumer see the new picture
-      const supabase = createClient();
-      await supabase.auth.updateUser({ data: { avatar_url: url } });
-    } catch (err) {
-      setPictureMessage({ type: 'error', text: 'Failed to upload profile picture' });
-    } finally {
-      setUploadingPicture(false);
-    }
-  };
-
-  const handleUsernameChange = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!newUsername.trim()) return;
-
-    setUsernameChanging(true);
-    setUsernameMessage(null);
-
-    const result = await changeUsernameAction(newUsername.trim());
-
-    if (result.success) {
-      setProfile((prev) => (prev ? { ...prev, username: newUsername.trim() } : null));
-      setNewUsername('');
-      setUsernameMessage({ type: 'success', text: 'Username updated successfully!' });
-    } else {
-      setUsernameMessage({ type: 'error', text: result.error ?? 'Failed to change username' });
-    }
-    setUsernameChanging(false);
-  };
-
-  const handleEmailChange = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!user?.email) return;
-
-    setEmailChanging(true);
-    setEmailMessage(null);
-
-    if (!emailPassword) {
-      setEmailMessage({ type: 'error', text: 'Please enter your current password' });
-      setEmailChanging(false);
-      return;
-    }
-
-    try {
-      const supabase = createClient();
-      // Re-authenticate with the current password before changing the email so a
-      // hijacked session cannot silently take over the account (TASK-331).
-      const { error: reauthError } = await supabase.auth.signInWithPassword({
-        email: user.email,
-        password: emailPassword,
-      });
-      if (reauthError) throw new Error('Current password is incorrect');
-      const { error } = await supabase.auth.updateUser({ email: newEmail });
-      if (error) throw error;
-      setProfile((prev) => (prev ? { ...prev, email: newEmail } : null));
-      setNewEmail('');
-      setEmailPassword('');
-      setEmailMessage({ type: 'success', text: 'Email updated successfully!' });
-    } catch (err: unknown) {
-      const error = err as { message?: string };
-      let message = 'Failed to update email';
-      if (error.message?.includes('wrong') || error.message?.includes('password')) {
-        message = 'Incorrect password';
-      } else if (error.message?.includes('already in use')) {
-        message = 'Email already in use';
-      } else if (error.message?.includes('invalid')) {
-        message = 'Invalid email address';
-      } else if (error.message) {
-        message = error.message;
-      }
-      setEmailMessage({ type: 'error', text: message });
-    } finally {
-      setEmailChanging(false);
-    }
-  };
-
-  const handlePasswordChange = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!user?.email) return;
-
-    if (newPassword !== confirmPassword) {
-      setPasswordMessage({ type: 'error', text: 'Passwords do not match' });
-      return;
-    }
-
-    if (newPassword.length < 6) {
-      setPasswordMessage({ type: 'error', text: 'Password must be at least 6 characters' });
-      return;
-    }
-
-    setPasswordChanging(true);
-    setPasswordMessage(null);
-
-    try {
-      const supabase = createClient();
-      // Verify the current password before setting a new one (TASK-331).
-      const { error: reauthError } = await supabase.auth.signInWithPassword({
-        email: user.email,
-        password: currentPassword,
-      });
-      if (reauthError) throw new Error('Current password is incorrect');
-      const { error } = await supabase.auth.updateUser({ password: newPassword });
-      if (error) throw error;
-      setCurrentPassword('');
-      setNewPassword('');
-      setConfirmPassword('');
-      setPasswordMessage({ type: 'success', text: 'Password updated successfully!' });
-    } catch (err: unknown) {
-      const error = err as { message?: string };
-      let message = 'Failed to update password';
-      if (error.message?.includes('wrong') || error.message?.includes('incorrect')) {
-        message = 'Current password is incorrect';
-      } else if (error.message?.includes('weak')) {
-        message = 'Password is too weak';
-      } else if (error.message) {
-        message = error.message;
-      }
-      setPasswordMessage({ type: 'error', text: message });
-    } finally {
-      setPasswordChanging(false);
-    }
-  };
-
-  const handleSendResetEmail = async () => {
-    if (!user?.email) return;
-
-    try {
-      const supabase = createClient();
-      await supabase.auth.resetPasswordForEmail(user.email);
-      setPasswordMessage({ type: 'success', text: 'Password reset email sent!' });
-    } catch {
-      setPasswordMessage({ type: 'error', text: 'Failed to send reset email' });
-    }
-  };
-
-  const handleDeleteAccount = async () => {
-    if (!user) return;
-    if (deleteConfirmText !== 'DELETE') return;
-
-    setDeleting(true);
-    setDeleteError(null);
-
-    try {
-      const supabase = createClient();
-      // Password accounts re-authenticate; OAuth-only users (no password) confirm
-      // via the typed DELETE, so they aren't locked out of deleting (TASK-331).
-      if (canChangeEmailPassword) {
-        if (!user.email) throw new Error('Missing account email');
-        const { error } = await supabase.auth.signInWithPassword({
-          email: user.email,
-          password: deletePassword,
-        });
-        if (error) throw error;
-      }
-
-      const result = await deleteAccountAction();
-      if (!result.success) {
-        throw new Error(result.error ?? 'Failed to delete account');
-      }
-      router.push('/');
-    } catch (err: unknown) {
-      const error = err as { message?: string };
-      let message = 'Failed to delete account';
-      if (error.message?.includes('wrong') || error.message?.includes('Invalid')) {
-        message = 'Incorrect password';
-      } else if (error.message) {
-        message = error.message;
-      }
-      setDeleteError(message);
-      setDeleting(false);
-    }
-  };
-
-  if (loading) {
+  if (model.loading) {
     return (
       <PageContainer size="xs">
         <LoadingState message="Loading account..." />
@@ -327,376 +34,118 @@ function AccountContent() {
   }
 
   return (
-    <PageContainer size="xs" className="space-y-6 min-w-0">
+    <PageContainer size="xs" className="min-w-0 space-y-6">
       <PageHeader
         title="My Account"
-        icon={<UserIcon className="w-8 h-8 text-primary-link-fg" />}
+        icon={<UserIcon className="h-8 w-8 text-primary-link-fg" />}
         description="Manage your profile and account settings"
         className="mb-0 min-w-0"
       />
 
-
-      <Card className="shadow-md p-6">
-        <h2 className="text-lg font-bold text-text-primary mb-3">Role &amp; Limits</h2>
-        <p className="text-text-secondary mb-4">
-          Your role controls quotas for campaigns, characters, and custom library items.
-        </p>
-
-        <div className="space-y-2">
-          <div className="flex items-center justify-between py-2 border-b border-border-subtle">
-            <span className="text-text-secondary">Role</span>
-            <span className="font-medium text-text-primary">{formatRoleLabel(profile?.role)}</span>
-          </div>
-
-          {profile?.rolePolicy ? (
-            <>
-              <div className="flex items-center justify-between py-2 border-b border-border-subtle">
-                <span className="text-text-secondary">Max Campaigns</span>
-                <span className="font-medium text-text-primary">{profile.rolePolicy.maxCampaigns}</span>
-              </div>
-              <div className="flex items-center justify-between py-2 border-b border-border-subtle">
-                <span className="text-text-secondary">Max Players Per Campaign</span>
-                <span className="font-medium text-text-primary">{profile.rolePolicy.maxPlayersPerCampaign}</span>
-              </div>
-              <div className="flex items-center justify-between py-2 border-b border-border-subtle">
-                <span className="text-text-secondary">Max Characters</span>
-                <span className="font-medium text-text-primary">{profile.rolePolicy.maxCharacters}</span>
-              </div>
-              <div className="flex items-center justify-between py-2 border-b border-border-subtle">
-                <span className="text-text-secondary">Max Custom Powers</span>
-                <span className="font-medium text-text-primary">{profile.rolePolicy.maxPowers}</span>
-              </div>
-              <div className="flex items-center justify-between py-2 border-b border-border-subtle">
-                <span className="text-text-secondary">Max Custom Techniques</span>
-                <span className="font-medium text-text-primary">{profile.rolePolicy.maxTechniques}</span>
-              </div>
-              <div className="flex items-center justify-between py-2 border-b border-border-subtle">
-                <span className="text-text-secondary">Max Custom Armaments</span>
-                <span className="font-medium text-text-primary">{profile.rolePolicy.maxArmaments}</span>
-              </div>
-              <div className="flex items-center justify-between py-2 border-b border-border-subtle">
-                <span className="text-text-secondary">Max Custom Creatures</span>
-                <span className="font-medium text-text-primary">{profile.rolePolicy.maxCreatures}</span>
-              </div>
-              <div className="flex items-center justify-between py-2">
-                <span className="text-text-secondary">Profile Picture Uploads</span>
-                <span className="font-medium text-text-primary">{profile.rolePolicy.canUploadProfilePicture ? 'Allowed' : 'Not allowed'}</span>
-              </div>
-            </>
-          ) : (
-            <p className="text-text-muted dark:text-text-secondary italic">Limits unavailable.</p>
-          )}
-        </div>
-      </Card>
-
-      <Card className="shadow-md p-6">
-        <h2 className="text-lg font-bold text-text-primary mb-4">Profile Information</h2>
-
-        <div className="flex items-center gap-4 mb-6 pb-4 border-b border-border-subtle">
-          <div className="relative w-20 h-20 rounded-full overflow-hidden bg-surface-alt border-2 border-border-light flex-shrink-0">
-            {profile?.photoURL ? (
-              <img src={profile.photoURL} alt="Profile" className="w-full h-full object-cover" />
-            ) : (
-              <div className="w-full h-full flex items-center justify-center text-text-muted">
-                <UserIcon className="w-8 h-8" />
-              </div>
-            )}
-            {uploadingPicture && (
-              <div className="absolute inset-0 flex items-center justify-center bg-black/40">
-                <Spinner size="sm" variant="white" />
-              </div>
-            )}
-          </div>
-          <div>
-            <Button
-              variant="secondary"
-              size="sm"
-              onClick={() => setShowPictureModal(true)}
-              disabled={uploadingPicture}
-            >
-              <Camera className="w-4 h-4" />
-              {profile?.photoURL ? 'Change Picture' : 'Add Picture'}
-            </Button>
-            <p className="text-xs text-text-muted mt-1">JPG, PNG, GIF, or WebP. Max 5MB.</p>
-            {pictureMessage && (
-              <p className={cn('text-xs mt-1', pictureMessage.type === 'success' ? 'text-green-600' : 'text-red-600')}>
-                {pictureMessage.text}
-              </p>
-            )}
-          </div>
-        </div>
-
-        <div className="space-y-3">
-          <div className="flex items-center justify-between py-2 border-b border-border-subtle">
-            <span className="text-text-secondary">Username</span>
-            <span className="font-medium text-text-primary">{profile?.username || 'Not set'}</span>
-          </div>
-          <div className="flex items-center justify-between py-2 border-b border-border-subtle">
-            <span className="text-text-secondary">Email</span>
-            <span className="font-medium text-text-primary">{profile?.email}</span>
-          </div>
-          <div className="flex items-center justify-between py-2 border-b border-border-subtle">
-            <span className="text-text-secondary">Signed in with</span>
-            <span className="font-medium text-text-primary">{authProviderLabel}</span>
-          </div>
-          <div className="flex items-center justify-between py-2">
-            <span className="text-text-secondary">Member Since</span>
-            <span className="font-medium text-text-primary">
-              {profile?.createdAt instanceof Date
-                ? profile.createdAt.toLocaleDateString()
-                : profile?.createdAt
-                  ? new Date(profile.createdAt).toLocaleDateString()
-                  : 'Unknown'}
-            </span>
-          </div>
-        </div>
-      </Card>
-
-      <Card className="shadow-md p-6">
-        <h2 className="text-lg font-bold text-text-primary mb-4 flex items-center gap-2">
-          <AtSign className="w-5 h-5 text-text-secondary" />
-          Change Username
-        </h2>
-        <p className="text-sm text-text-secondary mb-4">
-          Usernames can only be changed once per week. Use 3–24 characters (letters, numbers, underscores, hyphens).
-        </p>
-        <form onSubmit={handleUsernameChange} className="space-y-4">
-          <div>
-            <label className="block text-sm font-medium text-text-secondary mb-1">New Username</label>
-            <Input
-              type="text"
-              value={newUsername}
-              onChange={(e) => setNewUsername(e.target.value)}
-              placeholder={profile?.username ? `Current: ${profile.username}` : 'Enter new username'}
-              {...(!isAdmin && {
-                minLength: 3,
-                maxLength: 24,
-                pattern: '[a-zA-Z0-9_-]+',
-                title: 'Letters, numbers, underscores, and hyphens only',
-              })}
-            />
-          </div>
-
-          {usernameMessage && (
-            <Alert variant={usernameMessage.type === 'success' ? 'success' : 'danger'}>
-              {usernameMessage.text}
-            </Alert>
-          )}
-
+      {model.profileLoadError && (
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-start">
+          <Alert variant="danger" className="min-w-0 flex-1">
+            {model.profileLoadError}. Some account details may be incomplete.
+          </Alert>
           <Button
-            type="submit"
-            disabled={usernameChanging || !newUsername.trim() || (!isAdmin && newUsername.trim().length < 3)}
-            isLoading={usernameChanging}
+            type="button"
+            variant="secondary"
+            onClick={() => void model.refetchProfile()}
+            disabled={model.profileRetrying}
+            aria-label="Retry loading account profile"
+            className="min-h-[var(--touch-target-min,44px)] shrink-0 self-stretch sm:self-auto"
           >
-            Update Username
+            {model.profileRetrying ? 'Retrying…' : 'Retry'}
           </Button>
-        </form>
-      </Card>
-
-      {canChangeEmailPassword && (
-        <Card className="shadow-md p-6">
-          <h2 className="text-lg font-bold text-text-primary mb-4 flex items-center gap-2">
-            <Mail className="w-5 h-5 text-text-secondary" />
-            Change Email
-          </h2>
-
-          <form onSubmit={handleEmailChange} className="space-y-4">
-            <div>
-              <label className="block text-sm font-medium text-text-secondary mb-1">New Email Address</label>
-              <Input
-                type="email"
-                value={newEmail}
-                onChange={(e) => setNewEmail(e.target.value)}
-                required
-                placeholder="Enter new email"
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-text-secondary mb-1">Current Password</label>
-              <Input
-                type="password"
-                value={emailPassword}
-                onChange={(e) => setEmailPassword(e.target.value)}
-                required
-                placeholder="Enter current password"
-              />
-            </div>
-
-            {emailMessage && (
-              <Alert variant={emailMessage.type === 'success' ? 'success' : 'danger'}>
-                {emailMessage.text}
-              </Alert>
-            )}
-
-            <Button
-              type="submit"
-              disabled={emailChanging || !newEmail || !emailPassword}
-              isLoading={emailChanging}
-            >
-              Update Email
-            </Button>
-          </form>
-        </Card>
+        </div>
       )}
 
-      {canChangeEmailPassword && (
-        <Card className="shadow-md p-6">
-          <h2 className="text-lg font-bold text-text-primary mb-4 flex items-center gap-2">
-            <Lock className="w-5 h-5 text-text-secondary" />
-            Change Password
-          </h2>
+      <AccountRoleLimitsCard profile={model.profile} />
 
-          <form onSubmit={handlePasswordChange} className="space-y-4">
-            <div>
-              <label className="block text-sm font-medium text-text-secondary mb-1">Current Password</label>
-              <Input
-                type="password"
-                value={currentPassword}
-                onChange={(e) => setCurrentPassword(e.target.value)}
-                required
-                placeholder="Enter current password"
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-text-secondary mb-1">New Password</label>
-              <Input
-                type="password"
-                value={newPassword}
-                onChange={(e) => setNewPassword(e.target.value)}
-                required
-                minLength={6}
-                placeholder="Enter new password"
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-text-secondary mb-1">Confirm New Password</label>
-              <Input
-                type="password"
-                value={confirmPassword}
-                onChange={(e) => setConfirmPassword(e.target.value)}
-                required
-                minLength={6}
-                placeholder="Confirm new password"
-              />
-            </div>
+      <AccountProfileCard
+        profile={model.profile}
+        authProviderLabel={model.authProviderLabel}
+        uploadingPicture={model.uploadingPicture}
+        pictureMessage={model.pictureMessage}
+        onOpenPictureModal={() => model.setShowPictureModal(true)}
+      />
 
-            {passwordMessage && (
-              <Alert variant={passwordMessage.type === 'success' ? 'success' : 'danger'}>
-                {passwordMessage.text}
-              </Alert>
-            )}
+      <AccountTutorialsCard
+        tutorialsEnabled={model.tutorialsEnabled}
+        onTutorialsChange={model.handleTutorialsChange}
+      />
 
-            <div className="flex items-center gap-4">
-              <Button
-                type="submit"
-                disabled={passwordChanging || !currentPassword || !newPassword || !confirmPassword}
-                isLoading={passwordChanging}
-              >
-                Update Password
-              </Button>
-              <Button type="button" variant="link" onClick={handleSendResetEmail}>
-                Send password reset email instead
-              </Button>
-            </div>
-          </form>
-        </Card>
+      <AccountUsernameCard
+        profile={model.profile}
+        isAdmin={model.isAdmin}
+        newUsername={model.newUsername}
+        setNewUsername={model.setNewUsername}
+        usernameChanging={model.usernameChanging}
+        usernameMessage={model.usernameMessage}
+        onSubmit={model.handleUsernameChange}
+      />
+
+      {model.canChangeEmailPassword ? (
+        <>
+          <AccountEmailCard
+            newEmail={model.newEmail}
+            setNewEmail={model.setNewEmail}
+            emailPassword={model.emailPassword}
+            setEmailPassword={model.setEmailPassword}
+            emailChanging={model.emailChanging}
+            emailMessage={model.emailMessage}
+            onSubmit={model.handleEmailChange}
+          />
+          <AccountPasswordCard
+            currentPassword={model.currentPassword}
+            setCurrentPassword={model.setCurrentPassword}
+            newPassword={model.newPassword}
+            setNewPassword={model.setNewPassword}
+            confirmPassword={model.confirmPassword}
+            setConfirmPassword={model.setConfirmPassword}
+            passwordChanging={model.passwordChanging}
+            passwordMessage={model.passwordMessage}
+            onSubmit={model.handlePasswordChange}
+            onSendResetEmail={() => void model.handleSendResetEmail()}
+          />
+        </>
+      ) : (
+        <AccountOauthNoticeCard authProviderLabel={model.authProviderLabel} />
       )}
 
-      {!canChangeEmailPassword && (
-        <Card className="shadow-md p-6">
-          <p className="text-text-secondary text-sm">
-            You signed in with {authProviderLabel}. Email and password cannot be changed here. To update your
-            email, use your {authProviderLabel} account settings.
-          </p>
-        </Card>
-      )}
-
-      <Card className="shadow-md p-6 border-2 border-red-200">
-        <h2 className="text-lg font-bold text-red-700 mb-4 flex items-center gap-2">
-          <AlertTriangle className="w-5 h-5" />
-          Danger Zone
-        </h2>
-
-        <p className="text-text-secondary mb-4">
-          Deleting your account is permanent and cannot be undone. All your characters, creations, and data will be
-          permanently deleted.
-        </p>
-
-        {!showDeleteConfirm ? (
-          <Button variant="danger" onClick={() => setShowDeleteConfirm(true)}>
-            <Trash2 className="w-4 h-4" />
-            Delete My Account
-          </Button>
-        ) : (
-          <div className="bg-red-50 rounded-lg p-4 space-y-4">
-            <p className="text-sm text-red-700 font-medium">
-              {canChangeEmailPassword
-                ? 'To confirm deletion, enter your password and type DELETE below:'
-                : 'To confirm deletion, type DELETE below:'}
-            </p>
-            {canChangeEmailPassword && (
-              <div>
-                <label className="block text-sm font-medium text-red-700 mb-1">Password</label>
-                <Input
-                  type="password"
-                  value={deletePassword}
-                  onChange={(e) => setDeletePassword(e.target.value)}
-                  className="border-red-300 focus:ring-red-500"
-                  placeholder="Enter your password"
-                />
-              </div>
-            )}
-            <div>
-              <label className="block text-sm font-medium text-red-700 mb-1">Type DELETE to confirm</label>
-              <Input
-                type="text"
-                value={deleteConfirmText}
-                onChange={(e) => setDeleteConfirmText(e.target.value)}
-                className="border-red-300 focus:ring-red-500"
-                placeholder="DELETE"
-              />
-            </div>
-
-            {deleteError && (
-              <div className="p-3 rounded-lg bg-danger-light text-danger-fg text-sm">{deleteError}</div>
-            )}
-
-            <div className="flex gap-3">
-              <Button
-                variant="danger"
-                onClick={handleDeleteAccount}
-                disabled={
-                  deleting ||
-                  deleteConfirmText !== 'DELETE' ||
-                  (canChangeEmailPassword && !deletePassword)
-                }
-                isLoading={deleting}
-              >
-                Permanently Delete Account
-              </Button>
-              <Button
-                variant="ghost"
-                onClick={() => {
-                  setShowDeleteConfirm(false);
-                  setDeletePassword('');
-                  setDeleteConfirmText('');
-                  setDeleteError(null);
-                }}
-              >
-                Cancel
-              </Button>
-            </div>
-          </div>
-        )}
-      </Card>
+      <AccountDangerZoneCard
+        canChangeEmailPassword={model.canChangeEmailPassword}
+        showDeleteConfirm={model.showDeleteConfirm}
+        onShowDeleteConfirm={() => model.setShowDeleteConfirm(true)}
+        deletePassword={model.deletePassword}
+        setDeletePassword={model.setDeletePassword}
+        deleteConfirmText={model.deleteConfirmText}
+        setDeleteConfirmText={model.setDeleteConfirmText}
+        deleting={model.deleting}
+        deleteError={model.deleteError}
+        onDelete={() => void model.handleDeleteAccount()}
+        onCancel={model.cancelDeleteConfirm}
+      />
 
       <ImageUploadModal
-        isOpen={showPictureModal}
-        onClose={() => setShowPictureModal(false)}
-        onConfirm={handleProfilePictureUpload}
+        isOpen={model.showPictureModal}
+        onClose={() => model.setShowPictureModal(false)}
+        onConfirm={model.handleProfilePictureUpload}
+        onChooseFromLibrary={() => model.setShowPictureBank(true)}
         cropShape="round"
         aspect={1}
         title="Upload Profile Picture"
+      />
+      <RealmsImagePicker
+        isOpen={model.showPictureBank}
+        onClose={() => model.setShowPictureBank(false)}
+        onSelect={({ image }) => {
+          void model.handleBankProfilePicture(image.publicUrl);
+        }}
+        categories="portrait"
+        allowAdminUpload={false}
+        title="Choose Profile Picture"
+        description="Pick species or creature art from the Realms Image Library."
       />
     </PageContainer>
   );
@@ -708,13 +157,4 @@ export default function MyAccountPage() {
       <AccountContent />
     </ProtectedRoute>
   );
-}
-
-function formatRoleLabel(role: UserProfile['role'] | undefined): string {
-  if (!role) return 'Unknown';
-  if (role === 'new_player') return 'New Player';
-  if (role === 'playtester') return 'Playtester';
-  if (role === 'developer') return 'Developer';
-  if (role === 'admin') return 'Admin';
-  return role;
 }

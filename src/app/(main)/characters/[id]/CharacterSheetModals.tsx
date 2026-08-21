@@ -1,10 +1,12 @@
 /**
  * Character Sheet - Modal Components
+ * Reads modal state + handlers from character-sheet context (TASK-667).
  */
 
 'use client';
 
-import type { Character, CharacterPower, CharacterTechnique, Item } from '@/types';
+import { useMemo } from 'react';
+import type { Character, Item } from '@/types';
 import {
   AddLibraryItemModal,
   AddFeatModal,
@@ -13,114 +15,114 @@ import {
   EditArchetypeModal,
   EditSpeciesModal,
 } from '@/components/character-sheet';
-import type { EditArchetypeResult } from '@/components/character-sheet';
-import { DeleteConfirmModal, AddSkillModal, AddSubSkillModal } from '@/components/shared';
+import { DeleteConfirmModal, AddSubSkillModal } from '@/components/patterns';
 import type { AddLibraryItemType } from '@/hooks/use-add-library-item-data';
-import type { CharacterSheetStats } from './character-sheet-utils';
+import {
+  useCharacterSheet,
+  type AddModalType,
+} from '@/components/character-sheet/character-sheet-context';
 
-export type AddModalType = 'power' | 'innate-power' | 'technique' | 'weapon' | 'shield' | 'armor' | 'equipment' | null;
-export type FeatModalType = 'archetype' | 'character' | 'state' | null;
-export type SkillModalType = 'skill' | 'subskill' | null;
-
-interface SkillForModal {
-  id: string;
-  name: string;
-  category?: string;
-  skill_val?: number;
-  prof?: boolean;
-  baseSkill?: string;
-  ability?: string;
-  availableAbilities?: string[];
+/**
+ * DESIGN_INTENT: Add-modal exclusion set is type-scoped only.
+ * Cross-table numeric ids (weapon id "1" vs codex gear id "1") must not hide rows.
+ * Equipment is stackable — return empty so owned gear stays selectable (quantity merges).
+ */
+function existingIdsForAddModal(
+  character: Character | null,
+  addModalType: AddModalType,
+): Set<string> {
+  const ids = new Set<string>();
+  if (!character || !addModalType) return ids;
+  const add = (id: string | number | undefined) => {
+    const s = String(id ?? '');
+    if (s) ids.add(s);
+  };
+  switch (addModalType) {
+    case 'power':
+    case 'innate-power':
+      character.powers?.forEach((p) => add(p.id));
+      break;
+    case 'technique':
+      character.techniques?.forEach((t) => add(t.id));
+      break;
+    case 'weapon':
+      ((character.equipment?.weapons as Item[]) || []).forEach((w) => add(w.id));
+      break;
+    case 'armor':
+      ((character.equipment?.armor as Item[]) || []).forEach((a) => add(a.id));
+      break;
+    case 'shield':
+      ((character.equipment?.shields as Item[]) || []).forEach((s) => add(s.id));
+      break;
+    case 'equipment':
+      // Stackable — do not exclude owned gear (quantity merges on add).
+      break;
+  }
+  return ids;
 }
 
 interface TraitForModal {
   name: string;
-  currentUses?: number;
-  maxUses?: number;
-  recovery?: string;
+  currentUses?: number | undefined;
+  maxUses?: number | undefined;
+  recovery?: string | undefined;
 }
 
 interface FeatForModal {
   id: string;
   name: string;
-  currentUses?: number;
-  maxUses?: number;
-  recovery?: string;
+  currentUses?: number | undefined;
+  maxUses?: number | undefined;
+  recovery?: string | undefined;
 }
 
-interface CharacterSheetModalsProps {
-  addModalType: AddModalType;
-  setAddModalType: (t: AddModalType) => void;
-  featModalType: FeatModalType;
-  setFeatModalType: (t: FeatModalType) => void;
-  skillModalType: SkillModalType;
-  setSkillModalType: (t: SkillModalType) => void;
-  featToRemove: { id: string; name: string } | null;
-  setFeatToRemove: (f: { id: string; name: string } | null) => void;
-  showLevelUpModal: boolean;
-  setShowLevelUpModal: (v: boolean) => void;
-  showRecoveryModal: boolean;
-  setShowRecoveryModal: (v: boolean) => void;
-  character: Character | null;
-  /** Codex-hydrated character for path-aware modals (optional). */
-  displayCharacter?: Character | null;
-  calculatedStats: CharacterSheetStats | null;
-  existingIds: Set<string>;
-  skills: SkillForModal[];
-  traitsDb: Array<{ name?: string; uses_per_rec?: number; rec_period?: string }>;
-  onModalAdd: (items: CharacterPower[] | CharacterTechnique[] | Item[]) => void;
-  onAddFeats: (feats: Array<{ id: string; name: string; description?: string; effect?: string; max_uses?: number }>, type: 'archetype' | 'character' | 'state') => void;
-  onAddSkills: (skills: Array<{ id: string; name: string; ability?: string; base_skill_id?: number; selectedBaseSkillId?: string }>) => void;
-  onConfirmRemoveFeat: () => void;
-  onLevelUp: (newLevel: number) => void;
-  onFullRecovery: () => void;
-  onPartialRecovery: (hpRestored: number, enRestored: number, resetPartialFeats: boolean) => void;
-  showEditArchetypeModal: boolean;
-  setShowEditArchetypeModal: (v: boolean) => void;
-  onArchetypeSave: (result: EditArchetypeResult) => void;
-  showEditSpeciesModal: boolean;
-  setShowEditSpeciesModal: (v: boolean) => void;
-  onSpeciesSave: (updates: { ancestry: Character['ancestry']; skills: unknown }) => void;
-}
+export function CharacterSheetModals() {
+  const {
+    character,
+    displayCharacter,
+    calculatedStats,
+    skills,
+    libraryModel,
+    addModalType,
+    setAddModalType,
+    featModalType,
+    setFeatModalType,
+    skillModalType,
+    setSkillModalType,
+    featToRemove,
+    setFeatToRemove,
+    showLevelUpModal,
+    setShowLevelUpModal,
+    showRecoveryModal,
+    setShowRecoveryModal,
+    showEditArchetypeModal,
+    setShowEditArchetypeModal,
+    editArchetypeSessionKey,
+    showEditSpeciesModal,
+    setShowEditSpeciesModal,
+    onModalAdd,
+    onAddFeats,
+    onAddSkills,
+    onConfirmRemoveFeat,
+    onLevelUp,
+    onFullRecovery,
+    onPartialRecovery,
+    onArchetypeSave,
+    onSpeciesSave,
+  } = useCharacterSheet();
 
-export function CharacterSheetModals({
-  addModalType,
-  setAddModalType,
-  featModalType,
-  setFeatModalType,
-  skillModalType,
-  setSkillModalType,
-  featToRemove,
-  setFeatToRemove,
-  showLevelUpModal,
-  setShowLevelUpModal,
-  showRecoveryModal,
-  setShowRecoveryModal,
-  character,
-  displayCharacter,
-  calculatedStats,
-  existingIds,
-  skills,
-  traitsDb,
-  onModalAdd,
-  onAddFeats,
-  onAddSkills,
-  onConfirmRemoveFeat,
-  onLevelUp,
-  onFullRecovery,
-  onPartialRecovery,
-  showEditArchetypeModal,
-  setShowEditArchetypeModal,
-  onArchetypeSave,
-  showEditSpeciesModal,
-  setShowEditSpeciesModal,
-  onSpeciesSave,
-}: CharacterSheetModalsProps) {
+  const traitsDb = libraryModel?.traitsDb ?? [];
+  const scopedExistingIds = useMemo(
+    () => existingIdsForAddModal(character, addModalType),
+    [character, addModalType],
+  );
+
   return (
     <>
-      {character && (
+      {showEditArchetypeModal && (
         <EditArchetypeModal
-          isOpen={showEditArchetypeModal}
+          key={editArchetypeSessionKey}
+          isOpen
           onClose={() => setShowEditArchetypeModal(false)}
           character={character}
           displayCharacter={displayCharacter ?? character}
@@ -128,22 +130,24 @@ export function CharacterSheetModals({
         />
       )}
 
-      {character && (
-        <EditSpeciesModal
-          isOpen={showEditSpeciesModal}
-          onClose={() => setShowEditSpeciesModal(false)}
-          character={character}
-          onSave={onSpeciesSave}
-        />
-      )}
+      <EditSpeciesModal
+        isOpen={showEditSpeciesModal}
+        onClose={() => setShowEditSpeciesModal(false)}
+        character={character}
+        onSave={onSpeciesSave}
+      />
 
       {addModalType && (
         <AddLibraryItemModal
           isOpen={!!addModalType}
           onClose={() => setAddModalType(null)}
-          itemType={addModalType === 'innate-power' ? 'power' : (addModalType as AddLibraryItemType)}
-          titleOverride={addModalType === 'innate-power' ? 'Add Innate Power from Library' : undefined}
-          existingIds={existingIds}
+          itemType={
+            addModalType === 'innate-power' ? 'power' : (addModalType as AddLibraryItemType)
+          }
+          titleOverride={
+            addModalType === 'innate-power' ? 'Add Innate Power from Library' : undefined
+          }
+          existingIds={scopedExistingIds}
           onAdd={onModalAdd}
         />
       )}
@@ -159,42 +163,35 @@ export function CharacterSheetModals({
         />
       )}
 
-      {character && featModalType && (
+      {featModalType && (
         <AddFeatModal
-          isOpen={!!featModalType}
+          key={featModalType}
+          isOpen
           onClose={() => setFeatModalType(null)}
           featType={featModalType}
           character={character}
           existingFeatIds={[
-            ...(character.archetypeFeats || []).map(f => f.id || f.name),
-            ...(character.feats || []).map(f => f.id || f.name),
+            ...(character.archetypeFeats || []).map((f) => f.id || f.name),
+            ...(character.feats || []).map((f) => f.id || f.name),
           ]}
-          onAdd={feats => onAddFeats(feats, featModalType)}
+          onAdd={(feats) => onAddFeats(feats, featModalType)}
         />
       )}
 
-      {character && skillModalType === 'skill' && (
-        <AddSkillModal
-          isOpen={true}
-          onClose={() => setSkillModalType(null)}
-          existingSkillNames={skills.map(s => s.name)}
-          onAdd={onAddSkills}
-        />
-      )}
-
-      {character && skillModalType === 'subskill' && (
+      {skillModalType === 'subskill' && (
         <AddSubSkillModal
           isOpen={true}
           onClose={() => setSkillModalType(null)}
-          characterSkills={skills.map(s => ({ name: s.name, prof: s.prof || false }))}
-          existingSkillNames={skills.map(s => s.name)}
+          characterSkills={skills.map((s) => ({ name: s.name, prof: s.prof || false }))}
+          existingSkillNames={skills.map((s) => s.name)}
           onAdd={onAddSkills}
         />
       )}
 
-      {character && (
+      {showLevelUpModal && (
         <LevelUpModal
-          isOpen={showLevelUpModal}
+          key={`${character.id}:${character.level ?? 1}`}
+          isOpen
           onClose={() => setShowLevelUpModal(false)}
           character={character}
           displayCharacter={displayCharacter ?? character}
@@ -202,24 +199,28 @@ export function CharacterSheetModals({
         />
       )}
 
-      {character && calculatedStats && (
+      {calculatedStats && (
         <RecoveryModal
           isOpen={showRecoveryModal}
           onClose={() => setShowRecoveryModal(false)}
-          currentHealth={character.currentHealth ?? character.health?.current ?? calculatedStats.maxHealth}
+          currentHealth={
+            character.currentHealth ?? character.health?.current ?? calculatedStats.maxHealth
+          }
           maxHealth={calculatedStats.maxHealth}
-          currentEnergy={character.currentEnergy ?? character.energy?.current ?? calculatedStats.maxEnergy}
+          currentEnergy={
+            character.currentEnergy ?? character.energy?.current ?? calculatedStats.maxEnergy
+          }
           maxEnergy={calculatedStats.maxEnergy}
           feats={
             [
-              ...(character.archetypeFeats || []).map(f => ({
+              ...(character.archetypeFeats || []).map((f) => ({
                 id: f.id || f.name,
                 name: f.name,
                 currentUses: f.currentUses,
                 maxUses: f.maxUses,
                 recovery: f.recovery,
               })),
-              ...(character.feats || []).map(f => ({
+              ...(character.feats || []).map((f) => ({
                 id: f.id || f.name,
                 name: f.name,
                 currentUses: f.currentUses,
@@ -230,8 +231,8 @@ export function CharacterSheetModals({
           }
           traits={
             traitsDb
-              .filter(t => character.traitUses?.[t.name!] !== undefined)
-              .map(t => ({
+              .filter((t) => t.name != null && character.traitUses?.[t.name] !== undefined)
+              .map((t) => ({
                 name: t.name!,
                 currentUses: character.traitUses?.[t.name!],
                 maxUses: t.uses_per_rec,

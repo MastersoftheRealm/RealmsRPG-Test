@@ -15,21 +15,26 @@ export type AboutDiceImage = {
   src: string;
   alt: string;
   label: string;
-  className?: string;
+  className?: string | undefined;
 };
 
 type AboutDiceCarouselProps = {
   dice: AboutDiceImage[];
   selectedIndex: number;
   onSelect: (index: number) => void;
-  centerSlot?: number;
-  className?: string;
+  centerSlot?: number | undefined;
+  className?: string | undefined;
 };
 
 const SLOT_WIDTH_MOBILE = 68;
 const SLOT_WIDTH_DESKTOP = 80;
 
-function getDisplaySlot(diceIndex: number, selectedIndex: number, total: number, centerSlot: number): number {
+function getDisplaySlot(
+  diceIndex: number,
+  selectedIndex: number,
+  total: number,
+  centerSlot: number,
+): number {
   return (diceIndex - selectedIndex + centerSlot + total * 2) % total;
 }
 
@@ -46,7 +51,12 @@ function slotMetrics(offset: number) {
   };
 }
 
-function getWrappedDiceIndices(fromIndex: number, toIndex: number, total: number, centerSlot: number): Set<number> {
+function getWrappedDiceIndices(
+  fromIndex: number,
+  toIndex: number,
+  total: number,
+  centerSlot: number,
+): Set<number> {
   const wrapped = new Set<number>();
   for (let diceIndex = 0; diceIndex < total; diceIndex += 1) {
     const nextSlot = getDisplaySlot(diceIndex, toIndex, total, centerSlot);
@@ -98,13 +108,11 @@ export function AboutDiceCarousel({
       }
       onSelect(index);
     },
-    [centerSlot, onSelect, reduceMotion, selectedIndex, total]
+    [centerSlot, onSelect, reduceMotion, selectedIndex, total],
   );
 
   const goPrev = () => select((selectedIndex - 1 + total) % total);
   const goNext = () => select((selectedIndex + 1) % total);
-
-  const trackWidth = slotWidth * 6 + 56;
 
   const motionTransition = reduceMotion
     ? ''
@@ -114,15 +122,26 @@ export function AboutDiceCarousel({
     : 'transition-opacity duration-[280ms] ease-[cubic-bezier(0.4,0,0.2,1)]';
 
   const arrowButtonClass =
-    'shrink-0 p-2 rounded-full text-text-secondary hover:text-text-primary hover:bg-surface-alt/60 transition-colors min-h-[44px] min-w-[44px] flex items-center justify-center';
+    'absolute top-1/2 z-30 flex h-11 w-11 -translate-y-1/2 items-center justify-center rounded-full p-2 text-text-secondary transition-colors hover:bg-surface-alt/60 hover:text-text-primary';
 
   return (
-    <div className={cn('flex items-center justify-center gap-1 sm:gap-2 mx-auto', className)}>
-      <button type="button" onClick={goPrev} className={arrowButtonClass} aria-label="Previous section">
-        <Image src="/images/ArrowL.png" alt="" width={22} height={24} className="opacity-75 hover:opacity-100 transition-opacity" />
+    <div className={cn('relative mx-auto w-full max-w-full min-w-0', className)}>
+      <button
+        type="button"
+        onClick={goPrev}
+        className={cn(arrowButtonClass, 'left-0')}
+        aria-label="Previous section"
+      >
+        <Image
+          src="/images/ArrowL.png"
+          alt=""
+          width={22}
+          height={24}
+          className="opacity-75 transition-opacity hover:opacity-100"
+        />
       </button>
 
-      <div className="relative h-[4.25rem] sm:h-[4.5rem] shrink-0" style={{ width: trackWidth }}>
+      <div className="relative h-[4.25rem] w-full min-w-0 overflow-hidden sm:h-[4.5rem]">
         {dice.map((die, diceIndex) => {
           const slot = getDisplaySlot(diceIndex, selectedIndex, total, centerSlot);
           const offset = slotToOffset(slot, centerSlot);
@@ -136,15 +155,14 @@ export function AboutDiceCarousel({
               type="button"
               onClick={() => select(diceIndex)}
               className={cn(
-                'absolute top-1/2 left-1/2 flex items-center justify-center',
-                'min-h-[44px] min-w-[44px] p-1 sm:p-1.5',
+                'absolute top-1/2 left-1/2 flex h-11 w-11 items-center justify-center',
                 'focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-outline-border focus-visible:ring-offset-2 focus-visible:ring-offset-background',
-                isWrapFading ? wrapTransition : motionTransition
+                isWrapFading ? wrapTransition : motionTransition,
               )}
               style={{
                 zIndex,
                 opacity: isWrapFading ? 0 : opacity,
-                transform: `translate(-50%, -50%) translateX(${offset * slotWidth}px) scale(${scale})`,
+                transform: `translate(-50%, -50%) translateX(${offset * slotWidth}px)`,
               }}
               aria-label={`Go to ${die.label}`}
               aria-current={isCenter ? 'true' : undefined}
@@ -156,19 +174,31 @@ export function AboutDiceCarousel({
                 width={48}
                 height={48}
                 className={cn(
-                  'w-10 h-10 sm:w-11 sm:h-11 md:w-12 md:h-12 object-contain pointer-events-none',
+                  'pointer-events-none h-10 w-10 object-contain sm:h-11 sm:w-11 md:h-12 md:w-12',
                   die.className,
                   isCenter &&
-                    'drop-shadow-[0_2px_10px_rgba(59,130,246,0.28)] dark:drop-shadow-[0_2px_12px_rgba(147,197,253,0.22)]'
+                    'drop-shadow-[0_2px_10px_rgba(59,130,246,0.28)] dark:drop-shadow-[0_2px_12px_rgba(147,197,253,0.22)]',
                 )}
+                style={{ transform: `scale(${scale})` }}
               />
             </button>
           );
         })}
       </div>
 
-      <button type="button" onClick={goNext} className={arrowButtonClass} aria-label="Next section">
-        <Image src="/images/ArrowR.png" alt="" width={22} height={24} className="opacity-75 hover:opacity-100 transition-opacity" />
+      <button
+        type="button"
+        onClick={goNext}
+        className={cn(arrowButtonClass, 'right-0')}
+        aria-label="Next section"
+      >
+        <Image
+          src="/images/ArrowR.png"
+          alt=""
+          width={22}
+          height={24}
+          className="opacity-75 transition-opacity hover:opacity-100"
+        />
       </button>
     </div>
   );

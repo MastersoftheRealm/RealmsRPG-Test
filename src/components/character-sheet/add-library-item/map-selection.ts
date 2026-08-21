@@ -1,32 +1,41 @@
-import type { SelectableItem } from '@/components/shared/unified-selection-modal';
+import type { SelectableItem } from '@/components/patterns/select/unified-selection-modal';
 import type { UserPower, UserTechnique } from '@/hooks/use-user-library';
-import type { AddLibraryItemType, CodexDbRefs, EqItem, PowerSelectionMode } from '@/hooks/add-library-item/types';
+import type {
+  AddLibraryItemType,
+  CodexDbRefs,
+  EqItem,
+  PowerSelectionMode,
+} from '@/hooks/add-library-item/types';
 import type { CharacterPower, CharacterTechnique, Item } from '@/types';
 
 interface CodexPartLike {
-  id?: string | number;
-  name?: string;
-  base_tp?: number;
-  op_1_tp?: number;
-  op_2_tp?: number;
-  op_3_tp?: number;
+  id?: string | number | undefined;
+  name?: string | undefined;
+  base_tp?: number | undefined;
+  op_1_tp?: number | undefined;
+  op_2_tp?: number | undefined;
+  op_3_tp?: number | undefined;
 }
 
 interface SavedPartLike {
-  id?: string | number;
-  name?: string;
-  op_1_lvl?: number;
-  op_2_lvl?: number;
-  op_3_lvl?: number;
-  applyDuration?: boolean;
+  id?: string | number | undefined;
+  name?: string | undefined;
+  op_1_lvl?: number | undefined;
+  op_2_lvl?: number | undefined;
+  op_3_lvl?: number | undefined;
+  applyDuration?: boolean | undefined;
 }
 
 function findCodexPart(codexList: CodexPartLike[], part: SavedPartLike): CodexPartLike | undefined {
   const id = part.id != null ? String(part.id).trim().toLowerCase() : '';
-  const name = String(part.name ?? '').trim().toLowerCase();
+  const name = String(part.name ?? '')
+    .trim()
+    .toLowerCase();
   return codexList.find((c) => {
     const cId = c.id != null ? String(c.id).trim().toLowerCase() : '';
-    const cName = String(c.name ?? '').trim().toLowerCase();
+    const cName = String(c.name ?? '')
+      .trim()
+      .toLowerCase();
     return (id && cId === id) || (name && cName === name);
   });
 }
@@ -35,7 +44,12 @@ function findCodexPart(codexList: CodexPartLike[], part: SavedPartLike): CodexPa
 function enrichSavedPart(part: SavedPartLike, codexList: CodexPartLike[]) {
   const codex = findCodexPart(codexList, part);
   return {
-    id: part.id !== undefined && part.id !== '' ? String(part.id) : codex?.id != null ? String(codex.id) : undefined,
+    id:
+      part.id !== undefined && part.id !== ''
+        ? String(part.id)
+        : codex?.id != null
+          ? String(codex.id)
+          : undefined,
     name: part.name || codex?.name || '',
     base_tp: codex?.base_tp ?? 0,
     op_1_lvl: part.op_1_lvl ?? 0,
@@ -52,18 +66,18 @@ export function mapSelectedToCharacterItems(
   itemType: AddLibraryItemType,
   selected: SelectableItem[],
   powerSelectionMode: PowerSelectionMode,
-  dbs?: CodexDbRefs
+  dbs?: CodexDbRefs,
 ): CharacterPower[] | CharacterTechnique[] | Item[] {
   const selectedRaw = selected.map((s) => s.data as UserPower | UserTechnique | EqItem);
   const powerPartsDb = (dbs?.powerPartsDb ?? []) as CodexPartLike[];
   const techniquePartsDb = (dbs?.techniquePartsDb ?? []) as CodexPartLike[];
   const quantities = selected.reduce(
     (acc, s) => {
-      const q = (s as SelectableItem & { quantity?: number }).quantity;
-      if (q != null) acc[s.id] = q;
+      const q = (s as SelectableItem & { quantity?: number | undefined }).quantity;
+      if (q != null) acc[String(s.id)] = q;
       return acc;
     },
-    {} as Record<string, number>
+    {} as Record<string, number>,
   );
 
   if (itemType === 'power') {
@@ -71,7 +85,9 @@ export function mapSelectedToCharacterItems(
       if (powerSelectionMode === 'empowered') {
         const raw = entry as unknown as Record<string, unknown>;
         const powerData = (raw.power as Record<string, unknown> | undefined) ?? {};
-        const savedParts = (Array.isArray(powerData.parts) ? powerData.parts : []) as SavedPartLike[];
+        const savedParts = (
+          Array.isArray(powerData.parts) ? powerData.parts : []
+        ) as SavedPartLike[];
         return {
           id: entry.id,
           name: entry.name,
@@ -80,6 +96,8 @@ export function mapSelectedToCharacterItems(
           cost: 0,
           level: 1,
           damage: powerData.damage as CharacterPower['damage'],
+          image_id: (entry as UserTechnique).image_id ?? null,
+          image_url: (entry as UserTechnique).image_url ?? null,
         };
       }
       const power = entry as UserPower;
@@ -91,6 +109,8 @@ export function mapSelectedToCharacterItems(
         cost: 0,
         level: 1,
         damage: power.damage as CharacterPower['damage'],
+        image_id: power.image_id ?? null,
+        image_url: power.image_url ?? null,
       };
     });
   }
@@ -104,22 +124,28 @@ export function mapSelectedToCharacterItems(
       cost: 0,
       actionType: t.actionType,
       isReaction: t.isReaction,
-      damage: (t as { damage?: unknown }).damage as CharacterTechnique['damage'],
+      damage: (t as { damage?: unknown | undefined }).damage as CharacterTechnique['damage'],
+      image_id: t.image_id ?? null,
+      image_url: t.image_url ?? null,
     }));
   }
 
   return (selectedRaw as EqItem[]).map((i) => {
     const props = (i.properties || []) as EqItem['properties'];
+    const qty = itemType === 'equipment' ? (quantities[String(i.id)] ?? 1) : 1;
     return {
       id: i.id,
       name: String(i.name ?? ''),
       description: String(i.description ?? ''),
+      type: itemType === 'equipment' ? 'equipment' : itemType,
       properties: props as unknown as Item['properties'],
       damage: i.damage as Item['damage'],
       armor: i.armorValue ?? 0,
       equipped: false,
-      quantity: itemType === 'equipment' ? (quantities[i.id] ?? 1) : 1,
+      quantity: Math.max(1, Math.floor(Number(qty)) || 1),
       cost: 0,
+      image_id: i.image_id ?? null,
+      image_url: i.image_url ?? null,
     };
   });
 }

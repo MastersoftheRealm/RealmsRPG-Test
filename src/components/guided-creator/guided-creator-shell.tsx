@@ -8,8 +8,8 @@
 
 import { useMemo, useState } from 'react';
 import { cn } from '@/lib/utils';
-import { Button } from '@/components/ui';
-import { ConfirmActionModal } from '@/components/shared';
+import { Button, TabNavOverflowScroller } from '@/components/ui';
+import { ConfirmActionModal } from '@/components/patterns';
 import { ChevronDown, RotateCcw } from 'lucide-react';
 import {
   useGuidedCreatorStore,
@@ -47,20 +47,28 @@ const STEP_COMPONENTS: Record<GuidedSubStep, React.ComponentType> = {
   reveal: RevealStep,
 };
 
-function ChapterRail({ className }: { className?: string }) {
-  const { currentSubStep, completedSubSteps, canNavigateToSubStep, setSubStep } = useGuidedCreatorStore();
+function ChapterRail({ className }: { className?: string | undefined }) {
+  const { currentSubStep, isSubStepSatisfied, canNavigateToSubStep, setSubStep } =
+    useGuidedCreatorStore();
   const activeChapterIndex = GUIDED_CHAPTERS.findIndex((c) => c.subSteps.includes(currentSubStep));
 
   return (
     <nav aria-label="Creation chapters" className={cn(className)}>
-      <ol
-        className="flex flex-nowrap gap-2 overflow-x-auto scrollbar-thin pb-1"
-        style={{ WebkitOverflowScrolling: 'touch' }}
+      <TabNavOverflowScroller
+        as="ol"
+        overflowSignature={currentSubStep}
+        listClassName="gap-2 pb-1"
+        previousAriaLabel="Show previous chapters"
+        nextAriaLabel="Show more chapters"
       >
         {GUIDED_CHAPTERS.map((chapter, index) => {
-          const isComplete = chapter.subSteps.every((s) => completedSubSteps.includes(s));
           const isActive = index === activeChapterIndex;
+          // ✓ only for chapters the player has moved past — Equipment and Powers hold no
+          // required picks, so "satisfied" alone would tick them before they are reached.
+          const isComplete =
+            index < activeChapterIndex && chapter.subSteps.every(isSubStepSatisfied);
           const firstSub = chapter.subSteps[0];
+          if (firstSub === undefined) return null;
           const canOpen = canNavigateToSubStep(firstSub);
 
           return (
@@ -71,41 +79,41 @@ function ChapterRail({ className }: { className?: string }) {
                 disabled={!canOpen}
                 aria-current={isActive ? 'step' : undefined}
                 className={cn(
-                  'flex items-center gap-2 rounded-pill px-3 py-2 min-h-11 text-sm font-medium transition-colors border',
+                  'flex min-h-11 items-center gap-2 rounded-pill border px-3 py-2 text-sm font-medium transition-colors',
                   isActive &&
-                    'bg-primary-button text-text-on-dark border-primary-button shadow-card',
+                    'border-primary-button bg-primary-button text-text-on-dark shadow-card',
                   !isActive &&
                     isComplete &&
-                    'bg-success-light text-success-fg border-success-200/60 dark:border-success-800/40',
+                    'border-success-200/60 bg-success-light text-success-fg dark:border-success-800/40',
                   !isActive &&
                     !isComplete &&
                     canOpen &&
-                    'bg-surface text-text-secondary border-border-light hover:bg-surface-alt',
+                    'border-border-light bg-surface text-text-secondary hover:bg-surface-alt',
                   !isActive &&
                     !isComplete &&
                     !canOpen &&
-                    'bg-surface text-text-muted dark:text-text-secondary border-border-light cursor-not-allowed'
+                    'cursor-not-allowed border-border-light bg-surface text-text-muted',
                 )}
               >
                 <span
                   className={cn(
                     'flex h-6 w-6 items-center justify-center rounded-pill font-display text-xs font-bold',
                     isActive
-                      ? 'bg-white/20 text-text-on-dark'
+                      ? 'bg-text-on-dark/20 text-text-on-dark'
                       : isComplete
                         ? 'bg-success-fg/15 text-success-fg'
-                        : 'bg-surface-alt text-text-secondary'
+                        : 'bg-surface-alt text-text-secondary',
                   )}
                   aria-hidden="true"
                 >
                   {isComplete && !isActive ? '✓' : index + 1}
                 </span>
-                <span className="whitespace-nowrap font-nunito">{chapter.title}</span>
+                <span className="font-nunito whitespace-nowrap">{chapter.title}</span>
               </button>
             </li>
           );
         })}
-      </ol>
+      </TabNavOverflowScroller>
     </nav>
   );
 }
@@ -138,7 +146,7 @@ export function GuidedCreatorShell() {
           className={cn(
             'min-h-11',
             'border-primary-outline-border text-primary-outline-fg',
-            'dark:border-text-on-dark/80 dark:text-text-on-dark dark:bg-text-on-dark/10 dark:hover:bg-text-on-dark/20'
+            'dark:border-text-on-dark/80 dark:bg-text-on-dark/10 dark:text-text-on-dark dark:hover:bg-text-on-dark/20',
           )}
         >
           <RotateCcw className="mr-1.5 h-4 w-4" aria-hidden="true" />
@@ -148,21 +156,21 @@ export function GuidedCreatorShell() {
     >
       <div
         className={cn(
-          'sticky top-0 z-20 -mx-4 px-4 py-2.5 mb-4',
-          'bg-background/95 backdrop-blur-md',
-          'border-b border-border-light dark:border-border shadow-sm'
+          'sticky top-0 z-20 -mx-4 mb-4 px-4 py-2.5',
+          'bg-background md:bg-background/95 md:backdrop-blur-md',
+          'border-b border-border-light shadow-sm dark:border-border',
         )}
       >
         <ChapterRail />
       </div>
 
       {!isRevealStep && (
-        <div className="lg:hidden mb-3">
+        <div className="mb-3 lg:hidden">
           <button
             type="button"
             onClick={() => setMobilePreviewOpen((o) => !o)}
             aria-expanded={mobilePreviewOpen}
-            className="flex w-full items-center justify-between rounded-card border border-border-light dark:border-border bg-surface-alt/60 px-4 py-3 min-h-11 text-sm font-medium text-text-primary font-nunito shadow-card"
+            className="flex min-h-11 w-full items-center justify-between rounded-card border border-border-light bg-surface-alt/60 px-4 py-3 font-nunito text-sm font-medium text-text-primary shadow-card dark:border-border"
           >
             {shellCopy.previewToggle}
             <ChevronDown
@@ -170,20 +178,16 @@ export function GuidedCreatorShell() {
               aria-hidden="true"
             />
           </button>
-          {mobilePreviewOpen && (
-            <CharacterPreviewPanel variant="strip" className="mt-2" />
-          )}
+          {mobilePreviewOpen && <CharacterPreviewPanel variant="strip" className="mt-2" />}
         </div>
       )}
 
-      {!isRevealStep && (
-        <CharacterPreviewPanel variant="strip" className="mb-4 hidden lg:flex" />
-      )}
+      {!isRevealStep && <CharacterPreviewPanel variant="strip" className="mb-4 hidden lg:flex" />}
 
       <div
         className={cn(
-          'rounded-card border border-border-light dark:border-border bg-surface-alt/60 shadow-card',
-          isRevealStep ? 'p-5 md:p-8' : 'p-5 md:p-7'
+          'rounded-card border border-border-light bg-surface-alt/60 shadow-card dark:border-border',
+          isRevealStep ? 'p-5 md:p-8' : 'p-5 md:p-7',
         )}
       >
         <StepComponent />

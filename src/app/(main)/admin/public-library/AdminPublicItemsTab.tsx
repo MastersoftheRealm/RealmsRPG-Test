@@ -7,19 +7,29 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { DeleteConfirmModal, OfficialItemList } from '@/components/shared';
+import { DeleteConfirmModal, OfficialItemList, SegmentedControl } from '@/components/patterns';
 import { useToast } from '@/components/ui';
-import { useOfficialLibrary, useItemProperties } from '@/hooks';
+import { officialLibraryKeys, useOfficialLibrary, useItemProperties } from '@/hooks';
 import { useQueryClient } from '@tanstack/react-query';
 import { apiFetch } from '@/lib/api-client';
-import { Shield } from 'lucide-react';
+import {
+  ARMAMENT_LABELS_BY_KIND,
+  type ArmamentLibraryKind,
+} from '@/lib/library/armament-library-labels';
 
 const QUERY_KEY = ['official-library', 'items'] as const;
+
+const ARMAMENT_KIND_OPTIONS: { value: ArmamentLibraryKind; label: string }[] = [
+  { value: 'weapon', label: 'Weapons' },
+  { value: 'armor', label: 'Armor' },
+  { value: 'shield', label: 'Shields' },
+];
 
 export function AdminPublicItemsTab() {
   const { showToast } = useToast();
   const router = useRouter();
   const queryClient = useQueryClient();
+  const [armamentKind, setArmamentKind] = useState<ArmamentLibraryKind>('weapon');
   const { data: items = [], isLoading, error, refetch } = useOfficialLibrary('items');
   const { data: propertiesDb = [] } = useItemProperties();
   const [deleteConfirm, setDeleteConfirm] = useState<{ id: string; name: string } | null>(null);
@@ -31,6 +41,7 @@ export function AdminPublicItemsTab() {
         method: 'DELETE',
       });
       queryClient.invalidateQueries({ queryKey: QUERY_KEY });
+      queryClient.invalidateQueries({ queryKey: officialLibraryKeys.counts });
       await queryClient.refetchQueries({ queryKey: QUERY_KEY });
       setDeleteConfirm(null);
     } catch (e) {
@@ -38,18 +49,36 @@ export function AdminPublicItemsTab() {
     }
   };
 
+  const labels = ARMAMENT_LABELS_BY_KIND[armamentKind];
+  const sectionTitle =
+    armamentKind === 'weapon'
+      ? 'Official Weapons'
+      : armamentKind === 'armor'
+        ? 'Official Armor'
+        : 'Official Shields';
+
   return (
     <>
+      <div className="mb-4">
+        <SegmentedControl
+          value={armamentKind}
+          onChange={setArmamentKind}
+          options={ARMAMENT_KIND_OPTIONS}
+          aria-label="Armament type"
+        />
+      </div>
       <OfficialItemList
+        armamentKind={armamentKind}
         items={items}
         propertiesDb={propertiesDb}
         isLoading={isLoading}
         error={error}
-        onRetry={() => { void refetch(); }}
-        errorMessage="Failed to load official armaments"
-        sectionTitle="Official Armaments"
-        emptyIcon={<Shield className="w-8 h-8" />}
-        emptyTitle="No official armaments"
+        onRetry={() => {
+          void refetch();
+        }}
+        errorMessage={`Failed to load official ${labels.entityPlural}`}
+        sectionTitle={sectionTitle}
+        emptyTitle={`No official ${labels.entityPlural}`}
         emptyMessage="Add one from the header or publish from a creator."
         variant="admin"
         onEdit={(id) => router.push(`/item-creator?edit=${encodeURIComponent(id)}`)}
@@ -60,7 +89,7 @@ export function AdminPublicItemsTab() {
         <DeleteConfirmModal
           isOpen={true}
           itemName={deleteConfirm.name}
-          itemType="armament"
+          itemType={armamentKind}
           deleteContext="Realms Library"
           isDeleting={false}
           onConfirm={handleDeleteFromList}

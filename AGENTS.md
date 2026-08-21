@@ -2,71 +2,67 @@
 
 You are working on RealmsRPG, a D&D Beyond–like TTRPG web app built with Next.js, React, Tailwind, **Supabase** (PostgreSQL, Auth, Storage), and **Vercel**.
 
-> **Stack:** Supabase (PostgreSQL, Auth, Storage), Next.js, Vercel. No Prisma; no Firebase.
-> **Data access:** Supabase server client only (`.from()`, `.rpc()`); schema reference `src/docs/SUPABASE_SCHEMA.md`; migrations = SQL only.
+> **Stack:** Supabase + Next.js + Vercel. No Prisma; no Firebase.  
+> **Data:** Supabase client (`.from()`, `.rpc()`); schema = `src/docs/SUPABASE_SCHEMA.md`; SQL in `sql/`.
 
 ## Session Start
 
-1. **Read** `src/docs/ai/AI_TASK_QUEUE.md` — focus on `not-started` / `in-progress` / `partial`; **skip `blocked` and human-assigned tasks**; human-only items in `DEVELOPER_TASK_QUEUE.md`.
-2. **Read** `src/docs/ai/AGENT_GUIDE.md` — component locations, patterns, sources of truth.
-3. **When owner gives feedback:** Log it in `src/docs/ALL_FEEDBACK_CLEAN.md` (Raw Feedback Log) and process per `.cursor/rules/realms-tasks.mdc` (extract, cross-ref queue, add tasks or implement).
-4. **Reference when needed:** see the Source-of-Truth Map below.
+1. Read **`src/docs/ai/ARCHITECTURE_CONSTITUTION.md`** (roles, DoD, non-negotiables).
+2. Read **`src/docs/ai/ACTIVE_TASKS.md`** — pick work; skip `blocked` + human `assignee:`.
+3. When implementing: search **`FEATURE_INDEX.md`** + barrels before building anything new.
+4. Owner feedback → log in `ALL_FEEDBACK_CLEAN.md` and process per `realms-tasks.mdc`.
 
-## Source-of-Truth Map (read the right doc first)
+Do **not** load full historical queues, full `AGENT_GUIDE.md`, or archive audits at session start. Pull topic docs on demand.
 
-Check the canonical source for the topic instead of trusting scattered/stale docs. Each topic has **one** authority:
+## Roles
 
-| For… | Read (authority) |
-|------|------------------|
-| **Product vision, UX philosophy, onboarding/creator flow, three-layer model** | `src/docs/REALMS_PRODUCT_OVERVIEW.md` (desired experience) — pair with `src/docs/human/USER_EXPERIENCE_GOALS.md` (shipped-UX checklist) |
-| **Does this already exist?** (features, components, hooks, services) | `src/docs/ai/FEATURE_INDEX.md` → then `src/components/shared/index.ts`, `src/hooks/index.ts` |
-| DB tables / columns | `src/docs/SUPABASE_SCHEMA.md` (only) |
-| Game formulas, terminology, caps, display | `src/docs/GAME_RULES.md` |
-| Data flow, enrichment, hooks/services | `src/docs/ARCHITECTURE.md` |
-| Shared UI components & usage | `.cursor/rules/realms-unification.mdc` + `src/docs/ai/AGENT_GUIDE.md` (Unified patterns section) |
-| Design tokens / colors | `src/docs/DESIGN_SYSTEM.md` |
-| Mobile patterns | `src/docs/MOBILE_UX.md` |
-| Accessibility / contrast | `src/docs/ACCESSIBILITY.md` |
-| Open tasks | `src/docs/ai/AI_TASK_QUEUE.md` (active only) / `src/docs/ai/DEVELOPER_TASK_QUEUE.md` |
-| Task & audit history | `src/docs/ai/archive/HISTORY_INDEX.md` — not current truth; paths listed in `.cursorignore` |
-| Contextual help tooltips | `AGENT_GUIDE.md` § **Floating UI & contextual help** — when to use `InfoTippy` vs Floating UI vs Modal/Select |
-| Entity card art (list thumbnails, choice cards, click-to-enlarge, upload) | `AGENT_GUIDE.md` § **Entity card art & expandable images** + `REALMS_PRODUCT_OVERVIEW.md` §5.0.3 + `FEATURE_INDEX.md` |
-| QA build validation (step-by-step) | `src/docs/ai/BUILD_VALIDATION.md` |
-| Current remediation status & known open gaps | `src/docs/ai/REMEDIATION_STATUS_2026-06.md` |
-| UI/UX unification roadmap (design-system migration) | `src/docs/ai/UI_UNIFICATION_PLAN.md` + `VISUAL_STATE_AUDIT.md` + AGENT_GUIDE § Design-system safety net |
-| Deploy / secrets | `src/docs/DEPLOYMENT_AND_SECRETS_SUPABASE.md` |
-| Edge / CDN performance | `src/docs/PERFORMANCE_AND_EDGE.md` |
-| DB ops runbook | `src/docs/DATABASE_CONSISTENCY_CHECKLIST.md` |
-| Owner feedback log | `src/docs/ALL_FEEDBACK_CLEAN.md` |
+- **Implementer** (default): extend existing patterns only.
+- **Architect** (rare): new shared UI, stores, API contracts, migrations → ADR in `src/docs/ai/ADR/` or owner ack.
 
-> Rules in `.cursor/rules/` are terse pointers into these authorities — they don't duplicate the full content. If a rule and an authority disagree, trust the authority and fix the rule.
+## Source-of-Truth Map
+
+| For… | Authority |
+|------|-----------|
+| Product / UX / selection grammar | `REALMS_PRODUCT_OVERVIEW.md` + `human/USER_EXPERIENCE_GOALS.md` |
+| Exists already? | `FEATURE_INDEX.md` → `patterns` / `ui` / `hooks` / `services` barrels |
+| DB schema | `SUPABASE_SCHEMA.md` |
+| Game formulas & terminology | `GAME_RULES.md` |
+| GLR required facts (column vs chip) | `lib/glr/glr-fact-catalog.ts` + `glr-density.ts` + `resolve-glr-fact-layout.ts` (ADR-0016; supersedes ADR-0009) |
+| Deep component patterns | `AGENT_GUIDE.md` hub → `guide/` appendices (on demand) |
+| Design tokens | `DESIGN_SYSTEM.md` — prefer `*-fg` tokens |
+| Responsive / mobile | `MOBILE_UX.md` (ADR-0023) |
+| Accessibility | `ACCESSIBILITY.md` |
+| Open tasks | `ACTIVE_TASKS.md` · waiting `WAITING_TASKS.md` · process `AI_TASK_QUEUE.md` · human `DEVELOPER_TASK_QUEUE.md` |
+| Audit remediation status | `REMEDIATION_STATUS_2026-08.md` (June snapshot: `REMEDIATION_STATUS_2026-06.md`) |
+| **Sitewide audit (2026-08-13) + fix program** | `AUDIT_REMEDIATION_2026-08.md` → findings in `reports/audit-2026-08-13/` |
+| Design constraints | `DESIGN_INTENT.md` |
+| ADRs | `src/docs/ai/ADR/` |
+| PR failure-mode checklist | `src/docs/ai/PR_CHECKLIST.md` (incl. owner commands) |
+| Owner commands | `/audit` → `/cleanup` (session); `/global-audit` → `/debt` (repo) — `.cursor/commands/` |
+| Barrel inventory (generated) | `FEATURE_INDEX_BARRELS.generated.md` (`npm run tasks:generate-index`) |
+| QA steps | `BUILD_VALIDATION.md` |
+| Deploy / secrets | `DEPLOYMENT_AND_SECRETS_SUPABASE.md` |
+| Feedback log | `ALL_FEEDBACK_CLEAN.md` |
+| History (not session-start) | `archive/HISTORY_INDEX.md` |
+
+Rules under `.cursor/rules/` are terse pointers. If a rule and an authority disagree, trust the authority and fix the rule.
 
 ## Core Principles
 
-- **Search before you build (anti-re-implementation)** — Before writing a new component, hook, service, API route, or util, confirm it doesn't already exist: check `src/docs/ai/FEATURE_INDEX.md`, then grep `src/components/shared/index.ts`, `src/hooks/index.ts`, `src/services/index.ts`, and `src/lib/`. Many features here were accidentally rebuilt by agents who didn't know they existed.
-- **Learn once, use forever** — Reuse components (`GridListRow`, `SkillRow`, `ValueStepper`, `SectionHeader`, etc.). Consistent filters, sorting, and allocation across Library, Codex, Character Sheet, and Creators.
-- **Unification over duplication** — Before adding a component, search for existing patterns. Use design tokens (`bg-surface`, `text-text-primary`, etc.) not raw `gray-*` outside auth.
-- **Verify, don’t assume** — Docs may be stale. Inspect the codebase to confirm patterns and usage.
-- **Consider mobile on every UI change** — See `src/docs/MOBILE_UX.md` and `.cursor/rules/realms-mobile.mdc`. New pages, modals, and dense sections must follow breakpoints, full-screen modals on small viewports (`fullScreenOnMobile`), and touch targets (≥44px).
-- **Accessibility & contrast** — See `src/docs/ACCESSIBILITY.md` and `.cursor/rules/realms-accessibility.mdc`. Use semantic tokens and status colors that pass WCAG 2.1 AA in **both light and dark mode** (e.g. `text-success-700` not `text-success-600` for body text; `text-power-dark` / `text-martial-dark` for archetype body text). Every form control needs a label or `aria-label`; heading levels must not skip (h1 → h2 → h3). Modals need a title or `titleA11y`.
+- Search before you build (anti-re-implementation).
+- Unification over duplication; delete parallel systems when consolidating.
+- Verify in code — docs can lag.
+- Responsive + a11y on every UI change (`MOBILE_UX.md` / ADR-0023, `ACCESSIBILITY.md`).
+- Prefer theme-aware `*-fg` status/archetype tokens over numbered ramp + ad-hoc `dark:`.
 
-## Implementation
+## Definition of Done (summary)
 
-- Pick highest-priority `not-started` task from the queue.
-- **Verify** all acceptance criteria are fully met before marking done.
-- Verify `related_files` in the task match actual codebase paths (queue may have stale references).
-- Update task status (`in-progress` → `done`), add notes with PR link.
-- Append to `src/docs/ai/AI_CHANGELOG.md` on completion.
-- Run `npm run build` before opening a PR.
+Build + targeted tests + all implementable AC met + no new parallel pattern + update `ACTIVE_TASKS` (move `done` to archive with `verification_status`) + changelog. Do **not** commit per task — the owner batches work, then one commit whose subject lists every newly done `TASK-###`. User-facing work: `pending-qa` until owner runs `BUILD_VALIDATION` (see `DEVELOPER_TASK_QUEUE`). Incomplete → `partial` + follow-ups. Never mark `done` early.
 
-## Creating New Tasks
+## Migrations (one policy)
 
-Use `src/docs/ai/AI_REQUEST_TEMPLATE.md` format. Add to `AI_TASK_QUEUE.md` with next TASK-### ID. Create tasks when audits or implementation reveal additional work.
+Prefer **Supabase MCP `apply_migration`** when available; else **Dashboard SQL Editor**. Always keep SQL in `sql/` and update `SUPABASE_SCHEMA.md`. **Codex data:** audit → propose → owner approve → apply. See `realms-codex-data.mdc`.
 
-## Deployment & Secrets
+## Creating tasks
 
-See `src/docs/DEPLOYMENT_AND_SECRETS_SUPABASE.md` — env vars, Vercel config, Supabase keys.
-
-## Codex & reference data (owner review)
-
-Bulk or policy changes to **`codex_*`** / **`core_rules`** (tags, merges, categories, seed parity): **audit → propose SQL in `sql/` → owner reviews → then apply**. Do not push live codex writes via Supabase MCP without approval. Full workflow: `.cursor/rules/realms-codex-data.mdc`.
+Template: `AI_REQUEST_TEMPLATE.md` → add to `ACTIVE_TASKS.md`.

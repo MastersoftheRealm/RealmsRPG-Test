@@ -11,7 +11,13 @@
 'use client';
 
 import { useState } from 'react';
-import { PageContainer, PageHeader, TabNavigation, TabContentPanel, useTabGroup } from '@/components/ui';
+import {
+  PageContainer,
+  PageHeader,
+  TabNavigation,
+  TabContentPanel,
+  useTabGroup,
+} from '@/components/ui';
 import { Wand2, Swords, Shield, Sparkles, Users } from 'lucide-react';
 import { AdminPublicPowersTab } from './AdminPublicPowersTab';
 import { AdminPublicTechniquesTab } from './AdminPublicTechniquesTab';
@@ -22,12 +28,12 @@ import { AdminPublicEnhancedItemsTab } from './AdminPublicEnhancedItemsTab';
 type TabId = 'powers' | 'techniques' | 'empowered-techniques' | 'items' | 'creatures' | 'enhanced';
 
 const TABS: { id: TabId; label: string; icon: React.ReactNode }[] = [
-  { id: 'powers', label: 'Powers', icon: <Wand2 className="w-4 h-4" /> },
-  { id: 'techniques', label: 'Techniques', icon: <Swords className="w-4 h-4" /> },
-  { id: 'empowered-techniques', label: 'Empowered', icon: <Swords className="w-4 h-4" /> },
-  { id: 'items', label: 'Armaments', icon: <Shield className="w-4 h-4" /> },
-  { id: 'creatures', label: 'Creatures', icon: <Users className="w-4 h-4" /> },
-  { id: 'enhanced', label: 'Enhanced Items', icon: <Sparkles className="w-4 h-4" /> },
+  { id: 'powers', label: 'Powers', icon: <Wand2 className="h-4 w-4" /> },
+  { id: 'techniques', label: 'Techniques', icon: <Swords className="h-4 w-4" /> },
+  { id: 'empowered-techniques', label: 'Empowered', icon: <Swords className="h-4 w-4" /> },
+  { id: 'items', label: 'Armaments', icon: <Shield className="h-4 w-4" /> },
+  { id: 'creatures', label: 'Creatures', icon: <Users className="h-4 w-4" /> },
+  { id: 'enhanced', label: 'Enhanced Items', icon: <Sparkles className="h-4 w-4" /> },
 ];
 
 export default function AdminPublicLibraryPage() {
@@ -52,12 +58,12 @@ export default function AdminPublicLibraryPage() {
       />
 
       <TabContentPanel tabGroupId={tabGroupId} id={sharedPanelId} activeTab={activeTab}>
-      {activeTab === 'powers' && <AdminPublicPowersTab />}
-      {activeTab === 'techniques' && <AdminPublicTechniquesTab />}
-      {activeTab === 'empowered-techniques' && <AdminPublicTechniquesTab mode="empowered" />}
-      {activeTab === 'items' && <AdminPublicItemsTab />}
-      {activeTab === 'creatures' && <AdminPublicCreaturesTab />}
-      {activeTab === 'enhanced' && <AdminPublicEnhancedItemsTab />}
+        {activeTab === 'powers' && <AdminPublicPowersTab />}
+        {activeTab === 'techniques' && <AdminPublicTechniquesTab />}
+        {activeTab === 'empowered-techniques' && <AdminPublicTechniquesTab mode="empowered" />}
+        {activeTab === 'items' && <AdminPublicItemsTab />}
+        {activeTab === 'creatures' && <AdminPublicCreaturesTab />}
+        {activeTab === 'enhanced' && <AdminPublicEnhancedItemsTab />}
       </TabContentPanel>
     </PageContainer>
   );

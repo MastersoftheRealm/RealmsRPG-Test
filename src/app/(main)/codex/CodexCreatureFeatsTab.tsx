@@ -9,29 +9,35 @@
 
 import { useState, useMemo } from 'react';
 import {
-  SearchInput,
-  ListHeader,
-  LoadingState,
+  CodexBrowseListShell,
   ErrorDisplay as ErrorState,
   GridListRow,
-  ListEmptyState as EmptyState,
-} from '@/components/shared';
+} from '@/components/patterns';
+import { formatCreatureLevel } from '@/lib/game';
 import { useCreatureFeats, type CreatureFeat } from '@/hooks';
 import { useSort } from '@/hooks/use-sort';
 import { CodexMyCodexEmpty } from './CodexMyCodexEmpty';
 
-const CREATURE_FEAT_GRID_COLUMNS = '1.5fr 0.5fr 0.5fr 0.5fr 40px';
+const CREATURE_FEAT_GRID_COLUMNS = '1.5fr 0.5fr 0.5fr 0.5fr';
 const CREATURE_FEAT_COLUMNS = [
   { key: 'name', label: 'NAME' },
   { key: 'points', label: 'PTS' },
   { key: 'feat_lvl', label: 'FEAT LVL' },
   { key: 'lvl_req', label: 'REQ. LVL' },
-  { key: '_actions', label: '', sortable: false as const },
 ];
 
-export function CodexCreatureFeatsTab({ codexMode = 'public' }: { codexMode?: 'public' | 'my' }) {
+export function CodexCreatureFeatsTab({
+  codexMode = 'public',
+}: {
+  codexMode?: 'public' | 'my' | undefined;
+}) {
   const loadPublicCodex = codexMode === 'public';
-  const { data: creatureFeats, isLoading, error, refetch } = useCreatureFeats({ enabled: loadPublicCodex });
+  const {
+    data: creatureFeats,
+    isLoading,
+    error,
+    refetch,
+  } = useCreatureFeats({ enabled: loadPublicCodex });
   const [search, setSearch] = useState('');
   const { sortState, handleSort, sortItems } = useSort('name');
 
@@ -42,59 +48,47 @@ export function CodexCreatureFeatsTab({ codexMode = 'public' }: { codexMode?: 'p
           (f: CreatureFeat) =>
             !search ||
             f.name.toLowerCase().includes(search.toLowerCase()) ||
-            f.description?.toLowerCase().includes(search.toLowerCase())
-        )
+            f.description?.toLowerCase().includes(search.toLowerCase()),
+        ),
       ),
-    [creatureFeats, search, sortState, sortItems]
+    [creatureFeats, search, sortItems],
   );
 
   if (codexMode === 'my') {
     return <CodexMyCodexEmpty />;
   }
 
-  if (error) return <ErrorState message="Failed to load creature feats" onRetry={() => refetch()} />;
+  if (error)
+    return <ErrorState message="Failed to load creature feats" onRetry={() => refetch()} />;
 
   return (
-    <div>
-      <div className="mb-4 mt-2">
-        <SearchInput value={search} onChange={setSearch} placeholder="Search creature feats..." />
-      </div>
-
-      <ListHeader
-        columns={CREATURE_FEAT_COLUMNS}
-        gridColumns={CREATURE_FEAT_GRID_COLUMNS}
-        sortState={sortState}
-        onSort={handleSort}
-      />
-
-      {isLoading ? (
-        <LoadingState />
-      ) : (
-        <div className="flex flex-col gap-1 mt-2">
-          {filtered.length === 0 ? (
-            <EmptyState
-              title="No creature feats found"
-              description="Try adjusting your search."
-              size="sm"
-            />
-          ) : (
-            filtered.map((f: CreatureFeat) => (
-              <GridListRow
-                key={f.id}
-                id={f.id}
-                name={f.name}
-                description={f.description || ''}
-                gridColumns={CREATURE_FEAT_GRID_COLUMNS}
-                columns={[
-                  { key: 'Pts', value: String(f.points ?? '-') },
-                  { key: 'Feat Lvl', value: f.feat_lvl != null ? String(f.feat_lvl) : '-' },
-                  { key: 'Req. Lvl', value: f.lvl_req != null ? String(f.lvl_req) : '-' },
-                ]}
-              />
-            ))
-          )}
-        </div>
-      )}
-    </div>
+    <CodexBrowseListShell
+      search={search}
+      onSearchChange={setSearch}
+      searchPlaceholder="Search creature feats..."
+      headerColumns={CREATURE_FEAT_COLUMNS}
+      gridColumns={CREATURE_FEAT_GRID_COLUMNS}
+      sortState={sortState}
+      onSort={handleSort}
+      isLoading={isLoading}
+      isEmpty={filtered.length === 0}
+      emptyTitle="No creature feats found"
+      emptyMessage="Try adjusting your search."
+    >
+      {filtered.map((f: CreatureFeat) => (
+        <GridListRow
+          key={f.id}
+          id={f.id}
+          name={f.name}
+          description={f.description || ''}
+          gridColumns={CREATURE_FEAT_GRID_COLUMNS}
+          columns={[
+            { key: 'Pts', value: String(f.points ?? '-') },
+            { key: 'Feat Lvl', value: f.feat_lvl != null ? String(f.feat_lvl) : '-' },
+            { key: 'Req. Lvl', value: f.lvl_req != null ? formatCreatureLevel(f.lvl_req) : '-' },
+          ]}
+        />
+      ))}
+    </CodexBrowseListShell>
   );
 }

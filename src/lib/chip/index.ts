@@ -1,4 +1,13 @@
+export {
+  CHIP_ENTITY_INLINE_SIZE,
+  expandableShellChipSize,
+  resolveDescriptorChipSize,
+  type ChipVariantSize,
+  type DescriptorChipSizeProp,
+} from './chip-size-tokens';
 export { expandableChipShellClass, type ExpandableChipShellSize } from './expandable-chip-shell';
+// Capture/snapshot halves are internal to ExpandableChip — do not re-implement per call site.
+export { applyFullRowExpandLayout } from './full-row-expand-layout';
 export {
   expandableChipPropsFromPartData,
   expandableChipPropsFromChipData,
@@ -36,15 +45,21 @@ export {
 export {
   metadataDescriptorChip,
   buildRangeDamageMetadataChips,
-  buildArmorRequirementMetadataChips,
   metadataDetailSection,
   mergeDetailSections,
   buildEntityMetadataDetailSections,
+  rankedGlrFactChips,
+  buildGlrFactDetailSections,
+  glrSurfaceDetailSections,
   buildPartsAndMetadataDetailSections,
-  buildUsesRecoveryDetailSections,
   partsProficienciesSection,
   propertiesProficienciesSection,
+  isPartsOrPropertiesProficienciesLabel,
+  isPartsOrPropertiesProficienciesSection,
+  helpKeyForPartsOrPropertiesLabel,
   PARTS_PROFICIENCIES_LABEL,
   PROPERTIES_PROFICIENCIES_LABEL,
   type MetadataDetailSection,
+  type GlrFactChipSource,
+  type PartsPropertiesHelpKey,
 } from './list-row-metadata';

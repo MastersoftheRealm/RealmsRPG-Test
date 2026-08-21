@@ -1,6 +1,6 @@
 # AI Request Template
 
-Use this template when converting raw feedback into an actionable request to be added to `AI_TASK_QUEUE.md`.
+Use this template when converting raw feedback into an actionable request to be added to `ACTIVE_TASKS.md`.
 
 ---
 - id: TASK-###
@@ -26,6 +26,8 @@ Use this template when converting raw feedback into an actionable request to be 
   developer_test_plan: |
     # Short pointer for the task queue, e.g. "Suite DEV-V-001 T001–T015 — see BUILD_VALIDATION.md"
   related_files:
+    # Real repo paths only (files or dirs that exist). CI validate-related-files fails on typos.
+    # Prefer concrete modules (e.g. src/hooks/use-codex.ts), not guessed filenames.
     - path/to/file.tsx
   implemented_by: |
     # Optional: agent or human who implemented changes
@@ -36,7 +38,8 @@ Use this template when converting raw feedback into an actionable request to be 
   evidence: |
     # Optional: Reviewer notes, test screenshots, or verification commands output
   verification_status: |
-    # Optional: verified|failed|unverified
+    # Required when archiving user-facing work: pending-qa | verified | failed | skipped | n/a
+    # pending-qa = implementation done, owner manual QA not run yet (default for BUILD_VALIDATION tasks)
   automated_check: |
     # Optional: command to run for automated acceptance (e.g., "npm run build && node scripts/smoke_check.js")
   description: |
@@ -58,7 +61,7 @@ Example:
   status: not-started
   related_files:
     - src/components/character-sheet/skills-section.tsx
-    - src/components/shared/skill-row.tsx
+    - src/components/patterns/list/skill-row.tsx
   description: |
     Replace inline skill implementations in character creator and creature creator with the shared `SkillRow` component. Keep business logic in parents and ensure variant styling for creator vs sheet.
   acceptance_criteria:
@@ -66,4 +69,4 @@ Example:
     - Run `npm run build` successfully
     - Manual verification: create character, add skill, save, reload
   notes: |
-    Reference AGENT_GUIDE.md (Unified patterns) and DESIGN_SYSTEM.md for component patterns.
+    Reference ARCHITECTURE_CONSTITUTION.md + AGENT_GUIDE.md (on demand) and DESIGN_SYSTEM.md for component patterns.

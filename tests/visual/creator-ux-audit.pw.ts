@@ -46,7 +46,7 @@ function seedCreatorStorage(
   step: CreatorStep,
   draft: Record<string, unknown>,
   stepLayer: Record<string, number> = {},
-  completedSteps: CreatorStep[] = stepsBefore(step)
+  completedSteps: CreatorStep[] = stepsBefore(step),
 ) {
   return {
     state: {

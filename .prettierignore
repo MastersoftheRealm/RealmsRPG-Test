@@ -1,0 +1,43 @@
+# deps / build
+node_modules
+.next
+out
+build
+coverage
+playwright-report
+test-results
+
+# lock + dumps (do not reflow)
+package-lock.json
+backups
+sql
+reports
+data
+
+# CI / editor metadata
+.github
+.cursor
+
+# agent/task prose and YAML-in-markdown
+*.md
+src/docs
+
+# binaries / snapshots / static assets
+*.png
+*.webp
+*.jpg
+*.jpeg
+*.gif
+*.ico
+*.woff
+*.woff2
+*.svg
+public
+tests/**/__screenshots__
+**/*-snapshots/**
+tests/visual/*-baseline.json
+scripts/contrast-baseline.json
+
+# generated
+FEATURE_INDEX_BARRELS.generated.md
+src/types/database.types.ts

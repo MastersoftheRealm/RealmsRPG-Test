@@ -6,10 +6,19 @@
 
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import Link from 'next/link';
-import { Alert, Button, Input, PageContainer, PageHeader, LoadingState, EmptyState } from '@/components/ui';
-import { ErrorDisplay } from '@/components/shared';
+import { useQuery } from '@tanstack/react-query';
+import {
+  Alert,
+  Button,
+  Input,
+  PageContainer,
+  PageHeader,
+  LoadingState,
+  EmptyState,
+} from '@/components/ui';
+import { ErrorDisplay } from '@/components/patterns';
 import { apiFetch } from '@/lib/api-client';
 
 type UserRole = 'new_player' | 'playtester' | 'developer' | 'admin';
@@ -37,30 +46,30 @@ const ROLE_LABELS: Record<UserRole, string> = {
 
 export default function AdminRolesPage() {
   const [rows, setRows] = useState<RolePolicyRow[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const [syncedAt, setSyncedAt] = useState(0);
   const [savingRole, setSavingRole] = useState<UserRole | null>(null);
   const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
-  const [reloadToken, setReloadToken] = useState(0);
 
-  useEffect(() => {
-    let cancelled = false;
-    setLoading(true);
-    setError(null);
-    apiFetch<RolePolicyRow[]>('/api/admin/role-policies')
-      .then((data) => {
-        if (!cancelled) setRows(Array.isArray(data) ? data : []);
-      })
-      .catch((err) => {
-        if (!cancelled) setError(err instanceof Error ? err.message : 'Failed to load role policies');
-      })
-      .finally(() => {
-        if (!cancelled) setLoading(false);
-      });
-    return () => {
-      cancelled = true;
-    };
-  }, [reloadToken]);
+  const {
+    data: serverRows,
+    isLoading: loading,
+    error: queryError,
+    refetch,
+    dataUpdatedAt,
+  } = useQuery({
+    queryKey: ['admin', 'role-policies'],
+    queryFn: () => apiFetch<RolePolicyRow[]>('/api/admin/role-policies'),
+  });
+  const error = queryError
+    ? queryError instanceof Error
+      ? queryError.message
+      : 'Failed to load role policies'
+    : null;
+
+  if (serverRows && dataUpdatedAt !== syncedAt) {
+    setRows(Array.isArray(serverRows) ? serverRows : []);
+    setSyncedAt(dataUpdatedAt);
+  }
 
   const onNumberChange = (role: UserRole, key: keyof RolePolicyRow, rawValue: string) => {
     const value = Math.max(0, Math.floor(Number(rawValue) || 0));
@@ -78,8 +87,8 @@ export default function AdminRolesPage() {
                 can_upload_profile_picture: checked,
               },
             }
-          : r
-      )
+          : r,
+      ),
     );
   };
 
@@ -134,7 +143,7 @@ export default function AdminRolesPage() {
       {loading ? (
         <LoadingState size="lg" padding="md" />
       ) : error ? (
-        <ErrorDisplay message={error} onRetry={() => setReloadToken((token) => token + 1)} />
+        <ErrorDisplay message={error} onRetry={() => void refetch()} />
       ) : rows.length === 0 ? (
         <EmptyState title="No role policies found." size="sm" />
       ) : (
@@ -143,9 +152,11 @@ export default function AdminRolesPage() {
             const canUpload = Boolean(row.permissions?.can_upload_profile_picture);
             return (
               <section key={row.role} className="rounded-lg border border-border bg-surface p-5">
-                <h2 className="text-lg font-semibold text-text-primary mb-4">{ROLE_LABELS[row.role]}</h2>
+                <h2 className="mb-4 text-lg font-semibold text-text-primary">
+                  {ROLE_LABELS[row.role]}
+                </h2>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
                   <LabeledNumberInput
                     label="Max Campaigns"
                     value={row.max_campaigns}
@@ -154,7 +165,9 @@ export default function AdminRolesPage() {
                   <LabeledNumberInput
                     label="Max Players Per Campaign"
                     value={row.max_players_per_campaign}
-                    onChange={(value) => onNumberChange(row.role, 'max_players_per_campaign', value)}
+                    onChange={(value) =>
+                      onNumberChange(row.role, 'max_players_per_campaign', value)
+                    }
                   />
                   <LabeledNumberInput
                     label="Max Characters"
@@ -183,7 +196,7 @@ export default function AdminRolesPage() {
                   />
                 </div>
 
-                <label className="inline-flex items-center gap-3 mt-4 min-h-[44px]">
+                <label className="mt-4 inline-flex min-h-[44px] items-center gap-3">
                   <input
                     type="checkbox"
                     checked={canUpload}
@@ -222,7 +235,7 @@ function LabeledNumberInput({
 }) {
   return (
     <label className="block">
-      <span className="block text-sm text-text-secondary mb-1">{label}</span>
+      <span className="mb-1 block text-sm text-text-secondary">{label}</span>
       <Input
         type="number"
         min={0}

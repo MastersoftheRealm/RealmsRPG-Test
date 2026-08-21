@@ -8,16 +8,11 @@
 /** Legacy Firestore Timestamp shape stored in older campaign roll rows. */
 export interface LegacyFirestoreTimestamp {
   seconds: number;
-  nanoseconds?: number;
+  nanoseconds?: number | undefined;
 }
 
 /** All timestamp shapes accepted from API / DB / client roll entries. */
-export type RollTimestampInput =
-  | Date
-  | string
-  | LegacyFirestoreTimestamp
-  | null
-  | undefined;
+export type RollTimestampInput = Date | string | LegacyFirestoreTimestamp | null | undefined;
 
 /** Normalize roll timestamp to a Date (fallback: now). */
 export function normalizeRollTimestamp(timestamp: RollTimestampInput | unknown): Date {
@@ -32,5 +27,10 @@ export function normalizeRollTimestamp(timestamp: RollTimestampInput | unknown):
 export function formatRollTimestamp(timestamp: RollTimestampInput | unknown): string {
   const d = normalizeRollTimestamp(timestamp);
   if (Number.isNaN(d.getTime())) return '-';
-  return d.toLocaleString([], { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
+  return d.toLocaleString([], {
+    month: 'short',
+    day: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit',
+  });
 }

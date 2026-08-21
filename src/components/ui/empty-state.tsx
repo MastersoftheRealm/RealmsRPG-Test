@@ -13,24 +13,28 @@ export interface EmptyStateProps extends React.HTMLAttributes<HTMLDivElement> {
   /** Main heading */
   title: string;
   /** Description text (alias: message) */
-  description?: string;
+  description?: string | undefined;
   /** Alias for description for backward compatibility */
-  message?: string;
+  message?: string | undefined;
   /** Icon to display (optional) */
-  icon?: React.ReactNode;
+  icon?: React.ReactNode | undefined;
   /** Primary action button */
-  action?: {
-    label: string;
-    onClick: () => void;
-    variant?: 'primary' | 'secondary';
-  } | React.ReactNode;
+  action?:
+    | {
+        label: string;
+        onClick: () => void;
+        variant?: 'primary' | 'secondary' | undefined;
+      }
+    | React.ReactNode;
   /** Secondary action button */
-  secondaryAction?: {
-    label: string;
-    onClick: () => void;
-  };
+  secondaryAction?:
+    | {
+        label: string;
+        onClick: () => void;
+      }
+    | undefined;
   /** Size variant */
-  size?: 'sm' | 'md' | 'lg';
+  size?: 'sm' | 'md' | 'lg' | undefined;
 }
 
 const sizeClasses = {
@@ -68,24 +72,25 @@ export function EmptyState({
   const sizes = sizeClasses[size];
   // Support both 'description' and 'message' props for backward compatibility
   const displayMessage = description || message;
-  
+
   // Check if action is a React node or an action object
-  const isActionObject = action && typeof action === 'object' && 'label' in action && 'onClick' in action;
+  const isActionObject =
+    action && typeof action === 'object' && 'label' in action && 'onClick' in action;
 
   return (
     <div
       className={cn(
         'flex flex-col items-center justify-center text-center',
         sizes.container,
-        className
+        className,
       )}
       {...props}
     >
       {icon && (
         <div
           className={cn(
-            'flex items-center justify-center rounded-full bg-surface-alt text-text-muted dark:text-text-secondary mb-4',
-            sizes.iconWrapper
+            'mb-4 flex items-center justify-center rounded-full bg-surface-alt text-text-muted',
+            sizes.iconWrapper,
           )}
         >
           {icon}
@@ -95,19 +100,20 @@ export function EmptyState({
         {title}
       </p>
       {displayMessage && (
-        <p className={cn('mt-2 text-text-muted dark:text-text-secondary max-w-md', sizes.description)}>
-          {displayMessage}
-        </p>
+        <p className={cn('mt-2 max-w-md text-text-muted', sizes.description)}>{displayMessage}</p>
       )}
       {/* Support both action object and React node */}
-      {action && !isActionObject && (
-        <div className="mt-6">{action}</div>
-      )}
+      {action && !isActionObject && <div className="mt-6">{action}</div>}
       {(isActionObject || secondaryAction) && (
         <div className="mt-6 flex items-center gap-3">
           {isActionObject && (
             <Button
-              variant={(action as { variant?: 'primary' | 'secondary' }).variant === 'secondary' ? 'secondary' : 'primary'}
+              variant={
+                (action as { variant?: 'primary' | 'secondary' | undefined }).variant ===
+                'secondary'
+                  ? 'secondary'
+                  : 'primary'
+              }
               onClick={(action as { onClick: () => void }).onClick}
             >
               {(action as { label: string }).label}

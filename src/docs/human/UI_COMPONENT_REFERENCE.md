@@ -14,13 +14,14 @@ This file gathers the main UI components, shared utilities, and style convention
 |----------|-----------|-------|
 | Powers, techniques, feats, equipment in character sheet | **GridListRow** | Sortable columns, leftSlot/rightSlot, expandable rows |
 | Add-feat, add-skill, add-library-item modals | **GridListRow** or **UnifiedSelectionModal** | Consistent list selection with search |
+| Add combatant / session participant (encounters, VTT, downtime) | **AddCombatantModal** | Intentional non-USM shell (TASK-571); see FEATURE_INDEX |
 | Codex browse (feats, skills, equipment, parts) | **GridListRow** | Tab + filters + GridListRow list |
-| Library browse (user's items) | **ItemCard** / **ItemList** | Card layout, view/edit/duplicate/delete |
+| Library browse (user's items) | **GridListRow** / Official*List | Sortable columns; view/edit/duplicate/delete |
 | Base-skill selector (add sub-skill) | **SelectionToggle** | Unique UX; not GridListRow |
 | Species detail, level-up wizard | Custom layouts | Justified exceptions |
 | Quantity controls | **QuantitySelector** or **ValueStepper** | Not SelectionToggle |
 
-**Rule:** Prefer `GridListRow` for list rows with columns. Use `ItemCard`/`ItemList` for card-style layouts. Use `SelectionToggle` for add/select actions only.
+**Rule:** Prefer `GridListRow` for list rows with columns. Use `SelectionToggle` for add/select actions only.
 
 ---
 
@@ -169,17 +170,8 @@ Usage pattern: use `Chip` for small inline tags; `ExpandableChip` for chips with
 
 ## Part / Property chips (domain-specific)
 
-- `PartChip` — unified chip used for parts (powers/techniques) and item properties. Shows `name`, optional TP (`tpCost`) and energy cost, chevron rotation when expanded. File: [src/components/shared/part-chip.tsx](src/components/shared/part-chip.tsx#L1).
-  - Props: `part: PartData` (name, text, description, tpCost, energyCost, optionLevels, category), `isExpanded?`, `onClick?`, `size?`, `className?`.
-  - Visuals: category-based `categoryStyles` (design tokens), rings when expanded, TP badge (Zap icon).
-
-- `PartChipDetails` — expanded panel for the selected `PartChip` showing description, TP badge, option levels. See [src/components/shared/part-chip.tsx](src/components/shared/part-chip.tsx#L129).
-
-- `PartChipList` — container that manages expansion state for a list of `PartChip` instances (single-open accordion behavior). Renders expanded details below chips. See [src/components/shared/part-chip.tsx](src/components/shared/part-chip.tsx#L187).
-
-- `PropertyChipList` — thin wrapper mapping simple property strings to `PartChipList` entries for items. See [src/components/shared/part-chip.tsx](src/components/shared/part-chip.tsx#L242).
-
-Usage pattern: prefer `PartChipList` where multiple part chips are shown and a single expanded detail panel is required; `PartChip` can be used individually inside lists/cards.
+- **ExpandableChip** + `expandableChipPropsFromPartData` (`lib/chip/expandable-chip-props.ts`) for parts/properties with descriptions or option levels. `PartData` in `lib/chip/part-data.ts` (also `@/components/shared`).
+- Display helpers: `partChipsFromDisplay` (`lib/chip/part-chips-from-display.ts`).
 
 ## Expandable / Collapsible patterns
 
@@ -189,7 +181,7 @@ Usage pattern: prefer `PartChipList` where multiple part chips are shown and a s
 
 - `CollapsibleGroup` — accordion-like grouping that manages which children are open; supports `allowMultiple` option. See [src/components/ui/collapsible.tsx](src/components/ui/collapsible.tsx#L138).
 
-Pattern notes: chips and part-chips implement their own expansion handlers (local state or parent-managed in `PartChipList`). `Collapsible` is used for larger section blocks (filters, lists, attribute groups).
+Pattern notes: expandable chips own their expansion state (or parent via ExpandableChip APIs). `Collapsible` is used for larger section blocks (filters, lists, attribute groups).
 
 ## Modals and overlays
 
@@ -197,7 +189,7 @@ Pattern notes: chips and part-chips implement their own expansion handlers (loca
   - Props: `isOpen`, `onClose`, `title?`, `description?`, `size?` (`sm|md|lg|xl|2xl|full`), `showCloseButton?`.
   - Behavior: locks body scroll when open, listens for Escape key, backdrop click closes by default, modal content uses `animate-modal-pop` (CSS animation in design tokens).
 
-- `LoadingOverlay` / `LoadingState` (in `spinner.tsx`) — container-level or full-screen loading overlays used in pages or modals.
+- `LoadingState` (in `spinner.tsx`) — centered page/section loading. (`LoadingOverlay` removed `/debt` 2026-07-19.)
 
 Modal usage notes: any chip/list/collapsible can be used inside a modal; no modal-specific chip variants are used — components are reused inside modals.
 
@@ -210,6 +202,9 @@ Modal usage notes: any chip/list/collapsible can be used inside a modal; no moda
 **UnifiedSelectionModal** - Generic selection modal using GridListRow. File: [src/components/shared/unified-selection-modal.tsx](src/components/shared/unified-selection-modal.tsx#L1)
 - Props: `isOpen`, `onClose`, `title`, `items`, `onSelect`, `renderItem`, `searchFilter`
 - Pattern: Highly configurable for any selection scenario (skills, feats, powers, etc.)
+
+**AddCombatantModal** - Encounter / session participant picker (intentional non-USM; TASK-571). File: [src/components/shared/add-combatant-modal.tsx](src/components/shared/add-combatant-modal.tsx#L1)
+- Pattern: Creature Library + Campaign Characters; extend for VTT/downtime — do not migrate onto USM. Canonical: FEATURE_INDEX.
 
 **LoginPromptModal** - Prompts user to login when accessing protected features. File: [src/components/shared/login-prompt-modal.tsx](src/components/shared/login-prompt-modal.tsx#L1)
 - Props: `isOpen`, `onClose`, `title?`, `message?`, `feature`
@@ -394,15 +389,9 @@ The unified expandable list row now supports character sheet use cases with new 
 
 These slots allow `GridListRow` to replace custom character sheet components (PowerCard, TechniqueCard, ItemCard) while maintaining flexibility.
 
-### ItemCard & ItemList
+### ItemCard & ItemList — removed
 
-**ItemCard** - Unified item display component. File: [src/components/shared/item-card.tsx](src/components/shared/item-card.tsx#L1)
-- Props: `item`, `mode` (view|select|manage), `onSelect?`, `onEdit?`, `onDelete?`
-- Usage: Display items in codex, library, creator with consistent styling
-
-**ItemList** - Unified list with filtering, sorting, and search. File: [src/components/shared/item-list.tsx](src/components/shared/item-list.tsx#L1)
-- Props: `items`, `renderItem`, `layout` (list|grid), `searchFilter?`, `sortOptions?`, `filters?`, `emptyMessage?`
-- Pattern: Combines search, sort, filter, and list rendering in one component
+`ItemCard` / `ItemList` were deleted (`/debt` 2026-07-19). Use **GridListRow** + **Official\*List** / library shells.
 
 ---
 
@@ -421,7 +410,7 @@ These slots allow `GridListRow` to replace custom character sheet components (Po
 - Pattern: Centered spinner with optional message
 - Usage: Page/section loading states
 
-**LoadingOverlay** - Overlay that covers content during async operations. File: [src/components/ui/spinner.tsx](src/components/ui/spinner.tsx#L137)
+**LoadingOverlay** — removed (`/debt` 2026-07-19). Use `LoadingState` / `Spinner`.
 - Props: `isLoading`, `message?`, `fullScreen?`
 - Pattern: Conditional overlay with backdrop + spinner
 - Usage: Forms, modals during save/submit
@@ -542,28 +531,9 @@ D&D-style creature display component. File: [src/components/shared/creature-stat
 />
 ```
 
-### SpeciesTraitCard
+### SpeciesTraitCard — removed
 
-Unified trait display with limited uses tracking. File: [src/components/shared/species-trait-card.tsx](src/components/shared/species-trait-card.tsx#L1)
-
-- **Components:** `SpeciesTraitCard`, `TraitGroup`
-- **Props:** `trait`, `category` (species|ancestry|flaw|characteristic), `showUses?`, `currentUses?`, `onUseChange?`
-- **Features:**
-  - Category-based color coding
-  - Limited uses display with +/- controls
-  - Recovery period indicator
-  - Expandable description
-- **Usage:** Species modal, character sheet, character creator
-
-```tsx
-<SpeciesTraitCard
-  trait={traitData}
-  category="species"
-  showUses
-  currentUses={trait.uses.current}
-  onUseChange={(delta) => updateUses(trait.id, delta)}
-/>
-```
+`SpeciesTraitCard` / `TraitGroup` deleted (`/debt` 2026-07-19). Catalogs: **DetailOptionList** + `traitToDetailOption`. Selection: **GuidedChoiceCard**.
 
 ### CharacterCard
 
@@ -647,19 +617,20 @@ Powers, techniques, and equipment management. File: [src/components/character-sh
 - Features: Tab navigation, add buttons, equip toggles, innate toggles
 - Tabs: Powers, Techniques, Weapons, Armor, Equipment
 
-### DiceRoller & RollLog
+### RollProvider & RollLog
 
-Dice rolling system. Files: [dice-roller.tsx](src/components/character-sheet/dice-roller.tsx#L1), [roll-log.tsx](src/components/character-sheet/roll-log.tsx#L1)
-- Features: Dice pool builder, roll history, fixed-position panel
-- Pattern: Context-based roll state management
+Dice rolling system. Import from `@/components/rolls`. Files: [roll-context.tsx](src/components/rolls/roll-context.tsx#L1), [roll-log.tsx](src/components/rolls/roll-log.tsx#L1); die helpers [die.ts](src/lib/rolls/die.ts#L1)
+- Features: Roll history, fixed-position panel, campaign roll sync
+- Pattern: Context-based roll state (`RollProvider`); used by sheet, encounters, creature creator, library creatures
+- Note: Standalone `DiceRoller` UI was removed (unused); ownership move to shared/game domain tracked as TASK-593
 
 ### Character Sheet Modals
 
 - **AddFeatModal** - Add feats from archetype or general pool
-- **AddSkillModal** - Add base skills
-- **AddSubSkillModal** - Add sub-skills
+- **AddSubSkillModal** - Add sub-skills (sheet: base skills are catalog-all — no Add Skill)
 - **AddLibraryItemModal** - Add powers, techniques, weapons, armor, equipment
 - **LevelUpModal** - Level up wizard with point allocation
+- **EditSpeciesModal** / **EditArchetypeModal** - Sheet identity editors
 
 ---
 
@@ -750,11 +721,10 @@ Multi-select dropdown with chip display. File: [src/components/shared/filters/ch
 - Props: `label`, `options`, `selectedValues`, `onSelect`, `onRemove`, `placeholder?`
 - Pattern: Select dropdown + chip list for selections
 
-### CheckboxFilter
+### CheckboxFilter — removed
 
-Multiple checkbox options. File: [src/components/shared/filters/checkbox-filter.tsx](src/components/shared/filters/checkbox-filter.tsx#L1)
-- Props: `label`, `options`, `selectedValues`, `onChange`
-- Usage: Filter by multiple boolean flags
+`CheckboxFilter` deleted (`/debt` 2026-07-19). Prefer `ChipSelect` / `TagFilter` / `SelectFilter`.
+
 
 ### AbilityRequirementFilter
 
@@ -824,21 +794,21 @@ Collapsible filter container. File: [src/components/shared/filters/filter-sectio
 
 ### Character Sheet Pages
 - [src/app/(main)/characters/[id]/page.tsx](src/app/(main)/characters/[id]/page.tsx#L1)
-  - Uses: SheetHeader, AbilitiesSection, SkillsSection, LibrarySection, DiceRoller, RollLog
-  - Modals: AddFeatModal, AddSkillModal, AddSubSkillModal, AddLibraryItemModal, LevelUpModal
+  - Uses: SheetHeader, AbilitiesSection, SkillsSection, ArchetypeSection, LibrarySection, RollProvider, RollLog
+  - Modals: AddFeatModal, AddSubSkillModal, AddLibraryItemModal, LevelUpModal, EditSpecies/EditArchetype
   - Patterns: Section-based layout, edit mode toggle, auto-save
 
 ### Creator Tools
 - **Power Creator:** [src/app/(main)/power-creator/page.tsx](src/app/(main)/power-creator/page.tsx#L1)
-  - Components: CreatorSummaryPanel, PartChipList, PropertyChipList, CollapsibleSection
+  - Components: CreatorSummaryPanel, ExpandableChip / partChipsFromDisplay, CollapsibleSection
   - Pattern: Part selection with energy/TP costs
   
 - **Technique Creator:** [src/app/(main)/technique-creator/page.tsx](src/app/(main)/technique-creator/page.tsx#L1)
-  - Components: CreatorSummaryPanel, PartChipList, PropertyChipList, CollapsibleSection
+  - Components: CreatorSummaryPanel, ExpandableChip / partChipsFromDisplay, CollapsibleSection
   - Pattern: Similar to power creator, technique-specific properties
 
 - **Item Creator:** [src/app/(main)/item-creator/page.tsx](src/app/(main)/item-creator/page.tsx#L1)
-  - Components: CreatorSummaryPanel, PropertyChipList, Input, Select, Textarea
+  - Components: CreatorSummaryPanel, ExpandableChip / partChipsFromDisplay, Input, Select, Textarea
   - Pattern: Weapon/armor/equipment creation
 
 - **Creature Creator:** [src/app/(main)/creature-creator/page.tsx](src/app/(main)/creature-creator/page.tsx#L1)
@@ -887,7 +857,7 @@ All use: CreatorSummaryPanel, CollapsibleSection, Button, Input, Select, Checkbo
 ## Accessibility & Interaction Notes
 
 - **Keyboard accessibility:** 
-  - `ExpandableChip` and `PartChip` set `tabIndex` and `role='button'` and toggle on Enter/Space
+  - `ExpandableChip` sets `tabIndex` and `role='button'` and toggles on Enter/Space
   - `Collapsible` uses `aria-expanded` for screen readers
   - `TabNavigation` uses `role=tablist`, `role=tab`, `aria-selected`
   - All interactive components have visible focus rings (`focus-visible:ring`)
@@ -967,15 +937,14 @@ Based on the comprehensive audit, here are key patterns and recommendations:
    - **Issue:** Multiple overlapping loading components:
      - `Spinner` (minimal spinner)
      - `LoadingState` (spinner with message)
-     - `LoadingOverlay` (blocking overlay)
      - `LoadingSpinner` (in list-components, wrapper around Spinner)
    - **Recommendation:** 
-     - Keep: `Spinner` (primitive), `LoadingState` (with message), `LoadingOverlay` (blocking)
+     - Keep: `Spinner` (primitive), `LoadingState` (with message)
      - Remove: `LoadingSpinner` duplicate
      - Standardize loading message styling
 
 3. **Filter Components**
-   - **Current:** Specialized filters in `codex/filters/` (not reused elsewhere)
+   - **Current:** Shared filters in `shared/filters/` (ChipSelect, TagFilter, SelectFilter, SourceFilter, …)
    - **Recommendation:** 
      - Move to `shared/` for reuse across library, character sheet modals
      - Create unified `<FilterBar>` composition component
@@ -1009,7 +978,7 @@ Based on the comprehensive audit, here are key patterns and recommendations:
      - Consider Card composition pattern (Card.Header, Card.Body, Card.Footer)
 
 6. **Chip Category Colors**
-   - **Issue:** PartChip and PropertyChipList use category colors, but not all categories are standardized
+   - **Issue:** Part/category chips historically used category colors; prefer ExpandableChip + partChipVariant
    - **Recommendation:**
      - Audit all category tokens in globals.css
      - Create `CATEGORY_COLORS` mapping in design system docs
@@ -1102,7 +1071,7 @@ The goal of consistency is achieved through:
    - Backdrop click behavior consistent
    - Footer buttons always same alignment
 
-7. **PartChip/PropertyChipList** → Unified expandable chip pattern
+7. **PartChip / PropertyChipList** → ExpandableChip (deleted)
    - Powers, techniques use same display components
    - Consistent expand/collapse behavior
    - Category colors convey meaning

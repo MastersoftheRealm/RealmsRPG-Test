@@ -10,16 +10,30 @@ export const DEFAULT_VTT_GRID: VttGridConfig = {
   snap: true,
 };
 
-export function normalizeGridConfig(grid?: Partial<VttGridConfig> | null): VttGridConfig {
+type VttGridConfigInput = {
+  [K in keyof VttGridConfig]?: VttGridConfig[K] | undefined;
+};
+
+export function normalizeGridConfig(grid?: VttGridConfigInput | null): VttGridConfig {
   const cellSize = Number(grid?.cellSize);
   const opacity = Number(grid?.opacity);
   return {
-    ...DEFAULT_VTT_GRID,
-    ...(grid ?? {}),
-    cellSize: Number.isFinite(cellSize) ? Math.max(8, Math.min(400, cellSize)) : DEFAULT_VTT_GRID.cellSize,
-    offsetX: Number.isFinite(Number(grid?.offsetX)) ? Number(grid?.offsetX) : DEFAULT_VTT_GRID.offsetX,
-    offsetY: Number.isFinite(Number(grid?.offsetY)) ? Number(grid?.offsetY) : DEFAULT_VTT_GRID.offsetY,
-    opacity: Number.isFinite(opacity) ? Math.max(0.05, Math.min(1, opacity)) : DEFAULT_VTT_GRID.opacity,
+    enabled: typeof grid?.enabled === 'boolean' ? grid.enabled : DEFAULT_VTT_GRID.enabled,
+    cellSize: Number.isFinite(cellSize)
+      ? Math.max(8, Math.min(400, cellSize))
+      : DEFAULT_VTT_GRID.cellSize,
+    offsetX: Number.isFinite(Number(grid?.offsetX))
+      ? Number(grid?.offsetX)
+      : DEFAULT_VTT_GRID.offsetX,
+    offsetY: Number.isFinite(Number(grid?.offsetY))
+      ? Number(grid?.offsetY)
+      : DEFAULT_VTT_GRID.offsetY,
+    color:
+      typeof grid?.color === 'string' && grid.color.trim() ? grid.color : DEFAULT_VTT_GRID.color,
+    opacity: Number.isFinite(opacity)
+      ? Math.max(0.05, Math.min(1, opacity))
+      : DEFAULT_VTT_GRID.opacity,
+    snap: typeof grid?.snap === 'boolean' ? grid.snap : DEFAULT_VTT_GRID.snap,
   };
 }
 
@@ -46,4 +60,3 @@ export function clampPointToMap(point: VttPoint, mapWidth?: number, mapHeight?: 
     y: Math.max(0, Math.min(mapHeight, point.y)),
   };
 }
-

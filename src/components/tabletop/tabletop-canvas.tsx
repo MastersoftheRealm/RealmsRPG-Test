@@ -15,7 +15,7 @@ const PING_TTL_MS = 5_000;
 
 interface TabletopCanvasProps {
   state: VttTabletopState;
-  selectedTokenId?: string;
+  selectedTokenId?: string | undefined;
   toolMode: TabletopToolMode;
   onSelectToken: (tokenId: string | undefined) => void;
   onMoveToken: (tokenId: string, point: VttPoint) => void;
@@ -65,7 +65,13 @@ function useImage(src: string | undefined) {
   return loaded.image;
 }
 
-function buildGridLines(width: number, height: number, cellSize: number, offsetX: number, offsetY: number): number[][] {
+function buildGridLines(
+  width: number,
+  height: number,
+  cellSize: number,
+  offsetX: number,
+  offsetY: number,
+): number[][] {
   const lines: number[][] = [];
   const safeCell = Math.max(8, cellSize);
   for (let x = offsetX % safeCell; x <= width; x += safeCell) lines.push([x, 0, x, height]);
@@ -131,7 +137,7 @@ function TokenNode({
         const next = clampPointToMap(
           snapPointToGrid({ x: event.target.x(), y: event.target.y() }, grid),
           mapWidth,
-          mapHeight
+          mapHeight,
         );
         event.target.position(next);
         onMoveToken(token.id, next);
@@ -154,11 +160,11 @@ function TokenNode({
         >
           <KonvaImage
             image={tokenImage}
-            crop={crop}
             x={-token.size / 2}
             y={-token.size / 2}
             width={token.size}
             height={token.size}
+            {...(crop ? { crop } : {})}
           />
         </Group>
       ) : (
@@ -212,15 +218,13 @@ export function TabletopCanvas({
 
   const gridLines = useMemo(
     () => buildGridLines(mapWidth, mapHeight, grid.cellSize, grid.offsetX, grid.offsetY),
-    [mapWidth, mapHeight, grid.cellSize, grid.offsetX, grid.offsetY]
+    [mapWidth, mapHeight, grid.cellSize, grid.offsetX, grid.offsetY],
   );
 
   const pendingMoves = state.actions.filter(
-    (action) => action.type === 'move-request' && action.status === 'pending' && action.tokenId
+    (action) => action.type === 'move-request' && action.status === 'pending' && action.tokenId,
   );
-  const pings = state.actions
-    .filter((action) => pingExpiresAt(action) > now)
-    .slice(0, 8);
+  const pings = state.actions.filter((action) => pingExpiresAt(action) > now).slice(0, 8);
 
   useEffect(() => {
     const timeout = window.setTimeout(() => {
@@ -239,9 +243,12 @@ export function TabletopCanvas({
 
     if (nextPingExpiration == null) return;
 
-    const timeout = window.setTimeout(() => {
-      setNow(Date.now());
-    }, Math.max(0, nextPingExpiration - now) + 50);
+    const timeout = window.setTimeout(
+      () => {
+        setNow(Date.now());
+      },
+      Math.max(0, nextPingExpiration - now) + 50,
+    );
 
     return () => window.clearTimeout(timeout);
   }, [now, state.actions]);
@@ -325,7 +332,7 @@ export function TabletopCanvas({
       ref={ref}
       className={cn(
         'relative h-[62vh] min-h-105 w-full overflow-hidden rounded-lg border border-border-light bg-surface-alt',
-        isFullscreen && 'h-screen min-h-screen rounded-none border-0'
+        isFullscreen && 'h-screen min-h-screen rounded-none border-0',
       )}
     >
       {fullscreenAvailable && (
@@ -335,9 +342,13 @@ export function TabletopCanvas({
           variant="default"
           size="lg"
           onClick={toggleFullscreen}
-          className="absolute right-3 top-3 z-10 border border-border-light bg-surface/90 text-text-primary shadow-lg backdrop-blur-sm hover:bg-surface"
+          className="absolute top-3 right-3 z-10 border border-border-light bg-surface/90 text-text-primary shadow-lg backdrop-blur-sm hover:bg-surface"
         >
-          {isFullscreen ? <Minimize2 className="h-5 w-5" aria-hidden /> : <Maximize2 className="h-5 w-5" aria-hidden />}
+          {isFullscreen ? (
+            <Minimize2 className="h-5 w-5" aria-hidden />
+          ) : (
+            <Maximize2 className="h-5 w-5" aria-hidden />
+          )}
         </IconButton>
       )}
       <Stage
@@ -395,8 +406,7 @@ export function TabletopCanvas({
                 height={region.height}
                 fill={region.mode === 'cover' ? '#020617' : '#ffffff'}
                 opacity={region.mode === 'cover' ? 0.72 : 0.16}
-                dash={region.mode === 'reveal' ? [12, 8] : undefined}
-                stroke={region.mode === 'reveal' ? '#f8fafc' : undefined}
+                {...(region.mode === 'reveal' ? { dash: [12, 8], stroke: '#f8fafc' } : {})}
               />
             ))}
           </Layer>
@@ -409,7 +419,12 @@ export function TabletopCanvas({
             return (
               <Group key={action.id}>
                 <Line
-                  points={[action.fromX ?? token.x, action.fromY ?? token.y, action.toX, action.toY]}
+                  points={[
+                    action.fromX ?? token.x,
+                    action.fromY ?? token.y,
+                    action.toX,
+                    action.toY,
+                  ]}
                   stroke="#f59e0b"
                   strokeWidth={4}
                   dash={[12, 8]}
@@ -428,7 +443,14 @@ export function TabletopCanvas({
           })}
           {pings.map((action) => (
             <Group key={action.id}>
-              <Circle x={action.toX} y={action.toY} radius={34} stroke="#facc15" strokeWidth={5} opacity={0.9} />
+              <Circle
+                x={action.toX}
+                y={action.toY}
+                radius={34}
+                stroke="#facc15"
+                strokeWidth={5}
+                opacity={0.9}
+              />
               <Circle x={action.toX} y={action.toY} radius={8} fill="#facc15" opacity={0.95} />
             </Group>
           ))}

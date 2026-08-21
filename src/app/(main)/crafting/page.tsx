@@ -16,14 +16,13 @@ import {
   Button,
   EmptyState,
   LoadingState,
-  Alert,
   SearchInput,
   TabNavigation,
   TabContentPanel,
   useTabGroup,
   useToast,
 } from '@/components/ui';
-import { DeleteConfirmModal, HubListRow, ErrorDisplay } from '@/components/shared';
+import { DeleteConfirmModal, HubListRow, ErrorDisplay } from '@/components/patterns';
 import {
   useCraftingSessions,
   useDeleteCraftingSession,
@@ -88,16 +87,13 @@ function CraftingHubContent() {
     }
     if (search) {
       const s = search.toLowerCase();
-      result = result.filter(
-        (x) =>
-          x.itemName.toLowerCase().includes(s)
-      );
+      result = result.filter((x) => x.itemName.toLowerCase().includes(s));
     }
     return result;
   }, [sessions, activeTab, search]);
 
   const inProgressCount = sessions.filter(
-    (s) => s.status === 'in_progress' || s.status === 'planned'
+    (s) => s.status === 'in_progress' || s.status === 'planned',
   ).length;
   const completedCount = sessions.filter((s) => s.status === 'completed').length;
 
@@ -142,7 +138,7 @@ function CraftingHubContent() {
   return (
     <PageContainer size="xl">
       {!user && (
-        <div className="mb-4 rounded-lg bg-primary-subtle-bg border border-primary-subtle-border px-4 py-3 text-text-primary text-sm">
+        <div className="mb-4 rounded-lg border border-primary-subtle-border bg-primary-subtle-bg px-4 py-3 text-sm text-text-primary">
           You&apos;re not signed in. Sign in to save crafting sessions to your account.
           <Link
             href="/login?returnTo=/crafting"
@@ -158,7 +154,7 @@ function CraftingHubContent() {
         actions={
           <div className="flex flex-wrap gap-2">
             <Button onClick={handleStartCrafting}>
-              <Plus className="w-4 h-4" />
+              <Plus className="h-4 w-4" />
               Start Crafting
             </Button>
           </div>
@@ -181,14 +177,15 @@ function CraftingHubContent() {
         sharedTabPanelId={sharedPanelId}
       />
 
-      <TabContentPanel tabGroupId={tabGroupId} id={sharedPanelId} activeTab={activeTab} className="mt-6">
-        <div className="flex flex-wrap items-center gap-3 mb-4 min-w-0">
-          <div className="flex-1 min-w-[200px]">
-            <SearchInput
-              value={search}
-              onChange={setSearch}
-              placeholder="Search by item..."
-            />
+      <TabContentPanel
+        tabGroupId={tabGroupId}
+        id={sharedPanelId}
+        activeTab={activeTab}
+        className="mt-6"
+      >
+        <div className="mb-4 flex min-w-0 flex-wrap items-center gap-3">
+          <div className="min-w-[200px] flex-1">
+            <SearchInput value={search} onChange={setSearch} placeholder="Search by item..." />
           </div>
         </div>
 
@@ -197,11 +194,13 @@ function CraftingHubContent() {
         ) : error ? (
           <ErrorDisplay
             message={error.message || 'Failed to load crafting sessions'}
-            onRetry={() => { void refetch(); }}
+            onRetry={() => {
+              void refetch();
+            }}
           />
         ) : filteredSessions.length === 0 ? (
           <EmptyState
-            icon={<Hammer className="w-10 h-10" />}
+            icon={<Hammer className="h-10 w-10" />}
             title={
               search || activeTab !== 'all'
                 ? 'No sessions match your filters'
@@ -226,24 +225,22 @@ function CraftingHubContent() {
             {filteredSessions.map((session) => (
               <HubListRow
                 key={session.id}
-                icon={<Hammer className="w-5 h-5" />}
+                icon={<Hammer className="h-5 w-5" />}
                 iconContainerClassName="bg-warning-light text-warning-fg"
                 title={session.itemName}
                 badge={STATUS_LABELS[session.status]}
                 badgeVariant={STATUS_VARIANTS[session.status]}
-                subtitle={
-                  [
-                    session.currencyCost > 0 && `${session.currencyCost} currency`,
-                    session.updatedAt &&
-                      new Date(session.updatedAt).toLocaleDateString(undefined, {
-                        month: 'short',
-                        day: 'numeric',
-                        year: 'numeric',
-                      }),
-                  ]
-                    .filter(Boolean)
-                    .join(' · ')
-                }
+                subtitle={[
+                  session.currencyCost > 0 && `${session.currencyCost} currency`,
+                  session.updatedAt &&
+                    new Date(session.updatedAt).toLocaleDateString(undefined, {
+                      month: 'short',
+                      day: 'numeric',
+                      year: 'numeric',
+                    }),
+                ]
+                  .filter(Boolean)
+                  .join(' · ')}
                 onClick={() => handleOpen(session)}
                 onDelete={() => setDeleteTarget(session)}
                 deleteAriaLabel={`Delete crafting session ${session.itemName}`}
@@ -267,4 +264,3 @@ function CraftingHubContent() {
     </PageContainer>
   );
 }
-

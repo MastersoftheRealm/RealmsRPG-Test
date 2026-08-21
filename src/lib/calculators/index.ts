@@ -4,17 +4,10 @@
  * Export all calculator utilities
  */
 
-// Re-export shared ID constants and utilities
-export { PART_IDS, PROPERTY_IDS, GENERAL_PROPERTY_IDS, GENERAL_PROPERTY_NAMES, findByIdOrName, findByIdOrNameValue, normalizeRef, normalizeRefsArray } from '@/lib/id-constants';
-export type { HasIdAndName } from '@/lib/id-constants';
-
 // Unified Mechanic Builder (shared by Power, Technique, and future Empowered Technique creators)
 export {
   buildMechanicParts,
-  buildPowerMechanicParts,
-  buildTechniqueMechanicParts,
-  calculatePowerDamageLevel,
-  calculateTechniqueDamageLevel,
+  calculateDamageOptionLevel,
   type CreatorType,
   type MechanicPartResult,
   type MechanicBuilderContext,
@@ -24,24 +17,28 @@ export {
   type RangeConfig,
   type AreaConfig,
   type DurationConfig,
-  type WeaponConfig as MechanicWeaponConfig,
   type LegacyPowerMechanicContext,
   type LegacyTechniqueMechanicContext,
 } from './mechanic-builder';
 
+export {
+  POWER_ADVANCED_MECHANIC_CATEGORIES,
+  POWER_ADVANCED_MECHANIC_CATEGORY_SET,
+  POWER_AUTO_MECHANIC_PART_NAMES,
+  type PowerAdvancedMechanicCategory,
+} from './power-mechanic-constants';
+
 // Power Calculator
 export {
   calculatePowerCosts,
-  computeActionType as computePowerActionType,
+  calculatePowerSectionContribution,
   computeActionTypeFromSelection as computePowerActionTypeFromSelection,
-  buildPowerMechanicPartPayload,
   formatPowerRangeFromSteps,
   deriveRange,
   deriveArea,
   deriveDuration,
   getAreaPartForDisplay,
   formatAreaForDisplay,
-  formatPowerPartChip,
   derivePowerDisplay,
   formatPowerDamage,
   type PowerPartPayload,
@@ -49,20 +46,12 @@ export {
   type PowerDisplayData,
   type PartChipData,
   type PowerDocument,
-  type PowerMechanicContext,
 } from './power-calc';
-
-// Duration display (shared: character sheet, library, codex)
-export { formatDurationFromTypeAndValue, formatDurationWithModifiers } from '@/lib/utils/duration';
 
 // Technique Calculator
 export {
   calculateTechniqueCosts,
-  computeActionType as computeTechniqueActionType,
   computeActionTypeFromSelection as computeTechniqueActionTypeFromSelection,
-  computeSplits as computeTechniqueSplits,
-  computeAdditionalDamageLevel,
-  formatTechniquePartChip,
   deriveTechniqueDisplay,
   formatTechniqueDamage,
   type TechniquePart,
@@ -77,25 +66,29 @@ export {
 // Empowered Technique Calculator
 export {
   calculateEmpoweredTechniqueCosts,
-  getTechniquePercentageMultiplier,
   type EmpoweredTechniqueCostResult,
   type CalculateEmpoweredTechniqueCostsInput,
 } from './empowered-technique-calc';
+
+export {
+  pickCheaperEnPart,
+  toEmpoweredAutoMechanicPart,
+  type EmpoweredPartSide,
+  type EmpoweredPartCostCandidate,
+} from './empowered-overlap-parts';
 
 // Item Calculator
 export {
   calculateItemCosts,
   calculateCurrencyCostAndRarity,
-  calculateGoldCostAndRarity,
-  computeSplits as computeItemSplits,
-  formatDamage as formatItemDamage,
-  formatRange,
+  resolveWeaponRangeDisplay,
+  formatWeaponRangeDisplayCompact,
   deriveDamageReductionFromProperties,
+  deriveAgilityReductionFromProperties,
+  deriveCriticalRangeIncreaseFromProperties,
   deriveShieldAmountFromProperties,
   deriveShieldDamageFromProperties,
-  extractProficiencies,
   deriveItemDisplay,
-  formatProficiencyChip,
   isGeneralProperty,
   isMechanicProperty,
   filterSavedItemPropertiesForList,

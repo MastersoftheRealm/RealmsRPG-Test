@@ -1,16 +1,20 @@
 /**
  * Input Component
  * =================
- * Text input with label and error handling
+ * Text input with label and error handling.
+ * Filter panels (Codex/Library number fields next to FilterNativeSelect) use
+ * `FilterInput` from `@/components/patterns/filters` — do not restyle this default
+ * h-10 chrome per page. Coarse pointer uses Standard 44 via `touch-tier-standard`
+ * (ADR-0023 / TASK-830); fine pointer stays compact h-10.
  */
 
 import * as React from 'react';
 import { cn } from '@/lib/utils/cn';
 
 export interface InputProps extends React.InputHTMLAttributes<HTMLInputElement> {
-  label?: string;
-  error?: string;
-  helperText?: string;
+  label?: string | undefined;
+  error?: string | undefined;
+  helperText?: string | undefined;
 }
 
 const Input = React.forwardRef<HTMLInputElement, InputProps>(
@@ -23,10 +27,7 @@ const Input = React.forwardRef<HTMLInputElement, InputProps>(
     return (
       <div className="w-full">
         {label && (
-          <label
-            htmlFor={inputId}
-            className="mb-1.5 block text-sm font-medium text-text-primary"
-          >
+          <label htmlFor={inputId} className="mb-1.5 block text-sm font-medium text-text-primary">
             {label}
           </label>
         )}
@@ -34,20 +35,16 @@ const Input = React.forwardRef<HTMLInputElement, InputProps>(
           type={type}
           id={inputId}
           className={cn(
-            'flex h-10 w-full rounded-lg border bg-surface px-4 py-2.5 text-sm',
+            'touch-tier-standard flex h-10 w-full rounded-lg border bg-surface px-4 py-2.5 text-sm',
             'text-text-primary placeholder:text-text-muted',
-            'focus:outline-none focus:ring-2 focus:ring-primary-outline-border focus:border-primary-outline-border',
-            'disabled:cursor-not-allowed disabled:opacity-50 disabled:bg-surface-alt',
-            error
-              ? 'border-danger focus:ring-danger-border'
-              : 'border-border-light',
-            className
+            'focus:border-primary-outline-border focus:ring-2 focus:ring-primary-outline-border focus:outline-none',
+            'disabled:cursor-not-allowed disabled:bg-surface-alt disabled:opacity-50',
+            error ? 'border-danger focus:ring-danger-border' : 'border-border-light',
+            className,
           )}
           ref={ref}
           aria-invalid={error ? 'true' : undefined}
-          aria-describedby={
-            error ? errorId : helperText ? helperId : undefined
-          }
+          aria-describedby={error ? errorId : helperText ? helperId : undefined}
           {...props}
         />
         {error && (
@@ -62,7 +59,7 @@ const Input = React.forwardRef<HTMLInputElement, InputProps>(
         )}
       </div>
     );
-  }
+  },
 );
 
 Input.displayName = 'Input';

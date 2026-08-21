@@ -1,7 +1,12 @@
 'use client';
 
 import { useMemo, useState } from 'react';
-import { useUserPowers, useUserTechniques, useUserEmpoweredTechniques, useUserItems } from '../use-user-library';
+import {
+  useUserPowers,
+  useUserTechniques,
+  useUserEmpoweredTechniques,
+  useUserItems,
+} from '../use-user-library';
 import {
   useCodexEquipment,
   useCodexTechniqueParts,
@@ -9,8 +14,8 @@ import {
   useCodexItemProperties,
 } from '../use-codex';
 import { useOfficialLibrary } from '../use-official-library';
-import type { SourceFilterValue } from '@/components/shared/filters/source-filter';
-import type { SelectableItem } from '@/components/shared/unified-selection-modal';
+import type { SourceFilterValue } from '@/components/patterns/filters/source-filter';
+import type { SelectableItem } from '@/components/patterns/select/unified-selection-modal';
 import type { UserItem, UserPower, UserTechnique } from '../use-user-library';
 import { buildSelectableItem } from './build-selectable-item';
 import { loadEmpoweredRawItems, loadRawItemsForType } from './load-raw-items';
@@ -30,21 +35,42 @@ export function useAddLibraryItemData({
 
   const { data: userPowers = [], isLoading: powersLoading } = useUserPowers();
   const { data: userTechniques = [], isLoading: techniquesLoading } = useUserTechniques();
-  const { data: userEmpoweredTechniques = [], isLoading: empoweredTechniquesLoading } = useUserEmpoweredTechniques();
+  const { data: userEmpoweredTechniques = [], isLoading: empoweredTechniquesLoading } =
+    useUserEmpoweredTechniques();
   const { data: userItems = [], isLoading: itemsLoading } = useUserItems();
   const { data: codexEquipment = [], isLoading: equipmentLoading } = useCodexEquipment();
   const { data: techniquePartsDb = [] } = useCodexTechniqueParts();
   const { data: powerPartsDb = [] } = useCodexPowerParts();
   const { data: itemPropertiesDb = [] } = useCodexItemProperties();
-  const { data: publicPowers = [], isLoading: publicPowersLoading, isError: publicPowersError } = useOfficialLibrary('powers');
-  const { data: publicTechniques = [], isLoading: publicTechniquesLoading, isError: publicTechniquesError } = useOfficialLibrary('techniques');
-  const { data: publicEmpoweredTechniques = [], isLoading: publicEmpoweredTechniquesLoading, isError: publicEmpoweredTechniquesError } = useOfficialLibrary('empowered-techniques');
-  const { data: publicItems = [], isLoading: publicItemsLoading, isError: publicItemsError } = useOfficialLibrary('items');
-  const publicLibraryError = publicPowersError || publicTechniquesError || publicEmpoweredTechniquesError || publicItemsError;
+  const {
+    data: publicPowers = [],
+    isLoading: publicPowersLoading,
+    isError: publicPowersError,
+  } = useOfficialLibrary('powers');
+  const {
+    data: publicTechniques = [],
+    isLoading: publicTechniquesLoading,
+    isError: publicTechniquesError,
+  } = useOfficialLibrary('techniques');
+  const {
+    data: publicEmpoweredTechniques = [],
+    isLoading: publicEmpoweredTechniquesLoading,
+    isError: publicEmpoweredTechniquesError,
+  } = useOfficialLibrary('empowered-techniques');
+  const {
+    data: publicItems = [],
+    isLoading: publicItemsLoading,
+    isError: publicItemsError,
+  } = useOfficialLibrary('items');
+  const publicLibraryError =
+    publicPowersError ||
+    publicTechniquesError ||
+    publicEmpoweredTechniquesError ||
+    publicItemsError;
 
   const dbs = useMemo(
     () => ({ techniquePartsDb, powerPartsDb, itemPropertiesDb }),
-    [techniquePartsDb, powerPartsDb, itemPropertiesDb]
+    [techniquePartsDb, powerPartsDb, itemPropertiesDb],
   );
 
   const { rawItems, isLoading: rawItemsLoading } = useMemo(
@@ -54,7 +80,9 @@ export function useAddLibraryItemData({
         userPowers: userPowers as UserPower[],
         userTechniques: userTechniques as UserTechnique[],
         userItems: userItems as UserItem[],
-        codexEquipment: codexEquipment as Parameters<typeof loadRawItemsForType>[0]['codexEquipment'],
+        codexEquipment: codexEquipment as Parameters<
+          typeof loadRawItemsForType
+        >[0]['codexEquipment'],
         publicPowers,
         publicTechniques,
         publicItems,
@@ -84,7 +112,7 @@ export function useAddLibraryItemData({
       publicPowersLoading,
       publicTechniquesLoading,
       publicItemsLoading,
-    ]
+    ],
   );
 
   const empoweredRawItems = useMemo(() => {
@@ -96,16 +124,21 @@ export function useAddLibraryItemData({
   }, [itemType, publicEmpoweredTechniques, userEmpoweredTechniques]);
 
   const items: SelectableItem[] = useMemo(() => {
-    const list = itemType === 'power' && powerSelectionMode === 'empowered' ? empoweredRawItems : rawItems;
+    const list =
+      itemType === 'power' && powerSelectionMode === 'empowered' ? empoweredRawItems : rawItems;
+    // Callers pass type-scoped ids (CharacterSheetModals.existingIdsForAddModal).
+    // Equipment gets an empty set so stackable gear stays selectable.
     return list
-      .filter((item) => !existingIds.has(String((item as { id?: string | number }).id ?? '')))
+      .filter(
+        (item) => !existingIds.has(String((item as { id?: string | number | undefined }).id ?? '')),
+      )
       .map((item) =>
         buildSelectableItem(
           item as UserPower | UserTechnique | UserItem | EqItem,
           itemType,
           powerSelectionMode,
-          dbs
-        )
+          dbs,
+        ),
       );
   }, [rawItems, empoweredRawItems, existingIds, itemType, powerSelectionMode, dbs]);
 
@@ -129,11 +162,15 @@ export function useAddLibraryItemData({
 
   const displayFilterFn = useMemo(
     () => (item: SelectableItem) =>
-      source === 'all' || (item.data as { _source?: 'my' | 'public' })?._source === source,
-    [source]
+      source === 'all' ||
+      (item.data as { _source?: 'my' | 'public' | undefined })?._source === source,
+    [source],
   );
 
-  const displayedCount = useMemo(() => items.filter(displayFilterFn).length, [items, displayFilterFn]);
+  const displayedCount = useMemo(
+    () => items.filter(displayFilterFn).length,
+    [items, displayFilterFn],
+  );
 
   const emptyTitle =
     displayedCount === 0

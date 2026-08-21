@@ -6,9 +6,16 @@
  */
 
 import { PART_IDS, findByIdOrName } from '@/lib/id-constants';
-import { computePartTrainingPoints } from '@/lib/library/part-display';
+import { computePartTrainingPoints } from '@/lib/calculators/part-training-points';
+import { dedupeSavedParts } from '@/lib/game/dedupe-saved-parts';
 import type { TechniquePart } from '@/hooks/codex-types';
 import { formatActionTypeForDisplay } from '@/lib/utils/action-type';
+import type { AllowUndefinedOptionals } from '@/lib/utils/exact-optional';
+import {
+  attackModeColumnLabel,
+  deriveTechniqueAttackMode,
+  type AttackMode,
+} from '@/lib/attack-mode';
 import { deriveActionType, actionTypeFromSelection } from './action-type';
 
 // Re-export for convenience
@@ -19,13 +26,13 @@ export type { TechniquePart };
 // =============================================================================
 
 export interface TechniquePartPayload {
-  id?: number;
-  name?: string;
-  part?: TechniquePart;
-  op_1_lvl?: number;
-  op_2_lvl?: number;
-  op_3_lvl?: number;
-  applyDuration?: boolean;
+  id?: number | undefined;
+  name?: string | undefined;
+  part?: TechniquePart | undefined;
+  op_1_lvl?: number | undefined;
+  op_2_lvl?: number | undefined;
+  op_3_lvl?: number | undefined;
+  applyDuration?: boolean | undefined;
 }
 
 export interface TechniqueCostResult {
@@ -52,50 +59,53 @@ export interface TechniqueChipData {
   description: string;
   finalTP: number;
   hasTP: boolean;
+  /** Max option level when > 0; omit at 0. */
+  optionLevel?: number | undefined;
 }
 
-export interface TechniqueDocument {
-  name?: string;
-  description?: string;
-  parts?: TechniquePartPayload[];
-  damage?: { amount?: number | string; size?: number | string; type?: string };
-  weapon?: { id?: string | number; name?: string };
+interface TechniqueDocumentFields {
+  name?: string | undefined;
+  description?: string | undefined;
+  parts?: TechniquePartPayload[] | undefined;
+  damage?:
+    | {
+        amount?: number | string | undefined;
+        size?: number | string | undefined;
+        type?: string | undefined;
+      }
+    | undefined;
+  /** Attack mode (none | unarmed | weapon). Preferred over legacy `weapon`. */
+  attackMode?: AttackMode | undefined;
+  /** @deprecated Legacy weapon reference; kept for reading older library rows. */
+  weapon?: { id?: string | number | undefined; name?: string | undefined } | undefined;
+  /** @deprecated Legacy columnar label; kept for reading older library rows. */
+  weaponName?: string | undefined;
   /** Saved action type (basic, full, bonus, etc.) — used to avoid recalculation */
-  actionType?: string;
+  actionType?: string | undefined;
   /** Whether the technique can be used as a reaction */
-  isReaction?: boolean;
+  isReaction?: boolean | undefined;
 }
+
+export type TechniqueDocument = AllowUndefinedOptionals<TechniqueDocumentFields>;
 
 export interface MechanicContext {
-  actionTypeSelection?: string;
-  reaction?: boolean;
-  weaponTP?: number;
-  weaponAttackMode?: 'attack' | 'no_attack';
-  diceAmt?: number;
-  dieSize?: number;
-  partsDb?: TechniquePart[];
+  actionTypeSelection?: string | undefined;
+  reaction?: boolean | undefined;
+  attackMode?: AttackMode | undefined;
+  diceAmt?: number | undefined;
+  dieSize?: number | undefined;
+  partsDb?: TechniquePart[] | undefined;
 }
 
 // =============================================================================
 // Damage Helpers
 // =============================================================================
 
-export { computeSplits } from './dice-splits';
-
-/**
- * Compute the option level for Additional Damage based on dice.
- */
-export function computeAdditionalDamageLevel(diceAmt: number, dieSize: number): number {
-  const total = diceAmt * dieSize;
-  if (total <= 0) return 0;
-  return Math.max(0, Math.floor((total - 4) / 2));
-}
-
 /**
  * Format damage object as a string like "+2d6".
  */
 export function formatTechniqueDamage(
-  dmgObj?: { amount?: number | string; size?: number | string } | null
+  dmgObj?: { amount?: number | string | undefined; size?: number | string | undefined } | null,
 ): string {
   if (!dmgObj || !dmgObj.amount || !dmgObj.size) return '';
   if (dmgObj.amount === '0' || dmgObj.size === '0') return '';
@@ -111,7 +121,7 @@ export function formatTechniqueDamage(
  */
 export function computeActionType(
   partsPayload: TechniquePartPayload[] = [],
-  partsDb: TechniquePart[] = []
+  partsDb: TechniquePart[] = [],
 ): string {
   const ids = {
     reaction: PART_IDS.REACTION,
@@ -157,14 +167,15 @@ export const computeActionTypeFromSelection = actionTypeFromSelection;
  */
 export function calculateTechniqueCosts(
   partsPayload: TechniquePartPayload[] = [],
-  partsDb: TechniquePart[] = []
+  partsDb: TechniquePart[] = [],
 ): TechniqueCostResult {
   let sumNonPercentage = 0;
   let productPercentage = 1;
   let totalTP = 0;
   const tpSources: string[] = [];
 
-  partsPayload.forEach((pl) => {
+  const uniqueParts = dedupeSavedParts(partsPayload);
+  uniqueParts.forEach((pl) => {
     // Find part by ID or name for backwards compatibility
     const def = findByIdOrName(partsDb, {
       id: pl.id ?? pl.part?.id,
@@ -189,17 +200,11 @@ export function calculateTechniqueCosts(
       sumNonPercentage += energyContribution;
     }
 
-    // TP (special floor for Additional Damage option1)
-    let opt1TPRaw = (def.op_1_tp || 0) * l1;
-    const defId = typeof def.id === 'string' ? parseInt(def.id, 10) : def.id;
-    if (defId === PART_IDS.ADDITIONAL_DAMAGE || def.name === 'Additional Damage') {
-      opt1TPRaw = Math.floor(opt1TPRaw);
-    }
-
-    const rawTP =
-      (def.base_tp || 0) + opt1TPRaw + (def.op_2_tp || 0) * l2 + (def.op_3_tp || 0) * l3;
-
-    const partTP = Math.floor(rawTP);
+    const partTP = computePartTrainingPoints(
+      def,
+      { op_1_lvl: l1, op_2_lvl: l2, op_3_lvl: l3 },
+      'technique',
+    );
     if (partTP > 0) {
       let src = `${partTP} TP: ${def.name}`;
       if (l1 > 0) src += ` (Opt1 ${l1})`;
@@ -211,7 +216,9 @@ export function calculateTechniqueCosts(
   });
 
   const energyRaw = sumNonPercentage * productPercentage;
-  const totalEnergy = Math.ceil(energyRaw);
+  // Reduction parts (e.g. No Attack) can drive the sum below zero; Energy cannot be
+  // negative (GAME_RULES "Energy Below Zero").
+  const totalEnergy = Math.max(0, Math.ceil(energyRaw));
   return { totalEnergy, totalTP, tpSources, energyRaw };
 }
 
@@ -224,13 +231,14 @@ export function calculateTechniqueCosts(
  */
 export function formatTechniquePartChip(
   def: TechniquePart,
-  pl: TechniquePartPayload
+  pl: TechniquePartPayload,
 ): TechniqueChipData {
   const l1 = pl.op_1_lvl || 0;
   const l2 = pl.op_2_lvl || 0;
   const l3 = pl.op_3_lvl || 0;
 
   const finalTP = computePartTrainingPoints(def, pl, 'technique');
+  const optionLevel = Math.max(l1, l2, l3);
   let text = def.name || '';
   if (l1 > 0) text += ` (Opt1 ${l1})`;
   if (l2 > 0) text += ` (Opt2 ${l2})`;
@@ -242,6 +250,7 @@ export function formatTechniquePartChip(
     description: def.description || '',
     finalTP,
     hasTP: finalTP > 0,
+    optionLevel: optionLevel > 0 ? optionLevel : undefined,
   };
 }
 
@@ -254,17 +263,19 @@ export function formatTechniquePartChip(
  */
 export function deriveTechniqueDisplay(
   techniqueDoc: TechniqueDocument,
-  partsDb: TechniquePart[]
+  partsDb: TechniquePart[],
 ): TechniqueDisplayData {
-  const partsPayload: TechniquePartPayload[] = Array.isArray(techniqueDoc.parts)
-    ? techniqueDoc.parts.map((p) => ({
-        id: p.id,
-        name: p.name,
-        op_1_lvl: p.op_1_lvl || 0,
-        op_2_lvl: p.op_2_lvl || 0,
-        op_3_lvl: p.op_3_lvl || 0,
-      }))
-    : [];
+  const partsPayload: TechniquePartPayload[] = dedupeSavedParts(
+    Array.isArray(techniqueDoc.parts)
+      ? techniqueDoc.parts.map((p) => ({
+          id: p.id,
+          name: p.name,
+          op_1_lvl: p.op_1_lvl || 0,
+          op_2_lvl: p.op_2_lvl || 0,
+          op_3_lvl: p.op_3_lvl || 0,
+        }))
+      : [],
+  );
 
   const calc = calculateTechniqueCosts(partsPayload, partsDb);
   // Use saved actionType/isReaction if available; fall back to derivation from parts
@@ -274,10 +285,12 @@ export function deriveTechniqueDisplay(
     : null;
   const actionType = formatActionTypeForDisplay(savedAction || derivedAction);
   const damageStr = formatTechniqueDamage(techniqueDoc.damage);
-  const weaponName =
-    techniqueDoc.weapon && (techniqueDoc.weapon.name || techniqueDoc.weapon.id)
-      ? techniqueDoc.weapon.name || `Weapon #${techniqueDoc.weapon.id}`
-      : 'Unarmed';
+  const attackMode = deriveTechniqueAttackMode({
+    attackMode: techniqueDoc.attackMode,
+    parts: partsPayload,
+    weapon: techniqueDoc.weapon,
+  });
+  const weaponName = attackModeColumnLabel(attackMode);
 
   const partChips: TechniqueChipData[] = partsPayload
     .map((pl) => {

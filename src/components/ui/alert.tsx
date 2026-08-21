@@ -10,22 +10,19 @@ import { cn } from '@/lib/utils/cn';
 import { AlertTriangle, CheckCircle, Info, XCircle, X } from 'lucide-react';
 import { IconButton } from './icon-button';
 
-const alertVariants = cva(
-  'relative flex items-start gap-3 rounded-lg border p-4',
-  {
-    variants: {
-      variant: {
-        info: 'bg-info-light border-info-300 text-info-fg',
-        success: 'bg-success-light border-success-300 text-success-fg',
-        warning: 'bg-warning-light border-warning-300 text-warning-fg',
-        danger: 'bg-danger-light border-danger-300 text-danger-fg',
-      },
+const alertVariants = cva('relative flex items-start gap-3 rounded-lg border p-4', {
+  variants: {
+    variant: {
+      info: 'bg-info-light border-info-300 text-info-fg',
+      success: 'bg-success-light border-success-300 text-success-fg',
+      warning: 'bg-warning-light border-warning-300 text-warning-fg',
+      danger: 'bg-danger-light border-danger-300 text-danger-fg',
     },
-    defaultVariants: {
-      variant: 'info',
-    },
-  }
-);
+  },
+  defaultVariants: {
+    variant: 'info',
+  },
+});
 
 const alertIcons = {
   info: Info,
@@ -35,10 +32,9 @@ const alertIcons = {
 };
 
 export interface AlertProps
-  extends React.HTMLAttributes<HTMLDivElement>,
-    VariantProps<typeof alertVariants> {
-  title?: string;
-  onDismiss?: () => void;
+  extends React.HTMLAttributes<HTMLDivElement>, VariantProps<typeof alertVariants> {
+  title?: string | undefined;
+  onDismiss?: (() => void) | undefined;
 }
 
 export function Alert({
@@ -52,23 +48,14 @@ export function Alert({
   const Icon = alertIcons[variant ?? 'info'];
 
   return (
-    <div
-      role="alert"
-      className={cn(alertVariants({ variant }), className)}
-      {...props}
-    >
-      <Icon className="h-5 w-5 flex-shrink-0 mt-0.5" />
-      <div className="flex-1 min-w-0">
-        {title && <h4 className="font-semibold mb-1">{title}</h4>}
+    <div role="alert" className={cn(alertVariants({ variant }), className)} {...props}>
+      <Icon className="mt-0.5 h-5 w-5 flex-shrink-0" />
+      <div className="min-w-0 flex-1">
+        {title && <h4 className="mb-1 font-semibold">{title}</h4>}
         <div className="text-sm">{children}</div>
       </div>
       {onDismiss && (
-        <IconButton
-          variant="ghost"
-          size="sm"
-          onClick={onDismiss}
-          label="Dismiss alert"
-        >
+        <IconButton variant="ghost" size="sm" onClick={onDismiss} label="Dismiss alert">
           <X className="h-4 w-4" />
         </IconButton>
       )}

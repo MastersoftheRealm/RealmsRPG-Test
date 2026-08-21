@@ -2,28 +2,36 @@
  * Shared enrichment + display helpers for character sheet library lists.
  */
 
-import { formatRange } from '@/lib/calculators/item-calc';
-import { formatDamageDisplay } from '@/lib/utils';
+import { getWeaponAttackBonusFromProperties } from '@/lib/game/weapon-attack-ability';
+import {
+  deriveCriticalRangeIncreaseFromProperties,
+  deriveDamageReductionFromProperties,
+  type ItemPropertyPayload,
+} from '@/lib/calculators';
+import { calculateCriticalRange } from '@/lib/game/calculations';
+import type { CoreRulesMap } from '@/types/core-rules';
 import {
   characterPartsToPartData,
   itemPropertiesToPartData,
   type CodexPartRow,
   type CodexPropertyRow,
 } from '@/lib/library/part-display';
-import type { PartData } from '@/components/shared';
+import { TP_COST_LABEL } from '@/lib/detail-option/compact-facts';
+import { capitalizeWords } from '@/lib/utils';
+import type { PartData } from '@/components/patterns';
 import type { Abilities, CharacterPower, CharacterTechnique, Item } from '@/types';
 
 export type CodexPart = CodexPartRow;
 export type CodexProperty = CodexPropertyRow;
 
 export type ItemWithLibrarySource = Item & {
-  libraryItem?: { properties?: Item['properties'] };
+  libraryItem?: { properties?: Item['properties'] | undefined };
 };
 
 export function partsToPartData(
   parts?: CharacterPower['parts'] | CharacterTechnique['parts'],
   codexParts: CodexPart[] = [],
-  variant: 'power' | 'technique' = 'power'
+  variant: 'power' | 'technique' = 'power',
 ): PartData[] {
   return characterPartsToPartData(parts, codexParts, variant);
 }
@@ -32,7 +40,7 @@ export const propertiesToPartData = itemPropertiesToPartData;
 
 export function chipDescriptionWithOptionLevels(
   baseDescription: string | undefined,
-  optionLevels: PartData['optionLevels']
+  optionLevels: PartData['optionLevels'],
 ): string | undefined {
   const parts: string[] = [];
   if (baseDescription?.trim()) parts.push(baseDescription.trim());
@@ -46,33 +54,11 @@ export function chipDescriptionWithOptionLevels(
   return parts.length > 0 ? parts.join('\n\n') : undefined;
 }
 
-function capitalizeWords(str: string): string {
-  return str.replace(/\b\w/g, (c) => c.toUpperCase());
-}
-
 export function formatArea(area: string | undefined): string {
   if (!area) return '-';
   const lower = area.toLowerCase().trim();
   if (lower === '1 target' || lower === 'single target' || lower === 'target') return 'Target';
   return capitalizeWords(area);
-}
-
-export function formatDuration(duration: string | undefined): string {
-  if (!duration) return '-';
-  const lower = duration.toLowerCase().trim();
-  const withoutParens = lower.replace(/\s*\(.*?\)\s*/g, '').trim();
-  if (withoutParens === 'instant' || withoutParens === 'instantaneous') return 'Instant';
-  if (withoutParens === 'concentration') return 'Conc.';
-  const minMatch = withoutParens.match(/^(\d+)\s*min(ute)?s?$/);
-  if (minMatch) return `${minMatch[1]} MIN`;
-  const rndMatch = withoutParens.match(/^(\d+)\s*rounds?$/);
-  if (rndMatch) return rndMatch[1] === '1' ? '1 RND' : `${rndMatch[1]} RNDS`;
-  const hrMatch = withoutParens.match(/^(\d+)\s*hours?$/);
-  if (hrMatch) return hrMatch[1] === '1' ? '1 HR' : `${hrMatch[1]} HRS`;
-  const dayMatch = withoutParens.match(/^(\d+)\s*days?$/);
-  if (dayMatch) return dayMatch[1] === '1' ? '1 Day' : `${dayMatch[1]} Days`;
-  if (withoutParens === 'permanent') return 'Permanent';
-  return capitalizeWords(withoutParens);
 }
 
 export function formatDamageType(damage: string | undefined): string {
@@ -86,55 +72,120 @@ export function resolveItemProperties(item: ItemWithLibrarySource): Item['proper
   return item.properties;
 }
 
+type ArmorScalarFields = Item & {
+  armorValue?: number | undefined;
+  armor?: number | undefined;
+  damageReduction?: number | undefined;
+  criticalRangeIncrease?: number | undefined;
+  critRange?: number | undefined;
+};
+
+export interface ArmorItemCombatStats {
+  damageReduction: number;
+  criticalRangeIncrease: number;
+}
+
+/** Damage Reduction and Critical Range +1 bonus for one armor item (matches library armor rows). */
+export function deriveArmorItemCombatStats(item: ItemWithLibrarySource): ArmorItemCombatStats {
+  const typed = item as ArmorScalarFields;
+  const fromLib = item.libraryItem as ArmorScalarFields | undefined;
+  let damageReduction =
+    typed.damageReduction ??
+    typed.armorValue ??
+    typed.armor ??
+    fromLib?.damageReduction ??
+    fromLib?.armorValue ??
+    fromLib?.armor ??
+    0;
+  let criticalRangeIncrease =
+    typed.criticalRangeIncrease ??
+    typed.critRange ??
+    fromLib?.criticalRangeIncrease ??
+    fromLib?.critRange ??
+    0;
+
+  const props = resolveItemProperties(item);
+  const payload = (props ?? []) as ItemPropertyPayload[];
+  if (damageReduction === 0) {
+    damageReduction = deriveDamageReductionFromProperties(payload);
+  }
+  if (criticalRangeIncrease === 0) {
+    criticalRangeIncrease = deriveCriticalRangeIncreaseFromProperties(payload);
+  }
+
+  return { damageReduction, criticalRangeIncrease };
+}
+
+export interface EquippedArmorQuickRef {
+  damageReduction: number;
+  /** Stacked Critical Range +1 from equipped armor (0 when armor does not modify crit). */
+  criticalRangeIncrease: number;
+  /** Evasion + over-target + increase. Only show in the header when increase > 0. */
+  criticalRange: number;
+}
+
+/** Aggregated DR and effective Critical Range threshold for equipped armor (null if none equipped). */
+export function getEquippedArmorQuickRef(
+  armor: Item[] | undefined,
+  evasion: number,
+  rules?: Partial<CoreRulesMap>,
+): EquippedArmorQuickRef | null {
+  const equipped = (armor ?? []).filter((a) => a?.equipped);
+  if (equipped.length === 0) return null;
+
+  let damageReduction = 0;
+  let criticalRangeIncrease = 0;
+  for (const piece of equipped) {
+    const stats = deriveArmorItemCombatStats(piece as ItemWithLibrarySource);
+    damageReduction += stats.damageReduction;
+    criticalRangeIncrease += stats.criticalRangeIncrease;
+  }
+
+  return {
+    damageReduction,
+    criticalRangeIncrease,
+    criticalRange: calculateCriticalRange(evasion, criticalRangeIncrease, rules),
+  };
+}
+
 export function getWeaponAttackBonus(
   weapon: Item,
   abilities?: Abilities,
-  martialProficiency?: number
+  martialProficiency?: number,
 ): { bonus: number; abilityName: string } {
-  const prof = martialProficiency ?? 0;
-  if (!abilities) return { bonus: prof, abilityName: 'Strength' };
-
-  const props = (weapon.properties || []).map((p) =>
-    typeof p === 'string' ? p : (p as { name?: string }).name || ''
+  const props = resolveItemProperties(weapon) ?? weapon.properties ?? [];
+  const { bonus, abilityName } = getWeaponAttackBonusFromProperties(
+    props as {
+      id?: number | undefined;
+      name?: string | undefined;
+      op_1_lvl?: number | undefined;
+    }[],
+    abilities,
+    martialProficiency,
   );
-
-  if (props.some((p) => p.toLowerCase() === 'finesse')) {
-    return { bonus: (abilities.agility ?? 0) + prof, abilityName: 'Agility' };
-  }
-
-  const rangeStr = formatRange((weapon.properties || []) as { id?: number; name?: string; op_1_lvl?: number }[]);
-  if (rangeStr.toLowerCase() !== 'melee') {
-    return { bonus: (abilities.acuity ?? 0) + prof, abilityName: 'Acuity' };
-  }
-
-  return { bonus: (abilities.strength ?? 0) + prof, abilityName: 'Strength' };
+  return { bonus, abilityName };
 }
 
+/**
+ * Character sheet / play-list part & property chips.
+ * Always expandable (description / TP / options) — not guided-creator descriptor + InfoTippy.
+ * Cost label is dense `TP` (`TP: N` in ExpandableChip), not spelled-out Training Points.
+ */
 export function partDataToChips(parts: PartData[]) {
-  return parts.map((p) => ({
-    name: p.name,
-    description: chipDescriptionWithOptionLevels(p.description, p.optionLevels),
-    cost: p.tpCost,
-    costLabel: 'TP',
-    category: p.tpCost && p.tpCost > 0 ? ('cost' as const) : ('default' as const),
-    level: p.optionLevels
-      ? Math.max(p.optionLevels.opt1 ?? 0, p.optionLevels.opt2 ?? 0, p.optionLevels.opt3 ?? 0) || undefined
-      : undefined,
-    options: p.options,
-  }));
-}
-
-export function splitDamageDiceAndType(damage: unknown): { dice: string; type: string; rollStr: string } {
-  if (!damage) return { dice: '-', type: '', rollStr: '-' };
-  if (typeof damage === 'string') {
-    const str = damage.trim();
-    const match = str.match(/^([\dd+\-\s]+)(?:\s+(.+))?$/);
-    if (!match) return { dice: str, type: '', rollStr: str };
-    return { dice: match[1].trim(), type: (match[2] ?? '').trim(), rollStr: str };
-  }
-  const formatted = formatDamageDisplay(damage as never);
-  const str = formatted ? String(formatted) : '-';
-  const match = str.match(/^([\dd+\-\s]+)(?:\s+(.+))?$/);
-  if (!match) return { dice: str, type: '', rollStr: str };
-  return { dice: match[1].trim(), type: (match[2] ?? '').trim(), rollStr: str };
+  return parts.map((p) => {
+    const hasCost = (p.tpCost ?? 0) > 0;
+    return {
+      name: p.name,
+      description: chipDescriptionWithOptionLevels(p.description, p.optionLevels),
+      cost: p.tpCost,
+      costLabel: TP_COST_LABEL,
+      category: hasCost ? ('cost' as const) : ('default' as const),
+      level: p.optionLevels
+        ? Math.max(p.optionLevels.opt1 ?? 0, p.optionLevels.opt2 ?? 0, p.optionLevels.opt3 ?? 0) ||
+          undefined
+        : undefined,
+      options: p.options,
+      kind: 'expandable' as const,
+    };
+  });
 }

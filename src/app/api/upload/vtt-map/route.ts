@@ -24,9 +24,12 @@ export async function POST(request: NextRequest) {
       userId: user.uid,
       ip: resolveClientIp(request.headers),
     });
-    const { success } = uploadLimiter.check(key);
+    const { success } = await uploadLimiter.check(key);
     if (!success) {
-      return NextResponse.json({ error: 'Too many requests' }, { status: 429, headers: { 'Retry-After': '60' } });
+      return NextResponse.json(
+        { error: 'Too many requests' },
+        { status: 429, headers: { 'Retry-After': '60' } },
+      );
     }
 
     const formData = await request.formData();
@@ -36,7 +39,10 @@ export async function POST(request: NextRequest) {
     const height = Number(formData.get('height'));
 
     if (!file || !sceneId || !Number.isFinite(width) || !Number.isFinite(height)) {
-      return NextResponse.json({ error: 'file, sceneId, width, and height are required' }, { status: 400 });
+      return NextResponse.json(
+        { error: 'file, sceneId, width, and height are required' },
+        { status: 400 },
+      );
     }
     if (!file.type.startsWith('image/')) {
       return NextResponse.json({ error: 'Must be an image file' }, { status: 400 });
@@ -52,7 +58,10 @@ export async function POST(request: NextRequest) {
     const access = await getSceneAccess(supabase, sceneId, user.uid);
     if (!access) return NextResponse.json({ error: 'Scene not found' }, { status: 404 });
     if (access.role !== 'realm-master') {
-      return NextResponse.json({ error: 'Only the Realm Master can upload tabletop maps.' }, { status: 403 });
+      return NextResponse.json(
+        { error: 'Only the Realm Master can upload tabletop maps.' },
+        { status: 403 },
+      );
     }
 
     const service = createServiceRoleClient();
@@ -84,4 +93,3 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: 'Failed to upload tabletop map' }, { status: 500 });
   }
 }
-

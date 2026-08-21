@@ -1,6 +1,10 @@
 /**
  * GuidedChoiceCard — shared selectable card for the guided creator.
- * Supports thumb or hero image layouts; inline Read more for long copy.
+ * `readOnly` omits select chrome (granted traits on species overview).
+ * Supports thumb or hero image layouts; inline See more for long copy;
+ * optional More details opens a read-only deep-dive modal (not card select)
+ * or expands lots of chip/fact disclosure.
+ * When both expand and modal More details exist: More details only after expand/select.
  */
 
 'use client';
@@ -9,8 +13,10 @@ import { useMemo, useState, useRef, useEffect, type KeyboardEvent, type ReactNod
 import Image from 'next/image';
 import { cn } from '@/lib/utils';
 import { Check } from 'lucide-react';
-import { DescriptorChip } from '@/components/ui';
-import { ExpandableImage } from '@/components/shared';
+import { DescriptorChip, type ChipProps, type DescriptorChipSize } from '@/components/ui';
+import { ExpandableImage } from '@/components/patterns';
+import { usePlaceholderTheme } from '@/hooks/use-placeholder-theme';
+import { GUIDED_CREATOR_COPY } from '@/lib/constants/site-copy';
 import { shouldExpandTaglineBody } from './guided-text';
 import {
   defaultImageLayoutForKind,
@@ -24,37 +30,105 @@ import {
   type GuidedChoiceCardDensity,
 } from './guided-choice-styles';
 
-export interface GuidedChoiceCardProps {
+/** Card footer metadata chips — string shorthand or styled DescriptorChip config. */
+export type GuidedChoiceTag =
+  | string
+  | {
+      label: string;
+      variant?: ChipProps['variant'] | undefined;
+      size?: DescriptorChipSize | undefined;
+    };
+
+function normalizeChoiceTag(tag: GuidedChoiceTag): {
+  key: string;
+  label: string;
+  variant: ChipProps['variant'];
+  size: DescriptorChipSize;
+} {
+  if (typeof tag === 'string') {
+    return { key: tag, label: tag, variant: 'descriptor', size: 'sm' };
+  }
+  return {
+    key: tag.label,
+    label: tag.label,
+    variant: tag.variant ?? 'descriptor',
+    size: tag.size ?? 'sm',
+  };
+}
+
+type GuidedChoiceCardBase = {
   title: string;
-  description?: string | null;
-  tagline?: string;
-  fullDescription?: ReactNode;
-  tags?: string[];
+  description?: string | null | undefined;
+  tagline?: string | undefined;
+  fullDescription?: ReactNode | undefined;
+  tags?: GuidedChoiceTag[] | undefined;
+  /**
+   * Title-adjacent metadata (e.g. Currency / Training Points chips).
+   * Renders beside the title — never under the disclosure row.
+   */
+  titleMeta?: ReactNode | undefined;
   /** Explicit image URL (overrides imageKind/imageRecord resolution). */
-  imageUrl?: string | null;
+  imageUrl?: string | null | undefined;
   /** Codex record to read image_url from when imageUrl is omitted. */
-  imageRecord?: unknown;
+  imageRecord?: unknown | undefined;
   /** Placeholder + default layout family (species, equipment, power, etc.). */
-  imageKind?: ChoiceCardImageKind;
-  imageLayout?: ChoiceCardImageLayout;
-  icon?: ReactNode;
-  badge?: string;
-  selected?: boolean;
-  onSelect: () => void;
-  children?: ReactNode;
-  /** Shown only when expanded (Read more) — e.g. feat restriction notices. */
-  expandedExtra?: ReactNode;
-  selectAriaLabel?: string;
-  className?: string;
-  fullWidth?: boolean;
+  imageKind?: ChoiceCardImageKind | undefined;
+  imageLayout?: ChoiceCardImageLayout | undefined;
+  icon?: ReactNode | undefined;
+  badge?: string | undefined;
+  children?: ReactNode | undefined;
+  /**
+   * Content above See more / See less / More details (e.g. quantity stepper).
+   * Prefer this over `children` so nothing sits under the disclosure boundary.
+   */
+  beforeDisclosure?: ReactNode | undefined;
+  /** Shown only when expanded (See more) — e.g. feat restriction notices. */
+  expandedExtra?: ReactNode | undefined;
+  /**
+   * When true, string `tags` are hidden while the card is expanded (use expandable
+   * chips in `expandedExtra` instead to avoid duplicating the same facts).
+   */
+  hideTagsWhenExpanded?: boolean | undefined;
+  /** Label for the in-card expand control (default: “See more…”). */
+  expandLabel?: string | undefined;
+  /** Label for the in-card collapse control when not selected (default: “See less”). */
+  collapseLabel?: string | undefined;
+  /**
+   * Opens choice-card deep-dive (GuidedEntityDetailModal). Does not select the card.
+   * Distinct from catalog Layer 2 (`GuidedLayerNav` “See more options”).
+   * When the card also offers inline See more, this control appears only once expanded
+   * (or selected, which auto-expands).
+   */
+  onDetails?: (() => void) | undefined;
+  /** Visible label for the details control (default: guided copy “More details”). */
+  detailsLabel?: string | undefined;
+  className?: string | undefined;
+  fullWidth?: boolean | undefined;
   /**
    * Per-step preview sizing (uniform within the step, not globally):
    * - species — 5 lines (longer species flavor)
    * - path — 4 lines (path cards)
    * - compact — 3 lines (feats, traits, loadouts)
    */
-  density?: GuidedChoiceCardDensity;
-}
+  density?: GuidedChoiceCardDensity | undefined;
+};
+
+/** Display-only card: no select chrome. See more / See less still work. */
+type GuidedChoiceCardReadOnlyProps = GuidedChoiceCardBase & {
+  readOnly: true;
+  onSelect?: never | undefined;
+  selected?: never | undefined;
+  selectAriaLabel?: never | undefined;
+};
+
+type GuidedChoiceCardSelectableProps = GuidedChoiceCardBase & {
+  readOnly?: false | undefined;
+  onSelect: () => void;
+  selected?: boolean | undefined;
+  selectAriaLabel?: string | undefined;
+};
+
+export type GuidedChoiceCardProps = GuidedChoiceCardReadOnlyProps | GuidedChoiceCardSelectableProps;
 
 type BodyMode =
   | { kind: 'none' }
@@ -64,7 +138,7 @@ type BodyMode =
 function resolveBody(
   description: string | null | undefined,
   tagline: string | undefined,
-  fullDescription: ReactNode | undefined
+  fullDescription: ReactNode | undefined,
 ): BodyMode {
   const desc = description?.trim() ?? '';
   const tag = tagline?.trim() ?? '';
@@ -105,22 +179,46 @@ function resolveBody(
   return { kind: 'none' };
 }
 
-/** Detect whether clamped body copy overflows its fixed preview area. */
+/** Enter/Space on nested controls (See more, More details, steppers) must not select the card. */
+export function isGuidedChoiceCardSelectKey(e: {
+  key: string;
+  target: EventTarget | null;
+  currentTarget: EventTarget;
+}): boolean {
+  if (e.key !== 'Enter' && e.key !== ' ') return false;
+  return e.target === e.currentTarget;
+}
+
+export function guidedChoiceCardSelectAriaLabel(
+  title: string,
+  selected: boolean,
+  selectAriaLabel?: string,
+): string {
+  const base = selectAriaLabel?.trim() || `Choose ${title}`;
+  return selected ? `${base}, selected` : base;
+}
+
+function stopNestedSelectKeys(e: KeyboardEvent<HTMLElement>) {
+  if (e.key === 'Enter' || e.key === ' ') e.stopPropagation();
+}
+
+/**
+ * Detect whether clamped body copy overflows its fixed preview area.
+ * Keeps the last measurement while expanded so callers can still know
+ * whether inline See more was (or would be) offered.
+ */
 function useClampedOverflow(active: boolean, textKey: string) {
   const ref = useRef<HTMLParagraphElement>(null);
-  const [overflows, setOverflows] = useState(false);
+  const [measuredOverflows, setMeasuredOverflows] = useState(false);
 
   useEffect(() => {
-    if (!active) {
-      setOverflows(false);
-      return;
-    }
+    if (!active) return;
 
     const el = ref.current;
     if (!el) return;
 
     const measure = () => {
-      setOverflows(el.scrollHeight > el.clientHeight + 1);
+      setMeasuredOverflows(el.scrollHeight > el.clientHeight + 1);
     };
 
     measure();
@@ -129,7 +227,7 @@ function useClampedOverflow(active: boolean, textKey: string) {
     return () => observer.disconnect();
   }, [active, textKey]);
 
-  return { ref, overflows };
+  return { ref, overflows: measuredOverflows };
 }
 
 export function GuidedChoiceCard({
@@ -138,6 +236,7 @@ export function GuidedChoiceCard({
   tagline,
   fullDescription,
   tags,
+  titleMeta,
   imageUrl,
   imageRecord,
   imageKind,
@@ -146,63 +245,92 @@ export function GuidedChoiceCard({
   badge,
   selected = false,
   onSelect,
+  readOnly = false,
   children,
+  beforeDisclosure,
   expandedExtra,
+  hideTagsWhenExpanded = false,
+  expandLabel,
+  collapseLabel,
+  onDetails,
+  detailsLabel,
   selectAriaLabel,
   className,
   fullWidth = false,
   density = 'path',
 }: GuidedChoiceCardProps) {
-  const [expanded, setExpanded] = useState(false);
+  const [expanded, setExpanded] = useState(selected);
+  const [prevSelected, setPrevSelected] = useState(selected);
+  // Sync expand when selection changes (adjust state during render — no effect).
+  if (selected !== prevSelected) {
+    setPrevSelected(selected);
+    setExpanded(selected);
+  }
   const hasTags = tags && tags.length > 0;
+  const showTags = hasTags && !(hideTagsWhenExpanded && expanded);
   const preset = GUIDED_CHOICE_CARD_PRESETS[density];
   const hasExpandedExtra = Boolean(expandedExtra);
 
-  useEffect(() => {
-    setExpanded(selected);
-  }, [selected]);
-
   const layout =
-    imageLayout ?? (imageKind ? defaultImageLayoutForKind(imageKind) : imageUrl ? 'thumb' : 'thumb');
+    imageLayout ??
+    (imageKind ? defaultImageLayoutForKind(imageKind) : imageUrl ? 'thumb' : 'thumb');
   const isFeatured = layout === 'hero';
+
+  const theme = usePlaceholderTheme();
 
   const resolvedImage = useMemo(() => {
     if (imageUrl?.trim()) return { src: imageUrl.trim(), isPlaceholder: false };
-    if (imageKind) return resolveChoiceCardImage(imageKind, imageRecord);
+    if (imageKind) return resolveChoiceCardImage(imageKind, imageRecord, theme);
     return null;
-  }, [imageUrl, imageKind, imageRecord]);
+  }, [imageUrl, imageKind, imageRecord, theme]);
 
   const body = useMemo(
     () => resolveBody(description, tagline, fullDescription),
-    [description, tagline, fullDescription]
+    [description, tagline, fullDescription],
   );
 
-  const clampKey =
-    body.kind === 'plain'
-      ? body.text
-      : body.kind === 'rich'
-        ? body.collapsed
-        : '';
+  const clampKey = body.kind === 'plain' ? body.text : body.kind === 'rich' ? body.collapsed : '';
 
   const { ref: bodyRef, overflows: textOverflows } = useClampedOverflow(
     body.kind !== 'none' && !expanded,
-    clampKey
+    clampKey,
   );
 
-  const showReadMore =
-    !expanded &&
-    (hasExpandedExtra ||
-      (body.kind === 'rich'
-        ? body.canExpand || textOverflows
-        : body.kind === 'plain' && textOverflows));
+  /** Card has (or had) an inline expand control — distinct from More details. */
+  const canInlineExpand =
+    hasExpandedExtra ||
+    (body.kind === 'rich'
+      ? body.canExpand || textOverflows
+      : body.kind === 'plain' && textOverflows);
 
-  const showBodySection = body.kind !== 'none' || hasExpandedExtra;
+  const showBodySection = body.kind !== 'none' || hasExpandedExtra || Boolean(beforeDisclosure);
+  const showReadMore = !expanded && canInlineExpand;
+  const showCollapse = expanded && showBodySection && !selected;
+
+  /**
+   * Progressive disclosure: truncated → See more → More details.
+   * When both exist, hide More details until the card is expanded (or selected).
+   * Cards with only More details (no overflow) still show it collapsed.
+   */
+  const showDetails = Boolean(onDetails) && (expanded || !canInlineExpand);
+  const hasVisibleActions = showReadMore || showCollapse || showDetails;
+  /**
+   * Keep the collapsed body floor unless the card is expanded with an info notice and no
+   * More details control — that combination was the sparse gap under restriction callouts.
+   * Path/species (More details) and short cards like No Flaw keep the floor.
+   */
+  const keepBodyFloor = !expanded || showDetails || !hasExpandedExtra;
+  /**
+   * Reserve action-row height while collapsed, and for selected/expanded cards that keep
+   * the body floor (e.g. No Flaw). Dropping the empty min-h-11 only when expanded with an
+   * info notice — otherwise short selected cards shrink when alone on a grid row.
+   */
+  const showActionRow = showBodySection && (hasVisibleActions || keepBodyFloor);
 
   const handleCardKeyDown = (e: KeyboardEvent<HTMLDivElement>) => {
-    if (e.key === 'Enter' || e.key === ' ') {
-      e.preventDefault();
-      onSelect();
-    }
+    if (!isGuidedChoiceCardSelectKey(e)) return;
+    e.preventDefault();
+    onSelect?.();
   };
 
   const toggleExpand = (e: React.MouseEvent) => {
@@ -211,27 +339,55 @@ export function GuidedChoiceCard({
     setExpanded((o) => !o);
   };
 
+  const handleDetailsClick = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    e.preventDefault();
+    onDetails?.();
+  };
+
+  const handleDetailsKeyDown = (e: KeyboardEvent<HTMLButtonElement>) => {
+    if (e.key === 'Enter' || e.key === ' ') {
+      e.preventDefault();
+      e.stopPropagation();
+      onDetails?.();
+    }
+  };
+
+  const resolvedDetailsLabel = detailsLabel ?? GUIDED_CREATOR_COPY.choiceCard.moreDetails;
+  /** Visible text is the control name; aria-label adds which entity (screen readers). */
+  const detailsAriaLabel = `${resolvedDetailsLabel} for ${title}`;
+  const resolvedExpandLabel = expandLabel ?? GUIDED_CREATOR_COPY.choiceCard.seeMore;
+  const resolvedCollapseLabel = collapseLabel ?? GUIDED_CREATOR_COPY.choiceCard.seeLess;
+
   const showMedia = Boolean(resolvedImage || icon);
   const mediaClass = isFeatured && resolvedImage ? s.mediaFeatured : s.media;
   const imageSizes = isFeatured ? '80px' : '48px';
 
   return (
     <div
-      tabIndex={0}
-      aria-label={selectAriaLabel ?? `Choose ${title}`}
-      aria-selected={selected}
-      onClick={onSelect}
-      onKeyDown={handleCardKeyDown}
+      tabIndex={readOnly ? undefined : 0}
+      aria-label={
+        readOnly ? undefined : guidedChoiceCardSelectAriaLabel(title, selected, selectAriaLabel)
+      }
+      onClick={readOnly ? undefined : onSelect}
+      onKeyDown={readOnly ? undefined : handleCardKeyDown}
       className={cn(
-        'flex w-full cursor-pointer flex-col overflow-hidden rounded-card border bg-surface-alt/40 transition-shadow duration-base',
-        'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary',
+        'flex w-full flex-col overflow-hidden rounded-card border bg-surface-alt/40',
         'h-full',
-        !expanded && preset.cardCollapsed,
-        selected
-          ? 'border-primary ring-2 ring-primary shadow-raised'
-          : 'border-border-light dark:border-border hover:border-border hover:shadow-card',
+        // Always keep density min-height — selected/expanded cards auto-expand and
+        // previously dropped this class, so short options (e.g. Skip — no flaw) shrank.
+        preset.cardCollapsed,
+        readOnly
+          ? 'border-border-light dark:border-border'
+          : cn(
+              'duration-base cursor-pointer transition-shadow',
+              'focus-visible:ring-2 focus-visible:ring-primary focus-visible:outline-none',
+              selected
+                ? 'border-primary shadow-raised ring-2 ring-primary'
+                : 'border-border-light hover:border-border hover:shadow-card dark:border-border',
+            ),
         fullWidth && 'w-full',
-        className
+        className,
       )}
     >
       <div className={cn(s.selectButton, 'h-full')}>
@@ -249,7 +405,7 @@ export function GuidedChoiceCard({
                 alt=""
                 fill
                 sizes={imageSizes}
-                className="object-cover"
+                className="object-contain"
               />
             </ExpandableImage>
           ) : showMedia && icon ? (
@@ -259,6 +415,15 @@ export function GuidedChoiceCard({
             <div className="flex flex-wrap items-start gap-2">
               <h3 className={s.title}>{title}</h3>
               {badge && <DescriptorChip size="sm">{badge}</DescriptorChip>}
+              {titleMeta ? (
+                <div
+                  className="flex min-w-0 flex-wrap items-center gap-1.5"
+                  onClick={(e) => e.stopPropagation()}
+                  onKeyDown={stopNestedSelectKeys}
+                >
+                  {titleMeta}
+                </div>
+              ) : null}
             </div>
             {showBodySection ? (
               <div className={s.bodyWrap}>
@@ -267,8 +432,9 @@ export function GuidedChoiceCard({
                     ref={bodyRef}
                     className={cn(
                       s.body,
-                      !expanded && preset.bodyCollapsed,
-                      expanded && 'whitespace-pre-wrap'
+                      keepBodyFloor && preset.bodyMinHeight,
+                      !expanded && preset.bodyClamp,
+                      expanded && 'whitespace-pre-wrap',
                     )}
                   >
                     {body.kind === 'plain' && body.text}
@@ -276,53 +442,79 @@ export function GuidedChoiceCard({
                       (expanded ? body.expanded : body.collapsed || body.expanded)}
                   </p>
                 ) : null}
-                {expanded && expandedExtra ? (
-                  <div className="mt-3">{expandedExtra}</div>
+                {expanded && expandedExtra ? <div className="mt-2">{expandedExtra}</div> : null}
+                {beforeDisclosure ? (
+                  <div
+                    className="mt-2"
+                    onClick={(e) => e.stopPropagation()}
+                    onKeyDown={stopNestedSelectKeys}
+                  >
+                    {beforeDisclosure}
+                  </div>
                 ) : null}
-                {!expanded && (
-                  <div className={s.readMoreSlot}>
+                {/*
+                  See more / See less / More details stay below body copy (product
+                  placement). Shared min-h-11 row so deep-dive does not add a second strip.
+                */}
+                {showActionRow ? (
+                  <div className={s.actionRow}>
                     {showReadMore ? (
                       <button
                         type="button"
                         onClick={toggleExpand}
+                        onKeyDown={stopNestedSelectKeys}
                         aria-expanded={false}
                         className={s.readMore}
                       >
-                        Read more…
+                        {resolvedExpandLabel}
+                      </button>
+                    ) : null}
+                    {showCollapse ? (
+                      <button
+                        type="button"
+                        onClick={toggleExpand}
+                        onKeyDown={stopNestedSelectKeys}
+                        aria-expanded={expanded}
+                        className={s.readMore}
+                      >
+                        {resolvedCollapseLabel}
+                      </button>
+                    ) : null}
+                    {showDetails ? (
+                      <button
+                        type="button"
+                        onClick={handleDetailsClick}
+                        onKeyDown={handleDetailsKeyDown}
+                        aria-label={detailsAriaLabel}
+                        className={s.detailsLink}
+                      >
+                        {resolvedDetailsLabel}
                       </button>
                     ) : null}
                   </div>
-                )}
-                {expanded && showBodySection && !selected ? (
-                  <button
-                    type="button"
-                    onClick={toggleExpand}
-                    aria-expanded={expanded}
-                    className={s.readMore}
-                  >
-                    Read less
-                  </button>
                 ) : null}
               </div>
             ) : null}
           </div>
-          <span
-            className={cn(s.selectedCheck, !selected && 'invisible')}
-            aria-hidden={!selected}
-          >
-            <Check className="h-4 w-4" aria-hidden="true" />
-          </span>
+          {readOnly ? null : (
+            <span className={cn(s.selectedCheck, !selected && 'invisible')} aria-hidden={!selected}>
+              <Check className="h-4 w-4" aria-hidden="true" />
+            </span>
+          )}
         </div>
 
-        {hasTags && (
+        {showTags ? (
           <div className={s.tagsRow}>
-            {tags.map((tag) => (
-              <DescriptorChip key={tag} size="sm">
-                {tag}
-              </DescriptorChip>
-            ))}
+            {tags!.map((tag) => {
+              const chip = normalizeChoiceTag(tag);
+              return (
+                <DescriptorChip key={chip.key} variant={chip.variant} size={chip.size}>
+                  {chip.label}
+                </DescriptorChip>
+              );
+            })}
           </div>
-        )}
+        ) : null}
 
         {children}
       </div>

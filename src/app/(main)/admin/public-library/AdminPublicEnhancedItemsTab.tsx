@@ -1,142 +1,87 @@
+/**
+ * Admin Official Library — Enhanced Items tab
+ * List chrome via OfficialEnhancedList (TASK-575). Create/edit stays in-tab modal.
+ */
+
 'use client';
 
-import { useMemo, useState } from 'react';
-import { Sparkles } from 'lucide-react';
-import {
-  SectionHeader,
-  SearchInput,
-  ListHeader,
-  LoadingState,
-  ErrorDisplay,
-  GridListRow,
-  ListEmptyState,
-  DeleteConfirmModal,
-} from '@/components/shared';
+import { useState } from 'react';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { DeleteConfirmModal, OfficialEnhancedList } from '@/components/patterns';
 import {
   useOfficialLibrary,
   useEnhancedItems,
-  useCreateEnhancedItem,
-  useDeleteEnhancedItem,
+  useCreateOfficialEnhancedItem,
+  useDeleteOfficialEnhancedItem,
   type OfficialEnhancedItem,
+  type CreateOfficialEnhancedItemInput,
 } from '@/hooks';
-import { useSort } from '@/hooks/use-sort';
+import { enhancedItemsKeys } from '@/hooks/use-enhanced-items';
+import { apiFetch } from '@/lib/api-client';
 import { Button, Modal, Select, Input } from '@/components/ui';
 import type { LibraryItem, LibraryPower } from '@/types/library';
 
-const GRID = '1.6fr 1.3fr 1.3fr 0.9fr 0.9fr 0.9fr 40px';
+/** Edit sends the same body as create to `PATCH ?id=`; POST would insert a second entity. */
+function useUpdateOfficialEnhancedItem() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, body }: { id: string; body: CreateOfficialEnhancedItemInput }) =>
+      apiFetch(`/api/official/enhanced-items?id=${encodeURIComponent(id)}`, {
+        method: 'PATCH',
+        body: JSON.stringify(body),
+      }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: enhancedItemsKeys.lists('official') });
+    },
+  });
+}
 
 export function AdminPublicEnhancedItemsTab() {
   const { data: enhanced = [], isLoading, error, refetch } = useEnhancedItems('official');
   const { data: items = [] } = useOfficialLibrary('items');
   const { data: powers = [] } = useOfficialLibrary('powers');
 
-  const [search, setSearch] = useState('');
-  const [deleteConfirm, setDeleteConfirm] = useState<OfficialEnhancedItem | null>(null);
+  const [deleteConfirm, setDeleteConfirm] = useState<{ id: string; name: string } | null>(null);
   const [editTarget, setEditTarget] = useState<OfficialEnhancedItem | null>(null);
   const [isCreateOpen, setIsCreateOpen] = useState(false);
 
-  const createMutation = useCreateEnhancedItem('official');
-  const deleteMutation = useDeleteEnhancedItem('official');
-  const { sortState, handleSort, sortItems } = useSort('name');
-
-  const filtered = useMemo(() => {
-    let list = [...enhanced];
-    if (search.trim()) {
-      const s = search.toLowerCase();
-      list = list.filter(
-        (e) =>
-          e.name.toLowerCase().includes(s) ||
-          e.base_item_name.toLowerCase().includes(s) ||
-          e.power_name.toLowerCase().includes(s)
-      );
-    }
-    return sortItems(list);
-  }, [enhanced, search, sortItems]);
-
-  if (error) {
-    return <ErrorDisplay message="Failed to load official enhanced items" onRetry={() => { void refetch(); }} />;
-  }
+  const createMutation = useCreateOfficialEnhancedItem();
+  const updateMutation = useUpdateOfficialEnhancedItem();
+  const deleteMutation = useDeleteOfficialEnhancedItem();
 
   return (
-    <div>
-      <SectionHeader title="Official Enhanced Items" size="md" />
-      <div className="mb-4 flex flex-wrap items-center gap-3">
-        <div className="flex-1 min-w-[200px]">
-          <SearchInput
-            value={search}
-            onChange={setSearch}
-            placeholder="Search by name, base item, or power..."
-          />
-        </div>
-        <Button
-          size="sm"
-          onClick={() => {
-            setEditTarget(null);
-            setIsCreateOpen(true);
-          }}
-        >
-          New Enhanced Item
-        </Button>
-      </div>
-
-      <ListHeader
-        columns={[
-          { key: 'name', label: 'NAME' },
-          { key: 'base', label: 'BASE ITEM' },
-          { key: 'power', label: 'POWER' },
-          { key: 'rarity', label: 'RARITY' },
-          { key: 'cost', label: 'COST (C)' },
-          { key: 'uses', label: 'USES', sortable: false },
-          { key: '_actions', label: '', sortable: false as const },
-        ]}
-        gridColumns={GRID}
-        sortState={sortState}
-        onSort={handleSort}
+    <>
+      <OfficialEnhancedList
+        items={enhanced}
+        isLoading={isLoading}
+        error={error}
+        onRetry={() => {
+          void refetch();
+        }}
+        errorMessage="Failed to load official enhanced items"
+        sectionTitle="Official Enhanced Items"
+        emptyTitle="No official enhanced items"
+        emptyMessage="Use 'New Enhanced Item' to add one."
+        variant="admin"
+        onEdit={(id) => {
+          const item = enhanced.find((e) => e.id === id);
+          if (!item) return;
+          setEditTarget(item);
+          setIsCreateOpen(true);
+        }}
+        onDelete={(id, name) => setDeleteConfirm({ id, name })}
+        searchTrailing={
+          <Button
+            size="sm"
+            onClick={() => {
+              setEditTarget(null);
+              setIsCreateOpen(true);
+            }}
+          >
+            New Enhanced Item
+          </Button>
+        }
       />
-
-      <div className="flex flex-col gap-1 mt-2">
-        {isLoading ? (
-          <LoadingState />
-        ) : filtered.length === 0 ? (
-          <ListEmptyState
-            icon={<Sparkles className="w-8 h-8" />}
-            title="No official enhanced items"
-            message="Use 'New Enhanced Item' to add one."
-          />
-        ) : (
-          filtered.map((e) => (
-            <GridListRow
-              key={e.id}
-              id={e.id}
-              name={e.name}
-              description={e.description ?? undefined}
-              gridColumns={GRID}
-              columns={[
-                { key: 'Base', value: e.base_item_name },
-                { key: 'Power', value: e.power_name },
-                { key: 'Rarity', value: e.rarity },
-                { key: 'Cost', value: e.currency_cost, align: 'right' },
-                {
-                  key: 'Uses',
-                  value:
-                    e.uses_type === 'permanent'
-                      ? 'Permanent'
-                      : `${e.uses_count ?? 1} / ${
-                          e.uses_type === 'full' ? 'Full' : 'Partial'
-                        }`,
-                  align: 'right',
-                },
-              ]}
-              badges={[{ label: 'Enhanced', color: 'purple' }]}
-              onEdit={() => {
-                setEditTarget(e);
-                setIsCreateOpen(true);
-              }}
-              onDelete={() => setDeleteConfirm(e)}
-            />
-          ))
-        )}
-      </div>
 
       {deleteConfirm && (
         <DeleteConfirmModal
@@ -160,30 +105,19 @@ export function AdminPublicEnhancedItemsTab() {
           items={items}
           powers={powers}
           initial={editTarget ?? undefined}
+          isSaving={createMutation.isPending || updateMutation.isPending}
           onSave={async (body) => {
-            await createMutation.mutateAsync(body);
+            if (editTarget) await updateMutation.mutateAsync({ id: editTarget.id, body });
+            else await createMutation.mutateAsync(body);
             setIsCreateOpen(false);
           }}
         />
       )}
-    </div>
+    </>
   );
 }
 
-type EnhancedEditBody = {
-  name: string;
-  description?: string;
-  baseItemSource: 'codex' | 'public' | 'custom';
-  baseItemId?: string;
-  baseItemName: string;
-  baseItemDescription?: string;
-  powerSource: 'official' | 'public' | 'library';
-  powerId: string;
-  powerName: string;
-  powerEnergy: number;
-  usesType: 'full' | 'partial' | 'permanent';
-  usesCount?: number;
-};
+type EnhancedEditBody = CreateOfficialEnhancedItemInput;
 
 function EnhancedItemEditModal({
   isOpen,
@@ -191,21 +125,23 @@ function EnhancedItemEditModal({
   items,
   powers,
   initial,
+  isSaving,
   onSave,
 }: {
   isOpen: boolean;
   onClose: () => void;
   items: LibraryItem[];
   powers: LibraryPower[];
-  initial?: OfficialEnhancedItem;
+  initial?: OfficialEnhancedItem | undefined;
+  isSaving: boolean;
   onSave: (body: EnhancedEditBody) => Promise<void>;
 }) {
   const [name, setName] = useState(initial?.name ?? '');
   const [description, setDescription] = useState(initial?.description ?? '');
-  const [selectedItemId, setSelectedItemId] = useState<string | ''>('');
-  const [selectedPowerId, setSelectedPowerId] = useState<string | ''>('');
+  const [selectedItemId, setSelectedItemId] = useState<string | ''>(initial?.base_item_id ?? '');
+  const [selectedPowerId, setSelectedPowerId] = useState<string | ''>(initial?.power_id ?? '');
   const [usesType, setUsesType] = useState<'full' | 'partial' | 'permanent'>(
-    (initial?.uses_type as 'full' | 'partial' | 'permanent' | undefined) ?? 'full'
+    (initial?.uses_type as 'full' | 'partial' | 'permanent' | undefined) ?? 'full',
   );
   const [usesCount, setUsesCount] = useState<number>(initial?.uses_count ?? 1);
 
@@ -227,7 +163,7 @@ function EnhancedItemEditModal({
       powerSource: 'official',
       powerId: String(power.id),
       powerName: String(power.name ?? ''),
-      powerEnergy: Number((power as { energy?: unknown }).energy ?? 0),
+      powerEnergy: Number((power as { energy?: unknown | undefined }).energy ?? 0),
       usesType,
       usesCount: usesType === 'permanent' ? undefined : usesCount,
     };
@@ -242,14 +178,12 @@ function EnhancedItemEditModal({
       isOpen={isOpen}
       onClose={onClose}
       title={initial ? 'Edit Enhanced Item' : 'New Enhanced Item'}
-      size="lg"
+      size="full"
       fullScreenOnMobile
     >
       <div className="space-y-4">
         <div>
-          <label className="block text-sm font-medium text-text-secondary mb-1">
-            Name
-          </label>
+          <label className="mb-1 block text-sm font-medium text-text-secondary">Name</label>
           <Input
             value={name}
             onChange={(e) => setName(e.target.value)}
@@ -258,9 +192,7 @@ function EnhancedItemEditModal({
           />
         </div>
         <div>
-          <label className="block text-sm font-medium text-text-secondary mb-1">
-            Description
-          </label>
+          <label className="mb-1 block text-sm font-medium text-text-secondary">Description</label>
           <Input
             value={description ?? ''}
             onChange={(e) => setDescription(e.target.value)}
@@ -269,8 +201,8 @@ function EnhancedItemEditModal({
           />
         </div>
         <div className="flex flex-wrap gap-4">
-          <div className="flex-1 min-w-[220px]">
-            <label className="block text-sm font-medium text-text-secondary mb-1">
+          <div className="min-w-[220px] flex-1">
+            <label className="mb-1 block text-sm font-medium text-text-secondary">
               Base item (official)
             </label>
             <Select
@@ -284,8 +216,8 @@ function EnhancedItemEditModal({
               }))}
             />
           </div>
-          <div className="flex-1 min-w-[220px]">
-            <label className="block text-sm font-medium text-text-secondary mb-1">
+          <div className="min-w-[220px] flex-1">
+            <label className="mb-1 block text-sm font-medium text-text-secondary">
               Power (official)
             </label>
             <Select
@@ -300,11 +232,9 @@ function EnhancedItemEditModal({
             />
           </div>
         </div>
-        <div className="flex flex-wrap gap-4 items-end">
+        <div className="flex flex-wrap items-end gap-4">
           <div>
-            <label className="block text-sm font-medium text-text-secondary mb-1">
-              Recovery
-            </label>
+            <label className="mb-1 block text-sm font-medium text-text-secondary">Recovery</label>
             <Select
               value={usesType}
               onChange={(e) => setUsesType(e.target.value as 'full' | 'partial' | 'permanent')}
@@ -318,7 +248,7 @@ function EnhancedItemEditModal({
           </div>
           {usesType !== 'permanent' && (
             <div>
-              <label className="block text-sm font-medium text-text-secondary mb-1">
+              <label className="mb-1 block text-sm font-medium text-text-secondary">
                 Uses per {usesType === 'full' ? 'Full' : 'Partial'} Recovery
               </label>
               <Input
@@ -333,13 +263,17 @@ function EnhancedItemEditModal({
           )}
         </div>
         <div className="flex justify-end gap-2 pt-2">
-          <Button variant="ghost" onClick={onClose}>
+          <Button variant="ghost" onClick={onClose} disabled={isSaving}>
             Cancel
           </Button>
-          <Button onClick={handleSubmit}>Save</Button>
+          <Button
+            onClick={handleSubmit}
+            disabled={isSaving || !name.trim() || !selectedItemId || !selectedPowerId}
+          >
+            {isSaving ? 'Saving...' : 'Save'}
+          </Button>
         </div>
       </div>
     </Modal>
   );
 }
-

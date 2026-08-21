@@ -7,32 +7,25 @@
 'use client';
 
 import { useState, useMemo } from 'react';
-import { cn, formatListCellLabel } from '@/lib/utils';
+import { formatListCellLabel } from '@/lib/utils';
+import { SelectFilter } from '@/components/patterns/filters';
 import {
-  SelectFilter,
-  FilterSection,
-} from '@/components/codex';
-import {
-  SearchInput,
-  ListHeader,
-  LoadingState,
+  CodexBrowseListShell,
   ErrorDisplay as ErrorState,
   GridListRow,
   type ChipData,
-} from '@/components/shared';
-import { EmptyState } from '@/components/ui';
+} from '@/components/patterns';
 import { useSort } from '@/hooks/use-sort';
 import { CodexMyCodexEmpty } from './CodexMyCodexEmpty';
 import { useParts } from '@/hooks';
 import { descriptorChipData } from '@/lib/chip/chip-data-helpers';
 
-const PART_GRID_COLUMNS = '1.5fr 1fr 0.8fr 0.8fr 40px';
+const PART_GRID_COLUMNS = '1.5fr 1fr 0.8fr 0.8fr';
 const PART_COLUMNS = [
   { key: 'name', label: 'NAME' },
   { key: 'category', label: 'CATEGORY' },
   { key: 'energy', label: 'ENERGY' },
   { key: 'tp', label: 'TP' },
-  { key: '_actions', label: '', sortable: false as const },
 ];
 
 function formatEnergyCost(en: number | undefined, isPercentage: boolean | undefined): string {
@@ -51,7 +44,7 @@ function PartCard({ part }: { part: Part }) {
   const typeChips: ChipData[] = [
     descriptorChipData(
       part.type === 'power' ? 'Power' : 'Technique',
-      part.type === 'power' ? 'archetype' : 'skill'
+      part.type === 'power' ? 'archetype' : 'skill',
     ),
   ];
   if (part.mechanic) typeChips.push(descriptorChipData('Mechanic', 'default'));
@@ -59,7 +52,10 @@ function PartCard({ part }: { part: Part }) {
 
   const optionChips: ChipData[] = [];
   if (part.op_1_desc) {
-    const enStr = part.op_1_en !== undefined && part.op_1_en !== 0 ? formatEnergyCost(part.op_1_en, part.percentage) : null;
+    const enStr =
+      part.op_1_en !== undefined && part.op_1_en !== 0
+        ? formatEnergyCost(part.op_1_en, part.percentage)
+        : null;
     const tpStr = part.op_1_tp !== undefined && part.op_1_tp !== 0 ? String(part.op_1_tp) : null;
     const costParts = [enStr && `EN: ${enStr}`, tpStr && `TP: ${tpStr}`].filter(Boolean);
     optionChips.push({
@@ -69,7 +65,10 @@ function PartCard({ part }: { part: Part }) {
     });
   }
   if (part.op_2_desc) {
-    const enStr = part.op_2_en !== undefined && part.op_2_en !== 0 ? formatEnergyCost(part.op_2_en, part.percentage) : null;
+    const enStr =
+      part.op_2_en !== undefined && part.op_2_en !== 0
+        ? formatEnergyCost(part.op_2_en, part.percentage)
+        : null;
     const tpStr = part.op_2_tp !== undefined && part.op_2_tp !== 0 ? String(part.op_2_tp) : null;
     const costParts = [enStr && `EN: ${enStr}`, tpStr && `TP: ${tpStr}`].filter(Boolean);
     optionChips.push({
@@ -79,7 +78,10 @@ function PartCard({ part }: { part: Part }) {
     });
   }
   if (part.op_3_desc) {
-    const enStr = part.op_3_en !== undefined && part.op_3_en !== 0 ? formatEnergyCost(part.op_3_en, part.percentage) : null;
+    const enStr =
+      part.op_3_en !== undefined && part.op_3_en !== 0
+        ? formatEnergyCost(part.op_3_en, part.percentage)
+        : null;
     const tpStr = part.op_3_tp !== undefined && part.op_3_tp !== 0 ? String(part.op_3_tp) : null;
     const costParts = [enStr && `EN: ${enStr}`, tpStr && `TP: ${tpStr}`].filter(Boolean);
     optionChips.push({
@@ -89,7 +91,11 @@ function PartCard({ part }: { part: Part }) {
     });
   }
 
-  const detailSections: Array<{ label: string; chips: ChipData[]; hideLabelIfSingle?: boolean }> = [
+  const detailSections: Array<{
+    label: string;
+    chips: ChipData[];
+    hideLabelIfSingle?: boolean | undefined;
+  }> = [
     { label: 'Type', chips: typeChips, hideLabelIfSingle: true },
     ...(optionChips.length > 0 ? [{ label: 'Options', chips: optionChips }] : []),
   ];
@@ -102,7 +108,11 @@ function PartCard({ part }: { part: Part }) {
       gridColumns={PART_GRID_COLUMNS}
       columns={[
         { key: 'Category', value: formatListCellLabel(part.category) },
-        { key: 'Energy', value: formatEnergyCost(part.base_en, part.percentage), className: 'text-blue-600' },
+        {
+          key: 'Energy',
+          value: formatEnergyCost(part.base_en, part.percentage),
+          className: 'text-energy-text',
+        },
         { key: 'TP', value: part.base_tp ? part.base_tp : '-', className: 'text-tp' },
       ]}
       detailSections={detailSections}
@@ -117,7 +127,11 @@ interface PartFilters {
   mechanicMode: 'all' | 'only' | 'hide';
 }
 
-export function CodexPartsTab({ codexMode = 'public' }: { codexMode?: 'public' | 'my' }) {
+export function CodexPartsTab({
+  codexMode = 'public',
+}: {
+  codexMode?: 'public' | 'my' | undefined;
+}) {
   const loadPublicCodex = codexMode === 'public';
   const { data: parts, isLoading, error, refetch } = useParts({ enabled: loadPublicCodex });
   const { sortState, handleSort } = useSort('name');
@@ -143,8 +157,11 @@ export function CodexPartsTab({ codexMode = 'public' }: { codexMode?: 'public' |
     if (!parts) return [];
 
     const filtered = parts.filter((p: Part) => {
-      if (filters.search && !p.name.toLowerCase().includes(filters.search.toLowerCase()) &&
-        !p.description?.toLowerCase().includes(filters.search.toLowerCase())) {
+      if (
+        filters.search &&
+        !p.name.toLowerCase().includes(filters.search.toLowerCase()) &&
+        !p.description?.toLowerCase().includes(filters.search.toLowerCase())
+      ) {
         return false;
       }
       if (filters.categoryFilter && p.category !== filters.categoryFilter) return false;
@@ -175,18 +192,17 @@ export function CodexPartsTab({ codexMode = 'public' }: { codexMode?: 'public' |
   if (error) return <ErrorState message="Failed to load parts" onRetry={() => refetch()} />;
 
   return (
-    <div>
-      <div className="mb-4">
-        <SearchInput value={filters.search} onChange={(v) => setFilters(f => ({ ...f, search: v }))} placeholder="Search parts..." />
-      </div>
-
-      <FilterSection>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+    <CodexBrowseListShell
+      search={filters.search}
+      onSearchChange={(v) => setFilters((f) => ({ ...f, search: v }))}
+      searchPlaceholder="Search parts..."
+      filters={
+        <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4">
           <SelectFilter
             label="Category"
             value={filters.categoryFilter}
-            options={filterOptions.categories.map(c => ({ value: c, label: c }))}
-            onChange={(v) => setFilters(f => ({ ...f, categoryFilter: v }))}
+            options={filterOptions.categories.map((c) => ({ value: c, label: c }))}
+            onChange={(v) => setFilters((f) => ({ ...f, categoryFilter: v }))}
             placeholder="All Categories"
           />
 
@@ -198,7 +214,9 @@ export function CodexPartsTab({ codexMode = 'public' }: { codexMode?: 'public' |
               { value: 'power', label: 'Power' },
               { value: 'technique', label: 'Technique' },
             ]}
-            onChange={(v) => setFilters(f => ({ ...f, typeFilter: v as 'all' | 'power' | 'technique' }))}
+            onChange={(v) =>
+              setFilters((f) => ({ ...f, typeFilter: v as 'all' | 'power' | 'technique' }))
+            }
             placeholder={null}
           />
 
@@ -210,30 +228,24 @@ export function CodexPartsTab({ codexMode = 'public' }: { codexMode?: 'public' |
               { value: 'only', label: 'Only Mechanics' },
               { value: 'hide', label: 'Hide Mechanics' },
             ]}
-            onChange={(v) => setFilters(f => ({ ...f, mechanicMode: v as 'all' | 'only' | 'hide' }))}
+            onChange={(v) =>
+              setFilters((f) => ({ ...f, mechanicMode: v as 'all' | 'only' | 'hide' }))
+            }
             placeholder={null}
           />
         </div>
-      </FilterSection>
-
-      <ListHeader
-        columns={PART_COLUMNS}
-        gridColumns={PART_GRID_COLUMNS}
-        sortState={sortState}
-        onSort={handleSort}
-      />
-
-      <div className="flex flex-col gap-1 mt-2">
-        {isLoading ? (
-          <LoadingState />
-        ) : filteredParts.length === 0 ? (
-          <EmptyState title="No parts found" size="sm" />
-        ) : (
-          filteredParts.map(part => (
-            <PartCard key={part.id} part={part} />
-          ))
-        )}
-      </div>
-    </div>
+      }
+      headerColumns={PART_COLUMNS}
+      gridColumns={PART_GRID_COLUMNS}
+      sortState={sortState}
+      onSort={handleSort}
+      isLoading={isLoading}
+      isEmpty={filteredParts.length === 0}
+      emptyTitle="No parts found"
+    >
+      {filteredParts.map((part) => (
+        <PartCard key={part.id} part={part} />
+      ))}
+    </CodexBrowseListShell>
   );
 }

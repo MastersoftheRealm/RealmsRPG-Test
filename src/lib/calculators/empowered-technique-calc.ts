@@ -2,6 +2,7 @@ import type { PowerPart, TechniquePart } from '@/hooks/codex-types';
 import { calculatePowerCosts, type PowerPartPayload } from './power-calc';
 import { calculateTechniqueCosts, type TechniquePartPayload } from './technique-calc';
 import { findByIdOrName } from '@/lib/id-constants';
+import { dedupeSavedParts } from '@/lib/game/dedupe-saved-parts';
 
 export interface EmpoweredTechniqueCostResult {
   totalEnergy: number;
@@ -15,7 +16,7 @@ export interface EmpoweredTechniqueCostResult {
 
 function getTechniquePartEnergyContribution(
   part: TechniquePart,
-  payload: TechniquePartPayload
+  payload: TechniquePartPayload,
 ): number {
   return (
     (part.base_en || 0) +
@@ -27,10 +28,11 @@ function getTechniquePartEnergyContribution(
 
 export function getTechniquePercentageMultiplier(
   techniquePartsPayload: TechniquePartPayload[],
-  techniquePartsDb: TechniquePart[]
+  techniquePartsDb: TechniquePart[],
 ): number {
   let multiplier = 1;
-  techniquePartsPayload.forEach((payload) => {
+  const uniqueParts = dedupeSavedParts(techniquePartsPayload);
+  uniqueParts.forEach((payload) => {
     const part = findByIdOrName(techniquePartsDb, {
       id: payload.id ?? payload.part?.id,
       name: payload.name ?? payload.part?.name,
@@ -49,20 +51,15 @@ export interface CalculateEmpoweredTechniqueCostsInput {
 }
 
 export function calculateEmpoweredTechniqueCosts(
-  input: CalculateEmpoweredTechniqueCostsInput
+  input: CalculateEmpoweredTechniqueCostsInput,
 ): EmpoweredTechniqueCostResult {
-  const {
-    powerPartsPayload,
-    techniquePartsPayload,
-    powerPartsDb,
-    techniquePartsDb,
-  } = input;
+  const { powerPartsPayload, techniquePartsPayload, powerPartsDb, techniquePartsDb } = input;
 
   const powerCosts = calculatePowerCosts(powerPartsPayload, powerPartsDb);
   const techniqueCosts = calculateTechniqueCosts(techniquePartsPayload, techniquePartsDb);
   const techniquePercentageMultiplier = getTechniquePercentageMultiplier(
     techniquePartsPayload,
-    techniquePartsDb
+    techniquePartsDb,
   );
 
   // Empowered rule: technique percentage mechanics also scale the power side.

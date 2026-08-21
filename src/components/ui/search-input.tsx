@@ -11,17 +11,22 @@ import * as React from 'react';
 import { Search, X } from 'lucide-react';
 import { cn } from '@/lib/utils/cn';
 
-interface SearchInputProps extends Omit<React.InputHTMLAttributes<HTMLInputElement>, 'onChange' | 'size'> {
+interface SearchInputProps extends Omit<
+  React.InputHTMLAttributes<HTMLInputElement>,
+  'onChange' | 'size'
+> {
   /** Current search value */
   value: string;
   /** Change handler */
   onChange: (value: string) => void;
   /** Whether to show clear button when value is present */
-  showClear?: boolean;
+  showClear?: boolean | undefined;
   /** Custom icon to use instead of search icon */
-  icon?: React.ReactNode;
+  icon?: React.ReactNode | undefined;
   /** Size variant */
-  size?: 'sm' | 'md' | 'lg';
+  size?: 'sm' | 'md' | 'lg' | undefined;
+  /** Forwarded to the input and merged with the internal ref used by clear-then-refocus. */
+  ref?: React.Ref<HTMLInputElement> | undefined;
 }
 
 const sizeClasses = {
@@ -53,10 +58,20 @@ export function SearchInput({
   size = 'md',
   placeholder = 'Search...',
   className,
+  ref,
   ...props
 }: SearchInputProps) {
   const sizes = sizeClasses[size];
   const inputRef = React.useRef<HTMLInputElement>(null);
+
+  const setInputRef = React.useCallback(
+    (node: HTMLInputElement | null) => {
+      inputRef.current = node;
+      if (typeof ref === 'function') ref(node);
+      else if (ref) ref.current = node;
+    },
+    [ref],
+  );
 
   const handleClear = () => {
     onChange('');
@@ -64,23 +79,23 @@ export function SearchInput({
   };
 
   return (
-    <div className={cn('search-input-wrapper', sizes.wrapper)}>
+    <div className={cn('search-input-wrapper min-w-0', sizes.wrapper)}>
       <span className={cn('search-input-icon', sizes.icon)}>
-        {icon || <Search className="w-full h-full" />}
+        {icon || <Search className="h-full w-full" />}
       </span>
       <input
-        ref={inputRef}
         type="text"
         value={value}
         onChange={(e) => onChange(e.target.value)}
         placeholder={placeholder}
         className={cn(
-          'search-input',
+          'search-input touch-tier-standard',
           sizes.input,
           showClear && value && 'pr-10',
-          className
+          className,
         )}
         {...props}
+        ref={setInputRef}
       />
       {showClear && value && (
         <button
@@ -89,7 +104,7 @@ export function SearchInput({
           className={cn('search-input-clear', sizes.clear)}
           aria-label="Clear search"
         >
-          <X className="w-4 h-4" />
+          <X className="h-4 w-4" />
         </button>
       )}
     </div>

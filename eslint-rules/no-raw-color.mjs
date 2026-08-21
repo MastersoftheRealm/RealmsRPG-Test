@@ -16,15 +16,48 @@
  */
 
 const PALETTE = [
-  'slate', 'gray', 'zinc', 'neutral', 'stone',
-  'red', 'orange', 'amber', 'yellow', 'lime', 'green', 'emerald', 'teal',
-  'cyan', 'sky', 'blue', 'indigo', 'violet', 'purple', 'fuchsia', 'pink', 'rose',
+  'slate',
+  'gray',
+  'zinc',
+  'neutral',
+  'stone',
+  'red',
+  'orange',
+  'amber',
+  'yellow',
+  'lime',
+  'green',
+  'emerald',
+  'teal',
+  'cyan',
+  'sky',
+  'blue',
+  'indigo',
+  'violet',
+  'purple',
+  'fuchsia',
+  'pink',
+  'rose',
 ].join('|');
 
 const PROP = [
-  'bg', 'text', 'border', 'ring', 'ring-offset', 'from', 'via', 'to',
-  'fill', 'stroke', 'divide', 'outline', 'decoration', 'placeholder',
-  'caret', 'accent', 'shadow',
+  'bg',
+  'text',
+  'border',
+  'ring',
+  'ring-offset',
+  'from',
+  'via',
+  'to',
+  'fill',
+  'stroke',
+  'divide',
+  'outline',
+  'decoration',
+  'placeholder',
+  'caret',
+  'accent',
+  'shadow',
 ].join('|');
 
 // e.g. `hover:dark:bg-blue-600/50` -> matches the `bg-blue-600` segment.
@@ -45,7 +78,7 @@ function findViolation(value) {
 }
 
 /** @type {import('eslint').Rule.RuleModule} */
-export default {
+const noRawColorRule = {
   meta: {
     type: 'problem',
     docs: {
@@ -75,3 +108,5 @@ export default {
     };
   },
 };
+
+export default noRawColorRule;

@@ -1,0 +1,274 @@
+[
+  {
+    "slug": "welcome-to-realms",
+    "title": "Welcome to Realms",
+    "description": "Meet the table, the Codex, and how to use this book.",
+    "headings": [
+      {
+        "id": "the-players",
+        "title": "The Players"
+      },
+      {
+        "id": "the-main-realms-resources",
+        "title": "The Main Realms Resources"
+      },
+      {
+        "id": "using-this-book",
+        "title": "Using This Book"
+      },
+      {
+        "id": "using-the-codex",
+        "title": "Using the Codex"
+      }
+    ]
+  },
+  {
+    "slug": "playing-the-game",
+    "title": "Playing the Game",
+    "description": "Dice, abilities, Skill Rolls, defenses, rest, and travel.",
+    "headings": [
+      {
+        "id": "flavor-rules",
+        "title": "Flavor ‘Rules!’"
+      },
+      {
+        "id": "sessions-and-campaigns",
+        "title": "Sessions and Campaigns"
+      },
+      {
+        "id": "dice",
+        "title": "Dice"
+      },
+      {
+        "id": "abilities",
+        "title": "Abilities"
+      },
+      {
+        "id": "the-d20",
+        "title": "The D20"
+      },
+      {
+        "id": "overcoming-scores",
+        "title": "Overcoming Scores"
+      },
+      {
+        "id": "defenses",
+        "title": "Defenses"
+      },
+      {
+        "id": "proficiency",
+        "title": "Proficiency"
+      },
+      {
+        "id": "skills",
+        "title": "Skills"
+      },
+      {
+        "id": "vision-obscurity",
+        "title": "Vision & Obscurity"
+      },
+      {
+        "id": "travel",
+        "title": "Travel"
+      },
+      {
+        "id": "rest-recovery",
+        "title": "Rest & Recovery"
+      },
+      {
+        "id": "hazards-companions-other-mechanics",
+        "title": "Hazards, Companions, & Other Mechanics"
+      }
+    ]
+  },
+  {
+    "slug": "encounters",
+    "title": "Encounters",
+    "description": "Shared encounter rules: movement, size, armor, death, and conditions.",
+    "headings": [
+      {
+        "id": "general-encounter-rules",
+        "title": "General Encounter Rules"
+      },
+      {
+        "id": "companions-in-encounters",
+        "title": "Companions in Encounters"
+      },
+      {
+        "id": "conditions",
+        "title": "Conditions"
+      }
+    ]
+  },
+  {
+    "slug": "combat-encounters",
+    "title": "Combat Encounters",
+    "description": "Initiative, actions, reactions, attacking, and damage.",
+    "headings": [
+      {
+        "id": "combat-encounters",
+        "title": "Combat Encounters"
+      }
+    ]
+  },
+  {
+    "slug": "skill-encounters",
+    "title": "Skill Encounters",
+    "description": "Resolving skill encounters and their variants.",
+    "headings": [
+      {
+        "id": "skill-encounters",
+        "title": "Skill Encounters"
+      },
+      {
+        "id": "skill-encounter-variants",
+        "title": "Skill Encounter Variants"
+      }
+    ]
+  },
+  {
+    "slug": "character-creation",
+    "title": "Character Creation & Leveling",
+    "description": "Build a character and advance by level.",
+    "headings": [
+      {
+        "id": "creating-your-character",
+        "title": "Creating Your Character"
+      },
+      {
+        "id": "level-progression",
+        "title": "Level Progression"
+      },
+      {
+        "id": "feats",
+        "title": "Feats"
+      }
+    ]
+  },
+  {
+    "slug": "roll-tables",
+    "title": "Roll-Tables",
+    "description": "Random tables for species, archetypes, and flavor.",
+    "headings": []
+  },
+  {
+    "slug": "equipment",
+    "title": "Equipment",
+    "description": "Armaments, other gear, slots, and consumables.",
+    "headings": [
+      {
+        "id": "armaments",
+        "title": "Armaments"
+      },
+      {
+        "id": "other-equipment",
+        "title": "Other Equipment"
+      }
+    ]
+  },
+  {
+    "slug": "crafting",
+    "title": "Crafting & Harvesting",
+    "description": "Craft items, enhance them, and harvest resources.",
+    "headings": [
+      {
+        "id": "general-crafting-mechanics",
+        "title": "General Crafting Mechanics"
+      },
+      {
+        "id": "enhanced-crafting",
+        "title": "Enhanced Crafting"
+      },
+      {
+        "id": "additional-optional-crafting-mechanics",
+        "title": "Additional & Optional Crafting Mechanics"
+      }
+    ]
+  },
+  {
+    "slug": "downtime",
+    "title": "Downtime",
+    "description": "Between-session work, training, socializing, and more.",
+    "headings": [
+      {
+        "id": "bonding-training-companions",
+        "title": "Bonding & Training Companions"
+      },
+      {
+        "id": "training-skills-defenses",
+        "title": "Training Skills & Defenses"
+      },
+      {
+        "id": "criminal-activity",
+        "title": "Criminal Activity"
+      },
+      {
+        "id": "arena-combat",
+        "title": "Arena Combat"
+      },
+      {
+        "id": "working",
+        "title": "Working"
+      },
+      {
+        "id": "study",
+        "title": "Study"
+      },
+      {
+        "id": "socialize",
+        "title": "Socialize"
+      },
+      {
+        "id": "trading",
+        "title": "Trading"
+      },
+      {
+        "id": "gambling",
+        "title": "Gambling"
+      },
+      {
+        "id": "construction",
+        "title": "Construction"
+      },
+      {
+        "id": "cultivation",
+        "title": "Cultivation"
+      },
+      {
+        "id": "downtime-skill-encounters",
+        "title": "Downtime Skill Encounters"
+      }
+    ]
+  },
+  {
+    "slug": "powers-and-techniques",
+    "title": "Powers & Techniques",
+    "description": "Create and use Powers, Techniques, and Empowered Techniques.",
+    "headings": [
+      {
+        "id": "power-technique-creation",
+        "title": "Power & Technique Creation"
+      },
+      {
+        "id": "creating-powers",
+        "title": "Creating Powers"
+      },
+      {
+        "id": "creating-empowered-techniques",
+        "title": "Creating Empowered-Techniques"
+      }
+    ]
+  },
+  {
+    "slug": "glossary",
+    "title": "Rules Glossary",
+    "description": "Quick definitions. This chapter is unfinished in the source manuscript.",
+    "headings": []
+  },
+  {
+    "slug": "the-realms",
+    "title": "The Realms",
+    "description": "Setting chapter. This chapter is unfinished in the source manuscript.",
+    "headings": []
+  }
+]

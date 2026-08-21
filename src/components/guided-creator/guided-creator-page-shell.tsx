@@ -16,14 +16,14 @@ import { GUIDED_CREATOR_COPY } from '@/lib/constants/site-copy';
 const shellCopy = GUIDED_CREATOR_COPY.shell;
 
 export interface GuidedCreatorPageShellProps {
-  title?: string;
-  subtitle?: ReactNode;
+  title?: string | undefined;
+  subtitle?: ReactNode | undefined;
   /** Tighter gradient header inside the creator flow. */
-  compact?: boolean;
+  compact?: boolean | undefined;
   /** Right-side header actions (e.g. Restart). */
-  actions?: ReactNode;
+  actions?: ReactNode | undefined;
   children: ReactNode;
-  className?: string;
+  className?: string | undefined;
 }
 
 export function GuidedCreatorPageShell({
@@ -48,9 +48,9 @@ export function GuidedCreatorPageShell({
         <Link
           href="/characters/new"
           className={cn(
-            'inline-flex items-center gap-1.5 min-h-11 font-nunito text-sm font-medium',
-            'text-primary-link-fg hover:text-primary-fg-hover transition-colors',
-            'mb-4 -mt-1'
+            'inline-flex min-h-11 items-center gap-1.5 font-nunito text-sm font-medium',
+            'text-primary-link-fg transition-colors hover:text-primary-fg-hover',
+            '-mt-1 mb-4',
           )}
         >
           <ChevronLeft className="h-4 w-4" aria-hidden="true" />

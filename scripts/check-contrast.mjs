@@ -117,8 +117,17 @@ function parseColor(input) {
   let m = v.match(/^#([0-9a-f]{3,8})$/);
   if (m) {
     let hex = m[1];
-    if (hex.length === 3) hex = hex.split('').map((c) => c + c).join('') + 'ff';
-    else if (hex.length === 4) hex = hex.split('').map((c) => c + c).join('');
+    if (hex.length === 3)
+      hex =
+        hex
+          .split('')
+          .map((c) => c + c)
+          .join('') + 'ff';
+    else if (hex.length === 4)
+      hex = hex
+        .split('')
+        .map((c) => c + c)
+        .join('');
     else if (hex.length === 6) hex = hex + 'ff';
     const r = parseInt(hex.slice(0, 2), 16);
     const g = parseInt(hex.slice(2, 4), 16);
@@ -188,7 +197,12 @@ const PAIRS = [
   ['--color-primary-link-fg', '--color-surface', 4.5, 'Primary link on surface'],
   ['--color-primary-outline-fg', '--color-surface', 4.5, 'Primary outline label on surface'],
   ['--color-primary-chip-fg', '--color-primary-chip-bg', 4.5, 'Primary chip label'],
-  ['--color-primary-subtle-fg', '--color-primary-subtle-bg', 4.5, 'Primary subtle label on subtle bg'],
+  [
+    '--color-primary-subtle-fg',
+    '--color-primary-subtle-bg',
+    4.5,
+    'Primary subtle label on subtle bg',
+  ],
   ['--color-primary-foreground', '--color-danger-button', 4.5, 'Danger button label'],
   // Status text on status-light backgrounds (theme-aware foreground tokens)
   ['--color-success-fg', '--color-success-light', 4.5, 'Success text on success bg'],
@@ -220,7 +234,10 @@ const PAIRS = [
 function evaluate(theme, map) {
   const results = [];
   // Backdrop used to flatten translucent values: the app background for that theme.
-  const backdropHex = resolveVar(map['--color-background'] || map['--background'] || '#ffffff', map);
+  const backdropHex = resolveVar(
+    map['--color-background'] || map['--background'] || '#ffffff',
+    map,
+  );
   const backdrop = parseColor(backdropHex) || { r: 255, g: 255, b: 255, a: 1 };
 
   for (const [fgName, bgName, minRatio, label] of PAIRS) {
@@ -264,7 +281,9 @@ if (REPORT_ONLY) {
     `  [${r.status.padEnd(4)}] ${r.theme.padEnd(5)} ${String(r.ratio ?? '-').padStart(5)} (min ${r.minRatio})  ${r.label}  (${r.fgName} on ${r.bgName})`;
   console.log('\nContrast report (all pairs):');
   for (const r of results) console.log(fmt(r));
-  console.log(`\n${failures.length} FAIL, ${results.filter((r) => r.status === 'SKIP').length} SKIP, ${results.filter((r) => r.status === 'PASS').length} PASS\n`);
+  console.log(
+    `\n${failures.length} FAIL, ${results.filter((r) => r.status === 'SKIP').length} SKIP, ${results.filter((r) => r.status === 'PASS').length} PASS\n`,
+  );
   process.exit(0);
 }
 
@@ -282,18 +301,28 @@ const newFailures = failures.filter((r) => !baselineSet.has(keyOf(r)));
 const fixed = baseline.filter((k) => !failKeys.includes(k));
 
 if (fixed.length) {
-  console.log(`\nNice — ${fixed.length} baseline contrast failure(s) now PASS. Run --update-baseline to lock them in:`);
+  console.log(
+    `\nNice — ${fixed.length} baseline contrast failure(s) now PASS. Run --update-baseline to lock them in:`,
+  );
   for (const k of fixed) console.log(`  + ${k}`);
 }
 
 if (newFailures.length) {
-  console.error(`\nContrast regression: ${newFailures.length} NEW failing pair(s) (not in baseline):`);
+  console.error(
+    `\nContrast regression: ${newFailures.length} NEW failing pair(s) (not in baseline):`,
+  );
   for (const r of newFailures) {
-    console.error(`  [FAIL] ${r.theme} ${r.ratio} (min ${r.minRatio})  ${r.label}  (${r.fgName} on ${r.bgName})`);
+    console.error(
+      `  [FAIL] ${r.theme} ${r.ratio} (min ${r.minRatio})  ${r.label}  (${r.fgName} on ${r.bgName})`,
+    );
   }
-  console.error('\nFix the contrast or, if intentional, run: node scripts/check-contrast.mjs --update-baseline\n');
+  console.error(
+    '\nFix the contrast or, if intentional, run: node scripts/check-contrast.mjs --update-baseline\n',
+  );
   process.exit(1);
 }
 
-console.log(`Contrast check passed. ${failures.length} known/accepted failure(s) in baseline, no new regressions.`);
+console.log(
+  `Contrast check passed. ${failures.length} known/accepted failure(s) in baseline, no new regressions.`,
+);
 process.exit(0);

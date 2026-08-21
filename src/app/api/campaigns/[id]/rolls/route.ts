@@ -16,10 +16,10 @@ type RollRow = {
   id: string;
   data: unknown;
   created_at: string | null;
-  character_id?: string | null;
-  user_id?: string | null;
-  type?: string | null;
-  title?: string | null;
+  character_id?: string | null | undefined;
+  user_id?: string | null | undefined;
+  type?: string | null | undefined;
+  title?: string | null | undefined;
 };
 
 function toEntry(row: RollRow): CampaignRollEntry {
@@ -43,16 +43,13 @@ function toEntry(row: RollRow): CampaignRollEntry {
         ? ts
         : typeof ts === 'string'
           ? new Date(ts)
-          : (ts as { seconds?: number })?.seconds
+          : (ts as { seconds?: number | undefined })?.seconds
             ? new Date((ts as { seconds: number }).seconds * 1000)
             : new Date(),
   };
 }
 
-export async function GET(
-  _request: Request,
-  { params }: { params: Promise<{ id: string }> }
-) {
+export async function GET(_request: Request, { params }: { params: Promise<{ id: string }> }) {
   try {
     const { user, error } = await getSession();
     if (error || !user?.uid) {
@@ -119,10 +116,7 @@ export async function GET(
   }
 }
 
-export async function POST(
-  request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
-) {
+export async function POST(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
     const { user, error } = await getSession();
     if (error || !user?.uid) {
@@ -131,11 +125,17 @@ export async function POST(
 
     // SEC-05: rate-limit roll submissions per user/IP (realtime fan-out makes
     // this endpoint abuse-prone).
-    const { success } = standardLimiter.check(
-      buildRateLimitKey('campaign-roll', { userId: user.uid, ip: resolveClientIp(request.headers) })
+    const { success } = await standardLimiter.check(
+      buildRateLimitKey('campaign-roll', {
+        userId: user.uid,
+        ip: resolveClientIp(request.headers),
+      }),
     );
     if (!success) {
-      return NextResponse.json({ error: 'Too many requests' }, { status: 429, headers: { 'Retry-After': '60' } });
+      return NextResponse.json(
+        { error: 'Too many requests' },
+        { status: 429, headers: { 'Retry-After': '60' } },
+      );
     }
 
     const { id: campaignId } = await params;
@@ -181,14 +181,19 @@ export async function POST(
     // roll for: their own roster entry, or any roster character if they are the
     // RM (owner). This stops a member spoofing a roll as another player's
     // character. The displayed name is taken from the roster, not the client.
-    const roster = (campaign.characters as Array<{ userId?: string; characterId?: string; characterName?: string }> | null) ?? [];
+    const roster =
+      (campaign.characters as Array<{
+        userId?: string | undefined;
+        characterId?: string | undefined;
+        characterName?: string | undefined;
+      }> | null) ?? [];
     const ownEntry = roster.find((c) => c.userId === user.uid && c.characterId === characterId);
     const ownerEntry = isOwner ? roster.find((c) => c.characterId === characterId) : undefined;
     const rosterEntry = ownEntry ?? ownerEntry;
     if (!rosterEntry) {
       return NextResponse.json(
         { error: 'You can only roll for your own character in this campaign.' },
-        { status: 403 }
+        { status: 403 },
       );
     }
     const resolvedCharacterName = rosterEntry.characterName ?? characterName;
@@ -226,10 +231,15 @@ export async function POST(
       return NextResponse.json({ error: 'Failed to save roll' }, { status: 500 });
     }
 
-    const { count } = await supabase
+    // Trim is best-effort: the roll is already saved, so a failure here only
+    // leaves history longer than intended.
+    const { count, error: countError } = await supabase
       .from('campaign_rolls')
       .select('id', { count: 'exact', head: true })
       .eq('campaign_id', campaignId);
+    if (countError) {
+      console.warn('[API] Roll history trim skipped (count failed):', countError);
+    }
 
     if ((count ?? 0) > MAX_CAMPAIGN_ROLLS) {
       // The trim deletes the oldest rolls regardless of who authored them, so it
@@ -243,16 +253,25 @@ export async function POST(
         dbAdmin = null;
       }
       if (dbAdmin) {
-        const { data: oldRows } = await dbAdmin
+        const { data: oldRows, error: oldRowsError } = await dbAdmin
           .from('campaign_rolls')
           .select('id')
           .eq('campaign_id', campaignId)
           .order('created_at', { ascending: true, nullsFirst: true })
           .order('id', { ascending: true })
           .limit((count ?? 0) - MAX_CAMPAIGN_ROLLS);
+        if (oldRowsError) {
+          console.warn('[API] Roll history trim skipped (select failed):', oldRowsError);
+        }
         const idsToDelete = (oldRows ?? []).map((r: { id: string }) => r.id);
         if (idsToDelete.length) {
-          await dbAdmin.from('campaign_rolls').delete().in('id', idsToDelete);
+          const { error: trimError } = await dbAdmin
+            .from('campaign_rolls')
+            .delete()
+            .in('id', idsToDelete);
+          if (trimError) {
+            console.warn('[API] Roll history trim failed:', trimError);
+          }
         }
       }
     }

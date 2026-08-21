@@ -8,8 +8,10 @@
 
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { Modal, Select, Button } from '@/components/ui';
+import { ONBOARDING_COPY } from '@/lib/constants/copy/onboarding-copy';
+import { areTutorialsEnabled } from '@/lib/onboarding-preferences';
 import type { CharacterVisibility } from '@/types';
 
 const VISIBILITY_OPTIONS: { value: CharacterVisibility; label: string }[] = [
@@ -29,19 +31,26 @@ const SPEED_DISPLAY_OPTIONS: { value: SpeedDisplayUnit; label: string }[] = [
 export interface CharacterSheetSettingsModalProps {
   isOpen: boolean;
   onClose: () => void;
-  visibility?: CharacterVisibility;
-  onVisibilityChange?: (value: CharacterVisibility) => void;
+  visibility?: CharacterVisibility | undefined;
+  onVisibilityChange?: ((value: CharacterVisibility) => void) | undefined;
   /** Called when user clicks Confirm: save visibility then show feedback. Parent should save, toast, and close. */
-  onConfirmVisibility?: (value: CharacterVisibility) => void | Promise<void>;
+  onConfirmVisibility?: ((value: CharacterVisibility) => void | Promise<void>) | undefined;
   /** When false, visibility is read-only. */
-  canEdit?: boolean;
+  canEdit?: boolean | undefined;
   /** When true, Private option is disabled (character must leave campaign to set private). */
-  isInCampaign?: boolean;
+  isInCampaign?: boolean | undefined;
   /** How to display speed (spaces, feet, or meters). Editing is always in spaces. */
-  speedDisplayUnit?: SpeedDisplayUnit;
-  onSpeedDisplayUnitChange?: (value: SpeedDisplayUnit) => void;
+  speedDisplayUnit?: SpeedDisplayUnit | undefined;
+  onSpeedDisplayUnitChange?: ((value: SpeedDisplayUnit) => void) | undefined;
   /** Called on Confirm to save both visibility and speed display. If provided, overrides onConfirmVisibility for full save. */
-  onConfirm?: (updates: { visibility?: CharacterVisibility; speedDisplayUnit?: SpeedDisplayUnit }) => void | Promise<void>;
+  onConfirm?:
+    | ((updates: {
+        visibility?: CharacterVisibility | undefined;
+        speedDisplayUnit?: SpeedDisplayUnit | undefined;
+      }) => void | Promise<void>)
+    | undefined;
+  /** Restart the post-save sheet tour from step 1 (owner only). */
+  onTakeSheetTour?: (() => void) | undefined;
 }
 
 export function CharacterSheetSettingsModal({
@@ -55,16 +64,13 @@ export function CharacterSheetSettingsModal({
   speedDisplayUnit = 'spaces',
   onSpeedDisplayUnitChange,
   onConfirm,
+  onTakeSheetTour,
 }: CharacterSheetSettingsModalProps) {
+  const tourCopy = ONBOARDING_COPY.sheetSettings;
+  const tutorialsEnabled = areTutorialsEnabled();
+  // Fresh drafts per open — parent mounts only while showSettingsModal is true.
   const [selectedVisibility, setSelectedVisibility] = useState<CharacterVisibility>(visibility);
   const [selectedSpeedUnit, setSelectedSpeedUnit] = useState<SpeedDisplayUnit>(speedDisplayUnit);
-
-  useEffect(() => {
-    if (isOpen) {
-      setSelectedVisibility(visibility);
-      setSelectedSpeedUnit(speedDisplayUnit);
-    }
-  }, [isOpen, visibility, speedDisplayUnit]);
 
   const visibilityOptions = VISIBILITY_OPTIONS.map((opt) => ({
     ...opt,
@@ -91,7 +97,8 @@ export function CharacterSheetSettingsModal({
     onClose();
   };
 
-  const canSave = canEdit && (onVisibilityChange != null || onConfirmVisibility != null || onConfirm != null);
+  const canSave =
+    canEdit && (onVisibilityChange != null || onConfirmVisibility != null || onConfirm != null);
   const hasChanged = selectedVisibility !== visibility || selectedSpeedUnit !== speedDisplayUnit;
 
   return (
@@ -99,16 +106,29 @@ export function CharacterSheetSettingsModal({
       isOpen={isOpen}
       onClose={onClose}
       title="Character settings"
-      description="Adjust visibility and display preferences."
+      description="Adjust visibility, display preferences, and sheet tour."
       size="md"
       showCloseButton
       fullScreenOnMobile
+      footer={
+        canSave ? (
+          <div className="flex justify-end gap-2">
+            <Button variant="secondary" onClick={onClose}>
+              Cancel
+            </Button>
+            <Button size="lg" onClick={() => void handleConfirm()}>
+              {hasChanged ? 'Confirm & save' : 'Done'}
+            </Button>
+          </div>
+        ) : undefined
+      }
     >
       <div className="space-y-4">
         <div className="rounded-lg border border-border-light bg-surface-alt p-3">
-          <h3 className="text-sm font-semibold text-text-primary mb-1">Speed display</h3>
-          <p className="text-xs text-text-muted mb-2">
-            Speed is always edited in spaces. Choose how it appears on the sheet: spaces, feet (1 sp = 5 ft), or meters (1 sp = 1.5 m).
+          <h3 className="mb-1 text-sm font-semibold text-text-primary">Speed display</h3>
+          <p className="mb-2 text-xs text-text-muted">
+            Speed is always edited in spaces. Choose how it appears on the sheet: spaces, feet (1 sp
+            = 5 ft), or meters (1 sp = 1.5 m).
           </p>
           {canEdit && onSpeedDisplayUnitChange ? (
             <Select
@@ -119,18 +139,21 @@ export function CharacterSheetSettingsModal({
             />
           ) : (
             <p className="text-sm font-medium text-text-primary">
-              {SPEED_DISPLAY_OPTIONS.find((o) => o.value === speedDisplayUnit)?.label ?? speedDisplayUnit}
+              {SPEED_DISPLAY_OPTIONS.find((o) => o.value === speedDisplayUnit)?.label ??
+                speedDisplayUnit}
             </p>
           )}
         </div>
         <div className="rounded-lg border border-border-light bg-surface-alt p-3">
-          <h3 className="text-sm font-semibold text-text-primary mb-1">Character visibility</h3>
-          <p className="text-xs text-text-muted mb-2">
-            Controls who can view this character sheet. Realm Masters can view campaign members&apos; sheets when set to Campaign or Public.
+          <h3 className="mb-1 text-sm font-semibold text-text-primary">Character visibility</h3>
+          <p className="mb-2 text-xs text-text-muted">
+            Controls who can view this character sheet. Realm Masters can view campaign
+            members&apos; sheets when set to Campaign or Public.
           </p>
           {isInCampaign && (
-            <p className="text-xs text-amber-600 dark:text-amber-400 mb-2">
-              This character is in a campaign. To set visibility to Private, remove them from the campaign first.
+            <p className="mb-2 text-xs text-warning-fg">
+              This character is in a campaign. To set visibility to Private, remove them from the
+              campaign first.
             </p>
           )}
           {canEdit && onVisibilityChange ? (
@@ -146,13 +169,25 @@ export function CharacterSheetSettingsModal({
             </p>
           )}
         </div>
-        {canSave && (
-          <div className="flex justify-end gap-2">
-            <Button variant="secondary" onClick={onClose}>
-              Cancel
-            </Button>
-            <Button onClick={handleConfirm}>
-              {hasChanged ? 'Confirm & save' : 'Done'}
+        {onTakeSheetTour && (
+          <div className="rounded-lg border border-border-light bg-surface-alt p-3">
+            <h3 className="mb-1 text-sm font-semibold text-text-primary">{tourCopy.tourTitle}</h3>
+            <p className="mb-3 text-xs text-text-muted">{tourCopy.tourDescription}</p>
+            {!tutorialsEnabled && (
+              <p className="mb-3 text-xs text-text-muted">{tourCopy.tourDisabledHint}</p>
+            )}
+            <Button
+              type="button"
+              variant="secondary"
+              size="sm"
+              className="min-h-11"
+              disabled={!tutorialsEnabled}
+              onClick={() => {
+                onTakeSheetTour();
+                onClose();
+              }}
+            >
+              {tourCopy.tourRetake}
             </Button>
           </div>
         )}

@@ -6,7 +6,11 @@
 /** Parse codex_feats.tags TEXT (comma-separated, optional trailing comma) into a clean array. */
 export function parseFeatTagsFromDb(val: unknown): string[] {
   if (!val) return [];
-  if (Array.isArray(val)) return val.map(String).map((s) => s.trim()).filter(Boolean);
+  if (Array.isArray(val))
+    return val
+      .map(String)
+      .map((s) => s.trim())
+      .filter(Boolean);
   if (typeof val === 'string') {
     return val
       .split(',')
@@ -19,7 +23,7 @@ export function parseFeatTagsFromDb(val: unknown): string[] {
 /** Format tag array for codex_feats.tags storage (sorted unique, trailing comma when non-empty). */
 export function formatFeatTagsForDb(tags: string[]): string | null {
   const unique = [...new Set(tags.map((t) => t.trim()).filter(Boolean))].sort((a, b) =>
-    a.localeCompare(b)
+    a.localeCompare(b),
   );
   if (unique.length === 0) return null;
   return `${unique.join(',')},`;

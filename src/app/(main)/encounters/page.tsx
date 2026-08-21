@@ -10,16 +10,7 @@
 import { useState, useMemo, Suspense } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import {
-  Swords,
-  Brain,
-  Blend,
-  Plus,
-  Trash2,
-  ChevronRight,
-  Search,
-  CheckCircle2,
-} from 'lucide-react';
+import { Swords, Brain, Blend, Plus, Trash2, ChevronRight, CheckCircle2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import {
   PageContainer,
@@ -27,7 +18,6 @@ import {
   Button,
   EmptyState,
   LoadingState,
-  Alert,
   Modal,
   Input,
   TabNavigation,
@@ -36,9 +26,15 @@ import {
   SearchInput,
   useToast,
 } from '@/components/ui';
-import { DeleteConfirmModal, HubListRow, ErrorDisplay } from '@/components/shared';
+import { DeleteConfirmModal, HubListRow, ErrorDisplay } from '@/components/patterns';
 import { IconButton } from '@/components/ui';
-import { useEncounters, useCreateEncounter, useDeleteEncounter, useSaveEncounter, useAuth } from '@/hooks';
+import {
+  useEncounters,
+  useCreateEncounter,
+  useDeleteEncounter,
+  useSaveEncounter,
+  useAuth,
+} from '@/hooks';
 import { createDefaultEncounter } from '@/types/encounter';
 import type { EncounterType, EncounterStatus, EncounterSummary } from '@/types/encounter';
 
@@ -49,9 +45,9 @@ const TYPE_LABELS: Record<EncounterType, string> = {
 };
 
 const TYPE_ICONS: Record<EncounterType, React.ReactNode> = {
-  combat: <Swords className="w-4 h-4" />,
-  skill: <Brain className="w-4 h-4" />,
-  mixed: <Blend className="w-4 h-4" />,
+  combat: <Swords className="h-4 w-4" />,
+  skill: <Brain className="h-4 w-4" />,
+  mixed: <Blend className="h-4 w-4" />,
 };
 
 const TYPE_COLORS: Record<EncounterType, string> = {
@@ -125,9 +121,7 @@ function EncountersContent() {
     if (search) {
       const s = search.toLowerCase();
       result = result.filter(
-        (e) =>
-          e.name.toLowerCase().includes(s) ||
-          e.description?.toLowerCase().includes(s)
+        (e) => e.name.toLowerCase().includes(s) || e.description?.toLowerCase().includes(s),
       );
     }
 
@@ -135,7 +129,7 @@ function EncountersContent() {
   }, [encounters, activeTab, typeFilter, search]);
 
   const activeCount = encounters.filter(
-    (e) => e.status === 'active' || e.status === 'paused'
+    (e) => e.status === 'active' || e.status === 'paused',
   ).length;
   const completedCount = encounters.filter((e) => e.status === 'completed').length;
 
@@ -188,9 +182,12 @@ function EncountersContent() {
   return (
     <PageContainer size="xl">
       {!user && (
-        <div className="mb-4 rounded-lg bg-primary-subtle-bg border border-primary-subtle-border px-4 py-3 text-text-primary text-sm">
+        <div className="mb-4 rounded-lg border border-primary-subtle-border bg-primary-subtle-bg px-4 py-3 text-sm text-text-primary">
           You&apos;re using encounters locally. Sign in to save encounters to your account.
-          <Link href="/login?returnTo=/encounters" className="ml-2 font-medium text-primary-link-fg hover:underline">
+          <Link
+            href="/login?returnTo=/encounters"
+            className="ml-2 font-medium text-primary-link-fg hover:underline"
+          >
             Sign in
           </Link>
         </div>
@@ -201,7 +198,7 @@ function EncountersContent() {
         actions={
           <div className="flex items-center gap-2">
             <Button onClick={() => setCreateModalOpen(true)}>
-              <Plus className="w-4 h-4" />
+              <Plus className="h-4 w-4" />
               Create Encounter
             </Button>
           </div>
@@ -212,11 +209,7 @@ function EncountersContent() {
         tabs={TABS.map((t) => ({
           ...t,
           count:
-            t.id === 'all'
-              ? encounters.length
-              : t.id === 'active'
-                ? activeCount
-                : completedCount,
+            t.id === 'all' ? encounters.length : t.id === 'active' ? activeCount : completedCount,
         }))}
         activeTab={activeTab}
         onTabChange={(id) => setActiveTab(id as TabId)}
@@ -224,15 +217,16 @@ function EncountersContent() {
         sharedTabPanelId={sharedPanelId}
       />
 
-      <TabContentPanel tabGroupId={tabGroupId} id={sharedPanelId} activeTab={activeTab} className="mt-6">
+      <TabContentPanel
+        tabGroupId={tabGroupId}
+        id={sharedPanelId}
+        activeTab={activeTab}
+        className="mt-6"
+      >
         {/* Search & Filters */}
-        <div className="flex flex-wrap items-center gap-3 mb-4 min-w-0">
-          <div className="flex-1 min-w-[200px]">
-            <SearchInput
-              value={search}
-              onChange={setSearch}
-              placeholder="Search encounters..."
-            />
+        <div className="mb-4 flex min-w-0 flex-wrap items-center gap-3">
+          <div className="min-w-[200px] flex-1">
+            <SearchInput value={search} onChange={setSearch} placeholder="Search encounters..." />
           </div>
           <div className="flex items-center gap-2">
             {(['', 'combat', 'skill', 'mixed'] as const).map((type) => (
@@ -240,10 +234,10 @@ function EncountersContent() {
                 key={type || 'all-types'}
                 onClick={() => setTypeFilter(type as EncounterType | '')}
                 className={cn(
-                  'px-3 py-1.5 text-sm rounded-lg font-medium transition-colors',
+                  'rounded-lg px-3 py-1.5 text-sm font-medium transition-colors',
                   typeFilter === type
-                    ? 'bg-primary-button text-white'
-                    : 'bg-surface-alt text-text-secondary hover:bg-surface-alt/80'
+                    ? 'bg-primary-button text-text-on-dark'
+                    : 'bg-surface-alt text-text-secondary hover:bg-surface-alt/80',
                 )}
               >
                 {type ? TYPE_LABELS[type] : 'All Types'}
@@ -258,11 +252,13 @@ function EncountersContent() {
         ) : error ? (
           <ErrorDisplay
             message={error.message || 'Failed to load encounters'}
-            onRetry={() => { void refetch(); }}
+            onRetry={() => {
+              void refetch();
+            }}
           />
         ) : filteredEncounters.length === 0 ? (
           <EmptyState
-            icon={<Swords className="w-10 h-10" />}
+            icon={<Swords className="h-10 w-10" />}
             title={
               search || typeFilter || activeTab !== 'all'
                 ? 'No encounters match your filters'
@@ -310,35 +306,35 @@ function EncountersContent() {
                 onDelete={() => setDeleteTarget(encounter)}
                 deleteAriaLabel={`Delete encounter ${encounter.name}`}
                 rightSlot={
-                  <div className="flex items-center gap-2 flex-shrink-0">
+                  <div className="flex flex-shrink-0 items-center gap-2">
                     {encounter.status !== 'completed' && (
                       <IconButton
                         variant="ghost"
                         size="sm"
                         label={`Mark ${encounter.name} complete`}
                         title="Mark complete"
-                        className="opacity-0 group-hover:opacity-100 text-text-muted dark:text-text-secondary hover:text-success-fg min-w-[44px] min-h-[44px]"
+                        className="min-h-[44px] min-w-[44px] text-text-muted opacity-0 group-hover:opacity-100 hover:text-success-fg"
                         onClick={(e) => {
                           e.stopPropagation();
                           void handleMarkComplete(encounter);
                         }}
                       >
-                        <CheckCircle2 className="w-4 h-4" />
+                        <CheckCircle2 className="h-4 w-4" />
                       </IconButton>
                     )}
                     <IconButton
                       variant="ghost"
                       size="sm"
                       label={`Delete encounter ${encounter.name}`}
-                      className="opacity-0 group-hover:opacity-100 text-text-muted dark:text-text-secondary hover:text-danger-fg hover:bg-red-50 dark:hover:bg-danger-900/20 min-w-[44px] min-h-[44px]"
+                      className="min-h-[44px] min-w-[44px] text-text-muted opacity-0 group-hover:opacity-100 hover:bg-danger-50 hover:text-danger-fg dark:hover:bg-danger-900/20"
                       onClick={(e) => {
                         e.stopPropagation();
                         setDeleteTarget(encounter);
                       }}
                     >
-                      <Trash2 className="w-4 h-4" />
+                      <Trash2 className="h-4 w-4" />
                     </IconButton>
-                    <ChevronRight className="w-5 h-5 text-text-muted shrink-0" aria-hidden />
+                    <ChevronRight className="h-5 w-5 shrink-0 text-text-muted" aria-hidden />
                   </div>
                 }
               />
@@ -404,31 +400,27 @@ function CreateEncounterModal({
         />
 
         <div>
-          <label className="block text-sm font-medium text-text-secondary mb-2">
+          <label className="mb-2 block text-sm font-medium text-text-secondary">
             Encounter Type
           </label>
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+          <div className="grid grid-cols-1 gap-2 sm:grid-cols-3">
             {(['combat', 'skill', 'mixed'] as const).map((t) => (
               <button
                 key={t}
                 type="button"
                 onClick={() => setType(t)}
                 className={cn(
-                  'flex flex-col items-center gap-2 p-4 rounded-xl border-2 transition-colors',
+                  'flex flex-col items-center gap-2 rounded-xl border-2 p-4 transition-colors',
                   type === t
                     ? 'border-primary-outline-border bg-primary-subtle-bg'
-                    : 'border-border-light hover:border-primary-outline-border'
+                    : 'border-border-light hover:border-primary-outline-border',
                 )}
               >
-                <div className={cn('p-2 rounded-lg', TYPE_COLORS[t])}>
-                  {TYPE_ICONS[t]}
-                </div>
-                <span className="text-sm font-medium text-text-primary">
-                  {TYPE_LABELS[t]}
-                </span>
-                <span className="text-xs text-text-muted dark:text-text-secondary text-center">
+                <div className={cn('rounded-lg p-2', TYPE_COLORS[t])}>{TYPE_ICONS[t]}</div>
+                <span className="text-sm font-medium text-text-primary">{TYPE_LABELS[t]}</span>
+                <span className="text-center text-xs text-text-muted">
                   {t === 'combat'
-                    ? 'Initiative, HP, conditions'
+                    ? 'Initiative, Health, conditions'
                     : t === 'skill'
                       ? 'Skill rolls, DS, successes'
                       : 'Combat + skill combined'}
@@ -445,7 +437,7 @@ function CreateEncounterModal({
           placeholder="Brief description..."
         />
 
-        <div className="flex gap-3 justify-end pt-2">
+        <div className="flex justify-end gap-3 pt-2">
           <Button variant="ghost" type="button" onClick={onClose}>
             Cancel
           </Button>

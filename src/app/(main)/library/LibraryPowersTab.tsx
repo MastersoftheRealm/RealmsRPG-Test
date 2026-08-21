@@ -1,46 +1,57 @@
 /**
- * Library Powers Tab
- * ===================
- * User's powers list with search and sort.
+ * Library Powers Tab — entity mapping + rows; shell from ADR-0001.
  */
 
 'use client';
 
-import { useState, useMemo } from 'react';
-import Link from 'next/link';
+import { useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { Plus, RefreshCw, Wand2 } from 'lucide-react';
+import { Wand2 } from 'lucide-react';
 import {
   GridListRow,
-  SearchInput,
-  ListHeader,
-  LoadingState,
-  ErrorDisplay,
-  ListEmptyState,
-  ConfirmActionModal,
-  type ChipData,
-} from '@/components/shared';
+  LibraryAddToCharacterButton,
+  LibraryRowActionSlot,
+} from '@/components/patterns';
+import { PowerTechniqueFilters } from '@/components/patterns/filters';
 import { useSort } from '@/hooks/use-sort';
-import { derivePowerDisplay, formatPowerDamage } from '@/lib/calculators/power-calc';
-import { partChipsFromDisplay } from '@/lib/chip/part-chips-from-display';
+import { useGameRules } from '@/hooks/use-game-rules';
+import { useAddToCharacterFromLibrary } from '@/hooks/use-add-to-character-from-library';
+import { usePathListFilter } from '@/hooks';
 import { useUserPowers, usePowerParts, useDuplicatePower } from '@/hooks';
-import { Button, IconButton, useToast } from '@/components/ui';
 import type { DisplayItem } from '@/types';
-import type { PowerDocument } from '@/lib/calculators/power-calc';
 import { getPowerSyncResult, sanitizePowerForSync } from '@/lib/library-sync';
-import { saveToLibrary } from '@/services/library-service';
+import {
+  buildOfficialPowerRows,
+  filterOfficialPowerRows,
+  officialPowerDetailSections,
+  officialPowerRowColumns,
+  OFFICIAL_POWER_GRID,
+  OFFICIAL_POWER_HEADER_COLUMNS,
+} from '@/lib/library/official-power-list';
+import { collectCategoryOptionsFromItems } from '@/lib/library/power-technique-categories';
+import {
+  EMPTY_POWER_TECHNIQUE_FILTERS,
+  countActivePowerTechniqueFilters,
+  type PowerTechniqueFilterState,
+} from '@/lib/library/power-technique-filters';
+import type { PowerTechniqueCharacterContext } from '@/lib/library/power-technique-character-context';
+import { listInnateThresholdFilterOptions } from '@/lib/game/innate-eligibility';
+import {
+  POWER_LIST_PATH_KINDS,
+  libraryRowPathIds,
+  pathChipLabelsForEntity,
+  pathFilterEmptyTitle,
+} from '@/lib/game/path-recommendation-index';
+import {
+  LibrarySyncRowAction,
+  UserLibraryEntityTabShell,
+} from './components/UserLibraryEntityTabShell';
+import { POWER_LIBRARY_LABELS } from './components/library-entity-tab.types';
+import { useLibraryEntitySync } from './hooks/use-library-entity-sync';
+import { useLibraryDuplicateConfirm } from './hooks/use-library-duplicate-confirm';
+import { resolveListRowThumbnail } from '@/lib/list-row-image';
 
-const POWER_GRID_COLUMNS = '1.5fr 0.8fr 1fr 1fr 0.8fr 1fr 1fr 40px';
-const POWER_HEADER_COLUMNS = [
-  { key: 'name', label: 'NAME' },
-  { key: 'energy', label: 'ENERGY' },
-  { key: 'action', label: 'ACTION' },
-  { key: 'duration', label: 'DURATION' },
-  { key: 'range', label: 'RANGE' },
-  { key: 'area', label: 'AREA' },
-  { key: 'damage', label: 'DAMAGE' },
-  { key: '_actions', label: '', sortable: false as const },
-];
+const POWER_ROW_CHROME = { edit: true, delete: true, rightSlot: true } as const;
 
 interface LibraryPowersTabProps {
   onDelete: (item: DisplayItem) => void;
@@ -48,253 +59,188 @@ interface LibraryPowersTabProps {
 
 export function LibraryPowersTab({ onDelete }: LibraryPowersTabProps) {
   const router = useRouter();
-  const { showToast } = useToast();
+  const { rules } = useGameRules();
   const { data: powers = [], isLoading, error, refetch } = useUserPowers();
   const { data: partsDb = [] } = usePowerParts();
   const duplicatePower = useDuplicatePower();
   const [search, setSearch] = useState('');
-  const [syncingIds, setSyncingIds] = useState<Set<string>>(new Set());
-  const [syncingAll, setSyncingAll] = useState(false);
-  const [duplicateConfirm, setDuplicateConfirm] = useState<{ id: string; name: string } | null>(null);
-  const [showSyncAllConfirm, setShowSyncAllConfirm] = useState(false);
+  const [advancedFilters, setAdvancedFilters] = useState<PowerTechniqueFilterState>(
+    EMPTY_POWER_TECHNIQUE_FILTERS,
+  );
+  const [characterContext, setCharacterContext] = useState<PowerTechniqueCharacterContext | null>(
+    null,
+  );
+  const [characterFilterId, setCharacterFilterId] = useState('');
+  const addToCharacter = useAddToCharacterFromLibrary('power', characterFilterId);
   const { sortState, handleSort, sortItems } = useSort('name');
+  const { selectedPathIds, setSelectedPathIds, pathIndex, pathRecommendedIds, pathFilterActive } =
+    usePathListFilter({ entities: powers, kind: POWER_LIST_PATH_KINDS });
 
   const cardData = useMemo(() => {
-    return powers.map(p => {
-      const doc: PowerDocument = {
-        name: String(p.name ?? ''),
-        description: String(p.description ?? ''),
-        parts: Array.isArray(p.parts) ? (p.parts as PowerDocument['parts']) : [],
-        damage: p.damage as PowerDocument['damage'],
-        actionType: p.actionType,
-        isReaction: p.isReaction,
-        range: p.range as PowerDocument['range'],
-        area: p.area as PowerDocument['area'],
-        duration: p.duration as PowerDocument['duration'],
-      };
-      const display = derivePowerDisplay(doc, partsDb);
-      const syncResult = getPowerSyncResult(p, partsDb);
-      const damageStr = formatPowerDamage(doc.damage);
-      const parts = partChipsFromDisplay(display.partChips, { stripOptionSuffix: true });
+    return buildOfficialPowerRows(powers, partsDb).map((row) => {
+      const syncResult = getPowerSyncResult(row.raw, partsDb);
       return {
-        id: String(p.docId ?? p.id ?? ''),
-        source: p,
-        name: display.name,
-        description: display.description,
-        energy: display.energy,
-        action: display.actionType,
-        duration: display.duration,
-        range: display.range,
-        area: display.area,
-        damage: damageStr,
-        tp: display.tp,
-        parts,
+        ...row,
+        id: String(row.raw.docId ?? row.raw.id ?? row.id),
         hasDrift: syncResult.hasDrift,
         syncIssues: syncResult.issues,
       };
     });
   }, [powers, partsDb]);
 
-  const driftedItems = useMemo(() => cardData.filter((item) => item.hasDrift), [cardData]);
+  const categoryOptions = useMemo(
+    () => collectCategoryOptionsFromItems(powers, partsDb, { includeDamageCategory: true }),
+    [powers, partsDb],
+  );
 
-  const handleSyncOne = async (itemId: string) => {
-    const source = powers.find((p) => String(p.docId ?? p.id ?? '') === itemId);
-    if (!source) return;
-    const sanitized = sanitizePowerForSync(source, partsDb);
-    if (!sanitized.hasDrift || !sanitized.changed) return;
+  const innateThresholdOptions = useMemo(() => listInnateThresholdFilterOptions(rules), [rules]);
 
-    setSyncingIds((prev) => new Set(prev).add(itemId));
-    try {
-      await saveToLibrary('powers', sanitized.value as unknown as Record<string, unknown>, { existingId: itemId });
-      await refetch();
-      showToast(`Synced "${source.name}" to current patch rules.`, 'success');
-    } catch (e) {
-      showToast((e as Error)?.message ?? 'Failed to sync power', 'error');
-    } finally {
-      setSyncingIds((prev) => {
-        const next = new Set(prev);
-        next.delete(itemId);
-        return next;
-      });
-    }
-  };
+  const driftedIds = useMemo(
+    () => cardData.filter((item) => item.hasDrift).map((item) => item.id),
+    [cardData],
+  );
 
-  const handleSyncAll = async () => {
-    if (driftedItems.length === 0) return;
-    setSyncingAll(true);
-    let syncedCount = 0;
-    try {
-      for (const item of driftedItems) {
-        const source = powers.find((p) => String(p.docId ?? p.id ?? '') === item.id);
-        if (!source) continue;
-        const sanitized = sanitizePowerForSync(source, partsDb);
-        if (!sanitized.hasDrift || !sanitized.changed) continue;
-        await saveToLibrary('powers', sanitized.value as unknown as Record<string, unknown>, { existingId: item.id });
-        syncedCount += 1;
-      }
-      await refetch();
-      showToast(
-        syncedCount > 0
-          ? `Synced ${syncedCount} power${syncedCount === 1 ? '' : 's'} with current patch.`
-          : 'All powers are already in sync.',
-        'success'
-      );
-    } catch (e) {
-      showToast((e as Error)?.message ?? 'Failed to sync all powers', 'error');
-    } finally {
-      setSyncingAll(false);
-    }
-  };
+  const sync = useLibraryEntitySync({
+    saveType: 'powers',
+    sources: powers,
+    getRowId: (p) => String(p.docId ?? p.id ?? ''),
+    getRowName: (p) => String(p.name ?? ''),
+    driftedIds,
+    sanitize: (source) => sanitizePowerForSync(source, partsDb),
+    refetch,
+    entitySingular: POWER_LIBRARY_LABELS.entitySingular,
+    entityPlural: POWER_LIBRARY_LABELS.entityPlural,
+  });
 
-  const filteredData = useMemo(() => {
-    let result = cardData;
+  const dup = useLibraryDuplicateConfirm({
+    duplicateTitle: POWER_LIBRARY_LABELS.duplicateTitle,
+    isPending: duplicatePower.isPending,
+    mutate: (id, handlers) => duplicatePower.mutate(id, handlers),
+  });
 
-    if (search) {
-      const searchLower = search.toLowerCase();
-      result = result.filter(p =>
-        String(p.name ?? '').toLowerCase().includes(searchLower) ||
-        String(p.description ?? '').toLowerCase().includes(searchLower)
-      );
-    }
-
-    return sortItems(result);
-  }, [cardData, search, sortItems]);
-
-  if (error) {
-    return <ErrorDisplay message="Failed to load powers" subMessage="Please try again later" onRetry={() => refetch()} />;
-  }
-
-  if (!isLoading && cardData.length === 0) {
-    return (
-      <ListEmptyState
-        icon={<Wand2 className="w-8 h-8" />}
-        title="No powers yet"
-        message="Create your first power to see it here in your library."
-        action={
-          <Button asChild>
-            <Link href="/power-creator">
-              <Plus className="w-4 h-4" />
-              Create Power
-            </Link>
-          </Button>
-        }
-      />
-    );
-  }
+  const filteredData = useMemo(
+    () =>
+      filterOfficialPowerRows(
+        cardData,
+        search,
+        sortItems,
+        advancedFilters,
+        characterContext,
+        pathRecommendedIds,
+      ),
+    [cardData, search, advancedFilters, characterContext, sortItems, pathRecommendedIds],
+  );
 
   return (
-    <div>
-      <div className="mb-4 flex flex-wrap items-center justify-between gap-2">
-        <SearchInput
-          value={search}
-          onChange={setSearch}
-          placeholder="Search powers..."
-        />
-        <Button
-          variant="secondary"
-          size="sm"
-          onClick={() => setShowSyncAllConfirm(true)}
-          disabled={driftedItems.length === 0 || syncingAll}
-        >
-          <RefreshCw className={`w-4 h-4 ${syncingAll ? 'animate-spin' : ''}`} />
-          Sync with current patch
-          {driftedItems.length > 0 ? ` (${driftedItems.length})` : ''}
-        </Button>
-      </div>
-
-      <ListHeader
-        columns={POWER_HEADER_COLUMNS}
-        gridColumns={POWER_GRID_COLUMNS}
+    <>
+      <UserLibraryEntityTabShell
+        labels={POWER_LIBRARY_LABELS}
+        isLoading={isLoading}
+        error={error}
+        onRetry={() => void refetch()}
+        totalCount={cardData.length}
+        emptyIcon={<Wand2 className="h-8 w-8" />}
+        search={search}
+        onSearchChange={setSearch}
         sortState={sortState}
         onSort={handleSort}
-      />
-
-      <div className="flex flex-col gap-1 mt-2">
-        {isLoading ? (
-          <LoadingState />
-        ) : filteredData.length === 0 ? (
-          <ListEmptyState title="No powers match your search." size="sm" />
-        ) : (
-          filteredData.map(power => (
+        headerColumns={OFFICIAL_POWER_HEADER_COLUMNS}
+        gridColumns={OFFICIAL_POWER_GRID}
+        hasThumbnailColumn
+        rowChrome={POWER_ROW_CHROME}
+        filteredCount={filteredData.length}
+        driftedCount={sync.driftedCount}
+        syncingAll={sync.syncingAll}
+        showSyncAllConfirm={sync.showSyncAllConfirm}
+        onOpenSyncAllConfirm={() => sync.setShowSyncAllConfirm(true)}
+        onCloseSyncAllConfirm={() => sync.setShowSyncAllConfirm(false)}
+        onConfirmSyncAll={() => {
+          sync.setShowSyncAllConfirm(false);
+          void sync.handleSyncAll();
+        }}
+        duplicateConfirm={dup.duplicateConfirm}
+        onCloseDuplicate={dup.closeDuplicateConfirm}
+        onConfirmDuplicate={dup.onConfirmDuplicate}
+        duplicatePending={dup.isPending}
+        filters={
+          <PowerTechniqueFilters
+            kind="power"
+            value={advancedFilters}
+            onChange={setAdvancedFilters}
+            categoryOptions={categoryOptions}
+            innateThresholdOptions={innateThresholdOptions}
+            onCharacterContextChange={setCharacterContext}
+            onCharacterIdChange={setCharacterFilterId}
+            pathFilter={{
+              options: pathIndex.options,
+              selectedPathIds,
+              onChange: setSelectedPathIds,
+            }}
+          />
+        }
+        filterActiveCount={
+          countActivePowerTechniqueFilters(advancedFilters, 'power', Boolean(characterContext)) +
+          (characterFilterId ? 1 : 0) +
+          (pathFilterActive ? 1 : 0)
+        }
+        filterEmptyTitle={pathFilterActive ? pathFilterEmptyTitle('powers') : undefined}
+      >
+        {filteredData.map((power) => {
+          const detailSections = officialPowerDetailSections(power);
+          const nameLabels = pathFilterActive
+            ? pathChipLabelsForEntity(pathIndex, libraryRowPathIds(power), selectedPathIds)
+            : undefined;
+          const nameBadges = nameLabels?.map((label) => ({ label })) ?? [];
+          const driftBadges = power.hasDrift
+            ? [{ label: 'Needs sync' as const, color: 'amber' as const }]
+            : [];
+          const badges = [...nameBadges, ...driftBadges];
+          return (
             <GridListRow
               key={power.id}
               id={power.id}
               name={power.name}
               description={power.description}
-              gridColumns={POWER_GRID_COLUMNS}
-              columns={[
-                { key: 'Energy', value: power.energy, highlight: true },
-                { key: 'Action', value: power.action },
-                { key: 'Duration', value: power.duration },
-                { key: 'Range', value: power.range },
-                { key: 'Area', value: power.area },
-                { key: 'Damage', value: power.damage },
-              ]}
-              chips={power.parts}
-              chipsLabel="Parts & Proficiencies"
-              totalCost={power.tp}
-              costLabel="TP"
-              badges={power.hasDrift ? [{ label: 'Needs sync', color: 'amber' }] : []}
+              thumbnail={resolveListRowThumbnail('power', power.raw, power.name)}
+              gridColumns={OFFICIAL_POWER_GRID}
+              rowChrome={POWER_ROW_CHROME}
+              columns={officialPowerRowColumns(power)}
+              detailSections={detailSections.length > 0 ? detailSections : undefined}
+              badges={badges.length > 0 ? badges : undefined}
+              showBadgesInName={nameBadges.length > 0}
               warningMessage={power.syncIssues[0]?.message}
-              rightSlot={power.hasDrift ? (
-                <IconButton
-                  variant="ghost"
-                  size="sm"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    void handleSyncOne(power.id);
-                  }}
-                  label="Sync with current patch"
-                  className="text-warning-fg hover:opacity-80"
-                >
-                  <RefreshCw className={`w-4 h-4 ${syncingIds.has(power.id) ? 'animate-spin' : ''}`} />
-                </IconButton>
-              ) : undefined}
+              rightSlot={
+                addToCharacter.active && !addToCharacter.isOnCharacter(power.raw) ? (
+                  <LibraryRowActionSlot>
+                    <LibraryAddToCharacterButton
+                      kind="power"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        addToCharacter.openAddConfirm(power.name, power.raw);
+                      }}
+                    />
+                    {power.hasDrift ? (
+                      <LibrarySyncRowAction
+                        syncing={sync.syncingIds.has(power.id)}
+                        onSync={() => void sync.handleSyncOne(power.id)}
+                      />
+                    ) : null}
+                  </LibraryRowActionSlot>
+                ) : power.hasDrift ? (
+                  <LibrarySyncRowAction
+                    syncing={sync.syncingIds.has(power.id)}
+                    onSync={() => void sync.handleSyncOne(power.id)}
+                  />
+                ) : undefined
+              }
               onEdit={() => router.push(`/power-creator?edit=${encodeURIComponent(power.id)}`)}
               onDelete={() => onDelete({ id: power.id, name: power.name } as DisplayItem)}
-              onDuplicate={() => setDuplicateConfirm({ id: power.id, name: power.name })}
+              onDuplicate={() => dup.openDuplicateConfirm(power.id, power.name)}
             />
-          ))
-        )}
-      </div>
-
-      <ConfirmActionModal
-        isOpen={!!duplicateConfirm}
-        onClose={() => setDuplicateConfirm(null)}
-        onConfirm={() => {
-          if (!duplicateConfirm) return;
-          duplicatePower.mutate(duplicateConfirm.id, {
-            onSuccess: () => {
-              showToast(`Duplicated "${duplicateConfirm.name}"`, 'success');
-              setDuplicateConfirm(null);
-            },
-            onError: (e) => showToast(e?.message ?? 'Failed to duplicate', 'error'),
-          });
-        }}
-        title="Duplicate power?"
-        description={
-          duplicateConfirm
-            ? `Create a copy of "${duplicateConfirm.name}" in your library?`
-            : ''
-        }
-        confirmLabel="Duplicate"
-        loadingLabel="Duplicating..."
-        isLoading={duplicatePower.isPending}
-      />
-
-      <ConfirmActionModal
-        isOpen={showSyncAllConfirm}
-        onClose={() => setShowSyncAllConfirm(false)}
-        onConfirm={() => {
-          setShowSyncAllConfirm(false);
-          void handleSyncAll();
-        }}
-        title="Sync with current patch?"
-        description={`Sync ${driftedItems.length} power${driftedItems.length === 1 ? '' : 's'} to current patch rules. Parts that no longer exist in the codex may be removed.`}
-        confirmLabel="Sync all"
-        loadingLabel="Syncing..."
-        isLoading={syncingAll}
-      />
-    </div>
+          );
+        })}
+      </UserLibraryEntityTabShell>
+      {addToCharacter.confirmModal}
+    </>
   );
 }

@@ -4,30 +4,30 @@ import { findByIdOrName } from '@/lib/id-constants';
 import { calculateTrainingPoints } from '@/lib/game/formulas';
 
 interface CodexPartLike {
-  id?: string | number;
-  name?: string;
-  base_tp?: number;
-  op_1_tp?: number;
-  op_2_tp?: number;
-  op_3_tp?: number;
+  id?: string | number | undefined;
+  name?: string | undefined;
+  base_tp?: number | undefined;
+  op_1_tp?: number | undefined;
+  op_2_tp?: number | undefined;
+  op_3_tp?: number | undefined;
 }
 
 interface CodexPropertyLike {
-  id?: string | number;
-  name?: string;
-  base_tp?: number;
-  op_1_tp?: number;
+  id?: string | number | undefined;
+  name?: string | undefined;
+  base_tp?: number | undefined;
+  op_1_tp?: number | undefined;
 }
 
 interface BuildRequiredProficienciesInput {
   powers: CharacterPower[];
   techniques: CharacterTechnique[];
   weapons: Item[];
-  shields?: Item[];
+  shields?: Item[] | undefined;
   armor: Item[];
-  powerPartsDb?: CodexPartLike[];
-  techniquePartsDb?: CodexPartLike[];
-  itemPropertiesDb?: CodexPropertyLike[];
+  powerPartsDb?: CodexPartLike[] | undefined;
+  techniquePartsDb?: CodexPartLike[] | undefined;
+  itemPropertiesDb?: CodexPropertyLike[] | undefined;
 }
 
 /**
@@ -39,7 +39,7 @@ interface BuildRequiredProficienciesInput {
 export function getTrainingPointLimit(
   level: number,
   archetypeAbility: number,
-  rules?: Partial<CoreRulesMap>
+  rules?: Partial<CoreRulesMap>,
 ): number {
   const lvl = Math.max(1, Number(level) || 1);
   const abil = Number(archetypeAbility) || 0;
@@ -55,7 +55,9 @@ export function calculateProficiencyTP(prof: CharacterProficiency): number {
 }
 
 function normalize(s: unknown): string {
-  return String(s ?? '').trim().toLowerCase();
+  return String(s ?? '')
+    .trim()
+    .toLowerCase();
 }
 
 function normalizeDamageType(input: unknown): string | undefined {
@@ -64,7 +66,9 @@ function normalizeDamageType(input: unknown): string | undefined {
   return value;
 }
 
-function proficiencyKey(p: Pick<CharacterProficiency, 'kind' | 'refId' | 'name' | 'damageType'>): string {
+function proficiencyKey(
+  p: Pick<CharacterProficiency, 'kind' | 'refId' | 'name' | 'damageType'>,
+): string {
   const dmg = normalizeDamageType(p.damageType) ?? '';
   // Damage type proficiencies are shared across powers/techniques/items.
   if (dmg) return `damage_type:${dmg}`;
@@ -81,19 +85,39 @@ function parseDamageTypes(value: unknown): string[] {
           .map((d) => {
             if (typeof d === 'string') return normalizeDamageType(d);
             if (!d || typeof d !== 'object') return undefined;
-            const maybeDamage = d as { type?: unknown; damageType?: unknown; name?: unknown };
-            return normalizeDamageType(maybeDamage.type ?? maybeDamage.damageType ?? maybeDamage.name);
+            const maybeDamage = d as {
+              type?: unknown | undefined;
+              damageType?: unknown | undefined;
+              name?: unknown | undefined;
+            };
+            return normalizeDamageType(
+              maybeDamage.type ?? maybeDamage.damageType ?? maybeDamage.name,
+            );
           })
-          .filter((v): v is string => Boolean(v))
-      )
+          .filter((v): v is string => Boolean(v)),
+      ),
     );
   }
 
   if (typeof value === 'string') {
-    const found = Array.from(value.toLowerCase().matchAll(/\b([a-z]+)\b/g)).map((m) => m[1]);
+    const found = Array.from(value.toLowerCase().matchAll(/\b([a-z]+)\b/g), (m) => m[1]).filter(
+      (token): token is string => token !== undefined,
+    );
     const known = new Set([
-      'magic', 'fire', 'ice', 'lightning', 'spiritual', 'sonic', 'poison',
-      'necrotic', 'acid', 'psychic', 'light', 'bludgeoning', 'piercing', 'slashing',
+      'magic',
+      'fire',
+      'ice',
+      'lightning',
+      'spiritual',
+      'sonic',
+      'poison',
+      'necrotic',
+      'acid',
+      'psychic',
+      'light',
+      'bludgeoning',
+      'piercing',
+      'slashing',
     ]);
     return Array.from(new Set(found.filter((token) => known.has(token))));
   }
@@ -129,7 +153,9 @@ export function isCustomProficiency(p: CharacterProficiency): boolean {
   return !!(p.custom || p.kind === 'custom');
 }
 
-export function buildRequiredProficiencies(input: BuildRequiredProficienciesInput): CharacterProficiency[] {
+export function buildRequiredProficiencies(
+  input: BuildRequiredProficienciesInput,
+): CharacterProficiency[] {
   const out: CharacterProficiency[] = [];
   const {
     powers,
@@ -146,9 +172,10 @@ export function buildRequiredProficiencies(input: BuildRequiredProficienciesInpu
     kind: 'power_part' | 'technique_part',
     rawPart: unknown,
     codexList: CodexPartLike[],
-    damageTypes: string[]
+    damageTypes: string[],
   ) => {
-    const partObj = (typeof rawPart === 'string') ? { name: rawPart } : (rawPart as Record<string, unknown>);
+    const partObj =
+      typeof rawPart === 'string' ? { name: rawPart } : (rawPart as Record<string, unknown>);
     const ref = {
       id: partObj?.id as string | number | undefined,
       name: partObj?.name as string | undefined,
@@ -185,20 +212,28 @@ export function buildRequiredProficiencies(input: BuildRequiredProficienciesInpu
   };
 
   powers.forEach((power) => {
-    const damageTypes = parseDamageTypes((power as { damage?: unknown }).damage);
+    const damageTypes = parseDamageTypes((power as { damage?: unknown | undefined }).damage);
     (power.parts || []).forEach((part) => pushPart('power_part', part, powerPartsDb, damageTypes));
   });
 
   techniques.forEach((technique) => {
-    const damageTypes = parseDamageTypes((technique as { damage?: unknown; damageStr?: unknown }).damage ?? (technique as { damageStr?: unknown }).damageStr);
-    (technique.parts || []).forEach((part) => pushPart('technique_part', part, techniquePartsDb, damageTypes));
+    const damageTypes = parseDamageTypes(
+      (technique as { damage?: unknown | undefined; damageStr?: unknown | undefined }).damage ??
+        (technique as { damageStr?: unknown | undefined }).damageStr,
+    );
+    (technique.parts || []).forEach((part) =>
+      pushPart('technique_part', part, techniquePartsDb, damageTypes),
+    );
   });
 
   const armaments = [...weapons, ...shields, ...armor];
   armaments.forEach((item) => {
     const damageTypes = parseDamageTypes(item.damage);
     (item.properties || []).forEach((propRaw) => {
-      const propObj = (typeof propRaw === 'string') ? { name: propRaw } : (propRaw as unknown as Record<string, unknown>);
+      const propObj =
+        typeof propRaw === 'string'
+          ? { name: propRaw }
+          : (propRaw as unknown as Record<string, unknown>);
       const ref = {
         id: propObj?.id as string | number | undefined,
         name: propObj?.name as string | undefined,
@@ -209,7 +244,8 @@ export function buildRequiredProficiencies(input: BuildRequiredProficienciesInpu
       const op1Level = Number(propObj?.op_1_lvl ?? 0) || 0;
       const baseTP = Number(propObj?.base_tp ?? codex?.base_tp ?? 0) || 0;
       const op1TP = Number(propObj?.op_1_tp ?? codex?.op_1_tp ?? 0) || 0;
-      const refId = ref.id != null ? String(ref.id) : (codex?.id != null ? String(codex.id) : undefined);
+      const refId =
+        ref.id != null ? String(ref.id) : codex?.id != null ? String(codex.id) : undefined;
       const profBase: CharacterProficiency = {
         kind: 'item_property',
         id: nextProfId(),
@@ -256,17 +292,15 @@ export function filterZeroCostProficiencies(list: CharacterProficiency[]): Chara
  */
 export function filterToRequiredAndCustom(
   owned: CharacterProficiency[] = [],
-  required: CharacterProficiency[] = []
+  required: CharacterProficiency[] = [],
 ): CharacterProficiency[] {
   const requiredKeys = new Set(required.map((p) => proficiencyKey(p)));
-  return owned.filter(
-    (p) => isCustomProficiency(p) || requiredKeys.has(proficiencyKey(p))
-  );
+  return owned.filter((p) => isCustomProficiency(p) || requiredKeys.has(proficiencyKey(p)));
 }
 
 export function mergeOwnedWithRequired(
   owned: CharacterProficiency[] = [],
-  required: CharacterProficiency[] = []
+  required: CharacterProficiency[] = [],
 ): CharacterProficiency[] {
   const keepCustom = owned.filter(isCustomProficiency);
   const nonCustomOwned = owned.filter((p) => !isCustomProficiency(p));
@@ -276,7 +310,7 @@ export function mergeOwnedWithRequired(
 
 export function hasSufficientProficiency(
   owned: CharacterProficiency[],
-  required: CharacterProficiency
+  required: CharacterProficiency,
 ): boolean {
   const key = proficiencyKey(required);
   const match = owned.find((p) => proficiencyKey(p) === key);
@@ -286,7 +320,7 @@ export function hasSufficientProficiency(
 
 export function getMissingRequiredProficiencies(
   required: CharacterProficiency[],
-  owned: CharacterProficiency[]
+  owned: CharacterProficiency[],
 ): CharacterProficiency[] {
   return required.filter((req) => !hasSufficientProficiency(owned, req));
 }

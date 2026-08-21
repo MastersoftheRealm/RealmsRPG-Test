@@ -34,6 +34,7 @@ import {
   Chip,
   DescriptorChip,
   ExpandableChip,
+  ChipGroup,
   Alert,
   Spinner,
   LoadingState,
@@ -47,9 +48,9 @@ import {
   PageHeader,
   useToast,
 } from '@/components/ui';
-import { PointStatus } from '@/components/shared/point-status';
-import { TabSummarySection, SummaryItem } from '@/components/shared/tab-summary-section';
-import { GridListRow } from '@/components/shared/grid-list-row';
+import { PointStatus } from '@/components/patterns/chrome/point-status';
+import { TabSummarySection, SummaryItem } from '@/components/patterns/chrome/tab-summary-section';
+import { GridListRow } from '@/components/patterns/list/grid-list-row';
 import { buildFeatDetailSections } from '@/lib/codex/feat-list';
 import type { Feat } from '@/hooks';
 import { buildPartsAndMetadataDetailSections } from '@/lib/chip/list-row-metadata';
@@ -65,44 +66,48 @@ function Section({
 }: {
   title: string;
   children: React.ReactNode;
-  id?: string;
+  id?: string | undefined;
 }) {
   return (
     <section id={id} className="border-b border-border-light py-8">
-      <h2 className="text-xl font-semibold text-text-primary mb-4 font-display">{title}</h2>
+      <h2 className="mb-4 font-display text-xl font-semibold text-text-primary">{title}</h2>
       <div className="flex flex-col gap-4">{children}</div>
     </section>
   );
 }
 
-function Row({ label, children }: { label?: string; children: React.ReactNode }) {
+function Row({ label, children }: { label?: string | undefined; children: React.ReactNode }) {
   return (
     <div className="flex flex-col gap-2">
-      {label && <span className="text-xs uppercase tracking-wide text-text-muted">{label}</span>}
+      {label && <span className="text-xs tracking-wide text-text-muted uppercase">{label}</span>}
       <div className="flex flex-wrap items-center gap-3">{children}</div>
     </div>
   );
 }
 
-function Swatch({ token, label }: { token: string; label?: string }) {
+function Swatch({ token, label }: { token: string; label?: string | undefined }) {
   return (
     <div className="flex flex-col gap-1">
       <div
         className="h-14 w-24 rounded-lg border border-border-light"
         style={{ background: `var(${token})` }}
       />
-      <span className="text-[11px] text-text-secondary">{label ?? token.replace('--color-', '')}</span>
+      <span className="text-[11px] text-text-secondary">
+        {label ?? token.replace('--color-', '')}
+      </span>
     </div>
   );
 }
 
-function TextSwatch({ token, label }: { token: string; label?: string }) {
+function TextSwatch({ token, label }: { token: string; label?: string | undefined }) {
   return (
     <div className="flex flex-col gap-1">
       <span className="text-base font-semibold" style={{ color: `var(${token})` }}>
         Aa Bb Cc 123
       </span>
-      <span className="text-[11px] text-text-secondary">{label ?? token.replace('--color-', '')}</span>
+      <span className="text-[11px] text-text-secondary">
+        {label ?? token.replace('--color-', '')}
+      </span>
     </div>
   );
 }
@@ -115,19 +120,21 @@ function OnFillTextSwatch({
 }: {
   token: string;
   fillToken: string;
-  label?: string;
+  label?: string | undefined;
 }) {
   return (
     <div className="flex flex-col gap-1">
       <div
-        className="h-14 w-24 rounded-lg border border-border-light flex items-center justify-center"
+        className="flex h-14 w-24 items-center justify-center rounded-lg border border-border-light"
         style={{ background: `var(${fillToken})` }}
       >
         <span className="text-base font-semibold" style={{ color: `var(${token})` }}>
           Aa
         </span>
       </div>
-      <span className="text-[11px] text-text-secondary">{label ?? token.replace('--color-', '')}</span>
+      <span className="text-[11px] text-text-secondary">
+        {label ?? token.replace('--color-', '')}
+      </span>
     </div>
   );
 }
@@ -165,7 +172,7 @@ const SEMANTIC_FG_TOKENS = [
 /** Solid fills — show as background swatches, not text samples */
 const BUTTON_SURFACE_TOKENS = ['--color-primary-button', '--color-danger-button'];
 
-/** Text on solid fills — sample on appropriate background */
+/** Text on solid fills: sample on appropriate background */
 const ON_FILL_TEXT_TOKENS: Array<{ token: string; fill: string }> = [
   { token: '--color-primary-chip-fg', fill: '--color-primary-button' },
   { token: '--color-primary-subtle-fg', fill: '--color-primary-subtle-bg' },
@@ -245,7 +252,7 @@ export default function StyleguidePage() {
         <PageHeader
           title="Design System Styleguide"
           description="Every primitive and token, for visual review in both themes. Data-free and auth-free."
-          className="border-b border-border-light pb-6 mb-8"
+          className="mb-8 border-b border-border-light pb-6"
           actions={
             <Button
               variant="secondary"
@@ -277,17 +284,17 @@ export default function StyleguidePage() {
 
         {/* Semantic foreground (theme-aware) */}
         <Section title="Semantic Foreground (theme-aware)">
-          <Row label="Status & archetype text on tinted backgrounds — use text-*-fg, not ramp + dark:">
+          <Row label="Status & archetype text on tinted backgrounds: use text-*-fg, not ramp + dark:">
             {SEMANTIC_FG_TOKENS.map((t) => (
               <TextSwatch key={t} token={t} />
             ))}
           </Row>
-          <Row label="Solid button fills — background swatches only">
+          <Row label="Solid button fills: background swatches only">
             {BUTTON_SURFACE_TOKENS.map((t) => (
               <Swatch key={t} token={t} />
             ))}
           </Row>
-          <Row label="Text on solid fills — sample on matching background">
+          <Row label="Text on solid fills: sample on matching background">
             {ON_FILL_TEXT_TOKENS.map(({ token, fill }) => (
               <OnFillTextSwatch key={token} token={token} fillToken={fill} />
             ))}
@@ -380,7 +387,7 @@ export default function StyleguidePage() {
 
         {/* Form controls */}
         <Section title="Form Controls">
-          <div className="grid gap-4 sm:grid-cols-2 max-w-3xl">
+          <div className="grid max-w-3xl gap-4 sm:grid-cols-2">
             <Input label="Text input" placeholder="Type here" />
             <Input label="With error" placeholder="Invalid" error="This field is required" />
             <Select label="Select" options={SELECT_OPTIONS} placeholder="Choose one" />
@@ -420,6 +427,10 @@ export default function StyleguidePage() {
             <Chip variant="danger">Danger</Chip>
             <Chip variant="info">Info</Chip>
           </Row>
+          <Row label="Power / martial">
+            <Chip variant="power">Power</Chip>
+            <Chip variant="technique">Technique</Chip>
+          </Row>
           <Row label="GridListRow list chips">
             <Chip variant="list">List neutral</Chip>
             <Chip variant="listCost">List cost</Chip>
@@ -428,13 +439,27 @@ export default function StyleguidePage() {
             <Chip variant="tp">TP domain</Chip>
           </Row>
           <Row label="Rarity (item creator)">
-            <Chip variant="rarityCommon" size="lg">Common</Chip>
-            <Chip variant="rarityUncommon" size="lg">Uncommon</Chip>
-            <Chip variant="rarityRare" size="lg">Rare</Chip>
-            <Chip variant="rarityEpic" size="lg">Epic</Chip>
-            <Chip variant="rarityLegendary" size="lg">Legendary</Chip>
-            <Chip variant="rarityMythic" size="lg">Mythic</Chip>
-            <Chip variant="rarityAscended" size="lg">Ascended</Chip>
+            <Chip variant="rarityCommon" size="lg">
+              Common
+            </Chip>
+            <Chip variant="rarityUncommon" size="lg">
+              Uncommon
+            </Chip>
+            <Chip variant="rarityRare" size="lg">
+              Rare
+            </Chip>
+            <Chip variant="rarityEpic" size="lg">
+              Epic
+            </Chip>
+            <Chip variant="rarityLegendary" size="lg">
+              Legendary
+            </Chip>
+            <Chip variant="rarityMythic" size="lg">
+              Mythic
+            </Chip>
+            <Chip variant="rarityAscended" size="lg">
+              Ascended
+            </Chip>
           </Row>
           <Row label="Sizes">
             <Chip size="sm">Small</Chip>
@@ -451,80 +476,113 @@ export default function StyleguidePage() {
           </Row>
           <Row label="Descriptor vs pill (same text)">
             <DescriptorChip>Fire damage</DescriptorChip>
-            <Chip variant="default">Fire damage</Chip>
+            <Chip variant="default" size="descriptor">
+              Fire damage
+            </Chip>
+          </Row>
+          <Row label="Entity row parity (descriptor + expandable + pill)">
+            <ChipGroup>
+              <DescriptorChip>Archetype Feat</DescriptorChip>
+              <ExpandableChip
+                label="Elemental Damage"
+                variant="listCost"
+                cost={2}
+                costLabel="TP"
+                expandOnCost
+                description="Adds 1d6 fire damage when expanded."
+              />
+              <Chip variant="default" size="descriptor" shape="pill">
+                Tag
+              </Chip>
+            </ChipGroup>
           </Row>
         </Section>
 
         <Section title="Expandable Chips">
-          <p className="text-sm text-text-secondary mb-4 max-w-3xl">
-            Rounded-rectangle geometry for expand-in-place parts and properties. Expanded chips grow to
-            full width without pill clipping on multi-line descriptions.
+          <p className="mb-4 max-w-3xl text-sm text-text-secondary">
+            Rounded-rectangle geometry for expand-in-place parts and properties. An expanded chip
+            keeps its vertical row, moves to the group&apos;s left edge, and takes the full width
+            while the other chips reflow below it. Click open, then click close without moving
+            vertically.
           </p>
           <Row label="Collapsed / expanded">
-            <ExpandableChip
-              label="Elemental Damage"
-              costSuffix={2}
-              description="Adds 1d6 fire damage to the power's base effect."
-              interactiveHover
-            />
-            <ExpandableChip
-              label="Extended Range"
-              costSuffix={1}
-              description="Increases the power's range by 30 feet. This line is intentionally longer to verify that expanded chips use rounded rectangles rather than pill caps that clip corner text."
-              defaultExpanded
-              interactiveHover
-            />
+            <ChipGroup className="w-full max-w-3xl" data-testid="styleguide-stable-expand-chips">
+              <ExpandableChip
+                label="Elemental Damage"
+                costSuffix={2}
+                description="Adds 1d6 fire damage to the power's base effect."
+                interactiveHover
+              />
+              <ExpandableChip
+                label="Extended Range"
+                costSuffix={1}
+                description="Increases the power's range by 30 feet. This line is intentionally longer to verify that expanded chips use rounded rectangles rather than pill caps that clip corner text."
+                interactiveHover
+              />
+              <ExpandableChip
+                label="Versatile"
+                costSuffix={1}
+                description="Click this chip and leave the mouse at the same height. It moves left to fill the row while every other chip reflows below it."
+                interactiveHover
+              />
+            </ChipGroup>
           </Row>
-          <Row label="Size by role (md = default for lists; sm = dense only)">
-            <ExpandableChip
-              label="Stealth"
-              variant="list"
-              description="Move silently and remain unseen. Used for hiding, sneaking, and ambush setup."
-              interactiveHover
-            />
-            <ExpandableChip
-              label="Stealth"
-              variant="list"
-              size="sm"
-              description="Dense sm — avoid in GridListRow / summary panels; descriptor-sized expandable."
-              interactiveHover
-            />
+          <Row label="Size by role (md expandable = descriptor inline; sm = dense only)">
+            <ChipGroup>
+              <ExpandableChip
+                label="Stealth"
+                variant="list"
+                description="Move silently and remain unseen. Used for hiding, sneaking, and ambush setup."
+                interactiveHover
+              />
+              <ExpandableChip
+                label="Stealth"
+                variant="list"
+                size="sm"
+                description="Dense sm: avoid in GridListRow / summary panels; descriptor-sized expandable."
+                interactiveHover
+              />
+            </ChipGroup>
           </Row>
           <Row label="Category tints">
-            <ExpandableChip
-              label="Action"
-              category="action"
-              description="Defines when and how the power is used during combat."
-              interactiveHover
-            />
-            <ExpandableChip
-              label="Area of Effect"
-              category="area"
-              description="Affects all creatures in a 15-foot radius."
-              defaultExpanded
-              interactiveHover
-            />
+            <ChipGroup>
+              <ExpandableChip
+                label="Action"
+                category="action"
+                description="Defines when and how the power is used during combat."
+                interactiveHover
+              />
+              <ExpandableChip
+                label="Area of Effect"
+                category="area"
+                description="Affects all creatures in a 15-foot radius."
+                interactiveHover
+              />
+            </ChipGroup>
           </Row>
           <Row label="GridListRow patterns (descriptor + expandable)">
-            <ExpandableChip label="Archetype Feat" descriptor />
-            <ExpandableChip label="Fire" descriptor descriptorVariant="default" />
-            <ExpandableChip
-              label="Elemental Damage"
-              variant="listCost"
-              cost={2}
-              costLabel="TP"
-              expandOnCost
-              description="Adds 1d6 fire damage when expanded."
-            />
+            <ChipGroup>
+              <ExpandableChip label="Archetype Feat" descriptor />
+              <ExpandableChip label="Fire" descriptor descriptorVariant="default" />
+              <ExpandableChip
+                label="Elemental Damage"
+                variant="listCost"
+                cost={2}
+                costLabel="TP"
+                expandOnCost
+                description="Adds 1d6 fire damage when expanded."
+              />
+            </ChipGroup>
           </Row>
         </Section>
 
         <Section title="GridListRow · expanded chip unification" id="chip-unification-rows">
-          <p className="text-sm text-text-secondary mb-4 max-w-3xl">
-            Canonical expanded rows for Playwright baselines: codex-style feat metadata (descriptor chips)
-            and character-sheet power library (metadata + expandable parts). Matches TASK-415 Phase E.
+          <p className="mb-4 max-w-3xl text-sm text-text-secondary">
+            Canonical expanded rows for Playwright baselines: codex-style feat metadata (descriptor
+            chips) and character-sheet power library (metadata + expandable parts). Matches TASK-415
+            Phase E.
           </p>
-          <div className="flex flex-col gap-6 max-w-3xl" data-testid="chip-unification-rows">
+          <div className="flex max-w-3xl flex-col gap-6" data-testid="chip-unification-rows">
             <div data-testid="chip-unification-feat-row">
               <GridListRow
                 id="styleguide-feat"
@@ -557,7 +615,7 @@ export default function StyleguidePage() {
                     skill_req_val: [],
                   } satisfies Feat,
                   new Map(),
-                  []
+                  [],
                 )}
               />
             </div>
@@ -624,17 +682,25 @@ export default function StyleguidePage() {
 
         {/* Alerts */}
         <Section title="Alerts">
-          <div className="flex flex-col gap-3 max-w-2xl">
-            <Alert variant="info" title="Information">An informational message.</Alert>
-            <Alert variant="success" title="Success">Your changes were saved.</Alert>
-            <Alert variant="warning" title="Warning">Double-check this value.</Alert>
-            <Alert variant="danger" title="Error">Something went wrong.</Alert>
+          <div className="flex max-w-2xl flex-col gap-3">
+            <Alert variant="info" title="Information">
+              An informational message.
+            </Alert>
+            <Alert variant="success" title="Success">
+              Your changes were saved.
+            </Alert>
+            <Alert variant="warning" title="Warning">
+              Double-check this value.
+            </Alert>
+            <Alert variant="danger" title="Error">
+              Something went wrong.
+            </Alert>
           </div>
         </Section>
 
         {/* Cards */}
         <Section title="Cards">
-          <div className="grid gap-4 sm:grid-cols-2 max-w-3xl">
+          <div className="grid max-w-3xl gap-4 sm:grid-cols-2">
             <Card>
               <CardHeader>
                 <CardTitle>Card title</CardTitle>
@@ -657,7 +723,9 @@ export default function StyleguidePage() {
           </div>
           <Row label="Selection cards">
             <SelectionCard className="max-w-xs text-left">Selectable option</SelectionCard>
-            <SelectionCard selected className="max-w-xs text-left">Selected option</SelectionCard>
+            <SelectionCard selected className="max-w-xs text-left">
+              Selected option
+            </SelectionCard>
           </Row>
         </Section>
 
@@ -725,7 +793,7 @@ export default function StyleguidePage() {
           <Row label="Empty state">
             <div className="w-full max-w-md rounded-xl border border-border-light bg-surface">
               <EmptyState
-                icon={<Inbox className="w-8 h-8" />}
+                icon={<Inbox className="h-8 w-8" />}
                 title="No results found"
                 description="Try adjusting your search or filters."
                 action={{ label: 'Clear filters', onClick: () => {} }}
@@ -736,23 +804,27 @@ export default function StyleguidePage() {
 
         {/* Interactive state matrix (VSEA-002) */}
         <Section title="Interactive State Matrix">
-          <Row label="Buttons — default / disabled / loading">
+          <Row label="Buttons: default / disabled / loading">
             <Button>Default</Button>
             <Button disabled>Disabled</Button>
             <Button isLoading>Loading</Button>
           </Row>
-          <Row label="Form — default / disabled / error">
+          <Row label="Form: default / disabled / error">
             <Input label="Enabled" placeholder="Editable" />
             <Input label="Disabled" placeholder="Locked" disabled />
             <Input label="Error" placeholder="Invalid" error="Required field" />
           </Row>
-          <Row label="Chips — static / interactive">
+          <Row label="Chips: static / interactive">
             <Chip variant="primary">Static</Chip>
-            <Chip variant="primary" interactive>Interactive</Chip>
-            <Chip variant="success" onRemove={() => {}}>Removable</Chip>
+            <Chip variant="primary" interactive>
+              Interactive
+            </Chip>
+            <Chip variant="success" onRemove={() => {}}>
+              Removable
+            </Chip>
             <DescriptorChip>Descriptor</DescriptorChip>
           </Row>
-          <Row label="Tabs — underline (active: {tab})">
+          <Row label="Tabs: underline (active: {tab})">
             <div className="w-full max-w-xl">
               <TabNavigation
                 associatePanels={false}
@@ -765,12 +837,15 @@ export default function StyleguidePage() {
               />
             </div>
           </Row>
-          <Row label="Toast — trigger">
-            <Button variant="secondary" onClick={() => showToast('Example notification', 'success')}>
+          <Row label="Toast: trigger">
+            <Button
+              variant="secondary"
+              onClick={() => showToast('Example notification', 'success')}
+            >
               Show toast
             </Button>
           </Row>
-          <Row label="Overlays — tooltip + modal trigger">
+          <Row label="Overlays: tooltip + modal trigger">
             <Tooltip content="Tooltip on hover/focus">
               <Button variant="secondary">Tooltip target</Button>
             </Tooltip>

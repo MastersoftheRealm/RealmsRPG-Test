@@ -9,10 +9,10 @@ import { Button, PageHeader } from '@/components/ui';
 
 export default function NotFound() {
   return (
-    <div className="min-h-screen flex flex-col bg-background">
+    <div className="flex min-h-screen flex-col bg-background">
       <Header />
-      <main id="main-content" className="flex-1 flex items-center justify-center px-4 py-16">
-        <div className="text-center w-full max-w-md">
+      <main id="main-content" className="flex flex-1 items-center justify-center px-4 py-16">
+        <div className="w-full max-w-md text-center">
           <p className="text-9xl font-bold text-surface select-none" aria-hidden="true">
             404
           </p>

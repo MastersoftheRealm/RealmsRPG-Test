@@ -3,16 +3,51 @@
 import { use, useMemo, useRef, useState } from 'react';
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
-import { ChevronLeft, Crosshair, Eye, EyeOff, Map, MousePointer2, Plus, RefreshCw, Ruler, Trash2, Upload } from 'lucide-react';
+import {
+  ChevronLeft,
+  Crosshair,
+  Eye,
+  EyeOff,
+  Map,
+  MousePointer2,
+  Plus,
+  RefreshCw,
+  Ruler,
+  Trash2,
+  Upload,
+} from 'lucide-react';
 import { ProtectedRoute } from '@/components/layout';
-import { RollLog, RollProvider } from '@/components/character-sheet';
-import { DeleteConfirmModal } from '@/components/shared';
+import { DeleteConfirmModal } from '@/components/patterns';
+import { RollLog, RollProvider } from '@/components/rolls';
 import { AddMonsterTokenModal } from '@/components/tabletop/add-monster-token-modal';
 import { TabletopCanvas, type TabletopToolMode } from '@/components/tabletop/tabletop-canvas';
-import { Alert, Button, Card, CardContent, EmptyState, IconButton, Input, LoadingState, PageContainer, PageHeader, useToast } from '@/components/ui';
-import { useActiveCampaignTabletop, useAuth, useTabletopMutations, useTabletopRealtime, useTabletopScene } from '@/hooks';
+import {
+  Alert,
+  Button,
+  Card,
+  CardContent,
+  EmptyState,
+  IconButton,
+  Input,
+  LoadingState,
+  PageContainer,
+  PageHeader,
+  useToast,
+} from '@/components/ui';
+import {
+  useActiveCampaignTabletop,
+  useAuth,
+  useTabletopMutations,
+  useTabletopRealtime,
+  useTabletopScene,
+} from '@/hooks';
 import { cn } from '@/lib/utils/cn';
-import type { AddVttCreatureTokensRequest, VttFogRegion, VttTabletopState, VttToken } from '@/types/tabletop';
+import type {
+  AddVttCreatureTokensRequest,
+  VttFogRegion,
+  VttTabletopState,
+  VttToken,
+} from '@/types/tabletop';
 
 interface PageParams {
   params: Promise<{ id: string }>;
@@ -49,13 +84,20 @@ function CampaignTabletopContent({ params }: PageParams) {
   if (!state) {
     return (
       <PageContainer size="xl">
-        <Link href={`/campaigns/${campaignId}`} className="mb-4 inline-flex items-center gap-1 text-sm text-text-secondary hover:text-primary-fg-hover">
+        <Link
+          href={`/campaigns/${campaignId}`}
+          className="mb-4 inline-flex items-center gap-1 text-sm text-text-secondary hover:text-primary-fg-hover"
+        >
           <ChevronLeft className="h-4 w-4" aria-hidden />
           Back to Campaign
         </Link>
         <EmptyState
           title="No active tabletop"
-          description={error ? 'Open a campaign-linked combat encounter and choose Open Tabletop.' : 'Open a campaign-linked combat encounter and choose Open Tabletop.'}
+          description={
+            error
+              ? 'Open a campaign-linked combat encounter and choose Open Tabletop.'
+              : 'Open a campaign-linked combat encounter and choose Open Tabletop.'
+          }
         />
       </PageContainer>
     );
@@ -85,7 +127,13 @@ function readImageDimensions(file: File): Promise<{ width: number; height: numbe
   });
 }
 
-function TabletopExperience({ campaignId, state }: { campaignId: string; state: VttTabletopState }) {
+function TabletopExperience({
+  campaignId,
+  state,
+}: {
+  campaignId: string;
+  state: VttTabletopState;
+}) {
   const { user } = useAuth();
   const { showToast } = useToast();
   const inputRef = useRef<HTMLInputElement>(null);
@@ -96,14 +144,16 @@ function TabletopExperience({ campaignId, state }: { campaignId: string; state: 
   const mutations = useTabletopMutations(state.scene.id);
   const isRealmMaster = state.role === 'realm-master';
   const selectedToken = state.tokens.find((token) => token.id === selectedTokenId);
-  const pendingMoves = state.actions.filter((action) => action.type === 'move-request' && action.status === 'pending');
+  const pendingMoves = state.actions.filter(
+    (action) => action.type === 'move-request' && action.status === 'pending',
+  );
 
   const visibleCounts = useMemo(
     () => ({
       allies: state.tokens.filter((token) => token.combatantType !== 'enemy').length,
       enemies: state.tokens.filter((token) => token.combatantType === 'enemy').length,
     }),
-    [state.tokens]
+    [state.tokens],
   );
 
   const handleUpload = async (file: File | undefined) => {
@@ -174,7 +224,8 @@ function TabletopExperience({ campaignId, state }: { campaignId: string; state: 
     try {
       const tokens = await mutations.addCreatureTokens.mutateAsync(request);
       if (tokens[0]) setSelectedTokenId(tokens[0].id);
-      const label = tokens.length === 1 ? 'Monster token added.' : `${tokens.length} monster tokens added.`;
+      const label =
+        tokens.length === 1 ? 'Monster token added.' : `${tokens.length} monster tokens added.`;
       showToast(label, 'success');
     } catch (err) {
       showToast(err instanceof Error ? err.message : 'Failed to add monster tokens.', 'error');
@@ -186,7 +237,10 @@ function TabletopExperience({ campaignId, state }: { campaignId: string; state: 
   return (
     <PageContainer size="full">
       <div className="mb-5">
-        <Link href={`/campaigns/${campaignId}`} className="mb-3 inline-flex items-center gap-1 text-sm text-text-secondary hover:text-primary-fg-hover">
+        <Link
+          href={`/campaigns/${campaignId}`}
+          className="mb-3 inline-flex items-center gap-1 text-sm text-text-secondary hover:text-primary-fg-hover"
+        >
           <ChevronLeft className="h-4 w-4" aria-hidden />
           Back to Campaign
         </Link>
@@ -234,8 +288,12 @@ function TabletopExperience({ campaignId, state }: { campaignId: string; state: 
           selectedTokenId={selectedTokenId}
           toolMode={toolMode}
           onSelectToken={setSelectedTokenId}
-          onMoveToken={(tokenId, point) => mutations.updateToken.mutate({ id: tokenId, updates: point })}
-          onPing={(point) => mutations.createAction.mutate({ type: 'ping', toX: point.x, toY: point.y })}
+          onMoveToken={(tokenId, point) =>
+            mutations.updateToken.mutate({ id: tokenId, updates: point })
+          }
+          onPing={(point) =>
+            mutations.createAction.mutate({ type: 'ping', toX: point.x, toY: point.y })
+          }
           onRequestMove={requestTokenMove}
         />
 
@@ -245,7 +303,9 @@ function TabletopExperience({ campaignId, state }: { campaignId: string; state: 
               <CardContent className="space-y-4">
                 <div>
                   <h2 className="text-lg font-semibold text-text-primary">Scene Tools</h2>
-                  <p className="text-sm text-text-secondary">Upload maps, sync combatants, and tune the grid.</p>
+                  <p className="text-sm text-text-secondary">
+                    Upload maps, sync combatants, and tune the grid.
+                  </p>
                 </div>
                 <input
                   ref={inputRef}
@@ -256,11 +316,21 @@ function TabletopExperience({ campaignId, state }: { campaignId: string; state: 
                   aria-label="Upload battle map"
                 />
                 <div className="grid grid-cols-2 gap-2">
-                  <Button type="button" variant="secondary" onClick={() => inputRef.current?.click()} isLoading={mutations.uploadMap.isPending}>
+                  <Button
+                    type="button"
+                    variant="secondary"
+                    onClick={() => inputRef.current?.click()}
+                    isLoading={mutations.uploadMap.isPending}
+                  >
                     <Upload className="h-4 w-4" aria-hidden />
                     Map
                   </Button>
-                  <Button type="button" variant="secondary" onClick={() => mutations.syncCombatants.mutate()} isLoading={mutations.syncCombatants.isPending}>
+                  <Button
+                    type="button"
+                    variant="secondary"
+                    onClick={() => mutations.syncCombatants.mutate()}
+                    isLoading={mutations.syncCombatants.isPending}
+                  >
                     <RefreshCw className="h-4 w-4" aria-hidden />
                     Sync
                   </Button>
@@ -291,7 +361,9 @@ function TabletopExperience({ campaignId, state }: { campaignId: string; state: 
                     max={1}
                     step={0.05}
                     value={state.scene.grid.opacity}
-                    onChange={(event) => updateGrid({ opacity: Number(event.target.value) || 0.45 })}
+                    onChange={(event) =>
+                      updateGrid({ opacity: Number(event.target.value) || 0.45 })
+                    }
                   />
                   <Input
                     label="Offset X"
@@ -318,7 +390,9 @@ function TabletopExperience({ campaignId, state }: { campaignId: string; state: 
                   <Button
                     type="button"
                     variant="ghost"
-                    onClick={() => mutations.updateScene.mutate({ fog: { enabled: false, regions: [] } })}
+                    onClick={() =>
+                      mutations.updateScene.mutate({ fog: { enabled: false, regions: [] } })
+                    }
                     className="col-span-2"
                   >
                     Clear Fog
@@ -328,7 +402,11 @@ function TabletopExperience({ campaignId, state }: { campaignId: string; state: 
                   <input
                     type="checkbox"
                     checked={state.scene.settings.showEnemyResources}
-                    onChange={(event) => mutations.updateScene.mutate({ settings: { showEnemyResources: event.target.checked } })}
+                    onChange={(event) =>
+                      mutations.updateScene.mutate({
+                        settings: { showEnemyResources: event.target.checked },
+                      })
+                    }
                     className="h-4 w-4 rounded border-border-light"
                   />
                   Show enemy HP/EN/AP to players
@@ -351,7 +429,8 @@ function TabletopExperience({ campaignId, state }: { campaignId: string; state: 
                 ) : (
                   state.tokens.map((token) => {
                     const selected = selectedTokenId === token.id;
-                    const deletingThisToken = mutations.deleteToken.isPending && tokenDeleteTarget?.id === token.id;
+                    const deletingThisToken =
+                      mutations.deleteToken.isPending && tokenDeleteTarget?.id === token.id;
                     return (
                       <div
                         key={token.id}
@@ -359,20 +438,26 @@ function TabletopExperience({ campaignId, state }: { campaignId: string; state: 
                           'flex w-full items-stretch overflow-hidden rounded-lg border transition-colors',
                           selected
                             ? 'border-primary-outline-border bg-primary-subtle-bg'
-                            : 'border-border-light bg-surface hover:bg-surface-alt'
+                            : 'border-border-light bg-surface hover:bg-surface-alt',
                         )}
                       >
                         <button
                           type="button"
                           onClick={() => setSelectedTokenId(token.id)}
-                          className="min-w-0 flex-1 rounded-lg px-3 py-2 text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-outline-border focus-visible:ring-offset-2"
+                          className="min-w-0 flex-1 rounded-lg px-3 py-2 text-left focus-visible:ring-2 focus-visible:ring-primary-outline-border focus-visible:ring-offset-2 focus-visible:outline-none"
                         >
                           <span className="flex items-center justify-between gap-2">
-                            <span className="min-w-0 truncate font-medium text-text-primary">{token.name}</span>
-                            <span className="text-xs capitalize text-text-secondary">{token.combatantType}</span>
+                            <span className="min-w-0 truncate font-medium text-text-primary">
+                              {token.name}
+                            </span>
+                            <span className="text-xs text-text-secondary capitalize">
+                              {token.combatantType}
+                            </span>
                           </span>
                           <span className="mt-1 block text-xs text-text-secondary">
-                            {token.metadata.currentHealth != null ? `HP ${token.metadata.currentHealth}/${token.metadata.maxHealth ?? '?'}` : 'Resources hidden'}
+                            {token.metadata.currentHealth != null
+                              ? `HP ${token.metadata.currentHealth}/${token.metadata.maxHealth ?? '?'}`
+                              : 'Resources hidden'}
                           </span>
                         </button>
                         {isRealmMaster && (
@@ -400,7 +485,12 @@ function TabletopExperience({ campaignId, state }: { campaignId: string; state: 
                     type="button"
                     size="sm"
                     variant="secondary"
-                    onClick={() => mutations.updateToken.mutate({ id: selectedToken.id, updates: { visible: !selectedToken.visible } })}
+                    onClick={() =>
+                      mutations.updateToken.mutate({
+                        id: selectedToken.id,
+                        updates: { visible: !selectedToken.visible },
+                      })
+                    }
                   >
                     {selectedToken.visible ? 'Hide' : 'Show'}
                   </Button>
@@ -408,7 +498,12 @@ function TabletopExperience({ campaignId, state }: { campaignId: string; state: 
                     type="button"
                     size="sm"
                     variant="secondary"
-                    onClick={() => mutations.updateToken.mutate({ id: selectedToken.id, updates: { locked: !selectedToken.locked } })}
+                    onClick={() =>
+                      mutations.updateToken.mutate({
+                        id: selectedToken.id,
+                        updates: { locked: !selectedToken.locked },
+                      })
+                    }
                   >
                     {selectedToken.locked ? 'Unlock' : 'Lock'}
                   </Button>
@@ -426,17 +521,41 @@ function TabletopExperience({ campaignId, state }: { campaignId: string; state: 
                 pendingMoves.map((action) => {
                   const token = state.tokens.find((candidate) => candidate.id === action.tokenId);
                   return (
-                    <div key={action.id} className="rounded-lg border border-border-light bg-surface-alt p-3">
-                      <p className="text-sm font-medium text-text-primary">{token?.name ?? 'Token'} wants to move.</p>
+                    <div
+                      key={action.id}
+                      className="rounded-lg border border-border-light bg-surface-alt p-3"
+                    >
+                      <p className="text-sm font-medium text-text-primary">
+                        {token?.name ?? 'Token'} wants to move.
+                      </p>
                       <p className="text-xs text-text-secondary">
                         To {Math.round(action.toX)}, {Math.round(action.toY)}
                       </p>
                       {isRealmMaster ? (
                         <div className="mt-2 flex gap-2">
-                          <Button type="button" size="sm" onClick={() => mutations.resolveAction.mutate({ actionId: action.id, status: 'accepted' })}>
+                          <Button
+                            type="button"
+                            size="sm"
+                            onClick={() =>
+                              mutations.resolveAction.mutate({
+                                actionId: action.id,
+                                status: 'accepted',
+                              })
+                            }
+                          >
                             Accept
                           </Button>
-                          <Button type="button" size="sm" variant="secondary" onClick={() => mutations.resolveAction.mutate({ actionId: action.id, status: 'dismissed' })}>
+                          <Button
+                            type="button"
+                            size="sm"
+                            variant="secondary"
+                            onClick={() =>
+                              mutations.resolveAction.mutate({
+                                actionId: action.id,
+                                status: 'dismissed',
+                              })
+                            }
+                          >
                             Dismiss
                           </Button>
                         </div>

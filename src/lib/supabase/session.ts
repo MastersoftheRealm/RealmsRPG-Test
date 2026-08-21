@@ -8,10 +8,10 @@ import { createClient } from './server';
 
 export interface SessionUser {
   uid: string;
-  email?: string;
-  name?: string;
-  picture?: string;
-  emailVerified?: boolean;
+  email?: string | undefined;
+  name?: string | undefined;
+  picture?: string | undefined;
+  emailVerified?: boolean | undefined;
 }
 
 /**
@@ -23,7 +23,10 @@ export async function getSession(): Promise<{
 }> {
   try {
     const supabase = await createClient();
-    const { data: { user }, error } = await supabase.auth.getUser();
+    const {
+      data: { user },
+      error,
+    } = await supabase.auth.getUser();
 
     if (error || !user) {
       return { user: null, error: error?.message ?? null };

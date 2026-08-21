@@ -6,7 +6,7 @@
 > **Method:** `tsc`, `eslint`, `knip`, `ts-prune`, `jscpd`, file-size census, targeted greps, Supabase advisors (security + performance), Vercel project/deploy inspection.
 > **Companion:** [`SYSTEMATIC_AUDIT_2026-06.md`](SYSTEMATIC_AUDIT_2026-06.md) — exhaustive page-by-page / area-by-area walkthrough of the running site (20 areas, 10-lens rubric).
 > **Doc cleanup (2026-06-13):** Historical migration/rationale docs archived; living guidance in `AGENTS.md`, `PERFORMANCE_AND_EDGE.md`, and `ai/AGENT_GUIDE.md`.
-> **Status (2026-06-26):** This file is a **historical snapshot**. For current completion/open gaps, use `REMEDIATION_STATUS_2026-06.md` + `AI_TASK_QUEUE.md`.
+> **Status (2026-06-26):** This file is a **historical snapshot**. For current completion/open gaps, use `REMEDIATION_STATUS_2026-08.md` + `ACTIVE_TASKS.md` (June snapshot: `REMEDIATION_STATUS_2026-06.md`).
 
 ---
 

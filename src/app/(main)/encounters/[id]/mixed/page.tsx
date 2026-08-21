@@ -7,15 +7,16 @@
 
 'use client';
 
-import { useState, useEffect, use } from 'react';
+import { useState, use } from 'react';
 import Link from 'next/link';
 import { cn } from '@/lib/utils';
 import { Swords, Brain } from 'lucide-react';
 import { PageContainer, LoadingState, Alert, useToast } from '@/components/ui';
-import { SegmentedControl } from '@/components/shared';
+import { SegmentedControl } from '@/components/patterns';
 import { useEncounter, useSaveEncounter, useAutoSave, useCampaignsFull } from '@/hooks';
-import { RollProvider, RollLog } from '@/components/character-sheet';
+import { RollProvider, RollLog } from '@/components/rolls';
 import type { Encounter } from '@/types/encounter';
+import { defaultSkillEncounterState } from '@/types/encounter';
 import CombatEncounterView from '../_components/CombatEncounterView';
 import SkillEncounterView from '../_components/SkillEncounterView';
 import { EncounterPageHeader } from '../_components/EncounterPageHeader';
@@ -24,6 +25,31 @@ type ViewTab = 'combat' | 'skill';
 
 interface PageParams {
   params: Promise<{ id: string }>;
+}
+
+function prepareMixedEncounter(encounter: Encounter): Encounter {
+  if (!encounter.skillEncounter) {
+    // Mixed encounter: default to initiative so turn order can sync with combat.
+    return {
+      ...encounter,
+      skillEncounter: { ...defaultSkillEncounterState(), useInitiative: true },
+    };
+  }
+
+  const skill = encounter.skillEncounter;
+  const participants = skill.participants ?? [];
+  return {
+    ...encounter,
+    skillEncounter: {
+      ...skill,
+      participants,
+      additionalSuccesses: skill.additionalSuccesses ?? 0,
+      additionalFailures: skill.additionalFailures ?? 0,
+      requiredSuccesses: skill.requiredSuccesses ?? Math.max(1, participants.length + 1),
+      maxFailures: skill.maxFailures ?? 3,
+      useInitiative: skill.useInitiative ?? true,
+    },
+  };
 }
 
 export default function MixedEncounterPage({ params }: PageParams) {
@@ -35,53 +61,26 @@ function MixedEncounterContent({ params }: { params: Promise<{ id: string }> }) 
   const { data: encounterData, isLoading, error } = useEncounter(encounterId);
   const saveMutation = useSaveEncounter();
   const [encounter, setEncounter] = useState<Encounter | null>(null);
-  const [isInitialized, setIsInitialized] = useState(false);
+  const [initializedEncounterId, setInitializedEncounterId] = useState<string | null>(null);
   const [activeView, setActiveView] = useState<ViewTab>('combat');
   const [isEditingName, setIsEditingName] = useState(false);
   const [nameInput, setNameInput] = useState('');
   const { data: campaignsFull = [] } = useCampaignsFull();
 
-  useEffect(() => {
-    if (encounterData && !isInitialized) {
-      const enc = { ...encounterData };
-      if (!enc.skillEncounter) {
-        enc.skillEncounter = {
-          difficultyScore: 10,
-          participants: [],
-          currentSuccesses: 0,
-          currentFailures: 0,
-          additionalSuccesses: 0,
-          additionalFailures: 0,
-          requiredSuccesses: 1,
-          maxFailures: 3,
-          useInitiative: true, // mixed encounter: default to initiative so turn order can sync with combat
-        };
-      } else {
-        const sk = enc.skillEncounter as unknown as Record<string, unknown>;
-        const participants = (sk.participants as unknown[]) ?? [];
-        if (sk.additionalSuccesses == null) sk.additionalSuccesses = 0;
-        if (sk.additionalFailures == null) sk.additionalFailures = 0;
-        if (sk.requiredSuccesses == null) sk.requiredSuccesses = Math.max(1, participants.length + 1);
-        if (sk.maxFailures == null) sk.maxFailures = 3;
-        // Mixed encounter: default useInitiative to true so skill tab can sync with combat order
-        if (sk.useInitiative == null) sk.useInitiative = true;
-      }
-      setEncounter(enc);
-      setNameInput(enc.name || '');
-      setIsInitialized(true);
-    }
-  }, [encounterData, isInitialized]);
-
-  useEffect(() => {
-    if (encounter?.name && !isEditingName) setNameInput(encounter.name);
-  }, [encounter?.name, isEditingName]);
+  if (encounterData && initializedEncounterId !== encounterId) {
+    setEncounter(prepareMixedEncounter(encounterData));
+    setInitializedEncounterId(encounterId);
+  }
+  const isInitialized = initializedEncounterId === encounterId;
 
   const { showToast } = useToast();
   const { isSaving, hasUnsavedChanges, saveNow } = useAutoSave({
     data: encounter,
     onSave: async (data) => {
       if (!data || !encounterId) return;
-      const { id: _id, createdAt: _ca, ...rest } = data;
+      const { id, createdAt, ...rest } = data;
+      void id;
+      void createdAt;
       await saveMutation.mutateAsync({ id: encounterId, data: rest });
     },
     delay: 1500,
@@ -145,7 +144,10 @@ function MixedEncounterContent({ params }: { params: Promise<{ id: string }> }) 
           isEditingName={isEditingName}
           nameInput={nameInput}
           onNameInputChange={setNameInput}
-          onStartEditingName={() => setIsEditingName(true)}
+          onStartEditingName={() => {
+            setNameInput(encounter.name || '');
+            setIsEditingName(true);
+          }}
           onCommitName={handleCommitName}
           onCancelEdit={handleCancelEditName}
           isSaving={isSaving}
@@ -164,8 +166,16 @@ function MixedEncounterContent({ params }: { params: Promise<{ id: string }> }) 
           onChange={setActiveView}
           equalWidth
           options={[
-            { value: 'combat', label: 'Combat', icon: <Swords className="w-4 h-4" aria-hidden /> },
-            { value: 'skill', label: 'Skill', icon: <Brain className="w-4 h-4" aria-hidden /> },
+            {
+              value: 'combat',
+              label: 'Combat',
+              icon: <Swords className="h-4 w-4" aria-hidden />,
+            },
+            {
+              value: 'skill',
+              label: 'Skill',
+              icon: <Brain className="h-4 w-4" aria-hidden />,
+            },
           ]}
           aria-label="Mixed encounter view"
           className="mb-6 max-w-xs"

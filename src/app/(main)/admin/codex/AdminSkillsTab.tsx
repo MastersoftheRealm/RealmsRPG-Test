@@ -1,17 +1,11 @@
 'use client';
 
 import { useMemo, useState } from 'react';
-import {
-  SectionHeader,
-  SearchInput,
-  LoadingState,
-  ErrorDisplay as ErrorState,
-  ListEmptyState as EmptyState,
-  ListHeader,
-} from '@/components/shared';
-import { Modal, Button, Input, Textarea, IconButton, useToast } from '@/components/ui';
-import { ChipSelect, SelectFilter, FilterSection, CodexSkillRow } from '@/components/codex';
-import { useCodexSkills, type Skill } from '@/hooks';
+import { CodexBrowseListShell, ErrorDisplay as ErrorState } from '@/components/patterns';
+import { ChipSelect, SelectFilter, ArchetypePathFilter } from '@/components/patterns/filters';
+import { CodexSkillRow } from '@/components/codex';
+import { useCodexSkills, usePathListFilter, type Skill } from '@/hooks';
+import { useSort } from '@/hooks/use-sort';
 import { ABILITIES_AND_DEFENSES } from '@/lib/game/constants';
 import {
   SKILL_GRID_COLUMNS,
@@ -22,23 +16,44 @@ import {
   sortSkillsForBaseFilter,
   type SkillListFilters,
 } from '@/lib/codex/skill-list';
+import {
+  pathChipLabelsForEntity,
+  pathFilterEmptyTitle,
+} from '@/lib/game/path-recommendation-index';
+import { COPY_NAME_SUFFIX } from './admin-codex-copy-suffix';
+import { useAdminCodexEntity } from './use-admin-codex-entity';
+import { AdminCodexRowActions } from './admin-codex-row-actions';
+import {
+  AdminSkillEditModal,
+  EMPTY_SKILL_FORM,
+  type SkillFormState,
+} from './admin-skill-edit-modal';
 
 /** Skills are governed by abilities only (not defenses). */
 const ABILITY_OPTIONS_SKILLS = ABILITIES_AND_DEFENSES.slice(0, 6);
-import { useSort } from '@/hooks/use-sort';
-import { useQueryClient } from '@tanstack/react-query';
-import { createCodexDoc, updateCodexDoc, deleteCodexDoc } from './actions';
-import { Pencil, Copy, X } from 'lucide-react';
-const COPY_NAME_SUFFIX = ' copy';
 
 interface SkillFilters extends SkillListFilters {
   subSkillMode: '' | 'only' | 'hide';
 }
 
 export function AdminSkillsTab() {
-  const { showToast } = useToast();
   const { data: skills, isLoading, error, refetch } = useCodexSkills();
-  const queryClient = useQueryClient();
+  const {
+    modalOpen,
+    editing,
+    saving,
+    copySourceName,
+    openAdd: beginAdd,
+    openDuplicate: beginDuplicate,
+    openEdit: beginEdit,
+    closeModal,
+    save,
+    askDelete,
+    deleteModals,
+  } = useAdminCodexEntity<Skill>({
+    collection: 'codex_skills',
+    entityLabel: 'skill',
+  });
   const { sortState, handleSort, sortItems } = useSort('name');
   const [filters, setFilters] = useState<SkillFilters>({
     search: '',
@@ -46,84 +61,42 @@ export function AdminSkillsTab() {
     baseSkill: '',
     subSkillMode: '',
   });
-  const [modalOpen, setModalOpen] = useState(false);
-  const [editing, setEditing] = useState<{
-    id: string;
-    name: string;
-    description: string;
-    ability: string;
-    base_skill_id?: number;
-    success_desc?: string;
-    failure_desc?: string;
-    ds_calc?: string;
-    craft_success_desc?: string;
-    craft_failure_desc?: string;
-  } | null>(null);
-  const [saving, setSaving] = useState(false);
-  const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null);
-  const [pendingDeleteId, setPendingDeleteId] = useState<string | null>(null);
-  const [copySourceName, setCopySourceName] = useState<string | null>(null);
 
-  const [form, setForm] = useState({
-    name: '',
-    description: '',
-    abilities: [] as string[],
-    baseSkillName: '',
-    success_desc: '',
-    failure_desc: '',
-    ds_calc: '',
-    craft_success_desc: '',
-    craft_failure_desc: '',
-  });
+  const [form, setForm] = useState<SkillFormState>(EMPTY_SKILL_FORM);
 
   const ABILITY_OPTIONS = useMemo(
-    () => ABILITY_OPTIONS_SKILLS.map(a => ({ value: a, label: a })),
+    () => ABILITY_OPTIONS_SKILLS.map((a) => ({ value: a, label: a })),
     [],
   );
 
   const baseSkillOptions = useMemo(() => {
     if (!skills) return [] as { id: string; name: string }[];
     // Base skills are those without a base_skill_id (or with base_skill_id === 0 meaning can be a base for any)
-    const baseSkills = (skills as Skill[]).filter((s) => s.base_skill_id === undefined || s.base_skill_id === 0);
+    const baseSkills = (skills as Skill[]).filter(
+      (s) => s.base_skill_id === undefined || s.base_skill_id === 0,
+    );
     return baseSkills
       .map((s) => ({ id: String(s.id), name: s.name }))
       .sort((a, b) => a.name.localeCompare(b.name));
   }, [skills]);
 
   const skillIdToName = useMemo(() => buildSkillIdToName(skills), [skills]);
+  const { selectedPathIds, setSelectedPathIds, pathIndex, pathRecommendedIds, pathFilterActive } =
+    usePathListFilter({ entities: skills, kind: 'skills' });
 
   const filterOptions = useMemo(
     () => buildSkillFilterOptions(skills, skillIdToName),
-    [skills, skillIdToName]
+    [skills, skillIdToName],
   );
 
   const filteredSkills = useMemo(() => {
     if (!skills) return [];
-    const filtered = filterSkills(skills, filters, skillIdToName);
+    const filtered = filterSkills(skills, filters, skillIdToName, null, pathRecommendedIds);
     if (filters.baseSkill) return sortSkillsForBaseFilter(filtered, filters.baseSkill);
     return sortItems<Skill>(filtered);
-  }, [skills, filters, sortItems, skillIdToName]);
+  }, [skills, filters, sortItems, skillIdToName, pathRecommendedIds]);
 
-  const openAdd = () => {
-    setEditing(null);
-    setCopySourceName(null);
-    setForm({
-      name: '',
-      description: '',
-      abilities: [],
-      baseSkillName: '',
-      success_desc: '',
-      failure_desc: '',
-      ds_calc: '',
-      craft_success_desc: '',
-      craft_failure_desc: '',
-    });
-    setModalOpen(true);
-  };
-
-  const openDuplicate = (s: Skill) => {
-    setEditing(null);
-    setCopySourceName(s.name);
+  const skillFormFromSkill = (s: Skill, name: string) => {
     let baseSkillName = '';
     if (s.base_skill_id != null) {
       if (s.base_skill_id === 0) {
@@ -135,10 +108,13 @@ export function AdminSkillsTab() {
     }
     const abilityArr =
       typeof s.ability === 'string' && s.ability.length > 0
-        ? s.ability.split(',').map((a: string) => a.trim()).filter(Boolean)
+        ? s.ability
+            .split(',')
+            .map((a: string) => a.trim())
+            .filter(Boolean)
         : [];
-    setForm({
-      name: (s.name || '').trim() + COPY_NAME_SUFFIX,
+    return {
+      name,
       description: s.description || '',
       abilities: abilityArr,
       baseSkillName,
@@ -147,53 +123,21 @@ export function AdminSkillsTab() {
       ds_calc: s.ds_calc ?? '',
       craft_success_desc: s.craft_success_desc ?? '',
       craft_failure_desc: s.craft_failure_desc ?? '',
-    });
-    setModalOpen(true);
+    };
   };
 
-  const openEdit = (s: Skill) => {
-    setEditing(s);
-    setCopySourceName(null);
-    // Resolve base skill name from id (including 0 meaning "Any")
-    let baseSkillName = '';
-    if (s.base_skill_id != null) {
-      if (s.base_skill_id === 0) {
-        baseSkillName = 'Any';
-      } else {
-        const match = baseSkillOptions.find((opt) => String(opt.id) === String(s.base_skill_id));
-        baseSkillName = match?.name ?? '';
-      }
-    }
-    const abilityArr =
-      typeof s.ability === 'string' && s.ability.length > 0
-        ? s.ability.split(',').map((a: string) => a.trim()).filter(Boolean)
-        : [];
-    setForm({
-      name: s.name,
-      description: s.description || '',
-      abilities: abilityArr,
-      baseSkillName,
-      success_desc: s.success_desc ?? '',
-      failure_desc: s.failure_desc ?? '',
-      ds_calc: s.ds_calc ?? '',
-      craft_success_desc: s.craft_success_desc ?? '',
-      craft_failure_desc: s.craft_failure_desc ?? '',
-    });
-    setModalOpen(true);
-  };
+  const openAdd = () => beginAdd(() => setForm(EMPTY_SKILL_FORM));
 
-  const closeModal = () => {
-    setModalOpen(false);
-    setEditing(null);
-    setCopySourceName(null);
-    setDeleteConfirm(null);
-  };
+  const openDuplicate = (s: Skill) =>
+    beginDuplicate(s, () =>
+      setForm(skillFormFromSkill(s, (s.name || '').trim() + COPY_NAME_SUFFIX)),
+    );
+
+  const openEdit = (s: Skill) => beginEdit(s, () => setForm(skillFormFromSkill(s, s.name)));
 
   const handleSave = async () => {
     if (!form.name.trim()) return;
-    setSaving(true);
 
-    // Resolve base_skill_id from selected baseSkillName
     let base_skill_id: number | undefined;
     const trimmedBase = form.baseSkillName.trim();
     if (trimmedBase) {
@@ -207,265 +151,141 @@ export function AdminSkillsTab() {
       }
     }
 
-    const data: Record<string, unknown> = {
-      name: form.name.trim(),
-      description: form.description.trim(),
-      // Save as single string or array, depending on count
-      ability:
-        form.abilities.length === 0
-          ? undefined
-          : form.abilities.length === 1
-            ? form.abilities[0]
-            : form.abilities,
-      base_skill_id,
-      success_desc: form.success_desc.trim() || undefined,
-      failure_desc: form.failure_desc.trim() || undefined,
-      ds_calc: form.ds_calc.trim() || undefined,
-      craft_success_desc: form.craft_success_desc.trim() || undefined,
-      craft_failure_desc: form.craft_failure_desc.trim() || undefined,
-    };
-
-    const result = editing
-      ? await updateCodexDoc('codex_skills', editing.id, data)
-      : await createCodexDoc('codex_skills', undefined, data);
-
-    setSaving(false);
-    if (result.success) {
-      queryClient.invalidateQueries({ queryKey: ['codex'] });
-      await queryClient.refetchQueries({ queryKey: ['codex'] });
-      closeModal();
-    } else {
-      showToast(result.error ?? 'Operation failed', 'error');
-    }
+    await save({
+      payload: {
+        name: form.name.trim(),
+        description: form.description.trim(),
+        ability:
+          form.abilities.length === 0
+            ? undefined
+            : form.abilities.length === 1
+              ? form.abilities[0]
+              : form.abilities,
+        base_skill_id,
+        success_desc: form.success_desc.trim() || undefined,
+        failure_desc: form.failure_desc.trim() || undefined,
+        ds_calc: form.ds_calc.trim() || undefined,
+        craft_success_desc: form.craft_success_desc.trim() || undefined,
+        craft_failure_desc: form.craft_failure_desc.trim() || undefined,
+      },
+      expectedUpdatedAt: editing?.updated_at,
+    });
   };
 
-  const handleDelete = async (id: string) => {
-    if (deleteConfirm !== id) {
-      setDeleteConfirm(id);
-      return;
-    }
-    const result = await deleteCodexDoc('codex_skills', id);
-    if (result.success) {
-      queryClient.invalidateQueries({ queryKey: ['codex'] });
-      await queryClient.refetchQueries({ queryKey: ['codex'] });
-      closeModal();
-    } else {
-      showToast(result.error ?? 'Operation failed', 'error');
-    }
-  };
-
-  const handleInlineDelete = async (id: string, name: string) => {
-    if (pendingDeleteId !== id) {
-      setPendingDeleteId(id);
-      return;
-    }
-    const result = await deleteCodexDoc('codex_skills', id);
-    if (result.success) {
-      queryClient.invalidateQueries({ queryKey: ['codex'] });
-      await queryClient.refetchQueries({ queryKey: ['codex'] });
-      setPendingDeleteId(null);
-    } else {
-      showToast(result.error ?? 'Operation failed', 'error');
-      setPendingDeleteId(null);
-    }
-  };
-
-  if (error) return <ErrorState message="Failed to load skills" onRetry={() => { void refetch(); }} />;
+  if (error)
+    return (
+      <ErrorState
+        message="Failed to load skills"
+        onRetry={() => {
+          void refetch();
+        }}
+      />
+    );
 
   return (
     <div>
-      <SectionHeader title="Skills" onAdd={openAdd} size="md" />
-      <div className="mb-4 mt-2">
-        <SearchInput
-          value={filters.search}
-          onChange={(v) => setFilters(f => ({ ...f, search: v }))}
-          placeholder="Search names, descriptions..."
-        />
-      </div>
+      <CodexBrowseListShell
+        sectionTitle="Skills"
+        onAdd={openAdd}
+        search={filters.search}
+        onSearchChange={(v) => setFilters((f) => ({ ...f, search: v }))}
+        searchPlaceholder="Search names, descriptions..."
+        filters={
+          <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+            <ChipSelect
+              label="Ability"
+              placeholder="Choose ability"
+              options={filterOptions.abilities.map((a) => ({
+                value: a,
+                label:
+                  typeof a === 'string' && a.length > 0
+                    ? a.charAt(0).toUpperCase() + a.slice(1)
+                    : String(a),
+              }))}
+              selectedValues={filters.abilities}
+              onSelect={(v) => setFilters((f) => ({ ...f, abilities: [...f.abilities, v] }))}
+              onRemove={(v) =>
+                setFilters((f) => ({ ...f, abilities: f.abilities.filter((a) => a !== v) }))
+              }
+            />
 
-      <FilterSection>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          <ChipSelect
-            label="Ability"
-            placeholder="Choose ability"
-            options={filterOptions.abilities.map(a => ({
-              value: a,
-              label: typeof a === 'string' && a.length > 0 ? a.charAt(0).toUpperCase() + a.slice(1) : String(a),
-            }))}
-            selectedValues={filters.abilities}
-            onSelect={(v) => setFilters(f => ({ ...f, abilities: [...f.abilities, v] }))}
-            onRemove={(v) => setFilters(f => ({ ...f, abilities: f.abilities.filter(a => a !== v) }))}
-          />
+            <SelectFilter
+              label="Base Skill"
+              value={filters.baseSkill}
+              options={filterOptions.baseSkills.map((s) => ({ value: s, label: s }))}
+              onChange={(v) => setFilters((f) => ({ ...f, baseSkill: v }))}
+              placeholder="Base skill (any)"
+            />
 
-          <SelectFilter
-            label="Base Skill"
-            value={filters.baseSkill}
-            options={filterOptions.baseSkills.map(s => ({ value: s, label: s }))}
-            onChange={(v) => setFilters(f => ({ ...f, baseSkill: v }))}
-            placeholder="Base skill (any)"
-          />
-
-          <SelectFilter
-            label="Skill Type"
-            value={filters.subSkillMode}
-            options={[
-              { value: 'only', label: 'Only Sub-Skills' },
-              { value: 'hide', label: 'Hide Sub-Skills' },
-            ]}
-            onChange={(v) => setFilters(f => ({ ...f, subSkillMode: (v || '') as '' | 'only' | 'hide' }))}
-            placeholder="All skills"
-          />
-        </div>
-      </FilterSection>
-
-      <ListHeader
-        columns={SKILL_HEADER_COLUMNS}
+            <SelectFilter
+              label="Skill Type"
+              value={filters.subSkillMode}
+              options={[
+                { value: 'only', label: 'Only Sub-Skills' },
+                { value: 'hide', label: 'Hide Sub-Skills' },
+              ]}
+              onChange={(v) =>
+                setFilters((f) => ({ ...f, subSkillMode: (v || '') as '' | 'only' | 'hide' }))
+              }
+              placeholder="All skills"
+            />
+            <ArchetypePathFilter
+              options={pathIndex.options}
+              selectedPathIds={selectedPathIds}
+              onChange={setSelectedPathIds}
+            />
+          </div>
+        }
+        headerColumns={SKILL_HEADER_COLUMNS}
         gridColumns={SKILL_GRID_COLUMNS}
+        rowChrome={{ rightSlot: true }}
         sortState={sortState}
         onSort={handleSort}
-      />
-
-      {isLoading ? (
-        <LoadingState />
-      ) : (
-        <div className="flex flex-col gap-1 mt-2">
-          {filteredSkills.length === 0 ? (
-            <EmptyState
-              title="No skills found"
-              description="No skills match your filters."
-              action={{ label: 'Add Skill', onClick: openAdd }}
-              size="sm"
-            />
-          ) : (
-            filteredSkills.map((s: Skill) => (
-              <CodexSkillRow
-                key={s.id}
-                skill={s}
-                skillIdToName={skillIdToName}
-                variant="admin"
-                rightSlot={
-                  <div className="flex items-center gap-1 pr-2">
-                    {pendingDeleteId === s.id ? (
-                      <div className="flex items-center gap-1 text-xs">
-                        <span className="text-red-600 font-medium whitespace-nowrap">Remove?</span>
-                        <Button size="sm" variant="danger" onClick={() => handleInlineDelete(s.id, s.name)} className="text-xs px-2 py-0.5 h-6">Yes</Button>
-                        <Button size="sm" variant="secondary" onClick={() => setPendingDeleteId(null)} className="text-xs px-2 py-0.5 h-6">No</Button>
-                      </div>
-                    ) : (
-                      <>
-                        <IconButton variant="ghost" size="sm" onClick={() => openEdit(s)} label="Edit" aria-label="Edit">
-                          <Pencil className="w-4 h-4" />
-                        </IconButton>
-                        <IconButton variant="ghost" size="sm" onClick={() => openDuplicate(s)} label="Duplicate" aria-label="Duplicate">
-                          <Copy className="w-4 h-4" />
-                        </IconButton>
-                        <IconButton
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => setPendingDeleteId(s.id)}
-                          label="Delete"
-                          className="text-danger-fg hover:opacity-80 hover:bg-transparent"
-                        >
-                          <X className="w-4 h-4" />
-                        </IconButton>
-                      </>
-                    )}
-                  </div>
-                }
+        isLoading={isLoading}
+        isEmpty={filteredSkills.length === 0}
+        emptyTitle={pathFilterActive ? pathFilterEmptyTitle('skills') : 'No skills found'}
+        emptyMessage="No skills match your filters."
+        emptyAction={{ label: 'Add Skill', onClick: openAdd }}
+      >
+        {filteredSkills.map((s: Skill) => (
+          <CodexSkillRow
+            key={s.id}
+            skill={s}
+            skillIdToName={skillIdToName}
+            variant="admin"
+            nameChipLabels={
+              pathFilterActive
+                ? pathChipLabelsForEntity(pathIndex, s.id, selectedPathIds)
+                : undefined
+            }
+            rightSlot={
+              <AdminCodexRowActions
+                entity={s}
+                onEdit={openEdit}
+                onDuplicate={openDuplicate}
+                onDelete={askDelete}
               />
-            ))
-          )}
-        </div>
-      )}
+            }
+          />
+        ))}
+      </CodexBrowseListShell>
 
-      <Modal
+      <AdminSkillEditModal
         isOpen={modalOpen}
         onClose={closeModal}
         title={editing ? 'Edit Skill' : 'Add Skill'}
-        size="lg"
-        fullScreenOnMobile
-        footer={
-          <div className="flex justify-between">
-            <div>
-              {editing && (
-                <Button variant="outline" onClick={() => handleDelete(editing.id)} className={deleteConfirm === editing.id ? 'border-red-500 text-red-600' : ''}>
-                  {deleteConfirm === editing.id ? 'Click again to confirm delete' : 'Delete'}
-                </Button>
-              )}
-            </div>
-            <div className="flex gap-2">
-              <Button variant="outline" onClick={closeModal}>Cancel</Button>
-              <Button onClick={handleSave} disabled={saving || !form.name.trim()}>
-                {saving ? 'Saving...' : 'Save'}
-              </Button>
-            </div>
-          </div>
-        }
-      >
-        <div className="space-y-4">
-          {copySourceName && (
-            <p className="text-sm text-text-secondary rounded-md bg-surface-alt px-3 py-2 border border-border-light">
-              Creating a copy of <strong className="text-text-primary">{copySourceName}</strong>. Change the name and details as needed, then save to add the new skill.
-            </p>
-          )}
-          <div>
-            <label className="block text-sm font-medium text-text-secondary mb-1">Name *</label>
-            <Input value={form.name} onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))} placeholder="Skill name" />
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-text-secondary mb-1">Description</label>
-            <Textarea value={form.description} onChange={(e) => setForm((f) => ({ ...f, description: e.target.value }))} placeholder="Skill description" className="min-h-[120px] resize-y" rows={4} />
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-text-secondary mb-1">Success outcome description</label>
-            <Textarea value={form.success_desc} onChange={(e) => setForm((f) => ({ ...f, success_desc: e.target.value }))} placeholder="What happens on successes (expandable chip)" className="min-h-[100px] resize-y" rows={3} />
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-text-secondary mb-1">Failure outcome description</label>
-            <Textarea value={form.failure_desc} onChange={(e) => setForm((f) => ({ ...f, failure_desc: e.target.value }))} placeholder="What happens on failures (expandable chip)" className="min-h-[100px] resize-y" rows={3} />
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-text-secondary mb-1">Difficulty score (DS) guidance</label>
-            <Textarea value={form.ds_calc} onChange={(e) => setForm((f) => ({ ...f, ds_calc: e.target.value }))} placeholder="RM guidance for DS calculation (expandable chip)" className="min-h-[100px] resize-y" rows={3} />
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-text-secondary mb-1">Craft success description (Craft sub-skills)</label>
-            <Textarea value={form.craft_success_desc} onChange={(e) => setForm((f) => ({ ...f, craft_success_desc: e.target.value }))} placeholder="Crafting success results" className="min-h-[100px] resize-y" rows={3} />
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-text-secondary mb-1">Craft failure description (Craft sub-skills)</label>
-            <Textarea value={form.craft_failure_desc} onChange={(e) => setForm((f) => ({ ...f, craft_failure_desc: e.target.value }))} placeholder="Crafting failure results" className="min-h-[100px] resize-y" rows={3} />
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-text-secondary mb-1">Ability</label>
-            <ChipSelect
-              label=""
-              placeholder="Choose governing ability"
-              options={ABILITY_OPTIONS}
-              selectedValues={form.abilities}
-              onSelect={(v) => setForm((f) => ({ ...f, abilities: [...f.abilities, v] }))}
-              onRemove={(v) => setForm((f) => ({ ...f, abilities: f.abilities.filter((a) => a !== v) }))}
-            />
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-text-secondary mb-1">Base skill (for sub-skills)</label>
-            <select
-              value={form.baseSkillName}
-              onChange={(e) => setForm((f) => ({ ...f, baseSkillName: e.target.value }))}
-              className="w-full px-3 py-2 border border-border rounded-md bg-background text-text-primary text-sm"
-              aria-label="Base skill"
-            >
-              <option value="">None (base skill)</option>
-              <option value="Any">Any base skill (id 0)</option>
-              {baseSkillOptions.map((opt) => (
-                <option key={opt.id} value={opt.name}>
-                  {opt.name}
-                </option>
-              ))}
-            </select>
-          </div>
-        </div>
-      </Modal>
+        copySourceName={copySourceName}
+        editingId={editing?.id ?? null}
+        form={form}
+        setForm={setForm}
+        abilityOptions={ABILITY_OPTIONS}
+        baseSkillOptions={baseSkillOptions}
+        saving={saving}
+        onDelete={editing ? () => askDelete(editing) : undefined}
+        onSave={handleSave}
+      />
+
+      {deleteModals}
     </div>
   );
 }

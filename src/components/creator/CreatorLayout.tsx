@@ -1,10 +1,11 @@
 'use client';
 
 /**
- * CreatorLayout — Shared layout for all creators
- * ===============================================
- * Enforces consistent structure: PageContainer, PageHeader, grid with main (2/3) + sidebar (1/3).
- * Use for power, technique, item, and creature creators to avoid layout drift.
+ * CreatorLayout — Shared page chrome for standalone creators (and crafting)
+ * ========================================================================
+ * PageContainer + PageHeader + main/sidebar grid. Prefer wrapping routes with
+ * CreatorPageShell for auth/load/save; use CreatorLayout directly when actions
+ * differ (e.g. crafting Back button).
  */
 
 import { ReactNode } from 'react';
@@ -24,11 +25,11 @@ export interface CreatorLayoutProps {
   /** Sidebar content (right 1/3, e.g. CreatorSummaryPanel) */
   sidebar: ReactNode;
   /** Modals and other fragments (Load modal, Login prompt, Publish confirm) */
-  modals?: ReactNode;
+  modals?: ReactNode | undefined;
   /** PageContainer size (default: xl) */
-  size?: ContainerSize;
+  size?: ContainerSize | undefined;
   /** Optional className for PageHeader */
-  headerClassName?: string;
+  headerClassName?: string | undefined;
 }
 
 export function CreatorLayout({
@@ -52,9 +53,9 @@ export function CreatorLayout({
         className={headerClassName}
       />
       {modals}
-      <div className="grid lg:grid-cols-3 gap-6">
-        <div className="lg:col-span-2 space-y-6 order-2 lg:order-1 min-w-0">{children}</div>
-        <div className="order-1 lg:order-2 min-w-0">{sidebar}</div>
+      <div className="grid gap-6 lg:grid-cols-3">
+        <div className="order-2 min-w-0 space-y-6 lg:order-1 lg:col-span-2">{children}</div>
+        <div className="order-1 min-w-0 lg:order-2">{sidebar}</div>
       </div>
     </PageContainer>
   );

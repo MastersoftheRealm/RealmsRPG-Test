@@ -36,5 +36,4 @@ export const ABILITY_FILTER_OPTIONS = [
 ] as const;
 
 /** Type for ability option values */
-export type AbilityValue = typeof ABILITY_OPTIONS[number]['value'];
-
+export type AbilityValue = (typeof ABILITY_OPTIONS)[number]['value'];

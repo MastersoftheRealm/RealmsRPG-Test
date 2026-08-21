@@ -1,6 +1,340 @@
 # ALL_FEEDBACK — Consolidated & Curated
 
-Last updated: 2026-03-07
+Last updated: 2026-08-17 (Sheet Inventory: custom equipment add missing)
+
+**Raw Feedback Log — 2026-08-17 (Sheet Inventory: custom item add gone)**
+- Context: Character sheet Library → Inventory → Equipment → Add equipment
+- Priority: High (regression; one-off gear cannot be added)
+- Feedback (verbatim summary): We had functionality for adding custom items in the equipment section but it doesn't seem to be there anymore, there was regression
+- Misinterpretation / code note: `AddCustomEquipmentForm` still existed but TASK-564 put it in USM `headerExtra`, which is collapsed under **Filters**. The modal even hinted “Open Filters to add a custom item by name.” Custom add is not a filter, so it looked missing.
+- Disposition: **TASK-815 done** pending-qa — move the form to always-visible `scopeExtra`; SourceFilter stays in Filters; drop the Filters hint. DEV-V-009 T022 + DEV-V-016 T014.
+
+**Raw Feedback Log — 2026-08-15 (Sheet Feats: Customize caret jumps while typing)**
+- Context: Character sheet Library → Feats → Edit → expand a feat/trait → Customize
+- Priority: High (breaks mid-field typing)
+- Feedback (verbatim summary): when I customize a feat it constantly refreshes where the cursor/typing thingy is to the far left/right and it messes up your typing mid input.
+- Misinterpretation / code note: Edit Customize bound Custom name / Player note directly to character state. Each keystroke remapped the list (display `name` = custom name, default sort by name) and used index-based trait row ids, so the focused input remounted or moved and the caret jumped to the start or end.
+- Disposition: **TASK-805** — local draft until blur/unmount; stable `traitRowId`; customization handlers no longer depend on the whole `character` object. (Renumbered: master already used TASK-802–804.)
+
+**Raw Feedback Log — 2026-08-15 (Character create: Continue Without Saving does nothing)**
+- Context: Character creation (Guided Your Hero / Legacy Finalize) while signed out
+- Priority: High (guest cannot dismiss the save gate)
+- Feedback (verbatim summary): continue without saving button isn't working on character creation
+- Misinterpretation / code note: The button called `onClose`, but Modal unmounted on the same click. That tap then hit the sticky **Create character** footer (and on Legacy the still-open review modal), which reopened **Login Required to Save**. Looked like the button did nothing.
+- Disposition: **TASK-804 done** pending-qa — Modal close click-capture + deferred focus restore; login actions in `footer`; Legacy closes the review modal when showing/dismissing login. DEV-V-051 T011 + DEV-V-001 T019. (Renumbered: master already used TASK-802 for campaign RLS and TASK-803 for sheet skill names.)
+
+**Raw Feedback Log — 2026-08-15 (Sheet Skills: species-change id + missing hover description)**
+- Context: Character sheet Skills list after Edit Species
+- Priority: High (wrong label on a core play surface)
+- Feedback (verbatim summary): A skill (after changing species in sheet) is only on my skill list as an ID instead of the skill name. Also skills should have hover description (for the skill) in the character sheet.
+- Misinterpretation / code note: `migrateSkillsAfterSpeciesChange` inserted new species grants as `{ id, name: id }`. Sheet merge treated that owned row as the catalog match and showed the raw id. SkillRow rendered the name with no Codex description tip (ability names already use `WordHelpTip`).
+- Disposition: **TASK-803** — resolve Codex name/ability on species-change save; overlay names+descriptions at display time; `WordHelpTip` `compact` on sheet skill names. (Renumbered: master already used TASK-802 for campaign RLS.)
+
+**Raw Feedback Log — 2026-08-15 (Failed to create a campaign; Sentry CSP in console)**
+- Context: Production `/campaigns` Create tab; browser console
+- Priority: Critical (create campaign broken)
+- Feedback (verbatim summary): Console showed Grammarly/Iterable/Blackboard noise plus `Fetch API cannot load https://o….ingest.us.sentry.io/… Refused to connect because it violates the document's Content Security Policy.` Then: failed to create a campaign recently, please fix.
+- Misinterpretation / code note: Sentry CSP is why the client SDK could not report the failure. Live Postgres at 2026-08-15T17:15:54Z: `new row violates row-level security policy for table "campaigns"`. After TASK-650, `INSERT … RETURNING` is checked against STABLE `auth_is_campaign_participant`, which cannot see the in-flight row. Extension messages are unrelated.
+- Disposition: **TASK-802 done** pending-qa — create supplies `id` (no RETURNING) + owner `campaign_members`; SELECT policy `owner_id` short-circuit applied live; CSP allows Sentry ingest. DEV-V-042 T003 (+ T001 verify).
+
+**Raw Feedback Log — 2026-08-15 (Sheet Skills: edit/temp mode hidden by thin column)**
+- Context: Character sheet Skills panel — desktop `lg+` narrow column; Edit and Temp Modifier
+- Priority: Medium (mode discoverability / a11y)
+- Feedback (verbatim summary): When edit mode / temp mod mode for skills, the skills section of the character sheet is too thin, and scrolling side to side to actually see it's in edit mode (by virtue of the skill value edit steppers) is difficult. How can we improve accessibility when edit/temp mode are toggled in the skill section?
+- Misinterpretation / code note: TASK-543 added `min-w-[28rem]` + a fifth Value/Temp column + `TableScroll`, so the only strong “section is open” cue sat off-screen. Abilities already swap chrome in place and have a Temp strip; Skills spend had PointStatus only.
+- Disposition: **TASK-800 done** pending-qa — inline steppers in the Bonus/Value cell; **Editing** / **Temp** heading (`aria-live`); Temp strip parity with Abilities. Creator/allocation keep the Value column. DEV-V-009 T054 (+ T024/T032/T034).
+
+**Raw Feedback Log — 2026-08-15 (Sheet: save fails with PATCH 409)**
+- Context: Character sheet local dev — `PATCH /api/characters/[id]` 409, then GET, then PATCH 200, repeating
+- Priority: High (edits look unsaved / toast)
+- Feedback (verbatim summary): Character sheet keeps failing to save on local dev; Network shows PATCH 409 interleaved with GET 200 and PATCH 200.
+- Misinterpretation / code note: ADR-0013 lock is working. Same-tab race: `useCharacterResourceSync` PATCHed HP/EN/AP on every `character` identity change (notes, `updatedAt` echo) without a lock, stamping `updated_at`; autosave then sent the stale token. Pending resave after a successful PATCH also reused the pre-save token. Other-tab 409 + retry is still correct.
+- Disposition: **TASK-786 done** pending-qa — resource sync only on HP/EN/AP change; per-id PATCH queue + in-memory newest lock token; sheet `onSave` uses `characterLockToken`. DEV-V-009 T049.
+
+**Raw Feedback Log — 2026-08-15 (Sheet: per-section open/close lost after TASK-782)**
+- Context: Character sheet after exclusive Edit vs Temp split
+- Priority: High (lost section grammar)
+- Feedback (verbatim summary): In Temp mode, fields that had a temp-mod button should still use that button — not everything editable at once (same flow as section pencils). Edit mode lost the Abilities/Skills pencil; those sections auto-open spend. Whether editing or temp-modding, each section keeps its symbol (pencil or sliders) to open/close that section. Temp icon: no delta = blue; negative = red; positive = gold (like the value).
+- Misinterpretation / code note: TASK-782 first pass opened all spend/temp chrome when the toolbar mode flipped and deleted `TempModifierToggle`. Sheet-level exclusive modes stay; per-section/per-stat toggles must come back.
+- Disposition: **TASK-782 correction** — restore `EditSectionToggle` in Edit and `TempModifierToggle` in Temp (tinted); do not restore dual pairs. Do not reopen TASK-585/586/600.
+
+**Raw Feedback Log — 2026-08-15 (Process: batch commits, not one commit per task)**
+- Context: Agent OS / task DoD / `tasks:validate` strict reconcile
+- Priority: Medium (agent workflow)
+- Feedback (verbatim summary): Do not require a specific commit for each task done. Need the commit for all tasks/work done to acknowledge it all. Often commit multiple tasks at once rather than each individually — do 6 tasks, audit and cleanup each, then commit/push them all at once.
+- Misinterpretation / code note: CI already greps each `TASK-###` independently, so one subject can list many IDs. Friction was DoD/`/audit` treating a missing per-task commit as a gap, and agents creating a commit after each `done`.
+- Disposition: **TASK-785 done** (n/a) — batch commit is the default; local reconcile `--allow-uncommitted-done`; CI still requires every HEAD-archived ID in some subject.
+
+**Raw Feedback Log — 2026-08-15 (Chooser: Custom card Layer 3 / backend speak)**
+- Context: Character creation chooser at `/characters/new` — Custom mode card
+- Priority: High (first-visit conversion copy)
+- Feedback (verbatim summary): Make the Custom character creation card make more sense for users. They do not know what Layer 3 is. It should say something like “Fully customizable archetype and loadout built step by step,” not mention Layer 3 or other backend speak.
+- Misinterpretation / code note: Copy lives in `GUIDED_CREATOR_COPY.chooser.modes.custom`. First bullet was “Opens the cohesive creator on custom archetype (Layer 3)”; tagline used “chapter by chapter”; second bullet said “Forge type.”
+- Disposition: **TASK-784 done** pending-qa — player-facing tagline + bullets; no Layer 3 / cohesive creator / Forge jargon on the card. DEV-V-020 T002 + DEV-V-013 T001.
+
+**Raw Feedback Log — 2026-08-15 (Character sheet: edit vs temp modes; customized feats)**
+- Context: Character sheet Notes — sheet edit vs Temp Modifier; Feats/Traits customization (italic custom names + expanded note)
+- Priority: High for mode split (accidental permanent vs temp edits); Medium for feat play-view polish
+- Feedback (verbatim summary): (1) Split the edit mode / temp mod modes. While in edit mode no temp mod functionality exists, and vice versa, so users can be confident they aren’t altering the wrong one and so buttons/decision overload doesn’t occur. (2) Customized Feats: italicised titles get slightly cutoff on the right (italic leans into a clip). When not in edit mode don’t display the custom name field. Simply add a second description below the first within the same description text box, separated from the first by a clean simple line — no “note” title or anything else; no hide/show customization button on the expanded feat view (outside of edit mode).
+- Misinterpretation / code note: Temp chrome used to be gated on sheet `isEditMode` (ADR-0006 nested dual pair). **TASK-782 done** pending-qa — play / edit / temp are exclusive at the toolbar. Feat/trait customization: play view used **View customization** plus labeled Custom name / Note boxes; collapsed custom names were italic `nameContent` inside GLR `lg:truncate` (and the row `overflow-hidden`), which clipped the italic overhang.
+- Disposition: **TASK-782 done** pending-qa (sheet-level exclusive Edit vs Temp Modifier; ADR-0006 Amended; do not reopen TASK-585/586/600). **TASK-783 done** pending-qa (italic `pe-[0.35em]`; play note in GLR `descriptionAfter`; Customize fields stay edit-only). Related: TASK-778 done (Skills filters); TASK-779 done (trait kind expanded-only).
+
+**Raw Feedback Log — 2026-08-15 (Codex/Library: Filter by character tooltip far right)**
+- Context: Codex / Library Notes — **Filter by character** collapsible filter header (`CharacterFilter`)
+- Priority: Medium (help chrome)
+- Feedback (verbatim summary): Tooltip on **Filter by character** is at the far right (pushed likely by the hide/expand arrow added next to Filter by character). Want the tooltip actually next to the title **Filter by character** so it is clear what is being tooltipped.
+- Misinterpretation / code note: Header is `[icon] [flex-1 expand button: title + selected + chevron] [InfoTippy]`. `flex-1` on the expand control stretches the button and leaves the (i) as a trailing sibling at the far right of the row.
+- Disposition: **TASK-781 done** pending-qa — InfoTippy immediately after the title; expand overlay covers the rest of the header (CollapsibleSection pattern). Do not reopen TASK-722.
+
+**Raw Feedback Log — 2026-08-15 (Sheet Skills filters; trait type chip; feat rank stepper)**
+- Context: Character sheet Skills toolbar; Feats/Traits list; edit-mode Archetype/Character feat rank
+- Priority: Medium (filters + chip leak now); feat rank blocked on owner pick
+- Feedback (verbatim summary): (1) Skills All vs Proficient uses the bulky source-style SegmentedControl; want a cleaner, smaller, uninvasive filter for All/Proficient plus show/hide sub-skills. Rename **Show sub-skills** → **Sub-Skills**. (2) In the character feat list, traits list their type twice when expanded (e.g. Characteristic in the item header and again as a desc chip); type is only needed in the expanded view. (3) Edit-mode sheet feat list: increasing an existing feat’s level via the Lvl quantity stepper is unclear, especially next to uses-per-recovery ±; brainstorm a clearer control.
+- Misinterpretation / code note: Skills already use `SegmentedControl` (same chrome as `SourceFilter`) + a 44px checkbox labeled “Show sub-skills” (`skills-section.tsx`; TASK-584). Trait kind is `badges` on compact `FeatsTraitsListSection` rows (`mapTraitRows`); compact GLR always paints badges on the name **and** expanded `DescriptorChip`s unless `showBadgesInName` (TASK-415 leak). **Superseded by TASK-780:** sheet feat rank is no longer a collapsed Lvl `ValueStepper`. Rank lives on expanded **Feat Levels** chips (`buildFeatLevelChips` + `GridListChip`; edit uses `ChipData.onSelect`). Creature creator stepper is unchanged.
+- Disposition: **TASK-778 done** pending-qa (compact Skills All/Proficient + Sub-Skills toggle). **TASK-779** (trait type DescriptorChip expanded-only). **TASK-780 done** pending-qa — option A (expanded Feat Levels chips; DEV-Q04). Do not reopen TASK-584 / TASK-415 / the 2026-06-26 “add a level stepper” ship.
+
+**Raw Feedback Log — 2026-08-14 (Creator headers: empty space only, not smaller titles)**
+- Context: Follow-up on TASK-764 shared `CollapsibleSection` after the first compact-header pass
+- Priority: High (chrome size)
+- Feedback (verbatim summary): When shrinking the header section vertically, the intent was the **empty space**, not making section titles/area too small. Revert all but the empty vertical space fixes.
+- Misinterpretation / code note: First pass also shrank titles to `text-sm` and padding to `px-3 py-2`, and dropped Enable/Remove `min-h-[44px]`. Empty gap was the reserved `min-h-[1.25rem]` / `&nbsp;` summary line when expanded with `collapsedSummary` and no `subtitle`.
+- Disposition: Restored original title size/padding/44px actions; kept empty-line-only shrink. Docs (FEATURE_INDEX / DEV-V-018-T012 / archive AC) corrected.
+
+**Raw Feedback Log — 2026-08-14 (Standalone creators: expanded headers, Attack label, power tooltips, defer layers)**
+- Context: Standalone creators (power, technique, item, species, creature, empowered); Power Creator advanced builder; waiting TASK-408 / TASK-410–414
+- Priority: High (chrome + teaching copy now); layers deferred
+- Feedback (verbatim summary): (1) Dropdown header of all creator sections takes too much vertical space when expanded. (2) Power creator Attack section title is repeated on the inner selector — redundant. (3) Implement the power creator tooltips task with the provided tooltips. (4) Do not do the power creator layers task(s); defer those awhile longer.
+- Misinterpretation / code note: Shared `CollapsibleSection` used `p-4` plus a reserved empty summary line when expanded (`collapsedSummary` with no `subtitle`). Attack lives in `power-creator-editor-action-profile.tsx` with a duplicate inner `<label>Attack</label>`. TASK-408 (InfoTippy from POWER_CREATOR_TOOLTIPS_DRAFT) was blocked on TASK-414; owner unblocked advanced (L3) wiring only. TASK-410–414 remain the guided L1/L2 layers program.
+- Disposition: **TASK-764** — drop the reserved empty summary line on expanded `CollapsibleSection` headers (do not shrink titles/padding) + drop the redundant Attack field label. **TASK-408** — migrate draft copy into `tooltip-text.tsx` and wire InfoTippy on the advanced power creator (L1 placeholder strings only). **TASK-410–414** stay waiting/deferred (owner: layers later).
+
+**Raw Feedback Log — 2026-08-14 (Home: three steps + CTA jargon)**
+- Context: Guest home page (`/`) “Start Playing in Three Steps” + hero primary CTA
+- Priority: High (first-visit conversion copy)
+- Feedback (verbatim summary): The three steps should be **Create a character**, **Find a table**, **Start playing**. The hero CTA should not say Start Playing (that is step 3); use **Create Character** or similar. Step 2 should talk about joining the community through Discord. Current steps use terms a new user does not know yet and does not need (Archetype Path, Species, Abilities, Skills, Feats).
+- Misinterpretation / code note: Copy lives in `LANDING_COPY` (`landing-copy.ts`). Hero + mid-page how-it-works repeat both use `hero.primaryCta`. How-it-works was Choose Your Path / Become Your Character / Play with Friends. Discord CTA already exists in the closing community band (`DISCORD_URL`).
+- Disposition: **TASK-763** — rewrite how-it-works steps; rename primary CTA to Create Character; Discord as the find-a-table path; keep heading “Start Playing in Three Steps.”
+
+**Raw Feedback Log — 2026-08-14 (Guided creator: feat GLR, innate/powers split, Power weapons hatch, EN, ability tiles, create 500)**
+- Context: Guided character creator (feat GLRs, loadout, powers/techniques, Abilities, Your Hero) + POST `/api/characters` failing on Finish
+- Priority: Critical for create 500; High for EN + innate/powers/techniques screens; Medium for feat chrome, Power weapons hatch, ability-tile spacing
+- Feedback (verbatim summary): (1) **REQ LEVEL** column header is not needed on character creator (level is always 1 at create, feats already filtered to level 1). (2) Creator GLR **State Feats** filter needs an **(i)** tooltip; reuse existing state-feat text. (3) Split **innate vs normal power** screens (and techniques): e.g. L1 Powered-Martial loadout then innate powers (no innate/non-innate dropdown — that screen is innate-only), then powers (non-innate), then techniques; Back still shows prior choices. (4) Power archetype path **equipment** (gear) screen: bottom-right **See weapons** opens a weapon modal filtered by armament proficiency max, so Power users can still pick weapons though it is not mainstream. (5) Your Hero abbreviates Energy as **EP** — wrong; Energy is **EN**. Fix everywhere. (6) Ability cards: too little space at the bottom, too much at the top; Primary/Secondary pills displace tiles down. Fix and screenshot-audit for a uniform look. (7) Create character toast: `Failed to create character Check My Characters before trying again so you do not create a duplicate.` is unfriendly (user does not know why, what to do, or what “duplicate” means). Underlying 500: Postgres `42703` `column codex_skills.base_skill_id does not exist` (hint: `codex_skills.base_skill`) from `POST /api/characters`.
+- Misinterpretation / code note: Creator feat L2/L3 reuse Codex `FEAT_SELECTABLE_HEADER_COLUMNS` (includes `REQ. LEVEL`) via `feats-l2.ts`; eligibility already hides unmet `lvl_req` (`checkFeatRequirements`). State Feats `SelectFilter` in `guided-feats-filter-fields.tsx` has no `labelAccessory`; copy SoT is `getFeatRestrictionNotice` (`feat-restriction-notice.ts`). Powers/techniques is one sub-step with dual L1 lists + L3 `innateScope` dropdown (`powers-techniques-step.tsx`); REALMS § already says separate innate vs regular lists. Path Power loadout omits the weapon phase when the path has no weapon recs (`resolveEquipmentPhaseVisibility`). Your Hero power/technique chips pass `energyCost` into `SummaryChipList` → `ExpandableChip`, which hardcodes `N EP`. Ability tiles: `AbilityScoreGrid` extra grid `pt-*` plus pill-straddling `pt-3` on highlighted tiles. TASK-738 legality fetch selects `codex_skills.base_skill_id`; live column is `base_skill` (`SUPABASE_SCHEMA.md`); Codex API already maps `base_skill` → `base_skill_id`. Reveal toast always appends `saveRetryHint` (duplicate/My Characters) onto every create error, including this 500 that never inserted a row.
+- Disposition: Filed **TASK-754** (fix `base_skill` select + map; user-facing create errors; do first — blocks creator QA), **TASK-755** (EP → EN sitewide, starting with ExpandableChip / Your Hero), **TASK-756** (sequential innate → powers → techniques screens; drop innate/non-innate filter), **TASK-757** (Power path equipment See weapons hatch → existing weapon L2 modal), **TASK-758** (omit REQ. LEVEL on creator feat GLR; ADR-0009 registry), **TASK-759** (State Feats filter InfoTippy, shared notice copy), **TASK-760** (AbilityScoreGrid spacing + screenshot audit). Implement 754 then 755 then 756 before TASK-751–753; 758/759 before TASK-753 so path-filter wiring does not restore the column or drop the tip.
+
+**Raw Feedback Log — 2026-08-14 (Archetype Path Filtering — longevity / locked defaults)**
+- Context: Follow-up on TASK-751–753. Canonical recommendations already live on archetype paths; owner does not want a second dataset that can drift when paths are edited.
+- Priority: Medium (locks ADR-0014; still implement after Wave 2 leftovers)
+- Feedback: Prefer pulling recommended feats (and later skills/weapons/powers/techniques) from the selected path(s) themselves so admin path edits apply automatically. Do not duplicate that data for the filter. Locked defaults: (1) Monk + Berserker = union / either path — reuse existing multi-select filter logic, no extra any/all unless ChipSelect already does that. (2) Path-authoring level does not hide a feat from the path filter (a feat recommended at path level 5 still matches Berserker); other filters still apply (`lvl_req`, character level, creator L1 already hiding non-L1). Feat family ranks (expandable 2/3/4 chips on the same feat) stay visible. (3) Pick the long-term SoT that does not duplicate. (4) Desc chips only while filtering. (5) Player-visible paths only. (6) See-more feats modal opens as today; Filters expanded; auto-select all player-visible paths of the **same archetype type** as the draft (Power path → all Power paths); user can unapply to see the full list. Hide feats with required level > 1 in L1 creator; do not hide higher family ranks on a legal feat.
+- Disposition: Locked into **TASK-751** (derived collectors over `path_data`, no junction/`paths[]` on feats) and **TASK-753** (same-type auto-select, filter panel open, unapply = L3 in the same modal).
+
+**Raw Feedback Log — 2026-08-14 (Archetype Path Filtering — sitewide list filter / L2 layer)**
+- Context: Codex / Library / add modals / character creators; massive catalogs (especially archetype feats in custom creation); product layers L1 path-curated vs L3 full list
+- Priority: Medium (file now; implement after Wave 2 leftovers — does not wait for Wave 3)
+- Feedback: Add a filter on lists, implementable site-wide, that shows only items tied to selected archetype path(s). Example: Codex Feats tab, filter Berserker and Monk → only feats recommended to those paths. While that filter is active, show desc chips on the items (which path(s) recommend them). Same idea for skills, weapons, powers, techniques, etc. Goal: tame huge databases (custom character creation archetype feats) and create an L2 layer between full path character creation (L1) and full custom / full list (L3). First implementation may be Codex Feats only, but the component must be shared and scalable across the global database — do not parallel Codex vs creator vs add-modal copies.
+- Expected: One inverted path→item index + one shared filter control; Codex Feats as the first wiring; later the same primitive on other lists and as the creator L2 catalog face.
+- Misinterpretation / code note: Recommendations already live on paths (`path_data.level1` / `levels[]` / `guidance_groups`), not on feat/skill rows. Guided L2 “See more” today is the **full** eligible catalog with a “Recommended” badge — not a path-narrowed list. `ChipSelect` / `TagFilter` / `CharacterFilter` are the filter primitives; `filterFeats` has no path dimension; `GridListRow.badges` only render in compact mode (Codex browse is non-compact). TASK-423 remaining path seeds affect how full the filter looks, not whether to build it.
+- Disposition: Filed **TASK-751** (ADR-0014 + `lib/game` index + shared `ArchetypePathFilter` + Codex Feats first slice), **TASK-752** (other Codex/Library lists), **TASK-753** (creator L2 / USM / add modals). Start after Wave 2 leftovers (TASK-747 / 749 / 750 / 733) unless re-prioritized. Does **not** wait for Wave 3 Prettier/`text-muted` mega-diffs — shipping the primitive first helps the later duplication collapse.
+
+**Raw Feedback Log — 2026-08-14 (Advanced creator → Legacy label)**
+- Context: Character creation; `/characters/new` chooser vs `/characters/new/advanced` tabbed wizard; long-term one cohesive Guided creator (L1–L3, Guided/Custom entry)
+- Priority: Medium
+- Feedback: Label the Advanced creator as **legacy**. Eventually only the Guided creator remains (L1–L3 layers, Guided/Custom entrances). Do not treat Advanced as a permanent product peer.
+- Expected: User-facing chrome on the Advanced wizard reads **Legacy** (not “Advanced”); chooser already uses the Legacy card. Docs/index match. Route may stay `/characters/new/advanced` until retirement.
+- Disposition: **TASK-748** — label wizard header + document title; chooser copy names it the former Advanced wizard.
+
+**Raw Feedback Log — 2026-08-13 (Library — duplicate + for library vs character)**
+
+**Raw Feedback Log — 2026-08-13 (Library — duplicate + for library vs character)**
+- Context: `/library` browse lists with **Filter by character** (sort/filter by character) — Realms rows that are both addable to My Library and to the selected character
+- Priority: High
+- Feedback (verbatim summary): During sort/filter by character, some items can be added to the character sheet with a quick click on **+**. Issue: the **+** icon appears **twice** on items that are both addable to private library and addable to the selected character. Need a **universal icon distinction** for “add to library” vs “add to specific character” so the meaning is clear without reading labels. No space in the column header for a description — the + action column is intentionally tiny-width.
+- Expected: Distinct icons for add-to-library vs add-to-character used everywhere those actions appear; aria-labels remain accurate; header stays compact (no text legend in the narrow action column).
+- Misinterpretation / code note: `LibraryAddToCharacterButton` currently renders `LibraryAddToLibraryButton` (same Lucide `Plus`). Both can show together in `official-entity-list` / Library My+Realms tabs when character filter is active (TASK-679/680).
+- Disposition: **TASK-731 done** pending-qa (DEV-V-046 T006). Shared buttons: BookPlus = add to My Library; UserPlus = add to character.
+
+**Raw Feedback Log — 2026-08-13 (Species overview; universal Filters row; Codex skills/equipment; InfoTippy; innate GLR; Your Hero)**
+- Context: Guided Ancestry species overview (incl. mixed); Codex/Library/Admin GLR filter toolbars; Codex skills + equipment; sitewide filter `(i)` chrome; Custom L3 innate powers GLR; Your Hero finalize
+- Feedback: (1) **Choose your size** wireframe spans the whole species overview — unnecessary when there are only two options. (2) Mixed species overview: show **both parent species as cards** (details, pictures, descriptions) in one place; **change mixed-species choices on this page** (mixed only). (3) Guided creator list chrome puts the **Filters button on the same row, right of search** — implement that universally on Codex / Library / Admin GLR filter pages. (4) Codex **skills**: add Filter by character (shared CharacterFilter like feats/powers/equipment); simple extra filters — known / not known, sub-skills whose base skill the character has; do not over-complicate. (5) **Filter by character** section should collapse; **collapsed by default**; keep the `(i)` tippy on the collapsed header. (6) Filter-box **inputs vs dropdowns** are different sizes/styles — unify. Filter titles with `(i)` cause spacing problems **sitewide** — one universal InfoTippy / label-row fix, not per-page forks. (7) Guided creator **equipment list** needs a **Category** column header. Codex equipment columns are wrong: **Cost → Currency**, values **without trailing `c`**, **no blue**; **Damage / Dmg. Red. should not be column headers** — find the cause. Add **min/max currency** filters. When filtering by character: optional **rarity bracket for the character’s level** (GAME_RULES Levels by Rarity) and optional **hide equipment the character cannot afford** (max currency = character currency). (8) Powers screen: tooltip on **Innate Energy** resource tracker; tooltip on **Innate Powers**. (9) L3 custom innate-powers GLR: **do not hide the list** when the innate energy limit is met; selecting another innate should **deselect one of the current innates and select the new one** so the list stays browsable. (10) L3 GLR: selecting an item **inserts the Selected panel above the list**, pushing content down and making the just-clicked row jump — research usual UX (reserved selected slot vs scroll compensation so the viewport/mouse stay put) and apply it. (11) Your Hero finalize: **Auto-allocate** does not tick down the current/max Health/Energy **point pool** the way manual HP/EN adds do. Add a **hover tooltip** (layman’s: highest Energy-cost power/technique Y is X; auto-allocate gives enough Energy to use it once and puts the rest in Health). **Do not abbreviate HP/EN** on the allocator unless spacing is tight. (12) Your Hero summary **Loadout**: armor shows a name; **weapon shows an id** instead of name / card-dropdown.
+- Misinterpretation / code note: Size track is a block-level `SegmentedControl` (`display:flex` + `bg-surface-alt` border) so the wireframe is full overview width even when pills hug (`equalWidth` + `max-w-md` on single-species; mixed overview has no width cap). Mixed overview (`GuidedMixedSpeciesOverview`) is names + averaged vitals only — no parent `GuidedChoiceCard` / `SpeciesRevealPanel` and no change hatch (`MixedSpeciesModal` lives on species-step). Browse shells use ADR-0011 `ListSearchToolbar` then a **page** `FilterSection` **below** search; USM/L3 already use `FilterSection` compact `toolbarStart`. Codex skills use shared `CharacterFilter` (TASK-722). Codex/Admin equipment are a **forked mixed GLR** (`COST` + `highlight` blue + `c` suffix + Damage/DR) locked by `codex-equipment` required-facts (`FACT.damage`, `FACT.damageReduction`); Library armaments already use `ARMAMENT_LIBRARY_CONFIG` + `ArmamentFilters` (TASK-680 affordable). Guided **gear** headers are Name/Rarity/Currency only (`GEAR_L2_HEADER_COLUMNS`). Filter `Input` is `h-10`; `FilterNativeSelect` is `h-11`. `InfoTippy` `inline` is still `min-h-8` (icon `min-h-44` on touch) beside `h-5` filter labels / `GuidedSectionTitle`. L3 innate browse **filters out** `innateUnavailableReason` (energy-over-cap) so the catalog empties at the cap. `GuidedInlineCatalogList` mounts the Selected `Card` only when `selectedItems.length > 0`. Reveal loadout chips use `item?.name ?? a.id` against `officialItems` only.
+- Disposition: Filed **TASK-720** (species overview size hug + mixed parent cards + change on overview) **implemented 2026-08-13** pending-qa DEV-V-013 T081, **TASK-721** (universal search+Filters same row) **implemented 2026-08-13** pending-qa DEV-V-048 T001–T002, **TASK-722** (CharacterFilter collapsed-by-default + Codex skills character filters) **implemented 2026-08-13** pending-qa DEV-V-045 T001–T003, **TASK-723** (Codex/Admin equipment columns + min/max currency + character rarity/afford) **implemented 2026-08-13** pending-qa DEV-V-016 T008, **TASK-724** (guided equipment Category header) **implemented 2026-08-13** pending-qa DEV-V-050 T004, **TASK-725** (filter control size + InfoTippy label spacing) **implemented 2026-08-13** pending-qa DEV-V-046 T007, **TASK-726** (Innate Energy / Innate Powers tooltips) **implemented 2026-08-13** pending-qa DEV-V-013 T083, **TASK-727** (L3 innate swap-at-cap, keep list) **implemented 2026-08-13** pending-qa DEV-V-050 T003, **TASK-728** (L3 selected-panel layout jump) **implemented 2026-08-13** pending-qa DEV-V-050 T005 — Selected card still mounts only when N>0; insert height is `scrollBy`-compensated so the clicked row stays put, **TASK-729** (auto-allocate pool + tooltip + HP/Energy labels) **implemented 2026-08-13** pending-qa DEV-V-013 T082, **TASK-730** (Your Hero loadout weapon id) **implemented 2026-08-13** — Loadout chips use `resolveDraftArmaments` + `buildEquipmentLookup` (official + user + codex; `docId` + case-insensitive ids); save uses the same merge. Cleanup: Your Hero power/technique chips + save use the same merge + `indexByNormalizedIds` / `findByNormalizedId` (unresolved labels Unknown power/technique, not UUID). pending-qa DEV-V-013 T080. Remaining id→name sites filed as **TASK-732**. Owner ack 2026-08-13: rarity bracket reading on TASK-723 is correct; ignore the truncated “Also don’t” (typo, not a missing AC).
+
+
+**Raw Feedback Log — 2026-08-13 (Custom archetype tips, species overview traits, skills chips, Skill Bonus tip)**
+- Context: Guided creator Path L3 custom archetype; Ancestry species overview; Skills step
+- Feedback: (1) **Custom Archetype** title tooltip and **Choose your archetype** section tooltip both show Archetype Path / legacy chooser copy — inaccurate for custom archetype. (2) Species traits in More details modal (GLR) are fine; on species **overview** screen GLR rows look off — prefer un-selectable card displays (screenshot-verify). (3) Skills screen: desc chips should be to the right of skill name, not below (repeat of prior feedback; guided creator only). (4) Skill Bonus hover should explain what Skill Bonus is for (add to d20, proficiency, full Ability, +1 per Skill Point) — clearer than formula-only tip.
+- Disposition: (1) **Fixed inline** — `guidedCustomArchetypeHelp` + `guidedChooseArchetypeTypeHelp` wired in path-step + guided-path-custom-archetype (replaced `guidedArchetypePathHelp` / `chooseCharacterCreationStyle` on L3). (2) **TASK-711 done** pending-qa — Ancestry overview granted traits use read-only `GuidedChoiceCard`; species More details catalogs stay GLR. (3) **TASK-704 done** — chips inline right of name in `guided-skills-panel.tsx`. (4) **Fixed inline** — expanded `getGuidedSkillBonusHelp` pedagogical copy (TASK-548 formula retained).
+
+**Raw Feedback Log — 2026-08-13 (GLR expanded band + action chrome regression)**
+- Context: Guided/Custom L3 embedded GLR, add-X modules, Library/Codex GLR after TASK-702
+- Feedback: Grid list row items on guided creator embedded lists and add modules should match working Codex/Library GLR styles via **shared code**, not a parallel fork. Expanded background of list items does not extend into the + / interaction-button column. Same gap now appears on Library GLR (encouraging = shared path; discouraging = regression). Library interact buttons (edit, delete, add, sync) sit beside an empty expanded column; icons are no longer vertically centered or well spaced and look smaller. Exception: equipment quantity steppers do not leave an empty band below them, but row hover still does not extend through the stepper section.
+- Misinterpretation / regression note: TASK-702 moved right chrome to a `self-start` sibling of collapsed+expanded so + would not overlay description. That pinned actions to the top of the full row, so expanded `bg-surface-alt` (content column only) left a `bg-surface` band in the action column; `IconButton` `sm` / `w-4` looked undersized and top-aligned vs the name. Quantity steppers are taller so they fill the collapsed header (no empty band when collapsed) but hover still failed to read as one band. Fix belongs in `GridListRow` once (TASK-710), not a creator-only fork. TASK-709 remains the L3↔Library parity umbrella.
+- Disposition: Filed and implemented **TASK-710** — stretch-grid header (actions centered with name) + shared `GRID_LIST_ROW_EXPANDED_BAND_CLASS` fill in the action column; shared action icon size for edit/delete/add/sync. Related TASK-702 (overlay) kept: + stays in header, never covers description.
+
+**Raw Feedback Log — 2026-08-10 (Powers screen — resource trackers, tippy color, Energy=0, L3 GLR = Library)**
+- Context: Guided/Custom Powers (and related creator resource chrome); L3 embedded GLR vs Official Realms Library / Codex
+- Feedback: (1) Innate Energy / Currency / Skill Points / Ability Points (and similar) resource trackers must share the same size and styles. (2) Tooltip `(i)` icons should prefer blue, or match the color of what they sit on (e.g. Training Points tippy green/`text-tp`). (3) Some powers/techniques show **0 Energy** in the character creator; Official Realms Power Library shows correct values — creator-side inconsistency/bug. (4) Entire L3 embedded GLR logic/systems in the character creator should match Library/Codex GLR styles and logic (shared); only intentional creator differences (budgets, eligibility, selection) should diverge.
+- Misinterpretation / code note: Innate `PointStatus` on powers step lacks `text-base` used by Skills/Abilities/`LoadoutBudgetBar`; TP InfoTippy in `LoadoutBudgetBar` is forced `text-text-muted` (not tip-on-token green). Energy=0 despite TASK-687/691 shared `buildPowerTechniqueBudgetDisplay` — likely incomplete parts enrichment / item shape on guided catalog rows vs Library Official list (Library correct = SoT). L3 `GuidedInlineCatalogList` was meant to reuse USM/Library pieces (TASK-684+) but owner still sees wholesale drift — umbrella parity beyond facts (703) and chrome (702).
+- Disposition: Filed **TASK-706** (resource tracker size/style unification), **TASK-707** (InfoTippy contextual color), **TASK-708** (creator P/T Energy=0 vs Library), **TASK-709** (L3↔Library/Codex GLR system parity umbrella; related TASK-702/703/705). **TASK-706** implemented 2026-08-13 — Innate Energy is `LoadoutBudgetBar` `leading`; inline PointStatus is `text-base` (Skills/Abilities/Currency/TP). pending-qa DEV-V-013 T057 / DEV-V-050 T001 step 6. **TASK-707** implemented 2026-08-13 — InfoTippy `tone` (`info` default / `tp` on Training Points / `current` on-chip); deleted muted class fights on LoadoutBudgetBar + DescriptorChipWithTip. pending-qa DEV-V-013 T050. **TASK-708** implemented 2026-08-10 — `libraryItemToPowerDocument` / `libraryItemToTechniqueDocument` align budget derive with Official list document shape; pending-qa DEV-V-050 T002 step 4. **TASK-709 / TASK-703 / TASK-705** implemented 2026-08-13 — L2/L3 reuse Official/Codex column+expand builders; ADR-0012 allowlist; SourceFilter (L3 `all` / path L2 `public`, always-visible `scopeExtra`) + Create Armament hatch; required-facts registry `guided-feats-l3`. pending-qa DEV-V-050 T001, DEV-V-013 T052, DEV-V-016 T018.
+
+**Raw Feedback Log — 2026-08-10 (Weapon range display; GLR +/qty chrome; creator facts; skills chips; L3 create armament + source)**
+- Context: Weapons GLR (Library / sheet / guided L3); Custom L3 embedded GLR; guided Skills; Custom loadout L3 weapons/shields/armaments
+- Feedback: (1) Some weapons show Range as `0` (should be Melee); others correctly say Melee; ranged weapons show raw integers (`1`, `2`) instead of spaces from game rules (~8 spaces per Range level). Suspect display leak and/or bad stored `range` — must not be a silent sitewide regression on shared display helpers. (2) L3 Custom GLR: the `+` selection column blacks out / covers the expanded description body (screenshot); may be global whenever right chrome is interactive; does not happen with `X` remove. (3) Equipment GLR: column header strip must span the full row and titles must align; quantity stepper (add replacement) is too far right / clipped; quantity-on-GLR generally poorly integrated for sitewide reuse; row hover does not extend behind the steppers. (4) Audit character-creator GLR lists so every required fact is always in a column or desc chip per GLR rules / required-facts registry. (5) Skills screen: skill DescriptorChips should sit to the right of the name (not below) — rows too tall. (6) L3 weapons/shields/armaments: GuidedLayerNav hatch to Create Armament (new tab → item/armament creator); SourceFilter All / Realms / My — Custom defaults to All; L1–L2 path modules default Realms/public but remain toggleable.
+- Misinterpretation / code note: Canonical display is `formatRange` (`RANGE_BASE_SPACES` 8 + `op_1_lvl * RANGE_SPACES_PER_LEVEL` 8 → `"N spaces"`, or `"Melee"` when no Range property). Guided `rangeDisplay` prefers raw `EligibleEquipmentRow.range` when present — a stored `"0"` / `"1"` / `"2"` short-circuits `formatRange` (same class of bug as sheet `normalizeRangeDisplay(item.range)` showing raw). TASK-685/688 qty used `USM_QUANTITY_RIGHT_SLOT_WIDTH` + external rightSlot — hover lives on inner grid only; SelectionToggle may stack over expanded body. Skills chips wrap below name was intentional TASK-566 mobile collision avoidance — owner now prefers name+chips inline. Species Create Species hatch is the pattern for Create Armament; SourceFilter already shared.
+- Disposition: Filed **TASK-701** (weapon range SoT + regression tests), **TASK-702** (GLR right-chrome expand overlay + qty header/hover integration), **TASK-703** (creator GLR required-facts audit), **TASK-704** (skills chips inline with name), **TASK-705** (L3 Create Armament + SourceFilter defaults). **Superseded/extended in part by TASK-709** for full L3↔Library GLR system parity. **TASK-702** implemented 2026-08-11 — external chrome sibling + full-width qty header + hover band through right slot; pending-qa DEV-V-034 T001 / DEV-V-050 T001. **TASK-703 / TASK-705** implemented 2026-08-13 under TASK-709 (facts registry + SourceFilter/Create Armament); pending-qa DEV-V-050 T001 / DEV-V-013 T052.
+
+**Raw Feedback Log — 2026-08-10 (Species overview skip regression; filter chevron; desc chips; L3 selected spacing)**
+- Context: Guided/Custom character creator after Species Continue; sitewide filters/DescriptorChips; Custom L3 `GuidedInlineCatalogList` selected panel
+- Feedback: (1) Continue after selecting species flashes/skips the species overview and lands on the first ancestry pick — regression of a previously fixed issue; need a guard so this does not return unnoticed. (2) Sitewide filter dropdowns: down-arrow sits too close to the right edge (minor) and feels bolder than the label font; used to look fine — screenshot-verify and fix shared. (3) Sitewide DescriptorChips are slightly too small / font slightly too small — harder to read; screenshot-check then bump shared size. (4) Custom creator “Selected X” panel: poor spacing — GLR content has no cushion from the wireframe border; space below last selected row vs frame feels off; padding above the Selected title needs rebalance (screenshot-test).
+- Misinterpretation / regression note: TASK-640 `resolveForwardLandingPhaseIndex` + DEV-V-013-T076 step 5 intentionally skip species overview for Custom deep entry (`prefersDeepCatalogEntry` → phaseIndex 1). That over-applied “deep catalogs” to a confirmation/overview screen (overview paints at 0 then effect jumps — matches “skips quickly”). Filter chrome drift likely from TASK-676 SelectFilter/ChipSelect `h-11` without matching `ui/Select` chevron inset/weight. DescriptorChip default `size="sm"` (`text-xs`) from chip unification may be undersized for metadata readability. Selected panel shipped with TASK-684 (`Card p-0` + title `pt-4` + rows without side/bottom cushion).
+- Disposition: (1) **TASK-697 done** — species overview no longer skipped on forward landing; vitest regression guard; verification_status pending-qa (DEV-V-013-T076 step 5, T030). **TASK-698** (filter chevron inset/weight), **TASK-699** (DescriptorChip size bump), **TASK-700 done** — L3 selected panel `px-4 pt-3 pb-3` shared wrapper; verification_status pending-qa (DEV-V-050 T001 step 7).
+
+**Raw Feedback Log — 2026-08-10 (Guided creator — restart custom, Your Character summary, Create Species chrome)**
+- Context: Guided character creator Custom entry + CharacterPreviewPanel strip + Species L2 layer-nav (post TASK-640 / TASK-686)
+- Feedback: (1) Start in Custom mode → Restart should stay in Custom (Path L3 custom archetype face), not reset to Guided default first screen. (2) Selected archetype path appears twice in **Your Character** summary — show once; prefer the line under the name (not the DescriptorChip). Custom archetype should show path type (Power / Martial / Powered-Martial), once — not a path name and not duplicated. (3) Do not show ability DescriptorChips in Your Character until abilities are actually selected / ability step completed. (4) Only highlight (other color) the archetype ability(ies) (`pow_abil` / `mart_abil`) in that summary — not every ability chip. (5) **Create Species** must not be primary blue (reads as Continue); restyle that GuidedLayerNav / similar-function buttons consistently so layer-nav ≠ footer Continue.
+- Misinterpretation note: TASK-686 treated “summarize abilities + custom type” as always-on six primary chips + archetype chip (duplicating the subtitle). TASK-640 matched layer-nav expand to Continue primary so deeper didn’t feel dull — that made Create Species feel like the progress CTA.
+- Disposition: (1) **TASK-693 done** — `resetCreator` preserves `creatorEntryMode` (Custom → Path L3 after Restart); verification_status pending-qa (DEV-V-013-T079). (2–4) **TASK-694 done** — preview path/type once under name; ability chips gated until Abilities step; only pow_abil/mart_abil highlighted; verification_status pending-qa (DEV-V-050-T002). (5) **TASK-695 done** — layer-nav expand hatch chrome (not Continue-primary); verification_status pending-qa (DEV-V-013-T077–T078).
+
+**Raw Feedback Log — 2026-08-10 (Guided creator — preview, energy, equipment GLR, armor skip, L3 audit)**
+- Context: Guided character creator after TASK-684/685 L3 inline catalogs
+- Feedback: (1) Top **CharacterPreviewPanel** strip should summarize **all six abilities** (negative, positive, and zero) plus **custom archetype type** (Power / Martial / Powered-Martial) — quick reference, not top-3 non-zero only or codex path name only. (2) **Energy** on powers/techniques L3 GLR looks wrong vs Codex/Library — why not shared `library-selectable-builders` / GLR registry? Codex is correct; guided powers path may be forked. (3) **Equipment** inline list needs **all column headers** like Codex/Library (`ARMAMENT_LIBRARY_CONFIG` parity) and better spacing for headers + quantity steppers. (4) **Armor screen** still appears for Power characters — should never show (path or custom). (5) General **regression audit** of guided creator UI/UX vs Codex/GLR after L3 list rollout — functional lists in codex/GLR but many inconsistencies remain.
+- Disposition: **TASK-686–690 done** (2026-08-10) — preview all six abilities + custom type (mobile strip scroll); Energy via `library-selectable-builders` derive + kind fix; equipment cells via `armamentRowColumns` + qty 7.5rem; Power always skips armor; L3 audit closed + cleanup. verification_status pending-qa (DEV-V-050 T001–T002). **Superseded in part by 2026-08-10 preview polish feedback → TASK-694** (ability chips gated; path/type once under name; archetype abilities highlighted only).
+
+**Raw Feedback Log — 2026-08-10 (Guided L3 catalogs — filter / loadout / gear qty / powers)**
+- Context: Guided Full Customize (no path) after TASK-684 inline catalogs
+- Feedback: (1) Unavailable feats must be filtered out (not shown disabled). (2) Custom/no-path must not skip the weapon screen for Martial, Power, or Powered-Martial — all can take weapons within armament proficiency; only Power (not Powered-Martial) skips armor. (3) Powers: filters for innate vs non-innate; add as innate or normally using L1-parallel UI. (4) Gear: quantity stepper replaces the + add button (far right); edit qty in list and selected panel. (5) Powers/techniques must filter by potential max EN like guided L2.
+- Disposition: **TASK-685** done (TASK-684 follow-up) — hide unmet feats; `fullCatalog` loadout phases; gear qty-first; powers innate scope + max EN. verification_status pending-qa (DEV-V-050 T001).
+
+**Raw Feedback Log — 2026-08-10 (Guided creator — L3 inline GLR catalogs)**
+- Context: Guided character creator Full Customize (no archetype path) — feats / loadout / powers-techniques
+- Feedback: L3 should not be an auto-opened "add X" modal filling the screen. Embed the filtered GLR catalog in each step with selected items as cards/rows above the list. Path-based (L1) stays curated cards + "See more" → modal. Feats filters should mirror Codex (Category, State Feats), not Ability/Tags; search "by name, tags, keywords, or categories." Extend the same shared pattern to character feat, loadout (weapon/armor/gear), and powers/techniques. Keep eligibility filters (armament proficiency max, innate threshold, TP/currency budgets).
+- Expected: `prefersDeepCatalogEntry` → inline `GuidedInlineCatalogList`; L1 unchanged; shared builders/filters with L2 modals.
+- Disposition: **TASK-684** done — shared `GuidedInlineCatalogList` + `GuidedFeatsFilterFields` + `useGuidedEquipmentL2Catalog`; wired on all four screens. verification_status pending-qa (DEV-V-050 T001).
+
+**Raw Feedback Log — 2026-08-06 (Library — add power/technique to character from browse)**
+- Context: `/library` → Powers/Techniques with **Filter by character** selected
+- Feedback: When sorting/filtering by character, add a **+** on each GLR row to add that power/technique directly to the character (confirm/cancel modal), same pattern as add-to-library. Future armament tabs should reuse.
+- Expected: + appears only when a character is filtered; confirm names character + item; persists to sheet; hides + when already on character.
+- Disposition: **TASK-679** done — `useAddToCharacterFromLibrary` + row `LibraryAddToCharacterButton` on My/Realms power/technique lists. verification_status pending-qa (DEV-V-046 T004). Follow-ups: **TASK-680** (armaments), **TASK-681** (cross-tab character filter).
+
+**Raw Feedback Log — 2026-08-06 (Power filters — innate threshold lock with character)**
+- Context: Library/Codex power filters with character + Innate Eligible checked
+- Feedback: Power Threshold (Innate) selector should grey out and show **Set by character** like Max Energy when filtering by character and Innate Eligible is on.
+- Disposition: **TASK-679** cleanup — `thresholdLockedByCharacter` when `hasCharacter && innateEligibleOnly`; `SelectFilter.disabledHint`.
+
+**Raw Feedback Log — 2026-08-06 (Creature library — fractional level sort)**
+- Context: `/library` → Creatures (My Library + Realms Library) — sort by Level column
+- Feedback: Fractional levels sort wrong — ½ appears before ¼, then 1; expected ¼ (smallest) → ½ → 1.
+- Expected: Level sort uses numeric quarter-step order (0.25 < 0.5 < 0.75 < 1), not string/`localeCompare` collation on decimals or display fractions.
+- Disposition: **TASK-678** done — `parseCreatureLevelSortValue` + `sortByColumn` level/`lvl` numeric compare; tests in `creature-level-display.test.ts` + `use-sort.test.ts`. verification_status pending-qa (DEV-V-040 T002).
+
+**Raw Feedback Log — 2026-08-06 (My Library GLR header/column alignment vs Realms)**
+- Context: `/library` — My Library vs Realms Library GLR lists (powers, techniques, armaments, creatures)
+- Feedback: Column headers and row values misalign on My Library; Realms Library is correct. Likely caused by edit/delete/sync action chrome — sync button is conditional (patch drift) but spacing must stay consistent when present or absent. Should be enforced codebase-wide on GLR (shared component).
+- Expected: ListHeader `rowChrome` and row flex chrome match on every row; conditional `rightSlot` (sync) still reserves the same footprint when absent; parity with Realms Library column alignment.
+- Disposition: **TASK-674** done — `GridListRow.rowChrome` reserves empty right/left slot chrome; My Library tabs pass matching `*_ROW_CHROME` to shell + rows; CI `validateMyLibraryRowChromeOnRows`. verification_status pending-qa (DEV-V-034 T001).
+
+**Raw Feedback Log — 2026-08-06 (Character sheet tour — Next blocked by roll-log FAB)**
+- Context: Post-save sheet tour on character sheet (TASK-388 §11.2)
+- Feedback: Tour **Next** button sometimes hidden behind the dice roll log FAB; cannot continue the tour.
+- Expected: Tour card above roll-log FAB; Next always clickable; optional retake from settings.
+- Disposition: **Consolidated** `ONBOARDING_FLOATING_CARD_CLASS` + `z-tour` (1100); repositioned card bottom-left on desktop; **added** Take the tour again in Character settings. BUILD_VALIDATION DEV-V-029-T004. verification_status pending-qa. **2026-08-18:** TASK-837 changed FAB geometry to a 4.5rem C4 dock → re-check is TASK-844 (do not reopen TASK-388).
+
+**Raw Feedback Log — 2026-08-06 (Post-save play-together modal — sheet-first CTAs)**
+- Context: Character creator finish — `PlayTogetherModal` after first save (TASK-388 §11.1)
+- Feedback: Priority on **See my character** (primary blue, top). Join campaign / Join Discord / Run games as RM secondary below. Use **Join campaign** not Browse (browse not available yet).
+- Expected: Primary sheet CTA at top; secondary outline group; join links to `/campaigns?tab=join`.
+- Disposition: Implemented — `play-together-modal.tsx`, `onboarding-copy.ts`; BUILD_VALIDATION DEV-V-029 + DEV-V-013 aligned; REALMS_PRODUCT_OVERVIEW §11.1 updated. verification_status pending-qa.
+
+**Raw Feedback Log — 2026-08-03 (TASK-649 — public read + VTT scope)**
+- Context: TASK-649 Phase 2 Supabase least-privilege hardening before live apply
+- Feedback: Do not touch VTT tables (Collins branch, in use). Non-sensitive data must stay publicly readable without sign-in: codex, official Realms library, item/codex art (direct URLs), guest public character sheets with art. Approve apply if SQL matches vision.
+- Expected: Least-privilege anon grants + no bucket listing; public read preserved; VTT out of scope.
+- Disposition: **TASK-649 done** — applied live 2026-08-03 via `node scripts/run-task-649-phase2.mjs`; verify-task-649 checks pass. verification_status pending-qa.
+
+**Raw Feedback Log — 2026-08-03 (Guided Abilities — custom archetype / custom chooser)**
+- Context: Guided creator Abilities step when forging a custom archetype (no codex path)
+- Feedback: No pre-assigned ability values; no L1 recommended layer or See recommendations; only full point-buy from zeros; no auto-allocated points.
+- Expected: `prefersDeepCatalogEntry` → customize-only panel; Continue requires spending all ability points.
+- Disposition: Implemented — `abilities-step.tsx`, `buildOpenCustomPathEntryPatch` clears stale dependents, `canContinueGuidedAbilitiesStep`; BUILD_VALIDATION DEV-V-013 T074 step 5 updated. verification_status pending-qa.
+
+**Raw Feedback Log — 2026-08-03 (GuidedLayerNav placement — below content, not footer)**
+- Context: Guided creator layer expand/collapse buttons (`GuidedLayerNav`)
+- Feedback: One layer-nav button → bottom left below step content. Two buttons → shallower (e.g. See starter species) left, deeper (e.g. See all species / Create Species) right. Layer-nav actions must not live in the sticky Back/Continue footer (e.g. Create Species on Species L2).
+- Expected: `GuidedLayerNav` uses `justify-start` for single action, `justify-between` for pair; Species **Create Species** in layer nav right slot on L2.
+- Disposition: Implemented — `guided-layer-nav.tsx`, `species-step.tsx`; BUILD_VALIDATION DEV-V-013 T077–T078 updated. **Cleanup 2026-08-03:** removed dead `footerTrailing` API; FEATURE_INDEX + product overview aligned.
+
+**Raw Feedback Log — 2026-08-02 (Power Creator AoE apply duration + calc mismatch)**
+- Context: Power Creator save vs Library/GLR displayed Energy
+- Feedback: Power creator does not seem to save the Apply duration tick for Area of Effect mechanics; possible other mismatches between creator-calculated and displayed/loaded GLR Energy.
+- Expected: Apply duration on AoE (and related duration modifiers) round-trip on save/load; Library Energy matches creator.
+- Disposition: **TASK-672** done (re-homed from remote mislabeled TASK-642) — `bodyToColumnar` was skipping nested `area`/`range`/`duration` from payload (only promoting scalars), dropping `applyDuration` and Focus/Sustain/etc. Fixed persistence + section-cost applyDuration + enrich-powers part flag. verification_status pending-qa (DEV-V-041 T001).
+
+**Raw Feedback Log — 2026-08-01 (Guided Species L2 — mixed + Create Species)**
+- Context: Guided creator Species step product overview implementation
+- Feedback: L2 = all species + Mixed Species card (same as Advanced `MixedSpeciesModal`) + L3 footer **Create Species** opens species creator in new tab. Mixed species affects Ancestry/skills downstream.
+- Expected: L2 catalog + mixed pick + external species creator hatch; Ancestry micro-flow supports mixed parents (traits, choose-2 skills, flaw-scoped bonus trait).
+- Disposition: **TASK-641** done — see archive. verification_status pending-qa (DEV-V-013 T078).
+
+**Raw Feedback Log — 2026-08-01 (Chooser Legacy + custom deep catalogs + layer button parity)**
+- Context: Character creation chooser; cohesive creator custom entry; GuidedLayerNav vs footer buttons
+- Feedback: (1) Temporarily add **Legacy** chooser card → `/characters/new/advanced`; **Custom** → guided Path L3. (2) Custom entry should land on deeper catalog faces on later steps (e.g. all species, not starters only); layer nav labels direction-neutral (**See starter species**, not “Back to…”). (3) L1/L2/L3 expand/collapse buttons should match footer Continue/Back chrome so deeper does not feel like a dull downgrade.
+- Expected: `creatorEntryMode` session flag (not saved on character); deep landing per step; shared primary/outline styles via `GuidedLayerNav` + `guided-nav-button-styles`; product overview chooser table updated.
+- Disposition: **TASK-640** done — see archive. verification_status pending-qa (DEV-V-013 T075–T077).
+
+**Raw Feedback Log — 2026-08-01 (Do not persist creator type / creationMode)**
+- Context: TASK-638 Path L3 custom archetype + cohesive creator policy
+- Feedback: Do not persist a “creator type” or forge vs path flag. Only persist `archetypePathId` when the player picked a path (level-up / sheet recommendations). Custom-archetype builds use normal archetype type + ability fields with no path id.
+- Expected: Save payloads and sheet path logic use `archetypePathId` only; no `creationMode` in `clean-for-save` or guided draft; Advanced may keep in-session UX until retired.
+- Disposition: Implemented in `clean-for-save`, `build-character`, guided store migration v8, sheet modals/level-up, `FEATURE_INDEX`, `REALMS_PRODUCT_OVERVIEW` §5.0. `Character.creationMode` deprecated on type only. Pending-qa with TASK-638 (DEV-V-013).
+
+**Raw Feedback Log — 2026-08-01 (Unified character creator L1–L2–L3)**
+- Context: Character creation entry + guided creator layers; product overview three-layer model; parallel Advanced/Custom creator to phase out
+- Feedback: Guided creator is mostly L1–L2 today; L3 should be the full customizable options currently represented by the parallel Custom/Advanced creator. Chooser buttons **Guided** and **Custom** both enter the same creator (today’s guided shell): Guided → L1 entry; Custom → L3 entry. Navigate between layers with same-style, same-place buttons (`GuidedLayerNav` pattern). L3 entry lands on the archetype step: pick Martial / Power / Powered-Martial, then power/martial ability(ies), with InfoTippy along the way. Escape hatch from L3: view archetype paths → L1 (path browse; Path chapter has no distinct L2 — L1 and “L2” are the same path cards). On L1 Path step, add bottom entry **Custom Archetype** (or similar) → L3. Align with `REALMS_PRODUCT_OVERVIEW.md` three-layer model; supersede “keep two parallel creators forever.”
+- Expected: One character-creator shell with catalog layers; Advanced/Custom phased out after integration; Path L1↔L3 hatches; chooser dual entry into the same creator. Not every step exposes all three layers — some are L1-only, L2-only, or L3-only by mechanics or design.
+- Disposition: Product overview revised §3 / §5.0 / §5.1. **TASK-638 done** — Path L1↔L3 custom archetype + chooser Custom entry (pending-qa DEV-V-013 T072–T074). **TASK-640 done** — Legacy chooser + custom deep catalogs + layer nav chrome (pending-qa T075–T077). Downstream forge chapters still open.
+
+**Raw Feedback Log — 2026-08-01 (Creature level fraction display)**
+- Context: Sitewide creature level presentation
+- Feedback: Display decimal creature levels as unicode fractions when user-facing (0.25 → ¼, 0.5 → ½, 0.75 → ¾); establish as global standard across codebase.
+- Expected: All creature level labels/columns use shared formatter; creator level select shows fractions; numeric storage/calcs unchanged.
+- Disposition: **Session cleanup** — `lib/game/creature-level-display.ts` + wired stat blocks, library/admin lists, combatant picker, creator summary/select, load modals, creature-feat req columns. `GAME_RULES.md` + `FEATURE_INDEX` document rule. verification_status pending-qa (DEV-V-040-T001).
+
+**Raw Feedback Log — 2026-08-01 (Creatures GLR spacing + header alignment)**
+- Context: Library → Creatures tab (vs Powers/Techniques/Weapons/Armor/Shields); concern that GLR norms break locally and require hunt-and-peck fixes
+- Feedback: Creature GLR item spacing differs from other tabs; creature column headers do not follow the recent header↔column alignment fix (TASK-622 `rowChrome`). Assumed same pattern may exist in other GLR cases. Shared components should make the desired norm hard to break.
+- Expected: Same row gap as other GLR lists; ListHeader reserves the same action chrome as GridListRow (edit/delete/+); prefer enforceable shared defaults over per-tab overrides.
+- Disposition: **TASK-630** done — Creatures `rowChrome` + shell `gap-1` (dropped `space-y-3`); shared `CREATURE_STAT_BLOCK_GRID`. **TASK-631** done — GLR chrome/spacing CI for Library/Official/Codex. **TASK-637** done — extended CI to USM + creator-embedded lists (creature + advanced creator selected powers/techniques/equipment); migrated `rowChrome` / `gap-1`. Related TASK-629 (facts registry).
+
+**Raw Feedback Log — 2026-08-01 (Library armor columns + GLR quick-ref SoT)**
+- Context: Realms Library → Armor column headers; constitution consistency for GLR quick-ref facts
+- Feedback: Add ability requirement and critical range increase to the armor column headers. Also: based on the goal that quick-reference information is readily available as a column header or desc chip for items — do we have a shared/consistent reference for what that means for each GLR item type that is enforceable across the codebase? (e.g. powers show range; armor ability requirements / critical range; weapon damage / range / rarity / currency.) Are these accounted for across all cases and enforced? Source of truth?
+- Disposition: **TASK-628** done — Armor Abl. Req. + Crit + columns in `ARMAMENT_LIBRARY_CONFIG` / `armamentRowColumns`. **TASK-629** filed (Architect) for an enforceable per-entity required-facts registry — today policy lives in docs + `compact-facts` grammar, not CI-enforced per list.
+
+**Raw Feedback Log — 2026-08-01 (Power Creator multi-elemental damage EN)**
+- Context: Power Creator — Added Damage Types section
+- Feedback: When adding more than one row of elemental damage (fire, ice, lightning, etc.), each row should independently contribute to Energy; currently only one Elemental Damage instance is counted because rows share the same part id.
+- Expected: Each damage row adds its own base + option EN/TP; save/load and library display match live creator totals.
+- Disposition: **TASK-623** done — cost calc + display rebuild + save omit auto mechanics. verification_status pending-qa (DEV-V-036-T001).
+
+**Raw Feedback Log — 2026-08-01 (Realms Library redundant Realms badge)**
+- Context: Realms Library → expand power/technique/armament/creature row
+- Feedback: Some items show a descriptor chip labeled "Realms" — redundant when already browsing Realms Library (source is implied by page context); remove it.
+- Disposition: **Session cleanup** — dropped default `Realms` row badge from `OfficialEntityList` + creature `renderRow`; `getBadges` remains for meaningful badges (e.g. Enhanced). verification_status pending-qa (DEV-V-035-T001).
+
+**Raw Feedback Log — 2026-08-01 (GLR expand/collapse consistency)**
+- Context: GLR collapse/expand rows — character sheet, Library, Codex (official/personal), Powers/Techniques/Armor/Weapons/Shields
+- Feedback: (1) Column headers inconsistently account for edit/delete/add so data columns misalign; functional buttons inconsistently inside vs outside hover highlight (e.g. delete in hover, edit not). (2) Total Training Points desc chip repeats when TP already in collapsed columns (e.g. techniques). (3) Parts & Proficiencies chips: use `TP: X` not `Training Points: X`; option level increases unclear; do not show `(0)` when level is 0 or not increasable.
+- Disposition: **TASK-622** — shared GridListRow chrome + chip grammar; see ACTIVE_TASKS.
+
+**Raw Feedback Log — 2026-08-01 (guided creator subsection titles)**
+- Context: Guided creator — Path step and other steps with subsections (archetype feat groups, etc.)
+- Feedback: Section titles should use the display font; smaller than the main step title but large enough to read as clear sections; shared format across guided creator tabs with subsections.
+- Disposition: **Session cleanup** — `GuidedSectionTitle` + `GUIDED_SECTION_TITLE_CLASS` (`text-xl sm:text-2xl`); wired Path, feats, skills, abilities, powers/techniques, reveal, species overview. verification_status pending-qa (DEV-V-013-T067).
+
+**Raw Feedback Log — 2026-08-01 (Library armaments tab split)**
+- Context: Realms Library → Armaments tab
+- Feedback: Split armaments into Weapons, Armor, and Shields (3 tabs) so column headers can be more specific and users can tell which is which.
+- Disposition: **TASK-621** done — three tabs on `/library` (Realms + My); type-specific columns; shared `official-item-list.ts` + `armament-library-labels.ts`; admin segmented kind picker. verification_status pending-qa (DEV-V-033-T001).
 
 Purpose
 - Single, de-duplicated, organized source of owner feedback supplied to AI agents.
@@ -16,6 +350,22 @@ How to use
 
 ### Tooltips (canonical standard)
 - **Tooltips:** static copy in `public/tooltip-text.tsx`, `InfoTippy` (`@floating-ui/react`). TASK-376 + TASK-392 complete. Do not reintroduce DB tooltips.
+- **Ability/defense definitions (2026-07-19):** Word-tied tips (no Info icon) via `WordHelpTip` + `getAbilityHelp` / `getDefenseHelp` on character sheet and guided Abilities — **TASK-547**. Tip copy says the name once (not “Acuity. Acuity…”) — **TASK-566**.
+
+### Guided creator mobile density (2026-07-19)
+- **Skills L1 rows:** name + expand chevron; chips wrap below (no overlap / truncated path tags) — **TASK-566**.
+- **Abilities recommended grid:** full ability names on mobile; 2-col phone tiles (not tall STR/ACU columns) — **TASK-566**.
+
+### Guided innate Powers (2026-07-20)
+- **Continue:** do not hard-block when Innate Energy pool is under-filled; soft warning OK — **TASK-573**.
+- **Training Points:** innate powers spend shared TP like regular Powers and show the TP cost descriptor chip on guided cards — **TASK-573**.
+
+### Guided Path / Archetype screen (2026-07-20)
+- **L1 chrome:** title "Choose your Archetype Path" + tip; Foundation subtitle exposes Archetype Path; stronger Power/Martial section headers; path-type tips positive + examples; ability chips slightly larger, Primary slight blue (same size Primary/Secondary) — **TASK-577** (done, pending-qa).
+- **More details:** drop preview hint + Proficiency section; Path Abilities Primary/Secondary tips; recommended abilities as mini ability cards; Weapons & Armor with live `getArmamentMax` + reusable Armament Proficiency tip — **TASK-578** (done, pending-qa).
+- **Feats deep-dive:** uses/recovery as non-expanding desc chips; restriction-notice cohesion with later feat cards — **TASK-579**.
+- **TP tip:** shorter, clearer `trainingPointsHelp` — **TASK-580**.
+- **Tooltip docs:** L1/guided vs global tip layers; consolidate Armament Proficiency export — **TASK-581** (done, pending-qa DEV-V-009-T036).
 
 ---
 
@@ -32,8 +382,9 @@ How to use
 ### 1) Architecture & Unification
 - Consolidate duplicate components and logic across the project (character sheet, creators, library, codex).
 - Create and enforce shared list/header/modal patterns (sortable headers, consistent spacing, rounded modal edges).
-- **Modals with lists:** Unify add-X modals, load modals, and selection modals — same logic, styles, EmptyState/LoadingState, FilterSection; align with Codex/Library. TASK-264 (done).
+- **Modals with lists:** Unify add-X modals, load modals, and selection modals ? same logic, styles, EmptyState/LoadingState, FilterSection; align with Codex/Library. TASK-264 (done).
 - Find and remove true dead code.
+- **God-file / coverage follow-ups (2026-07-20 quality audit):** Continue TASK-598-style ≤~500 LOC facades for crafting, encounters, admin codex, remaining creators, shared hotspots (**TASK-607–611**); thin API route automated smoke (**TASK-613**). Docs hygiene **TASK-612** done (HISTORY_INDEX + debt deletes; ~60-day changelog rotation N/A). Report: `archive/QUALITY_GLOBAL_AUDIT_2026-07-20.md`.
 
 ### 2) Crafting (2026-03-10)
 - **Core rules:** Add CRAFTING category to core_rules with crafting table, successes table (incl. calculation fields for auto-cost/price), enhanced/consumable tables, multipliers. TASK-293.
@@ -48,8 +399,16 @@ How to use
 - Ensure parts/properties load their TP/IP/C values from Codex and are used to compute EN/TP/C when rendering lists or summaries.
 - Wire option levels and part selections to update calculated costs (EN/TP/C) in UI immediately.
 - Consistent layout: fixed compact summary + scrolling inputs/values.
-- **Creature Creator (2026-02-24):** (1) Show feat point cost for damage modifiers (resistance, immunity, weakness), senses, movement, condition immunities — before and after adding (chip or label). TASK-270. (2) Use AddSkillModal and AddSubSkillModal instead of skills dropdown. TASK-271. (3) Separate Add Feat and Add Negative Feat modals (negative = feats with negative feat point cost). TASK-272. (4) Add power/technique/armament modals and displayed lists: parts, properties, options as chips; area, range, etc in expanded view; use same logic as add-library-item-modal and library/codex. TASK-273.
+- **Guided choice-card disclosure (2026-07-15):** **See more?** = in-card deepen (truncated copy / card content). **More details** = entity modal and/or lots of chip/fact disclosure. **See more options** = catalog Layer 2 only. Do not invent specialist verbs (Property details, Read more, Hide properties). When a card has both See more and modal More details, show modal More details only after expand/select. TASK-432?436.
+- **GridListRow fact chips (2026-07-15):** Column facts must stay as columns or self-describing expanded chips (e.g. Damage Reduction 2). Sitewide audit **TASK-437 done**.
+- **Guided L1 = curated picks, not silent kits (2026-07-15):** Layer 1 still requires deliberate user choice for identity and fighting-style decisions (path, species, ancestry, feats, weapons, armor). Soften prior ?accept defaults / barely touch middle chapters? and remove quick loadout kits; weapon/armor are individual path cards. Gear may offer optional ?Add all recommended.? Selection grammar: cards (few/curated) vs GridListRow (many/browse); entity depth ladder vs catalog breadth ladder ? see `REALMS_PRODUCT_OVERVIEW.md` ?3.1. TASK-442?443.
+- **Admin archetype path ? guided parity (2026-07-17):** Sync admin path builder with guided creator ? named feat groups with explicit character vs archetype audience (no title heuristics), max 3 base skills with warn-not-block on legacy excess, armaments UI-only split (weapons/shields vs armor; single `level1_armaments`), drop `level1_recommended_species` column entirely (`is_starter` only). Guided is SoT; custom/advanced transitional. Tasks **TASK-514?518** (TASK-391 superseded). Owner decisions locked same day.
+- **Card ? GLR selection grammar (2026-07-15 session):** Cards are the quieter Layer?A presentation of the same entity facts as GridListRow; See more / row expand and More details / rich expand are the same depth ladder. ?See more options? is catalog breadth only. Share fact builders and labels sitewide; do not force one chrome component.
+- **Agent user-facing copy (2026-07-15):** Game-term capitalization + prefer/avoid vocab (no Check/Save/Class/DC; Abilities not Ability Scores in UI; Score = Bonus + 10; no em dash in UI). Guide = **TASK-438 done**. Sitewide string audit = **TASK-439 done**; residuals **TASK-440**.
+- **Named Bonuses Title Case (2026-07-15):** Capitalize Attack Bonus and essentially every named Bonus (Power Bonus, Martial Bonus, Ranged Attack Bonus, Skill Bonus, Defense Bonus, ?). Documented in `GAME_RULES.md` Terminology.
+- **Creature Creator (2026-02-24):** (1) Show feat point cost for damage modifiers (resistance, immunity, weakness), senses, movement, condition immunities ? before and after adding (chip or label). TASK-270. (2) Use AddSkillModal and AddSubSkillModal instead of skills dropdown. TASK-271. (3) Separate Add Feat and Add Negative Feat modals (negative = feats with negative feat point cost). TASK-272. (4) Add power/technique/armament modals and displayed lists: parts, properties, options as chips; area, range, etc in expanded view; use same logic as add-library-item-modal and library/codex. TASK-273.
 - **2026-03-07 (barfight):** Power creator: allow multiple damage types per power (add row; save/load array). TASK-286. Creators: show explicit energy (EN) per item. TASK-287. Remove "(optional)" from damage in creators. TASK-288.
+- **2026-08-01:** Creature levels: user-facing decimal levels (0.25 / 0.5 / 0.75) display as unicode fractions (¼ / ½ / ¾) via `formatCreatureLevel*` (`@/lib/game`). Session cleanup — see raw log above.
 
 ### 4) Character Sheet & Library
 - Library tab order: Feats, Powers, Techniques, Inventory, Proficiencies, Notes (default open to Feats).
@@ -67,8 +426,9 @@ How to use
 - Palette: primarily blues/grays; use green for health, blue for energy, and lighter purple for powers.
 - Remove extraneous expand/collapse chevrons when they cause layout issues.
 - Implement modern thin scrollbars sitewide.
-- **Buttons:** Use solid colors with clear white font (btn-solid, btn-outline-clean) — no gradients. Match about page styles site-wide.
+- **Buttons:** Use solid colors with clear white font (btn-solid, btn-outline-clean) ? no gradients. Match about page styles site-wide.
 - **Roll Log:** Single-row layout (1d20 X + Bonus = Total in boxes); roll=light grey, bonus=green, total=blue; smaller timestamp.
+- **Stable vertical chip expand (updated 2026-07-17):** ExpandableChip keeps its collapsed vertical row but intentionally moves to the chip group?s left edge and takes the full width. All chips from that row onward move below it. The pointer remains vertically aligned; preserving horizontal position is no longer the goal. Sitewide shared standard ? **TASK-445 / TASK-504**.
 
 ### 7) Modals & Lists
 - Shared modal/list components should include: rounded headers, header spacing, sortable columns, and right-aligned add/select controls.
@@ -76,21 +436,21 @@ How to use
 - All modals: uniform rounded corners (overflow-hidden on modal container). Remove "Add" column header; ListHeader with hasSelectionColumn provides empty slot. Header bar: shorter than modal width, rounded edges, ascending/descending sort.
 
 ### 7b) Creator Contrast & Accessibility
-- Technique and Armament creators: description and option boxes must use semantic tokens (text-text-primary) and dark mode variants — match Power Creator. Dropdown menus across all 3 creators must have explicit text-text-primary bg-surface. ✅ TASK-254
-- **Dark mode — cost/TP/currency and advanced mechanics:** Cost stat boxes (Energy, TP, Currency) in CreatorSummaryPanel and advanced mechanics option boxes in Power Creator must use dark-mode-appropriate backgrounds (semantic tokens or .dark overrides). Implemented 2026-02-21: .dark --color-tp-light and --color-tp; PowerAdvancedMechanics option boxes use bg-surface-alt.
+- Technique and Armament creators: description and option boxes must use semantic tokens (text-text-primary) and dark mode variants ? match Power Creator. Dropdown menus across all 3 creators must have explicit text-text-primary bg-surface. ? TASK-254
+- **Dark mode ? cost/TP/currency and advanced mechanics:** Cost stat boxes (Energy, TP, Currency) in CreatorSummaryPanel and advanced mechanics option boxes in Power Creator must use dark-mode-appropriate backgrounds (semantic tokens or .dark overrides). Implemented 2026-02-21: .dark --color-tp-light and --color-tp; PowerAdvancedMechanics option boxes use bg-surface-alt.
 - **Armaments: strength requirements and descriptions:** When loading armaments (weapons, armor) from library or character, description and strength/ability requirements must display when saved. Implemented 2026-02-21: item creator edit load restores abilityRequirement.id from saved item; enrichItems derives abilityRequirement from properties when missing on library item; description preserved with ?? ''.
-- Full accessibility audit: Elements must meet WCAG 2.1 AA contrast (4.5:1 small text, 3:1 large text). Use axe DevTools to identify and fix violations. ✅ TASK-255 (not-started; handled by other agent)
-- **Site-wide accessibility (Vercel audit 2026-02-23):** (1) Minimum color contrast in light mode: home feature text (text-neutral-600 → text-neutral-700 or semantic token), auth password toggle icon, primary buttons, status text (e.g. green-600). (2) Buttons must have discernable text: icon-only buttons need aria-label (e.g. password show/hide, dice roller history, campaign edit name/description). (3) Select elements must have an accessible name: use <label htmlFor> + id on select, or aria-label. (4) Heading levels must only increase by one: page h1 → next section h2 (not h3); fix campaigns list, campaign detail, encounter combat/skill views. (5) Image alt text must not duplicate adjacent visible text: dice images with "d4"/"d6" etc. next to them should use alt="". (6) Set up eslint-plugin-jsx-a11y and Cursor rule so future code complies. TASK-267.
+- Full accessibility audit: Elements must meet WCAG 2.1 AA contrast (4.5:1 small text, 3:1 large text). Use axe DevTools to identify and fix violations. ? TASK-255 (not-started; handled by other agent)
+- **Site-wide accessibility (Vercel audit 2026-02-23):** (1) Minimum color contrast in light mode: home feature text (text-neutral-600 ? text-neutral-700 or semantic token), auth password toggle icon, primary buttons, status text (e.g. green-600). (2) Buttons must have discernable text: icon-only buttons need aria-label (e.g. password show/hide, dice roller history, campaign edit name/description). (3) Select elements must have an accessible name: use <label htmlFor> + id on select, or aria-label. (4) Heading levels must only increase by one: page h1 ? next section h2 (not h3); fix campaigns list, campaign detail, encounter combat/skill views. (5) Image alt text must not duplicate adjacent visible text: dice images with "d4"/"d6" etc. next to them should use alt="". (6) Set up eslint-plugin-jsx-a11y and Cursor rule so future code complies. TASK-267.
 
 ### 8) Bugs / Behavior to Prioritize
-- **user_profiles / user_items after migration:** Ensure user_profiles row exists (with created_at/updated_at) before any insert into user_items, user_powers, etc. Fix "null value in column updated_at" and "user_items_user_id_fkey" by upserting profile with timestamps and ensuring profile before library writes. ✅ Implemented 2026-03-02 (ensureUserProfile, auth/API/actions/profile-picture; SQL default script).
+- **user_profiles / user_items after migration:** Ensure user_profiles row exists (with created_at/updated_at) before any insert into user_items, user_powers, etc. Fix "null value in column updated_at" and "user_items_user_id_fkey" by upserting profile with timestamps and ensuring profile before library writes. ? Implemented 2026-03-02 (ensureUserProfile, auth/API/actions/profile-picture; SQL default script).
 - Login redirect: return user to the page that initiated login.
-- Character creator: persist skill allocations automatically when switching tabs. Species steps: deduplicate list items (flaws, traits, characteristics) when mixed. TASK-284. Species steps: sticky Continue button so user doesn't have to scroll. TASK-285.
+- Character creator: persist skill allocations automatically when switching tabs. Species steps: deduplicate list items (flaws, traits, characteristics) when mixed. TASK-766. Species steps: sticky Continue button so user doesn't have to scroll. TASK-285.
 - Creature creator: hide unarmed prowess options > level 1 for new characters; fix dropdown alignment; make summary scroll behavior consistent.
 - Powers/Techniques/Armaments: ensure Codex enrichment computes and displays EN/TP/C in all list views.
 - **Power creator: option levels must not be negative.** Implemented 2026-02-23: PowerPartCard and PowerAdvancedMechanics ValueSteppers for op_1/2/3_lvl now use min={0}.
-- **Console: InvalidNodeTypeError (Range/selectNode — "the given Node has no parent").** Triggered on mouse up; likely React/dependency selection logic when a node was unmounted. TASK-268 done: source is dependency (chunk 525.js); added SelectionGuard to clear selection when anchor node is detached; documented in ACCESSIBILITY.md.
-- **Rules page (embedded Google Doc): DOCS_timing is not defined.** Error is from inside the embedded Google Doc iframe; not fixable in our codebase.
+- **Console: InvalidNodeTypeError (Range/selectNode ? "the given Node has no parent").** Triggered on mouse up; likely React/dependency selection logic when a node was unmounted. TASK-268 done: source is dependency (chunk 525.js); added SelectionGuard to clear selection when anchor node is detached; documented in ACCESSIBILITY.md.
+- **Rules page (embedded Google Doc): DOCS_timing is not defined.** Was Google’s iframe (not our code). TASK-796 removed the embed; first-party MDX rulebook.
 - **Resources page: Character Sheet PDF 404.** Link is `/Realms Character Sheet Alpha.pdf`; file must exist in `public/` or link updated. TASK-269.
 - **Zustand default export deprecation:** Our stores use named import; warning is from a dependency (noted in AI_CHANGELOG 2026-02-23).
 - **Official library not saving:** Powers, techniques, armaments do not persist when admin saves to official library. TASK-289 (critical).
@@ -105,7 +465,7 @@ How to use
 - Health/Energy Allocation section should be titled "Health/Energy Allocation" consistently.
 - "Next: 2 Points" label for abilities costing 2 at 4+ (not 3).
 - Auto-capitalize archetype power/martial ability display (e.g., "Charisma" not "charisma").
-- **Roll Log terminology:** Realms uses "Rolls" only — no "Saves" or "Checks". Titles: "Acuity", "Discernment", "Athletics (STR)", weapon name. Skill format: "Skill Name (ABR)". Roll log labels: fall damage → "Fall Damage"; attack rolls → "Strength Attack" / "Acuity Attack" (do not specify prof/unprof); damage rolls → "{Type} Damage" (e.g. "Slashing Damage"), not "Damage (slashing)". Implemented 2026-02-21.
+- **Roll Log terminology:** Realms uses "Rolls" only ? no "Saves" or "Checks". Titles: "Acuity", "Discernment", "Athletics (STR)", weapon name. Skill format: "Skill Name (ABR)". Roll log labels: fall damage ? "Fall Damage"; attack rolls ? "Strength Attack" / "Acuity Attack" (do not specify prof/unprof); damage rolls ? "{Type} Damage" (e.g. "Slashing Damage"), not "Damage (slashing)". Implemented 2026-02-21.
 
 ### 10) Page Layout & Sizing
 - Page content width should be consistent across non-unique pages (codex, library, creators, character sheet).
@@ -132,42 +492,42 @@ How to use
 - Level dropdown is too wide; Level/Type/Size dropdowns not aligned horizontally with Name input.
 - Fix alignment and constrain dropdown widths.
 
-### 16) Character Sheet Archetype Section — Proficiency Slider
+### 16) Character Sheet Archetype Section ? Proficiency Slider
 - Archetype prof slider: Hide unless in edit mode for archetype proficiency editing. Only show when pencil is clicked.
 - In non-edit mode, display Power and/or Martial proficiency as simple values (e.g., "Power: 2, Martial: 1") instead of the slider.
 - The slider is for editing only.
 
 ### 17) Admin Codex Editor
-- Navbar: Campaigns link should appear after RM Tools, before About. ✅ TASK-153
-- Feat level 0: Display "-" instead of "0" in list views. ✅ TASK-154
-- Delete: List must refresh immediately after delete (no page reload). ✅ TASK-155
-- UI consistency: Admin tabs should match Codex tabs (same filters, search, sort, layout); only pencil/trash differ for edit/delete. ✅ TASK-155 (Admin Feats unified; other tabs can follow)
-- Feat ability: Use dropdown of 6 Abilities + 6 Defenses; allow multi-select. ✅ TASK-156
-- Feat fields: All feat fields must be editable (req_desc, ability_req/abil_req_val pairs, skill_req/skill_req_val, feat_cat_req, pow_abil_req, mart_abil_req, pow_prof_req, mart_prof_req, speed_req, feat_lvl, lvl_req, uses_per_rec, rec_period, category, ability, tags, char_feat, state_feat). ✅ TASK-157
-- Array fields: Use dropdowns to select by name (e.g. species skills, feat skill_req), not "ids separated by commas". ✅ TASK-160
-- Input lag: Typing in edit mode should feel responsive. ✅ TASK-159 (done: useTransition in Admin Feats)
-- Centralized schema doc: Create reference for all codex entity fields (name, type, description) for AI/engineer use. ✅ TASK-158
- - Feat prerequisites: `prereq_text` is not a real feat attribute and should not appear in schema docs, types, or Admin editors. Use `req_desc` only. ✅ TASK-169
- - Other Admin tabs: Admin Skills, Parts, Properties, and Equipment tabs should use the same search, filters, sort headers, and GridListRow layout as their Codex counterparts, with only edit/delete controls added. ✅ TASK-170
- - Skill base skill selector: Admin Skills edit modal should use a dropdown of base skill names for the `base_skill` relationship instead of requesting a numeric ID; the UI selects by name and the code resolves/stores the corresponding `base_skill_id` internally. ✅ TASK-171
- - Skill additional descriptions: Admin Skills edit modal must expose all skill narrative fields for editing — `success_desc`, `failure_desc`, `ds_calc`, `craft_success_desc`, `craft_failure_desc` — matching the codex schema. ✅ TASK-172
- - Skill chips: Extra skill descriptions (success/failure outcomes, DS guidance, craft success/failure details) should render as expandable chips on skill item cards across the site (Codex, add skill modals, add sub-skill modals, etc.), appended after the main description. ✅ TASK-173
- - Species height/weight/lifespan: Codex API maps ave_hgt_cm/ave_wgt_kg to ave_height/ave_weight; adulthood_lifespan as number or [adult, max]. Ancestry tab and Codex species cards show Avg Height, Avg Weight, Adulthood, Lifespan (max). ✅ TASK-256
- - Skill governing ability: Admin Skills edit uses only the six abilities (not defenses); placeholder "Choose governing ability". ✅ TASK-257
+- Navbar: Campaigns link should appear after RM Tools, before About. ? TASK-153
+- Feat level 0: Display "-" instead of "0" in list views. ? TASK-154
+- Delete: List must refresh immediately after delete (no page reload). ? TASK-155
+- UI consistency: Admin tabs should match Codex tabs (same filters, search, sort, layout); only pencil/trash differ for edit/delete. ? TASK-155 (Admin Feats unified; other tabs can follow)
+- Feat ability: Use dropdown of 6 Abilities + 6 Defenses; allow multi-select. ? TASK-156
+- Feat fields: All feat fields must be editable (req_desc, ability_req/abil_req_val pairs, skill_req/skill_req_val, feat_cat_req, pow_abil_req, mart_abil_req, pow_prof_req, mart_prof_req, speed_req, feat_lvl, lvl_req, uses_per_rec, rec_period, category, ability, tags, char_feat, state_feat). ? TASK-157
+- Array fields: Use dropdowns to select by name (e.g. species skills, feat skill_req), not "ids separated by commas". ? TASK-160
+- Input lag: Typing in edit mode should feel responsive. ? TASK-159 (done: useTransition in Admin Feats)
+- Centralized schema doc: Create reference for all codex entity fields (name, type, description) for AI/engineer use. ? TASK-158
+ - Feat prerequisites: `prereq_text` is not a real feat attribute and should not appear in schema docs, types, or Admin editors. Use `req_desc` only. ? TASK-169
+ - Other Admin tabs: Admin Skills, Parts, Properties, and Equipment tabs should use the same search, filters, sort headers, and GridListRow layout as their Codex counterparts, with only edit/delete controls added. ? TASK-170
+ - Skill base skill selector: Admin Skills edit modal should use a dropdown of base skill names for the `base_skill` relationship instead of requesting a numeric ID; the UI selects by name and the code resolves/stores the corresponding `base_skill_id` internally. ? TASK-171
+ - Skill additional descriptions: Admin Skills edit modal must expose all skill narrative fields for editing ? `success_desc`, `failure_desc`, `ds_calc`, `craft_success_desc`, `craft_failure_desc` ? matching the codex schema. ? TASK-172
+ - Skill chips: Extra skill descriptions (success/failure outcomes, DS guidance, craft success/failure details) should render as expandable chips on skill item cards across the site (Codex, add skill modals, add sub-skill modals, etc.), appended after the main description. ? TASK-173
+ - Species height/weight/lifespan: Codex API maps ave_hgt_cm/ave_wgt_kg to ave_height/ave_weight; adulthood_lifespan as number or [adult, max]. Ancestry tab and Codex species cards show Avg Height, Avg Weight, Adulthood, Lifespan (max). ? TASK-256
+ - Skill governing ability: Admin Skills edit uses only the six abilities (not defenses); placeholder "Choose governing ability". ? TASK-257
 
 ### 18) Encounters System (Major Redesign)
-- **Rename:** "Encounter Tracker" → "Encounters" (hub page).
+- **Rename:** "Encounter Tracker" ? "Encounters" (hub page).
 - **Encounters hub:** List view of saved encounters; filter, search, sort; create new (combat, skill, or mixed); click to open.
 - **Persist:** Save encounters to Supabase/Prisma by ID; replace local storage. Save/return to sessions (turns, AP, HP tracked).
 - **Combat Tracker:** Designate current encounter tracker as combat-specific; tied to encounter ID.
-- **Skill Encounter page:** Add characters; track skill rolls; successes vs failures; required successes/failures; DS-based resolution; reference GAME_RULES.md (DS = 10 + ½ Party Level, Required Successes = # Characters + 1).
+- **Skill Encounter page:** Add characters; track skill rolls; successes vs failures; required successes/failures; DS-based resolution; reference GAME_RULES.md (DS = 10 + ? Party Level, Required Successes = # Characters + 1).
 - **Mixed Encounter page:** Combine combat + skill functionality; reuse components from both.
-- **Add from library:** Encounter tracker — add creatures from user's creature library; auto-populate max HP/EN; quantity selector; use existing add combatant/creature modal components.
+- **Add from library:** Encounter tracker ? add creatures from user's creature library; auto-populate max HP/EN; quantity selector; use existing add combatant/creature modal components.
 - **Campaign integration:** Add characters from campaigns user is in; pull evasion, acuity, HP, EN for quick reference; easy add without manual entry.
 
-### 19) Campaign–Encounter Linkage & Roll Log & Character Visibility
-- **Campaign–Encounter:** Allow attaching a campaign to an encounter (on creation or within). Add "Add all Characters" button to add all campaign characters to the encounter at once.
-- **Encounter combatants:** Fix HP/EN loading — when combatant is tied to a user's character, load accurate current/max health and energy.
+### 19) Campaign?Encounter Linkage & Roll Log & Character Visibility
+- **Campaign?Encounter:** Allow attaching a campaign to an encounter (on creation or within). Add "Add all Characters" button to add all campaign characters to the encounter at once.
+- **Encounter combatants:** Fix HP/EN loading ? when combatant is tied to a user's character, load accurate current/max health and energy.
 - **Encounter roll log:** Add roll log to encounters (same UI/functionality/styles as character sheet). RM uses it for private rolls (not to campaign). Include tabs so RM can see rolls in their campaigns.
 - **Roll log consistency:** Unify styles across encounter tab (roll log campaign mode), character sheet (campaign mode), and campaign page. Fix roll date display (most show "unavailable").
 - **Roll log real-time:** Rolls synced in real time between characters, campaigns, and users. Supabase Realtime or equivalent.
@@ -189,10 +549,10 @@ How to use
 - [x] Enforce consistent "Abilities" naming (not "Ability Scores") everywhere. (TASK-055)
 - [x] Unify page content width across non-unique pages. (TASK-057)
 - [x] Fix half-health bar color to yellower orange; deepen terminal red. (TASK-058)
-- [x] Unify selection/add button styles site-wide. (TASK-059 — already implemented)
+- [x] Unify selection/add button styles site-wide. (TASK-059 ? already implemented)
 - [x] Fix vitality box height mismatch in character creator. (TASK-060)
 - [x] Rename HealthEnergyAllocator title to "Health/Energy Allocation". (TASK-055)
-- [x] Auto-capitalize archetype ability display. (TASK-056 — already implemented via CSS)
+- [x] Auto-capitalize archetype ability display. (TASK-056 ? already implemented via CSS)
 - [x] Match character library section heights to archetype section height. (TASK-062)
 - [x] Fix creature creator basic info dropdown alignment and sizing. (TASK-063)
 - [x] Health/Energy edit: bump current with max when at full and increasing. (TASK-072)
@@ -219,15 +579,15 @@ How to use
 - [x] Feat editing: ability dropdown (6 abilities + 6 defenses, multi-select). (TASK-156)
 - [x] Feat editing: add all missing editable fields. (TASK-157)
 - [x] Create centralized codex schema reference doc for AI. (TASK-158)
-- [x] Admin Codex: reduce input lag in edit mode. (TASK-159 — done: useTransition in Admin Feats; other tabs can follow)
+- [x] Admin Codex: reduce input lag in edit mode. (TASK-159 ? done: useTransition in Admin Feats; other tabs can follow)
 - [x] Admin Codex: array fields use dropdowns (skills, etc.), not raw IDs. (TASK-160)
-- [x] Campaign–Encounter: attach campaign to encounter; "Add all Characters" button. (TASK-161)
+- [x] Campaign?Encounter: attach campaign to encounter; "Add all Characters" button. (TASK-161)
 - [x] Encounter combatants: fix HP/EN loading when combatant tied to user character. (TASK-162)
 - [x] Encounter roll log: add RM roll log (personal + campaign tabs), same UI as character sheet. (TASK-163)
 - [x] Roll log consistency: styles, date display ("unavailable" fix), tabs across encounter/campaign/sheet. (TASK-164)
 - [x] Roll log real-time: Supabase Realtime for campaign rolls sync. (TASK-165)
 - [x] Health/Energy real-time: sync current HP/EN between encounters and characters. (TASK-166)
-- [x] Character visibility: public (link share, view-only); campaign (RM + members view); private→campaign on join. (TASK-167)
+- [x] Character visibility: public (link share, view-only); campaign (RM + members view); private?campaign on join. (TASK-167)
 - [x] Character-derived content visibility: powers/techniques/items in private library visible (view-only) when viewing char. (TASK-168)
 
 ---
@@ -240,22 +600,22 @@ Items below are the only feedback/tasks that remain **not implemented** (or expl
 
 | Item | Source | Status / Notes |
 |------|--------|----------------|
-| **Full accessibility audit (WCAG 2.1 AA)** | §6b curated; 2/18 raw | **TASK-255** (not-started). Color contrast 4.5:1 small text, 3:1 large text. *Handled by another agent; do not duplicate.* |
-| *(None else)* | — | All other curated items and High-Level action items have a corresponding **done** or **cancelled** task, or were implemented directly and noted in the raw log. |
+| **Full accessibility audit (WCAG 2.1 AA)** | ?6b curated; 2/18 raw | **TASK-255** (not-started). Color contrast 4.5:1 small text, 3:1 large text. *Handled by another agent; do not duplicate.* |
+| *(None else)* | ? | All other curated items and High-Level action items have a corresponding **done** or **cancelled** task, or were implemented directly and noted in the raw log. |
 
 **How to use this section**
 
 - When new raw feedback is added, re-check whether it creates new work; if yes, add a row above and/or create a task in `AI_TASK_QUEUE.md`.
 - When a task is completed, remove it from this table (or mark as done in the Notes column) and ensure the curated/High-Level sections reflect completion.
-- For deferred or “other agent” work, keep the row with a short note so agents don’t re-open it.
+- For deferred or ?other agent? work, keep the row with a short note so agents don?t re-open it.
 
 ---
 
-## Raw Feedback Log (append below — newest entries at bottom)
+## Raw Feedback Log (append below ? newest entries at bottom)
 
 **Raw Entry Template** (copy/paste)
 - Date: YYYY-MM-DD HH:MM
-- Context / Page: (e.g., Character Sheet → Library → Powers)
+- Context / Page: (e.g., Character Sheet ? Library ? Powers)
 - Priority: (Critical / High / Medium / Low)
 - Feedback (paste raw text)
 - Expected behavior (short)
@@ -265,19 +625,19 @@ Items below are the only feedback/tasks that remain **not implemented** (or expl
 
 ### Raw Entries (chronological)
 
-2/3/2026 20:27 — Library / Creators
+2/3/2026 20:27 ? Library / Creators
 - "The armaments (weapons/shields with damage) don't display their weapon damage in the library page. Edit should open creator with item loaded. Duplicate should copy item without redirecting."
 
-2/3/2026 21:00 — Creators / UI
+2/3/2026 21:00 ? Creators / UI
 - Codex enrichment: saved powers/techniques store part IDs; list views resolve parts from Codex and compute costs when rendering.
 
-2/4/2026 16:00 — Character Sheet
+2/4/2026 16:00 ? Character Sheet
 - "Innate star doesn't toggle in the UI (hit area/centering)."
 
-2/4/2026 16:00 — Powers/Techniques
+2/4/2026 16:00 ? Powers/Techniques
 - "Powers/techniques/armaments sometimes display incorrect/missing energy or TP values in lists."
 
-(2026-04-09) — Admin → Codex Editor (Feats edit modal / spreadsheet)
+(2026-04-09) ? Admin ? Codex Editor (Feats edit modal / spreadsheet)
 - Priority: High
 - Feedback: "When I try to edit the text of feats like descriptions or names or etc in edit modal in admin page editor, it doesn't actually change the text or let me edit it. It acts like I could but doesn't. Console spam: 'The specified value \"[]\" cannot be parsed, or is out of range.' (also values like '[1]', '[4,3]'.)"
 - Expected behavior: Admin codex feat editing should allow name/description edits and should not spam console errors.
@@ -285,37 +645,37 @@ Items below are the only feedback/tasks that remain **not implemented** (or expl
 
 (older raw entries omitted for brevity)
 
-2/5/2026 — Login / Auth
+2/5/2026 ? Login / Auth
 - Context: Login redirect flow
 - Priority: High
 - "The redirect to previous page login method seems to not work. I was on the realms home page, clicked to login, then it redirected me to the characters page instead of the home page again (signed in with Google). It should take me to the home page again since that's where I came from when I went to login."
 
-2/5/2026 — My Account / Auth
+2/5/2026 ? My Account / Auth
 - Context: Account settings, security
 - Priority: Medium
 - "What if the user signed up with Google, can they still change their email? Can we allow adding a profile picture? Can we allow changing username (check if it already exists, and filter out inappropriate names)? Limit changing usernames, emails, etc to once a week at most for users. Does Apple/Google/email sign-in fully work? Are all settings needed accounted for in My Account? Do we need to add any settings? Any security risks or bad practices currently in place for any login/account management? Follow best practices."
 
-2/5/2026 — Navbar / Theme
+2/5/2026 ? Navbar / Theme
 - Context: Profile dropdown, theme settings
 - Priority: Medium
-- "My account icon (profile pic circle in nav bar) — perhaps we can have a settings option other than My Account and Sign Out in the dropdown, for things like theme (dark/light/system modes). Will need to implement dark mode theming somehow across the site with best practice."
+- "My account icon (profile pic circle in nav bar) ? perhaps we can have a settings option other than My Account and Sign Out in the dropdown, for things like theme (dark/light/system modes). Will need to implement dark mode theming somehow across the site with best practice."
 
-2/5/2026 — Navbar / Auth UI
+2/5/2026 ? Navbar / Auth UI
 - Context: Placeholder login image
 - Priority: Low
 - "Placeholder (no login) image: We should have this be replaced with a clean 'Login' button instead. The icon isn't good."
 
-2/5/2026 — Creature Creator / Character Sheet
+2/5/2026 ? Creature Creator / Character Sheet
 - Context: Powered Martial slider, component reuse
 - Priority: High
-- "Creature Creator: Powered Martial slider — can we make this slider a component that can be utilized in the character sheet for powered martial characters instead of clunkily allocating points to each independently? It also improves our goal for uniformity/consistency across the website's UI especially in cases of shared UI/component functionality. We would obviously make a much smaller scale, same styles, for the character sheet powered martial editing in edit mode."
+- "Creature Creator: Powered Martial slider ? can we make this slider a component that can be utilized in the character sheet for powered martial characters instead of clunkily allocating points to each independently? It also improves our goal for uniformity/consistency across the website's UI especially in cases of shared UI/component functionality. We would obviously make a much smaller scale, same styles, for the character sheet powered martial editing in edit mode."
 
-2/5/2026 — Component Consistency
+2/5/2026 ? Component Consistency
 - Context: Ability allocation, defense allocation, steppers
 - Priority: High
 - "Ability allocation, defense allocation, components: There's seemingly differences between the character sheet, creature creator, and character creator when it comes to some of these components that are meant to be unified, such as the ability allocation and defenses allocation. Why do the styles seem different slightly? What about the buttons? Aren't all/most steppers supposed to have the same/analogous styles?"
 
-2/5/2026 — Creature Creator Batch (Health/Energy, Defenses, Modals, Summary, Steppers)
+2/5/2026 ? Creature Creator Batch (Health/Energy, Defenses, Modals, Summary, Steppers)
 - Context: Creature Creator, Steppers, Modals
 - Priority: High (multiple items)
 - Raw feedback: "Health/Energy allocation should have faster/continuous allotment on button hold, it seems this functionality didn't work in the creature creator? maybe everywhere? Defense/ability allocation should NOT have a hold to increase function, as they have little variance. Noticed on creature creator: the senses and movement item cards have inconsistent vertical margins above/below the description box, they should be equal padding. this is likely true globally for like item cards. add feat/power/technique/armament modals in creature creator: uses old modal styles, not updated to work like character sheet modals have been for instance, all add X modals with list views/list items should be uniform and work/be styled to match codex/library like list view styles, like our feat/skill modals do in the character sheet, etc. These should be unified global components that override inline styling wherever possible such as here on the creature creator (which modal might need to be entirely removed, re-written, replaced with our components, etc.) audit/look into best option aligned with our unification goals. Power/Martial scroller in creature creator: shouldn't allow you to scroll fully to one side/the other, since the powered-martial has a division of power/martial proficiencies between both, the furthest end of the slider should be 1 for that end, not 0. Creature Summary: At the top of the summary, to match other creators, should be boxes with spendable resources (ability points, Skill points, feat points, training points, currency) this is more boxes than other creators, so they can be smaller, but should match with the style of the other creators. Below these resources can be the obvious summary points: Abilities, Archetype, level, type, size, etc. then below this can be the more specific stuff, written as basically line items, like how other creators show smaller details that change, for instance with a skill added you would say 'Skills: Stealth +3, Athletics -1, ...' as a sentence of skills, and do similar things with resistances, immunities, weaknesses, etc (if any.) Here's an example of a DND creature stat block for an idea of how simple it can be while still satisfying a TTRPG player: [D&D stat block example]. The stepper buttons across the site seem to all have slightly different styles, sizes, colors, etc. for instance, defenses allocation steppers are smaller, and the - is grey as opposed to red, compared to other steppers. we should go with less stark colors for the stppers, and unify their styles across the site as much as possible."
@@ -324,349 +684,349 @@ Items below are the only feedback/tasks that remain **not implemented** (or expl
 ---
 
 Notes
-- To refresh the curated top section, paste a batch of raw log entries and request: "Consolidate and update curated feedback" — the agent will re-run the summarization and update the curated sections.
+- To refresh the curated top section, paste a batch of raw log entries and request: "Consolidate and update curated feedback" ? the agent will re-run the summarization and update the curated sections.
 - This file is intended to be the canonical owner-feedback source for engineering planning and triage.
 
-2/5/2026 — Character Sheet / Recovery
+2/5/2026 ? Character Sheet / Recovery
 - Context: Character Sheet, Recovery button
 - Priority: High
 - "Recovery Modal: When you hit recovery on the character sheet, it should open a clean sleek modal (matching site styles/designs etc) that allows you to choose between full recovery (which restores HP current to the Max value, same with energy current to it's max value, it also restores all uses of all feats/traits to their max values. Partial recovery is different and also has options. First, if you take a partial recovery you choose between 2, 4, and 6 hours of recovery. With 2 hours you get bath 1/4 of your current/max hp, or you can choose to get 1/2 of your hp or energy instead (not both), this stacks for each 2 hours, ie with 4 hours you get half back to both, or 3/4 back to one, 1/4 to the other, or full to one, none to the other, and so on with 6 hours being 3/4 back to both, full to one 1/2 to the other, etc. We could also have an automatic partial recovery option where you select the hours, then it automatically determines the 'best' option for the time recovered and the optimal amount of 1/4ths to spend on hp en or both (ie if you have 10/12 HP but 0/20 EN and took a 4 hour partial recovery, it would choose whatever options grants the most percentage of the resource back overall, so for 4 hours that's 4/4ths of hp/en to divide, so it'd automatically give all to energy since that's 20 total EN gained (100% of energy) over the option of of 1/4 to HP (2 hp = 16.67% of hp) and 3/4 to EN (75% of EN) for a total of 91.6% resources regained. Remember, when it comes to fractions we round up, so if you have 9HP max and recovered half, you'd regain 5 not 4 hp. In cases where it's indifferent, it'd give you a spread between both, ie if you have 5/10 HP and 10/20 EN it'd grant 1/4 to both for a 2 hour partial recovery, granting 3 HP and 5 EN. Use best logic and common sense for this. No matter the type of partial recovery, make the ui sleek, simple, and useable. Also, partial recoveries automatically set all trait/feat uses with a use recovery period of 'Partial' sets the current value to the max value, it doesn't reset feats/traits with uses 'Full' to max though."
 
-2/5/2026 — Character Sheet / Notes / BUG
-- Context: Character Notes → Physical Attributes & Movement
+2/5/2026 ? Character Sheet / Notes / BUG
+- Context: Character Notes ? Physical Attributes & Movement
 - Priority: Medium
 - "BUG: Users are able to set Weight and Height to negative values. Minimum Weight and Height can't be set below 1."
-- Steps: Go to character sheet → Notes → Physical Attributes & Movement → edit weight/height
+- Steps: Go to character sheet ? Notes ? Physical Attributes & Movement ? edit weight/height
 - Expected: Weight and Height have a minimum value of 1
 
-2/5/2026 — Character Sheet / Inventory / BUG
-- Context: Character Notes → Inventory
+2/5/2026 ? Character Sheet / Inventory / BUG
+- Context: Character Notes ? Inventory
 - Priority: High
 - "BUG: Unable to remove items from inventory. Users are unable to remove items from their 'Inventory'. Items can be removed from the User's 'Inventory'."
-- Steps: Go to character sheet → Notes → Inventory → add an item → try to remove it
+- Steps: Go to character sheet ? Notes ? Inventory ? add an item ? try to remove it
 - Expected: Items can be removed from the inventory
 
-2/5/2026 — Character Sheet / Edit Mode / Character Name & XP
+2/5/2026 ? Character Sheet / Edit Mode / Character Name & XP
 - Context: Character Sheet Header
 - Priority: High
 - "Only allow editing of character name in edit mode. Allow editing of XP in any mode."
 
-2/5/2026 — Character Sheet / UI / Pencil Edit Icons
+2/5/2026 ? Character Sheet / UI / Pencil Edit Icons
 - Context: Site-wide edit icon consistency
 - Priority: High
 - "We use different pen/pencil icons across the page to represent editing. Unify to one style - prefer the ones with no button background, simplistic design (like the ones for character name/XP, skills, etc., not the one over abilities with a circle around it permanently). Pencil edit icon color schemes should all be blue, green, or red, dependent on if things may be spent or not (i.e. name pencil would be blue since the name isn't under or overspent)."
 
-2/5/2026 — Character Sheet / Library / Feat Deletion
+2/5/2026 ? Character Sheet / Library / Feat Deletion
 - Context: Library tab pencil icon
 - Priority: High
 - "The pencil icon in the character library is useless, it should allow the deletion of feats on the feats tab."
 
-2/5/2026 — Character Sheet / Custom Notes / BUG
+2/5/2026 ? Character Sheet / Custom Notes / BUG
 - Context: Custom note name editing
 - Priority: Medium
 - "BUG: When you hit the name on the custom note to edit or add a name to it, it collapses. It shouldn't collapse since you're editing something, not clicking to collapse it."
 
-2/5/2026 — Character Sheet / Powers & Techniques / Energy Buttons
+2/5/2026 ? Character Sheet / Powers & Techniques / Energy Buttons
 - Context: Powers/Techniques list items
 - Priority: High
 - "Technique/powers list item buttons: the energy for these should be in button form with the same styles as roll buttons to show you can spend the resource if you click the button."
 
-2/5/2026 — Character Sheet / Powers / Innate Energy Summary
+2/5/2026 ? Character Sheet / Powers / Innate Energy Summary
 - Context: Innate power tab summary
 - Priority: Medium
 - "Innate energy power tab summary: Remove 'Innate powers use this energy pool instead of regular energy'. Instead: 'Innate powers have no cost to use. You may have powers with energy costs up to your innate energy.' Also center the summary content."
 
-2/5/2026 — Character Sheet / Powers / Display Formatting
+2/5/2026 ? Character Sheet / Powers / Display Formatting
 - Context: Power list items display
 - Priority: Medium
 - "Power list items: Capitalize the damage types 'Radiant' instead of 'radiant'. For area in power list items, for 1 target have it say 'Target' instead. Capitalize duration 'Rounds' instead of 'rounds'."
 
-2/5/2026 — Power Creator / Data
+2/5/2026 ? Power Creator / Data
 - Context: Power Creator damage types
 - Priority: Medium
 - "Power Creator: Remove the damage type 'radiant' - that isn't a Realms damage type. Reference vanilla site for proper damage types and their related part names. (In React site we use IDs for mechanic parts not names)."
 
-2/5/2026 — Character Sheet / Library / List Headers
+2/5/2026 ? Character Sheet / Library / List Headers
 - Context: All item lists in library
 - Priority: High
 - "Item list headers, character library: Always have full caps for headers for list items. 'NAME ACTION DAMAGE ENERGY' instead of 'Name Action Damage Energy'."
 
-2/5/2026 — Character Sheet / Library / Column Alignment
+2/5/2026 ? Character Sheet / Library / Column Alignment
 - Context: Power item list and other header lists
 - Priority: Medium
 - "Power item list headers: Ensure the header is centered over the list items (action should be centered over the action type, not right/left aligned). Only exception is name, which is always left centered both header and list items. Duration seems too long - abbreviate where possible and don't include focus/sustain values in overview (include in expanded view instead). Use '4 MIN' instead of '4 minutes (Focus)', '2 RNDS' or '1 RND' etc."
 
-2/5/2026 — Character Sheet / UI / Character Saved Prompt
+2/5/2026 ? Character Sheet / UI / Character Saved Prompt
 - Context: Save state UI
 - Priority: Low
 - "Remove the 'Character Saved' prompt thingy, we only need the 'Unsaved Changes' and 'Saved' UI at the top of the character sheet instead."
 
-2/5/2026 — Character Sheet / UI / Top Bar Relocation
+2/5/2026 ? Character Sheet / UI / Top Bar Relocation
 - Context: Character Sheet top bar
 - Priority: High
 - "Remove the top bar by relocating the options for recovery, level up, edit mode, and save state to icons on the side of the screen (like the dice roller icon but in the top right or somewhere unintrusive). Remove the back to characters arrow/link - the nav bar already has a quick link to the characters tab."
 
-2/5/2026 — Dice Roller / UI Overhaul
+2/5/2026 ? Dice Roller / UI Overhaul
 - Context: Dice roller/log
 - Priority: High
 - "Dice roller should work/look more like the original one in the vanilla site, using our custom images from the vanilla site. Keep: ability to add modifier/bonus to custom roll. Don't need to name the roll - just call it 'Custom Roll' in the log. Fix: Show what/how many dice with an image each time you roll, then result plus bonus, then total. Add ability to select dice icons instead of adding numbers, but also implement labeling (1d10 below the 1d10 icon). Dice logs should be saved not cleared on refresh - only last 20 rolls need to be saved."
 
-2/5/2026 — Character Sheet / UI / Chip Expansion
+2/5/2026 ? Character Sheet / UI / Chip Expansion
 - Context: Chip expanded functionality
 - Priority: Medium
 - "When you expand a chip, prefer the chip doesn't create a separate bubble for the expanded description - instead expand the chip you clicked on, displacing other chips above/below it, keeping same coloring/styling. Some chips are purely informational and need not expand (tag chips for feats, subtext chips for traits denoting ancestry/flaw/characteristic, codex subtext for character feat/state feat)."
 
-2/5/2026 — Character Sheet / Powers & Techniques / Duplicate Energy Columns
+2/5/2026 ? Character Sheet / Powers & Techniques / Duplicate Energy Columns
 - Context: Powers and techniques list
 - Priority: High
 - "Duplicate energy columns and energy buttons in powers and techniques. Need only the buttons in the energy row. Energy row can be moved to the most right row. 'Use' button should not say 'Use (X)' - just 'X' where X is the energy. Styles should match roll buttons."
 
-2/5/2026 — Character Sheet / Inventory / Equip Buttons
+2/5/2026 ? Character Sheet / Inventory / Equip Buttons
 - Context: Armor/weapons equip functionality
 - Priority: High
 - "BUG: Armor/weapons still won't become equipped when I hit the equip + button. Better as a circle or other symbol to select/to be filled to show it's equipped."
 
-2/5/2026 — Character Sheet / Inventory / Equipment Tab Issues
+2/5/2026 ? Character Sheet / Inventory / Equipment Tab Issues
 - Context: Equipment/Inventory tab
 - Priority: Medium
 - "Equipment tab issues: needs ability to increase/decrease amount outside edit mode, missing currency/rarity/category tags, could have truncated descriptions after name column like feats/traits. Inventory list items seem taller height-wise than other tabs with larger font or scale - seems off."
 
-2/5/2026 — Character Sheet / Archetype Ability Indicators
+2/5/2026 ? Character Sheet / Archetype Ability Indicators
 - Context: Archetype ability selection
 - Priority: Medium
 - "For archetype ability (power/martial or both): use the same indicator logic as character creator - selected power ability outlined in power purple, martial ability in martial red, instead of current yellow outlining. Get rid of the 'power' and 'martial' symbols by ability names - they're ugly."
 
-2/5/2026 — Character Sheet / Ability Edit Mode / Centering
+2/5/2026 ? Character Sheet / Ability Edit Mode / Centering
 - Context: Ability edit mode skill/ability points
 - Priority: Medium
 - "In ability edit mode in character sheet: center the skill/ability points things in their row so they're more easily visible. Make styles match other instances (ability allocation in character/creature creators, skill point allocation in skill creators). Styles for both resources should be analogous to each other."
 
-2/5/2026 — Steppers / Abilities / Defenses
+2/5/2026 ? Steppers / Abilities / Defenses
 - Context: ValueStepper hold-to-increase behavior
 - Priority: High
 - "Exponential speed steppers: we don't need hold to increase functionality on steppers for ability and defense increase, these types of steppers are mostly useful for allocating/adjusting pools like health and energy, not abilities and defenses."
 - Expected: Remove enableHoldRepeat from ability/defense steppers; keep only for HP/EN pools
 
-2/5/2026 — Character Sheet / Skills / Caps & Validation
+2/5/2026 ? Character Sheet / Skills / Caps & Validation
 - Context: Skill and defense value caps, game rules
 - Priority: High
 - "Skill values (not bonuses) cannot exceed 3. Defense bonuses cannot exceed your level based on increases granted by allocating skill points. The bonus could be 3 from an ability of 3 (e.g., mental fort. of 3 from 3 int at level 1), but you couldn't increase defense bonus to 4 using skill points until level 4 or higher, or intelligence increased to 4."
 - Expected: Enforce skill value cap of 3, enforce defense bonus cap based on level/ability
 
-2/5/2026 — Character Library / UI Improvements
+2/5/2026 ? Character Library / UI Improvements
 - Context: Library tabs, currency display, defense buttons
 - Priority: Medium
 - "Capitalize 'Currency' and separate the currency from the armament proficiency more. Increase font size of tabs, make them more visible. Make defense roll buttons the same style and color as others (they're less saturated)."
 - Expected: Capitalize Currency label, bigger tab fonts, defense buttons match primary variant
 
-2/5/2026 — Character/Profile Picture Upload
+2/5/2026 ? Character/Profile Picture Upload
 - Context: Profile and character picture upload
 - Priority: High
 - "When uploading a character or profile picture, make a modal that lets you upload, choose from device, drag and drop, etc. Show accepted image types/sizes, recommended ratio, and let you manipulate/drag the picture into a translucent frame for cropping. Use best practice, make it sleek, robust, and clean."
 - Expected: Full image upload modal with crop/preview for character portrait and profile icon
 
-2/5/2026 — Character Sheet Header / Species Line
+2/5/2026 ? Character Sheet Header / Species Line
 - Context: Species name + level display
 - Priority: Medium
 - "Separate the species name from the level line in the character sheet header."
 - Expected: Species name on its own line, not combined with "Level X SpeciesName"
 
-2/5/2026 — Character Sheet / Skills / Point Display
+2/5/2026 ? Character Sheet / Skills / Point Display
 - Context: Skill point current/max visibility
 - Priority: Medium
 - "In non-edit mode, skill point max/current on the top right of the skill list shouldn't be visible."
 - Expected: Hide PointStatus when not in edit mode
 
-2/5/2026 — Character Sheet / Skills / Skill Point Calculation
+2/5/2026 ? Character Sheet / Skills / Skill Point Calculation
 - Context: Skill points at level 1
 - Priority: High
 - "All creatures/characters at level 1 have 5 skill points, but species forces 2 into proficiency. Display available skill points as 3/3 instead of 3/5 or 5/5 at level 1, since players only choose where 3 go. +3 each level. Creature creator shows 5/5 since no species selection."
 - Expected: Character sheet/creator shows 3/3 (not 5/5), creature creator shows 5/5
 
-2/5/2026 — Character Sheet / Health-Energy Allocation Styles
+2/5/2026 ? Character Sheet / Health-Energy Allocation Styles
 - Context: HP/EN pool allocation styles
 - Priority: High
 - "Why is the styles for health pool allocation different than character creator/creature creator? They should all be the same stylistic design, colors, etc."
 - Expected: Unify HealthEnergyAllocator styles across character sheet, character creator, creature creator
 
-2/5/2026 — Creature Creator / Health-Energy Hold-to-Repeat
+2/5/2026 ? Creature Creator / Health-Energy Hold-to-Repeat
 - Context: Health/Energy allocation
 - Priority: High
 - "Health/Energy allocation should have faster/continuous allotment on button hold, it seems this functionality didn't work in the creature creator? maybe everywhere?"
 - Expected: Enable enableHoldRepeat for creature creator HealthEnergyAllocator; verify character creator/sheet (TASK-065)
 
-2/5/2026 — Creature Creator / Defense-Ability No Hold-to-Repeat
+2/5/2026 ? Creature Creator / Defense-Ability No Hold-to-Repeat
 - Context: Defense and ability allocation steppers
 - Priority: High
 - "Defense/ability allocation should NOT have a hold to increase function, as they have little variance."
 - Expected: Remove enableHoldRepeat from creature creator DefenseBlock (TASK-066)
 
-2/5/2026 — Creature Creator / Senses & Movement Card Margins
+2/5/2026 ? Creature Creator / Senses & Movement Card Margins
 - Context: ExpandableChipList, GridListRow
 - Priority: Medium
 - "Senses and movement item cards have inconsistent vertical margins above/below the description box, they should be equal padding. This is likely true globally for like item cards."
 - Expected: Equal padding above/below description; audit globally (TASK-067)
 
-2/5/2026 — Creature Creator / Add Modals Unification
+2/5/2026 ? Creature Creator / Add Modals Unification
 - Context: Add feat/power/technique/armament modals
 - Priority: High
 - "Uses old modal styles, not updated to work like character sheet modals. All add X modals with list views should be uniform and match codex/library list view styles. These should be unified global components. Audit best option aligned with unification goals."
 - Expected: Replace with GridListRow/UnifiedSelectionModal patterns (TASK-068)
 
-2/5/2026 — Creature Creator / Power-Martial Slider Bounds
+2/5/2026 ? Creature Creator / Power-Martial Slider Bounds
 - Context: PoweredMartialSlider
 - Priority: High
 - "Shouldn't allow you to scroll fully to one side/the other. The furthest end of the slider should be 1 for that end, not 0."
 - Expected: min power = 1, max power = maxPoints - 1 (TASK-069)
 
-2/5/2026 — Creature Creator / Summary Layout Restructure
+2/5/2026 ? Creature Creator / Summary Layout Restructure
 - Context: Creature Summary sidebar
 - Priority: High
 - "At top: boxes with spendable resources (ability, skill, feat, training, currency). Below: summary points (Abilities, Archetype, level, type, size). Below: line items like 'Skills: Stealth +3, Athletics -1, ...' and similar for resistances, immunities, weaknesses. Reference D&D creature stat block."
 - Expected: Match other creators' resource box style; D&D stat block format for details (TASK-070)
 
-2/5/2026 — Character Sheet / Health-Energy Edit Mode
+2/5/2026 ? Character Sheet / Health-Energy Edit Mode
 - Context: Character sheet edit mode, Health/Energy allocation
 - Priority: High
 - "When editing health/energy and increasing it, if the current value is at the max, increase the current with the max increase (since that means a character was fully healthy and/or energized when increasing the value, so the current increases with the maximum in those cases.)"
 - Extracted to: TASK-072
 
-2/5/2026 — Character Sheet / Speed-Evasion Base Editing
+2/5/2026 ? Character Sheet / Speed-Evasion Base Editing
 - Context: Character sheet, Speed/Evasion display
 - Priority: High
 - "Don't show speed/evasion base editing options, instead have a pencil icon by each as with other sections, require that to be clicked to show the option to edit it, and this way it can be red/green if under/over the proper values (in this case, increasing the base is red, and decreasing it is green)."
 - Extracted to: TASK-073
 
-2/5/2026 — Dark Mode / Color Contrast
+2/5/2026 ? Dark Mode / Color Contrast
 - Context: Dark mode theming
 - Priority: Medium
 - "Many colors are too contrasting in dark mode and need easier viewing colors to replace them, such as some chip colors, stepper colors, character sheet health/energy backgrounds, power proficiency background, item list headers, some hover-highlight colors (which also white out the hovered white font content of the hovered items) and many many more."
 - Extracted to: TASK-074
 
-2/5/2026 — Portrait / Session / Storage Errors
+2/5/2026 ? Portrait / Session / Storage Errors
 - Context: Character portrait upload, profile picture
 - Priority: High
 - "/api/session 500 Internal Server Error; Supabase Storage 403 for portraits/ and profile-pictures/ (User does not have permission)."
 - Extracted to: TASK-075 (session), TASK-076 (storage rules)
 
-2/5/2026 — My Account / Username Regex
+2/5/2026 ? My Account / Username Regex
 - Context: Username change, Google user
 - Priority: High
 - "error updating username (google user): Pattern attribute value [a-zA-Z0-9_-]+ is not a valid regular expression: Invalid character in character class. POST my-account 500."
 - Extracted to: TASK-077
 
-2/5/2026 — Steppers / Unify Styles Sitewide
+2/5/2026 ? Steppers / Unify Styles Sitewide
 - Context: ValueStepper, DecrementButton, IncrementButton
 - Priority: Medium
 - "Stepper buttons across the site have slightly different styles, sizes, colors. Defenses allocation steppers are smaller, - is grey as opposed to red. Go with less stark colors and unify styles across the site."
 - Expected: Consistent sizes, less stark colors, unified btn-stepper styles (TASK-071)
 
-2/6/2026 — Character Sheet Archetype Section / Proficiency Slider
-- Context: Character Sheet → Archetype & Attacks
+2/6/2026 ? Character Sheet Archetype Section / Proficiency Slider
+- Context: Character Sheet ? Archetype & Attacks
 - Priority: High
 - "Character Sheet Archetype Section - the archetype prof slider: We don't want this slider visible unless you're in edit mode for archetype proficiency editing, and we only want it visible if you hit the pencil, otherwise we can simply display Power and/or Martial proficiency as a simple value instead of a slider, the slider is designed for editing. (in non edit mode editable)"
 - Expected: Slider hidden unless pencil clicked; show "Power: X, Martial: Y" (or similar) when not editing. Extracted to TASK-101.
 
-2/6/2026 — Encounter Tracker / Add Creatures from Library
+2/6/2026 ? Encounter Tracker / Add Creatures from Library
 - Context: Encounter Tracker, Add Combatant
 - Priority: High
 - "Encounter Tracker: Allow adding creatures from your library (which gets the creatures max health/energy automatically instead of inputting them manually, also allows choosing how many of those creature's you'd like to add, etc. can use the stuff we already have in the add combatant tab, as well as add creature modal using our many components for modals if we want."
 - Expected: Add from creature library; auto HP/EN; quantity selector; reuse add combatant/creature modal. Extracted to TASK-102.
 
-2/6/2026 — Encounters System Redesign (Major)
-- Context: Encounter Tracker → Encounters
+2/6/2026 ? Encounters System Redesign (Major)
+- Context: Encounter Tracker ? Encounters
 - Priority: Critical
-- Raw feedback (abbreviated): Rename to "Encounters"; hub page to create (combat/skill/mixed) or choose saved; click encounter → redirect to that encounter page; save/return to sessions (turns, AP, HP tracked); separate encounters list page (filter, search, sort); designate current as combat tracker; new skill encounter page; new mixed encounter page; skill encounter: add characters, track rolls, successes/failures, required successes/failures, DS-based; mixed = both combined; campaign integration: add characters from campaigns (evasion, acuity, hp, en). Reference core rules. Best practice, shared components, security.
+- Raw feedback (abbreviated): Rename to "Encounters"; hub page to create (combat/skill/mixed) or choose saved; click encounter ? redirect to that encounter page; save/return to sessions (turns, AP, HP tracked); separate encounters list page (filter, search, sort); designate current as combat tracker; new skill encounter page; new mixed encounter page; skill encounter: add characters, track rolls, successes/failures, required successes/failures, DS-based; mixed = both combined; campaign integration: add characters from campaigns (evasion, acuity, hp, en). Reference core rules. Best practice, shared components, security.
 - Extracted to: TASK-103, TASK-104, TASK-105, TASK-106, TASK-107, TASK-108.
 
-2/7/2026 — Batch feedback (roll log, encounters, modals, species skills)
+2/7/2026 ? Batch feedback (roll log, encounters, modals, species skills)
 - Context: Multiple areas
 - Priority: High
 - Raw feedback: "Some roll log fonts are dark in darkmode, thus invisible. non-rm characters aren't being added to combatants in combat or skill encounters from the campaign tab. Neither are simply RM characters in the skill encounters being added. audit skill encounter tasks, it isn't working completely right, check raw/clean feedback to see if theres any issues with skill encounters. duplicate / two X buttons at top right of add feat modal in creature creator, may be an issue elsewhere too (like other add modals in creature creator, these should be using logic/code from other modals but seem to still be different) wont let me hit + to add powers. (may have same issues with techniques and armaments. Species skills aren't automatically loaded/added to the character sheet skill list."
-- Extracted/disposition: Roll log dark mode — fixed (dark: variants). Campaign chars — fixed (API ?scope=encounter allows any campaign member). Duplicate X — fixed (UnifiedSelectionModal showCloseButton=false). Species skills — fixed (merge species skills into character sheet skills). Skill encounter audit — TASK-152.
+- Extracted/disposition: Roll log dark mode ? fixed (dark: variants). Campaign chars ? fixed (API ?scope=encounter allows any campaign member). Duplicate X ? fixed (UnifiedSelectionModal showCloseButton=false). Species skills ? fixed (merge species skills into character sheet skills). Skill encounter audit ? TASK-152.
 
-2/9/2026 — Navbar / Structure
+2/9/2026 ? Navbar / Structure
 - Context: Main navigation header
 - Priority: Medium
 - Raw feedback: "Navbar: Move campaigns to the right of RM tools and the left of About in the navbar."
 - Expected: Campaigns link appears after RM Tools dropdown, before About
 - Extracted to: TASK-153 | Done 2026-02-09
 
-2/9/2026 — Admin Codex Editor / Feats tab
-- Context: Admin → Codex → Feats list
+2/9/2026 ? Admin Codex Editor / Feats tab
+- Context: Admin ? Codex ? Feats list
 - Priority: Low
 - Raw feedback: "If feat level requirement is 0 display - instead of '0' in the list."
-- Expected: feat_lvl 0 → "-" in list display
+- Expected: feat_lvl 0 ? "-" in list display
 - Extracted to: TASK-154 | Done 2026-02-09
 
-2/9/2026 — Admin Codex Editor / List delete & UI consistency
+2/9/2026 ? Admin Codex Editor / List delete & UI consistency
 - Context: Admin Codex all tabs
 - Priority: High
 - Raw feedback: "When I delete a list item, the list still shows the item until I refresh the page. Can use the same ui, filter, styles, etc as the codex here to consistency with the exception of the pencil/trash icons for edit and delete. True for all codex tabs. don't need different/repeated styles/ui as they're the same essentially."
 - Expected: Delete removes item immediately; Admin tabs match Codex UI/filters/styles; Admin retains edit/delete icons
 - Extracted to: TASK-155 | Done 2026-02-09
 
-2/9/2026 — Feat Editing / Ability requirement
-- Context: Admin Codex → Feats → Edit modal
+2/9/2026 ? Feat Editing / Ability requirement
+- Context: Admin Codex ? Feats ? Edit modal
 - Priority: High
 - Raw feedback: "Feat Editing: Should be able to choose ability from a dropdown of the six ability and six defense options, you can pick one or more."
 - Expected: ability_req and ability use multi-select dropdown with 12 options (6 abilities + 6 defenses)
 - Extracted to: TASK-156 | Done 2026-02-09
 
-2/9/2026 — Feat Editing / Missing fields
-- Context: Admin Codex → Feats → Edit modal
+2/9/2026 ? Feat Editing / Missing fields
+- Context: Admin Codex ? Feats ? Edit modal
 - Priority: High
 - Raw feedback (abbreviated): All feat fields should be editable: name, description, req_desc, ability_req, abil_req_val, skill_req, skill_req_val, feat_cat_req, pow_abil_req, mart_abil_req, pow_prof_req, mart_prof_req, speed_req, feat_lvl, lvl_req, uses_per_rec, rec_period, category, ability, tags, char_feat, state_feat. Full semantics described in feedback.
 - Expected: Edit modal has controls for all listed fields
 - Extracted to: TASK-157 | Done 2026-02-09
 
-2/9/2026 — Centralized data schema
+2/9/2026 ? Centralized data schema
 - Context: Documentation, AI reference
 - Priority: Medium
 - Raw feedback: "I'd love if we had a centralized location for all our arrays of data/tables with descriptions of each values that ai can reference to clarify it's utility. For all codex items this is essential as well. Do our best in this area."
 - Expected: Doc with all codex entity schemas, field descriptions, valid values
 - Extracted to: TASK-158 | Done 2026-02-09
 
-2/9/2026 — Admin Codex / Input lag
+2/9/2026 ? Admin Codex / Input lag
 - Context: Admin Codex edit modals
 - Priority: Medium
 - Raw feedback: "lag: when inputting data in edit mode, it seems to have some lag while typing/deleting."
 - Expected: Responsive typing in edit inputs
 - Extracted to: TASK-159 | Deferred (needs profiling)
 
-2/9/2026 — Admin Codex / Array editing
+2/9/2026 ? Admin Codex / Array editing
 - Context: Admin Codex edit modals, array fields
 - Priority: High
 - Raw feedback: "All editing modals: When it comes to arrays, you should be able to select and add from a dropdown for some arrays, or separate by commas if that's the only option when editing. For instance, skills for species should be a dropdown of skills you can add, not a 'ids separated by commas' since admins don't have ids memorized."
 - Expected: Array fields (species skills, feat skill_req, etc.) use dropdown of names; store IDs internally
 - Extracted to: TASK-160 | Done 2026-02-09
 
-2/11/2026 — Codex Schema / Skills & Feats / Invalid Fields
+2/11/2026 ? Codex Schema / Skills & Feats / Invalid Fields
 - Context: Codex data schema (feats, skills, species, traits, items, parts, properties, creature feats)
 - Priority: High
 - Raw feedback: "Do we have a doc that has all the codex data mapped out with each value, its function, if it's a string array, number, array of numbers, and its exact purpose? We should have something like this that's formatted nicely and cleanly and good for reference. Add to the schema a use column interpreting what I said about it so it's clear exactly what the use of each dataset is for, such as the use for success or failure desc and so on. Also trained only is not a skill field, remove it across the codebase. Remove fields I don't mention, and add fields that are missing, totally refactor across the codebase anything that doesn't align. Feats: name, description, req_desc (requirement description), ability_req (array of ability/defense names out of the twelve), abil_req_val (minimum values for those abilities/defenses), skill_req (names of skills required), skill_req_val (array of minimum bonuses), feat_cat_req (feat category you must already have), pow_abil_req, mart_abil_req, pow_prof_req, mart_prof_req, speed_req, feat_lvl, lvl_req, uses_per_rec, rec_period, category, ability (sorting, can be array), tags, char_feat, state_feat. Skills: id, name, description, ability (array), base_skill (blank for base skills, id of non-sub-skill for sub-skills, id 0 means can be a sub-skill of any skill), success_desc, failure_desc, ds_calc, craft_failure_desc, craft_success_desc. All additional skill descriptions that aren't part of the skill description itself can be expandable chips in skill item cards (codex, add skill modals, add sub skill modals, etc.). Species: id, name, description, type, sizes (allowed sizes), skills (two skill ids where 0 means choose a species skill), species_traits, ancestry_traits, flaws (trait ids with flaw=true, usually 3), characteristics (trait ids with characteristic=true, usually 3), ave_hgt_cm, ave_wgt_kg, adulthood_lifespan ([adult age, max age]), languages (array of language names), part_cont exists currently but will be removed/ignored. Traits: id, name, description, uses_per_rec, rec_period, flaw, characteristic. Items: id, name, description, category, currency, rarity (Common, Uncommon, Rare, Epic, Legendary, Mythic, Ascended). Parts: id, name, description, category, base_en (may be percentage depending on percentage flag), base_tp, op_1/2/3_desc, op_1/2/3_en, op_1/2/3_tp, type (power or technique), mechanic (boolean), percentage (boolean), duration (boolean), defense (what defense(s) are targeted, can be array). Properties: id, name, description, base_ip, base_tp, base_c, op_1_desc, op_1_ip, op_1_tp, op_1_c, type (Armor, Shield, or Weapon). Creature feats: id, name, description, feat_points (relative to character archetype feats), feat_lvl, lvl_req, mechanic (some function as mechanics, not visible in list but still consume feat points)."
 - Expected: CODEX_SCHEMA_REFERENCE includes a Use column for all codex entities with accurate types and purposes for each field per this spec; `trained_only` is removed as a skill field across docs, types, API, and admin UIs; deprecated fields like `part_cont` are removed from schema docs and treated as legacy only.
 
-2/11/2026 — Codex Seed & ID-based Cross-Refs
+2/11/2026 ? Codex Seed & ID-based Cross-Refs
 - Context: Codex CSVs, seeding into Supabase, and ID semantics
 - Priority: High
 - Raw feedback: "I need to completely delete all fields/data within the current website's/supabase database codex and replace them with a new set. This means we need to totally make the seed to supabase script compliant with our refactored codex information and these desires. We also need to audit the codebase for discrepancies between the correct codex schema and what's currently being used. In the codex schema reference update feats so that skill req are ids, never names, same with species traits, flaws, characteristics, and skills, all use ids to tie to the proper thing, not names, ever, only ids. Also I renamed 'items' to 'equipment' so we'll need to update that entirely across the site that was referencing the items database as it's now the equipment database codex_equipment. Also, I added 'mechanic' field to the properties data, its a boolean that if true represents a property that, like other mechanic properties, parts, creature feats, etc, do not show up in the traditional 'add part/property/feat' dropdown lists, since they're integrated with the UI already. This means for the armament creator specific properties (Damage Reduction, Armor/Weapon stat requirements, Agility Reduction, Split Damage Dice, Range, Two-Handed, Shield Base, Armor Base, Weapon Damage, etc.) have been made into mechanics and we can use that code/logic now instead of manually taking them out of the add property lists."
-- Expected: (1) `scripts/seed-to-supabase.js` wipes all codex tables and reseeds from the canonical Codex CSVs using the updated schema; (2) CODEX_SCHEMA_REFERENCE documents feat `skill_req` as ID arrays, and species `skills`/`species_traits`/`ancestry_traits`/`flaws`/`characteristics` as ID arrays (never names); (3) all references to codex “items” are updated to use “equipment” / `codex_equipment`; (4) properties gain a `mechanic` boolean field, and a follow-up task wires this into armament creator UIs so mechanic properties no longer appear in normal add-property dropdowns.
+- Expected: (1) `scripts/seed-to-supabase.js` wipes all codex tables and reseeds from the canonical Codex CSVs using the updated schema; (2) CODEX_SCHEMA_REFERENCE documents feat `skill_req` as ID arrays, and species `skills`/`species_traits`/`ancestry_traits`/`flaws`/`characteristics` as ID arrays (never names); (3) all references to codex ?items? are updated to use ?equipment? / `codex_equipment`; (4) properties gain a `mechanic` boolean field, and a follow-up task wires this into armament creator UIs so mechanic properties no longer appear in normal add-property dropdowns.
 
-2/9/2026 — Encounters / Campaigns / Roll Log / Character Visibility (Batch)
-- Context: Multiple areas — Encounters, Roll Log, Campaigns, Character Sharing
+2/9/2026 ? Encounters / Campaigns / Roll Log / Character Visibility (Batch)
+- Context: Multiple areas ? Encounters, Roll Log, Campaigns, Character Sharing
 - Priority: Critical
 - Raw feedback: "Roll logs/Campaigns/Encounters: Allow attaching a campaign to an encounter upon creation or within the encounter, this allows you to click a button 'Add all Characters' or something that lets you add all the characters from the campaign into the encounter automatically. I also see that encounter combatants are not fully loading with their accurate current/max energy and health (when the combatant is tied to a users character). add a roll log (same ui/functionalty/styles as the character sheet) to encounters for RM to use to make rolls (privately, not to the campaign) but which also has the tabs so they can see the rolls in their campaigns. in the encounter tab (roll log campaign mode), character sheet (campaign mode), and campaign page, make the roll log styles consistent, ensure it shows the roll date, most say 'unavailable' for the date. also rolls should be REAL TIME synced between characters and campaigns and other characters/users, so we may need to update the database, supabase settings, and so on to make it real time. The other realtime data would be current health and energy synced between encounters and the characters themselves. Character visibilty: When a user sets a character to public, anyone else should be able to copy the link to that character and use it in their browser to see the character, with the exception that they wouldn't be allowed to edit ANYTHING. is it's set to campaign only, the RM and other users in the campaign should be able to see (not edit) it. If it's set to private and they join a campaign, it should automatically set the character privacy to campaign only (make a notifcation when they join a campaign with a private character that it will set the characters visibility to campaign only. Note: Since characters use powers, techniques, armametns, items, etc which are also from users private library, these also would need to be visible to others, again, without editing privilages."
 - Extracted to: TASK-161 through TASK-168
 
-2/11/2026 — Admin Codex UI — Creature Feats, Equipment, Traits, Species, Skills, Feats, Parts, Properties
-- Context: Admin Codex → Creature Feats / Equipment / Traits / Species / Skills / Feats / Parts / Properties
+2/11/2026 ? Admin Codex UI ? Creature Feats, Equipment, Traits, Species, Skills, Feats, Parts, Properties
+- Context: Admin Codex ? Creature Feats / Equipment / Traits / Species / Skills / Feats / Parts / Properties
 - Priority: High
 - Raw feedback (abbreviated): Admin Codex edit and list UIs are missing or misrepresenting important schema fields. For creature feats there is no way to set feat level, required creature level, or a mechanic flag; equipment lacks proper inputs for category and currency, uses an incorrect type selector, and loads existing cost as 0 in the edit modal; property edit modals default type to a non-existent \"general\" type and do not reflect mechanic properties accurately; parts editing/filtering mishandles mechanic and duration flags and shows percentage-based EN as raw values instead of percentages; list rows with options (parts/properties) do not show those options as expandable chips; trait edit modals do not show flaw/characteristic checkboxes as checked when true; species editing exposes a \"Primary size\" concept instead of only sizes[] and does not make selected traits expandable for RMs to read descriptions; skills and feats filters show duplicate \"All\" options, skills base-skill columns show \"-\" even when base_skill_id is set, and skill edit modals do not reliably surface the base skill.
 - Expected: Admin Codex tabs for creature feats, equipment, traits, species, skills, feats, parts, and properties align with CODEX_SCHEMA_REFERENCE: editors expose all relevant schema fields (including feat_points/feat_lvl/lvl_req/mechanic, equipment category/currency, property type/mechanic, part mechanic/percentage/duration), boolean flags load into checkboxes correctly, size handling uses sizes[] rather than a separate primary size, base skills display and edit correctly, filter dropdowns avoid duplicate \"All\" options, percentage-based EN is formatted as percentages, and any parts/properties with options render those options as expandable chips in both Codex and Admin Codex list expanded views.
 - Extracted to: TASK-190, TASK-191, TASK-192, TASK-193, TASK-194
 
-2/11/2026 — Core Rules Corrections (Owner Batch from Core Rulebook)
+2/11/2026 ? Core Rules Corrections (Owner Batch from Core Rulebook)
 - Context: Game rules, ability caps, damage types, feat formulas, creature progression, conditions, sizes, recovery, experience, archetype progression
 - Priority: Critical
 - Raw feedback (aggregated from multiple messages):
@@ -679,57 +1039,57 @@ Notes
   7. Full Power Character Progression table provided (innate threshold/energy/pools/power prof by level).
   8. Full Martial Character Progression table provided (bonus feats/total feats/armament prof/martial prof by level).
   9. Full Powered-Martial Progression table provided (innate or feat choice every 3 levels, prof increase every 5).
-  10. Armament Proficiency by Martial Prof confirmed: 0→3, 1→8, 2→12, 3→15, 4→18, 5→21, 6→24.
+  10. Armament Proficiency by Martial Prof confirmed: 0?3, 1?8, 2?12, 3?15, 4?18, 5?21, 6?24.
   11. Creature skill points: 5 at level 1, 3 per level (NOT 5 per level as previously documented).
   12. Creature base training points: 22, TP per level: 2 (same as characters, NOT 9/1).
   13. Full conditions list provided from core rulebook (13 standard + 10 leveled) with detailed descriptions.
-  14. Full sizes table (8 sizes: Miniscule through Gargantuan) with carrying capacity — already in GAME_RULES.
-  15. Full recovery rules from core rulebook — requirements (nutrition, doff armor, etc.), interruption rules.
-  16. Full experience/leveling rules: XP threshold = Level × 4, Combat XP = sum enemy levels × 2.
+  14. Full sizes table (8 sizes: Miniscule through Gargantuan) with carrying capacity ? already in GAME_RULES.
+  15. Full recovery rules from core rulebook ? requirements (nutrition, doff armor, etc.), interruption rules.
+  16. Full experience/leveling rules: XP threshold = Level ? 4, Combat XP = sum enemy levels ? 2.
   17. core_rulebook_extracted.txt is the pure source of truth for game rules.
 - Expected: GAME_RULES.md corrected with all values. Task queue updated. TASK-195 cancelled (code was correct). TASK-198, TASK-199 resolved with owner-confirmed values. TASK-221 creature values corrected.
 - Extracted to: Updates applied to TASK-195 (cancelled), TASK-198 (resolved), TASK-199 (resolved), TASK-221 (corrected), GAME_RULES.md (updated)
 
-### 2/11/2026 — About page, Skill encounter, Combat tracker (batch)
+### 2/11/2026 ? About page, Skill encounter, Combat tracker (batch)
 - Raw feedback (abbreviated): About: dice carousel no brackets, center below content, cycle with selected middle (d10 d12 d20 [d4] d6 d8 d10), add second d10 slide (Join Community/Discord). Skill encounter: skill dropdown, success/failure descriptions per roll, allow updating DS post-rolls, fix save/load of rolls, rename Progress to Successes, red failure dots cancel green (net display), Additional Success/Failure buttons, RM Bonus per participant. Combat: surprised checkbox on list items, initiative edit auto-select value, delete combatant don't advance turn, re-sort initiative each round start, keep Sort Initiative in bar when active, Auto Sort Initiative toggle.
 - Extracted to: TASK-235 (About dice carousel), TASK-236 (Skill encounter Successes/RM bonus/DS), TASK-237 (Combat surprised/initiative/delete/auto-sort). Implemented 2026-02-11.
 
-### 2/13/2026 — Feat restrictions, species skill Any, creator skills, defense bonuses (batch 1 — implemented)
+### 2/13/2026 ? Feat restrictions, species skill Any, creator skills, defense bonuses (batch 1 ? implemented)
 - Feat requirements: skill_req_val = required skill BONUS (not value); all skill requirements require proficiency. Example: sub skill req 5 = ability + base value + sub value = 5 bonus.
 - Species skill id "0": Display as "Any"; represents user picks any skill or extra skill point. Character sheet/creation: id 0 = +1 skill point; don't allocate a fixed skill for 0.
 - Character creator skills: Remove ability-grouped sub-tabs; single flat list like character sheet with headers Prof, Skill, Ability, Bonus, Value; reuse SkillRow/table layout; auto proficient when adding; disable Add when no skill points; skill points display one row (no wrap).
 - Defense bonuses in creator: Show bonus when increasing defense (same styles as character sheet defense edit section).
 - Implemented 2026-02-13 (formulas.ts getSkillBonusForFeatRequirement; add-feat-modal, feats-step; species id 0 in resolveSkillIdsToNames, species-modal, skills-step, SkillsAllocationPage, characters page; skills-allocation-page flat table, PointStatus nowrap, defense bonus display).
 
-### 2/13/2026 — Creator feats filter, add modals, feats tab (batch 2 — implemented)
+### 2/13/2026 ? Creator feats filter, add modals, feats tab (batch 2 ? implemented)
 - Character Creator feats: Either/or filter (Archetype feats | Character feats), not "All Feats". Label "Showing all feats" not "Show all feats". Add ability as sort option. Selected feat chips expandable to show description.
-- Add Power / Add Technique modals: Align with add-feat and library — list headers, collapsed/expandable rows, add button on right, shared styles and gridColumns.
+- Add Power / Add Technique modals: Align with add-feat and library ? list headers, collapsed/expandable rows, add button on right, shared styles and gridColumns.
 - Feats tab: Uses current/max as steppers (increase/decrease); remove redundant (X/X) after feat/trait name; expand name column, move uses column right; reuse quantity-editor-style steppers.
 - Implemented 2026-02-13 (feats-step filter/sort/chips; add-library-item-modal layout; feats-tab steppers, hideUsesInName, column widths).
 
 ---
 
-**Raw Feedback Log — 2/13/2026 (session batch 1)**  
+**Raw Feedback Log ? 2/13/2026 (session batch 1)**  
 - Date: 2026-02-13  
 - Context: Feat requirements, species skills, character creator skills, defense display  
 - Priority: High  
 - Feedback: Feat skill_req_val = required BONUS not value; proficiency required. Species skill id 0 = "Any" / extra skill point; display "Any", account for extra point in sheet/creator. Creator skills: flat list, sheet-style table (Prof, Skill, Ability, Bonus, Value), no ability tabs, auto proficient on add, no add if no points; skill points one row. Defense bonuses shown when increasing in creator.  
 - Expected: Implemented 2026-02-13.
 
-**Raw Feedback Log — 2/13/2026 (session batch 2)**  
+**Raw Feedback Log ? 2/13/2026 (session batch 2)**  
 - Date: 2026-02-13  
 - Context: Creator feats filter, add modals, feats tab  
 - Priority: High  
 - Feedback: Creator feats either/or (archetype or character). "Showing all feats" not "Show all feats". Ability sort in creator. Selected feat chips expandable with description. Add power/technique modals align with add-feat and library (headers, collapsed views, add on right, shared styles). Feats tab: uses as steppers; remove redundant X/X after name; widen name column, uses column right.  
 - Expected: Implemented 2026-02-13.
 
-**Raw Feedback Log — 2/13/2026 (session batch 3)**  
+**Raw Feedback Log ? 2/13/2026 (session batch 3)**  
 - Date: 2026-02-13  
 - Context: Dark theme, feat creator, sub-skills, species skill, modals, armaments  
 - Priority: High  
 - Feedback:
   1. Dark theme text: many dark theme font colors are too dark on backgrounds. Example: home page feature cards text on neutral-300.
-  2. Archetype feats shown twice in dropdown → change to toggle button "Showing Archetype" / "Showing Character" feats.
+  2. Archetype feats shown twice in dropdown ? change to toggle button "Showing Archetype" / "Showing Character" feats.
   3. Sub-skills (e.g., Tinker) should count as proficient for feat requirements. Proficiency check failing despite sub-skill being added.
   4. Remove Level header from feat list in character creator (unnecessary since filtered to available feats). Make Ability a real filter, not just a sort header.
   5. Add technique/power modals should match character sheet column display (Action, Damage, Area for powers; Action, Weapon for techniques).
@@ -737,101 +1097,101 @@ Notes
   7. Armor/weapons: critical range showing raw bonus instead of threshold, armor DR fallback from properties needed.
 - Expected: All items implemented 2026-02-13.
 
-**Raw Feedback Log — 2/14/2026 (session batch)**  
+**Raw Feedback Log ? 2/14/2026 (session batch)**  
 - Date: 2026-02-14  
 - Context: Library, feats, skills, ranged weapons, part chips, roll log, character sheet  
 - Priority: High  
 - Feedback:
-  1. Remove the "mine" tags from items in your personal library — it's implied they're yours because you have them in the "My Library" tab.
+  1. Remove the "mine" tags from items in your personal library ? it's implied they're yours because you have them in the "My Library" tab.
   2. Feats have abilities tied to them used to sort them; abilities can be sorted and displayed as a list in codex lists, e.g. "Strength, Intelligence" etc, instead of "StrengthIntelligence" etc. This is how it should be displayed in lists.
-  3. Skills discrepancy between character creator and character sheet: character sheet loaded skills as all having +1 to the skill values AND proficiency. Proficiency costs a skill point regardless of a skill value increase. Character creator adds skills as having skill values of 1, instead of 0 — they should be added as proficient but skill value of 0, not 1. Don't remove a skill you add in character creator when you hit - at 0; instead just don't let you decrease skill stepper skill values below 0.
-  4. The range for my ranged weapon I made didn't save, and/or doesn't display in my character sheet as having the range that it has — it just loads as melee. It seems to be accounting for the range by using acuity as the attack bonus, but not accounting for it regardless.
+  3. Skills discrepancy between character creator and character sheet: character sheet loaded skills as all having +1 to the skill values AND proficiency. Proficiency costs a skill point regardless of a skill value increase. Character creator adds skills as having skill values of 1, instead of 0 ? they should be added as proficient but skill value of 0, not 1. Don't remove a skill you add in character creator when you hit - at 0; instead just don't let you decrease skill stepper skill values below 0.
+  4. The range for my ranged weapon I made didn't save, and/or doesn't display in my character sheet as having the range that it has ? it just loads as melee. It seems to be accounting for the range by using acuity as the attack bonus, but not accounting for it regardless.
   5. The part chips in the powers/techniques should be expandable to show what that part is, what the options are, and what each of their increase levels are. Also all powers and techniques and items etc need to show their descriptions in their expanded views; some are missing these traits.
   6. When viewing a character sheet that's not your own, don't allow rolling for them/as them if it's not your character.
   7. Rolls between different roll log locations don't seem to be updating in realtime; you need to refresh to see the updated rolls.
 - Expected: Mine badges removed in My Library; feat abilities as comma-separated list; creator adds skills with value 0 (proficient), stepper doesn't remove at 0; weapon range derived and displayed on sheet; part chips expandable with options/levels; descriptions in expanded views; no rolling when viewing others' characters; roll log realtime across locations.
 
-**Raw Feedback Log — 2/14/2026 (session batch)**  
+**Raw Feedback Log ? 2/14/2026 (session batch)**  
 - Date: 2026-02-14  
 - Context: Character/portrait deletion, user management, About page dice, character creator skills  
 - Priority: High  
-- Feedback: (1) Character/picture Deletion: Delete old portrait from database when character updates one, same with profile picture. Remove portraits from storage when character is deleted. (2) User management: Users who have uids and are admins shown as "Admin" with inability to alter that role instead of dropdown. (3) About page: Selected dice icon should be middle icon, 3 dice on each side; arrows cycle selection (e.g. d10 d12 d20 [d4] d6 d8 d10 → right → d12 d20 d4 [d6] d8 d10 d10). (4) Character creator skills: Add skill as proficient (blue dot) + skill value 0, costs 1 pt. Increase value costs 1 pt each. Decrease to 0 doesn't remove proficiency for base skills. Sub-skills: add as proficient with value 1 (1 pt total); decrease to 0 removes proficiency. Formula: proficient base skills + sum of all skill values = spent skill points.  
+- Feedback: (1) Character/picture Deletion: Delete old portrait from database when character updates one, same with profile picture. Remove portraits from storage when character is deleted. (2) User management: Users who have uids and are admins shown as "Admin" with inability to alter that role instead of dropdown. (3) About page: Selected dice icon should be middle icon, 3 dice on each side; arrows cycle selection (e.g. d10 d12 d20 [d4] d6 d8 d10 ? right ? d12 d20 d4 [d6] d8 d10 d10). (4) Character creator skills: Add skill as proficient (blue dot) + skill value 0, costs 1 pt. Increase value costs 1 pt each. Decrease to 0 doesn't remove proficiency for base skills. Sub-skills: add as proficient with value 1 (1 pt total); decrease to 0 removes proficiency. Formula: proficient base skills + sum of all skill values = spent skill points.  
 - Expected: Implemented 2026-02-14.
 
-**Raw Feedback Log — 2/14/2026 (creator expand + load audit)**  
+**Raw Feedback Log ? 2/14/2026 (creator expand + load audit)**  
 - Date: 2026-02-14  
 - Context: Creature creator, Power/Technique/Item creators  
 - Priority: High  
-- Feedback: (1) When enabling powers, armaments, techniques in the creature creator, auto-open the list (expanded) instead of collapsed — you enabled it to add something. (2) Audit load option/functionality in creators. Loading must update all UI, option levels, added parts/properties to exactly match the saved item: range, damage dice, action type, armament type, description, properties, option levels, etc. Any existing UI state must be completely cleared/reset before load to avoid corruption. Applies to armaments, powers, techniques, and creatures.  
+- Feedback: (1) When enabling powers, armaments, techniques in the creature creator, auto-open the list (expanded) instead of collapsed ? you enabled it to add something. (2) Audit load option/functionality in creators. Loading must update all UI, option levels, added parts/properties to exactly match the saved item: range, damage dice, action type, armament type, description, properties, option levels, etc. Any existing UI state must be completely cleared/reset before load to avoid corruption. Applies to armaments, powers, techniques, and creatures.  
 - Expected: Implemented 2026-02-14. Creature sections expand when enabled. All creators reset before load; technique load restores actionType/isReaction; item load supports armorValue fallback; creature load does full replace (no merge).
 
-**Raw Feedback Log — 2/17/2026 (Species skill description + step check mark)**  
+**Raw Feedback Log ? 2/17/2026 (Species skill description + step check mark)**  
 - Date: 2026-02-17  
-- Context: Character creator — Species step, step tabs  
+- Context: Character creator ? Species step, step tabs  
 - Priority: Low  
 - Feedback:  
-  (1) Bug — Skill description carrying over: Make a new character → Select "2. Species" → Click a Species → Under "Species Skills" click a skill to show description → Click off that Species and click a different Species. Observed: Skill description from the first Species stays open on the second. Expected: Skill description should close when clicking off of a Species.  
-  (2) Bug — Character creation Step missing check mark: Make a new character → Choose and confirm Archetype → Select and pick a Species → Click the "3. Ancestry" tab. Observed: Users can complete but not "confirm" a Step so it doesn't get a check mark. Expected: Step should warn the user if they have made a selection but not confirmed it.  
+  (1) Bug ? Skill description carrying over: Make a new character ? Select "2. Species" ? Click a Species ? Under "Species Skills" click a skill to show description ? Click off that Species and click a different Species. Observed: Skill description from the first Species stays open on the second. Expected: Skill description should close when clicking off of a Species.  
+  (2) Bug ? Character creation Step missing check mark: Make a new character ? Choose and confirm Archetype ? Select and pick a Species ? Click the "3. Ancestry" tab. Observed: Users can complete but not "confirm" a Step so it doesn't get a check mark. Expected: Step should warn the user if they have made a selection but not confirmed it.  
   (Note: Seeming did not impact character creation. BLOCKED: Users can not view completed Character sheets. 2/17/2026)  
 - Expected: (1) Clear skill description when switching species in modal. (2) When navigating to another step via tab with unconfirmed selection, show warning and offer to mark complete and go.  
-- Implemented 2026-02-17: (1) species-modal.tsx — clear selectedSkill when isOpen becomes false and when species?.id changes. (2) creator-tab-bar.tsx — handleContinueAnyway now calls markStepComplete(currentStep) so the step gets a check mark when user clicks "Continue anyway". TASK-250, TASK-251.
+- Implemented 2026-02-17: (1) species-modal.tsx ? clear selectedSkill when isOpen becomes false and when species?.id changes. (2) creator-tab-bar.tsx ? handleContinueAnyway now calls markStepComplete(currentStep) so the step gets a check mark when user clicks "Continue anyway". TASK-250, TASK-251.
 
-**Raw Feedback Log — 2/17/2026 (Add power/technique modals + Finalize abilities)**  
+**Raw Feedback Log ? 2/17/2026 (Add power/technique modals + Finalize abilities)**  
 - Date: 2026-02-17  
 - Context: Character creator, Creature creator, Finalize step  
 - Priority: High  
 - Feedback: (1) The select/add powers and select/add technique modals in the character creator are not unified in UI/styles/format with other add power/technique modals; they're missing the layout of column headers, collapsed item headers, etc. This is likely an issue in the creature creator too. (2) Finalize Step: Abilities shouldn't ever be abbreviated to less than 3 letters; the current finalize step makes them all one letter. Show 3-letter abbreviations at least, but prefer full text: "Strength", "Vitality", etc.  
-- Expected: (1) Character creator and creature creator add power/technique modals match character sheet add-library-item modal: same column headers (e.g. NAME, ACTION, DAMAGE, AREA for powers; NAME, WEAPON, PARTS for techniques), collapsed/expandable row layout, list header bar. (2) Finalize step abilities display as full names (Strength, Vitality, …) or at minimum 3-letter abbreviations, not single letters.
-- Implemented 2026-02-17: (1) TASK-252 — Character creator powers-step: columns + gridColumns for power (Action, Damage, Area) and technique (Weapon, Parts); creature creator transformers stats and modal columns/gridColumns aligned; (2) TASK-253 — ABILITY_DISPLAY_NAMES in constants; finalize-step uses full ability names.
+- Expected: (1) Character creator and creature creator add power/technique modals match character sheet add-library-item modal: same column headers (e.g. NAME, ACTION, DAMAGE, AREA for powers; NAME, WEAPON, PARTS for techniques), collapsed/expandable row layout, list header bar. (2) Finalize step abilities display as full names (Strength, Vitality, ?) or at minimum 3-letter abbreviations, not single letters.
+- Implemented 2026-02-17: (1) TASK-252 ? Character creator powers-step: columns + gridColumns for power (Action, Damage, Area) and technique (Weapon, Parts); creature creator transformers stats and modal columns/gridColumns aligned; (2) TASK-253 ? ABILITY_DISPLAY_NAMES in constants; finalize-step uses full ability names.
 
-**Raw Feedback Log — Creators description/dropdown contrast + accessibility audit**  
+**Raw Feedback Log ? Creators description/dropdown contrast + accessibility audit**  
 - Date: 2026-02-18  
 - Context: Creators (Technique, Armament), add Part/Property  
 - Priority: Low (contrast), Serious (accessibility)  
-- Feedback: Steps: Creators → Techniques or Armaments → Add a Technique Part or Property. Observed: The description can not be easily read as the text is light blue on white. Expected: Description should change for Dark-mode like on the Power Creator. Issue is effecting Dropdown menus as well for all 3 Creators. In addition we need to do an accessibility audit to prevent from lawsuits: Elements must meet minimum color contrast ratio thresholds (WCAG 2.1 AA - 4.5:1 small text, 3:1 large text). Rule ID: color-contrast, User Impact: Serious, Guidelines: WCAG 2.1 (AA), WCAG 2.0 (AA), WCAG 2.2 (AA).  
+- Feedback: Steps: Creators ? Techniques or Armaments ? Add a Technique Part or Property. Observed: The description can not be easily read as the text is light blue on white. Expected: Description should change for Dark-mode like on the Power Creator. Issue is effecting Dropdown menus as well for all 3 Creators. In addition we need to do an accessibility audit to prevent from lawsuits: Elements must meet minimum color contrast ratio thresholds (WCAG 2.1 AA - 4.5:1 small text, 3:1 large text). Rule ID: color-contrast, User Impact: Serious, Guidelines: WCAG 2.1 (AA), WCAG 2.0 (AA), WCAG 2.2 (AA).  
 - Expected: (1) Description text uses semantic tokens (text-text-primary) that adapt to dark mode like Power Creator. (2) Dropdown menus across Power/Technique/Armament creators meet WCAG AA contrast. (3) Full accessibility audit for color contrast across site.  
 - Extracted to: TASK-254 (implement), TASK-255 (accessibility audit)
 
-**Raw Feedback Log — Character creator allocate skills tab (species value 0, bonuses, ability choice)**  
+**Raw Feedback Log ? Character creator allocate skills tab (species value 0, bonuses, ability choice)**  
 - Date: 2026-02-17  
-- Context: Character creator — Allocate skills tab  
+- Context: Character creator ? Allocate skills tab  
 - Priority: High  
-- Feedback: (1) Species skills are added as proficient with skill value 0, not 1 — I've given feedback about this before. (2) Skill bonuses seem inaccurate; reference GAME_RULES for skills/subskill bonus calculations. (3) Skills with multiple ability options (e.g. Craft) should let me choose which ability the skill uses; default should be the highest value ability at that point, but I need to be able to select. (4) Unity between skill calculations in character sheet, creature creator, and character creator.  
-- Expected: Species skills = proficient + value 0; bonus formulas per GAME_RULES (proficient base = ability + value, sub-skill = ability + base value + sub value; unproficient = ½ ability round up or ×2 if negative); multi-ability skills have ability selector, default highest; same formulas everywhere.  
+- Feedback: (1) Species skills are added as proficient with skill value 0, not 1 ? I've given feedback about this before. (2) Skill bonuses seem inaccurate; reference GAME_RULES for skills/subskill bonus calculations. (3) Skills with multiple ability options (e.g. Craft) should let me choose which ability the skill uses; default should be the highest value ability at that point, but I need to be able to select. (4) Unity between skill calculations in character sheet, creature creator, and character creator.  
+- Expected: Species skills = proficient + value 0; bonus formulas per GAME_RULES (proficient base = ability + value, sub-skill = ability + base value + sub value; unproficient = ? ability round up or ?2 if negative); multi-ability skills have ability selector, default highest; same formulas everywhere.  
 - Implemented 2026-02-18: (1) Character sheet merge of species skills now uses skill_val: 0 (was 1). Character creator already set species skills to 0. (2) formulas.ts already matches GAME_RULES. (3) Ability selector for multi-ability skills already present (skillAbilities, onSkillAbilityChange in skills-step and SkillsAllocationPage). (4) Same formulas used in formulas.ts across sheet/creator; creature creator uses calculateSkillBonusWithProficiency. Base skill gaining proficiency in sheet now explicitly set to skill_val: 0.
 
-**Raw Feedback Log — 2/18/2026 (Species height/weight/lifespan, codex unification, skill ability, public codex)**  
+**Raw Feedback Log ? 2/18/2026 (Species height/weight/lifespan, codex unification, skill ability, public codex)**  
 - Date: 2026-02-18  
 - Context: Character creator Ancestry tab, Codex (admin + public), species editor, skill admin, equipment/property editors  
 - Priority: High  
 - Feedback: (1) Character creator Ancestry tab: height, weight, lifespan, adulthood should be in the species summary with size, type, skills, languages; they are missing. (2) Age/height/weight numbers are missing in many forms (codex, character creator). (3) Codex editor: ensure average height/weight and sometimes lifespan (max age) and adulthood are present; example species in Supabase uses ave_hgt_cm, ave_wgt_kg, adulthood_lifespan (e.g. 3). (4) Use common styles and load/display logic for species across the site. (5) Skill edit admin: "governing ability/defense" should be abilities only, not defenses, for skills. (6) Sync codex species display with admin style (expandable cards); include languages, age, weight/height. (7) Add "Traits" tab to public codex, mimicking admin codex (no edit/delete). (8) Public codex: hide some tabs by default; "Advanced" reveals power/technique parts, armament properties, creature feats, traits. (9) Audit public vs admin codex: use same layouts/components/styles; options in parts/properties should be expandable chips with IP/TP/c/EN costs and description; parts/properties missing descriptions in public codex. (10) Edit property: option costs need labels for IP/TP/c; description field bigger. (11) Edit equipment: category dropdown with list of existing categories + add new. (12) Column headers aligned with collapsed item cards across codexes/admin/library; remove inline styles in favor of reusable components. (13) Armament properties not always showing descriptions in codex when they have options (shows only options).
 - Expected: Species summary everywhere includes height, weight, lifespan, adulthood; API maps ave_hgt_cm/ave_wgt_kg and adulthood_lifespan; skill admin uses abilities-only; public codex has Traits tab and Advanced toggle; unified codex display and chip styles; property/equipment editor improvements; column/component consistency.
 
-**Raw Feedback Log — 2/20/2026 (Feat level display, codex modals “No value”, public armaments 500)**  
+**Raw Feedback Log ? 2/20/2026 (Feat level display, codex modals ?No value?, public armaments 500)**  
 - Date: 2026-02-20  
 - Context: Admin Codex feats, codex edit modals, Codex public library tab  
 - Priority: High  
-- Feedback: (1) Feats are stored with feat_lvl (e.g. "feat_lvl": 2 for Adapt II); feat level is not being displayed in admin page—loaded as 0 in edit mode. (2) In the codex, if a value doesn't exist in the edit modal for any editing modal, simply display "no value", not "0". (3) Codex public library tab: "Failed to load public armaments"; dev terminal shows GET /api/public/items 500 — "The table codex.public_items does not exist in the current database."  
+- Feedback: (1) Feats are stored with feat_lvl (e.g. "feat_lvl": 2 for Adapt II); feat level is not being displayed in admin page?loaded as 0 in edit mode. (2) In the codex, if a value doesn't exist in the edit modal for any editing modal, simply display "no value", not "0". (3) Codex public library tab: "Failed to load public armaments"; dev terminal shows GET /api/public/items 500 ? "The table codex.public_items does not exist in the current database."  
 - Expected: (1) Admin feat edit shows actual feat_lvl from feat data. (2) Optional numeric fields in codex edit modals show empty/placeholder "No value" when value is missing, not "0". (3) Public armaments (items) load; table codex.public_items exists or API handles missing table without 500.  
 - Implemented 2026-02-20: (1) Codex API now returns feat_lvl, req_desc, feat_cat_req, pow_abil_req, pow_prof_req, speed_req for feats; Admin Feats edit modal loads and displays feat_lvl correctly. (2) Admin Feats and Admin Creature Feats modals: optional numeric fields use number | undefined, display value ?? '' with placeholder "No value"; Admin Traits uses_per_rec placeholder "No value". (3) New migration 20260220000000_public_library_codex_schema creates codex.public_powers/techniques/items/creatures; GET /api/public/[type] catches P2021/missing table and returns [] so UI shows empty list instead of error.
 
-**Raw Feedback Log — 2/20/2026 (Modal unification audit)**
+**Raw Feedback Log ? 2/20/2026 (Modal unification audit)**
 - Date: 2026-02-20
-- Context: Unification audit — modals with lists (add-X, load, selection)
+- Context: Unification audit ? modals with lists (add-X, load, selection)
 - Priority: High
 - Feedback: During the instruction for the original audit I neglected to mention the need to also audit the unification of MODALS whether they are add X modals (add powers to creatures, characters, etc) load modals, etc (modals with lists within them!) I want to make sure the logic, styles, etc is unified between them, most of which are likely possible to have integrated with codex and library styles, components, etc etc. Much of the logic is possible to synchronize and clean up.
 - Expected: Single audit of list modals; unified logic, styles, and patterns; alignment with Codex/Library; recommendations and tasks for implementation.
 - Created: MODAL_UNIFICATION_AUDIT_2026-02-20.md; TASK-264 added to AI_TASK_QUEUE.
 
-**Raw Feedback Log — 2/20/2026 (Weapon armament load duplicates damage/range)**
+**Raw Feedback Log ? 2/20/2026 (Weapon armament load duplicates damage/range)**
 - Date: 2026-02-20
-- Context: Item creator — Load weapon armament from library
+- Context: Item creator ? Load weapon armament from library
 - Priority: High
 - Feedback: When loading a weapon armament, it loads the weapon damage and range in addition to the normal armament properties. This duplicates these in the UI (they already have dedicated fields) and adds them to the property list, effectively duplicating the costs.
 - Expected: On load, damage and range are restored only from item.damage and item.rangeLevel; Weapon Damage and Range properties are not shown in the add-property list and are not double-counted in cost.
 - Implemented 2026-02-20: filterSavedItemPropertiesForList now excludes properties by a fixed set of mechanic property IDs (Range, Weapon Damage, Split Damage Dice, Two-Handed, DR, Armor Base, Shield Base/Amount/Damage, Critical Range +1, ability requirements) so they never appear in the selectable list on load even if the codex has mechanic: false.
 
-**Raw Feedback Log — 2/20/2026 (Action Points, realtime sync, character settings)**
+**Raw Feedback Log ? 2/20/2026 (Action Points, realtime sync, character settings)**
 - Date: 2026-02-20
 - Context: Character sheet header, encounter tracker, Supabase realtime, roll log, character sheet toolbar
 - Priority: High
@@ -839,23 +1199,23 @@ Notes
 - Expected: AP tracker in header (default 4, stepper); two-way realtime sync of HP/EN/AP when character is in encounter; roll log and character/encounter sync properly using realtime; gear icon opens settings modal with visibility (Private/Campaign/Public); Notes tab no longer shows visibility.
 - Implemented 2026-02-20: AP tracker added to sheet header; character type actionPoints (default 4); syncCharacterResources on combat page syncs health/energy/actionPoints to character API; character page and combat page subscribe to users.characters for realtime; campaign_rolls realtime already in place; CharacterSheetSettingsModal + gear icon in toolbar; visibility moved from Notes tab to settings modal. See AI_CHANGELOG.md.
 
-**Raw Feedback Log — 2/20/2026 (Character portrait upload / RLS)**
+**Raw Feedback Log ? 2/20/2026 (Character portrait upload / RLS)**
 - Date: 2026-02-20
 - Context: Character portrait upload, Supabase Storage
 - Priority: High
-- Feedback: Character portrait isn't loading and errors when uploading. Console: "Portrait upload error: Error: new row violates row-level security policy"; /api/upload/portrait 500; image 400. (Other console messages — slow network, message channel closed, express-utils.js, Adobe extension — are from browser extensions, not the app.)
+- Feedback: Character portrait isn't loading and errors when uploading. Console: "Portrait upload error: Error: new row violates row-level security policy"; /api/upload/portrait 500; image 400. (Other console messages ? slow network, message channel closed, express-utils.js, Adobe extension ? are from browser extensions, not the app.)
 - Expected: Portrait upload succeeds; portrait loads on character sheet.
-- Implemented 2026-02-20: Added sql/supabase-storage-policies.sql with full RLS for portraits bucket (SELECT, INSERT, UPDATE, DELETE) and profile-pictures; API needs UPDATE/DELETE for list+remove+upsert flow. Deployment doc updated to point to this file and to troubleshoot "new row violates row-level security policy" by running the storage policies. User must run the SQL in Supabase Dashboard → SQL Editor. See AI_CHANGELOG.md.
+- Implemented 2026-02-20: Added sql/supabase-storage-policies.sql with full RLS for portraits bucket (SELECT, INSERT, UPDATE, DELETE) and profile-pictures; API needs UPDATE/DELETE for list+remove+upsert flow. Deployment doc updated to point to this file and to troubleshoot "new row violates row-level security policy" by running the storage policies. User must run the SQL in Supabase Dashboard ? SQL Editor. See AI_CHANGELOG.md.
 
-**Raw Feedback Log — 2/20/2026 (Unarmed prowess damage = Attack Bonus + dice)**
+**Raw Feedback Log ? 2/20/2026 (Unarmed prowess damage = Attack Bonus + dice)**
 - Date: 2026-02-20
 - Context: Character sheet Weapons, Proficiencies tab, GAME_RULES, equipment step
 - Priority: High
 - Feedback: Unarmed prowess damage when you have proficiency needs to be equal to the full attack bonus with no dice at level 1 of proficiency, not JUST the ability. The table/game rules need to be updated to match the idea that your proficient unarmed prowess uses ability + martial proficiency + dice (from higher proficiency levels), not just ability + dice.
-- Expected: At prowess level 1, damage = full Attack Bonus (Ability + Martial Proficiency), no dice. At prowess II–V, damage = dice + Attack Bonus. UI and docs show "Attack Bonus" (or equivalent) and table reflects Ability + Martial Prof + dice.
+- Expected: At prowess level 1, damage = full Attack Bonus (Ability + Martial Proficiency), no dice. At prowess II?V, damage = dice + Attack Bonus. UI and docs show "Attack Bonus" (or equivalent) and table reflects Ability + Martial Prof + dice.
 - Implemented 2026-02-20: archetype-section damage display uses unarmedAttackBonus for level 1 (no dice) and dice + unarmedAttackBonus for 2+; proficiencies-tab and equipment-step tables use "Attack Bonus" / "1d2 + Attack Bonus" etc.; GAME_RULES.md updated with "Unarmed Prowess Damage (Proficient)" table; unarmed roll at level 1 uses 0d4 so dice roller receives a valid pattern.
 
-**Raw Feedback Log — 2/20/2026 (Technique/power modals + character creator lists)**
+**Raw Feedback Log ? 2/20/2026 (Technique/power modals + character creator lists)**
 - Date: 2026-02-20
 - Context: Add technique modal, add power modal, character sheet, creature creator, character creator
 - Priority: High
@@ -863,7 +1223,7 @@ Notes
 - Expected: Technique modal everywhere shows Name, Energy, Weapon, Training Pts (not Parts count). Power add modal identical across sheet, creature creator, character creator. Character creator selected powers/techniques use ListHeader + GridListRow with same columns as character sheet, plus remove buttons.
 - Implemented 2026-02-20: add-library-item-modal techniques use Energy, Weapon, Training Pts (deriveTechniqueDisplay + useTechniqueParts); library-section technique columns Energy, Weapon, TP; enrichTechniques returns tp; creature creator technique modal/transformer and technique list use Energy/Weapon/Training Pts; character creator technique modal and selected lists use same columns; character creator and creature creator selected powers/techniques use ListHeader + GridListRow with remove buttons. See AI_CHANGELOG.md.
 
-**Raw Feedback Log — 2/20/2026 (Public library on Library page, admin Public Library Editor)**
+**Raw Feedback Log ? 2/20/2026 (Public library on Library page, admin Public Library Editor)**
 - Date: 2026-02-20
 - Context: Library page, Codex page, Admin page
 - Priority: High
@@ -871,7 +1231,7 @@ Notes
 - Expected: Library page has My Library / Public Library switch and title; Public Library shows same four tabs with browse + Add to my library; Codex no longer has Public Library tab; Library "My" mode can still filter All/Public/My and show merged data in each tab; Admin has Public Library Editor (list + modal edit, save/delete) for powers, techniques, armaments, creatures.
 - Implemented 2026-02-20: Library page mode switch and LibraryPublicContent; Techniques/Items/Creatures tabs support public and merged data; Codex Public Library tab removed and CodexPublicLibraryTab deleted; DELETE added to /api/public/[type]; Admin Public Library Editor at /admin/public-library with four tabs and list+modal (name, description, JSON body). See AI_CHANGELOG.md.
 
-**Raw Feedback Log — 2/20/2026 (Public Library edit UX + account deletion)**
+**Raw Feedback Log ? 2/20/2026 (Public Library edit UX + account deletion)**
 - Date: 2026-02-20
 - Context: Admin Public Library editor, My Account delete account
 - Priority: High
@@ -879,22 +1239,22 @@ Notes
 - Expected: Public Library editor uses structured forms (not raw JSON) with fields and parts/properties lists; account deletion removes characters, library, encounters, campaigns owned, and user removed from campaign membership.
 - Implemented 2026-02-20: PublicPowerEditModal, PublicTechniqueEditModal, PublicItemEditModal, PublicCreatureEditModal with codex-style fields and parts/properties add/remove and option levels; deleteAccountAction now deletes encounters, campaigns owned, and strips user from campaign membership and character lists. See AI_CHANGELOG.md.
 
-**Raw Feedback Log — 2026-02-21 (Cannot add equipment, armaments, techniques to character)**
+**Raw Feedback Log ? 2026-02-21 (Cannot add equipment, armaments, techniques to character)**
 - Date: 2026-02-21
 - Context: Character sheet Library tab, character creator (equipment / powers & techniques)
 - Priority: High
 - Feedback: Can't seem to add equipment, armaments, or techniques to my character. Could be a modal problem between the character sheet and creator, or something else.
 - Expected: User can add powers, techniques, weapons, armor, and equipment from the add modals (select items, confirm, and see them on the character). Same in character creator where applicable.
 
-**Raw Feedback Log — 2026-02-21 (Dark mode audit — bright element backgrounds)**
+**Raw Feedback Log ? 2026-02-21 (Dark mode audit ? bright element backgrounds)**
 - Date: 2026-02-21
 - Context: Character creator, creators (power/technique/item/creature), codex/libraries
 - Priority: Medium
 - Feedback: Dark mode audit: Reset button in character creator is too bright background, finished steps are a too bright white green in character creator, add sub skill button has too bright of a button background. Look for other instances of these bright backgrounds for individual elements that are too bright for dark mode, such as the backgrounds in the creators for things like IP, EN, TP etc, summary items, creature creator components, background for column headers in codex/libraries, etc.
 - Expected: All listed elements use dark-mode-appropriate backgrounds (design tokens with dark variants or explicit dark: classes) so no bright white/green/teal/amber panels or buttons in dark mode.
-- Implemented 2026-02-21: Reset/secondary Button, creator tab bar (finished steps + Restart), Add Sub-Skill button, ListHeader, creator summary panel, equipment/finalize/feats/ancestry steps, creature creator chip/stat panels — dark variants applied.
+- Implemented 2026-02-21: Reset/secondary Button, creator tab bar (finished steps + Restart), Add Sub-Skill button, ListHeader, creator summary panel, equipment/finalize/feats/ancestry steps, creature creator chip/stat panels ? dark variants applied.
 
-**Raw Feedback Log — 2026-02-21 (Portrait not loading, save indicator, species/traits on species change)**
+**Raw Feedback Log ? 2026-02-21 (Portrait not loading, save indicator, species/traits on species change)**
 - Date: 2026-02-21
 - Context: Character sheet portrait upload, character sheet toolbar, character creator species/ancestry steps
 - Priority: High
@@ -902,84 +1262,84 @@ Notes
 - Expected: (1) Portrait displays on the sheet after upload/crop. (2) No save state indicator in the toolbar. (3) Changing species clears previous ancestry trait/flaw/characteristic selections so the new species requires fresh choices.
 - Implemented 2026-02-21: Portrait: added portraitRefreshKey after upload so the header image remounts and uses a cache-bust query param so the new image loads. Save indicator: removed from SheetActionToolbar and related props. Species: setSpecies now resets selectedTraits, selectedFlaw, selectedCharacteristic when species changes so ancestry step does not carry over old selections.
 
-**Raw Feedback Log — 2026-02-21 (Add skill modal abilities + add modals expand vs add)**
+**Raw Feedback Log ? 2026-02-21 (Add skill modal abilities + add modals expand vs add)**
 - Date: 2026-02-21
 - Context: Add Skill modal (collapsed row), Add modals (add feat, add skill, add library item)
 - Priority: High
-- Feedback: (1) Add skill modal: In collapsed mode, display abilities as little card things; under Abilities it currently shows the skill name and the ability — format them like the sub skill ability column with a list of abilities attached to the skill in abbreviated form (STR, AGI, etc.). (2) Add modals: Each item in the list needs to be expandable so you know what you're adding (descriptions, properties, parts, etc. as in codex/library). Clicking a collapsed card should not "add" it unless you hit the + part of the card; otherwise it should expand/collapse.
-- Expected: (1) Add skill modal: Abilities column shows abbreviated ability chips (STR, AGI, …); expanded view has Abilities section in same abbreviated list style. (2) Add modals: Row click only expand/collapse; selection only via + button.
+- Feedback: (1) Add skill modal: In collapsed mode, display abilities as little card things; under Abilities it currently shows the skill name and the ability ? format them like the sub skill ability column with a list of abilities attached to the skill in abbreviated form (STR, AGI, etc.). (2) Add modals: Each item in the list needs to be expandable so you know what you're adding (descriptions, properties, parts, etc. as in codex/library). Clicking a collapsed card should not "add" it unless you hit the + part of the card; otherwise it should expand/collapse.
+- Expected: (1) Add skill modal: Abilities column shows abbreviated ability chips (STR, AGI, ?); expanded view has Abilities section in same abbreviated list style. (2) Add modals: Row click only expand/collapse; selection only via + button.
 
-**Raw Feedback Log — 2026-04-01 (Character sheet Library edit: remove button wraps)**
+**Raw Feedback Log ? 2026-04-01 (Character sheet Library edit: remove button wraps)**
 - Date: 2026-04-01
-- Context: Character sheet → Library → Feats (edit mode) list rows (archetype feats + other feats)
+- Context: Character sheet ? Library ? Feats (edit mode) list rows (archetype feats + other feats)
 - Priority: High
 - Feedback: In edit mode, the Remove (X) buttons wrap to a second row for some archetype feats and other feats; they should stay right-aligned / right-most like other list items across the site.
 - Expected: Remove (X) action stays pinned to the far-right of the row on a single line; row content truncates/shrinks instead of pushing the action onto a second line.
 - Implemented 2026-02-21: add-skill-modal: getAbilityAbbrList + buildAbilityDisplay; abilities column shows chips (ReactNode); detailSections include Abilities (abbreviated chips). grid-list-row: when selectable, handleRowClick only toggles expansion, never calls onSelect; selection only via SelectionToggle (+). add-skill description updated to "Expand a row to view details. Use the + button to add."
 
-**Raw Feedback Log — 2026-04-01 (Pencil toggle: clearer active editing state)**
+**Raw Feedback Log ? 2026-04-01 (Pencil toggle: clearer active editing state)**
 - Date: 2026-04-01
 - Context: Character sheet (and any section using the pencil `EditSectionToggle`)
 - Priority: Medium
-- Feedback: When a section is actively being edited vs not, make the pencil visually indicate the active state more clearly (e.g., a light color-matched background, slight growth), while staying professional/simple and matching the pencil’s theme color (blue/green/red).
-- Expected: Clicking the pencil toggles an obvious “active” state. Active state uses a subtle tinted background + ring (theme-matched) and a small scale change; inactive remains a clean icon with hover affordance.
+- Feedback: When a section is actively being edited vs not, make the pencil visually indicate the active state more clearly (e.g., a light color-matched background, slight growth), while staying professional/simple and matching the pencil?s theme color (blue/green/red).
+- Expected: Clicking the pencil toggles an obvious ?active? state. Active state uses a subtle tinted background + ring (theme-matched) and a small scale change; inactive remains a clean icon with hover affordance.
 
-**Raw Feedback Log — 2026-02-21 (Powers/techniques/armor/weapons modals: source switch + public library, DB usage)**
+**Raw Feedback Log ? 2026-02-21 (Powers/techniques/armor/weapons modals: source switch + public library, DB usage)**
 - Date: 2026-02-21
-- Context: Character creator, character sheet, creature creator — modals that add powers, techniques, armor, weapons (public library options)
+- Context: Character creator, character sheet, creature creator ? modals that add powers, techniques, armor, weapons (public library options)
 - Priority: High
 - Feedback: In the modals that correlate with public library/user library, allow switching the source from my library, to public library, to all sources, using the same component used in the library page, same styles, logic, etc., so users can easily add public things to their characters. Question: Should adding a public item to a character copy it to the user's personal library first, then add that version to the character (copy then add)? Or would that use too much Supabase data? Should we only add to personal library when they explicitly do so on the Library page, and otherwise keep the character referencing the public library (no copy)?
 - Expected: (1) Add-X modals support source filter (My library / Public library / All sources) like Library page. (2) Clear, cost-conscious design: either reference public items on the character without copying, or copy-only-when-explicit so DB usage stays low.
 
-**Raw Feedback Log — 2026-02-21 (Character library expand = full library details)**  
+**Raw Feedback Log ? 2026-02-21 (Character library expand = full library details)**  
 - Date: 2026-02-21  
-- Context: Character sheet → Library tab (Powers, Techniques, Inventory: weapons, armor, equipment)  
+- Context: Character sheet ? Library tab (Powers, Techniques, Inventory: weapons, armor, equipment)  
 - Priority: High  
 - Feedback: Expanding items in character library: All the information available in the library page should also be available for those same items in the character library. For instance, if you have a weapon in your character library, it should expand to show all the properties chips, all the details, description, and so on, not just the description. Players need to be able to fully reference their added library items completely, whether from public or private library. This goes for all things, powers, techniques, armaments, armor, weapons, shields, etc.  
-- Expected: Expanded rows in character library show description, property/part chips (with TP and expandable chip descriptions), total TP where applicable, range/damage/requirements — same structure as Library page expanded rows.  
-- Implemented 2026-02-21: library-section.tsx — removed custom expandedContent overrides for powers, techniques, weapons, armor; use GridListRow default expanded view (description + chips + requirements + totalCost). Added chipsLabel, totalCost/costLabel, requirements (range for powers; range/damage for techniques; ability req + agility reduction for armor); part/property chips include cost/costLabel for TP display. Equipment already had no override; added chipsLabel "Properties" and cost on property chips.
+- Expected: Expanded rows in character library show description, property/part chips (with TP and expandable chip descriptions), total TP where applicable, range/damage/requirements ? same structure as Library page expanded rows.  
+- Implemented 2026-02-21: library-section.tsx ? removed custom expandedContent overrides for powers, techniques, weapons, armor; use GridListRow default expanded view (description + chips + requirements + totalCost). Added chipsLabel, totalCost/costLabel, requirements (range for powers; range/damage for techniques; ability req + agility reduction for armor); part/property chips include cost/costLabel for TP display. Equipment already had no override; added chipsLabel "Properties" and cost on property chips.
 
-**Raw Feedback Log — 2026-02-21 (Roll log audit: labels)**  
+**Raw Feedback Log ? 2026-02-21 (Roll log audit: labels)**  
 - Date: 2026-02-21  
 - Context: Roll log (character sheet, campaign, encounters)  
 - Priority: Medium  
-- Feedback: When rolling fall damage, say "Fall Damage" in the roll log instead of "Damage". For attack rolls, don't specify prof/unprof — just "Strength Attack" or "Acuity Attack" (or whatever ability). For damage rolls, say "Slashing Damage" instead of "Damage (slashing)".  
-- Expected: Roll log titles: fall damage → "Fall Damage"; attack rolls → ability name + " Attack" only; damage rolls → "{Type} Damage".  
+- Feedback: When rolling fall damage, say "Fall Damage" in the roll log instead of "Damage". For attack rolls, don't specify prof/unprof ? just "Strength Attack" or "Acuity Attack" (or whatever ability). For damage rolls, say "Slashing Damage" instead of "Damage (slashing)".  
+- Expected: Roll log titles: fall damage ? "Fall Damage"; attack rolls ? ability name + " Attack" only; damage rolls ? "{Type} Damage".  
 - Implemented 2026-02-21: roll-context.tsx (rollDamage titleOverride, title = "{Type} Damage"); archetype-section.tsx (attack labels "X Attack" only); notes-tab.tsx (rollDamage(..., 'Fall Damage')).
 
-**Raw Feedback Log — 2026-02-21 (List items = Library page info: parts/properties, option levels, expandable chips)**  
+**Raw Feedback Log ? 2026-02-21 (List items = Library page info: parts/properties, option levels, expandable chips)**  
 - Date: 2026-02-21  
 - Context: Character library (Library tab on sheet), add modals (Add Power/Technique/Weapon/Armor/Equipment)  
 - Priority: High  
 - Feedback: List items such as in character library need the same type of information as they have in the library page. Expand a power and see its power parts, their option increase level if any, in expandable chips; same for techniques (expandable chips for parts) and armaments (expandable chips for properties). Look at how the library page handles armaments, powers, and techniques as list items with expandable views, and implement that in both the character library and in the add modals. We can't rely on descriptions alone.  
 - Expected: Character library and add modals show parts/properties as expandable chips with option levels (Lv.X) and TP cost; same structure as Library page (Parts & Proficiencies / Properties & Proficiencies, total TP).  
-- Implemented 2026-02-21: (1) library-section: partsToPartData → chip level from optionLevels (max opt1/2/3); propertiesToPartData includes option levels and TP from codex; all part/property chips use ChipData with name, description, cost, costLabel, level. (2) add-library-item-modal: usePowerParts, useItemProperties; each SelectableItem gets detailSections (Parts or Properties chips), totalCost, costLabel; powers use derivePowerDisplay, techniques use deriveTechniqueDisplay, items use property chips from propertiesDb. (3) UnifiedSelectionModal: SelectableItem supports totalCost/costLabel; GridListRow receives them for expanded view.
+- Implemented 2026-02-21: (1) library-section: partsToPartData ? chip level from optionLevels (max opt1/2/3); propertiesToPartData includes option levels and TP from codex; all part/property chips use ChipData with name, description, cost, costLabel, level. (2) add-library-item-modal: usePowerParts, useItemProperties; each SelectableItem gets detailSections (Parts or Properties chips), totalCost, costLabel; powers use derivePowerDisplay, techniques use deriveTechniqueDisplay, items use property chips from propertiesDb. (3) UnifiedSelectionModal: SelectableItem supports totalCost/costLabel; GridListRow receives them for expanded view.
 
-**Raw Feedback Log — 2026-02-21 (Portrait in bucket but won’t load on sheet)**
+**Raw Feedback Log ? 2026-02-21 (Portrait in bucket but won?t load on sheet)**
 - Date: 2026-02-21
 - Context: Character sheet portrait; upload succeeds and file appears in Supabase portrait bucket
 - Priority: High
 - Feedback: Still having issues with portraits! I see what I uploaded to my character sheet WAS added to Supabase portrait bucket, but it won't load in on my sheet.
 - Expected: Portrait displays on the character sheet after upload.
-- Implemented 2026-02-21: (1) Added Next.js `images.remotePatterns` for `*.supabase.co` so `next/image` can load Supabase Storage URLs. (2) Documented in DEPLOYMENT_AND_SECRETS_SUPABASE.md: portrait won’t load if the bucket is private — enable **Public bucket** for `portraits` (and `profile-pictures`) in Supabase Dashboard → Storage → bucket → Configuration.
+- Implemented 2026-02-21: (1) Added Next.js `images.remotePatterns` for `*.supabase.co` so `next/image` can load Supabase Storage URLs. (2) Documented in DEPLOYMENT_AND_SECRETS_SUPABASE.md: portrait won?t load if the bucket is private ? enable **Public bucket** for `portraits` (and `profile-pictures`) in Supabase Dashboard ? Storage ? bucket ? Configuration.
 
-**Raw Feedback Log — 2026-02-21 (Column alignment in list views)**
+**Raw Feedback Log ? 2026-02-21 (Column alignment in list views)**
 - Date: 2026-02-21
-- Context: Character library, modals, codex, library, codex edit, library edit — list views site-wide
+- Context: Character library, modals, codex, library, codex edit, library edit ? list views site-wide
 - Priority: High
-- Feedback: Columns seem to still be off-centered in the character library; the column item content should be left centered with its above header as much as possible, across the entire website — in modals, codex, library, codex edit, library edit, and so on. This should be a shared functionality/style with unification of components already in place. Likely still an issue globally across all list views.
+- Feedback: Columns seem to still be off-centered in the character library; the column item content should be left centered with its above header as much as possible, across the entire website ? in modals, codex, library, codex edit, library edit, and so on. This should be a shared functionality/style with unification of components already in place. Likely still an issue globally across all list views.
 - Expected: Column content left-aligned with header; consistent alignment in all list views (Library, Codex, modals, edit views).
 - Implemented 2026-02-21: ListHeader: removed mx-1 so header and row content share same horizontal bounds (px-4); added compact prop so modals (UnifiedSelectionModal) use px-3 to match GridListRow compact rows. SortHeaderRow: removed mx-1 for consistency. GridListRow: explicit text-left on column cells. UnifiedSelectionModal: pass compact to ListHeader.
 
-**Raw Feedback Log — 2026-02-21 (Equip public items; add modals public library)**
+**Raw Feedback Log ? 2026-02-21 (Equip public items; add modals public library)**
 - Date: 2026-02-21
 - Context: Character sheet edit mode; add modals (armor, weapons, powers, techniques)
 - Priority: High
-- Feedback: (1) In edit mode, armor, weapons, powers, techniques from the public library don't let you equip them — only "my library" items. (2) Add modals for armor, techniques, weapons, powers don't show any items when sorting by Public library.
+- Feedback: (1) In edit mode, armor, weapons, powers, techniques from the public library don't let you equip them ? only "my library" items. (2) Add modals for armor, techniques, weapons, powers don't show any items when sorting by Public library.
 - Expected: Public library items can be equipped like my library items; add modals show public library content when source is Public library.
 - Implemented 2026-02-21: (1) data-enrichment: enrichItems now uses character's stored id for display so equip/remove handlers match (displayId from charItem.id when present). (2) API public [type]: return id/docId after ...d so row id is always used (stable id for add/enrich/equip). (3) use-public-library: refetchOnMount so add modals get fresh public data. (4) add-library-item-modal: empty state when source=public (message + error when fetch fails); typeLabel for empty title.
 
-**Raw Feedback Log — 2026-02-21 (Profile picture didn't update on admin account)**
+**Raw Feedback Log ? 2026-02-21 (Profile picture didn't update on admin account)**
 - Date: 2026-02-21
 - Context: My Account profile picture upload
 - Priority: High
@@ -987,15 +1347,15 @@ Notes
 - Expected: Profile picture updates and is visible after upload (e.g. on My Account and anywhere else the avatar is shown).
 - Implemented 2026-02-21: (1) Cache-bust after upload: set photoURL with `?t=Date.now()` so the browser shows the new image instead of the cached old one. (2) When loading profile from API, append `?t=updatedAt` to photoUrl so returning to the page shows the latest image. (3) After upload, call Supabase Auth `updateUser({ data: { avatar_url: url } })` so auth store and any UI using user.photoURL stay in sync.
 
-**Raw Feedback Log — 2026-02-21 (Portrait 400, nothing displays on character sheet)**
+**Raw Feedback Log ? 2026-02-21 (Portrait 400, nothing displays on character sheet)**
 - Date: 2026-02-21
 - Context: Character sheet portrait; upload succeeds, storage logs show object/sign and object/portraits activity
 - Priority: High
 - Feedback: Added and uploaded a portrait, nothing displays on my character sheet though. Failed to load resource: the server responded with a status of 400 (). [Included storage logs showing POST/GET to portraits bucket.]
 - Expected: Portrait displays on the sheet after upload.
-- Implemented 2026-02-21: (1) Portrait image in sheet-header now uses unoptimized so the browser loads the Supabase URL directly (avoids 400 from Next.js image optimizer). (2) onError fallback to placeholder so a failed load still shows the placeholder. (3) Deployment doc: 400/403 on portrait usually means the portraits bucket is not public — turn Public bucket on in Storage → portraits → Configuration.
+- Implemented 2026-02-21: (1) Portrait image in sheet-header now uses unoptimized so the browser loads the Supabase URL directly (avoids 400 from Next.js image optimizer). (2) onError fallback to placeholder so a failed load still shows the placeholder. (3) Deployment doc: 400/403 on portrait usually means the portraits bucket is not public ? turn Public bucket on in Storage ? portraits ? Configuration.
 
-**Raw Feedback Log — 2026-02-21 (Realtime: campaign roll log not updating; permission denied for schema)**  
+**Raw Feedback Log ? 2026-02-21 (Realtime: campaign roll log not updating; permission denied for schema)**  
 - Date: 2026-02-21  
 - Context: Character sheet in campaign; campaign roll log; Supabase Realtime  
 - Priority: High  
@@ -1003,36 +1363,36 @@ Notes
 - Expected: Campaign roll log (and character/encounter realtime sync) update in real time without refresh.  
 - Disposition: Root cause is Realtime service lacking USAGE on custom schemas (campaigns, users). sql/supabase-rls-policies.sql updated with GRANT USAGE ON SCHEMA for campaigns and users (anon, authenticated, service_role, authenticator). DEPLOYMENT_AND_SECRETS_SUPABASE.md updated with troubleshooting and optional supabase_realtime grant. Owner must run the updated SQL in Supabase SQL Editor for the fix to take effect.
 
-**Raw Feedback Log — 2026-02-21 (Dark mode: currency cost/training point, advanced mechanics, creators)**
+**Raw Feedback Log ? 2026-02-21 (Dark mode: currency cost/training point, advanced mechanics, creators)**
 - Date: 2026-02-21
 - Context: Dark mode; creators (power, technique, item, creature); currency cost/training point boxes; power creator advanced mechanics
 - Priority: Medium
 - Feedback: Dark mode issues: currency cost/training point, advanced mechanics in power creator, all have bright backgrounds still in dark mode. Some other similar things across creators still likely have these too.
 - Expected: Cost stat boxes (Energy, TP, Currency), advanced mechanics option boxes, and any similar creator UI use dark-mode-appropriate backgrounds (semantic tokens or dark variants).
 
-**Raw Feedback Log — 2026-02-21 (Armaments: strength requirements, descriptions sometimes don't load)**
+**Raw Feedback Log ? 2026-02-21 (Armaments: strength requirements, descriptions sometimes don't load)**
 - Date: 2026-02-21
 - Context: Armaments (weapons, armor, shields); character sheet, library, creators; loading saved items
 - Priority: High
 - Feedback: Armaments sometimes don't load with the saved strength requirements or item descriptions. This may be an issue elsewhere too.
 - Expected: When loading armaments from library or character, description and strength (ability) requirements always display when they were saved; same for other item types where applicable.
 
-**Raw Feedback Log — 2026-02-21 (Encounter save, campaign combatants HP/EN, privacy, health input)**
+**Raw Feedback Log ? 2026-02-21 (Encounter save, campaign combatants HP/EN, privacy, health input)**
 - Date: 2026-02-21
 - Context: Encounters (combat), campaign characters in encounters, character privacy, character sheet health/energy
 - Priority: High
 - Feedback: (1) Encounter isn't saving changes after adding campaign tied combatants/characters, stuck on unsaved changes. (2) Added characters in campaign aren't loading their energy and health properly; need to show current and total for both values and sync changes between encounter and character sheet in real time. (3) Characters in campaigns cannot ever set their privacy to private unless they leave the campaign. (4) A character's privacy is set to public but it says private when trying to view the character sheet. (5) In character sheet health we allow steppers to increase beyond the max, but manual input won't allow a value higher than max; allow directly inputting a value higher than max as well.
 - Expected: (1) Encounter PATCH persists combatants and dirty state clears after save. (2) Campaign combatants show current/max HP and EN; realtime sync between encounter and sheet. (3) When character is in a campaign, Private option disabled or blocked until they leave. (4) Public characters viewable by link; fix visibility read/save so public shows correctly. (5) Health/energy manual input accepts values above max like the steppers.
 
-**Raw Feedback Log — 2026-02-22 (Encounter HP/EN/AP realtime + max energy/sheet discrepancy)**
+**Raw Feedback Log ? 2026-02-22 (Encounter HP/EN/AP realtime + max energy/sheet discrepancy)**
 - Date: 2026-02-22
 - Context: Encounters with combatants tied to player characters; character sheet as source of truth for calculation logic
 - Priority: High
-- Feedback: Encounters with combatants tied to player characters are designed to work seamlessly with realtime updates for current health, current energy, and current AP. This is not the case — roll logs work in real time to display rolls, but realtime current health, energy, and AP updates do not. There are also discrepancies between the maximum energy of a player character and the maximum energy displayed in an encounter; the encounter is likely using bad logic for energy and possibly HP calculations and should use the same logic the character sheet uses. The character sheets are the source of truth for calculation logic.
+- Feedback: Encounters with combatants tied to player characters are designed to work seamlessly with realtime updates for current health, current energy, and current AP. This is not the case ? roll logs work in real time to display rolls, but realtime current health, energy, and AP updates do not. There are also discrepancies between the maximum energy of a player character and the maximum energy displayed in an encounter; the encounter is likely using bad logic for energy and possibly HP calculations and should use the same logic the character sheet uses. The character sheets are the source of truth for calculation logic.
 - Expected: Realtime updates for current health, current energy, and current AP on encounter combatant cards when the character sheet (or any source) updates those values. Max health and max energy shown in encounters must match the character sheet (use character-sheet calculation logic everywhere).
 - Disposition: Implemented 2026-02-22. See AI_CHANGELOG.md.
 
-**Raw Feedback Log — 2026-02-22 (Codex: My Codex vs Public Codex)**
+**Raw Feedback Log ? 2026-02-22 (Codex: My Codex vs Public Codex)**
 - Date: 2026-02-22
 - Context: Codex page; future custom feats, traits, parts, properties
 - Priority: Medium
@@ -1040,47 +1400,47 @@ Notes
 - Expected: Codex page has Public Codex (default) and My Codex toggle; Public Codex shows current reference data; My Codex shows placeholder until custom codex feature exists.
 - Implemented 2026-02-22: Codex page has codexMode state (default 'public'); pill toggle "Public Codex" | "My Codex" (same styling as Library); title/description update by mode; My Codex shows CodexMyCodexEmpty placeholder. No DB changes; ready for future user codex.
 
-**Raw Feedback Log — 2026-02-22 (Species creator fixes/feedback)**
+**Raw Feedback Log ? 2026-02-22 (Species creator fixes/feedback)**
 - Date: 2026-02-22
 - Context: Species Creator
 - Priority: High
-- Feedback: (1) Speed isn't a setting you can edit for a species — remove or make non-editable. (2) Make the species type a dropdown from creature types in Realms (like creature creator; may need to pull from core rules that admins can edit for types/sizes). (3) Don't allow picking sub-skills for the species skill — base skills only. (4) Height, Weight, Lifespan (use "lifespan" instead of "max age") are not optional; they need these as required. (5) Add trait modal: use the same layout as other add trait modals — codex-like compact version to sort, filter, search, expand; don't make users classify trait type until later. Traits are already classified as flaw or characteristics (Boolean in DB). So: three sections — (a) Add species/ancestry trait (classify as species vs ancestry after add), (b) Add flaw (traits where flaw=true), (c) Add characteristic (traits where characteristic=true).
+- Feedback: (1) Speed isn't a setting you can edit for a species ? remove or make non-editable. (2) Make the species type a dropdown from creature types in Realms (like creature creator; may need to pull from core rules that admins can edit for types/sizes). (3) Don't allow picking sub-skills for the species skill ? base skills only. (4) Height, Weight, Lifespan (use "lifespan" instead of "max age") are not optional; they need these as required. (5) Add trait modal: use the same layout as other add trait modals ? codex-like compact version to sort, filter, search, expand; don't make users classify trait type until later. Traits are already classified as flaw or characteristics (Boolean in DB). So: three sections ? (a) Add species/ancestry trait (classify as species vs ancestry after add), (b) Add flaw (traits where flaw=true), (c) Add characteristic (traits where characteristic=true).
 - Expected: Species creator: no speed edit; type dropdown from creature types; species skill = base skills only; height/weight/lifespan required with "Lifespan" label; three add-trait flows with codex-like list modals (species/ancestry with post-add classification; flaw; characteristic).
 - Implemented 2026-02-22: See species-creator page and AI_CHANGELOG.md.
 
-**Raw Feedback Log — 2026-02-22 (Character sheet swipe + nav dropdowns touch)**
+**Raw Feedback Log ? 2026-02-22 (Character sheet swipe + nav dropdowns touch)**
 - Date: 2026-02-22
 - Context: Character sheet (mobile), nav bar
 - Priority: High
-- Feedback: (1) In the character sheet the side swiping is too sensitive — it should only swipe one section at a time. (2) The dropdown menus on the nav bar sometimes don't work properly on touchscreen: they don't show up or go away too quick.
+- Feedback: (1) In the character sheet the side swiping is too sensitive ? it should only swipe one section at a time. (2) The dropdown menus on the nav bar sometimes don't work properly on touchscreen: they don't show up or go away too quick.
 - Expected: (1) One section per swipe on mobile character sheet (scroll-snap-stop so each panel is a mandatory stop). (2) Nav dropdowns open on tap, stay open until user taps outside or selects a link; desktop hover still works.
 - Implemented 2026-02-22: (1) Added [scroll-snap-stop:always] to all four character sheet panels. (2) NavDropdown and Account menu use state + click-to-toggle, outside-click close, and hover (onMouseEnter/Leave) for desktop; MobileDropdown gets min-h-[44px] and onLinkClick to close mobile menu when a sub-link is tapped.
 
-**Raw Feedback Log — 2026-02-22 (Mobile batch: footer, home, dark nav, steppers, slider, list labels)**
+**Raw Feedback Log ? 2026-02-22 (Mobile batch: footer, home, dark nav, steppers, slider, list labels)**
 - Date: 2026-02-22
-- Context: Mobile UX — footer, home page, nav, steppers, archetype slider, list details
+- Context: Mobile UX ? footer, home page, nav, steppers, archetype slider, list details
 - Priority: High
-- Feedback: (1) Footer doesn't scale/adapt well on mobile; use best practice for mobile footer. (2) Home page isn't set up for mobile — lots of stuff off screen horizontally; may need new layout for mobile. (3) In dark mode the mobile navbar dropdown has pages fonts too dark other than Creators/Rules/RM Tools. (4) Health/energy/other steppers increase too quickly on mobile — hard to tap to change by one (usually goes up by 2+). (5) Health/energy allocation stepper for energy is out of the box to the right on mobile. (6) Archetype edit prof slider: when you try to slide on mobile, it swipes between sections instead of moving the slider. (7) Many list item details show variable names (uses_per_rec, rec_period, "attack") instead of UI-facing labels (Uses, Recovery, Attack); not capitalized.
-- Expected: (1) Footer stacks on mobile, readable text, touch targets. (2) Home: responsive layout, no horizontal overflow. (3) Mobile nav links visible in dark mode (primary-300 or similar). (4) Single tap = one step; hold = repeat after delay. (5) Allocation: stack HP/EN on mobile. (6) Slider captures horizontal touch so section doesn’t swipe. (7) Column labels human-readable and capitalized.
+- Feedback: (1) Footer doesn't scale/adapt well on mobile; use best practice for mobile footer. (2) Home page isn't set up for mobile ? lots of stuff off screen horizontally; may need new layout for mobile. (3) In dark mode the mobile navbar dropdown has pages fonts too dark other than Creators/Rules/RM Tools. (4) Health/energy/other steppers increase too quickly on mobile ? hard to tap to change by one (usually goes up by 2+). (5) Health/energy allocation stepper for energy is out of the box to the right on mobile. (6) Archetype edit prof slider: when you try to slide on mobile, it swipes between sections instead of moving the slider. (7) Many list item details show variable names (uses_per_rec, rec_period, "attack") instead of UI-facing labels (Uses, Recovery, Attack); not capitalized.
+- Expected: (1) Footer stacks on mobile, readable text, touch targets. (2) Home: responsive layout, no horizontal overflow. (3) Mobile nav links visible in dark mode (primary-300 or similar). (4) Single tap = one step; hold = repeat after delay. (5) Allocation: stack HP/EN on mobile. (6) Slider captures horizontal touch so section doesn?t swipe. (7) Column labels human-readable and capitalized.
 - Implemented 2026-02-22: Footer: flex-col on mobile, py-4, text-sm sm:text-base, dark bg, min-h-[44px] links. Home: flex-col lg:flex-row features/reviews/creator, responsive padding and min-w-0, hero height responsive. Mobile nav: text-primary-700 dark:text-primary-300 for all links and dropdown items. ValueStepper: useHoldRepeat now has initialDelay (400ms) so tap fires once from stop(); hold repeats after delay. HealthEnergyAllocator inline: flex-col sm:flex-row, divider hidden on small. PoweredMartialSlider: touch-action pan-y on wrapper, touch-action none + stopPropagation on range input. GridListRow: ColumnValue.label optional; columnDisplayLabel() humanizes key when label missing; add-feat-modal passes label Uses/Recovery/Category. npm run build passes.
 
-**Raw Feedback Log — 2026-02-23 (Shields without damage + roll log campaign custom dice)**
+**Raw Feedback Log ? 2026-02-23 (Shields without damage + roll log campaign custom dice)**
 - Date: 2026-02-23
-- Context: Character sheet — Archetype section (Shields), Roll log (Personal/Campaign tabs)
+- Context: Character sheet ? Archetype section (Shields), Roll log (Personal/Campaign tabs)
 - Priority: High
 - Feedback: (1) Shields in the shield part of the archetype section without damage need no buttons for attack/damage rolls if they have no shield damage added; remove these buttons and show - instead. (2) The bottom section of the roll log (add/roll custom dice) should be visible in the campaign tab too, not just personal roll log, since you can send custom rolls to the campaign log.
 - Expected: (1) Archetype Shields: when shield has no shield damage, show "-" for Damage and Attack (no roll buttons). (2) Roll log: custom dice builder visible in Campaign tab so users can send custom rolls to campaign.
 - Implemented 2026-02-23: (1) archetype-section: shield damage via formatDamageDisplay fallback; hasDamage only when damageStr non-empty; Attack/Damage show "-" when no damage. (2) roll-log: dice builder no longer hidden in Campaign tab; visible in both tabs so custom rolls can go to campaign.
 
-**Raw Feedback Log — 2026-02-23 (Custom species not showing in My Codex Species tab)**
+**Raw Feedback Log ? 2026-02-23 (Custom species not showing in My Codex Species tab)**
 - Date: 2026-02-23
-- Context: Codex → My Codex → Species tab
+- Context: Codex ? My Codex ? Species tab
 - Priority: High
 - Feedback: I made a custom species, and saved it, it isn't showing up in the species tab of the codex if I select "my codex".
 - Expected: Custom (user-created) species should appear in the Species tab when viewing "My Codex".
 - Implemented 2026-02-23: Codex page now renders tab content in both Public and My Codex modes; Species tab in My Codex uses useUserSpecies() and displays user-created species with the same card UI. Other tabs in My Codex show empty state until those content types are supported. userSpeciesToSpecies exported from use-user-library.
 
-**Raw Feedback Log — 2026-02-23 (Vercel accessibility audit — light mode)**
+**Raw Feedback Log ? 2026-02-23 (Vercel accessibility audit ? light mode)**
 - Date: 2026-02-23
 - Context: Vercel accessibility audit on home, login, campaigns, encounters (combat/skill), encounter combat; light mode
 - Priority: High
@@ -1088,23 +1448,23 @@ Notes
 - Expected: Fix all reported issues; add eslint-plugin-jsx-a11y; add .cursor/rules or doc so new UI meets WCAG 2.1 AA (contrast, focus, labels, headings, alt).
 - Disposition: TASK-267 created; implementing fixes and a11y systems.
 
-**Raw Feedback Log — 2026-02-23 (Character sheet & Codex accessibility — light mode, more examples)**
+**Raw Feedback Log ? 2026-02-23 (Character sheet & Codex accessibility ? light mode, more examples)**
 - Date: 2026-02-23
-- Context: Character sheet, Library, Codex — Vercel accessibility audit (light mode); examples only, patterns to fix site-wide
+- Context: Character sheet, Library, Codex ? Vercel accessibility audit (light mode); examples only, patterns to fix site-wide
 - Priority: High
 - Feedback: (1) Heading levels only increase by one: e.g. h4 "Attack Bonuses" (skip from h1); h3 "No powers yet"; h4 "Parts & Proficiencies", "Tags". (2) Minimum color contrast: text-xs opacity-75; font-medium text-success-600 (+2 bonus text). (3) Form elements must have labels: numeric inputs (HP/EN in sheet header); select elements in Codex need accessible name. (4) Buttons need discernable text: icon-only buttons (e.g. w-7 h-7 rounded bg-white/10). (5) Codex: select elements must have accessible name; heading levels should only increase by one (e.g. h4 Tags). Owner will gather dark-mode samples next; same components/styles used site-wide so fixing shared components fixes many issues.
-- Expected: Fix heading hierarchy (SectionHeader, EmptyState, GridListRow, part-chip); improve contrast (opacity-75, success-600→700 where needed); ensure all selects have id+htmlFor or aria-label; icon buttons have aria-label. Apply in shared components where possible.
+- Expected: Fix heading hierarchy (SectionHeader, EmptyState, GridListRow, part-chip); improve contrast (opacity-75, success-600?700 where needed); ensure all selects have id+htmlFor or aria-label; icon buttons have aria-label. Apply in shared components where possible.
 - Disposition: Implementing in shared components and character sheet/codex.
 
-**Raw Feedback Log — 2026-02-23 (Dark mode accessibility audit — about, campaigns, power creator, character sheet)**
+**Raw Feedback Log ? 2026-02-23 (Dark mode accessibility audit ? about, campaigns, power creator, character sheet)**
 - Date: 2026-02-23
-- Context: Vercel accessibility audit — dark mode; about page, campaigns page, power creator, character sheet
+- Context: Vercel accessibility audit ? dark mode; about page, campaigns page, power creator, character sheet
 - Priority: High
-- Feedback: (1) About/campaigns: nav links must meet minimum color contrast — text-primary-500 (active) and text-text-primary hover:text-primary-700 fail in dark mode; footer/header links need dark variants. (2) Campaigns: h3 "Kadin's Campagin" (heading levels only increase by one). (3) Power creator dark mode: select elements need accessible name (action type, area, duration, sustain, damage size/type; power part Category/Part); color contrast — text-energy, text-energy-text, text-tp; "Requires 2+ rounds" text-text-muted italic; "My library" button; heading levels (e.g. Action Type h3). (4) Character sheet dark mode: minimum color contrast — bg-tp-light text-tp-text, text-xs opacity-75, opacity-90, roll buttons (primary-600/danger-600/neutral-500); buttons need discernable text (roll buttons have title but need aria-label); violet-700 needs dark variant; nav links same as about/campaigns.
+- Feedback: (1) About/campaigns: nav links must meet minimum color contrast ? text-primary-500 (active) and text-text-primary hover:text-primary-700 fail in dark mode; footer/header links need dark variants. (2) Campaigns: h3 "Kadin's Campagin" (heading levels only increase by one). (3) Power creator dark mode: select elements need accessible name (action type, area, duration, sustain, damage size/type; power part Category/Part); color contrast ? text-energy, text-energy-text, text-tp; "Requires 2+ rounds" text-text-muted italic; "My library" button; heading levels (e.g. Action Type h3). (4) Character sheet dark mode: minimum color contrast ? bg-tp-light text-tp-text, text-xs opacity-75, opacity-90, roll buttons (primary-600/danger-600/neutral-500); buttons need discernable text (roll buttons have title but need aria-label); violet-700 needs dark variant; nav links same as about/campaigns.
 - Expected: Add dark mode link contrast (header/footer); ensure all selects have id+htmlFor or aria-label site-wide; RollButton and icon-only buttons get aria-label; energy/TP/energy-text and violet-700 have dark mode CSS overrides; fix any remaining opacity/contrast and heading hierarchy.
 - Disposition: Implementing across header, footer, globals, power-creator, character sheet, roll-button.
 
-**Raw Feedback Log — 2026-02-23 (Dark mode character sheet contrast — site-wide patterns)**
+**Raw Feedback Log ? 2026-02-23 (Dark mode character sheet contrast ? site-wide patterns)**
 - Date: 2026-02-23
 - Context: Dark mode character sheet re-audit; most issues color contrast; patterns indicate site-wide fixes
 - Priority: High
@@ -1112,31 +1472,31 @@ Notes
 - Expected: Document dark-mode contrast patterns; fix icon buttons, inputs, section headers, toasts, warning buttons, grid-list-row labels.
 - Disposition: Implementing; documenting patterns.
 
-**Raw Feedback Log — 2026-02-23 (Species traits multi-select + Codex spreadsheet sort/columns)**
+**Raw Feedback Log ? 2026-02-23 (Species traits multi-select + Codex spreadsheet sort/columns)**
 - Date: 2026-02-23
 - Context: Species Creator (add trait modals); Admin Editor Codex spreadsheet view
 - Priority: High
 - Feedback: (1) Like other add modals, allow selecting multiple traits in the species traits add modals and adding all at once (provided the count is less than the maximum for said trait/flaw/characteristics). (2) Admin Editor: Allow the headers in spreadsheet view to sort ascending/descending if you click them. Make the order of the columns for all codex editor spreadsheets be id (smaller column), name, description (longer, but not too long), and so on in a logical order; id and name far left is logical/common sense, with description right after. Make columns that have less possible width of information smaller horizontally (e.g. Boolean column only up to 5 letters; rec period, speed req only up to 2 digits usually). Use common sense, logic, best practice for formatting sheet view of edit mode codex.
-- Expected: Species trait modals support multi-select and "Add selected as species/ancestry trait(s)" (and flaw/characteristic) respecting limits; third-species-trait confirm still applies when adding batch. Codex spreadsheet: clickable sortable column headers (asc/desc); column order id → name → description → rest in logical order; variable column widths (narrow for id, boolean, rec_period, etc.; wider for description).
+- Expected: Species trait modals support multi-select and "Add selected as species/ancestry trait(s)" (and flaw/characteristic) respecting limits; third-species-trait confirm still applies when adding batch. Codex spreadsheet: clickable sortable column headers (asc/desc); column order id ? name ? description ? rest in logical order; variable column widths (narrow for id, boolean, rec_period, etc.; wider for description).
 - Disposition: Implemented 2026-02-23.
 
-**Raw Feedback Log — 2026-02-23 (Second/Full accessibility audit — light mode)**
+**Raw Feedback Log ? 2026-02-23 (Second/Full accessibility audit ? light mode)**
 - Date: 2026-02-23
 - Context: Full accessibility audit; each page, most functionality; light mode only (console errors and contrast issues)
 - Priority: High
-- Feedback: (1) Console: [DEPRECATED] zustand default export — use `import { create } from 'zustand'`. (2) Console: `DialogContent` requires a `DialogTitle` for screen readers; missing `Description` or `aria-describedby={undefined}`. (3) Home page: Sign In button (contrast/accessibility). (4) Home page + footer: elemental contrast issues — feature card h3/p, footer links, CTA, reviews section text. All need sufficient foreground/background contrast in light mode.
+- Feedback: (1) Console: [DEPRECATED] zustand default export ? use `import { create } from 'zustand'`. (2) Console: `DialogContent` requires a `DialogTitle` for screen readers; missing `Description` or `aria-describedby={undefined}`. (3) Home page: Sign In button (contrast/accessibility). (4) Home page + footer: elemental contrast issues ? feature card h3/p, footer links, CTA, reviews section text. All need sufficient foreground/background contrast in light mode.
 - Expected: Fix zustand import if in our code; ensure dialogs have accessible title/description; fix home and footer light-mode contrast; add aria-label to Sign In button.
 - Disposition: Implemented 2026-02-23. Modal: fallback aria-label and sr-only title when no title. Home: FeatureCard and reviews use text-text-primary; footer links use text-neutral-900. Login: Sign In button aria-label="Sign in". DialogContent warning from dependency; zustand already named import in our code.
 
-**Raw Feedback Log — 2026-02-23 (Sitewide errors / UX — Range selectNode, DOCS_timing, PDF 404, Zustand, Power option levels)**
+**Raw Feedback Log ? 2026-02-23 (Sitewide errors / UX ? Range selectNode, DOCS_timing, PDF 404, Zustand, Power option levels)**
 - Date: 2026-02-23
 - Context: Sitewide error/UI/UX feedback; production (Vercel) console and Resources/Rules pages
 - Priority: High (errors); Medium (PDF, option levels)
-- Feedback: (1) Uncaught InvalidNodeTypeError: Failed to execute 'selectNode' on 'Range': the given Node has no parent — in 525.js, triggered from handleMouseUp/attributes. (2) Rules page (pub?embedded=true): Uncaught ReferenceError: DOCS_timing is not defined. (3) Resources page: GET .../Realms%20Character%20Sheet%20Alpha.pdf 404. (4) [DEPRECATED] Default export is deprecated. Instead use `import { create } from 'zustand'`. (5) Power page: don't allow options levels to be set to negative values.
+- Feedback: (1) Uncaught InvalidNodeTypeError: Failed to execute 'selectNode' on 'Range': the given Node has no parent ? in 525.js, triggered from handleMouseUp/attributes. (2) Rules page (pub?embedded=true): Uncaught ReferenceError: DOCS_timing is not defined. (3) Resources page: GET .../Realms%20Character%20Sheet%20Alpha.pdf 404. (4) [DEPRECATED] Default export is deprecated. Instead use `import { create } from 'zustand'`. (5) Power page: don't allow options levels to be set to negative values.
 - Expected: No Range/selectNode error; rules page note or accept external doc noise; PDF available or handle missing asset; Power creator option level steppers have min 0.
 - Disposition: Power option levels implemented (min={0} on PowerPartCard and PowerAdvancedMechanics). TASK-268 (Range/selectNode), TASK-269 (Resources PDF). DOCS_timing and Zustand documented as external/dependency.
 
-**Raw Feedback Log — 2026-02-23 (Dark mode accessibility / instrumentation console)**
+**Raw Feedback Log ? 2026-02-23 (Dark mode accessibility / instrumentation console)**
 - Date: 2026-02-23
 - Context: Production (Vercel) console; dark mode accessibility
 - Priority: Medium
@@ -1144,117 +1504,117 @@ Notes
 - Expected: No deprecation/warnings from our code; dialogs accessible; dark mode text uses design system tokens.
 - Disposition: Home page FeatureCard description now uses text-text-primary only. ACCESSIBILITY.md updated with dependency warnings section. Zustand and DialogContent warnings originate from dependencies; our code uses create from 'zustand' and Modal with aria-labelledby/aria-describedby.
 
-**Raw Feedback Log — 2026-02-23 (Dark mode site-wide WCAG AA contrast — about, footer, btn-solid)**
+**Raw Feedback Log ? 2026-02-23 (Dark mode site-wide WCAG AA contrast ? about, footer, btn-solid)**
 - Date: 2026-02-23
 - Context: Production (Vercel); WCAG 2 AA color contrast; about page, footer, btn-solid
 - Priority: High
 - Feedback: Elements must meet minimum color contrast ratio thresholds WCAG 2 AA. About page: btn-solid link failing; footer links (About, Core Rulebook, Codex, Library, Terms, Privacy, Contact, Discord) and footer fixes needed in dark mode.
 - Expected: btn-solid and footer links meet 4.5:1 (normal text) in both light and dark; outline buttons and about page links readable in dark mode.
-- Disposition: (1) globals.css: .btn-solid dark:bg-primary-100 dark:text-white dark:hover:bg-primary-50 (dark blue bg so white text passes); .btn-outline-clean dark:border-primary-400 dark:text-primary-300 dark:hover:bg-primary-900/30. (2) footer.tsx: dark:bg-neutral-700 → dark:bg-neutral-800; dark:text-neutral-100 → dark:text-white, dark:hover:text-primary-400 → dark:hover:text-primary-300 (theme overrides made neutral-100 dark, so use explicit white). (3) about/page.tsx: carousel h2 dark:text-primary-300; all inline links and list icons text-primary-600 → dark:text-primary-400. npm run build passes.
+- Disposition: (1) globals.css: .btn-solid dark:bg-primary-100 dark:text-white dark:hover:bg-primary-50 (dark blue bg so white text passes); .btn-outline-clean dark:border-primary-400 dark:text-primary-300 dark:hover:bg-primary-900/30. (2) footer.tsx: dark:bg-neutral-700 ? dark:bg-neutral-800; dark:text-neutral-100 ? dark:text-white, dark:hover:text-primary-400 ? dark:hover:text-primary-300 (theme overrides made neutral-100 dark, so use explicit white). (3) about/page.tsx: carousel h2 dark:text-primary-300; all inline links and list icons text-primary-600 ? dark:text-primary-400. npm run build passes.
 
-**Raw Feedback Log — 2026-02-23 (Trait add modal touch targets, spacing, a11y; global modal touch targets)**
+**Raw Feedback Log ? 2026-02-23 (Trait add modal touch targets, spacing, a11y; global modal touch targets)**
 - Date: 2026-02-23
 - Context: Species creator trait add modal; production console
 - Priority: High
-- Feedback: (1) Trait add modal: touch targets 24px (should be 44px per MOBILE_UX.md) and extra spacing around them; likely global issue across modals. (2) Console: [DEPRECATED] zustand default export — use `import { create } from 'zustand'`. (3) Console: DialogContent requires DialogTitle for screen readers; missing Description or aria-describedby. (4) Console: div role="button" (small touch targets). (5) feedback.html "Could not fetch session" and "listener indicated asynchronous response" — extension/Vercel, not app code.
-- Expected: All tappable controls in modals ≥ 44px; reduced extra spacing; no a11y regressions. Dependency/extension warnings documented.
+- Feedback: (1) Trait add modal: touch targets 24px (should be 44px per MOBILE_UX.md) and extra spacing around them; likely global issue across modals. (2) Console: [DEPRECATED] zustand default export ? use `import { create } from 'zustand'`. (3) Console: DialogContent requires DialogTitle for screen readers; missing Description or aria-describedby. (4) Console: div role="button" (small touch targets). (5) feedback.html "Could not fetch session" and "listener indicated asynchronous response" ? extension/Vercel, not app code.
+- Expected: All tappable controls in modals ? 44px; reduced extra spacing; no a11y regressions. Dependency/extension warnings documented.
 - Disposition: (1) TraitListModal: row wrapper min-h-[44px], flex items-center, gap-0.5 p-1, aria-label on row button. (2) SelectionToggle: sm/md/lg use min 44px touch target (w-11 h-11). (3) ValueStepper: stepper buttons min 44px (base + size variants). (4) species-creator: added cn import. Zustand/DialogContent/feedback.html from dependencies or extensions; documented in ACCESSIBILITY.md. npm run build passes.
 
-**Raw Feedback Log — 2026-02-23 (Creature creator dark mode WCAG AA — contrast, labels, headings)**
+**Raw Feedback Log ? 2026-02-23 (Creature creator dark mode WCAG AA ? contrast, labels, headings)**
 - Date: 2026-02-23
 - Context: Creature creator; production console and axe
 - Priority: High
 - Feedback: (1) Range input (powered-martial slider) must have label/aria-label. (2) Minimum contrast: My library/All sources buttons (bg-primary-600 text-white), h3/h4 text-primary, text-martial-dark/text-power-dark, bg-danger-light text-danger-700, bg-power-light text-power-text. (3) Heading levels increase by one: h4 for Martial/Power/Powered-Martial and STR etc. (4) Zustand/DialogContent warnings from dependencies (documented).
-- Expected: Range has aria-label; primary chips and headings have dark variants; danger/power chip text passes in dark; heading hierarchy h2 → h3 (ability names) not h4.
-- Disposition: (1) PoweredMartialSlider: aria-label on range input; dark variants for power/martial display numbers and tick. (2) CreatorSaveToolbar + SourceFilter: dark:bg-primary-100 dark:text-white for active state. (3) Creature creator: ChipList weakness/immunity colors + dark text; CreatureCreatorHelpers ChipList remove button + None text dark. (4) CollapsibleSection + ArchetypeSelector: headings dark:text-primary-300; archetype proficiency display dark:text-martial-300/dark:text-power-300; archetype selected card dark:bg-primary-900/20. (5) Chip: power/technique variants dark:text-power-300, dark:text-martial-300. (6) globals .dark: --color-power-300, --color-martial-300 for contrast. (7) AbilityScoreEditor: ability name h4→h3 for hierarchy under h2 Abilities. npm run build passes.
+- Expected: Range has aria-label; primary chips and headings have dark variants; danger/power chip text passes in dark; heading hierarchy h2 ? h3 (ability names) not h4.
+- Disposition: (1) PoweredMartialSlider: aria-label on range input; dark variants for power/martial display numbers and tick. (2) CreatorSaveToolbar + SourceFilter: dark:bg-primary-100 dark:text-white for active state. (3) Creature creator: ChipList weakness/immunity colors + dark text; CreatureCreatorHelpers ChipList remove button + None text dark. (4) CollapsibleSection + ArchetypeSelector: headings dark:text-primary-300; archetype proficiency display dark:text-martial-300/dark:text-power-300; archetype selected card dark:bg-primary-900/20. (5) Chip: power/technique variants dark:text-power-300, dark:text-martial-300. (6) globals .dark: --color-power-300, --color-martial-300 for contrast. (7) AbilityScoreEditor: ability name h4?h3 for hierarchy under h2 Abilities. npm run build passes.
 
-**Raw Feedback Log — 2026-02-23 (Dark mode WCAG AA — Delete Campaign button, campaign roll log badges)**
+**Raw Feedback Log ? 2026-02-23 (Dark mode WCAG AA ? Delete Campaign button, campaign roll log badges)**
 - Date: 2026-02-23
 - Context: Production; WCAG 2 AA contrast; campaigns page, roll logs
 - Priority: High
-- Feedback: Elements must meet minimum color contrast: (1) Delete Campaign button (bg-danger-600 text-white) fails in dark mode. (2) Roll log / campaign roll log spans (bg-surface-alt dark:bg-neutral-800 text-text-secondary) — numbers in badges fail contrast. (3) About link still reported (may be cached build).
+- Feedback: Elements must meet minimum color contrast: (1) Delete Campaign button (bg-danger-600 text-white) fails in dark mode. (2) Roll log / campaign roll log spans (bg-surface-alt dark:bg-neutral-800 text-text-secondary) ? numbers in badges fail contrast. (3) About link still reported (may be cached build).
 - Expected: Danger buttons and roll log numeric badges meet 4.5:1 in dark mode.
 - Disposition: (1) Button component: danger variant dark:bg-danger-800 dark:text-white dark:hover:bg-danger-700; primary variant dark mode aligned with btn-solid; link variant dark:text-primary-400. (2) roll-log.tsx: dice notation and die value badges using dark:bg-neutral-800 given dark:text-text-primary so numbers pass on dark bg. npm run build passes.
 
-**Raw Feedback Log — 2026-02-24 (Character creator techniques/powers expand, innate star, part chips, chip unification)**
+**Raw Feedback Log ? 2026-02-24 (Character creator techniques/powers expand, innate star, part chips, chip unification)**
 - Date: 2026-02-24
 - Context: Character creator add techniques/powers; Library innate section; part/property chips; feat/codex chips
 - Priority: High
-- Feedback: (1) In character creator add techniques/powers, added techniques and powers need ALL details in expand: anything missing from column headers (range, damage, area, etc.), expandable chips for each part and options. (2) Innate powers should not show the star symbol to the right of their name (already in innate section). (3) Part/property chips: show part/property description, then below all options and their descriptions for levels above 0; options collapsible (expandable chips); TP chip color (orange/gold) is ugly — use blue for chips. (4) Feat codex and other subtext chips (character feat, state feat, tags, categories, skills for species, languages, etc.) should be unified to 2–3 colors and same styles; no inline styles; use components, shared styles, props/variants only when needed.
+- Feedback: (1) In character creator add techniques/powers, added techniques and powers need ALL details in expand: anything missing from column headers (range, damage, area, etc.), expandable chips for each part and options. (2) Innate powers should not show the star symbol to the right of their name (already in innate section). (3) Part/property chips: show part/property description, then below all options and their descriptions for levels above 0; options collapsible (expandable chips); TP chip color (orange/gold) is ugly ? use blue for chips. (4) Feat codex and other subtext chips (character feat, state feat, tags, categories, skills for species, languages, etc.) should be unified to 2?3 colors and same styles; no inline styles; use components, shared styles, props/variants only when needed.
 - Expected: Full detail in creator powers/techniques expand; no star on innate section powers; part chips show description + collapsible options with descriptions; cost chips use blue; chip styles unified to default/cost/tag.
 - Implemented 2026-02-24: (1) powers-step: Range and Duration columns added; selected list rows pass detailSections, totalCost, costLabel and are expandable with full details. (2) GridListRow hideInnateBadge prop; library-section innate section passes hideInnateBadge. (3) ChipData options array; GridListRow and PartChipDetails show description then collapsible Options (label + level + description); cost/proficiency chips use info (blue); CHIP_STYLES and part-chip cost/proficiency use blue. (4) CHIP_STYLES unified to default (neutral), cost (blue), tag (neutral); archetype/skill/warning/success kept for backward compatibility but mapped to neutral where appropriate.
 
-**Raw Feedback Log — 2026-02-24 (Mixed species 2 skills, edit species on sheet)**
+**Raw Feedback Log ? 2026-02-24 (Mixed species 2 skills, edit species on sheet)**
 - Date: 2026-02-24
 - Context: Character creator mixed species; character sheet species editing
 - Priority: High
-- Feedback: (1) When you pick mixed species in character creator, you must choose which two species skills you want from the 4 (or fewer if duplicate) options from both species. Currently the creator gives all 4 species skills; you should only ever get proficiency with 2 skills from your species, not 4. (2) Add ability to edit species on the character sheet: pencil next to species that opens a modal to change species and ancestry (same styles/components as creator species and ancestry tabs, compacted). User must select all traits properly to save. (3) When changing species: remove 1 skill point from each of the 2 previous species skills (remove proficiency or lower skill value); add proficiency/1 skill point for the new species’ 2 skills. Handle edge cases: e.g. if already proficient with a new species skill, increase skill value instead; if at soft cap, refund 1 point; if old species skill had 2 value + prof and new species doesn’t have that skill, reduce to prof + 1 value. (4) New species includes size, age, weight, height; can be custom or mixed.
+- Feedback: (1) When you pick mixed species in character creator, you must choose which two species skills you want from the 4 (or fewer if duplicate) options from both species. Currently the creator gives all 4 species skills; you should only ever get proficiency with 2 skills from your species, not 4. (2) Add ability to edit species on the character sheet: pencil next to species that opens a modal to change species and ancestry (same styles/components as creator species and ancestry tabs, compacted). User must select all traits properly to save. (3) When changing species: remove 1 skill point from each of the 2 previous species skills (remove proficiency or lower skill value); add proficiency/1 skill point for the new species? 2 skills. Handle edge cases: e.g. if already proficient with a new species skill, increase skill value instead; if at soft cap, refund 1 point; if old species skill had 2 value + prof and new species doesn?t have that skill, reduce to prof + 1 value. (4) New species includes size, age, weight, height; can be custom or mixed.
 - Expected: Mixed species: choose exactly 2 species skills on ancestry step; character sheet: edit species pencil opens modal with species then ancestry steps; save runs skill migration (remove/add points) and updates ancestry; modal supports single, mixed, custom; size/age/weight/height when applicable.
-- Implemented 2026-02-24: (1) CharacterAncestry.selectedSpeciesSkillIds; ancestry-step mixed UI “Choose 2 species skills” with toggle; canContinueMixed requires hasTwoSpeciesSkills; skills-step and character/campaign pages use selectedSpeciesSkillIds for mixed. (2) Sheet header pencil + onEditSpecies; EditSpeciesModal with steps Species → Ancestry (single/mixed trait sections, size, choose 2 skills for mixed); migrateSkillsAfterSpeciesChange in lib/species-skill-migration.ts. (3) Migration: old species skills not in new lose 1 pt (value or prof); new species skills not in old gain 1 pt (prof at 0 or +1 value; at soft cap no value increase). (4) Modal supports single/mixed; size dropdown for mixed; physical traits from species; full ancestry/flaw/characteristic selection.
+- Implemented 2026-02-24: (1) CharacterAncestry.selectedSpeciesSkillIds; ancestry-step mixed UI ?Choose 2 species skills? with toggle; canContinueMixed requires hasTwoSpeciesSkills; skills-step and character/campaign pages use selectedSpeciesSkillIds for mixed. (2) Sheet header pencil + onEditSpecies; EditSpeciesModal with steps Species ? Ancestry (single/mixed trait sections, size, choose 2 skills for mixed); migrateSkillsAfterSpeciesChange in lib/species-skill-migration.ts. (3) Migration: old species skills not in new lose 1 pt (value or prof); new species skills not in old gain 1 pt (prof at 0 or +1 value; at soft cap no value increase). (4) Modal supports single/mixed; size dropdown for mixed; physical traits from species; full ancestry/flaw/characteristic selection.
 
-**Raw Feedback Log — 2026-02-24 (Vercel Edge Requests spike after development deployments)**
+**Raw Feedback Log ? 2026-02-24 (Vercel Edge Requests spike after development deployments)**
 - Date: 2026-02-24
-- Context: Vercel free tier; email: "Your site is growing! … used 75% of the included free tier usage for Edge Requests (1,000,000 Requests)." Huge spike in Edge Requests today after development deployments.
+- Context: Vercel free tier; email: "Your site is growing! ? used 75% of the included free tier usage for Edge Requests (1,000,000 Requests)." Huge spike in Edge Requests today after development deployments.
 - Priority: High
 - Feedback: Something we edited today sent a huge spike in Edge Requests; free team has used 75% of 1M Edge Requests. Exceeding free usage will pause projects; user doesn't know what caused it but it coincided with development deployments.
 - Expected: Identify cause and reduce Edge Request usage so free tier is sustainable.
 - Implemented 2026-02-24: Cause: Next.js proxy (runs on Edge) matched almost every request (pages + all API routes). Each matching request = 1 Edge Request; high-volume public APIs (/api/codex, /api/public/*) don't need session refresh. Narrowed proxy matcher to exclude api/codex and api/public so those requests no longer count as Edge. Session refresh still runs for page loads and auth-required API routes. See proxy.ts and AI_CHANGELOG.md.
 
-**Raw Feedback Log — 2026-02-24 (Vercel Fast Data Transfer + Edge CPU Duration spike)**
+**Raw Feedback Log ? 2026-02-24 (Vercel Fast Data Transfer + Edge CPU Duration spike)**
 - Date: 2026-02-24
 - Context: Vercel free tier; Fast Data Transfer spiked to 4 GB (usually under 200 MB); Edge Request CPU Duration also spiked today. Edge requests >10ms incur CPU duration charges.
 - Priority: High
 - Feedback: Huge spike in Fast Data Transfer (4 GB) and Edge Request CPU Duration today, same day as Edge Request spike.
 - Expected: Reduce data transfer and Edge CPU so free tier is sustainable.
-- Implemented 2026-02-24: (1) Edge CPU: Already reduced by excluding api/codex and api/public from proxy (those requests no longer run on Edge). (2) Fast Data Transfer: /api/codex and /api/public GET had no cache headers; repeated fetches (prefetch, hooks, tabs) re-downloaded full payload every time. Added Cache-Control: public, max-age=300, s-maxage=600, stale-while-revalidate=300 to both APIs so browser and CDN cache 5–10 min and repeated requests don't re-download. (3) DEPLOYMENT_AND_SECRETS_SUPABASE.md: added "Vercel free tier usage" section documenting proxy exclusions, cache headers, and guidance for new public APIs.
+- Implemented 2026-02-24: (1) Edge CPU: Already reduced by excluding api/codex and api/public from proxy (those requests no longer run on Edge). (2) Fast Data Transfer: /api/codex and /api/public GET had no cache headers; repeated fetches (prefetch, hooks, tabs) re-downloaded full payload every time. Added Cache-Control: public, max-age=300, s-maxage=600, stale-while-revalidate=300 to both APIs so browser and CDN cache 5?10 min and repeated requests don't re-download. (3) DEPLOYMENT_AND_SECRETS_SUPABASE.md: added "Vercel free tier usage" section documenting proxy exclusions, cache headers, and guidance for new public APIs.
 
-**Raw Feedback Log — 2026-02-24 (Edge Requests spiked 10x — re-audit)**
+**Raw Feedback Log ? 2026-02-24 (Edge Requests spiked 10x ? re-audit)**
 - Date: 2026-02-24
 - Context: Vercel Usage; Edge Requests spiked to 10x normal today. Edge Requests = all requests to the site (static assets + functions). Vercel guidance: optimize re-mounting (many images), excessive polling/refetch on focus (SWR/React Query).
 - Priority: High
 - Feedback: Re-audit roll-log and roll-context (and related hooks) for causes of Edge Request spike. Edge Requests recently spiked to 10x the normal amount today. Managing Edge Requests: count, projects, region. Optimizing: identify frequent re-mounting (304 on repeated paths); reduce excessive polling or data fetching (APIs polled for live updates, SWR/React Query reload on focus).
 - Expected: Identify and fix refetch-on-focus and aggressive polling that multiply requests; reduce Edge Request count.
-- Implemented 2026-02-24: (1) use-campaign-rolls: refetchOnWindowFocus set to false — Supabase Realtime (postgres_changes) already pushes campaign roll updates; refetch on every tab/window focus was redundant and multiplied API calls. (2) CombatEncounterView: removed window focus listener that called refetchCharacterResources (N API calls per tab switch, N = linked combatants); increased character-resource polling interval from 30s to 60s; Realtime still pushes character updates. Roll-log/roll-context: no polling; images are static Next/Image; no further change.
+- Implemented 2026-02-24: (1) use-campaign-rolls: refetchOnWindowFocus set to false ? Supabase Realtime (postgres_changes) already pushes campaign roll updates; refetch on every tab/window focus was redundant and multiplied API calls. (2) CombatEncounterView: removed window focus listener that called refetchCharacterResources (N API calls per tab switch, N = linked combatants); increased character-resource polling interval from 30s to 60s; Realtime still pushes character updates. Roll-log/roll-context: no polling; images are static Next/Image; no further change.
 
-**Raw Feedback Log — 2026-02-24 (Creature Creator: feat point costs, modals, skills, display)**
+**Raw Feedback Log ? 2026-02-24 (Creature Creator: feat point costs, modals, skills, display)**
 - Date: 2026-02-24
-- Context: Creature Creator — damage modifiers, senses, movement, condition immunities, skills, feats, add power/technique/armament modals and lists
+- Context: Creature Creator ? damage modifiers, senses, movement, condition immunities, skills, feats, add power/technique/armament modals and lists
 - Priority: High
-- Feedback: (1) For damage modifiers, the cost of each type of resistance, immunity, weakness, etc should be clear before and after you add them (feat point cost). (2) When you add a sense or movement it should show the feat point cost of that thing perhaps with a chip with feat point cost or something like we use across the website. (3) Same with condition immunities as other damage modifiers — they should show how many feat points each condition immunity or damage modifier costs. (4) For skills use the add skill and add sub skill modals instead of a dropdown list. (5) Separate feats into add feat and add negative feat, where the add negative feat modal only has feats with negative feat point costs. (6) In the add power, technique, and armament modals the loaded things should show like all other parts of the site — parts, properties, options as chips as part of the parts, with other header-usual data detailed in the expanded view such as area, range, etc if not in the column headers. This is true for both the modals and the actual displayed lists in the creature creator. (7) Make sure we use the correct common logic that other parts of the site with similar/same functionality use.
+- Feedback: (1) For damage modifiers, the cost of each type of resistance, immunity, weakness, etc should be clear before and after you add them (feat point cost). (2) When you add a sense or movement it should show the feat point cost of that thing perhaps with a chip with feat point cost or something like we use across the website. (3) Same with condition immunities as other damage modifiers ? they should show how many feat points each condition immunity or damage modifier costs. (4) For skills use the add skill and add sub skill modals instead of a dropdown list. (5) Separate feats into add feat and add negative feat, where the add negative feat modal only has feats with negative feat point costs. (6) In the add power, technique, and armament modals the loaded things should show like all other parts of the site ? parts, properties, options as chips as part of the parts, with other header-usual data detailed in the expanded view such as area, range, etc if not in the column headers. This is true for both the modals and the actual displayed lists in the creature creator. (7) Make sure we use the correct common logic that other parts of the site with similar/same functionality use.
 - Expected: Damage modifiers/senses/movement/condition immunities show feat point cost before and after adding (e.g. chip or label). Skills use AddSkillModal and AddSubSkillModal. Separate Add Feat and Add Negative Feat modals. Power/technique/armament modals and lists show parts, properties, options as chips; area, range, etc in expanded view; align with add-library-item-modal and library/codex display logic.
 
-**Raw Feedback Log — 2026-02-25 (Username change reverts to Player###)**
+**Raw Feedback Log ? 2026-02-25 (Username change reverts to Player###)**
 - Date: 2026-02-25
-- Context: My Account — change username
+- Context: My Account ? change username
 - Priority: Medium (task for later)
 - Feedback: When changing account username, it saves the new one but then creates a new "Player###" username and replaces the chosen one instead of keeping the new username.
 - Expected: After changing username, the profile should keep the new username; it should not be overwritten by a generated Player### default.
 
-**Raw Feedback Log — 2026-03-02 (Admin official library save + character creator power/technique selection)**
+**Raw Feedback Log ? 2026-03-02 (Admin official library save + character creator power/technique selection)**
 - Date: 2026-03-02
 - Context: Admin saving to official library (power, technique, armament, creature, species); character creator add powers/techniques
 - Priority: High
 - Feedback: (1) When admin saves something into the official library it says it saved but it isn't in the database (perhaps old JSONB styles or not saving right). (2) When making a character, add power/technique modal: if you close the modal after adding some, then open again to add more, previously added powers are removed and replaced by whatever new ones you selected (likely same for techniques, armaments).
 - Expected: (1) Official library saves persist to official_* tables; API returns real errors if insert/update fails; RLS allows admin writes. (2) Confirming the add-power/add-technique modal merges with existing selections (keeps items not in current list, adds/replaces from modal selection).
-- Disposition: Implemented 2026-03-02. (1) Official API: check insert/update/delete result and return 500 with details on failure; added RLS policies (Admin can insert/update/delete) for official_* tables using user_profiles.role = 'admin'. Admin users must have role = 'admin' in user_profiles. (2) powers-step: handlePowerSelect/handleTechniqueSelect now merge — keep draft powers/techniques whose ids are not in the current modal list (e.g. from other source tab), then add powers/techniques from the modal selection so reopening and adding more does not replace previous selections.
+- Disposition: Implemented 2026-03-02. (1) Official API: check insert/update/delete result and return 500 with details on failure; added RLS policies (Admin can insert/update/delete) for official_* tables using user_profiles.role = 'admin'. Admin users must have role = 'admin' in user_profiles. (2) powers-step: handlePowerSelect/handleTechniqueSelect now merge ? keep draft powers/techniques whose ids are not in the current modal list (e.g. from other source tab), then add powers/techniques from the modal selection so reopening and adding more does not replace previous selections.
 
-**Raw Feedback Log — 2026-03-02 (user_profiles / user_items DB errors after migration)**
+**Raw Feedback Log ? 2026-03-02 (user_profiles / user_items DB errors after migration)**
 - Date: 2026-03-02
 - Context: Database migration; adding items to public library, saving armaments from public to personal, saving admin armaments to admin official library
 - Priority: Critical
-- Feedback: Post-migration errors: (1) "insert or update on table user_items violates foreign key constraint user_items_user_id_fkey — Key is not present in table user_profiles". (2) "null value in column updated_at of relation user_profiles violates not-null constraint". Cannot add items to public library, save armaments from public to personal, or save admin armaments to admin official library.
+- Feedback: Post-migration errors: (1) "insert or update on table user_items violates foreign key constraint user_items_user_id_fkey ? Key is not present in table user_profiles". (2) "null value in column updated_at of relation user_profiles violates not-null constraint". Cannot add items to public library, save armaments from public to personal, or save admin armaments to admin official library.
 - Expected: user_profiles row exists before any user_* insert; created_at/updated_at never null. All library and profile flows work.
 - Disposition: Implemented 2026-03-02. Added ensureUserProfile helper and fixed all user_profiles upserts to include created_at/updated_at; ensure profile before user library inserts (API + library actions); profile-picture upload upsert includes timestamps. SQL migration added: supabase-user-profiles-timestamps-default.sql (DEFAULT now() on created_at/updated_at). See AI_CHANGELOG.
 
-**Raw Feedback Log — 2026-03-07 (barfight)**
+**Raw Feedback Log ? 2026-03-07 (barfight)**
 - Date: 2026-03-07
 - Context: Character creator (species steps), Power Creator, Creators (energy display), Library (public/official), range display
 - Priority: Mixed (high for bugs; medium for UX)
-- Feedback: (1) Duplicate list items for species when mixed — e.g. flaws, etc. (2) Continue button should be sticky on species steps so you don't need to wait. (3) Power creator: allow multiple damage types to be added to a power (add another row of damage types; may need to change the save data setup and load data). (4) Creators: explicit energy displays per each thing. (5) Remove "(optional)" from damage — everything is optional so we don't need to specify it. (6) The public library isn't saving powers, techniques, armaments, etc. (7) Spaces for range seems to display differently for powers and maybe armaments depending on what view you're in (more spaces in lists/libraries).
+- Feedback: (1) Duplicate list items for species when mixed ? e.g. flaws, etc. (2) Continue button should be sticky on species steps so you don't need to wait. (3) Power creator: allow multiple damage types to be added to a power (add another row of damage types; may need to change the save data setup and load data). (4) Creators: explicit energy displays per each thing. (5) Remove "(optional)" from damage ? everything is optional so we don't need to specify it. (6) The public library isn't saving powers, techniques, armaments, etc. (7) Spaces for range seems to display differently for powers and maybe armaments depending on what view you're in (more spaces in lists/libraries).
 - Expected: (1) No duplicate traits/flaws/characteristics in species mixed lists. (2) Continue button sticky (e.g. footer) on species steps. (3) Power can have multiple damage types; schema/save/load supports array. (4) Each power/technique/armament in creators shows EN explicitly. (5) No "(optional)" label on damage. (6) Official/public library save persists powers, techniques, armaments. (7) Range spacing consistent across list vs detail views for powers and armaments.
-- Disposition: (1) TASK-284 done 2026-03-07. (2) TASK-285 done 2026-03-07: sticky Continue on species/ancestry steps. (3) TASK-286 done 2026-03-07: power creator multiple damage types. (4) TASK-287 done 2026-03-07: verified EN per part/property already shown. (5) TASK-288 done 2026-03-07: removed "(optional)" from damage labels. (6) TASK-289 done 2026-03-07. (7) TASK-290 done 2026-03-07: normalizeRangeDisplay + item formatRange consistency.
+- Disposition: (1) TASK-766 done 2026-03-07. (2) TASK-285 done 2026-03-07: sticky Continue on species/ancestry steps. (3) TASK-286 done 2026-03-07: power creator multiple damage types. (4) TASK-287 done 2026-03-07: verified EN per part/property already shown. (5) TASK-288 done 2026-03-07: removed "(optional)" from damage labels. (6) TASK-289 done 2026-03-07. (7) TASK-290 done 2026-03-07: normalizeRangeDisplay + item formatRange consistency.
 
-**Raw Feedback Log — 2026-03-10 (Crafting rules + crafting page)**
+**Raw Feedback Log ? 2026-03-10 (Crafting rules + crafting page)**
 - Date: 2026-03-10
 - Context: Core rules database, admin core rules editor, creators section
 - Priority: High
@@ -1262,7 +1622,7 @@ Notes
 - Expected: Crafting rules in core_rules; admin Crafting tab; crafting page with item selection, roll phase, outcome display using sub-skill flavor text.
 - Disposition: Plan created/updated in CRAFTING_IMPLEMENTATION_PLAN.md. TASK-293 (core rules + admin tab), TASK-294 (crafting hub + page), TASK-295 (enhanced crafting + library). Plan now includes: Crafting Hub (encounter-like list), incremental roll sessions, Consumable/Bulk/Enhanced toggles, auto-calculated costs, custom base items, Enhanced Equipment Library.
 
-**Raw Feedback Log — 2026-03-12 (TP color shift + leveled feat normalization)**
+**Raw Feedback Log ? 2026-03-12 (TP color shift + leveled feat normalization)**
 - Date: 2026-03-12
 - Context: Creator UI resource colors; feat system architecture across codex/admin/character sheet/creator
 - Priority: High
@@ -1270,7 +1630,7 @@ Notes
 - Expected: TP color updated globally through semantic tokens; feat architecture uses `feat_lvl` + ids (same names) with robust family linking; migration path for roman suffix removal; UI displays level variants clearly; replacement/counting behavior enforced consistently.
 - Disposition: In progress via TASK-296/TASK-297. Implemented this session: TP lime token shift; id-only duplicate checks in Add Feat modal; creator/sheet level-weighted feat slot counting; previous-level prerequisite and upgrade replacement behavior in creator add-feat flow and character sheet add-feat handling. Remaining: run/verify DB migration and complete full surface audit for slot enforcement/replacement consistency.
 
-**Raw Feedback Log — 2026-03-12 (Creator costs, sort direction, section styling, resource colors)**
+**Raw Feedback Log ? 2026-03-12 (Creator costs, sort direction, section styling, resource colors)**
 - Date: 2026-03-12
 - Context: Power/Technique/Item creators (section costs and sorting), creator section UI consistency
 - Priority: High
@@ -1278,7 +1638,7 @@ Notes
 - Expected: Technique combat configuration clearly shows cost contribution for selected weapon/action/reaction; type column sorting toggles and sorts alphabetically both directions; no extra divider line in collapsible sections; TP/IP/C colors are distinct and consistent anywhere section cost labels/stat boxes render.
 - Disposition: Implemented 2026-03-12. Added technique combat configuration section and per-control cost badges for weapon/action/reaction; fixed shared sort resolver to sort by GridListRow column values (including `type`) with asc/desc toggle; removed collapsible content top border; introduced separate IP and currency color tokens and applied them in shared creator cost components and item creator cost displays.
 
-**Raw Feedback Log — 2026-03-12 (Skill encounter tracker UX: RM bonus placement, success steppers, encounter thresholds/description)**
+**Raw Feedback Log ? 2026-03-12 (Skill encounter tracker UX: RM bonus placement, success steppers, encounter thresholds/description)**
 - Date: 2026-03-12
 - Context: Skill encounter tracker UI (`/encounters/[id]/skill` and mixed encounter skill tab)
 - Priority: High
@@ -1286,7 +1646,7 @@ Notes
 - Expected: Success tracker clearly separates roll totals vs RM-added totals; RM bonus entered next to roll total; editable encounter description field on tracker; configurable required successes and max failures persisted and displayed in the Successes area with clear status.
 - Disposition: Implemented 2026-03-12. SkillEncounterView now uses ValueStepper controls for additional successes/failures, displays total successes/failures against required/max thresholds with status (Overcome/Failed/In Progress), moves RM bonus input into the roll area (after total) for both pending and rolled participants, and adds editable Encounter Description in configuration. Skill/mixed page initialization and encounter types now persist requiredSuccesses/maxFailures defaults.
 
-**Raw Feedback Log — 2026-03-12 (Leveled feat family row UX across all feat surfaces)**
+**Raw Feedback Log ? 2026-03-12 (Leveled feat family row UX across all feat surfaces)**
 - Date: 2026-03-12
 - Context: Feat list and selection surfaces (Codex, Admin, Character Creator, Character Sheet, Add Feat modal)
 - Priority: High
@@ -1294,91 +1654,91 @@ Notes
 - Expected: One row per feat family where appropriate, with `Feat Levels` chips listing other levels; consistent styling/behavior across Codex/Admin/player flows using shared modern components and sources of truth.
 - Disposition: Implemented 2026-03-12. Added shared leveled-feat helpers (`src/lib/leveled-feats.ts`) for family grouping, display naming, and level-chip generation. Updated Codex feats, Admin feats, Character Creator feats, Add Feat modal, and Character Sheet feats tab to use family-aware display with `Feat Levels` chips and shared `GridListRow` detail sections. Build remains blocked by pre-existing unrelated syntax error in `src/app/(main)/crafting/[id]/page.tsx`.
 
-**Raw Feedback Log — 2026-03-12 (Archetype Paths for guided character creation + admin authoring)**
+**Raw Feedback Log ? 2026-03-12 (Archetype Paths for guided character creation + admin authoring)**
 - Date: 2026-03-12
 - Context: Character creator entry flow, archetype admin authoring, codex archetype data model, level-up guidance persistence
 - Priority: High
 - Feedback: Add an archetype-path system where users choose between "Forge Your Own Path" (fully custom) and "Choose a Path" (guided archetype recommendations). Archetype paths should include level-1 recommendations (proficiency, feats, skills, powers/techniques, armaments, equipment), primary + optional secondary ability emphasis, and level 2-5 progression recommendations (add/remove options). Admin archetype editing should support creating these robust paths with clean shared UI patterns. Choose-a-Path flow should present official archetype paths in grouped categories, guide feats/skills/equipment/powers/techniques by recommendations while still allowing manual override, and save selected path id with the character for level-up guidance.
 - Expected: End-to-end archetype path support in data model/API/admin/creator flow with reusable components, strong UX consistency, and saved `archetypePathId` for future leveling guidance.
 
-**Raw Feedback Log — 2026-03-13 (Enhanced crafting energy, base-item inclusion, and uses flow)**
+**Raw Feedback Log ? 2026-03-13 (Enhanced crafting energy, base-item inclusion, and uses flow)**
 - Date: 2026-03-13
 - Context: Crafting tool enhanced flow (`/crafting/[id]`)
 - Priority: High
 - Feedback: Enhanced crafting should pull power energy from calculated power data (not manual EN input), account for whether the base item is already crafted vs must be crafted in the same process, and account for item uses/recovery selection in enhanced requirements. Requested UX includes a toggle like "craft base item as well" and clearer rules-aligned enhanced crafting flow.
 - Expected: Power selector auto-resolves calculated EN, enhanced requirements apply multiple-use energy adjustment, and optional base-item crafting is included in requirements when toggled.
 
-**Raw Feedback Log — 2026-03-13 (Archetype editor should use selection dropdowns, no CSV/manual IDs)**
+**Raw Feedback Log ? 2026-03-13 (Archetype editor should use selection dropdowns, no CSV/manual IDs)**
 - Date: 2026-03-13
-- Context: Admin Codex → Archetypes → Archetype Path Builder (editing/creation UX)
+- Context: Admin Codex ? Archetypes ? Archetype Path Builder (editing/creation UX)
 - Priority: High
 - Feedback: Archetype format/editing/creation updates: the editor needs to utilize dropdowns/selection for feats, skills, powers, techniques, armaments, and equipment (from codex/official library) not manually inputted CSV or anything. The editor needs to be UI friendly. All recommended feats/items/powers/etc already exist in codex/library; do not create new ones for archetype paths, only choose existing entries.
 - Expected: Path builder uses selection-based controls backed by existing codex/official library datasets for recommendation fields (and remove lists), eliminating manual CSV entry and preventing ad-hoc values.
 
-**Raw Feedback Log — 2026-03-14 (TP/proficiency system completion audit)**
+**Raw Feedback Log ? 2026-03-14 (TP/proficiency system completion audit)**
 - Date: 2026-03-14
 - Context: Character creator, character sheet proficiencies, sitewide TP/proficiency logic and tracking
 - Priority: High
 - Feedback: Ensure the entire TP/proficiency overhaul is fully implemented sitewide with no dropped requirements: per-part/property proficiency storage, TP formula with floor rounding, duplicate-highest logic, damage-type dedupe, creator payload + over-limit visibility, character sheet auto-add/prompt on over limit, missing-proficiency indicators, add-all-missing, removable old proficiencies, custom proficiencies, and durable task/phase tracking so nothing falls through cracks.
 - Expected: Sitewide behavior matches core TP/proficiency rules end-to-end; over-limit states are visible (not silently blocked); tracking docs and task queue reflect completion status and remaining gaps explicitly.
 
-**Raw Feedback Log — 2026-03-14 (Creators, character creator, library bugs)**
+**Raw Feedback Log ? 2026-03-14 (Creators, character creator, library bugs)**
 - Date: 2026-03-14
 - Context: Creators, Character Creator (finalize, powers, equipment), Character Sheet Library (inventory/weapons)
 - Priority: High
 - Feedback: (1) Creators: when displaying en/ip/c/tp cost, show one decimal only when fractional (e.g. 1.5), not "1.0" for whole numbers. (2) Character Creator finalize: display abilities as plain text without chips/colors. (3) Character Creator: selected powers/techniques should persist when switching step tabs, not disappear. (4) Equipment step: show added equipment in grid list rows with expand/collapse like powers/techniques. (5) Finalize step: power/technique chips should show energy cost for each. (6) Library inventory: negative attack bonus displayed as "+-1" should be "-1"; remove redundant attack column and keep single "Attack" button column; attack button should use same calculation as character sheet weapon section (ability + proficiency).
 - Expected: Implemented 2026-03-14: formatCostDisplay in creators, plain abilities in finalize, selected powers/techniques from full pool so they persist, equipment as GridListRow list, energy cost on finalize powers/techniques, getWeaponAttackBonus with proficiency and single Attack column in library.
 
-**Raw Feedback Log — 2026-03-21 (Admin archetype save + Realms Library publish)**
+**Raw Feedback Log ? 2026-03-21 (Admin archetype save + Realms Library publish)**
 - Date: 2026-03-21
 - Context: Admin Codex archetypes; Technique Creator publish to Realms Library after private save
 - Priority: High
-- Feedback: As an admin, archetypes made on the admin page do not save reliably (“can’t seem to save … well”). After saving one technique to My Library and publishing several more to the Realms Library, later publishes did not appear — treated as a major bug.
+- Feedback: As an admin, archetypes made on the admin page do not save reliably (?can?t seem to save ? well?). After saving one technique to My Library and publishing several more to the Realms Library, later publishes did not appear ? treated as a major bug.
 - Expected: Archetype saves persist and lists refresh with current data. Each publish to the official Realms Library creates or updates rows and all users (and admin lists) see new content without stale cached responses.
 
-**Raw Feedback Log — 2026-03-18 (Character creator portrait missing after finalize)**
+**Raw Feedback Log ? 2026-03-18 (Character creator portrait missing after finalize)**
 - Date: 2026-03-18
-- Context: Character Creator finalize — portrait upload/confirm then create character
+- Context: Character Creator finalize ? portrait upload/confirm then create character
 - Priority: High
 - Feedback: After adding a portrait and creating the character, the sheet loads without the portrait.
 - Expected: Portrait uploads to Storage and character `data.portrait` stores the public URL; sheet shows portrait; failures are visible (toast) not silent.
 
-**Raw Feedback Log — 2026-03-18 (Campaign join visibility + invalid invite code)**
+**Raw Feedback Log ? 2026-03-18 (Campaign join visibility + invalid invite code)**
 - Date: 2026-03-18
-- Context: Campaigns — join with invite code, character visibility (private / campaign / public)
+- Context: Campaigns ? join with invite code, character visibility (private / campaign / public)
 - Priority: High
 - Feedback: (1) Adding/joining a campaign should set character visibility to campaign automatically unless already campaign or public (do not block public/campaign/private with denials; private should become campaign when joining). (2) Valid invite codes sometimes rejected as invalid.
 - Expected: Join succeeds; visibility rules applied without extra blocking modals; invite lookup works for users who are not yet campaign members (RLS-safe server path).
 
-**Raw Feedback Log — 2026-03-18 (Mixed species traits + library list refresh)**
+**Raw Feedback Log ? 2026-03-18 (Mixed species traits + library list refresh)**
 - Date: 2026-03-18
-- Context: Character Creator (mixed species); Technique Creator → My Library / Realms Library
+- Context: Character Creator (mixed species); Technique Creator ? My Library / Realms Library
 - Priority: High
-- Feedback: (1) New character with mixed species did not save selected species traits — only ancestry traits. (2) Techniques after creation sometimes do not show in personal or official library immediately or at all.
+- Feedback: (1) New character with mixed species did not save selected species traits ? only ancestry traits. (2) Techniques after creation sometimes do not show in personal or official library immediately or at all.
 - Expected: Mixed species saves persist species trait picks (and related mixed ancestry fields). Library lists refetch after save/publish so new techniques appear without stale client cache.
 
-**Raw Feedback Log — 2026-03-21 (Empowered Techniques creator request)**
+**Raw Feedback Log ? 2026-03-21 (Empowered Techniques creator request)**
 - Date: 2026-03-21
 - Context: Power Creator + Technique Creator convergence; new Empowered Technique flow
 - Priority: High
 - Feedback: Add support for Empowered Techniques by combining power + technique authoring. Requested behavior: shared action type/reaction profile, Add Weapon should use Add Weapon to Power (id 369), Duration applies only to power side, include both power Add Damage and technique Additional Damage, and allow adding/incrementing technique parts inside the empowered flow. Prefer a dedicated creator that reuses existing power/technique shared code/components so future updates to those creators propagate.
 - Expected: New empowered-technique creator route with power-like UX plus technique sections, empowered-aware energy/TP calculations, and high code reuse with minimal duplicated logic.
 
-**Raw Feedback Log — 2026-03-21 (Power add-weapon + empowered library/modal integration)**
+**Raw Feedback Log ? 2026-03-21 (Power add-weapon + empowered library/modal integration)**
 - Date: 2026-03-21
 - Context: Power Creator, Empowered Technique clarity, Library tabs, character/creature add-power modals
 - Priority: High
 - Feedback: Add a dedicated Add Weapon section to Power Creator using Add Weapon to Power logic (power part id path), modeled after the technique creator weapon UX and using shared component(s). Keep empowered technique sections clearly separated so technique parts are distinct from power parts/mechanics. Add Empowered Techniques as first-class library content in both Realms and My Library. In character/creature add-power flows, include Empowered Techniques as a tab and ensure selected entries display in the corresponding lists.
 - Expected: Power creator weapon section with shared UI, clear empowered section separation, library empowered visibility in both scopes, and add-power modal tab support for empowered selection in character/creature flows.
 
-**Raw Feedback Log — 2026-03-21 (Character sheet current HP not saving / refresh loses HP)**
+**Raw Feedback Log ? 2026-03-21 (Character sheet current HP not saving / refresh loses HP)**
 - Date: 2026-03-21
-- Context: Character sheet — editing current HP (view mode vs edit mode)
+- Context: Character sheet ? editing current HP (view mode vs edit mode)
 - Priority: High
-- Feedback: Current HP isn’t autosaving and doesn’t stay after refresh when editing current HP.
-- Expected: Current HP (and energy/AP) persist to the server after change and reload correctly. **Disposition:** Implemented — `useAutoSave` was only enabled in sheet edit mode while HP steppers work in view mode; autosave now enabled for owners whenever character state changes (`enabled: isOwner`).
+- Feedback: Current HP isn?t autosaving and doesn?t stay after refresh when editing current HP.
+- Expected: Current HP (and energy/AP) persist to the server after change and reload correctly. **Disposition:** Implemented ? `useAutoSave` was only enabled in sheet edit mode while HP steppers work in view mode; autosave now enabled for owners whenever character state changes (`enabled: isOwner`).
 
-**Raw Feedback Log — 2026-03-24 (Supabase columnar parity scaling request)**
+**Raw Feedback Log ? 2026-03-24 (Supabase columnar parity scaling request)**
 - Date: 2026-03-24
 - Context: Supabase schema scalability (official/user library + encounter/library payload depth)
 - Priority: High
@@ -1386,122 +1746,122 @@ Notes
 - Expected: A practical migration plan and execution path that promotes high-value payload fields to typed columns, keeps backward compatibility during rollout, and aligns official/user table structures.
 - Disposition: Implemented 2026-03-24 via TASK-304. Added `sql/supabase-library-columnar-parity-expansion.sql` (official_* + user_* promoted columns for powers/techniques/items, trigger-based payload->column sync, backfill updates, supporting indexes). Updated `SUPABASE_SCHEMA.md` and `OFFICIAL_LIBRARY_COLUMNAR_PLAN.md` with run order and parity notes.
 
-**Raw Feedback Log — 2026-04-09 (Username change reverts to Player###)**
+**Raw Feedback Log ? 2026-04-09 (Username change reverts to Player###)**
 - Date: 2026-04-09
-- Context: My Account — Change Username
+- Context: My Account ? Change Username
 - Priority: High
 - Feedback: When changing my username, it usually sticks for a second then changes back into a generated default like "player341421".
 - Expected: After changing username, it stays as the chosen username (UI + stored profile) and is not overwritten by any default-username generator on subsequent auth/profile sync.
 
-**Raw Feedback Log — 2026-04-09 (Tooltips + creator UX feedback batch)**
+**Raw Feedback Log ? 2026-04-09 (Tooltips + creator UX feedback batch)**
 - Date: 2026-04-09
 - Context: Tooltip rollout Wave 1, Character Creator (archetype/species/ancestry/skills/feats/equipment/powers), modals, header account menu
 - Priority: High
-- Feedback: Remove the redundant top-of-character-creation tip text now that tooltips cover it. Add Forge-your-own archetype tooltips explaining Power Ability and Martial Ability (using core rulebook language), and ideally ability-by-ability guidance/examples. Add a tooltip next to “Add Sub-Skill” in character creator explaining sub-skills (core rulebook). UX: remove the border on sticky Back/Continue bars in creator steps (floating buttons preferred) and add sticky action buttons in modals (e.g., species “Pick Me”). In species source selector, add a “Make a Species” option that opens the Species Creator in a new tab. In mixed species ancestry, when taking a flaw and unlocking an extra ancestry trait, move the extra trait list below the flaw section (more intuitive). Fix Add Sub-Skill modal where row action buttons wrap to a second line (should match shared modal/list patterns). Feats step: replace the archetype/character toggle button with proper tabs/segmented control for clarity. Character creator Equipment and Powers tabs should show a Proficiency/Training Points (TP) summary like the character sheet (proper proficiency TP calculation). Rename “Powers” to “Powers & Techniques” in the creator flow. Add tooltip toggle to the profile icon hover menu (like theme toggle).
+- Feedback: Remove the redundant top-of-character-creation tip text now that tooltips cover it. Add Forge-your-own archetype tooltips explaining Power Ability and Martial Ability (using core rulebook language), and ideally ability-by-ability guidance/examples. Add a tooltip next to ?Add Sub-Skill? in character creator explaining sub-skills (core rulebook). UX: remove the border on sticky Back/Continue bars in creator steps (floating buttons preferred) and add sticky action buttons in modals (e.g., species ?Pick Me?). In species source selector, add a ?Make a Species? option that opens the Species Creator in a new tab. In mixed species ancestry, when taking a flaw and unlocking an extra ancestry trait, move the extra trait list below the flaw section (more intuitive). Fix Add Sub-Skill modal where row action buttons wrap to a second line (should match shared modal/list patterns). Feats step: replace the archetype/character toggle button with proper tabs/segmented control for clarity. Character creator Equipment and Powers tabs should show a Proficiency/Training Points (TP) summary like the character sheet (proper proficiency TP calculation). Rename ?Powers? to ?Powers & Techniques? in the creator flow. Add tooltip toggle to the profile icon hover menu (like theme toggle).
 - Expected: Cleaner creator UI, consistent modal action footers, clearer mixed ancestry flow, clearer feats selection navigation, correct TP summary visibility, and a quick tooltip visibility toggle in the header account dropdown.
 
-**Raw Feedback Log — 2026-04-09 (Sub-skill point spend double-count)**
+**Raw Feedback Log ? 2026-04-09 (Sub-skill point spend double-count)**
 - Date: 2026-04-09
-- Context / Page: Character Sheet + Character Creator + Creature Creator — Skills (sub-skills)
+- Context / Page: Character Sheet + Character Creator + Creature Creator ? Skills (sub-skills)
 - Priority: High
 - Feedback (paste raw text): "Sub skills error: when increasing the skill value of a sub-skill from 0 to 1, it should automatically make that subskill proficient as well, but proficiency for SUB SKILLS does NOT count agasint total skill points spent, only the 0 to 1 skill value increase (right now increasing skill value from 0 to 1 for sub skill makes it automatically count as 2 spent skill points not 1) this is true across character sheet, creator, and likely creature creator, check."
-- Expected behavior (short): Increasing a sub-skill from 0 → 1 auto-marks it proficient, and **only spends 1 skill point total** (no extra proficiency point beyond that).
+- Expected behavior (short): Increasing a sub-skill from 0 ? 1 auto-marks it proficient, and **only spends 1 skill point total** (no extra proficiency point beyond that).
 - References (vanilla site, screenshots, notes): None
 
-**Raw Feedback Log — 2026-04-09 (Email/password onboarding + verification confusion)**
+**Raw Feedback Log ? 2026-04-09 (Email/password onboarding + verification confusion)**
 - Date: 2026-04-09
-- Context: Auth — email/password signup + verification + redirects
+- Context: Auth ? email/password signup + verification + redirects
 - Priority: High
-- Feedback: The email/password signup flow is confusing and likely misconfigured. Email verification isn’t clear; user may feel like they have to sign up, then verify email, then re-enter email/password again or “do it twice”. Redirection/direction after sign up and verification is unclear.
-- Expected: Clear post-signup messaging (“check your email”), proper Supabase best-practice confirmation handling, and consistent redirect back to the intended page after confirming or signing in.
+- Feedback: The email/password signup flow is confusing and likely misconfigured. Email verification isn?t clear; user may feel like they have to sign up, then verify email, then re-enter email/password again or ?do it twice?. Redirection/direction after sign up and verification is unclear.
+- Expected: Clear post-signup messaging (?check your email?), proper Supabase best-practice confirmation handling, and consistent redirect back to the intended page after confirming or signing in.
 
-**Raw Feedback Log — 2026-04-09 (Username casing + role quotas/permissions management)**
+**Raw Feedback Log ? 2026-04-09 (Username casing + role quotas/permissions management)**
 - Date: 2026-04-09
 - Context: Auth username behavior + Admin user management and role limits
 - Priority: High
 - Feedback: Allow capital letters in usernames while keeping uniqueness sane. Add user-management controls to manage what each role can do and the quotas per role (campaign count, users in campaigns, created characters, custom library limits for powers/techniques/armaments/creatures, and similar permissions), likely with a new DB table.
 - Expected: Usernames preserve entered casing (case-insensitive uniqueness), and admins can view/edit role-level permissions and quotas from the app with those limits enforced in create flows.
 
-**Raw Feedback Log — 2026-04-09 (Admin codex — new armament property + option not saving)**
+**Raw Feedback Log ? 2026-04-09 (Admin codex ? new armament property + option not saving)**
 - Date: 2026-04-09
-- Context: Admin Codex → Armament Properties — create/save with option
+- Context: Admin Codex ? Armament Properties ? create/save with option
 - Priority: High
 - Feedback: Created and saved a new armament property with an option; the option was not saved; IP appeared negative / did not save; TP and cost were 0 but displayed as 0/-.
 - Expected: Option description and option IP/TP/cost persist to `codex_properties`; list shows saved numeric values including 0 and negatives when set.
-- Disposition: Implemented 2026-04-09 — fixed `toColumnarPayload` key mapping (`op_1_*` → `op1*`) in `admin/codex/actions.ts`; admin list display for IP/TP/cost in `AdminPropertiesTab.tsx`.
+- Disposition: Implemented 2026-04-09 ? fixed `toColumnarPayload` key mapping (`op_1_*` ? `op1*`) in `admin/codex/actions.ts`; admin list display for IP/TP/cost in `AdminPropertiesTab.tsx`.
 
-**Raw Feedback Log — 2026-04-10 (Armament library edit loads mechanic properties; option zero-cost display)**
+**Raw Feedback Log ? 2026-04-10 (Armament library edit loads mechanic properties; option zero-cost display)**
 - Date: 2026-04-10
-- Context: Armament Library — load weapon/armament; edit armament in armament library
+- Context: Armament Library ? load weapon/armament; edit armament in armament library
 - Priority: High
 - Feedback: When loading a weapon/armament or hitting edit in the armament library, it appears to load mechanic properties that are hardwired/dedicated UI fields and incorrectly adds them into the editable armament property list. These mechanic properties should be omitted from the list and handled only in the UI/background. Also: when saving an armament property option with TP 0 or C 0, the UI shows "Option 00" instead of showing the labels like "Option / TP 0 / C 0".
 - Expected: Mechanic-only properties never appear in the editable property list on load/edit; they are restored only into their dedicated UI fields/state. Option display always includes cost labels (TP/C) even when values are 0.
 
-**Raw Feedback Log — 2026-04-10 (Codex armament properties negative values hidden)**
+**Raw Feedback Log ? 2026-04-10 (Codex armament properties negative values hidden)**
 - Date: 2026-04-10
-- Context: Codex → Armament Properties list
+- Context: Codex ? Armament Properties list
 - Priority: High
 - Feedback: Armament properties with negative values (cost multiplier, IP, TP, etc.) are displayed as "-" in the Codex list instead of showing the actual negative numbers.
 - Expected: Codex property list displays numeric values exactly (including negatives and 0), rather than replacing them with "-".
 
-**Raw Feedback Log — 2026-04-10 (Feat requirements filter treats defenses as abilities)**
+**Raw Feedback Log ? 2026-04-10 (Feat requirements filter treats defenses as abilities)**
 - Date: 2026-04-10
-- Context: Feats — add-feat modal / feat selection sorting & filtering
+- Context: Feats ? add-feat modal / feat selection sorting & filtering
 - Priority: High
-- Feedback: In feat sorting/filtering (especially when adding feats), some feats with requirements like "Might +3" (and other Defense requirements) get filtered out even when the character’s defense bonus meets/exceeds the requirement. The requirement is stored under "ability requirements" even though it can be a Defense.
-- Expected: Defense requirements (Might/Fortitude/Reflexes/Discernment/Mental Fortitude/Resolve) should be evaluated against the character’s defense bonus (ability + allocated defense increases), not against core abilities, so qualified feats remain visible/sortable.
+- Feedback: In feat sorting/filtering (especially when adding feats), some feats with requirements like "Might +3" (and other Defense requirements) get filtered out even when the character?s defense bonus meets/exceeds the requirement. The requirement is stored under "ability requirements" even though it can be a Defense.
+- Expected: Defense requirements (Might/Fortitude/Reflexes/Discernment/Mental Fortitude/Resolve) should be evaluated against the character?s defense bonus (ability + allocated defense increases), not against core abilities, so qualified feats remain visible/sortable.
 
-**Raw Feedback Log — 2026-04-10 (Campaign roll log not shared / recent rolls missing)**
+**Raw Feedback Log ? 2026-04-10 (Campaign roll log not shared / recent rolls missing)**
 - Date: 2026-04-10
-- Context: Campaigns — shared roll log; Supabase `campaign_rolls` export
+- Context: Campaigns ? shared roll log; Supabase `campaign_rolls` export
 - Priority: High
-- Feedback: Campaign roll logs are not taking/shared right; they do not update with each player’s rolls. Recent rolls do not appear to add (CSV export shows empty `created_at`, list columns populated from JSON).
+- Feedback: Campaign roll logs are not taking/shared right; they do not update with each player?s rolls. Recent rolls do not appear to add (CSV export shows empty `created_at`, list columns populated from JSON).
 - Expected: Every member sees the same ordered campaign roll history; newest rolls appear after each player rolls; DB/API list reflects inserts reliably.
-- Disposition: Implemented 2026-04-10 — POST sets `created_at`; GET orders `created_at DESC NULLS LAST` + `id` tie-break; trim-old uses consistent ascending order; optional SQL backfill `sql/supabase-campaign-rolls-created-at-backfill.sql`.
+- Disposition: Implemented 2026-04-10 ? POST sets `created_at`; GET orders `created_at DESC NULLS LAST` + `id` tie-break; trim-old uses consistent ascending order; optional SQL backfill `sql/supabase-campaign-rolls-created-at-backfill.sql`.
 
-**Raw Feedback Log — 2026-04-20 (Level Up modal should allow leveling down)**
+**Raw Feedback Log ? 2026-04-20 (Level Up modal should allow leveling down)**
 - Date: 2026-04-20
-- Context: Character Sheet — Level Up modal
+- Context: Character Sheet ? Level Up modal
 - Priority: High
 - Feedback: The level up modal should also let you go down level(s), not just up.
 - Expected: The modal allows selecting a lower level (down to level 1) and correctly previews negative deltas before applying the change.
 
-**Raw Feedback Log — 2026-04-20 (Species preview modal multi-choice traits)**
+**Raw Feedback Log ? 2026-04-20 (Species preview modal multi-choice traits)**
 - Date: 2026-04-20
-- Context: Character Creator — Species step preview modal
+- Context: Character Creator ? Species step preview modal
 - Priority: Medium
 - Feedback: For multi choice traits in the preview modal in the species page, it needs to allow the multichoice traits to expand so you can see the multi-choices before picking a species.
 - Expected: In the species preview modal, any trait with multiple options can expand/collapse to show the list of option traits (name + description) before selecting the species.
 
-**Raw Feedback Log — 2026-04-20 (Ancestry choice-trait picker should be expandable list)**
+**Raw Feedback Log ? 2026-04-20 (Ancestry choice-trait picker should be expandable list)**
 - Date: 2026-04-20
-- Context: Character Creator — Ancestry step (species/ancestry/flaw/characteristic choice traits)
+- Context: Character Creator ? Ancestry step (species/ancestry/flaw/characteristic choice traits)
 - Priority: High
 - Feedback: For the multi-choice trait selection on ancestry tab, a simple dropdown with trait choices doesn't work; it needs to let you pick from list items which expand and collapse so users can read each option's description before choosing.
 - Expected: Choice traits render an expandable option list with descriptions, and selection happens from that list (no plain dropdown).
 
-**Raw Feedback Log — 2026-04-28 (Codex editor — deleting part/property option doesn’t persist; reindex options)**
+**Raw Feedback Log ? 2026-04-28 (Codex editor ? deleting part/property option doesn?t persist; reindex options)**
 - Date: 2026-04-28
-- Context: Admin Codex editor — edit modal for parts/properties/options (e.g., power parts)
+- Context: Admin Codex editor ? edit modal for parts/properties/options (e.g., power parts)
 - Priority: High
-- Feedback: In the edit modal, deleting an option (e.g., delete Op 2) does not actually remove it. Also: when an earlier option is deleted, later options should shift down (delete Op 2 when Op 3 exists → Op 3 becomes Op 2; delete Op 1 when Op 2/3 exist → Op 2→1, Op 3→2, etc.) for maintainable compact option sets.
+- Feedback: In the edit modal, deleting an option (e.g., delete Op 2) does not actually remove it. Also: when an earlier option is deleted, later options should shift down (delete Op 2 when Op 3 exists ? Op 3 becomes Op 2; delete Op 1 when Op 2/3 exist ? Op 2?1, Op 3?2, etc.) for maintainable compact option sets.
 - Expected: Deleting an option truly clears it in persisted state, and option indices are compacted so there are no gaps (op1/op2/op3 stay contiguous).
 
-**Raw Feedback Log — 2026-05-01 (Library dependency safety + sync with current patch)**
+**Raw Feedback Log ? 2026-05-01 (Library dependency safety + sync with current patch)**
 - Date: 2026-05-01
 - Context: Official and personal library dependency handling; character sheet live data behavior
 - Priority: High
 - Feedback: Editing shared parts/mechanics/options can break legacy powers/techniques/empowered techniques/armaments/species/creatures. Missing referenced options should be null-safe (ignore-and-continue). For personal libraries, detect rule drift and provide a `Sync with current patch` workflow (global and per-item). Character sheets should reflect latest codex/feat/trait/library data in line with sync state without overcomplicating flow.
 - Expected: Graceful null-safe fallback for removed refs/options, drift visibility, explicit sync controls in My Library, and character sheets that stay up to date with current codex/library resolution.
 
-**Raw Feedback Log — 2026-05-16 (Library sync button disabled after part edits)**
+**Raw Feedback Log ? 2026-05-16 (Library sync button disabled after part edits)**
 - Date: 2026-05-16
-- Context: My Library powers tab — sync with current patch drift detection
+- Context: My Library powers tab ? sync with current patch drift detection
 - Priority: High
 - Feedback: Sync button stays greyed out as "already in sync" even after many referenced power parts were edited in codex.
 - Expected: Part definition edits (not only deleted parts/options) should trigger drift so the per-item and global sync actions enable correctly.
 
-**Raw Feedback Log — 2026-05-16 (Technique Add Weapon TP scaling + weapon persistence across private/public libraries)**
+**Raw Feedback Log ? 2026-05-16 (Technique Add Weapon TP scaling + weapon persistence across private/public libraries)**
 - Date: 2026-05-16
 - Context: Technique Creator, Empowered Technique Creator, Power Creator, user/public/official library load-save mapping
 - Priority: High
@@ -1509,7 +1869,7 @@ Notes
 - Expected: Weapon references persist for custom and official techniques/powers/empowered techniques; TP scaling reflects selected weapon TP (or saved Add Weapon part level fallback for older official entries); load behavior remains consistent across My Library and Realms Library.
 - Disposition: Implemented 2026-05-16. Fixed UUID weapon save conditions in creators, added Add Weapon level fallback reconstruction on load for technique/empowered flows, and updated shared columnar mapping to persist/rehydrate weaponName from nested payload weapon fields.
 
-**Raw Feedback Log — 2026-05-22 (Character creator — add powers empty on mobile)**
+**Raw Feedback Log ? 2026-05-22 (Character creator ? add powers empty on mobile)**
 - Date: 2026-05-22
 - Context: Character creator, Powers & Techniques step, mobile
 - Priority: High
@@ -1517,7 +1877,7 @@ Notes
 - Expected: Add Powers / Add Techniques modals list the same merged library content as the character sheet add-library-item modal, with working source filter and visible rows on mobile.
 - Disposition: Implemented 2026-05-22. Aligned powers-step with add-library-item modal (merge all sources + displayFilter), source-aware loading (My Library no longer blocked on official fetch), stable item ids (docId ?? id), default source All, mobile-friendly modal flex height. `npm run build` passes.
 
-**Raw Feedback Log — 2026-06-12 (Codex "view as character" filter)**
+**Raw Feedback Log ? 2026-06-12 (Codex "view as character" filter)**
 - Date: 2026-06-12
 - Context: Codex (all tabs; Feats tab specifically)
 - Priority: High
@@ -1525,274 +1885,1257 @@ Notes
 - Expected: A persistent "view as character" selector on the Codex that, on the Feats tab, auto-filters feats by the selected character's stats (level, abilities, skills, speed, prerequisites) reusing the character creator's qualification logic. Other tabs unchanged for now.
 - Disposition: Implemented 2026-06-12 (TASK-311). Extracted creator/sheet feat-requirement logic into shared `src/lib/game/feat-requirements.ts` (now also covers speed); added `CodexCharacterFilter` with page-level + localStorage persistence; wired `CodexFeatsTab` to auto-filter via the shared module with a show/hide-unqualified toggle. `npm run build` passes.
 
-**Raw Feedback Log — 2026-06-13 (QA — build validation format)**
+**Raw Feedback Log ? 2026-06-13 (QA ? build validation format)**
 - Date: 2026-06-13
 - Context: DEVELOPER_TASK_QUEUE smoke tests (e.g. DEV-T-001 character creator)
 - Priority: High
-- Feedback: Smoke tests are too convoluted/cramped — missing context; each validation point should be its own step-by-step test under a category (e.g. DEV-V-001 Character creator step guards → 1. Archetype → Test-001 Choose a Path selectable). Need fool-proof How-To for QA to report PASS/FAIL per test after each build. Write into AI workflow as Build Validation tasks.
+- Feedback: Smoke tests are too convoluted/cramped ? missing context; each validation point should be its own step-by-step test under a category (e.g. DEV-V-001 Character creator step guards ? 1. Archetype ? Test-001 Choose a Path selectable). Need fool-proof How-To for QA to report PASS/FAIL per test after each build. Write into AI workflow as Build Validation tasks.
 - Expected: Granular DEV-V-### suites in BUILD_VALIDATION.md; agents add one-behavior-per-test on user-facing done/partial; DEVELOPER_TASK_QUEUE indexes suites only.
 - Disposition: Implemented 2026-06-13. Created `BUILD_VALIDATION.md` with DEV-V-001 (15 tests); updated AGENT_GUIDE, AI_REQUEST_TEMPLATE, realms-tasks, AGENTS.md, DEVELOPER_TASK_QUEUE index; TASK-356 `build_validation` field.
 
-**Raw Feedback Log — 2026-06-19 (Prod — RLS recursion + tooltips column)**
+**Raw Feedback Log ? 2026-06-19 (Prod ? RLS recursion + tooltips column)**
 - Date: 2026-06-19
-- Context: Production realmsrpg.com — GET /api/characters, /api/tooltips; Supabase logs
+- Context: Production realmsrpg.com ? GET /api/characters, /api/tooltips; Supabase logs
 - Priority: Critical
 - Feedback: After TASK-352 RLS consolidation, `/api/characters` returns 500 with `42P17 infinite recursion detected in policy for relation "campaign_members"`. `/api/tooltips` fails with `column user_profiles.show_tooltips does not exist`. Auth refresh "session missing" on manifest (likely unauthenticated asset requests).
 - Expected: Characters list loads for signed-in users; tooltips API works; no RLS recursion between campaigns and campaign_members.
 - Disposition: Hotfix applied 2026-06-19 (`rls_fix_campaign_members_recursion_2026_06`): SECURITY DEFINER helpers `auth_is_campaign_owner` / `auth_is_campaign_participant`; campaigns SELECT uses owner_id + memberIds only; added `user_profiles.show_tooltips` column. See `sql/supabase-rls-fix-campaign-recursion-2026-06.sql`.
 
-**Raw Feedback Log — 2026-06-20 (Character creator — path descriptions truncated)**
+**Raw Feedback Log ? 2026-06-20 (Character creator ? path descriptions truncated)**
 - Date: 2026-06-20
-- Context: Character creator → Archetype step → Choose a Path
+- Context: Character creator ? Archetype step ? Choose a Path
 - Priority: High
 - Feedback: Path cards show truncated descriptions (`line-clamp-2`); selecting a path does not reveal full text. Users must Confirm, advance to Species, then navigate back to Archetype to read full descriptions.
 - Expected: Selecting a path shows the complete description before confirming; no workaround required.
 - Disposition: Implemented 2026-06-20. Selected path expands in-card; full description panel appears below path grid on selection. Edit Archetype path picker also shows full descriptions (no line-clamp).
 
-**Raw Feedback Log — 2026-06-20 (Character creator vs sheet max HP mismatch)**
+**Raw Feedback Log ? 2026-06-20 (Character creator vs sheet max HP mismatch)**
 - Date: 2026-06-20
-- Context: Character creator Finalize vs character sheet — max HP / HP-EN pool
+- Context: Character creator Finalize vs character sheet ? max HP / HP-EN pool
 - Priority: High
 - Feedback: Max HP during character creation differs from character sheet; unclear if both use admin core rules (`baseHealth`, HP/EN pool).
 - Expected: Creator and sheet use same `calculateMaxHealth` + `calculateHealthEnergyPool` with core rules from `useGameRules()`.
 - Disposition: Implemented 2026-06-20. Creator finalize/validation/store wired to `useGameRules()`; sheet header + derived hooks use `calculateHealthEnergyPool` with rules; `mart_abil` vitality check in `calculateMaxHealth`; save path always recomputes `health.max`/`energy.max` (no stale persisted max). Server/API still uses formula fallbacks when DB rules unavailable.
 
-**Raw Feedback Log — 2026-06-20 (Filter dropdown duplicate options)**
+**Raw Feedback Log ? 2026-06-20 (Filter dropdown duplicate options)**
 - Date: 2026-06-20
-- Context: Codex/Library list filters — SelectFilter dropdowns
+- Context: Codex/Library list filters ? SelectFilter dropdowns
 - Priority: Medium
 - Feedback: Filter dropdowns show duplicate entries for "All", current selection, or placeholder labels (e.g. Mechanics filter showed "Hide Mechanics" twice).
 - Expected: One option per filter value in every filter dropdown.
 - Disposition: Implemented 2026-06-20. Central dedupe in `SelectFilter`, `ChipSelect`, `TagFilter`, `ItemList`; shared `filter-utils.ts`.
 
-**Raw Feedback Log — 2026-06-20 (PathHelpCard duplicate prefix on Powers step)**
+**Raw Feedback Log ? 2026-06-20 (PathHelpCard duplicate prefix on Powers step)**
 - Date: 2026-06-20
-- Context: Character creator → Powers & Techniques step (path mode)
+- Context: Character creator ? Powers & Techniques step (path mode)
 - Priority: Medium
-- Feedback: Message reads "As a Necromancer, As a Necromancer, some recommended techniques…" — duplicated path prefix.
+- Feedback: Message reads "As a Necromancer, As a Necromancer, some recommended techniques?" ? duplicated path prefix.
 - Expected: Single "As a {pathName}," prefix from `PathHelpCard` only.
 - Disposition: Implemented 2026-06-20. Powers step children text is continuation-only (matches Feats/Equipment/Skills steps).
 
-**Raw Feedback Log — 2026-06-25 (Tooltips: Collin's Tippy is canonical)**
+**Raw Feedback Log ? 2026-06-25 (Tooltips: Collin's Tippy is canonical)**
 - Date: 2026-06-25
 - Context: Collin tooltip branches merged into master; long-term tooltip direction
 - Priority: High
 - Feedback: We will eventually FULLY align to only Collin's approach to tooltips, which replaces the current tooltip DB system completely. His code is law; master/Kadin AI-written tooltip code is flawed and inconsistent.
 - Expected: All contextual help uses Tippy + `public/tooltip-text.tsx`; retire `useTooltipByKey`, `ContextHelpTooltip`, `HelpTooltip`, admin tooltips DB/API, and user show-tooltips preference. New work follows Collin's pattern only.
-- Disposition: Policy documented in `AGENT_GUIDE.md` § Tooltips, `FEATURE_INDEX.md`, `REMEDIATION_STATUS_2026-06.md`. **TASK-376** blocked, assignee **Collin Morrison** — AI agents skip; see `DEVELOPER_TASK_QUEUE.md` **COLLIN-001**.
+- Disposition: Policy documented in `AGENT_GUIDE.md` ? Tooltips, `FEATURE_INDEX.md`, `REMEDIATION_STATUS_2026-06.md`. **TASK-376** blocked, assignee **Collin Morrison** ? AI agents skip; see `DEVELOPER_TASK_QUEUE.md` **COLLIN-001**.
 
-**Raw Feedback Log — 2026-06-26 (Creature creator feat requirement filter)**
+**Raw Feedback Log ? 2026-06-26 (Creature creator feat requirement filter)**
 - Date: 2026-06-26
-- Context: Creature creator → Add feat modal → Character & archetype tab
+- Context: Creature creator ? Add feat modal ? Character & archetype tab
 - Priority: High
 - Feedback: Feat list filters out feats whose requirements appear met (skill bonus, defense bonus) but still hides them as unavailable.
 - Expected: Same feat requirement logic as character sheet/creator (`checkFeatRequirements`).
 - Disposition: Implemented 2026-06-26. `AddCreatureFeatModal` now uses shared `checkFeatRequirements` with `defenseVals` from creature defenses (was comparing raw allocation vs required bonus).
 
-**Raw Feedback Log — 2026-06-26 (Creature creator leveled feat stepper)**
+**Raw Feedback Log ? 2026-06-26 (Creature creator leveled feat stepper)**
 - Date: 2026-06-26
-- Context: Creature creator → Feats list
+- Context: Creature creator ? Feats list
 - Priority: Medium
 - Feedback: No way to increase feat level after adding a leveled character/archetype feat; should be easy (step up in feat list).
 - Expected: Level stepper on added library feats; respects requirements and updates feat points.
-- Disposition: Implemented 2026-06-26. LVL column with ValueStepper for multi-level library feats; add-feat merges replace lower levels in same family.
+- Disposition: Implemented 2026-06-26. LVL column with ValueStepper for multi-level library feats; add-feat merges replace lower levels in same family. **2026-08-15 revisit:** sheet Lvl stepper replaced — **TASK-780** option A (expanded Feat Levels chips). Creature creator stepper unchanged. **2026-08-15 revisit:** sheet Lvl stepper replaced — **TASK-780** option A (expanded Feat Levels chips). Creature creator stepper unchanged.
 
-**Raw Feedback Log — 2026-06-26 (Feat/trait custom name + player note)**
+**Raw Feedback Log ? 2026-06-26 (Feat/trait custom name + player note)**
 - Date: 2026-06-26
-- Context: Character sheet → Library → Feats/Traits
+- Context: Character sheet ? Library ? Feats/Traits
 - Priority: Medium
 - Feedback: Allow appending a note to a feat/trait and renaming a feat/trait in a character's feat list, without overwriting the codex name/description. Renames are editable only in edit mode and shown in italics; notes are non-invasive and visible only in the expanded row. Later refined: hide the fields behind a small "Customize" button (collapsed by default) and allow spaces in custom names/notes.
 - Expected: Player-defined `customName` (italic display, codex name preserved) and `note` (expanded-only) persist per character; visible in read-only campaign view; survive feat level-swaps.
 - Disposition: Implemented 2026-06-26 (TASK-377). Lean-save `customName`/`note` on `feats`/`archetypeFeats`; `traitCustomizations` map for traits; collapsible `FeatTraitCustomizationBlock`; trimming only on save (spaces allowed while typing). Audit fixes: `traitCustomizations` added to `SAVEABLE_FIELDS`; level-swap preserves customization; campaign read-only view passes trait map. No Supabase migration (JSONB `characters.data`).
 
-**Raw Feedback Log — 2026-07-02 (Chip taxonomy & metadata display unification)**
+**Raw Feedback Log ? 2026-07-02 (Chip taxonomy & metadata display unification)**
 - Date: 2026-07-02
-- Context: Post–UI-unification review; GridListRow / codex / character sheet / traits
+- Context: Post?UI-unification review; GridListRow / codex / character sheet / traits
 - Priority: High
-- Feedback: (1) Expandable chips use overly intense rounding (pill/oval) that clips words in corners when expanded — should feel like rounded rectangles, not capsules. (2) Descriptor/subtext chips (feat type, tags, requirements, trait kind) are inconsistent: codex chips vs rectangle pills on sheet/library vs floating plain text (e.g. trait "Flaw" italic under description while also in overview). (3) Redundant metadata — category on feats shown in collapsed column and expanded chips; trait type in bar and expanded text. (4) Governing rule: for grid-list/database items, every meaningful DB field must appear in collapsed column headers OR descriptor chips in expanded view (not missing, not duplicated). Example: power energy/TP if not in creator summary columns. Applies to armor, weapons, techniques, etc. (5) Unify to two clear roles — expandable vs non-expandable descriptor — with unique visual difference (opaque descriptor style suggested); simplify codebase, don't multiply overlapping types.
+- Feedback: (1) Expandable chips use overly intense rounding (pill/oval) that clips words in corners when expanded ? should feel like rounded rectangles, not capsules. (2) Descriptor/subtext chips (feat type, tags, requirements, trait kind) are inconsistent: codex chips vs rectangle pills on sheet/library vs floating plain text (e.g. trait "Flaw" italic under description while also in overview). (3) Redundant metadata ? category on feats shown in collapsed column and expanded chips; trait type in bar and expanded text. (4) Governing rule: for grid-list/database items, every meaningful DB field must appear in collapsed column headers OR descriptor chips in expanded view (not missing, not duplicated). Example: power energy/TP if not in creator summary columns. Applies to armor, weapons, techniques, etc. (5) Unify to two clear roles ? expandable vs non-expandable descriptor ? with unique visual difference (opaque descriptor style suggested); simplify codebase, don't multiply overlapping types.
 - Expected: Two chip roles (ExpandableChip + DescriptorChip); rounded-rectangle expandable shape; opaque descriptor style; metadata visibility rule enforced; redundancy removed.
 - Disposition: Plan in `src/docs/ai/CHIP_UNIFICATION_PLAN.md`; **TASK-415** added. VSEA-004 logged.
 
-**Raw Feedback Log — 2026-06-28 (Product Experience Redesign clarifications)**
+**Raw Feedback Log ? 2026-06-28 (Product Experience Redesign clarifications)**
 - Date: 2026-06-28
 - Context: REALMS_PRODUCT_OVERVIEW.md vision doc; sitewide UX overhaul
 - Priority: High
-- Feedback: (1) Fully scrap and rebuild home page as modern TTRPG startup landing page — remove OnboardingTour, welcome tour, Codex/Library CTAs, multi-CTA sprawl; single primary CTA Start Playing; mid-page custom power + weapons/armor CTAs to creators (Layer 1 when built); Discord tertiary. (2) Sitewide UX overhaul one page at a time; creators currently Layer 3 only — migrate to L1/L2/L3; character creator highest priority. (3) Tooltip system depends on Collin TASK-376 Tippy — follow his methods. (4) Post-save: play-together prompt (Discord, campaign invite); optional sheet tour after character created; milestone level-up tutorials (first level-up, first ability point, delta-only per level); tutorials on/off toggle. Remove pre-creation home tour.
+- Feedback: (1) Fully scrap and rebuild home page as modern TTRPG startup landing page ? remove OnboardingTour, welcome tour, Codex/Library CTAs, multi-CTA sprawl; single primary CTA Start Playing; mid-page custom power + weapons/armor CTAs to creators (Layer 1 when built); Discord tertiary. (2) Sitewide UX overhaul one page at a time; creators currently Layer 3 only ? migrate to L1/L2/L3; character creator highest priority. (3) Tooltip system depends on Collin TASK-376 Tippy ? follow his methods. (4) Post-save: play-together prompt (Discord, campaign invite); optional sheet tour after character created; milestone level-up tutorials (first level-up, first ability point, delta-only per level); tutorials on/off toggle. Remove pre-creation home tour.
 - Expected: REALMS_PRODUCT_OVERVIEW.md updated; TASK-387 landing rebuild, TASK-386 creator pilot, TASK-388 post-activation.
-- Disposition: Documented 2026-06-28 in REALMS_PRODUCT_OVERVIEW.md Sections 4, 6, 11; tasks filed.
+- Disposition: Documented 2026-06-28 in REALMS_PRODUCT_OVERVIEW.md Sections 4, 6, 11; tasks filed. **TASK-388 implemented 2026-07-20** (play-together, sheet tour, level-up highlight guides, tutorials toggle; pending-qa DEV-V-029).
 
-**Raw Feedback Log — 2026-06-28 (Validation-first critique — external review)**
+**Raw Feedback Log ? 2026-06-28 (Validation-first critique ? external review)**
 - Date: 2026-06-28
 - Context: REALMS_PRODUCT_OVERVIEW.md; pre-implementation strategy
 - Priority: High
-- Feedback: Doc over-specified before validation (layers, 10 steps, migration, tooltips, landing, post-activation) — risk building theory that breaks in real use. Missing failure modes: users ignore recs, Forge-first, species bounce, TP confusion, speedrun. Layer system needs governance (what qualifies as L1). Landing single-CTA may be too rigid for skeptical explorers — consider light "Explore system first" secondary intent. Section 11 retention shallow vs "why come back tomorrow" (campaign, encounters, progression). Doc is philosophy/direction not validated UX. Next: lock 3 things only, prototype 1 path + species + feats step, let behavior rewrite spec before expanding doc.
+- Feedback: Doc over-specified before validation (layers, 10 steps, migration, tooltips, landing, post-activation) ? risk building theory that breaks in real use. Missing failure modes: users ignore recs, Forge-first, species bounce, TP confusion, speedrun. Layer system needs governance (what qualifies as L1). Landing single-CTA may be too rigid for skeptical explorers ? consider light "Explore system first" secondary intent. Section 11 retention shallow vs "why come back tomorrow" (campaign, encounters, progression). Doc is philosophy/direction not validated UX. Next: lock 3 things only, prototype 1 path + species + feats step, let behavior rewrite spec before expanding doc.
 - Expected: Appendix I in REALMS_PRODUCT_OVERVIEW.md; validation gate on phases; defer doc expansion until prototype.
 - Disposition: Documented 2026-06-28 in REALMS_PRODUCT_OVERVIEW.md Appendix I; Appendix E validation gate note.
 
-**Raw Feedback Log — 2026-07-01 (Standalone creator UX plan — owner review)**
+**Raw Feedback Log ? 2026-07-01 (Standalone creator UX plan ? owner review)**
 - Date: 2026-07-01
 - Context: Product overview; standalone creators (power, technique, item); landing secondary CTAs
 - Priority: High
-- Feedback: (1) Build Layer 1 guided power creator first on parallel route; keep underlying calculator/save code; evolve current advanced builder to L2 face value over time (same pattern as character creator: guided L1 now, Advanced → L2 later). (2) Defer species/creature creators from beginner funnel; empowered technique is afterthought — advanced-only, no L1. (3) Templates from existing official_powers in Supabase (curate by part category); category-first flow with damage/delivery prompts. (4) Layer 1 needs character context (Power vs Powered-Martial, level) for innate threshold filtering; innate toggle with rule constraints (Basic/Reaction, no healing/energy parts, threshold 8/6 at L1). Item guided similar: armament proficiency cap, L1 common rarity note. (5) Owner-authored power creator tooltip copy for future InfoTippy; teaching via tooltips primary; videos/tutorial TBD. (6) Phase 0: god-file decomposition (TASK-380/381). Owner feedback required at each milestone.
-- Expected: REALMS §5.11; POWER_CREATOR_TOOLTIPS_DRAFT.md; TASK-408–413 in AI_TASK_QUEUE.
-- Disposition: Documented 2026-07-01 in REALMS_PRODUCT_OVERVIEW.md §5.11, Appendix E/F; tasks TASK-408–413 filed; tooltip draft in src/docs/human/POWER_CREATOR_TOOLTIPS_DRAFT.md.
+- Feedback: (1) Build Layer 1 guided power creator first on parallel route; keep underlying calculator/save code; evolve current advanced builder to L2 face value over time (same pattern as character creator: guided L1 now, Advanced ? L2 later). (2) Defer species/creature creators from beginner funnel; empowered technique is afterthought ? advanced-only, no L1. (3) Templates from existing official_powers in Supabase (curate by part category); category-first flow with damage/delivery prompts. (4) Layer 1 needs character context (Power vs Powered-Martial, level) for innate threshold filtering; innate toggle with rule constraints (Basic/Reaction, no healing/energy parts, threshold 8/6 at L1). Item guided similar: armament proficiency cap, L1 common rarity note. (5) Owner-authored power creator tooltip copy for future InfoTippy; teaching via tooltips primary; videos/tutorial TBD. (6) Phase 0: god-file decomposition (TASK-380/381). Owner feedback required at each milestone.
+- Expected: REALMS ?5.11; POWER_CREATOR_TOOLTIPS_DRAFT.md; TASK-408?413 in AI_TASK_QUEUE.
+- Disposition: Documented 2026-07-01 in REALMS_PRODUCT_OVERVIEW.md ?5.11, Appendix E/F; tasks TASK-408?413 filed; tooltip draft in src/docs/human/POWER_CREATOR_TOOLTIPS_DRAFT.md.
 
-**Raw Feedback Log — 2026-07-01 (Power creator L1 — spec before build)**
+**Raw Feedback Log ? 2026-07-01 (Power creator L1 ? spec before build)**
 - Date: 2026-07-01
 - Context: Standalone creator task queue; power creator Layer 1
 - Priority: High
-- Feedback: No perfect vision yet for exactly how Layer 1 power creator should work. Do not start implementation tasks (TASK-408–413) until owner locks exact spec.
-- Expected: TASK-414 owner spec; POWER_CREATOR_LAYER1_SPEC.md; TASK-408–413 blocked.
-- Disposition: TASK-414 filed (assignee: owner); TASK-408–413 blocked; REALMS §5.11 spec-lock gate; agent queue rule updated.
+- Feedback: No perfect vision yet for exactly how Layer 1 power creator should work. Do not start implementation tasks (TASK-408?413) until owner locks exact spec.
+- Expected: TASK-414 owner spec; POWER_CREATOR_LAYER1_SPEC.md; TASK-408?413 blocked.
+- Disposition: TASK-414 filed (assignee: owner); TASK-408?413 blocked; REALMS ?5.11 spec-lock gate; agent queue rule updated.
 
-**Raw Feedback Log — 2026-07-01 (Card art — three-layer model)**
+**Raw Feedback Log ? 2026-07-01 (Card art ? three-layer model)**
 - Date: 2026-07-01
 - Context: Choice-card art; creators; user library; long-term image strategy
 - Priority: High
-- Feedback: (1) Art bank — curated preset images per category (armor, weapon, shield, equipment, power, technique, species) that any user can pick when making custom creations. (2) Custom uploads allowed for higher roles (developer, admin) tied to user-owned creations. (3) Official items with images keep image when added to personal library; user and official structures should match (same image_url field) so editing behaves consistently.
-- Expected: REALMS §5.0.3 documents three layers (official/codex, art bank, privileged user upload) + library copy parity; schema plan for user_* image_url; TASK-415 for implementation.
-- Disposition: Documented 2026-07-01 in REALMS §5.0.3, SUPABASE_SCHEMA user-library parity notes; TASK-415 filed; TASK-405 follow-up updated.
+- Feedback: (1) Art bank ? curated preset images per category (armor, weapon, shield, equipment, power, technique, species) that any user can pick when making custom creations. (2) Custom uploads allowed for higher roles (developer, admin) tied to user-owned creations. (3) Official items with images keep image when added to personal library; user and official structures should match (same image_url field) so editing behaves consistently.
+- Expected: REALMS ?5.0.3 documents three layers (official/codex, art bank, privileged user upload) + library copy parity; schema plan for user_* image_url; TASK-415 for implementation.
+- Disposition: Documented 2026-07-01 in REALMS ?5.0.3, SUPABASE_SCHEMA user-library parity notes; TASK-415 filed; TASK-405 follow-up updated.
 
-**Raw Feedback Log — 2026-07-03 (Guided ancestry skip flaw)**
+**Raw Feedback Log ? 2026-07-03 (Guided ancestry skip flaw)**
 - Date: 2026-07-03
-- Context: Guided character creator → Ancestry → optional flaw step
+- Context: Guided character creator ? Ancestry ? optional flaw step
 - Priority: High
-- Feedback: "Skip — no flaw" button doesn't work, or works but doesn't actually skip by selecting it or moving on.
+- Feedback: "Skip ? no flaw" button doesn't work, or works but doesn't actually skip by selecting it or moving on.
 - Expected: Skip clears flaw choice, records explicit decline, and advances to the next chapter (Abilities).
-- Disposition: Fixed 2026-07-03 in guided ancestry-step — skip now sets `selectedFlawId: ''`, advances via `nextSubStep()`, and `isTaskFilled` treats empty string as resolved.
+- Disposition: Fixed 2026-07-03 in guided ancestry-step ? skip now sets `selectedFlawId: ''`, advances via `nextSubStep()`, and `isTaskFilled` treats empty string as resolved.
 
-**Raw Feedback Log — 2026-07-03 (Guided skills step UX)**
+**Raw Feedback Log ? 2026-07-03 (Guided skills step UX)**
 - Date: 2026-07-03
-- Context: Guided character creator → Skills step vs refined earlier steps
+- Context: Guided character creator ? Skills step vs refined earlier steps
 - Priority: High
-- Feedback: Skills step feels like advanced creator table (prof marker, ability/bonus/value columns, floating Add Skill); skill point display unlabeled and not centered; doesn't mesh with path/species/abilities/feat steps. Want simplified list: bonus with ± around it, X to remove, labeled centered point budget.
+- Feedback: Skills step feels like advanced creator table (prof marker, ability/bonus/value columns, floating Add Skill); skill point display unlabeled and not centered; doesn't mesh with path/species/abilities/feat steps. Want simplified list: bonus with ? around it, X to remove, labeled centered point budget.
 - Expected: Layer 1 guided-native skill list; path skill chips in help card; browse-all link; single point counter; advanced creator unchanged.
-- Disposition: TASK-419 implemented 2026-07-03 — `GuidedSkillsPanel`, `SkillSourceChip` path toggles, `PathHelpCard.actions`.
+- Disposition: TASK-419 implemented 2026-07-03 ? `GuidedSkillsPanel`, `SkillSourceChip` path toggles, `PathHelpCard.actions`.
 
-**Raw Feedback Log — 2026-07-03 (Guided creator feat restriction notices)**
+**Raw Feedback Log ? 2026-07-03 (Guided creator feat restriction notices)**
 - Date: 2026-07-03
-- Context: Guided character creator → Archetype Feats / Character Feat steps
+- Context: Guided character creator ? Archetype Feats / Character Feat steps
 - Priority: Medium
-- Feedback: When a feat has restrictions (uses per recovery, state feat), show a brief notifier on the choice card — e.g. state feats explain Quick Action / Enter State, 1-minute duration, and uses per recovery; non-state feats with uses show "X times per Y Recovery".
+- Feedback: When a feat has restrictions (uses per recovery, state feat), show a brief notifier on the choice card ? e.g. state feats explain Quick Action / Enter State, 1-minute duration, and uses per recovery; non-state feats with uses show "X times per Y Recovery".
 - Expected: Inline notice on guided feat choice cards when `state_feat` and/or `uses_per_rec` apply.
-- Disposition: Implemented 2026-07-03 — `getFeatRestrictionNotice`, `GuidedFeatRestrictionNotice` on archetype-feats-step and character-feat-step.
+- Disposition: Implemented 2026-07-03 ? `getFeatRestrictionNotice`, `GuidedFeatRestrictionNotice` on archetype-feats-step and character-feat-step.
 
-**Raw Feedback Log — 2026-07-04 (Guided creator cards, species overview, skill chips)**
+**Raw Feedback Log ? 2026-07-04 (Guided creator cards, species overview, skill chips)**
 - Date: 2026-07-04
-- Context: Guided character creator — choice cards, species overview (ancestry step), species skills
+- Context: Guided character creator ? choice cards, species overview (ancestry step), species skills
 - Priority: High
-- Feedback: (1) Choice cards should have uniform height; show Read more only when description exceeds the preview area. (2) Species overview should let users pick species size when multiple sizes exist, with clear explanation. (3) Expanded species skill chips span the full page width — too wide for short descriptions.
+- Feedback: (1) Choice cards should have uniform height; show Read more only when description exceeds the preview area. (2) Species overview should let users pick species size when multiple sizes exist, with clear explanation. (3) Expanded species skill chips span the full page width ? too wide for short descriptions.
 - Expected: Fixed-height card bodies with overflow-based Read more; size SegmentedControl on overview when `sizes[]` has 2+ options (blocks Continue until chosen); species skill chips expand within a grid column, not full page width.
-- Disposition: Implemented 2026-07-04 — `GuidedChoiceCard` line-clamp + ResizeObserver overflow; `SpeciesRevealPanel` size choice + `selectedSize` on guided draft; `SummaryChipList` `layout="grid"` on species skills.
+- Disposition: Implemented 2026-07-04 ? `GuidedChoiceCard` line-clamp + ResizeObserver overflow; `SpeciesRevealPanel` size choice + `selectedSize` on guided draft; `SummaryChipList` `layout="grid"` on species skills.
 
-**Raw Feedback Log — 2026-07-05 (Guided equipment / loadout step)**
+**Raw Feedback Log ? 2026-07-05 (Guided equipment / loadout step)**
 - Date: 2026-07-05
-- Context: Guided character creator → Equipment (loadout) step vs REALMS §5.7 / §5.9
+- Context: Guided character creator ? Equipment (loadout) step vs REALMS ?5.7 / ?5.9
 - Priority: High
-- Feedback: Equipment step is unfinished vs product overview. Loadouts were added to path DB but current UI is card grid showing only "X items" — not enough. Want branching like archetype feat step + expandable list like skills step so users can inspect individual items per loadout. Pick among loadouts with TP as limiter (Layer 2 for mix/match). Show unarmed prowess only when loadout/path recommends it — no clutter otherwise. Request honest review of goals, DB, and codebase before implementation.
+- Feedback: Equipment step is unfinished vs product overview. Loadouts were added to path DB but current UI is card grid showing only "X items" ? not enough. Want branching like archetype feat step + expandable list like skills step so users can inspect individual items per loadout. Pick among loadouts with TP as limiter (Layer 2 for mix/match). Show unarmed prowess only when loadout/path recommends it ? no clutter otherwise. Request honest review of goals, DB, and codebase before implementation.
 - Expected: Role-based loadout kits with visible item detail; weapon-then-armor sub-flow optional; Layer 1 invisible TP (pre-validated kits); Layer 2 customize with TP budget; conditional unarmed prowess; admin TP validation on publish.
-- Disposition: TASK-422 Phase 1 implemented 2026-07-05 — enriched loadout cards + expandable item rows + save name resolution.
+- Disposition: TASK-422 Phase 1 implemented 2026-07-05 ? enriched loadout cards + expandable item rows + save name resolution.
 
-**Raw Feedback Log — 2026-07-06 (Guided choice card Read more on select)**
+**Raw Feedback Log ? 2026-07-06 (Guided choice card Read more on select)**
 - Date: 2026-07-06
-- Context: Guided character creator — choice cards (feats, species, paths, etc.)
+- Context: Guided character creator ? choice cards (feats, species, paths, etc.)
 - Priority: Medium
 - Feedback: When selecting a card that has Read more, the section should auto-expand. Currently selection leaves the Read more link visible instead of showing full copy.
 - Expected: Selecting a card expands its description (and any expandedExtra content); deselecting collapses back to preview.
-- Disposition: Implemented 2026-07-06 — `GuidedChoiceCard` syncs `expanded` to `selected` for all cards, not only those with `expandedExtra`.
+- Disposition: Implemented 2026-07-06 ? `GuidedChoiceCard` syncs `expanded` to `selected` for all cards, not only those with `expandedExtra`.
 
-**Raw Feedback Log — 2026-07-06 (Archetype ability tag dark mode)**
+**Raw Feedback Log ? 2026-07-06 (Archetype ability tag dark mode)**
 - Date: 2026-07-06
-- Context: Guided creator abilities step — `AbilityScoreGrid` path-ability pill ("Archetype Ability" / Power / Martial)
+- Context: Guided creator abilities step ? `AbilityScoreGrid` path-ability pill ("Archetype Ability" / Power / Martial)
 - Priority: Medium
-- Feedback: In dark mode the archetype ability tag above the highlighted ability is almost invisible — transparent/low contrast.
+- Feedback: In dark mode the archetype ability tag above the highlighted ability is almost invisible ? transparent/low contrast.
 - Expected: Tag readable in dark mode with solid tinted background and light archetype text (WCAG AA).
-- Disposition: Implemented 2026-07-06 — `PathAbilityLabel` uses solid `bg-*-light` + `text-*-fg` + `border-*-border` (removed `dark:bg-*-light/40` transparency).
+- Disposition: Implemented 2026-07-06 ? `PathAbilityLabel` uses solid `bg-*-light` + `text-*-fg` + `border-*-border` (removed `dark:bg-*-light/40` transparency).
 
-**Raw Feedback Log — 2026-07-06 (Guided loadout grid spacing / header alignment)**
+**Raw Feedback Log ? 2026-07-06 (Guided loadout grid spacing / header alignment)**
 - Date: 2026-07-06
-- Context: Guided creator → Equipment (loadout) step — kit item tables + Mix and match gear
+- Context: Guided creator ? Equipment (loadout) step ? kit item tables + Mix and match gear
 - Priority: Medium
 - Feedback: Layer 1 kit rows have too much space between name and type/stats; Mix and match column headers don't line up with row columns.
 - Expected: Tighter proportional columns on kit tables; customize ListHeader reserves selection-column chrome so headers align with selectable rows.
-- Disposition: Implemented 2026-07-06 — fixed rem column tracks in `guided-loadout-item-table.tsx`; customize grid includes inline selection column so ListHeader and GridListRow share five tracks.
+- Disposition: Implemented 2026-07-06 ? fixed rem column tracks in `guided-loadout-item-table.tsx`; customize grid includes inline selection column so ListHeader and GridListRow share five tracks.
 
-**Raw Feedback Log — 2026-07-09 (VTT migration auth helper mismatch)**
-- Date: 2026-07-09
-- Context: VTT V1 SQL migration — `sql/vtt-v1-tabletop.sql`
-- Priority: High
-- Feedback: Running the VTT migration failed with `ERROR: 42883: function public.auth_is_campaign_participant(text) does not exist`.
-- Expected: VTT migration should work on databases where campaign auth helpers have moved out of the public schema.
-- Disposition: Fixed 2026-07-09 — VTT migration now creates private VTT-scoped campaign auth helpers and uses them in VTT RLS policies.
+**Raw Feedback Log ? 2026-07-07 (State feat recovery notice)**
+- Date: 2026-07-07
+- Context: Guided creator feat choice cards ? state feat info warnings
+- Priority: Low
+- Feedback: State feats refresh on full recovery, not partial; info warnings on state feat cards should say Full Recovery (not Partial).
+- Expected: `getFeatRestrictionNotice` always uses Full Recovery for state feat uses text; matches GAME_RULES ? recovery and sheet full-recovery handler.
+- Disposition: Implemented 2026-07-07 ? `feat-restriction-notice.ts` forces Full when `state_feat`; unit tests added.
 
-**Raw Feedback Log — 2026-07-09 (Campaign create RLS during VTT smoke test)**
-- Date: 2026-07-09
-- Context: Local VTT testing against production database — campaign creation
-- Priority: High
-- Feedback: Creating a campaign failed with `42501` / `new row violates row-level security policy for table "campaigns"`.
-- Expected: Authenticated users can create campaigns where `owner_id = auth.uid()` and receive the inserted campaign id.
-- Disposition: Added `sql/supabase-campaigns-owner-rls-hotfix-2026-07.sql` to restore owner SELECT/INSERT/UPDATE/DELETE policies and documented the troubleshooting path.
-
-**Raw Feedback Log — 2026-07-09 (VTT realtime latency)**
-- Date: 2026-07-09
-- Context: Virtual tabletop — cross-player scene updates
-- Priority: High
-- Feedback: "There is about a second delay on the virtual tabletop before any changes made by a user are reflected on the other players' tabletops. Is there a way to make it so all players can view changes in real time?"
-- Expected: Tabletop token moves, scene tool changes, pings, and move requests appear in other campaign participants' open tabletop sessions without manual refresh or a full-scene reload delay.
-- Disposition: TASK-424 implemented 2026-07-09 — `useTabletopRealtime` now merges Supabase Realtime payloads directly into tabletop query cache with player-safe visibility filtering; server refetch fallback remains for signed map URLs and enemy-resource visibility setting changes.
-
-**Raw Feedback Log — 2026-07-10 (Encounter duplicate campaign characters)**
-- Date: 2026-07-10
-- Context: Encounters — adding campaign characters to combat/skill/mixed encounters
-- Priority: High
-- Feedback: "In an encounter, I can add the same character more than once. Please disallow this functionality. No duplicate characters should be in a given encounter."
-- Expected: A campaign character can only appear once in a given encounter combatant list or skill participant list; add-all, campaign-character modal, and duplicate-card paths must not create duplicate linked characters.
-- Disposition: Implemented directly 2026-07-10 — campaign-character source IDs are filtered in encounter add flows, already-added rows are disabled in the modal, linked combatant duplicate action is hidden, and encounter API/local persistence rejects duplicate campaign-character entries.
-
-**Raw Feedback Log — 2026-07-10 (Campaign encounter visibility for players)**
-- Date: 2026-07-10
-- Context: Encounters — campaign-linked encounter persistence and non-RM visibility
-- Priority: High
-- Feedback: RM created a campaign, another user joined by code, RM started an encounter and added both the RM character and the other user's character. Both users left and came back the next day; the non-RM user had no encounters listed, while the RM could still see and edit the encounter.
-- Expected: Clarify whether campaign-linked encounters are RM-only or should appear for campaign members; if shared, non-RM users should be able to find the relevant encounter again without receiving unsafe RM-only edit/delete permissions.
-- Disposition: Added TASK-425 — campaign-linked encounter visibility for players.
-
-**Raw Feedback Log — 2026-07-16 (VTT ping expiry)**
-- Date: 2026-07-16
-- Context: Virtual tabletop — player/RM pings
+**Raw Feedback Log ? 2026-07-11 (Guided species size SegmentedControl clarity)**
+- Date: 2026-07-11
+- Context: Guided character creator ? Species overview ? size choice section
 - Priority: Medium
-- Feedback: "Actually, make the pings expire after 5 seconds. We don't need a manuall delete"
-- Expected: Pings placed on the VTT disappear automatically after five seconds; no manual delete affordance is needed.
-- Disposition: Implemented directly 2026-07-16 — tabletop canvas filters ping actions by a 5-second lifetime and schedules their visual expiry.
+- Feedback: Size buttons have no clear distinction until selected ? no border or separation; looks odd. Likely the shared SegmentedControl; that universal style may need to be clearer.
+- Expected: Unselected size options (and SegmentedControl segments site-wide) read as distinct clickable choices with visible borders/surfaces before selection; selected state remains primary.
+- Disposition: Implemented 2026-07-11 ? `SegmentedControl` idle segments use `bg-surface` + `border-border-light`; track gets outer border (TASK-425).
 
-**Raw Feedback Log — 2026-07-24 (VTT token deletion)**
+**Raw Feedback Log ? 2026-07-11 (Guided ancestry Skip ? no flaw card fit)**
+- Date: 2026-07-11
+- Context: Guided character creator ? Ancestry ? optional flaw step
+- Priority: Medium
+- Feedback: "Skip ? no flaw" doesn't look like it fits with the flaw choice cards; make it fit better. Screenshots + fix.
+- Expected: Skip is a peer GuidedChoiceCard in the same grid (title + short description, selectable like flaws); footer Next pick advances. No orphan secondary button under the grid.
+- Disposition: Implemented 2026-07-11 ? skip rendered as `GuidedChoiceCard` in flaw grid; select sets `selectedFlawId: ''` (TASK-426).
+
+**Raw Feedback Log ? 2026-07-11 (Add modal ? browse when budget exhausted)**
+- Date: 2026-07-11
+- Context: Guided character creator ? Skills ? Browse all skills (add modal); applies to any add modal at capacity
+- Priority: Medium
+- Feedback: When you've already added too much (e.g. skill points spent), greying out all selections makes it hard to read through skills when curious. Instead allow reading and even selecting; show a warning that you don't have enough skill points ? remove or decrease a skill bonus to add more.
+- Expected: Add modals stay fully readable at zero/remaining budget; selection allowed with clear over-budget warning; confirm blocked until under limit / points freed.
+- Disposition: Implemented 2026-07-11 ? TASK-427 soft `maxSelections` in `UnifiedSelectionModal`; skill warning copy.
+
+**Raw Feedback Log ? 2026-07-11 (Guided archetype feats ? swap like ancestry)**
+- Date: 2026-07-11
+- Context: Guided character creator ? Archetype Feats (and similar choice-card steps)
+- Priority: Medium
+- Feedback: Odd difference vs other steps ? selecting an archetype feat greys out other feat cards and blocks selection. Should work like ancestry traits: let you swap among choices even when you already have the required amount.
+- Expected: At-capacity choice cards stay fully interactive; picking another feat swaps into the selection (ancestry-style replace), not grey-out / hard lock. Unified selection grammar across guided steps.
+- Disposition: Implemented 2026-07-11 ? TASK-428 swap-on-select (no grey-out) in archetype-feats-step.
+
+**Raw Feedback Log ? 2026-07-11 (Guided feat steps ? Layer 2)**
+- Date: 2026-07-11
+- Context: Guided character creator ? Archetype Feats + Character Feat
+- Priority: High
+- Feedback: Add Layer 2 to feat selection pages ? same button location/design as abilities go-deeper; view all feats (modal or in-step expand); same style/location button to go back. Follow product overview + shared modules.
+- Expected: GuidedLayerNav expand/collapse; L2 filtered ranked browse; selections persist when returning to L1.
+- Disposition: Implemented 2026-07-11 — TASK-429 GuidedFeatsBrowsePanel in-step L2 (not modal). Superseded 2026-07-19 — TASK-565 GuidedFeatsL2Modal (UnifiedSelectionModal), matching skills/loadout/powers L2 grammar.
+
+**Raw Feedback Log ? 2026-07-15 (Guided choice-card deep-dive / ?Layer 2 Cards?)**
+- Date: 2026-07-15
+- Context: Guided character creator ? Path + Species choice cards (progressive disclosure); product overview ?see as much as you want?
+- Priority: High
+- Feedback: Across the guided creator, Layer 1 uses simple edible cards with inline expand/read-more for longer descriptions or warnings. For some cards we also need a pathway that expands into an information modal so the user can go deeper on that specific card ? opened only via an explicit ?more details? control, never by selecting/choosing the card. Species: more details ? modal with species overview (same info as post-select overview before traits) including language, avg height/weight, full description, etc., clean and well-separated; below overview, expandable sections for trait / characteristic / flaw options with hover tooltips explaining how many of each you pick. Path: more details ? overview (description, proficiency, primary/secondary recommended abilities, recommended skills) plus expandable sections for archetype feats, character feats, weapons (incl. unarmed prowess when relevant), armor, equipment loadout, techniques, powers, etc. Expanding option sections shows elongated cards / GridListRow lists (uses, energy/range/damage, handedness, DR, crit, ability req, property chips, expand-for-more) matching guided UX?not legacy dense modals. Remodel reused advanced-creator pieces globally to match home/guided product rework. Do not ship all at once ? phased tasks, implement ? audit ? next phase.
+- Expected: Explicit ?More details? on relevant GuidedChoiceCards; read-only deep-dive modals (species + path first); shared shell + GridListRow option lists; naming distinct from catalog Layer 2 (GuidedLayerNav ?See more options?).
+- Disposition: Tasks TASK-432?435 (phased) ? **all done 2026-07-15** (shell ? species modal ? path modal ? shared `DetailOptionList` + builders; epic audit fixes CollapsibleSection a11y/touch, removed Phase-1 demo shell). Human QA: DEV-V-013 T016?T019.
+
+**Raw Feedback Log ? 2026-07-15 (Guided deep-dive polish + global GridListRow + copy rules)**
+- Date: 2026-07-15
+- Context: Guided creator ? Path / Species More details; also sitewide GridListRow + agent writing rules
+- Priority: High (guided now); High/Medium (global follow-ups)
+- Feedback:
+  (1) Path overview: do not show proficiency the path does not use (Martial ? no Power Proficiency 0); cleaner single line e.g. Archetype Power Proficiency 2. Path abilities: Archetype Ability {Name} plus secondary recommended ability. Recommended Abilities (not scores); game terms capitalized. Recommended Skills as expandable chips with descriptions. Rename Path notes ? Path Options with intro about choices from this Archetype Path during creation.
+  (2) Deep-dive section tooltips: remove redundant tip titles that repeat the section name.
+  (3) Expanded option lists / GridListRow (universal): if a fact would be a column, it must remain a column or become a self-describing chip (Damage Reduction X, Range, Damage/type, Action Type, Duration, etc.). For these deep-dive options: remove Stats header; Name + Description only; hide column headers for cleaner lists.
+  (4) Agent writing: no hyphens in user-facing AI text; avoid stock AI phrasing; capitalize game terms only in game-term context; ban non-rules vocab (Ability Score for Abilities UI, Check, Save, Class, DC/Difficulty Class ? use Difficulty Score / Skill Roll per GAME_RULES). Need game-term list for agents; global doc + audit work separate from guided fix-now.
+- Expected: Guided path/species deep-dives polished now; file global GridListRow policy task + terminology/copy guide task; ask owner clarifying questions before broad audits.
+- Disposition: Guided polish ? **TASK-436 done**; global GridListRow ? **TASK-437 done**; agent copy/game terms ? **TASK-438 done** (GAME_RULES Terminology refined). Human QA: DEV-V-013-T020; DEV-V-016-T007/T008.
+
+**Raw Feedback Log ? 2026-07-15 (answers on Path Abilities, Path Options, terms, GridListRow)**
+- Date: 2026-07-15
+- Context: Follow-up Q&A on TASK-436?438
+- Priority: High
+- Feedback:
+  (1) Powered-Martial: call out Power Ability and Martial Ability specifically; both are Archetype Abilities / both primary (no primary/secondary split for those).
+  (2) Path Options placement: agent decide from goals/context.
+  (3) Em dash ban only (`?`); hyphens fine.
+  (4) TASK-437: Library ? Codex ? sheet ? add modals; dense browse keeps column headers when space allows; labeled chips for deep-dive-style lists.
+  (5) TASK-438: expand/refine existing GAME_RULES + agent pointers; do not create parallel docs.
+  (6) Score = Bonus + 10; Bonus not modifier; soft whitelist/blacklist (no Spell/AC/Race/Class/Check/Save/DC as product terms) without extremely limiting agents.
+- Expected: Update guided Powered-Martial labels; Path Options above catalogs; lock 437/438 notes; refine Terminology section.
+- Disposition: Implemented guided + Path Options move; TASK-438 done; TASK-437 done after sitewide re-audit (creators, creature-creator, admin equipment, sheet cost badge).
+
+**Raw Feedback Log ? 2026-07-15 (Guided traits uses + equipment kit removal / remodel)**
+- Date: 2026-07-15
+- Context: Guided character creator ? ancestry trait choice cards; Equipment loadout (weapon ? armor ? gear)
+- Priority: High
+- Feedback:
+  (1) Traits with uses should show uses-per-recovery info when selected/expanded on guided choice cards, exactly like feats; share components/code with feat uses notices (no duplication).
+  (2) Equipment step numbering stays 1 / 2 / 3 even when a path has no armor and/or no weapon options ? numbering should only reflect visible phases.
+  (3) Remove all quick kits (Layer 1 and everywhere): no quick-kit frontend or backend/database functionality. Users specifically select weapons/armor from path options when those steps apply.
+  (4) Weapon step: cards with description chips (ability requirement, handedness, damage and type, other properties) plus currency cost; expand via More details so the same chips become expandable chips with property descriptions (progressive disclosure). Currency remaining visible across all three equipment phases.
+  (5) Armor step: same card/chip/expand pattern as weapons.
+  (6) Equipment (gear) step: ?Add all recommended equipment? button; chip-style cards; users can pick individual recommended items and quantities without opening Layer 2; Layer 2 still available to browse all common gear. This is the only kit-like affordance (bulk add recommended), and it is optional.
+- Expected: Shared limited-uses notice on trait cards; no quick kits; dynamic equipment phases from path options; remodeled weapon/armor/gear L1 UX as above.
+- Disposition: TASK-441 (trait uses), TASK-442 (remove kits FE+BE ? **done**, SQL applied + audit cleaned), TASK-443 (phase visibility + card remodel ? done).
+
+**Raw Feedback Log ? 2026-07-15 (Choice-card More details vs Read more)**
+- Date: 2026-07-15
+- Context: Guided creator ? choice cards with both deep-dive and inline expand (Path / Species)
+- Priority: Medium
+- Feedback: For cards with both **More details** and see more / Read more, only show **More details** after the card is expanded (see more selected).
+- Expected: Progressive disclosure ? collapsed offers Read more only; expanded (or selected) then shows More details for the deep-dive modal. Cards with More details but no overflow still show More details collapsed.
+- Disposition: Implemented in GuidedChoiceCard (`showDetails` gated on `expanded || !canInlineExpand`).
+
+**Raw Feedback Log ? 2026-07-15 (Guided Skills copy ? no fixed point count)**
+- Date: 2026-07-15
+- Context: Guided creator Skills step copy
+- Priority: Medium
+- Feedback: Do not hardcode ?3 Skill Points? in user-facing copy. Base is often 3, but species can raise the budget (e.g. 4 or 5). Use clear non-specific language; let the current/max counter show the real numbers.
+- Expected: Skills step description explains free Species Skills + spending Skill Points without asserting a total; PointStatus remains source of truth.
+- Disposition: Updated `guided-creator-copy.ts` skills.description (+ related guided copy accuracy pass).
+
+**Raw Feedback Log ? 2026-07-15 (Selection grammar + Layer 1 choice vs automation)**
+- Date: 2026-07-15
+- Context: Product vision ? guided creator cards vs GridListRow; reconcile REALMS with recent guided equipment feedback
+- Priority: High (docs / north-star)
+- Feedback:
+  (1) GuidedChoiceCards are a quieter Layer?A presentation of the same entities as GridListRow: name, description, image; Read more deepens copy and key facts (state feat, uses); More details opens a read-only info modal (entity Layer?A deepen), analogous to expanded GLR + chips. Catalog ?See more options? is a separate ladder (more choices). Unify commonalities / fact builders so card ? GLR feel like one system sitewide.
+  (2) Owner no longer wants extreme L1 automation: even Layer 1 should require some real user choice (not ?accept path and barely touch middle chapters?). Especially equipment: no weapon/armor quick kits; pick individually from curated path cards. Optional gear ?Add all recommended? is fine. Reconcile product overview with TASK-442?443 and this session without losing prior progress (deep-dive, phases, fact chips).
+- Expected: REALMS ?3 / ?5 updated (selection grammar + L1 choice principle); equipment kits removed from vision language; AGENT_GUIDE / phased equipment spec aligned.
+- Disposition: Docs revised 2026-07-15 ? `REALMS_PRODUCT_OVERVIEW.md` ?3.1 + ?5.0/?5.7; `GUIDED_EQUIPMENT_PHASED_SPEC.md`; `AGENT_GUIDE.md` pointer. Powers/techniques L2 + visible confirm filed as **TASK-444**.
+
+**Raw Feedback Log ? 2026-07-15 (Stable expand / click-open click-close)**
+- Date: 2026-07-15
+- Context: Expandable chips (and expand-in-place UI generally) ? pointer stability on toggle
+- Priority: High (sitewide UX standard)
+- Feedback: When you click open to expand something, you should be able to click again without moving the mouse to close it. Expanded chips often reflow / move to make room for other chips, so the click target jumps. Prefer expanding and moving *other* chips without changing the vertical location of the expanded chip. Should be a standard for all expandable things sitewide for clean, intuitive UI.
+- Expected: Expand keeps the opened control?s toggle under the cursor; siblings may reflow; document + implement sitewide (chips first, then other expanders).
+- Disposition: Logged; curated ?6; filed **TASK-445**. Confirmed as UX best practice (spatial stability / Fitts for toggles); GridListRow already closer to this; ChipGroup + `fullWidthWhenExpanded` is the main offender.
+
+**Raw Feedback Log ? 2026-07-15 (Guided flaw Skip card shrinks when selected)**
+- Date: 2026-07-15
+- Context: Guided creator ? Ancestry ? Take a flaw? ? Skip ? no flaw card
+- Priority: Medium
+- Feedback: When you click the Skip ? no flaw card in its selected mode it shrinks instead of retaining height, which is odd and not intuitive; other cards don?t do that.
+- Expected: Selected Skip card keeps the same height as other choice cards in the grid.
+- Disposition: Implemented ? GuidedChoiceCard always applies density `cardCollapsed` min-height (selected/expanded no longer drops it). DEV-V-013-T009 updated.
+
+**Raw Feedback Log ? 2026-07-15 (Equipment L1 glitchy / cluttered vs other guided steps)**
+- Date: 2026-07-15
+- Context: Guided creator ? Loadout after kit removal remodel
+- Priority: High
+- Feedback: Equipment step feels glitchy (e.g. ?2 weapons selected? with missing cards) and overly chrome?d vs path/species/feats. Want card-first like other chapters: selection ring on cards is enough; quieter phase copy/currency; few collapsed tags with depth under More details; See more options for catalog; fix orphan selection vs card grid desync.
+- Expected: Drop Your selection summary; quiet chrome; quieter collapsed chips; orphan prune / keep selected path cards visible.
+- Disposition: Implemented as **TASK-446** (done).
+
+**Raw Feedback Log ? 2026-07-15 (Equipment L1 chrome, PointStatus, cards, chips)**
+- Date: 2026-07-15
+- Context: Guided creator ? Loadout after TASK-446
+- Priority: High
+- Feedback:
+  (1) Remove the weapon/armor/gear progress bar at the top ? other in-step phases only use Next/Back; the bar clutters and pulls focus.
+  (2) Currency should use shared `PointStatus` (like abilities/skills), not plain ?Xc remaining?; write out **Currency** (full term). L1/L2 should not abbreviate game rules/terms for new users.
+  (3) No ?Path pick? badges on weapon/armor ? implied by curated cards.
+  (4) Currency desc chip shows 0 instead of real cost (bug).
+  (5) Weapon/armor cards: image, title, Description, plus desc chips.
+  (6) Weapon desc chips: non-mechanic property names (Cleave, Topple, Finesse, ?); chips with descriptions hover for tooltip.
+- Expected: Progress strip gone; PointStatus Currency; fixed costs; description + property chips with hover tips; no Path pick badge; L1/L2 terminology norm.
+- Disposition: Implementing as **TASK-447**.
+
+**Raw Feedback Log ? 2026-07-15 (Equipment dual titles)**
+- Date: 2026-07-15
+- Context: Guided creator ? Loadout
+- Priority: Medium
+- Feedback: Equipment shows two titles (?Your equipment? + per-phase Weapons/Armor/Gear). Should feel like ancestry: one page-specific title per screen, not a chapter title plus a phase title.
+- Expected: GuidedStepLayout title/description = current equipment phase only; no nested h3 phase header.
+- Disposition: Implemented with TASK-447 (done); one-title-per-phase follow-up applied 2026-07-15.
+
+**Raw Feedback Log ? 2026-07-15 (Equipment L2 browse columns wrong)**
+- Date: 2026-07-15
+- Context: Guided creator ? Loadout ? See more options (weapon/armor/gear modal)
+- Priority: High
+- Feedback: Add/browse modal columns and rows are wrong / misaligned (?none of the right stuff?).
+- Expected: Headers match row values; weapons/armor/gear show the same useful columns as advanced equipment browse (Damage / Damage Reduction / Currency / Training Points), not broken TYPE/STATS mapping.
+- Disposition: Fixed ? per-phase L2 headers aligned with row columns; remove stale TYPE/STATS mismatch.
+
+**Raw Feedback Log ? 2026-07-15 (Card disclosure labels: See more vs More details)**
+- Date: 2026-07-15
+- Context: Guided choice cards / equipment chip expand wording
+- Priority: Medium (docs + copy consistency)
+- Feedback: Stop inventing specialist verbs like ?Property details?. Use blankets: **More details** for things that open a modal or show lots of chip details; **See more** when the card itself will contain the more info (truncated descriptions, chips, etc.). Record in card usage docs.
+- Expected: See more / See less = in-card deepen; More details / Less details = modal or heavy chip disclosure; See more options = catalog L2 only. Update REALMS ?3.1 + AGENT_GUIDE + copy.
+- Disposition: Implemented ? See more / More details blankets in REALMS ?3.1, AGENT_GUIDE, FEATURE_INDEX, choiceCard copy; removed Property details / Hide properties / Read more defaults.
+
+**Raw Feedback Log ? 2026-07-15 (Guided L2 Currency column shows multiplier)**
+- Date: 2026-07-15
+- Context: Guided creator ? Equipment ? See more options GridListRow Currency column
+- Priority: High
+- Feedback: Currency in the GLR is not calculating properly ? looks like currency multiplier instead of actual Currency cost (as elsewhere). Proper constraints / protocol for GLR not followed.
+- Expected: Currency column = market cost via `calculateCurrencyCostAndRarity` (same as Library OfficialItemList), not raw `costs.totalCurrency` (property C sum). L1 chips and spend math match.
+- Disposition: Fixed ? `rowFromOfficial` + `resolveItemUnitCost` use Library GLR protocol; catalog `gold_cost` is market Currency.
+
+**Raw Feedback Log ? 2026-07-15 (Audit: equipment L2/L1 budget + disclosure consistency)**
+- Date: 2026-07-15
+- Context: Owner asked for audit of recent guided equipment / disclosure work
+- Priority: High
+- Feedback: Look for oversight, overcomplication, shared-use gaps, rule compliance; fix issues.
+- Expected: Replacement budgets reclaimable; L1 Currency gated; See more for in-card deepen; shared cost helpers; docs/tests match shipped UI.
+- Disposition: Fixed ? L2 gear/TP cross-phase reclaim; L1 currency gates; disclosure labels; DRY cost; type filter parity; T025/spec/copy cleanup.
+
+**Raw Feedback Log ? 2026-07-15 (No Flaw card too wide)**
+- Date: 2026-07-15
+- Context: Guided creator ? Ancestry ? Take a flaw? ? No Flaw card
+- Priority: Medium
+- Feedback: No Flaw is a long card dimensionally; it doesn?t fit well with the other cards.
+- Expected: Peer card in the same grid footprint as Flaw options (no full-row span).
+- Disposition: Fixed ? removed `sm:col-span-2` from ancestry No Flaw GuidedChoiceCard.
+
+**Raw Feedback Log ? 2026-07-15 (GridListRow description duplicate on expand)**
+- Date: 2026-07-15
+- Context: GridListRow / guided creator DetailOptionList (and all expandable list rows)
+- Priority: Medium
+- Feedback: When description is the only thing visible in the non-expanded list item, expanding feels redundant ? description still shows on the non-expanded header portion AND in the expanded panel.
+- Expected: Best practice from research (NN/g accordion, Carbon expandable tables, progressive disclosure): header keeps identity (name); expanded panel owns the full description. Do not show truncated teaser and full text at the same time.
+- Disposition: Implemented in GridListRow ? while default expanded body shows `description`, hide `key: 'description'` teaser from desktop columns, mobile summary, and flex stats; description-only layouts span name across vacated tracks.
+
+**Raw Feedback Log ? 2026-07-15 (Guided creator: detail Select/Close + step-nav landing)**
+- Date: 2026-07-15
+- Context: Guided creator ? species / archetype path more-details; chapter rail vs Back
+- Priority: High
+- Feedback:
+  (1) In more-details for species and archetype path, bottom-right button should be **Select**, bottom-left **Close**, so users can select the entity they are viewing without exiting, scrolling, clicking the card, then Continue.
+  (2) When going back via the step navigator/progress, land on the **first** sub-step of that target step (abilities ? Foundation = path selection, not species; equipment ? Ancestry = species overview, not flaw/trait). Back button should stay sequential (last screen before).
+- Expected: Detail modals Close | Select; chapter rail / jump = first sub-screen; footer Back = sequential history.
+- Disposition: Implemented as **TASK-448** (done) ? Close|Select on path/species detail; navigationIntent first vs sequential for chapter rail vs Back.
+
+**Raw Feedback Log ? 2026-07-15 (Guided choice cards: space below info notices)**
+- Date: 2026-07-15
+- Context: Guided creator ? feat (and other) choice cards with restriction info boxes
+- Priority: Medium
+- Feedback: Feat cards with info boxes have too much vertical space below the info box when expanded.
+- Expected: Expanded cards with restriction/uses notices should sit tight under the callout (no empty reserved disclosure row / body floor gap).
+- Disposition: Fixed in GuidedChoiceCard ? drop empty action-row reservation when expanded with no controls; drop body min-height when expanded unless More details is shown; slightly tighter notice spacing. Applies to all guided notices (feats, traits, L2 browse).
+
+**Raw Feedback Log ? 2026-07-15 (Guided creator mobile UX audit)**
+- Date: 2026-07-15
+- Context: Guided creator ? all steps (mobile)
+- Priority: High
+- Feedback: Do an audit of mobile UX/UI on all parts of the guided creator. Specific issues: Intelligence is crammed in its box on mobile; archetype ability pill text spills over on the abilities page.
+- Expected: Full-pass mobile concerns logged; owner-reported AbilityScoreGrid issues root-caused and queued for fix; other medium/low findings filed.
+- Disposition: Audit only initially ? **TASK-452 done** (AbilityScoreGrid mobile) + **TASK-453 done** (footer completion hints stack above actions on phone).
+
+**Raw Feedback Log ? 2026-07-15 (Guided creator: retain choices, skills L2, secondary ability pill)**
+- Date: 2026-07-15
+- Context: Guided Creator
+- Priority: High
+- Feedback:
+  (1) Retain choices made while working through the creator so going back a step does not forget selections (traits, feats, skills, etc.).
+  (2) Skills screen: **Browse all Skills** should sit below recommended skills (L1/L2 pattern), not attached to the skill list itself (feels like a primary CTA).
+  (3) Abilities: secondary ability should have a clear pill like the Archetype Ability pill on the archetype ability tile.
+- Expected: Back/rail navigation preserves prior picks unless an upstream choice changes and invalidates them; Skills uses curated recommendations then Layer 2 browse; secondary ability has an analogous grid pill.
+- Disposition: Implemented as **TASK-451**. Audit follow-up: restored feedback log encoding; path change resets ability scores (not only mode); shared `resolveDistinctSecondaryAbility`; secondary pill uses `text-primary-subtle-fg`.
+
+**Raw Feedback Log ? 2026-07-15 (Guided creator: card regressions, Loadout resources, fact-chip grammar, and Equipment polish)**
+- Date: 2026-07-15
+- Context: Guided Creator ? No Flaw, Archetype Ability, Loadout weapons/armor/Equipment, powers/techniques, and Layer 2 add modals
+- Priority: High
+- Feedback (verbatim):
+  No flaw shrinks when selected instead of retaining normal card height like other cards.
+
+  Archetype ability pill overlaps ability name due to archetype ability pill wrapping around and expanding pill height
+
+  Equipment step:
+  do not show expandable chips on weapons/armor cards, only show the currency descriptor chip, and put that after the name instead of at the bottom outside of the expanded description area, there should be nothing outside/under the see more/more detail/see less section of the cards (can be added as a rule to docs where relevant).
+
+  What chips to show in layer 1 and how: Only display mechanically relevant chips such as weapon ability requirement, for weapon ability requirement just say "Ability Requirement X+" instead of "Weapon (or Armor) Ability Requirement X+", handedness (don't say Handedness: Two-handed" just say "Two-handed", for damage do "XdY type damage" instead of "damage XdY type", the Strength attack chip is good, but should instead be "Strength Weapon" for weapons without range or finesse, for finesse weapons just put "Agility Weapon" instead of displaying finesse, and for ranged weapons without finesse "Acuity Weapon". Use this same logic for most cards logic, so the sentense structure sounds clean when a header/item list row mechanic is reduced to a desc chip, we should create shared behavior for these use cases so it's consistent across the codebase not just in these card examples (for all cases where our GLR or Cards need to hold important mechanical details for weapons, armor, powers, techniques, etc, how to format for each when it needs to be a desc chip rather than as outlined in a column header, etc). For other properties that aren't mechanically shown, show as descriptor chips only ie instead of making it "Graze: Description" make it a desc chip "Graze" with a small un-invasive tooltip i icon in the chip you can hover to see the description instead of needing to expand the desc chip, since those don't expand anyways.
+
+  We can add to docs where needed that desc chips can use this universal and common style for tooltips for those desc chips if they have more details but we don't want them expanding.
+
+  Required checks before moving forward equipment step: Do not require choosing anything when on the steps of equipment, since you can choose to not have a weapon/armor.
+
+  I can't find a way to escape the training point requirements across the weapon/armor/technique/power steps, it's a limiting factor that even in L1 needs to be accounted for to stop users from overspending TP. For this reason it needs to be tracked alongside currency for the equipment step (clear tooltip available to explain what the resource is), and also present in the technique/power screens. Because of this weapons and armor also need a desc chip next to currency for Training Points cost.
+
+  Add Modal Display: When picking an item NOT in your path loadout, it should still load in as a card on the current screen, i.e. if you pick a different weapon then options present to you, it should show that weapon as a selected card, you can tag path recommended ones with a desc if needed to differentiate the different cards, just like we do for skills. this way a user can see clearly what they've selected. This is currently most integrated just ensure it is properly.
+
+  true for weapons, armor, and eventually techniques and powers (since the techniques and powers screens/steps will work like the weapon and armor steps quite a bit.
+
+  Mechanic capitalization rules: certain things should be capitalized especially mechanics (in mechanic desc chips/glr column titles/item collapsed views, and so on) things such as range, action type (ie Basic Reaction instead of basic reaction) spaces = Spaces, etc and so on.
+
+  Rename equipment step 'Loadout' since it's both equipment and powers and techniques,
+
+  Rename Adventuring gear screen to Equipment, and on this page: Descriptions for equipment cards shouldn't be repeated as a desc chip that says "Use -repeated description inserted here-, currency should be located consistency across cards in the loadout section, quantity when selected is listed twice, it should only be listed once and instead of saying "Quantity for X" just say "Quantity" (the title adjacent directly to the increase/decrease buttons). I don't like how the quantity selector in the add adventuring gear modal looks, idk why, look into that and fix.
+- Expected:
+  Preserve card geometry; prevent Archetype Ability pill/name collisions; establish shared compact-fact grammar and capitalization; make Loadout picks optional while enforcing visible Currency and Training Points budgets; keep catalog selections visible as selected cards; rename Loadout/Equipment surfaces; and remove duplicated/misplaced Equipment card content and quantity controls.
+- Disposition:
+  Cross-referenced against TASK-444 and shipped TASK-446/TASK-447/TASK-452. New work filed as TASK-454?TASK-461; TASK-444 remains the prerequisite for powers/techniques Layer 2 browse. The repeated No Flaw and Archetype Ability reports are treated as regression verification, not assumed fixed by prior tasks. **TASK-455 done 2026-07-15:** No Flaw keeps action-row + compact min-height when selected; Archetype/Secondary pills use short single-line copy + tile top padding (full terms on aria-label).
+
+**Raw Feedback Log ? 2026-07-15 (Guided creator: Finalize / Meet your hero overhaul)**
+- Date: 2026-07-15
+- Context: Guided Creator ? Your Hero (reveal / finalize step)
+- Priority: High
+- Feedback (verbatim summary):
+  This is the big reveal ? satisfying end step showing what you made. Need simultaneous as much information as possible (showing work and choices) and as little as possible (hide unchosen, redundant, or over-seen info). Should feel like the cherry on top.
+
+  Specifics: (1) Can't add name or portrait at the top ? take Meet your hero header UI and allow clicking/adding portrait there, and naming the hero there (not buried at bottom). (2) Your Build ? remove all edit hooks; users can click steps to go back. (3) Don't display Type (martial/power); species and path matter; don't show martial ability as its own card since it's already a pill in abilities. (4) Audit full step for clutter, meaning, clarity, redundancy. (5) Powers & Techniques section title should say Techniques or Powers alone when that's all you have. (6) Identity filling out should be at the top along with Health/Energy allocation; clean up Health/Energy text noise. (7) Appearance description is one field; also check for background/general description in DB and expose those options. (8) Age/height/weight inputs should show grey placeholder prompts with species average height/weight and adulthood/lifespan for age.
+- Expected: Reveal feels like a fulfilling cherry-on-top; hero header owns name+portrait; identity + HP/EN near top; build summary is show-off not edit surface; no Type/redundant ability cards; dynamic powers title; species avg placeholders; appearance + description saved.
+- Disposition: Implementing as **TASK-462**.
+
+**Raw Feedback Log ? 2026-07-15 (Guided Loadout: weapon/armor/equipment/power fact chips + steppers)**
+- Date: 2026-07-15
+- Context: Guided creator ? Loadout (weapons / armor / Equipment) and powers & techniques; shared steppers sitewide
+- Priority: High
+- Feedback (verbatim):
+  Weapon/Equipment/Armor/technique/power screens/step feedback guided creator:
+  1. For weapon cards do not include the training points with desc chips in L1 cards just the part/property name
+  2. Ability requirements on armor and weapon should be displayed in desc chips as Abilityname Requirement X+ only ? e.g. Strength Requirement 1+ NOT Ability Requirement Weapon strength requirement 1+ (capitalization wrong, redundant, huge)
+  3. The word Damage (for damage) should be capitalized. Weapon Damage (the property) is a mechanic and need not be its own chip since already covered by XdY Type Damage desc chip ? find and fix similar oversights. Same for mechanic Damage Reduction vs Damage Reduction desc chip. General rule: do not repeat if already represented. Armor Base never needs to be user-facing on armor (base mechanic for calculation only).
+  4. Tooltip is: would they look better inside the chips/cards/sections they're connected to, or outside/beside them? Owner feels nicer inside (inside desc chip, inside Training Points resource tracker). Need best-practice advice + practical reasoning; inspect current UI patterns; recommend and implement preferred pattern if clear.
+  5. Equipment screen: too much vertical space; Quantity title should be adjacent not far from quantity steppers
+  6. Add modal See more options equipment: quantity steppers push aside the list row ? feels wrong. Prefer steppers working within the row, e.g. - X + on each row; add by increasing value instead of add THEN increase.
+  7. Globally/sitewide: prefer sleeker/cleaner/less colorful steppers like skill bonus steppers, not red/green circles. Update design UI / ValueStepper toward that preferred style universally for consistent shared UI.
+- Expected: Ability Requirement chips as Abilityname Requirement X+; Damage capitalized; no redundant mechanic property chips (Weapon Damage / DR property / Armor Base); L1 named props name-only (no TP on those chips); Quantity adjacent on Equipment L1; L2 quantity in-row / quantity-first; InfoTippy inside chips and TP tracker; ValueStepper matches sleek skill style sitewide.
+- Disposition: Filed TASK-464?468 (dependency-ordered). Implementing P0/P1 in this session: compact-facts grammar + suppressions (464), tip-inside placement (465), Equipment L1 Quantity layout (466), UnifiedSelectionModal in-row quantity-first (467), ValueStepper sleek default (468).
+**Raw Feedback Log ? 2026-07-15 (Characters list: portrait aspect + remove search/ListHeader)**
+- Date: 2026-07-15
+- Context: Characters page (pre-character sheet) ? `/characters`
+- Priority: High
+- Feedback (verbatim):
+  Character Page (Pre-Character Sheet): Character portraits aren't displaying in the expected aspect ratio as expected by the portrait cropping on this page, they are shorted horizontally to fit more cards but this is unneeded, also the GLR header doesn't fit will here, and we don't need a search bar for characters either, we can remove all of that and it's functionality because most people don't need to search quickly their own characters.
+- Expected: Portrait cards match crop aspect (1:1); cards not packed into an overly dense horizontal grid; no ListHeader / search chrome on the characters list.
+- Disposition: Implementing as **TASK-469**.
+
+**Raw Feedback Log ? 2026-07-15 (Guided creator Loadout: Techniques & Powers steps)**
+- Date: 2026-07-15
+- Context: Guided creator Loadout ? Techniques & Powers steps
+- Priority: High
+- Feedback (verbatim themes):
+  (1) Technique and power steps are essentially identical workflows; shore them up to work exactly like weapons/armor/equipment in Loadout for cards, how mechanics display as desc chips, etc. (see previous TASK-454?468 / Loadout feedback).
+
+  (2) Techniques and Powers must account for Training Point costs like equipment did.
+
+  (3) Separate choose innate powers vs powers, with different lists for each; technique and power steps need their Layer 2 modal included.
+
+  (4) Add/See more modal = official powers or techniques depending on step. For non-innate powers and techniques: include Realms official library items filtered by energy cost so energy cost ? max theoretical energy the character could have at L1 (core rules health-energy allocation + archetype ability ? usually 18?22). If calculating that is too complex, filter out energy cost > 20 as fallback.
+
+  (5) Innate powers (power users): on power step, select innate powers recommended by path (path data enriched with recommended innate powers from admin path creation). Innate powers must equal/be ? innate threshold; user should choose enough to fully use all innate energy. See character sheet/docs for innate definition/calcs; use shared components. Paths will have recommended powers + recommended innate powers. Core rules set innate energy; other eligibility rules enforced on admin path creation (another task) so recommended innates are ? threshold.
+
+  (6) Much of this may already be in REALMS_PRODUCT_OVERVIEW or elsewhere ? cite what exists.
+
+  (7) See more options for techniques/powers/innate powers must open a modal like other See more options ? not add all the cards (far too many).
+
+  (8) Desc chips for technique/power cards should match armor/weapons positioning/grammar: e.g. Action Type chip shows only "Quick Action" not "Action Type Quick Action" ? note in rules/docs as for GLR/Card desc chips (align with prior compact-facts / chip grammar work).
+- Expected: Powers/Techniques L1 cards match Loadout weapon/armor anatomy and chip grammar; shared Training Points continue to gate picks; innate vs regular powers are separate curated lists with Layer 2 UnifiedSelectionModal (not dump-all cards); L2 catalogs filter by theoretical L1 max energy (or ?20 fallback); path-recommended innates fill Innate Energy within threshold; Action Type desc chips are value-only; admin path authoring validates innate eligibility separately.
+- Disposition:
+  Cross-ref: TASK-444 done (L1 cards + interim in-step L2); TASK-456 done (shared TP); TASK-458 done (L2?L1 promotion); TASK-463 not-started (GLR modal bridge ? **updated**); chip grammar TASK-454/461/464 done for equipment (Action Type still prefixed ? revise). New work: **TASK-470** (L1 card/chip parity + Action Type value-only docs), **TASK-471** (innate vs powers L1 split), **TASK-472** (innate energy fill + threshold), **TASK-473** (admin path recommended innates + eligibility). TP already shipped ? verify only. No implementation this pass beyond queue/docs filing. Spec audit 2026-07-15: Innate Energy = progression Threshold?Pools (not getInnateEnergyMax); Action Type chip vs column; 463?471 after 470; Appendix G on TASK-473; browse-panel removal AC on TASK-463.
+**Raw Feedback Log ? 2026-07-16 (Character sheet: Unarmed Prowess column order)**
+- Date: 2026-07-16
+- Context: Character sheet ? Archetype ? Weapons / Unarmed Prowess
+- Priority: Medium
+- Feedback (verbatim themes):
+  Unarmed Prowess shows Range on the far right, shifting Attack and Damage left. Align Unarmed with weapons columns: Name | Range | Attack | Damage.
+- Expected: Unarmed row cells match QuickWeaponsTable order; Attack/Damage not displaced; no regression to unarmed roll math or proficient display.
+- Disposition: Implemented as **TASK-483** (done).
+**Raw Feedback Log ? 2026-07-16 (Character sheet: weapon property density)**
+- Date: 2026-07-16
+- Context: Character sheet ? Archetype ? Weapons (martial example with multiple named properties); shared QuickWeaponsTable
+- Priority: Medium
+- Feedback (verbatim themes):
+  Weapon named properties under the name are a cramped inline `? a ? b ? c` string. Prefer one `? Property` per line under the name (layout A). Apply globally via QuickWeaponsTable (character + creature consumers). Do not switch to descriptor chips this pass (chips remain TASK-461).
+- Expected: Stacked bullets under name; columns Name | Range | Attack | Damage stable; readable at desktop and ~360px; Unarmed alignment not regressed.
+- Disposition: Implemented as **TASK-486** (done). Shields/armor siblings shared the identical join and use the same helper. Creature stat block currently uses WeaponsListSection (chips), not QuickWeaponsTable. Post-impl audit: stacked divs (a11y), T009 tightened for Unarmed `trailingRows` + creature chip path; live screenshot QA still owner (`verification_status: unverified`).
+**Raw Feedback Log ? 2026-07-16 (Character sheet skills play-view chrome)**
+- Date: 2026-07-16
+- Context: Character sheet ? Skills (normal view vs section pencil edit); Advanced creator Skills allocation
+- Priority: Medium
+- Feedback (verbatim themes):
+  In normal (non-edit) view: sub-skills keep ? + italic but same text color as base skills; no source suffixes like `(species)` or path labels; species proficient dots match other proficient dots. In section edit mode, source markers and locked/species affordances may remain. Do not weaken lock behavior when editing. Creator/allocation may still show source labels.
+- Expected: Clean play view; edit keeps locked/species identifiable and non-removable/non-toggleable; allocation source labels unchanged.
+- Disposition: Implemented as **TASK-485** (done). Gated via shared `SkillRow` `isEditing` (table). Post-impl audit: FEATURE_INDEX + guide usage note, DEV-V-009-T008, suite header/index anchor, DESIGN_INTENT + ? `aria-hidden`.
+**Raw Feedback Log ? 2026-07-16 (GLR column header sort in add modals)**
+- Date: 2026-07-16
+- Context: Guided creator add modals (and other GLR + ListHeader surfaces)
+- Priority: High
+- Feedback (verbatim themes):
+  All instances of GLR with column headers should allow ascending/descending sorting ? e.g. guided creator add modals for Action Type, Energy, Training Points, Name, etc. May already be reflected in rules.
+- Expected: Clicking any labeled data column header (desktop) or Sort by (mobile) toggles asc/desc; spacer/action columns stay non-sortable; rules/docs reinforce the default.
+- Disposition: Implemented as **TASK-488** (done). Flipped guided L2 + peer add-modal columns to sortable; strengthened guide/02 + realms-unification; DEV-V-013-T058. **Audit 2026-07-16:** closed holes ? creature armament RANGE/ATTACK/DAMAGE sort keys, Admin enhanced header/row key alignment, Codex DESCRIPTION + entity-library/stat-block Description sortable.
+
+**Raw Feedback Log ? 2026-07-16 (Stepper unification)**
+- Date: 2026-07-16
+- Context: Sitewide ? steppers; reference = guided creator skills bonus steppers
+- Priority: High
+- Feedback (verbatim themes):
+  Across the codebase are many different types of steppers; unify them all into one UI style that can be used universally ? the skills bonus steppers in the guided creator (non-invasive borders, non-opaque, clear bold -/+). Re-write the rules regarding steppers UI and create a shared component for them all while removing other iterations. Props such as size/color OK but as unified as possible.
+- Expected: One shared chrome + component family; docs/rules updated; parallel hand-rolled / colored-button steppers removed.
+- Disposition: Implemented as **TASK-487** (ADR-0002). `ValueStepper` / Dec/Inc + `QuantitySelector` wrapper; `.btn-stepper` matches guided skills; health/energy button tints and `.btn-stepper-danger`/`success` removed.
+
+**Raw Feedback Log ? 2026-07-16 (Guided finish ? character sheet)**
+- Date: 2026-07-16
+- Context: Guided character creator ? Your Hero / Finish
+- Priority: High
+- Feedback (verbatim themes):
+  When finishing your character it should take you to the finished character after hitting finish and it confirming it finished properly; it also shouldn't clear the guided character creator until it confirms the character was successfully created.
+- Expected: Keep wizard draft until create returns success; then navigate to `/characters/{id}` (play-together may appear first, then View character ? sheet). On failure, draft remains.
+- Disposition: Implemented as **TASK-489** (done). Root cause: `resetCreator()` remounted PathStep before navigation and dropped the play-together success handoff.
+
+**Raw Feedback Log ? 2026-07-16 (Site footer Play / Create links)**
+- Date: 2026-07-16
+- Context: Site footer ? Play and Create sections
+- Priority: Low
+- Feedback (verbatim themes):
+  In the site footer is the Play section, should have Characters, Campaigns, and Encounters. Learn is fine. Create should be Power Creator, Armament Creator, and Technique Creator.
+- Expected: Play = Characters, Campaigns, Encounters; Create = Power Creator, Armament Creator, Technique Creator; Learn unchanged.
+- Disposition: Implemented in `footer-copy.ts` (removed Create a Character; renamed Item Creator ? Armament Creator; added Encounters + Technique Creator).
+
+**Raw Feedback Log ? 2026-07-16 (Guided save proficiencies + custom-creator parity)**
+- Date: 2026-07-16
+- Context: Guided character creator save vs working custom creator
+- Priority: High
+- Feedback (verbatim themes):
+  When a character is saved, like the custom creator, the proficiencies need to be saved also. Also, analyze all the functions of the custom creator to ensure we are using those good/best practices for character creation data, saving, progress saving, error handling, etc. We made the guided creator to improve UX/UI of creators and implement our product overview, but it doesn't change the fact that it's a replacement of a working tool, so look at the working tool (custom creator) to ensure we follow best practice for our database, code, character sheet creation, and so on.
+- Expected: Guided save includes required proficiencies; save/progress/error/handoff practices match custom creator where applicable.
+- Disposition: Implemented as **TASK-490** (done). Root gap: `buildGuidedCharacterPayload` omitted `proficiencies` while custom `getCharacter` calls `buildRequiredProficiencies`. Also aligned status, currentHealth/Energy, library names, and `?returnTo=`. Intentional guided differences kept: lighter pre-save validation (name + HP/EN), play-together modal.
+
+**Raw Feedback Log ? 2026-07-16 (Realms Image Library / multi-category admin media)**
+- Date: 2026-07-16
+- Context: Admin tooling; choice-card art; REALMS ?5.0.3; TASK-405 / TASK-417
+- Priority: High
+- Feedback (verbatim themes):
+  Need a place where admins can upload and manage database images. Same size/file-type restrictions and crop-to-aspect as other images. Images should be designated (and designations altered) into different sections ? e.g. a species image may also be usable for creatures, so it appears in the Realms image library picker for users creating creatures and for admins adding creatures to the Realms Library. Same for weapons, armor, shields, powers, techniques, equipment, empowered techniques. Upload may happen on the admin image page or when creating/publishing an entity (e.g. power with a mushroom image) ? either way the image lands in the library and is designated in that category. Must be easy to multi-designate, rename, etc. Entities with images: species, creatures, weapons, armor, shields, powers, techniques, equipment, empowered techniques. Without images: feats, skills, archetypes, parts, properties, creature feats, traits.
+- Expected: Shared Realms Image Library (catalog + multi-category tags) + admin management UI + picker in creators/admin editors; entity `image_url` parity; supersedes narrow ?art bank only? framing of TASK-417.
+- Disposition: Filed TASK-491?500 (2026-07-16). Architect gate TASK-491 done ? ADR-0003 + REALMS ?5.0.3 / schema / art-guide. Implement from TASK-492 when asked.
+
+**Raw Feedback Log ? 2026-07-16 (Realms Image Library ? owner clarifications)**
+- Date: 2026-07-16
+- Context: Follow-up to Realms Image Library epic; TASK-491 questions
+- Priority: High
+- Feedback (decisions):
+  (1) Binding ? one master file in the shared bank; reusable in many places without duplicating instances; use best practice. (2) Delete ? warn listing all uses; support replace so all uses point to the new image; hard-delete without replace clears the image everywhere. (3) One image bank with name + multi-category ?libraries? tags (e.g. dagger ? equipment+weapon+shield+technique); pickers filter by those tags for users and admins. (4) Empowered techniques share power/technique designations (no separate tag). (5) Enhanced items ? no images for now; yes eventually. (6) Upload into bank ? admin only (admin Images page, or admin publishing via creators to Realms Library ? auto name from entity + auto category tag). (7) Pick from bank ? guests and all signed-in users; species/creature bank images also pickable for profile picture and character portrait. (8) Admin UI ? `/admin/images` card on admin dashboard.
+- Expected: Tasks/ADR encode master-asset + `image_id` refs, replace/delete-everywhere, category matrix, guest-readable picker, portrait integration, deferred enhanced images.
+- Disposition: Locked into TASK-491?500 (2026-07-16). TASK-491 Architect done ? ADR-0003 + REALMS ?5.0.3 / schema / art-guide rewrite. Implement from TASK-492 when asked.
+
+**Raw Feedback Log ? 2026-07-16 (Hide opposite Library tab on create)**
+- Date: 2026-07-16
+- Context: Character sheet Library tabs after create
+- Priority: Medium
+- Feedback (verbatim themes):
+  For when a character is made as only a martial/only power character initially, hide the opposite power/technique tab by default using our already existing hide mechanics (can be unhidden by user in edit mode as normal) ie if I make a level 1 power character, when I get to the character sheet, have the powers tab hidden, and vice versa.
+- Expected: Power-only ? Techniques hidden by default; Martial-only ? Powers hidden; unhide via existing edit-mode eye toggle. (Example wording said "powers tab" for a power character; interpreted as hide the opposite tab per the first sentence.)
+- Disposition: Implemented as **TASK-501** (done).
+
+**Raw Feedback Log ? 2026-07-16 (Sheet techniques Energy duplicates)**
+- Date: 2026-07-16
+- Context: Character sheet Library ? Techniques (and Powers)
+- Priority: Medium
+- Feedback (verbatim themes):
+  Character sheet techniques (and possibly powers) tab: the only section for energy listed should be the far right energy spend button (right now there are duplicate headers/columns, a static energy value and the roll button).
+- Expected: Powers/Techniques show energy cost only via the far-right spend RollButton; no static Energy column/header beside it.
+- Disposition: Implemented as **TASK-502**. Techniques still had Energy column + rightSlot button; powers already spend-button-only. Removed sheet Energy *value* column; cost is far-right spend button under an **Energy** ListHeader label (`rowChrome.rightSlotLabel`). Audit: campaign view omits noop `onUse*`; mapper regression tests; play-vs-browse docs.
+
+**Raw Feedback Log ? 2026-07-16 (Guided creator feat names are IDs)**
+- Date: 2026-07-16
+- Context: Guided character creator ? save ? character sheet Feats
+- Priority: High
+- Feedback (verbatim themes):
+  Created a new character on guided creator, the feat names are ID's instead of actual feat names.
+- Expected: Archetype and character feats show Codex display names on the sheet (and in saved character data), not raw ids.
+- Disposition: Implemented as **TASK-503**. Root cause: `buildGuidedCharacterPayload` set `name: String(id)`. Now resolves names from `codexFeats`; sheet enrichFeat also prefers Codex when stored name equals id.
+
+**Raw Feedback Log ? 2026-07-17 (Expandable chips full-width, vertical stability)**
+- Date: 2026-07-17
+- Context: Global/shared ExpandableChip behavior and documentation
+- Priority: High
+- Feedback (verbatim): Regarding expanding chip functionality, we have it so the chip remains in the same place so you don't have to move around, and while that is useful it looks bad, so instead of having it remain in the same place vertically and horizontally, just have it remain in the same place vertically, pushing all chips to below it while it's expanded, you mouse will always be inline vertically but the chip will move to be left aligned fully taking the width instead of being pushed to the side by previous chips. This is a global/shared component/logic and needs to be clear in the documentation and all use cases updated in one.
+- Expected: Shared expansion logic preserves the chip?s vertical row, left-aligns it at full group width, and moves same-row/later chips below; no call-site forks.
+- Disposition: Implemented as **TASK-504** through `ExpandableChip` + shared full-row layout logic; docs and DEV-V-021 updated.
+
+**Raw Feedback Log ? 2026-07-17 (Your Hero feat chip color)**
+- Date: 2026-07-17
+- Context: Guided character creator ? Your Hero ? Your Build
+- Priority: Low
+- Feedback (verbatim):
+  for the your hero step in guided creator I notice the archetype feats are yellow, that's unneeded, make them the same color.
+- Expected: Archetype and character feat chips use the same neutral list color in the Your Hero summary.
+- Disposition: Implemented in `guided-reveal-summary.tsx`; archetype feats now use the standard `list` chip variant.
+
+**Raw Feedback Log ? 2026-07-17 (Your Hero loadout equipment ID chips)**
+- Date: 2026-07-17
+- Context: Guided character creator ? Your Hero ? Your Build ? Loadout
+- Priority: Low
+- Feedback (verbatim):
+  for the your hero step in guided creator I notice the loadout has weapons/armor displayed nicely, but then after it has tiny chips that read [YxZ] or something like that, likely equipment ID's and quantitiy values, simply don't display equipment in the your build section since they mostly care about weapons and armor.
+- Expected: Loadout section in the Your Build summary shows only weapons/armor (and Unarmed Prowess), not general equipment chips.
+- Disposition: Implemented in `guided-reveal-summary.tsx`; `loadoutItems` no longer includes `draft.equipment`, so only armaments + Unarmed Prowess render.
+
+**Raw Feedback Log ? 2026-07-17 (Power/Technique attack mode ? drop weapon tying)**
+- Date: 2026-07-17
+- Context: Power / Technique / Empowered Technique creators; Add Weapon mechanic parts
+- Priority: High
+- Feedback (verbatim):
+  I updated the add weapon part(s) to only cost a base energy cost, no more/less or options increases. Adding a weapon to a Power/Technique should only be 3 options now, 1. No Weapon/Attack 2. Unarmed Attack 3. Weapon Attack, 1. adds the no weapon mechanic (which I can't seem to find in the database?) 2. adds nothing 3. adds the creator specific add weapon part with no option to increase the costs.
+
+  With this in mind we don't need weapons tied to techniques/powers anymore, no TP to option calculation, no ids tied, etc.
+
+  this is a large cleanup and refine task
+- Expected: Creators expose three attack modes only; no library weapon picker / TP scaling / weapon IDs on saves. Display uses attack mode labels. Cleanup across creators, calcs, columnar mapping, lists.
+- Disposition: Implemented as **TASK-507** (Architect proceed from owner). Shared `lib/attack-mode.ts`; creators use 3-mode Attack select; display column renamed Attack; dead creator-weapon picker/options/persistence removed. Owner QA: DEV-V-026. **DB follow-up applied 2026-07-20:** zeroed Add Weapon option levels + stripped tied `payload.weapon` on official/user techniques; `weapon_name` rewritten to Attack labels (`sql/zero-add-weapon-option-levels-applied.sql`).
+
+**Raw Feedback Log ? 2026-07-17 (Sheet TP header + expandable part chips)**
+- Date: 2026-07-17
+- Context: Character sheet ? Library ? Techniques (powers/parts globally on sheet)
+- Priority: High
+- Feedback (verbatim):
+  Technique tab column header should say TP not Training PTs (same for powers if TP is listed)
+
+  I expanded a technique on the character sheet (likely a global issue) but some things had trainingpoints listed in parts and proficiencies as a descriptor chip, with training points, and an info tooltip, this is not the way we want the character sheet items to work, instead parts/proficiencies should have all expandable chips with some listing TP, the rule for not having TP abbrivated and other things not abbreviated was only true for guided creator so expandable chips are better off having TP: # instead of it written out entirely, there's an odd mix of the expandable chips and the desc chips with i loaded in, the desc chips with i are for the guided creator or L1 views, the character sheet is a flowing non-creator that is always in a state of beingable to delve deeper, it's L1/2/3 aren't as strictly enforced since it's an environment a user works around in
+- Expected: Sheet Techniques column = TP; Parts & Proficiencies = expandable chips with TP: N (not descriptor + InfoTippy / spelled-out Training Points). Full-term Training Points stays for guided creator L1/L2.
+- Disposition: Implemented as **TASK-505**.
+
+**Raw Feedback Log ? 2026-07-17 (Inventory summary horizontal layout)**
+- Date: 2026-07-17
+- Context: Character sheet ? Library ? Inventory
+- Priority: Low
+- Feedback (verbatim):
+  Inventory tab: Currency and armament proficiency can be on the same line instead of vertically spaced, separated horizontally instead of vertically.
+- Expected: Currency stays left while Armament Proficiency is right-aligned in the same wrapping summary row, separated by a vertically centered divider at the row midpoint.
+- Disposition: Implemented in `library-section.tsx` with equal flex sides and one shared divider (no absolute/dual-divider hack); Currency input has `aria-label`.
+
+**Raw Feedback Log ? 2026-07-17 (GLR name vs type descriptor tag)**
+- Date: 2026-07-17
+- Context: Character sheet ? Feats/Traits (GridListRow compact rows with type badges)
+- Priority: Medium
+- Feedback (verbatim):
+  character sheet: GLR names get truncated with smaller pages, it should first hide the trait/feat type descriptor tag to avoid this.
+- Expected: When the name column is tight, hide the inline trait/feat type descriptor tag before truncating the name; tag remains available in the expanded row. Prefer column-width (container) over viewport breakpoints so narrow sheet panels on large screens behave correctly.
+- Disposition: Implemented in `grid-list-row.tsx` ? name column is `@container`; compact inline badges use `hidden @[13rem]:inline-flex`. QA: DEV-V-009-T014.
+
+**Raw Feedback Log ? 2026-07-17 (character sheet toast console error)**
+- Date: 2026-07-17
+- Context: Character sheet open / auto-proficiency sync
+- Priority: High
+- Feedback (verbatim):
+  Console error: Cannot update ToastProvider while rendering CharacterSheetPage. Stack points to showToast in toast.tsx from character sheet flow (useSheetAutoProficiencies / applyAutoProficiencies inside setCharacter updater).
+- Expected: No React setState-while-rendering warning; over-cap proficiency warning toast still appears when TP exceeds limit.
+- Disposition: Implemented as **TASK-508** ? pure `computeAutoProficiencies` + deferred toast (`queueMicrotask`) after commit (not TASK-504; TASK-504 is expandable chips).
+
+**Raw Feedback Log ? 2026-07-17 (Character sheet feedback batch ? coordinator)**
+- Date: 2026-07-17
+- Context: Character sheet ? parallel agent pass (toast, equip, collapse, archetype polish, header vitals, techniques columns)
+- Priority: High (mixed)
+- Feedback (themes):
+  - Fix React console error when auto-proficiency sync shows over-cap toast.
+  - Armor equip toggle must swap single equipped armor; new characters auto-equip starter gear (one armor by highest DR).
+  - Library subsections (Feats, Inventory, Notes, Proficiencies) collapsible; empty closed; + Add expands target section.
+  - Archetype: hide empty shields/armor blocks; weapon range compact; milestone choices edit-only; dark token polish.
+  - Header quick ref: Damage Reduction + Critical Range when armored.
+  - Techniques tab: no collapsed TP column (TP on expanded parts only).
+- Expected: Behaviors above on `/characters/[id]`; no ToastProvider render warning; existing saves unchanged on load except user equip actions.
+- Disposition: **TASK-508** toast ? **TASK-509** equip/auto-equip ? **TASK-510** section collapse ? **TASK-511** archetype/milestone ? **TASK-512** header DR/crit ? **TASK-513** techniques TP column. Owner QA: DEV-V-008-T015, DEV-V-009-T011/T013?T016.
+
+**Raw Feedback Log ? 2026-07-17 (Admin archetype path builder ? guided creator parity)**
+- Date: 2026-07-17
+- Context: Admin backend ? Codex ? Archetypes path create/edit; sync with guided creator + DB
+- Priority: High
+- Feedback (verbatim):
+  Archetype builder/editor on admin backend updates: We are syncing up all functionality for archetype paths between backend database, frontend guided creator, and admin, to be inline with the guided creator we've made well. Allow designated feats into their groups, also pick character/archetype separately, allow adding/naming groups/adding name descriptions for those feat groups. Only allow picking 3 skills (not sub skills) in the admin archetype path edit/creation modal, separate selecting armaments by weapon/shields and armor, remove all "recommended species" logic everywhere, this isn't part of it, remove duplicate logic, cleanup/audit where needed. Make this into tasks.
+- Expected: Admin path authoring matches guided creator data shape/UX for feat groups (named + described; character vs archetype), skills (?3 base skills), armaments (weapons/shields vs armor), no path-recommended species; admin ? DB ? guided stay aligned; dead/duplicate logic removed.
+- Disposition: Tasks filed (no implementation this pass); owner clarified 2026-07-17:
+  - **TASK-514** ? Feat groups: name/description; explicit audience field (character vs archetype); remove title-includes-"character" heuristic; path data for guided (custom/advanced transitional)
+  - **TASK-515** ? Admin max 3 base skills (no sub-skills); warn on legacy >3 / sub-skills ? do not block save
+  - **TASK-516** ? Armaments UI-only split (weapons/shields vs armor); keep single `level1_armaments`
+  - **TASK-517** ? Fully remove recommended species; DROP `level1_recommended_species` (owner approved)
+  - **TASK-518** ? Cross-surface sync audit + cleanup after 514?517
+  - **TASK-391** superseded (skip)
+  Cross-ref: TASK-403 partial; REALMS ?5.0.1 / `is_starter`; DEV-V-008 / DEV-V-013.
+
+
+**Raw Feedback Log ? 2026-07-17 (header overhang empty strip)**
+- Date: 2026-07-17
+- Context: Site chrome / header in a smaller windowed browser
+- Priority: Medium
+- Feedback (verbatim):
+  When in a smaller windowed version of the site sometimes where a scrollbar appears at the bottom (usually due to a long header overhanging the right side) a bar of unfilled website appears where that header overhangs?
+- Expected: No document horizontal scroll from the header; no empty/unfilled strip beside the header or page background.
+- Disposition: Implemented as **TASK-519** ? desktop inline nav starts at xl; tighter header gutters/gaps; overflow-x-clip on header + MainAppChrome. QA: DEV-V-012-T007.
+
+**Raw Feedback Log ? 2026-07-17 (library section collapse chevrons)**
+- Date: 2026-07-17
+- Context: Character sheet ? Library section open/close arrows (TASK-510)
+- Priority: Medium
+- Feedback (verbatim):
+  The open close arrows for character library should be a very minimalistic feature with no surrounding circle, and they should appear to the right of the section names in the character sheet library not to the far right. They should match the ui/design of other up down open close arrows we use in the codebase such as for ascending decending header lists, for expandable chips, etc.
+- Expected: Minimal ChevronDown beside section title (ListHeader / ExpandableChip style); no bordered circle; + Add remains far right.
+- Disposition: Implemented in `SectionHeader` ? inline title+chevron toggle; BUILD_VALIDATION DEV-V-009-T013 updated.
+
+**Raw Feedback Log ? 2026-07-17 (guided Next jumps to furthest)**
+- Date: 2026-07-17
+- Context: Guided Simple character creator ? Foundation / Ancestry after revisiting earlier steps
+- Priority: High
+- Feedback (verbatim):
+  if I go from one step to a forward step, don't take me to the further step I've made it too in that step, for instance if I picked human race, went through the steps, then click back on ancestry or foundation step and went back and chose human aain, and hit next, it takes me to the last step I was on instead of the actual next screen. The next/back buttons should just take you to the previous or last screen never jump,
+- Expected: Footer Continue/Back only move one screen; Continue into a multi-screen step lands on its first inner screen (not furthest progress). Back still resumes the previous/last screen.
+- Disposition: Implemented as **TASK-520** ? `navigationIntent` split into `first` / `forward` / `back`; Ancestry + Loadout land on first screen for Continue. QA: DEV-V-013-T059.
+
+**Raw Feedback Log ? 2026-07-17 (weapons Range/Attack/Damage column spacing)**
+- Date: 2026-07-17
+- Context: Character sheet ? Archetype ? Weapons (`QuickWeaponsTable`)
+- Priority: Medium
+- Feedback (verbatim themes):
+  The range/attack/damage columns need more space between them in the weapons tab; reclaim horizontal space by wrapping bullet-point weapon properties onto lines below in the Name column.
+- Expected: Clear gaps between Range | Attack | Damage; named properties still one `?` per line under the name, wrapping long property text within Name; Unarmed trailing row stays aligned.
+- Disposition: Implemented as **TASK-523** ? `table-fixed` + content-sized metric cols via `QUICK_WEAPON_COL` (`3.75` / `3.75` / `4.25rem`, tight padding); properties `break-words` under Name. QA: DEV-V-009-T017.
+
+**Raw Feedback Log ? 2026-07-17 (sheet header DR/crit cards)**
+- Date: 2026-07-17
+- Context: Character sheet ? top header vitals (Speed / Evasion / Damage Reduction / Critical Range)
+- Priority: High
+- Feedback (verbatim):
+  the damage reduction/critical range cards on the top section of character sheet aren't the same size as speed/evasion, also the font colors are different for the displayed values, also damage reduction doesn't seem to be the value attached to the actual armor currently equipped.
+- Expected: DR / Critical Range cards match Speed / Evasion size and value color; DR matches equipped armor (same as library armor DR column).
+- Disposition: Implemented as **TASK-522** ? reuse LargeStatBlock; header reads enriched armor. QA: DEV-V-008-T015.
+
+**Raw Feedback Log ? 2026-07-17 (guided ancestry pick order)**
+- Date: 2026-07-17
+- Context: Guided Simple character creator ? Ancestry micro-flow
+- Priority: Medium
+- Feedback (verbatim):
+  make picking ancestry trait after picking character trait instead of ancestry character flaw. (swap the screen order)
+- Expected: Full Ancestry pick order is species options (if any) ? characteristic ? ancestry trait ? optional flaw ? bonus ancestry trait (if flaw taken). Characteristic must not be followed immediately by the flaw screen.
+- Disposition: Implemented as **TASK-524** ? swapped characteristic ahead of ancestry-trait-1 in guided `ancestry-step.tsx`. QA: DEV-V-013-T061.
+
+**Raw Feedback Log ? 2026-07-17 (character library section title too small)**
+- Date: 2026-07-17
+- Context: Character sheet ? Library panel
+- Priority: Medium
+- Feedback (verbatim themes):
+  at some point during another tasks character library section title font seemed to be shrunk to be too small, fix. ensure we are following proj, rules, consistition, and design styles
+- Expected: Library card title matches Skills / Archetype sizing; list subsection titles readable and not shrunk by collapse chrome.
+- Disposition: Implemented as **TASK-525** ? peer Library h2 (text-lg); SectionHeader default md; Library list subsections lg (text-base) + pb-1.5. QA: DEV-V-009-T018.
+
+**Raw Feedback Log ? 2026-07-17 (library collapsed sections leftover space)**
+- Date: 2026-07-17
+- Context: Character sheet ? Library multi-section tabs (Inventory, Feats, Powers, Notes, Proficiencies)
+- Priority: Medium
+- Feedback (verbatim):
+  when library sections are collapsed they have too much space below them still. doesn't feel cleanly collapsed/out of the way/saving space.
+- Expected: Collapsed subsection headers stack tightly (accordion-like); no large `space-y-6` / header pad leftover under closed sections; touch targets still ?44px.
+- Disposition: Implemented as **TASK-526** ? SectionHeader collapsible pb-1.5 (no full size pad); library stacks use space-y-2. QA: DEV-V-009-T019.
+
+**Raw Feedback Log ? 2026-07-17 (guided loadout skips weapons/armor)**
+- Date: 2026-07-17
+- Context: Guided Simple character creator ? Loadout chapter
+- Priority: High
+- Feedback (verbatim):
+  sometimes when going through guided creator going onto the loadout step it skips weapons and armor and jumps to general equipment right away.
+- Expected: Entering Loadout lands on Weapons (then Armor when applicable) before Equipment; cold catalog load must not lock the phase onto Equipment.
+- Disposition: Implemented as **TASK-527** ? defer phase-jump effects until catalogs/path ready; unresolved pool refs excluded from phase filters. QA: DEV-V-013-T062.
+
+**Raw Feedback Log - 2026-07-17 (library subsection title size + margin)**
+- Date: 2026-07-17
+- Context: Character sheet - Library collapsible subsections (follow-up to TASK-525/526)
+- Priority: Medium
+- Feedback (verbatim):
+  the title font is still too small, and it should have a slightly bigger margin below the section title too.
+- Expected: Subsection titles larger than text-sm; modest margin under each section title.
+- Disposition: Polished in SectionHeader / entity-library-sections - default/use lg (text-base); collapsible pb-1.5 under title. QA: DEV-V-009-T018.
+
+**Raw Feedback Log - 2026-07-17 (guided path type sections)**
+- Date: 2026-07-17
+- Context: Guided Simple character creator - Path step
+- Priority: High
+- Feedback (verbatim):
+  Separate on the guided creator the path's by martial, power, and powered martial, (with tooltips for what each of those mean to a new user by their section title). This will work a lot more like the custom creator's first page when choosing a path, but use the updated guided ui, tooltips, etc. and the ux design goals followed from product overview.
+- Expected: Path cards grouped under Power / Powered-Martial / Martial section titles with InfoTippy tips; guided choice cards retained; no hybrid LayerNav hide.
+- Disposition: Implemented as **TASK-528**. QA: DEV-V-013-T063.
+
+**Raw Feedback Log - 2026-07-17 (admin edit modals too narrow)**
+- Date: 2026-07-17
+- Context: Admin pages ? Codex / Images / Public Library edit modals
+- Priority: Medium
+- Feedback (verbatim):
+  can we make the edit modals in the admin page be wider since they're such high complexity compared to a normal modal? they can be pretty wide, taking up a good protion of the screen as you go through them, still use best practice and follow consititution/design styles
+- Expected: Complex admin add/edit dialogs use a large desktop width (good portion of viewport) while keeping overlay margins, design tokens, and full-screen-on-mobile.
+- Disposition: Implemented as **TASK-529** - Modal `full` = max-w-6xl; admin edit modals use `size="full"`. QA: DEV-V-008-T020.
+
+**Raw Feedback Log - 2026-07-17 (transparent image black background)**
+- Date: 2026-07-17
+- Context: Image Library / entity art / crop upload
+- Priority: Medium
+- Feedback (verbatim):
+  for images with no background, make the background be not just black but a good very soft color that isn't full black/white and matches the current system theme/ui of the site.
+- Expected: Transparent art shows a soft theme-matched matte (light + dark), including crop/JPEG bake ? not pure black or white.
+- Disposition: Implemented as **TASK-531**. QA: DEV-V-026-T007.
+
+**Raw Feedback Log - 2026-07-17 (GLR item thumbnails missing)**
+- Date: 2026-07-17
+- Context: Library / Codex / Admin equipment armaments GridListRow
+- Priority: High
+- Feedback (verbatim):
+  okay now small images should be visible in GLR for items with images, but I don't see them, didn't we mention this desire in our product overview or somewhere else? didn't we have a pattern established to make this happen? Following the pattern for species, I believe, as a shared component/logic with the GLR/image system we made recently?
+- Expected: Equipment/armament GLR rows use the same ListRowThumbnail + resolveListRowThumbnail pattern as species (product overview section 5.0.3 / guide/03).
+- Disposition: Implemented as **TASK-532**. QA: DEV-V-026-T008.
+
+**Raw Feedback Log - 2026-07-17 (wire GLR thumbs for all image-capable entities)**
+- Date: 2026-07-17
+- Context: Sitewide GridListRow art for entities with Realms Image Library art
+- Priority: High
+- Feedback (verbatim):
+  Okay so it should be wired for all things that can have images now across the codebase.
+- Expected: Powers, techniques, empowered techniques, creatures, equipment/armaments, species use shared ListRowThumbnail pattern everywhere GLR browse/select appears; non-art entities stay thumb-less; enhanced items remain deferred.
+- Disposition: Implemented as **TASK-533**. QA: DEV-V-026-T009.
+
+**Raw Feedback Log - 2026-07-17 (admin archetype modal cleaner + readable feats)**
+- Date: 2026-07-17
+- Context: Admin Codex ? Archetypes edit modal
+- Priority: Medium
+- Feedback (verbatim):
+  make the admin edit modal for archetypes look cleaner and avoid overlap, also allow reading feats in the modal after adding them (expanding them) so you can read the feats you add.
+- Expected: Cleaner spacing/layout without overlapping controls; selected feats expandable to show Codex description in-modal.
+- Disposition: Implemented as **TASK-534**. QA: DEV-V-008-T021.
+
+**Raw Feedback Log - 2026-07-18 (GLR mobile names squished by X/+)**
+- Date: 2026-07-18
+- Context: GridListRow lists on mobile (Library armaments, Codex equipment, add-X modals)
+- Priority: High
+- Feedback (verbatim):
+  The names of GLR items on mobile are being squished to the left and wrapped because of the X or + from them in some cases. Fix and merge with master using best practices.
+- Expected: On narrow viewports, item names use the available row width beside X/+ (and thumbnail when present) instead of wrapping into a narrow left strip caused by empty desktop column tracks.
+- Disposition: Implemented as **TASK-536** — `buildMobileCollapsedGridColumns` + `max-lg` grid template on GridListRow. QA: DEV-V-016-T012.
+- Follow-up (2026-07-18): Owner screenshot on Library Powers still showed squeeze — root cause was inline `gridTemplateColumns` overriding the mobile class. `/cleanup` switched to CSS variables only.
+
+**Raw Feedback Log - 2026-07-18 (sheet Inventory TP / Armament Proficiency overlap + gradients)**
+- Date: 2026-07-18
+- Context: Character sheet Library → Inventory summary; Proficiencies / Notes tab summary bars
+- Priority: High
+- Feedback (verbatim):
+  On mobile uI for the character sheet the training points/armament proficiency overlaps. Also remove the background gradient for this section, dont need gradient here. Same for gradient on background kf the proficineices/notes header sections if any.
+- Expected: Currency and Armament Proficiency (TP) do not overlap on ~360px; TabSummarySection bars use solid fills (no gradient) on Inventory, Proficiencies, and Notes.
+- Disposition: Implemented as **TASK-537**. QA: DEV-V-009-T020.
+
+**Raw Feedback Log - 2026-07-18 (character sheet mobile side-scroll not centered)**
+- Date: 2026-07-18
+- Context: Character sheet mobile UI — lower half swipeable section panels
+- Priority: Medium
+- Feedback (verbatim):
+  On the character sheet mobile ui the swipable tabs/sections thing at the lower half aren't centered, and they have no margins between each of each other (which would likely help with the centering), the centering is the top half section of the sheet being centered with the bottom. Follow constitution and rules/design styles
+- Expected: Mobile side-scroll panels share horizontal gutters with the sheet header; visible gap/margin between adjacent panels; snap alignment stays centered with the top half.
+- Disposition: Implemented as **TASK-538**. QA: DEV-V-009-T021.
+
+**Raw Feedback Log - 2026-07-18 (chip/GLR body tap to expand)**
+- Date: 2026-07-18
+- Context: ExpandableChip + GridListRow mobile/list expand hit targets
+- Priority: High
+- Feedback (verbatim):
+  Chip/mobile ui GLR items/chips/cards etc shouldn't just expand when you hit the item header thingy,but also if you hit the body to expand. Follow constitution, rules, guidelines
+- Expected: Expand/collapse from header **or** body — GridListRow mobile summary + non-interactive expanded panel; ExpandableChip expanded description; Options/buttons/chip groups keep their own handlers. GuidedChoiceCard select/"See more" grammar unchanged.
+- Disposition: Implemented as **TASK-539**. QA: DEV-V-021-T004.
+
+**Raw Feedback Log - 2026-07-19 (guided skills Ability + Skill Bonus tip)**
+- Date: 2026-07-19
+- Context: Guided creator → Skills step
+- Priority: Medium
+- Feedback (verbatim):
+  In the guided creator we should list the ability that contributes to the skills listed so people know what ability is tied to each skill. Also a simple hover/tap topltip on the skill bonus to explain how its calculated would be good.
+- Expected: Each listed Skill shows its contributing Ability; Skill Bonus has hover/tap help showing Ability + Skill Value = Skill Bonus.
+- Disposition: Implemented as **TASK-548** (renumbered; TASK-544–547 + DEV-V-013-T065 taken on master). QA: DEV-V-013-T066.
+
+**Raw Feedback Log - 2026-07-18 (sheet Skills Value stepper + clipped)**
+- Date: 2026-07-18
+- Context: Character sheet Skills panel — desktop edit mode Value steppers
+- Priority: High
+- Feedback (verbatim):
+  desktop skills on character sheet, the + on skill val increase steppers is pushed behing the right side, so that's an issue.
+- Expected: In Skills edit mode on desktop (`lg+` narrow Skills column), each Value stepper shows a full usable `+` (not clipped by the panel/card edge); horizontal scroll via TableScroll if the table is wider than the panel.
+- Disposition: Implemented as **TASK-543** (renumbered; TASK-540–542 taken by auth / sticky footer / inventory+roll-log). QA: DEV-V-009-T024.
+
+**Raw Feedback Log - 2026-08-03 (Guided custom route skills browse layers)**
+- Date: 2026-08-03
+- Context: Guided creator → Skills step → custom chooser (no path)
+- Priority: High
+- Feedback (verbatim):
+  For custom route in guided creator for the skills screen, don't show the add skills modal automatically, instead let them choose to open it if they scroll down and select browse all skills, also add a button to the bottom to navigate deeper by browse all sub skills, since this is slightly deeper.
+- Expected: Custom chooser Skills does not auto-open Add Skills modal; L1 **Browse all Skills** opt-in; L3 **Browse all Sub-Skills** deeper from L2 modal; sub-skills visible in guided allocation list; reuse canonical `AddSubSkillModal` not parallel modal.
+- Disposition: Implemented session cleanup — `skill-allocation-add.ts`, progressive L2→L3 modal footer nav, `GuidedSkillsPanel` sub-rows. QA: DEV-V-013-T076 step 4.
+
+**Raw Feedback Log - 2026-07-19 (Guided feats See more → add modal)**
+- Date: 2026-07-19
+- Context: Guided creator → Archetype Feats / Character Feat Layer 2
+- Priority: High
+- Feedback (verbatim):
+  As task 565 (idc if this is higher than next highest I dont want task conflicts): see all Feats shouldn't add all fests to the list as cards it should instead be an add modal like other L2 see all buttons in the guided creator.
+- Expected: See more Feats / See more Character Feats opens an add modal (UnifiedSelectionModal grammar like Browse all Skills / Loadout / Powers), not an in-step full-catalog card grid.
+- Disposition: Implemented as **TASK-565**. QA: DEV-V-013-T012.
+
+**Raw Feedback Log - 2026-07-19 (duplicate sheet lists / part chips / traits / feats)**
+- Date: 2026-07-19
+- Context: Character sheets — powers, power/technique expandable part chips, traits, feats; guided creator new characters
+- Priority: Critical
+- Feedback (verbatim):
+  A major bug: on character sheets, some lists, powers, power parts lists, techniques/techniques expandable parts chips, etc there are many cases of duplicates in thede areas, such as a power having 2 or 3 of the same expandable part chip listed. Same for dome traits and Feats being listed on new characters and such, could be a backend storing error, how guided creator handles new character data, how data is being loaded, etc. Requires thorough investigation to fix globally not just bandaid and ensure our best practices for the codebase health are followed.
+- Expected: Unique part chips per power/technique; unique traits/feats on new and existing characters; fix at save/load/enrichment layers (not display-only bandaid).
+- Disposition: Implemented as **TASK-546** (renumbered; TASK-544/545 taken by path ability UX on master). Root causes: guided `selectedTraits` included species traits (sheet also lists species from codex); library parts arrays concatenated without dedupe on creator save/sync/calc. Shared `dedupeSavedParts` / `collectSheetTraits`. QA: DEV-V-009-T025.
+
+**Raw Feedback Log - 2026-07-19 (Archetype Ability vs Primary/Secondary UX clarification)**
+- Date: 2026-07-19
+- Context: After TASK-544 / PR #45 — GAME_RULES + powered-martial labeling
+- Priority: High
+- Feedback (verbatim):
+  Wait hold on, the primary ability is still called the archetype ability, it was just a fix on the ui/ux for nee users using thr guided creator to understand what paths primary abilities were vs secondary ones. For powered martial paths they have primary abilities (two). The distinction for primary and secondary also has nothing to with archetype type, ie power vs martial. Ie a martial character can have an archetype (primary) ability of Strength and a power character could also have a Archetype Ability of Strength. For a power user a primary, archetype, or power ability all describe the same thing, and for a martial a primary,  archetype ​​or martial ability ALSO describes the same thing. For understanding we use primary and secondary for paths and such, but that's not a game rule term really. Only archetype or power / martial ability is. For a powered martial character they have two archetype abilities, a power and martial one, and for calculations usung archetype ability in these cases its the higher of the two.
+- Expected: GAME_RULES keep Archetype Ability (hybrids = two primaries, higher-of-two for formulas). Guided Primary/Secondary = UX only. Powered-martial shows two Primary chips (not Primary+Secondary for power/martial sides). Ability grid hybrids keep Power/Martial pills.
+- Disposition: Implemented as **TASK-545**. QA: DEV-V-013-T018, T020, T034, T035.
+
+**Raw Feedback Log - 2026-07-19 (guided path Primary/Secondary Ability labels)**
+- Date: 2026-07-19
+- Context: Guided creator → Path selection + More details + Abilities grid
+- Priority: Medium
+- Feedback (verbatim):
+  In the guided creator instrad of listing it as archetype ability and secondary, make it Primary and Secondary ability. In the archetype path selection screen ensure descriptor chips appear for Primary Abilty and Secondary on the cards for paths, in more details for an archetype path the abilities need only list Primary and Secondary and we dont need the "power" or "martial" tag in the more details modal.
+- Expected: Path cards show Primary Ability / Secondary Ability chips; More details Path Abilities use those labels only (no Power/Martial type tag); ability grid pills say Primary / Secondary.
+- Disposition: Implemented as **TASK-544**. Clarified/corrected by **TASK-545**. QA: DEV-V-013-T018, T020, T034, T035.
+
+**Raw Feedback Log - 2026-07-18 (roll log bonus dark mode + inventory add equipment)**
+- Date: 2026-07-18
+- Context: Character sheet roll log; Library → Inventory → Add equipment
+- Priority: High
+- Feedback (verbatim):
+  1. A few things to a address: the second (bonus) in the roll log has no dark mode thing in the roll log, fix it. 2. adding equipment in character inventory doesn't seem to actually let you add anything, fix that.
+- Expected: Roll log bonus chip readable in dark mode; Add equipment (library select + custom) updates the Inventory Equipment list (and stacks quantity when re-adding).
+- Disposition: Implemented as **TASK-542** (renumbered; TASK-540/541 taken by auth + sticky footer). QA: DEV-V-009-T022–T023.
+
+**Raw Feedback Log - 2026-07-19 (add modal list cramped by filters)**
+- Date: 2026-07-19
+- Context: Add/selection modals (UnifiedSelectionModal) — mobile and desktop
+- Priority: High
+- Feedback (verbatim):
+  As a new task 564 we need to fix how add modals work, in mobile and desktop, they often have the list of options crammed between the filters and the footer buttons when you're scrolling so that you can barely see any of the list itself between all the filter rows and stuff. We need to research how best to handle these to make it intuitive and user friendly so the scrollable list is the main focus and filters/search are options instead. Do research, follow design styles ui, make any changes to the whole global shared components/structures if at all possible to follow our constitution and component guide.
+- Expected: List is the dominant focus; filters/search are secondary progressive-disclosure options; prefer shared UnifiedSelectionModal / FilterSection changes over one-off modal forks.
+- Disposition: Implemented as **TASK-564**. Research: always-visible `headerExtra` (SourceFilter, mode tabs, custom forms) + expanded filter rows squeezed the flex list against the sticky footer; FilterSection already collapsed `filterContent` but not `headerExtra`, and page spacing (`mb-6`) was heavy in modals. Fix: compact Search+Filters toolbar; `headerExtra`+`filterContent` in collapsed-by-default panel. QA: DEV-V-016-T014.
+
+**Raw Feedback Log - 2026-07-18 (mobile modal sticky Add Selected)**
+- Date: 2026-07-18
+- Context: Mobile full-screen selection/add modals (UnifiedSelectionModal)
+- Priority: High
+- Feedback (verbatim):
+  in mobile a modal needs to have the add selected or whatever button sticky to the bottom of the screen so you don't have to scroll
+- Expected: On mobile full-screen modals, primary actions (Add Selected / Confirm / Load / etc.) stay pinned at the bottom without scrolling the list.
+- Disposition: Implemented as **TASK-541** (renumbered; TASK-540 taken by auth). QA: DEV-V-016-T013.
+
+**Raw Feedback Log - 2026-07-18 (valid email shown as invalid)**
+- Date: 2026-07-18
+- Context: Auth — register / forgot-password / login email errors
+- Priority: High
+- Feedback (verbatim):
+  people put in an email in that's valid it says invalid email?
+- Expected: Valid addresses are accepted; only true format failures say invalid email. SMTP/confirmation-send failures must not be mislabeled as invalid email.
+- Disposition: Implemented as **TASK-540**. Root cause: register/forgot-password mapped any error containing `"email"` to “Invalid email address.” QA: DEV-V-024-T004–T005.
+
+**Raw Feedback Log - 2026-07-19 (ability/defense word tooltips)**
+- Date: 2026-07-19
+- Context: Character sheet Abilities/Defenses; guided creator Abilities
+- Priority: High
+- Feedback (verbatim):
+  For character sheets/guided creator we need hover/tap tooltips (no icon just tied to the word) for all abilities, and defenses. [owner-provided ability + defense definition copy]. Use our integrated systems already existing for tooltips following our constitution and rules and using the proper docs to reference tooltip implementation.
+- Expected: Word-tied hover/focus/touch-hold tips on ability and defense names (no Info icon); copy from tooltip-text.tsx via InfoTippy/WordHelpTip.
+- Disposition: Implemented as **TASK-547** (renumbered; TASK-544/545/546 taken by PRs #45/#49/#48). QA: DEV-V-009-T026 + DEV-V-013-T065.
+
+**Raw Feedback Log - 2026-07-20 (add-modal help clutter + footer gap + leave prompt)**
+- Date: 2026-07-20
+- Context: Add/selection modals (UnifiedSelectionModal) — mobile Browse Innate Powers screenshot
+- Priority: High
+- Feedback (verbatim):
+  Add modal help text adds to the clutter it needs to either be a single sentence or removed entirely (help text below title) also there's a white bar above the sticky buttons at the bottom of add modals thst also adds to the clutter.
+
+  Separate issue with add modals, if someone selects things then leaves the modal without confirming can we have it prompt 'Add selected?' Or something so they dont miss it?
+- Expected: Header help ≤1 sentence or omitted; no blank strip above sticky Cancel/Add Selected; dismissing with unconfirmed picks prompts Add selected? (confirm / don't add / keep browsing).
+- Disposition: Implemented as **TASK-574**. QA: DEV-V-016-T015.
+
+**Raw Feedback Log - 2026-07-19 (guided Skills/Abilities mobile UI + tip copy)**
+- Date: 2026-07-19
+- Context: Guided creator Skills + Abilities (mobile screenshots: Tamer)
+- Priority: High
+- Feedback (verbatim):
+  Skills on guided creator are crammed and ui overlaps for expanding button etc. Also abilities on mobile shoulndt be abbreviated in the abilities page guided creator plus elongated tall ability containers look off. Also tooltips for abilities dont need to say the name twice (ie Acutiy. Acuity is...) can just say Acuity is ... and so on. Same for defenses tooltips.
+- Expected: Skills rows without chip/chevron overlap or truncated path tags; Abilities show full names on mobile with less elongated tiles; ability/defense tips name the term once.
+- Disposition: Implemented as **TASK-566**. QA: DEV-V-013-T067 (+ tip copy in T065/T026).
+
+**Raw Feedback Log - 2026-07-20 (guided innate soft warn + TP parity)**
+- Date: 2026-07-20
+- Context: Guided creator Powers step — Innate Powers
+- Priority: High
+- Feedback (verbatim):
+  Guided creator shouldnt stop a user from continuing if the haven't added innate powers equal to their innate power pool, but it can have a soft warning. Also innate powers still contribute to spent TP like normal powers amd should have TP cost descriptor chip like the other power cards in guided creator.
+- Expected: Continue enabled with remaining Innate Energy (soft warn OK); innate picks spend shared Training Points; innate L1 cards show TP cost chip like regular Powers.
+- Disposition: Implemented as **TASK-573**. QA: DEV-V-013-T057.
+
+**Raw Feedback Log - 2026-07-20 (Guided Creator Path / Archetype screen improvements)**
+- Date: 2026-07-20
+- Context: Guided Creator — Foundation Path / Archetype screen + More details + tooltips
+- Priority: High
+- Feedback (verbatim):
+  Guided Creator (Improvements): Archetype screen, rename from choose your path to "Choose your Archetype Path" and it should have a i tooltip describing what an archetype path is something like "An Archetype Path is your character's class or the type of adventurer they are. These Path's guide you with suggestions for your Path, but make it your own! Deviate or recreate the Path to be your own!" something like this.
+
+  Remove the subtext from more details (it's self explanatory) ie "look at this thing and pick if you like" is obvious, also remove the "Proficiency" section since that's implied (don't need to see power proficiency 2), make the recommended abilities layout look the same as the abilities cards later in the creator but smaller versions, instead of the desc cards, should look good though. In more details we can have it describe the purpose of the primary (archetype) ability with an i next to the path ability section, it should essentially give details about what a primary archetype ability represents, and that its value influences real values such as energy training points and your attack or power bonus. secondary ability should be described as a recommendation with no direct game effect. (reference rules/my wording/core rules to write this well.
+
+  In more details we should have a section to describe the type of armaments they can utilize somewhere as a summary section such as Weapons and Armor with three varieties of descriptions, one for martial, power, and powered-martial. It'd be like (for martial) "You are able to wield the most technical weapons and wear the most advanced armor. Your Armament Proficiency is 12. (with another tooltip on what armament profiecicy is, and this tooltip can be reusable between each instance of armamanet profincy across the site, an i here hover elsewhere)
+
+  For feats expanded, uses per recovery is a desc chip not expanded, ie 1 Use / Full Recovery needs no expansion. For the feats in the overview the information warnings style we use on later feat cards could be used here instead too to make it feel cohesive?
+
+  Ability desc chips on cards should be larger, maybe add some color to each.
+
+  Power and Martial Path section headers in the first screen should be bolder/larger so it's clearer they are sections.
+
+  Fix tooltips: In the guided creator tooltips for Training Points need to be less calculation heavy/dense and more right to the point and clear. The power and martial paths should be less about what a path isn't and more about what it is. Also, reference core rules against current tooltips to ensure we are accurately representing each thing (ie a power user could be a spell caster, an artificer, an elemental bender, a warlock, bard, etc).
+
+  In general when adding a tooltip, it might be L1 or guided specific, or it might be generalizable, such as the ability/defense tooltips that should be the same regardless of where they are on the site when you hover an ability or defense name. Archetype ability tooltip is simplified in the guided creator more details for instance, but might be more specific when it's a global tooltip for archetype ability (ie describe how it adds to each thing, it's exact function, in simple but clear terms). this type of behavior is how our hover or i tooltips with function, so we can note this in our guideing documentation where needed/sensible.
+- Owner clarifications (same session):
+  - Armament Proficiency number from live core rules DB via helpers (`getArmamentMax` / rules table); if missing, add honestly (propose SQL, owner approve).
+  - Ability chips: slight enlarge for all; Primary slight blue; same size Primary/Secondary (not power/martial tint split).
+  - Foundation chapter subtitle should also say Archetype Path for game-term exposure.
+  - Tip copy should prefer Archetype Path / type of adventurer; avoid calling it "class" per GAME_RULES.
+- Expected: Path L1 + More details teaching/cohesion polish; TP + path-type tip clarity; reusable Armament Proficiency tip; docs for L1 vs global tip layers.
+- Disposition: **TASK-577** / **TASK-578** / **TASK-579** / **TASK-580** / **TASK-581** implemented (pending-qa).
+
+**Raw Feedback Log - 2026-07-20 (sheet overload, skills model, Temp Modifier, roll log, desktop a11y)**
+- Date: 2026-07-20
+- Context: General site list rows + character sheet (Abilities/Defenses/Skills/header) + roll log dark mode
+- Priority: High
+- Feedback (verbatim summary):
+  Parts/Properties & Proficiencies expandable sections should default collapsed sitewide (chevron to open) with i tip explaining parts/properties ↔ proficiency/TP; leave descriptor chips open. Abilities/Defenses labels too small and mismatched (see image). Skills: show all Codex base skills by default (filter not opt-in); sub-skills prof always / unprof only if added; edit chrome cramped; remove X (use −); pencil was misheard as “gen”. Split pencil (rules spend) vs Temp Modifier (PlusMinus/sliders; persist; gold/red value tint; ability cascade except HP/EN/TP unless toggled). Desktop feedback default; don’t leak 44px chrome into desktop. Roll log dark mode die badges low contrast (see image).
+- Owner clarifications:
+  - Skills = (A) all Codex base skills always; no base opt-in; sub-skills as above.
+  - “Gen” = pencil.
+  - Name: **Temp Modifier** OK (UI convenience, not GAME_RULES term); icon PlusMinus/sliders.
+  - Persist on character (A).
+  - Parts collapse: everywhere.
+  - Pencil: compact desktop; 44px mobile via responsive pattern; document desktop-first feedback.
+  - v1 Temp Modifier surfaces: Speed, Evasion, Crit Range, DR, Terminal, Abilities (+ HP/EN/TP toggles), Defenses, Skills — layered on top of bases.
+- Expected: Quick wins shipped; remaining filed as tasks.
+- Disposition: **TASK-582** done (abilities/defenses labels, roll log die badges, EditSectionToggle desktop compact, MOBILE_UX/a11y desktop-vs-mobile docs). **TASK-583** done (Parts/Properties default collapsed + family InfoTippy sitewide; pending-qa DEV-V-009-T031). **TASK-584** done (skills catalog-all + filters + − path; pending-qa DEV-V-009-T032). **TASK-585** / **TASK-586** done (Temp Modifier Architect + v1 wire; pending-qa T033–T034).
+
+**Raw Feedback Log - 2026-07-20 (Defense Score tip)**
+- Date: 2026-07-20
+- Context: Character sheet Abilities/Defenses (post TASK-582 density polish)
+- Priority: Medium
+- Feedback: Add a hover tooltip on defense Score values so players see the number is a Score and what a Defense Score is per core rules; simple short tip for all six scores.
+- Expected: Word-tied tip on Score values; GAME_RULES Score / Defense Score copy; shared across defenses.
+- Disposition: **TASK-587** done (shared `defenseScoreHelp` WordHelpTip on Score values; pending-qa DEV-V-009-T035).
+
+**Raw Feedback Log - 2026-07-24 (Terminal on Health header)**
 - Date: 2026-07-24
-- Context: Virtual tabletop — duplicate or unwanted scene tokens
-- Priority: High
-- Feedback: "Currently, the VTT allows for duplicate tokens. Please build a way for RMs to delete tokens on the VTT"
-- Expected: Realm Masters can remove unwanted tokens from a tabletop scene; players cannot delete tokens; deleted tokens disappear from open tabletop sessions.
-- Disposition: Implemented directly 2026-07-24 — RM token rows expose a confirmed delete action backed by an RM-only tabletop token DELETE API and realtime/cache removal.
+- Context: Character sheet header — Terminal threshold placement
+- Priority: Medium
+- Feedback (verbatim): The terminal value should be in the top right "Terminal: X" of the health section of the character sheet, editable by temp mod, but not it's own box in the character stats top section area (it's not a main focus/quick reference value).
+- Expected: `Terminal: X` top-right on Health resource box; temp-mod in edit mode; removed from center LargeStatBlock row.
+- Disposition: **Session cleanup 2026-07-24** (co-located `sheet-temp-modifier-controls`; ADR-0006 + FEATURE_INDEX + BUILD_VALIDATION T033/T034 updated; pending-qa DEV-V-009-T034 retest).
 
-**Raw Feedback Log — 2026-07-24 (VTT monster tokens)**
-- Date: 2026-07-24
-- Context: Virtual tabletop — adding monsters directly to a scene
-- Priority: High
-- Feedback: "Please add the ability for RMs to add monster tokens to the map"
-- Expected: Realm Masters can choose a creature from Realms Library or My Library, set quantity, and add enemy monster tokens to the tabletop; players cannot add monster tokens.
-- Disposition: Implemented directly 2026-07-24 — Scene Tools now includes an RM-only Monster action backed by an RM-only `add-creature` tabletop token API path.
+**Raw Feedback Log - 2026-07-20 (Speed/Evasion Temp only)**
+- Date: 2026-07-20
+- Context: Character sheet header Speed / Evasion LargeStatBlocks
+- Priority: Medium
+- Feedback (verbatim): For speed/Evasion modifiers, remove the pencil/permanent modifier, only have the temp mod function. Remove the rest of the pencil editing function.
+- Expected: Speed and Evasion edit chrome is Temp Modifier only (no pencil / base stepper); DR/crit/Terminal already Temp-only; Abilities/Skills keep dual pencil+Temp.
+- Disposition: **TASK-600** done (pending-qa DEV-V-009-T038).
 
-**Raw Feedback Log — 2026-07-30 (VTT character token portraits)**
-- Date: 2026-07-30
-- Context: Virtual tabletop — campaign character tokens on the canvas
-- Priority: High
-- Feedback: "On the VTT, can you make the tokens have the pictures of the characters instead of abbreviations of their names?"
-- Expected: Campaign-character tokens render character portraits on the VTT canvas when available; older synced tokens can pick up missing portrait URLs; tokens without an image still have a readable fallback.
-- Disposition: Implemented directly 2026-07-30 — tabletop canvas renders circular token images from `imageUrl` with initials fallback, and combatant sync/open tabletop backfills missing or stale campaign-character token portraits from the campaign roster.
+**Raw Feedback Log - 2026-07-20 (codebase quality → pseudo global audit + tasks)**
+- Date: 2026-07-20
+- Context: Post owner website audit; agent quality review of codebase structure
+- Priority: Medium
+- Feedback (verbatim summary): Add a pseudo global audit with quality findings (god files, docs corpus weight, creator/admin/encounter complexity clusters, API/e2e coverage shape) and create/add tasks to fix those issues.
+- Expected: Archive audit report + ACTIVE_TASKS follow-ups; no drive-by product refactors in the filing pass.
+- Disposition: Report `archive/QUALITY_GLOBAL_AUDIT_2026-07-20.md`; filed **TASK-607**–**TASK-613** (splits, docs hygiene, API smoke; renumbered after debt TASK-601–606 collision).
 
-**Raw Feedback Log — 2026-07-30 (VTT portrait backfill empty updates)**
-- Date: 2026-07-30
-- Context: Virtual tabletop — sync combatants portrait backfill
+**Raw Feedback Log - 2026-07-23 (Placeholder dark mode + PNG matte)**
+- Date: 2026-07-23
+- Context: General site improvements (session)
+- Priority: Medium
+- Feedback (verbatim): Placeholder images need a darkmode variant. Images uploaded as PNGs get a default black background, but that color is too stark — needs to be closer to the theme background so contrast of PNG images isn't killed.
+- Expected: Dark-mode placeholder card/portrait art; transparent PNG letterboxing and crop matte aligned to theme (`surface-alt` / `image-matte`), not pure black.
+- Disposition: Implemented — `placeholder-art.ts`, dark SVG assets, adaptive `bg-image-matte` (display-only); crops preserve alpha (PNG/WebP, no baked matte). pending-qa DEV-V-026-T007.
+
+**Raw Feedback Log - 2026-08-01 (Realms Library creature stat blocks)**
+- Date: 2026-08-01
+- Context: Library / Realms Library
+- Priority: Medium
+- Feedback (verbatim): The public realms library creature's tab should display creatures the same way as the private one, with full creature stat blocks.
+- Expected: Realms Library → Creatures uses full `CreatureStatBlock` rows (parity with My Library), not compact name/level/type grid.
+- Disposition: **TASK-620** (done, pending-qa DEV-V-032-T001).
+
+**Raw Feedback Log — 2026-08-01 (GLR expand/collapse consistency)**
+- Date: 2026-08-01
+- Context: GLR collapse/expand — character sheet, Library, Codex (official/personal); Powers/Techniques/Armor/Weapons/Shields
 - Priority: High
-- Feedback: After syncing, `vtt_tokens.image_url` values were not populating because `buildCampaignTokenImageUpdates` returned an empty array.
-- Expected: Sync should find campaign-character portraits even when campaign roster JSON uses legacy key shapes or older token rows are missing source refs.
-- Disposition: Implemented directly 2026-07-30 — VTT campaign access now normalizes roster JSON; token image update detection can fall back through linked encounter combatants by `combatantId`.
+- Feedback (verbatim summary): Column headers inconsistently reserve space for edit/delete/add so columns misalign; functional buttons inconsistently inside vs outside hover (delete in hover, edit not). Total Training Points expanded chip redundant when TP already in collapsed columns (techniques). Parts & Proficiencies chips should use `TP: X` not `Training Points: X`; option level increases unclear; omit `(0)` when level is 0 or not increasable.
+- Expected: Shared GridListRow chrome alignment + unified hover for action icons; suppress Total TP when column already shows it; dense browse Parts/Properties chips `TP: N` + `Lv.N` only when > 0.
+- Disposition: **TASK-622**.
+
+**Raw Feedback Log — 2026-08-01 (Codex feat Tags section label + order)**
+- Date: 2026-08-01
+- Context: Codex → Feats expanded row (e.g. Abundant Harvest)
+- Priority: Medium
+- Feedback (verbatim summary): Single feat tag chips (e.g. "Craft") appear without a section header — looks like a floating descriptor; user needs to know it is a tag. Tags should appear at the bottom of expanded detail sections (after ability requirements, skill requirements, feat levels).
+- Expected: **Tags** section label always visible; section order: requirements/levels first, Tags last; applies wherever `buildFeatDetailSections` is used.
+- Disposition: Implemented in `buildFeatDetailSections` (`feat-list.ts`); CI `feat-list.test.ts`; pending-qa **DEV-V-039-T001**.
+
+**Raw Feedback Log - 2026-08-01 (guided path ability chip colon + unification)**
+- Priority: Low
+- Feedback (verbatim summary): Path selection guided creator card/desc chips should read `Primary Ability: X` and `Secondary Ability: X` (colon for clarity), not `Primary Ability X`.
+- Expected: Guided path cards + More details use colon-separated labels; Advanced creator parity via shared copy + chip builder.
+- Disposition: `path-ability-copy.ts` + `buildPathAbilityChipLabels`; wired Guided path-step/overview + Advanced archetype-step; `path-ability-labels.test.ts`.
+
+**Raw Feedback Log — 2026-08-03 (Species skill pick cards show descriptions)**
+- Date: 2026-08-03
+- Context: Guided creator mixed ancestry, Advanced ancestry, Edit Species
+- Priority: Medium
+- Feedback (verbatim summary): For “Choose your species skills” and other skill cards/row pickers, show skill descriptions (truncated as normal) instead of name-only chips/pills.
+- Expected: Guided `GuidedChoiceCard` skill picks show codex description; Advanced + sheet mixed pickers show description in TraitSection-style rows with clamp/See more.
+- Disposition: **TASK-670** — `buildMixedSpeciesSkillOptions` + `MixedSpeciesSkillPicker`; pending-qa **DEV-V-013 T079**.
+
+**Raw Feedback Log — 2026-08-06 (Codex character filter UX)**
+- Date: 2026-08-06
+- Context: Codex feats tab — character qualification filter
+- Priority: Medium
+- Feedback (verbatim summary): Rename "View as character" to "Filter by character"; move control into the Feats tab filters section (not page chrome); only on tabs where character filtering applies; grey out manual level/ability requirement filters with "Set by character" when a character is selected; shared component for reuse (e.g. Library later).
+- Expected: `CharacterFilter` in shared filters; feats tab only; distinct subsection in filters with tooltip; level + ability/defense requirement filters disabled when character selected.
+- Disposition: Implemented — `CharacterFilter` in `shared/filters`; moved from Codex page header into `CodexFeatsTab` FilterSection (feats tab only); manual max-level + ability/defense requirement filters disabled with "Set by character" placeholders when active; qualification banner removed; Show unqualified feats inline with character select; max-level helper moved to InfoTippy; redundant "Set by character" subtext removed. Deleted deprecated `CodexCharacterFilter` shim. pending-qa **DEV-V-045-T001**.
+
+**Raw Feedback Log — 2026-08-06 (Library powers/techniques categories + filters)**
+- Date: 2026-08-06
+- Context: Library page — Realms + My tabs for Powers / Techniques
+- Priority: High
+- Feedback (verbatim): Powers and techniques will need categories assigned from power/technique part categories (excluding mechanic parts). Multi-category OK; dedupe duplicate part categories. Library (Realms + My) powers/techniques get a top FilterSection (shared filters like Codex): Category; min/max Energy; Action Type / Reaction. Power-only: Power Threshold (Innate) dropdown of live core-rules threshold values (same progression as sheet — e.g. 6 at Power Prof 1 / PM, 8 at Power Prof 2, then 9+), selecting it auto-checks "Innate Eligible" which reuses the shared innate-eligibility filter used in guided creator (Basic/Reaction, no heal/energy-gain parts, energy ≤ threshold). Category is for sort/filter and should be a desc chip when not a column header; prefer column header when spacing permits (owner said "codex" — clarify: Library Realms/My + Admin public lists); uninvasive desc chip in expanded power details. Future filters may be added later.
+- Expected: Derived categories (not a new DB field); FilterSection on power/technique library surfaces; GLR column-or-chip for category; shared innate eligibility; threshold options from `useGameRules` / progression helpers.
+- Disposition: Filed **TASK-673** (categories + display + shared filters). Architect note: compose `@/components/shared/filters` first; extract a shared panel file only if Official + My + USM need identical chrome (owner ack / ADR if new shared UI). **Implemented 2026-08-06** — `PowerTechniqueFilters` + derived categories; Realms/My/Admin wired; pending-qa **DEV-V-046**.
+
+**Raw Feedback Log — 2026-08-06 (Power/technique filter layout + character/TP)**
+- Date: 2026-08-06
+- Context: Library powers/techniques FilterSection follow-up
+- Priority: High
+- Feedback (verbatim summary): Filters misaligned across rows; Innate Eligible toggle not aligned; Category GLR header should be center (default for non-name columns); remove Min Energy (keep Max only); add Filter by character — caps by character max Energy; when Innate Eligible checked, use that character’s innate threshold; same energy for techniques; with character, filter by Training Points remaining (e.g. 22/25 spent → hide TP > 3) for powers/techniques (armaments later); Max TP filter always available with or without character.
+- Expected: Aligned filter grid; CharacterFilter + derived caps; Max TP + optional affordable TP; Category center; no Min Energy.
+- Disposition: Filed **TASK-676**. **Implemented** — layout fix (label+control cells, h-11 controls); CharacterFilter + max Energy / innate / remaining TP; Max TP always; Category headers/cells center; Min Energy removed. Follow-up polish (same day): locks/clear/Damage/PM 6→8. pending-qa **DEV-V-046-T003**.
+
+**Raw Feedback Log — 2026-08-06 (Filter polish + Damage category + innate threshold rules)**
+- Date: 2026-08-06
+- Context: Library power/technique filters + innate progression
+- Priority: High
+- Feedback (verbatim summary): Slight misalignment from Innate Threshold tooltip vertical space; grey out Set-by-character fields; unchecking Innate Eligible clears threshold (connected); powers with damage get Damage category; innate thresholds are not a clean Power Proficiency map — Power 8→14 by level; Powered-Martial starts 6 with milestone 6→8 then +1 (or feat); update tooltip; ensure core rules correct.
+- Disposition: Fixed filter label-row heights + compact tippy; disabled/grey Max Energy + Threshold when character-driven; clear threshold on uncheck; synthetic Damage category; fixed PM innate bump in formulas (6→8); filter options exclude 7; tooltip + sheet milestone copy updated. Live `core_rules` ARCHETYPES configs already matched GAME_RULES (L1 thresholds/pools/energy + milestones); local `ARCHETYPE_CONFIGS.power.innateEnergy` aligned to 16.
+
+**Raw Feedback Log — 2026-08-06 (Library search span + Enhanced Items tab)**
+- Date: 2026-08-06
+- Context: `/library` My Library — entity tab shell search + tab bar
+- Priority: Medium
+- Feedback (verbatim summary): Search bar should span full width until the Sync with current patch button (match codex full-span search). Rename Enhanced tab to **Enhanced Items** and place it immediately before Creatures.
+- Expected: `UserLibraryEntityTabShell` search uses codex-style `flex-1` wrapper; tab label **Enhanced Items**; tab order … Shields → Enhanced Items → Creatures.
+- Disposition: **Implemented** — `UserLibraryEntityTabShell` search row aligned to `CodexBrowseListShell`; `page.tsx` `TABS` updated. pending-qa **DEV-V-048-T001** (+ refresh DEV-V-016-T011 / DEV-V-019-T004 labels). Follow-up **TASK-682** — extract shared `ListSearchToolbar`.
+
+**Raw Feedback Log — 2026-08-06 (Empowered creator cheaper EN overlap + No Attack)**
+- Date: 2026-08-06
+- Context: `/empowered-technique-creator` — Attack / overlapping power vs technique mechanic parts
+- Priority: High
+- Feedback (verbatim summary): Empowered creator currently favors more expensive energy-wise parts when similar parts exist between power and techniques. Guiding rule: when technique/power parts overlap for a hard-tied UI control (e.g. Add Weapon), use whichever of the two IDs is cheaper Energy. Also for No Attack, add the No Attack mechanic like the technique creator does.
+- Expected: Cheaper-EN pick between overlapping power/technique parts; Weapon Attack uses cheaper of Add Weapon to Power vs Add Weapon to Technique; No Weapon/Attack adds No Attack reduction part.
+- Disposition: Filed **TASK-683**. **Implemented 2026-08-06** — `pickCheaperEnPart` + `deriveEmpoweredAttackMode`; Weapon uses cheaper Add Weapon (live technique 2.5 vs power 4.5); No Attack on No Weapon/Attack; pending-qa **DEV-V-049-T001**.
+
+**Raw Feedback Log — 2026-08-15 (Character sheet Recovery footer + header DR/crit)**
+- Date: 2026-08-15
+- Context: Character sheet — Recovery modal; header Speed/Evasion vitals
+- Priority: High
+- Feedback (verbatim): Recovery modal hugs border of full recovery/cancel buttons in bottom right instead of having a border margin like the rest of the borders/edges of the modal, may be an issue elsewhere. Damage reduction shouldn’t be in the header when character has no armor, or if that armor doesn’t modify the value at all, same for critical range. Also critical range should be calculating as evasion +10 + critical range increase property from armor giving 1 + Op1 level of critical range or something like that I believe.
+- Expected: Modal footer inset matching content/header gutters (sitewide, not Recovery-only). Play/edit: header shows Damage Reduction / Critical Range only when equipped armor (or a leftover temp) changes that stat. **Temp mode always shows both cards** so a temp can be added. Formula: Evasion + 10 + (1 + Option 1 level).
+- Disposition: Filed and implemented **TASK-787** / **TASK-788**. Cleanup: Temp mode shows DR/crit cards; archetype `QuickArmorTable` uses `calculateCriticalRange` (deleted inline `10 + agility + 10`). pending-qa **DEV-V-009-T052 / T053** (+ DEV-V-008-T015).

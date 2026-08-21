@@ -10,10 +10,7 @@ import { getSession } from '@/lib/supabase/session';
 import { normalizeInviteCodeInput, isValidInviteCodeFormat } from '@/lib/campaign-invite';
 import { buildRateLimitKey, inviteCodeLimiter, resolveClientIp } from '@/lib/rate-limit';
 
-export async function GET(
-  _request: Request,
-  { params }: { params: Promise<{ code: string }> }
-) {
+export async function GET(_request: Request, { params }: { params: Promise<{ code: string }> }) {
   try {
     // Require auth: you must be signed in to join a campaign, so invite preview
     // is gated. Combined with the rate limit + format check, this prevents
@@ -25,9 +22,12 @@ export async function GET(
 
     const ip = resolveClientIp((_request as unknown as NextRequest).headers);
     const key = buildRateLimitKey('invite', { ip });
-    const { success } = inviteCodeLimiter.check(key);
+    const { success } = await inviteCodeLimiter.check(key);
     if (!success) {
-      return NextResponse.json({ error: 'Too many requests' }, { status: 429, headers: { 'Retry-After': '60' } });
+      return NextResponse.json(
+        { error: 'Too many requests' },
+        { status: 429, headers: { 'Retry-After': '60' } },
+      );
     }
 
     const { code } = await params;
@@ -44,11 +44,12 @@ export async function GET(
       return NextResponse.json({ error: 'Invite lookup unavailable' }, { status: 503 });
     }
 
-    const { data: row } = await supabase
+    const { data: row, error: lookupErr } = await supabase
       .from('campaigns')
       .select('id, name')
       .eq('invite_code', inviteCode)
       .maybeSingle();
+    if (lookupErr) throw lookupErr;
 
     if (!row) {
       return NextResponse.json(null, { status: 404 });

@@ -1,0 +1,4459 @@
+[
+  {
+    "route": "auth-sheet",
+    "url": "/characters/11111111-1111-4111-8111-111111111111",
+    "width": "390",
+    "finalUrl": "/characters/11111111-1111-4111-8111-111111111111",
+    "notes": [],
+    "viewport": {
+      "w": 390,
+      "h": 844
+    },
+    "horizontalPageScroll": false,
+    "medianControlHeight": 44,
+    "counts": {
+      "overflowRight": 0,
+      "textSpill": 1,
+      "tooSmall": 90,
+      "oversized": 0,
+      "overlaps": 0,
+      "controls": 209
+    },
+    "overflowRight": [],
+    "textSpill": [
+      {
+        "el": "span.min-w-0.truncate \"E2E Baseline Knight\"",
+        "clientW": 196,
+        "scrollW": 229,
+        "clipped": false,
+        "rect": {
+          "x": 161,
+          "y": 113,
+          "w": 196,
+          "h": 32
+        }
+      }
+    ],
+    "tooSmall": [
+      {
+        "el": "a.sr-only.focus:not-sr-only.focus:fixed.focus:top-4.focus:left-4 \"Skip to main content\"",
+        "rect": {
+          "x": -1,
+          "y": -1,
+          "w": 1,
+          "h": 1
+        }
+      },
+      {
+        "el": "button.text-primary-fg.transition-colors.hover:scale-110.hover:text-primary-fg-hover",
+        "rect": {
+          "x": 207,
+          "y": 245,
+          "w": 16,
+          "h": 16
+        }
+      },
+      {
+        "el": "button.btn-stepper.hit-area-dense.shrink-0.touch-manipulation.select-none [aria-label=\"Decrease action points\"] \"−\"",
+        "rect": {
+          "x": 157,
+          "y": 553,
+          "w": 24,
+          "h": 24
+        }
+      },
+      {
+        "el": "button.btn-stepper.hit-area-dense.shrink-0.touch-manipulation.select-none [aria-label=\"Increase action points\"] \"+\"",
+        "rect": {
+          "x": 209,
+          "y": 553,
+          "w": 24,
+          "h": 24
+        }
+      },
+      {
+        "el": "input.w-12.rounded.border.bg-surface.px-1 [aria-label=\"Current Health\"]",
+        "rect": {
+          "x": 46,
+          "y": 635,
+          "w": 48,
+          "h": 34
+        }
+      },
+      {
+        "el": "button.btn-stepper.hit-area-dense.shrink-0.touch-manipulation.select-none [aria-label=\"Decrease health\"] \"−\"",
+        "rect": {
+          "x": 138,
+          "y": 640,
+          "w": 24,
+          "h": 24
+        }
+      },
+      {
+        "el": "button.btn-stepper.hit-area-dense.shrink-0.touch-manipulation.select-none [aria-label=\"Increase health\"] \"+\"",
+        "rect": {
+          "x": 164,
+          "y": 640,
+          "w": 24,
+          "h": 24
+        }
+      },
+      {
+        "el": "input.w-12.rounded.border.bg-surface.px-1 [aria-label=\"Current Energy\"]",
+        "rect": {
+          "x": 46,
+          "y": 739,
+          "w": 48,
+          "h": 34
+        }
+      },
+      {
+        "el": "button.btn-stepper.hit-area-dense.shrink-0.touch-manipulation.select-none [aria-label=\"Decrease energy\"] \"−\"",
+        "rect": {
+          "x": 148,
+          "y": 744,
+          "w": 24,
+          "h": 24
+        }
+      },
+      {
+        "el": "button.btn-stepper.hit-area-dense.shrink-0.touch-manipulation.select-none [aria-label=\"Increase energy\"] \"+\"",
+        "rect": {
+          "x": 174,
+          "y": 744,
+          "w": 24,
+          "h": 24
+        }
+      },
+      {
+        "el": "button.inline-flex.items-center.justify-center.rounded.border \"All\"",
+        "rect": {
+          "x": 378,
+          "y": 891,
+          "w": 34,
+          "h": 22
+        }
+      },
+      {
+        "el": "button.inline-flex.items-center.justify-center.rounded.border \"Proficient\"",
+        "rect": {
+          "x": 414,
+          "y": 891,
+          "w": 69,
+          "h": 22
+        }
+      },
+      {
+        "el": "input#sheet-skills-sub-skills.rounded.border-border-light",
+        "rect": {
+          "x": 498,
+          "y": 895,
+          "w": 13,
+          "h": 13
+        }
+      },
+      {
+        "el": "button.inline-block.h-4.w-4.rounded-full.transition-all",
+        "rect": {
+          "x": 387,
+          "y": 986,
+          "w": 16,
+          "h": 16
+        }
+      },
+      {
+        "el": "button.inline-flex.cursor-help.items-center.rounded-sm.hit-area-dense [aria-label=\"About Acrobatics\"] \"Acrobatics\"",
+        "rect": {
+          "x": 423,
+          "y": 986,
+          "w": 67,
+          "h": 20
+        }
+      },
+      {
+        "el": "button.inline-block.h-4.w-4.rounded-full.transition-all",
+        "rect": {
+          "x": 387,
+          "y": 1047,
+          "w": 16,
+          "h": 16
+        }
+      },
+      {
+        "el": "button.inline-flex.cursor-help.items-center.rounded-sm.hit-area-dense [aria-label=\"About Analyze\"] \"Analyze\"",
+        "rect": {
+          "x": 423,
+          "y": 1047,
+          "w": 51,
+          "h": 20
+        }
+      },
+      {
+        "el": "button.inline-block.h-4.w-4.rounded-full.transition-all",
+        "rect": {
+          "x": 387,
+          "y": 1108,
+          "w": 16,
+          "h": 16
+        }
+      },
+      {
+        "el": "button.inline-flex.cursor-help.items-center.rounded-sm.hit-area-dense [aria-label=\"About Arcana\"] \"Arcana\"",
+        "rect": {
+          "x": 423,
+          "y": 1108,
+          "w": 45,
+          "h": 20
+        }
+      },
+      {
+        "el": "button.inline-block.h-4.w-4.rounded-full.transition-all",
+        "rect": {
+          "x": 387,
+          "y": 1169,
+          "w": 16,
+          "h": 16
+        }
+      },
+      {
+        "el": "button.inline-flex.cursor-help.items-center.rounded-sm.hit-area-dense [aria-label=\"About Athletics\"] \"Athletics\"",
+        "rect": {
+          "x": 423,
+          "y": 1169,
+          "w": 57,
+          "h": 20
+        }
+      },
+      {
+        "el": "button.inline-block.h-4.w-4.rounded-full.transition-all",
+        "rect": {
+          "x": 387,
+          "y": 1230,
+          "w": 16,
+          "h": 16
+        }
+      },
+      {
+        "el": "button.inline-flex.cursor-help.items-center.rounded-sm.hit-area-dense [aria-label=\"About Beastcraft\"] \"Beastcraft\"",
+        "rect": {
+          "x": 423,
+          "y": 1230,
+          "w": 65,
+          "h": 20
+        }
+      },
+      {
+        "el": "button.inline-block.h-4.w-4.rounded-full.transition-all",
+        "rect": {
+          "x": 387,
+          "y": 1291,
+          "w": 16,
+          "h": 16
+        }
+      },
+      {
+        "el": "button.inline-flex.cursor-help.items-center.rounded-sm.hit-area-dense [aria-label=\"About Craft\"] \"Craft\"",
+        "rect": {
+          "x": 423,
+          "y": 1291,
+          "w": 31,
+          "h": 20
+        }
+      },
+      {
+        "el": "button.inline-flex.cursor-help.items-center.rounded-sm.hit-area-dense [aria-label=\"About Artistry\"] \"Artistry\"",
+        "rect": {
+          "x": 437,
+          "y": 1352,
+          "w": 49,
+          "h": 20
+        }
+      },
+      {
+        "el": "button.inline-flex.cursor-help.items-center.rounded-sm.hit-area-dense [aria-label=\"About Smith\"] \"Smith\"",
+        "rect": {
+          "x": 437,
+          "y": 1413,
+          "w": 37,
+          "h": 20
+        }
+      },
+      {
+        "el": "button.inline-block.h-4.w-4.rounded-full.transition-all",
+        "rect": {
+          "x": 387,
+          "y": 1474,
+          "w": 16,
+          "h": 16
+        }
+      },
+      {
+        "el": "button.inline-flex.cursor-help.items-center.rounded-sm.hit-area-dense [aria-label=\"About Deceive\"] \"Deceive\"",
+        "rect": {
+          "x": 423,
+          "y": 1474,
+          "w": 50,
+          "h": 20
+        }
+      },
+      {
+        "el": "button.inline-block.h-4.w-4.rounded-full.transition-all",
+        "rect": {
+          "x": 387,
+          "y": 1535,
+          "w": 16,
+          "h": 16
+        }
+      }
+    ],
+    "oversized": [],
+    "overlaps": []
+  },
+  {
+    "route": "auth-sheet-edit",
+    "url": "/characters/11111111-1111-4111-8111-111111111111",
+    "width": "390",
+    "finalUrl": "/characters/11111111-1111-4111-8111-111111111111",
+    "notes": [],
+    "viewport": {
+      "w": 390,
+      "h": 844
+    },
+    "horizontalPageScroll": false,
+    "medianControlHeight": 44,
+    "counts": {
+      "overflowRight": 0,
+      "textSpill": 1,
+      "tooSmall": 117,
+      "oversized": 0,
+      "overlaps": 6,
+      "controls": 243
+    },
+    "overflowRight": [],
+    "textSpill": [
+      {
+        "el": "span.min-w-0.truncate \"E2E Baseline Knight\"",
+        "clientW": 172,
+        "scrollW": 229,
+        "clipped": false,
+        "rect": {
+          "x": 161,
+          "y": 113,
+          "w": 172,
+          "h": 32
+        }
+      }
+    ],
+    "tooSmall": [
+      {
+        "el": "a.sr-only.focus:not-sr-only.focus:fixed.focus:top-4.focus:left-4 \"Skip to main content\"",
+        "rect": {
+          "x": -1,
+          "y": -1,
+          "w": 1,
+          "h": 1
+        }
+      },
+      {
+        "el": "button.shrink-0.text-primary-fg.transition-colors.hover:scale-110.hover:text-primary-fg-hover [aria-label=\"Edit name\"]",
+        "rect": {
+          "x": 341,
+          "y": 121,
+          "w": 16,
+          "h": 16
+        }
+      },
+      {
+        "el": "button.text-primary-fg.transition-colors.hover:scale-110.hover:text-primary-fg-hover [aria-label=\"Edit species and ancestry\"]",
+        "rect": {
+          "x": 341,
+          "y": 161,
+          "w": 16,
+          "h": 16
+        }
+      },
+      {
+        "el": "button.text-primary-fg.transition-colors.hover:scale-110.hover:text-primary-fg-hover",
+        "rect": {
+          "x": 207,
+          "y": 297,
+          "w": 16,
+          "h": 16
+        }
+      },
+      {
+        "el": "button.btn-stepper.hit-area-dense.shrink-0.touch-manipulation.select-none [aria-label=\"Decrease action points\"] \"−\"",
+        "rect": {
+          "x": 157,
+          "y": 605,
+          "w": 24,
+          "h": 24
+        }
+      },
+      {
+        "el": "button.btn-stepper.hit-area-dense.shrink-0.touch-manipulation.select-none [aria-label=\"Increase action points\"] \"+\"",
+        "rect": {
+          "x": 209,
+          "y": 605,
+          "w": 24,
+          "h": 24
+        }
+      },
+      {
+        "el": "input.w-12.rounded.border.bg-surface.px-1 [aria-label=\"Current Health\"]",
+        "rect": {
+          "x": 46,
+          "y": 687,
+          "w": 48,
+          "h": 34
+        }
+      },
+      {
+        "el": "button.btn-stepper.hit-area-dense.shrink-0.touch-manipulation.select-none [aria-label=\"Decrease health\"] \"−\"",
+        "rect": {
+          "x": 138,
+          "y": 692,
+          "w": 24,
+          "h": 24
+        }
+      },
+      {
+        "el": "button.btn-stepper.hit-area-dense.shrink-0.touch-manipulation.select-none [aria-label=\"Increase health\"] \"+\"",
+        "rect": {
+          "x": 164,
+          "y": 692,
+          "w": 24,
+          "h": 24
+        }
+      },
+      {
+        "el": "input.w-12.rounded.border.bg-surface.px-1 [aria-label=\"Current Energy\"]",
+        "rect": {
+          "x": 46,
+          "y": 791,
+          "w": 48,
+          "h": 34
+        }
+      },
+      {
+        "el": "button.btn-stepper.hit-area-dense.shrink-0.touch-manipulation.select-none [aria-label=\"Decrease energy\"] \"−\"",
+        "rect": {
+          "x": 148,
+          "y": 796,
+          "w": 24,
+          "h": 24
+        }
+      },
+      {
+        "el": "button.btn-stepper.hit-area-dense.shrink-0.touch-manipulation.select-none [aria-label=\"Increase energy\"] \"+\"",
+        "rect": {
+          "x": 174,
+          "y": 796,
+          "w": 24,
+          "h": 24
+        }
+      },
+      {
+        "el": "button.btn-stepper.hit-area-dense.shrink-0.touch-manipulation.select-none [aria-label=\"Remove HP points\"] \"−\"",
+        "rect": {
+          "x": 118,
+          "y": 914,
+          "w": 24,
+          "h": 24
+        }
+      },
+      {
+        "el": "button.btn-stepper.hit-area-dense.shrink-0.touch-manipulation.select-none [aria-label=\"Add HP points\"] \"+\"",
+        "rect": {
+          "x": 170,
+          "y": 914,
+          "w": 24,
+          "h": 24
+        }
+      },
+      {
+        "el": "button.btn-stepper.hit-area-dense.shrink-0.touch-manipulation.select-none [aria-label=\"Remove EN points\"] \"−\"",
+        "rect": {
+          "x": 120,
+          "y": 958,
+          "w": 24,
+          "h": 24
+        }
+      },
+      {
+        "el": "button.btn-stepper.hit-area-dense.shrink-0.touch-manipulation.select-none [aria-label=\"Add EN points\"] \"+\"",
+        "rect": {
+          "x": 172,
+          "y": 958,
+          "w": 24,
+          "h": 24
+        }
+      },
+      {
+        "el": "button.touch-target-md-compact.inline-flex.items-center.justify-center.rounded-md [aria-label=\"Edit — spend ability/defense points\"]",
+        "rect": {
+          "x": 305,
+          "y": 1043,
+          "w": 24,
+          "h": 24
+        }
+      },
+      {
+        "el": "button.touch-target-md-compact.inline-flex.items-center.justify-center.rounded-md [aria-label=\"Edit — spend skill points\"]",
+        "rect": {
+          "x": 647,
+          "y": 1043,
+          "w": 24,
+          "h": 24
+        }
+      },
+      {
+        "el": "button.inline-flex.items-center.justify-center.rounded.border \"All\"",
+        "rect": {
+          "x": 378,
+          "y": 1086,
+          "w": 34,
+          "h": 22
+        }
+      },
+      {
+        "el": "button.inline-flex.items-center.justify-center.rounded.border \"Proficient\"",
+        "rect": {
+          "x": 414,
+          "y": 1086,
+          "w": 69,
+          "h": 22
+        }
+      },
+      {
+        "el": "input#sheet-skills-sub-skills.rounded.border-border-light",
+        "rect": {
+          "x": 498,
+          "y": 1090,
+          "w": 13,
+          "h": 13
+        }
+      },
+      {
+        "el": "button.inline-block.h-4.w-4.rounded-full.transition-all",
+        "rect": {
+          "x": 387,
+          "y": 1181,
+          "w": 16,
+          "h": 16
+        }
+      },
+      {
+        "el": "button.inline-flex.cursor-help.items-center.rounded-sm.hit-area-dense [aria-label=\"About Acrobatics\"] \"Acrobatics\"",
+        "rect": {
+          "x": 423,
+          "y": 1181,
+          "w": 67,
+          "h": 20
+        }
+      },
+      {
+        "el": "button.inline-block.h-4.w-4.rounded-full.transition-all",
+        "rect": {
+          "x": 387,
+          "y": 1242,
+          "w": 16,
+          "h": 16
+        }
+      },
+      {
+        "el": "button.inline-flex.cursor-help.items-center.rounded-sm.hit-area-dense [aria-label=\"About Analyze\"] \"Analyze\"",
+        "rect": {
+          "x": 423,
+          "y": 1242,
+          "w": 51,
+          "h": 20
+        }
+      },
+      {
+        "el": "button.inline-block.h-4.w-4.rounded-full.transition-all",
+        "rect": {
+          "x": 387,
+          "y": 1303,
+          "w": 16,
+          "h": 16
+        }
+      },
+      {
+        "el": "button.inline-flex.cursor-help.items-center.rounded-sm.hit-area-dense [aria-label=\"About Arcana\"] \"Arcana\"",
+        "rect": {
+          "x": 423,
+          "y": 1303,
+          "w": 45,
+          "h": 20
+        }
+      },
+      {
+        "el": "button.inline-block.h-4.w-4.rounded-full.transition-all",
+        "rect": {
+          "x": 387,
+          "y": 1364,
+          "w": 16,
+          "h": 16
+        }
+      },
+      {
+        "el": "button.inline-flex.cursor-help.items-center.rounded-sm.hit-area-dense [aria-label=\"About Athletics\"] \"Athletics\"",
+        "rect": {
+          "x": 423,
+          "y": 1364,
+          "w": 57,
+          "h": 20
+        }
+      },
+      {
+        "el": "button.inline-block.h-4.w-4.rounded-full.transition-all",
+        "rect": {
+          "x": 387,
+          "y": 1425,
+          "w": 16,
+          "h": 16
+        }
+      }
+    ],
+    "oversized": [],
+    "overlaps": [
+      {
+        "a": "button.duration-base.relative.h-11.w-11.rounded-full [aria-label=\"Done editing\"]",
+        "b": "input.w-12.rounded.border.bg-surface.px-1 [aria-label=\"Current Energy\"]",
+        "overlap": {
+          "w": 33,
+          "h": 34
+        }
+      },
+      {
+        "a": "button.duration-base.relative.h-11.w-11.rounded-full [aria-label=\"Temp Modifier\"]",
+        "b": "input.w-12.rounded.border.bg-surface.px-1 [aria-label=\"Current Energy\"]",
+        "overlap": {
+          "w": 7,
+          "h": 34
+        }
+      },
+      {
+        "a": "button.duration-base.h-11.w-11.rounded-full.shadow-lg [aria-label=\"Recovery\"]",
+        "b": "button.btn-stepper.hit-area-dense.shrink-0.touch-manipulation.select-none [aria-label=\"Decrease energy\"] \"−\"",
+        "overlap": {
+          "w": 24,
+          "h": 24
+        }
+      },
+      {
+        "a": "button.duration-base.h-11.w-11.rounded-full.shadow-lg [aria-label=\"Recovery\"]",
+        "b": "button.btn-stepper.hit-area-dense.shrink-0.touch-manipulation.select-none [aria-label=\"Increase energy\"] \"+\"",
+        "overlap": {
+          "w": 9,
+          "h": 24
+        }
+      },
+      {
+        "a": "button.duration-base.h-11.w-11.rounded-full.shadow-lg [aria-label=\"Level Up\"]",
+        "b": "button.btn-stepper.hit-area-dense.shrink-0.touch-manipulation.select-none [aria-label=\"Increase energy\"] \"+\"",
+        "overlap": {
+          "w": 7,
+          "h": 24
+        }
+      },
+      {
+        "a": "button.touch-target-md-compact.inline-flex.items-center.justify-center.rounded-md [aria-label=\"Edit — spend ability/defense points\"]",
+        "b": "button.inline-flex.cursor-help.items-center.rounded-sm.justify-center [aria-label=\"About Agility\"] \"Agility\"",
+        "overlap": {
+          "w": 4,
+          "h": 6
+        }
+      }
+    ]
+  },
+  {
+    "route": "auth-sheet-add-feat",
+    "url": "/characters/11111111-1111-4111-8111-111111111111",
+    "width": "390",
+    "finalUrl": "/characters/11111111-1111-4111-8111-111111111111",
+    "notes": [],
+    "viewport": {
+      "w": 390,
+      "h": 844
+    },
+    "horizontalPageScroll": false,
+    "medianControlHeight": 44,
+    "counts": {
+      "overflowRight": 0,
+      "textSpill": 1,
+      "tooSmall": 118,
+      "oversized": 2,
+      "overlaps": 84,
+      "controls": 899
+    },
+    "overflowRight": [],
+    "textSpill": [
+      {
+        "el": "span.min-w-0.truncate \"E2E Baseline Knight\"",
+        "clientW": 172,
+        "scrollW": 229,
+        "clipped": false,
+        "rect": {
+          "x": 161,
+          "y": -566,
+          "w": 172,
+          "h": 32
+        }
+      }
+    ],
+    "tooSmall": [
+      {
+        "el": "a.sr-only.focus:not-sr-only.focus:fixed.focus:top-4.focus:left-4 \"Skip to main content\"",
+        "rect": {
+          "x": -1,
+          "y": -1,
+          "w": 1,
+          "h": 1
+        }
+      },
+      {
+        "el": "button.shrink-0.text-primary-fg.transition-colors.hover:scale-110.hover:text-primary-fg-hover [aria-label=\"Edit name\"]",
+        "rect": {
+          "x": 341,
+          "y": -558,
+          "w": 16,
+          "h": 16
+        }
+      },
+      {
+        "el": "button.text-primary-fg.transition-colors.hover:scale-110.hover:text-primary-fg-hover [aria-label=\"Edit species and ancestry\"]",
+        "rect": {
+          "x": 341,
+          "y": -518,
+          "w": 16,
+          "h": 16
+        }
+      },
+      {
+        "el": "button.text-primary-fg.transition-colors.hover:scale-110.hover:text-primary-fg-hover",
+        "rect": {
+          "x": 207,
+          "y": -382,
+          "w": 16,
+          "h": 16
+        }
+      },
+      {
+        "el": "button.btn-stepper.hit-area-dense.shrink-0.touch-manipulation.select-none [aria-label=\"Decrease action points\"] \"−\"",
+        "rect": {
+          "x": 157,
+          "y": -74,
+          "w": 24,
+          "h": 24
+        }
+      },
+      {
+        "el": "button.btn-stepper.hit-area-dense.shrink-0.touch-manipulation.select-none [aria-label=\"Increase action points\"] \"+\"",
+        "rect": {
+          "x": 209,
+          "y": -74,
+          "w": 24,
+          "h": 24
+        }
+      },
+      {
+        "el": "input.w-12.rounded.border.bg-surface.px-1 [aria-label=\"Current Health\"]",
+        "rect": {
+          "x": 46,
+          "y": 8,
+          "w": 48,
+          "h": 34
+        }
+      },
+      {
+        "el": "button.btn-stepper.hit-area-dense.shrink-0.touch-manipulation.select-none [aria-label=\"Decrease health\"] \"−\"",
+        "rect": {
+          "x": 138,
+          "y": 13,
+          "w": 24,
+          "h": 24
+        }
+      },
+      {
+        "el": "button.btn-stepper.hit-area-dense.shrink-0.touch-manipulation.select-none [aria-label=\"Increase health\"] \"+\"",
+        "rect": {
+          "x": 164,
+          "y": 13,
+          "w": 24,
+          "h": 24
+        }
+      },
+      {
+        "el": "input.w-12.rounded.border.bg-surface.px-1 [aria-label=\"Current Energy\"]",
+        "rect": {
+          "x": 46,
+          "y": 112,
+          "w": 48,
+          "h": 34
+        }
+      },
+      {
+        "el": "button.btn-stepper.hit-area-dense.shrink-0.touch-manipulation.select-none [aria-label=\"Decrease energy\"] \"−\"",
+        "rect": {
+          "x": 148,
+          "y": 117,
+          "w": 24,
+          "h": 24
+        }
+      },
+      {
+        "el": "button.btn-stepper.hit-area-dense.shrink-0.touch-manipulation.select-none [aria-label=\"Increase energy\"] \"+\"",
+        "rect": {
+          "x": 174,
+          "y": 117,
+          "w": 24,
+          "h": 24
+        }
+      },
+      {
+        "el": "button.btn-stepper.hit-area-dense.shrink-0.touch-manipulation.select-none [aria-label=\"Remove HP points\"] \"−\"",
+        "rect": {
+          "x": 118,
+          "y": 235,
+          "w": 24,
+          "h": 24
+        }
+      },
+      {
+        "el": "button.btn-stepper.hit-area-dense.shrink-0.touch-manipulation.select-none [aria-label=\"Add HP points\"] \"+\"",
+        "rect": {
+          "x": 170,
+          "y": 235,
+          "w": 24,
+          "h": 24
+        }
+      },
+      {
+        "el": "button.btn-stepper.hit-area-dense.shrink-0.touch-manipulation.select-none [aria-label=\"Remove EN points\"] \"−\"",
+        "rect": {
+          "x": 120,
+          "y": 279,
+          "w": 24,
+          "h": 24
+        }
+      },
+      {
+        "el": "button.btn-stepper.hit-area-dense.shrink-0.touch-manipulation.select-none [aria-label=\"Add EN points\"] \"+\"",
+        "rect": {
+          "x": 172,
+          "y": 279,
+          "w": 24,
+          "h": 24
+        }
+      },
+      {
+        "el": "button.touch-target-md-compact.inline-flex.items-center.justify-center.rounded-md [aria-label=\"Edit — spend ability/defense points\"]",
+        "rect": {
+          "x": -721,
+          "y": 364,
+          "w": 24,
+          "h": 24
+        }
+      },
+      {
+        "el": "button.touch-target-md-compact.inline-flex.items-center.justify-center.rounded-md [aria-label=\"Edit — spend skill points\"]",
+        "rect": {
+          "x": -379,
+          "y": 364,
+          "w": 24,
+          "h": 24
+        }
+      },
+      {
+        "el": "button.inline-flex.items-center.justify-center.rounded.border \"All\"",
+        "rect": {
+          "x": -648,
+          "y": 407,
+          "w": 34,
+          "h": 22
+        }
+      },
+      {
+        "el": "button.inline-flex.items-center.justify-center.rounded.border \"Proficient\"",
+        "rect": {
+          "x": -612,
+          "y": 407,
+          "w": 69,
+          "h": 22
+        }
+      },
+      {
+        "el": "input#sheet-skills-sub-skills.rounded.border-border-light",
+        "rect": {
+          "x": -528,
+          "y": 411,
+          "w": 13,
+          "h": 13
+        }
+      },
+      {
+        "el": "button.inline-block.h-4.w-4.rounded-full.transition-all",
+        "rect": {
+          "x": -639,
+          "y": 502,
+          "w": 16,
+          "h": 16
+        }
+      },
+      {
+        "el": "button.inline-flex.cursor-help.items-center.rounded-sm.hit-area-dense [aria-label=\"About Acrobatics\"] \"Acrobatics\"",
+        "rect": {
+          "x": -603,
+          "y": 502,
+          "w": 67,
+          "h": 20
+        }
+      },
+      {
+        "el": "button.inline-block.h-4.w-4.rounded-full.transition-all",
+        "rect": {
+          "x": -639,
+          "y": 563,
+          "w": 16,
+          "h": 16
+        }
+      },
+      {
+        "el": "button.inline-flex.cursor-help.items-center.rounded-sm.hit-area-dense [aria-label=\"About Analyze\"] \"Analyze\"",
+        "rect": {
+          "x": -603,
+          "y": 563,
+          "w": 51,
+          "h": 20
+        }
+      },
+      {
+        "el": "button.inline-block.h-4.w-4.rounded-full.transition-all",
+        "rect": {
+          "x": -639,
+          "y": 624,
+          "w": 16,
+          "h": 16
+        }
+      },
+      {
+        "el": "button.inline-flex.cursor-help.items-center.rounded-sm.hit-area-dense [aria-label=\"About Arcana\"] \"Arcana\"",
+        "rect": {
+          "x": -603,
+          "y": 624,
+          "w": 45,
+          "h": 20
+        }
+      },
+      {
+        "el": "button.inline-block.h-4.w-4.rounded-full.transition-all",
+        "rect": {
+          "x": -639,
+          "y": 685,
+          "w": 16,
+          "h": 16
+        }
+      },
+      {
+        "el": "button.inline-flex.cursor-help.items-center.rounded-sm.hit-area-dense [aria-label=\"About Athletics\"] \"Athletics\"",
+        "rect": {
+          "x": -603,
+          "y": 685,
+          "w": 57,
+          "h": 20
+        }
+      },
+      {
+        "el": "button.inline-block.h-4.w-4.rounded-full.transition-all",
+        "rect": {
+          "x": -639,
+          "y": 746,
+          "w": 16,
+          "h": 16
+        }
+      }
+    ],
+    "oversized": [
+      {
+        "el": "button.inline-flex.items-center.justify-center.gap-2.whitespace-nowrap \"Cancel\"",
+        "rect": {
+          "x": 16,
+          "y": 752,
+          "w": 168,
+          "h": 44
+        },
+        "inkW": 43,
+        "slackW": 125
+      },
+      {
+        "el": "button.inline-flex.items-center.justify-center.gap-2.whitespace-nowrap \"Add Selected\"",
+        "rect": {
+          "x": 192,
+          "y": 752,
+          "w": 182,
+          "h": 48
+        },
+        "inkW": 98,
+        "slackW": 84
+      }
+    ],
+    "overlaps": [
+      {
+        "a": "a.shrink-0",
+        "b": "input.w-12.rounded.border.bg-surface.px-1 [aria-label=\"Current Health\"]",
+        "overlap": {
+          "w": 14,
+          "h": 26
+        }
+      },
+      {
+        "a": "a.shrink-0",
+        "b": "div.min-h-[44px].min-w-0.flex-1.text-left.transition-colors \"FrenzyAs a basic action you can enter a frenzy for\"",
+        "overlap": {
+          "w": 26,
+          "h": 8
+        }
+      },
+      {
+        "a": "button.flex.min-h-11.min-w-11.items-center.gap-2 [aria-label=\"Account menu\"] \"E\"",
+        "b": "div.min-h-[44px].min-w-0.flex-1.text-left.transition-colors \"FrenzyAs a basic action you can enter a frenzy for\"",
+        "overlap": {
+          "w": 44,
+          "h": 6
+        }
+      },
+      {
+        "a": "button.flex.min-h-[44px].min-w-[44px].items-center.justify-center [aria-label=\"Toggle navigation menu\"]",
+        "b": "button.inline-flex.items-center.justify-center.rounded-lg.transition-colors [aria-label=\"Close modal\"]",
+        "overlap": {
+          "w": 44,
+          "h": 42
+        }
+      },
+      {
+        "a": "button.btn-stepper.hit-area-dense.shrink-0.touch-manipulation.select-none [aria-label=\"Decrease action points\"] \"−\"",
+        "b": "button.btn-stepper.hit-area-dense.shrink-0.touch-manipulation.select-none [aria-label=\"Increase\"] \"+\"",
+        "overlap": {
+          "w": 22,
+          "h": 21
+        }
+      },
+      {
+        "a": "input.w-12.rounded.border.bg-surface.px-1 [aria-label=\"Current Health\"]",
+        "b": "div.min-h-[44px].min-w-0.flex-1.text-left.transition-colors \"EnduranceIncrease the max Health you gain each lev\"",
+        "overlap": {
+          "w": 48,
+          "h": 3
+        }
+      },
+      {
+        "a": "input.w-12.rounded.border.bg-surface.px-1 [aria-label=\"Current Energy\"]",
+        "b": "button.btn-stepper.hit-area-dense.shrink-0.touch-manipulation.select-none [aria-label=\"Decrease\"] \"−\"",
+        "overlap": {
+          "w": 11,
+          "h": 5
+        }
+      },
+      {
+        "a": "input.w-12.rounded.border.bg-surface.px-1 [aria-label=\"Current Energy\"]",
+        "b": "input.search-input.py-2.5.pl-10.pr-4 [aria-label=\"Search feats by name, description, or tags...\"]",
+        "overlap": {
+          "w": 48,
+          "h": 29
+        }
+      },
+      {
+        "a": "button.btn-stepper.hit-area-dense.shrink-0.touch-manipulation.select-none [aria-label=\"Decrease energy\"] \"−\"",
+        "b": "input.search-input.py-2.5.pl-10.pr-4 [aria-label=\"Search feats by name, description, or tags...\"]",
+        "overlap": {
+          "w": 24,
+          "h": 24
+        }
+      },
+      {
+        "a": "button.btn-stepper.hit-area-dense.shrink-0.touch-manipulation.select-none [aria-label=\"Increase energy\"] \"+\"",
+        "b": "input.search-input.py-2.5.pl-10.pr-4 [aria-label=\"Search feats by name, description, or tags...\"]",
+        "overlap": {
+          "w": 24,
+          "h": 24
+        }
+      },
+      {
+        "a": "button.btn-stepper.hit-area-dense.shrink-0.touch-manipulation.select-none [aria-label=\"Remove HP points\"] \"−\"",
+        "b": "div.min-h-[44px].min-w-0.flex-1.text-left.transition-colors \"A Martial's PowerUtility---\"",
+        "overlap": {
+          "w": 24,
+          "h": 24
+        }
+      },
+      {
+        "a": "button.btn-stepper.hit-area-dense.shrink-0.touch-manipulation.select-none [aria-label=\"Add HP points\"] \"+\"",
+        "b": "div.min-h-[44px].min-w-0.flex-1.text-left.transition-colors \"A Martial's PowerUtility---\"",
+        "overlap": {
+          "w": 24,
+          "h": 24
+        }
+      },
+      {
+        "a": "button.btn-stepper.hit-area-dense.shrink-0.touch-manipulation.select-none [aria-label=\"Remove EN points\"] \"−\"",
+        "b": "div.min-h-[44px].min-w-0.flex-1.text-left.transition-colors \"Pack MentalityIncrease your roll to hit against a \"",
+        "overlap": {
+          "w": 24,
+          "h": 18
+        }
+      },
+      {
+        "a": "button.btn-stepper.hit-area-dense.shrink-0.touch-manipulation.select-none [aria-label=\"Add EN points\"] \"+\"",
+        "b": "div.min-h-[44px].min-w-0.flex-1.text-left.transition-colors \"Pack MentalityIncrease your roll to hit against a \"",
+        "overlap": {
+          "w": 24,
+          "h": 18
+        }
+      },
+      {
+        "a": "button.touch-target-md-compact.inline-flex.items-center.justify-center.rounded-md [aria-label=\"Edit — spend ability/defense points\"]",
+        "b": "button.inline-flex.cursor-help.items-center.rounded-sm.justify-center [aria-label=\"About Agility\"] \"Agility\"",
+        "overlap": {
+          "w": 4,
+          "h": 6
+        }
+      },
+      {
+        "a": "button.btn-stepper.hit-area-dense.shrink-0.touch-manipulation.select-none [aria-label=\"Decrease\"] \"−\"",
+        "b": "input.search-input.py-2.5.pl-10.pr-4 [aria-label=\"Search feats by name, description, or tags...\"]",
+        "overlap": {
+          "w": 24,
+          "h": 23
+        }
+      },
+      {
+        "a": "button.btn-stepper.hit-area-dense.shrink-0.touch-manipulation.select-none [aria-label=\"Increase\"] \"+\"",
+        "b": "input.search-input.py-2.5.pl-10.pr-4 [aria-label=\"Search feats by name, description, or tags...\"]",
+        "overlap": {
+          "w": 24,
+          "h": 23
+        }
+      },
+      {
+        "a": "div.min-h-[44px].min-w-0.flex-1.text-left.transition-colors \"Pack BondYour species forms strong bonds with thei\"",
+        "b": "button.flex.w-full.items-center.justify-between.gap-2 [aria-label=\"Sort by. Current: Name A→Z. Choose sort order.\"] \"Sort byName(A→Z)\"",
+        "overlap": {
+          "w": 290,
+          "h": 35
+        }
+      },
+      {
+        "a": "div.min-h-[44px].min-w-0.flex-1.text-left.transition-colors \"Pack MentalityIncrease your roll to hit against a \"",
+        "b": "div.min-h-[44px].min-w-0.flex-1.text-left.transition-colors \"AbjureControl---\"",
+        "overlap": {
+          "w": 290,
+          "h": 25
+        }
+      },
+      {
+        "a": "div.min-h-[44px].min-w-0.flex-1.text-left.transition-colors \"Unstable AngerWhen you become the target of a Char\"",
+        "b": "div.min-h-[44px].min-w-0.flex-1.text-left.transition-colors \"Action Surge (Level 2)Utility-2Partial\"",
+        "overlap": {
+          "w": 290,
+          "h": 32
+        }
+      },
+      {
+        "a": "button.inline-flex.items-center.gap-1.5.text-left.transition-colors [aria-label=\"Collapse Archetype Feats\"] \"Archetype Feats\"",
+        "b": "div.min-h-[44px].min-w-0.flex-1.text-left.transition-colors \"ADHDUtility---\"",
+        "overlap": {
+          "w": 151,
+          "h": 39
+        }
+      },
+      {
+        "a": "button.inline-flex.items-center.justify-center.rounded-lg.transition-colors [aria-label=\"Add archetype feat\"]",
+        "b": "div.min-h-[44px].min-w-0.flex-1.text-left.transition-colors \"ADHDUtility---\"",
+        "overlap": {
+          "w": 28,
+          "h": 28
+        }
+      },
+      {
+        "a": "button.flex.w-full.items-center.justify-between.gap-2 [aria-label=\"Sort by. Current: Name A→Z. Choose sort order.\"] \"Sort byName(A→Z)\"",
+        "b": "div.min-h-[44px].min-w-0.flex-1.text-left.transition-colors \"All-SeeingUtility-2Full\"",
+        "overlap": {
+          "w": 292,
+          "h": 24
+        }
+      },
+      {
+        "a": "div.min-h-[44px].min-w-0.flex-1.text-left.transition-colors \"Action SurgeAs a free action, gain 2 action points\"",
+        "b": "div.min-h-[44px].min-w-0.flex-1.text-left.transition-colors \"All-SeeingUtility-2Full\"",
+        "overlap": {
+          "w": 250,
+          "h": 12
+        }
+      },
+      {
+        "a": "div.min-h-[44px].min-w-0.flex-1.text-left.transition-colors \"Action SurgeAs a free action, gain 2 action points\"",
+        "b": "div.min-h-[44px].min-w-0.flex-1.text-left.transition-colors \"Always PreparedUtility---\"",
+        "overlap": {
+          "w": 250,
+          "h": 3
+        }
+      }
+    ]
+  },
+  {
+    "route": "auth-sheet-add-library",
+    "url": "/characters/11111111-1111-4111-8111-111111111111",
+    "width": "390",
+    "finalUrl": "/characters/11111111-1111-4111-8111-111111111111",
+    "notes": [
+      "action miss: /add (power|item|library)/i — locator.click: Timeout 5000ms exceeded."
+    ],
+    "viewport": {
+      "w": 390,
+      "h": 844
+    },
+    "horizontalPageScroll": false,
+    "medianControlHeight": 44,
+    "counts": {
+      "overflowRight": 0,
+      "textSpill": 1,
+      "tooSmall": 117,
+      "oversized": 0,
+      "overlaps": 6,
+      "controls": 243
+    },
+    "overflowRight": [],
+    "textSpill": [
+      {
+        "el": "span.min-w-0.truncate \"E2E Baseline Knight\"",
+        "clientW": 172,
+        "scrollW": 229,
+        "clipped": false,
+        "rect": {
+          "x": 161,
+          "y": 113,
+          "w": 172,
+          "h": 32
+        }
+      }
+    ],
+    "tooSmall": [
+      {
+        "el": "a.sr-only.focus:not-sr-only.focus:fixed.focus:top-4.focus:left-4 \"Skip to main content\"",
+        "rect": {
+          "x": -1,
+          "y": -1,
+          "w": 1,
+          "h": 1
+        }
+      },
+      {
+        "el": "button.shrink-0.text-primary-fg.transition-colors.hover:scale-110.hover:text-primary-fg-hover [aria-label=\"Edit name\"]",
+        "rect": {
+          "x": 341,
+          "y": 121,
+          "w": 16,
+          "h": 16
+        }
+      },
+      {
+        "el": "button.text-primary-fg.transition-colors.hover:scale-110.hover:text-primary-fg-hover [aria-label=\"Edit species and ancestry\"]",
+        "rect": {
+          "x": 341,
+          "y": 161,
+          "w": 16,
+          "h": 16
+        }
+      },
+      {
+        "el": "button.text-primary-fg.transition-colors.hover:scale-110.hover:text-primary-fg-hover",
+        "rect": {
+          "x": 207,
+          "y": 297,
+          "w": 16,
+          "h": 16
+        }
+      },
+      {
+        "el": "button.btn-stepper.hit-area-dense.shrink-0.touch-manipulation.select-none [aria-label=\"Decrease action points\"] \"−\"",
+        "rect": {
+          "x": 157,
+          "y": 605,
+          "w": 24,
+          "h": 24
+        }
+      },
+      {
+        "el": "button.btn-stepper.hit-area-dense.shrink-0.touch-manipulation.select-none [aria-label=\"Increase action points\"] \"+\"",
+        "rect": {
+          "x": 209,
+          "y": 605,
+          "w": 24,
+          "h": 24
+        }
+      },
+      {
+        "el": "input.w-12.rounded.border.bg-surface.px-1 [aria-label=\"Current Health\"]",
+        "rect": {
+          "x": 46,
+          "y": 687,
+          "w": 48,
+          "h": 34
+        }
+      },
+      {
+        "el": "button.btn-stepper.hit-area-dense.shrink-0.touch-manipulation.select-none [aria-label=\"Decrease health\"] \"−\"",
+        "rect": {
+          "x": 138,
+          "y": 692,
+          "w": 24,
+          "h": 24
+        }
+      },
+      {
+        "el": "button.btn-stepper.hit-area-dense.shrink-0.touch-manipulation.select-none [aria-label=\"Increase health\"] \"+\"",
+        "rect": {
+          "x": 164,
+          "y": 692,
+          "w": 24,
+          "h": 24
+        }
+      },
+      {
+        "el": "input.w-12.rounded.border.bg-surface.px-1 [aria-label=\"Current Energy\"]",
+        "rect": {
+          "x": 46,
+          "y": 791,
+          "w": 48,
+          "h": 34
+        }
+      },
+      {
+        "el": "button.btn-stepper.hit-area-dense.shrink-0.touch-manipulation.select-none [aria-label=\"Decrease energy\"] \"−\"",
+        "rect": {
+          "x": 148,
+          "y": 796,
+          "w": 24,
+          "h": 24
+        }
+      },
+      {
+        "el": "button.btn-stepper.hit-area-dense.shrink-0.touch-manipulation.select-none [aria-label=\"Increase energy\"] \"+\"",
+        "rect": {
+          "x": 174,
+          "y": 796,
+          "w": 24,
+          "h": 24
+        }
+      },
+      {
+        "el": "button.btn-stepper.hit-area-dense.shrink-0.touch-manipulation.select-none [aria-label=\"Remove HP points\"] \"−\"",
+        "rect": {
+          "x": 118,
+          "y": 914,
+          "w": 24,
+          "h": 24
+        }
+      },
+      {
+        "el": "button.btn-stepper.hit-area-dense.shrink-0.touch-manipulation.select-none [aria-label=\"Add HP points\"] \"+\"",
+        "rect": {
+          "x": 170,
+          "y": 914,
+          "w": 24,
+          "h": 24
+        }
+      },
+      {
+        "el": "button.btn-stepper.hit-area-dense.shrink-0.touch-manipulation.select-none [aria-label=\"Remove EN points\"] \"−\"",
+        "rect": {
+          "x": 120,
+          "y": 958,
+          "w": 24,
+          "h": 24
+        }
+      },
+      {
+        "el": "button.btn-stepper.hit-area-dense.shrink-0.touch-manipulation.select-none [aria-label=\"Add EN points\"] \"+\"",
+        "rect": {
+          "x": 172,
+          "y": 958,
+          "w": 24,
+          "h": 24
+        }
+      },
+      {
+        "el": "button.touch-target-md-compact.inline-flex.items-center.justify-center.rounded-md [aria-label=\"Edit — spend ability/defense points\"]",
+        "rect": {
+          "x": 305,
+          "y": 1043,
+          "w": 24,
+          "h": 24
+        }
+      },
+      {
+        "el": "button.touch-target-md-compact.inline-flex.items-center.justify-center.rounded-md [aria-label=\"Edit — spend skill points\"]",
+        "rect": {
+          "x": 647,
+          "y": 1043,
+          "w": 24,
+          "h": 24
+        }
+      },
+      {
+        "el": "button.inline-flex.items-center.justify-center.rounded.border \"All\"",
+        "rect": {
+          "x": 378,
+          "y": 1086,
+          "w": 34,
+          "h": 22
+        }
+      },
+      {
+        "el": "button.inline-flex.items-center.justify-center.rounded.border \"Proficient\"",
+        "rect": {
+          "x": 414,
+          "y": 1086,
+          "w": 69,
+          "h": 22
+        }
+      },
+      {
+        "el": "input#sheet-skills-sub-skills.rounded.border-border-light",
+        "rect": {
+          "x": 498,
+          "y": 1090,
+          "w": 13,
+          "h": 13
+        }
+      },
+      {
+        "el": "button.inline-block.h-4.w-4.rounded-full.transition-all",
+        "rect": {
+          "x": 387,
+          "y": 1181,
+          "w": 16,
+          "h": 16
+        }
+      },
+      {
+        "el": "button.inline-flex.cursor-help.items-center.rounded-sm.hit-area-dense [aria-label=\"About Acrobatics\"] \"Acrobatics\"",
+        "rect": {
+          "x": 423,
+          "y": 1181,
+          "w": 67,
+          "h": 20
+        }
+      },
+      {
+        "el": "button.inline-block.h-4.w-4.rounded-full.transition-all",
+        "rect": {
+          "x": 387,
+          "y": 1242,
+          "w": 16,
+          "h": 16
+        }
+      },
+      {
+        "el": "button.inline-flex.cursor-help.items-center.rounded-sm.hit-area-dense [aria-label=\"About Analyze\"] \"Analyze\"",
+        "rect": {
+          "x": 423,
+          "y": 1242,
+          "w": 51,
+          "h": 20
+        }
+      },
+      {
+        "el": "button.inline-block.h-4.w-4.rounded-full.transition-all",
+        "rect": {
+          "x": 387,
+          "y": 1303,
+          "w": 16,
+          "h": 16
+        }
+      },
+      {
+        "el": "button.inline-flex.cursor-help.items-center.rounded-sm.hit-area-dense [aria-label=\"About Arcana\"] \"Arcana\"",
+        "rect": {
+          "x": 423,
+          "y": 1303,
+          "w": 45,
+          "h": 20
+        }
+      },
+      {
+        "el": "button.inline-block.h-4.w-4.rounded-full.transition-all",
+        "rect": {
+          "x": 387,
+          "y": 1364,
+          "w": 16,
+          "h": 16
+        }
+      },
+      {
+        "el": "button.inline-flex.cursor-help.items-center.rounded-sm.hit-area-dense [aria-label=\"About Athletics\"] \"Athletics\"",
+        "rect": {
+          "x": 423,
+          "y": 1364,
+          "w": 57,
+          "h": 20
+        }
+      },
+      {
+        "el": "button.inline-block.h-4.w-4.rounded-full.transition-all",
+        "rect": {
+          "x": 387,
+          "y": 1425,
+          "w": 16,
+          "h": 16
+        }
+      }
+    ],
+    "oversized": [],
+    "overlaps": [
+      {
+        "a": "button.duration-base.relative.h-11.w-11.rounded-full [aria-label=\"Done editing\"]",
+        "b": "input.w-12.rounded.border.bg-surface.px-1 [aria-label=\"Current Energy\"]",
+        "overlap": {
+          "w": 33,
+          "h": 34
+        }
+      },
+      {
+        "a": "button.duration-base.relative.h-11.w-11.rounded-full [aria-label=\"Temp Modifier\"]",
+        "b": "input.w-12.rounded.border.bg-surface.px-1 [aria-label=\"Current Energy\"]",
+        "overlap": {
+          "w": 7,
+          "h": 34
+        }
+      },
+      {
+        "a": "button.duration-base.h-11.w-11.rounded-full.shadow-lg [aria-label=\"Recovery\"]",
+        "b": "button.btn-stepper.hit-area-dense.shrink-0.touch-manipulation.select-none [aria-label=\"Decrease energy\"] \"−\"",
+        "overlap": {
+          "w": 24,
+          "h": 24
+        }
+      },
+      {
+        "a": "button.duration-base.h-11.w-11.rounded-full.shadow-lg [aria-label=\"Recovery\"]",
+        "b": "button.btn-stepper.hit-area-dense.shrink-0.touch-manipulation.select-none [aria-label=\"Increase energy\"] \"+\"",
+        "overlap": {
+          "w": 9,
+          "h": 24
+        }
+      },
+      {
+        "a": "button.duration-base.h-11.w-11.rounded-full.shadow-lg [aria-label=\"Level Up\"]",
+        "b": "button.btn-stepper.hit-area-dense.shrink-0.touch-manipulation.select-none [aria-label=\"Increase energy\"] \"+\"",
+        "overlap": {
+          "w": 7,
+          "h": 24
+        }
+      },
+      {
+        "a": "button.touch-target-md-compact.inline-flex.items-center.justify-center.rounded-md [aria-label=\"Edit — spend ability/defense points\"]",
+        "b": "button.inline-flex.cursor-help.items-center.rounded-sm.justify-center [aria-label=\"About Agility\"] \"Agility\"",
+        "overlap": {
+          "w": 4,
+          "h": 6
+        }
+      }
+    ]
+  },
+  {
+    "route": "auth-sheet-levelup",
+    "url": "/characters/11111111-1111-4111-8111-111111111111",
+    "width": "390",
+    "finalUrl": "/characters/11111111-1111-4111-8111-111111111111",
+    "notes": [],
+    "viewport": {
+      "w": 390,
+      "h": 844
+    },
+    "horizontalPageScroll": false,
+    "medianControlHeight": 44,
+    "counts": {
+      "overflowRight": 0,
+      "textSpill": 1,
+      "tooSmall": 92,
+      "oversized": 2,
+      "overlaps": 2,
+      "controls": 208
+    },
+    "overflowRight": [],
+    "textSpill": [
+      {
+        "el": "span.min-w-0.truncate \"E2E Baseline Knight\"",
+        "clientW": 196,
+        "scrollW": 229,
+        "clipped": false,
+        "rect": {
+          "x": 161,
+          "y": 113,
+          "w": 196,
+          "h": 32
+        }
+      }
+    ],
+    "tooSmall": [
+      {
+        "el": "a.sr-only.focus:not-sr-only.focus:fixed.focus:top-4.focus:left-4 \"Skip to main content\"",
+        "rect": {
+          "x": -1,
+          "y": -1,
+          "w": 1,
+          "h": 1
+        }
+      },
+      {
+        "el": "button.text-primary-fg.transition-colors.hover:scale-110.hover:text-primary-fg-hover",
+        "rect": {
+          "x": 207,
+          "y": 245,
+          "w": 16,
+          "h": 16
+        }
+      },
+      {
+        "el": "button.btn-stepper.hit-area-dense.shrink-0.touch-manipulation.select-none [aria-label=\"Decrease action points\"] \"−\"",
+        "rect": {
+          "x": 157,
+          "y": 553,
+          "w": 24,
+          "h": 24
+        }
+      },
+      {
+        "el": "button.btn-stepper.hit-area-dense.shrink-0.touch-manipulation.select-none [aria-label=\"Increase action points\"] \"+\"",
+        "rect": {
+          "x": 209,
+          "y": 553,
+          "w": 24,
+          "h": 24
+        }
+      },
+      {
+        "el": "input.w-12.rounded.border.bg-surface.px-1 [aria-label=\"Current Health\"]",
+        "rect": {
+          "x": 46,
+          "y": 635,
+          "w": 48,
+          "h": 34
+        }
+      },
+      {
+        "el": "button.btn-stepper.hit-area-dense.shrink-0.touch-manipulation.select-none [aria-label=\"Decrease health\"] \"−\"",
+        "rect": {
+          "x": 138,
+          "y": 640,
+          "w": 24,
+          "h": 24
+        }
+      },
+      {
+        "el": "button.btn-stepper.hit-area-dense.shrink-0.touch-manipulation.select-none [aria-label=\"Increase health\"] \"+\"",
+        "rect": {
+          "x": 164,
+          "y": 640,
+          "w": 24,
+          "h": 24
+        }
+      },
+      {
+        "el": "input.w-12.rounded.border.bg-surface.px-1 [aria-label=\"Current Energy\"]",
+        "rect": {
+          "x": 46,
+          "y": 739,
+          "w": 48,
+          "h": 34
+        }
+      },
+      {
+        "el": "button.btn-stepper.hit-area-dense.shrink-0.touch-manipulation.select-none [aria-label=\"Decrease energy\"] \"−\"",
+        "rect": {
+          "x": 148,
+          "y": 744,
+          "w": 24,
+          "h": 24
+        }
+      },
+      {
+        "el": "button.btn-stepper.hit-area-dense.shrink-0.touch-manipulation.select-none [aria-label=\"Increase energy\"] \"+\"",
+        "rect": {
+          "x": 174,
+          "y": 744,
+          "w": 24,
+          "h": 24
+        }
+      },
+      {
+        "el": "button.inline-flex.items-center.justify-center.rounded.border \"All\"",
+        "rect": {
+          "x": 378,
+          "y": 891,
+          "w": 34,
+          "h": 22
+        }
+      },
+      {
+        "el": "button.inline-flex.items-center.justify-center.rounded.border \"Proficient\"",
+        "rect": {
+          "x": 414,
+          "y": 891,
+          "w": 69,
+          "h": 22
+        }
+      },
+      {
+        "el": "input#sheet-skills-sub-skills.rounded.border-border-light",
+        "rect": {
+          "x": 498,
+          "y": 895,
+          "w": 13,
+          "h": 13
+        }
+      },
+      {
+        "el": "button.inline-block.h-4.w-4.rounded-full.transition-all",
+        "rect": {
+          "x": 387,
+          "y": 986,
+          "w": 16,
+          "h": 16
+        }
+      },
+      {
+        "el": "button.inline-flex.cursor-help.items-center.rounded-sm.hit-area-dense [aria-label=\"About Acrobatics\"] \"Acrobatics\"",
+        "rect": {
+          "x": 423,
+          "y": 986,
+          "w": 67,
+          "h": 20
+        }
+      },
+      {
+        "el": "button.inline-block.h-4.w-4.rounded-full.transition-all",
+        "rect": {
+          "x": 387,
+          "y": 1047,
+          "w": 16,
+          "h": 16
+        }
+      },
+      {
+        "el": "button.inline-flex.cursor-help.items-center.rounded-sm.hit-area-dense [aria-label=\"About Analyze\"] \"Analyze\"",
+        "rect": {
+          "x": 423,
+          "y": 1047,
+          "w": 51,
+          "h": 20
+        }
+      },
+      {
+        "el": "button.inline-block.h-4.w-4.rounded-full.transition-all",
+        "rect": {
+          "x": 387,
+          "y": 1108,
+          "w": 16,
+          "h": 16
+        }
+      },
+      {
+        "el": "button.inline-flex.cursor-help.items-center.rounded-sm.hit-area-dense [aria-label=\"About Arcana\"] \"Arcana\"",
+        "rect": {
+          "x": 423,
+          "y": 1108,
+          "w": 45,
+          "h": 20
+        }
+      },
+      {
+        "el": "button.inline-block.h-4.w-4.rounded-full.transition-all",
+        "rect": {
+          "x": 387,
+          "y": 1169,
+          "w": 16,
+          "h": 16
+        }
+      },
+      {
+        "el": "button.inline-flex.cursor-help.items-center.rounded-sm.hit-area-dense [aria-label=\"About Athletics\"] \"Athletics\"",
+        "rect": {
+          "x": 423,
+          "y": 1169,
+          "w": 57,
+          "h": 20
+        }
+      },
+      {
+        "el": "button.inline-block.h-4.w-4.rounded-full.transition-all",
+        "rect": {
+          "x": 387,
+          "y": 1230,
+          "w": 16,
+          "h": 16
+        }
+      },
+      {
+        "el": "button.inline-flex.cursor-help.items-center.rounded-sm.hit-area-dense [aria-label=\"About Beastcraft\"] \"Beastcraft\"",
+        "rect": {
+          "x": 423,
+          "y": 1230,
+          "w": 65,
+          "h": 20
+        }
+      },
+      {
+        "el": "button.inline-block.h-4.w-4.rounded-full.transition-all",
+        "rect": {
+          "x": 387,
+          "y": 1291,
+          "w": 16,
+          "h": 16
+        }
+      },
+      {
+        "el": "button.inline-flex.cursor-help.items-center.rounded-sm.hit-area-dense [aria-label=\"About Craft\"] \"Craft\"",
+        "rect": {
+          "x": 423,
+          "y": 1291,
+          "w": 31,
+          "h": 20
+        }
+      },
+      {
+        "el": "button.inline-flex.cursor-help.items-center.rounded-sm.hit-area-dense [aria-label=\"About Artistry\"] \"Artistry\"",
+        "rect": {
+          "x": 437,
+          "y": 1352,
+          "w": 49,
+          "h": 20
+        }
+      },
+      {
+        "el": "button.inline-flex.cursor-help.items-center.rounded-sm.hit-area-dense [aria-label=\"About Smith\"] \"Smith\"",
+        "rect": {
+          "x": 437,
+          "y": 1413,
+          "w": 37,
+          "h": 20
+        }
+      },
+      {
+        "el": "button.inline-block.h-4.w-4.rounded-full.transition-all",
+        "rect": {
+          "x": 387,
+          "y": 1474,
+          "w": 16,
+          "h": 16
+        }
+      },
+      {
+        "el": "button.inline-flex.cursor-help.items-center.rounded-sm.hit-area-dense [aria-label=\"About Deceive\"] \"Deceive\"",
+        "rect": {
+          "x": 423,
+          "y": 1474,
+          "w": 50,
+          "h": 20
+        }
+      },
+      {
+        "el": "button.inline-block.h-4.w-4.rounded-full.transition-all",
+        "rect": {
+          "x": 387,
+          "y": 1535,
+          "w": 16,
+          "h": 16
+        }
+      }
+    ],
+    "oversized": [
+      {
+        "el": "button.inline-flex.items-center.justify-center.gap-2.whitespace-nowrap \"Cancel\"",
+        "rect": {
+          "x": 16,
+          "y": 784,
+          "w": 164,
+          "h": 44
+        },
+        "inkW": 43,
+        "slackW": 121
+      },
+      {
+        "el": "button.inline-flex.items-center.justify-center.gap-2.whitespace-nowrap \"Set Level to 20\"",
+        "rect": {
+          "x": 192,
+          "y": 784,
+          "w": 182,
+          "h": 48
+        },
+        "inkW": 134,
+        "slackW": 48
+      }
+    ],
+    "overlaps": [
+      {
+        "a": "button.flex.min-h-[44px].min-w-[44px].items-center.justify-center [aria-label=\"Toggle navigation menu\"]",
+        "b": "button.inline-flex.items-center.justify-center.rounded-lg.transition-colors [aria-label=\"Close modal\"]",
+        "overlap": {
+          "w": 44,
+          "h": 42
+        }
+      },
+      {
+        "a": "button.cursor-pointer.transition-shadow.hover:ring-2.hover:ring-primary/40.focus-visible:outline-none [aria-label=\"View enlarged image: E2E Baseline Knight\"]",
+        "b": "button.btn-stepper.hit-area-dense.shrink-0.touch-manipulation.select-none [aria-label=\"Decrease level\"] \"−\"",
+        "overlap": {
+          "w": 39,
+          "h": 40
+        }
+      }
+    ]
+  },
+  {
+    "route": "auth-sheet-recovery",
+    "url": "/characters/11111111-1111-4111-8111-111111111111",
+    "width": "390",
+    "finalUrl": "/characters/11111111-1111-4111-8111-111111111111",
+    "notes": [],
+    "viewport": {
+      "w": 390,
+      "h": 844
+    },
+    "horizontalPageScroll": false,
+    "medianControlHeight": 44,
+    "counts": {
+      "overflowRight": 0,
+      "textSpill": 1,
+      "tooSmall": 90,
+      "oversized": 2,
+      "overlaps": 2,
+      "controls": 208
+    },
+    "overflowRight": [],
+    "textSpill": [
+      {
+        "el": "span.min-w-0.truncate \"E2E Baseline Knight\"",
+        "clientW": 196,
+        "scrollW": 229,
+        "clipped": false,
+        "rect": {
+          "x": 161,
+          "y": 113,
+          "w": 196,
+          "h": 32
+        }
+      }
+    ],
+    "tooSmall": [
+      {
+        "el": "a.sr-only.focus:not-sr-only.focus:fixed.focus:top-4.focus:left-4 \"Skip to main content\"",
+        "rect": {
+          "x": -1,
+          "y": -1,
+          "w": 1,
+          "h": 1
+        }
+      },
+      {
+        "el": "button.text-primary-fg.transition-colors.hover:scale-110.hover:text-primary-fg-hover",
+        "rect": {
+          "x": 207,
+          "y": 245,
+          "w": 16,
+          "h": 16
+        }
+      },
+      {
+        "el": "button.btn-stepper.hit-area-dense.shrink-0.touch-manipulation.select-none [aria-label=\"Decrease action points\"] \"−\"",
+        "rect": {
+          "x": 157,
+          "y": 553,
+          "w": 24,
+          "h": 24
+        }
+      },
+      {
+        "el": "button.btn-stepper.hit-area-dense.shrink-0.touch-manipulation.select-none [aria-label=\"Increase action points\"] \"+\"",
+        "rect": {
+          "x": 209,
+          "y": 553,
+          "w": 24,
+          "h": 24
+        }
+      },
+      {
+        "el": "input.w-12.rounded.border.bg-surface.px-1 [aria-label=\"Current Health\"]",
+        "rect": {
+          "x": 46,
+          "y": 635,
+          "w": 48,
+          "h": 34
+        }
+      },
+      {
+        "el": "button.btn-stepper.hit-area-dense.shrink-0.touch-manipulation.select-none [aria-label=\"Decrease health\"] \"−\"",
+        "rect": {
+          "x": 138,
+          "y": 640,
+          "w": 24,
+          "h": 24
+        }
+      },
+      {
+        "el": "button.btn-stepper.hit-area-dense.shrink-0.touch-manipulation.select-none [aria-label=\"Increase health\"] \"+\"",
+        "rect": {
+          "x": 164,
+          "y": 640,
+          "w": 24,
+          "h": 24
+        }
+      },
+      {
+        "el": "input.w-12.rounded.border.bg-surface.px-1 [aria-label=\"Current Energy\"]",
+        "rect": {
+          "x": 46,
+          "y": 739,
+          "w": 48,
+          "h": 34
+        }
+      },
+      {
+        "el": "button.btn-stepper.hit-area-dense.shrink-0.touch-manipulation.select-none [aria-label=\"Decrease energy\"] \"−\"",
+        "rect": {
+          "x": 148,
+          "y": 744,
+          "w": 24,
+          "h": 24
+        }
+      },
+      {
+        "el": "button.btn-stepper.hit-area-dense.shrink-0.touch-manipulation.select-none [aria-label=\"Increase energy\"] \"+\"",
+        "rect": {
+          "x": 174,
+          "y": 744,
+          "w": 24,
+          "h": 24
+        }
+      },
+      {
+        "el": "button.inline-flex.items-center.justify-center.rounded.border \"All\"",
+        "rect": {
+          "x": 378,
+          "y": 891,
+          "w": 34,
+          "h": 22
+        }
+      },
+      {
+        "el": "button.inline-flex.items-center.justify-center.rounded.border \"Proficient\"",
+        "rect": {
+          "x": 414,
+          "y": 891,
+          "w": 69,
+          "h": 22
+        }
+      },
+      {
+        "el": "input#sheet-skills-sub-skills.rounded.border-border-light",
+        "rect": {
+          "x": 498,
+          "y": 895,
+          "w": 13,
+          "h": 13
+        }
+      },
+      {
+        "el": "button.inline-block.h-4.w-4.rounded-full.transition-all",
+        "rect": {
+          "x": 387,
+          "y": 986,
+          "w": 16,
+          "h": 16
+        }
+      },
+      {
+        "el": "button.inline-flex.cursor-help.items-center.rounded-sm.hit-area-dense [aria-label=\"About Acrobatics\"] \"Acrobatics\"",
+        "rect": {
+          "x": 423,
+          "y": 986,
+          "w": 67,
+          "h": 20
+        }
+      },
+      {
+        "el": "button.inline-block.h-4.w-4.rounded-full.transition-all",
+        "rect": {
+          "x": 387,
+          "y": 1047,
+          "w": 16,
+          "h": 16
+        }
+      },
+      {
+        "el": "button.inline-flex.cursor-help.items-center.rounded-sm.hit-area-dense [aria-label=\"About Analyze\"] \"Analyze\"",
+        "rect": {
+          "x": 423,
+          "y": 1047,
+          "w": 51,
+          "h": 20
+        }
+      },
+      {
+        "el": "button.inline-block.h-4.w-4.rounded-full.transition-all",
+        "rect": {
+          "x": 387,
+          "y": 1108,
+          "w": 16,
+          "h": 16
+        }
+      },
+      {
+        "el": "button.inline-flex.cursor-help.items-center.rounded-sm.hit-area-dense [aria-label=\"About Arcana\"] \"Arcana\"",
+        "rect": {
+          "x": 423,
+          "y": 1108,
+          "w": 45,
+          "h": 20
+        }
+      },
+      {
+        "el": "button.inline-block.h-4.w-4.rounded-full.transition-all",
+        "rect": {
+          "x": 387,
+          "y": 1169,
+          "w": 16,
+          "h": 16
+        }
+      },
+      {
+        "el": "button.inline-flex.cursor-help.items-center.rounded-sm.hit-area-dense [aria-label=\"About Athletics\"] \"Athletics\"",
+        "rect": {
+          "x": 423,
+          "y": 1169,
+          "w": 57,
+          "h": 20
+        }
+      },
+      {
+        "el": "button.inline-block.h-4.w-4.rounded-full.transition-all",
+        "rect": {
+          "x": 387,
+          "y": 1230,
+          "w": 16,
+          "h": 16
+        }
+      },
+      {
+        "el": "button.inline-flex.cursor-help.items-center.rounded-sm.hit-area-dense [aria-label=\"About Beastcraft\"] \"Beastcraft\"",
+        "rect": {
+          "x": 423,
+          "y": 1230,
+          "w": 65,
+          "h": 20
+        }
+      },
+      {
+        "el": "button.inline-block.h-4.w-4.rounded-full.transition-all",
+        "rect": {
+          "x": 387,
+          "y": 1291,
+          "w": 16,
+          "h": 16
+        }
+      },
+      {
+        "el": "button.inline-flex.cursor-help.items-center.rounded-sm.hit-area-dense [aria-label=\"About Craft\"] \"Craft\"",
+        "rect": {
+          "x": 423,
+          "y": 1291,
+          "w": 31,
+          "h": 20
+        }
+      },
+      {
+        "el": "button.inline-flex.cursor-help.items-center.rounded-sm.hit-area-dense [aria-label=\"About Artistry\"] \"Artistry\"",
+        "rect": {
+          "x": 437,
+          "y": 1352,
+          "w": 49,
+          "h": 20
+        }
+      },
+      {
+        "el": "button.inline-flex.cursor-help.items-center.rounded-sm.hit-area-dense [aria-label=\"About Smith\"] \"Smith\"",
+        "rect": {
+          "x": 437,
+          "y": 1413,
+          "w": 37,
+          "h": 20
+        }
+      },
+      {
+        "el": "button.inline-block.h-4.w-4.rounded-full.transition-all",
+        "rect": {
+          "x": 387,
+          "y": 1474,
+          "w": 16,
+          "h": 16
+        }
+      },
+      {
+        "el": "button.inline-flex.cursor-help.items-center.rounded-sm.hit-area-dense [aria-label=\"About Deceive\"] \"Deceive\"",
+        "rect": {
+          "x": 423,
+          "y": 1474,
+          "w": 50,
+          "h": 20
+        }
+      },
+      {
+        "el": "button.inline-block.h-4.w-4.rounded-full.transition-all",
+        "rect": {
+          "x": 387,
+          "y": 1535,
+          "w": 16,
+          "h": 16
+        }
+      }
+    ],
+    "oversized": [
+      {
+        "el": "button.inline-flex.items-center.justify-center.rounded.border \"Full Recovery\"",
+        "rect": {
+          "x": 29,
+          "y": 106,
+          "w": 164,
+          "h": 44
+        },
+        "inkW": 110,
+        "slackW": 54
+      },
+      {
+        "el": "button.inline-flex.items-center.justify-center.gap-2.whitespace-nowrap \"Full Recovery\"",
+        "rect": {
+          "x": 227,
+          "y": 784,
+          "w": 147,
+          "h": 48
+        },
+        "inkW": 99,
+        "slackW": 48
+      }
+    ],
+    "overlaps": [
+      {
+        "a": "button.flex.min-h-[44px].min-w-[44px].items-center.justify-center [aria-label=\"Toggle navigation menu\"]",
+        "b": "button.inline-flex.items-center.justify-center.rounded-lg.transition-colors [aria-label=\"Close modal\"]",
+        "overlap": {
+          "w": 44,
+          "h": 42
+        }
+      },
+      {
+        "a": "button.cursor-pointer.transition-shadow.hover:ring-2.hover:ring-primary/40.focus-visible:outline-none [aria-label=\"View enlarged image: E2E Baseline Knight\"]",
+        "b": "button.inline-flex.items-center.justify-center.rounded.border \"Full Recovery\"",
+        "overlap": {
+          "w": 112,
+          "h": 17
+        }
+      }
+    ]
+  },
+  {
+    "route": "auth-sheet",
+    "url": "/characters/11111111-1111-4111-8111-111111111111",
+    "width": "360",
+    "finalUrl": "/characters/11111111-1111-4111-8111-111111111111",
+    "notes": [],
+    "viewport": {
+      "w": 360,
+      "h": 800
+    },
+    "horizontalPageScroll": false,
+    "medianControlHeight": 44,
+    "counts": {
+      "overflowRight": 0,
+      "textSpill": 1,
+      "tooSmall": 90,
+      "oversized": 0,
+      "overlaps": 5,
+      "controls": 209
+    },
+    "overflowRight": [],
+    "textSpill": [
+      {
+        "el": "span.min-w-0.truncate \"E2E Baseline Knight\"",
+        "clientW": 166,
+        "scrollW": 229,
+        "clipped": false,
+        "rect": {
+          "x": 161,
+          "y": 113,
+          "w": 166,
+          "h": 32
+        }
+      }
+    ],
+    "tooSmall": [
+      {
+        "el": "a.sr-only.focus:not-sr-only.focus:fixed.focus:top-4.focus:left-4 \"Skip to main content\"",
+        "rect": {
+          "x": -1,
+          "y": -1,
+          "w": 1,
+          "h": 1
+        }
+      },
+      {
+        "el": "button.text-primary-fg.transition-colors.hover:scale-110.hover:text-primary-fg-hover",
+        "rect": {
+          "x": 207,
+          "y": 245,
+          "w": 16,
+          "h": 16
+        }
+      },
+      {
+        "el": "button.btn-stepper.hit-area-dense.shrink-0.touch-manipulation.select-none [aria-label=\"Decrease action points\"] \"−\"",
+        "rect": {
+          "x": 142,
+          "y": 553,
+          "w": 24,
+          "h": 24
+        }
+      },
+      {
+        "el": "button.btn-stepper.hit-area-dense.shrink-0.touch-manipulation.select-none [aria-label=\"Increase action points\"] \"+\"",
+        "rect": {
+          "x": 194,
+          "y": 553,
+          "w": 24,
+          "h": 24
+        }
+      },
+      {
+        "el": "input.w-12.rounded.border.bg-surface.px-1 [aria-label=\"Current Health\"]",
+        "rect": {
+          "x": 46,
+          "y": 635,
+          "w": 48,
+          "h": 34
+        }
+      },
+      {
+        "el": "button.btn-stepper.hit-area-dense.shrink-0.touch-manipulation.select-none [aria-label=\"Decrease health\"] \"−\"",
+        "rect": {
+          "x": 138,
+          "y": 640,
+          "w": 24,
+          "h": 24
+        }
+      },
+      {
+        "el": "button.btn-stepper.hit-area-dense.shrink-0.touch-manipulation.select-none [aria-label=\"Increase health\"] \"+\"",
+        "rect": {
+          "x": 164,
+          "y": 640,
+          "w": 24,
+          "h": 24
+        }
+      },
+      {
+        "el": "input.w-12.rounded.border.bg-surface.px-1 [aria-label=\"Current Energy\"]",
+        "rect": {
+          "x": 46,
+          "y": 739,
+          "w": 48,
+          "h": 34
+        }
+      },
+      {
+        "el": "button.btn-stepper.hit-area-dense.shrink-0.touch-manipulation.select-none [aria-label=\"Decrease energy\"] \"−\"",
+        "rect": {
+          "x": 148,
+          "y": 744,
+          "w": 24,
+          "h": 24
+        }
+      },
+      {
+        "el": "button.btn-stepper.hit-area-dense.shrink-0.touch-manipulation.select-none [aria-label=\"Increase energy\"] \"+\"",
+        "rect": {
+          "x": 174,
+          "y": 744,
+          "w": 24,
+          "h": 24
+        }
+      },
+      {
+        "el": "button.inline-flex.items-center.justify-center.rounded.border \"All\"",
+        "rect": {
+          "x": 348,
+          "y": 891,
+          "w": 34,
+          "h": 22
+        }
+      },
+      {
+        "el": "button.inline-flex.items-center.justify-center.rounded.border \"Proficient\"",
+        "rect": {
+          "x": 384,
+          "y": 891,
+          "w": 69,
+          "h": 22
+        }
+      },
+      {
+        "el": "input#sheet-skills-sub-skills.rounded.border-border-light",
+        "rect": {
+          "x": 468,
+          "y": 895,
+          "w": 13,
+          "h": 13
+        }
+      },
+      {
+        "el": "button.inline-block.h-4.w-4.rounded-full.transition-all",
+        "rect": {
+          "x": 357,
+          "y": 986,
+          "w": 16,
+          "h": 16
+        }
+      },
+      {
+        "el": "button.inline-flex.cursor-help.items-center.rounded-sm.hit-area-dense [aria-label=\"About Acrobatics\"] \"Acrobatics\"",
+        "rect": {
+          "x": 393,
+          "y": 986,
+          "w": 67,
+          "h": 20
+        }
+      },
+      {
+        "el": "button.inline-block.h-4.w-4.rounded-full.transition-all",
+        "rect": {
+          "x": 357,
+          "y": 1047,
+          "w": 16,
+          "h": 16
+        }
+      },
+      {
+        "el": "button.inline-flex.cursor-help.items-center.rounded-sm.hit-area-dense [aria-label=\"About Analyze\"] \"Analyze\"",
+        "rect": {
+          "x": 393,
+          "y": 1047,
+          "w": 51,
+          "h": 20
+        }
+      },
+      {
+        "el": "button.inline-block.h-4.w-4.rounded-full.transition-all",
+        "rect": {
+          "x": 357,
+          "y": 1108,
+          "w": 16,
+          "h": 16
+        }
+      },
+      {
+        "el": "button.inline-flex.cursor-help.items-center.rounded-sm.hit-area-dense [aria-label=\"About Arcana\"] \"Arcana\"",
+        "rect": {
+          "x": 393,
+          "y": 1108,
+          "w": 45,
+          "h": 20
+        }
+      },
+      {
+        "el": "button.inline-block.h-4.w-4.rounded-full.transition-all",
+        "rect": {
+          "x": 357,
+          "y": 1169,
+          "w": 16,
+          "h": 16
+        }
+      },
+      {
+        "el": "button.inline-flex.cursor-help.items-center.rounded-sm.hit-area-dense [aria-label=\"About Athletics\"] \"Athletics\"",
+        "rect": {
+          "x": 393,
+          "y": 1169,
+          "w": 57,
+          "h": 20
+        }
+      },
+      {
+        "el": "button.inline-block.h-4.w-4.rounded-full.transition-all",
+        "rect": {
+          "x": 357,
+          "y": 1230,
+          "w": 16,
+          "h": 16
+        }
+      },
+      {
+        "el": "button.inline-flex.cursor-help.items-center.rounded-sm.hit-area-dense [aria-label=\"About Beastcraft\"] \"Beastcraft\"",
+        "rect": {
+          "x": 393,
+          "y": 1230,
+          "w": 65,
+          "h": 20
+        }
+      },
+      {
+        "el": "button.inline-block.h-4.w-4.rounded-full.transition-all",
+        "rect": {
+          "x": 357,
+          "y": 1291,
+          "w": 16,
+          "h": 16
+        }
+      },
+      {
+        "el": "button.inline-flex.cursor-help.items-center.rounded-sm.hit-area-dense [aria-label=\"About Craft\"] \"Craft\"",
+        "rect": {
+          "x": 393,
+          "y": 1291,
+          "w": 31,
+          "h": 20
+        }
+      },
+      {
+        "el": "button.inline-flex.cursor-help.items-center.rounded-sm.hit-area-dense [aria-label=\"About Artistry\"] \"Artistry\"",
+        "rect": {
+          "x": 407,
+          "y": 1352,
+          "w": 49,
+          "h": 20
+        }
+      },
+      {
+        "el": "button.inline-flex.cursor-help.items-center.rounded-sm.hit-area-dense [aria-label=\"About Smith\"] \"Smith\"",
+        "rect": {
+          "x": 407,
+          "y": 1413,
+          "w": 37,
+          "h": 20
+        }
+      },
+      {
+        "el": "button.inline-block.h-4.w-4.rounded-full.transition-all",
+        "rect": {
+          "x": 357,
+          "y": 1474,
+          "w": 16,
+          "h": 16
+        }
+      },
+      {
+        "el": "button.inline-flex.cursor-help.items-center.rounded-sm.hit-area-dense [aria-label=\"About Deceive\"] \"Deceive\"",
+        "rect": {
+          "x": 393,
+          "y": 1474,
+          "w": 50,
+          "h": 20
+        }
+      },
+      {
+        "el": "button.inline-block.h-4.w-4.rounded-full.transition-all",
+        "rect": {
+          "x": 357,
+          "y": 1535,
+          "w": 16,
+          "h": 16
+        }
+      }
+    ],
+    "oversized": [],
+    "overlaps": [
+      {
+        "a": "button.duration-base.relative.h-11.w-11.rounded-full [aria-label=\"Edit character\"]",
+        "b": "input.w-12.rounded.border.bg-surface.px-1 [aria-label=\"Current Energy\"]",
+        "overlap": {
+          "w": 18,
+          "h": 30
+        }
+      },
+      {
+        "a": "button.duration-base.relative.h-11.w-11.rounded-full [aria-label=\"Temp Modifier\"]",
+        "b": "input.w-12.rounded.border.bg-surface.px-1 [aria-label=\"Current Energy\"]",
+        "overlap": {
+          "w": 22,
+          "h": 30
+        }
+      },
+      {
+        "a": "button.duration-base.h-11.w-11.rounded-full.shadow-lg [aria-label=\"Recovery\"]",
+        "b": "button.btn-stepper.hit-area-dense.shrink-0.touch-manipulation.select-none [aria-label=\"Decrease energy\"] \"−\"",
+        "overlap": {
+          "w": 20,
+          "h": 24
+        }
+      },
+      {
+        "a": "button.duration-base.h-11.w-11.rounded-full.shadow-lg [aria-label=\"Level Up\"]",
+        "b": "button.btn-stepper.hit-area-dense.shrink-0.touch-manipulation.select-none [aria-label=\"Increase energy\"] \"+\"",
+        "overlap": {
+          "w": 22,
+          "h": 24
+        }
+      },
+      {
+        "a": "button.inline-flex.cursor-help.items-center.rounded-sm.justify-center [aria-label=\"About Intelligence\"] \"Intelligence\"",
+        "b": "button.inline-flex.cursor-help.items-center.rounded-sm.justify-center [aria-label=\"About Charisma\"] \"Charisma\"",
+        "overlap": {
+          "w": 3,
+          "h": 44
+        }
+      }
+    ]
+  },
+  {
+    "route": "auth-sheet-edit",
+    "url": "/characters/11111111-1111-4111-8111-111111111111",
+    "width": "360",
+    "finalUrl": "/characters/11111111-1111-4111-8111-111111111111",
+    "notes": [
+      "action miss: /edit/i — locator.click: Timeout 5000ms exceeded."
+    ],
+    "viewport": {
+      "w": 360,
+      "h": 800
+    },
+    "horizontalPageScroll": false,
+    "medianControlHeight": 44,
+    "counts": {
+      "overflowRight": 0,
+      "textSpill": 1,
+      "tooSmall": 90,
+      "oversized": 0,
+      "overlaps": 5,
+      "controls": 209
+    },
+    "overflowRight": [],
+    "textSpill": [
+      {
+        "el": "span.min-w-0.truncate \"E2E Baseline Knight\"",
+        "clientW": 166,
+        "scrollW": 229,
+        "clipped": false,
+        "rect": {
+          "x": 161,
+          "y": 113,
+          "w": 166,
+          "h": 32
+        }
+      }
+    ],
+    "tooSmall": [
+      {
+        "el": "a.sr-only.focus:not-sr-only.focus:fixed.focus:top-4.focus:left-4 \"Skip to main content\"",
+        "rect": {
+          "x": -1,
+          "y": -1,
+          "w": 1,
+          "h": 1
+        }
+      },
+      {
+        "el": "button.text-primary-fg.transition-colors.hover:scale-110.hover:text-primary-fg-hover",
+        "rect": {
+          "x": 207,
+          "y": 245,
+          "w": 16,
+          "h": 16
+        }
+      },
+      {
+        "el": "button.btn-stepper.hit-area-dense.shrink-0.touch-manipulation.select-none [aria-label=\"Decrease action points\"] \"−\"",
+        "rect": {
+          "x": 142,
+          "y": 553,
+          "w": 24,
+          "h": 24
+        }
+      },
+      {
+        "el": "button.btn-stepper.hit-area-dense.shrink-0.touch-manipulation.select-none [aria-label=\"Increase action points\"] \"+\"",
+        "rect": {
+          "x": 194,
+          "y": 553,
+          "w": 24,
+          "h": 24
+        }
+      },
+      {
+        "el": "input.w-12.rounded.border.bg-surface.px-1 [aria-label=\"Current Health\"]",
+        "rect": {
+          "x": 46,
+          "y": 635,
+          "w": 48,
+          "h": 34
+        }
+      },
+      {
+        "el": "button.btn-stepper.hit-area-dense.shrink-0.touch-manipulation.select-none [aria-label=\"Decrease health\"] \"−\"",
+        "rect": {
+          "x": 138,
+          "y": 640,
+          "w": 24,
+          "h": 24
+        }
+      },
+      {
+        "el": "button.btn-stepper.hit-area-dense.shrink-0.touch-manipulation.select-none [aria-label=\"Increase health\"] \"+\"",
+        "rect": {
+          "x": 164,
+          "y": 640,
+          "w": 24,
+          "h": 24
+        }
+      },
+      {
+        "el": "input.w-12.rounded.border.bg-surface.px-1 [aria-label=\"Current Energy\"]",
+        "rect": {
+          "x": 46,
+          "y": 739,
+          "w": 48,
+          "h": 34
+        }
+      },
+      {
+        "el": "button.btn-stepper.hit-area-dense.shrink-0.touch-manipulation.select-none [aria-label=\"Decrease energy\"] \"−\"",
+        "rect": {
+          "x": 148,
+          "y": 744,
+          "w": 24,
+          "h": 24
+        }
+      },
+      {
+        "el": "button.btn-stepper.hit-area-dense.shrink-0.touch-manipulation.select-none [aria-label=\"Increase energy\"] \"+\"",
+        "rect": {
+          "x": 174,
+          "y": 744,
+          "w": 24,
+          "h": 24
+        }
+      },
+      {
+        "el": "button.inline-flex.items-center.justify-center.rounded.border \"All\"",
+        "rect": {
+          "x": 348,
+          "y": 891,
+          "w": 34,
+          "h": 22
+        }
+      },
+      {
+        "el": "button.inline-flex.items-center.justify-center.rounded.border \"Proficient\"",
+        "rect": {
+          "x": 384,
+          "y": 891,
+          "w": 69,
+          "h": 22
+        }
+      },
+      {
+        "el": "input#sheet-skills-sub-skills.rounded.border-border-light",
+        "rect": {
+          "x": 468,
+          "y": 895,
+          "w": 13,
+          "h": 13
+        }
+      },
+      {
+        "el": "button.inline-block.h-4.w-4.rounded-full.transition-all",
+        "rect": {
+          "x": 357,
+          "y": 986,
+          "w": 16,
+          "h": 16
+        }
+      },
+      {
+        "el": "button.inline-flex.cursor-help.items-center.rounded-sm.hit-area-dense [aria-label=\"About Acrobatics\"] \"Acrobatics\"",
+        "rect": {
+          "x": 393,
+          "y": 986,
+          "w": 67,
+          "h": 20
+        }
+      },
+      {
+        "el": "button.inline-block.h-4.w-4.rounded-full.transition-all",
+        "rect": {
+          "x": 357,
+          "y": 1047,
+          "w": 16,
+          "h": 16
+        }
+      },
+      {
+        "el": "button.inline-flex.cursor-help.items-center.rounded-sm.hit-area-dense [aria-label=\"About Analyze\"] \"Analyze\"",
+        "rect": {
+          "x": 393,
+          "y": 1047,
+          "w": 51,
+          "h": 20
+        }
+      },
+      {
+        "el": "button.inline-block.h-4.w-4.rounded-full.transition-all",
+        "rect": {
+          "x": 357,
+          "y": 1108,
+          "w": 16,
+          "h": 16
+        }
+      },
+      {
+        "el": "button.inline-flex.cursor-help.items-center.rounded-sm.hit-area-dense [aria-label=\"About Arcana\"] \"Arcana\"",
+        "rect": {
+          "x": 393,
+          "y": 1108,
+          "w": 45,
+          "h": 20
+        }
+      },
+      {
+        "el": "button.inline-block.h-4.w-4.rounded-full.transition-all",
+        "rect": {
+          "x": 357,
+          "y": 1169,
+          "w": 16,
+          "h": 16
+        }
+      },
+      {
+        "el": "button.inline-flex.cursor-help.items-center.rounded-sm.hit-area-dense [aria-label=\"About Athletics\"] \"Athletics\"",
+        "rect": {
+          "x": 393,
+          "y": 1169,
+          "w": 57,
+          "h": 20
+        }
+      },
+      {
+        "el": "button.inline-block.h-4.w-4.rounded-full.transition-all",
+        "rect": {
+          "x": 357,
+          "y": 1230,
+          "w": 16,
+          "h": 16
+        }
+      },
+      {
+        "el": "button.inline-flex.cursor-help.items-center.rounded-sm.hit-area-dense [aria-label=\"About Beastcraft\"] \"Beastcraft\"",
+        "rect": {
+          "x": 393,
+          "y": 1230,
+          "w": 65,
+          "h": 20
+        }
+      },
+      {
+        "el": "button.inline-block.h-4.w-4.rounded-full.transition-all",
+        "rect": {
+          "x": 357,
+          "y": 1291,
+          "w": 16,
+          "h": 16
+        }
+      },
+      {
+        "el": "button.inline-flex.cursor-help.items-center.rounded-sm.hit-area-dense [aria-label=\"About Craft\"] \"Craft\"",
+        "rect": {
+          "x": 393,
+          "y": 1291,
+          "w": 31,
+          "h": 20
+        }
+      },
+      {
+        "el": "button.inline-flex.cursor-help.items-center.rounded-sm.hit-area-dense [aria-label=\"About Artistry\"] \"Artistry\"",
+        "rect": {
+          "x": 407,
+          "y": 1352,
+          "w": 49,
+          "h": 20
+        }
+      },
+      {
+        "el": "button.inline-flex.cursor-help.items-center.rounded-sm.hit-area-dense [aria-label=\"About Smith\"] \"Smith\"",
+        "rect": {
+          "x": 407,
+          "y": 1413,
+          "w": 37,
+          "h": 20
+        }
+      },
+      {
+        "el": "button.inline-block.h-4.w-4.rounded-full.transition-all",
+        "rect": {
+          "x": 357,
+          "y": 1474,
+          "w": 16,
+          "h": 16
+        }
+      },
+      {
+        "el": "button.inline-flex.cursor-help.items-center.rounded-sm.hit-area-dense [aria-label=\"About Deceive\"] \"Deceive\"",
+        "rect": {
+          "x": 393,
+          "y": 1474,
+          "w": 50,
+          "h": 20
+        }
+      },
+      {
+        "el": "button.inline-block.h-4.w-4.rounded-full.transition-all",
+        "rect": {
+          "x": 357,
+          "y": 1535,
+          "w": 16,
+          "h": 16
+        }
+      }
+    ],
+    "oversized": [],
+    "overlaps": [
+      {
+        "a": "button.duration-base.relative.h-11.w-11.rounded-full [aria-label=\"Edit character\"]",
+        "b": "input.w-12.rounded.border.bg-surface.px-1 [aria-label=\"Current Energy\"]",
+        "overlap": {
+          "w": 18,
+          "h": 30
+        }
+      },
+      {
+        "a": "button.duration-base.relative.h-11.w-11.rounded-full [aria-label=\"Temp Modifier\"]",
+        "b": "input.w-12.rounded.border.bg-surface.px-1 [aria-label=\"Current Energy\"]",
+        "overlap": {
+          "w": 22,
+          "h": 30
+        }
+      },
+      {
+        "a": "button.duration-base.h-11.w-11.rounded-full.shadow-lg [aria-label=\"Recovery\"]",
+        "b": "button.btn-stepper.hit-area-dense.shrink-0.touch-manipulation.select-none [aria-label=\"Decrease energy\"] \"−\"",
+        "overlap": {
+          "w": 20,
+          "h": 24
+        }
+      },
+      {
+        "a": "button.duration-base.h-11.w-11.rounded-full.shadow-lg [aria-label=\"Level Up\"]",
+        "b": "button.btn-stepper.hit-area-dense.shrink-0.touch-manipulation.select-none [aria-label=\"Increase energy\"] \"+\"",
+        "overlap": {
+          "w": 22,
+          "h": 24
+        }
+      },
+      {
+        "a": "button.inline-flex.cursor-help.items-center.rounded-sm.justify-center [aria-label=\"About Intelligence\"] \"Intelligence\"",
+        "b": "button.inline-flex.cursor-help.items-center.rounded-sm.justify-center [aria-label=\"About Charisma\"] \"Charisma\"",
+        "overlap": {
+          "w": 3,
+          "h": 44
+        }
+      }
+    ]
+  },
+  {
+    "route": "auth-sheet-add-feat",
+    "url": "/characters/11111111-1111-4111-8111-111111111111",
+    "width": "360",
+    "finalUrl": "/characters/11111111-1111-4111-8111-111111111111",
+    "notes": [
+      "action miss: /edit character/i — locator.click: Timeout 5000ms exceeded.",
+      "action miss: /add (archetype |character |state )?feat/i — locator.click: Timeout 5000ms exceeded."
+    ],
+    "viewport": {
+      "w": 360,
+      "h": 800
+    },
+    "horizontalPageScroll": false,
+    "medianControlHeight": 44,
+    "counts": {
+      "overflowRight": 0,
+      "textSpill": 1,
+      "tooSmall": 90,
+      "oversized": 0,
+      "overlaps": 7,
+      "controls": 209
+    },
+    "overflowRight": [],
+    "textSpill": [
+      {
+        "el": "span.min-w-0.truncate \"E2E Baseline Knight\"",
+        "clientW": 166,
+        "scrollW": 229,
+        "clipped": false,
+        "rect": {
+          "x": 161,
+          "y": -393,
+          "w": 166,
+          "h": 32
+        }
+      }
+    ],
+    "tooSmall": [
+      {
+        "el": "a.sr-only.focus:not-sr-only.focus:fixed.focus:top-4.focus:left-4 \"Skip to main content\"",
+        "rect": {
+          "x": -1,
+          "y": -1,
+          "w": 1,
+          "h": 1
+        }
+      },
+      {
+        "el": "button.text-primary-fg.transition-colors.hover:scale-110.hover:text-primary-fg-hover",
+        "rect": {
+          "x": 207,
+          "y": -261,
+          "w": 16,
+          "h": 16
+        }
+      },
+      {
+        "el": "button.btn-stepper.hit-area-dense.shrink-0.touch-manipulation.select-none [aria-label=\"Decrease action points\"] \"−\"",
+        "rect": {
+          "x": 142,
+          "y": 47,
+          "w": 24,
+          "h": 24
+        }
+      },
+      {
+        "el": "button.btn-stepper.hit-area-dense.shrink-0.touch-manipulation.select-none [aria-label=\"Increase action points\"] \"+\"",
+        "rect": {
+          "x": 194,
+          "y": 47,
+          "w": 24,
+          "h": 24
+        }
+      },
+      {
+        "el": "input.w-12.rounded.border.bg-surface.px-1 [aria-label=\"Current Health\"]",
+        "rect": {
+          "x": 46,
+          "y": 129,
+          "w": 48,
+          "h": 34
+        }
+      },
+      {
+        "el": "button.btn-stepper.hit-area-dense.shrink-0.touch-manipulation.select-none [aria-label=\"Decrease health\"] \"−\"",
+        "rect": {
+          "x": 138,
+          "y": 134,
+          "w": 24,
+          "h": 24
+        }
+      },
+      {
+        "el": "button.btn-stepper.hit-area-dense.shrink-0.touch-manipulation.select-none [aria-label=\"Increase health\"] \"+\"",
+        "rect": {
+          "x": 164,
+          "y": 134,
+          "w": 24,
+          "h": 24
+        }
+      },
+      {
+        "el": "input.w-12.rounded.border.bg-surface.px-1 [aria-label=\"Current Energy\"]",
+        "rect": {
+          "x": 46,
+          "y": 233,
+          "w": 48,
+          "h": 34
+        }
+      },
+      {
+        "el": "button.btn-stepper.hit-area-dense.shrink-0.touch-manipulation.select-none [aria-label=\"Decrease energy\"] \"−\"",
+        "rect": {
+          "x": 148,
+          "y": 238,
+          "w": 24,
+          "h": 24
+        }
+      },
+      {
+        "el": "button.btn-stepper.hit-area-dense.shrink-0.touch-manipulation.select-none [aria-label=\"Increase energy\"] \"+\"",
+        "rect": {
+          "x": 174,
+          "y": 238,
+          "w": 24,
+          "h": 24
+        }
+      },
+      {
+        "el": "button.inline-flex.items-center.justify-center.rounded.border \"All\"",
+        "rect": {
+          "x": -588,
+          "y": 385,
+          "w": 34,
+          "h": 22
+        }
+      },
+      {
+        "el": "button.inline-flex.items-center.justify-center.rounded.border \"Proficient\"",
+        "rect": {
+          "x": -552,
+          "y": 385,
+          "w": 69,
+          "h": 22
+        }
+      },
+      {
+        "el": "input#sheet-skills-sub-skills.rounded.border-border-light",
+        "rect": {
+          "x": -468,
+          "y": 389,
+          "w": 13,
+          "h": 13
+        }
+      },
+      {
+        "el": "button.inline-block.h-4.w-4.rounded-full.transition-all",
+        "rect": {
+          "x": -579,
+          "y": 480,
+          "w": 16,
+          "h": 16
+        }
+      },
+      {
+        "el": "button.inline-flex.cursor-help.items-center.rounded-sm.hit-area-dense [aria-label=\"About Acrobatics\"] \"Acrobatics\"",
+        "rect": {
+          "x": -543,
+          "y": 480,
+          "w": 67,
+          "h": 20
+        }
+      },
+      {
+        "el": "button.inline-block.h-4.w-4.rounded-full.transition-all",
+        "rect": {
+          "x": -579,
+          "y": 541,
+          "w": 16,
+          "h": 16
+        }
+      },
+      {
+        "el": "button.inline-flex.cursor-help.items-center.rounded-sm.hit-area-dense [aria-label=\"About Analyze\"] \"Analyze\"",
+        "rect": {
+          "x": -543,
+          "y": 541,
+          "w": 51,
+          "h": 20
+        }
+      },
+      {
+        "el": "button.inline-block.h-4.w-4.rounded-full.transition-all",
+        "rect": {
+          "x": -579,
+          "y": 602,
+          "w": 16,
+          "h": 16
+        }
+      },
+      {
+        "el": "button.inline-flex.cursor-help.items-center.rounded-sm.hit-area-dense [aria-label=\"About Arcana\"] \"Arcana\"",
+        "rect": {
+          "x": -543,
+          "y": 602,
+          "w": 45,
+          "h": 20
+        }
+      },
+      {
+        "el": "button.inline-block.h-4.w-4.rounded-full.transition-all",
+        "rect": {
+          "x": -579,
+          "y": 663,
+          "w": 16,
+          "h": 16
+        }
+      },
+      {
+        "el": "button.inline-flex.cursor-help.items-center.rounded-sm.hit-area-dense [aria-label=\"About Athletics\"] \"Athletics\"",
+        "rect": {
+          "x": -543,
+          "y": 663,
+          "w": 57,
+          "h": 20
+        }
+      },
+      {
+        "el": "button.inline-block.h-4.w-4.rounded-full.transition-all",
+        "rect": {
+          "x": -579,
+          "y": 724,
+          "w": 16,
+          "h": 16
+        }
+      },
+      {
+        "el": "button.inline-flex.cursor-help.items-center.rounded-sm.hit-area-dense [aria-label=\"About Beastcraft\"] \"Beastcraft\"",
+        "rect": {
+          "x": -543,
+          "y": 724,
+          "w": 65,
+          "h": 20
+        }
+      },
+      {
+        "el": "button.inline-block.h-4.w-4.rounded-full.transition-all",
+        "rect": {
+          "x": -579,
+          "y": 785,
+          "w": 16,
+          "h": 16
+        }
+      },
+      {
+        "el": "button.inline-flex.cursor-help.items-center.rounded-sm.hit-area-dense [aria-label=\"About Craft\"] \"Craft\"",
+        "rect": {
+          "x": -543,
+          "y": 785,
+          "w": 31,
+          "h": 20
+        }
+      },
+      {
+        "el": "button.inline-flex.cursor-help.items-center.rounded-sm.hit-area-dense [aria-label=\"About Artistry\"] \"Artistry\"",
+        "rect": {
+          "x": -529,
+          "y": 846,
+          "w": 49,
+          "h": 20
+        }
+      },
+      {
+        "el": "button.inline-flex.cursor-help.items-center.rounded-sm.hit-area-dense [aria-label=\"About Smith\"] \"Smith\"",
+        "rect": {
+          "x": -529,
+          "y": 907,
+          "w": 37,
+          "h": 20
+        }
+      },
+      {
+        "el": "button.inline-block.h-4.w-4.rounded-full.transition-all",
+        "rect": {
+          "x": -579,
+          "y": 968,
+          "w": 16,
+          "h": 16
+        }
+      },
+      {
+        "el": "button.inline-flex.cursor-help.items-center.rounded-sm.hit-area-dense [aria-label=\"About Deceive\"] \"Deceive\"",
+        "rect": {
+          "x": -543,
+          "y": 968,
+          "w": 50,
+          "h": 20
+        }
+      },
+      {
+        "el": "button.inline-block.h-4.w-4.rounded-full.transition-all",
+        "rect": {
+          "x": -579,
+          "y": 1029,
+          "w": 16,
+          "h": 16
+        }
+      }
+    ],
+    "oversized": [],
+    "overlaps": [
+      {
+        "a": "button.duration-base.relative.h-11.w-11.rounded-full [aria-label=\"Edit character\"]",
+        "b": "div.min-h-[44px].min-w-0.flex-1.text-left.transition-colors \"FrenzyAs a basic action you can enter a frenzy for\"",
+        "overlap": {
+          "w": 30,
+          "h": 21
+        }
+      },
+      {
+        "a": "button.duration-base.relative.h-11.w-11.rounded-full [aria-label=\"Temp Modifier\"]",
+        "b": "div.min-h-[44px].min-w-0.flex-1.text-left.transition-colors \"FrenzyAs a basic action you can enter a frenzy for\"",
+        "overlap": {
+          "w": 44,
+          "h": 21
+        }
+      },
+      {
+        "a": "button.duration-base.h-11.w-11.rounded-full.shadow-lg [aria-label=\"Recovery\"]",
+        "b": "div.min-h-[44px].min-w-0.flex-1.text-left.transition-colors \"FrenzyAs a basic action you can enter a frenzy for\"",
+        "overlap": {
+          "w": 44,
+          "h": 21
+        }
+      },
+      {
+        "a": "button.duration-base.h-11.w-11.rounded-full.shadow-lg [aria-label=\"Level Up\"]",
+        "b": "div.min-h-[44px].min-w-0.flex-1.text-left.transition-colors \"FrenzyAs a basic action you can enter a frenzy for\"",
+        "overlap": {
+          "w": 44,
+          "h": 21
+        }
+      },
+      {
+        "a": "button.duration-base.h-11.w-11.rounded-full.shadow-lg [aria-label=\"Character settings\"]",
+        "b": "div.min-h-[44px].min-w-0.flex-1.text-left.transition-colors \"FrenzyAs a basic action you can enter a frenzy for\"",
+        "overlap": {
+          "w": 44,
+          "h": 21
+        }
+      },
+      {
+        "a": "button.inline-flex.cursor-help.items-center.rounded-sm.justify-center [aria-label=\"About Intelligence\"] \"Intelligence\"",
+        "b": "button.inline-flex.cursor-help.items-center.rounded-sm.justify-center [aria-label=\"About Charisma\"] \"Charisma\"",
+        "overlap": {
+          "w": 3,
+          "h": 44
+        }
+      },
+      {
+        "a": "div.min-h-[44px].min-w-0.flex-1.text-left.transition-colors \"FrenzyAs a basic action you can enter a frenzy for\"",
+        "b": "button.duration-slow.h-14.w-14.rounded-full.shadow-lg [aria-label=\"Open roll log\"]",
+        "overlap": {
+          "w": 6,
+          "h": 27
+        }
+      }
+    ]
+  },
+  {
+    "route": "auth-sheet-add-library",
+    "url": "/characters/11111111-1111-4111-8111-111111111111",
+    "width": "360",
+    "finalUrl": "/characters/11111111-1111-4111-8111-111111111111",
+    "notes": [
+      "action miss: /edit character/i — locator.click: Timeout 5000ms exceeded.",
+      "action miss: /add (power|item|library)/i — locator.click: Timeout 5000ms exceeded."
+    ],
+    "viewport": {
+      "w": 360,
+      "h": 800
+    },
+    "horizontalPageScroll": false,
+    "medianControlHeight": 44,
+    "counts": {
+      "overflowRight": 0,
+      "textSpill": 1,
+      "tooSmall": 90,
+      "oversized": 0,
+      "overlaps": 5,
+      "controls": 209
+    },
+    "overflowRight": [],
+    "textSpill": [
+      {
+        "el": "span.min-w-0.truncate \"E2E Baseline Knight\"",
+        "clientW": 166,
+        "scrollW": 229,
+        "clipped": false,
+        "rect": {
+          "x": 161,
+          "y": 113,
+          "w": 166,
+          "h": 32
+        }
+      }
+    ],
+    "tooSmall": [
+      {
+        "el": "a.sr-only.focus:not-sr-only.focus:fixed.focus:top-4.focus:left-4 \"Skip to main content\"",
+        "rect": {
+          "x": -1,
+          "y": -1,
+          "w": 1,
+          "h": 1
+        }
+      },
+      {
+        "el": "button.text-primary-fg.transition-colors.hover:scale-110.hover:text-primary-fg-hover",
+        "rect": {
+          "x": 207,
+          "y": 245,
+          "w": 16,
+          "h": 16
+        }
+      },
+      {
+        "el": "button.btn-stepper.hit-area-dense.shrink-0.touch-manipulation.select-none [aria-label=\"Decrease action points\"] \"−\"",
+        "rect": {
+          "x": 142,
+          "y": 553,
+          "w": 24,
+          "h": 24
+        }
+      },
+      {
+        "el": "button.btn-stepper.hit-area-dense.shrink-0.touch-manipulation.select-none [aria-label=\"Increase action points\"] \"+\"",
+        "rect": {
+          "x": 194,
+          "y": 553,
+          "w": 24,
+          "h": 24
+        }
+      },
+      {
+        "el": "input.w-12.rounded.border.bg-surface.px-1 [aria-label=\"Current Health\"]",
+        "rect": {
+          "x": 46,
+          "y": 635,
+          "w": 48,
+          "h": 34
+        }
+      },
+      {
+        "el": "button.btn-stepper.hit-area-dense.shrink-0.touch-manipulation.select-none [aria-label=\"Decrease health\"] \"−\"",
+        "rect": {
+          "x": 138,
+          "y": 640,
+          "w": 24,
+          "h": 24
+        }
+      },
+      {
+        "el": "button.btn-stepper.hit-area-dense.shrink-0.touch-manipulation.select-none [aria-label=\"Increase health\"] \"+\"",
+        "rect": {
+          "x": 164,
+          "y": 640,
+          "w": 24,
+          "h": 24
+        }
+      },
+      {
+        "el": "input.w-12.rounded.border.bg-surface.px-1 [aria-label=\"Current Energy\"]",
+        "rect": {
+          "x": 46,
+          "y": 739,
+          "w": 48,
+          "h": 34
+        }
+      },
+      {
+        "el": "button.btn-stepper.hit-area-dense.shrink-0.touch-manipulation.select-none [aria-label=\"Decrease energy\"] \"−\"",
+        "rect": {
+          "x": 148,
+          "y": 744,
+          "w": 24,
+          "h": 24
+        }
+      },
+      {
+        "el": "button.btn-stepper.hit-area-dense.shrink-0.touch-manipulation.select-none [aria-label=\"Increase energy\"] \"+\"",
+        "rect": {
+          "x": 174,
+          "y": 744,
+          "w": 24,
+          "h": 24
+        }
+      },
+      {
+        "el": "button.inline-flex.items-center.justify-center.rounded.border \"All\"",
+        "rect": {
+          "x": 348,
+          "y": 891,
+          "w": 34,
+          "h": 22
+        }
+      },
+      {
+        "el": "button.inline-flex.items-center.justify-center.rounded.border \"Proficient\"",
+        "rect": {
+          "x": 384,
+          "y": 891,
+          "w": 69,
+          "h": 22
+        }
+      },
+      {
+        "el": "input#sheet-skills-sub-skills.rounded.border-border-light",
+        "rect": {
+          "x": 468,
+          "y": 895,
+          "w": 13,
+          "h": 13
+        }
+      },
+      {
+        "el": "button.inline-block.h-4.w-4.rounded-full.transition-all",
+        "rect": {
+          "x": 357,
+          "y": 986,
+          "w": 16,
+          "h": 16
+        }
+      },
+      {
+        "el": "button.inline-flex.cursor-help.items-center.rounded-sm.hit-area-dense [aria-label=\"About Acrobatics\"] \"Acrobatics\"",
+        "rect": {
+          "x": 393,
+          "y": 986,
+          "w": 67,
+          "h": 20
+        }
+      },
+      {
+        "el": "button.inline-block.h-4.w-4.rounded-full.transition-all",
+        "rect": {
+          "x": 357,
+          "y": 1047,
+          "w": 16,
+          "h": 16
+        }
+      },
+      {
+        "el": "button.inline-flex.cursor-help.items-center.rounded-sm.hit-area-dense [aria-label=\"About Analyze\"] \"Analyze\"",
+        "rect": {
+          "x": 393,
+          "y": 1047,
+          "w": 51,
+          "h": 20
+        }
+      },
+      {
+        "el": "button.inline-block.h-4.w-4.rounded-full.transition-all",
+        "rect": {
+          "x": 357,
+          "y": 1108,
+          "w": 16,
+          "h": 16
+        }
+      },
+      {
+        "el": "button.inline-flex.cursor-help.items-center.rounded-sm.hit-area-dense [aria-label=\"About Arcana\"] \"Arcana\"",
+        "rect": {
+          "x": 393,
+          "y": 1108,
+          "w": 45,
+          "h": 20
+        }
+      },
+      {
+        "el": "button.inline-block.h-4.w-4.rounded-full.transition-all",
+        "rect": {
+          "x": 357,
+          "y": 1169,
+          "w": 16,
+          "h": 16
+        }
+      },
+      {
+        "el": "button.inline-flex.cursor-help.items-center.rounded-sm.hit-area-dense [aria-label=\"About Athletics\"] \"Athletics\"",
+        "rect": {
+          "x": 393,
+          "y": 1169,
+          "w": 57,
+          "h": 20
+        }
+      },
+      {
+        "el": "button.inline-block.h-4.w-4.rounded-full.transition-all",
+        "rect": {
+          "x": 357,
+          "y": 1230,
+          "w": 16,
+          "h": 16
+        }
+      },
+      {
+        "el": "button.inline-flex.cursor-help.items-center.rounded-sm.hit-area-dense [aria-label=\"About Beastcraft\"] \"Beastcraft\"",
+        "rect": {
+          "x": 393,
+          "y": 1230,
+          "w": 65,
+          "h": 20
+        }
+      },
+      {
+        "el": "button.inline-block.h-4.w-4.rounded-full.transition-all",
+        "rect": {
+          "x": 357,
+          "y": 1291,
+          "w": 16,
+          "h": 16
+        }
+      },
+      {
+        "el": "button.inline-flex.cursor-help.items-center.rounded-sm.hit-area-dense [aria-label=\"About Craft\"] \"Craft\"",
+        "rect": {
+          "x": 393,
+          "y": 1291,
+          "w": 31,
+          "h": 20
+        }
+      },
+      {
+        "el": "button.inline-flex.cursor-help.items-center.rounded-sm.hit-area-dense [aria-label=\"About Artistry\"] \"Artistry\"",
+        "rect": {
+          "x": 407,
+          "y": 1352,
+          "w": 49,
+          "h": 20
+        }
+      },
+      {
+        "el": "button.inline-flex.cursor-help.items-center.rounded-sm.hit-area-dense [aria-label=\"About Smith\"] \"Smith\"",
+        "rect": {
+          "x": 407,
+          "y": 1413,
+          "w": 37,
+          "h": 20
+        }
+      },
+      {
+        "el": "button.inline-block.h-4.w-4.rounded-full.transition-all",
+        "rect": {
+          "x": 357,
+          "y": 1474,
+          "w": 16,
+          "h": 16
+        }
+      },
+      {
+        "el": "button.inline-flex.cursor-help.items-center.rounded-sm.hit-area-dense [aria-label=\"About Deceive\"] \"Deceive\"",
+        "rect": {
+          "x": 393,
+          "y": 1474,
+          "w": 50,
+          "h": 20
+        }
+      },
+      {
+        "el": "button.inline-block.h-4.w-4.rounded-full.transition-all",
+        "rect": {
+          "x": 357,
+          "y": 1535,
+          "w": 16,
+          "h": 16
+        }
+      }
+    ],
+    "oversized": [],
+    "overlaps": [
+      {
+        "a": "button.duration-base.relative.h-11.w-11.rounded-full [aria-label=\"Edit character\"]",
+        "b": "input.w-12.rounded.border.bg-surface.px-1 [aria-label=\"Current Energy\"]",
+        "overlap": {
+          "w": 18,
+          "h": 30
+        }
+      },
+      {
+        "a": "button.duration-base.relative.h-11.w-11.rounded-full [aria-label=\"Temp Modifier\"]",
+        "b": "input.w-12.rounded.border.bg-surface.px-1 [aria-label=\"Current Energy\"]",
+        "overlap": {
+          "w": 22,
+          "h": 30
+        }
+      },
+      {
+        "a": "button.duration-base.h-11.w-11.rounded-full.shadow-lg [aria-label=\"Recovery\"]",
+        "b": "button.btn-stepper.hit-area-dense.shrink-0.touch-manipulation.select-none [aria-label=\"Decrease energy\"] \"−\"",
+        "overlap": {
+          "w": 20,
+          "h": 24
+        }
+      },
+      {
+        "a": "button.duration-base.h-11.w-11.rounded-full.shadow-lg [aria-label=\"Level Up\"]",
+        "b": "button.btn-stepper.hit-area-dense.shrink-0.touch-manipulation.select-none [aria-label=\"Increase energy\"] \"+\"",
+        "overlap": {
+          "w": 22,
+          "h": 24
+        }
+      },
+      {
+        "a": "button.inline-flex.cursor-help.items-center.rounded-sm.justify-center [aria-label=\"About Intelligence\"] \"Intelligence\"",
+        "b": "button.inline-flex.cursor-help.items-center.rounded-sm.justify-center [aria-label=\"About Charisma\"] \"Charisma\"",
+        "overlap": {
+          "w": 3,
+          "h": 44
+        }
+      }
+    ]
+  },
+  {
+    "route": "auth-sheet-levelup",
+    "url": "/characters/11111111-1111-4111-8111-111111111111",
+    "width": "360",
+    "finalUrl": "/characters/11111111-1111-4111-8111-111111111111",
+    "notes": [],
+    "viewport": {
+      "w": 360,
+      "h": 800
+    },
+    "horizontalPageScroll": false,
+    "medianControlHeight": 44,
+    "counts": {
+      "overflowRight": 0,
+      "textSpill": 1,
+      "tooSmall": 92,
+      "oversized": 2,
+      "overlaps": 7,
+      "controls": 208
+    },
+    "overflowRight": [],
+    "textSpill": [
+      {
+        "el": "span.min-w-0.truncate \"E2E Baseline Knight\"",
+        "clientW": 166,
+        "scrollW": 229,
+        "clipped": false,
+        "rect": {
+          "x": 161,
+          "y": 113,
+          "w": 166,
+          "h": 32
+        }
+      }
+    ],
+    "tooSmall": [
+      {
+        "el": "a.sr-only.focus:not-sr-only.focus:fixed.focus:top-4.focus:left-4 \"Skip to main content\"",
+        "rect": {
+          "x": -1,
+          "y": -1,
+          "w": 1,
+          "h": 1
+        }
+      },
+      {
+        "el": "button.text-primary-fg.transition-colors.hover:scale-110.hover:text-primary-fg-hover",
+        "rect": {
+          "x": 207,
+          "y": 245,
+          "w": 16,
+          "h": 16
+        }
+      },
+      {
+        "el": "button.btn-stepper.hit-area-dense.shrink-0.touch-manipulation.select-none [aria-label=\"Decrease action points\"] \"−\"",
+        "rect": {
+          "x": 142,
+          "y": 553,
+          "w": 24,
+          "h": 24
+        }
+      },
+      {
+        "el": "button.btn-stepper.hit-area-dense.shrink-0.touch-manipulation.select-none [aria-label=\"Increase action points\"] \"+\"",
+        "rect": {
+          "x": 194,
+          "y": 553,
+          "w": 24,
+          "h": 24
+        }
+      },
+      {
+        "el": "input.w-12.rounded.border.bg-surface.px-1 [aria-label=\"Current Health\"]",
+        "rect": {
+          "x": 46,
+          "y": 635,
+          "w": 48,
+          "h": 34
+        }
+      },
+      {
+        "el": "button.btn-stepper.hit-area-dense.shrink-0.touch-manipulation.select-none [aria-label=\"Decrease health\"] \"−\"",
+        "rect": {
+          "x": 138,
+          "y": 640,
+          "w": 24,
+          "h": 24
+        }
+      },
+      {
+        "el": "button.btn-stepper.hit-area-dense.shrink-0.touch-manipulation.select-none [aria-label=\"Increase health\"] \"+\"",
+        "rect": {
+          "x": 164,
+          "y": 640,
+          "w": 24,
+          "h": 24
+        }
+      },
+      {
+        "el": "input.w-12.rounded.border.bg-surface.px-1 [aria-label=\"Current Energy\"]",
+        "rect": {
+          "x": 46,
+          "y": 739,
+          "w": 48,
+          "h": 34
+        }
+      },
+      {
+        "el": "button.btn-stepper.hit-area-dense.shrink-0.touch-manipulation.select-none [aria-label=\"Decrease energy\"] \"−\"",
+        "rect": {
+          "x": 148,
+          "y": 744,
+          "w": 24,
+          "h": 24
+        }
+      },
+      {
+        "el": "button.btn-stepper.hit-area-dense.shrink-0.touch-manipulation.select-none [aria-label=\"Increase energy\"] \"+\"",
+        "rect": {
+          "x": 174,
+          "y": 744,
+          "w": 24,
+          "h": 24
+        }
+      },
+      {
+        "el": "button.inline-flex.items-center.justify-center.rounded.border \"All\"",
+        "rect": {
+          "x": 348,
+          "y": 891,
+          "w": 34,
+          "h": 22
+        }
+      },
+      {
+        "el": "button.inline-flex.items-center.justify-center.rounded.border \"Proficient\"",
+        "rect": {
+          "x": 384,
+          "y": 891,
+          "w": 69,
+          "h": 22
+        }
+      },
+      {
+        "el": "input#sheet-skills-sub-skills.rounded.border-border-light",
+        "rect": {
+          "x": 468,
+          "y": 895,
+          "w": 13,
+          "h": 13
+        }
+      },
+      {
+        "el": "button.inline-block.h-4.w-4.rounded-full.transition-all",
+        "rect": {
+          "x": 357,
+          "y": 986,
+          "w": 16,
+          "h": 16
+        }
+      },
+      {
+        "el": "button.inline-flex.cursor-help.items-center.rounded-sm.hit-area-dense [aria-label=\"About Acrobatics\"] \"Acrobatics\"",
+        "rect": {
+          "x": 393,
+          "y": 986,
+          "w": 67,
+          "h": 20
+        }
+      },
+      {
+        "el": "button.inline-block.h-4.w-4.rounded-full.transition-all",
+        "rect": {
+          "x": 357,
+          "y": 1047,
+          "w": 16,
+          "h": 16
+        }
+      },
+      {
+        "el": "button.inline-flex.cursor-help.items-center.rounded-sm.hit-area-dense [aria-label=\"About Analyze\"] \"Analyze\"",
+        "rect": {
+          "x": 393,
+          "y": 1047,
+          "w": 51,
+          "h": 20
+        }
+      },
+      {
+        "el": "button.inline-block.h-4.w-4.rounded-full.transition-all",
+        "rect": {
+          "x": 357,
+          "y": 1108,
+          "w": 16,
+          "h": 16
+        }
+      },
+      {
+        "el": "button.inline-flex.cursor-help.items-center.rounded-sm.hit-area-dense [aria-label=\"About Arcana\"] \"Arcana\"",
+        "rect": {
+          "x": 393,
+          "y": 1108,
+          "w": 45,
+          "h": 20
+        }
+      },
+      {
+        "el": "button.inline-block.h-4.w-4.rounded-full.transition-all",
+        "rect": {
+          "x": 357,
+          "y": 1169,
+          "w": 16,
+          "h": 16
+        }
+      },
+      {
+        "el": "button.inline-flex.cursor-help.items-center.rounded-sm.hit-area-dense [aria-label=\"About Athletics\"] \"Athletics\"",
+        "rect": {
+          "x": 393,
+          "y": 1169,
+          "w": 57,
+          "h": 20
+        }
+      },
+      {
+        "el": "button.inline-block.h-4.w-4.rounded-full.transition-all",
+        "rect": {
+          "x": 357,
+          "y": 1230,
+          "w": 16,
+          "h": 16
+        }
+      },
+      {
+        "el": "button.inline-flex.cursor-help.items-center.rounded-sm.hit-area-dense [aria-label=\"About Beastcraft\"] \"Beastcraft\"",
+        "rect": {
+          "x": 393,
+          "y": 1230,
+          "w": 65,
+          "h": 20
+        }
+      },
+      {
+        "el": "button.inline-block.h-4.w-4.rounded-full.transition-all",
+        "rect": {
+          "x": 357,
+          "y": 1291,
+          "w": 16,
+          "h": 16
+        }
+      },
+      {
+        "el": "button.inline-flex.cursor-help.items-center.rounded-sm.hit-area-dense [aria-label=\"About Craft\"] \"Craft\"",
+        "rect": {
+          "x": 393,
+          "y": 1291,
+          "w": 31,
+          "h": 20
+        }
+      },
+      {
+        "el": "button.inline-flex.cursor-help.items-center.rounded-sm.hit-area-dense [aria-label=\"About Artistry\"] \"Artistry\"",
+        "rect": {
+          "x": 407,
+          "y": 1352,
+          "w": 49,
+          "h": 20
+        }
+      },
+      {
+        "el": "button.inline-flex.cursor-help.items-center.rounded-sm.hit-area-dense [aria-label=\"About Smith\"] \"Smith\"",
+        "rect": {
+          "x": 407,
+          "y": 1413,
+          "w": 37,
+          "h": 20
+        }
+      },
+      {
+        "el": "button.inline-block.h-4.w-4.rounded-full.transition-all",
+        "rect": {
+          "x": 357,
+          "y": 1474,
+          "w": 16,
+          "h": 16
+        }
+      },
+      {
+        "el": "button.inline-flex.cursor-help.items-center.rounded-sm.hit-area-dense [aria-label=\"About Deceive\"] \"Deceive\"",
+        "rect": {
+          "x": 393,
+          "y": 1474,
+          "w": 50,
+          "h": 20
+        }
+      },
+      {
+        "el": "button.inline-block.h-4.w-4.rounded-full.transition-all",
+        "rect": {
+          "x": 357,
+          "y": 1535,
+          "w": 16,
+          "h": 16
+        }
+      }
+    ],
+    "oversized": [
+      {
+        "el": "button.inline-flex.items-center.justify-center.gap-2.whitespace-nowrap \"Cancel\"",
+        "rect": {
+          "x": 16,
+          "y": 740,
+          "w": 134,
+          "h": 44
+        },
+        "inkW": 43,
+        "slackW": 91
+      },
+      {
+        "el": "button.inline-flex.items-center.justify-center.gap-2.whitespace-nowrap \"Set Level to 20\"",
+        "rect": {
+          "x": 162,
+          "y": 740,
+          "w": 182,
+          "h": 48
+        },
+        "inkW": 134,
+        "slackW": 48
+      }
+    ],
+    "overlaps": [
+      {
+        "a": "button.flex.min-h-[44px].min-w-[44px].items-center.justify-center [aria-label=\"Toggle navigation menu\"]",
+        "b": "button.inline-flex.items-center.justify-center.rounded-lg.transition-colors [aria-label=\"Close modal\"]",
+        "overlap": {
+          "w": 44,
+          "h": 42
+        }
+      },
+      {
+        "a": "button.cursor-pointer.transition-shadow.hover:ring-2.hover:ring-primary/40.focus-visible:outline-none [aria-label=\"View enlarged image: E2E Baseline Knight\"]",
+        "b": "button.btn-stepper.hit-area-dense.shrink-0.touch-manipulation.select-none [aria-label=\"Decrease level\"] \"−\"",
+        "overlap": {
+          "w": 40,
+          "h": 40
+        }
+      },
+      {
+        "a": "input.w-12.rounded.border.bg-surface.px-1 [aria-label=\"Current Energy\"]",
+        "b": "button.inline-flex.items-center.justify-center.gap-2.whitespace-nowrap \"Cancel\"",
+        "overlap": {
+          "w": 48,
+          "h": 33
+        }
+      },
+      {
+        "a": "button.btn-stepper.hit-area-dense.shrink-0.touch-manipulation.select-none [aria-label=\"Decrease energy\"] \"−\"",
+        "b": "button.inline-flex.items-center.justify-center.gap-2.whitespace-nowrap \"Cancel\"",
+        "overlap": {
+          "w": 2,
+          "h": 24
+        }
+      },
+      {
+        "a": "button.btn-stepper.hit-area-dense.shrink-0.touch-manipulation.select-none [aria-label=\"Decrease energy\"] \"−\"",
+        "b": "button.inline-flex.items-center.justify-center.gap-2.whitespace-nowrap \"Set Level to 20\"",
+        "overlap": {
+          "w": 10,
+          "h": 24
+        }
+      },
+      {
+        "a": "button.btn-stepper.hit-area-dense.shrink-0.touch-manipulation.select-none [aria-label=\"Increase energy\"] \"+\"",
+        "b": "button.inline-flex.items-center.justify-center.gap-2.whitespace-nowrap \"Set Level to 20\"",
+        "overlap": {
+          "w": 24,
+          "h": 24
+        }
+      },
+      {
+        "a": "button.inline-flex.cursor-help.items-center.rounded-sm.justify-center [aria-label=\"About Intelligence\"] \"Intelligence\"",
+        "b": "button.inline-flex.cursor-help.items-center.rounded-sm.justify-center [aria-label=\"About Charisma\"] \"Charisma\"",
+        "overlap": {
+          "w": 3,
+          "h": 44
+        }
+      }
+    ]
+  },
+  {
+    "route": "auth-sheet-recovery",
+    "url": "/characters/11111111-1111-4111-8111-111111111111",
+    "width": "360",
+    "finalUrl": "/characters/11111111-1111-4111-8111-111111111111",
+    "notes": [],
+    "viewport": {
+      "w": 360,
+      "h": 800
+    },
+    "horizontalPageScroll": false,
+    "medianControlHeight": 44,
+    "counts": {
+      "overflowRight": 0,
+      "textSpill": 2,
+      "tooSmall": 90,
+      "oversized": 1,
+      "overlaps": 5,
+      "controls": 208
+    },
+    "overflowRight": [],
+    "textSpill": [
+      {
+        "el": "span.min-w-0.truncate \"E2E Baseline Knight\"",
+        "clientW": 166,
+        "scrollW": 229,
+        "clipped": false,
+        "rect": {
+          "x": 161,
+          "y": 113,
+          "w": 166,
+          "h": 32
+        }
+      },
+      {
+        "el": "span.min-w-0.truncate \"Partial Recovery\"",
+        "clientW": 99,
+        "scrollW": 104,
+        "clipped": false,
+        "rect": {
+          "x": 219,
+          "y": 118,
+          "w": 99,
+          "h": 20
+        }
+      }
+    ],
+    "tooSmall": [
+      {
+        "el": "a.sr-only.focus:not-sr-only.focus:fixed.focus:top-4.focus:left-4 \"Skip to main content\"",
+        "rect": {
+          "x": -1,
+          "y": -1,
+          "w": 1,
+          "h": 1
+        }
+      },
+      {
+        "el": "button.text-primary-fg.transition-colors.hover:scale-110.hover:text-primary-fg-hover",
+        "rect": {
+          "x": 207,
+          "y": 245,
+          "w": 16,
+          "h": 16
+        }
+      },
+      {
+        "el": "button.btn-stepper.hit-area-dense.shrink-0.touch-manipulation.select-none [aria-label=\"Decrease action points\"] \"−\"",
+        "rect": {
+          "x": 142,
+          "y": 553,
+          "w": 24,
+          "h": 24
+        }
+      },
+      {
+        "el": "button.btn-stepper.hit-area-dense.shrink-0.touch-manipulation.select-none [aria-label=\"Increase action points\"] \"+\"",
+        "rect": {
+          "x": 194,
+          "y": 553,
+          "w": 24,
+          "h": 24
+        }
+      },
+      {
+        "el": "input.w-12.rounded.border.bg-surface.px-1 [aria-label=\"Current Health\"]",
+        "rect": {
+          "x": 46,
+          "y": 635,
+          "w": 48,
+          "h": 34
+        }
+      },
+      {
+        "el": "button.btn-stepper.hit-area-dense.shrink-0.touch-manipulation.select-none [aria-label=\"Decrease health\"] \"−\"",
+        "rect": {
+          "x": 138,
+          "y": 640,
+          "w": 24,
+          "h": 24
+        }
+      },
+      {
+        "el": "button.btn-stepper.hit-area-dense.shrink-0.touch-manipulation.select-none [aria-label=\"Increase health\"] \"+\"",
+        "rect": {
+          "x": 164,
+          "y": 640,
+          "w": 24,
+          "h": 24
+        }
+      },
+      {
+        "el": "input.w-12.rounded.border.bg-surface.px-1 [aria-label=\"Current Energy\"]",
+        "rect": {
+          "x": 46,
+          "y": 739,
+          "w": 48,
+          "h": 34
+        }
+      },
+      {
+        "el": "button.btn-stepper.hit-area-dense.shrink-0.touch-manipulation.select-none [aria-label=\"Decrease energy\"] \"−\"",
+        "rect": {
+          "x": 148,
+          "y": 744,
+          "w": 24,
+          "h": 24
+        }
+      },
+      {
+        "el": "button.btn-stepper.hit-area-dense.shrink-0.touch-manipulation.select-none [aria-label=\"Increase energy\"] \"+\"",
+        "rect": {
+          "x": 174,
+          "y": 744,
+          "w": 24,
+          "h": 24
+        }
+      },
+      {
+        "el": "button.inline-flex.items-center.justify-center.rounded.border \"All\"",
+        "rect": {
+          "x": 348,
+          "y": 891,
+          "w": 34,
+          "h": 22
+        }
+      },
+      {
+        "el": "button.inline-flex.items-center.justify-center.rounded.border \"Proficient\"",
+        "rect": {
+          "x": 384,
+          "y": 891,
+          "w": 69,
+          "h": 22
+        }
+      },
+      {
+        "el": "input#sheet-skills-sub-skills.rounded.border-border-light",
+        "rect": {
+          "x": 468,
+          "y": 895,
+          "w": 13,
+          "h": 13
+        }
+      },
+      {
+        "el": "button.inline-block.h-4.w-4.rounded-full.transition-all",
+        "rect": {
+          "x": 357,
+          "y": 986,
+          "w": 16,
+          "h": 16
+        }
+      },
+      {
+        "el": "button.inline-flex.cursor-help.items-center.rounded-sm.hit-area-dense [aria-label=\"About Acrobatics\"] \"Acrobatics\"",
+        "rect": {
+          "x": 393,
+          "y": 986,
+          "w": 67,
+          "h": 20
+        }
+      },
+      {
+        "el": "button.inline-block.h-4.w-4.rounded-full.transition-all",
+        "rect": {
+          "x": 357,
+          "y": 1047,
+          "w": 16,
+          "h": 16
+        }
+      },
+      {
+        "el": "button.inline-flex.cursor-help.items-center.rounded-sm.hit-area-dense [aria-label=\"About Analyze\"] \"Analyze\"",
+        "rect": {
+          "x": 393,
+          "y": 1047,
+          "w": 51,
+          "h": 20
+        }
+      },
+      {
+        "el": "button.inline-block.h-4.w-4.rounded-full.transition-all",
+        "rect": {
+          "x": 357,
+          "y": 1108,
+          "w": 16,
+          "h": 16
+        }
+      },
+      {
+        "el": "button.inline-flex.cursor-help.items-center.rounded-sm.hit-area-dense [aria-label=\"About Arcana\"] \"Arcana\"",
+        "rect": {
+          "x": 393,
+          "y": 1108,
+          "w": 45,
+          "h": 20
+        }
+      },
+      {
+        "el": "button.inline-block.h-4.w-4.rounded-full.transition-all",
+        "rect": {
+          "x": 357,
+          "y": 1169,
+          "w": 16,
+          "h": 16
+        }
+      },
+      {
+        "el": "button.inline-flex.cursor-help.items-center.rounded-sm.hit-area-dense [aria-label=\"About Athletics\"] \"Athletics\"",
+        "rect": {
+          "x": 393,
+          "y": 1169,
+          "w": 57,
+          "h": 20
+        }
+      },
+      {
+        "el": "button.inline-block.h-4.w-4.rounded-full.transition-all",
+        "rect": {
+          "x": 357,
+          "y": 1230,
+          "w": 16,
+          "h": 16
+        }
+      },
+      {
+        "el": "button.inline-flex.cursor-help.items-center.rounded-sm.hit-area-dense [aria-label=\"About Beastcraft\"] \"Beastcraft\"",
+        "rect": {
+          "x": 393,
+          "y": 1230,
+          "w": 65,
+          "h": 20
+        }
+      },
+      {
+        "el": "button.inline-block.h-4.w-4.rounded-full.transition-all",
+        "rect": {
+          "x": 357,
+          "y": 1291,
+          "w": 16,
+          "h": 16
+        }
+      },
+      {
+        "el": "button.inline-flex.cursor-help.items-center.rounded-sm.hit-area-dense [aria-label=\"About Craft\"] \"Craft\"",
+        "rect": {
+          "x": 393,
+          "y": 1291,
+          "w": 31,
+          "h": 20
+        }
+      },
+      {
+        "el": "button.inline-flex.cursor-help.items-center.rounded-sm.hit-area-dense [aria-label=\"About Artistry\"] \"Artistry\"",
+        "rect": {
+          "x": 407,
+          "y": 1352,
+          "w": 49,
+          "h": 20
+        }
+      },
+      {
+        "el": "button.inline-flex.cursor-help.items-center.rounded-sm.hit-area-dense [aria-label=\"About Smith\"] \"Smith\"",
+        "rect": {
+          "x": 407,
+          "y": 1413,
+          "w": 37,
+          "h": 20
+        }
+      },
+      {
+        "el": "button.inline-block.h-4.w-4.rounded-full.transition-all",
+        "rect": {
+          "x": 357,
+          "y": 1474,
+          "w": 16,
+          "h": 16
+        }
+      },
+      {
+        "el": "button.inline-flex.cursor-help.items-center.rounded-sm.hit-area-dense [aria-label=\"About Deceive\"] \"Deceive\"",
+        "rect": {
+          "x": 393,
+          "y": 1474,
+          "w": 50,
+          "h": 20
+        }
+      },
+      {
+        "el": "button.inline-block.h-4.w-4.rounded-full.transition-all",
+        "rect": {
+          "x": 357,
+          "y": 1535,
+          "w": 16,
+          "h": 16
+        }
+      }
+    ],
+    "oversized": [
+      {
+        "el": "button.inline-flex.items-center.justify-center.gap-2.whitespace-nowrap \"Full Recovery\"",
+        "rect": {
+          "x": 197,
+          "y": 740,
+          "w": 147,
+          "h": 48
+        },
+        "inkW": 99,
+        "slackW": 48
+      }
+    ],
+    "overlaps": [
+      {
+        "a": "button.flex.min-h-[44px].min-w-[44px].items-center.justify-center [aria-label=\"Toggle navigation menu\"]",
+        "b": "button.inline-flex.items-center.justify-center.rounded-lg.transition-colors [aria-label=\"Close modal\"]",
+        "overlap": {
+          "w": 44,
+          "h": 42
+        }
+      },
+      {
+        "a": "button.cursor-pointer.transition-shadow.hover:ring-2.hover:ring-primary/40.focus-visible:outline-none [aria-label=\"View enlarged image: E2E Baseline Knight\"]",
+        "b": "button.inline-flex.items-center.justify-center.rounded.border \"Full Recovery\"",
+        "overlap": {
+          "w": 112,
+          "h": 17
+        }
+      },
+      {
+        "a": "button.btn-stepper.hit-area-dense.shrink-0.touch-manipulation.select-none [aria-label=\"Decrease energy\"] \"−\"",
+        "b": "button.inline-flex.items-center.justify-center.gap-2.whitespace-nowrap \"Cancel\"",
+        "overlap": {
+          "w": 24,
+          "h": 24
+        }
+      },
+      {
+        "a": "button.btn-stepper.hit-area-dense.shrink-0.touch-manipulation.select-none [aria-label=\"Increase energy\"] \"+\"",
+        "b": "button.inline-flex.items-center.justify-center.gap-2.whitespace-nowrap \"Cancel\"",
+        "overlap": {
+          "w": 12,
+          "h": 24
+        }
+      },
+      {
+        "a": "button.inline-flex.cursor-help.items-center.rounded-sm.justify-center [aria-label=\"About Intelligence\"] \"Intelligence\"",
+        "b": "button.inline-flex.cursor-help.items-center.rounded-sm.justify-center [aria-label=\"About Charisma\"] \"Charisma\"",
+        "overlap": {
+          "w": 3,
+          "h": 44
+        }
+      }
+    ]
+  }
+]

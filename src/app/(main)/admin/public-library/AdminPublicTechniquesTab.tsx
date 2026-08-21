@@ -7,14 +7,18 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { DeleteConfirmModal, OfficialTechniqueList } from '@/components/shared';
+import { DeleteConfirmModal, OfficialTechniqueList } from '@/components/patterns';
 import { useToast } from '@/components/ui';
-import { useOfficialLibrary, useTechniqueParts } from '@/hooks';
+import { officialLibraryKeys, useOfficialLibrary, useTechniqueParts, usePowerParts } from '@/hooks';
 import { useQueryClient } from '@tanstack/react-query';
 import { apiFetch } from '@/lib/api-client';
 import { Swords } from 'lucide-react';
 
-export function AdminPublicTechniquesTab({ mode = 'standard' }: { mode?: 'standard' | 'empowered' }) {
+export function AdminPublicTechniquesTab({
+  mode = 'standard',
+}: {
+  mode?: 'standard' | 'empowered' | undefined;
+}) {
   const { showToast } = useToast();
   const libraryType = mode === 'empowered' ? 'empowered-techniques' : 'techniques';
   const queryKey = ['official-library', libraryType] as const;
@@ -23,6 +27,7 @@ export function AdminPublicTechniquesTab({ mode = 'standard' }: { mode?: 'standa
   const queryClient = useQueryClient();
   const { data: items = [], isLoading, error, refetch } = useOfficialLibrary(libraryType);
   const { data: partsDb = [] } = useTechniqueParts();
+  const { data: powerPartsDb = [] } = usePowerParts({ enabled: mode === 'empowered' });
   const [deleteConfirm, setDeleteConfirm] = useState<{ id: string; name: string } | null>(null);
   const empowered = mode === 'empowered';
 
@@ -33,6 +38,7 @@ export function AdminPublicTechniquesTab({ mode = 'standard' }: { mode?: 'standa
         method: 'DELETE',
       });
       queryClient.invalidateQueries({ queryKey });
+      queryClient.invalidateQueries({ queryKey: officialLibraryKeys.counts });
       await queryClient.refetchQueries({ queryKey });
       setDeleteConfirm(null);
     } catch (e) {
@@ -45,13 +51,16 @@ export function AdminPublicTechniquesTab({ mode = 'standard' }: { mode?: 'standa
       <OfficialTechniqueList
         items={items}
         partsDb={partsDb}
+        powerPartsDb={powerPartsDb}
         isLoading={isLoading}
         error={error}
-        onRetry={() => { void refetch(); }}
+        onRetry={() => {
+          void refetch();
+        }}
         mode={mode}
         errorMessage={`Failed to load official ${empowered ? 'empowered techniques' : 'techniques'}`}
         sectionTitle={empowered ? 'Official Empowered Techniques' : 'Official Techniques'}
-        emptyIcon={<Swords className="w-8 h-8" />}
+        emptyIcon={<Swords className="h-8 w-8" />}
         emptyTitle="No official techniques"
         emptyMessage={
           empowered

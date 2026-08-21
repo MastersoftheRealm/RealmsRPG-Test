@@ -4,9 +4,9 @@ export interface AdvancedCalculationRow {
 }
 
 interface AdvancedCalculationsPanelProps {
-  title?: string;
+  title?: string | undefined;
   rows: AdvancedCalculationRow[];
-  ruleText?: string;
+  ruleText?: string | undefined;
 }
 
 export function AdvancedCalculationsPanel({
@@ -19,7 +19,7 @@ export function AdvancedCalculationsPanel({
   return (
     <div className="mt-2">
       <details className="group rounded-lg border border-border-light bg-surface-alt">
-        <summary className="cursor-pointer select-none px-3 py-2 text-sm font-medium text-text-primary">
+        <summary className="cursor-pointer px-3 py-2 text-sm font-medium text-text-primary select-none">
           {title}
         </summary>
         <div className="space-y-2 border-t border-border-light px-3 py-3 text-xs">

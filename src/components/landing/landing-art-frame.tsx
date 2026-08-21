@@ -45,7 +45,7 @@ type CropConfig = {
   src: string;
   alt: string;
   objectPosition: string;
-  scale?: number;
+  scale?: number | undefined;
   surface: 'dark' | 'light';
 };
 
@@ -54,14 +54,14 @@ function FrameShell({
   className,
 }: {
   children: React.ReactNode;
-  className?: string;
+  className?: string | undefined;
 }) {
   return (
     <div
       className={cn(
-        'relative w-full overflow-hidden rounded-card border border-border-light dark:border-border shadow-card',
+        'relative w-full overflow-hidden rounded-card border border-border-light shadow-card dark:border-border',
         LANDING_MEDIA_ASPECT,
-        className
+        className,
       )}
     >
       {children}
@@ -76,12 +76,12 @@ function CroppedPanel({
   scale = 1.08,
   surface,
   priority = false,
-}: CropConfig & { priority?: boolean }) {
+}: CropConfig & { priority?: boolean | undefined }) {
   return (
     <div
       className={cn(
         'relative h-full min-h-0 overflow-hidden',
-        surface === 'dark' ? 'bg-primary-900' : 'bg-surface-alt dark:bg-surface'
+        surface === 'dark' ? 'bg-primary-900' : 'bg-surface-alt dark:bg-surface',
       )}
     >
       <Image
@@ -98,12 +98,8 @@ function CroppedPanel({
 }
 
 /** Three portrait crops — variety of Realms characters in one fixed frame. */
-export function CharacterVarietyTriptych({ priority = false }: { priority?: boolean }) {
-  const panels = [
-    LANDING_ART.faust,
-    LANDING_ART.gnome,
-    LANDING_ART.humanGreyscale,
-  ];
+export function CharacterVarietyTriptych({ priority = false }: { priority?: boolean | undefined }) {
+  const panels = [LANDING_ART.faust, LANDING_ART.gnome, LANDING_ART.humanGreyscale];
 
   return (
     <FrameShell>
@@ -127,7 +123,7 @@ export function GearShowcasePanel() {
             alt={LANDING_ART.shroomShot.alt}
             fill
             sizes="(max-width: 768px) 100vw, 360px"
-            className="object-contain object-center drop-shadow-md scale-[1.2] sm:scale-[1.24]"
+            className="scale-[1.2] object-contain object-center drop-shadow-md sm:scale-[1.24]"
           />
         </div>
       </div>
@@ -141,7 +137,7 @@ export function RulesBookPanel() {
     <FrameShell className="bg-gradient-to-br from-surface-alt via-surface to-primary-subtle-bg dark:from-primary-900 dark:via-primary-800 dark:to-primary-900">
       <div className="absolute inset-0 flex items-center justify-center p-6">
         <BookOpen
-          className="w-[clamp(3rem,18vw,4.5rem)] h-[clamp(3rem,18vw,4.5rem)] text-primary-link-fg dark:text-primary-300"
+          className="h-[clamp(3rem,18vw,4.5rem)] w-[clamp(3rem,18vw,4.5rem)] text-primary-link-fg dark:text-primary-300"
           strokeWidth={1.25}
           aria-hidden="true"
         />
@@ -151,12 +147,10 @@ export function RulesBookPanel() {
 }
 
 /** Placeholder panel for cards without licensed art yet. */
-export function PlaceholderMediaPanel({ label = 'Preview' }: { label?: string }) {
+export function PlaceholderMediaPanel({ label = 'Preview' }: { label?: string | undefined }) {
   return (
-    <FrameShell className="bg-gradient-to-br from-primary-100 to-primary-50 dark:from-primary-800 dark:to-primary-900 flex items-center justify-center">
-      <span className="text-[10px] uppercase tracking-wide text-text-muted dark:text-text-secondary">
-        {label}
-      </span>
+    <FrameShell className="flex items-center justify-center bg-gradient-to-br from-primary-100 to-primary-50 dark:from-primary-800 dark:to-primary-900">
+      <span className="text-[10px] tracking-wide text-text-muted uppercase">{label}</span>
     </FrameShell>
   );
 }

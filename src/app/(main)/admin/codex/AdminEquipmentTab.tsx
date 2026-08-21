@@ -2,420 +2,235 @@
 
 import { useMemo, useState } from 'react';
 import {
-  SectionHeader,
-  SearchInput,
-  LoadingState,
+  CodexBrowseListShell,
   ErrorDisplay as ErrorState,
   GridListRow,
-  ListEmptyState as EmptyState,
-  ListHeader,
-} from '@/components/shared';
-import { Modal, Button, Input, Textarea, IconButton, useToast } from '@/components/ui';
-import { SelectFilter, FilterSection } from '@/components/codex';
-import { useEquipment } from '@/hooks';
+} from '@/components/patterns';
+import { SelectFilter, ArchetypePathFilter } from '@/components/patterns/filters';
+import { useEquipment, useItemProperties, usePathListFilter } from '@/hooks';
 import { useSort } from '@/hooks/use-sort';
-import { useQueryClient } from '@tanstack/react-query';
-import { createCodexDoc, updateCodexDoc, deleteCodexDoc } from './actions';
-import { Pencil, Copy, X } from 'lucide-react';
-import { formatListCellLabel } from '@/lib/utils';
-
-const COPY_NAME_SUFFIX = ' copy';
-
-const EQUIPMENT_GRID_COLUMNS = '1.5fr 1fr 0.8fr 1fr 40px';
-
-interface EquipmentListItem {
-  id: string;
-  name: string;
-  description?: string;
-  type?: string;
-  category?: string;
-  gold_cost?: number;
-  currency?: number;
-  rarity?: string;
-}
-
-interface EquipmentFilters {
-  search: string;
-  categoryFilter: string;
-  rarityFilter: string;
-}
+import { COPY_NAME_SUFFIX } from './admin-codex-copy-suffix';
+import { useAdminCodexEntity } from './use-admin-codex-entity';
+import { AdminCodexRowActions } from './admin-codex-row-actions';
+import {
+  AdminEquipmentEditModal,
+  EMPTY_EQUIPMENT_FORM,
+  type EquipmentFormState,
+} from './admin-equipment-edit-modal';
+import { resolveListRowThumbnail } from '@/lib/list-row-image';
+import {
+  buildCodexEquipmentColumns,
+  buildCodexEquipmentDetailSections,
+  collectCodexEquipmentFilterOptions,
+  CODEX_EQUIPMENT_HEADER_COLUMNS,
+  EQUIPMENT_GRID_COLUMNS,
+  filterCodexEquipment,
+  type CodexEquipmentListFilters,
+} from '@/lib/codex/equipment-list';
+import type { CodexEquipmentItem } from '@/types/codex';
+import { EMPTY_ARMAMENT_FILTERS } from '@/lib/library/armament-filters';
+import {
+  EQUIPMENT_LIST_PATH_KINDS,
+  pathChipLabelsForEntity,
+  pathFilterEmptyTitle,
+} from '@/lib/game/path-recommendation-index';
 
 export function AdminEquipmentTab() {
-  const { showToast } = useToast();
   const { data: equipment, isLoading, error, refetch } = useEquipment();
-  const queryClient = useQueryClient();
+  const { data: propertiesDb = [] } = useItemProperties();
+  const {
+    modalOpen,
+    editing,
+    saving,
+    copySourceName,
+    openAdd: beginAdd,
+    openDuplicate: beginDuplicate,
+    openEdit: beginEdit,
+    closeModal,
+    save,
+    askDelete,
+    deleteModals,
+  } = useAdminCodexEntity<CodexEquipmentItem>({
+    collection: 'codex_equipment',
+    entityLabel: 'equipment entry',
+  });
   const { sortState, handleSort, sortItems } = useSort('name');
-  const [filters, setFilters] = useState<EquipmentFilters>({
+  const [filters, setFilters] = useState<CodexEquipmentListFilters>({
     search: '',
     categoryFilter: '',
     rarityFilter: '',
   });
-  const [modalOpen, setModalOpen] = useState(false);
-  const [editing, setEditing] = useState<EquipmentListItem | null>(null);
-  const [saving, setSaving] = useState(false);
-  const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null);
-  const [pendingDeleteId, setPendingDeleteId] = useState<string | null>(null);
-  const [copySourceName, setCopySourceName] = useState<string | null>(null);
 
-  const [form, setForm] = useState({
-    name: '',
-    description: '',
-    category: '',
-    currency: 0,
-    rarity: 'Common',
-  });
+  const [form, setForm] = useState<EquipmentFormState>(EMPTY_EQUIPMENT_FORM);
   const [categoryIsNew, setCategoryIsNew] = useState(false);
 
-  const filterOptions = useMemo(() => {
-    if (!equipment) return { categories: [] as string[], rarities: [] as string[] };
-    const categories = new Set<string>();
-    const rarities = new Set<string>();
-    equipment.forEach((e: EquipmentListItem) => {
-      if (e.category) categories.add(e.category);
-      if (e.rarity) rarities.add(e.rarity);
-    });
-    return {
-      categories: Array.from(categories).sort(),
-      rarities: Array.from(rarities).sort(),
-    };
-  }, [equipment]);
+  const filterOptions = useMemo(() => collectCodexEquipmentFilterOptions(equipment), [equipment]);
+  const { selectedPathIds, setSelectedPathIds, pathIndex, pathRecommendedIds, pathFilterActive } =
+    usePathListFilter({ entities: equipment, kind: EQUIPMENT_LIST_PATH_KINDS });
 
   const filteredEquipment = useMemo(() => {
     if (!equipment) return [];
-
-    const filtered = equipment.filter((e: EquipmentListItem) => {
-      if (
-        filters.search &&
-        !e.name.toLowerCase().includes(filters.search.toLowerCase()) &&
-        !e.description?.toLowerCase().includes(filters.search.toLowerCase())
-      ) {
-        return false;
-      }
-      if (filters.categoryFilter && e.category !== filters.categoryFilter) return false;
-      if (filters.rarityFilter && e.rarity !== filters.rarityFilter) return false;
-      return true;
-    });
-
-    type FilteredItem = EquipmentListItem & { category: string; cost: number; rarity: string };
-    return sortItems<FilteredItem>(
-      filtered.map((e: EquipmentListItem) => ({
-        ...e,
-        category: e.category || '',
-        cost: e.currency ?? e.gold_cost ?? 0,
-        rarity: e.rarity || '',
-      })),
+    return sortItems(
+      filterCodexEquipment(equipment, filters, EMPTY_ARMAMENT_FILTERS, null, pathRecommendedIds),
     );
-  }, [equipment, filters, sortItems]);
+  }, [equipment, filters, sortItems, pathRecommendedIds]);
 
-  const openAdd = () => {
-    setEditing(null);
-    setCopySourceName(null);
-    setForm({ name: '', description: '', category: '', currency: 0, rarity: 'Common' });
-    setCategoryIsNew(false);
-    setModalOpen(true);
-  };
-
-  const openDuplicate = (e: EquipmentListItem & { category?: string; currency?: number; rarity?: string }) => {
-    setEditing(null);
-    setCopySourceName(e.name);
-    const cat = e.category || '';
-    setForm({
-      name: (e.name || '').trim() + COPY_NAME_SUFFIX,
-      description: e.description || '',
-      category: cat,
-      currency: e.currency ?? e.gold_cost ?? 0,
-      rarity: e.rarity || 'Common',
+  const openAdd = () =>
+    beginAdd(() => {
+      setForm(EMPTY_EQUIPMENT_FORM);
+      setCategoryIsNew(false);
     });
-    const existingCats = new Set((equipment || []).map((eq: EquipmentListItem) => eq.category).filter(Boolean));
-    setCategoryIsNew(cat !== '' && !existingCats.has(cat));
-    setModalOpen(true);
-  };
 
-  const openEdit = (e: EquipmentListItem & { category?: string; currency?: number; rarity?: string }) => {
-    setEditing(e);
-    setCopySourceName(null);
-    const cat = e.category || '';
-    setForm({
-      name: e.name,
-      description: e.description || '',
-      category: cat,
-      currency: e.currency ?? e.gold_cost ?? 0,
-      rarity: e.rarity || 'Common',
+  const openDuplicate = (e: CodexEquipmentItem) =>
+    beginDuplicate(e, () => {
+      const cat = e.category || '';
+      setForm({
+        name: (e.name || '').trim() + COPY_NAME_SUFFIX,
+        description: e.description || '',
+        category: cat,
+        currency: e.currency ?? e.gold_cost ?? 0,
+        rarity: e.rarity || 'Common',
+        imageId: e.image_id ?? null,
+        imageUrl: e.image_url ?? null,
+      });
+      const existingCats = new Set((equipment || []).map((eq) => eq.category).filter(Boolean));
+      setCategoryIsNew(cat !== '' && !existingCats.has(cat));
     });
-    const existingCats = new Set((equipment || []).map((eq: EquipmentListItem) => eq.category).filter(Boolean));
-    setCategoryIsNew(cat !== '' && !existingCats.has(cat));
-    setModalOpen(true);
-  };
 
-  const closeModal = () => {
-    setModalOpen(false);
-    setEditing(null);
-    setCopySourceName(null);
-    setDeleteConfirm(null);
-  };
+  const openEdit = (e: CodexEquipmentItem) =>
+    beginEdit(e, () => {
+      const cat = e.category || '';
+      setForm({
+        name: e.name,
+        description: e.description || '',
+        category: cat,
+        currency: e.currency ?? e.gold_cost ?? 0,
+        rarity: e.rarity || 'Common',
+        imageId: e.image_id ?? null,
+        imageUrl: e.image_url ?? null,
+      });
+      const existingCats = new Set((equipment || []).map((eq) => eq.category).filter(Boolean));
+      setCategoryIsNew(cat !== '' && !existingCats.has(cat));
+    });
 
   const handleSave = async () => {
     if (!form.name.trim()) return;
-    setSaving(true);
-    // No type column in codex_equipment; do not send type.
-    const data = {
-      name: form.name.trim(),
-      description: form.description.trim(),
-      category: form.category.trim() || undefined,
-      currency: form.currency,
-      rarity: form.rarity.trim() || undefined,
-    };
-
-    const result = editing
-      ? await updateCodexDoc('codex_equipment', editing.id, data)
-      : await createCodexDoc('codex_equipment', undefined, data);
-
-    setSaving(false);
-    if (result.success) {
-      queryClient.invalidateQueries({ queryKey: ['codex'] });
-      await queryClient.refetchQueries({ queryKey: ['codex'] });
-      closeModal();
-    } else {
-      showToast(result.error ?? 'Operation failed', 'error');
-    }
+    await save({
+      payload: {
+        name: form.name.trim(),
+        description: form.description.trim(),
+        category: form.category.trim() || undefined,
+        currency: form.currency,
+        rarity: form.rarity.trim() || undefined,
+        imageId: form.imageId,
+        imageUrl: form.imageUrl,
+      },
+      expectedUpdatedAt: editing?.updated_at,
+    });
   };
 
-  const handleDelete = async (id: string) => {
-    if (deleteConfirm !== id) {
-      setDeleteConfirm(id);
-      return;
-    }
-    const result = await deleteCodexDoc('codex_equipment', id);
-    if (result.success) {
-      queryClient.invalidateQueries({ queryKey: ['codex'] });
-      await queryClient.refetchQueries({ queryKey: ['codex'] });
-      closeModal();
-    } else {
-      showToast(result.error ?? 'Operation failed', 'error');
-    }
-  };
-
-  const handleInlineDelete = async (id: string, name: string) => {
-    if (pendingDeleteId !== id) {
-      setPendingDeleteId(id);
-      return;
-    }
-    const result = await deleteCodexDoc('codex_equipment', id);
-    if (result.success) {
-      queryClient.invalidateQueries({ queryKey: ['codex'] });
-      await queryClient.refetchQueries({ queryKey: ['codex'] });
-      setPendingDeleteId(null);
-    } else {
-      showToast(result.error ?? 'Operation failed', 'error');
-      setPendingDeleteId(null);
-    }
-  };
-
-  if (error) return <ErrorState message="Failed to load equipment" onRetry={() => { void refetch(); }} />;
+  if (error)
+    return (
+      <ErrorState
+        message="Failed to load equipment"
+        onRetry={() => {
+          void refetch();
+        }}
+      />
+    );
 
   return (
     <div>
-      <SectionHeader title="Equipment" onAdd={openAdd} size="md" />
-      <div className="mb-4 mt-2">
-        <SearchInput
-          value={filters.search}
-          onChange={(v) => setFilters(f => ({ ...f, search: v }))}
-          placeholder="Search equipment..."
-        />
-      </div>
-
-      <FilterSection>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          <SelectFilter
-            label="Category"
-            value={filters.categoryFilter}
-            options={filterOptions.categories.map(c => ({ value: c, label: c }))}
-            onChange={(v) => setFilters(f => ({ ...f, categoryFilter: v }))}
-            placeholder="All Categories"
-          />
-          <SelectFilter
-            label="Rarity"
-            value={filters.rarityFilter}
-            options={filterOptions.rarities.map(r => ({ value: r, label: r }))}
-            onChange={(v) => setFilters(f => ({ ...f, rarityFilter: v }))}
-            placeholder="All Rarities"
-          />
-        </div>
-      </FilterSection>
-
-      <ListHeader
-        columns={[
-          { key: 'name', label: 'NAME' },
-          { key: 'category', label: 'CATEGORY' },
-          { key: 'cost', label: 'COST' },
-          { key: 'rarity', label: 'RARITY' },
-          { key: '_actions', label: '', sortable: false as const },
-        ]}
+      <CodexBrowseListShell
+        sectionTitle="Equipment"
+        onAdd={openAdd}
+        search={filters.search}
+        onSearchChange={(v) => setFilters((f) => ({ ...f, search: v }))}
+        searchPlaceholder="Search equipment..."
+        filters={
+          <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+            <SelectFilter
+              label="Category"
+              value={filters.categoryFilter}
+              options={filterOptions.categories.map((c) => ({ value: c, label: c }))}
+              onChange={(v) => setFilters((f) => ({ ...f, categoryFilter: v }))}
+              placeholder="All Categories"
+            />
+            <SelectFilter
+              label="Rarity"
+              value={filters.rarityFilter}
+              options={filterOptions.rarities.map((r) => ({ value: r, label: r }))}
+              onChange={(v) => setFilters((f) => ({ ...f, rarityFilter: v }))}
+              placeholder="All Rarities"
+            />
+            <ArchetypePathFilter
+              options={pathIndex.options}
+              selectedPathIds={selectedPathIds}
+              onChange={setSelectedPathIds}
+            />
+          </div>
+        }
+        headerColumns={CODEX_EQUIPMENT_HEADER_COLUMNS}
         gridColumns={EQUIPMENT_GRID_COLUMNS}
         sortState={sortState}
         onSort={handleSort}
+        hasThumbnailColumn
+        rowChrome={{ rightSlot: true }}
+        isLoading={isLoading}
+        isEmpty={filteredEquipment.length === 0}
+        emptyTitle={pathFilterActive ? pathFilterEmptyTitle('equipment') : 'No equipment found'}
+        emptyMessage="No equipment matches your filters."
+        emptyAction={{ label: 'Add Equipment', onClick: openAdd }}
+      >
+        {filteredEquipment.map((e) => {
+          const detailSections = buildCodexEquipmentDetailSections(e, propertiesDb);
+          const nameChips = pathFilterActive
+            ? pathChipLabelsForEntity(pathIndex, e.id, selectedPathIds)?.map((label) => ({
+                label,
+              }))
+            : undefined;
+          return (
+            <GridListRow
+              key={e.id}
+              id={e.id}
+              name={e.name}
+              description={e.description || ''}
+              thumbnail={resolveListRowThumbnail('equipment', e, e.name)}
+              gridColumns={EQUIPMENT_GRID_COLUMNS}
+              columns={buildCodexEquipmentColumns(e)}
+              detailSections={detailSections.length > 0 ? detailSections : undefined}
+              badges={nameChips}
+              showBadgesInName={Boolean(nameChips)}
+              rightSlot={
+                <AdminCodexRowActions
+                  entity={e}
+                  onEdit={openEdit}
+                  onDuplicate={openDuplicate}
+                  onDelete={askDelete}
+                />
+              }
+            />
+          );
+        })}
+      </CodexBrowseListShell>
+
+      <AdminEquipmentEditModal
+        isOpen={modalOpen}
+        onClose={closeModal}
+        title={editing ? 'Edit Equipment' : 'Add Equipment'}
+        copySourceName={copySourceName}
+        editingId={editing?.id ?? null}
+        form={form}
+        setForm={setForm}
+        categoryIsNew={categoryIsNew}
+        setCategoryIsNew={setCategoryIsNew}
+        categories={filterOptions.categories}
+        saving={saving}
+        onDelete={editing ? () => askDelete(editing) : undefined}
+        onSave={handleSave}
       />
 
-      {isLoading ? (
-        <LoadingState />
-      ) : (
-        <div className="flex flex-col gap-1 mt-2">
-          {filteredEquipment.length === 0 ? (
-            <EmptyState
-              title="No equipment found"
-              description="No equipment matches your filters."
-              action={{ label: 'Add Equipment', onClick: openAdd }}
-              size="sm"
-            />
-          ) : (
-            filteredEquipment.map((e: EquipmentListItem & { category: string; cost: number; rarity: string }) => (
-              <GridListRow
-                key={e.id}
-                id={e.id}
-                name={e.name}
-                description={e.description || ''}
-                gridColumns={EQUIPMENT_GRID_COLUMNS}
-                columns={[
-                  { key: 'Category', value: formatListCellLabel(e.category || 'equipment') },
-                  {
-                    key: 'Cost',
-                    value: typeof e.cost === 'number' && !Number.isNaN(e.cost) ? `${e.cost} c` : '-',
-                    highlight: true,
-                  },
-                  { key: 'Rarity', value: formatListCellLabel(e.rarity) },
-                ]}
-                rightSlot={
-                  <div className="flex items-center gap-1 pr-2">
-                    {pendingDeleteId === e.id ? (
-                      <div className="flex items-center gap-1 text-xs">
-                        <span className="text-red-600 font-medium whitespace-nowrap">Remove?</span>
-                        <Button size="sm" variant="danger" onClick={() => handleInlineDelete(e.id, e.name)} className="text-xs px-2 py-0.5 h-6">Yes</Button>
-                        <Button size="sm" variant="secondary" onClick={() => setPendingDeleteId(null)} className="text-xs px-2 py-0.5 h-6">No</Button>
-                      </div>
-                    ) : (
-                      <>
-                        <IconButton variant="ghost" size="sm" onClick={() => openEdit(e)} label="Edit" aria-label="Edit">
-                          <Pencil className="w-4 h-4" />
-                        </IconButton>
-                        <IconButton variant="ghost" size="sm" onClick={() => openDuplicate(e)} label="Duplicate" aria-label="Duplicate">
-                          <Copy className="w-4 h-4" />
-                        </IconButton>
-                        <IconButton
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => setPendingDeleteId(e.id)}
-                          label="Delete"
-                          className="text-danger-fg hover:opacity-80 hover:bg-transparent"
-                        >
-                          <X className="w-4 h-4" />
-                        </IconButton>
-                      </>
-                    )}
-                  </div>
-                }
-              />
-            ))
-          )}
-        </div>
-      )}
-
-      <Modal isOpen={modalOpen} onClose={closeModal} title={editing ? 'Edit Equipment' : 'Add Equipment'} size="lg" fullScreenOnMobile
-        footer={
-          <div className="flex justify-between">
-            <div>
-              {editing && (
-                <Button variant="outline" onClick={() => handleDelete(editing.id)} className={deleteConfirm === editing.id ? 'border-red-500 text-red-600' : ''}>
-                  {deleteConfirm === editing.id ? 'Click again to confirm delete' : 'Delete'}
-                </Button>
-              )}
-            </div>
-            <div className="flex gap-2">
-              <Button variant="outline" onClick={closeModal}>Cancel</Button>
-              <Button onClick={handleSave} disabled={saving || !form.name.trim()}>
-                {saving ? 'Saving...' : 'Save'}
-              </Button>
-            </div>
-          </div>
-        }
-      >
-        <div className="space-y-4">
-          {copySourceName && (
-            <p className="text-sm text-text-secondary rounded-md bg-surface-alt px-3 py-2 border border-border-light">
-              Creating a copy of <strong className="text-text-primary">{copySourceName}</strong>. Change the name and details as needed, then save to add the new equipment.
-            </p>
-          )}
-          <div>
-            <label className="block text-sm font-medium text-text-secondary mb-1">Name *</label>
-            <Input
-              value={form.name}
-              onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))}
-              placeholder="Equipment name"
-            />
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-text-secondary mb-1">Description</label>
-            <Textarea
-              value={form.description}
-              onChange={(e) => setForm((f) => ({ ...f, description: e.target.value }))}
-              placeholder="Equipment description"
-              className="min-h-[120px] resize-y"
-              rows={4}
-            />
-          </div>
-          <div className="grid grid-cols-3 gap-4">
-            <div className="col-span-1">
-              <label className="block text-sm font-medium text-text-secondary mb-1">Category</label>
-              <select
-                value={categoryIsNew ? '__new__' : (form.category || '')}
-                onChange={(e) => {
-                  const v = e.target.value;
-                  setCategoryIsNew(v === '__new__');
-                  setForm((f) => ({ ...f, category: v === '__new__' ? '' : v }));
-                }}
-                className="w-full px-3 py-2 rounded-md border border-border bg-background text-text-primary"
-                aria-label="Category"
-              >
-                <option value="">None</option>
-                {filterOptions.categories.map((c) => (
-                  <option key={c} value={c}>{c}</option>
-                ))}
-                <option value="__new__">Add new category...</option>
-              </select>
-              {categoryIsNew && (
-                <Input
-                  value={form.category}
-                  onChange={(e) => setForm((f) => ({ ...f, category: e.target.value }))}
-                  placeholder="Type new category"
-                  className="mt-2"
-                />
-              )}
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-text-secondary mb-1">Currency Cost</label>
-              <Input
-                type="number"
-                min={0}
-                step="any"
-                value={form.currency}
-                onChange={(e) => setForm((f) => ({ ...f, currency: parseFloat(e.target.value) || 0 }))}
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-text-secondary mb-1">Rarity</label>
-              <select
-                value={form.rarity}
-                onChange={(e) => setForm((f) => ({ ...f, rarity: e.target.value }))}
-                className="w-full px-3 py-2 rounded-md border border-border bg-background text-text-primary"
-                aria-label="Rarity"
-              >
-                {['Common', 'Uncommon', 'Rare', 'Epic', 'Legendary', 'Mythic', 'Ascended'].map((r) => (
-                  <option key={r} value={r}>{r}</option>
-                ))}
-              </select>
-            </div>
-          </div>
-        </div>
-      </Modal>
+      {deleteModals}
     </div>
   );
 }

@@ -2,7 +2,11 @@ import type { Campaign } from '@/types/campaign';
 import type { TrackedCombatant } from '@/types/encounter';
 import type { LibraryCreature } from '@/types/library';
 import type { VttGridConfig, VttToken, VttTokenMetadata } from '@/types/tabletop';
-import { calculateCreatureMaxEnergy, calculateCreatureMaxHealth, getCreatureAbilityScore } from '@/lib/game/encounter-utils';
+import {
+  calculateCreatureMaxEnergy,
+  calculateCreatureMaxHealth,
+  getCreatureAbilityScore,
+} from '@/lib/game/encounter-utils';
 import { snapPointToGrid } from './grid';
 
 const TOKEN_COLORS: Record<TrackedCombatant['combatantType'], string> = {
@@ -13,13 +17,23 @@ const TOKEN_COLORS: Record<TrackedCombatant['combatantType'], string> = {
 
 function initials(name: string): string {
   const parts = name.trim().split(/\s+/).filter(Boolean);
-  if (parts.length === 0) return '?';
-  if (parts.length === 1) return parts[0].slice(0, 2).toUpperCase();
-  return `${parts[0][0]}${parts[1][0]}`.toUpperCase();
+  const first = parts[0];
+  if (!first) return '?';
+  const second = parts[1];
+  if (!second) return first.slice(0, 2).toUpperCase();
+  return `${first[0] ?? ''}${second[0] ?? ''}`.toUpperCase();
 }
 
-function readRosterPortrait(campaign: Campaign | undefined, combatant: TrackedCombatant): string | undefined {
-  if (!campaign || combatant.sourceType !== 'campaign-character' || !combatant.sourceId || !combatant.sourceUserId) {
+function readRosterPortrait(
+  campaign: Campaign | undefined,
+  combatant: TrackedCombatant,
+): string | undefined {
+  if (
+    !campaign ||
+    combatant.sourceType !== 'campaign-character' ||
+    !combatant.sourceId ||
+    !combatant.sourceUserId
+  ) {
     return undefined;
   }
   return readCampaignCharacterTokenImageUrl(campaign, {
@@ -31,22 +45,31 @@ function readRosterPortrait(campaign: Campaign | undefined, combatant: TrackedCo
 
 export function readCampaignCharacterTokenImageUrl(
   campaign: Campaign | undefined,
-  ref: Pick<VttToken, 'sourceType' | 'sourceId' | 'sourceUserId'>
+  ref: Pick<VttToken, 'sourceType' | 'sourceId' | 'sourceUserId'>,
 ): string | undefined {
   if (!campaign || ref.sourceType !== 'campaign-character' || !ref.sourceId || !ref.sourceUserId) {
     return undefined;
   }
   return campaign.characters?.find(
-    (c) => c.characterId === ref.sourceId && c.userId === ref.sourceUserId
+    (c) => c.characterId === ref.sourceId && c.userId === ref.sourceUserId,
   )?.portrait;
 }
 
 export function buildCampaignTokenImageUpdates(params: {
-  campaign?: Campaign;
-  existingTokens: Array<Pick<VttToken, 'id' | 'sourceType' | 'sourceId' | 'sourceUserId' | 'imageUrl'>>;
+  campaign?: Campaign | undefined;
+  combatants?: readonly TrackedCombatant[] | undefined;
+  existingTokens: Array<
+    Pick<VttToken, 'id' | 'combatantId' | 'sourceType' | 'sourceId' | 'sourceUserId' | 'imageUrl'>
+  >;
 }): Array<{ id: string; imageUrl: string }> {
+  const combatantsById = new Map(
+    params.combatants?.map((combatant) => [combatant.id, combatant]) ?? [],
+  );
   return params.existingTokens.flatMap((token) => {
-    const imageUrl = readCampaignCharacterTokenImageUrl(params.campaign, token);
+    const linkedCombatant = token.combatantId ? combatantsById.get(token.combatantId) : undefined;
+    const imageUrl =
+      readCampaignCharacterTokenImageUrl(params.campaign, token) ??
+      (linkedCombatant ? readRosterPortrait(params.campaign, linkedCombatant) : undefined);
 
     if (!imageUrl || token.imageUrl === imageUrl) return [];
     return [{ id: token.id, imageUrl }];
@@ -54,7 +77,10 @@ export function buildCampaignTokenImageUpdates(params: {
 }
 
 function readCreatureImageUrl(creature: LibraryCreature): string | undefined {
-  const record = creature as LibraryCreature & { image_url?: string | null; imageUrl?: string | null };
+  const record = creature as LibraryCreature & {
+    image_url?: string | null;
+    imageUrl?: string | null;
+  };
   return record.image_url ?? record.imageUrl ?? undefined;
 }
 
@@ -79,7 +105,7 @@ function tokenPointForIndex(index: number, grid: VttGridConfig): { x: number; y:
       x: grid.offsetX + cell * (1 + (index % columns)),
       y: grid.offsetY + cell * (1 + Math.floor(index / columns)),
     },
-    grid
+    grid,
   );
 }
 
@@ -101,7 +127,7 @@ export function buildTokenFromCombatant(params: {
   combatant: TrackedCombatant;
   index: number;
   grid: VttGridConfig;
-  campaign?: Campaign;
+  campaign?: Campaign | undefined;
 }): Omit<VttToken, 'createdAt' | 'updatedAt'> {
   const { sceneId, combatant, index, grid, campaign } = params;
   const cell = Math.max(32, grid.cellSize);
@@ -141,7 +167,11 @@ export function buildTokenFromCreature(params: {
   const safeLevel = Number.isFinite(level) ? level : 1;
   const abilities = creature.abilities || {};
   const agility = getCreatureAbilityScore(abilities, 'agility');
-  const maxHealth = calculateCreatureMaxHealth(safeLevel, abilities, creature.hitPoints ?? creature.hp ?? 0);
+  const maxHealth = calculateCreatureMaxHealth(
+    safeLevel,
+    abilities,
+    creature.hitPoints ?? creature.hp ?? 0,
+  );
   const maxEnergy = calculateCreatureMaxEnergy(safeLevel, abilities, creature.energyPoints ?? 0);
   const evasion = Number(creature.defenses?.evasion ?? 10 + agility);
   const armor = Number(creature.defenses?.armor ?? 0);
@@ -187,7 +217,9 @@ export function buildMissingTokensFromCombatants(params: {
   grid: VttGridConfig;
   campaign?: Campaign;
 }): Omit<VttToken, 'createdAt' | 'updatedAt'>[] {
-  const existingIds = new Set(params.existingTokens.map((token) => token.combatantId).filter(Boolean));
+  const existingIds = new Set(
+    params.existingTokens.map((token) => token.combatantId).filter(Boolean),
+  );
   return params.combatants
     .filter((combatant) => !existingIds.has(combatant.id))
     .map((combatant, index) =>
@@ -197,6 +229,6 @@ export function buildMissingTokensFromCombatants(params: {
         index: params.existingTokens.length + index,
         grid: params.grid,
         campaign: params.campaign,
-      })
+      }),
     );
 }

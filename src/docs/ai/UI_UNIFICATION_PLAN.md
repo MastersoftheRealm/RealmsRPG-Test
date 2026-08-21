@@ -1,9 +1,9 @@
-# UI/UX Unification Plan (durable roadmap)
+# UI/UX Unification Plan (historical)
 
-> **This is the guiding document for the UI/UX unification effort.** It supersedes
+> **Status:** Complete (phases 0–5). Keep as historical reference; live rules live in `FEATURE_INDEX.md`, `AGENT_GUIDE.md`, and `.cursor/rules/realms-unification.mdc`.
+> **This was the guiding document for the UI/UX unification effort.** It superseded
 > ad-hoc task-queue entries for this work. The original audit + plan were produced in
 > Cursor plan mode (not persisted); this file is the durable, source-controlled copy.
-> Keep the **Progress** section current as phases land.
 
 ## North-star
 
@@ -105,7 +105,7 @@ VSEA does not replace verify — it informs **what** to migrate and **which stat
 | Phase 1.2 — shared leaf components (batch 1) | ✅ | `PointStatus` + `TabSummarySection` highlight colors → `text-*-fg`. No visual baseline changes. Verify green. |
 | Phase 1.3 — shared leaf components (batch 2) | ✅ | All `components/shared/*` status foreground text → `text-*-fg` (incl. gap-fix pass: toggles, delete icons, badges, stat values, powered-martial). Zero `dark:text-(success|danger|warning|info|power|martial)` remaining in shared/. |
 | Phase 1.4 — domain surfaces → *-fg tokens | ✅ | Codemod + manual pass: `character-sheet/`, `character-creator/`, `app/` routes, `CombatantCard`, header, archetype-selector. Zero `dark:` status pairs repo-wide in TSX. Verify green. |
-| Phase 1.1–1.3 sign-off | ✅ | **Scope:** `components/ui/*` + `components/shared/*` — all status/archetype foreground pairs migrated to theme-aware `*-fg` tokens. **VSEA retroactive:** styleguide default + interactive matrix (VSEA-002 ✅). TabSummarySection gradients → Phase 4.3. |
+| Phase 1.1–1.3 sign-off | ✅ | **Scope:** `components/ui/*` + `components/shared/*` — all status/archetype foreground pairs migrated to theme-aware `*-fg` tokens. **VSEA retroactive:** styleguide default + interactive matrix (VSEA-002 ✅). TabSummarySection domain fills → Phase 4.3 (solid as of TASK-537). |
 | Phase 1.5 — remove compat-alias shim | ✅ | Deleted legacy `:root` var() aliases from `globals.css` (zero external consumers). Verify green; baselines unchanged. |
 | Phase 1.6 — light-only status ramp cleanup | ✅ | Migrated remaining light-only `text-*-700/800` status text to `*-fg` (roll-log, archetype-section, species-trait-card, value-stepper, library tabs, species-modal, campaigns, CodexPartsTab, hover-only danger hovers). |
 | VSEA — methodology + findings log | ✅ | Added `VISUAL_STATE_AUDIT.md` (checklist, coverage tracker, retroactive queue, findings table). Integrated into plan as cross-cutting gate before surface refactors. First findings logged (VSEA-001, VSEA-002). |
@@ -123,7 +123,7 @@ VSEA does not replace verify — it informs **what** to migrate and **which stat
 | Phase 3 — close-out (increment 4) | ✅ | Styleguide → `PageContainer` + `PageHeader`. `PageContainer` sizes wired to `--container-*` CSS vars. Removed dead `.page-container` CSS (zero TSX usage). **Phase 3 ✅ complete** (documented exceptions: sheet-header editable name, auth-card, global-error minimal shell, home sr-only h1). |
 | Phase 4 — rarity colors (increment 1) | ✅ | Added `rarity*` chip variants + `rarityChipVariant()`. Item creator summary badge → `<Chip>`. Removed dead `RARITY_COLORS`. Styleguide rarity row. Verify green. |
 | Phase 4 — category colors (increment 2) | ✅ | **Already migrated in Phase 2.2** via chip category variants + `partChipVariant()`. Removed dead `CATEGORY_COLORS` map; merged `part-category.ts` fuzzy codex labels into `part-chip-variant.ts`; deleted duplicate file. Verify green. |
-| Phase 4 — TabSummarySection gradients (increment 3) | ✅ | Variants use theme-aware domain tokens (`power-light`, `martial-light`, `currency-light`, `info-light`, `surface-*`) + semantic borders; `SummaryItem` power highlight → `text-power-fg`. Dark domain border overrides. Styleguide shows all 5 variants. Verify green. |
+| Phase 4 — TabSummarySection domain fills (increment 3) | ✅ | Variants use theme-aware domain tokens (`power-light`, `martial-light`, `currency-light`, `info-light`, `surface-*`) + semantic borders; `SummaryItem` power highlight → `text-power-fg`. Styleguide shows all 5 variants. **TASK-537:** solid fills (`bg-*-light` / `bg-surface-alt`) — no `bg-gradient-to-r`. |
 | Phase 4 — shared power violet cleanup (increment 4) | ✅ | `PoweredMartialSlider`, `InnateToggle`, sheet level-up FAB → `text-power-fg` / `bg-power-light` / `border-power-border`. |
 | Phase 4 — power/martial + encounter domain (increment 5) | ✅ | Archetype section/modals, creator archetype-step, recovery modal, GridListRow innate, sheet-header, encounters list TYPE/STATUS maps, CombatEncounterView combatant types, CombatantCard conditions → semantic domain tokens. Added `accent-fg`/`accent-border`, `info-border`. `rarityAscended` chip fixed. |
 | Phase 4 — chip surface backgrounds (increment 6) | ✅ | `list*`/`tp`/`proficiency` chip variants → theme-aware `-light`/`-fg`/`-border` tokens; zero `dark:` on chip surfaces. |
@@ -135,7 +135,7 @@ VSEA does not replace verify — it informs **what** to migrate and **which stat
 | Phase 5 — foundations (increment 1) | ✅ | Z-index ladder in `@theme`; global `prefers-reduced-motion`; `<TableScroll>` wrapper; bare tables wrapped (armaments, archetype, item creator, admin users); primitives → `z-*` / `duration-base`; header/modal/toast/roll-log migrated. Verify green. |
 | Phase 5 — motion tokens (increment 2) | ✅ | Primitives + shared surfaces + auth/about → `duration-base`/`duration-slow`/`ease-standard`. CSS `@apply` uses `var(--duration-*)` directly. Toast exit aligned via `MOTION_DURATION_SLOW_MS`. Verify green. |
 | Phase 5 — focus rings (increment 3) | ✅ | Primitives + globals (input/search/tabs/focus-ring) → `ring-primary-outline-border`; `focus-visible` on buttons/icon-buttons/checkbox; error → `ring-danger-border`. Verify green. |
-| Phase 5 — touch targets (increment 4) | ✅ | `touch-target` / `touch-target-md-compact` utilities; tab triggers; CombatantCard, RollButton, Chip dismiss; ValueStepper already compliant. Styleguide mobile baselines updated. Verify green. |
+| Phase 5 — touch targets (increment 4) | ✅ | Dense expanded hit (`.hit-area-dense` / `.hit-area-dense-square`); tab triggers; CombatantCard, RollButton, Chip dismiss; ValueStepper already compliant. Styleguide mobile baselines updated. Verify green. |
 | Phase 5 — breakpoints + capitalization (increment 5) | ✅ | `.layout-shell-wide` for header/footer/home; `formatColumnKeyLabel()` for list column keys; species-creator trait labels. Verify green. |
 | Phase 5 — gap closure (increment 6) | ✅ | Ad-hoc focus rings → `primary-outline-border`; auth/about motion tokens; `--z-popover` / `--z-skip-link`; toast exit uses `MOTION_DURATION_SLOW_MS`; btn-stepper + modal/fade keyframes on motion vars; home reviews/creator on `.layout-shell-wide`; CombatantCard full-variant HP/EN touch targets; admin/core-rules + tooltips + skills tables → `<TableScroll>`. **Phase 5 ✅ complete — no open gaps.** |
 | Phase 0a follow-up — a11y baseline zero (TASK-384) | ✅ | Toast `role="region"`; tab `disabled` not `aria-disabled`; form errors `text-danger-fg`; privacy link underline; styleguide token/tab/toast fixes; `tab-nav-trigger-active` semantic tokens; `a11y-baseline.json` empty. Verify green. |

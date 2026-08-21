@@ -10,9 +10,9 @@ import { cva, type VariantProps } from 'class-variance-authority';
 import { cn } from '@/lib/utils/cn';
 
 const iconButtonVariants = cva(
-  // Touch devices get a 44px minimum tap target; scoped to coarse pointers so
-  // desktop keeps the compact icon sizing (TASK-332).
-  'inline-flex items-center justify-center rounded-lg transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-outline-border focus-visible:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed [@media(pointer:coarse)]:min-h-[44px] [@media(pointer:coarse)]:min-w-[44px]',
+  // ADR-0023: explicit square size, not a global min-w. Fine pointer stays
+  // compact; coarse pointer scales md/lg to Standard/Primary squares.
+  'inline-flex items-center justify-center rounded-lg transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-outline-border focus-visible:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed',
   {
     variants: {
       variant: {
@@ -21,24 +21,22 @@ const iconButtonVariants = cva(
         primary: 'text-primary-link-fg hover:text-primary-fg-hover hover:bg-primary-subtle-bg',
         danger: 'text-danger-fg hover:text-danger-dark hover:bg-danger-light',
         success: 'text-success hover:text-success-dark hover:bg-success-light',
-        muted: 'text-text-muted hover:bg-surface-alt',
       },
       size: {
-        sm: 'p-1 h-7 w-7',
-        md: 'p-1.5 h-8 w-8',
-        lg: 'p-2 h-10 w-10',
+        sm: 'hit-area-dense-square h-7 w-7 p-1',
+        md: 'h-8 w-8 p-1.5 [@media(pointer:coarse)]:h-11 [@media(pointer:coarse)]:w-11',
+        lg: 'h-10 w-10 p-2 [@media(pointer:coarse)]:h-12 [@media(pointer:coarse)]:w-12',
       },
     },
     defaultVariants: {
       variant: 'default',
       size: 'md',
     },
-  }
+  },
 );
 
 export interface IconButtonProps
-  extends React.ButtonHTMLAttributes<HTMLButtonElement>,
-    VariantProps<typeof iconButtonVariants> {
+  extends React.ButtonHTMLAttributes<HTMLButtonElement>, VariantProps<typeof iconButtonVariants> {
   /** Accessible label for the button (required for accessibility) */
   label: string;
 }
@@ -56,7 +54,7 @@ const IconButton = React.forwardRef<HTMLButtonElement, IconButtonProps>(
         {children}
       </button>
     );
-  }
+  },
 );
 
 IconButton.displayName = 'IconButton';

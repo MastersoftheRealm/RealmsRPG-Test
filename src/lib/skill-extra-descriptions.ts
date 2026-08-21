@@ -9,28 +9,44 @@ import type { Skill } from '@/hooks';
 /** Compatible with GridListRow ChipData (name, description, category). */
 export interface SkillExtraChip {
   name: string;
-  description?: string;
-  category?: 'default';
+  description?: string | undefined;
+  category?: 'default' | undefined;
 }
 
 export function getSkillExtraDescriptionDetailSections(
-  skill: Skill
+  skill: Skill,
 ): Array<{ label: string; chips: SkillExtraChip[] }> {
   const chips: SkillExtraChip[] = [];
   if (skill.success_desc?.trim()) {
-    chips.push({ name: 'Success Outcomes', description: skill.success_desc.trim(), category: 'default' });
+    chips.push({
+      name: 'Success Outcomes',
+      description: skill.success_desc.trim(),
+      category: 'default',
+    });
   }
   if (skill.failure_desc?.trim()) {
-    chips.push({ name: 'Failure Outcomes', description: skill.failure_desc.trim(), category: 'default' });
+    chips.push({
+      name: 'Failure Outcomes',
+      description: skill.failure_desc.trim(),
+      category: 'default',
+    });
   }
   if (skill.ds_calc?.trim()) {
     chips.push({ name: 'DS Calculation', description: skill.ds_calc.trim(), category: 'default' });
   }
   if (skill.craft_success_desc?.trim()) {
-    chips.push({ name: 'Craft Success', description: skill.craft_success_desc.trim(), category: 'default' });
+    chips.push({
+      name: 'Craft Success',
+      description: skill.craft_success_desc.trim(),
+      category: 'default',
+    });
   }
   if (skill.craft_failure_desc?.trim()) {
-    chips.push({ name: 'Craft Failure', description: skill.craft_failure_desc.trim(), category: 'default' });
+    chips.push({
+      name: 'Craft Failure',
+      description: skill.craft_failure_desc.trim(),
+      category: 'default',
+    });
   }
   if (chips.length === 0) return [];
   return [{ label: 'Additional descriptions', chips }];

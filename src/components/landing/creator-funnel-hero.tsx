@@ -14,15 +14,15 @@ import { LandingDiceDecor } from './landing-dice-decor';
 
 export interface CreatorFunnelHeroProps {
   title: string;
-  subtitle?: ReactNode;
+  subtitle?: ReactNode | undefined;
   /** Small label above the title (e.g. "Guided character creation"). */
-  eyebrow?: string;
-  actions?: ReactNode;
+  eyebrow?: string | undefined;
+  actions?: ReactNode | undefined;
   /** Chooser uses centered copy; guided creator uses start + optional actions. */
-  align?: 'center' | 'start';
+  align?: 'center' | 'start' | undefined;
   /** Tighter header for in-flow creator (less vertical scroll before content). */
-  compact?: boolean;
-  className?: string;
+  compact?: boolean | undefined;
+  className?: string | undefined;
 }
 
 export function CreatorFunnelHero({
@@ -42,7 +42,7 @@ export function CreatorFunnelHero({
         'relative overflow-hidden border-b border-border-light',
         'bg-gradient-to-br from-background via-primary-subtle-bg to-primary-100',
         'dark:from-primary-900 dark:via-primary-800 dark:to-primary-900',
-        className
+        className,
       )}
     >
       <LandingGradientBackdrop />
@@ -50,27 +50,27 @@ export function CreatorFunnelHero({
       <div
         className={cn(
           'pointer-events-none absolute inset-x-0 bottom-0 bg-gradient-to-t from-background to-transparent dark:from-background',
-          compact ? 'h-6' : 'h-10'
+          compact ? 'h-6' : 'h-10',
         )}
         aria-hidden="true"
       />
 
       <div
         className={cn(
-          'relative z-10 layout-shell-wide px-4',
+          'layout-shell-wide relative z-10 px-4',
           compact ? 'py-3 sm:py-4' : 'py-8 sm:py-10 md:py-12',
-          centered ? 'text-center' : ''
+          centered ? 'text-center' : '',
         )}
       >
         <div
           className={cn(
             'flex flex-col gap-4',
-            !centered && 'sm:flex-row sm:items-end sm:justify-between'
+            !centered && 'sm:flex-row sm:items-end sm:justify-between',
           )}
         >
           <div className={cn(centered && 'mx-auto max-w-[46ch]')}>
             {eyebrow && (
-              <p className="font-nunito text-sm font-semibold uppercase tracking-wide text-primary-fg">
+              <p className="font-nunito text-sm font-semibold tracking-wide text-primary-fg uppercase">
                 {eyebrow}
               </p>
             )}
@@ -82,7 +82,7 @@ export function CreatorFunnelHero({
                   ? 'text-xl sm:text-2xl'
                   : centered
                     ? 'text-3xl sm:text-4xl'
-                    : 'text-2xl sm:text-3xl md:text-4xl'
+                    : 'text-2xl sm:text-3xl md:text-4xl',
               )}
             >
               {title}
@@ -92,7 +92,7 @@ export function CreatorFunnelHero({
                 className={cn(
                   'mt-1.5 font-nunito text-text-secondary dark:text-text-on-dark/90',
                   compact ? 'text-sm sm:text-base' : 'text-base sm:text-lg',
-                  centered ? 'max-w-[46ch] mx-auto' : 'max-w-[52ch]'
+                  centered ? 'mx-auto max-w-[46ch]' : 'max-w-[52ch]',
                 )}
               >
                 {subtitle}

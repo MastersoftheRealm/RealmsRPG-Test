@@ -1,8 +1,8 @@
 /**
  * User Library API
  * ================
- * List and create user library items. Powers, techniques, items, creatures use
- * columnar tables (Supabase). Species uses legacy id+data.
+ * List and create user library items. Powers, techniques, items, creatures, and
+ * species use columnar tables (Supabase).
  */
 
 import { NextRequest, NextResponse } from 'next/server';
@@ -19,12 +19,21 @@ import {
   bodyToColumnar,
   toDbRow,
   rowToItemSpecies,
+  mergeLegacySpeciesRowWithImageColumns,
   bodyToColumnarSpecies,
   toDbRowSpecies,
   type ColumnarLibraryType,
 } from '@/lib/library-columnar';
+import { enrichRowsWithBankImageUrls } from '@/lib/entity-image-enrich-server';
 
-const VALID_TYPES = ['powers', 'techniques', 'empowered-techniques', 'items', 'creatures', 'species'] as const;
+const VALID_TYPES = [
+  'powers',
+  'techniques',
+  'empowered-techniques',
+  'items',
+  'creatures',
+  'species',
+] as const;
 type LibraryType = (typeof VALID_TYPES)[number];
 
 const isColumnar = (t: string): t is ColumnarLibraryType =>
@@ -38,10 +47,7 @@ const TABLE: Record<ColumnarLibraryType, string> = {
   creatures: 'user_creatures',
 };
 
-export async function GET(
-  request: NextRequest,
-  { params }: { params: Promise<{ type: string }> }
-) {
+export async function GET(request: NextRequest, { params }: { params: Promise<{ type: string }> }) {
   try {
     const { user, error } = await getSession();
     if (error || !user?.uid) {
@@ -63,11 +69,12 @@ export async function GET(
       if (isColumnar(type)) {
         // ilike narrows server-side (escape LIKE metacharacters); strict match in JS.
         const pattern = nameFilter.replace(/[%_\\]/g, (c) => `\\${c}`);
-        const { data: rows } = await supabase
+        const { data: rows, error: dbError } = await supabase
           .from(TABLE[type])
           .select('id, name')
           .eq('user_id', user.uid)
           .ilike('name', pattern);
+        if (dbError) throw dbError;
         const matches = ((rows ?? []) as Array<Record<string, unknown>>)
           .map((r) => ({ id: String(r.id), name: String(r.name ?? '') }))
           .filter((r) => r.name.trim().toLowerCase() === target);
@@ -75,10 +82,11 @@ export async function GET(
       }
       // Species: legacy rows keep the name inside `data`, so scan the (small)
       // species set and match the column or the JSON name.
-      const { data: rows } = await supabase
+      const { data: rows, error: dbError } = await supabase
         .from('user_species')
         .select('id, name, data')
         .eq('user_id', user.uid);
+      if (dbError) throw dbError;
       const matches = ((rows ?? []) as Array<Record<string, unknown>>)
         .map((r) => {
           const name =
@@ -92,11 +100,13 @@ export async function GET(
     }
 
     if (isColumnar(type)) {
-      const { data: rows } = await supabase
+      const { data: rows, error: dbError } = await supabase
         .from(TABLE[type])
         .select('*')
         .eq('user_id', user.uid);
+      if (dbError) throw dbError;
       const list = (rows ?? []) as Record<string, unknown>[];
+      await enrichRowsWithBankImageUrls(supabase, list);
       const items = list.map((r) => rowToItem(type, r, 'user'));
       items.sort((a, b) => {
         const na = String((a as Record<string, unknown>).name ?? '');
@@ -106,12 +116,16 @@ export async function GET(
       return NextResponse.json(items);
     }
 
-    const { data: rows } = await supabase.from('user_species').select('*').eq('user_id', user.uid);
+    const { data: rows, error: dbError } = await supabase
+      .from('user_species')
+      .select('*')
+      .eq('user_id', user.uid);
+    if (dbError) throw dbError;
     const list = (rows ?? []) as Record<string, unknown>[];
+    await enrichRowsWithBankImageUrls(supabase, list);
     const items = list.map((r) => {
       if (r.data !== undefined && r.data !== null) {
-        const d = (r.data as Record<string, unknown>) ?? {};
-        return { id: r.id, docId: r.id, ...d };
+        return mergeLegacySpeciesRowWithImageColumns(r);
       }
       return rowToItemSpecies(r);
     });
@@ -129,7 +143,7 @@ export async function GET(
 
 export async function POST(
   request: NextRequest,
-  { params }: { params: Promise<{ type: string }> }
+  { params }: { params: Promise<{ type: string }> },
 ) {
   try {
     const { user, error } = await getSession();
@@ -137,11 +151,14 @@ export async function POST(
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const { success } = standardLimiter.check(
-      buildRateLimitKey('lib-post', { userId: user.uid, ip: resolveClientIp(request.headers) })
+    const { success } = await standardLimiter.check(
+      buildRateLimitKey('lib-post', { userId: user.uid, ip: resolveClientIp(request.headers) }),
     );
     if (!success) {
-      return NextResponse.json({ error: 'Too many requests' }, { status: 429, headers: { 'Retry-After': '60' } });
+      return NextResponse.json(
+        { error: 'Too many requests' },
+        { status: 429, headers: { 'Retry-After': '60' } },
+      );
     }
 
     const { type } = await params;
@@ -176,13 +193,16 @@ export async function POST(
               currentCount: count ?? 0,
               maxAllowed: rolePolicy.maxPowers,
             }),
-            { status: 403 }
+            { status: 403 },
           );
         }
       }
 
       if (type === 'techniques' || type === 'empowered-techniques') {
-        const [{ count: techniquesCount, error: techniquesErr }, { count: empoweredCount, error: empoweredErr }] = await Promise.all([
+        const [
+          { count: techniquesCount, error: techniquesErr },
+          { count: empoweredCount, error: empoweredErr },
+        ] = await Promise.all([
           supabase
             .from('user_techniques')
             .select('id', { count: 'exact', head: true })
@@ -203,7 +223,7 @@ export async function POST(
               currentCount: techniqueTotal,
               maxAllowed: rolePolicy.maxTechniques,
             }),
-            { status: 403 }
+            { status: 403 },
           );
         }
       }
@@ -222,7 +242,7 @@ export async function POST(
               currentCount: count ?? 0,
               maxAllowed: rolePolicy.maxArmaments,
             }),
-            { status: 403 }
+            { status: 403 },
           );
         }
       }
@@ -241,18 +261,19 @@ export async function POST(
               currentCount: count ?? 0,
               maxAllowed: rolePolicy.maxCreatures,
             }),
-            { status: 403 }
+            { status: 403 },
           );
         }
       }
 
       if (duplicateOf) {
-        const { data: existing } = await supabase
+        const { data: existing, error: existingErr } = await supabase
           .from(table)
           .select('*')
           .eq('id', duplicateOf)
           .eq('user_id', user.uid)
           .maybeSingle();
+        if (existingErr) throw existingErr;
         if (!existing) {
           return NextResponse.json({ error: 'Item not found' }, { status: 404 });
         }
@@ -294,19 +315,24 @@ export async function POST(
 
     const now = new Date().toISOString();
     if (duplicateOf) {
-      const { data: existing } = await supabase
+      const { data: existing, error: existingErr } = await supabase
         .from('user_species')
         .select('*')
         .eq('id', duplicateOf)
         .eq('user_id', user.uid)
         .maybeSingle();
+      if (existingErr) throw existingErr;
       if (!existing) {
         return NextResponse.json({ error: 'Item not found' }, { status: 404 });
       }
       const existingRow = existing as Record<string, unknown>;
       const copyItem =
         existingRow.data !== undefined && existingRow.data !== null
-          ? { id: existingRow.id, docId: existingRow.id, ...(existingRow.data as Record<string, unknown>) }
+          ? {
+              id: existingRow.id,
+              docId: existingRow.id,
+              ...(existingRow.data as Record<string, unknown>),
+            }
           : rowToItemSpecies(existingRow);
       const baseName = String((copyItem.name as string) || 'Item').trim();
       const copyData = { ...copyItem, name: `${baseName} (Copy)` };
@@ -315,12 +341,24 @@ export async function POST(
       delete (copyData as Record<string, unknown>)._source;
       const { scalars, payload } = bodyToColumnarSpecies({ ...copyData, updatedAt: now });
       const newId = crypto.randomUUID();
-      const row = toDbRowSpecies({ id: newId, user_id: user.uid, ...scalars, payload, created_at: now, updated_at: now });
+      const row = toDbRowSpecies({
+        id: newId,
+        user_id: user.uid,
+        ...scalars,
+        payload,
+        created_at: now,
+        updated_at: now,
+      });
       const { error: insertErr } = await supabase.from('user_species').insert(row);
       if (insertErr) {
         if (insertErr.message?.includes('column') && existingRow.data !== undefined) {
           const d = (existingRow.data as Record<string, unknown>) ?? {};
-          const newData = { ...d, name: `${(d.name as string) || 'Item'} (Copy)`, createdAt: now, updatedAt: now };
+          const newData = {
+            ...d,
+            name: `${(d.name as string) || 'Item'} (Copy)`,
+            createdAt: now,
+            updatedAt: now,
+          };
           const { data: created, error: legErr } = await supabase
             .from('user_species')
             .insert({ id: newId, user_id: user.uid, data: newData })
@@ -336,7 +374,14 @@ export async function POST(
 
     const { scalars, payload } = bodyToColumnarSpecies({ ...body, updatedAt: now });
     const newId = crypto.randomUUID();
-    const row = toDbRowSpecies({ id: newId, user_id: user.uid, ...scalars, payload, created_at: now, updated_at: now });
+    const row = toDbRowSpecies({
+      id: newId,
+      user_id: user.uid,
+      ...scalars,
+      payload,
+      created_at: now,
+      updated_at: now,
+    });
     const { error: insertErr } = await supabase.from('user_species').insert(row);
     if (insertErr) {
       if (insertErr.message?.includes('column')) {

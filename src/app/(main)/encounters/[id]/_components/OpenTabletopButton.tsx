@@ -8,11 +8,15 @@ import { openEncounterTabletop } from '@/services/tabletop-service';
 
 interface OpenTabletopButtonProps {
   encounterId: string;
-  campaignId?: string;
-  onBeforeOpen?: () => Promise<void>;
+  campaignId?: string | undefined;
+  onBeforeOpen?: (() => Promise<void>) | undefined;
 }
 
-export function OpenTabletopButton({ encounterId, campaignId, onBeforeOpen }: OpenTabletopButtonProps) {
+export function OpenTabletopButton({
+  encounterId,
+  campaignId,
+  onBeforeOpen,
+}: OpenTabletopButtonProps) {
   const router = useRouter();
   const { showToast } = useToast();
   const [loading, setLoading] = useState(false);
@@ -41,4 +45,3 @@ export function OpenTabletopButton({ encounterId, campaignId, onBeforeOpen }: Op
     </Button>
   );
 }
-

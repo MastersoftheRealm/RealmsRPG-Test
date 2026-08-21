@@ -52,11 +52,11 @@ export type CombatantSource = 'manual' | 'creature-library' | 'campaign-characte
 /** Extended combatant with source tracking */
 export interface TrackedCombatant extends Combatant {
   /** Where this combatant was added from */
-  sourceType?: CombatantSource;
+  sourceType?: CombatantSource | undefined;
   /** Original ID (creature library ID or character ID) */
-  sourceId?: string;
+  sourceId?: string | undefined;
   /** When sourceType is campaign-character, the character owner's user ID (for HP/EN sync) */
-  sourceUserId?: string;
+  sourceUserId?: string | undefined;
 }
 
 /** Participant side in skill encounter (when using initiative) */
@@ -67,26 +67,26 @@ export interface SkillParticipant {
   id: string;
   name: string;
   hasRolled: boolean;
-  rollValue?: number;
+  rollValue?: number | undefined;
   /** Successes contributed by this roll (1 + floor((roll-DS)/5) when roll >= DS) */
-  successCount?: number;
+  successCount?: number | undefined;
   /** Failures contributed by this roll (1 + floor((DS-roll)/5) when roll < DS) */
-  failureCount?: number;
-  isSuccess?: boolean; // legacy, derived from successCount > 0
-  skillUsed?: string;
-  notes?: string;
+  failureCount?: number | undefined;
+  isSuccess?: boolean | undefined; // legacy, derived from successCount > 0
+  skillUsed?: string | undefined;
+  notes?: string | undefined;
   /** When true, participant helped but roll doesn't count toward encounter totals */
-  isHelping?: boolean;
+  isHelping?: boolean | undefined;
   /** RM bonus applied to this participant's roll (e.g. +2, +4) for situational benefits */
-  rmBonus?: number;
+  rmBonus?: number | undefined;
   /** Source tracking */
-  sourceType?: CombatantSource;
-  sourceId?: string;
-  sourceUserId?: string;
+  sourceType?: CombatantSource | undefined;
+  sourceId?: string | undefined;
+  sourceUserId?: string | undefined;
   /** Initiative order (when useInitiative is true) */
-  initiative?: number;
+  initiative?: number | undefined;
   /** Ally or enemy (when useInitiative is true) */
-  participantType?: SkillParticipantType;
+  participantType?: SkillParticipantType | undefined;
 }
 
 /** State for a skill encounter */
@@ -100,35 +100,35 @@ export interface SkillEncounterState {
   /** Running total of failures (each 5 under DS = +1). Net = successes - failures */
   currentFailures: number;
   /** RM-added successes (buttons "Additional Success") */
-  additionalSuccesses?: number;
+  additionalSuccesses?: number | undefined;
   /** RM-added failures (buttons "Additional Failure") */
-  additionalFailures?: number;
+  additionalFailures?: number | undefined;
   /** RM-configured threshold to overcome the encounter */
-  requiredSuccesses?: number;
+  requiredSuccesses?: number | undefined;
   /** RM-configured failure limit before the encounter fails */
-  maxFailures?: number;
+  maxFailures?: number | undefined;
   /** When true, track turns and use initiative (roll, sort, drag, ally/enemy) */
-  useInitiative?: boolean;
+  useInitiative?: boolean | undefined;
   /** Current turn index when useInitiative is true */
-  currentTurnIndex?: number;
+  currentTurnIndex?: number | undefined;
   /** Sequence: manual running total of successes across multiple skill encounters */
-  sequenceSuccesses?: number;
+  sequenceSuccesses?: number | undefined;
   /** Sequence: manual running total of failures across multiple skill encounters */
-  sequenceFailures?: number;
+  sequenceFailures?: number | undefined;
   /** @deprecated Legacy target for failures */
-  requiredFailures?: number;
+  requiredFailures?: number | undefined;
 }
 
 /** Full encounter document stored in Supabase */
 export interface Encounter {
   id: string;
   name: string;
-  description?: string;
+  description?: string | undefined;
   type: EncounterType;
   status: EncounterStatus;
 
   /** Optional campaign; when set, "Add all Characters" adds all campaign characters. */
-  campaignId?: string;
+  campaignId?: string | undefined;
 
   // Combat state (combat + mixed)
   combatants: TrackedCombatant[];
@@ -137,35 +137,49 @@ export interface Encounter {
   isActive: boolean;
   applySurprise: boolean;
   /** When true, initiative is re-sorted at the start of each new round (e.g. after deaths). */
-  autoSortInitiative?: boolean;
+  autoSortInitiative?: boolean | undefined;
 
   // Skill state (skill + mixed)
-  skillEncounter?: SkillEncounterState;
+  skillEncounter?: SkillEncounterState | undefined;
 
   // Metadata
-  createdAt?: Date | string;
-  updatedAt?: Date | string;
+  createdAt?: Date | string | undefined;
+  updatedAt?: Date | string | undefined;
 }
 
 /** Summary for list views */
 export interface EncounterSummary {
   id: string;
   name: string;
-  description?: string;
+  description?: string | undefined;
   type: EncounterType;
   status: EncounterStatus;
   combatantCount: number;
   participantCount: number;
   round: number;
-  updatedAt?: Date | string;
-  createdAt?: Date | string;
+  updatedAt?: Date | string | undefined;
+  createdAt?: Date | string | undefined;
+}
+
+/** Fresh skill-encounter state (shared by encounter creation and route bootstrap defaults). */
+export function defaultSkillEncounterState(): SkillEncounterState {
+  return {
+    difficultyScore: 10,
+    participants: [],
+    currentSuccesses: 0,
+    currentFailures: 0,
+    additionalSuccesses: 0,
+    additionalFailures: 0,
+    requiredSuccesses: 1,
+    maxFailures: 3,
+  };
 }
 
 /** Default values for creating a new encounter */
 export function createDefaultEncounter(
   type: EncounterType,
   name: string,
-  description?: string
+  description?: string,
 ): Omit<Encounter, 'id'> {
   return {
     name,
@@ -178,18 +192,7 @@ export function createDefaultEncounter(
     isActive: false,
     applySurprise: false,
     ...(type === 'skill' || type === 'mixed'
-      ? {
-          skillEncounter: {
-            difficultyScore: 10,
-            participants: [],
-            currentSuccesses: 0,
-            currentFailures: 0,
-            additionalSuccesses: 0,
-            additionalFailures: 0,
-            requiredSuccesses: 1,
-            maxFailures: 3,
-          },
-        }
+      ? { skillEncounter: defaultSkillEncounterState() }
       : {}),
   };
 }

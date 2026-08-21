@@ -34,7 +34,7 @@ function findGeneralRow(currencyCost: number, table: CraftingTableRow[]): Crafti
 export function getCraftingRequirements(
   currencyCost: number,
   isConsumable: boolean,
-  rules: CraftingRules
+  rules: CraftingRules,
 ): {
   rarity: string;
   difficultyScore: number;
@@ -75,7 +75,7 @@ export function getCraftingRequirements(
 export function getCraftingSessionLabels(
   timeValue: number,
   timeUnit: 'hours' | 'days',
-  sessionCount: number
+  sessionCount: number,
 ): string[] {
   const labels: string[] = [];
   if (timeUnit === 'hours') {
@@ -110,13 +110,21 @@ export function getCraftingSessionLabels(
  */
 export function getSuccessesTableEffect(
   delta: number,
-  table: SuccessesTableRow[]
-): { failureEffect?: string; successEffect?: string; row?: SuccessesTableRow } | null {
+  table: SuccessesTableRow[],
+): {
+  failureEffect?: string | undefined;
+  successEffect?: string | undefined;
+  row?: SuccessesTableRow | undefined;
+} | null {
   const absDelta = Math.abs(delta);
   const isFailure = delta < 0;
 
-  const rowForDelta = (d: number) => table.find((r) => r.delta === d) ?? table.find((r) => r.delta >= 8 && d >= 8);
-  const row = absDelta <= 7 ? rowForDelta(absDelta) : table.find((r) => r.delta >= 8) ?? table[table.length - 1];
+  const rowForDelta = (d: number) =>
+    table.find((r) => r.delta === d) ?? table.find((r) => r.delta >= 8 && d >= 8);
+  const row =
+    absDelta <= 7
+      ? rowForDelta(absDelta)
+      : (table.find((r) => r.delta >= 8) ?? table[table.length - 1]);
   if (!row) return null;
 
   return {
@@ -133,7 +141,7 @@ export function calculateCraftingOutcome(
   delta: number,
   materialCost: number,
   marketPrice: number,
-  table: SuccessesTableRow[]
+  table: SuccessesTableRow[],
 ): {
   finalMaterialCost: number;
   materialsRetained: number;
@@ -188,7 +196,7 @@ export function calculateCraftingOutcome(
  */
 function findEnhancedRow(
   energyCost: number,
-  table: EnhancedCraftingTableRow[]
+  table: EnhancedCraftingTableRow[],
 ): EnhancedCraftingTableRow | null {
   for (const row of table) {
     if (energyCost < row.energyMin) continue;
@@ -203,7 +211,7 @@ function findEnhancedRow(
  */
 function findConsumableEnhancedRow(
   energyCost: number,
-  table: ConsumableEnhancedTableRow[]
+  table: ConsumableEnhancedTableRow[],
 ): ConsumableEnhancedTableRow | null {
   for (const row of table) {
     if (energyCost < row.energyMin) continue;
@@ -220,11 +228,13 @@ function findConsumableEnhancedRow(
 export function getMultipleUseAdjustedEnergy(
   baseEnergy: number,
   tableIndex: number,
-  rules: CraftingRules
+  rules: CraftingRules,
 ): number {
   const table = rules.multipleUseTable ?? [];
   if (tableIndex < 0 || tableIndex >= table.length) return baseEnergy;
-  const pct = table[tableIndex].adjustedEnergyPercent ?? 100;
+  const row = table[tableIndex];
+  if (!row) return baseEnergy;
+  const pct = row.adjustedEnergyPercent ?? 100;
   return baseEnergy * (pct / 100);
 }
 
@@ -235,7 +245,7 @@ export function getMultipleUseAdjustedEnergy(
  */
 export function getEnhancedCraftingRequirements(
   effectiveEnergyCost: number,
-  rules: CraftingRules
+  rules: CraftingRules,
 ): {
   rarity: string;
   difficultyScore: number;
@@ -265,7 +275,7 @@ export function getEnhancedCraftingRequirements(
  */
 export function getConsumableEnhancedRequirements(
   energyCost: number,
-  rules: CraftingRules
+  rules: CraftingRules,
 ): {
   rarity: string;
   difficultyScore: number;
@@ -275,10 +285,7 @@ export function getConsumableEnhancedRequirements(
   timeUnit: 'hours' | 'days';
   sessionCount: number;
 } | null {
-  const row = findConsumableEnhancedRow(
-    energyCost,
-    rules.consumableEnhancedTable ?? []
-  );
+  const row = findConsumableEnhancedRow(energyCost, rules.consumableEnhancedTable ?? []);
   if (!row) return null;
   const materialCost = energyCost * row.costPerEnergy;
   return {
@@ -296,33 +303,9 @@ export function getConsumableEnhancedRequirements(
  * Get market price for enhanced item: material cost × enhancedSellPriceMultiplier,
  * capped by general table max for the item's rarity bracket (optional; caller can cap).
  */
-export function getEnhancedMarketPrice(
-  materialCost: number,
-  rules: CraftingRules
-): number {
+export function getEnhancedMarketPrice(materialCost: number, rules: CraftingRules): number {
   const mult = rules.enhancedSellPriceMultiplier ?? 1.25;
   return materialCost * mult;
-}
-
-/**
- * Get requirements for upgrading an enhanced item's potency (25% of original time, cost, successes; same DS).
- * Uses the same enhanced table as initial craft; effectiveEnergyCost should match the item's power (base or multiple-use adjusted).
- */
-export function getUpgradePotencyRequirements(
-  effectiveEnergyCost: number,
-  rules: CraftingRules
-): CraftingRequirements | null {
-  const base = getEnhancedCraftingRequirements(effectiveEnergyCost, rules);
-  if (!base) return null;
-  return {
-    rarity: base.rarity,
-    difficultyScore: base.difficultyScore,
-    requiredSuccesses: Math.max(1, Math.ceil(base.requiredSuccesses * 0.25)),
-    materialCost: base.materialCost * 0.25,
-    timeValue: Math.max(1, Math.ceil(base.timeValue * 0.25)),
-    timeUnit: base.timeUnit,
-    sessionCount: Math.max(1, Math.ceil(base.sessionCount * 0.25)),
-  };
 }
 
 /** Requirements shape used by getCraftingRequirements, getUpgradeRequirements, and optional modifiers */
@@ -343,7 +326,7 @@ export interface CraftingRequirements {
 export function getUpgradeRequirements(
   oldMarketPrice: number,
   newMarketPrice: number,
-  rules: CraftingRules
+  rules: CraftingRules,
 ): CraftingRequirements | null {
   if (newMarketPrice <= oldMarketPrice) return null;
   const oldRow = findGeneralRow(oldMarketPrice, rules.generalTable);
@@ -382,12 +365,13 @@ export function getUpgradeRequirements(
 export function applyReduceTimeByDifficulty(
   base: CraftingRequirements,
   steps: number,
-  rules: CraftingRules
+  rules: CraftingRules,
 ): CraftingRequirements {
   const opt = rules.optionalReduceTimeByDifficulty;
   if (!opt || steps <= 0) return base;
   const daysThreshold = 5;
-  const isShort = base.timeUnit === 'days' && base.timeValue < daysThreshold || base.timeUnit === 'hours';
+  const isShort =
+    (base.timeUnit === 'days' && base.timeValue < daysThreshold) || base.timeUnit === 'hours';
   if (isShort && opt.halfTimeWhenUnder5Days && steps >= 1) {
     const timeValue = Math.max(1, Math.floor(base.timeValue / 2));
     return { ...base, timeValue };
@@ -409,11 +393,11 @@ export function applyReduceTimeByDifficulty(
 export function applyReduceTimeByCost(
   base: CraftingRequirements,
   steps: number,
-  rules: CraftingRules
+  rules: CraftingRules,
 ): CraftingRequirements {
   const opt = rules.optionalReduceTimeByCost;
   if (!opt || steps <= 0) return base;
-  const isShort = base.timeUnit === 'days' && base.timeValue < 5 || base.timeUnit === 'hours';
+  const isShort = (base.timeUnit === 'days' && base.timeValue < 5) || base.timeUnit === 'hours';
   if (isShort && opt.halfTimeWhenUnder5Days && steps >= 1) {
     const timeValue = Math.max(1, Math.floor(base.timeValue / 2));
     return { ...base, timeValue, materialCost: base.materialCost * 1.5 };
@@ -436,11 +420,13 @@ export function applyReduceTimeByCost(
 export function applyReduceDifficultyByTime(
   base: CraftingRequirements,
   isCommonOrConsumableCommonToRare: boolean,
-  rules: CraftingRules
+  rules: CraftingRules,
 ): CraftingRequirements {
   const opt = rules.optionalReduceDifficultyByTime;
   if (!opt) return base;
-  const extraDays = isCommonOrConsumableCommonToRare ? opt.additionalDaysCommon : opt.additionalDaysOther;
+  const extraDays = isCommonOrConsumableCommonToRare
+    ? opt.additionalDaysCommon
+    : opt.additionalDaysOther;
   return {
     ...base,
     difficultyScore: Math.max(1, base.difficultyScore - opt.dsReduction),
@@ -456,7 +442,7 @@ export function applyReduceDifficultyByTime(
 export function applyReduceDifficultyByCost(
   base: CraftingRequirements,
   steps: number,
-  rules: CraftingRules
+  rules: CraftingRules,
 ): CraftingRequirements {
   const opt = rules.optionalReduceDifficultyByCost;
   if (!opt || steps <= 0) return base;

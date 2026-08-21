@@ -6,408 +6,55 @@
 
 'use client';
 
-import { useState, useMemo, useCallback } from 'react';
+import { useState, useMemo } from 'react';
 import { statusPanel } from '@/lib/ui/status-surface-classes';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { createCharacter, saveCharacter } from '@/services/character-service';
-import { useAuth, useCodexSkills, useMergedSpecies, useTraits, usePowerParts, useTechniqueParts, useItemProperties, useGameRules } from '@/hooks';
+import { formatCharacterCreateFailureMessage, resolveClientRequestId } from '@/lib/character-save';
+import {
+  useAuth,
+  useCodexSkills,
+  useMergedSpecies,
+  useTraits,
+  usePowerParts,
+  useTechniqueParts,
+  useItemProperties,
+  useGameRules,
+} from '@/hooks';
 import { cn } from '@/lib/utils';
 import { cleanForSave } from '@/lib/data-enrichment';
-import { dataUrlToBlob } from '@/lib/portrait';
-import { apiUpload } from '@/lib/api-client';
+import { buildCreatorSkillSaveRows } from '@/lib/creator/build-creator-skills';
+import { PORTRAIT_SAVE_UPLOAD_FALLBACK, uploadCharacterPortraitFromDataUrl } from '@/lib/portrait';
+import { getErrorMessage } from '@/lib/api-client';
 import type { Character, CharacterPower, CharacterTechnique, Item } from '@/types';
-import { Spinner, Button, Alert, Modal, Textarea, useToast } from '@/components/ui';
-import { useCharacterCreatorStore, CHARACTER_STARTING_CURRENCY, type CreatorStep } from '@/stores/character-creator-store';
-import { getAllValidationIssues, type ValidationIssue } from '@/lib/character-creator-validation';
-import { calculateMaxHealth, calculateMaxEnergy } from '@/lib/game/calculations';
-import { calculateHealthEnergyPool } from '@/lib/game/formulas';
-import { ABILITY_DISPLAY_NAMES } from '@/lib/game/constants';
-import { LoginPromptModal, ImageUploadModal, InfoTippy } from '@/components/shared';
+import { Button, Alert, Textarea, useToast } from '@/components/ui';
+import { useCharacterCreatorStore } from '@/stores/character-creator-store';
+import { computeStartingCurrency } from '@/lib/guided-creator/equipment-currency';
+import { getAllValidationIssues } from '@/lib/character-creator-validation';
+import { calculateMaxEnergyForArchetype } from '@/lib/game/calculations';
+import { navigateThenResetCreator, scheduleCreatorReset } from '@/lib/creator-save-handoff';
+import { sanitizeRedirectPath } from '@/lib/safe-redirect';
+import { GUIDED_CREATOR_COPY } from '@/lib/constants/site-copy';
+import { LoginPromptModal, InfoTippy, PointStatus, LoadoutBudgetBar } from '@/components/patterns';
+import { PlayTogetherModal } from '@/components/onboarding';
+import {
+  characterSheetUrlWithTourOffer,
+  hasSeenPlayTogether,
+  shouldOfferSheetTour,
+} from '@/lib/onboarding-preferences';
 import { finalizeSummaryHelp } from '../../../../public/tooltip-text';
 import { CreatorStepFooter } from '@/components/character-creator/creator-step-footer';
-import { CreatorResourceBar } from '@/components/character-creator/CreatorResourceBar';
-import { HealthEnergyAllocator } from '@/components/creator';
-import { buildRequiredProficiencies, calculateProficiencyTP, dedupeHighestProficiencies, getTrainingPointLimit } from '@/lib/proficiencies';
-import { derivePowerDisplay } from '@/lib/calculators/power-calc';
-import type { PowerDocument } from '@/lib/calculators/power-calc';
-import { deriveTechniqueDisplay } from '@/lib/calculators/technique-calc';
-import type { TechniqueDocument } from '@/lib/calculators/technique-calc';
-
-const AGE_IN_APPEARANCE = /^Age:\s*(\d+)\s*(?:\n|$)/;
-
-function parseAgeFromAppearance(appearance?: string): string {
-  const match = appearance?.match(AGE_IN_APPEARANCE);
-  return match?.[1] ?? '';
-}
-
-function mergeAgeIntoAppearance(age: string, appearance?: string): string | undefined {
-  const rest = appearance?.replace(AGE_IN_APPEARANCE, '').trim() ?? '';
-  const trimmedAge = age.trim();
-  if (!trimmedAge && !rest) return undefined;
-  if (!trimmedAge) return rest || undefined;
-  return rest ? `Age: ${trimmedAge}\n${rest}` : `Age: ${trimmedAge}`;
-}
-
-function StepEditLink({ step, label }: { step: CreatorStep; label: string }) {
-  const { setStep, canNavigateToStep } = useCharacterCreatorStore();
-  if (!canNavigateToStep(step)) return null;
-  return (
-    <Button
-      type="button"
-      variant="link"
-      size="sm"
-      onClick={() => setStep(step)}
-      className="min-h-11 shrink-0"
-    >
-      Edit {label}
-    </Button>
-  );
-}
-
-function ValidationModal({ 
-  isOpen, 
-  onClose, 
-  issues, 
-  onContinueAnyway,
-  onSave,
-  isSaving,
-}: { 
-  isOpen: boolean; 
-  onClose: () => void; 
-  issues: ValidationIssue[];
-  onContinueAnyway?: () => void;
-  onSave?: () => void;
-  isSaving?: boolean;
-}) {
-  const hasErrors = issues.some(i => i.severity === 'error');
-  const isValid = issues.length === 0;
-
-  // Custom header for Modal
-  const modalHeader = (
-    <div className={cn(
-      'p-4 border-b flex items-center gap-3',
-      isValid ? statusPanel.completeBg : hasErrors ? statusPanel.dangerBg : statusPanel.warningBg
-    )}>
-      <span className="text-2xl">{isValid ? '✅' : hasErrors ? '⚠️' : '📋'}</span>
-      <h2 className="text-xl font-bold text-text-primary">
-        {isValid ? 'Character Ready!' : hasErrors ? 'Issues Found' : 'Review Needed'}
-      </h2>
-    </div>
-  );
-
-  // Custom footer for Modal
-  const modalFooter = (
-    <div className="shrink-0 border-t border-border-light p-4 flex justify-end gap-3">
-      <Button
-        variant="secondary"
-        onClick={onClose}
-        disabled={isSaving}
-      >
-        {isValid ? 'Cancel' : 'Go Back & Fix'}
-      </Button>
-      {/* Show Save button when valid */}
-      {isValid && onSave && (
-        <Button
-          onClick={onSave}
-          disabled={isSaving}
-          isLoading={isSaving}
-        >
-          ✓ Create Character
-        </Button>
-      )}
-      {/* Show Continue Anyway when there are warnings but no errors */}
-      {!hasErrors && !isValid && onContinueAnyway && (
-        <Button
-          onClick={onContinueAnyway}
-          disabled={isSaving}
-          className="bg-warning-600 text-white hover:bg-warning-700 dark:bg-warning-500 dark:hover:bg-warning-600"
-        >
-          Save Anyway
-        </Button>
-      )}
-    </div>
-  );
-  
-  return (
-    <Modal
-      isOpen={isOpen}
-      onClose={onClose}
-      size="lg"
-      flexLayout
-      fullScreenOnMobile
-      header={modalHeader}
-      footer={modalFooter}
-      showCloseButton={false}
-      contentClassName="p-4 overflow-y-auto"
-    >
-      {isValid ? (
-        <p className="text-text-secondary text-center py-8">
-          Your character is complete and ready for adventure!
-        </p>
-      ) : (
-        <div className="space-y-3">
-          {issues.map((issue, idx) => (
-            <div 
-              key={idx} 
-              className={cn(
-                'p-3 rounded-lg flex gap-3',
-                issue.severity === 'error' ? statusPanel.dangerBg : statusPanel.warningBg
-              )}
-            >
-              <span className="text-xl flex-shrink-0">{issue.emoji}</span>
-              <p className="text-text-secondary">{issue.message}</p>
-            </div>
-          ))}
-        </div>
-      )}
-    </Modal>
-  );
-}
-
-/**
- * Health & Energy Allocation Section
- * Uses the shared HealthEnergyAllocator component for consistent UX
- * across character creator, character sheet, and creature creator.
- * Auto-allocate button sets energy to match highest power/technique cost (if possible), rest to health.
- */
-function HealthEnergyAllocationSection() {
-  const { draft, updateDraft } = useCharacterCreatorStore();
-  const { rules } = useGameRules();
-  const { data: powerPartsDb = [] } = usePowerParts();
-  const { data: techniquePartsDb = [] } = useTechniqueParts();
-  
-  // Calculate base values using centralized calculations
-  const abilities = draft.abilities || { strength: 0, vitality: 0, agility: 0, acuity: 0, intelligence: 0, charisma: 0 };
-  const level = draft.level || 1;
-  const powAbil = draft.pow_abil || draft.archetype?.pow_abil || draft.archetype?.ability;
-  const martAbil = draft.mart_abil || draft.archetype?.mart_abil;
-  
-  // Base = max with 0 allocation; used for display
-  const baseHealth = calculateMaxHealth(0, abilities.vitality || 0, level, powAbil, abilities, rules, martAbil);
-  const baseEnergy = calculateMaxEnergy(0, powAbil || martAbil, abilities, level);
-  
-  const hePool = calculateHealthEnergyPool(level, 'PLAYER', false, rules);
-  
-  // Now using bonus values (stored directly)
-  const hpBonus = draft.healthPoints || 0;
-  const enBonus = draft.energyPoints || 0;
-  
-  // Calculated max values for display
-  const maxHp = calculateMaxHealth(hpBonus, abilities.vitality || 0, level, powAbil, abilities, rules, martAbil);
-  const maxEnergy = calculateMaxEnergy(enBonus, powAbil || martAbil, abilities, level);
-  
-  // Highest energy cost among powers and techniques (for auto-allocate)
-  const highestEnergyCost = useMemo(() => {
-    let max = 0;
-    const powers = (draft.powers || []) as CharacterPower[];
-    const techniques = (draft.techniques || []) as CharacterTechnique[];
-    powers.forEach((p) => {
-      try {
-        const disp = derivePowerDisplay(p as unknown as PowerDocument, powerPartsDb);
-        if (typeof disp.energy === 'number') max = Math.max(max, disp.energy);
-      } catch {
-        // ignore invalid power
-      }
-    });
-    techniques.forEach((t) => {
-      try {
-        const disp = deriveTechniqueDisplay(t as unknown as TechniqueDocument, techniquePartsDb);
-        if (typeof disp.energy === 'number') max = Math.max(max, disp.energy);
-      } catch {
-        // ignore invalid technique
-      }
-    });
-    return max;
-  }, [draft.powers, draft.techniques, powerPartsDb, techniquePartsDb]);
-  
-  const onAutoAllocate = useCallback(() => {
-    // Target max EN = highest power/technique cost, capped by what the pool can provide
-    const maxAchievableEN = baseEnergy + hePool;
-    const targetEN = Math.min(highestEnergyCost, maxAchievableEN);
-    const energyBonusNeeded = Math.max(0, targetEN - baseEnergy);
-    const energyBonusFinal = Math.min(hePool, energyBonusNeeded);
-    const hpBonusFinal = hePool - energyBonusFinal;
-    updateDraft({ healthPoints: hpBonusFinal, energyPoints: energyBonusFinal });
-  }, [baseEnergy, hePool, highestEnergyCost, updateDraft]);
-  
-  return (
-    <div>
-      <div className="flex flex-wrap items-center justify-between gap-2 mb-3">
-        <p className="text-xs text-text-muted dark:text-text-secondary">
-          Base HP: {baseHealth} | Base EN: {baseEnergy}
-        </p>
-        <Button
-          type="button"
-          variant="secondary"
-          size="sm"
-          onClick={onAutoAllocate}
-          aria-label="Auto-allocate points so max energy matches highest power or technique cost, rest to health"
-          className="min-h-11"
-        >
-          Auto-allocate to match highest cost
-        </Button>
-      </div>
-      <HealthEnergyAllocator
-        hpBonus={hpBonus}
-        energyBonus={enBonus}
-        poolTotal={hePool}
-        maxHp={maxHp}
-        maxEnergy={maxEnergy}
-        onHpChange={(val) => updateDraft({ healthPoints: val })}
-        onEnergyChange={(val) => updateDraft({ energyPoints: val })}
-        enableHoldRepeat
-      />
-    </div>
-  );
-}
-
-// =============================================================================
-// Portrait Upload Component - uses ImageUploadModal for cropping
-// =============================================================================
-
-async function blobToCompressedBase64(blob: Blob, maxSize = 700 * 1024): Promise<string> {
-  return new Promise((resolve, reject) => {
-    const img = new Image();
-    const url = URL.createObjectURL(blob);
-    img.onload = () => {
-      URL.revokeObjectURL(url);
-      const canvas = document.createElement('canvas');
-      const ctx = canvas.getContext('2d');
-      let { width, height } = img;
-      const maxDim = 400;
-      if (width > height && width > maxDim) {
-        height = Math.round((height * maxDim) / width);
-        width = maxDim;
-      } else if (height > maxDim) {
-        width = Math.round((width * maxDim) / height);
-        height = maxDim;
-      }
-      canvas.width = width;
-      canvas.height = height;
-      ctx?.drawImage(img, 0, 0, width, height);
-      let quality = 0.7;
-      const tryEncode = () => {
-        const dataUrl = canvas.toDataURL('image/jpeg', quality);
-        if (dataUrl.length > maxSize && quality > 0.3) {
-          quality -= 0.1;
-          tryEncode();
-        } else {
-          resolve(dataUrl);
-        }
-      };
-      tryEncode();
-    };
-    img.onerror = () => {
-      URL.revokeObjectURL(url);
-      reject(new Error('Failed to load image'));
-    };
-    img.src = url;
-  });
-}
-
-function PortraitUpload() {
-  const { draft, updateDraft } = useCharacterCreatorStore();
-  const [showModal, setShowModal] = useState(false);
-  const [isProcessing, setIsProcessing] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-
-  const handleCropped = async (blob: Blob) => {
-    setError(null);
-    setIsProcessing(true);
-    try {
-      const base64 = await blobToCompressedBase64(blob);
-      if (base64.length > 700 * 1024) {
-        setError('Image is still too large. Please use a smaller image.');
-        return;
-      }
-      updateDraft({ portrait: base64 });
-      setShowModal(false);
-    } catch {
-      setError('Failed to process image');
-    } finally {
-      setIsProcessing(false);
-    }
-  };
-
-  const handleRemove = () => {
-    updateDraft({ portrait: undefined });
-    setError(null);
-  };
-
-  return (
-    <div className="mb-6">
-      <label className="block text-sm font-medium text-text-secondary mb-2">
-        Character Portrait (Optional)
-      </label>
-
-      <div className="flex items-start gap-4">
-        <div className="relative w-28 h-28 rounded-lg overflow-hidden bg-surface-alt border-2 border-dashed border-border-light flex items-center justify-center">
-          {draft.portrait ? (
-            <>
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img
-                src={draft.portrait}
-                alt="Character portrait"
-                className="w-full h-full object-cover"
-              />
-              <button
-                type="button"
-                onClick={handleRemove}
-                aria-label="Remove portrait"
-                className="absolute top-1 right-1 min-h-11 min-w-11 rounded-full bg-danger-button text-white flex items-center justify-center text-sm hover:bg-danger-700"
-              >
-                ×
-              </button>
-            </>
-          ) : (
-            <div className="text-center p-2">
-              <span className="text-3xl text-text-muted dark:text-text-secondary">📷</span>
-              <p className="text-xs text-text-muted dark:text-text-secondary mt-1">No image</p>
-            </div>
-          )}
-        </div>
-
-        <div className="flex-1">
-          <button
-            type="button"
-            onClick={() => setShowModal(true)}
-            disabled={isProcessing}
-            className={cn(
-              'inline-flex items-center gap-2 px-4 py-2 rounded-lg border cursor-pointer transition-colors',
-              isProcessing
-                ? 'bg-surface-alt text-text-muted dark:text-text-secondary cursor-not-allowed'
-                : 'border-primary-outline-border text-primary-link-fg hover:bg-primary-subtle-bg'
-            )}
-          >
-            {isProcessing ? (
-              <>
-                <Spinner size="sm" />
-                Processing...
-              </>
-            ) : (
-              <>📤 {draft.portrait ? 'Change Image' : 'Upload Image'}</>
-            )}
-          </button>
-          <p className="text-xs text-text-muted dark:text-text-secondary mt-2">
-            Click to upload and crop. JPG, PNG, or GIF. Max 5MB.
-          </p>
-          {error && (
-            <p className="text-xs text-danger-700 dark:text-danger-400 mt-1 font-medium">{error}</p>
-          )}
-        </div>
-      </div>
-
-      <ImageUploadModal
-        isOpen={showModal}
-        onClose={() => { setShowModal(false); setError(null); }}
-        onConfirm={handleCropped}
-        cropShape="rect"
-        aspect={1}
-        title="Character Portrait"
-      />
-    </div>
-  );
-}
+import {
+  buildRequiredProficiencies,
+  calculateProficiencyTP,
+  dedupeHighestProficiencies,
+  getTrainingPointLimit,
+} from '@/lib/proficiencies';
+import { ValidationModal } from './finalize/validation-modal';
+import { HealthEnergyAllocationSection } from './finalize/health-energy-section';
+import { PortraitUpload } from './finalize/portrait-upload';
+import { BuildSummary } from './finalize/build-summary';
+import { IdentityFields } from './finalize/identity-fields';
 
 export function FinalizeStep() {
   const searchParams = useSearchParams();
@@ -422,11 +69,13 @@ export function FinalizeStep() {
   const { data: powerPartsDb = [] } = usePowerParts();
   const { data: techniquePartsDb = [] } = useTechniqueParts();
   const { data: itemPropertiesDb = [] } = useItemProperties();
-  
+
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [showValidation, setShowValidation] = useState(false);
   const [showLoginPrompt, setShowLoginPrompt] = useState(false);
+  const [showPlayTogether, setShowPlayTogether] = useState(false);
+  const [savedCharacterId, setSavedCharacterId] = useState<string | null>(null);
 
   const creatorReturnPath = useMemo(() => {
     const qs = searchParams.toString();
@@ -436,12 +85,16 @@ export function FinalizeStep() {
   // Validation from shared lib (same messages as tab-bar "things left to do" modal)
   const validationIssues = useMemo(
     () =>
-      getAllValidationIssues(draft, {
-        allSpecies,
-        codexSkills: codexSkills ?? null,
-        allTraits: allTraits ?? null,
-      }, rules),
-    [draft, allSpecies, codexSkills, allTraits, rules]
+      getAllValidationIssues(
+        draft,
+        {
+          allSpecies,
+          codexSkills: codexSkills ?? null,
+          allTraits: allTraits ?? null,
+        },
+        rules,
+      ),
+    [draft, allSpecies, codexSkills, allTraits, rules],
   );
 
   const proficiencyTpSummary = useMemo(() => {
@@ -459,125 +112,97 @@ export function FinalizeStep() {
       techniquePartsDb,
       itemPropertiesDb,
     });
-    const spent = dedupeHighestProficiencies(required).reduce((sum, p) => sum + calculateProficiencyTP(p), 0);
+    const spent = dedupeHighestProficiencies(required).reduce(
+      (sum, p) => sum + calculateProficiencyTP(p),
+      0,
+    );
 
     const abilities = draft.abilities || {};
     const getAbility = (key: string | undefined): number =>
       key ? Number((abilities as Record<string, unknown>)[key] ?? 0) || 0 : 0;
     const highestAbility = Math.max(
       ...Object.values(abilities).filter((v): v is number => typeof v === 'number'),
-      0
+      0,
     );
-    const archetypeAbility = Math.max(getAbility(draft.pow_abil), getAbility(draft.mart_abil), highestAbility);
+    const archetypeAbility = Math.max(
+      getAbility(draft.pow_abil),
+      getAbility(draft.mart_abil),
+      highestAbility,
+    );
     const limit = getTrainingPointLimit(draft.level || 1, archetypeAbility);
     return { spent, limit, remaining: limit - spent };
   }, [draft, powerPartsDb, techniquePartsDb, itemPropertiesDb]);
-  
-  const displayAge = parseAgeFromAppearance(draft.appearance);
-  const physicalDescription = draft.appearance?.replace(AGE_IN_APPEARANCE, '').trim() ?? '';
 
-  const handleAgeChange = (value: string) => {
-    updateDraft({ appearance: mergeAgeIntoAppearance(value, draft.appearance) });
-  };
-
-  const handlePhysicalDescriptionChange = (value: string) => {
-    updateDraft({ appearance: mergeAgeIntoAppearance(displayAge, value) });
-  };
-
-  const energySummary = useMemo(() => {
+  const maxEnergy = useMemo(() => {
     const abilities = draft.abilities || {};
     const level = draft.level || 1;
     const powAbil = draft.pow_abil || draft.archetype?.pow_abil || draft.archetype?.ability;
     const martAbil = draft.mart_abil || draft.archetype?.mart_abil;
-    const maxEnergy = calculateMaxEnergy(draft.energyPoints || 0, powAbil || martAbil, abilities, level);
-    return { current: maxEnergy, max: maxEnergy };
+    return calculateMaxEnergyForArchetype(
+      draft.energyPoints || 0,
+      abilities,
+      level,
+      powAbil,
+      martAbil,
+    );
   }, [draft]);
 
-  const startingCurrency = useMemo(() => {
-    const level = draft.level || 1;
-    if (level <= 1) return CHARACTER_STARTING_CURRENCY;
-    return Math.round(CHARACTER_STARTING_CURRENCY * Math.pow(1.45, level - 1));
-  }, [draft.level]);
+  const startingCurrency = useMemo(() => computeStartingCurrency(draft.level || 1), [draft.level]);
   const remainingCurrency = draft.currency ?? startingCurrency;
-  
+
   const handleValidateAndSave = () => {
     setShowValidation(true);
   };
-  
+
   const handleSave = async () => {
     if (!user) {
-      // Show login prompt modal instead of error
+      // Close review first so Continue Without Saving is not stacked over Create.
+      setShowValidation(false);
       setShowLoginPrompt(true);
       return;
     }
-    
+
+    if (saving) return;
+
     if (!draft.name?.trim()) {
       setError('Please enter a character name');
       return;
     }
-    
+
     try {
       setSaving(true);
       setError(null);
       setShowValidation(false);
-      
+
       const characterData = getCharacter({
         powerPartsDb,
         techniquePartsDb,
         itemPropertiesDb,
         rules,
       });
-      
-      // Convert skills from Record<string, number> to array format
-      // Character sheet expects: Array<{ id, name, category, skill_val, prof }>
-      if (characterData.skills && typeof characterData.skills === 'object' && !Array.isArray(characterData.skills)) {
-        const skillsRecord = characterData.skills as Record<string, number>;
-        const skillsArray: Array<{
-          id: string;
-          name: string;
-          category?: string;
-          skill_val: number;
-          prof: boolean;
-          baseSkill?: string;
-          ability?: string;
-        }> = [];
-        
-        // Convert each skill allocation to array format
-        Object.entries(skillsRecord).forEach(([skillId, points]) => {
-          if (points >= 0) {
-            const skillData = codexSkills?.find((s: { id: string; name: string }) => s.id === skillId || s.name === skillId);
-            const baseSkill = skillData?.base_skill_id !== undefined
-              ? (codexSkills?.find((s: { id: string }) => s.id === String(skillData?.base_skill_id)) as { name?: string })?.name
-              : undefined;
-            if (skillData) {
-              skillsArray.push({
-                id: skillData.id,
-                name: skillData.name,
-                category: (skillData as { category?: string }).category || skillData.ability?.split(',')[0]?.trim() || 'other',
-                skill_val: points,
-                prof: true,
-                ...(baseSkill && { baseSkill }),
-                ability: skillData.ability?.split(',')[0]?.trim().toLowerCase(),
-              });
-            } else {
-              skillsArray.push({
-                id: skillId,
-                name: skillId,
-                category: 'other',
-                skill_val: points,
-                prof: true,
-              });
-            }
-          }
-        });
-        
-        characterData.skills = skillsArray as unknown as Character['skills'];
+
+      // Convert skills Record → array before cleanForSave so proficient-only 0 survives
+      // (shared with Guided via buildCreatorSkillSaveRows).
+      if (
+        characterData.skills &&
+        typeof characterData.skills === 'object' &&
+        !Array.isArray(characterData.skills)
+      ) {
+        characterData.skills = buildCreatorSkillSaveRows(
+          characterData.skills as Record<string, number>,
+          {
+            codexSkills: codexSkills ?? [],
+            includeBaseSkillName: true,
+            abilities: characterData.abilities,
+            skillAbilities: draft.skillAbilities,
+          },
+        ) as unknown as Character['skills'];
       }
 
       // Strip to lean schema (feats, powers, techniques, skills, equipment, etc.) so we don't persist
       // full codex/library data — it's derived on load from codex.
       const leanData = cleanForSave(characterData as unknown as Character);
-      
+
       // Remove any undefined values (PostgreSQL JSONB rejects undefined)
       const sanitizeForJsonb = (val: unknown): unknown => {
         if (val === undefined) return undefined;
@@ -597,447 +222,136 @@ export function FinalizeStep() {
       const sanitizedCharacter = sanitizeForJsonb(leanData) as Partial<Character>;
 
       // If portrait is base64, strip it from initial save (will upload to Storage after)
-      const hasBase64Portrait = sanitizedCharacter.portrait && 
-        typeof sanitizedCharacter.portrait === 'string' && 
+      const hasBase64Portrait =
+        sanitizedCharacter.portrait &&
+        typeof sanitizedCharacter.portrait === 'string' &&
         sanitizedCharacter.portrait.startsWith('data:');
       const base64Portrait = hasBase64Portrait ? sanitizedCharacter.portrait : null;
       if (hasBase64Portrait) {
         delete sanitizedCharacter.portrait;
       }
 
-      const characterId = await createCharacter({
-        ...sanitizedCharacter,
-        userId: user.uid,
-      });
+      const clientRequestId = resolveClientRequestId(draft.clientRequestId);
+      if (clientRequestId !== draft.clientRequestId) {
+        updateDraft({ clientRequestId });
+      }
+      const characterId = await createCharacter(
+        {
+          ...sanitizedCharacter,
+          userId: user.uid,
+        },
+        { clientRequestId },
+      );
+      if (!characterId?.trim()) {
+        throw new Error('Character was created but no id was returned');
+      }
 
       // Upload base64 portrait to Supabase Storage and save the URL
-      if (base64Portrait && characterId) {
+      if (base64Portrait) {
         try {
-          const blob = dataUrlToBlob(base64Portrait);
-          const file = new File([blob], 'portrait.jpg', {
-            type: blob.type?.startsWith('image/') ? blob.type : 'image/jpeg',
-          });
-
-          const formData = new FormData();
-          formData.append('file', file);
-          formData.append('characterId', characterId);
-
-          const uploadRes = await apiUpload<{ url: string }>('/api/upload/portrait', formData);
-
-          if (!uploadRes.url) {
-            showToast('Portrait upload returned no URL. Add a portrait from your character sheet.', 'error');
-          } else {
-            await saveCharacter(characterId, { portrait: uploadRes.url });
-          }
-        } catch {
-          showToast(
-            'Could not process or upload your portrait. Your character was created. Add a portrait from the sheet.',
-            'error'
-          );
+          const { url } = await uploadCharacterPortraitFromDataUrl(characterId, base64Portrait);
+          await saveCharacter(characterId, { portrait: url });
+        } catch (err) {
+          showToast(getErrorMessage(err, PORTRAIT_SAVE_UPLOAD_FALLBACK), 'error');
         }
       }
 
-      // Clear the creator store
-      resetCreator();
-
-      // Navigate: returnTo param (e.g. from campaigns Join tab) or new character sheet
+      // Navigate first, then clear — see navigateThenResetCreator DESIGN_INTENT.
       const returnTo = searchParams.get('returnTo');
+      const safeReturnTo =
+        returnTo && returnTo.startsWith('/') ? sanitizeRedirectPath(returnTo, '') : '';
       showToast('Your character is ready!', 'success');
-      if (returnTo && returnTo.startsWith('/')) {
-        router.push(returnTo);
+      setSavedCharacterId(characterId);
+
+      const goAfterSave = (offerTour: boolean) => {
+        navigateThenResetCreator(() => {
+          if (safeReturnTo) {
+            router.push(safeReturnTo);
+          } else if (offerTour && shouldOfferSheetTour()) {
+            router.push(characterSheetUrlWithTourOffer(characterId));
+          } else {
+            router.push(`/characters/${characterId}`);
+          }
+        }, resetCreator);
+      };
+
+      if (!safeReturnTo && !hasSeenPlayTogether()) {
+        setShowPlayTogether(true);
+        // Leave `saving` true so Create stays disabled while play-together is open.
       } else {
-        router.push(`/characters/${characterId}`);
+        goAfterSave(!safeReturnTo);
       }
     } catch (err) {
-      const message =
-        err instanceof Error && err.message.trim()
-          ? err.message
-          : 'Failed to save character. Please try again.';
-      setError(message);
-    } finally {
+      setError(formatCharacterCreateFailureMessage(err, GUIDED_CREATOR_COPY.steps.reveal));
       setSaving(false);
     }
   };
-  
+
   return (
-    <div className="max-w-2xl mx-auto flex flex-col flex-1 min-h-0">
-      <CreatorResourceBar
-        trainingPoints={{
-          spent: proficiencyTpSummary.spent,
-          limit: proficiencyTpSummary.limit,
-        }}
-        currency={{
-          spent: startingCurrency - remainingCurrency,
-          limit: startingCurrency,
-        }}
-        energy={energySummary}
-        layer={3}
-        creationMode={draft.creationMode}
+    <div className="mx-auto flex min-h-0 max-w-2xl flex-1 flex-col">
+      <LoadoutBudgetBar
+        className="mb-6"
+        currencyTotal={startingCurrency}
+        currencySpent={startingCurrency - remainingCurrency}
+        tpTotal={proficiencyTpSummary.limit}
+        tpSpent={proficiencyTpSummary.spent}
+        trailing={<PointStatus total={maxEnergy} spent={0} label="Energy" variant="inline" />}
       />
 
-      <div className="flex items-center gap-1 mb-2">
+      <div className="mb-2 flex items-center gap-1">
         <h2 className="text-2xl font-bold text-text-primary">Meet Your Character</h2>
-        <InfoTippy content={finalizeSummaryHelp} allowHTML label="Finalize checklist help" size="inline" />
+        <InfoTippy content={finalizeSummaryHelp} label="Finalize checklist help" />
       </div>
-      <p className="text-text-secondary mb-6">
+      <p className="mb-6 text-text-secondary">
         Review your build, add identity details, then create your character.
       </p>
 
       {/* Character reveal hero */}
-      <div className="rounded-xl border border-primary-subtle-border bg-gradient-to-br from-primary-subtle-bg/80 to-surface overflow-hidden mb-6 shadow-sm">
-        <div className="p-5 flex flex-col sm:flex-row gap-5 items-center sm:items-start">
-          <div className="relative w-24 h-24 rounded-xl overflow-hidden bg-surface-alt border-2 border-border-light flex items-center justify-center shrink-0">
+      <div className="mb-6 overflow-hidden rounded-xl border border-primary-subtle-border bg-gradient-to-br from-primary-subtle-bg/80 to-surface shadow-sm">
+        <div className="flex flex-col items-center gap-5 p-5 sm:flex-row sm:items-start">
+          <div className="relative flex h-24 w-24 shrink-0 items-center justify-center overflow-hidden rounded-xl border-2 border-border-light bg-image-matte">
             {draft.portrait ? (
               // eslint-disable-next-line @next/next/no-img-element
-              <img src={draft.portrait} alt="" className="w-full h-full object-cover" />
+              <img src={draft.portrait} alt="" className="h-full w-full object-contain" />
             ) : (
-              <span className="text-4xl text-text-muted dark:text-text-secondary" aria-hidden>
+              <span className="text-4xl text-text-muted" aria-hidden>
                 {draft.name?.charAt(0).toUpperCase() || '?'}
               </span>
             )}
           </div>
-          <div className="min-w-0 text-center sm:text-left flex-1">
-            <p className="text-xs font-medium uppercase tracking-wide text-primary-fg mb-1">Level {draft.level || 1}</p>
-            <h3 className="text-2xl font-bold text-text-primary truncate">
+          <div className="min-w-0 flex-1 text-center sm:text-left">
+            <p className="mb-1 text-xs font-medium tracking-wide text-primary-fg uppercase">
+              Level {draft.level || 1}
+            </p>
+            <h3 className="truncate text-2xl font-bold text-text-primary">
               {draft.name?.trim() || 'Unnamed Hero'}
             </h3>
-            <p className="text-text-secondary mt-1">
-              {[draft.archetype?.name, draft.ancestry?.name].filter(Boolean).join(' · ') || 'Complete earlier steps to fill in your build.'}
+            <p className="mt-1 text-text-secondary">
+              {[draft.archetype?.name, draft.ancestry?.name].filter(Boolean).join(' · ') ||
+                'Complete earlier steps to fill in your build.'}
             </p>
           </div>
         </div>
       </div>
-      
-      {/* Character Name & identity */}
-      <div className="mb-6 rounded-xl border border-border-light bg-surface p-5 space-y-4">
-        <h3 className="text-lg font-bold text-text-primary">Identity</h3>
-        <div>
-          <label htmlFor="character-name" className="block text-sm font-medium text-text-secondary mb-2">
-            Character Name *
-          </label>
-          <input
-            id="character-name"
-            type="text"
-            value={draft.name || ''}
-            onChange={(e) => updateDraft({ name: e.target.value })}
-            placeholder="Enter your character's name"
-            className="w-full px-4 py-3 rounded-xl border border-border-light focus:border-primary-outline-border focus:ring-2 focus:ring-primary-outline-border transition-colors"
-          />
-        </div>
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-          <div>
-            <label htmlFor="character-age" className="block text-sm font-medium text-text-secondary mb-2">
-              Age (optional)
-            </label>
-            <input
-              id="character-age"
-              type="number"
-              min={1}
-              value={displayAge}
-              onChange={(e) => handleAgeChange(e.target.value)}
-              placeholder="—"
-              className="w-full px-4 py-3 rounded-xl border border-border-light focus:border-primary-outline-border focus:ring-2 focus:ring-primary-outline-border transition-colors"
-            />
-          </div>
-          <div>
-            <label htmlFor="character-height" className="block text-sm font-medium text-text-secondary mb-2">
-              Height cm (optional)
-            </label>
-            <input
-              id="character-height"
-              type="number"
-              min={0}
-              value={draft.height ?? ''}
-              onChange={(e) =>
-                updateDraft({ height: e.target.value ? Number(e.target.value) : undefined })
-              }
-              placeholder="—"
-              className="w-full px-4 py-3 rounded-xl border border-border-light focus:border-primary-outline-border focus:ring-2 focus:ring-primary-outline-border transition-colors"
-            />
-          </div>
-          <div>
-            <label htmlFor="character-weight" className="block text-sm font-medium text-text-secondary mb-2">
-              Weight kg (optional)
-            </label>
-            <input
-              id="character-weight"
-              type="number"
-              min={0}
-              value={draft.weight ?? ''}
-              onChange={(e) =>
-                updateDraft({ weight: e.target.value ? Number(e.target.value) : undefined })
-              }
-              placeholder="—"
-              className="w-full px-4 py-3 rounded-xl border border-border-light focus:border-primary-outline-border focus:ring-2 focus:ring-primary-outline-border transition-colors"
-            />
-          </div>
-        </div>
-        <Textarea
-          label="Appearance (optional)"
-          value={physicalDescription}
-          onChange={(e) => handlePhysicalDescriptionChange(e.target.value)}
-          placeholder="Hair, eyes, distinguishing features…"
-          rows={2}
-          className="resize-none"
-        />
-      </div>
-      
+
+      <IdentityFields />
+
       {/* Character Portrait (Optional) */}
       <PortraitUpload />
-      
-      {/* Character Summary — styled to match creator steps: clear hierarchy, ability cards, no grey-on-grey */}
-      <div className="rounded-xl border border-border-light bg-surface overflow-hidden mb-6 shadow-sm">
-        <div className="px-5 py-4 border-b border-border-light bg-surface-alt flex flex-wrap items-start justify-between gap-2">
-          <div>
-            <h3 className="text-lg font-bold text-text-primary">Build Summary</h3>
-            <p className="text-sm text-text-secondary mt-0.5">Every choice at a glance — jump back to edit any step.</p>
-          </div>
-        </div>
 
-        <div className="p-5 space-y-5">
-          {/* Top row: Level, Archetype, Species, Power/Martial only when archetype has that proficiency */}
-          {(() => {
-            const arch = draft.archetype;
-            const hasPowerProf = arch?.type === 'power' || arch?.type === 'powered-martial' || (arch?.power_prof_start ?? 0) > 0;
-            const hasMartialProf = arch?.type === 'martial' || arch?.type === 'powered-martial' || (arch?.martial_prof_start ?? 0) > 0;
-            const showPowerAbility = draft.pow_abil && hasPowerProf;
-            const showMartialAbility = draft.mart_abil && hasMartialProf;
-            return (
-              <div className="space-y-4">
-                <div className="flex flex-wrap items-center justify-between gap-2">
-                  <p className="text-xs font-medium text-text-secondary uppercase tracking-wide">Core choices</p>
-                  <div className="flex flex-wrap gap-1">
-                    <StepEditLink step="archetype" label="archetype" />
-                    <StepEditLink step="species" label="species" />
-                    <StepEditLink step="ancestry" label="ancestry" />
-                    <StepEditLink step="abilities" label="abilities" />
-                    <StepEditLink step="skills" label="skills" />
-                  </div>
-                </div>
-              <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
-                <div className="rounded-lg border border-border-light bg-surface-alt/50 p-3">
-                  <p className="text-xs font-medium text-text-secondary uppercase tracking-wide">Level</p>
-                  <p className="text-lg font-bold text-text-primary mt-0.5">{draft.level || 1}</p>
-                </div>
-                <div className="rounded-lg border border-border-light bg-surface-alt/50 p-3">
-                  <p className="text-xs font-medium text-text-secondary uppercase tracking-wide">Archetype</p>
-                  <p className="text-lg font-bold text-text-primary mt-0.5">
-                    {arch?.name
-                      ? arch.name
-                      : arch?.type
-                        ? arch.type.charAt(0).toUpperCase() + arch.type.slice(1)
-                        : '-'}
-                  </p>
-                </div>
-                <div className="rounded-lg border border-border-light bg-surface-alt/50 p-3">
-                  <p className="text-xs font-medium text-text-secondary uppercase tracking-wide">Species</p>
-                  <p className="text-lg font-bold text-text-primary mt-0.5">{draft.ancestry?.name || '-'}</p>
-                </div>
-                {showPowerAbility && (
-                  <div className="rounded-lg border border-power bg-power-light/40 dark:bg-power-900/20 p-3">
-                    <p className="text-xs font-medium text-power-fg uppercase tracking-wide">Power Ability</p>
-                    <p className="text-lg font-bold text-power-fg mt-0.5 capitalize">{draft.pow_abil}</p>
-                  </div>
-                )}
-                {showMartialAbility && (
-                  <div className="rounded-lg border border-martial bg-martial-light/40 dark:bg-martial-900/20 p-3">
-                    <p className="text-xs font-medium text-martial-fg uppercase tracking-wide">Martial Ability</p>
-                    <p className="text-lg font-bold text-martial-fg mt-0.5 capitalize">{draft.mart_abil}</p>
-                  </div>
-                )}
-              </div>
-              </div>
-            );
-          })()}
+      <BuildSummary
+        draft={draft}
+        proficiencyTpSummary={proficiencyTpSummary}
+        powerPartsDb={powerPartsDb}
+        techniquePartsDb={techniquePartsDb}
+      />
 
-          {/* Proficiency TP — same token styling as elsewhere */}
-          <div className="rounded-lg border border-border-light bg-surface-alt/50 p-4">
-            <div className="flex flex-wrap items-center justify-between gap-2 mb-2">
-              <p className="text-xs font-medium text-text-secondary uppercase tracking-wide">Proficiency TP</p>
-              <StepEditLink step="equipment" label="equipment" />
-            </div>
-            <div className="flex flex-wrap gap-2">
-              <span className="px-3 py-1.5 rounded-lg text-sm font-medium bg-surface text-text-primary border border-border-light">
-                Limit: {proficiencyTpSummary.limit}
-              </span>
-              <span className="px-3 py-1.5 rounded-lg text-sm font-medium bg-surface text-text-primary border border-border-light">
-                Required: {proficiencyTpSummary.spent}
-              </span>
-              <span
-                className={cn(
-                  'px-3 py-1.5 rounded-lg text-sm font-bold',
-                  proficiencyTpSummary.remaining >= 0
-                    ? 'bg-success-100 dark:bg-success-900/40 text-success-fg border border-success-200 dark:border-success-700/50'
-                    : 'bg-danger-100 dark:bg-danger-900/40 text-danger-fg border border-danger-200 dark:border-danger-700/50'
-                )}
-              >
-                Remaining: {proficiencyTpSummary.remaining}
-              </span>
-            </div>
-            {proficiencyTpSummary.remaining < 0 && (
-              <p className="mt-2 text-sm text-danger-fg font-medium">
-                Over by {Math.abs(proficiencyTpSummary.remaining)} TP. You can still create and adjust later.
-              </p>
-            )}
-          </div>
-
-          {/* Abilities — name above value, mini ability cards matching creator (power/martial tint, +/- colors) */}
-          {draft.abilities && (
-            <div>
-              <div className="flex flex-wrap items-center justify-between gap-2 mb-3">
-                <p className="text-xs font-medium text-text-secondary uppercase tracking-wide">Abilities</p>
-              </div>
-              <div className="grid grid-cols-3 sm:grid-cols-6 gap-2">
-                {(Object.entries(draft.abilities) as [string, number][]).map(([key, value]) => {
-                  const isPower = draft.pow_abil === key;
-                  const isMartial = draft.mart_abil === key;
-                  const name = ABILITY_DISPLAY_NAMES[key] ?? key;
-                  return (
-                    <div
-                      key={key}
-                      className={cn(
-                        'rounded-lg border-2 p-2 text-center',
-                        isPower && 'border-power bg-power-light/50 dark:bg-power-900/20',
-                        isMartial && 'border-martial bg-martial-light/50 dark:bg-martial-900/20',
-                        !isPower && !isMartial && 'border-border-light bg-surface-alt/50'
-                      )}
-                    >
-                      <p className="text-[10px] font-semibold text-text-secondary uppercase tracking-wide leading-tight">
-                        {name}
-                      </p>
-                      <p
-                        className={cn(
-                          'text-lg font-bold mt-0.5',
-                          value > 0 && 'text-success-fg',
-                          value < 0 && 'text-danger-fg',
-                          value === 0 && 'text-text-secondary'
-                        )}
-                      >
-                        {value >= 0 ? `+${value}` : value}
-                      </p>
-                    </div>
-                  );
-                })}
-              </div>
-            </div>
-          )}
-
-          {/* Feats — chips with contrast */}
-          {draft.feats && draft.feats.length > 0 && (
-            <div>
-              <div className="flex flex-wrap items-center justify-between gap-2 mb-2">
-                <p className="text-xs font-medium text-text-secondary uppercase tracking-wide">Feats</p>
-                <StepEditLink step="feats" label="feats" />
-              </div>
-              <div className="flex flex-wrap gap-2">
-                {draft.feats.map((feat) => (
-                  <span
-                    key={feat.id}
-                    className={cn(
-                      'px-3 py-1.5 rounded-lg text-sm font-medium border',
-                      feat.type === 'archetype'
-                        ? cn(statusPanel.warning, 'text-warning-fg')
-                        : cn(statusPanel.info, 'text-info-fg')
-                    )}
-                  >
-                    {feat.name}
-                  </span>
-                ))}
-              </div>
-            </div>
-          )}
-
-          {/* Powers & Techniques — section headers with power/martial color, list with EN */}
-          {((draft.powers && draft.powers.length > 0) || (draft.techniques && draft.techniques.length > 0)) && (
-            <div className="space-y-3">
-              <div className="flex flex-wrap items-center justify-between gap-2">
-                <p className="text-xs font-medium text-text-secondary uppercase tracking-wide">Powers &amp; techniques</p>
-                <StepEditLink step="powers" label="powers" />
-              </div>
-              {draft.powers && draft.powers.length > 0 && (
-                <div>
-                  <p className="text-xs font-medium text-power-fg uppercase tracking-wide mb-2">Powers</p>
-                  <div className="flex flex-wrap gap-2">
-                    {draft.powers.map((p) => {
-                      const doc: PowerDocument = {
-                        name: String(p.name ?? ''),
-                        description: String(p.description ?? ''),
-                        parts: Array.isArray(p.parts) ? (p.parts as PowerDocument['parts']) : [],
-                        damage: (p as CharacterPower & { damage?: PowerDocument['damage'] }).damage,
-                        actionType: (p as CharacterPower & { actionType?: string }).actionType,
-                        isReaction: (p as CharacterPower & { isReaction?: boolean }).isReaction,
-                        range: (p as CharacterPower & { range?: PowerDocument['range'] }).range,
-                        area: (p as CharacterPower & { area?: PowerDocument['area'] }).area,
-                        duration: (p as CharacterPower & { duration?: PowerDocument['duration'] }).duration,
-                      };
-                      const display = derivePowerDisplay(doc, powerPartsDb ?? []);
-                      const en = typeof display.energy === 'number' ? display.energy : '-';
-                      return (
-                        <span
-                          key={String(p.id)}
-                          className="px-3 py-1.5 rounded-lg text-sm font-medium bg-power-light/50 dark:bg-power-900/30 text-power-fg border border-power/30"
-                        >
-                          {p.name} <span className="opacity-90">({en} EN)</span>
-                        </span>
-                      );
-                    })}
-                  </div>
-                </div>
-              )}
-              {draft.techniques && draft.techniques.length > 0 && (
-                <div>
-                  <p className="text-xs font-medium text-martial-fg uppercase tracking-wide mb-2">Techniques</p>
-                  <div className="flex flex-wrap gap-2">
-                    {draft.techniques.map((t) => {
-                      const doc: TechniqueDocument = {
-                        name: String(t.name ?? ''),
-                        description: String(t.description ?? ''),
-                        parts: Array.isArray(t.parts) ? (t.parts as TechniqueDocument['parts']) : [],
-                        damage: Array.isArray((t as CharacterTechnique & { damage?: unknown }).damage) && (t as CharacterTechnique & { damage: unknown[] }).damage[0]
-                          ? (t as CharacterTechnique & { damage: unknown[] }).damage[0] as TechniqueDocument['damage']
-                          : (t as CharacterTechnique & { damage?: TechniqueDocument['damage'] }).damage,
-                        weapon: (t as CharacterTechnique & { weapon?: TechniqueDocument['weapon'] }).weapon,
-                      };
-                      const display = deriveTechniqueDisplay(doc, techniquePartsDb ?? []);
-                      const en = typeof display.energy === 'number' ? display.energy : '-';
-                      return (
-                        <span
-                          key={String(t.id)}
-                          className="px-3 py-1.5 rounded-lg text-sm font-medium bg-martial-light/50 dark:bg-martial-900/30 text-martial-fg border border-martial/30"
-                        >
-                          {t.name} <span className="opacity-90">({en} EN)</span>
-                        </span>
-                      );
-                    })}
-                  </div>
-                </div>
-              )}
-            </div>
-          )}
-
-          {/* Equipment */}
-          {draft.equipment?.inventory && draft.equipment.inventory.length > 0 && (
-            <div>
-              <div className="flex flex-wrap items-center justify-between gap-2 mb-2">
-                <p className="text-xs font-medium text-text-secondary uppercase tracking-wide">Equipment</p>
-                <StepEditLink step="equipment" label="equipment" />
-              </div>
-              <p className="text-sm text-text-primary">
-                {draft.equipment.inventory.map(i =>
-                  (i.quantity ?? 1) > 1 ? `${i.name} ×${i.quantity ?? 1}` : i.name
-                ).join(', ')}
-              </p>
-            </div>
-          )}
-        </div>
-      </div>
-      
       {/* Health & Energy Allocation */}
       <div className="mb-6">
-        <h3 className="font-bold text-text-primary mb-3">Health &amp; Energy</h3>
+        <h3 className="mb-3 font-bold text-text-primary">Health &amp; Energy</h3>
         <HealthEnergyAllocationSection />
       </div>
-      
+
       {/* Description (Optional) */}
       <div className="mb-6">
         <Textarea
@@ -1049,7 +363,7 @@ export function FinalizeStep() {
           className="resize-none"
         />
       </div>
-      
+
       {/* Notes (Optional) */}
       <div className="mb-6">
         <Textarea
@@ -1061,29 +375,33 @@ export function FinalizeStep() {
           className="resize-none"
         />
       </div>
-      
+
       {/* Error Message */}
       {error && (
         <Alert variant="danger" className="mb-6">
           {error}
         </Alert>
       )}
-      
+
       {/* Validation Summary */}
       {validationIssues.length > 0 && (
-        <div className={cn(
-          'mb-6 p-4 rounded-xl',
-          validationIssues.some(i => i.severity === 'error') 
-            ? cn(statusPanel.danger, 'border')
-            : cn(statusPanel.warning, 'border')
-        )}>
-          <div className="flex items-center gap-2 mb-2">
+        <div
+          className={cn(
+            'mb-6 rounded-xl p-4',
+            validationIssues.some((i) => i.severity === 'error')
+              ? cn(statusPanel.danger, 'border')
+              : cn(statusPanel.warning, 'border'),
+          )}
+        >
+          <div className="mb-2 flex items-center gap-2">
             <span className="text-xl">
-              {validationIssues.some(i => i.severity === 'error') ? '⚠️' : '📋'}
+              {validationIssues.some((i) => i.severity === 'error') ? '⚠️' : '📋'}
             </span>
             <span className="font-medium">
-              {validationIssues.filter(i => i.severity === 'error').length} error{validationIssues.filter(i => i.severity === 'error').length !== 1 ? 's' : ''}, 
-              {' '}{validationIssues.filter(i => i.severity === 'warning').length} warning{validationIssues.filter(i => i.severity === 'warning').length !== 1 ? 's' : ''}
+              {validationIssues.filter((i) => i.severity === 'error').length} error
+              {validationIssues.filter((i) => i.severity === 'error').length !== 1 ? 's' : ''},{' '}
+              {validationIssues.filter((i) => i.severity === 'warning').length} warning
+              {validationIssues.filter((i) => i.severity === 'warning').length !== 1 ? 's' : ''}
             </span>
           </div>
           <p className="text-sm text-text-secondary">
@@ -1091,10 +409,11 @@ export function FinalizeStep() {
           </p>
         </div>
       )}
-      
+
       {!user && (
-        <p className="text-sm text-text-muted dark:text-text-secondary text-right mb-2">
-          Create an account to save your character. Your progress is stored locally until you sign in.
+        <p className="mb-2 text-right text-sm text-text-muted">
+          Create an account to save your character. Your progress is stored locally until you sign
+          in.
         </p>
       )}
       <CreatorStepFooter
@@ -1102,38 +421,64 @@ export function FinalizeStep() {
         backDisabled={saving}
         primaryAction={
           <Button
+            size="lg"
             onClick={handleValidateAndSave}
-            disabled={saving}
+            disabled={saving || showLoginPrompt}
             isLoading={saving}
             variant={validationIssues.some((i) => i.severity === 'error') ? 'secondary' : 'primary'}
             className={cn(
-              'min-h-11 min-w-11 px-8',
+              'px-8',
               !saving &&
                 validationIssues.some((i) => i.severity === 'error') &&
-                'bg-warning-600 hover:bg-warning-700 dark:bg-warning-500 dark:hover:bg-warning-600 text-white'
+                'bg-warning-600 text-text-on-dark hover:bg-warning-700 dark:bg-warning-500 dark:hover:bg-warning-600',
             )}
           >
             {validationIssues.length > 0 ? '📋 Review & Create' : '✓ Create Character'}
           </Button>
         }
       />
-      
+
       {/* Validation Modal */}
       <ValidationModal
         isOpen={showValidation}
         onClose={() => setShowValidation(false)}
         issues={validationIssues}
         onSave={handleSave}
-        onContinueAnyway={validationIssues.every(i => i.severity !== 'error') ? handleSave : undefined}
+        onContinueAnyway={
+          validationIssues.every((i) => i.severity !== 'error') ? handleSave : undefined
+        }
         isSaving={saving}
       />
 
       {/* Login Prompt Modal */}
       <LoginPromptModal
         isOpen={showLoginPrompt}
-        onClose={() => setShowLoginPrompt(false)}
+        onClose={() => {
+          setShowLoginPrompt(false);
+          setShowValidation(false);
+        }}
         returnPath={creatorReturnPath}
         contentType="character"
+      />
+
+      <PlayTogetherModal
+        isOpen={showPlayTogether}
+        onViewCharacter={() => {
+          setShowPlayTogether(false);
+          if (savedCharacterId) {
+            navigateThenResetCreator(() => {
+              if (shouldOfferSheetTour()) {
+                router.push(characterSheetUrlWithTourOffer(savedCharacterId));
+              } else {
+                router.push(`/characters/${savedCharacterId}`);
+              }
+            }, resetCreator);
+          }
+        }}
+        onLeaveElsewhere={() => {
+          setShowPlayTogether(false);
+          scheduleCreatorReset(resetCreator);
+        }}
       />
     </div>
   );

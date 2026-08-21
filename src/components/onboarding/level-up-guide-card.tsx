@@ -1,0 +1,67 @@
+/**
+ * Delta-only level-up contextual guide — floating highlight card (TASK-388 §11.3).
+ * Prefer sheet highlight over a blocking modal.
+ */
+
+'use client';
+
+import { useEffect } from 'react';
+import { Button } from '@/components/ui';
+import { ONBOARDING_COPY } from '@/lib/constants/copy/onboarding-copy';
+import { markTutorialMilestone } from '@/lib/onboarding-preferences';
+import type { LevelUpGuideContent } from '@/lib/level-up-guide';
+import { applyTourHighlight, ONBOARDING_FLOATING_CARD_CLASS } from '@/lib/sheet-tour-highlight';
+import { cn } from '@/lib/utils';
+
+const copy = ONBOARDING_COPY.levelUpGuide;
+
+export interface LevelUpGuideCardProps {
+  content: LevelUpGuideContent | null;
+  onClose: () => void;
+}
+
+export function LevelUpGuideCard({ content, onClose }: LevelUpGuideCardProps) {
+  useEffect(() => {
+    if (!content?.highlightTarget) return;
+    return applyTourHighlight(content.highlightTarget);
+  }, [content?.highlightTarget, content?.milestoneId]);
+
+  if (!content) return null;
+
+  const handleDismiss = () => {
+    markTutorialMilestone(content.milestoneId);
+    onClose();
+  };
+
+  return (
+    <div
+      className={cn(
+        ONBOARDING_FLOATING_CARD_CLASS,
+        'rounded-xl border border-border-light bg-surface p-4 shadow-lg',
+      )}
+      role="dialog"
+      aria-labelledby="level-up-guide-title"
+      aria-describedby="level-up-guide-body"
+    >
+      <p className="mb-1 text-xs text-text-muted">
+        {copy.titleReady.replace('{level}', String(content.newLevel))}
+      </p>
+      <h2 id="level-up-guide-title" className="text-base font-semibold text-text-primary">
+        {content.title}
+      </h2>
+      <ul
+        id="level-up-guide-body"
+        className="mt-2 list-inside list-disc space-y-1.5 text-sm text-text-secondary"
+      >
+        {content.bullets.map((b) => (
+          <li key={b}>{b}</li>
+        ))}
+      </ul>
+      <div className="mt-4 flex justify-end">
+        <Button variant="primary" size="sm" onClick={handleDismiss} className="min-h-11">
+          {copy.dismiss}
+        </Button>
+      </div>
+    </div>
+  );
+}

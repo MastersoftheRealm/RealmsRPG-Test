@@ -8,14 +8,16 @@
  * When provided, DB-stored values are used. Otherwise, constants.ts fallbacks apply.
  */
 
-import type { EntityType, Abilities, ArchetypeCategory } from '@/types';
+import type { EntityType, Abilities } from '@/types';
+import type { ArchetypeCategory, ProficiencyDerivedArchetype } from '@/types';
 import type { CoreRulesMap, ArchetypeConfigRules } from '@/types/core-rules';
-import { 
-  SHARED_CONSTANTS, 
-  PLAYER_CONSTANTS, 
-  CREATURE_CONSTANTS, 
+import {
+  SHARED_CONSTANTS,
+  PLAYER_CONSTANTS,
+  CREATURE_CONSTANTS,
   ABILITY_LIMITS,
   ARCHETYPE_CONFIGS,
+  ARMAMENT_PROFICIENCY_TABLE,
 } from './constants';
 
 // =============================================================================
@@ -38,6 +40,20 @@ export function unproficientBonus(abilityMod: number): number {
 }
 
 // =============================================================================
+// Level parsing
+// =============================================================================
+
+/**
+ * Parse a level input without collapsing 0 to 1. Creature levels are legitimately
+ * sub-1 (¼ / ½ / ¾ — see `creature-level-display.ts`), so `|| 1` would swallow both
+ * 0 and the sub-level branch of every progression function.
+ */
+function parseLevel(level: number): number {
+  const parsed = parseFloat(String(level));
+  return Number.isFinite(parsed) ? parsed : 1;
+}
+
+// =============================================================================
 // Level Progression Calculations
 // =============================================================================
 
@@ -45,19 +61,25 @@ export function unproficientBonus(abilityMod: number): number {
  * Calculate ability points based on level.
  * Formula: 7 at level 1, +1 at level 3 and each 3 levels (3, 6, 9, 12...)
  */
-export function calculateAbilityPoints(level: number, allowSubLevel = false, rules?: Rules): number {
-  const parsedLevel = parseFloat(String(level)) || 1;
+export function calculateAbilityPoints(
+  level: number,
+  allowSubLevel = false,
+  rules?: Rules,
+): number {
+  const parsedLevel = parseLevel(level);
   const base = rules?.PROGRESSION_PLAYER?.baseAbilityPoints ?? SHARED_CONSTANTS.BASE_ABILITY_POINTS;
-  const perIncrease = rules?.PROGRESSION_PLAYER?.abilityPointsPerIncrease ?? SHARED_CONSTANTS.ABILITY_POINTS_PER_3_LEVELS;
+  const perIncrease =
+    rules?.PROGRESSION_PLAYER?.abilityPointsPerIncrease ??
+    SHARED_CONSTANTS.ABILITY_POINTS_PER_3_LEVELS;
   const interval = rules?.PROGRESSION_PLAYER?.abilityPointsEveryNLevels ?? 3;
-  
+
   if (allowSubLevel && parsedLevel < 1) {
     return Math.ceil(base * parsedLevel);
   }
-  
+
   if (parsedLevel < 1) return 0;
   if (parsedLevel < interval) return base;
-  
+
   const bonusPoints = Math.floor(parsedLevel / interval) * perIncrease;
   return base + bonusPoints;
 }
@@ -68,15 +90,18 @@ export function calculateAbilityPoints(level: number, allowSubLevel = false, rul
 export function calculateSkillPointsForEntity(
   level: number,
   entityType: 'character' | 'creature',
-  rules?: Rules
+  rules?: Rules,
 ): number {
-  const parsedLevel = Math.max(1, Math.floor(parseFloat(String(level)) || 1));
+  const parsedLevel = Math.max(1, Math.floor(parseLevel(level)));
   if (entityType === 'creature') {
-    const baseSkills = rules?.PROGRESSION_CREATURE?.skillPointsAtLevel1 ?? CREATURE_CONSTANTS.BASE_SKILL_POINTS;
-    const perLevel = rules?.PROGRESSION_CREATURE?.skillPointsPerLevel ?? CREATURE_CONSTANTS.SKILL_POINTS_PER_LEVEL;
+    const baseSkills =
+      rules?.PROGRESSION_CREATURE?.skillPointsAtLevel1 ?? CREATURE_CONSTANTS.BASE_SKILL_POINTS;
+    const perLevel =
+      rules?.PROGRESSION_CREATURE?.skillPointsPerLevel ?? CREATURE_CONSTANTS.SKILL_POINTS_PER_LEVEL;
     return baseSkills + perLevel * (parsedLevel - 1);
   }
-  const perLevel = rules?.PROGRESSION_PLAYER?.skillPointsPerLevel ?? SHARED_CONSTANTS.SKILL_POINTS_PER_LEVEL;
+  const perLevel =
+    rules?.PROGRESSION_PLAYER?.skillPointsPerLevel ?? SHARED_CONSTANTS.SKILL_POINTS_PER_LEVEL;
   return perLevel * parsedLevel;
 }
 
@@ -84,24 +109,60 @@ export function calculateSkillPointsForEntity(
  * Calculate health-energy pool based on level.
  */
 export function calculateHealthEnergyPool(
-  level: number, 
-  entityType: EntityType = 'PLAYER', 
+  level: number,
+  entityType: EntityType = 'PLAYER',
   allowSubLevel = false,
-  rules?: Rules
+  rules?: Rules,
 ): number {
-  const parsedLevel = parseFloat(String(level)) || 1;
-  const basePool = entityType === 'CREATURE'
-    ? (rules?.PROGRESSION_CREATURE?.baseHitEnergyPool ?? CREATURE_CONSTANTS.BASE_HIT_ENERGY)
-    : (rules?.PROGRESSION_PLAYER?.baseHitEnergyPool ?? PLAYER_CONSTANTS.BASE_HIT_ENERGY);
-  const perLevel = entityType === 'CREATURE'
-    ? (rules?.PROGRESSION_CREATURE?.hitEnergyPerLevel ?? SHARED_CONSTANTS.HIT_ENERGY_PER_LEVEL)
-    : (rules?.PROGRESSION_PLAYER?.hitEnergyPerLevel ?? SHARED_CONSTANTS.HIT_ENERGY_PER_LEVEL);
-  
+  const parsedLevel = parseLevel(level);
+  const basePool =
+    entityType === 'CREATURE'
+      ? (rules?.PROGRESSION_CREATURE?.baseHitEnergyPool ?? CREATURE_CONSTANTS.BASE_HIT_ENERGY)
+      : (rules?.PROGRESSION_PLAYER?.baseHitEnergyPool ?? PLAYER_CONSTANTS.BASE_HIT_ENERGY);
+  const perLevel =
+    entityType === 'CREATURE'
+      ? (rules?.PROGRESSION_CREATURE?.hitEnergyPerLevel ?? SHARED_CONSTANTS.HIT_ENERGY_PER_LEVEL)
+      : (rules?.PROGRESSION_PLAYER?.hitEnergyPerLevel ?? SHARED_CONSTANTS.HIT_ENERGY_PER_LEVEL);
+
   if (allowSubLevel && parsedLevel < 1) {
     return Math.ceil(basePool * parsedLevel);
   }
-  
-  return basePool + (perLevel * (parsedLevel - 1));
+
+  if (parsedLevel < 1) return 0;
+  return basePool + perLevel * (parsedLevel - 1);
+}
+
+/**
+ * Split a Health/Energy pool so max Energy can cover the highest Power/Technique
+ * cost once; leftover pool points go to Health (TASK-729).
+ */
+export function allocateHealthEnergyPool(args: {
+  baseEnergy: number;
+  pool: number;
+  highestEnergyCost: number;
+}): { hpBonus: number; energyBonus: number } {
+  const pool = Math.max(0, args.pool);
+  const baseEnergy = Math.max(0, args.baseEnergy);
+  const highestEnergyCost = Math.max(0, args.highestEnergyCost);
+  const maxAchievableEnergy = baseEnergy + pool;
+  const targetEnergy = Math.min(highestEnergyCost, maxAchievableEnergy);
+  const energyBonus = Math.min(pool, Math.max(0, targetEnergy - baseEnergy));
+  return { hpBonus: pool - energyBonus, energyBonus };
+}
+
+export type EnergyCostPick = {
+  name: string;
+  energy: number;
+  kind: 'power' | 'technique';
+};
+
+/** Highest Energy-cost pick; ties keep the first. */
+export function pickHighestEnergyCost(picks: EnergyCostPick[]): EnergyCostPick | null {
+  let best: EnergyCostPick | null = null;
+  for (const pick of picks) {
+    if (!best || pick.energy > best.energy) best = pick;
+  }
+  return best;
 }
 
 /**
@@ -109,18 +170,19 @@ export function calculateHealthEnergyPool(
  * Formula: 2 + 1 every 5 levels starting at level 5
  */
 export function calculateProficiency(level: number, allowSubLevel = false, rules?: Rules): number {
-  const parsedLevel = parseFloat(String(level)) || 1;
+  const parsedLevel = parseLevel(level);
   const base = rules?.PROGRESSION_PLAYER?.baseProficiency ?? SHARED_CONSTANTS.BASE_PROFICIENCY;
-  const perIncrease = rules?.PROGRESSION_PLAYER?.proficiencyPerIncrease ?? SHARED_CONSTANTS.PROFICIENCY_PER_5_LEVELS;
+  const perIncrease =
+    rules?.PROGRESSION_PLAYER?.proficiencyPerIncrease ?? SHARED_CONSTANTS.PROFICIENCY_PER_5_LEVELS;
   const interval = rules?.PROGRESSION_PLAYER?.proficiencyEveryNLevels ?? 5;
-  
+
   if (allowSubLevel && parsedLevel < 1) {
     return Math.ceil(base * parsedLevel);
   }
-  
+
   if (parsedLevel < 1) return 0;
   if (parsedLevel < interval) return base;
-  
+
   const bonusPoints = Math.floor(parsedLevel / interval) * perIncrease;
   return base + bonusPoints;
 }
@@ -129,45 +191,66 @@ export function calculateProficiency(level: number, allowSubLevel = false, rules
  * Calculate training points for a player character.
  * Formula: 22 + ability + ((2 + ability) * (level - 1))
  */
-export function calculateTrainingPoints(level: number, highestArchetypeAbility = 0, rules?: Rules): number {
+export function calculateTrainingPoints(
+  level: number,
+  highestArchetypeAbility = 0,
+  rules?: Rules,
+): number {
   const ability = highestArchetypeAbility || 0;
-  const base = rules?.PROGRESSION_PLAYER?.baseTrainingPoints ?? PLAYER_CONSTANTS.BASE_TRAINING_POINTS;
-  const perLevel = (rules?.PROGRESSION_PLAYER?.tpPerLevelMultiplier ?? PLAYER_CONSTANTS.TP_PER_LEVEL_MULTIPLIER) + ability;
-  
-  return base + ability + (perLevel * (level - 1));
+  const base =
+    rules?.PROGRESSION_PLAYER?.baseTrainingPoints ?? PLAYER_CONSTANTS.BASE_TRAINING_POINTS;
+  const perLevel =
+    (rules?.PROGRESSION_PLAYER?.tpPerLevelMultiplier ?? PLAYER_CONSTANTS.TP_PER_LEVEL_MULTIPLIER) +
+    ability;
+
+  return base + ability + perLevel * (level - 1);
 }
 
 /**
  * Calculate training points for a creature.
  */
-export function calculateCreatureTrainingPoints(level: number, highestNonVitality = 0, rules?: Rules): number {
-  const parsedLevel = parseFloat(String(level)) || 1;
+export function calculateCreatureTrainingPoints(
+  level: number,
+  highestNonVitality = 0,
+  rules?: Rules,
+): number {
+  const parsedLevel = parseLevel(level);
   const ability = highestNonVitality || 0;
-  const base = rules?.PROGRESSION_CREATURE?.baseTrainingPoints ?? CREATURE_CONSTANTS.BASE_TRAINING_POINTS;
-  const perLevel = (rules?.PROGRESSION_CREATURE?.tpPerLevelMultiplier ?? CREATURE_CONSTANTS.TP_PER_LEVEL) + ability;
-  
+  const base =
+    rules?.PROGRESSION_CREATURE?.baseTrainingPoints ?? CREATURE_CONSTANTS.BASE_TRAINING_POINTS;
+  const perLevel =
+    (rules?.PROGRESSION_CREATURE?.tpPerLevelMultiplier ?? CREATURE_CONSTANTS.TP_PER_LEVEL) +
+    ability;
+
   if (parsedLevel < 1) {
     return Math.ceil(base * parsedLevel) + ability;
   }
-  
+
   if (parsedLevel <= 1) return base + ability;
-  return base + ability + ((parsedLevel - 1) * perLevel);
+  return base + ability + (parsedLevel - 1) * perLevel;
 }
 
 /**
  * Calculate creature feat points based on level and martial proficiency.
  */
-export function calculateCreatureFeatPoints(level: number, martialProficiency = 0, rules?: Rules): number {
-  const parsedLevel = parseFloat(String(level)) || 1;
+export function calculateCreatureFeatPoints(
+  level: number,
+  martialProficiency = 0,
+  rules?: Rules,
+): number {
+  const parsedLevel = parseLevel(level);
   const martial = martialProficiency || 0;
-  const baseFeat = rules?.PROGRESSION_CREATURE?.baseFeatPoints ?? 1.5;
-  
+  const baseFeat =
+    rules?.PROGRESSION_CREATURE?.baseFeatPoints ?? CREATURE_CONSTANTS.BASE_FEAT_POINTS;
+  const perLevel =
+    rules?.PROGRESSION_CREATURE?.featPointsPerLevel ?? CREATURE_CONSTANTS.FEAT_POINTS_PER_LEVEL;
+
   if (parsedLevel < 1) {
     return Math.ceil((baseFeat + martial) * parsedLevel);
   }
-  
+
   const baseAtLevel1 = baseFeat + martial;
-  const levelBonus = parsedLevel > 1 ? (parsedLevel - 1) : 0;
+  const levelBonus = parsedLevel > 1 ? (parsedLevel - 1) * perLevel : 0;
   return baseAtLevel1 + levelBonus;
 }
 
@@ -175,34 +258,36 @@ export function calculateCreatureFeatPoints(level: number, martialProficiency = 
  * Calculate creature currency based on level.
  */
 export function calculateCreatureCurrency(level: number, rules?: Rules): number {
-  const parsedLevel = parseFloat(String(level)) || 1;
-  const baseCurrency = rules?.PROGRESSION_CREATURE?.baseCurrency ?? CREATURE_CONSTANTS.BASE_CURRENCY;
-  const growth = rules?.PROGRESSION_CREATURE?.currencyGrowthRate ?? CREATURE_CONSTANTS.CURRENCY_GROWTH;
+  const parsedLevel = parseLevel(level);
+  const baseCurrency =
+    rules?.PROGRESSION_CREATURE?.baseCurrency ?? CREATURE_CONSTANTS.BASE_CURRENCY;
+  const growth =
+    rules?.PROGRESSION_CREATURE?.currencyGrowthRate ?? CREATURE_CONSTANTS.CURRENCY_GROWTH;
   return Math.round(baseCurrency * Math.pow(growth, parsedLevel - 1));
 }
 
 /**
- * Calculate maximum archetype feats allowed based on level and archetype type.
+ * Maximum archetype feat slots: 1 per level plus the bonus tracked by
+ * `calculateArchetypeProgression` (martial table, Powered-Martial joining bonus,
+ * and Powered-Martial milestone **feat** picks). Pass `archetypeChoices` so
+ * innate vs feat milestones are not a second answer (GAME_RULES "Archetype Feats").
  */
 export function calculateMaxArchetypeFeats(
-  level: number, 
+  level: number,
   archetypeType?: ArchetypeCategory,
-  rules?: Rules
+  rules?: Rules,
+  archetypeChoices?: Record<number, 'innate' | 'feat'>,
 ): number {
   const parsedLevel = Math.max(1, Math.floor(level));
-  const martialBase = rules?.ARCHETYPES?.martialBonusFeatsBase ?? 2;
-  const martialInterval = rules?.ARCHETYPES?.martialBonusFeatsInterval ?? 3;
-  
-  if (archetypeType === 'martial') {
-    const martialBonus = martialBase + Math.floor((parsedLevel - 1) / martialInterval);
-    return parsedLevel + martialBonus;
-  }
-  
-  if (archetypeType === 'powered-martial') {
-    return parsedLevel + 1;
-  }
-  
-  return parsedLevel;
+  const config = getArchetypeConfig(archetypeType ?? 'power', rules);
+  const progression = calculateArchetypeProgression(
+    parsedLevel,
+    config.proficiency.martial,
+    config.proficiency.power,
+    archetypeChoices ?? {},
+    rules,
+  );
+  return parsedLevel + progression.bonusArchetypeFeats;
 }
 
 /**
@@ -210,6 +295,11 @@ export function calculateMaxArchetypeFeats(
  */
 export function calculateMaxCharacterFeats(level: number): number {
   return Math.max(1, Math.floor(level));
+}
+
+/** Experience needed to reach the next level: level × 4 (GAME_RULES "Experience"). */
+export function calculateXpToLevelUp(level: number): number {
+  return Math.max(1, Math.floor(parseLevel(level))) * 4;
 }
 
 // =============================================================================
@@ -221,7 +311,8 @@ export function calculateMaxCharacterFeats(level: number): number {
  * e.g. 3→4 costs 1; 4→5 and above cost 2 (when threshold is 4).
  */
 export function getAbilityIncreaseCost(currentValue: number, rules?: Rules): number {
-  const threshold = rules?.ABILITY_RULES?.costIncreaseThreshold ?? ABILITY_LIMITS.COST_INCREASE_THRESHOLD;
+  const threshold =
+    rules?.ABILITY_RULES?.costIncreaseThreshold ?? ABILITY_LIMITS.COST_INCREASE_THRESHOLD;
   const increasedCost = rules?.ABILITY_RULES?.increasedCost ?? 2;
   const normalCost = rules?.ABILITY_RULES?.normalCost ?? 1;
   if (currentValue >= threshold) return increasedCost;
@@ -233,7 +324,8 @@ export function getAbilityIncreaseCost(currentValue: number, rules?: Rules): num
  */
 export function calculateAbilityScoreCost(value: number, rules?: Rules): number {
   if (value <= 0) return value;
-  const threshold = rules?.ABILITY_RULES?.costIncreaseThreshold ?? ABILITY_LIMITS.COST_INCREASE_THRESHOLD;
+  const threshold =
+    rules?.ABILITY_RULES?.costIncreaseThreshold ?? ABILITY_LIMITS.COST_INCREASE_THRESHOLD;
   const increasedCost = rules?.ABILITY_RULES?.increasedCost ?? 2;
   const normalCost = rules?.ABILITY_RULES?.normalCost ?? 1;
   let spent = 0;
@@ -247,19 +339,20 @@ export function calculateAbilityScoreCost(value: number, rules?: Rules): number 
  * Check if an ability increase is valid.
  */
 export function canIncreaseAbility(
-  currentValue: number, 
-  availablePoints: number, 
+  currentValue: number,
+  availablePoints: number,
   isCreation = true,
   isCreature = false,
-  rules?: Rules
+  rules?: Rules,
 ): boolean {
   const maxStarting = rules?.ABILITY_RULES?.maxStarting ?? ABILITY_LIMITS.MAX_STARTING;
   const maxChar = rules?.ABILITY_RULES?.maxAbsoluteCharacter ?? ABILITY_LIMITS.MAX_ABSOLUTE;
-  const maxCreature = rules?.ABILITY_RULES?.maxAbsoluteCreature ?? ABILITY_LIMITS.MAX_ABSOLUTE_CREATURE;
-  
-  const max = isCreation ? maxStarting : (isCreature ? maxCreature : maxChar);
+  const maxCreature =
+    rules?.ABILITY_RULES?.maxAbsoluteCreature ?? ABILITY_LIMITS.MAX_ABSOLUTE_CREATURE;
+
+  const max = isCreation ? maxStarting : isCreature ? maxCreature : maxChar;
   if (currentValue >= max) return false;
-  
+
   const cost = getAbilityIncreaseCost(currentValue, rules);
   return availablePoints >= cost;
 }
@@ -279,7 +372,10 @@ export function canDecreaseAbility(currentValue: number, rules?: Rules): boolean
 /**
  * Get archetype configuration.
  */
-export function getArchetypeConfig(archetypeType: ArchetypeCategory | string, rules?: Rules): ArchetypeConfigRules {
+export function getArchetypeConfig(
+  archetypeType: ArchetypeCategory | string,
+  rules?: Rules,
+): ArchetypeConfigRules {
   // Try DB rules first
   const dbConfigs = rules?.ARCHETYPES?.configs;
   if (dbConfigs) {
@@ -293,40 +389,62 @@ export function getArchetypeConfig(archetypeType: ArchetypeCategory | string, ru
 /**
  * Get the maximum armament value for an archetype.
  */
-export function getArmamentMax(archetype: ArchetypeCategory | { type?: ArchetypeCategory }, rules?: Rules): number {
+export function getArmamentMax(
+  archetype: ArchetypeCategory | { type?: ArchetypeCategory | undefined },
+  rules?: Rules,
+): number {
   const type = typeof archetype === 'string' ? archetype : archetype?.type;
   return getArchetypeConfig(type || 'power', rules).armamentMax;
+}
+
+/**
+ * Level-1 Power / Martial Proficiency: path columns when present, else type defaults
+ * (Power 2/0, Martial 0/2, Powered-Martial 1/1). Shared by Guided save and Advanced
+ * path select so the same codex row cannot produce two different characters.
+ */
+export function resolveArchetypeProficiencyStart(
+  type: ArchetypeCategory | string | null | undefined,
+  archetype?: {
+    power_prof_start?: number | null | undefined;
+    martial_prof_start?: number | null | undefined;
+  } | null,
+): { pow_prof: number; mart_prof: number } {
+  const t = (type || 'power') as ArchetypeCategory;
+  const powDefault = t === 'power' ? 2 : t === 'powered-martial' ? 1 : 0;
+  const martDefault = t === 'martial' ? 2 : t === 'powered-martial' ? 1 : 0;
+  return {
+    pow_prof: archetype?.power_prof_start ?? powDefault,
+    mart_prof: archetype?.martial_prof_start ?? martDefault,
+  };
 }
 
 /**
  * Calculate armament proficiency based on martial proficiency.
  */
 export function calculateArmamentProficiency(martialProf: number, rules?: Rules): number {
-  // Try DB lookup table first
-  const table = rules?.ARMAMENT_PROFICIENCY?.table;
-  if (table && table.length > 0) {
-    // Find exact match or highest entry below martialProf
-    const sorted = [...table].sort((a, b) => a.martialProf - b.martialProf);
-    for (let i = sorted.length - 1; i >= 0; i--) {
-      if (sorted[i].martialProf <= martialProf) return sorted[i].armamentMax;
-    }
-    return sorted[0]?.armamentMax ?? 3;
+  const table =
+    rules?.ARMAMENT_PROFICIENCY?.table && rules.ARMAMENT_PROFICIENCY.table.length > 0
+      ? rules.ARMAMENT_PROFICIENCY.table
+      : ARMAMENT_PROFICIENCY_TABLE;
+  const sorted = [...table].sort((a, b) => a.martialProf - b.martialProf);
+  for (let i = sorted.length - 1; i >= 0; i--) {
+    const row = sorted[i];
+    if (row === undefined) continue;
+    if (row.martialProf <= martialProf) return row.armamentMax;
   }
-  
-  // Fallback to hardcoded formula
-  if (martialProf === 0) return 3;
-  if (martialProf === 1) return 8;
-  if (martialProf === 2) return 12;
-  return 12 + (3 * (martialProf - 2));
+  return sorted[0]?.armamentMax ?? ARCHETYPE_CONFIGS.power.armamentMax;
 }
 
 /**
  * Get archetype type based on martial and power proficiency.
  */
-export function getArchetypeType(martialProf: number, powerProf: number): 'power' | 'martial' | 'mixed' | 'none' {
+export function getArchetypeType(
+  martialProf: number,
+  powerProf: number,
+): ProficiencyDerivedArchetype {
   if (martialProf === 0 && powerProf > 0) return 'power';
   if (powerProf === 0 && martialProf > 0) return 'martial';
-  if (martialProf > 0 && powerProf > 0) return 'mixed';
+  if (martialProf > 0 && powerProf > 0) return 'powered-martial';
   return 'none';
 }
 
@@ -380,7 +498,7 @@ export function getArchetypeMilestoneLevels(currentLevel: number, rules?: Rules)
 }
 
 export interface ArchetypeProgression {
-  archetype: 'power' | 'martial' | 'mixed' | 'none';
+  archetype: ProficiencyDerivedArchetype;
   armamentProficiency: number;
   innateThreshold: number;
   innatePools: number;
@@ -397,52 +515,53 @@ export function calculateArchetypeProgression(
   martialProf: number,
   powerProf: number,
   archetypeChoices: Record<number, 'innate' | 'feat'> = {},
-  rules?: Rules
+  rules?: Rules,
 ): ArchetypeProgression {
   const archetype = getArchetypeType(martialProf, powerProf);
   const armamentProficiency = calculateArmamentProficiency(martialProf, rules);
-  
+
   let innateThreshold = 0;
   let innatePools = 0;
   let innateEnergy = 0;
   let bonusArchetypeFeats = 0;
-  
+
   const mixedConfig = getArchetypeConfig('powered-martial', rules);
-  
+
   switch (archetype) {
     case 'power':
       innateThreshold = calculateBaseInnateThreshold(level, rules);
       innatePools = calculateBaseInnatePools(level, rules);
       innateEnergy = innateThreshold * innatePools;
       break;
-      
+
     case 'martial':
       bonusArchetypeFeats = calculateBonusArchetypeFeats(level, rules);
       break;
-      
-    case 'mixed':
+
+    case 'powered-martial':
       innateThreshold = mixedConfig.innateThreshold;
       innatePools = mixedConfig.innatePools;
       bonusArchetypeFeats = mixedConfig.featLimit;
-      
+
       const milestones = getArchetypeMilestoneLevels(level, rules);
       for (const milestoneLevel of milestones) {
         const choice = archetypeChoices[milestoneLevel];
         if (choice === 'innate') {
-          innateThreshold += 1;
+          // GAME_RULES: first Increase Innate Power is 6→8; later picks +1.
+          innateThreshold = innateThreshold < 8 ? 8 : innateThreshold + 1;
           innatePools += 1;
         } else if (choice === 'feat') {
           bonusArchetypeFeats += 1;
         }
       }
-      
+
       innateEnergy = innateThreshold * innatePools;
       break;
-      
+
     default:
       break;
   }
-  
+
   return {
     archetype,
     armamentProficiency,
@@ -450,46 +569,22 @@ export function calculateArchetypeProgression(
     innatePools,
     innateEnergy,
     bonusArchetypeFeats,
-    availableMilestones: archetype === 'mixed' ? getArchetypeMilestoneLevels(level, rules) : [],
+    availableMilestones:
+      archetype === 'powered-martial' ? getArchetypeMilestoneLevels(level, rules) : [],
   };
-}
-
-/**
- * Calculate power potency: 10 + power proficiency + power ability score.
- */
-export function calculatePowerPotency(powerProf: number, powerAbilityScore: number): number {
-  return 10 + powerProf + powerAbilityScore;
-}
-
-/**
- * Get the archetype feat limit.
- */
-export function getArchetypeFeatLimit(archetype: ArchetypeCategory | { type?: ArchetypeCategory }, rules?: Rules): number {
-  const type = typeof archetype === 'string' ? archetype : archetype?.type;
-  return getArchetypeConfig(type || 'power', rules).featLimit;
-}
-
-/**
- * Get the maximum innate energy for an archetype.
- */
-export function getInnateEnergyMax(archetype: ArchetypeCategory | { type?: ArchetypeCategory }, rules?: Rules): number {
-  const type = typeof archetype === 'string' ? archetype : archetype?.type;
-  return getArchetypeConfig(type || 'power', rules).innateEnergy;
 }
 
 /** Sum energy costs of powers marked innate (innate energy budget spent). */
 export function sumInnatePowerEnergyCosts(
-  powers: Array<{ innate?: boolean; cost?: number }> = []
+  powers: Array<{ innate?: boolean | undefined; cost?: number | undefined }> = [],
 ): number {
-  return powers
-    .filter((p) => p.innate === true)
-    .reduce((sum, p) => sum + (p.cost ?? 0), 0);
+  return powers.filter((p) => p.innate === true).reduce((sum, p) => sum + (p.cost ?? 0), 0);
 }
 
 /** Remaining innate energy budget after innate power costs. */
 export function calculateRemainingInnateEnergy(
   maxInnateEnergy: number,
-  powers: Array<{ innate?: boolean; cost?: number }> = []
+  powers: Array<{ innate?: boolean | undefined; cost?: number | undefined }> = [],
 ): number {
   return maxInnateEnergy - sumInnatePowerEnergyCosts(powers);
 }
@@ -499,19 +594,21 @@ export function calculateRemainingInnateEnergy(
 // =============================================================================
 
 const ABILITY_MAP: Record<string, keyof Abilities> = {
-  'strength': 'strength',
-  'vitality': 'vitality', 
-  'agility': 'agility',
-  'acuity': 'acuity',
-  'intelligence': 'intelligence',
-  'charisma': 'charisma',
+  strength: 'strength',
+  vitality: 'vitality',
+  agility: 'agility',
+  acuity: 'acuity',
+  intelligence: 'intelligence',
+  charisma: 'charisma',
 };
 
 /**
  * Normalize linked abilities to an array of ability keys (keyof Abilities).
  * Exported for UI (e.g. ability selector for multi-ability skills).
  */
-export function getLinkedAbilityKeys(linkedAbilities: string | string[] | undefined): (keyof Abilities)[] {
+export function getLinkedAbilityKeys(
+  linkedAbilities: string | string[] | undefined,
+): (keyof Abilities)[] {
   if (!linkedAbilities) return [];
   const arr = Array.isArray(linkedAbilities)
     ? linkedAbilities
@@ -526,7 +623,7 @@ export function getLinkedAbilityKeys(linkedAbilities: string | string[] | undefi
  */
 export function getHighestLinkedAbility(
   linkedAbilities: string | string[] | undefined,
-  abilities: Abilities
+  abilities: Abilities,
 ): number {
   const keys = getLinkedAbilityKeys(linkedAbilities);
   if (keys.length === 0) return 0;
@@ -543,7 +640,7 @@ export function getHighestLinkedAbility(
  */
 export function getHighestLinkedAbilityKey(
   linkedAbilities: string | string[] | undefined,
-  abilities: Abilities
+  abilities: Abilities,
 ): keyof Abilities | undefined {
   const keys = getLinkedAbilityKeys(linkedAbilities);
   if (keys.length === 0) return undefined;
@@ -565,7 +662,7 @@ export function getHighestLinkedAbilityKey(
 export function getLinkedAbilityMod(
   linkedAbilities: string | string[] | undefined,
   abilities: Abilities,
-  chosenAbilityKey?: string
+  chosenAbilityKey?: string,
 ): number {
   const keys = getLinkedAbilityKeys(linkedAbilities);
   if (keys.length === 0) return 0;
@@ -577,18 +674,6 @@ export function getLinkedAbilityMod(
 }
 
 /**
- * Calculate skill bonus: highest linked ability + skill value.
- */
-export function calculateSkillBonus(
-  linkedAbilities: string | string[] | undefined,
-  skillValue: number,
-  abilities: Abilities
-): number {
-  const abilityMod = getHighestLinkedAbility(linkedAbilities, abilities);
-  return abilityMod + skillValue;
-}
-
-/**
  * Calculate total skill bonus including proficiency.
  * @param chosenAbilityKey - If skill has multiple abilities, use this one; else use highest.
  */
@@ -597,22 +682,20 @@ export function calculateSkillBonusWithProficiency(
   skillValue: number,
   abilities: Abilities,
   isProficient: boolean = false,
-  chosenAbilityKey?: string
+  chosenAbilityKey?: string,
 ): number {
   const abilityMod = getLinkedAbilityMod(linkedAbilities, abilities, chosenAbilityKey);
 
   if (isProficient) {
     return abilityMod + skillValue;
-  } else {
-    const unprofAbilityBonus = abilityMod < 0 ? abilityMod * 2 : Math.ceil(abilityMod / 2);
-    return unprofAbilityBonus;
   }
+  return unproficientBonus(abilityMod);
 }
 
 /** Codex row shape for resolving a sub-skill's parent skill name (character save omits `baseSkill` string). */
 export interface CodexSkillParentRef {
   id: string | number;
-  name?: string;
+  name?: string | undefined;
 }
 
 /**
@@ -620,9 +703,9 @@ export interface CodexSkillParentRef {
  * Character `cleanForSave` strips `baseSkill`; re-attach before sheet bonus math (GAME_RULES: ability + base value + sub value).
  */
 export function resolveParentSkillNameForSubSkill(
-  saved: { selectedBaseSkillId?: string },
-  codexSkill: { base_skill_id?: number | string } | undefined,
-  codexSkills: CodexSkillParentRef[]
+  saved: { selectedBaseSkillId?: string | undefined },
+  codexSkill: { base_skill_id?: number | string | undefined } | undefined,
+  codexSkills: CodexSkillParentRef[],
 ): string | undefined {
   if (saved.selectedBaseSkillId != null && String(saved.selectedBaseSkillId) !== '') {
     const p = codexSkills.find((s) => String(s.id) === String(saved.selectedBaseSkillId));
@@ -647,7 +730,7 @@ export function calculateSubSkillBonusWithProficiency(
   baseSkillProficient: boolean,
   abilities: Abilities,
   isProficient: boolean,
-  chosenAbilityKey?: string
+  chosenAbilityKey?: string,
 ): number {
   const abilityMod = getLinkedAbilityMod(linkedAbilities, abilities, chosenAbilityKey);
 
@@ -663,9 +746,9 @@ export function calculateSubSkillBonusWithProficiency(
 /** Codex skill shape for feat requirement resolution */
 export interface CodexSkillForFeat {
   id: string | number;
-  name?: string;
-  base_skill_id?: number | string;
-  ability?: string;
+  name?: string | undefined;
+  base_skill_id?: number | string | undefined;
+  ability?: string | undefined;
 }
 
 /**
@@ -680,12 +763,15 @@ export interface CodexSkillForFeat {
 export function getSkillBonusForFeatRequirement(
   skillId: string,
   abilities: Partial<Abilities> | Abilities,
-  skills: Record<string, number | { prof?: boolean; val?: number }>,
-  codexSkills: CodexSkillForFeat[]
+  skills: Record<string, number | { prof?: boolean | undefined; val?: number | undefined }>,
+  codexSkills: CodexSkillForFeat[],
 ): { bonus: number; proficient: boolean } {
   // Look up by ID first, then fall back to name match (feat data may use either)
-  const codexSkill = codexSkills.find((s) => String(s.id) === String(skillId))
-    || codexSkills.find((s) => s.name != null && s.name.toLowerCase() === String(skillId).toLowerCase());
+  const codexSkill =
+    codexSkills.find((s) => String(s.id) === String(skillId)) ||
+    codexSkills.find(
+      (s) => s.name != null && s.name.toLowerCase() === String(skillId).toLowerCase(),
+    );
   if (!codexSkill) return { bonus: 0, proficient: false };
 
   const getVal = (key: string): number => {
@@ -703,20 +789,25 @@ export function getSkillBonusForFeatRequirement(
     return s?.prof ?? false;
   };
 
-  const baseSkillId = codexSkill.base_skill_id != null ? String(codexSkill.base_skill_id) : undefined;
+  const baseSkillId =
+    codexSkill.base_skill_id != null ? String(codexSkill.base_skill_id) : undefined;
   const featTargetsSubSkill = Boolean(baseSkillId);
 
   // Resolve key: character may key by id or by name
   const byId = skills[String(skillId)] != null;
   const byName = codexSkill.name && skills[String(codexSkill.name)] != null;
   const skillKey = byId ? String(skillId) : byName ? String(codexSkill.name) : String(skillId);
-  const value = getVal(skillKey) || getVal(String(skillId)) || (codexSkill.name ? getVal(String(codexSkill.name)) : 0);
+  const value =
+    getVal(skillKey) ||
+    getVal(String(skillId)) ||
+    (codexSkill.name ? getVal(String(codexSkill.name)) : 0);
   const proficient =
     readProficiency(skillKey, featTargetsSubSkill) ||
     readProficiency(String(skillId), featTargetsSubSkill) ||
     (codexSkill.name ? readProficiency(String(codexSkill.name), featTargetsSubSkill) : false);
 
-  const abilityKey = (codexSkill.ability?.split(',')[0]?.trim()?.toLowerCase() || 'strength') as keyof Abilities;
+  const abilityKey = (codexSkill.ability?.split(',')[0]?.trim()?.toLowerCase() ||
+    'strength') as keyof Abilities;
   const abilityMod = abilities[abilityKey] ?? 0;
 
   if (baseSkillId) {
@@ -724,8 +815,15 @@ export function getSkillBonusForFeatRequirement(
     const baseCodex = codexSkills.find((s) => String(s.id) === baseSkillId);
     const baseKeyById = skills[baseSkillId] != null;
     const baseKeyByName = baseCodex?.name && skills[String(baseCodex.name)] != null;
-    const baseKey = baseKeyById ? baseSkillId : baseKeyByName ? String(baseCodex!.name) : baseSkillId;
-    const baseValue = getVal(baseKey) || getVal(baseSkillId) || (baseCodex?.name ? getVal(String(baseCodex.name)) : 0);
+    const baseKey = baseKeyById
+      ? baseSkillId
+      : baseKeyByName
+        ? String(baseCodex!.name)
+        : baseSkillId;
+    const baseValue =
+      getVal(baseKey) ||
+      getVal(baseSkillId) ||
+      (baseCodex?.name ? getVal(String(baseCodex.name)) : 0);
     const baseProficient =
       readProficiency(baseKey, false) ||
       readProficiency(baseSkillId, false) ||

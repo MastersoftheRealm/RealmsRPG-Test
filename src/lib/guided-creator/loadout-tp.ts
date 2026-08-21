@@ -1,5 +1,5 @@
 /**
- * Training Point helpers for guided loadout customize (Layer 2).
+ * Training Point helpers for guided Loadout (L1 + L2) and powers/techniques budgets.
  */
 
 import type { CodexEquipmentItem } from '@/types/codex';
@@ -20,6 +20,7 @@ import {
   type LoadoutItemCategory,
 } from '@/lib/guided-creator/resolve-loadout-items';
 import { isItemSelectedInDraft } from '@/lib/guided-creator/loadout-pool';
+import { findByNormalizedId } from '@/lib/utils';
 
 export { isItemSelectedInDraft };
 
@@ -34,7 +35,7 @@ function coercePropertyId(raw: unknown): number | undefined {
 
 function normalizeProperties(
   raw: unknown,
-  itemProperties: ItemPropertyTpRow[]
+  itemProperties: ItemPropertyTpRow[],
 ): ItemPropertyPayload[] {
   if (!Array.isArray(raw)) return [];
   return raw.map((entry) => {
@@ -55,30 +56,16 @@ function normalizeProperties(
   });
 }
 
-function findLibraryRow(
-  id: string,
-  officialItems: LibraryItem[],
-  codexEquipment: CodexEquipmentItem[]
-): LibraryItem | CodexEquipmentItem | undefined {
-  const key = String(id).trim().toLowerCase();
-  return (
-    officialItems.find((i) => String(i.id).trim().toLowerCase() === key) ??
-    codexEquipment.find((i) => String(i.id).trim().toLowerCase() === key)
-  );
-}
-
 export function resolveItemTrainingPoints(
   itemId: string,
   officialItems: LibraryItem[],
   codexEquipment: CodexEquipmentItem[],
-  itemProperties: ItemPropertyTpRow[]
+  itemProperties: ItemPropertyTpRow[],
 ): number | null {
-  const row = findLibraryRow(itemId, officialItems, codexEquipment);
+  const row =
+    findByNormalizedId(officialItems, itemId) ?? findByNormalizedId(codexEquipment, itemId);
   if (!row) return null;
-  const props = normalizeProperties(
-    'properties' in row ? row.properties : [],
-    itemProperties
-  );
+  const props = normalizeProperties('properties' in row ? row.properties : [], itemProperties);
   return Math.round(calculateItemCosts(props, itemProperties).totalTP);
 }
 
@@ -86,7 +73,7 @@ export function computeSelectedLoadoutTp(
   selections: PathItemRecommendation[],
   officialItems: LibraryItem[],
   codexEquipment: CodexEquipmentItem[],
-  itemProperties: ItemPropertyTpRow[]
+  itemProperties: ItemPropertyTpRow[],
 ): number {
   return selections.reduce((sum, ref) => {
     const tp = resolveItemTrainingPoints(ref.id, officialItems, codexEquipment, itemProperties);
@@ -112,15 +99,10 @@ export function computeGuidedLoadoutTpSummary(
   officialItems: LibraryItem[],
   codexEquipment: CodexEquipmentItem[],
   itemProperties: ItemPropertyTpRow[],
-  rules?: Partial<CoreRulesMap>
+  rules?: Partial<CoreRulesMap>,
 ): { spent: number; limit: number; remaining: number } {
   const selections = flattenGuidedDraftSelections(draft);
-  const spent = computeSelectedLoadoutTp(
-    selections,
-    officialItems,
-    codexEquipment,
-    itemProperties
-  );
+  const spent = computeSelectedLoadoutTp(selections, officialItems, codexEquipment, itemProperties);
 
   const getAbility = (key: AbilityName | null | undefined): number =>
     key ? Number(draft.abilities[key] ?? 0) || 0 : 0;
@@ -128,7 +110,7 @@ export function computeGuidedLoadoutTpSummary(
   const archetypeAbility = Math.max(
     getAbility(draft.pow_abil),
     getAbility(draft.mart_abil),
-    highestAbility
+    highestAbility,
   );
   const limit = getTrainingPointLimit(1, archetypeAbility, rules);
   return { spent, limit, remaining: limit - spent };
@@ -146,7 +128,7 @@ export function wouldExceedLoadoutTp(
   officialItems: LibraryItem[],
   codexEquipment: CodexEquipmentItem[],
   itemProperties: ItemPropertyTpRow[],
-  rules?: Partial<CoreRulesMap>
+  rules?: Partial<CoreRulesMap>,
 ): boolean {
   if (isItemSelectedInDraft(draft, ref.id)) return false;
   const summary = computeGuidedLoadoutTpSummary(
@@ -154,7 +136,7 @@ export function wouldExceedLoadoutTp(
     officialItems,
     codexEquipment,
     itemProperties,
-    rules
+    rules,
   );
   const addTp =
     (resolveItemTrainingPoints(ref.id, officialItems, codexEquipment, itemProperties) ?? 0) *
@@ -165,7 +147,7 @@ export function wouldExceedLoadoutTp(
 export function resolvePoolItemCategory(
   ref: PathItemRecommendation,
   officialItems: LibraryItem[],
-  codexEquipment: CodexEquipmentItem[]
+  codexEquipment: CodexEquipmentItem[],
 ): LoadoutItemCategory {
   const lookup = buildEquipmentLookup(officialItems, codexEquipment);
   return inventoryTypeForResolvedItem(resolveEquipmentRef(ref, lookup));
@@ -175,18 +157,45 @@ export function resolvePoolItemCategory(
 export function createItemTpResolver(
   officialItems: LibraryItem[],
   codexEquipment: CodexEquipmentItem[],
-  itemProperties: ItemPropertyTpRow[]
+  itemProperties: ItemPropertyTpRow[],
 ): (itemId: string) => number | null {
-  return (itemId) => resolveItemTrainingPoints(itemId, officialItems, codexEquipment, itemProperties);
+  return (itemId) =>
+    resolveItemTrainingPoints(itemId, officialItems, codexEquipment, itemProperties);
 }
 
 export function trainingPointLimitFromRecommendedAbilities(
   recommended: Record<string, number> | undefined,
-  rules?: Partial<CoreRulesMap>
+  rules?: Partial<CoreRulesMap>,
 ): number {
   if (!recommended || Object.keys(recommended).length === 0) {
     return getTrainingPointLimit(1, 2, rules);
   }
   const highest = Math.max(...Object.values(recommended).map((v) => Number(v) || 0), 0);
   return getTrainingPointLimit(1, highest, rules);
+}
+
+/**
+ * Combine equipment loadout spend with powers/techniques spend against the same TP limit.
+ * `combatTpSpent` is the sum of selected power/technique Training Points (part totals),
+ * including innate powers (they spend TP like regular Powers).
+ */
+export function combineGuidedTpBudgets(
+  loadout: { spent: number; limit: number; remaining: number },
+  combatTpSpent: number,
+): { spent: number; limit: number; remaining: number } {
+  const combat = Math.max(0, Math.floor(Number(combatTpSpent) || 0));
+  const spent = loadout.spent + combat;
+  return { spent, limit: loadout.limit, remaining: loadout.limit - spent };
+}
+
+/** True when adding `addTp` would exceed the shared Training Points budget. */
+export function wouldExceedSharedTp(
+  spent: number,
+  limit: number,
+  addTp: number,
+  opts?: { alreadySelected?: boolean | undefined },
+): boolean {
+  if (opts?.alreadySelected) return false;
+  const add = Math.max(0, Math.floor(Number(addTp) || 0));
+  return spent + add > limit;
 }

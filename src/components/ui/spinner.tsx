@@ -10,11 +10,11 @@ import { cn } from '@/lib/utils/cn';
 
 interface SpinnerProps extends React.HTMLAttributes<HTMLDivElement> {
   /** Size variant */
-  size?: 'sm' | 'md' | 'lg' | 'xl';
+  size?: 'sm' | 'md' | 'lg' | 'xl' | undefined;
   /** Color variant */
-  variant?: 'primary' | 'white' | 'muted';
+  variant?: 'primary' | 'white' | undefined;
   /** Optional label for accessibility */
-  label?: string;
+  label?: string | undefined;
 }
 
 const sizeClasses = {
@@ -27,7 +27,6 @@ const sizeClasses = {
 const variantClasses = {
   primary: 'border-primary-subtle-border border-t-primary-button',
   white: 'border-white/30 border-t-white',
-  muted: 'border-border-light border-t-neutral-500',
 };
 
 export function Spinner({
@@ -42,50 +41,14 @@ export function Spinner({
       role="status"
       aria-label={label}
       className={cn(
-        'rounded-full animate-spin',
+        'animate-spin rounded-full',
         sizeClasses[size],
         variantClasses[variant],
-        className
+        className,
       )}
       {...props}
     >
       <span className="sr-only">{label}</span>
-    </div>
-  );
-}
-
-/**
- * LoadingOverlay Component
- * =========================
- * Full-screen or container loading overlay with spinner.
- */
-interface LoadingOverlayProps {
-  /** Whether to show the overlay */
-  isLoading: boolean;
-  /** Loading message */
-  message?: string;
-  /** Whether to cover the full viewport or just the container */
-  fullScreen?: boolean;
-}
-
-export function LoadingOverlay({
-  isLoading,
-  message = 'Loading...',
-  fullScreen = false,
-}: LoadingOverlayProps) {
-  if (!isLoading) return null;
-
-  return (
-    <div
-      className={cn(
-        'flex flex-col items-center justify-center bg-white/80 dark:bg-black/60 backdrop-blur-sm z-overlay',
-        fullScreen ? 'fixed inset-0' : 'absolute inset-0'
-      )}
-    >
-      <Spinner size="lg" />
-      {message && (
-        <p className="mt-4 text-text-muted font-medium">{message}</p>
-      )}
     </div>
   );
 }
@@ -97,11 +60,11 @@ export function LoadingOverlay({
  */
 interface LoadingStateProps {
   /** Loading message */
-  message?: string;
+  message?: string | undefined;
   /** Size of the spinner */
-  size?: 'sm' | 'md' | 'lg';
+  size?: 'sm' | 'md' | 'lg' | undefined;
   /** Vertical padding */
-  padding?: 'sm' | 'md' | 'lg';
+  padding?: 'sm' | 'md' | 'lg' | undefined;
 }
 
 const paddingClasses = {
@@ -110,21 +73,14 @@ const paddingClasses = {
   lg: 'py-24',
 };
 
-export function LoadingState({
-  message,
-  size = 'lg',
-  padding = 'md',
-}: LoadingStateProps) {
+export function LoadingState({ message, size = 'lg', padding = 'md' }: LoadingStateProps) {
   return (
     <div className={cn('flex flex-col items-center justify-center', paddingClasses[padding])}>
       <Spinner size={size} />
-      {message && (
-        <p className="mt-4 text-text-muted">{message}</p>
-      )}
+      {message && <p className="mt-4 text-text-muted">{message}</p>}
     </div>
   );
 }
 
 Spinner.displayName = 'Spinner';
-LoadingOverlay.displayName = 'LoadingOverlay';
 LoadingState.displayName = 'LoadingState';

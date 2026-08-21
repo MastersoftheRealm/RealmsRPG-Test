@@ -1,7 +1,7 @@
 'use client';
 
 import type { ReactNode } from 'react';
-import { GridListRow } from '@/components/shared';
+import { GridListRow } from '@/components/patterns';
 import type { Feat } from '@/hooks';
 import {
   FEAT_GRID_COLUMNS,
@@ -16,15 +16,22 @@ export function CodexFeatRow({
   name = feat.name,
   variant = 'codex',
   rightSlot,
+  nameChipLabels,
 }: {
   feat: Feat;
   skillIdToName: Map<string, string>;
-  familyLevels?: Feat[];
-  name?: string;
-  variant?: 'codex' | 'admin';
-  rightSlot?: ReactNode;
+  familyLevels?: Feat[] | undefined;
+  name?: string | undefined;
+  variant?: 'codex' | 'admin' | undefined;
+  rightSlot?: ReactNode | undefined;
+  /**
+   * Labels shown beside the name while a list filter needs them — the archetype paths that
+   * recommend this feat (ADR-0014). Empty / omitted renders nothing.
+   */
+  nameChipLabels?: string[] | undefined;
 }) {
   const detailSections = buildFeatDetailSections(feat, skillIdToName, familyLevels);
+  const nameChips = nameChipLabels?.length ? nameChipLabels.map((label) => ({ label })) : undefined;
 
   return (
     <GridListRow
@@ -34,6 +41,8 @@ export function CodexFeatRow({
       gridColumns={FEAT_GRID_COLUMNS}
       columns={buildFeatGridColumns(feat, variant)}
       detailSections={detailSections.length > 0 ? detailSections : undefined}
+      badges={nameChips}
+      showBadgesInName={Boolean(nameChips)}
       rightSlot={rightSlot}
     />
   );

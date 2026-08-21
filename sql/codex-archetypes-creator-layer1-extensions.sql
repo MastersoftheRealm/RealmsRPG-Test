@@ -1,5 +1,8 @@
 -- Character creator Layer 1 extensions for codex_archetypes.
--- Adds recommended_species + guidance_groups as first-class columns (non-destructive).
+-- Historical: added recommended_species + guidance_groups as first-class columns.
+-- SUPERSEDED for species: level1_recommended_species was DROPPED by
+--   sql/codex-archetypes-drop-recommended-species.sql (TASK-517). Do not re-apply the
+--   ADD COLUMN for level1_recommended_species on environments that already ran the drop.
 -- Backfills from legacy path_data JSONB when present.
 -- Seeds Berserker (id=1) as reference martial path when guidance_groups is still empty.
 --

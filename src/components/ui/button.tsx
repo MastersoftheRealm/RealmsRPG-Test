@@ -2,19 +2,14 @@
  * Button Component
  * ==================
  * Reusable button with variants using class-variance-authority
- * 
- * RECOMMENDED VARIANTS (use these):
+ *
+ * VARIANTS:
  * - primary: Main CTA, solid bg (clean, no gradient)
  * - outline: Secondary CTA, border only (clean outline style)
  * - secondary: Alternative actions, cancel buttons
  * - danger: Destructive actions (delete, remove)
  * - ghost: Minimal emphasis, inline actions
  * - link: Text link styling
- * 
- * DEPRECATED VARIANTS (avoid, will be removed):
- * - gradient: Use 'primary' instead
- * - success: Use 'primary' instead (context provides meaning)
- * - utility: Use 'secondary' or 'ghost' instead
  */
 
 import * as React from 'react';
@@ -24,52 +19,63 @@ import { cn } from '@/lib/utils/cn';
 import { Loader2 } from 'lucide-react';
 
 const buttonVariants = cva(
-  // Touch devices get a 44px minimum tap target (WCAG/MOBILE_UX). Scoped to
-  // coarse pointers so desktop dense layouts keep their compact sizing (TASK-332).
-  'inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-lg text-sm font-semibold transition-all duration-base ease-standard focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0 [@media(pointer:coarse)]:min-h-[44px] [@media(pointer:coarse)]:min-w-[44px]',
+  // ADR-0023: height under coarse pointer only — never a global min-w (that
+  // turned link/footer text into 167×44 slabs). Tiers live on size / variant.
+  'inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-lg text-sm font-semibold transition-all duration-base ease-standard focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0',
   {
     variants: {
       variant: {
         // RECOMMENDED VARIANTS - clean solid/outline preferred over gradients
-        primary: 'bg-primary-button text-white hover:bg-primary-button-hover focus-visible:ring-primary-outline-border',
-        secondary: 'bg-surface text-text-secondary border border-border-light hover:bg-surface-alt focus-visible:ring-primary-outline-border dark:bg-surface-alt dark:border-border dark:hover:bg-surface',
-        danger: 'bg-danger-button text-white hover:bg-danger-700 focus-visible:ring-danger-border',
-        ghost: 'text-text-secondary hover:bg-surface-alt hover:text-text-primary focus-visible:ring-primary-outline-border',
+        primary:
+          'bg-primary-button text-text-on-dark hover:bg-primary-button-hover focus-visible:ring-primary-outline-border',
+        secondary:
+          'bg-surface text-text-secondary border border-border-light hover:bg-surface-alt focus-visible:ring-primary-outline-border dark:bg-surface-alt dark:border-border dark:hover:bg-surface',
+        danger:
+          'bg-danger-button text-text-on-dark hover:bg-danger-700 focus-visible:ring-danger-border',
+        ghost:
+          'text-text-secondary hover:bg-surface-alt hover:text-text-primary focus-visible:ring-primary-outline-border',
         link: 'text-primary-link-fg underline-offset-4 hover:underline focus-visible:ring-primary-outline-border',
-        outline: 'border-2 border-primary-outline-border text-primary-outline-fg bg-transparent hover:bg-primary-subtle-bg focus-visible:ring-primary-outline-border',
+        outline:
+          'border-2 border-primary-outline-border text-primary-outline-fg bg-transparent hover:bg-primary-subtle-bg focus-visible:ring-primary-outline-border',
       },
       size: {
-        sm: 'h-8 px-3 text-xs',
-        md: 'h-10 px-4 py-2',
-        lg: 'h-12 px-6 text-base',
-        xl: 'h-14 px-8 text-lg',
-        icon: 'h-10 w-10',
-        'icon-sm': 'h-8 w-8',
-        'icon-lg': 'h-12 w-12',
+        sm: 'hit-area-dense h-8 px-3 text-xs',
+        md: 'touch-tier-standard h-10 px-4 py-2',
+        lg: 'touch-tier-primary h-12 px-6 text-base',
+        xl: 'touch-tier-primary h-14 px-8 text-lg',
+        icon: 'h-10 w-10 [@media(pointer:coarse)]:h-11 [@media(pointer:coarse)]:w-11',
       },
     },
+    compoundVariants: [
+      {
+        variant: 'link',
+        class: 'hit-area-dense h-auto px-0',
+      },
+    ],
     defaultVariants: {
       variant: 'primary',
       size: 'md',
     },
-  }
+  },
 );
 
 export interface ButtonProps
-  extends React.ButtonHTMLAttributes<HTMLButtonElement>,
-    VariantProps<typeof buttonVariants> {
-  isLoading?: boolean;
-  asChild?: boolean;
+  extends React.ButtonHTMLAttributes<HTMLButtonElement>, VariantProps<typeof buttonVariants> {
+  isLoading?: boolean | undefined;
+  asChild?: boolean | undefined;
 }
 
 const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
-  ({ className, variant, size, isLoading, asChild = false, children, disabled, onClick, ...props }, ref) => {
+  (
+    { className, variant, size, isLoading, asChild = false, children, disabled, onClick, ...props },
+    ref,
+  ) => {
     const Comp = asChild ? Slot : 'button';
 
     // IMPORTANT (Next.js RSC): only pass an `onClick` prop when one was provided, so
     // server components that render <Button /> don't fail prerendering.
     const wrappedOnClick = onClick ?? undefined;
-    
+
     return (
       <Comp
         className={cn(buttonVariants({ variant, size, className }))}
@@ -88,7 +94,7 @@ const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
         )}
       </Comp>
     );
-  }
+  },
 );
 
 Button.displayName = 'Button';

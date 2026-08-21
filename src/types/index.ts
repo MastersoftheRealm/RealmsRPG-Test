@@ -11,6 +11,7 @@ export { DEFAULT_ABILITIES } from './abilities';
 // Archetype
 export type {
   ArchetypeCategory,
+  ProficiencyDerivedArchetype,
   ArchetypeProficiency,
   ArchetypeConfig,
   Archetype,
@@ -20,30 +21,21 @@ export type {
 } from './archetype';
 
 // Ancestry
-export type {
-  SizeCategory,
-  Ancestry,
-  AncestryTrait,
-  CharacterAncestry,
-} from './ancestry';
+export type { SizeCategory, Ancestry, AncestryTrait, CharacterAncestry } from './ancestry';
 
 // Skills
 export type {
   SkillCategory,
   Skill,
   CharacterSkill,
+  CharacterSkillRow,
   CharacterSkills,
   DefenseSkills,
 } from './skills';
 export { DEFAULT_DEFENSE_SKILLS } from './skills';
 
 // Feats
-export type {
-  FeatCategory,
-  Feat,
-  CharacterFeat,
-  FeatTraitCustomization,
-} from './feats';
+export type { FeatCategory, Feat, CharacterFeat, FeatTraitCustomization } from './feats';
 
 // Equipment
 export type {
@@ -59,7 +51,12 @@ export type {
 } from './equipment';
 
 // Campaign
-export type { Campaign, CampaignCharacter, CampaignSummary, ArchetypeDisplayName } from './campaign';
+export type {
+  Campaign,
+  CampaignCharacter,
+  CampaignSummary,
+  ArchetypeDisplayName,
+} from './campaign';
 
 // Tabletop
 export type {
@@ -93,6 +90,7 @@ export type {
   CharacterCondition,
   ResourcePool,
   CombatBonuses,
+  CharacterTempModifiers,
   Character,
   CharacterSummary,
   CharacterDraft,
@@ -151,6 +149,24 @@ export type {
   LibrarySaveBody,
 } from './library';
 export { LIBRARY_ITEM_TYPES } from './library';
+
+// Crafting + enhanced items
+export type {
+  CraftingSessionStatus,
+  CraftingRollSession,
+  CraftingItemRef,
+  CraftingCustomBaseItem,
+  CraftingPowerRef,
+  CraftingSessionData,
+  CraftingSession,
+  CraftingSessionSummary,
+  UserEnhancedItem,
+  EnhancedItemUsesType,
+  OfficialEnhancedItemPayload,
+  OfficialEnhancedItem,
+  CreateOfficialEnhancedItemInput,
+  UpdateOfficialEnhancedItemInput,
+} from './crafting';
 
 // Item Display System
 export type {

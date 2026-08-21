@@ -6,37 +6,45 @@ name: UI Verify (design system)
 #   - production build
 #   - accessibility (axe-core, deterministic routes, both themes)
 #   - visual regression (Playwright screenshots, both themes x 3 breakpoints)
+#   - shell-creators chrome audit (8 Playwright tests, ~1–2 min on Linux after build — TASK-659)
 #
 # All steps are required (no continue-on-error). See src/docs/ai/BUILD_VALIDATION.md
 # and DEVELOPER_TASK_QUEUE for the one-time setup (CI secrets + seeding Linux
 # visual baselines).
+#
+# THESE CHECKS DO NOT BLOCK A DEPLOY ON THEIR OWN.
+# This workflow also triggers on `push: [master]`, i.e. in parallel with the Vercel
+# production build it is meant to gate. **Branch protection must be enabled in GitHub
+# settings** — Settings → Branches → rule for `master`: require a pull request before
+# merging, and require these status checks: `Lint, contrast & static gates`,
+# `Visual regression & accessibility`, and `verify` (ai-task-verifier.yml). That is not
+# configurable from the repository. Local backstop: `.husky/pre-push`.
+#
+# One `next build` per PR: only the visual-a11y job builds, because Playwright has to serve
+# that build anyway. Collapsing it further (sharing `.next` with another job) would need
+# artifact upload/download between runners and is not done.
 
 on:
   pull_request:
     types: [opened, synchronize, reopened]
   push:
-    branches: [main]
+    branches: [master]
 
 jobs:
   static-gates:
-    name: Lint, contrast & build
+    name: Lint, contrast & static gates
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
-          node-version: '22'
+          node-version: '24'
           cache: 'npm'
       - run: npm ci
       - name: Lint (incl. no-raw-color guardrail)
         run: npm run lint
       - name: Token contrast (WCAG AA)
         run: npm run verify:contrast
-      - name: Build
-        run: npm run build
-        env:
-          NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
-          NEXT_PUBLIC_SUPABASE_PUBLISHABLE_DEFAULT_KEY: ${{ secrets.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_DEFAULT_KEY }}
 
   visual-a11y:
     name: Visual regression & accessibility
@@ -50,7 +58,7 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
-          node-version: '22'
+          node-version: '24'
           cache: 'npm'
       - run: npm ci
       - name: Install Playwright browser + OS deps
@@ -58,21 +66,47 @@ jobs:
       - name: Build
         run: npm run build
       - name: Visual + accessibility (Playwright)
-        # Playwright's webServer starts `npm run start` automatically.
-        run: npx playwright test
-      - name: Authenticated visual + a11y (optional — DEV-003 secrets)
-        if: ${{ secrets.E2E_TEST_EMAIL != '' && secrets.E2E_TEST_PASSWORD != '' }}
+        # Core gate only: screenshots.pw.ts + a11y.pw.ts (audit suites use dedicated configs).
+        run: npm run verify:visual && npm run verify:a11y
+      - name: Shell-creators chrome audit (Playwright)
+        # 8 deterministic tests across six CreatorPageShell routes; no auth/data deps.
+        # Uses npx playwright (not npm run verify:shell-creators-audit) to avoid a second build.
+        # Budget: ~1–2 min on Linux (workers=1; review screenshots under .shell-creators-audit/).
+        run: npx playwright test -c playwright.shell-creators-audit.config.ts
+      - name: Responsive layout contracts (ADR-0023)
+        # 8 guest routes × 6 widths. Ratchets overflow / clip / fixed-collision counts
+        # against tests/visual/responsive-baseline.json. No auth. Reuses the job build.
+        # Update locally: npm run verify:responsive:update
+        run: npx playwright test -c playwright.responsive.config.ts
+      - name: Authenticated visual + a11y (DEV-003 secrets)
+        # Missing secrets used to `exit 0`, so an unrun gate reported green. Now the step
+        # either runs, or fails with instructions, or is an explicitly acknowledged skip:
+        # set repository variable E2E_OPTIONAL=1 (Settings → Variables) to accept the gap.
         env:
+          E2E_OPTIONAL: ${{ vars.E2E_OPTIONAL }}
           E2E_TEST_EMAIL: ${{ secrets.E2E_TEST_EMAIL }}
           E2E_TEST_PASSWORD: ${{ secrets.E2E_TEST_PASSWORD }}
           E2E_TEST_CHARACTER_ID: ${{ secrets.E2E_TEST_CHARACTER_ID }}
           E2E_TEST_CAMPAIGN_ID: ${{ secrets.E2E_TEST_CAMPAIGN_ID }}
         run: |
-          npx playwright test -c playwright.auth.config.ts
+          if [ -n "$E2E_TEST_EMAIL" ] && [ -n "$E2E_TEST_PASSWORD" ]; then
+            npx playwright test -c playwright.auth.config.ts
+            exit 0
+          fi
+          if [ "$E2E_OPTIONAL" = "1" ]; then
+            echo "::notice title=Authenticated E2E skipped::E2E_TEST_EMAIL/E2E_TEST_PASSWORD are not set and repository variable E2E_OPTIONAL=1 acknowledges the gap (DEV-003). Authenticated visual + a11y coverage did NOT run."
+            exit 0
+          fi
+          echo "::error title=Authenticated E2E not configured::Set repository secrets E2E_TEST_EMAIL and E2E_TEST_PASSWORD (DEV-003, provision with 'npm run e2e:provision'), or set repository variable E2E_OPTIONAL=1 to accept running without authenticated coverage."
+          exit 1
       - name: Upload Playwright report
         if: ${{ !cancelled() }}
         uses: actions/upload-artifact@v4
         with:
           name: playwright-report
-          path: playwright-report/
+          path: |
+            playwright-report/
+            .shell-creators-audit/
+            .responsive-layout/
+            test-results/**/*-actual.png
           retention-days: 14

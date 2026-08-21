@@ -1,6 +1,8 @@
-import type { NextConfig } from "next";
+import type { NextConfig } from 'next';
+import createMDX from '@next/mdx';
 
 const nextConfig: NextConfig = {
+  pageExtensions: ['ts', 'tsx', 'js', 'jsx', 'mdx'],
   // Allow character portraits (and profile pictures) from Supabase Storage public URLs
   images: {
     remotePatterns: [
@@ -42,14 +44,18 @@ const nextConfig: NextConfig = {
       "form-action 'self'",
       "frame-ancestors 'self'",
       "object-src 'none'",
-      // Vercel Toolbar / Live feedback (preview & production) loads from vercel.live
-      "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://vercel.live",
+      // Vercel Toolbar / Live feedback (preview & production) loads from vercel.live.
+      // Web Analytics: production script is same-origin (/_vercel/insights/*); local/dev
+      // debug script loads from va.vercel-scripts.com (see DEPLOYMENT_AND_SECRETS_SUPABASE).
+      "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://vercel.live https://va.vercel-scripts.com",
       "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
       "img-src 'self' data: blob: https:",
       "font-src 'self' data: https://fonts.gstatic.com",
-      "connect-src 'self' https://*.supabase.co wss://*.supabase.co https://vercel.live wss://*.vercel.live",
-      // Google Doc (Core Rulebook) + Vercel Live feedback iframe (preview toolbar)
-      "frame-src 'self' https://docs.google.com https://vercel.live",
+      // Sentry browser SDK posts envelopes to regional ingest hosts
+      // (e.g. o<id>.ingest.us.sentry.io). CSP `*` matches one label only.
+      "connect-src 'self' https://*.supabase.co wss://*.supabase.co https://vercel.live wss://*.vercel.live https://va.vercel-scripts.com https://*.sentry.io https://*.ingest.sentry.io https://*.ingest.us.sentry.io",
+      // Vercel Live feedback iframe (preview toolbar)
+      "frame-src 'self' https://vercel.live",
     ].join('; ');
 
     return [
@@ -99,4 +105,11 @@ const nextConfig: NextConfig = {
   },
 };
 
-export default nextConfig;
+const withMDX = createMDX({
+  extension: /\.mdx$/,
+  options: {
+    remarkPlugins: ['remark-gfm'],
+  },
+});
+
+export default withMDX(nextConfig);

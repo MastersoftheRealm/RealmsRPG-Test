@@ -20,16 +20,18 @@ export function MarketingLinkButton({
   size,
   className,
   children,
+  onClick,
 }: {
   href: string;
-  variant?: Variant;
-  size?: Size;
-  className?: string;
+  variant?: Variant | undefined;
+  size?: Size | undefined;
+  className?: string | undefined;
   children: React.ReactNode;
+  onClick?: (() => void) | undefined;
 }) {
   return (
     <Button asChild variant={variant} size={size} className={className}>
-      <Link prefetch={false} href={href}>
+      <Link prefetch={false} href={href} {...(onClick ? { onClick } : {})}>
         {children}
       </Link>
     </Button>
@@ -42,16 +44,18 @@ export function MarketingExternalButton({
   size,
   className,
   children,
+  onClick,
 }: {
   href: string;
-  variant?: Variant;
-  size?: Size;
-  className?: string;
+  variant?: Variant | undefined;
+  size?: Size | undefined;
+  className?: string | undefined;
   children: React.ReactNode;
+  onClick?: (() => void) | undefined;
 }) {
   return (
     <Button asChild variant={variant} size={size} className={className}>
-      <a href={href} target="_blank" rel="noopener noreferrer">
+      <a href={href} target="_blank" rel="noopener noreferrer" onClick={onClick}>
         {children}
       </a>
     </Button>

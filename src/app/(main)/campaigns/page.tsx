@@ -8,17 +8,10 @@
 
 'use client';
 
-import { useState, useEffect, Suspense } from 'react';
+import { useState, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
-import {
-  Users,
-  PlusCircle,
-  LogIn,
-  Crown,
-  UserPlus,
-  ChevronRight,
-} from 'lucide-react';
+import { Users, PlusCircle, LogIn, Crown, UserPlus, ChevronRight } from 'lucide-react';
 import {
   PageContainer,
   PageHeader,
@@ -33,10 +26,10 @@ import {
   Alert,
   useToast,
 } from '@/components/ui';
-import { InfoTippy } from '@/components/shared';
+import { InfoTippy } from '@/components/patterns';
 import { campaignsHelp } from '../../../../public/tooltip-text';
 import { cn } from '@/lib/utils';
-import { getEffectivePortrait } from '@/lib/portrait';
+import { PortraitThumb } from '@/components/character/portrait-thumb';
 import { useCampaigns, useCharacters, useInvalidateCampaigns, useAuth } from '@/hooks';
 import { createCampaignAction, joinCampaignAction } from './actions';
 import { isValidInviteCodeFormat } from '@/lib/campaign-invite';
@@ -45,16 +38,16 @@ import type { CampaignSummary } from '@/types/campaign';
 type TabId = 'my-campaigns' | 'create' | 'join';
 
 const TABS = [
-  { id: 'my-campaigns' as TabId, label: 'My Campaigns', icon: <Users className="w-4 h-4" /> },
-  { id: 'create' as TabId, label: 'Create Campaign', icon: <PlusCircle className="w-4 h-4" /> },
-  { id: 'join' as TabId, label: 'Join Campaign', icon: <LogIn className="w-4 h-4" /> },
+  { id: 'my-campaigns' as TabId, label: 'My Campaigns', icon: <Users className="h-4 w-4" /> },
+  { id: 'create' as TabId, label: 'Create Campaign', icon: <PlusCircle className="h-4 w-4" /> },
+  { id: 'join' as TabId, label: 'Join Campaign', icon: <LogIn className="h-4 w-4" /> },
 ];
 
 export default function CampaignsPage() {
   const { user, loading: authLoading } = useAuth();
   if (authLoading) {
     return (
-      <div className="min-h-[400px] flex items-center justify-center">
+      <div className="flex min-h-[400px] items-center justify-center">
         <LoadingState message="Loading..." />
       </div>
     );
@@ -62,16 +55,22 @@ export default function CampaignsPage() {
   if (!user) {
     return (
       <PageContainer size="xl">
-        <PageHeader title="Campaigns" description="Create campaigns, invite players, and manage your Realm Master sessions." />
-        <div className="rounded-xl border border-border-light bg-surface-alt p-8 md:p-12 text-center max-w-lg mx-auto">
-          <Users className="w-14 h-14 mx-auto text-text-muted dark:text-text-secondary mb-4" aria-hidden />
-          <h2 className="text-xl font-bold text-text-primary mb-2">Sign in to create or join campaigns</h2>
-          <p className="text-text-secondary mb-6">
-            Campaigns let you run games as a Realm Master or join with your characters. Sign in to get started.
+        <PageHeader
+          title="Campaigns"
+          description="Create campaigns, invite players, and manage your Realm Master sessions."
+        />
+        <div className="mx-auto max-w-lg rounded-xl border border-border-light bg-surface-alt p-8 text-center md:p-12">
+          <Users className="mx-auto mb-4 h-14 w-14 text-text-muted" aria-hidden />
+          <h2 className="mb-2 text-xl font-bold text-text-primary">
+            Sign in to create or join campaigns
+          </h2>
+          <p className="mb-6 text-text-secondary">
+            Campaigns let you run games as a Realm Master or join with your characters. Sign in to
+            get started.
           </p>
           <Link href="/login?returnTo=/campaigns">
             <Button variant="primary" size="lg">
-              <LogIn className="w-4 h-4" aria-hidden />
+              <LogIn className="h-4 w-4" aria-hidden />
               Sign in
             </Button>
           </Link>
@@ -80,7 +79,13 @@ export default function CampaignsPage() {
     );
   }
   return (
-    <Suspense fallback={<div className="min-h-[400px] flex items-center justify-center"><LoadingState message="Loading..." /></div>}>
+    <Suspense
+      fallback={
+        <div className="flex min-h-[400px] items-center justify-center">
+          <LoadingState message="Loading..." />
+        </div>
+      }
+    >
       <CampaignsContent />
     </Suspense>
   );
@@ -92,14 +97,18 @@ function CampaignsContent() {
   const searchParams = useSearchParams();
   const [activeTab, setActiveTab] = useState<TabId>('my-campaigns');
 
-  useEffect(() => {
-    const tab = searchParams.get('tab');
-    if (tab === 'create' || tab === 'join') {
-      setActiveTab(tab);
-    }
-  }, [searchParams]);
+  const tabParam = searchParams.get('tab');
+  const urlTab: TabId | null = tabParam === 'create' || tabParam === 'join' ? tabParam : null;
+  if (urlTab && activeTab !== urlTab) {
+    setActiveTab(urlTab);
+  }
 
-  const { data: campaigns = [], isLoading: campaignsLoading, error: campaignsError, refetch: refetchCampaigns } = useCampaigns();
+  const {
+    data: campaigns = [],
+    isLoading: campaignsLoading,
+    error: campaignsError,
+    refetch: refetchCampaigns,
+  } = useCampaigns();
   const { data: characters = [], isLoading: charactersLoading } = useCharacters();
   const invalidateCampaigns = useInvalidateCampaigns();
 
@@ -126,7 +135,12 @@ function CampaignsContent() {
         />
       </div>
 
-      <TabContentPanel tabGroupId={tabGroupId} id={sharedPanelId} activeTab={activeTab} className="mt-6 min-w-0">
+      <TabContentPanel
+        tabGroupId={tabGroupId}
+        id={sharedPanelId}
+        activeTab={activeTab}
+        className="mt-6 min-w-0"
+      >
         {activeTab === 'my-campaigns' && (
           <MyCampaignsTab
             campaigns={campaigns}
@@ -198,7 +212,7 @@ function MyCampaignsTab({
   if (campaigns.length === 0) {
     return (
       <EmptyState
-        icon={<Users className="w-10 h-10" />}
+        icon={<Users className="h-10 w-10" />}
         title="No campaigns yet"
         description="Create a campaign to start your adventure as a Realm Master, or join one with an invite code."
         action={{
@@ -219,33 +233,33 @@ function MyCampaignsTab({
         <Link
           key={campaign.id}
           href={`/campaigns/${campaign.id}`}
-          className="block rounded-xl border border-border-light bg-surface p-5 shadow-sm hover:border-primary-outline-border hover:shadow-md transition-all"
+          className="block rounded-xl border border-border-light bg-surface p-5 shadow-sm transition-all hover:border-primary-outline-border hover:shadow-md"
         >
           <div className="flex items-start justify-between gap-2">
             <div className="min-w-0 flex-1">
-              <h2 className="font-bold text-lg text-text-primary truncate">
-                {campaign.name}
-              </h2>
-              <p className="mt-1 text-sm text-text-secondary line-clamp-2">
+              <h2 className="truncate text-lg font-bold text-text-primary">{campaign.name}</h2>
+              <p className="mt-1 line-clamp-2 text-sm text-text-secondary">
                 {campaign.description || 'No description'}
               </p>
-              <div className="mt-3 flex items-center gap-2 text-sm text-text-muted dark:text-text-secondary">
+              <div className="mt-3 flex items-center gap-2 text-sm text-text-muted">
                 {campaign.isOwner ? (
                   <span className="inline-flex items-center gap-1">
-                    <Crown className="w-4 h-4 text-accent-500" />
+                    <Crown className="h-4 w-4 text-accent-500" />
                     Realm Master
                   </span>
                 ) : (
                   <span className="inline-flex items-center gap-1">
-                    <UserPlus className="w-4 h-4" />
+                    <UserPlus className="h-4 w-4" />
                     {campaign.ownerUsername || 'Realm Master'}
                   </span>
                 )}
                 <span>•</span>
-                <span>{campaign.characterCount} character{campaign.characterCount !== 1 ? 's' : ''}</span>
+                <span>
+                  {campaign.characterCount} character{campaign.characterCount !== 1 ? 's' : ''}
+                </span>
               </div>
             </div>
-            <ChevronRight className="w-5 h-5 text-text-muted dark:text-text-secondary flex-shrink-0" />
+            <ChevronRight className="h-5 w-5 flex-shrink-0 text-text-muted" />
           </div>
         </Link>
       ))}
@@ -267,7 +281,10 @@ function CreateCampaignTab({ onSuccess }: { onSuccess: () => void }) {
     setError(null);
     setSubmitting(true);
     try {
-      const result = await createCampaignAction({ name: name.trim(), description: description.trim() });
+      const result = await createCampaignAction({
+        name: name.trim(),
+        description: description.trim(),
+      });
       if (result.success && result.inviteCode) {
         setCreatedInviteCode(result.inviteCode);
         if (result.campaignId) setCreatedCampaignId(result.campaignId);
@@ -291,13 +308,13 @@ function CreateCampaignTab({ onSuccess }: { onSuccess: () => void }) {
 
   if (createdInviteCode) {
     return (
-      <div className="rounded-xl border border-success-200 bg-success-50 p-6 max-w-lg">
-        <h2 className="font-bold text-lg text-success-fg">Campaign created!</h2>
+      <div className="max-w-lg rounded-xl border border-success-200 bg-success-50 p-6">
+        <h2 className="text-lg font-bold text-success-fg">Campaign created!</h2>
         <p className="mt-2 text-success-fg">
           Share this invite code with players so they can join:
         </p>
-        <div className="mt-4 p-4 bg-surface rounded-lg border border-success-200">
-          <code className="text-2xl font-mono font-bold tracking-widest text-primary-subtle-fg">
+        <div className="mt-4 rounded-lg border border-success-200 bg-surface p-4">
+          <code className="font-mono text-2xl font-bold tracking-widest text-primary-subtle-fg">
             {createdInviteCode}
           </code>
         </div>
@@ -311,9 +328,7 @@ function CreateCampaignTab({ onSuccess }: { onSuccess: () => void }) {
   return (
     <form onSubmit={handleSubmit} className="max-w-xl space-y-4">
       <div>
-        <label className="block text-sm font-medium text-text-secondary mb-1">
-          Campaign Name
-        </label>
+        <label className="mb-1 block text-sm font-medium text-text-secondary">Campaign Name</label>
         <Input
           value={name}
           onChange={(e) => setName(e.target.value)}
@@ -324,7 +339,7 @@ function CreateCampaignTab({ onSuccess }: { onSuccess: () => void }) {
         />
       </div>
       <div>
-        <label className="block text-sm font-medium text-text-secondary mb-1">
+        <label className="mb-1 block text-sm font-medium text-text-secondary">
           Description (optional)
         </label>
         <Textarea
@@ -336,9 +351,7 @@ function CreateCampaignTab({ onSuccess }: { onSuccess: () => void }) {
           className="resize-none"
         />
       </div>
-      {error && (
-        <Alert variant="danger">{error}</Alert>
-      )}
+      {error && <Alert variant="danger">{error}</Alert>}
       <Button type="submit" disabled={submitting || !name.trim()} isLoading={submitting}>
         Create Campaign
       </Button>
@@ -351,7 +364,15 @@ function JoinCampaignTab({
   isLoading,
   onSuccess,
 }: {
-  characters: Array<{ id: string; name: string; level: number; portrait?: string; archetypeName?: string; ancestryName?: string; visibility?: string }>;
+  characters: Array<{
+    id: string;
+    name: string;
+    level: number;
+    portrait?: string | undefined;
+    archetypeName?: string | undefined;
+    ancestryName?: string | undefined;
+    visibility?: string | undefined;
+  }>;
   isLoading: boolean;
   onSuccess: () => void;
 }) {
@@ -369,7 +390,9 @@ function JoinCampaignTab({
     setSubmitting(true);
     setError(null);
     try {
-      const archetypeType = String(selectedCharacter.archetypeName ?? '').toLowerCase().replace(/\s+/g, '-');
+      const archetypeType = String(selectedCharacter.archetypeName ?? '')
+        .toLowerCase()
+        .replace(/\s+/g, '-');
       const result = await joinCampaignAction({
         inviteCode: inviteCode.trim(),
         characterId: selectedCharacter.id,
@@ -383,7 +406,7 @@ function JoinCampaignTab({
         if (result.visibilityUpdated) {
           showToast(
             'Joined! Character visibility was set to Campaign so the Realm Master and players can view your sheet.',
-            'success'
+            'success',
           );
         } else {
           showToast('Joined the campaign!', 'success');
@@ -420,12 +443,13 @@ function JoinCampaignTab({
   if (characters.length === 0) {
     return (
       <EmptyState
-        icon={<UserPlus className="w-10 h-10" />}
+        icon={<UserPlus className="h-10 w-10" />}
         title="No characters to join with"
         description="Create a character first, then you can join a campaign with them."
         action={{
           label: 'Create Character',
-          onClick: () => router.push('/characters/new?returnTo=' + encodeURIComponent('/campaigns?tab=join')),
+          onClick: () =>
+            router.push('/characters/new?returnTo=' + encodeURIComponent('/campaigns?tab=join')),
         }}
       />
     );
@@ -434,10 +458,8 @@ function JoinCampaignTab({
   return (
     <form onSubmit={handleSubmit} className="max-w-xl space-y-6">
       <div>
-        <div className="flex items-center gap-1 mb-1">
-          <label className="block text-sm font-medium text-text-secondary">
-            Invite Code
-          </label>
+        <div className="mb-1 flex items-center gap-1">
+          <label className="block text-sm font-medium text-text-secondary">Invite Code</label>
         </div>
         <Input
           value={inviteCode}
@@ -455,23 +477,23 @@ function JoinCampaignTab({
           className="font-mono tracking-widest uppercase"
           aria-describedby="invite-code-hint"
         />
-        <p id="invite-code-hint" className="text-xs text-text-muted dark:text-text-secondary mt-1">
+        <p id="invite-code-hint" className="mt-1 text-xs text-text-muted">
           Letters A–Z (not I or O) and numbers 2–9. Spaces or dashes are removed automatically.
         </p>
       </div>
       <div>
-        <label className="block text-sm font-medium text-text-secondary mb-2">
+        <label className="mb-2 block text-sm font-medium text-text-secondary">
           Character to Join With
         </label>
-        <div className="space-y-2 max-h-48 overflow-y-auto border border-border-light rounded-lg p-2">
+        <div className="max-h-48 space-y-2 overflow-y-auto rounded-lg border border-border-light p-2">
           {characters.map((c) => (
             <label
               key={c.id}
               className={cn(
-                'flex items-center gap-3 p-3 rounded-lg cursor-pointer border transition-colors',
+                'flex cursor-pointer items-center gap-3 rounded-lg border p-3 transition-colors',
                 selectedCharacterId === c.id
                   ? 'border-primary-outline-border bg-primary-subtle-bg'
-                  : 'border-transparent hover:bg-surface-alt'
+                  : 'border-transparent hover:bg-surface-alt',
               )}
             >
               <input
@@ -482,14 +504,10 @@ function JoinCampaignTab({
                 onChange={() => setSelectedCharacterId(c.id)}
                 className="sr-only"
               />
-              <img
-                src={getEffectivePortrait(c.portrait)}
-                alt=""
-                className="w-12 h-12 rounded-lg object-cover flex-shrink-0"
-              />
+              <PortraitThumb portrait={c.portrait} className="h-12 w-12 flex-shrink-0 rounded-lg" />
               <div className="min-w-0 flex-1">
                 <span className="font-medium text-text-primary">{c.name}</span>
-                <span className="block text-sm text-text-muted dark:text-text-secondary">
+                <span className="block text-sm text-text-muted">
                   Level {c.level}
                   {c.archetypeName && ` • ${c.archetypeName}`}
                   {c.ancestryName && ` • ${c.ancestryName}`}
@@ -510,4 +528,3 @@ function JoinCampaignTab({
     </form>
   );
 }
-

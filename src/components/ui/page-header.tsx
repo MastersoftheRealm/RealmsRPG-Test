@@ -12,17 +12,17 @@ interface PageHeaderProps extends Omit<React.HTMLAttributes<HTMLDivElement>, 'ti
   /** Main page title */
   title: React.ReactNode;
   /** Optional icon to display before the title */
-  icon?: React.ReactNode;
+  icon?: React.ReactNode | undefined;
   /** Optional description below title */
-  description?: React.ReactNode;
+  description?: React.ReactNode | undefined;
   /** Optional action buttons/elements to display on the right */
-  actions?: React.ReactNode;
+  actions?: React.ReactNode | undefined;
   /** Size variant for the title */
-  size?: 'sm' | 'md' | 'lg';
+  size?: 'sm' | 'md' | 'lg' | undefined;
   /** When set, the title is clickable (e.g. inline rename) */
-  onTitleClick?: () => void;
+  onTitleClick?: (() => void) | undefined;
   /** Accessible name when title is clickable */
-  titleAriaLabel?: string;
+  titleAriaLabel?: string | undefined;
 }
 
 const titleSizeClasses = {
@@ -43,21 +43,23 @@ export function PageHeader({
   ...props
 }: PageHeaderProps) {
   const titleClasses = cn(
-    'font-bold font-display text-text-primary flex items-center gap-2',
+    'font-bold font-display text-text-primary flex flex-wrap items-center gap-2',
     titleSizeClasses[size],
-    onTitleClick && 'cursor-pointer hover:text-primary-link-fg hover:underline text-left'
+    onTitleClick && 'cursor-pointer hover:text-primary-link-fg hover:underline text-left',
   );
 
   return (
     <div className={cn('mb-8', className)} {...props}>
-      <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
         <div>
           {onTitleClick ? (
             <button
               type="button"
               onClick={onTitleClick}
               className={cn(titleClasses, 'w-full max-w-full')}
-              aria-label={titleAriaLabel ?? (typeof title === 'string' ? `Edit ${title}` : 'Edit page title')}
+              aria-label={
+                titleAriaLabel ?? (typeof title === 'string' ? `Edit ${title}` : 'Edit page title')
+              }
             >
               {icon}
               {title}
@@ -68,16 +70,10 @@ export function PageHeader({
               {title}
             </h1>
           )}
-          {description && (
-            <div className="mt-2 text-text-secondary">
-              {description}
-            </div>
-          )}
+          {description && <div className="mt-2 text-text-secondary">{description}</div>}
         </div>
         {actions && (
-          <div className="flex flex-wrap items-center gap-3 flex-shrink-0 min-w-0">
-            {actions}
-          </div>
+          <div className="flex min-w-0 flex-shrink-0 flex-wrap items-center gap-3">{actions}</div>
         )}
       </div>
     </div>

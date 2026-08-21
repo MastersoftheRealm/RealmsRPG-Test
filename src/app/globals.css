@@ -1,4 +1,4 @@
-@import "tailwindcss";
+@import 'tailwindcss';
 
 /* Use class-based dark mode so next-themes controls it, not OS prefers-color-scheme */
 @custom-variant dark (&:where(.dark, .dark *));
@@ -23,7 +23,7 @@
   --color-primary-700: #053357;
   --color-primary-800: #042845;
   --color-primary-900: #091d2d;
-  
+
   /* Primary semantic aliases */
   --color-primary: #053357;
   --color-primary-dark: #091d2d;
@@ -45,10 +45,9 @@
   --color-accent-700: #8f6a2f;
   --color-accent-800: #6b4f23;
   --color-accent-900: #473517;
-  
+
   /* Accent semantic aliases */
   --color-accent-gold: #c79956;
-  --color-accent-chip: #fef8f0;
   --color-accent-light: #fdf0dc;
 
   /* ---------------------------------------------------------------------------
@@ -80,7 +79,7 @@
   --color-neutral-700: #5a5645;
   --color-neutral-800: #41464a;
   --color-neutral-900: #302e33;
-  
+
   /* Neutral semantic aliases */
   --color-text-primary: #091d2d;
   --color-text-secondary: #41464a;
@@ -100,6 +99,8 @@
   --color-surface-secondary: #f6f6f6;
   --color-background: #f6f6f6;
   --color-card: #ffffff;
+  /* Soft matte behind transparent art at display time (cropper stage + thumbs). Not pure white/black. */
+  --color-image-matte: #e8f1f8;
 
   /* ---------------------------------------------------------------------------
      STATUS COLORS (Success, Danger, Warning, Info)
@@ -116,7 +117,7 @@
   --color-success-700: #055745;
   --color-success-800: #064e3b;
   --color-success-900: #053d2f;
-  
+
   --color-success: #059669;
   --color-success-hover: #055745;
   --color-success-light: #d1fae5;
@@ -133,7 +134,7 @@
   --color-danger-700: #b91c1c;
   --color-danger-800: #991b1b;
   --color-danger-900: #570705;
-  
+
   --color-danger: #dc2626;
   --color-danger-hover: #b91c1c;
   --color-danger-light: #fee2e2;
@@ -150,7 +151,7 @@
   --color-warning-700: #b45309;
   --color-warning-800: #92400e;
   --color-warning-900: #78350f;
-  
+
   --color-warning: #f59e0b;
   --color-warning-hover: #d97706;
   --color-warning-light: #fef3c7;
@@ -166,7 +167,7 @@
   --color-info-700: #1d4ed8;
   --color-info-800: #1e40af;
   --color-info-900: #1e3a8a;
-  
+
   --color-info: #3b82f6;
   --color-info-hover: #2563eb;
   --color-info-light: #dbeafe;
@@ -178,27 +179,27 @@
   --color-category-action: #e7f0ff;
   --color-category-action-text: #0b5ed7;
   --color-category-action-border: #bcd4ff;
-  
+
   --color-category-activation: #e6fffa;
   --color-category-activation-text: #0f766e;
   --color-category-activation-border: #b3f0e7;
-  
+
   --color-category-area: #eafbe7;
   --color-category-area-text: #166534;
   --color-category-area-border: #c7efc1;
-  
+
   --color-category-duration: #f3e8ff;
   --color-category-duration-text: #6b21a8;
   --color-category-duration-border: #e3d0ff;
-  
+
   --color-category-target: #fff4e5;
   --color-category-target-text: #9a3412;
   --color-category-target-border: #ffd8a8;
-  
+
   --color-category-special: #fffbe6;
   --color-category-special-text: #854d0e;
   --color-category-special-border: #ffe58f;
-  
+
   --color-category-restriction: #ffe5e5;
   --color-category-restriction-text: #b91c1c;
   --color-category-restriction-border: #ffb3b3;
@@ -224,42 +225,42 @@
   --color-currency-light: #fef9c3;
   --color-currency-text: #a16207;
   --color-currency-border: #facc15;
-  
+
   /* Power Archetype - Muted Lavender (very low saturation for subtle appearance) */
   --color-power: #a899b8;
   --color-power-light: #f9f8fb;
   --color-power-text: #6d6580;
   --color-power-border: #d9d3e3;
   --color-power-dark: #5e5570;
-  
+
   /* Martial Archetype - Muted Rose (matching low saturation as power) */
   --color-martial: #b89899;
   --color-martial-light: #fbf8f8;
   --color-martial-text: #80656d;
   --color-martial-border: #e3d3d5;
   --color-martial-dark: #705560;
-  
+
   /* Health - Green (intuitive for HP) */
   --color-health: #22c55e;
   --color-health-light: #dcfce7;
   --color-health-text: #166534;
   --color-health-border: #86efac;
-  
+
   /* Energy (Resource) - Blue */
   --color-energy: #2563eb;
   --color-energy-light: #dbeafe;
   --color-energy-text: #1e40af;
   --color-energy-border: #93c5fd;
-  
+
   /* Combatant Types */
   --color-ally: #2563eb;
   --color-ally-light: #dbeafe;
   --color-ally-text: #1e40af;
-  
+
   --color-enemy: #dc2626;
   --color-enemy-light: #fee2e2;
   --color-enemy-text: #991b1b;
-  
+
   --color-companion: #7c3aed;
   --color-companion-light: #ede9fe;
   --color-companion-text: #5b21b6;
@@ -303,11 +304,13 @@
   /* ---------------------------------------------------------------------------
      TYPOGRAPHY
      --------------------------------------------------------------------------- */
-  --font-sans: "Nunito", system-ui, sans-serif;
+  --font-sans: 'Nunito', system-ui, sans-serif;
   /* Self-hosted via next/font (var set on <html> in layout.tsx) — falls back to
      the literal family name then system-ui if the variable is unavailable. */
-  --font-display: var(--font-nova-flat, "Nova Flat"), system-ui, sans-serif;
-  
+  --font-display: var(--font-nova-flat, 'Nova Flat'), system-ui, sans-serif;
+  /* `font-nunito` was inert: next/font set a face var, but @theme never emitted the utility. */
+  --font-nunito: var(--font-nunito-face), 'Nunito', system-ui, sans-serif;
+
   /* ---------------------------------------------------------------------------
      SEMANTIC COMPONENT COLORS (Backwards compatibility)
      --------------------------------------------------------------------------- */
@@ -330,9 +333,9 @@
 
   /* Radius — `rounded-control` (inputs/buttons), `rounded-card` (cards/panels),
      `rounded-pill` (chips/badges). Map to the dominant lg / xl / full usage. */
-  --radius-control: 0.5rem;   /* = rounded-lg  (buttons, inputs, tabs) */
-  --radius-card: 0.75rem;     /* = rounded-xl  (cards, panels, modals) */
-  --radius-pill: 9999px;      /* = rounded-full (chips, pills, avatars) */
+  --radius-control: 0.5rem; /* = rounded-lg  (buttons, inputs, tabs) */
+  --radius-card: 0.75rem; /* = rounded-xl  (cards, panels, modals) */
+  --radius-pill: 9999px; /* = rounded-full (chips, pills, avatars) */
 
   /* Elevation — `shadow-card` (resting surface), `shadow-raised` (hover/lifted),
      `shadow-overlay` (modals/popovers/tooltips). Aligned to the existing scale. */
@@ -356,19 +359,30 @@
   --z-index-popover: 70;
   --z-index-toast: 100;
   --z-index-floating: 1000;
+  --z-index-tour: 1100;
   --z-index-skip-link: 9999;
   --z-index-toast-stack: 10000;
 
   /* Container widths — `max-w-narrow` (forms/legal), `max-w-standard` (most app
      pages = 7xl), `max-w-wide` (marketing = 1440px), `max-w-full-tool`
      (character sheet / campaign view = 1600px). */
-  --container-narrow: 56rem;     /* = max-w-4xl */
-  --container-standard: 80rem;   /* = max-w-7xl */
+  --container-narrow: 56rem; /* = max-w-4xl */
+  --container-standard: 80rem; /* = max-w-7xl */
   --container-wide: 1440px;
   --container-full-tool: 1600px;
 
   /* Layout max-width utilities (pair with PageContainer sizes) */
   --max-width-wide: var(--container-wide);
+
+  /* C4 floating dock (ADR-0023 / TASK-837). One corner owner; consumers
+     register with these tokens instead of each guessing `bottom-4` / `bottom-5`. */
+  --dock-gap: 1rem;
+  --dock-fab-size: 3.5rem;
+  --dock-bottom: var(--dock-gap);
+  --sheet-mobile-dock-height: calc(4.5rem + env(safe-area-inset-bottom, 0px));
+  /* Same length as the owner dock; used as panel end-pad when no toolbar (TASK-843). */
+  --sheet-mobile-fab-gutter: var(--sheet-mobile-dock-height);
+  --dock-reserved-end: calc(var(--dock-fab-size) + var(--dock-gap) * 2);
 }
 
 /* =============================================================================
@@ -393,6 +407,8 @@
     --color-surface-alt: #21262d;
     --color-surface-secondary: #0d1117;
     --color-background: #0d1117;
+    /* Align with surface-alt so transparent PNG letterboxing isn't stark vs page bg */
+    --color-image-matte: #21262d;
     /* These @theme tokens previously had no dark value (stayed light): */
     --color-card: #161b22;
     --color-muted: #21262d;
@@ -400,7 +416,11 @@
     --color-destructive: #f85149;
     --color-text-primary: #e6edf3;
     --color-text-secondary: #8b949e;
-    --color-text-muted: #8b949e; /* WCAG AA contrast on dark surfaces */
+    /* Deliberately collapsed onto secondary: #8b949e is the dimmest grey that still
+       clears AA on --color-surface-alt (4.95:1), so dark mode has no room for a
+       separate, dimmer "muted" step. Pairing `text-text-muted` with
+       `dark:text-text-secondary` is a no-op — see DESIGN_SYSTEM.md. */
+    --color-text-muted: var(--color-text-secondary);
     --color-border: #30363d;
     /* Visible on surface-alt (#21262d) — chips, inputs, cards */
     --color-border-light: #6e7681;
@@ -524,39 +544,42 @@
     --color-companion-light: #1e1633;
     --color-companion-text: #d8b4fe;
 
-    /* Accent (gold) chip surface — Chip component `accent` variant */
-    --color-accent-chip: #2a2416;
+    /* Accent (gold) chip surface — Chip `rarityAscended` variant */
     --color-accent-light: #2a2416;
   }
-  
+
   body {
     background-color: var(--color-surface-secondary);
     color: var(--color-text-primary);
     font-family: var(--font-sans);
     @apply antialiased;
   }
-  
+
   /* Consistent heading styles */
-  h1, h2 {
-    @apply text-title font-semibold;
+  h1,
+  h2 {
+    @apply font-semibold text-title;
     font-family: var(--font-display);
   }
-  
-  h3, h4, h5, h6 {
-    @apply text-title font-semibold;
+
+  h3,
+  h4,
+  h5,
+  h6 {
+    @apply font-semibold text-title;
   }
 
   /* ---------------------------------------------------------------------------
      CUSTOM SCROLLBAR - Minimal, non-intrusive design
      Thin by default, expands on hover, overlay style
      --------------------------------------------------------------------------- */
-  
+
   /* Firefox scrollbar styling */
   * {
     scrollbar-width: thin;
     scrollbar-color: rgba(0, 0, 0, 0.15) transparent;
   }
-  
+
   *:hover {
     scrollbar-color: rgba(0, 0, 0, 0.25) transparent;
   }
@@ -574,7 +597,9 @@
   ::-webkit-scrollbar-thumb {
     background: rgba(0, 0, 0, 0.15);
     border-radius: 9999px;
-    transition: background 0.2s ease, width 0.2s ease;
+    transition:
+      background 0.2s ease,
+      width 0.2s ease;
   }
 
   ::-webkit-scrollbar-thumb:hover {
@@ -643,34 +668,185 @@
   }
 
   /* ---------------------------------------------------------------------------
-     FORM INPUT COMPONENTS
+     C4 FLOATING DOCK (ADR-0023 / TASK-837)
+     Bottom-right is owned by `.floating-dock-bottom-right` (RollLog FAB).
+     Sheet actions below md occupy the same strip via `.sheet-mobile-action-dock`
+     and leave a FAB-sized end slot. Modal overlay hides the dock so footers stay
+     tappable; the sheet tour dialog is not `aria-modal` and is unaffected.
      --------------------------------------------------------------------------- */
-  .input-field {
-    @apply w-full rounded-lg border border-border-light bg-surface px-4 py-2.5
-           text-text-primary placeholder:text-text-muted
-           focus:border-primary-outline-border focus:outline-none focus:ring-2 focus:ring-primary-outline-border
-           disabled:cursor-not-allowed disabled:opacity-50;
+  .floating-dock-bottom-right {
+    position: fixed;
+    z-index: var(--z-index-floating);
+    right: var(--dock-gap);
+    bottom: var(--dock-bottom);
+    display: flex;
+    width: var(--dock-fab-size);
+    flex-direction: column;
+    align-items: flex-end;
+    contain: layout;
+  }
+
+  .sheet-mobile-action-dock {
+    position: fixed;
+    z-index: var(--z-index-overlay);
+    inset-inline: 0;
+    bottom: 0;
+    display: flex;
+    height: var(--sheet-mobile-dock-height);
+    flex-direction: row;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    box-sizing: border-box;
+    border-top: 1px solid var(--color-border-light);
+    background-color: var(--color-surface);
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+    padding-left: 0.75rem;
+    padding-right: calc(var(--dock-fab-size) + var(--dock-gap) * 1.5);
+  }
+
+  .has-sheet-mobile-dock {
+    --dock-bottom: calc(
+      (var(--sheet-mobile-dock-height) - var(--dock-fab-size) - env(safe-area-inset-bottom, 0px)) /
+        2 + env(safe-area-inset-bottom, 0px)
+    );
+  }
+
+  /* C1 frame vs C4 reserve (TASK-843): height-bound class stays shared.
+     Owner `.has-sheet-mobile-dock` keeps the opaque action-dock strip.
+     RM / other frames pad scrollable panels with the FAB gutter instead. */
+  .character-sheet-mobile-frame {
+    --sheet-mobile-bottom-reserve: 0px;
+    --sheet-panel-end-pad: var(--sheet-mobile-fab-gutter);
+  }
+
+  .has-sheet-mobile-dock .character-sheet-mobile-frame {
+    --sheet-mobile-bottom-reserve: var(--sheet-mobile-dock-height);
+    --sheet-panel-end-pad: 1rem;
+  }
+
+  @media (min-width: 768px) {
+    .sheet-mobile-action-dock {
+      inset: auto;
+      top: 6rem;
+      right: 1rem;
+      bottom: auto;
+      left: auto;
+      height: auto;
+      flex-direction: column;
+      justify-content: flex-start;
+      gap: 0.5rem;
+      border: 0;
+      background-color: transparent;
+      padding: 0;
+    }
+
+    .has-sheet-mobile-dock {
+      --dock-bottom: var(--dock-gap);
+    }
+
+    #main-content:has(.floating-dock-bottom-right) {
+      padding-right: var(--dock-reserved-end);
+      padding-bottom: var(--dock-reserved-end);
+    }
+  }
+
+  #main-content:has(.floating-dock-bottom-right):not(:has(.character-sheet-mobile-frame)) {
+    padding-bottom: var(--dock-reserved-end);
+  }
+
+  body:has([aria-modal='true']) .floating-dock-bottom-right,
+  body:has([aria-modal='true']) .sheet-mobile-action-dock {
+    visibility: hidden;
+    pointer-events: none;
+  }
+
+  /* C1: the sheet frame is viewport-bounded. Hide the site footer below md so
+     the document does not grow a marketing strip under the play surface. */
+  @media (max-width: 767px) {
+    body:has(.character-sheet-mobile-frame) footer {
+      display: none;
+    }
   }
 }
 
 /* Animations */
 @layer utilities {
-  /* Touch targets — 44px minimum below md; compact on desktop (MOBILE_UX.md) */
-  .touch-target {
-    min-width: var(--touch-target-min, 44px);
-    min-height: var(--touch-target-min, 44px);
-  }
-
-  .touch-target-md-compact {
-    min-width: var(--touch-target-min, 44px);
-    min-height: var(--touch-target-min, 44px);
-  }
-
-  @media (min-width: 768px) {
-    .touch-target-md-compact {
-      min-width: 0;
-      min-height: 0;
+  /* Standard 44 / Primary 48 — height only, coarse pointer (ADR-0023 / TASK-841). */
+  @media (pointer: coarse) {
+    .touch-tier-standard:not(.hit-area-dense):not(.hit-area-dense-square) {
+      min-height: var(--touch-target-min, 44px);
     }
+
+    .touch-tier-primary {
+      min-height: 48px;
+    }
+  }
+
+  .hit-area-dense,
+  .hit-area-dense-square {
+    position: relative;
+    isolation: isolate;
+  }
+
+  @media (pointer: coarse) {
+    .hit-area-dense::after,
+    .hit-area-dense-square::after {
+      content: '';
+      position: absolute;
+      pointer-events: auto;
+    }
+
+    /* Height-first: text buttons, links, row steppers — no min-w slab. */
+    .hit-area-dense::after {
+      top: 50%;
+      right: 0;
+      left: 0;
+      height: max(100%, var(--touch-target-min, 44px));
+      transform: translateY(-50%);
+    }
+
+    /* Square: icon-only Dense (painted stays small, hit is 44×44). */
+    .hit-area-dense-square::after {
+      top: 50%;
+      left: 50%;
+      width: max(100%, var(--touch-target-min, 44px));
+      height: max(100%, var(--touch-target-min, 44px));
+      transform: translate(-50%, -50%);
+    }
+  }
+
+  .hit-area-dense:hover,
+  .hit-area-dense:focus-visible,
+  .hit-area-dense-square:hover,
+  .hit-area-dense-square:focus-visible {
+    z-index: 1;
+  }
+
+  /*
+    Expand tap target without growing flex/grid track (TASK-725).
+    Layout box stays the 16px icon; ::after is the extra hit area.
+    Coarse pointer gets the 44px hit; fine pointer keeps a modest inset (TASK-841).
+  */
+  .hit-area-layout-neutral {
+    position: relative;
+  }
+
+  .hit-area-layout-neutral::after {
+    content: '';
+    position: absolute;
+    inset: -6px;
+  }
+
+  @media (pointer: coarse) {
+    .hit-area-layout-neutral::after {
+      inset: -14px;
+    }
+  }
+
+  .hit-area-layout-neutral:hover,
+  .hit-area-layout-neutral:focus-visible {
+    z-index: 1;
   }
 
   /* Modal pop-in animation matching vanilla site */
@@ -684,87 +860,112 @@
       opacity: 1;
     }
   }
-  
+
   .animate-modal-pop {
     animation: modal-pop var(--duration-base) var(--ease-standard);
   }
-  
+
   /* Fade in animation */
   @keyframes fade-in {
-    from { opacity: 0; }
-    to { opacity: 1; }
+    from {
+      opacity: 0;
+    }
+    to {
+      opacity: 1;
+    }
   }
-  
+
   .animate-fade-in {
     animation: fade-in var(--duration-base) var(--ease-standard);
   }
-  
+
   /* Slide in from right (for toasts) */
   @keyframes slide-in-right {
-    from { transform: translateX(100%); opacity: 0; }
-    to { transform: translateX(0); opacity: 1; }
+    from {
+      transform: translateX(100%);
+      opacity: 0;
+    }
+    to {
+      transform: translateX(0);
+      opacity: 1;
+    }
   }
-  
+
   .animate-slide-in-right {
     animation: slide-in-right 0.3s ease;
   }
-  
+
   /* Slide up (for roll log, bottom panels) */
   @keyframes slide-up {
-    from { transform: translateY(100%); opacity: 0; }
-    to { transform: translateY(0); opacity: 1; }
+    from {
+      transform: translateY(100%);
+      opacity: 0;
+    }
+    to {
+      transform: translateY(0);
+      opacity: 1;
+    }
   }
-  
+
   .animate-slide-up {
     animation: slide-up 0.3s ease;
   }
-  
+
   /* Pulse animation for notifications */
   @keyframes pulse-dot {
-    0%, 100% { opacity: 1; transform: scale(1); }
-    50% { opacity: 0.7; transform: scale(1.1); }
+    0%,
+    100% {
+      opacity: 1;
+      transform: scale(1);
+    }
+    50% {
+      opacity: 0.7;
+      transform: scale(1.1);
+    }
   }
-  
+
   .animate-pulse-dot {
     animation: pulse-dot 2s infinite;
   }
-  
+
   /* Glow animation for level-up indicator */
   @keyframes glow-green {
-    0%, 100% { box-shadow: 0 0 5px #22c55e, 0 0 10px #22c55e; }
-    50% { box-shadow: 0 0 15px #22c55e, 0 0 20px #22c55e; }
+    0%,
+    100% {
+      box-shadow:
+        0 0 5px var(--color-success-500),
+        0 0 10px var(--color-success-500);
+    }
+    50% {
+      box-shadow:
+        0 0 15px var(--color-success-500),
+        0 0 20px var(--color-success-500);
+    }
   }
-  
+
   .animate-glow-green {
     animation: glow-green 1.5s ease-in-out infinite;
   }
-  
+
   /* Skeleton shimmer */
   @keyframes shimmer {
-    0% { background-position: 200% 0; }
-    100% { background-position: -200% 0; }
+    0% {
+      background-position: 200% 0;
+    }
+    100% {
+      background-position: -200% 0;
+    }
   }
-  
+
   .animate-shimmer {
-    background: linear-gradient(90deg, #e9ecef 25%, #f8f9fa 50%, #e9ecef 75%);
+    background: linear-gradient(
+      90deg,
+      var(--color-surface-secondary) 25%,
+      var(--color-surface-alt) 50%,
+      var(--color-surface-secondary) 75%
+    );
     background-size: 200% 100%;
     animation: shimmer 1.5s infinite;
-  }
-  
-  /* Hover lift effect for cards */
-  .hover-lift {
-    transition-property: transform;
-    transition-duration: var(--duration-base);
-    transition-timing-function: var(--ease-standard);
-  }
-  
-  .hover-lift:hover {
-    @apply -translate-y-0.5;
-  }
-  
-  /* Focus ring utility */
-  .focus-ring {
-    @apply focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-outline-border focus-visible:ring-offset-2;
   }
 }
 
@@ -775,88 +976,153 @@
 @layer components {
   /* Generic tab navigation for Codex, Library, etc. */
   .tab-nav {
-    @apply border-b border-border-light;
+    @apply min-w-0 border-b border-border-light;
   }
-  
+
+  /* C1 overflow chrome (TASK-840): fade + chevrons on the wrapper, not in trailing.
+     Fade is chevron width + 8px so Dense/Standard hits do not overlap unfaded tabs. */
+  .tab-nav-scroll {
+    --tab-nav-overflow-fade: 2.5rem;
+    @apply relative min-w-0;
+  }
+
   .tab-nav-list {
-    @apply flex gap-1 overflow-x-auto;
+    @apply m-0 flex min-w-0 list-none gap-1 overflow-x-auto p-0;
+    scrollbar-width: thin;
+    -webkit-overflow-scrolling: touch;
+    scroll-padding-inline: var(--tab-nav-overflow-fade);
   }
-  
+
+  .tab-nav-list[data-overflow-end='true'] {
+    mask-image: linear-gradient(
+      to right,
+      black 0,
+      black calc(100% - var(--tab-nav-overflow-fade)),
+      transparent 100%
+    );
+  }
+
+  .tab-nav-list[data-overflow-start='true'] {
+    mask-image: linear-gradient(
+      to right,
+      transparent 0,
+      black var(--tab-nav-overflow-fade),
+      black 100%
+    );
+  }
+
+  .tab-nav-list[data-overflow-start='true'][data-overflow-end='true'] {
+    mask-image: linear-gradient(
+      to right,
+      transparent 0,
+      black var(--tab-nav-overflow-fade),
+      black calc(100% - var(--tab-nav-overflow-fade)),
+      transparent 100%
+    );
+  }
+
+  .tab-nav-scroll-btn {
+    @apply absolute top-0 bottom-0 z-10 flex w-8 items-center justify-center text-text-muted hover:text-text-primary focus-visible:ring-2 focus-visible:ring-primary-outline-border focus-visible:outline-none;
+  }
+
+  @media (pointer: coarse) {
+    .tab-nav-scroll {
+      --tab-nav-overflow-fade: 3.25rem;
+    }
+
+    .tab-nav-scroll-btn {
+      width: 2.75rem;
+    }
+  }
+
+  .tab-nav-scroll-start {
+    left: 0;
+  }
+
+  .tab-nav-scroll-end {
+    right: 0;
+  }
+
+  /* Trailing control (Codex Advanced) is outside the tablist scrollport — TASK-827 */
+  .tab-nav-with-trailing {
+    @apply flex flex-col border-b-0 md:flex-row md:items-stretch md:border-b;
+  }
+
+  .tab-nav-with-trailing .tab-nav-scroll {
+    @apply min-w-0 flex-1 border-b md:border-b-0;
+  }
+
+  .tab-nav-with-trailing .tab-nav-list {
+    @apply min-w-0;
+  }
+
+  .tab-nav-trailing {
+    @apply flex shrink-0 items-center justify-end py-2 md:py-0 md:pl-2;
+  }
+
   .tab-nav-trigger {
-    @apply px-4 py-3 text-sm font-medium border-b-2 transition-colors whitespace-nowrap
-           border-transparent text-text-muted hover:text-text-primary hover:bg-neutral-100
-           dark:hover:bg-neutral-800
-           focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-outline-border focus-visible:ring-offset-2
-           min-h-[var(--touch-target-min,44px)] md:min-h-0;
+    @apply border-b-2 border-transparent px-4 py-3 text-sm font-medium whitespace-nowrap text-text-muted transition-colors hover:bg-surface-alt hover:text-text-primary focus-visible:ring-2 focus-visible:ring-primary-outline-border focus-visible:ring-offset-2 focus-visible:outline-none dark:hover:bg-surface-alt;
   }
-  
+
   .tab-nav-trigger-active {
-    @apply border-primary-outline-border text-primary-fg bg-primary-subtle-bg;
+    @apply border-primary-outline-border bg-primary-subtle-bg text-primary-fg;
   }
-  
+
   /* Pill-style tabs (wizard steps, settings) */
   .tab-pill-list {
-    @apply inline-flex items-center p-1 rounded-lg bg-neutral-100 gap-1;
+    @apply inline-flex items-center gap-1 rounded-lg bg-surface-alt p-1;
   }
-  
+
   .tab-pill-trigger {
-    @apply px-4 py-2 text-sm font-medium rounded-md transition-colors
-           text-text-muted hover:text-text-primary
-           focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-outline-border focus-visible:ring-offset-2
-           min-h-[var(--touch-target-min,44px)] md:min-h-0;
+    @apply rounded-md px-4 py-2 text-sm font-medium text-text-muted transition-colors hover:text-text-primary focus-visible:ring-2 focus-visible:ring-primary-outline-border focus-visible:ring-offset-2 focus-visible:outline-none;
   }
-  
+
+  @media (pointer: coarse) {
+    .tab-nav-trigger,
+    .tab-pill-trigger {
+      min-height: var(--touch-target-min, 44px);
+    }
+  }
+
   .tab-pill-trigger-active {
     @apply bg-surface text-text-primary shadow-sm;
   }
 
-  /* Stepper buttons for +/- controls - unified, less stark colors */
+  /* Stepper buttons for +/- controls — sleek/neutral default (skill bonus style, TASK-468) */
+  /**
+   * Unified ± stepper chrome (ADR-0002 / TASK-487).
+   * Matches guided skills bonus steppers: soft surface-alt, no invasive border,
+   * rounded-lg, bold glyphs. Do not hand-roll ± buttons — use ValueStepper /
+   * DecrementButton / IncrementButton (QuantitySelector wraps ValueStepper).
+   */
   .btn-stepper {
-    @apply flex items-center justify-center rounded-full font-bold border-2
-           transition-colors
-           disabled:bg-neutral-100 disabled:text-neutral-400 disabled:border-neutral-200 disabled:cursor-not-allowed;
+    @apply flex items-center justify-center rounded-lg bg-surface-alt font-bold text-text-secondary transition-colors hover:bg-surface disabled:cursor-not-allowed disabled:bg-transparent disabled:text-border-light dark:disabled:bg-transparent dark:disabled:text-border-light;
     transition-duration: var(--duration-fast);
   }
 
-  .btn-stepper-danger {
-    @apply bg-red-50 text-red-600 border-red-200
-           hover:bg-red-100 hover:border-red-300 active:bg-red-200
-           dark:bg-red-950/50 dark:text-red-400 dark:border-red-900/50
-           dark:hover:bg-red-900/40 dark:hover:border-red-800/50
-           disabled:bg-neutral-100 disabled:text-neutral-400 disabled:border-neutral-200
-           dark:disabled:bg-neutral-800 dark:disabled:text-neutral-500;
-  }
-
-  .btn-stepper-success {
-    @apply bg-green-50 text-green-600 border-green-200
-           hover:bg-green-100 hover:border-green-300 active:bg-green-200
-           dark:bg-green-950/50 dark:text-green-400 dark:border-green-900/50
-           dark:hover:bg-green-900/40 dark:hover:border-green-800/50
-           disabled:bg-neutral-100 disabled:text-neutral-400 disabled:border-neutral-200
-           dark:disabled:bg-neutral-800 dark:disabled:text-neutral-500;
+  /* GridListRow: inherit the row surface so hover:bg-surface-alt is one band
+     (TASK-710). Do not change global stepper chrome on skills / sheet allocators. */
+  [data-glr-row] .btn-stepper {
+    @apply bg-transparent hover:bg-transparent;
   }
 
   /* ---------------------------------------------------------------------------
      SEARCH INPUT - Unified component style
      --------------------------------------------------------------------------- */
   .search-input-wrapper {
-    @apply relative;
+    @apply relative min-w-0;
   }
-  
+
   .search-input-icon {
-    @apply absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-text-muted pointer-events-none;
+    @apply pointer-events-none absolute top-1/2 left-3 h-5 w-5 -translate-y-1/2 text-text-muted;
   }
-  
+
   .search-input {
-    @apply w-full pl-10 pr-4 py-2.5 rounded-lg border border-border-light bg-surface
-           text-text-primary placeholder:text-text-muted
-           focus:border-primary-outline-border focus:outline-none focus:ring-2 focus:ring-primary-outline-border;
+    @apply w-full min-w-0 truncate rounded-lg border border-border-light bg-surface py-2.5 pr-4 pl-10 text-text-primary placeholder:truncate placeholder:text-text-muted focus:border-primary-outline-border focus:ring-2 focus:ring-primary-outline-border focus:outline-none;
   }
-  
+
   .search-input-clear {
-    @apply absolute right-3 top-1/2 -translate-y-1/2 p-1 rounded-full
-           text-text-muted hover:text-text-primary hover:bg-neutral-100 transition-colors
-           focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-outline-border focus-visible:ring-offset-2;
+    @apply absolute top-1/2 right-3 -translate-y-1/2 rounded-full p-1 text-text-muted transition-colors hover:bg-surface-alt hover:text-text-primary focus-visible:ring-2 focus-visible:ring-primary-outline-border focus-visible:ring-offset-2 focus-visible:outline-none;
   }
 
   /* ---------------------------------------------------------------------------
@@ -864,28 +1130,12 @@
      --------------------------------------------------------------------------- */
   .skeleton {
     @apply rounded;
-    background: linear-gradient(90deg, #e9ecef 25%, #f8f9fa 50%, #e9ecef 75%);
-    background-size: 200% 100%;
-    animation: shimmer 1.5s infinite;
-  }
-  
-  .skeleton-text {
-    @apply h-4 rounded;
-    background: linear-gradient(90deg, #e9ecef 25%, #f8f9fa 50%, #e9ecef 75%);
-    background-size: 200% 100%;
-    animation: shimmer 1.5s infinite;
-  }
-  
-  .skeleton-title {
-    @apply h-6 rounded;
-    background: linear-gradient(90deg, #e9ecef 25%, #f8f9fa 50%, #e9ecef 75%);
-    background-size: 200% 100%;
-    animation: shimmer 1.5s infinite;
-  }
-  
-  .skeleton-card {
-    @apply h-32 rounded-xl;
-    background: linear-gradient(90deg, #e9ecef 25%, #f8f9fa 50%, #e9ecef 75%);
+    background: linear-gradient(
+      90deg,
+      var(--color-surface-secondary) 25%,
+      var(--color-surface-alt) 50%,
+      var(--color-surface-secondary) 75%
+    );
     background-size: 200% 100%;
     animation: shimmer 1.5s infinite;
   }
@@ -894,24 +1144,24 @@
      RANGE SLIDER
      --------------------------------------------------------------------------- */
   .range-slider {
-    @apply w-full h-2 rounded-full appearance-none cursor-pointer;
+    @apply h-2 w-full cursor-pointer appearance-none rounded-full;
   }
-  
+
   .range-slider::-webkit-slider-thumb {
-    @apply appearance-none w-6 h-6 rounded-full bg-white border-2 border-primary-500 shadow-md cursor-pointer;
+    @apply h-6 w-6 cursor-pointer appearance-none rounded-full border-2 border-primary-500 bg-white shadow-md;
     -webkit-appearance: none;
     margin-top: -2px;
   }
-  
+
   .range-slider::-moz-range-thumb {
-    @apply w-6 h-6 rounded-full bg-white border-2 border-primary-500 shadow-md cursor-pointer;
+    @apply h-6 w-6 cursor-pointer rounded-full border-2 border-primary-500 bg-white shadow-md;
     border: none;
   }
-  
+
   .range-slider::-webkit-slider-runnable-track {
     @apply h-2 rounded-full;
   }
-  
+
   .range-slider::-moz-range-track {
     @apply h-2 rounded-full;
   }
@@ -922,58 +1172,10 @@
   .divider {
     @apply border-t border-divider;
   }
-  
-  .divider-light {
-    @apply border-t border-border-light;
-  }
-
-  /* ---------------------------------------------------------------------------
-     UNIFIED LIST COMPONENTS
-     Consistent styling for all list-based displays (Library, Codex, Modals)
-     --------------------------------------------------------------------------- */
-  
-  /* List headers - darker background for visibility */
-  .list-header {
-    @apply hidden lg:grid gap-2 px-4 py-3 bg-primary-50 border-b border-border-light 
-           rounded-t-lg font-semibold text-sm text-primary-700 uppercase tracking-wide;
-  }
-  
-  /* List container - gap-based instead of dividers for softer look */
-  .list-container {
-    @apply flex flex-col gap-2;
-  }
-  
-  /* Individual list item - rounded with soft border */
-  .list-item {
-    @apply bg-surface rounded-lg border border-border-light overflow-hidden hover:border-primary-200;
-    transition-property: all;
-    transition-duration: var(--duration-base);
-    transition-timing-function: var(--ease-standard);
-  }
-  
-  /* Selectable list item */
-  .list-item-selectable {
-    @apply cursor-pointer hover:bg-surface-alt;
-  }
-  
-  /* Selected list item */
-  .list-item-selected {
-    @apply bg-primary-50 border-l-4 border-l-primary-500;
-  }
-  
-  /* Expanded content area */
-  .list-item-expanded {
-    @apply border-t border-border-light bg-surface-alt px-4 py-3;
-  }
-  
-  /* Modal filters section */
-  .modal-filters {
-    @apply px-5 py-4 border-b border-border-light bg-surface-alt;
-  }
 
   /* Filter group - layout for filter controls (label + inputs) */
   .filter-group {
-    @apply flex min-w-[140px] flex-col gap-1 flex-[1_1_180px];
+    @apply flex min-w-[140px] flex-[1_1_180px] flex-col gap-1;
   }
 
   /* Marketing / chrome shell — matches header, footer, home hero width + gutters */

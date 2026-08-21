@@ -9,9 +9,9 @@ import * as React from 'react';
 import { cn } from '@/lib/utils/cn';
 
 export interface TextareaProps extends React.TextareaHTMLAttributes<HTMLTextAreaElement> {
-  label?: string;
-  error?: string;
-  helperText?: string;
+  label?: string | undefined;
+  error?: string | undefined;
+  helperText?: string | undefined;
 }
 
 const Textarea = React.forwardRef<HTMLTextAreaElement, TextareaProps>(
@@ -35,20 +35,16 @@ const Textarea = React.forwardRef<HTMLTextAreaElement, TextareaProps>(
           id={textareaId}
           ref={ref}
           className={cn(
-            'flex min-h-[100px] w-full rounded-lg border bg-surface px-4 py-2.5 text-sm',
+            'touch-tier-standard flex min-h-[100px] w-full rounded-lg border bg-surface px-4 py-2.5 text-sm',
             'text-text-primary placeholder:text-text-muted',
-            'focus:outline-none focus:ring-2 focus:ring-primary-outline-border focus:border-primary-outline-border',
-            'disabled:cursor-not-allowed disabled:opacity-50 disabled:bg-surface-alt',
+            'focus:border-primary-outline-border focus:ring-2 focus:ring-primary-outline-border focus:outline-none',
+            'disabled:cursor-not-allowed disabled:bg-surface-alt disabled:opacity-50',
             'resize-y',
-            error
-              ? 'border-danger focus:ring-danger-border'
-              : 'border-border-light',
-            className
+            error ? 'border-danger focus:ring-danger-border' : 'border-border-light',
+            className,
           )}
           aria-invalid={error ? 'true' : undefined}
-          aria-describedby={
-            error ? errorId : helperText ? helperId : undefined
-          }
+          aria-describedby={error ? errorId : helperText ? helperId : undefined}
           {...props}
         />
         {error && (
@@ -63,7 +59,7 @@ const Textarea = React.forwardRef<HTMLTextAreaElement, TextareaProps>(
         )}
       </div>
     );
-  }
+  },
 );
 
 Textarea.displayName = 'Textarea';

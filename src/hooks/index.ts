@@ -8,11 +8,27 @@
 export { useAuth, useAuthStore } from './use-auth';
 export { useAdmin } from './use-admin';
 export { useCreatorSave } from './use-creator-save';
-export type { CreatorLibraryType, CreatorSavePayload, UseCreatorSaveOptions, UseCreatorSaveReturn } from './use-creator-save';
+export type {
+  CreatorLibraryType,
+  CreatorSavePayload,
+  UseCreatorSaveOptions,
+  UseCreatorSaveReturn,
+} from './use-creator-save';
 export { useCreatorPathData } from './use-creator-path-data';
+export {
+  buildGuidedEquipmentEligibilityContext,
+  useGuidedEquipmentCatalog,
+} from './use-guided-equipment-catalog';
+export { useGuidedEquipmentL2Catalog } from './use-guided-equipment-l2-catalog';
 export { useLoadModalLibrary } from './use-load-modal-library';
-export type { LoadModalLibraryType, UseLoadModalLibraryReturn } from './use-load-modal-library';
+export type {
+  LoadModalLibraryType,
+  LoadModalArmamentKind,
+  UseLoadModalLibraryReturn,
+  UseLoadModalLibraryOptions,
+} from './use-load-modal-library';
 export { useAddLibraryItemData } from './use-add-library-item-data';
+export { useAddToCharacterFromLibrary } from './use-add-to-character-from-library';
 export type {
   AddLibraryItemType,
   EqItem,
@@ -20,18 +36,22 @@ export type {
   UseAddLibraryItemDataOptions,
   UseAddLibraryItemDataReturn,
 } from './use-add-library-item-data';
-export { useCreatorWeaponOptions } from './use-creator-weapon-options';
-export type { CreatorWeaponOption } from '@/lib/creator-weapon-options';
-export { useProfile } from './use-profile';
+export { useProfile, useAccountProfile, type AccountProfile } from './use-profile';
+export { useIsClient } from './use-is-client';
+export { usePlaceholderTheme } from './use-placeholder-theme';
+export { useEffectivePortrait } from './use-effective-portrait';
+export { usePortraitFallbackUrl } from './use-portrait-fallback-url';
 
 // Campaigns
 export {
-  campaignKeys,
   useCampaigns,
   useCampaignsFull,
   useCampaign,
-  useCampaignByInviteCode,
+  useCampaignCharacterView,
+  useCampaignCharacterEncounters,
+  fetchCampaignCharacterForEncounter,
   useInvalidateCampaigns,
+  campaignKeys,
 } from './use-campaigns';
 export { useCampaignRolls } from './use-campaign-rolls';
 
@@ -46,18 +66,15 @@ export {
 
 // Encounters
 export {
-  encounterKeys,
   useEncounters,
   useEncounter,
   useCreateEncounter,
   useSaveEncounter,
   useDeleteEncounter,
-  useInvalidateEncounters,
 } from './use-encounters';
 
 // Crafting
 export {
-  craftingKeys,
   useCraftingSessions,
   useCraftingSession,
   useCreateCraftingSession,
@@ -67,35 +84,34 @@ export {
 
 // Enhanced items (user library + official admin)
 export {
-  enhancedItemsKeys,
   useEnhancedItems,
-  useOfficialEnhancedItems,
   useCreateEnhancedItem,
   useCreateOfficialEnhancedItem,
   useDeleteEnhancedItem,
   useDeleteOfficialEnhancedItem,
   useUpdateEnhancedItem,
-  useUpdateOfficialEnhancedItem,
-  type EnhancedItemsScope,
   type OfficialEnhancedItem,
+  type OfficialEnhancedItemPayload,
+  type CreateOfficialEnhancedItemInput,
+  type UpdateOfficialEnhancedItemInput,
+  type EnhancedItemUsesType,
 } from './use-enhanced-items';
 
 // Characters
 export {
-  characterKeys,
   useCharacters,
   useCharacter,
   useSaveCharacter,
-  useCreateCharacter,
   useDeleteCharacter,
   useDuplicateCharacter,
+  characterKeys,
+  characterViewerId,
+  patchCharacterDetailQuery,
 } from './use-characters';
 
-// Game Data (useArchetype for single archetype by id; useArchetypes = useCodexArchetypes)
-export { useArchetype } from './use-game-data';
-
-// Codex Data (Supabase via API) — single codex fetch shared by all useCodex* and useGameRules
+// Codex Data (Supabase via API) — per-collection fetches under the ['codex'] key prefix (TASK-775)
 export {
+  codexKeys,
   useCodexFull,
   useCodexFeats,
   useCodexSkills,
@@ -108,18 +124,15 @@ export {
   useCodexEquipment as useEquipment,
   useCodexCreatureFeats as useCreatureFeats,
   useCodexArchetypes,
-  useCodexArchetypes as useArchetypes,
 } from './use-codex';
 export { useGameRules, getGameRulesFallback } from './use-game-rules';
+// Archetype Path recommendation index for list filters (ADR-0014)
+export { usePathRecommendationIndex, usePathListFilter } from './use-path-recommendation-index';
 
 // Codex utilities (trait/skill resolution) — use use-codex types
 export {
-  useResolvedTraits,
   findTraitByIdOrName,
   resolveTraitIds,
-  useSkillIdToNameMap,
-  useResolvedSkillNames,
-  buildSkillIdToNameMap,
   resolveSkillIdsToNames,
   type Feat,
   type Skill,
@@ -134,17 +147,23 @@ export {
 } from './codex-types';
 
 // Official Library (browse, add to my library)
-export { useOfficialLibrary, useAddOfficialToLibrary } from './use-official-library';
+export {
+  useOfficialLibrary,
+  useOfficialLibraryCounts,
+  useAddOfficialToLibrary,
+  officialLibraryKeys,
+} from './use-official-library';
 
 // User Library (user-specific content)
 export {
-  useUserLibrary,
   useUserPowers,
   useUserTechniques,
   useUserEmpoweredTechniques,
   useUserItems,
   useUserCreatures,
   useUserSpecies,
+  useUserLibraryCounts,
+  userLibraryKeys,
   useMergedSpecies,
   userSpeciesToSpecies,
   useDeletePower,
@@ -152,13 +171,11 @@ export {
   useDeleteEmpoweredTechnique,
   useDeleteItem,
   useDeleteCreature,
-  useDeleteSpecies,
   useDuplicatePower,
   useDuplicateTechnique,
   useDuplicateEmpoweredTechnique,
   useDuplicateItem,
   useDuplicateCreature,
-  useDuplicateSpecies,
   type UserPower,
   type UserTechnique,
   type UserItem,
@@ -176,3 +193,9 @@ export { useCharacterResourceSync } from './use-character-resource-sync';
 export { useSort, toggleSort, sortByColumn } from './use-sort';
 export { useModalListState } from './use-modal-list-state';
 export type { UseModalListStateOptions } from './use-modal-list-state';
+
+// Character sheet library UI
+export {
+  useLibrarySectionCollapse,
+  type LibrarySectionCollapseHeaderProps,
+} from './use-library-section-collapse';

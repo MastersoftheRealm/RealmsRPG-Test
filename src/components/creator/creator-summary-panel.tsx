@@ -27,9 +27,9 @@ export interface SummaryItem {
   /** Remaining/available points */
   remaining: number;
   /** Total points available (optional, for display) */
-  total?: number;
+  total?: number | undefined;
   /** Custom color variant */
-  variant?: 'default' | 'success' | 'warning' | 'danger' | 'info';
+  variant?: 'default' | 'success' | 'warning' | 'danger' | 'info' | undefined;
 }
 
 export interface CostStat {
@@ -38,9 +38,11 @@ export interface CostStat {
   /** The stat value */
   value: string | number;
   /** Lucide icon component */
-  icon?: ReactNode;
+  icon?: ReactNode | undefined;
   /** Color theme: energy (blue), tp (purple), health (red), currency (amber) */
   color: 'energy' | 'tp' | 'health' | 'currency';
+  /** Optional InfoTippy beside the label */
+  help?: ReactNode | undefined;
 }
 
 export interface StatRow {
@@ -49,50 +51,62 @@ export interface StatRow {
   /** Right-side value */
   value: string | number;
   /** Optional custom color for value (for negative values, etc.) */
-  valueColor?: string;
+  valueColor?: string | undefined;
 }
 
 export interface BreakdownList {
   /** Section title */
   title: string;
   /** List items (can be strings or objects with label and optional detail) */
-  items: Array<string | { label: string; detail?: string }>;
+  items: Array<string | { label: string; detail?: string | undefined }>;
 }
 
 export interface CreatorSummaryPanelProps {
   /** Title of the summary panel */
   title: string;
   /** Large cost stat boxes at top (Energy/TP/Currency) */
-  costStats?: CostStat[];
+  costStats?: CostStat[] | undefined;
   /** Badge displayed prominently (for rarity, etc.) */
-  badge?: {
-    label: string;
-    variant?: ChipVariant;
-    /** @deprecated Prefer `variant` (canonical chip token) */
-    className?: string;
-  };
+  badge?:
+    | {
+        label: string;
+        variant?: ChipVariant | undefined;
+        /** @deprecated Prefer `variant` (canonical chip token) */
+        className?: string | undefined;
+      }
+    | undefined;
   /** Summary items to display (resource tracking with remaining points) */
-  items?: SummaryItem[];
+  items?: SummaryItem[] | undefined;
   /** Optional quick stats section (HP, EN, SPD chips) */
-  quickStats?: {
-    label: string;
-    value: string | number;
-    color?: string;
-  }[];
+  quickStats?:
+    | {
+        label: string;
+        value: string | number;
+        color?: string | undefined;
+      }[]
+    | undefined;
   /** Key-value stat rows */
-  statRows?: StatRow[];
+  statRows?: StatRow[] | undefined;
   /** Breakdown lists (TP sources, properties, etc.) */
-  breakdowns?: BreakdownList[];
+  breakdowns?: BreakdownList[] | undefined;
   /** Compact resource boxes at top (e.g. ability pts, skill pts - for creature creator) */
-  resourceBoxes?: Array<{ label: string; value: number | string; variant?: SummaryItem['variant'] }>;
+  resourceBoxes?:
+    | Array<{
+        label: string;
+        value: number | string;
+        variant?: SummaryItem['variant'] | undefined;
+      }>
+    | undefined;
   /** Line items as sentences: "Skills: Stealth +3, Athletics -1" (D&D stat block style) */
-  lineItems?: Array<{ label: string; items: string[] }>;
+  lineItems?: Array<{ label: string; items: string[] }> | undefined;
   /** Abilities as chips (e.g. STR +2, VIT +1) — rendered in a section "Abilities" below quickStats with border/chip style */
-  abilitiesChips?: Array<{ abbr: string; value: number }>;
+  abilitiesChips?: Array<{ abbr: string; value: number }> | undefined;
   /** Additional content at the bottom */
-  children?: ReactNode;
+  children?: ReactNode | undefined;
+  /** Help row under cost stats (e.g. Innate Power tip) */
+  costHelp?: ReactNode | undefined;
   /** Additional class names */
-  className?: string;
+  className?: string | undefined;
 }
 
 const COST_STAT_COLORS: Record<CostStat['color'], { bg: string; text: string }> = {
@@ -137,30 +151,31 @@ export function CreatorSummaryPanel({
   lineItems,
   abilitiesChips,
   children,
+  costHelp,
   className,
 }: CreatorSummaryPanelProps) {
   return (
-    <Card className={cn('shadow-md p-6', className)}>
-      <h2 className="text-lg font-bold text-text-primary mb-4">{title}</h2>
+    <Card className={cn('p-6 shadow-md', className)}>
+      <h2 className="mb-4 text-lg font-bold text-text-primary">{title}</h2>
 
       {/* Resource boxes (compact, for creature creator - ability/skill/feat/training/currency) */}
       {resourceBoxes && resourceBoxes.length > 0 && (
-        <div className="flex flex-wrap gap-2 mb-4">
+        <div className="mb-4 flex flex-wrap gap-2">
           {resourceBoxes.map((box, i) => (
             <div
               key={i}
               className={cn(
                 // w-fit lets each box grow with long current/max values; max-w-full avoids overflow on narrow sidebars
-                'rounded-lg px-3 py-2 text-center text-sm w-fit max-w-full min-w-[5rem] shrink-0',
-                getVariantClasses(box.variant, box.value)
+                'w-fit max-w-full min-w-[5rem] shrink-0 rounded-lg px-3 py-2 text-center text-sm',
+                getVariantClasses(box.variant, box.value),
               )}
             >
-              <div className="max-w-full overflow-x-auto [scrollbar-width:thin]">
-                <div className="font-bold text-base text-inherit whitespace-nowrap tabular-nums w-max max-w-none mx-auto">
+              <div className="max-w-full [scrollbar-width:thin] overflow-x-auto">
+                <div className="mx-auto w-max max-w-none text-base font-bold whitespace-nowrap text-inherit tabular-nums">
                   {typeof box.value === 'number' ? box.value.toLocaleString() : box.value}
                 </div>
               </div>
-              <div className="text-[10px] uppercase tracking-wide text-inherit opacity-80 whitespace-normal break-words">
+              <div className="text-[10px] tracking-wide break-words whitespace-normal text-inherit uppercase opacity-80">
                 {box.label}
               </div>
             </div>
@@ -170,7 +185,7 @@ export function CreatorSummaryPanel({
 
       {/* Badge (Rarity, etc.) */}
       {badge && (
-        <div className="text-center mb-6">
+        <div className="mb-6 text-center">
           {badge.variant ? (
             <DescriptorChip variant={badge.variant} size="lg" className="font-bold">
               {badge.label}
@@ -185,43 +200,55 @@ export function CreatorSummaryPanel({
 
       {/* Cost Stats (Energy/TP/Currency boxes) */}
       {costStats && costStats.length > 0 && (
-        <div className={cn(
-          'grid gap-4 mb-6',
-          costStats.length === 2 ? 'grid-cols-2' : 
-          costStats.length === 3 ? 'grid-cols-3' : 
-          'grid-cols-2'
-        )}>
+        <div
+          className={cn(
+            'mb-6 grid gap-4',
+            costStats.length === 2
+              ? 'grid-cols-2'
+              : costStats.length === 3
+                ? 'grid-cols-3'
+                : 'grid-cols-2',
+          )}
+        >
           {costStats.map((stat, index) => {
             const colors = COST_STAT_COLORS[stat.color];
             return (
               <div key={index} className={cn('rounded-lg p-4 text-center', colors.bg)}>
                 {stat.icon && (
-                  <div className={cn('w-6 h-6 mx-auto mb-1', colors.text)}>
-                    {stat.icon}
-                  </div>
+                  <div className={cn('mx-auto mb-1 h-6 w-6', colors.text)}>{stat.icon}</div>
                 )}
                 <div className={cn('text-2xl font-bold', colors.text)}>
                   {typeof stat.value === 'number' ? stat.value.toLocaleString() : stat.value}
                 </div>
-                <div className={cn('text-xs', colors.text)}>{stat.label}</div>
+                <div
+                  className={cn(
+                    'inline-flex items-center justify-center gap-0.5 text-xs',
+                    colors.text,
+                  )}
+                >
+                  {stat.label}
+                  {stat.help}
+                </div>
               </div>
             );
           })}
         </div>
       )}
 
+      {costHelp ? <div className="-mt-2 mb-4">{costHelp}</div> : null}
+
       {/* Quick Stats (HP, EN, SPD chips) */}
       {quickStats && quickStats.length > 0 && (
-        <div className="flex flex-wrap gap-2 mb-4 pb-4 border-b border-border-light">
+        <div className="mb-4 flex flex-wrap gap-2 border-b border-border-light pb-4">
           {quickStats.map((stat, index) => (
             <div
               key={index}
               className={cn(
-                'flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm border border-border-light',
-                stat.color || 'bg-surface-alt'
+                'flex items-center gap-2 rounded-lg border border-border-light px-3 py-1.5 text-sm',
+                stat.color || 'bg-surface-alt',
               )}
             >
-              <span className="text-text-muted dark:text-text-secondary">{stat.label}</span>
+              <span className="text-text-muted">{stat.label}</span>
               <span className="font-bold text-text-primary">{stat.value}</span>
             </div>
           ))}
@@ -230,16 +257,21 @@ export function CreatorSummaryPanel({
 
       {/* Abilities (chip/border style, same family as HP/EVA) */}
       {abilitiesChips && abilitiesChips.length > 0 && (
-        <div className="mb-4 pb-4 border-b border-border-light">
-          <h3 className="text-sm font-semibold text-text-secondary dark:text-text-primary mb-2">Abilities</h3>
+        <div className="mb-4 border-b border-border-light pb-4">
+          <h3 className="mb-2 text-sm font-semibold text-text-secondary dark:text-text-primary">
+            Abilities
+          </h3>
           <div className="flex flex-wrap gap-2">
             {abilitiesChips.map((ab, index) => (
               <span
                 key={index}
-                className="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg text-sm font-medium border border-border-light bg-surface-alt text-text-primary"
+                className="inline-flex items-center gap-1 rounded-lg border border-border-light bg-surface-alt px-3 py-1.5 text-sm font-medium text-text-primary"
               >
-                <span className="text-text-muted dark:text-text-secondary">{ab.abbr}</span>
-                <span>{ab.value >= 0 ? '+' : ''}{ab.value}</span>
+                <span className="text-text-muted">{ab.abbr}</span>
+                <span>
+                  {ab.value >= 0 ? '+' : ''}
+                  {ab.value}
+                </span>
               </span>
             ))}
           </div>
@@ -248,11 +280,13 @@ export function CreatorSummaryPanel({
 
       {/* Stat Rows (key-value pairs) */}
       {statRows && statRows.length > 0 && (
-        <div className="space-y-2 text-sm mb-6">
+        <div className="mb-6 space-y-2 text-sm">
           {statRows.map((row, index) => (
             <div key={index} className="flex justify-between">
               <span className="text-text-secondary dark:text-text-primary">{row.label}:</span>
-              <span className={cn('font-medium text-text-primary', row.valueColor)}>{row.value}</span>
+              <span className={cn('font-medium text-text-primary', row.valueColor)}>
+                {row.value}
+              </span>
             </div>
           ))}
         </div>
@@ -265,17 +299,15 @@ export function CreatorSummaryPanel({
             <div
               key={index}
               className={cn(
-                'flex justify-between items-center p-3 rounded-lg',
-                getVariantClasses(item.variant, item.remaining)
+                'flex items-center justify-between rounded-lg p-3',
+                getVariantClasses(item.variant, item.remaining),
               )}
             >
-              <span className="text-sm font-medium text-inherit opacity-80">
-                {item.label}
-              </span>
+              <span className="text-sm font-medium text-inherit opacity-80">{item.label}</span>
               <span className="font-bold">
                 {item.remaining}
                 {typeof item.total === 'number' && (
-                  <span className="text-xs text-text-muted dark:text-text-secondary ml-1">/ {item.total}</span>
+                  <span className="ml-1 text-xs text-text-muted">/ {item.total}</span>
                 )}
               </span>
             </div>
@@ -285,13 +317,17 @@ export function CreatorSummaryPanel({
 
       {/* Line items (D&D stat block style: "Skills: X, Y, Z") */}
       {lineItems && lineItems.length > 0 && (
-        <div className="space-y-2 text-sm border-t border-border-subtle pt-4 mt-4">
-          {lineItems.filter(li => li.items.length > 0).map((li, i) => (
-            <div key={i}>
-              <span className="font-medium text-text-secondary dark:text-text-primary">{li.label}: </span>
-              <span className="text-text-primary">{li.items.join(', ')}</span>
-            </div>
-          ))}
+        <div className="mt-4 space-y-2 border-t border-border-subtle pt-4 text-sm">
+          {lineItems
+            .filter((li) => li.items.length > 0)
+            .map((li, i) => (
+              <div key={i}>
+                <span className="font-medium text-text-secondary dark:text-text-primary">
+                  {li.label}:{' '}
+                </span>
+                <span className="text-text-primary">{li.items.join(', ')}</span>
+              </div>
+            ))}
         </div>
       )}
 
@@ -299,15 +335,22 @@ export function CreatorSummaryPanel({
       {breakdowns && breakdowns.length > 0 && (
         <>
           {breakdowns.map((breakdown, index) => (
-            <div key={index} className="border-t border-border-subtle pt-4 mt-4">
-              <h3 className="text-sm font-medium text-text-secondary dark:text-text-primary mb-2">{breakdown.title}</h3>
-              <ul className="text-xs text-text-secondary dark:text-text-primary space-y-1">
+            <div key={index} className="mt-4 border-t border-border-subtle pt-4">
+              <h3 className="mb-2 text-sm font-medium text-text-secondary dark:text-text-primary">
+                {breakdown.title}
+              </h3>
+              <ul className="space-y-1 text-xs text-text-secondary dark:text-text-primary">
                 {breakdown.items.map((item, i) => (
                   <li key={i}>
-                    • {typeof item === 'string' ? item : (
+                    •{' '}
+                    {typeof item === 'string' ? (
+                      item
+                    ) : (
                       <>
                         {item.label}
-                        {item.detail && <span className="text-text-muted dark:text-text-secondary ml-1">({item.detail})</span>}
+                        {item.detail && (
+                          <span className="ml-1 text-text-muted">({item.detail})</span>
+                        )}
                       </>
                     )}
                   </li>
@@ -319,11 +362,7 @@ export function CreatorSummaryPanel({
       )}
 
       {/* Additional Content */}
-      {children && (
-        <div className="mt-4 pt-4 border-t border-border-light">
-          {children}
-        </div>
-      )}
+      {children && <div className="mt-4 border-t border-border-light pt-4">{children}</div>}
     </Card>
   );
 }

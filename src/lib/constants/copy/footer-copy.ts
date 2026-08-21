@@ -1,7 +1,9 @@
 /** Site footer copy and link groups — edit for global footer / auth shell. */
 
+import { SITE_CONTACT_EMAIL } from './shared-copy';
+
 export const FOOTER_COPY = {
-  contactEmail: 'RealmsRoleplayGame@gmail.com',
+  contactEmail: SITE_CONTACT_EMAIL,
   discordCta: 'Join the Discord',
   copyright: (year: number) => `© ${year} Realms RPG`,
   groups: {
@@ -9,8 +11,8 @@ export const FOOTER_COPY = {
       heading: 'Play',
       links: [
         { href: '/characters', label: 'Characters' },
-        { href: '/characters/new', label: 'Create a Character' },
         { href: '/campaigns', label: 'Campaigns' },
+        { href: '/encounters', label: 'Encounters' },
       ],
     },
     learn: {
@@ -25,7 +27,8 @@ export const FOOTER_COPY = {
       heading: 'Create',
       links: [
         { href: '/power-creator', label: 'Power Creator' },
-        { href: '/item-creator', label: 'Item Creator' },
+        { href: '/item-creator', label: 'Armament Creator' },
+        { href: '/technique-creator', label: 'Technique Creator' },
       ],
     },
     legal: {

@@ -25,46 +25,55 @@ import { DEFAULT_DEFENSE_SKILLS } from '@/types/skills';
 /** Minimal feat shape needed for requirement checks (structurally compatible with codex Feat). */
 export interface FeatForRequirement {
   id: string | number;
-  name?: string;
-  lvl_req?: number;
-  ability_req?: string[];
-  abil_req_val?: number[];
-  skill_req?: Array<string | number>;
-  skill_req_val?: number[];
-  mart_abil_req?: number | string;
-  speed_req?: number;
-  feat_lvl?: number;
-  base_feat_id?: string;
+  name?: string | undefined;
+  lvl_req?: number | undefined;
+  ability_req?: string[] | undefined;
+  abil_req_val?: number[] | undefined;
+  skill_req?: Array<string | number> | undefined;
+  skill_req_val?: number[] | undefined;
+  mart_abil_req?: number | string | undefined;
+  speed_req?: number | undefined;
+  feat_lvl?: number | undefined;
+  base_feat_id?: string | undefined;
 }
 
 /** Minimal character/draft shape needed for requirement checks. */
 export interface CharacterForFeatRequirement {
-  level?: number;
-  abilities?: Partial<Abilities>;
+  level?: number | undefined;
+  abilities?: Partial<Abilities> | undefined;
   /** Character: Record<id, { prof, val }>; Draft: Record<id, value (number)>; legacy: array. */
   skills?:
-    | Record<string, number | { prof?: boolean; val?: number }>
-    | Array<{ id?: string | number; name?: string; skill_val?: number; prof?: boolean }>
-    | null;
+    | Record<string, number | { prof?: boolean | undefined; val?: number | undefined }>
+    | Array<{
+        id?: string | number | undefined;
+        name?: string | undefined;
+        skill_val?: number | undefined;
+        prof?: boolean | undefined;
+      }>
+    | null
+    | undefined;
   /** Canonical defense allocation field. */
-  defenseVals?: Partial<DefenseSkills> | null;
+  defenseVals?: Partial<DefenseSkills> | null | undefined;
   /** @deprecated legacy defense field, still honored for old saves/drafts. */
-  defenseSkills?: Partial<DefenseSkills> | null;
+  defenseSkills?: Partial<DefenseSkills> | null | undefined;
   /** Martial ability (top-level on saved characters). */
-  mart_abil?: number | string;
+  mart_abil?: number | string | undefined;
   /** Base speed (default 6). */
-  speedBase?: number;
+  speedBase?: number | undefined;
   /** Creator draft nests martial ability under archetype. */
-  archetype?: { mart_abil?: number | string } | null;
+  archetype?: { mart_abil?: number | string | undefined } | null | undefined;
   /** Selected/owned feats — used for leveled-feat prerequisite checks. */
-  feats?: Array<{ id?: string | number; name?: string }> | null;
-  archetypeFeats?: Array<{ id?: string | number; name?: string }> | null;
+  feats?: Array<{ id?: string | number | undefined; name?: string | undefined }> | null | undefined;
+  archetypeFeats?:
+    | Array<{ id?: string | number | undefined; name?: string | undefined }>
+    | null
+    | undefined;
 }
 
 export interface FeatRequirementResult {
   met: boolean;
   /** All failing reasons joined; undefined when met. */
-  reason?: string;
+  reason?: string | undefined;
   /** Individual failing reasons. */
   reasons: string[];
 }
@@ -77,7 +86,7 @@ function normalizeReqKey(input: string): string {
 }
 
 function isAbilityReqKey(
-  key: string
+  key: string,
 ): key is 'strength' | 'vitality' | 'agility' | 'acuity' | 'intelligence' | 'charisma' {
   return (
     key === 'strength' ||
@@ -89,7 +98,13 @@ function isAbilityReqKey(
   );
 }
 
-type DefenseReqKey = 'might' | 'fortitude' | 'reflex' | 'discernment' | 'mentalFortitude' | 'resolve';
+type DefenseReqKey =
+  | 'might'
+  | 'fortitude'
+  | 'reflex'
+  | 'discernment'
+  | 'mentalFortitude'
+  | 'resolve';
 
 function toDefenseReqKey(key: string): DefenseReqKey | null {
   if (key === 'might') return 'might';
@@ -104,20 +119,20 @@ function toDefenseReqKey(key: string): DefenseReqKey | null {
 /** Id of the previous-level feat required to take this feat. Null if level 1 or no base. */
 export function getPreviousLevelFeatId(
   feat: FeatForRequirement,
-  allFeats: FeatForRequirement[]
+  allFeats: FeatForRequirement[],
 ): string | null {
   const level = getFeatLevel(feat);
   if (level <= 1) return null;
 
   const familyId = getFeatFamilyId(feat);
   const byFamily = allFeats.find(
-    (f) => getFeatFamilyId(f) === familyId && getFeatLevel(f) === level - 1
+    (f) => getFeatFamilyId(f) === familyId && getFeatLevel(f) === level - 1,
   );
   if (byFamily) return String(byFamily.id);
 
   if (feat.base_feat_id) {
     const byBaseId = allFeats.find(
-      (f) => String(f.id) === String(feat.base_feat_id) && getFeatLevel(f) === level - 1
+      (f) => String(f.id) === String(feat.base_feat_id) && getFeatLevel(f) === level - 1,
     );
     if (byBaseId) return String(byBaseId.id);
     // Legacy: level-2 rows stored the level-1 feat id in base_feat_id
@@ -132,11 +147,11 @@ export function getPreviousLevelFeatId(
 
 /** Normalize a character's skills into the shape `getSkillBonusForFeatRequirement` expects. */
 function normalizeSkills(
-  skills: CharacterForFeatRequirement['skills']
-): Record<string, number | { prof?: boolean; val?: number }> {
+  skills: CharacterForFeatRequirement['skills'],
+): Record<string, number | { prof?: boolean | undefined; val?: number | undefined }> {
   if (!skills) return {};
   if (Array.isArray(skills)) {
-    const record: Record<string, { prof?: boolean; val?: number }> = {};
+    const record: Record<string, { prof?: boolean | undefined; val?: number | undefined }> = {};
     skills.forEach((s) => {
       const id = s.id != null ? String(s.id) : '';
       const name = s.name != null ? String(s.name) : '';
@@ -146,7 +161,10 @@ function normalizeSkills(
     });
     return record;
   }
-  return skills as Record<string, number | { prof?: boolean; val?: number }>;
+  return skills as Record<
+    string,
+    number | { prof?: boolean | undefined; val?: number | undefined }
+  >;
 }
 
 /**
@@ -164,15 +182,25 @@ export function checkFeatRequirements(
   feat: FeatForRequirement,
   character: CharacterForFeatRequirement,
   skillsDb: CodexSkillForFeat[],
-  allFeats: FeatForRequirement[]
+  allFeats: FeatForRequirement[],
 ): FeatRequirementResult {
   const reasons: string[] = [];
   const abilities = (character.abilities || {}) as Partial<Abilities>;
   const level = character.level ?? 1;
 
-  // Level requirement
-  if (feat.lvl_req != null && feat.lvl_req > level) {
-    reasons.push(`Requires level ${feat.lvl_req}`);
+  // Level: hard `lvl_req` always wins. Otherwise character level must be
+  // ≥ 2 × feat level (GAME_RULES "Half Pattern"). Feat rank 1 with no `lvl_req`
+  // stays legal at character level 1 (2×1 would block every untagged L1 feat).
+  if (feat.lvl_req != null) {
+    if (feat.lvl_req > level) {
+      reasons.push(`Requires level ${feat.lvl_req}`);
+    }
+  } else {
+    const featLevel = getFeatLevel(feat);
+    const minCharacterLevel = 2 * featLevel;
+    if (featLevel > 1 && level < minCharacterLevel) {
+      reasons.push(`Requires character level ${minCharacterLevel}+ (feat level ${featLevel})`);
+    }
   }
 
   // Ability / defense requirements
@@ -207,7 +235,7 @@ export function checkFeatRequirements(
         String(skillId),
         abilities,
         skillsForReq,
-        skillsDb
+        skillsDb,
       );
       if (!proficient) reasons.push(`Requires proficiency in ${skillName}`);
       else if (bonus < requiredBonus)
@@ -232,8 +260,8 @@ export function checkFeatRequirements(
   if (prevLevelId) {
     const ownedFeatIds = new Set(
       [...(character.feats || []), ...(character.archetypeFeats || [])].map((f) =>
-        String(f.id ?? (f as { name?: string }).name)
-      )
+        String(f.id ?? (f as { name?: string | undefined }).name),
+      ),
     );
     if (!ownedFeatIds.has(prevLevelId)) {
       const prevFeat = allFeats.find((f) => String(f.id) === prevLevelId);
@@ -251,18 +279,24 @@ export function checkFeatRequirements(
 
 /** Map a saved character to the shape used by feat requirement checks. */
 export function characterToFeatRequirementCharacter(
-  character: import('@/types').Character
+  character: import('@/types').Character,
 ): CharacterForFeatRequirement {
-  const skillsRecord: Record<string, { prof?: boolean; val?: number }> = {};
+  const skillsRecord: Record<
+    string,
+    number | { prof?: boolean | undefined; val?: number | undefined }
+  > = {};
   const rawSkills = character.skills as
-    | Record<string, number | { prof?: boolean; val?: number }>
+    | Record<string, number | { prof?: boolean | undefined; val?: number | undefined }>
     | undefined;
   if (rawSkills) {
     Object.entries(rawSkills).forEach(([key, sk]) => {
       if (sk && typeof sk === 'object' && 'val' in sk) {
         skillsRecord[key] = { prof: sk.prof, val: sk.val };
       } else if (typeof sk === 'number') {
-        skillsRecord[key] = { val: sk };
+        // Pass the number through: `{ val: sk }` would drop `prof` and make every
+        // skill-gated feat report "Requires proficiency" (readProficiency in formulas.ts
+        // reads numeric allocations directly).
+        skillsRecord[key] = sk;
       }
     });
   }
@@ -284,7 +318,7 @@ export function getMaxQualifiedFeatLevel(
   character: CharacterForFeatRequirement,
   family: FeatForRequirement[],
   codexSkills: CodexSkillForFeat[],
-  allFeats: FeatForRequirement[]
+  allFeats: FeatForRequirement[],
 ): number {
   let max = 1;
   family.forEach((feat) => {

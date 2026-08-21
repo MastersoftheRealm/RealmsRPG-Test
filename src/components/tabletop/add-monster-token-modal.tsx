@@ -1,8 +1,14 @@
 'use client';
 
 import { useMemo, useState } from 'react';
+import {
+  SourceFilter,
+  UnifiedSelectionModal,
+  ValueStepper,
+  type SelectableItem,
+  type SourceFilterValue,
+} from '@/components/patterns';
 import { Checkbox } from '@/components/ui';
-import { SourceFilter, UnifiedSelectionModal, ValueStepper, type SelectableItem, type SourceFilterValue } from '@/components/shared';
 import { calculateCreatureMaxEnergy, calculateCreatureMaxHealth } from '@/lib/game/encounter-utils';
 import type { LibraryCreature } from '@/types/library';
 import type { AddVttCreatureTokensRequest, VttCreatureTokenSource } from '@/types/tabletop';
@@ -33,12 +39,19 @@ function creatureResources(creature: LibraryCreature): string {
   const level = Number(creature.level || 1);
   const safeLevel = Number.isFinite(level) ? level : 1;
   const abilities = creature.abilities || {};
-  const hp = calculateCreatureMaxHealth(safeLevel, abilities, creature.hitPoints ?? creature.hp ?? 0);
+  const hp = calculateCreatureMaxHealth(
+    safeLevel,
+    abilities,
+    creature.hitPoints ?? creature.hp ?? 0,
+  );
   const en = calculateCreatureMaxEnergy(safeLevel, abilities, creature.energyPoints ?? 0);
   return `HP ${hp} / EN ${en}`;
 }
 
-function toSelectableCreature(creature: LibraryCreature, source: VttCreatureTokenSource): SelectableItem {
+function toSelectableCreature(
+  creature: LibraryCreature,
+  source: VttCreatureTokenSource,
+): SelectableItem {
   const sourceLabel = source === 'official' ? 'Realms Library' : 'My Library';
   return {
     id: `${source}:${creature.id}`,
@@ -62,12 +75,22 @@ function readSelectionData(item: SelectableItem | undefined): CreatureSelectionD
   return data?.source && data.creatureId ? data : null;
 }
 
-export function AddMonsterTokenModal({ isOpen, isAdding = false, onClose, onAdd }: AddMonsterTokenModalProps) {
+export function AddMonsterTokenModal({
+  isOpen,
+  isAdding = false,
+  onClose,
+  onAdd,
+}: AddMonsterTokenModalProps) {
   const [source, setSource] = useState<SourceFilterValue>('all');
   const [quantity, setQuantity] = useState(1);
   const [visible, setVisible] = useState(false);
-  const { data: officialCreatures = [], isLoading: officialLoading } = useOfficialLibrary('creatures', { enabled: isOpen });
-  const { data: userCreatures = [], isLoading: userLoading } = useUserCreatures({ enabled: isOpen });
+  const { data: officialCreatures = [], isLoading: officialLoading } = useOfficialLibrary(
+    'creatures',
+    { enabled: isOpen },
+  );
+  const { data: userCreatures = [], isLoading: userLoading } = useUserCreatures({
+    enabled: isOpen,
+  });
 
   const reset = () => {
     setSource('all');
@@ -85,7 +108,7 @@ export function AddMonsterTokenModal({ isOpen, isAdding = false, onClose, onAdd 
       ...officialCreatures.map((creature) => toSelectableCreature(creature, 'official')),
       ...userCreatures.map((creature) => toSelectableCreature(creature, 'user')),
     ],
-    [officialCreatures, userCreatures]
+    [officialCreatures, userCreatures],
   );
 
   const isLoading =

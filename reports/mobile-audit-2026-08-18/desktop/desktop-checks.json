@@ -1,0 +1,702 @@
+[
+  {
+    "route": "sheet",
+    "width": 768,
+    "vw": 768,
+    "h1": {
+      "text": "E2E Baseline Knight",
+      "clientW": 286,
+      "scrollW": 286,
+      "overflowing": false,
+      "textOverflow": "ellipsis",
+      "badChain": [
+        "flex flex-shrink-0 items-center gap-4"
+      ]
+    },
+    "fixedCount": 2,
+    "fixedOverlaps": [],
+    "fixedOverContent": [
+      {
+        "fixed": "div.fixed right-4 bottom-4 left-4 z-overlay ",
+        "covers": "E2E Baseline KnightLevel 20 · Skarra / DraconianPo"
+      },
+      {
+        "fixed": "div.fixed right-5 bottom-5 z-floating flex f",
+        "covers": "Strength+5Temp +2Vitality-1Agility-3Temp -1Acuity+"
+      }
+    ],
+    "tablists": [
+      {
+        "clientW": 670,
+        "scrollW": 670,
+        "overflowing": false,
+        "hidden": 0
+      }
+    ],
+    "panels": [
+      {
+        "label": "Abilities & Defenses",
+        "rendered": 0,
+        "natural": 0
+      },
+      {
+        "label": "Skills",
+        "rendered": 1536,
+        "natural": 1536
+      },
+      {
+        "label": "Archetype & Attacks",
+        "rendered": 1331,
+        "natural": 1331
+      },
+      {
+        "label": "Library",
+        "rendered": 2371,
+        "natural": 2371
+      }
+    ],
+    "statRow": {
+      "w": 670,
+      "h": 98,
+      "rows": 1,
+      "widths": [
+        100,
+        100,
+        186,
+        153
+      ],
+      "equalWidth": false
+    },
+    "textClippedNoEllipsis": 0,
+    "textEllipsised": 0
+  },
+  {
+    "route": "codex",
+    "width": 768,
+    "vw": 768,
+    "h1": {
+      "text": "Realms Codex",
+      "clientW": 720,
+      "scrollW": 720,
+      "overflowing": false,
+      "textOverflow": "clip",
+      "badChain": [
+        "",
+        "mb-8"
+      ]
+    },
+    "fixedCount": 0,
+    "fixedOverlaps": [],
+    "fixedOverContent": [],
+    "tablists": [
+      {
+        "clientW": 608,
+        "scrollW": 608,
+        "overflowing": false,
+        "hidden": 0
+      }
+    ],
+    "textClippedNoEllipsis": 0,
+    "textEllipsised": 0
+  },
+  {
+    "route": "characters",
+    "width": 768,
+    "vw": 768,
+    "h1": {
+      "text": "Characters",
+      "clientW": 150,
+      "scrollW": 150,
+      "overflowing": false,
+      "textOverflow": "clip",
+      "badChain": [
+        ""
+      ]
+    },
+    "fixedCount": 0,
+    "fixedOverlaps": [],
+    "fixedOverContent": [],
+    "tablists": [],
+    "textClippedNoEllipsis": 0,
+    "textEllipsised": 0
+  },
+  {
+    "route": "creature-creator",
+    "width": 768,
+    "vw": 768,
+    "h1": {
+      "text": "Creature Creator",
+      "clientW": 466,
+      "scrollW": 466,
+      "overflowing": false,
+      "textOverflow": "clip",
+      "badChain": [
+        ""
+      ]
+    },
+    "fixedCount": 1,
+    "fixedOverlaps": [],
+    "fixedOverContent": [
+      {
+        "fixed": "div.fixed right-5 bottom-5 z-floating flex f",
+        "covers": "Basic InformationNameDescriptionLevel¼½¾1234567891"
+      }
+    ],
+    "tablists": [],
+    "textClippedNoEllipsis": 0,
+    "textEllipsised": 13
+  },
+  {
+    "route": "library",
+    "width": 768,
+    "vw": 768,
+    "h1": {
+      "text": "My Library",
+      "clientW": 425,
+      "scrollW": 425,
+      "overflowing": false,
+      "textOverflow": "clip",
+      "badChain": [
+        ""
+      ]
+    },
+    "fixedCount": 0,
+    "fixedOverlaps": [],
+    "fixedOverContent": [],
+    "tablists": [
+      {
+        "clientW": 720,
+        "scrollW": 1229,
+        "overflowing": true,
+        "hidden": 4
+      }
+    ],
+    "textClippedNoEllipsis": 0,
+    "textEllipsised": 0
+  },
+  {
+    "route": "sheet",
+    "width": 1024,
+    "vw": 1024,
+    "h1": {
+      "text": "E2E Baseline Knight",
+      "clientW": 286,
+      "scrollW": 286,
+      "overflowing": false,
+      "textOverflow": "ellipsis",
+      "badChain": [
+        "flex flex-shrink-0 items-center gap-4"
+      ]
+    },
+    "fixedCount": 2,
+    "fixedOverlaps": [],
+    "fixedOverContent": [
+      {
+        "fixed": "div.fixed right-4 bottom-4 left-4 z-overlay ",
+        "covers": "E2E Baseline KnightLevel 20 · Skarra / DraconianPo"
+      },
+      {
+        "fixed": "div.fixed right-5 bottom-5 z-floating flex f",
+        "covers": "Strength+5Temp +2Vitality-1Agility-3Temp -1Acuity+"
+      }
+    ],
+    "tablists": [
+      {
+        "clientW": 414,
+        "scrollW": 541,
+        "overflowing": true,
+        "hidden": 2
+      }
+    ],
+    "panels": [
+      {
+        "label": "Abilities & Defenses",
+        "rendered": 0,
+        "natural": 0
+      },
+      {
+        "label": "Skills",
+        "rendered": 3386,
+        "natural": 3386
+      },
+      {
+        "label": "Archetype & Attacks",
+        "rendered": 3386,
+        "natural": 3386
+      },
+      {
+        "label": "Library",
+        "rendered": 3386,
+        "natural": 3386
+      }
+    ],
+    "statRow": {
+      "w": 119,
+      "h": 480,
+      "rows": 4,
+      "widths": [
+        100,
+        100,
+        119,
+        119
+      ],
+      "equalWidth": false
+    },
+    "textClippedNoEllipsis": 0,
+    "textEllipsised": 22
+  },
+  {
+    "route": "codex",
+    "width": 1024,
+    "vw": 1024,
+    "h1": {
+      "text": "Realms Codex",
+      "clientW": 857,
+      "scrollW": 857,
+      "overflowing": false,
+      "textOverflow": "clip",
+      "badChain": [
+        "",
+        "mb-8"
+      ]
+    },
+    "fixedCount": 0,
+    "fixedOverlaps": [],
+    "fixedOverContent": [],
+    "tablists": [
+      {
+        "clientW": 848,
+        "scrollW": 848,
+        "overflowing": false,
+        "hidden": 0
+      }
+    ],
+    "textClippedNoEllipsis": 0,
+    "textEllipsised": 0
+  },
+  {
+    "route": "characters",
+    "width": 1024,
+    "vw": 1024,
+    "h1": {
+      "text": "Characters",
+      "clientW": 150,
+      "scrollW": 150,
+      "overflowing": false,
+      "textOverflow": "clip",
+      "badChain": [
+        ""
+      ]
+    },
+    "fixedCount": 0,
+    "fixedOverlaps": [],
+    "fixedOverContent": [],
+    "tablists": [],
+    "textClippedNoEllipsis": 0,
+    "textEllipsised": 0
+  },
+  {
+    "route": "creature-creator",
+    "width": 1024,
+    "vw": 1024,
+    "h1": {
+      "text": "Creature Creator",
+      "clientW": 706,
+      "scrollW": 706,
+      "overflowing": false,
+      "textOverflow": "clip",
+      "badChain": [
+        ""
+      ]
+    },
+    "fixedCount": 1,
+    "fixedOverlaps": [],
+    "fixedOverContent": [
+      {
+        "fixed": "div.fixed right-5 bottom-5 z-floating flex f",
+        "covers": "Creature Summary7/7Ability Pts5/5Skill Pts4/4Feat "
+      }
+    ],
+    "tablists": [],
+    "textClippedNoEllipsis": 0,
+    "textEllipsised": 1
+  },
+  {
+    "route": "library",
+    "width": 1024,
+    "vw": 1024,
+    "h1": {
+      "text": "My Library",
+      "clientW": 425,
+      "scrollW": 425,
+      "overflowing": false,
+      "textOverflow": "clip",
+      "badChain": [
+        ""
+      ]
+    },
+    "fixedCount": 0,
+    "fixedOverlaps": [],
+    "fixedOverContent": [],
+    "tablists": [
+      {
+        "clientW": 960,
+        "scrollW": 1229,
+        "overflowing": true,
+        "hidden": 2
+      }
+    ],
+    "textClippedNoEllipsis": 0,
+    "textEllipsised": 0
+  },
+  {
+    "route": "sheet",
+    "width": 1280,
+    "vw": 1280,
+    "h1": {
+      "text": "E2E Baseline Knight",
+      "clientW": 286,
+      "scrollW": 286,
+      "overflowing": false,
+      "textOverflow": "ellipsis",
+      "badChain": [
+        "flex flex-shrink-0 items-center gap-4"
+      ]
+    },
+    "fixedCount": 2,
+    "fixedOverlaps": [],
+    "fixedOverContent": [
+      {
+        "fixed": "div.fixed right-4 bottom-4 left-4 z-overlay ",
+        "covers": "E2E Baseline KnightLevel 20 · Skarra / DraconianPo"
+      },
+      {
+        "fixed": "div.fixed right-5 bottom-5 z-floating flex f",
+        "covers": "LibraryFeatsPowersTechniquesInventoryProficiencies"
+      }
+    ],
+    "tablists": [
+      {
+        "clientW": 542,
+        "scrollW": 542,
+        "overflowing": false,
+        "hidden": 0
+      }
+    ],
+    "panels": [
+      {
+        "label": "Abilities & Defenses",
+        "rendered": 0,
+        "natural": 0
+      },
+      {
+        "label": "Skills",
+        "rendered": 1976,
+        "natural": 1976
+      },
+      {
+        "label": "Archetype & Attacks",
+        "rendered": 1976,
+        "natural": 1976
+      },
+      {
+        "label": "Library",
+        "rendered": 1976,
+        "natural": 1976
+      }
+    ],
+    "statRow": {
+      "w": 283,
+      "h": 326,
+      "rows": 3,
+      "widths": [
+        100,
+        100,
+        186,
+        153
+      ],
+      "equalWidth": false
+    },
+    "textClippedNoEllipsis": 0,
+    "textEllipsised": 20
+  },
+  {
+    "route": "codex",
+    "width": 1280,
+    "vw": 1280,
+    "h1": {
+      "text": "Realms Codex",
+      "clientW": 857,
+      "scrollW": 857,
+      "overflowing": false,
+      "textOverflow": "clip",
+      "badChain": [
+        "",
+        "mb-8"
+      ]
+    },
+    "fixedCount": 0,
+    "fixedOverlaps": [],
+    "fixedOverContent": [],
+    "tablists": [
+      {
+        "clientW": 1104,
+        "scrollW": 1104,
+        "overflowing": false,
+        "hidden": 0
+      }
+    ],
+    "textClippedNoEllipsis": 0,
+    "textEllipsised": 0
+  },
+  {
+    "route": "characters",
+    "width": 1280,
+    "vw": 1280,
+    "h1": {
+      "text": "Characters",
+      "clientW": 150,
+      "scrollW": 150,
+      "overflowing": false,
+      "textOverflow": "clip",
+      "badChain": [
+        ""
+      ]
+    },
+    "fixedCount": 0,
+    "fixedOverlaps": [],
+    "fixedOverContent": [],
+    "tablists": [],
+    "textClippedNoEllipsis": 0,
+    "textEllipsised": 0
+  },
+  {
+    "route": "creature-creator",
+    "width": 1280,
+    "vw": 1280,
+    "h1": {
+      "text": "Creature Creator",
+      "clientW": 737,
+      "scrollW": 737,
+      "overflowing": false,
+      "textOverflow": "clip",
+      "badChain": [
+        ""
+      ]
+    },
+    "fixedCount": 1,
+    "fixedOverlaps": [],
+    "fixedOverContent": [
+      {
+        "fixed": "div.fixed right-5 bottom-5 z-floating flex f",
+        "covers": "Creature Summary7/7Ability Pts5/5Skill Pts4/4Feat "
+      }
+    ],
+    "tablists": [],
+    "textClippedNoEllipsis": 0,
+    "textEllipsised": 1
+  },
+  {
+    "route": "library",
+    "width": 1280,
+    "vw": 1280,
+    "h1": {
+      "text": "My Library",
+      "clientW": 425,
+      "scrollW": 425,
+      "overflowing": false,
+      "textOverflow": "clip",
+      "badChain": [
+        ""
+      ]
+    },
+    "fixedCount": 0,
+    "fixedOverlaps": [],
+    "fixedOverContent": [],
+    "tablists": [
+      {
+        "clientW": 1216,
+        "scrollW": 1229,
+        "overflowing": true,
+        "hidden": 1
+      }
+    ],
+    "textClippedNoEllipsis": 0,
+    "textEllipsised": 0
+  },
+  {
+    "route": "sheet",
+    "width": 1440,
+    "vw": 1440,
+    "h1": {
+      "text": "E2E Baseline Knight",
+      "clientW": 286,
+      "scrollW": 286,
+      "overflowing": false,
+      "textOverflow": "ellipsis",
+      "badChain": [
+        "flex flex-shrink-0 items-center gap-4"
+      ]
+    },
+    "fixedCount": 2,
+    "fixedOverlaps": [],
+    "fixedOverContent": [
+      {
+        "fixed": "div.fixed right-4 bottom-4 left-4 z-overlay ",
+        "covers": "E2E Baseline KnightLevel 20 · Skarra / DraconianPo"
+      },
+      {
+        "fixed": "div.fixed right-5 bottom-5 z-floating flex f",
+        "covers": "LibraryFeatsPowersTechniquesInventoryProficiencies"
+      }
+    ],
+    "tablists": [
+      {
+        "clientW": 622,
+        "scrollW": 622,
+        "overflowing": false,
+        "hidden": 0
+      }
+    ],
+    "panels": [
+      {
+        "label": "Abilities & Defenses",
+        "rendered": 0,
+        "natural": 0
+      },
+      {
+        "label": "Skills",
+        "rendered": 1544,
+        "natural": 1544
+      },
+      {
+        "label": "Archetype & Attacks",
+        "rendered": 1544,
+        "natural": 1544
+      },
+      {
+        "label": "Library",
+        "rendered": 1544,
+        "natural": 1544
+      }
+    ],
+    "statRow": {
+      "w": 390,
+      "h": 212,
+      "rows": 2,
+      "widths": [
+        100,
+        100,
+        186,
+        153
+      ],
+      "equalWidth": false
+    },
+    "textClippedNoEllipsis": 0,
+    "textEllipsised": 17
+  },
+  {
+    "route": "codex",
+    "width": 1440,
+    "vw": 1440,
+    "h1": {
+      "text": "Realms Codex",
+      "clientW": 857,
+      "scrollW": 857,
+      "overflowing": false,
+      "textOverflow": "clip",
+      "badChain": [
+        "",
+        "mb-8"
+      ]
+    },
+    "fixedCount": 0,
+    "fixedOverlaps": [],
+    "fixedOverContent": [],
+    "tablists": [
+      {
+        "clientW": 1264,
+        "scrollW": 1264,
+        "overflowing": false,
+        "hidden": 0
+      }
+    ],
+    "textClippedNoEllipsis": 0,
+    "textEllipsised": 0
+  },
+  {
+    "route": "characters",
+    "width": 1440,
+    "vw": 1440,
+    "h1": {
+      "text": "Characters",
+      "clientW": 150,
+      "scrollW": 150,
+      "overflowing": false,
+      "textOverflow": "clip",
+      "badChain": [
+        ""
+      ]
+    },
+    "fixedCount": 0,
+    "fixedOverlaps": [],
+    "fixedOverContent": [],
+    "tablists": [],
+    "textClippedNoEllipsis": 0,
+    "textEllipsised": 0
+  },
+  {
+    "route": "creature-creator",
+    "width": 1440,
+    "vw": 1440,
+    "h1": {
+      "text": "Creature Creator",
+      "clientW": 737,
+      "scrollW": 737,
+      "overflowing": false,
+      "textOverflow": "clip",
+      "badChain": [
+        ""
+      ]
+    },
+    "fixedCount": 1,
+    "fixedOverlaps": [],
+    "fixedOverContent": [
+      {
+        "fixed": "div.fixed right-5 bottom-5 z-floating flex f",
+        "covers": "Creature Summary7/7Ability Pts5/5Skill Pts4/4Feat "
+      }
+    ],
+    "tablists": [],
+    "textClippedNoEllipsis": 0,
+    "textEllipsised": 1
+  },
+  {
+    "route": "library",
+    "width": 1440,
+    "vw": 1440,
+    "h1": {
+      "text": "My Library",
+      "clientW": 425,
+      "scrollW": 425,
+      "overflowing": false,
+      "textOverflow": "clip",
+      "badChain": [
+        ""
+      ]
+    },
+    "fixedCount": 0,
+    "fixedOverlaps": [],
+    "fixedOverContent": [],
+    "tablists": [
+      {
+        "clientW": 1376,
+        "scrollW": 1376,
+        "overflowing": false,
+        "hidden": 0
+      }
+    ],
+    "textClippedNoEllipsis": 0,
+    "textEllipsised": 0
+  }
+]

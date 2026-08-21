@@ -5,21 +5,86 @@
  * Same column set: scalars + one payload JSONB.
  */
 
-export const COLUMNAR_LIBRARY_TYPES = ['powers', 'techniques', 'empowered-techniques', 'items', 'creatures'] as const;
+import {
+  attackModeColumnLabel,
+  deriveEmpoweredAttackMode,
+  deriveTechniqueAttackMode,
+  type AttackMode,
+} from '@/lib/attack-mode';
+import { dedupeSavedParts } from '@/lib/game/dedupe-saved-parts';
+
+export const COLUMNAR_LIBRARY_TYPES = [
+  'powers',
+  'techniques',
+  'empowered-techniques',
+  'items',
+  'creatures',
+] as const;
 export type ColumnarLibraryType = (typeof COLUMNAR_LIBRARY_TYPES)[number];
+
+type PartLike = { id?: string | number | undefined; name?: string | undefined };
+
+/** Collect saved parts from a technique / empowered-technique payload for attack-mode derivation. */
+function collectPayloadParts(payload: Record<string, unknown>): PartLike[] {
+  const parts: PartLike[] = [];
+  const push = (value: unknown) => {
+    if (Array.isArray(value)) parts.push(...(value as PartLike[]));
+    else if (value && typeof value === 'object') parts.push(value as PartLike);
+  };
+  push(payload.parts);
+  push(payload.techniqueParts);
+  const power = payload.power as Record<string, unknown> | undefined;
+  if (power) {
+    push(power.parts);
+    push(power.mechanics);
+    push(power.autoMechanics);
+    push(power.addWeaponPowerPart);
+  }
+  const technique = payload.technique as Record<string, unknown> | undefined;
+  if (technique) {
+    push(technique.parts);
+    push(technique.autoMechanics);
+  }
+  return dedupeSavedParts(parts);
+}
 
 export const SCALAR_KEYS: Record<ColumnarLibraryType, string[]> = {
   powers: [
-    'name', 'description', 'actionType', 'isReaction', 'innate',
-    'rangeSteps', 'durationType', 'durationValue', 'areaType', 'areaLevel', 'damage',
+    'name',
+    'description',
+    'actionType',
+    'isReaction',
+    'innate',
+    'rangeSteps',
+    'durationType',
+    'durationValue',
+    'areaType',
+    'areaLevel',
+    'damage',
+    'imageId',
+    'imageUrl',
   ],
   techniques: [
-    'name', 'description', 'actionType', 'weaponName',
-    'rangeSteps', 'durationType', 'durationValue', 'damage',
+    'name',
+    'description',
+    'actionType',
+    'rangeSteps',
+    'durationType',
+    'durationValue',
+    'damage',
+    'imageId',
+    'imageUrl',
   ],
   'empowered-techniques': [
-    'name', 'description', 'actionType', 'weaponName',
-    'rangeSteps', 'durationType', 'durationValue', 'damage',
+    'name',
+    'description',
+    'actionType',
+    'rangeSteps',
+    'durationType',
+    'durationValue',
+    'damage',
+    'imageId',
+    'imageUrl',
   ],
   items: [
     'name',
@@ -39,15 +104,25 @@ export const SCALAR_KEYS: Record<ColumnarLibraryType, string[]> = {
     'criticalRangeIncrease',
     'shieldDR',
     'shieldDamage',
+    'imageId',
     'imageUrl',
   ],
-  creatures: ['name', 'description', 'level', 'type', 'size', 'hitPoints', 'energyPoints'],
+  creatures: [
+    'name',
+    'description',
+    'level',
+    'type',
+    'size',
+    'hitPoints',
+    'energyPoints',
+    'imageId',
+    'imageUrl',
+  ],
 };
 
 const BODY_TO_CAMEL: Record<string, string> = {
   action_type: 'actionType',
   is_reaction: 'isReaction',
-  weapon_name: 'weaponName',
   armor_value: 'armorValue',
   damage_reduction: 'damageReduction',
   hit_points: 'hitPoints',
@@ -63,13 +138,13 @@ const BODY_TO_CAMEL: Record<string, string> = {
   critical_range_increase: 'criticalRangeIncrease',
   shield_dr: 'shieldDR',
   shield_damage: 'shieldDamage',
+  image_id: 'imageId',
   image_url: 'imageUrl',
 };
 
 const CAMEL_TO_SNAKE: Record<string, string> = {
   actionType: 'action_type',
   isReaction: 'is_reaction',
-  weaponName: 'weapon_name',
   armorValue: 'armor_value',
   damageReduction: 'damage_reduction',
   hitPoints: 'hit_points',
@@ -85,11 +160,21 @@ const CAMEL_TO_SNAKE: Record<string, string> = {
   criticalRangeIncrease: 'critical_range_increase',
   shieldDR: 'shield_dr',
   shieldDamage: 'shield_damage',
+  imageId: 'image_id',
   imageUrl: 'image_url',
   createdAt: 'created_at',
   updatedAt: 'updated_at',
   userId: 'user_id',
 };
+
+/**
+ * Select list for official_* / user_* view fetches: identity, timestamps, payload,
+ * and the columnar scalars `rowToItem` reads. `user_id` is omitted on purpose.
+ */
+export function columnarViewSelect(type: ColumnarLibraryType): string {
+  const scalarColumns = SCALAR_KEYS[type].map((key) => Object.keys(toDbRow({ [key]: null }))[0]);
+  return ['id', 'created_at', 'updated_at', 'payload', ...scalarColumns].join(', ');
+}
 
 /** Convert camelCase object to snake_case for Supabase columnar insert/update. */
 export function toDbRow(obj: Record<string, unknown>): Record<string, unknown> {
@@ -106,11 +191,40 @@ function v(row: Record<string, unknown>, camel: string, snake?: string): unknown
   return row[camel] ?? (snake ? row[snake] : undefined);
 }
 
+function assignImageScalars(base: Record<string, unknown>, row: Record<string, unknown>): void {
+  const imageId = v(row, 'imageId', 'image_id');
+  if (imageId !== undefined && imageId !== null) base.imageId = imageId;
+  const imageUrl = v(row, 'imageUrl', 'image_url');
+  if (typeof imageUrl === 'string' && imageUrl.trim()) {
+    base.imageUrl = imageUrl.split('?')[0];
+  } else if (imageUrl === null) {
+    base.imageUrl = null;
+  }
+}
+
+function applyImageScalarsFromBody(
+  scalars: Record<string, unknown>,
+  body: Record<string, unknown>,
+): void {
+  const imageId = body.imageId !== undefined ? body.imageId : body.image_id;
+  if (typeof imageId === 'string' && imageId.trim()) {
+    scalars.imageId = imageId.trim();
+  } else if (imageId === null) {
+    scalars.imageId = null;
+  }
+  const imageUrl = body.imageUrl !== undefined ? body.imageUrl : body.image_url;
+  if (typeof imageUrl === 'string' && imageUrl.trim()) {
+    scalars.imageUrl = imageUrl.split('?')[0];
+  } else if (imageUrl === null) {
+    scalars.imageUrl = null;
+  }
+}
+
 /** Build client-shaped item from a columnar row (official or user). Row may be camelCase or snake_case (Supabase). */
 export function rowToItem(
   type: ColumnarLibraryType,
   row: Record<string, unknown>,
-  source?: 'official' | 'user'
+  source?: 'official' | 'user',
 ): Record<string, unknown> {
   const payload = (row.payload as Record<string, unknown>) || {};
   const base: Record<string, unknown> = {};
@@ -139,28 +253,42 @@ export function rowToItem(
     const payArea = payload.area as Record<string, unknown> | undefined;
     if (rangeSteps != null) base.range = { ...payRange, steps: rangeSteps };
     if (durationType != null || durationValue != null)
-      base.duration = { ...payDuration, type: durationType ?? payDuration?.type, value: durationValue ?? payDuration?.value };
+      base.duration = {
+        ...payDuration,
+        type: durationType ?? payDuration?.type,
+        value: durationValue ?? payDuration?.value,
+      };
     if (areaType != null || areaLevel != null)
-      base.area = { ...payArea, type: areaType ?? payArea?.type, level: areaLevel ?? payArea?.level };
+      base.area = {
+        ...payArea,
+        type: areaType ?? payArea?.type,
+        level: areaLevel ?? payArea?.level,
+      };
     if (damageCol != null && Array.isArray(damageCol)) base.damage = damageCol;
+    assignImageScalars(base, row);
   }
   if (type === 'techniques' || type === 'empowered-techniques') {
     assignIfPresent('actionType', v(row, 'actionType', 'action_type'));
-    const weaponName = v(row, 'weaponName', 'weapon_name');
-    assignIfPresent('weaponName', weaponName);
-    if (weaponName && !payload.weapon) base.weapon = { name: weaponName };
-    if (
-      type === 'empowered-techniques' &&
-      weaponName &&
-      payload.power &&
-      typeof payload.power === 'object' &&
-      !(payload.power as Record<string, unknown>).addWeapon
-    ) {
-      base.power = {
-        ...(payload.power as Record<string, unknown>),
-        addWeapon: { name: weaponName },
-      };
-    }
+    const savedParts = collectPayloadParts(payload);
+    const attackMode: AttackMode =
+      type === 'empowered-techniques'
+        ? deriveEmpoweredAttackMode({
+            attackMode: payload.attackMode,
+            parts: savedParts,
+            weapon: (payload.power as Record<string, unknown> | undefined)?.addWeapon as
+              | { id?: string | number | undefined; name?: string | undefined }
+              | undefined,
+          })
+        : deriveTechniqueAttackMode({
+            attackMode: payload.attackMode,
+            parts: savedParts,
+            weapon: payload.weapon as
+              | { id?: string | number | undefined; name?: string | undefined }
+              | undefined,
+          });
+    base.attackMode = attackMode;
+    // DESIGN_INTENT: Attack column label is derived from parts/attackMode — not a DB column.
+    base.weaponName = attackModeColumnLabel(attackMode);
     const rangeSteps = v(row, 'rangeSteps', 'range_steps') as number | undefined | null;
     const durationType = v(row, 'durationType', 'duration_type') as string | undefined | null;
     const durationValue = v(row, 'durationValue', 'duration_value') as number | undefined | null;
@@ -176,6 +304,7 @@ export function rowToItem(
       };
     }
     if (damageCol != null && Array.isArray(damageCol)) base.damage = damageCol;
+    assignImageScalars(base, row);
   }
   if (type === 'items') {
     // IMPORTANT: Only assign scalar-backed fields when present on the row.
@@ -188,10 +317,13 @@ export function rowToItem(
     assignIfPresent('isTwoHanded', v(row, 'isTwoHanded', 'is_two_handed'));
     assignIfPresent('abilityRequirement', v(row, 'abilityRequirement', 'ability_requirement'));
     assignIfPresent('agilityReduction', v(row, 'agilityReduction', 'agility_reduction'));
-    assignIfPresent('criticalRangeIncrease', v(row, 'criticalRangeIncrease', 'critical_range_increase'));
+    assignIfPresent(
+      'criticalRangeIncrease',
+      v(row, 'criticalRangeIncrease', 'critical_range_increase'),
+    );
     assignIfPresent('shieldDR', v(row, 'shieldDR', 'shield_dr'));
     assignIfPresent('shieldDamage', v(row, 'shieldDamage', 'shield_damage'));
-    assignIfPresent('imageUrl', v(row, 'imageUrl', 'image_url'));
+    assignImageScalars(base, row);
 
     // Transition hardening:
     // If columns exist but are still default/empty (e.g. `damage = []`, `properties = []`)
@@ -205,7 +337,10 @@ export function rowToItem(
 
     // costs: keep scalar if it's a non-empty object; otherwise fall back to payload.
     const costsIsNonEmptyObject =
-      costsCol != null && typeof costsCol === 'object' && !Array.isArray(costsCol) && Object.keys(costsCol as Record<string, unknown>).length > 0;
+      costsCol != null &&
+      typeof costsCol === 'object' &&
+      !Array.isArray(costsCol) &&
+      Object.keys(costsCol as Record<string, unknown>).length > 0;
     if (costsIsNonEmptyObject) {
       base.costs = costsCol;
     } else if (payloadCosts !== undefined && payloadCosts !== null) {
@@ -232,6 +367,7 @@ export function rowToItem(
     assignIfPresent('size', v(row, 'size'));
     assignIfPresent('hitPoints', v(row, 'hitPoints', 'hit_points'));
     assignIfPresent('energyPoints', v(row, 'energyPoints', 'energy_points'));
+    assignImageScalars(base, row);
   }
   assignIfPresent('createdAt', v(row, 'createdAt', 'created_at'));
   assignIfPresent('updatedAt', v(row, 'updatedAt', 'updated_at'));
@@ -242,7 +378,7 @@ export function rowToItem(
 /** Split request body into scalars (for columns) and payload (JSONB). */
 export function bodyToColumnar(
   type: ColumnarLibraryType,
-  body: Record<string, unknown>
+  body: Record<string, unknown>,
 ): { scalars: Record<string, unknown>; payload: Record<string, unknown> } {
   const scalarKeys = new Set(SCALAR_KEYS[type]);
   const scalars: Record<string, unknown> = {};
@@ -252,39 +388,48 @@ export function bodyToColumnar(
     const range = body.range as Record<string, unknown> | undefined;
     const duration = body.duration as Record<string, unknown> | undefined;
     const area = body.area as Record<string, unknown> | undefined;
-    if (range && typeof range === 'object' && range.steps != null) scalars.rangeSteps = range.steps;
+    // Promote query scalars AND keep full nested objects in payload so non-promoted
+    // fields survive round-trip (area/range applyDuration; duration focus/sustain/etc.).
+    if (range && typeof range === 'object') {
+      if (range.steps != null) scalars.rangeSteps = range.steps;
+      payload.range = { ...range };
+    }
     if (duration && typeof duration === 'object') {
       if (duration.type != null) scalars.durationType = duration.type;
       if (duration.value != null) scalars.durationValue = duration.value;
+      payload.duration = { ...duration };
     }
     if (area && typeof area === 'object') {
       if (area.type != null) scalars.areaType = area.type;
       if (area.level != null) scalars.areaLevel = area.level;
+      payload.area = { ...area };
     }
     if (Array.isArray(body.damage)) scalars.damage = body.damage;
   }
 
   if (type === 'techniques' || type === 'empowered-techniques') {
-    const weaponRef = (
-      body.weapon ??
-      ((body.power as Record<string, unknown> | undefined)?.addWeapon)
-    ) as Record<string, unknown> | undefined;
-    if (typeof body.weaponName === 'string' && body.weaponName.trim()) {
-      scalars.weaponName = body.weaponName.trim();
-    } else if (weaponRef && typeof weaponRef.name === 'string' && weaponRef.name.trim()) {
-      scalars.weaponName = weaponRef.name.trim();
-    }
     const range = (body.range ?? (body.power as Record<string, unknown> | undefined)?.range) as
       | Record<string, unknown>
       | undefined;
-    const duration = (body.duration ?? (body.power as Record<string, unknown> | undefined)?.duration) as
+    const duration = (body.duration ??
+      (body.power as Record<string, unknown> | undefined)?.duration) as
       | Record<string, unknown>
       | undefined;
-    const damage = (body.damage ?? (body.power as Record<string, unknown> | undefined)?.damage) as unknown;
-    if (range && typeof range === 'object' && range.steps != null) scalars.rangeSteps = range.steps;
+    const damage = (body.damage ??
+      (body.power as Record<string, unknown> | undefined)?.damage) as unknown;
+    // Top-level range/duration may be omitted when nested under `power` (empowered).
+    // Persist top-level objects when present; nested `power` still goes through the loop.
+    if (range && typeof range === 'object') {
+      if (range.steps != null) scalars.rangeSteps = range.steps;
+      if (body.range && typeof body.range === 'object')
+        payload.range = { ...(body.range as Record<string, unknown>) };
+    }
     if (duration && typeof duration === 'object') {
       if (duration.type != null) scalars.durationType = duration.type;
       if (duration.value != null) scalars.durationValue = duration.value;
+      if (body.duration && typeof body.duration === 'object') {
+        payload.duration = { ...(body.duration as Record<string, unknown>) };
+      }
     }
     if (Array.isArray(damage)) scalars.damage = damage;
   }
@@ -299,19 +444,33 @@ export function bodyToColumnar(
     if (Array.isArray(body.damage)) scalars.damage = body.damage;
     if (Array.isArray(body.properties)) scalars.properties = body.properties;
     if (body.agilityReduction != null) scalars.agilityReduction = body.agilityReduction;
-    if (body.criticalRangeIncrease != null) scalars.criticalRangeIncrease = body.criticalRangeIncrease;
+    if (body.criticalRangeIncrease != null)
+      scalars.criticalRangeIncrease = body.criticalRangeIncrease;
     if (body.shieldDR != null) scalars.shieldDR = body.shieldDR;
     if (body.shieldDamage != null) scalars.shieldDamage = body.shieldDamage;
-    if (typeof body.imageUrl === 'string' && body.imageUrl.trim()) {
-      scalars.imageUrl = body.imageUrl.split('?')[0];
-    } else if (body.imageUrl === null) {
-      scalars.imageUrl = null;
-    }
   }
 
+  applyImageScalarsFromBody(scalars, body);
+
   const skipKeys = new Set<string>([
+    // Image refs always go through applyImageScalarsFromBody → columnar columns only.
+    'imageId',
+    'imageUrl',
+    'image_id',
+    'image_url',
     ...(type === 'powers' ? ['range', 'duration', 'area', 'damage'] : []),
-    ...((type === 'techniques' || type === 'empowered-techniques') ? ['range', 'duration', 'damage'] : []),
+    ...(type === 'techniques' || type === 'empowered-techniques'
+      ? [
+          'range',
+          'duration',
+          'damage',
+          // Derived Attack label — never persist (not a column; not payload SoT).
+          'weaponName',
+          'weapon_name',
+          // Legacy tied-weapon object — parts/attackMode are SoT.
+          'weapon',
+        ]
+      : []),
     ...(type === 'items'
       ? [
           // Stored in scalar columns (rangeSteps/isTwoHanded/etc.) via the block above.
@@ -326,7 +485,6 @@ export function bodyToColumnar(
           'criticalRangeIncrease',
           'shieldDR',
           'shieldDamage',
-          'imageUrl',
         ]
       : []),
   ]);
@@ -353,6 +511,29 @@ export function bodyToColumnar(
       payload[k] = v;
     }
   }
+
+  // Persist derived attackMode beside parts (label stays client-derived on read).
+  if (type === 'techniques' || type === 'empowered-techniques') {
+    const savedParts = collectPayloadParts(payload);
+    const attackMode: AttackMode =
+      type === 'empowered-techniques'
+        ? deriveEmpoweredAttackMode({
+            attackMode: payload.attackMode ?? body.attackMode,
+            parts: savedParts,
+            weapon: (payload.power as Record<string, unknown> | undefined)?.addWeapon as
+              | { id?: string | number | undefined; name?: string | undefined }
+              | undefined,
+          })
+        : deriveTechniqueAttackMode({
+            attackMode: payload.attackMode ?? body.attackMode,
+            parts: savedParts,
+            weapon: body.weapon as
+              | { id?: string | number | undefined; name?: string | undefined }
+              | undefined,
+          });
+    payload.attackMode = attackMode;
+  }
+
   return { scalars, payload };
 }
 
@@ -373,8 +554,28 @@ const SPECIES_ARRAY_KEYS = [
 function toStrArray(val: unknown): string[] {
   if (!val) return [];
   if (Array.isArray(val)) return val.map(String);
-  if (typeof val === 'string') return val.split(',').map((s) => s.trim()).filter(Boolean);
+  if (typeof val === 'string')
+    return val
+      .split(',')
+      .map((s) => s.trim())
+      .filter(Boolean);
   return [];
+}
+
+/** Flatten a legacy `data` JSON species row, overlaying columnar image columns. */
+export function mergeLegacySpeciesRowWithImageColumns(
+  row: Record<string, unknown>,
+): Record<string, unknown> {
+  const d = (row.data as Record<string, unknown>) ?? {};
+  const imageId = row.image_id ?? row.imageId ?? d.image_id ?? d.imageId;
+  const imageUrl = row.image_url ?? row.imageUrl ?? d.image_url ?? d.imageUrl;
+  return {
+    id: row.id,
+    docId: row.id,
+    ...d,
+    ...(typeof imageId === 'string' && imageId.trim() ? { image_id: imageId.trim() } : {}),
+    ...(typeof imageUrl === 'string' && imageUrl.trim() ? { image_url: imageUrl.trim() } : {}),
+  };
 }
 
 /** Build client-shaped species from columnar row (user_species). */
@@ -404,6 +605,12 @@ export function rowToItemSpecies(row: Record<string, unknown>): Record<string, u
       .map((s) => parseFloat(s.trim()))
       .filter((n) => !Number.isNaN(n));
   }
+  // Species consumers read the codex-like snake_case shape (types/codex.ts, list-row-image);
+  // readRecordImageUrl/-Id also handle it. Do not add a redundant camelCase copy here.
+  const imageId = v(row, 'imageId', 'image_id');
+  if (typeof imageId === 'string' && imageId.trim()) base.image_id = imageId.trim();
+  const imageUrl = v(row, 'imageUrl', 'image_url');
+  if (typeof imageUrl === 'string' && imageUrl.trim()) base.image_url = imageUrl.trim();
   return { ...base, ...payload };
 }
 
@@ -431,8 +638,13 @@ export function bodyToColumnarSpecies(body: Record<string, unknown>): {
   const payload: Record<string, unknown> = {};
   for (const [k, v] of Object.entries(body)) {
     if (k === 'id' || k === 'docId' || k === '_source') continue;
+    // Image refs are columnar only (camel or snake) — never duplicate into payload JSONB.
+    if (k === 'imageId' || k === 'imageUrl' || k === 'image_id' || k === 'image_url') continue;
     if (scalarKeys.has(k)) {
-      if (SPECIES_ARRAY_KEYS.includes(k as (typeof SPECIES_ARRAY_KEYS)[number]) && Array.isArray(v)) {
+      if (
+        SPECIES_ARRAY_KEYS.includes(k as (typeof SPECIES_ARRAY_KEYS)[number]) &&
+        Array.isArray(v)
+      ) {
         scalars[k] = (v as unknown[]).map(String).join(',');
       } else if (k === 'adulthood_lifespan' && Array.isArray(v)) {
         scalars[k] = (v as unknown[]).map(String).join(',');
@@ -443,6 +655,7 @@ export function bodyToColumnarSpecies(body: Record<string, unknown>): {
       payload[k] = v;
     }
   }
+  applyImageScalarsFromBody(scalars, body);
   return { scalars, payload };
 }
 

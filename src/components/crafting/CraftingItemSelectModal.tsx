@@ -10,8 +10,15 @@
 
 import { useMemo, useState } from 'react';
 import { useUserItems, useEquipment, useItemProperties, useOfficialLibrary } from '@/hooks';
-import { SourceFilter, type SourceFilterValue } from '@/components/shared/filters/source-filter';
-import { UnifiedSelectionModal, type SelectableItem } from '@/components/shared/unified-selection-modal';
+import {
+  SourceFilter,
+  sourceFilterSummary,
+  type SourceFilterValue,
+} from '@/components/patterns/filters/source-filter';
+import {
+  UnifiedSelectionModal,
+  type SelectableItem,
+} from '@/components/patterns/select/unified-selection-modal';
 import { TabNavigation, useTabGroup } from '@/components/ui/tab-navigation';
 import {
   getCodexEquipmentMarketPrice,
@@ -46,7 +53,11 @@ function isEquipmentType(type: string | undefined): boolean {
   return (type || 'equipment').toLowerCase() === 'equipment';
 }
 
-export function CraftingItemSelectModal({ isOpen, onClose, onSelect }: CraftingItemSelectModalProps) {
+export function CraftingItemSelectModal({
+  isOpen,
+  onClose,
+  onSelect,
+}: CraftingItemSelectModalProps) {
   const { tabGroupId, sharedPanelId } = useTabGroup();
   const [activeTab, setActiveTab] = useState<CraftingTabId>('armaments');
   const [source, setSource] = useState<SourceFilterValue>('all');
@@ -60,7 +71,7 @@ export function CraftingItemSelectModal({ isOpen, onClose, onSelect }: CraftingI
 
   const armamentsItems = useMemo((): SelectableItem[] => {
     const list: SelectableItem[] = [];
-    const addUser = (i: UserItem & { _source?: 'my' | 'public' }) => {
+    const addUser = (i: UserItem & { _source?: 'my' | 'public' | undefined }) => {
       const marketPrice = getLibraryItemMarketPrice(i, propertiesDb);
       list.push({
         id: String(i.id ?? i.docId ?? ''),
@@ -83,7 +94,9 @@ export function CraftingItemSelectModal({ isOpen, onClose, onSelect }: CraftingI
         description: String(i.description ?? ''),
         type: String(i.type ?? ''),
         armamentType: String(i.type ?? ''),
-        properties: (Array.isArray(i.properties) ? i.properties : []) as LibraryItemLike['properties'],
+        properties: (Array.isArray(i.properties)
+          ? i.properties
+          : []) as LibraryItemLike['properties'],
         damage: i.damage,
       };
       const marketPrice = getLibraryItemMarketPrice(lib, propertiesDb);
@@ -114,7 +127,7 @@ export function CraftingItemSelectModal({ isOpen, onClose, onSelect }: CraftingI
       list.push({
         id: String(e.id),
         name: String(e.name ?? ''),
-        description: String((e as { description?: string }).description ?? ''),
+        description: String((e as { description?: string | undefined }).description ?? ''),
         columns: [{ key: 'Currency', value: marketPrice }],
         data: {
           source: 'public',
@@ -127,7 +140,10 @@ export function CraftingItemSelectModal({ isOpen, onClose, onSelect }: CraftingI
     userItems
       .filter((i: UserItem) => isEquipmentType(i.type as string))
       .forEach((i: UserItem) => {
-        const marketPrice = getLibraryItemMarketPrice(i as unknown as LibraryItemLike, propertiesDb);
+        const marketPrice = getLibraryItemMarketPrice(
+          i as unknown as LibraryItemLike,
+          propertiesDb,
+        );
         list.push({
           id: String(i.id ?? i.docId ?? ''),
           name: String(i.name ?? ''),
@@ -141,29 +157,33 @@ export function CraftingItemSelectModal({ isOpen, onClose, onSelect }: CraftingI
           } as CraftingSelectedItem,
         });
       });
-    publicItems.filter((i) => isEquipmentType(i.type)).forEach((i) => {
-      const id = String(i.id ?? i.docId ?? '');
-      const lib: LibraryItemLike = {
-        id,
-        name: String(i.name ?? ''),
-        description: String(i.description ?? ''),
-        type: 'equipment',
-        properties: (Array.isArray(i.properties) ? i.properties : []) as LibraryItemLike['properties'],
-      };
-      const marketPrice = getLibraryItemMarketPrice(lib, propertiesDb);
-      list.push({
-        id,
-        name: String(i.name ?? ''),
-        description: String(i.description ?? ''),
-        columns: [{ key: 'Currency', value: marketPrice }],
-        data: {
-          source: 'public',
+    publicItems
+      .filter((i) => isEquipmentType(i.type))
+      .forEach((i) => {
+        const id = String(i.id ?? i.docId ?? '');
+        const lib: LibraryItemLike = {
           id,
           name: String(i.name ?? ''),
-          marketPrice,
-        } as CraftingSelectedItem,
+          description: String(i.description ?? ''),
+          type: 'equipment',
+          properties: (Array.isArray(i.properties)
+            ? i.properties
+            : []) as LibraryItemLike['properties'],
+        };
+        const marketPrice = getLibraryItemMarketPrice(lib, propertiesDb);
+        list.push({
+          id,
+          name: String(i.name ?? ''),
+          description: String(i.description ?? ''),
+          columns: [{ key: 'Currency', value: marketPrice }],
+          data: {
+            source: 'public',
+            id,
+            name: String(i.name ?? ''),
+            marketPrice,
+          } as CraftingSelectedItem,
+        });
       });
-    });
     return list;
   }, [codexEquipment, userItems, publicItems, propertiesDb]);
 
@@ -176,7 +196,7 @@ export function CraftingItemSelectModal({ isOpen, onClose, onSelect }: CraftingI
       if (source === 'my') return d.source === 'library';
       return d.source === 'public';
     },
-    [source]
+    [source],
   );
   const isLoading = userLoading || codexLoading || publicLoading;
 
@@ -188,37 +208,47 @@ export function CraftingItemSelectModal({ isOpen, onClose, onSelect }: CraftingI
     onClose();
   };
 
+  const optionsSummary = sourceFilterSummary(source);
+  const optionsActiveCount = source !== 'all' ? 1 : 0;
+
   return (
     <UnifiedSelectionModal
       isOpen={isOpen}
       onClose={onClose}
       title="Select item to craft"
-      description="Choose Armaments or Equipment, then pick a source. Select one item and confirm."
-      headerExtra={
-        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-          <TabNavigation
-            tabs={[{ id: 'armaments', label: 'Armaments' }, { id: 'equipment', label: 'Equipment' }]}
-            activeTab={activeTab}
-            onTabChange={(id) => setActiveTab(id as CraftingTabId)}
-            variant="pill"
-            fullWidth
-            className="w-full sm:w-auto"
-            tabGroupId={tabGroupId}
-            sharedTabPanelId={sharedPanelId}
-          />
-          <SourceFilter value={source} onChange={setSource} />
-        </div>
+      scopeExtra={
+        <TabNavigation
+          tabs={[
+            { id: 'armaments', label: 'Armaments' },
+            { id: 'equipment', label: 'Equipment' },
+          ]}
+          activeTab={activeTab}
+          onTabChange={(id) => setActiveTab(id as CraftingTabId)}
+          variant="pill"
+          fullWidth
+          className="w-full"
+          tabGroupId={tabGroupId}
+          sharedTabPanelId={sharedPanelId}
+        />
       }
+      headerExtra={<SourceFilter value={source} onChange={setSource} />}
+      optionsSummary={optionsSummary}
+      optionsActiveCount={optionsActiveCount}
       items={items}
       isLoading={isLoading}
       onConfirm={handleConfirm}
       maxSelections={1}
       displayFilter={displayFilter}
-      columns={[{ key: 'name', label: 'Name' }, { key: 'Currency', label: 'Currency', sortable: true }]}
+      columns={[
+        { key: 'name', label: 'Name' },
+        { key: 'Currency', label: 'Currency', sortable: true },
+      ]}
       gridColumns="1.4fr 0.8fr"
       itemLabel="item"
       emptyMessage={activeTab === 'armaments' ? 'No armaments found' : 'No equipment found'}
-      emptySubMessage={source !== 'all' ? 'Try another source or create items in the Item Creator.' : undefined}
+      emptySubMessage={
+        source !== 'all' ? 'Try another source or create items in the Item Creator.' : undefined
+      }
       searchPlaceholder="Search items..."
       size="lg"
       className="h-[70vh]"
@@ -226,5 +256,3 @@ export function CraftingItemSelectModal({ isOpen, onClose, onSelect }: CraftingI
     />
   );
 }
-
-export default CraftingItemSelectModal;

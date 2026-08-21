@@ -28,8 +28,7 @@ export const createCraftingSession = (data: CraftingSessionData): Promise<string
 
 export const saveCraftingSession = (
   sessionId: string,
-  data: Partial<CraftingSessionData>
+  data: Partial<CraftingSessionData>,
 ): Promise<void> => client.save(sessionId, data);
 
-export const deleteCraftingSession = (sessionId: string): Promise<void> =>
-  client.remove(sessionId);
+export const deleteCraftingSession = (sessionId: string): Promise<void> => client.remove(sessionId);

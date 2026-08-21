@@ -99,10 +99,9 @@ async function ensureProfile(userId) {
   const { error: upsertErr } = await admin.from('user_profiles').upsert(row, { onConflict: 'id' });
   if (upsertErr) throw upsertErr;
 
-  const { error: usernameErr } = await admin.from('usernames').upsert(
-    { username: manifest.profileUsername, user_id: userId },
-    { onConflict: 'username' },
-  );
+  const { error: usernameErr } = await admin
+    .from('usernames')
+    .upsert({ username: manifest.profileUsername, user_id: userId }, { onConflict: 'username' });
   if (usernameErr) throw usernameErr;
 }
 
@@ -168,10 +167,12 @@ async function ensureCampaign(userId) {
   const { error } = await admin.from('campaigns').upsert(row, { onConflict: 'id' });
   if (error) throw error;
 
-  const { error: memberErr } = await admin.from('campaign_members').upsert(
-    { campaign_id: manifest.campaignId, user_id: userId },
-    { onConflict: 'campaign_id,user_id' },
-  );
+  const { error: memberErr } = await admin
+    .from('campaign_members')
+    .upsert(
+      { campaign_id: manifest.campaignId, user_id: userId },
+      { onConflict: 'campaign_id,user_id' },
+    );
   if (memberErr && !memberErr.message.includes('duplicate')) {
     // Table may not exist in all envs; roster memberIds still gates access.
     console.warn('campaign_members upsert skipped:', memberErr.message);

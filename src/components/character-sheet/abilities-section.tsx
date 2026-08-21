@@ -3,22 +3,42 @@
  * =================
  * Displays the six core abilities in a row with clickable roll buttons,
  * followed by a separate defenses row with defense scores and roll buttons.
- * 
- * Layout matches vanilla site:
- * - Row 1: 6 abilities with gradient roll buttons showing bonus
- * - Row 2: 6 defenses with score and gradient roll buttons for bonus
+ *
+ * // DESIGN_INTENT: Dense like sheet-header LargeStatBlock — label glued to value.
+ * C3 equal-track 2/3/6 grid; tiles in a row share height (`h-full`); labels are
+ * GAME_RULES full names that wrap inside the tile. Ability play = RollButton;
+ * defense glance = Score, play = smaller bonus RollButton.
+ * Sheet Edit = rules spend; sheet Temp Modifier = layered deltas (ADR-0006 / TASK-782).
  */
 
 'use client';
 
 import { useMemo, useState } from 'react';
-import { cn, formatBonus } from '@/lib/utils';
-import { useRollsOptional } from './roll-context';
-import { RollButton, PointStatus, EditSectionToggle, DecrementButton, IncrementButton } from '@/components/shared';
+import { EditSectionToggle, PointStatus, TempModifierToggle } from '@/components/patterns';
 import { Card } from '@/components/ui';
+import { cn } from '@/lib/utils';
 import { DEFENSE_INCREASE_COST } from '@/lib/game/skill-allocation';
-import { calculateAbilityScoreCost, getAbilityIncreaseCost } from '@/lib/game/formulas';
-import type { Abilities, AbilityName, DefenseSkills } from '@/types';
+import { calculateAbilityScoreCost } from '@/lib/game/formulas';
+import {
+  getDefenseTempModifier,
+  getEffectiveAbilities,
+  sectionTempModifierTint,
+} from '@/lib/character/temp-modifiers';
+import type {
+  Abilities,
+  AbilityName,
+  CharacterTempModifiers,
+  DefenseName,
+  DefenseSkills,
+} from '@/types';
+import {
+  ABILITY_INFO,
+  ABILITY_ORDER,
+  ABILITY_CONSTRAINTS,
+  SHEET_STAT_GRID_CLASS,
+} from './abilities-section-model';
+import { AbilityStatTile } from './ability-stat-tile';
+import { DefenseStatTile } from './defense-stat-tile';
 
 // =============================================================================
 // Types
@@ -26,97 +46,22 @@ import type { Abilities, AbilityName, DefenseSkills } from '@/types';
 
 interface AbilitiesSectionProps {
   abilities: Abilities;
-  defenseSkills?: DefenseSkills;
+  defenseSkills?: DefenseSkills | undefined;
   level: number;
-  archetypeAbility?: AbilityName;
-  martialAbility?: AbilityName;
-  powerAbility?: AbilityName;
-  isEditMode?: boolean;
-  totalAbilityPoints?: number;
-  spentAbilityPoints?: number;
-  totalSkillPoints?: number;
-  spentSkillPoints?: number;
-  onAbilityChange?: (ability: AbilityName, value: number) => void;
-  onDefenseChange?: (defense: keyof DefenseSkills, value: number) => void;
+  archetypeAbility?: AbilityName | undefined;
+  martialAbility?: AbilityName | undefined;
+  powerAbility?: AbilityName | undefined;
+  isEditMode?: boolean | undefined;
+  isTempModifierMode?: boolean | undefined;
+  totalAbilityPoints?: number | undefined;
+  spentAbilityPoints?: number | undefined;
+  totalSkillPoints?: number | undefined;
+  spentSkillPoints?: number | undefined;
+  tempModifiers?: CharacterTempModifiers | undefined;
+  onTempModifiersChange?: ((patch: CharacterTempModifiers) => void) | undefined;
+  onAbilityChange?: ((ability: AbilityName, value: number) => void) | undefined;
+  onDefenseChange?: ((defense: keyof DefenseSkills, value: number) => void) | undefined;
 }
-
-// =============================================================================
-// Constants
-// =============================================================================
-
-const ABILITY_ORDER: AbilityName[] = ['strength', 'vitality', 'agility', 'acuity', 'intelligence', 'charisma'];
-
-const ABILITY_INFO: Record<AbilityName, { name: string; shortName: string; defenseKey: keyof DefenseSkills }> = {
-  strength: { name: 'Strength', shortName: 'STR', defenseKey: 'might' },
-  vitality: { name: 'Vitality', shortName: 'VIT', defenseKey: 'fortitude' },
-  agility: { name: 'Agility', shortName: 'AGI', defenseKey: 'reflex' },
-  acuity: { name: 'Acuity', shortName: 'ACU', defenseKey: 'discernment' },
-  intelligence: { name: 'Intelligence', shortName: 'INT', defenseKey: 'mentalFortitude' },
-  charisma: { name: 'Charisma', shortName: 'CHA', defenseKey: 'resolve' },
-};
-
-const DEFENSE_INFO: Record<keyof DefenseSkills, { name: string; shortName: string }> = {
-  might: { name: 'Might', shortName: 'MGT' },
-  fortitude: { name: 'Fortitude', shortName: 'FOR' },
-  reflex: { name: 'Reflex', shortName: 'REF' },
-  discernment: { name: 'Discernment', shortName: 'DIS' },
-  mentalFortitude: { name: 'Mental Fort.', shortName: 'MNT' },
-  resolve: { name: 'Resolve', shortName: 'RES' },
-};
-
-// Ability constraints
-const ABILITY_CONSTRAINTS = {
-  /** Level-1 creation minimum; sheet editing can go lower for effects. */
-  MIN_ABILITY: -2,
-  /** Floor when editing on character sheet (effects may reduce below -2). */
-  MIN_ABILITY_SHEET_EDIT: -10,
-  MAX_NEGATIVE_SUM: -3,
-  getMaxAbility: (level: number): number => {
-    if (level <= 1) return 3;
-    if (level <= 3) return 4;
-    if (level <= 6) return 5;
-    if (level <= 9) return 6;
-    if (level <= 12) return 7;
-    if (level <= 15) return 8;
-    return 9;
-  },
-  getMaxDefenseSkill: (level: number): number => level,
-};
-
-// =============================================================================
-// Helper Functions
-// =============================================================================
-
-function canDecreaseAbility(abilities: Abilities, abilityName: AbilityName): boolean {
-  const currentValue = abilities[abilityName] ?? 0;
-  const newValue = currentValue - 1;
-
-  // Sheet editing: allow down to MIN_ABILITY_SHEET_EDIT so effects can reduce below level-1 minimum (-2)
-  if (newValue < ABILITY_CONSTRAINTS.MIN_ABILITY_SHEET_EDIT) return false;
-
-  // When going below creation minimum (-2), only enforce the sheet floor; skip negative-sum rule
-  if (newValue < ABILITY_CONSTRAINTS.MIN_ABILITY) return true;
-
-  // Check negative sum constraint (creation rule for values >= -2)
-  if (newValue < 0) {
-    const currentNegSum = Object.values(abilities)
-      .filter((v): v is number => typeof v === 'number' && v < 0)
-      .reduce((sum, v) => sum + v, 0);
-
-    let newNegSum: number;
-    if (currentValue < 0) {
-      newNegSum = currentNegSum - 1;
-    } else {
-      newNegSum = currentNegSum + newValue;
-    }
-
-    if (newNegSum < ABILITY_CONSTRAINTS.MAX_NEGATIVE_SUM) return false;
-  }
-
-  return true;
-}
-
-// Note: RollButton and PointStatus are now imported from @/components/shared
 
 // =============================================================================
 // Main Component
@@ -126,97 +71,120 @@ export function AbilitiesSection({
   abilities,
   defenseSkills,
   level,
-  archetypeAbility,
   martialAbility,
   powerAbility,
   isEditMode = false,
+  isTempModifierMode = false,
   totalAbilityPoints,
   spentAbilityPoints,
   totalSkillPoints,
   spentSkillPoints,
+  tempModifiers,
+  onTempModifiersChange,
   onAbilityChange,
   onDefenseChange,
 }: AbilitiesSectionProps) {
-  const rollContext = useRollsOptional();
-  
-  // Local state for whether this section is actively being edited
-  // Only relevant when isEditMode is true - clicking pencil toggles this
-  const [isSectionEditing, setIsSectionEditing] = useState(false);
-  
-  // Derived state: is the section actually editable right now?
-  const showEditControls = isEditMode && isSectionEditing;
-  
-  // Calculate ability points spent
+  const [sectionAdjustOpen, setSectionAdjustOpen] = useState(false);
+  const sheetModeKey = `${isEditMode}:${isTempModifierMode}`;
+  const [prevSheetModeKey, setPrevSheetModeKey] = useState(sheetModeKey);
+  if (sheetModeKey !== prevSheetModeKey) {
+    setPrevSheetModeKey(sheetModeKey);
+    setSectionAdjustOpen(false);
+  }
+
+  const showSpendControls = isEditMode && sectionAdjustOpen;
+  const showTempControls = isTempModifierMode && sectionAdjustOpen;
+  const showEditControls = showSpendControls || showTempControls;
+  const showSectionToggle = isEditMode || isTempModifierMode;
+
+  const effectiveAbilities = useMemo(
+    () => getEffectiveAbilities(abilities, tempModifiers),
+    [abilities, tempModifiers],
+  );
+
+  // Calculate ability points spent (base allocation only — temps are not spend)
   const calculatedSpentAbilityPoints = useMemo(() => {
     return ABILITY_ORDER.reduce(
       (sum, ability) => sum + calculateAbilityScoreCost(abilities[ability] ?? 0),
-      0
+      0,
     );
   }, [abilities]);
-  
-  // Defense allocation cost: DEFENSE_INCREASE_COST skill points per +1 (core rules: 2)
-  const calculatedDefenseSpent = useMemo(() => {
-    if (!defenseSkills) return 0;
-    return Object.values(defenseSkills).reduce((sum, val) => sum + ((val || 0) * DEFENSE_INCREASE_COST), 0);
-  }, [defenseSkills]);
-  
+
   const getDefenseValue = (defenseKey: keyof DefenseSkills): number => {
     return defenseSkills?.[defenseKey] ?? 0;
   };
-  
-  const getDefenseBonus = (ability: AbilityName): number => {
-    const abilityValue = abilities[ability] ?? 0;
+
+  const getDefenseBonus = (ability: AbilityName, useEffective: boolean): number => {
+    const abilityValue = (useEffective ? effectiveAbilities : abilities)[ability] ?? 0;
     const defenseKey = ABILITY_INFO[ability].defenseKey;
     const defenseValue = getDefenseValue(defenseKey);
-    return abilityValue + defenseValue;
+    const defenseTemp = getDefenseTempModifier(tempModifiers, defenseKey as DefenseName);
+    return abilityValue + defenseValue + defenseTemp;
   };
-  
-  const getDefenseScore = (ability: AbilityName): number => {
-    return 10 + getDefenseBonus(ability);
+
+  const getDefenseScore = (ability: AbilityName, useEffective: boolean): number => {
+    return 10 + getDefenseBonus(ability, useEffective);
   };
-  
+
   const maxAbility = ABILITY_CONSTRAINTS.getMaxAbility(level);
   const maxDefenseSkill = ABILITY_CONSTRAINTS.getMaxDefenseSkill(level);
-  
-  // Calculate edit state for pencil icon: red when over (ability or skill points), green when either has remaining
-  const abilityRemaining = totalAbilityPoints !== undefined
-    ? totalAbilityPoints - (spentAbilityPoints ?? calculatedSpentAbilityPoints)
-    : 0;
-  const skillPointsRemaining = totalSkillPoints !== undefined
-    ? totalSkillPoints - (spentSkillPoints ?? 0)
-    : 0;
+
+  const abilityRemaining =
+    totalAbilityPoints !== undefined
+      ? totalAbilityPoints - (spentAbilityPoints ?? calculatedSpentAbilityPoints)
+      : 0;
+  const skillPointsRemaining =
+    totalSkillPoints !== undefined ? totalSkillPoints - (spentSkillPoints ?? 0) : 0;
+
   const abilityEditState =
     totalAbilityPoints !== undefined || totalSkillPoints !== undefined
-      ? (abilityRemaining < 0 || skillPointsRemaining < 0
-          ? 'over-budget'
-          : (abilityRemaining > 0 || skillPointsRemaining > 0 ? 'has-points' : 'normal'))
+      ? abilityRemaining < 0 || skillPointsRemaining < 0
+        ? 'over-budget'
+        : abilityRemaining > 0 || skillPointsRemaining > 0
+          ? 'has-points'
+          : 'normal'
       : 'normal';
+  const tempTint = sectionTempModifierTint(tempModifiers, 'abilities');
+  const applyToResourceMaxima = tempModifiers?.applyAbilityToResourceMaxima === true;
 
   return (
-    <Card className="shadow-md p-4 md:p-6 mb-4 relative">
-      {/* Edit Mode Indicator - Blue Pencil Icon in top-right */}
-      {isEditMode && (
+    <Card className="relative mb-4 p-4 shadow-md md:p-6">
+      {showSectionToggle && (
         <div className="absolute top-3 right-3">
-          <EditSectionToggle 
-            state={abilityEditState}
-            isActive={isSectionEditing}
-            onClick={() => setIsSectionEditing(prev => !prev)}
-            title={
-              isSectionEditing
-                ? 'Click to close editing'
-                : abilityEditState === 'has-points' 
-                  ? 'Click to edit - you have ability points to spend' 
-                  : abilityEditState === 'over-budget'
-                    ? 'Click to edit - over budget, remove points'
-                    : 'Click to edit abilities & defenses'
-            }
-          />
+          {isEditMode ? (
+            <EditSectionToggle
+              state={abilityEditState}
+              isActive={sectionAdjustOpen}
+              onClick={() => setSectionAdjustOpen((open) => !open)}
+              title={
+                sectionAdjustOpen
+                  ? 'Close point spending'
+                  : abilityEditState === 'has-points'
+                    ? 'Edit — spend ability/defense points'
+                    : abilityEditState === 'over-budget'
+                      ? 'Edit — over budget, remove points'
+                      : 'Edit abilities & defenses'
+              }
+            />
+          ) : (
+            <TempModifierToggle
+              isActive={sectionAdjustOpen}
+              tint={tempTint}
+              onClick={() => setSectionAdjustOpen((open) => !open)}
+              title={
+                sectionAdjustOpen
+                  ? 'Close Temp Modifier'
+                  : tempTint === 'none'
+                    ? 'Temp Modifier'
+                    : 'Temp Modifier (active adjustments)'
+              }
+            />
+          )}
         </div>
       )}
-      
-      {/* Header with Point Trackers */}
-      {showEditControls && (
-        <div className="flex flex-col items-center gap-2 mb-4 p-3 bg-surface-secondary rounded-lg">
+
+      {showSpendControls && (
+        <div className="mb-4 flex flex-col items-center gap-2 rounded-lg bg-surface-secondary p-3">
           <div className="flex flex-wrap justify-center gap-4">
             {totalAbilityPoints !== undefined && (
               <PointStatus
@@ -235,144 +203,87 @@ export function AbilitiesSection({
               />
             )}
           </div>
-          <div className="text-xs text-text-muted dark:text-text-secondary">
-            Max ability: +{maxAbility} | Defense: {DEFENSE_INCREASE_COST}sp per +1 (max +{maxDefenseSkill}, over allowed)
+          <div className="text-xs text-text-muted">
+            Max ability: +{maxAbility} | Defense: {DEFENSE_INCREASE_COST}sp per +1 (max +
+            {maxDefenseSkill})
           </div>
         </div>
       )}
-      
-      {/* Abilities Row */}
-      <div className="grid grid-cols-3 sm:grid-cols-6 gap-3 md:gap-4 mb-6">
-        {ABILITY_ORDER.map((ability) => {
-          const value = abilities[ability] ?? 0;
-          const info = ABILITY_INFO[ability];
-          const isPower = powerAbility?.toLowerCase() === ability;
-          const isMartial = martialAbility?.toLowerCase() === ability;
-          const isArchetype = isPower || isMartial;
-          const cost = getAbilityIncreaseCost(value);
-          const canIncrease = value < maxAbility;
-          const canDecrease = canDecreaseAbility(abilities, ability);
-          
-          return (
-            <div
-              key={ability}
-              className={cn(
-                'flex flex-col items-center p-3 bg-gradient-to-b from-surface to-surface-alt rounded-xl border-2 transition-all',
-                isPower ? 'border-power-border' : isMartial ? 'border-martial-border' : 'border-border-light',
-                !showEditControls && 'hover:shadow-md'
-              )}
-            >
-              {/* Ability Name */}
-              <span className="text-xs font-bold text-text-muted dark:text-text-secondary uppercase tracking-wider mb-2">
-                {info.name}
-              </span>
-              
-              {/* Ability Value / Roll Button */}
-              {showEditControls ? (
-                <div className="flex items-center gap-1">
-                  <DecrementButton
-                    onClick={() => onAbilityChange?.(ability, value - 1)}
-                    disabled={!canDecrease}
-                    size="sm"
-                  />
-                  <span className={cn(
-                    'text-2xl font-bold min-w-[56px] text-center',
-                    value > 0 ? 'text-success-fg' : value < 0 ? 'text-danger-fg' : 'text-text-secondary'
-                  )}>
-                    {formatBonus(value)}
-                  </span>
-                  <IncrementButton
-                    onClick={() => onAbilityChange?.(ability, value + 1)}
-                    disabled={!canIncrease}
-                    size="sm"
-                    title={canIncrease ? `Cost: ${cost} point${cost > 1 ? 's' : ''}` : `Max at level ${level}`}
-                  />
-                </div>
-              ) : rollContext?.canRoll !== false ? (
-                <RollButton
-                  value={value}
-                  onClick={() => rollContext?.rollAbility?.(ability, value)}
-                  size="lg"
-                  title={`Roll ${info.name}`}
-                />
-              ) : null}
-              
-              {/* Cost indicator in edit mode - only show if next point costs 2 */}
-              {showEditControls && cost > 1 && canIncrease && (
-                <span className="text-[10px] text-warning-fg font-medium mt-1">
-                  Next: {cost} Points
-                </span>
-              )}
-            </div>
-          );
-        })}
+
+      {showTempControls && (
+        <div className="mb-4 flex flex-col items-center gap-2 rounded-lg bg-surface-secondary p-3">
+          <p className="text-center text-xs text-text-secondary">
+            Temp Modifier — layered Bonus/Penalty (does not spend points). Values tint gold or
+            danger.
+          </p>
+          <label className="inline-flex cursor-pointer items-center gap-2 text-xs text-text-primary">
+            <input
+              type="checkbox"
+              checked={applyToResourceMaxima}
+              onChange={(e) =>
+                onTempModifiersChange?.({
+                  applyAbilityToResourceMaxima: e.target.checked,
+                })
+              }
+              className="rounded border-border"
+              aria-describedby="ability-temp-resource-maxima-help"
+            />
+            <span>Apply ability temps to max Health / Energy / TP</span>
+          </label>
+          <p
+            id="ability-temp-resource-maxima-help"
+            className="text-center text-[10px] text-text-muted"
+          >
+            Default off. When on, ability Temp Modifiers also adjust resource maxima.
+          </p>
+        </div>
+      )}
+
+      {/* Abilities — label + roll; equal gap + tile padding (not squashed, not empty) */}
+      <div className={cn('mb-4', SHEET_STAT_GRID_CLASS)}>
+        {ABILITY_ORDER.map((ability) => (
+          <AbilityStatTile
+            key={ability}
+            ability={ability}
+            abilities={abilities}
+            level={level}
+            powerAbility={powerAbility}
+            martialAbility={martialAbility}
+            tempModifiers={tempModifiers}
+            showSpendControls={showSpendControls}
+            showTempControls={showTempControls}
+            showEditControls={showEditControls}
+            maxAbility={maxAbility}
+            abilityRemaining={abilityRemaining}
+            totalAbilityPoints={totalAbilityPoints}
+            onAbilityChange={onAbilityChange}
+            onTempModifiersChange={onTempModifiersChange}
+          />
+        ))}
       </div>
-      
-      {/* Defenses Row - Separate from abilities */}
-      <div className="border-t-2 border-border-light pt-4">
-        <div className="grid grid-cols-3 sm:grid-cols-6 gap-3 md:gap-4">
-          {ABILITY_ORDER.map((ability) => {
-            const info = ABILITY_INFO[ability];
-            const defenseKey = info.defenseKey;
-            const defenseInfo = DEFENSE_INFO[defenseKey];
-            const defenseValue = getDefenseValue(defenseKey);
-            const defenseBonus = getDefenseBonus(ability);
-            const defenseScore = getDefenseScore(ability);
-            const canDecreaseDefense = defenseValue > 0;
-            // Allow override: can increase even over level cap (red pencil indicates overspend)
-            const atOrOverLevelCap = defenseValue >= maxDefenseSkill;
-            
-            return (
-              <div
-                key={defenseKey}
-                className="flex flex-col items-center p-3 bg-surface-alt rounded-lg"
-              >
-                {/* Defense Name */}
-                <span className="text-[10px] font-semibold text-text-muted dark:text-text-secondary uppercase tracking-wider mb-1">
-                  {defenseInfo.name}
-                </span>
-                
-                {/* Defense Score */}
-                <span className="text-lg font-bold text-text-primary mb-1">
-                  {defenseScore}
-                </span>
-                
-                {/* Defense Bonus Roll Button / Edit Controls */}
-                {showEditControls ? (
-                  <div className="flex items-center gap-1">
-                    <DecrementButton
-                      onClick={() => onDefenseChange?.(defenseKey, Math.max(0, defenseValue - 1))}
-                      disabled={!canDecreaseDefense}
-                      size="sm"
-                    />
-                    <span className="text-sm font-bold min-w-[36px] text-center text-primary-link-fg">
-                      {formatBonus(defenseBonus)}
-                    </span>
-                    <IncrementButton
-                      onClick={() => onDefenseChange?.(defenseKey, defenseValue + 1)}
-                      size="sm"
-                      title={atOrOverLevelCap ? `Cost: ${DEFENSE_INCREASE_COST} skill points (over level cap, allowed)` : `Cost: ${DEFENSE_INCREASE_COST} skill points`}
-                    />
-                  </div>
-                ) : rollContext?.canRoll !== false ? (
-                  <RollButton
-                    value={defenseBonus}
-                    variant="primary"
-                    onClick={() => rollContext?.rollDefense?.(defenseInfo.name, defenseBonus)}
-                    size="sm"
-                    title={`Roll ${defenseInfo.name}`}
-                  />
-                ) : null}
-                
-                {/* Defense skill allocation indicator */}
-                {showEditControls && defenseValue > 0 && (
-                  <span className="text-[9px] text-primary-link-fg font-medium mt-0.5">
-                    +{defenseValue} ({defenseValue * DEFENSE_INCREASE_COST}sp)
-                  </span>
-                )}
-              </div>
-            );
-          })}
+
+      {/* Defenses — Score glance + roll; same tip/tile rhythm as abilities */}
+      <div className="border-t border-border-light pt-4">
+        <div className={SHEET_STAT_GRID_CLASS}>
+          {ABILITY_ORDER.map((ability) => (
+            <DefenseStatTile
+              key={ABILITY_INFO[ability].defenseKey}
+              ability={ability}
+              abilities={abilities}
+              defenseSkills={defenseSkills}
+              level={level}
+              tempModifiers={tempModifiers}
+              showSpendControls={showSpendControls}
+              showTempControls={showTempControls}
+              maxDefenseSkill={maxDefenseSkill}
+              skillPointsRemaining={skillPointsRemaining}
+              totalSkillPoints={totalSkillPoints}
+              defenseBonus={getDefenseBonus(ability, true)}
+              defenseScore={getDefenseScore(ability, true)}
+              onDefenseChange={onDefenseChange}
+              onTempModifiersChange={onTempModifiersChange}
+            />
+          ))}
         </div>
       </div>
     </Card>

@@ -9,6 +9,9 @@ import { calculateAllStats, type AllDerivedStats } from '@/lib/game/calculations
 
 export type CharacterSheetStats = AllDerivedStats;
 
-export function calculateStats(character: Character, rules?: Partial<CoreRulesMap>): CharacterSheetStats {
+export function calculateStats(
+  character: Character,
+  rules?: Partial<CoreRulesMap>,
+): CharacterSheetStats {
   return calculateAllStats(character, rules);
 }

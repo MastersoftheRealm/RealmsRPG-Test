@@ -1,37 +1,36 @@
 'use client';
 
 /**
- * CreatorSaveToolbar — Unified save/load/reset actions for all creators
- * =====================================================================
- * Renders Private/Public toggle (admin only), Load, Reset, and Save buttons.
- * Same styling and behavior across power, technique, item, and creature creators.
+ * CreatorSaveToolbar — Unified save/load/reset actions for standalone creators
+ * ==========================================================================
+ * Private/Public toggle (admin), Load, Reset, Save. Used by CreatorPageShell.
  */
 
+import type { ReactNode } from 'react';
 import { FolderOpen } from 'lucide-react';
 import { Button } from '@/components/ui';
-import { SegmentedControl } from '@/components/shared';
+import { SegmentedControl } from '@/components/patterns';
 
 export interface CreatorSaveToolbarProps {
-  /** Current save target (private or public library) */
   saveTarget: 'private' | 'public';
-  /** Called when user toggles Private/Public */
   onSaveTargetChange: (target: 'private' | 'public') => void;
-  /** Called when user clicks Save */
   onSave: () => void | Promise<void>;
-  /** Called when user clicks Load */
   onLoad: () => void;
-  /** Called when user clicks Reset */
   onReset: () => void;
-  /** Save in progress */
   saving: boolean;
-  /** Disable Save button (e.g. when name is empty) */
-  saveDisabled?: boolean;
-  /** Show My library / Public library toggle (admin only) */
-  showPublicPrivate?: boolean;
-  /** Whether user is logged in (for Load button tooltip) */
+  saveDisabled?: boolean | undefined;
+  showPublicPrivate?: boolean | undefined;
   user: unknown;
-  /** Optional className for the actions wrapper */
-  className?: string;
+  /**
+   * When false, Load is usable while logged out (species creator).
+   * Affects Load button aria/tooltip only — shell still owns the auth gate.
+   */
+  requireAuthToLoad?: boolean | undefined;
+  className?: string | undefined;
+  /** Optional InfoTippy beside Load */
+  loadHelp?: ReactNode | undefined;
+  /** Optional InfoTippy beside Reset */
+  resetHelp?: ReactNode | undefined;
 }
 
 export function CreatorSaveToolbar({
@@ -44,8 +43,13 @@ export function CreatorSaveToolbar({
   saveDisabled = false,
   showPublicPrivate = false,
   user,
-  className,
+  requireAuthToLoad = true,
+  loadHelp,
+  resetHelp,
 }: CreatorSaveToolbarProps) {
+  const loadNeedsLogin = requireAuthToLoad && !user;
+  const loadLabel = loadNeedsLogin ? 'Log in to load from library' : 'Load from library';
+
   return (
     <div className="flex flex-wrap items-center gap-2">
       {showPublicPrivate && (
@@ -59,22 +63,24 @@ export function CreatorSaveToolbar({
           aria-label="Save to my library or Realms Library"
         />
       )}
-      <Button
-        variant="secondary"
-        onClick={onLoad}
-        title={user ? 'Load from library' : 'Log in to load from library'}
-        aria-label={user ? 'Load from library' : 'Log in to load from library'}
-      >
-        <FolderOpen className="w-5 h-5" />
-        Load
-      </Button>
-      <Button variant="secondary" onClick={onReset}>
-        Reset
-      </Button>
+      <span className="inline-flex items-center gap-1">
+        <Button variant="secondary" onClick={onLoad} title={loadLabel} aria-label={loadLabel}>
+          <FolderOpen className="h-5 w-5" />
+          Load
+        </Button>
+        {loadHelp}
+      </span>
+      <span className="inline-flex items-center gap-1">
+        <Button variant="secondary" onClick={onReset} aria-label="Reset creator form">
+          Reset
+        </Button>
+        {resetHelp}
+      </span>
       <Button
         onClick={onSave}
         disabled={saving || saveDisabled}
         isLoading={saving}
+        aria-label={saving ? 'Saving' : 'Save'}
       >
         {saving ? 'Saving...' : 'Save'}
       </Button>

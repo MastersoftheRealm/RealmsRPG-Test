@@ -10,8 +10,8 @@ import Image from 'next/image';
 interface SocialButtonProps {
   provider: 'google' | 'apple';
   onClick: () => void;
-  disabled?: boolean;
-  className?: string;
+  disabled?: boolean | undefined;
+  className?: string | undefined;
 }
 
 const providerConfig = {
@@ -38,21 +38,15 @@ export function SocialButton({ provider, onClick, disabled, className }: SocialB
       onClick={onClick}
       disabled={disabled}
       className={cn(
-        'w-full flex items-center justify-center gap-3 px-4 py-3 rounded-lg',
-        'font-medium transition-colors duration-base',
-        'disabled:opacity-50 disabled:cursor-not-allowed',
+        'flex w-full items-center justify-center gap-3 rounded-lg px-4 py-3',
+        'duration-base font-medium transition-colors',
+        'disabled:cursor-not-allowed disabled:opacity-50',
         config.bg,
         config.text,
-        className
+        className,
       )}
     >
-      <Image
-        src={config.icon}
-        alt={provider}
-        width={20}
-        height={20}
-        className="w-5 h-5"
-      />
+      <Image src={config.icon} alt={provider} width={20} height={20} className="h-5 w-5" />
       <span>{config.label}</span>
     </button>
   );

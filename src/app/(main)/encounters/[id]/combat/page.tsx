@@ -7,11 +7,11 @@
 
 'use client';
 
-import { useState, useEffect, use } from 'react';
+import { useState, use } from 'react';
 import Link from 'next/link';
 import { LoadingState, PageContainer, Alert, useToast } from '@/components/ui';
 import { useEncounter, useSaveEncounter, useAutoSave, useCampaignsFull } from '@/hooks';
-import { RollProvider } from '@/components/character-sheet';
+import { RollProvider } from '@/components/rolls';
 import type { Encounter } from '@/types/encounter';
 import CombatEncounterView from '../_components/CombatEncounterView';
 import { EncounterPageHeader } from '../_components/EncounterPageHeader';
@@ -30,29 +30,25 @@ function CombatEncounterContent({ params }: { params: Promise<{ id: string }> })
   const { data: encounterData, isLoading, error } = useEncounter(encounterId);
   const saveMutation = useSaveEncounter();
   const [encounter, setEncounter] = useState<Encounter | null>(null);
-  const [isInitialized, setIsInitialized] = useState(false);
+  const [initializedEncounterId, setInitializedEncounterId] = useState<string | null>(null);
   const [isEditingName, setIsEditingName] = useState(false);
   const [nameInput, setNameInput] = useState('');
   const { data: campaignsFull = [] } = useCampaignsFull();
 
-  useEffect(() => {
-    if (encounterData && !isInitialized) {
-      setEncounter(encounterData);
-      setNameInput(encounterData.name || '');
-      setIsInitialized(true);
-    }
-  }, [encounterData, isInitialized]);
-
-  useEffect(() => {
-    if (encounter?.name && !isEditingName) setNameInput(encounter.name);
-  }, [encounter?.name, isEditingName]);
+  if (encounterData && initializedEncounterId !== encounterId) {
+    setEncounter(encounterData);
+    setInitializedEncounterId(encounterId);
+  }
+  const isInitialized = initializedEncounterId === encounterId;
 
   const { showToast } = useToast();
   const { isSaving, hasUnsavedChanges, saveNow } = useAutoSave({
     data: encounter,
     onSave: async (data) => {
       if (!data || !encounterId) return;
-      const { id: _id, createdAt: _ca, ...rest } = data;
+      const { id, createdAt, ...rest } = data;
+      void id;
+      void createdAt;
       await saveMutation.mutateAsync({ id: encounterId, data: rest });
     },
     delay: 1500,
@@ -116,7 +112,10 @@ function CombatEncounterContent({ params }: { params: Promise<{ id: string }> })
           isEditingName={isEditingName}
           nameInput={nameInput}
           onNameInputChange={setNameInput}
-          onStartEditingName={() => setIsEditingName(true)}
+          onStartEditingName={() => {
+            setNameInput(encounter.name || '');
+            setIsEditingName(true);
+          }}
           onCommitName={handleCommitName}
           onCancelEdit={handleCancelEditName}
           isSaving={isSaving}

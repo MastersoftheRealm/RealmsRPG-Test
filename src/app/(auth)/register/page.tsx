@@ -14,6 +14,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { createClient } from '@/lib/supabase/client';
 
 import { registerSchema, type RegisterFormData } from '@/lib/validation';
+import { getAuthErrorMessage } from '@/lib/auth-errors';
 import { sanitizeRedirectPath } from '@/lib/safe-redirect';
 import { createUserProfileAction } from '@/app/(auth)/actions';
 import { resendConfirmationAction } from '@/app/(auth)/auth-actions';
@@ -32,7 +33,8 @@ function RegisterContent() {
 
   const getRedirectPath = () => {
     const urlRedirect = searchParams.get('redirect') ?? searchParams.get('returnTo');
-    const sessionRedirect = typeof window !== 'undefined' ? sessionStorage.getItem('loginRedirect') : null;
+    const sessionRedirect =
+      typeof window !== 'undefined' ? sessionStorage.getItem('loginRedirect') : null;
     return sanitizeRedirectPath(urlRedirect || sessionRedirect || '/');
   };
 
@@ -60,7 +62,7 @@ function RegisterContent() {
         password: data.password,
         options: {
           emailRedirectTo: `${window.location.origin}/auth/confirm?next=${encodeURIComponent(redirectPath)}`,
-          data: chosenUsername ? { username_display: chosenUsername } : undefined,
+          ...(chosenUsername ? { data: { username_display: chosenUsername } } : {}),
         },
       });
       if (err) throw err;
@@ -84,7 +86,7 @@ function RegisterContent() {
       sessionStorage.removeItem('loginRedirect');
       router.push(redirectPath);
     } catch (err) {
-      setError(getAuthErrorMessage(err));
+      setError(getAuthErrorMessage(err, 'register'));
     } finally {
       setIsLoading(false);
     }
@@ -105,7 +107,7 @@ function RegisterContent() {
       setResendStatus('sent');
     } catch (e) {
       setResendStatus('idle');
-      setError(getAuthErrorMessage(e));
+      setError(getAuthErrorMessage(e, 'resend'));
     }
   };
 
@@ -118,7 +120,9 @@ function RegisterContent() {
       const supabase = createClient();
       const { data, error: err } = await supabase.auth.signInWithOAuth({
         provider: 'google',
-        options: { redirectTo: `${window.location.origin}/auth/callback?next=${encodeURIComponent(redirectPath)}` },
+        options: {
+          redirectTo: `${window.location.origin}/auth/callback?next=${encodeURIComponent(redirectPath)}`,
+        },
       });
       if (err) throw err;
       if (data?.url) {
@@ -126,7 +130,7 @@ function RegisterContent() {
       }
     } catch (err: unknown) {
       console.error('Google sign-in error:', err);
-      setError(getAuthErrorMessage(err));
+      setError(getAuthErrorMessage(err, 'register'));
       setIsLoading(false);
     }
   };
@@ -140,9 +144,9 @@ function RegisterContent() {
           </Alert>
         ) : null}
 
-        <div className="text-center space-y-6">
-          <div className="w-16 h-16 mx-auto rounded-full bg-green-500/10 flex items-center justify-center">
-            <CheckIcon className="w-8 h-8 text-green-400" />
+        <div className="space-y-6 text-center">
+          <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-green-500/10">
+            <CheckIcon className="h-8 w-8 text-green-400" />
           </div>
 
           <p className="text-text-secondary">
@@ -171,7 +175,7 @@ function RegisterContent() {
 
             <Link
               href={`/login?redirect=${encodeURIComponent(getRedirectPath())}`}
-              className="inline-block text-primary-link-fg hover:text-primary-fg-hover transition-colors font-medium"
+              className="inline-block font-medium text-primary-link-fg transition-colors hover:text-primary-fg-hover"
             >
               Back to Sign In
             </Link>
@@ -228,22 +232,22 @@ function RegisterContent() {
           <input
             type="checkbox"
             id="acceptTerms"
-            className="w-4 h-4 rounded border-border-light dark:border-border bg-surface text-primary-fg focus:ring-primary-outline-border"
+            className="h-4 w-4 rounded border-border-light bg-surface text-primary-fg focus:ring-primary-outline-border dark:border-border"
             {...register('acceptTerms')}
           />
           <label htmlFor="acceptTerms" className="text-sm text-text-secondary">
             I agree to the{' '}
             <Link href="/terms" className="text-primary-link-fg hover:text-primary-fg-hover">
               Terms of Service
-            </Link>
-            {' '}and{' '}
+            </Link>{' '}
+            and{' '}
             <Link href="/privacy" className="text-primary-link-fg hover:text-primary-fg-hover">
               Privacy Policy
             </Link>
           </label>
         </div>
         {errors.acceptTerms ? (
-          <p className="text-sm text-red-400 -mt-3">{errors.acceptTerms.message}</p>
+          <p className="-mt-3 text-sm text-red-400">{errors.acceptTerms.message}</p>
         ) : null}
 
         <Button type="submit" className="w-full" disabled={isLoading}>
@@ -252,22 +256,21 @@ function RegisterContent() {
       </form>
 
       <div className="my-6 flex items-center gap-4">
-        <div className="flex-1 h-px bg-border-light dark:bg-border" />
-        <span className="text-text-secondary text-sm">or</span>
-        <div className="flex-1 h-px bg-border-light dark:bg-border" />
+        <div className="h-px flex-1 bg-border-light dark:bg-border" />
+        <span className="text-sm text-text-secondary">or</span>
+        <div className="h-px flex-1 bg-border-light dark:bg-border" />
       </div>
 
       <div className="space-y-3">
-        <SocialButton
-          provider="google"
-          onClick={handleGoogleSignIn}
-          disabled={isLoading}
-        />
+        <SocialButton provider="google" onClick={handleGoogleSignIn} disabled={isLoading} />
       </div>
 
       <p className="mt-6 text-center text-text-secondary">
         Already have an account?{' '}
-        <Link href="/login" className="text-primary-link-fg hover:text-primary-fg-hover transition-colors font-medium">
+        <Link
+          href="/login"
+          className="font-medium text-primary-link-fg transition-colors hover:text-primary-fg-hover"
+        >
           Sign in
         </Link>
       </p>
@@ -291,17 +294,7 @@ export default function RegisterPage() {
   );
 }
 
-function getAuthErrorMessage(error: unknown): string {
-  const e = error as { message?: string };
-  const msg = (e.message ?? '').toLowerCase();
-  if (msg.includes('already') || msg.includes('exists')) return 'An account with this email already exists.';
-  if (msg.includes('weak') || msg.includes('password')) return 'Password is too weak. Please choose a stronger password.';
-  if (msg.includes('invalid') || msg.includes('email')) return 'Invalid email address.';
-  if (msg.includes('network') || msg.includes('fetch')) return 'Network error. Please check your connection.';
-  return e.message ?? 'An error occurred during registration. Please try again.';
-}
-
-function CheckIcon({ className }: { className?: string }) {
+function CheckIcon({ className }: { className?: string | undefined }) {
   return (
     <svg
       xmlns="http://www.w3.org/2000/svg"

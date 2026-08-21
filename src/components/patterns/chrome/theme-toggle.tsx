@@ -1,0 +1,84 @@
+/**
+ * Theme Toggle Component
+ * ======================
+ * Allows users to switch between dark, light, and system themes.
+ * Uses next-themes for persistence and system preference detection.
+ */
+
+'use client';
+
+import { useTheme } from 'next-themes';
+import { Sun, Moon, Monitor } from 'lucide-react';
+import { cn } from '@/lib/utils';
+import { useIsClient } from '@/hooks/use-is-client';
+
+interface ThemeToggleProps {
+  /** Whether to show as a dropdown menu or inline buttons */
+  variant?: 'dropdown' | 'inline' | undefined;
+  /** Additional className */
+  className?: string | undefined;
+}
+
+const THEME_OPTIONS = [
+  { value: 'light', label: 'Light', icon: Sun },
+  { value: 'dark', label: 'Dark', icon: Moon },
+  { value: 'system', label: 'System', icon: Monitor },
+] as const;
+
+export function ThemeToggle({ variant = 'dropdown', className }: ThemeToggleProps) {
+  const { theme, setTheme } = useTheme();
+  const mounted = useIsClient();
+
+  if (!mounted) {
+    return null;
+  }
+
+  // Inline variant stays custom: three icon-only choices with a softer selected state (tint, not solid primary).
+  // SegmentedControl is for text (or icon+label) pills with the shared primary fill — see TASK-301 / realms-unification.
+  if (variant === 'inline') {
+    return (
+      <div className={cn('flex items-center gap-1 rounded-lg bg-surface-alt p-1', className)}>
+        {THEME_OPTIONS.map(({ value, label, icon: Icon }) => (
+          <button
+            key={value}
+            onClick={() => setTheme(value)}
+            className={cn(
+              'rounded-md p-2 transition-colors',
+              theme === value
+                ? 'bg-primary-subtle-bg text-primary-subtle-fg'
+                : 'text-text-secondary hover:bg-surface hover:text-text-primary',
+            )}
+            title={label}
+            aria-label={`${label} theme`}
+            aria-pressed={theme === value}
+          >
+            <Icon className="h-4 w-4" />
+          </button>
+        ))}
+      </div>
+    );
+  }
+
+  // Dropdown variant - returns menu items to be used inside a dropdown
+  return (
+    <div className={cn('py-1', className)}>
+      <div className="px-4 py-1 text-xs font-medium text-text-muted uppercase">Theme</div>
+      {THEME_OPTIONS.map(({ value, label, icon: Icon }) => (
+        <button
+          key={value}
+          onClick={() => setTheme(value)}
+          className={cn(
+            'flex w-full items-center gap-3 px-4 py-2 text-left transition-colors',
+            theme === value
+              ? 'bg-primary-subtle-bg text-primary-subtle-fg'
+              : 'text-text-secondary hover:bg-surface-alt',
+          )}
+        >
+          <Icon className="h-4 w-4" />
+          <span>{label}</span>
+          {theme === value && <span className="ml-auto text-primary-fg-active">✓</span>}
+        </button>
+      ))}
+    </div>
+  );
+}

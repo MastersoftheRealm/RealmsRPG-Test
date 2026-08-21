@@ -8,7 +8,8 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { getSession } from '@/lib/supabase/session';
 import { validateJson, enhancedItemCreateSchema } from '@/lib/api-validation';
-import { standardLimiter } from '@/lib/rate-limit';
+import { apiErrorResponse } from '@/lib/api-error';
+import { buildRateLimitKey, resolveClientIp, standardLimiter } from '@/lib/rate-limit';
 import type { UserEnhancedItem } from '@/types/crafting';
 
 export async function GET() {
@@ -19,17 +20,18 @@ export async function GET() {
     }
 
     const supabase = await createClient();
-    const { data: rows } = await supabase
+    const { data: rows, error: dbError } = await supabase
       .from('user_enhanced_items')
       .select('id, data, name, created_at, updated_at')
       .eq('user_id', user.uid)
       .order('updated_at', { ascending: false });
+    if (dbError) throw dbError;
 
     const items: UserEnhancedItem[] = (rows ?? []).map((r) => {
-      const d = ((r as { data?: unknown }).data as Record<string, unknown>) ?? {};
+      const d = ((r as { data?: unknown | undefined }).data as Record<string, unknown>) ?? {};
       return {
         id: (r as { id: string }).id,
-        name: (r as { name?: string }).name ?? (d.name as string) ?? 'Enhanced item',
+        name: (r as { name?: string | undefined }).name ?? (d.name as string) ?? 'Enhanced item',
         baseItem: d.baseItem as UserEnhancedItem['baseItem'],
         powerRef: d.powerRef as UserEnhancedItem['powerRef'],
         description: d.description as string | undefined,
@@ -38,29 +40,40 @@ export async function GET() {
         usesType: d.usesType as string | undefined,
         usesCount: d.usesCount as number | undefined,
         potency: d.potency as number | undefined,
-        createdAt: (r as { created_at?: string }).created_at ?? undefined,
-        updatedAt: (r as { updated_at?: string }).updated_at ?? undefined,
+        createdAt: (r as { created_at?: string | undefined }).created_at ?? undefined,
+        updatedAt: (r as { updated_at?: string | undefined }).updated_at ?? undefined,
       };
     });
 
     return NextResponse.json(items);
   } catch (err) {
-    console.error('[API Error] GET /api/user/enhanced-items:', err);
-    return NextResponse.json({ error: 'Failed to load enhanced items' }, { status: 500 });
+    return apiErrorResponse(
+      'Failed to load enhanced items',
+      500,
+      'GET /api/user/enhanced-items',
+      err,
+    );
   }
 }
 
 export async function POST(request: NextRequest) {
   try {
-    const ip = request.headers.get('x-forwarded-for') ?? 'unknown';
-    const { success } = standardLimiter.check(`enhanced-post:${ip}`);
-    if (!success) {
-      return NextResponse.json({ error: 'Too many requests' }, { status: 429, headers: { 'Retry-After': '60' } });
-    }
-
     const { user, error } = await getSession();
     if (error || !user?.uid) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
+    const { success } = await standardLimiter.check(
+      buildRateLimitKey('enhanced-post', {
+        userId: user.uid,
+        ip: resolveClientIp(request.headers),
+      }),
+    );
+    if (!success) {
+      return NextResponse.json(
+        { error: 'Too many requests' },
+        { status: 429, headers: { 'Retry-After': '60' } },
+      );
     }
 
     const validation = await validateJson(request, enhancedItemCreateSchema);
@@ -93,16 +106,21 @@ export async function POST(request: NextRequest) {
 
     const { error: insertErr } = await supabase.from('user_enhanced_items').insert(row);
     if (insertErr) {
-      console.error('[API Error] POST /api/user/enhanced-items:', insertErr.message);
-      return NextResponse.json(
-        { error: insertErr.message ?? 'Failed to create enhanced item' },
-        { status: 500 }
+      return apiErrorResponse(
+        'Failed to create enhanced item',
+        500,
+        'POST /api/user/enhanced-items (insert)',
+        insertErr,
       );
     }
 
     return NextResponse.json({ id });
   } catch (err) {
-    console.error('[API Error] POST /api/user/enhanced-items:', err);
-    return NextResponse.json({ error: 'Failed to create enhanced item' }, { status: 500 });
+    return apiErrorResponse(
+      'Failed to create enhanced item',
+      500,
+      'POST /api/user/enhanced-items',
+      err,
+    );
   }
 }

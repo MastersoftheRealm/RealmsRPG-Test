@@ -10,12 +10,18 @@
 import { createClient, createServiceRoleClient } from '@/lib/supabase/server';
 import { requireAuth } from '@/lib/supabase/session';
 import { ensureUserProfile } from '@/lib/ensure-user-profile';
+import { reportError } from '@/lib/observability';
 import { getCharacterListColumns } from '@/lib/character-list-columns';
-import { normalizeInviteCodeInput, isValidInviteCodeFormat, visibilityForCampaignMembership } from '@/lib/campaign-invite';
+import {
+  normalizeInviteCodeInput,
+  isValidInviteCodeFormat,
+  visibilityForCampaignMembership,
+} from '@/lib/campaign-invite';
 import { buildRosterFieldsFromCharacterData } from '@/lib/campaign-roster';
 import { getRolePolicyForUser } from '@/lib/role-policy';
+import { buildRateLimitKey, inviteCodeLimiter } from '@/lib/rate-limit';
 import { formatRoleQuotaExceededMessage } from '@/lib/role-quota-messages';
-import type { Campaign, CampaignCharacter } from '@/types/campaign';
+import type { CampaignCharacter } from '@/types/campaign';
 import { MAX_CAMPAIGN_CHARACTERS, OWNER_MAX_CHARACTERS } from './constants';
 
 const INVITE_CODE_LENGTH = 8;
@@ -31,21 +37,32 @@ function generateInviteCode(): string {
 
 async function getUsernameByUid(uid: string): Promise<string | undefined> {
   const supabase = await createClient();
-  const { data } = await supabase.from('user_profiles').select('username').eq('id', uid).maybeSingle();
-  return (data as { username?: string } | null)?.username ?? undefined;
+  const { data } = await supabase
+    .from('user_profiles')
+    .select('username')
+    .eq('id', uid)
+    .maybeSingle();
+  return (data as { username?: string | undefined } | null)?.username ?? undefined;
 }
 
 async function ensureUniqueInviteCode(): Promise<string> {
   const supabase = await createClient();
   for (let attempt = 0; attempt < 10; attempt++) {
     const code = generateInviteCode();
-    const { data: existing } = await supabase.from('campaigns').select('id').eq('invite_code', code).maybeSingle();
+    const { data: existing } = await supabase
+      .from('campaigns')
+      .select('id')
+      .eq('invite_code', code)
+      .maybeSingle();
     if (!existing) return code;
   }
   throw new Error('Failed to generate unique invite code');
 }
 
-export async function createCampaignAction(data: { name: string; description?: string }) {
+export async function createCampaignAction(data: {
+  name: string;
+  description?: string | undefined;
+}) {
   try {
     const user = await requireAuth();
     const name = data.name?.trim();
@@ -77,23 +94,38 @@ export async function createCampaignAction(data: { name: string; description?: s
 
     await ensureUserProfile(supabase, user.uid);
 
-    const { data: campaign, error } = await supabase
-      .from('campaigns')
-      .insert({
-        name,
-        description: data.description?.trim() || '',
-        owner_id: user.uid,
-        owner_username: ownerUsername || user.name || 'Realm Master',
-        invite_code: inviteCode,
-        characters: [],
-      })
-      .select('id')
-      .single();
+    // Skip RETURNING (SELECT RLS cannot see the in-flight row); membership SoT is campaign_members.
+    const campaignId = crypto.randomUUID();
+    const now = new Date().toISOString();
+    const { error } = await supabase.from('campaigns').insert({
+      id: campaignId,
+      name,
+      description: data.description?.trim() || '',
+      owner_id: user.uid,
+      owner_username: ownerUsername || user.name || 'Realm Master',
+      invite_code: inviteCode,
+      characters: [],
+      created_at: now,
+      updated_at: now,
+    });
     if (error) throw error;
 
-    return { success: true, campaignId: campaign.id, inviteCode };
+    const { error: memberErr } = await supabase
+      .from('campaign_members')
+      .upsert(
+        { campaign_id: campaignId, user_id: user.uid },
+        { onConflict: 'campaign_id,user_id' },
+      );
+    if (memberErr) {
+      reportError(memberErr, {
+        scope: 'createCampaignAction campaign_members',
+        extra: { campaignId },
+      });
+    }
+
+    return { success: true, campaignId, inviteCode };
   } catch (error) {
-    console.error('Create campaign error:', error);
+    reportError(error, { scope: 'createCampaignAction' });
     return { success: false, error: 'Failed to create campaign' };
   }
 }
@@ -102,13 +134,24 @@ export async function joinCampaignAction(data: {
   inviteCode: string;
   characterId: string;
   characterName: string;
-  portrait?: string;
+  portrait?: string | undefined;
   level: number;
-  species?: string;
-  archetypeType?: string;
+  species?: string | undefined;
+  archetypeType?: string | undefined;
 }) {
   try {
     const user = await requireAuth();
+
+    const { success: rateOk } = await inviteCodeLimiter.check(
+      buildRateLimitKey('join-campaign', { userId: user.uid }),
+    );
+    if (!rateOk) {
+      return {
+        success: false,
+        error: 'Too many join attempts. Please wait a minute and try again.',
+      };
+    }
+
     const code = normalizeInviteCodeInput(data.inviteCode);
     if (!code) {
       return { success: false, error: 'Please enter an invite code' };
@@ -147,7 +190,10 @@ export async function joinCampaignAction(data: {
       .eq('user_id', user.uid)
       .maybeSingle();
     if (!charRow) {
-      return { success: false, error: 'Character not found. You can only add your own characters.' };
+      return {
+        success: false,
+        error: 'Character not found. You can only add your own characters.',
+      };
     }
     // SEC-06: trust the stored character row for roster fields, not the client args.
     const charData = (charRow.data as Record<string, unknown>) ?? {};
@@ -178,13 +224,18 @@ export async function joinCampaignAction(data: {
     const nonOwnerMemberIds = memberIds.filter((id) => id && id !== campaignRow.owner_id);
     const campaignId = campaignRow.id;
 
-    const alreadyIn = campaignData?.some((c) => c.userId === user.uid && c.characterId === data.characterId);
+    const alreadyIn = campaignData?.some(
+      (c) => c.userId === user.uid && c.characterId === data.characterId,
+    );
     if (alreadyIn) {
       return { success: false, error: 'This character is already in the campaign.' };
     }
 
     if (campaignData?.length >= MAX_CAMPAIGN_CHARACTERS) {
-      return { success: false, error: `This campaign has reached the maximum of ${MAX_CAMPAIGN_CHARACTERS} characters.` };
+      return {
+        success: false,
+        error: `This campaign has reached the maximum of ${MAX_CAMPAIGN_CHARACTERS} characters.`,
+      };
     }
 
     const joiningAsNonOwner = user.uid !== campaignRow.owner_id;
@@ -218,10 +269,12 @@ export async function joinCampaignAction(data: {
     const characters = [...(campaignData || []), newChar];
 
     // BE-02/06: campaign_members is the single source of truth for membership.
-    const { error: memErr } = await dbService.from('campaign_members').upsert(
-      { campaign_id: campaignId, user_id: user.uid },
-      { onConflict: 'campaign_id,user_id' }
-    );
+    const { error: memErr } = await dbService
+      .from('campaign_members')
+      .upsert(
+        { campaign_id: campaignId, user_id: user.uid },
+        { onConflict: 'campaign_id,user_id' },
+      );
     if (memErr) {
       console.error('joinCampaignAction campaign_members:', memErr);
       return { success: false, error: 'Failed to join campaign' };
@@ -237,9 +290,14 @@ export async function joinCampaignAction(data: {
     }
 
     const { visibility, visibilityUpdated } = visibilityForCampaignMembership(charData.visibility);
-    const merged = { ...charData, visibility, updatedAt: new Date().toISOString() };
+    const now = new Date().toISOString();
+    const merged = { ...charData, visibility, updatedAt: now };
     const listCols = getCharacterListColumns(merged);
-    await supabase.from('characters').update({ data: merged, ...listCols }).eq('id', data.characterId).eq('user_id', user.uid);
+    await supabase
+      .from('characters')
+      .update({ data: merged, updated_at: now, ...listCols })
+      .eq('id', data.characterId)
+      .eq('user_id', user.uid);
 
     return { success: true, campaignId, visibilityUpdated };
   } catch (error) {
@@ -252,10 +310,10 @@ export async function addCharacterToCampaignAction(data: {
   campaignId: string;
   characterId: string;
   characterName: string;
-  portrait?: string;
+  portrait?: string | undefined;
   level: number;
-  species?: string;
-  archetypeType?: string;
+  species?: string | undefined;
+  archetypeType?: string | undefined;
 }) {
   try {
     const user = await requireAuth();
@@ -270,7 +328,10 @@ export async function addCharacterToCampaignAction(data: {
       return { success: false, error: 'Campaign not found' };
     }
     if (campaignRow.owner_id !== user.uid) {
-      return { success: false, error: 'Only the Realm Master can add characters to their campaign' };
+      return {
+        success: false,
+        error: 'Only the Realm Master can add characters to their campaign',
+      };
     }
 
     const { data: charRow } = await supabase
@@ -288,13 +349,21 @@ export async function addCharacterToCampaignAction(data: {
 
     const campaignData = (campaignRow.characters as CampaignCharacter[]) ?? [];
     if (campaignData.length >= MAX_CAMPAIGN_CHARACTERS) {
-      return { success: false, error: `This campaign has reached the maximum of ${MAX_CAMPAIGN_CHARACTERS} characters.` };
+      return {
+        success: false,
+        error: `This campaign has reached the maximum of ${MAX_CAMPAIGN_CHARACTERS} characters.`,
+      };
     }
     const ownerChars = campaignData.filter((c) => c.userId === user.uid);
     if (ownerChars.length >= OWNER_MAX_CHARACTERS) {
-      return { success: false, error: `You can add up to ${OWNER_MAX_CHARACTERS} of your own characters.` };
+      return {
+        success: false,
+        error: `You can add up to ${OWNER_MAX_CHARACTERS} of your own characters.`,
+      };
     }
-    const alreadyIn = campaignData.some((c) => c.userId === user.uid && c.characterId === data.characterId);
+    const alreadyIn = campaignData.some(
+      (c) => c.userId === user.uid && c.characterId === data.characterId,
+    );
     if (alreadyIn) {
       return { success: false, error: 'This character is already in the campaign.' };
     }
@@ -309,16 +378,23 @@ export async function addCharacterToCampaignAction(data: {
     const characters = [...campaignData, newChar];
 
     // BE-02/06: campaign_members is the single source of truth for membership.
-    await supabase.from('campaign_members').upsert(
-      { campaign_id: data.campaignId, user_id: user.uid },
-      { onConflict: 'campaign_id,user_id' }
-    );
+    await supabase
+      .from('campaign_members')
+      .upsert(
+        { campaign_id: data.campaignId, user_id: user.uid },
+        { onConflict: 'campaign_id,user_id' },
+      );
     await supabase.from('campaigns').update({ characters }).eq('id', data.campaignId);
 
     const { visibility, visibilityUpdated } = visibilityForCampaignMembership(charData.visibility);
-    const merged = { ...charData, visibility, updatedAt: new Date().toISOString() };
+    const now = new Date().toISOString();
+    const merged = { ...charData, visibility, updatedAt: now };
     const listCols = getCharacterListColumns(merged);
-    await supabase.from('characters').update({ data: merged, ...listCols }).eq('id', data.characterId).eq('user_id', user.uid);
+    await supabase
+      .from('characters')
+      .update({ data: merged, updated_at: now, ...listCols })
+      .eq('id', data.characterId)
+      .eq('user_id', user.uid);
 
     return { success: true, visibilityUpdated };
   } catch (error) {
@@ -350,11 +426,15 @@ export async function removeCharacterFromCampaignAction(data: {
     const isRemovingOwn = data.userId === user.uid;
 
     if (!isOwner && !isRemovingOwn) {
-      return { success: false, error: 'You can only remove your own character, or the Realm Master can remove any character.' };
+      return {
+        success: false,
+        error:
+          'You can only remove your own character, or the Realm Master can remove any character.',
+      };
     }
 
     const characters = (campaignData || []).filter(
-      (c) => !(c.userId === data.userId && c.characterId === data.characterId)
+      (c) => !(c.userId === data.userId && c.characterId === data.characterId),
     );
     // BE-02/06: membership lives in campaign_members; derive remaining roster
     // owners to decide whether the removed user keeps any characters here.
@@ -369,7 +449,10 @@ export async function removeCharacterFromCampaignAction(data: {
       dbWrite = createServiceRoleClient();
     } catch {
       console.error('removeCharacterFromCampaignAction: SUPABASE_SERVICE_ROLE_KEY missing');
-      return { success: false, error: 'Server cannot update the campaign right now. Please contact support.' };
+      return {
+        success: false,
+        error: 'Server cannot update the campaign right now. Please contact support.',
+      };
     }
 
     await dbWrite.from('campaigns').update({ characters }).eq('id', data.campaignId);
@@ -391,7 +474,7 @@ export async function removeCharacterFromCampaignAction(data: {
 
 export async function updateCampaignAction(
   campaignId: string,
-  data: { name?: string; description?: string }
+  data: { name?: string | undefined; description?: string | undefined },
 ) {
   try {
     const user = await requireAuth();
@@ -424,7 +507,11 @@ export async function updateCampaignAction(
       return { success: true };
     }
 
-    const { error } = await supabase.from('campaigns').update(updates).eq('id', campaignId).eq('owner_id', user.uid);
+    const { error } = await supabase
+      .from('campaigns')
+      .update(updates)
+      .eq('id', campaignId)
+      .eq('owner_id', user.uid);
     if (error) throw error;
     return { success: true };
   } catch (error) {

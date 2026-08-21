@@ -1,0 +1,70 @@
+[
+  {
+    "id": "ddb-spells",
+    "url": "https://www.dndbeyond.com/spells",
+    "viewportW": 390,
+    "controlCount": 137,
+    "medianControlHeight": 36,
+    "controlHeightBuckets": {
+      "under32": 67,
+      "32to43": 21,
+      "44to52": 40,
+      "over52": 9
+    },
+    "rowCount": 20,
+    "medianRowHeight": 73,
+    "chromeBeforeContent": 579,
+    "docHeight": 3378
+  },
+  {
+    "id": "ddb-monsters",
+    "url": "https://www.dndbeyond.com/monsters",
+    "viewportW": 390,
+    "controlCount": 147,
+    "medianControlHeight": 35,
+    "controlHeightBuckets": {
+      "under32": 62,
+      "32to43": 37,
+      "44to52": 39,
+      "over52": 9
+    },
+    "rowCount": 20,
+    "medianRowHeight": 73,
+    "chromeBeforeContent": 618,
+    "docHeight": 3416
+  },
+  {
+    "id": "realms-codex",
+    "url": "http://localhost:3100/codex",
+    "viewportW": 390,
+    "controlCount": 42,
+    "medianControlHeight": 44,
+    "controlHeightBuckets": {
+      "under32": 13,
+      "32to43": 1,
+      "44to52": 28,
+      "over52": 0
+    },
+    "rowCount": 13,
+    "medianRowHeight": 68,
+    "chromeBeforeContent": 546,
+    "docHeight": 35240
+  },
+  {
+    "id": "realms-library",
+    "url": "http://localhost:3100/library",
+    "viewportW": 390,
+    "controlCount": 120,
+    "medianControlHeight": 44,
+    "controlHeightBuckets": {
+      "under32": 13,
+      "32to43": 3,
+      "44to52": 59,
+      "over52": 45
+    },
+    "rowCount": 45,
+    "medianRowHeight": 84,
+    "chromeBeforeContent": 590,
+    "docHeight": 5270
+  }
+]

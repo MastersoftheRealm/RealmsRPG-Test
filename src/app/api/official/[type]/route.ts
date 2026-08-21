@@ -7,11 +7,11 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import type { SupabaseClient } from '@supabase/supabase-js';
 import { createClient, createServiceRoleClient } from '@/lib/supabase/server';
 import { getSession } from '@/lib/supabase/session';
 import { isAdmin } from '@/lib/admin';
-import { validateJson, publicItemSchema } from '@/lib/api-validation';
+import { validateJson, verifyMutationRequest, publicItemSchema } from '@/lib/api-validation';
+import { apiErrorResponse, logApiError } from '@/lib/api-error';
 import {
   rowToItem,
   bodyToColumnar,
@@ -21,10 +21,19 @@ import {
   toDbRowSpecies,
   type ColumnarLibraryType,
 } from '@/lib/library-columnar';
+import { enrichRowsWithBankImageUrls } from '@/lib/entity-image-enrich-server';
+import { allocateCodexNumericId, retireCodexId } from '@/lib/codex/id-allocation';
 
 const SPECIES_TABLE = 'codex_species';
 
-const VALID_TYPES = ['powers', 'techniques', 'empowered-techniques', 'items', 'creatures', 'species'] as const;
+const VALID_TYPES = [
+  'powers',
+  'techniques',
+  'empowered-techniques',
+  'items',
+  'creatures',
+  'species',
+] as const;
 type OfficialType = (typeof VALID_TYPES)[number];
 
 const TABLE_MAP: Record<Exclude<OfficialType, 'species'>, string> = {
@@ -50,32 +59,9 @@ const SPECIES_CODEX_DB_KEYS = new Set([
   'adulthood_lifespan',
   'languages',
   'payload',
+  'image_id',
+  'image_url',
 ]);
-
-function parseNumericId(id: unknown): number | null {
-  if (typeof id !== 'string') return null;
-  if (!/^\d+$/.test(id)) return null;
-  const n = Number(id);
-  if (!Number.isSafeInteger(n) || n <= 0) return null;
-  return n;
-}
-
-async function allocateLowestUnusedSpeciesCodexId(supabase: SupabaseClient): Promise<string> {
-  const { data, error } = await supabase.from(SPECIES_TABLE).select('id');
-  if (error) throw error;
-  const used = new Set<number>();
-  let max = 0;
-  for (const row of (data ?? []) as Array<{ id?: unknown }>) {
-    const n = parseNumericId(row.id);
-    if (n == null) continue;
-    used.add(n);
-    if (n > max) max = n;
-  }
-  for (let i = 1; i <= max + 1; i++) {
-    if (!used.has(i)) return String(i);
-  }
-  return String(max + 1);
-}
 
 /** Creator payloads use ave_height / ave_weight; columnar expects ave_hgt_cm / ave_wgt_kg. */
 function normalizeSpeciesBody(body: Record<string, unknown>): Record<string, unknown> {
@@ -103,7 +89,7 @@ function filterSpeciesCodexRow(row: Record<string, unknown>): Record<string, unk
 
 export async function GET(
   _request: NextRequest,
-  { params }: { params: Promise<{ type: string }> }
+  { params }: { params: Promise<{ type: string }> },
 ) {
   try {
     const { type } = await params;
@@ -124,7 +110,9 @@ export async function GET(
         }
         throw error;
       }
-      const items = (rows ?? []).map((r) => {
+      const speciesRows = (rows ?? []) as Record<string, unknown>[];
+      await enrichRowsWithBankImageUrls(supabase, speciesRows);
+      const items = speciesRows.map((r) => {
         const item = rowToItemSpecies(r as Record<string, unknown>);
         (item as Record<string, unknown>)._source = 'official';
         return item;
@@ -138,7 +126,9 @@ export async function GET(
       return NextResponse.json(items, { headers: { 'Cache-Control': cacheControl } });
     }
 
-    const { data: rows, error } = await supabase.from(TABLE_MAP[type as ColumnarLibraryType]).select('*');
+    const { data: rows, error } = await supabase
+      .from(TABLE_MAP[type as ColumnarLibraryType])
+      .select('*');
 
     if (error) {
       if (error.code === '42P01' || error.message?.includes('does not exist')) {
@@ -148,7 +138,9 @@ export async function GET(
       throw error;
     }
 
-    const items = (rows ?? []).map((r) => rowToItem(type as ColumnarLibraryType, r as Record<string, unknown>, 'official'));
+    const officialRows = (rows ?? []) as Record<string, unknown>[];
+    await enrichRowsWithBankImageUrls(supabase, officialRows);
+    const items = officialRows.map((r) => rowToItem(type as ColumnarLibraryType, r, 'official'));
     items.sort((a, b) => {
       const na = String((a as Record<string, unknown>).name ?? '');
       const nb = String((b as Record<string, unknown>).name ?? '');
@@ -158,14 +150,14 @@ export async function GET(
     const cacheControl = 'private, max-age=0, must-revalidate';
     return NextResponse.json(items, { headers: { 'Cache-Control': cacheControl } });
   } catch (err) {
-    console.error('[API Error] GET /api/official/[type]:', err);
-    return NextResponse.json({ error: 'Failed to load items' }, { status: 500 });
+    logApiError('GET /api/official/[type]', err);
+    return apiErrorResponse('Failed to load items', 500);
   }
 }
 
 export async function POST(
   request: NextRequest,
-  { params }: { params: Promise<{ type: string }> }
+  { params }: { params: Promise<{ type: string }> },
 ) {
   try {
     const { user, error } = await getSession();
@@ -204,10 +196,11 @@ export async function POST(
           .eq('id', existingId)
           .select('id');
         if (updateError) {
-          console.error('[API] codex_species update failed:', updateError);
-          return NextResponse.json(
-            { error: 'Failed to update item', details: updateError.message },
-            { status: 500 }
+          return apiErrorResponse(
+            'Failed to update item',
+            500,
+            'POST /api/official/[type] (species update)',
+            updateError,
           );
         }
         if (updatedRows && updatedRows.length > 0) {
@@ -216,20 +209,25 @@ export async function POST(
       }
 
       for (let attempt = 0; attempt < 3; attempt++) {
-        const id = await allocateLowestUnusedSpeciesCodexId(supabase);
-        const { error: insertError } = await supabase.from(SPECIES_TABLE).insert({ id, ...dbRow }).select('id').single();
+        const id = await allocateCodexNumericId(supabase, SPECIES_TABLE);
+        const { error: insertError } = await supabase
+          .from(SPECIES_TABLE)
+          .insert({ id, ...dbRow })
+          .select('id')
+          .single();
         if (!insertError) {
           return NextResponse.json({ id });
         }
         if (insertError.code !== '23505') {
-          console.error('[API] codex_species insert failed:', insertError);
-          return NextResponse.json(
-            { error: 'Failed to save item', details: insertError.message },
-            { status: 500 }
+          return apiErrorResponse(
+            'Failed to save item',
+            500,
+            'POST /api/official/[type] (species insert)',
+            insertError,
           );
         }
       }
-      return NextResponse.json({ error: 'Failed to save item', details: 'ID allocation conflict' }, { status: 500 });
+      return apiErrorResponse('Failed to save item', 500);
     }
 
     const withUpdated = { ...body, updatedAt: new Date().toISOString() };
@@ -245,10 +243,11 @@ export async function POST(
         .eq('id', existingId)
         .select('id');
       if (updateError) {
-        console.error('[API] Official library update failed:', updateError);
-        return NextResponse.json(
-          { error: 'Failed to update item', details: updateError.message },
-          { status: 500 }
+        return apiErrorResponse(
+          'Failed to update item',
+          500,
+          'POST /api/official/[type] (update)',
+          updateError,
         );
       }
       if (updatedRows && updatedRows.length > 0) {
@@ -257,29 +256,34 @@ export async function POST(
     }
 
     const id = crypto.randomUUID();
-    const { error: insertError } = await supabase.from(table).insert({
-      id,
-      ...dbRow,
-      created_at: new Date().toISOString(),
-      updated_at: new Date().toISOString(),
-    }).select('id').single();
+    const { error: insertError } = await supabase
+      .from(table)
+      .insert({
+        id,
+        ...dbRow,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+      })
+      .select('id')
+      .single();
     if (insertError) {
-      console.error('[API] Official library insert failed:', insertError);
-      return NextResponse.json(
-        { error: 'Failed to save item', details: insertError.message },
-        { status: 500 }
+      return apiErrorResponse(
+        'Failed to save item',
+        500,
+        'POST /api/official/[type] (insert)',
+        insertError,
       );
     }
     return NextResponse.json({ id });
   } catch (err) {
-    console.error('[API Error] POST /api/official/[type]:', err);
-    return NextResponse.json({ error: 'Failed to save item' }, { status: 500 });
+    logApiError('POST /api/official/[type]', err);
+    return apiErrorResponse('Failed to save item', 500);
   }
 }
 
 export async function DELETE(
   _request: NextRequest,
-  { params }: { params: Promise<{ type: string }> }
+  { params }: { params: Promise<{ type: string }> },
 ) {
   try {
     const { user, error } = await getSession();
@@ -289,6 +293,9 @@ export async function DELETE(
     if (!(await isAdmin(user.uid))) {
       return NextResponse.json({ error: 'Admin only' }, { status: 403 });
     }
+
+    const denied = verifyMutationRequest(_request);
+    if (denied) return denied;
 
     const { type } = await params;
     if (!VALID_TYPES.includes(type as OfficialType)) {
@@ -303,20 +310,28 @@ export async function DELETE(
 
     const supabase = createServiceRoleClient();
     const table = type === 'species' ? SPECIES_TABLE : TABLE_MAP[type as ColumnarLibraryType];
-    const { data: deleted, error: deleteError } = await supabase.from(table).delete().eq('id', id).select('id');
+    const { data: deleted, error: deleteError } = await supabase
+      .from(table)
+      .delete()
+      .eq('id', id)
+      .select('id');
     if (deleteError) {
-      console.error('[API] Official library delete failed:', deleteError);
-      return NextResponse.json(
-        { error: 'Failed to delete item', details: deleteError.message },
-        { status: 500 }
+      return apiErrorResponse(
+        'Failed to delete item',
+        500,
+        'DELETE /api/official/[type]',
+        deleteError,
       );
     }
     if (!deleted || deleted.length === 0) {
       return NextResponse.json({ error: 'Item not found or already deleted' }, { status: 404 });
     }
+    // Tombstone so the id is never handed to a different entity, which would silently
+    // repoint every saved character that referenced the deleted one.
+    await retireCodexId(supabase, table, id);
     return NextResponse.json({ ok: true });
   } catch (err) {
-    console.error('[API Error] DELETE /api/official/[type]:', err);
-    return NextResponse.json({ error: 'Failed to delete item' }, { status: 500 });
+    logApiError('DELETE /api/official/[type]', err);
+    return apiErrorResponse('Failed to delete item', 500);
   }
 }

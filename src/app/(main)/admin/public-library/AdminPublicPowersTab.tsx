@@ -7,9 +7,9 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { DeleteConfirmModal, OfficialPowerList } from '@/components/shared';
+import { DeleteConfirmModal, OfficialPowerList } from '@/components/patterns';
 import { useToast } from '@/components/ui';
-import { useOfficialLibrary, usePowerParts } from '@/hooks';
+import { officialLibraryKeys, useOfficialLibrary, usePowerParts } from '@/hooks';
 import { useQueryClient } from '@tanstack/react-query';
 import { apiFetch } from '@/lib/api-client';
 import { Wand2 } from 'lucide-react';
@@ -31,6 +31,7 @@ export function AdminPublicPowersTab() {
         method: 'DELETE',
       });
       queryClient.invalidateQueries({ queryKey: QUERY_KEY });
+      queryClient.invalidateQueries({ queryKey: officialLibraryKeys.counts });
       await queryClient.refetchQueries({ queryKey: QUERY_KEY });
       setDeleteConfirm(null);
     } catch (e) {
@@ -45,10 +46,12 @@ export function AdminPublicPowersTab() {
         partsDb={partsDb}
         isLoading={isLoading}
         error={error}
-        onRetry={() => { void refetch(); }}
+        onRetry={() => {
+          void refetch();
+        }}
         errorMessage="Failed to load official powers"
         sectionTitle="Official Powers"
-        emptyIcon={<Wand2 className="w-8 h-8" />}
+        emptyIcon={<Wand2 className="h-8 w-8" />}
         emptyTitle="No official powers"
         emptyMessage="Add one from the header or publish from a creator."
         variant="admin"

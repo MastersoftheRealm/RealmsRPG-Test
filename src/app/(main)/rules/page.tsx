@@ -1,47 +1,53 @@
 /**
- * Rules Page
- * ===========
- * Core rulebook embedded from Google Docs
+ * Rulebook chapter index (ADR-0021).
  */
 
-import { PageContainer, PageHeader, Card } from '@/components/ui';
-
-const RULEBOOK_EMBED_URL =
-  'https://docs.google.com/document/d/e/2PACX-1vQabErotA2q4K7xCPtyR1rYmsJuzBNT48N_FL3FzaxWx2H1yITOq2SyxtBwVXdqtUTOIeGCMFTtljpR/pub?embedded=true';
-const RULEBOOK_VIEW_URL =
-  'https://docs.google.com/document/d/e/2PACX-1vQabErotA2q4K7xCPtyR1rYmsJuzBNT48N_FL3FzaxWx2H1yITOq2SyxtBwVXdqtUTOIeGCMFTtljpR/pub';
+import Link from 'next/link';
+import { PageContainer, PageHeader } from '@/components/ui';
+import { RulebookNav } from '@/components/rules/rulebook-nav';
+import { RULES_COPY } from '@/lib/constants/site-copy';
+import { RULEBOOK_CHAPTERS } from '@/lib/rules/rulebook';
 
 export default function RulesPage() {
   return (
-    <PageContainer size="xl">
-      <PageHeader 
-        title="Core Rulebook Alpha"
-        description="Scroll through or use Ctrl+F to find the desired rule or reference you're looking for! Enjoy playing!"
-      />
+    <PageContainer size="content">
+      <PageHeader title={RULES_COPY.pageTitle} description={RULES_COPY.pageDescription} />
 
-      <p className="text-sm text-text-secondary mb-4">
-        Having trouble viewing the embedded rulebook?{' '}
+      <p className="mb-4 font-nunito text-base leading-relaxed text-text-secondary">
+        {RULES_COPY.seoDescription}
+      </p>
+
+      <p className="mb-6 text-sm text-text-secondary">
+        {RULES_COPY.viewSourcePrefix}{' '}
         <a
-          href={RULEBOOK_VIEW_URL}
+          href={RULES_COPY.viewUrl}
           target="_blank"
           rel="noopener noreferrer"
-          className="text-primary-link-fg hover:underline font-medium"
+          className="font-medium text-primary-link-fg hover:underline"
         >
-          Open in new tab
+          {RULES_COPY.openInNewTab}
         </a>
       </p>
 
-      <Card className="shadow-lg overflow-hidden p-0 border-0">
-        <iframe 
-          src={RULEBOOK_EMBED_URL}
-          className="w-full border-0"
-          style={{ height: 'min(900px, calc(100vh - 220px))' }}
-          allowFullScreen
-          title="Realms RPG Core Rulebook"
-          loading="lazy"
-          referrerPolicy="no-referrer-when-downgrade"
-        />
-      </Card>
+      <div className="md:grid md:grid-cols-[16rem_minmax(0,1fr)] md:items-start md:gap-8">
+        <RulebookNav chapters={RULEBOOK_CHAPTERS} />
+        <ol className="min-w-0 space-y-3">
+          {RULEBOOK_CHAPTERS.map((chapter, index) => (
+            <li key={chapter.slug}>
+              <Link
+                href={`/rules/${chapter.slug}`}
+                className="block min-w-0 rounded-md px-3 py-2 hover:bg-surface-alt"
+              >
+                <h2 className="font-display text-lg font-bold text-text-primary">
+                  <span className="mr-2 text-text-muted tabular-nums">{index + 1}.</span>
+                  {chapter.title}
+                </h2>
+                <p className="mt-1 text-sm text-text-secondary">{chapter.description}</p>
+              </Link>
+            </li>
+          ))}
+        </ol>
+      </div>
     </PageContainer>
   );
 }

@@ -1,0 +1,43 @@
+-- TASK-649 Phase 2 — codex-art storage SELECT hardening (D4)
+-- =============================================================================
+-- Status: APPLIED 2026-08-03 on RealmsRPG-Test
+-- Project: RealmsRPG-Test (lbqhiwudvifmkjtkccdg)
+-- Audit ref: archive/CODEBASE_AUDIT_2026-08-01.md §5.2 D4
+--
+-- Finding: Public bucket `codex-art` has broad SELECT policy
+-- "Codex art is publicly readable" (qual: bucket_id = 'codex-art'), which allows
+-- unauthenticated listing of all objects via the Storage API.
+--
+-- Fix (same pattern as sql/supabase-storage-select-hardening-2026-06.sql for
+-- portraits/profile-pictures):
+--   * DROP the bucket-wide public SELECT policy.
+--   * Keep bucket `public = true` in storage.buckets (set in
+--     codex-art-species-image-url.sql / realms-image-library.sql).
+--   * Direct object GET / CDN URLs continue to work without a SELECT policy.
+--   * Admin uploads remain service-role via /api/upload/codex-art.
+--
+-- No replacement SELECT policy: codex art is consumed by known public URLs in
+-- codex/official rows, not by client-side bucket listing.
+--
+-- Safe to re-run (DROP POLICY IF EXISTS).
+-- =============================================================================
+
+DROP POLICY IF EXISTS "Codex art is publicly readable" ON storage.objects;
+
+-- -----------------------------------------------------------------------------
+-- Verification (run after apply)
+-- -----------------------------------------------------------------------------
+-- SELECT policyname, roles, cmd, qual
+-- FROM pg_policies
+-- WHERE schemaname = 'storage' AND tablename = 'objects'
+--   AND qual ILIKE '%codex-art%';
+-- Expect: 0 rows.
+--
+-- SELECT id, public FROM storage.buckets WHERE id = 'codex-art';
+-- Expect: public = true (unchanged).
+--
+-- Manual QA:
+--   * Species/power/technique card images still render (direct public URL).
+--   * Storage API list on codex-art fails for anon (intended).
+-- Re-check get_advisors: public_bucket_allows_listing on codex-art cleared.
+-- -----------------------------------------------------------------------------

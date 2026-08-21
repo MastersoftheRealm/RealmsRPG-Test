@@ -1,341 +1,307 @@
 /**
- * Library Techniques Tab
- * ======================
- * User's techniques with search and sort.
+ * Library Techniques Tab — entity mapping + rows; shell from ADR-0001.
+ * Handles both standard and empowered techniques via the `mode` prop.
  */
 
 'use client';
 
-import { useState, useMemo } from 'react';
-import Link from 'next/link';
+import { useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { Plus, RefreshCw, Swords } from 'lucide-react';
+import { Swords } from 'lucide-react';
 import {
   GridListRow,
-  SearchInput,
-  ListHeader,
-  LoadingState,
-  ErrorDisplay,
-  ListEmptyState,
-  ConfirmActionModal,
-  type ChipData,
-} from '@/components/shared';
+  LibraryAddToCharacterButton,
+  LibraryRowActionSlot,
+} from '@/components/patterns';
+import { PowerTechniqueFilters } from '@/components/patterns/filters';
 import { useSort } from '@/hooks/use-sort';
-import type { TechniqueDocument } from '@/lib/calculators/technique-calc';
-import { deriveTechniqueDisplay, formatTechniqueDamage } from '@/lib/calculators/technique-calc';
-import { partChipsFromDisplay } from '@/lib/chip/part-chips-from-display';
-import { useUserTechniques, useUserEmpoweredTechniques, useTechniqueParts, useDuplicateTechnique, useDuplicateEmpoweredTechnique } from '@/hooks';
-import { Button, IconButton, useToast } from '@/components/ui';
+import { useAddToCharacterFromLibrary } from '@/hooks/use-add-to-character-from-library';
+import { usePathListFilter } from '@/hooks';
+import { empoweredTechniquePartsSection } from '@/lib/library/empowered-technique-display';
+import {
+  buildOfficialTechniqueRows,
+  filterOfficialTechniqueRows,
+  officialTechniqueDetailSections,
+  officialTechniqueRowColumns,
+  OFFICIAL_TECHNIQUE_GRID,
+  OFFICIAL_TECHNIQUE_HEADER_COLUMNS,
+} from '@/lib/library/official-technique-list';
+import { collectCategoryOptionsFromItems } from '@/lib/library/power-technique-categories';
+import {
+  EMPTY_POWER_TECHNIQUE_FILTERS,
+  countActivePowerTechniqueFilters,
+  type PowerTechniqueFilterState,
+} from '@/lib/library/power-technique-filters';
+import type { PowerTechniqueCharacterContext } from '@/lib/library/power-technique-character-context';
+import {
+  useUserTechniques,
+  useUserEmpoweredTechniques,
+  useTechniqueParts,
+  usePowerParts,
+  useDuplicateTechnique,
+  useDuplicateEmpoweredTechnique,
+} from '@/hooks';
 import type { DisplayItem } from '@/types';
 import { getTechniqueSyncResult, sanitizeTechniqueForSync } from '@/lib/library-sync';
-import { saveToLibrary } from '@/services/library-service';
+import {
+  LibrarySyncRowAction,
+  UserLibraryEntityTabShell,
+} from './components/UserLibraryEntityTabShell';
+import {
+  TECHNIQUE_LIBRARY_LABELS,
+  EMPOWERED_TECHNIQUE_LIBRARY_LABELS,
+} from './components/library-entity-tab.types';
+import { useLibraryEntitySync } from './hooks/use-library-entity-sync';
+import { useLibraryDuplicateConfirm } from './hooks/use-library-duplicate-confirm';
+import { resolveListRowThumbnail } from '@/lib/list-row-image';
+import {
+  libraryRowPathIds,
+  pathChipLabelsForEntity,
+  pathFilterEmptyTitle,
+} from '@/lib/game/path-recommendation-index';
 
-const TECHNIQUE_GRID_COLUMNS = '1.5fr 0.8fr 0.8fr 1fr 1fr 1fr 40px';
-const TECHNIQUE_HEADER_COLUMNS = [
-  { key: 'name', label: 'NAME' },
-  { key: 'energy', label: 'ENERGY' },
-  { key: 'tp', label: 'TP' },
-  { key: 'action', label: 'ACTION' },
-  { key: 'weapon', label: 'WEAPON' },
-  { key: 'damage', label: 'DAMAGE' },
-  { key: '_actions', label: '', sortable: false as const },
-];
+const TECHNIQUE_ROW_CHROME = { edit: true, delete: true, rightSlot: true } as const;
 
 interface LibraryTechniquesTabProps {
   onDelete: (item: DisplayItem) => void;
-  mode?: 'standard' | 'empowered';
-}
-
-function getEmpoweredTotals(technique: unknown): { energy?: number; tp?: number } {
-  const raw = technique as Record<string, unknown>;
-  const totals = raw.totals as Record<string, unknown> | undefined;
-  const energy = typeof totals?.energy === 'number' ? totals.energy : undefined;
-  const tp = typeof totals?.trainingPoints === 'number' ? totals.trainingPoints : undefined;
-  return { energy, tp };
+  mode?: 'standard' | 'empowered' | undefined;
 }
 
 export function LibraryTechniquesTab({ onDelete, mode = 'standard' }: LibraryTechniquesTabProps) {
   const router = useRouter();
-  const { showToast } = useToast();
   const standardTechniquesQuery = useUserTechniques({ enabled: mode === 'standard' });
   const empoweredTechniquesQuery = useUserEmpoweredTechniques({ enabled: mode === 'empowered' });
-  const { data: standardTechniques = [], isLoading: standardLoading, error: standardError } = standardTechniquesQuery;
-  const { data: empoweredTechniques = [], isLoading: empoweredLoading, error: empoweredError } = empoweredTechniquesQuery;
+  const {
+    data: standardTechniques = [],
+    isLoading: standardLoading,
+    error: standardError,
+  } = standardTechniquesQuery;
+  const {
+    data: empoweredTechniques = [],
+    isLoading: empoweredLoading,
+    error: empoweredError,
+  } = empoweredTechniquesQuery;
   const { data: partsDb = [] } = useTechniqueParts();
+  const { data: powerPartsDb = [] } = usePowerParts({ enabled: mode === 'empowered' });
   const duplicateTechnique = useDuplicateTechnique();
   const duplicateEmpoweredTechnique = useDuplicateEmpoweredTechnique();
   const [search, setSearch] = useState('');
-  const [syncingIds, setSyncingIds] = useState<Set<string>>(new Set());
-  const [syncingAll, setSyncingAll] = useState(false);
-  const [duplicateConfirm, setDuplicateConfirm] = useState<{ id: string; name: string } | null>(null);
-  const [showSyncAllConfirm, setShowSyncAllConfirm] = useState(false);
+  const [advancedFilters, setAdvancedFilters] = useState<PowerTechniqueFilterState>(
+    EMPTY_POWER_TECHNIQUE_FILTERS,
+  );
+  const [characterContext, setCharacterContext] = useState<PowerTechniqueCharacterContext | null>(
+    null,
+  );
+  const [characterFilterId, setCharacterFilterId] = useState('');
+  const addToCharacter = useAddToCharacterFromLibrary('technique', characterFilterId);
   const { sortState, handleSort, sortItems } = useSort('name');
+
   const techniques = mode === 'empowered' ? empoweredTechniques : standardTechniques;
   const isLoading = mode === 'empowered' ? empoweredLoading : standardLoading;
   const error = mode === 'empowered' ? empoweredError : standardError;
+  const labels =
+    mode === 'empowered' ? EMPOWERED_TECHNIQUE_LIBRARY_LABELS : TECHNIQUE_LIBRARY_LABELS;
+  const saveType = mode === 'empowered' ? 'empowered-techniques' : 'techniques';
+  const duplicateMutation = mode === 'empowered' ? duplicateEmpoweredTechnique : duplicateTechnique;
+  const { selectedPathIds, setSelectedPathIds, pathIndex, pathRecommendedIds, pathFilterActive } =
+    usePathListFilter({
+      entities: techniques,
+      kind: 'techniques',
+      enabled: mode === 'standard',
+    });
 
   const cardData = useMemo(() => {
-    return techniques.map(tech => {
-      const empowered = mode === 'empowered';
-      const doc: TechniqueDocument = {
-        name: String(tech.name ?? ''),
-        description: String(tech.description ?? ''),
-        parts: Array.isArray(tech.parts) ? (tech.parts as TechniqueDocument['parts']) : [],
-        damage: Array.isArray(tech.damage) ? (tech.damage[0] as TechniqueDocument['damage']) : (tech.damage as TechniqueDocument['damage']),
-        weapon: tech.weapon as TechniqueDocument['weapon'],
-      };
-      const display = deriveTechniqueDisplay(doc, partsDb);
-      const syncResult = getTechniqueSyncResult(tech, partsDb);
-      const totals = getEmpoweredTotals(tech);
-      const damageStr = formatTechniqueDamage(doc.damage);
-      const parts = partChipsFromDisplay(display.partChips, { stripOptionSuffix: true });
+    return buildOfficialTechniqueRows(techniques, partsDb, mode).map((row) => {
+      const syncResult = getTechniqueSyncResult(row.raw, partsDb);
       return {
-        id: String(tech.docId ?? tech.id ?? ''),
-        source: tech,
-        name: display.name,
-        description: display.description,
-        energy: empowered ? (totals.energy ?? display.energy) : display.energy,
-        tp: empowered ? (totals.tp ?? display.tp) : display.tp,
-        action: display.actionType,
-        weapon: display.weaponName || '-',
-        damage: damageStr,
-        parts,
+        ...row,
+        id: String(row.raw.docId ?? row.raw.id ?? row.id),
         hasDrift: syncResult.hasDrift,
         syncIssues: syncResult.issues,
       };
     });
   }, [mode, techniques, partsDb]);
 
-  const driftedItems = useMemo(() => cardData.filter((item) => item.hasDrift), [cardData]);
+  const categoryOptions = useMemo(
+    () => (mode === 'empowered' ? [] : collectCategoryOptionsFromItems(techniques, partsDb)),
+    [mode, techniques, partsDb],
+  );
 
-  const saveType = mode === 'empowered' ? 'empowered-techniques' : 'techniques';
+  const driftedIds = useMemo(
+    () => cardData.filter((item) => item.hasDrift).map((item) => item.id),
+    [cardData],
+  );
 
-  const handleSyncOne = async (itemId: string) => {
-    const source = techniques.find((t) => String(t.docId ?? t.id ?? '') === itemId);
-    if (!source) return;
-    const sanitized = sanitizeTechniqueForSync(source, partsDb);
-    if (!sanitized.hasDrift || !sanitized.changed) return;
+  const sync = useLibraryEntitySync({
+    saveType,
+    sources: techniques,
+    getRowId: (t) => String(t.docId ?? t.id ?? ''),
+    getRowName: (t) => String(t.name ?? ''),
+    driftedIds,
+    sanitize: (source) => sanitizeTechniqueForSync(source, partsDb),
+    refetch: () =>
+      mode === 'empowered' ? empoweredTechniquesQuery.refetch() : standardTechniquesQuery.refetch(),
+    entitySingular: labels.entitySingular,
+    entityPlural: labels.entityPlural,
+  });
 
-    setSyncingIds((prev) => new Set(prev).add(itemId));
-    try {
-      await saveToLibrary(saveType, sanitized.value as unknown as Record<string, unknown>, { existingId: itemId });
-      if (mode === 'empowered') {
-        await empoweredTechniquesQuery.refetch();
-      } else {
-        await standardTechniquesQuery.refetch();
-      }
-      showToast(`Synced "${source.name}" to current patch rules.`, 'success');
-    } catch (e) {
-      showToast((e as Error)?.message ?? 'Failed to sync technique', 'error');
-    } finally {
-      setSyncingIds((prev) => {
-        const next = new Set(prev);
-        next.delete(itemId);
-        return next;
-      });
-    }
-  };
-
-  const handleSyncAll = async () => {
-    if (driftedItems.length === 0) return;
-    setSyncingAll(true);
-    let syncedCount = 0;
-    try {
-      for (const item of driftedItems) {
-        const source = techniques.find((t) => String(t.docId ?? t.id ?? '') === item.id);
-        if (!source) continue;
-        const sanitized = sanitizeTechniqueForSync(source, partsDb);
-        if (!sanitized.hasDrift || !sanitized.changed) continue;
-        await saveToLibrary(saveType, sanitized.value as unknown as Record<string, unknown>, { existingId: item.id });
-        syncedCount += 1;
-      }
-      if (mode === 'empowered') {
-        await empoweredTechniquesQuery.refetch();
-      } else {
-        await standardTechniquesQuery.refetch();
-      }
-      showToast(
-        syncedCount > 0
-          ? `Synced ${syncedCount} technique${syncedCount === 1 ? '' : 's'} with current patch.`
-          : 'All techniques are already in sync.',
-        'success'
-      );
-    } catch (e) {
-      showToast((e as Error)?.message ?? 'Failed to sync all techniques', 'error');
-    } finally {
-      setSyncingAll(false);
-    }
-  };
+  const dup = useLibraryDuplicateConfirm({
+    duplicateTitle: labels.duplicateTitle,
+    isPending: duplicateMutation.isPending,
+    mutate: (id, handlers) => duplicateMutation.mutate(id, handlers),
+  });
 
   const filteredData = useMemo(() => {
-    let result = cardData;
-    if (search) {
-      const searchLower = search.toLowerCase();
-      result = result.filter(t =>
-        String(t.name ?? '').toLowerCase().includes(searchLower) ||
-        String(t.description ?? '').toLowerCase().includes(searchLower) ||
-        String(t.weapon ?? '').toLowerCase().includes(searchLower)
-      );
-    }
-    return sortItems(result);
-  }, [cardData, search, sortItems]);
-
-  if (error) {
-    return (
-      <ErrorDisplay
-        message="Failed to load techniques"
-        subMessage="Please try again later"
-        onRetry={() => {
-          standardTechniquesQuery.refetch();
-          empoweredTechniquesQuery.refetch();
-        }}
-      />
+    const advanced = mode === 'empowered' ? undefined : advancedFilters;
+    return filterOfficialTechniqueRows(
+      cardData,
+      search,
+      sortItems,
+      advanced,
+      mode === 'empowered' ? null : characterContext,
+      mode === 'empowered' ? null : pathRecommendedIds,
     );
-  }
-
-  if (!isLoading && cardData.length === 0) {
-    return (
-      <ListEmptyState
-        icon={<Swords className="w-8 h-8" />}
-        title={mode === 'empowered' ? 'No empowered techniques yet' : 'No techniques yet'}
-        message={mode === 'empowered' ? 'Create your first empowered technique to see it here in your library.' : 'Create your first technique to see it here in your library.'}
-        action={
-          <Button asChild>
-            <Link href={mode === 'empowered' ? '/empowered-technique-creator' : '/technique-creator'}>
-              <Plus className="w-4 h-4" />
-              {mode === 'empowered' ? 'Create Empowered Technique' : 'Create Technique'}
-            </Link>
-          </Button>
-        }
-      />
-    );
-  }
+  }, [cardData, search, sortItems, mode, advancedFilters, characterContext, pathRecommendedIds]);
 
   return (
-    <div>
-      <div className="mb-4 flex flex-wrap items-center justify-between gap-2">
-        <SearchInput
-          value={search}
-          onChange={setSearch}
-          placeholder="Search techniques..."
-        />
-        <Button
-          variant="secondary"
-          size="sm"
-          onClick={() => setShowSyncAllConfirm(true)}
-          disabled={driftedItems.length === 0 || syncingAll}
-        >
-          <RefreshCw className={`w-4 h-4 ${syncingAll ? 'animate-spin' : ''}`} />
-          Sync with current patch
-          {driftedItems.length > 0 ? ` (${driftedItems.length})` : ''}
-        </Button>
-      </div>
-
-      <ListHeader
-        columns={TECHNIQUE_HEADER_COLUMNS}
-        gridColumns={TECHNIQUE_GRID_COLUMNS}
+    <>
+      <UserLibraryEntityTabShell
+        labels={labels}
+        isLoading={isLoading}
+        error={error}
+        onRetry={() => {
+          void standardTechniquesQuery.refetch();
+          void empoweredTechniquesQuery.refetch();
+        }}
+        totalCount={cardData.length}
+        emptyIcon={<Swords className="h-8 w-8" />}
+        search={search}
+        onSearchChange={setSearch}
         sortState={sortState}
         onSort={handleSort}
-      />
-
-      <div className="flex flex-col gap-1 mt-2">
-        {isLoading ? (
-          <LoadingState />
-        ) : filteredData.length === 0 ? (
-        <ListEmptyState
-          title={
+        headerColumns={OFFICIAL_TECHNIQUE_HEADER_COLUMNS}
+        gridColumns={OFFICIAL_TECHNIQUE_GRID}
+        hasThumbnailColumn
+        rowChrome={TECHNIQUE_ROW_CHROME}
+        filteredCount={filteredData.length}
+        driftedCount={sync.driftedCount}
+        syncingAll={sync.syncingAll}
+        showSyncAllConfirm={sync.showSyncAllConfirm}
+        onOpenSyncAllConfirm={() => sync.setShowSyncAllConfirm(true)}
+        onCloseSyncAllConfirm={() => sync.setShowSyncAllConfirm(false)}
+        onConfirmSyncAll={() => {
+          sync.setShowSyncAllConfirm(false);
+          void sync.handleSyncAll();
+        }}
+        duplicateConfirm={dup.duplicateConfirm}
+        onCloseDuplicate={dup.closeDuplicateConfirm}
+        onConfirmDuplicate={dup.onConfirmDuplicate}
+        duplicatePending={dup.isPending}
+        filters={
+          mode === 'empowered' ? undefined : (
+            <PowerTechniqueFilters
+              kind="technique"
+              value={advancedFilters}
+              onChange={setAdvancedFilters}
+              categoryOptions={categoryOptions}
+              onCharacterContextChange={setCharacterContext}
+              onCharacterIdChange={setCharacterFilterId}
+              pathFilter={{
+                options: pathIndex.options,
+                selectedPathIds,
+                onChange: setSelectedPathIds,
+              }}
+            />
+          )
+        }
+        filterActiveCount={
+          mode === 'empowered'
+            ? undefined
+            : countActivePowerTechniqueFilters(
+                advancedFilters,
+                'technique',
+                Boolean(characterContext),
+              ) +
+              (characterFilterId ? 1 : 0) +
+              (pathFilterActive ? 1 : 0)
+        }
+        filterEmptyTitle={
+          mode !== 'empowered' && pathFilterActive ? pathFilterEmptyTitle('techniques') : undefined
+        }
+      >
+        {filteredData.map((tech) => {
+          const detailSections =
             mode === 'empowered'
-              ? 'No empowered techniques match your search.'
-              : 'No techniques match your search.'
-          }
-          size="sm"
-        />
-        ) : (
-          filteredData.map(tech => (
+              ? (() => {
+                  const section = empoweredTechniquePartsSection(tech.raw, powerPartsDb, partsDb, {
+                    stripOptionSuffix: true,
+                  });
+                  return section ? [section] : undefined;
+                })()
+              : officialTechniqueDetailSections(tech);
+          const nameLabels =
+            mode !== 'empowered' && pathFilterActive
+              ? pathChipLabelsForEntity(pathIndex, libraryRowPathIds(tech), selectedPathIds)
+              : undefined;
+          const nameBadges = nameLabels?.map((label) => ({ label })) ?? [];
+          const driftBadges = tech.hasDrift
+            ? [{ label: 'Needs sync' as const, color: 'amber' as const }]
+            : [];
+          const badges = [...nameBadges, ...driftBadges];
+          return (
             <GridListRow
               key={tech.id}
               id={tech.id}
               name={tech.name}
               description={tech.description}
-              gridColumns={TECHNIQUE_GRID_COLUMNS}
-              columns={[
-                { key: 'Energy', value: tech.energy, highlight: true },
-                { key: 'TP', value: tech.tp },
-                { key: 'Action', value: tech.action },
-                { key: 'Weapon', value: tech.weapon },
-                { key: 'Damage', value: tech.damage },
-              ]}
-              chips={tech.parts}
-              chipsLabel="Parts & Proficiencies"
-              totalCost={typeof tech.tp === 'number' ? tech.tp : (parseFloat(String(tech.tp)) || undefined)}
-              costLabel="TP"
-              badges={tech.hasDrift ? [{ label: 'Needs sync', color: 'amber' }] : []}
+              thumbnail={resolveListRowThumbnail('technique', tech.raw, tech.name)}
+              gridColumns={OFFICIAL_TECHNIQUE_GRID}
+              rowChrome={TECHNIQUE_ROW_CHROME}
+              columns={officialTechniqueRowColumns(tech)}
+              detailSections={
+                detailSections && detailSections.length > 0 ? detailSections : undefined
+              }
+              badges={badges.length > 0 ? badges : undefined}
+              showBadgesInName={nameBadges.length > 0}
               warningMessage={tech.syncIssues[0]?.message}
-              rightSlot={tech.hasDrift ? (
-                <IconButton
-                  variant="ghost"
-                  size="sm"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    void handleSyncOne(tech.id);
-                  }}
-                  label="Sync with current patch"
-                  className="text-warning-fg hover:opacity-80"
-                >
-                  <RefreshCw className={`w-4 h-4 ${syncingIds.has(tech.id) ? 'animate-spin' : ''}`} />
-                </IconButton>
-              ) : undefined}
+              rightSlot={
+                mode !== 'empowered' &&
+                addToCharacter.active &&
+                !addToCharacter.isOnCharacter(tech.raw) ? (
+                  <LibraryRowActionSlot>
+                    <LibraryAddToCharacterButton
+                      kind="technique"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        addToCharacter.openAddConfirm(tech.name, tech.raw);
+                      }}
+                    />
+                    {tech.hasDrift ? (
+                      <LibrarySyncRowAction
+                        syncing={sync.syncingIds.has(tech.id)}
+                        onSync={() => void sync.handleSyncOne(tech.id)}
+                      />
+                    ) : null}
+                  </LibraryRowActionSlot>
+                ) : tech.hasDrift ? (
+                  <LibrarySyncRowAction
+                    syncing={sync.syncingIds.has(tech.id)}
+                    onSync={() => void sync.handleSyncOne(tech.id)}
+                  />
+                ) : undefined
+              }
               onEdit={() => {
-                const creator = mode === 'empowered' ? '/empowered-technique-creator' : '/technique-creator';
+                const creator =
+                  mode === 'empowered' ? '/empowered-technique-creator' : '/technique-creator';
                 router.push(`${creator}?edit=${encodeURIComponent(tech.id)}`);
               }}
               onDelete={() => onDelete({ id: tech.id, name: tech.name } as DisplayItem)}
-              onDuplicate={() => setDuplicateConfirm({ id: tech.id, name: tech.name })}
+              onDuplicate={() => dup.openDuplicateConfirm(tech.id, tech.name)}
             />
-          ))
-        )}
-      </div>
-
-      <ConfirmActionModal
-        isOpen={!!duplicateConfirm}
-        onClose={() => setDuplicateConfirm(null)}
-        onConfirm={() => {
-          if (!duplicateConfirm) return;
-          const duplicateMutation = mode === 'empowered' ? duplicateEmpoweredTechnique : duplicateTechnique;
-          duplicateMutation.mutate(duplicateConfirm.id, {
-            onSuccess: () => {
-              showToast(`Duplicated "${duplicateConfirm.name}"`, 'success');
-              setDuplicateConfirm(null);
-            },
-            onError: (e) => showToast(e?.message ?? 'Failed to duplicate', 'error'),
-          });
-        }}
-        title={mode === 'empowered' ? 'Duplicate empowered technique?' : 'Duplicate technique?'}
-        description={
-          duplicateConfirm
-            ? `Create a copy of "${duplicateConfirm.name}" in your library?`
-            : ''
-        }
-        confirmLabel="Duplicate"
-        loadingLabel="Duplicating..."
-        isLoading={
-          mode === 'empowered' ? duplicateEmpoweredTechnique.isPending : duplicateTechnique.isPending
-        }
-      />
-
-      <ConfirmActionModal
-        isOpen={showSyncAllConfirm}
-        onClose={() => setShowSyncAllConfirm(false)}
-        onConfirm={() => {
-          setShowSyncAllConfirm(false);
-          void handleSyncAll();
-        }}
-        title="Sync with current patch?"
-        description={`Sync ${driftedItems.length} ${mode === 'empowered' ? 'empowered technique' : 'technique'}${driftedItems.length === 1 ? '' : 's'} to current patch rules. Parts that no longer exist in the codex may be removed.`}
-        confirmLabel="Sync all"
-        loadingLabel="Syncing..."
-        isLoading={syncingAll}
-      />
-    </div>
+          );
+        })}
+      </UserLibraryEntityTabShell>
+      {mode !== 'empowered' ? addToCharacter.confirmModal : null}
+    </>
   );
 }

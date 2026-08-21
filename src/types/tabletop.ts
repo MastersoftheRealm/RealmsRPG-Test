@@ -30,12 +30,12 @@ export interface VttFogState {
 
 export interface VttMapAsset {
   storagePath: string;
-  signedUrl?: string;
+  signedUrl?: string | undefined;
   width: number;
   height: number;
-  fileName?: string;
-  contentType?: string;
-  uploadedAt?: string;
+  fileName?: string | undefined;
+  contentType?: string | undefined;
+  uploadedAt?: string | undefined;
 }
 
 export interface VttSceneSettings {
@@ -45,51 +45,51 @@ export interface VttSceneSettings {
 export interface VttScene {
   id: string;
   campaignId: string;
-  encounterId?: string;
+  encounterId?: string | undefined;
   name: string;
   isActive: boolean;
-  map?: VttMapAsset;
+  map?: VttMapAsset | undefined;
   grid: VttGridConfig;
   fog: VttFogState;
   settings: VttSceneSettings;
-  createdAt?: string;
-  updatedAt?: string;
+  createdAt?: string | undefined;
+  updatedAt?: string | undefined;
 }
 
 export interface VttTokenMetadata {
-  currentHealth?: number;
-  maxHealth?: number;
-  currentEnergy?: number;
-  maxEnergy?: number;
-  armor?: number;
-  evasion?: number;
-  ap?: number;
-  notes?: string;
-  creatureLevel?: number;
-  creatureType?: string;
-  creatureSize?: string;
+  currentHealth?: number | undefined;
+  maxHealth?: number | undefined;
+  currentEnergy?: number | undefined;
+  maxEnergy?: number | undefined;
+  armor?: number | undefined;
+  evasion?: number | undefined;
+  ap?: number | undefined;
+  notes?: string | undefined;
+  creatureLevel?: number | undefined;
+  creatureType?: string | undefined;
+  creatureSize?: string | undefined;
 }
 
 export interface VttToken {
   id: string;
   sceneId: string;
-  combatantId?: string;
+  combatantId?: string | undefined;
   name: string;
   label: string;
   x: number;
   y: number;
   size: number;
   color: string;
-  imageUrl?: string;
+  imageUrl?: string | undefined;
   visible: boolean;
   locked: boolean;
   combatantType: CombatantType;
-  sourceType?: CombatantSource;
-  sourceId?: string;
-  sourceUserId?: string;
+  sourceType?: CombatantSource | undefined;
+  sourceId?: string | undefined;
+  sourceUserId?: string | undefined;
   metadata: VttTokenMetadata;
-  createdAt?: string;
-  updatedAt?: string;
+  createdAt?: string | undefined;
+  updatedAt?: string | undefined;
 }
 
 export type VttActionType = 'ping' | 'move-request';
@@ -101,14 +101,14 @@ export interface VttAction {
   userId: string;
   type: VttActionType;
   status: VttActionStatus;
-  tokenId?: string;
-  fromX?: number;
-  fromY?: number;
+  tokenId?: string | undefined;
+  fromX?: number | undefined;
+  fromY?: number | undefined;
   toX: number;
   toY: number;
-  message?: string;
-  createdAt?: string;
-  updatedAt?: string;
+  message?: string | undefined;
+  createdAt?: string | undefined;
+  updatedAt?: string | undefined;
 }
 
 export interface VttTabletopState {
@@ -128,6 +128,6 @@ export type VttCreatureTokenSource = 'official' | 'user';
 export interface AddVttCreatureTokensRequest {
   source: VttCreatureTokenSource;
   creatureId: string;
-  quantity?: number;
-  visible?: boolean;
+  quantity?: number | undefined;
+  visible?: boolean | undefined;
 }

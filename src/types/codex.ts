@@ -2,85 +2,103 @@
  * Codex API Types
  * ===============
  * Canonical typed payload for `/api/codex` (HYG-01 / TASK-378).
- * Entity shapes match the normalized response from `src/app/api/codex/route.ts`.
+ * Collection entity shapes match `src/lib/codex/row-map.ts` (GET `/api/codex` + view enrichment).
+ * Archetype path join stays in the route.
  */
 
-import type { Archetype, ArchetypePathData, PathGuidanceGroup } from './archetype';
+import type { AllowUndefinedOptionals } from '@/lib/utils/exact-optional';
+import type { Archetype, PathGuidanceGroup } from './archetype';
 
 // =============================================================================
 // Entity types (codex collections)
 // =============================================================================
 
-export interface CodexPowerPart {
+/**
+ * Row version carried through `/api/codex` so admin saves can send the value they loaded
+ * and be rejected when another admin has written since. Absent until the table has the column.
+ */
+interface CodexRowVersionFields {
+  updated_at?: string | undefined;
+}
+
+export type CodexRowVersion = AllowUndefinedOptionals<CodexRowVersionFields>;
+
+interface CodexPowerPartFields extends CodexRowVersion {
   id: string;
   name: string;
   description: string;
   category: string;
   base_en: number;
   base_tp: number;
-  op_1_desc?: string;
-  op_1_en?: number;
-  op_1_tp?: number;
-  op_2_desc?: string;
-  op_2_en?: number;
-  op_2_tp?: number;
-  op_3_desc?: string;
-  op_3_en?: number;
-  op_3_tp?: number;
-  duration?: boolean;
-  percentage?: boolean;
-  mechanic?: boolean;
+  op_1_desc?: string | undefined;
+  op_1_en?: number | undefined;
+  op_1_tp?: number | undefined;
+  op_2_desc?: string | undefined;
+  op_2_en?: number | undefined;
+  op_2_tp?: number | undefined;
+  op_3_desc?: string | undefined;
+  op_3_en?: number | undefined;
+  op_3_tp?: number | undefined;
+  duration?: boolean | undefined;
+  percentage?: boolean | undefined;
+  mechanic?: boolean | undefined;
   /** Targeted defenses (subset of the 6 canonical defenses). */
-  defense?: string[];
-  type?: string;
+  defense?: string[] | undefined;
+  type?: string | undefined;
 }
 
-export interface CodexTechniquePart {
+export type CodexPowerPart = AllowUndefinedOptionals<CodexPowerPartFields>;
+
+interface CodexTechniquePartFields extends CodexRowVersion {
   id: string;
   name: string;
   description: string;
   category: string;
   base_tp: number;
-  base_en?: number;
-  op_1_desc?: string;
-  op_1_en?: number;
-  op_1_tp?: number;
-  op_2_desc?: string;
-  op_2_en?: number;
-  op_2_tp?: number;
-  op_3_desc?: string;
-  op_3_en?: number;
-  op_3_tp?: number;
-  percentage?: boolean;
-  mechanic?: boolean;
-  type?: string;
+  base_en?: number | undefined;
+  op_1_desc?: string | undefined;
+  op_1_en?: number | undefined;
+  op_1_tp?: number | undefined;
+  op_2_desc?: string | undefined;
+  op_2_en?: number | undefined;
+  op_2_tp?: number | undefined;
+  op_3_desc?: string | undefined;
+  op_3_en?: number | undefined;
+  op_3_tp?: number | undefined;
+  percentage?: boolean | undefined;
+  mechanic?: boolean | undefined;
+  type?: string | undefined;
 }
+
+export type CodexTechniquePart = AllowUndefinedOptionals<CodexTechniquePartFields>;
 
 export type CodexPart = CodexPowerPart & { type: 'power' | 'technique' | string };
 
-export interface CodexItemProperty {
+interface CodexItemPropertyFields extends CodexRowVersion {
   id: string;
   name: string;
   description: string;
-  type?: 'weapon' | 'armor' | 'shield' | 'general';
-  tp_cost?: number;
-  gold_cost?: number;
-  base_ip?: number;
-  base_tp?: number;
-  base_c?: number;
-  op_1_desc?: string;
-  op_1_ip?: number;
-  op_1_tp?: number;
-  op_1_c?: number;
-  mechanic?: boolean;
+  type?: 'weapon' | 'armor' | 'shield' | 'general' | undefined;
+  tp_cost?: number | undefined;
+  gold_cost?: number | undefined;
+  base_ip?: number | undefined;
+  base_tp?: number | undefined;
+  base_c?: number | undefined;
+  op_1_desc?: string | undefined;
+  op_1_ip?: number | undefined;
+  op_1_tp?: number | undefined;
+  op_1_c?: number | undefined;
+  mechanic?: boolean | undefined;
 }
 
-export interface CodexFeat {
+export type CodexItemProperty = AllowUndefinedOptionals<CodexItemPropertyFields>;
+
+interface CodexFeatFields extends CodexRowVersion {
   id: string;
   name: string;
   description: string;
   category: string;
-  ability?: string[];
+  ability?: string[] | undefined;
   ability_req: string[];
   abil_req_val: number[];
   tags: string[];
@@ -88,34 +106,38 @@ export interface CodexFeat {
   skill_req_val: number[];
   lvl_req: number;
   uses_per_rec: number;
-  mart_abil_req?: number | string;
+  mart_abil_req?: number | string | undefined;
   char_feat: boolean;
   state_feat: boolean;
-  rec_period?: string;
-  feat_lvl?: number;
-  base_feat_id?: string;
-  req_desc?: string;
-  feat_cat_req?: string;
-  pow_abil_req?: number;
-  pow_prof_req?: number;
-  mart_prof_req?: number;
-  speed_req?: number;
+  rec_period?: string | undefined;
+  feat_lvl?: number | undefined;
+  base_feat_id?: string | undefined;
+  req_desc?: string | undefined;
+  feat_cat_req?: string | undefined;
+  pow_abil_req?: number | undefined;
+  pow_prof_req?: number | undefined;
+  mart_prof_req?: number | undefined;
+  speed_req?: number | undefined;
 }
 
-export interface CodexSkill {
+export type CodexFeat = AllowUndefinedOptionals<CodexFeatFields>;
+
+interface CodexSkillFields extends CodexRowVersion {
   id: string;
   name: string;
   description: string;
   ability: string;
-  base_skill_id?: number;
-  success_desc?: string;
-  failure_desc?: string;
-  ds_calc?: string;
-  craft_success_desc?: string;
-  craft_failure_desc?: string;
+  base_skill_id?: number | undefined;
+  success_desc?: string | undefined;
+  failure_desc?: string | undefined;
+  ds_calc?: string | undefined;
+  craft_success_desc?: string | undefined;
+  craft_failure_desc?: string | undefined;
 }
 
-export interface CodexSpecies {
+export type CodexSkill = AllowUndefinedOptionals<CodexSkillFields>;
+
+interface CodexSpeciesFields extends CodexRowVersion {
   id: string;
   name: string;
   description: string;
@@ -130,71 +152,85 @@ export interface CodexSpecies {
   characteristics: string[];
   skills: string[];
   languages: string[];
-  ability_bonuses?: Record<string, number>;
-  ave_height?: number;
-  ave_weight?: number;
-  adulthood_lifespan?: number[];
-  is_starter?: boolean;
-  image_url?: string | null;
+  ability_bonuses?: Record<string, number> | undefined;
+  ave_height?: number | undefined;
+  ave_weight?: number | undefined;
+  adulthood_lifespan?: number[] | undefined;
+  is_starter?: boolean | undefined;
+  image_id?: string | null | undefined;
+  image_url?: string | null | undefined;
 }
 
-export interface CodexTrait {
+export type CodexSpecies = AllowUndefinedOptionals<CodexSpeciesFields>;
+
+interface CodexTraitFields extends CodexRowVersion {
   id: string;
   name: string;
   description: string;
-  species?: string[];
-  uses_per_rec?: number;
-  rec_period?: string;
-  flaw?: boolean;
-  characteristic?: boolean;
-  option_trait_ids?: string[];
+  species?: string[] | undefined;
+  uses_per_rec?: number | undefined;
+  rec_period?: string | undefined;
+  flaw?: boolean | undefined;
+  characteristic?: boolean | undefined;
+  option_trait_ids?: string[] | undefined;
 }
 
-export interface CodexEquipmentItem {
+export type CodexTrait = AllowUndefinedOptionals<CodexTraitFields>;
+
+interface CodexEquipmentItemFields extends CodexRowVersion {
   id: string;
   name: string;
   type: 'weapon' | 'armor' | 'equipment';
-  subtype?: string;
-  category?: string;
+  subtype?: string | undefined;
+  category?: string | undefined;
   description: string;
-  damage?: string;
-  armor_value?: number;
+  damage?: string | undefined;
+  armor_value?: number | undefined;
   gold_cost: number;
   currency: number;
   properties: string[];
-  rarity?: string;
-  weight?: number;
+  rarity?: string | undefined;
+  weight?: number | undefined;
+  image_id?: string | null | undefined;
+  image_url?: string | null | undefined;
 }
 
-export interface CodexCreatureFeat {
+export type CodexEquipmentItem = AllowUndefinedOptionals<CodexEquipmentItemFields>;
+
+interface CodexCreatureFeatFields extends CodexRowVersion {
   id: string;
   name: string;
   description: string;
   points: number;
-  feat_points?: number;
-  feat_lvl?: number;
-  lvl_req?: number;
-  mechanic?: boolean;
-  tiers?: number;
-  prereqs?: string[];
+  feat_points?: number | undefined;
+  feat_lvl?: number | undefined;
+  lvl_req?: number | undefined;
+  mechanic?: boolean | undefined;
+  tiers?: number | undefined;
+  prereqs?: string[] | undefined;
 }
 
+export type CodexCreatureFeat = AllowUndefinedOptionals<CodexCreatureFeatFields>;
+
 /** Archetype row as returned by `/api/codex` (includes flat level1 columns). */
-export interface CodexArchetype extends Archetype {
-  level1_feats?: string[];
-  level1_skills?: string[];
-  level1_powers?: string[];
-  level1_techniques?: string[];
-  level1_armaments?: string[];
-  level1_equipment?: string[];
-  level1_remove_feats?: string[];
-  level1_remove_powers?: string[];
-  level1_remove_techniques?: string[];
-  level1_remove_armaments?: string[];
-  level1_notes?: string;
-  level1_recommended_species?: string[];
-  level1_guidance_groups?: PathGuidanceGroup[] | null;
+interface CodexArchetypeFields extends Archetype, CodexRowVersion {
+  level1_feats?: string[] | undefined;
+  level1_skills?: string[] | undefined;
+  level1_powers?: string[] | undefined;
+  /** Recommended Innate Powers (CSV column `level1_innate_powers`; TASK-473). */
+  level1_innate_powers?: string[] | undefined;
+  level1_techniques?: string[] | undefined;
+  level1_armaments?: string[] | undefined;
+  level1_equipment?: string[] | undefined;
+  level1_remove_feats?: string[] | undefined;
+  level1_remove_powers?: string[] | undefined;
+  level1_remove_techniques?: string[] | undefined;
+  level1_remove_armaments?: string[] | undefined;
+  level1_notes?: string | undefined;
+  level1_guidance_groups?: PathGuidanceGroup[] | null | undefined;
 }
+
+export type CodexArchetype = AllowUndefinedOptionals<CodexArchetypeFields>;
 
 // =============================================================================
 // Full codex response
@@ -217,6 +253,14 @@ export const CODEX_PAYLOAD_KEYS = [
 ] as const;
 
 export type CodexPayloadKey = (typeof CODEX_PAYLOAD_KEYS)[number];
+
+/** Collection keys that are lists — `coreRules` is a record, not an array. */
+export type CodexCollectionKey = Exclude<CodexPayloadKey, 'coreRules'>;
+
+/** Validates `?collection=` on GET /api/codex. */
+export function isCodexPayloadKey(value: string): value is CodexPayloadKey {
+  return (CODEX_PAYLOAD_KEYS as readonly string[]).includes(value);
+}
 
 /** Canonical typed payload for `/api/codex`. */
 export interface CodexPayload {

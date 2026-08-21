@@ -97,15 +97,15 @@ export function useFloatingHelpPopover({
 }
 
 export interface FloatingHelpPanelProps {
-  id?: string;
+  id?: string | undefined;
   refs: ReturnType<typeof useFloatingHelpPopover>['refs'];
   floatingStyles: CSSProperties;
   transitionStyles: CSSProperties;
   isMounted: boolean;
   context: ReturnType<typeof useFloatingHelpPopover>['context'];
   arrowRef: ReturnType<typeof useFloatingHelpPopover>['arrowRef'];
-  interactive?: boolean;
-  className?: string;
+  interactive?: boolean | undefined;
+  className?: string | undefined;
   getFloatingProps: (userProps?: HTMLAttributes<HTMLDivElement>) => Record<string, unknown>;
   children: ReactNode;
 }
@@ -132,7 +132,7 @@ export function FloatingHelpPanel({
       'z-popover rounded-lg border border-border-light bg-surface text-text-primary shadow-xl text-left',
       'outline-none will-change-opacity p-3',
       interactive && 'pointer-events-auto',
-      className
+      className,
     ),
     style: { ...floatingStyles, ...transitionStyles } as CSSProperties,
   }) as HTMLAttributes<HTMLDivElement>;

@@ -12,10 +12,14 @@ import {
   findByIdOrName,
   type HasIdAndName,
 } from '@/lib/id-constants';
+import { ITEM_PROPERTY_CONSTANTS } from '@/lib/game/constants';
+import {
+  compactResolvedWeaponRange,
+  formatDamageDisplay,
+  normalizeRangeDisplay,
+} from '@/lib/utils/string';
 import type { ItemProperty } from '@/hooks/codex-types';
 
-// Re-export for convenience
-export { PROPERTY_IDS, GENERAL_PROPERTY_IDS, GENERAL_PROPERTY_NAMES };
 export type { ItemProperty };
 
 // =============================================================================
@@ -23,23 +27,23 @@ export type { ItemProperty };
 // =============================================================================
 
 export interface ItemPropertyPayload {
-  id?: number;
-  name?: string;
-  op_1_lvl?: number;
-  property?: ItemProperty;
+  id?: number | undefined;
+  name?: string | undefined;
+  op_1_lvl?: number | undefined;
+  property?: ItemProperty | undefined;
 }
 
 /** Codex / hook row shape for property TP lookup (IDs may be string or number from API). */
 export type ItemPropertyTpRow = HasIdAndName & {
-  description?: string;
-  base_tp?: number;
-  tp_cost?: number;
-  op_1_tp?: number;
-  base_ip?: number;
-  op_1_ip?: number;
-  base_c?: number;
-  op_1_c?: number;
-  mechanic?: boolean;
+  description?: string | undefined;
+  base_tp?: number | undefined;
+  tp_cost?: number | undefined;
+  op_1_tp?: number | undefined;
+  base_ip?: number | undefined;
+  op_1_ip?: number | undefined;
+  base_c?: number | undefined;
+  op_1_c?: number | undefined;
+  mechanic?: boolean | undefined;
 };
 
 export interface ItemCostResult {
@@ -70,11 +74,11 @@ export interface ItemDamage {
 }
 
 export interface ItemDocument {
-  name?: string;
-  description?: string;
-  armamentType?: 'Weapon' | 'Armor' | 'Shield' | 'Accessory';
-  properties?: ItemPropertyPayload[];
-  damage?: ItemDamage[];
+  name?: string | undefined;
+  description?: string | undefined;
+  armamentType?: 'Weapon' | 'Armor' | 'Shield' | 'Accessory' | undefined;
+  properties?: ItemPropertyPayload[] | undefined;
+  damage?: ItemDamage[] | undefined;
 }
 
 export interface ItemDisplayData {
@@ -97,14 +101,15 @@ export interface ItemDisplayData {
 // Constants
 // =============================================================================
 
+/** IP band picks rarity; `low` is the pricing floor; `currencyMax` is the GAME_RULES band ceiling. */
 const RARITY_BRACKETS = [
-  { name: 'Common', low: 25, ipLow: 0, ipHigh: 4 },
-  { name: 'Uncommon', low: 100, ipLow: 4.01, ipHigh: 6 },
-  { name: 'Rare', low: 500, ipLow: 6.01, ipHigh: 8 },
-  { name: 'Epic', low: 2500, ipLow: 8.01, ipHigh: 11 },
-  { name: 'Legendary', low: 10000, ipLow: 11.01, ipHigh: 14 },
-  { name: 'Mythic', low: 50000, ipLow: 14.01, ipHigh: 16 },
-  { name: 'Ascended', low: 100000, ipLow: 16.01, ipHigh: Infinity },
+  { name: 'Common', low: 25, currencyMax: 99, ipLow: 0, ipHigh: 4 },
+  { name: 'Uncommon', low: 100, currencyMax: 499, ipLow: 4.01, ipHigh: 6 },
+  { name: 'Rare', low: 500, currencyMax: 1499, ipLow: 6.01, ipHigh: 8 },
+  { name: 'Epic', low: 2500, currencyMax: 9999, ipLow: 8.01, ipHigh: 11 },
+  { name: 'Legendary', low: 10000, currencyMax: 49999, ipLow: 11.01, ipHigh: 14 },
+  { name: 'Mythic', low: 50000, currencyMax: 99999, ipLow: 14.01, ipHigh: 16 },
+  { name: 'Ascended', low: 100000, currencyMax: Infinity, ipLow: 16.01, ipHigh: Infinity },
 ] as const;
 
 /** Property IDs that are driven by dedicated UI (damage, range, DR, etc.) and must not appear in the add-property list on load to avoid duplicating cost/display. */
@@ -157,7 +162,12 @@ export function isGeneralProperty(prop: ItemPropertyPayload | ItemProperty): boo
  * Considers both the codex mechanic flag and a known set of mechanic property IDs (so loading
  * still works even if the codex has mechanic: false for e.g. Weapon Damage or Range).
  */
-export function isMechanicProperty(prop: ItemPropertyPayload | ItemProperty | { mechanic?: boolean; id?: number | string }): boolean {
+export function isMechanicProperty(
+  prop:
+    | ItemPropertyPayload
+    | ItemProperty
+    | { mechanic?: boolean | undefined; id?: number | string | undefined },
+): boolean {
   if (!prop || typeof prop !== 'object') return false;
   if ((prop as ItemProperty).mechanic === true) return true;
   const id = (prop as ItemPropertyPayload).id ?? (prop as ItemProperty).id;
@@ -176,8 +186,12 @@ export function isMechanicProperty(prop: ItemPropertyPayload | ItemProperty | { 
  * only for non-mechanic entries; mechanic entries are restored from their dedicated UI state.
  */
 export function filterSavedItemPropertiesForList(
-  savedProperties: Array<{ id?: number | string; name?: string; op_1_lvl?: number }>,
-  propertiesDb: ItemProperty[]
+  savedProperties: Array<{
+    id?: number | string | undefined;
+    name?: string | undefined;
+    op_1_lvl?: number | undefined;
+  }>,
+  propertiesDb: ItemProperty[],
 ): Array<{ property: ItemProperty; op_1_lvl: number }> {
   const result: Array<{ property: ItemProperty; op_1_lvl: number }> = [];
   for (const saved of savedProperties || []) {
@@ -192,18 +206,19 @@ export function filterSavedItemPropertiesForList(
   return result;
 }
 
-export { computeSplits } from './dice-splits';
-
 // =============================================================================
 // Core Calculations
 // =============================================================================
 
 /**
  * Calculate currency cost and rarity from IP and currency totals.
+ * IP selects the rarity band; currency (`c`) prices inside it; the result is
+ * clamped to that band's `currencyMax` so it cannot spill into the next rarity
+ * (GAME_RULES "Rarity & Currency").
  */
 export function calculateCurrencyCostAndRarity(
   totalCurrency: number,
-  totalIP: number
+  totalIP: number,
 ): RarityResult {
   const ip = Math.max(0, totalIP);
   const c = Math.max(0, totalCurrency);
@@ -219,7 +234,12 @@ export function calculateCurrencyCostAndRarity(
   }
 
   const bracket = RARITY_BRACKETS.find((b) => b.name === rarity);
-  if (bracket) currencyCost = Math.max(currencyCost, bracket.low);
+  if (bracket) {
+    currencyCost = Math.max(currencyCost, bracket.low);
+    if (Number.isFinite(bracket.currencyMax)) {
+      currencyCost = Math.min(currencyCost, bracket.currencyMax);
+    }
+  }
 
   return { currencyCost: Math.floor(currencyCost), rarity };
 }
@@ -259,7 +279,7 @@ function normalizeItemPropertyRef(ref: unknown): ItemPropertyPayload {
 /** Resolve codex row for a saved property reference (id, name, or string name). Case-insensitive name fallback. */
 export function resolveItemPropertyCodexRow(
   ref: unknown,
-  propertiesData: readonly ItemPropertyTpRow[]
+  propertiesData: readonly ItemPropertyTpRow[],
 ): ItemPropertyTpRow | undefined {
   const payload = normalizeItemPropertyRef(ref);
   const rows = [...propertiesData];
@@ -277,17 +297,14 @@ export function resolveItemPropertyCodexRow(
  */
 export function trainingPointsForItemPropertyRef(
   ref: unknown,
-  propertiesData: readonly ItemPropertyTpRow[]
+  propertiesData: readonly ItemPropertyTpRow[],
 ): number {
   const payload = normalizeItemPropertyRef(ref);
   const data = resolveItemPropertyCodexRow(payload, propertiesData);
   if (!data) return 0;
   const lvl = payload.op_1_lvl || 0;
-  const baseTP =
-    (data as unknown as { base_tp?: number }).base_tp ||
-    (data as unknown as { tp_cost?: number }).tp_cost ||
-    0;
-  const op1TP = (data as unknown as { op_1_tp?: number }).op_1_tp || 0;
+  const baseTP = data.base_tp || data.tp_cost || 0;
+  const op1TP = data.op_1_tp || 0;
   return baseTP + op1TP * lvl;
 }
 
@@ -296,7 +313,7 @@ export function trainingPointsForItemPropertyRef(
  */
 export function calculateItemCosts(
   properties: ItemPropertyPayload[],
-  propertiesData: readonly ItemPropertyTpRow[]
+  propertiesData: readonly ItemPropertyTpRow[],
 ): ItemCostResult {
   let totalIP = 0;
   let totalTP = 0;
@@ -309,11 +326,10 @@ export function calculateItemCosts(
     const payload = normalizeItemPropertyRef(ref);
     const lvl = payload.op_1_lvl || 0;
 
-    // Access properties with optional chaining for safety
-    const baseIP = (data as unknown as { base_ip?: number }).base_ip || 0;
-    const op1IP = (data as unknown as { op_1_ip?: number }).op_1_ip || 0;
-    const baseC = (data as unknown as { base_c?: number }).base_c || 0;
-    const op1C = (data as unknown as { op_1_c?: number }).op_1_c || 0;
+    const baseIP = data.base_ip || 0;
+    const op1IP = data.op_1_ip || 0;
+    const baseC = data.base_c || 0;
+    const op1C = data.op_1_c || 0;
 
     totalIP += baseIP + op1IP * lvl;
     totalTP += trainingPointsForItemPropertyRef(ref, propertiesData);
@@ -321,17 +337,6 @@ export function calculateItemCosts(
   });
 
   return { totalIP, totalTP, totalCurrency };
-}
-
-/**
- * Format damage array as a string.
- */
-export function formatDamage(damageArr?: ItemDamage[]): string {
-  if (!Array.isArray(damageArr)) return '';
-  return damageArr
-    .filter((d) => d && d.amount && d.size && d.type && d.type !== 'none')
-    .map((d) => `${d.amount}d${d.size} ${d.type}`)
-    .join(', ');
 }
 
 /**
@@ -344,8 +349,46 @@ export function formatRange(properties: ItemPropertyPayload[]): string {
   });
   if (!prop) return 'Melee';
   const lvl = prop.op_1_lvl || 0;
-  const n = 8 + lvl * 8;
+  const n =
+    ITEM_PROPERTY_CONSTANTS.RANGE_BASE_SPACES +
+    lvl * ITEM_PROPERTY_CONSTANTS.RANGE_SPACES_PER_LEVEL;
   return `${n} ${n === 1 ? 'space' : 'spaces'}`;
+}
+
+/**
+ * Display SoT for weapon/shield range (TASK-701).
+ * Prefer `formatRange(properties)` when properties are present; fall back to stored
+ * range only when properties are absent. Never surface raw op_1_lvl integers or `"0"`.
+ */
+export function resolveWeaponRangeDisplay(
+  storedRange: string | number | null | undefined,
+  properties?: ItemPropertyPayload[] | null,
+): string {
+  const props = properties ?? [];
+  if (props.length > 0) {
+    return formatRange(props);
+  }
+
+  const normalized = normalizeRangeDisplay(storedRange);
+  if (!normalized || normalized === '0' || normalized === '-') {
+    return 'Melee';
+  }
+  if (/^melee$/i.test(normalized)) {
+    return 'Melee';
+  }
+  // Corrupt stored values: bare integers are op_1_lvl, not display spaces.
+  if (/^\d+$/.test(normalized)) {
+    return 'Melee';
+  }
+  return normalized;
+}
+
+/** Resolved + compact weapon range for dense cells (TASK-701). */
+export function formatWeaponRangeDisplayCompact(
+  storedRange: string | number | null | undefined,
+  properties?: ItemPropertyPayload[] | null,
+): string {
+  return compactResolvedWeaponRange(resolveWeaponRangeDisplay(storedRange, properties));
 }
 
 /**
@@ -358,6 +401,33 @@ export function deriveDamageReductionFromProperties(properties: ItemPropertyPayl
   });
   if (!drProp) return 0;
   return 1 + (drProp.op_1_lvl || 0);
+}
+
+/** Derive Agility Reduction from properties (1 + op_1_lvl; matches item creator storage). */
+export function deriveAgilityReductionFromProperties(properties: ItemPropertyPayload[]): number {
+  const arProp = (properties || []).find((p) => {
+    if (p.id === PROPERTY_IDS.AGILITY_REDUCTION) return true;
+    return p.name === 'Agility Reduction';
+  });
+  if (!arProp) return 0;
+  return 1 + (arProp.op_1_lvl || 0);
+}
+
+function isCriticalRangePlus1Property(p: ItemPropertyPayload): boolean {
+  if (p.id === PROPERTY_IDS.CRITICAL_RANGE_PLUS_1) return true;
+  const name = (p.name ?? '').trim().toLowerCase();
+  return name === 'critical range +1' || name === 'critical range increase';
+}
+
+/**
+ * Derive Critical Range +1 levels from properties (1 + op_1_lvl per matching property).
+ */
+export function deriveCriticalRangeIncreaseFromProperties(
+  properties: ItemPropertyPayload[],
+): number {
+  const critProp = (properties || []).find(isCriticalRangePlus1Property);
+  if (!critProp) return 0;
+  return 1 + (critProp.op_1_lvl || 0);
 }
 
 /** Dice sizes for shield amount display (level % 3 → d4, d6, d8) */
@@ -399,7 +469,7 @@ export function deriveShieldDamageFromProperties(properties: ItemPropertyPayload
  */
 export function extractProficiencies(
   properties: ItemPropertyPayload[],
-  propertiesData: ItemProperty[]
+  propertiesData: ItemProperty[],
 ): ProficiencyInfo[] {
   const profs: ProficiencyInfo[] = [];
 
@@ -408,8 +478,8 @@ export function extractProficiencies(
     if (!data) return;
 
     const lvl = ref.op_1_lvl || 0;
-    const baseTP = (data as unknown as { base_tp?: number }).base_tp || 0;
-    const op1TP = (data as unknown as { op_1_tp?: number }).op_1_tp || 0;
+    const baseTP = data.base_tp || 0;
+    const op1TP = data.op_1_tp || 0;
     const optTP = lvl > 0 ? op1TP * lvl : 0;
     const totalTP = baseTP + optTP;
 
@@ -434,16 +504,16 @@ export function extractProficiencies(
  */
 export function deriveItemDisplay(
   item: ItemDocument,
-  propertiesData: ItemProperty[]
+  propertiesData: ItemProperty[],
 ): ItemDisplayData {
   const properties = item.properties || [];
   const costs = calculateItemCosts(properties, propertiesData);
   const { currencyCost, rarity } = calculateCurrencyCostAndRarity(
     costs.totalCurrency,
-    costs.totalIP
+    costs.totalIP,
   );
-  const damageStr = formatDamage(item.damage);
-  const rangeStr = formatRange(properties);
+  const damageStr = formatDamageDisplay(item.damage);
+  const rangeStr = resolveWeaponRangeDisplay(undefined, properties);
   const dr = deriveDamageReductionFromProperties(properties);
   const profs = extractProficiencies(properties, propertiesData);
 

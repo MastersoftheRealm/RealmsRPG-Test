@@ -3,7 +3,7 @@
  * ==================
  * Loads core game rules from the database (via /api/codex coreRules)
  * with fallback to hardcoded constants when DB is unavailable.
- * 
+ *
  * Usage:
  *   const { rules, isLoading } = useGameRules();
  *   const baseHealth = rules.PROGRESSION_PLAYER.baseHealth; // 8
@@ -14,7 +14,9 @@
 
 import { useQuery } from '@tanstack/react-query';
 import type { CoreRulesMap } from '@/types/core-rules';
-import { fetchCodex } from '@/lib/api-client';
+import type { CodexPayload } from '@/types/codex';
+import { fetchCodexCollection } from '@/lib/api-client';
+import { codexKeys } from './use-codex';
 
 // Import current hardcoded values as fallback defaults
 import {
@@ -24,6 +26,7 @@ import {
   ABILITY_LIMITS,
   ARCHETYPE_CONFIGS,
   COMBAT_DEFAULTS,
+  ARMAMENT_PROFICIENCY_TABLE,
 } from '@/lib/game/constants';
 import {
   CONDITIONS,
@@ -57,7 +60,7 @@ const FALLBACK_RULES: CoreRulesMap = {
     proficiencyPerIncrease: SHARED_CONSTANTS.PROFICIENCY_PER_5_LEVELS,
     baseTrainingPoints: PLAYER_CONSTANTS.BASE_TRAINING_POINTS,
     tpPerLevelMultiplier: PLAYER_CONSTANTS.TP_PER_LEVEL_MULTIPLIER,
-    baseHealth: 8,
+    baseHealth: PLAYER_CONSTANTS.BASE_HEALTH,
     xpToLevelFormula: 'level * 4',
     startingCurrency: 200,
     characterFeatsPerLevel: 1,
@@ -120,22 +123,27 @@ const FALLBACK_RULES: CoreRulesMap = {
     martialProgression: [],
   },
   ARMAMENT_PROFICIENCY: {
-    table: [
-      { martialProf: 0, armamentMax: 3 },
-      { martialProf: 1, armamentMax: 8 },
-      { martialProf: 2, armamentMax: 12 },
-      { martialProf: 3, armamentMax: 15 },
-      { martialProf: 4, armamentMax: 18 },
-      { martialProf: 5, armamentMax: 21 },
-      { martialProf: 6, armamentMax: 24 },
-    ],
+    table: [...ARMAMENT_PROFICIENCY_TABLE],
   },
   COMBAT: {
     baseSpeed: COMBAT_DEFAULTS.BASE_SPEED,
     baseEvasion: COMBAT_DEFAULTS.BASE_EVASION,
     baseDefense: COMBAT_DEFAULTS.BASE_DEFENSE,
     apPerRound: 4,
-    actionCosts: { basic: 2, quick: 1, free: 0, movement: 1, interaction: 1, abilityRoll: 1, skillEncounterAction: 2, evade: 1, brace: 1, focus: 1, search: 1, overcome: 1 },
+    actionCosts: {
+      basic: 2,
+      quick: 1,
+      free: 0,
+      movement: 1,
+      interaction: 1,
+      abilityRoll: 1,
+      skillEncounterAction: 2,
+      evade: 1,
+      brace: 1,
+      focus: 1,
+      search: 1,
+      overcome: 1,
+    },
     multipleActionPenalty: -5,
     criticalHitThreshold: 10,
     natural20Bonus: 2,
@@ -153,12 +161,37 @@ const FALLBACK_RULES: CoreRulesMap = {
     unproficientRules: { positive: 'half ability (round up)', negative: 'double the negative' },
   },
   CONDITIONS: {
-    standard: CONDITIONS.filter(c => !['Bleed', 'Exhausted', 'Exposed', 'Frightened', 'Staggered', 'Resilient', 'Slowed', 'Stunned', 'Susceptible', 'Weakened'].includes(c)).map(name => ({ name, leveled: false, description: '' })),
-    leveled: ['Bleed', 'Exhausted', 'Exposed', 'Frightened', 'Staggered', 'Resilient', 'Slowed', 'Stunned', 'Susceptible', 'Weakened'].map(name => ({ name, leveled: true, description: '' })),
+    standard: CONDITIONS.filter(
+      (c) =>
+        ![
+          'Bleed',
+          'Exhausted',
+          'Exposed',
+          'Frightened',
+          'Staggered',
+          'Resilient',
+          'Slowed',
+          'Stunned',
+          'Susceptible',
+          'Weakened',
+        ].includes(c),
+    ).map((name) => ({ name, leveled: false, description: '' })),
+    leveled: [
+      'Bleed',
+      'Exhausted',
+      'Exposed',
+      'Frightened',
+      'Staggered',
+      'Resilient',
+      'Slowed',
+      'Stunned',
+      'Susceptible',
+      'Weakened',
+    ].map((name) => ({ name, leveled: true, description: '' })),
     stackingRules: "Conditions don't stack. Stronger replaces weaker.",
   },
   SIZES: {
-    categories: CREATURE_SIZES.map(s => ({
+    categories: CREATURE_SIZES.map((s) => ({
       value: s.value,
       label: s.label,
       height: s.height,
@@ -168,9 +201,15 @@ const FALLBACK_RULES: CoreRulesMap = {
       minCarry: s.minCarry,
     })),
     halfCapacitySpeedPenalty: 'Movement speed halved',
+    spaceAndShape:
+      'Creatures are classified into size categories based on their height and, in some cases, width. Generally, larger creatures take up more space on a battle map.',
+    carryingNotes:
+      'If you carry more than half your maximum capacity, your movement speed is halved. Minimum carry still applies when Strength is negative.',
+    movementThroughEnemySpaces:
+      'Moving through an enemy your size or smaller is difficult terrain. You cannot end your turn in another creature’s space unless it occupies more than double your spaces.',
   },
   RARITIES: {
-    tiers: LEVELS_BY_RARITY.map(r => ({
+    tiers: LEVELS_BY_RARITY.map((r) => ({
       name: r.rarity,
       currencyMin: 0,
       currencyMax: null,
@@ -179,15 +218,23 @@ const FALLBACK_RULES: CoreRulesMap = {
     })),
   },
   DAMAGE_TYPES: {
-    all: ALL_DAMAGE_TYPES.filter(t => t !== 'none') as unknown as string[],
+    all: ALL_DAMAGE_TYPES.filter((t) => t !== 'none') as unknown as string[],
     armorExceptions: [...ARMOR_EXCEPTION_TYPES],
     note: 'No physical vs magic split. All damage types are equal categories.',
   },
   RECOVERY: {
-    partial: { duration: '2, 4, or 6 hours', effect: 'Each 2 hours: regain 1/4 of both max Energy and Health, OR 1/2 of one.', interruptionGrace: '10 minutes' },
-    full: { duration: '8-10 hours', effect: 'Fully restore Energy and Health, remove most temporary effects.' },
+    partial: {
+      duration: '2, 4, or 6 hours',
+      effect: 'Each 2 hours: regain 1/4 of both max Energy and Health, OR 1/2 of one.',
+      interruptionGrace: '10 minutes',
+    },
+    full: {
+      duration: '8-10 hours',
+      effect: 'Fully restore Energy and Health, remove most temporary effects.',
+    },
     requirements: 'Adequate nutrition/hydration, temperate conditions, bedding. Must doff armor.',
-    withoutFullRecovery: 'Max HP and EN reduce by 1/4 each 24 hours without full recovery (accumulates, min 1).',
+    withoutFullRecovery:
+      'Max HP and EN reduce by 1/4 each 24 hours without full recovery (accumulates, min 1).',
     featUses: { partial: 'Resets "Partial" recovery feats only', full: 'Resets all feat uses' },
   },
   EXPERIENCE: {
@@ -210,28 +257,116 @@ const FALLBACK_RULES: CoreRulesMap = {
     bulkCraftCount: 4,
     bulkCraftMaterialCount: 3,
     generalTable: [
-      { currencyMin: 0, currencyMax: 99, rarity: 'Common', difficultyScore: 14, successes: 1, timeValue: 8, timeUnit: 'hours' as const },
-      { currencyMin: 100, currencyMax: null, rarity: 'Uncommon', difficultyScore: 16, successes: 1, timeValue: 5, timeUnit: 'days' as const },
+      {
+        currencyMin: 0,
+        currencyMax: 99,
+        rarity: 'Common',
+        difficultyScore: 14,
+        successes: 1,
+        timeValue: 8,
+        timeUnit: 'hours' as const,
+      },
+      {
+        currencyMin: 100,
+        currencyMax: null,
+        rarity: 'Uncommon',
+        difficultyScore: 16,
+        successes: 1,
+        timeValue: 5,
+        timeUnit: 'days' as const,
+      },
     ],
     successesTable: [
-      { delta: 0, failureEffect: '—', successEffect: 'Create fully functional item worth market price.', successItemWorthPercent: 100, materialsRetainedPercent: 0, choiceExtraItemOrEnhance: false },
-      { delta: 1, failureEffect: '75% market price', successEffect: '125% market price', failureItemWorthPercent: 75, successItemWorthPercent: 125, materialsRetainedPercent: 0, choiceExtraItemOrEnhance: false },
+      {
+        delta: 0,
+        failureEffect: '—',
+        successEffect: 'Create fully functional item worth market price.',
+        successItemWorthPercent: 100,
+        materialsRetainedPercent: 0,
+        choiceExtraItemOrEnhance: false,
+      },
+      {
+        delta: 1,
+        failureEffect: '75% market price',
+        successEffect: '125% market price',
+        failureItemWorthPercent: 75,
+        successItemWorthPercent: 125,
+        materialsRetainedPercent: 0,
+        choiceExtraItemOrEnhance: false,
+      },
     ],
     enhancedTable: [
-      { rarity: 'Common', currencyPerEnergy: 10, energyMin: 0, energyMax: 10, difficultyScore: 14, successes: 1, timeValue: 8, timeUnit: 'hours' as const },
-      { rarity: 'Uncommon', currencyPerEnergy: 25, energyMin: 11, energyMax: null, difficultyScore: 16, successes: 1, timeValue: 5, timeUnit: 'days' as const },
+      {
+        rarity: 'Common',
+        currencyPerEnergy: 10,
+        energyMin: 0,
+        energyMax: 10,
+        difficultyScore: 14,
+        successes: 1,
+        timeValue: 8,
+        timeUnit: 'hours' as const,
+      },
+      {
+        rarity: 'Uncommon',
+        currencyPerEnergy: 25,
+        energyMin: 11,
+        energyMax: null,
+        difficultyScore: 16,
+        successes: 1,
+        timeValue: 5,
+        timeUnit: 'days' as const,
+      },
     ],
     multipleUseTable: [
       { partialRecovery: 'permanent' as const, fullRecovery: 1, adjustedEnergyPercent: 100 },
-      { partialRecovery: 'permanent' as const, fullRecovery: 'permanent' as const, adjustedEnergyPercent: 300 },
+      {
+        partialRecovery: 'permanent' as const,
+        fullRecovery: 'permanent' as const,
+        adjustedEnergyPercent: 300,
+      },
     ],
     consumableEnhancedTable: [
-      { rarity: 'Common', costPerEnergy: 5, energyMin: 0, energyMax: 10, difficultyScore: 14, successes: 1, timeValue: 2, timeUnit: 'hours' as const },
-      { rarity: 'Uncommon', costPerEnergy: 12, energyMin: 21, energyMax: null, difficultyScore: 16, successes: 1, timeValue: 1, timeUnit: 'days' as const },
+      {
+        rarity: 'Common',
+        costPerEnergy: 5,
+        energyMin: 0,
+        energyMax: 10,
+        difficultyScore: 14,
+        successes: 1,
+        timeValue: 2,
+        timeUnit: 'hours' as const,
+      },
+      {
+        rarity: 'Uncommon',
+        costPerEnergy: 12,
+        energyMin: 21,
+        energyMax: null,
+        difficultyScore: 16,
+        successes: 1,
+        timeValue: 1,
+        timeUnit: 'days' as const,
+      },
     ],
-    optionalReduceTimeByDifficulty: { dsIncreasePerStep: 2, daysReductionPerStep: 5, successesReductionPerStep: 1, maxSteps: 5, halfTimeWhenUnder5Days: true },
-    optionalReduceTimeByCost: { costIncreasePercentPerStep: 50, daysReductionPerStep: 5, successesReductionPerStep: 1, maxSteps: 5, halfTimeWhenUnder5Days: true },
-    optionalReduceDifficultyByTime: { additionalDaysCommon: 1, additionalDaysOther: 5, dsReduction: 1, successesIncrease: 1 },
+    optionalReduceTimeByDifficulty: {
+      dsIncreasePerStep: 2,
+      daysReductionPerStep: 5,
+      successesReductionPerStep: 1,
+      maxSteps: 5,
+      halfTimeWhenUnder5Days: true,
+    },
+    optionalReduceTimeByCost: {
+      costIncreasePercentPerStep: 50,
+      daysReductionPerStep: 5,
+      successesReductionPerStep: 1,
+      maxSteps: 5,
+      halfTimeWhenUnder5Days: true,
+    },
+    optionalReduceDifficultyByTime: {
+      additionalDaysCommon: 1,
+      additionalDaysOther: 5,
+      dsReduction: 1,
+      successesIncrease: 1,
+    },
     optionalReduceDifficultyByCost: { costIncreasePercent: 25, dsReduction: 2, maxSteps: 4 },
   },
 };
@@ -251,20 +386,28 @@ function mergeCoreRules(dbRules: Record<string, unknown>): CoreRulesMap {
 }
 
 // =============================================================================
-// Hook — shares codex fetch (queryKey ['codex']) so one request serves rules + other codex hooks
+// Hook — core_rules only (`['codex', 'coreRules']`), not the full codex payload (TASK-775)
 // =============================================================================
+
+const selectCoreRules = (data: Pick<CodexPayload, 'coreRules'>): CoreRulesMap =>
+  mergeCoreRules(data.coreRules ?? {});
 
 export function useGameRules(): {
   rules: CoreRulesMap;
   isLoading: boolean;
   error: Error | null;
 } {
-  const query = useQuery<Awaited<ReturnType<typeof fetchCodex>>, Error, CoreRulesMap, ['codex']>({
-    queryKey: ['codex'],
-    queryFn: fetchCodex,
-    select: (data) => mergeCoreRules(data.coreRules ?? {}),
-    staleTime: 10 * 60 * 1000,   // 10 min — rules change infrequently
-    gcTime: 60 * 60 * 1000,      // 1 hour cache
+  const query = useQuery<
+    Pick<CodexPayload, 'coreRules'>,
+    Error,
+    CoreRulesMap,
+    readonly ['codex', 'coreRules']
+  >({
+    queryKey: codexKeys.collection('coreRules'),
+    queryFn: () => fetchCodexCollection('coreRules'),
+    select: selectCoreRules,
+    staleTime: 10 * 60 * 1000, // 10 min — rules change infrequently
+    gcTime: 60 * 60 * 1000, // 1 hour cache
     retry: 1,
     refetchOnWindowFocus: false,
   });

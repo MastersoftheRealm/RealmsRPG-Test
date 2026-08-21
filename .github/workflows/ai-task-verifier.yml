@@ -1,10 +1,25 @@
 name: AI Task Verifier
 
+# Correctness gates: typecheck, unit tests, dependency audit, agent-doc/task consistency.
+#
+# THIS WORKFLOW DOES NOT BLOCK A DEPLOY ON ITS OWN.
+# It triggers on `push: [master]` — i.e. in parallel with the Vercel production build it is
+# meant to gate. **Branch protection must be enabled in GitHub settings** (Settings →
+# Branches → add a rule for `master`: require a pull request, and require the status checks
+# `verify` (this workflow) plus `Lint, contrast & static gates` and
+# `Visual regression & accessibility` from ui-verify.yml). That cannot be configured from
+# the repository, so until an owner clicks it, a red run here cannot stop a bad deploy.
+# Local backstop: `.husky/pre-push` runs `npm run typecheck` + `npm test`.
+#
+# `next build` deliberately does NOT run here — ui-verify.yml builds the same commit with
+# the Supabase env vars production uses, so a build here would validate a different
+# configuration and cost a third full build per PR.
+
 on:
   pull_request:
     types: [opened, synchronize, reopened]
   push:
-    branches: [ main ]
+    branches: [master]
 
 jobs:
   verify:
@@ -12,24 +27,44 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       - name: Setup Node
         uses: actions/setup-node@v4
         with:
-          node-version: '20'
+          node-version: '24'
+          cache: 'npm'
 
       - name: Install
         run: npm ci
 
-      - name: Build
-        run: npm run build --if-present
+      - name: Typecheck
+        run: npm run typecheck
 
-      # Report-only: generates task-reconcile-report.json; use --strict locally to fail when done tasks have no matching commits
-      - name: Run reconcile (dry-run)
-        run: |
-          node scripts/reconcile_tasks.js
+      - name: Unit tests (lib/glr contracts)
+        run: npm test
+
+      - name: Dependency audit (high severity and above)
+        run: npm audit --audit-level=high
+
+      - name: Reconcile tasks (strict)
+        run: node scripts/reconcile_tasks.js --strict --strict-since=2026-07-15
+
+      - name: Validate agent doc links
+        run: node scripts/validate-agent-docs.js
+
+      - name: Validate FEATURE_INDEX paths
+        run: node scripts/validate-feature-index.js
+
+      - name: Validate related_files on open tasks
+        run: node scripts/validate-related-files.js
+
+      - name: Validate shared/ui allowlist
+        run: node scripts/validate-shared-ui-allowlist.js
 
       - name: Upload reconcile report
+        if: always()
         uses: actions/upload-artifact@v4
         with:
           name: reconcile-report

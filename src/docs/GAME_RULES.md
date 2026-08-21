@@ -2,7 +2,7 @@
 
 > **Purpose:** Centralized game rules for AI agents and engineers. Use when implementing validation, caps, display logic, helpful subtext, and calculations. Parsed from the Core Rulebook.
 
-**Pure source of truth:** `core_rulebook_extracted.txt` (the extracted Core Rulebook)
+**Authority:** This file (`GAME_RULES.md`) for agent/engineer rules reference; live DB via `public.core_rules` (admin/codex); re-seed JSON in `data/core-rules/`.
 **Code sources:** `src/lib/game/constants.ts`, `src/lib/game/formulas.ts`, `src/lib/game/calculations.ts`, `src/lib/game/skill-allocation.ts`, `src/lib/game/creator-constants.ts`
 
 ---
@@ -51,7 +51,7 @@ Several rules use **½** or "half":
 | Rule | Formula |
 |------|---------|
 | Companion max level | ½ Character level |
-| Feat level you can acquire | Feat level ≤ ½ your level |
+| Feat level you can acquire | Hard `lvl_req` wins if present; otherwise character level ≥ 2 × feat level. Feat rank 1 with no `lvl_req` stays legal at L1 (literal 2×1 would block untagged L1 feats). |
 | Skill Encounter DS | 10 + ½ Party Level |
 | Skill Encounter successes | # Characters + 1 |
 | Jump beyond limit (per space) | DS 10 + 5 per space over |
@@ -84,7 +84,7 @@ Several rules use **½** or "half":
 
 ### Obscurity & Modifiers
 
-**Apply modifiers to the active party only** — the one making the roll. Do not apply the same modifier to both attacker and defender (e.g., -2 to attack from darkness is enough; don't also give +2 Evasion to the defender).
+**Apply Bonuses and Penalties to the active party only** (the one making the roll). Do not apply the same Bonus or Penalty to both attacker and defender (e.g., -2 to attack from darkness is enough; do not also give +2 Evasion to the defender).
 
 ### Ranged Attack Penalties
 
@@ -119,9 +119,11 @@ A creature can have only **one instance** of a given Condition at a time. Levele
 
 ## Terminology & Definitions
 
+**Authority for user-facing product copy and agent writing.** Capitalize the terms below when they name a Realms rules concept. Do not capitalize the same English word when it is used in ordinary language (e.g. "the power level of your story" vs "spend Energy on Powers").
+
 ### Official Game Terms (Capitalize These)
 
-These terms are used consistently across all Realms resources. Capitalize them in UI and documentation:
+These terms are used consistently across all Realms resources. Capitalize them in UI and documentation when used as game terms:
 
 | Term | Definition |
 |------|------------|
@@ -130,18 +132,86 @@ These terms are used consistently across all Realms resources. Capitalize them i
 | **Creature** | NPCs, monsters, companions, summoned entities |
 | **Realm Master (RM)** | The game moderator who runs the adventure |
 | **Encounter** | A structured challenge: Skill Encounter, Combat Encounter, or social interaction |
-| **Power** | Supernatural/magical ability (spells, mana, divine favor, etc.) |
-| **Technique** | Physical or martial ability (weapon attacks, unarmed prowess, etc.) |
-| **Feat** | Archetype Feat or Character Feat—a discrete ability or talent |
-| **Species** | Character lineage (Human, Elf, Dwarf, etc.) |
-| **Archetype** | Character class/role: Power, Martial, or Powered-Martial |
-| **Score** | A numerical representation used passively or reactively (Skill Score, Defense Score, Evasion) |
-| **Bonus** | A number added to rolls (Skill Bonus, Attack Bonus, Defense Bonus) |
-| **Penalty** | A number subtracted from rolls |
-| **Overcome** | When a roll meets or exceeds a target Score, or Vice Versa |
+| **Power** | Supernatural ability granted by an Archetype Path (or similar). Not a "spell". |
+| **Technique** | Physical or martial ability (weapon attacks, Unarmed Prowess, etc.) |
+| **Feat** | Archetype Feat or Character Feat: a discrete ability or talent |
+| **Trait** | Species Trait, Ancestry Trait, Characteristic, Flaw, and related Species options |
+| **Skill** / **Skills** | Trained competence; spent with Skill Points; used on Skill Rolls |
+| **Species** | Character lineage (Human, Elf, Dwarf, etc.). Not "race". |
+| **Archetype** / **Archetype Path** | Path type that guides Feats, Skills, and Loadout: Power, Martial, or Powered-Martial. Not "class". |
+| **Archetype Ability** | Governing Ability for a path. Powered-Martial paths have **two** Archetype Abilities: **Archetype Power Ability** and **Archetype Martial Ability** (both primary — never primary/secondary between those two). When a formula needs a single Archetype Ability score, use the higher of the two. Creators may label a path’s Archetype Ability as “Primary Ability” and an optional recommended ability as “Secondary Ability” for clarity; those are UX labels, not separate rules terms. |
+| **Score** | Passive target or passive total = **Bonus + 10** (Defense Score, Skill Score, Difficulty Score, Evasion, etc.). See Score Pattern above. |
+| **Bonus** | A number added to rolled dice. Other games call this a "modifier"; Realms does not. **Capitalize every named Bonus** when it is a rules label (same for related compounds). |
+| **Attack Bonus** | Bonus on an Attack Roll (often Martial Bonus or Power Bonus, including ranged or other specific Attack Bonuses). Capitalize as a game term. |
+| **Martial Bonus** | Relevant Ability + Martial Proficiency (weapon / Technique Attack Bonus family). |
+| **Power Bonus** | Power Ability + Power Proficiency (Power Attack Bonus / healing-from-Power addends, etc.). |
+| **Skill Bonus** | Bonus used on Skill Rolls (proficient or unproficient Skill Bonus / Sub-Skill Bonus). |
+| **Defense Bonus** | Bonus for Defense Rolls and Defense Score (ability + Skill Point increases, etc.). |
+| **Ranged Attack Bonus** | Attack Bonus when using ranged (and similar specific Attack Bonus labels: capitalize the full phrase). |
+| **Penalty** | A number subtracted from rolls. Named Penalties follow the same capitalization pattern when used as rules labels. |
+| **Difficulty Score (DS)** | The target number for many rolls. Not DC / Difficulty Class. |
+| **Energy** | Resource spent to use Powers (and some Techniques / items) |
+| **Health** | Damage capacity |
+| **Speed** | Movement measure from rules |
+| **Loadout** | Guided chapter and character kit covering weapons, armor, Equipment, Powers, and Techniques |
+| **Equipment** | Adventuring items that are not weapons or armor (guided Loadout phase; capitalize as a game term) |
+| **Overcome** | When a roll meets or exceeds a target Score, or vice versa |
 | **Action** | Something a creature does during its turn (Basic, Quick, Free, Movement, etc.) |
 | **Reaction** | Something a creature does outside its turn in response to a trigger |
 | **Determination Die** | Session resource: spend to re-roll any roll and choose which result to keep |
+
+### Preferred vs avoided vocabulary (soft guide)
+
+This is a **guide**, not a muzzle. Prefer Realms terms; avoid importing other systems' jargon when a Realms term already exists. Ordinary English is fine when you are not naming a rules concept.
+
+| Prefer (Realms) | Avoid in product UI / rules copy |
+|-----------------|----------------------------------|
+| Abilities | Ability Scores (as the UI label for Abilities) |
+| Bonus / Penalty (capitalized named labels: Attack Bonus, Martial Bonus, Power Bonus, Skill Bonus, Defense Bonus, Ranged Attack Bonus, …) | Modifier / Mod; lowercase "attack bonus" when naming the rules concept |
+| Score (Bonus + 10) | Using "Score" for an Ability value |
+| Difficulty Score (DS) | DC, Difficulty Class |
+| Skill Roll / Attack Roll / Defense Roll | Check, Saving Throw, Save |
+| Archetype Path / Archetype | Class |
+| Species | Race |
+| Power | Spell (unless flavor text clearly means in-world magic as fiction) |
+| Energy | Mana / Spell slots |
+| Defense / Evasion / Damage Reduction | Armor Class (AC) |
+| Health | HP in dense HUD labels (prefer Health; TASK-440) |
+| Energy | EN in dense HUD / chip headers (never EP; prefer Energy; TASK-440 / TASK-755) |
+| Currency | c / gold shorthand in Layer 1 or Layer 2 UI |
+
+**Layer 1 / Layer 2 copy:** Spell game terms in full for new players (**Currency**, **Training Points**, **Damage Reduction**, **Health**, **Energy**, …). Do not use compact abbreviations like `c` or `TP` in guided L1/L2 chrome, choice cards, or resource bars. Dense Layer 3 / advanced / table columns, **Library / Codex browse rows**, and **character sheet / play lists**, may use short labels (`TP`, expandable chip `TP: N`, Energy `N EN`) — those are working surfaces, not a guided creator disclosure ladder. **Energy abbreviates as EN, never EP.** Parts/Properties chips on those surfaces: show `TP: N` only when cost is greater than 0; show `(Lv.N)` only when option level is greater than 0 (never `(0)`).
+
+**Guided budgets (TASK-456):** Currency and Training Points are visible constrained resources in Layer 1 and Layer 2 (PointStatus total/spent/remaining). Do not hide Training Points behind “Layer 2 only” or “included in your path” framing when the user is making constrained Loadout or Powers/Techniques selections.
+
+**Also avoid:** inventing systems we do not have. When unsure, match `GAME_RULES.md` and existing UI copy.
+
+### Mechanic labels in columns and chips (TASK-454)
+
+Capitalize rules terms and structured values in **column headers**, **collapsed list cells**, and **descriptor chips**. Do **not** title-case ordinary prose descriptions.
+
+| Context | Capitalize | Example |
+|---------|------------|---------|
+| Range / distance | **Range**, **Spaces** / **Space** | `Range 16 Spaces`, `3 Spaces` |
+| Action Type (**column / labeled metadata**) | **Action Type** + value | Column header `Action Type` + cell `Basic Reaction`; or labeled metadata `Action Type Basic Reaction` via `formatActionTypeFact` |
+| Action Type (**desc chip**) | Value only | Chip `Quick Action` / `Basic Reaction` via `actionTypeFactChip` / `formatActionTypeValue` — do **not** prefix “Action Type” on the chip |
+| Ability Requirement | **Abilityname Requirement** + level | `Strength Requirement 3+` (never "Ability Requirement Strength…", never "Weapon/Armor …") |
+| Damage | Die expression + capitalized damage type + **Damage** | `2d6 Slashing Damage` (do not also chip Weapon Damage) |
+| Weapon Ability | Ability name + **Weapon** | `Strength Weapon`, `Agility Weapon`, `Acuity Weapon` |
+| Handedness | Bare label | `Two-handed` (not "Handedness: Two-handed") |
+| Budgets | **Currency**, **Training Points** | `Currency 12`, `Training Points 4` |
+| Energy | **Energy** + amount | `Energy 4` |
+| Redundant mechanics | Suppress when already represented | No separate chips for **Weapon Damage**, **Damage Reduction** (property), **Armor Base**, **Shield Base** when dedicated facts/columns exist |
+
+Shared formatters live in `src/lib/detail-option/compact-facts.ts`. Feature UI must not invent parallel strings.
+
+### Agent writing notes (user-facing strings)
+
+- Capitalize game terms only in game-term context (table above and mechanic-label table).
+- **Named Bonuses are always Title Case in UI:** Attack Bonus, Martial Bonus, Power Bonus, Skill Bonus, Defense Bonus, Ranged Attack Bonus, Sub-Skill Bonus, and any new "… Bonus" rules label. Same idea for named Penalties. Do not write "attack bonus" / "martial bonus" when referring to the game concept.
+- Do **not** use em dashes (`—`) in new user-facing copy. Hyphens (`-`) in compounds (e.g. Powered-Martial, one-handed) are fine.
+- Prefer plain, specific wording over stock AI phrasing.
+- Display Abilities as "Abilities", not "Ability Scores". Scores are for Bonus + 10 targets.
 
 ### How We Refer to Rolls
 
@@ -156,6 +226,8 @@ These terms are used consistently across all Realms resources. Capitalize them i
 ### Rounding
 
 **Round up** whenever you get a fraction or decimal from division. Complete all calculations first, then round up only at the end.
+
+**Exception — Training Points:** Floor each part or property’s TP contribution **before** adding it to the sum. A part that contributes 2.5 TP costs **2** TP. Do not ceil the combined total. Energy still ceils at the end. This is the only rounding-down exception.
 
 ---
 
@@ -177,7 +249,7 @@ Every Character, creature, and monster has six Abilities:
 | Rule | Value | Notes |
 |------|-------|------|
 | Typical range | -3 to 5 | Default for player Characters |
-| Absolute min | -5 | Never below |
+| Absolute min | -2 | Ability **scores** never go below −2 (characters and creatures). Temp modifiers can push past this in play. Creatures may break other hard rules; they still use this score floor. |
 | Hard cap (characters) | 10 | Absolute maximum for player Characters |
 | Hard cap (creatures) | 20 | Absolute maximum for creatures |
 | Max at creation | 3 | From point allocation alone |
@@ -272,6 +344,7 @@ Obscurity affects Stealth, Hide, and attack rolls. **Apply to the active party (
 | **Sub-Skill (Proficient)** | Relevant Ability + Base Skill Value + Sub-Skill Value = Sub-Skill Bonus |
 | **Unproficient Skill** | ½ Relevant Ability (or ×2 if negative) = Unproficient Skill Bonus |
 | **Unproficient Sub-Skill** | Relevant Ability + Base Skill Value = Sub-Skill Bonus |
+| **Unproficient Sub-Skill (base also unproficient)** | Unproficient Skill Bonus of the linked Ability + Base Skill Value |
 
 **Skill Value** = Skill Points allocated after gaining proficiency. Sub-Skill Value includes the point spent to gain proficiency.
 
@@ -295,7 +368,7 @@ D20 + Skill Bonus = Total
 | Increase skill value | 1:1 | 1 pt per +1 up to cap of 3 |
 | Increase past cap (base skill) | 3 Skill Points | Per +1 above 3 |
 | Increase past cap (sub-skill) | 2 Skill Points | Per +1 above 3 |
-| Increase Defense Bonus | 2 Skill Points | +1 to a Defense; total defense bonus cannot exceed level |
+| Increase Defense Bonus | 2 Skill Points | +1 to a Defense; total Defense Bonus from Skill Points cannot exceed level |
 
 **Defense bonus cap:** Defense bonuses from **skill point allocation** cannot exceed character level. Ability-derived defense bonus is unrestricted.
 
@@ -403,6 +476,8 @@ Any Bonus can be converted to a Score by adding 10.
 | Proficiency | 2 | +1 every 5 levels |
 | Training points | 22 + ability + (2 + ability) × (level − 1) | Same formula as characters |
 | Currency | 200 × 1.45^(level−1) | `calculateCreatureCurrency` |
+
+**Display (UI):** User-facing creature levels use unicode fractions for quarter steps — `¼`, `½`, `¾` (e.g. level 0.25 → `¼`, 1.5 → `1½`). Use `formatCreatureLevel` / `formatCreatureLevelLabel` / `formatCreatureLevelShort` from `@/lib/game`. List sort by level uses `parseCreatureLevelSortValue` (numeric quarter-step order). Store and calculate with numeric levels; format only at display.
 
 ---
 
@@ -662,6 +737,7 @@ When proficient, unarmed prowess uses **Ability + Martial Proficiency** (Attack 
 ### Critical Hits
 
 - **Standard Critical Range:** +10 over Defense/Evasion
+- Armor **Critical Range +1** / Critical Range Increase adds **1 + Option 1 level** to that threshold (e.g. Evasion 12 + 10 + 1 = 23)
 - **Effect:** Double damage dice (2× multiplier)
 - **Coup de Grâce:** Unconscious/asleep target within 1 space = auto hit + critical
 
@@ -685,18 +761,26 @@ When proficient, unarmed prowess uses **Ability + Martial Proficiency** (Attack 
 
 ## Size & Carrying Capacity
 
+Creatures are classified into size categories based on their height and, in some cases, width. Generally, larger creatures take up more space on a battle map. For instance, a Huge creature occupies 4 spaces.
+
+**Creature space and shape.** When a creature occupies multiple spaces, those spaces are typically adjacent. Some creatures may have unique shapes. A creature whose width matches a larger category’s typical height uses the larger size (for example, a horse about 150 cm tall and 250 cm long is Large).
+
+**Carrying capacity** is determined by size (table below). If you carry more than half your maximum capacity, your movement speed is halved. Regardless of Strength, you can carry at least the size’s minimum (the kilogram bonus you would multiply by Strength) even if Strength is negative — for example, Tiny at Strength −2 still carries 10 kg.
+
+**Movement through enemy spaces.** When moving through the space of an enemy that is your size or smaller, the space is difficult terrain. You cannot end your turn in the same space as another creature unless that creature occupies more than double the number of spaces you do (for example, a Medium creature occupying one space of a Huge creature).
+
+**Speed** is `6 + ½ Agility`. Size does **not** add a Speed modifier. The only size-related Speed rule is the half-capacity penalty above.
+
 | Size | Height | Spaces | Carrying Capacity | Min Carry |
 |------|--------|--------|-------------------|-----------|
-| Miniscule | Under 1 ft | 1/8 | 10 + 5×STR kg | 5 kg |
-| Tiny | 1–2 ft | 1/4 | 25 + 10×STR kg | 10 kg |
-| Small | 2–4 ft | 1 | 50 + 25×STR kg | 25 kg |
-| Medium | 5–7 ft | 1 | 100 + 50×STR kg | 50 kg |
-| Large | 7–10 ft | 1–2 | 200 + 100×STR kg | 100 kg |
-| Huge | 10–15 ft | 4 | 400 + 200×STR kg | 200 kg |
-| Humongous | 15–25 ft | 9 | 800 + 400×STR kg | 400 kg |
-| Gargantuan | 25+ ft | 16+ | 1600 + 800×STR kg | 800 kg |
-
-Carrying > ½ capacity halves movement speed.
+| Miniscule | Under 30 cm | 1/8 | 10 + 5×STR kg | 5 kg |
+| Tiny | 30–60 cm | 1/4 | 25 + 10×STR kg | 10 kg |
+| Small | 60–120 cm | 1 | 50 + 25×STR kg | 25 kg |
+| Medium | 150–200 cm | 1 | 100 + 50×STR kg | 50 kg |
+| Large | 200–300 cm | 1–2 | 200 + 100×STR kg | 100 kg |
+| Huge | 300–450 cm | 4 | 400 + 200×STR kg | 200 kg |
+| Humongous | 450–750 cm | 9 | 800 + 400×STR kg | 400 kg |
+| Gargantuan | 750+ cm | 16+ | 1600 + 800×STR kg | 800 kg |
 
 ---
 
@@ -752,6 +836,8 @@ Conditions are temporary effects. Leveled conditions have proportional effects. 
 
 ## Rarity & Currency
 
+**Item Point (IP) total determines rarity.** Currency (`c`) determines cost, using a rarity-based multiplier. Clamp the resulting currency so it cannot exceed that rarity’s `currencyMax` (it must not spill into the next bracket). With current properties the ceiling is rarely reachable; the clamp is a backstop.
+
 | Rarity | Currency Range |
 |--------|----------------|
 | Common | 0–99 |
@@ -764,6 +850,20 @@ Conditions are temporary effects. Leveled conditions have proportional effects. 
 
 ---
 
+## Crafting
+
+Crafting numbers live in `core_rules.CRAFTING` (admin Core Rules editor). Code: `lib/game/crafting-utils.ts`.
+
+**General items.** Look up the market Currency cost on the general table (`currencyMin`–`currencyMax`). That row supplies rarity, Difficulty Score, required Successes, and time (`timeValue` + `timeUnit`). Material cost is market price × `craftingCostMultiplier` (default 0.75). Consumables multiply time by `consumableTimeMultiplier` (default ¼, minimum 1). Each required Success is one roll session (8 hours for Common, or one 5-day block otherwise).
+
+**Outcomes.** Compare net Successes to the required count (delta). The successes table sets item worth, retained materials, extra items, or a choice to extra-item vs enhance. Failure deltas reduce worth or waste materials per that table.
+
+**Enhanced / consumable-enhanced.** Separate tables price by Energy cost of the effect (`currencyPerEnergy` / `costPerEnergy`) and use their own DS, Successes, and time. NPC upgrade fees and optional DS/time/cost trades are the `optionalReduce*` / `npc*` fields on the same `CRAFTING` blob.
+
+Until a table row matches, crafting requirements cannot be resolved. Do not invent DS or time in UI.
+
+---
+
 ## Naming & Display Conventions
 
 | Rule | Example |
@@ -772,6 +872,18 @@ Conditions are temporary effects. Leveled conditions have proportional effects. 
 | Single target | Display "Target" not "1 target" |
 | Duration | Abbreviate: "4 MIN", "2 RNDS", "1 RND", "1 HR" |
 | Valid damage types | Reference `creator-constants.ts` |
+
+### Empowered Techniques (creator costing)
+
+Empowered techniques combine power and technique parts in one profile.
+
+**Cheaper-EN overlap rule:** When a hard-tied creator control maps to similar power and technique parts (same mechanical role, different codex IDs), attach the candidate with the lower live `base_en`. On an Energy tie, prefer the technique-side part.
+
+Examples:
+- **Weapon Attack** — pick cheaper of Add Weapon to Power vs Add Weapon to Technique.
+- **No Weapon/Attack** — add the technique **No Attack** reduction mechanic (same as the technique creator). Unarmed Attack adds no attack part.
+
+Code: `pickCheaperEnPart` (`lib/calculators/empowered-overlap-parts.ts`), `deriveEmpoweredAttackMode` (`lib/attack-mode.ts`).
 
 ---
 

@@ -4,17 +4,68 @@
  * Centralized fetch wrapper for all client-side API calls.
  * Handles JSON headers, error parsing, and 204 responses.
  *
+ * Error boundary convention: see `src/docs/ARCHITECTURE.md` § Client error handling.
+ *
  * Usage:
- *   import { apiFetch } from '@/lib/api-client';
+ *   import { apiFetch, getErrorMessage } from '@/lib/api-client';
  *   const data = await apiFetch<MyType>('/api/endpoint', { method: 'POST', body: JSON.stringify(payload) });
  */
 
+function formatApiDetails(details: unknown): string | undefined {
+  if (typeof details === 'string' && details.trim()) return details.trim();
+  if (Array.isArray(details)) {
+    const parts = details
+      .map((item) => (typeof item === 'string' ? item.trim() : ''))
+      .filter(Boolean);
+    if (parts.length > 0) return parts.join(' ');
+  }
+  return undefined;
+}
+
 function parseApiErrorBody(err: unknown, fallback: string): string {
-  const payload = err as { error?: string; details?: string };
-  if (payload.details) {
-    return `${payload.error ?? fallback}: ${payload.details}`;
+  const payload = err as { error?: string | undefined; details?: unknown | undefined };
+  const details = formatApiDetails(payload.details);
+  if (details) {
+    return `${payload.error ?? fallback}: ${details}`;
   }
   return payload.error ?? fallback;
+}
+
+/** Thrown by `apiFetch` / `apiUpload` / `apiFetchOrNull` when the response is not ok. */
+export class ApiError extends Error {
+  readonly status: number;
+  readonly body: unknown;
+
+  constructor(message: string, status: number, body?: unknown) {
+    super(message);
+    this.name = 'ApiError';
+    this.status = status;
+    this.body = body;
+  }
+}
+
+export function isApiError(err: unknown): err is ApiError {
+  return err instanceof ApiError;
+}
+
+export function isConflictError(err: unknown): boolean {
+  return isApiError(err) && err.status === 409;
+}
+
+/** Log client-side failures for dev tools / diagnostics (best-effort paths). */
+export function logClientError(context: string, err: unknown): void {
+  console.error(`[Client Error] ${context}:`, err);
+}
+
+/** Normalize unknown catch values for toasts / inline Alerts. */
+export function getErrorMessage(err: unknown, fallback: string): string {
+  if (err instanceof Error && err.message.trim()) return err.message;
+  if (typeof err === 'string' && err.trim()) return err;
+  if (err && typeof err === 'object' && 'message' in err) {
+    const message = (err as { message?: unknown | undefined }).message;
+    if (typeof message === 'string' && message.trim()) return message;
+  }
+  return fallback;
 }
 
 export async function apiFetch<T>(url: string, options?: RequestInit): Promise<T> {
@@ -28,7 +79,7 @@ export async function apiFetch<T>(url: string, options?: RequestInit): Promise<T
 
   if (!res.ok) {
     const err = await res.json().catch(() => ({ error: res.statusText }));
-    throw new Error(parseApiErrorBody(err, 'Request failed'));
+    throw new ApiError(parseApiErrorBody(err, 'Request failed'), res.status, err);
   }
 
   if (res.status === 204) return undefined as T;
@@ -41,7 +92,7 @@ export async function apiUpload<T>(url: string, formData: FormData): Promise<T> 
 
   if (!res.ok) {
     const err = await res.json().catch(() => ({ error: res.statusText }));
-    throw new Error(parseApiErrorBody(err, 'Upload failed'));
+    throw new ApiError(parseApiErrorBody(err, 'Upload failed'), res.status, err);
   }
 
   return res.json();
@@ -60,14 +111,14 @@ export async function apiFetchOrNull<T>(url: string, options?: RequestInit): Pro
   if (res.status === 404) return null;
   if (!res.ok) {
     const err = await res.json().catch(() => ({ error: res.statusText }));
-    throw new Error(parseApiErrorBody(err, 'Request failed'));
+    throw new ApiError(parseApiErrorBody(err, 'Request failed'), res.status, err);
   }
 
   if (res.status === 204) return undefined as T;
   return res.json();
 }
 
-import type { CodexPayload } from '@/types/codex';
+import type { CodexPayload, CodexPayloadKey } from '@/types/codex';
 
 /**
  * Fetch full codex data from `/api/codex`.
@@ -77,4 +128,17 @@ import type { CodexPayload } from '@/types/codex';
  */
 export async function fetchCodex(): Promise<CodexPayload> {
   return apiFetch<CodexPayload>('/api/codex', { cache: 'no-store' });
+}
+
+/**
+ * Fetch one codex collection (`?collection=`) — same payload shape, one key (TASK-775).
+ * Browse hooks use this so opening a Codex tab does not download every table.
+ */
+export async function fetchCodexCollection<K extends CodexPayloadKey>(
+  collection: K,
+): Promise<Pick<CodexPayload, K>> {
+  return apiFetch<Pick<CodexPayload, K>>(
+    `/api/codex?collection=${encodeURIComponent(collection)}`,
+    { cache: 'no-store' },
+  );
 }

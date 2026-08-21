@@ -26,7 +26,7 @@ export function formatActionTypeForDisplay(raw: string): string {
  */
 export function formatSavedActionTypeForDisplay(
   actionType?: string | null,
-  isReaction?: boolean
+  isReaction?: boolean,
 ): string {
   const raw = String(actionType ?? '').trim();
   if (!raw) {

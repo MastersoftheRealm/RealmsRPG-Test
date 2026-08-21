@@ -3,15 +3,17 @@ type DuplicateScope = 'combatants' | 'participants';
 export type DuplicateCampaignCharacterReport = Partial<Record<DuplicateScope, string[]>>;
 
 interface EncounterCampaignCharacterLists {
-  combatants?: readonly unknown[];
-  skillEncounter?: { participants?: readonly unknown[] } | null;
+  combatants?: readonly unknown[] | undefined;
+  skillEncounter?: { participants?: readonly unknown[] | undefined } | null | undefined;
 }
 
 function readCampaignCharacterId(entry: unknown): string | null {
   if (!entry || typeof entry !== 'object') return null;
   const record = entry as { sourceType?: unknown; sourceId?: unknown };
   if (record.sourceType !== 'campaign-character') return null;
-  return typeof record.sourceId === 'string' && record.sourceId.trim() ? record.sourceId.trim() : null;
+  return typeof record.sourceId === 'string' && record.sourceId.trim()
+    ? record.sourceId.trim()
+    : null;
 }
 
 function findDuplicateIds(entries: readonly unknown[] | undefined): string[] {
@@ -42,7 +44,7 @@ export function getCampaignCharacterIds(entries: readonly unknown[] | undefined)
 
 export function filterDuplicateCampaignCharacterEntries<T>(
   entries: readonly T[],
-  existingEntries: readonly unknown[] | undefined = []
+  existingEntries: readonly unknown[] | undefined = [],
 ): T[] {
   const seen = getCampaignCharacterIds(existingEntries);
   const filtered: T[] = [];
@@ -57,7 +59,9 @@ export function filterDuplicateCampaignCharacterEntries<T>(
   return filtered;
 }
 
-export function getDuplicateCampaignCharactersByScope(encounter: EncounterCampaignCharacterLists | null | undefined): DuplicateCampaignCharacterReport {
+export function getDuplicateCampaignCharactersByScope(
+  encounter: EncounterCampaignCharacterLists | null | undefined,
+): DuplicateCampaignCharacterReport {
   const report: DuplicateCampaignCharacterReport = {};
   const combatants = findDuplicateIds(encounter?.combatants);
   const participants = findDuplicateIds(encounter?.skillEncounter?.participants);
@@ -68,12 +72,16 @@ export function getDuplicateCampaignCharactersByScope(encounter: EncounterCampai
   return report;
 }
 
-export function hasDuplicateCampaignCharacters(encounter: EncounterCampaignCharacterLists | null | undefined): boolean {
+export function hasDuplicateCampaignCharacters(
+  encounter: EncounterCampaignCharacterLists | null | undefined,
+): boolean {
   const report = getDuplicateCampaignCharactersByScope(encounter);
   return Boolean(report.combatants?.length || report.participants?.length);
 }
 
-export function formatDuplicateCampaignCharacterMessage(report: DuplicateCampaignCharacterReport): string {
+export function formatDuplicateCampaignCharacterMessage(
+  report: DuplicateCampaignCharacterReport,
+): string {
   const scopes: string[] = [];
   if (report.combatants?.length) scopes.push('combatants');
   if (report.participants?.length) scopes.push('skill participants');
@@ -82,7 +90,9 @@ export function formatDuplicateCampaignCharacterMessage(report: DuplicateCampaig
   return `Each campaign character can only be added once to encounter ${scopes.join(' and ')}.`;
 }
 
-export function assertNoDuplicateCampaignCharacters(encounter: EncounterCampaignCharacterLists | null | undefined): void {
+export function assertNoDuplicateCampaignCharacters(
+  encounter: EncounterCampaignCharacterLists | null | undefined,
+): void {
   const report = getDuplicateCampaignCharactersByScope(encounter);
   const message = formatDuplicateCampaignCharacterMessage(report);
   if (message) throw new Error(message);

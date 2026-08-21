@@ -12,6 +12,7 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { createClient } from '@/lib/supabase/client';
 import { forgotPasswordSchema, type ForgotPasswordFormData } from '@/lib/validation';
+import { getAuthErrorMessage } from '@/lib/auth-errors';
 import { AuthCard, FormInput } from '@/components/auth';
 import { Button, Alert } from '@/components/ui';
 
@@ -34,12 +35,13 @@ export default function ForgotPasswordPage() {
 
     try {
       const supabase = createClient();
-      await supabase.auth.resetPasswordForEmail(data.email, {
+      const { error: err } = await supabase.auth.resetPasswordForEmail(data.email, {
         redirectTo: `${typeof window !== 'undefined' ? window.location.origin : ''}/auth/confirm?next=${encodeURIComponent('/reset-password')}`,
       });
+      if (err) throw err;
       setIsSuccess(true);
     } catch (err) {
-      setError(getAuthErrorMessage(err));
+      setError(getAuthErrorMessage(err, 'forgot-password'));
     } finally {
       setIsLoading(false);
     }
@@ -47,31 +49,24 @@ export default function ForgotPasswordPage() {
 
   if (isSuccess) {
     return (
-      <AuthCard 
-        title="Check Your Email" 
-        subtitle="Password reset instructions sent"
-      >
-        <div className="text-center space-y-6">
-          <div className="w-16 h-16 mx-auto rounded-full bg-green-500/10 flex items-center justify-center">
-            <CheckIcon className="w-8 h-8 text-green-400" />
+      <AuthCard title="Check Your Email" subtitle="Password reset instructions sent">
+        <div className="space-y-6 text-center">
+          <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-green-500/10">
+            <CheckIcon className="h-8 w-8 text-green-400" />
           </div>
           <p className="text-text-secondary">
-            We have sent password reset instructions to your email address. 
-            Please check your inbox and follow the link to reset your password.
+            We have sent password reset instructions to your email address. Please check your inbox
+            and follow the link to reset your password.
           </p>
           <p className="text-sm text-text-secondary">
             Did not receive the email? Check your spam folder or{' '}
-            <Button
-              variant="link"
-              type="button"
-              onClick={() => setIsSuccess(false)}
-            >
+            <Button variant="link" type="button" onClick={() => setIsSuccess(false)}>
               try again
             </Button>
           </p>
-          <Link 
+          <Link
             href="/login"
-            className="inline-block text-primary-link-fg hover:text-primary-fg-hover transition-colors font-medium"
+            className="inline-block font-medium text-primary-link-fg transition-colors hover:text-primary-fg-hover"
           >
             Back to Sign In
           </Link>
@@ -81,10 +76,7 @@ export default function ForgotPasswordPage() {
   }
 
   return (
-    <AuthCard 
-      title="Reset Password" 
-      subtitle="Enter your email to receive reset instructions"
-    >
+    <AuthCard title="Reset Password" subtitle="Enter your email to receive reset instructions">
       {error ? (
         <Alert variant="danger" className="mb-6">
           {error}
@@ -101,20 +93,16 @@ export default function ForgotPasswordPage() {
           {...register('email')}
         />
 
-        <Button
-          type="submit"
-          className="w-full"
-          disabled={isLoading}
-        >
+        <Button type="submit" className="w-full" disabled={isLoading}>
           {isLoading ? 'Sending...' : 'Send Reset Link'}
         </Button>
       </form>
 
       <p className="mt-6 text-center text-text-secondary">
         Remember your password?{' '}
-        <Link 
+        <Link
           href="/login"
-          className="text-primary-link-fg hover:text-primary-fg-hover transition-colors font-medium"
+          className="font-medium text-primary-link-fg transition-colors hover:text-primary-fg-hover"
         >
           Sign in
         </Link>
@@ -123,25 +111,17 @@ export default function ForgotPasswordPage() {
   );
 }
 
-function CheckIcon({ className }: { className?: string }) {
+function CheckIcon({ className }: { className?: string | undefined }) {
   return (
-    <svg 
-      xmlns="http://www.w3.org/2000/svg" 
-      fill="none" 
-      viewBox="0 0 24 24" 
-      strokeWidth={2} 
-      stroke="currentColor" 
+    <svg
+      xmlns="http://www.w3.org/2000/svg"
+      fill="none"
+      viewBox="0 0 24 24"
+      strokeWidth={2}
+      stroke="currentColor"
       className={className}
     >
       <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" />
     </svg>
   );
-}
-
-function getAuthErrorMessage(error: unknown): string {
-  const msg = (error as { message?: string })?.message ?? '';
-  if (msg.includes('rate') || msg.includes('too many')) return 'Too many requests. Please try again later.';
-  if (msg.includes('invalid') || msg.includes('email')) return 'Invalid email address.';
-  if (msg.includes('network') || msg.includes('fetch')) return 'Network error. Please check your connection.';
-  return 'An error occurred. Please try again.';
 }

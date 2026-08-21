@@ -7,29 +7,36 @@
 
 import type { PowerPart } from '@/hooks/codex-types';
 import { PART_IDS, findByIdOrName } from '@/lib/id-constants';
-import { computePartTrainingPoints } from '@/lib/library/part-display';
+import {
+  computePartTrainingPoints,
+  computePartTrainingPointsRaw,
+} from '@/lib/calculators/part-training-points';
+import { dedupeSavedParts } from '@/lib/game/dedupe-saved-parts';
+import type { AllowUndefinedOptionals } from '@/lib/utils/exact-optional';
 import { formatDurationFromTypeAndValue, formatDurationWithModifiers } from '@/lib/utils/duration';
 import { formatActionTypeForDisplay } from '@/lib/utils/action-type';
 import { deriveActionType, actionTypeFromSelection } from './action-type';
-
-// Re-export for backwards compatibility
-export { PART_IDS, findByIdOrName };
+import { buildMechanicParts, type AreaConfig, type DurationConfig } from './mechanic-builder';
+import {
+  POWER_ADVANCED_MECHANIC_CATEGORY_SET,
+  POWER_AUTO_MECHANIC_PART_NAMES,
+} from './power-mechanic-constants';
 
 // =============================================================================
 // Types
 // =============================================================================
 
 export interface PowerPartPayload {
-  id?: number | string; // codex may use string ids e.g. "s377"
-  name?: string;
-  part?: PowerPart;
-  op_1_lvl?: number;
-  op_2_lvl?: number;
-  op_3_lvl?: number;
-  opt1Level?: number; // Legacy format
-  opt2Level?: number;
-  opt3Level?: number;
-  applyDuration?: boolean;
+  id?: number | string | undefined; // codex may use string ids e.g. "s377"
+  name?: string | undefined;
+  part?: PowerPart | undefined;
+  op_1_lvl?: number | undefined;
+  op_2_lvl?: number | undefined;
+  op_3_lvl?: number | undefined;
+  opt1Level?: number | undefined; // Legacy format
+  opt2Level?: number | undefined;
+  opt3Level?: number | undefined;
+  applyDuration?: boolean | undefined;
 }
 
 export interface PowerCostResult {
@@ -59,6 +66,8 @@ export interface PartChipData {
   description: string;
   finalTP: number;
   hasTP: boolean;
+  /** Max option level when > 0; omit at 0. */
+  optionLevel?: number | undefined;
 }
 
 /**
@@ -82,7 +91,7 @@ function getOptionLevel(pl: PowerPartPayload, option: 1 | 2 | 3): number {
  */
 export function calculatePowerCosts(
   partsPayload: PowerPartPayload[] = [],
-  partsDb: PowerPart[] = []
+  partsDb: PowerPart[] = [],
 ): PowerCostResult {
   let flat_normal = 0;
   let flat_duration = 0;
@@ -94,6 +103,8 @@ export function calculatePowerCosts(
   let tpRaw = 0;
   const tpSources: string[] = [];
 
+  // Each payload entry is an independent cost contribution (e.g. multiple elemental
+  // damage rows share a part id but must each add base_en + option energy).
   partsPayload.forEach((pl) => {
     // Normalize to support both saved-format and UI-format
     const isUiShape = pl.part !== undefined;
@@ -135,15 +146,9 @@ export function calculatePowerCosts(
       if (applyToDuration) flat_duration += energyContribution;
     }
 
-    // TP calculation (floor entire sum)
-    const rawTP =
-      (def.base_tp || 0) +
-      (def.op_1_tp || 0) * l1 +
-      (def.op_2_tp || 0) * l2 +
-      (def.op_3_tp || 0) * l3;
-
-    tpRaw += rawTP;
-    const partTP = Math.floor(rawTP);
+    const tpLevels = { op_1_lvl: l1, op_2_lvl: l2, op_3_lvl: l3 };
+    tpRaw += computePartTrainingPointsRaw(def, tpLevels, 'power');
+    const partTP = computePartTrainingPoints(def, tpLevels, 'power');
     if (partTP > 0) {
       let src = `${partTP} TP: ${def.name}`;
       if (l1 > 0) src += ` (Opt1 ${l1})`;
@@ -159,12 +164,37 @@ export function calculatePowerCosts(
 
   // Unified power energy equation
   const totalEnergyRaw =
-    flat_normal * perc_all +
-    (dur_all + 1) * flat_duration * perc_dur -
-    flat_duration * perc_dur;
-  const totalEnergy = Math.ceil(totalEnergyRaw);
+    flat_normal * perc_all + (dur_all + 1) * flat_duration * perc_dur - flat_duration * perc_dur;
+  // Reduction parts (e.g. No Attack) and negative base_en rows can drive the sum below
+  // zero; Energy cannot be negative (GAME_RULES "Energy Below Zero").
+  const totalEnergy = Math.max(0, Math.ceil(totalEnergyRaw));
 
   return { totalEnergy, totalTP, tpRaw, tpSources, energyRaw: totalEnergyRaw };
+}
+
+/**
+ * Section EN/TP contribution for creator badges.
+ * When section parts use `applyDuration`, duration parts must be included so
+ * `dur_all` multiplies correctly — then duration-only energy is subtracted so
+ * the badge reflects only this section's share.
+ */
+export function calculatePowerSectionContribution(
+  sectionParts: PowerPartPayload[] = [],
+  partsDb: PowerPart[] = [],
+  durationParts: PowerPartPayload[] = [],
+): Pick<PowerCostResult, 'energyRaw' | 'totalTP'> {
+  const sectionOnly = calculatePowerCosts(sectionParts, partsDb);
+  const needsDurationContext =
+    durationParts.length > 0 && sectionParts.some((pl) => !!pl.applyDuration);
+  if (!needsDurationContext) {
+    return { energyRaw: sectionOnly.energyRaw, totalTP: sectionOnly.totalTP };
+  }
+  const withDuration = calculatePowerCosts([...sectionParts, ...durationParts], partsDb);
+  const durationOnly = calculatePowerCosts(durationParts, partsDb);
+  return {
+    energyRaw: withDuration.energyRaw - durationOnly.energyRaw,
+    totalTP: sectionOnly.totalTP,
+  };
 }
 
 // =============================================================================
@@ -176,7 +206,7 @@ export function calculatePowerCosts(
  */
 export function computeActionType(
   partsPayload: PowerPartPayload[] = [],
-  partsDb: PowerPart[] = []
+  partsDb: PowerPart[] = [],
 ): string {
   const resolved = partsPayload.map((p) => {
     let partId: number | undefined;
@@ -208,141 +238,6 @@ export const computeActionTypeFromSelection = actionTypeFromSelection;
 // Mechanic Part Assembly
 // =============================================================================
 
-export interface PowerMechanicContext {
-  actionTypeSelection?: string;
-  reaction?: boolean;
-  damageType?: string;
-  diceAmt?: number;
-  dieSize?: number;
-  partsDb?: PowerPart[];
-}
-
-/**
- * Map damage type string to Codex part ID
- */
-function getDamagePartId(damageType: string): number | null {
-  switch (damageType) {
-    case 'magic':
-      return PART_IDS.MAGIC_DAMAGE;
-    case 'light':
-    case 'radiant':
-      return PART_IDS.LIGHT_DAMAGE;
-    case 'fire':
-    case 'ice':
-    case 'cold':       // backward compat alias for 'ice'
-    case 'lightning':
-    case 'acid':
-      return PART_IDS.ELEMENTAL_DAMAGE;
-    case 'poison':
-    case 'necrotic':
-      return PART_IDS.POISON_OR_NECROTIC_DAMAGE;
-    case 'sonic':
-      return PART_IDS.SONIC_DAMAGE;
-    case 'spiritual':
-      return PART_IDS.SPIRITUAL_DAMAGE;
-    case 'psychic':
-      return PART_IDS.PSYCHIC_DAMAGE;
-    case 'bludgeoning':
-    case 'piercing':
-    case 'slashing':
-      return PART_IDS.PHYSICAL_DAMAGE;
-    default:
-      return null;
-  }
-}
-
-/**
- * Map damage type to part name
- */
-function getDamagePartName(damageType: string): string {
-  switch (damageType) {
-    case 'magic':
-      return 'Magic Damage';
-    case 'light':
-    case 'radiant':
-      return 'Light Damage';
-    case 'fire':
-    case 'ice':
-    case 'cold':       // backward compat alias for 'ice'
-    case 'lightning':
-    case 'acid':
-      return 'Elemental Damage';
-    case 'poison':
-    case 'necrotic':
-      return 'Poison or Necrotic Damage';
-    case 'sonic':
-      return 'Sonic Damage';
-    case 'spiritual':
-      return 'Spiritual Damage';
-    case 'psychic':
-      return 'Psychic Damage';
-    case 'physical':
-    case 'bludgeoning':
-    case 'piercing':
-    case 'slashing':
-      return 'Physical Damage';
-    default:
-      return '';
-  }
-}
-
-/**
- * Build mechanic part payloads based on current UI selections.
- * Converts action type and damage selections into Codex parts for cost calculation.
- */
-export function buildPowerMechanicPartPayload(
-  ctx: PowerMechanicContext
-): Array<{ id: number; name: string; op_1_lvl: number; op_2_lvl: number; op_3_lvl: number; applyDuration: boolean }> {
-  const {
-    actionTypeSelection = 'basic',
-    reaction = false,
-    damageType = 'none',
-    diceAmt = 0,
-    dieSize = 0,
-    partsDb = [],
-  } = ctx || {};
-
-  const payload: Array<{ id: number; name: string; op_1_lvl: number; op_2_lvl: number; op_3_lvl: number; applyDuration: boolean }> = [];
-
-  function pushIf(partId: number, partName: string, op1 = 0, applyDuration = false): void {
-    // Try by ID first, then by name for backwards compatibility
-    let def = findByIdOrName(partsDb, { id: partId });
-    if (!def) def = findByIdOrName(partsDb, { name: partName });
-    // Only include mechanic parts
-    if (def && def.mechanic) {
-      payload.push({
-        id: Number(def.id),
-        name: def.name || partName,
-        op_1_lvl: op1,
-        op_2_lvl: 0,
-        op_3_lvl: 0,
-        applyDuration,
-      });
-    }
-  }
-
-  // Action / Reaction
-  if (reaction) pushIf(PART_IDS.POWER_REACTION, 'Power Reaction', 0);
-  if (actionTypeSelection === 'quick') pushIf(PART_IDS.POWER_QUICK_OR_FREE_ACTION, 'Power Quick or Free Action', 0);
-  else if (actionTypeSelection === 'free') pushIf(PART_IDS.POWER_QUICK_OR_FREE_ACTION, 'Power Quick or Free Action', 1);
-  else if (actionTypeSelection === 'long3') pushIf(PART_IDS.POWER_LONG_ACTION, 'Power Long Action', 0);
-  else if (actionTypeSelection === 'long4') pushIf(PART_IDS.POWER_LONG_ACTION, 'Power Long Action', 1);
-
-  // Damage
-  if (damageType !== 'none' && diceAmt > 0 && dieSize >= 4) {
-    const partId = getDamagePartId(damageType);
-    const partName = getDamagePartName(damageType);
-    if (partId && partName) {
-      // Power damage formula: opt1Level = floor((totalDamage - 4) / 2)
-      const totalDamage = diceAmt * dieSize;
-      const opt1Level = Math.max(0, Math.floor((totalDamage - 4) / 2));
-      pushIf(partId, partName, opt1Level);
-    }
-  }
-
-  return payload;
-}
-
 // =============================================================================
 // Range / Area / Duration Derivation
 // =============================================================================
@@ -359,10 +254,7 @@ export function formatPowerRangeFromSteps(steps: number): string {
 /**
  * Derive range string from parts
  */
-export function deriveRange(
-  partsPayload: PowerPartPayload[] = [],
-  _partsDb?: unknown
-): string {
+export function deriveRange(partsPayload: PowerPartPayload[] = []): string {
   const pr = partsPayload.find((p) => {
     const partId = p.part?.id ?? p.id;
     if (Number(partId) === PART_IDS.POWER_RANGE) return true;
@@ -391,8 +283,8 @@ const AREA_TYPE_TO_PART: Record<string, { id: number; name: string }> = {
 export function getAreaPartForDisplay(
   areaType: string,
   areaLevel: number,
-  partsDb: PowerPart[] = []
-): { part: PowerPart; description: string; op1Desc?: string; op1Level: number } | null {
+  partsDb: PowerPart[] = [],
+): { part: PowerPart; description: string; op1Desc?: string | undefined; op1Level: number } | null {
   const info = AREA_TYPE_TO_PART[areaType];
   if (!info) return null;
   const part = findByIdOrName(partsDb, { id: info.id, name: info.name });
@@ -425,10 +317,7 @@ export function formatAreaForDisplay(areaType: string, areaLevel: number): strin
 /**
  * Derive area string from parts
  */
-export function deriveArea(
-  partsPayload: PowerPartPayload[] = [],
-  _partsDb?: unknown
-): string {
+export function deriveArea(partsPayload: PowerPartPayload[] = []): string {
   const areaPartIds = [
     PART_IDS.SPHERE_OF_EFFECT,
     PART_IDS.CYLINDER_OF_EFFECT,
@@ -445,7 +334,10 @@ export function deriveArea(
       const name = p.part?.name || p.name;
       return name === `${areaNames[i]} of Effect`;
     });
-    if (found) return areaNames[i];
+    if (found) {
+      const areaName = areaNames[i];
+      if (areaName !== undefined) return areaName;
+    }
   }
   return '1 target';
 }
@@ -454,10 +346,7 @@ export function deriveArea(
  * Derive duration string from parts (value + unit with proper pluralization).
  * Uses shared formatDurationFromTypeAndValue for consistency with character sheet, library, codex.
  */
-export function deriveDuration(
-  partsPayload: PowerPartPayload[] = [],
-  _partsDb?: unknown
-): string {
+export function deriveDuration(partsPayload: PowerPartPayload[] = []): string {
   const findPartById = (partId: number, fallbackName: string) =>
     partsPayload.find((p) => {
       const id = p.part?.id ?? p.id;
@@ -465,8 +354,7 @@ export function deriveDuration(
       const name = p.part?.name || p.name;
       return name === fallbackName;
     });
-  const getLvl = (p: PowerPartPayload | undefined) =>
-    p ? getOptionLevel(p, 1) : 0;
+  const getLvl = (p: PowerPartPayload | undefined) => (p ? getOptionLevel(p, 1) : 0);
 
   const permanentPart = findPartById(PART_IDS.DURATION_PERMANENT, 'Duration (Permanent)');
   if (permanentPart) return formatDurationFromTypeAndValue('permanent', 0);
@@ -499,7 +387,7 @@ export function deriveDuration(
     return formatDurationFromTypeAndValue('days', days);
   }
 
-  return formatDurationFromTypeAndValue('rounds', 1);
+  return formatDurationFromTypeAndValue('instant', 0);
 }
 
 // =============================================================================
@@ -509,15 +397,13 @@ export function deriveDuration(
 /**
  * Format a single power part as a chip
  */
-export function formatPowerPartChip(
-  def: PowerPart,
-  pl: PowerPartPayload
-): PartChipData {
+export function formatPowerPartChip(def: PowerPart, pl: PowerPartPayload): PartChipData {
   const l1 = pl.op_1_lvl || 0;
   const l2 = pl.op_2_lvl || 0;
   const l3 = pl.op_3_lvl || 0;
 
   const finalTP = computePartTrainingPoints(def, pl, 'power');
+  const optionLevel = Math.max(l1, l2, l3);
   let text = def.name;
   if (l1 > 0) text += ` (Opt1 ${l1})`;
   if (l2 > 0) text += ` (Opt2 ${l2})`;
@@ -529,6 +415,7 @@ export function formatPowerPartChip(
     description: def.description || '',
     finalTP,
     hasTP: finalTP > 0,
+    optionLevel: optionLevel > 0 ? optionLevel : undefined,
   };
 }
 
@@ -536,72 +423,200 @@ export function formatPowerPartChip(
 // High-level Display Builder
 // =============================================================================
 
-export interface PowerDocument {
-  name?: string;
-  description?: string;
-  parts?: Array<{
-    id?: number;
-    name?: string;
-    op_1_lvl?: number;
-    op_2_lvl?: number;
-    op_3_lvl?: number;
-    applyDuration?: boolean;
-  }>;
-  damage?: Array<{
-    amount?: number | string;
-    size?: number | string;
-    type?: string;
-    applyDuration?: boolean;
-  }>;
-  // Directly saved fields from power creator
-  actionType?: string;
-  isReaction?: boolean;
-  range?: {
-    steps?: number;
-    applyDuration?: boolean;
-  };
-  area?: {
-    type?: string;
-    level?: number;
-    applyDuration?: boolean;
-  };
-  duration?: {
-    type?: string;
-    value?: number;
-    focus?: boolean;
-    noHarm?: boolean;
-    endsOnActivation?: boolean;
-    sustain?: number;
-  };
+type SavedPowerPart = NonNullable<PowerDocument['parts']>[number];
+
+function isUserOrAdvancedSavedPart(savedPart: SavedPowerPart, partsDb: PowerPart[]): boolean {
+  const def = findByIdOrName(partsDb, savedPart);
+  if (!def) return false;
+  const name = savedPart.name ?? def.name;
+  if (name && POWER_AUTO_MECHANIC_PART_NAMES.has(name)) return false;
+  if (!def.mechanic) return true;
+  if (savedPart.isAdvanced) return true;
+  return POWER_ADVANCED_MECHANIC_CATEGORY_SET.has(def.category || '');
 }
 
-/**
- * Build complete display data from a saved power document
- */
-export function derivePowerDisplay(
+function powerDocHasCreatorStyleFields(powerDoc: PowerDocument): boolean {
+  const hasDamage = (powerDoc.damage ?? []).some(
+    (d) => d.type && d.type !== 'none' && Number(d.amount) > 0,
+  );
+  return (
+    hasDamage ||
+    !!powerDoc.actionType ||
+    !!powerDoc.isReaction ||
+    powerDoc.range?.steps !== undefined ||
+    (!!powerDoc.area?.type && powerDoc.area.type !== 'none') ||
+    (!!powerDoc.duration?.type && powerDoc.duration.type !== 'instant')
+  );
+}
+
+function buildPowerPartsPayloadForCost(
   powerDoc: PowerDocument,
-  partsDb: PowerPart[]
-): PowerDisplayData {
-  const partsPayload: PowerPartPayload[] = Array.isArray(powerDoc.parts)
-    ? powerDoc.parts.map((p) => ({
+  partsDb: PowerPart[],
+): PowerPartPayload[] {
+  const savedParts = Array.isArray(powerDoc.parts) ? powerDoc.parts : [];
+
+  if (!powerDocHasCreatorStyleFields(powerDoc)) {
+    return dedupeSavedParts(
+      savedParts.map((p) => ({
         id: p.id,
         name: p.name,
         op_1_lvl: p.op_1_lvl || 0,
         op_2_lvl: p.op_2_lvl || 0,
         op_3_lvl: p.op_3_lvl || 0,
         applyDuration: p.applyDuration || false,
-      }))
-    : [];
+      })),
+    );
+  }
+
+  const userParts: PowerPartPayload[] = savedParts
+    .filter((p) => isUserOrAdvancedSavedPart(p, partsDb))
+    .map((p) => ({
+      id: p.id,
+      name: p.name,
+      op_1_lvl: p.op_1_lvl || 0,
+      op_2_lvl: p.op_2_lvl || 0,
+      op_3_lvl: p.op_3_lvl || 0,
+      applyDuration: p.applyDuration || false,
+    }));
+
+  const mechanicParts = buildMechanicParts({
+    creatorType: 'power',
+    partsDb,
+    action: {
+      type: powerDoc.actionType ?? 'basic',
+      isReaction: !!powerDoc.isReaction,
+    },
+    powerDamage: (powerDoc.damage ?? []).map((d) => ({
+      type: d.type ?? 'none',
+      diceAmount: Number(d.amount) || 0,
+      dieSize: Number(d.size) || 6,
+      applyDuration: d.applyDuration ?? false,
+    })),
+    range: powerDoc.range
+      ? { steps: powerDoc.range.steps ?? 0, applyDuration: powerDoc.range.applyDuration }
+      : undefined,
+    area:
+      powerDoc.area?.type && powerDoc.area.type !== 'none'
+        ? {
+            type: powerDoc.area.type as AreaConfig['type'],
+            level: powerDoc.area.level ?? 1,
+            applyDuration: powerDoc.area.applyDuration,
+          }
+        : undefined,
+    duration:
+      powerDoc.duration?.type && powerDoc.duration.type !== 'instant'
+        ? {
+            type: powerDoc.duration.type as DurationConfig['type'],
+            value: powerDoc.duration.value ?? 1,
+            applyDuration: powerDoc.duration.applyDuration,
+            focus: powerDoc.duration.focus,
+            noHarm: powerDoc.duration.noHarm,
+            endsOnActivation: powerDoc.duration.endsOnActivation,
+            sustain: powerDoc.duration.sustain,
+          }
+        : undefined,
+  });
+
+  const mechanicPayload: PowerPartPayload[] = mechanicParts.map((mp) => ({
+    id: mp.id,
+    name: mp.name,
+    op_1_lvl: mp.op_1_lvl,
+    op_2_lvl: mp.op_2_lvl,
+    op_3_lvl: mp.op_3_lvl,
+    applyDuration: mp.applyDuration ?? false,
+  }));
+
+  const rebuiltMechanicNames = new Set(mechanicParts.map((mp) => mp.name));
+  const legacyAutoMechanics: PowerPartPayload[] = savedParts
+    .filter((p) => {
+      const name = p.name ?? '';
+      return name && POWER_AUTO_MECHANIC_PART_NAMES.has(name) && !rebuiltMechanicNames.has(name);
+    })
+    .map((p) => ({
+      id: p.id,
+      name: p.name,
+      op_1_lvl: p.op_1_lvl || 0,
+      op_2_lvl: p.op_2_lvl || 0,
+      op_3_lvl: p.op_3_lvl || 0,
+      applyDuration: p.applyDuration || false,
+    }));
+
+  // Dedupe saved-side rows only — mechanicPayload may intentionally repeat the same
+  // part id per damage row (e.g. three Elemental Damage lines for fire/ice/lightning).
+  return [...dedupeSavedParts([...userParts, ...legacyAutoMechanics]), ...mechanicPayload];
+}
+
+interface PowerDocumentFields {
+  name?: string | undefined;
+  description?: string | undefined;
+  parts?:
+    | Array<{
+        id?: number | undefined;
+        name?: string | undefined;
+        op_1_lvl?: number | undefined;
+        op_2_lvl?: number | undefined;
+        op_3_lvl?: number | undefined;
+        applyDuration?: boolean | undefined;
+        isAdvanced?: boolean | undefined;
+      }>
+    | undefined;
+  damage?:
+    | Array<{
+        amount?: number | string | undefined;
+        size?: number | string | undefined;
+        type?: string | undefined;
+        applyDuration?: boolean | undefined;
+      }>
+    | undefined;
+  // Directly saved fields from power creator
+  actionType?: string | undefined;
+  isReaction?: boolean | undefined;
+  range?:
+    | {
+        steps?: number | undefined;
+        applyDuration?: boolean | undefined;
+      }
+    | undefined;
+  area?:
+    | {
+        type?: string | undefined;
+        level?: number | undefined;
+        applyDuration?: boolean | undefined;
+      }
+    | undefined;
+  duration?:
+    | {
+        type?: string | undefined;
+        value?: number | undefined;
+        applyDuration?: boolean | undefined;
+        focus?: boolean | undefined;
+        noHarm?: boolean | undefined;
+        endsOnActivation?: boolean | undefined;
+        sustain?: number | undefined;
+      }
+    | undefined;
+}
+
+export type PowerDocument = AllowUndefinedOptionals<PowerDocumentFields>;
+
+/**
+ * Build complete display data from a saved power document
+ */
+export function derivePowerDisplay(
+  powerDoc: PowerDocument,
+  partsDb: PowerPart[],
+): PowerDisplayData {
+  const partsPayload: PowerPartPayload[] = buildPowerPartsPayloadForCost(powerDoc, partsDb);
 
   const calc = calculatePowerCosts(partsPayload, partsDb);
-  
+
   // Use directly saved actionType if available, otherwise derive from parts; format for display (e.g. Long (3 AP))
   const derivedAction = computeActionType(partsPayload, partsDb);
   const savedAction = powerDoc.actionType
     ? computeActionTypeFromSelection(powerDoc.actionType, !!powerDoc.isReaction)
     : null;
   const actionType = formatActionTypeForDisplay(savedAction || derivedAction);
-  
+
   // Use directly saved range if available, otherwise derive from parts
   let rangeStr: string;
   if (powerDoc.range && powerDoc.range.steps !== undefined && powerDoc.range.steps > 0) {
@@ -609,7 +624,7 @@ export function derivePowerDisplay(
   } else {
     rangeStr = deriveRange(partsPayload);
   }
-  
+
   // Use directly saved area if available, otherwise derive from parts
   let areaStr: string;
   if (powerDoc.area && powerDoc.area.type && powerDoc.area.type !== 'none') {
@@ -627,7 +642,7 @@ export function derivePowerDisplay(
   } else {
     areaStr = deriveArea(partsPayload);
   }
-  
+
   // Use directly saved duration if available, otherwise derive from parts
   let durationStr: string;
   if (powerDoc.duration && powerDoc.duration.type && powerDoc.duration.type !== 'instant') {
@@ -672,7 +687,11 @@ export function derivePowerDisplay(
  * Format power damage as [amount]d[size] [type]. Supports multiple damage types (e.g. "2d6 slashing, 1d4 fire").
  */
 export function formatPowerDamage(
-  damageArr?: Array<{ amount?: number | string; size?: number | string; type?: string }>
+  damageArr?: Array<{
+    amount?: number | string | undefined;
+    size?: number | string | undefined;
+    type?: string | undefined;
+  }>,
 ): string {
   if (!Array.isArray(damageArr)) return '';
   const parts = damageArr

@@ -8,9 +8,17 @@
 'use client';
 
 import { useMemo, useCallback } from 'react';
-import { useQuery, useMutation, useQueryClient, UseQueryResult, UseMutationResult } from '@tanstack/react-query';
+import {
+  useQuery,
+  useMutation,
+  useQueryClient,
+  UseQueryResult,
+  UseMutationResult,
+} from '@tanstack/react-query';
 import { useAuthStore } from '@/stores/auth-store';
 import { apiFetch } from '@/lib/api-client';
+import { fetchUserLibraryCounts } from '@/services/library-service';
+import type { LibraryTabCounts } from '@/lib/library/library-tab-counts';
 import { useCodexSpecies } from './use-codex';
 import type { Species } from './codex-types';
 import { readRecordImageUrl } from '@/components/guided-creator/guided-choice-image';
@@ -49,7 +57,18 @@ import type {
 // =============================================================================
 
 /** One canonical query key per library type, keyed by user id. */
-const libraryQueryKey = (type: LibraryItemType, userId: string) => [`user-${type}`, userId] as const;
+const libraryQueryKey = (type: LibraryItemType, userId: string) =>
+  [`user-${type}`, userId] as const;
+
+export const userLibraryKeys = {
+  countsRoot: ['user-library-counts'] as const,
+  counts: (userId: string) => ['user-library-counts', userId] as const,
+};
+
+/** Keys delete/duplicate must invalidate (collection + tab badges). */
+export function userLibraryAfterMutationKeys(type: LibraryItemType, userId: string) {
+  return [libraryQueryKey(type, userId), userLibraryKeys.counts(userId)] as const;
+}
 
 // =============================================================================
 // Fetch Functions
@@ -86,7 +105,7 @@ async function duplicateLibraryItem(type: string, docId: string): Promise<string
  */
 export function useUserLibrary<T>(
   type: LibraryItemType,
-  options?: { enabled?: boolean }
+  options?: { enabled?: boolean | undefined },
 ): UseQueryResult<T[], Error> {
   const { user } = useAuthStore();
   const userId = user?.uid || '';
@@ -101,23 +120,39 @@ export function useUserLibrary<T>(
   });
 }
 
-export const useUserPowers = (options?: { enabled?: boolean }) =>
+export const useUserPowers = (options?: { enabled?: boolean | undefined }) =>
   useUserLibrary<LibraryPower>('powers', options);
 
-export const useUserTechniques = (options?: { enabled?: boolean }) =>
+export const useUserTechniques = (options?: { enabled?: boolean | undefined }) =>
   useUserLibrary<LibraryTechnique>('techniques', options);
 
-export const useUserEmpoweredTechniques = (options?: { enabled?: boolean }) =>
+export const useUserEmpoweredTechniques = (options?: { enabled?: boolean | undefined }) =>
   useUserLibrary<LibraryTechnique>('empowered-techniques', options);
 
-export const useUserItems = (options?: { enabled?: boolean }) =>
+export const useUserItems = (options?: { enabled?: boolean | undefined }) =>
   useUserLibrary<LibraryItem>('items', options);
 
-export const useUserCreatures = (options?: { enabled?: boolean }) =>
+export const useUserCreatures = (options?: { enabled?: boolean | undefined }) =>
   useUserLibrary<LibraryCreature>('creatures', options);
 
-export const useUserSpecies = (options?: { enabled?: boolean }) =>
+export const useUserSpecies = (options?: { enabled?: boolean | undefined }) =>
   useUserLibrary<LibrarySpecies>('species', options);
+
+export function useUserLibraryCounts(options?: {
+  enabled?: boolean | undefined;
+}): UseQueryResult<LibraryTabCounts, Error> {
+  const { user } = useAuthStore();
+  const userId = user?.uid || '';
+  const enabled = (options?.enabled ?? true) && !!userId;
+
+  return useQuery({
+    queryKey: userLibraryKeys.counts(userId),
+    queryFn: fetchUserLibraryCounts,
+    enabled,
+    staleTime: 2 * 60 * 1000,
+    gcTime: 10 * 60 * 1000,
+  });
+}
 
 /** Normalize user species to Species shape for use in character creator, sheet, and codex. */
 export function userSpeciesToSpecies(u: UserSpecies): Species {
@@ -146,9 +181,22 @@ export function userSpeciesToSpecies(u: UserSpecies): Species {
 }
 
 /** Merged species list: user (My Codex) first, then codex (public). Use for species step, skills step, and character sheet so user-created species can be selected and resolved. */
-export function useMergedSpecies(): UseQueryResult<Species[], Error> {
-  const { data: codexSpecies = [], isLoading: codexLoading, error: codexError, refetch: refetchCodex } = useCodexSpecies();
-  const { data: userSpecies = [], isLoading: userLoading, error: userError, refetch: refetchUser } = useUserSpecies();
+export function useMergedSpecies(options?: {
+  enabled?: boolean | undefined;
+}): UseQueryResult<Species[], Error> {
+  const enabled = options?.enabled ?? true;
+  const {
+    data: codexSpecies = [],
+    isLoading: codexLoading,
+    error: codexError,
+    refetch: refetchCodex,
+  } = useCodexSpecies({ enabled });
+  const {
+    data: userSpecies = [],
+    isLoading: userLoading,
+    error: userError,
+    refetch: refetchUser,
+  } = useUserSpecies({ enabled });
 
   const merged = useMemo(() => {
     const codex = (codexSpecies ?? []) as Species[];
@@ -187,7 +235,7 @@ export function useMergedSpecies(): UseQueryResult<Species[], Error> {
         isLoadingError: false,
         isPaused: false,
       }) as unknown as UseQueryResult<Species[], Error>,
-    [merged, isLoading, error, refetch]
+    [merged, isLoading, error, refetch],
   );
 }
 
@@ -204,7 +252,11 @@ function useDeleteLibraryItem(type: LibraryItemType): UseMutationResult<void, Er
     mutationFn: (docId: string) => deleteLibraryItem(type, docId),
     onSuccess: () => {
       const uid = user?.uid;
-      if (uid) queryClient.invalidateQueries({ queryKey: libraryQueryKey(type, uid) });
+      if (uid) {
+        for (const queryKey of userLibraryAfterMutationKeys(type, uid)) {
+          queryClient.invalidateQueries({ queryKey });
+        }
+      }
     },
   });
 }
@@ -218,7 +270,11 @@ function useDuplicateLibraryItem(type: LibraryItemType): UseMutationResult<strin
     mutationFn: (docId: string) => duplicateLibraryItem(type, docId),
     onSuccess: () => {
       const uid = user?.uid;
-      if (uid) queryClient.invalidateQueries({ queryKey: libraryQueryKey(type, uid) });
+      if (uid) {
+        for (const queryKey of userLibraryAfterMutationKeys(type, uid)) {
+          queryClient.invalidateQueries({ queryKey });
+        }
+      }
     },
   });
 }

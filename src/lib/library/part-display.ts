@@ -3,77 +3,61 @@
  * TP math aligns with power-calc / technique-calc chip formatters (SA-4-17).
  */
 
-import type { PartData } from '@/components/shared';
-import { trainingPointsForItemPropertyRef, type ItemPropertyTpRow } from '@/lib/calculators/item-calc';
-import { PART_IDS, findByIdOrName } from '@/lib/id-constants';
+import type { PartData } from '@/components/patterns';
+import {
+  trainingPointsForItemPropertyRef,
+  type ItemPropertyTpRow,
+} from '@/lib/calculators/item-calc';
+import {
+  computePartTrainingPoints,
+  type PartTpVariant,
+} from '@/lib/calculators/part-training-points';
+import { dedupeSavedParts } from '@/lib/game/dedupe-saved-parts';
+import { findByIdOrName } from '@/lib/id-constants';
 import type { CharacterPower, CharacterTechnique, Item } from '@/types';
 
 export interface CodexPartRow {
   id: string | number;
   name: string;
-  description?: string;
-  base_tp?: number;
-  op_1_tp?: number;
-  op_2_tp?: number;
-  op_3_tp?: number;
-  op_1_desc?: string;
-  op_2_desc?: string;
-  op_3_desc?: string;
+  description?: string | undefined;
+  base_tp?: number | undefined;
+  op_1_tp?: number | undefined;
+  op_2_tp?: number | undefined;
+  op_3_tp?: number | undefined;
+  op_1_desc?: string | undefined;
+  op_2_desc?: string | undefined;
+  op_3_desc?: string | undefined;
 }
 
 export interface CodexPropertyRow {
   id: string | number;
   name: string;
-  description?: string;
-  base_tp?: number;
-  tp_cost?: number;
+  description?: string | undefined;
+  base_tp?: number | undefined;
+  tp_cost?: number | undefined;
 }
 
 type PartPayload = {
-  id?: string | number;
-  name?: string;
-  op_1_lvl?: number;
-  op_2_lvl?: number;
-  op_3_lvl?: number;
+  id?: string | number | undefined;
+  name?: string | undefined;
+  op_1_lvl?: number | undefined;
+  op_2_lvl?: number | undefined;
+  op_3_lvl?: number | undefined;
 };
 
 type PropertyPayload = {
-  id?: string | number;
-  name?: string;
-  op_1_lvl?: number;
-  op_2_lvl?: number;
-  op_3_lvl?: number;
+  id?: string | number | undefined;
+  name?: string | undefined;
+  op_1_lvl?: number | undefined;
+  op_2_lvl?: number | undefined;
+  op_3_lvl?: number | undefined;
 };
 
-export type PartTpVariant = 'power' | 'technique';
-
-/** Shared TP calculation used by library PartData and calculator chip formatters. */
-export function computePartTrainingPoints(
-  def: Pick<CodexPartRow, 'id' | 'name' | 'base_tp' | 'op_1_tp' | 'op_2_tp' | 'op_3_tp'>,
-  levels: Pick<PartPayload, 'op_1_lvl' | 'op_2_lvl' | 'op_3_lvl'>,
-  variant: PartTpVariant = 'power'
-): number {
-  const l1 = levels.op_1_lvl ?? 0;
-  const l2 = levels.op_2_lvl ?? 0;
-  const l3 = levels.op_3_lvl ?? 0;
-
-  let opt1Contribution = (def.op_1_tp || 0) * l1;
-  if (variant === 'technique') {
-    const defId = typeof def.id === 'string' ? parseInt(def.id, 10) : def.id;
-    if (defId === PART_IDS.ADDITIONAL_DAMAGE || def.name === 'Additional Damage') {
-      opt1Contribution = Math.floor(opt1Contribution);
-    }
-  }
-
-  const rawTP =
-    (def.base_tp || 0) + opt1Contribution + (def.op_2_tp || 0) * l2 + (def.op_3_tp || 0) * l3;
-
-  return Math.floor(rawTP);
-}
+export type { PartTpVariant } from '@/lib/calculators/part-training-points';
 
 function buildOptionEntries(
   def: CodexPartRow,
-  levels: Pick<PartPayload, 'op_1_lvl' | 'op_2_lvl' | 'op_3_lvl'>
+  levels: Pick<PartPayload, 'op_1_lvl' | 'op_2_lvl' | 'op_3_lvl'>,
 ): PartData['options'] {
   const opt1 = levels.op_1_lvl ?? 0;
   const opt2 = levels.op_2_lvl ?? 0;
@@ -88,7 +72,7 @@ function buildOptionEntries(
 export function partPayloadToPartData(
   payload: string | PartPayload,
   codexParts: CodexPartRow[],
-  variant: PartTpVariant
+  variant: PartTpVariant,
 ): PartData {
   if (typeof payload === 'string') {
     const codexPart = codexParts.find((p) => p.name?.toLowerCase() === payload.toLowerCase());
@@ -123,20 +107,24 @@ export function partPayloadToPartData(
 export function characterPartsToPartData(
   parts?: CharacterPower['parts'] | CharacterTechnique['parts'],
   codexParts: CodexPartRow[] = [],
-  variant: PartTpVariant = 'power'
+  variant: PartTpVariant = 'power',
 ): PartData[] {
   if (!parts || parts.length === 0) return [];
-  return parts.map((part) => partPayloadToPartData(part as string | PartPayload, codexParts, variant));
+  const unique = dedupeSavedParts(parts as Array<string | PartPayload>);
+  return unique.map((part) =>
+    partPayloadToPartData(part as string | PartPayload, codexParts, variant),
+  );
 }
 
 export function itemPropertiesToPartData(
   properties?: Item['properties'],
-  codexProperties: CodexPropertyRow[] = []
+  codexProperties: CodexPropertyRow[] = [],
 ): PartData[] {
   if (!properties || properties.length === 0) return [];
   const db = codexProperties as unknown as ItemPropertyTpRow[];
+  const unique = dedupeSavedParts(properties as Array<string | PropertyPayload>);
 
-  return properties.map((prop) => {
+  return unique.map((prop) => {
     if (typeof prop === 'string') {
       const codexProp = codexProperties.find((p) => p.name?.toLowerCase() === prop.toLowerCase());
       const tp = trainingPointsForItemPropertyRef(prop, db);

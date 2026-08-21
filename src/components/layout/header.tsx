@@ -12,41 +12,12 @@ import Image from 'next/image';
 import { usePathname, useRouter } from 'next/navigation';
 import { cn } from '@/lib/utils';
 import { useAuth, useAdmin, useProfile } from '@/hooks';
-import { ThemeToggle, InfoTippy } from '@/components/shared';
+import { ThemeToggle, InfoTippy } from '@/components/patterns';
+import { IconButton } from '@/components/ui';
 import { navbarCodex, navbarLibrary } from '../../../public/tooltip-text';
+import { NAV_COPY, type NavLink } from '@/lib/constants/site-copy';
 
-const navLinks: Array<{ href: string; label: string; external?: boolean } | { label: string; dropdown: { href: string; label: string }[] }> = [
-  { href: '/characters', label: 'Characters' },
-  { href: '/library', label: 'Library' },
-  { href: '/codex', label: 'Codex' },
-  {
-    label: 'Creators',
-    dropdown: [
-      { href: '/power-creator', label: 'Powers' },
-      { href: '/technique-creator', label: 'Techniques' },
-      { href: '/empowered-technique-creator', label: 'Empowered Techniques' },
-      { href: '/item-creator', label: 'Armaments' },
-      { href: '/species-creator', label: 'Species' },
-    ],
-  },
-  {
-    label: 'Rules',
-    dropdown: [
-      { href: '/rules', label: 'Core Rulebook' },
-      { href: '/resources', label: 'Resources' },
-    ],
-  },
-  {
-    label: 'RM Tools',
-    dropdown: [
-      { href: '/encounters', label: 'Encounters' },
-      { href: '/crafting', label: 'Crafting' },
-      { href: '/creature-creator', label: 'Creature Creator' },
-    ],
-  },
-  { href: '/campaigns', label: 'Campaigns' },
-  { href: '/about', label: 'About' },
-];
+const navLinks: NavLink[] = NAV_COPY.links;
 
 const MOBILE_NAV_ID = 'mobile-nav-panel';
 const FOCUSABLE_SELECTOR =
@@ -82,12 +53,13 @@ export function Header() {
   useEffect(() => {
     if (!mobileMenuOpen) return;
     const node = mobileNavRef.current;
+    const menuButton = mobileMenuButtonRef.current;
     if (node) {
       const firstFocusable = node.querySelector<HTMLElement>(FOCUSABLE_SELECTOR);
       (firstFocusable ?? node).focus();
     }
     return () => {
-      mobileMenuButtonRef.current?.focus?.();
+      menuButton?.focus?.();
     };
   }, [mobileMenuOpen]);
 
@@ -96,11 +68,12 @@ export function Header() {
     const node = mobileNavRef.current;
     if (!node) return;
     const focusables = Array.from(node.querySelectorAll<HTMLElement>(FOCUSABLE_SELECTOR)).filter(
-      (el) => el.offsetParent !== null || el === document.activeElement
+      (el) => el.offsetParent !== null || el === document.activeElement,
     );
     if (focusables.length === 0) return;
     const first = focusables[0];
     const last = focusables[focusables.length - 1];
+    if (first === undefined || last === undefined) return;
     if (e.shiftKey && document.activeElement === first) {
       e.preventDefault();
       last.focus();
@@ -120,9 +93,12 @@ export function Header() {
   };
 
   return (
-    <header className="sticky top-0 z-header w-full bg-surface-secondary border-b border-divider h-20">
-      <div className="layout-shell-wide">
-        <div className="flex items-center justify-between h-20 gap-14">
+    <header className="sticky top-0 z-header h-20 w-full border-b border-divider bg-surface-secondary">
+      {/* DESIGN_INTENT: Inline nav at xl+ with tighter gutters than `.layout-shell-wide` —
+          nowrap labels at lg widened the document (empty strip). Do not put overflow-x-clip
+          on this header — it clips absolute nav/account menus; clip lives on MainAppChrome. */}
+      <div className="mx-auto w-full max-w-[var(--container-wide)] min-w-0 px-4 sm:px-6 lg:px-8 xl:px-16">
+        <div className="flex h-20 min-w-0 items-center justify-between gap-3 xl:gap-6 2xl:gap-10">
           {/* Logo */}
           <Link href="/" className="shrink-0">
             <Image
@@ -130,26 +106,26 @@ export function Header() {
               alt="Realms RPG"
               width={44}
               height={49}
-              className="w-11 h-auto"
+              className="h-auto w-11"
               priority
               suppressHydrationWarning
             />
           </Link>
 
-          {/* Desktop Navigation */}
-          <nav className="hidden lg:flex items-center gap-14 flex-1 justify-center">
+          {/* Desktop Navigation — xl+ only; nowrap labels need the wider band */}
+          <nav className="hidden min-w-0 flex-1 items-center justify-center gap-3 xl:flex xl:gap-5 2xl:gap-8">
             {isAdmin && (
               <Link
                 href="/admin"
                 className={cn(
-                  'font-semibold text-lg text-primary-fg hover:text-primary-fg-hover transition-colors whitespace-nowrap',
-                  pathname?.startsWith('/admin') ? 'text-primary-fg-active' : ''
+                  'text-base font-semibold whitespace-nowrap text-primary-fg transition-colors hover:text-primary-fg-hover 2xl:text-lg',
+                  pathname?.startsWith('/admin') ? 'text-primary-fg-active' : '',
                 )}
               >
                 Admin
               </Link>
             )}
-            {navLinks.map((item) => (
+            {navLinks.map((item) =>
               'dropdown' in item ? (
                 <NavDropdown key={item.label} item={item} pathname={pathname} />
               ) : item.external ? (
@@ -159,36 +135,44 @@ export function Header() {
                   target="_blank"
                   rel="noopener noreferrer"
                   className={cn(
-                    'font-semibold text-lg text-primary-fg hover:text-primary-fg-hover transition-colors whitespace-nowrap',
-                    pathname === item.href ? 'text-primary-fg-active' : ''
+                    'text-base font-semibold whitespace-nowrap text-primary-fg transition-colors hover:text-primary-fg-hover 2xl:text-lg',
+                    pathname === item.href ? 'text-primary-fg-active' : '',
                   )}
                 >
                   {item.label}
                 </a>
               ) : (
-                <span key={item.href} className="inline-flex items-center gap-1">
+                <span key={item.href} className="inline-flex shrink-0 items-center gap-1">
                   <Link
                     href={item.href}
                     className={cn(
-                      'font-semibold text-lg text-primary-fg hover:text-primary-fg-hover transition-colors whitespace-nowrap',
-                      pathname === item.href ? 'text-primary-fg-active' : ''
+                      'text-base font-semibold whitespace-nowrap text-primary-fg transition-colors hover:text-primary-fg-hover 2xl:text-lg',
+                      pathname === item.href ? 'text-primary-fg-active' : '',
                     )}
                   >
                     {item.label}
                   </Link>
                   {item.href === '/library' && (
-                    <InfoTippy content={navbarLibrary} label="About Realms Library" placement="bottom" />
+                    <InfoTippy
+                      content={navbarLibrary}
+                      label={NAV_COPY.tippy.library}
+                      placement="bottom"
+                    />
                   )}
                   {item.href === '/codex' && (
-                    <InfoTippy content={navbarCodex} label="About Realms Codex" placement="bottom" />
+                    <InfoTippy
+                      content={navbarCodex}
+                      label={NAV_COPY.tippy.codex}
+                      placement="bottom"
+                    />
                   )}
                 </span>
-              )
-            ))}
+              ),
+            )}
           </nav>
 
           {/* Account Section */}
-          <div className="flex items-center gap-2 sm:gap-4">
+          <div className="flex shrink-0 items-center gap-2 sm:gap-4">
             {!user && (
               <div className="hidden sm:block">
                 <ThemeToggle variant="inline" />
@@ -200,33 +184,31 @@ export function Header() {
               <button
                 type="button"
                 onClick={handleLoginClick}
-                className="font-semibold text-lg text-primary-fg hover:text-primary-fg-hover transition-colors whitespace-nowrap min-h-[44px] px-2 flex items-center"
+                className="flex min-h-[44px] items-center px-2 text-base font-semibold whitespace-nowrap text-primary-fg transition-colors hover:text-primary-fg-hover 2xl:text-lg"
               >
                 Login
               </button>
             )}
 
-            {/* Mobile menu button */}
-            <button
+            {/* Compact / tablet menu (below xl) */}
+            <IconButton
               ref={mobileMenuButtonRef}
               type="button"
+              variant="ghost"
+              size="md"
               aria-expanded={mobileMenuOpen}
               aria-controls={MOBILE_NAV_ID}
-              aria-label="Toggle navigation menu"
-              className="lg:hidden p-2 text-text-secondary min-h-[44px] min-w-[44px] flex items-center justify-center"
+              label="Toggle navigation menu"
+              className="text-text-secondary xl:hidden"
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
             >
-              {mobileMenuOpen ? (
-                <XIcon className="w-6 h-6" />
-              ) : (
-                <MenuIcon className="w-6 h-6" />
-              )}
-            </button>
+              {mobileMenuOpen ? <XIcon className="h-5 w-5" /> : <MenuIcon className="h-5 w-5" />}
+            </IconButton>
           </div>
         </div>
       </div>
 
-      {/* Mobile Navigation */}
+      {/* Compact / tablet Navigation */}
       {mobileMenuOpen ? (
         <div
           id={MOBILE_NAV_ID}
@@ -235,33 +217,38 @@ export function Header() {
           role="navigation"
           aria-label="Mobile navigation"
           onKeyDown={handleMobileNavKeyDown}
-          className="lg:hidden border-t border-border-light bg-surface outline-none"
+          className="border-t border-border-light bg-surface outline-none xl:hidden"
         >
           {!user && (
             <div className="px-4 pt-4 sm:hidden">
               <ThemeToggle variant="inline" className="w-full justify-center" />
             </div>
           )}
-          <nav className="px-4 py-4 space-y-2">
+          <nav className="space-y-2 px-4 py-4">
             {isAdmin && (
               <Link
                 href="/admin"
-                className="py-3 text-lg font-semibold text-primary-fg min-h-11 flex items-center"
+                className="flex min-h-11 items-center py-3 text-lg font-semibold text-primary-fg"
                 onClick={() => setMobileMenuOpen(false)}
               >
                 Admin
               </Link>
             )}
-            {navLinks.map((item) => (
+            {navLinks.map((item) =>
               'dropdown' in item ? (
-                <MobileDropdown key={item.label} item={item} pathname={pathname} onLinkClick={() => setMobileMenuOpen(false)} />
+                <MobileDropdown
+                  key={item.label}
+                  item={item}
+                  pathname={pathname}
+                  onLinkClick={() => setMobileMenuOpen(false)}
+                />
               ) : item.external ? (
                 <a
                   key={item.href}
                   href={item.href}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="py-3 text-lg font-semibold text-primary-fg min-h-11 flex items-center"
+                  className="flex min-h-11 items-center py-3 text-lg font-semibold text-primary-fg"
                   onClick={() => setMobileMenuOpen(false)}
                 >
                   {item.label}
@@ -270,13 +257,13 @@ export function Header() {
                 <Link
                   key={item.href}
                   href={item.href}
-                  className="py-3 text-lg font-semibold text-primary-fg min-h-11 flex items-center"
+                  className="flex min-h-11 items-center py-3 text-lg font-semibold text-primary-fg"
                   onClick={() => setMobileMenuOpen(false)}
                 >
                   {item.label}
                 </Link>
-              )
-            ))}
+              ),
+            )}
           </nav>
         </div>
       ) : null}
@@ -286,16 +273,16 @@ export function Header() {
 
 interface DropdownItem {
   label: string;
-  href?: string;
-  external?: boolean;
-  dropdown?: { href: string; label: string }[];
+  href?: string | undefined;
+  external?: boolean | undefined;
+  dropdown?: { href: string; label: string }[] | undefined;
 }
 
 function AccountDropdown({
   profile,
   signOut,
 }: {
-  profile: { username?: string | null } | null;
+  profile: { username?: string | null | undefined } | null;
   signOut: () => void;
 }) {
   const [open, setOpen] = useState(false);
@@ -308,31 +295,46 @@ function AccountDropdown({
     return () => document.removeEventListener('click', handleClick);
   }, []);
   return (
-    <div ref={ref} className="relative" onMouseEnter={() => setOpen(true)} onMouseLeave={() => setOpen(false)}>
+    <div
+      ref={ref}
+      className="relative"
+      onMouseEnter={() => setOpen(true)}
+      onMouseLeave={() => setOpen(false)}
+    >
       <button
         type="button"
         aria-label="Account menu"
         aria-expanded={open}
-        className="flex items-center gap-2 min-h-11 min-w-11"
-        onClick={(e) => { e.stopPropagation(); setOpen((o) => !o); }}
+        className="flex min-h-11 min-w-11 items-center gap-2"
+        onClick={(e) => {
+          e.stopPropagation();
+          setOpen((o) => !o);
+        }}
       >
-        <div className="w-10 h-10 rounded-full bg-primary-button flex items-center justify-center text-white font-bold">
+        <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary-button font-bold text-text-on-dark">
           {profile?.username?.charAt(0).toUpperCase() ?? '?'}
         </div>
       </button>
       {open && (
-        <div className="absolute right-0 top-full pt-2 z-popover">
-          <div className="w-56 bg-surface rounded-lg shadow-lg border border-border-light py-2">
-            <Link href="/my-account" className="px-4 py-2.5 text-text-secondary hover:bg-surface-alt min-h-11 flex items-center" onClick={() => setOpen(false)}>
+        <div className="absolute top-full right-0 z-popover pt-2">
+          <div className="w-56 rounded-lg border border-border-light bg-surface py-2 shadow-lg">
+            <Link
+              href="/my-account"
+              className="flex min-h-11 items-center px-4 py-2.5 text-text-secondary hover:bg-surface-alt"
+              onClick={() => setOpen(false)}
+            >
               My Account
             </Link>
-            <div className="border-t border-border-light my-1" />
+            <div className="my-1 border-t border-border-light" />
             <ThemeToggle />
-            <div className="border-t border-border-light my-1" />
+            <div className="my-1 border-t border-border-light" />
             <button
               type="button"
-              onClick={() => { signOut(); setOpen(false); }}
-              className="w-full text-left px-4 py-2.5 text-text-secondary hover:bg-surface-alt min-h-11"
+              onClick={() => {
+                signOut();
+                setOpen(false);
+              }}
+              className="min-h-11 w-full px-4 py-2.5 text-left text-text-secondary hover:bg-surface-alt"
             >
               Sign Out
             </button>
@@ -354,28 +356,36 @@ function NavDropdown({ item, pathname }: { item: DropdownItem; pathname: string 
     return () => document.removeEventListener('click', handleClick);
   }, []);
   return (
-    <div ref={ref} className="relative" onMouseEnter={() => setOpen(true)} onMouseLeave={() => setOpen(false)}>
+    <div
+      ref={ref}
+      className="relative"
+      onMouseEnter={() => setOpen(true)}
+      onMouseLeave={() => setOpen(false)}
+    >
       <button
         type="button"
         aria-label={`${item.label} menu`}
         aria-expanded={open}
-        className="font-semibold text-lg text-primary-fg hover:text-primary-fg-hover transition-colors flex items-center gap-1 whitespace-nowrap min-h-11"
-        onClick={(e) => { e.stopPropagation(); setOpen((o) => !o); }}
+        className="flex min-h-11 shrink-0 items-center gap-1 text-base font-semibold whitespace-nowrap text-primary-fg transition-colors hover:text-primary-fg-hover 2xl:text-lg"
+        onClick={(e) => {
+          e.stopPropagation();
+          setOpen((o) => !o);
+        }}
       >
         {item.label}
-        <ChevronDownIcon className={cn('w-4 h-4 transition-transform', open ? 'rotate-180' : '')} />
+        <ChevronDownIcon className={cn('h-4 w-4 transition-transform', open ? 'rotate-180' : '')} />
       </button>
       {open && (
-        <div className="absolute top-full left-1/2 -translate-x-1/2 pt-2 z-popover before:content-[''] before:absolute before:top-0 before:left-0 before:right-0 before:h-2">
-          <div className="w-48 bg-surface-secondary rounded-lg shadow-lg border border-divider py-2">
+        <div className="absolute top-full left-1/2 z-popover -translate-x-1/2 pt-2 before:absolute before:top-0 before:right-0 before:left-0 before:h-2 before:content-['']">
+          <div className="w-48 rounded-lg border border-divider bg-surface-secondary py-2 shadow-lg">
             {item.dropdown?.map((subItem) => (
               <Link
                 key={subItem.href}
                 href={subItem.href}
                 prefetch={false}
                 className={cn(
-                  'px-5 py-3 text-primary-fg hover:bg-surface hover:text-primary-fg-hover transition-colors min-h-11 flex items-center',
-                  pathname === subItem.href ? 'bg-surface-alt text-primary-fg-active' : ''
+                  'flex min-h-11 items-center px-5 py-3 text-primary-fg transition-colors hover:bg-surface hover:text-primary-fg-hover',
+                  pathname === subItem.href ? 'bg-surface-alt text-primary-fg-active' : '',
                 )}
                 onClick={() => setOpen(false)}
               >
@@ -389,7 +399,15 @@ function NavDropdown({ item, pathname }: { item: DropdownItem; pathname: string 
   );
 }
 
-function MobileDropdown({ item, pathname, onLinkClick }: { item: DropdownItem; pathname: string; onLinkClick?: () => void }) {
+function MobileDropdown({
+  item,
+  pathname,
+  onLinkClick,
+}: {
+  item: DropdownItem;
+  pathname: string;
+  onLinkClick?: (() => void) | undefined;
+}) {
   const [open, setOpen] = useState(false);
 
   return (
@@ -398,24 +416,24 @@ function MobileDropdown({ item, pathname, onLinkClick }: { item: DropdownItem; p
         type="button"
         aria-expanded={open}
         aria-label={`${item.label} menu`}
-        className="flex items-center justify-between w-full py-3 text-lg font-semibold text-primary-fg min-h-11"
+        className="flex min-h-11 w-full items-center justify-between py-3 text-lg font-semibold text-primary-fg"
         onClick={() => setOpen(!open)}
       >
         {item.label}
-        <ChevronDownIcon className={cn('w-4 h-4 transition-transform', open ? 'rotate-180' : '')} />
+        <ChevronDownIcon className={cn('h-4 w-4 transition-transform', open ? 'rotate-180' : '')} />
       </button>
       {open ? (
-        <div className="pl-4 space-y-1">
+        <div className="space-y-1 pl-4">
           {item.dropdown?.map((subItem) => (
             <Link
               key={subItem.href}
               href={subItem.href}
               prefetch={false}
               className={cn(
-                'py-3 text-primary-fg min-h-11 flex items-center',
-                pathname === subItem.href ? 'text-primary-fg-active' : ''
+                'flex min-h-11 items-center py-3 text-primary-fg',
+                pathname === subItem.href ? 'text-primary-fg-active' : '',
               )}
-              onClick={onLinkClick}
+              {...(onLinkClick ? { onClick: onLinkClick } : {})}
             >
               {subItem.label}
             </Link>
@@ -426,25 +444,53 @@ function MobileDropdown({ item, pathname, onLinkClick }: { item: DropdownItem; p
   );
 }
 
-function MenuIcon({ className }: { className?: string }) {
+function MenuIcon({ className }: { className?: string | undefined }) {
   return (
-    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className={className} suppressHydrationWarning>
-      <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5" />
+    <svg
+      xmlns="http://www.w3.org/2000/svg"
+      fill="none"
+      viewBox="0 0 24 24"
+      strokeWidth={1.5}
+      stroke="currentColor"
+      className={className}
+      suppressHydrationWarning
+    >
+      <path
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5"
+      />
     </svg>
   );
 }
 
-function XIcon({ className }: { className?: string }) {
+function XIcon({ className }: { className?: string | undefined }) {
   return (
-    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className={className} suppressHydrationWarning>
+    <svg
+      xmlns="http://www.w3.org/2000/svg"
+      fill="none"
+      viewBox="0 0 24 24"
+      strokeWidth={1.5}
+      stroke="currentColor"
+      className={className}
+      suppressHydrationWarning
+    >
       <path strokeLinecap="round" strokeLinejoin="round" d="M6 18 18 6M6 6l12 12" />
     </svg>
   );
 }
 
-function ChevronDownIcon({ className }: { className?: string }) {
+function ChevronDownIcon({ className }: { className?: string | undefined }) {
   return (
-    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className={className} suppressHydrationWarning>
+    <svg
+      xmlns="http://www.w3.org/2000/svg"
+      fill="none"
+      viewBox="0 0 24 24"
+      strokeWidth={2}
+      stroke="currentColor"
+      className={className}
+      suppressHydrationWarning
+    >
       <path strokeLinecap="round" strokeLinejoin="round" d="m19.5 8.25-7.5 7.5-7.5-7.5" />
     </svg>
   );

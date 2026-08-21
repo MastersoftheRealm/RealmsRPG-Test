@@ -1,58 +1,76 @@
 /**
  * Ancestry micro-flow: species overview, then one pick at a time.
- * Select a trait, confirm with Next pick, Back revisits prior picks.
- * Deferred: mixed species.
+ * Supports single species and mixed species (two parents).
  */
 
 'use client';
 
 import { useMemo, useState, useCallback, useEffect, useRef } from 'react';
-import { Button, Spinner } from '@/components/ui';
-import { useMergedSpecies, useTraits, resolveTraitIds } from '@/hooks';
+import { Spinner } from '@/components/ui';
+import { MixedSpeciesModal } from '@/components/patterns';
+import {
+  useMergedSpecies,
+  useTraits,
+  useCodexSkills,
+  useUserSpecies,
+  resolveTraitIds,
+} from '@/hooks';
 import type { Species, Trait } from '@/hooks';
-import { getChoiceOptionIds, resolveChoiceOptionTraits } from '@/lib/choice-trait';
+import { getChoiceOptionIds } from '@/lib/choice-trait';
+import {
+  canContinueAncestryMixed,
+  canContinueAncestrySingle,
+  combineSpeciesSizes,
+  toggleMixedSpeciesSkillSelection,
+  buildMixedSpeciesSkillOptions,
+} from '@/lib/ancestry/ancestry-selection';
+import {
+  buildAncestryPickTasks,
+  buildMixedAncestryPickTasks,
+  hasRequiredMixedSpeciesSkills,
+  resolveFlawSpeciesIdForMixedPick,
+  type AncestryPickTask,
+} from '@/lib/guided-creator/ancestry-pick-tasks';
+import { resolveGuidedSpeciesContext } from '@/lib/guided-creator/guided-species-resolve';
+import { buildGuidedMixedSpeciesDraftPatch } from '@/lib/guided-creator/species-selection-draft';
+import { canContinueAncestryPick } from '@/lib/guided-creator/ancestry-pick-gate';
+import { landsOnFirstInnerScreen } from '@/lib/guided-creator/guided-substep-nav';
 import { useGuidedCreatorStore, type GuidedDraft } from '@/stores/guided-creator-store';
 import { GuidedChoiceCard } from '../guided-choice-card';
 import { GUIDED_CHOICE_COMPACT_GRID_CLASS } from '../guided-choice-styles';
+import { GuidedMixedSpeciesOverview } from '../guided-mixed-species-overview';
+import { GuidedTraitRestrictionNotice } from '../guided-restriction-notice';
 import { GuidedStepLayout } from '../guided-step-layout';
 import { SpeciesRevealPanel } from '../species-reveal-panel';
 import { getSpeciesSizeOptions } from '../guided-species-utils';
 import { GUIDED_CREATOR_COPY } from '@/lib/constants/site-copy';
+import { getTraitRestrictionNotice } from '@/lib/codex/feat-restriction-notice';
 
 const stepCopy = GUIDED_CREATOR_COPY.steps.ancestry;
 const overviewCopy = stepCopy.speciesOverview;
 
-type AncestryPhase =
-  | 'species-trait-option'
-  | 'ancestry-trait-1'
-  | 'characteristic'
-  | 'flaw'
-  | 'ancestry-trait-2'
-  | 'done';
-
-interface PickTask {
-  phase: AncestryPhase;
-  title: string;
-  description: string;
-  options: Trait[];
-  parentTraitId?: string;
-  optional?: boolean;
-}
-
-function resolveTraits(ids: (string | number)[], allTraits: Trait[]): Trait[] {
-  return resolveTraitIds(ids, allTraits);
-}
-
-function isTaskFilled(task: PickTask, draft: GuidedDraft): boolean {
+function isTaskFilled(
+  task: AncestryPickTask,
+  draft: GuidedDraft,
+  mixedSkillOptionCount: number,
+): boolean {
   switch (task.phase) {
     case 'species-trait-option':
       return Boolean(task.parentTraitId && draft.selectedSpeciesTraitChoices[task.parentTraitId]);
+    case 'mixed-species-trait-a':
+      return Boolean(draft.selectedSpeciesTraits[0]);
+    case 'mixed-species-trait-b':
+      return Boolean(draft.selectedSpeciesTraits[1]);
+    case 'mixed-species-skills':
+      return hasRequiredMixedSpeciesSkills(
+        mixedSkillOptionCount,
+        draft.selectedSpeciesSkillIds.length,
+      );
     case 'ancestry-trait-1':
       return draft.selectedAncestryTraitIds.length >= 1;
     case 'characteristic':
       return Boolean(draft.selectedCharacteristicId);
     case 'flaw':
-      // null = not decided yet; '' = explicitly skipped; id = chosen
       return draft.selectedFlawId !== null;
     case 'ancestry-trait-2':
       return draft.selectedAncestryTraitIds.length >= 2;
@@ -62,118 +80,180 @@ function isTaskFilled(task: PickTask, draft: GuidedDraft): boolean {
 }
 
 function resolveInitialPhaseIndex(
-  tasks: PickTask[],
+  tasks: AncestryPickTask[],
   draft: GuidedDraft,
-  ancestryAlreadyComplete: boolean
+  ancestryAlreadyComplete: boolean,
+  mixedSkillOptionCount: number,
 ): number {
   if (tasks.length === 0) return 0;
   if (ancestryAlreadyComplete) return tasks.length;
-  // Always show the species overview first when no ancestry picks exist yet.
-  const hasProgress = tasks.some((task) => isTaskFilled(task, draft));
+  const hasProgress = tasks.some((task) => isTaskFilled(task, draft, mixedSkillOptionCount));
   if (!hasProgress) return 0;
-  const firstOpen = tasks.findIndex((task) => !isTaskFilled(task, draft));
+  const firstOpen = tasks.findIndex((task) => !isTaskFilled(task, draft, mixedSkillOptionCount));
   return firstOpen >= 0 ? firstOpen + 1 : tasks.length;
 }
 
 export function AncestryStep() {
-  const { draft, updateDraft, prevSubStep, nextSubStep, completedSubSteps } = useGuidedCreatorStore();
+  const {
+    draft,
+    updateDraft,
+    prevSubStep,
+    nextSubStep,
+    isSubStepSatisfied,
+    navigationIntent,
+    entryNonce,
+  } = useGuidedCreatorStore();
   const { data: allSpecies = [], isLoading: speciesLoading } = useMergedSpecies();
+  const { data: userSpeciesList = [] } = useUserSpecies();
   const { data: allTraits = [], isLoading: traitsLoading } = useTraits();
+  const { data: codexSkills = [] } = useCodexSkills();
   const [phaseIndex, setPhaseIndex] = useState(0);
+  const [showMixedModal, setShowMixedModal] = useState(false);
   const phaseInitialized = useRef(false);
-  const ancestryChapterComplete = completedSubSteps.includes('ancestry');
+  const lastEntryNonce = useRef<number | null>(null);
+  const ancestryChapterComplete = isSubStepSatisfied('ancestry');
 
-  const species = useMemo(
-    () => allSpecies.find((s) => String(s.id) === String(draft.speciesId)) ?? null,
-    [allSpecies, draft.speciesId]
+  const speciesContext = useMemo(
+    () => resolveGuidedSpeciesContext(draft, allSpecies as Species[]),
+    [draft, allSpecies],
+  );
+  const { isMixed, species, speciesA, speciesB, displayName, ready } = speciesContext;
+
+  const userSpeciesIds = useMemo(
+    () => new Set((userSpeciesList ?? []).map((s) => s.id)),
+    [userSpeciesList],
   );
 
-  const tasks = useMemo((): PickTask[] => {
-    if (!species || !allTraits.length) return [];
+  const mixedSkillOptionCount = useMemo(() => {
+    if (!isMixed || !speciesA || !speciesB) return 0;
+    const merged = [...(speciesA.skills || []), ...(speciesB.skills || [])];
+    return Array.from(new Set(merged.map(String))).length;
+  }, [isMixed, speciesA, speciesB]);
 
-    const list: PickTask[] = [];
-    const speciesTraits = resolveTraits(species.species_traits || [], allTraits);
-
-    speciesTraits.forEach((trait) => {
-      const optionIds = getChoiceOptionIds(trait);
-      if (optionIds.length > 0) {
-        const options = resolveChoiceOptionTraits(optionIds, allTraits);
-        if (options.length > 0) {
-          list.push({
-            phase: 'species-trait-option',
-            title: `Choose your ${trait.name}`,
-            description: trait.description || 'Pick the option that fits your character.',
-            options,
-            parentTraitId: String(trait.id),
-          });
-        }
-      }
-    });
-
-    list.push({
-      phase: 'ancestry-trait-1',
-      title: 'Pick an ancestry trait',
-      description: 'This trait makes your character distinct within their species.',
-      options: resolveTraits(species.ancestry_traits || [], allTraits),
-    });
-
-    list.push({
-      phase: 'characteristic',
-      title: 'Pick a characteristic',
-      description: 'A personal detail that adds flavor to who you are.',
-      options: resolveTraits(species.characteristics || [], allTraits),
-    });
-
-    list.push({
-      phase: 'flaw',
-      title: 'Take a flaw? (optional)',
-      description: 'Flaws add depth — and grant an extra ancestry trait.',
-      options: resolveTraits(species.flaws || [], allTraits),
-      optional: true,
-    });
-
-    if (draft.selectedFlawId) {
-      const firstAncestryId = draft.selectedAncestryTraitIds[0];
-      list.push({
-        phase: 'ancestry-trait-2',
-        title: 'Pick your bonus ancestry trait',
-        description: 'Your flaw grants one additional ancestry trait.',
-        options: resolveTraits(species.ancestry_traits || [], allTraits).filter(
-          (t) => !firstAncestryId || String(t.id) !== firstAncestryId
-        ),
+  const tasks = useMemo((): AncestryPickTask[] => {
+    if (!allTraits.length) return [];
+    if (isMixed && speciesA && speciesB) {
+      return buildMixedAncestryPickTasks({
+        speciesA,
+        speciesB,
+        allTraits,
+        allSkills: codexSkills,
+        selectedFlawId: draft.selectedFlawId,
+        selectedAncestryTraitIds: draft.selectedAncestryTraitIds,
+        selectedFlawSpeciesId: draft.selectedFlawSpeciesId,
       });
     }
+    if (species) {
+      return buildAncestryPickTasks({
+        species,
+        allTraits,
+        selectedFlawId: draft.selectedFlawId,
+        selectedAncestryTraitIds: draft.selectedAncestryTraitIds,
+      });
+    }
+    return [];
+  }, [
+    isMixed,
+    species,
+    speciesA,
+    speciesB,
+    allTraits,
+    codexSkills,
+    draft.selectedFlawId,
+    draft.selectedAncestryTraitIds,
+    draft.selectedFlawSpeciesId,
+  ]);
 
-    return list;
-  }, [species, allTraits, draft.selectedFlawId, draft.selectedAncestryTraitIds]);
-
-  const showOverview = Boolean(species);
+  const showOverview = ready;
   const isOverview = showOverview && phaseIndex === 0;
   const pickIndex = showOverview ? phaseIndex - 1 : phaseIndex;
-  const currentTask = pickIndex >= 0 ? tasks[Math.min(pickIndex, Math.max(0, tasks.length - 1))] : undefined;
+  const currentTask =
+    pickIndex >= 0 ? tasks[Math.min(pickIndex, Math.max(0, tasks.length - 1))] : undefined;
   const totalPicks = tasks.length;
+
+  const [trackedSpeciesId, setTrackedSpeciesId] = useState(draft.speciesId);
+  if (draft.speciesId !== trackedSpeciesId) {
+    setTrackedSpeciesId(draft.speciesId);
+    setPhaseIndex(0);
+  }
 
   useEffect(() => {
     phaseInitialized.current = false;
-    setPhaseIndex(0);
+    lastEntryNonce.current = null;
   }, [draft.speciesId]);
 
   useEffect(() => {
-    if (!species) return;
-    const sizes = getSpeciesSizeOptions(species);
-    if (sizes.length === 1 && !draft.selectedSize) {
-      updateDraft({ selectedSize: sizes[0] });
-    }
-  }, [species, draft.selectedSize, updateDraft]);
+    if (!ready || !isMixed || !speciesA || !speciesB) return;
+    if (mixedSkillOptionCount > 2) return;
+    const options = buildMixedSpeciesSkillOptions(speciesA, speciesB, codexSkills);
+    const ids = options.map((o) => o.id);
+    if (ids.length === 0) return;
+    const current = draft.selectedSpeciesSkillIds;
+    if (current.length === ids.length && ids.every((id) => current.includes(id))) return;
+    updateDraft({ selectedSpeciesSkillIds: ids });
+  }, [
+    ready,
+    isMixed,
+    speciesA,
+    speciesB,
+    codexSkills,
+    mixedSkillOptionCount,
+    draft.selectedSpeciesSkillIds,
+    updateDraft,
+  ]);
 
   useEffect(() => {
-    if (phaseInitialized.current || !species) return;
-    setPhaseIndex(resolveInitialPhaseIndex(tasks, draft, ancestryChapterComplete));
+    if (!ready) return;
+
+    if (!isMixed && species) {
+      const sizes = getSpeciesSizeOptions(species);
+      const size = sizes[0];
+      if (sizes.length === 1 && size && !draft.selectedSize) {
+        updateDraft({ selectedSize: size });
+      }
+      return;
+    }
+
+    if (isMixed && speciesA && speciesB) {
+      const sizes = combineSpeciesSizes(speciesA, speciesB);
+      const size = sizes[0];
+      if (sizes.length === 1 && size && !draft.selectedSize) {
+        updateDraft({ selectedSize: size });
+      }
+    }
+  }, [ready, isMixed, species, speciesA, speciesB, draft.selectedSize, updateDraft]);
+
+  useEffect(() => {
+    if (!ready) return;
+
+    // Forward navigation always lands on the species overview — never skips to a pick (TASK-697).
+    if (landsOnFirstInnerScreen(navigationIntent)) {
+      if (lastEntryNonce.current !== entryNonce) {
+        lastEntryNonce.current = entryNonce;
+        setPhaseIndex(0);
+        phaseInitialized.current = true;
+      }
+      return;
+    }
+
+    if (lastEntryNonce.current === entryNonce && phaseInitialized.current) return;
+    lastEntryNonce.current = entryNonce;
+    setPhaseIndex(
+      resolveInitialPhaseIndex(tasks, draft, ancestryChapterComplete, mixedSkillOptionCount),
+    );
     phaseInitialized.current = true;
-  }, [tasks, draft, ancestryChapterComplete, species]);
+  }, [
+    tasks,
+    draft,
+    ancestryChapterComplete,
+    ready,
+    navigationIntent,
+    entryNonce,
+    mixedSkillOptionCount,
+  ]);
 
   const isSelected = useCallback(
-    (trait: Trait, task: PickTask | undefined = currentTask): boolean => {
+    (trait: Trait, task: AncestryPickTask | undefined = currentTask): boolean => {
       const id = String(trait.id);
       if (!task) return false;
       switch (task.phase) {
@@ -181,6 +261,10 @@ export function AncestryStep() {
           return task.parentTraitId
             ? draft.selectedSpeciesTraitChoices[task.parentTraitId] === id
             : false;
+        case 'mixed-species-trait-a':
+          return draft.selectedSpeciesTraits[0] === id;
+        case 'mixed-species-trait-b':
+          return draft.selectedSpeciesTraits[1] === id;
         case 'ancestry-trait-1':
           return draft.selectedAncestryTraitIds[0] === id;
         case 'characteristic':
@@ -193,13 +277,33 @@ export function AncestryStep() {
           return false;
       }
     },
-    [currentTask, draft]
+    [currentTask, draft],
   );
+
+  const isSkillSelected = useCallback(
+    (skillId: string) => draft.selectedSpeciesSkillIds.includes(skillId),
+    [draft.selectedSpeciesSkillIds],
+  );
+
+  const skipFlawSelected = Boolean(currentTask?.optional && draft.selectedFlawId === '');
 
   const hasCurrentPick = useMemo(() => {
     if (!currentTask) return false;
+    if (currentTask.phase === 'mixed-species-skills') {
+      return hasRequiredMixedSpeciesSkills(
+        mixedSkillOptionCount,
+        draft.selectedSpeciesSkillIds.length,
+      );
+    }
+    if (skipFlawSelected) return true;
     return currentTask.options.some((t) => isSelected(t, currentTask));
-  }, [currentTask, isSelected]);
+  }, [
+    currentTask,
+    isSelected,
+    skipFlawSelected,
+    mixedSkillOptionCount,
+    draft.selectedSpeciesSkillIds,
+  ]);
 
   const handlePick = useCallback(
     (trait: Trait) => {
@@ -217,50 +321,110 @@ export function AncestryStep() {
             });
           }
           break;
-        case 'ancestry-trait-1':
+        case 'mixed-species-trait-a': {
+          const next = [...draft.selectedSpeciesTraits];
+          next[0] = id;
+          updateDraft({ selectedSpeciesTraits: next });
+          break;
+        }
+        case 'mixed-species-trait-b': {
+          const next = [...draft.selectedSpeciesTraits];
+          next[1] = id;
+          updateDraft({ selectedSpeciesTraits: next });
+          break;
+        }
+        case 'ancestry-trait-1': {
+          const prev = draft.selectedAncestryTraitIds;
+          if (prev[0] === id) break;
           updateDraft({ selectedAncestryTraitIds: [id] });
           break;
+        }
         case 'characteristic':
           updateDraft({ selectedCharacteristicId: id });
           break;
-        case 'flaw':
-          updateDraft({ selectedFlawId: id });
+        case 'flaw': {
+          if (isMixed && speciesA && speciesB) {
+            const flawSpeciesId = resolveFlawSpeciesIdForMixedPick(id, speciesA, speciesB);
+            updateDraft({
+              selectedFlawId: id,
+              selectedFlawSpeciesId: flawSpeciesId,
+              selectedAncestryTraitIds: draft.selectedAncestryTraitIds.slice(0, 1),
+            });
+          } else {
+            updateDraft({ selectedFlawId: id });
+          }
           break;
+        }
         case 'ancestry-trait-2': {
           const first = draft.selectedAncestryTraitIds[0];
           if (!first) break;
-          updateDraft({
-            selectedAncestryTraitIds: [first, id],
-          });
+          updateDraft({ selectedAncestryTraitIds: [first, id] });
           break;
         }
       }
     },
-    [currentTask, draft, updateDraft]
+    [currentTask, draft, updateDraft, isMixed, speciesA, speciesB],
+  );
+
+  const handleSkillPick = useCallback(
+    (skillId: string) => {
+      updateDraft({
+        selectedSpeciesSkillIds: toggleMixedSpeciesSkillSelection(
+          draft.selectedSpeciesSkillIds,
+          skillId,
+        ),
+      });
+    },
+    [draft.selectedSpeciesSkillIds, updateDraft],
+  );
+
+  const allPicksFilled = useMemo(
+    () => tasks.every((task) => isTaskFilled(task, draft, mixedSkillOptionCount)),
+    [tasks, draft, mixedSkillOptionCount],
   );
 
   const advanceAfterPick = useCallback(() => {
     const isLastTask = pickIndex >= totalPicks - 1;
-    if (isLastTask) {
-      nextSubStep();
-    } else {
+    if (!isLastTask) {
       setPhaseIndex((i) => i + 1);
+      return;
     }
-  }, [pickIndex, totalPicks, nextSubStep]);
+    // Leaving the chapter is where unfilled picks become invisible — require them all first.
+    if (!allPicksFilled) return;
+    nextSubStep();
+  }, [pickIndex, totalPicks, allPicksFilled, nextSubStep]);
 
   const handleSkipFlaw = useCallback(() => {
     updateDraft({
       selectedFlawId: '',
+      selectedFlawSpeciesId: null,
       selectedAncestryTraitIds: draft.selectedAncestryTraitIds.slice(0, 1),
     });
-    // Skipping the optional flaw always completes ancestry (no bonus trait pick).
-    nextSubStep();
-  }, [draft.selectedAncestryTraitIds, updateDraft, nextSubStep]);
+  }, [draft.selectedAncestryTraitIds, updateDraft]);
 
   const ancestryComplete = useMemo(() => {
-    if (!species || !allTraits.length) return false;
+    if (!ready || !allTraits.length) return false;
 
-    const speciesTraits = resolveTraits(species.species_traits || [], allTraits);
+    if (isMixed && speciesA && speciesB) {
+      const sizes = combineSpeciesSizes(speciesA, speciesB);
+      const sizeOk = sizes.length <= 1 || Boolean(draft.selectedSize);
+      if (!sizeOk) return false;
+      return canContinueAncestryMixed({
+        selectedSpeciesTraits: [
+          draft.selectedSpeciesTraits[0] ?? '',
+          draft.selectedSpeciesTraits[1] ?? '',
+        ],
+        selectedTraitIds: draft.selectedAncestryTraitIds,
+        ancestryTraitCount: 1,
+        selectedSize: draft.selectedSize ?? undefined,
+        mixedSkillOptionCount,
+        selectedSpeciesSkillIds: draft.selectedSpeciesSkillIds,
+      });
+    }
+
+    if (!species) return false;
+
+    const speciesTraits = resolveTraitIds(species.species_traits || [], allTraits);
     for (const trait of speciesTraits) {
       const optionIds = getChoiceOptionIds(trait);
       if (optionIds.length > 0 && !draft.selectedSpeciesTraitChoices[String(trait.id)]) {
@@ -268,19 +432,16 @@ export function AncestryStep() {
       }
     }
 
-    if (draft.selectedAncestryTraitIds.length < 1) return false;
     if (!draft.selectedCharacteristicId) return false;
     if (draft.selectedFlawId && draft.selectedAncestryTraitIds.length < 2) return false;
 
-    return true;
-  }, [
-    species,
-    allTraits,
-    draft.selectedSpeciesTraitChoices,
-    draft.selectedAncestryTraitIds,
-    draft.selectedCharacteristicId,
-    draft.selectedFlawId,
-  ]);
+    return canContinueAncestrySingle({
+      selectedTraitIds: draft.selectedAncestryTraitIds,
+      ancestryTraitCount: 1,
+      speciesChoiceParents: speciesTraits.filter((t) => getChoiceOptionIds(t).length > 0),
+      speciesTraitChoices: draft.selectedSpeciesTraitChoices,
+    });
+  }, [ready, allTraits, isMixed, species, speciesA, speciesB, draft, mixedSkillOptionCount]);
 
   const handleAncestryBack = () => {
     if (phaseIndex > 0) {
@@ -306,10 +467,7 @@ export function AncestryStep() {
     }
 
     if (currentTask.optional && !hasCurrentPick) {
-      updateDraft({
-        selectedFlawId: '',
-        selectedAncestryTraitIds: draft.selectedAncestryTraitIds.slice(0, 1),
-      });
+      handleSkipFlaw();
       nextSubStep();
       return;
     }
@@ -317,22 +475,42 @@ export function AncestryStep() {
     advanceAfterPick();
   };
 
-  const sizeOptions = species ? getSpeciesSizeOptions(species) : [];
+  const handleMixedConfirm = (
+    nextA: { id: string; name: string },
+    nextB: { id: string; name: string },
+  ) => {
+    updateDraft(buildGuidedMixedSpeciesDraftPatch(draft, nextA, nextB));
+    setShowMixedModal(false);
+  };
+
+  const sizeOptions = isMixed
+    ? speciesA && speciesB
+      ? combineSpeciesSizes(speciesA, speciesB)
+      : []
+    : species
+      ? getSpeciesSizeOptions(species)
+      : [];
   const sizeOk = sizeOptions.length <= 1 || Boolean(draft.selectedSize);
 
   const footerCanContinue = isOverview
     ? (totalPicks > 0 || ancestryComplete) && sizeOk
-    : currentTask
-      ? currentTask.optional || hasCurrentPick
-      : ancestryComplete;
+    : canContinueAncestryPick({
+        task: currentTask,
+        mixedSkillOptionCount,
+        selectedSpeciesSkillIdCount: draft.selectedSpeciesSkillIds.length,
+        hasPick: hasCurrentPick,
+        ancestryComplete,
+      });
+
+  const overviewTitle = isMixed
+    ? overviewCopy.title(displayName ?? 'Mixed species')
+    : overviewCopy.title(species?.name ?? 'species');
 
   const stepTitle = isOverview
-    ? overviewCopy.title(species?.name ?? 'species')
+    ? overviewTitle
     : (currentTask?.title ?? GUIDED_CREATOR_COPY.chapters.ancestry.title);
 
-  const stepDescription = isOverview
-    ? overviewCopy.description
-    : currentTask?.description;
+  const stepDescription = isOverview ? overviewCopy.description : currentTask?.description;
 
   const continueLabel = isOverview ? overviewCopy.continueLabel : stepCopy.nextPick;
 
@@ -359,40 +537,81 @@ export function AncestryStep() {
         <div className="flex justify-center py-12">
           <Spinner />
         </div>
-      ) : !species ? (
+      ) : !ready ? (
         <p className="font-nunito text-text-secondary">{stepCopy.selectSpeciesFirst}</p>
       ) : isOverview ? (
-        <SpeciesRevealPanel
-          species={species as Species}
-          allTraits={allTraits}
-          selectedSize={draft.selectedSize}
-          onSizeChange={(size) => updateDraft({ selectedSize: size })}
-        />
+        isMixed && speciesA && speciesB ? (
+          <GuidedMixedSpeciesOverview
+            speciesA={speciesA}
+            speciesB={speciesB}
+            selectedSize={draft.selectedSize}
+            onSizeChange={(size) => updateDraft({ selectedSize: size })}
+            onChangeParents={() => setShowMixedModal(true)}
+          />
+        ) : species ? (
+          <SpeciesRevealPanel
+            species={species}
+            allTraits={allTraits}
+            selectedSize={draft.selectedSize}
+            onSizeChange={(size) => updateDraft({ selectedSize: size })}
+          />
+        ) : null
       ) : !currentTask ? (
         <p className="font-nunito text-text-secondary">{stepCopy.emptyOptions}</p>
+      ) : currentTask.phase === 'mixed-species-skills' ? (
+        <div className={GUIDED_CHOICE_COMPACT_GRID_CLASS}>
+          {(currentTask.skillOptions ?? []).map((opt) => (
+            <GuidedChoiceCard
+              key={opt.id}
+              density="compact"
+              title={opt.name}
+              description={opt.description}
+              selected={isSkillSelected(opt.id)}
+              onSelect={() => handleSkillPick(opt.id)}
+              selectAriaLabel={`Choose ${opt.name}`}
+            />
+          ))}
+        </div>
       ) : (
-        <>
-          <div className={GUIDED_CHOICE_COMPACT_GRID_CLASS}>
-            {currentTask.options.map((trait) => (
-              <GuidedChoiceCard
-                key={trait.id}
-                density="compact"
-                title={trait.name}
-                description={trait.description}
-                selected={isSelected(trait)}
-                onSelect={() => handlePick(trait)}
-              />
-            ))}
-          </div>
-          {currentTask.optional && (
-            <div className="mt-4">
-              <Button type="button" variant="secondary" onClick={handleSkipFlaw} className="min-h-11">
-                {stepCopy.skipFlaw}
-              </Button>
-            </div>
-          )}
-        </>
+        <div className={GUIDED_CHOICE_COMPACT_GRID_CLASS}>
+          {currentTask.options.map((trait) => (
+            <GuidedChoiceCard
+              key={trait.id}
+              density="compact"
+              title={trait.name}
+              description={trait.description}
+              selected={isSelected(trait)}
+              onSelect={() => handlePick(trait)}
+              expandedExtra={
+                getTraitRestrictionNotice(trait) ? (
+                  <GuidedTraitRestrictionNotice trait={trait} />
+                ) : undefined
+              }
+            />
+          ))}
+          {currentTask.optional ? (
+            <GuidedChoiceCard
+              density="compact"
+              title={stepCopy.skipFlaw}
+              description={stepCopy.skipFlawDescription}
+              selected={skipFlawSelected}
+              onSelect={handleSkipFlaw}
+              selectAriaLabel={stepCopy.skipFlaw}
+            />
+          ) : null}
+        </div>
       )}
+      {isMixed ? (
+        <MixedSpeciesModal
+          isOpen={showMixedModal}
+          onClose={() => setShowMixedModal(false)}
+          onConfirm={handleMixedConfirm}
+          allSpecies={allSpecies}
+          userSpeciesIds={userSpeciesIds}
+          initialSpeciesAId={draft.mixedSpeciesIds?.[0]}
+          initialSpeciesBId={draft.mixedSpeciesIds?.[1]}
+        />
+      ) : null}
     </GuidedStepLayout>
   );
 }

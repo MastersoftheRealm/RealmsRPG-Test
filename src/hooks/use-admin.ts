@@ -16,7 +16,7 @@ export function useAdmin() {
   const { data, isLoading } = useQuery({
     queryKey: ['admin', user?.uid],
     queryFn: async () => {
-      const json = await apiFetch<{ isAdmin?: boolean }>('/api/admin/check');
+      const json = await apiFetch<{ isAdmin?: boolean | undefined }>('/api/admin/check');
       return json.isAdmin === true;
     },
     enabled: !!user?.uid,

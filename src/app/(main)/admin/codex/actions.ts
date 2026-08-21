@@ -2,34 +2,29 @@
 
 import { getSession } from '@/lib/supabase/session';
 import { isAdmin } from '@/lib/admin';
-import { recordCodexChange } from '@/lib/codex-changelog';
+import { recordCodexChange, type RecordCodexChangeInput } from '@/lib/codex-changelog';
 import { featTagsToNormalizeInput, parseFeatTagsFromDb } from '@/lib/codex/feat-tags';
 import { createServiceRoleClient } from '@/lib/supabase/server';
 import { revalidatePath } from 'next/cache';
+import {
+  assertCodexCollection,
+  isColumnarCollection,
+  type CodexCollection,
+} from '@/lib/codex/collections';
+import { toColumnarPayload, toDbPayload } from './codex-column-map';
+import { allocateCodexNumericId, fetchRetiredIds, retireCodexId } from '@/lib/codex/id-allocation';
+import { findReferencesInRows, REFERENCE_PROBES } from '@/lib/codex/references';
+import {
+  buildArchetypeLevelRows,
+  buildArchetypeRow,
+  restorableLevelRows,
+  type SaveArchetypeWithPathInput,
+} from './codex-archetype-write';
 
-type CodexCollection =
-  | 'codex_feats'
-  | 'codex_skills'
-  | 'codex_species'
-  | 'codex_traits'
-  | 'codex_parts'
-  | 'codex_properties'
-  | 'codex_equipment'
-  | 'codex_archetypes'
-  | 'codex_creature_feats'
-  | 'core_rules';
+const MAX_REPORTED_REFERENCES = 20;
 
-const COLUMNAR_COLLECTIONS: CodexCollection[] = [
-  'codex_feats',
-  'codex_skills',
-  'codex_species',
-  'codex_traits',
-  'codex_parts',
-  'codex_properties',
-  'codex_equipment',
-  'codex_archetypes',
-  'codex_creature_feats',
-];
+const CONFLICT_MESSAGE =
+  'This entity changed since you opened it. Reload the page and reapply your edit.';
 
 async function requireAdmin() {
   const { user } = await getSession();
@@ -42,160 +37,32 @@ function sanitizeId(id: string): string {
   return id.replace(/[^a-zA-Z0-9_-]/g, '_').slice(0, 150);
 }
 
-function parseNumericId(id: unknown): number | null {
-  if (typeof id !== 'string') return null;
-  if (!/^\d+$/.test(id)) return null;
-  const n = Number(id);
-  if (!Number.isSafeInteger(n) || n <= 0) return null;
-  return n;
-}
-
-async function allocateLowestUnusedNumericId(collection: CodexCollection): Promise<string> {
-  const supabase = getSupabaseAdmin();
-  const table = getTableName(collection);
-  const { data, error } = await supabase.from(table).select('id');
-  if (error) throw new Error(error.message);
-
-  const used = new Set<number>();
-  let max = 0;
-  for (const row of (data ?? []) as Array<{ id?: unknown }>) {
-    const n = parseNumericId(row.id);
-    if (n == null) continue;
-    used.add(n);
-    if (n > max) max = n;
-  }
-
-  for (let i = 1; i <= max + 1; i++) {
-    if (!used.has(i)) return String(i);
-  }
-  return String(max + 1);
-}
-
-function snakeToCamel(s: string): string {
-  // Handle common codex column patterns like op_1_desc -> op1Desc
-  // so option fields survive the allowed-field filter.
-  const normalized = s.replace(/_(\d+)/g, '$1');
-  return normalized.replace(/_([a-z])/g, (_, c) => c.toUpperCase());
-}
-
-/**
- * Admin payloads use snake_case like `op_1_desc`. COLUMNAR_FIELDS use `op1Desc` (digit in the
- * camel segment). Plain snakeToCamel leaves `op_1Desc`, which fails the allowlist and drops
- * option fields on insert/update.
- */
-function columnarSourceKeyToCamel(collection: CodexCollection, key: string): string {
-  if ((collection === 'codex_properties' || collection === 'codex_parts') && /^op_\d+_/.test(key)) {
-    const m = key.match(/^op_(\d+)_(.+)$/);
-    if (m) {
-      const restCamel = snakeToCamel(m[2]);
-      if (!restCamel) return snakeToCamel(key);
-      return `op${m[1]}${restCamel.charAt(0).toUpperCase()}${restCamel.slice(1)}`;
-    }
-  }
-  return snakeToCamel(key);
-}
-
-function camelToSnake(s: string): string {
-  return s
-    .replace(/([a-zA-Z])(\d)/g, '$1_$2')
-    .replace(/[A-Z]/g, (c) => `_${c.toLowerCase()}`);
-}
-
-/** Serialize value for columnar TEXT columns: arrays become comma-separated */
-function toColumnValue(val: unknown): unknown {
-  if (val == null) return null;
-  if (Array.isArray(val)) return val.map(String).join(', ');
-  if (typeof val === 'object' && !(val instanceof Date)) return JSON.stringify(val);
-  return val;
-}
-
-const COLUMNAR_FIELDS: Record<CodexCollection, string[]> = {
-  codex_feats: ['name', 'description', 'reqDesc', 'abilityReq', 'abilReqVal', 'skillReq', 'skillReqVal', 'featCatReq', 'powAbilReq', 'martAbilReq', 'powProfReq', 'martProfReq', 'speedReq', 'featLvl', 'lvlReq', 'usesPerRec', 'recPeriod', 'category', 'ability', 'tags', 'charFeat', 'stateFeat', 'baseFeatId'],
-  codex_skills: ['name', 'description', 'ability', 'baseSkill', 'baseSkillId', 'successDesc', 'failureDesc', 'dsCalc', 'craftFailureDesc', 'craftSuccessDesc'],
-  codex_species: ['name', 'description', 'type', 'sizes', 'skills', 'speciesTraits', 'ancestryTraits', 'flaws', 'characteristics', 'aveHgtCm', 'aveWgtKg', 'aveHeight', 'aveWeight', 'adulthoodLifespan', 'languages', 'isStarter', 'imageUrl'],
-  codex_traits: ['name', 'description', 'usesPerRec', 'recPeriod', 'flaw', 'characteristic', 'optionTraitIds'],
-  codex_parts: ['name', 'description', 'category', 'baseEn', 'baseTp', 'op1Desc', 'op1En', 'op1Tp', 'op2Desc', 'op2En', 'op2Tp', 'op3Desc', 'op3En', 'op3Tp', 'type', 'mechanic', 'percentage', 'duration', 'defense'],
-  codex_properties: ['name', 'description', 'baseIp', 'baseTp', 'baseC', 'op1Desc', 'op1Ip', 'op1Tp', 'op1C', 'type', 'mechanic'],
-  codex_equipment: ['name', 'description', 'category', 'currency', 'rarity'],
-  codex_archetypes: [
-    'name',
-    'type',
-    'description',
-    'archetypeAbility',
-    'secondaryAbility',
-    'powerProfStart',
-    'martialProfStart',
-    'powerProfLevel5',
-    'martialProfLevel5',
-    'level1Feats',
-    'level1Skills',
-    'level1Powers',
-    'level1Techniques',
-    'level1Armaments',
-    'level1Equipment',
-    'level1RemoveFeats',
-    'level1RemovePowers',
-    'level1RemoveTechniques',
-    'level1RemoveArmaments',
-    'level1Notes',
-  ],
-  codex_creature_feats: ['name', 'description', 'featPoints', 'featLvl', 'lvlReq', 'mechanic'],
-  core_rules: [],
-};
-
-/** Build create/update payload from admin payload (snake_case, arrays). Output camelCase for toDbPayload. */
-function toColumnarPayload(collection: CodexCollection, data: Record<string, unknown>): Record<string, unknown> {
-  const allowed = new Set(COLUMNAR_FIELDS[collection] ?? []);
-  const out: Record<string, unknown> = {};
-  for (const [key, value] of Object.entries(data)) {
-    if (key === 'id' || key === 'data') continue;
-    const camel = columnarSourceKeyToCamel(collection, key);
-    if (allowed.size > 0 && !allowed.has(camel)) continue;
-    out[camel] = toColumnValue(value);
-  }
-  return out;
-}
-
-/** Convert camelCase payload to snake_case for Supabase (DB columns). Collection-specific aliases so API response keys round-trip to correct DB columns. */
-function toDbPayload(collection: CodexCollection, payload: Record<string, unknown>): Record<string, unknown> {
-  const out: Record<string, unknown> = {};
-  for (const [key, value] of Object.entries(payload)) {
-    if (collection === 'codex_skills' && key === 'baseSkillId') {
-      out.base_skill = value != null ? String(value) : null;
-      continue;
-    }
-    if (collection === 'codex_species') {
-      if (key === 'aveHeight') {
-        out.ave_hgt_cm = value != null ? (typeof value === 'number' ? value : Number(value)) : null;
-        continue;
-      }
-      if (key === 'aveWeight') {
-        out.ave_wgt_kg = value != null ? (typeof value === 'number' ? value : Number(value)) : null;
-        continue;
-      }
-    }
-    out[camelToSnake(key)] = value;
-  }
-  return out;
-}
-
 function getTableName(collection: CodexCollection): string {
   return collection;
 }
 
-function getSupabaseAdmin() {
-  return createServiceRoleClient();
+/**
+ * The changelog is an audit trail, not part of the mutation. A failed insert used to invert a
+ * completed write into `{ success: false }`, which made admins retry and duplicate the entity.
+ * Same contract as the role-change audit in api/admin/users/update-role.
+ */
+async function recordCodexChangeBestEffort(input: RecordCodexChangeInput): Promise<void> {
+  try {
+    await recordCodexChange(input);
+  } catch (err) {
+    console.error('[Admin Codex] changelog write failed (mutation kept):', err);
+  }
 }
 
 /** Run DB `normalize_feat_tags` on admin feat saves so merges stay canonical. */
 async function applyFeatTagNormalization(
   collection: CodexCollection,
-  data: Record<string, unknown>
+  data: Record<string, unknown>,
 ): Promise<Record<string, unknown>> {
   if (collection !== 'codex_feats' || !('tags' in data)) return data;
   const input = featTagsToNormalizeInput(parseFeatTagsFromDb(data.tags));
   if (!input) return { ...data, tags: null };
-  const supabase = getSupabaseAdmin();
+  const supabase = createServiceRoleClient();
   const { data: normalized, error } = await supabase.rpc('normalize_feat_tags', {
     tag_string: input,
   });
@@ -206,7 +73,7 @@ async function applyFeatTagNormalization(
 }
 
 async function fetchRowById(table: string, id: string): Promise<Record<string, unknown> | null> {
-  const supabase = getSupabaseAdmin();
+  const supabase = createServiceRoleClient();
   const { data, error } = await supabase.from(table).select('*').eq('id', id).maybeSingle();
   if (error) throw new Error(error.message);
   return (data as Record<string, unknown> | null) ?? null;
@@ -218,7 +85,7 @@ type ArchetypeSnapshot = {
 };
 
 async function getArchetypeSnapshot(archetypeId: string): Promise<ArchetypeSnapshot | null> {
-  const supabase = getSupabaseAdmin();
+  const supabase = createServiceRoleClient();
   const { data: archetype, error: archetypeError } = await supabase
     .from('codex_archetypes')
     .select('*')
@@ -236,45 +103,81 @@ async function getArchetypeSnapshot(archetypeId: string): Promise<ArchetypeSnaps
 
   return {
     archetype: archetype as Record<string, unknown>,
-    levels: ((levels ?? []) as Record<string, unknown>[]),
+    levels: (levels ?? []) as Record<string, unknown>[],
   };
+}
+
+/** Inbound references to a codex row, as display strings. Empty when nothing points at it. */
+async function findCodexReferences(collection: CodexCollection, id: string): Promise<string[]> {
+  const probes = REFERENCE_PROBES[collection];
+  if (!probes || !id) return [];
+  const supabase = createServiceRoleClient();
+  const found: string[] = [];
+
+  for (const probe of probes) {
+    const { data, error } = await supabase.from(probe.table).select(probe.selectColumns);
+    if (error) {
+      console.error('[Admin Codex] reference scan failed for', probe.table, error.message);
+      continue;
+    }
+    const rows = ((data ?? []) as unknown as Record<string, unknown>[]).filter(
+      (row) => !(probe.table === collection && String(row.id ?? '') === id),
+    );
+    found.push(...findReferencesInRows(probe, rows, id));
+  }
+
+  return found;
 }
 
 export async function createCodexDoc(
   collection: CodexCollection,
   id: string | undefined,
-  data: Record<string, unknown>
-): Promise<{ success: boolean; id?: string; error?: string }> {
+  data: Record<string, unknown>,
+): Promise<{ success: boolean; id?: string | undefined; error?: string | undefined }> {
   try {
     const changedByUserId = await requireAdmin();
-    const supabase = getSupabaseAdmin();
-    const table = getTableName(collection);
+    const safeCollection = assertCodexCollection(collection);
+    const supabase = createServiceRoleClient();
+    const table = getTableName(safeCollection);
 
-    const shouldAllocateNumeric = COLUMNAR_COLLECTIONS.includes(collection) && collection !== 'core_rules';
+    const shouldAllocateNumeric = isColumnarCollection(safeCollection);
     // Prefer numeric IDs for codex reference data so renaming doesn't imply ID changes.
     let docId = sanitizeId(id ?? '');
     if (!docId && shouldAllocateNumeric) {
-      docId = await allocateLowestUnusedNumericId(collection);
+      docId = await allocateCodexNumericId(supabase, table);
     }
     docId = docId || `doc_${Date.now()}`;
 
+    // Retired ids belong to deleted entities that saved characters may still reference.
+    const retiredIds = shouldAllocateNumeric
+      ? await fetchRetiredIds(supabase, table)
+      : new Set<string>();
+
     // Small retry loop for rare concurrency collisions.
     for (let attempt = 0; attempt < 3; attempt++) {
-      const { data: existing } = await supabase.from(table).select('id').eq('id', docId).maybeSingle();
-      if (!existing) break;
-      if (!shouldAllocateNumeric) return { success: false, error: `Document ${docId} already exists` };
-      const n = parseNumericId(docId);
-      docId = n != null ? String(n + 1) : await allocateLowestUnusedNumericId(collection);
+      const { data: existing } = await supabase
+        .from(table)
+        .select('id')
+        .eq('id', docId)
+        .maybeSingle();
+      if (!existing && !retiredIds.has(docId)) break;
+      if (!shouldAllocateNumeric)
+        return { success: false, error: `Document ${docId} already exists` };
+      docId = await allocateCodexNumericId(supabase, table);
     }
 
-    if (COLUMNAR_COLLECTIONS.includes(collection)) {
-      const normalizedData = await applyFeatTagNormalization(collection, data);
-      const payload = toColumnarPayload(collection, normalizedData);
-      const dbPayload = toDbPayload(collection, { id: docId, ...payload });
-      const { data: inserted, error } = await supabase.from(table).insert(dbPayload).select('*').single();
+    if (shouldAllocateNumeric) {
+      const normalizedData = await applyFeatTagNormalization(safeCollection, data);
+      const payload = toColumnarPayload(safeCollection, normalizedData);
+      const dbPayload = toDbPayload(safeCollection, { id: docId, ...payload });
+      const { data: inserted, error } = await supabase
+        .from(table)
+        .insert(dbPayload)
+        .select('*')
+        .single();
       if (error) throw new Error(error.message);
-      await recordCodexChange({
-        entityType: collection,
+      await recordCodexChangeBestEffort({
+        entityType: safeCollection,
         entityId: docId,
         operation: 'create',
         changedByUserId,
@@ -282,10 +185,14 @@ export async function createCodexDoc(
         afterData: (inserted as Record<string, unknown> | null) ?? null,
       });
     } else {
-      const { data: inserted, error } = await supabase.from(table).insert({ id: docId, data }).select('*').single();
+      const { data: inserted, error } = await supabase
+        .from(table)
+        .insert({ id: docId, data })
+        .select('*')
+        .single();
       if (error) throw new Error(error.message);
-      await recordCodexChange({
-        entityType: collection,
+      await recordCodexChangeBestEffort({
+        entityType: safeCollection,
         entityId: docId,
         operation: 'create',
         changedByUserId,
@@ -305,47 +212,63 @@ export async function createCodexDoc(
 export async function updateCodexDoc(
   collection: CodexCollection,
   id: string,
-  data: Record<string, unknown>
-): Promise<{ success: boolean; error?: string }> {
+  data: Record<string, unknown>,
+  options?: { expectedUpdatedAt?: string | undefined } | undefined,
+): Promise<{ success: boolean; error?: string | undefined; conflict?: boolean | undefined }> {
   try {
     const changedByUserId = await requireAdmin();
-    const supabase = getSupabaseAdmin();
-    const table = getTableName(collection);
+    const safeCollection = assertCodexCollection(collection);
+    const supabase = createServiceRoleClient();
+    const table = getTableName(safeCollection);
 
     const before = await fetchRowById(table, id);
     if (!before) {
       return { success: false, error: 'Document not found' };
     }
 
-    if (COLUMNAR_COLLECTIONS.includes(collection)) {
-      const normalizedData = await applyFeatTagNormalization(collection, data);
-      const payload = toColumnarPayload(collection, normalizedData);
-      const dbPayload = toDbPayload(collection, payload);
-      const { data: after, error } = await supabase.from(table).update(dbPayload).eq('id', id).select('*').single();
+    // Optimistic lock: only enforced when the caller sends the version it loaded, so callers
+    // that never read `updated_at` (and tables that do not have the column yet) are unaffected.
+    const currentUpdatedAt = typeof before.updated_at === 'string' ? before.updated_at : null;
+    const expectedUpdatedAt = options?.expectedUpdatedAt;
+    const lockOn = expectedUpdatedAt && currentUpdatedAt ? currentUpdatedAt : null;
+    if (expectedUpdatedAt && currentUpdatedAt && expectedUpdatedAt !== currentUpdatedAt) {
+      return { success: false, conflict: true, error: CONFLICT_MESSAGE };
+    }
+
+    if (isColumnarCollection(safeCollection)) {
+      const normalizedData = await applyFeatTagNormalization(safeCollection, data);
+      const payload = toColumnarPayload(safeCollection, normalizedData);
+      const dbPayload = toDbPayload(safeCollection, payload);
+      if (currentUpdatedAt) dbPayload.updated_at = new Date().toISOString();
+      let query = supabase.from(table).update(dbPayload).eq('id', id);
+      if (lockOn) query = query.eq('updated_at', lockOn);
+      const { data: after, error } = await query.select('*').maybeSingle();
       if (error) throw new Error(error.message);
-      await recordCodexChange({
-        entityType: collection,
+      if (!after) return { success: false, conflict: true, error: CONFLICT_MESSAGE };
+      await recordCodexChangeBestEffort({
+        entityType: safeCollection,
         entityId: id,
         operation: 'update',
         changedByUserId,
         beforeData: before,
-        afterData: (after as Record<string, unknown> | null) ?? null,
+        afterData: after as Record<string, unknown>,
       });
     } else {
-      const { data: after, error } = await supabase
+      let query = supabase
         .from(table)
         .update({ data, updated_at: new Date().toISOString() })
-        .eq('id', id)
-        .select('*')
-        .single();
+        .eq('id', id);
+      if (lockOn) query = query.eq('updated_at', lockOn);
+      const { data: after, error } = await query.select('*').maybeSingle();
       if (error) throw new Error(error.message);
-      await recordCodexChange({
-        entityType: collection,
+      if (!after) return { success: false, conflict: true, error: CONFLICT_MESSAGE };
+      await recordCodexChangeBestEffort({
+        entityType: safeCollection,
         entityId: id,
         operation: 'update',
         changedByUserId,
         beforeData: before,
-        afterData: (after as Record<string, unknown> | null) ?? null,
+        afterData: after as Record<string, unknown>,
       });
     }
 
@@ -359,20 +282,38 @@ export async function updateCodexDoc(
 
 export async function deleteCodexDoc(
   collection: CodexCollection,
-  id: string
-): Promise<{ success: boolean; error?: string }> {
+  id: string,
+  options?: { acknowledgeReferences?: boolean | undefined },
+): Promise<{ success: boolean; error?: string | undefined; references?: string[] | undefined }> {
   try {
     const changedByUserId = await requireAdmin();
-    const supabase = getSupabaseAdmin();
-    const table = getTableName(collection);
+    const safeCollection = assertCodexCollection(collection);
+    const supabase = createServiceRoleClient();
+    const table = getTableName(safeCollection);
     const before = await fetchRowById(table, id);
+
+    if (!options?.acknowledgeReferences) {
+      const references = await findCodexReferences(safeCollection, id);
+      if (references.length > 0) {
+        return {
+          success: false,
+          references: references.slice(0, MAX_REPORTED_REFERENCES),
+          error: `${references.length} entities still reference this entry.`,
+        };
+      }
+    }
 
     const { error } = await supabase.from(table).delete().eq('id', id);
     if (error) throw new Error(error.message);
 
+    // Tombstone before anything else can fail: a reused id silently repoints saved characters.
+    if (isColumnarCollection(safeCollection)) {
+      await retireCodexId(supabase, table, id);
+    }
+
     if (before) {
-      await recordCodexChange({
-        entityType: collection,
+      await recordCodexChangeBestEffort({
+        entityType: safeCollection,
         entityId: id,
         operation: 'delete',
         changedByUserId,
@@ -389,122 +330,48 @@ export async function deleteCodexDoc(
   }
 }
 
-type ArchetypeLevelPayload = {
-  level: number;
-  feats?: string;
-  skills?: string;
-  powers?: string;
-  techniques?: string;
-  armaments?: string;
-  equipment?: string;
-  remove_feats?: string;
-  remove_powers?: string;
-  remove_techniques?: string;
-  remove_armaments?: string;
-  notes?: string;
-};
-
-type SaveArchetypeWithPathInput = {
-  id?: string;
-  name: string;
-  type: 'power' | 'martial' | 'powered-martial';
-  description?: string;
-  archetype_ability?: string;
-  secondary_ability?: string;
-  power_prof_start?: number;
-  martial_prof_start?: number;
-  power_prof_level5?: number;
-  martial_prof_level5?: number;
-  level1_feats?: string;
-  level1_skills?: string;
-  level1_powers?: string;
-  level1_techniques?: string;
-  level1_armaments?: string;
-  level1_equipment?: string;
-  level1_recommend_unarmed_prowess?: boolean;
-  level1_remove_feats?: string;
-  level1_remove_powers?: string;
-  level1_remove_techniques?: string;
-  level1_remove_armaments?: string;
-  level1_notes?: string;
-  level1_recommended_species?: string;
-  level1_guidance_groups?: unknown;
-  level1_recommended_abilities?: unknown;
-  level1_loadouts?: unknown;
-  levels: ArchetypeLevelPayload[];
-};
-
 export async function saveArchetypeWithPath(
-  payload: SaveArchetypeWithPathInput
-): Promise<{ success: boolean; error?: string; id?: string }> {
+  payload: SaveArchetypeWithPathInput,
+): Promise<{ success: boolean; error?: string | undefined; id?: string | undefined }> {
   try {
     const changedByUserId = await requireAdmin();
-    const supabase = getSupabaseAdmin();
-    const id = payload.id ? sanitizeId(payload.id) : await allocateLowestUnusedNumericId('codex_archetypes');
+    const supabase = createServiceRoleClient();
+    const id = payload.id
+      ? sanitizeId(payload.id)
+      : await allocateCodexNumericId(supabase, 'codex_archetypes');
     const beforeSnapshot = await getArchetypeSnapshot(id);
+    const existingLevels = beforeSnapshot?.levels ?? [];
 
-    const archetypeRow = {
-      id,
-      name: payload.name,
-      type: payload.type,
-      description: payload.description ?? null,
-      archetype_ability: payload.archetype_ability ?? null,
-      secondary_ability: payload.secondary_ability ?? null,
-      power_prof_start: payload.power_prof_start ?? null,
-      martial_prof_start: payload.martial_prof_start ?? null,
-      power_prof_level5: payload.power_prof_level5 ?? null,
-      martial_prof_level5: payload.martial_prof_level5 ?? null,
-      level1_feats: payload.level1_feats ?? null,
-      level1_skills: payload.level1_skills ?? null,
-      level1_powers: payload.level1_powers ?? null,
-      level1_techniques: payload.level1_techniques ?? null,
-      level1_armaments: payload.level1_armaments ?? null,
-      level1_equipment: payload.level1_equipment ?? null,
-      level1_recommend_unarmed_prowess: payload.level1_recommend_unarmed_prowess ?? false,
-      level1_remove_feats: payload.level1_remove_feats ?? null,
-      level1_remove_powers: payload.level1_remove_powers ?? null,
-      level1_remove_techniques: payload.level1_remove_techniques ?? null,
-      level1_remove_armaments: payload.level1_remove_armaments ?? null,
-      level1_notes: payload.level1_notes ?? null,
-      level1_recommended_species: payload.level1_recommended_species ?? null,
-      level1_guidance_groups: payload.level1_guidance_groups ?? null,
-      level1_recommended_abilities: payload.level1_recommended_abilities ?? null,
-      level1_loadouts: payload.level1_loadouts ?? null,
-    };
+    const cleanLevels = buildArchetypeLevelRows(id, payload.levels);
 
-    const { error: upsertError } = await supabase.from('codex_archetypes').upsert(archetypeRow);
+    const levelNumbers = cleanLevels.map((row) => Number(row.level));
+    if (new Set(levelNumbers).size !== levelNumbers.length) {
+      return {
+        success: false,
+        error: 'Duplicate levels in the progression; each level may appear once.',
+      };
+    }
+
+    if (cleanLevels.length === 0 && existingLevels.length > 0) {
+      return {
+        success: false,
+        error:
+          `Refusing to save: this would delete all ${existingLevels.length} progression level(s) for this archetype. ` +
+          'Add the levels back, or delete the archetype itself if that is the intent.',
+      };
+    }
+
+    const { error: upsertError } = await supabase
+      .from('codex_archetypes')
+      .upsert(buildArchetypeRow(id, payload));
     if (upsertError) throw new Error(upsertError.message);
 
-    const { error: clearLevelsError } = await supabase.from('codex_archetype_levels').delete().eq('archetype_id', id);
-    if (clearLevelsError) throw new Error(clearLevelsError.message);
-
-    const cleanLevels = payload.levels
-      .filter((entry) => Number.isFinite(entry.level) && entry.level >= 2)
-      .map((entry) => ({
-        archetype_id: id,
-        level: entry.level,
-        feats: entry.feats ?? null,
-        skills: entry.skills ?? null,
-        powers: entry.powers ?? null,
-        techniques: entry.techniques ?? null,
-        armaments: entry.armaments ?? null,
-        equipment: entry.equipment ?? null,
-        remove_feats: entry.remove_feats ?? null,
-        remove_powers: entry.remove_powers ?? null,
-        remove_techniques: entry.remove_techniques ?? null,
-        remove_armaments: entry.remove_armaments ?? null,
-        notes: entry.notes ?? null,
-      }));
-
-    if (cleanLevels.length > 0) {
-      const { error: insertLevelsError } = await supabase.from('codex_archetype_levels').insert(cleanLevels);
-      if (insertLevelsError) throw new Error(insertLevelsError.message);
-    }
+    await replaceArchetypeLevels(id, cleanLevels, existingLevels);
 
     const afterSnapshot = await getArchetypeSnapshot(id);
     if (!afterSnapshot) throw new Error('Failed to load saved archetype snapshot');
 
-    await recordCodexChange({
+    await recordCodexChangeBestEffort({
       entityType: 'codex_archetypes',
       entityId: id,
       operation: beforeSnapshot ? 'update' : 'create',
@@ -517,6 +384,71 @@ export async function saveArchetypeWithPath(
     revalidatePath('/codex');
     return { success: true, id };
   } catch (e) {
-    return { success: false, error: e instanceof Error ? e.message : 'Failed to save archetype path data' };
+    return {
+      success: false,
+      error: e instanceof Error ? e.message : 'Failed to save archetype path data',
+    };
+  }
+}
+
+/**
+ * `codex_archetype_levels` has UNIQUE (archetype_id, level), so the new rows cannot be inserted
+ * before the old ones are removed. Until the replace runs inside a Postgres function, the old
+ * rows are restored from the snapshot when the insert or the row-count check fails.
+ */
+async function replaceArchetypeLevels(
+  archetypeId: string,
+  incoming: Record<string, unknown>[],
+  snapshot: Record<string, unknown>[],
+): Promise<void> {
+  const supabase = createServiceRoleClient();
+
+  const { error: clearError } = await supabase
+    .from('codex_archetype_levels')
+    .delete()
+    .eq('archetype_id', archetypeId);
+  if (clearError) throw new Error(clearError.message);
+
+  if (incoming.length === 0) return;
+
+  const { data: inserted, error: insertError } = await supabase
+    .from('codex_archetype_levels')
+    .insert(incoming)
+    .select('id');
+
+  const insertedCount = (inserted ?? []).length;
+  if (insertError || insertedCount !== incoming.length) {
+    const reason = insertError
+      ? insertError.message
+      : `wrote ${insertedCount} of ${incoming.length} levels`;
+    const restored = await restoreArchetypeLevels(archetypeId, snapshot);
+    throw new Error(
+      restored
+        ? `Progression levels were not saved (${reason}). The previous levels were restored.`
+        : `Progression levels were not saved (${reason}) and could not be restored. ` +
+            'The previous levels are in codex_change_logs.before_data for this archetype.',
+    );
+  }
+}
+
+async function restoreArchetypeLevels(
+  archetypeId: string,
+  snapshot: Record<string, unknown>[],
+): Promise<boolean> {
+  const supabase = createServiceRoleClient();
+  try {
+    await supabase.from('codex_archetype_levels').delete().eq('archetype_id', archetypeId);
+    if (snapshot.length === 0) return true;
+    const { error } = await supabase
+      .from('codex_archetype_levels')
+      .insert(restorableLevelRows(snapshot));
+    if (error) {
+      console.error('[Admin Codex] archetype level restore failed:', error.message);
+      return false;
+    }
+    return true;
+  } catch (err) {
+    console.error('[Admin Codex] archetype level restore failed:', err);
+    return false;
   }
 }

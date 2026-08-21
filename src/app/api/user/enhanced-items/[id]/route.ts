@@ -7,28 +7,33 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { getSession } from '@/lib/supabase/session';
-import { validateJson, enhancedItemPatchSchema } from '@/lib/api-validation';
-import { standardLimiter } from '@/lib/rate-limit';
+import { validateJson, verifyMutationRequest, enhancedItemPatchSchema } from '@/lib/api-validation';
+import { apiErrorResponse } from '@/lib/api-error';
+import { buildRateLimitKey, resolveClientIp, standardLimiter } from '@/lib/rate-limit';
 
-export async function PATCH(
-  request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
-) {
+export async function PATCH(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
-    const ip = request.headers.get('x-forwarded-for') ?? 'unknown';
-    const { success } = standardLimiter.check(`enhanced-patch:${ip}`);
-    if (!success) {
-      return NextResponse.json({ error: 'Too many requests' }, { status: 429, headers: { 'Retry-After': '60' } });
-    }
-
     const { user, error } = await getSession();
     if (error || !user?.uid) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
+    const { success } = await standardLimiter.check(
+      buildRateLimitKey('enhanced-patch', {
+        userId: user.uid,
+        ip: resolveClientIp(request.headers),
+      }),
+    );
+    if (!success) {
+      return NextResponse.json(
+        { error: 'Too many requests' },
+        { status: 429, headers: { 'Retry-After': '60' } },
+      );
+    }
+
     const validation = await validateJson(request, enhancedItemPatchSchema);
     if (!validation.success) return validation.error;
-    const body = validation.data as { potency?: number; name?: string };
+    const body = validation.data as { potency?: number | undefined; name?: string | undefined };
 
     const { id } = await params;
     const supabase = await createClient();
@@ -37,9 +42,10 @@ export async function PATCH(
       .select('data, name')
       .eq('id', id)
       .eq('user_id', user.uid)
-      .single();
+      .maybeSingle();
+    if (fetchErr) throw fetchErr;
 
-    if (fetchErr || !row) {
+    if (!row) {
       return NextResponse.json({ error: 'Enhanced item not found' }, { status: 404 });
     }
 
@@ -56,31 +62,49 @@ export async function PATCH(
       .eq('user_id', user.uid);
 
     if (updateErr) {
-      console.error('[API Error] PATCH /api/user/enhanced-items/[id]:', updateErr.message);
-      return NextResponse.json({ error: 'Failed to update enhanced item' }, { status: 500 });
+      return apiErrorResponse(
+        'Failed to update enhanced item',
+        500,
+        'PATCH /api/user/enhanced-items/[id] (update)',
+        updateErr,
+      );
     }
 
     return new NextResponse(null, { status: 204 });
   } catch (err) {
-    console.error('[API Error] PATCH /api/user/enhanced-items/[id]:', err);
-    return NextResponse.json({ error: 'Failed to update enhanced item' }, { status: 500 });
+    return apiErrorResponse(
+      'Failed to update enhanced item',
+      500,
+      'PATCH /api/user/enhanced-items/[id]',
+      err,
+    );
   }
 }
 
 export async function DELETE(
-  _request: Request,
-  { params }: { params: Promise<{ id: string }> }
+  _request: NextRequest,
+  { params }: { params: Promise<{ id: string }> },
 ) {
   try {
-    const ip = (_request as unknown as NextRequest).headers.get('x-forwarded-for') ?? 'unknown';
-    const { success } = standardLimiter.check(`enhanced-del:${ip}`);
-    if (!success) {
-      return NextResponse.json({ error: 'Too many requests' }, { status: 429, headers: { 'Retry-After': '60' } });
-    }
-
     const { user, error } = await getSession();
     if (error || !user?.uid) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
+    const denied = verifyMutationRequest(_request);
+    if (denied) return denied;
+
+    const { success } = await standardLimiter.check(
+      buildRateLimitKey('enhanced-del', {
+        userId: user.uid,
+        ip: resolveClientIp(_request.headers),
+      }),
+    );
+    if (!success) {
+      return NextResponse.json(
+        { error: 'Too many requests' },
+        { status: 429, headers: { 'Retry-After': '60' } },
+      );
     }
 
     const { id } = await params;
@@ -92,13 +116,21 @@ export async function DELETE(
       .eq('user_id', user.uid);
 
     if (delErr) {
-      console.error('[API Error] DELETE /api/user/enhanced-items/[id]:', delErr.message);
-      return NextResponse.json({ error: 'Failed to delete enhanced item' }, { status: 500 });
+      return apiErrorResponse(
+        'Failed to delete enhanced item',
+        500,
+        'DELETE /api/user/enhanced-items/[id]',
+        delErr,
+      );
     }
 
     return new NextResponse(null, { status: 204 });
   } catch (err) {
-    console.error('[API Error] DELETE /api/user/enhanced-items/[id]:', err);
-    return NextResponse.json({ error: 'Failed to delete enhanced item' }, { status: 500 });
+    return apiErrorResponse(
+      'Failed to delete enhanced item',
+      500,
+      'DELETE /api/user/enhanced-items/[id]',
+      err,
+    );
   }
 }

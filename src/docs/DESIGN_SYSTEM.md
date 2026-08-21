@@ -2,8 +2,7 @@
 
 This document outlines the unified design system for RealmsRPG, based on the Figma mockup specifications and best practices for consistency across the entire application.
 
-> **Unification status:** See `src/docs/ai/AGENT_GUIDE.md` (Unified patterns section) and `.cursor/rules/realms-unification.mdc`.
-> **Active roadmap:** `src/docs/ai/UI_UNIFICATION_PLAN.md` is the source of truth for the in-progress token/component unification.
+> **Unification status:** See `src/docs/ai/AGENT_GUIDE.md` (Unified patterns section) and `.cursor/rules/realms-unification.mdc`. Canonical import is `@/components/patterns` (ADR-0019). `src/docs/ai/UI_UNIFICATION_PLAN.md` is historical (complete), not an in-progress SoT.
 
 ## Token Architecture (Phase 0+)
 
@@ -21,7 +20,19 @@ Dark mode overrides **only** the canonical `--color-*` tokens inside `.dark { �
 
 ### Theme-aware semantic foreground tokens
 
-Status and archetype "on-color" text uses dedicated foreground tokens that are **theme-aware** (correct contrast in both light and dark): `--color-success-fg`, `--color-danger-fg`, `--color-warning-fg`, `--color-info-fg`, `--color-power-fg`, `--color-martial-fg`, and `--color-primary-button`. Prefer these over picking a ramp step by hand when placing text on a tinted/solid background — they are contrast-validated by `scripts/check-contrast.mjs`.
+Status and archetype body/icon text **is** `text-success-fg`, `text-danger-fg`, `text-warning-fg`, `text-info-fg`, `text-power-fg`, `text-martial-fg` (plus `bg-primary-button` / `text-primary-fg`). Validated by `scripts/check-contrast.mjs`. Numbered ramps and `power-dark` / `martial-dark` stay as fills, borders, and CSS internals — see Status Colors and Game-Specific Colors.
+
+### Muted vs secondary text (decision, 2026-08-13)
+
+**`text-text-muted dark:text-text-secondary` is a no-op, and that is intentional. Write `text-text-muted` alone in new code.**
+
+`--color-text-muted` and `--color-text-secondary` differ in light mode (`#707070` vs `#41464a`) but resolve to the same `#8b949e` in dark mode, where `--color-text-muted` is now written as `var(--color-text-secondary)` so the collapse is explicit rather than a duplicated hex.
+
+**Why they cannot differ in dark mode.** Muted text must clear WCAG AA (4.5:1) on `--color-surface-alt` (`#21262d`), the densest surface it lands on. `#8b949e` measures **4.95:1** there — the entire remaining headroom is about four 8-bit steps (`#878f99` = 4.65:1; `#838b95` = 4.42:1 already fails and would trip `scripts/check-contrast.mjs`, whose baseline is empty). A "dimmer muted" step that stays legal would be visually indistinguishable from secondary, so a two-tier dark grey ramp buys nothing and costs a `dark:` override on every muted string.
+
+**Consequence:** the pairing is redundant, not meaningful — the `dark:` half should be dropped, not made to matter.
+
+**Follow-up (TASK-770, 2026-08-15):** the dead `dark:text-text-secondary` half is stripped next to `text-text-muted`. ESLint `realms/no-muted-dark-secondary-pairing` blocks new pairings. Do not add them back.
 
 ### Standard ladders (semantic scales)
 
@@ -32,9 +43,10 @@ Common scales are encoded as semantic tokens so components share one ladder inst
 | Radius | `--radius-control`, `--radius-card`, `--radius-pill` | controls = `lg`, cards = `xl`, pills/avatars = `full` |
 | Elevation | `--shadow-card`, `--shadow-raised`, `--shadow-overlay` | resting card → hovered/raised → modal/popover |
 | Motion | `--duration-fast` (150ms), `--duration-base` (200ms), `--duration-slow` (300ms), `--ease-standard` | one easing curve for all transitions; use `duration-base ease-standard` in TSX; in `@apply` use `var(--duration-base)` + `var(--ease-standard)` |
-| Z-index | `--z-sticky` (10), `--z-header` / `--z-overlay` (50), `--z-popover` (70), `--z-toast` (100), `--z-floating` (1000), `--z-skip-link` (9999), `--z-toast-stack` (10000) | sticky → header/modal → popovers/tooltips → alerts → skip link / toast stack |
+| Z-index | `--z-sticky` (10), `--z-header` / `--z-overlay` (50), `--z-popover` (70), `--z-toast` (100), `--z-floating` (1000), `--z-tour` (1100), `--z-skip-link` (9999), `--z-toast-stack` (10000) | sticky → header/modal → popovers/tooltips → floating widgets → onboarding tour cards → skip link / toast stack. C4 docks (`.floating-dock-bottom-right`, `.sheet-mobile-action-dock`) hide while `aria-modal` is open so they cannot cover modal footers (TASK-837). |
+| Floating dock (C4) | `--dock-gap`, `--dock-fab-size`, `--dock-bottom`, `--sheet-mobile-dock-height`, `--sheet-mobile-fab-gutter` (alias of dock height), `--dock-reserved-end`; `.floating-dock-bottom-right`, `.sheet-mobile-action-dock`, `.has-sheet-mobile-dock` | One owner per corner. Owner frames reserve dock height; no-toolbar sheets apply that length as panel end-pad (TASK-843). Do not add a second `fixed bottom-*`. |
 | Focus | `focus-visible:ring-2 focus-visible:ring-primary-outline-border focus-visible:ring-offset-2` | buttons, icon buttons, tabs; form controls use `:focus:` (same ring token); errors use `ring-danger-border` |
-| Touch | `--touch-target-min: 44px`; utilities `.touch-target`, `.touch-target-md-compact` | 44px below `md`; compact on desktop; `Button`/`IconButton` also use `@media(pointer:coarse)` |
+| Touch | `--touch-target-min: 44px`; utilities `.touch-tier-standard` / `.touch-tier-primary`, `.hit-area-dense` (height-first), `.hit-area-dense-square`, `.hit-area-layout-neutral` (16px icons) | **Pointer, not viewport:** `@media (pointer: coarse)` sets hit area (TASK-841). Tiers: Primary 48 / Standard 44 / Dense 32 painted + 44 expanded hit. InfoTippy and sheet proficiency dots use `.hit-area-layout-neutral` so the painted box stays 16px (TASK-836). `Input` / `Select` / `Textarea` / `SearchInput` use `.touch-tier-standard` (TASK-830). Codex spreadsheet / list Filters / RollLog send no longer use viewport `md:` 44 slabs (TASK-847). |
 | Container | `--container-narrow` (4xl), `--container-standard` (7xl), `--container-wide` (1440px), `--container-full-tool` (1600px) | page max-widths; marketing chrome uses `.layout-shell-wide` |
 
 ## Color Palette
@@ -62,7 +74,7 @@ Warm accent colors for highlights and special elements.
 |-------|-------|-------|
 | `accent-gold` | #c79956 | Primary accent |
 | `accent-bronze` | #d99735 | Secondary accent |
-| `accent-chip` | #fef8f0 | `<Chip variant="accent">` background |
+| `accent-light` | #fdf0dc | `<Chip variant="rarityAscended">` background |
 
 ### Utility Colors (Cool Blue)
 Secondary blue shades for utility buttons and accents.
@@ -72,6 +84,13 @@ Secondary blue shades for utility buttons and accents.
 | `utility-100` | #c3e8fb | Light backgrounds |
 | `utility-300` | #4584b6 | Utility buttons |
 | `utility-400` | #407cb6 | Hover states |
+
+### Image matte
+Soft backdrop behind transparent card/portrait art at **display time only** (`bg-image-matte`, enlarge modal, cropper stage). **Never baked into stored files** — uploads preserve alpha (PNG/WebP) so light/dark theme switches stay correct.
+
+| Token | Light | Dark | Usage |
+|-------|-------|------|-------|
+| `image-matte` | #e8f1f8 | #21262d | `bg-image-matte` on image frames; cropper container |
 
 ### Neutral Colors
 Grays for text, borders, and backgrounds.
@@ -88,7 +107,7 @@ Grays for text, borders, and backgrounds.
 | `divider` | #707070 | Section dividers |
 
 ### Status Colors
-Semantic colors for success, danger, warning, and info states. **Accessibility:** Use **-700** (or darker) for normal-sized text in light mode so contrast meets WCAG 2.1 AA; pair with **-400** (or equivalent) in dark mode, e.g. `text-success-700 dark:text-success-400`.
+Semantic colors for success, danger, warning, and info states. **Body/icon text:** `text-success-fg`, `text-danger-fg`, `text-warning-fg`, `text-info-fg`. Hex ramps below are fills/borders only (Main is not the body-text token).
 
 | Status | Main | Hover | Light | Dark |
 |--------|------|-------|-------|------|
@@ -98,14 +117,14 @@ Semantic colors for success, danger, warning, and info states. **Accessibility:*
 | Info | #3b82f6 | #2563eb | #dbeafe | - |
 
 ### Game-Specific Colors
-Colors for health, energy, power, and martial concepts. **For accessibility (WCAG 2.1 AA):** use the **darker** text tokens in light mode so contrast passes on white/light backgrounds.
+HP/EN chrome uses dedicated fill pairings. Archetype body/icon text uses `*-fg`.
 
-| Concept | Text Token (light) | Dark Mode Text | Background Token | Border Token |
-|---------|-------------------|----------------|------------------|-------------|
-| Health | `text-success-700` | `dark:text-success-400` | `bg-success-50` | `border-success-*` |
-| Energy | `text-info-600` | `dark:text-info-400` | `bg-info-50` | `border-info-*` |
-| Power (archetype) | `text-power-dark` for body/labels; `text-power-text` only where contrast passes | `dark:text-power-300` | `bg-power-light` | `border-power-border` |
-| Martial (archetype) | `text-martial-dark` for body/labels; `text-martial-text` only where contrast passes | `dark:text-martial-border` / `dark:text-martial-*` | `bg-martial-light` | `border-martial-border` |
+| Concept | Text | Background | Border |
+|---------|------|------------|--------|
+| Health | `text-health-text` | `bg-health-light` | `border-health-border` |
+| Energy | `text-energy-text` | `bg-energy-light` | `border-energy-border` |
+| Power (archetype) | `text-power-fg` | `bg-power-light` | `border-power-border` |
+| Martial (archetype) | `text-martial-fg` | `bg-martial-light` | `border-martial-border` |
 
 ### Color Migration Guide (2026-02-13 Audit)
 
@@ -114,12 +133,12 @@ Colors for health, energy, power, and martial concepts. **For accessibility (WCA
 | Hardcoded Class | Replace With | Semantic Meaning |
 |----------------|-------------|------------------|
 | `blue-*` | `primary-*` | Primary actions, links, editable indicators |
-| `green-*` | `success-*` | Positive values, health, equipped items |
-| `red-*` | `danger-*` | Negative values, errors, delete actions |
-| `amber-*` | `warning-*` | Warnings, costs, unsaved state |
-| `blue-*` (energy) | `info-*` | Energy-related, informational |
-| `purple-*` / `violet-*` | `power-*` or keep `violet-*` | Power archetype theme |
-| `red-*` (martial) | `martial-*` | Martial archetype theme |
+| `green-*` | `success-*` fills; body `text-success-fg` | Positive values, equipped items |
+| `red-*` | `danger-*` fills; body `text-danger-fg` | Negative values, errors, delete |
+| `amber-*` | `warning-*` fills; body `text-warning-fg` | Warnings, costs, unsaved state |
+| `blue-*` (energy) | `info-*` fills; body `text-info-fg` | Informational (HP/EN chrome: `health-text` / `energy-text`) |
+| `purple-*` / `violet-*` | `power-*` fills; body `text-power-fg` | Power archetype (or keep `violet-*` where no token exists) |
+| `red-*` (martial) | `martial-*` fills; body `text-martial-fg` | Martial archetype |
 | `orange-*` (TP costs) | `tp-*` tokens | Training point costs |
 
 > **Exception:** Auth pages (`/login`, `/register`) intentionally use `gray-*` for dark theme.
@@ -145,14 +164,15 @@ Used for chips, badges, and content type indicators.
 Standard patterns for consistent UX across the app.
 
 ### Modals
-- **Base component:** All modals must use `@/components/ui/modal` (Modal). Pass `isOpen`, `onClose`, and use `title`/`description` (simple) or `header`/`footer` (custom).
-- **Confirm/delete:** Use `ConfirmActionModal` or `DeleteConfirmModal` from `@/components/shared`; both compose base Modal and accept `isOpen`.
+- **Base component:** All modals must use `@/components/ui/modal` (Modal). Pass `isOpen`, `onClose`, and use `title`/`description` (simple) or `header`/`footer` (custom). After close, Modal holds an invisible `z-overlay` sink for 200ms so the dismiss click cannot fall through to Create/Save underneath.
+- **Confirm/delete:** Use `ConfirmActionModal` or `DeleteConfirmModal` from `@/components/patterns`; both compose base Modal and accept `isOpen`. `DeleteConfirmModal` wraps `ConfirmActionModal` with delete copy (do not fork a third confirm body).
 - **Selection:** Use `UnifiedSelectionModal` for add-feat, add-power, add-technique, etc.
+- **Size guidance:** `sm`–`md` confirms; `lg`–`2xl` typical forms/lists; `full` (`max-w-6xl`) for high-complexity multi-section editors (admin codex add/edit). Large dialogs use `fullScreenOnMobile`.
 
 ### Error display
 - **Persistent errors** (form validation, failed load, permission): Use `<Alert variant="danger">` (or `warning`/`info`). Keep in layout until user dismisses or fixes.
 - **Transient feedback** (save success, copy link): Use Toast (e.g. `showToast(message, 'success')`). Auto-dismiss.
-- **List/page empty error state:** Use `ErrorDisplay` from `@/components/shared/list-components` for full-message + subMessage, or Alert for inline.
+- **List/page empty error state:** Use `ErrorDisplay` from `@/components/patterns` for full-message + subMessage, or Alert for inline.
 
 ### Loading states
 - **Page-level** (data fetch for whole page): Use `<LoadingState message="Loading…" size="lg" />` from `@/components/ui/spinner`.
@@ -201,20 +221,15 @@ Use the `<PageContainer>` component for all page layouts. Container widths and p
 ```tsx
 import { Button } from '@/components/ui';
 
-// RECOMMENDED Variants
+// Variants (the full set — `gradient` / `success` / `utility` were removed in Phase 2.1)
 <Button variant="primary">Primary Action</Button>
 <Button variant="secondary">Secondary</Button>
+<Button variant="outline">Outline</Button>
 <Button variant="danger">Delete</Button>
 <Button variant="ghost">Ghost</Button>
 <Button variant="link">Link</Button>
 
-// DEPRECATED (avoid - will be removed)
-// <Button variant="success"> // Use 'primary' instead
-// <Button variant="outline"> // Use 'secondary' instead
-// <Button variant="utility"> // Use 'secondary' or 'ghost' instead
-// <Button variant="gradient"> // Use 'primary' instead
-
-// Sizes
+// Sizes (`icon-sm` / `icon-lg` were removed 2026-08-13 — zero call sites)
 <Button size="sm">Small</Button>
 <Button size="md">Medium</Button>
 <Button size="lg">Large</Button>
@@ -225,10 +240,18 @@ import { Button } from '@/components/ui';
 <Button isLoading>Loading...</Button>
 ```
 
-**Always use the `<Button>` component for buttons.** Legacy gradient utilities (`.btn-primary`, etc.) and raw link button classes (`.btn-solid`, `.btn-outline-clean`) were removed in Phase 0.4 / Phase 2.1. For links styled as buttons, use `<Button asChild><Link …></Button>`. Stepper buttons still use:
-- `.btn-stepper`, `.btn-stepper-danger`, `.btn-stepper-success` - +/- stepper buttons
+**Touch tiers (ADR-0023 / TASK-841):** coarse pointer only. `size="lg"` / `xl` = Primary (48px min-h). Default `md` = Standard (44px min-h, no min-w). `size="sm"` and `variant="link"` = Dense (painted compact + `.hit-area-dense`). Icon-only `size="icon"` and `IconButton` md/lg set an explicit square (`h-11` / `h-12`), not a global `min-w`. **Modal/screen Primary CTAs** (Add Selected, Save, Continue, Confirm) must pass `size="lg"` — default `md` is Standard, not Primary. Cancel stays `md`.
 
-> **Note:** Navigation buttons (back/continue) now use the `<Button>` component with `variant="secondary"` for back and default for continue.
+**Always use the `<Button>` component for buttons.** Legacy gradient utilities (`.btn-primary`, etc.) and raw link button classes (`.btn-solid`, `.btn-outline-clean`) were removed in Phase 0.4 / Phase 2.1. For links styled as buttons, use `<Button asChild><Link …></Button>`.
+
+**± Steppers (ADR-0002 — one chrome sitewide):**
+
+- **Use:** `ValueStepper`, or `DecrementButton` / `IncrementButton` when the value display is custom (e.g. skill bonus between ±). Quantities in list rows: `QuantitySelector` (thin wrapper over `ValueStepper`).
+- **Chrome:** `.btn-stepper` — soft `bg-surface-alt`, no invasive border, `rounded-lg`, bold ± glyphs; disabled = muted text on transparent. Matches guided skills bonus steppers.
+- **Allowed props:** `size`, layout `variant` (`default` | `inline` | `compact`), `enableHoldRepeat` (HP/EN pools only), and **value** coloring (`colorVariant` / `colorValue` for the number only). Buttons stay neutral everywhere.
+- **Do not:** hand-roll ± buttons; tint stepper buttons green/red/blue; reintroduce `.btn-stepper-danger` / `.btn-stepper-success`.
+
+Touch targets follow the Primary / Standard / Dense tiers in `MOBILE_UX.md` (ADR-0023). Height under `@media (pointer: coarse)`, not a blanket `md:` 44px.
 
 ### Cards
 
@@ -249,10 +272,11 @@ import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter }
 </Card>
 ```
 
-CSS classes available:
-- `.card` - Base card styling (`bg-surface` + `rounded-xl` + border + `shadow-sm`)
-- `.interactive-card` - Hoverable/clickable card
-- `.selection-card`, `.selection-card--selected` - Selection card + selected state
+`cardVariants` (the legacy `.card` / `.interactive-card` / `.selection-card` CSS was removed in Phase 2.3):
+- `default` — `bg-surface` + `rounded-xl` + border + `shadow-sm`
+- `selectable` / `selected` — selection card + selected state (used by `SelectionCard`)
+
+The unused `interactive` variant was removed 2026-08-13; for a hoverable card, compose `default` with the hover utilities you need.
 
 ### Chips/Badges
 
@@ -264,26 +288,38 @@ Two chip **roles** (see `src/docs/ai/CHIP_UNIFICATION_PLAN.md`):
 | **Expandable** | `<ExpandableChip>` | `rounded-lg` | Parts/properties with descriptions (expand in place) |
 | **Filter / legacy** | `<Chip shape="pill">` | `rounded-full` | Removable tags, filter chips |
 
+**Descriptor + help (TASK-454):** When a non-mechanic property needs a description but must **not** expand, use **`DescriptorChipWithTip`** from `@/components/patterns` — `DescriptorChip` + compact `InfoTippy`. Hover, focus, and touch-hold follow the Floating UI / InfoTippy standard. Do not turn these into ExpandableChips.
+
+**Compact facts:** Prefer formatters in `@/lib/detail-option/compact-facts` for Ability Requirement, handedness, damage, weapon Ability, Range, Spaces, Action Type, Currency, and Training Points. Dense GridListRow browse keeps labeled **columns**; chips are for when columns are omitted (see AGENT_GUIDE fact policy).
+
 **Size by role** (use consistently — do not mix expandable `sm` into summary/list contexts):
 
 | Context | Component | Size | Notes |
 |---------|-----------|------|-------|
 | GridListRow expanded sections, summary panels, creator part lists | `ExpandableChip` | **`md`** (default) | `text-sm` header; expanded body scales with size |
-| Inline metadata (tags, feat type, row badges, choice-card tags) | `DescriptorChip` | **`sm`** (default) | Compact opaque labels |
-| Summary counters, TP totals, step progress (e.g. "2 / 5 feats") | `DescriptorChip` | **`md`** | **Prominent descriptor** — not entity chips |
+| Inline metadata (tags, feat type, row badges, choice-card tags) | `DescriptorChip` | **`sm`** → `descriptor` token (default) | Entity-row inline size — matches expandable `md` in chip groups |
+| Property name + optional description tip | `DescriptorChipWithTip` | **`sm`** → `descriptor` token | Non-expanding; InfoTippy for description |
+| Summary counters, TP totals, step progress (e.g. "2 / 5 feats") | `DescriptorChip` | **`md`** | **Prominent descriptor** — outside chip groups only |
 | Hero emphasis (creator rarity badge) | `DescriptorChip` | **`lg`** | **Prominent descriptor** — single focal badge |
-| Filter / removable pills | `<Chip shape="pill">` | context-dependent | Often `sm` in dense toolbars |
+| Filter / removable pills | `<Chip shape="pill">` | `sm` in toolbars; `descriptor` when mixed in entity chip groups | Filters stay dense; match inline size when beside descriptor/expandable chips |
+| GridListRow / summary expandable parts | `ExpandableChip` | **`md`** → `descriptor` token | Collapsed header matches DescriptorChip inline size |
 
-Use **`SummaryChipList`** (`@/components/shared`) for read-only entity lists (skills, traits, feats) in creators and modals.
+Use **`SummaryChipList`** (`@/components/patterns`) for read-only entity lists (skills, traits, feats) in creators and modals.
 
 **Variant = meaning** — prefer semantic `variant` / `category` tokens (`list`, `listWarning`, `listCost`, `power`, `technique`, part categories) over ad-hoc `className` color overrides.
 
 ```tsx
 import { Chip, DescriptorChip, ExpandableChip } from '@/components/ui';
+import { DescriptorChipWithTip } from '@/components/patterns';
 
 // Descriptor metadata (opaque, non-expandable)
 <DescriptorChip>Archetype Feat</DescriptorChip>
 <DescriptorChip variant="rarityRare">Rare</DescriptorChip>
+
+// Non-mechanic property with tip (never expands)
+<DescriptorChipWithTip
+  chip={{ name: 'Graze', description: 'Deal half damage on a miss.', kind: 'descriptor' }}
+/>
 
 // Expandable part/property chip (single implementation — GridListRow, sheet, creators)
 // Default size is md — do not pass size="sm" for entity chips with descriptions
@@ -348,9 +384,9 @@ import { CreatorSummaryPanel } from '@/components/creator';
     { label: 'Ability Points', remaining: 5 },
     { label: 'Skill Points', remaining: -1 }, // Shows as danger
   ]}
-  // Quick stats (HP, EN chips)
+  // Quick stats (Health, Energy chips)
   quickStats={[
-    { label: 'HP', value: 30, color: 'bg-red-50 text-red-600' },
+    { label: 'Health', value: 30, color: 'bg-red-50 text-red-600' },
   ]}
   // Breakdown lists
   breakdowns={[
@@ -388,11 +424,16 @@ const tabs = [
   onTabChange={(id) => setActiveTab(id)}
   variant="underline" // or "pill"
   size="md" // sm | md | lg
+  trailing={advancedToggle} // optional; outside the tablist (TASK-827)
 />
 ```
 
+`labelMobile` on a tab is the below-`md` label (viewport layout). `trailing` sits under the strip below `md` and in the bar from `md` — do not overlay a sibling button on `.tab-nav-list`. Overflowing underline strips fade the overflowing edge and show a chevron inside that fade (TASK-840); the affordance unmounts when the strip does not overflow. Active tabs scroll inside `.tab-nav-list` only (`scrollDeltaToRevealChild`), never via `scrollIntoView`. Wizard step rails (Legacy `CreatorTabBar`, Guided chapter rail) reuse **`TabNavOverflowScroller`** and the same CSS (TASK-848) — do not fork a second overflow helper.
+
 CSS classes available:
 - `.tab-nav`, `.tab-nav-list`, `.tab-nav-trigger`, `.tab-nav-trigger-active`
+- `.tab-nav-scroll`, `.tab-nav-scroll-btn`, `.tab-nav-scroll-start`, `.tab-nav-scroll-end`
+- `.tab-nav-with-trailing`, `.tab-nav-trailing`
 - `.tab-pill-list`, `.tab-pill-trigger`, `.tab-pill-trigger-active`
 
 ### Form Inputs
@@ -416,14 +457,17 @@ import { Input, SearchInput } from '@/components/ui';
 />
 ```
 
+Coarse pointer: `Input` / `Select` / `Textarea` / `SearchInput` use `.touch-tier-standard` (44px min-height, no `min-w` — TASK-830). Fine pointer keeps compact `h-10` (Textarea `min-h-[100px]`). Codex/Library filter rows use `FilterInput` / `FilterNativeSelect` (`FILTER_CONTROL_CLASS` `h-11`), not these primitives.
+
 CSS classes available:
-- `.input-field` - Standard input styling
 - `.search-input-wrapper`, `.search-input`, `.search-input-icon`
+
+`.input-field` was removed (2026-08-13) — it duplicated `<Input>` and had zero call sites.
 
 ### Loading States
 
 ```tsx
-import { Spinner, LoadingState, LoadingOverlay } from '@/components/ui/spinner';
+import { Spinner, LoadingState } from '@/components/ui/spinner';
 
 // Simple spinner
 <Spinner size="md" variant="primary" />
@@ -432,11 +476,10 @@ import { Spinner, LoadingState, LoadingOverlay } from '@/components/ui/spinner';
 <LoadingState message="Loading data..." size="lg" />
 
 // Full overlay
-<LoadingOverlay isLoading={loading} message="Saving..." fullScreen />
 ```
 
-Use the `<Spinner>` / `<LoadingState>` components for spinners (the raw `.loading-spinner` classes were removed in Phase 0.4). Skeleton classes remain for placeholders:
-- `.skeleton`, `.skeleton-text`, `.skeleton-title`, `.skeleton-card`
+Use the `<Spinner>` / `<LoadingState>` components for spinners (the raw `.loading-spinner` classes were removed in Phase 0.4). `Spinner` variants: `primary`, `white`. One skeleton class remains for placeholders:
+- `.skeleton` — pair with your own `h-*` / `rounded-*` utilities. The `.skeleton-text` / `.skeleton-title` / `.skeleton-card` presets were removed (2026-08-13, zero call sites).
 
 ### Alerts
 
@@ -482,18 +525,26 @@ import { Modal } from '@/components/ui';
   title="Modal Title"
   description="Optional description"
   size="md" // sm | md | lg | xl | 2xl | full
+  fullScreenOnMobile // large / complex dialogs
 >
   Modal content
 </Modal>
 ```
+
+| Size | Max width | Use for |
+|------|-----------|---------|
+| `sm` / `md` | max-w-sm / md | Confirms, short prompts |
+| `lg` / `xl` / `2xl` | max-w-lg / max-w-2xl / max-w-3xl | Typical forms, selection lists |
+| `full` | max-w-6xl | High-complexity admin / multi-section editors |
 
 ---
 
 ## Typography
 
 ### Fonts
-- **Body text**: Nunito (--font-sans)
-- **Display/headers**: Nova Flat (--font-display)
+- **Body text**: Nunito (`--font-sans` / `font-sans`)
+- **Brand / marketing body**: Nunito (`--font-nunito` / `font-nunito` — same face as next/font `--font-nunito-face`)
+- **Display/headers**: Nova Flat (`--font-display` / `font-display`)
 
 ### Text Colors
 Use semantic color tokens for text:
@@ -520,6 +571,7 @@ Use semantic color tokens for text:
 - Page container: `px-4 sm:px-6 lg:px-8 py-8`
 - Cards: `p-6`
 - Modal content: `p-6`
+- Modal `footer` slot: inset `px-4 py-3 md:px-6 md:py-4` (do not re-pad Cancel/Confirm rows)
 
 ---
 
@@ -606,18 +658,19 @@ These components are used across multiple pages and should be imported rather th
 
 | Component | Import | Purpose |
 |-----------|--------|---------|
-| `ErrorBoundary` | `@/components/shared/error-boundary` | Catches rendering errors, shows retry UI |
-| `EditSectionToggle` | `@/components/shared/edit-section-toggle` | Color-coded pencil icon (normal/has-points/over-budget) |
-| `SelectionToggle` | `@/components/shared/selection-toggle` | + → ✓ toggle for adding items in modals |
-| `EquipToggle` | `@/components/shared/equip-toggle` | Equipment equipped/unequipped toggle |
-| `InnateToggle` | `@/components/shared/innate-toggle` | Innate power toggle |
-| `HealthEnergyAllocator` | `@/components/creator/health-energy-allocator` | HP/EN point allocation with stepper |
+| `ErrorBoundary` | `@/components/patterns/chrome/error-boundary` | Catches rendering errors, shows retry UI |
+| `EditSectionToggle` | `@/components/patterns/chrome/edit-section-toggle` | Color-coded pencil icon (normal/has-points/over-budget) |
+| Sheet Edit / Temp Modifier | `SheetActionToolbar` + `EditSectionToggle` / `TempModifierToggle` (ADR-0006 / TASK-782) | Exclusive sheet modes; per-section/per-stat open-close. Temp icon: none = blue, + = gold, − = danger |
+| `SelectionToggle` | `@/components/patterns/select/selection-toggle` | + → ✓ toggle for adding items in modals |
+| `EquipToggle` | `@/components/patterns/select/equip-toggle` | Equipment equipped/unequipped toggle |
+| `InnateToggle` | `@/components/patterns/select/innate-toggle` | Innate power toggle |
+| `HealthEnergyAllocator` | `@/components/creator/health-energy-allocator` | Health/Energy pool allocation (PointStatus + steppers; HP/EN only when compact) |
 | `CreatorSummaryPanel` | `@/components/creator/creator-summary-panel` | Cost/point summary in creators |
 | `RecoveryModal` | `@/components/character-sheet/recovery-modal` | Full/partial recovery dialog |
-| `RollLog` | `@/components/character-sheet/roll-log` | Dice roll history display |
-| `SheetActionToolbar` | `@/components/character-sheet/sheet-action-toolbar` | Floating action toolbar on character sheet |
-| `TabSummarySection` | `@/components/shared/tab-summary-section` | Color-coded summary bar for tabs |
-| `PoweredMartialSlider` | `@/components/shared/powered-martial-slider` | Power/martial proficiency allocation slider |
+| `RollLog` | `@/components/rolls` | Dice roll history; C4 `.floating-dock-bottom-right` (TASK-837) |
+| `SheetActionToolbar` | `@/components/character-sheet/sheet-action-toolbar` | Sheet actions; C4 `.sheet-mobile-action-dock` below md, top-right from md (TASK-837) |
+| `TabSummarySection` | `@/components/patterns/chrome/tab-summary-section` | Color-coded solid summary bar for tabs (no gradient fills) |
+| `PoweredMartialSlider` | `@/components/patterns/select/powered-martial-slider` | Power/martial proficiency allocation slider |
 
 ## Best Practices
 

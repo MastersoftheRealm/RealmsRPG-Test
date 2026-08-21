@@ -1,40 +1,157 @@
 /**
  * Converts a guided creator draft into a lean Character payload for save.
+ * Mirrors custom creator `getCharacter()` save practices: lean refs + computed
+ * proficiencies from library parts/properties (powers/items are stripped by cleanForSave).
  */
 
 import type { CodexEquipmentItem } from '@/types/codex';
-import type { LibraryItem } from '@/types/library';
+import type { LibraryItem, LibraryPower, LibraryTechnique } from '@/types/library';
 import {
   buildEquipmentLookup,
+  draftArmamentRefs,
   inventoryTypeForResolvedItem,
   resolveEquipmentRef,
 } from '@/lib/guided-creator/resolve-loadout-items';
-import type { Character, AbilityName } from '@/types';
+import type { AbilityName, Character, CharacterPower, CharacterTechnique, Item } from '@/types';
 import { DEFAULT_DEFENSE_SKILLS } from '@/types';
-import { calculateMaxHealth, calculateMaxEnergy } from '@/lib/game/calculations';
-import { applySpeciesTraitChoiceSelections } from '@/lib/choice-trait';
-import type { TraitWithChoiceOptions } from '@/lib/choice-trait';
+import { calculateMaxHealth, calculateMaxEnergyForArchetype } from '@/lib/game/calculations';
 import type { GuidedDraft } from '@/stores/guided-creator-store';
 import type { Archetype, ArchetypePathData } from '@/types/archetype';
-import type { Species, Trait } from '@/hooks';
-import { CHARACTER_STARTING_CURRENCY } from '@/stores/character-creator-store';
+import type { Species } from '@/hooks';
+import { averageMixedPhysical } from '@/lib/ancestry/ancestry-selection';
+import { mergeAgeIntoAppearance } from '@/lib/character/appearance-age';
+import { clampSavedCurrency } from '@/lib/character-save';
+import { computeStartingCurrency } from '@/lib/guided-creator/equipment-currency';
+import { resolveArchetypeProficiencyStart } from '@/lib/game/formulas';
 import { buildSuggestedAbilityArray } from '@/lib/game/suggested-abilities';
-import { buildGuidedSkillsArray } from '@/lib/guided-creator/build-skills';
+import { buildCreatorSkillSaveRows } from '@/lib/creator/build-creator-skills';
+import { buildRequiredProficiencies } from '@/lib/proficiencies';
+import { defaultLibraryTabVisibilityForArchetype } from '@/lib/character-library-tab-visibility';
+import { applyStarterEquippedFlags } from '@/lib/game/equipment-equipped';
+import { resolveArmorDamageReduction } from '@/lib/game/resolve-armor-damage-reduction';
+import { findByNormalizedId, normalizeId } from '@/lib/utils';
+import { dedupeEntityRefs } from '@/lib/game/dedupe-saved-parts';
+
+interface CodexPartLike {
+  id?: string | number | undefined;
+  name?: string | undefined;
+  base_tp?: number | undefined;
+  op_1_tp?: number | undefined;
+  op_2_tp?: number | undefined;
+  op_3_tp?: number | undefined;
+}
+
+interface CodexPropertyLike {
+  id?: string | number | undefined;
+  name?: string | undefined;
+  base_tp?: number | undefined;
+  op_1_tp?: number | undefined;
+}
 
 export interface BuildGuidedCharacterContext {
-  archetype?: Archetype;
-  pathData?: ArchetypePathData;
-  species?: Species | null;
-  allTraits?: Trait[];
-  codexSkills?: Array<{ id: string | number; name?: string; ability?: string; category?: string }>;
-  rules?: Parameters<typeof calculateMaxHealth>[5];
-  officialItems?: LibraryItem[];
-  codexEquipment?: CodexEquipmentItem[];
+  archetype?: Archetype | undefined;
+  pathData?: ArchetypePathData | undefined;
+  species?: Species | null | undefined;
+  /** Mixed species parents for save enrichment. */
+  speciesA?: Species | null | undefined;
+  speciesB?: Species | null | undefined;
+  codexSkills?: Array<{
+    id: string | number;
+    name?: string | undefined;
+    ability?: string | undefined;
+    category?: string | undefined;
+  }>;
+  /** Codex feats — resolve archetype/character feat display names on save. */
+  codexFeats?: Array<{ id?: string | number | undefined; name?: string | undefined }>;
+  rules?: Parameters<typeof calculateMaxHealth>[5] | undefined;
+  officialItems?: LibraryItem[] | undefined;
+  codexEquipment?: CodexEquipmentItem[] | undefined;
+  /** Library powers (official + user) — resolve names/parts for proficiency and save. */
+  officialPowers?: LibraryPower[] | undefined;
+  /** Library techniques (official + user) — resolve names/parts for proficiency and save. */
+  officialTechniques?: LibraryTechnique[] | undefined;
+  powerPartsDb?: CodexPartLike[] | undefined;
+  techniquePartsDb?: CodexPartLike[] | undefined;
+  itemPropertiesDb?: CodexPropertyLike[] | undefined;
+}
+
+/** Resolve draft power ids to CharacterPower shapes with parts/damage for proficiency TP. */
+function resolvePowersForProficiency(
+  draft: GuidedDraft,
+  officialPowers: LibraryPower[] = [],
+): CharacterPower[] {
+  const innatePowerIds = dedupeEntityRefs(draft.innatePowerIds ?? []);
+  const innateKeys = new Set(innatePowerIds.map((id) => normalizeId(id)));
+  const orderedIds = [
+    ...innatePowerIds,
+    ...dedupeEntityRefs(draft.powerIds ?? []).filter((id) => !innateKeys.has(normalizeId(id))),
+  ];
+
+  return orderedIds.map((id) => {
+    const lib = findByNormalizedId(officialPowers, id);
+    return {
+      id,
+      name: lib?.name ?? String(id),
+      innate: innateKeys.has(normalizeId(id)),
+      parts: lib?.parts ?? [],
+      damage: lib?.damage,
+    } as CharacterPower;
+  });
+}
+
+function resolveTechniquesForProficiency(
+  draft: GuidedDraft,
+  officialTechniques: LibraryTechnique[] = [],
+): CharacterTechnique[] {
+  return dedupeEntityRefs(draft.techniqueIds ?? []).map((id) => {
+    const lib = findByNormalizedId(officialTechniques, id);
+    return {
+      id,
+      name: lib?.name ?? String(id),
+      parts: lib?.parts ?? [],
+      damage: lib?.damage,
+    } as CharacterTechnique;
+  });
+}
+
+/** Armaments with properties/damage so buildRequiredProficiencies can compute TP. */
+function resolveArmamentsForProficiency(
+  inventory: Array<{ id: string; name: string; type: string }>,
+  officialItems: LibraryItem[] = [],
+  codexEquipment: CodexEquipmentItem[] = [],
+): { weapons: Item[]; shields: Item[]; armor: Item[] } {
+  const toItem = (row: { id: string; name: string }): Item => {
+    const official = findByNormalizedId(officialItems, row.id);
+    if (official) {
+      return {
+        id: row.id,
+        name: official.name || row.name,
+        properties: (official.properties ?? []) as Item['properties'],
+        damage: official.damage as Item['damage'],
+      } as Item;
+    }
+    const codex = findByNormalizedId(codexEquipment, row.id);
+    if (codex) {
+      return {
+        id: row.id,
+        name: codex.name || row.name,
+        properties: (codex.properties ?? []).map((name) => ({ name })),
+        damage: codex.damage,
+      } as Item;
+    }
+    return { id: row.id, name: row.name, properties: [] } as Item;
+  };
+
+  return {
+    weapons: inventory.filter((i) => i.type === 'weapon').map(toItem),
+    shields: inventory.filter((i) => i.type === 'shield').map(toItem),
+    armor: inventory.filter((i) => i.type === 'armor').map(toItem),
+  };
 }
 
 export function buildGuidedCharacterPayload(
   draft: GuidedDraft,
-  ctx: BuildGuidedCharacterContext
+  ctx: BuildGuidedCharacterContext,
 ): Partial<Character> {
   const level = 1;
   const abilities = draft.abilities;
@@ -52,29 +169,57 @@ export function buildGuidedCharacterPayload(
     powAbil,
     abilities,
     ctx.rules,
-    martAbil
+    martAbil,
   );
-  const maxEnergy = calculateMaxEnergy(enAlloc, powAbil || martAbil, abilities, level);
+  const maxEnergy = calculateMaxEnergyForArchetype(enAlloc, abilities, level, powAbil, martAbil);
 
-  const resolvedSpeciesTraits = applySpeciesTraitChoiceSelections(
-    ctx.species?.species_traits,
-    draft.selectedSpeciesTraitChoices,
-    (ctx.allTraits ?? []) as TraitWithChoiceOptions[]
-  );
+  const mixedPhysical =
+    draft.speciesMixed && ctx.speciesA && ctx.speciesB
+      ? averageMixedPhysical(ctx.speciesA, ctx.speciesB)
+      : null;
 
+  // Species traits are derived from the species codex on the sheet — do not
+  // persist them into selectedTraits (that caused duplicate trait rows).
+  // Keep choice resolutions so choice-trait options still apply on load.
   const ancestry = draft.speciesId
     ? {
         id: draft.speciesId,
         name: draft.speciesName ?? ctx.species?.name ?? '',
-        selectedTraits: [...resolvedSpeciesTraits, ...draft.selectedAncestryTraitIds],
+        // DESIGN_INTENT: selectedTraits = ancestry picks only (not species_traits).
+        selectedTraits: dedupeEntityRefs(draft.selectedAncestryTraitIds ?? []),
         selectedFlaw: draft.selectedFlawId,
         selectedCharacteristic: draft.selectedCharacteristicId,
         selectedSpeciesTraitChoices: draft.selectedSpeciesTraitChoices,
+        ...(draft.speciesMixed && draft.mixedSpeciesIds
+          ? {
+              mixed: true as const,
+              speciesIds: draft.mixedSpeciesIds,
+              ...(draft.mixedSpeciesNames ? { speciesNames: draft.mixedSpeciesNames } : {}),
+              ...(draft.selectedSpeciesTraits.length >= 2
+                ? {
+                    selectedSpeciesTraits: [
+                      draft.selectedSpeciesTraits[0],
+                      draft.selectedSpeciesTraits[1],
+                    ] as [string, string],
+                  }
+                : {}),
+              ...(draft.selectedFlawSpeciesId
+                ? { selectedFlawSpeciesId: draft.selectedFlawSpeciesId }
+                : {}),
+              ...(mixedPhysical ? { mixedPhysical } : {}),
+              ...(draft.selectedSpeciesSkillIds.length > 0
+                ? { selectedSpeciesSkillIds: draft.selectedSpeciesSkillIds }
+                : {}),
+            }
+          : {}),
         ...(draft.selectedSize ? { selectedSize: draft.selectedSize } : {}),
       }
     : undefined;
 
-  const speciesSkillIds = (ctx.species?.skills ?? []).map(String);
+  const speciesSkillIds =
+    draft.speciesMixed && draft.selectedSpeciesSkillIds.length > 0
+      ? draft.selectedSpeciesSkillIds.map(String)
+      : (ctx.species?.skills ?? []).map(String);
 
   const activePathSkillIds = (ctx.pathData?.level1?.skills ?? [])
     .map(String)
@@ -85,78 +230,173 @@ export function buildGuidedCharacterPayload(
     if (!(id in skillsForSave)) skillsForSave[id] = 0;
   });
 
-  const skillsArray = buildGuidedSkillsArray(skillsForSave, speciesSkillIds, ctx.codexSkills ?? []);
+  const skillsArray = buildCreatorSkillSaveRows(skillsForSave, {
+    speciesSkillIds,
+    codexSkills: ctx.codexSkills ?? [],
+    abilities,
+    skillAbilities: draft.skillAbilities,
+  });
 
-  const archetypeFeats = draft.archetypeFeatIds.map((id) => ({ id, name: String(id) }));
-  const characterFeats = draft.characterFeatIds.map((id) => ({ id, name: String(id) }));
+  // Lean save refs — resolve feat names from codex (same pattern as powers/techniques).
+  const resolveFeatRef = (id: string) => {
+    const feat = findByNormalizedId(ctx.codexFeats, id);
+    return { id, name: feat?.name?.trim() || String(id) };
+  };
+  const archetypeFeats = dedupeEntityRefs(draft.archetypeFeatIds.map(resolveFeatRef));
+  const characterFeats = dedupeEntityRefs(draft.characterFeatIds.map(resolveFeatRef));
 
-  const powers = draft.powerIds.map((id) => ({ id, name: String(id) }));
-  const techniques = draft.techniqueIds.map((id) => ({ id, name: String(id) }));
+  // Lean save refs (parts stripped by cleanForSave) — resolve names from official + user library.
+  const innatePowerIds = dedupeEntityRefs(draft.innatePowerIds ?? []);
+  const innateKeys = new Set(innatePowerIds.map((id) => normalizeId(id)));
+  const powersForSave: CharacterPower[] = [
+    ...innatePowerIds.map((id) => {
+      const lib = findByNormalizedId(ctx.officialPowers, id);
+      return { id, name: lib?.name ?? String(id), innate: true as const };
+    }),
+    ...dedupeEntityRefs(draft.powerIds ?? [])
+      .filter((id) => !innateKeys.has(normalizeId(id)))
+      .map((id) => {
+        const lib = findByNormalizedId(ctx.officialPowers, id);
+        return { id, name: lib?.name ?? String(id), innate: false as const };
+      }),
+  ];
+  const techniquesForSave: CharacterTechnique[] = dedupeEntityRefs(draft.techniqueIds ?? []).map(
+    (id) => {
+      const lib = findByNormalizedId(ctx.officialTechniques, id);
+      return { id, name: lib?.name ?? String(id) };
+    },
+  );
 
   const inventory = (() => {
     const lookup = buildEquipmentLookup(ctx.officialItems, ctx.codexEquipment);
-    const rows: Array<{ id: string; name: string; quantity: number; type: 'weapon' | 'armor' | 'equipment' }> = [];
+    const rows: Array<{
+      id: string;
+      name: string;
+      quantity: number;
+      type: 'weapon' | 'armor' | 'equipment' | 'shield';
+    }> = [];
 
     const pushRow = (ref: { id: string; quantity: number }) => {
       const resolved = resolveEquipmentRef(ref, lookup);
+      const official = findByNormalizedId(ctx.officialItems, ref.id);
+      const codex = findByNormalizedId(ctx.codexEquipment, ref.id);
+      const rawType = String(official?.type ?? codex?.type ?? '').toLowerCase();
+      let type: 'weapon' | 'armor' | 'equipment' | 'shield' =
+        inventoryTypeForResolvedItem(resolved);
+      if (rawType === 'shield') type = 'shield';
+
       rows.push({
         id: ref.id,
         name: resolved.name,
         quantity: ref.quantity,
-        type: inventoryTypeForResolvedItem(resolved),
+        type,
       });
     };
 
-    draft.armaments.forEach(pushRow);
+    draftArmamentRefs(draft).forEach(pushRow);
     draft.equipment.forEach(pushRow);
     return rows;
   })();
 
+  const drForInventoryRow = (row: { id: string }) => {
+    const official = findByNormalizedId(ctx.officialItems, row.id);
+    if (official) return resolveArmorDamageReduction(official);
+    const codex = findByNormalizedId(ctx.codexEquipment, row.id);
+    if (codex) {
+      return resolveArmorDamageReduction({
+        armorValue: codex.armor_value,
+        properties: codex.properties?.map((name) => ({ name })),
+      });
+    }
+    return 0;
+  };
+
+  const equippedInventory = applyStarterEquippedFlags(inventory, drForInventoryRow);
+
+  // DESIGN_INTENT: Guided drafts store lean ids only. Resolve parts/properties from
+  // official/codex libraries here so buildRequiredProficiencies matches custom
+  // getCharacter(), then persist the computed list — cleanForSave strips power/item
+  // parts but keeps `proficiencies` (SAVEABLE_FIELDS).
+  const powersForProf = resolvePowersForProficiency(draft, ctx.officialPowers);
+  const techniquesForProf = resolveTechniquesForProficiency(draft, ctx.officialTechniques);
+  const armamentsForProf = resolveArmamentsForProficiency(
+    equippedInventory,
+    ctx.officialItems,
+    ctx.codexEquipment,
+  );
+  const proficiencies = buildRequiredProficiencies({
+    powers: powersForProf,
+    techniques: techniquesForProf,
+    weapons: armamentsForProf.weapons,
+    shields: armamentsForProf.shields,
+    armor: armamentsForProf.armor,
+    powerPartsDb: ctx.powerPartsDb ?? [],
+    techniquePartsDb: ctx.techniquePartsDb ?? [],
+    itemPropertiesDb: ctx.itemPropertiesDb ?? [],
+  });
+
+  const startingCurrency = computeStartingCurrency(level);
+  const savedCurrency = clampSavedCurrency(
+    typeof draft.currency === 'number' ? draft.currency : startingCurrency,
+  );
+  const { pow_prof, mart_prof } = resolveArchetypeProficiencyStart(type, ctx.archetype);
+
+  // DESIGN_INTENT: same libraryTabVisibility prefs as sheet eye toggle (TASK-501).
+  const libraryTabVisibility = defaultLibraryTabVisibilityForArchetype(type);
+
+  const archetypePayload = ctx.archetype
+    ? {
+        id: String(ctx.archetype.id),
+        type,
+        ...(ctx.archetype.power_prof_start != null
+          ? { power_prof_start: ctx.archetype.power_prof_start }
+          : {}),
+        ...(ctx.archetype.martial_prof_start != null
+          ? { martial_prof_start: ctx.archetype.martial_prof_start }
+          : {}),
+      }
+    : { id: type, type };
+
   return {
     name: draft.name.trim() || 'Unnamed Character',
     level,
+    status: 'complete',
     abilities,
-    creationMode: 'path',
-    ...(draft.archetypePathId && { archetypePathId: draft.archetypePathId }),
-    ...(ctx.archetype && {
-      archetype: {
-        id: String(ctx.archetype.id),
-        type,
-      },
-    }),
+    ...(draft.archetypePathId ? { archetypePathId: draft.archetypePathId } : {}),
+    archetype: archetypePayload,
     ...(powAbil && { pow_abil: powAbil }),
     ...(martAbil && { mart_abil: martAbil }),
-    mart_prof: type === 'martial' ? 2 : type === 'powered-martial' ? 1 : 0,
-    pow_prof: type === 'power' ? 2 : type === 'powered-martial' ? 1 : 0,
+    mart_prof,
+    pow_prof,
     healthPoints: hpAlloc,
     energyPoints: enAlloc,
+    currentHealth: maxHealth,
+    currentEnergy: maxEnergy,
     health: { current: maxHealth, max: maxHealth },
     energy: { current: maxEnergy, max: maxEnergy },
-    currency: CHARACTER_STARTING_CURRENCY,
+    currency: savedCurrency,
     unarmedProwess: draft.unarmedProwess ?? 0,
     ancestry,
     skills: skillsArray as unknown as Character['skills'],
     archetypeFeats,
     feats: characterFeats,
-    powers,
-    techniques,
+    powers: powersForSave,
+    techniques: techniquesForSave,
     equipment: {
-      inventory,
-      weapons: inventory.filter((i) => i.type === 'weapon'),
-      armor: [],
-      items: inventory.filter((i) => i.type === 'equipment'),
-      shields: [],
+      inventory: equippedInventory,
+      weapons: equippedInventory.filter((i) => i.type === 'weapon'),
+      armor: equippedInventory.filter((i) => i.type === 'armor'),
+      items: equippedInventory.filter((i) => i.type === 'equipment'),
+      shields: equippedInventory.filter((i) => i.type === 'shield'),
     },
-    defenseVals: { ...DEFAULT_DEFENSE_SKILLS },
+    proficiencies,
+    ...(libraryTabVisibility && { libraryTabVisibility }),
+    defenseVals: { ...(draft.defenseVals ?? DEFAULT_DEFENSE_SKILLS) },
     portrait: draft.portraitUrl ?? undefined,
-    appearance: [
-      draft.age ? `Age: ${draft.age}` : '',
-      draft.heightCm ? `Height: ${draft.heightCm} cm` : '',
-      draft.weightKg ? `Weight: ${draft.weightKg} kg` : '',
-      draft.appearanceNotes?.trim() ?? '',
-    ]
-      .filter(Boolean)
-      .join('\n'),
+    height: draft.heightCm ?? undefined,
+    weight: draft.weightKg ?? undefined,
+    appearance: mergeAgeIntoAppearance(draft.age, draft.appearanceNotes?.trim() ?? ''),
+    description: draft.description?.trim() || undefined,
   };
 }
 
@@ -164,7 +404,7 @@ export function buildGuidedCharacterPayload(
 export function resolveGuidedRecommendedAbilities(
   pathData: ArchetypePathData | undefined,
   primary?: AbilityName | null,
-  secondary?: AbilityName | null
+  secondary?: AbilityName | null,
 ): Record<AbilityName, number> | null {
   const fromPath = pathData?.level1?.recommended_abilities;
   if (fromPath && Object.keys(fromPath).length > 0) {

@@ -18,7 +18,7 @@ import {
  * Authenticated a11y baselines (TASK-385) — ratcheted separately from public routes.
  */
 test.describe('authenticated surfaces · accessibility', () => {
-  test.beforeEach(({ page: _page }, testInfo) => {
+  test.beforeEach((_, testInfo) => {
     if (!hasAuthCredentials()) {
       testInfo.skip(true, 'Set E2E_TEST_EMAIL and E2E_TEST_PASSWORD (DEV-003)');
     }

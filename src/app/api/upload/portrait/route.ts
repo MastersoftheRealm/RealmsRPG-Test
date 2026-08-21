@@ -8,8 +8,10 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { getSession } from '@/lib/supabase/session';
-import { validateImageMagicBytes } from '@/lib/validate-image';
+import { detectImageMime, extensionForImageMime } from '@/lib/validate-image';
 import { buildRateLimitKey, resolveClientIp, uploadLimiter } from '@/lib/rate-limit';
+import { apiErrorResponse, logApiError } from '@/lib/api-error';
+import { verifyMutationRequest } from '@/lib/api-validation';
 
 const BUCKET = 'portraits';
 const MAX_SIZE = 5 * 1024 * 1024; // 5MB
@@ -21,13 +23,19 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
+  const denied = verifyMutationRequest(request);
+  if (denied) return denied;
+
   const key = buildRateLimitKey('upload-portrait', {
     userId: user.uid,
     ip: resolveClientIp(request.headers),
   });
-  const { success } = uploadLimiter.check(key);
+  const { success } = await uploadLimiter.check(key);
   if (!success) {
-    return NextResponse.json({ error: 'Too many requests' }, { status: 429, headers: { 'Retry-After': '60' } });
+    return NextResponse.json(
+      { error: 'Too many requests' },
+      { status: 429, headers: { 'Retry-After': '60' } },
+    );
   }
 
   const formData = await request.formData();
@@ -52,14 +60,13 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: 'Image must be less than 5MB' }, { status: 400 });
   }
 
-  // Validate file content matches a real image format (prevents spoofed MIME types)
-  const isValidImage = await validateImageMagicBytes(file);
-  if (!isValidImage) {
+  const detectedMime = await detectImageMime(file);
+  if (!detectedMime) {
     return NextResponse.json({ error: 'Invalid image file' }, { status: 400 });
   }
 
-  // Always use .jpg for consistency (cropped images are JPEG); removes old portrait if different extension
-  const path = `${user.uid}/${charId}.jpg`;
+  const ext = extensionForImageMime(detectedMime);
+  const path = `${user.uid}/${charId}.${ext}`;
 
   try {
     const supabase = await createClient();
@@ -72,37 +79,49 @@ export async function POST(request: NextRequest) {
       .eq('user_id', user.uid)
       .maybeSingle();
     if (ownErr) {
-      console.error('Portrait upload ownership check error:', ownErr);
-      return NextResponse.json({ error: 'Upload failed' }, { status: 500 });
+      return apiErrorResponse(
+        'Upload failed',
+        500,
+        'POST /api/upload/portrait (ownership)',
+        ownErr,
+      );
     }
     if (!ownedChar) {
       return NextResponse.json({ error: 'Character not found' }, { status: 404 });
     }
 
-    // Delete any existing portrait for this character (different extensions)
-    const { data: existing } = await supabase.storage.from(BUCKET).list(user.uid);
+    // Delete any existing portrait for this character (different extensions).
+    // Cleanup only: a failure leaves an orphaned object but must not fail the upload.
+    const { data: existing, error: listError } = await supabase.storage.from(BUCKET).list(user.uid);
+    if (listError) {
+      logApiError('POST /api/upload/portrait (stale portrait list)', listError);
+    }
     if (existing?.length) {
       const toRemove = existing
         .filter((f) => f.name?.startsWith(`${charId}.`))
         .map((f) => `${user.uid}/${f.name}`);
       if (toRemove.length) {
-        await supabase.storage.from(BUCKET).remove(toRemove);
+        const { error: removeError } = await supabase.storage.from(BUCKET).remove(toRemove);
+        if (removeError) {
+          logApiError('POST /api/upload/portrait (stale portrait remove)', removeError);
+        }
       }
     }
 
     const { error: uploadError } = await supabase.storage
       .from(BUCKET)
-      .upload(path, file, { upsert: true, contentType: file.type });
+      .upload(path, file, { upsert: true, contentType: detectedMime });
 
     if (uploadError) {
-      console.error('Portrait upload error:', uploadError);
-      return NextResponse.json({ error: uploadError.message }, { status: 500 });
+      return apiErrorResponse('Upload failed', 500, 'POST /api/upload/portrait', uploadError);
     }
 
-    const { data: { publicUrl } } = supabase.storage.from(BUCKET).getPublicUrl(path);
+    const {
+      data: { publicUrl },
+    } = supabase.storage.from(BUCKET).getPublicUrl(path);
     return NextResponse.json({ url: publicUrl });
   } catch (err) {
-    console.error('[API Error] POST /api/upload/portrait:', err);
-    return NextResponse.json({ error: 'Upload failed' }, { status: 500 });
+    logApiError('POST /api/upload/portrait', err);
+    return apiErrorResponse('Upload failed', 500);
   }
 }

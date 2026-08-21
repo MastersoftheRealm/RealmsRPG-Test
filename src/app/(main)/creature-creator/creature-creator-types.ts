@@ -3,12 +3,17 @@
  */
 
 import type { ArchetypeType } from '@/components/creator';
-import type { CreaturePower, CreatureTechnique, CreatureFeat, CreatureArmament } from './transformers';
+import type {
+  CreaturePower,
+  CreatureTechnique,
+  CreatureFeat,
+  CreatureArmament,
+} from './transformers';
 
 export interface CreatureSkill {
-  id?: string;
-  baseSkillId?: string;
-  isSubSkill?: boolean;
+  id?: string | undefined;
+  baseSkillId?: string | undefined;
+  isSubSkill?: boolean | undefined;
   name: string;
   value: number;
   proficient: boolean;
@@ -20,6 +25,8 @@ export interface CreatureState {
   type: string;
   size: string;
   description: string;
+  imageId: string | null;
+  imageUrl: string | null;
   archetypeType: ArchetypeType;
   abilities: {
     strength: number;
@@ -52,7 +59,10 @@ export interface CreatureState {
   powers: CreaturePower[];
   techniques: CreatureTechnique[];
   feats: CreatureFeat[];
-  armaments: CreatureArmament[];
+  weapons: CreatureArmament[];
+  armor: CreatureArmament[];
+  shields: CreatureArmament[];
+  equipment: CreatureArmament[];
   enablePowers: boolean;
   enableTechniques: boolean;
   enableArmaments: boolean;

@@ -31,5 +31,5 @@ Tags help players filter feats by **mechanic**, **playstyle**, or **skill linkag
 ## Code
 
 - Parse: `parseFeatTagsFromDb()` in `src/lib/codex/feat-tags.ts`
-- Display chips: `buildFeatDetailSections()` → `tagDescriptorChip()`
+- Display chips: `buildFeatDetailSections()` → `tagDescriptorChip()` — **Tags** section is last (after ability/skill requirements and feat levels) and always shows its section label, even for a single tag.
 - Filter UI: `buildFeatFilterOptions()` / `filterFeats()` in `src/lib/codex/feat-list.ts`

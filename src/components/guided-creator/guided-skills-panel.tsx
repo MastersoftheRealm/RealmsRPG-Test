@@ -1,28 +1,40 @@
 /**
  * GuidedSkillsPanel — Layer 1 skill allocation for the guided creator.
- * Simplified rows: name + source chip, bonus ±, X remove on right, tap to expand description.
+ * Simplified rows: name + ability + source chip, bonus ± with formula tip, X remove, expand description.
+ * Layer 2 browse lives in the parent step (below recommended skills), not on this list.
  */
 
 'use client';
 
-import { useState, useMemo, useCallback } from 'react';
+import { useMemo, useCallback, useId, useState } from 'react';
 import { X, ChevronDown } from 'lucide-react';
 import { cn, formatBonus } from '@/lib/utils';
 import { useCodexSkills, useGameRules, type Skill } from '@/hooks';
 import {
   calculateSkillBonusWithProficiency,
+  calculateSubSkillBonusWithProficiency,
   getHighestLinkedAbilityKey,
   getLinkedAbilityKeys,
 } from '@/lib/game/formulas';
+import { abilityDefenseBonusesFromAbilities } from '@/lib/game/calculations';
 import {
   getSkillValueIncreaseCost,
   resolveSkillAllocationRules,
 } from '@/lib/game/skill-allocation';
-import type { AddSkillModalSkillBadge } from '@/components/shared/add-skill-modal';
-import { AddSkillModal, PointStatus } from '@/components/shared';
-import { Button, DescriptorChip, IconButton, Spinner } from '@/components/ui';
+import { formatAbilityLabel } from '@/lib/constants/ability-effect-blurbs';
+import { ABILITY_FILTER_OPTIONS } from '@/lib/constants/skills';
+import {
+  DecrementButton,
+  DefenseBonusesCard,
+  IncrementButton,
+  InfoTippy,
+  PointStatus,
+} from '@/components/patterns';
+import { FilterNativeSelect } from '@/components/patterns/filters';
+import { DescriptorChip, IconButton, Spinner } from '@/components/ui';
 import { GUIDED_CREATOR_COPY } from '@/lib/constants/site-copy';
-import type { Abilities } from '@/types';
+import { getGuidedSkillBonusHelp } from '../../../public/tooltip-text';
+import type { Abilities, AbilityName, DefenseSkills } from '@/types';
 
 const panelCopy = GUIDED_CREATOR_COPY.steps.skills;
 
@@ -31,23 +43,32 @@ export interface GuidedSkillsPanelProps {
   allocations: Record<string, number>;
   speciesSkillIds: Set<string>;
   pathSkillIds: Set<string>;
-  pathSourceLabel?: string;
+  pathSourceLabel?: string | undefined;
   totalPoints: number;
   spentPoints: number;
   onAllocationsChange: (allocations: Record<string, number>) => void;
-  /** Descriptor chips for recommended skills in browse-all modal (Layer 2). */
-  browseSkillBadgesById?: Record<string, AddSkillModalSkillBadge[]>;
-  /** Skill ids to pin at top of browse-all modal. */
-  browseRecommendedSkillIds?: string[];
-  className?: string;
+  defenseSkills: DefenseSkills;
+  onDefenseChange: (defense: DefenseSkills) => void;
+  skillAbilities?: Record<string, string> | undefined;
+  onSkillAbilityChange?: ((skillId: string, abilityKey: string) => void) | undefined;
+  level?: number | undefined;
+  className?: string | undefined;
 }
 
 interface GuidedSkillRowItem {
   skill: Skill;
   value: number;
   bonus: number;
+  abilityLabel: string | null;
+  abilityValue: number;
+  multiAbility: boolean;
+  chosenAbilityKey?: string | undefined;
+  linkedAbilityKeys: string[];
+  abilitySkillId: string;
   isSpecies: boolean;
   isPath: boolean;
+  isSubSkill: boolean;
+  baseSkillName?: string | undefined;
   canIncrease: boolean;
   canDecrease: boolean;
 }
@@ -58,117 +79,195 @@ function GuidedSkillRow({
   onDecrease,
   onIncrease,
   onRemove,
+  onAbilityChange,
 }: {
   item: GuidedSkillRowItem;
-  pathSourceLabel?: string;
+  pathSourceLabel?: string | undefined;
   onDecrease: () => void;
   onIncrease: () => void;
-  onRemove?: () => void;
+  onRemove?: (() => void) | undefined;
+  onAbilityChange?: ((skillId: string, abilityKey: string) => void) | undefined;
 }) {
   const [expanded, setExpanded] = useState(false);
-  const { skill, bonus, isSpecies, isPath, canIncrease, canDecrease } = item;
+  const abilitySelectId = useId();
+  const {
+    skill,
+    value,
+    bonus,
+    abilityLabel,
+    abilityValue,
+    multiAbility,
+    chosenAbilityKey,
+    linkedAbilityKeys,
+    abilitySkillId,
+    isSpecies,
+    isPath,
+    isSubSkill,
+    baseSkillName,
+    canIncrease,
+    canDecrease,
+  } = item;
   const bonusTone =
-    bonus > 0
-      ? 'text-success-700 dark:text-success-400'
-      : bonus < 0
-        ? 'text-danger-700 dark:text-danger-400'
-        : 'text-text-secondary';
+    bonus > 0 ? 'text-success-fg' : bonus < 0 ? 'text-danger-fg' : 'text-text-secondary';
 
   const hasDescription = Boolean(skill.description);
+  const skillName = skill.name ?? 'skill';
+  const bonusHelp = abilityLabel
+    ? getGuidedSkillBonusHelp({
+        abilityLabel,
+        abilityValue,
+        skillValue: value,
+        skillBonus: bonus,
+        multiAbility,
+      })
+    : null;
 
   return (
     <li className="border-b border-border-light last:border-b-0">
-      <div className="flex items-center gap-2 sm:gap-3 py-2.5">
-        <button
-          type="button"
-          onClick={() => hasDescription && setExpanded(!expanded)}
-          disabled={!hasDescription}
-          className={cn(
-            'min-w-0 flex-1 flex items-center gap-2 text-left min-h-11',
-            hasDescription && 'cursor-pointer'
-          )}
-          aria-expanded={hasDescription ? expanded : undefined}
-          aria-label={hasDescription ? `${expanded ? 'Collapse' : 'Expand'} ${skill.name} description` : undefined}
-        >
-          <div className="min-w-0 flex-1">
-            <div className="flex flex-wrap items-center gap-1.5">
-              <span className="font-nunito font-semibold text-text-primary">{skill.name}</span>
-              {isSpecies && (
-                <DescriptorChip variant="descriptor" size="sm">Species</DescriptorChip>
-              )}
-              {isPath && pathSourceLabel && (
-                <DescriptorChip variant="primary" size="sm">{pathSourceLabel}</DescriptorChip>
-              )}
-            </div>
-          </div>
-          {hasDescription && (
-            <ChevronDown
+      {/* DESIGN_INTENT: Name, chevron, and desc chips share one horizontal band (chips to the
+          right of the name); wrap only when width forces it. Controls stay shrink-0. */}
+      <div className="flex items-start gap-2 py-2">
+        <div className="min-w-0 flex-1">
+          <div className="flex flex-wrap items-center gap-x-1.5 gap-y-1">
+            <button
+              type="button"
+              onClick={() => hasDescription && setExpanded(!expanded)}
+              disabled={!hasDescription}
               className={cn(
-                'h-4 w-4 shrink-0 text-text-muted transition-transform',
-                expanded && 'rotate-180'
+                'inline-flex min-h-11 max-w-full shrink-0 items-center gap-1.5 py-0 text-left',
+                hasDescription ? 'cursor-pointer' : 'cursor-default',
               )}
-              aria-hidden
-            />
-          )}
-        </button>
-
-        <div className="flex shrink-0 items-center gap-0.5 sm:gap-1">
-          <button
-            type="button"
-            onClick={onDecrease}
-            disabled={!canDecrease}
-            aria-label={`Decrease ${skill.name ?? 'skill'} bonus`}
-            className={cn(
-              'flex h-11 w-11 items-center justify-center rounded-lg text-lg font-bold transition-colors',
-              canDecrease
-                ? 'bg-surface-alt text-text-secondary hover:bg-surface'
-                : 'cursor-not-allowed text-border-light'
+              aria-expanded={hasDescription ? expanded : undefined}
+              aria-label={
+                hasDescription
+                  ? `${expanded ? 'Collapse' : 'Expand'} ${skillName} description`
+                  : undefined
+              }
+            >
+              <span className="font-nunito font-semibold text-text-primary">
+                {item.isSubSkill ? <span className="pl-1 text-text-secondary">↳ </span> : null}
+                {skill.name}
+              </span>
+              {hasDescription && (
+                <ChevronDown
+                  className={cn(
+                    'h-4 w-4 shrink-0 text-text-muted transition-transform',
+                    expanded && 'rotate-180',
+                  )}
+                  aria-hidden
+                />
+              )}
+            </button>
+            {/* DESIGN_INTENT: Ability = primary (guided ability chips); Species = descriptor; path = primary source */}
+            {multiAbility && onAbilityChange && linkedAbilityKeys.length > 1 ? (
+              <FilterNativeSelect
+                id={abilitySelectId}
+                value={chosenAbilityKey ?? linkedAbilityKeys[0]}
+                onChange={(e) => onAbilityChange(abilitySkillId, e.target.value)}
+                aria-label={panelCopy.abilityPickerLabel(skillName)}
+                wrapperClassName="w-auto"
+                className="h-11 min-h-11 w-auto min-w-[7.5rem] px-2 pr-9 text-xs md:h-8 md:min-h-8"
+              >
+                {linkedAbilityKeys.map((key) => {
+                  const opt = ABILITY_FILTER_OPTIONS.find((o) => o.value === key);
+                  return (
+                    <option key={key} value={key}>
+                      {opt?.label ?? formatAbilityLabel(key as AbilityName)}
+                    </option>
+                  );
+                })}
+              </FilterNativeSelect>
+            ) : (
+              abilityLabel && (
+                <DescriptorChip
+                  variant="primary"
+                  size="sm"
+                  title={`Contributing Ability: ${abilityLabel}`}
+                >
+                  {abilityLabel}
+                </DescriptorChip>
+              )
             )}
-          >
-            −
-          </button>
-          <span
-            className={cn(
-              'min-w-[2.75rem] text-center font-display text-lg font-bold tabular-nums',
-              bonusTone
+            {isSubSkill && baseSkillName && (
+              <DescriptorChip variant="descriptor" size="sm" title={baseSkillName}>
+                {baseSkillName}
+              </DescriptorChip>
             )}
-          >
-            {formatBonus(bonus)}
-          </span>
-          <button
-            type="button"
-            onClick={onIncrease}
-            disabled={!canIncrease}
-            aria-label={`Increase ${skill.name ?? 'skill'} bonus`}
-            className={cn(
-              'flex h-11 w-11 items-center justify-center rounded-lg text-lg font-bold transition-colors',
-              canIncrease
-                ? 'bg-surface-alt text-text-secondary hover:bg-surface'
-                : 'cursor-not-allowed text-border-light'
+            {isSpecies && (
+              <DescriptorChip variant="descriptor" size="sm">
+                Species
+              </DescriptorChip>
             )}
-          >
-            +
-          </button>
+            {isPath && pathSourceLabel && (
+              <DescriptorChip variant="primary" size="sm" title={pathSourceLabel}>
+                {pathSourceLabel}
+              </DescriptorChip>
+            )}
+          </div>
         </div>
 
-        {onRemove ? (
-          <IconButton
-            variant="ghost"
+        <div className="flex shrink-0 items-center gap-0.5 sm:gap-1">
+          <DecrementButton
+            onClick={onDecrease}
+            disabled={!canDecrease}
             size="sm"
-            onClick={onRemove}
-            label={`Remove ${skill.name ?? 'skill'}`}
-            className="shrink-0 text-danger-700 hover:bg-danger-light dark:text-danger-400 min-h-11 min-w-11"
-          >
-            <X className="h-4 w-4" aria-hidden />
-          </IconButton>
-        ) : (
-          <span className="shrink-0 w-11" aria-hidden />
-        )}
+            title={`Decrease ${skillName} Skill Value`}
+          />
+          {/* DESIGN_INTENT: Skill Bonus tip uses InfoTippy + getGuidedSkillBonusHelp (parameterized
+              like getAbilityPointsHelp) — supplementary formula copy with live numbers, not a required control. */}
+          {bonusHelp ? (
+            <InfoTippy
+              content={bonusHelp}
+              label={`How ${skillName} Skill Bonus is calculated`}
+              placement="top"
+            >
+              <button
+                type="button"
+                aria-label={`${formatBonus(bonus)}, how ${skillName} Skill Bonus is calculated`}
+                className={cn(
+                  'min-h-11 min-w-[2.5rem] rounded-md px-0.5 text-center font-display text-base font-bold tabular-nums sm:min-w-[2.75rem] sm:text-lg',
+                  'hover:bg-surface-alt focus-visible:ring-2 focus-visible:ring-primary-outline-border focus-visible:ring-offset-2 focus-visible:outline-none',
+                  bonusTone,
+                )}
+              >
+                {formatBonus(bonus)}
+              </button>
+            </InfoTippy>
+          ) : (
+            <span
+              className={cn(
+                'min-w-[2.5rem] text-center font-display text-base font-bold tabular-nums sm:min-w-[2.75rem] sm:text-lg',
+                bonusTone,
+              )}
+            >
+              {formatBonus(bonus)}
+            </span>
+          )}
+          <IncrementButton
+            onClick={onIncrease}
+            disabled={!canIncrease}
+            size="sm"
+            title={`Increase ${skillName} Skill Value`}
+          />
+          {onRemove ? (
+            <IconButton
+              variant="ghost"
+              size="sm"
+              onClick={onRemove}
+              label={`Remove ${skillName}`}
+              className="min-h-11 min-w-11 shrink-0 text-danger-fg hover:bg-danger-light"
+            >
+              <X className="h-4 w-4" aria-hidden />
+            </IconButton>
+          ) : (
+            <span className="w-11 shrink-0" aria-hidden />
+          )}
+        </div>
       </div>
 
       {expanded && skill.description && (
-        <div className="pb-3 pl-2 pr-12">
-          <p className="font-nunito text-sm text-text-secondary leading-relaxed">
+        <div className="pr-2 pb-2.5">
+          <p className="font-nunito text-sm leading-relaxed text-text-secondary">
             {skill.description}
           </p>
         </div>
@@ -186,19 +285,18 @@ export function GuidedSkillsPanel({
   totalPoints,
   spentPoints,
   onAllocationsChange,
-  browseSkillBadgesById,
-  browseRecommendedSkillIds,
+  defenseSkills,
+  onDefenseChange,
+  skillAbilities = {},
+  onSkillAbilityChange,
+  level = 1,
   className,
 }: GuidedSkillsPanelProps) {
   const { data: allSkills = [], isLoading } = useCodexSkills();
   const { rules } = useGameRules();
   const skillRules = resolveSkillAllocationRules(rules);
-  const [addSkillModalOpen, setAddSkillModalOpen] = useState(false);
 
   const remainingPoints = totalPoints - spentPoints;
-  const maxAddSkillSelections = Math.floor(
-    remainingPoints / skillRules.gainProficiencyCost
-  );
 
   const visibleSkillIds = useMemo(() => {
     const ids = new Set<string>();
@@ -210,38 +308,52 @@ export function GuidedSkillsPanel({
   }, [speciesSkillIds, allocations]);
 
   const orderedSkills = useMemo(() => {
-    const base = allSkills.filter(
-      (s) => s.base_skill_id === undefined && visibleSkillIds.has(String(s.id))
-    );
+    const subsByBase: Record<string, Skill[]> = {};
+    const inList = (id: string | number) => visibleSkillIds.has(String(id));
+
+    allSkills.forEach((s) => {
+      if (s.base_skill_id !== undefined) {
+        const baseKey = String(s.base_skill_id);
+        if (!subsByBase[baseKey]) subsByBase[baseKey] = [];
+        subsByBase[baseKey].push(s);
+      }
+    });
+
+    const baseSkills = allSkills.filter((s) => s.base_skill_id === undefined);
     const rank = (id: string) => {
       if (speciesSkillIds.has(id)) return 0;
       if (pathSkillIds.has(id)) return 1;
       return 2;
     };
-    return base.sort((a, b) => {
+    baseSkills.sort((a, b) => {
       const ra = rank(String(a.id));
       const rb = rank(String(b.id));
       if (ra !== rb) return ra - rb;
       return String(a.name ?? '').localeCompare(String(b.name ?? ''));
     });
-  }, [allSkills, visibleSkillIds, speciesSkillIds, pathSkillIds]);
 
-  const existingSkillNames = useMemo(
-    () =>
-      allSkills
-        .filter((s) => visibleSkillIds.has(String(s.id)))
-        .map((s) => s.name)
-        .filter((n): n is string => Boolean(n)),
-    [allSkills, visibleSkillIds]
-  );
+    const result: Skill[] = [];
+    baseSkills.forEach((base) => {
+      const baseKey = String(base.id);
+      const subs = subsByBase[baseKey] ?? [];
+      const subsInList = subs.filter((sub) => inList(sub.id));
+      const baseInList = inList(base.id);
+      if (!baseInList && subsInList.length === 0) return;
+      if (baseInList) result.push(base);
+      subsInList.sort((a, b) => String(a.name ?? '').localeCompare(String(b.name ?? '')));
+      result.push(...subsInList);
+    });
+    return result;
+  }, [allSkills, visibleSkillIds, speciesSkillIds, pathSkillIds]);
 
   const handleRemove = useCallback(
     (skillId: string) => {
       if (speciesSkillIds.has(skillId)) return;
-      const { [skillId]: _, ...rest } = allocations;
+      const rest = { ...allocations };
+      delete rest[skillId];
       onAllocationsChange(rest);
     },
-    [allocations, speciesSkillIds, onAllocationsChange]
+    [allocations, speciesSkillIds, onAllocationsChange],
   );
 
   const handleAllocate = useCallback(
@@ -250,71 +362,108 @@ export function GuidedSkillsPanel({
       if (!skill) return;
 
       const current = allocations[skillId] ?? 0;
+      const isSubSkill = skill.base_skill_id !== undefined;
 
       if (delta > 0) {
-        const cost = getSkillValueIncreaseCost(current, false, skillRules);
+        const cost = getSkillValueIncreaseCost(current, isSubSkill, skillRules);
         if (remainingPoints < cost) return;
         onAllocationsChange({ ...allocations, [skillId]: current + 1 });
       } else if (current > 0) {
-        onAllocationsChange({ ...allocations, [skillId]: current - 1 });
+        const newVal = current - 1;
+        if (isSubSkill && newVal === 0) {
+          handleRemove(skillId);
+        } else {
+          onAllocationsChange({ ...allocations, [skillId]: newVal });
+        }
       }
     },
-    [allocations, allSkills, remainingPoints, onAllocationsChange, skillRules]
-  );
-
-  const handleAddSkills = useCallback(
-    (skills: Skill[]) => {
-      const next = { ...allocations };
-      skills.forEach((s) => {
-        const key = String(s.id);
-        if (!(key in next)) next[key] = 0;
-      });
-      onAllocationsChange(next);
-      setAddSkillModalOpen(false);
-    },
-    [allocations, onAllocationsChange]
+    [allocations, allSkills, remainingPoints, onAllocationsChange, skillRules, handleRemove],
   );
 
   const rowItems = useMemo((): GuidedSkillRowItem[] => {
     return orderedSkills.map((skill) => {
       const skillId = String(skill.id);
+      const isSubSkill = skill.base_skill_id !== undefined;
+      const baseSkill = isSubSkill
+        ? allSkills.find((s) => String(s.id) === String(skill.base_skill_id))
+        : null;
+      const baseValue = baseSkill ? (allocations[String(baseSkill.id)] ?? 0) : 0;
+      const baseProficient = Boolean(
+        baseSkill &&
+        (speciesSkillIds.has(String(baseSkill.id)) ||
+          (allocations[String(baseSkill.id)] ?? -1) >= 0),
+      );
       const value = Math.max(0, allocations[skillId] ?? 0);
       const isSpecies = speciesSkillIds.has(skillId);
       const isPath = !isSpecies && pathSkillIds.has(skillId);
-      const linkedKeys = getLinkedAbilityKeys(skill.ability);
+      const skillForAbility = baseSkill ?? skill;
+      const linkedKeys = getLinkedAbilityKeys(skillForAbility.ability);
+      const abilitySkillId = String(skillForAbility.id);
       const chosenAbilityKey =
-        getHighestLinkedAbilityKey(skill.ability, abilities) ?? linkedKeys[0];
-      const bonus = calculateSkillBonusWithProficiency(
-        skill.ability,
-        value,
-        abilities,
-        true,
-        chosenAbilityKey
-      );
-      const canInc =
-        remainingPoints >=
-        (value === 0
-          ? skillRules.gainProficiencyCost
-          : getSkillValueIncreaseCost(value, false, skillRules));
+        skillAbilities[abilitySkillId] ??
+        getHighestLinkedAbilityKey(skillForAbility.ability, abilities) ??
+        linkedKeys[0];
+      const abilityValue = chosenAbilityKey ? (abilities[chosenAbilityKey as AbilityName] ?? 0) : 0;
+      const abilityLabel = chosenAbilityKey
+        ? formatAbilityLabel(chosenAbilityKey as AbilityName)
+        : null;
+      const proficient = isSubSkill ? value >= 1 : value >= 0;
+      const bonus = isSubSkill
+        ? calculateSubSkillBonusWithProficiency(
+            skill.ability,
+            value,
+            baseValue,
+            baseProficient,
+            abilities,
+            proficient,
+            chosenAbilityKey,
+          )
+        : calculateSkillBonusWithProficiency(
+            skill.ability,
+            value,
+            abilities,
+            true,
+            chosenAbilityKey,
+          );
+      const canInc = isSubSkill
+        ? baseProficient &&
+          remainingPoints >=
+            (value === 0
+              ? skillRules.gainProficiencyCost
+              : getSkillValueIncreaseCost(value, true, skillRules))
+        : remainingPoints >=
+          (value === 0
+            ? skillRules.gainProficiencyCost
+            : getSkillValueIncreaseCost(value, false, skillRules));
 
       return {
         skill,
         value,
         bonus,
+        abilityLabel,
+        abilityValue,
+        multiAbility: linkedKeys.length > 1,
+        chosenAbilityKey,
+        linkedAbilityKeys: linkedKeys as string[],
+        abilitySkillId,
         isSpecies,
         isPath,
+        isSubSkill,
+        baseSkillName: isSubSkill ? baseSkill?.name : undefined,
         canIncrease: canInc,
         canDecrease: value > 0,
       };
     });
   }, [
     orderedSkills,
+    allSkills,
     allocations,
     speciesSkillIds,
     pathSkillIds,
     abilities,
     remainingPoints,
     skillRules,
+    skillAbilities,
   ]);
 
   if (isLoading) {
@@ -331,9 +480,8 @@ export function GuidedSkillsPanel({
         <PointStatus
           total={totalPoints}
           spent={spentPoints}
-          label="Skill points"
+          label="Skill Points"
           variant="inline"
-          className="text-base"
         />
       </div>
 
@@ -353,37 +501,22 @@ export function GuidedSkillsPanel({
                   pathSourceLabel={pathSourceLabel}
                   onDecrease={() => handleAllocate(skillId, -1)}
                   onIncrease={() => handleAllocate(skillId, 1)}
-                  onRemove={
-                    item.isSpecies
-                      ? undefined
-                      : () => handleRemove(skillId)
-                  }
+                  onRemove={item.isSpecies ? undefined : () => handleRemove(skillId)}
+                  onAbilityChange={onSkillAbilityChange}
                 />
               );
             })}
           </ul>
         )}
-
-        <div className="border-t border-border-light px-4 py-3 flex justify-center">
-          <Button
-            type="button"
-            variant="ghost"
-            onClick={() => setAddSkillModalOpen(true)}
-            className="min-h-11 font-nunito text-primary-link-fg hover:text-primary-fg-hover"
-          >
-            {panelCopy.browseAll}
-          </Button>
-        </div>
       </div>
 
-      <AddSkillModal
-        isOpen={addSkillModalOpen}
-        onClose={() => setAddSkillModalOpen(false)}
-        existingSkillNames={existingSkillNames}
-        onAdd={handleAddSkills}
-        skillBadgesById={browseSkillBadgesById}
-        recommendedSkillIds={browseRecommendedSkillIds}
-        maxSelections={maxAddSkillSelections}
+      <DefenseBonusesCard
+        defenseSkills={defenseSkills}
+        onDefenseChange={onDefenseChange}
+        level={level}
+        remainingPoints={remainingPoints}
+        abilityDefenseBonuses={abilityDefenseBonusesFromAbilities(abilities)}
+        skillRules={skillRules}
       />
     </div>
   );

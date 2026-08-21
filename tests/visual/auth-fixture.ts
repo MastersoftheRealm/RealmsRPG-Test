@@ -76,7 +76,10 @@ export async function waitForAuthPageReady(page: Page, pageName: AuthPageName): 
       break;
     case 'characters':
       await page.getByRole('heading', { name: /^characters$/i }).waitFor({ timeout: 30_000 });
-      await page.getByText('Loading...').waitFor({ state: 'hidden', timeout: 30_000 }).catch(() => undefined);
+      await page
+        .getByText('Loading...')
+        .waitFor({ state: 'hidden', timeout: 30_000 })
+        .catch(() => undefined);
       break;
     case 'character-sheet':
       await page.getByText('Loading character...').waitFor({ state: 'hidden', timeout: 45_000 });
@@ -86,7 +89,10 @@ export async function waitForAuthPageReady(page: Page, pageName: AuthPageName): 
       await page.getByRole('heading', { name: /^campaigns$/i }).waitFor({ timeout: 30_000 });
       break;
     case 'campaign-detail':
-      await page.getByText('Loading campaign...').waitFor({ state: 'hidden', timeout: 45_000 }).catch(() => undefined);
+      await page
+        .getByText('Loading campaign...')
+        .waitFor({ state: 'hidden', timeout: 45_000 })
+        .catch(() => undefined);
       await page.getByRole('heading', { level: 1 }).waitFor({ timeout: 30_000 });
       break;
     default:
@@ -101,9 +107,7 @@ export async function waitForAuthPageReady(page: Page, pageName: AuthPageName): 
  * Mask volatile regions (portraits, roll logs) so baselines don't churn on data drift.
  */
 export function screenshotMasks(page: Page, pageName: AuthPageName): Locator[] {
-  const masks: Locator[] = [
-    page.locator('img[src*="storage"], img[src*="supabase.co/storage"]'),
-  ];
+  const masks: Locator[] = [page.locator('img[src*="storage"], img[src*="supabase.co/storage"]')];
 
   if (pageName === 'campaign-detail') {
     masks.push(page.locator('.max-h-\\[400px\\].overflow-y-auto').first());

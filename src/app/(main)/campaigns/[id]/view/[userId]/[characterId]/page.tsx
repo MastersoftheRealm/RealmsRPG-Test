@@ -2,47 +2,44 @@
  * Campaign Character View Page
  * ============================
  * Read-only character sheet view for Realm Masters viewing their campaign players.
+ * Reuses sheet derived assemble + CharacterSheetBody (TASK-597) — no parallel enrich/stats glue.
+ * Document SoT is `useCampaignCharacterView` / `campaignKeys.characterView` (TASK-761):
+ * the campaign route enforces roster + RM authorization, so this view does not read
+ * `characterKeys.detail` / `/api/characters/[id]`.
  */
 
 'use client';
 
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useMemo } from 'react';
 import Link from 'next/link';
 import { useParams } from 'next/navigation';
 import { ChevronLeft } from 'lucide-react';
-import { apiFetch } from '@/lib/api-client';
 import { ProtectedRoute } from '@/components/layout';
 import { LoadingState, Alert, PageContainer } from '@/components/ui';
-import { SheetHeader, AbilitiesSection, SkillsSection, ArchetypeSection, LibrarySection, RollLog } from '@/components/character-sheet';
-import { RollProvider } from '@/components/character-sheet/roll-context';
-import { calculateStats } from '@/app/(main)/characters/[id]/character-sheet-utils';
-import { enrichCharacterData } from '@/lib/data-enrichment';
 import {
-  useUserPowers,
-  useUserTechniques,
-  useUserItems,
-  useTraits,
-  usePowerParts,
-  useTechniqueParts,
-  useItemProperties,
-  useEquipment,
-  useSpecies,
-  useCodexFeats,
-  useCodexSkills,
-  useOfficialLibrary,
-  type Species,
-  type Skill,
-} from '@/hooks';
+  SheetHeader,
+  CharacterSheetProvider,
+  CharacterSheetBody,
+  CharacterSheetColumn,
+  CHARACTER_SHEET_MOBILE_FRAME_CLASSNAME,
+  useCharacterSheetDerived,
+  resolveLibraryActiveTab,
+} from '@/components/character-sheet';
+import {
+  buildReadOnlyLibraryHandlers,
+  buildReadOnlySheetContextValue,
+} from '@/components/character-sheet/read-only-sheet';
+import type { SheetLibraryModel } from '@/components/character-sheet/library-section-props';
+import { RollLog, RollProvider } from '@/components/rolls';
+import { useCampaignCharacterView } from '@/hooks';
 import { useGameRules } from '@/hooks/use-game-rules';
 import {
-  calculateArchetypeProgression,
-  calculateSkillPointsForEntity,
-  resolveParentSkillNameForSubSkill,
-} from '@/lib/game/formulas';
-import { getArchetypeAbilityScore, calculatePowerAttackBonus } from '@/lib/game/calculations';
-import type { Character, Item } from '@/types';
-import type { UserPower, UserTechnique, UserItem } from '@/hooks/use-user-library';
-import { DEFAULT_DEFENSE_SKILLS } from '@/types/skills';
+  emptyCharacterViewEnrichment,
+  sheetCatalogFromEnrichment,
+} from '@/lib/character-view-enrichment';
+import type { CharacterLibraryTabId, Item } from '@/types';
+
+const READONLY_LIBRARY_HANDLERS = buildReadOnlyLibraryHandlers();
 
 export default function CampaignCharacterViewPage() {
   return (
@@ -59,149 +56,127 @@ function CampaignCharacterViewContent() {
   const userId = params.userId as string;
   const characterId = params.characterId as string;
 
-  const [character, setCharacter] = useState<Character | null>(null);
-  const [libraryForView, setLibraryForView] = useState<{ powers: unknown[]; techniques: unknown[]; items: unknown[]; creatures: unknown[] } | undefined>(undefined);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const [libraryActiveTab, setLibraryActiveTab] = useState<CharacterLibraryTabId>('feats');
 
-  // Owner's library for enrichment when viewing another user's character; fallback to current user's for codex-only refs
-  const { data: userPowers = [] } = useUserPowers();
-  const { data: userTechniques = [] } = useUserTechniques();
-  const { data: userItems = [] } = useUserItems();
-  const { data: traitsDb = [] } = useTraits();
-  const { data: powerPartsDb = [] } = usePowerParts();
-  const { data: techniquePartsDb = [] } = useTechniqueParts();
-  const { data: itemPropertiesDb = [] } = useItemProperties();
-  const { data: codexEquipment = [] } = useEquipment();
-  const { data: publicPowersRaw = [] } = useOfficialLibrary('powers');
-  const { data: publicTechniquesRaw = [] } = useOfficialLibrary('techniques');
-  const { data: publicItemsRaw = [] } = useOfficialLibrary('items');
-  const publicLibraries = useMemo(
-    () => ({
-      powers: publicPowersRaw,
-      techniques: publicTechniquesRaw,
-      items: publicItemsRaw,
-    }),
-    [publicPowersRaw, publicTechniquesRaw, publicItemsRaw]
+  const {
+    data: viewData,
+    isPending: loading,
+    error: loadError,
+  } = useCampaignCharacterView(campaignId, userId, characterId);
+  const character = viewData?.character ?? null;
+  const libraryForView = viewData?.libraryForView;
+  const catalog = sheetCatalogFromEnrichment(
+    viewData?.enrichment ?? emptyCharacterViewEnrichment(),
   );
-  const { data: allSpecies = [] } = useSpecies();
-  const { data: codexSkills = [] } = useCodexSkills();
-  const { data: featsDb = [] } = useCodexFeats();
+  const error = loadError ? loadError.message || 'Failed to load character' : null;
 
-  useEffect(() => {
-    async function fetchCharacter() {
-      try {
-        setLoading(true);
-        setError(null);
-        const data = await apiFetch<
-          Character & {
-            libraryForView?: {
-              powers: unknown[];
-              techniques: unknown[];
-              items: unknown[];
-              creatures: unknown[];
-            };
-          }
-        >(`/api/campaigns/${campaignId}/characters/${userId}/${characterId}`);
-        const { libraryForView: lib, ...charData } = data;
-        setCharacter(charData);
-        setLibraryForView(lib);
-      } catch (err) {
-        setError(err instanceof Error ? err.message : 'Failed to load character');
-      } finally {
-        setLoading(false);
-      }
+  const {
+    enrichedData,
+    characterSpeciesTraits,
+    characterSpeciesSkills,
+    characterForDisplay,
+    calculatedStats,
+    pointBudgets,
+    archetypeProgression,
+    skills,
+    archetypeFeatsForDisplay,
+    characterFeatsForDisplay,
+    stateFeatsList,
+    stateUsesMax,
+    stateUsesCurrent,
+  } = useCharacterSheetDerived({
+    character,
+    libraryForView,
+    ...catalog,
+    rules,
+  });
+
+  // Clamp library tab to visible tabs (same as owner sheet).
+  if (character) {
+    const resolvedLibraryTab = resolveLibraryActiveTab(libraryActiveTab, {
+      isEditMode: false,
+      tabVisibility: character.libraryTabVisibility,
+    });
+    if (resolvedLibraryTab !== libraryActiveTab) {
+      setLibraryActiveTab(resolvedLibraryTab);
     }
-    fetchCharacter();
-  }, [campaignId, userId, characterId]);
+  }
 
-  const calculatedStats = useMemo(
-    () => (character ? calculateStats(character, rules) : null),
-    [character, rules]
+  const libraryModel = useMemo((): SheetLibraryModel | null => {
+    if (!character || !calculatedStats) return null;
+    return {
+      archetypeProgression,
+      calculatedMaxEnergy: calculatedStats.maxEnergy,
+      powerPartsDb: catalog.powerPartsDb,
+      techniquePartsDb: catalog.techniquePartsDb,
+      itemPropertiesDb: catalog.itemPropertiesDb,
+      traitsDb: catalog.traitsDb,
+      featsDb: catalog.featsDb,
+      characterSpeciesTraits,
+      archetypeFeatsForDisplay,
+      characterFeatsForDisplay,
+      stateFeatsList,
+      stateUsesCurrent,
+      stateUsesMax,
+    };
+  }, [
+    character,
+    calculatedStats,
+    archetypeProgression,
+    catalog.powerPartsDb,
+    catalog.techniquePartsDb,
+    catalog.itemPropertiesDb,
+    catalog.traitsDb,
+    catalog.featsDb,
+    characterSpeciesTraits,
+    archetypeFeatsForDisplay,
+    characterFeatsForDisplay,
+    stateFeatsList,
+    stateUsesCurrent,
+    stateUsesMax,
+  ]);
+
+  const sheetContextValue = useMemo(
+    () =>
+      character
+        ? buildReadOnlySheetContextValue({
+            character,
+            skills,
+            pointBudgets,
+            enrichedData,
+            libraryModel,
+            libraryHandlers: READONLY_LIBRARY_HANDLERS,
+            characterSpeciesSkills,
+            libraryActiveTab,
+            setLibraryActiveTab,
+            displayCharacter: character,
+            calculatedStats,
+          })
+        : null,
+    [
+      character,
+      skills,
+      pointBudgets,
+      enrichedData,
+      libraryModel,
+      characterSpeciesSkills,
+      libraryActiveTab,
+      calculatedStats,
+    ],
   );
-  const powersForEnrich = (libraryForView?.powers as typeof userPowers) ?? userPowers;
-  const techniquesForEnrich = (libraryForView?.techniques as typeof userTechniques) ?? userTechniques;
-  const itemsForEnrich = (libraryForView?.items as typeof userItems) ?? userItems;
-  const enrichedData = character
-    ? enrichCharacterData(character, powersForEnrich, techniquesForEnrich, itemsForEnrich, codexEquipment, powerPartsDb, techniquePartsDb, publicLibraries)
-    : null;
-
-  const characterSpeciesSkills = character && allSpecies.length
-    ? (() => {
-        const ancestry = character.ancestry;
-        if (ancestry?.mixed === true && ancestry?.speciesIds?.length === 2) {
-          if (ancestry.selectedSpeciesSkillIds?.length === 2) return ancestry.selectedSpeciesSkillIds;
-          const a = allSpecies.find((s: Species) => s.id === ancestry.speciesIds![0]);
-          const b = allSpecies.find((s: Species) => s.id === ancestry.speciesIds![1]);
-          const ids = new Set<string>();
-          (a?.skills || []).forEach((id: string | number) => ids.add(String(id)));
-          (b?.skills || []).forEach((id: string | number) => ids.add(String(id)));
-          return Array.from(ids);
-        }
-        const speciesName = ancestry?.name || character.species;
-        const species = allSpecies.find((s: Species) => s.name?.toLowerCase() === speciesName?.toLowerCase());
-        return (species?.skills || []) as string[];
-      })()
-    : [];
-
-  const archetypeProgression = character
-    ? calculateArchetypeProgression(
-        character.level || 1,
-        character.mart_prof || 0,
-        character.pow_prof || 0,
-        character.archetypeChoices || {}
-      )
-    : null;
-
-  const skills = character
-    ? ((character.skills || []) as Array<{
-        id: string;
-        name: string;
-        category?: string;
-        skill_val: number;
-        prof?: boolean;
-        baseSkill?: string;
-        selectedBaseSkillId?: string;
-        ability?: string;
-        availableAbilities?: string[];
-      }>).map((skill) => {
-        const codexSkill = codexSkills.find(
-          (rs: Skill) =>
-            String(rs.id) === String(skill.id) ||
-            String(rs.name ?? '').toLowerCase() === String(skill.name ?? '').toLowerCase()
-        );
-        const fromCodex = codexSkill?.ability
-          ? codexSkill.ability.split(',').map((a: string) => a.trim().toLowerCase()).filter(Boolean)
-          : [];
-        const availableAbilities =
-          fromCodex.length > 0 ? fromCodex : skill.availableAbilities;
-        let ability = skill.ability || availableAbilities?.[0] || 'strength';
-        if (availableAbilities?.length && !availableAbilities.includes(ability.toLowerCase())) {
-          ability = availableAbilities[0] || 'strength';
-        }
-        const parentName =
-          skill.baseSkill ?? resolveParentSkillNameForSubSkill(skill, codexSkill, codexSkills);
-        return {
-          ...skill,
-          ability,
-          ...(availableAbilities?.length ? { availableAbilities } : {}),
-          ...(parentName ? { baseSkill: parentName } : {}),
-        };
-      })
-    : [];
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
+      <div className="flex min-h-screen items-center justify-center">
         <LoadingState message="Loading character sheet..." size="lg" />
       </div>
     );
   }
 
-  if (error || !character) {
+  if (error || !character || !sheetContextValue) {
     return (
-      <div className="min-h-screen flex items-center justify-center p-4">
-        <div className="text-center max-w-md">
+      <div className="flex min-h-screen items-center justify-center p-4">
+        <div className="max-w-md text-center">
           <Alert variant="danger" title="Cannot view character">
             {error || 'Character not found. It may be set to private.'}
           </Alert>
@@ -209,7 +184,7 @@ function CampaignCharacterViewContent() {
             href={`/campaigns/${campaignId}`}
             className="mt-4 inline-flex items-center gap-1 text-primary-link-fg hover:underline"
           >
-            <ChevronLeft className="w-4 h-4" />
+            <ChevronLeft className="h-4 w-4" />
             Back to Campaign
           </Link>
         </div>
@@ -225,132 +200,43 @@ function CampaignCharacterViewContent() {
         characterName: character.name,
       }}
     >
-      <div className="min-h-screen bg-background pb-8">
-        <PageContainer size="tool" padded={false} className="pt-4">
-          <Link
-            href={`/campaigns/${campaignId}`}
-            className="inline-flex items-center gap-1 text-text-secondary hover:text-primary-fg-hover mb-4"
-          >
-            <ChevronLeft className="w-4 h-4" />
-            Back to Campaign
-          </Link>
-          <p className="text-sm text-text-muted dark:text-text-secondary mb-4">View-only (Realm Master view)</p>
+      <CharacterSheetProvider value={sheetContextValue}>
+        <div className="bg-background md:min-h-screen">
+          <div className={CHARACTER_SHEET_MOBILE_FRAME_CLASSNAME}>
+            <PageContainer
+              size="tool"
+              padded={false}
+              centered={false}
+              className="pt-4 max-md:flex max-md:min-h-0 max-md:w-full max-md:min-w-0 max-md:flex-1 max-md:flex-col md:mx-auto"
+            >
+              <Link
+                href={`/campaigns/${campaignId}`}
+                className="mb-4 inline-flex shrink-0 items-center gap-1 text-text-secondary hover:text-primary-fg-hover"
+              >
+                <ChevronLeft className="h-4 w-4" />
+                Back to Campaign
+              </Link>
+              <p className="mb-4 shrink-0 text-sm text-text-muted">View-only (Realm Master view)</p>
 
-          {calculatedStats && (
-            <>
-              <SheetHeader
-                character={character}
-                calculatedStats={calculatedStats}
-                isEditMode={false}
-                speedDisplayUnit={character.speedDisplayUnit ?? 'spaces'}
-              />
-              <AbilitiesSection
-                abilities={character.abilities}
-                defenseSkills={character.defenseVals || character.defenseSkills}
-                level={character.level || 1}
-                archetypeAbility={(character.pow_abil || character.archetype?.ability) as keyof typeof character.abilities}
-                martialAbility={character.mart_abil}
-                powerAbility={character.pow_abil}
-                isEditMode={false}
-              />
-              <div className="grid grid-cols-1 lg:grid-cols-[1fr_1fr_2fr] gap-4 items-stretch mt-4">
-                <SkillsSection
-                  skills={skills}
-                  abilities={character.abilities}
-                  isEditMode={false}
-                  totalSkillPoints={calculateSkillPointsForEntity(character.level || 1, 'character')}
-                  speciesSkills={characterSpeciesSkills}
-                  onSkillChange={() => {}}
-                  onRemoveSkill={() => {}}
-                  onAddSkill={() => {}}
-                  onAddSubSkill={() => {}}
-                  className="flex-1"
-                />
-                <ArchetypeSection
-                  character={character}
-                  isEditMode={false}
-                  enrichedWeapons={enrichedData?.weapons}
-                  enrichedShields={enrichedData?.shields}
-                  enrichedArmor={enrichedData?.armor}
-                  className="flex-1"
-                />
-                <LibrarySection
-                  className="flex-1"
-                  powers={enrichedData?.powers || character.powers || []}
-                  techniques={enrichedData?.techniques || character.techniques || []}
-                  weapons={(enrichedData?.weapons || (character.equipment?.weapons || [])) as Item[]}
-                  shields={(enrichedData?.shields || (character.equipment?.shields || [])) as Item[]}
-                  armor={(enrichedData?.armor || (character.equipment?.armor || [])) as Item[]}
-                  equipment={(enrichedData?.equipment || (character.equipment?.items || [])) as Item[]}
-                  currency={character.currency}
-                  innateEnergy={archetypeProgression?.innateEnergy || 0}
-                  innateThreshold={archetypeProgression?.innateThreshold || 0}
-                  innatePools={archetypeProgression?.innatePools || 0}
-                  currentEnergy={character.currentEnergy ?? character.energy?.current ?? calculatedStats.maxEnergy}
-                  martialProficiency={character.mart_prof ?? 0}
-                  powerAttackBonus={calculatePowerAttackBonus(character)}
-                  speedDisplayUnit={character.speedDisplayUnit ?? 'spaces'}
-                  isEditMode={false}
-                  onAddPower={() => {}}
-                  onRemovePower={() => {}}
-                  onTogglePowerInnate={() => {}}
-                  onUsePower={() => {}}
-                  onAddTechnique={() => {}}
-                  onRemoveTechnique={() => {}}
-                  onUseTechnique={() => {}}
-                  onAddWeapon={() => {}}
-                  onRemoveWeapon={() => {}}
-                  onToggleEquipWeapon={() => {}}
-                  onAddShield={() => {}}
-                  onRemoveShield={() => {}}
-                  onToggleEquipShield={() => {}}
-                  onAddArmor={() => {}}
-                  onRemoveArmor={() => {}}
-                  onToggleEquipArmor={() => {}}
-                  onAddEquipment={() => {}}
-                  onRemoveEquipment={() => {}}
-                  onEquipmentQuantityChange={() => {}}
-                  onCurrencyChange={() => {}}
-                  powerPartsDb={powerPartsDb}
-                  techniquePartsDb={techniquePartsDb}
-                  itemPropertiesDb={itemPropertiesDb}
-                  level={character.level}
-                  archetypeFeats={character.archetypeFeats}
-                  characterFeats={character.feats}
-                  onFeatUsesChange={() => {}}
-                  onAddArchetypeFeat={() => {}}
-                  onAddCharacterFeat={() => {}}
-                  onRemoveFeat={() => {}}
-                  traitsDb={traitsDb}
-                  featsDb={featsDb}
-                  traitUses={character.traitUses}
-                  onTraitUsesChange={() => {}}
-                  traitCustomizations={character.traitCustomizations}
-                  ancestry={character.ancestry as never}
-                  vanillaTraits={{
-                    ancestryTraits: character.ancestryTraits,
-                    flawTrait: character.flawTrait,
-                    characteristicTrait: character.characteristicTrait,
-                    speciesTraits: character.speciesTraits,
-                  }}
-                  speciesTraitsFromCodex={[]}
-                  archetypeAbility={getArchetypeAbilityScore(character)}
-                  proficiencies={character.proficiencies}
-                  onProficienciesChange={() => {}}
-                  weight={character.weight}
-                  height={character.height}
-                  appearance={character.appearance}
-                  archetypeDesc={character.archetypeDesc}
-                  notes={character.notes}
-                  abilities={character.abilities}
-                  namedNotes={character.namedNotes}
-                />
-              </div>
-            </>
-          )}
-        </PageContainer>
-        <RollLog />
-      </div>
+              {calculatedStats && (
+                <CharacterSheetColumn>
+                  <SheetHeader
+                    character={characterForDisplay ?? character}
+                    calculatedStats={calculatedStats}
+                    isEditMode={false}
+                    speedDisplayUnit={character.speedDisplayUnit ?? 'spaces'}
+                    enrichedArmor={enrichedData?.armor as Item[] | undefined}
+                    innateThreshold={archetypeProgression?.innateThreshold || 0}
+                    innatePools={archetypeProgression?.innatePools || 0}
+                  />
+                  <CharacterSheetBody />
+                </CharacterSheetColumn>
+              )}
+            </PageContainer>
+          </div>
+          <RollLog />
+        </div>
+      </CharacterSheetProvider>
     </RollProvider>
   );
 }

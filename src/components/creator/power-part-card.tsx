@@ -10,7 +10,7 @@ import { ChevronDown, ChevronUp, X } from 'lucide-react';
 import { formatCost } from '@/lib/game/creator-constants';
 import { partChipVariant } from '@/lib/chip/part-chip-variant';
 import { IconButton, Checkbox, DescriptorChip } from '@/components/ui';
-import { ValueStepper } from '@/components/shared';
+import { ValueStepper } from '@/components/patterns';
 import type { PowerPart, TechniquePart } from '@/hooks';
 
 type CreatorPart = PowerPart | TechniquePart;
@@ -20,7 +20,7 @@ interface SelectedPartLike {
   op_1_lvl: number;
   op_2_lvl: number;
   op_3_lvl: number;
-  applyDuration?: boolean;
+  applyDuration?: boolean | undefined;
   selectedCategory: string;
 }
 
@@ -30,7 +30,7 @@ export interface PowerPartCardProps {
   onRemove: () => void;
   onUpdate: (updates: Partial<SelectedPartLike>) => void;
   allParts: CreatorPart[];
-  showApplyDuration?: boolean;
+  showApplyDuration?: boolean | undefined;
 }
 
 export function PowerPartCard({
@@ -58,20 +58,24 @@ export function PowerPartCard({
 
   const hasOption = (n: 1 | 2 | 3) => {
     const partWithOptions = part as CreatorPart & {
-      op_1_desc?: string;
-      op_1_en?: number;
-      op_1_tp?: number;
-      op_2_desc?: string;
-      op_2_en?: number;
-      op_2_tp?: number;
-      op_3_desc?: string;
-      op_3_en?: number;
-      op_3_tp?: number;
+      op_1_desc?: string | undefined;
+      op_1_en?: number | undefined;
+      op_1_tp?: number | undefined;
+      op_2_desc?: string | undefined;
+      op_2_en?: number | undefined;
+      op_2_tp?: number | undefined;
+      op_3_desc?: string | undefined;
+      op_3_en?: number | undefined;
+      op_3_tp?: number | undefined;
     };
     const desc = partWithOptions[`op_${n}_desc`];
     const en = partWithOptions[`op_${n}_en`];
     const tp = partWithOptions[`op_${n}_tp`];
-    return (desc && desc.trim() !== '') || (en !== undefined && en !== 0) || (tp !== undefined && tp !== 0);
+    return (
+      (desc && desc.trim() !== '') ||
+      (en !== undefined && en !== 0) ||
+      (tp !== undefined && tp !== 0)
+    );
   };
 
   const partEnergy =
@@ -87,50 +91,58 @@ export function PowerPartCard({
     (part.op_3_tp || 0) * selectedPart.op_3_lvl;
 
   return (
-    <div className="bg-surface rounded-lg border border-border-light shadow-sm overflow-hidden">
-      <div className="bg-surface-alt px-4 py-3 flex items-center justify-between">
+    <div className="overflow-hidden rounded-lg border border-border-light bg-surface shadow-sm">
+      <div className="flex items-center justify-between bg-surface-alt px-4 py-3">
         <button
           type="button"
           onClick={() => setExpanded(!expanded)}
-          className="flex items-center gap-2 flex-1 min-w-0 text-left hover:bg-surface-alt/80 -ml-2 pl-2 py-1 rounded transition-colors"
+          className="-ml-2 flex min-w-0 flex-1 items-center gap-2 rounded py-1 pl-2 text-left transition-colors hover:bg-surface-alt/80"
         >
-          <span className="text-text-muted dark:text-text-secondary shrink-0">
-            {expanded ? <ChevronUp className="w-5 h-5" /> : <ChevronDown className="w-5 h-5" />}
+          <span className="shrink-0 text-text-muted">
+            {expanded ? <ChevronUp className="h-5 w-5" /> : <ChevronDown className="h-5 w-5" />}
           </span>
           {part.category && (
             <DescriptorChip
               variant={partChipVariant(part.category)}
               size="sm"
-              className="shrink-0 max-w-[7.5rem] truncate font-normal"
+              className="max-w-[7.5rem] shrink-0 truncate font-normal"
               title={part.category}
             >
               {part.category}
             </DescriptorChip>
           )}
-          <span className="font-medium text-text-primary truncate min-w-0">{part.name}</span>
-          <span className="flex items-center gap-2 text-sm font-semibold flex-shrink-0">
+          <span className="min-w-0 truncate font-medium text-text-primary">{part.name}</span>
+          <span className="flex flex-shrink-0 items-center gap-2 text-sm font-semibold">
             <span className="text-energy-text">EN: {formatCost(partEnergy)}</span>
             <span className="text-tp-text">TP: {formatCost(partTP)}</span>
           </span>
         </button>
         <IconButton onClick={onRemove} label="Remove part" variant="danger" size="sm">
-          <X className="w-5 h-5" />
+          <X className="h-5 w-5" />
         </IconButton>
       </div>
 
       {expanded && (
-        <div className="px-4 py-4 space-y-4">
-          <div className="grid md:grid-cols-2 gap-4">
+        <div className="space-y-4 px-4 py-4">
+          <div className="grid gap-4 md:grid-cols-2">
             <div>
-              <label htmlFor={categorySelectId} className="block text-sm font-medium text-text-secondary mb-1">Category</label>
+              <label
+                htmlFor={categorySelectId}
+                className="mb-1 block text-sm font-medium text-text-secondary"
+              >
+                Category
+              </label>
               <select
                 id={categorySelectId}
                 value={selectedPart.selectedCategory}
                 onChange={(e) => {
                   const newCategory = e.target.value;
-                  const partsInCategory = newCategory === 'any'
-                    ? allParts.sort((a, b) => a.name.localeCompare(b.name))
-                    : allParts.filter((p) => p.category === newCategory).sort((a, b) => a.name.localeCompare(b.name));
+                  const partsInCategory =
+                    newCategory === 'any'
+                      ? allParts.sort((a, b) => a.name.localeCompare(b.name))
+                      : allParts
+                          .filter((p) => p.category === newCategory)
+                          .sort((a, b) => a.name.localeCompare(b.name));
                   const firstPart = partsInCategory[0];
                   if (firstPart) {
                     onUpdate({
@@ -145,7 +157,7 @@ export function PowerPartCard({
                     onUpdate({ selectedCategory: newCategory });
                   }
                 }}
-                className="w-full px-3 py-2 border border-border-light rounded-lg text-sm text-text-primary bg-surface"
+                className="touch-tier-standard w-full rounded-lg border border-border-light bg-surface px-3 py-2 text-sm text-text-primary"
               >
                 {categories.map((cat) => (
                   <option key={cat} value={cat}>
@@ -155,7 +167,12 @@ export function PowerPartCard({
               </select>
             </div>
             <div>
-              <label htmlFor={partSelectId} className="block text-sm font-medium text-text-secondary mb-1">Part</label>
+              <label
+                htmlFor={partSelectId}
+                className="mb-1 block text-sm font-medium text-text-secondary"
+              >
+                Part
+              </label>
               <select
                 id={partSelectId}
                 value={filteredParts.findIndex((p) => p.id === part.id)}
@@ -171,7 +188,7 @@ export function PowerPartCard({
                     });
                   }
                 }}
-                className="w-full px-3 py-2 border border-border-light rounded-lg text-sm text-text-primary bg-surface"
+                className="touch-tier-standard w-full rounded-lg border border-border-light bg-surface px-3 py-2 text-sm text-text-primary"
               >
                 {filteredParts.map((p, idx) => (
                   <option key={p.id} value={idx}>
@@ -182,11 +199,12 @@ export function PowerPartCard({
             </div>
           </div>
 
-          <p className="text-base text-text-primary leading-relaxed">{part.description}</p>
+          <p className="text-base leading-relaxed text-text-primary">{part.description}</p>
 
           <div className="flex gap-4 text-sm">
             <span className="text-text-secondary">
-              Base Energy: <strong className="text-energy-text">{formatCost(part.base_en || 0)}</strong>
+              Base Energy:{' '}
+              <strong className="text-energy-text">{formatCost(part.base_en || 0)}</strong>
             </span>
             <span className="text-text-secondary">
               Base TP: <strong className="text-tp-text">{formatCost(part.base_tp || 0)}</strong>
@@ -194,17 +212,19 @@ export function PowerPartCard({
           </div>
 
           {(hasOption(1) || hasOption(2) || hasOption(3)) && (
-            <div className="space-y-3 pt-2 border-t border-border-light">
+            <div className="space-y-3 border-t border-border-light pt-2">
               {hasOption(1) && (
-                <div className="bg-energy-light border border-energy-border rounded-lg p-3">
-                  <div className="flex items-center justify-between mb-2">
+                <div className="rounded-lg border border-energy-border bg-energy-light p-3">
+                  <div className="mb-2 flex items-center justify-between">
                     <div className="flex items-center gap-2">
                       <span className="text-sm font-semibold text-energy-text">Option 1</span>
                       <span className="text-sm font-medium text-energy-text">
-                        EN {(part.op_1_en || 0) >= 0 ? '+' : ''}{formatCost(part.op_1_en || 0)}
+                        EN {(part.op_1_en || 0) >= 0 ? '+' : ''}
+                        {formatCost(part.op_1_en || 0)}
                       </span>
                       <span className="text-sm font-medium text-tp-text">
-                        TP {(part.op_1_tp || 0) >= 0 ? '+' : ''}{formatCost(part.op_1_tp || 0)}
+                        TP {(part.op_1_tp || 0) >= 0 ? '+' : ''}
+                        {formatCost(part.op_1_tp || 0)}
                       </span>
                     </div>
                     <ValueStepper
@@ -214,22 +234,22 @@ export function PowerPartCard({
                       min={0}
                     />
                   </div>
-                  {part.op_1_desc && (
-                    <p className="text-sm text-text-primary">{part.op_1_desc}</p>
-                  )}
+                  {part.op_1_desc && <p className="text-sm text-text-primary">{part.op_1_desc}</p>}
                 </div>
               )}
 
               {hasOption(2) && (
-                <div className="bg-energy-light border border-energy-border rounded-lg p-3">
-                  <div className="flex items-center justify-between mb-2">
+                <div className="rounded-lg border border-energy-border bg-energy-light p-3">
+                  <div className="mb-2 flex items-center justify-between">
                     <div className="flex items-center gap-2">
                       <span className="text-sm font-semibold text-energy-text">Option 2</span>
                       <span className="text-sm font-medium text-energy-text">
-                        EN {(part.op_2_en || 0) >= 0 ? '+' : ''}{formatCost(part.op_2_en || 0)}
+                        EN {(part.op_2_en || 0) >= 0 ? '+' : ''}
+                        {formatCost(part.op_2_en || 0)}
                       </span>
                       <span className="text-sm font-medium text-tp-text">
-                        TP {(part.op_2_tp || 0) >= 0 ? '+' : ''}{formatCost(part.op_2_tp || 0)}
+                        TP {(part.op_2_tp || 0) >= 0 ? '+' : ''}
+                        {formatCost(part.op_2_tp || 0)}
                       </span>
                     </div>
                     <ValueStepper
@@ -239,22 +259,22 @@ export function PowerPartCard({
                       min={0}
                     />
                   </div>
-                  {part.op_2_desc && (
-                    <p className="text-sm text-text-primary">{part.op_2_desc}</p>
-                  )}
+                  {part.op_2_desc && <p className="text-sm text-text-primary">{part.op_2_desc}</p>}
                 </div>
               )}
 
               {hasOption(3) && (
-                <div className="bg-energy-light border border-energy-border rounded-lg p-3">
-                  <div className="flex items-center justify-between mb-2">
+                <div className="rounded-lg border border-energy-border bg-energy-light p-3">
+                  <div className="mb-2 flex items-center justify-between">
                     <div className="flex items-center gap-2">
                       <span className="text-sm font-semibold text-energy-text">Option 3</span>
                       <span className="text-sm font-medium text-energy-text">
-                        EN {(part.op_3_en || 0) >= 0 ? '+' : ''}{formatCost(part.op_3_en || 0)}
+                        EN {(part.op_3_en || 0) >= 0 ? '+' : ''}
+                        {formatCost(part.op_3_en || 0)}
                       </span>
                       <span className="text-sm font-medium text-tp-text">
-                        TP {(part.op_3_tp || 0) >= 0 ? '+' : ''}{formatCost(part.op_3_tp || 0)}
+                        TP {(part.op_3_tp || 0) >= 0 ? '+' : ''}
+                        {formatCost(part.op_3_tp || 0)}
                       </span>
                     </div>
                     <ValueStepper
@@ -264,9 +284,7 @@ export function PowerPartCard({
                       min={0}
                     />
                   </div>
-                  {part.op_3_desc && (
-                    <p className="text-sm text-text-primary">{part.op_3_desc}</p>
-                  )}
+                  {part.op_3_desc && <p className="text-sm text-text-primary">{part.op_3_desc}</p>}
                 </div>
               )}
             </div>

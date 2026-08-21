@@ -5,7 +5,7 @@ const DEFAULT_PREVIEW_LEN = 320;
 /** Shorter preview for compact trait/feat cards (paired with line-clamp-6). */
 export const COMPACT_PREVIEW_LEN = 240;
 
-/** Skip "Read more" when truncation would hide less than ~6 words of copy. */
+/** Skip "See more" when truncation would hide less than ~6 words of copy. */
 const MIN_HIDDEN_TO_TRUNCATE = 40;
 
 function hiddenCharCount(full: string, preview: string): number {
@@ -19,7 +19,7 @@ function worthTruncating(full: string, preview: string): boolean {
 /** Truncate at a word boundary — avoids cutting mid-word or mid-sentence for previews. */
 export function truncateAtWord(
   text?: string | null,
-  maxLen = DEFAULT_PREVIEW_LEN
+  maxLen = DEFAULT_PREVIEW_LEN,
 ): { preview: string; isTruncated: boolean } {
   if (!text) return { preview: '', isTruncated: false };
   const trimmed = text.trim();
@@ -38,7 +38,7 @@ export function truncateAtWord(
   return { preview, isTruncated: true };
 }
 
-/** Whether collapsed tagline + full body should offer Read more (plain strings only). */
+/** Whether collapsed tagline + full body should offer See more (plain strings only). */
 export function shouldExpandTaglineBody(tagline: string, fullBody: string): boolean {
   const tag = tagline.trim();
   const full = fullBody.trim();

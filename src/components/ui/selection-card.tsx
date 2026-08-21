@@ -8,7 +8,7 @@ import { cn } from '@/lib/utils/cn';
 import { cardVariants } from './card';
 
 export interface SelectionCardProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
-  selected?: boolean;
+  selected?: boolean | undefined;
 }
 
 export function SelectionCard({
@@ -27,7 +27,7 @@ export function SelectionCard({
 }
 
 export interface SelectionCardSurfaceProps extends React.HTMLAttributes<HTMLDivElement> {
-  selected?: boolean;
+  selected?: boolean | undefined;
 }
 
 /** Div-based selection card for non-button interactive surfaces (role="button" + keyboard). */

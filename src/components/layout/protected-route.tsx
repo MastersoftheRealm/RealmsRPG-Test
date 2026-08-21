@@ -13,7 +13,7 @@ import { LoadingState } from '@/components/ui/spinner';
 
 interface ProtectedRouteProps {
   children: React.ReactNode;
-  fallback?: React.ReactNode;
+  fallback?: React.ReactNode | undefined;
 }
 
 export function ProtectedRoute({ children, fallback }: ProtectedRouteProps) {

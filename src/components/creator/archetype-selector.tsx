@@ -10,7 +10,8 @@
 
 import { useState } from 'react';
 import { cn } from '@/lib/utils';
-import { PoweredMartialSlider } from '@/components/shared';
+import { PoweredMartialSlider } from '@/components/patterns';
+import { ARCHETYPE_CATEGORY_INFO } from '@/lib/constants/copy';
 
 export type ArchetypeType = 'martial' | 'power' | 'powered-martial';
 
@@ -28,33 +29,21 @@ export interface ArchetypeSelectorProps {
   /** Callback when proficiency allocation changes */
   onProficiencyChange: (power: number, martial: number) => void;
   /** Whether the component is in compact mode */
-  compact?: boolean;
+  compact?: boolean | undefined;
   /** Whether selection is disabled/locked */
-  disabled?: boolean;
+  disabled?: boolean | undefined;
 }
 
-const ARCHETYPE_INFO: Record<ArchetypeType, { title: string; description: string; icon: string }> = {
-  martial: {
-    title: 'Martial',
-    description: 'Focus on physical combat, techniques, and weaponry. All proficiency goes to martial prowess.',
-    icon: '⚔️',
-  },
-  power: {
-    title: 'Power',
-    description: 'Focus on supernatural abilities and powers. All proficiency goes to power mastery.',
-    icon: '✨',
-  },
-  'powered-martial': {
-    title: 'Powered-Martial',
-    description: 'Balanced blend of martial prowess and supernatural abilities. Allocate proficiency between both.',
-    icon: '⚡',
-  },
+/** Selector-only icons; titles/descriptions come from ARCHETYPE_CATEGORY_INFO. */
+const ARCHETYPE_ICONS: Record<ArchetypeType, string> = {
+  martial: '⚔️',
+  power: '✨',
+  'powered-martial': '⚡',
 };
 
 export function ArchetypeSelector({
   value,
   powerProficiency,
-  martialProficiency,
   maxProficiency,
   onTypeChange,
   onProficiencyChange,
@@ -66,7 +55,7 @@ export function ArchetypeSelector({
   const handleTypeChange = (type: ArchetypeType) => {
     if (disabled) return;
     onTypeChange(type);
-    
+
     // Auto-set proficiency based on type
     if (type === 'martial') {
       onProficiencyChange(0, maxProficiency);
@@ -88,12 +77,9 @@ export function ArchetypeSelector({
   return (
     <div className="space-y-4">
       {/* Archetype Type Selection */}
-      <div className={cn(
-        'grid gap-3',
-        compact ? 'grid-cols-3' : 'grid-cols-1 sm:grid-cols-3'
-      )}>
+      <div className={cn('grid gap-3', compact ? 'grid-cols-3' : 'grid-cols-1 sm:grid-cols-3')}>
         {(['martial', 'power', 'powered-martial'] as ArchetypeType[]).map((type) => {
-          const info = ARCHETYPE_INFO[type];
+          const info = ARCHETYPE_CATEGORY_INFO[type];
           const isSelected = value === type;
 
           return (
@@ -102,19 +88,23 @@ export function ArchetypeSelector({
               onClick={() => handleTypeChange(type)}
               disabled={disabled}
               className={cn(
-                'p-4 rounded-xl border-2 text-left transition-all',
+                'rounded-xl border-2 p-4 text-left transition-all',
                 isSelected
                   ? 'border-primary-outline-border bg-primary-subtle-bg shadow-md'
                   : 'border-border-light bg-surface hover:border-border hover:shadow',
-                disabled && 'opacity-50 cursor-not-allowed'
+                disabled && 'cursor-not-allowed opacity-50',
               )}
             >
-              <div className="flex items-center gap-2 mb-2">
-                <span className="text-2xl">{info.icon}</span>
+              <div className="mb-2 flex items-center gap-2">
+                <span className="text-2xl" aria-hidden="true">
+                  {ARCHETYPE_ICONS[type]}
+                </span>
                 <h4 className="font-bold text-primary-fg">{info.title}</h4>
               </div>
               {!compact && (
-                <p className="text-xs text-secondary dark:text-text-secondary">{info.description}</p>
+                <p className="text-secondary text-xs dark:text-text-secondary">
+                  {info.description}
+                </p>
               )}
             </button>
           );
@@ -127,22 +117,24 @@ export function ArchetypeSelector({
           powerValue={sliderValue}
           martialValue={maxProficiency - sliderValue}
           maxPoints={maxProficiency}
-          onChange={(power, _martial) => handleSliderChange(power)}
+          onChange={(power) => handleSliderChange(power)}
           disabled={disabled}
         />
       )}
 
       {/* Non-slider display for Martial/Power */}
       {value !== 'powered-martial' && (
-        <div className="p-4 rounded-xl bg-surface-secondary border border-border-light">
+        <div className="rounded-xl border border-border-light bg-surface-secondary p-4">
           <div className="flex items-center justify-between">
-            <span className="text-sm text-secondary dark:text-text-secondary">
+            <span className="text-secondary text-sm dark:text-text-secondary">
               {value === 'martial' ? 'Martial Proficiency' : 'Power Proficiency'}
             </span>
-            <span className={cn(
-              'text-xl font-bold',
-              value === 'martial' ? 'text-martial-fg' : 'text-power-fg'
-            )}>
+            <span
+              className={cn(
+                'text-xl font-bold',
+                value === 'martial' ? 'text-martial-fg' : 'text-power-fg',
+              )}
+            >
               +{maxProficiency}
             </span>
           </div>

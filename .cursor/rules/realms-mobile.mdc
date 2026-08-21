@@ -1,18 +1,26 @@
 ---
-description: Mobile-first UI — breakpoints, modals, dense layouts, touch targets. Apply when creating or editing pages, modals, or layouts.
+description: Responsive UI — six-width contracts, tiered touch targets, modals. Apply when creating or editing pages, modals, or layouts.
 alwaysApply: true
 ---
 
-# Mobile UX
+# Responsive UX
 
 When **creating or editing** any page, modal, or layout:
 
-1. **Read** `src/docs/MOBILE_UX.md` for breakpoints, touch targets, modal behavior, and dense-layout strategy (side-scroll vs collapse).
+1. **Read** `src/docs/MOBILE_UX.md` (authority: ADR-0023). The file covers **every viewport**, not just phones. The worst failures in the 2026-08-18 audit were at **1024px**.
 
-2. **Modals:** For selection, add-X, load, recovery, level-up, settings, wizards, and other large dialogs, set **`fullScreenOnMobile`** on the `Modal` component so the modal is full-screen on viewports &lt; 768px (sticky header/footer, scrollable content).
+2. **Input method vs layout:** `@media (pointer: coarse)` decides hit-area size. Viewport breakpoints decide arrangement. Do not use `md:` to shrink a touch target. Dense expanded hit is `.hit-area-dense` (height-first) or `.hit-area-dense-square` (icon-only).
 
-3. **Dense layouts:** For pages with many sections (e.g. character sheet, encounter tracker), prefer **horizontal side-scroll** between section panels on mobile; use **Collapsible** or responsive stacking when sections are few or content is lighter.
+3. **Touch tiers (coarse pointer):** Primary 48px · Standard 44px · Dense 32px painted + 44px expanded hit (`.hit-area-layout-neutral`) with 8px gap. **No `min-w` on text buttons.** Fine pointer stays compact. Owner feedback is desktop-first unless labeled `mobile feedback:`.
 
-4. **Touch targets:** New interactive elements (buttons, icon buttons, steppers, tab triggers) must have a minimum size of **44×44px** on touch (use `--touch-target-min: 44px` or equivalent).
+4. **Layout contracts** (must be true, not just "use this pattern"):
+   - **C1 Side-scroll:** bound height, no stretch-to-tallest, visible overflow affordance, reachable without a swipe.
+   - **C2 Truncation:** `min-w-0` on every flex ancestor; never clip without an ellipsis.
+   - **C3 Card sets:** equal-track `grid`, not `flex-wrap` of content-width children.
+   - **C4 Floating chrome:** one dock per corner; reserve page padding. Do not invent a second `fixed bottom-*`.
+   - **C5 Breakpoint honesty:** switch only where the target layout actually fits.
+   - **C6 Overflow:** no horizontal page scroll except inside a C1 container.
 
-5. **Checklist:** Use the **Agent checklist** in `MOBILE_UX.md` when adding or significantly changing a page or modal (responsive breakpoints, side-scroll/collapse for dense sections, list/table patterns, verification at ~360px width).
+5. **Modals:** `fullScreenOnMobile` on selection, add-X, load, recovery, level-up, settings, wizards (sticky header/footer). Actions in `footer`.
+
+6. **Verify at 360 / 390 / 768 / 1024 / 1280 / 1440.** "Mobile and desktop" is not enough. Run `npm run verify:responsive` after layout changes.

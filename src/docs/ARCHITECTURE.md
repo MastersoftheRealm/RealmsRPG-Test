@@ -68,9 +68,8 @@ Codex reference data comes from Supabase via `/api/codex`. Hooks like `useCodexP
 |------|---------|---------|
 | `useAuth` | Auth state, user | `{ user, loading, signOut, ... }` |
 | `useCharacters` | User's characters | `{ characters, loading, createCharacter, updateCharacter, deleteCharacter }` |
-| `useUserLibrary` | User's powers, techniques, items, creatures | `{ powers, techniques, items, creatures, loading }` |
+| `useUserPowers` / `useUserItems` / … | User's powers, techniques, items, creatures (`use-user-library.ts`) | typed query results |
 | `useCodexPowerParts`, `useCodexTechniqueParts`, `useCodexFeats`, `useCodexSkills`, etc. | Codex reference data | Parts, feats, skills, species from Supabase |
-| `useGameData` | Combined game data (Codex + optional library) | `{ gameData, loading }` |
 | `useAutoSave` | Auto-save character on change | Used in character sheet |
 
 ### Services
@@ -114,5 +113,60 @@ Codex reference data comes from Supabase via `/api/codex`. Hooks like `useCodexP
 ## Common Patterns
 
 1. **List views with costs:** Load library + Codex parts, then enrich before rendering. Do not block render on `!partsDb.length` — show data as soon as library loads; costs update when parts are available.
-2. **Character sheet:** Uses `useCharacters`, `useUserLibrary`, Codex hooks. Enrichment happens in `library-section.tsx` and similar components.
-3. **Creators:** Use Codex hooks for part/property options. Save to Supabase via `useUserLibrary` mutations.
+2. **Character sheet:** Owner sheet uses `useCharacter` (shared `characterKeys.detail` cache — TASK-750) plus catalog hooks for add-X. Other-user `/characters/[id]` and the campaign RM view consume `libraryForView` + referenced `enrichment` from the GET (TASK-773) instead of the viewer's library / official catalogs. Campaign RM view uses `useCampaignCharacterView` / `campaignKeys.characterView` against the campaign route (TASK-761) — not `characterKeys.detail`, which does not enforce roster + RM auth. Combat linked-character HP sync uses `useCampaignCharacterEncounters` / `campaignKeys.characterEncounter` → `getCampaignCharacterForEncounter` (`?scope=encounter`; TASK-762) — not the RM-view GET. Catalog hooks fetch one codex collection each (`['codex', collection]` → `?collection=`), and `useGameRules` reads `['codex', 'coreRules']` (TASK-775).
+3. **Creators:** Use Codex hooks for part/property options. Save to Supabase via `useUser*` mutations.
+
+---
+
+## Client error handling (API / Supabase boundaries)
+
+**Authority for client-side failure UX.** Keep one pattern per boundary; do not mix silent swallows with toast/inline feedback on the same user action.
+
+| Boundary | Convention |
+|----------|------------|
+| **`apiFetch` / `apiUpload` / `apiFetchOrNull`** (`@/lib/api-client`) | Failures **throw** `ApiError` (extends `Error`) with a parsed message and HTTP `status`. Callers `catch` and surface (toast or inline Alert). Use `isConflictError` for 409. Prefer these over raw `fetch` for `/api/*`. |
+| **Supabase JS client** (`createClient()` / server client) | Always inspect `{ data, error }`. On `error`, **throw** or return a typed failure — Supabase does **not** throw by default. |
+| **Server actions** returning `{ success, error }` / `{ profile, error }` | Check the `error` / `success` field; do not treat a null payload as success when `error` is set. |
+| **React Query mutations** | Prefer `onError` → `showToast(...)`, or `mutateAsync` inside `try/catch` with toast/Alert. Load errors → `ErrorDisplay` + retry (library tabs). |
+
+### Rules
+
+1. **User-initiated actions** (save, delete, sync, upload, account change): never empty `catch {}` / `.catch(() => {})`. Show toast or inline message with `getErrorMessage(err, fallback)`.
+2. **Not-found vs failure:** Helpers that return `null` for “no row” (e.g. name lookup) must still **throw** on network/HTTP failure — `null` means not found only.
+3. **Best-effort background work** (optional migrate, non-critical sync): log via `logClientError` from `@/lib/api-client` with an adjacent comment explaining why the user is not notified; do not use empty `catch {}`.
+4. **Parse once:** Use `getErrorMessage` from `@/lib/api-client` instead of ad-hoc `(e as Error)?.message ?? '…'` at each callsite when touching a file.
+
+### Reference migrations (TASK-479)
+
+- Account: `my-account/page.tsx` — profile load and auth updates surface errors (no silent catch).
+- Library: `findLibraryItemByName` in `library-service.ts` — lookup miss → `null`; API failure → throw (callers toast).
+
+### Server error responses (Route Handlers)
+
+**Authority for `/api/*` failure JSON.** Complements client-side handling above.
+
+| Rule | Convention |
+|------|------------|
+| **Error shape** | `{ error: string }` with appropriate HTTP status. No raw Supabase/Postgres `.message`, `.details`, or stack in production responses. |
+| **Logging** | `logApiError(context, err)` or `apiErrorResponse(message, status, context, err)` from `@/lib/api-error` — log full error server-side first. |
+| **Debug / hints** | Optional `hint` or `debug` only when `NODE_ENV=development` or explicit gated `?debug=1` (e.g. codex admin gate). |
+| **Validation** | Zod/validation failures may include field-level `details` when the message is derived from schema paths, not DB errors. |
+
+Success responses remain route-specific (`{ id }`, `{ images }`, arrays, etc.); standardize **errors** only.
+
+---
+
+## Character schema (save/load boundary)
+
+**Authority:** `src/lib/character/schema-normalize.ts` (TASK-663). Normalize at API load (`normalizeCharacterOnLoad` — promotes canonical fields and strips legacy aliases) and before persistence (`normalizeCharacterForSave` in `cleanForSave`, `prepareCharacterForSave`, and PATCH/duplicate merge paths).
+
+| Concept | Canonical field | Legacy aliases (dual-read on load; stripped on save) |
+|---------|-----------------|------------------------------------------------------|
+| Defense allocation | `defenseVals` | `defenseSkills` |
+| Martial proficiency | `mart_prof` | `martialProficiency` |
+| Power proficiency | `pow_prof` | `powerProficiency` |
+| Archetype category | `archetype.type` (`power` \| `powered-martial` \| `martial`) | `mixed` → `powered-martial` |
+
+Proficiency-inferred archetype in `getArchetypeType()` uses `ProficiencyDerivedArchetype` (`ArchetypeCategory | 'none'`) — same vocabulary as stored `archetype.type`, not a separate `mixed` label.
+
+Armor item DR at display time: resolve via canonical **`resolveArmorDamageReduction`** (`lib/game/resolve-armor-damage-reduction.ts`, TASK-644) — prefers `damageReduction`, then `armorValue` / `armor` / `armor_value`, then a Damage Reduction property. `deriveArmorItemCombatStats` and list/enrichment/guided catalog/create auto-equip call sites consume that helper.

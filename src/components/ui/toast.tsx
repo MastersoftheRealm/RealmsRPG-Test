@@ -12,6 +12,7 @@ import { createPortal } from 'react-dom';
 import { cn } from '@/lib/utils/cn';
 import { Check, X, AlertTriangle, Info, XCircle } from 'lucide-react';
 import { MOTION_DURATION_SLOW_MS } from '@/lib/utils/motion';
+import { useIsClient } from '@/hooks/use-is-client';
 import { IconButton } from './icon-button';
 
 type ToastType = 'success' | 'error' | 'warning' | 'info';
@@ -20,7 +21,7 @@ interface Toast {
   id: string;
   message: string;
   type: ToastType;
-  duration?: number;
+  duration?: number | undefined;
 }
 
 interface ToastContextValue {
@@ -39,10 +40,10 @@ export function useToast() {
 }
 
 const toastIcons: Record<ToastType, React.ReactNode> = {
-  success: <Check className="w-5 h-5" />,
-  error: <XCircle className="w-5 h-5" />,
-  warning: <AlertTriangle className="w-5 h-5" />,
-  info: <Info className="w-5 h-5" />,
+  success: <Check className="h-5 w-5" />,
+  error: <XCircle className="h-5 w-5" />,
+  warning: <AlertTriangle className="h-5 w-5" />,
+  info: <Info className="h-5 w-5" />,
 };
 
 const toastStyles: Record<ToastType, string> = {
@@ -66,7 +67,7 @@ function ToastItem({ toast, onDismiss }: { toast: Toast; onDismiss: () => void }
   React.useEffect(() => {
     // Trigger enter animation
     const enterTimer = setTimeout(() => setIsVisible(true), 10);
-    
+
     // Auto-dismiss
     const duration = toast.duration ?? 4000;
     const dismissTimer = setTimeout(() => {
@@ -83,16 +84,14 @@ function ToastItem({ toast, onDismiss }: { toast: Toast; onDismiss: () => void }
   return (
     <div
       className={cn(
-        'flex items-center gap-3 px-4 py-3 rounded-lg shadow-lg transition-all duration-slow ease-standard',
-        'min-w-[300px] max-w-[400px]',
+        'duration-slow flex items-center gap-3 rounded-lg px-4 py-3 shadow-lg transition-all ease-standard',
+        'max-w-[400px] min-w-[300px]',
         toastStyles[toast.type],
-        isVisible && !isLeaving ? 'translate-x-0 opacity-100' : 'translate-x-full opacity-0'
+        isVisible && !isLeaving ? 'translate-x-0 opacity-100' : 'translate-x-full opacity-0',
       )}
       role="alert"
     >
-      <span className={cn('flex-shrink-0', iconStyles[toast.type])}>
-        {toastIcons[toast.type]}
-      </span>
+      <span className={cn('flex-shrink-0', iconStyles[toast.type])}>{toastIcons[toast.type]}</span>
       <p className="flex-1 text-sm font-medium text-inherit">{toast.message}</p>
       <IconButton
         variant="ghost"
@@ -103,7 +102,7 @@ function ToastItem({ toast, onDismiss }: { toast: Toast; onDismiss: () => void }
         }}
         label="Dismiss"
       >
-        <X className="w-4 h-4" />
+        <X className="h-4 w-4" />
       </IconButton>
     </div>
   );
@@ -111,18 +110,14 @@ function ToastItem({ toast, onDismiss }: { toast: Toast; onDismiss: () => void }
 
 export function ToastProvider({ children }: { children: React.ReactNode }) {
   const [toasts, setToasts] = React.useState<Toast[]>([]);
-  const [mounted, setMounted] = React.useState(false);
-
-  React.useEffect(() => {
-    setMounted(true);
-  }, []);
+  const mounted = useIsClient();
 
   const showToast = React.useCallback(
     (message: string, type: ToastType = 'info', duration?: number) => {
       const id = `toast-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
       setToasts((prev) => [...prev, { id, message, type, duration }]);
     },
-    []
+    [],
   );
 
   const dismissToast = React.useCallback((id: string) => {
@@ -143,14 +138,10 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
             aria-label="Notifications"
           >
             {toasts.map((toast) => (
-              <ToastItem
-                key={toast.id}
-                toast={toast}
-                onDismiss={() => dismissToast(toast.id)}
-              />
+              <ToastItem key={toast.id} toast={toast} onDismiss={() => dismissToast(toast.id)} />
             ))}
           </div>,
-          document.body
+          document.body,
         )}
     </ToastContext.Provider>
   );

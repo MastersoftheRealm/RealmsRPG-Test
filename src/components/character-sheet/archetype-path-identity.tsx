@@ -1,31 +1,14 @@
 'use client';
 
 import { useMemo } from 'react';
-import { DescriptorChip } from '@/components/ui';
-import { PathHelpCard } from '@/components/character-creator/PathHelpCard';
+import { PathHelpCard } from '@/components/patterns';
 import { getPathRecommendationsForLevel } from '@/lib/game/archetype-path';
 import { PathRemoveGuidance } from '@/components/character-sheet/path-level-guidance';
 import { resolveArchetypeDisplayName } from '@/lib/game/archetype-display';
 import type { Character } from '@/types';
 
 export function isPathCharacter(character: Character): boolean {
-  return character.creationMode === 'path' || Boolean(character.archetypePathId?.trim());
-}
-
-export function showArchetypeCreationBadge(character: Character): boolean {
-  return Boolean(character.creationMode) || Boolean(character.archetypePathId?.trim());
-}
-
-export function ArchetypeCreationBadge({ character }: { character: Character }) {
-  if (!showArchetypeCreationBadge(character)) return null;
-
-  const label = isPathCharacter(character) ? 'Archetype Path' : 'Forge Your Own Path';
-
-  return (
-    <DescriptorChip variant="primary" size="sm" aria-label={`Creation style: ${label}`}>
-      {label}
-    </DescriptorChip>
-  );
+  return Boolean(character.archetypePathId?.trim());
 }
 
 export function ArchetypePathGuidance({ character }: { character: Character }) {
@@ -33,7 +16,7 @@ export function ArchetypePathGuidance({ character }: { character: Character }) {
 
   const pathName = useMemo(
     () => resolveArchetypeDisplayName(character) ?? character.archetype?.name ?? 'Archetype path',
-    [character]
+    [character],
   );
 
   const { description, level1Notes, levelNotes, level, hasRemoveLists } = useMemo(() => {
@@ -46,9 +29,9 @@ export function ArchetypePathGuidance({ character }: { character: Character }) {
       level: lvl,
       hasRemoveLists: Boolean(
         levelRec?.removeFeats?.length ||
-          levelRec?.removePowers?.length ||
-          levelRec?.removeTechniques?.length ||
-          levelRec?.removeArmaments?.length
+        levelRec?.removePowers?.length ||
+        levelRec?.removeTechniques?.length ||
+        levelRec?.removeArmaments?.length,
       ),
     };
   }, [character]);
@@ -63,17 +46,15 @@ export function ArchetypePathGuidance({ character }: { character: Character }) {
 
   return (
     <div
-      className="mt-2 space-y-2 max-w-xl"
+      className="mt-2 max-w-xl space-y-2"
       role="region"
       aria-label={`Path information for ${pathName}`}
     >
-      {description ? (
-        <p className="text-sm text-text-secondary dark:text-text-secondary">{description}</p>
-      ) : null}
+      {description ? <p className="text-sm text-text-secondary">{description}</p> : null}
 
       {showLevel1Notes && level <= 1 ? (
         <PathHelpCard pathName={pathName}>
-          <span className="block whitespace-pre-wrap font-normal">{level1Notes}</span>
+          <span className="block font-normal whitespace-pre-wrap">{level1Notes}</span>
         </PathHelpCard>
       ) : null}
 
@@ -83,10 +64,10 @@ export function ArchetypePathGuidance({ character }: { character: Character }) {
           role="region"
           aria-label={`Level 1 path guidance for ${pathName}`}
         >
-          <p className="text-xs font-semibold uppercase tracking-wide text-text-secondary mb-1">
+          <p className="mb-1 text-xs font-semibold tracking-wide text-text-secondary uppercase">
             Level 1 guidance
           </p>
-          <p className="text-sm text-text-primary whitespace-pre-wrap">{level1Notes}</p>
+          <p className="text-sm whitespace-pre-wrap text-text-primary">{level1Notes}</p>
         </div>
       ) : null}
 
@@ -96,12 +77,12 @@ export function ArchetypePathGuidance({ character }: { character: Character }) {
           role="region"
           aria-label={`Level ${level} path guidance for ${pathName}`}
         >
-          <p className="text-xs font-semibold uppercase tracking-wide text-primary-fg mb-1">
+          <p className="mb-1 text-xs font-semibold tracking-wide text-primary-fg uppercase">
             Level {level} guidance
           </p>
-          <p className="text-sm text-text-primary whitespace-pre-wrap">{levelNotes}</p>
-          <p className="text-xs text-text-muted dark:text-text-secondary mt-2">
-            Admin path notes — not your personal archetype description.
+          <p className="text-sm whitespace-pre-wrap text-text-primary">{levelNotes}</p>
+          <p className="mt-2 text-xs text-text-muted">
+            Admin path notes. Not your personal archetype description.
           </p>
         </div>
       ) : null}

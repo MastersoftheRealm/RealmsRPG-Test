@@ -16,7 +16,9 @@ function renderInline(text: string): ReactNode[] {
     }
 
     if (match.index > 0) {
-      nodes.push(<React.Fragment key={`t-${index++}`}>{remaining.slice(0, match.index)}</React.Fragment>);
+      nodes.push(
+        <React.Fragment key={`t-${index++}`}>{remaining.slice(0, match.index)}</React.Fragment>,
+      );
     }
 
     const token = match[0];
@@ -26,18 +28,27 @@ function renderInline(text: string): ReactNode[] {
       nodes.push(<em key={`i-${index++}`}>{token.slice(1, -1)}</em>);
     } else if (token.startsWith('`')) {
       nodes.push(
-        <code key={`c-${index++}`} className="font-mono text-xs px-1 py-0.5 rounded bg-surface-alt border border-border-light">
+        <code
+          key={`c-${index++}`}
+          className="rounded border border-border-light bg-surface-alt px-1 py-0.5 font-mono text-xs"
+        >
           {token.slice(1, -1)}
-        </code>
+        </code>,
       );
     } else if (token.startsWith('[')) {
       const linkMatch = token.match(/^\[([^\]]+)\]\((https?:\/\/[^\s)]+)\)$/);
       if (linkMatch) {
         const [, label, href] = linkMatch;
         nodes.push(
-          <a key={`l-${index++}`} href={href} target="_blank" rel="noopener noreferrer" className="text-primary-link-fg underline">
+          <a
+            key={`l-${index++}`}
+            href={href}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-primary-link-fg underline"
+          >
             {label}
-          </a>
+          </a>,
         );
       } else {
         nodes.push(<React.Fragment key={`t-${index++}`}>{token}</React.Fragment>);
@@ -57,21 +68,23 @@ export function renderMarkdownLite(markdown: string): ReactNode {
 
   while (i < lines.length) {
     const line = lines[i];
-    if (!line.trim()) {
+    if (line === undefined || !line.trim()) {
       i += 1;
       continue;
     }
 
     if (line.startsWith('- ')) {
       const bullets: ReactNode[] = [];
-      while (i < lines.length && lines[i].startsWith('- ')) {
-        bullets.push(<li key={`li-${i}`}>{renderInline(lines[i].slice(2))}</li>);
+      while (i < lines.length) {
+        const bullet = lines[i];
+        if (bullet === undefined || !bullet.startsWith('- ')) break;
+        bullets.push(<li key={`li-${i}`}>{renderInline(bullet.slice(2))}</li>);
         i += 1;
       }
       elements.push(
-        <ul key={`ul-${i}`} className="list-disc pl-5 space-y-1">
+        <ul key={`ul-${i}`} className="list-disc space-y-1 pl-5">
           {bullets}
-        </ul>
+        </ul>,
       );
       continue;
     }
@@ -79,7 +92,7 @@ export function renderMarkdownLite(markdown: string): ReactNode {
     elements.push(
       <p key={`p-${i}`} className="leading-relaxed">
         {renderInline(line)}
-      </p>
+      </p>,
     );
     i += 1;
   }

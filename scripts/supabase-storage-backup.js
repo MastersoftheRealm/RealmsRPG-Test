@@ -5,7 +5,10 @@
  * Requires: NEXT_PUBLIC_SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY in .env.local or .env
  * Run: npm run storage:backup
  *
- * Default buckets: portraits, profile-pictures (see DEPLOYMENT_AND_SECRETS_SUPABASE.md)
+ * Default buckets: every bucket the project uses — portraits, profile-pictures, codex-art
+ * (official Realms Image Library art) and vtt-maps. Override with STORAGE_BACKUP_BUCKETS.
+ * A bucket that fails does not abort the others, but the run exits non-zero and prints
+ * FAILURE so a partial storage backup can never read as success.
  */
 
 const fs = require('fs');
@@ -20,22 +23,22 @@ for (const name of ['.env.local', '.env']) {
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
 const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
 if (!supabaseUrl || !supabaseServiceKey) {
-  console.error('Missing NEXT_PUBLIC_SUPABASE_URL or SUPABASE_SERVICE_ROLE_KEY in .env.local or .env');
+  console.error(
+    'Missing NEXT_PUBLIC_SUPABASE_URL or SUPABASE_SERVICE_ROLE_KEY in .env.local or .env',
+  );
   process.exit(1);
 }
 
-const DEFAULT_BUCKETS = ['portraits', 'profile-pictures'];
+const DEFAULT_BUCKETS = ['portraits', 'profile-pictures', 'codex-art', 'vtt-maps'];
 const buckets = process.env.STORAGE_BACKUP_BUCKETS
-  ? process.env.STORAGE_BACKUP_BUCKETS.split(',').map((b) => b.trim()).filter(Boolean)
+  ? process.env.STORAGE_BACKUP_BUCKETS.split(',')
+      .map((b) => b.trim())
+      .filter(Boolean)
   : DEFAULT_BUCKETS;
 
 const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
-const timestamp = new Date()
-  .toISOString()
-  .replace(/[-:]/g, '')
-  .replace('T', '-')
-  .slice(0, 15);
+const timestamp = new Date().toISOString().replace(/[-:]/g, '').replace('T', '-').slice(0, 15);
 const outDir = path.join(root, 'backups', `storage-${timestamp}`);
 
 async function listAllFiles(bucket, prefix = '') {
@@ -80,33 +83,57 @@ async function downloadFile(bucket, filePath) {
   return Buffer.from(await data.arrayBuffer());
 }
 
+async function backupBucket(bucket, manifest) {
+  const files = await listAllFiles(bucket);
+  console.log(`  Found ${files.length} file(s)`);
+  manifest.buckets[bucket] = { fileCount: files.length, bytes: 0, files: [] };
+
+  for (const file of files) {
+    const localPath = path.join(outDir, bucket, file.path);
+    fs.mkdirSync(path.dirname(localPath), { recursive: true });
+    const buf = await downloadFile(bucket, file.path);
+    fs.writeFileSync(localPath, buf);
+    manifest.buckets[bucket].bytes += buf.length;
+    manifest.buckets[bucket].files.push(file);
+  }
+  console.log(`  Saved ${files.length} file(s) (${manifest.buckets[bucket].bytes} bytes)`);
+}
+
 async function main() {
   fs.mkdirSync(outDir, { recursive: true });
   console.log(`Output: ${outDir}`);
 
-  const manifest = { createdAt: new Date().toISOString(), buckets: {} };
+  const manifest = { createdAt: new Date().toISOString(), buckets: {}, failures: {} };
 
   for (const bucket of buckets) {
     console.log(`\nBucket: ${bucket}`);
-    const files = await listAllFiles(bucket);
-    console.log(`  Found ${files.length} file(s)`);
-    manifest.buckets[bucket] = { fileCount: files.length, files: [] };
-
-    for (const file of files) {
-      const localPath = path.join(outDir, bucket, file.path);
-      fs.mkdirSync(path.dirname(localPath), { recursive: true });
-      const buf = await downloadFile(bucket, file.path);
-      fs.writeFileSync(localPath, buf);
-      manifest.buckets[bucket].files.push(file);
-      console.log(`  Saved ${bucket}/${file.path}`);
+    try {
+      await backupBucket(bucket, manifest);
+    } catch (err) {
+      const message = err.message || String(err);
+      manifest.failures[bucket] = message;
+      console.error(`  FAILED: ${message}`);
     }
   }
 
   fs.writeFileSync(path.join(outDir, 'manifest.json'), JSON.stringify(manifest, null, 2));
-  console.log(`\nStorage backup complete: ${outDir}`);
+
+  const failed = Object.keys(manifest.failures);
+  const totalFiles = Object.values(manifest.buckets).reduce((sum, b) => sum + b.fileCount, 0);
+  console.log('');
+  if (failed.length > 0) {
+    console.error(
+      `FAILURE: ${failed.length} of ${buckets.length} bucket(s) did not back up (${failed.join(', ')}). ` +
+        `Partial output at ${outDir}`,
+    );
+    process.exit(1);
+  }
+  console.log(
+    `SUCCESS: ${totalFiles} object(s) from ${buckets.length} bucket(s) backed up to ${outDir}`,
+  );
 }
 
 main().catch((err) => {
-  console.error(err.message || err);
+  console.error(`FAILURE: ${err.message || err}`);
   process.exit(1);
 });

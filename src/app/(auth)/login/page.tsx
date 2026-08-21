@@ -6,15 +6,19 @@
 
 'use client';
 
-import { useState, useEffect, Suspense } from 'react';
+import { useState, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { createClient } from '@/lib/supabase/client';
-import { hasGuestEncountersToMigrate, migrateGuestEncountersOnSignIn } from '@/lib/guest-encounter-migration';
+import {
+  hasGuestEncountersToMigrate,
+  migrateGuestEncountersOnSignIn,
+} from '@/lib/guest-encounter-migration';
 
 import { loginSchema, type LoginFormData } from '@/lib/validation';
+import { getAuthErrorMessage } from '@/lib/auth-errors';
 import { sanitizeRedirectPath } from '@/lib/safe-redirect';
 import { resendConfirmationAction } from '@/app/(auth)/auth-actions';
 import { AuthCard, FormInput, PasswordInput, SocialButton } from '@/components/auth';
@@ -26,24 +30,36 @@ function LoginContent() {
   const searchParams = useSearchParams();
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [ready, setReady] = useState(true);
   const [resendStatus, setResendStatus] = useState<'idle' | 'sending' | 'sent'>('idle');
   const [lastAttemptEmail, setLastAttemptEmail] = useState<string>('');
+  /** When true, ignore ?error= from the URL (user started a new sign-in attempt). */
+  const [ignoreAuthParam, setIgnoreAuthParam] = useState(false);
+  const errorParam = searchParams.get('error');
+  const [prevErrorParam, setPrevErrorParam] = useState(errorParam);
+  if (errorParam !== prevErrorParam) {
+    setPrevErrorParam(errorParam);
+    setIgnoreAuthParam(false);
+  }
 
   const getRedirectPath = () => {
     const urlRedirect = searchParams.get('redirect') ?? searchParams.get('returnTo');
-    const sessionRedirect = typeof window !== 'undefined' ? sessionStorage.getItem('loginRedirect') : null;
+    const sessionRedirect =
+      typeof window !== 'undefined' ? sessionStorage.getItem('loginRedirect') : null;
     return sanitizeRedirectPath(urlRedirect || sessionRedirect || '/');
   };
 
-  useEffect(() => {
-    const e = searchParams.get('error');
-    if (e === 'confirm') {
-      setError('Email confirmation failed or expired. Please sign in again, or request a new confirmation email.');
-    } else if (e === 'auth_callback') {
-      setError('Sign-in failed. Please try again.');
-    }
-  }, [searchParams]);
+  const authParamError =
+    !ignoreAuthParam && errorParam === 'confirm'
+      ? 'Email confirmation failed or expired. Please sign in again, or request a new confirmation email.'
+      : !ignoreAuthParam && errorParam === 'auth_callback'
+        ? 'Sign-in failed. Please try again.'
+        : null;
+  const displayError = error ?? authParamError;
+
+  const clearDisplayedError = () => {
+    setError(null);
+    setIgnoreAuthParam(true);
+  };
 
   const {
     register,
@@ -55,13 +71,16 @@ function LoginContent() {
 
   const onSubmit = async (data: LoginFormData) => {
     setIsLoading(true);
-    setError(null);
+    clearDisplayedError();
     setResendStatus('idle');
     setLastAttemptEmail(data.email);
 
     try {
       const supabase = createClient();
-      const { error: err } = await supabase.auth.signInWithPassword({ email: data.email, password: data.password });
+      const { error: err } = await supabase.auth.signInWithPassword({
+        email: data.email,
+        password: data.password,
+      });
       if (err) throw err;
       if (hasGuestEncountersToMigrate()) {
         await migrateGuestEncountersOnSignIn();
@@ -69,7 +88,7 @@ function LoginContent() {
       sessionStorage.removeItem('loginRedirect');
       router.push(getRedirectPath());
     } catch (err) {
-      setError(getAuthErrorMessage(err));
+      setError(getAuthErrorMessage(err, 'login'));
     } finally {
       setIsLoading(false);
     }
@@ -82,7 +101,7 @@ function LoginContent() {
       return;
     }
     setResendStatus('sending');
-    setError(null);
+    clearDisplayedError();
     try {
       const redirectPath = getRedirectPath();
       const result = await resendConfirmationAction(email, redirectPath);
@@ -90,20 +109,22 @@ function LoginContent() {
       setResendStatus('sent');
     } catch (e) {
       setResendStatus('idle');
-      setError(getAuthErrorMessage(e));
+      setError(getAuthErrorMessage(e, 'resend'));
     }
   };
 
   const handleGoogleSignIn = async () => {
     setIsLoading(true);
-    setError(null);
+    clearDisplayedError();
 
     try {
       const supabase = createClient();
       const redirectPath = getRedirectPath();
       const { data, error: err } = await supabase.auth.signInWithOAuth({
         provider: 'google',
-        options: { redirectTo: `${window.location.origin}/auth/callback?next=${encodeURIComponent(redirectPath)}` },
+        options: {
+          redirectTo: `${window.location.origin}/auth/callback?next=${encodeURIComponent(redirectPath)}`,
+        },
       });
       if (err) throw err;
       if (data?.url) {
@@ -111,19 +132,16 @@ function LoginContent() {
       }
     } catch (err: unknown) {
       console.error('Google sign-in error:', err);
-      setError(getAuthErrorMessage(err));
+      setError(getAuthErrorMessage(err, 'login'));
       setIsLoading(false);
     }
   };
 
   return (
-    <AuthCard
-      title="Welcome Back"
-      subtitle="Sign in to continue your adventure"
-    >
-      {error ? (
+    <AuthCard title="Welcome Back" subtitle="Sign in to continue your adventure">
+      {displayError ? (
         <Alert variant="danger" className="mb-6">
-          {error}
+          {displayError}
         </Alert>
       ) : null}
 
@@ -146,29 +164,24 @@ function LoginContent() {
         />
 
         <div className="flex items-center justify-between">
-          <label className="flex items-center gap-2 text-sm text-text-secondary cursor-pointer select-none">
+          <label className="flex cursor-pointer items-center gap-2 text-sm text-text-secondary select-none">
             <input
               type="checkbox"
-              className="h-4 w-4 rounded border-border-light dark:border-border bg-surface text-primary-fg focus:ring-2 focus:ring-primary-outline-border focus:ring-offset-0 cursor-pointer transition-colors"
+              className="h-4 w-4 cursor-pointer rounded border-border-light bg-surface text-primary-fg transition-colors focus:ring-2 focus:ring-primary-outline-border focus:ring-offset-0 dark:border-border"
               {...register('rememberMe')}
             />
             Remember me
           </label>
           <Link
             href="/forgot-password"
-            className="text-sm text-primary-link-fg hover:text-primary-fg-hover transition-colors"
+            className="text-sm text-primary-link-fg transition-colors hover:text-primary-fg-hover"
           >
             Forgot password?
           </Link>
         </div>
 
-        <Button
-          type="submit"
-          className="w-full"
-          disabled={isLoading || !ready}
-          aria-label="Sign in"
-        >
-          {!ready ? 'Loading...' : isLoading ? 'Signing in...' : 'Sign In'}
+        <Button type="submit" className="w-full" disabled={isLoading} aria-label="Sign in">
+          {isLoading ? 'Signing in...' : 'Sign In'}
         </Button>
       </form>
 
@@ -191,24 +204,20 @@ function LoginContent() {
       ) : null}
 
       <div className="my-6 flex items-center gap-4">
-        <div className="flex-1 h-px bg-border-light dark:bg-border" />
-        <span className="text-text-secondary text-sm">or</span>
-        <div className="flex-1 h-px bg-border-light dark:bg-border" />
+        <div className="h-px flex-1 bg-border-light dark:bg-border" />
+        <span className="text-sm text-text-secondary">or</span>
+        <div className="h-px flex-1 bg-border-light dark:bg-border" />
       </div>
 
       <div className="space-y-3">
-        <SocialButton
-          provider="google"
-          onClick={handleGoogleSignIn}
-          disabled={isLoading || !ready}
-        />
+        <SocialButton provider="google" onClick={handleGoogleSignIn} disabled={isLoading} />
       </div>
 
       <p className="mt-6 text-center text-text-secondary">
         Don&apos;t have an account?{' '}
         <Link
           href="/register"
-          className="text-primary-link-fg hover:text-primary-fg-hover transition-colors font-medium"
+          className="font-medium text-primary-link-fg transition-colors hover:text-primary-fg-hover"
         >
           Create one
         </Link>
@@ -231,16 +240,4 @@ export default function LoginPage() {
       <LoginContent />
     </Suspense>
   );
-}
-
-function getAuthErrorMessage(error: unknown): string {
-  const e = error as { message?: string; code?: string };
-  const msg = (e.message ?? '').toLowerCase();
-  if (msg.includes('not confirmed') || msg.includes('email not confirmed')) {
-    return 'Please confirm your email before signing in.';
-  }
-  if (msg.includes('invalid') || msg.includes('credentials')) return 'Invalid email or password';
-  if (msg.includes('too many') || msg.includes('rate')) return 'Too many failed attempts. Please try again later.';
-  if (msg.includes('network') || msg.includes('fetch')) return 'Network error. Please check your connection.';
-  return e.message ?? 'An error occurred during sign in. Please try again.';
 }

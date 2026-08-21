@@ -11,6 +11,8 @@ import { getSession } from '@/lib/supabase/session';
 import { getRolePolicyForUser } from '@/lib/role-policy';
 import { detectImageMime, extensionForImageMime } from '@/lib/validate-image';
 import { buildRateLimitKey, resolveClientIp, uploadLimiter } from '@/lib/rate-limit';
+import { apiErrorResponse, logApiError } from '@/lib/api-error';
+import { verifyMutationRequest } from '@/lib/api-validation';
 
 const BUCKET = 'profile-pictures';
 const MAX_SIZE = 5 * 1024 * 1024; // 5MB
@@ -21,19 +23,28 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
+  const denied = verifyMutationRequest(request);
+  if (denied) return denied;
+
   const key = buildRateLimitKey('upload-profile-picture', {
     userId: user.uid,
     ip: resolveClientIp(request.headers),
   });
-  const { success } = uploadLimiter.check(key);
+  const { success } = await uploadLimiter.check(key);
   if (!success) {
-    return NextResponse.json({ error: 'Too many requests' }, { status: 429, headers: { 'Retry-After': '60' } });
+    return NextResponse.json(
+      { error: 'Too many requests' },
+      { status: 429, headers: { 'Retry-After': '60' } },
+    );
   }
 
   const supabase = await createClient();
   const rolePolicy = await getRolePolicyForUser(user.uid, supabase);
   if (!rolePolicy.canUploadProfilePicture) {
-    return NextResponse.json({ error: 'Your role cannot upload profile pictures.' }, { status: 403 });
+    return NextResponse.json(
+      { error: 'Your role cannot upload profile pictures.' },
+      { status: 403 },
+    );
   }
 
   const formData = await request.formData();
@@ -61,13 +72,22 @@ export async function POST(request: NextRequest) {
   const path = `${user.uid}.${ext}`;
 
   try {
-    const { data: existing } = await supabase.storage.from(BUCKET).list('', { limit: 100 });
+    // Cleanup only: a failure leaves an orphaned object but must not fail the upload.
+    const { data: existing, error: listError } = await supabase.storage
+      .from(BUCKET)
+      .list('', { limit: 100 });
+    if (listError) {
+      logApiError('POST /api/upload/profile-picture (stale picture list)', listError);
+    }
     if (existing?.length) {
       const toRemove = existing
         .filter((f) => f.name?.startsWith(`${user.uid}.`))
         .map((f) => f.name);
       if (toRemove.length) {
-        await supabase.storage.from(BUCKET).remove(toRemove);
+        const { error: removeError } = await supabase.storage.from(BUCKET).remove(toRemove);
+        if (removeError) {
+          logApiError('POST /api/upload/profile-picture (stale picture remove)', removeError);
+        }
       }
     }
 
@@ -76,23 +96,39 @@ export async function POST(request: NextRequest) {
       .upload(path, file, { upsert: true, contentType: detectedMime });
 
     if (uploadError) {
-      console.error('Profile picture upload error:', uploadError);
-      return NextResponse.json({ error: uploadError.message }, { status: 500 });
+      return apiErrorResponse(
+        'Upload failed',
+        500,
+        'POST /api/upload/profile-picture',
+        uploadError,
+      );
     }
 
-    const { data: { publicUrl } } = supabase.storage.from(BUCKET).getPublicUrl(path);
+    const {
+      data: { publicUrl },
+    } = supabase.storage.from(BUCKET).getPublicUrl(path);
 
     // Do NOT set created_at here: upsert would clobber the original signup
     // timestamp on every upload (TASK-331). created_at is set on first insert
     // (DB default / ensureUserProfile); we only touch photo_url + updated_at.
-    await supabase.from('user_profiles').upsert(
-      { id: user.uid, photo_url: publicUrl, updated_at: new Date().toISOString() },
-      { onConflict: 'id' }
-    );
+    const { error: profileError } = await supabase
+      .from('user_profiles')
+      .upsert(
+        { id: user.uid, photo_url: publicUrl, updated_at: new Date().toISOString() },
+        { onConflict: 'id' },
+      );
+    if (profileError) {
+      return apiErrorResponse(
+        'Upload failed',
+        500,
+        'POST /api/upload/profile-picture (profile update)',
+        profileError,
+      );
+    }
 
     return NextResponse.json({ url: publicUrl });
   } catch (err) {
-    console.error('[API Error] POST /api/upload/profile-picture:', err);
-    return NextResponse.json({ error: 'Upload failed' }, { status: 500 });
+    logApiError('POST /api/upload/profile-picture', err);
+    return apiErrorResponse('Upload failed', 500);
   }
 }

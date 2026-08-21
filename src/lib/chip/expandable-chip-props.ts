@@ -1,26 +1,21 @@
-import type { VariantProps } from 'class-variance-authority';
-import type { chipVariants } from '@/components/ui/chip';
 import type { ExpandableChipProps } from '@/components/ui/expandable-chip';
-import type { ChipData } from '@/components/shared/grid-list-row-types';
+import type { ChipData } from '@/components/patterns/list/grid-list-row-types';
 import type { PartData } from '@/lib/chip/part-data';
-import { partChipVariant } from '@/lib/chip/part-chip-variant';
 import {
   formatGridListChipLabel,
   gridListChipStyleVariant,
   isGridListChipExpandable,
 } from '@/lib/chip/grid-list-chip-utils';
 
-type ChipVariant = NonNullable<VariantProps<typeof chipVariants>['variant']>;
-
 export function expandableChipPropsFromPartData(
   part: PartData,
   ctx?: {
-    isExpanded?: boolean;
-    onClick?: (e: React.MouseEvent) => void;
-    size?: 'sm' | 'md';
-    fullWidthWhenExpanded?: boolean;
-    className?: string;
-  }
+    isExpanded?: boolean | undefined;
+    onClick?: ((e: React.MouseEvent) => void) | undefined;
+    size?: 'sm' | 'md' | undefined;
+    fullWidthWhenExpanded?: boolean | undefined;
+    className?: string | undefined;
+  },
 ): ExpandableChipProps {
   const hasTP = (part.tpCost ?? 0) > 0;
   const hasDescription = !!part.description;
@@ -45,7 +40,7 @@ export function expandableChipPropsFromPartData(
 
 export function expandableChipPropsFromChipData(
   chip: ChipData,
-  costLabel: string
+  costLabel: string,
 ): ExpandableChipProps {
   const hasCost = (chip.cost ?? 0) > 0;
   const isExpandable = isGridListChipExpandable(chip);
@@ -63,8 +58,8 @@ export function expandableChipPropsFromChipData(
     label: chip.name,
     description: chip.description,
     variant: styleVariant,
-    level: chip.level,
-    cost: chip.cost,
+    level: chip.level && chip.level > 0 ? chip.level : undefined,
+    cost: hasCost ? chip.cost : undefined,
     costLabel: chip.costLabel || costLabel,
     options: chip.options,
     expandable: true,

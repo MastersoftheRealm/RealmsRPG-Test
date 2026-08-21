@@ -1,7 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getSession } from '@/lib/supabase/session';
-import { isAdmin } from '@/lib/admin';
+import { requireAdminSession } from '@/lib/admin';
 import { createServiceRoleClient } from '@/lib/supabase/server';
+import {
+  buildRateLimitKey,
+  resolveClientIp,
+  retryAfterSecondsFromReset,
+  standardLimiter,
+} from '@/lib/rate-limit';
 
 export const dynamic = 'force-dynamic';
 
@@ -46,9 +51,23 @@ function toValidLimit(raw: string | null): number {
 
 export async function GET(request: NextRequest) {
   try {
-    const { user } = await getSession();
-    if (!user?.uid) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    if (!(await isAdmin(user.uid))) return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+    const auth = await requireAdminSession();
+    if (!auth.ok) {
+      return NextResponse.json(auth.body, { status: auth.status });
+    }
+
+    const rateResult = await standardLimiter.check(
+      buildRateLimitKey('admin-changelogs-get', {
+        userId: auth.userId,
+        ip: resolveClientIp(request.headers),
+      }),
+    );
+    if (!rateResult.success) {
+      return NextResponse.json(
+        { error: 'Too many requests' },
+        { status: 429, headers: { 'Retry-After': retryAfterSecondsFromReset(rateResult.reset) } },
+      );
+    }
 
     const params = request.nextUrl.searchParams;
     const entityType = params.get('entityType') ?? 'codex_feats';
@@ -60,7 +79,9 @@ export async function GET(request: NextRequest) {
     const supabase = createServiceRoleClient();
     const { data, error } = await supabase
       .from('codex_change_logs')
-      .select('id, entity_type, entity_id, operation, changed_at, changed_by_user_id, before_data, after_data, changed_fields')
+      .select(
+        'id, entity_type, entity_id, operation, changed_at, changed_by_user_id, before_data, after_data, changed_fields',
+      )
       .eq('entity_type', entityType)
       .order('changed_at', { ascending: false })
       .limit(limit);
@@ -68,7 +89,9 @@ export async function GET(request: NextRequest) {
     if (error) throw error;
 
     const rows = (data ?? []) as ChangeLogRow[];
-    const userIds = Array.from(new Set(rows.map((row) => String(row.changed_by_user_id)).filter(Boolean)));
+    const userIds = Array.from(
+      new Set(rows.map((row) => String(row.changed_by_user_id)).filter(Boolean)),
+    );
     let profilesById = new Map<string, UserProfileRow>();
 
     if (userIds.length > 0) {
@@ -78,7 +101,12 @@ export async function GET(request: NextRequest) {
         .in('id', userIds);
       if (profileError) throw profileError;
 
-      profilesById = new Map((profiles ?? []).map((profile) => [String((profile as UserProfileRow).id), profile as UserProfileRow]));
+      profilesById = new Map(
+        (profiles ?? []).map((profile) => [
+          String((profile as UserProfileRow).id),
+          profile as UserProfileRow,
+        ]),
+      );
     }
 
     const payload = rows.map((row) => {

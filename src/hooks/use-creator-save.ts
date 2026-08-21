@@ -11,9 +11,14 @@
 import { useState, useCallback, useEffect } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import { useToast } from '@/components/ui';
-import { saveToLibrary, saveToOfficialLibrary, findLibraryItemByName, findOfficialLibraryItemByName } from '@/services/library-service';
-
-const OFFICIAL_LIBRARY_KEY = ['official-library'] as const;
+import {
+  saveToLibrary,
+  saveToOfficialLibrary,
+  findLibraryItemByName,
+  findOfficialLibraryItemByName,
+} from '@/services/library-service';
+import { officialLibraryKeys } from '@/hooks/use-official-library';
+import { userLibraryKeys } from '@/hooks/use-user-library';
 
 /** Partial query keys for user library; invalidating these refreshes load-modal lists after save */
 const USER_LIBRARY_QUERY_KEYS: Record<CreatorLibraryType, readonly string[]> = {
@@ -25,7 +30,13 @@ const USER_LIBRARY_QUERY_KEYS: Record<CreatorLibraryType, readonly string[]> = {
   species: ['user-species'],
 };
 
-export type CreatorLibraryType = 'powers' | 'techniques' | 'empowered-techniques' | 'items' | 'creatures' | 'species';
+export type CreatorLibraryType =
+  | 'powers'
+  | 'techniques'
+  | 'empowered-techniques'
+  | 'items'
+  | 'creatures'
+  | 'species';
 
 export interface CreatorSavePayload {
   name: string;
@@ -37,16 +48,18 @@ export interface UseCreatorSaveOptions {
   /** Returns current name and payload for save. Called at save time. */
   getPayload: () => CreatorSavePayload;
   /** Require confirmation modal before saving to public library */
-  requirePublishConfirm?: boolean;
-  publishConfirmTitle?: string;
+  requirePublishConfirm?: boolean | undefined;
+  publishConfirmTitle?: string | undefined;
   /** Receives name and whether an item with that name already exists in the public library (override case). */
-  publishConfirmDescription?: (name: string, opts: { existingInPublic: boolean }) => string;
+  publishConfirmDescription?:
+    | ((name: string, opts: { existingInPublic: boolean }) => string)
+    | undefined;
   /** Called after successful save (e.g. reset form). Optional. */
-  onSaveSuccess?: () => void;
+  onSaveSuccess?: (() => void) | undefined;
   /** Success message for private save. Default: "Saved successfully!" */
-  successMessage?: string;
+  successMessage?: string | undefined;
   /** Success message for public save. Default: "Saved to Realms Library!" */
-  publicSuccessMessage?: string;
+  publicSuccessMessage?: string | undefined;
 }
 
 export interface UseCreatorSaveReturn {
@@ -61,7 +74,9 @@ export interface UseCreatorSaveReturn {
   /** Call when user confirms publish in modal */
   confirmPublish: () => Promise<void>;
   publishConfirmTitle: string;
-  publishConfirmDescription: ((name: string, opts: { existingInPublic: boolean }) => string) | undefined;
+  publishConfirmDescription:
+    | ((name: string, opts: { existingInPublic: boolean }) => string)
+    | undefined;
   /** True when publishing would replace an existing public item with the same name. */
   publishExistingInPublic: boolean;
 }
@@ -83,14 +98,17 @@ export function useCreatorSave(options: UseCreatorSaveOptions): UseCreatorSaveRe
 
   const queryClient = useQueryClient();
   const { showToast } = useToast();
-  const [saveMessage, setSaveMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
+  const [saveMessage, setSaveMessage] = useState<{
+    type: 'success' | 'error';
+    text: string;
+  } | null>(null);
 
   useEffect(() => {
     if (!saveMessage) return;
     showToast(
       saveMessage.text,
       saveMessage.type === 'success' ? 'success' : 'error',
-      saveMessage.type === 'error' ? 6000 : undefined
+      saveMessage.type === 'error' ? 6000 : undefined,
     );
   }, [saveMessage, showToast]);
   const [saveTarget, setSaveTarget] = useState<'private' | 'public'>('private');
@@ -106,14 +124,26 @@ export function useCreatorSave(options: UseCreatorSaveOptions): UseCreatorSaveRe
   const executeSave = useCallback(
     async (target: 'private' | 'public', existingPublicId?: string) => {
       const { name, data } = getPayload();
+      // Private + public saves persist image_id / image_url cache (TASK-497 user_* parity).
       const payload = { ...data, createdAt: new Date().toISOString(), updatedAt: new Date() };
       setSaving(true);
       setSaveMessage(null);
       try {
         if (target === 'public') {
-          await saveToOfficialLibrary(type, payload, existingPublicId ? { existingId: existingPublicId } : undefined);
+          await saveToOfficialLibrary(
+            type,
+            payload,
+            existingPublicId ? { existingId: existingPublicId } : undefined,
+          );
           // Refetch all matching official-library queries (inactive tabs too) so Library / browse update immediately
-          await queryClient.invalidateQueries({ queryKey: [...OFFICIAL_LIBRARY_KEY], refetchType: 'all' });
+          await queryClient.invalidateQueries({
+            queryKey: officialLibraryKeys.all,
+            refetchType: 'all',
+          });
+          await queryClient.invalidateQueries({
+            queryKey: officialLibraryKeys.counts,
+            refetchType: 'all',
+          });
           if (type === 'species') {
             await queryClient.invalidateQueries({ queryKey: ['codex'], refetchType: 'all' });
           }
@@ -123,6 +153,14 @@ export function useCreatorSave(options: UseCreatorSaveOptions): UseCreatorSaveRe
           await saveToLibrary(type, payload, existing ? { existingId: existing.id } : undefined);
           await queryClient.invalidateQueries({
             queryKey: [...USER_LIBRARY_QUERY_KEYS[type]],
+            refetchType: 'all',
+          });
+          await queryClient.invalidateQueries({
+            queryKey: userLibraryKeys.countsRoot,
+            refetchType: 'all',
+          });
+          await queryClient.invalidateQueries({
+            queryKey: userLibraryKeys.countsRoot,
             refetchType: 'all',
           });
           setSaveMessage({ type: 'success', text: successMessage });
@@ -140,13 +178,16 @@ export function useCreatorSave(options: UseCreatorSaveOptions): UseCreatorSaveRe
         setSaving(false);
       }
     },
-    [type, getPayload, successMessage, publicSuccessMessage, onSaveSuccess]
+    [type, getPayload, successMessage, publicSuccessMessage, onSaveSuccess, queryClient],
   );
 
   const handleSave = useCallback(async () => {
     const { name } = getPayload();
     if (!name?.trim()) {
-      setSaveMessage({ type: 'error', text: `Please enter a ${type === 'species' ? 'species' : type.slice(0, -1)} name` });
+      setSaveMessage({
+        type: 'error',
+        text: `Please enter a ${type === 'species' ? 'species' : type.slice(0, -1)} name`,
+      });
       return;
     }
     if (saveTarget === 'public' && requirePublishConfirm) {
@@ -162,7 +203,7 @@ export function useCreatorSave(options: UseCreatorSaveOptions): UseCreatorSaveRe
     const existingId = publishExistingId;
     setShowPublishConfirm(false);
     await executeSave('public', existingId ?? undefined);
-  }, [executeSave, publishExistingId]);
+  }, [executeSave, publishExistingId, setShowPublishConfirm]);
 
   return {
     saveMessage,

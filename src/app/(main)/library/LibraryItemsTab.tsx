@@ -1,312 +1,250 @@
 /**
- * Library Items (Armaments) Tab
- * =============================
- * User's armaments list with search and sort.
+ * Library Items Tab — weapons, armor, or shields (My Library).
+ * Entity mapping + rows; shell from ADR-0001.
  */
 
 'use client';
 
-import { useState, useMemo } from 'react';
-import Link from 'next/link';
+import { useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { Plus, RefreshCw, Shield } from 'lucide-react';
+import { Shield, Shirt, Sword } from 'lucide-react';
 import {
   GridListRow,
-  SearchInput,
-  ListHeader,
-  LoadingState,
-  ErrorDisplay,
-  ListEmptyState,
-  ConfirmActionModal,
-  type ChipData,
-} from '@/components/shared';
+  LibraryAddToCharacterButton,
+  LibraryRowActionSlot,
+} from '@/components/patterns';
+import { ArmamentFilters } from '@/components/patterns/filters';
 import { useSort } from '@/hooks/use-sort';
-import type { ItemPropertyPayload } from '@/lib/calculators/item-calc';
-import {
-  calculateItemCosts,
-  calculateCurrencyCostAndRarity,
-  formatRange as formatItemRange,
-  trainingPointsForItemPropertyRef,
-} from '@/lib/calculators/item-calc';
-import { formatDamageDisplay, formatListCellLabel } from '@/lib/utils';
+import { useAddToCharacterFromLibrary } from '@/hooks/use-add-to-character-from-library';
+import { usePathListFilter } from '@/hooks';
 import { useUserItems, useItemProperties, useDuplicateItem } from '@/hooks';
-import { Button, IconButton, useToast } from '@/components/ui';
 import type { DisplayItem } from '@/types';
 import { getItemSyncResult, sanitizeItemForSync } from '@/lib/library-sync';
-import { saveToLibrary } from '@/services/library-service';
+import {
+  ARMAMENT_LIBRARY_CONFIG,
+  armamentRowColumns,
+  buildOfficialItemRows,
+  filterItemsByArmamentKind,
+  filterOfficialItemRows,
+  officialItemDetailSections,
+  type ArmamentLibraryKind,
+} from '@/lib/library/official-item-list';
+import {
+  EMPTY_ARMAMENT_FILTERS,
+  countActiveArmamentFilters,
+  type ArmamentFilterState,
+} from '@/lib/library/armament-filters';
+import type { ArmamentCharacterContext } from '@/lib/library/armament-character-context';
+import {
+  LibrarySyncRowAction,
+  UserLibraryEntityTabShell,
+} from './components/UserLibraryEntityTabShell';
+import {
+  ARMOR_LIBRARY_LABELS,
+  SHIELD_LIBRARY_LABELS,
+  WEAPON_LIBRARY_LABELS,
+  type LibraryEntityTabLabels,
+} from './components/library-entity-tab.types';
+import { useLibraryEntitySync } from './hooks/use-library-entity-sync';
+import { useLibraryDuplicateConfirm } from './hooks/use-library-duplicate-confirm';
+import { resolveListRowThumbnail } from '@/lib/list-row-image';
+import {
+  libraryRowPathIds,
+  pathChipLabelsForEntity,
+  pathFilterEmptyTitle,
+} from '@/lib/game/path-recommendation-index';
 
-const ARMAMENT_GRID_COLUMNS = '1.5fr 0.8fr 0.8fr 0.8fr 0.8fr 0.8fr 1fr 40px';
-const ARMAMENT_HEADER_COLUMNS = [
-  { key: 'name', label: 'NAME', align: 'left' as const },
-  { key: 'type', label: 'TYPE', align: 'center' as const },
-  { key: 'rarity', label: 'RARITY', align: 'center' as const },
-  { key: 'currency', label: 'CURRENCY', align: 'center' as const },
-  { key: 'tp', label: 'TP', align: 'center' as const },
-  { key: 'range', label: 'RANGE', align: 'center' as const },
-  { key: 'damage', label: 'DAMAGE', align: 'center' as const },
-  { key: '_actions', label: '', sortable: false as const },
-];
+const LABELS_BY_KIND: Record<ArmamentLibraryKind, LibraryEntityTabLabels> = {
+  weapon: WEAPON_LIBRARY_LABELS,
+  armor: ARMOR_LIBRARY_LABELS,
+  shield: SHIELD_LIBRARY_LABELS,
+};
+
+const ICONS_BY_KIND = {
+  weapon: <Sword className="h-8 w-8" />,
+  armor: <Shirt className="h-8 w-8" />,
+  shield: <Shield className="h-8 w-8" />,
+};
+
+const ARMAMENT_ROW_CHROME = { edit: true, delete: true, rightSlot: true } as const;
 
 interface LibraryItemsTabProps {
+  armamentKind: ArmamentLibraryKind;
   onDelete: (item: DisplayItem) => void;
 }
 
-export function LibraryItemsTab({ onDelete }: LibraryItemsTabProps) {
+export function LibraryItemsTab({ armamentKind, onDelete }: LibraryItemsTabProps) {
   const router = useRouter();
-  const { showToast } = useToast();
-  const { data: items = [], isLoading, error, refetch } = useUserItems();
+  const labels = LABELS_BY_KIND[armamentKind];
+  const { grid, headers } = ARMAMENT_LIBRARY_CONFIG[armamentKind];
+  const { data: allItems = [], isLoading, error, refetch } = useUserItems();
+  const items = useMemo(
+    () => filterItemsByArmamentKind(allItems, armamentKind),
+    [allItems, armamentKind],
+  );
   const { data: propertiesDb = [] } = useItemProperties();
   const duplicateItem = useDuplicateItem();
   const [search, setSearch] = useState('');
-  const [syncingIds, setSyncingIds] = useState<Set<string>>(new Set());
-  const [syncingAll, setSyncingAll] = useState(false);
-  const [duplicateConfirm, setDuplicateConfirm] = useState<{ id: string; name: string } | null>(null);
-  const [showSyncAllConfirm, setShowSyncAllConfirm] = useState(false);
+  const [advancedFilters, setAdvancedFilters] =
+    useState<ArmamentFilterState>(EMPTY_ARMAMENT_FILTERS);
+  const [characterContext, setCharacterContext] = useState<ArmamentCharacterContext | null>(null);
+  const [characterFilterId, setCharacterFilterId] = useState('');
+  const addToCharacter = useAddToCharacterFromLibrary(armamentKind, characterFilterId);
   const { sortState, handleSort, sortItems } = useSort('name');
+  const { selectedPathIds, setSelectedPathIds, pathIndex, pathRecommendedIds, pathFilterActive } =
+    usePathListFilter({ entities: items, kind: 'armaments' });
 
-  const cardData = useMemo(() => {
-    return (items || []).map(item => {
-      const props = (Array.isArray(item.properties) ? item.properties : []) as ItemPropertyPayload[];
-      const costs = calculateItemCosts(props, propertiesDb);
-      const syncResult = getItemSyncResult(item, propertiesDb);
-      const { currencyCost, rarity } = calculateCurrencyCostAndRarity(costs.totalCurrency, costs.totalIP);
-      const rangeStr = formatItemRange(props);
-      const parts: ChipData[] = (
-        (item.properties || []) as Array<string | { id?: unknown; name?: string; op_1_lvl?: number }>
-      ).map((prop) => {
-        const propName = typeof prop === 'string' ? prop : (prop.name || '');
-        const dbProp = propertiesDb.find(
-          (p: { name?: string }) => p.name?.toLowerCase() === String(propName).toLowerCase()
-        );
-        const cost = trainingPointsForItemPropertyRef(prop, propertiesDb);
-        const lvl = typeof prop === 'object' && prop && prop.op_1_lvl != null ? prop.op_1_lvl : 0;
-        return {
-          name: dbProp?.name || propName || '',
-          description: dbProp?.description || '',
-          cost: cost > 0 ? cost : undefined,
-          costLabel: 'TP',
-          category: (cost > 0 ? 'cost' : 'default') as 'cost' | 'default',
-          level: lvl > 1 ? lvl : undefined,
-        };
-      });
-      const totalTP = parts.reduce((sum, p) => sum + (p.cost || 0), 0);
-      return {
-        id: String(item.docId ?? item.id ?? ''),
-        source: item,
-        name: String(item.name ?? ''),
-        description: String(item.description ?? ''),
-        type: formatListCellLabel(item.type),
-        rarity: formatListCellLabel(rarity),
-        currency: Math.round(currencyCost),
-        tp: Math.round(totalTP),
-        range: rangeStr || '-',
-        damage: formatDamageDisplay(item.damage) || '-',
-        parts,
-        hasDrift: syncResult.hasDrift,
-        syncIssues: syncResult.issues,
-      };
-    });
-  }, [items, propertiesDb]);
+  const cardData = useMemo(
+    () => buildOfficialItemRows(items, propertiesDb, armamentKind),
+    [items, propertiesDb, armamentKind],
+  );
 
-  const driftedItems = useMemo(() => cardData.filter((item) => item.hasDrift), [cardData]);
+  const driftedIds = useMemo(
+    () =>
+      cardData
+        .filter((item) => getItemSyncResult(item.raw, propertiesDb).hasDrift)
+        .map((item) => item.id),
+    [cardData, propertiesDb],
+  );
 
-  const handleSyncOne = async (itemId: string) => {
-    const source = items.find((i) => String(i.docId ?? i.id ?? '') === itemId);
-    if (!source) return;
-    const sanitized = sanitizeItemForSync(source, propertiesDb);
-    if (!sanitized.hasDrift || !sanitized.changed) return;
+  const sync = useLibraryEntitySync({
+    saveType: 'items',
+    sources: items,
+    getRowId: (i) => String(i.docId ?? i.id ?? ''),
+    getRowName: (i) => String(i.name ?? ''),
+    driftedIds,
+    sanitize: (source) => sanitizeItemForSync(source, propertiesDb),
+    refetch,
+    entitySingular: labels.entitySingular,
+    entityPlural: labels.entityPlural,
+  });
 
-    setSyncingIds((prev) => new Set(prev).add(itemId));
-    try {
-      await saveToLibrary('items', sanitized.value as unknown as Record<string, unknown>, { existingId: itemId });
-      await refetch();
-      showToast(`Synced "${source.name}" to current patch rules.`, 'success');
-    } catch (e) {
-      showToast((e as Error)?.message ?? 'Failed to sync armament', 'error');
-    } finally {
-      setSyncingIds((prev) => {
-        const next = new Set(prev);
-        next.delete(itemId);
-        return next;
-      });
-    }
-  };
+  const dup = useLibraryDuplicateConfirm({
+    duplicateTitle: labels.duplicateTitle,
+    isPending: duplicateItem.isPending,
+    mutate: (id, handlers) => duplicateItem.mutate(id, handlers),
+  });
 
-  const handleSyncAll = async () => {
-    if (driftedItems.length === 0) return;
-    setSyncingAll(true);
-    let syncedCount = 0;
-    try {
-      for (const item of driftedItems) {
-        const source = items.find((i) => String(i.docId ?? i.id ?? '') === item.id);
-        if (!source) continue;
-        const sanitized = sanitizeItemForSync(source, propertiesDb);
-        if (!sanitized.hasDrift || !sanitized.changed) continue;
-        await saveToLibrary('items', sanitized.value as unknown as Record<string, unknown>, { existingId: item.id });
-        syncedCount += 1;
-      }
-      await refetch();
-      showToast(
-        syncedCount > 0
-          ? `Synced ${syncedCount} armament${syncedCount === 1 ? '' : 's'} with current patch.`
-          : 'All armaments are already in sync.',
-        'success'
-      );
-    } catch (e) {
-      showToast((e as Error)?.message ?? 'Failed to sync all armaments', 'error');
-    } finally {
-      setSyncingAll(false);
-    }
-  };
-
-  const filteredData = useMemo(() => {
-    let result = cardData;
-    if (search) {
-      const searchLower = search.toLowerCase();
-      result = result.filter(item =>
-        String(item.name ?? '').toLowerCase().includes(searchLower) ||
-        String(item.description ?? '').toLowerCase().includes(searchLower) ||
-        item.parts.some(p => String(p.name ?? '').toLowerCase().includes(searchLower))
-      );
-    }
-    return sortItems(result);
-  }, [cardData, search, sortItems]);
-
-  if (error) {
-    return <ErrorDisplay message="Failed to load armaments" subMessage="Please try again later" onRetry={() => refetch()} />;
-  }
-
-  if (!isLoading && cardData.length === 0) {
-    return (
-      <ListEmptyState
-        icon={<Shield className="w-8 h-8" />}
-        title="No armaments yet"
-        message="Create your first weapon, armor, or equipment to see it here."
-        action={
-          <Button asChild>
-            <Link href="/item-creator">
-              <Plus className="w-4 h-4" />
-              Create Armament
-            </Link>
-          </Button>
-        }
-      />
-    );
-  }
+  const filteredData = useMemo(
+    () =>
+      filterOfficialItemRows(
+        cardData,
+        search,
+        sortItems,
+        advancedFilters,
+        characterContext,
+        pathRecommendedIds,
+      ),
+    [cardData, search, sortItems, advancedFilters, characterContext, pathRecommendedIds],
+  );
 
   return (
-    <div>
-      <div className="mb-4 flex flex-wrap items-center justify-between gap-2">
-        <SearchInput
-          value={search}
-          onChange={setSearch}
-          placeholder="Search armaments..."
-        />
-        <Button
-          variant="secondary"
-          size="sm"
-          onClick={() => setShowSyncAllConfirm(true)}
-          disabled={driftedItems.length === 0 || syncingAll}
-        >
-          <RefreshCw className={`w-4 h-4 ${syncingAll ? 'animate-spin' : ''}`} />
-          Sync with current patch
-          {driftedItems.length > 0 ? ` (${driftedItems.length})` : ''}
-        </Button>
-      </div>
-
-      <ListHeader
-        columns={ARMAMENT_HEADER_COLUMNS}
-        gridColumns={ARMAMENT_GRID_COLUMNS}
+    <>
+      <UserLibraryEntityTabShell
+        labels={labels}
+        isLoading={isLoading}
+        error={error}
+        onRetry={() => void refetch()}
+        totalCount={cardData.length}
+        emptyIcon={ICONS_BY_KIND[armamentKind]}
+        search={search}
+        onSearchChange={setSearch}
         sortState={sortState}
         onSort={handleSort}
-      />
-
-      <div className="flex flex-col gap-1 mt-2">
-        {isLoading ? (
-          <LoadingState />
-        ) : filteredData.length === 0 ? (
-          <ListEmptyState title="No armaments match your search." size="sm" />
-        ) : (
-          filteredData.map(item => (
+        headerColumns={headers}
+        gridColumns={grid}
+        hasThumbnailColumn
+        rowChrome={ARMAMENT_ROW_CHROME}
+        filteredCount={filteredData.length}
+        driftedCount={sync.driftedCount}
+        syncingAll={sync.syncingAll}
+        showSyncAllConfirm={sync.showSyncAllConfirm}
+        onOpenSyncAllConfirm={() => sync.setShowSyncAllConfirm(true)}
+        onCloseSyncAllConfirm={() => sync.setShowSyncAllConfirm(false)}
+        onConfirmSyncAll={() => {
+          sync.setShowSyncAllConfirm(false);
+          void sync.handleSyncAll();
+        }}
+        duplicateConfirm={dup.duplicateConfirm}
+        onCloseDuplicate={dup.closeDuplicateConfirm}
+        onConfirmDuplicate={dup.onConfirmDuplicate}
+        duplicatePending={dup.isPending}
+        filters={
+          <ArmamentFilters
+            value={advancedFilters}
+            onChange={setAdvancedFilters}
+            onCharacterContextChange={setCharacterContext}
+            onCharacterIdChange={setCharacterFilterId}
+            pathFilter={{
+              options: pathIndex.options,
+              selectedPathIds,
+              onChange: setSelectedPathIds,
+            }}
+          />
+        }
+        filterActiveCount={
+          countActiveArmamentFilters(advancedFilters, Boolean(characterContext)) +
+          (pathFilterActive ? 1 : 0)
+        }
+        filterEmptyTitle={pathFilterActive ? pathFilterEmptyTitle(labels.entityPlural) : undefined}
+      >
+        {filteredData.map((item) => {
+          const syncResult = getItemSyncResult(item.raw, propertiesDb);
+          const propertySection = officialItemDetailSections(item, armamentKind);
+          const nameLabels = pathFilterActive
+            ? pathChipLabelsForEntity(pathIndex, libraryRowPathIds(item), selectedPathIds)
+            : undefined;
+          const nameBadges = nameLabels?.map((label) => ({ label })) ?? [];
+          const driftBadges = syncResult.hasDrift
+            ? [{ label: 'Needs sync' as const, color: 'amber' as const }]
+            : [];
+          const badges = [...nameBadges, ...driftBadges];
+          return (
             <GridListRow
               key={item.id}
               id={item.id}
               name={item.name}
               description={item.description}
-              gridColumns={ARMAMENT_GRID_COLUMNS}
-              columns={[
-                { key: 'Type', value: item.type, align: 'center' },
-                { key: 'Rarity', value: item.rarity, align: 'center' },
-                { key: 'Currency', value: item.currency, align: 'center' },
-                { key: 'TP', value: item.tp, highlight: true, align: 'center' },
-                { key: 'Range', value: item.range, align: 'center' },
-                { key: 'Damage', value: item.damage, align: 'center' },
-              ]}
-              chips={item.parts}
-              chipsLabel="Properties & Proficiencies"
-              totalCost={item.tp}
-              costLabel="TP"
-              badges={item.hasDrift ? [{ label: 'Needs sync', color: 'amber' }] : []}
-              warningMessage={item.syncIssues[0]?.message}
-              rightSlot={item.hasDrift ? (
-                <IconButton
-                  variant="ghost"
-                  size="sm"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    void handleSyncOne(item.id);
-                  }}
-                  label="Sync with current patch"
-                  className="text-warning-fg hover:opacity-80"
-                >
-                  <RefreshCw className={`w-4 h-4 ${syncingIds.has(item.id) ? 'animate-spin' : ''}`} />
-                </IconButton>
-              ) : undefined}
-              onEdit={() => router.push(`/item-creator?edit=${item.id}`)}
+              thumbnail={resolveListRowThumbnail('equipment', item.raw, item.name)}
+              gridColumns={grid}
+              rowChrome={ARMAMENT_ROW_CHROME}
+              columns={armamentRowColumns(item, armamentKind)}
+              detailSections={propertySection.length > 0 ? propertySection : undefined}
+              badges={badges.length > 0 ? badges : undefined}
+              showBadgesInName={nameBadges.length > 0}
+              warningMessage={syncResult.issues[0]?.message}
+              rightSlot={
+                addToCharacter.active && !addToCharacter.isOnCharacter(item.raw) ? (
+                  <LibraryRowActionSlot>
+                    <LibraryAddToCharacterButton
+                      kind={armamentKind}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        addToCharacter.openAddConfirm(item.name, item.raw);
+                      }}
+                    />
+                    {syncResult.hasDrift ? (
+                      <LibrarySyncRowAction
+                        syncing={sync.syncingIds.has(item.id)}
+                        onSync={() => void sync.handleSyncOne(item.id)}
+                      />
+                    ) : null}
+                  </LibraryRowActionSlot>
+                ) : syncResult.hasDrift ? (
+                  <LibrarySyncRowAction
+                    syncing={sync.syncingIds.has(item.id)}
+                    onSync={() => void sync.handleSyncOne(item.id)}
+                  />
+                ) : undefined
+              }
+              onEdit={() => router.push(`/item-creator?edit=${encodeURIComponent(item.id)}`)}
               onDelete={() => onDelete({ id: item.id, name: item.name } as DisplayItem)}
-              onDuplicate={() => setDuplicateConfirm({ id: item.id, name: item.name })}
+              onDuplicate={() => dup.openDuplicateConfirm(item.id, item.name)}
             />
-          ))
-        )}
-      </div>
-
-      <ConfirmActionModal
-        isOpen={!!duplicateConfirm}
-        onClose={() => setDuplicateConfirm(null)}
-        onConfirm={() => {
-          if (!duplicateConfirm) return;
-          duplicateItem.mutate(duplicateConfirm.id, {
-            onSuccess: () => {
-              showToast(`Duplicated "${duplicateConfirm.name}"`, 'success');
-              setDuplicateConfirm(null);
-            },
-            onError: (e) => showToast(e?.message ?? 'Failed to duplicate', 'error'),
-          });
-        }}
-        title="Duplicate armament?"
-        description={
-          duplicateConfirm
-            ? `Create a copy of "${duplicateConfirm.name}" in your library?`
-            : ''
-        }
-        confirmLabel="Duplicate"
-        loadingLabel="Duplicating..."
-        isLoading={duplicateItem.isPending}
-      />
-
-      <ConfirmActionModal
-        isOpen={showSyncAllConfirm}
-        onClose={() => setShowSyncAllConfirm(false)}
-        onConfirm={() => {
-          setShowSyncAllConfirm(false);
-          void handleSyncAll();
-        }}
-        title="Sync with current patch?"
-        description={`Sync ${driftedItems.length} armament${driftedItems.length === 1 ? '' : 's'} to current patch rules. Properties that no longer exist in the codex may be removed.`}
-        confirmLabel="Sync all"
-        loadingLabel="Syncing..."
-        isLoading={syncingAll}
-      />
-    </div>
+          );
+        })}
+      </UserLibraryEntityTabShell>
+      {addToCharacter.confirmModal}
+    </>
   );
 }

@@ -13,6 +13,7 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { createClient } from '@/lib/supabase/client';
+import { getAuthErrorMessage } from '@/lib/auth-errors';
 import { AuthCard, PasswordInput } from '@/components/auth';
 import { Button, Alert } from '@/components/ui';
 
@@ -65,7 +66,7 @@ export default function ResetPasswordPage() {
       if (updateError) throw updateError;
       router.push('/login?message=password_updated');
     } catch (err) {
-      setError(getAuthErrorMessage(err));
+      setError(getAuthErrorMessage(err, 'reset-password'));
     } finally {
       setIsLoading(false);
     }
@@ -87,7 +88,7 @@ export default function ResetPasswordPage() {
         </Alert>
         <Link
           href="/forgot-password"
-          className="inline-block w-full text-center text-primary-link-fg hover:text-primary-fg-hover transition-colors font-medium min-h-[44px] flex items-center justify-center"
+          className="flex inline-block min-h-[44px] w-full items-center justify-center text-center font-medium text-primary-link-fg transition-colors hover:text-primary-fg-hover"
         >
           Request a new reset link
         </Link>
@@ -126,15 +127,4 @@ export default function ResetPasswordPage() {
       </form>
     </AuthCard>
   );
-}
-
-function getAuthErrorMessage(error: unknown): string {
-  const msg = (error as { message?: string })?.message ?? '';
-  if (msg.includes('weak') || msg.includes('password')) {
-    return 'Password is too weak. Please choose a stronger password.';
-  }
-  if (msg.includes('session') || msg.includes('expired')) {
-    return 'Your reset session expired. Please request a new reset link.';
-  }
-  return msg || 'An error occurred. Please try again.';
 }

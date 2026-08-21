@@ -9,18 +9,30 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { getSession } from '@/lib/supabase/session';
-import { validateJson, characterUpdateSchema } from '@/lib/api-validation';
+import { validateJson, verifyMutationRequest, characterUpdateSchema } from '@/lib/api-validation';
 import { prepareCharacterForSave } from '@/lib/character-save';
-import { standardLimiter } from '@/lib/rate-limit';
-import { getOwnerLibraryForView } from '@/lib/owner-library-for-view';
-import { getCharacterListColumns } from '@/lib/character-list-columns';
+import { applyCharacterDirtyPatch, isStaleCharacterWrite } from '@/lib/character/dirty-patch';
+import {
+  normalizeCharacterForSave,
+  normalizeCharacterOnLoad,
+} from '@/lib/character/schema-normalize';
+import { buildRateLimitKey, resolveClientIp, standardLimiter } from '@/lib/rate-limit';
+import { getOwnerLibraryAndEnrichmentForView } from '@/lib/character-view-enrichment-server';
+import { getCharacterListColumns, resolveCharacterVisibility } from '@/lib/character-list-columns';
 import { fetchArchetypeNameMap } from '@/lib/game/archetype-display';
-import type { Character, CharacterVisibility } from '@/types';
+import type { Character } from '@/types';
 
-type CharRow = { id: string; user_id: string; data: unknown; created_at: string | null; updated_at: string | null };
+type CharRow = {
+  id: string;
+  user_id: string;
+  data: unknown;
+  created_at: string | null;
+  updated_at: string | null;
+  visibility?: string | null | undefined;
+};
 
 function rowToCharacter(row: CharRow): Character {
-  const d = (row.data as Record<string, unknown>) ?? {};
+  const d = normalizeCharacterOnLoad((row.data as Record<string, unknown>) ?? {});
   return {
     id: row.id,
     userId: row.user_id,
@@ -32,10 +44,7 @@ function rowToCharacter(row: CharRow): Character {
   } as Character;
 }
 
-export async function GET(
-  _request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
-) {
+export async function GET(_request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
     const { user } = await getSession();
     const { id } = await params;
@@ -44,11 +53,12 @@ export async function GET(
     }
 
     const supabase = await createClient();
-    const { data: row } = await supabase
+    const { data: row, error: rowErr } = await supabase
       .from('characters')
-      .select('id, user_id, data, created_at, updated_at')
+      .select('id, user_id, data, created_at, updated_at, visibility')
       .eq('id', id.trim())
       .maybeSingle();
+    if (rowErr) throw rowErr;
 
     if (!row) {
       return NextResponse.json(null, { status: 404 });
@@ -60,64 +70,90 @@ export async function GET(
       return NextResponse.json({ character: rowToCharacter(charRow) });
     }
 
-    const visibility = ((charRow.data as Record<string, unknown>)?.visibility as CharacterVisibility) ?? 'private';
+    const visibility = resolveCharacterVisibility(charRow);
     if (visibility === 'public') {
-      const libraryForView = await getOwnerLibraryForView(charRow.user_id);
-      return NextResponse.json({ character: rowToCharacter(charRow), libraryForView });
+      const { libraryForView, enrichment } = await getOwnerLibraryAndEnrichmentForView(
+        supabase,
+        charRow.user_id,
+        charRow.data,
+      );
+      return NextResponse.json({ character: rowToCharacter(charRow), libraryForView, enrichment });
     }
 
     if (visibility === 'campaign' && user?.uid) {
-      const { data: memberRows } = await supabase
+      const { data: memberRows, error: memberErr } = await supabase
         .from('campaign_members')
         .select('campaign_id')
         .eq('user_id', user.uid);
-      const memberCampaignIds = (memberRows ?? []).map((m: { campaign_id: string }) => m.campaign_id);
-      const { data: ownedCampaigns } = await supabase
+      if (memberErr) throw memberErr;
+      const memberCampaignIds = (memberRows ?? []).map(
+        (m: { campaign_id: string }) => m.campaign_id,
+      );
+      const { data: ownedCampaigns, error: ownedErr } = await supabase
         .from('campaigns')
         .select('id')
         .eq('owner_id', user.uid);
+      if (ownedErr) throw ownedErr;
       const ownedIds = (ownedCampaigns ?? []).map((c: { id: string }) => c.id);
       const allCampaignIds = [...new Set([...memberCampaignIds, ...ownedIds])];
       if (allCampaignIds.length > 0) {
-        const { data: campaigns } = await supabase
+        const { data: campaigns, error: campaignsErr } = await supabase
           .from('campaigns')
           .select('id, characters')
           .in('id', allCampaignIds);
+        if (campaignsErr) throw campaignsErr;
         const list = (campaigns ?? []) as { id: string; characters: unknown }[];
         const inCampaign = list.some((c) => {
-          const arr = (c.characters as Array<{ user_id?: string; character_id?: string; userId?: string; characterId?: string }>) ?? [];
+          const arr =
+            (c.characters as Array<{
+              user_id?: string | undefined;
+              character_id?: string | undefined;
+              userId?: string | undefined;
+              characterId?: string | undefined;
+            }>) ?? [];
           return arr.some(
-            (cc) => (cc.user_id ?? cc.userId) === charRow.user_id && (cc.character_id ?? cc.characterId) === charRow.id
+            (cc) =>
+              (cc.user_id ?? cc.userId) === charRow.user_id &&
+              (cc.character_id ?? cc.characterId) === charRow.id,
           );
         });
         if (inCampaign) {
-          const libraryForView = await getOwnerLibraryForView(charRow.user_id);
-          return NextResponse.json({ character: rowToCharacter(charRow), libraryForView });
+          const { libraryForView, enrichment } = await getOwnerLibraryAndEnrichmentForView(
+            supabase,
+            charRow.user_id,
+            charRow.data,
+          );
+          return NextResponse.json({
+            character: rowToCharacter(charRow),
+            libraryForView,
+            enrichment,
+          });
         }
       }
     }
 
-    return NextResponse.json({ error: 'Character not found or not visible' }, { status: 403 });
+    return NextResponse.json(null, { status: 404 });
   } catch (err) {
     console.error('[API Error] GET /api/characters/[id]:', err);
     return NextResponse.json({ error: 'Failed to load character' }, { status: 500 });
   }
 }
 
-export async function PATCH(
-  request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
-) {
+export async function PATCH(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
-    const ip = request.headers.get('x-forwarded-for') ?? 'unknown';
-    const { success } = standardLimiter.check(`char-patch:${ip}`);
-    if (!success) {
-      return NextResponse.json({ error: 'Too many requests' }, { status: 429, headers: { 'Retry-After': '60' } });
-    }
-
     const { user, error } = await getSession();
     if (error || !user?.uid) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
+    const { success } = await standardLimiter.check(
+      buildRateLimitKey('char-patch', { userId: user.uid, ip: resolveClientIp(request.headers) }),
+    );
+    if (!success) {
+      return NextResponse.json(
+        { error: 'Too many requests' },
+        { status: 429, headers: { 'Retry-After': '60' } },
+      );
     }
 
     const { id } = await params;
@@ -128,33 +164,57 @@ export async function PATCH(
     const validation = await validateJson(request, characterUpdateSchema);
     if (!validation.success) return validation.error;
     const data = validation.data as Partial<Character>;
+    const expectedUpdatedAt = typeof data.updatedAt === 'string' ? data.updatedAt : undefined;
     const cleanedData = prepareCharacterForSave(data);
 
     const supabase = await createClient();
-    const { data: existing } = await supabase
+    const { data: existing, error: existingErr } = await supabase
       .from('characters')
-      .select('id, data')
+      .select('id, data, updated_at')
       .eq('id', id.trim())
       .eq('user_id', user.uid)
       .maybeSingle();
+    if (existingErr) throw existingErr;
 
     if (!existing) {
       return NextResponse.json({ error: 'Character not found' }, { status: 404 });
     }
 
-    const currentData = (existing.data as Record<string, unknown>) ?? {};
-    const mergedData = { ...currentData, ...cleanedData };
+    const existingRow = existing as CharRow;
+    const currentUpdatedAt = existingRow.updated_at;
+    if (isStaleCharacterWrite(expectedUpdatedAt, currentUpdatedAt)) {
+      return NextResponse.json({ error: 'Character was updated elsewhere' }, { status: 409 });
+    }
+
+    const currentData = (existingRow.data as Record<string, unknown>) ?? {};
+    const now = new Date().toISOString();
+    const mergedData = applyCharacterDirtyPatch(currentData, cleanedData, { blobUpdatedAt: now });
+    normalizeCharacterForSave(mergedData);
     const archetypeNameById = await fetchArchetypeNameMap(supabase);
     const listCols = getCharacterListColumns(mergedData, { archetypeNameById });
 
-    const { error: updateErr } = await supabase
+    let updateQuery = supabase
       .from('characters')
-      .update({ data: mergedData, ...listCols })
+      .update({ data: mergedData, updated_at: now, ...listCols })
       .eq('id', id.trim())
       .eq('user_id', user.uid);
-    if (updateErr) throw updateErr;
+    if (expectedUpdatedAt && currentUpdatedAt) {
+      updateQuery = updateQuery.eq('updated_at', currentUpdatedAt);
+    }
 
-    return NextResponse.json({ ok: true });
+    const { data: updated, error: updateErr } = await updateQuery
+      .select('updated_at')
+      .maybeSingle();
+    if (updateErr) throw updateErr;
+    if (!updated) {
+      return NextResponse.json({ error: 'Character was updated elsewhere' }, { status: 409 });
+    }
+
+    const savedUpdatedAt =
+      typeof (updated as { updated_at?: string | null | undefined }).updated_at === 'string'
+        ? (updated as { updated_at: string }).updated_at
+        : now;
+    return NextResponse.json({ ok: true, updatedAt: savedUpdatedAt });
   } catch (err) {
     console.error('[API Error] PATCH /api/characters/[id]:', err);
     return NextResponse.json({ error: 'Failed to update character' }, { status: 500 });
@@ -163,18 +223,25 @@ export async function PATCH(
 
 export async function DELETE(
   _request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
+  { params }: { params: Promise<{ id: string }> },
 ) {
   try {
-    const ip = _request.headers.get('x-forwarded-for') ?? 'unknown';
-    const { success } = standardLimiter.check(`char-del:${ip}`);
-    if (!success) {
-      return NextResponse.json({ error: 'Too many requests' }, { status: 429, headers: { 'Retry-After': '60' } });
-    }
-
     const { user, error } = await getSession();
     if (error || !user?.uid) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
+    const denied = verifyMutationRequest(_request);
+    if (denied) return denied;
+
+    const { success } = await standardLimiter.check(
+      buildRateLimitKey('char-del', { userId: user.uid, ip: resolveClientIp(_request.headers) }),
+    );
+    if (!success) {
+      return NextResponse.json(
+        { error: 'Too many requests' },
+        { status: 429, headers: { 'Retry-After': '60' } },
+      );
     }
 
     const { id } = await params;
@@ -183,25 +250,31 @@ export async function DELETE(
     }
 
     const supabase = await createClient();
-    const { data: existing } = await supabase
+    const { data: existing, error: existingErr } = await supabase
       .from('characters')
       .select('id')
       .eq('id', id.trim())
       .eq('user_id', user.uid)
       .maybeSingle();
+    if (existingErr) throw existingErr;
 
     if (!existing) {
       return NextResponse.json({ error: 'Character not found' }, { status: 404 });
     }
 
+    // Portrait cleanup is best-effort; a storage failure must not block the delete.
     try {
-      const { data: files } = await supabase.storage.from('portraits').list(user.uid);
+      const { data: files, error: listErr } = await supabase.storage
+        .from('portraits')
+        .list(user.uid);
+      if (listErr) throw listErr;
       if (files?.length) {
         const toRemove = files
           .filter((f) => f.name?.startsWith(`${id.trim()}.`))
           .map((f) => `${user.uid}/${f.name}`);
         if (toRemove.length) {
-          await supabase.storage.from('portraits').remove(toRemove);
+          const { error: removeErr } = await supabase.storage.from('portraits').remove(toRemove);
+          if (removeErr) throw removeErr;
         }
       }
     } catch (storageErr) {

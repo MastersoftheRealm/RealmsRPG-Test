@@ -1,9 +1,21 @@
 'use client';
 
-import { useEffect, useMemo, useState } from 'react';
+import { useMemo, useState } from 'react';
 import Link from 'next/link';
-import { Button, Modal, PageContainer, PageHeader, LoadingState, EmptyState, TabNavigation, TabContentPanel, useTabGroup, DescriptorChip } from '@/components/ui';
-import { ErrorDisplay } from '@/components/shared';
+import { useQuery } from '@tanstack/react-query';
+import {
+  Button,
+  Modal,
+  PageContainer,
+  PageHeader,
+  LoadingState,
+  EmptyState,
+  TabNavigation,
+  TabContentPanel,
+  useTabGroup,
+  DescriptorChip,
+} from '@/components/ui';
+import { ErrorDisplay } from '@/components/patterns';
 import { apiFetch } from '@/lib/api-client';
 
 type TabId =
@@ -39,7 +51,7 @@ type ChangeLogEntry = {
   } | null;
 };
 
-const TABS: { id: TabId; label: string; labelMobile?: string }[] = [
+const TABS: { id: TabId; label: string; labelMobile?: string | undefined }[] = [
   { id: 'codex_feats', label: 'Feats' },
   { id: 'codex_skills', label: 'Skills' },
   { id: 'codex_species', label: 'Species' },
@@ -73,40 +85,36 @@ function readEntityName(entry: ChangeLogEntry): string {
 }
 
 function readActorLabel(entry: ChangeLogEntry): string {
-  return entry.actor?.displayName ?? entry.actor?.usernameDisplay ?? entry.actor?.username ?? entry.changed_by_user_id;
+  return (
+    entry.actor?.displayName ??
+    entry.actor?.usernameDisplay ??
+    entry.actor?.username ??
+    entry.changed_by_user_id
+  );
 }
 
 export default function AdminChangelogsPage() {
   const { tabGroupId, sharedPanelId } = useTabGroup();
   const [activeTab, setActiveTab] = useState<TabId>('codex_feats');
-  const [rows, setRows] = useState<ChangeLogEntry[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
   const [selectedEntry, setSelectedEntry] = useState<ChangeLogEntry | null>(null);
-  const [reloadToken, setReloadToken] = useState(0);
 
-  useEffect(() => {
-    let cancelled = false;
-    setLoading(true);
-    setError(null);
-
-    apiFetch<ChangeLogEntry[]>(
-      `/api/admin/changelogs?entityType=${encodeURIComponent(activeTab)}&limit=200`
-    )
-      .then((data) => {
-        if (!cancelled) setRows(Array.isArray(data) ? data : []);
-      })
-      .catch((err) => {
-        if (!cancelled) setError(err instanceof Error ? err.message : 'Failed to load changelogs');
-      })
-      .finally(() => {
-        if (!cancelled) setLoading(false);
-      });
-
-    return () => {
-      cancelled = true;
-    };
-  }, [activeTab, reloadToken]);
+  const {
+    data: rows = [],
+    isLoading: loading,
+    error: queryError,
+    refetch,
+  } = useQuery({
+    queryKey: ['admin', 'changelogs', activeTab],
+    queryFn: () =>
+      apiFetch<ChangeLogEntry[]>(
+        `/api/admin/changelogs?entityType=${encodeURIComponent(activeTab)}&limit=200`,
+      ),
+  });
+  const error = queryError
+    ? queryError instanceof Error
+      ? queryError.message
+      : 'Failed to load changelogs'
+    : null;
 
   const tabs = useMemo(
     () =>
@@ -115,7 +123,7 @@ export default function AdminChangelogsPage() {
         label: tab.label,
         labelMobile: tab.labelMobile,
       })),
-    []
+    [],
   );
 
   return (
@@ -145,51 +153,52 @@ export default function AdminChangelogsPage() {
       />
 
       <TabContentPanel tabGroupId={tabGroupId} id={sharedPanelId} activeTab={activeTab}>
-      {loading ? (
-        <LoadingState size="lg" padding="md" />
-      ) : error ? (
-        <ErrorDisplay message={error} onRetry={() => setReloadToken((token) => token + 1)} />
-      ) : rows.length === 0 ? (
-        <EmptyState title="No changelog entries yet for this tab." size="sm" />
-      ) : (
-        <div className="space-y-3">
-          {rows.map((entry) => (
-            <article key={entry.id} className="rounded-lg border border-border bg-surface p-4">
-              <div className="flex flex-wrap items-start justify-between gap-3">
-                <div className="space-y-1">
-                  <p className="text-sm text-text-secondary">
-                    {dateFormatter.format(new Date(entry.changed_at))} by {readActorLabel(entry)}
-                  </p>
-                  <h2 className="text-base font-semibold text-text-primary">
-                    {readEntityName(entry)} <span className="text-text-secondary font-normal">({entry.entity_id})</span>
-                  </h2>
+        {loading ? (
+          <LoadingState size="lg" padding="md" />
+        ) : error ? (
+          <ErrorDisplay message={error} onRetry={() => void refetch()} />
+        ) : rows.length === 0 ? (
+          <EmptyState title="No changelog entries yet for this tab." size="sm" />
+        ) : (
+          <div className="space-y-3">
+            {rows.map((entry) => (
+              <article key={entry.id} className="rounded-lg border border-border bg-surface p-4">
+                <div className="flex flex-wrap items-start justify-between gap-3">
+                  <div className="space-y-1">
+                    <p className="text-sm text-text-secondary">
+                      {dateFormatter.format(new Date(entry.changed_at))} by {readActorLabel(entry)}
+                    </p>
+                    <h2 className="text-base font-semibold text-text-primary">
+                      {readEntityName(entry)}{' '}
+                      <span className="font-normal text-text-secondary">({entry.entity_id})</span>
+                    </h2>
+                  </div>
+                  <DescriptorChip
+                    variant={operationChipVariant(entry.operation)}
+                    size="sm"
+                    className="font-semibold tracking-wide uppercase"
+                  >
+                    {entry.operation}
+                  </DescriptorChip>
                 </div>
-                <DescriptorChip
-                  variant={operationChipVariant(entry.operation)}
-                  size="sm"
-                  className="uppercase tracking-wide font-semibold"
-                >
-                  {entry.operation}
-                </DescriptorChip>
-              </div>
 
-              <div className="mt-3 flex flex-wrap items-center justify-between gap-3">
-                <p className="text-sm text-text-secondary">
-                  Fields changed: {entry.changed_fields?.length ?? 0}
-                </p>
-                <Button
-                  size="sm"
-                  variant="secondary"
-                  className="min-h-[44px]"
-                  onClick={() => setSelectedEntry(entry)}
-                >
-                  View Details
-                </Button>
-              </div>
-            </article>
-          ))}
-        </div>
-      )}
+                <div className="mt-3 flex flex-wrap items-center justify-between gap-3">
+                  <p className="text-sm text-text-secondary">
+                    Fields changed: {entry.changed_fields?.length ?? 0}
+                  </p>
+                  <Button
+                    size="sm"
+                    variant="secondary"
+                    className="min-h-[44px]"
+                    onClick={() => setSelectedEntry(entry)}
+                  >
+                    View Details
+                  </Button>
+                </div>
+              </article>
+            ))}
+          </div>
+        )}
       </TabContentPanel>
 
       <Modal
@@ -203,33 +212,36 @@ export default function AdminChangelogsPage() {
           <div className="space-y-4">
             <div className="rounded-lg border border-border bg-surface-alt p-3">
               <p className="text-sm text-text-secondary">
-                {dateFormatter.format(new Date(selectedEntry.changed_at))} by {readActorLabel(selectedEntry)}
+                {dateFormatter.format(new Date(selectedEntry.changed_at))} by{' '}
+                {readActorLabel(selectedEntry)}
               </p>
-              <p className="text-sm text-text-secondary mt-1">
-                Operation: <span className="text-text-primary font-medium">{selectedEntry.operation}</span>
+              <p className="mt-1 text-sm text-text-secondary">
+                Operation:{' '}
+                <span className="font-medium text-text-primary">{selectedEntry.operation}</span>
               </p>
-              <p className="text-sm text-text-secondary mt-1">
-                Entity: <span className="text-text-primary font-medium">{selectedEntry.entity_id}</span>
+              <p className="mt-1 text-sm text-text-secondary">
+                Entity:{' '}
+                <span className="font-medium text-text-primary">{selectedEntry.entity_id}</span>
               </p>
             </div>
 
             <section>
-              <h3 className="text-sm font-semibold text-text-primary mb-2">Changed Fields</h3>
-              <pre className="rounded-lg border border-border bg-background p-3 text-xs overflow-auto">
+              <h3 className="mb-2 text-sm font-semibold text-text-primary">Changed Fields</h3>
+              <pre className="overflow-auto rounded-lg border border-border bg-background p-3 text-xs">
                 {JSON.stringify(selectedEntry.changed_fields ?? [], null, 2)}
               </pre>
             </section>
 
             <section>
-              <h3 className="text-sm font-semibold text-text-primary mb-2">Before</h3>
-              <pre className="rounded-lg border border-border bg-background p-3 text-xs overflow-auto">
+              <h3 className="mb-2 text-sm font-semibold text-text-primary">Before</h3>
+              <pre className="overflow-auto rounded-lg border border-border bg-background p-3 text-xs">
                 {JSON.stringify(selectedEntry.before_data, null, 2)}
               </pre>
             </section>
 
             <section>
-              <h3 className="text-sm font-semibold text-text-primary mb-2">After</h3>
-              <pre className="rounded-lg border border-border bg-background p-3 text-xs overflow-auto">
+              <h3 className="mb-2 text-sm font-semibold text-text-primary">After</h3>
+              <pre className="overflow-auto rounded-lg border border-border bg-background p-3 text-xs">
                 {JSON.stringify(selectedEntry.after_data, null, 2)}
               </pre>
             </section>

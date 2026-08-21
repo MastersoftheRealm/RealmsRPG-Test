@@ -4,7 +4,7 @@
  * Shared roll log entries stored in the database for campaign members.
  */
 
-import type { DieResult } from '@/components/character-sheet/roll-context';
+import type { DieResult } from '@/components/rolls/roll-context';
 import type { LegacyFirestoreTimestamp, RollTimestampInput } from '@/lib/roll-timestamp';
 
 export type CampaignRollType = 'attack' | 'damage' | 'skill' | 'ability' | 'defense' | 'custom';
@@ -23,8 +23,8 @@ export interface CampaignRollEntry {
   dice: DieResult[];
   modifier: number;
   total: number;
-  isCrit?: boolean;
-  isCritFail?: boolean;
-  critMessage?: string;
+  isCrit?: boolean | undefined;
+  isCritFail?: boolean | undefined;
+  critMessage?: string | undefined;
   timestamp: CampaignRollTimestamp;
 }

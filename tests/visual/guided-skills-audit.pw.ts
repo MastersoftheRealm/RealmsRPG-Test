@@ -5,12 +5,7 @@ import { themeInit } from './targets';
 
 const OUT_DIR = path.join(process.cwd(), '.guided-skills-audit');
 
-const COMPLETED_BEFORE_SKILLS = [
-  'path',
-  'species',
-  'ancestry',
-  'abilities',
-] as const;
+const COMPLETED_BEFORE_SKILLS = ['path', 'species', 'ancestry', 'abilities'] as const;
 
 function seedGuidedStorage(subStep: string, draft: Record<string, unknown>) {
   return {
@@ -41,7 +36,6 @@ function seedGuidedStorage(subStep: string, draft: Record<string, unknown>) {
         declinedPathSkillIds: [],
         archetypeFeatIds: [],
         characterFeatIds: [],
-        loadoutId: null,
         armaments: [],
         equipment: [],
         powerIds: [],

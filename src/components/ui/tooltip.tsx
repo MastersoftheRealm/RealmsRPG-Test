@@ -1,14 +1,14 @@
 'use client';
 
 /**
- * Styleguide/demo tooltip only. For contextual page help use `InfoTippy` from `@/components/shared`.
+ * Styleguide/demo tooltip only. For contextual page help use `InfoTippy` from `@/components/patterns`.
  *
  * Uses the same Floating UI primitives as InfoTippy (Collin PR #14) with configurable triggers.
  */
 
 /* eslint-disable react-hooks/refs -- Floating UI positions with ref callbacks and arrow refs during render. */
 
-import type { CSSProperties, HTMLAttributes, ReactElement, ReactNode } from 'react';
+import type { HTMLAttributes, ReactElement, ReactNode } from 'react';
 import { isValidElement, useMemo, useState } from 'react';
 import {
   useClick,
@@ -19,22 +19,19 @@ import {
   useRole,
 } from '@floating-ui/react';
 import { cn } from '@/lib/utils/cn';
-import {
-  FloatingHelpPanel,
-  useFloatingHelpPopover,
-} from '@/lib/tooltips/floating-help';
+import { FloatingHelpPanel, useFloatingHelpPopover } from '@/lib/tooltips/floating-help';
 import { renderMarkdownLite } from '@/lib/tooltips/markdown-lite';
 import type { TooltipPlacement, TooltipTrigger } from '@/types/tooltips';
 
 interface TooltipProps {
-  title?: string | null;
+  title?: string | null | undefined;
   content: ReactNode;
-  placement?: TooltipPlacement;
-  trigger?: TooltipTrigger;
-  className?: string;
-  contentClassName?: string;
-  disabled?: boolean;
-  children: ReactElement<{ className?: string }>;
+  placement?: TooltipPlacement | undefined;
+  trigger?: TooltipTrigger | undefined;
+  className?: string | undefined;
+  contentClassName?: string | undefined;
+  disabled?: boolean | undefined;
+  children: ReactElement<{ className?: string | undefined }>;
 }
 
 function hasTooltipContent(content: ReactNode): boolean {
@@ -48,9 +45,9 @@ function TooltipBody({
   content,
   className,
 }: {
-  title?: string | null;
+  title?: string | null | undefined;
   content: ReactNode;
-  className?: string;
+  className?: string | undefined;
 }) {
   return (
     <div className={cn('text-text-primary', className)}>
@@ -103,8 +100,8 @@ export function Tooltip({
 function FloatingTooltip({
   title,
   content,
-  placement,
-  trigger,
+  placement = 'top',
+  trigger = 'auto',
   className,
   contentClassName,
   children,
@@ -114,18 +111,12 @@ function FloatingTooltip({
   const enabledInteractions = useMemo(() => getEnabledInteractions(trigger), [trigger]);
   const isInteractive = typeof content !== 'string';
 
-  const {
-    refs,
-    floatingStyles,
-    transitionStyles,
-    isMounted,
-    context,
-    arrowRef,
-  } = useFloatingHelpPopover({
-    open,
-    onOpenChange: setOpen,
-    placement,
-  });
+  const { refs, floatingStyles, transitionStyles, isMounted, context, arrowRef } =
+    useFloatingHelpPopover({
+      open,
+      onOpenChange: setOpen,
+      placement,
+    });
 
   const hover = useHover(context, {
     enabled: enabledInteractions.hover,

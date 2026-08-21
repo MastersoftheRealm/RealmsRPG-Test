@@ -7,7 +7,7 @@
 'use client';
 
 import { AbilityScoreEditor } from '@/components/creator';
-import { PointStatus } from '@/components/shared';
+import { PointStatus } from '@/components/patterns';
 import type { AbilityName, Abilities } from '@/types';
 import { GUIDED_CREATOR_COPY } from '@/lib/constants/site-copy';
 
@@ -18,9 +18,10 @@ export interface GuidedAbilitiesCustomizePanelProps {
   totalPoints: number;
   spentPoints: number;
   onAbilityChange: (ability: AbilityName, value: number) => void;
-  powerAbility?: AbilityName;
-  martialAbility?: AbilityName;
-  className?: string;
+  powerAbility?: AbilityName | undefined;
+  martialAbility?: AbilityName | undefined;
+  secondaryAbility?: AbilityName | undefined;
+  className?: string | undefined;
 }
 
 export function GuidedAbilitiesCustomizePanel({
@@ -30,6 +31,7 @@ export function GuidedAbilitiesCustomizePanel({
   onAbilityChange,
   powerAbility,
   martialAbility,
+  secondaryAbility,
   className,
 }: GuidedAbilitiesCustomizePanelProps) {
   return (
@@ -40,17 +42,17 @@ export function GuidedAbilitiesCustomizePanel({
           spent={spentPoints}
           label={panelCopy.abilityPointsLabel}
           variant="inline"
-          className="text-base"
         />
       </div>
 
-      <div className="mt-4 rounded-card border border-border-light bg-surface shadow-sm p-4 sm:p-5">
+      <div className="mt-4 rounded-card border border-border-light bg-surface p-4 shadow-sm sm:p-5">
         <AbilityScoreEditor
           abilities={abilities}
           totalPoints={totalPoints}
           onAbilityChange={onAbilityChange}
           powerAbility={powerAbility}
           martialAbility={martialAbility}
+          secondaryAbility={secondaryAbility}
           hidePointsStatus
           variant="sheet"
         />

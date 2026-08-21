@@ -6,16 +6,20 @@
 
 import type { Metadata, Viewport } from 'next';
 import { Nunito, Nunito_Sans, Nova_Flat } from 'next/font/google';
+import { Analytics } from '@vercel/analytics/next';
 import { AuthProvider, QueryProvider, ThemeProvider } from '@/components/providers';
 import { ToastProvider } from '@/components/ui';
 import { SelectionGuard } from '@/components/layout';
+import { ROOT_META_DESCRIPTION } from '@/lib/constants/site-copy';
+import { getCanonicalSiteUrlObject, isProductionIndexingEnabled } from '@/lib/site-url';
 import './globals.css';
 
 // Primary font - Nunito for headings and brand text
 const nunito = Nunito({
   subsets: ['latin'],
   display: 'swap',
-  variable: '--font-nunito',
+  // Distinct from the Tailwind `--font-nunito` token so @theme can reference this face.
+  variable: '--font-nunito-face',
   weight: ['300', '400', '500', '600', '700', '800'],
 });
 
@@ -37,12 +41,15 @@ const novaFlat = Nova_Flat({
   weight: ['400'],
 });
 
+const siteUrl = getCanonicalSiteUrlObject();
+
 export const metadata: Metadata = {
+  metadataBase: siteUrl,
   title: {
     default: 'RealmsRPG',
     template: '%s | RealmsRPG',
   },
-  description: 'Your new favorite roleplaying game. Create and manage your tabletop RPG characters with RealmsRPG.',
+  description: ROOT_META_DESCRIPTION,
   keywords: ['RPG', 'tabletop', 'character creator', 'character sheet', 'roleplaying'],
   authors: [{ name: 'RealmsRPG Team' }],
   creator: 'RealmsRPG',
@@ -56,6 +63,25 @@ export const metadata: Metadata = {
     apple: '/apple-touch-icon.png',
   },
   manifest: '/manifest.json',
+  openGraph: {
+    type: 'website',
+    locale: 'en_US',
+    url: siteUrl,
+    siteName: 'RealmsRPG',
+    title: 'RealmsRPG',
+    description: ROOT_META_DESCRIPTION,
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'RealmsRPG',
+    description: ROOT_META_DESCRIPTION,
+  },
+  alternates: {
+    canonical: '/',
+  },
+  robots: isProductionIndexingEnabled()
+    ? { index: true, follow: true }
+    : { index: false, follow: false },
 };
 
 export const viewport: Viewport = {
@@ -75,11 +101,11 @@ export default function RootLayout({
       className={`${nunito.variable} ${nunitoSans.variable} ${novaFlat.variable}`}
       suppressHydrationWarning
     >
-      <body className="min-h-screen bg-surface text-text-primary font-sans antialiased">
+      <body className="min-h-screen bg-surface font-sans text-text-primary antialiased">
         {/* Skip-to-content link for keyboard/screen-reader accessibility */}
         <a
           href="#main-content"
-          className="sr-only focus:not-sr-only focus:fixed focus:top-4 focus:left-4 focus:z-skip-link focus:px-4 focus:py-2 focus:bg-primary-button focus:text-white focus:rounded-lg focus:shadow-lg focus:outline-none"
+          className="sr-only focus:not-sr-only focus:fixed focus:top-4 focus:left-4 focus:z-skip-link focus:rounded-lg focus:bg-primary-button focus:px-4 focus:py-2 focus:text-text-on-dark focus:shadow-lg focus:outline-none"
         >
           Skip to main content
         </a>
@@ -93,6 +119,8 @@ export default function RootLayout({
             </AuthProvider>
           </QueryProvider>
         </ThemeProvider>
+        {/* Vercel Web Analytics — production pageviews via same-origin /_vercel/insights */}
+        <Analytics />
       </body>
     </html>
   );

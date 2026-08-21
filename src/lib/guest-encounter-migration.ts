@@ -4,6 +4,7 @@
  * Moves localStorage guest encounters to the authenticated user's account on sign-in.
  */
 
+import { logClientError } from '@/lib/api-client';
 import { createEncounter } from '@/services/encounter-service';
 import {
   getGuestEncountersList,
@@ -42,7 +43,9 @@ export async function migrateGuestEncountersOnSignIn(): Promise<number> {
       await createEncounter(payload);
       deleteGuestEncounter(summary.id);
       migrated += 1;
-    } catch {
+    } catch (err) {
+      // Best-effort background migrate on sign-in; user is not notified.
+      logClientError(`guest-encounter-migration: failed to migrate "${summary.id}"`, err);
     }
   }
 
@@ -53,7 +56,7 @@ export async function migrateGuestEncountersOnSignIn(): Promise<number> {
 }
 
 function guestEncounterToCreatePayload(
-  guest: Encounter
+  guest: Encounter,
 ): Omit<Encounter, 'id' | 'createdAt' | 'updatedAt'> {
   /* eslint-disable @typescript-eslint/no-unused-vars -- strip server fields for create payload */
   const { id, createdAt, updatedAt, ...rest } = guest;

@@ -4,6 +4,7 @@
 
 'use client';
 
+import type { ReactNode } from 'react';
 import { useCallback, useEffect, useState } from 'react';
 import { Swords } from 'lucide-react';
 import { cn } from '@/lib/utils/cn';
@@ -14,8 +15,8 @@ const FADE_IN_MS = 220;
 
 export type AboutCarouselSlide = {
   title: string;
-  content: React.ReactNode;
-  contentMobile?: React.ReactNode;
+  content: ReactNode;
+  contentMobile?: ReactNode | undefined;
 };
 
 type AboutCarouselSectionProps = {
@@ -29,14 +30,14 @@ function SlidePanel({
   className,
 }: {
   slide: AboutCarouselSlide;
-  className?: string;
+  className?: string | undefined;
 }) {
   const mobileContent = slide.contentMobile ?? slide.content;
 
   return (
     <div className={className}>
-      <h2 className="font-display text-xl sm:text-2xl font-bold text-text-primary mb-5 sm:mb-6 flex items-center justify-center md:justify-start gap-2">
-        <Swords className="w-6 h-6 text-primary-link-fg shrink-0" aria-hidden="true" />
+      <h2 className="mb-5 flex items-center justify-center gap-2 font-display text-xl font-bold text-text-primary sm:mb-6 sm:text-2xl md:justify-start">
+        <Swords className="h-6 w-6 shrink-0 text-primary-link-fg" aria-hidden="true" />
         <span>{slide.title}</span>
       </h2>
       <div className="font-nunito text-text-secondary">
@@ -47,11 +48,7 @@ function SlidePanel({
   );
 }
 
-export function AboutCarouselSection({
-  slides,
-  dice,
-  initialIndex,
-}: AboutCarouselSectionProps) {
+export function AboutCarouselSection({ slides, dice, initialIndex }: AboutCarouselSectionProps) {
   const [activeIndex, setActiveIndex] = useState(initialIndex);
   const [contentVisible, setContentVisible] = useState(true);
   const [isTransitioning, setIsTransitioning] = useState(false);
@@ -85,23 +82,24 @@ export function AboutCarouselSection({
         });
       }, FADE_OUT_MS);
     },
-    [activeIndex, isTransitioning, reduceMotion]
+    [activeIndex, isTransitioning, reduceMotion],
   );
 
   const fadeClass = reduceMotion
     ? ''
     : cn(
         'transition-opacity ease-in-out',
-        contentVisible ? 'duration-[220ms] ease-in' : 'duration-[180ms] ease-out'
+        contentVisible ? 'duration-[220ms] ease-in' : 'duration-[180ms] ease-out',
       );
+  const slide = slides[activeIndex];
 
   return (
-    <div>
+    <div className="min-w-0">
       <div
         className={cn(fadeClass, contentVisible ? 'opacity-100' : 'opacity-0')}
         aria-live="polite"
       >
-        <SlidePanel slide={slides[activeIndex]} />
+        {slide ? <SlidePanel slide={slide} /> : null}
       </div>
 
       <AboutDiceCarousel

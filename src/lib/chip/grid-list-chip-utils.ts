@@ -1,6 +1,6 @@
 import type { VariantProps } from 'class-variance-authority';
 import type { chipVariants } from '@/components/ui/chip';
-import type { ChipData } from '@/components/shared/grid-list-row-types';
+import type { ChipData } from '@/components/patterns/list/grid-list-row-types';
 import { gridListChipVariant } from '@/lib/chip/grid-list-chip-variant';
 
 type ChipVariant = NonNullable<VariantProps<typeof chipVariants>['variant']>;
@@ -8,7 +8,7 @@ type ChipVariant = NonNullable<VariantProps<typeof chipVariants>['variant']>;
 export type GridListBadgeColor = 'blue' | 'purple' | 'green' | 'amber' | 'gray' | 'red';
 
 export function isGridListChipExpandable(chip: ChipData): boolean {
-  if (chip.kind === 'descriptor') return false;
+  if (chip.kind === 'descriptor' || chip.onSelect || chip.disabled) return false;
   if (chip.kind === 'expandable') {
     const hasCost = (chip.cost ?? 0) > 0;
     return !!(chip.description || hasCost || (chip.options?.length ?? 0) > 0);
@@ -59,6 +59,6 @@ export function gridListChipStyleVariant(chip: ChipData): ChipVariant {
 }
 
 export function formatGridListChipLabel(chip: ChipData): string {
-  const levelSuffix = chip.level && chip.level > 1 ? ` (Lv.${chip.level})` : '';
+  const levelSuffix = chip.level != null && chip.level > 0 ? ` (Lv.${chip.level})` : '';
   return `${chip.name}${levelSuffix}`;
 }

@@ -51,7 +51,7 @@ export function useCampaignRolls(campaignId: string | undefined) {
         () => {
           // Refetch immediately so roll log updates in realtime everywhere (campaign page, character sheet, encounter)
           queryClient.refetchQueries({ queryKey: ['campaign-rolls', stableId] });
-        }
+        },
       )
       .subscribe();
 

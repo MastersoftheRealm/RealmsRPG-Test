@@ -1,17 +1,19 @@
-import type { ChipData } from '@/components/shared/grid-list-row';
+import type { ChipData } from '@/components/patterns/list/grid-list-row';
 
 /** Minimal trait shape for resolving choice-trait option IDs from codex data. */
 export type ChoiceTraitOptionSource = {
   id: string | number;
   name: string;
-  description?: string;
+  description?: string | undefined;
 };
 
-export function getChoiceOptionIds(trait: { option_trait_ids?: string[] }): string[] {
+export function getChoiceOptionIds(trait: { option_trait_ids?: string[] | undefined }): string[] {
   return Array.isArray(trait.option_trait_ids) ? trait.option_trait_ids : [];
 }
 
-export function traitsByIdMap<T extends ChoiceTraitOptionSource>(traits: T[] | null | undefined): Map<string, T> {
+export function traitsByIdMap<T extends ChoiceTraitOptionSource>(
+  traits: T[] | null | undefined,
+): Map<string, T> {
   const map = new Map<string, T>();
   (traits || []).forEach((t) => {
     map.set(String(t.id), t);
@@ -30,7 +32,10 @@ export function resolveChoiceOptionTraits<T extends ChoiceTraitOptionSource>(
 }
 
 /** First option ID from the parent’s option list that appears in `selectedIds`. */
-export function firstSelectedChoiceOptionId(optionIds: string[], selectedIds: string[]): string | undefined {
+export function firstSelectedChoiceOptionId(
+  optionIds: string[],
+  selectedIds: string[],
+): string | undefined {
   const set = new Set(selectedIds.map(String));
   return optionIds.find((id) => set.has(String(id)));
 }
@@ -50,9 +55,14 @@ export function choiceTraitOptionIdsToChipData(
 }
 
 /** Trait rows that include `option_trait_ids` (from codex). */
-export type TraitWithChoiceOptions = { id: string | number; option_trait_ids?: string[] };
+export type TraitWithChoiceOptions = {
+  id: string | number;
+  option_trait_ids?: string[] | undefined;
+};
 
-function traitByIdMapForChoiceOptions(traits: TraitWithChoiceOptions[] | null | undefined): Map<string, TraitWithChoiceOptions> {
+function traitByIdMapForChoiceOptions(
+  traits: TraitWithChoiceOptions[] | null | undefined,
+): Map<string, TraitWithChoiceOptions> {
   const map = new Map<string, TraitWithChoiceOptions>();
   (traits || []).forEach((t) => {
     map.set(String(t.id), t);

@@ -7,21 +7,30 @@
 
 import { useState, useEffect, useCallback, useRef } from 'react';
 
+export const AUTOSAVE_RETRY_DELAYS_MS = [2_000, 5_000, 15_000, 60_000] as const;
+
+/** Backoff after a failed save; capped at the last slot (60s). */
+export function nextAutosaveRetryDelayMs(failedAttemptIndex: number): number {
+  const last = AUTOSAVE_RETRY_DELAYS_MS.length - 1;
+  const idx = Math.min(Math.max(0, failedAttemptIndex), last);
+  return AUTOSAVE_RETRY_DELAYS_MS[idx]!;
+}
+
 interface AutoSaveOptions<T> {
   /** Data to watch for changes */
   data: T;
   /** Function to call when saving */
   onSave: (data: T) => Promise<void>;
   /** Debounce delay in milliseconds (default: 2000) */
-  delay?: number;
+  delay?: number | undefined;
   /** Whether auto-save is enabled (default: true) */
-  enabled?: boolean;
+  enabled?: boolean | undefined;
   /** Callback when save starts */
-  onSaveStart?: () => void;
+  onSaveStart?: (() => void) | undefined;
   /** Callback when save completes */
-  onSaveComplete?: () => void;
+  onSaveComplete?: (() => void) | undefined;
   /** Callback when save fails */
-  onSaveError?: (error: Error) => void;
+  onSaveError?: ((error: Error) => void) | undefined;
 }
 
 interface AutoSaveResult {
@@ -51,28 +60,51 @@ export function useAutoSave<T>({
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [lastSaved, setLastSaved] = useState<Date | null>(null);
-  
-  // Track initial data to compare changes
+
   const initialDataRef = useRef<T>(data);
   const currentDataRef = useRef<T>(data);
   const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const retryTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const saveInProgressRef = useRef(false);
-  // True when an edit arrives while a save is in flight — triggers a follow-up
-  // save so concurrent edits are never dropped.
   const pendingResaveRef = useRef(false);
-  // Tracks the enabled→true transition so loading/enabling doesn't look like an edit.
   const prevEnabledRef = useRef(false);
-  // Latest performSave, used to schedule the follow-up save without a self-reference.
+  const retryAttemptRef = useRef(0);
   const performSaveRef = useRef<(dataToSave: T) => Promise<void>>(async () => {});
+  const enabledRef = useRef(enabled);
+  const hasUnsavedChangesRef = useRef(hasUnsavedChanges);
 
-  // Update current data ref
+  const onSaveRef = useRef(onSave);
+  const onSaveStartRef = useRef(onSaveStart);
+  const onSaveCompleteRef = useRef(onSaveComplete);
+  const onSaveErrorRef = useRef(onSaveError);
+
+  useEffect(() => {
+    onSaveRef.current = onSave;
+    onSaveStartRef.current = onSaveStart;
+    onSaveCompleteRef.current = onSaveComplete;
+    onSaveErrorRef.current = onSaveError;
+  }, [onSave, onSaveStart, onSaveComplete, onSaveError]);
+
   useEffect(() => {
     currentDataRef.current = data;
   }, [data]);
 
-  // Perform the actual save
+  useEffect(() => {
+    enabledRef.current = enabled;
+  }, [enabled]);
+
+  useEffect(() => {
+    hasUnsavedChangesRef.current = hasUnsavedChanges;
+  }, [hasUnsavedChanges]);
+
+  const clearRetry = () => {
+    if (retryTimeoutRef.current) {
+      clearTimeout(retryTimeoutRef.current);
+      retryTimeoutRef.current = null;
+    }
+  };
+
   const performSave = useCallback(async (dataToSave: T) => {
-    // A save is already running: remember to re-save the latest snapshot after.
     if (saveInProgressRef.current) {
       pendingResaveRef.current = true;
       return;
@@ -80,24 +112,31 @@ export function useAutoSave<T>({
 
     saveInProgressRef.current = true;
     setIsSaving(true);
-    onSaveStart?.();
+    onSaveStartRef.current?.();
 
     try {
-      await onSave(dataToSave);
+      await onSaveRef.current(dataToSave);
+      retryAttemptRef.current = 0;
+      clearRetry();
       setLastSaved(new Date());
       initialDataRef.current = dataToSave;
-      // Only clear the dirty flag if no newer edits arrived during the save.
       if (JSON.stringify(currentDataRef.current) === JSON.stringify(dataToSave)) {
         setHasUnsavedChanges(false);
       }
-      onSaveComplete?.();
+      onSaveCompleteRef.current?.();
     } catch (err) {
-      onSaveError?.(err instanceof Error ? err : new Error('Save failed'));
+      pendingResaveRef.current = false;
+      onSaveErrorRef.current?.(err instanceof Error ? err : new Error('Save failed'));
+      const wait = nextAutosaveRetryDelayMs(retryAttemptRef.current);
+      retryAttemptRef.current += 1;
+      clearRetry();
+      retryTimeoutRef.current = setTimeout(() => {
+        retryTimeoutRef.current = null;
+        void performSaveRef.current(currentDataRef.current);
+      }, wait);
     } finally {
       setIsSaving(false);
       saveInProgressRef.current = false;
-      // Edits arrived mid-save (or the same save coalesced more changes): persist
-      // the most recent snapshot so nothing is lost.
       if (pendingResaveRef.current) {
         pendingResaveRef.current = false;
         const latest = currentDataRef.current;
@@ -106,45 +145,45 @@ export function useAutoSave<T>({
         }
       }
     }
-  }, [onSave, onSaveStart, onSaveComplete, onSaveError]);
+  }, []);
 
   useEffect(() => {
     performSaveRef.current = performSave;
   }, [performSave]);
 
-  // Debounced save effect
   useEffect(() => {
-    // While disabled, keep the baseline in sync so re-enabling never sees a
-    // phantom diff (and never triggers a save just for loading data).
     if (!enabled) {
       prevEnabledRef.current = false;
       initialDataRef.current = data;
+      clearRetry();
       return;
     }
 
-    // Autosave just turned on (e.g. data finished loading / ownership resolved):
-    // adopt the current data as the saved baseline and do NOT fire a save.
     if (!prevEnabledRef.current) {
       prevEnabledRef.current = true;
       initialDataRef.current = data;
+      retryAttemptRef.current = 0;
+      clearRetry();
       setHasUnsavedChanges(false);
       return;
     }
 
-    // Compare current data with the last-saved baseline
     const hasChanges = JSON.stringify(data) !== JSON.stringify(initialDataRef.current);
 
     if (!hasChanges) {
-      // Data returned to the saved baseline — cancel any pending save.
       if (timeoutRef.current) {
         clearTimeout(timeoutRef.current);
         timeoutRef.current = null;
       }
+      clearRetry();
+      retryAttemptRef.current = 0;
       setHasUnsavedChanges(false);
       return;
     }
 
     setHasUnsavedChanges(true);
+    retryAttemptRef.current = 0;
+    clearRetry();
 
     if (timeoutRef.current) {
       clearTimeout(timeoutRef.current);
@@ -160,40 +199,43 @@ export function useAutoSave<T>({
     };
   }, [data, delay, enabled, performSave]);
 
-  // Save immediately
   const saveNow = useCallback(async () => {
     if (timeoutRef.current) {
       clearTimeout(timeoutRef.current);
     }
+    clearRetry();
     await performSave(currentDataRef.current);
   }, [performSave]);
 
-  // Mark as saved without calling onSave
   const markSaved = useCallback(() => {
     setHasUnsavedChanges(false);
     setLastSaved(new Date());
     initialDataRef.current = currentDataRef.current;
+    retryAttemptRef.current = 0;
+    clearRetry();
   }, []);
 
-  // Reset dirty state
   const reset = useCallback(() => {
     setHasUnsavedChanges(false);
     if (timeoutRef.current) {
       clearTimeout(timeoutRef.current);
     }
+    clearRetry();
+    retryAttemptRef.current = 0;
     initialDataRef.current = currentDataRef.current;
   }, []);
 
-  // Cleanup on unmount
   useEffect(() => {
     return () => {
       if (timeoutRef.current) {
         clearTimeout(timeoutRef.current);
       }
+      if (retryTimeoutRef.current) {
+        clearTimeout(retryTimeoutRef.current);
+      }
     };
   }, []);
 
-  // Save on page unload if there are unsaved changes
   useEffect(() => {
     const handleBeforeUnload = (e: BeforeUnloadEvent) => {
       if (hasUnsavedChanges) {
@@ -205,6 +247,22 @@ export function useAutoSave<T>({
     window.addEventListener('beforeunload', handleBeforeUnload);
     return () => window.removeEventListener('beforeunload', handleBeforeUnload);
   }, [hasUnsavedChanges]);
+
+  useEffect(() => {
+    const flush = () => {
+      if (!enabledRef.current || !hasUnsavedChangesRef.current) return;
+      void performSaveRef.current(currentDataRef.current);
+    };
+    const onVisibility = () => {
+      if (document.visibilityState === 'hidden') flush();
+    };
+    window.addEventListener('pagehide', flush);
+    document.addEventListener('visibilitychange', onVisibility);
+    return () => {
+      window.removeEventListener('pagehide', flush);
+      document.removeEventListener('visibilitychange', onVisibility);
+    };
+  }, []);
 
   return {
     hasUnsavedChanges,

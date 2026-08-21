@@ -42,7 +42,6 @@ function seedGuidedStorage(subStep: string, draft: Record<string, unknown>) {
         declinedPathSkillIds: [],
         archetypeFeatIds: [],
         characterFeatIds: [],
-        loadoutId: null,
         armaments: [],
         equipment: [],
         powerIds: [],
@@ -89,11 +88,16 @@ test('guided archetype feat card height audit', async ({ page, context }) => {
   }, storage);
 
   await page.goto('/characters/new/guided', { waitUntil: 'networkidle' });
-  await page.getByRole('heading', { name: /how you excel in combat/i }).waitFor({ timeout: 30_000 });
+  await page
+    .getByRole('heading', { name: /how you excel in combat/i })
+    .waitFor({ timeout: 30_000 });
 
   await snap(page, '01-archetype-feats-full-page');
 
-  const firstGroup = page.locator('section').filter({ has: page.getByRole('heading', { level: 3 }) }).first();
+  const firstGroup = page
+    .locator('section')
+    .filter({ has: page.getByRole('heading', { level: 3 }) })
+    .first();
   await firstGroup.scrollIntoViewIfNeeded();
   await snap(page, '02-first-feat-group-cards', false);
 
@@ -116,6 +120,8 @@ test('guided archetype feat card height audit', async ({ page, context }) => {
 
   await page.setViewportSize({ width: 360, height: 800 });
   await page.goto('/characters/new/guided', { waitUntil: 'networkidle' });
-  await page.getByRole('heading', { name: /how you excel in combat/i }).waitFor({ timeout: 30_000 });
+  await page
+    .getByRole('heading', { name: /how you excel in combat/i })
+    .waitFor({ timeout: 30_000 });
   await snap(page, '04-archetype-feats-mobile');
 });

@@ -1,13 +1,29 @@
 /**
  * Owner Library for View
  * =======================
- * Server-only: fetches a user's library (powers, techniques, items, creatures) for
- * read-only display when viewing another user's character (public or campaign).
+ * Server-only: fetches the subset of a user's library (powers, techniques, items,
+ * creatures) that a specific character references, for read-only display when
+ * viewing that character (public or campaign).
  * Uses Supabase (public.user_powers, user_techniques, user_items, user_creatures).
+ *
+ * Callers MUST verify authorization before invoking (e.g. public visibility, shared
+ * campaign membership, or campaign RM roster check). This helper uses the service-role
+ * client to bypass RLS on the owner's library tables — the viewer's session client
+ * cannot read another user's rows.
+ *
+ * Authorization here is per-character, so the query must be too: `refIds` is required
+ * and rows outside it are never fetched. Passing an unfiltered owner id would hand the
+ * viewer the owner's whole private library (audit 2026-08-13 P0-1).
  */
 
-import { createClient } from '@/lib/supabase/server';
-import { rowToItem } from '@/lib/library-columnar';
+import {
+  fromPublicTable,
+  type PublicTableName,
+  type TypedSupabaseClient,
+} from '@/lib/supabase/database';
+import { createServiceRoleClient } from '@/lib/supabase/server';
+import { columnarViewSelect, rowToItem, type ColumnarLibraryType } from '@/lib/library-columnar';
+import type { OwnerLibraryRefIds } from '@/lib/character-view-enrichment';
 
 export interface LibraryForView {
   powers: Array<Record<string, unknown>>;
@@ -16,28 +32,67 @@ export interface LibraryForView {
   creatures: Array<Record<string, unknown>>;
 }
 
+const TABLE: Record<keyof OwnerLibraryRefIds, PublicTableName> = {
+  powers: 'user_powers',
+  techniques: 'user_techniques',
+  items: 'user_items',
+  creatures: 'user_creatures',
+};
+
+const ROW_TO_ITEM_TYPE: Record<keyof OwnerLibraryRefIds, ColumnarLibraryType> = {
+  powers: 'powers',
+  techniques: 'techniques',
+  items: 'items',
+  creatures: 'creatures',
+};
+
+/** Empty result, used when a character references nothing from the owner's library. */
+export function emptyLibraryForView(): LibraryForView {
+  return { powers: [], techniques: [], items: [], creatures: [] };
+}
+
+async function fetchReferenced(
+  supabase: TypedSupabaseClient,
+  kind: keyof OwnerLibraryRefIds,
+  ownerUserId: string,
+  ids: string[],
+): Promise<Array<Record<string, unknown>>> {
+  if (ids.length === 0) return [];
+
+  const type = ROW_TO_ITEM_TYPE[kind];
+  const { data, error } = await fromPublicTable(supabase, TABLE[kind])
+    .select(columnarViewSelect(type))
+    .eq('user_id', ownerUserId)
+    .in('id', ids);
+  if (error) throw error;
+
+  return ((data ?? []) as unknown as Record<string, unknown>[]).map((row) =>
+    rowToItem(type, row, 'user'),
+  );
+}
+
 /**
- * Fetch a user's library items for display when viewing their character.
- * Used by GET /api/characters/[id] and GET /api/campaigns/[id]/characters/[userId]/[characterId].
+ * Fetch the owner's library rows referenced by the character being viewed.
+ * Throws on a query failure so callers surface a 500 rather than an empty library.
  */
-export async function getOwnerLibraryForView(ownerUserId: string): Promise<LibraryForView> {
-  const supabase = await createClient();
-  const [powerRes, techniqueRes, itemRes, creatureRes] = await Promise.all([
-    supabase.from('user_powers').select('*').eq('user_id', ownerUserId),
-    supabase.from('user_techniques').select('*').eq('user_id', ownerUserId),
-    supabase.from('user_items').select('*').eq('user_id', ownerUserId),
-    supabase.from('user_creatures').select('*').eq('user_id', ownerUserId),
+export async function getOwnerLibraryForView(
+  ownerUserId: string,
+  refIds: OwnerLibraryRefIds,
+): Promise<LibraryForView> {
+  const hasRefs =
+    refIds.powers.length > 0 ||
+    refIds.techniques.length > 0 ||
+    refIds.items.length > 0 ||
+    refIds.creatures.length > 0;
+  if (!hasRefs) return emptyLibraryForView();
+
+  const supabase = createServiceRoleClient();
+  const [powers, techniques, items, creatures] = await Promise.all([
+    fetchReferenced(supabase, 'powers', ownerUserId, refIds.powers),
+    fetchReferenced(supabase, 'techniques', ownerUserId, refIds.techniques),
+    fetchReferenced(supabase, 'items', ownerUserId, refIds.items),
+    fetchReferenced(supabase, 'creatures', ownerUserId, refIds.creatures),
   ]);
 
-  const powerRows = (powerRes.data ?? []) as Record<string, unknown>[];
-  const techniqueRows = (techniqueRes.data ?? []) as Record<string, unknown>[];
-  const itemRows = (itemRes.data ?? []) as Record<string, unknown>[];
-  const creatureRows = (creatureRes.data ?? []) as Record<string, unknown>[];
-
-  return {
-    powers: powerRows.map((r) => rowToItem('powers', r, 'user')),
-    techniques: techniqueRows.map((r) => rowToItem('techniques', r, 'user')),
-    items: itemRows.map((r) => rowToItem('items', r, 'user')),
-    creatures: creatureRows.map((r) => rowToItem('creatures', r, 'user')),
-  };
+  return { powers, techniques, items, creatures };
 }

@@ -5,7 +5,7 @@
  */
 
 import type { CampaignRollEntry } from '@/types/campaign-roll';
-import type { RollEntry } from '@/components/character-sheet/roll-context';
+import type { RollEntry } from '@/components/rolls';
 import { apiFetch } from '@/lib/api-client';
 
 export interface AddCampaignRollParams {
@@ -39,8 +39,7 @@ export async function addCampaignRoll({
  * Get campaign rolls (for polling).
  */
 export async function getCampaignRolls(campaignId: string): Promise<CampaignRollEntry[]> {
-  return apiFetch<CampaignRollEntry[]>(
-    `/api/campaigns/${encodeURIComponent(campaignId)}/rolls`,
-    { credentials: 'same-origin' }
-  );
+  return apiFetch<CampaignRollEntry[]>(`/api/campaigns/${encodeURIComponent(campaignId)}/rolls`, {
+    credentials: 'same-origin',
+  });
 }

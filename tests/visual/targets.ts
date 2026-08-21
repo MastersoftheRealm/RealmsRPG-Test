@@ -38,7 +38,14 @@ export const SCREENSHOT_PAGES = [
  * Set `A11Y_DETERMINISTIC_ONLY=1` (CI) to scan only the data-free routes, so the
  * gate doesn't depend on Supabase data/secrets being present in the CI runner.
  */
-const DATA_PAGES = ['/characters', '/library', '/codex', '/power-creator', '/encounters', '/campaigns'];
+const DATA_PAGES = [
+  '/characters',
+  '/library',
+  '/codex',
+  '/power-creator',
+  '/encounters',
+  '/campaigns',
+];
 
 export const A11Y_PAGES: string[] = [
   ...SCREENSHOT_PAGES.map((p) => p.path),

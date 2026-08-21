@@ -1,16 +1,17 @@
 /**
  * Health/Energy Allocator
  * =======================
- * Shared component for allocating HP and Energy points from a shared pool.
+ * Shared component for allocating Health and Energy points from a shared pool.
  * Used in character creator, character sheet, and creature creator.
- * 
- * Uses the unified ValueStepper component with hold-to-repeat support.
- * 
- * Design Updates:
- * - Health uses GREEN colors (intuitive for HP)
+ *
+ * Uses unified ValueStepper (ADR-0002) with hold-to-repeat for pool allocation.
+ * Pool chrome is PointStatus (remaining / total) so Auto-allocate ticks down
+ * the same way as Ability / Skill / Training Points trackers (TASK-729).
+ *
+ * Design notes:
+ * - Domain color on totals / value text (Health green, Energy blue) — stepper **buttons** stay neutral
  * - Shows TOTAL value prominently, "points" allocated shown secondary
- * - Renamed "bonus" to "points" for clarity
- * 
+ *
  * Variants:
  * - "card": Full card layout with visual pool status (default, for creators)
  * - "inline": Compact horizontal layout with progress bars (for sheet edit mode)
@@ -19,31 +20,40 @@
 'use client';
 
 import { cn } from '@/lib/utils';
-import { ValueStepper } from '@/components/shared';
+import { PointStatus, ValueStepper } from '@/components/patterns';
 
 export interface HealthEnergyAllocatorProps {
-  /** Additional HP points allocated beyond base */
+  /** Additional Health points allocated beyond base */
   hpBonus: number;
   /** Additional Energy points allocated beyond base */
   energyBonus: number;
   /** Total pool of points available */
   poolTotal: number;
-  /** Calculated max HP after bonuses */
+  /** Calculated max Health after bonuses */
   maxHp: number;
   /** Calculated max Energy after bonuses */
   maxEnergy: number;
-  /** Callback when HP allocation changes */
+  /** Callback when Health allocation changes */
   onHpChange: (value: number) => void;
   /** Callback when Energy allocation changes */
   onEnergyChange: (value: number) => void;
   /** Layout variant: 'card' for creators, 'inline' for sheet */
-  variant?: 'card' | 'inline';
+  variant?: 'card' | 'inline' | undefined;
   /** Whether editing is disabled */
-  disabled?: boolean;
+  disabled?: boolean | undefined;
   /** Enable hold-to-repeat with exponential acceleration */
-  enableHoldRepeat?: boolean;
+  enableHoldRepeat?: boolean | undefined;
   /** Allow allocating more points than the pool provides (for manual overrides) */
-  allowOverallocation?: boolean;
+  allowOverallocation?: boolean | undefined;
+}
+
+function ResourceName({ full, abbrev }: { full: string; abbrev: string }) {
+  return (
+    <>
+      <span className="md:hidden">{abbrev}</span>
+      <span className="hidden md:inline">{full}</span>
+    </>
+  );
 }
 
 export function HealthEnergyAllocator({
@@ -63,45 +73,56 @@ export function HealthEnergyAllocator({
   const remaining = poolTotal - spent;
   const isOverspent = remaining < 0;
   const isComplete = remaining === 0;
-  
-  // Max bonus is constrained by remaining pool, unless overallocation is allowed
+  const compactLabels = variant === 'inline';
+
   const maxHpBonus = allowOverallocation ? Infinity : hpBonus + remaining;
   const maxEnergyBonus = allowOverallocation ? Infinity : energyBonus + remaining;
 
-  // Inline variant for character sheet edit mode
+  const poolStatus = (
+    <PointStatus
+      total={poolTotal}
+      spent={spent}
+      variant={compactLabels ? 'compact' : 'inline'}
+      className={compactLabels ? 'text-xs' : undefined}
+    />
+  );
+
+  const healthLabel = compactLabels ? 'HP' : 'Health';
+  const energyLabel = compactLabels ? 'EN' : 'Energy';
+
   if (variant === 'inline') {
     return (
-      <div className={cn(
-        'rounded-xl border',
-        isOverspent ? 'border-danger-300 bg-danger-light' : 
-        isComplete ? 'border-success-300 bg-success-light' : 
-        'border-border-light bg-surface-secondary'
-      )}>
-        {/* Pool Status Header */}
-        <div className={cn(
-          'flex items-center justify-between px-4 py-1.5 border-b',
-          isOverspent ? 'border-danger-300' : 
-          isComplete ? 'border-success-300' : 
-          'border-border-light'
-        )}>
-          <span className="text-xs font-semibold text-text-secondary uppercase tracking-wide">
+      <div
+        className={cn(
+          'rounded-xl border',
+          isOverspent
+            ? 'border-danger-300 bg-danger-light'
+            : isComplete
+              ? 'border-success-300 bg-success-light'
+              : 'border-border-light bg-surface-secondary',
+        )}
+      >
+        <div
+          className={cn(
+            'flex items-center justify-between border-b px-4 py-1.5',
+            isOverspent
+              ? 'border-danger-300'
+              : isComplete
+                ? 'border-success-300'
+                : 'border-border-light',
+          )}
+        >
+          <span className="text-xs font-semibold tracking-wide text-text-secondary uppercase">
             Health/Energy Allocation
           </span>
-          <span className={cn(
-            'text-xs font-bold',
-            isOverspent ? 'text-danger-fg' : 
-            isComplete ? 'text-success-fg' : 
-            'text-info-fg'
-          )}>
-            {spent} / {poolTotal}
-            {isOverspent && <span className="ml-1">({remaining})</span>}
-          </span>
+          {poolStatus}
         </div>
-        
-        <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-4 px-4 py-3">
-          {/* Health Points - Green colors, show total prominently */}
-          <div className="flex-1 flex items-center gap-2 min-w-0">
-            <span className="text-lg font-bold text-success-fg min-w-[60px] shrink-0">{maxHp} HP</span>
+
+        <div className="flex flex-col items-stretch gap-4 px-4 py-3 sm:flex-row sm:items-center">
+          <div className="flex min-w-0 flex-1 items-center gap-2">
+            <span className="min-w-[60px] shrink-0 text-lg font-bold text-success-fg">
+              {maxHp} HP
+            </span>
             <ValueStepper
               value={hpBonus}
               onChange={onHpChange}
@@ -112,18 +133,18 @@ export function HealthEnergyAllocator({
               colorVariant="health"
               enableHoldRepeat={enableHoldRepeat}
               disabled={disabled}
-              decrementTitle="Remove HP points"
-              incrementTitle="Add HP points"
+              decrementTitle={`Remove ${healthLabel} points`}
+              incrementTitle={`Add ${healthLabel} points`}
             />
-            <span className="text-xs text-text-muted dark:text-text-secondary whitespace-nowrap shrink-0">pts</span>
+            <span className="shrink-0 text-xs whitespace-nowrap text-text-muted">pts</span>
           </div>
-          
-          {/* Divider - hidden on narrow mobile */}
-          <div className="hidden sm:block w-px h-10 bg-border-light shrink-0" />
-          
-          {/* Energy Points - Blue colors, show total prominently */}
-          <div className="flex-1 flex items-center gap-2 min-w-0">
-            <span className="text-lg font-bold text-info-fg min-w-[60px] shrink-0">{maxEnergy} EN</span>
+
+          <div className="hidden h-10 w-px shrink-0 bg-border-light sm:block" />
+
+          <div className="flex min-w-0 flex-1 items-center gap-2">
+            <span className="min-w-[60px] shrink-0 text-lg font-bold text-info-fg">
+              {maxEnergy} EN
+            </span>
             <ValueStepper
               value={energyBonus}
               onChange={onEnergyChange}
@@ -134,47 +155,46 @@ export function HealthEnergyAllocator({
               colorVariant="energy"
               enableHoldRepeat={enableHoldRepeat}
               disabled={disabled}
-              decrementTitle="Remove Energy points"
-              incrementTitle="Add Energy points"
+              decrementTitle={`Remove ${energyLabel} points`}
+              incrementTitle={`Add ${energyLabel} points`}
             />
-            <span className="text-xs text-text-muted dark:text-text-secondary whitespace-nowrap shrink-0">pts</span>
+            <span className="shrink-0 text-xs whitespace-nowrap text-text-muted">pts</span>
           </div>
         </div>
       </div>
     );
   }
 
-  // Card variant (default) for creators
   return (
-    <div className={cn(
-      'rounded-xl border',
-      isOverspent ? 'border-danger-300 bg-danger-light' : 
-      isComplete ? 'border-success-300 bg-success-light' : 
-      'border-border-light bg-surface-secondary'
-    )}>
-      {/* Pool Status */}
-      <div className={cn(
-        'flex items-center justify-between px-4 py-2 border-b',
-        isOverspent ? 'border-danger-300' : 
-        isComplete ? 'border-success-300' : 
-        'border-border-light'
-      )}>
+    <div
+      className={cn(
+        'rounded-xl border',
+        isOverspent
+          ? 'border-danger-300 bg-danger-light'
+          : isComplete
+            ? 'border-success-300 bg-success-light'
+            : 'border-border-light bg-surface-secondary',
+      )}
+    >
+      <div
+        className={cn(
+          'flex items-center justify-between gap-3 border-b px-4 py-2',
+          isOverspent
+            ? 'border-danger-300'
+            : isComplete
+              ? 'border-success-300'
+              : 'border-border-light',
+        )}
+      >
         <span className="text-sm font-medium text-text-secondary">Health/Energy Allocation</span>
-        <span className={cn(
-          'text-sm font-bold',
-          isOverspent ? 'text-danger-fg' : 
-          isComplete ? 'text-success-fg' : 
-          'text-info-fg'
-        )}>
-          {spent} / {poolTotal}
-          {isOverspent && <span className="ml-1">({remaining})</span>}
-        </span>
+        {poolStatus}
       </div>
 
-      <div className="grid gap-4 p-4 grid-cols-1 sm:grid-cols-2">
-        {/* HP Allocator - Show total prominently, points secondary */}
-        <div className="flex items-center gap-3">
-          <span className="text-xl font-bold text-success-fg min-w-[70px]">{maxHp} HP</span>
+      <div className="grid grid-cols-1 gap-4 p-4 sm:grid-cols-2">
+        <div className="flex min-w-0 items-center gap-3">
+          <span className="min-w-[4.5rem] shrink-0 text-xl font-bold text-success-fg md:min-w-[7.5rem]">
+            {maxHp} <ResourceName full="Health" abbrev="HP" />
+          </span>
           <ValueStepper
             value={hpBonus}
             onChange={onHpChange}
@@ -184,15 +204,16 @@ export function HealthEnergyAllocator({
             colorVariant="health"
             enableHoldRepeat={enableHoldRepeat}
             disabled={disabled}
-            decrementTitle="Remove HP points"
-            incrementTitle="Add HP points"
+            decrementTitle="Remove Health points"
+            incrementTitle="Add Health points"
           />
-          <span className="text-sm text-text-muted dark:text-text-secondary whitespace-nowrap">pts</span>
+          <span className="text-sm whitespace-nowrap text-text-muted">pts</span>
         </div>
 
-        {/* Energy Allocator - Show total prominently, points secondary */}
-        <div className="flex items-center gap-3">
-          <span className="text-xl font-bold text-info-fg min-w-[70px]">{maxEnergy} EN</span>
+        <div className="flex min-w-0 items-center gap-3">
+          <span className="min-w-[4.5rem] shrink-0 text-xl font-bold text-info-fg md:min-w-[7.5rem]">
+            {maxEnergy} <ResourceName full="Energy" abbrev="EN" />
+          </span>
           <ValueStepper
             value={energyBonus}
             onChange={onEnergyChange}
@@ -205,7 +226,7 @@ export function HealthEnergyAllocator({
             decrementTitle="Remove Energy points"
             incrementTitle="Add Energy points"
           />
-          <span className="text-sm text-text-muted dark:text-text-secondary whitespace-nowrap">pts</span>
+          <span className="text-sm whitespace-nowrap text-text-muted">pts</span>
         </div>
       </div>
     </div>

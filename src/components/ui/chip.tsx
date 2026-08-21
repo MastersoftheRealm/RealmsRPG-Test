@@ -17,6 +17,10 @@ import * as React from 'react';
 import { cva, type VariantProps } from 'class-variance-authority';
 import { cn } from '@/lib/utils/cn';
 import { X } from 'lucide-react';
+import {
+  resolveDescriptorChipSize,
+  type DescriptorChipSizeProp,
+} from '@/lib/chip/chip-size-tokens';
 
 const chipVariants = cva(
   'inline-flex items-center gap-1.5 px-3 py-1 text-sm font-medium border transition-colors duration-base ease-standard',
@@ -28,21 +32,26 @@ const chipVariants = cva(
         primary: 'bg-primary-chip-bg text-primary-chip-fg border-primary-chip-border',
 
         /** Opaque metadata label — feat type, tags, trait kind, requirements (non-expandable) */
-        descriptor: 'bg-surface text-text-secondary border-border-light dark:bg-surface dark:border-border-light',
+        descriptor:
+          'bg-surface text-text-secondary border-border-light dark:bg-surface dark:border-border-light',
 
         // Category-based colors for power/technique parts (KEEP - domain-specific)
         action: 'bg-category-action text-category-action-text border-category-action-border',
-        activation: 'bg-category-activation text-category-activation-text border-category-activation-border',
+        activation:
+          'bg-category-activation text-category-activation-text border-category-activation-border',
         area: 'bg-category-area text-category-area-text border-category-area-border',
-        duration: 'bg-category-duration text-category-duration-text border-category-duration-border',
+        duration:
+          'bg-category-duration text-category-duration-text border-category-duration-border',
         target: 'bg-category-target text-category-target-text border-category-target-border',
         special: 'bg-category-special text-category-special-text border-category-special-border',
-        restriction: 'bg-category-restriction text-category-restriction-text border-category-restriction-border',
+        restriction:
+          'bg-category-restriction text-category-restriction-text border-category-restriction-border',
 
         // Status colors (KEEP - semantic feedback)
         success: 'bg-success-light text-success-fg border-success-border',
         danger: 'bg-danger-light text-danger-fg border-danger-border',
         warning: 'bg-warning-light text-warning-fg border-warning-border',
+        info: 'bg-info-light text-info-fg border-info-border',
 
         // GridListRow expandable list chips (Phase 2.2 — unified from CHIP_STYLES)
         list: 'bg-surface-alt border-border-light text-text-secondary hover:bg-surface',
@@ -53,6 +62,10 @@ const chipVariants = cva(
         /** Proficiency / training-point (TP) domain chip — creator + sheet summaries */
         tp: 'bg-tp-light text-tp-text border-tp-border',
 
+        /** Power / martial domain chips — path type, trait kind, archetype summaries */
+        power: 'bg-power-light text-power-fg border-power-border',
+        technique: 'bg-martial-light text-martial-fg border-martial-border',
+
         /** Item rarity badges (Phase 4 — theme-aware semantic tokens) */
         rarityCommon: 'bg-surface-alt text-text-primary border-border-light',
         rarityUncommon: 'bg-success-light text-success-fg border-success-300',
@@ -61,36 +74,6 @@ const chipVariants = cva(
         rarityLegendary: 'bg-warning-light text-warning-fg border-warning-border',
         rarityMythic: 'bg-danger-light text-danger-fg border-danger-border',
         rarityAscended: 'bg-accent-light text-accent-fg border-accent-border',
-
-        // DEPRECATED VARIANTS (kept for backwards compatibility)
-        /** @deprecated Use 'default' instead */
-        secondary: 'bg-surface text-text-secondary border-border-light',
-        /** @deprecated Use 'default' instead */
-        outline: 'border-border-light bg-transparent text-text-secondary hover:bg-surface-alt',
-        /** @deprecated Use 'primary' instead */
-        accent: 'bg-accent-chip text-primary-subtle-fg border-accent-200',
-        /** @deprecated Use 'default' instead */
-        info: 'bg-info-light text-info-fg border-info-border',
-
-        // Equipment types - DEPRECATED (context provides meaning)
-        /** @deprecated Use 'default' - context provides meaning */
-        weapon: 'bg-warning-light text-warning-fg border-warning-border',
-        /** @deprecated Use 'default' - context provides meaning */
-        armor: 'bg-info-light text-info-fg border-info-border',
-        /** @deprecated Use 'default' - context provides meaning */
-        shield: 'bg-success-light text-success-fg border-success-border',
-
-        // Character content types - DEPRECATED (context provides meaning)
-        /** @deprecated Use 'default' - context provides meaning */
-        feat: 'bg-surface-alt text-text-secondary border-border-light',
-        /** @deprecated Use 'default' - context provides meaning */
-        proficiency: 'bg-info-light text-info-fg border-info-border',
-        /** @deprecated Use 'default' - context provides meaning */
-        weakness: 'bg-danger-light text-danger-fg border-danger-border',
-        /** @deprecated Use 'default' - context provides meaning */
-        power: 'bg-power-light text-power-fg border-power-border',
-        /** @deprecated Use 'default' - context provides meaning */
-        technique: 'bg-martial-light text-martial-fg border-martial-border',
       },
       shape: {
         /** Filters, removable tags, legacy chips */
@@ -102,6 +85,8 @@ const chipVariants = cva(
       },
       size: {
         sm: 'px-2 py-0.5 text-xs',
+        /** Inline metadata — DescriptorChip default; between `sm` and `md` (TASK-699). */
+        descriptor: 'px-2.5 py-1 text-sm',
         md: 'px-3 py-1 text-sm',
         lg: 'px-4 py-1.5 text-base',
       },
@@ -116,13 +101,12 @@ const chipVariants = cva(
       size: 'md',
       interactive: false,
     },
-  }
+  },
 );
 
 export interface ChipProps
-  extends React.HTMLAttributes<HTMLSpanElement>,
-    VariantProps<typeof chipVariants> {
-  onRemove?: () => void;
+  extends React.HTMLAttributes<HTMLSpanElement>, VariantProps<typeof chipVariants> {
+  onRemove?: (() => void) | undefined;
 }
 
 const Chip = React.forwardRef<HTMLSpanElement, ChipProps>(
@@ -141,7 +125,7 @@ const Chip = React.forwardRef<HTMLSpanElement, ChipProps>(
               e.stopPropagation();
               onRemove();
             }}
-            className="ml-0.5 -mr-1 rounded-full p-0.5 hover:bg-black/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-outline-border transition-colors touch-target-md-compact inline-flex items-center justify-center"
+            className="hit-area-dense-square -mr-1 ml-0.5 inline-flex items-center justify-center rounded-full p-0.5 transition-colors hover:bg-black/10 focus-visible:ring-2 focus-visible:ring-primary-outline-border focus-visible:outline-none"
             aria-label="Remove"
           >
             <X className="h-3 w-3" />
@@ -149,16 +133,26 @@ const Chip = React.forwardRef<HTMLSpanElement, ChipProps>(
         )}
       </span>
     );
-  }
+  },
 );
 Chip.displayName = 'Chip';
 
-/** Non-expandable metadata chip — opaque fill, rounded-md. */
+export type { DescriptorChipSizeProp as DescriptorChipSize } from '@/lib/chip/chip-size-tokens';
 const DescriptorChip = React.forwardRef<
   HTMLSpanElement,
-  Omit<ChipProps, 'shape' | 'interactive'> & { shape?: ChipProps['shape'] }
+  Omit<ChipProps, 'shape' | 'interactive' | 'size'> & {
+    shape?: ChipProps['shape'] | undefined;
+    size?: DescriptorChipSizeProp | undefined;
+  }
 >(({ variant = 'descriptor', shape = 'rounded', size = 'sm', ...props }, ref) => (
-  <Chip ref={ref} variant={variant} shape={shape} size={size} interactive={false} {...props} />
+  <Chip
+    ref={ref}
+    variant={variant}
+    shape={shape}
+    size={resolveDescriptorChipSize(size)}
+    interactive={false}
+    {...props}
+  />
 ));
 DescriptorChip.displayName = 'DescriptorChip';
 

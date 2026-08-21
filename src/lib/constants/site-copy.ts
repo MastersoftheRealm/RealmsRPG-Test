@@ -5,13 +5,18 @@
  *
  * | Page / area        | File                          |
  * |--------------------|-------------------------------|
- * | Shared (motto, URL)| `copy/shared-copy.ts`         |
+ * | Shared (motto, URL, email) | `copy/shared-copy.ts` |
  * | Landing `/`        | `copy/landing-copy.ts`        |
  * | Auth login/register| `copy/auth-copy.ts`           |
  * | About `/about`     | `copy/about-copy.ts`          |
- * | Character creator chooser + guided flow | `copy/guided-creator-copy.ts` |
+ * | Nav header         | `copy/nav-copy.ts`            |
+ * | Rules `/rules`     | `copy/rules-copy.ts`          |
+ * | Resources          | `copy/resources-copy.ts`      |
+ * | Privacy `/privacy` | `copy/privacy-copy.ts`        |
+ * | Terms `/terms`     | `copy/terms-copy.ts`          |
+ * | Character creator chooser + guided flow + Legacy wizard chrome | `copy/guided-creator-copy.ts` |
+ * | Archetype category (Power / Martial / P-M) | `copy/archetype-category-copy.ts` |
  * | Footer             | `copy/footer-copy.ts`         |
- * | Nav, rules, etc.   | TASK-390 (not migrated yet)   |
  * | Tooltips           | `public/tooltip-text.tsx`     |
  *
  * Game mechanics (not prose): `skills.ts`, `GAME_RULES.md`
@@ -21,10 +26,23 @@
 export {
   REALMS_MOTTO,
   DISCORD_URL,
+  SITE_CONTACT_EMAIL,
+  ROOT_META_DESCRIPTION,
+  SITE_URL,
   LANDING_COPY,
   AUTH_COPY,
   ABOUT_COPY,
+  ABOUT_CAROUSEL_SLIDES,
+  ABOUT_DICE_ASSETS,
+  ABOUT_CAROUSEL_CENTER_INDEX,
   GUIDED_CREATOR_COPY,
   FOOTER_COPY,
+  NAV_COPY,
+  RULES_COPY,
+  RESOURCES_COPY,
+  PRIVACY_COPY,
+  TERMS_COPY,
+  ARCHETYPE_CATEGORY_INFO,
 } from './copy';
 
+export type { NavLink, ArchetypeCategoryInfo } from './copy';

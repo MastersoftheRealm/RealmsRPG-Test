@@ -8,6 +8,30 @@
 
 ---
 
+## Drift detection (`schema/`)
+
+`sql/schema/0000_baseline_<date>.sql` is a committed `pg_dump --schema-only --no-owner --no-acl`
+of the live database. It is the diff target that makes "did someone change the DB without a
+migration?" answerable.
+
+| Command | What it does |
+|---------|--------------|
+| `npm run db:diff` | Dumps the live schema with the same tool + flags, normalises both sides (strips the random `\restrict` token, tool-version headers, comments and object ordering), then `git diff --no-index`. **Exits non-zero on drift.** |
+| `npm run db:baseline:update` | Writes a fresh `0000_baseline_<today>.sql`. Use this only after the corresponding migration file has been added to `sql/`, and delete the superseded baseline in the same commit so exactly one stays committed. |
+| `npm run db:check-codex-drift` | Scans `codex_change_logs` for fields that went value → null **without** the null appearing in `changed_fields` — i.e. collateral loss rather than a deliberate edit. |
+
+Requires `DIRECT_URL` (preferred) or `DATABASE_URL` in `.env.local` / `.env`, plus `pg_dump`.
+The dump must come from the same **major** pg_dump version as the baseline (recorded in its
+header) or every object reports as drift; `db:diff` refuses to run on a mismatch unless
+`--allow-tool-mismatch` is passed. Working files land in `.db-diff/` (gitignored).
+
+**Workflow.** Run `npm run db:diff` before a release and after any Dashboard/MCP apply. Drift
+output is a list of live objects that no committed SQL creates: for each one, add the migration
+to `sql/`, apply nothing new, then refresh the baseline. Neither command is a PR gate — both
+need database credentials — so they are manual or scheduled checks.
+
+---
+
 ## Applied Supabase migrations (schema_migrations)
 
 These are recorded in `supabase_migrations.schema_migrations` on RealmsRPG-Test. Local file = source to re-run on a **new** environment (idempotent where noted).
@@ -37,6 +61,7 @@ These are recorded in `supabase_migrations.schema_migrations` on RealmsRPG-Test.
 | `codex_art_species_image_url` | 20260702031831 | [codex-art-species-image-url.sql](codex-art-species-image-url.sql) |
 | `official_items_image_url` | 20260702143123 | [official-items-image-url.sql](official-items-image-url.sql) |
 | `normalize_codex_feat_ability_delimiters` | 20260703144039 | [normalize-codex-feat-ability-delimiters.sql](normalize-codex-feat-ability-delimiters.sql) |
+| `realms_image_library` | 20260716 (MCP) | [realms-image-library.sql](realms-image-library.sql) |
 
 ---
 
@@ -48,7 +73,13 @@ These are recorded in `supabase_migrations.schema_migrations` on RealmsRPG-Test.
 | Leveled feats (`base_feat_id` column + backfill) | [leveled-feats-add-base-feat-id.sql](leveled-feats-add-base-feat-id.sql), [leveled-feats-migrate-roman-to-base-id.sql](leveled-feats-migrate-roman-to-base-id.sql) | 202/203 `feat_lvl >= 2` rows have `base_feat_id` on Test. |
 | Archetype path columnar fields | [codex-archetypes-path-columns.sql](codex-archetypes-path-columns.sql) | `level1_*` columns + `codex_archetype_levels` present on Test. |
 | Unarmed prowess recommendation flag | [codex-archetypes-recommend-unarmed-prowess.sql](codex-archetypes-recommend-unarmed-prowess.sql) | `level1_recommend_unarmed_prowess` column present. |
+| TASK-530 path enrichment (all 12 + ability + backup) | [codex-archetypes-backup-20260717.sql](codex-archetypes-backup-20260717.sql), [codex-archetypes-ability-spread-20260717.sql](codex-archetypes-ability-spread-20260717.sql), [codex-archetypes-enrich-*-applied.sql](codex-archetypes-enrich-berserker-applied.sql), [codex-archetypes-emdash-scrub-20260717.sql](codex-archetypes-emdash-scrub-20260717.sql) | Applied RealmsRPG-Test 2026-07-17. Per-path `*-applied.sql` is the replay source; em-dash scrub is idempotent. |
 | Empowered technique tables | [empowered-techniques-separate-tables.sql](empowered-techniques-separate-tables.sql) | `user_empowered_techniques`, `official_empowered_techniques` exist. |
+| TASK-627 official powers payload dedupe | [official-powers-strip-redundant-auto-mechanic-parts-applied.sql](official-powers-strip-redundant-auto-mechanic-parts-applied.sql) | Applied 2026-08-01. Strips auto-mechanic parts from `payload.parts` when promoted columns exist; helper `_official_power_rebuilt_mechanic_part_names`. 41/44 rows cleaned; post-apply overlap audit 0; idempotent. |
+| TASK-649 Supabase least-privilege Phase 2 | [task-649-*-applied.sql](task-649-anon-least-privilege-applied.sql) (6 files) + [task-649-verify-applied.sql](task-649-verify-applied.sql) | Applied 2026-08-03. `node scripts/run-task-649-phase2.mjs` · `node scripts/verify-task-649.mjs`. VTT tables skipped. |
+| TASK-650 campaigns RLS SELECT consolidation | [task-650-campaigns-rls-select-consolidation-applied.sql](task-650-campaigns-rls-select-consolidation-applied.sql) + [task-650-verify-applied.sql](task-650-verify-applied.sql) | Applied 2026-08-03. Dropped redundant `campaigns_owner_select` (stacked with `campaigns_select_participants`). `node scripts/run-task-650.mjs` · `node scripts/verify-task-650.mjs`. |
+| TASK-802 campaigns SELECT owner short-circuit | [task-802-campaigns-select-owner-short-circuit.sql](task-802-campaigns-select-owner-short-circuit.sql) | Applied 2026-08-15. Single SELECT policy keeps `owner_id = auth.uid()` **or** the participant helper so `INSERT … RETURNING` works. Verify: `node scripts/verify-task-650.mjs` (includes INSERT RETURNING smoke). |
+| TASK-738 character create idempotency key | [task-738-characters-client-request-id.sql](task-738-characters-client-request-id.sql) | Applied 2026-08-13 (Supabase MCP `apply_migration`). Adds nullable `characters.client_request_id uuid` + partial unique index `characters_user_client_request_id_key (user_id, client_request_id) WHERE client_request_id IS NOT NULL`. Additive and idempotent; the index is what makes a concurrent retry replay instead of duplicating. |
 
 ---
 
@@ -77,8 +108,13 @@ These are recorded in `supabase_migrations.schema_migrations` on RealmsRPG-Test.
 
 | File | Status on Test |
 |------|----------------|
+| realms-image-library.sql | Applied — migration `realms_image_library` (TASK-492) |
 | codex-archetypes-path-columns.sql | Applied ad-hoc |
 | codex-archetypes-recommend-unarmed-prowess.sql | Applied ad-hoc |
+| codex-archetypes-enrich-*-applied.sql | Applied ad-hoc (TASK-530) — 12 paths + abilities backfill |
+| codex-archetypes-backup-20260717.sql | Applied ad-hoc — backup tables before TASK-530 |
+| codex-archetypes-ability-spread-20260717.sql | Applied ad-hoc — ability point spread pass |
+| codex-archetypes-emdash-scrub-20260717.sql | Applied ad-hoc — user-facing em/en dash scrub |
 | codex-archetypes-creator-layer1-extensions.sql | Migration `codex_archetypes_creator_layer1_extensions` |
 | guided-creator-schema-seed.sql | Migration `guided_creator_schema_seed` |
 | codex-art-species-image-url.sql | Migration `codex_art_species_image_url` |
