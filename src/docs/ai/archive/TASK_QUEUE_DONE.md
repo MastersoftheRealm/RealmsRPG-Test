@@ -1,3 +1,33 @@
+- id: TASK-900
+  title: Catch up styleguide Linux visual baselines after 2026-08-21 dump
+  created_at: 2026-08-22
+  completed_at: 2026-08-22
+  created_by: agent
+  implemented_by: agent
+  priority: high
+  status: done
+  verification_status: n/a
+  related_files:
+    - tests/visual/screenshots.pw.ts-snapshots
+    - src/docs/ai/AI_CHANGELOG.md
+  automated_check: |
+    npm run verify:visual
+  description: |
+    Master UI Verify failed on Visual + accessibility: all 6 styleguide Playwright
+    snapshots (mobile/tablet/desktop x light/dark) after the 2026-08-21 owner dump.
+    Page heights drifted (mobile +64px, tablet -48px, desktop +128px). Other 48
+    visual baselines still pass.
+  acceptance_criteria:
+    - The 6 failing styleguide Linux snapshots match CI Chromium actuals.
+    - Non-styleguide Linux baselines that already passed are unchanged.
+    - `npm run tasks:validate` passes.
+  completed_work: |
+    Replaced 6 styleguide Linux PNGs with CI actuals from GitHub Actions run
+    32582656150 (mobile/tablet/desktop x light/dark). Windows styleguide snapshots
+    left as-is (CI authority is Linux).
+
+---
+
 - id: TASK-895
   title: Clicking outside the roll log closes it
   created_at: 2026-08-21
