@@ -718,7 +718,7 @@ export function buildSelectableItem(
     const currency = isArmament
       ? pricing.currencyCost > 0
         ? pricing.currencyCost
-        : undefined
+        : costFallback
       : catalogCurrency > 0
         ? catalogCurrency
         : costFallback;

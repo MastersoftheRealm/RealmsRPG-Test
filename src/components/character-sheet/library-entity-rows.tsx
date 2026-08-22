@@ -140,11 +140,12 @@ function sheetItemCostFacts(
     Math.round(pricing.totalTP) ||
     (typeof storedTp === 'number' && storedTp > 0 ? Math.round(storedTp) : undefined);
 
+  const storedCost = item.cost != null && item.cost > 0 ? item.cost : undefined;
+
   if (kind === 'equipment') {
     const catalogCurrency = equipmentCurrency(
       item as Item & { currency?: number | undefined; gold_cost?: number | undefined },
     );
-    const storedCost = item.cost != null && item.cost > 0 ? item.cost : undefined;
     return {
       rarity: item.rarity,
       currency: catalogCurrency > 0 ? catalogCurrency : storedCost,
@@ -154,7 +155,8 @@ function sheetItemCostFacts(
 
   return {
     rarity: item.rarity || (pricing.rarity ? pricing.rarity : undefined),
-    currency: pricing.currencyCost > 0 ? pricing.currencyCost : undefined,
+    // Market formula first; stored `cost` for play rows without property DB (creature kit).
+    currency: pricing.currencyCost > 0 ? pricing.currencyCost : storedCost,
     trainingPoints,
   };
 }

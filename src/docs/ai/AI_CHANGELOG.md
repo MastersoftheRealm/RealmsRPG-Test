@@ -2,6 +2,8 @@
 
 Newest **150** entries. Older: [`archive/AI_CHANGELOG_ARCHIVE.md`](archive/AI_CHANGELOG_ARCHIVE.md).
 
+- 2026-08-21 | agent | TASK-870 — armament Currency falls back to stored cost | files: library-entity-rows, library-selectable-builders, AI_CHANGELOG | Summary: **Wired** armament Currency chips to use stored `item.cost` when market pricing has no property/DB signal (creature kit / play rows). Keeps market formula first; does not restore property C-sum display. verification_status n/a.
+
 - 2026-08-21 | agent | TASK-872 /cleanup — drop Gear comment clutter + sync archive | files: archive TASK-872, glr-surface-bindings, glr-density, equipment-phase-nav, store, LibraryEnhancedTab, equipment-list, library-selectable-builders, library-entity-tab.types, ALL_FEEDBACK_CLEAN, AI_CHANGELOG | Summary: **Deleted** redundant TASK-872 identifier-map header comments (SoT stays ADR-0016 / FEATURE_INDEX / glr-fact-catalog). **Synced** archive related_files + BV tests DEV-V-013-T039 and DEV-V-020-T005 (dropped suite_also). verification_status pending-qa.
 
 - 2026-08-21 | agent | /cleanup TASK-870 — drop duplicate currency parsers | files: item-creator-cost-derivation, get-crafting-market-price, library-selectable-builders, library-entity-rows, equipment-currency, item-calc, ACTIVE TASK-873, AI_CHANGELOG | Summary: **Deleted** item-creator `costs = pricing` alias, crafting local property-id parse, unused `getMarketPriceFallback`, and USM `'currency' in it` ladder. **Wired** Codex `equipmentCurrency` into sheet equipment facts, USM equipment chips, and crafting Codex price. Folded remaining Add-equipment C-sum column + `map-selection` `cost: 0` into TASK-873. verification_status n/a.
