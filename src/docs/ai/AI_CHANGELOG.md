@@ -2,6 +2,8 @@
 
 Newest **150** entries. Older: [`archive/AI_CHANGELOG_ARCHIVE.md`](archive/AI_CHANGELOG_ARCHIVE.md).
 
+- 2026-08-22 | agent | TASK-900 — catch up styleguide Linux visual baselines | files: screenshots.pw.ts-snapshots (6 linux PNGs), ACTIVE→archive, AI_CHANGELOG | Summary: **Replaced** the 6 styleguide Linux Playwright baselines that failed UI Verify on master (mobile/tablet/desktop × light/dark) with CI actuals from run 32582656150 after the 2026-08-21 dump. Other 48 baselines unchanged. verification_status n/a.
+
 - 2026-08-22 | agent | /cleanup session batch — outline Customize, slider labels, Firefox thumb | files: library-feat-rows(+test), powered-martial-slider, globals.css, sheet-header, BUILD_VALIDATION T071, AI_CHANGELOG | Summary: **Dropped** TASK-888 readFileSync source-scan test. **Switched** Customize to `Button outline sm` (distinct from desc chips). **Wired** `powerValue`/`martialValue` props into slider labels. **Removed** Firefox `border: none` that wiped tokenized thumb border. **Indented** header stat grid + TASK-885 comment. verification_status pending-qa unchanged.
 
 - 2026-08-22 | agent | TASK-871 TASK-874 TASK-876 follow-through — live counts, GET slim, Offense filter | files: changelog GET name-only snapshots, feat-list normalizeFeatCategory(+test), sql feat-offense proposed (8 live rows), ACTIVE_TASKS, DEV-Q05–Q07 | Summary: **Cited** live item-table counts on the keep-as-is recommendation. **Stopped** shipping full changelog snapshots on GET. **Mapped** leftover feat `Offense` → Offensive in filters; live UPDATE still waits on apply (8 rows). verification_status n/a (owner-gated).
