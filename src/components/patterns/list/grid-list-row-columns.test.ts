@@ -1,3 +1,4 @@
+import { createElement } from 'react';
 import { describe, expect, it } from 'vitest';
 import {
   columnHasDisplayValue,
@@ -64,7 +65,7 @@ describe('columnHasDisplayValue / mobile expand facts (TASK-868)', () => {
 describe('columnHasInteractiveValue / dataColumnTrackCount (TASK-898)', () => {
   it('detects ReactNode column values that need stacked expanded layout', () => {
     expect(columnHasInteractiveValue({ key: 'uses', value: '1/2' })).toBe(false);
-    expect(columnHasInteractiveValue({ key: 'uses', value: { mock: 'stepper' } })).toBe(true);
+    expect(columnHasInteractiveValue({ key: 'uses', value: createElement('span') })).toBe(true);
   });
 
   it('sums data column spans for expanded name grid-column span', () => {
