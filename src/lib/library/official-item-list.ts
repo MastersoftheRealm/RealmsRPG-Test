@@ -10,12 +10,11 @@ import type { ColumnValue } from '@/components/patterns/list/grid-list-row';
 import type { ItemProperty } from '@/hooks/codex-types';
 import type { LibraryItem } from '@/types/library';
 import {
-  calculateItemCosts,
-  calculateCurrencyCostAndRarity,
   deriveAgilityReductionFromProperties,
   deriveCriticalRangeIncreaseFromProperties,
   deriveShieldAmountFromProperties,
   deriveShieldDamageFromProperties,
+  resolveItemMarketPricing,
   resolveWeaponRangeDisplay,
   type ItemPropertyPayload,
 } from '@/lib/calculators/item-calc';
@@ -180,11 +179,7 @@ export function buildOfficialItemRows(
   const filtered = kind ? filterItemsByArmamentKind(items, kind) : items;
   return filtered.map((item) => {
     const props = (Array.isArray(item.properties) ? item.properties : []) as ItemPropertyPayload[];
-    const costs = calculateItemCosts(props, propertiesDb);
-    const { currencyCost, rarity } = calculateCurrencyCostAndRarity(
-      costs.totalCurrency,
-      costs.totalIP,
-    );
+    const pricing = resolveItemMarketPricing(props, propertiesDb, item.costs);
     const rangeStr = resolveWeaponRangeDisplay(
       (item as LibraryItem & { range?: string | undefined }).range,
       props,
@@ -206,9 +201,9 @@ export function buildOfficialItemRows(
       name: String(item.name ?? ''),
       description: String(item.description ?? ''),
       type: formatListCellLabel(item.type),
-      rarity: formatListCellLabel(rarity),
-      currency: Math.round(currencyCost),
-      tp: Math.round(costs.totalTP),
+      rarity: formatListCellLabel(pricing.rarity || item.rarity),
+      currency: Math.round(pricing.currencyCost),
+      tp: Math.round(pricing.totalTP),
       range: rangeStr,
       damage: kind === 'shield' ? shieldDamage || '-' : damageStr,
       damageReduction,

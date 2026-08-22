@@ -45,7 +45,7 @@ export const ARMOR_L2_GRID = armorCfg.grid;
 
 const gearChrome = glrListChrome({ entityType: 'gear', mode: 'browse' }, { sortable: true });
 
-/** Gear — Name | Category | Currency | Rarity (taxonomy, not phase type). */
+/** Equipment — Name | Category | Currency | Rarity (taxonomy, not phase type). Internal phase id `gear`. */
 export const GEAR_L2_HEADER_COLUMNS: L2ColumnHeader[] = gearChrome.headers.map((h) => ({
   key: h.key,
   label: h.label,

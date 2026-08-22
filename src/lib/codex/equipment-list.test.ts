@@ -118,7 +118,7 @@ describe('codex equipment-list', () => {
       paths: [
         {
           id: 'p-gear',
-          name: 'Gear',
+          name: 'Equipment Path',
           type: 'martial',
           path_data: parseArchetypePathData({
             level1: { armaments: ['sword:1'], equipment: ['torch'] },

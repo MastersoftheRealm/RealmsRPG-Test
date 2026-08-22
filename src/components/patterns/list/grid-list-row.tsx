@@ -38,6 +38,7 @@ import {
   columnsForExpandedMobileStats,
   columnsForMobileSummary,
   columnsWithoutDescriptionPreview,
+  columnHasDisplayValue,
   descriptionColumnTrackCount,
 } from './grid-list-row-columns';
 import { GridListRowExpandedBody, GridListRowMobileSummary } from './grid-list-row-expanded';
@@ -234,6 +235,10 @@ export const GridListRow = memo(function GridListRow({
   const hasExternalChrome =
     externalRightSlot || externalEdit || externalDelete || externalSelectable;
 
+  const usesColumnHasValue = columns.some(
+    (col) => col.key === 'uses' && columnHasDisplayValue(col),
+  );
+  const hideUsesBesideName = hideUsesInName || usesColumnHasValue;
   const suppressDescriptionPreview = isExpanded && !!descTrimmed && !expandedContent;
   const headerColumns = columnsWithoutDescriptionPreview(columns, suppressDescriptionPreview);
   const allDataColumnsAreDescription =
@@ -267,9 +272,9 @@ export const GridListRow = memo(function GridListRow({
   const showLeftChrome = !!(leftSlot || reserveLeftSlotChrome);
   const contentCol = showLeftChrome ? 2 : 1;
   const chromeCol = hasExternalChrome ? (showLeftChrome ? 3 : 2) : 0;
-  const hasMobileSummary = !!(gridColumns && mobileSummaryColumns.length > 0);
-  const summaryRow = hasMobileSummary ? 2 : 0;
   const showExpanded = isExpanded && hasDetails;
+  const hasMobileSummary = !!(gridColumns && mobileSummaryColumns.length > 0 && !showExpanded);
+  const summaryRow = hasMobileSummary ? 2 : 0;
   const expandedRow = showExpanded ? (hasMobileSummary ? 3 : 2) : 0;
   const chromeGridTemplateColumns = [
     showLeftChrome ? GRID_LIST_ROW_LEFT_SLOT_WIDTH : null,
@@ -328,7 +333,7 @@ export const GridListRow = memo(function GridListRow({
             innate={innate}
             hideInnateBadge={hideInnateBadge}
             uses={uses}
-            hideUsesInName={hideUsesInName}
+            hideUsesInName={hideUsesBesideName}
             quantity={quantity}
             onQuantityChange={onQuantityChange}
             quantityMin={quantityMin}

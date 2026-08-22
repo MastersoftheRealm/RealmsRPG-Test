@@ -6,7 +6,8 @@
  */
 
 import type { ItemProperty } from '@/hooks/codex-types';
-import { deriveItemDisplay, type ItemDocument } from '@/lib/calculators/item-calc';
+import { resolveItemMarketPricing, type ItemStoredCostSums } from '@/lib/calculators/item-calc';
+import { equipmentCurrency } from '@/lib/codex/equipment-list';
 
 /** Codex equipment row (from useEquipment) */
 export interface CodexEquipmentLike {
@@ -39,8 +40,7 @@ export interface LibraryItemLike {
  * Get market price (currency) for codex equipment. Uses stored currency column.
  */
 export function getCodexEquipmentMarketPrice(e: CodexEquipmentLike): number {
-  const c = e.currency ?? e.gold_cost ?? 0;
-  return Math.max(0, Number(c));
+  return Math.max(0, equipmentCurrency(e));
 }
 
 /**
@@ -51,37 +51,9 @@ export function getLibraryItemMarketPrice(
   item: LibraryItemLike,
   propertiesDb: ItemProperty[],
 ): number {
-  const raw = item as unknown as Record<string, unknown>;
-  const armamentType = (raw.armamentType as string) || (raw.type as string) || '';
-  const normalizedType = armamentType
-    ? armamentType.charAt(0).toUpperCase() + armamentType.slice(1).toLowerCase()
-    : 'Weapon';
-  const doc = {
-    name: item.name ?? '',
-    description: item.description ?? '',
-    armamentType: (normalizedType === 'Weapon' ||
-    normalizedType === 'Shield' ||
-    normalizedType === 'Armor'
-      ? normalizedType
-      : 'Weapon') as 'Weapon' | 'Armor' | 'Shield',
-    properties: (Array.isArray(item.properties) ? item.properties : []).map((p) => ({
-      id: typeof p === 'object' && p && 'id' in p ? p.id : undefined,
-      name: typeof p === 'object' && p && 'name' in p ? p.name : undefined,
-      op_1_lvl: typeof p === 'object' && p && 'op_1_lvl' in p ? p.op_1_lvl : undefined,
-    })),
-    damage: item.damage,
-  };
-  const display = deriveItemDisplay(doc as ItemDocument, propertiesDb);
-  return Math.max(0, display.currencyCost);
-}
-
-/**
- * Fallback when no propertiesDb: use totalCurrency from calculateItemCosts
- * with empty properties (0). Or for codex-style item with a currency field.
- */
-export function getMarketPriceFallback(
-  item: LibraryItemLike & { currency?: number | undefined; gold_cost?: number | undefined },
-): number {
-  const c = item.currency ?? item.gold_cost ?? 0;
-  return Math.max(0, Number(c));
+  const stored = item as LibraryItemLike & { costs?: ItemStoredCostSums | undefined };
+  return Math.max(
+    0,
+    resolveItemMarketPricing(item.properties, propertiesDb, stored.costs).currencyCost,
+  );
 }

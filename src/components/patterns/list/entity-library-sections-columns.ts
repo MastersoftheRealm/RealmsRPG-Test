@@ -1,8 +1,10 @@
 import type { ColumnValue } from '@/components/patterns/list/grid-list-row-types';
 import type { ListColumn } from '@/components/patterns/list/list-header';
-import { formatCreatureEquipmentQuantity } from '@/lib/game/creature-inventory';
+import {
+  formatCreatureEquipmentQuantity,
+  formatInventoryKindLabel,
+} from '@/lib/game/creature-inventory';
 import { glrListChrome } from '@/lib/glr';
-import { formatListCellLabel } from '@/lib/utils';
 
 function toListColumns(chrome: ReturnType<typeof glrListChrome>): ListColumn[] {
   return chrome.headers.map((h) => ({
@@ -81,7 +83,7 @@ const playFeatChrome = glrListChrome(
     trackOverrides: { uses: '5rem', recovery: '4rem' },
   },
 );
-const playGearChrome = glrListChrome(
+const playEquipmentChrome = glrListChrome(
   { entityType: 'gear', mode: 'play' },
   {
     labelStyle: 'title',
@@ -130,8 +132,8 @@ export const CHARACTER_SHEET_SHIELD_GRID = sheetShieldChrome.grid;
 export const ARMOR_COLUMNS: ListColumn[] = toListColumns(playArmorChrome);
 export const ARMOR_GRID = playArmorChrome.grid;
 
-export const EQUIPMENT_COLUMNS: ListColumn[] = toListColumns(playGearChrome);
-export const EQUIPMENT_GRID = playGearChrome.grid;
+export const EQUIPMENT_COLUMNS: ListColumn[] = toListColumns(playEquipmentChrome);
+export const EQUIPMENT_GRID = playEquipmentChrome.grid;
 
 /** Creature / stat-block Qty: stored number or "-"; never fake 1 (TASK-813). */
 export function buildCreatureEquipmentColumns(
@@ -139,7 +141,7 @@ export function buildCreatureEquipmentColumns(
   quantity: unknown,
 ): ColumnValue[] {
   return [
-    { key: 'type', value: formatListCellLabel(type), align: 'center' },
+    { key: 'type', value: formatInventoryKindLabel(type), align: 'center' },
     { key: 'quantity', value: formatCreatureEquipmentQuantity(quantity), align: 'center' },
   ];
 }

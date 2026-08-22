@@ -188,10 +188,10 @@ Earlier drafts over-emphasized “accept path defaults and barely touch the midd
 |---------------------------------------------|-----------------------------------|
 | Path, Species, Characteristic / Ancestry trait / optional flaw | Recommended ability array (editable; Customize via LayerNav) |
 | Archetype feat(s), Character feat (from path options) | Skill budget + path-suggested skills (user allocates / toggles) |
-| **Weapon** and **Armor** when those equipment phases apply (individual path cards — **no quick kits**) | Gear: optional **Add all recommended**; quantity steppers |
+| **Weapon** and **Armor** when those equipment phases apply (individual path cards — **no quick kits**) | Equipment: optional **Add all recommended**; quantity steppers |
 | Powers / Techniques: confirm or toggle path recommendations (prefer visible cards over silent auto-all) | Path-prevalidated TP / currency (hide anxiety; never strand L1) |
 
-**Forbidden drift:** Growing Layer 1 lists until they are semi-full catalogs; reintroducing weapon/armor “quick kit” one-click loadouts; silent auto-equip of identity gear.
+**Forbidden drift:** Growing Layer 1 lists until they are semi-full catalogs; reintroducing weapon/armor “quick kit” one-click loadouts; silent auto-equip of identity Equipment.
 
 #### Shared layer chrome
 
@@ -316,7 +316,7 @@ flowchart LR
 
 Decisions baked into this model:
 
-- **Path frames the build; the player still chooses.** A chosen path supplies recommended abilities, skills, archetype feat options (1–3, usually combat), a character feat option set (usually non-combat), **curated weapon / armor / gear recommendation pools**, and recommended powers/techniques. Layer 1 keeps those pools small and explained — it does **not** one-click the whole character. See §3.1 Layer 1 choice principle.
+- **Path frames the build; the player still chooses.** A chosen path supplies recommended abilities, skills, archetype feat options (1–3, usually combat), a character feat option set (usually non-combat), **curated weapon / armor / Equipment recommendation pools**, and recommended powers/techniques. Layer 1 keeps those pools small and explained — it does **not** one-click the whole character. See §3.1 Layer 1 choice principle.
 - **Abilities = who you are** (natural aptitude; e.g. high INT → naturally better at History); **Skills = what you can do** (learned capabilities). They are distinct themes, so abilities is its own chapter; skills sits in the "build your archetype" chapter where it belongs mechanically.
 - **Species are path-ambiguous.** There are **no recommended species per path**. Instead, a **starter-species** flag curates a small Layer-1 set; "show all species" reveals the rest.
 - **Shared card format** across Path, Species, ancestry picks, feats, and equipment (and reused elsewhere): short eye-catcher description on the card, full description behind inline **See more…**, key facts as labeled chips where needed, and **hero art** where the entity is a visual selling point (species first). Consistency between steps is a goal — see §3.1.
@@ -340,7 +340,7 @@ Admin tooling (later phase): replace the archetype edit **modal** ([`AdminArchet
 
 #### 5.0.3 Choice-card art (image-forward selling) — Realms Image Library (ADR-0003)
 
-**Species art is a primary selling point**, not decoration. The guided creator's [`GuidedChoiceCard`](../components/guided-creator/guided-choice-card.tsx) must treat illustration as the hero of the card wherever it helps users imagine their character or gear.
+**Species art is a primary selling point**, not decoration. The guided creator's [`GuidedChoiceCard`](../components/guided-creator/guided-choice-card.tsx) must treat illustration as the hero of the card wherever it helps users imagine their character or Loadout.
 
 **One shared bank (not three pipelines)**
 
@@ -363,7 +363,7 @@ All card/list art comes from the **Realms Image Library**: one master Storage ob
 | **Species** | Yes | **High** | `image_id` (+ optional `image_url` cache) |
 | **Creatures** | Yes | **High** | same |
 | **Weapons / armor / shields** | Yes | Some / low | same (`official_items` / `user_items` by type) |
-| **Equipment** (simple gear) | Yes | Bank + entity ref | first-class category; `codex_equipment` / equipment-type items get `image_id` |
+| **Equipment** | Yes | Bank + entity ref | first-class category; `codex_equipment` / equipment-type items get `image_id` |
 | **Powers / techniques** | Yes | **Low** — standouts | same |
 | **Empowered techniques** | Yes | via power/technique tags | `image_id` column; no separate category tag |
 | Skills, feats, traits, archetypes, parts, properties, creature feats | **No** | — | no art columns |
@@ -375,7 +375,7 @@ All card/list art comes from the **Realms Image Library**: one master Storage ob
 | Surface | Layout | Art role |
 |---------|--------|----------|
 | **Species** | Featured inline art (~80px) beside title + copy | Primary selling point without dominating the card |
-| **Equipment (weapons / armor / gear)** | Featured inline art | Visual cue at card glance, same scale as species |
+| **Armaments / Equipment** | Featured inline art | Visual cue at card glance, same scale as species |
 | **Powers / techniques** | Featured inline art (when pickers exist) | Ability identity at a glance |
 | **Paths / feats / ancestry** | No paired bank art | — |
 
@@ -585,7 +585,7 @@ The final step delivers a fulfilling character reveal, then the identity details
 
 ### 5.11 Standalone creators (power, technique, item) — DECIDED 2026-07-01
 
-Standalone creators are **conversion surfaces** (landing secondary CTAs) and **homebrew tools** for players who want custom powers and gear. They must follow the same philosophy as character creation: **build Layer 1 first on a parallel route, keep the existing calculator/save stack, validate with owner feedback, then evolve the current full builder toward Layer 2 face value and Layer 3 on deliberate expand.**
+Standalone creators are **conversion surfaces** (landing secondary CTAs) and **homebrew tools** for players who want custom Powers and Armaments. They must follow the same philosophy as character creation: **build Layer 1 first on a parallel route, keep the existing calculator/save stack, validate with owner feedback, then evolve the current full builder toward Layer 2 face value and Layer 3 on deliberate expand.**
 
 **Owner review (2026-07-01):** Implementation is iterative and requires owner feedback at each milestone. Do not treat this section as a frozen spec until the power-creator guided prototype is playtested.
 

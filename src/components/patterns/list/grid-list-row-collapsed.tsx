@@ -14,7 +14,7 @@ import {
   GRID_LIST_ROW_RIGHT_SLOT_FLEX_WIDTH,
   GRID_LIST_ROW_SELECTION_COLUMN_WIDTH,
 } from './grid-list-row-chrome';
-import { columnDisplayLabel } from './grid-list-row-columns';
+import { columnDisplayLabel, columnHasDisplayValue } from './grid-list-row-columns';
 import type { ColumnValue } from './grid-list-row-types';
 import { ListRowThumbnail, type ListRowThumbnailProps } from './list-row-thumbnail';
 
@@ -240,10 +240,10 @@ export function GridListRowCollapsed({
               ★
             </span>
           )}
-          {/* Uses display (hidden when Uses column shows stepper). Show - when no/zero uses. */}
-          {uses && !hideUsesInName && (
+          {/* Uses display (hidden when a Uses column already shows the value). */}
+          {uses && !hideUsesInName && uses.max > 0 && (
             <span className="flex-shrink-0 text-xs text-text-secondary">
-              {uses.max > 0 ? `(${uses.current}/${uses.max})` : '-'}
+              ({uses.current}/{uses.max})
             </span>
           )}
           {/* Quantity display - editable if onQuantityChange provided (allows 0 for quantity-first) */}
@@ -317,7 +317,7 @@ export function GridListRowCollapsed({
                 (!col.align || col.align === 'center') && 'text-center',
               )}
             >
-              {col.value ?? '-'}
+              {columnHasDisplayValue(col) ? col.value : null}
             </div>
           );
         })}
@@ -325,16 +325,22 @@ export function GridListRowCollapsed({
         {/* Flex mode: show key stats inline */}
         {useFlex && headerColumns.length > 0 && (
           <div className="hidden items-center gap-4 text-sm text-text-secondary md:flex">
-            {headerColumns.slice(0, 3).map((col) => (
-              <span key={col.key} className="whitespace-nowrap">
-                <span className="text-text-muted">{columnDisplayLabel(col)}:</span>{' '}
-                <span
-                  className={cn(col.highlight && 'font-medium text-primary-link-fg', col.className)}
-                >
-                  {col.value ?? '-'}
+            {headerColumns
+              .filter(columnHasDisplayValue)
+              .slice(0, 3)
+              .map((col) => (
+                <span key={col.key} className="whitespace-nowrap">
+                  <span className="text-text-muted">{columnDisplayLabel(col)}:</span>{' '}
+                  <span
+                    className={cn(
+                      col.highlight && 'font-medium text-primary-link-fg',
+                      col.className,
+                    )}
+                  >
+                    {col.value}
+                  </span>
                 </span>
-              </span>
-            ))}
+              ))}
           </div>
         )}
 

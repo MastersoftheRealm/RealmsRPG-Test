@@ -17,7 +17,7 @@ export const POWER_LIST_PATH_KINDS = [
   'innatePowers',
 ] as const satisfies readonly PathRecommendationKind[];
 
-/** Codex mixed equipment covers weapons/armor (`armaments`) and gear (`equipment`). */
+/** Codex mixed equipment covers Armaments (`armaments`) and Equipment (`equipment`). */
 export const EQUIPMENT_LIST_PATH_KINDS = [
   'armaments',
   'equipment',

@@ -24,7 +24,7 @@ export function EquipmentStepHeader({
           <InfoTippy content={equipmentCurrencyHelp} label="Starting equipment budget help" />
         </div>
         <p className="text-text-secondary">
-          Select your starting weapons, armor, and gear. Use + and - to adjust quantities.
+          Select your starting weapons, armor, and Equipment. Use + and - to adjust quantities.
         </p>
       </div>
 

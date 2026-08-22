@@ -30,7 +30,7 @@ export interface ResolvedLoadoutItem {
 const CATEGORY_LABELS: Record<LoadoutItemCategory, string> = {
   weapon: 'Weapon',
   armor: 'Armor',
-  equipment: 'Gear',
+  equipment: 'Equipment',
 };
 
 function mapLibraryType(type: string | undefined): LoadoutItemCategory {
@@ -255,7 +255,7 @@ export function groupResolvedItemsByCategory(
   }> = [];
   if (weapons.length > 0) groups.push({ id: 'weapons', label: 'Weapons', items: weapons });
   if (armor.length > 0) groups.push({ id: 'armor', label: 'Armor', items: armor });
-  if (gear.length > 0) groups.push({ id: 'gear', label: 'Gear', items: gear });
+  if (gear.length > 0) groups.push({ id: 'gear', label: 'Equipment', items: gear });
   return groups;
 }
 

@@ -1,6 +1,6 @@
 /**
  * Equipped-state rules for character equipment (sheet + create).
- * Armor: at most one piece equipped; weapons/shields/general gear may multi-equip.
+ * Armor: at most one piece equipped; weapons/shields/Equipment may multi-equip.
  */
 
 import type { Item } from '@/types/equipment';
@@ -45,7 +45,7 @@ export type InventoryEquipRow = {
 };
 
 /**
- * Mark starter gear equipped on create. Does not mutate input rows.
+ * Mark starter Equipment/Armaments equipped on create. Does not mutate input rows.
  * Weapons, shields, and general equipment → equipped; armor → single best DR.
  */
 export function applyStarterEquippedFlags<T extends InventoryEquipRow>(

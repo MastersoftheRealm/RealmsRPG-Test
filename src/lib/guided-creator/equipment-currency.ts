@@ -1,19 +1,18 @@
 /**
  * Guided equipment — starting currency and spend math (shared with equipment-step).
  *
- * Display Currency is the market cost from calculateCurrencyCostAndRarity — never the
+ * Display Currency is `resolveItemMarketPricing().currencyCost` — never the
  * raw property C sum (`costs.totalCurrency`). Same protocol as OfficialItemList / Library GLR.
  */
 
 import {
-  calculateCurrencyCostAndRarity,
-  calculateItemCosts,
+  resolveItemMarketPricing,
   type ItemPropertyPayload,
   type ItemPropertyTpRow,
 } from '@/lib/calculators/item-calc';
 import { CHARACTER_STARTING_CURRENCY } from '@/lib/game/constants';
 
-/** Max unit cost for gear items in guided Layer 2 shop. */
+/** Max unit cost for Equipment items in guided Layer 2 shop. */
 export const GUIDED_GEAR_L2_MAX_UNIT_COST = 50;
 
 const CURRENCY_GROWTH = 1.45;
@@ -68,19 +67,7 @@ export function resolveItemUnitCost(
     return Number(explicit) || 0;
   }
 
-  if (itemProperties.length > 0 && Array.isArray(item.properties) && item.properties.length > 0) {
-    const costs = calculateItemCosts(item.properties, itemProperties);
-    return calculateCurrencyCostAndRarity(costs.totalCurrency, costs.totalIP).currencyCost;
-  }
-
-  if (item.costs?.totalCurrency != null) {
-    return calculateCurrencyCostAndRarity(
-      Number(item.costs.totalCurrency) || 0,
-      Number(item.costs.totalIP) || 0,
-    ).currencyCost;
-  }
-
-  return 0;
+  return resolveItemMarketPricing(item.properties, itemProperties, item.costs).currencyCost;
 }
 
 export function computeSpentCurrency(

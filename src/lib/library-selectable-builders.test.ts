@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import type { PowerPart, TechniquePart } from '@/hooks/codex-types';
+import type { PowerPart, TechniquePart, ItemProperty } from '@/hooks/codex-types';
 import {
   buildPowerTechniqueBudgetDisplay,
   buildSelectableItem,
@@ -438,5 +438,37 @@ describe('library-selectable-builders (DEV-V-016 parity)', () => {
       expect.arrayContaining(['Strength Requirement 3+', 'Agility Reduction -1']),
     );
     expect(chips.some((l) => l === 'Critical Range +1')).toBe(true);
+  });
+
+  it('add-weapon Currency chip is market cost, not the property C sum (TASK-870)', () => {
+    const selectable = buildSelectableItem(
+      {
+        id: 'axe',
+        name: 'Axe',
+        type: 'weapon',
+        description: 'An axe.',
+        properties: [{ id: 1, name: 'Sharp', op_1_lvl: 0 }],
+        costs: { totalCurrency: 2, totalIP: 2, totalTP: 4 },
+      },
+      'weapon',
+      {
+        ...emptyCodex,
+        itemPropertiesDb: [
+          {
+            id: '1',
+            name: 'Sharp',
+            description: '',
+            base_c: 2,
+            op_1_c: 0,
+            base_ip: 2,
+            op_1_ip: 0,
+            base_tp: 4,
+          },
+        ] as ItemProperty[],
+      },
+    );
+    const chips = (selectable.detailSections ?? []).flatMap((s) => s.chips.map((c) => c.name));
+    expect(chips).toContain('Currency 31');
+    expect(chips).not.toContain('Currency 2');
   });
 });

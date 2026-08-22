@@ -9,7 +9,7 @@ import { useMemo } from 'react';
 import type { ItemProperty } from '@/hooks';
 import {
   calculateItemCosts,
-  calculateCurrencyCostAndRarity,
+  resolveItemMarketPricing,
   type ItemPropertyPayload,
 } from '@/lib/calculators';
 import { PROPERTY_IDS } from '@/lib/id-constants';
@@ -287,8 +287,8 @@ export function useItemCreatorCostDerivation({
     damage,
   ]);
 
-  const costs = useMemo(
-    () => calculateItemCosts(propertiesPayload, itemProperties),
+  const pricing = useMemo(
+    () => resolveItemMarketPricing(propertiesPayload, itemProperties),
     [propertiesPayload, itemProperties],
   );
 
@@ -321,20 +321,17 @@ export function useItemCreatorCostDerivation({
     };
   }, [propertiesPayload, itemProperties, abilityRequirement]);
 
-  const { currencyCost, rarity } = useMemo(
-    () => calculateCurrencyCostAndRarity(costs.totalCurrency, costs.totalIP),
-    [costs.totalCurrency, costs.totalIP],
-  );
+  const { currencyCost, rarity } = pricing;
 
   const advancedCalcRows = useMemo(
     () => [
-      { label: 'Item points (IP)', value: formatCost(costs.totalIP) },
-      { label: 'Training points (TP)', value: formatCost(costs.totalTP) },
-      { label: 'Currency sum (C)', value: formatCost(costs.totalCurrency) },
+      { label: 'Item points (IP)', value: formatCost(pricing.totalIP) },
+      { label: 'Training points (TP)', value: formatCost(pricing.totalTP) },
+      { label: 'Currency sum (C)', value: formatCost(pricing.totalCurrency) },
       { label: 'Rarity', value: rarity },
       { label: 'Currency cost (final)', value: currencyCost.toLocaleString() },
     ],
-    [costs.totalCurrency, costs.totalIP, costs.totalTP, currencyCost, rarity],
+    [pricing.totalCurrency, pricing.totalIP, pricing.totalTP, currencyCost, rarity],
   );
 
   const damageDisplay = useMemo(() => {
@@ -352,7 +349,7 @@ export function useItemCreatorCostDerivation({
     abilityReqSummary,
     propertiesSummary,
     propertiesPayload,
-    costs,
+    costs: pricing,
     itemSectionCosts,
     currencyCost,
     rarity,

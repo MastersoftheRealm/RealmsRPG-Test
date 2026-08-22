@@ -5,6 +5,10 @@
  * and how they rank. Density modes + the layout resolver decide column vs chip.
  * Formatting lives in compact-facts; this module only names facts and metadata.
  *
+ * Identifier map (TASK-872): `GlrEntityType` `'gear'` is the internal id for player-facing
+ * **Equipment** (`codex_equipment`). Do not show “Gear” in UI copy. Armaments are separate
+ * entity types (`weapon` / `armor` / `shield`). Enhanced items are a later track — not in this catalog.
+ *
  * @see src/docs/ai/ADR/0016-glr-fact-catalog.md
  */
 

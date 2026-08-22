@@ -156,3 +156,24 @@ describe('feat/trait Customize draft (TASK-805)', () => {
     expect(defined(rows[0]).id).not.toBe('ancestry-0');
   });
 });
+
+describe('feat/trait columns omit empty uses and recovery (TASK-868)', () => {
+  it('does not paint a Uses or Recovery dash when both are empty', () => {
+    const row = defined(mapFeatRows([{ name: 'Focused', description: 'Stay on target.' }], ctx)[0]);
+    expect(row.columns?.some((col) => col.key === 'uses' || col.key === 'recovery')).toBe(false);
+    expect(row.columns?.some((col) => col.value === '-')).toBe(false);
+  });
+
+  it('keeps valued recovery without a uses dash', () => {
+    const row = defined(
+      mapFeatRows(
+        [{ name: 'Second Wind', description: 'Catch a breath.', recovery: 'Partial Recovery' }],
+        ctx,
+      )[0],
+    );
+    const uses = row.columns?.find((col) => col.key === 'uses');
+    const recovery = row.columns?.find((col) => col.key === 'recovery');
+    expect(uses?.value).toBeNull();
+    expect(recovery?.value).toBe('PR');
+  });
+});

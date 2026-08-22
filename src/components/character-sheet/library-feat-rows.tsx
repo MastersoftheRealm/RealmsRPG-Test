@@ -9,6 +9,7 @@ import { DecrementButton, IncrementButton, type ColumnValue } from '@/components
 import type { ChipData } from '@/components/patterns/list/grid-list-row';
 import type { EntityFeatRow } from '@/components/patterns/list/entity-library-sections';
 import { FEAT_GRID } from '@/components/patterns/list/entity-library-sections';
+import { formatRecoveryAbbrev } from '@/components/patterns/list/entity-library-sections-rows';
 import { Input, Textarea } from '@/components/ui';
 import type { FeatTraitCustomization } from '@/types/feats';
 import { descriptorChipData } from '@/lib/chip/chip-data-helpers';
@@ -16,16 +17,6 @@ import { glrSurfaceDetailSections, metadataDetailSection } from '@/lib/chip/list
 import { capitalize, formatAbilityList, truncateText } from '@/lib/utils';
 
 const DESCRIPTION_EXTENDED_TRUNCATE = 220;
-
-function formatRecoveryAbbrev(recovery: string | undefined): string {
-  if (!recovery) return '';
-  const lower = recovery.toLowerCase();
-  if (lower.includes('partial')) return 'PR';
-  if (lower.includes('full')) return 'FR';
-  if (lower.includes('short')) return 'SR';
-  if (lower.includes('long')) return 'LR';
-  return '';
-}
 
 /** Stable trait id for customization lookup (prefers codex id). */
 export function resolveTraitCustomizationKey(
@@ -283,7 +274,7 @@ function buildUsesStepper(
       </span>
     );
   }
-  return '-';
+  return null;
 }
 
 function buildFeatTraitColumns(
@@ -292,8 +283,8 @@ function buildFeatTraitColumns(
   recovery: string | undefined,
   usesStepper: ReactNode,
 ): { columns: ColumnValue[]; columnSpans?: (number | undefined)[] | undefined } {
-  const recoveryDisplay = formatRecoveryAbbrev(recovery) || '-';
-  const noUsesOrRecovery = !uses && recoveryDisplay === '-';
+  const recoveryDisplay = formatRecoveryAbbrev(recovery);
+  const noUsesOrRecovery = !uses && !recoveryDisplay;
   if (noUsesOrRecovery) {
     return {
       columns: [

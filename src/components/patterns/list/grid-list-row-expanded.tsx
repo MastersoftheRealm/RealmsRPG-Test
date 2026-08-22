@@ -149,7 +149,7 @@ export function GridListRowExpandedBody({
                       col.highlight && 'text-primary-link-fg',
                     )}
                   >
-                    {col.value ?? '-'}
+                    {col.value}
                   </span>
                 </div>
               ))}
@@ -279,7 +279,7 @@ interface GridListRowMobileSummaryProps {
   handleRowBodyClickWithGuard: (e: MouseEvent) => void;
 }
 
-/** Mobile summary — stats hidden from the collapsed grid; description teaser hides while expanded. */
+/** Mobile summary — stats hidden from the collapsed grid; omitted while expanded (body owns them). */
 export function GridListRowMobileSummary({
   mobileSummaryColumns,
   isRowClickable,
@@ -294,27 +294,25 @@ export function GridListRowMobileSummary({
       onClick={isRowClickable ? handleRowBodyClickWithGuard : undefined}
     >
       {mobileSummaryColumns.map((col) =>
-        col.value ? (
-          col.key === 'description' ? (
-            <div
-              key={col.key}
-              className={cn(
-                'w-full min-w-0 text-text-secondary',
-                col.className,
-                col.highlight && 'font-medium text-primary-link-fg',
-              )}
-            >
+        col.key === 'description' ? (
+          <div
+            key={col.key}
+            className={cn(
+              'w-full min-w-0 text-text-secondary',
+              col.className,
+              col.highlight && 'font-medium text-primary-link-fg',
+            )}
+          >
+            {col.value}
+          </div>
+        ) : (
+          <span key={col.key} className="flex items-center gap-1">
+            <span className="text-text-muted">{columnDisplayLabel(col)}:</span>
+            <span className={cn(col.highlight && 'font-medium text-primary-link-fg')}>
               {col.value}
-            </div>
-          ) : (
-            <span key={col.key} className="flex items-center gap-1">
-              <span className="text-text-muted">{columnDisplayLabel(col)}:</span>
-              <span className={cn(col.highlight && 'font-medium text-primary-link-fg')}>
-                {col.value}
-              </span>
             </span>
-          )
-        ) : null,
+          </span>
+        ),
       )}
     </div>
   );

@@ -14,13 +14,13 @@ export function useEntityListSectionCollapse(
 }
 
 export function formatRecoveryAbbrev(recovery: string | undefined): string {
-  if (!recovery) return '-';
+  if (!recovery) return '';
   const lower = recovery.toLowerCase();
   if (lower.includes('partial')) return 'PR';
   if (lower.includes('full')) return 'FR';
   if (lower.includes('short')) return 'SR';
   if (lower.includes('long')) return 'LR';
-  return '-';
+  return '';
 }
 
 type InteractiveRow = EntityRowExtras & {

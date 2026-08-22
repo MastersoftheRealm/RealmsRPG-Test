@@ -1,3 +1,165 @@
+- id: TASK-872
+  title: Stop using Gear; separate Equipment vs Armaments vs Enhanced
+  created_at: 2026-08-21
+  completed_at: 2026-08-21
+  created_by: owner
+  implemented_by: agent
+  priority: high
+  status: done
+  verification_status: pending-qa
+  related_files:
+    - src/docs/GAME_RULES.md
+    - src/docs/ai/FEATURE_INDEX.md
+    - src/docs/REALMS_PRODUCT_OVERVIEW.md
+    - src/docs/ai/ADR/0016-glr-fact-catalog.md
+    - src/lib/glr/glr-fact-catalog.ts
+    - src/lib/glr/glr-surface-bindings.ts
+    - src/lib/game/creature-inventory.ts
+    - src/lib/game/creature-inventory.test.ts
+    - src/lib/guided-creator/resolve-loadout-items.ts
+    - src/lib/guided-creator/guided-equipment-l2.ts
+    - src/lib/guided-creator/equipment-eligibility.ts
+    - src/lib/guided-creator/loadout-pool.ts
+    - src/lib/guided-creator/equipment-phase-nav.ts
+    - src/lib/library-selectable-builders.ts
+    - src/lib/codex/equipment-list.ts
+    - src/lib/constants/copy/landing-copy.ts
+    - src/lib/constants/copy/onboarding-copy.ts
+    - src/components/character-creator/steps/equipment/path-loadout-section.tsx
+    - src/components/character-creator/steps/equipment/step-header.tsx
+    - src/components/character-sheet/library-entity-rows.tsx
+    - src/components/guided-creator/steps/loadout-step.tsx
+    - src/components/guided-creator/guided-equipment-l2-modal.tsx
+    - src/components/guided-creator/guided-equipment-phase-layout.tsx
+    - src/components/patterns/list/entity-library-sections-columns.ts
+    - src/components/patterns/list/entity-library-sections-columns.test.ts
+    - src/app/(main)/admin/codex/admin-archetype-editor-guided.tsx
+    - src/app/(main)/characters/[id]/CharacterSheetModals.tsx
+    - src/app/(main)/library/LibraryEnhancedTab.tsx
+    - src/app/(main)/library/components/library-entity-tab.types.ts
+    - src/hooks/add-library-item/use-add-library-item-data.ts
+    - src/hooks/use-guided-equipment-l2-catalog.ts
+    - src/stores/guided-creator-store.ts
+    - src/types/archetype.ts
+    - public/tooltip-text.tsx
+    - tests/visual/guided-loadout-audit.pw.ts
+    - src/docs/ai/BUILD_VALIDATION.md
+    - src/docs/ai/DEVELOPER_TASK_QUEUE.md
+    - src/docs/ai/AI_CHANGELOG.md
+    - src/docs/ALL_FEEDBACK_CLEAN.md
+  build_validation: |
+    suite: DEV-V-013
+    tests:
+      - DEV-V-013-T039
+      - DEV-V-020-T005
+  developer_test_plan: |
+    Suite DEV-V-013 T039 + DEV-V-020 T005 - see BUILD_VALIDATION.md
+  automated_check: |
+    npx vitest run src/lib/game/creature-inventory.test.ts src/components/patterns/list/entity-library-sections-columns.test.ts src/lib/guided-creator/resolve-loadout-items.test.ts
+  description: |
+    "Gear" is not a game term and must not mean anything to players. Game terms:
+    Equipment = Codex list; Armaments = Weapons/Armor/Shields; Enhanced items = later track.
+  acceptance_criteria:
+    - Player-facing "Gear" meaning Equipment or Armaments is gone (search UI copy, not every historic changelog).
+    - Docs/GAME_RULES/FEATURE_INDEX state the three buckets clearly; Enhanced items called later-work.
+    - Code comments / GLR bindings say Equipment where they said Gear, or document the identifier map.
+    - No new parallel item system. `npm run build`.
+  notes: |
+    Internal GlrEntityType / phase id `gear` kept; map SoT is ADR-0016 + FEATURE_INDEX + glr-fact-catalog header.
+    `formatInventoryKindLabel` maps adventuring_gear → Equipment. Sheet Equipment columns remain TASK-873.
+---
+- id: TASK-877
+  title: Archetype Path filter is last-in-flow, not locked bottom-right
+  created_at: 2026-08-21
+  completed_at: 2026-08-21
+  created_by: owner
+  implemented_by: agent
+  priority: medium
+  status: done
+  verification_status: n/a
+  related_files:
+    - src/components/patterns/filters/archetype-path-filter.tsx
+    - src/components/patterns/filters/power-technique-filters.tsx
+    - src/docs/ai/FEATURE_INDEX.md
+  description: |
+    Archetype Path sorting/filter was locked to the bottom-right (`xl:col-start-4`) instead of simply being the last filter in the grid. Last-in-flow is usually bottom-right in a 4-column row, but not always. Keep it last among siblings (FEATURE_INDEX already says last control) and remove the column-start lock. ADR-0014 union multi-select stays. Do not invent a second path filter.
+  acceptance_criteria:
+    - Path filter is the last control in document/grid order with no `col-start` lock.
+    - On a 4-col row with three earlier filters it still lands bottom-right; with fewer filters it sits in the last occupied cell, not an empty bottom-right hole.
+    - `npm run build`.
+  notes: |
+    Removed `xl:col-start-4`. /cleanup deleted exported `ARCHETYPE_PATH_FILTER_CLASS` and inlined `min-w-0` on ChipSelect. Call sites already render ArchetypePathFilter last among siblings.
+  build_validation: |
+    n/a - layout class only; no dedicated suite in AC.
+---
+- id: TASK-868
+  title: Mobile sheet header collapse, carousel snap, GLR expand facts
+  created_at: 2026-08-21
+  completed_at: 2026-08-21
+  created_by: owner
+  implemented_by: agent
+  priority: high
+  status: done
+  verification_status: pending-qa
+  related_files:
+    - src/components/character-sheet/character-sheet-body.tsx
+    - src/components/character-sheet/library-feat-rows.tsx
+    - src/components/character-sheet/library-feat-rows.test.ts
+    - src/components/patterns/list/grid-list-row.tsx
+    - src/components/patterns/list/grid-list-row-collapsed.tsx
+    - src/components/patterns/list/grid-list-row-expanded.tsx
+    - src/components/patterns/list/grid-list-row-columns.ts
+    - src/components/patterns/list/grid-list-row-columns.test.ts
+    - src/components/patterns/list/grid-list-row-types.ts
+    - src/components/patterns/list/entity-library-feats.tsx
+    - src/components/patterns/list/entity-library-sections-rows.tsx
+    - src/components/ui/tab-navigation.tsx
+    - src/components/ui/tab-navigation.test.ts
+    - src/app/globals.css
+    - src/docs/ai/FEATURE_INDEX.md
+    - src/docs/MOBILE_UX.md
+    - src/docs/ai/BUILD_VALIDATION.md
+    - src/docs/ai/DEVELOPER_TASK_QUEUE.md
+    - src/docs/ALL_FEEDBACK_CLEAN.md
+    - src/docs/ai/AI_CHANGELOG.md
+  build_validation: |
+    suite: DEV-V-009
+    tests:
+      - DEV-V-009-T064
+      - DEV-V-009-T021
+    suite_also: DEV-V-016
+    tests_also:
+      - DEV-V-016-T029
+  developer_test_plan: |
+    Suite DEV-V-009 T064 + T021; DEV-V-016 T029 - see BUILD_VALIDATION.md
+  automated_check: |
+    npx vitest run src/components/patterns/list/grid-list-row-columns.test.ts src/components/character-sheet/library-feat-rows.test.ts src/components/ui/tab-navigation.test.ts
+  description: |
+    Owner mobile feedback: sheet header did not fully leave when scrolling the
+    lower section (took ~half the panel); swipe snap was not centered under the
+    header; expanded GLR feats duplicated Uses/Recovery (and other column facts)
+    in the collapsed header and the body; empty "-" values still painted.
+  acceptance_criteria:
+    - Below md, scrolling a sheet panel fully hides the sheet header; scroll-to-top restores it.
+    - Swiped panels share the header/PageContainer content width (no leftover offset).
+    - Below lg, GLR column facts appear in the collapsed summary or the expanded body, never both.
+    - Blank / dash / none column values are omitted in header and body.
+    - Desktop md+/lg+ sheet grid and GLR header columns stay in place.
+    - `npm run tasks:validate` passes.
+  notes: |
+    C1 internal panel scroll stays. Header is not an inner scroller (no max-h 50% /
+    overflow-y-auto); collapse is on panel scroll. Rest-state carousel fade reuses
+    tabListOverflowState + tab-strip mask CSS. Do not restore carousel min(50dvh)
+    floor or scroller -mx/scroll-px.
+  completed_work: |
+    Collapsed data-sheet-mobile-header on mobile panel/carousel scroll (natural header
+    height at rest, max-h-0 when the panel scrolls). Removed header inner scroller,
+    carousel 50dvh floor, and scroller padding so snap matches PageContainer/header
+    gutters. C1 rest fade via tabListOverflowState. GridListRow hides mobile summary
+    while expanded and omits blank column values via columnHasDisplayValue. Sheet/Codex
+    feat dashes gone.
+
+---
 - id: TASK-867
   title: Catch up Linux visual baselines after ADR-0023 landing
   created_at: 2026-08-20
@@ -25220,3 +25382,44 @@ Firebase/RTDB - the project is Supabase-only.
   completed_work: |
     Deleted the custom One/Two-Handed min-h-[44px] warning-fill pair. Wired handedness onto shared SegmentedControl. Default SegmentedControl size is now touch-tier-standard (coarse 44, fine compact) instead of always-on min-h-[44px]. Extended button-tiers.test.ts. /characters/new/advanced unchanged.
 
+---
+
+- id: TASK-870
+  title: Armament currency chips show calculated cost, not multiplier
+  created_at: 2026-08-21
+  completed_at: 2026-08-21
+  created_by: owner
+  implemented_by: agent
+  priority: high
+  status: done
+  verification_status: pending-qa
+  related_files:
+    - src/lib/calculators/item-calc.ts
+    - src/lib/calculators/item-calc.test.ts
+    - src/lib/calculators/index.ts
+    - src/components/character-sheet/library-entity-rows.tsx
+    - src/lib/library/official-item-list.ts
+    - src/lib/library/official-item-list.test.ts
+    - src/lib/library-selectable-builders.ts
+    - src/lib/library-selectable-builders.test.ts
+    - src/lib/guided-creator/equipment-currency.ts
+    - src/lib/guided-creator/equipment-catalog-rows.ts
+    - src/app/(main)/item-creator/item-creator-cost-derivation.ts
+    - src/components/crafting/get-crafting-market-price.ts
+    - src/docs/ai/FEATURE_INDEX.md
+    - src/docs/ai/BUILD_VALIDATION.md
+  build_validation: |
+    suite: DEV-V-016
+    tests:
+      - DEV-V-016-T030
+  developer_test_plan: |
+    Suite DEV-V-016 T030 — see BUILD_VALIDATION.md
+  description: |
+    Weapons / Armor / Shields desc chips currently show the currency multiplier (or pre-rarity costs.totalCurrency) instead of the same Currency amount as Library columns and the armament creator. sheetItemCostFacts rounds calculateItemCosts(...).totalCurrency and skips calculateCurrencyCostAndRarity. Library buildOfficialItemRows already uses the rarity-multiplied currencyCost. Due diligence: find every armament chip/column path (sheet, add-modals, guided L2/L3, Codex) and route them through one shared final-cost helper. GAME_RULES: IP to rarity; currency uses the rarity multiplier and clamp.
+  acceptance_criteria:
+    - Weapon/armor/shield currency chips match Library Currency and item-creator Currency cost (final).
+    - Do not display raw IP, option multipliers, or pre-rarity totals as Currency.
+    - Shared helper; no parallel cost formatter. Targeted tests for a known property set.
+    - npm run build.
+  completed_work: |
+    Added resolveItemMarketPricing in item-calc (display currencyCost, never totalCurrency). Sheet weapons/armor/shields, add-modal armament chips, OfficialItemList columns, guided catalog/spend, item-creator final cost, and crafting market price all use it. Equipment still uses stored Codex currency. Tests cover Sharp C=2/IP=2 to Currency 31.

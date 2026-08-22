@@ -1,3 +1,4 @@
+import { isBlank } from '@/lib/detail-option/compact-facts';
 import { formatColumnKeyLabel } from '@/lib/utils';
 import type { ColumnValue } from './grid-list-row-types';
 
@@ -24,9 +25,22 @@ export function columnsAlreadyShowTrainingPoints(
   });
 }
 
-/** Columns hidden from the mobile grid (`hideOnMobile` default true). */
+/**
+ * True when a column has a real value to paint. Empty / `-` / `—` / `none` stay off
+ * the row (collapsed header, mobile summary, and expanded body).
+ */
+export function columnHasDisplayValue(col: ColumnValue): boolean {
+  const value = col.value;
+  if (value == null) return false;
+  if (typeof value === 'string' || typeof value === 'number') return !isBlank(value);
+  return true;
+}
+
+/** Columns hidden from the mobile grid (`hideOnMobile` default true). Skip blanks. */
 export function columnsForMobileSummary(columns: ColumnValue[]): ColumnValue[] {
-  return columns.filter((col) => col.hideOnMobile !== false).slice(0, 3);
+  return columns
+    .filter((col) => col.hideOnMobile !== false && columnHasDisplayValue(col))
+    .slice(0, 3);
 }
 
 /** Stat columns for expanded mobile — skip description when the body already shows it. */
@@ -34,7 +48,10 @@ export function columnsForExpandedMobileStats(
   columns: ColumnValue[],
   hasDescriptionBody: boolean,
 ): ColumnValue[] {
-  return columns.filter((col) => !(col.key === 'description' && hasDescriptionBody));
+  return columns.filter((col) => {
+    if (col.key === 'description' && hasDescriptionBody) return false;
+    return columnHasDisplayValue(col);
+  });
 }
 
 /**

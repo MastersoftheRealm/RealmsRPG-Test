@@ -7,7 +7,7 @@ export interface GuidedEquipmentPhaseLayoutProps {
   children: ReactNode;
   /** Starting Currency for PointStatus (abilities/skills pattern). */
   currencyTotal?: number | undefined;
-  /** Currency spent so far (weapons + armor + gear). */
+  /** Currency spent so far (weapons + armor + Equipment). */
   currencySpent?: number | undefined;
   /** Training Points limit (same pool L1/L2). */
   tpTotal?: number | undefined;

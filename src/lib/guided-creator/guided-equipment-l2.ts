@@ -91,7 +91,7 @@ function rarityDisplay(row: EligibleEquipmentRow): string {
 const PHASE_IMPLIED_CATEGORY = new Set(['weapon', 'armor', 'shield', 'equipment', 'item', 'gear']);
 
 /**
- * Gear Category cell: Codex taxonomy only. Blank when missing or when the
+ * Equipment Category cell: Codex taxonomy only. Blank when missing or when the
  * value just repeats the phase type (Weapon/Armor/Equipment).
  */
 function taxonomyCategoryColumnValue(
@@ -169,7 +169,7 @@ function toOfficialItemRowForGuided(
 /**
  * Guided L2/L3 columns — weapon/armor via shared `armamentRowColumns`.
  * Mixed weapon+shield phase keeps weapon headers; shields put Block in Damage.
- * Gear adds Category (taxonomy); weapon/armor do not — type is implied by phase
+ * Equipment adds Category (taxonomy); weapon/armor do not — type is implied by phase
  * and ARMAMENT_LIBRARY_CONFIG has no category column (TASK-724).
  */
 function buildL2Columns(
@@ -416,7 +416,7 @@ export interface ApplyL2Result {
 const CURRENCY_BLOCKED_MESSAGE: Record<EquipmentPhase, string> = {
   weapon: 'Not enough Currency remaining for this weapon selection',
   armor: 'Not enough Currency remaining for this armor',
-  gear: 'Not enough Currency remaining for this gear',
+  gear: 'Not enough Currency remaining for this Equipment',
 };
 
 /**
@@ -427,7 +427,7 @@ const CURRENCY_BLOCKED_MESSAGE: Record<EquipmentPhase, string> = {
  * modal and inline (TASK-684).
  *
  * `currencyBudget` is the level-1 starting Currency and applies to all three phases: it used
- * to be a gear-only ceiling, which let weapons and armor spend past the budget and write a
+ * to be an Equipment-only ceiling, which let weapons and armor spend past the budget and write a
  * negative balance onto the saved character (audit P1-1).
  */
 export function applyGuidedEquipmentL2Refs(
@@ -513,7 +513,7 @@ export function applyGuidedEquipmentL2Selection(
 
 /**
  * Immediate select/deselect for the L3 inline catalog (TASK-684) — armor is single-slot
- * (selecting a new one swaps it); weapon/gear append. Runs the same validated-apply as the
+ * (selecting a new one swaps it); weapon/Equipment append. Runs the same validated-apply as the
  * modal's Confirm so hand-slot rules and TP/currency budgets stay in lockstep.
  */
 export function toggleGuidedEquipmentL2Ref(
@@ -536,7 +536,7 @@ export function toggleGuidedEquipmentL2Ref(
 }
 
 /**
- * Immediate quantity +/- for the L3 inline catalog gear phase (TASK-684) — mirrors the
+ * Immediate quantity +/- for the L3 inline Equipment phase (TASK-684) — mirrors the
  * modal's `handleQuantityChange` delta semantics (clamped 0–99; 0 removes the row).
  */
 export function changeGuidedEquipmentL2Quantity(

@@ -7,6 +7,7 @@
  *
  * Pair it with `usePathRecommendationIndex` + `pathRecommendedEntityIds`; it never resolves
  * recommendations itself, so Codex, Library, and creator surfaces share one match rule.
+ * Call sites keep this control last among filter-grid siblings (flow position only — no col-start).
  */
 
 'use client';
@@ -30,9 +31,6 @@ export interface ArchetypePathFilterProps {
   placeholder?: string | undefined;
   className?: string | undefined;
 }
-
-/** Last control in a 4-col filter grid — niche, so it sits bottom-right. */
-export const ARCHETYPE_PATH_FILTER_CLASS = 'min-w-0 xl:col-start-4';
 
 export function ArchetypePathFilter({
   options,
@@ -71,7 +69,7 @@ export function ArchetypePathFilter({
       labelAccessory={
         <InfoTippy content={ARCHETYPE_PATH_FILTER_HELP} label="Archetype path filter help" />
       }
-      className={cn(ARCHETYPE_PATH_FILTER_CLASS, className)}
+      className={cn('min-w-0', className)}
     />
   );
 }

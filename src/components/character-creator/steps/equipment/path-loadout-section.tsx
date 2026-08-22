@@ -77,7 +77,7 @@ export function PathLoadoutSection({
               </h3>
               <p className="mt-0.5 text-sm text-text-secondary">
                 {pathConfirmMode
-                  ? 'Included in your path. Review your loadout below. Expand to swap gear or browse the full catalog.'
+                  ? 'Included in your path. Review your loadout below. Expand to swap Armaments or browse the full catalog.'
                   : pathRecommendedForPhase.length > 0
                     ? 'Included in your path. Click to add, or add all at once.'
                     : publicItemsLoading

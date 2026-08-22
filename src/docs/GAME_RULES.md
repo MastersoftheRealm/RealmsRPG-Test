@@ -153,8 +153,10 @@ These terms are used consistently across all Realms resources. Capitalize them i
 | **Energy** | Resource spent to use Powers (and some Techniques / items) |
 | **Health** | Damage capacity |
 | **Speed** | Movement measure from rules |
-| **Loadout** | Guided chapter and character kit covering weapons, armor, Equipment, Powers, and Techniques |
-| **Equipment** | Adventuring items that are not weapons or armor (guided Loadout phase; capitalize as a game term) |
+| **Loadout** | Guided chapter and character kit covering Armaments, Equipment, Powers, and Techniques |
+| **Equipment** | Adventuring items from the Codex Equipment list (`codex_equipment`: name, description, category, currency, rarity, image). Not weapons, armor, or shields. Capitalize as a game term. |
+| **Armaments** | Weapons, Armor, and Shields only (stored as items today; UI splits by type). Distinct from Equipment. |
+| **Enhanced items** | Crafted/enhanced track — underdeveloped; do not merge into Equipment or Armaments. Later work. |
 | **Overcome** | When a roll meets or exceeds a target Score, or vice versa |
 | **Action** | Something a creature does during its turn (Basic, Quick, Free, Movement, etc.) |
 | **Reaction** | Something a creature does outside its turn in response to a trigger |
@@ -179,6 +181,7 @@ This is a **guide**, not a muzzle. Prefer Realms terms; avoid importing other sy
 | Health | HP in dense HUD labels (prefer Health; TASK-440) |
 | Energy | EN in dense HUD / chip headers (never EP; prefer Energy; TASK-440 / TASK-755) |
 | Currency | c / gold shorthand in Layer 1 or Layer 2 UI |
+| Equipment / Armaments / Enhanced items | Gear (not a game term); Adventuring Gear as a phase title |
 
 **Layer 1 / Layer 2 copy:** Spell game terms in full for new players (**Currency**, **Training Points**, **Damage Reduction**, **Health**, **Energy**, …). Do not use compact abbreviations like `c` or `TP` in guided L1/L2 chrome, choice cards, or resource bars. Dense Layer 3 / advanced / table columns, **Library / Codex browse rows**, and **character sheet / play lists**, may use short labels (`TP`, expandable chip `TP: N`, Energy `N EN`) — those are working surfaces, not a guided creator disclosure ladder. **Energy abbreviates as EN, never EP.** Parts/Properties chips on those surfaces: show `TP: N` only when cost is greater than 0; show `(Lv.N)` only when option level is greater than 0 (never `(0)`).
 

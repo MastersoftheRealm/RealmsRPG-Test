@@ -5,12 +5,9 @@
  */
 
 import type { ReactNode } from 'react';
-import {
-  formatDurationCompact,
-  formatSavedActionTypeForDisplay,
-  formatListCellLabel,
-} from '@/lib/utils';
+import { formatDurationCompact, formatSavedActionTypeForDisplay } from '@/lib/utils';
 import { calculateCriticalRange, calculateEvasion } from '@/lib/game/calculations';
+import { formatInventoryKindLabel } from '@/lib/game/creature-inventory';
 import { resolveWeaponRangeDisplay, type ItemPropertyPayload } from '@/lib/calculators';
 import {
   InnateToggle,
@@ -60,7 +57,12 @@ import {
 import { rangeFactChip } from '@/lib/detail-option/compact-facts';
 import { derivePowerDisplay, formatPowerDamage } from '@/lib/calculators/power-calc';
 import { deriveTechniqueDisplay } from '@/lib/calculators/technique-calc';
-import { calculateItemCosts, type ItemPropertyTpRow } from '@/lib/calculators/item-calc';
+import {
+  resolveItemMarketPricing,
+  type ItemPropertyTpRow,
+  type ItemStoredCostSums,
+} from '@/lib/calculators/item-calc';
+import { equipmentCurrency } from '@/lib/codex/equipment-list';
 import type { PowerPart, TechniquePart } from '@/hooks/codex-types';
 import {
   libraryItemToPowerDocument,
@@ -120,19 +122,40 @@ function partsForCategories(
   return parts.map((part) => (typeof part === 'string' ? { name: part } : part));
 }
 
-function sheetItemCostFacts(item: Item, ctx: LibraryEntityRowContext) {
+function sheetItemCostFacts(
+  item: Item,
+  ctx: LibraryEntityRowContext,
+  kind: 'armament' | 'equipment' = 'armament',
+) {
   const propsPayload = (resolveItemProperties(item as ItemWithLibrarySource) ??
     []) as ItemPropertyPayload[];
-  const costs = calculateItemCosts(propsPayload, ctx.itemPropertiesDb as ItemPropertyTpRow[]);
-  const storedCost = item.cost != null && item.cost > 0 ? item.cost : undefined;
-  const derivedCurrency = Math.round(costs.totalCurrency);
+  const storedSums = (item as Item & { costs?: ItemStoredCostSums | undefined }).costs;
+  const pricing = resolveItemMarketPricing(
+    propsPayload,
+    ctx.itemPropertiesDb as ItemPropertyTpRow[],
+    storedSums,
+  );
   const storedTp = (item as Item & { tp?: number | undefined }).tp;
+  const trainingPoints =
+    Math.round(pricing.totalTP) ||
+    (typeof storedTp === 'number' && storedTp > 0 ? Math.round(storedTp) : undefined);
+
+  if (kind === 'equipment') {
+    const catalogCurrency = equipmentCurrency(
+      item as Item & { currency?: number | undefined; gold_cost?: number | undefined },
+    );
+    const storedCost = item.cost != null && item.cost > 0 ? item.cost : undefined;
+    return {
+      rarity: item.rarity,
+      currency: catalogCurrency > 0 ? catalogCurrency : storedCost,
+      trainingPoints,
+    };
+  }
+
   return {
-    rarity: item.rarity,
-    currency: storedCost ?? (derivedCurrency > 0 ? derivedCurrency : undefined),
-    trainingPoints:
-      Math.round(costs.totalTP) ||
-      (typeof storedTp === 'number' && storedTp > 0 ? Math.round(storedTp) : undefined),
+    rarity: item.rarity || (pricing.rarity ? pricing.rarity : undefined),
+    currency: pricing.currencyCost > 0 ? pricing.currencyCost : undefined,
+    trainingPoints,
   };
 }
 
@@ -694,7 +717,7 @@ export function mapEquipmentRows(
       ),
     );
     const propertySection = propertiesProficienciesSection(propertyChips, 'item');
-    const itemType = formatListCellLabel(item.type);
+    const itemType = formatInventoryKindLabel(item.type);
     const itemCategory = (item as Item & { category?: string | undefined }).category;
     const qty = item.quantity ?? 1;
     const quantityStepper = ctx.onEquipmentQuantityChange ? (
@@ -715,7 +738,7 @@ export function mapEquipmentRows(
       'character-sheet-gear',
       {
         category: itemCategory,
-        ...sheetItemCostFacts(item, ctx),
+        ...sheetItemCostFacts(item, ctx, 'equipment'),
       },
       propertySection ? [propertySection] : undefined,
     );

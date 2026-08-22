@@ -49,7 +49,7 @@ describe('collectPathRecommendedIds', () => {
   });
 
   it('collapses id:qty refs and dedupes repeated ids', () => {
-    const gear = path('p-gear', 'Gear', 'martial', {
+    const gear = path('p-gear', 'Equipment Path', 'martial', {
       level1: { equipment: ['torch:5', 'rope'] },
       levels: [{ level: 5, equipment: ['torch:2'] }],
     });
@@ -165,7 +165,7 @@ describe('buildPathRecommendationIndex', () => {
   it('unions armaments + equipment kinds on the mixed Codex equipment list', () => {
     const mixed = buildPathRecommendationIndex({
       paths: [
-        path('p-gear', 'Gear', 'martial', {
+        path('p-gear', 'Equipment Path', 'martial', {
           level1: { armaments: ['sword:1'], equipment: ['torch:2'] },
         }),
       ],

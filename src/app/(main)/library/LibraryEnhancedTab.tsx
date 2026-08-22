@@ -1,7 +1,7 @@
 /**
- * Library Enhanced (Equipment) Tab
- * ================================
- * User's enhanced items (base item + power) saved from crafting.
+ * Library Enhanced Items tab
+ * ==========================
+ * User's Enhanced items (base item + power) saved from crafting.
  * List chrome via UserLibraryEntityTabShell basic mode (ADR-0001 / TASK-475).
  */
 

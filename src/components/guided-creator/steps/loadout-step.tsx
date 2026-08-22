@@ -194,7 +194,7 @@ export function LoadoutStep() {
   );
 
   /**
-   * Weapon / armor / gear picks are all optional (TASK-456), so the only phase blocker is an
+   * Weapon / armor / Equipment picks are all optional (TASK-456), so the only phase blocker is an
    * overspent budget — which a draft written before the ceiling was enforced can still carry.
    */
   const currencyOverspend = Math.max(0, -currencyRemaining);
@@ -512,7 +512,7 @@ export function LoadoutStep() {
                       ? 'weapons'
                       : equipmentPhase === 'armor'
                         ? 'armor'
-                        : 'gear',
+                        : 'Equipment',
                   )
                 : phaseCopy.l2.emptyMessage(equipmentPhase)
             }

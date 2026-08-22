@@ -7,6 +7,7 @@ import {
   filterItemsByArmamentKind,
 } from '@/lib/library/official-item-list';
 import type { LibraryItem } from '@/types/library';
+import type { ItemProperty } from '@/hooks/codex-types';
 
 const propertiesDb: never[] = [];
 
@@ -105,5 +106,35 @@ describe('official-item-list armament kinds', () => {
     expect(row.block).not.toBe('-');
     const cols = armamentRowColumns(row, 'shield');
     expect(cols.map((c) => c.key)).toEqual(['rarity', 'currency', 'tp', 'block', 'damage']);
+  });
+
+  it('weapon Currency column is market cost, not the property C sum (TASK-870)', () => {
+    const rows = buildOfficialItemRows(
+      [
+        item({
+          id: 'axe',
+          name: 'Axe',
+          type: 'weapon',
+          properties: [{ id: 1, name: 'Sharp', op_1_lvl: 0 }],
+          costs: { totalCurrency: 2, totalIP: 2, totalTP: 4 },
+        }),
+      ],
+      [
+        {
+          id: '1',
+          name: 'Sharp',
+          description: '',
+          base_c: 2,
+          op_1_c: 0,
+          base_ip: 2,
+          op_1_ip: 0,
+          base_tp: 4,
+        },
+      ] as ItemProperty[],
+      'weapon',
+    );
+    expect(rows[0]?.currency).toBe(31);
+    expect(rows[0]?.currency).not.toBe(2);
+    expect(rows[0]?.rarity).toBe('Common');
   });
 });

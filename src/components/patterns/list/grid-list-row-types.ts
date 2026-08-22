@@ -108,8 +108,9 @@ interface GridListRowPropsFields {
   nameContent?: ReactNode | undefined;
   /**
    * Item description (shown in default expanded view).
-   * When expanded, any collapsed-row column with `key: 'description'` (or the mobile
-   * description summary) is hidden so the full text is not duplicated in the header.
+   * When expanded, collapsed-row column facts (including description teasers and
+   * mobile summary Uses/Recovery/etc.) move to the body — never both at once.
+   * Blank / `-` values are omitted in header and body.
    */
   description?: string | undefined;
   /** Column values to display in collapsed row */

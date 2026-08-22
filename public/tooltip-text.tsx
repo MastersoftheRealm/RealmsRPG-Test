@@ -355,7 +355,7 @@ export const equipmentCurrencyHelp = (
   <div>
     <div>Starting Equipment Budget</div>
     <div>Starting currency is typically <strong>200</strong>.</div>
-    <div>Track remaining currency while adding weapons, armor, and gear.</div>
+    <div>Track remaining currency while adding weapons, armor, and Equipment.</div>
     <div>Path mode can add a recommended loadout in one click.</div>
   </div>
 );
@@ -496,7 +496,7 @@ export const guidedPathDetailArmor = (
 export const guidedPathDetailLoadouts = (
   <div>
     <div>
-      Coherent kits this Archetype Path offers. Gear listed elsewhere may also be shared across kits.
+      Coherent kits this Archetype Path offers. Equipment listed elsewhere may also be shared across kits.
     </div>
   </div>
 );

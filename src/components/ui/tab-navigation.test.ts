@@ -93,4 +93,18 @@ describe('Creator / guided rails reuse tab overflow chrome (TASK-848)', () => {
     expect(creatorTabBar).not.toContain('getActiveElement');
     expect(guidedShell).not.toContain('getActiveElement');
   });
+
+  it('sheet carousel reuses tabListOverflowState fade, not TabNavOverflowScroller', () => {
+    const sheetBody = readFileSync(
+      path.join(import.meta.dirname, '../character-sheet/character-sheet-body.tsx'),
+      'utf8',
+    );
+    expect(sheetBody).toContain('tabListOverflowState');
+    expect(sheetBody).toContain('data-sheet-mobile-carousel');
+    expect(sheetBody).not.toContain('TabNavOverflowScroller');
+    expect(sheetBody).not.toContain('max-h-[50%]');
+    expect(sheetBody).not.toContain('max-md:overflow-y-auto');
+    expect(globals).toContain('[data-sheet-mobile-carousel]');
+    expect(globals).toContain("[data-sheet-mobile-carousel][data-overflow-end='true']");
+  });
 });

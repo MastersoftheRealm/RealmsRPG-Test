@@ -980,9 +980,14 @@
   }
 
   /* C1 overflow chrome (TASK-840): fade + chevrons on the wrapper, not in trailing.
-     Fade is chevron width + 8px so Dense/Standard hits do not overlap unfaded tabs. */
-  .tab-nav-scroll {
+     Fade is chevron width + 8px so Dense/Standard hits do not overlap unfaded tabs.
+     Sheet carousel reuses the same fade metric/mask (TASK-868) — no second helper. */
+  .tab-nav-scroll,
+  [data-sheet-mobile-carousel] {
     --tab-nav-overflow-fade: 2.5rem;
+  }
+
+  .tab-nav-scroll {
     @apply relative min-w-0;
   }
 
@@ -993,7 +998,8 @@
     scroll-padding-inline: var(--tab-nav-overflow-fade);
   }
 
-  .tab-nav-list[data-overflow-end='true'] {
+  .tab-nav-list[data-overflow-end='true'],
+  [data-sheet-mobile-carousel][data-overflow-end='true'] {
     mask-image: linear-gradient(
       to right,
       black 0,
@@ -1002,7 +1008,8 @@
     );
   }
 
-  .tab-nav-list[data-overflow-start='true'] {
+  .tab-nav-list[data-overflow-start='true'],
+  [data-sheet-mobile-carousel][data-overflow-start='true'] {
     mask-image: linear-gradient(
       to right,
       transparent 0,
@@ -1011,7 +1018,8 @@
     );
   }
 
-  .tab-nav-list[data-overflow-start='true'][data-overflow-end='true'] {
+  .tab-nav-list[data-overflow-start='true'][data-overflow-end='true'],
+  [data-sheet-mobile-carousel][data-overflow-start='true'][data-overflow-end='true'] {
     mask-image: linear-gradient(
       to right,
       transparent 0,
@@ -1021,12 +1029,19 @@
     );
   }
 
+  @media (min-width: 768px) {
+    [data-sheet-mobile-carousel] {
+      mask-image: none;
+    }
+  }
+
   .tab-nav-scroll-btn {
     @apply absolute top-0 bottom-0 z-10 flex w-8 items-center justify-center text-text-muted hover:text-text-primary focus-visible:ring-2 focus-visible:ring-primary-outline-border focus-visible:outline-none;
   }
 
   @media (pointer: coarse) {
-    .tab-nav-scroll {
+    .tab-nav-scroll,
+    [data-sheet-mobile-carousel] {
       --tab-nav-overflow-fade: 3.25rem;
     }
 

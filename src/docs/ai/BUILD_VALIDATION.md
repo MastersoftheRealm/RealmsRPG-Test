@@ -1414,9 +1414,9 @@ Manual QA for library/feats modularization and shared part display. **Needs:** c
 | Field | Value |
 |-------|-------|
 | **Suite** | DEV-V-009 — Character sheet refactor |
-| **Task** | TASK-538 |
+| **Task** | TASK-538 / TASK-868 |
 | **Where** | `/characters/[id]` at ~360px and ~700px width (below `md`) |
-| **Steps** | 1. Open character sheet. 2. Compare left/right edges of the sheet header card vs the Abilities panel below — they should share the same horizontal gutters. 3. Swipe to Skills, Archetype, and Library; confirm each snapped panel keeps those gutters (not flush to the screen edge). 4. While swiping between panels, confirm a clear gap/margin between adjacent section cards. |
+| **Steps** | 1. Open character sheet. 2. Compare left/right edges of the sheet header card vs the Abilities panel below — they should share the same horizontal gutters. 3. Swipe to Skills, Archetype, and Library; confirm each snapped panel keeps those gutters (not flush to the screen edge, not shifted left of the header). 4. While swiping between panels, confirm a clear gap/margin between adjacent section cards. |
 | **Expected** | Side-scroll panels align with the header/PageContainer content width; gap between panels; snap stops do not shift content left of the header. Desktop `md+` grid unchanged. |
 | **Report** | DEV-V-009-T021: PASS / FAIL / SKIP — |
 
@@ -2181,6 +2181,27 @@ Manual QA for library/feats modularization and shared part display. **Needs:** c
 
 **Report** — `[ ] PASS` · `[ ] FAIL` · `[ ] SKIP` — Notes:
 
+#### DEV-V-009-T064 — Mobile sheet header fully hides on panel scroll (TASK-868)
+
+| Field | Value |
+|-------|-------|
+| **Suite** | DEV-V-009 — Character sheet refactor |
+| **Related task** | TASK-868 |
+| **Where** | `/characters/[id]` at 360px and 390px (below `md`) |
+| **Needs** | A populated character (header tall enough to share the first screen with Abilities — E2E Baseline Knight / loaded sheet) |
+
+**Steps**
+1. Open the sheet at ~390px. Confirm identity / Speed / resources are visible above Abilities. The header is not its own scroller — the first downward scroll is the panel. The carousel shows a right-edge fade while later panels are off-screen (C1; no next-panel peek / scroller padding).
+2. Scroll down inside the Abilities (or Library) panel. Confirm the **sheet** header (not the site nav) fully leaves — no leftover identity/stat strip taking half the lower section. The panel uses the leftover viewport above the dock.
+3. Scroll that panel back to the top. Confirm the sheet header returns.
+4. Swipe to Skills / Archetype / Library. Confirm each snapped panel lines up with the header card’s left/right edges (T021). On the last panel the right-edge fade is gone.
+5. Repeat at ~360px. Optional ≥768px: header stays in document flow (no collapse); no carousel fade.
+
+**Expected**
+- Below `md`, panel scroll fully collapses `data-sheet-mobile-header`. Restoring scrollTop restores the header. Snap panels stay aligned with PageContainer/header gutters. Desktop grid unchanged.
+
+**Report** — `[ ] PASS` · `[ ] FAIL` · `[ ] SKIP` — Notes:
+
 ---
 
 ## DEV-V-005 — RLS policy consolidation (TASK-352, TASK-327)
@@ -2589,7 +2610,7 @@ Verifies the rebuilt marketing landing page at `/` (REALMS_PRODUCT_OVERVIEW Sect
 
 **Expected**
 - Layer 2 `UnifiedSelectionModal` opens with Training Points `PointStatus`; weapon rows show **Name | Damage | Currency | Training Points** aligned under those headers.
-- Armor browse uses **Damage Reduction**; gear browse uses **Name | Currency**.
+- Armor browse uses **Damage Reduction**; Equipment browse uses **Name | Category | Currency | Rarity**.
 - Selecting updates Training Points / Currency `PointStatus` in the footer; Confirm applies the selection to the draft. Items that would exceed budget are disabled or Confirm stays blocked.
 - Closing L2 without Confirm (Escape / Cancel) returns to phase L1 cards without changing the draft.
 
@@ -3351,12 +3372,12 @@ Verifies the rebuilt marketing landing page at `/` (REALMS_PRODUCT_OVERVIEW Sect
 - Character feat shows `0 / 1` or `1 / 1` like archetype feats.
 **Report** — `[ ] PASS` · `[ ] FAIL` · `[ ] SKIP` — Notes:
 
-#### DEV-V-013-T039 — Loadout chapter + Equipment phase copy (TASK-459)
+#### DEV-V-013-T039 — Loadout chapter + Equipment phase copy (TASK-459 / TASK-872)
 
 | Field | Value |
 |-------|-------|
 | **Suite** | DEV-V-013 |
-| **Related task** | TASK-459 |
+| **Related task** | TASK-459, TASK-872 |
 | **Where** | Guided creator chapter rail, Loadout phases, path More details, Your Hero summary |
 | **Needs** | Path with weapon/armor/Equipment recommendations (e.g. Berserker) |
 
@@ -3364,12 +3385,13 @@ Verifies the rebuilt marketing landing page at `/` (REALMS_PRODUCT_OVERVIEW Sect
 1. Confirm chapter rail label **Loadout** (not Equipment).
 2. On weapon/armor phases, confirm page titles are phase-only (**Weapons & shields**, **Armor**).
 3. Advance to Equipment; confirm page title **Equipment**, continue label **Continue to Equipment →** from armor, and **Add all recommended Equipment**.
-4. Open **See more options** on Equipment; confirm **Browse Equipment** (no Adventuring Gear).
+4. Open **See more options** on Equipment; confirm **Browse Equipment** (no Adventuring Gear / bare Gear).
 5. On path **More details**, confirm Equipment section title (not Adventuring Gear).
 6. On Your Hero, confirm summary section **Loadout**.
 
 **Expected**
-- Chapter = Loadout; gear phase = Equipment; no user-facing Adventuring Gear or bare Gear phase labels; no new em dashes in these strings.
+- Chapter = Loadout; Equipment phase = **Equipment**; no user-facing Adventuring Gear or bare Gear labels; no new em dashes in these strings.
+- Armaments (weapons/armor/shields) stay separate from Equipment; Enhanced items are not merged into either list.
 
 **Report** — `[ ] PASS` · `[ ] FAIL` · `[ ] SKIP` — Notes:
 
@@ -4870,7 +4892,7 @@ Unified `SelectableItem` shaping via `library-selectable-builders` + `LoadFromLi
 | **Task** | TASK-813 |
 | **Where** | `/creature-creator`; Library → Creatures expand |
 | **Needs** | Signed-in user; a creature with one equipment item that has no stored quantity and one with Qty 2 (or set Qty on save) |
-| **Steps** | 1. Library → Creatures → expand: Equipment is the shared list section (Type + Qty, not a second Qty column). Missing quantity shows `-` (not a fake 1 / stepper). Stored Qty 2 shows `2`. 2. Creature Creator → Inventory → Equipment: same `-` / `2` (also `layout="creature"`). Sheet Inventory equipment steppers still default missing qty to 1. 3. Desktop + ~360px. Skip Legacy `/characters/new/advanced`. |
+| **Steps** | 1. Library → Creatures → expand: Equipment is the shared list section (Type + Qty, not a second Qty column). Missing quantity is blank (not a fake 1 / stepper). Stored Qty 2 shows `2`. 2. Creature Creator → Inventory → Equipment: same blank / `2` (also `layout="creature"`). Sheet Inventory equipment steppers still default missing qty to 1. 3. Desktop + ~360px. Skip Legacy `/characters/new/advanced`. |
 | **Expected** | Creator and stat-block Equipment Qty both use `EquipmentListSection` `layout="creature"` (`buildCreatureEquipmentColumns`). Character sheet steppers unchanged. |
 | **Automated** | `npm test` — `entity-library-sections-columns.test.ts` + `map-creature-inventory-rows.test.ts` + `creature-inventory.test.ts` |
 | **Report** | DEV-V-016-T025: PASS / FAIL / SKIP — |
@@ -4908,10 +4930,36 @@ Unified `SelectableItem` shaping via `library-selectable-builders` + `LoadFromLi
 | **Task** | TASK-825 |
 | **Where** | `/characters/[id]` Library → Inventory equipment; `/creature-creator` selected Equipment; `/codex` Equipment; sheet Add equipment |
 | **Needs** | Signed-in character with an equipment item that costs Training Points; a creature with selected equipment that has stored TP; Codex equipment rows |
-| **Steps** | 1. Sheet Library → Inventory → Equipment: expand an item with valued TP → **Training Points N** chip. No TP column. No Total TP footer. 2. Creature Creator → Inventory → Equipment: same chip when stored TP is valued; Qty still `-` / stored number (TASK-813). 3. Codex + Admin Equipment: headers stay Category / Currency / Rarity. Expand a row with valued TP → Training Points chip, not a fourth dense column. Add equipment modal: same three columns; expand → TP chip when valued. 4. An item with 0 TP has no Training Points chip. Desktop + ~360px. Skip Legacy `/characters/new/advanced`. |
+| **Steps** | 1. Sheet Library → Inventory → Equipment: expand an item with valued TP → **Training Points N** chip. No TP column. No Total TP footer. 2. Creature Creator → Inventory → Equipment: same chip when stored TP is valued; Qty still blank / stored number (TASK-813). 3. Codex + Admin Equipment: headers stay Category / Currency / Rarity. Expand a row with valued TP → Training Points chip, not a fourth dense column. Add equipment modal: same three columns; expand → TP chip when valued. 4. An item with 0 TP has no Training Points chip. Desktop + ~360px. Skip Legacy `/characters/new/advanced`. |
 | **Expected** | Gear play shows valued TP as a ranked chip (`character-sheet-gear`). Browse/select keep the three gear columns and demote TP. No new GLR surface id. |
 | **Automated** | `npm test` — `glr-fact-catalog.test.ts` + `resolve-glr-fact-layout.test.ts` + `map-creature-inventory-rows.test.ts` + `equipment-list.test.ts` |
 | **Report** | DEV-V-016-T028: PASS / FAIL / SKIP — |
+
+#### DEV-V-016-T029 — GLR expanded mobile facts once; omit blanks (TASK-868)
+
+| Field | Value |
+|-------|-------|
+| **Suite** | DEV-V-016 |
+| **Task** | TASK-868 |
+| **Where** | `/characters/[id]` Library → Feats at ~360px / ~390px (below `lg`); spot-check Codex feats |
+| **Needs** | A character with mixed feats: one with Uses and Recovery, one with neither (or Uses `-`) |
+| **Steps** | 1. Collapse a feat that has Uses and Recovery. Confirm those facts appear in the row header / mobile summary only. 2. Expand that feat. Confirm Uses and Recovery appear in the expanded body only — not still labeled in the collapsed header/summary. 3. Expand a feat with no Uses / Recovery (or `-`). Confirm those labels are absent from both header and body. 4. Desktop `lg+`: column cells may stay in the header grid (expanded mobile stats stay `lg:hidden`). Skip Legacy `/characters/new/advanced`. |
+| **Expected** | Below `lg`, column facts are collapsed summary **or** expanded body, never both. Blank / `-` / `none` values are omitted. |
+| **Automated** | `npm test` — `grid-list-row-columns.test.ts` + `library-feat-rows.test.ts` |
+| **Report** | DEV-V-016-T029: PASS / FAIL / SKIP — |
+
+#### DEV-V-016-T030 — Armament Currency chips match Library market cost (TASK-870)
+
+| Field | Value |
+|-------|-------|
+| **Suite** | DEV-V-016 |
+| **Task** | TASK-870 |
+| **Where** | `/library` Weapons/Armor/Shields; `/characters/[id]` Inventory weapons/armor/shields; Add Weapon/Armor/Shield; `/item-creator` cost summary |
+| **Needs** | Signed-in character with a library weapon (or armor/shield) that has properties; Codex item properties loaded |
+| **Steps** | 1. `/library` → Weapons: note a row’s **Currency** column. 2. Sheet Inventory → expand that weapon: the Currency descriptor chip is the same number (e.g. Currency 31), not the tiny property C sum / multiplier (2). 3. Add Weapon: expand the same item — same market Currency chip. Repeat Armor / Shields. 4. Item creator: **Currency cost (final)** matches that number; Currency sum (C) may still show the small C total. Desktop + ~360px. Skip Legacy `/characters/new/advanced`. |
+| **Expected** | Weapon/armor/shield Currency chips and Library columns share `resolveItemMarketPricing` market cost. Do not display raw IP, option multipliers, or pre-rarity `costs.totalCurrency` as Currency. Codex Equipment still uses stored currency (not the IP formula). |
+| **Automated** | `npm test` — `item-calc.test.ts` + `official-item-list.test.ts` + `library-selectable-builders.test.ts` + `equipment-catalog-rows.test.ts` + `equipment-currency.test.ts` |
+| **Report** | DEV-V-016-T030: PASS / FAIL / SKIP — |
 
 ---
 
@@ -5881,6 +5929,28 @@ Spot-checks Realms terminology and em-dash hygiene on high-traffic surfaces afte
 
 **Expected**
 - Dense resource HUD labels use full Realms terms Health / Energy.
+
+**Report** — `[ ] PASS` · `[ ] FAIL` · `[ ] SKIP` — Notes:
+
+#### DEV-V-020-T005 — No player-facing Gear for Equipment or Armaments (TASK-872)
+
+| Field | Value |
+|-------|-------|
+| **Suite** | DEV-V-020 |
+| **Related task** | TASK-872 |
+| **Where** | `/`; `/characters/new/advanced` Equipment step; sheet tour Library step; Admin Codex archetype guided Equipment |
+| **Needs** | Signed-in for Advanced + Admin; a saved character for the sheet tour |
+
+**Steps**
+1. Open `/` uniqueness cards: character-creation body uses **Loadout** (not Gear); second card title is **Custom Powers & Armaments**.
+2. Open `/characters/new/advanced` Equipment step: body says weapons, armor, and **Equipment**.
+3. On a sheet tour Library step (or `onboarding-copy.ts` Library body): Feats / Powers / Techniques / Equipment / Armaments — not Gear.
+4. Admin Codex → Archetypes → guided recommended Equipment: label **Recommended Equipment** (not adventuring gear).
+5. Creature or sheet Equipment Type cell for `adventuring_gear` shows **Equipment**, not Adventuring Gear (TASK-873 will drop the Type column on the sheet).
+
+**Expected**
+- Player-facing copy uses Equipment, Armaments, or Enhanced items — never Gear as a bucket name.
+- Settings cog copy may still say “gear icon”; that is the Lucide icon, not the game term.
 
 **Report** — `[ ] PASS` · `[ ] FAIL` · `[ ] SKIP` — Notes:
 

@@ -57,6 +57,19 @@ export interface RarityResult {
   rarity: string;
 }
 
+/** Property C/IP sums plus GAME_RULES market Currency (`currencyCost`) and rarity. */
+export interface ItemMarketPricing extends ItemCostResult, RarityResult {
+  /** True when at least one property matched the Codex property list. */
+  resolvedFromProperties: boolean;
+}
+
+/** Optional stored calculator totals (Library `costs` — `totalCurrency` is the C sum, not market price). */
+export type ItemStoredCostSums = {
+  totalCurrency?: number | undefined;
+  totalIP?: number | undefined;
+  totalTP?: number | undefined;
+};
+
 export interface ProficiencyInfo {
   id: number | string;
   name: string;
@@ -340,6 +353,54 @@ export function calculateItemCosts(
 }
 
 /**
+ * Market Currency + rarity for armament chips/columns (GAME_RULES).
+ * Display `currencyCost` — never `totalCurrency` (property C sum / multiplier).
+ *
+ * Uses resolved properties when the Codex DB can match them; otherwise stored C+IP
+ * sums. Does not apply the Common floor when there is no cost signal (empty DB and
+ * no stored sums) so loading sheets do not flash Currency 25.
+ */
+export function resolveItemMarketPricing(
+  properties: readonly unknown[] | null | undefined,
+  propertiesData: readonly ItemPropertyTpRow[] = [],
+  storedSums?: ItemStoredCostSums | null,
+): ItemMarketPricing {
+  const props = (properties ?? []) as ItemPropertyPayload[];
+  const fromProps = calculateItemCosts(props, propertiesData);
+  const resolvedFromProperties = props.some((p) =>
+    Boolean(resolveItemPropertyCodexRow(p, propertiesData)),
+  );
+  const dbReady = propertiesData.length > 0;
+  const hasStoredCurrency = storedSums?.totalCurrency != null;
+  const hasStoredIp = storedSums?.totalIP != null;
+  const priced = resolvedFromProperties || dbReady || hasStoredCurrency || hasStoredIp;
+
+  const costs: ItemCostResult =
+    resolvedFromProperties || dbReady || !storedSums
+      ? fromProps
+      : {
+          totalCurrency: Number(storedSums.totalCurrency) || 0,
+          totalIP: Number(storedSums.totalIP) || 0,
+          totalTP: storedSums.totalTP != null ? Number(storedSums.totalTP) || 0 : fromProps.totalTP,
+        };
+
+  if (!priced) {
+    return {
+      ...costs,
+      currencyCost: 0,
+      rarity: '',
+      resolvedFromProperties,
+    };
+  }
+
+  const { currencyCost, rarity } = calculateCurrencyCostAndRarity(
+    costs.totalCurrency,
+    costs.totalIP,
+  );
+  return { ...costs, currencyCost, rarity, resolvedFromProperties };
+}
+
+/**
  * Format range from properties.
  */
 export function formatRange(properties: ItemPropertyPayload[]): string {
@@ -507,11 +568,7 @@ export function deriveItemDisplay(
   propertiesData: ItemProperty[],
 ): ItemDisplayData {
   const properties = item.properties || [];
-  const costs = calculateItemCosts(properties, propertiesData);
-  const { currencyCost, rarity } = calculateCurrencyCostAndRarity(
-    costs.totalCurrency,
-    costs.totalIP,
-  );
+  const pricing = resolveItemMarketPricing(properties, propertiesData);
   const damageStr = formatDamageDisplay(item.damage);
   const rangeStr = resolveWeaponRangeDisplay(undefined, properties);
   const dr = deriveDamageReductionFromProperties(properties);
@@ -521,12 +578,12 @@ export function deriveItemDisplay(
     name: item.name || '',
     armamentType: item.armamentType || 'Weapon',
     description: item.description || '',
-    rarity,
-    currencyCost,
-    goldCost: currencyCost, // Legacy alias
-    totalIP: costs.totalIP,
-    totalTP: costs.totalTP,
-    totalCurrency: costs.totalCurrency,
+    rarity: pricing.rarity,
+    currencyCost: pricing.currencyCost,
+    goldCost: pricing.currencyCost, // Legacy alias
+    totalIP: pricing.totalIP,
+    totalTP: pricing.totalTP,
+    totalCurrency: pricing.totalCurrency,
     range: rangeStr,
     damage: damageStr,
     damageReduction: dr,

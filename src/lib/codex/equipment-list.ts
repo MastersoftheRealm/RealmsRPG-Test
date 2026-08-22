@@ -1,6 +1,6 @@
 /**
  * Shared Codex + Admin equipment list helpers (TASK-723 / TASK-806).
- * Gear GLR: Category / Currency / Rarity columns. Named property chips stay.
+ * Equipment GLR (entityType `gear`): Category / Currency / Rarity columns. Named property chips stay.
  */
 
 import type { ColumnValue } from '@/components/patterns/list/grid-list-row-types';

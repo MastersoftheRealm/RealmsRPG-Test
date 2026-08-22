@@ -2,6 +2,7 @@
  * GLR surface bindings — CI pointers from list chrome to entity + density (ADR-0016).
  *
  * New GridListRow lists register a row here instead of a custom fact table.
+ * (`*-gear*` surface ids → entityType `'gear'` = Equipment; see glr-fact-catalog.)
  */
 
 import type { GlrEntityType } from './glr-fact-catalog';

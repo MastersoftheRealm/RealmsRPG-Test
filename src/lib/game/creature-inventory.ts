@@ -38,6 +38,20 @@ export function normalizeCreatureInventoryType(type: string | undefined): Creatu
   return 'equipment';
 }
 
+/** Player-facing kind label. Storage slugs like `adventuring_gear` display as Equipment (TASK-872). */
+export function formatInventoryKindLabel(type: string | undefined): string {
+  switch (normalizeCreatureInventoryType(type)) {
+    case 'weapon':
+      return 'Weapon';
+    case 'armor':
+      return 'Armor';
+    case 'shield':
+      return 'Shield';
+    default:
+      return 'Equipment';
+  }
+}
+
 export function splitCreatureInventoryByKind<T extends { type?: string | undefined }>(
   items: T[],
 ): CreatureInventoryBuckets<T> {
