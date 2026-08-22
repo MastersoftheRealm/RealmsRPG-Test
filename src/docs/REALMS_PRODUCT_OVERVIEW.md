@@ -145,7 +145,7 @@ When a step skips a layer (e.g. Path: L1 path cards ↔ L3 custom archetype, no 
 | Presentation | Use when | Default components |
 |--------------|----------|--------------------|
 | **Choice card** | Few curated options; narrative / fantasy-first; user should feel “I pick this hero / weapon” | [`GuidedChoiceCard`](../components/guided-creator/guided-choice-card.tsx) |
-| **GridListRow** | Many options; compare / sort / search; Codex, Library, add modals, catalog Layer 2–3 browse | [`GridListRow`](../components/shared/grid-list-row.tsx) + [`ListHeader`](../components/shared/list-header.tsx) |
+| **GridListRow** | Many options; compare / sort / search; Codex, Library, add modals, catalog Layer 2–3 browse | [`GridListRow`](../components/patterns/list/grid-list-row.tsx) + [`ListHeader`](../components/patterns/list/list-header.tsx) |
 
 **Rule of thumb:** Few choices → cards. Many choices → GridListRow. Understanding a choice → the **same entity depth ladder** in both (below). Do **not** grow cards into dense column grids, and do **not** turn browse lists into marketing cards by default.
 
@@ -195,9 +195,9 @@ Earlier drafts over-emphasized “accept path defaults and barely touch the midd
 
 #### Shared layer chrome
 
-[`GuidedChoiceShell`](../components/shared/guided-choice/guided-choice-shell.tsx) + [`GuidedLayerNav`](../components/shared/guided-choice/guided-layer-nav.tsx) own expand/collapse for Ladder B. **Placement:** below step content (not the sticky footer); one action → bottom left; two+ actions → shallower left, deeper right (outline collapse and/or hatch expand; optional second hatch for a sibling Layer 2). Character-creator steps use `GuidedStepLayout` + `GuidedLayerNav` (same labels). Absorb remaining Custom/Advanced catalog behaviors into those layers rather than inventing per-step toggles or a second wizard.
+[`GuidedChoiceShell`](../components/patterns/guided-choice/guided-choice-shell.tsx) + [`GuidedLayerNav`](../components/patterns/guided-choice/guided-layer-nav.tsx) own expand/collapse for Ladder B. **Placement:** below step content (not the sticky footer); one action → bottom left; two+ actions → shallower left, deeper right (outline collapse and/or hatch expand; optional second hatch for a sibling Layer 2). Character-creator steps use `GuidedStepLayout` + `GuidedLayerNav` (same labels). Absorb remaining Custom/Advanced catalog behaviors into those layers rather than inventing per-step toggles or a second wizard.
 
-Legacy Advanced surfaces still being absorbed into the cohesive creator: [`feats-step.tsx`](../components/character-creator/steps/feats-step.tsx), [`equipment-step.tsx`](../components/character-creator/steps/equipment-step.tsx), [`powers-step.tsx`](../components/character-creator/steps/powers-step.tsx), [`archetype-step.tsx`](../components/character-creator/steps/archetype-step.tsx) forge face, [`path-help-card.tsx`](../components/shared/path-help-card.tsx).
+Legacy Advanced surfaces still being absorbed into the cohesive creator: [`feats-step.tsx`](../components/character-creator/steps/feats-step.tsx), [`equipment-step.tsx`](../components/character-creator/steps/equipment-step.tsx), [`powers-step.tsx`](../components/character-creator/steps/powers-step.tsx), [`archetype-step.tsx`](../components/character-creator/steps/archetype-step.tsx) forge face, [`path-help-card.tsx`](../components/patterns/help/path-help-card.tsx).
 
 ### Current state: most creators are Layer 3 today
 
@@ -348,7 +348,7 @@ All card/list art comes from the **Realms Image Library**: one master Storage ob
 
 | Concern | Who | What |
 |---------|-----|------|
-| **Bank write** | **Admin only** | Upload/replace/rename/retag via `/admin/images`, or admin publish-to-Realms / official editors (auto name = entity name, auto tag = entity category). Reuse [`ImageUploadModal`](../components/shared/image-upload-modal.tsx) (5MB, jpeg/png/gif/webp, square crop). |
+| **Bank write** | **Admin only** | Upload/replace/rename/retag via `/admin/images`, or admin publish-to-Realms / official editors (auto name = entity name, auto tag = entity category). Reuse [`ImageUploadModal`](../components/patterns/chrome/image-upload-modal.tsx) (5MB, jpeg/png/gif/webp, square crop). |
 | **Pick / attach** | **Guests + all signed-in** | Browse bank filtered by category tags; selection sets `image_id` on the target. Non-admins do not upload into the bank. |
 | **Portrait / profile** | Guests + signed-in | May pick bank images tagged **species** or **creature** (TASK-499). Custom personal photo upload (`portraits`, `profile-pictures`) remains separate. |
 
@@ -370,7 +370,7 @@ All card/list art comes from the **Realms Image Library**: one master Storage ob
 
 **Library copy parity:** Official/codex → personal library copies **`image_id`** (and cache URL if present) so editors share the same shape. Users change art by picking another bank image — not by uploading a private copy into the shared bank.
 
-**Authoring (TASK-496 / TASK-498):** Codex species/equipment and admin creator publish flows use `RealmsImageField` → `RealmsImagePicker`, storing `image_id` plus the URL cache. Legacy entity-tied Storage objects were cataloged into the bank (TASK-498); the old `/api/upload/codex-art` path is removed. List thumbs use [`ListRowThumbnail`](../components/shared/list-row-thumbnail.tsx) / [`ExpandableImage`](../components/shared/expandable-image.tsx).
+**Authoring (TASK-496 / TASK-498):** Codex species/equipment and admin creator publish flows use `RealmsImageField` → `RealmsImagePicker`, storing `image_id` plus the URL cache. Legacy entity-tied Storage objects were cataloged into the bank (TASK-498); the old `/api/upload/codex-art` path is removed. List thumbs use [`ListRowThumbnail`](../components/patterns/list/list-row-thumbnail.tsx) / [`ExpandableImage`](../components/patterns/help/expandable-image.tsx).
 
 | Surface | Layout | Art role |
 |---------|--------|----------|
@@ -492,7 +492,7 @@ The user assigns abilities, understanding what each one does and which their pat
 | Path guidance | Primary and secondary abilities auto-highlighted; an optional one-click suggested array in Layer 1 |
 | Layer 2 / 3 | Free point-buy as today via [`ability-score-editor.tsx`](../components/creator/ability-score-editor.tsx) |
 
-**Shipped (guided):** Recommended ability array as soft default; **Customize scores** via `GuidedLayerNav` (§3.1 soft automation OK here). **Advanced gap:** [`PathHelpCard`](../components/shared/path-help-card.tsx) text nudge only.
+**Shipped (guided):** Recommended ability array as soft default; **Customize scores** via `GuidedLayerNav` (§3.1 soft automation OK here). **Advanced gap:** [`PathHelpCard`](../components/patterns/help/path-help-card.tsx) text nudge only.
 
 ### 5.5 Skills Selection
 
@@ -505,7 +505,7 @@ Skills must be structured to avoid overwhelm.
 | Path copy | Role framing, e.g. "Intimidate and Athletics are a warrior's bread and butter" |
 | Easy add and remove | Species skills are locked; path skills are toggleable |
 
-**Current gap:** The full [`skills-allocation-page.tsx`](../components/shared/skills-allocation-page.tsx) shows sub-skills and defense allocation on one screen.
+**Current gap:** The full [`skills-allocation-page.tsx`](../components/patterns/list/skills-allocation-page.tsx) shows sub-skills and defense allocation on one screen.
 
 ### 5.6 Feat Selection
 

@@ -11,7 +11,7 @@
 
 ## Decision
 
-Move `LoadoutBudgetBar` to `src/components/shared/loadout-budget-bar.tsx`, export it from `@/components/shared`, and update all Guided + Advanced call sites to import from the shared barrel. No behavior or prop API changes.
+Move `LoadoutBudgetBar` to `src/components/patterns/chrome/loadout-budget-bar.tsx`, export it from `@/components/patterns`, and update all Guided + Advanced call sites to import from the shared barrel. No behavior or prop API changes.
 
 ## Consequences
 

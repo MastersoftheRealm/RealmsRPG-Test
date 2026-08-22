@@ -13,7 +13,7 @@ A later owner request (TASK-721) required Codex / Library / Admin browse lists t
 
 ## Decision
 
-**`ListSearchToolbar`** under `src/components/shared/`:
+**`ListSearchToolbar`** under `src/components/patterns/list/`:
 
 - Props: `search`, `onSearchChange`, `placeholder`, optional `searchAriaLabel`, optional `trailing`, optional `filters` (panel body only), optional `filterActiveCount`, optional `className` (e.g. `mt-2` when below `SectionHeader`).
 - **No filters:** search + optional trailing (Create/sync) as before (`flex-wrap`, `gap-3`, `flex-1` search).

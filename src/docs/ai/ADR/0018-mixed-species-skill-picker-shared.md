@@ -1,6 +1,7 @@
 # ADR-0018: MixedSpeciesSkillPicker lives in shared/
 
 - **Status:** Accepted
+- **Path note:** After ADR-0019: `src/components/patterns/select/mixed-species-skill-picker.tsx` (`@/components/patterns`).
 - **Date:** 2026-08-18
 - **Deciders:** owner (chat: Architect leftover ack, excluding Legacy route deletion) / agent (Architect)
 - **Task:** TASK-820
@@ -12,7 +13,7 @@ ADR-0017 extracted five Legacy creator symbols into `shared/` and deferred `mixe
 
 ## Decision
 
-Move `MixedSpeciesSkillPicker` to `src/components/shared/mixed-species-skill-picker.tsx`, export from `@/components/shared`, and update Legacy mixed ancestry + sheet Edit Species. No character-creator shim. No behavior or prop API changes. Do **not** delete `/characters/new/advanced`. Do not fold into TASK-799 list/modal clusters. Do not migrate onto USM (TraitSection-style selectable rows, not a dual species picker). Guided mixed skills stay `GuidedChoiceCard`.
+Move `MixedSpeciesSkillPicker` to `src/components/patterns/select/mixed-species-skill-picker.tsx`, export from `@/components/patterns`, and update Legacy mixed ancestry + sheet Edit Species. No character-creator shim. No behavior or prop API changes. Do **not** delete `/characters/new/advanced`. Do not fold into TASK-799 list/modal clusters. Do not migrate onto USM (TraitSection-style selectable rows, not a dual species picker). Guided mixed skills stay `GuidedChoiceCard`.
 
 ## Consequences
 
