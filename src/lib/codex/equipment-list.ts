@@ -42,13 +42,38 @@ export function equipmentCurrency(item: {
   return typeof value === 'number' && !Number.isNaN(value) ? value : 0;
 }
 
-export function buildCodexEquipmentColumns(item: CodexEquipmentItem): ColumnValue[] {
-  const currency = equipmentCurrency(item);
+/** Persist catalog Currency onto sheet equipment — never property C sum (TASK-873). */
+export function persistEquipmentCost(item: {
+  currency?: number | undefined;
+  gold_cost?: number | undefined;
+  cost?: number | undefined;
+}): number {
+  const catalog = equipmentCurrency(item);
+  if (catalog > 0) return catalog;
+  const stored = item.cost;
+  return typeof stored === 'number' && stored > 0 ? stored : 0;
+}
+
+/** Category / Currency / Rarity cells shared by Codex browse and sheet play rows (TASK-873). */
+export function buildEquipmentCatalogFactColumns(item: {
+  category?: string | undefined;
+  rarity?: string | undefined;
+  currency?: number | undefined;
+  gold_cost?: number | undefined;
+  cost?: number | undefined;
+}): ColumnValue[] {
+  const catalogCurrency = equipmentCurrency(item);
+  const storedCost = item.cost != null && item.cost > 0 ? item.cost : undefined;
+  const currency = catalogCurrency > 0 ? catalogCurrency : (storedCost ?? catalogCurrency);
   return [
-    { key: 'category', value: formatListCellLabel(item.category) },
-    { key: 'currency', value: currency },
-    { key: 'rarity', value: formatListCellLabel(item.rarity) },
+    { key: 'category', value: formatListCellLabel(item.category), align: 'center' },
+    { key: 'currency', value: currency, align: 'center' },
+    { key: 'rarity', value: formatListCellLabel(item.rarity), align: 'center' },
   ];
+}
+
+export function buildCodexEquipmentColumns(item: CodexEquipmentItem): ColumnValue[] {
+  return buildEquipmentCatalogFactColumns(item);
 }
 
 export function buildCodexEquipmentDetailSections(

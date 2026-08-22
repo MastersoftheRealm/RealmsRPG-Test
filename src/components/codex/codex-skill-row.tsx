@@ -4,7 +4,7 @@ import type { ReactNode } from 'react';
 import { GridListRow } from '@/components/patterns';
 import type { Skill } from '@/hooks';
 import { getSkillExtraDescriptionDetailSections } from '@/lib/skill-extra-descriptions';
-import { SKILL_GRID_COLUMNS } from '@/lib/codex/skill-list';
+import { SKILL_GRID_COLUMNS, formatSkillAbilityList } from '@/lib/codex/skill-list';
 
 export function CodexSkillRow({
   skill,
@@ -42,7 +42,7 @@ export function CodexSkillRow({
       description={variant === 'codex' ? description : skill.description || ''}
       gridColumns={SKILL_GRID_COLUMNS}
       columns={[
-        { key: 'Ability', value: skill.ability || '-', highlight: false },
+        { key: 'Ability', value: formatSkillAbilityList(skill.ability), highlight: false },
         { key: 'Base Skill', value: baseSkillName, highlight: variant === 'codex' && isSubSkill },
       ]}
       detailSections={detailSections.length > 0 ? detailSections : undefined}

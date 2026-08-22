@@ -23,6 +23,7 @@ import { applyStarterEquippedFlags } from '@/lib/game/equipment-equipped';
 import { resolveArmorDamageReduction } from '@/lib/game/resolve-armor-damage-reduction';
 import { resolveArchetypeProficiencyStart } from '@/lib/game/formulas';
 import { clampSavedCurrency, isClientRequestId } from '@/lib/character-save';
+import { parseAgeFromAppearance, stripAgeFromAppearance } from '@/lib/character/appearance-age';
 import { CHARACTER_STARTING_CURRENCY } from '@/lib/game/constants';
 
 function downstreamDraftReset(): Partial<CharacterDraft> {
@@ -653,9 +654,14 @@ export const useCharacterCreatorStore = create<CharacterCreatorState>()(
           currentEnergy: maxEnergy,
           ...(libraryTabVisibility && { libraryTabVisibility }),
           // Optional fields - only include if defined
-          ...(draft.description && { description: draft.description }),
+          ...(draft.description?.trim() && { backstory: draft.description.trim() }),
           ...(draft.notes && { notes: draft.notes }),
-          ...(draft.appearance && { appearance: draft.appearance }),
+          ...(stripAgeFromAppearance(draft.appearance) && {
+            appearance: stripAgeFromAppearance(draft.appearance),
+          }),
+          ...(draft.age?.trim() || parseAgeFromAppearance(draft.appearance)
+            ? { age: draft.age?.trim() || parseAgeFromAppearance(draft.appearance) }
+            : {}),
           ...(draft.height != null && { height: draft.height }),
           ...(draft.weight != null && { weight: draft.weight }),
           ...(draft.portrait && { portrait: draft.portrait }),

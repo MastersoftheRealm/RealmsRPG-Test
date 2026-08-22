@@ -10,6 +10,7 @@
 import React, { createContext, useContext, useCallback, useState, useEffect } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import { rollDie, generateRollId, DIE_MAX, type DieType } from '@/lib/rolls/die';
+import { resolveRollModifierLabel } from '@/lib/rolls/modifier-label';
 
 // Types
 export interface DieResult {
@@ -27,6 +28,8 @@ export interface RollEntry {
   title: string;
   dice: DieResult[];
   modifier: number;
+  /** Player-facing source for the numeric bonus (Strength, Power bonus, …). */
+  modifierLabel?: string | undefined;
   total: number;
   isCrit?: boolean | undefined;
   isCritFail?: boolean | undefined;
@@ -49,12 +52,28 @@ interface RollContextValue {
   canRoll: boolean;
 
   // Roll functions
-  rollAbility: (abilityName: string, bonus: number) => void;
-  rollDefense: (defenseDisplayName: string, bonus: number) => void;
-  rollSkill: (skillName: string, bonus: number, abilityAbbr?: string) => void;
-  rollAttack: (weaponName: string, attackBonus: number) => void;
-  rollDamage: (damageStr: string, bonus?: number, titleOverride?: string) => void;
-  rollCustom: (title: string, dieType: DieType, count: number, modifier: number) => void;
+  rollAbility: (abilityName: string, bonus: number, modifierLabel?: string) => void;
+  rollDefense: (defenseDisplayName: string, bonus: number, modifierLabel?: string) => void;
+  rollSkill: (
+    skillName: string,
+    bonus: number,
+    abilityAbbr?: string,
+    modifierLabel?: string,
+  ) => void;
+  rollAttack: (weaponName: string, attackBonus: number, modifierLabel?: string) => void;
+  rollDamage: (
+    damageStr: string,
+    bonus?: number,
+    titleOverride?: string,
+    modifierLabel?: string,
+  ) => void;
+  rollCustom: (
+    title: string,
+    dieType: DieType,
+    count: number,
+    modifier: number,
+    modifierLabel?: string,
+  ) => void;
 
   // History management
   clearHistory: () => void;
@@ -153,7 +172,7 @@ export function RollProvider({
 
   // Internal helper for d20 rolls (abilities, defenses, skills, attacks)
   const makeD20Roll = useCallback(
-    (type: RollType, title: string, bonus: number) => {
+    (type: RollType, title: string, bonus: number, explicitLabel?: string) => {
       if (!canRoll) return;
       const roll = rollDie('d20');
       const isCrit = roll === 20;
@@ -171,12 +190,20 @@ export function RollProvider({
         critMessage = 'Natural 1! -2 from the total!';
       }
 
+      const modifierLabel = resolveRollModifierLabel({
+        type,
+        title,
+        modifier: bonus,
+        explicit: explicitLabel,
+      });
+
       const newRoll: RollEntry = {
         id: generateRollId(),
         type,
         title,
         dice: [{ type: 'd20', value: roll, isMax: isCrit, isMin: isCritFail }],
         modifier: bonus,
+        modifierLabel,
         total,
         isCrit,
         isCritFail,
@@ -192,41 +219,41 @@ export function RollProvider({
 
   // Roll an ability roll (Realms uses "Roll" not "Check" or "Save")
   const rollAbility = useCallback(
-    (abilityName: string, bonus: number) => {
+    (abilityName: string, bonus: number, modifierLabel?: string) => {
       const title = abilityName.charAt(0).toUpperCase() + abilityName.slice(1).toLowerCase();
-      makeD20Roll('ability', title, bonus);
+      makeD20Roll('ability', title, bonus, modifierLabel);
     },
     [makeD20Roll],
   );
 
   // Roll a defense roll (caller passes display name, e.g. "Discernment")
   const rollDefense = useCallback(
-    (defenseDisplayName: string, bonus: number) => {
-      makeD20Roll('defense', defenseDisplayName, bonus);
+    (defenseDisplayName: string, bonus: number, modifierLabel?: string) => {
+      makeD20Roll('defense', defenseDisplayName, bonus, modifierLabel);
     },
     [makeD20Roll],
   );
 
   // Roll a skill roll: "Athletics (STR)" format when abilityAbbr provided
   const rollSkill = useCallback(
-    (skillName: string, bonus: number, abilityAbbr?: string) => {
+    (skillName: string, bonus: number, abilityAbbr?: string, modifierLabel?: string) => {
       const title = abilityAbbr ? `${skillName} (${abilityAbbr})` : skillName;
-      makeD20Roll('skill', title, bonus);
+      makeD20Roll('skill', title, bonus, modifierLabel);
     },
     [makeD20Roll],
   );
 
   // Roll an attack (just weapon/attack name)
   const rollAttack = useCallback(
-    (weaponName: string, attackBonus: number) => {
-      makeD20Roll('attack', weaponName, attackBonus);
+    (weaponName: string, attackBonus: number, modifierLabel?: string) => {
+      makeD20Roll('attack', weaponName, attackBonus, modifierLabel);
     },
     [makeD20Roll],
   );
 
   // Roll damage (parses damage strings like "2d6", "1d8+2", "1d6 Slashing")
   const rollDamage = useCallback(
-    (damageStr: string, bonus: number = 0, titleOverride?: string) => {
+    (damageStr: string, bonus: number = 0, titleOverride?: string, modifierLabel?: string) => {
       if (!canRoll) return;
       // Validate input is a string
       if (typeof damageStr !== 'string') {
@@ -270,6 +297,12 @@ export function RollProvider({
         title,
         dice: diceResults,
         modifier: totalBonus,
+        modifierLabel: resolveRollModifierLabel({
+          type: 'damage',
+          title,
+          modifier: totalBonus,
+          explicit: modifierLabel,
+        }),
         total,
         timestamp: new Date(),
       };
@@ -281,7 +314,7 @@ export function RollProvider({
 
   // Roll custom dice
   const rollCustom = useCallback(
-    (title: string, dieType: DieType, count: number, modifier: number) => {
+    (title: string, dieType: DieType, count: number, modifier: number, modifierLabel?: string) => {
       if (!canRoll) return;
       const diceResults: DieResult[] = [];
       let total = modifier;
@@ -307,6 +340,12 @@ export function RollProvider({
         title,
         dice: diceResults,
         modifier,
+        modifierLabel: resolveRollModifierLabel({
+          type: 'custom',
+          title,
+          modifier,
+          explicit: modifierLabel,
+        }),
         total,
         isCrit,
         isCritFail,

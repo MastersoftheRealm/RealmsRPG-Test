@@ -99,6 +99,8 @@ interface GridListRowCollapsedProps {
   columns: ColumnValue[];
   columnSpans?: (number | undefined)[] | undefined;
   suppressDescriptionPreview: boolean;
+  /** When expanded, column facts render in the body — omit from header tracks (TASK-898). */
+  suppressColumnFactsWhenExpanded: boolean;
   allDataColumnsAreDescription: boolean;
   headerColumns: ColumnValue[];
   inlineWarning: boolean;
@@ -145,6 +147,7 @@ export function GridListRowCollapsed({
   columns,
   columnSpans,
   suppressDescriptionPreview,
+  suppressColumnFactsWhenExpanded,
   allDataColumnsAreDescription,
   headerColumns,
   inlineWarning,
@@ -216,10 +219,9 @@ export function GridListRowCollapsed({
             <ListRowThumbnail {...thumbnail} />
           </div>
         )}
-        {/* Name column: full name visible on mobile (wrap), truncate on desktop.
-            @container so inline type tags hide based on *column* width (narrow sheet
-            panels), not viewport — name wins space before truncating.
-            Desktop-only span: mobile uses a collapsed template (name already 1fr). */}
+        {/* Name column: truncate in collapsed row (C2 / MOBILE_UX wrap strategy) — full
+            name in expanded panel or native `title` on hover. @container so inline type tags
+            hide based on *column* width (narrow sheet panels), not viewport. */}
         <div
           style={
             nameGridColumnSpan
@@ -233,7 +235,9 @@ export function GridListRowCollapsed({
           )}
         >
           {!useThumbnailColumn && thumbnail && <ListRowThumbnail {...thumbnail} />}
-          <span className="min-w-0 break-words lg:truncate">{nameContent ?? name}</span>
+          <span className="min-w-0 truncate" title={name}>
+            {nameContent ?? name}
+          </span>
           {/* Innate indicator (hidden when already in innate section) */}
           {innate && !hideInnateBadge && (
             <span className="flex-shrink-0 rounded border border-power-border bg-power-light px-1 py-0.5 text-[10px] text-power-fg">
@@ -282,6 +286,9 @@ export function GridListRowCollapsed({
 
         {/* Data columns (non-name). Description teaser clears while expanded when body has the full text. */}
         {columns.map((col, colIndex) => {
+          if (suppressColumnFactsWhenExpanded && columnHasDisplayValue(col)) {
+            return null;
+          }
           if (suppressDescriptionPreview && col.key === 'description') {
             // Description-only layouts: name spans those tracks (no empty hole).
             if (allDataColumnsAreDescription) return null;

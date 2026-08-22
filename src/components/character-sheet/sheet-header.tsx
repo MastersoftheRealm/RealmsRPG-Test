@@ -221,51 +221,56 @@ export function SheetHeader({
           />
         </div>
 
-        <div
-          className="grid min-w-0 grid-cols-2 gap-3 md:col-span-2 md:grid-cols-4 md:gap-4 lg:col-span-1 lg:col-start-2 lg:row-start-1 lg:grid-cols-2"
-          data-sheet-stat-grid
-        >
-          <LargeStatBlock
-            label="Speed"
-            value={speedDisplayValue}
-            valueSuffix={speedDisplay.suffix}
-            isTempModifierMode={isTempModifierMode}
-            tempDelta={speedTemp}
-            onTempDeltaChange={onTempModifiersChange ? (d) => setScalarTemp('speed', d) : undefined}
-          />
-          <LargeStatBlock
-            label="Evasion"
-            value={displayStats.evasion}
-            isTempModifierMode={isTempModifierMode}
-            tempDelta={evasionTemp}
-            onTempDeltaChange={
-              onTempModifiersChange ? (d) => setScalarTemp('evasion', d) : undefined
-            }
-          />
-          {showDamageReduction && (
+        {/* C3/C5 (TASK-839): equal-track stat grid. TASK-885: w-max centered cluster — compact tiles, not full-bleed bars. */}
+        <div className="flex min-w-0 justify-center md:col-span-2 lg:col-span-1 lg:col-start-2 lg:row-start-1">
+          <div
+            className="grid w-max max-w-full grid-cols-2 gap-3 md:grid-cols-4 md:gap-4 lg:grid-cols-2"
+            data-sheet-stat-grid
+          >
             <LargeStatBlock
-              label="Damage Reduction"
-              value={displayDr}
-              valueAriaLabel={`Damage Reduction ${displayDr}`}
+              label="Speed"
+              value={speedDisplayValue}
+              valueSuffix={speedDisplay.suffix}
               isTempModifierMode={isTempModifierMode}
-              tempDelta={drTemp}
+              tempDelta={speedTemp}
               onTempDeltaChange={
-                onTempModifiersChange ? (d) => setScalarTemp('damageReduction', d) : undefined
+                onTempModifiersChange ? (d) => setScalarTemp('speed', d) : undefined
               }
             />
-          )}
-          {showCriticalRange && (
             <LargeStatBlock
-              label="Critical Range"
-              value={displayCrit}
-              valueAriaLabel={`Critical Range ${displayCrit}`}
+              label="Evasion"
+              value={displayStats.evasion}
               isTempModifierMode={isTempModifierMode}
-              tempDelta={critTemp}
+              tempDelta={evasionTemp}
               onTempDeltaChange={
-                onTempModifiersChange ? (d) => setScalarTemp('criticalRange', d) : undefined
+                onTempModifiersChange ? (d) => setScalarTemp('evasion', d) : undefined
               }
             />
-          )}
+            {showDamageReduction && (
+              <LargeStatBlock
+                label="Damage Reduction"
+                value={displayDr}
+                valueAriaLabel={`Damage Reduction ${displayDr}`}
+                isTempModifierMode={isTempModifierMode}
+                tempDelta={drTemp}
+                onTempDeltaChange={
+                  onTempModifiersChange ? (d) => setScalarTemp('damageReduction', d) : undefined
+                }
+              />
+            )}
+            {showCriticalRange && (
+              <LargeStatBlock
+                label="Critical Range"
+                value={displayCrit}
+                valueAriaLabel={`Critical Range ${displayCrit}`}
+                isTempModifierMode={isTempModifierMode}
+                tempDelta={critTemp}
+                onTempDeltaChange={
+                  onTempModifiersChange ? (d) => setScalarTemp('criticalRange', d) : undefined
+                }
+              />
+            )}
+          </div>
         </div>
 
         <div className="min-w-0">

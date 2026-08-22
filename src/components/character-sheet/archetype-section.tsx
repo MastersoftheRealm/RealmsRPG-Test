@@ -22,8 +22,6 @@ import {
   RollButton,
   SectionHeader,
   PoweredMartialSlider,
-  DecrementButton,
-  IncrementButton,
 } from '@/components/patterns';
 import { TableScroll } from '@/components/ui';
 import type { Character, Abilities, Item } from '@/types';
@@ -97,7 +95,7 @@ function AttackBonusesTable({
   martialProf: number;
   powerProf: number;
   powerAbility?: string | undefined; // The archetype's power ability (pow_abil)
-  onRollBonus?: ((name: string, bonus: number) => void) | undefined;
+  onRollBonus?: ((name: string, bonus: number, modifierLabel?: string) => void) | undefined;
 }) {
   // Prof = Ability + Proficiency; Unprof = half the Ability, doubled if negative.
   const bonuses = calculateBonuses(martialProf, powerProf, abilities, powerAbility);
@@ -188,7 +186,9 @@ function AttackBonusesTable({
             {onRollBonus ? (
               <RollButton
                 value={powerBonus.prof}
-                onClick={() => onRollBonus(`${powAbilDisplayName} Attack`, powerBonus.prof)}
+                onClick={() =>
+                  onRollBonus(`${powAbilDisplayName} Attack`, powerBonus.prof, 'Power bonus')
+                }
                 size="sm"
                 title={`Roll power attack - ${powAbilDisplayName}`}
               />
@@ -262,7 +262,7 @@ function WeaponsSection({
   const unarmedRow = (
     <tr className="border-t border-border-light align-top">
       <td className={QUICK_WEAPON_COL.nameTd}>
-        <div className="break-words">Unarmed Prowess</div>
+        <div>Unarmed Prowess</div>
       </td>
       <td className={QUICK_WEAPON_COL.rangeTd}>Melee</td>
       <td className={QUICK_WEAPON_COL.attackTd}>
@@ -393,16 +393,9 @@ export function ArchetypeSection({
 
   // Local state for whether this section is actively being edited
   const [isSectionEditing, setIsSectionEditing] = useState(false);
-  // Optional manual max above level-derived total (homebrew); floor is always level-based
-  const [maxProfOverride, setMaxProfOverride] = useState<number | null>(null);
 
-  // Calculate proficiency points (effective max = level-based, or higher if manually raised)
   const level = character.level || 1;
-  const levelBasedMax = calculateProficiency(level, false, rules);
-  // Ignore stale overrides at/below level max (derive — no sync effect)
-  const effectiveMaxProfOverride =
-    maxProfOverride !== null && maxProfOverride > levelBasedMax ? maxProfOverride : null;
-  const totalProfPoints = Math.max(levelBasedMax, effectiveMaxProfOverride ?? levelBasedMax);
+  const totalProfPoints = calculateProficiency(level, false, rules);
   const spentProfPoints = martialProf + powerProf;
   const remainingProfPoints = totalProfPoints - spentProfPoints;
 
@@ -426,8 +419,8 @@ export function ArchetypeSection({
   const martialPotency = calculateScoreFromBonus(martialProf + martAbilValue, rules);
 
   // Handle attack bonus roll
-  const handleRollBonus = (name: string, bonus: number) => {
-    rollContext?.rollAttack(name, bonus);
+  const handleRollBonus = (name: string, bonus: number, modifierLabel?: string) => {
+    rollContext?.rollAttack(name, bonus, modifierLabel);
   };
 
   // Handle damage roll
@@ -485,26 +478,10 @@ export function ArchetypeSection({
               allowZeroEnds
             />
           </div>
-          {/* Proficiency Points Display - steppers change max only; three-state coloring for pencil */}
-          <div className="mb-4 flex items-center justify-center gap-2">
-            <DecrementButton
-              onClick={() => {
-                if (totalProfPoints <= levelBasedMax) return;
-                const next = totalProfPoints - 1;
-                setMaxProfOverride(next <= levelBasedMax ? null : next);
-              }}
-              disabled={totalProfPoints <= levelBasedMax}
-              size="sm"
-              title="Decrease max prof points (cannot go below level-based total)"
-            />
+          <div className="mb-4 flex items-center justify-center">
             <DescriptorChip variant={profPointsVariant} size="md" className="font-medium">
               {remainingProfPoints} / {totalProfPoints} prof. points
             </DescriptorChip>
-            <IncrementButton
-              onClick={() => setMaxProfOverride(Math.min(12, totalProfPoints + 1))}
-              size="sm"
-              title="Increase max prof points above level-based total"
-            />
           </div>
         </>
       ) : null}

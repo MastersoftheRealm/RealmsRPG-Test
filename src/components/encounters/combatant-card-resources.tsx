@@ -10,6 +10,8 @@ export interface CombatantCardResourcesProps {
   variant: 'full' | 'compact';
   linkedResourcesReadOnly: boolean;
   linkedResourcesTitle: string;
+  /** Player-linked combatants may track Dying (negative HP); NPCs stay floored at 0. */
+  allowNegativeHealth?: boolean | undefined;
   onUpdate: (updates: Partial<Combatant>) => void;
 }
 
@@ -18,8 +20,11 @@ export function CombatantCardResources({
   variant,
   linkedResourcesReadOnly,
   linkedResourcesTitle,
+  allowNegativeHealth = false,
   onUpdate,
 }: CombatantCardResourcesProps) {
+  const healthMin = allowNegativeHealth ? Number.NEGATIVE_INFINITY : 0;
+  const clampHealth = (value: number) => Math.max(healthMin, value);
   const healthPercent =
     combatant.maxHealth > 0 ? (combatant.currentHealth / combatant.maxHealth) * 100 : 0;
   const energyPercent =
@@ -47,7 +52,9 @@ export function CombatantCardResources({
                 <input
                   type="number"
                   value={combatant.currentHealth}
-                  onChange={(e) => onUpdate({ currentHealth: parseInt(e.target.value) || 0 })}
+                  onChange={(e) =>
+                    onUpdate({ currentHealth: clampHealth(parseInt(e.target.value, 10) || 0) })
+                  }
                   className={cn(
                     'touch-tier-standard w-10 rounded border px-0.5 py-0 text-center text-sm font-bold',
                     'border-health-border text-health-text',
@@ -56,8 +63,8 @@ export function CombatantCardResources({
                 <span className="text-xs text-health-text">/ {combatant.maxHealth}</span>
                 <ValueStepper
                   value={combatant.currentHealth}
-                  onChange={(v) => onUpdate({ currentHealth: Math.max(0, v) })}
-                  min={0}
+                  onChange={(v) => onUpdate({ currentHealth: clampHealth(v) })}
+                  min={healthMin}
                   colorVariant="health"
                   size="xs"
                   variant="compact"
@@ -137,7 +144,9 @@ export function CombatantCardResources({
             <input
               type="number"
               value={combatant.currentHealth}
-              onChange={(e) => onUpdate({ currentHealth: parseInt(e.target.value) || 0 })}
+              onChange={(e) =>
+                onUpdate({ currentHealth: clampHealth(parseInt(e.target.value, 10) || 0) })
+              }
               className={cn(
                 'touch-tier-standard w-12 rounded border px-1 py-0.5 text-center text-xs font-medium',
                 combatant.currentHealth <= 0
@@ -154,8 +163,8 @@ export function CombatantCardResources({
             />
             <ValueStepper
               value={combatant.currentHealth}
-              onChange={(v) => onUpdate({ currentHealth: Math.max(0, v) })}
-              min={0}
+              onChange={(v) => onUpdate({ currentHealth: clampHealth(v) })}
+              min={healthMin}
               colorVariant="health"
               size="xs"
               variant="compact"

@@ -43,6 +43,12 @@ type UserProfileRow = {
   email: string | null;
 };
 
+function snapshotNameOnly(data: Record<string, unknown> | null): Record<string, unknown> | null {
+  if (!data) return null;
+  const name = typeof data.name === 'string' ? data.name : undefined;
+  return name ? { name } : {};
+}
+
 function toValidLimit(raw: string | null): number {
   const parsed = Number(raw ?? '');
   if (!Number.isFinite(parsed)) return 100;
@@ -113,6 +119,9 @@ export async function GET(request: NextRequest) {
       const actor = profilesById.get(String(row.changed_by_user_id));
       return {
         ...row,
+        // TASK-874: list UI only needs entity name — do not ship full snapshots.
+        before_data: snapshotNameOnly(row.before_data),
+        after_data: snapshotNameOnly(row.after_data),
         actor: actor
           ? {
               id: actor.id,

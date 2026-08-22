@@ -116,6 +116,7 @@ const RollButton = React.forwardRef<HTMLButtonElement, RollButtonProps>(
     return (
       <button
         ref={ref}
+        data-roll-trigger=""
         className={cn(rollButtonVariants({ variant, size, className }))}
         title={labelBase}
         aria-label={accessibleLabel}

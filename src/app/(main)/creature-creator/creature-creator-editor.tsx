@@ -50,14 +50,6 @@ export type CreatureCreatorEditorProps = {
   stats: CreatureCreatorStatsSlice;
   skillPointsHelp: ReactNode;
   skillAllocations: Record<string, number>;
-  abilityDefenseBonuses: {
-    might: number;
-    fortitude: number;
-    reflex: number;
-    discernment: number;
-    mentalFortitude: number;
-    resolve: number;
-  };
   senseDescriptions: Record<string, string>;
   movementDescriptions: Record<string, string>;
   getSenseCostLabel: (sense: string) => string | undefined;
@@ -125,7 +117,6 @@ export function CreatureCreatorEditor(props: CreatureCreatorEditorProps) {
     stats,
     skillPointsHelp,
     skillAllocations,
-    abilityDefenseBonuses,
     onSkillAllocationsChange,
     onDefenseChange,
     updateCreature,
@@ -249,7 +240,6 @@ export function CreatureCreatorEditor(props: CreatureCreatorEditorProps) {
         speciesSkillIds={EMPTY_SPECIES_SKILL_IDS}
         onAllocationsChange={onSkillAllocationsChange}
         onDefenseChange={onDefenseChange}
-        abilityDefenseBonuses={abilityDefenseBonuses}
         className="max-w-none"
         headingAddon={<InfoTippy content={skillPointsHelp} label="Skill allocation help" />}
         addSubSkillAddon={

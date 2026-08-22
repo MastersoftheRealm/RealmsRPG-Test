@@ -3,9 +3,9 @@
  * =========
  * Physical attributes, movement calculations, and character notes
  * Features:
- * - All text fields are always editable (not just in edit mode)
+ * - Appearance, backstory, and general notes are always editable
  * - Support for multiple named notes with add/delete functionality
- * - Weight/height still require edit mode for modification
+ * - Weight, height, and age require edit mode for modification
  *
  * Uses unified components: SectionHeader, TabSummarySection
  */
@@ -35,7 +35,9 @@ export interface CharacterNote {
 interface NotesTabProps {
   weight: number;
   height: number;
+  age?: string | undefined;
   appearance: string;
+  backstory?: string | undefined;
   archetypeDesc: string;
   notes: string;
   // New: array of named notes
@@ -49,7 +51,9 @@ interface NotesTabProps {
   speedDisplayUnit?: SpeedDisplayUnit | undefined;
   onWeightChange?: ((value: number) => void) | undefined;
   onHeightChange?: ((value: number) => void) | undefined;
+  onAgeChange?: ((value: string) => void) | undefined;
   onAppearanceChange?: ((value: string) => void) | undefined;
+  onBackstoryChange?: ((value: string) => void) | undefined;
   onArchetypeDescChange?: ((value: string) => void) | undefined;
   onNotesChange?: ((value: string) => void) | undefined;
   // New: handlers for named notes
@@ -144,7 +148,9 @@ function NoteCard({
 export function NotesTab({
   weight = 70,
   height = 170,
+  age = '',
   appearance = '',
+  backstory = '',
   archetypeDesc = '',
   notes = '',
   namedNotes = [],
@@ -153,7 +159,9 @@ export function NotesTab({
   speedDisplayUnit = 'spaces',
   onWeightChange,
   onHeightChange,
+  onAgeChange,
   onAppearanceChange,
+  onBackstoryChange,
   onArchetypeDescChange,
   onNotesChange,
   onAddNote,
@@ -166,6 +174,7 @@ export function NotesTab({
   // Local state for editing
   const [weightInput, setWeightInput] = useState(weight.toString());
   const [heightInput, setHeightInput] = useState(height.toString());
+  const [ageInput, setAgeInput] = useState(age);
 
   // Get abilities for movement calculations
   const strength = abilities.strength || 0;
@@ -204,6 +213,14 @@ export function NotesTab({
     setHeightInput(String(value));
     if (value !== height && onHeightChange) {
       onHeightChange(value);
+    }
+  };
+
+  const handleAgeBlur = () => {
+    const trimmed = ageInput.trim();
+    setAgeInput(trimmed);
+    if (trimmed !== age && onAgeChange) {
+      onAgeChange(trimmed);
     }
   };
 
@@ -256,6 +273,27 @@ export function NotesTab({
                 <span className="text-sm font-bold text-text-primary">{height} cm</span>
               )}
             </div>
+
+            {/* Age */}
+            <div className="flex items-center gap-2">
+              <span className="text-sm font-medium text-text-secondary">Age:</span>
+              {isEditMode && onAgeChange ? (
+                <input
+                  type="number"
+                  min="1"
+                  value={ageInput}
+                  onChange={(e) => setAgeInput(e.target.value)}
+                  onBlur={handleAgeBlur}
+                  placeholder="—"
+                  className="w-16 rounded border border-border-light bg-surface px-2 py-0.5 text-sm focus:ring-2 focus:ring-primary-outline-border"
+                  aria-label="Character age"
+                />
+              ) : age ? (
+                <span className="text-sm font-bold text-text-primary">{age}</span>
+              ) : (
+                <span className="text-sm text-text-muted">—</span>
+              )}
+            </div>
           </SummaryRow>
 
           <SummaryRow className="text-xs">
@@ -271,6 +309,7 @@ export function NotesTab({
             <Button
               variant="primary"
               size="sm"
+              data-roll-trigger=""
               onClick={handleRollFallDamage}
               disabled={!rollContext || rollContext.canRoll === false}
               title={
@@ -299,6 +338,15 @@ export function NotesTab({
         />
       </LibraryCollapsibleSection>
 
+      <LibraryCollapsibleSection title="Backstory" itemCount={backstory.trim() ? 1 : 0}>
+        <Textarea
+          value={backstory}
+          onChange={(e) => onBackstoryChange?.(e.target.value)}
+          placeholder="Background, personality, bonds, and history..."
+          className="min-h-[80px]"
+        />
+      </LibraryCollapsibleSection>
+
       <LibraryCollapsibleSection
         title="Archetype Description"
         itemCount={archetypeDesc.trim() ? 1 : 0}
@@ -315,7 +363,7 @@ export function NotesTab({
         <Textarea
           value={notes}
           onChange={(e) => onNotesChange?.(e.target.value)}
-          placeholder="Additional notes, backstory, goals..."
+          placeholder="Additional notes, goals, and reminders..."
           className="min-h-[120px]"
         />
       </LibraryCollapsibleSection>

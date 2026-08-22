@@ -2,23 +2,22 @@
 
 import { Textarea } from '@/components/ui';
 import { useCharacterCreatorStore } from '@/stores/character-creator-store';
-import {
-  AGE_IN_APPEARANCE,
-  parseAgeFromAppearance,
-  mergeAgeIntoAppearance,
-} from '@/lib/character/appearance-age';
+import { parseAgeFromAppearance, stripAgeFromAppearance } from '@/lib/character/appearance-age';
 
 export function IdentityFields() {
   const { draft, updateDraft } = useCharacterCreatorStore();
-  const displayAge = parseAgeFromAppearance(draft.appearance);
-  const physicalDescription = draft.appearance?.replace(AGE_IN_APPEARANCE, '').trim() ?? '';
+  const displayAge = draft.age?.trim() || parseAgeFromAppearance(draft.appearance);
+  const physicalDescription = stripAgeFromAppearance(draft.appearance);
 
   const handleAgeChange = (value: string) => {
-    updateDraft({ appearance: mergeAgeIntoAppearance(value, draft.appearance) });
+    updateDraft({
+      age: value,
+      appearance: stripAgeFromAppearance(draft.appearance) || undefined,
+    });
   };
 
   const handlePhysicalDescriptionChange = (value: string) => {
-    updateDraft({ appearance: mergeAgeIntoAppearance(displayAge, value) });
+    updateDraft({ appearance: value.trim() || undefined });
   };
 
   return (

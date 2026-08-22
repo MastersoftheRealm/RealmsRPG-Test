@@ -53,6 +53,114 @@ export interface PathFilterOption {
   type: ArchetypeCategory;
 }
 
+/** Union aliases for ArchetypePathFilter (ADR-0014 / TASK-878). Not real path ids. */
+export const PATH_FILTER_ALIAS = {
+  ANY: '__path_filter_any__',
+  ANY_POWER: '__path_filter_any_power__',
+  ANY_MARTIAL: '__path_filter_any_martial__',
+  ANY_POWERED_MARTIAL: '__path_filter_any_powered_martial__',
+} as const;
+
+export type PathFilterAliasId = (typeof PATH_FILTER_ALIAS)[keyof typeof PATH_FILTER_ALIAS];
+
+const PATH_FILTER_ALIAS_VALUES = new Set<string>(Object.values(PATH_FILTER_ALIAS));
+
+export function isPathFilterAlias(id: string): id is PathFilterAliasId {
+  return PATH_FILTER_ALIAS_VALUES.has(id);
+}
+
+/** ChipSelect label + value for the four union aliases (listed first in ArchetypePathFilter). */
+export const PATH_FILTER_ALIAS_CHIP_OPTIONS = [
+  { value: PATH_FILTER_ALIAS.ANY, label: 'Any' },
+  { value: PATH_FILTER_ALIAS.ANY_POWER, label: 'Any Power' },
+  { value: PATH_FILTER_ALIAS.ANY_MARTIAL, label: 'Any Martial' },
+  { value: PATH_FILTER_ALIAS.ANY_POWERED_MARTIAL, label: 'Any Powered-Martial' },
+] as const;
+
+export function pathFilterAliasForArchetypeType(type: ArchetypeCategory): PathFilterAliasId {
+  if (type === 'power') return PATH_FILTER_ALIAS.ANY_POWER;
+  if (type === 'martial') return PATH_FILTER_ALIAS.ANY_MARTIAL;
+  return PATH_FILTER_ALIAS.ANY_POWERED_MARTIAL;
+}
+
+function archetypeTypeForPathFilterAlias(id: string): ArchetypeCategory | null {
+  if (id === PATH_FILTER_ALIAS.ANY_POWER) return 'power';
+  if (id === PATH_FILTER_ALIAS.ANY_MARTIAL) return 'martial';
+  if (id === PATH_FILTER_ALIAS.ANY_POWERED_MARTIAL) return 'powered-martial';
+  return null;
+}
+
+/**
+ * Expand union aliases to concrete player-visible path ids for matching.
+ * Reuses `pathIdsForArchetypeType` for type-wide aliases (TASK-878).
+ */
+export function expandPathFilterSelection(
+  selectedPathIds: readonly string[],
+  options: readonly PathFilterOption[],
+): string[] {
+  const concrete = new Set<string>();
+  for (const id of selectedPathIds) {
+    if (id === PATH_FILTER_ALIAS.ANY) {
+      for (const option of options) concrete.add(option.id);
+      continue;
+    }
+    const aliasType = archetypeTypeForPathFilterAlias(id);
+    if (aliasType) {
+      for (const pathId of pathIdsForArchetypeType(options, aliasType)) concrete.add(pathId);
+      continue;
+    }
+    concrete.add(id);
+  }
+  return [...concrete];
+}
+
+/**
+ * Add one path or alias to the ChipSelect selection.
+ * Type-wide aliases replace individual paths of the same type; Any replaces the whole selection.
+ */
+export function addPathFilterSelection(
+  selectedPathIds: readonly string[],
+  addedId: string,
+  options: readonly PathFilterOption[],
+): string[] {
+  if (addedId === PATH_FILTER_ALIAS.ANY) {
+    return [PATH_FILTER_ALIAS.ANY];
+  }
+
+  if (isPathFilterAlias(addedId)) {
+    const aliasType = archetypeTypeForPathFilterAlias(addedId);
+    let next = selectedPathIds.filter((id) => id !== PATH_FILTER_ALIAS.ANY && id !== addedId);
+    if (aliasType) {
+      const typeAlias = pathFilterAliasForArchetypeType(aliasType);
+      next = next.filter((id) => {
+        if (id === typeAlias) return false;
+        if (isPathFilterAlias(id) && archetypeTypeForPathFilterAlias(id) === aliasType)
+          return false;
+        const option = options.find((opt) => opt.id === id);
+        return option?.type !== aliasType;
+      });
+    }
+    return [...next, addedId];
+  }
+
+  const option = options.find((opt) => opt.id === addedId);
+  if (!option) {
+    return selectedPathIds.includes(addedId) ? [...selectedPathIds] : [...selectedPathIds, addedId];
+  }
+
+  let next = selectedPathIds.filter((id) => id !== PATH_FILTER_ALIAS.ANY);
+  next = next.filter((id) => id !== pathFilterAliasForArchetypeType(option.type));
+  if (next.includes(addedId)) return next;
+  return [...next, addedId];
+}
+
+export function removePathFilterSelection(
+  selectedPathIds: readonly string[],
+  removedId: string,
+): string[] {
+  return selectedPathIds.filter((id) => id !== removedId);
+}
+
 export interface PathRecommendationIndex {
   /** Selectable paths, name-sorted. */
   options: PathFilterOption[];
@@ -117,7 +225,7 @@ export function pathRecommendedEntityIds(
   selectedPathIds: readonly string[],
 ): Set<string> {
   const union = new Set<string>();
-  for (const pathId of selectedPathIds) {
+  for (const pathId of expandPathFilterSelection(selectedPathIds, index.options)) {
     const ids = index.entityIdsByPathId.get(String(pathId));
     if (!ids) continue;
     for (const id of ids) union.add(id);
@@ -162,7 +270,7 @@ export function pathNamesForEntity(
   const keys = entityKeys(entityId);
   if (keys.size === 0 || selectedPathIds.length === 0) return [];
 
-  const selected = new Set(selectedPathIds.map(String));
+  const selected = new Set(expandPathFilterSelection(selectedPathIds, index.options));
   return index.options
     .filter((option) => {
       if (!selected.has(option.id)) return false;

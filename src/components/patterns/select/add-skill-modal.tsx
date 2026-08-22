@@ -5,26 +5,31 @@
 
 'use client';
 
-import { useId, useMemo, useState, type ReactNode } from 'react';
-import { Button } from '@/components/ui';
+import { useId, useMemo, useState } from 'react';
+import { Alert, Button } from '@/components/ui';
 import { guidedNavProgressClassName } from '@/components/patterns/guided-choice/guided-nav-button-styles';
 import { useCodexSkills, usePathListFilter, type Skill } from '@/hooks';
-import { Alert, DescriptorChip } from '@/components/ui';
 import {
   UnifiedSelectionModal,
   type SelectableItem,
 } from '@/components/patterns/select/unified-selection-modal';
 import { ArchetypePathFilter } from '@/components/patterns/filters';
-import type { ChipData } from '@/components/patterns/list/grid-list-row';
-import { ABILITY_ABBR, ABILITY_FILTER_OPTIONS } from '@/lib/constants/skills';
+import { ABILITY_FILTER_OPTIONS } from '@/lib/constants/skills';
 import { getSkillExtraDescriptionDetailSections } from '@/lib/skill-extra-descriptions';
-import { descriptorChipData } from '@/lib/chip/chip-data-helpers';
+import {
+  ADD_SKILL_GRID_COLUMNS,
+  ADD_SKILL_HEADER_COLUMNS,
+  formatSkillAbilityList,
+  parseSkillAbilities,
+} from '@/lib/codex/skill-list';
 import {
   pathChipLabelsForEntity,
   pathFilterEmptyTitle,
   rowMatchesPathRecommendedIds,
 } from '@/lib/game/path-recommendation-index';
 import type { ArchetypeCategory } from '@/types/archetype';
+import { formatAbilityLabel } from '@/lib/constants/ability-effect-blurbs';
+import type { AbilityName } from '@/types';
 
 import type { GridListBadgeColor } from '@/lib/chip/grid-list-chip-utils';
 
@@ -60,36 +65,17 @@ export interface AddSkillModalProps {
   optionsDefaultExpanded?: boolean | undefined;
 }
 
-/** Parse skill.ability (comma-separated) into list of abbreviated ability codes (STR, AGI, ...). */
-function getAbilityAbbrList(abilityString?: string): string[] {
-  if (!abilityString) return [];
-  return abilityString
-    .split(',')
-    .map((a) => a.trim().toLowerCase())
-    .filter(Boolean)
-    .map((a) => ABILITY_ABBR[a] ?? a.slice(0, 3).toUpperCase());
-}
-
-/** Build Abilities detail section and collapsed ability column (abbreviated, like sub-skill ability column). */
-function buildAbilityDisplay(abilityString?: string): {
-  detailChips: ChipData[];
-  columnValue: string | ReactNode;
-} {
-  const abbrList = getAbilityAbbrList(abilityString);
-  const detailChips: ChipData[] = abbrList.map((abbr) => descriptorChipData(abbr, 'skill'));
-  const columnValue: string | ReactNode =
-    abbrList.length === 0 ? (
-      '-'
-    ) : (
-      <span className="inline-flex flex-wrap gap-1">
-        {abbrList.map((abbr) => (
-          <DescriptorChip key={abbr} variant="info">
-            {abbr}
-          </DescriptorChip>
-        ))}
-      </span>
-    );
-  return { detailChips, columnValue };
+/** Drop ability badges when the Abilities column already shows governing options. */
+function filterAbilityDuplicateBadges(
+  skill: Skill & { ability?: string | undefined },
+  badges?: AddSkillModalSkillBadge[],
+): AddSkillModalSkillBadge[] | undefined {
+  if (!badges?.length) return badges;
+  const abilityLabels = new Set(
+    parseSkillAbilities(skill.ability).map((key) => formatAbilityLabel(key as AbilityName)),
+  );
+  const filtered = badges.filter((badge) => !abilityLabels.has(badge.label));
+  return filtered.length > 0 ? filtered : undefined;
 }
 
 function skillToSelectableItem(
@@ -98,24 +84,28 @@ function skillToSelectableItem(
   pathChipLabels?: string[],
 ): SelectableItem {
   const extraSections = getSkillExtraDescriptionDetailSections(skill);
-  const { detailChips, columnValue } = buildAbilityDisplay(skill.ability);
-  const detailSections: SelectableItem['detailSections'] = [];
-  if (detailChips.length > 0) {
-    detailSections.push({ label: 'Abilities', chips: detailChips, hideLabelIfSingle: true });
-  }
-  if (extraSections.length > 0) {
-    detailSections.push(...extraSections);
-  }
+  const detailSections: SelectableItem['detailSections'] =
+    extraSections.length > 0 ? extraSections : undefined;
   const skillId = String(skill.id);
   const pathBadges = pathChipLabels?.map((label) => ({ label, color: 'blue' as const }));
-  const badges = pathBadges ?? skillBadgesById?.[skillId];
+  const rawBadges = pathBadges ?? skillBadgesById?.[skillId];
+  const badges = filterAbilityDuplicateBadges(skill, rawBadges)?.map((b) => ({
+    label: b.label,
+    color: b.color,
+  }));
   return {
     id: skillId,
     name: skill.name ?? '',
     description: skill.description,
-    columns: [{ key: 'ability', value: columnValue, align: 'center' as const }],
-    detailSections: detailSections.length > 0 ? detailSections : undefined,
-    badges: badges?.map((b) => ({ label: b.label, color: b.color })),
+    columns: [
+      {
+        key: 'ability',
+        value: formatSkillAbilityList(skill.ability),
+        align: 'center' as const,
+      },
+    ],
+    detailSections,
+    badges,
     showBadgesInName: Boolean(pathBadges?.length),
     data: skill,
   };
@@ -244,19 +234,17 @@ export function AddSkillModal({
 
   const deeperLayerNav =
     deeperLayerLabel && onDeeperLayer ? (
-      <div className="pb-1">
-        <Button
-          type="button"
-          variant="primary"
-          size="lg"
-          onClick={onDeeperLayer}
-          disabled={deeperLayerDisabled}
-          title={deeperLayerDisabled ? deeperLayerDisabledTitle : undefined}
-          className={guidedNavProgressClassName}
-        >
-          {deeperLayerLabel}
-        </Button>
-      </div>
+      <Button
+        type="button"
+        variant="primary"
+        size="lg"
+        onClick={onDeeperLayer}
+        disabled={deeperLayerDisabled}
+        title={deeperLayerDisabled ? deeperLayerDisabledTitle : undefined}
+        className={guidedNavProgressClassName}
+      >
+        {deeperLayerLabel}
+      </Button>
     ) : null;
 
   return (
@@ -276,11 +264,12 @@ export function AddSkillModal({
         maxSelections={maxSelections}
         selectionLimitMessage={resolvedLimitMessage}
         footerExtra={deeperLayerNav ? () => deeperLayerNav : undefined}
-        columns={[
-          { key: 'name', label: 'Name' },
-          { key: 'ability', label: 'Abilities', sortable: true },
-        ]}
-        gridColumns="1fr auto"
+        columns={ADD_SKILL_HEADER_COLUMNS.map((col) => ({
+          key: col.key,
+          label: col.label,
+          sortable: col.key === 'ability' ? true : undefined,
+        }))}
+        gridColumns={ADD_SKILL_GRID_COLUMNS}
         itemLabel="Skill"
         emptyMessage={
           error ??

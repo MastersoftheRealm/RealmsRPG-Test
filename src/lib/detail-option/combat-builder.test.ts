@@ -79,19 +79,23 @@ describe('combat-builder path More details chips (TASK-818)', () => {
       'trainingPoints',
     ]);
     expect(labels).toEqual(
-      rankedGlrFactChips(layout.chipFacts, {
-        category: 'Offense, Damage',
-        energy: 1,
-        actionType: 'Basic Action',
-        duration: '1 Minute',
-        range: '15 spaces',
-        area: 'Sphere',
-        damage: '1d8 fire',
-        trainingPoints: 2,
-      }).map((chip) => chip.name),
+      rankedGlrFactChips(
+        layout.chipFacts,
+        {
+          category: 'Offense, Damage',
+          energy: 1,
+          actionType: 'Basic Action',
+          duration: '1 Minute',
+          range: '15 spaces',
+          area: 'Sphere',
+          damage: '1d8 fire',
+          trainingPoints: 2,
+        },
+        'power',
+      ).map((chip) => chip.name),
     );
     assertRowFactCoverage('detail-option-power', { columnKeys: [], chipLabels: labels });
-    expect(labels.some((label) => /^category\b/i.test(label))).toBe(true);
+    expect(labels.some((label) => /^offense\b/i.test(label))).toBe(true);
     expect(labels.some((label) => /^energy\s+\d+/i.test(label))).toBe(true);
     expect(labels.some((label) => /^range\b/i.test(label))).toBe(true);
     expect(labels.some((label) => /\d+d\d+.*damage/i.test(label))).toBe(true);
@@ -118,14 +122,18 @@ describe('combat-builder path More details chips (TASK-818)', () => {
       'damage',
     ]);
     expect(labels).toEqual(
-      rankedGlrFactChips(layout.chipFacts, {
-        category: 'Offense',
-        energy: 2,
-        trainingPoints: 3,
-        actionType: 'Basic Action',
-        weapon: 'Weapon',
-        damage: '+1d8',
-      }).map((chip) => chip.name),
+      rankedGlrFactChips(
+        layout.chipFacts,
+        {
+          category: 'Offense',
+          energy: 2,
+          trainingPoints: 3,
+          actionType: 'Basic Action',
+          weapon: 'Weapon',
+          damage: '+1d8',
+        },
+        'technique',
+      ).map((chip) => chip.name),
     );
     assertRowFactCoverage('detail-option-technique', { columnKeys: [], chipLabels: labels });
     expect(labels.some((label) => /^attack\b/i.test(label))).toBe(true);

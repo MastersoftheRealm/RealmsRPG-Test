@@ -8,6 +8,7 @@ import { defined } from '@/lib/utils';
 import {
   abilityRequirementChip,
   actionTypeFactChip,
+  categoryFactChip,
   capitalizeSpacesTerm,
   currencyFactChip,
   energyFactChip,
@@ -122,6 +123,9 @@ describe('compact-facts formatters', () => {
     expect(actionTypeFactChip('quick action')?.name).toBe('Quick Action');
     expect(actionTypeFactChip('basic reaction')?.name).toBe('Basic Reaction');
     expect(actionTypeFactChip(null)).toBeNull();
+    expect(categoryFactChip('Offense, Damage')?.name).toBe('Offense, Damage');
+    expect(categoryFactChip('Category Defense')?.name).toBe('Defense');
+    expect(categoryFactChip(null)).toBeNull();
     expect(formatEnergyFact(4)).toBe('Energy 4');
     expect(energyFactChip(0)?.name).toBe('Energy 0');
     expect(energyFactChip(undefined)).toBeNull();

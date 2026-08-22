@@ -647,7 +647,7 @@ flowchart LR
 | Step | User question | Layer 1 behavior |
 |------|---------------|------------------|
 | **Audience** | Who is this for? | Optional: pick a **saved character** (level, archetype) **or** generic **Power** vs **Powered-Martial** + level. Enables innate threshold and TP context. `InfoTippy` on archetype terms. |
-| **Innate** | Innate or standard? | Toggle with rules tooltips. If innate: filter templates and validate action type (Basic/Reaction only), no healing/energy-gain parts, energy ≤ **Innate Threshold** for level/archetype ([`GAME_RULES.md`](./GAME_RULES.md): L1 threshold **8** Power, **6** Powered-Martial). |
+| **Innate** | Innate or standard? | Toggle with rules tooltips. If innate: filter templates and validate action type (Basic/Basic Reaction only), duration Instant or ≤1 minute, no Adaptation-category parts, no healing/energy-gain parts, energy ≤ **Innate Threshold** for level/archetype ([`GAME_RULES.md`](./GAME_RULES.md): L1 threshold **8** Power, **6** Powered-Martial). |
 | **Category** | What kind of power? | `GuidedChoiceCard` grid mapped to part categories — not raw part names. |
 | **Delivery** | How does it reach targets? | Melee / ranged / area cards; hides steppers and mechanic jargon. |
 | **Damage** | Does it deal damage? | Yes/no → simple presets (light / moderate / heavy) before die math. |
@@ -1061,7 +1061,7 @@ Everything else stays on current UI until each phase validates the pattern.
 - **Custom archetype (Path L3)** — pick archetype type + power/martial abilities without a curated path; always reachable from Foundation Path (and the Custom chooser entry). Legacy name in Advanced: “Forge Your Own.”
 - **Cohesive character creator** — single shell at `/characters/new/guided` with per-step L1/L2/L3 (partial layers OK). Legacy Custom/Advanced at `/characters/new/advanced` is transitional.
 - **Guided power creator route** — future L1 flow at `/power-creator/guided` when built (standalone creators still mostly L3 today).
-- **Innate Power** — a power whose Energy is at or below your Innate Threshold; usable without spending pool Energy when qualified (Basic/Reaction only; no healing/energy-gain parts).
+- **Innate Power** — a power whose Energy is at or below your Innate Threshold; usable without spending pool Energy when qualified (Basic/Basic Reaction only; duration Instant or ≤1 minute; no healing/energy-gain or Adaptation-category parts).
 - **Innate Threshold** — max Energy for an innate power; level 1: 8 (Power), 6 (Powered-Martial); +1 every 3 levels from 4.
 - **Archetype feat** — a feat oriented toward combat and high-stakes situations.
 - **Character feat** — a feat oriented toward identity and build expression.

@@ -6,7 +6,7 @@ import { listPlayerVisiblePaths } from '@/lib/game/archetype-edit';
 import {
   buildPathRecommendationIndex,
   EMPTY_PATH_RECOMMENDATION_INDEX,
-  pathIdsForArchetypeType,
+  pathFilterAliasForArchetypeType,
   pathRecommendedEntityIds,
   type PathRecommendationEntity,
   type PathRecommendationIndex,
@@ -69,7 +69,7 @@ export function usePathListFilter({
   const resolvedSelectedPathIds = useMemo(() => {
     if (selectedPathIds !== null) return selectedPathIds;
     if (autoSelectType && autoSelectWhen && pathIndex.options.length > 0) {
-      return pathIdsForArchetypeType(pathIndex.options, autoSelectType);
+      return [pathFilterAliasForArchetypeType(autoSelectType)];
     }
     return [];
   }, [selectedPathIds, autoSelectType, autoSelectWhen, pathIndex]);

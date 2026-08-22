@@ -6,6 +6,7 @@
 
 // Auth
 export { useAuth, useAuthStore } from './use-auth';
+export { useAuthCaptcha } from './use-auth-captcha';
 export { useAdmin } from './use-admin';
 export { useCreatorSave } from './use-creator-save';
 export type {

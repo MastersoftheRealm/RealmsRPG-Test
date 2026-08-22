@@ -37,9 +37,14 @@ export function LargeStatBlock({
   const tint = tempModifierTintFromDelta(tempDelta);
 
   return (
-    <Card className="flex h-full w-full min-w-0 flex-col items-center bg-surface-alt p-3 shadow-none sm:p-4">
+    <Card
+      className={cn(
+        'flex w-full max-w-[8.75rem] min-w-[6.75rem] flex-col items-center justify-center bg-surface-alt px-2.5 py-2 shadow-none',
+        !showTempControls && 'aspect-square',
+      )}
+    >
       <div className="flex w-full min-w-0 flex-wrap items-center justify-center gap-1.5">
-        <span className="min-w-0 text-center text-sm leading-tight font-semibold tracking-wide break-words text-text-secondary uppercase">
+        <span className="min-w-0 text-center text-xs leading-tight font-semibold tracking-wide break-normal text-text-secondary uppercase sm:text-sm">
           {label}
         </span>
         {canTemp && (
@@ -53,7 +58,7 @@ export function LargeStatBlock({
       </div>
       <span
         className={cn(
-          'mt-1 text-4xl font-bold tabular-nums',
+          'mt-1 text-3xl font-bold tabular-nums sm:text-4xl',
           tempModifierValueClass(tempDelta) || 'text-text-primary',
         )}
         aria-label={valueAriaLabel}

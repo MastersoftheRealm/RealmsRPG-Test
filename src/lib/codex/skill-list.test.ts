@@ -7,6 +7,7 @@ import {
   filterSkills,
   findSkillByIdOrName,
   parseSkillAbilities,
+  formatSkillAbilityList,
   type SkillListFilters,
 } from './skill-list';
 import { parseArchetypePathData } from '@/lib/game/archetype-path';
@@ -84,6 +85,14 @@ describe('parseSkillAbilities', () => {
   it('splits a comma list and ignores blanks', () => {
     expect(parseSkillAbilities('Strength, Agility')).toEqual(['strength', 'agility']);
     expect(parseSkillAbilities(undefined)).toEqual([]);
+  });
+});
+
+describe('formatSkillAbilityList', () => {
+  it('formats governing abilities as full comma-separated names', () => {
+    expect(formatSkillAbilityList('strength')).toBe('Strength');
+    expect(formatSkillAbilityList('strength, agility')).toBe('Strength, Agility');
+    expect(formatSkillAbilityList(undefined)).toBe('-');
   });
 });
 

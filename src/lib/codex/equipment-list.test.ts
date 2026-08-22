@@ -4,6 +4,7 @@ import {
   buildCodexEquipmentDetailSections,
   CODEX_EQUIPMENT_HEADER_COLUMNS,
   equipmentCurrency,
+  persistEquipmentCost,
   filterCodexEquipment,
 } from './equipment-list';
 import { EMPTY_ARMAMENT_FILTERS } from '@/lib/library/armament-filters';
@@ -64,6 +65,12 @@ describe('codex equipment-list', () => {
   it('prefers currency over gold_cost', () => {
     expect(equipmentCurrency({ currency: 5, gold_cost: 99 })).toBe(5);
     expect(equipmentCurrency({ gold_cost: 7 })).toBe(7);
+  });
+
+  it('persistEquipmentCost prefers catalog currency over stored cost (TASK-873)', () => {
+    expect(persistEquipmentCost({ currency: 20, cost: 5 })).toBe(20);
+    expect(persistEquipmentCost({ cost: 12 })).toBe(12);
+    expect(persistEquipmentCost({})).toBe(0);
   });
 
   it('does not chip Damage, DR, or Weight on mixed gear browse', () => {

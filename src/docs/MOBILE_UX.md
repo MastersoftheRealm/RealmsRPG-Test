@@ -81,6 +81,8 @@ Gutters: size panels with `basis-full` (not `min-w-full`) inside the same conten
 
 Any `truncate` / `line-clamp` needs `min-w-0` on **every** flex ancestor between the text and its constraining box — `truncate` alone silently does nothing when an ancestor flex item is `min-width: auto`. Text may never be clipped by `overflow: hidden` without `text-overflow: ellipsis`.
 
+**Wrap strategy (TASK-897):** Prefer word/token boundaries over character-by-character breaks. Do **not** use `break-words` or `break-all` on identity text in dense list/table name columns — in a narrow track they produce one-letter lines and inflate row height. Use `truncate` (or `line-clamp-*` with `break-normal`) so overflow becomes an ellipsis; the expanded row / tooltip / detail view carries the full string. Multi-word labels that may stack (stat tile titles, ability names in fixed tiles) use `break-normal` so wraps happen at spaces. Reserve `break-words` only for prose/description blocks where mid-token breaks are acceptable. Never blanket `whitespace-nowrap` on names if it causes C6 page scroll.
+
 ### C3 — Fixed-count card sets
 
 A known-length set of sibling cards uses `grid` with equal tracks. `flex-wrap` with content-width children **cannot** produce an even row — the sheet's four stat cards measured 100/100/186/153 at every width.
@@ -95,7 +97,7 @@ One dock owns each screen corner. Components **register** with the dock; they do
 
 A layout switch happens at a width where the target arrangement **actually fits**, not at a nominal breakpoint name. Verify every layout switch at **360 / 390 / 768 / 1024 / 1280 / 1440**.
 
-**Landed (TASK-839):** Speed / Evasion / DR / Crit sit in an equal-track `grid` (C3: 2-col below `md`, 4-col from `md`, 2×2 in the middle column). Three-column identity | stats | resources engages at `lg` (1024) as equal `minmax(0,1fr)` tracks — not leftover flex — so stats are never a 119px column. From `xl`, side tracks cap (`minmax(0,20rem)` / `minmax(16rem,20rem)`). Below `lg`: identity | resources, stats spanning. The mobile frame/column/carousel use `min-w-0` so the C1 scroller cannot stretch the header past the viewport.
+**Landed (TASK-839 / TASK-885):** Speed / Evasion / DR / Crit sit in an equal-track `grid` (C3: 2-col below `md`, 4-col from `md`, 2×2 in the middle column). The cluster is `w-max` and centered so tiles stay compact/squarish and do not fill the middle track. Three-column identity | stats | resources engages at `lg` (1024) as equal `minmax(0,1fr)` tracks — not leftover flex — so stats are never a 119px column. From `xl`, side tracks cap (`minmax(0,20rem)` / `minmax(16rem,20rem)`). Below `lg`: identity | resources, stats spanning. The mobile frame/column/carousel use `min-w-0` so the C1 scroller cannot stretch the header past the viewport.
 
 ### C6 — Overflow
 
@@ -131,7 +133,7 @@ Side-scroll between section panels is the preferred pattern — subject to **C1*
 ## Lists and tables
 
 - **ListHeader:** desktop shows column headers in a grid (`hidden lg:grid`). Mobile shows no column headers — instead an expandable **"Sort by"** control using the same `sortState` / `onSort`. Tap to expand and choose; tapping the same option toggles A→Z / Z→A.
-- **GridListRow:** use `hideOnMobile` on non-essential columns. Below `lg` the row collapses empty desktop data-column tracks (`buildMobileCollapsedGridColumns`) so the name keeps `minmax(0, 1fr)` beside X/+ actions. Apply data-column templates via `--glr-desktop-grid` / `--glr-mobile-grid` classes — **never** inline `gridTemplateColumns` on the name/column grid (inline styles override the mobile media query). The chrome stretch-grid (TASK-710) may set its own template inline; that is not the data-column template. **Expand hit target:** header trigger, mobile summary body, and non-interactive expanded-panel areas all toggle expand/collapse (buttons, links, chip groups excluded). **Collapsed vs expanded (TASK-868):** mobile summary column facts hide while the row is expanded (body shows them); blank / `-` values are omitted.
+- **GridListRow:** use `hideOnMobile` on non-essential columns. Below `lg` the row collapses empty desktop data-column tracks (`buildMobileCollapsedGridColumns`) so the name keeps `minmax(0, 1fr)` beside X/+ actions. Apply data-column templates via `--glr-desktop-grid` / `--glr-mobile-grid` classes — **never** inline `gridTemplateColumns` on the name/column grid (inline styles override the mobile media query). The chrome stretch-grid (TASK-710) may set its own template inline; that is not the data-column template. **Expand hit target:** header trigger, mobile summary body, and non-interactive expanded-panel areas all toggle expand/collapse (buttons, links, chip groups excluded). **Collapsed vs expanded (TASK-868):** mobile summary column facts hide while the row is expanded (body shows them); blank / `-` values are omitted. **Expanded reflow (TASK-898):** when a row expands, column facts (Uses, Recovery, Energy, etc.) move out of the collapsed header grid into the expanded body at every width — header tracks are too narrow for stepper + text pairs. Interactive column values (steppers) stack label above control and span full width on two-column stat grids; text facts stay side-by-side where space allows. `min-w-0` on every flex ancestor (C2).
 - **Tabs:** `TabNavigation` uses `overflow-x-auto` with a C1 overflow affordance (edge fade + chevrons that hide when the strip does not overflow; chevrons sit in the fade with an 8px gap to unfaded labels; arrow keys and chevrons scroll **the tablist only**, not ancestor carousels). A control beside the strip (Codex **Advanced**) is `trailing` — stacked below `md`, in-bar from `md` outside the tablist (TASK-827). `labelMobile` is the below-`md` label. Legacy `CreatorTabBar` and Guided chapter rail reuse the same `.tab-nav-scroll` chrome (`TabNavOverflowScroller`) — TASK-848.
 
 ---
@@ -149,6 +151,7 @@ Side-scroll between section panels is the preferred pattern — subject to **C1*
    - At ~360px, several list rows visible between toolbar and footer.
 3. **List / table**
    - `ListHeader` (hidden on mobile) + `GridListRow` with sensible `hideOnMobile`.
+   - **Expanded column facts (TASK-898):** when a row expands, Uses/Recovery/etc. move to the expanded body at all widths; interactive values (steppers) stack full-width — no header-track overlap at 360px or in narrow sheet panels.
    - **Stable vertical expand:** expand-in-place chips keep their collapsed vertical row, move to the chip group's left edge, and take the full group width; every chip from that row onward reflows below. Header or expanded body toggles (Options / nested controls excluded). See AGENT_GUIDE → Stable expand toggle.
 4. **Verification — all six widths**
    - Check **360 / 390 / 768 / 1024 / 1280 / 1440** (**C5**). "Mobile and desktop" is not sufficient; 1024 is where things break.

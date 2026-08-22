@@ -30,7 +30,7 @@ export function UnifiedSelectionModalFooter({
   primaryActions,
 }: UnifiedSelectionModalFooterProps) {
   return (
-    <div className="flex flex-col gap-3 border-t border-border-light bg-surface">
+    <div className="flex flex-col gap-3 border-t border-border-light bg-surface pt-3 md:pt-4">
       {footerExtra?.(selectedItems)}
       <div className="flex flex-col-reverse gap-3 sm:flex-row sm:items-center sm:justify-between">
         <span className="text-sm text-text-muted">

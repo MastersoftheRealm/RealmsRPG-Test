@@ -29,6 +29,38 @@ describe('mapSelectedToCharacterItems (equipment)', () => {
     expect(item.id).toBe(1);
   });
 
+  it('persists catalog currency, category, and rarity for equipment (TASK-873)', () => {
+    const selected: SelectableItem[] = [
+      {
+        id: '10',
+        name: 'Spyglass',
+        description: 'A glass.',
+        columns: [],
+        data: {
+          id: 10,
+          name: 'Spyglass',
+          description: 'A glass.',
+          category: 'Adventuring',
+          rarity: 'uncommon',
+          currency: 20,
+          properties: [],
+        },
+        quantity: 1,
+      } as SelectableItem & { quantity: number },
+    ];
+
+    const items = mapSelectedToCharacterItems('equipment', selected, 'powers') as Array<{
+      cost?: number | undefined;
+      category?: string | undefined;
+      rarity?: string | undefined;
+    }>;
+
+    const item = defined(items[0]);
+    expect(item.cost).toBe(20);
+    expect(item.category).toBe('Adventuring');
+    expect(item.rarity).toBe('uncommon');
+  });
+
   it('normalizes fractional/invalid quantities to at least 1 (DEV-V-009-T022)', () => {
     const selected: SelectableItem[] = [
       {

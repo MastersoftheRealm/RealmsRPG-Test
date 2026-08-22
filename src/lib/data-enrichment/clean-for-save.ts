@@ -1,4 +1,5 @@
 import type { Character } from '@/types';
+import { normalizeAgeAppearanceForSave } from '@/lib/character/appearance-age';
 import { computeMaxHealthEnergy } from '@/lib/game/calculations';
 import { dedupeByNormalizedId, dedupeEntityRefs } from '@/lib/game/dedupe-saved-parts';
 import { normalizeTempModifiers } from '@/lib/character/temp-modifiers';
@@ -70,6 +71,7 @@ const SAVEABLE_FIELDS = [
   // Physical attributes
   'weight',
   'height',
+  'age',
   // Character visibility (who can view sheet)
   'visibility',
   // Display preferences (speed shown as spaces, feet, or meters)
@@ -134,6 +136,9 @@ export function cleanForSave(data: Character): Partial<Character> {
     if (normalized) cleaned.tempModifiers = normalized;
     else delete cleaned.tempModifiers;
   }
+
+  // Promote legacy Age prefix out of appearance into dedicated age field (TASK-886)
+  normalizeAgeAppearanceForSave(cleaned);
 
   // Canonical field names + strip legacy aliases (TASK-663)
   normalizeCharacterForSave(cleaned, data);

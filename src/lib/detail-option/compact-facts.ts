@@ -320,6 +320,20 @@ export function actionTypeFactChip(actionType: string | null | undefined): ChipD
   return compactFactChip(formatActionTypeValue(actionType));
 }
 
+/**
+ * Desc-chip for power/technique Category — value only ("Offense", "Offense, Damage"),
+ * not "Category Offense". Column headers keep "Category" separately.
+ */
+export function categoryFactChip(category: string | null | undefined): ChipData | null {
+  if (isBlank(category)) return null;
+  let text = String(category).trim();
+  if (/^category\b/i.test(text)) {
+    text = text.replace(/^category\s+/i, '').trim();
+  }
+  if (!text) return null;
+  return compactFactChip(text);
+}
+
 /** Energy N — compact fact for power/technique cards and catalogs. */
 export function formatEnergyFact(energy: number | null | undefined): string | undefined {
   if (energy == null || Number.isNaN(Number(energy))) return undefined;

@@ -352,13 +352,13 @@ export function FinalizeStep() {
         <HealthEnergyAllocationSection />
       </div>
 
-      {/* Description (Optional) */}
+      {/* Backstory (Optional) */}
       <div className="mb-6">
         <Textarea
-          label="Description (Optional)"
+          label="Backstory (Optional)"
           value={draft.description || ''}
           onChange={(e) => updateDraft({ description: e.target.value })}
-          placeholder="Describe your character's appearance, personality, or background..."
+          placeholder="Background, personality, bonds, and history..."
           rows={4}
           className="resize-none"
         />

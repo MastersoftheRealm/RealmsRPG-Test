@@ -253,7 +253,7 @@ export function useCharacterSheetPage(id: string) {
     isOwner: data.isOwner,
     isInCampaign: data.isInCampaign,
     campaignContext: data.campaignContext,
-    hasUnappliedPoints: data.hasUnappliedPoints,
+    sheetEditNotification: data.sheetEditNotification,
     hasTempModifiers: hasAnyTempModifiers(data.character?.tempModifiers),
     calculatedStats: data.calculatedStats,
     characterForDisplay: data.characterForDisplay,

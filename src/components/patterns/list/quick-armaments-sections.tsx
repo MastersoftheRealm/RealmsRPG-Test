@@ -66,14 +66,14 @@ function displayNamedProperties(props: QuickArmamentItem['properties']): string[
   return getPropertyNames(props).filter((name) => name && !isMechanicPropertyName(name));
 }
 
-/** One `• Property` per line under the armament name; long names wrap within the Name column. */
+/** One `• Property` per line under the armament name; truncate if a token would char-wrap. */
 function NamedPropertiesUnderName({ names }: { names: string[] }) {
   if (names.length === 0) return null;
   // Stacked lines (not a semantic list): literal bullets are visual only; index keys allow duplicate names.
   return (
     <div className="mt-0.5 space-y-0.5 text-xs leading-snug font-normal text-text-muted">
       {names.map((p, i) => (
-        <div key={`${p}-${i}`} className="break-words">
+        <div key={`${p}-${i}`} className="min-w-0 truncate" title={p}>
           • {p}
         </div>
       ))}
@@ -170,7 +170,9 @@ export function QuickWeaponsTable({
                   className="border-b border-border-subtle align-top last:border-0"
                 >
                   <td className={QUICK_WEAPON_COL.nameTd}>
-                    <div className="break-words">{weapon.name}</div>
+                    <div className="min-w-0 truncate" title={weapon.name}>
+                      {weapon.name}
+                    </div>
                     <NamedPropertiesUnderName names={displayProps} />
                   </td>
                   <td className={QUICK_WEAPON_COL.rangeTd}>
@@ -223,9 +225,7 @@ export function QuickWeaponsTable({
                       ) : (
                         <span className="text-sm font-medium text-text-muted">{dice}</span>
                       )}
-                      {type && (
-                        <span className="text-[10px] break-words text-text-muted">{type}</span>
-                      )}
+                      {type && <span className="text-[10px] text-text-muted">{type}</span>}
                     </div>
                   </td>
                 </tr>

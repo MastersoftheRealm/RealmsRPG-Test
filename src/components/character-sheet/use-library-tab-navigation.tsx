@@ -125,7 +125,7 @@ export function useLibraryTabNavigation(options: {
                 handleToggleTabVisibility(tab.id);
               }}
               label={`${visibleOutsideEdit ? 'Hide' : 'Show'} ${tab.label} tab when not editing`}
-              className="-mr-1 min-h-[44px] min-w-[44px] shrink-0"
+              className="-mr-0.5 shrink-0"
             >
               {visibleOutsideEdit ? (
                 <Eye className="h-4 w-4" />

@@ -2,6 +2,13 @@ import { isBlank } from '@/lib/detail-option/compact-facts';
 import { formatColumnKeyLabel } from '@/lib/utils';
 import type { ColumnValue } from './grid-list-row-types';
 
+/** ReactNode column values (steppers, buttons) need stacked expanded layout — not header tracks. */
+export function columnHasInteractiveValue(col: ColumnValue): boolean {
+  const value = col.value;
+  if (value == null) return false;
+  return typeof value !== 'string' && typeof value !== 'number';
+}
+
 /** Humanize column key for display when label is not set. */
 export function columnDisplayLabel(col: ColumnValue): string {
   if (col.label) return col.label;
@@ -43,8 +50,8 @@ export function columnsForMobileSummary(columns: ColumnValue[]): ColumnValue[] {
     .slice(0, 3);
 }
 
-/** Stat columns for expanded mobile — skip description when the body already shows it. */
-export function columnsForExpandedMobileStats(
+/** Stat columns for expanded body — skip description when the body already shows it. */
+export function columnsForExpandedBodyStats(
   columns: ColumnValue[],
   hasDescriptionBody: boolean,
 ): ColumnValue[] {
@@ -75,4 +82,12 @@ export function descriptionColumnTrackCount(
     if (col.key !== 'description') return sum;
     return sum + (columnSpans?.[idx] ?? 1);
   }, 0);
+}
+
+/** Grid tracks consumed by data columns (respecting columnSpans). */
+export function dataColumnTrackCount(
+  columns: ColumnValue[],
+  columnSpans?: (number | undefined)[],
+): number {
+  return columns.reduce((sum, _col, idx) => sum + (columnSpans?.[idx] ?? 1), 0);
 }

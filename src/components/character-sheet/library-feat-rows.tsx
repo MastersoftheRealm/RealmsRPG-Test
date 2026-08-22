@@ -10,7 +10,7 @@ import type { ChipData } from '@/components/patterns/list/grid-list-row';
 import type { EntityFeatRow } from '@/components/patterns/list/entity-library-sections';
 import { FEAT_GRID } from '@/components/patterns/list/entity-library-sections';
 import { formatRecoveryAbbrev } from '@/components/patterns/list/entity-library-sections-rows';
-import { Input, Textarea } from '@/components/ui';
+import { Button, Input, Textarea } from '@/components/ui';
 import type { FeatTraitCustomization } from '@/types/feats';
 import { descriptorChipData } from '@/lib/chip/chip-data-helpers';
 import { glrSurfaceDetailSections, metadataDetailSection } from '@/lib/chip/list-row-metadata';
@@ -131,24 +131,25 @@ function FeatTraitCustomizationBlock({
 
   return (
     <div
-      className="space-y-3 border-t border-border-light pt-3"
+      className="mt-3 border-t border-border-light pt-3"
       onClick={(e) => e.stopPropagation()}
       onKeyDown={(e) => e.stopPropagation()}
     >
-      <button
+      <Button
         type="button"
+        variant="outline"
+        size="sm"
         onClick={(e) => {
           e.stopPropagation();
           setIsCustomizationOpen((prev) => !prev);
         }}
-        className="inline-flex min-h-[44px] items-center rounded-md border border-border-light bg-surface px-3 py-2 text-xs font-medium text-text-secondary hover:bg-surface-alt"
         aria-expanded={isCustomizationOpen}
       >
         {isCustomizationOpen ? 'Hide customization' : 'Customize'}
-      </button>
+      </Button>
 
       {isCustomizationOpen && (
-        <>
+        <div className="mt-3 space-y-3">
           {onCustomNameChange && (
             <Input
               id={`${fieldId}-custom-name`}
@@ -191,7 +192,7 @@ function FeatTraitCustomizationBlock({
               className="min-h-[72px]"
             />
           )}
-        </>
+        </div>
       )}
     </div>
   );

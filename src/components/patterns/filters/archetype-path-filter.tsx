@@ -2,8 +2,10 @@
  * ArchetypePathFilter Component
  * =============================
  * Filters a browse list down to the entities the selected archetype paths recommend
- * (ADR-0014 / TASK-751). Multi-select is a **union**: Monk + Berserker shows anything either path
- * recommends. Options are player-visible paths only, grouped by archetype type.
+ * (ADR-0014 / TASK-751 / TASK-878). Multi-select is a **union** — Monk + Berserker, or
+ * Quick select aliases (Any / Any Power / Any Martial / Any Powered-Martial), which expand
+ * to player-visible paths. A type-wide alias replaces individual paths of that type; Any
+ * replaces the whole selection.
  *
  * Pair it with `usePathRecommendationIndex` + `pathRecommendedEntityIds`; it never resolves
  * recommendations itself, so Codex, Library, and creator surfaces share one match rule.
@@ -15,12 +17,17 @@
 import { useMemo } from 'react';
 import { InfoTippy } from '@/components/patterns/help/info-tippy';
 import { PATH_CATEGORY_GROUPS, pathCategoryGroupLabel } from '@/lib/game/archetype-edit';
-import type { PathFilterOption } from '@/lib/game/path-recommendation-index';
+import {
+  addPathFilterSelection,
+  PATH_FILTER_ALIAS_CHIP_OPTIONS,
+  removePathFilterSelection,
+  type PathFilterOption,
+} from '@/lib/game/path-recommendation-index';
 import { cn } from '@/lib/utils';
 import { ChipSelect, type ChipSelectOption } from './chip-select';
 
 const ARCHETYPE_PATH_FILTER_HELP =
-  'Show only entries an archetype path recommends. Choose several paths to see everything any of them recommends. Other filters still apply.';
+  'Show only entries an archetype path recommends. Quick select: Any (all paths), Any Power, Any Martial, or Any Powered-Martial — a type alias replaces individual paths of that type; Any replaces your whole selection. You can also pick specific paths; several selections union together. Other filters still apply.';
 
 export interface ArchetypePathFilterProps {
   /** Player-visible paths — `usePathRecommendationIndex().options`. */
@@ -41,6 +48,10 @@ export function ArchetypePathFilter({
   className,
 }: ArchetypePathFilterProps) {
   const chipOptions = useMemo<ChipSelectOption[]>(() => {
+    const aliasOptions: ChipSelectOption[] = PATH_FILTER_ALIAS_CHIP_OPTIONS.map((option) => ({
+      value: option.value,
+      label: option.label,
+    }));
     const byType = PATH_CATEGORY_GROUPS.flatMap((type) =>
       options
         .filter((option) => option.type === type)
@@ -55,7 +66,7 @@ export function ArchetypePathFilter({
     const rest = options
       .filter((option) => !grouped.has(option.id))
       .map((option) => ({ value: option.id, label: option.name }));
-    return [...rest, ...byType];
+    return [...aliasOptions, ...rest, ...byType];
   }, [options]);
 
   return (
@@ -64,8 +75,8 @@ export function ArchetypePathFilter({
       placeholder={placeholder}
       options={chipOptions}
       selectedValues={selectedPathIds}
-      onSelect={(id) => onChange([...selectedPathIds, id])}
-      onRemove={(id) => onChange(selectedPathIds.filter((value) => value !== id))}
+      onSelect={(id) => onChange(addPathFilterSelection(selectedPathIds, id, options))}
+      onRemove={(id) => onChange(removePathFilterSelection(selectedPathIds, id))}
       labelAccessory={
         <InfoTippy content={ARCHETYPE_PATH_FILTER_HELP} label="Archetype path filter help" />
       }

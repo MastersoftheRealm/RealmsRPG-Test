@@ -52,6 +52,7 @@ export function buildEmpoweredPowerSelectableItem(
       : undefined;
   const detailSections = buildGlrFactDetailSections({
     chipFacts: resolveSurfaceLayout('empowered-power').chipFacts,
+    entityType: 'power',
     facts: {
       range: rangeStr,
       trainingPoints: Number(totals.trainingPoints ?? 0) || undefined,

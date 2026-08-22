@@ -1,0 +1,24 @@
+-- TASK-874 — Codex changelog storage / retention proposal (preview only; owner ack DEV-Q07)
+--
+-- Current: every mutation stores full before_data + after_data JSON blobs plus changed_fields.
+-- Display slimming ships in admin UI first; destructive storage changes wait on owner.
+--
+-- Recommended policy (DEV-Q07):
+-- 1. Keep changed_fields + entity metadata as the source of truth for admin review.
+-- 2. Stop writing before_data/after_data on new rows once a restore path is confirmed unnecessary
+--    (or store a capped JSON snippet only when a field value exceeds N chars).
+-- 3. Retention: delete rows older than 90 days OR cap at 500 rows per entity_type (whichever is stricter).
+--
+-- Preview row counts:
+-- SELECT entity_type, count(*) AS n, min(changed_at) AS oldest, max(changed_at) AS newest
+-- FROM codex_change_logs
+-- GROUP BY entity_type
+-- ORDER BY n DESC;
+--
+-- Proposed retention cron (run only after owner approve):
+-- DELETE FROM codex_change_logs
+-- WHERE changed_at < now() - interval '90 days';
+--
+-- Optional later migration (Architect + owner ack — do not run in TASK-874):
+-- ALTER TABLE codex_change_logs DROP COLUMN IF EXISTS before_data;
+-- ALTER TABLE codex_change_logs DROP COLUMN IF EXISTS after_data;

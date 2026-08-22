@@ -159,7 +159,11 @@ export const GLR_FACT_CATALOG: Record<GlrFactId, GlrFactDef> = {
     titleLabel: 'Category',
     preferredColumnKey: 'category',
     columnKeys: col('category'),
-    chipPatterns: [/^category\b/i],
+    chipPatterns: [
+      /^category\b/i,
+      /\b(offense|defense|utility|control|damage|charm|adaptation|healing|creation|summoning|movement|perception|communication|enchantment|transmutation)\b/i,
+    ],
+    chipFormatter: 'categoryFactChip',
     entities: {
       power: { band: 'secondary', orderInBand: 1, displayOrder: 1, headerTrack: '1fr' },
       technique: { band: 'secondary', orderInBand: 1, displayOrder: 1, headerTrack: '1fr' },
@@ -203,7 +207,7 @@ export const GLR_FACT_CATALOG: Record<GlrFactId, GlrFactDef> = {
     preferredColumnKey: 'damage',
     usmKey: 'Damage',
     columnKeys: col('damage'),
-    chipPatterns: [/\d+d\d+.*damage/i, /^(?!category\b).+\bdamage$/i],
+    chipPatterns: [/\d+d\d+.*damage/i, /^(?!.+,)(?!category\b).+\bdamage$/i],
     chipFormatter: 'damageFactChip',
     entities: {
       power: { band: 'primary', orderInBand: 3, displayOrder: 7, headerTrack: '0.9fr' },

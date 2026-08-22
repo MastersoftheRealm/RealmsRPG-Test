@@ -5,6 +5,12 @@
 
 import type { CharacterProficiency, Item, Character, CharacterAncestry } from '@/types';
 import type { EnrichedCharacterData } from '@/lib/data-enrichment';
+import {
+  resolveCharacterAge,
+  resolveCharacterAppearance,
+  resolveCharacterBackstory,
+  stripAgeFromAppearance,
+} from '@/lib/character/appearance-age';
 import { characterToFeatRequirementCharacter } from '@/lib/game/feat-requirements';
 import { calculateMaxArchetypeFeats, calculateMaxCharacterFeats } from '@/lib/game/formulas';
 import { getArchetypeAbilityScore, calculatePowerAttackBonus } from '@/lib/game/calculations';
@@ -77,16 +83,38 @@ export function buildLibrarySectionData(input: {
     onCurrencyChange: handleCurrencyChange,
     weight: character.weight,
     height: character.height,
-    appearance: character.appearance,
+    age: resolveCharacterAge(character.age, character.appearance),
+    appearance: resolveCharacterAppearance(character.appearance),
+    backstory: resolveCharacterBackstory(character.backstory, character.description),
     archetypeDesc: character.archetypeDesc,
     notes: character.notes,
     abilities: character.abilities,
     onWeightChange: (v) => setCharacter((prev) => (prev ? { ...prev, weight: v } : null)),
     onHeightChange: (v) => setCharacter((prev) => (prev ? { ...prev, height: v } : null)),
+    onAgeChange: (v) =>
+      setCharacter((prev) =>
+        prev
+          ? {
+              ...prev,
+              age: v || undefined,
+              appearance: stripAgeFromAppearance(prev.appearance) || undefined,
+            }
+          : null,
+      ),
     visibility: character.visibility,
     onVisibilityChange: (v) => setCharacter((prev) => (prev ? { ...prev, visibility: v } : null)),
     speedDisplayUnit: character.speedDisplayUnit ?? 'spaces',
-    onAppearanceChange: (v) => setCharacter((prev) => (prev ? { ...prev, appearance: v } : null)),
+    onAppearanceChange: (v) =>
+      setCharacter((prev) =>
+        prev
+          ? {
+              ...prev,
+              appearance: stripAgeFromAppearance(v) || undefined,
+            }
+          : null,
+      ),
+    onBackstoryChange: (v) =>
+      setCharacter((prev) => (prev ? { ...prev, backstory: v.trim() || undefined } : null)),
     onArchetypeDescChange: (v) =>
       setCharacter((prev) => (prev ? { ...prev, archetypeDesc: v } : null)),
     onNotesChange: (v) => setCharacter((prev) => (prev ? { ...prev, notes: v } : null)),

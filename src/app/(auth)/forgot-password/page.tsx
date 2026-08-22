@@ -13,13 +13,22 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { createClient } from '@/lib/supabase/client';
 import { forgotPasswordSchema, type ForgotPasswordFormData } from '@/lib/validation';
 import { getAuthErrorMessage } from '@/lib/auth-errors';
-import { AuthCard, FormInput } from '@/components/auth';
+import { AuthCard, AuthTurnstile, FormInput } from '@/components/auth';
 import { Button, Alert } from '@/components/ui';
+import { useAuthCaptcha } from '@/hooks/use-auth-captcha';
 
 export default function ForgotPasswordPage() {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [isSuccess, setIsSuccess] = useState(false);
+  const {
+    captchaReady,
+    captchaBlockMessage,
+    captchaOptions,
+    captchaResetKey,
+    setCaptchaToken,
+    resetCaptcha,
+  } = useAuthCaptcha();
 
   const {
     register,
@@ -33,14 +42,22 @@ export default function ForgotPasswordPage() {
     setIsLoading(true);
     setError(null);
 
+    if (captchaBlockMessage) {
+      setError(captchaBlockMessage);
+      setIsLoading(false);
+      return;
+    }
+
     try {
       const supabase = createClient();
       const { error: err } = await supabase.auth.resetPasswordForEmail(data.email, {
         redirectTo: `${typeof window !== 'undefined' ? window.location.origin : ''}/auth/confirm?next=${encodeURIComponent('/reset-password')}`,
+        ...captchaOptions,
       });
       if (err) throw err;
       setIsSuccess(true);
     } catch (err) {
+      resetCaptcha();
       setError(getAuthErrorMessage(err, 'forgot-password'));
     } finally {
       setIsLoading(false);
@@ -93,7 +110,9 @@ export default function ForgotPasswordPage() {
           {...register('email')}
         />
 
-        <Button type="submit" className="w-full" disabled={isLoading}>
+        <AuthTurnstile resetKey={captchaResetKey} onToken={setCaptchaToken} />
+
+        <Button type="submit" className="w-full" disabled={isLoading || !captchaReady}>
           {isLoading ? 'Sending...' : 'Send Reset Link'}
         </Button>
       </form>

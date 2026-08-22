@@ -15,6 +15,7 @@ import {
 import { CODEX_EQUIPMENT_HEADER_COLUMNS } from '@/lib/codex/equipment-list';
 import {
   CHARACTER_SHEET_SHIELD_COLUMNS,
+  CHARACTER_SHEET_EQUIPMENT_COLUMNS,
   CHARACTER_SHEET_TECHNIQUE_COLUMNS,
   CHARACTER_SHEET_WEAPON_COLUMNS,
   FEAT_COLUMNS,
@@ -185,6 +186,13 @@ describe('GLR fact catalog — surface column configs (ADR-0016)', () => {
     );
   });
 
+  it('character-sheet equipment play columns satisfy catalog bindings (TASK-873)', () => {
+    const keys = headerKeys(CHARACTER_SHEET_EQUIPMENT_COLUMNS);
+    expect(keys).not.toContain('type');
+    expect(keys).toEqual(['description', 'category', 'currency', 'rarity', 'quantity']);
+    assertSurfaceColumnConfig('character-sheet-gear', keys);
+  });
+
   it('codex feat headers satisfy catalog bindings', () => {
     assertSurfaceColumnConfig('codex-feat', headerKeys(CODEX_FEAT_HEADER_COLUMNS));
   });
@@ -279,7 +287,7 @@ describe('GLR fact catalog — row coverage (ADR-0016)', () => {
     });
     expect(errors).toEqual([]);
     expect(chipLabels.some((l) => /^range\b/i.test(l))).toBe(true);
-    expect(chipLabels.some((l) => /^category\b/i.test(l))).toBe(true);
+    expect(chipLabels.some((l) => /^offense\b/i.test(l) || /^category\b/i.test(l))).toBe(true);
     expect(chipLabels.some((l) => /training points\s+\d+/i.test(l))).toBe(true);
   });
 
@@ -375,7 +383,7 @@ describe('GLR fact catalog — row coverage (ADR-0016)', () => {
   it('allows a chip-only fact without a matching column (TASK-808)', () => {
     const errors = validateRowFactCoverage('add-modal-power', {
       columnKeys: ['Energy', 'Action', 'Duration', 'Area', 'Damage'],
-      chipLabels: ['Category Offense', 'Range 16 Spaces', 'Training Points 2'],
+      chipLabels: ['Offense', 'Range 16 Spaces', 'Training Points 2'],
       hasRightSlot: false,
     });
     expect(errors).toEqual([]);
@@ -442,6 +450,8 @@ describe('GLR fact catalog — row coverage (ADR-0016)', () => {
       chipLabels,
     });
     expect(chipLabels.some((l) => /training points\s+\d+/i.test(l))).toBe(true);
+    expect(columnValueKeys(officialPowerRowColumns(row))).toContain('category');
+    expect(chipLabels.some((l) => /^category\b/i.test(l))).toBe(false);
   });
 
   it('character-sheet power play chips category / range / TP', () => {
@@ -467,12 +477,12 @@ describe('GLR fact catalog — row coverage (ADR-0016)', () => {
       chipLabels,
       hasRightSlot: true,
     });
-    expect(chipLabels.some((l) => /^category\b/i.test(l))).toBe(true);
+    expect(chipLabels.some((l) => /^offense\b/i.test(l) || /^category\b/i.test(l))).toBe(true);
     expect(chipLabels.some((l) => /^range\b/i.test(l))).toBe(true);
     expect(chipLabels.some((l) => /training points\s+\d+/i.test(l))).toBe(true);
   });
 
-  it('character-sheet gear play chips category / currency / rarity / TP when valued (TASK-825)', () => {
+  it('character-sheet gear play columns category / currency / rarity; chips TP when valued (TASK-873)', () => {
     const row = defined(
       mapEquipmentRows(
         [
@@ -491,14 +501,22 @@ describe('GLR fact catalog — row coverage (ADR-0016)', () => {
     );
     expect(row.totalTp).toBeUndefined();
     expect(columnValueKeys(row.columns ?? [])).not.toContain('tp');
+    expect(columnValueKeys(row.columns ?? [])).not.toContain('type');
+    expect(columnValueKeys(row.columns ?? [])).toEqual([
+      'description',
+      'category',
+      'currency',
+      'rarity',
+      'quantity',
+    ]);
     const chipLabels = chipLabelsFromDetailSections(row.detailSections);
     assertRowFactCoverage('character-sheet-gear', {
       columnKeys: columnValueKeys(row.columns ?? []),
       chipLabels,
     });
     expect(chipLabels.some((l) => /training points\s+2/i.test(l))).toBe(true);
-    expect(chipLabels.some((l) => /^category\b/i.test(l))).toBe(true);
-    expect(chipLabels.some((l) => /^currency\s+20$/i.test(l))).toBe(true);
+    expect(chipLabels.some((l) => /^category\b/i.test(l))).toBe(false);
+    expect(chipLabels.some((l) => /^currency\s+20$/i.test(l))).toBe(false);
   });
 
   it('character-sheet gear play omits Training Points chip when TP is 0', () => {

@@ -98,6 +98,7 @@ export const CombatantCard = memo(function CombatantCard({
             variant={variant}
             linkedResourcesReadOnly={linkedResourcesReadOnly}
             linkedResourcesTitle={linkedResourcesTitle}
+            allowNegativeHealth={isLinkedToCharacter}
             onUpdate={onUpdate}
           />
 

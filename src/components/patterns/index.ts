@@ -26,6 +26,20 @@ export {
   resolveDistinctSecondaryAbility,
 } from './list/ability-score-grid';
 
+// DefenseStatTile + ability/defense stat model (sheet + creators; TASK-881)
+export {
+  DefenseStatTile,
+  ABILITY_ORDER,
+  ABILITY_INFO,
+  DEFENSE_INFO,
+  ABILITY_CONSTRAINTS,
+  SHEET_STAT_GRID_CLASS,
+  SHEET_STAT_TILE_CLASS,
+  SHEET_STAT_TIP_CLASS,
+  SHEET_SCORE_TIP_CLASS,
+  canDecreaseAbility,
+} from './stat-tiles';
+
 // ValueStepper - Unified +/- controls (ADR-0002: guided skills bonus chrome)
 export { ValueStepper, DecrementButton, IncrementButton } from './select/value-stepper';
 

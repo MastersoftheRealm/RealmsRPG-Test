@@ -2,8 +2,11 @@ import { describe, expect, it } from 'vitest';
 import {
   evaluateInnatePowerEligibility,
   getLevel1InnateBudget,
+  innateDurationToMinutes,
+  isAdaptationCategoryPart,
   isHealingOrEnergyGainPart,
   isInnateEligibleActionType,
+  isInnateEligibleDuration,
   isPowerInnateEligible,
   listInnateThresholdFilterOptions,
   validateRecommendedInnatePowers,
@@ -16,6 +19,8 @@ function snap(partial: Partial<InnatePowerSnapshot> & { id: string }): InnatePow
     energy: 0,
     partIds: [],
     partNames: [],
+    partCategories: [],
+    duration: { type: 'instant', value: 0 },
     actionType: 'basic',
     ...partial,
   };
@@ -110,7 +115,7 @@ describe('innate-eligibility', () => {
     expect(defined(opts[0])).toBeLessThan(defined(opts[opts.length - 1]));
   });
 
-  it('isPowerInnateEligible enforces action, parts, and optional threshold', () => {
+  it('isPowerInnateEligible enforces action, parts, duration, adaptation, and optional threshold', () => {
     expect(isPowerInnateEligible(snap({ id: '1', energy: 6, actionType: 'basic' }), 8)).toBe(true);
     expect(isPowerInnateEligible(snap({ id: '1', energy: 10, actionType: 'basic' }), 8)).toBe(
       false,
@@ -123,6 +128,70 @@ describe('innate-eligibility', () => {
           actionType: 'basic',
           partIds: ['307'],
           partNames: ['Heal'],
+        }),
+        8,
+      ),
+    ).toBe(false);
+    expect(
+      isPowerInnateEligible(
+        snap({
+          id: '1',
+          energy: 4,
+          actionType: 'basic',
+          duration: { type: 'minutes', value: 10 },
+        }),
+        8,
+      ),
+    ).toBe(false);
+    expect(
+      isPowerInnateEligible(
+        snap({
+          id: '1',
+          energy: 4,
+          actionType: 'basic',
+          partIds: ['99'],
+          partNames: ['Shapeshift'],
+          partCategories: ['Adaptation'],
+        }),
+        8,
+      ),
+    ).toBe(false);
+    expect(
+      isPowerInnateEligible(
+        snap({
+          id: '1',
+          energy: 4,
+          actionType: 'basic',
+          duration: { type: 'rounds', value: 10 },
+        }),
+        8,
+      ),
+    ).toBe(true);
+    expect(
+      isPowerInnateEligible(snap({ id: '1', energy: 4, actionType: 'basic', duration: null }), 8),
+    ).toBe(false);
+  });
+
+  it('duration helpers respect 1-minute cap and round conversion', () => {
+    expect(innateDurationToMinutes({ type: 'rounds', value: 10 })).toBe(1);
+    expect(innateDurationToMinutes({ type: 'rounds', value: 11 })).toBeCloseTo(1.1);
+    expect(isInnateEligibleDuration({ type: 'minutes', value: 1 })).toBe(true);
+    expect(isInnateEligibleDuration({ type: 'minutes', value: 2 })).toBe(false);
+    expect(isInnateEligibleDuration({ type: 'hours', value: 1 })).toBe(false);
+    expect(isAdaptationCategoryPart('Adaptation')).toBe(true);
+    expect(isAdaptationCategoryPart('Offense')).toBe(false);
+  });
+
+  it('blocks Adaptation when category is only on saved payload', () => {
+    expect(
+      isPowerInnateEligible(
+        snap({
+          id: '1',
+          energy: 4,
+          actionType: 'basic',
+          partIds: ['custom'],
+          partNames: ['Custom Shift'],
+          partCategories: ['Adaptation'],
         }),
         8,
       ),

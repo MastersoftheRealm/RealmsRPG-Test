@@ -1,9 +1,11 @@
 import { describe, expect, it } from 'vitest';
 import {
   columnHasDisplayValue,
+  columnHasInteractiveValue,
   columnsAlreadyShowTrainingPoints,
-  columnsForExpandedMobileStats,
+  columnsForExpandedBodyStats,
   columnsForMobileSummary,
+  dataColumnTrackCount,
 } from './grid-list-row-columns';
 
 describe('columnsAlreadyShowTrainingPoints', () => {
@@ -45,9 +47,9 @@ describe('columnHasDisplayValue / mobile expand facts (TASK-868)', () => {
     ).toEqual(['recovery', 'description']);
   });
 
-  it('omits blank and in-body description from expanded mobile stats', () => {
+  it('omits blank and in-body description from expanded body stats', () => {
     expect(
-      columnsForExpandedMobileStats(
+      columnsForExpandedBodyStats(
         [
           { key: 'description', value: 'A feat.' },
           { key: 'uses', value: '-' },
@@ -56,5 +58,25 @@ describe('columnHasDisplayValue / mobile expand facts (TASK-868)', () => {
         true,
       ).map((col) => col.key),
     ).toEqual(['recovery']);
+  });
+});
+
+describe('columnHasInteractiveValue / dataColumnTrackCount (TASK-898)', () => {
+  it('detects ReactNode column values that need stacked expanded layout', () => {
+    expect(columnHasInteractiveValue({ key: 'uses', value: '1/2' })).toBe(false);
+    expect(columnHasInteractiveValue({ key: 'uses', value: { mock: 'stepper' } })).toBe(true);
+  });
+
+  it('sums data column spans for expanded name grid-column span', () => {
+    expect(
+      dataColumnTrackCount(
+        [
+          { key: 'description', value: 'x' },
+          { key: 'uses', value: '1' },
+          { key: 'recovery', value: 'FR' },
+        ],
+        [3, 1, 1],
+      ),
+    ).toBe(5);
   });
 });

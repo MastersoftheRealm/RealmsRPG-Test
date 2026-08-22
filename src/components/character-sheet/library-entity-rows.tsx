@@ -7,7 +7,6 @@
 import type { ReactNode } from 'react';
 import { formatDurationCompact, formatSavedActionTypeForDisplay } from '@/lib/utils';
 import { calculateCriticalRange, calculateEvasion } from '@/lib/game/calculations';
-import { formatInventoryKindLabel } from '@/lib/game/creature-inventory';
 import { resolveWeaponRangeDisplay, type ItemPropertyPayload } from '@/lib/calculators';
 import {
   InnateToggle,
@@ -29,7 +28,9 @@ import {
   CHARACTER_SHEET_TECHNIQUE_GRID,
   CHARACTER_SHEET_WEAPON_GRID,
   CHARACTER_SHEET_SHIELD_GRID,
+  CHARACTER_SHEET_EQUIPMENT_GRID,
 } from '@/components/patterns/list/entity-library-sections';
+import { buildCreatureEquipmentColumns } from '@/components/patterns/list/entity-library-sections-columns';
 import type { useRollsOptional } from '@/components/rolls';
 import type { Abilities, CharacterPower, CharacterTechnique, Item } from '@/types';
 import { resolveListRowThumbnail } from '@/lib/list-row-image';
@@ -62,7 +63,9 @@ import {
   type ItemPropertyTpRow,
   type ItemStoredCostSums,
 } from '@/lib/calculators/item-calc';
-import { equipmentCurrency } from '@/lib/codex/equipment-list';
+import { buildEquipmentCatalogFactColumns, equipmentCurrency } from '@/lib/codex/equipment-list';
+import type { GlrSurfaceId } from '@/lib/glr';
+import { truncateText } from '@/lib/utils';
 import type { PowerPart, TechniquePart } from '@/hooks/codex-types';
 import {
   libraryItemToPowerDocument,
@@ -706,10 +709,38 @@ export function mapArmorRows(armor: Item[], ctx: LibraryEntityRowContext): Entit
   });
 }
 
+const SHEET_EQUIPMENT_DESCRIPTION_TRUNCATE = 120;
+
+function buildSheetEquipmentColumns(
+  item: Item,
+  ctx: LibraryEntityRowContext,
+  quantityStepper: ReactNode | number,
+): ColumnValue[] {
+  const costFacts = sheetItemCostFacts(item, ctx, 'equipment');
+  return [
+    {
+      key: 'description',
+      value: truncateText(item.description, SHEET_EQUIPMENT_DESCRIPTION_TRUNCATE),
+      hideOnMobile: true,
+    },
+    ...buildEquipmentCatalogFactColumns({
+      category: (item as Item & { category?: string | undefined }).category,
+      rarity: item.rarity,
+      currency: costFacts.currency,
+      cost: item.cost,
+    }),
+    { key: 'quantity', value: quantityStepper, align: 'center' },
+  ];
+}
+
 export function mapEquipmentRows(
   equipment: Item[],
   ctx: LibraryEntityRowContext,
+  options?: { surfaceId?: GlrSurfaceId | undefined },
 ): EntityEquipmentRow[] {
+  const surfaceId = options?.surfaceId ?? 'character-sheet-gear';
+  const isSheetSurface = surfaceId === 'character-sheet-gear';
+
   return equipment.map((item, i) => {
     const itemId = item.id ?? item.name ?? i;
     const propertyChips = partDataToChips(
@@ -719,8 +750,6 @@ export function mapEquipmentRows(
       ),
     );
     const propertySection = propertiesProficienciesSection(propertyChips, 'item');
-    const itemType = formatInventoryKindLabel(item.type);
-    const itemCategory = (item as Item & { category?: string | undefined }).category;
     const qty = item.quantity ?? 1;
     const quantityStepper = ctx.onEquipmentQuantityChange ? (
       <div className="flex items-center justify-center" onClick={(e) => e.stopPropagation()}>
@@ -737,23 +766,25 @@ export function mapEquipmentRows(
     );
 
     const detailSections = glrSurfaceDetailSections(
-      'character-sheet-gear',
+      surfaceId,
       {
-        category: itemCategory,
+        category: (item as Item & { category?: string | undefined }).category,
         ...sheetItemCostFacts(item, ctx, 'equipment'),
       },
       propertySection ? [propertySection] : undefined,
     );
+
+    const columns = isSheetSurface
+      ? buildSheetEquipmentColumns(item, ctx, quantityStepper)
+      : buildCreatureEquipmentColumns(item.type, item.quantity);
 
     return {
       id: itemId,
       name: item.name,
       description: item.description,
       thumbnail: resolveListRowThumbnail('equipment', item, item.name),
-      columns: [
-        { key: 'type', value: itemType, align: 'center' },
-        { key: 'quantity', value: quantityStepper, align: 'center' },
-      ],
+      gridColumns: isSheetSurface ? CHARACTER_SHEET_EQUIPMENT_GRID : undefined,
+      columns,
       detailSections: detailSections.length > 0 ? detailSections : undefined,
       onDelete:
         ctx.showLibraryEditControls && ctx.onRemoveEquipment

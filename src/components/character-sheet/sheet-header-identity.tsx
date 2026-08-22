@@ -13,6 +13,10 @@ import { useEffectivePortrait } from '@/hooks/use-effective-portrait';
 import { usePortraitFallbackUrl } from '@/hooks/use-portrait-fallback-url';
 import { resolveArchetypeDisplayName } from '@/lib/game/archetype-display';
 import { calculateXpToLevelUp } from '@/lib/game/formulas';
+import {
+  resolveSheetHeaderSpeciesLabel,
+  isMixedSpeciesHeaderLine,
+} from '@/lib/character/sheet-header-species-label';
 import { ArchetypePathGuidance } from './archetype-path-identity';
 
 export function SheetHeaderIdentity({
@@ -136,6 +140,9 @@ export function SheetHeaderIdentity({
   const showMartialAbility =
     Boolean(character.mart_abil) && normalizedMartialAbility !== normalizedPowerAbility;
 
+  const speciesLabel = resolveSheetHeaderSpeciesLabel(character);
+  const isMixedSpecies = isMixedSpeciesHeaderLine(character);
+
   return (
     <>
       {/* Left: Portrait and Identity */}
@@ -208,22 +215,26 @@ export function SheetHeaderIdentity({
             </h1>
           )}
 
-          {/* Level and Species - separated */}
-          <p className="flex items-center gap-2 text-base text-text-primary">
-            Level {character.level} ·{' '}
-            <span className="font-medium">
-              {character.ancestry?.name || character.species || 'Unknown'}
+          {/* Level and Species — wrap as atomic groups (Level N | species line) */}
+          <p className="min-w-0 text-base text-text-primary">
+            <span className="inline-flex max-w-full flex-wrap items-center gap-x-2 gap-y-0">
+              <span className="shrink-0 whitespace-nowrap">Level {character.level}</span>
+              <span className="inline-flex max-w-full min-w-0 items-center gap-x-2 font-medium">
+                <span className={cn('min-w-0 break-normal', isMixedSpecies && 'whitespace-nowrap')}>
+                  {speciesLabel}
+                </span>
+                {onEditSpecies && (
+                  <button
+                    onClick={onEditSpecies}
+                    className="shrink-0 text-primary-fg transition-colors hover:scale-110 hover:text-primary-fg-hover"
+                    title="Edit species and ancestry"
+                    aria-label="Edit species and ancestry"
+                  >
+                    <Pencil className="h-4 w-4" />
+                  </button>
+                )}
+              </span>
             </span>
-            {onEditSpecies && (
-              <button
-                onClick={onEditSpecies}
-                className="text-primary-fg transition-colors hover:scale-110 hover:text-primary-fg-hover"
-                title="Edit species and ancestry"
-                aria-label="Edit species and ancestry"
-              >
-                <Pencil className="h-4 w-4" />
-              </button>
-            )}
           </p>
 
           {/* Archetype: name and abilities */}

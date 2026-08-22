@@ -2,8 +2,10 @@ import { describe, expect, it } from 'vitest';
 import type { Feat } from '@/hooks';
 import {
   buildFeatDetailSections,
+  buildFeatFilterOptions,
   featPathChipNames,
   filterFeats,
+  normalizeFeatCategory,
   type FeatListFilters,
 } from './feat-list';
 import { parseArchetypePathData } from '@/lib/game/archetype-path';
@@ -166,5 +168,35 @@ describe('filterFeats — Archetype Path filter (TASK-751)', () => {
     expect(featPathChipNames(index, flurryLevel2, ['p-monk', 'p-berserker'])).toEqual(['Monk']);
     expect(featPathChipNames(index, feats[2]!, ['p-monk', 'p-berserker'])).toEqual(['Berserker']);
     expect(featPathChipNames(index, feats[0]!, [])).toEqual([]);
+  });
+});
+
+describe('normalizeFeatCategory (TASK-876)', () => {
+  it('maps Offense to Offensive and leaves other categories alone', () => {
+    expect(normalizeFeatCategory('Offense')).toBe('Offensive');
+    expect(normalizeFeatCategory('Offensive')).toBe('Offensive');
+    expect(normalizeFeatCategory('Utility')).toBe('Utility');
+    expect(normalizeFeatCategory('')).toBe('');
+  });
+
+  it('exposes Offensive once in filter options and matches leftover Offense rows', () => {
+    const mixed = [
+      minimalFeat({ id: 'a', name: 'Legacy', category: 'Offense' }),
+      minimalFeat({ id: 'b', name: 'Current', category: 'Offensive' }),
+      minimalFeat({ id: 'c', name: 'Util', category: 'Utility' }),
+    ];
+    expect(buildFeatFilterOptions(mixed).categories).toEqual(['Offensive', 'Utility']);
+    const filters: FeatListFilters = {
+      search: '',
+      maxLevel: null,
+      abilityRequirements: [],
+      categories: ['Offensive'],
+      abilities: [],
+      tags: [],
+      tagMode: 'all',
+      featTypeMode: 'all',
+      stateFeatMode: 'all',
+    };
+    expect(filterFeats(mixed, filters).map((f) => f.id)).toEqual(['a', 'b']);
   });
 });

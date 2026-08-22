@@ -37,6 +37,7 @@ export interface PoweredMartialSliderProps {
 }
 
 export function PoweredMartialSlider({
+  powerValue,
   martialValue,
   maxPoints,
   onChange,
@@ -56,8 +57,8 @@ export function PoweredMartialSlider({
     onChange(maxPoints - clamped, clamped);
   };
 
-  const powerDisplay = maxPoints - sliderValue;
-  const martialDisplay = sliderValue;
+  const powerDisplay = powerValue;
+  const martialDisplay = martialValue;
 
   return (
     <div
@@ -70,9 +71,7 @@ export function PoweredMartialSlider({
       {/* Header with total info */}
       {!compact && (
         <div className="mb-3 flex items-center justify-between">
-          <span className="text-sm font-medium text-text-secondary dark:text-text-primary">
-            Proficiency Allocation
-          </span>
+          <span className="text-sm font-medium text-text-secondary">Proficiency Allocation</span>
           <span className="text-sm text-text-muted">Total: {maxPoints} points</span>
         </div>
       )}
@@ -100,13 +99,11 @@ export function PoweredMartialSlider({
       )}
 
       {/* Custom Slider: left = 0 martial (all power), right = max martial. touch-action: pan-y so horizontal drag doesn't trigger section swipe on mobile. */}
-      <div className="relative touch-pan-y py-2" style={{ touchAction: 'pan-y' }}>
-        <div
-          className={cn(
-            'absolute inset-x-0 top-1/2 -translate-y-1/2 rounded-full bg-gradient-to-r from-power-dark to-martial-dark',
-            compact ? 'h-1.5' : 'h-2',
-          )}
-        />
+      <div
+        className={cn('relative flex touch-pan-y items-center', compact ? 'h-5' : 'h-6')}
+        style={{ touchAction: 'pan-y' }}
+      >
+        <div className="pointer-events-none absolute inset-x-0 top-1/2 h-2 -translate-y-1/2 rounded-full bg-gradient-to-r from-power-fg to-martial-fg" />
         <input
           type="range"
           min={minMartial}
@@ -118,9 +115,9 @@ export function PoweredMartialSlider({
           disabled={disabled}
           aria-label="Power-Martial proficiency allocation"
           className={cn(
-            'relative w-full cursor-pointer appearance-none bg-transparent',
+            'relative z-10 w-full cursor-pointer appearance-none bg-transparent',
             'range-slider',
-            compact ? 'h-4' : 'h-6',
+            compact ? 'h-5' : 'h-6',
             disabled && 'cursor-not-allowed opacity-50',
           )}
           style={{

@@ -7,7 +7,7 @@
  * `.floating-dock-bottom-right` slot (ADR-0023 / TASK-837).
  *
  * Actions:
- * - Edit/Done toggle (with notification dot for unapplied points)
+ * - Edit/Done toggle (notification dot: red overspend, green unspent, red/green mix when both, purple level-up)
  * - Temp Modifier toggle (mutually exclusive with Edit — ADR-0006 / TASK-782)
  * - Recovery modal trigger
  * - Level Up modal trigger
@@ -16,12 +16,13 @@
 'use client';
 
 import { cn } from '@/lib/utils';
+import type { SheetEditNotification } from '@/lib/character/sheet-edit-notification';
 import { Pencil, Check, Heart, ArrowUp, Settings, SlidersHorizontal } from 'lucide-react';
 
 interface SheetActionToolbarProps {
   isEditMode: boolean;
   isTempModifierMode?: boolean | undefined;
-  hasUnappliedPoints: boolean;
+  sheetEditNotification: SheetEditNotification;
   /** Glow on the Temp control when persisted deltas exist (play or inactive). */
   hasTempModifiers?: boolean | undefined;
   onToggleEditMode: () => void;
@@ -37,7 +38,7 @@ interface SheetActionToolbarProps {
 export function SheetActionToolbar({
   isEditMode,
   isTempModifierMode = false,
-  hasUnappliedPoints,
+  sheetEditNotification,
   hasTempModifiers = false,
   onToggleEditMode,
   onToggleTempModifierMode,
@@ -72,10 +73,18 @@ export function SheetActionToolbar({
         aria-pressed={isEditMode}
       >
         {isEditMode ? <Check className="h-5 w-5" /> : <Pencil className="h-4 w-4" />}
-        {hasUnappliedPoints && !isEditMode && (
+        {sheetEditNotification.show && !isEditMode && (
           <span
-            className="absolute -top-0.5 -right-0.5 h-3 w-3 animate-pulse rounded-full bg-danger-500"
-            title="You have unspent points!"
+            className={cn(
+              'absolute -top-0.5 -right-0.5 h-3 w-3 rounded-full',
+              sheetEditNotification.severity === 'overspent' && 'animate-pulse bg-danger-500',
+              sheetEditNotification.severity === 'unspent' && 'animate-pulse bg-success-500',
+              sheetEditNotification.severity === 'mixed' &&
+                'animate-pulse bg-gradient-to-br from-danger-500 to-success-500',
+              sheetEditNotification.severity === 'level-up' && 'bg-power-500',
+            )}
+            title={sheetEditNotification.title}
+            aria-label={sheetEditNotification.title}
           />
         )}
       </button>

@@ -4,7 +4,7 @@ import {
   formatCreatureEquipmentQuantity,
   formatInventoryKindLabel,
 } from '@/lib/game/creature-inventory';
-import { glrListChrome } from '@/lib/glr';
+import { glrListChrome, SHEET_GEAR_PLAY_LAYOUT_OVERRIDES } from '@/lib/glr';
 
 function toListColumns(chrome: ReturnType<typeof glrListChrome>): ListColumn[] {
   return chrome.headers.map((h) => ({
@@ -83,7 +83,7 @@ const playFeatChrome = glrListChrome(
     trackOverrides: { uses: '5rem', recovery: '4rem' },
   },
 );
-const playEquipmentChrome = glrListChrome(
+const creatureEquipmentChrome = glrListChrome(
   { entityType: 'gear', mode: 'play' },
   {
     labelStyle: 'title',
@@ -91,6 +91,21 @@ const playEquipmentChrome = glrListChrome(
     extraColumns: [
       { key: 'type', label: 'Type', width: '0.6fr', afterKey: 'name' },
       { key: 'quantity', label: 'Qty', width: '4rem', afterKey: 'type' },
+    ],
+  },
+);
+const sheetEquipmentChrome = glrListChrome(
+  {
+    entityType: 'gear',
+    mode: 'play',
+    layoutOverrides: SHEET_GEAR_PLAY_LAYOUT_OVERRIDES,
+  },
+  {
+    labelStyle: 'title',
+    nameWidth: '1fr',
+    extraColumns: [
+      { key: 'description', label: 'Description', width: '2.5fr', afterKey: 'name' },
+      { key: 'quantity', label: 'Qty', width: '4rem', afterKey: 'rarity' },
     ],
   },
 );
@@ -132,8 +147,12 @@ export const CHARACTER_SHEET_SHIELD_GRID = sheetShieldChrome.grid;
 export const ARMOR_COLUMNS: ListColumn[] = toListColumns(playArmorChrome);
 export const ARMOR_GRID = playArmorChrome.grid;
 
-export const EQUIPMENT_COLUMNS: ListColumn[] = toListColumns(playEquipmentChrome);
-export const EQUIPMENT_GRID = playEquipmentChrome.grid;
+export const EQUIPMENT_COLUMNS: ListColumn[] = toListColumns(creatureEquipmentChrome);
+export const EQUIPMENT_GRID = creatureEquipmentChrome.grid;
+
+/** Character sheet Inventory → Equipment (TASK-873): catalog columns + Description + Qty. */
+export const CHARACTER_SHEET_EQUIPMENT_COLUMNS: ListColumn[] = toListColumns(sheetEquipmentChrome);
+export const CHARACTER_SHEET_EQUIPMENT_GRID = sheetEquipmentChrome.grid;
 
 /** Creature / stat-block Qty: stored number or "-"; never fake 1 (TASK-813). */
 export function buildCreatureEquipmentColumns(

@@ -29,8 +29,10 @@ import { partsProficienciesSection, glrSurfaceDetailSections } from '@/lib/chip/
 import { resolveListRowThumbnail } from '@/lib/list-row-image';
 import {
   applyPowerTechniqueFilters,
+  toInnateSnapshot,
   type PowerTechniqueFilterState,
 } from '@/lib/library/power-technique-filters';
+import { isPowerInnateEligible } from '@/lib/game/innate-eligibility';
 import {
   calculateGuidedL1TheoreticalMaxEnergy,
   isGuidedL2EnergyAllowed,
@@ -184,6 +186,19 @@ export function buildPowersTechniquesL2Items(opts: {
       const energy = numericEnergy(row.energy);
       if (!energyAllowed(energy, mode, maxEnergy, innateThreshold)) continue;
 
+      const filterRow = buildPowerTechniqueFilterableRow(
+        budgetKind,
+        row.raw,
+        powerPartsDb,
+        techniquePartsDb,
+      );
+      if (
+        mode === 'innate' &&
+        !isPowerInnateEligible(toInnateSnapshot(filterRow), innateThreshold)
+      ) {
+        continue;
+      }
+
       const section = partsProficienciesSection(row.parts, 'power');
       const detailSections = glrSurfaceDetailSections(
         'guided-powers-l3',
@@ -205,12 +220,7 @@ export function buildPowersTechniquesL2Items(opts: {
         totalCost: row.tp,
         costLabel: TRAINING_POINTS_COST_LABEL,
         data: { kind, energy, tpCost: row.tp },
-        powerTechniqueFilter: buildPowerTechniqueFilterableRow(
-          budgetKind,
-          row.raw,
-          powerPartsDb,
-          techniquePartsDb,
-        ),
+        powerTechniqueFilter: filterRow,
       });
     }
   }

@@ -18,28 +18,44 @@ export type CodexDetailRow = {
   id: string;
   name: string;
   description: string;
+  feat_lvl?: number | undefined;
 };
 
 const DETAIL_SELECT = 'id, name, description';
 
-function toDetailRow(row: Record<string, unknown>): CodexDetailRow | null {
+function detailSelectFor(collection: CodexDetailCollection): string {
+  if (collection === 'feats' || collection === 'creature-feats') {
+    return `${DETAIL_SELECT}, feat_lvl`;
+  }
+  return DETAIL_SELECT;
+}
+
+function toDetailRow(row: Record<string, unknown>, includeFeatLvl: boolean): CodexDetailRow | null {
   const id = String(row.id ?? '');
   if (!id) return null;
-  return {
+  const detail: CodexDetailRow = {
     id,
     name: String(row.name ?? ''),
     description: typeof row.description === 'string' ? row.description : '',
   };
+  if (includeFeatLvl && row.feat_lvl != null) {
+    const lvl = Number(row.feat_lvl);
+    if (Number.isFinite(lvl) && lvl > 0) detail.feat_lvl = lvl;
+  }
+  return detail;
 }
 
 async function fetchCollectionRows(collection: CodexDetailCollection): Promise<CodexDetailRow[]> {
   const supabase = createPublicClient();
   if (!supabase) return [];
   const table = CODEX_DETAIL_TABLE[collection] as PublicTableName;
-  const { data, error } = await fromPublicTable(supabase, table).select(DETAIL_SELECT);
+  const { data, error } = await fromPublicTable(supabase, table).select(
+    detailSelectFor(collection),
+  );
   if (error || !data) return [];
+  const includeFeatLvl = collection === 'feats' || collection === 'creature-feats';
   return (data as Record<string, unknown>[])
-    .map((row) => toDetailRow(row))
+    .map((row) => toDetailRow(row, includeFeatLvl))
     .filter((row): row is CodexDetailRow => row !== null);
 }
 
@@ -55,11 +71,12 @@ async function fetchCodexDetailEntry(
   if (!supabase) return null;
   const table = CODEX_DETAIL_TABLE[collection] as PublicTableName;
   const { data, error } = await fromPublicTable(supabase, table)
-    .select(DETAIL_SELECT)
+    .select(detailSelectFor(collection))
     .eq('id', parsed.id)
     .maybeSingle();
   if (error || !data) return null;
-  return toDetailRow(data as Record<string, unknown>);
+  const includeFeatLvl = collection === 'feats' || collection === 'creature-feats';
+  return toDetailRow(data as Record<string, unknown>, includeFeatLvl);
 }
 
 export const loadCodexDetailEntry = cache(fetchCodexDetailEntry);

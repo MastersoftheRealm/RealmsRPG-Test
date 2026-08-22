@@ -17,9 +17,25 @@ import {
   getArchetypeConfig,
   getArchetypeMilestoneLevels,
 } from '@/lib/game/formulas';
-import { derivePowerDisplay, type PowerDocument } from '@/lib/calculators/power-calc';
+import {
+  derivePowerDisplay,
+  deriveStructuredDuration,
+  type PowerDocument,
+} from '@/lib/calculators/power-calc';
+import { resolvePartCategoryList } from '@/lib/library/power-technique-categories';
 
 type Rules = Partial<CoreRulesMap>;
+
+/** GAME_RULES: 1 minute = 10 rounds (10 seconds per round). */
+export const INNATE_ROUNDS_PER_MINUTE = 10;
+
+/** Max duration for an innate power (inclusive). */
+export const INNATE_MAX_DURATION_MINUTES = 1;
+
+export interface InnatePowerDuration {
+  type: string;
+  value?: number | undefined;
+}
 
 /** Known healing / energy-gain power part ids (codex_parts). */
 const DISALLOWED_INNATE_PART_IDS = new Set([
@@ -47,6 +63,10 @@ export interface InnatePowerSnapshot {
   partIds: string[];
   /** Part names (fallback when ids unknown). */
   partNames: string[];
+  /** Resolved part categories (parallel to partIds) for Adaptation checks. */
+  partCategories?: string[] | undefined;
+  /** Structured duration; null when unknown (fail closed for innate lists). */
+  duration?: InnatePowerDuration | null | undefined;
 }
 
 export interface InnateEligibilityIssue {
@@ -68,6 +88,56 @@ export function isHealingOrEnergyGainPart(part: {
   if (/\bhealth\s+summon\b/.test(name)) return false;
   // Heal / Healing / Overheal / True Heal / Major Heal / etc.
   if (/\boverheal\b/.test(name) || /\bheal(ing|s)?\b/.test(name)) return true;
+  return false;
+}
+
+function normalizeDurationTypeForInnate(type: string): string {
+  const t = (type || '').toLowerCase().trim();
+  if (t === 'instant' || t === 'instantaneous') return 'instant';
+  if (t === 'round' || t === 'rounds') return 'rounds';
+  if (t === 'minute' || t === 'minutes' || t === 'min' || t === 'mins') return 'minutes';
+  if (t === 'hour' || t === 'hours' || t === 'hr' || t === 'hrs') return 'hours';
+  if (t === 'day' || t === 'days') return 'days';
+  if (t === 'permanent') return 'permanent';
+  return t;
+}
+
+/** Convert structured duration to minutes; null when unknown. */
+export function innateDurationToMinutes(duration: InnatePowerDuration): number | null {
+  const norm = normalizeDurationTypeForInnate(duration.type);
+  const value = duration.value ?? (norm === 'instant' || norm === 'permanent' ? 0 : 1);
+  if (norm === 'instant') return 0;
+  if (norm === 'rounds') return value / INNATE_ROUNDS_PER_MINUTE;
+  if (norm === 'minutes') return value;
+  if (norm === 'hours') return value * 60;
+  if (norm === 'days') return value * 24 * 60;
+  if (norm === 'permanent') return Number.POSITIVE_INFINITY;
+  return null;
+}
+
+/**
+ * Innate powers: duration at most 1 minute (Instant and ≤10 Rounds qualify).
+ * Missing/unknown duration fails closed.
+ */
+export function isInnateEligibleDuration(
+  duration: InnatePowerDuration | null | undefined,
+): boolean {
+  if (!duration?.type?.trim()) return false;
+  const minutes = innateDurationToMinutes(duration);
+  if (minutes == null || !Number.isFinite(minutes)) return false;
+  return minutes <= INNATE_MAX_DURATION_MINUTES;
+}
+
+export function isAdaptationCategoryPart(category?: string | null): boolean {
+  return (category ?? '').trim().toLowerCase() === 'adaptation';
+}
+
+export function powerHasAdaptationCategoryPart(power: InnatePowerSnapshot): boolean {
+  const partCount = Math.max(power.partIds.length, power.partNames.length);
+  for (let i = 0; i < partCount; i++) {
+    const category = power.partCategories?.[i] ?? '';
+    if (isAdaptationCategoryPart(category)) return true;
+  }
   return false;
 }
 
@@ -142,7 +212,48 @@ export function evaluateInnatePowerEligibility(
     });
   }
 
+  if (powerHasAdaptationCategoryPart(power)) {
+    const adaptationParts: string[] = [];
+    const seenAdapt = new Set<string>();
+    const partCount = Math.max(power.partIds.length, power.partNames.length);
+    for (let i = 0; i < partCount; i++) {
+      if (!isAdaptationCategoryPart(power.partCategories?.[i])) continue;
+      const partLabel = power.partNames[i] || power.partIds[i];
+      if (!partLabel) continue;
+      const key = partLabel.toLowerCase();
+      if (seenAdapt.has(key)) continue;
+      seenAdapt.add(key);
+      adaptationParts.push(partLabel);
+    }
+    issues.push({
+      severity: 'error',
+      message: `Recommended innate power "${label}" includes Adaptation-category parts: ${adaptationParts.join(', ') || 'Adaptation'}.`,
+    });
+  }
+
+  if (!isInnateEligibleDuration(power.duration)) {
+    const durationLabel = power.duration?.type
+      ? formatInnateDurationHint(power.duration)
+      : 'unknown';
+    issues.push({
+      severity: 'error',
+      message: `Recommended innate power "${label}" duration must be Instant or at most 1 minute (got ${durationLabel}).`,
+    });
+  }
+
   return issues;
+}
+
+function formatInnateDurationHint(duration: InnatePowerDuration): string {
+  const norm = normalizeDurationTypeForInnate(duration.type);
+  const value = duration.value ?? (norm === 'instant' ? 0 : 1);
+  if (norm === 'instant') return 'Instant';
+  if (norm === 'permanent') return 'Permanent';
+  if (norm === 'rounds') return value === 1 ? '1 Round' : `${value} Rounds`;
+  if (norm === 'minutes') return value === 1 ? '1 Minute' : `${value} Minutes`;
+  if (norm === 'hours') return value === 1 ? '1 Hour' : `${value} Hours`;
+  if (norm === 'days') return value === 1 ? '1 Day' : `${value} Days`;
+  return duration.type;
 }
 
 function formatSavedActionHint(actionType?: string | null, isReaction?: boolean): string {
@@ -191,6 +302,13 @@ export function snapshotOfficialPowerForInnate(
       op_3_lvl?: number | undefined;
       applyDuration?: boolean | undefined;
     }> | null;
+    duration?:
+      | {
+          type?: string | undefined;
+          value?: number | undefined;
+        }
+      | null
+      | undefined;
   },
   partsDb: PowerPart[],
 ): InnatePowerSnapshot {
@@ -200,17 +318,30 @@ export function snapshotOfficialPowerForInnate(
     parts: (power.parts ?? []) as PowerDocument['parts'],
     actionType: power.actionType ?? undefined,
     isReaction: power.isReaction === true,
+    duration: power.duration ?? undefined,
   };
   const display = derivePowerDisplay(doc, partsDb);
   const parts = Array.isArray(power.parts) ? power.parts : [];
+  const partIds = parts.map((p) => (p.id != null ? String(p.id) : ''));
+  const partNames = parts.map((p) => (p.name != null ? String(p.name) : ''));
+  const structuredDuration = deriveStructuredDuration(
+    parts as PowerDocument['parts'],
+    power.duration?.type
+      ? { type: power.duration.type, value: power.duration.value ?? 1 }
+      : undefined,
+  );
   return {
     id,
     name: power.name ? String(power.name) : undefined,
     energy: Math.max(0, Math.round(display.energy ?? 0)),
     actionType: power.actionType ?? display.actionType,
     isReaction: power.isReaction === true,
-    partIds: parts.map((p) => (p.id != null ? String(p.id) : '')).filter(Boolean),
-    partNames: parts.map((p) => (p.name != null ? String(p.name) : '')).filter(Boolean),
+    partIds,
+    partNames,
+    partCategories: resolvePartCategoryList(parts, partsDb),
+    duration: structuredDuration
+      ? { type: structuredDuration.type, value: structuredDuration.value }
+      : null,
   };
 }
 
@@ -307,6 +438,10 @@ export function isPowerInnateEligible(
   innateThreshold?: number | null,
 ): boolean {
   if (!isInnateEligibleActionType(power.actionType, power.isReaction)) return false;
+
+  if (!isInnateEligibleDuration(power.duration)) return false;
+
+  if (powerHasAdaptationCategoryPart(power)) return false;
 
   const partCount = Math.max(power.partIds.length, power.partNames.length);
   for (let i = 0; i < partCount; i++) {

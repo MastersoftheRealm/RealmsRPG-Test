@@ -19,7 +19,6 @@ import type { GuidedDraft } from '@/stores/guided-creator-store';
 import type { Archetype, ArchetypePathData } from '@/types/archetype';
 import type { Species } from '@/hooks';
 import { averageMixedPhysical } from '@/lib/ancestry/ancestry-selection';
-import { mergeAgeIntoAppearance } from '@/lib/character/appearance-age';
 import { clampSavedCurrency } from '@/lib/character-save';
 import { computeStartingCurrency } from '@/lib/guided-creator/equipment-currency';
 import { resolveArchetypeProficiencyStart } from '@/lib/game/formulas';
@@ -395,8 +394,9 @@ export function buildGuidedCharacterPayload(
     portrait: draft.portraitUrl ?? undefined,
     height: draft.heightCm ?? undefined,
     weight: draft.weightKg ?? undefined,
-    appearance: mergeAgeIntoAppearance(draft.age, draft.appearanceNotes?.trim() ?? ''),
-    description: draft.description?.trim() || undefined,
+    age: draft.age?.trim() || undefined,
+    appearance: draft.appearanceNotes?.trim() || undefined,
+    backstory: draft.description?.trim() || undefined,
   };
 }
 

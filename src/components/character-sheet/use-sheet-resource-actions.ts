@@ -9,7 +9,7 @@ import { saveCharacterWithConflictRetry } from '@/services/character-service';
 import { apiUpload } from '@/lib/api-client';
 import {
   getArchetypeCodexLookupId,
-  applyPathProficiencyForLevel,
+  applyLevelUpProficiencyUpdates,
 } from '@/lib/game/archetype-display';
 import { calculateProficiency } from '@/lib/game/formulas';
 import { computeMaxHealthEnergy } from '@/lib/game/calculations';
@@ -448,14 +448,17 @@ export function useSheetResourceActions({
   const handleLevelUp = useCallback(
     (newLevel: number) => {
       if (!character) return;
+      const oldLevel = character.level || 1;
       const lookupId = getArchetypeCodexLookupId(character);
       const pathArch = lookupId
         ? (codexArchetypes.find((a) => a.id === lookupId) as Character['archetype'] | undefined)
         : undefined;
-      const profUpdate = applyPathProficiencyForLevel(
+      const profUpdate = applyLevelUpProficiencyUpdates(
         character,
+        oldLevel,
         newLevel,
         pathArch ?? character.archetype,
+        rules,
       );
 
       setCharacter((prev) => {
@@ -469,12 +472,12 @@ export function useSheetResourceActions({
 
       if (profUpdate) {
         showToast(
-          `Path proficiency updated: Power ${profUpdate.pow_prof}, Martial ${profUpdate.mart_prof}`,
+          `Proficiency updated: Power ${profUpdate.pow_prof}, Martial ${profUpdate.mart_prof}`,
           'success',
         );
       }
     },
-    [character, codexArchetypes, showToast, setCharacter],
+    [character, codexArchetypes, rules, showToast, setCharacter],
   );
 
   return {

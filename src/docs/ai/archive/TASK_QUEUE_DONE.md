@@ -1,4 +1,530 @@
-- id: TASK-872
+- id: TASK-895
+  title: Clicking outside the roll log closes it
+  created_at: 2026-08-21
+  completed_at: 2026-08-22
+  created_by: owner
+  implemented_by: agent
+  priority: medium
+  status: done
+  verification_status: pending-qa
+  related_files:
+    - src/components/rolls/roll-log.tsx
+    - src/components/rolls/roll-log.test.ts
+    - src/components/patterns/chrome/roll-button.tsx
+  build_validation: |
+    suite: DEV-V-009
+    tests:
+      - DEV-V-009-T074
+  description: |
+    Click/tap outside the open roll log should close it, unless the click is starting another roll.
+  acceptance_criteria:
+    - Outside click/tap closes the log.
+    - Clicking a roll control with the log open keeps it open and records the new roll.
+    - Clicks inside the panel do not close it. `npm run build`.
+  completed_work: |
+    Pointer-down outside the C4 dock closes the panel; `[data-roll-trigger]` on RollButton is ignored so a new roll stays open. Escape also closes. FAB still toggles. npm run build PASS.
+  notes: |
+    QA: DEV-V-009 T074 � outside click, roll trigger, inside panel, FAB toggle.
+- id: TASK-893
+  title: Roll-log bonus hover names the bonus source
+  created_at: 2026-08-21
+  completed_at: 2026-08-22
+  created_by: owner
+  implemented_by: agent
+  priority: medium
+  status: done
+  verification_status: pending-qa
+  related_files:
+    - src/lib/rolls/modifier-label.ts
+    - src/lib/rolls/modifier-label.test.ts
+    - src/components/rolls/roll-context.tsx
+    - src/components/rolls/roll-log.tsx
+    - src/types/campaign-roll.ts
+    - src/lib/api-validation.ts
+    - src/app/api/campaigns/[id]/rolls/route.ts
+  build_validation: |
+    suite: DEV-V-009
+    tests:
+      - DEV-V-009-T074
+  description: |
+    Hovering the bonus added on a roll should name the source (Strength, Power bonus, Reflexes bonus).
+  acceptance_criteria:
+    - Hovering the added bonus shows the source name.
+    - Zero/absent modifier has no bogus hover. `npm run build`.
+  completed_work: |
+    Added resolveRollModifierLabel; wired through makeD20Roll / damage / custom; Power attack passes explicit "Power bonus". Bonus chip uses native title. Zero modifier returns no label. npm run build PASS; unit tests PASS.
+  notes: |
+    QA: DEV-V-009 T074 � hover named bonuses on ability/defense/skill/attack/power rolls.
+- id: TASK-891
+  title: Remove prof-points �; fix slider thumb alignment and dark mode
+  created_at: 2026-08-21
+  completed_at: 2026-08-22
+  created_by: owner
+  implemented_by: agent
+  priority: medium
+  status: done
+  verification_status: pending-qa
+  related_files:
+    - src/components/character-sheet/archetype-section.tsx
+    - src/components/patterns/select/powered-martial-slider.tsx
+    - src/app/globals.css
+  build_validation: |
+    suite: DEV-V-009
+    tests:
+      - DEV-V-009-T073
+  description: |
+    Remove +/- on the proficiency-points pool; fix PoweredMartialSlider thumb alignment and dark theme tokens.
+  acceptance_criteria:
+    - No +/- to change prof-point max on the sheet.
+    - Slider thumb is vertically centered; dark theme uses tokenized thumb/track.
+    - `npm run build`.
+  completed_work: |
+    Deleted session max-override steppers; remaining/total is a read-only chip. Slider thumb/track use surface + *-fg tokens; webkit margin-top centers on the 8px track. npm run build PASS.
+  notes: |
+    QA: DEV-V-009 T073 � no �; thumb centered; dark theme.
+- id: TASK-890
+  title: Library tab overflow arrows only when tabs overflow
+  created_at: 2026-08-21
+  completed_at: 2026-08-22
+  created_by: owner
+  implemented_by: agent
+  priority: medium
+  status: done
+  verification_status: pending-qa
+  related_files:
+    - src/components/ui/tab-navigation.tsx
+    - src/components/ui/tab-navigation.test.ts
+    - src/app/globals.css
+  build_validation: |
+    suite: DEV-V-009
+    tests:
+      - DEV-V-009-T072
+  description: |
+    Tab chevrons should appear only when that edge can scroll; jump to leftmost/rightmost tab.
+  acceptance_criteria:
+    - Arrows render only when that edge can actually scroll.
+    - When tabs fit, no chevron. Tests cover equal scroll/client width and overflow.
+    - `npm run build`.
+  completed_work: |
+    Root cause: overflow-x auto computed overflow-y to auto and a 1px vertical overflow invented a scrollbar. Added overflow-y-hidden; 2px slack tests; chevrons scrollTo list edges; ResizeObserver watches children. npm run build PASS; tab-navigation tests PASS.
+  notes: |
+    QA: DEV-V-009 T072 � no dead arrow when tabs fit; Codex/Library too.
+- id: TASK-888
+  title: Feats Customize looks like a button and is evenly spaced
+  created_at: 2026-08-21
+  completed_at: 2026-08-22
+  created_by: owner
+  implemented_by: agent
+  priority: medium
+  status: done
+  verification_status: pending-qa
+  related_files:
+    - src/components/character-sheet/library-feat-rows.tsx
+    - src/components/character-sheet/library-feat-rows.test.ts
+  build_validation: |
+    suite: DEV-V-009
+    tests:
+      - DEV-V-009-T071
+  description: |
+    Customize should be a real Button with even gap from chips to rule to button.
+  acceptance_criteria:
+    - Customize is visually a button, not a desc-chip cousin; vertical padding is tight.
+    - Expanded: equal gap from chips to rule and rule to button.
+    - `npm run build`. DEV-V-010 / DEV-V-009.
+  completed_work: |
+    Replaced chip-cousin control with shared Button secondary/sm. Equal mt-3 / pt-3 around the rule. npm run build PASS; source test PASS.
+  notes: |
+    QA: DEV-V-009 T071 � Customize button + even rule gaps.
+- id: TASK-887
+  title: Edit-mode library hide-eye does not pad tabs into overflow
+  created_at: 2026-08-21
+  completed_at: 2026-08-22
+  created_by: owner
+  implemented_by: agent
+  priority: medium
+  status: done
+  verification_status: pending-qa
+  related_files:
+    - src/components/character-sheet/use-library-tab-navigation.tsx
+    - src/components/ui/icon-button.tsx
+  build_validation: |
+    suite: DEV-V-009
+    tests:
+      - DEV-V-009-T070
+  description: |
+    Hide/show eyes used 44px min slabs that forced tab overflow. Use Dense expanded hit.
+  acceptance_criteria:
+    - Typical desktop widths do not force horizontal tab scroll solely because of eye padding.
+    - Hide/show still works; 44px hit on coarse pointer. `npm run build`.
+  completed_work: |
+    Dropped min-h/min-w 44 overrides. IconButton size=sm already paints Dense + hit-area-dense-square. npm run build PASS.
+  notes: |
+    QA: DEV-V-009 T070 � desktop Library edit tabs without eye-caused scroll.
+- id: TASK-885
+  title: Header Speed/Evasion/Crit/DR are squarish equal tiles
+  created_at: 2026-08-21
+  completed_at: 2026-08-22
+  created_by: owner
+  implemented_by: agent
+  priority: medium
+  status: done
+  verification_status: pending-qa
+  related_files:
+    - src/components/character-sheet/sheet-header.tsx
+    - src/components/character-sheet/sheet-large-stat-block.tsx
+    - src/docs/MOBILE_UX.md
+  build_validation: |
+    suite: DEV-V-009
+    tests:
+      - DEV-V-009-T069
+  description: |
+    Header stat tiles should be compact/squarish and centered, not full-bleed rectangles.
+  acceptance_criteria:
+    - Four (or visible) stat tiles are equal, compact, and do not stretch identity/resources away.
+    - Titles fit with padding; not long empty bars. 360 / 768 / 1024 / 1280.
+    - `npm run verify:responsive` after layout change. `npm run build`.
+  completed_work: |
+    Cluster is w-max centered; LargeStatBlock dropped h-full w-full, uses compact/squarish tiles (aspect-square unless temp steppers). npm run build PASS; verify:responsive 54/54.
+  notes: |
+    QA: DEV-V-009 T069 � compact centered tiles at 360/768/1024/1280.
+- id: TASK-884
+  title: Sheet header wraps Level vs species, not mid-mixed-name
+  created_at: 2026-08-21
+  completed_at: 2026-08-22
+  created_by: owner
+  implemented_by: agent
+  priority: medium
+  status: done
+  verification_status: pending-qa
+  related_files:
+    - src/components/character-sheet/sheet-header-identity.tsx
+    - src/lib/character/sheet-header-species-label.ts
+    - src/lib/character/sheet-header-species-label.test.ts
+    - src/types/ancestry.ts
+    - src/docs/MOBILE_UX.md
+  description: |
+    Below the character name, mixed-species level 20 currently wraps oddly: "Level Species name 1 /" then a lower row "20 � Second species name". When Level + both species names do not fit one row, wrap as Level (label + value) on the first row and species name(s) on the next � do not split the level number away from "Level" or split "Name1 / Name2" across the level value. Use `ancestry.speciesNames` for mixed (not a single slash string that wraps through "Level"). C2: `min-w-0`; wrap on word/token boundaries (see TASK-897). Do not invent a new identity component.
+  acceptance_criteria:
+    - Narrow mixed-species header: row 1 is Level N; row 2 is both species names.
+    - Wide screens keep one line. Level number never wraps onto the species-only line alone.
+    - Verify 360 / 390 / 768. `npm run build`.
+  completed_work: |
+    Added resolveSheetHeaderSpeciesLine (speciesNames for mixed). Restructured header identity line as flex-wrap atomic groups: Level N nowrap block + species line block (mixed names whitespace-nowrap). npm run build PASS; unit tests PASS.
+  notes: |
+    QA: mixed-species sheet header at 360/390/768 � Level N on row 1, both species on row 2; wide one line.
+- id: TASK-883
+  title: Add Sub-Skill modal abilities are full names
+  created_at: 2026-08-21
+  completed_at: 2026-08-22
+  created_by: owner
+  implemented_by: agent
+  priority: medium
+  status: done
+  verification_status: pending-qa
+  related_files:
+    - src/components/patterns/select/add-sub-skill-modal.tsx
+    - src/lib/codex/skill-list.ts
+    - src/lib/codex/skill-list.test.ts
+  build_validation: |
+    suite: DEV-V-013
+    tests:
+      - DEV-V-013-T010
+  description: |
+    Add Sub-Skill modal already uses a text Abilities column (not chips) but abbreviates (slice(0, 3).toUpperCase()). Show full ability names like the library. Share formatting with TASK-882 / Codex SKILL_HEADER_COLUMNS so add-skill and add-sub-skill do not drift.
+  acceptance_criteria:
+    - Sub-skill Abilities column shows full names (comma-separated if several), not STR-style abbreviations.
+    - Same helper as add-skill/Codex if practical. npm run build.
+  completed_work: |
+    Sub-skill rows use shared formatSkillAbilityList for the Abilities column (Strength, Agility, etc.). npm run build PASS; skill-list unit tests PASS.
+  notes: |
+    QA: DEV-V-013 T010 spot-check Add Sub-Skills modal at desktop + ~360px.
+- id: TASK-882
+  title: Add Skills modal abilities match library columns
+  created_at: 2026-08-21
+  completed_at: 2026-08-22
+  created_by: owner
+  implemented_by: agent
+  priority: medium
+  status: done
+  verification_status: pending-qa
+  related_files:
+    - src/components/patterns/select/add-skill-modal.tsx
+    - src/components/codex/codex-skill-row.tsx
+    - src/lib/codex/skill-list.ts
+    - src/lib/codex/skill-list.test.ts
+  build_validation: |
+    suite: DEV-V-013
+    tests:
+      - DEV-V-013-T010
+  description: |
+    Add Skills modal GLR puts Abilities far right as abbreviated desc chips, and recommended-by-highest-ability also chips that ability on the name � so it shows twice. Abilities should display like Codex/Library: a real column with full ability names, not chips, not abbreviated. Tighten the column so it does not sit on top of the + / add control. Recommended badges may keep a non-ability meaning (path names); do not repeat the governing ability as a name chip when the Abilities column is present.
+  acceptance_criteria:
+    - Add Skills list: Abilities column, full names, not chips; not duplicated on the name.
+    - Column is not jammed against the add control.
+    - Library/Codex skill lists stay the source of truth for how abilities look.
+    - npm run build.
+  completed_work: |
+    Added formatSkillAbilityList, ADD_SKILL_HEADER_COLUMNS, ADD_SKILL_GRID_COLUMNS in skill-list.ts. Add Skills modal uses full-name Abilities column (1.5fr 1fr), drops abbreviated chips, filters guided/path badges that duplicate governing abilities. CodexSkillRow uses the same formatter. npm run build PASS; skill-list unit tests PASS.
+  notes: |
+    QA: DEV-V-013 T010 � guided Browse all Skills + sheet/creature Add Skill; confirm Abilities column + no duplicate ability name chips. Desktop + ~360px.
+- id: TASK-881
+  title: Guided Skills defense cards match sheet defense UI
+  created_at: 2026-08-21
+  completed_at: 2026-08-22
+  created_by: owner
+  implemented_by: agent
+  priority: medium
+  status: done
+  verification_status: pending-qa
+  related_files:
+    - src/components/patterns/list/skills-allocation-page.tsx
+    - src/components/guided-creator/guided-skills-panel.tsx
+    - src/components/character-sheet/defense-stat-tile.tsx
+    - src/components/character-sheet/abilities-section-model.ts
+  build_validation: |
+    suite: DEV-V-013
+    tests:
+      - DEV-V-013-T088
+  description: |
+    Guided Skills defense-increase sections must follow the character-sheet defense tile: show score and bonus; steppers hug the value instead of stretching to both edges; "+1 (2sp)" under an increased value is center-aligned, not left. Cards are too wide — titles/font should match sheet counterparts. Prefer sharing DefenseStatTile / sheet layout with a non-roll variant over a second card. Keep guided chrome (budget, step nav).
+  acceptance_criteria:
+    - Defense cards show score + bonus; steppers border the value; cost hint is centered.
+    - Density/type size tracks the sheet; cards are not full-width slabs on desktop.
+    - Shared path where possible. npm run build. DEV-V-013.
+  completed_work: |
+    Refactored DefenseBonusesCard to render six DefenseStatTile instances in SHEET_STAT_GRID_CLASS (2/3/6 tracks). Shows Defense Score + bonus with compact Dec/Inc steppers and centered skill-point cost hint. Requires abilities prop; Legacy/creature allocation and GuidedSkillsPanel updated. Removed bespoke ValueStepper defense cards.
+  notes: |
+    QA: DEV-V-013 T088 — confirm tiles match sheet Abilities & Defenses row; desktop + ~360px. npm run build PASS; verify:responsive PASS 54/54.
+- id: TASK-889
+  title: Leveled feat names use Roman numerals, not (Level N)
+  created_at: 2026-08-21
+  completed_at: 2026-08-22
+  created_by: owner
+  implemented_by: agent
+  priority: medium
+  status: done
+  verification_status: pending-qa
+  related_files:
+    - src/lib/leveled-feats.ts
+    - src/lib/leveled-feats.test.ts
+    - src/components/character-sheet/feats-tab.tsx
+    - src/components/character-sheet/add-feat-modal.tsx
+    - src/lib/guided-creator/feats-l2.ts
+    - src/components/codex/codex-feat-row.tsx
+    - src/app/(main)/codex/[collection]/[slug]/page.tsx
+    - src/lib/codex/detail-server.ts
+    - src/lib/game/feat-requirements.ts
+    - src/lib/game/feat-requirements.test.ts
+  description: |
+    Feat level 2+ must display �Feat Name II�, not �Feat Name (Level 2)�. `formatFeatName` currently appends `(Level ${lvl})`. Due diligence: many Codex names already include the numeral (e.g. �Amplify II� with `feat_lvl: 2`) � never produce �Amplify II II� or �Amplify II (Level 2)�. If the stored name already ends with a Roman numeral matching `feat_lvl`, leave it; otherwise append the Roman suffix for lvl > 1. One helper, all feat surfaces (sheet, add modal, guided, admin, creature).
+  acceptance_criteria:
+    - Display is Name / Name II / Name III � with no �(Level N)�.
+    - Names that already include the numeral are not double-suffixed.
+    - Tests in `leveled-feats`. `npm run build`.
+  completed_work: |
+    Updated `formatFeatName` to append Roman suffixes (II�XI) when `feat_lvl` > 1; leaves stored names alone when trailing numeral already matches level; level-1 names unchanged (e.g. �Empowered Experience II� stays as-is). Added Roman parse/format helpers + unit tests. Cleanup wired public Codex browse/detail + prerequisite strings through `formatFeatName`; dropped unused `romanNumeralToLevel` export.
+  notes: |
+    Spot-check sheet Feats tab, Add Feat modal, guided L2, Codex/admin feat lists for level-2+ names (no �(Level N)�, no double suffix). Automated: leveled-feats.test.ts 11/11; npm run build PASS; verify:responsive PASS 54/54.
+- id: TASK-898
+  title: Expanded GLR rows must not overlap on thin screens
+  created_at: 2026-08-21
+  completed_at: 2026-08-22
+  created_by: owner
+  implemented_by: agent
+  priority: high
+  status: done
+  verification_status: pending-qa
+  related_files:
+    - src/components/patterns/list/grid-list-row.tsx
+    - src/components/patterns/list/grid-list-row-collapsed.tsx
+    - src/components/patterns/list/grid-list-row-expanded.tsx
+    - src/components/patterns/list/grid-list-row-columns.ts
+    - src/components/patterns/list/grid-list-row-columns.test.ts
+    - src/docs/MOBILE_UX.md
+  build_validation: |
+    suite: DEV-V-016
+    tests:
+      - DEV-V-016-T033
+      - DEV-V-016-T029
+  description: |
+    On thin screens, same-row expanded GLR content overlaps (example: feat Uses steppers overlap the word Recovery). Systemic GridListRow fix � not feats-only.
+  acceptance_criteria:
+    - Expanded feat Uses steppers do not overlap Recovery (or other facts) at 360px.
+    - Same row chrome is safe for other GLR entities with steppers/chips on one row.
+    - MOBILE_UX notes the expanded-row reflow rule. npm run verify:responsive. npm run build.
+  completed_work: |
+    suppressColumnFactsWhenExpanded moves column facts from collapsed header to expanded body at all widths. Expanded stat grid stacks interactive values (steppers) full-width; text facts use min-w-0 side-by-side where space allows. columnHasInteractiveValue + dataColumnTrackCount helpers; grid-list-row-columns tests.
+  notes: |
+    QA: DEV-V-016-T033 at 360/390/768/1024 on sheet Feats edit + spot-check powers/armaments. T029 regression for XOR/blank omit. Automated: playwright responsive-layout PASS 54/54 (2026-08-22 cleanup; build + npx playwright test -c playwright.responsive.config.ts).
+- id: TASK-897
+  title: Sitewide wrapping is word-based, not character-by-character
+  created_at: 2026-08-21
+  completed_at: 2026-08-22
+  created_by: owner
+  implemented_by: agent
+  priority: high
+  status: done
+  verification_status: pending-qa
+  related_files:
+    - src/docs/MOBILE_UX.md
+    - src/components/patterns/list/grid-list-row-collapsed.tsx
+    - src/components/patterns/list/quick-armaments-sections.tsx
+    - src/components/character-sheet/sheet-large-stat-block.tsx
+    - src/components/character-sheet/ability-stat-tile.tsx
+    - src/components/character-sheet/defense-stat-tile.tsx
+    - src/components/character-sheet/archetype-section.tsx
+  build_validation: |
+    suite: DEV-V-009
+    tests:
+      - DEV-V-009-T068
+  description: |
+    On thin screens, names wrap character-by-character (sheet weapon Name column becomes unreadable and inflates page height). Rule: wrap at word/token boundaries; dense name columns truncate with ellipsis (C2) rather than one-letter lines.
+  acceptance_criteria:
+    - MOBILE_UX C2 (or sibling clause) states word-wrap vs character-wrap vs truncate.
+    - Sheet weapon names wrap by word or ellipsis � not one character per line � at 360px.
+    - Shared row name chrome is fixed once, not a one-off weapon class. npm run verify:responsive. npm run build.
+  completed_work: |
+    MOBILE_UX C2 wrap strategy clause. GLR collapsed name: truncate (removed break-words on mobile). QuickWeaponsTable name + property bullets: truncate. LargeStatBlock labels: break-normal. Ability/defense tiles: break-normal. Unarmed Prowess name: truncate.
+  notes: |
+    QA: DEV-V-009-T068 at 360px on Library weapons/powers + Archetype weapons table. USM rows are expandable (description/detailSections from buildSelectableItem); collapsed names also expose native title on hover. npm run verify:responsive failed locally (Playwright prod server start) � not a code regression; re-run before verified.
+- id: TASK-896
+  title: Diagnose red edit-pen when no section pencils are red
+  created_at: 2026-08-21
+  completed_at: 2026-08-22
+  created_by: owner
+  implemented_by: agent
+  priority: high
+  status: done
+  verification_status: pending-qa
+  related_files:
+    - src/lib/character/sheet-edit-notification.ts
+    - src/lib/character/sheet-edit-notification.test.ts
+    - src/components/character-sheet/use-character-sheet-derived.ts
+    - src/components/character-sheet/sheet-action-toolbar.tsx
+    - src/components/character-sheet/library-section.tsx
+  build_validation: |
+    suite: DEV-V-009
+    tests:
+      - DEV-V-009-T067
+  description: |
+    Global edit pencil used danger-red for any unspent pool (including can-level-up), while section EditSectionToggle pencils only go red on overspend and green on unspent � owner saw red toolbar dot with no red section pencils.
+  acceptance_criteria:
+    - Global pencil indicator is truthful (overspend vs unspent) and explains what is left or over.
+    - If nothing is overspent or unspent, no red dot.
+    - Section pencils still reflect overspend. npm run build. DEV-V-009.
+  completed_work: |
+    Added sheet-edit-notification helper (pool math + severity + tooltip). Toolbar dot: danger only on overspend, success on unspent, power on level-up; descriptive title/aria-label. Library EditSectionToggle now has-points when feat slots remain (weighted slot math). Proficiency remaining included in global notification.
+  notes: |
+    QA: green unspent-only; red overspent-only; red/green gradient when both; purple level-up when balanced; no dot when balanced and not XP-ready. Tooltip lists pools. Library pencil green when feat slots remain.
+- id: TASK-879
+  title: Define and apply innate-power eligibility everywhere
+  created_at: 2026-08-21
+  completed_at: 2026-08-22
+  created_by: owner
+  implemented_by: agent
+  priority: high
+  status: done
+  verification_status: pending-qa
+  related_files:
+    - src/lib/game/innate-eligibility.ts
+    - src/lib/game/innate-eligibility.test.ts
+    - src/lib/library/power-technique-categories.ts
+    - src/lib/library/power-technique-categories.test.ts
+    - src/lib/library/power-technique-filters.ts
+    - src/lib/library/power-technique-filters.test.ts
+    - src/lib/library-selectable-builders.ts
+    - src/lib/guided-creator/powers-techniques-l2.ts
+    - src/lib/calculators/power-calc.ts
+    - src/docs/GAME_RULES.md
+    - src/docs/REALMS_PRODUCT_OVERVIEW.md
+    - public/tooltip-text.tsx
+    - src/app/(main)/admin/codex/admin-archetype-editor-level1.tsx
+  build_validation: |
+    suite: DEV-V-046
+    tests:
+      - DEV-V-046-T009
+  description: |
+    One definition of innate power eligibility: Basic/Basic Reaction; duration <=1 minute (fail closed when unknown); no Adaptation-category parts; keep healing/energy-gain bans. Reuse isPowerInnateEligible across library filters, guided innate L2, and admin path validation.
+  acceptance_criteria:
+    - GAME_RULES states the three innate constraints (plus kept Appendix G bans).
+    - One helper gates all innate filters/lists; Adaptation-category parts and duration > 1 minute are excluded.
+    - Non-innate power lists are unchanged. Targeted tests for action, duration boundary, Adaptation.
+    - npm run build.
+  completed_work: |
+    Extended isPowerInnateEligible + evaluateInnatePowerEligibility with duration (<=1 min / 10 rounds) and Adaptation-category part checks. deriveStructuredDuration in power-calc; filter rows carry duration + partCategories; guided innate L2 pre-filters via shared helper; GAME_RULES Appendix G qualification + tooltip/copy updated. Cleanup: deleted duplicate resolveInnatePartCategoryList; wired resolvePartCategoryList payload fallback.
+  notes: |
+    QA: Library/Codex innate-eligible filter; guided See more Innate Powers; admin path innate validation - powers with >1 min duration or Adaptation parts should drop out; instant/basic/heal-ban unchanged.
+- id: TASK-878
+  title: Path filter Any / Any Power / Any Martial / Any Powered-Martial
+  created_at: 2026-08-21
+  completed_at: 2026-08-22
+  created_by: owner
+  implemented_by: agent
+  priority: high
+  status: done
+  verification_status: pending-qa
+  related_files:
+    - src/components/patterns/filters/archetype-path-filter.tsx
+    - src/lib/game/path-recommendation-index.ts
+    - src/lib/game/path-recommendation-index.test.ts
+    - src/hooks/use-path-recommendation-index.ts
+    - src/docs/ai/BUILD_VALIDATION.md
+  build_validation: |
+    suite: DEV-V-052
+    tests:
+      - DEV-V-052-T006
+  developer_test_plan: |
+    Suite DEV-V-052 T006 — see BUILD_VALIDATION.md
+  description: |
+    Archetype path selection needs Any, Any Power, Any Martial, and Any Powered-Martial so users can see recommended feats (and other path-filtered lists) without picking every path. Guided creator L2 auto-select uses one type-wide alias instead of every path id. Extend ADR-0014 union matching via shared helpers — not a parallel filter.
+  acceptance_criteria:
+    - Filter offers Any, Any Power, Any Martial, Any Powered-Martial plus individual paths.
+    - Any Power = union of all player-visible Power paths (same for Martial / Powered-Martial); Any = all paths.
+    - Guided L2 feat list for a Power (etc.) character uses the type-wide option, not one id per path.
+    - Tests on the index helper. npm run build.
+  completed_work: |
+    Added PATH_FILTER_ALIAS, expandPathFilterSelection, addPathFilterSelection, pathFilterAliasForArchetypeType. ArchetypePathFilter lists aliases first (ungrouped). usePathListFilter auto-select uses one type alias. Matching/chips expand aliases before union.
+  notes: |
+    Type-wide alias replaces individual paths of the same type on select; Any replaces the whole selection. Guided See more auto-selects e.g. Any Martial (one chip).
+- id: TASK-873
+  title: Sheet Inventory Equipment GLR uses catalog facts, not Type
+  created_at: 2026-08-21
+  completed_at: 2026-08-22
+  created_by: owner
+  implemented_by: agent
+  priority: high
+  status: done
+  verification_status: pending-qa
+  related_files:
+    - src/lib/glr/resolve-glr-fact-layout.ts
+    - src/lib/glr/glr-surface-bindings.ts
+    - src/lib/glr/glr-fact-catalog.test.ts
+    - src/lib/glr/resolve-glr-fact-layout.test.ts
+    - src/components/patterns/list/entity-library-sections-columns.ts
+    - src/components/patterns/list/entity-library-inventory.tsx
+    - src/components/character-sheet/library-entity-rows.tsx
+    - src/components/character-sheet/add-library-item/map-selection.ts
+    - src/lib/codex/equipment-list.ts
+    - src/app/(main)/creature-creator/map-creature-inventory-rows.ts
+  build_validation: |
+    suite: DEV-V-016
+    tests:
+      - DEV-V-016-T031
+  developer_test_plan: |
+    Suite DEV-V-016 T031 � see BUILD_VALIDATION.md
+  description: |
+    Character sheet Inventory Equipment GLR showed Name/Type/Qty. Bind character-sheet-gear with layoutOverrides so Category/Currency/Rarity are columns; Description + Qty extras; TP chip only. Persist catalog currency/category/rarity on Add from library.
+  acceptance_criteria:
+    - Sheet Equipment headers Name, Description, Category, Currency, Rarity, Qty; no Type.
+    - Qty edit works; facts appear as column or chip per catalog.
+    - Currency from catalog/stored cost, not property C sum; populated after Add.
+    - Creature layout=creature Qty behavior preserved (TASK-813).
+    - Catalog tests updated; npm run build.
+  completed_work: |
+    Added GlrLayoutOverrides + SHEET_GEAR_PLAY_LAYOUT_OVERRIDES on character-sheet-gear. Sheet chrome CHARACTER_SHEET_EQUIPMENT_*; mapEquipmentRows catalog columns via buildEquipmentCatalogFactColumns; persistEquipmentCost in map-selection. Creature uses creature-inventory-equipment surface. assertSurfaceColumnConfig + row CI updated.
+  notes: |
+    Manual QA DEV-V-016 T031. EquipmentListSection layout=characterSheet consumes same column constants as rows � header CI is assertSurfaceColumnConfig on CHARACTER_SHEET_EQUIPMENT_COLUMNS (ADR-0016), not a separate component test.
+---- id: TASK-872
   title: Stop using Gear; separate Equipment vs Armaments vs Enhanced
   created_at: 2026-08-21
   completed_at: 2026-08-21
@@ -8,7 +534,6 @@
   status: done
   verification_status: pending-qa
   related_files:
-    - src/docs/GAME_RULES.md
     - src/docs/ai/FEATURE_INDEX.md
     - src/docs/REALMS_PRODUCT_OVERVIEW.md
     - src/docs/ai/ADR/0016-glr-fact-catalog.md
@@ -272,7 +797,7 @@
       and wrong-user (or non-admin) requests are rejected as the route already intends.
     - No new parallel test harness — extend the existing API route test style.
     - DEVELOPER_TASK_QUEUE gap table shrinks or points at the new tests.
-    - npm test -- --run src/app/api and npm run build pass.
+    - npm test -- --run src/app/api and npm run build PASS; verify:responsive PASS 54/54.
   notes: |
     Filed from /global-audit 2026-08-20 + DEVELOPER_TASK_QUEUE deferred list.
     Not DEV-V-002/003/004 (those are Planned human campaign/admin/storage suites).
@@ -2672,7 +3197,6 @@
     - src/components/character-sheet/library-entity-rows.tsx
     - src/components/character-sheet/sheet-header.tsx
     - src/components/shared/quick-armaments-sections.tsx
-    - src/docs/GAME_RULES.md
     - src/docs/ai/FEATURE_INDEX.md
     - src/docs/ai/DESIGN_INTENT.md
     - src/docs/ai/BUILD_VALIDATION.md
@@ -4303,7 +4827,6 @@
     - TASK-440
   related_files:
     - src/components/ui/expandable-chip.tsx
-    - src/docs/GAME_RULES.md
     - src/docs/ai/FEATURE_INDEX.md
     - src/docs/ai/BUILD_VALIDATION.md
     - src/docs/ai/DEVELOPER_TASK_QUEUE.md
@@ -4689,7 +5212,6 @@
     - src/components/character-sheet/build-library-section-data.ts
     - src/components/character-sheet/level-up-modal.tsx
     - src/components/character-creator/steps/feats-step.tsx
-    - src/docs/GAME_RULES.md
     - src/docs/ai/FEATURE_INDEX.md
     - src/docs/ai/AUDIT_REMEDIATION_2026-08.md
   description: |
@@ -5546,7 +6068,6 @@
     - src/lib/library/armament-character-context.ts
     - src/lib/game/rarity-by-level.ts
     - src/lib/game/rarity-by-level.test.ts
-    - src/docs/GAME_RULES.md
     - src/docs/ai/FEATURE_INDEX.md
     - src/docs/ai/BUILD_VALIDATION.md
     - src/docs/ai/DEVELOPER_TASK_QUEUE.md
@@ -7025,7 +7546,6 @@
     - src/lib/library/empowered-technique-display.ts
     - src/lib/library-columnar.ts
     - src/lib/library-columnar.test.ts
-    - src/docs/GAME_RULES.md
     - src/docs/ai/FEATURE_INDEX.md
     - src/docs/ai/BUILD_VALIDATION.md
     - src/docs/ai/DEVELOPER_TASK_QUEUE.md
@@ -7646,7 +8166,7 @@
     Moved deriveAbilityRequirementFromProperties + AbilityRequirement type to weapon-attack-ability.ts;
     removed duplicates from find-in-library and equipment-eligibility; updated enrich-items, official-item-list,
     equipment-phase-stats imports. calculateSkillBonusWithProficiency now calls unproficientBonus. Added tests
-    in weapon-attack-ability.test.ts and formulas.test.ts. npm run test 475 pass; npm run build pass.
+    in weapon-attack-ability.test.ts and formulas.test.ts. npm run test 475 pass; npm run build PASS; verify:responsive PASS 54/54.
   notes: |
     Audit ref: archive/CODEBASE_AUDIT_2026-08-01.md section 6 B3/B4.
 
@@ -7847,7 +8367,7 @@
   completed_work: |
     Added --max-warnings 0 to ui-verify.yml lint step and local package.json lint script (eslint . --max-warnings 0).
     Resolved ~28 ESLint warnings across production src/, scripts, and visual test files (unused vars, hook deps,
-    raw-color backlog entries). npm run lint and npm run build pass.
+    raw-color backlog entries). npm run lint and npm run build PASS; verify:responsive PASS 54/54.
   notes: |
     Audit ref: archive/CODEBASE_AUDIT_2026-08-01.md section 3/10.
 
@@ -8329,7 +8849,6 @@
     - src/app/(main)/library/components/UserLibraryEntityTabShell.tsx
     - src/docs/ai/BUILD_VALIDATION.md
     - src/docs/ai/FEATURE_INDEX.md
-    - src/docs/GAME_RULES.md
     - src/docs/ALL_FEEDBACK_CLEAN.md
     - src/docs/ai/AI_CHANGELOG.md
     - src/docs/ai/DEVELOPER_TASK_QUEUE.md
@@ -9605,7 +10124,6 @@
   related_files:
     - src/components/character-sheet/abilities-section.tsx
     - public/tooltip-text.tsx
-    - src/docs/GAME_RULES.md
     - src/docs/ai/FEATURE_INDEX.md
     - src/docs/ai/guide/04-floating-ui-tooltips.md
     - src/lib/tooltips/README.md
@@ -9950,7 +10468,6 @@
     - src/app/(main)/library/LibraryCreaturesTab.tsx
     - src/components/encounters/CombatantCard.tsx
     - src/app/(main)/creature-creator/page.tsx
-    - src/docs/GAME_RULES.md
     - src/docs/DESIGN_SYSTEM.md
     - src/docs/ai/BUILD_VALIDATION.md
   build_validation: |
@@ -10904,8 +11421,7 @@
   verification_status: pending-qa
   related_files:
     - src/components/guided-creator/guided-skills-panel.tsx
-    - src/lib/guided-creator/guided-skill-recommendations.ts
-    - src/lib/guided-creator/guided-skill-recommendations.test.ts
+        - src/lib/guided-creator/guided-skill-recommendations.test.ts
     - public/tooltip-text.tsx
     - src/docs/ai/FEATURE_INDEX.md
     - src/docs/ai/BUILD_VALIDATION.md
@@ -11131,7 +11647,6 @@
     - src/components/guided-creator/steps/path-step.tsx
     - src/components/guided-creator/guided-path-detail-overview.tsx
     - src/components/shared/ability-score-grid.tsx
-    - src/docs/GAME_RULES.md
     - src/docs/ai/BUILD_VALIDATION.md
     - src/docs/ai/FEATURE_INDEX.md
     - src/docs/ai/DEVELOPER_TASK_QUEUE.md
@@ -11184,7 +11699,6 @@
     - src/components/guided-creator/steps/abilities-step.tsx
     - src/components/shared/ability-score-grid.tsx
     - src/lib/constants/copy/guided-creator-copy.ts
-    - src/docs/GAME_RULES.md
     - src/docs/ai/BUILD_VALIDATION.md
     - src/docs/ai/FEATURE_INDEX.md
     - src/docs/ai/DEVELOPER_TASK_QUEUE.md
@@ -15333,7 +15847,6 @@ Firebase/RTDB - the project is Supabase-only.
   status: done
   related_files:
     - src/app/(main)/encounters/[id]/skill/page.tsx
-    - src/docs/GAME_RULES.md
   created_at: 2026-02-06
   created_by: agent
   description: |
@@ -16149,7 +16662,6 @@ Firebase/RTDB - the project is Supabase-only.
   related_files:
     - src/app/(main)/encounters/[id]/skill/page.tsx
     - src/components/shared/add-combatant-modal.tsx
-    - src/docs/GAME_RULES.md
     - src/docs/ALL_FEEDBACK_CLEAN.md
   acceptance_criteria:
     - Campaign characters (RM and non-RM) can be added to skill encounters
@@ -16233,7 +16745,6 @@ Firebase/RTDB - the project is Supabase-only.
   related_files:
     - src/app/(main)/admin/codex/AdminFeatsTab.tsx
     - src/types/abilities.ts
-    - src/docs/GAME_RULES.md
   acceptance_criteria:
     - ability_req uses multi-select dropdown with 12 options
     - ability (sorting) uses same dropdown (multi-select)
@@ -16254,7 +16765,6 @@ Firebase/RTDB - the project is Supabase-only.
     - src/app/(main)/admin/codex/AdminFeatsTab.tsx
     - src/types/feats.ts
     - src/hooks/use-rtdb.ts
-    - src/docs/GAME_RULES.md
   acceptance_criteria:
     - All listed fields have an input/select/checkbox in edit modal
     - ability_req/abil_req_val pairs: add/remove rows; dropdown for ability; number for min value
@@ -17097,7 +17607,6 @@ Firebase/RTDB - the project is Supabase-only.
     GAME_RULES.md had an incorrect table (said 3?4 costs 2) which has been corrected.
   related_files:
     - src/lib/game/constants.ts
-    - src/docs/GAME_RULES.md
   acceptance_criteria:
     - COST_INCREASE_THRESHOLD is 3 in constants.ts
     - getAbilityIncreaseCost(3) returns 2
@@ -17186,7 +17695,6 @@ Firebase/RTDB - the project is Supabase-only.
     - src/lib/game/creator-constants.ts
     - src/lib/game/constants.ts
     - src/lib/game/constants.ts
-    - src/docs/GAME_RULES.md
   acceptance_criteria:
     - Staggered is added to the CONDITIONS array
     - acid is added to MAGIC_DAMAGE_TYPES
@@ -17220,7 +17728,6 @@ Firebase/RTDB - the project is Supabase-only.
     - src/app/(main)/characters/[id]/page.tsx
     - src/components/character-creator/steps/feats-step.tsx
     - src/lib/game/formulas.ts
-    - src/docs/GAME_RULES.md
   acceptance_criteria:
     - Owner confirms correct feat slot formula (per archetype or universal)
     - Both character sheet and character creator use the same formula
@@ -17986,7 +18493,6 @@ Firebase/RTDB - the project is Supabase-only.
     - src/lib/game/constants.ts
     - src/lib/game/creator-constants.ts
     - src/lib/game/formulas.ts
-    - src/docs/GAME_RULES.md
     - prisma/schema.prisma
   acceptance_criteria:
     - Written design document specifying each category, its JSON shape, and all included values
@@ -18051,7 +18557,6 @@ Firebase/RTDB - the project is Supabase-only.
     - scripts/seed-to-supabase.js
     - src/lib/game/constants.ts
     - src/lib/game/creator-constants.ts
-    - src/docs/GAME_RULES.md
   acceptance_criteria:
     - Seed script creates all core_rules rows with correct data
     - Every value from constants.ts and creator-constants.ts is present in the DB
@@ -18166,7 +18671,6 @@ Firebase/RTDB - the project is Supabase-only.
   related_files:
     - src/lib/game/constants.ts
     - src/lib/game/creator-constants.ts
-    - src/docs/GAME_RULES.md
   acceptance_criteria:
     - All combat values are editable
     - Changes save to core_rules table
@@ -18194,7 +18698,6 @@ Firebase/RTDB - the project is Supabase-only.
   related_files:
     - src/lib/game/constants.ts
     - src/lib/game/formulas.ts
-    - src/docs/GAME_RULES.md
   acceptance_criteria:
     - All three archetype configs are editable
     - Archetype progression rules are editable
@@ -18223,7 +18726,6 @@ Firebase/RTDB - the project is Supabase-only.
     creature creator condition assignment, power/technique condition application.
   related_files:
     - src/lib/game/creator-constants.ts
-    - src/docs/GAME_RULES.md
   acceptance_criteria:
     - All conditions are listed with editable name, description, leveled flag
     - Can add new conditions, remove existing ones
@@ -18250,7 +18752,6 @@ Firebase/RTDB - the project is Supabase-only.
     - Unify and make comprehensive
   related_files:
     - src/lib/game/creator-constants.ts
-    - src/docs/GAME_RULES.md
   acceptance_criteria:
     - All 8 size categories from GAME_RULES are present and editable
     - Carrying capacity values per size are editable
@@ -18275,7 +18776,6 @@ Firebase/RTDB - the project is Supabase-only.
       only in GAME_RULES.md - unify into one editable data source
   related_files:
     - src/lib/game/creator-constants.ts
-    - src/docs/GAME_RULES.md
   acceptance_criteria:
     - All rarity tiers are listed with editable name, currency range, color
     - Starting currency is editable
@@ -18302,7 +18802,6 @@ Firebase/RTDB - the project is Supabase-only.
     - Ability increase cost per level-up
   related_files:
     - src/lib/game/constants.ts
-    - src/docs/GAME_RULES.md
   acceptance_criteria:
     - All ability score rules are editable
     - Standard arrays are editable (add/remove/modify)
@@ -18345,7 +18844,6 @@ Firebase/RTDB - the project is Supabase-only.
   related_files:
     - src/lib/game/constants.ts
     - src/lib/game/creator-constants.ts
-    - src/docs/GAME_RULES.md
   acceptance_criteria:
     - All skills/defense rules are editable
     - Recovery rules are editable
@@ -20203,7 +20701,6 @@ Firebase/RTDB - the project is Supabase-only.
     - src/lib/game/path-validation.ts
     - src/docs/SUPABASE_SCHEMA.md
     - src/docs/REALMS_PRODUCT_OVERVIEW.md
-    - src/docs/GAME_RULES.md
     - sql/codex-archetypes-level1-innate-powers-proposed.sql
   description: |
     Paths must author recommended powers and recommended innate powers separately. Admin path
@@ -20254,7 +20751,6 @@ Firebase/RTDB - the project is Supabase-only.
     - src/stores/guided-creator-store.ts
     - src/stores/guided-creator-store.test.ts
     - src/lib/guided-creator/build-character.ts
-    - src/docs/GAME_RULES.md
     - src/docs/REALMS_PRODUCT_OVERVIEW.md
   description: |
     On the innate powers portion of the guided power step: each pick must have Energy = Innate
@@ -20359,7 +20855,6 @@ Firebase/RTDB - the project is Supabase-only.
     - src/components/guided-creator/steps/powers-techniques-step.tsx
     - src/components/guided-creator/guided-equipment-fact-chips.tsx
     - src/components/guided-creator/guided-choice-card.tsx
-    - src/docs/GAME_RULES.md
     - src/docs/ai/AGENT_GUIDE.md
     - src/docs/REALMS_PRODUCT_OVERVIEW.md
     - src/docs/ai/FEATURE_INDEX.md
@@ -20563,7 +21058,6 @@ Firebase/RTDB - the project is Supabase-only.
     - src/lib/detail-option/compact-facts.test.ts
     - src/lib/guided-creator/equipment-phase-stats.ts
     - src/lib/guided-creator/equipment-phase-stats.test.ts
-    - src/docs/GAME_RULES.md
     - src/docs/ai/AGENT_GUIDE.md
     - src/docs/REALMS_PRODUCT_OVERVIEW.md
   description: |
@@ -20608,7 +21102,6 @@ Firebase/RTDB - the project is Supabase-only.
     - src/components/shared/unified-selection-modal.tsx
     - src/components/guided-creator/loadout-budget-bar.tsx
     - src/docs/REALMS_PRODUCT_OVERVIEW.md
-    - src/docs/GAME_RULES.md
     - src/docs/ai/FEATURE_INDEX.md
   description: |
     REALMS Ã¢â¬â3.1 / Ã¢â¬â5.8: See more options must open a Layer 2 modal (GridListRow +
@@ -20709,7 +21202,6 @@ Firebase/RTDB - the project is Supabase-only.
     - src/components/shared/grid-list-row-types.ts
     - src/docs/REALMS_PRODUCT_OVERVIEW.md
     - src/docs/ai/AGENT_GUIDE.md
-    - src/docs/GAME_RULES.md
     - src/docs/DESIGN_SYSTEM.md
   description: |
     Establish one typed compact-fact presentation grammar for cards and GridListRow before
@@ -20780,7 +21272,7 @@ Firebase/RTDB - the project is Supabase-only.
     No Flaw alone on a row shrank despite cardCollapsed; (2) TASK-452 wrap on Ã¢â¬âArchetype AbilityÃ¢â¬â
     grew the straddling pill into the tile name. Fixes: showActionRow mirrors keepBodyFloor;
     compact cardCollapsed bumped; pills use short single-line Archetype/Secondary + aria-label
-    + highlight pt-3. npm run build pass.
+    + highlight pt-3. npm run build PASS; verify:responsive PASS 54/54.
   notes: |
     Can run in parallel with TASK-454 and TASK-459. Verify the current report; do not close this
     solely from old TASK-452 evidence.
@@ -20806,7 +21298,6 @@ Firebase/RTDB - the project is Supabase-only.
     - src/lib/guided-creator/loadout-tp.ts
     - public/tooltip-text.tsx
     - src/docs/REALMS_PRODUCT_OVERVIEW.md
-    - src/docs/GAME_RULES.md
   description: |
     Make weapon, armor, and Equipment selections optional while exposing the real constraints that
     still apply when users choose items. Training Points must be visible beside Currency throughout
@@ -20946,7 +21437,6 @@ Firebase/RTDB - the project is Supabase-only.
     - src/stores/guided-creator-store.test.ts
     - src/docs/REALMS_PRODUCT_OVERVIEW.md
     - src/docs/ai/GUIDED_EQUIPMENT_PHASED_SPEC.md
-    - src/docs/GAME_RULES.md
     - src/docs/ai/BUILD_VALIDATION.md
   description: |
     Make the chapter name Ã¢â¬âLoadoutÃ¢â¬â because it includes weapons, armor, Equipment, powers, and
@@ -21829,7 +22319,6 @@ Firebase/RTDB - the project is Supabase-only.
   follow_up_tasks:
     - TASK-439
   related_files:
-    - src/docs/GAME_RULES.md
     - src/docs/ai/AGENT_GUIDE.md
     - AGENTS.md
     - src/lib/constants/copy/guided-creator-copy.ts
@@ -21864,7 +22353,6 @@ Firebase/RTDB - the project is Supabase-only.
   follow_up_tasks:
     - TASK-440
   related_files:
-    - src/docs/GAME_RULES.md
     - src/lib/constants/copy/
     - public/tooltip-text.tsx
     - src/docs/ai/AGENT_GUIDE.md
@@ -22224,7 +22712,7 @@ Firebase/RTDB - the project is Supabase-only.
   developer_test_plan: |
     DEV-V-013-T014 Ã¢â¬â Guided skills Layer 1 (path chips + budget + browse).
   notes: |
-    2026-07-03: Owner feedback on skills step UX mismatch vs other guided steps. npm run build pass.
+    2026-07-03: Owner feedback on skills step UX mismatch vs other guided steps. npm run build PASS; verify:responsive PASS 54/54.
 
 ---
 
@@ -23017,7 +23505,7 @@ Firebase/RTDB - the project is Supabase-only.
     tests:
       - DEV-V-013-T014
   notes: |
-    2026-06-30: Owner chose Option B Ã¢â¬â full allocation per REALMS Ã¢â¬â5.5. Store schema v3 (skillIds� skills). npm run build pass.
+    2026-06-30: Owner chose Option B Ã¢â¬â full allocation per REALMS Ã¢â¬â5.5. Store schema v3 (skillIds� skills). npm run build PASS; verify:responsive PASS 54/54.
     2026-07-13 audit: AC updated for GuidedSkillsPanel (TASK-419); build_validation rewired from wrong T003� T014.
 
 - id: TASK-406
@@ -23053,7 +23541,7 @@ Firebase/RTDB - the project is Supabase-only.
       - DEV-V-013-T005
   notes: |
     2026-06-30: Owner feedback Ã¢â¬â guided reveal was worst finalize step; redesign in stages.
-    2026-06-30: Hero band, GuidedRevealSummary (names + edit links), identity block, portrait upload, smart HP/EN auto-allocate, shell hides strip on reveal. npm run build pass.
+    2026-06-30: Hero band, GuidedRevealSummary (names + edit links), identity block, portrait upload, smart HP/EN auto-allocate, shell hides strip on reveal. npm run build PASS; verify:responsive PASS 54/54.
     2026-07-13 audit: build_validation rewired from T004 (loadout)� T015 reveal + T005 save.
 
 - id: TASK-415
@@ -24254,7 +24742,7 @@ Firebase/RTDB - the project is Supabase-only.
   completed_work: |
     - Eliminated all `as unknown as` in top-10 concentration files (transformers 12, item-calc 9, use-sheet-skill-identity-actions 7, use-character-sheet-derived 4, creature-stat-block-display-data 4, creature-stat-block-panels 3, archetype-section 3, clean-for-save 2, enrich-powers/techniques 1 each).
     - Added CharacterSkillRow union on Character.skills; typed LibraryForView; empowered technique fields on LibraryTechnique; DisplayItem.sourceData unknown; computeMaxHealthEnergy accepts Character.
-    - src/ `as unknown as` count reduced from ~86 to ~45. npm run build pass.
+    - src/ `as unknown as` count reduced from ~86 to ~45. npm run build PASS; verify:responsive PASS 54/54.
   notes: |
     Audit ref: archive/CODEBASE_AUDIT_2026-08-01.md section 6/8. Remaining casts in API routes, creator steps, tests � follow-up optional.
 
@@ -25423,3 +25911,201 @@ Firebase/RTDB - the project is Supabase-only.
     - npm run build.
   completed_work: |
     Added resolveItemMarketPricing in item-calc (display currencyCost, never totalCurrency). Sheet weapons/armor/shields, add-modal armament chips, OfficialItemList columns, guided catalog/spend, item-creator final cost, and crafting market price all use it. Equipment still uses stored Codex currency. Tests cover Sharp C=2/IP=2 to Currency 31.
+
+- id: TASK-886
+  title: Age and backstory persist as Notes fields, not appearance dump
+  created_at: 2026-08-21
+  created_by: owner
+  priority: high
+  status: done
+  verification_status: pending-qa
+  completed_at: 2026-08-22
+  related_files:
+    - src/lib/character/appearance-age.ts
+    - src/lib/character/appearance-age.test.ts
+    - src/lib/guided-creator/build-character.ts
+    - src/lib/guided-creator/build-character.test.ts
+    - src/components/character-creator/steps/finalize/identity-fields.tsx
+    - src/components/character-creator/steps/finalize-step.tsx
+    - src/components/character-sheet/notes-tab.tsx
+    - src/components/character-sheet/build-library-section-data.ts
+    - src/components/character-sheet/library-section-props.ts
+    - src/components/character-sheet/library-section.tsx
+    - src/stores/character-creator-store.ts
+    - src/stores/guided-creator-store.ts
+    - src/types/character.ts
+    - src/lib/data-enrichment/clean-for-save.ts
+  completed_work: |
+    Dedicated character JSON fields for age and backstory (no Postgres migration). Guided + Advanced creators map age, appearance-only notes, and creator description → backstory. Notes tab shows Age in physical header and a Backstory section; legacy Age: prefixes resolve on read via appearance-age helpers.
+  acceptance_criteria:
+    - Age from creator shows in Notes header after height/weight, not inside Appearance.
+    - Backstory/background from creator has its own notes section on the sheet.
+    - Appearance stays appearance-only. Existing Age: prefixes still parse into the Age field.
+    - Guided + advanced creators both map. npm run build. DEV-V-009 / DEV-V-013.
+
+
+---
+
+- id: TASK-894
+  title: Current HP may go negative
+  created_at: 2026-08-21
+  created_by: owner
+  priority: high
+  status: done
+  verification_status: pending-qa
+  completed_at: 2026-08-22
+  related_files:
+    - src/components/character-sheet/sheet-resource-input.tsx
+    - src/components/character-sheet/sheet-header-resources.tsx
+    - src/components/encounters/combatant-card-resources.tsx
+    - src/components/encounters/CombatantCard.tsx
+  description: |
+    HP is allowed and supposed to go negative (GAME_RULES Dying: HP at 0 or negative). ResourceInput clamped with Math.max(0, …) on typed and stepper paths. Allow negative current Health only (Energy still cannot go below 0 per GAME_RULES). Player-linked encounter combatants allow negative HP; NPC combatants stay floored at 0.
+  acceptance_criteria:
+    - Sheet Health stepper and typed entry can set negative HP.
+    - Energy still floors at 0. Dying rules copy unchanged.
+    - npm run build. DEV-V-009.
+  completed_work: |
+    Added min prop to ResourceInput; Health uses unbounded floor via sheet-header-resources. Linked campaign combatants pass allowNegativeHealth on CombatantCardResources; NPC paths unchanged.
+  developer_test_plan: DEV-V-009 T066
+
+- id: TASK-892
+  title: Level-up auto-assigns a new prof point to the existing side
+  created_at: 2026-08-21
+  created_by: owner
+  priority: high
+  status: done
+  verification_status: pending-qa
+  completed_at: 2026-08-22
+  related_files:
+    - src/lib/game/archetype-display.ts
+    - src/lib/game/archetype-display.test.ts
+    - src/components/character-sheet/use-sheet-resource-actions.ts
+  description: |
+    When a character levels and gains a martial or power prof point, if they previously had all points in only one side, the new point auto-assigns to that same side (e.g. 2 martial to level 5 with +1 martial, not a leftover unassigned or a split). applyPathProficiencyForLevel today only floors to admin level-5 path targets from level 5+. Due diligence: when does a level grant +1 martial vs +1 power vs +1 either (GAME_RULES progression tables); implement auto-assign for pure-martial and pure-power allocations; Powered-Martial with both sides already split should keep existing redistribution (do not yank points). Cover sheet level-up handler (load-time path floor unchanged).
+  acceptance_criteria:
+    - Pure martial (or pure power) stays pure when the new point is of that kind / untyped grant.
+    - Mixed Powered-Martial allocation is not forcibly flattened.
+    - Tests on the helper. npm run build.
+  developer_test_plan: DEV-V-008-T027
+
+- id: TASK-869
+  title: Power/technique category desc chips are value-only
+  created_at: 2026-08-21
+  created_by: owner
+  priority: medium
+  status: done
+  verification_status: pending-qa
+  completed_at: 2026-08-22
+  related_files:
+    - src/lib/chip/list-row-metadata.ts
+    - src/lib/detail-option/compact-facts.ts
+    - src/lib/detail-option/compact-facts.test.ts
+    - src/lib/glr/glr-fact-catalog.ts
+    - src/lib/glr/glr-fact-catalog.test.ts
+    - src/lib/library-selectable-builders.ts
+    - src/hooks/add-library-item/build-empowered-selectable-item.ts
+    - src/lib/detail-option/index.ts
+    - src/docs/ai/ADR/0016-glr-fact-catalog.md
+  description: |
+    When a power or technique Category fact is shown as a descriptor chip (expanded / demoted column), the chip must be the category value only � "Defense", not "Category Defense". Column headers still say Category. Action Type already uses value-only chips (actionTypeFactChip); follow that grammar for Category.
+  acceptance_criteria:
+    - Expanded power/technique GLR chips show category values without a leading Category word (e.g. Defense, Offense, Utility).
+    - Category remains a column header where it is a column.
+    - Update glr-fact-catalog.test.ts / compact-facts tests that currently expect Category Offense.
+    - npm run build + targeted tests.
+  completed_work: |
+    Added categoryFactChip (mirrors actionTypeFactChip); entity-aware routing in buildGlrFactDetailSections / glrSurfaceDetailSections; feat/gear keep labeled Category chips.
+  developer_test_plan: DEV-V-016 T032
+
+- id: TASK-875
+  title: Browse-all Skills/Sub-Skills footer not flush on the rule
+  created_at: 2026-08-21
+  created_by: owner
+  priority: medium
+  status: done
+  verification_status: pending-qa
+  completed_at: 2026-08-22
+  related_files:
+    - src/components/patterns/select/unified-selection-modal-footer.tsx
+    - src/components/patterns/select/add-skill-modal.tsx
+    - src/components/patterns/select/add-sub-skill-modal.tsx
+    - src/components/guided-creator/steps/skills-step.tsx
+  description: |
+    Add Skills modal Browse all Sub-Skills sits flush against the horizontal footer separator (same for Browse all Skills on Add Sub-Skill in the character creator). Prefer shared footer padding over per-modal hacks.
+  acceptance_criteria:
+    - Browse-all controls are not kissing the separator; either no redundant rule or consistent gap.
+    - Same treatment on Add Skills and Add Sub-Skill (creator + sheet).
+    - No new modal primitive. npm run build.
+  completed_work: |
+    Added pt-3 md:pt-4 on UnifiedSelectionModalFooter after border-t; removed per-modal pb-1 layer-nav wrappers (then dropped no-op wrapper divs in cleanup).
+  developer_test_plan: DEV-V-013 T010
+- id: TASK-880
+  title: Guided Abilities cards match sheet tiles + allocation tooltip
+  created_at: 2026-08-21
+  created_by: owner
+  priority: medium
+  status: done
+  verification_status: pending-qa
+  completed_at: 2026-08-22
+  related_files:
+    - src/components/patterns/list/ability-score-grid.tsx
+    - src/components/guided-creator/guided-abilities-customize-panel.tsx
+    - src/components/guided-creator/steps/abilities-step.tsx
+    - public/tooltip-text.tsx
+  build_validation: |
+    suite: DEV-V-013
+    tests:
+      - DEV-V-013-T034
+      - DEV-V-013-T035
+      - DEV-V-013-T036
+  description: |
+    Guided creator Abilities step cards feel too wide/tall. They should be close to character-sheet ability tiles (same font size, similar layout; values are not full roll buttons). On mobile, use the same ability-grid layout as the sheet (C3 2/3/6). Shared UI if possible without breaking guided chrome. Ability Points needs a player-facing tooltip when allocating: each Ability max +3; reducing below 0 gains points for others; cannot go below −2; cannot have less than −3 total among negative values (match GAME_RULES Custom allocation — not backend jargon). Reuse InfoTippy / tooltip-text; do not invent a new tip pattern.
+  acceptance_criteria:
+    - Guided ability cards visually track sheet tiles (type size, density, mobile grid).
+    - Customize/allocate mode shows an Ability Points tooltip with the player rules above.
+    - Values are not fake RollButtons. No new shared/ui file unless Architect + allowlist.
+    - npm run build; DEV-V-013 when marking done.
+  notes: |
+    AbilityScoreGrid edit+display aligned to sheet AbilityStatTile (2/3/6 grid, text-sm labels, text-xl values, gap-2.5). GuidedAbilitiesCustomizePanel PointStatus labelAccessory InfoTippy with getAbilityPointsHelp. npm run build PASS; verify:responsive PASS 54/54.
+
+
+- id: TASK-899
+  title: Auth signup CAPTCHA, rate limits, and security.txt
+  created_at: 2026-08-22
+  created_by: owner
+  priority: high
+  status: done
+  verification_status: pending-qa
+  completed_at: 2026-08-22
+  related_files:
+    - src/app/(auth)/register/page.tsx
+    - src/app/(auth)/login/page.tsx
+    - src/app/(auth)/forgot-password/page.tsx
+    - src/components/auth/auth-turnstile.tsx
+    - src/hooks/use-auth-captcha.ts
+    - src/hooks/use-auth.ts
+    - src/lib/auth/captcha.ts
+    - src/lib/auth/captcha.test.ts
+    - public/.well-known/security.txt
+    - .env.example
+    - src/docs/DEPLOYMENT_AND_SECRETS_SUPABASE.md
+    - src/docs/ai/DEVELOPER_TASK_QUEUE.md
+  build_validation: |
+    suite: DEV-V-007
+    tests:
+      - DEV-V-007-T006
+      - DEV-V-007-T007
+  description: |
+    Turnstile on auth forms + Supabase Attack Protection + security.txt from responsible-disclosure report.
+  acceptance_criteria:
+    - Register/login/forgot-password pass Turnstile token when site key is configured.
+    - Supabase project has CAPTCHA enabled with matching Turnstile secret (owner Dashboard).
+    - Auth rate limits tightened in Supabase Dashboard (owner).
+    - /.well-known/security.txt returns valid RFC 9116 file on production.
+    - npm run build; captcha helper tests pass.
+  completed_work: |
+    Turnstile widget + useAuthCaptcha on register/login/forgot-password; buildAuthCaptchaOptions; security.txt; captcha unit tests; DEV-015 owner checklist. No prod behavior change until env key + Supabase CAPTCHA (Dashboard steps in DEVELOPER_TASK_QUEUE).
+  notes: |
+    Owner remainder: DEV-015 / DEV-Q08 Dashboard CAPTCHA + rate limits + HIBP. Deploy frontend before enabling Supabase CAPTCHA.
+  developer_test_plan: DEV-V-007 T006–T007 after DEV-015

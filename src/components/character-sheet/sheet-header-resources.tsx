@@ -92,6 +92,7 @@ export function SheetHeaderResources({
             max={maxHealth}
             onChange={onHealthChange}
             colorVariant="health"
+            min={Number.NEGATIVE_INFINITY}
             showBar
             headerRight={
               <TempModifierInlineLabel

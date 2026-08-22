@@ -24,8 +24,13 @@ import {
   type ItemPropertyPayload,
 } from '@/lib/calculators';
 import { deriveAbilityRequirementFromProperties } from '@/lib/game/weapon-attack-ability';
-import { derivePowerDisplay, formatPowerDamage } from '@/lib/calculators/power-calc';
+import {
+  derivePowerDisplay,
+  deriveStructuredDuration,
+  formatPowerDamage,
+} from '@/lib/calculators/power-calc';
 import type { PowerDocument } from '@/lib/calculators/power-calc';
+import { resolvePartCategoryList } from '@/lib/library/power-technique-categories';
 import { deriveTechniqueDisplay } from '@/lib/calculators/technique-calc';
 import type { TechniqueDocument } from '@/lib/calculators/technique-calc';
 import {
@@ -376,6 +381,13 @@ export function buildPowerTechniqueFilterableRow(
     parts?: unknown | undefined;
     damage?: unknown | undefined;
     isReaction?: boolean | undefined;
+    duration?:
+      | {
+          type?: string | undefined;
+          value?: number | undefined;
+        }
+      | null
+      | undefined;
   },
   powerPartsDb: PowerPart[],
   techniquePartsDb: TechniquePart[],
@@ -390,6 +402,23 @@ export function buildPowerTechniqueFilterableRow(
   if (kind === 'power') {
     categories = withDamageCategory(categories, powerHasDamageCategory(item.damage));
   }
+  const partIds = parts.map((part) => {
+    const p = part as { id?: string | number | undefined };
+    return p.id != null ? String(p.id) : '';
+  });
+  const partNames = parts.map((part) => {
+    const p = part as { name?: string | undefined };
+    return p.name != null ? String(p.name) : '';
+  });
+  const structuredDuration =
+    kind === 'power'
+      ? deriveStructuredDuration(
+          parts as PowerDocument['parts'],
+          item.duration?.type
+            ? { type: item.duration.type, value: item.duration.value ?? 1 }
+            : undefined,
+        )
+      : null;
   return {
     categories,
     energy: facts.energy,
@@ -397,18 +426,18 @@ export function buildPowerTechniqueFilterableRow(
     actionTypeRaw: item.actionType ?? facts.actionType,
     action: facts.actionType,
     isReaction: item.isReaction === true,
-    partIds: parts
-      .map((part) => {
-        const p = part as { id?: string | number | undefined };
-        return p.id != null ? String(p.id) : '';
-      })
-      .filter(Boolean),
-    partNames: parts
-      .map((part) => {
-        const p = part as { name?: string | undefined };
-        return p.name != null ? String(p.name) : '';
-      })
-      .filter(Boolean),
+    partIds,
+    partNames,
+    ...(kind === 'power'
+      ? {
+          durationType: structuredDuration?.type ?? null,
+          durationValue: structuredDuration?.value ?? null,
+          partCategories: resolvePartCategoryList(
+            parts as Parameters<typeof resolvePartCategoryList>[0],
+            powerPartsDb,
+          ),
+        }
+      : {}),
   };
 }
 
@@ -507,14 +536,11 @@ export function getItemColumns(
     });
   }
   const gear = item as UserItem | EqItem;
-  const storedCurrency = gear.costs?.totalCurrency;
-  const fallbackCost = 'cost' in gear ? gear.cost : undefined;
-  const currency =
-    storedCurrency != null
-      ? Math.round(storedCurrency)
-      : fallbackCost != null
-        ? fallbackCost
-        : undefined;
+  const catalogCurrency = equipmentCurrency(
+    gear as { currency?: number | undefined; gold_cost?: number | undefined },
+  );
+  const gearCost = 'cost' in gear && gear.cost != null && gear.cost > 0 ? gear.cost : undefined;
+  const currency = catalogCurrency > 0 ? catalogCurrency : gearCost;
   const values: Record<string, string> = {
     category: formatListCellLabel(('category' in gear ? gear.category : undefined) || gear.type),
     currency: currency != null ? String(currency) : '-',
@@ -632,6 +658,7 @@ export function buildSelectableItem(
     const categoryText = formatPartCategoriesColumn(categories);
     const sections = buildGlrFactDetailSections({
       chipFacts: selectPowerChrome.layout.chipFacts,
+      entityType: 'power',
       facts: {
         range: display.range,
         category: categoryText && categoryText !== '—' ? categoryText : undefined,
@@ -663,6 +690,7 @@ export function buildSelectableItem(
     const categoryText = formatPartCategoriesColumn(categories);
     const sections = buildGlrFactDetailSections({
       chipFacts: selectTechniqueChrome.layout.chipFacts,
+      entityType: 'technique',
       facts: {
         category: categoryText && categoryText !== '—' ? categoryText : undefined,
         damage: display.damageStr && display.damageStr !== '-' ? display.damageStr : undefined,
@@ -729,8 +757,11 @@ export function buildSelectableItem(
           ? Math.round(it.costs.totalTP)
           : undefined;
     const rarity = isArmament ? it.rarity || pricing.rarity || undefined : it.rarity;
+    const glrEntityType =
+      effectiveType === 'equipment' ? 'gear' : (effectiveType as 'weapon' | 'armor' | 'shield');
     const sections = buildGlrFactDetailSections({
       chipFacts: selectChromeFor(effectiveType).layout.chipFacts,
+      entityType: glrEntityType,
       facts: {
         rarity,
         currency,

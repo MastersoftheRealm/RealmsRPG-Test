@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { ABILITIES_AND_DEFENSES, DEFENSE_DISPLAY_NAMES } from '@/lib/game/constants';
-import { ABILITY_INFO, DEFENSE_INFO } from './abilities-section-model';
+import { ABILITY_INFO, DEFENSE_INFO } from './ability-defense-stat-model';
 
 describe('Sheet ability/defense tile labels (TASK-835)', () => {
   it('uses GAME_RULES full names from ABILITIES_AND_DEFENSES (no Mental Fort.)', () => {

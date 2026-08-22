@@ -16,7 +16,6 @@ import type {
   EntityShieldRow,
   EntityWeaponRow,
 } from '@/components/patterns/list/entity-library-sections';
-import { buildCreatureEquipmentColumns } from '@/components/patterns/list/entity-library-sections-columns';
 import { normalizeCreatureInventoryType } from '@/lib/game/creature-inventory';
 import type { Item } from '@/types';
 import type { CreatureArmamentRow } from './creature-creator-feat-armament-display';
@@ -126,13 +125,14 @@ export function mapCreatureSelectedInventoryRows(opts: {
     weapons: mapWeaponRows(weapons as Item[], ctx),
     shields: mapShieldRows(shields as Item[], ctx),
     armor: mapArmorRows(armor as Item[], ctx),
-    equipment: mapEquipmentRows(equipment as Item[], ctx).map((row, index) => {
+    equipment: mapEquipmentRows(equipment as Item[], ctx, {
+      surfaceId: 'creature-inventory-equipment',
+    }).map((row, index) => {
       const item = equipment[index];
       return {
         ...row,
         type: item?.type,
         quantity: item?.quantity,
-        columns: buildCreatureEquipmentColumns(item?.type, item?.quantity),
       };
     }),
   };

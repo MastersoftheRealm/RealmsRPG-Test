@@ -28,7 +28,6 @@ import {
   getTotalSkillPoints,
   getSkillValueIncreaseCost,
   calculateSimpleSkillPointsSpent,
-  canIncreaseDefense,
   resolveSkillAllocationRules,
 } from '@/lib/game/skill-allocation';
 import {
@@ -39,16 +38,18 @@ import {
   buildExistingSkillNames,
 } from '@/lib/game/skill-allocation-add';
 import { useGameRules } from '@/hooks';
-import { formatBonus } from '@/lib/utils';
 import { SkillRow } from './skill-row';
 import { PointStatus } from '../chrome/point-status';
 import { AddSkillModal } from '../select/add-skill-modal';
 import { AddSubSkillModal } from '../select/add-sub-skill-modal';
-import { ValueStepper } from '../select/value-stepper';
-import { WordHelpTip } from '../help/info-tippy';
+import {
+  DefenseStatTile,
+  ABILITY_ORDER,
+  ABILITY_INFO,
+  ABILITY_CONSTRAINTS,
+  SHEET_STAT_GRID_CLASS,
+} from '../stat-tiles';
 import { Button, Spinner, Alert, Card, PageHeader, TableScroll } from '@/components/ui';
-import { DEFENSE_DISPLAY_NAMES, DEFENSE_DISPLAY_ORDER } from '@/lib/game/constants';
-import { getDefenseHelp } from '../../../../public/tooltip-text';
 import type { Abilities, DefenseSkills } from '@/types';
 
 export interface DefenseBonusesCardProps {
@@ -56,7 +57,7 @@ export interface DefenseBonusesCardProps {
   onDefenseChange: (defense: DefenseSkills) => void;
   level: number;
   remainingPoints: number;
-  abilityDefenseBonuses?: Partial<Record<keyof DefenseSkills, number>> | undefined;
+  abilities: Abilities;
   skillRules: ReturnType<typeof resolveSkillAllocationRules>;
   className?: string | undefined;
 }
@@ -66,21 +67,18 @@ export function DefenseBonusesCard({
   onDefenseChange,
   level,
   remainingPoints,
-  abilityDefenseBonuses = {},
+  abilities,
   skillRules,
   className,
 }: DefenseBonusesCardProps) {
-  const handleDefenseChange = (key: keyof DefenseSkills, delta: number) => {
-    const current = defenseSkills[key] ?? 0;
-    if (delta > 0) {
-      const abilityBonus = abilityDefenseBonuses[key] ?? 0;
-      if (current + abilityBonus >= level) return;
-      if (remainingPoints < skillRules.defenseIncreaseCost) return;
-      onDefenseChange({ ...defenseSkills, [key]: current + 1 });
-    } else if (current > 0) {
-      onDefenseChange({ ...defenseSkills, [key]: current - 1 });
-    }
-  };
+  const maxDefenseSkill = ABILITY_CONSTRAINTS.getMaxDefenseSkill(level);
+
+  const handleDefenseChange = useCallback(
+    (defenseKey: keyof DefenseSkills, value: number) => {
+      onDefenseChange({ ...defenseSkills, [defenseKey]: value });
+    },
+    [defenseSkills, onDefenseChange],
+  );
 
   return (
     <Card className={cn('p-4 shadow-md', className)}>
@@ -91,54 +89,24 @@ export function DefenseBonusesCard({
         Spend {skillRules.defenseIncreaseCost} Skill points to increase a defense bonus by 1.
         Defense bonus from Skill points cannot exceed your level.
       </p>
-      <div className="grid grid-cols-2 gap-3 md:grid-cols-3">
-        {DEFENSE_DISPLAY_ORDER.map((key) => {
-          const current = defenseSkills[key] ?? 0;
-          const abilityBonus = abilityDefenseBonuses[key] ?? 0;
-          const totalBonus = abilityBonus + current;
-          const name = DEFENSE_DISPLAY_NAMES[key];
-          const canInc = canIncreaseDefense(
-            current,
-            level,
-            abilityBonus,
-            remainingPoints,
-            skillRules,
-          );
+      <div className={SHEET_STAT_GRID_CLASS}>
+        {ABILITY_ORDER.map((ability) => {
+          const defenseKey = ABILITY_INFO[ability].defenseKey;
           return (
-            <div
-              key={key}
-              className="flex flex-col rounded-lg border border-border-light bg-surface-alt p-3"
-            >
-              <WordHelpTip
-                content={getDefenseHelp(key)}
-                label={`About ${name}`}
-                className="mb-1 font-medium text-text-primary normal-case"
-              >
-                {name}
-              </WordHelpTip>
-              <div className="flex items-center justify-between gap-2">
-                <ValueStepper
-                  value={current}
-                  onChange={(next) => handleDefenseChange(key, next - current)}
-                  min={0}
-                  max={canInc ? Infinity : current}
-                  size="sm"
-                  formatValue={() => formatBonus(totalBonus)}
-                  decrementTitle={`Decrease ${name}`}
-                  incrementTitle={
-                    canInc
-                      ? `Increase ${name} (Cost: ${skillRules.defenseIncreaseCost} Skill points)`
-                      : `Increase ${name} (Max at level ${level})`
-                  }
-                  className="w-full justify-between"
-                />
-              </div>
-              {current > 0 && (
-                <span className="mt-0.5 text-[9px] font-medium text-primary-link-fg">
-                  +{current} ({current * skillRules.defenseIncreaseCost}sp)
-                </span>
-              )}
-            </div>
+            <DefenseStatTile
+              key={defenseKey}
+              ability={ability}
+              abilities={abilities}
+              defenseSkills={defenseSkills}
+              level={level}
+              showSpendControls
+              showTempControls={false}
+              maxDefenseSkill={maxDefenseSkill}
+              skillPointsRemaining={remainingPoints}
+              enforceSkillPointBudget
+              defenseIncreaseCost={skillRules.defenseIncreaseCost}
+              onDefenseChange={handleDefenseChange}
+            />
           );
         })}
       </div>
@@ -167,8 +135,6 @@ export interface SkillsAllocationPageProps {
   onAllocationsChange: (allocations: Record<string, number>) => void;
   /** Callback when defense skills change */
   onDefenseChange: (defense: DefenseSkills) => void;
-  /** Optional: ability-derived defense bonuses for cap check */
-  abilityDefenseBonuses?: Partial<Record<keyof DefenseSkills, number>> | undefined;
   /** Optional: chosen ability per skill (for multi-ability skills). Key = skill ID (base skill for sub-skills). */
   skillAbilities?: Record<string, string> | undefined;
   /** Optional: callback when user changes chosen ability for a skill */
@@ -203,7 +169,6 @@ export function SkillsAllocationPage({
   extraSkillPoints = 0,
   onAllocationsChange,
   onDefenseChange,
-  abilityDefenseBonuses = {},
   skillAbilities = {},
   onSkillAbilityChange,
   footer,
@@ -574,7 +539,7 @@ export function SkillsAllocationPage({
           onDefenseChange={onDefenseChange}
           level={level}
           remainingPoints={remainingPoints}
-          abilityDefenseBonuses={abilityDefenseBonuses}
+          abilities={abilities}
           skillRules={skillRules}
         />
       )}

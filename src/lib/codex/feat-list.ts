@@ -28,6 +28,13 @@ const creatorFeatChrome = glrListChrome({
 });
 const selectFeatChrome = glrListChrome({ entityType: 'feat', mode: 'select' });
 
+/** Live `codex_feats` still has a few `Offense` rows (TASK-876). Display + filters use Offensive. */
+export function normalizeFeatCategory(category: string | undefined | null): string {
+  const value = String(category ?? '').trim();
+  if (!value) return '';
+  return value === 'Offense' ? 'Offensive' : value;
+}
+
 /** Data columns only — admin action chrome uses CodexBrowseListShell `rowChrome`. */
 export const FEAT_GRID_COLUMNS = codexFeatChrome.grid;
 
@@ -92,7 +99,7 @@ function featColumnValues(feat: Feat): Record<string, string> {
   const uses = feat.uses_per_rec != null && feat.uses_per_rec > 0 ? String(feat.uses_per_rec) : '-';
   return {
     lvl_req: feat.lvl_req != null && feat.lvl_req > 0 ? String(feat.lvl_req) : '-',
-    category: formatListCellLabel(feat.category),
+    category: formatListCellLabel(normalizeFeatCategory(feat.category)),
     ability: formatAbilityList(feat.ability),
     uses_per_rec: uses,
     rec_period: formatListCellLabel(feat.rec_period),
@@ -236,7 +243,7 @@ export function buildFeatFilterOptions(feats: Feat[] | undefined): FeatFilterOpt
   feats.forEach((f) => {
     if (f.lvl_req > 0) levels.add(f.lvl_req);
     normalizeFeatAbilities(f.ability).forEach((a) => abilities.add(a));
-    if (f.category) categories.add(f.category);
+    if (f.category) categories.add(normalizeFeatCategory(f.category));
     f.tags?.forEach((t) => tags.add(t));
     f.ability_req?.forEach((a) => abilReqAbilities.add(a));
   });
@@ -285,7 +292,10 @@ export function filterFeats(
       }
     }
 
-    if (filters.categories.length > 0 && !filters.categories.includes(f.category || ''))
+    if (
+      filters.categories.length > 0 &&
+      !filters.categories.includes(normalizeFeatCategory(f.category))
+    )
       return false;
 
     if (filters.abilities.length > 0) {
@@ -389,7 +399,7 @@ export function buildFeatGridColumns(
 
   const values: Record<string, string> = {
     lvl_req: String(reqLevel),
-    category: formatListCellLabel(feat.category),
+    category: formatListCellLabel(normalizeFeatCategory(feat.category)),
     ability: formatAbilityList(feat.ability),
     uses_per_rec: uses,
     rec_period: formatListCellLabel(feat.rec_period),

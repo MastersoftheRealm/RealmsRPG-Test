@@ -1,8 +1,7 @@
 /**
  * AbilityScoreGrid — unified six-ability tile row (character sheet layout).
  * Display mode: name + score (no roll buttons). Edit mode: +/- steppers.
- * Mobile display: full ability names in a 2-col grid (avoids STR/ACU + tall skinny tiles);
- * edit uses a roomier grid so 44px steppers are not forced into narrow phone tiles.
+ * Uses the same 2/3/6 grid and tile density as character-sheet AbilityStatTile (TASK-880).
  */
 
 'use client';
@@ -104,10 +103,10 @@ function getPathAbilityHighlight(
 }
 
 function abilityBorderClass(role: PathAbilityRole | null): string {
-  if (role === 'power') return 'border-power dark:border-power-border';
-  if (role === 'martial') return 'border-martial dark:border-martial-border';
-  if (role === 'secondary') return 'border-primary-subtle-border';
-  return 'border-border-light';
+  if (role === 'power') return 'border-2 border-power-border';
+  if (role === 'martial') return 'border-2 border-martial-border';
+  if (role === 'secondary') return 'border-2 border-primary-subtle-border';
+  return 'border border-border-light';
 }
 
 function abilityGradientClass(role: PathAbilityRole | null): string {
@@ -196,16 +195,12 @@ export function AbilityScoreGrid({
     <div
       className={cn(
         // Only the pill's outer half needs grid clearance; each tile reserves its inner half below.
-        'grid',
-        isCompact ? 'gap-2 pt-2' : 'gap-2 pt-2 sm:gap-3 md:gap-4',
-        // Display: 2-col phone (full names, less elongated), 3-col tablet, 6-col desktop.
-        // Edit: wider cells so 44px steppers fit.
-        // Compact + filtered: denser auto columns for overview subsets (Path More details).
-        isEdit
-          ? 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6'
-          : isCompact && onlyAbilities?.length
-            ? 'grid-cols-2 sm:grid-cols-3 md:grid-cols-4'
-            : 'grid-cols-2 sm:grid-cols-3 lg:grid-cols-6',
+        // C3: same 2/3/6 tracks as character-sheet AbilityStatTile (edit + display).
+        'grid min-w-0 pt-2',
+        isCompact ? 'gap-2' : 'gap-2.5 md:gap-3',
+        isCompact && onlyAbilities?.length
+          ? 'grid-cols-2 sm:grid-cols-3 md:grid-cols-4'
+          : 'grid-cols-2 sm:grid-cols-3 lg:grid-cols-6',
         className,
       )}
     >
@@ -227,18 +222,13 @@ export function AbilityScoreGrid({
             {highlight ? <PathAbilityLabel role={highlight} hybrid={hybrid} /> : null}
             <div
               className={cn(
-                'flex h-full rounded-xl border-2 bg-gradient-to-b transition-all',
+                'flex h-full min-w-0 rounded-xl bg-gradient-to-b transition-all',
                 abilityGradientClass(highlight),
                 abilityBorderClass(highlight),
                 !isEdit && 'hover:shadow-md',
-                isEdit
-                  ? 'flex-row items-center justify-between gap-2 px-3 py-2 sm:flex-col sm:justify-center sm:px-2 sm:py-2'
-                  : isCompact
-                    ? 'flex-col items-center justify-center px-1 py-1 sm:px-1.5 sm:py-1.5'
-                    : 'flex-col items-center justify-center px-1.5 py-1.5 sm:px-2 sm:py-2',
+                'flex-col items-center justify-start gap-2 px-2.5 py-3',
                 // Reserve the pill's inner half on every tile so highlighted content stays aligned.
-                // Keep after py-* so twMerge preserves the top clearance (including sm:py-2).
-                isCompact ? 'pt-2.5 sm:pt-2.5' : 'pt-3 sm:pt-3',
+                isCompact ? 'pt-2.5' : 'pt-3',
               )}
             >
               {/* Name is WordHelpTip (focusable); score carries ability context — no tile aria-label. */}
@@ -246,30 +236,17 @@ export function AbilityScoreGrid({
                 content={getAbilityHelp(ability)}
                 label={`About ${info.name}`}
                 className={cn(
-                  'font-bold text-text-muted uppercase',
-                  isEdit
-                    ? 'text-xs tracking-wide sm:text-[11px] sm:tracking-wider'
-                    : // Full-width label; keep WordHelpTip default 44px touch target (MOBILE_UX).
-                      cn(
-                        'w-full min-w-0 justify-center px-0.5 text-center leading-tight tracking-wide',
-                        isCompact
-                          ? 'text-[9px] sm:text-[10px]'
-                          : 'text-[10px] sm:text-[11px] sm:tracking-wider',
-                      ),
+                  'w-full min-w-0 justify-center px-0.5 text-center leading-tight font-semibold tracking-wide text-text-secondary uppercase',
+                  isCompact ? 'text-[10px] sm:text-xs' : 'text-sm',
                 )}
               >
                 {info.name}
               </WordHelpTip>
 
-              <div
-                className={cn(
-                  'flex items-center justify-center',
-                  isEdit ? 'min-h-11 shrink-0' : 'mt-0.5',
-                )}
-              >
+              <div className="flex items-center justify-center">
                 {isEdit ? (
                   <div className="flex flex-col items-center gap-0.5">
-                    <div className="flex items-center gap-1">
+                    <div className="flex items-center gap-0.5">
                       <DecrementButton
                         onClick={() => onAbilityChange?.(ability, value - 1)}
                         disabled={!canDec}
@@ -277,7 +254,7 @@ export function AbilityScoreGrid({
                       />
                       <span
                         className={cn(
-                          'min-w-[2.75rem] text-center text-2xl font-bold',
+                          'min-w-[2.5rem] text-center text-xl leading-none font-bold tabular-nums',
                           abilityValueClass(value),
                         )}
                         aria-label={`${info.name} ${formatBonus(value)}`}
@@ -298,21 +275,19 @@ export function AbilityScoreGrid({
                     {getIncreaseCost ? (
                       <span
                         className={cn(
-                          'h-3.5 text-[10px] leading-none font-medium',
+                          'text-[10px] leading-none font-medium',
                           increaseCost > 1 && canInc ? 'text-warning-fg' : 'invisible',
                         )}
                       >
-                        Next: {increaseCost} Points
+                        Next: {increaseCost} Pts
                       </span>
                     ) : null}
                   </div>
                 ) : (
                   <span
                     className={cn(
-                      'min-w-[2.5rem] text-center font-bold',
-                      isCompact
-                        ? 'text-lg sm:min-w-[2.5rem] sm:text-xl'
-                        : 'text-xl sm:min-w-[2.75rem] sm:text-2xl',
+                      'min-w-[2.5rem] text-center text-xl leading-none font-bold tabular-nums',
+                      isCompact && 'text-lg',
                       abilityValueClass(value),
                     )}
                     aria-label={`${info.name} ${formatBonus(value)}`}

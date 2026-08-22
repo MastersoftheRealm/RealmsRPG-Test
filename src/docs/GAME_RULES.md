@@ -535,6 +535,17 @@ Any Bonus can be converted to a Score by adding 10.
 **Innate Energy:** Innate Pools × Innate Threshold. Total combined energy of all innate powers.
 **Innate Pools:** Number of innate powers (if each uses max threshold). +1 every 3 levels starting at 4.
 
+#### Innate Power qualification (Appendix G)
+
+A power qualifies as **Innate** only when **all** of the following are true:
+
+1. **Action type:** Basic Action or Basic Reaction only (not Quick, Free, or Long).
+2. **Energy:** At or below your **Innate Threshold** for your level.
+3. **Duration:** Instant, or at most **1 minute** (10 rounds = 1 minute). Longer durations (hours, days, permanent, or >1 minute) do not qualify. Powers with unknown/unresolved duration do not qualify.
+4. **Parts:** No **Healing** or **energy-gain** parts (e.g. Heal, Siphon). No parts whose codex **category** is **Adaptation** (distinct from the “No Harm or Adaptation for Duration” mechanic part).
+
+Combined innate Energy across all innate powers must stay within **Innate Energy** (Pools × Threshold).
+
 ### Martial Character Progression
 
 | Level | Bonus Archetype Feats | Total Archetype Feats | Armament Prof | Martial Prof |

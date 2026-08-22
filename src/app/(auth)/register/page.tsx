@@ -18,9 +18,10 @@ import { getAuthErrorMessage } from '@/lib/auth-errors';
 import { sanitizeRedirectPath } from '@/lib/safe-redirect';
 import { createUserProfileAction } from '@/app/(auth)/actions';
 import { resendConfirmationAction } from '@/app/(auth)/auth-actions';
-import { AuthCard, FormInput, PasswordInput, SocialButton } from '@/components/auth';
+import { AuthCard, AuthTurnstile, FormInput, PasswordInput, SocialButton } from '@/components/auth';
 import { Spinner } from '@/components/ui';
 import { Button, Alert } from '@/components/ui';
+import { useAuthCaptcha } from '@/hooks/use-auth-captcha';
 
 function RegisterContent() {
   const router = useRouter();
@@ -30,6 +31,14 @@ function RegisterContent() {
   const [needsEmailConfirm, setNeedsEmailConfirm] = useState(false);
   const [signupEmail, setSignupEmail] = useState<string>('');
   const [resendStatus, setResendStatus] = useState<'idle' | 'sending' | 'sent'>('idle');
+  const {
+    captchaReady,
+    captchaBlockMessage,
+    captchaOptions,
+    captchaResetKey,
+    setCaptchaToken,
+    resetCaptcha,
+  } = useAuthCaptcha();
 
   const getRedirectPath = () => {
     const urlRedirect = searchParams.get('redirect') ?? searchParams.get('returnTo');
@@ -53,6 +62,12 @@ function RegisterContent() {
     setResendStatus('idle');
     setSignupEmail(data.email);
 
+    if (captchaBlockMessage) {
+      setError(captchaBlockMessage);
+      setIsLoading(false);
+      return;
+    }
+
     try {
       const supabase = createClient();
       const redirectPath = getRedirectPath();
@@ -61,6 +76,7 @@ function RegisterContent() {
         email: data.email,
         password: data.password,
         options: {
+          ...captchaOptions,
           emailRedirectTo: `${window.location.origin}/auth/confirm?next=${encodeURIComponent(redirectPath)}`,
           ...(chosenUsername ? { data: { username_display: chosenUsername } } : {}),
         },
@@ -86,6 +102,7 @@ function RegisterContent() {
       sessionStorage.removeItem('loginRedirect');
       router.push(redirectPath);
     } catch (err) {
+      resetCaptcha();
       setError(getAuthErrorMessage(err, 'register'));
     } finally {
       setIsLoading(false);
@@ -250,7 +267,9 @@ function RegisterContent() {
           <p className="-mt-3 text-sm text-red-400">{errors.acceptTerms.message}</p>
         ) : null}
 
-        <Button type="submit" className="w-full" disabled={isLoading}>
+        <AuthTurnstile resetKey={captchaResetKey} onToken={setCaptchaToken} />
+
+        <Button type="submit" className="w-full" disabled={isLoading || !captchaReady}>
           {isLoading ? 'Creating account...' : 'Create Account'}
         </Button>
       </form>
