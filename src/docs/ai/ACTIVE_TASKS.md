@@ -4,7 +4,7 @@
 Skip `blocked` and human `assignee:` (those live in [`WAITING_TASKS.md`](WAITING_TASKS.md)).
 Do **not** read the done archive at session start.
 
-**Next task ID:** TASK-901
+**Next task ID:** TASK-902
 **Waiting / blocked / human:** [WAITING_TASKS.md](WAITING_TASKS.md)
 **Done archive:** [archive/TASK_QUEUE_DONE.md](archive/TASK_QUEUE_DONE.md) · snapshot [archive/TASK_QUEUE_DONE_2026-07-15.md](archive/TASK_QUEUE_DONE_2026-07-15.md)
 **Process:** [AI_TASK_QUEUE.md](AI_TASK_QUEUE.md) · Template: [AI_REQUEST_TEMPLATE.md](AI_REQUEST_TEMPLATE.md)
@@ -12,9 +12,9 @@ Do **not** read the done archive at session start.
 
 **Agent rules:** Prefer highest `priority` among `not-started` / continue `partial` / `in-progress`. Human-only → `DEVELOPER_TASK_QUEUE.md`. Done summaries live in the archive — do not re-list them here.
 
-**Counts:** 3 agent-eligible (partial, owner-gated) · waiting/blocked in WAITING_TASKS · done in archive.
+**Counts:** 4 agent-eligible (1 not-started + 3 partial owner-gated) · waiting/blocked in WAITING_TASKS · done in archive.
 
-**Hot notes:** **2026-08-22** TASK-900 archived (styleguide Linux visual baselines). **Architect / owner ack before implement:** TASK-871 armament table split (DEV-Q05 — research write-up done), TASK-876 live Codex UPDATE (DEV-Q06 — seed+SQL preview ready), TASK-874 changelog schema/TTL (DEV-Q07 — display slimming done). **2026-08-22** TASK-899 archived (Turnstile + security.txt; Dashboard steps DEV-015). Batch A sheet/library/rolls tasks (885–895) archived. **Mobile audit 2026-08-18** → `reports/mobile-audit-2026-08-18/MOBILE_AUDIT.md`. **WAITING:** TASK-834 (OneDrive), TASK-823 (manuscript). Do **not** delete `/characters/new/advanced`. TASK-410–414 deferred.
+**Hot notes:** **2026-08-22** `/debt` filed TASK-901 (always-on 44 slabs). **2026-08-22** TASK-900 archived (styleguide Linux visual baselines). **Architect / owner ack before implement:** TASK-871 armament table split (DEV-Q05 — research write-up done), TASK-876 live Codex UPDATE (DEV-Q06 — seed+SQL preview ready), TASK-874 changelog schema/TTL (DEV-Q07 — display slimming done). **2026-08-22** TASK-899 archived (Turnstile + security.txt; Dashboard steps DEV-015). Batch A sheet/library/rolls tasks (885–895) archived. **Mobile audit 2026-08-18** → `reports/mobile-audit-2026-08-18/MOBILE_AUDIT.md`. **WAITING:** TASK-834 (OneDrive), TASK-823 (manuscript). Do **not** delete `/characters/new/advanced`. TASK-410–414 deferred.
 
 ---
 
@@ -120,3 +120,42 @@ Do **not** read the done archive at session start.
     - Proposed SQL + seed CSV mapping; live UPDATE only after owner “apply”.
     - Feat category filters expose Offensive once, not both.
     - After apply: no remaining `category = 'Offense'` on feats; changelog note for reference data.
+
+---
+
+- id: TASK-901
+  title: Pointer-tier remaining always-on min-h-[44px] slabs (TASK-865 leftovers)
+  created_at: 2026-08-22
+  created_by: agent
+  priority: medium
+  status: not-started
+  related_files:
+    - src/components/character-sheet/edit-archetype-modal.tsx
+    - src/app/(main)/crafting/[id]/_components/crafting-item-options-section.tsx
+    - src/app/(main)/crafting/[id]/_components/crafting-optional-rules-section.tsx
+    - src/app/(main)/crafting/[id]/_components/crafting-rolls-section.tsx
+    - src/app/(main)/encounters/page.tsx
+    - src/app/(main)/encounters/[id]/_components/skill/skill-participant-card.tsx
+    - src/docs/MOBILE_UX.md
+    - src/docs/ai/ADR/0023-responsive-layout-contracts.md
+    - src/components/ui/button-tiers.test.ts
+  build_validation: |
+    suite: DEV-V-055
+    tests:
+      - DEV-V-055-T008
+  developer_test_plan: |
+    Suite DEV-V-055 T008 — see BUILD_VALIDATION.md (add when implementing)
+  description: |
+    `/global-audit` 2026-08-22: TASK-865 cleared viewport `md:min-h-*` shrinks, but left
+    always-on `min-h-[44px]` (no `@media (pointer: coarse)`) on crafting options/rules/rolls,
+    edit-archetype modal cards, encounters hub icons, and skill-participant-card. Owner ack
+    was required before retagging those surfaces onto pointer tiers / Button sizes / `.hit-area-*`.
+  acceptance_criteria:
+    - Named surfaces use pointer tiers (coarse Standard/Primary as appropriate; fine compact) — no always-on 44 layout slab on fine pointer unless product-intentional and documented.
+    - Do not retag list thumbs, image mattes, or InnateToggle.
+    - Extend `button-tiers.test.ts` ratchet; add DEV-V-055 T008; `/characters/new/advanced` still loads.
+    - Owner ack recorded in notes or chat before implement (gated from /debt).
+  notes: |
+    Filed from /debt after /global-audit. Do not fold USM migrations or AdminArchetypes shell.
+    Keep `/characters/new/advanced`. Live codex/schema out of scope.
+
