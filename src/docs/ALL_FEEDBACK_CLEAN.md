@@ -1,6 +1,20 @@
 # ALL_FEEDBACK — Consolidated & Curated
 
-Last updated: 2026-08-22
+Last updated: 2026-08-24
+
+**Raw Feedback Log — 2026-08-24 (Tab away / tab back remounts UI state)**
+- Context: Any authenticated page with local UI state (sheet modals, expanded GLR rows, etc.)
+- Priority: High (play-surface; loses in-progress UI on every focus return)
+- Feedback (verbatim summary): Whenever I tab away from a page and tab back (or similar), it always refreshes the info on the page — open modals, expanded sheet items, etc. reset. Why? Don't like it long term.
+- Misinterpretation / code note: Not React Query `refetchOnWindowFocus` (already `false` globally + sheet). Root cause: Supabase Auth `_onVisibilityChanged` → `_recoverAndRefresh()` re-emits `SIGNED_IN` when a still-valid session is recovered on tab focus. `use-auth.ts` calls `queryClient.clear()` on every `SIGNED_IN` (TASK-737 identity-switch hygiene). Cleared cache → `isPending` → character sheet (and similar) hard-gates to `<LoadingState>` and unmounts the tree → local `useState` (modals, expansions) resets. `TOKEN_REFRESHED` / `INITIAL_SESSION` are already excluded from clear; visibility-recovery `SIGNED_IN` is not.
+- Disposition: **TASK-903 done** (pending-qa DEV-V-009 T076) — `shouldClearQueryCacheOnAuthEvent` clears only on user-id change / `SIGNED_OUT`.
+
+**Raw Feedback Log — 2026-08-24 (Mobile character sheet: vertical scroll broken)**
+- Context: Character sheet below `md` after TASK-838/868 mobile frame + header-collapse work
+- Priority: High (play-surface regression; worked ~2 weeks ago)
+- Feedback (verbatim summary): (1) Swiping down from the header section does not scroll the sheet. (2) Scrolling up from the lower section quickly jumps back to the header and locks it in place. (3) Swiping feels locked to only outside the actual field/functional area (the sides). Recent mobile audit edits broke natural scroll.
+- Misinterpretation / code note: Carousel uses `touch-pan-x` alone — effective touch-action intersects with ancestors and blocks vertical pan on panels (sides/gutters outside the carousel still feel “free”). Header is not a scroller (TASK-868), so gestures on identity/resources do nothing. Collapse threshold is symmetric at 8px — expanding the header shrinks the panel and feels like a snap-lock. Library keeps a nested `overflow-y-auto` inside the panel scroller.
+- Disposition: **TASK-902** — restore dual-axis touch on the carousel; forward vertical gestures from the header to the active panel; asymmetric collapse hysteresis; drop nested library overflow below `md`.
 
 **Raw Feedback Log — 2026-08-22 (External security report — auth signup abuse)**
 - Context: Responsible disclosure email re realmsrpg.com `/register`

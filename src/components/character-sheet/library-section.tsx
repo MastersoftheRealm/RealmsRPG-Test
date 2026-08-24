@@ -272,7 +272,7 @@ export function LibrarySection({
         className="mb-4"
       />
 
-      <div className="min-h-0 flex-1 space-y-2 overflow-y-auto">
+      <div className="min-h-0 flex-1 space-y-2 max-md:overflow-visible md:overflow-y-auto">
         {resolvedActiveTab === 'powers' && (
           <LibraryPowersPanel
             innateEnergy={innateEnergy}

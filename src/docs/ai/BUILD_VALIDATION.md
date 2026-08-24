@@ -2215,14 +2215,55 @@ Manual QA for library/feats modularization and shared part display. **Needs:** c
 | **Needs** | A populated character (header tall enough to share the first screen with Abilities — E2E Baseline Knight / loaded sheet) |
 
 **Steps**
-1. Open the sheet at ~390px. Confirm identity / Speed / resources are visible above Abilities. The header is not its own scroller — the first downward scroll is the panel. The carousel shows a right-edge fade while later panels are off-screen (C1; no next-panel peek / scroller padding).
+1. Open the sheet at ~390px. Confirm identity / Speed / resources are visible above Abilities. The header is not its own scroller — vertical swipe on the header still scrolls the active panel (TASK-902 bridge). The carousel shows a right-edge fade while later panels are off-screen (C1; no next-panel peek / scroller padding).
 2. Scroll down inside the Abilities (or Library) panel. Confirm the **sheet** header (not the site nav) fully leaves — no leftover identity/stat strip taking half the lower section. The panel uses the leftover viewport above the dock.
-3. Scroll that panel back to the top. Confirm the sheet header returns.
+3. Scroll that panel back to the top. Confirm the sheet header returns only once the panel is fully at the top (no mid-scroll snap-lock).
 4. Swipe to Skills / Archetype / Library. Confirm each snapped panel lines up with the header card’s left/right edges (T021). On the last panel the right-edge fade is gone.
 5. Repeat at ~360px. Optional ≥768px: header stays in document flow (no collapse); no carousel fade.
 
 **Expected**
-- Below `md`, panel scroll fully collapses `data-sheet-mobile-header`. Restoring scrollTop restores the header. Snap panels stay aligned with PageContainer/header gutters. Desktop grid unchanged.
+- Below `md`, panel scroll fully collapses `data-sheet-mobile-header`. Restoring scrollTop to 0 restores the header. Snap panels stay aligned with PageContainer/header gutters. Desktop grid unchanged.
+
+**Report** — `[ ] PASS` · `[ ] FAIL` · `[ ] SKIP` — Notes:
+
+#### DEV-V-009-T075 — Mobile sheet vertical scroll works on header and panel content (TASK-902)
+
+| Field | Value |
+|-------|-------|
+| **Suite** | DEV-V-009 — Character sheet refactor |
+| **Related task** | TASK-902 |
+| **Where** | `/characters/[id]` at 360px and 390px (below `md`, real touch or DevTools device mode with touch) |
+| **Needs** | Populated character (E2E Baseline Knight / loaded sheet) |
+
+**Steps**
+1. Open the sheet at ~390px. Swipe **down** starting on the sheet header (portrait / name / HP area). Confirm the Abilities (or active) panel scrolls and the header collapses after real travel — not stuck.
+2. Swipe **vertically on panel content** (ability tiles, skill rows, library list — not only the side gutters). Confirm the panel scrolls smoothly.
+3. Scroll partway down, then swipe up slowly. Confirm the header does **not** pop back open until the panel reaches the top.
+4. Horizontal-swipe to Skills / Library. Confirm snap still works one panel at a time.
+5. Repeat at ~360px.
+
+**Expected**
+- Vertical pan works on header and on functional panel content. No “sides only” scroll lock. Header collapse still satisfies T064. Horizontal C1 snap unchanged.
+
+**Report** — `[ ] PASS` · `[ ] FAIL` · `[ ] SKIP` — Notes:
+
+#### DEV-V-009-T076 — Tab away / tab back keeps sheet UI state (TASK-903)
+
+| Field | Value |
+|-------|-------|
+| **Suite** | DEV-V-009 — Character sheet refactor |
+| **Related task** | TASK-903 |
+| **Where** | `/characters/[id]` (owner sheet) |
+| **Needs** | Loaded character; browser tab you can hide and show |
+
+**Steps**
+1. Open the sheet. Expand a Library feat/power row (or open Settings / an add-X modal).
+2. Switch to another browser tab (or minimize), wait ~2s, return to the sheet tab.
+3. Confirm the expanded row / open modal is still there — no flash of “Loading character…” and no remount to a clean sheet.
+4. Optional: sign out and sign in as a different account — prior character cache must not leak (list/sheet for the new user only).
+
+**Expected**
+- Same-user tab hide→show preserves local UI (modals, expansions). Real identity change / sign-out still isolates caches.
 
 **Report** — `[ ] PASS` · `[ ] FAIL` · `[ ] SKIP` — Notes:
 

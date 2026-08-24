@@ -4,7 +4,7 @@
 Skip `blocked` and human `assignee:` (those live in [`WAITING_TASKS.md`](WAITING_TASKS.md)).
 Do **not** read the done archive at session start.
 
-**Next task ID:** TASK-902
+**Next task ID:** TASK-904
 **Waiting / blocked / human:** [WAITING_TASKS.md](WAITING_TASKS.md)
 **Done archive:** [archive/TASK_QUEUE_DONE.md](archive/TASK_QUEUE_DONE.md) · snapshot [archive/TASK_QUEUE_DONE_2026-07-15.md](archive/TASK_QUEUE_DONE_2026-07-15.md)
 **Process:** [AI_TASK_QUEUE.md](AI_TASK_QUEUE.md) · Template: [AI_REQUEST_TEMPLATE.md](AI_REQUEST_TEMPLATE.md)
@@ -14,7 +14,7 @@ Do **not** read the done archive at session start.
 
 **Counts:** 4 agent-eligible (1 not-started + 3 partial owner-gated) · waiting/blocked in WAITING_TASKS · done in archive.
 
-**Hot notes:** **2026-08-22** `/debt` filed TASK-901 (always-on 44 slabs). **2026-08-22** TASK-900 archived (styleguide Linux visual baselines). **Architect / owner ack before implement:** TASK-871 armament table split (DEV-Q05 — research write-up done), TASK-876 live Codex UPDATE (DEV-Q06 — seed+SQL preview ready), TASK-874 changelog schema/TTL (DEV-Q07 — display slimming done). **2026-08-22** TASK-899 archived (Turnstile + security.txt; Dashboard steps DEV-015). Batch A sheet/library/rolls tasks (885–895) archived. **Mobile audit 2026-08-18** → `reports/mobile-audit-2026-08-18/MOBILE_AUDIT.md`. **WAITING:** TASK-834 (OneDrive), TASK-823 (manuscript). Do **not** delete `/characters/new/advanced`. TASK-410–414 deferred.
+**Hot notes:** **2026-08-24** TASK-903 archived (tab-focus session recovery no longer clears React Query). **2026-08-24** TASK-902 archived (mobile sheet vertical scroll). **2026-08-22** `/debt` filed TASK-901 (always-on 44 slabs). **2026-08-22** TASK-900 archived (styleguide Linux visual baselines). **Architect / owner ack before implement:** TASK-871 armament table split (DEV-Q05 — research write-up done), TASK-876 live Codex UPDATE (DEV-Q06 — seed+SQL preview ready), TASK-874 changelog schema/TTL (DEV-Q07 — display slimming done). **2026-08-22** TASK-899 archived (Turnstile + security.txt; Dashboard steps DEV-015). Batch A sheet/library/rolls tasks (885–895) archived. **Mobile audit 2026-08-18** → `reports/mobile-audit-2026-08-18/MOBILE_AUDIT.md`. **WAITING:** TASK-834 (OneDrive), TASK-823 (manuscript). Do **not** delete `/characters/new/advanced`. TASK-410–414 deferred.
 
 ---
 
