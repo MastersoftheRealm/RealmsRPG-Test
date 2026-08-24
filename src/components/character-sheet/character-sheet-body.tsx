@@ -4,7 +4,7 @@
  * Mobile panel gutters: basis-full + gap-4 inside PageContainer (TASK-538 / TASK-868).
  * Mobile C1: height-bound carousel so panels scroll internally (TASK-838).
  * Mobile header collapses on panel scroll so it can leave the viewport (TASK-868).
- * Header is not an inner scroller — the panel receives the first downward gesture.
+ * Header is not an inner scroller — vertical gestures on it bridge to the active panel (TASK-902).
  */
 
 'use client';
@@ -27,6 +27,7 @@ import { SkillsSection } from './skills-section';
 import { ArchetypeSection } from './archetype-section';
 import { LibrarySection } from './library-section';
 import { useCharacterSheet } from './character-sheet-context';
+import { nextSheetHeaderCollapsed } from './sheet-mobile-header-collapse';
 
 /**
  * Site `Header` is `h-20` (5rem). Below md, lock the sheet column to the leftover
@@ -43,13 +44,13 @@ export const CHARACTER_SHEET_MOBILE_DOCK_SCOPE_CLASSNAME = 'has-sheet-mobile-doc
 const MOBILE_SNAP_PANEL_CLASSNAME =
   'box-border shrink-0 grow-0 basis-full snap-start [scroll-snap-stop:always] overflow-x-hidden overflow-y-auto max-md:h-full max-md:min-h-0 max-md:overscroll-y-contain pb-4 max-md:pb-[var(--sheet-panel-end-pad)]';
 
-const SHEET_HEADER_COLLAPSE_SCROLL_PX = 8;
+const HEADER_GESTURE_AXIS_PX = 8;
 
 function isMobileSheetViewport(): boolean {
   return typeof window !== 'undefined' && window.matchMedia('(max-width: 767px)').matches;
 }
 
-function activeMobilePanelScrollTop(carousel: HTMLElement): number {
+function activeMobilePanel(carousel: HTMLElement): HTMLElement | null {
   const origin = carousel.getBoundingClientRect().left;
   const panels = carousel.querySelectorAll<HTMLElement>('[data-sheet-mobile-panel]');
   let active: HTMLElement | null = null;
@@ -61,31 +62,44 @@ function activeMobilePanelScrollTop(carousel: HTMLElement): number {
       active = panel;
     }
   }
-  return active?.scrollTop ?? 0;
+  return active;
+}
+
+function activeMobilePanelScrollTop(carousel: HTMLElement): number {
+  return activeMobilePanel(carousel)?.scrollTop ?? 0;
 }
 
 /**
- * Collapse the sheet header once a mobile panel (or the snapped panel after swipe)
- * scrolls. The header itself is not a scroller — first downward gesture hits the panel.
+ * Collapse the sheet header once a mobile panel scrolls past hysteresis.
+ * Header is not a scroller — vertical touch/wheel on it is bridged to the active panel.
  */
 function useMobileSheetHeaderCollapse(columnRef: RefObject<HTMLDivElement | null>) {
   const [collapsed, setCollapsed] = useState(false);
+  const collapsedRef = useRef(false);
 
   useEffect(() => {
     const root = columnRef.current;
     if (!root) return;
 
-    const syncFromScroller = (scroller: HTMLElement) => {
+    const applyScrollTop = (scrollTop: number) => {
       if (!isMobileSheetViewport()) {
+        collapsedRef.current = false;
         setCollapsed(false);
         return;
       }
+      const next = nextSheetHeaderCollapsed(collapsedRef.current, scrollTop);
+      if (next === collapsedRef.current) return;
+      collapsedRef.current = next;
+      setCollapsed(next);
+    };
+
+    const syncFromScroller = (scroller: HTMLElement) => {
       if (scroller.dataset.sheetMobileCarousel !== undefined) {
-        setCollapsed(activeMobilePanelScrollTop(scroller) > SHEET_HEADER_COLLAPSE_SCROLL_PX);
+        applyScrollTop(activeMobilePanelScrollTop(scroller));
         return;
       }
       if (scroller.dataset.sheetMobilePanel !== undefined) {
-        setCollapsed(scroller.scrollTop > SHEET_HEADER_COLLAPSE_SCROLL_PX);
+        applyScrollTop(scroller.scrollTop);
       }
     };
 
@@ -96,7 +110,10 @@ function useMobileSheetHeaderCollapse(columnRef: RefObject<HTMLDivElement | null
     };
 
     const onViewportChange = () => {
-      if (!isMobileSheetViewport()) setCollapsed(false);
+      if (!isMobileSheetViewport()) {
+        collapsedRef.current = false;
+        setCollapsed(false);
+      }
     };
 
     root.addEventListener('scroll', onScroll, true);
@@ -104,6 +121,71 @@ function useMobileSheetHeaderCollapse(columnRef: RefObject<HTMLDivElement | null
     return () => {
       root.removeEventListener('scroll', onScroll, true);
       window.removeEventListener('resize', onViewportChange);
+    };
+  }, [columnRef]);
+
+  useEffect(() => {
+    const root = columnRef.current;
+    if (!root) return;
+    const header = root.querySelector<HTMLElement>('[data-sheet-mobile-header]');
+    if (!header) return;
+
+    let startY = 0;
+    let startX = 0;
+    let axis: 'undecided' | 'vertical' | 'horizontal' = 'undecided';
+    let panel: HTMLElement | null = null;
+
+    const resolvePanel = () => {
+      const carousel = root.querySelector<HTMLElement>('[data-sheet-mobile-carousel]');
+      return carousel ? activeMobilePanel(carousel) : null;
+    };
+
+    const onTouchStart = (event: TouchEvent) => {
+      if (!isMobileSheetViewport() || event.touches.length !== 1) return;
+      const touch = event.touches[0];
+      if (!touch) return;
+      startY = touch.clientY;
+      startX = touch.clientX;
+      axis = 'undecided';
+      panel = resolvePanel();
+    };
+
+    const onTouchMove = (event: TouchEvent) => {
+      if (!panel || event.touches.length !== 1) return;
+      const touch = event.touches[0];
+      if (!touch) return;
+      const dy = startY - touch.clientY;
+      const dx = touch.clientX - startX;
+      if (axis === 'undecided') {
+        if (Math.abs(dy) < HEADER_GESTURE_AXIS_PX && Math.abs(dx) < HEADER_GESTURE_AXIS_PX) return;
+        axis = Math.abs(dx) > Math.abs(dy) ? 'horizontal' : 'vertical';
+        if (axis === 'horizontal') {
+          panel = null;
+          return;
+        }
+      }
+      if (axis !== 'vertical') return;
+      panel.scrollTop += dy;
+      startY = touch.clientY;
+      startX = touch.clientX;
+      event.preventDefault();
+    };
+
+    const onWheel = (event: WheelEvent) => {
+      if (!isMobileSheetViewport()) return;
+      const active = resolvePanel();
+      if (!active) return;
+      active.scrollTop += event.deltaY;
+      event.preventDefault();
+    };
+
+    header.addEventListener('touchstart', onTouchStart, { passive: true });
+    header.addEventListener('touchmove', onTouchMove, { passive: false });
+    header.addEventListener('wheel', onWheel, { passive: false });
+    return () => {
+      header.removeEventListener('touchstart', onTouchStart);
+      header.removeEventListener('touchmove', onTouchMove);
+      header.removeEventListener('wheel', onWheel);
     };
   }, [columnRef]);
 
@@ -305,7 +387,7 @@ export function CharacterSheetBody() {
         data-sheet-mobile-carousel
         data-overflow-start={carouselOverflow.start ? 'true' : 'false'}
         data-overflow-end={carouselOverflow.end ? 'true' : 'false'}
-        className="flex touch-pan-x snap-x snap-mandatory flex-nowrap gap-4 overflow-x-auto scroll-smooth pb-4 max-md:min-h-0 max-md:w-full max-md:min-w-0 max-md:flex-1 max-md:overflow-y-hidden md:grid md:snap-none md:grid-cols-1 md:items-stretch md:overflow-visible md:pb-0 lg:grid-cols-[1fr_1fr_2fr]"
+        className="flex snap-x snap-mandatory flex-nowrap gap-4 overflow-x-auto scroll-smooth pb-4 max-md:min-h-0 max-md:w-full max-md:min-w-0 max-md:flex-1 max-md:touch-pan-x max-md:touch-pan-y max-md:overflow-y-hidden md:grid md:snap-none md:grid-cols-1 md:items-stretch md:overflow-visible md:pb-0 lg:grid-cols-[1fr_1fr_2fr]"
         style={{ WebkitOverflowScrolling: 'touch' }}
       >
         <section

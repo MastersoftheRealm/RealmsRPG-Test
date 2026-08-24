@@ -1,0 +1,156 @@
+{
+  "character": "E2E Baseline Knight",
+  "url": "http://127.0.0.1:3000/characters/11111111-1111-4111-8111-111111111111",
+  "metrics": [
+    {
+      "width": 360,
+      "headerH": 723,
+      "headerW": 328,
+      "gridW": 294,
+      "gridH": 205,
+      "cardCount": 4,
+      "rowCount": 2,
+      "cardWidths": [
+        141,
+        141,
+        141,
+        141
+      ],
+      "labels": [
+        "Speed",
+        "Evasion",
+        "Damage Reduction",
+        "Critical Range"
+      ],
+      "overflowClip": false,
+      "viewportW": 360,
+      "equalWidth": true,
+      "shot": "sheet-header@360.png"
+    },
+    {
+      "width": 390,
+      "headerH": 723,
+      "headerW": 358,
+      "gridW": 324,
+      "gridH": 205,
+      "cardCount": 4,
+      "rowCount": 2,
+      "cardWidths": [
+        156,
+        156,
+        156,
+        156
+      ],
+      "labels": [
+        "Speed",
+        "Evasion",
+        "Damage Reduction",
+        "Critical Range"
+      ],
+      "overflowClip": false,
+      "viewportW": 390,
+      "equalWidth": true,
+      "shot": "sheet-header@390.png"
+    },
+    {
+      "width": 768,
+      "headerH": 643,
+      "headerW": 632,
+      "gridW": 582,
+      "gridH": 113,
+      "cardCount": 4,
+      "rowCount": 1,
+      "cardWidths": [
+        134,
+        134,
+        134,
+        134
+      ],
+      "labels": [
+        "Speed",
+        "Evasion",
+        "Damage Reduction",
+        "Critical Range"
+      ],
+      "overflowClip": false,
+      "viewportW": 768,
+      "equalWidth": true,
+      "shot": "sheet-header@768.png"
+    },
+    {
+      "width": 1024,
+      "headerH": 310,
+      "headerW": 872,
+      "gridW": 258,
+      "gridH": 225,
+      "cardCount": 4,
+      "rowCount": 2,
+      "cardWidths": [
+        121,
+        121,
+        121,
+        121
+      ],
+      "labels": [
+        "Speed",
+        "Evasion",
+        "Damage Reduction",
+        "Critical Range"
+      ],
+      "overflowClip": false,
+      "viewportW": 1024,
+      "equalWidth": true,
+      "shot": "sheet-header@1024.png"
+    },
+    {
+      "width": 1280,
+      "headerH": 257,
+      "headerW": 1128,
+      "gridW": 390,
+      "gridH": 207,
+      "cardCount": 4,
+      "rowCount": 2,
+      "cardWidths": [
+        187,
+        187,
+        187,
+        187
+      ],
+      "labels": [
+        "Speed",
+        "Evasion",
+        "Damage Reduction",
+        "Critical Range"
+      ],
+      "overflowClip": false,
+      "viewportW": 1280,
+      "equalWidth": true,
+      "shot": "sheet-header@1280.png"
+    },
+    {
+      "width": 1440,
+      "headerH": 257,
+      "headerW": 1288,
+      "gridW": 550,
+      "gridH": 207,
+      "cardCount": 4,
+      "rowCount": 2,
+      "cardWidths": [
+        267,
+        267,
+        267,
+        267
+      ],
+      "labels": [
+        "Speed",
+        "Evasion",
+        "Damage Reduction",
+        "Critical Range"
+      ],
+      "overflowClip": false,
+      "viewportW": 1440,
+      "equalWidth": true,
+      "shot": "sheet-header@1440.png"
+    }
+  ]
+}

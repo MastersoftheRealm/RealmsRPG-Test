@@ -1,0 +1,38 @@
+[
+  {
+    "width": 360,
+    "advanced": {
+      "x": 223,
+      "y": 417,
+      "w": 121,
+      "h": 44
+    },
+    "tabCount": 5,
+    "tabLabels": [
+      "Feats",
+      "Skills",
+      "Species",
+      "Archetypes",
+      "Equipment"
+    ],
+    "pairs": []
+  },
+  {
+    "width": 390,
+    "advanced": {
+      "x": 253,
+      "y": 417,
+      "w": 121,
+      "h": 44
+    },
+    "tabCount": 5,
+    "tabLabels": [
+      "Feats",
+      "Skills",
+      "Species",
+      "Archetypes",
+      "Equipment"
+    ],
+    "pairs": []
+  }
+]

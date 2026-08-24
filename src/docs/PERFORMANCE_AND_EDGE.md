@@ -14,7 +14,7 @@
 |------|--------|--------|
 | **Proxy matcher** | Good | High-volume public routes excluded; session refresh only where needed |
 | **Cache headers** | Partial | Codex + official library GET have Cache-Control; other GETs do not |
-| **Refetch / polling** | Good | `refetchOnWindowFocus: false` globally; encounter polling visibility-aware |
+| **Refetch / polling** | Good | `refetchOnWindowFocus: false` globally; encounter polling visibility-aware; auth `queryClient.clear()` only on user-id change / sign-out (TASK-903) |
 | **Prefetch** | Tuned | Footer, header dropdown, About page use `prefetch={false}` |
 | **Official library hook** | Good | `staleTime` 5 min; refetchOnMount only when stale |
 
