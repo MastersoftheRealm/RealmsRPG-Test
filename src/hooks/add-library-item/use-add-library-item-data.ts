@@ -127,7 +127,7 @@ export function useAddLibraryItemData({
     const list =
       itemType === 'power' && powerSelectionMode === 'empowered' ? empoweredRawItems : rawItems;
     // Callers pass type-scoped ids (CharacterSheetModals.existingIdsForAddModal).
-    // Equipment gets an empty set so stackable gear stays selectable.
+    // Equipment gets an empty set so stackable Equipment stays selectable.
     return list
       .filter(
         (item) => !existingIds.has(String((item as { id?: string | number | undefined }).id ?? '')),

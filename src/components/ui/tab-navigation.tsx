@@ -14,7 +14,7 @@ import * as React from 'react';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { cn } from '@/lib/utils/cn';
 
-/** Pixels past which a tablist edge counts as overflowing (TASK-840). */
+/** Pixels past which a tablist edge counts as overflowing (TASK-840 / TASK-890). */
 export function tabListOverflowState(
   scrollLeft: number,
   clientWidth: number,
@@ -209,6 +209,9 @@ export function TabNavOverflowScroller({
     list.addEventListener('scroll', updateOverflow, { passive: true });
     const ro = new ResizeObserver(updateOverflow);
     ro.observe(list);
+    for (const child of list.children) {
+      ro.observe(child);
+    }
     return () => {
       list.removeEventListener('scroll', updateOverflow);
       ro.disconnect();
@@ -237,8 +240,8 @@ export function TabNavOverflowScroller({
   const scrollList = (direction: -1 | 1) => {
     const list = listRef.current;
     if (!list) return;
-    const amount = Math.max(list.clientWidth * 0.7, 120) * direction;
-    list.scrollBy({ left: amount, behavior: 'smooth' });
+    const maxScroll = Math.max(0, list.scrollWidth - list.clientWidth);
+    list.scrollTo({ left: direction === -1 ? 0 : maxScroll, behavior: 'smooth' });
   };
 
   const setListNode = React.useCallback((node: HTMLElement | null) => {
@@ -316,7 +319,8 @@ export function TabNavigation({
   const tabGroupId = tabGroupIdProp ?? generatedGroupId;
   const tabSignature = tabs.map((t) => t.id).join('|');
   const hasTrailing = Boolean(trailing);
-  const overflowSignature = `${tabSignature}|${size ?? 'md'}|${hasTrailing ? 't' : ''}|${activeTab}`;
+  const hasSuffix = tabs.some((t) => t.suffix);
+  const overflowSignature = `${tabSignature}|${size ?? 'md'}|${hasTrailing ? 't' : ''}|${activeTab}|${hasSuffix ? 's' : ''}`;
 
   const getActiveTabElement = React.useCallback(
     (list: HTMLElement) => {

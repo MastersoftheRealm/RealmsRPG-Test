@@ -1,5 +1,5 @@
 /**
- * Equipment path refs → DetailOptionItem (Weapons, Shields, Armor, gear).
+ * Equipment path refs → DetailOptionItem (Weapons, Shields, Armor, Equipment).
  * Column facts become labeled expanded chips (Damage, Range, Damage Reduction, etc.).
  */
 

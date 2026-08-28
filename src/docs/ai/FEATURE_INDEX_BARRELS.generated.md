@@ -3,17 +3,21 @@
 > **Do not edit by hand.** Run `npm run tasks:generate-index` after changing barrel exports.
 > Curated narrative map: [`FEATURE_INDEX.md`](FEATURE_INDEX.md).
 
-Generated: 2026-08-20
+Generated: 2026-08-22
 
 ## `src/components/patterns/index.ts`
 
+- ABILITY_CONSTRAINTS
 - ABILITY_DISPLAY_ORDER
+- ABILITY_INFO
+- ABILITY_ORDER
 - AbilityPickButton
 - AbilityRequirementFilter
 - AbilityScoreGrid
 - AddSkillModal
 - AddSubSkillModal
 - ArmorListSection
+- canDecreaseAbility
 - CHARACTER_SHEET_ENERGY_SPEND_ROW_CHROME
 - CharacterFilter
 - ChipSelect
@@ -24,7 +28,9 @@ Generated: 2026-08-20
 - CreatureLibraryStatBlockRows
 - CreatureStatBlock
 - DecrementButton
+- DEFENSE_INFO
 - DefenseBonusesCard
+- DefenseStatTile
 - DeleteConfirmModal
 - DescriptorChipWithTip
 - DetailOptionList
@@ -89,6 +95,10 @@ Generated: 2026-08-20
 - SegmentedControl
 - SelectFilter
 - SelectionToggle
+- SHEET_SCORE_TIP_CLASS
+- SHEET_STAT_GRID_CLASS
+- SHEET_STAT_TILE_CLASS
+- SHEET_STAT_TIP_CLASS
 - ShieldsListSection
 - SkillRow
 - SkillsAllocationPage
@@ -207,6 +217,7 @@ Generated: 2026-08-20
 - useAddToCharacterFromLibrary
 - useAdmin
 - useAuth
+- useAuthCaptcha
 - useAuthStore
 - useAutoSave
 - useCampaign

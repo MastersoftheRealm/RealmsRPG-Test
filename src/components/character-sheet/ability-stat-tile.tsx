@@ -16,7 +16,7 @@ import {
   SHEET_STAT_TIP_CLASS,
   SHEET_STAT_TILE_CLASS,
   canDecreaseAbility,
-} from './abilities-section-model';
+} from '@/components/patterns';
 
 export function AbilityStatTile({
   ability,
@@ -91,7 +91,7 @@ export function AbilityStatTile({
         label={`About ${info.name}`}
         className={SHEET_STAT_TIP_CLASS}
       >
-        <span className="w-full min-w-0 text-center break-words">{info.name}</span>
+        <span className="w-full min-w-0 text-center break-normal">{info.name}</span>
       </WordHelpTip>
 
       {showSpendControls ? (

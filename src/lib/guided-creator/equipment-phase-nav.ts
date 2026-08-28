@@ -1,5 +1,5 @@
 /**
- * Guided equipment in-step phase navigation (weapon → armor? → gear).
+ * Guided Loadout in-step phase navigation (weapon → armor? → Equipment).
  */
 
 import type { PathItemRecommendation } from '@/types/archetype';

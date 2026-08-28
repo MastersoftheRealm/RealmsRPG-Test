@@ -138,6 +138,26 @@ Applies to email/password sign-up and password updates (including **My Account**
 
 ---
 
+## Auth: CAPTCHA + signup abuse protection (TASK-899)
+
+Supabase Auth accepts direct `/auth/v1/signup` calls with the public key. **Server-side CAPTCHA** (Turnstile or hCaptcha) blocks scripted bulk signups once enabled in the Dashboard **and** the frontend passes `options.captchaToken`.
+
+**Safe default (today):** If `NEXT_PUBLIC_TURNSTILE_SITE_KEY` is unset, auth pages render **no widget** and send **no** captcha token — behavior matches pre–TASK-899 production until you complete DEV-015.
+
+**Order matters:** deploy the frontend env + widget **before** toggling CAPTCHA on, or legitimate signups will fail.
+
+1. **Cloudflare Turnstile** (free) → create a site for `realmsrpg.com` (+ localhost for dev). Copy **site key** + **secret key**.
+2. **Vercel** → `NEXT_PUBLIC_TURNSTILE_SITE_KEY` = site key (Production + Preview).
+3. **Supabase Dashboard** → **Authentication** → **Bot and Abuse Protection** → enable CAPTCHA → paste **secret key** → provider = Turnstile.
+4. While there: tighten **Rate Limits** (signup / email sends) and **minimum password length** (recommend ≥8).
+5. Also enable **Leaked password protection** (DEV-001 / TASK-353) if not already on.
+
+Frontend: `/register`, `/login`, and `/forgot-password` render `AuthTurnstile` when the site key is set (`src/components/auth/auth-turnstile.tsx`).
+
+**security.txt:** `public/.well-known/security.txt` (RFC 9116) — refresh `Expires` annually.
+
+---
+
 ## Admin Setup
 
 Admins are configured in `public.user_profiles`:

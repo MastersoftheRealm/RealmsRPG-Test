@@ -31,7 +31,6 @@ import { CreatorStepFooter } from '@/components/character-creator/creator-step-f
 import { Button } from '@/components/ui';
 import { getSkillPointsHelp, subSkillsHelp } from '../../../../public/tooltip-text';
 import { DEFAULT_ABILITIES, DEFAULT_DEFENSE_SKILLS } from '@/types';
-import { abilityDefenseBonusesFromAbilities } from '@/lib/game/calculations';
 import { EMPTY_NUMBER_RECORD, EMPTY_STRING_ARRAY } from '@/lib/empty';
 
 function pathHelpContent(_pathName: string, names: string[]): React.ReactNode {
@@ -302,11 +301,6 @@ export function SkillsStep() {
     nextStep();
   };
 
-  const abilityDefenseBonuses = useMemo(
-    () => abilityDefenseBonusesFromAbilities(abilities),
-    [abilities],
-  );
-
   const skillsPage = (
     <SkillsAllocationPage
       entityType="character"
@@ -320,7 +314,6 @@ export function SkillsStep() {
       extraSkillPoints={extraSkillPoints}
       onAllocationsChange={handleAllocationsChange}
       onDefenseChange={handleDefenseChange}
-      abilityDefenseBonuses={abilityDefenseBonuses}
       skillAbilities={mergedSkillAbilities}
       onSkillAbilityChange={handleSkillAbilityChange}
       afterDescription={pathMode ? undefined : pathHelpAfterDescription}

@@ -23,6 +23,7 @@ import {
 import { useCodexSkills, type Skill } from '@/hooks';
 import { isDefined } from '@/lib/utils';
 import { ABILITY_FILTER_OPTIONS } from '@/lib/constants/skills';
+import { formatSkillAbilityList, ADD_SUB_SKILL_HEADER_COLUMNS } from '@/lib/codex/skill-list';
 import { getSkillExtraDescriptionDetailSections } from '@/lib/skill-extra-descriptions';
 import type { ChipData } from '@/components/patterns/list/grid-list-row';
 
@@ -46,12 +47,6 @@ export interface AddSubSkillModalProps {
   shallowerLayerLabel?: string | undefined;
   onShallowerLayer?: (() => void) | undefined;
 }
-
-const SUB_SKILL_COLUMNS = [
-  { key: 'name', label: 'Name', sortable: true },
-  { key: 'ability', label: 'Abilities', sortable: true },
-  { key: 'base', label: 'Base', sortable: true },
-];
 
 export function AddSubSkillModal({
   isOpen,
@@ -148,12 +143,7 @@ export function AddSubSkillModal({
       const isAnyBaseSkill = skill.base_skill_id === 0;
       const baseSkill = skill.base_skill_id ? skillById[String(skill.base_skill_id)] : null;
       const baseSkillName = isAnyBaseSkill ? 'Any' : (baseSkill?.name ?? 'Unknown');
-      const abilities =
-        skill.ability
-          ?.split(',')
-          .map((a) => a.trim())
-          .filter(Boolean) || [];
-      const abilityAbbrevs = abilities.map((a) => a.slice(0, 3).toUpperCase()).join(', ') || '-';
+      const abilityDisplay = formatSkillAbilityList(skill.ability);
       const detailSections = getSkillExtraDescriptionDetailSections(skill);
       const chips: ChipData[] = (detailSections[0]?.chips ?? []).map((c) => ({
         name: c.name,
@@ -167,7 +157,7 @@ export function AddSubSkillModal({
         description:
           [skill.description, `Base: ${baseSkillName}`].filter(Boolean).join(' · ') || undefined,
         columns: [
-          { key: 'ability', value: abilityAbbrevs, align: 'center' as const },
+          { key: 'ability', value: abilityDisplay, align: 'center' as const },
           { key: 'base', value: baseSkillName, align: 'center' as const },
         ],
         detailSections:
@@ -248,17 +238,15 @@ export function AddSubSkillModal({
 
       const shallowerNav =
         shallowerLayerLabel && onShallowerLayer ? (
-          <div className="pb-1">
-            <Button
-              type="button"
-              variant="outline"
-              size="lg"
-              onClick={onShallowerLayer}
-              className={guidedNavPreviousClassName}
-            >
-              {shallowerLayerLabel}
-            </Button>
-          </div>
+          <Button
+            type="button"
+            variant="outline"
+            size="lg"
+            onClick={onShallowerLayer}
+            className={guidedNavPreviousClassName}
+          >
+            {shallowerLayerLabel}
+          </Button>
         ) : null;
 
       if (!shallowerNav && !anyBaseUi) return null;
@@ -340,7 +328,11 @@ export function AddSubSkillModal({
         items={items}
         isLoading={loading}
         onConfirm={handleConfirm}
-        columns={SUB_SKILL_COLUMNS}
+        columns={ADD_SUB_SKILL_HEADER_COLUMNS.map((col) => ({
+          key: col.key,
+          label: col.label,
+          sortable: true,
+        }))}
         gridColumns="1.4fr 0.8fr 0.7fr"
         itemLabel="sub-skill"
         emptyMessage={error ?? 'No sub-skills available to add'}

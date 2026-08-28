@@ -4,6 +4,7 @@ import {
   collectCreatureInventoryItems,
   creatureInventoryQuantityMultiplier,
   formatCreatureEquipmentQuantity,
+  formatInventoryKindLabel,
   normalizeCreatureInventoryType,
   removeCreatureInventoryItem,
   resolveCreatureInventoryBuckets,
@@ -17,6 +18,16 @@ describe('normalizeCreatureInventoryType', () => {
     expect(normalizeCreatureInventoryType('shield')).toBe('shield');
     expect(normalizeCreatureInventoryType('gear')).toBe('equipment');
     expect(normalizeCreatureInventoryType(undefined)).toBe('equipment');
+  });
+});
+
+describe('formatInventoryKindLabel (TASK-872)', () => {
+  it('maps adventuring_gear / gear slugs to Equipment, not Adventuring Gear', () => {
+    expect(formatInventoryKindLabel('adventuring_gear')).toBe('Equipment');
+    expect(formatInventoryKindLabel('gear')).toBe('Equipment');
+    expect(formatInventoryKindLabel('weapon')).toBe('Weapon');
+    expect(formatInventoryKindLabel('armor')).toBe('Armor');
+    expect(formatInventoryKindLabel('shield')).toBe('Shield');
   });
 });
 

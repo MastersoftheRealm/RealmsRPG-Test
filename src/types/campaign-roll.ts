@@ -22,6 +22,7 @@ export interface CampaignRollEntry {
   title: string;
   dice: DieResult[];
   modifier: number;
+  modifierLabel?: string | undefined;
   total: number;
   isCrit?: boolean | undefined;
   isCritFail?: boolean | undefined;

@@ -180,7 +180,7 @@ describe('mapCreatureSelectedInventoryRows (TASK-817)', () => {
     expect(row.columns?.some((c) => c.key === 'tp')).toBe(false);
     const chips = chipLabelsFromDetailSections(row.detailSections);
     expect(chips.some((l) => /training points\s+2/i.test(l))).toBe(true);
-    assertRowFactCoverage('character-sheet-gear', {
+    assertRowFactCoverage('creature-inventory-equipment', {
       columnKeys: row.columns?.map((c) => c.key) ?? [],
       chipLabels: chips,
     });

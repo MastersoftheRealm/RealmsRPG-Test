@@ -2,16 +2,30 @@
  * GLR surface bindings — CI pointers from list chrome to entity + density (ADR-0016).
  *
  * New GridListRow lists register a row here instead of a custom fact table.
+ * (`*-gear*` surface ids → entityType `'gear'` = Equipment; see glr-fact-catalog.)
  */
 
 import type { GlrEntityType } from './glr-fact-catalog';
 import type { GlrDensityMode, GlrLayoutFlags } from './glr-density';
-import { resolveGlrFactLayout, type GlrResolvedLayout } from './resolve-glr-fact-layout';
+import {
+  resolveGlrFactLayout,
+  type GlrLayoutOverrides,
+  type GlrResolvedLayout,
+} from './resolve-glr-fact-layout';
+
+export type { GlrLayoutOverrides };
+
+/** Sheet Inventory Equipment: catalog columns on play surface (TASK-873). */
+export const SHEET_GEAR_PLAY_LAYOUT_OVERRIDES = {
+  columnBudget: 3,
+  demoteFacts: ['trainingPoints'],
+} as const satisfies GlrLayoutOverrides;
 
 export interface GlrSurfaceBinding {
   entityType: GlrEntityType;
   mode: GlrDensityMode;
   flags?: GlrLayoutFlags | undefined;
+  layoutOverrides?: GlrLayoutOverrides | undefined;
 }
 
 export const GLR_SURFACE_BINDINGS = {
@@ -26,7 +40,13 @@ export const GLR_SURFACE_BINDINGS = {
   'character-sheet-weapon-play': { entityType: 'weapon', mode: 'play' },
   'character-sheet-shield-play': { entityType: 'shield', mode: 'play' },
   'character-sheet-feat': { entityType: 'feat', mode: 'play' },
-  'character-sheet-gear': { entityType: 'gear', mode: 'play' },
+  'character-sheet-gear': {
+    entityType: 'gear',
+    mode: 'play',
+    layoutOverrides: SHEET_GEAR_PLAY_LAYOUT_OVERRIDES,
+  },
+  /** Creature selected inventory: play chip-all; Type/Qty are row extras (TASK-817). */
+  'creature-inventory-equipment': { entityType: 'gear', mode: 'play' },
   'add-modal-power': { entityType: 'power', mode: 'select' },
   'add-modal-technique': { entityType: 'technique', mode: 'select' },
   'add-modal-weapon': { entityType: 'weapon', mode: 'select' },
@@ -75,5 +95,6 @@ export function resolveSurfaceLayout(surfaceId: GlrSurfaceId): GlrResolvedLayout
     entityType: binding.entityType,
     mode: binding.mode,
     flags: binding.flags,
+    layoutOverrides: binding.layoutOverrides,
   });
 }

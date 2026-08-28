@@ -76,3 +76,37 @@ describe('characterToFeatRequirementCharacter numeric skills (T7 / N3)', () => {
     expect(result.met).toBe(true);
   });
 });
+
+describe('checkFeatRequirements leveled-feat prerequisite (TASK-889)', () => {
+  it('names the previous rank with Roman suffix, not (Level N)', () => {
+    const allFeats = [
+      { id: '1', name: 'Speedy', feat_lvl: 1 },
+      { id: '2', name: 'Speedy', feat_lvl: 2, base_feat_id: '1' },
+    ];
+    const result = checkFeatRequirements(
+      allFeats[1]!,
+      { level: 10, abilities: DEFAULT_ABILITIES },
+      emptyCatalog.skills,
+      allFeats,
+    );
+    expect(result.met).toBe(false);
+    expect(result.reason).toBe('Requires Speedy');
+  });
+
+  it('uses Roman display name when the previous rank is level 2+', () => {
+    const allFeats = [
+      { id: '1', name: 'Speedy', feat_lvl: 1 },
+      { id: '2', name: 'Speedy', feat_lvl: 2, base_feat_id: '1' },
+      { id: '3', name: 'Speedy', feat_lvl: 3, base_feat_id: '1' },
+    ];
+    const result = checkFeatRequirements(
+      allFeats[2]!,
+      { level: 10, abilities: DEFAULT_ABILITIES, feats: [{ id: '1', name: 'Speedy' }] },
+      emptyCatalog.skills,
+      allFeats,
+    );
+    expect(result.met).toBe(false);
+    expect(result.reason).toBe('Requires Speedy II');
+    expect(result.reason).not.toContain('(Level');
+  });
+});

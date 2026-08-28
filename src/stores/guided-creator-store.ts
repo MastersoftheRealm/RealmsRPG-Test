@@ -200,7 +200,7 @@ export interface GuidedDraft {
   heightCm: number | null;
   weightKg: number | null;
   appearanceNotes: string;
-  /** General background / personality (maps to Character.description). */
+  /** General background / personality (maps to Character.backstory). */
   description: string;
   portraitUrl: string | null;
   hpAllocated: number | null;

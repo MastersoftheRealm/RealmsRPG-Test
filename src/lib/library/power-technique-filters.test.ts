@@ -20,6 +20,9 @@ const rows: (PowerTechniqueFilterableRow & { tp?: number | undefined })[] = [
     isReaction: false,
     partIds: ['1'],
     partNames: ['Fire'],
+    partCategories: ['Damage'],
+    durationType: 'instant',
+    durationValue: 0,
   },
   {
     categories: ['Defense', 'Utility'],
@@ -30,6 +33,9 @@ const rows: (PowerTechniqueFilterableRow & { tp?: number | undefined })[] = [
     isReaction: false,
     partIds: ['307'],
     partNames: ['Heal'],
+    partCategories: ['Healing'],
+    durationType: 'instant',
+    durationValue: 0,
   },
   {
     categories: ['Control'],
@@ -40,6 +46,22 @@ const rows: (PowerTechniqueFilterableRow & { tp?: number | undefined })[] = [
     isReaction: true,
     partIds: ['5'],
     partNames: ['Fog'],
+    partCategories: ['Control'],
+    durationType: 'instant',
+    durationValue: 0,
+  },
+  {
+    categories: ['Utility'],
+    energy: 5,
+    tp: 3,
+    actionTypeRaw: 'basic',
+    action: 'Basic Action',
+    isReaction: false,
+    partIds: ['10'],
+    partNames: ['Long Veil'],
+    partCategories: ['Control'],
+    durationType: 'minutes',
+    durationValue: 10,
   },
 ];
 
@@ -64,8 +86,8 @@ describe('power-technique-filters (TASK-673 / TASK-676)', () => {
       { ...EMPTY_POWER_TECHNIQUE_FILTERS, categories: ['Utility', 'Control'] },
       'power',
     );
-    expect(result).toHaveLength(2);
-    expect(result.map((r) => r.categories?.[0])).toEqual(['Defense', 'Control']);
+    expect(result).toHaveLength(3);
+    expect(result.map((r) => r.categories?.[0])).toEqual(['Defense', 'Control', 'Utility']);
   });
 
   it('filters by max energy and reaction mode', () => {
@@ -82,7 +104,7 @@ describe('power-technique-filters (TASK-673 / TASK-676)', () => {
     expect(defined(result[0]).isReaction).toBe(true);
   });
 
-  it('innate eligible excludes heal parts and high energy vs threshold', () => {
+  it('innate eligible excludes heal parts, long duration, and high energy vs threshold', () => {
     const result = applyPowerTechniqueFilters(
       rows,
       {
@@ -95,6 +117,7 @@ describe('power-technique-filters (TASK-673 / TASK-676)', () => {
     expect(result).toHaveLength(2);
     expect(result.every((r) => (r.partNames ?? []).every((n) => n !== 'Heal'))).toBe(true);
     expect(result.every((r) => Number(r.energy) <= 8)).toBe(true);
+    expect(result.every((r) => r.durationValue == null || r.durationValue <= 1)).toBe(true);
   });
 
   it('selecting threshold auto-enables innate eligible', () => {
@@ -125,7 +148,7 @@ describe('power-technique-filters (TASK-673 / TASK-676)', () => {
       { ...EMPTY_POWER_TECHNIQUE_FILTERS, tpMax: 3 },
       'technique',
     );
-    expect(byMax).toHaveLength(1);
+    expect(byMax).toHaveLength(2);
     expect(defined(byMax[0]).tp).toBe(2);
 
     const affordable = applyPowerTechniqueFilters(
@@ -135,7 +158,7 @@ describe('power-technique-filters (TASK-673 / TASK-676)', () => {
       characterCtx,
     );
     expect(affordable.every((r) => (r.tp ?? 0) <= 3)).toBe(true);
-    expect(affordable).toHaveLength(1);
+    expect(affordable).toHaveLength(2);
   });
 
   it('withCharacterContextApplied sets energy max from character', () => {

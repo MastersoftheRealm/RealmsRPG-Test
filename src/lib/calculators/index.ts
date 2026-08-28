@@ -81,6 +81,7 @@ export {
 export {
   calculateItemCosts,
   calculateCurrencyCostAndRarity,
+  resolveItemMarketPricing,
   resolveWeaponRangeDisplay,
   formatWeaponRangeDisplayCompact,
   deriveDamageReductionFromProperties,
@@ -97,6 +98,8 @@ export {
   type ItemPropertyTpRow,
   type ItemPropertyPayload,
   type ItemCostResult,
+  type ItemMarketPricing,
+  type ItemStoredCostSums,
   type RarityResult,
   type ProficiencyInfo,
   type ItemDamage,

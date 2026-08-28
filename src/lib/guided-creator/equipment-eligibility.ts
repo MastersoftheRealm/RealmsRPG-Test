@@ -200,7 +200,7 @@ export function ineligibilityReason(
   }
 
   if (ctx.phase === 'gear' && resolveCatalogRowUnitCost(row) > GUIDED_GEAR_L2_MAX_UNIT_COST) {
-    return `Gear must cost ${GUIDED_GEAR_L2_MAX_UNIT_COST} Currency or less`;
+    return `Equipment must cost ${GUIDED_GEAR_L2_MAX_UNIT_COST} Currency or less`;
   }
 
   return 'Not eligible';

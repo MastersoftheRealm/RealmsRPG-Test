@@ -10,7 +10,7 @@
  * immediate (toggle-on-click), matching L1 choice cards; there is no separate
  * confirm step since the step's own Continue action is the confirmation.
  *
- * Intended for any guided-creator L3 screen (feats, weapons/armor/gear,
+ * Intended for any guided-creator L3 screen (feats, weapons/armor/Equipment,
  * powers/techniques) — keep this generic; put domain copy/columns in the caller.
  *
  * Selected panel mounts only when N>0 (no reserved empty hole). Height growth is

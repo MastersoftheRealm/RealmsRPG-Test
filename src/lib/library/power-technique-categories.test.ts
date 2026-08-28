@@ -4,6 +4,7 @@ import {
   derivePartCategories,
   formatPartCategoriesColumn,
   powerHasDamageCategory,
+  resolvePartCategoryList,
   withDamageCategory,
 } from './power-technique-categories';
 
@@ -33,6 +34,13 @@ describe('derivePartCategories (TASK-673)', () => {
     expect(
       derivePartCategories([{ id: 'x', category: 'Utility', mechanic: false }], partsDb),
     ).toEqual(['Utility']);
+  });
+
+  it('resolvePartCategoryList aligns per-part categories with payload fallback', () => {
+    expect(
+      resolvePartCategoryList([{ name: 'Custom Shift', category: 'Adaptation' }], partsDb),
+    ).toEqual(['Adaptation']);
+    expect(resolvePartCategoryList([{ id: '3' }], partsDb)).toEqual(['']);
   });
 
   it('formats column display', () => {

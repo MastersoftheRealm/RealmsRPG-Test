@@ -23,8 +23,8 @@ export function getHealthColor(current: number, max: number): 'green' | 'orange'
 /**
  * Smart Resource Input
  * - Click value to select all for easy editing
- * - Type a number and press Enter to set that value
- * - Type +N or -N and press Enter to modify by that amount
+ * - Type a number (including negative for Health) and press Enter to set that value
+ * - Type +N and press Enter to add N to the current value
  * - Use stepper buttons with typed value (if not pressed Enter yet)
  */
 export function ResourceInput({
@@ -36,6 +36,7 @@ export function ResourceInput({
   subLabel,
   headerRight,
   showBar = false,
+  min = 0,
 }: {
   label: string;
   current: number;
@@ -46,6 +47,8 @@ export function ResourceInput({
   /** Top-right slot (e.g. Terminal threshold on Health). Takes precedence over subLabel. */
   headerRight?: ReactNode | undefined;
   showBar?: boolean | undefined;
+  /** Lower bound for current value (default 0). Health may use `-Infinity` for Dying negative HP. */
+  min?: number | undefined;
 }) {
   const [inputValue, setInputValue] = useState(String(current));
   const [isEditing, setIsEditing] = useState(false);
@@ -70,27 +73,17 @@ export function ResourceInput({
 
     const trimmed = inputValue.trim();
 
-    // Check for +/- modifiers
     if (trimmed.startsWith('+')) {
       const delta = parseInt(trimmed.slice(1), 10);
       if (!isNaN(delta)) {
-        // Allow values above max (no upper clamp)
-        const newValue = Math.max(0, current + delta);
+        const newValue = Math.max(min, current + delta);
         onChange(newValue);
         setInputValue(String(newValue));
       }
-    } else if (trimmed.startsWith('-')) {
-      const delta = parseInt(trimmed.slice(1), 10);
-      if (!isNaN(delta)) {
-        const newValue = Math.max(0, current - delta);
-        onChange(newValue);
-        setInputValue(String(newValue));
-      }
-    } else {
-      // Direct value: allow any non-negative value including above max (e.g. temp HP/over-heal)
+    } else if (/^-?\d+$/.test(trimmed)) {
       const newValue = parseInt(trimmed, 10);
       if (!isNaN(newValue)) {
-        const value = Math.max(0, newValue);
+        const value = Math.max(min, newValue);
         onChange(value);
         setInputValue(String(value));
       }
@@ -128,7 +121,7 @@ export function ResourceInput({
       } else {
         const parsed = parseInt(trimmed, 10);
         if (!isNaN(parsed)) {
-          result = Math.max(0, parsed + stepperDelta);
+          result = Math.max(min, parsed + stepperDelta);
         }
       }
     }
@@ -210,7 +203,7 @@ export function ResourceInput({
           <ValueStepper
             value={current}
             onChange={handleStepperChange}
-            min={0}
+            min={min}
             // No max - allow incrementing above max (gold bar shows when above)
             colorVariant={
               colorVariant === 'health'

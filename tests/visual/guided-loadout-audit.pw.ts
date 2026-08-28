@@ -106,7 +106,7 @@ test('guided loadout phased equipment audit (TASK-442/443)', async ({ page, cont
   await expect(phaseGroup).toBeVisible({ timeout: 15_000 });
   await expect(phaseGroup.getByRole('button', { name: /1\.\s*Weapons/i })).toBeVisible();
   await expect(phaseGroup.getByRole('button', { name: /2\.\s*Armor/i })).toBeVisible();
-  await expect(phaseGroup.getByRole('button', { name: /3\.\s*Gear/i })).toBeVisible();
+  await expect(phaseGroup.getByRole('button', { name: /3\.\s*Equipment/i })).toBeVisible();
 
   await expect(page.getByText(/c remaining/i).first()).toBeVisible();
 

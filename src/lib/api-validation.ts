@@ -488,6 +488,7 @@ export const campaignRollCreateSchema = z.object({
     title: z.string().min(1),
     dice: z.array(z.unknown()).optional().default([]),
     modifier: z.number().optional().default(0),
+    modifierLabel: z.string().optional(),
     total: z.number().optional().default(0),
     isCrit: z.boolean().optional().default(false),
     isCritFail: z.boolean().optional().default(false),

@@ -19,7 +19,7 @@ import type { Abilities } from '@/types/abilities';
 import type { DefenseSkills } from '@/types/skills';
 import { calculateDefenses, calculateSpeed } from './calculations';
 import { getSkillBonusForFeatRequirement, type CodexSkillForFeat } from './formulas';
-import { getFeatFamilyId, getFeatLevel } from '@/lib/leveled-feats';
+import { getFeatFamilyId, getFeatLevel, formatFeatName } from '@/lib/leveled-feats';
 import { DEFAULT_DEFENSE_SKILLS } from '@/types/skills';
 
 /** Minimal feat shape needed for requirement checks (structurally compatible with codex Feat). */
@@ -265,8 +265,8 @@ export function checkFeatRequirements(
     );
     if (!ownedFeatIds.has(prevLevelId)) {
       const prevFeat = allFeats.find((f) => String(f.id) === prevLevelId);
-      const prevLevel = getFeatLevel(prevFeat);
-      reasons.push(`Requires ${prevFeat?.name ?? 'previous level'} (Level ${prevLevel})`);
+      const requiredName = prevFeat ? formatFeatName(prevFeat) : 'previous level';
+      reasons.push(`Requires ${requiredName}`);
     }
   }
 

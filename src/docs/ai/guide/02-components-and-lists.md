@@ -51,7 +51,7 @@ Goal: "Learn once, use forever" — consistent UI across Library, Codex, Charact
 | GuidedChoiceCard + guided-choice-image | Guided creator choice steps (species hero art); optional `onDetails` for deep-dive |
 | GuidedEntityDetailModal | Choice-card deep-dive (overview + read-only CollapsibleSection catalogs; optional Close \| Select footer) — not catalog Layer 2 |
 | GuidedSpeciesDetailModal + GuidedTraitOptionList | Species deep-dive: SpeciesRevealPanel overview + DetailOptionList trait catalogs (TASK-433/435) |
-| GuidedPathDetailModal + GuidedDetailOptionList | Path deep-dive: proficiency / abilities / skills overview + feat / weapon / armor / gear / power|technique catalogs (TASK-434/435; kits removed TASK-442) |
+| GuidedPathDetailModal + GuidedDetailOptionList | Path deep-dive: proficiency / abilities / skills overview + feat / weapon / armor / Equipment / power|technique catalogs (TASK-434/435; kits removed TASK-442) |
 | DetailOptionList + lib/detail-option | Shared elongated option-row toolkit for deep-dive + remodeled species-modal / SpeciesRevealPanel granted traits (TASK-435) |
 | GuidedLayerNav | Layer 1 expand / Layer 2+ collapse / optional trailing hatch below step content — guided creator (path, species, abilities, loadout), GuidedChoiceShell (Advanced path mode) |
 | SkillRow | skills-section, skills-step, creature-creator, SkillsAllocationPage. Table play view gates source chrome via `isEditing` (TASK-485) |

@@ -83,6 +83,23 @@ export function derivePartCategories(
   return out;
 }
 
+/**
+ * Per-part category strings aligned with the parts array (innate Adaptation checks).
+ * Uses codex DB lookup with saved-payload `category` fallback (same as derivePartCategories).
+ */
+export function resolvePartCategoryList(
+  parts: PartCategorySource[] | null | undefined,
+  partsDb: PartCategoryDbRow[] = [],
+): string[] {
+  if (!parts?.length) return [];
+  const index = buildPartsDbIndex(partsDb);
+  return parts.map((part) => {
+    const def = resolvePartDef(part, index);
+    if (!def || def.mechanic === true) return '';
+    return String(def.category ?? '').trim();
+  });
+}
+
 /** True when a power damage payload has at least one real damage row. */
 export function powerHasDamageCategory(damage: unknown): boolean {
   if (!Array.isArray(damage)) return false;

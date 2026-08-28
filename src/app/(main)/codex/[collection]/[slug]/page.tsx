@@ -8,6 +8,7 @@ import { notFound } from 'next/navigation';
 import { PageContainer, PageHeader } from '@/components/ui';
 import { CODEX_DETAIL_LABEL, isCodexDetailCollection } from '@/lib/codex/detail-href';
 import { loadAllCodexDetailParams, loadCodexDetailEntry } from '@/lib/codex/detail-server';
+import { formatFeatName } from '@/lib/leveled-feats';
 import { getCanonicalSiteUrl } from '@/lib/site-url';
 import { truncateText } from '@/lib/utils';
 
@@ -18,6 +19,16 @@ type DetailParams = { collection: string; slug: string };
 
 function metaDescription(text: string, max: number): string {
   return truncateText(text.replace(/\s+/g, ' ').trim(), max);
+}
+
+function codexDetailDisplayName(
+  collection: string,
+  row: { id: string; name: string; feat_lvl?: number | undefined },
+): string {
+  if (collection === 'feats' || collection === 'creature-feats') {
+    return formatFeatName(row);
+  }
+  return row.name;
 }
 
 export async function generateStaticParams(): Promise<DetailParams[]> {
@@ -34,14 +45,15 @@ export async function generateMetadata({
   const row = await loadCodexDetailEntry(collection, slug);
   if (!row) return { title: 'Codex' };
   const kind = CODEX_DETAIL_LABEL[collection];
+  const displayName = codexDetailDisplayName(collection, row);
   const description = metaDescription(row.description, 160) || `${kind} in the Realms Codex.`;
   const url = `${getCanonicalSiteUrl()}/codex/${collection}/${slug}`;
   return {
-    title: row.name,
+    title: displayName,
     description,
     alternates: { canonical: url },
     openGraph: {
-      title: `${row.name} | ${kind} | Codex`,
+      title: `${displayName} | ${kind} | Codex`,
       description,
       url,
       type: 'article',
@@ -56,11 +68,12 @@ export default async function CodexDetailPage({ params }: { params: Promise<Deta
   if (!row) notFound();
 
   const kind = CODEX_DETAIL_LABEL[collection];
+  const displayName = codexDetailDisplayName(collection, row);
   const url = `${getCanonicalSiteUrl()}/codex/${collection}/${slug}`;
   const jsonLd = {
     '@context': 'https://schema.org',
     '@type': 'Article',
-    headline: row.name,
+    headline: displayName,
     description: metaDescription(row.description, 300),
     url,
   };
@@ -78,7 +91,7 @@ export default async function CodexDetailPage({ params }: { params: Promise<Deta
         <span aria-hidden="true"> / </span>
         {kind}
       </p>
-      <PageHeader title={row.name} description={kind} />
+      <PageHeader title={displayName} description={kind} />
       {row.description ? (
         <div className="space-y-3 font-nunito text-base leading-relaxed whitespace-pre-wrap text-text-secondary">
           {row.description}

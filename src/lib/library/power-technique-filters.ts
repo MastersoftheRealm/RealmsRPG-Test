@@ -62,6 +62,10 @@ export interface PowerTechniqueFilterableRow {
   isReaction?: boolean | undefined;
   partIds?: string[] | undefined;
   partNames?: string[] | undefined;
+  /** Resolved part categories (parallel to partIds) for innate Adaptation checks. */
+  partCategories?: string[] | undefined;
+  durationType?: string | null | undefined;
+  durationValue?: number | null | undefined;
 }
 
 /** Normalize display/persisted action labels to ACTION_OPTIONS values. */
@@ -174,7 +178,8 @@ function rowMatchesTp(
   return true;
 }
 
-function toInnateSnapshot(row: PowerTechniqueFilterableRow): InnatePowerSnapshot {
+export function toInnateSnapshot(row: PowerTechniqueFilterableRow): InnatePowerSnapshot {
+  const durationType = row.durationType?.trim();
   return {
     id: 'filter',
     energy: Math.max(0, Math.round(parseEnergy(row.energy) ?? 0)),
@@ -182,6 +187,14 @@ function toInnateSnapshot(row: PowerTechniqueFilterableRow): InnatePowerSnapshot
     isReaction: row.isReaction === true,
     partIds: row.partIds ?? [],
     partNames: row.partNames ?? [],
+    partCategories: row.partCategories ?? [],
+    duration:
+      durationType != null && durationType !== ''
+        ? {
+            type: durationType,
+            value: row.durationValue ?? undefined,
+          }
+        : null,
   };
 }
 

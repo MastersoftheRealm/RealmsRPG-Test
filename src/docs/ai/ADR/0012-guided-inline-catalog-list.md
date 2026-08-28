@@ -22,8 +22,8 @@ show "already selected" rows once picked.
 
 ## Decision
 
-Add **`GuidedInlineCatalogList`** under `src/components/shared/guided-choice/` (exported via
-`@/components/shared`):
+Add **`GuidedInlineCatalogList`** under `src/components/patterns/guided-choice/` (exported via
+`@/components/patterns`):
 
 - Reuses `UnifiedSelectionModalList` + `UnifiedSelectionModalColumnHeaders` directly for the
   browsable catalog — no parallel row-rendering or eligibility logic; the same `SelectableItem[]`

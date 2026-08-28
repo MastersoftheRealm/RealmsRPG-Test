@@ -181,7 +181,7 @@ export function GuidedEquipmentL2Modal({
       emptyMessage={
         pathFilterActive
           ? pathFilterEmptyTitle(
-              phase === 'weapon' ? 'weapons' : phase === 'armor' ? 'armor' : 'gear',
+              phase === 'weapon' ? 'weapons' : phase === 'armor' ? 'armor' : 'Equipment',
             )
           : l2Copy.emptyMessage(phase)
       }

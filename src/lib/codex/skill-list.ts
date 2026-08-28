@@ -3,8 +3,9 @@
  */
 
 import type { Skill } from '@/hooks';
-import type { Character } from '@/types';
+import type { Character, AbilityName } from '@/types';
 import { normalizeId } from '@/lib/utils';
+import { formatAbilityLabel } from '@/lib/constants/ability-effect-blurbs';
 import { rowMatchesPathRecommendedIds } from '@/lib/game/path-recommendation-index';
 
 /** Data columns only — admin action chrome uses CodexBrowseListShell `rowChrome`. */
@@ -14,6 +15,20 @@ export const SKILL_HEADER_COLUMNS = [
   { key: 'name', label: 'NAME' },
   { key: 'ability', label: 'ABILITIES' },
   { key: 'base_skill', label: 'BASE SKILL' },
+];
+
+/** Add Skill modal: Codex name + Abilities columns (no Base Skill). */
+export const ADD_SKILL_HEADER_COLUMNS = SKILL_HEADER_COLUMNS.filter(
+  (col) => col.key !== 'base_skill',
+);
+
+/** Grid tracks for name + Abilities (first two tracks of SKILL_GRID_COLUMNS). */
+export const ADD_SKILL_GRID_COLUMNS = '1.5fr 1fr';
+
+/** Add Sub-Skill modal: Codex name + Abilities + Base columns. */
+export const ADD_SUB_SKILL_HEADER_COLUMNS = [
+  ...ADD_SKILL_HEADER_COLUMNS,
+  { key: 'base', label: 'BASE' },
 ];
 
 export interface SkillFilterOptions {
@@ -100,6 +115,13 @@ export function parseSkillAbilities(abilityString?: string): string[] {
     .split(',')
     .map((a) => a.trim().toLowerCase())
     .filter(Boolean);
+}
+
+/** Full ability names for list columns (Codex, Add Skill, Add Sub-Skill). */
+export function formatSkillAbilityList(abilityString?: string): string {
+  const keys = parseSkillAbilities(abilityString);
+  if (keys.length === 0) return '-';
+  return keys.map((key) => formatAbilityLabel(key as AbilityName)).join(', ');
 }
 
 export function buildSkillFilterOptions(

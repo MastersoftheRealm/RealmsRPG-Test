@@ -21,9 +21,10 @@ import { loginSchema, type LoginFormData } from '@/lib/validation';
 import { getAuthErrorMessage } from '@/lib/auth-errors';
 import { sanitizeRedirectPath } from '@/lib/safe-redirect';
 import { resendConfirmationAction } from '@/app/(auth)/auth-actions';
-import { AuthCard, FormInput, PasswordInput, SocialButton } from '@/components/auth';
+import { AuthCard, AuthTurnstile, FormInput, PasswordInput, SocialButton } from '@/components/auth';
 import { Spinner } from '@/components/ui';
 import { Button, Alert } from '@/components/ui';
+import { useAuthCaptcha } from '@/hooks/use-auth-captcha';
 
 function LoginContent() {
   const router = useRouter();
@@ -34,6 +35,14 @@ function LoginContent() {
   const [lastAttemptEmail, setLastAttemptEmail] = useState<string>('');
   /** When true, ignore ?error= from the URL (user started a new sign-in attempt). */
   const [ignoreAuthParam, setIgnoreAuthParam] = useState(false);
+  const {
+    captchaReady,
+    captchaBlockMessage,
+    captchaOptions,
+    captchaResetKey,
+    setCaptchaToken,
+    resetCaptcha,
+  } = useAuthCaptcha();
   const errorParam = searchParams.get('error');
   const [prevErrorParam, setPrevErrorParam] = useState(errorParam);
   if (errorParam !== prevErrorParam) {
@@ -75,11 +84,18 @@ function LoginContent() {
     setResendStatus('idle');
     setLastAttemptEmail(data.email);
 
+    if (captchaBlockMessage) {
+      setError(captchaBlockMessage);
+      setIsLoading(false);
+      return;
+    }
+
     try {
       const supabase = createClient();
       const { error: err } = await supabase.auth.signInWithPassword({
         email: data.email,
         password: data.password,
+        options: captchaOptions,
       });
       if (err) throw err;
       if (hasGuestEncountersToMigrate()) {
@@ -88,6 +104,7 @@ function LoginContent() {
       sessionStorage.removeItem('loginRedirect');
       router.push(getRedirectPath());
     } catch (err) {
+      resetCaptcha();
       setError(getAuthErrorMessage(err, 'login'));
     } finally {
       setIsLoading(false);
@@ -180,7 +197,14 @@ function LoginContent() {
           </Link>
         </div>
 
-        <Button type="submit" className="w-full" disabled={isLoading} aria-label="Sign in">
+        <AuthTurnstile resetKey={captchaResetKey} onToken={setCaptchaToken} />
+
+        <Button
+          type="submit"
+          className="w-full"
+          disabled={isLoading || !captchaReady}
+          aria-label="Sign in"
+        >
           {isLoading ? 'Signing in...' : 'Sign In'}
         </Button>
       </form>

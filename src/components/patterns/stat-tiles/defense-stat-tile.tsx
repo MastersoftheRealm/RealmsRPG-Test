@@ -2,9 +2,11 @@
 
 import { cn, formatBonus } from '@/lib/utils';
 import { useRollsOptional } from '@/components/rolls';
-import { RollButton, DecrementButton, IncrementButton, WordHelpTip } from '@/components/patterns';
+import { RollButton } from '../chrome/roll-button';
+import { DecrementButton, IncrementButton } from '../select/value-stepper';
+import { WordHelpTip } from '../help/info-tippy';
 import { DEFENSE_INCREASE_COST } from '@/lib/game/skill-allocation';
-import { defenseScoreHelp, getDefenseHelp } from '../../../public/tooltip-text';
+import { defenseScoreHelp, getDefenseHelp } from '../../../../public/tooltip-text';
 import {
   getAbilityTempModifier,
   getDefenseTempModifier,
@@ -17,7 +19,7 @@ import {
   SHEET_SCORE_TIP_CLASS,
   SHEET_STAT_TIP_CLASS,
   SHEET_STAT_TILE_CLASS,
-} from './abilities-section-model';
+} from './ability-defense-stat-model';
 
 export function DefenseStatTile({
   ability,
@@ -29,7 +31,8 @@ export function DefenseStatTile({
   showTempControls,
   maxDefenseSkill,
   skillPointsRemaining,
-  totalSkillPoints,
+  enforceSkillPointBudget = false,
+  defenseIncreaseCost = DEFENSE_INCREASE_COST,
   defenseBonus,
   defenseScore,
   onDefenseChange,
@@ -44,9 +47,13 @@ export function DefenseStatTile({
   showTempControls: boolean;
   maxDefenseSkill: number;
   skillPointsRemaining: number;
-  totalSkillPoints?: number | undefined;
-  defenseBonus: number;
-  defenseScore: number;
+  /** When true, increment requires `skillPointsRemaining >= defenseIncreaseCost`. */
+  enforceSkillPointBudget?: boolean | undefined;
+  /** Skill points per +1 defense rank (from core rules when available). */
+  defenseIncreaseCost?: number | undefined;
+  /** Play/temp modes — optional when `showSpendControls` (computed locally). */
+  defenseBonus?: number | undefined;
+  defenseScore?: number | undefined;
   onDefenseChange?: ((defense: keyof DefenseSkills, value: number) => void) | undefined;
   onTempModifiersChange?: ((patch: CharacterTempModifiers) => void) | undefined;
 }) {
@@ -57,16 +64,15 @@ export function DefenseStatTile({
   const defenseValue = defenseSkills?.[defenseKey] ?? 0;
   const defenseTemp = getDefenseTempModifier(tempModifiers, defenseKey as DefenseName);
   const abilityTemp = getAbilityTempModifier(tempModifiers, ability);
-  const displayDefenseBonus = defenseBonus;
-  const displayDefenseScore = defenseScore;
   const spendDefenseBonus = (abilities[ability] ?? 0) + defenseValue;
-  const glanceDefenseScore = showSpendControls ? 10 + spendDefenseBonus : displayDefenseScore;
+  const glanceDefenseScore = showSpendControls ? 10 + spendDefenseBonus : (defenseScore ?? 10);
+  const displayDefenseBonus = defenseBonus ?? spendDefenseBonus;
   const netTempDelta = abilityTemp + defenseTemp;
   const canDecreaseDefense = defenseValue > 0;
   const canIncreaseDefense =
     showSpendControls &&
     defenseValue < maxDefenseSkill &&
-    (totalSkillPoints === undefined || skillPointsRemaining >= DEFENSE_INCREASE_COST);
+    (!enforceSkillPointBudget || skillPointsRemaining >= defenseIncreaseCost);
 
   return (
     <div className={cn(SHEET_STAT_TILE_CLASS, 'border-border-light bg-surface-alt')}>
@@ -75,7 +81,7 @@ export function DefenseStatTile({
         label={`About ${defenseInfo.name}`}
         className={SHEET_STAT_TIP_CLASS}
       >
-        <span className="w-full min-w-0 text-center break-words">{defenseInfo.name}</span>
+        <span className="w-full min-w-0 text-center break-normal">{defenseInfo.name}</span>
       </WordHelpTip>
 
       <WordHelpTip
@@ -107,7 +113,7 @@ export function DefenseStatTile({
             size="sm"
             title={
               canIncreaseDefense
-                ? `Cost: ${DEFENSE_INCREASE_COST} skill points`
+                ? `Cost: ${defenseIncreaseCost} skill points`
                 : defenseValue >= maxDefenseSkill
                   ? `Max defense rank at level ${level}`
                   : 'Not enough skill points'
@@ -164,7 +170,7 @@ export function DefenseStatTile({
 
       {showSpendControls && defenseValue > 0 && (
         <span className="text-[10px] leading-none font-medium text-primary-link-fg">
-          +{defenseValue} ({defenseValue * DEFENSE_INCREASE_COST}sp)
+          +{defenseValue} ({defenseValue * defenseIncreaseCost}sp)
         </span>
       )}
       {showTempControls && defenseTemp !== 0 && (

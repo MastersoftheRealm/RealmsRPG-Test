@@ -2,9 +2,9 @@
 
 This file gathers the main UI components, shared utilities, and style conventions used across the site for unification and reuse.
 
-> **Agents:** This is a detailed human reference. For day-to-day work use the shorter canonical sources first: the shared-component table in `.cursor/rules/realms-unification.mdc`, `src/docs/ai/AGENT_GUIDE.md`, and the `src/components/shared/index.ts` / `src/components/ui/index.ts` barrels (which list the real exports). Consult this file only when you need the deeper decision-tree detail.
+> **Agents:** This is a detailed human reference. For day-to-day work use the shorter canonical sources first: the shared-component table in `.cursor/rules/realms-unification.mdc`, `src/docs/ai/AGENT_GUIDE.md`, and the `src/components/patterns/index.ts` / `src/components/ui/index.ts` barrels (which list the real exports). Consult this file only when you need the deeper decision-tree detail.
 
-> Location: `src/components/*` and `src/components/shared/*` (central exports in `src/components/ui/index.ts`).
+> Location: `src/components/*` and `src/components/patterns/*` (barrels: `@/components/patterns`, `@/components/ui`).
 
 ---
 
@@ -170,7 +170,7 @@ Usage pattern: use `Chip` for small inline tags; `ExpandableChip` for chips with
 
 ## Part / Property chips (domain-specific)
 
-- **ExpandableChip** + `expandableChipPropsFromPartData` (`lib/chip/expandable-chip-props.ts`) for parts/properties with descriptions or option levels. `PartData` in `lib/chip/part-data.ts` (also `@/components/shared`).
+- **ExpandableChip** + `expandableChipPropsFromPartData` (`lib/chip/expandable-chip-props.ts`) for parts/properties with descriptions or option levels. `PartData` in `lib/chip/part-data.ts` (also `@/components/patterns`).
 - Display helpers: `partChipsFromDisplay` (`lib/chip/part-chips-from-display.ts`).
 
 ## Expandable / Collapsible patterns
@@ -195,18 +195,18 @@ Modal usage notes: any chip/list/collapsible can be used inside a modal; no moda
 
 ### Specialized Modals
 
-**DeleteConfirmModal** - Reusable delete confirmation dialog. File: [src/components/shared/delete-confirm-modal.tsx](src/components/shared/delete-confirm-modal.tsx#L1)
+**DeleteConfirmModal** - Reusable delete confirmation dialog. File: [src/components/patterns/chrome/delete-confirm-modal.tsx](src/components/patterns/chrome/delete-confirm-modal.tsx#L1)
 - Props: `isOpen`, `onClose`, `onConfirm`, `itemName`, `itemType`
 - Pattern: Displays warning message with item name, requires confirmation
 
-**UnifiedSelectionModal** - Generic selection modal using GridListRow. File: [src/components/shared/unified-selection-modal.tsx](src/components/shared/unified-selection-modal.tsx#L1)
+**UnifiedSelectionModal** - Generic selection modal using GridListRow. File: [src/components/patterns/select/unified-selection-modal.tsx](src/components/patterns/select/unified-selection-modal.tsx#L1)
 - Props: `isOpen`, `onClose`, `title`, `items`, `onSelect`, `renderItem`, `searchFilter`
 - Pattern: Highly configurable for any selection scenario (skills, feats, powers, etc.)
 
-**AddCombatantModal** - Encounter / session participant picker (intentional non-USM; TASK-571). File: [src/components/shared/add-combatant-modal.tsx](src/components/shared/add-combatant-modal.tsx#L1)
+**AddCombatantModal** - Encounter / session participant picker (intentional non-USM; TASK-571). File: [src/components/encounters/add-combatant-modal.tsx](src/components/encounters/add-combatant-modal.tsx#L1)
 - Pattern: Creature Library + Campaign Characters; extend for VTT/downtime — do not migrate onto USM. Canonical: FEATURE_INDEX.
 
-**LoginPromptModal** - Prompts user to login when accessing protected features. File: [src/components/shared/login-prompt-modal.tsx](src/components/shared/login-prompt-modal.tsx#L1)
+**LoginPromptModal** - Prompts user to login when accessing protected features. File: [src/components/patterns/chrome/login-prompt-modal.tsx](src/components/patterns/chrome/login-prompt-modal.tsx#L1)
 - Props: `isOpen`, `onClose`, `title?`, `message?`, `feature`
 - Pattern: Info alert with login/signup buttons
 
@@ -219,14 +219,16 @@ Modal usage notes: any chip/list/collapsible can be used inside a modal; no moda
 
 ## List utilities and patterns
 
-Shared list helpers live in `src/components/shared/list-components.tsx` and are widely used in Codex/Library pages:
+Canonical list chrome (import `@/components/patterns` / `@/components/ui`):
 
-- `SearchInput` — text input for searching lists (re-exported from `ui/search-input.tsx`).
-- `SortHeader` — clickable column header that toggles sort dir and shows chevron.
-- `FilterSection` — collapsible filter section with show/hide and internal content wrapper.
-- `ResultsCount`, `EmptyState`, `LoadingSpinner`, `ListContainer`, `ColumnHeaders` — common UI used by list pages. File: [src/components/shared/list-components.tsx](src/components/shared/list-components.tsx#L1).
+- `SearchInput`, `EmptyState`, `LoadingState` / `Spinner` — `@/components/ui`
+- `ListHeader` — sortable column headers (`patterns/list/list-header.tsx`)
+- `FilterSection` / filter panels — `patterns/filters/`
+- `ListSearchToolbar` — search + Filters row (ADR-0011)
+- `ErrorDisplay` — list error + retry (`patterns/list/list-components.tsx`; also barrel-exported)
+- Browse shells: `CodexBrowseListShell`, `UserLibraryEntityTabShell`, `OfficialEntityList`, `UnifiedSelectionModal`
 
-Usage notes: these building blocks are composable. `FilterSection` uses the `Collapsible` pattern but is implemented specifically for list filters.
+Do **not** look for deleted helpers (`ResultsCount`, `LoadingSpinner`, `SortHeader`, `ColumnHeaders`, `ListContainer`, `ItemCard`) — they were removed in earlier debt passes.
 
 ---
 
@@ -234,7 +236,7 @@ Usage notes: these building blocks are composable. `FilterSection` uses the `Col
 
 ### ValueStepper
 
-Unified increment/decrement control with hold-to-repeat functionality. File: [src/components/shared/value-stepper.tsx](src/components/shared/value-stepper.tsx#L1)
+Unified increment/decrement control with hold-to-repeat functionality. File: [src/components/patterns/select/value-stepper.tsx](src/components/patterns/select/value-stepper.tsx#L1)
 
 - **Components:** `ValueStepper`, `DecrementButton`, `IncrementButton`
 - **Props:** `value`, `onChange`, `min?`, `max?`, `step?`, `size?` (sm|md|lg), `layout?` (inline|block|compact), `disabled?`, `enableHoldRepeat?`
@@ -260,7 +262,7 @@ Unified increment/decrement control with hold-to-repeat functionality. File: [sr
 
 ### QuantitySelector
 
-Specialized quantity control with badge display. File: [src/components/shared/quantity-selector.tsx](src/components/shared/quantity-selector.tsx#L1)
+Specialized quantity control with badge display. File: [src/components/patterns/select/quantity-selector.tsx](src/components/patterns/select/quantity-selector.tsx#L1)
 
 - **Components:** `QuantitySelector`, `QuantityBadge`
 - **Props:** `quantity`, `onQuantityChange`, `min?`, `max?`, `size?` (sm|md)
@@ -278,7 +280,7 @@ Specialized quantity control with badge display. File: [src/components/shared/qu
 
 ### SelectionToggle
 
-The unified + → ✓ selection button. File: [src/components/shared/selection-toggle.tsx](src/components/shared/selection-toggle.tsx#L1)
+The unified + → ✓ selection button. File: [src/components/patterns/select/selection-toggle.tsx](src/components/patterns/select/selection-toggle.tsx#L1)
 
 - **Props:** `isSelected`, `onToggle`, `disabled?`, `size?` (sm|md|lg)
 - **States:** 
@@ -297,7 +299,7 @@ The unified + → ✓ selection button. File: [src/components/shared/selection-t
 
 ### RollButton
 
-Unified dice roll button with gradient styles. File: [src/components/shared/roll-button.tsx](src/components/shared/roll-button.tsx#L1)
+Unified dice roll button with gradient styles. File: [src/components/patterns/chrome/roll-button.tsx](src/components/patterns/chrome/roll-button.tsx#L1)
 
 - **Props:** `onClick`, `children`, `variant?` (primary|unproficient|defense|success|danger|outline), `size?` (sm|md|lg), `disabled?`
 - **Variants:** CVA-based with gradient backgrounds matching design system
@@ -315,7 +317,7 @@ Unified dice roll button with gradient styles. File: [src/components/shared/roll
 
 ### EditSectionToggle
 
-Blue pencil icon for edit mode sections. File: [src/components/shared/edit-section-toggle.tsx](src/components/shared/edit-section-toggle.tsx#L1)
+Blue pencil icon for edit mode sections. File: [src/components/patterns/chrome/edit-section-toggle.tsx](src/components/patterns/chrome/edit-section-toggle.tsx#L1)
 
 - **Props:** `state` (normal|has-points|over-budget), `isActive`, `onClick`, `title?`
 - **Export:** `getEditState(spent, total)` helper function
@@ -337,7 +339,7 @@ Blue pencil icon for edit mode sections. File: [src/components/shared/edit-secti
 
 ### PointStatus
 
-Point allocation status display. File: [src/components/shared/point-status.tsx](src/components/shared/point-status.tsx#L1)
+Point allocation status display. File: [src/components/patterns/chrome/point-status.tsx](src/components/patterns/chrome/point-status.tsx#L1)
 
 - **Props:** `total`, `spent`, `variant?` (block|inline|compact), `label?`
 - **Colors:** 
@@ -362,7 +364,7 @@ Point allocation status display. File: [src/components/shared/point-status.tsx](
 
 ### SectionHeader (NEW - Phase 1 Unification)
 
-Standardized section header pattern with optional add button and count display. File: [src/components/shared/section-header.tsx](src/components/shared/section-header.tsx#L1).
+Standardized section header pattern with optional add button and count display. File: [src/components/patterns/chrome/section-header.tsx](src/components/patterns/chrome/section-header.tsx#L1).
 
 - Props: `title`, `count?`, `onAdd?`, `addLabel?`, `rightContent?`, `size?` (`sm|md|lg`), `bordered?`
 - Usage: All section headers in character sheet (Powers, Techniques, Weapons, Armor, Equipment, Feats)
@@ -415,9 +417,8 @@ These slots allow `GridListRow` to replace custom character sheet components (Po
 - Pattern: Conditional overlay with backdrop + spinner
 - Usage: Forms, modals during save/submit
 
-**LoadingSpinner** (in list-components) - Simple centered spinner for lists. File: [src/components/shared/list-components.tsx](src/components/shared/list-components.tsx#L254)
-- Alias/wrapper around `Spinner` component
-- Usage: List loading states in Library/Codex
+**LoadingState** / **Spinner** — `@/components/ui` (`spinner.tsx`). Do not use a list-components LoadingSpinner (deleted).
+
 
 ### Empty States
 
@@ -440,10 +441,8 @@ These slots allow `GridListRow` to replace custom character sheet components (Po
 />
 ```
 
-**EmptyState (list-components)** - Simpler variant for lists. File: [src/components/shared/list-components.tsx](src/components/shared/list-components.tsx#L226)
-- Props: `icon?`, `title`, `message?`, `action?` (ReactNode)
-- Exported as `ListEmptyState` in shared/index.ts
-- Usage: Quick empty states for list contexts
+**EmptyState** — `@/components/ui/empty-state.tsx` only (list-components re-export deleted, TASK-821).
+
 
 ### Alerts & Feedback
 
@@ -484,17 +483,13 @@ showToast('Character saved successfully', 'success', 3000);
 showToast('Failed to save', 'error');
 ```
 
-**ErrorDisplay** - Error state display for lists. File: [src/components/shared/list-components.tsx](src/components/shared/list-components.tsx#L268)
+**ErrorDisplay** - Error state display for lists. File: [src/components/patterns/list/list-components.tsx](src/components/patterns/list/list-components.tsx)
 - Props: `message`, `subMessage?`
 - Pattern: Error icon + message + optional sub-message
 - Usage: List/page error states
 
-**ResultsCount** - Display count of filtered results. File: [src/components/shared/list-components.tsx](src/components/shared/list-components.tsx#L123)
-- Props: `count`, `itemLabel?`, `isLoading?`
-- Pattern: Shows "X items found" with proper pluralization
-- Usage: Above filtered lists
+**ResultsCount** — **removed**. Show counts via `SectionHeader` / shell empty states / tab badges instead.
 
----
 
 ## Buttons & icon buttons
 
@@ -510,7 +505,7 @@ showToast('Failed to save', 'error');
 
 ### CreatureStatBlock
 
-D&D-style creature display component. File: [src/components/shared/creature-stat-block.tsx](src/components/shared/creature-stat-block.tsx#L1)
+D&D-style creature display component. File: [src/components/patterns/list/creature-stat-block.tsx](src/components/patterns/list/creature-stat-block.tsx#L1)
 
 - **Props:** `creature`, `onEdit?`, `onDelete?`, `onDuplicate?`, `showActions?`, `expanded?`, `compact?`
 - **Features:**
@@ -697,27 +692,27 @@ Opt-in collapsible card sections for creators. File: [src/components/creator/col
 
 ## Filter Components
 
-Located in `src/components/shared/filters/` (now shared for reuse across the app):
+Located in `src/components/patterns/filters/` (import `@/components/patterns/filters` or `@/components/patterns`):
 
-> **Note:** These were previously in `codex/filters/` but have been moved to `shared/filters/` for reuse.
-> Import from `@/components/shared/filters` or `@/components/shared` directly.
+> **Note:** Formerly `codex/filters/`, then `shared/filters/`; public path is `patterns/filters/` (ADR-0019).
+> Import from `@/components/patterns/filters` or `@/components/patterns` directly.
 > The old `@/components/codex` imports still work for backward compatibility.
 
 ### TagFilter
 
-Multi-select tag filter with Any/All mode. File: [src/components/shared/filters/tag-filter.tsx](src/components/shared/filters/tag-filter.tsx#L1)
+Multi-select tag filter with Any/All mode. File: [src/components/patterns/filters/tag-filter.tsx](src/components/patterns/filters/tag-filter.tsx#L1)
 - Props: `tags`, `selectedTags`, `tagMode` (any|all), `onSelect`, `onRemove`, `onModeChange`
 - Features: Dropdown + chip display, Any/All radio toggle
 
 ### SelectFilter
 
-Simple dropdown filter. File: [src/components/shared/filters/select-filter.tsx](src/components/shared/filters/select-filter.tsx#L1)
+Simple dropdown filter. File: [src/components/patterns/filters/select-filter.tsx](src/components/patterns/filters/select-filter.tsx#L1)
 - Props: `label`, `value`, `options`, `onChange`, `placeholder?`
 - Pattern: Standard select with "All X" default option
 
 ### ChipSelect
 
-Multi-select dropdown with chip display. File: [src/components/shared/filters/chip-select.tsx](src/components/shared/filters/chip-select.tsx#L1)
+Multi-select dropdown with chip display. File: [src/components/patterns/filters/chip-select.tsx](src/components/patterns/filters/chip-select.tsx#L1)
 - Props: `label`, `options`, `selectedValues`, `onSelect`, `onRemove`, `placeholder?`
 - Pattern: Select dropdown + chip list for selections
 
@@ -728,13 +723,13 @@ Multi-select dropdown with chip display. File: [src/components/shared/filters/ch
 
 ### AbilityRequirementFilter
 
-Filter by ability requirements. File: [src/components/shared/filters/ability-requirement-filter.tsx](src/components/shared/filters/ability-requirement-filter.tsx#L1)
+Filter by ability requirements. File: [src/components/patterns/filters/ability-requirement-filter.tsx](src/components/patterns/filters/ability-requirement-filter.tsx#L1)
 - Props: `abilities`, `selectedAbilities`, `maxValue`, `onChange`
 - Features: Ability selection + max value input
 
-### FilterSection (shared)
+### FilterSection
 
-Collapsible filter container. File: [src/components/shared/filters/filter-section.tsx](src/components/shared/filters/filter-section.tsx#L1)
+Collapsible filter container. File: [src/components/patterns/filters/filter-section.tsx](src/components/patterns/filters/filter-section.tsx#L1)
 - Props: `title`, `children`, `defaultExpanded?`
 - Pattern: Expandable section for grouping filters
 
@@ -742,23 +737,10 @@ Collapsible filter container. File: [src/components/shared/filters/filter-sectio
 
 ## Shared Utilities & Styles
 
-- **list-components exports** ([src/components/shared/list-components.tsx](src/components/shared/list-components.tsx#L1)):
-  - `GridListRow` — unified list item with consistent grid layout, hover states, optional expand button
-  - `EmptyState` — re-exported from `ui/empty-state.tsx` for convenience
-  - `LoadingState` — re-exported from `ui/spinner.tsx` for convenience
-  - `ResultsCount` — Shows "X results" with optional total count
-  - `FilterSection` — Collapsible filter container with title
-  - `ContentDivider` — Visual separator line
-  - `LoadingSpinner` — Centered spinner for list loading states
-  - `ErrorDisplay` — Error state display for lists
-  - Pattern: All list pages use GridListRow for consistent item display
-  - Grid constants exported: `ITEM_GRID`, `FEAT_GRID`, `SKILL_GRID`, `EQUIPMENT_GRID`, `PROPERTY_GRID`, `PART_GRID`
-
-- **item-card exports** ([src/components/shared/item-card.tsx](src/components/shared/item-card.tsx#L1)):
-  - `ItemCard` — Generic item display card with action buttons, details, tags
-  - `ItemList` — Wrapper for item card grids with empty state
-  - Props: `item`, `onEdit?`, `onDelete?`, `onDuplicate?`, `onSelect?`, `isSelected?`, `showActions?`
-  - Usage: Powers, techniques, armaments, feats library displays
+- **list-components exports** ([src/components/patterns/list/list-components.tsx](src/components/patterns/list/list-components.tsx#L1)):
+  - `ErrorDisplay` only — list error + optional retry (also `@/components/patterns`)
+  - `EmptyState` / `LoadingState` / `SearchInput` — `@/components/ui` (TASK-821)
+  - `GridListRow` / `ListHeader` / `FilterSection` — `@/components/patterns`
 
 - **Utilities:**
   - `cn` (class name merge helper) — used across components (`src/lib/utils/cn.ts` or `src/lib/utils/index.ts`)
@@ -826,14 +808,14 @@ All use: CreatorSummaryPanel, CollapsibleSection, Button, Input, Select, Checkbo
 
 - **Library:** [src/app/(main)/library/page.tsx](src/app/(main)/library/page.tsx#L1)
   - **Tabs:** Powers, Techniques, Armaments, Creatures
-  - **Components:** Tabs, ItemCard, ItemList, CreatureStatBlock, LibrarySection
+  - **Components:** Tabs, Official*List / UserLibraryEntityTabShell, CreatureStatBlock, LibrarySection
   - **Pattern:** User's saved items with edit/delete/duplicate actions
 
 ### Character Creator
 - [src/app/(main)/characters/new/page.tsx](src/app/(main)/characters/new/page.tsx#L1)
   - **Steps:** SpeciesStep, AbilityStep, ArchetypeStep, FeatsStep, SkillsStep, FinalizeStep
   - **Components:** 
-    - SpeciesStep: SpeciesModal, SpeciesTraitCard
+    - SpeciesStep: SpeciesModal, DetailOptionList / GuidedChoiceCard (SpeciesTraitCard removed)
     - AbilityStep: AbilityScoreEditor
     - ArchetypeStep: ArchetypeSelector
     - FeatsStep: Chip selections
@@ -927,7 +909,7 @@ Based on the comprehensive audit, here are key patterns and recommendations:
 1. **EmptyState Duplication**
    - **Issue:** Two versions exist:
      - `src/components/ui/empty-state.tsx` (generic, with description prop)
-     - `src/components/shared/list-components.tsx` (EmptyState export, simpler)
+     - `src/components/patterns/list/list-components.tsx` (EmptyState export, simpler)
    - **Recommendation:** 
      - Consolidate to single component in ui/ with both simple and detailed modes
      - Add optional `action` prop for CTA button
@@ -937,14 +919,13 @@ Based on the comprehensive audit, here are key patterns and recommendations:
    - **Issue:** Multiple overlapping loading components:
      - `Spinner` (minimal spinner)
      - `LoadingState` (spinner with message)
-     - `LoadingSpinner` (in list-components, wrapper around Spinner)
+     - `LoadingState` / `Spinner` (`@/components/ui`)
    - **Recommendation:** 
      - Keep: `Spinner` (primitive), `LoadingState` (with message)
-     - Remove: `LoadingSpinner` duplicate
      - Standardize loading message styling
 
 3. **Filter Components**
-   - **Current:** Shared filters in `shared/filters/` (ChipSelect, TagFilter, SelectFilter, SourceFilter, …)
+   - **Current:** Filters in `patterns/filters/` (ChipSelect, TagFilter, SelectFilter, SourceFilter, …)
    - **Recommendation:** 
      - Move to `shared/` for reuse across library, character sheet modals
      - Create unified `<FilterBar>` composition component
@@ -968,7 +949,6 @@ Based on the comprehensive audit, here are key patterns and recommendations:
      - Card (generic)
      - PageContainer (page wrapper)
      - AuthCard (login/register)
-     - ItemCard (library items)
      - CharacterCard (character selection)
      - CreatureStatBlock (stat block display)
    - **Recommendation:**
@@ -1080,11 +1060,10 @@ The goal of consistency is achieved through:
 
 1. **Phase 1: Cleanup**
    - Remove deprecated Button/Chip variants from codebase
-   - Consolidate duplicate components (EmptyState, LoadingSpinner)
+   - Prefer `@/components/ui` EmptyState / LoadingState (duplicates already removed)
    - Audit and fix any remaining hardcoded colors
 
 2. **Phase 2: Standardization**
-   - Move filter components to shared/
    - Create GenericListModal pattern
    - Standardize modal sizing and footer patterns
    - Document prop naming conventions

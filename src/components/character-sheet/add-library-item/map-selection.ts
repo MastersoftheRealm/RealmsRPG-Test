@@ -7,6 +7,7 @@ import type {
   PowerSelectionMode,
 } from '@/hooks/add-library-item/types';
 import type { CharacterPower, CharacterTechnique, Item } from '@/types';
+import { persistEquipmentCost } from '@/lib/codex/equipment-list';
 
 interface CodexPartLike {
   id?: string | number | undefined;
@@ -143,7 +144,9 @@ export function mapSelectedToCharacterItems(
       armor: i.armorValue ?? 0,
       equipped: false,
       quantity: Math.max(1, Math.floor(Number(qty)) || 1),
-      cost: 0,
+      cost: itemType === 'equipment' ? persistEquipmentCost(i) : 0,
+      category: itemType === 'equipment' ? i.category : undefined,
+      rarity: itemType === 'equipment' ? (i.rarity as Item['rarity']) : undefined,
       image_id: i.image_id ?? null,
       image_url: i.image_url ?? null,
     };

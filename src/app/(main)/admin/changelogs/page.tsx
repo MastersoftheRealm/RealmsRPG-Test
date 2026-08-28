@@ -17,6 +17,12 @@ import {
 } from '@/components/ui';
 import { ErrorDisplay } from '@/components/patterns';
 import { apiFetch } from '@/lib/api-client';
+import {
+  formatCodexChangeValue,
+  parseChangedFields,
+  summarizeChangedFieldNames,
+  type CodexFieldChange,
+} from '@/lib/codex-changelog-display';
 
 type TabId =
   | 'codex_feats'
@@ -93,6 +99,43 @@ function readActorLabel(entry: ChangeLogEntry): string {
   );
 }
 
+function readFieldChanges(entry: ChangeLogEntry): CodexFieldChange[] {
+  return parseChangedFields(entry.changed_fields);
+}
+
+function ChangedFieldsTable({ changes }: { changes: CodexFieldChange[] }) {
+  if (changes.length === 0) {
+    return <p className="text-sm text-text-muted">No field-level diff recorded for this entry.</p>;
+  }
+
+  return (
+    <div className="overflow-x-auto rounded-lg border border-border">
+      <table className="min-w-full text-sm">
+        <thead className="bg-surface-alt text-left text-xs text-text-muted uppercase">
+          <tr>
+            <th className="px-3 py-2 font-semibold">Field</th>
+            <th className="px-3 py-2 font-semibold">Before</th>
+            <th className="px-3 py-2 font-semibold">After</th>
+          </tr>
+        </thead>
+        <tbody>
+          {changes.map((change) => (
+            <tr key={change.field} className="border-t border-border-light align-top">
+              <td className="px-3 py-2 font-medium text-text-primary">{change.field}</td>
+              <td className="max-w-[16rem] px-3 py-2 break-words text-text-secondary">
+                {formatCodexChangeValue(change.before)}
+              </td>
+              <td className="max-w-[16rem] px-3 py-2 break-words text-text-primary">
+                {formatCodexChangeValue(change.after)}
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  );
+}
+
 export default function AdminChangelogsPage() {
   const { tabGroupId, sharedPanelId } = useTabGroup();
   const [activeTab, setActiveTab] = useState<TabId>('codex_feats');
@@ -161,42 +204,53 @@ export default function AdminChangelogsPage() {
           <EmptyState title="No changelog entries yet for this tab." size="sm" />
         ) : (
           <div className="space-y-3">
-            {rows.map((entry) => (
-              <article key={entry.id} className="rounded-lg border border-border bg-surface p-4">
-                <div className="flex flex-wrap items-start justify-between gap-3">
-                  <div className="space-y-1">
-                    <p className="text-sm text-text-secondary">
-                      {dateFormatter.format(new Date(entry.changed_at))} by {readActorLabel(entry)}
-                    </p>
-                    <h2 className="text-base font-semibold text-text-primary">
-                      {readEntityName(entry)}{' '}
-                      <span className="font-normal text-text-secondary">({entry.entity_id})</span>
-                    </h2>
+            {rows.map((entry) => {
+              const fieldChanges = readFieldChanges(entry);
+              return (
+                <article key={entry.id} className="rounded-lg border border-border bg-surface p-4">
+                  <div className="flex flex-wrap items-start justify-between gap-3">
+                    <div className="min-w-0 space-y-1">
+                      <p className="text-sm text-text-secondary">
+                        {dateFormatter.format(new Date(entry.changed_at))} by{' '}
+                        {readActorLabel(entry)}
+                      </p>
+                      <h2 className="text-base font-semibold text-text-primary">
+                        {readEntityName(entry)}{' '}
+                        <span className="font-normal text-text-secondary">({entry.entity_id})</span>
+                      </h2>
+                    </div>
+                    <DescriptorChip
+                      variant={operationChipVariant(entry.operation)}
+                      size="sm"
+                      className="font-semibold tracking-wide uppercase"
+                    >
+                      {entry.operation}
+                    </DescriptorChip>
                   </div>
-                  <DescriptorChip
-                    variant={operationChipVariant(entry.operation)}
-                    size="sm"
-                    className="font-semibold tracking-wide uppercase"
-                  >
-                    {entry.operation}
-                  </DescriptorChip>
-                </div>
 
-                <div className="mt-3 flex flex-wrap items-center justify-between gap-3">
-                  <p className="text-sm text-text-secondary">
-                    Fields changed: {entry.changed_fields?.length ?? 0}
+                  <p className="mt-3 text-sm text-text-secondary">
+                    {summarizeChangedFieldNames(fieldChanges)}
                   </p>
-                  <Button
-                    size="sm"
-                    variant="secondary"
-                    className="min-h-[44px]"
-                    onClick={() => setSelectedEntry(entry)}
-                  >
-                    View Details
-                  </Button>
-                </div>
-              </article>
-            ))}
+
+                  {fieldChanges.length > 0 ? (
+                    <div className="mt-3">
+                      <ChangedFieldsTable changes={fieldChanges.slice(0, 4)} />
+                      {fieldChanges.length > 4 ? (
+                        <p className="mt-2 text-xs text-text-muted">
+                          +{fieldChanges.length - 4} more fields in details
+                        </p>
+                      ) : null}
+                    </div>
+                  ) : null}
+
+                  <div className="mt-3 flex justify-end">
+                    <Button size="sm" variant="secondary" onClick={() => setSelectedEntry(entry)}>
+                      View all fields
+                    </Button>
+                  </div>
+                </article>
+              );
+            })}
           </div>
         )}
       </TabContentPanel>
@@ -227,23 +281,7 @@ export default function AdminChangelogsPage() {
 
             <section>
               <h3 className="mb-2 text-sm font-semibold text-text-primary">Changed Fields</h3>
-              <pre className="overflow-auto rounded-lg border border-border bg-background p-3 text-xs">
-                {JSON.stringify(selectedEntry.changed_fields ?? [], null, 2)}
-              </pre>
-            </section>
-
-            <section>
-              <h3 className="mb-2 text-sm font-semibold text-text-primary">Before</h3>
-              <pre className="overflow-auto rounded-lg border border-border bg-background p-3 text-xs">
-                {JSON.stringify(selectedEntry.before_data, null, 2)}
-              </pre>
-            </section>
-
-            <section>
-              <h3 className="mb-2 text-sm font-semibold text-text-primary">After</h3>
-              <pre className="overflow-auto rounded-lg border border-border bg-background p-3 text-xs">
-                {JSON.stringify(selectedEntry.after_data, null, 2)}
-              </pre>
+              <ChangedFieldsTable changes={readFieldChanges(selectedEntry)} />
             </section>
           </div>
         )}

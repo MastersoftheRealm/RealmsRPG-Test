@@ -9,23 +9,14 @@ import { DecrementButton, IncrementButton, type ColumnValue } from '@/components
 import type { ChipData } from '@/components/patterns/list/grid-list-row';
 import type { EntityFeatRow } from '@/components/patterns/list/entity-library-sections';
 import { FEAT_GRID } from '@/components/patterns/list/entity-library-sections';
-import { Input, Textarea } from '@/components/ui';
+import { formatRecoveryAbbrev } from '@/components/patterns/list/entity-library-sections-rows';
+import { Button, Input, Textarea } from '@/components/ui';
 import type { FeatTraitCustomization } from '@/types/feats';
 import { descriptorChipData } from '@/lib/chip/chip-data-helpers';
 import { glrSurfaceDetailSections, metadataDetailSection } from '@/lib/chip/list-row-metadata';
 import { capitalize, formatAbilityList, truncateText } from '@/lib/utils';
 
 const DESCRIPTION_EXTENDED_TRUNCATE = 220;
-
-function formatRecoveryAbbrev(recovery: string | undefined): string {
-  if (!recovery) return '';
-  const lower = recovery.toLowerCase();
-  if (lower.includes('partial')) return 'PR';
-  if (lower.includes('full')) return 'FR';
-  if (lower.includes('short')) return 'SR';
-  if (lower.includes('long')) return 'LR';
-  return '';
-}
 
 /** Stable trait id for customization lookup (prefers codex id). */
 export function resolveTraitCustomizationKey(
@@ -140,24 +131,25 @@ function FeatTraitCustomizationBlock({
 
   return (
     <div
-      className="space-y-3 border-t border-border-light pt-3"
+      className="mt-3 border-t border-border-light pt-3"
       onClick={(e) => e.stopPropagation()}
       onKeyDown={(e) => e.stopPropagation()}
     >
-      <button
+      <Button
         type="button"
+        variant="outline"
+        size="sm"
         onClick={(e) => {
           e.stopPropagation();
           setIsCustomizationOpen((prev) => !prev);
         }}
-        className="inline-flex min-h-[44px] items-center rounded-md border border-border-light bg-surface px-3 py-2 text-xs font-medium text-text-secondary hover:bg-surface-alt"
         aria-expanded={isCustomizationOpen}
       >
         {isCustomizationOpen ? 'Hide customization' : 'Customize'}
-      </button>
+      </Button>
 
       {isCustomizationOpen && (
-        <>
+        <div className="mt-3 space-y-3">
           {onCustomNameChange && (
             <Input
               id={`${fieldId}-custom-name`}
@@ -200,7 +192,7 @@ function FeatTraitCustomizationBlock({
               className="min-h-[72px]"
             />
           )}
-        </>
+        </div>
       )}
     </div>
   );
@@ -283,7 +275,7 @@ function buildUsesStepper(
       </span>
     );
   }
-  return '-';
+  return null;
 }
 
 function buildFeatTraitColumns(
@@ -292,8 +284,8 @@ function buildFeatTraitColumns(
   recovery: string | undefined,
   usesStepper: ReactNode,
 ): { columns: ColumnValue[]; columnSpans?: (number | undefined)[] | undefined } {
-  const recoveryDisplay = formatRecoveryAbbrev(recovery) || '-';
-  const noUsesOrRecovery = !uses && recoveryDisplay === '-';
+  const recoveryDisplay = formatRecoveryAbbrev(recovery);
+  const noUsesOrRecovery = !uses && !recoveryDisplay;
   if (noUsesOrRecovery) {
     return {
       columns: [

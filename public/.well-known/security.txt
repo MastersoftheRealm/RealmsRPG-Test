@@ -1,0 +1,6 @@
+Contact: mailto:RealmsRoleplayGame@gmail.com
+Expires: 2027-08-22T00:00:00.000Z
+Preferred-Languages: en
+Canonical: https://realmsrpg.com/.well-known/security.txt
+Policy: https://realmsrpg.com/terms
+Acknowledgments: https://realmsrpg.com/about

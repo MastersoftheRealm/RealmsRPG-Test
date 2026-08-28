@@ -5,6 +5,10 @@ import { scrollDeltaToRevealChild, tabListOverflowState } from './tab-navigation
 
 const tabNav = readFileSync(path.join(import.meta.dirname, 'tab-navigation.tsx'), 'utf8');
 const globals = readFileSync(path.join(import.meta.dirname, '../../app/globals.css'), 'utf8');
+const libraryTabNav = readFileSync(
+  path.join(import.meta.dirname, '../character-sheet/use-library-tab-navigation.tsx'),
+  'utf8',
+);
 const codexPage = readFileSync(
   path.join(import.meta.dirname, '../../app/(main)/codex/page.tsx'),
   'utf8',
@@ -40,6 +44,24 @@ describe('TabNavigation overflow affordance (TASK-840)', () => {
     expect(tabListOverflowState(0, 324, 541)).toEqual({ start: false, end: true });
     expect(tabListOverflowState(100, 324, 541)).toEqual({ start: true, end: true });
     expect(tabListOverflowState(217, 324, 541)).toEqual({ start: true, end: false });
+  });
+
+  it('treats 1–2px slack as no overflow (TASK-890)', () => {
+    expect(tabListOverflowState(0, 324, 325)).toEqual({ start: false, end: false });
+    expect(tabListOverflowState(0, 324, 326)).toEqual({ start: false, end: false });
+    expect(tabListOverflowState(0, 324, 340)).toEqual({ start: false, end: true });
+  });
+
+  it('scrolls chevrons to list edges and clips vertical overflow (TASK-890)', () => {
+    expect(tabNav).toContain('scrollTo');
+    expect(tabNav).toMatch(/direction === -1 \? 0 : maxScroll/);
+    expect(globals).toContain('overflow-y-hidden');
+  });
+
+  it('keeps sheet hide-eyes Dense instead of 44px slabs (TASK-887)', () => {
+    expect(libraryTabNav).toContain('size="sm"');
+    expect(libraryTabNav).not.toContain('min-h-[44px]');
+    expect(libraryTabNav).not.toContain('min-w-[44px]');
   });
 
   it('reveals a clipped child by scrolling the list only', () => {
@@ -92,5 +114,19 @@ describe('Creator / guided rails reuse tab overflow chrome (TASK-848)', () => {
     expect(tabNav).toMatch(/type OverflowListTag = 'nav' \| 'ol'/);
     expect(creatorTabBar).not.toContain('getActiveElement');
     expect(guidedShell).not.toContain('getActiveElement');
+  });
+
+  it('sheet carousel reuses tabListOverflowState fade, not TabNavOverflowScroller', () => {
+    const sheetBody = readFileSync(
+      path.join(import.meta.dirname, '../character-sheet/character-sheet-body.tsx'),
+      'utf8',
+    );
+    expect(sheetBody).toContain('tabListOverflowState');
+    expect(sheetBody).toContain('data-sheet-mobile-carousel');
+    expect(sheetBody).not.toContain('TabNavOverflowScroller');
+    expect(sheetBody).not.toContain('max-h-[50%]');
+    expect(sheetBody).not.toContain('max-md:overflow-y-auto');
+    expect(globals).toContain('[data-sheet-mobile-carousel]');
+    expect(globals).toContain("[data-sheet-mobile-carousel][data-overflow-end='true']");
   });
 });

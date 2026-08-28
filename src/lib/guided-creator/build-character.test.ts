@@ -474,4 +474,21 @@ describe('buildGuidedCharacterPayload', () => {
       martial_prof_start: 0,
     });
   });
+
+  it('maps reveal identity fields to age, appearance, and backstory (not merged appearance)', () => {
+    const payload = buildGuidedCharacterPayload(
+      minimalDraft({
+        age: '25',
+        appearanceNotes: 'Green eyes.',
+        description: 'Raised in the marshes.',
+      }),
+      {},
+    );
+
+    expect(payload.age).toBe('25');
+    expect(payload.appearance).toBe('Green eyes.');
+    expect(payload.backstory).toBe('Raised in the marshes.');
+    expect(payload.description).toBeUndefined();
+    expect(payload.appearance).not.toContain('Age:');
+  });
 });

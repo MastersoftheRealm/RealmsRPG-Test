@@ -2,7 +2,20 @@ import { describe, expect, it } from 'vitest';
 import {
   calculateCurrencyCostAndRarity,
   deriveCriticalRangeIncreaseFromProperties,
+  resolveItemMarketPricing,
+  type ItemPropertyTpRow,
 } from './item-calc';
+
+/** Known property: C=2, IP=2 → Common market Currency 31, not the raw C sum. */
+const SHARP: ItemPropertyTpRow = {
+  id: 1,
+  name: 'Sharp',
+  base_c: 2,
+  op_1_c: 0,
+  base_ip: 2,
+  op_1_ip: 0,
+  base_tp: 4,
+};
 
 describe('calculateCurrencyCostAndRarity (T10 / M11)', () => {
   it('picks rarity from IP band boundaries', () => {
@@ -23,6 +36,36 @@ describe('calculateCurrencyCostAndRarity (T10 / M11)', () => {
     expect(priced.rarity).toBe('Uncommon');
     expect(priced.currencyCost).toBe(499);
     expect(priced.currencyCost).toBeLessThan(500);
+  });
+});
+
+describe('resolveItemMarketPricing (TASK-870)', () => {
+  it('converts a known property set to rarity-multiplied Currency, not the C sum', () => {
+    const pricing = resolveItemMarketPricing([{ id: 1, name: 'Sharp', op_1_lvl: 0 }], [SHARP]);
+    const expected = calculateCurrencyCostAndRarity(2, 2).currencyCost;
+
+    expect(pricing.totalCurrency).toBe(2);
+    expect(pricing.totalIP).toBe(2);
+    expect(pricing.totalTP).toBe(4);
+    expect(pricing.rarity).toBe('Common');
+    expect(pricing.currencyCost).toBe(expected);
+    expect(pricing.currencyCost).toBe(31);
+    expect(pricing.currencyCost).not.toBe(pricing.totalCurrency);
+    expect(pricing.resolvedFromProperties).toBe(true);
+  });
+
+  it('converts stored C+IP sums when the Codex DB is not loaded', () => {
+    const expected = calculateCurrencyCostAndRarity(2, 2).currencyCost;
+    const pricing = resolveItemMarketPricing([], [], { totalCurrency: 2, totalIP: 2, totalTP: 4 });
+    expect(pricing.currencyCost).toBe(expected);
+    expect(pricing.currencyCost).not.toBe(2);
+    expect(pricing.resolvedFromProperties).toBe(false);
+  });
+
+  it('does not invent Common-floor Currency when there is no cost signal', () => {
+    const pricing = resolveItemMarketPricing([], []);
+    expect(pricing.currencyCost).toBe(0);
+    expect(pricing.resolvedFromProperties).toBe(false);
   });
 });
 

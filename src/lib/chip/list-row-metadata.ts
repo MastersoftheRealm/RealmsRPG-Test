@@ -16,6 +16,7 @@ import { descriptorChipData } from '@/lib/chip/chip-data-helpers';
 import {
   abilityRequirementChip,
   actionTypeFactChip,
+  categoryFactChip,
   agilityReductionFactChip,
   compactFactChip,
   criticalRangeIncreaseFactChip,
@@ -29,8 +30,12 @@ import {
   rangeFactChip,
   trainingPointsFactChip,
 } from '@/lib/detail-option/compact-facts';
-import type { GlrFactId } from '@/lib/glr/glr-fact-catalog';
-import { resolveSurfaceLayout, type GlrSurfaceId } from '@/lib/glr/glr-surface-bindings';
+import type { GlrEntityType, GlrFactId } from '@/lib/glr/glr-fact-catalog';
+import {
+  getGlrSurfaceBinding,
+  resolveSurfaceLayout,
+  type GlrSurfaceId,
+} from '@/lib/glr/glr-surface-bindings';
 
 /** InfoTippy key for Parts/Properties & Proficiencies (resolved in GridListRow). */
 export type PartsPropertiesHelpKey =
@@ -237,9 +242,20 @@ function labeledFactChip(
 }
 
 /** Descriptor chips for `layout.chipFacts` — parts/properties stay in their own sections. */
+function categoryChipForEntity(
+  category: string | null | undefined,
+  entityType?: GlrEntityType,
+): ChipData | null {
+  if (entityType === 'power' || entityType === 'technique') {
+    return categoryFactChip(category);
+  }
+  return labeledFactChip('Category', category);
+}
+
 export function rankedGlrFactChips(
   chipFacts: readonly GlrFactId[],
   source: GlrFactChipSource,
+  entityType?: GlrEntityType,
 ): ChipData[] {
   const chips: ChipData[] = [];
   for (const factId of chipFacts) {
@@ -269,7 +285,7 @@ export function rankedGlrFactChips(
         chip = labeledFactChip('Block', source.block);
         break;
       case 'category':
-        chip = labeledFactChip('Category', source.category);
+        chip = categoryChipForEntity(source.category, entityType);
         break;
       case 'criticalRangeIncrease':
         chip = criticalRangeIncreaseFactChip(source.criticalRangeIncrease);
@@ -322,10 +338,11 @@ export function rankedGlrFactChips(
 export function buildGlrFactDetailSections(opts: {
   chipFacts: readonly GlrFactId[];
   facts: GlrFactChipSource;
+  entityType?: GlrEntityType | undefined;
   extraSections?: MetadataDetailSection[] | undefined;
 }): MetadataDetailSection[] {
   return mergeDetailSections(
-    metadataDetailSection(rankedGlrFactChips(opts.chipFacts, opts.facts)),
+    metadataDetailSection(rankedGlrFactChips(opts.chipFacts, opts.facts, opts.entityType)),
     opts.extraSections,
   );
 }
@@ -339,6 +356,7 @@ export function glrSurfaceDetailSections(
   return buildGlrFactDetailSections({
     chipFacts: resolveSurfaceLayout(surfaceId).chipFacts,
     facts,
+    entityType: getGlrSurfaceBinding(surfaceId).entityType,
     extraSections,
   });
 }

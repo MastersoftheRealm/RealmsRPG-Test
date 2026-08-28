@@ -135,14 +135,18 @@ export interface LibrarySectionData {
   speedDisplayUnit?: 'spaces' | 'feet' | 'meters' | undefined;
   weight?: number | undefined;
   height?: number | undefined;
+  age?: string | undefined;
   appearance?: string | undefined;
+  backstory?: string | undefined;
   archetypeDesc?: string | undefined;
   notes?: string | undefined;
   abilities?: Abilities | undefined;
   powerAttackBonus?: number | undefined;
   onWeightChange?: ((value: number) => void) | undefined;
   onHeightChange?: ((value: number) => void) | undefined;
+  onAgeChange?: ((value: string) => void) | undefined;
   onAppearanceChange?: ((value: string) => void) | undefined;
+  onBackstoryChange?: ((value: string) => void) | undefined;
   onArchetypeDescChange?: ((value: string) => void) | undefined;
   onNotesChange?: ((value: string) => void) | undefined;
   namedNotes?: CharacterNote[] | undefined;

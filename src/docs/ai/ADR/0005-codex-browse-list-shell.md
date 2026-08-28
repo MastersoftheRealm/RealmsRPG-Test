@@ -10,7 +10,7 @@ Admin Codex tabs, Codex browse tabs, and Admin Images each hand-roll `SectionHea
 
 ## Decision
 
-Add **`CodexBrowseListShell`** under `src/components/shared/` for Admin Codex + Codex browse sortable list chrome only:
+Add **`CodexBrowseListShell`** under `src/components/patterns/list/` for Admin Codex + Codex browse sortable list chrome only:
 
 - Optional `SectionHeader` (`sectionTitle` / `onAdd`) — admin
 - Search row (+ optional `searchTrailing` after Filters; `filters` panel body in ListSearchToolbar compact FilterSection — TASK-721)

@@ -17,6 +17,7 @@ ADR-0009 copied required facts **per GLR surface**, including a static `column` 
 3. **Resolver** (`resolve-glr-fact-layout.ts`) — once per list, not per row: fill columns from primary → secondary → tertiary until the mode budget; remainder → chips; never both; never neither for applicable facts. Play/select `demoteFacts` skip the column fill so combat tracks stay dense, but those facts still join `chipFacts` (TASK-814). True omit is only `characterCreate` + feat `reqLevel`. Visual order uses `displayOrder`, not band rank. No `ResizeObserver` column stealing.
 4. **Surface bindings** — CI pointers `{ entityType, mode, flags }`. New lists register a binding, not a custom fact table. Path More details power/technique catalogs (`DetailOptionList`) bind `detail-option-power` / `detail-option-technique` at detail density (column budget 0; all valued facts are chips).
 5. **Mixed lists** use the intersection of kinds (Codex equipment → gear facts only). Filters/sort stay available even if a fact is currently a chip.
+6. **Terminology (TASK-872):** Internal `GlrEntityType` `'gear'` and surface ids `*-gear*` mean player-facing **Equipment**. Do not rename the identifier in this ADR wave; UI/docs must say Equipment. **Armaments** = weapon/armor/shield. **Enhanced items** are out of scope for this catalog.
 
 Formatting stays in `lib/detail-option/compact-facts.ts`. Chrome/spacing CI (`glr-chrome-spacing-norms.ts`) stays complementary.
 
@@ -30,7 +31,7 @@ Default bands (identity is pinned separately; owner may correct):
 | Armor | DR, Crit + | Abl. Req., Agility Red., Rarity, Currency, TP | — |
 | Shield | Block, Damage | Rarity, Currency, TP | — |
 | Feat | Category, Ability | Uses, Recovery, Req. Level (`characterCreate` omits Req. Level) | — |
-| Gear | Category, Currency, Rarity | TP | — |
+| Gear (Equipment) | Category, Currency, Rarity | TP | — |
 
 ## Consequences
 

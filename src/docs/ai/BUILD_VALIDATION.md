@@ -687,6 +687,30 @@ Path-created characters: hydration, level-up guidance, sheet identity, public co
 
 ---
 
+#### DEV-V-008-T027 — Level-up auto-assigns prof to pure side (TASK-892)
+
+| Field | Value |
+|-------|-------|
+| **Suite** | DEV-V-008 — Archetype path completion |
+| **Section** | Level-up proficiency |
+| **Related task** | TASK-892 |
+| **Where** | Character sheet → level-up |
+| **Needs** | Pure Martial (e.g. 2/0) or pure Power (0/2) character at level 4 |
+
+**Steps**
+1. Note Power/Martial prof split on Archetype section.
+2. Level up from **4 → 5** (or 9 → 10 for a second +1).
+
+**Expected**
+- Pure Martial: new point goes to Martial (e.g. 2/0 → 3/0), not left unspent.
+- Pure Power: new point goes to Power (e.g. 0/2 → 0/3).
+- Powered-Martial with both sides > 0: split unchanged; player allocates manually.
+- Path level-5 admin floor still applies when set (DEV-V-008-T004).
+
+**Report** — `[ ] PASS` · `[ ] FAIL` · `[ ] SKIP` — Notes:
+
+---
+
 #### DEV-V-008-T012 — Level ≥5 path character loads with prof floor applied
 
 | Field | Value |
@@ -1405,8 +1429,8 @@ Manual QA for library/feats modularization and shared part display. **Needs:** c
 | **Task** | TASK-523 |
 | **Where** | `/characters/[id]` → Archetype → Weapons (desktop + ~360px) |
 | **Needs** | Equipped weapon with **multiple** named properties (preferably at least one long property name) |
-| **Steps** | 1. Open Weapons on desktop. 2. Confirm **Range**, **Attack**, and **Damage** are readable and not cramped, without the table overflowing the Archetype panel. 3. Confirm named properties remain one `• Property` per line under the weapon name; long property text wraps within the Name column. 4. Confirm Unarmed Prowess (same table) still aligns under the same headers. 5. At ~360px, confirm `TableScroll` allows horizontal scroll without crushing Attack/Damage under wrong headers. |
-| **Expected** | Metric columns use tight content-sized widths (fit roll buttons / range text); Name wraps properties; table stays inside the panel; Unarmed alignment preserved; no regression to roll buttons. |
+| **Steps** | 1. Open Weapons on desktop. 2. Confirm **Range**, **Attack**, and **Damage** are readable and not cramped, without the table overflowing the Archetype panel. 3. Confirm named properties remain one `• Property` per line under the weapon name; long property text truncates with ellipsis (not char-by-char wrap). 4. Confirm Unarmed Prowess (same table) still aligns under the same headers. 5. At ~360px, confirm `TableScroll` allows horizontal scroll without crushing Attack/Damage under wrong headers. |
+| **Expected** | Metric columns use tight content-sized widths (fit roll buttons / range text); Name column truncates long names/properties; table stays inside the panel; Unarmed alignment preserved; no regression to roll buttons. |
 | **Report** | DEV-V-009-T017: PASS / FAIL / SKIP — |
 
 #### DEV-V-009-T021 — Mobile side-scroll panels centered with header gutters (TASK-538)
@@ -1414,9 +1438,9 @@ Manual QA for library/feats modularization and shared part display. **Needs:** c
 | Field | Value |
 |-------|-------|
 | **Suite** | DEV-V-009 — Character sheet refactor |
-| **Task** | TASK-538 |
+| **Task** | TASK-538 / TASK-868 |
 | **Where** | `/characters/[id]` at ~360px and ~700px width (below `md`) |
-| **Steps** | 1. Open character sheet. 2. Compare left/right edges of the sheet header card vs the Abilities panel below — they should share the same horizontal gutters. 3. Swipe to Skills, Archetype, and Library; confirm each snapped panel keeps those gutters (not flush to the screen edge). 4. While swiping between panels, confirm a clear gap/margin between adjacent section cards. |
+| **Steps** | 1. Open character sheet. 2. Compare left/right edges of the sheet header card vs the Abilities panel below — they should share the same horizontal gutters. 3. Swipe to Skills, Archetype, and Library; confirm each snapped panel keeps those gutters (not flush to the screen edge, not shifted left of the header). 4. While swiping between panels, confirm a clear gap/margin between adjacent section cards. |
 | **Expected** | Side-scroll panels align with the header/PageContainer content width; gap between panels; snap stops do not shift content left of the header. Desktop `md+` grid unchanged. |
 | **Report** | DEV-V-009-T021: PASS / FAIL / SKIP — |
 
@@ -2181,9 +2205,266 @@ Manual QA for library/feats modularization and shared part display. **Needs:** c
 
 **Report** — `[ ] PASS` · `[ ] FAIL` · `[ ] SKIP` — Notes:
 
----
+#### DEV-V-009-T064 — Mobile sheet header fully hides on panel scroll (TASK-868)
 
-## DEV-V-005 — RLS policy consolidation (TASK-352, TASK-327)
+| Field | Value |
+|-------|-------|
+| **Suite** | DEV-V-009 — Character sheet refactor |
+| **Related task** | TASK-868 |
+| **Where** | `/characters/[id]` at 360px and 390px (below `md`) |
+| **Needs** | A populated character (header tall enough to share the first screen with Abilities — E2E Baseline Knight / loaded sheet) |
+
+**Steps**
+1. Open the sheet at ~390px. Confirm identity / Speed / resources are visible above Abilities. The header is not its own scroller — vertical swipe on the header still scrolls the active panel (TASK-902 bridge). The carousel shows a right-edge fade while later panels are off-screen (C1; no next-panel peek / scroller padding).
+2. Scroll down inside the Abilities (or Library) panel. Confirm the **sheet** header (not the site nav) fully leaves — no leftover identity/stat strip taking half the lower section. The panel uses the leftover viewport above the dock.
+3. Scroll that panel back to the top. Confirm the sheet header returns only once the panel is fully at the top (no mid-scroll snap-lock).
+4. Swipe to Skills / Archetype / Library. Confirm each snapped panel lines up with the header card’s left/right edges (T021). On the last panel the right-edge fade is gone.
+5. Repeat at ~360px. Optional ≥768px: header stays in document flow (no collapse); no carousel fade.
+
+**Expected**
+- Below `md`, panel scroll fully collapses `data-sheet-mobile-header`. Restoring scrollTop to 0 restores the header. Snap panels stay aligned with PageContainer/header gutters. Desktop grid unchanged.
+
+**Report** — `[ ] PASS` · `[ ] FAIL` · `[ ] SKIP` — Notes:
+
+#### DEV-V-009-T075 — Mobile sheet vertical scroll works on header and panel content (TASK-902)
+
+| Field | Value |
+|-------|-------|
+| **Suite** | DEV-V-009 — Character sheet refactor |
+| **Related task** | TASK-902 |
+| **Where** | `/characters/[id]` at 360px and 390px (below `md`, real touch or DevTools device mode with touch) |
+| **Needs** | Populated character (E2E Baseline Knight / loaded sheet) |
+
+**Steps**
+1. Open the sheet at ~390px. Swipe **down** starting on the sheet header (portrait / name / HP area). Confirm the Abilities (or active) panel scrolls and the header collapses after real travel — not stuck.
+2. Swipe **vertically on panel content** (ability tiles, skill rows, library list — not only the side gutters). Confirm the panel scrolls smoothly.
+3. Scroll partway down, then swipe up slowly. Confirm the header does **not** pop back open until the panel reaches the top.
+4. Horizontal-swipe to Skills / Library. Confirm snap still works one panel at a time.
+5. Repeat at ~360px.
+
+**Expected**
+- Vertical pan works on header and on functional panel content. No “sides only” scroll lock. Header collapse still satisfies T064. Horizontal C1 snap unchanged.
+
+**Report** — `[ ] PASS` · `[ ] FAIL` · `[ ] SKIP` — Notes:
+
+#### DEV-V-009-T076 — Tab away / tab back keeps sheet UI state (TASK-903)
+
+| Field | Value |
+|-------|-------|
+| **Suite** | DEV-V-009 — Character sheet refactor |
+| **Related task** | TASK-903 |
+| **Where** | `/characters/[id]` (owner sheet) |
+| **Needs** | Loaded character; browser tab you can hide and show |
+
+**Steps**
+1. Open the sheet. Expand a Library feat/power row (or open Settings / an add-X modal).
+2. Switch to another browser tab (or minimize), wait ~2s, return to the sheet tab.
+3. Confirm the expanded row / open modal is still there — no flash of “Loading character…” and no remount to a clean sheet.
+4. Optional: sign out and sign in as a different account — prior character cache must not leak (list/sheet for the new user only).
+
+**Expected**
+- Same-user tab hide→show preserves local UI (modals, expansions). Real identity change / sign-out still isolates caches.
+
+**Report** — `[ ] PASS` · `[ ] FAIL` · `[ ] SKIP` — Notes:
+
+#### DEV-V-009-T065 — Notes Age + Backstory fields (TASK-886)
+
+| Field | Value |
+|-------|-------|
+| **Suite** | DEV-V-009 — Character sheet refactor |
+| **Related task** | TASK-886 |
+| **Where** | `/characters/new/guided` Reveal, `/characters/new/advanced` Finalize, `/characters/[id]` Notes tab |
+| **Needs** | Character with age + backstory from creator; optional legacy save with `Age: N` prefix inside appearance |
+
+**Steps**
+1. Guided Reveal or Advanced Finalize: enter Age, appearance text, and backstory/background. Create character.
+2. Sheet → Library → Notes: Age appears in the physical header after Height/Weight (not inside Appearance). Backstory has its own section. Appearance is appearance-only.
+3. Edit mode: change Age; save/reload — Age persists; Appearance never regains an `Age:` prefix.
+4. Legacy character with `Age: 42` prefix in appearance only: Notes shows Age 42 in header and clean Appearance body; after any save, stored JSON has dedicated `age` and stripped `appearance`.
+
+**Expected**
+- Creators map to `age`, `appearance`, and `backstory` fields. Save migrates legacy age prefix out of appearance.
+
+**Automated** | `npm test` — `appearance-age.test.ts` + `build-character.test.ts`
+
+**Report** — `[ ] PASS` · `[ ] FAIL` · `[ ] SKIP` — Notes:
+
+#### DEV-V-009-T066 — Sheet Health may go negative (TASK-894)
+
+| Field | Value |
+|-------|-------|
+| **Suite** | DEV-V-009 — Character sheet refactor |
+| **Related task** | TASK-894 |
+| **Where** | `/characters/[id]` header Health; encounter combat card with linked campaign character |
+| **Needs** | Loaded character with editable Health; optional encounter with a player-linked combatant |
+
+**Steps**
+1. Sheet header: step Current Health below 0 (e.g. −3). Confirm value persists and Energy still floors at 0.
+2. Click Health value, type `-5` at positive HP, press Enter — confirm absolute −5 (not current−5). Type `+2` — confirm adds 2.
+3. Over-heal above max still works (gold bar if shown).
+4. Encounter: editable linked campaign combatant allows negative HP; standalone NPC combatant still floors at 0.
+5. Desktop + ~360px coarse pointer: Health input/stepper remain tappable.
+
+**Expected**
+- Current Health may be negative per GAME_RULES Dying. Energy ≥ 0. NPC encounter HP unchanged.
+
+**Report** — `[ ] PASS` · `[ ] FAIL` · `[ ] SKIP` — Notes:
+
+#### DEV-V-009-T067 — Global edit pencil dot matches section semantics (TASK-896)
+
+| Field | Value |
+|-------|-------|
+| **Suite** | DEV-V-009 — Character sheet refactor |
+| **Related task** | TASK-896 |
+| **Where** | `/characters/[id]` toolbar edit pencil + section EditSectionToggle pencils |
+
+**Steps**
+1. Open a character with **no** unspent pools and not XP-ready — confirm no dot on the toolbar edit pencil.
+2. Open a character with unspent ability, skill, feat, prof, or HE points — confirm toolbar dot is **green** (not red); hover shows which pools remain (e.g. “Unspent: 2 ability points; 1 archetype feat slot”).
+3. Enter edit mode — confirm section pencils are **green** where those pools apply (Abilities, Skills, Archetype prof, Library when feat slots remain); none are red unless overspent.
+4. Overspend one pool and leave points in another — confirm toolbar dot is a **red/green gradient** with both “Over budget” and “Unspent” in the tooltip; section pencils show red/green per pool.
+5. Character XP-ready with all pools balanced — confirm **purple** level-up dot (not red/green) and tooltip mentions Level Up.
+
+**Expected**
+- Global dot severity: green = unspent only; red = overspent only; red/green gradient = both; purple = level-up when no unspent/overspend; none when fully balanced and not XP-ready.
+
+**Report** — `[ ] PASS` · `[ ] FAIL` · `[ ] SKIP` — Notes:
+
+#### DEV-V-009-T068 — Identity text wraps by word or ellipsis, not char-by-char (TASK-897)
+
+| Field | Value |
+|-------|-------|
+| **Suite** | DEV-V-009 — Character sheet refactor |
+| **Related task** | TASK-897 |
+| **Where** | Sheet Library GLR rows, Archetype → Weapons table, ability/defense tiles, header stat labels |
+
+**Steps**
+1. Open a loaded character sheet at **~360px**. Library → Weapons (or Powers): confirm collapsed row names show an ellipsis when long — not one character per line down the column.
+2. Archetype → Weapons: confirm weapon names truncate with ellipsis (or stay on one line); property bullets under the name truncate rather than char-wrap vertically.
+3. Abilities / Defenses panels: multi-word labels (e.g. **Intelligence**, **Mental Fortitude**) wrap at word boundaries inside tiles — not mid-word glyph stacks.
+4. Header Speed / Evasion / Critical Range / DR labels: two-word titles wrap at the space (e.g. CRITICAL / RANGE), not letter-by-letter.
+5. Expand a truncated GLR row — full name visible in expanded body. Hover collapsed name shows native `title` tooltip when truncated.
+
+**Expected**
+- Dense name columns use truncate/ellipsis; multi-word fixed labels use word-boundary wrap; no inflated row height from vertical char stacks.
+
+**Report** — `[ ] PASS` · `[ ] FAIL` · `[ ] SKIP` — Notes:
+
+#### DEV-V-009-T069 — Header stat tiles are compact and centered (TASK-885)
+
+| Field | Value |
+|-------|-------|
+| **Suite** | DEV-V-009 — Character sheet refactor |
+| **Related task** | TASK-885 |
+| **Where** | `/characters/[id]` at 360 / 768 / 1024 / 1280 |
+| **Needs** | A character that shows Speed + Evasion (and DR / Crit if armored) |
+
+**Steps**
+1. Open the sheet at ~1024px. Confirm Speed / Evasion / DR / Crit are equal compact/squarish tiles centered in the middle column — not full-bleed rectangles squeezing identity or Health/Energy.
+2. Confirm titles (including **Critical Range** / **Damage Reduction**) fit with padding; no long empty bars.
+3. Repeat at ~360, ~768, and ~1280. Three-column header still engages at 1024.
+
+**Expected**
+- Equal compact tiles; identity and resources keep their tracks. C3 equal-track grid remains.
+
+**Report** — `[ ] PASS` · `[ ] FAIL` · `[ ] SKIP` — Notes:
+
+#### DEV-V-009-T070 — Library edit eyes do not force tab scroll (TASK-887)
+
+| Field | Value |
+|-------|-------|
+| **Suite** | DEV-V-009 — Character sheet refactor |
+| **Related task** | TASK-887 |
+| **Where** | `/characters/[id]` Library, Edit mode |
+| **Needs** | Loaded sheet; typical desktop width (~1280) |
+
+**Steps**
+1. Enter sheet Edit. Confirm hide/show eyes sit next to every Library tab.
+2. With all tabs visible, confirm the tab strip does **not** require horizontal scroll solely because of eye padding.
+3. Toggle an eye — tab still hides/shows in play. On a coarse pointer, the eye hit stays ~44px.
+
+**Expected**
+- Eyes stay Dense-painted; hide/show works; desktop tabs fit without eye-caused overflow.
+
+**Report** — `[ ] PASS` · `[ ] FAIL` · `[ ] SKIP` — Notes:
+
+#### DEV-V-009-T071 — Feats Customize is a button with even rule gaps (TASK-888)
+
+| Field | Value |
+|-------|-------|
+| **Suite** | DEV-V-009 — Character sheet refactor |
+| **Related task** | TASK-888 |
+| **Where** | `/characters/[id]` Library → Feats, Edit |
+| **Needs** | A feat or trait that can be customized |
+
+**Steps**
+1. Edit → Feats → expand a row. Confirm **Customize** looks like a button (outline variant — not a descriptor chip).
+2. Confirm equal space from desc chips to the rule and from the rule to the button.
+3. Open Customize — fields still work; Hide customization toggles.
+
+**Expected**
+- Shared Button `outline`/`sm`, tight vertical padding, even gaps. Not a desc-chip cousin.
+
+**Report** — `[ ] PASS` · `[ ] FAIL` · `[ ] SKIP` — Notes:
+
+#### DEV-V-009-T072 — Library tab chevrons only when overflowing (TASK-890)
+
+| Field | Value |
+|-------|-------|
+| **Suite** | DEV-V-009 — Character sheet refactor |
+| **Related task** | TASK-890 |
+| **Where** | Sheet Library + `/codex` / `/library` tab strips |
+| **Needs** | A width where all tabs fit, and one where they overflow |
+
+**Steps**
+1. At a width where every tab is visible, confirm no left/right chevron.
+2. Narrow until tabs overflow — chevron appears on the clipped edge only.
+3. Click the end chevron — list jumps to the last tab; start chevron jumps to the first.
+
+**Expected**
+- No dead arrow when content fits. Codex/Library share the same `TabNavigation` behavior.
+
+**Report** — `[ ] PASS` · `[ ] FAIL` · `[ ] SKIP` — Notes:
+
+#### DEV-V-009-T073 — Prof-point pool is read-only; slider thumb centered (TASK-891)
+
+| Field | Value |
+|-------|-------|
+| **Suite** | DEV-V-009 — Character sheet refactor |
+| **Related task** | TASK-891 |
+| **Where** | `/characters/[id]` Archetype & Attacks, Edit |
+| **Needs** | Powered-Martial (or any) character; also check dark theme |
+
+**Steps**
+1. Edit Archetype. Confirm remaining/total prof. points is a read-only chip — no +/− to raise the max.
+2. Drag the Power↔Martial slider: thumb sits on the track (not hanging below).
+3. Toggle dark theme: thumb/track use surface / `*-fg` tokens (readable, not a white-only thumb).
+
+**Expected**
+- Pool max is not editable. Slider is centered and tokenized in both themes. Creature Creator slider matches.
+
+**Report** — `[ ] PASS` · `[ ] FAIL` · `[ ] SKIP` — Notes:
+
+#### DEV-V-009-T074 — Roll-log bonus hover and outside click (TASK-893 / TASK-895)
+
+| Field | Value |
+|-------|-------|
+| **Suite** | DEV-V-009 — Character sheet refactor |
+| **Related task** | TASK-893, TASK-895 |
+| **Where** | `/characters/[id]` with the Roll Log open |
+| **Needs** | Loaded sheet that can roll abilities, defenses, skills, attacks, and a Power attack |
+
+**Steps**
+1. Roll Strength, a defense (e.g. Reflexes), a skill, a weapon attack, and a Power attack. Hover each bonus chip — source names Strength / Reflexes bonus / skill bonus / Attack or ability bonus / **Power bonus**.
+2. A roll with +0 (or no modifier) has no bonus chip and no bogus hover.
+3. With the log open, click empty page chrome — log closes. Click a RollButton — log stays open and records the new roll. Click inside the panel — stays open. FAB still toggles.
+
+**Expected**
+- Named bonus hover; outside click closes; roll triggers keep the log open. No second overlay.
+
+**Report** — `[ ] PASS` · `[ ] FAIL` · `[ ] SKIP` — Notes:
+
+---
 
 Archived (TASK-718; not cited by Pending owner QA). Full steps: [`BUILD_VALIDATION_ARCHIVE.md`](archive/BUILD_VALIDATION_ARCHIVE.md#dev-v-005--rls-policy-consolidation-task-352-task-327).
 
@@ -2589,7 +2870,7 @@ Verifies the rebuilt marketing landing page at `/` (REALMS_PRODUCT_OVERVIEW Sect
 
 **Expected**
 - Layer 2 `UnifiedSelectionModal` opens with Training Points `PointStatus`; weapon rows show **Name | Damage | Currency | Training Points** aligned under those headers.
-- Armor browse uses **Damage Reduction**; gear browse uses **Name | Currency**.
+- Armor browse uses **Damage Reduction**; Equipment browse uses **Name | Category | Currency | Rarity**.
 - Selecting updates Training Points / Currency `PointStatus` in the footer; Confirm applies the selection to the draft. Items that would exceed budget are disabled or Confirm stays blocked.
 - Closing L2 without Confirm (Escape / Cancel) returns to phase L1 cards without changing the draft.
 
@@ -2703,12 +2984,14 @@ Verifies the rebuilt marketing landing page at `/` (REALMS_PRODUCT_OVERVIEW Sect
 1. Reach Skills; spend all skill points (path/species defaults often do this).
 2. Confirm **Browse all Skills** sits below any recommended/suggested skill cards (GuidedLayerNav), not attached to the allocated skill list.
 3. Click **Browse all Skills**.
-4. Expand a few skill rows and read descriptions; tap + to select one or more skills.
-5. Confirm the warning banner and that **Add Selected** stays disabled.
-6. Close modal; decrease or remove a skill to free a point; reopen browse and add a skill successfully.
+4. In the Add Skills modal footer, confirm **Browse all Sub-Skills** (when shown) has visible gap below the horizontal separator — not flush on the rule.
+5. Expand a few skill rows and read descriptions; tap + to select one or more skills.
+6. Confirm the warning banner and that **Add Selected** stays disabled.
+7. Close modal; decrease or remove a skill to free a point; reopen browse and add a skill successfully.
 
 **Expected**
 - Browse control is Layer 2 under recommendations (not a primary CTA on the skill list).
+- USM footer `footerExtra` (Browse all Sub-Skills / Browse all Skills layer nav) clears the footer separator with consistent padding (TASK-875).
 - Rows stay full opacity (not greyed out) with 0 points remaining.
 - Selection is allowed; warning explains needing to free skill points.
 - Add Selected disabled while over budget; works after freeing a point.
@@ -3289,20 +3572,23 @@ Verifies the rebuilt marketing landing page at `/` (REALMS_PRODUCT_OVERVIEW Sect
 | Field | Value |
 |-------|-------|
 | **Suite** | DEV-V-013 |
-| **Related task** | TASK-452 · TASK-760 |
+| **Related task** | TASK-452 · TASK-760 · **TASK-880** |
 | **Where** | Guided creator → Abilities → Customize |
 | **Needs** | DevTools ~360px width; path with a Primary/Secondary or Power/Martial pill |
 
 **Steps**
 1. On Abilities, open Customize.
-2. Confirm ability rows use a roomier layout (not 3 cramped columns with colliding ±).
-3. Confirm Decrement/Increment targets are ≥44px and usable without zoom.
-4. Compare highlighted and unhighlighted rows on phone, then the `sm+` column layout: tile heights and content alignment remain even and the pill does not push a highlighted tile down.
+2. Confirm the edit grid matches the character sheet: **2 columns** at ~360px, **3** at `sm`, **6** at `lg` — not a single-column phone stack or a cramped 3-column phone grid.
+3. Confirm labels are **text-sm** full ability names; values are **text-xl** (not oversized slabs); tiles use compact density (`px-2.5 py-3`), not full-bleed wide rectangles.
+4. Confirm Decrement/Increment use Dense expanded hit (`.hit-area-dense`, `size="sm"`) — usable without zoom; steppers do not overlap neighboring values.
+5. Confirm **Ability Points** inline tracker has an InfoTippy (rules: max +3, below 0 returns points, floor −2, total negatives ≥ −3).
+6. Compare highlighted and unhighlighted tiles on phone, then `sm+`: heights and alignment stay even; path pills do not push a highlighted tile down.
 
 **Expected**
+- Customize edit layout tracks sheet `AbilityStatTile` density (TASK-880).
 - Steppers do not overflow or overlap neighboring ability values.
 - Point-buy remains usable with recommended Back via LayerNav.
-- Every edit tile reserves the same pill clearance; highlighted rows/columns keep the same padding and height as their neighbors.
+- Every edit tile reserves the same pill clearance; highlighted tiles keep the same padding and height as neighbors.
 
 **Report** — `[ ] PASS` · `[ ] FAIL` · `[ ] SKIP` — Notes:
 
@@ -3351,12 +3637,12 @@ Verifies the rebuilt marketing landing page at `/` (REALMS_PRODUCT_OVERVIEW Sect
 - Character feat shows `0 / 1` or `1 / 1` like archetype feats.
 **Report** — `[ ] PASS` · `[ ] FAIL` · `[ ] SKIP` — Notes:
 
-#### DEV-V-013-T039 — Loadout chapter + Equipment phase copy (TASK-459)
+#### DEV-V-013-T039 — Loadout chapter + Equipment phase copy (TASK-459 / TASK-872)
 
 | Field | Value |
 |-------|-------|
 | **Suite** | DEV-V-013 |
-| **Related task** | TASK-459 |
+| **Related task** | TASK-459, TASK-872 |
 | **Where** | Guided creator chapter rail, Loadout phases, path More details, Your Hero summary |
 | **Needs** | Path with weapon/armor/Equipment recommendations (e.g. Berserker) |
 
@@ -3364,12 +3650,13 @@ Verifies the rebuilt marketing landing page at `/` (REALMS_PRODUCT_OVERVIEW Sect
 1. Confirm chapter rail label **Loadout** (not Equipment).
 2. On weapon/armor phases, confirm page titles are phase-only (**Weapons & shields**, **Armor**).
 3. Advance to Equipment; confirm page title **Equipment**, continue label **Continue to Equipment →** from armor, and **Add all recommended Equipment**.
-4. Open **See more options** on Equipment; confirm **Browse Equipment** (no Adventuring Gear).
+4. Open **See more options** on Equipment; confirm **Browse Equipment** (no Adventuring Gear / bare Gear).
 5. On path **More details**, confirm Equipment section title (not Adventuring Gear).
 6. On Your Hero, confirm summary section **Loadout**.
 
 **Expected**
-- Chapter = Loadout; gear phase = Equipment; no user-facing Adventuring Gear or bare Gear phase labels; no new em dashes in these strings.
+- Chapter = Loadout; Equipment phase = **Equipment**; no user-facing Adventuring Gear or bare Gear labels; no new em dashes in these strings.
+- Armaments (weapons/armor/shields) stay separate from Equipment; Enhanced items are not merged into either list.
 
 **Report** — `[ ] PASS` · `[ ] FAIL` · `[ ] SKIP` — Notes:
 
@@ -4870,7 +5157,7 @@ Unified `SelectableItem` shaping via `library-selectable-builders` + `LoadFromLi
 | **Task** | TASK-813 |
 | **Where** | `/creature-creator`; Library → Creatures expand |
 | **Needs** | Signed-in user; a creature with one equipment item that has no stored quantity and one with Qty 2 (or set Qty on save) |
-| **Steps** | 1. Library → Creatures → expand: Equipment is the shared list section (Type + Qty, not a second Qty column). Missing quantity shows `-` (not a fake 1 / stepper). Stored Qty 2 shows `2`. 2. Creature Creator → Inventory → Equipment: same `-` / `2` (also `layout="creature"`). Sheet Inventory equipment steppers still default missing qty to 1. 3. Desktop + ~360px. Skip Legacy `/characters/new/advanced`. |
+| **Steps** | 1. Library → Creatures → expand: Equipment is the shared list section (Type + Qty, not a second Qty column). Missing quantity is blank (not a fake 1 / stepper). Stored Qty 2 shows `2`. 2. Creature Creator → Inventory → Equipment: same blank / `2` (also `layout="creature"`). Sheet Inventory equipment steppers still default missing qty to 1. 3. Desktop + ~360px. Skip Legacy `/characters/new/advanced`. |
 | **Expected** | Creator and stat-block Equipment Qty both use `EquipmentListSection` `layout="creature"` (`buildCreatureEquipmentColumns`). Character sheet steppers unchanged. |
 | **Automated** | `npm test` — `entity-library-sections-columns.test.ts` + `map-creature-inventory-rows.test.ts` + `creature-inventory.test.ts` |
 | **Report** | DEV-V-016-T025: PASS / FAIL / SKIP — |
@@ -4908,10 +5195,62 @@ Unified `SelectableItem` shaping via `library-selectable-builders` + `LoadFromLi
 | **Task** | TASK-825 |
 | **Where** | `/characters/[id]` Library → Inventory equipment; `/creature-creator` selected Equipment; `/codex` Equipment; sheet Add equipment |
 | **Needs** | Signed-in character with an equipment item that costs Training Points; a creature with selected equipment that has stored TP; Codex equipment rows |
-| **Steps** | 1. Sheet Library → Inventory → Equipment: expand an item with valued TP → **Training Points N** chip. No TP column. No Total TP footer. 2. Creature Creator → Inventory → Equipment: same chip when stored TP is valued; Qty still `-` / stored number (TASK-813). 3. Codex + Admin Equipment: headers stay Category / Currency / Rarity. Expand a row with valued TP → Training Points chip, not a fourth dense column. Add equipment modal: same three columns; expand → TP chip when valued. 4. An item with 0 TP has no Training Points chip. Desktop + ~360px. Skip Legacy `/characters/new/advanced`. |
+| **Steps** | 1. Sheet Library → Inventory → Equipment: expand an item with valued TP → **Training Points N** chip. No TP column. No Total TP footer. 2. Creature Creator → Inventory → Equipment: same chip when stored TP is valued; Qty still blank / stored number (TASK-813). 3. Codex + Admin Equipment: headers stay Category / Currency / Rarity. Expand a row with valued TP → Training Points chip, not a fourth dense column. Add equipment modal: same three columns; expand → TP chip when valued. 4. An item with 0 TP has no Training Points chip. Desktop + ~360px. Skip Legacy `/characters/new/advanced`. |
 | **Expected** | Gear play shows valued TP as a ranked chip (`character-sheet-gear`). Browse/select keep the three gear columns and demote TP. No new GLR surface id. |
 | **Automated** | `npm test` — `glr-fact-catalog.test.ts` + `resolve-glr-fact-layout.test.ts` + `map-creature-inventory-rows.test.ts` + `equipment-list.test.ts` |
 | **Report** | DEV-V-016-T028: PASS / FAIL / SKIP — |
+
+#### DEV-V-016-T032 — Power/technique Category chips value-only (TASK-869)
+
+| Field | Value |
+|-------|-------|
+| **Suite** | DEV-V-016 |
+| **Task** | TASK-869 |
+| **Where** | `/characters/[id]` Library → Powers or Techniques (expand row); Add Power/Technique modal; `/library` Official Powers browse (expand) |
+| **Needs** | A power with a non-mechanic part category (e.g. Offense) and/or synthetic Damage category |
+| **Steps** | 1. Expand a power on the sheet Library tab: Category descriptor chip reads `Offense` or `Offense, Damage` — not `Category Offense`. 2. Add Power modal: same value-only chip when Category is demoted to expand. 3. Official Library browse: **Category** column header still present; expanded chip stays value-only. 4. Sheet Feats expand: chip still reads `Category Utility` (labeled). Desktop + ~360px. Skip Legacy `/characters/new/advanced`. |
+| **Expected** | Power/technique Category chips follow Action Type grammar (value only); column headers unchanged. Feat/gear Category chips keep the Category prefix. |
+| **Automated** | `npm test` — `compact-facts.test.ts` + `glr-fact-catalog.test.ts` + `combat-builder.test.ts` |
+| **Report** | DEV-V-016-T032: PASS / FAIL / SKIP — |
+
+#### DEV-V-016-T033 — GLR expanded row reflow; Uses steppers do not overlap (TASK-898)
+
+| Field | Value |
+|-------|-------|
+| **Suite** | DEV-V-016 |
+| **Task** | TASK-898 |
+| **Where** | `/characters/[id]` Library → Feats (edit mode with Uses steppers) at 360 / 390 / 768; spot-check Powers/Techniques/Inventory armaments with expanded rows |
+| **Needs** | Character with feats that have Uses + Recovery; edit mode enabled for Uses steppers |
+| **Steps** | 1. Expand a feat with Uses steppers + Recovery at 360px. Confirm Uses and Recovery appear in the expanded body only (not the collapsed header row). 2. Confirm Uses ± steppers do not overlap the Recovery label/value. 3. Repeat at 768 and 1024 (narrow sheet panel): expanded body still owns column facts; no header-track overlap. 4. Spot-check another GLR entity with steppers/chips on one row (power Energy spend, quantity stepper). Skip Legacy `/characters/new/advanced`. |
+| **Expected** | Expanded column facts reflow/stack (`min-w-0`); interactive values (steppers) stack label above control; no same-row overlap at thin widths. |
+| **Automated** | `npm test` — `grid-list-row-columns.test.ts`; `npm run verify:responsive` (54/54 responsive-layout probes) |
+| **Report** | DEV-V-016-T033: PASS / FAIL / SKIP — |
+
+#### DEV-V-016-T029 — GLR expanded mobile facts once; omit blanks (TASK-868)
+
+| Field | Value |
+|-------|-------|
+| **Suite** | DEV-V-016 |
+| **Task** | TASK-868 |
+| **Where** | `/characters/[id]` Library → Feats at ~360px / ~390px (below `lg`); spot-check Codex feats |
+| **Needs** | A character with mixed feats: one with Uses and Recovery, one with neither (or Uses `-`) |
+| **Steps** | 1. Collapse a feat that has Uses and Recovery. Confirm those facts appear in the row header / mobile summary only. 2. Expand that feat. Confirm Uses and Recovery appear in the expanded body only — not still labeled in the collapsed header/summary. 3. Expand a feat with no Uses / Recovery (or `-`). Confirm those labels are absent from both header and body. 4. When expanded, column facts live in the body at every width (TASK-898); Uses steppers must not overlap Recovery — see DEV-V-016-T033. Skip Legacy `/characters/new/advanced`. |
+| **Expected** | Column facts are collapsed summary/header **or** expanded body, never both. Blank / `-` / `none` values are omitted. |
+| **Automated** | `npm test` — `grid-list-row-columns.test.ts` + `library-feat-rows.test.ts` |
+| **Report** | DEV-V-016-T029: PASS / FAIL / SKIP — |
+
+#### DEV-V-016-T030 — Armament Currency chips match Library market cost (TASK-870)
+
+| Field | Value |
+|-------|-------|
+| **Suite** | DEV-V-016 |
+| **Task** | TASK-870 |
+| **Where** | `/library` Weapons/Armor/Shields; `/characters/[id]` Inventory weapons/armor/shields; Add Weapon/Armor/Shield; `/item-creator` cost summary |
+| **Needs** | Signed-in character with a library weapon (or armor/shield) that has properties; Codex item properties loaded |
+| **Steps** | 1. `/library` → Weapons: note a row’s **Currency** column. 2. Sheet Inventory → expand that weapon: the Currency descriptor chip is the same number (e.g. Currency 31), not the tiny property C sum / multiplier (2). 3. Add Weapon: expand the same item — same market Currency chip. Repeat Armor / Shields. 4. Item creator: **Currency cost (final)** matches that number; Currency sum (C) may still show the small C total. Desktop + ~360px. Skip Legacy `/characters/new/advanced`. |
+| **Expected** | Weapon/armor/shield Currency chips and Library columns share `resolveItemMarketPricing` market cost. Do not display raw IP, option multipliers, or pre-rarity `costs.totalCurrency` as Currency. Codex Equipment still uses stored currency (not the IP formula). |
+| **Automated** | `npm test` — `item-calc.test.ts` + `official-item-list.test.ts` + `library-selectable-builders.test.ts` + `equipment-catalog-rows.test.ts` + `equipment-currency.test.ts` |
+| **Report** | DEV-V-016-T030: PASS / FAIL / SKIP — |
 
 ---
 
@@ -5881,6 +6220,28 @@ Spot-checks Realms terminology and em-dash hygiene on high-traffic surfaces afte
 
 **Expected**
 - Dense resource HUD labels use full Realms terms Health / Energy.
+
+**Report** — `[ ] PASS` · `[ ] FAIL` · `[ ] SKIP` — Notes:
+
+#### DEV-V-020-T005 — No player-facing Gear for Equipment or Armaments (TASK-872)
+
+| Field | Value |
+|-------|-------|
+| **Suite** | DEV-V-020 |
+| **Related task** | TASK-872 |
+| **Where** | `/`; `/characters/new/advanced` Equipment step; sheet tour Library step; Admin Codex archetype guided Equipment |
+| **Needs** | Signed-in for Advanced + Admin; a saved character for the sheet tour |
+
+**Steps**
+1. Open `/` uniqueness cards: character-creation body uses **Loadout** (not Gear); second card title is **Custom Powers & Armaments**.
+2. Open `/characters/new/advanced` Equipment step: body says weapons, armor, and **Equipment**.
+3. On a sheet tour Library step (or `onboarding-copy.ts` Library body): Feats / Powers / Techniques / Equipment / Armaments — not Gear.
+4. Admin Codex → Archetypes → guided recommended Equipment: label **Recommended Equipment** (not adventuring gear).
+5. Creature or sheet Equipment Type cell for `adventuring_gear` shows **Equipment**, not Adventuring Gear (TASK-873 will drop the Type column on the sheet).
+
+**Expected**
+- Player-facing copy uses Equipment, Armaments, or Enhanced items — never Gear as a bucket name.
+- Settings cog copy may still say “gear icon”; that is the Lucide icon, not the game term.
 
 **Report** — `[ ] PASS` · `[ ] FAIL` · `[ ] SKIP` — Notes:
 
@@ -7081,6 +7442,26 @@ Derived part categories (non-mechanic) as Category column; shared `PowerTechniqu
 
 **Report** — `[ ] PASS` · `[ ] FAIL` · `[ ] SKIP` — Notes:
 
+#### DEV-V-046-T009 — Innate eligible: duration + Adaptation (TASK-879)
+
+| Field | Value |
+|-------|-------|
+| **Suite** | DEV-V-046 |
+| **Related task** | TASK-879 |
+| **Where** | `/library` → Powers (Innate Eligible filter); `/characters/new/guided` → Powers → **See more Innate Powers**; Admin Codex archetype Level 1 innate picks |
+| **Needs** | Catalog with: (a) Basic power duration ≤1 min, (b) Basic power duration >1 min or permanent, (c) power with Adaptation-category part (saved payload or codex), (d) heal-part power |
+| **CI** | `innate-eligibility.test.ts`, `power-technique-filters.test.ts`, `power-technique-categories.test.ts` |
+
+**Steps**
+1. Library → Powers → Filters → check **Innate Eligible** (set threshold 8 if needed). Confirm (a) stays; (b)(c)(d) drop out.
+2. Guided creator → Innate Powers → **See more**. Same exclusions; instant/basic ≤ threshold remain.
+3. Admin archetype editor: add ineligible innate (10+ min duration or Adaptation part) → Save blocked with Appendix G error.
+
+**Expected**
+- One shared `isPowerInnateEligible` gate; unknown duration fails closed; inline `part.category` on saved payloads counts for Adaptation.
+
+**Report** — `[ ] PASS` · `[ ] FAIL` · `[ ] SKIP` — Notes:
+
 ---
 
 ## DEV-V-047 — Collapse-by-default creators + browse filters (TASK-677)
@@ -8022,17 +8403,18 @@ Filters browse lists by what an archetype path recommends, read live from `path_
 | Field | Value |
 |-------|-------|
 | **Suite** | DEV-V-052 — TASK-753 |
-| **Related task** | TASK-753 |
+| **Related task** | TASK-753, **TASK-878** |
 | **Where** | Guided See more on Feats, Powers/Techniques, Loadout; custom inline catalogs; sheet Add Feat / Add Skill / Add Power (not Empowered) |
 | **Needs** | A Martial path character and a custom (no-path) draft; sheet with library add |
 
 **Steps**
-1. Path character: Archetype Feats **See more** — Filters expanded; **Archetype Path** last and auto-selected to every player-visible Martial path (not Power). Path-name chips, not Recommended. Clear paths — list widens. Repeat on Powers **See more options** and Loadout **See more options**.
+1. Path character: Archetype Feats **See more** — Filters expanded; **Archetype Path** last and auto-selected to **Any Martial** (one chip, not every martial path). Path-name chips, not Recommended. Clear paths — list widens. Repeat on Powers **See more options** and Loadout **See more options**.
 2. Custom / no-path: feat, loadout, and powers inline catalogs show **Archetype Path** last with **no** auto-select. Selecting paths narrows; clearing returns the eligible catalog.
 3. Sheet: Add Feat / Add Skill / Add Power — same last control. Add Feat keeps family rank chips when only one rank is recommended. Empowered add has no path filter.
+4. **Quick select:** dropdown offers **Any**, **Any Power**, **Any Martial**, **Any Powered-Martial** first; selecting **Any Power** replaces individual Power path chips (does not stack). **Any** replaces the whole selection.
 
 **Expected**
-- Same shared `ArchetypePathFilter` and live `path_data` index as Codex. Union multi-select. Chips only while filtering. Desktop + ~360px.
+- Same shared `ArchetypePathFilter` and live `path_data` index as Codex. Union multi-select via aliases or individual paths. Chips only while filtering. Desktop + ~360px.
 
 **Report** — `[ ] PASS` · `[ ] FAIL` · `[ ] SKIP` — Notes:
 
@@ -8378,17 +8760,17 @@ Codex browse fetches only the open tab's collection (`GET /api/codex?collection=
 
 ---
 
-## DEV-V-016 — Virtual tabletop V1
+## DEV-V-056 — Virtual tabletop V1
 
 **Related tasks:** User request — VTT V1
 **Start URL:** `/encounters/[id]/combat` or `/encounters/[id]/mixed`
 **Needs:** Logged-in Realm Master account, a campaign with at least one character, and a campaign-linked combat or mixed encounter.
 
-#### DEV-V-016-T001 — Open tabletop from a campaign-linked encounter
+#### DEV-V-056-T001 — Open tabletop from a campaign-linked encounter
 
 | Field | Value |
 |-------|-------|
-| **Suite** | DEV-V-016 |
+| **Suite** | DEV-V-056 |
 | **Section** | Encounter → tabletop |
 | **Related task** | User request — VTT V1 |
 | **Where** | `/encounters/[id]/combat` or `/encounters/[id]/mixed` |
@@ -8408,11 +8790,11 @@ Codex browse fetches only the open tab's collection (`GET /api/codex?collection=
 
 ---
 
-#### DEV-V-016-T002 — RM uploads a map and adjusts grid
+#### DEV-V-056-T002 — RM uploads a map and adjusts grid
 
 | Field | Value |
 |-------|-------|
-| **Suite** | DEV-V-016 |
+| **Suite** | DEV-V-056 |
 | **Section** | Tabletop scene tools |
 | **Related task** | User request — VTT V1 |
 | **Where** | `/campaigns/[id]/tabletop` |
@@ -8431,11 +8813,11 @@ Codex browse fetches only the open tab's collection (`GET /api/codex?collection=
 
 ---
 
-#### DEV-V-016-T003 — RM controls tokens and move requests
+#### DEV-V-056-T003 — RM controls tokens and move requests
 
 | Field | Value |
 |-------|-------|
-| **Suite** | DEV-V-016 |
+| **Suite** | DEV-V-056 |
 | **Section** | Tokens and actions |
 | **Related task** | User request — VTT V1 |
 | **Where** | `/campaigns/[id]/tabletop` |
@@ -8455,11 +8837,11 @@ Codex browse fetches only the open tab's collection (`GET /api/codex?collection=
 
 ---
 
-#### DEV-V-016-T004 — Player pings and requests movement
+#### DEV-V-056-T004 — Player pings and requests movement
 
 | Field | Value |
 |-------|-------|
-| **Suite** | DEV-V-016 |
+| **Suite** | DEV-V-056 |
 | **Section** | Player tabletop |
 | **Related task** | User request — VTT V1 |
 | **Where** | `/campaigns/[id]/tabletop` |
@@ -8481,11 +8863,11 @@ Codex browse fetches only the open tab's collection (`GET /api/codex?collection=
 
 ---
 
-#### DEV-V-016-T005 — Mobile tabletop controls fit
+#### DEV-V-056-T005 — Mobile tabletop controls fit
 
 | Field | Value |
 |-------|-------|
-| **Suite** | DEV-V-016 |
+| **Suite** | DEV-V-056 |
 | **Section** | Mobile tabletop |
 | **Related task** | User request — VTT V1 |
 | **Where** | `/campaigns/[id]/tabletop` |
@@ -8504,11 +8886,11 @@ Codex browse fetches only the open tab's collection (`GET /api/codex?collection=
 
 ---
 
-#### DEV-V-016-T006 — RM token movement syncs across sessions
+#### DEV-V-056-T006 — RM token movement syncs across sessions
 
 | Field | Value |
 |-------|-------|
-| **Suite** | DEV-V-016 |
+| **Suite** | DEV-V-056 |
 | **Section** | Realtime tabletop sync |
 | **Related task** | TASK-424 |
 | **Where** | `/campaigns/[id]/tabletop` |
@@ -8528,11 +8910,11 @@ Codex browse fetches only the open tab's collection (`GET /api/codex?collection=
 
 ---
 
-#### DEV-V-016-T007 — RM scene tools sync across sessions
+#### DEV-V-056-T007 — RM scene tools sync across sessions
 
 | Field | Value |
 |-------|-------|
-| **Suite** | DEV-V-016 |
+| **Suite** | DEV-V-056 |
 | **Section** | Realtime tabletop sync |
 | **Related task** | TASK-424 |
 | **Where** | `/campaigns/[id]/tabletop` |
@@ -8553,11 +8935,11 @@ Codex browse fetches only the open tab's collection (`GET /api/codex?collection=
 
 ---
 
-#### DEV-V-016-T008 — Player actions sync to RM session
+#### DEV-V-056-T008 — Player actions sync to RM session
 
 | Field | Value |
 |-------|-------|
-| **Suite** | DEV-V-016 |
+| **Suite** | DEV-V-056 |
 | **Section** | Realtime tabletop sync |
 | **Related task** | TASK-424 |
 | **Where** | `/campaigns/[id]/tabletop` |
@@ -8578,11 +8960,11 @@ Codex browse fetches only the open tab's collection (`GET /api/codex?collection=
 
 ---
 
-#### DEV-V-016-T009 — RM deletes an unwanted tabletop token
+#### DEV-V-056-T009 — RM deletes an unwanted tabletop token
 
 | Field | Value |
 |-------|-------|
-| **Suite** | DEV-V-016 |
+| **Suite** | DEV-V-056 |
 | **Section** | Tokens and actions |
 | **Related task** | User request — VTT token deletion |
 | **Where** | `/campaigns/[id]/tabletop` |
@@ -8605,11 +8987,11 @@ Codex browse fetches only the open tab's collection (`GET /api/codex?collection=
 
 ---
 
-#### DEV-V-016-T010 — RM adds monster tokens directly to the tabletop
+#### DEV-V-056-T010 — RM adds monster tokens directly to the tabletop
 
 | Field | Value |
 |-------|-------|
-| **Suite** | DEV-V-016 |
+| **Suite** | DEV-V-056 |
 | **Section** | Tabletop scene tools |
 | **Related task** | User request — VTT monster tokens |
 | **Where** | `/campaigns/[id]/tabletop` |
@@ -8634,11 +9016,11 @@ Codex browse fetches only the open tab's collection (`GET /api/codex?collection=
 
 ---
 
-#### DEV-V-016-T011 — Character tokens render portraits on the tabletop
+#### DEV-V-056-T011 — Character tokens render portraits on the tabletop
 
 | Field | Value |
 |-------|-------|
-| **Suite** | DEV-V-016 |
+| **Suite** | DEV-V-056 |
 | **Section** | Tokens and actions |
 | **Related task** | User request — VTT character token portraits |
 | **Where** | `/campaigns/[id]/tabletop` |
@@ -8662,7 +9044,7 @@ Codex browse fetches only the open tab's collection (`GET /api/codex?collection=
 
 ---
 
-## DEV-V-017 — Encounter duplicate campaign characters
+## DEV-V-057 — Encounter duplicate campaign characters
 
 **Related task:** User request — encounter duplicate campaign characters
 **Start URL:** `/encounters`
@@ -8670,11 +9052,11 @@ Codex browse fetches only the open tab's collection (`GET /api/codex?collection=
 
 ---
 
-#### DEV-V-017-T001 — Combat encounter cannot add the same campaign character twice
+#### DEV-V-057-T001 — Combat encounter cannot add the same campaign character twice
 
 | Field | Value |
 |-------|-------|
-| **Suite** | DEV-V-017 |
+| **Suite** | DEV-V-057 |
 | **Section** | Combat encounter |
 | **Related task** | User request — encounter duplicate campaign characters |
 | **Where** | `/encounters/[id]/combat` |
@@ -8696,11 +9078,11 @@ Codex browse fetches only the open tab's collection (`GET /api/codex?collection=
 
 ---
 
-#### DEV-V-017-T002 — Skill encounter cannot add the same campaign participant twice
+#### DEV-V-057-T002 — Skill encounter cannot add the same campaign participant twice
 
 | Field | Value |
 |-------|-------|
-| **Suite** | DEV-V-017 |
+| **Suite** | DEV-V-057 |
 | **Section** | Skill encounter |
 | **Related task** | User request — encounter duplicate campaign characters |
 | **Where** | `/encounters/[id]/skill` |
@@ -8721,11 +9103,11 @@ Codex browse fetches only the open tab's collection (`GET /api/codex?collection=
 
 ---
 
-#### DEV-V-017-T003 — Mixed encounter copy skips campaign characters already in skill participants
+#### DEV-V-057-T003 — Mixed encounter copy skips campaign characters already in skill participants
 
 | Field | Value |
 |-------|-------|
-| **Suite** | DEV-V-017 |
+| **Suite** | DEV-V-057 |
 | **Section** | Mixed encounter |
 | **Related task** | User request — encounter duplicate campaign characters |
 | **Where** | `/encounters/[id]/mixed` |
@@ -8747,6 +9129,50 @@ Codex browse fetches only the open tab's collection (`GET /api/codex?collection=
 
 ---
 
+## DEV-V-007 — Auth UI (TASK-361, TASK-899)
+
+#### DEV-V-007-T006 — Register Turnstile + server-side CAPTCHA enforcement (TASK-899)
+
+| Field | Value |
+|-------|-------|
+| **Suite** | DEV-V-007 — Auth UI |
+| **Related task** | TASK-899 |
+| **Where** | `/register`, Supabase Auth API |
+| **Needs** | **DEV-015** complete (Vercel site key + Supabase CAPTCHA secret enabled) |
+
+**Steps**
+1. Open `/register` — Cloudflare Turnstile widget visible; **Create Account** disabled until check completes.
+2. Complete signup with valid email/password — account created; confirmation email if enabled.
+3. Using reporter-style direct POST to `/auth/v1/signup` **without** a valid `captchaToken` — request rejected (4xx), user not created.
+
+**Expected**
+- Widget + token required on the form when CAPTCHA enabled.
+- Supabase rejects tokenless signup even when bypassing the UI.
+
+**Report** — `[ ] PASS` · `[ ] FAIL` · `[ ] SKIP` — Notes:
+
+#### DEV-V-007-T007 — security.txt + login/forgot-password CAPTCHA (TASK-899)
+
+| Field | Value |
+|-------|-------|
+| **Suite** | DEV-V-007 — Auth UI |
+| **Related task** | TASK-899 |
+| **Where** | `https://realmsrpg.com/.well-known/security.txt`, `/login`, `/forgot-password` |
+| **Needs** | Production deploy; **DEV-015** |
+
+**Steps**
+1. Fetch `/.well-known/security.txt` — valid RFC 9116 fields (`Contact`, `Expires`, `Canonical`); contact matches site support email.
+2. `/login` — Turnstile present; sign-in works after completion.
+3. `/forgot-password` — Turnstile present; reset email sends after completion.
+
+**Expected**
+- security.txt publicly reachable.
+- All password auth surfaces pass CAPTCHA when Supabase protection is on.
+
+**Report** — `[ ] PASS` · `[ ] FAIL` · `[ ] SKIP` — Notes:
+
+---
+
 ## Planned suites (split from legacy DEV-T)
 
 | Suite | Topic | Legacy | Status |
@@ -8756,7 +9182,7 @@ Codex browse fetches only the open tab's collection (`GET /api/codex?collection=
 | DEV-V-004 | Storage & account security | DEV-T-004 | Planned |
 | DEV-V-005 | RLS / DB migrations | DEV-T-005 | Archived — [archive](archive/BUILD_VALIDATION_ARCHIVE.md#dev-v-005--rls-policy-consolidation-task-352-task-327) |
 | DEV-V-006 | Resources PDF | DEV-T-006 | Planned |
-| DEV-V-007 | Auth UI (Google only) | DEV-T-007 | Planned |
+| DEV-V-007 | Auth UI (CAPTCHA + Google) | DEV-T-007 | Pending QA (T006–T007 after DEV-015) |
 | DEV-V-014 | Codex typing + roll timestamp (TASK-378) | — | Archived (CI) — [archive](archive/BUILD_VALIDATION_ARCHIVE.md#dev-v-014--codex-payload--roll-timestamp-task-378) |
 | DEV-V-015 | Library API typing (TASK-420) | — | Archived (CI) — [archive](archive/BUILD_VALIDATION_ARCHIVE.md#dev-v-015--library-api-typing-task-420) |
 | DEV-V-016 | Library add/load selection parity (TASK-379, TASK-437, TASK-475, TASK-536, TASK-541, TASK-712) | — | Manual — see suite above (T001–T028) |
@@ -8793,5 +9219,7 @@ Codex browse fetches only the open tab's collection (`GET /api/codex?collection=
 | DEV-V-053 | Wave 3A SEO + token hygiene (TASK-769 / TASK-770 / TASK-771 / TASK-793 / TASK-853) | — | Automated (`site-url`, `robots-sitemap`, `rulebook`) + manual DEV-V-053 T001–T006 |
 | DEV-V-054 | Codex per-collection fetch + virtualized browse rows (TASK-775) | — | Automated (`api/codex/route.test`, `use-codex.keys.test`) + manual DEV-V-054 T001–T003 |
 | DEV-V-055 | ADR-0023 control touch tiers (TASK-841, TASK-847, TASK-830, TASK-850, TASK-851, TASK-857, TASK-865) | — | Automated (`button-tiers.test.ts` + `verify:responsive` creator form-height probe) + manual DEV-V-055 T001–T007 |
+| DEV-V-056 | Virtual tabletop V1 | — | Manual DEV-V-056 T001–T011 |
+| DEV-V-057 | Encounter duplicate campaign characters | — | Manual DEV-V-057 T001–T003 |
 
 When implementing a related task, replace the legacy **DEV-T-###** block with granular **DEV-V-###** tests in this file.

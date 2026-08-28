@@ -251,10 +251,18 @@ export function getAbilityPointsHelp(level: number, rules: CoreRulesMap) {
         At level <strong>{level}</strong>, you have <strong>{points} Ability Points.</strong>
       </div>
       <div>
-        At creation, each Ability can be between <strong>{min}</strong> and <strong>{maxStarting}</strong>.
+        Each Ability can be raised up to <strong>+{maxStarting}</strong> from allocation.
       </div>
       <div>
-        Total negative adjustments cannot go below <strong>{maxNegative}</strong>.
+        Lowering an Ability below <strong>0</strong> returns points you can spend on other
+        Abilities.
+      </div>
+      <div>
+        No Ability can go below <strong>{min}</strong>.
+      </div>
+      <div>
+        Total negative adjustments cannot go below <strong>{maxNegative}</strong> (sum of all
+        negative values).
       </div>
     </div>
   );
@@ -355,7 +363,7 @@ export const equipmentCurrencyHelp = (
   <div>
     <div>Starting Equipment Budget</div>
     <div>Starting currency is typically <strong>200</strong>.</div>
-    <div>Track remaining currency while adding weapons, armor, and gear.</div>
+    <div>Track remaining currency while adding weapons, armor, and Equipment.</div>
     <div>Path mode can add a recommended loadout in one click.</div>
   </div>
 );
@@ -394,7 +402,9 @@ export const innatePowersHelp = (
     </div>
     <div>
       Each must cost at or below your Innate Threshold — the max energy cost to be innate. Their
-      Energy totals count against your Innate Energy pool.
+      Energy totals count against your Innate Energy pool. Qualifying powers use Basic Action or
+      Reaction, last at most 1 minute, and exclude Healing, energy-gain, and Adaptation-category
+      parts.
     </div>
   </div>
 );
@@ -496,7 +506,7 @@ export const guidedPathDetailArmor = (
 export const guidedPathDetailLoadouts = (
   <div>
     <div>
-      Coherent kits this Archetype Path offers. Gear listed elsewhere may also be shared across kits.
+      Coherent kits this Archetype Path offers. Equipment listed elsewhere may also be shared across kits.
     </div>
   </div>
 );
@@ -689,7 +699,9 @@ export const powerCreatorInnateHelp = (
     </div>
     <div>
       To qualify as an Innate Power it must be a <strong>Basic Action</strong> or{' '}
-      <strong>Reaction</strong>, and cannot include Healing or Energy-gaining parts.
+      <strong>Basic Reaction</strong>, last <strong>Instant</strong> or at most <strong>1 minute</strong>,
+      exclude <strong>Healing</strong> or <strong>energy-gain</strong> parts, and exclude parts whose
+      codex category is <strong>Adaptation</strong>.
     </div>
   </div>
 );
@@ -723,7 +735,7 @@ export const guidedPowerCreatorAudienceHelp =
   'Selecting a character enables Innate Threshold filtering and Training Point context for this Power.';
 
 export const guidedPowerCreatorInnateIntentHelp =
-  'Innate Powers are usable without spending Energy when they qualify: Basic Action or Reaction, Energy at or below your Innate Threshold, and no Healing or Energy-gaining parts.';
+  'Innate Powers are usable without spending Energy when they qualify: Basic Action or Reaction, Energy at or below your Innate Threshold, duration Instant or at most 1 minute, no Healing or Energy-gaining parts, and no Adaptation-category parts.';
 
 export const guidedPowerCreatorCategoryHelp =
   'Maps to part categories such as Offense, Defense, Utility, and Control. Pick one primary category for this Power.';

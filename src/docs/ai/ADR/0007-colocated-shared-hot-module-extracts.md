@@ -9,11 +9,11 @@
 
 Shared hotspots (`creature-stat-block`, `entity-library-sections`, `grid-list-row`) and `lib/data-enrichment` exceeded ~1000 LOC. TASK-611 requires facades ≤ ~500 LOC via co-located extracts **without** growing the public shared barrel API.
 
-New files under `src/components/shared/` must appear on `scripts/shared-ui-allowlist.json` (CI gate), which is an Architect surface even when the files are private implementation details.
+New files under `src/components/patterns/` must appear on `scripts/shared-ui-allowlist.json` (CI gate), which is an Architect surface even when the files are private implementation details.
 
 ## Decision
 
-Split each hotspot into **private co-located siblings** (or `src/lib/data-enrichment/*`) imported only by the existing facade file. Keep consumer imports on the same facade / shared barrel paths. Do **not** add new named exports to `src/components/shared/index.ts` for these internals.
+Split each hotspot into **private co-located siblings** (or `src/lib/data-enrichment/*`) imported only by the existing facade file. Keep consumer imports on the same facade / shared barrel paths. Do **not** add new named exports to `src/components/patterns/index.ts` for these internals.
 
 Allowlist entries for the new private shared files are required for CI; this ADR records that they are implementation splits, not new public shared UI contracts.
 

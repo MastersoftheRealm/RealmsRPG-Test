@@ -1,6 +1,8 @@
 import { parseArchetypePathData, parseLevel1LoadoutsField } from '@/lib/game/archetype-path';
+import { calculateProficiency } from '@/lib/game/formulas';
 import type { TypedSupabaseClient } from '@/lib/supabase/database';
 import type { Archetype, ArchetypeCategory, Character, CharacterArchetype } from '@/types';
+import type { CoreRulesMap } from '@/types/core-rules';
 
 const FORGE_ARCHETYPE_IDS = new Set(['power', 'martial', 'powered-martial']);
 
@@ -219,6 +221,56 @@ export function mergeArchetypeFromCodex(
   };
 
   return { ...character, archetype: mergedArch };
+}
+
+/**
+ * When proficiency cap rises on level-up (+1 every 5 levels), auto-assign the gain to the
+ * side that already holds every spent point. Mixed splits (both sides > 0) are left to the player.
+ */
+export function applyProficiencyGainForLevelUp(
+  character: Character,
+  oldLevel: number,
+  newLevel: number,
+  rules?: Partial<CoreRulesMap>,
+): { pow_prof: number; mart_prof: number } | null {
+  if (newLevel <= oldLevel) return null;
+
+  const oldCap = calculateProficiency(oldLevel, false, rules);
+  const newCap = calculateProficiency(newLevel, false, rules);
+  const gained = newCap - oldCap;
+  if (gained <= 0) return null;
+
+  const currentMart = character.mart_prof ?? character.martialProficiency ?? 0;
+  const currentPow = character.pow_prof ?? character.powerProficiency ?? 0;
+
+  if (currentMart > 0 && currentPow === 0) {
+    return { mart_prof: currentMart + gained, pow_prof: 0 };
+  }
+  if (currentPow > 0 && currentMart === 0) {
+    return { pow_prof: currentPow + gained, mart_prof: 0 };
+  }
+  return null;
+}
+
+/** Level-up: pure-side auto-assign, then admin level-5 path floors (if any). */
+export function applyLevelUpProficiencyUpdates(
+  character: Character,
+  oldLevel: number,
+  newLevel: number,
+  pathArchetype?: CharacterArchetype | null,
+  rules?: Partial<CoreRulesMap>,
+): { pow_prof: number; mart_prof: number } | null {
+  const autoAssign = applyProficiencyGainForLevelUp(character, oldLevel, newLevel, rules);
+  const interim = autoAssign ? { ...character, ...autoAssign } : character;
+  const pathFloor = applyPathProficiencyForLevel(interim, newLevel, pathArchetype);
+
+  const currentMart = character.mart_prof ?? character.martialProficiency ?? 0;
+  const currentPow = character.pow_prof ?? character.powerProficiency ?? 0;
+  const nextMart = pathFloor?.mart_prof ?? autoAssign?.mart_prof ?? currentMart;
+  const nextPow = pathFloor?.pow_prof ?? autoAssign?.pow_prof ?? currentPow;
+
+  if (nextMart === currentMart && nextPow === currentPow) return null;
+  return { mart_prof: nextMart, pow_prof: nextPow };
 }
 
 /** When a path character reaches level 5+, apply admin level-5 prof targets if set (floor, not override higher values). */

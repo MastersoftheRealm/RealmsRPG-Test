@@ -1,0 +1,1806 @@
+[
+  {
+    "width": "390",
+    "state": "idle",
+    "viewport": {
+      "w": 390,
+      "h": 844
+    },
+    "docScrollH": 844,
+    "bodyScrollH": 844,
+    "docVsViewport": 0,
+    "frameH": 764,
+    "columnH": 676,
+    "columnScrollH": 1161,
+    "carouselH": 422,
+    "panels": [
+      {
+        "label": "Abilities & Defenses",
+        "clientH": 406,
+        "scrollH": 751,
+        "rect": {
+          "y": 835,
+          "h": 406,
+          "w": 326
+        },
+        "overflowY": "auto",
+        "trailingBlank": 0
+      },
+      {
+        "label": "Skills",
+        "clientH": 406,
+        "scrollH": 1872,
+        "rect": {
+          "y": 835,
+          "h": 406,
+          "w": 326
+        },
+        "overflowY": "auto",
+        "trailingBlank": 0
+      },
+      {
+        "label": "Archetype & Attacks",
+        "clientH": 406,
+        "scrollH": 1580,
+        "rect": {
+          "y": 835,
+          "h": 406,
+          "w": 326
+        },
+        "overflowY": "auto",
+        "trailingBlank": 0
+      },
+      {
+        "label": "Library",
+        "clientH": 406,
+        "scrollH": 2879,
+        "rect": {
+          "y": 835,
+          "h": 406,
+          "w": 326
+        },
+        "overflowY": "auto",
+        "trailingBlank": 0
+      }
+    ],
+    "maxPanelScrollH": 2879,
+    "maxPanelClientH": 406,
+    "dock": {
+      "visibility": "visible",
+      "rect": {
+        "x": 0,
+        "y": 772,
+        "width": 390,
+        "height": 72,
+        "top": 772,
+        "right": 390,
+        "bottom": 844,
+        "left": 0
+      },
+      "buttons": [
+        {
+          "label": "Edit character",
+          "x": 35,
+          "y": 787,
+          "w": 44,
+          "h": 44
+        },
+        {
+          "label": "Temp Modifier",
+          "x": 87,
+          "y": 787,
+          "w": 44,
+          "h": 44
+        },
+        {
+          "label": "Recovery",
+          "x": 139,
+          "y": 787,
+          "w": 44,
+          "h": 44
+        },
+        {
+          "label": "Level Up",
+          "x": 191,
+          "y": 787,
+          "w": 44,
+          "h": 44
+        },
+        {
+          "label": "Character settings",
+          "x": 243,
+          "y": 787,
+          "w": 44,
+          "h": 44
+        }
+      ]
+    },
+    "fab": {
+      "visibility": "visible",
+      "label": "Open roll log",
+      "rect": {
+        "x": 318,
+        "y": 780,
+        "w": 56,
+        "h": 56
+      }
+    },
+    "toolbarFabOverlaps": [],
+    "toolbarPairOverlaps": [],
+    "modal": null,
+    "tour": null
+  },
+  {
+    "width": "390",
+    "state": "idle-scrolled",
+    "viewport": {
+      "w": 390,
+      "h": 844
+    },
+    "docScrollH": 844,
+    "bodyScrollH": 844,
+    "docVsViewport": 0,
+    "frameH": 764,
+    "columnH": 676,
+    "columnScrollH": 1161,
+    "carouselH": 422,
+    "panels": [
+      {
+        "label": "Abilities & Defenses",
+        "clientH": 406,
+        "scrollH": 751,
+        "rect": {
+          "y": 350,
+          "h": 406,
+          "w": 326
+        },
+        "overflowY": "auto",
+        "trailingBlank": 0
+      },
+      {
+        "label": "Skills",
+        "clientH": 406,
+        "scrollH": 1872,
+        "rect": {
+          "y": 350,
+          "h": 406,
+          "w": 326
+        },
+        "overflowY": "auto",
+        "trailingBlank": 0
+      },
+      {
+        "label": "Archetype & Attacks",
+        "clientH": 406,
+        "scrollH": 1580,
+        "rect": {
+          "y": 350,
+          "h": 406,
+          "w": 326
+        },
+        "overflowY": "auto",
+        "trailingBlank": 0
+      },
+      {
+        "label": "Library",
+        "clientH": 406,
+        "scrollH": 2879,
+        "rect": {
+          "y": 350,
+          "h": 406,
+          "w": 326
+        },
+        "overflowY": "auto",
+        "trailingBlank": 0
+      }
+    ],
+    "maxPanelScrollH": 2879,
+    "maxPanelClientH": 406,
+    "dock": {
+      "visibility": "visible",
+      "rect": {
+        "x": 0,
+        "y": 772,
+        "width": 390,
+        "height": 72,
+        "top": 772,
+        "right": 390,
+        "bottom": 844,
+        "left": 0
+      },
+      "buttons": [
+        {
+          "label": "Edit character",
+          "x": 35,
+          "y": 787,
+          "w": 44,
+          "h": 44
+        },
+        {
+          "label": "Temp Modifier",
+          "x": 87,
+          "y": 787,
+          "w": 44,
+          "h": 44
+        },
+        {
+          "label": "Recovery",
+          "x": 139,
+          "y": 787,
+          "w": 44,
+          "h": 44
+        },
+        {
+          "label": "Level Up",
+          "x": 191,
+          "y": 787,
+          "w": 44,
+          "h": 44
+        },
+        {
+          "label": "Character settings",
+          "x": 243,
+          "y": 787,
+          "w": 44,
+          "h": 44
+        }
+      ]
+    },
+    "fab": {
+      "visibility": "visible",
+      "label": "Open roll log",
+      "rect": {
+        "x": 318,
+        "y": 780,
+        "w": 56,
+        "h": 56
+      }
+    },
+    "toolbarFabOverlaps": [],
+    "toolbarPairOverlaps": [],
+    "modal": null,
+    "tour": null
+  },
+  {
+    "width": "390",
+    "state": "recovery",
+    "viewport": {
+      "w": 390,
+      "h": 844
+    },
+    "docScrollH": 844,
+    "bodyScrollH": 844,
+    "docVsViewport": 0,
+    "frameH": 764,
+    "columnH": 676,
+    "columnScrollH": 1161,
+    "carouselH": 422,
+    "panels": [
+      {
+        "label": "Abilities & Defenses",
+        "clientH": 406,
+        "scrollH": 751,
+        "rect": {
+          "y": 835,
+          "h": 406,
+          "w": 326
+        },
+        "overflowY": "auto",
+        "trailingBlank": 0
+      },
+      {
+        "label": "Skills",
+        "clientH": 406,
+        "scrollH": 1872,
+        "rect": {
+          "y": 835,
+          "h": 406,
+          "w": 326
+        },
+        "overflowY": "auto",
+        "trailingBlank": 0
+      },
+      {
+        "label": "Archetype & Attacks",
+        "clientH": 406,
+        "scrollH": 1580,
+        "rect": {
+          "y": 835,
+          "h": 406,
+          "w": 326
+        },
+        "overflowY": "auto",
+        "trailingBlank": 0
+      },
+      {
+        "label": "Library",
+        "clientH": 406,
+        "scrollH": 2879,
+        "rect": {
+          "y": 835,
+          "h": 406,
+          "w": 326
+        },
+        "overflowY": "auto",
+        "trailingBlank": 0
+      }
+    ],
+    "maxPanelScrollH": 2879,
+    "maxPanelClientH": 406,
+    "dock": {
+      "visibility": "hidden",
+      "rect": {
+        "x": 0,
+        "y": 772,
+        "width": 390,
+        "height": 72,
+        "top": 772,
+        "right": 390,
+        "bottom": 844,
+        "left": 0
+      },
+      "buttons": [
+        {
+          "label": "Edit character",
+          "x": 35,
+          "y": 787,
+          "w": 44,
+          "h": 44
+        },
+        {
+          "label": "Temp Modifier",
+          "x": 87,
+          "y": 787,
+          "w": 44,
+          "h": 44
+        },
+        {
+          "label": "Recovery",
+          "x": 139,
+          "y": 787,
+          "w": 44,
+          "h": 44
+        },
+        {
+          "label": "Level Up",
+          "x": 191,
+          "y": 787,
+          "w": 44,
+          "h": 44
+        },
+        {
+          "label": "Character settings",
+          "x": 243,
+          "y": 787,
+          "w": 44,
+          "h": 44
+        }
+      ]
+    },
+    "fab": {
+      "visibility": "hidden",
+      "label": "Open roll log",
+      "rect": {
+        "x": 318,
+        "y": 780,
+        "w": 56,
+        "h": 56
+      }
+    },
+    "toolbarFabOverlaps": [],
+    "toolbarPairOverlaps": [],
+    "modal": {
+      "title": "_r_43_-title",
+      "footerLabel": "Full Recovery",
+      "footerRect": {
+        "x": 29,
+        "y": 106,
+        "w": 164,
+        "h": 44
+      },
+      "footerVsFab": null,
+      "footerVsDock": null,
+      "docksHidden": true
+    },
+    "tour": null
+  },
+  {
+    "width": "390",
+    "state": "levelup",
+    "viewport": {
+      "w": 390,
+      "h": 844
+    },
+    "docScrollH": 844,
+    "bodyScrollH": 844,
+    "docVsViewport": 0,
+    "frameH": 764,
+    "columnH": 676,
+    "columnScrollH": 1161,
+    "carouselH": 422,
+    "panels": [
+      {
+        "label": "Abilities & Defenses",
+        "clientH": 406,
+        "scrollH": 751,
+        "rect": {
+          "y": 835,
+          "h": 406,
+          "w": 326
+        },
+        "overflowY": "auto",
+        "trailingBlank": 0
+      },
+      {
+        "label": "Skills",
+        "clientH": 406,
+        "scrollH": 1872,
+        "rect": {
+          "y": 835,
+          "h": 406,
+          "w": 326
+        },
+        "overflowY": "auto",
+        "trailingBlank": 0
+      },
+      {
+        "label": "Archetype & Attacks",
+        "clientH": 406,
+        "scrollH": 1580,
+        "rect": {
+          "y": 835,
+          "h": 406,
+          "w": 326
+        },
+        "overflowY": "auto",
+        "trailingBlank": 0
+      },
+      {
+        "label": "Library",
+        "clientH": 406,
+        "scrollH": 2879,
+        "rect": {
+          "y": 835,
+          "h": 406,
+          "w": 326
+        },
+        "overflowY": "auto",
+        "trailingBlank": 0
+      }
+    ],
+    "maxPanelScrollH": 2879,
+    "maxPanelClientH": 406,
+    "dock": {
+      "visibility": "hidden",
+      "rect": {
+        "x": 0,
+        "y": 772,
+        "width": 390,
+        "height": 72,
+        "top": 772,
+        "right": 390,
+        "bottom": 844,
+        "left": 0
+      },
+      "buttons": [
+        {
+          "label": "Edit character",
+          "x": 35,
+          "y": 787,
+          "w": 44,
+          "h": 44
+        },
+        {
+          "label": "Temp Modifier",
+          "x": 87,
+          "y": 787,
+          "w": 44,
+          "h": 44
+        },
+        {
+          "label": "Recovery",
+          "x": 139,
+          "y": 787,
+          "w": 44,
+          "h": 44
+        },
+        {
+          "label": "Level Up",
+          "x": 191,
+          "y": 787,
+          "w": 44,
+          "h": 44
+        },
+        {
+          "label": "Character settings",
+          "x": 243,
+          "y": 787,
+          "w": 44,
+          "h": 44
+        }
+      ]
+    },
+    "fab": {
+      "visibility": "hidden",
+      "label": "Open roll log",
+      "rect": {
+        "x": 318,
+        "y": 780,
+        "w": 56,
+        "h": 56
+      }
+    },
+    "toolbarFabOverlaps": [],
+    "toolbarPairOverlaps": [],
+    "modal": {
+      "title": "_r_6r_-title",
+      "footerLabel": "Set Level to 20",
+      "footerRect": {
+        "x": 192,
+        "y": 784,
+        "w": 182,
+        "h": 48
+      },
+      "footerVsFab": null,
+      "footerVsDock": null,
+      "docksHidden": true
+    },
+    "tour": null
+  },
+  {
+    "width": "390",
+    "state": "add-feat",
+    "viewport": {
+      "w": 390,
+      "h": 844
+    },
+    "docScrollH": 844,
+    "bodyScrollH": 844,
+    "docVsViewport": 0,
+    "frameH": 764,
+    "columnH": 676,
+    "columnScrollH": 1356,
+    "carouselH": 422,
+    "panels": [
+      {
+        "label": "Abilities & Defenses",
+        "clientH": 406,
+        "scrollH": 751,
+        "rect": {
+          "y": 350,
+          "h": 406,
+          "w": 326
+        },
+        "overflowY": "auto",
+        "trailingBlank": 0
+      },
+      {
+        "label": "Skills",
+        "clientH": 406,
+        "scrollH": 1872,
+        "rect": {
+          "y": 350,
+          "h": 406,
+          "w": 326
+        },
+        "overflowY": "auto",
+        "trailingBlank": 0
+      },
+      {
+        "label": "Archetype & Attacks",
+        "clientH": 406,
+        "scrollH": 1580,
+        "rect": {
+          "y": 350,
+          "h": 406,
+          "w": 326
+        },
+        "overflowY": "auto",
+        "trailingBlank": 0
+      },
+      {
+        "label": "Library",
+        "clientH": 406,
+        "scrollH": 2911,
+        "rect": {
+          "y": 350,
+          "h": 406,
+          "w": 326
+        },
+        "overflowY": "auto",
+        "trailingBlank": 0
+      }
+    ],
+    "maxPanelScrollH": 2911,
+    "maxPanelClientH": 406,
+    "dock": {
+      "visibility": "hidden",
+      "rect": {
+        "x": 0,
+        "y": 772,
+        "width": 390,
+        "height": 72,
+        "top": 772,
+        "right": 390,
+        "bottom": 844,
+        "left": 0
+      },
+      "buttons": [
+        {
+          "label": "Done editing",
+          "x": 35,
+          "y": 787,
+          "w": 44,
+          "h": 44
+        },
+        {
+          "label": "Temp Modifier",
+          "x": 87,
+          "y": 787,
+          "w": 44,
+          "h": 44
+        },
+        {
+          "label": "Recovery",
+          "x": 139,
+          "y": 787,
+          "w": 44,
+          "h": 44
+        },
+        {
+          "label": "Level Up",
+          "x": 191,
+          "y": 787,
+          "w": 44,
+          "h": 44
+        },
+        {
+          "label": "Character settings",
+          "x": 243,
+          "y": 787,
+          "w": 44,
+          "h": 44
+        }
+      ]
+    },
+    "fab": {
+      "visibility": "hidden",
+      "label": "Open roll log",
+      "rect": {
+        "x": 318,
+        "y": 780,
+        "w": 56,
+        "h": 56
+      }
+    },
+    "toolbarFabOverlaps": [],
+    "toolbarPairOverlaps": [],
+    "modal": {
+      "title": "_r_6t_-title",
+      "footerLabel": "Add Selected",
+      "footerRect": {
+        "x": 192,
+        "y": 752,
+        "w": 182,
+        "h": 48
+      },
+      "footerVsFab": null,
+      "footerVsDock": null,
+      "docksHidden": true
+    },
+    "tour": null
+  },
+  {
+    "width": "390",
+    "state": "tour",
+    "viewport": {
+      "w": 390,
+      "h": 844
+    },
+    "docScrollH": 844,
+    "bodyScrollH": 844,
+    "docVsViewport": 0,
+    "frameH": 764,
+    "columnH": 676,
+    "columnScrollH": 1161,
+    "carouselH": 422,
+    "panels": [
+      {
+        "label": "Abilities & Defenses",
+        "clientH": 406,
+        "scrollH": 751,
+        "rect": {
+          "y": 350,
+          "h": 406,
+          "w": 326
+        },
+        "overflowY": "auto",
+        "trailingBlank": 0
+      },
+      {
+        "label": "Skills",
+        "clientH": 406,
+        "scrollH": 1872,
+        "rect": {
+          "y": 350,
+          "h": 406,
+          "w": 326
+        },
+        "overflowY": "auto",
+        "trailingBlank": 0
+      },
+      {
+        "label": "Archetype & Attacks",
+        "clientH": 406,
+        "scrollH": 1580,
+        "rect": {
+          "y": 350,
+          "h": 406,
+          "w": 326
+        },
+        "overflowY": "auto",
+        "trailingBlank": 0
+      },
+      {
+        "label": "Library",
+        "clientH": 406,
+        "scrollH": 2879,
+        "rect": {
+          "y": 350,
+          "h": 406,
+          "w": 326
+        },
+        "overflowY": "auto",
+        "trailingBlank": 0
+      }
+    ],
+    "maxPanelScrollH": 2879,
+    "maxPanelClientH": 406,
+    "dock": {
+      "visibility": "visible",
+      "rect": {
+        "x": 0,
+        "y": 772,
+        "width": 390,
+        "height": 72,
+        "top": 772,
+        "right": 390,
+        "bottom": 844,
+        "left": 0
+      },
+      "buttons": [
+        {
+          "label": "Edit character",
+          "x": 35,
+          "y": 787,
+          "w": 44,
+          "h": 44
+        },
+        {
+          "label": "Temp Modifier",
+          "x": 87,
+          "y": 787,
+          "w": 44,
+          "h": 44
+        },
+        {
+          "label": "Recovery",
+          "x": 139,
+          "y": 787,
+          "w": 44,
+          "h": 44
+        },
+        {
+          "label": "Level Up",
+          "x": 191,
+          "y": 787,
+          "w": 44,
+          "h": 44
+        },
+        {
+          "label": "Character settings",
+          "x": 243,
+          "y": 787,
+          "w": 44,
+          "h": 44
+        }
+      ]
+    },
+    "fab": {
+      "visibility": "visible",
+      "label": "Open roll log",
+      "rect": {
+        "x": 318,
+        "y": 780,
+        "w": 56,
+        "h": 56
+      }
+    },
+    "toolbarFabOverlaps": [],
+    "toolbarPairOverlaps": [],
+    "modal": null,
+    "tour": {
+      "title": "Abilities & defenses",
+      "nextLabel": "Next",
+      "nextRect": {
+        "x": 243,
+        "y": 703,
+        "w": 50,
+        "h": 44
+      },
+      "nextFullyInView": true,
+      "nextVsDock": null,
+      "nextVsFab": null
+    }
+  },
+  {
+    "width": "360",
+    "state": "idle",
+    "viewport": {
+      "w": 360,
+      "h": 800
+    },
+    "docScrollH": 800,
+    "bodyScrollH": 800,
+    "docVsViewport": 0,
+    "frameH": 720,
+    "columnH": 632,
+    "columnScrollH": 1139,
+    "carouselH": 400,
+    "panels": [
+      {
+        "label": "Abilities & Defenses",
+        "clientH": 384,
+        "scrollH": 751,
+        "rect": {
+          "y": 835,
+          "h": 384,
+          "w": 296
+        },
+        "overflowY": "auto",
+        "trailingBlank": 0
+      },
+      {
+        "label": "Skills",
+        "clientH": 384,
+        "scrollH": 1872,
+        "rect": {
+          "y": 835,
+          "h": 384,
+          "w": 296
+        },
+        "overflowY": "auto",
+        "trailingBlank": 0
+      },
+      {
+        "label": "Archetype & Attacks",
+        "clientH": 384,
+        "scrollH": 1790,
+        "rect": {
+          "y": 835,
+          "h": 384,
+          "w": 296
+        },
+        "overflowY": "auto",
+        "trailingBlank": 0
+      },
+      {
+        "label": "Library",
+        "clientH": 384,
+        "scrollH": 2943,
+        "rect": {
+          "y": 835,
+          "h": 384,
+          "w": 296
+        },
+        "overflowY": "auto",
+        "trailingBlank": 0
+      }
+    ],
+    "maxPanelScrollH": 2943,
+    "maxPanelClientH": 384,
+    "dock": {
+      "visibility": "visible",
+      "rect": {
+        "x": 0,
+        "y": 728,
+        "width": 360,
+        "height": 72,
+        "top": 728,
+        "right": 360,
+        "bottom": 800,
+        "left": 0
+      },
+      "buttons": [
+        {
+          "label": "Edit character",
+          "x": 20,
+          "y": 743,
+          "w": 44,
+          "h": 44
+        },
+        {
+          "label": "Temp Modifier",
+          "x": 72,
+          "y": 743,
+          "w": 44,
+          "h": 44
+        },
+        {
+          "label": "Recovery",
+          "x": 124,
+          "y": 743,
+          "w": 44,
+          "h": 44
+        },
+        {
+          "label": "Level Up",
+          "x": 176,
+          "y": 743,
+          "w": 44,
+          "h": 44
+        },
+        {
+          "label": "Character settings",
+          "x": 228,
+          "y": 743,
+          "w": 44,
+          "h": 44
+        }
+      ]
+    },
+    "fab": {
+      "visibility": "visible",
+      "label": "Open roll log",
+      "rect": {
+        "x": 288,
+        "y": 736,
+        "w": 56,
+        "h": 56
+      }
+    },
+    "toolbarFabOverlaps": [],
+    "toolbarPairOverlaps": [],
+    "modal": null,
+    "tour": null
+  },
+  {
+    "width": "360",
+    "state": "idle-scrolled",
+    "viewport": {
+      "w": 360,
+      "h": 800
+    },
+    "docScrollH": 800,
+    "bodyScrollH": 800,
+    "docVsViewport": 0,
+    "frameH": 720,
+    "columnH": 632,
+    "columnScrollH": 1139,
+    "carouselH": 400,
+    "panels": [
+      {
+        "label": "Abilities & Defenses",
+        "clientH": 384,
+        "scrollH": 751,
+        "rect": {
+          "y": 328,
+          "h": 384,
+          "w": 296
+        },
+        "overflowY": "auto",
+        "trailingBlank": 0
+      },
+      {
+        "label": "Skills",
+        "clientH": 384,
+        "scrollH": 1872,
+        "rect": {
+          "y": 328,
+          "h": 384,
+          "w": 296
+        },
+        "overflowY": "auto",
+        "trailingBlank": 0
+      },
+      {
+        "label": "Archetype & Attacks",
+        "clientH": 384,
+        "scrollH": 1790,
+        "rect": {
+          "y": 328,
+          "h": 384,
+          "w": 296
+        },
+        "overflowY": "auto",
+        "trailingBlank": 0
+      },
+      {
+        "label": "Library",
+        "clientH": 384,
+        "scrollH": 2943,
+        "rect": {
+          "y": 328,
+          "h": 384,
+          "w": 296
+        },
+        "overflowY": "auto",
+        "trailingBlank": 0
+      }
+    ],
+    "maxPanelScrollH": 2943,
+    "maxPanelClientH": 384,
+    "dock": {
+      "visibility": "visible",
+      "rect": {
+        "x": 0,
+        "y": 728,
+        "width": 360,
+        "height": 72,
+        "top": 728,
+        "right": 360,
+        "bottom": 800,
+        "left": 0
+      },
+      "buttons": [
+        {
+          "label": "Edit character",
+          "x": 20,
+          "y": 743,
+          "w": 44,
+          "h": 44
+        },
+        {
+          "label": "Temp Modifier",
+          "x": 72,
+          "y": 743,
+          "w": 44,
+          "h": 44
+        },
+        {
+          "label": "Recovery",
+          "x": 124,
+          "y": 743,
+          "w": 44,
+          "h": 44
+        },
+        {
+          "label": "Level Up",
+          "x": 176,
+          "y": 743,
+          "w": 44,
+          "h": 44
+        },
+        {
+          "label": "Character settings",
+          "x": 228,
+          "y": 743,
+          "w": 44,
+          "h": 44
+        }
+      ]
+    },
+    "fab": {
+      "visibility": "visible",
+      "label": "Open roll log",
+      "rect": {
+        "x": 288,
+        "y": 736,
+        "w": 56,
+        "h": 56
+      }
+    },
+    "toolbarFabOverlaps": [],
+    "toolbarPairOverlaps": [],
+    "modal": null,
+    "tour": null
+  },
+  {
+    "width": "360",
+    "state": "recovery",
+    "viewport": {
+      "w": 360,
+      "h": 800
+    },
+    "docScrollH": 800,
+    "bodyScrollH": 800,
+    "docVsViewport": 0,
+    "frameH": 720,
+    "columnH": 632,
+    "columnScrollH": 1139,
+    "carouselH": 400,
+    "panels": [
+      {
+        "label": "Abilities & Defenses",
+        "clientH": 384,
+        "scrollH": 751,
+        "rect": {
+          "y": 835,
+          "h": 384,
+          "w": 296
+        },
+        "overflowY": "auto",
+        "trailingBlank": 0
+      },
+      {
+        "label": "Skills",
+        "clientH": 384,
+        "scrollH": 1872,
+        "rect": {
+          "y": 835,
+          "h": 384,
+          "w": 296
+        },
+        "overflowY": "auto",
+        "trailingBlank": 0
+      },
+      {
+        "label": "Archetype & Attacks",
+        "clientH": 384,
+        "scrollH": 1790,
+        "rect": {
+          "y": 835,
+          "h": 384,
+          "w": 296
+        },
+        "overflowY": "auto",
+        "trailingBlank": 0
+      },
+      {
+        "label": "Library",
+        "clientH": 384,
+        "scrollH": 2943,
+        "rect": {
+          "y": 835,
+          "h": 384,
+          "w": 296
+        },
+        "overflowY": "auto",
+        "trailingBlank": 0
+      }
+    ],
+    "maxPanelScrollH": 2943,
+    "maxPanelClientH": 384,
+    "dock": {
+      "visibility": "hidden",
+      "rect": {
+        "x": 0,
+        "y": 728,
+        "width": 360,
+        "height": 72,
+        "top": 728,
+        "right": 360,
+        "bottom": 800,
+        "left": 0
+      },
+      "buttons": [
+        {
+          "label": "Edit character",
+          "x": 20,
+          "y": 743,
+          "w": 44,
+          "h": 44
+        },
+        {
+          "label": "Temp Modifier",
+          "x": 72,
+          "y": 743,
+          "w": 44,
+          "h": 44
+        },
+        {
+          "label": "Recovery",
+          "x": 124,
+          "y": 743,
+          "w": 44,
+          "h": 44
+        },
+        {
+          "label": "Level Up",
+          "x": 176,
+          "y": 743,
+          "w": 44,
+          "h": 44
+        },
+        {
+          "label": "Character settings",
+          "x": 228,
+          "y": 743,
+          "w": 44,
+          "h": 44
+        }
+      ]
+    },
+    "fab": {
+      "visibility": "hidden",
+      "label": "Open roll log",
+      "rect": {
+        "x": 288,
+        "y": 736,
+        "w": 56,
+        "h": 56
+      }
+    },
+    "toolbarFabOverlaps": [],
+    "toolbarPairOverlaps": [],
+    "modal": {
+      "title": "_r_43_-title",
+      "footerLabel": "Full Recovery",
+      "footerRect": {
+        "x": 29,
+        "y": 106,
+        "w": 149,
+        "h": 44
+      },
+      "footerVsFab": null,
+      "footerVsDock": null,
+      "docksHidden": true
+    },
+    "tour": null
+  },
+  {
+    "width": "360",
+    "state": "levelup",
+    "viewport": {
+      "w": 360,
+      "h": 800
+    },
+    "docScrollH": 800,
+    "bodyScrollH": 800,
+    "docVsViewport": 0,
+    "frameH": 720,
+    "columnH": 632,
+    "columnScrollH": 1139,
+    "carouselH": 400,
+    "panels": [
+      {
+        "label": "Abilities & Defenses",
+        "clientH": 384,
+        "scrollH": 751,
+        "rect": {
+          "y": 835,
+          "h": 384,
+          "w": 296
+        },
+        "overflowY": "auto",
+        "trailingBlank": 0
+      },
+      {
+        "label": "Skills",
+        "clientH": 384,
+        "scrollH": 1872,
+        "rect": {
+          "y": 835,
+          "h": 384,
+          "w": 296
+        },
+        "overflowY": "auto",
+        "trailingBlank": 0
+      },
+      {
+        "label": "Archetype & Attacks",
+        "clientH": 384,
+        "scrollH": 1790,
+        "rect": {
+          "y": 835,
+          "h": 384,
+          "w": 296
+        },
+        "overflowY": "auto",
+        "trailingBlank": 0
+      },
+      {
+        "label": "Library",
+        "clientH": 384,
+        "scrollH": 2943,
+        "rect": {
+          "y": 835,
+          "h": 384,
+          "w": 296
+        },
+        "overflowY": "auto",
+        "trailingBlank": 0
+      }
+    ],
+    "maxPanelScrollH": 2943,
+    "maxPanelClientH": 384,
+    "dock": {
+      "visibility": "hidden",
+      "rect": {
+        "x": 0,
+        "y": 728,
+        "width": 360,
+        "height": 72,
+        "top": 728,
+        "right": 360,
+        "bottom": 800,
+        "left": 0
+      },
+      "buttons": [
+        {
+          "label": "Edit character",
+          "x": 20,
+          "y": 743,
+          "w": 44,
+          "h": 44
+        },
+        {
+          "label": "Temp Modifier",
+          "x": 72,
+          "y": 743,
+          "w": 44,
+          "h": 44
+        },
+        {
+          "label": "Recovery",
+          "x": 124,
+          "y": 743,
+          "w": 44,
+          "h": 44
+        },
+        {
+          "label": "Level Up",
+          "x": 176,
+          "y": 743,
+          "w": 44,
+          "h": 44
+        },
+        {
+          "label": "Character settings",
+          "x": 228,
+          "y": 743,
+          "w": 44,
+          "h": 44
+        }
+      ]
+    },
+    "fab": {
+      "visibility": "hidden",
+      "label": "Open roll log",
+      "rect": {
+        "x": 288,
+        "y": 736,
+        "w": 56,
+        "h": 56
+      }
+    },
+    "toolbarFabOverlaps": [],
+    "toolbarPairOverlaps": [],
+    "modal": {
+      "title": "_r_6r_-title",
+      "footerLabel": "Set Level to 20",
+      "footerRect": {
+        "x": 162,
+        "y": 740,
+        "w": 182,
+        "h": 48
+      },
+      "footerVsFab": null,
+      "footerVsDock": null,
+      "docksHidden": true
+    },
+    "tour": null
+  },
+  {
+    "width": "360",
+    "state": "add-feat",
+    "error": "locator.click: Timeout 8000ms exceeded."
+  },
+  {
+    "width": "360",
+    "state": "tour",
+    "viewport": {
+      "w": 360,
+      "h": 800
+    },
+    "docScrollH": 800,
+    "bodyScrollH": 800,
+    "docVsViewport": 0,
+    "frameH": 720,
+    "columnH": 632,
+    "columnScrollH": 1139,
+    "carouselH": 400,
+    "panels": [
+      {
+        "label": "Abilities & Defenses",
+        "clientH": 384,
+        "scrollH": 751,
+        "rect": {
+          "y": 328,
+          "h": 384,
+          "w": 296
+        },
+        "overflowY": "auto",
+        "trailingBlank": 0
+      },
+      {
+        "label": "Skills",
+        "clientH": 384,
+        "scrollH": 1872,
+        "rect": {
+          "y": 328,
+          "h": 384,
+          "w": 296
+        },
+        "overflowY": "auto",
+        "trailingBlank": 0
+      },
+      {
+        "label": "Archetype & Attacks",
+        "clientH": 384,
+        "scrollH": 1790,
+        "rect": {
+          "y": 328,
+          "h": 384,
+          "w": 296
+        },
+        "overflowY": "auto",
+        "trailingBlank": 0
+      },
+      {
+        "label": "Library",
+        "clientH": 384,
+        "scrollH": 2943,
+        "rect": {
+          "y": 328,
+          "h": 384,
+          "w": 296
+        },
+        "overflowY": "auto",
+        "trailingBlank": 0
+      }
+    ],
+    "maxPanelScrollH": 2943,
+    "maxPanelClientH": 384,
+    "dock": {
+      "visibility": "visible",
+      "rect": {
+        "x": 0,
+        "y": 728,
+        "width": 360,
+        "height": 72,
+        "top": 728,
+        "right": 360,
+        "bottom": 800,
+        "left": 0
+      },
+      "buttons": [
+        {
+          "label": "Edit character",
+          "x": 20,
+          "y": 743,
+          "w": 44,
+          "h": 44
+        },
+        {
+          "label": "Temp Modifier",
+          "x": 72,
+          "y": 743,
+          "w": 44,
+          "h": 44
+        },
+        {
+          "label": "Recovery",
+          "x": 124,
+          "y": 743,
+          "w": 44,
+          "h": 44
+        },
+        {
+          "label": "Level Up",
+          "x": 176,
+          "y": 743,
+          "w": 44,
+          "h": 44
+        },
+        {
+          "label": "Character settings",
+          "x": 228,
+          "y": 743,
+          "w": 44,
+          "h": 44
+        }
+      ]
+    },
+    "fab": {
+      "visibility": "visible",
+      "label": "Open roll log",
+      "rect": {
+        "x": 288,
+        "y": 736,
+        "w": 56,
+        "h": 56
+      }
+    },
+    "toolbarFabOverlaps": [],
+    "toolbarPairOverlaps": [],
+    "modal": null,
+    "tour": {
+      "title": "Abilities & defenses",
+      "nextLabel": "Next",
+      "nextRect": {
+        "x": 213,
+        "y": 659,
+        "w": 50,
+        "h": 44
+      },
+      "nextFullyInView": true,
+      "nextVsDock": null,
+      "nextVsFab": null
+    }
+  },
+  {
+    "width": "1280",
+    "state": "idle",
+    "viewport": {
+      "w": 1280,
+      "h": 900
+    },
+    "docScrollH": 4406,
+    "bodyScrollH": 4406,
+    "docVsViewport": 3506,
+    "frameH": 3948,
+    "columnH": null,
+    "columnScrollH": null,
+    "carouselH": 3340,
+    "panels": [
+      {
+        "label": "Abilities & Defenses",
+        "clientH": 0,
+        "scrollH": 0,
+        "rect": {
+          "y": 0,
+          "h": 0,
+          "w": 0
+        },
+        "overflowY": "auto",
+        "trailingBlank": 0
+      },
+      {
+        "label": "Skills",
+        "clientH": 3340,
+        "scrollH": 3340,
+        "rect": {
+          "y": 688,
+          "h": 3340,
+          "w": 274
+        },
+        "overflowY": "visible",
+        "trailingBlank": 16
+      },
+      {
+        "label": "Archetype & Attacks",
+        "clientH": 3340,
+        "scrollH": 3340,
+        "rect": {
+          "y": 688,
+          "h": 3340,
+          "w": 274
+        },
+        "overflowY": "visible",
+        "trailingBlank": 16
+      },
+      {
+        "label": "Library",
+        "clientH": 3340,
+        "scrollH": 3340,
+        "rect": {
+          "y": 688,
+          "h": 3340,
+          "w": 548
+        },
+        "overflowY": "visible",
+        "trailingBlank": 16
+      }
+    ],
+    "maxPanelScrollH": 3340,
+    "maxPanelClientH": 3340,
+    "dock": {
+      "visibility": "visible",
+      "rect": {
+        "x": 1220,
+        "y": 96,
+        "width": 44,
+        "height": 252,
+        "top": 96,
+        "right": 1264,
+        "bottom": 348,
+        "left": 1220
+      },
+      "buttons": [
+        {
+          "label": "Edit character",
+          "x": 1220,
+          "y": 96,
+          "w": 44,
+          "h": 44
+        },
+        {
+          "label": "Temp Modifier",
+          "x": 1220,
+          "y": 148,
+          "w": 44,
+          "h": 44
+        },
+        {
+          "label": "Recovery",
+          "x": 1220,
+          "y": 200,
+          "w": 44,
+          "h": 44
+        },
+        {
+          "label": "Level Up",
+          "x": 1220,
+          "y": 252,
+          "w": 44,
+          "h": 44
+        },
+        {
+          "label": "Character settings",
+          "x": 1220,
+          "y": 304,
+          "w": 44,
+          "h": 44
+        }
+      ]
+    },
+    "fab": {
+      "visibility": "visible",
+      "label": "Open roll log",
+      "rect": {
+        "x": 1208,
+        "y": 828,
+        "w": 56,
+        "h": 56
+      }
+    },
+    "toolbarFabOverlaps": [],
+    "toolbarPairOverlaps": [],
+    "modal": null,
+    "tour": null
+  },
+  {
+    "width": "1280",
+    "state": "tour",
+    "viewport": {
+      "w": 1280,
+      "h": 900
+    },
+    "docScrollH": 4406,
+    "bodyScrollH": 4406,
+    "docVsViewport": 3506,
+    "frameH": 3948,
+    "columnH": null,
+    "columnScrollH": null,
+    "carouselH": 3340,
+    "panels": [
+      {
+        "label": "Abilities & Defenses",
+        "clientH": 0,
+        "scrollH": 0,
+        "rect": {
+          "y": 0,
+          "h": 0,
+          "w": 0
+        },
+        "overflowY": "auto",
+        "trailingBlank": 0
+      },
+      {
+        "label": "Skills",
+        "clientH": 3340,
+        "scrollH": 3340,
+        "rect": {
+          "y": 617,
+          "h": 3340,
+          "w": 274
+        },
+        "overflowY": "visible",
+        "trailingBlank": 16
+      },
+      {
+        "label": "Archetype & Attacks",
+        "clientH": 3340,
+        "scrollH": 3340,
+        "rect": {
+          "y": 617,
+          "h": 3340,
+          "w": 274
+        },
+        "overflowY": "visible",
+        "trailingBlank": 16
+      },
+      {
+        "label": "Library",
+        "clientH": 3340,
+        "scrollH": 3340,
+        "rect": {
+          "y": 617,
+          "h": 3340,
+          "w": 548
+        },
+        "overflowY": "visible",
+        "trailingBlank": 16
+      }
+    ],
+    "maxPanelScrollH": 3340,
+    "maxPanelClientH": 3340,
+    "dock": {
+      "visibility": "visible",
+      "rect": {
+        "x": 1220,
+        "y": 96,
+        "width": 44,
+        "height": 252,
+        "top": 96,
+        "right": 1264,
+        "bottom": 348,
+        "left": 1220
+      },
+      "buttons": [
+        {
+          "label": "Edit character",
+          "x": 1220,
+          "y": 96,
+          "w": 44,
+          "h": 44
+        },
+        {
+          "label": "Temp Modifier",
+          "x": 1220,
+          "y": 148,
+          "w": 44,
+          "h": 44
+        },
+        {
+          "label": "Recovery",
+          "x": 1220,
+          "y": 200,
+          "w": 44,
+          "h": 44
+        },
+        {
+          "label": "Level Up",
+          "x": 1220,
+          "y": 252,
+          "w": 44,
+          "h": 44
+        },
+        {
+          "label": "Character settings",
+          "x": 1220,
+          "y": 304,
+          "w": 44,
+          "h": 44
+        }
+      ]
+    },
+    "fab": {
+      "visibility": "visible",
+      "label": "Open roll log",
+      "rect": {
+        "x": 1208,
+        "y": 828,
+        "w": 56,
+        "h": 56
+      }
+    },
+    "toolbarFabOverlaps": [],
+    "toolbarPairOverlaps": [],
+    "modal": null,
+    "tour": {
+      "title": "Abilities & defenses",
+      "nextLabel": "Next",
+      "nextRect": {
+        "x": 333,
+        "y": 807,
+        "w": 50,
+        "h": 44
+      },
+      "nextFullyInView": true,
+      "nextVsDock": null,
+      "nextVsFab": null
+    }
+  }
+]

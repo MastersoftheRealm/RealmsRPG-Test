@@ -200,8 +200,10 @@ interface CharacterFields {
   // Physical attributes
   weight?: number | undefined;
   height?: number | undefined;
+  age?: string | undefined;
   appearance?: string | undefined;
   archetypeDesc?: string | undefined;
+  backstory?: string | undefined;
 
   // Core stats
   abilities: Abilities;
@@ -465,6 +467,7 @@ export interface CharacterSaveData {
   description?: string | undefined;
   notes?: string | undefined;
   namedNotes?: Array<{ id: string; name: string; content: string }> | undefined;
+  age?: string | undefined;
   appearance?: string | undefined;
   archetypeDesc?: string | undefined;
   backstory?: string | undefined;

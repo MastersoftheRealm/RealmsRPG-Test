@@ -9,6 +9,8 @@
 import { useEffect, useCallback, useRef } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import { createClient } from '@/lib/supabase/client';
+import { buildAuthCaptchaOptions } from '@/lib/auth/captcha';
+import { shouldClearQueryCacheOnAuthEvent } from '@/lib/auth/should-clear-query-cache-on-auth-event';
 import { useAuthStore } from '@/stores/auth-store';
 import type { AuthUser } from '@/types/auth';
 import {
@@ -90,9 +92,18 @@ export function useAuth() {
     } = supabase.auth.onAuthStateChange((event, session) => {
       listenerFired = true;
       if (mountedRef.current) {
-        setUser(toAuthUser(session?.user ?? null));
+        const previousUserId = useAuthStore.getState().user?.uid ?? null;
+        const nextUser = toAuthUser(session?.user ?? null);
+        setUser(nextUser);
         setInitialized(true);
-        if (event === 'SIGNED_IN' || event === 'SIGNED_OUT' || event === 'USER_UPDATED') {
+        // Clear only on identity change / sign-out — not tab-focus recovery SIGNED_IN (TASK-903).
+        if (
+          shouldClearQueryCacheOnAuthEvent({
+            event,
+            previousUserId,
+            nextUserId: nextUser?.uid ?? null,
+          })
+        ) {
           queryClient.clear();
         }
         if (event === 'SIGNED_IN' && session?.user && hasGuestEncountersToMigrate()) {
@@ -148,7 +159,7 @@ export function useAuth() {
   );
 
   const signUp = useCallback(
-    async (email: string, password: string, displayName?: string) => {
+    async (email: string, password: string, displayName?: string, captchaToken?: string | null) => {
       setLoading(true);
       clearError();
       try {
@@ -156,7 +167,10 @@ export function useAuth() {
         const { data, error: err } = await supabase.auth.signUp({
           email,
           password,
-          options: { data: { full_name: displayName, display_name: displayName } },
+          options: {
+            ...buildAuthCaptchaOptions(captchaToken ?? null),
+            data: { full_name: displayName, display_name: displayName },
+          },
         });
         if (err) throw err;
         setUser(toAuthUser(data.user));

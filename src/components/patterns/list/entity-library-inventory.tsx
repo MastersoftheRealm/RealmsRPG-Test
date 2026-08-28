@@ -20,6 +20,8 @@ import {
   ARMOR_GRID,
   EQUIPMENT_COLUMNS,
   EQUIPMENT_GRID,
+  CHARACTER_SHEET_EQUIPMENT_COLUMNS,
+  CHARACTER_SHEET_EQUIPMENT_GRID,
   buildCreatureEquipmentColumns,
 } from './entity-library-sections-columns';
 import {
@@ -395,13 +397,15 @@ export function EquipmentListSection({
     onAdd: onAddWrapped,
     headerCollapseProps,
   } = useEntityListSectionCollapse(collapsible, items.length, onAdd);
-  const grid = EQUIPMENT_GRID;
+  const isSheetLayout = layout === 'characterSheet';
+  const grid = isSheetLayout ? CHARACTER_SHEET_EQUIPMENT_GRID : EQUIPMENT_GRID;
+  const headerColumns = isSheetLayout ? CHARACTER_SHEET_EQUIPMENT_COLUMNS : EQUIPMENT_COLUMNS;
 
   const listBody = (
     <>
       {showListHeader && hasAny && (
         <ListHeader
-          columns={EQUIPMENT_COLUMNS}
+          columns={headerColumns}
           gridColumns={grid}
           sortState={sortState}
           onSort={onSort}

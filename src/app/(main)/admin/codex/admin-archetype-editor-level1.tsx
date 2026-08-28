@@ -192,8 +192,9 @@ export function AdminArchetypeEditorLevel1({
       {form.type !== 'martial' && (
         <p className="text-xs text-text-muted">
           Innate Powers are separate from Powers. Save validates Appendix G: Energy ≤ Innate
-          Threshold, Basic/Basic Reaction only, no healing or energy-gain parts, and total Energy ≤
-          Innate Energy (Power 16 / Powered-Martial 6 at level 1).
+          Threshold, Basic/Basic Reaction only, duration Instant or ≤1 minute, no healing or
+          energy-gain parts, no Adaptation-category parts, and total Energy ≤ Innate Energy (Power
+          16 / Powered-Martial 6 at level 1).
         </p>
       )}
 

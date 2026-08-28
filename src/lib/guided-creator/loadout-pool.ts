@@ -95,7 +95,7 @@ export function addItemToGuidedDraft(
   };
 }
 
-/** Update quantity for a selected gear/weapon/armor ref (min 1). */
+/** Update quantity for a selected weapon/armor/Equipment ref (min 1). */
 export function setItemQuantityInGuidedDraft(
   draft: GuidedLoadoutDraftSelection,
   itemId: string,
@@ -139,7 +139,7 @@ export function setItemQuantityInGuidedDraft(
   };
 }
 
-/** Add every recommended gear ref that is not already selected. */
+/** Add every recommended Equipment ref that is not already selected. */
 export function addAllRecommendedEquipment(
   draft: GuidedLoadoutDraftSelection,
   recommended: PathItemRecommendation[],

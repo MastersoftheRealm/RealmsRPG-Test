@@ -3,6 +3,9 @@ import { isGridListChipExpandable } from '@/lib/chip/grid-list-chip-utils';
 import {
   buildFeatLevelChips,
   featLevelChipDescription,
+  formatFeatName,
+  levelToRomanNumeral,
+  parseFeatNameRomanSuffix,
   type LeveledFeatLike,
 } from './leveled-feats';
 
@@ -88,5 +91,64 @@ describe('featLevelChipDescription', () => {
     expect(featLevelChipDescription(family[1]!)).toBe(
       'Req. Character Level 4\nUses: 1 / Full\nMove faster.',
     );
+  });
+});
+
+describe('levelToRomanNumeral', () => {
+  it('maps feat ranks to Roman suffixes', () => {
+    expect(levelToRomanNumeral(1)).toBe('');
+    expect(levelToRomanNumeral(2)).toBe('II');
+    expect(levelToRomanNumeral(3)).toBe('III');
+    expect(levelToRomanNumeral(4)).toBe('IV');
+    expect(levelToRomanNumeral(6)).toBe('VI');
+    expect(levelToRomanNumeral(11)).toBe('XI');
+  });
+});
+
+describe('parseFeatNameRomanSuffix', () => {
+  it('detects trailing Roman suffixes without stripping level-1 names that include numerals', () => {
+    expect(parseFeatNameRomanSuffix('Amplify II')).toMatchObject({
+      baseName: 'Amplify',
+      romanSuffix: 'II',
+      levelFromSuffix: 2,
+    });
+    expect(parseFeatNameRomanSuffix('Empowered Experience II')).toMatchObject({
+      baseName: 'Empowered Experience',
+      romanSuffix: 'II',
+      levelFromSuffix: 2,
+    });
+    expect(parseFeatNameRomanSuffix('Speedy')).toMatchObject({
+      baseName: 'Speedy',
+      romanSuffix: null,
+      levelFromSuffix: null,
+    });
+  });
+});
+
+describe('formatFeatName', () => {
+  it('returns base name for level 1 even when the stored name includes a Roman suffix', () => {
+    expect(formatFeatName({ id: '197', name: 'Empowered Experience II', feat_lvl: 1 })).toBe(
+      'Empowered Experience II',
+    );
+    expect(formatFeatName({ id: '1', name: 'Speedy', feat_lvl: 1 })).toBe('Speedy');
+  });
+
+  it('appends Roman suffix for level 2+ when missing', () => {
+    expect(formatFeatName({ id: '2', name: 'Speedy', feat_lvl: 2 })).toBe('Speedy II');
+    expect(formatFeatName({ id: '3', name: 'Speedy', feat_lvl: 3 })).toBe('Speedy III');
+  });
+
+  it('keeps names that already include the matching Roman suffix', () => {
+    expect(formatFeatName({ id: '24', name: 'Amplify II', feat_lvl: 2 })).toBe('Amplify II');
+  });
+
+  it('does not double-suffix or use (Level N)', () => {
+    expect(formatFeatName({ id: '24', name: 'Amplify II', feat_lvl: 2 })).not.toContain('(Level');
+    expect(formatFeatName({ id: '24', name: 'Amplify II', feat_lvl: 2 })).not.toBe('Amplify II II');
+    expect(formatFeatName({ id: '2', name: 'Speedy', feat_lvl: 2 })).not.toContain('(Level');
+  });
+
+  it('replaces a mismatched Roman suffix with the feat level', () => {
+    expect(formatFeatName({ id: '3', name: 'Amplify II', feat_lvl: 3 })).toBe('Amplify III');
   });
 });

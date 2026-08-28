@@ -20,6 +20,7 @@ import { Button, LoadingState, EmptyState, Card } from '@/components/ui';
 import type { CampaignRollEntry } from '@/types/campaign-roll';
 import { formatRollTimestamp } from '@/lib/roll-timestamp';
 import { DIE_IMAGES, DIE_MAX, generateRollId, rollDie, type DieType } from '@/lib/rolls/die';
+import { resolveRollModifierLabel } from '@/lib/rolls/modifier-label';
 
 // Re-export types for convenience
 export type { RollEntry, RollType, DieResult };
@@ -67,6 +68,7 @@ export function RollLog({ className, viewOnlyCampaignId }: RollLogProps) {
   const [mode, setMode] = React.useState<RollLogMode>('personal');
   const [isOpen, setIsOpen] = React.useState(false);
   const listRef = React.useRef<HTMLDivElement>(null);
+  const dockRef = React.useRef<HTMLDivElement>(null);
 
   // When switching to Campaign tab, refetch so in-sheet/encounter log stays in sync with campaign page
   React.useEffect(() => {
@@ -100,6 +102,26 @@ export function RollLog({ className, viewOnlyCampaignId }: RollLogProps) {
       requestAnimationFrame(scroll);
     });
   }, [isOpen, scrollToLatestKey]);
+
+  React.useEffect(() => {
+    if (!isOpen) return;
+    const onPointerDown = (event: PointerEvent) => {
+      const target = event.target;
+      if (!(target instanceof Element)) return;
+      if (dockRef.current?.contains(target)) return;
+      if (target.closest('[data-roll-trigger]')) return;
+      setIsOpen(false);
+    };
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') setIsOpen(false);
+    };
+    document.addEventListener('pointerdown', onPointerDown);
+    document.addEventListener('keydown', onKeyDown);
+    return () => {
+      document.removeEventListener('pointerdown', onPointerDown);
+      document.removeEventListener('keydown', onKeyDown);
+    };
+  }, [isOpen]);
 
   // Dice pool state (local to the manual dice builder)
   const [dicePool, setDicePool] = React.useState<Record<DieType, number>>({
@@ -180,6 +202,11 @@ export function RollLog({ className, viewOnlyCampaignId }: RollLogProps) {
       title: 'Custom Roll',
       dice: diceResults,
       modifier,
+      modifierLabel: resolveRollModifierLabel({
+        type: 'custom',
+        title: 'Custom Roll',
+        modifier,
+      }),
       total,
       isCrit,
       isCritFail,
@@ -196,6 +223,7 @@ export function RollLog({ className, viewOnlyCampaignId }: RollLogProps) {
 
   return (
     <div
+      ref={dockRef}
       className={cn('floating-dock-bottom-right', className)}
       data-floating-dock="bottom-right"
       data-tour-id="sheet-tour-roll-log"
@@ -431,6 +459,12 @@ export function RollEntryCard({
 }) {
   const diceGroups = groupDiceByType(roll.dice);
   const showModifier = roll.modifier !== 0;
+  const bonusLabel = resolveRollModifierLabel({
+    type: roll.type,
+    title: roll.title,
+    modifier: roll.modifier,
+    explicit: 'modifierLabel' in roll ? roll.modifierLabel : undefined,
+  });
   const showSubtotal = showModifier || roll.dice.length > 1;
   const timestampStr = formatRollTimestamp(roll.timestamp);
 
@@ -509,6 +543,7 @@ export function RollEntryCard({
           <>
             <span className="text-xs text-text-muted">{roll.modifier >= 0 ? '+' : '−'}</span>
             <span
+              title={bonusLabel}
               className={cn(
                 'inline-flex items-center rounded border px-1.5 py-0.5 text-xs font-semibold',
                 roll.modifier >= 0

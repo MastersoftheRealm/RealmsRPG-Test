@@ -20,12 +20,17 @@ import {
   deriveShieldAmountFromProperties,
   deriveShieldDamageFromProperties,
   resolveWeaponRangeDisplay,
-  calculateItemCosts,
+  resolveItemMarketPricing,
   type ItemPropertyPayload,
 } from '@/lib/calculators';
 import { deriveAbilityRequirementFromProperties } from '@/lib/game/weapon-attack-ability';
-import { derivePowerDisplay, formatPowerDamage } from '@/lib/calculators/power-calc';
+import {
+  derivePowerDisplay,
+  deriveStructuredDuration,
+  formatPowerDamage,
+} from '@/lib/calculators/power-calc';
 import type { PowerDocument } from '@/lib/calculators/power-calc';
+import { resolvePartCategoryList } from '@/lib/library/power-technique-categories';
 import { deriveTechniqueDisplay } from '@/lib/calculators/technique-calc';
 import type { TechniqueDocument } from '@/lib/calculators/technique-calc';
 import {
@@ -47,6 +52,7 @@ import {
   trainingPointsFactChip,
 } from '@/lib/detail-option/compact-facts';
 import { glrColumnKeyFor, glrListChrome } from '@/lib/glr';
+import { equipmentCurrency } from '@/lib/codex/equipment-list';
 import {
   derivePartCategories,
   formatPartCategoriesColumn,
@@ -78,7 +84,7 @@ const selectShieldChrome = glrListChrome(
   { labelStyle: 'title', keyStyle: 'usm' },
 );
 
-const selectGearChrome = glrListChrome(
+const selectEquipmentChrome = glrListChrome(
   { entityType: 'gear', mode: 'select' },
   { labelStyle: 'title', keyStyle: 'usm' },
 );
@@ -98,7 +104,7 @@ function selectChromeFor(
     case 'shield':
       return selectShieldChrome;
     case 'equipment':
-      return selectGearChrome;
+      return selectEquipmentChrome;
   }
 }
 
@@ -375,6 +381,13 @@ export function buildPowerTechniqueFilterableRow(
     parts?: unknown | undefined;
     damage?: unknown | undefined;
     isReaction?: boolean | undefined;
+    duration?:
+      | {
+          type?: string | undefined;
+          value?: number | undefined;
+        }
+      | null
+      | undefined;
   },
   powerPartsDb: PowerPart[],
   techniquePartsDb: TechniquePart[],
@@ -389,6 +402,23 @@ export function buildPowerTechniqueFilterableRow(
   if (kind === 'power') {
     categories = withDamageCategory(categories, powerHasDamageCategory(item.damage));
   }
+  const partIds = parts.map((part) => {
+    const p = part as { id?: string | number | undefined };
+    return p.id != null ? String(p.id) : '';
+  });
+  const partNames = parts.map((part) => {
+    const p = part as { name?: string | undefined };
+    return p.name != null ? String(p.name) : '';
+  });
+  const structuredDuration =
+    kind === 'power'
+      ? deriveStructuredDuration(
+          parts as PowerDocument['parts'],
+          item.duration?.type
+            ? { type: item.duration.type, value: item.duration.value ?? 1 }
+            : undefined,
+        )
+      : null;
   return {
     categories,
     energy: facts.energy,
@@ -396,18 +426,18 @@ export function buildPowerTechniqueFilterableRow(
     actionTypeRaw: item.actionType ?? facts.actionType,
     action: facts.actionType,
     isReaction: item.isReaction === true,
-    partIds: parts
-      .map((part) => {
-        const p = part as { id?: string | number | undefined };
-        return p.id != null ? String(p.id) : '';
-      })
-      .filter(Boolean),
-    partNames: parts
-      .map((part) => {
-        const p = part as { name?: string | undefined };
-        return p.name != null ? String(p.name) : '';
-      })
-      .filter(Boolean),
+    partIds,
+    partNames,
+    ...(kind === 'power'
+      ? {
+          durationType: structuredDuration?.type ?? null,
+          durationValue: structuredDuration?.value ?? null,
+          partCategories: resolvePartCategoryList(
+            parts as Parameters<typeof resolvePartCategoryList>[0],
+            powerPartsDb,
+          ),
+        }
+      : {}),
   };
 }
 
@@ -506,20 +536,17 @@ export function getItemColumns(
     });
   }
   const gear = item as UserItem | EqItem;
-  const storedCurrency = gear.costs?.totalCurrency;
-  const fallbackCost = 'cost' in gear ? gear.cost : undefined;
-  const currency =
-    storedCurrency != null
-      ? Math.round(storedCurrency)
-      : fallbackCost != null
-        ? fallbackCost
-        : undefined;
+  const catalogCurrency = equipmentCurrency(
+    gear as { currency?: number | undefined; gold_cost?: number | undefined },
+  );
+  const gearCost = 'cost' in gear && gear.cost != null && gear.cost > 0 ? gear.cost : undefined;
+  const currency = catalogCurrency > 0 ? catalogCurrency : gearCost;
   const values: Record<string, string> = {
     category: formatListCellLabel(('category' in gear ? gear.category : undefined) || gear.type),
     currency: currency != null ? String(currency) : '-',
     rarity: formatListCellLabel(gear.rarity),
   };
-  return selectGearChrome.layout.columnFacts.map((id) => {
+  return selectEquipmentChrome.layout.columnFacts.map((id) => {
     const key = glrColumnKeyFor(id, 'gear', 'select', 'usm');
     return { key, value: values[key] ?? '-', align: 'center' as const };
   });
@@ -538,7 +565,7 @@ export function getModalGridColumns(itemType: LibraryItemType): string {
     case 'armor':
       return selectArmorChrome.grid;
     case 'equipment':
-      return selectGearChrome.grid;
+      return selectEquipmentChrome.grid;
     default:
       return '1.5fr';
   }
@@ -583,7 +610,7 @@ export function getListHeaderColumns(itemType: LibraryItemType): {
         align,
       }));
     case 'equipment':
-      return selectGearChrome.headers.map(({ key, label, align }) => ({
+      return selectEquipmentChrome.headers.map(({ key, label, align }) => ({
         key,
         label,
         align,
@@ -631,6 +658,7 @@ export function buildSelectableItem(
     const categoryText = formatPartCategoriesColumn(categories);
     const sections = buildGlrFactDetailSections({
       chipFacts: selectPowerChrome.layout.chipFacts,
+      entityType: 'power',
       facts: {
         range: display.range,
         category: categoryText && categoryText !== '—' ? categoryText : undefined,
@@ -662,6 +690,7 @@ export function buildSelectableItem(
     const categoryText = formatPartCategoriesColumn(categories);
     const sections = buildGlrFactDetailSections({
       chipFacts: selectTechniqueChrome.layout.chipFacts,
+      entityType: 'technique',
       facts: {
         category: categoryText && categoryText !== '—' ? categoryText : undefined,
         damage: display.damageStr && display.damageStr !== '-' ? display.damageStr : undefined,
@@ -682,7 +711,9 @@ export function buildSelectableItem(
       op_1_lvl?: number | undefined;
     }>;
     const payload = props as ItemPropertyPayload[];
-    const costs = calculateItemCosts(payload, itemPropertiesDb);
+    const isArmament =
+      effectiveType === 'weapon' || effectiveType === 'armor' || effectiveType === 'shield';
+    const pricing = resolveItemMarketPricing(payload, itemPropertiesDb, it.costs);
     const propertyChips: ChipData[] = namedPropertyDescriptorChips(props, itemPropertiesDb).map(
       (chip) => {
         const prop = props.find((p) => {
@@ -708,22 +739,31 @@ export function buildSelectableItem(
             ? 'weapon'
             : 'item';
     const propertySection = propertiesProficienciesSection(propertyChips, propertyFamily);
-    const storedCurrency = it.costs?.totalCurrency;
-    const fallbackCost = 'cost' in it ? it.cost : undefined;
-    const currency =
-      storedCurrency != null && storedCurrency > 0
-        ? Math.round(storedCurrency)
-        : fallbackCost != null && fallbackCost > 0
-          ? fallbackCost
-          : Math.round(costs.totalCurrency) || undefined;
+    const catalogCurrency = equipmentCurrency(
+      it as { currency?: number | undefined; gold_cost?: number | undefined },
+    );
+    const costFallback = 'cost' in it && it.cost != null && it.cost > 0 ? it.cost : undefined;
+    const currency = isArmament
+      ? pricing.currencyCost > 0
+        ? pricing.currencyCost
+        : costFallback
+      : catalogCurrency > 0
+        ? catalogCurrency
+        : costFallback;
     const trainingPoints =
-      it.costs?.totalTP != null && it.costs.totalTP > 0
-        ? Math.round(it.costs.totalTP)
-        : Math.round(costs.totalTP) || undefined;
+      pricing.totalTP > 0
+        ? Math.round(pricing.totalTP)
+        : it.costs?.totalTP != null && it.costs.totalTP > 0
+          ? Math.round(it.costs.totalTP)
+          : undefined;
+    const rarity = isArmament ? it.rarity || pricing.rarity || undefined : it.rarity;
+    const glrEntityType =
+      effectiveType === 'equipment' ? 'gear' : (effectiveType as 'weapon' | 'armor' | 'shield');
     const sections = buildGlrFactDetailSections({
       chipFacts: selectChromeFor(effectiveType).layout.chipFacts,
+      entityType: glrEntityType,
       facts: {
-        rarity: it.rarity,
+        rarity,
         currency,
         trainingPoints,
         range: resolveWeaponRangeDisplay((it as EqItem).range, payload),

@@ -2,8 +2,12 @@ import { describe, expect, it } from 'vitest';
 import { listPlayerVisiblePaths } from '@/lib/game/archetype-edit';
 import { collectPathRecommendedIds, parseArchetypePathData } from '@/lib/game/archetype-path';
 import {
+  addPathFilterSelection,
   applyLivePathFilter,
   buildPathRecommendationIndex,
+  expandPathFilterSelection,
+  PATH_FILTER_ALIAS,
+  pathFilterAliasForArchetypeType,
   pathIdsForArchetypeType,
   pathNamesForEntity,
   pathRecommendedEntityIds,
@@ -49,7 +53,7 @@ describe('collectPathRecommendedIds', () => {
   });
 
   it('collapses id:qty refs and dedupes repeated ids', () => {
-    const gear = path('p-gear', 'Gear', 'martial', {
+    const gear = path('p-gear', 'Equipment Path', 'martial', {
       level1: { equipment: ['torch:5', 'rope'] },
       levels: [{ level: 5, equipment: ['torch:2'] }],
     });
@@ -165,7 +169,7 @@ describe('buildPathRecommendationIndex', () => {
   it('unions armaments + equipment kinds on the mixed Codex equipment list', () => {
     const mixed = buildPathRecommendationIndex({
       paths: [
-        path('p-gear', 'Gear', 'martial', {
+        path('p-gear', 'Equipment Path', 'martial', {
           level1: { armaments: ['sword:1'], equipment: ['torch:2'] },
         }),
       ],
@@ -250,5 +254,82 @@ describe('buildPathRecommendationIndex', () => {
     expect(rows[0]?.badges).toEqual([{ label: 'Monk' }]);
     expect(rows[0]?.showBadgesInName).toBe(true);
     expect(rows[1]?.badges).toBeUndefined();
+  });
+});
+
+describe('path filter union aliases (TASK-878)', () => {
+  const index = buildPathRecommendationIndex({
+    paths: [monk, berserker, path('p-mage', 'Mage', 'power', { level1: { feats: ['10'] } })],
+    entities: FEATS,
+    kind: 'feats',
+  });
+
+  it('maps archetype type to the type-wide alias for auto-select', () => {
+    expect(pathFilterAliasForArchetypeType('power')).toBe(PATH_FILTER_ALIAS.ANY_POWER);
+    expect(pathFilterAliasForArchetypeType('martial')).toBe(PATH_FILTER_ALIAS.ANY_MARTIAL);
+    expect(pathFilterAliasForArchetypeType('powered-martial')).toBe(
+      PATH_FILTER_ALIAS.ANY_POWERED_MARTIAL,
+    );
+  });
+
+  it('expands Any Martial to every martial path id', () => {
+    expect(
+      expandPathFilterSelection([PATH_FILTER_ALIAS.ANY_MARTIAL], index.options).sort(),
+    ).toEqual(['p-berserker', 'p-monk']);
+  });
+
+  it('expands Any Power to every power path id', () => {
+    expect(expandPathFilterSelection([PATH_FILTER_ALIAS.ANY_POWER], index.options)).toEqual([
+      'p-mage',
+    ]);
+  });
+
+  it('expands Any to all player-visible paths', () => {
+    expect(expandPathFilterSelection([PATH_FILTER_ALIAS.ANY], index.options).sort()).toEqual([
+      'p-berserker',
+      'p-mage',
+      'p-monk',
+    ]);
+  });
+
+  it('resolves alias unions the same as selecting every path of that type', () => {
+    const martialIds = pathIdsForArchetypeType(index.options, 'martial');
+    expect([...pathRecommendedEntityIds(index, [PATH_FILTER_ALIAS.ANY_MARTIAL])].sort()).toEqual(
+      [...pathRecommendedEntityIds(index, martialIds)].sort(),
+    );
+    expect([...pathRecommendedEntityIds(index, [PATH_FILTER_ALIAS.ANY_POWER])].sort()).toEqual([
+      '10',
+    ]);
+  });
+
+  it('addPathFilterSelection replaces individual paths of the same type', () => {
+    expect(
+      addPathFilterSelection(
+        ['p-monk', 'p-berserker'],
+        PATH_FILTER_ALIAS.ANY_MARTIAL,
+        index.options,
+      ),
+    ).toEqual([PATH_FILTER_ALIAS.ANY_MARTIAL]);
+    expect(
+      addPathFilterSelection([PATH_FILTER_ALIAS.ANY_MARTIAL], 'p-monk', index.options),
+    ).toEqual(['p-monk']);
+  });
+
+  it('addPathFilterSelection replaces the whole selection with Any', () => {
+    expect(
+      addPathFilterSelection(
+        ['p-monk', PATH_FILTER_ALIAS.ANY_POWER],
+        PATH_FILTER_ALIAS.ANY,
+        index.options,
+      ),
+    ).toEqual([PATH_FILTER_ALIAS.ANY]);
+  });
+
+  it('still names concrete paths on rows when filtering by alias', () => {
+    expect(pathNamesForEntity(index, '10', [PATH_FILTER_ALIAS.ANY_POWER])).toEqual(['Mage']);
+    expect(pathNamesForEntity(index, '13', [PATH_FILTER_ALIAS.ANY_MARTIAL]).sort()).toEqual([
+      'Berserker',
+      'Monk',
+    ]);
   });
 });

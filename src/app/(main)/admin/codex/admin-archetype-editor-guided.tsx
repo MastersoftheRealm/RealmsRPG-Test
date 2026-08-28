@@ -56,11 +56,11 @@ export function AdminArchetypeEditorGuided({
       </div>
       <div>
         <label className="mb-1 block text-sm font-medium text-text-secondary">
-          Recommended adventuring gear
+          Recommended Equipment
         </label>
         <ChipSelect
-          label="Add recommended gear item"
-          placeholder="Select recommended equipment"
+          label="Add recommended Equipment"
+          placeholder="Select recommended Equipment"
           options={equipmentOptions}
           selectedValues={[]}
           onSelect={(value) =>
@@ -97,7 +97,7 @@ export function AdminArchetypeEditorGuided({
                     ),
                   }))
                 }
-                removeLabel={`Remove recommended gear ${label}`}
+                removeLabel={`Remove recommended Equipment ${label}`}
               />
             );
           })}

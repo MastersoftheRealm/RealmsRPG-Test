@@ -4,6 +4,7 @@ import {
   buildCodexEquipmentDetailSections,
   CODEX_EQUIPMENT_HEADER_COLUMNS,
   equipmentCurrency,
+  persistEquipmentCost,
   filterCodexEquipment,
 } from './equipment-list';
 import { EMPTY_ARMAMENT_FILTERS } from '@/lib/library/armament-filters';
@@ -66,6 +67,12 @@ describe('codex equipment-list', () => {
     expect(equipmentCurrency({ gold_cost: 7 })).toBe(7);
   });
 
+  it('persistEquipmentCost prefers catalog currency over stored cost (TASK-873)', () => {
+    expect(persistEquipmentCost({ currency: 20, cost: 5 })).toBe(20);
+    expect(persistEquipmentCost({ cost: 12 })).toBe(12);
+    expect(persistEquipmentCost({})).toBe(0);
+  });
+
   it('does not chip Damage, DR, or Weight on mixed gear browse', () => {
     const sections = buildCodexEquipmentDetailSections(
       item({ id: 'w', name: 'Sword', damage: '1d8 Slashing', armor_value: 2, weight: 3 }),
@@ -118,7 +125,7 @@ describe('codex equipment-list', () => {
       paths: [
         {
           id: 'p-gear',
-          name: 'Gear',
+          name: 'Equipment Path',
           type: 'martial',
           path_data: parseArchetypePathData({
             level1: { armaments: ['sword:1'], equipment: ['torch'] },

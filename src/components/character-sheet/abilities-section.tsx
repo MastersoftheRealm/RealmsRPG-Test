@@ -14,11 +14,21 @@
 'use client';
 
 import { useMemo, useState } from 'react';
-import { EditSectionToggle, PointStatus, TempModifierToggle } from '@/components/patterns';
+import {
+  EditSectionToggle,
+  PointStatus,
+  TempModifierToggle,
+  ABILITY_INFO,
+  ABILITY_ORDER,
+  ABILITY_CONSTRAINTS,
+  DefenseStatTile,
+  SHEET_STAT_GRID_CLASS,
+} from '@/components/patterns';
 import { Card } from '@/components/ui';
 import { cn } from '@/lib/utils';
-import { DEFENSE_INCREASE_COST } from '@/lib/game/skill-allocation';
+import { resolveSkillAllocationRules } from '@/lib/game/skill-allocation';
 import { calculateAbilityScoreCost } from '@/lib/game/formulas';
+import { useGameRules } from '@/hooks';
 import {
   getDefenseTempModifier,
   getEffectiveAbilities,
@@ -31,14 +41,7 @@ import type {
   DefenseName,
   DefenseSkills,
 } from '@/types';
-import {
-  ABILITY_INFO,
-  ABILITY_ORDER,
-  ABILITY_CONSTRAINTS,
-  SHEET_STAT_GRID_CLASS,
-} from './abilities-section-model';
 import { AbilityStatTile } from './ability-stat-tile';
-import { DefenseStatTile } from './defense-stat-tile';
 
 // =============================================================================
 // Types
@@ -101,6 +104,8 @@ export function AbilitiesSection({
     () => getEffectiveAbilities(abilities, tempModifiers),
     [abilities, tempModifiers],
   );
+  const { rules } = useGameRules();
+  const defenseIncreaseCost = resolveSkillAllocationRules(rules).defenseIncreaseCost;
 
   // Calculate ability points spent (base allocation only — temps are not spend)
   const calculatedSpentAbilityPoints = useMemo(() => {
@@ -204,7 +209,7 @@ export function AbilitiesSection({
             )}
           </div>
           <div className="text-xs text-text-muted">
-            Max ability: +{maxAbility} | Defense: {DEFENSE_INCREASE_COST}sp per +1 (max +
+            Max ability: +{maxAbility} | Defense: {defenseIncreaseCost}sp per +1 (max +
             {maxDefenseSkill})
           </div>
         </div>
@@ -277,7 +282,8 @@ export function AbilitiesSection({
               showTempControls={showTempControls}
               maxDefenseSkill={maxDefenseSkill}
               skillPointsRemaining={skillPointsRemaining}
-              totalSkillPoints={totalSkillPoints}
+              enforceSkillPointBudget={totalSkillPoints !== undefined}
+              defenseIncreaseCost={defenseIncreaseCost}
               defenseBonus={getDefenseBonus(ability, true)}
               defenseScore={getDefenseScore(ability, true)}
               onDefenseChange={onDefenseChange}

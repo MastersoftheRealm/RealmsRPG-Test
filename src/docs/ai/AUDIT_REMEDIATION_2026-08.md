@@ -23,7 +23,7 @@ row moves to `done`, record the commit subject. When a row is `partial`, record 
 | **0 — foundation** | `done` | Backups, schema baseline, codex data-loss determination. |
 | **1 — stop the bleeding** | `done` (code + DB + ops) | GitHub required checks + Actions public Supabase secrets + `E2E_OPTIONAL=1` + orphan profile delete. **2026-08-13 Vercel:** Upstash Redis + Sentry DSN live on production/preview; `NEXT_PUBLIC_SITE_URL` on production; production rebuilt. Still owner: HIBP, E2E test user, optional “require PR”. |
 | **2 — correctness** | `done` (code; pending-qa) | P0/P1-1–P1-5 **committed** on `master`. TASK-740 Advanced persist migrate **done**; TASK-738 guided P1-6–P1-10 + server legality + idempotent create **done**; TASK-744 styleguide Linux baselines **done**; TASK-741 dirty-key PATCH **done**; TASK-742 acked rules leftovers **done**; TASK-739 Advanced currency clamp **done**; TASK-746 library add lock **done**; TASK-747 realtime non-resource merge **done**; TASK-749 PATCH currency floor **done**; TASK-750 sheet Query SoT **done**; TASK-761 campaign RM view Query load **done**; TASK-762 combat `?scope=encounter` Query **done**. Remaining Wave 2 coding: none. |
-| **3 — structure** | `partial` (3A + 3B + implementable 3C done; Architect leftovers TASK-794–799 / 820 / 824 / 842 / 845 done) | Wave 3A landed (TASK-769–772). **3B** complete: TASK-773–775 done (pending-qa); ADR-0015 Accepted. **3C implementable** TASK-789–793 done (pending-qa / n/a). **TASK-794 done** (ADR-0019); **TASK-795 done** (ADR-0020); **TASK-796 done** (ADR-0021); **TASK-797 done** (ADR-0022); **TASK-798 done** (ADR-0017); **TASK-799 done** (pending-qa); **TASK-820 done** (ADR-0018); **TASK-824 done** (ADR-0024); **TASK-842 / TASK-845 done** (ADR-0025 pending-qa). |
+| **3 — structure** | `done` (code; pending-qa on several suites) | Wave 3A–3C + Architect leftovers **shipped**. TASK-769–775 / 789–799 / 820 / 824 / 842 / 845 done (many `verification_status: pending-qa`). ADR-0015–0025 as cited in FEATURE_INDEX. No Wave 3 coding leftovers. |
 
 ### Commits on `master` (audit program, oldest → newest)
 
@@ -53,8 +53,7 @@ Later `master` commits (`6adf344f`, `21ffcd18`, …) are unrelated product work 
 
 ### Uncommitted / follow-up coding
 
-Plan refresh + GAME_RULES / SIZES seed / admin editor prose may still be uncommitted.
-Wave 2 coding leftovers: none. Report 07 P2-5 RM-view enrichment landed as TASK-773 (Wave 3B). Wave 3C implementable TASK-789–793 is committed on `master` (`2dcb2173`). Architect leftover **TASK-798 done** (ADR-0017); **TASK-820 done** (ADR-0018); **TASK-794–797 done**; **TASK-799 done** (pending-qa); **TASK-824 done** (ADR-0024); **TASK-842 / TASK-845 done** (ADR-0025 pending-qa).
+None for this audit program (2026-08-22 honesty pass). Owner QA backlog lives in `DEVELOPER_TASK_QUEUE.md` → Pending owner QA. Open product work is unrelated ACTIVE_TASKS (e.g. TASK-871/874/876 owner-gated).
 
 ---
 

@@ -51,7 +51,7 @@ export function useGuidedEquipmentL2Catalog(
     [phase, pool, officialItems, codexEquipment],
   );
 
-  /** Gear L2 replaces draft.equipment — ceiling is starting − arms (not − current gear). */
+  /** Ceiling is starting − arms (not − current Equipment selection). */
   const gearBudget = currencyStarting - armsSpent;
 
   /**

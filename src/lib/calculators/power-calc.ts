@@ -390,6 +390,81 @@ export function deriveDuration(partsPayload: PowerPartPayload[] = []): string {
   return formatDurationFromTypeAndValue('instant', 0);
 }
 
+export type StructuredPowerDuration = {
+  type: 'instant' | 'rounds' | 'minutes' | 'hours' | 'days' | 'permanent';
+  value: number;
+};
+
+function normalizeStructuredDurationType(type: string): StructuredPowerDuration['type'] | null {
+  const t = (type || '').toLowerCase().trim();
+  if (t === 'instant' || t === 'instantaneous') return 'instant';
+  if (t === 'round' || t === 'rounds') return 'rounds';
+  if (t === 'minute' || t === 'minutes' || t === 'min' || t === 'mins') return 'minutes';
+  if (t === 'hour' || t === 'hours' || t === 'hr' || t === 'hrs') return 'hours';
+  if (t === 'day' || t === 'days') return 'days';
+  if (t === 'permanent') return 'permanent';
+  return null;
+}
+
+/**
+ * Structured duration for rules checks (innate eligibility, etc.).
+ * Returns null when type cannot be resolved (fail closed). No duration parts → instant.
+ */
+export function deriveStructuredDuration(
+  partsPayload: PowerPartPayload[] = [],
+  savedDuration?: { type: string; value?: number } | null,
+): StructuredPowerDuration | null {
+  if (savedDuration?.type) {
+    const norm = normalizeStructuredDurationType(savedDuration.type);
+    if (!norm) return null;
+    if (norm === 'instant' || norm === 'permanent') {
+      return { type: norm, value: 0 };
+    }
+    return { type: norm, value: savedDuration.value ?? 1 };
+  }
+
+  const findPartById = (partId: number, fallbackName: string) =>
+    partsPayload.find((p) => {
+      const id = p.part?.id ?? p.id;
+      if (Number(id) === partId) return true;
+      const name = p.part?.name || p.name;
+      return name === fallbackName;
+    });
+  const getLvl = (p: PowerPartPayload | undefined) => (p ? getOptionLevel(p, 1) : 0);
+
+  const permanentPart = findPartById(PART_IDS.DURATION_PERMANENT, 'Duration (Permanent)');
+  if (permanentPart) return { type: 'permanent', value: 0 };
+
+  const roundPart = findPartById(PART_IDS.DURATION_ROUND, 'Duration (Round)');
+  if (roundPart) {
+    const lvl = getLvl(roundPart);
+    return { type: 'rounds', value: 2 + lvl };
+  }
+
+  const minutePart = findPartById(PART_IDS.DURATION_MINUTE, 'Duration (Minute)');
+  if (minutePart) {
+    const lvl = getLvl(minutePart);
+    const minutes = [1, 10, 30][lvl] ?? 1;
+    return { type: 'minutes', value: minutes };
+  }
+
+  const hourPart = findPartById(PART_IDS.DURATION_HOUR, 'Duration (Hour)');
+  if (hourPart) {
+    const lvl = getLvl(hourPart);
+    const hours = [1, 6, 12][lvl] ?? 1;
+    return { type: 'hours', value: hours };
+  }
+
+  const dayPart = findPartById(PART_IDS.DURATION_DAYS, 'Duration (Days)');
+  if (dayPart) {
+    const lvl = getLvl(dayPart);
+    const days = [1, 10, 20, 30][lvl] ?? 1;
+    return { type: 'days', value: days };
+  }
+
+  return { type: 'instant', value: 0 };
+}
+
 // =============================================================================
 // Chip Formatting
 // =============================================================================

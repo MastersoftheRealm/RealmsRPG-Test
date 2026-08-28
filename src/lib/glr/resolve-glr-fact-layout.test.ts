@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest';
+import { resolveSurfaceLayout } from './glr-surface-bindings';
 import { resolveGlrFactLayout } from './resolve-glr-fact-layout';
 
 describe('resolveGlrFactLayout (ADR-0016)', () => {
@@ -51,6 +52,12 @@ describe('resolveGlrFactLayout (ADR-0016)', () => {
     const layout = resolveGlrFactLayout({ entityType: 'gear', mode: 'play' });
     expect(layout.columnFacts).toEqual([]);
     expect(layout.chipFacts).toEqual(['category', 'currency', 'rarity', 'trainingPoints']);
+  });
+
+  it('character-sheet gear play uses catalog columns and chips TP only (TASK-873)', () => {
+    const layout = resolveSurfaceLayout('character-sheet-gear');
+    expect(layout.columnFacts).toEqual(['category', 'currency', 'rarity']);
+    expect(layout.chipFacts).toEqual(['trainingPoints']);
   });
 
   it('select gear keeps Category / Currency / Rarity and chips TP (TASK-825)', () => {

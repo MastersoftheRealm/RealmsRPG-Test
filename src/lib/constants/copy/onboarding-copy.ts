@@ -40,7 +40,7 @@ export const ONBOARDING_COPY = {
         id: 'library',
         target: 'sheet-tour-library',
         title: 'Library',
-        body: 'Feats, powers, techniques, and gear. Add from Realms Library or your creations.',
+        body: 'Feats, powers, techniques, Equipment, and Armaments. Add from Realms Library or your creations.',
       },
       {
         id: 'roll',

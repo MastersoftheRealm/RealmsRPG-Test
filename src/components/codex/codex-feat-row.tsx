@@ -3,6 +3,7 @@
 import type { ReactNode } from 'react';
 import { GridListRow } from '@/components/patterns';
 import type { Feat } from '@/hooks';
+import { formatFeatName } from '@/lib/leveled-feats';
 import {
   FEAT_GRID_COLUMNS,
   buildFeatDetailSections,
@@ -13,7 +14,7 @@ export function CodexFeatRow({
   feat,
   skillIdToName,
   familyLevels = [],
-  name = feat.name,
+  name,
   variant = 'codex',
   rightSlot,
   nameChipLabels,
@@ -30,13 +31,15 @@ export function CodexFeatRow({
    */
   nameChipLabels?: string[] | undefined;
 }) {
+  const displayName =
+    name ?? formatFeatName({ id: feat.id, name: feat.name, feat_lvl: feat.feat_lvl });
   const detailSections = buildFeatDetailSections(feat, skillIdToName, familyLevels);
   const nameChips = nameChipLabels?.length ? nameChipLabels.map((label) => ({ label })) : undefined;
 
   return (
     <GridListRow
       id={feat.id}
-      name={name}
+      name={displayName}
       description={feat.description}
       gridColumns={FEAT_GRID_COLUMNS}
       columns={buildFeatGridColumns(feat, variant)}

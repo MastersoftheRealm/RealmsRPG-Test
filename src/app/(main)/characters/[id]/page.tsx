@@ -65,7 +65,7 @@ export default function CharacterSheetPage({ params }: PageParams) {
     isEditMode,
     effectiveEditMode,
     isTempModifierMode,
-    hasUnappliedPoints,
+    sheetEditNotification,
     hasTempModifiers,
     isOwner,
     isInCampaign,
@@ -112,7 +112,7 @@ export default function CharacterSheetPage({ params }: PageParams) {
           <SheetActionToolbar
             isEditMode={isEditMode}
             isTempModifierMode={isTempModifierMode}
-            hasUnappliedPoints={hasUnappliedPoints}
+            sheetEditNotification={sheetEditNotification}
             hasTempModifiers={hasTempModifiers}
             onToggleEditMode={handleToggleEditMode}
             onToggleTempModifierMode={handleToggleTempModifierMode}

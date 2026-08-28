@@ -426,18 +426,6 @@ export function useCreatureCreatorWorkspace() {
     [creature.skills, skillsData],
   );
 
-  const abilityDefenseBonuses = useMemo(
-    () => ({
-      might: creature.abilities.strength,
-      fortitude: creature.abilities.vitality,
-      reflex: creature.abilities.agility,
-      discernment: creature.abilities.acuity,
-      mentalFortitude: creature.abilities.intelligence,
-      resolve: creature.abilities.charisma,
-    }),
-    [creature.abilities],
-  );
-
   const handleSkillAllocationsChange = useCallback(
     (next: Record<string, number>) => {
       setCreature((prev) => ({
@@ -489,7 +477,6 @@ export function useCreatureCreatorWorkspace() {
     armamentSelectableItems,
     codexFeatsById,
     skillAllocations,
-    abilityDefenseBonuses,
     senseDescriptions,
     movementDescriptions,
     getSenseCostLabel,

@@ -22,6 +22,7 @@ import {
 } from '@/components/patterns';
 import { Card } from '@/components/ui';
 import { TabNavigation } from '@/components/ui/tab-navigation';
+import { useGameRules } from '@/hooks';
 import { useCharacterSheet } from './character-sheet-context';
 import type { TabType } from './library-tab-config';
 import { useLibrarySectionRows } from './use-library-section-rows';
@@ -30,6 +31,10 @@ import { LibraryPowersPanel } from './library-powers-panel';
 import { LibraryInventoryPanel } from './library-inventory-panel';
 import { buildLibrarySectionData } from './build-library-section-data';
 import type { LibrarySectionProps } from './library-section-props';
+import {
+  computeSheetPointPools,
+  resolveFeatLibraryEditState,
+} from '@/lib/character/sheet-edit-notification';
 
 export type { LibrarySectionProps, SheetLibraryModel } from './library-section-props';
 
@@ -45,9 +50,11 @@ export function LibrarySection({
     isEditMode,
     libraryModel,
     libraryHandlers,
+    characterSpeciesSkills,
     setAddModalType,
     setFeatModalType,
   } = ctx;
+  const { rules } = useGameRules();
 
   const data = useMemo(() => {
     if (!libraryModel) return null;
@@ -78,13 +85,17 @@ export function LibrarySection({
   }
 
   const showLibraryEditControls = isEditMode && isSectionEditing;
-  const archetypeFeatCount = data?.archetypeFeats?.length ?? 0;
-  const characterFeatCount = data?.characterFeats?.length ?? 0;
-  const archetypeOver =
-    data?.maxArchetypeFeats !== undefined && archetypeFeatCount > data.maxArchetypeFeats;
-  const characterOver =
-    data?.maxCharacterFeats !== undefined && characterFeatCount > data.maxCharacterFeats;
-  const libraryEditState = archetypeOver || characterOver ? 'over-budget' : 'normal';
+
+  const libraryEditState = useMemo(() => {
+    if (!data || !character) return 'normal' as const;
+    const pools = computeSheetPointPools({
+      character,
+      characterSpeciesSkills,
+      featsDb: data.featsDb ?? [],
+      rules,
+    });
+    return resolveFeatLibraryEditState(pools);
+  }, [character, characterSpeciesSkills, data, rules]);
 
   const { resolvedActiveTab, setActiveTab, navigationTabs } = useLibraryTabNavigation({
     isEditMode,
@@ -176,13 +187,17 @@ export function LibrarySection({
     speedDisplayUnit = 'spaces',
     weight = 70,
     height = 170,
+    age = '',
     appearance = '',
+    backstory = '',
     archetypeDesc = '',
     notes = '',
     abilities,
     onWeightChange,
     onHeightChange,
+    onAgeChange,
     onAppearanceChange,
+    onBackstoryChange,
     onArchetypeDescChange,
     onNotesChange,
     namedNotes,
@@ -236,7 +251,9 @@ export function LibrarySection({
                 ? 'Click to close library editing'
                 : libraryEditState === 'over-budget'
                   ? 'Click to edit library (feats over limit)'
-                  : 'Click to edit library (powers, techniques, inventory, feats)'
+                  : libraryEditState === 'has-points'
+                    ? 'Click to edit library — unspent feat slots'
+                    : 'Click to edit library (powers, techniques, inventory, feats)'
             }
           />
         </div>
@@ -255,7 +272,7 @@ export function LibrarySection({
         className="mb-4"
       />
 
-      <div className="min-h-0 flex-1 space-y-2 overflow-y-auto">
+      <div className="min-h-0 flex-1 space-y-2 max-md:overflow-visible md:overflow-y-auto">
         {resolvedActiveTab === 'powers' && (
           <LibraryPowersPanel
             innateEnergy={innateEnergy}
@@ -378,7 +395,9 @@ export function LibrarySection({
             speedDisplayUnit={speedDisplayUnit}
             weight={weight}
             height={height}
+            age={age}
             appearance={appearance}
+            backstory={backstory}
             archetypeDesc={archetypeDesc}
             notes={notes}
             namedNotes={namedNotes}
@@ -386,7 +405,9 @@ export function LibrarySection({
             isEditMode={isEditMode}
             onWeightChange={onWeightChange}
             onHeightChange={onHeightChange}
+            onAgeChange={onAgeChange}
             onAppearanceChange={onAppearanceChange}
+            onBackstoryChange={onBackstoryChange}
             onArchetypeDescChange={onArchetypeDescChange}
             onNotesChange={onNotesChange}
             onAddNote={onAddNote}

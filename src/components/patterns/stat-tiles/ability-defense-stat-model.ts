@@ -58,7 +58,6 @@ export const DEFENSE_INFO: Record<keyof DefenseSkills, { name: string; shortName
   resolve: { name: DEFENSE_DISPLAY_NAMES.resolve, shortName: 'RES' },
 };
 
-// Ability constraints
 export const ABILITY_CONSTRAINTS = {
   /** Level-1 creation minimum; sheet editing can go lower for effects. */
   MIN_ABILITY: -2,
@@ -81,13 +80,9 @@ export function canDecreaseAbility(abilities: Abilities, abilityName: AbilityNam
   const currentValue = abilities[abilityName] ?? 0;
   const newValue = currentValue - 1;
 
-  // Sheet editing: allow down to MIN_ABILITY_SHEET_EDIT so effects can reduce below level-1 minimum (-2)
   if (newValue < ABILITY_CONSTRAINTS.MIN_ABILITY_SHEET_EDIT) return false;
-
-  // When going below creation minimum (-2), only enforce the sheet floor; skip negative-sum rule
   if (newValue < ABILITY_CONSTRAINTS.MIN_ABILITY) return true;
 
-  // Check negative sum constraint (creation rule for values >= -2)
   if (newValue < 0) {
     const currentNegSum = Object.values(abilities)
       .filter((v): v is number => typeof v === 'number' && v < 0)

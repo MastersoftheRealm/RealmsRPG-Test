@@ -553,7 +553,7 @@ export const GUIDED_CREATOR_COPY = {
       weightPlaceholder: (avg?: number) => (avg != null && avg > 0 ? `Avg ${avg} kg` : ''),
       appearanceLabel: 'Appearance (optional)',
       appearancePlaceholder: 'Hair, eyes, distinguishing features…',
-      descriptionLabel: 'Background (optional)',
+      descriptionLabel: 'Backstory (optional)',
       descriptionPlaceholder: 'Personality, history, or what drives them…',
       allocateHint: (remaining: number) =>
         `Allocate ${remaining} more point${remaining === 1 ? '' : 's'} between Health and Energy.`,

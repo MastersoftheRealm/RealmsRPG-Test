@@ -115,7 +115,7 @@ interface ArchetypePathRecommendationsFields {
   recommendUnarmedProwess?: boolean | undefined;
   /** Guided equipment phase 2: skip armor, optional unarmored, or required. */
   armorStep?: 'required' | 'optional' | 'none' | undefined;
-  /** Recommended adventuring gear for the path (guided gear phase L1 + Add all). */
+  /** Recommended Equipment for the path (guided Equipment phase L1 + Add all). */
   sharedEquipment?: PathItemRecommendation[] | undefined;
   removeFeats?: string[] | undefined;
   removePowers?: string[] | undefined;

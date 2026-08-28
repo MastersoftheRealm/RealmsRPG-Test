@@ -5,7 +5,7 @@
 import type { CodexEquipmentItem } from '@/types/codex';
 import type { LibraryItem } from '@/types/library';
 import {
-  calculateItemCosts,
+  resolveItemMarketPricing,
   type ItemPropertyPayload,
   type ItemPropertyTpRow,
 } from '@/lib/calculators/item-calc';
@@ -13,7 +13,6 @@ import type {
   EligibleEquipmentRow,
   EquipmentPhase,
 } from '@/lib/guided-creator/equipment-eligibility';
-import { resolveItemUnitCost } from '@/lib/guided-creator/equipment-currency';
 import { resolveItemTrainingPoints } from '@/lib/guided-creator/loadout-tp';
 import { formatWeaponDamageLine } from '@/lib/guided-creator/equipment-phase-stats';
 import { resolveArmorDamageReduction } from '@/lib/game/resolve-armor-damage-reduction';
@@ -34,17 +33,10 @@ function rowFromOfficial(
   itemProperties: ItemPropertyTpRow[],
 ): EligibleEquipmentRow {
   const props = (item.properties ?? []) as ItemPropertyPayload[];
-  const fromProps = itemProperties.length > 0 ? calculateItemCosts(props, itemProperties) : null;
-  const totalCurrency = fromProps?.totalCurrency ?? item.costs?.totalCurrency ?? 0;
-  const totalIP = fromProps?.totalIP ?? item.costs?.totalIP ?? 0;
-  const currencyCost = resolveItemUnitCost({
-    costs: { totalCurrency, totalIP },
-  });
+  const pricing = resolveItemMarketPricing(props, itemProperties, item.costs);
+  const currencyCost = pricing.currencyCost;
   const tp =
-    fromProps?.totalTP ??
-    item.costs?.totalTP ??
-    resolveItemTrainingPoints(String(item.id), [item], [], itemProperties) ??
-    0;
+    pricing.totalTP || resolveItemTrainingPoints(String(item.id), [item], [], itemProperties) || 0;
   return {
     id: String(item.id),
     name: String(item.name ?? item.id),

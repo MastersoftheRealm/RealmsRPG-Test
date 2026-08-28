@@ -6,10 +6,13 @@
 
 'use client';
 
+import { useMemo } from 'react';
 import { AbilityScoreEditor } from '@/components/creator';
-import { PointStatus } from '@/components/patterns';
+import { InfoTippy, PointStatus } from '@/components/patterns';
 import type { AbilityName, Abilities } from '@/types';
 import { GUIDED_CREATOR_COPY } from '@/lib/constants/site-copy';
+import { getAbilityPointsHelp } from '../../../public/tooltip-text';
+import { useGameRules } from '@/hooks';
 
 const panelCopy = GUIDED_CREATOR_COPY.steps.abilities;
 
@@ -34,6 +37,9 @@ export function GuidedAbilitiesCustomizePanel({
   secondaryAbility,
   className,
 }: GuidedAbilitiesCustomizePanelProps) {
+  const { rules } = useGameRules();
+  const abilityPointsHelp = useMemo(() => getAbilityPointsHelp(1, rules), [rules]);
+
   return (
     <div className={className}>
       <div className="flex justify-center">
@@ -41,6 +47,7 @@ export function GuidedAbilitiesCustomizePanel({
           total={totalPoints}
           spent={spentPoints}
           label={panelCopy.abilityPointsLabel}
+          labelAccessory={<InfoTippy content={abilityPointsHelp} label="Ability point rules" />}
           variant="inline"
         />
       </div>

@@ -16,7 +16,6 @@ import {
   getHighestLinkedAbilityKey,
   getLinkedAbilityKeys,
 } from '@/lib/game/formulas';
-import { abilityDefenseBonusesFromAbilities } from '@/lib/game/calculations';
 import {
   getSkillValueIncreaseCost,
   resolveSkillAllocationRules,
@@ -515,7 +514,7 @@ export function GuidedSkillsPanel({
         onDefenseChange={onDefenseChange}
         level={level}
         remainingPoints={remainingPoints}
-        abilityDefenseBonuses={abilityDefenseBonusesFromAbilities(abilities)}
+        abilities={abilities}
         skillRules={skillRules}
       />
     </div>

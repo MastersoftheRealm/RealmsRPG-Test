@@ -96,9 +96,9 @@ export type PathLevelForm = {
   techniques: string[];
   armaments: string[];
   equipment: string[];
-  /** Level 1 only: armaments with quantity for path recommended gear */
+  /** Level 1 only: armaments with quantity for path recommended Armaments */
   armamentEntries: PathItemRecommendation[];
-  /** Level 1 only: equipment with quantity for path recommended gear */
+  /** Level 1 only: equipment with quantity for path recommended Equipment */
   equipmentEntries: PathItemRecommendation[];
   /** Level 1 only: recommend Unarmed Prowess proficiency in equipment step */
   recommendUnarmedProwess: boolean;

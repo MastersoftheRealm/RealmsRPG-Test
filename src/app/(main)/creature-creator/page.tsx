@@ -78,7 +78,6 @@ function CreatureCreatorContent() {
     armamentSelectableItems,
     codexFeatsById,
     skillAllocations,
-    abilityDefenseBonuses,
     senseDescriptions,
     movementDescriptions,
     getSenseCostLabel,
@@ -433,7 +432,6 @@ function CreatureCreatorContent() {
         stats={stats}
         skillPointsHelp={skillPointsHelp}
         skillAllocations={skillAllocations}
-        abilityDefenseBonuses={abilityDefenseBonuses}
         senseDescriptions={senseDescriptions}
         movementDescriptions={movementDescriptions}
         getSenseCostLabel={getSenseCostLabel}

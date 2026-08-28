@@ -145,7 +145,7 @@ When a step skips a layer (e.g. Path: L1 path cards ↔ L3 custom archetype, no 
 | Presentation | Use when | Default components |
 |--------------|----------|--------------------|
 | **Choice card** | Few curated options; narrative / fantasy-first; user should feel “I pick this hero / weapon” | [`GuidedChoiceCard`](../components/guided-creator/guided-choice-card.tsx) |
-| **GridListRow** | Many options; compare / sort / search; Codex, Library, add modals, catalog Layer 2–3 browse | [`GridListRow`](../components/shared/grid-list-row.tsx) + [`ListHeader`](../components/shared/list-header.tsx) |
+| **GridListRow** | Many options; compare / sort / search; Codex, Library, add modals, catalog Layer 2–3 browse | [`GridListRow`](../components/patterns/list/grid-list-row.tsx) + [`ListHeader`](../components/patterns/list/list-header.tsx) |
 
 **Rule of thumb:** Few choices → cards. Many choices → GridListRow. Understanding a choice → the **same entity depth ladder** in both (below). Do **not** grow cards into dense column grids, and do **not** turn browse lists into marketing cards by default.
 
@@ -188,16 +188,16 @@ Earlier drafts over-emphasized “accept path defaults and barely touch the midd
 |---------------------------------------------|-----------------------------------|
 | Path, Species, Characteristic / Ancestry trait / optional flaw | Recommended ability array (editable; Customize via LayerNav) |
 | Archetype feat(s), Character feat (from path options) | Skill budget + path-suggested skills (user allocates / toggles) |
-| **Weapon** and **Armor** when those equipment phases apply (individual path cards — **no quick kits**) | Gear: optional **Add all recommended**; quantity steppers |
+| **Weapon** and **Armor** when those equipment phases apply (individual path cards — **no quick kits**) | Equipment: optional **Add all recommended**; quantity steppers |
 | Powers / Techniques: confirm or toggle path recommendations (prefer visible cards over silent auto-all) | Path-prevalidated TP / currency (hide anxiety; never strand L1) |
 
-**Forbidden drift:** Growing Layer 1 lists until they are semi-full catalogs; reintroducing weapon/armor “quick kit” one-click loadouts; silent auto-equip of identity gear.
+**Forbidden drift:** Growing Layer 1 lists until they are semi-full catalogs; reintroducing weapon/armor “quick kit” one-click loadouts; silent auto-equip of identity Equipment.
 
 #### Shared layer chrome
 
-[`GuidedChoiceShell`](../components/shared/guided-choice/guided-choice-shell.tsx) + [`GuidedLayerNav`](../components/shared/guided-choice/guided-layer-nav.tsx) own expand/collapse for Ladder B. **Placement:** below step content (not the sticky footer); one action → bottom left; two+ actions → shallower left, deeper right (outline collapse and/or hatch expand; optional second hatch for a sibling Layer 2). Character-creator steps use `GuidedStepLayout` + `GuidedLayerNav` (same labels). Absorb remaining Custom/Advanced catalog behaviors into those layers rather than inventing per-step toggles or a second wizard.
+[`GuidedChoiceShell`](../components/patterns/guided-choice/guided-choice-shell.tsx) + [`GuidedLayerNav`](../components/patterns/guided-choice/guided-layer-nav.tsx) own expand/collapse for Ladder B. **Placement:** below step content (not the sticky footer); one action → bottom left; two+ actions → shallower left, deeper right (outline collapse and/or hatch expand; optional second hatch for a sibling Layer 2). Character-creator steps use `GuidedStepLayout` + `GuidedLayerNav` (same labels). Absorb remaining Custom/Advanced catalog behaviors into those layers rather than inventing per-step toggles or a second wizard.
 
-Legacy Advanced surfaces still being absorbed into the cohesive creator: [`feats-step.tsx`](../components/character-creator/steps/feats-step.tsx), [`equipment-step.tsx`](../components/character-creator/steps/equipment-step.tsx), [`powers-step.tsx`](../components/character-creator/steps/powers-step.tsx), [`archetype-step.tsx`](../components/character-creator/steps/archetype-step.tsx) forge face, [`path-help-card.tsx`](../components/shared/path-help-card.tsx).
+Legacy Advanced surfaces still being absorbed into the cohesive creator: [`feats-step.tsx`](../components/character-creator/steps/feats-step.tsx), [`equipment-step.tsx`](../components/character-creator/steps/equipment-step.tsx), [`powers-step.tsx`](../components/character-creator/steps/powers-step.tsx), [`archetype-step.tsx`](../components/character-creator/steps/archetype-step.tsx) forge face, [`path-help-card.tsx`](../components/patterns/help/path-help-card.tsx).
 
 ### Current state: most creators are Layer 3 today
 
@@ -316,7 +316,7 @@ flowchart LR
 
 Decisions baked into this model:
 
-- **Path frames the build; the player still chooses.** A chosen path supplies recommended abilities, skills, archetype feat options (1–3, usually combat), a character feat option set (usually non-combat), **curated weapon / armor / gear recommendation pools**, and recommended powers/techniques. Layer 1 keeps those pools small and explained — it does **not** one-click the whole character. See §3.1 Layer 1 choice principle.
+- **Path frames the build; the player still chooses.** A chosen path supplies recommended abilities, skills, archetype feat options (1–3, usually combat), a character feat option set (usually non-combat), **curated weapon / armor / Equipment recommendation pools**, and recommended powers/techniques. Layer 1 keeps those pools small and explained — it does **not** one-click the whole character. See §3.1 Layer 1 choice principle.
 - **Abilities = who you are** (natural aptitude; e.g. high INT → naturally better at History); **Skills = what you can do** (learned capabilities). They are distinct themes, so abilities is its own chapter; skills sits in the "build your archetype" chapter where it belongs mechanically.
 - **Species are path-ambiguous.** There are **no recommended species per path**. Instead, a **starter-species** flag curates a small Layer-1 set; "show all species" reveals the rest.
 - **Shared card format** across Path, Species, ancestry picks, feats, and equipment (and reused elsewhere): short eye-catcher description on the card, full description behind inline **See more…**, key facts as labeled chips where needed, and **hero art** where the entity is a visual selling point (species first). Consistency between steps is a goal — see §3.1.
@@ -340,7 +340,7 @@ Admin tooling (later phase): replace the archetype edit **modal** ([`AdminArchet
 
 #### 5.0.3 Choice-card art (image-forward selling) — Realms Image Library (ADR-0003)
 
-**Species art is a primary selling point**, not decoration. The guided creator's [`GuidedChoiceCard`](../components/guided-creator/guided-choice-card.tsx) must treat illustration as the hero of the card wherever it helps users imagine their character or gear.
+**Species art is a primary selling point**, not decoration. The guided creator's [`GuidedChoiceCard`](../components/guided-creator/guided-choice-card.tsx) must treat illustration as the hero of the card wherever it helps users imagine their character or Loadout.
 
 **One shared bank (not three pipelines)**
 
@@ -348,7 +348,7 @@ All card/list art comes from the **Realms Image Library**: one master Storage ob
 
 | Concern | Who | What |
 |---------|-----|------|
-| **Bank write** | **Admin only** | Upload/replace/rename/retag via `/admin/images`, or admin publish-to-Realms / official editors (auto name = entity name, auto tag = entity category). Reuse [`ImageUploadModal`](../components/shared/image-upload-modal.tsx) (5MB, jpeg/png/gif/webp, square crop). |
+| **Bank write** | **Admin only** | Upload/replace/rename/retag via `/admin/images`, or admin publish-to-Realms / official editors (auto name = entity name, auto tag = entity category). Reuse [`ImageUploadModal`](../components/patterns/chrome/image-upload-modal.tsx) (5MB, jpeg/png/gif/webp, square crop). |
 | **Pick / attach** | **Guests + all signed-in** | Browse bank filtered by category tags; selection sets `image_id` on the target. Non-admins do not upload into the bank. |
 | **Portrait / profile** | Guests + signed-in | May pick bank images tagged **species** or **creature** (TASK-499). Custom personal photo upload (`portraits`, `profile-pictures`) remains separate. |
 
@@ -363,19 +363,19 @@ All card/list art comes from the **Realms Image Library**: one master Storage ob
 | **Species** | Yes | **High** | `image_id` (+ optional `image_url` cache) |
 | **Creatures** | Yes | **High** | same |
 | **Weapons / armor / shields** | Yes | Some / low | same (`official_items` / `user_items` by type) |
-| **Equipment** (simple gear) | Yes | Bank + entity ref | first-class category; `codex_equipment` / equipment-type items get `image_id` |
+| **Equipment** | Yes | Bank + entity ref | first-class category; `codex_equipment` / equipment-type items get `image_id` |
 | **Powers / techniques** | Yes | **Low** — standouts | same |
 | **Empowered techniques** | Yes | via power/technique tags | `image_id` column; no separate category tag |
 | Skills, feats, traits, archetypes, parts, properties, creature feats | **No** | — | no art columns |
 
 **Library copy parity:** Official/codex → personal library copies **`image_id`** (and cache URL if present) so editors share the same shape. Users change art by picking another bank image — not by uploading a private copy into the shared bank.
 
-**Authoring (TASK-496 / TASK-498):** Codex species/equipment and admin creator publish flows use `RealmsImageField` → `RealmsImagePicker`, storing `image_id` plus the URL cache. Legacy entity-tied Storage objects were cataloged into the bank (TASK-498); the old `/api/upload/codex-art` path is removed. List thumbs use [`ListRowThumbnail`](../components/shared/list-row-thumbnail.tsx) / [`ExpandableImage`](../components/shared/expandable-image.tsx).
+**Authoring (TASK-496 / TASK-498):** Codex species/equipment and admin creator publish flows use `RealmsImageField` → `RealmsImagePicker`, storing `image_id` plus the URL cache. Legacy entity-tied Storage objects were cataloged into the bank (TASK-498); the old `/api/upload/codex-art` path is removed. List thumbs use [`ListRowThumbnail`](../components/patterns/list/list-row-thumbnail.tsx) / [`ExpandableImage`](../components/patterns/help/expandable-image.tsx).
 
 | Surface | Layout | Art role |
 |---------|--------|----------|
 | **Species** | Featured inline art (~80px) beside title + copy | Primary selling point without dominating the card |
-| **Equipment (weapons / armor / gear)** | Featured inline art | Visual cue at card glance, same scale as species |
+| **Armaments / Equipment** | Featured inline art | Visual cue at card glance, same scale as species |
 | **Powers / techniques** | Featured inline art (when pickers exist) | Ability identity at a glance |
 | **Paths / feats / ancestry** | No paired bank art | — |
 
@@ -492,7 +492,7 @@ The user assigns abilities, understanding what each one does and which their pat
 | Path guidance | Primary and secondary abilities auto-highlighted; an optional one-click suggested array in Layer 1 |
 | Layer 2 / 3 | Free point-buy as today via [`ability-score-editor.tsx`](../components/creator/ability-score-editor.tsx) |
 
-**Shipped (guided):** Recommended ability array as soft default; **Customize scores** via `GuidedLayerNav` (§3.1 soft automation OK here). **Advanced gap:** [`PathHelpCard`](../components/shared/path-help-card.tsx) text nudge only.
+**Shipped (guided):** Recommended ability array as soft default; **Customize scores** via `GuidedLayerNav` (§3.1 soft automation OK here). **Advanced gap:** [`PathHelpCard`](../components/patterns/help/path-help-card.tsx) text nudge only.
 
 ### 5.5 Skills Selection
 
@@ -505,7 +505,7 @@ Skills must be structured to avoid overwhelm.
 | Path copy | Role framing, e.g. "Intimidate and Athletics are a warrior's bread and butter" |
 | Easy add and remove | Species skills are locked; path skills are toggleable |
 
-**Current gap:** The full [`skills-allocation-page.tsx`](../components/shared/skills-allocation-page.tsx) shows sub-skills and defense allocation on one screen.
+**Current gap:** The full [`skills-allocation-page.tsx`](../components/patterns/list/skills-allocation-page.tsx) shows sub-skills and defense allocation on one screen.
 
 ### 5.6 Feat Selection
 
@@ -585,7 +585,7 @@ The final step delivers a fulfilling character reveal, then the identity details
 
 ### 5.11 Standalone creators (power, technique, item) — DECIDED 2026-07-01
 
-Standalone creators are **conversion surfaces** (landing secondary CTAs) and **homebrew tools** for players who want custom powers and gear. They must follow the same philosophy as character creation: **build Layer 1 first on a parallel route, keep the existing calculator/save stack, validate with owner feedback, then evolve the current full builder toward Layer 2 face value and Layer 3 on deliberate expand.**
+Standalone creators are **conversion surfaces** (landing secondary CTAs) and **homebrew tools** for players who want custom Powers and Armaments. They must follow the same philosophy as character creation: **build Layer 1 first on a parallel route, keep the existing calculator/save stack, validate with owner feedback, then evolve the current full builder toward Layer 2 face value and Layer 3 on deliberate expand.**
 
 **Owner review (2026-07-01):** Implementation is iterative and requires owner feedback at each milestone. Do not treat this section as a frozen spec until the power-creator guided prototype is playtested.
 
@@ -647,7 +647,7 @@ flowchart LR
 | Step | User question | Layer 1 behavior |
 |------|---------------|------------------|
 | **Audience** | Who is this for? | Optional: pick a **saved character** (level, archetype) **or** generic **Power** vs **Powered-Martial** + level. Enables innate threshold and TP context. `InfoTippy` on archetype terms. |
-| **Innate** | Innate or standard? | Toggle with rules tooltips. If innate: filter templates and validate action type (Basic/Reaction only), no healing/energy-gain parts, energy ≤ **Innate Threshold** for level/archetype ([`GAME_RULES.md`](./GAME_RULES.md): L1 threshold **8** Power, **6** Powered-Martial). |
+| **Innate** | Innate or standard? | Toggle with rules tooltips. If innate: filter templates and validate action type (Basic/Basic Reaction only), duration Instant or ≤1 minute, no Adaptation-category parts, no healing/energy-gain parts, energy ≤ **Innate Threshold** for level/archetype ([`GAME_RULES.md`](./GAME_RULES.md): L1 threshold **8** Power, **6** Powered-Martial). |
 | **Category** | What kind of power? | `GuidedChoiceCard` grid mapped to part categories — not raw part names. |
 | **Delivery** | How does it reach targets? | Melee / ranged / area cards; hides steppers and mechanic jargon. |
 | **Damage** | Does it deal damage? | Yes/no → simple presets (light / moderate / heavy) before die math. |
@@ -1061,7 +1061,7 @@ Everything else stays on current UI until each phase validates the pattern.
 - **Custom archetype (Path L3)** — pick archetype type + power/martial abilities without a curated path; always reachable from Foundation Path (and the Custom chooser entry). Legacy name in Advanced: “Forge Your Own.”
 - **Cohesive character creator** — single shell at `/characters/new/guided` with per-step L1/L2/L3 (partial layers OK). Legacy Custom/Advanced at `/characters/new/advanced` is transitional.
 - **Guided power creator route** — future L1 flow at `/power-creator/guided` when built (standalone creators still mostly L3 today).
-- **Innate Power** — a power whose Energy is at or below your Innate Threshold; usable without spending pool Energy when qualified (Basic/Reaction only; no healing/energy-gain parts).
+- **Innate Power** — a power whose Energy is at or below your Innate Threshold; usable without spending pool Energy when qualified (Basic/Basic Reaction only; duration Instant or ≤1 minute; no healing/energy-gain or Adaptation-category parts).
 - **Innate Threshold** — max Energy for an innate power; level 1: 8 (Power), 6 (Powered-Martial); +1 every 3 levels from 4.
 - **Archetype feat** — a feat oriented toward combat and high-stakes situations.
 - **Character feat** — a feat oriented toward identity and build expression.

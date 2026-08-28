@@ -24,8 +24,8 @@ import {
 
 /**
  * DESIGN_INTENT: Add-modal exclusion set is type-scoped only.
- * Cross-table numeric ids (weapon id "1" vs codex gear id "1") must not hide rows.
- * Equipment is stackable — return empty so owned gear stays selectable (quantity merges).
+ * Cross-table numeric ids (weapon id "1" vs codex Equipment id "1") must not hide rows.
+ * Equipment is stackable — return empty so owned Equipment stays selectable (quantity merges).
  */
 function existingIdsForAddModal(
   character: Character | null,
@@ -55,7 +55,7 @@ function existingIdsForAddModal(
       ((character.equipment?.shields as Item[]) || []).forEach((s) => add(s.id));
       break;
     case 'equipment':
-      // Stackable — do not exclude owned gear (quantity merges on add).
+      // Stackable — do not exclude owned Equipment (quantity merges on add).
       break;
   }
   return ids;

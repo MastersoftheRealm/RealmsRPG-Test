@@ -13,7 +13,6 @@ import {
 } from './glr-fact-catalog';
 import {
   GLR_DENSITY,
-  isFactDemoted,
   isFactOmitted,
   type GlrDensityMode,
   type GlrLayoutFlags,
@@ -21,10 +20,17 @@ import {
 
 export type GlrFactChannel = 'column' | 'chip' | 'rightSlot';
 
+/** Per-surface override of play/select density (e.g. sheet Equipment catalog columns — TASK-873). */
+export interface GlrLayoutOverrides {
+  columnBudget?: number | undefined;
+  demoteFacts?: readonly GlrFactId[] | undefined;
+}
+
 export interface GlrResolveInput {
   entityType: GlrEntityType;
   mode: GlrDensityMode;
   flags?: GlrLayoutFlags | undefined;
+  layoutOverrides?: GlrLayoutOverrides | undefined;
 }
 
 export interface GlrResolvedLayout {
@@ -118,10 +124,20 @@ function compareInclusion(
   return orderInBandFor(a, entityType, mode) - orderInBandFor(b, entityType, mode);
 }
 
+function isFactDemotedForInput(
+  entityType: GlrEntityType,
+  mode: GlrDensityMode,
+  factId: GlrFactId,
+  layoutOverrides?: GlrLayoutOverrides,
+): boolean {
+  const demoted = layoutOverrides?.demoteFacts ?? GLR_DENSITY[mode].demoteFacts?.[entityType];
+  return demoted?.includes(factId) ?? false;
+}
+
 function resolveEntityLayout(input: GlrResolveInput): GlrResolvedLayout {
   const flags = input.flags ?? {};
-  const { entityType, mode } = input;
-  const budget = GLR_DENSITY[mode].columnBudget[entityType] ?? 0;
+  const { entityType, mode, layoutOverrides } = input;
+  const budget = layoutOverrides?.columnBudget ?? GLR_DENSITY[mode].columnBudget[entityType] ?? 0;
 
   const applicable = factsForEntity(entityType)
     .map((f) => f.id)
@@ -129,7 +145,7 @@ function resolveEntityLayout(input: GlrResolveInput): GlrResolvedLayout {
 
   const rightSlotFacts = applicable.filter((id) => rightSlotFact(id, entityType, mode, flags));
   const pool = applicable.filter((id) => !rightSlotFacts.includes(id));
-  const demoted = pool.filter((id) => isFactDemoted(entityType, mode, id));
+  const demoted = pool.filter((id) => isFactDemotedForInput(entityType, mode, id, layoutOverrides));
   const columnPool = pool.filter((id) => !demoted.includes(id));
   columnPool.sort((a, b) => compareInclusion(a, b, entityType, mode));
 

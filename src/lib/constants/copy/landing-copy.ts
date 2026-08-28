@@ -22,12 +22,12 @@ export const LANDING_COPY = {
     items: [
       {
         title: 'Limitless Character Creation',
-        body: 'Bring any dream characters to life. Follow a guided path or forge your own from species, feats, powers, and gear.',
+        body: 'Bring any dream characters to life. Follow a guided path or forge your own from species, Feats, Powers, and Loadout.',
         href: '/characters/new',
         linkLabel: 'Start character creation',
       },
       {
-        title: 'Custom Powers & Gear',
+        title: 'Custom Powers & Armaments',
         body: 'Design powers from infinite combinations of parts and effects, or craft weapons and armor to perfectly fit your build.',
         href: '/power-creator',
         linkLabel: 'Create custom powers',

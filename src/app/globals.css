@@ -980,20 +980,26 @@
   }
 
   /* C1 overflow chrome (TASK-840): fade + chevrons on the wrapper, not in trailing.
-     Fade is chevron width + 8px so Dense/Standard hits do not overlap unfaded tabs. */
-  .tab-nav-scroll {
+     Fade is chevron width + 8px so Dense/Standard hits do not overlap unfaded tabs.
+     Sheet carousel reuses the same fade metric/mask (TASK-868) — no second helper. */
+  .tab-nav-scroll,
+  [data-sheet-mobile-carousel] {
     --tab-nav-overflow-fade: 2.5rem;
+  }
+
+  .tab-nav-scroll {
     @apply relative min-w-0;
   }
 
   .tab-nav-list {
-    @apply m-0 flex min-w-0 list-none gap-1 overflow-x-auto p-0;
+    @apply m-0 flex min-w-0 list-none gap-1 overflow-x-auto overflow-y-hidden p-0;
     scrollbar-width: thin;
     -webkit-overflow-scrolling: touch;
     scroll-padding-inline: var(--tab-nav-overflow-fade);
   }
 
-  .tab-nav-list[data-overflow-end='true'] {
+  .tab-nav-list[data-overflow-end='true'],
+  [data-sheet-mobile-carousel][data-overflow-end='true'] {
     mask-image: linear-gradient(
       to right,
       black 0,
@@ -1002,7 +1008,8 @@
     );
   }
 
-  .tab-nav-list[data-overflow-start='true'] {
+  .tab-nav-list[data-overflow-start='true'],
+  [data-sheet-mobile-carousel][data-overflow-start='true'] {
     mask-image: linear-gradient(
       to right,
       transparent 0,
@@ -1011,7 +1018,8 @@
     );
   }
 
-  .tab-nav-list[data-overflow-start='true'][data-overflow-end='true'] {
+  .tab-nav-list[data-overflow-start='true'][data-overflow-end='true'],
+  [data-sheet-mobile-carousel][data-overflow-start='true'][data-overflow-end='true'] {
     mask-image: linear-gradient(
       to right,
       transparent 0,
@@ -1021,12 +1029,19 @@
     );
   }
 
+  @media (min-width: 768px) {
+    [data-sheet-mobile-carousel] {
+      mask-image: none;
+    }
+  }
+
   .tab-nav-scroll-btn {
     @apply absolute top-0 bottom-0 z-10 flex w-8 items-center justify-center text-text-muted hover:text-text-primary focus-visible:ring-2 focus-visible:ring-primary-outline-border focus-visible:outline-none;
   }
 
   @media (pointer: coarse) {
-    .tab-nav-scroll {
+    .tab-nav-scroll,
+    [data-sheet-mobile-carousel] {
       --tab-nav-overflow-fade: 3.25rem;
     }
 
@@ -1144,26 +1159,26 @@
      RANGE SLIDER
      --------------------------------------------------------------------------- */
   .range-slider {
-    @apply h-2 w-full cursor-pointer appearance-none rounded-full;
+    @apply h-2 w-full cursor-pointer appearance-none bg-transparent;
   }
 
+  /* Thumb centered on the 8px track: (8 − 20) / 2 = −6px (TASK-891). */
   .range-slider::-webkit-slider-thumb {
-    @apply h-6 w-6 cursor-pointer appearance-none rounded-full border-2 border-primary-500 bg-white shadow-md;
+    @apply h-5 w-5 cursor-pointer appearance-none rounded-full border-2 border-primary-outline-border bg-surface shadow-md;
     -webkit-appearance: none;
-    margin-top: -2px;
+    margin-top: -0.375rem;
   }
 
   .range-slider::-moz-range-thumb {
-    @apply h-6 w-6 cursor-pointer rounded-full border-2 border-primary-500 bg-white shadow-md;
-    border: none;
+    @apply h-5 w-5 cursor-pointer rounded-full border-2 border-primary-outline-border bg-surface shadow-md;
   }
 
   .range-slider::-webkit-slider-runnable-track {
-    @apply h-2 rounded-full;
+    @apply h-2 rounded-full bg-transparent;
   }
 
   .range-slider::-moz-range-track {
-    @apply h-2 rounded-full;
+    @apply h-2 rounded-full bg-transparent;
   }
 
   /* ---------------------------------------------------------------------------

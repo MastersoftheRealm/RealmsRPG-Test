@@ -35,7 +35,7 @@ The path recommendation arrays in `path_data` stay the **single source of truth*
    **player-visible paths only** (`listPlayerVisiblePaths`).
 3. **`hooks/use-path-recommendation-index.ts`** memoizes that index from `useCodexArchetypes`
    (query key `['codex']`) so no surface adds a fetch, store, or persisted copy.
-4. **`components/shared/filters/archetype-path-filter.tsx`** is the one control, composing the
+4. **`components/patterns/filters/archetype-path-filter.tsx`** is the one control, composing the
    existing `ChipSelect` (extended with optional per-option `group` → `<optgroup>` and
    `labelAccessory`). No second multi-select and no any/all toggle: union only.
 5. Entity list filters consume the resolved id set as an option (`filterFeats(..., { pathRecommendedIds })`),

@@ -13,14 +13,15 @@ import {
   calculateAbilityPoints,
   calculateAbilityScoreCost,
   calculateArchetypeProgression,
-  calculateHealthEnergyPool,
-  calculateMaxArchetypeFeats,
-  calculateMaxCharacterFeats,
   calculateProficiency,
   calculateSkillPointsForEntity,
-  calculateXpToLevelUp,
   resolveParentSkillNameForSubSkill,
 } from '@/lib/game/formulas';
+import {
+  buildSheetEditNotification,
+  computeSheetPointPools,
+  type SheetEditNotification,
+} from '@/lib/character/sheet-edit-notification';
 import { getArchetypeCodexLookupId, mergeArchetypeFromCodex } from '@/lib/game/archetype-display';
 import {
   calculateCharacterSkillPointsSpent,
@@ -279,80 +280,18 @@ export function useCharacterSheetDerived({
     );
   }, [character]);
 
-  const hasUnappliedPoints = useMemo(() => {
-    if (!character) return false;
+  const sheetEditNotification = useMemo((): SheetEditNotification => {
+    if (!character) {
+      return { show: false, severity: 'none', title: '' };
+    }
 
-    const level = character.level || 1;
-    const xp = character.experience ?? 0;
-    const canLevelUp = xp >= calculateXpToLevelUp(level);
-
-    const totalAbilityPoints = calculateAbilityPoints(level, false, rules);
-    const currentAbilities = character.abilities || {};
-    const spentAbilityPoints = Object.values(currentAbilities).reduce(
-      (sum, val) => sum + calculateAbilityScoreCost(val || 0, rules),
-      0,
-    );
-    const abilityPointsRemaining = totalAbilityPoints - spentAbilityPoints;
-
-    const totalHEPoints = calculateHealthEnergyPool(level, 'PLAYER', false, rules);
-    const spentHEPoints = (character.healthPoints || 0) + (character.energyPoints || 0);
-    const hePointsRemaining = totalHEPoints - spentHEPoints;
-
-    const totalSkillPoints = calculateSkillPointsForEntity(level, 'character', rules);
-    const skillsList = (character.skills || []) as Array<{
-      skill_val?: number | undefined;
-      prof?: boolean | undefined;
-      baseSkill?: string | undefined;
-      baseSkillId?: number | undefined;
-      selectedBaseSkillId?: string | undefined;
-      name?: string | undefined;
-      id?: string | undefined;
-    }>;
-    const speciesSkillIdSet = buildSpeciesSkillIdSet(
-      characterSpeciesSkills.filter((id) => id !== '0'),
-      skillsList,
-    );
-    const defValsForSpend =
-      character.defenseVals || character.defenseSkills || DEFAULT_DEFENSE_SKILLS;
-    const spentSkillPoints = calculateCharacterSkillPointsSpent(
-      skillsList,
-      speciesSkillIdSet,
-      defValsForSpend,
+    const pools = computeSheetPointPools({
+      character,
+      characterSpeciesSkills,
+      featsDb: featsDb || [],
       rules,
-    );
-    const skillPointsRemaining = totalSkillPoints - spentSkillPoints;
-
-    const archetypeType = character.archetype?.type || 'power';
-    const archetypeFeatSlots = calculateMaxArchetypeFeats(
-      level,
-      archetypeType,
-      undefined,
-      character.archetypeChoices,
-    );
-    const characterFeatSlots = calculateMaxCharacterFeats(level);
-    const featLevelById = new Map<string, number>();
-    (featsDb || []).forEach((f) => {
-      const feat = f as CodexFeat & { feat_lvl?: number | undefined };
-      const lvl = feat.feat_lvl != null && feat.feat_lvl > 0 ? feat.feat_lvl : 1;
-      featLevelById.set(String(feat.id), lvl);
     });
-    const usedArchetypeFeats = (character.archetypeFeats || []).reduce((sum, feat) => {
-      return sum + (featLevelById.get(String(feat.id)) ?? 1);
-    }, 0);
-    const usedCharacterFeats = (character.feats || []).reduce((sum, feat) => {
-      return sum + (featLevelById.get(String(feat.id)) ?? 1);
-    }, 0);
-    const archetypeFeatsRemaining = archetypeFeatSlots - usedArchetypeFeats;
-    const characterFeatsRemaining = characterFeatSlots - usedCharacterFeats;
-
-    return (
-      canLevelUp ||
-      abilityPointsRemaining > 0 ||
-      hePointsRemaining > 0 ||
-      skillPointsRemaining > 0 ||
-      archetypeFeatsRemaining > 0 ||
-      characterFeatsRemaining > 0
-    );
+    return buildSheetEditNotification(pools);
   }, [character, characterSpeciesSkills, featsDb, rules]);
 
   const { archetypeFeatsForDisplay, characterFeatsForDisplay, stateFeatsList } = useMemo(() => {
@@ -466,7 +405,7 @@ export function useCharacterSheetDerived({
     calculatedStats,
     pointBudgets,
     archetypeProgression,
-    hasUnappliedPoints,
+    sheetEditNotification,
     skills,
     archetypeFeatsForDisplay,
     characterFeatsForDisplay,

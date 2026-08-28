@@ -29,10 +29,73 @@ export function getFeatFamilyId(feat: LeveledFeatLike): string {
   return feat.base_feat_id ? String(feat.base_feat_id) : String(feat.id);
 }
 
+/** Roman suffixes on feat names (longest first for parsing). Matches codex migration pattern. */
+const FEAT_ROMAN_SUFFIXES = ['XI', 'X', 'IX', 'VIII', 'VII', 'VI', 'V', 'IV', 'III', 'II'] as const;
+
+const ROMAN_TO_LEVEL: Record<string, number> = {
+  II: 2,
+  III: 3,
+  IV: 4,
+  V: 5,
+  VI: 6,
+  VII: 7,
+  VIII: 8,
+  IX: 9,
+  X: 10,
+  XI: 11,
+};
+
+function romanSuffixToLevel(suffix: string): number | null {
+  return ROMAN_TO_LEVEL[suffix.toUpperCase()] ?? null;
+}
+
+export function levelToRomanNumeral(level: number): string {
+  if (level <= 1) return '';
+  const pairs: Array<[number, string]> = [
+    [10, 'X'],
+    [9, 'IX'],
+    [5, 'V'],
+    [4, 'IV'],
+    [1, 'I'],
+  ];
+  let remaining = level;
+  let result = '';
+  for (const [value, numeral] of pairs) {
+    while (remaining >= value) {
+      result += numeral;
+      remaining -= value;
+    }
+  }
+  return result;
+}
+
+export function parseFeatNameRomanSuffix(name: string): {
+  baseName: string;
+  romanSuffix: string | null;
+  levelFromSuffix: number | null;
+} {
+  for (const suffix of FEAT_ROMAN_SUFFIXES) {
+    const pattern = new RegExp(`\\s+${suffix}$`, 'i');
+    if (pattern.test(name)) {
+      return {
+        baseName: name.replace(pattern, '').trim(),
+        romanSuffix: suffix,
+        levelFromSuffix: romanSuffixToLevel(suffix),
+      };
+    }
+  }
+  return { baseName: name, romanSuffix: null, levelFromSuffix: null };
+}
+
 export function formatFeatName(feat: LeveledFeatLike): string {
-  const base = feat.name ?? '';
+  const storedName = feat.name ?? '';
   const lvl = getFeatLevel(feat);
-  return lvl > 1 ? `${base} (Level ${lvl})` : base;
+  if (lvl <= 1) return storedName;
+
+  const { baseName, levelFromSuffix } = parseFeatNameRomanSuffix(storedName);
+  if (levelFromSuffix === lvl) return storedName;
+
+  return `${baseName} ${levelToRomanNumeral(lvl)}`;
 }
 
 export function groupFeatFamilies<T extends LeveledFeatLike>(feats: T[]): FeatFamily<T>[] {

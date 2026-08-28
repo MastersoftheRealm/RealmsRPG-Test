@@ -2,6 +2,8 @@ export {
   GLR_SURFACE_BINDINGS,
   getGlrSurfaceBinding,
   resolveSurfaceLayout,
+  SHEET_GEAR_PLAY_LAYOUT_OVERRIDES,
+  type GlrLayoutOverrides,
   type GlrSurfaceBinding,
   type GlrSurfaceId,
 } from './glr-surface-bindings';

@@ -108,9 +108,9 @@ export function FeatsTraitsListSection({
                   (feat.maxUses ?? 0) > 0
                     ? { current: feat.currentUses ?? feat.maxUses ?? 0, max: feat.maxUses ?? 0 }
                     : undefined;
-                const usesDisplay = uses ? `${uses.current}/${uses.max}` : '-';
+                const usesDisplay = uses ? `${uses.current}/${uses.max}` : '';
                 const recoveryDisplay = formatRecoveryAbbrev(feat.recovery);
-                const noUsesOrRecovery = !uses && recoveryDisplay === '-';
+                const noUsesOrRecovery = !uses && !recoveryDisplay;
                 return (
                   <GridListRow
                     key={String(feat.id ?? `${feat.name}-${index}`)}
