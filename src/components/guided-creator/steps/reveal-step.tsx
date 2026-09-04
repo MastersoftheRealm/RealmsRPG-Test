@@ -7,6 +7,7 @@
 import { useMemo, useRef, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { Sparkles } from 'lucide-react';
+import { useQueryClient } from '@tanstack/react-query';
 import { Button, Input, Textarea, useToast } from '@/components/ui';
 import {
   useAuth,
@@ -22,30 +23,44 @@ import {
   usePowerParts,
   useTechniqueParts,
   useItemProperties,
+  invalidateCharacterLists,
 } from '@/hooks';
 import { LoginPromptModal } from '@/components/patterns';
 import { PlayTogetherModal } from '@/components/onboarding';
-import { GUIDED_SUBSTEP_ORDER, useGuidedCreatorStore } from '@/stores/guided-creator-store';
-import { isGuidedDraftSaveable } from '@/lib/guided-creator/substep-satisfaction';
+import {
+  GUIDED_CHAPTERS,
+  GUIDED_SUBSTEP_ORDER,
+  useGuidedCreatorStore,
+  type GuidedSubStep,
+} from '@/stores/guided-creator-store';
+import { isGuidedSubStepSatisfied } from '@/lib/guided-creator/substep-satisfaction';
+import {
+  listGuidedRevealBlockers,
+  type GuidedRevealBlocker,
+} from '@/lib/guided-creator/reveal-blockers';
+import { calculateGuidedSkillPointBudget } from '@/lib/guided-creator/skill-reconcile';
+import {
+  calculateAbilityPoints,
+  calculateAbilityScoreCost,
+  calculateHealthEnergyPool,
+} from '@/lib/game/formulas';
+import { averageMixedPhysical } from '@/lib/ancestry/ancestry-selection';
+import type { Character } from '@/types';
 import { useGuidedPathData } from '../use-guided-path-data';
 import { GuidedStepLayout } from '../guided-step-layout';
 import { GuidedRevealSummary } from '../guided-reveal-summary';
 import { GuidedPortraitUpload } from '../guided-portrait-upload';
 import { GuidedHealthEnergySection } from '../guided-health-energy-section';
 import { GuidedSectionTitle } from '../guided-section-title';
+import { GuidedRevealReviewModal } from '../guided-reveal-review-modal';
 import { buildGuidedCharacterPayload } from '@/lib/guided-creator/build-character';
 import { mergeLibraryBySource } from '@/lib/library/source-scope';
 import { resolveGuidedSpeciesContext } from '@/lib/guided-creator/guided-species-resolve';
-import { averageMixedPhysical } from '@/lib/ancestry/ancestry-selection';
 import { cleanForSave } from '@/lib/data-enrichment';
-import { createCharacter, saveCharacter } from '@/services/character-service';
+import { persistFinishedCharacter } from '@/lib/character/persist-finished-character';
 import { formatCharacterCreateFailureMessage, resolveClientRequestId } from '@/lib/character-save';
-import { PORTRAIT_SAVE_UPLOAD_FALLBACK, uploadCharacterPortraitFromDataUrl } from '@/lib/portrait';
-import { getErrorMessage } from '@/lib/api-client';
 import { sanitizeRedirectPath } from '@/lib/safe-redirect';
-import type { Character } from '@/types';
 import { GUIDED_CREATOR_COPY } from '@/lib/constants/site-copy';
-import { calculateHealthEnergyPool } from '@/lib/game/formulas';
 import { navigateThenResetCreator, scheduleCreatorReset } from '@/lib/creator-save-handoff';
 import {
   characterSheetUrlWithTourOffer,
@@ -64,10 +79,12 @@ function speciesAvgNumber(value: unknown): number | undefined {
 export function RevealStep() {
   const router = useRouter();
   const searchParams = useSearchParams();
+  const queryClient = useQueryClient();
   const { user } = useAuth();
   const { showToast } = useToast();
   const { rules } = useGameRules();
-  const { draft, updateDraft, resetCreator } = useGuidedCreatorStore();
+  const { draft, updateDraft, resetCreator, setSubStep, canNavigateToSubStep } =
+    useGuidedCreatorStore();
   const { archetype, pathData } = useGuidedPathData();
   const { data: allSpecies = [] } = useMergedSpecies();
   const { data: codexSkills = [] } = useCodexSkills();
@@ -85,6 +102,7 @@ export function RevealStep() {
 
   const [saving, setSaving] = useState(false);
   const [showLogin, setShowLogin] = useState(false);
+  const [showReview, setShowReview] = useState(false);
   const [showPlayTogether, setShowPlayTogether] = useState(false);
   const [savedCharacterId, setSavedCharacterId] = useState<string | null>(null);
   /** `saving` state lands a render late — a ref latch closes the same-tick double submit. */
@@ -132,12 +150,88 @@ export function RevealStep() {
   const weightPlaceholder = stepCopy.weightPlaceholder(avgWeight);
 
   /**
-   * Every sub-step must still hold its picks — a chapter-rail jump back to Foundation clears
-   * abilities/skills/feats/loadout/powers, and this is the gate that used to let the gutted
-   * draft through on name + Health/Energy alone.
+   * Create stays clickable. Leftovers (name, Health/Energy, unspent Skill/Ability
+   * points, unfinished chapters) open a review instead of greying the button out.
    */
-  const draftSaveable = isGuidedDraftSaveable(GUIDED_SUBSTEP_ORDER, draft);
-  const canSave = draftSaveable && remaining === 0;
+  const abilityPointsRemaining = useMemo(() => {
+    if (draft.abilitiesMode === 'recommended') return 0;
+    const total = calculateAbilityPoints(1, false, rules);
+    const spent = Object.values(draft.abilities).reduce(
+      (sum, value) => sum + calculateAbilityScoreCost(value || 0),
+      0,
+    );
+    return total - spent;
+  }, [draft.abilities, draft.abilitiesMode, rules]);
+
+  const skillPointsRemaining = useMemo(
+    () =>
+      calculateGuidedSkillPointBudget({
+        allocations: draft.skills,
+        defenseVals: draft.defenseVals,
+        selectedSpeciesSkillIds: draft.selectedSpeciesSkillIds,
+        declinedPathSkillIds: draft.declinedPathSkillIds,
+        recommendedSkillIds: pathData?.level1?.skills,
+        speciesContext,
+        catalog: codexSkills,
+        rules,
+      }).remainingPoints,
+    [
+      codexSkills,
+      draft.declinedPathSkillIds,
+      draft.defenseVals,
+      draft.selectedSpeciesSkillIds,
+      draft.skills,
+      pathData?.level1?.skills,
+      rules,
+      speciesContext,
+    ],
+  );
+
+  const revealBlockers = useMemo(
+    () =>
+      listGuidedRevealBlockers({
+        chapters: GUIDED_CHAPTERS,
+        draft,
+        healthEnergyRemaining: remaining,
+        abilityPointsRemaining,
+        skillPointsRemaining,
+      }),
+    [abilityPointsRemaining, draft, remaining, skillPointsRemaining],
+  );
+  const canSave = revealBlockers.length === 0;
+
+  const focusRevealTarget = (id: string) => {
+    const el = document.getElementById(id);
+    el?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    if (el instanceof HTMLElement) {
+      el.focus({ preventScroll: true });
+    }
+  };
+
+  const jumpToSubStep = (subStep: GuidedSubStep) => {
+    if (canNavigateToSubStep(subStep)) {
+      setSubStep(subStep);
+      return;
+    }
+    const fallback = GUIDED_SUBSTEP_ORDER.find(
+      (step) =>
+        step !== 'reveal' && canNavigateToSubStep(step) && !isGuidedSubStepSatisfied(step, draft),
+    );
+    if (fallback) setSubStep(fallback);
+  };
+
+  const handleBlockerSelect = (blocker: GuidedRevealBlocker) => {
+    setShowReview(false);
+    if (blocker.kind === 'name') {
+      requestAnimationFrame(() => focusRevealTarget('guided-char-name'));
+      return;
+    }
+    if (blocker.kind === 'healthEnergy') {
+      requestAnimationFrame(() => focusRevealTarget('guided-health-energy'));
+      return;
+    }
+    jumpToSubStep(blocker.subStep);
+  };
 
   /** Navigate only after a confirmed create; clear draft as we leave. Honors ?returnTo= like custom finalize. */
   const goAfterSave = (characterId: string, offerTour = false) => {
@@ -152,13 +246,13 @@ export function RevealStep() {
     }, resetCreator);
   };
 
-  const handleSave = async () => {
-    if (!user) {
+  const persistRevealCharacter = async (asGuest: boolean) => {
+    if (savedCharacterId || saveInFlight.current) return;
+    if (!canSave) return;
+    if (!asGuest && !user) {
       setShowLogin(true);
       return;
     }
-    if (savedCharacterId || saveInFlight.current) return;
-    if (!canSave) return;
     saveInFlight.current = true;
     setSaving(true);
     try {
@@ -193,37 +287,44 @@ export function RevealStep() {
       if (clientRequestId !== draft.clientRequestId) {
         updateDraft({ clientRequestId });
       }
-      const characterId = await createCharacter({ ...lean, userId: user.uid }, { clientRequestId });
-      if (!characterId?.trim()) {
-        throw new Error('Character was created but no id was returned');
+
+      const result = await persistFinishedCharacter({
+        lean,
+        portraitDataUrl: base64Portrait,
+        clientRequestId,
+        userId: asGuest ? null : user?.uid,
+      });
+      invalidateCharacterLists(queryClient, user?.uid);
+      if (result.portraitWarning) {
+        showToast(result.portraitWarning, 'error');
       }
 
-      if (base64Portrait) {
-        try {
-          const { url } = await uploadCharacterPortraitFromDataUrl(characterId, base64Portrait);
-          await saveCharacter(characterId, { portrait: url });
-        } catch (err) {
-          showToast(getErrorMessage(err, PORTRAIT_SAVE_UPLOAD_FALLBACK), 'error');
-        }
-      }
-
-      // Keep the guided draft until create succeeded — only clear when leaving for the sheet.
-      setSavedCharacterId(characterId);
-      // `savedCharacterId` keeps the button disabled from here on, so `saving` can settle:
-      // leaving it true stranded Finish whenever play-together closed by another route.
+      setSavedCharacterId(result.id);
       setSaving(false);
+      setShowLogin(false);
       showToast('Your character is ready!', 'success');
-      // Campaign/join returnTo skips play-together (custom finalize goes straight to returnTo).
       if (!postSaveReturnTo && !hasSeenPlayTogether()) {
         setShowPlayTogether(true);
       } else {
-        goAfterSave(characterId, !postSaveReturnTo);
+        goAfterSave(result.id, !postSaveReturnTo);
       }
     } catch (err) {
       showToast(formatCharacterCreateFailureMessage(err, stepCopy), 'error');
       saveInFlight.current = false;
       setSaving(false);
     }
+  };
+
+  const handleSave = async () => {
+    if (revealBlockers.length > 0) {
+      setShowReview(true);
+      return;
+    }
+    if (!user) {
+      setShowLogin(true);
+      return;
+    }
+    await persistRevealCharacter(false);
   };
 
   const dismissPlayTogether = (goSheet: boolean) => {
@@ -243,16 +344,11 @@ export function RevealStep() {
         title={stepCopy.title}
         description={stepCopy.description}
         hideBack={false}
-        completionHint={
-          !draftSaveable ? (
-            <span className="font-nunito text-warning-fg">{stepCopy.incompleteHint}</span>
-          ) : undefined
-        }
         primaryAction={
           <Button
             size="lg"
             onClick={handleSave}
-            disabled={!canSave || saving || !!savedCharacterId || showLogin}
+            disabled={saving || !!savedCharacterId || showLogin}
           >
             <Sparkles className="mr-1.5 h-4 w-4" aria-hidden="true" />
             {saving ? stepCopy.saving : stepCopy.save}
@@ -264,8 +360,11 @@ export function RevealStep() {
           <div className="overflow-hidden rounded-card border border-primary-subtle-border bg-gradient-to-br from-primary-subtle-bg/80 to-surface shadow-sm">
             <div className="flex flex-col items-center gap-5 p-5 sm:flex-row sm:items-start">
               <GuidedPortraitUpload />
-              <div className="w-full min-w-0 flex-1 text-center sm:text-left">
-                <label htmlFor="guided-char-name" className="sr-only">
+              <div className="w-full min-w-0 flex-1 scroll-mt-24 scroll-mb-32 text-center sm:text-left">
+                <label
+                  htmlFor="guided-char-name"
+                  className="mb-1.5 block font-nunito text-sm font-medium text-text-secondary"
+                >
                   {stepCopy.nameLabel}
                 </label>
                 <Input
@@ -273,6 +372,8 @@ export function RevealStep() {
                   value={draft.name}
                   onChange={(e) => updateDraft({ name: e.target.value })}
                   placeholder={stepCopy.namePlaceholder}
+                  aria-required="true"
+                  autoComplete="off"
                   className="font-display text-2xl font-bold text-text-primary placeholder:font-nunito placeholder:text-xl placeholder:font-normal"
                 />
                 {heroSubtitle && (
@@ -369,11 +470,19 @@ export function RevealStep() {
         </div>
       </GuidedStepLayout>
 
+      <GuidedRevealReviewModal
+        isOpen={showReview}
+        blockers={revealBlockers}
+        onClose={() => setShowReview(false)}
+        onSelect={handleBlockerSelect}
+      />
+
       <LoginPromptModal
         isOpen={showLogin}
         onClose={() => setShowLogin(false)}
         returnPath={creatorReturnPath}
         contentType="character"
+        onContinueWithoutSigningIn={() => persistRevealCharacter(true)}
       />
 
       <PlayTogetherModal

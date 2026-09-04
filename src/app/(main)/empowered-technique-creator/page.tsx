@@ -224,6 +224,11 @@ function EmpoweredTechniqueWorkspace({
             { label: 'Range', value: ws.rangeDisplay },
             { label: 'Area', value: ws.areaDisplay },
             { label: 'Duration', value: ws.durationDisplay },
+            {
+              label: 'Targets',
+              value:
+                ws.targetedDefenses.length > 0 ? ws.targetedDefenses.join(', ') : 'None specified',
+            },
           ]}
           breakdowns={
             ws.costs.tpSources.length > 0
@@ -232,8 +237,8 @@ function EmpoweredTechniqueWorkspace({
           }
         >
           <AdvancedCalculationsPanel
-            rows={ws.advancedCalcRows}
-            ruleText="Rule: Technique percentage parts multiply the power side before adding technique energy; TP is the sum of both sides."
+            groups={ws.advancedCalcGroups}
+            ruleText="Energy is rounded up at the end. Technique percentage parts multiply the power side before adding technique Energy. Training Points are listed separately above."
           />
         </CreatorSummaryPanel>
       }
@@ -257,6 +262,10 @@ function EmpoweredTechniqueWorkspace({
         onIsReactionChange={ws.setIsReaction}
         attackMode={ws.attackMode}
         onAttackModeChange={ws.setAttackMode}
+        targetedDefenses={ws.targetedDefenses}
+        onTargetedDefensesChange={ws.setTargetedDefenses}
+        suggestionSelectedParts={ws.suggestionSelectedParts}
+        suggestionPartsDb={[...ws.powerParts, ...ws.techniqueParts]}
         rangeDisplay={ws.rangeDisplay}
         range={ws.range}
         onRangeStepsChange={(steps) => ws.setRange({ steps })}

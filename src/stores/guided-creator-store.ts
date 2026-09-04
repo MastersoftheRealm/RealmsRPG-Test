@@ -1,8 +1,9 @@
 /**
  * Guided ("Simple") Character Creator Store
  * =========================================
- * Separate from `character-creator-store.ts` (the Advanced/Classic creator).
- * Models the chapter-based guided flow described in REALMS_PRODUCT_OVERVIEW.md §5.0.
+ * Sole character-create store (guided + custom entry). The former 9-step
+ * Legacy wizard (`character-creator-store`) was removed in TASK-912.
+ * Models the chapter-based flow described in REALMS_PRODUCT_OVERVIEW.md §5.0.
  *
  * Chapters (rulebook-aligned):
  *   1. Foundation  -> path, species

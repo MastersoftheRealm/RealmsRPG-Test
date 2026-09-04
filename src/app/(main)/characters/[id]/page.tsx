@@ -9,7 +9,7 @@
 
 import { use } from 'react';
 import Link from 'next/link';
-import { LoadingState, PageContainer, PageHeader } from '@/components/ui';
+import { LoadingState, PageContainer, PageHeader, Alert, Button } from '@/components/ui';
 import {
   SheetHeader,
   SheetActionToolbar,
@@ -33,7 +33,7 @@ export default function CharacterSheetPage({ params }: PageParams) {
   const { id } = use(params);
   const model = useCharacterSheetPage(id);
 
-  if (model.authLoading || model.loading) {
+  if (model.loading) {
     return (
       <div className="flex min-h-screen items-center justify-center">
         <LoadingState message="Loading character..." size="lg" />
@@ -68,6 +68,7 @@ export default function CharacterSheetPage({ params }: PageParams) {
     sheetEditNotification,
     hasTempModifiers,
     isOwner,
+    isGuestSheet,
     isInCampaign,
     campaignContext,
     calculatedStats,
@@ -138,6 +139,8 @@ export default function CharacterSheetPage({ params }: PageParams) {
               onConfirm={handleSettingsConfirm}
               canEdit={isOwner}
               isInCampaign={isInCampaign}
+              visibilityLocked={isGuestSheet}
+              visibilityLockedMessage="Sign in to share this character. Until then it stays in this browser."
               onTakeSheetTour={isOwner ? handleRetakeSheetTour : undefined}
             />
           )}
@@ -149,6 +152,19 @@ export default function CharacterSheetPage({ params }: PageParams) {
               centered={false}
               className="pt-4 max-md:flex max-md:min-h-0 max-md:w-full max-md:min-w-0 max-md:flex-1 max-md:flex-col md:mx-auto"
             >
+              {isGuestSheet ? (
+                <Alert variant="info" className="mb-4 px-4">
+                  <span className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                    <span>
+                      <strong>This character lives in this browser.</strong> Sign in to keep it and
+                      use it in campaigns. Clearing site data removes it.
+                    </span>
+                    <Button asChild variant="secondary" size="sm" className="shrink-0 self-start">
+                      <Link href="/login?redirect=/characters">Sign in</Link>
+                    </Button>
+                  </span>
+                </Alert>
+              ) : null}
               {calculatedStats && (
                 <CharacterSheetColumn>
                   <SheetHeader

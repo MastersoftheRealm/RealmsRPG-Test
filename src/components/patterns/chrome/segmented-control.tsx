@@ -22,8 +22,10 @@ export interface SegmentedControlProps<T extends string> {
   value: T;
   onChange: (value: T) => void;
   options: SegmentedOption<T>[];
-  /** Accessible name for the control group */
-  'aria-label': string;
+  /** Accessible name for the control group (omit when `aria-labelledby` is set) */
+  'aria-label'?: string | undefined;
+  /** Visible label id; preferred over `aria-label` when both could apply */
+  'aria-labelledby'?: string | undefined;
   className?: string | undefined;
   /** When true, uses tablist/tab roles (e.g. feat source tabs in a modal) */
   tabs?: boolean | undefined;
@@ -43,6 +45,7 @@ export function SegmentedControl<T extends string>({
   onChange,
   options,
   'aria-label': ariaLabel,
+  'aria-labelledby': ariaLabelledBy,
   className,
   tabs = false,
   tabPanelId,
@@ -50,9 +53,12 @@ export function SegmentedControl<T extends string>({
   size = 'default',
 }: SegmentedControlProps<T>) {
   const compact = size === 'compact';
+  const nameProps = ariaLabelledBy
+    ? { 'aria-labelledby': ariaLabelledBy }
+    : { 'aria-label': ariaLabel };
   const wrapperProps = tabs
-    ? { role: 'tablist' as const, 'aria-label': ariaLabel }
-    : { role: 'group' as const, 'aria-label': ariaLabel };
+    ? { role: 'tablist' as const, ...nameProps }
+    : { role: 'group' as const, ...nameProps };
 
   return (
     <div

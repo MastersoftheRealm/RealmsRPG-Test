@@ -16,6 +16,8 @@ import { dedupeSelectOptions, FILTER_LABEL_ROW_CLASS } from './filter-utils';
 export interface ChipSelectOption {
   value: string;
   label: string;
+  /** Optional shorter label for selected chips (dropdown still uses `label`). */
+  chipLabel?: string | undefined;
   /** Optional `<optgroup>` label — set on every option to group a long list (e.g. path types). */
   group?: string | undefined;
 }
@@ -109,13 +111,13 @@ export function ChipSelect({
                 key={value}
                 className="inline-flex items-center gap-1 rounded-full bg-primary-subtle-bg px-2 py-1 text-sm text-primary-fg-hover"
               >
-                {option?.label || value}
+                {option?.chipLabel || option?.label || value}
                 {onRemove && (
                   <button
                     type="button"
                     onClick={() => onRemove(value)}
                     className="rounded-full p-0.5 transition-colors hover:bg-primary-subtle-bg-hover"
-                    aria-label={`Remove ${option?.label || value}`}
+                    aria-label={`Remove ${option?.chipLabel || option?.label || value}`}
                   >
                     <X className="h-3 w-3" />
                   </button>

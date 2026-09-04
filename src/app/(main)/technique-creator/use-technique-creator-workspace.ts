@@ -14,6 +14,9 @@ import {
   computeTechniqueActionTypeFromSelection,
   buildMechanicParts,
   formatTechniqueDamage,
+  analyzeTechniqueEnergy,
+  buildTechniqueAdvancedCalculationGroups,
+  TECHNIQUE_CALC_SECTION_BY_NAME,
   type TechniquePartPayload,
 } from '@/lib/calculators';
 import { attackModeColumnLabel, type AttackMode } from '@/lib/attack-mode';
@@ -67,6 +70,9 @@ export function useTechniqueCreatorWorkspace({
   const [attackMode, setAttackMode] = useState<AttackMode>(initialFormState.attackMode);
   const [imageId, setImageId] = useState<string | null>(initialFormState.imageId);
   const [imageUrl, setImageUrl] = useState<string | null>(initialFormState.imageUrl);
+  const [targetedDefenses, setTargetedDefenses] = useState<string[]>(
+    initialFormState.targetedDefenses,
+  );
 
   // ?edit= mode: clear any stale draft once on mount (parity with the old hydrate
   // effect, which removed the cache after loading the edit target).
@@ -94,6 +100,7 @@ export function useTechniqueCreatorWorkspace({
       attackMode,
       imageId,
       imageUrl,
+      targetedDefenses,
       timestamp: Date.now(),
     };
     writeCreatorCache(TECHNIQUE_CREATOR_CACHE_KEY, cache);
@@ -108,6 +115,7 @@ export function useTechniqueCreatorWorkspace({
     attackMode,
     imageId,
     imageUrl,
+    targetedDefenses,
   ]);
 
   // Build mechanic parts from action type, damage, and attack mode.
@@ -124,36 +132,60 @@ export function useTechniqueCreatorWorkspace({
   );
 
   // Convert selected parts to payload format for calculator
-  const partsPayload: TechniquePartPayload[] = useMemo(
-    () => [
-      ...selectedParts.map((sp) => ({
-        id: Number(sp.part.id),
-        name: sp.part.name,
-        part: sp.part,
-        op_1_lvl: sp.op_1_lvl,
-        op_2_lvl: sp.op_2_lvl,
-        op_3_lvl: sp.op_3_lvl,
-      })),
-      ...mechanicParts.map(toTechniquePartPayload),
-    ],
-    [selectedParts, mechanicParts],
-  );
+  const partsPayload: TechniquePartPayload[] = useMemo(() => {
+    const selected: TechniquePartPayload[] = selectedParts.map((sp) => ({
+      id: Number(sp.part.id),
+      name: sp.part.name,
+      part: sp.part,
+      op_1_lvl: sp.op_1_lvl,
+      op_2_lvl: sp.op_2_lvl,
+      op_3_lvl: sp.op_3_lvl,
+      calcSection: 'parts' as const,
+    }));
+
+    const mechanics: TechniquePartPayload[] = mechanicParts.map((mp) => {
+      const section = TECHNIQUE_CALC_SECTION_BY_NAME[mp.name];
+      let displayLabel: string | undefined;
+      if (mp.name === 'Quick or Free Action') {
+        displayLabel = actionType === 'free' ? 'Free Action' : 'Quick Action';
+      } else if (mp.name === 'Long Action') {
+        displayLabel = actionType === 'long4' ? 'Long Action (4 AP)' : 'Long Action (3 AP)';
+      } else if (mp.name === 'Reaction') {
+        displayLabel = 'Reaction';
+      } else if (mp.name === 'Additional Damage' && damage.amount > 0) {
+        displayLabel =
+          formatTechniqueDamage({ amount: damage.amount, size: damage.size }) ||
+          'Additional Damage';
+      } else if (mp.name === 'Add Weapon to Technique' || mp.name === 'Add Weapon Attack') {
+        displayLabel = 'Weapon Attack';
+      } else if (mp.name === 'No Attack') {
+        displayLabel = 'No Attack';
+      } else if (mp.name === 'Split Damage Dice') {
+        displayLabel = 'Split damage dice';
+      }
+      return {
+        id: Number(mp.id),
+        name: mp.name,
+        op_1_lvl: mp.op_1_lvl,
+        op_2_lvl: mp.op_2_lvl,
+        op_3_lvl: mp.op_3_lvl,
+        calcSection: section,
+        displayLabel,
+      };
+    });
+
+    return [...selected, ...mechanics];
+  }, [selectedParts, mechanicParts, actionType, damage.amount, damage.size]);
 
   // Calculate costs - using technique parts as the database
   const costs = useMemo(
     () => calculateTechniqueCosts(partsPayload, techniqueParts),
     [partsPayload, techniqueParts],
   );
-  const advancedCalcRows = useMemo(
-    () => [
-      { label: 'Energy (raw)', value: costs.energyRaw.toFixed(2) },
-      {
-        label: 'Energy (final)',
-        value: `ceil(${costs.energyRaw.toFixed(2)}) = ${costs.totalEnergy}`,
-      },
-      { label: 'Training points (final)', value: String(costs.totalTP) },
-    ],
-    [costs.energyRaw, costs.totalEnergy, costs.totalTP],
+  const advancedCalcGroups = useMemo(
+    () =>
+      buildTechniqueAdvancedCalculationGroups(analyzeTechniqueEnergy(partsPayload, techniqueParts)),
+    [partsPayload, techniqueParts],
   );
 
   // Derived display values
@@ -276,6 +308,7 @@ export function useTechniqueCreatorWorkspace({
         attackMode,
         actionType,
         isReaction,
+        ...(targetedDefenses.length > 0 ? { targetedDefenses } : {}),
         ...(imageId ? { imageId } : {}),
         ...(imageUrl ? { imageUrl } : {}),
       },
@@ -289,6 +322,7 @@ export function useTechniqueCreatorWorkspace({
     attackMode,
     actionType,
     isReaction,
+    targetedDefenses,
     imageId,
     imageUrl,
   ]);
@@ -314,6 +348,7 @@ export function useTechniqueCreatorWorkspace({
       setAttackMode('unarmed');
       setImageId(null);
       setImageUrl(null);
+      setTargetedDefenses([]);
     },
   });
 
@@ -327,6 +362,7 @@ export function useTechniqueCreatorWorkspace({
     setAttackMode('unarmed');
     setImageId(null);
     setImageUrl(null);
+    setTargetedDefenses([]);
     save.setSaveMessage(null);
     clearCreatorCache(TECHNIQUE_CREATOR_CACHE_KEY);
   }, [save]);
@@ -341,7 +377,13 @@ export function useTechniqueCreatorWorkspace({
     setAttackMode(next.attackMode);
     setImageId(next.imageId);
     setImageUrl(next.imageUrl);
+    setTargetedDefenses(next.targetedDefenses);
   }, []);
+
+  const suggestionSelectedParts = useMemo(
+    () => selectedParts.map((sp) => sp.part),
+    [selectedParts],
+  );
 
   const handleLoadTechnique = useCallback(
     (technique: TechniqueLibraryRecord) => {
@@ -370,8 +412,11 @@ export function useTechniqueCreatorWorkspace({
     imageUrl,
     setImageId,
     setImageUrl,
+    targetedDefenses,
+    setTargetedDefenses,
+    suggestionSelectedParts,
     costs,
-    advancedCalcRows,
+    advancedCalcGroups,
     actionTypeDisplay,
     damageDisplay,
     attackModeLabel,

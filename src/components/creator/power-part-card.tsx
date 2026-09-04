@@ -9,6 +9,7 @@ import { useState, useMemo, useId } from 'react';
 import { ChevronDown, ChevronUp, X } from 'lucide-react';
 import { formatCost } from '@/lib/game/creator-constants';
 import { partChipVariant } from '@/lib/chip/part-chip-variant';
+import { defensesFromPart, formatTargetsFact } from '@/lib/game/targeted-defenses';
 import { IconButton, Checkbox, DescriptorChip } from '@/components/ui';
 import { ValueStepper } from '@/components/patterns';
 import type { PowerPart, TechniquePart } from '@/hooks';
@@ -89,6 +90,7 @@ export function PowerPartCard({
     (part.op_1_tp || 0) * selectedPart.op_1_lvl +
     (part.op_2_tp || 0) * selectedPart.op_2_lvl +
     (part.op_3_tp || 0) * selectedPart.op_3_lvl;
+  const targetsFact = formatTargetsFact(defensesFromPart(part));
 
   return (
     <div className="overflow-hidden rounded-lg border border-border-light bg-surface shadow-sm">
@@ -112,6 +114,15 @@ export function PowerPartCard({
             </DescriptorChip>
           )}
           <span className="min-w-0 truncate font-medium text-text-primary">{part.name}</span>
+          {targetsFact ? (
+            <DescriptorChip
+              size="sm"
+              className="max-w-[12rem] shrink-0 truncate font-normal"
+              title={targetsFact}
+            >
+              {targetsFact}
+            </DescriptorChip>
+          ) : null}
           <span className="flex flex-shrink-0 items-center gap-2 text-sm font-semibold">
             <span className="text-energy-text">EN: {formatCost(partEnergy)}</span>
             <span className="text-tp-text">TP: {formatCost(partTP)}</span>

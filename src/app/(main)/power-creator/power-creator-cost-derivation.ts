@@ -17,14 +17,63 @@ import {
   deriveArea,
   deriveDuration,
   formatPowerRangeFromSteps,
+  formatAreaForDisplay,
+  formatDamageEnergyLabel,
   getAreaPartForDisplay,
+  analyzePowerEnergy,
+  buildPowerAdvancedCalculationGroups,
+  POWER_CALC_SECTION_BY_NAME,
+  POWER_DURATION_TYPE_PART_NAMES,
   type PowerPartPayload,
   type AreaConfig,
   type DurationConfig,
+  type MechanicPartResult,
 } from '@/lib/calculators';
 import { formatDurationFromTypeAndValue } from '@/lib/utils/duration';
 import { attackModeColumnLabel, type AttackMode } from '@/lib/attack-mode';
 import type { SelectedPart, AdvancedPart, DamageConfig, RangeConfig } from './power-creator-types';
+
+function enrichMechanicPayloads(
+  mechanicParts: MechanicPartResult[],
+  ctx: {
+    actionType: string;
+    damages: DamageConfig[];
+    range: RangeConfig;
+    area: AreaConfig;
+    duration: DurationConfig;
+  },
+): PowerPartPayload[] {
+  const validDamages = ctx.damages.filter((d) => d.type !== 'none' && d.amount > 0);
+  let damageCursor = 0;
+  return mechanicParts.map((mp) => {
+    let displayLabel: string | undefined;
+    const section = POWER_CALC_SECTION_BY_NAME[mp.name];
+    if (section === 'damage' && mp.name !== 'Power Split Damage Dice') {
+      const dmg = validDamages[damageCursor];
+      damageCursor += 1;
+      if (dmg) displayLabel = formatDamageEnergyLabel(dmg.type, dmg.amount, dmg.size);
+    } else if (mp.name === 'Power Range' && ctx.range.steps > 0) {
+      const formatted = formatPowerRangeFromSteps(ctx.range.steps);
+      displayLabel = formatted.replace(/\bspaces\b/, 'Spaces').replace(/\bspace\b/, 'Space');
+    } else if (mp.name.endsWith(' of Effect') && ctx.area.type !== 'none') {
+      displayLabel = formatAreaForDisplay(ctx.area.type, ctx.area.level);
+    } else if (POWER_DURATION_TYPE_PART_NAMES.has(mp.name) && ctx.duration.type !== 'instant') {
+      displayLabel = formatDurationFromTypeAndValue(ctx.duration.type, ctx.duration.value);
+    } else if (mp.name === 'Power Quick or Free Action') {
+      displayLabel = ctx.actionType === 'free' ? 'Free Action' : 'Quick Action';
+    }
+    return {
+      id: mp.id,
+      name: mp.name,
+      op_1_lvl: mp.op_1_lvl,
+      op_2_lvl: mp.op_2_lvl,
+      op_3_lvl: mp.op_3_lvl,
+      applyDuration: mp.applyDuration,
+      calcSection: section,
+      displayLabel,
+    };
+  });
+}
 
 export type PowerSectionCostSlice = {
   energyRaw: number;
@@ -114,8 +163,22 @@ export function usePowerCreatorCostDerivation({
       op_2_lvl: 0,
       op_3_lvl: 0,
       applyDuration: false,
+      calcSection: 'attack' as const,
+      displayLabel: 'Weapon Attack',
     };
   }, [attackMode, powerParts]);
+
+  const labeledMechanicParts = useMemo(
+    () =>
+      enrichMechanicPayloads(mechanicParts, {
+        actionType,
+        damages,
+        range,
+        area,
+        duration,
+      }),
+    [actionType, area, damages, duration, mechanicParts, range],
+  );
 
   const partsPayload: PowerPartPayload[] = useMemo(
     () => [
@@ -125,6 +188,7 @@ export function usePowerCreatorCostDerivation({
         op_2_lvl: sp.op_2_lvl,
         op_3_lvl: sp.op_3_lvl,
         applyDuration: sp.applyDuration,
+        calcSection: 'parts' as const,
       })),
       ...selectedAdvancedParts.map((ap) => ({
         part: ap.part,
@@ -132,11 +196,12 @@ export function usePowerCreatorCostDerivation({
         op_2_lvl: ap.op_2_lvl,
         op_3_lvl: ap.op_3_lvl,
         applyDuration: ap.applyDuration,
+        calcSection: 'mechanics' as const,
       })),
-      ...mechanicParts,
+      ...labeledMechanicParts,
       ...(addWeaponToPowerPart ? [addWeaponToPowerPart] : []),
     ],
-    [selectedParts, selectedAdvancedParts, mechanicParts, addWeaponToPowerPart],
+    [selectedParts, selectedAdvancedParts, labeledMechanicParts, addWeaponToPowerPart],
   );
 
   const costs = useMemo(
@@ -144,17 +209,9 @@ export function usePowerCreatorCostDerivation({
     [partsPayload, powerParts],
   );
 
-  const advancedCalcRows = useMemo(
-    () => [
-      { label: 'Energy (raw)', value: costs.energyRaw.toFixed(2) },
-      {
-        label: 'Energy (final)',
-        value: `ceil(${costs.energyRaw.toFixed(2)}) = ${costs.totalEnergy}`,
-      },
-      { label: 'Training points (raw)', value: costs.tpRaw.toFixed(2) },
-      { label: 'Training points (final)', value: `floor per part → ${costs.totalTP}` },
-    ],
-    [costs.energyRaw, costs.totalEnergy, costs.totalTP, costs.tpRaw],
+  const advancedCalcGroups = useMemo(
+    () => buildPowerAdvancedCalculationGroups(analyzePowerEnergy(partsPayload, powerParts)),
+    [partsPayload, powerParts],
   );
 
   const actionTypeDisplay = useMemo(
@@ -294,7 +351,7 @@ export function usePowerCreatorCostDerivation({
     addWeaponToPowerPart,
     partsPayload,
     costs,
-    advancedCalcRows,
+    advancedCalcGroups,
     actionTypeDisplay,
     attackModeLabel,
     rangeDisplay,

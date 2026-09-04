@@ -14,12 +14,14 @@ import {
 } from '@/lib/calculators/part-training-points';
 import { dedupeSavedParts } from '@/lib/game/dedupe-saved-parts';
 import { findByIdOrName } from '@/lib/id-constants';
+import { appendCanTargetToDescription, defensesFromPart } from '@/lib/game/targeted-defenses';
 import type { CharacterPower, CharacterTechnique, Item } from '@/types';
 
 export interface CodexPartRow {
   id: string | number;
   name: string;
   description?: string | undefined;
+  defense?: string[] | string | null | undefined;
   base_tp?: number | undefined;
   op_1_tp?: number | undefined;
   op_2_tp?: number | undefined;
@@ -78,7 +80,10 @@ export function partPayloadToPartData(
     const codexPart = codexParts.find((p) => p.name?.toLowerCase() === payload.toLowerCase());
     return {
       name: payload,
-      description: codexPart?.description,
+      description: appendCanTargetToDescription(
+        codexPart?.description,
+        codexPart ? defensesFromPart(codexPart) : undefined,
+      ),
       tpCost: codexPart?.base_tp,
     };
   }
@@ -93,7 +98,7 @@ export function partPayloadToPartData(
 
   return {
     name: codexPart.name || partName,
-    description: codexPart.description,
+    description: appendCanTargetToDescription(codexPart.description, defensesFromPart(codexPart)),
     tpCost: tpCost > 0 ? tpCost : undefined,
     optionLevels: {
       opt1: payload.op_1_lvl,

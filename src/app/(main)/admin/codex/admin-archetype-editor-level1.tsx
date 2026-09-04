@@ -236,7 +236,6 @@ export function AdminArchetypeEditorLevel1({
                 type="button"
                 variant="outline"
                 size="sm"
-                className="min-h-[44px]"
                 onClick={() => addFeatGuidanceGroup(section.audience)}
                 aria-label={`Add ${section.audience} feat group`}
               >
@@ -271,13 +270,12 @@ export function AdminArchetypeEditorLevel1({
                             updateFeatGuidanceGroup(group.id, { title: e.target.value })
                           }
                           placeholder="Group name"
-                          className="min-h-[44px]"
                         />
                       </div>
                       <IconButton
                         variant="ghost"
                         size="sm"
-                        className="min-h-[44px] min-w-[44px] shrink-0"
+                        className="shrink-0"
                         onClick={() => removeFeatGuidanceGroup(group.id)}
                         label={`Remove ${group.title || section.audience} feat group`}
                       >
@@ -300,7 +298,6 @@ export function AdminArchetypeEditorLevel1({
                           })
                         }
                         placeholder="One-line why this group fits the path"
-                        className="min-h-[44px]"
                       />
                       {whyLen > LAYER1_GOVERNANCE.maxWhyCopyLength - 20 && (
                         <p className="mt-0.5 text-xs text-text-muted">

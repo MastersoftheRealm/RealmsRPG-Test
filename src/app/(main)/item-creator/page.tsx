@@ -280,8 +280,8 @@ function ItemCreatorWorkspace({
             }
           >
             <AdvancedCalculationsPanel
-              rows={ws.advancedCalcRows}
-              ruleText="Rule: Final currency = base cost for rarity × (1 + 0.125 × C)."
+              groups={ws.advancedCalcGroups}
+              ruleText="Rule: Final currency = base cost for rarity × (1 + 0.125 × C), then rounded down. Training Points are not shown in this panel."
             />
           </CreatorSummaryPanel>
           <RarityReferenceTable currentIP={ws.costs.totalIP} />
@@ -305,9 +305,12 @@ function ItemCreatorWorkspace({
         onArmamentTypeChange={ws.changeArmamentType}
         isTwoHanded={ws.isTwoHanded}
         onIsTwoHandedChange={ws.setIsTwoHanded}
-        rangeLevel={ws.rangeLevel}
-        onRangeLevelChange={ws.setRangeLevel}
-        rangeDisplay={ws.rangeDisplay}
+        rangeType={ws.rangeType}
+        onRangeTypeChange={ws.changeRangeType}
+        rangeSpaces={ws.rangeSpaces}
+        onRangeSpacesChange={ws.setRangeSpaces}
+        attackAbility={ws.attackAbility}
+        onAttackAbilityChange={ws.changeAttackAbility}
         weaponShieldConfigSummary={ws.weaponShieldConfigSummary}
         damage={ws.damage}
         onDamageChange={ws.setDamage}

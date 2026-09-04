@@ -249,14 +249,14 @@ export function EditArchetypeModal({
               <div className="flex flex-col gap-3 sm:flex-row">
                 <Button
                   variant="outline"
-                  className="min-h-[44px] flex-1"
+                  className="flex-1"
                   onClick={() => setPendingConfirm({ type: 'switch-forge' })}
                 >
                   Switch to Forge Your Own
                 </Button>
                 <Button
                   variant="outline"
-                  className="min-h-[44px] flex-1"
+                  className="flex-1"
                   onClick={() => setUiMode('path-picker')}
                 >
                   Choose a Different Path
@@ -291,7 +291,7 @@ export function EditArchetypeModal({
                           <SelectionCard
                             key={option.id}
                             onClick={() => setPendingConfirm({ type: 'switch-path', path: option })}
-                            className="min-h-[44px] text-left"
+                            className="touch-tier-standard text-left"
                           >
                             <span className="mb-1 block font-semibold text-text-primary">
                               {option.name}
@@ -333,7 +333,7 @@ export function EditArchetypeModal({
                     type="button"
                     onClick={() => handleTypeSelect(type)}
                     className={cn(
-                      'min-h-[44px] rounded-lg border-2 p-4 text-left transition-all',
+                      'touch-tier-standard rounded-lg border-2 p-4 text-left transition-all',
                       selectedType === type
                         ? 'border-primary-outline-border bg-primary-subtle-bg'
                         : 'border-border-light bg-surface hover:border-border',

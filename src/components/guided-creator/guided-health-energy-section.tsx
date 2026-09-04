@@ -95,7 +95,11 @@ export function GuidedHealthEnergySection() {
   );
 
   return (
-    <div className="rounded-card border border-border-light bg-surface p-5 shadow-sm">
+    <div
+      id="guided-health-energy"
+      tabIndex={-1}
+      className="scroll-mt-24 scroll-mb-32 rounded-card border border-border-light bg-surface p-5 shadow-sm focus-visible:ring-2 focus-visible:ring-primary-outline-border focus-visible:outline-none"
+    >
       <div className="mb-3 flex flex-wrap items-start justify-between gap-3">
         <div className="min-w-0 flex-1">
           <GuidedSectionTitle>{copy.title}</GuidedSectionTitle>
@@ -128,9 +132,7 @@ export function GuidedHealthEnergySection() {
       />
 
       {remaining !== 0 && (
-        <p className="mt-3 font-nunito text-sm text-text-secondary">
-          {copy.allocateHint(remaining)}
-        </p>
+        <p className="mt-3 font-nunito text-sm text-warning-fg">{copy.allocateHint(remaining)}</p>
       )}
     </div>
   );

@@ -17,8 +17,34 @@ import {
   migrateGuestEncountersOnSignIn,
   hasGuestEncountersToMigrate,
 } from '@/lib/guest-encounter-migration';
+import {
+  migrateGuestCharactersOnSignIn,
+  hasGuestCharactersToMigrate,
+} from '@/lib/guest-character-migration';
 import { logClientError } from '@/lib/api-client';
 import { useIsClient } from './use-is-client';
+
+function migrateGuestDataOnSignIn(): void {
+  if (hasGuestEncountersToMigrate()) {
+    migrateGuestEncountersOnSignIn().catch((err) => {
+      logClientError('use-auth: guest encounter migration failed', err);
+    });
+  }
+  if (hasGuestCharactersToMigrate()) {
+    migrateGuestCharactersOnSignIn().catch((err) => {
+      logClientError('use-auth: guest character migration failed', err);
+    });
+  }
+}
+
+async function migrateGuestDataOnSignInAwait(): Promise<void> {
+  if (hasGuestEncountersToMigrate()) {
+    await migrateGuestEncountersOnSignIn();
+  }
+  if (hasGuestCharactersToMigrate()) {
+    await migrateGuestCharactersOnSignIn();
+  }
+}
 
 function toAuthUser(
   user: {
@@ -106,10 +132,8 @@ export function useAuth() {
         ) {
           queryClient.clear();
         }
-        if (event === 'SIGNED_IN' && session?.user && hasGuestEncountersToMigrate()) {
-          migrateGuestEncountersOnSignIn().catch((err) => {
-            logClientError('use-auth: guest encounter migration failed', err);
-          });
+        if (event === 'SIGNED_IN' && session?.user) {
+          migrateGuestDataOnSignIn();
         }
       }
     });
@@ -145,9 +169,7 @@ export function useAuth() {
         const { data, error: err } = await supabase.auth.signInWithPassword({ email, password });
         if (err) throw err;
         setUser(toAuthUser(data.user));
-        if (hasGuestEncountersToMigrate()) {
-          await migrateGuestEncountersOnSignIn();
-        }
+        await migrateGuestDataOnSignInAwait();
         return data.user;
       } catch (err) {
         const message = err instanceof Error ? err.message : 'Failed to sign in';

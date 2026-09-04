@@ -47,3 +47,5 @@ id,name,description,base_ip,base_tp,base_c,op_1_desc,op_1_ip,op_1_tp,op_1_c,type
 46,Block,"As a Quick Reaction you may make an attack roll with this Weapon against another melee Weapon attack made within your melee range. If you exceed the attack roll of the triggering attack, you prevent the attack from hitting.",1.5,3,2,,,,,Weapon
 47,Quick,The multiple attack penalty for this Weapon is -4 for each additional attack.,0.5,2,1.5,Reduce penalty by an additional -1.,0.5,2,1.5,Weapon
 48,Pull,"When you successfully hit with this Weapon you may cause the target to roll Might against your Martial Potency, getting pulled one space closer upon failure.",0.5,1,1,Increase distance pulled by 1 space.,0.5,1,1,Weapon
+49,Additional Damage Type,"This weapon has a secondary damage type, between Piercing, Bludgeoning, or Slashing, that you may choose to use instead of the primary damage type, using the same damage dice.",0.5,1,2,,,,,Weapon
+50,Heavy,This Weapon uses Strength for attack and damage rolls instead of another ability.,1,2,1.5,,,,,Weapon

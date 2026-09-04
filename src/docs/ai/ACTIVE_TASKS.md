@@ -4,7 +4,7 @@
 Skip `blocked` and human `assignee:` (those live in [`WAITING_TASKS.md`](WAITING_TASKS.md)).
 Do **not** read the done archive at session start.
 
-**Next task ID:** TASK-904
+**Next task ID:** TASK-927
 **Waiting / blocked / human:** [WAITING_TASKS.md](WAITING_TASKS.md)
 **Done archive:** [archive/TASK_QUEUE_DONE.md](archive/TASK_QUEUE_DONE.md) · snapshot [archive/TASK_QUEUE_DONE_2026-07-15.md](archive/TASK_QUEUE_DONE_2026-07-15.md)
 **Process:** [AI_TASK_QUEUE.md](AI_TASK_QUEUE.md) · Template: [AI_REQUEST_TEMPLATE.md](AI_REQUEST_TEMPLATE.md)
@@ -12,9 +12,9 @@ Do **not** read the done archive at session start.
 
 **Agent rules:** Prefer highest `priority` among `not-started` / continue `partial` / `in-progress`. Human-only → `DEVELOPER_TASK_QUEUE.md`. Done summaries live in the archive — do not re-list them here.
 
-**Counts:** 4 agent-eligible (1 not-started + 3 partial owner-gated) · waiting/blocked in WAITING_TASKS · done in archive.
+**Counts:** 8 agent-eligible (3 partial owner-gated, 5 not-started) · waiting/blocked in WAITING_TASKS · done in archive.
 
-**Hot notes:** **2026-08-24** TASK-903 archived (tab-focus session recovery no longer clears React Query). **2026-08-24** TASK-902 archived (mobile sheet vertical scroll). **2026-08-22** `/debt` filed TASK-901 (always-on 44 slabs). **2026-08-22** TASK-900 archived (styleguide Linux visual baselines). **Architect / owner ack before implement:** TASK-871 armament table split (DEV-Q05 — research write-up done), TASK-876 live Codex UPDATE (DEV-Q06 — seed+SQL preview ready), TASK-874 changelog schema/TTL (DEV-Q07 — display slimming done). **2026-08-22** TASK-899 archived (Turnstile + security.txt; Dashboard steps DEV-015). Batch A sheet/library/rolls tasks (885–895) archived. **Mobile audit 2026-08-18** → `reports/mobile-audit-2026-08-18/MOBILE_AUDIT.md`. **WAITING:** TASK-834 (OneDrive), TASK-823 (manuscript). Do **not** delete `/characters/new/advanced`. TASK-410–414 deferred.
+**Hot notes:** **Architect / owner ack before implement:** TASK-871 (DEV-Q05), TASK-876 (DEV-Q06), TASK-874 (DEV-Q07), TASK-914 (Admin Archetypes list shell), TASK-915 (power/empowered editor extract). **WAITING:** TASK-834 (OneDrive), TASK-823 (manuscript), TASK-917 (pending-QA snapshot — DEV-016). TASK-410–414 deferred. Mobile audit: `reports/mobile-audit-2026-08-18/MOBILE_AUDIT.md`.
 
 ---
 
@@ -66,13 +66,19 @@ Do **not** read the done archive at session start.
   priority: medium
   status: partial
   completed_work: |
-    - **Display:** Admin changelogs list + modal render compact field-diff tables via `codex-changelog-display.ts`. GET `/api/admin/changelogs` now ships name-only snapshots (not full entity JSON).
-    - **Proposal:** `sql/codex-changelog-retention-proposed.sql` — prefer `changed_fields` as SoT; optional 90-day TTL; drop snapshot columns only after owner confirms no restore path (DEV-Q07). Live 2026-08-22: 709 rows / ~1.7 MB.
-    - **Store (unchanged pending ack):** `recordCodexChange` still writes snapshots best-effort so Codex saves cannot fail.
+    - **Display:** Compact field-diff tables; GET ships identity snapshots (name/type), not full entity JSON.
+    - **2026-09-03 clutter:** Visible diffs omit empty-equivalent pairs (`null` / `""` / `[]` / `{}`) and `updated_at`/`created_at`.
+    - **Creates:** Display + new writes are identity only (`Created “Name” (Feat)`); no field dump. Deletes still persist/show prior-state fields.
+    - **Updates/deletes store:** Full `before_data`/`after_data` still written until DEV-Q07. Changelog insert is best-effort so Codex saves cannot fail.
+    - **Proposal:** `sql/codex-changelog-retention-proposed.sql` — prefer `changed_fields` as SoT; optional 90-day TTL; drop snapshot columns only after owner confirms no restore path. Live 2026-08-22: 709 rows / ~1.7 MB.
     - Changelog GET auth tests PASS; unit tests for display helper.
   remaining_work: |
     - Owner ack **DEV-Q07** on retention + whether to stop persisting `before_data`/`after_data`.
     - After ack: optional migration/TTL apply (Dashboard or MCP); update `recordCodexChange` write shape.
+    - Per-item Hist in Codex edit (e.g. power part) is still not in this task.
+  developer_test_plan: |
+    DEV-V-056-T001 — `/admin/changelogs` feat update shows only real content diffs (no `—`/`—` req rows; no `updated_at`).
+    DEV-V-056-T002 — Create rows are `Created “Name” (Feat)` with no field table; delete rows still show prior fields.
   related_files:
     - src/lib/codex-changelog.ts
     - src/lib/codex-changelog-display.ts
@@ -123,39 +129,128 @@ Do **not** read the done archive at session start.
 
 ---
 
-- id: TASK-901
-  title: Pointer-tier remaining always-on min-h-[44px] slabs (TASK-865 leftovers)
-  created_at: 2026-08-22
+- id: TASK-914
+  title: Mount Admin Archetypes list on CodexBrowseListShell
+  created_at: 2026-09-03
   created_by: agent
+  priority: low
+  status: not-started
+  related_files:
+    - src/app/(main)/admin/codex/AdminArchetypesTab.tsx
+    - src/components/patterns/list/codex-browse-list-shell.tsx
+    - src/docs/ai/FEATURE_INDEX.md
+    - src/docs/ai/ADR/0005-codex-browse-list-shell.md
+  description: |
+    Admin Archetypes tab hand-rolls SectionHeader + SearchInput + GridListRow instead of CodexBrowseListShell. Path-row editor chrome stays custom (FEATURE_INDEX / ADR-0005 exception). Owner ack before implement — do not put path rows on the browse shell.
+  acceptance_criteria:
+    - Owner ack in chat or this task’s notes before coding.
+    - `AdminArchetypesTab` list uses CodexBrowseListShell (search/empty/loading/rows + AdminCodexRowActions). Path editor / `admin-archetype-path-rows` stay out of the shell.
+    - FEATURE_INDEX row updated; GLR chrome CI still green if the tab is a registered source.
+    - `npm run build`.
+  notes: |
+    Architect / owner ack before implement (same gate as TASK-871). Filed /debt 2026-09-03. Pause for a stronger model if the shell prop surface is unclear.
+
+---
+
+- id: TASK-915
+  title: Extract shared power/empowered creator editor sections
+  created_at: 2026-09-03
+  created_by: agent
+  priority: low
+  status: not-started
+  related_files:
+    - src/app/(main)/power-creator/power-creator-editor-power-config.tsx
+    - src/app/(main)/power-creator/power-creator-editor-power-damage.tsx
+    - src/app/(main)/power-creator/power-creator-editor-action-profile.tsx
+    - src/app/(main)/empowered-technique-creator/empowered-technique-editor-power-config.tsx
+    - src/app/(main)/empowered-technique-creator/empowered-technique-editor-power-damage.tsx
+    - src/app/(main)/empowered-technique-creator/empowered-technique-editor-action-profile.tsx
+    - src/docs/ai/FEATURE_INDEX.md
+  description: |
+    Power creator and empowered-technique creator duplicate editor section files (power-config, power-damage, action-profile). Extract one shared module under `components/creator/` (or a co-located helper both routes import). Do not merge technique-only calc (`formatTechniqueDamage`) into power damage.
+  acceptance_criteria:
+    - Owner/Architect ack before new shared/ui files (allowlist + ADR if a new patterns/ui file).
+    - Duplicate section components deleted; both routes import the shared extract.
+    - Cost/display math still comes from `lib/calculators` (no second formula).
+    - `npm run build`; smoke `/power-creator` and `/empowered-technique-creator` load/save.
+  notes: |
+    Architect / owner ack before implement. Filed /debt 2026-09-03. Prefer extract-in-place over a new pattern unless two+ more creators need it.
+
+---
+
+- id: TASK-916
+  title: Fold sheet formatArea / formatDamageType into canonical formatters
+  created_at: 2026-09-03
+  created_by: agent
+  priority: low
+  status: not-started
+  related_files:
+    - src/components/character-sheet/library-list-helpers.ts
+    - src/components/character-sheet/library-entity-rows.tsx
+    - src/lib/utils/string.ts
+    - src/lib/calculators/power-calc.ts
+  description: |
+    Sheet `formatArea` / `formatDamageType` are string-shaped local helpers beside canonical `formatAreaForDisplay` and `formatDamageDisplay` / `formatPowerDamage`. Wire the sheet path through the canonical helpers if display stays identical; otherwise document why the string path must stay.
+  acceptance_criteria:
+    - No local `formatArea` / `formatDamageType` in `library-list-helpers.ts`, or a one-line comment citing the canonical helper and why a string shim remains.
+    - Sheet Library power Area/Damage cells match pre-change copy (Target, typed dice).
+    - `npm run build`; targeted sheet/library unit tests if they exist.
+  notes: |
+    Filed /debt 2026-09-03. Do not merge `formatPowerDamage` with `formatTechniqueDamage` (different payloads).
+
+---
+
+- id: TASK-924
+  title: Fill relevant empty codex_parts.defense from description (owner apply)
+  created_at: 2026-09-03
+  created_by: owner
   priority: medium
   status: not-started
   related_files:
-    - src/components/character-sheet/edit-archetype-modal.tsx
-    - src/app/(main)/crafting/[id]/_components/crafting-item-options-section.tsx
-    - src/app/(main)/crafting/[id]/_components/crafting-optional-rules-section.tsx
-    - src/app/(main)/crafting/[id]/_components/crafting-rolls-section.tsx
-    - src/app/(main)/encounters/page.tsx
-    - src/app/(main)/encounters/[id]/_components/skill/skill-participant-card.tsx
-    - src/docs/MOBILE_UX.md
-    - src/docs/ai/ADR/0023-responsive-layout-contracts.md
-    - src/components/ui/button-tiers.test.ts
-  build_validation: |
-    suite: DEV-V-055
-    tests:
-      - DEV-V-055-T008
-  developer_test_plan: |
-    Suite DEV-V-055 T008 — see BUILD_VALIDATION.md (add when implementing)
+    - sql/codex-parts-targeted-defenses-proposed.sql
+    - src/lib/game/targeted-defenses.ts
+    - src/app/(main)/admin/codex/admin-part-form.ts
+    - src/docs/GAME_RULES.md
   description: |
-    `/global-audit` 2026-08-22: TASK-865 cleared viewport `md:min-h-*` shrinks, but left
-    always-on `min-h-[44px]` (no `@media (pointer: coarse)`) on crafting options/rules/rolls,
-    edit-archetype modal cards, encounters hub icons, and skill-participant-card. Owner ack
-    was required before retagging those surfaces onto pointer tiers / Button sizes / `.hit-area-*`.
+    Not every power/technique part targets a defense. Some empty `codex_parts.defense` rows do name targets in description (e.g. "Targets your choice of Fortitude, Mental Fortitude, or Discernment", "Targets Evasion"). Audit empty rows, propose fills only where the copy is clearly a targeted-defense clause, leave the rest empty. Live apply is owner-gated.
   acceptance_criteria:
-    - Named surfaces use pointer tiers (coarse Standard/Primary as appropriate; fine compact) — no always-on 44 layout slab on fine pointer unless product-intentional and documented.
-    - Do not retag list thumbs, image mattes, or InnateToggle.
-    - Extend `button-tiers.test.ts` ratchet; add DEV-V-055 T008; `/characters/new/advanced` still loads.
-    - Owner ack recorded in notes or chat before implement (gated from /debt).
+    - Proposed SQL in `sql/` covers only description-backed targeted-defense clauses (no greedy "mentions Evasion as a stat" fills).
+    - False positives from a regex preview (Blessed, Evasion Increase, Side-Step, Alternate Targeted Defense, etc.) stay empty unless owner adds them.
+    - No live UPDATE until owner says apply. Post-apply: counts + changelog.
+    - Creator suggestion/chips pick up the new field without further UI work.
   notes: |
-    Filed from /debt after /global-audit. Do not fold USM migrations or AdminArchetypes shell.
-    Keep `/characters/new/advanced`. Live codex/schema out of scope.
+    Live 2026-09-03: 85 filled / 335 empty / 420 total. Draft `sql/codex-parts-targeted-defenses-proposed.sql` lists a conservative 16-id set. Owner may add/remove rows before apply. Do not invent a core_rules DAMAGE_TYPES map.
+
+---
+
+- id: TASK-926
+  title: Weapon range display — typed labels + Thrown/Ranged normal/long
+  created_at: 2026-09-03
+  created_by: owner
+  priority: high
+  status: not-started
+  build_validation: |
+    suite: DEV-V-018
+    tests:
+      - DEV-V-018-T022
+  developer_test_plan: |
+    Suite DEV-V-018 T022 — see BUILD_VALIDATION.md (add on implement). Spot-check Library/sheet weapon range cells + creator range badge.
+  related_files:
+    - src/lib/calculators/item-calc.ts
+    - src/lib/calculators/item-calc-range.test.ts
+    - src/lib/detail-option/compact-facts.ts
+    - src/lib/detail-option/compact-facts.test.ts
+    - src/components/character-sheet/library-entity-rows.tsx
+    - src/docs/GAME_RULES.md
+    - src/docs/ai/FEATURE_INDEX.md
+    - src/docs/ai/BUILD_VALIDATION.md
+  description: |
+    After TASK-919, creator pickers store Melee / Reach / Ranged / Thrown with core-rule space ladders, but display still shows bare `N spaces` (and chips often force a “Range …” prefix). Owner wants typed display: Melee; Reach #; Thrown and Ranged as normal/long `#/4×#` (owner wrote `#/4*#`), with a hover tooltip on the long-range half explaining use at 4× normal incurs −5 (GAME_RULES § Ranged Attack Penalties). Spaces remain ladder-derived — not raw op levels.
+  acceptance_criteria:
+    - Single display SoT in `item-calc` (extend `formatWeaponRangeConfig` / `resolveWeaponRangeDisplay` / compact helper — no parallel formatter). Melee → `Melee`; Reach → `Reach N`; Thrown → `Thrown N/4N` (or equivalent `#/4×#`); Ranged → `Range N/4N`.
+    - Long-range segment has an InfoTippy (or existing tip pattern) explaining 4× normal range with −5 Attack Roll; Melee/Reach have no long-range half.
+    - `formatRangeFact` / GLR / sheet / Library / creator badge consume the SoT without mislabeling Reach or Thrown as “Range …”. Dense compact may shorten (e.g. `16/64`) but must keep type when ambiguous.
+    - GAME_RULES + FEATURE_INDEX note the display grammar; vitest covers ladders + formats; BUILD_VALIDATION DEV-V-018-T022 added; `npm run build`.
+  notes: |
+    Creator config UI (TASK-919) stays as-is. Do not invent a second range ladder. Tooltip copy should match GAME_RULES (long range = 4× normal, −5). Owner QA after implement → pending-qa.
 

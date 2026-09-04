@@ -70,6 +70,8 @@ export interface LibraryPower {
   updatedAt?: Date | string | undefined;
   /** Present on official-library rows when copied from Realms Library. */
   _source?: 'official' | string | undefined;
+  /** Defenses this power actually targets (if any). */
+  targetedDefenses?: string[] | undefined;
 }
 
 export interface LibraryTechnique {
@@ -100,6 +102,8 @@ export interface LibraryTechnique {
   power?: Record<string, unknown> | undefined;
   technique?: Record<string, unknown> | undefined;
   totals?: { energy?: number | undefined; trainingPoints?: number | undefined } | undefined;
+  /** Defenses this technique / empowered entry actually targets (if any). */
+  targetedDefenses?: string[] | undefined;
 }
 
 export interface SavedProperty {

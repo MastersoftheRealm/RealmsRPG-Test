@@ -35,6 +35,11 @@ export type PowerCreatorEditorProps = {
   attackMode: AttackMode;
   onAttackModeChange: (mode: AttackMode) => void;
 
+  targetedDefenses: string[];
+  onTargetedDefensesChange: (next: string[]) => void;
+  suggestionPartsDb: PowerPart[];
+  suggestionSelectedParts: PowerPart[];
+
   range: RangeConfig;
   onRangeChange: (updater: (prev: RangeConfig) => RangeConfig) => void;
   rangeSummary: string;

@@ -302,16 +302,16 @@ describe('ADR-0023 remaining viewport 44 slabs (TASK-865)', () => {
 
   it('raises rulebook nav and chapter prev/next with pointer tiers, not md:min-h-0', () => {
     const nav = readFileSync(path.join(import.meta.dirname, '../rules/rulebook-nav.tsx'), 'utf8');
-    const chapter = readFileSync(
-      path.join(import.meta.dirname, '../../app/(main)/rules/[slug]/page.tsx'),
+    const pager = readFileSync(
+      path.join(import.meta.dirname, '../rules/rulebook-pager.tsx'),
       'utf8',
     );
     expect(nav).toContain('touch-tier-standard');
     expect(nav).not.toContain('md:min-h-0');
     expect(nav).not.toMatch(/min-h-\[44px\]/);
-    expect(chapter).toContain('touch-tier-standard');
-    expect(chapter).not.toContain('md:min-h-0');
-    expect(chapter).not.toMatch(/min-h-\[44px\]/);
+    expect(pager).toContain('touch-tier-standard');
+    expect(pager).not.toContain('md:min-h-0');
+    expect(pager).not.toMatch(/min-h-\[44px\]/);
   });
 
   it('raises CharacterFilter header with touch-tier-standard, not md:min-h-5', () => {
@@ -335,6 +335,180 @@ describe('ADR-0023 remaining viewport 44 slabs (TASK-865)', () => {
     expect(src).not.toContain('md:min-w-[36px]');
     expect(src).not.toMatch(/min-w-\[44px\]/);
     expect(src).not.toMatch(/min-h-\[44px\]/);
+  });
+});
+
+describe('ADR-0023 always-on 44 leftovers (TASK-901)', () => {
+  const namedSurfaces = [
+    '../character-sheet/edit-archetype-modal.tsx',
+    '../../app/(main)/crafting/[id]/_components/crafting-item-options-section.tsx',
+    '../../app/(main)/crafting/[id]/_components/crafting-optional-rules-section.tsx',
+    '../../app/(main)/crafting/[id]/_components/crafting-rolls-section.tsx',
+    '../../app/(main)/encounters/page.tsx',
+    '../../app/(main)/encounters/[id]/_components/skill/skill-participant-card.tsx',
+  ];
+
+  it('retags named always-on min-h-[44px] surfaces onto pointer tiers', () => {
+    for (const rel of namedSurfaces) {
+      const src = readFileSync(path.join(import.meta.dirname, rel), 'utf8');
+      expect(src).not.toMatch(/min-h-\[44px\]/);
+      expect(src).not.toMatch(/min-w-\[44px\]/);
+    }
+
+    const editArchetype = readFileSync(
+      path.join(import.meta.dirname, '../character-sheet/edit-archetype-modal.tsx'),
+      'utf8',
+    );
+    expect(editArchetype).toContain('touch-tier-standard');
+
+    const craftingOptions = readFileSync(
+      path.join(
+        import.meta.dirname,
+        '../../app/(main)/crafting/[id]/_components/crafting-item-options-section.tsx',
+      ),
+      'utf8',
+    );
+    expect(craftingOptions).toContain('touch-tier-standard');
+
+    const craftingRules = readFileSync(
+      path.join(
+        import.meta.dirname,
+        '../../app/(main)/crafting/[id]/_components/crafting-optional-rules-section.tsx',
+      ),
+      'utf8',
+    );
+    expect(craftingRules).toContain('touch-tier-standard');
+
+    const craftingRolls = readFileSync(
+      path.join(
+        import.meta.dirname,
+        '../../app/(main)/crafting/[id]/_components/crafting-rolls-section.tsx',
+      ),
+      'utf8',
+    );
+    expect(craftingRolls).toContain('<Input');
+
+    const encountersHub = readFileSync(
+      path.join(import.meta.dirname, '../../app/(main)/encounters/page.tsx'),
+      'utf8',
+    );
+    expect(encountersHub).toContain('<IconButton');
+    expect(encountersHub).toContain('size="sm"');
+    expect(encountersHub).not.toMatch(/dark:hover:bg-danger-900/);
+
+    const skillCard = readFileSync(
+      path.join(
+        import.meta.dirname,
+        '../../app/(main)/encounters/[id]/_components/skill/skill-participant-card.tsx',
+      ),
+      'utf8',
+    );
+    expect(skillCard).toContain('touch-tier-standard');
+    expect(skillCard).toContain('<IconButton');
+    expect(skillCard).toContain('[@media(pointer:coarse)]:h-11');
+  });
+});
+
+describe('ADR-0023 leftover always-on 44 slabs (TASK-913)', () => {
+  const namedSurfaces = [
+    '../../app/(main)/power-creator/power-creator-editor-power-damage.tsx',
+    '../../app/(main)/technique-creator/technique-creator-editor.tsx',
+    '../../app/(main)/empowered-technique-creator/empowered-technique-editor-power-damage.tsx',
+    '../../app/(main)/empowered-technique-creator/empowered-technique-editor-power-config.tsx',
+    '../../app/(main)/empowered-technique-creator/empowered-technique-editor-action-profile.tsx',
+    '../../app/(main)/empowered-technique-creator/empowered-technique-editor-technique-parts.tsx',
+    '../../app/(main)/empowered-technique-creator/empowered-technique-editor-power-parts.tsx',
+    '../../app/(main)/item-creator/item-creator-editor-meta.tsx',
+    '../../app/(main)/admin/codex/admin-archetype-path-rows.tsx',
+    '../../app/(main)/admin/codex/admin-archetype-editor-level1.tsx',
+    '../../app/(main)/admin/roles/page.tsx',
+    '../../app/(main)/campaigns/[id]/_components/character-chip.tsx',
+    '../../app/(main)/campaigns/[id]/_components/campaign-detail-header.tsx',
+    '../../app/(main)/creature-creator/AddCreatureFeatModal.tsx',
+    '../creator/collapsible-section.tsx',
+    '../character-sheet/edit-species-ancestry-step.tsx',
+    '../patterns/select/choice-trait-option-select.tsx',
+  ];
+
+  it('retags named always-on min-h-[44px] surfaces onto pointer tiers', () => {
+    for (const rel of namedSurfaces) {
+      const src = readFileSync(path.join(import.meta.dirname, rel), 'utf8');
+      expect(src).not.toMatch(/min-h-\[44px\]/);
+      expect(src).not.toMatch(/min-w-\[44px\]/);
+    }
+
+    const powerDamage = readFileSync(
+      path.join(
+        import.meta.dirname,
+        '../../app/(main)/power-creator/power-creator-editor-power-damage.tsx',
+      ),
+      'utf8',
+    );
+    expect(powerDamage).toContain('<IconButton');
+    expect(powerDamage).toContain('size="sm"');
+
+    const technique = readFileSync(
+      path.join(
+        import.meta.dirname,
+        '../../app/(main)/technique-creator/technique-creator-editor.tsx',
+      ),
+      'utf8',
+    );
+    expect(technique).toContain('touch-tier-standard');
+
+    const itemMeta = readFileSync(
+      path.join(import.meta.dirname, '../../app/(main)/item-creator/item-creator-editor-meta.tsx'),
+      'utf8',
+    );
+    expect(itemMeta).toContain('SegmentedControl');
+    expect(itemMeta).not.toContain('grid-cols-4');
+
+    const itemTypeControl = readFileSync(
+      path.join(import.meta.dirname, '../patterns/chrome/segmented-control.tsx'),
+      'utf8',
+    );
+    expect(itemTypeControl).toContain('touch-tier-standard');
+
+    const roles = readFileSync(
+      path.join(import.meta.dirname, '../../app/(main)/admin/roles/page.tsx'),
+      'utf8',
+    );
+    expect(roles).toContain('touch-tier-standard');
+
+    const chip = readFileSync(
+      path.join(
+        import.meta.dirname,
+        '../../app/(main)/campaigns/[id]/_components/character-chip.tsx',
+      ),
+      'utf8',
+    );
+    expect(chip).toMatch(/<Button asChild variant="ghost" size="icon"/);
+    expect(chip).toContain('<IconButton');
+
+    const collapsible = readFileSync(
+      path.join(import.meta.dirname, '../creator/collapsible-section.tsx'),
+      'utf8',
+    );
+    expect(collapsible).toContain('size="sm"');
+    expect(collapsible).not.toMatch(/min-h-\[44px\]/);
+  });
+
+  it('leaves InnateToggle, list thumbs, and auth shell on their existing 44 floors', () => {
+    const innate = readFileSync(
+      path.join(import.meta.dirname, '../patterns/select/innate-toggle.tsx'),
+      'utf8',
+    );
+    const thumb = readFileSync(
+      path.join(import.meta.dirname, '../patterns/list/list-row-thumbnail.tsx'),
+      'utf8',
+    );
+    const password = readFileSync(
+      path.join(import.meta.dirname, '../auth/password-input.tsx'),
+      'utf8',
+    );
+    expect(innate).toMatch(/min-h-\[44px\]/);
+    expect(thumb).toMatch(/min-h-\[44px\]/);
+    expect(password).toMatch(/min-h-\[44px\]/);
   });
 });
 

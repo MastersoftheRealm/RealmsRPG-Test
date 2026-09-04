@@ -67,6 +67,9 @@ export function useEmpoweredTechniqueCreatorWorkspace({
   );
   const [imageId, setImageId] = useState<string | null>(initialFormState.imageId);
   const [imageUrl, setImageUrl] = useState<string | null>(initialFormState.imageUrl);
+  const [targetedDefenses, setTargetedDefenses] = useState<string[]>(
+    initialFormState.targetedDefenses,
+  );
 
   // ?edit= mode: clear any stale draft once on mount (parity with the old hydrate
   // effect, which removed the cache after loading the edit target).
@@ -93,7 +96,7 @@ export function useEmpoweredTechniqueCreatorWorkspace({
     attackModePowerPart,
     attackModeTechniquePart,
     costs,
-    advancedCalcRows,
+    advancedCalcGroups,
     sectionCosts,
     actionDisplay,
     rangeDisplay,
@@ -159,6 +162,7 @@ export function useEmpoweredTechniqueCreatorWorkspace({
     setSelectedTechniqueParts([]);
     setImageId(null);
     setImageUrl(null);
+    setTargetedDefenses([]);
     clearCreatorCache(CACHE_KEY);
   }, []);
 
@@ -178,7 +182,17 @@ export function useEmpoweredTechniqueCreatorWorkspace({
     setSelectedTechniqueParts(next.selectedTechniqueParts);
     setImageId(next.imageId);
     setImageUrl(next.imageUrl);
+    setTargetedDefenses(next.targetedDefenses);
   }, []);
+
+  const suggestionSelectedParts = useMemo(
+    () => [
+      ...selectedPowerParts.map((row) => row.part),
+      ...selectedPowerAdvancedParts.map((row) => row.part),
+      ...selectedTechniqueParts.map((row) => row.part),
+    ],
+    [selectedPowerParts, selectedPowerAdvancedParts, selectedTechniqueParts],
+  );
 
   const getPayload = useCallback(() => {
     const powerPartsToSave = dedupeSavedParts(
@@ -221,6 +235,7 @@ export function useEmpoweredTechniqueCreatorWorkspace({
         actionType,
         isReaction,
         attackMode,
+        ...(targetedDefenses.length > 0 ? { targetedDefenses } : {}),
         ...(imageId ? { imageId } : {}),
         ...(imageUrl ? { imageUrl } : {}),
         power: {
@@ -256,6 +271,7 @@ export function useEmpoweredTechniqueCreatorWorkspace({
     attackModeTechniquePart,
     area,
     attackMode,
+    targetedDefenses,
     costs.totalEnergy,
     costs.totalTP,
     description,
@@ -338,6 +354,7 @@ export function useEmpoweredTechniqueCreatorWorkspace({
       })),
       imageId,
       imageUrl,
+      targetedDefenses,
       timestamp: Date.now(),
     };
     writeCreatorCache(CACHE_KEY, cache);
@@ -358,6 +375,7 @@ export function useEmpoweredTechniqueCreatorWorkspace({
     selectedTechniqueParts,
     techniqueDamage,
     attackMode,
+    targetedDefenses,
   ]);
 
   const loadError =
@@ -399,11 +417,16 @@ export function useEmpoweredTechniqueCreatorWorkspace({
     imageUrl,
     setImageId,
     setImageUrl,
+    targetedDefenses,
+    setTargetedDefenses,
+    suggestionSelectedParts,
+    powerParts,
+    techniqueParts,
     nonMechanicPowerParts,
     nonMechanicTechniqueParts,
     powerMechanicsForList,
     costs,
-    advancedCalcRows,
+    advancedCalcGroups,
     sectionCosts,
     actionDisplay,
     rangeDisplay,

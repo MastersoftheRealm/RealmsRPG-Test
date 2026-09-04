@@ -11,7 +11,6 @@ import {
   renderInteractiveGridRows,
   useEntityListSectionCollapse,
 } from './entity-library-sections-rows';
-import { truncateText } from '@/lib/utils';
 import type { EntityFeatRow, EntityListControls } from './entity-library-sections-types';
 
 /** Collapsible block for library tabs that are not entity list sections (notes, proficiencies). */
@@ -120,24 +119,12 @@ export function FeatsTraitsListSection({
                     gridColumns={FEAT_GRID}
                     columns={
                       noUsesOrRecovery
-                        ? [
-                            {
-                              key: 'description',
-                              value: truncateText(feat.description, 220),
-                              hideOnMobile: true,
-                            },
-                          ]
+                        ? []
                         : [
-                            {
-                              key: 'description',
-                              value: truncateText(feat.description, uses ? 60 : 100),
-                              hideOnMobile: true,
-                            },
                             { key: 'uses', value: usesDisplay, align: 'center' },
                             { key: 'recovery', value: recoveryDisplay, align: 'center' },
                           ]
                     }
-                    columnSpans={noUsesOrRecovery ? [3] : undefined}
                     uses={uses}
                     compact={compactRows}
                   />

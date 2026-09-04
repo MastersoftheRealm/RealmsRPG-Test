@@ -58,7 +58,7 @@ export function EmpoweredTechniqueEditorPowerConfig({
                 type: event.target.value as AreaConfig['type'],
               }))
             }
-            className="min-h-[44px] rounded-lg border border-border-light bg-surface px-4 py-2 text-text-primary"
+            className="touch-tier-standard rounded-lg border border-border-light bg-surface px-4 py-2 text-text-primary"
             aria-label="Empowered technique area type"
           >
             {AREA_TYPES.map((option) => (
@@ -100,7 +100,7 @@ export function EmpoweredTechniqueEditorPowerConfig({
               onChange={(event) =>
                 onDurationTypeChange(event.target.value as DurationConfig['type'])
               }
-              className="min-h-[44px] rounded-lg border border-border-light bg-surface px-4 py-2 text-text-primary"
+              className="touch-tier-standard rounded-lg border border-border-light bg-surface px-4 py-2 text-text-primary"
               aria-label="Empowered technique duration type"
             >
               {DURATION_TYPES.map((option) => (
@@ -120,7 +120,7 @@ export function EmpoweredTechniqueEditorPowerConfig({
                       value: Number(event.target.value),
                     }))
                   }
-                  className="min-h-[44px] rounded-lg border border-border-light bg-surface px-4 py-2 text-text-primary"
+                  className="touch-tier-standard rounded-lg border border-border-light bg-surface px-4 py-2 text-text-primary"
                   aria-label="Empowered technique duration value"
                 >
                   {durationValueOptions.map((option) => (
@@ -171,7 +171,7 @@ export function EmpoweredTechniqueEditorPowerConfig({
                     sustain: Number(event.target.value),
                   }))
                 }
-                className="min-h-[44px] rounded border border-border-light bg-surface px-2 py-1 text-sm text-text-primary"
+                className="touch-tier-standard rounded border border-border-light bg-surface px-2 py-1 text-sm text-text-primary"
                 aria-label="Empowered technique sustain action points"
               >
                 <option value={0}>Sustain: None</option>

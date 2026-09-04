@@ -19,6 +19,7 @@ import {
 } from '@/lib/calculators/item-calc';
 import {
   getWeaponAttackAbility,
+  hasReachProperty,
   hasThrownProperty,
   hasTwoHandedProperty,
   weaponAttackAbilityLabel,
@@ -27,6 +28,7 @@ import {
 } from '@/lib/game/weapon-attack-ability';
 import { formatActionTypeForDisplay } from '@/lib/utils/action-type';
 import { capitalize, formatDamageDisplay } from '@/lib/utils';
+import { formatTargetsFact } from '@/lib/game/targeted-defenses';
 
 /** Ability name + minimum level (weapon/armor/feat requirements). */
 export interface AbilityRequirementFact {
@@ -43,9 +45,11 @@ export const MECHANIC_PROPERTY_NAMES = new Set([
   'one-handed',
   'two-handed',
   'thrown',
+  'reach',
   'ranged',
   'melee',
   'finesse',
+  'heavy',
   // Dedicated compact-fact formatters / column facts
   'weapon damage',
   'damage reduction',
@@ -106,6 +110,7 @@ export function formatHandednessFact(
 ): HandednessLabel {
   if (hasTwoHandedProperty(properties)) return 'Two-handed';
   if (hasThrownProperty(properties)) return 'Thrown';
+  if (hasReachProperty(properties)) return 'One-handed';
   const range = resolveWeaponRangeDisplay(storedRange, (properties ?? []) as ItemPropertyPayload[]);
   if (range.toLowerCase() !== 'melee') return 'Ranged';
   return 'One-handed';
@@ -318,6 +323,10 @@ export function spacesFactChip(spaces: string | number | null | undefined): Chip
  */
 export function actionTypeFactChip(actionType: string | null | undefined): ChipData | null {
   return compactFactChip(formatActionTypeValue(actionType));
+}
+
+export function targetsFactChip(targetedDefenses: string[] | null | undefined): ChipData | null {
+  return compactFactChip(formatTargetsFact(targetedDefenses));
 }
 
 /**

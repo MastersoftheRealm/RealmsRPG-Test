@@ -3,7 +3,7 @@
 > **Do not edit by hand.** Run `npm run tasks:generate-index` after changing barrel exports.
 > Curated narrative map: [`FEATURE_INDEX.md`](FEATURE_INDEX.md).
 
-Generated: 2026-08-22
+Generated: 2026-09-03
 
 ## `src/components/patterns/index.ts`
 
@@ -49,7 +49,6 @@ Generated: 2026-08-22
 - GridListChip
 - GridListRow
 - gridTemplateColumnsWithThumbnail
-- GuidedChoiceShell
 - GuidedInlineCatalogList
 - GuidedLayerNav
 - HubListRow
@@ -181,6 +180,7 @@ Generated: 2026-08-22
 - fetchCampaignCharacterForEncounter
 - findTraitByIdOrName
 - getGameRulesFallback
+- invalidateCharacterLists
 - officialLibraryKeys
 - patchCharacterDetailQuery
 - resolveSkillIdsToNames
@@ -239,7 +239,6 @@ Generated: 2026-08-22
 - useCreateEncounter
 - useCreateEnhancedItem
 - useCreateOfficialEnhancedItem
-- useCreatorPathData
 - useCreatorSave
 - useCreatureFeats
 - useDeleteCharacter

@@ -2,24 +2,15 @@
  * Character Sheet Body — desktop grid + mobile side-scroll (TASK-348).
  * Single LibrarySection mount shared across breakpoints (TASK-317).
  * Mobile panel gutters: basis-full + gap-4 inside PageContainer (TASK-538 / TASK-868).
- * Mobile C1: height-bound carousel so panels scroll internally (TASK-838).
- * Mobile header collapses on panel scroll so it can leave the viewport (TASK-868).
- * Header is not an inner scroller — vertical gestures on it bridge to the active panel (TASK-902).
+ * Mobile C1: height-bound frame; column is the vertical scroller (TASK-838 / TASK-907).
+ * Inactive snap panels contribute no height so the tallest sibling cannot stretch the page.
  */
 
 'use client';
 
-import {
-  Children,
-  useEffect,
-  useLayoutEffect,
-  useRef,
-  useState,
-  type ReactNode,
-  type RefObject,
-} from 'react';
+import { Children, useEffect, useRef, useState, type ReactNode, type RefObject } from 'react';
 import type { AbilityName } from '@/types';
-import { tabListOverflowState } from '@/components/ui/tab-navigation';
+import { SegmentedControl } from '@/components/patterns';
 import { cn } from '@/lib/utils';
 import { calculateSkillPointsForEntity } from '@/lib/game/formulas';
 import { AbilitiesSection } from './abilities-section';
@@ -27,7 +18,17 @@ import { SkillsSection } from './skills-section';
 import { ArchetypeSection } from './archetype-section';
 import { LibrarySection } from './library-section';
 import { useCharacterSheet } from './character-sheet-context';
-import { nextSheetHeaderCollapsed } from './sheet-mobile-header-collapse';
+import {
+  SHEET_CAROUSEL_AXIS_PX,
+  SHEET_CAROUSEL_PANEL_OPTIONS,
+  isMobileSheetViewport,
+  isSheetCarouselNearSnap,
+  nearestSheetCarouselIndex,
+  sheetCarouselGapPx,
+  sheetCarouselPanelScrollLeft,
+  sheetMobilePanels,
+  type SheetCarouselPanelId,
+} from './sheet-mobile-carousel';
 
 /**
  * Site `Header` is `h-20` (5rem). Below md, lock the sheet column to the leftover
@@ -42,103 +43,69 @@ export const CHARACTER_SHEET_MOBILE_FRAME_CLASSNAME =
 export const CHARACTER_SHEET_MOBILE_DOCK_SCOPE_CLASSNAME = 'has-sheet-mobile-dock';
 
 const MOBILE_SNAP_PANEL_CLASSNAME =
-  'box-border shrink-0 grow-0 basis-full snap-start [scroll-snap-stop:always] overflow-x-hidden overflow-y-auto max-md:h-full max-md:min-h-0 max-md:overscroll-y-contain pb-4 max-md:pb-[var(--sheet-panel-end-pad)]';
+  'box-border shrink-0 grow-0 basis-full snap-start [scroll-snap-stop:always] overflow-x-hidden max-md:min-h-0 max-md:overflow-y-hidden pb-4 max-md:pb-[var(--sheet-panel-end-pad)] max-md:[&:not([data-sheet-panel-active])]:h-0 max-md:[&:not([data-sheet-panel-active])]:overflow-hidden max-md:[&:not([data-sheet-panel-active])]:pb-0';
 
-const HEADER_GESTURE_AXIS_PX = 8;
-
-function isMobileSheetViewport(): boolean {
-  return typeof window !== 'undefined' && window.matchMedia('(max-width: 767px)').matches;
-}
-
-function activeMobilePanel(carousel: HTMLElement): HTMLElement | null {
-  const origin = carousel.getBoundingClientRect().left;
-  const panels = carousel.querySelectorAll<HTMLElement>('[data-sheet-mobile-panel]');
-  let active: HTMLElement | null = null;
-  let best = Number.POSITIVE_INFINITY;
-  for (const panel of panels) {
-    const delta = Math.abs(panel.getBoundingClientRect().left - origin);
-    if (delta < best) {
-      best = delta;
-      active = panel;
-    }
-  }
-  return active;
-}
-
-function activeMobilePanelScrollTop(carousel: HTMLElement): number {
-  return activeMobilePanel(carousel)?.scrollTop ?? 0;
+function clearSheetCarouselPanning(carousel: HTMLElement) {
+  carousel.removeAttribute('data-sheet-carousel-panning');
+  carousel.style.removeProperty('--sheet-carousel-lock-height');
 }
 
 /**
- * Collapse the sheet header once a mobile panel scrolls past hysteresis.
- * Header is not a scroller — vertical touch/wheel on it is bridged to the active panel.
+ * Keep inactive snap panels out of the column's height; lock height while
+ * horizontally panning so the incoming panel is visible. Vertical pan on the
+ * carousel is forwarded to the column (header stays in document flow).
  */
-function useMobileSheetHeaderCollapse(columnRef: RefObject<HTMLDivElement | null>) {
-  const [collapsed, setCollapsed] = useState(false);
-  const collapsedRef = useRef(false);
+function useSheetMobileCarousel(carouselRef: RefObject<HTMLDivElement | null>) {
+  const [activeId, setActiveId] = useState<SheetCarouselPanelId>('abilities');
 
   useEffect(() => {
-    const root = columnRef.current;
-    if (!root) return;
+    const carousel = carouselRef.current;
+    if (!carousel) return;
 
-    const applyScrollTop = (scrollTop: number) => {
+    const syncFromScroll = () => {
       if (!isMobileSheetViewport()) {
-        collapsedRef.current = false;
-        setCollapsed(false);
+        clearSheetCarouselPanning(carousel);
         return;
       }
-      const next = nextSheetHeaderCollapsed(collapsedRef.current, scrollTop);
-      if (next === collapsedRef.current) return;
-      collapsedRef.current = next;
-      setCollapsed(next);
-    };
-
-    const syncFromScroller = (scroller: HTMLElement) => {
-      if (scroller.dataset.sheetMobileCarousel !== undefined) {
-        applyScrollTop(activeMobilePanelScrollTop(scroller));
+      const panels = sheetMobilePanels(carousel);
+      const gap = sheetCarouselGapPx(carousel);
+      const width = carousel.clientWidth;
+      const index = nearestSheetCarouselIndex(carousel.scrollLeft, width, gap, panels.length);
+      setActiveId(SHEET_CAROUSEL_PANEL_OPTIONS[index]?.value ?? 'abilities');
+      if (isSheetCarouselNearSnap(carousel.scrollLeft, width, gap, panels.length)) {
+        clearSheetCarouselPanning(carousel);
         return;
       }
-      if (scroller.dataset.sheetMobilePanel !== undefined) {
-        applyScrollTop(scroller.scrollTop);
-      }
+      if (carousel.dataset.sheetCarouselPanning !== undefined) return;
+      const active = panels[index];
+      const lockHeight = Math.round(active?.scrollHeight || carousel.offsetHeight);
+      carousel.style.setProperty('--sheet-carousel-lock-height', `${lockHeight}px`);
+      carousel.setAttribute('data-sheet-carousel-panning', '');
     };
 
-    const onScroll = (event: Event) => {
-      const target = event.target;
-      if (!(target instanceof HTMLElement) || target === root) return;
-      syncFromScroller(target);
-    };
-
-    const onViewportChange = () => {
-      if (!isMobileSheetViewport()) {
-        collapsedRef.current = false;
-        setCollapsed(false);
-      }
-    };
-
-    root.addEventListener('scroll', onScroll, true);
-    window.addEventListener('resize', onViewportChange);
+    syncFromScroll();
+    carousel.addEventListener('scroll', syncFromScroll, { passive: true });
+    carousel.addEventListener('scrollend', syncFromScroll);
+    const ro = new ResizeObserver(syncFromScroll);
+    ro.observe(carousel);
+    window.addEventListener('resize', syncFromScroll);
     return () => {
-      root.removeEventListener('scroll', onScroll, true);
-      window.removeEventListener('resize', onViewportChange);
+      carousel.removeEventListener('scroll', syncFromScroll);
+      carousel.removeEventListener('scrollend', syncFromScroll);
+      ro.disconnect();
+      window.removeEventListener('resize', syncFromScroll);
     };
-  }, [columnRef]);
+  }, [carouselRef]);
 
   useEffect(() => {
-    const root = columnRef.current;
-    if (!root) return;
-    const header = root.querySelector<HTMLElement>('[data-sheet-mobile-header]');
-    if (!header) return;
+    const carousel = carouselRef.current;
+    if (!carousel) return;
 
     let startY = 0;
     let startX = 0;
     let axis: 'undecided' | 'vertical' | 'horizontal' = 'undecided';
-    let panel: HTMLElement | null = null;
 
-    const resolvePanel = () => {
-      const carousel = root.querySelector<HTMLElement>('[data-sheet-mobile-carousel]');
-      return carousel ? activeMobilePanel(carousel) : null;
-    };
+    const columnOf = () => carousel.closest<HTMLElement>('[data-sheet-mobile-column]');
 
     const onTouchStart = (event: TouchEvent) => {
       if (!isMobileSheetViewport() || event.touches.length !== 1) return;
@@ -147,25 +114,22 @@ function useMobileSheetHeaderCollapse(columnRef: RefObject<HTMLDivElement | null
       startY = touch.clientY;
       startX = touch.clientX;
       axis = 'undecided';
-      panel = resolvePanel();
     };
 
     const onTouchMove = (event: TouchEvent) => {
-      if (!panel || event.touches.length !== 1) return;
+      if (!isMobileSheetViewport() || event.touches.length !== 1) return;
       const touch = event.touches[0];
       if (!touch) return;
       const dy = startY - touch.clientY;
       const dx = touch.clientX - startX;
       if (axis === 'undecided') {
-        if (Math.abs(dy) < HEADER_GESTURE_AXIS_PX && Math.abs(dx) < HEADER_GESTURE_AXIS_PX) return;
+        if (Math.abs(dy) < SHEET_CAROUSEL_AXIS_PX && Math.abs(dx) < SHEET_CAROUSEL_AXIS_PX) return;
         axis = Math.abs(dx) > Math.abs(dy) ? 'horizontal' : 'vertical';
-        if (axis === 'horizontal') {
-          panel = null;
-          return;
-        }
       }
       if (axis !== 'vertical') return;
-      panel.scrollTop += dy;
+      const column = columnOf();
+      if (!column) return;
+      column.scrollTop += dy;
       startY = touch.clientY;
       startX = touch.clientX;
       event.preventDefault();
@@ -173,54 +137,35 @@ function useMobileSheetHeaderCollapse(columnRef: RefObject<HTMLDivElement | null
 
     const onWheel = (event: WheelEvent) => {
       if (!isMobileSheetViewport()) return;
-      const active = resolvePanel();
-      if (!active) return;
-      active.scrollTop += event.deltaY;
+      if (Math.abs(event.deltaY) < Math.abs(event.deltaX)) return;
+      const column = columnOf();
+      if (!column) return;
+      column.scrollTop += event.deltaY;
       event.preventDefault();
     };
 
-    header.addEventListener('touchstart', onTouchStart, { passive: true });
-    header.addEventListener('touchmove', onTouchMove, { passive: false });
-    header.addEventListener('wheel', onWheel, { passive: false });
+    carousel.addEventListener('touchstart', onTouchStart, { passive: true });
+    carousel.addEventListener('touchmove', onTouchMove, { passive: false });
+    carousel.addEventListener('wheel', onWheel, { passive: false });
     return () => {
-      header.removeEventListener('touchstart', onTouchStart);
-      header.removeEventListener('touchmove', onTouchMove);
-      header.removeEventListener('wheel', onWheel);
-    };
-  }, [columnRef]);
-
-  return collapsed;
-}
-
-/** C1 edge fade on the sheet carousel — same overflow metric as tab strips (TASK-840). */
-function useSheetCarouselOverflow(carouselRef: RefObject<HTMLDivElement | null>) {
-  const [overflow, setOverflow] = useState({ start: false, end: false });
-
-  useLayoutEffect(() => {
-    const el = carouselRef.current;
-    if (!el) return;
-
-    const update = () => {
-      if (!isMobileSheetViewport()) {
-        setOverflow({ start: false, end: false });
-        return;
-      }
-      setOverflow(tabListOverflowState(el.scrollLeft, el.clientWidth, el.scrollWidth));
-    };
-
-    update();
-    el.addEventListener('scroll', update, { passive: true });
-    const ro = new ResizeObserver(update);
-    ro.observe(el);
-    window.addEventListener('resize', update);
-    return () => {
-      el.removeEventListener('scroll', update);
-      ro.disconnect();
-      window.removeEventListener('resize', update);
+      carousel.removeEventListener('touchstart', onTouchStart);
+      carousel.removeEventListener('touchmove', onTouchMove);
+      carousel.removeEventListener('wheel', onWheel);
     };
   }, [carouselRef]);
 
-  return overflow;
+  const selectPanel = (id: SheetCarouselPanelId) => {
+    setActiveId(id);
+    const carousel = carouselRef.current;
+    if (!carousel || !isMobileSheetViewport()) return;
+    const index = SHEET_CAROUSEL_PANEL_OPTIONS.findIndex((option) => option.value === id);
+    const panel = sheetMobilePanels(carousel)[index];
+    if (!panel) return;
+    clearSheetCarouselPanning(carousel);
+    carousel.scrollTo({ left: sheetCarouselPanelScrollLeft(carousel, panel), behavior: 'auto' });
+  };
+
+  return { activeId, selectPanel };
 }
 
 const DESKTOP_GRID_PANEL_CLASSNAME =
@@ -228,24 +173,14 @@ const DESKTOP_GRID_PANEL_CLASSNAME =
 
 /** Flex column below md; `contents` on md+ so header + body stay PageContainer siblings. */
 export function CharacterSheetColumn({ children }: { children: ReactNode }) {
-  const columnRef = useRef<HTMLDivElement>(null);
-  const headerCollapsed = useMobileSheetHeaderCollapse(columnRef);
   const [header, ...rest] = Children.toArray(children);
 
   return (
     <div
-      ref={columnRef}
-      className="max-md:flex max-md:min-h-0 max-md:w-full max-md:min-w-0 max-md:flex-1 max-md:flex-col max-md:overflow-y-hidden max-md:overscroll-y-contain md:contents"
+      data-sheet-mobile-column
+      className="max-md:flex max-md:min-h-0 max-md:w-full max-md:min-w-0 max-md:flex-1 max-md:flex-col max-md:overflow-x-hidden max-md:overflow-y-auto max-md:overscroll-y-contain md:contents"
     >
-      <div
-        data-sheet-mobile-header
-        className={cn(
-          'max-md:min-w-0 max-md:shrink-0 max-md:transition-[max-height,opacity] max-md:duration-200 max-md:ease-out motion-reduce:max-md:transition-none md:contents',
-          headerCollapsed &&
-            'max-md:pointer-events-none max-md:max-h-0 max-md:overflow-hidden max-md:opacity-0',
-        )}
-        inert={headerCollapsed || undefined}
-      >
+      <div data-sheet-mobile-header className="max-md:min-w-0 max-md:shrink-0 md:contents">
         {header}
       </div>
       {rest}
@@ -368,7 +303,7 @@ function LibraryPanel({ className }: { className?: string | undefined }) {
 
 export function CharacterSheetBody() {
   const carouselRef = useRef<HTMLDivElement>(null);
-  const carouselOverflow = useSheetCarouselOverflow(carouselRef);
+  const { activeId, selectPanel } = useSheetMobileCarousel(carouselRef);
 
   return (
     <>
@@ -377,23 +312,38 @@ export function CharacterSheetBody() {
         <AbilitiesPanel />
       </div>
 
+      <div className="sticky top-0 z-sticky mb-2 bg-background py-1 md:hidden">
+        <SegmentedControl
+          size="compact"
+          equalWidth
+          tabs
+          tabPanelId="character-sheet-mobile-carousel"
+          aria-label="Character sheet sections"
+          className="w-full flex-nowrap"
+          value={activeId}
+          onChange={selectPanel}
+          options={[...SHEET_CAROUSEL_PANEL_OPTIONS]}
+        />
+      </div>
+
       {/* Shared grid (desktop) + side-scroll panels (mobile); Library mounts once.
           Mobile: panel basis = PageContainer content width (same as SheetHeader);
           gap between panels; no scroller padding so snap stays aligned (TASK-868).
-          Height-bound below md so overflow-y-auto on each panel actually engages (TASK-838).
-          C1 rest-state fade via tabListOverflowState (TASK-840 metric; no -mx/scroll-px). */}
+          Column is the vertical scroller (header in flow). Inactive panels height 0
+          so Library cannot stretch Abilities (TASK-838 / TASK-907). C1 affordance is
+          the section switcher — not a content-covering fade. */}
       <div
         ref={carouselRef}
+        id="character-sheet-mobile-carousel"
         data-sheet-mobile-carousel
-        data-overflow-start={carouselOverflow.start ? 'true' : 'false'}
-        data-overflow-end={carouselOverflow.end ? 'true' : 'false'}
-        className="flex snap-x snap-mandatory flex-nowrap gap-4 overflow-x-auto scroll-smooth pb-4 max-md:min-h-0 max-md:w-full max-md:min-w-0 max-md:flex-1 max-md:touch-pan-x max-md:touch-pan-y max-md:overflow-y-hidden md:grid md:snap-none md:grid-cols-1 md:items-stretch md:overflow-visible md:pb-0 lg:grid-cols-[1fr_1fr_2fr]"
+        className="flex snap-x snap-mandatory flex-nowrap gap-4 overflow-x-auto pb-4 max-md:min-h-0 max-md:w-full max-md:min-w-0 max-md:shrink-0 max-md:touch-pan-x max-md:items-start max-md:overflow-y-hidden md:grid md:snap-none md:grid-cols-1 md:items-stretch md:overflow-visible md:pb-0 lg:grid-cols-[1fr_1fr_2fr]"
         style={{ WebkitOverflowScrolling: 'touch' }}
       >
         <section
           aria-label="Abilities & Defenses"
           data-tour-id="sheet-tour-abilities"
           data-sheet-mobile-panel
+          data-sheet-panel-active={activeId === 'abilities' || undefined}
           className={cn(MOBILE_SNAP_PANEL_CLASSNAME, 'md:hidden')}
         >
           <AbilitiesPanel />
@@ -403,6 +353,7 @@ export function CharacterSheetBody() {
           aria-label="Skills"
           data-tour-id="sheet-tour-skills"
           data-sheet-mobile-panel
+          data-sheet-panel-active={activeId === 'skills' || undefined}
           className={cn(MOBILE_SNAP_PANEL_CLASSNAME, DESKTOP_GRID_PANEL_CLASSNAME)}
         >
           <SkillsPanel className="min-h-0 flex-1 md:min-h-0" />
@@ -411,6 +362,7 @@ export function CharacterSheetBody() {
         <section
           aria-label="Archetype & Attacks"
           data-sheet-mobile-panel
+          data-sheet-panel-active={activeId === 'archetype' || undefined}
           className={cn(MOBILE_SNAP_PANEL_CLASSNAME, DESKTOP_GRID_PANEL_CLASSNAME)}
         >
           <ArchetypePanel className="min-h-0 flex-1 md:min-h-0" />
@@ -420,6 +372,7 @@ export function CharacterSheetBody() {
           aria-label="Library"
           data-tour-id="sheet-tour-library"
           data-sheet-mobile-panel
+          data-sheet-panel-active={activeId === 'library' || undefined}
           className={cn(MOBILE_SNAP_PANEL_CLASSNAME, DESKTOP_GRID_PANEL_CLASSNAME)}
         >
           <LibraryPanel className="min-h-0 flex-1 md:min-h-0" />

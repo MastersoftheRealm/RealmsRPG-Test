@@ -7,6 +7,7 @@ import type { PowerPart } from '@/hooks';
 import type { AreaConfig, DurationConfig } from '@/lib/calculators';
 import { derivePowerAttackMode, normalizeAttackMode, type AttackMode } from '@/lib/attack-mode';
 import { readCreatorCache } from '@/lib/game/creator-cache';
+import { normalizeTargetedDefenses } from '@/lib/game/targeted-defenses';
 import {
   ADVANCED_CATEGORIES,
   EXCLUDED_PARTS,
@@ -43,6 +44,7 @@ export type PowerLibraryRecord = {
   image_id?: string | null | undefined;
   imageUrl?: string | null | undefined;
   image_url?: string | null | undefined;
+  targetedDefenses?: string[] | undefined;
 };
 
 export interface PowerCreatorCache {
@@ -72,6 +74,7 @@ export interface PowerCreatorCache {
   attackMode: AttackMode;
   imageId?: string | null | undefined;
   imageUrl?: string | null | undefined;
+  targetedDefenses?: string[] | undefined;
   timestamp: number;
 }
 
@@ -89,6 +92,7 @@ export interface PowerCreatorFormState {
   attackMode: AttackMode;
   imageId: string | null;
   imageUrl: string | null;
+  targetedDefenses: string[];
 }
 
 const DEFAULT_DURATION: DurationConfig = {
@@ -116,6 +120,7 @@ export function emptyPowerCreatorFormState(): PowerCreatorFormState {
     attackMode: 'none',
     imageId: null,
     imageUrl: null,
+    targetedDefenses: [],
   };
 }
 
@@ -202,6 +207,7 @@ export function restorePowerCreatorFromCache(
     attackMode: normalizeAttackMode(parsed.attackMode) ?? 'none',
     imageId: parsed.imageId ?? null,
     imageUrl: parsed.imageUrl ?? null,
+    targetedDefenses: normalizeTargetedDefenses(parsed.targetedDefenses),
   };
 }
 
@@ -331,6 +337,9 @@ export function powerLibraryRecordToFormState(
     attackMode,
     imageId: power.imageId ?? power.image_id ?? null,
     imageUrl: power.imageUrl ?? power.image_url ?? null,
+    targetedDefenses: normalizeTargetedDefenses(
+      (power as { targetedDefenses?: string[] | undefined }).targetedDefenses,
+    ),
   };
 }
 

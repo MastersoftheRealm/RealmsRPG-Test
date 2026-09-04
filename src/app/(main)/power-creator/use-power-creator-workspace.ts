@@ -52,6 +52,9 @@ export function usePowerCreatorWorkspace({
   const [attackMode, setAttackMode] = useState<AttackMode>(initialFormState.attackMode);
   const [imageId, setImageId] = useState<string | null>(initialFormState.imageId);
   const [imageUrl, setImageUrl] = useState<string | null>(initialFormState.imageUrl);
+  const [targetedDefenses, setTargetedDefenses] = useState<string[]>(
+    initialFormState.targetedDefenses,
+  );
 
   useEffect(() => {
     if (editPowerId) clearCreatorCache(POWER_CREATOR_CACHE_KEY);
@@ -87,6 +90,7 @@ export function usePowerCreatorWorkspace({
       attackMode,
       imageId,
       imageUrl,
+      targetedDefenses,
       timestamp: Date.now(),
     };
     writeCreatorCache(POWER_CREATOR_CACHE_KEY, cache);
@@ -105,6 +109,7 @@ export function usePowerCreatorWorkspace({
     attackMode,
     imageId,
     imageUrl,
+    targetedDefenses,
   ]);
 
   const nonMechanicParts = useMemo(
@@ -119,7 +124,7 @@ export function usePowerCreatorWorkspace({
 
   const {
     costs,
-    advancedCalcRows,
+    advancedCalcGroups,
     actionTypeDisplay,
     attackModeLabel,
     rangeDisplay,
@@ -159,6 +164,11 @@ export function usePowerCreatorWorkspace({
     setSelectedParts,
     setSelectedAdvancedParts,
   });
+
+  const suggestionSelectedParts = useMemo(
+    () => [...selectedParts.map((sp) => sp.part), ...selectedAdvancedParts.map((ap) => ap.part)],
+    [selectedParts, selectedAdvancedParts],
+  );
 
   const getPayload = useCallback(() => {
     // User + advanced parts only; auto mechanics are derived from action/damage/range/area/duration/attackMode on load.
@@ -202,6 +212,7 @@ export function usePowerCreatorWorkspace({
         area,
         duration,
         attackMode,
+        ...(targetedDefenses.length > 0 ? { targetedDefenses } : {}),
         ...(imageId ? { imageId } : {}),
         ...(imageUrl ? { imageUrl } : {}),
       },
@@ -218,6 +229,7 @@ export function usePowerCreatorWorkspace({
     area,
     duration,
     attackMode,
+    targetedDefenses,
     imageId,
     imageUrl,
   ]);
@@ -255,6 +267,7 @@ export function usePowerCreatorWorkspace({
       setAttackMode('none');
       setImageId(null);
       setImageUrl(null);
+      setTargetedDefenses([]);
     },
   });
 
@@ -280,6 +293,7 @@ export function usePowerCreatorWorkspace({
     setAttackMode('none');
     setImageId(null);
     setImageUrl(null);
+    setTargetedDefenses([]);
     save.setSaveMessage(null);
     clearCreatorCache(POWER_CREATOR_CACHE_KEY);
   }, [save]);
@@ -298,6 +312,7 @@ export function usePowerCreatorWorkspace({
     setAttackMode(next.attackMode);
     setImageId(next.imageId);
     setImageUrl(next.imageUrl);
+    setTargetedDefenses(next.targetedDefenses);
   }, []);
 
   const handleLoadPower = useCallback(
@@ -334,10 +349,14 @@ export function usePowerCreatorWorkspace({
     imageUrl,
     setImageId,
     setImageUrl,
+    targetedDefenses,
+    setTargetedDefenses,
+    suggestionSelectedParts,
+    powerParts,
     nonMechanicParts,
     mechanicPartsForList,
     costs,
-    advancedCalcRows,
+    advancedCalcGroups,
     actionTypeDisplay,
     attackModeLabel,
     rangeDisplay,

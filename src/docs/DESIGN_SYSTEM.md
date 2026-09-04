@@ -247,7 +247,7 @@ import { Button } from '@/components/ui';
 **± Steppers (ADR-0002 — one chrome sitewide):**
 
 - **Use:** `ValueStepper`, or `DecrementButton` / `IncrementButton` when the value display is custom (e.g. skill bonus between ±). Quantities in list rows: `QuantitySelector` (thin wrapper over `ValueStepper`).
-- **Chrome:** `.btn-stepper` — soft `bg-surface-alt`, no invasive border, `rounded-lg`, bold ± glyphs; disabled = muted text on transparent. Matches guided skills bonus steppers.
+- **Chrome:** `.btn-stepper` — soft `bg-surface-alt`, no invasive border, `rounded-lg`, bold ± glyphs in `text-text-primary`; disabled = `text-text-muted` **on the same plate** (not `text-border-light`, not `disabled:bg-transparent`). GLR enabled steppers stay plate-less (TASK-710); disabled GLR steppers restore the plate (TASK-910). Matches guided skills bonus steppers.
 - **Allowed props:** `size`, layout `variant` (`default` | `inline` | `compact`), `enableHoldRepeat` (HP/EN pools only), and **value** coloring (`colorVariant` / `colorValue` for the number only). Buttons stay neutral everywhere.
 - **Do not:** hand-roll ± buttons; tint stepper buttons green/red/blue; reintroduce `.btn-stepper-danger` / `.btn-stepper-success`.
 

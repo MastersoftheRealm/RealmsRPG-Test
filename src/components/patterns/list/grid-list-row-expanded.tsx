@@ -12,7 +12,7 @@ import {
   isPartsOrPropertiesProficienciesSection,
   type MetadataDetailSection,
 } from '@/lib/chip/list-row-metadata';
-import { columnDisplayLabel, columnHasInteractiveValue } from './grid-list-row-columns';
+import { columnDisplayLabel } from './grid-list-row-columns';
 import { GRID_LIST_ROW_EXPANDED_BAND_CLASS } from './grid-list-row-chrome';
 import { DetailSectionLabel, partsPropertiesHelpContent } from './grid-list-row-detail';
 import type { ColumnValue } from './grid-list-row-types';
@@ -31,8 +31,6 @@ interface GridListRowExpandedBodyProps {
     label: string;
     color?: 'blue' | 'purple' | 'green' | 'amber' | 'gray' | 'red' | undefined;
   }>;
-  gridColumns?: string | undefined;
-  expandedBodyStatColumns: ColumnValue[];
   totalCost?: number | undefined;
   costLabel: string;
   requirements?: ReactNode | undefined;
@@ -62,8 +60,6 @@ export function GridListRowExpandedBody({
   descriptionAfter,
   warningMessage,
   badges,
-  gridColumns,
-  expandedBodyStatColumns,
   totalCost,
   costLabel,
   requirements,
@@ -134,41 +130,6 @@ export function GridListRowExpandedBody({
                   {badge.label}
                 </DescriptorChip>
               ))}
-            </div>
-          )}
-
-          {/* Column facts (collapsed header when row is closed; body when expanded — TASK-868/898) */}
-          {gridColumns && expandedBodyStatColumns.length > 0 && (
-            <div className="mb-4 flex flex-col gap-3 text-sm min-[480px]:grid min-[480px]:grid-cols-2 min-[480px]:gap-x-4 min-[480px]:gap-y-2">
-              {expandedBodyStatColumns.map((col) => {
-                const interactive = columnHasInteractiveValue(col);
-                return (
-                  <div
-                    key={col.key}
-                    className={cn(
-                      'min-w-0',
-                      interactive
-                        ? 'flex flex-col gap-1 min-[480px]:col-span-2'
-                        : 'flex min-w-0 items-center gap-2',
-                    )}
-                  >
-                    <span className="shrink-0 text-text-muted">{columnDisplayLabel(col)}:</span>
-                    {interactive ? (
-                      <div className="min-w-0">{col.value}</div>
-                    ) : (
-                      <span
-                        className={cn(
-                          'min-w-0 font-medium text-text-primary',
-                          col.highlight && 'text-primary-link-fg',
-                          col.className,
-                        )}
-                      >
-                        {col.value}
-                      </span>
-                    )}
-                  </div>
-                );
-              })}
             </div>
           )}
 
@@ -295,7 +256,7 @@ interface GridListRowMobileSummaryProps {
   handleRowBodyClickWithGuard: (e: MouseEvent) => void;
 }
 
-/** Mobile summary — stats hidden from the collapsed grid; omitted while expanded (body owns them). */
+/** Mobile summary — glance facts stay here below `lg` even while the row is expanded. */
 export function GridListRowMobileSummary({
   mobileSummaryColumns,
   isRowClickable,
@@ -309,27 +270,14 @@ export function GridListRowMobileSummary({
       )}
       onClick={isRowClickable ? handleRowBodyClickWithGuard : undefined}
     >
-      {mobileSummaryColumns.map((col) =>
-        col.key === 'description' ? (
-          <div
-            key={col.key}
-            className={cn(
-              'w-full min-w-0 text-text-secondary',
-              col.className,
-              col.highlight && 'font-medium text-primary-link-fg',
-            )}
-          >
+      {mobileSummaryColumns.map((col) => (
+        <span key={col.key} className="flex items-center gap-1">
+          <span className="text-text-muted">{columnDisplayLabel(col)}:</span>
+          <span className={cn(col.highlight && 'font-medium text-primary-link-fg')}>
             {col.value}
-          </div>
-        ) : (
-          <span key={col.key} className="flex items-center gap-1">
-            <span className="text-text-muted">{columnDisplayLabel(col)}:</span>
-            <span className={cn(col.highlight && 'font-medium text-primary-link-fg')}>
-              {col.value}
-            </span>
           </span>
-        ),
-      )}
+        </span>
+      ))}
     </div>
   );
 }

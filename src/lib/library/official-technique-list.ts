@@ -23,7 +23,13 @@ import {
   rowMatchesPathRecommendedIds,
 } from '@/lib/game/path-recommendation-index';
 import { glrColumnKeyFor, glrListChrome } from '@/lib/glr';
-import { glrSurfaceDetailSections, partsProficienciesSection } from '@/lib/chip/list-row-metadata';
+import {
+  glrSurfaceDetailSections,
+  mergeDetailSections,
+  metadataDetailSection,
+  partsProficienciesSection,
+} from '@/lib/chip/list-row-metadata';
+import { targetsFactChip } from '@/lib/detail-option/compact-facts';
 
 const officialTechniqueChrome = glrListChrome({ entityType: 'technique', mode: 'browse' });
 
@@ -109,14 +115,20 @@ export function buildOfficialTechniqueRows(
 
 export function officialTechniqueDetailSections(row: OfficialTechniqueRow) {
   const parts = partsProficienciesSection(row.parts, 'technique');
-  return glrSurfaceDetailSections(
-    'library-official-technique',
-    {
-      category: row.category && row.category !== '—' ? row.category : undefined,
-      damage: row.damage && row.damage !== '-' ? row.damage : undefined,
-      trainingPoints: row.tp > 0 ? row.tp : undefined,
-    },
-    parts ? [parts] : undefined,
+  const targets = metadataDetailSection(
+    [targetsFactChip(row.raw.targetedDefenses)].filter(Boolean) as ChipData[],
+  );
+  return mergeDetailSections(
+    glrSurfaceDetailSections(
+      'library-official-technique',
+      {
+        category: row.category && row.category !== '—' ? row.category : undefined,
+        damage: row.damage && row.damage !== '-' ? row.damage : undefined,
+        trainingPoints: row.tp > 0 ? row.tp : undefined,
+      },
+      parts ? [parts] : undefined,
+    ),
+    targets,
   );
 }
 

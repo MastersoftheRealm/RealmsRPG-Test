@@ -93,6 +93,19 @@ Several rules use **½** or "half":
 | Target within 1 space | -5 to Attack Roll |
 | Long range (4× normal distance) | -5 to Attack Roll |
 
+### Weapon Range
+
+Weapons have one range type. Distance is chosen from a closed ladder (no freeform stepper).
+
+| Type | Spaces | Notes |
+|------|--------|-------|
+| **Melee** | Adjacent (no spaces picker) | Default; Strength unless Finesse |
+| **Reach** | 2, 3, 4, 5, or 6 | Base Reach is 2 spaces, then +1 per increment. Still a melee attack. Strength unless Finesse. |
+| **Ranged** | 8, 16, 24, … 64 | 8 spaces per increment, capped at 64. Acuity unless Heavy or Finesse. |
+| **Thrown** | 3, 5, 7, … 35 | 3 spaces + 2 per increment, through the mid-30s. Strength unless Finesse. |
+
+Range, Thrown, Reach, Finesse, and Heavy are mechanic properties on the Weapon Configuration UI. They do not appear on Add property.
+
 ### Conditions Don't Stack
 
 A creature can have only **one instance** of a given Condition at a time. Leveled Conditions (Stunned 2, Slowed 3, etc.) do not combine; a new source **replaces** the old one (stronger replaces weaker). Durations do not stack.
@@ -301,6 +314,13 @@ Each Ability has a corresponding Defense used to withstand harmful effects or br
 | **Evasion (EV)** | 10 + Agility (passive only; not a "Defense"; cannot be increased with Skill Points) |
 
 **Evasion** is the default target for attacks. Feats/Powers that reference "Defenses" do **not** include Evasion.
+
+### Power & technique targeting
+
+- **Part can-target:** Codex power/technique parts may list defenses they *can* target (`codex_parts.defense`). Part chips and creator suggestions surface these options.
+- **Actual target:** When saving a power or technique, the author may specify `targetedDefenses` (zero or more of the six Defenses plus Evasion). Empty means no defense is specified in data.
+- **Weapon / unarmed attacks** target **Evasion** by default; creators highlight Evasion when Attack is Weapon or Unarmed.
+- **Damage types:** Inferred from the linked damage part (e.g. Elemental/Magic/Physical → Evasion; Light/Poison-Necrotic/Sonic → Fortitude; Psychic → Mental Fortitude; Spiritual → Resolve).
 
 ---
 
@@ -729,10 +749,12 @@ Using the same Action/Reaction more than once in a turn: -5 per subsequent use (
 | Attack Type | Ability |
 |-------------|---------|
 | Melee Weapon | Strength |
+| Reach Weapon | Strength |
 | Ranged Weapon | Acuity |
 | Unarmed Prowess | Strength or Agility (if proficient) |
 | Finesse Weapon | Agility |
 | Thrown Weapon | Strength |
+| Heavy Ranged Weapon | Strength |
 
 ### Unarmed Prowess Damage (Proficient)
 

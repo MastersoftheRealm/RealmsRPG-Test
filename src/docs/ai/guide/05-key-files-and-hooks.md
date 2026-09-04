@@ -9,7 +9,7 @@
 | Design tokens | `src/app/globals.css` |
 | Data enrichment | `src/lib/data-enrichment.ts` |
 | Character logic | `src/services/character-service.ts`, `src/hooks/use-characters.ts` |
-| Creator state | `src/stores/character-creator-store.ts` (Advanced) · `src/stores/guided-creator-store.ts` (Simple/Guided) |
+| Creator state | `src/stores/guided-creator-store.ts` (Guided / Custom) |
 | Supabase | `src/lib/supabase/` |
 | **Database schema (single source of truth)** | `src/docs/SUPABASE_SCHEMA.md` — all public tables, columnar vs JSONB, API→tables; do not duplicate elsewhere |
 | Database types | Generated Postgres rows: `src/types/database.types.ts` (regenerate `npm run db:types`; ADR-0020). Domain/API shapes stay in `src/types/` (`character.ts`, `codex.ts`, `campaign.ts`, …). Schema narrative: `SUPABASE_SCHEMA.md`. Helpers: `lib/supabase/database.ts`. |

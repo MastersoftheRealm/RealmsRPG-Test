@@ -96,9 +96,6 @@ export const USM_QUANTITY_CHROME_SOURCES = [
 /** Creator pages with embedded ListHeader + GridListRow lists (not library/codex shells). */
 export const CREATOR_EMBEDDED_GLR_SOURCES = [
   'src/app/(main)/creature-creator/creature-creator-editor-loadout-sections.tsx',
-  'src/components/character-creator/steps/powers/powers-selected-section.tsx',
-  'src/components/character-creator/steps/powers/techniques-selected-section.tsx',
-  'src/components/character-creator/steps/equipment/selected-equipment-list.tsx',
 ] as const;
 
 /**

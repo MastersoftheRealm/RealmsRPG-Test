@@ -7,7 +7,7 @@ import type { Character } from '@/types';
 import type { CoreRulesMap } from '@/types/core-rules';
 import { calculateAllStats, getArchetypeAbilityScore } from '@/lib/game/calculations';
 import { calculateArchetypeProgression } from '@/lib/game/formulas';
-import { computeUnarmedProwessTpCost } from '@/lib/creator/advanced-equipment-catalog';
+import { computeUnarmedProwessTpCost } from '@/lib/game/unarmed-prowess';
 import {
   calculateProficiencyTP,
   dedupeHighestProficiencies,

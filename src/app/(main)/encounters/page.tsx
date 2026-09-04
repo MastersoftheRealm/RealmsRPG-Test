@@ -313,7 +313,7 @@ function EncountersContent() {
                         size="sm"
                         label={`Mark ${encounter.name} complete`}
                         title="Mark complete"
-                        className="min-h-[44px] min-w-[44px] text-text-muted opacity-0 group-hover:opacity-100 hover:text-success-fg"
+                        className="text-text-muted opacity-0 group-hover:opacity-100 hover:text-success-fg"
                         onClick={(e) => {
                           e.stopPropagation();
                           void handleMarkComplete(encounter);
@@ -326,7 +326,7 @@ function EncountersContent() {
                       variant="ghost"
                       size="sm"
                       label={`Delete encounter ${encounter.name}`}
-                      className="min-h-[44px] min-w-[44px] text-text-muted opacity-0 group-hover:opacity-100 hover:bg-danger-50 hover:text-danger-fg dark:hover:bg-danger-900/20"
+                      className="text-text-muted opacity-0 group-hover:opacity-100 hover:bg-danger-light hover:text-danger-fg"
                       onClick={(e) => {
                         e.stopPropagation();
                         setDeleteTarget(encounter);

@@ -198,6 +198,11 @@ function TechniqueCreatorWorkspace({
             { label: 'Action', value: ws.actionTypeDisplay },
             { label: 'Attack', value: ws.attackModeLabel },
             ...(ws.damageDisplay ? [{ label: 'Damage', value: ws.damageDisplay }] : []),
+            {
+              label: 'Targets',
+              value:
+                ws.targetedDefenses.length > 0 ? ws.targetedDefenses.join(', ') : 'None specified',
+            },
           ]}
           breakdowns={
             ws.costs.tpSources.length > 0
@@ -206,8 +211,8 @@ function TechniqueCreatorWorkspace({
           }
         >
           <AdvancedCalculationsPanel
-            rows={ws.advancedCalcRows}
-            ruleText="Rule: Mechanic parts are auto-generated from action, reaction, damage, and attack mode; costs match standalone technique math."
+            groups={ws.advancedCalcGroups}
+            ruleText="Energy is rounded up at the end. Training Points are listed separately above when a part has them. Mechanic parts are auto-generated from action, reaction, damage, and attack mode."
           />
         </CreatorSummaryPanel>
       }
@@ -245,6 +250,9 @@ function TechniqueCreatorWorkspace({
         onDamageChange={ws.setDamage}
         damageSummary={ws.damageSummary}
         damageSectionCost={ws.damageSectionCost}
+        targetedDefenses={ws.targetedDefenses}
+        onTargetedDefensesChange={ws.setTargetedDefenses}
+        suggestionSelectedParts={ws.suggestionSelectedParts}
       />
     </CreatorPageShell>
   );

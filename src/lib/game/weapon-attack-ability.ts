@@ -1,9 +1,11 @@
 /**
  * Weapon attack ability resolution — single source for sheet + guided equipment.
- * @see GAME_RULES.md — Melee/Thrown → Strength, Ranged → Acuity, Finesse → Agility
+ * @see GAME_RULES.md — Melee/Thrown → Strength, Ranged → Acuity, Finesse → Agility,
+ * Heavy ranged → Strength
  */
 
 import { resolveWeaponRangeDisplay, type ItemPropertyPayload } from '@/lib/calculators/item-calc';
+import type { WeaponRangeType } from '@/lib/game/creator-constants';
 import { PROPERTY_IDS } from '@/lib/id-constants';
 import type { Abilities, AbilityName } from '@/types';
 
@@ -83,15 +85,27 @@ function propertyList(properties: WeaponPropertyRef[] | undefined): WeaponProper
   return properties ?? [];
 }
 
-export function hasFinesseProperty(properties: WeaponPropertyRef[] | undefined): boolean {
+function hasFinesseProperty(properties: WeaponPropertyRef[] | undefined): boolean {
   return propertyList(properties).some(
     (p) => hasPropertyId(p, PROPERTY_IDS.FINESSE) || normalizePropertyName(p) === 'finesse',
+  );
+}
+
+function hasHeavyProperty(properties: WeaponPropertyRef[] | undefined): boolean {
+  return propertyList(properties).some(
+    (p) => hasPropertyId(p, PROPERTY_IDS.HEAVY) || normalizePropertyName(p) === 'heavy',
   );
 }
 
 export function hasThrownProperty(properties: WeaponPropertyRef[] | undefined): boolean {
   return propertyList(properties).some(
     (p) => hasPropertyId(p, PROPERTY_IDS.THROWN) || normalizePropertyName(p) === 'thrown',
+  );
+}
+
+export function hasReachProperty(properties: WeaponPropertyRef[] | undefined): boolean {
+  return propertyList(properties).some(
+    (p) => hasPropertyId(p, PROPERTY_IDS.REACH) || normalizePropertyName(p) === 'reach',
   );
 }
 
@@ -104,9 +118,53 @@ export function hasTwoHandedProperty(properties: WeaponPropertyRef[] | undefined
   );
 }
 
+/** Default Ability utilized for a range type (no Finesse / Heavy). */
+export function defaultWeaponAbilityUtilized(rangeType: WeaponRangeType): WeaponAttackAbility {
+  return rangeType === 'ranged' ? 'acuity' : 'strength';
+}
+
+/** Legal Ability utilized dropdown values for a range type. */
+export function weaponAbilityUtilizedOptions(
+  rangeType: WeaponRangeType,
+): { value: WeaponAttackAbility; label: string }[] {
+  if (rangeType === 'ranged') {
+    return [
+      { value: 'acuity', label: ABILITY_LABELS.acuity },
+      { value: 'strength', label: ABILITY_LABELS.strength },
+      { value: 'agility', label: ABILITY_LABELS.agility },
+    ];
+  }
+  return [
+    { value: 'strength', label: ABILITY_LABELS.strength },
+    { value: 'agility', label: ABILITY_LABELS.agility },
+  ];
+}
+
+export function clampWeaponAbilityUtilized(
+  ability: WeaponAttackAbility,
+  rangeType: WeaponRangeType,
+): WeaponAttackAbility {
+  const allowed = weaponAbilityUtilizedOptions(rangeType).some((opt) => opt.value === ability);
+  return allowed ? ability : defaultWeaponAbilityUtilized(rangeType);
+}
+
+/**
+ * Creator Ability utilized from saved mechanic properties (not a stored ability string).
+ * Finesse → Agility; Heavy on ranged → Strength; else the range-type default.
+ */
+export function deriveWeaponAbilityUtilized(
+  properties: WeaponPropertyRef[] | undefined,
+  rangeType: WeaponRangeType,
+): WeaponAttackAbility {
+  if (hasFinesseProperty(properties)) return 'agility';
+  if (rangeType === 'ranged' && hasHeavyProperty(properties)) return 'strength';
+  return defaultWeaponAbilityUtilized(rangeType);
+}
+
 /**
  * Resolve which ability applies to weapon attacks.
- * Priority: Finesse → Agility | Thrown → Strength | non-melee Range → Acuity | else Strength
+ * Priority: Finesse → Agility | Thrown → Strength | Reach → Strength |
+ * Heavy → Strength | non-melee Range → Acuity | else Strength
  */
 export function getWeaponAttackAbility(
   properties: WeaponPropertyRef[] | undefined,
@@ -114,6 +172,8 @@ export function getWeaponAttackAbility(
 ): WeaponAttackAbility {
   if (hasFinesseProperty(properties)) return 'agility';
   if (hasThrownProperty(properties)) return 'strength';
+  if (hasReachProperty(properties)) return 'strength';
+  if (hasHeavyProperty(properties)) return 'strength';
 
   const rangeStr = resolveWeaponRangeDisplay(
     rangeOverride,

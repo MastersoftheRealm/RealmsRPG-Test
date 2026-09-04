@@ -319,6 +319,22 @@ describe('library-columnar API round-trip — powers', () => {
       true,
     );
   });
+
+  it('persists targetedDefenses in payload through columnar round-trip', () => {
+    const body = {
+      name: 'Mind Lance',
+      actionType: 'basic',
+      targetedDefenses: ['Mental Fortitude', 'Resolve'],
+      parts: [],
+      damage: [],
+    };
+
+    const { payload } = bodyToColumnar('powers', body);
+    expect(payload.targetedDefenses).toEqual(['Mental Fortitude', 'Resolve']);
+
+    const loaded = apiRoundTrip('powers', body);
+    expect(loaded.targetedDefenses).toEqual(['Mental Fortitude', 'Resolve']);
+  });
 });
 
 describe('library-columnar API round-trip — items (migration hardening)', () => {

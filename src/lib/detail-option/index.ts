@@ -32,6 +32,7 @@ export {
   rangeFactChip,
   spacesFactChip,
   actionTypeFactChip,
+  targetsFactChip,
   categoryFactChip,
   energyFactChip,
   currencyFactChip,

@@ -49,6 +49,9 @@ export interface CharacterSheetSettingsModalProps {
         speedDisplayUnit?: SpeedDisplayUnit | undefined;
       }) => void | Promise<void>)
     | undefined;
+  /** When true, visibility cannot be changed (guest local sheet). */
+  visibilityLocked?: boolean | undefined;
+  visibilityLockedMessage?: string | undefined;
   /** Restart the post-save sheet tour from step 1 (owner only). */
   onTakeSheetTour?: (() => void) | undefined;
 }
@@ -65,6 +68,8 @@ export function CharacterSheetSettingsModal({
   onSpeedDisplayUnitChange,
   onConfirm,
   onTakeSheetTour,
+  visibilityLocked = false,
+  visibilityLockedMessage,
 }: CharacterSheetSettingsModalProps) {
   const tourCopy = ONBOARDING_COPY.sheetSettings;
   const tutorialsEnabled = areTutorialsEnabled();
@@ -78,7 +83,7 @@ export function CharacterSheetSettingsModal({
   }));
 
   const handleConfirm = async () => {
-    const visChanged = selectedVisibility !== visibility;
+    const visChanged = !visibilityLocked && selectedVisibility !== visibility;
     const speedChanged = selectedSpeedUnit !== speedDisplayUnit;
     if (onConfirm && (visChanged || speedChanged)) {
       await onConfirm({
@@ -150,23 +155,31 @@ export function CharacterSheetSettingsModal({
             Controls who can view this character sheet. Realm Masters can view campaign
             members&apos; sheets when set to Campaign or Public.
           </p>
-          {isInCampaign && (
-            <p className="mb-2 text-xs text-warning-fg">
-              This character is in a campaign. To set visibility to Private, remove them from the
-              campaign first.
+          {visibilityLocked ? (
+            <p className="text-sm text-text-primary">
+              {visibilityLockedMessage ?? 'This character stays in this browser until you sign in.'}
             </p>
-          )}
-          {canEdit && onVisibilityChange ? (
-            <Select
-              aria-label="Character visibility"
-              options={visibilityOptions}
-              value={selectedVisibility}
-              onChange={(e) => setSelectedVisibility(e.target.value as CharacterVisibility)}
-            />
           ) : (
-            <p className="text-sm font-medium text-text-primary">
-              {VISIBILITY_OPTIONS.find((o) => o.value === visibility)?.label ?? visibility}
-            </p>
+            <>
+              {isInCampaign ? (
+                <p className="mb-2 text-xs text-warning-fg">
+                  This character is in a campaign. To set visibility to Private, remove them from
+                  the campaign first.
+                </p>
+              ) : null}
+              {canEdit && onVisibilityChange ? (
+                <Select
+                  aria-label="Character visibility"
+                  options={visibilityOptions}
+                  value={selectedVisibility}
+                  onChange={(e) => setSelectedVisibility(e.target.value as CharacterVisibility)}
+                />
+              ) : (
+                <p className="text-sm font-medium text-text-primary">
+                  {VISIBILITY_OPTIONS.find((o) => o.value === visibility)?.label ?? visibility}
+                </p>
+              )}
+            </>
           )}
         </div>
         {onTakeSheetTour && (

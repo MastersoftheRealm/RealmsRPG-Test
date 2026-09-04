@@ -1,7 +1,8 @@
 -- TASK-874 — Codex changelog storage / retention proposal (preview only; owner ack DEV-Q07)
 --
--- Current: every mutation stores full before_data + after_data JSON blobs plus changed_fields.
--- Display slimming ships in admin UI first; destructive storage changes wait on owner.
+-- Current: creates persist identity only (name/type). Updates and deletes still store
+-- full before_data / after_data JSON plus changed_fields. Display slimming is in the
+-- admin UI; dropping snapshot columns / TTL waits on owner (DEV-Q07).
 --
 -- Recommended policy (DEV-Q07):
 -- 1. Keep changed_fields + entity metadata as the source of truth for admin review.

@@ -196,7 +196,7 @@ export default function AdminRolesPage() {
                   />
                 </div>
 
-                <label className="mt-4 inline-flex min-h-[44px] items-center gap-3">
+                <label className="touch-tier-standard mt-4 inline-flex items-center gap-3">
                   <input
                     type="checkbox"
                     checked={canUpload}
@@ -207,11 +207,7 @@ export default function AdminRolesPage() {
                 </label>
 
                 <div className="mt-4">
-                  <Button
-                    onClick={() => saveRole(row)}
-                    disabled={savingRole === row.role}
-                    className="min-h-[44px]"
-                  >
+                  <Button onClick={() => saveRole(row)} disabled={savingRole === row.role}>
                     {savingRole === row.role ? 'Saving...' : `Save ${ROLE_LABELS[row.role]}`}
                   </Button>
                 </div>
@@ -241,7 +237,6 @@ function LabeledNumberInput({
         min={0}
         value={value}
         onChange={(event) => onChange(event.target.value)}
-        className="min-h-[44px]"
       />
     </label>
   );

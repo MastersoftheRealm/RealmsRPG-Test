@@ -23,6 +23,9 @@ import {
   deriveDuration,
   pickCheaperEnPart,
   toEmpoweredAutoMechanicPart,
+  analyzePowerEnergy,
+  analyzeTechniqueEnergy,
+  buildEmpoweredAdvancedCalculationGroups,
   type PowerPartPayload,
   type TechniquePartPayload,
   type AreaConfig,
@@ -35,11 +38,6 @@ import type {
   SelectedPowerPart,
   SelectedTechniquePart,
 } from './empowered-technique-bootstrap';
-
-export type EmpoweredAdvancedCalcRow = {
-  label: string;
-  value: string;
-};
 
 export type EmpoweredSectionCostSlice = {
   energyRaw: number;
@@ -247,68 +245,25 @@ export function useEmpoweredTechniqueCostDerivation({
     [powerPayload, powerParts, techniquePayload, techniqueParts],
   );
 
-  const powerBaseCosts = useMemo(
-    () => calculatePowerCosts(powerPayload, powerParts),
-    [powerPayload, powerParts],
+  const advancedCalcGroups = useMemo(
+    () =>
+      buildEmpoweredAdvancedCalculationGroups({
+        powerAnalysis: analyzePowerEnergy(powerPayload, powerParts),
+        techniqueAnalysis: analyzeTechniqueEnergy(techniquePayload, techniqueParts),
+        techniquePercentageMultiplier: costs.techniquePercentageMultiplier,
+        energyRaw: costs.energyRaw,
+        totalEnergy: costs.totalEnergy,
+      }),
+    [
+      costs.energyRaw,
+      costs.techniquePercentageMultiplier,
+      costs.totalEnergy,
+      powerPayload,
+      powerParts,
+      techniquePayload,
+      techniqueParts,
+    ],
   );
-  const techniqueBaseCosts = useMemo(
-    () => calculateTechniqueCosts(techniquePayload, techniqueParts),
-    [techniquePayload, techniqueParts],
-  );
-
-  const advancedCalcRows = useMemo((): EmpoweredAdvancedCalcRow[] => {
-    const powerRawBeforeMultiplier = powerBaseCosts.energyRaw;
-    const techniqueRaw = techniqueBaseCosts.energyRaw;
-    const techniqueMultiplier = costs.techniquePercentageMultiplier;
-    const adjustedPowerRaw = powerRawBeforeMultiplier * techniqueMultiplier;
-    const combinedRaw = adjustedPowerRaw + techniqueRaw;
-    return [
-      {
-        label: 'Power side: energy (raw, before technique %)',
-        value: powerRawBeforeMultiplier.toFixed(2),
-      },
-      {
-        label: 'Technique % multiplier',
-        value: techniqueMultiplier.toFixed(3),
-      },
-      {
-        label: 'Power side: energy (adjusted)',
-        value: `${powerRawBeforeMultiplier.toFixed(2)} × ${techniqueMultiplier.toFixed(3)} = ${adjustedPowerRaw.toFixed(2)}`,
-      },
-      {
-        label: 'Technique side: energy (raw)',
-        value: techniqueRaw.toFixed(2),
-      },
-      {
-        label: 'Combined energy (raw)',
-        value: `${adjustedPowerRaw.toFixed(2)} + ${techniqueRaw.toFixed(2)} = ${combinedRaw.toFixed(2)}`,
-      },
-      {
-        label: 'Energy (final)',
-        value: `ceil(${combinedRaw.toFixed(2)}) = ${costs.totalEnergy}`,
-      },
-      {
-        label: 'Training points (power side)',
-        value: String(powerBaseCosts.totalTP),
-      },
-      {
-        label: 'Training points (technique side)',
-        value: String(techniqueBaseCosts.totalTP),
-      },
-      {
-        label: 'Training points (final)',
-        value: `${powerBaseCosts.totalTP} + ${techniqueBaseCosts.totalTP} = ${costs.totalTP}`,
-      },
-    ];
-  }, [
-    costs.techniquePercentageMultiplier,
-    costs.totalEnergy,
-    costs.totalTP,
-    powerBaseCosts.energyRaw,
-    powerBaseCosts.totalTP,
-    techniqueBaseCosts.energyRaw,
-    techniqueBaseCosts.totalTP,
-  ]);
 
   const sectionCosts = useMemo((): EmpoweredSectionCosts => {
     const actionPartNames = ['Power Reaction', 'Power Quick or Free Action', 'Power Long Action'];
@@ -458,7 +413,7 @@ export function useEmpoweredTechniqueCostDerivation({
     powerPayload,
     techniquePayload,
     costs,
-    advancedCalcRows,
+    advancedCalcGroups,
     sectionCosts,
     actionDisplay,
     rangeDisplay,

@@ -91,12 +91,7 @@ export function CollapsibleSection({
               {subtitleText ? <p className="text-sm text-text-muted">{subtitleText}</p> : null}
             </div>
           </div>
-          <Button
-            variant="secondary"
-            size="sm"
-            onClick={() => onEnabledChange?.(true)}
-            className="min-h-[44px]"
-          >
+          <Button variant="secondary" size="sm" onClick={() => onEnabledChange?.(true)}>
             + Enable {title}
           </Button>
         </div>
@@ -149,7 +144,7 @@ export function CollapsibleSection({
             <div
               className={cn(
                 'pointer-events-auto flex flex-shrink-0 items-center gap-2',
-                optional ? 'min-h-[44px] self-stretch' : 'self-center',
+                optional ? 'self-stretch' : 'self-center',
               )}
             >
               {rightSlot}
@@ -158,7 +153,7 @@ export function CollapsibleSection({
                   variant="ghost"
                   size="sm"
                   onClick={() => onEnabledChange?.(false)}
-                  className="min-h-[44px] text-danger-fg hover:bg-danger-light"
+                  className="text-danger-fg hover:bg-danger-light"
                 >
                   Remove
                 </Button>

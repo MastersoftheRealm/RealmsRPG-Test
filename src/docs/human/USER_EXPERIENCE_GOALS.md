@@ -14,7 +14,7 @@
 
 - **Fun first, flavor second, rules third** — Align with the core rulebook: freedom in creativity, engaging gameplay, and “create exactly what you envision.”
 - **Official content first-class** — Codex and Realms Library are the game’s reference and playable content (species, feats, skills, powers, techniques, armaments, creatures). They should feel like “what’s in the game,” not “pre-made” or “public” (which implies community-made).
-- **Account at value, not at door** — Let users see value before sign-in: browse Codex, try the character creator as a guest, and see Realms Library (or a read-only browse). Require account only when saving a character, adding from Realms Library to My Library, or opening My Library/Campaigns.
+- **Account at value, not at door** — Let users see value before sign-in: browse Codex, try the character creator as a guest, **play a finished sheet in this browser**, and see Realms Library (or a read-only browse). Require account to keep a character on the account (and across devices), add from Realms Library to My Library, or open My Library/Campaigns.
 - **Progressive disclosure** — Show simple paths first (browse Codex, Realms Library, pick from lists); “Create your own” / “Build custom” is secondary for customizers.
 - **Light progression feel** — Step progress, small confirmations, and brief positive moments (e.g. “Your character is ready!” on save, “Added to My Library” toast) without heavy gamification or childish tone.
 - **Community and belonging** — Discord and “Run a campaign” / “Find a group” as clear CTAs so users see there are people to play with.
@@ -50,14 +50,14 @@ Future **Archetypes** (ready-to-play character builds) will live in Realms Libra
 ### 2.1 Landing and first touch
 
 - **Home:** Hero tagline (“Create your character your way — use what’s in the game or build your own”), two primary paths (Browse Codex, Browse Realms Library, Create a character), “Join the Community” (Discord) in hero/features and footer.
-- **No login required** for: Home, About, Rules, Codex, character creator (guest), public character sheet, **and** read-only Realms Library on the Library page (`/library` shows official content to guests; the My-Library toggle and "Add to my library" are hidden when logged out). The former standalone `/browse` route was a duplicate and now redirects to `/library` (TASK-336).
-- **Gated (login required):** Characters list, **My Library** (the user's own collection / add-to-library actions), Campaigns, Encounters, My Account. The Library *page* itself is guest-viewable in Realms mode; only My-Library features require auth.
+- **No login required** for: Home, About, Rules, Codex, character creator (guest), **guest local character sheet** (this browser only, ADR-0026), public character sheet, **and** read-only Realms Library on the Library page (`/library` shows official content to guests; the My-Library toggle and "Add to my library" are hidden when logged out). The former standalone `/browse` route was a duplicate and now redirects to `/library` (TASK-336).
+- **Gated (login required):** Cloud character list (signed-in `/characters` besides browser-local cards), **My Library** (the user's own collection / add-to-library actions), Campaigns, Encounters (cloud; guests already have local encounters), My Account. The Library *page* itself is guest-viewable in Realms mode; only My-Library features require auth.
 
 ### 2.2 Character creator
 
-- **Guest flow:** Full wizard with localStorage; login only when saving.
+- **Guest flow:** Full wizard with localStorage drafts; login to save to the account. Finalize tertiary **Continue without signing in** writes a finished character locally (`local-` id, cap 3) and opens the real sheet (ADR-0026). Sign-in migrates those characters onto the account.
 - **Defaults:** In steps that use official content (Species, Feats, Powers, Techniques, Equipment), source filter defaults to **Realms Library** / Codex so “From Realms Library” / “From Codex” is first; “Create your own” is secondary. No “pre-made” label.
-- **Finalize step:** When not logged in, show “Create an account to save your character. Your progress is stored locally until you sign in.”
+- **Finalize step:** When not logged in, prompt to save to the account, with **Continue without signing in** to play the sheet in this browser.
 - **Step progress:** Subtitle shows “Step X of 9”; tab bar shows checkmarks for completed steps.
 - **On save:** Success toast “Your character is ready!” then redirect to character sheet (or `returnTo`).
 
@@ -125,7 +125,7 @@ When implementing or reviewing **any** UI, copy, or flow that touches onboarding
 ### 5.2 Checklist for UX-sensitive changes
 
 - **Terminology:** Use “Realms Codex” and “Realms Library” (never “Public Codex/Library”). Use “My Library” for user content. Prefer “from the Codex,” “from Realms Library,” “Create your own” over “pre-made.”
-- **Account friction:** Don’t add new gates that block unauthenticated users from seeing Codex, the Realms Library (Library page in public mode), or guest character creator. Require login only for save, “Add to My Library,” or gated features (My Library actions, Campaigns, etc.).
+- **Account friction:** Don’t add new gates that block unauthenticated users from seeing Codex, the Realms Library (Library page in public mode), the guest character creator, or a locally persisted try-out sheet. Require login for cloud save, “Add to My Library,” or gated features (My Library actions, Campaigns, etc.).
 - **Character creator:** Keep guest flow; default to Realms Library/Codex in selection steps; show “Create account to save” when not logged in; keep step progress and success message on save.
 - **CTAs:** Any new landing or nav should consider “Create a character,” “Browse Codex,” “Browse Realms Library,” and “Join the Community” (Discord) where relevant.
 - **Tone:** Epic but not childish; avoid heavy gamification or “Achievement unlocked!” style copy.
@@ -144,7 +144,7 @@ When implementing or reviewing **any** UI, copy, or flow that touches onboarding
 |------|--------|
 | Home and CTAs | `src/app/(main)/page.tsx` |
 | Realms Library (guest read-only) | `src/app/(main)/library/page.tsx`, `src/app/(main)/library/LibraryPublicContent.tsx` (former `/browse` redirects here) |
-| Character creator | `src/app/(main)/characters/new/page.tsx`, `src/components/character-creator/steps/*.tsx`, `src/stores/character-creator-store.ts` |
+| Character creator | `src/app/(main)/characters/new/page.tsx`, `src/app/(main)/characters/new/guided/`, `src/components/guided-creator/`, `src/stores/guided-creator-store.ts` |
 | Home / landing | `src/app/(main)/page.tsx` (post-activation onboarding shipped — TASK-388) |
 | Header / footer / Discord | `src/components/layout/header.tsx`, `src/components/layout/footer.tsx` |
 | Library and Codex labels | `src/app/(main)/library/page.tsx`, `src/app/(main)/codex/page.tsx`, `src/components/patterns/filters/source-filter.tsx` |

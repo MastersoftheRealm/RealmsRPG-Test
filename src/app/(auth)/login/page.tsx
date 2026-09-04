@@ -16,6 +16,10 @@ import {
   hasGuestEncountersToMigrate,
   migrateGuestEncountersOnSignIn,
 } from '@/lib/guest-encounter-migration';
+import {
+  hasGuestCharactersToMigrate,
+  migrateGuestCharactersOnSignIn,
+} from '@/lib/guest-character-migration';
 
 import { loginSchema, type LoginFormData } from '@/lib/validation';
 import { getAuthErrorMessage } from '@/lib/auth-errors';
@@ -100,6 +104,9 @@ function LoginContent() {
       if (err) throw err;
       if (hasGuestEncountersToMigrate()) {
         await migrateGuestEncountersOnSignIn();
+      }
+      if (hasGuestCharactersToMigrate()) {
+        await migrateGuestCharactersOnSignIn();
       }
       sessionStorage.removeItem('loginRedirect');
       router.push(getRedirectPath());

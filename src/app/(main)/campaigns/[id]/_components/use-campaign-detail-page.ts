@@ -23,6 +23,7 @@ import {
   updateCampaignAction,
 } from '../../actions';
 import { MAX_CAMPAIGN_CHARACTERS, OWNER_MAX_CHARACTERS } from '../../constants';
+import { isGuestCharacterId } from '@/lib/guest-character-storage';
 import type { CampaignCharacter } from '@/types/campaign';
 import type { AddableCampaignCharacter } from './add-character-modal';
 
@@ -204,6 +205,7 @@ export function useCampaignDetailPage() {
     isRealmMaster && ownerCharacters.length < OWNER_MAX_CHARACTERS && !isCampaignFull;
   const charactersNotInCampaign = characters.filter(
     (c) =>
+      !isGuestCharacterId(c.id) &&
       !campaign?.characters?.some((cc) => cc.userId === currentUserId && cc.characterId === c.id),
   );
 

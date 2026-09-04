@@ -310,3 +310,25 @@ Move a task back to [`ACTIVE_TASKS.md`](ACTIVE_TASKS.md) when it becomes unblock
     2026-07-01: Owner — no perfect L1 vision yet; spec must be exact before build.
     2026-08-14: Owner — defer this and TASK-410–413 awhile longer. TASK-408 advanced tooltips shipped without waiting on this spec.
 
+---
+
+- id: TASK-917
+  title: Snapshot old Pending owner QA rows (owner cutoff)
+  created_at: 2026-09-03
+  created_by: agent
+  priority: low
+  status: not-started
+  assignee: owner
+  related_files:
+    - src/docs/ai/DEVELOPER_TASK_QUEUE.md
+    - src/docs/ai/BUILD_VALIDATION.md
+  description: |
+    Pending owner QA has ~300 rows (TASK-912 down through TASK-381). Owner picks a cutoff (suggested: pre-TASK-800). An agent then moves those rows to an archive table/section — does not mark them verified. See DEV-016.
+  acceptance_criteria:
+    - Owner names the cutoff (or says keep the full table).
+    - After ack: pre-cutoff rows live in an archive section/file; Pending owner QA only has still-actionable rows.
+    - No `verification_status: verified` invented by an agent.
+    - Index in DEVELOPER_TASK_QUEUE still points at the live Pending table.
+  notes: |
+    Human-owned. Filed /global-audit → /debt 2026-09-03. Agents must not drain the table without this cutoff.
+

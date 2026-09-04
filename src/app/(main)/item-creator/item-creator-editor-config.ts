@@ -9,6 +9,8 @@ import type {
   ItemDamageConfig as DamageConfig,
 } from './item-creator-bootstrap';
 import type { ItemSectionCosts } from './item-creator-cost-derivation';
+import type { WeaponRangeType } from '@/lib/calculators';
+import type { WeaponAttackAbility } from '@/lib/game/weapon-attack-ability';
 
 export type { ItemSectionCosts };
 
@@ -28,9 +30,12 @@ export type ItemCreatorEditorProps = {
 
   isTwoHanded: boolean;
   onIsTwoHandedChange: (value: boolean) => void;
-  rangeLevel: number;
-  onRangeLevelChange: (value: number) => void;
-  rangeDisplay: string;
+  rangeType: WeaponRangeType;
+  onRangeTypeChange: (value: WeaponRangeType) => void;
+  rangeSpaces: number;
+  onRangeSpacesChange: (value: number) => void;
+  attackAbility: WeaponAttackAbility;
+  onAttackAbilityChange: (value: WeaponAttackAbility) => void;
   weaponShieldConfigSummary: string;
 
   damage: DamageConfig;

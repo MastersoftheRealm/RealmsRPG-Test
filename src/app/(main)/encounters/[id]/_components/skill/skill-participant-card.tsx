@@ -7,7 +7,7 @@
 import { useState, type DragEvent } from 'react';
 import { cn } from '@/lib/utils';
 import { Trash2, RotateCcw, HandHelping, GripVertical } from 'lucide-react';
-import { Button, Card } from '@/components/ui';
+import { Button, Card, IconButton } from '@/components/ui';
 import type { SkillParticipant, SkillParticipantType } from '@/types/encounter';
 
 export interface CodexSkillOption {
@@ -134,7 +134,7 @@ export function ParticipantCard({
               <GripVertical className="h-5 w-5" aria-hidden />
             </div>
             <div
-              className="flex h-10 min-h-[44px] w-10 min-w-[44px] cursor-pointer flex-col items-center justify-center rounded-lg bg-surface-alt text-sm font-bold text-text-secondary transition-colors hover:bg-surface"
+              className="flex h-10 w-10 cursor-pointer flex-col items-center justify-center rounded-lg bg-surface-alt text-sm font-bold text-text-secondary transition-colors hover:bg-surface [@media(pointer:coarse)]:h-11 [@media(pointer:coarse)]:w-11"
               onClick={onRollInitiative}
               title="Roll initiative (d20)"
               role="button"
@@ -217,13 +217,13 @@ export function ParticipantCard({
                     value={rmBonusInput}
                     onChange={(e) => handleRmBonusChange(e.target.value)}
                     placeholder="+0"
-                    className="min-h-[44px] w-14 rounded border border-border-light bg-surface px-2 py-1 text-xs text-text-primary focus:border-primary-outline-border focus:outline-none"
+                    className="touch-tier-standard w-14 rounded border border-border-light bg-surface px-2 py-1 text-xs text-text-primary focus:border-primary-outline-border focus:outline-none"
                     aria-label="RM bonus"
                   />
                 </div>
                 <span
                   className={cn(
-                    'flex min-h-[44px] items-center rounded-lg px-2 py-1 text-sm font-bold',
+                    'flex items-center rounded-lg px-2 py-1 text-sm font-bold',
                     successCount > 0
                       ? 'bg-success-light text-success-fg'
                       : 'bg-danger-light text-danger-fg',
@@ -236,14 +236,9 @@ export function ParticipantCard({
                       ? `${failureCount} Failure${failureCount !== 1 ? 's' : ''}!`
                       : ''}
                 </span>
-                <button
-                  onClick={onClearRoll}
-                  className="min-h-[44px] min-w-[44px] rounded p-2 text-text-muted hover:bg-surface-alt hover:text-text-secondary"
-                  title="Clear roll"
-                  aria-label="Clear roll"
-                >
+                <IconButton variant="ghost" size="sm" onClick={onClearRoll} label="Clear roll">
                   <RotateCcw className="h-4 w-4" />
-                </button>
+                </IconButton>
               </div>
             </>
           ) : (
@@ -254,7 +249,7 @@ export function ParticipantCard({
                 onChange={(e) => setRollInput(e.target.value)}
                 onKeyDown={(e) => e.key === 'Enter' && submitRoll()}
                 placeholder="Total"
-                className="min-h-[44px] w-16 rounded-lg border border-border-light bg-surface px-2 py-1.5 text-sm text-text-primary focus:border-primary-outline-border focus:outline-none"
+                className="touch-tier-standard w-16 rounded-lg border border-border-light bg-surface px-2 py-1.5 text-sm text-text-primary focus:border-primary-outline-border focus:outline-none"
                 aria-label="Roll total"
               />
               <div className="flex items-center gap-1">
@@ -264,16 +259,16 @@ export function ParticipantCard({
                   value={rmBonusInput}
                   onChange={(e) => handleRmBonusChange(e.target.value)}
                   placeholder="+0"
-                  className="min-h-[44px] w-14 rounded-lg border border-border-light bg-surface px-2 py-1.5 text-sm text-text-primary focus:border-primary-outline-border focus:outline-none"
+                  className="touch-tier-standard w-14 rounded-lg border border-border-light bg-surface px-2 py-1.5 text-sm text-text-primary focus:border-primary-outline-border focus:outline-none"
                   aria-label="RM bonus"
                 />
               </div>
-              <Button size="sm" onClick={submitRoll} disabled={!rollInput} className="min-h-[44px]">
+              <Button size="sm" onClick={submitRoll} disabled={!rollInput}>
                 Submit
               </Button>
               <span
                 className={cn(
-                  'flex min-h-[44px] items-center rounded-lg px-2 py-1 text-sm font-bold empty:invisible',
+                  'flex items-center rounded-lg px-2 py-1 text-sm font-bold empty:invisible',
                   successCount > 0
                     ? 'bg-success-light text-success-fg'
                     : failureCount > 0
@@ -288,27 +283,27 @@ export function ParticipantCard({
                     ? `${failureCount} Failure${failureCount !== 1 ? 's' : ''}!`
                     : ''}
               </span>
-              <Button
-                size="sm"
+              <IconButton
                 variant="ghost"
+                size="sm"
                 onClick={() => onSetHelping(true)}
+                label="Mark as helping"
                 title="Mark as helping (doesn't count toward encounter)"
-                aria-label="Mark as helping"
-                className="min-h-[44px]"
               >
                 <HandHelping className="h-4 w-4" />
-              </Button>
+              </IconButton>
             </>
           )}
 
-          <button
+          <IconButton
+            variant="ghost"
+            size="sm"
             onClick={onRemove}
-            className="min-h-[44px] min-w-[44px] flex-shrink-0 rounded-lg p-2 text-text-muted transition-colors hover:bg-danger-light hover:text-danger-fg"
-            title="Remove participant"
-            aria-label="Remove participant"
+            label="Remove participant"
+            className="flex-shrink-0 hover:bg-danger-light hover:text-danger-fg"
           >
             <Trash2 className="h-4 w-4" />
-          </button>
+          </IconButton>
         </div>
       </div>
     </Card>

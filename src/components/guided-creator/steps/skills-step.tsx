@@ -12,18 +12,14 @@ import { GuidedChoiceCard } from '../guided-choice-card';
 import { GUIDED_CHOICE_COMPACT_GRID_CLASS } from '../guided-choice-styles';
 import { GuidedSkillsPanel } from '../guided-skills-panel';
 import { GuidedSectionTitle } from '../guided-section-title';
-import { useMergedSpecies, useCodexSkills, useGameRules } from '@/hooks';
+import { useMergedSpecies, useCodexSkills, useGameRules, type Skill } from '@/hooks';
 import { useGuidedCreatorStore } from '@/stores/guided-creator-store';
 import { useGuidedPathData } from '../use-guided-path-data';
 import { GuidedStepLayout } from '../guided-step-layout';
 import { AddSkillModal, AddSubSkillModal, GuidedLayerNav } from '@/components/patterns';
 import { prefersDeepCatalogEntry } from '@/lib/guided-creator/creator-entry-mode';
 import { DEFAULT_ABILITIES, DEFAULT_DEFENSE_SKILLS } from '@/types';
-import {
-  calculateSimpleSkillPointsSpent,
-  getTotalSkillPoints,
-  resolveSkillAllocationRules,
-} from '@/lib/game/skill-allocation';
+import { resolveSkillAllocationRules } from '@/lib/game/skill-allocation';
 import {
   applyAddedBaseSkills,
   applyAddedSubSkills,
@@ -37,12 +33,12 @@ import {
 } from '@/lib/guided-creator/guided-skill-recommendations';
 import { GUIDED_CREATOR_COPY } from '@/lib/constants/site-copy';
 import { resolveGuidedSpeciesContext } from '@/lib/guided-creator/guided-species-resolve';
-import { buildMixedSpeciesSkillOptions } from '@/lib/ancestry/ancestry-selection';
 import { useGuidedDeepEntryOnArrival } from '@/lib/guided-creator/use-guided-deep-entry-on-arrival';
-import { pruneUnresolvedSkillAllocations } from '@/lib/guided-creator/skill-reconcile';
-import type { Skill } from '@/hooks';
-
-import { EMPTY_NUMBER_RECORD, EMPTY_STRING_ARRAY, EMPTY_STRING_RECORD } from '@/lib/empty';
+import {
+  calculateGuidedSkillPointBudget,
+  pruneUnresolvedSkillAllocations,
+} from '@/lib/guided-creator/skill-reconcile';
+import { EMPTY_STRING_ARRAY, EMPTY_STRING_RECORD } from '@/lib/empty';
 
 const stepCopy = GUIDED_CREATOR_COPY.steps.skills;
 
@@ -83,21 +79,6 @@ export function SkillsStep() {
     [draft, allSpecies],
   );
 
-  const speciesSkillIds = useMemo(() => {
-    if (speciesContext.isMixed && speciesContext.speciesA && speciesContext.speciesB) {
-      if (draft.selectedSpeciesSkillIds.length > 0) {
-        return new Set(draft.selectedSpeciesSkillIds.map(String));
-      }
-      const options = buildMixedSpeciesSkillOptions(
-        speciesContext.speciesA,
-        speciesContext.speciesB,
-        codexSkills,
-      );
-      return new Set(options.map((o) => o.id));
-    }
-    return new Set((speciesContext.species?.skills ?? []).map(String));
-  }, [speciesContext, draft.selectedSpeciesSkillIds, codexSkills]);
-
   const pathSkillIds = useMemo(
     () => new Set((pathData?.level1?.skills ?? []).map(String)),
     [pathData],
@@ -111,48 +92,40 @@ export function SkillsStep() {
     [draft.declinedPathSkillIds],
   );
 
-  const allocations = draft.skills ?? EMPTY_NUMBER_RECORD;
   const defenseVals = draft.defenseVals ?? DEFAULT_DEFENSE_SKILLS;
   const skillAbilities = draft.skillAbilities ?? EMPTY_STRING_RECORD;
   const abilities = useMemo(() => draft.abilities ?? { ...DEFAULT_ABILITIES }, [draft.abilities]);
   const level = 1;
-  const extraSkillPoints = speciesSkillIds.has('0') ? 1 : 0;
-  const totalPoints = getTotalSkillPoints(level, 'character') + extraSkillPoints;
-
-  const skillMeta = useMemo(() => {
-    const map = new Map<string, { isSubSkill: boolean }>();
-    codexSkills.forEach((s: Skill) => {
-      map.set(String(s.id), { isSubSkill: s.base_skill_id !== undefined });
-    });
-    return map;
-  }, [codexSkills]);
-
-  /**
-   * Codex-resolved keys only. An unresolvable id still costs a Skill Point in the spend calc
-   * but `GuidedSkillsPanel` renders no row for it, so it can never be removed and Continue is
-   * dead (audit P0-2). Skipped while the codex is empty so a cold cache cannot drop valid
-   * allocations, and applied to species/path defaults too — a deleted path skill bricks the
-   * step the same way a deleted draft skill does.
-   */
-  const allocationsWithDefaults = useMemo(() => {
-    const codexReady = skillMeta.size > 0;
-    const resolves = (id: string) => !codexReady || skillMeta.has(id);
-    const next: Record<string, number> = {};
-    Object.entries(allocations).forEach(([id, value]) => {
-      if (resolves(id)) next[id] = value;
-    });
-    speciesSkillIds.forEach((id) => {
-      if (id === '0' || !resolves(id)) return;
-      if (!(id in next)) next[id] = 0;
-    });
-    recommendedSkillIds.forEach((id) => {
-      const key = String(id);
-      if (key === '0' || !resolves(key)) return;
-      if (declinedPathSkillIds.has(key)) return;
-      if (!(key in next)) next[key] = 0;
-    });
-    return next;
-  }, [allocations, speciesSkillIds, recommendedSkillIds, declinedPathSkillIds, skillMeta]);
+  const {
+    skillMeta,
+    speciesSkillIds,
+    allocationsWithDefaults,
+    remainingPoints,
+    totalPoints,
+    spentPoints,
+  } = useMemo(
+    () =>
+      calculateGuidedSkillPointBudget({
+        allocations: draft.skills,
+        defenseVals,
+        selectedSpeciesSkillIds: draft.selectedSpeciesSkillIds,
+        declinedPathSkillIds: draft.declinedPathSkillIds,
+        recommendedSkillIds,
+        speciesContext,
+        catalog: codexSkills,
+        rules,
+      }),
+    [
+      codexSkills,
+      defenseVals,
+      draft.declinedPathSkillIds,
+      draft.selectedSpeciesSkillIds,
+      draft.skills,
+      recommendedSkillIds,
+      rules,
+      speciesContext,
+    ],
+  );
 
   /** Same reconciliation on the persisted draft, so the stale key does not survive a reload. */
   useEffect(() => {
@@ -161,20 +134,6 @@ export function SkillsStep() {
     if (removedIds.length === 0) return;
     updateDraft({ skills });
   }, [skillMeta, draft.skills, updateDraft]);
-
-  const spentPoints = useMemo(
-    () =>
-      calculateSimpleSkillPointsSpent(
-        allocationsWithDefaults,
-        speciesSkillIds,
-        skillMeta,
-        defenseVals,
-        skillRules,
-      ),
-    [allocationsWithDefaults, speciesSkillIds, skillMeta, defenseVals, skillRules],
-  );
-
-  const remainingPoints = totalPoints - spentPoints;
   const maxAddSkillSelections = Math.floor(remainingPoints / skillRules.gainProficiencyCost);
   const canBrowseSubSkills = remainingPoints >= 1;
 

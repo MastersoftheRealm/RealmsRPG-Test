@@ -69,6 +69,9 @@ describe('compact-facts formatters', () => {
     expect(formatHandednessFact([{ id: PROPERTY_IDS.RANGE, name: 'Range', op_1_lvl: 1 }])).toBe(
       'Ranged',
     );
+    expect(formatHandednessFact([{ id: PROPERTY_IDS.REACH, name: 'Reach', op_1_lvl: 0 }])).toBe(
+      'One-handed',
+    );
     expect(formatHandednessFact([])).toBe('One-handed');
     expect(formatHandednessFact([], '16 spaces')).toBe('Ranged');
     expect(formatHandednessFact([], '0')).toBe('One-handed');
@@ -95,6 +98,12 @@ describe('compact-facts formatters', () => {
         { id: PROPERTY_IDS.RANGE, name: 'Range', op_1_lvl: 0 },
       ]),
     ).toBe('Acuity Weapon');
+    expect(
+      formatWeaponAbilityFactFromProperties([
+        { id: PROPERTY_IDS.HEAVY, name: 'Heavy' },
+        { id: PROPERTY_IDS.RANGE, name: 'Range', op_1_lvl: 0 },
+      ]),
+    ).toBe('Strength Weapon');
     expect(formatWeaponAbilityFactFromProperties([])).toBe('Strength Weapon');
   });
 
@@ -189,6 +198,9 @@ describe('compact-facts formatters', () => {
     expect(namedChip.description).toBe('Deal half damage on a miss.');
     expect(namedChip.cost).toBeUndefined();
     expect(isMechanicPropertyName('Finesse')).toBe(true);
+    expect(isMechanicPropertyName('Heavy')).toBe(true);
+    expect(isMechanicPropertyName('Reach')).toBe(true);
+    expect(isMechanicPropertyName('Thrown')).toBe(true);
     expect(isMechanicPropertyName('Graze')).toBe(false);
     expect(isMechanicPropertyName('Weapon Damage')).toBe(true);
     expect(isMechanicPropertyName('Armor Base')).toBe(true);

@@ -1,11 +1,12 @@
 import { createElement } from 'react';
 import { describe, expect, it } from 'vitest';
 import {
+  collapsedColumnOverflowClass,
   columnHasDisplayValue,
   columnHasInteractiveValue,
   columnsAlreadyShowTrainingPoints,
-  columnsForExpandedBodyStats,
   columnsForMobileSummary,
+  columnsWithoutDescriptionPreview,
   dataColumnTrackCount,
 } from './grid-list-row-columns';
 
@@ -28,7 +29,7 @@ describe('columnsAlreadyShowTrainingPoints', () => {
   });
 });
 
-describe('columnHasDisplayValue / mobile expand facts (TASK-868)', () => {
+describe('columnHasDisplayValue / mobile expand facts (TASK-868 / TASK-909)', () => {
   it('treats empty, dash, and none as not displayable', () => {
     expect(columnHasDisplayValue({ key: 'uses', value: '-' })).toBe(false);
     expect(columnHasDisplayValue({ key: 'uses', value: '—' })).toBe(false);
@@ -45,30 +46,37 @@ describe('columnHasDisplayValue / mobile expand facts (TASK-868)', () => {
         { key: 'recovery', value: 'FR', hideOnMobile: true },
         { key: 'description', value: 'A feat.', hideOnMobile: true },
       ]).map((col) => col.key),
-    ).toEqual(['recovery', 'description']);
+    ).toEqual(['recovery']);
   });
 
-  it('omits blank and in-body description from expanded body stats', () => {
+  it('drops truncated description from header/summary when the body owns it', () => {
     expect(
-      columnsForExpandedBodyStats(
+      columnsWithoutDescriptionPreview(
         [
           { key: 'description', value: 'A feat.' },
-          { key: 'uses', value: '-' },
+          { key: 'uses', value: '1/2' },
           { key: 'recovery', value: 'PR' },
         ],
         true,
       ).map((col) => col.key),
-    ).toEqual(['recovery']);
+    ).toEqual(['uses', 'recovery']);
   });
 });
 
-describe('columnHasInteractiveValue / dataColumnTrackCount (TASK-898)', () => {
-  it('detects ReactNode column values that need stacked expanded layout', () => {
+describe('interactive header cells (TASK-909)', () => {
+  it('detects ReactNode column values that must not truncate', () => {
     expect(columnHasInteractiveValue({ key: 'uses', value: '1/2' })).toBe(false);
     expect(columnHasInteractiveValue({ key: 'uses', value: createElement('span') })).toBe(true);
   });
 
-  it('sums data column spans for expanded name grid-column span', () => {
+  it('skips text truncate on interactive header cells', () => {
+    expect(collapsedColumnOverflowClass({ key: 'action', value: 'Basic' })).toContain('truncate');
+    expect(
+      collapsedColumnOverflowClass({ key: 'uses', value: createElement('span') }),
+    ).not.toContain('truncate');
+  });
+
+  it('sums data column spans for description-only name grid-column span', () => {
     expect(
       dataColumnTrackCount(
         [

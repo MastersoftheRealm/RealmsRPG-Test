@@ -129,8 +129,8 @@ function getActionPartIds(creatorType: CreatorType) {
   };
 }
 
-/** Map power damage type to part ID and name */
-function getPowerDamagePartInfo(damageType: string): { id: number; name: string } | null {
+/** Map power damage type to part ID and name (shared with targeted-defenses suggestions). */
+export function getPowerDamagePartInfo(damageType: string): { id: number; name: string } | null {
   const mapping: Record<string, { id: number; name: string }> = {
     magic: { id: PART_IDS.MAGIC_DAMAGE, name: 'Magic Damage' },
     light: { id: PART_IDS.LIGHT_DAMAGE, name: 'Light Damage' },

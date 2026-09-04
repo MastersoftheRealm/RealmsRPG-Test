@@ -1,5 +1,5 @@
 /**
- * Guided equipment — starting currency and spend math (shared with equipment-step).
+ * Guided equipment — starting currency and spend math.
  *
  * Display Currency is `resolveItemMarketPricing().currencyCost` — never the
  * raw property C sum (`costs.totalCurrency`). Same protocol as OfficialItemList / Library GLR.

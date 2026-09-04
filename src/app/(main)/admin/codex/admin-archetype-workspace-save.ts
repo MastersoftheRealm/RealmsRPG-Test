@@ -293,9 +293,7 @@ export async function saveAdminArchetype({
 
   setSaving(false);
   if (result.success) {
-    queryClient.invalidateQueries({ queryKey: ['gameData', 'archetypes'] });
     queryClient.invalidateQueries({ queryKey: ['codex'] });
-    await queryClient.refetchQueries({ queryKey: ['gameData', 'archetypes'] });
     await queryClient.refetchQueries({ queryKey: ['codex'] });
     onSuccess();
   } else {

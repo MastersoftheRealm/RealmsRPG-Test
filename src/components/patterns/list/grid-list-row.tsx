@@ -35,11 +35,9 @@ import {
 import { GridListRowCollapsed, GridListRowExternalChrome } from './grid-list-row-collapsed';
 import {
   columnsAlreadyShowTrainingPoints,
-  columnsForExpandedBodyStats,
   columnsForMobileSummary,
   columnsWithoutDescriptionPreview,
   columnHasDisplayValue,
-  dataColumnTrackCount,
   descriptionColumnTrackCount,
 } from './grid-list-row-columns';
 import { GridListRowExpandedBody, GridListRowMobileSummary } from './grid-list-row-expanded';
@@ -195,7 +193,7 @@ export const GridListRow = memo(function GridListRow({
     isSelected && 'bg-primary-subtle-bg border-l-4 border-l-primary-outline-border',
     innate && !isSelected && 'border-power-border bg-power-light',
     !isSelected && !innate && 'border-border-light',
-    disabled && 'opacity-50',
+    disabled && 'cursor-not-allowed',
     className,
   );
 
@@ -240,19 +238,14 @@ export const GridListRow = memo(function GridListRow({
     (col) => col.key === 'uses' && columnHasDisplayValue(col),
   );
   const hideUsesBesideName = hideUsesInName || usesColumnHasValue;
-  // TASK-898: expanded rows paint column facts in the body only — header tracks are too
-  // narrow for steppers (Uses) beside text facts (Recovery), especially in sheet panels.
-  const suppressColumnFactsWhenExpanded = isExpanded && !!gridColumns && !expandedContent;
-  const suppressDescriptionPreview =
-    !suppressColumnFactsWhenExpanded && isExpanded && !!descTrimmed && !expandedContent;
-  const headerColumns = suppressColumnFactsWhenExpanded
-    ? columns.filter((col) => !columnHasDisplayValue(col))
-    : columnsWithoutDescriptionPreview(columns, suppressDescriptionPreview);
+  // TASK-909: glance facts stay under ListHeader even while expanded. Description is
+  // expanded-only (truncated header teasers are dropped whenever the body has full text).
+  const suppressDescriptionPreview = !!descTrimmed && !expandedContent;
+  const headerColumns = columnsWithoutDescriptionPreview(columns, suppressDescriptionPreview);
   const allDataColumnsAreDescription =
     columns.length > 0 && columns.every((col) => col.key === 'description');
-  const nameGridColumnSpan = suppressColumnFactsWhenExpanded
-    ? 1 + dataColumnTrackCount(columns, columnSpans)
-    : suppressDescriptionPreview && allDataColumnsAreDescription
+  const nameGridColumnSpan =
+    suppressDescriptionPreview && allDataColumnsAreDescription
       ? 1 + descriptionColumnTrackCount(columns, columnSpans)
       : undefined;
 
@@ -273,7 +266,6 @@ export const GridListRow = memo(function GridListRow({
     columnsForMobileSummary(columns),
     suppressDescriptionPreview,
   );
-  const expandedBodyStatColumns = columnsForExpandedBodyStats(columns, !!descTrimmed);
 
   const showRowHover = showExpander || selectable || hasExternalChrome;
   const hoverClass = showRowHover ? (rowHoverClass ?? 'hover:bg-surface-alt') : undefined;
@@ -281,7 +273,8 @@ export const GridListRow = memo(function GridListRow({
   const contentCol = showLeftChrome ? 2 : 1;
   const chromeCol = hasExternalChrome ? (showLeftChrome ? 3 : 2) : 0;
   const showExpanded = isExpanded && hasDetails;
-  const hasMobileSummary = !!(gridColumns && mobileSummaryColumns.length > 0 && !showExpanded);
+  // Keep the mobile fact summary while expanded (no ListHeader below `lg`).
+  const hasMobileSummary = !!(gridColumns && mobileSummaryColumns.length > 0);
   const summaryRow = hasMobileSummary ? 2 : 0;
   const expandedRow = showExpanded ? (hasMobileSummary ? 3 : 2) : 0;
   const chromeGridTemplateColumns = [
@@ -352,7 +345,6 @@ export const GridListRow = memo(function GridListRow({
             columns={columns}
             columnSpans={columnSpans}
             suppressDescriptionPreview={suppressDescriptionPreview}
-            suppressColumnFactsWhenExpanded={suppressColumnFactsWhenExpanded}
             allDataColumnsAreDescription={allDataColumnsAreDescription}
             headerColumns={headerColumns}
             inlineWarning={inlineWarning}
@@ -424,8 +416,6 @@ export const GridListRow = memo(function GridListRow({
                 descriptionAfter={descriptionAfter}
                 warningMessage={warningMessage}
                 badges={expandedBadges}
-                gridColumns={gridColumns}
-                expandedBodyStatColumns={expandedBodyStatColumns}
                 totalCost={showExpandedTotalCost ? totalCost : undefined}
                 costLabel={costLabel}
                 requirements={requirements}

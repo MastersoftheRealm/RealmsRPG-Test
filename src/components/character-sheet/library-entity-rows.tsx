@@ -55,7 +55,8 @@ import {
   partsProficienciesSection,
   propertiesProficienciesSection,
 } from '@/lib/chip/list-row-metadata';
-import { rangeFactChip } from '@/lib/detail-option/compact-facts';
+import type { ChipData } from '@/components/patterns';
+import { rangeFactChip, targetsFactChip } from '@/lib/detail-option/compact-facts';
 import { derivePowerDisplay, formatPowerDamage } from '@/lib/calculators/power-calc';
 import { deriveTechniqueDisplay } from '@/lib/calculators/technique-calc';
 import {
@@ -65,7 +66,6 @@ import {
 } from '@/lib/calculators/item-calc';
 import { buildEquipmentCatalogFactColumns, equipmentCurrency } from '@/lib/codex/equipment-list';
 import type { GlrSurfaceId } from '@/lib/glr';
-import { truncateText } from '@/lib/utils';
 import type { PowerPart, TechniquePart } from '@/hooks/codex-types';
 import {
   libraryItemToPowerDocument,
@@ -298,14 +298,19 @@ export function mapPowerRows(
         />
       ) : undefined;
 
-    const detailSections = glrSurfaceDetailSections(
-      'character-sheet-power-play',
-      {
-        category: categoryFactValue(categories),
-        range: rangeValue,
-        trainingPoints: display.tp > 0 ? display.tp : undefined,
-      },
-      partsSection ? [partsSection] : undefined,
+    const detailSections = mergeDetailSections(
+      glrSurfaceDetailSections(
+        'character-sheet-power-play',
+        {
+          category: categoryFactValue(categories),
+          range: rangeValue,
+          trainingPoints: display.tp > 0 ? display.tp : undefined,
+        },
+        partsSection ? [partsSection] : undefined,
+      ),
+      metadataDetailSection(
+        [targetsFactChip(power.targetedDefenses)].filter(Boolean) as ChipData[],
+      ),
     );
 
     return {
@@ -370,6 +375,7 @@ export function mapTechniqueRows(
     const rangeChip = rangeFactChip(tech.range);
     const extraSections = mergeDetailSections(
       rangeChip ? metadataDetailSection([rangeChip]) : undefined,
+      metadataDetailSection([targetsFactChip(tech.targetedDefenses)].filter(Boolean) as ChipData[]),
       partsSection ? [partsSection] : undefined,
     );
     const detailSections = glrSurfaceDetailSections(
@@ -709,8 +715,6 @@ export function mapArmorRows(armor: Item[], ctx: LibraryEntityRowContext): Entit
   });
 }
 
-const SHEET_EQUIPMENT_DESCRIPTION_TRUNCATE = 120;
-
 function buildSheetEquipmentColumns(
   item: Item,
   ctx: LibraryEntityRowContext,
@@ -718,11 +722,6 @@ function buildSheetEquipmentColumns(
 ): ColumnValue[] {
   const costFacts = sheetItemCostFacts(item, ctx, 'equipment');
   return [
-    {
-      key: 'description',
-      value: truncateText(item.description, SHEET_EQUIPMENT_DESCRIPTION_TRUNCATE),
-      hideOnMobile: true,
-    },
     ...buildEquipmentCatalogFactColumns({
       category: (item as Item & { category?: string | undefined }).category,
       rarity: item.rarity,
@@ -752,7 +751,7 @@ export function mapEquipmentRows(
     const propertySection = propertiesProficienciesSection(propertyChips, 'item');
     const qty = item.quantity ?? 1;
     const quantityStepper = ctx.onEquipmentQuantityChange ? (
-      <div className="flex items-center justify-center" onClick={(e) => e.stopPropagation()}>
+      <div className="inline-flex items-center" onClick={(e) => e.stopPropagation()}>
         <QuantitySelector
           quantity={qty}
           min={0}

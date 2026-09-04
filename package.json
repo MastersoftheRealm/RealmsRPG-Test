@@ -5,10 +5,11 @@
   "engines": {
     "node": "24.x"
   },
-  "//overrides": "Transitive pins added by `chore: apply npm audit fixes` (133aa520). postcss 8.5.25 hoists one copy across @tailwindcss/postcss, next and vitest's vite; sharp 0.35.3 pins next's optional image-optimization dep. `npm audit` is clean WITH these pins in place, so neither advisory can be re-confirmed from here: to retire them, delete this block, run `npm install`, then `npm audit` — if it stays at 0 vulnerabilities the pins were leftovers and should stay deleted.",
+  "//overrides": "Transitive pins added by `chore: apply npm audit fixes` (133aa520). postcss 8.5.25 hoists one copy across @tailwindcss/postcss, next and vitest's vite; sharp 0.35.3 pins next's optional image-optimization dep; fast-uri 3.1.7 patches GHSA advisories under ajv-formats→ajv (3.0.0–3.1.5). `npm audit` is clean WITH these pins in place, so neither advisory can be re-confirmed from here: to retire them, delete this block, run `npm install`, then `npm audit` — if it stays at 0 vulnerabilities the pins were leftovers and should stay deleted.",
   "overrides": {
     "postcss": "8.5.25",
-    "sharp": "0.35.3"
+    "sharp": "0.35.3",
+    "fast-uri": "3.1.7"
   },
   "scripts": {
     "dev": "next dev",
@@ -31,7 +32,6 @@
     "verify:auth-visual:update": "npm run build && playwright test -c playwright.auth.config.ts tests/visual/auth-screenshots.pw.ts --update-snapshots",
     "verify:auth-a11y": "npm run build && playwright test -c playwright.auth.config.ts tests/visual/auth-a11y.pw.ts",
     "verify:auth-a11y:update": "npm run build && cross-env UPDATE_AUTH_A11Y_BASELINE=1 playwright test -c playwright.auth.config.ts tests/visual/auth-a11y.pw.ts --workers=1",
-    "verify:creator-audit": "npm run build && playwright test -c playwright.creator-audit.config.ts",
     "verify:shell-creators-audit": "npm run build && playwright test -c playwright.shell-creators-audit.config.ts",
     "verify:responsive": "npm run build && playwright test -c playwright.responsive.config.ts",
     "verify:responsive:update": "npm run build && cross-env UPDATE_RESPONSIVE_BASELINE=1 playwright test -c playwright.responsive.config.ts --workers=1",

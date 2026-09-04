@@ -1,11 +1,10 @@
 /**
- * Item Creator — meta + type selector (TASK-616)
+ * Item Creator — meta + type selector (TASK-616 / TASK-918)
  */
 
 'use client';
 
-import { cn } from '@/lib/utils';
-import { RealmsImageField } from '@/components/patterns';
+import { RealmsImageField, SegmentedControl } from '@/components/patterns';
 import { Card, Input, Textarea } from '@/components/ui';
 import type { ArmamentType } from './item-creator-bootstrap';
 import { ARMAMENT_TYPES } from './item-creator-helpers';
@@ -69,25 +68,19 @@ export function ItemCreatorEditorMeta({
         )}
 
         <div>
-          <label className="mb-2 block text-sm font-medium text-text-secondary">Item Type</label>
-          <div className="grid grid-cols-4 gap-2">
-            {ARMAMENT_TYPES.map((type) => (
-              <button
-                key={type.value}
-                type="button"
-                onClick={() => onArmamentTypeChange(type.value)}
-                className={cn(
-                  'flex min-h-[44px] items-center justify-center gap-1 rounded-lg px-3 py-2 text-sm font-medium transition-colors',
-                  armamentType === type.value
-                    ? 'bg-warning-600 text-text-on-dark hover:bg-warning-700 dark:bg-warning-700 dark:text-text-on-dark dark:hover:bg-warning-600'
-                    : 'bg-surface-alt text-text-primary hover:bg-surface dark:bg-surface',
-                )}
-              >
-                <type.icon className="h-4 w-4" />
-                {type.label}
-              </button>
-            ))}
-          </div>
+          <p id="item-creator-item-type" className="mb-2 text-sm font-medium text-text-secondary">
+            Item Type
+          </p>
+          <SegmentedControl
+            value={armamentType}
+            onChange={onArmamentTypeChange}
+            aria-labelledby="item-creator-item-type"
+            options={ARMAMENT_TYPES.map((type) => ({
+              value: type.value,
+              label: type.label,
+              icon: <type.icon className="h-4 w-4" aria-hidden />,
+            }))}
+          />
         </div>
 
         <div>

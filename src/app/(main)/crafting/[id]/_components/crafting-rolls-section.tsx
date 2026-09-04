@@ -130,7 +130,7 @@ export function CraftingRollsSection({
                     updateSessionRoll(i, v === '' ? null : parseInt(v, 10));
                   }}
                   placeholder="Roll"
-                  className="min-h-[44px] w-20"
+                  className="w-20"
                 />
               </div>
               {hasRoll && (

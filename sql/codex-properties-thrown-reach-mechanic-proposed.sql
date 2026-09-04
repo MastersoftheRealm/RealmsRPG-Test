@@ -1,0 +1,32 @@
+-- TASK-919 — Thrown + Reach mechanic flags (preview only; owner approve before apply)
+-- Codex-data policy: audit → propose → owner "apply" → run once.
+--
+-- Live audit 2026-09-03 (project lbqhiwudvifmkjtkccdg):
+--   id 13 Range  mechanic=true
+--   id 25 Thrown mechanic=false
+--   id 41 Reach  mechanic=false
+-- App already hides Thrown/Reach from Add property via MECHANIC_PROPERTY_IDS +
+-- PropertyCard isMechanicProperty filter (same pattern as Range). This UPDATE
+-- only syncs the live codex mechanic flag. Compact facts do not chip them.
+--
+-- Seed CSV (scripts/seed-data/properties.csv) has no mechanic column.
+-- Do not INSERT new properties. Heavy (TASK-920) is a separate audit.
+
+-- Preview live flags (run in Supabase SQL editor before apply):
+-- SELECT id, name, mechanic, type
+-- FROM public.codex_properties
+-- WHERE id IN ('13', '25', '41')
+-- ORDER BY id;
+
+-- Proposed apply (idempotent) — uncomment only after owner "apply":
+-- UPDATE public.codex_properties
+-- SET mechanic = true
+-- WHERE id IN ('25', '41')
+--   AND mechanic IS DISTINCT FROM true;
+
+-- Post-apply verification:
+-- SELECT id, name, mechanic
+-- FROM public.codex_properties
+-- WHERE id IN ('13', '25', '41')
+-- ORDER BY id;
+-- Expected: Range/Thrown/Reach all mechanic=true
