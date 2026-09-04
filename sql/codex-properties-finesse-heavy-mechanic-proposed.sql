@@ -1,0 +1,47 @@
+-- TASK-920 — Finesse + Heavy mechanic flags / Heavy row (preview only)
+-- Codex-data policy: audit → propose → owner "apply" → run once.
+--
+-- Live audit 2026-09-03 (project lbqhiwudvifmkjtkccdg):
+--   id 26 Finesse mechanic=true type=Weapon  base_ip=1 base_tp=1 base_c=1.5
+--   id 50 Heavy   mechanic=true type=Weapon  base_ip=1 base_tp=2 base_c=1.5
+--     description: "This Weapon uses Strength for attack and damage rolls instead of another ability."
+-- No INSERT or mechanic UPDATE needed — both rows already exist with mechanic=true.
+-- App hides Finesse/Heavy from Add property via MECHANIC_PROPERTY_IDS (26, 50) +
+-- isMechanicProperty filter. Ability utilized writes Finesse or Heavy on save.
+-- Seed CSV now includes id 50 Heavy for repo parity (scripts/seed-data/properties.csv).
+-- PROPERTY_IDS.HEAVY = 50.
+--
+-- Preview live flags (run in Supabase SQL editor before any apply):
+-- SELECT id, name, mechanic, type, base_ip, base_tp, base_c
+-- FROM public.codex_properties
+-- WHERE id IN ('26', '50')
+-- ORDER BY id;
+--
+-- Proposed apply: none. If a future environment is missing Heavy, INSERT then uncomment:
+-- INSERT INTO public.codex_properties (
+--   id, name, description, base_ip, base_tp, base_c,
+--   op_1_desc, op_1_ip, op_1_tp, op_1_c, type, mechanic
+-- )
+-- SELECT
+--   '50',
+--   'Heavy',
+--   'This Weapon uses Strength for attack and damage rolls instead of another ability.',
+--   1, 2, 1.5,
+--   NULL, NULL, NULL, NULL,
+--   'Weapon',
+--   true
+-- WHERE NOT EXISTS (
+--   SELECT 1 FROM public.codex_properties WHERE id = '50' OR lower(name) = 'heavy'
+-- );
+--
+-- UPDATE public.codex_properties
+-- SET mechanic = true
+-- WHERE id IN ('26', '50')
+--   AND mechanic IS DISTINCT FROM true;
+--
+-- Post-apply verification:
+-- SELECT id, name, mechanic
+-- FROM public.codex_properties
+-- WHERE id IN ('26', '50')
+-- ORDER BY id;
+-- Expected: Finesse + Heavy mechanic=true

@@ -8,6 +8,7 @@
 import { PART_IDS, findByIdOrName } from '@/lib/id-constants';
 import { computePartTrainingPoints } from '@/lib/calculators/part-training-points';
 import { dedupeSavedParts } from '@/lib/game/dedupe-saved-parts';
+import { appendCanTargetToDescription, defensesFromPart } from '@/lib/game/targeted-defenses';
 import type { TechniquePart } from '@/hooks/codex-types';
 import { formatActionTypeForDisplay } from '@/lib/utils/action-type';
 import type { AllowUndefinedOptionals } from '@/lib/utils/exact-optional';
@@ -25,6 +26,9 @@ export type { TechniquePart };
 // Types
 // =============================================================================
 
+/** Creator Advanced Calculations section ids (display-only). */
+export type TechniqueCalcSectionId = 'action' | 'attack' | 'damage' | 'parts';
+
 export interface TechniquePartPayload {
   id?: number | undefined;
   name?: string | undefined;
@@ -33,6 +37,10 @@ export interface TechniquePartPayload {
   op_2_lvl?: number | undefined;
   op_3_lvl?: number | undefined;
   applyDuration?: boolean | undefined;
+  /** Display-only. Advanced Calculations grouping; ignored by cost math. */
+  calcSection?: TechniqueCalcSectionId | undefined;
+  /** Display-only label override; ignored by cost math. */
+  displayLabel?: string | undefined;
 }
 
 export interface TechniqueCostResult {
@@ -84,6 +92,7 @@ interface TechniqueDocumentFields {
   actionType?: string | undefined;
   /** Whether the technique can be used as a reaction */
   isReaction?: boolean | undefined;
+  targetedDefenses?: string[] | undefined;
 }
 
 export type TechniqueDocument = AllowUndefinedOptionals<TechniqueDocumentFields>;
@@ -247,7 +256,7 @@ export function formatTechniquePartChip(
 
   return {
     text,
-    description: def.description || '',
+    description: appendCanTargetToDescription(def.description || '', defensesFromPart(def)) ?? '',
     finalTP,
     hasTP: finalTP > 0,
     optionLevel: optionLevel > 0 ? optionLevel : undefined,

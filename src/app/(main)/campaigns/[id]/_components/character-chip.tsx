@@ -6,7 +6,7 @@
 
 import Link from 'next/link';
 import { ExternalLink, Trash2 } from 'lucide-react';
-import { IconButton } from '@/components/ui';
+import { Button, IconButton } from '@/components/ui';
 import { ExpandableImage } from '@/components/patterns';
 import type { CampaignCharacter } from '@/types/campaign';
 import { isPortraitFallbackSrc } from '@/lib/portrait';
@@ -62,24 +62,19 @@ export function CharacterChip({
       </div>
       <div className="flex flex-shrink-0 items-center gap-1">
         {onViewSheet && (
-          <Link
-            href={onViewSheet}
-            target="_blank"
-            rel="noopener noreferrer"
-            aria-label={`View ${character.characterName} sheet`}
-            className="inline-flex min-h-[44px] min-w-[44px] items-center justify-center rounded-lg text-text-muted transition-colors hover:bg-surface-alt hover:text-text-primary focus:ring-2 focus:ring-primary-outline-border focus:ring-offset-2 focus:outline-none"
-          >
-            <ExternalLink className="h-4 w-4" />
-          </Link>
+          <Button asChild variant="ghost" size="icon">
+            <Link
+              href={onViewSheet}
+              target="_blank"
+              rel="noopener noreferrer"
+              aria-label={`View ${character.characterName} sheet`}
+            >
+              <ExternalLink className="h-4 w-4" />
+            </Link>
+          </Button>
         )}
         {canRemove && (
-          <IconButton
-            label="Remove"
-            variant="danger"
-            size="sm"
-            onClick={onRemove}
-            className="min-h-[44px] min-w-[44px]"
-          >
+          <IconButton label="Remove" variant="danger" size="sm" onClick={onRemove}>
             <Trash2 className="h-4 w-4" />
           </IconButton>
         )}

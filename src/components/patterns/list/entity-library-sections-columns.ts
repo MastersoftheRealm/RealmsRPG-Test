@@ -79,7 +79,6 @@ const playFeatChrome = glrListChrome(
   { entityType: 'feat', mode: 'play' },
   {
     labelStyle: 'title',
-    extraColumns: [{ key: 'description', label: 'Description', width: '2.5fr', afterKey: 'name' }],
     trackOverrides: { uses: '5rem', recovery: '4rem' },
   },
 );
@@ -103,10 +102,7 @@ const sheetEquipmentChrome = glrListChrome(
   {
     labelStyle: 'title',
     nameWidth: '1fr',
-    extraColumns: [
-      { key: 'description', label: 'Description', width: '2.5fr', afterKey: 'name' },
-      { key: 'quantity', label: 'Qty', width: '4rem', afterKey: 'rarity' },
-    ],
+    extraColumns: [{ key: 'quantity', label: 'Qty', width: '4rem', afterKey: 'rarity' }],
   },
 );
 
@@ -150,7 +146,7 @@ export const ARMOR_GRID = playArmorChrome.grid;
 export const EQUIPMENT_COLUMNS: ListColumn[] = toListColumns(creatureEquipmentChrome);
 export const EQUIPMENT_GRID = creatureEquipmentChrome.grid;
 
-/** Character sheet Inventory → Equipment (TASK-873): catalog columns + Description + Qty. */
+/** Character sheet Inventory → Equipment (TASK-873 / TASK-909): catalog columns + Qty; description in expand. */
 export const CHARACTER_SHEET_EQUIPMENT_COLUMNS: ListColumn[] = toListColumns(sheetEquipmentChrome);
 export const CHARACTER_SHEET_EQUIPMENT_GRID = sheetEquipmentChrome.grid;
 

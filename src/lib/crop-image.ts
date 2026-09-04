@@ -22,7 +22,8 @@ export function fileFromCroppedBlob(blob: Blob, baseName: string): File {
   return new File([blob], `${baseName}.${ext}`, { type });
 }
 
-function readFileAsDataUrl(file: File): Promise<string> {
+/** Read a File as a data URL (guest local portraits + crop pipeline). */
+export function readFileAsDataUrl(file: File): Promise<string> {
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
     reader.onload = () => resolve(reader.result as string);

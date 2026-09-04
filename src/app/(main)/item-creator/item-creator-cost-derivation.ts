@@ -9,11 +9,18 @@ import { useMemo } from 'react';
 import type { ItemProperty } from '@/hooks';
 import {
   calculateItemCosts,
+  formatWeaponRangeConfig,
   resolveItemMarketPricing,
+  weaponRangeOpLevelFromSpaces,
+  buildItemAdvancedCalculationGroups,
   type ItemPropertyPayload,
+  type WeaponRangeType,
 } from '@/lib/calculators';
 import { PROPERTY_IDS } from '@/lib/id-constants';
-import { formatCost } from '@/lib/game/creator-constants';
+import {
+  weaponAttackAbilityLabel,
+  type WeaponAttackAbility,
+} from '@/lib/game/weapon-attack-ability';
 import type {
   ArmamentType,
   ItemSelectedProperty as SelectedProperty,
@@ -30,6 +37,7 @@ export type ItemSectionCostSlice = {
 export type ItemSectionCosts = {
   handedness: ItemSectionCostSlice;
   range: ItemSectionCostSlice;
+  abilityUtilized: ItemSectionCostSlice;
   damage: ItemSectionCostSlice;
   damageReduction: ItemSectionCostSlice;
   agilityReduction: ItemSectionCostSlice;
@@ -45,7 +53,9 @@ type UseItemCreatorCostDerivationArgs = {
   itemProperties: ItemProperty[];
   damage: DamageConfig;
   isTwoHanded: boolean;
-  rangeLevel: number;
+  rangeType: WeaponRangeType;
+  rangeSpaces: number;
+  attackAbility: WeaponAttackAbility;
   damageReduction: number;
   agilityReduction: number;
   criticalRangeIncrease: number;
@@ -61,7 +71,9 @@ export function useItemCreatorCostDerivation({
   itemProperties,
   damage,
   isTwoHanded,
-  rangeLevel,
+  rangeType,
+  rangeSpaces,
+  attackAbility,
   damageReduction,
   agilityReduction,
   criticalRangeIncrease,
@@ -70,16 +82,18 @@ export function useItemCreatorCostDerivation({
   shieldDamage,
   abilityRequirement,
 }: UseItemCreatorCostDerivationArgs) {
-  const rangeDisplay = useMemo(() => {
-    if (rangeLevel === 0) return 'Melee';
-    return `${rangeLevel * 8} spaces`;
-  }, [rangeLevel]);
+  const rangeDisplay = useMemo(
+    () => formatWeaponRangeConfig({ type: rangeType, spaces: rangeSpaces }),
+    [rangeType, rangeSpaces],
+  );
 
   const weaponShieldConfigSummary = useMemo(() => {
     const handed = isTwoHanded ? 'Two-Handed' : 'One-Handed';
-    if (armamentType === 'Weapon') return `${handed} • ${rangeDisplay}`;
+    if (armamentType === 'Weapon') {
+      return `${handed} • ${rangeDisplay} • ${weaponAttackAbilityLabel(attackAbility)}`;
+    }
     return handed;
-  }, [armamentType, isTwoHanded, rangeDisplay]);
+  }, [armamentType, isTwoHanded, rangeDisplay, attackAbility]);
 
   const baseDamageSummary = useMemo(
     () => `${damage.amount}d${damage.size} ${damage.type}`,
@@ -117,28 +131,87 @@ export function useItemCreatorCostDerivation({
   }, [selectedProperties]);
 
   const propertiesPayload: ItemPropertyPayload[] = useMemo(() => {
-    const rangeId = Number(PROPERTY_IDS.RANGE);
+    const rangeMechanicIds = new Set<number>([
+      Number(PROPERTY_IDS.RANGE),
+      Number(PROPERTY_IDS.THROWN),
+      Number(PROPERTY_IDS.REACH),
+    ]);
+    const abilityMechanicIds = new Set<number>([
+      Number(PROPERTY_IDS.FINESSE),
+      Number(PROPERTY_IDS.HEAVY),
+    ]);
     const baseProps = selectedProperties
-      .filter(
-        (sp) => Number(sp.property.id) !== rangeId && sp.property.name?.toLowerCase() !== 'range',
-      )
+      .filter((sp) => {
+        const id = Number(sp.property.id);
+        const name = sp.property.name?.toLowerCase() ?? '';
+        if (rangeMechanicIds.has(id)) return false;
+        if (name === 'range' || name === 'thrown' || name === 'reach') return false;
+        if (abilityMechanicIds.has(id)) return false;
+        if (name === 'finesse' || name === 'heavy') return false;
+        return true;
+      })
       .map((sp) => ({
         id: Number(sp.property.id),
         name: sp.property.name,
         op_1_lvl: sp.op_1_lvl,
       }));
 
+    const findProp = (id: number, name: string) =>
+      itemProperties.find((p: ItemProperty) => Number(p.id) === id || p.name === name);
+
     if ((armamentType === 'Weapon' || armamentType === 'Shield') && isTwoHanded) {
-      const twoHandedProp = itemProperties.find((p: ItemProperty) => p.name === 'Two-Handed');
+      const twoHandedProp = findProp(PROPERTY_IDS.TWO_HANDED, 'Two-Handed');
       if (twoHandedProp) {
         baseProps.push({ id: Number(twoHandedProp.id), name: 'Two-Handed', op_1_lvl: 0 });
       }
     }
 
-    if (armamentType === 'Weapon' && rangeLevel > 0) {
-      const rangeProp = itemProperties.find((p: ItemProperty) => p.name === 'Range');
-      if (rangeProp) {
-        baseProps.push({ id: Number(rangeProp.id), name: 'Range', op_1_lvl: rangeLevel - 1 });
+    if (armamentType === 'Weapon' && rangeType !== 'melee') {
+      if (rangeType === 'ranged') {
+        const rangeProp = findProp(PROPERTY_IDS.RANGE, 'Range');
+        if (rangeProp) {
+          baseProps.push({
+            id: Number(rangeProp.id),
+            name: 'Range',
+            op_1_lvl: weaponRangeOpLevelFromSpaces('ranged', rangeSpaces),
+          });
+        }
+      } else if (rangeType === 'thrown') {
+        const thrownProp = findProp(PROPERTY_IDS.THROWN, 'Thrown');
+        if (thrownProp) {
+          baseProps.push({
+            id: Number(thrownProp.id),
+            name: 'Thrown',
+            op_1_lvl: weaponRangeOpLevelFromSpaces('thrown', rangeSpaces),
+          });
+        }
+      } else if (rangeType === 'reach') {
+        const reachProp = findProp(PROPERTY_IDS.REACH, 'Reach');
+        if (reachProp) {
+          baseProps.push({
+            id: Number(reachProp.id),
+            name: 'Reach',
+            op_1_lvl: weaponRangeOpLevelFromSpaces('reach', rangeSpaces),
+          });
+        }
+      }
+    }
+
+    if (armamentType === 'Weapon') {
+      if (attackAbility === 'agility') {
+        const finesseProp = findProp(PROPERTY_IDS.FINESSE, 'Finesse');
+        baseProps.push({
+          id: Number(finesseProp?.id ?? PROPERTY_IDS.FINESSE),
+          name: finesseProp?.name ?? 'Finesse',
+          op_1_lvl: 0,
+        });
+      } else if (attackAbility === 'strength' && rangeType === 'ranged') {
+        const heavyProp = findProp(PROPERTY_IDS.HEAVY, 'Heavy');
+        baseProps.push({
+          id: Number(heavyProp?.id ?? PROPERTY_IDS.HEAVY),
+          name: heavyProp?.name ?? 'Heavy',
+          op_1_lvl: 0,
+        });
       }
     }
 
@@ -275,7 +348,9 @@ export function useItemCreatorCostDerivation({
     selectedProperties,
     armamentType,
     isTwoHanded,
-    rangeLevel,
+    rangeType,
+    rangeSpaces,
+    attackAbility,
     itemProperties,
     damageReduction,
     agilityReduction,
@@ -296,7 +371,14 @@ export function useItemCreatorCostDerivation({
     const byId = (id: number) => propertiesPayload.filter((p) => Number(p.id) === id);
     return {
       handedness: calculateItemCosts(byId(PROPERTY_IDS.TWO_HANDED), itemProperties),
-      range: calculateItemCosts(byId(PROPERTY_IDS.RANGE), itemProperties),
+      range: calculateItemCosts(
+        [...byId(PROPERTY_IDS.RANGE), ...byId(PROPERTY_IDS.THROWN), ...byId(PROPERTY_IDS.REACH)],
+        itemProperties,
+      ),
+      abilityUtilized: calculateItemCosts(
+        [...byId(PROPERTY_IDS.FINESSE), ...byId(PROPERTY_IDS.HEAVY)],
+        itemProperties,
+      ),
       damage: calculateItemCosts(
         [...byId(PROPERTY_IDS.WEAPON_DAMAGE), ...byId(PROPERTY_IDS.SPLIT_DAMAGE_DICE)],
         itemProperties,
@@ -323,15 +405,9 @@ export function useItemCreatorCostDerivation({
 
   const { currencyCost, rarity } = pricing;
 
-  const advancedCalcRows = useMemo(
-    () => [
-      { label: 'Item points (IP)', value: formatCost(pricing.totalIP) },
-      { label: 'Training points (TP)', value: formatCost(pricing.totalTP) },
-      { label: 'Currency sum (C)', value: formatCost(pricing.totalCurrency) },
-      { label: 'Rarity', value: rarity },
-      { label: 'Currency cost (final)', value: currencyCost.toLocaleString() },
-    ],
-    [pricing.totalCurrency, pricing.totalIP, pricing.totalTP, currencyCost, rarity],
+  const advancedCalcGroups = useMemo(
+    () => buildItemAdvancedCalculationGroups(propertiesPayload, itemProperties, pricing),
+    [propertiesPayload, itemProperties, pricing],
   );
 
   const damageDisplay = useMemo(() => {
@@ -353,7 +429,7 @@ export function useItemCreatorCostDerivation({
     itemSectionCosts,
     currencyCost,
     rarity,
-    advancedCalcRows,
+    advancedCalcGroups,
     damageDisplay,
   };
 }

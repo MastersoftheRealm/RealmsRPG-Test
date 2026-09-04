@@ -141,7 +141,6 @@ export default function AdminCoreRulesPage() {
         );
       }
 
-      queryClient.invalidateQueries({ queryKey: ['core-rules'] });
       queryClient.invalidateQueries({ queryKey: ['codex'] });
 
       setDirty(false);

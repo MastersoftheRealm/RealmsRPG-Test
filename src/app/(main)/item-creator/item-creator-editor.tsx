@@ -37,9 +37,12 @@ export function ItemCreatorEditor(props: ItemCreatorEditorProps) {
         armamentType={props.armamentType}
         isTwoHanded={props.isTwoHanded}
         onIsTwoHandedChange={props.onIsTwoHandedChange}
-        rangeLevel={props.rangeLevel}
-        onRangeLevelChange={props.onRangeLevelChange}
-        rangeDisplay={props.rangeDisplay}
+        rangeType={props.rangeType}
+        onRangeTypeChange={props.onRangeTypeChange}
+        rangeSpaces={props.rangeSpaces}
+        onRangeSpacesChange={props.onRangeSpacesChange}
+        attackAbility={props.attackAbility}
+        onAttackAbilityChange={props.onAttackAbilityChange}
         weaponShieldConfigSummary={props.weaponShieldConfigSummary}
         damage={props.damage}
         onDamageChange={props.onDamageChange}

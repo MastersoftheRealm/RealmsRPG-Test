@@ -56,7 +56,6 @@ const ROUTES = [
   { id: 'characters', url: '/characters' },
   { id: 'characters-new', url: '/characters/new' },
   { id: 'creator-guided', url: '/characters/new/guided' },
-  { id: 'creator-advanced', url: '/characters/new/advanced' },
   { id: 'power-creator', url: '/power-creator' },
   { id: 'item-creator', url: '/item-creator' },
   { id: 'technique-creator', url: '/technique-creator' },

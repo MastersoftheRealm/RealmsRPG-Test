@@ -19,8 +19,9 @@ import { ErrorDisplay } from '@/components/patterns';
 import { apiFetch } from '@/lib/api-client';
 import {
   formatCodexChangeValue,
-  parseChangedFields,
-  summarizeChangedFieldNames,
+  formatCodexChangelogHeadline,
+  parseChangedFieldsForOperation,
+  readCodexChangelogEntityName,
   type CodexFieldChange,
 } from '@/lib/codex-changelog-display';
 
@@ -84,12 +85,6 @@ function operationChipVariant(operation: Operation): 'success' | 'danger' | 'pri
   return 'primary';
 }
 
-function readEntityName(entry: ChangeLogEntry): string {
-  const afterName = typeof entry.after_data?.name === 'string' ? entry.after_data.name : null;
-  const beforeName = typeof entry.before_data?.name === 'string' ? entry.before_data.name : null;
-  return afterName ?? beforeName ?? '(unnamed)';
-}
-
 function readActorLabel(entry: ChangeLogEntry): string {
   return (
     entry.actor?.displayName ??
@@ -100,7 +95,7 @@ function readActorLabel(entry: ChangeLogEntry): string {
 }
 
 function readFieldChanges(entry: ChangeLogEntry): CodexFieldChange[] {
-  return parseChangedFields(entry.changed_fields);
+  return parseChangedFieldsForOperation(entry.operation, entry.changed_fields);
 }
 
 function ChangedFieldsTable({ changes }: { changes: CodexFieldChange[] }) {
@@ -205,7 +200,15 @@ export default function AdminChangelogsPage() {
         ) : (
           <div className="space-y-3">
             {rows.map((entry) => {
+              const entityName = readCodexChangelogEntityName(entry.before_data, entry.after_data);
               const fieldChanges = readFieldChanges(entry);
+              const headline = formatCodexChangelogHeadline({
+                operation: entry.operation,
+                entityType: entry.entity_type,
+                entityName,
+                fieldChanges,
+              });
+              const showFieldDump = entry.operation !== 'create' && fieldChanges.length > 0;
               return (
                 <article key={entry.id} className="rounded-lg border border-border bg-surface p-4">
                   <div className="flex flex-wrap items-start justify-between gap-3">
@@ -215,7 +218,7 @@ export default function AdminChangelogsPage() {
                         {readActorLabel(entry)}
                       </p>
                       <h2 className="text-base font-semibold text-text-primary">
-                        {readEntityName(entry)}{' '}
+                        {entityName}{' '}
                         <span className="font-normal text-text-secondary">({entry.entity_id})</span>
                       </h2>
                     </div>
@@ -228,11 +231,9 @@ export default function AdminChangelogsPage() {
                     </DescriptorChip>
                   </div>
 
-                  <p className="mt-3 text-sm text-text-secondary">
-                    {summarizeChangedFieldNames(fieldChanges)}
-                  </p>
+                  <p className="mt-3 text-sm text-text-secondary">{headline}</p>
 
-                  {fieldChanges.length > 0 ? (
+                  {showFieldDump ? (
                     <div className="mt-3">
                       <ChangedFieldsTable changes={fieldChanges.slice(0, 4)} />
                       {fieldChanges.length > 4 ? (
@@ -243,11 +244,13 @@ export default function AdminChangelogsPage() {
                     </div>
                   ) : null}
 
-                  <div className="mt-3 flex justify-end">
-                    <Button size="sm" variant="secondary" onClick={() => setSelectedEntry(entry)}>
-                      View all fields
-                    </Button>
-                  </div>
+                  {entry.operation !== 'create' ? (
+                    <div className="mt-3 flex justify-end">
+                      <Button size="sm" variant="secondary" onClick={() => setSelectedEntry(entry)}>
+                        View details
+                      </Button>
+                    </div>
+                  ) : null}
                 </article>
               );
             })}

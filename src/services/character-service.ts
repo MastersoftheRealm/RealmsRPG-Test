@@ -14,6 +14,13 @@ import {
   rememberCharacterLockToken,
   resolveCharacterLockToken,
 } from '@/lib/character/save-lock';
+import {
+  deleteGuestCharacter,
+  duplicateGuestCharacter,
+  getGuestCharacter,
+  isGuestCharacterId,
+  saveGuestCharacter,
+} from '@/lib/guest-character-storage';
 
 const API_BASE = '/api/characters';
 
@@ -45,6 +52,10 @@ export async function getCharacters(): Promise<CharacterSummary[]> {
 export async function getCharacter(characterId: string): Promise<GetCharacterResult> {
   if (!characterId?.trim()) {
     throw new Error('Invalid character ID');
+  }
+
+  if (isGuestCharacterId(characterId)) {
+    return { character: getGuestCharacter(characterId.trim()) };
   }
 
   const data = await apiFetchOrNull<GetCharacterResult | Character>(
@@ -94,6 +105,13 @@ export async function saveCharacter(
   }
 
   const id = characterId.trim();
+  if (isGuestCharacterId(id)) {
+    saveGuestCharacter(id, data);
+    const updatedAt = new Date().toISOString();
+    rememberCharacterLockToken(id, updatedAt);
+    return { ok: true as const, updatedAt };
+  }
+
   const run = async () => {
     const body: Record<string, unknown> = { ...data };
     const lock = options.skipLock
@@ -132,6 +150,12 @@ export async function saveCharacterWithConflictRetry(
   },
 ): Promise<{ updatedAt?: string | undefined; applied: Partial<Character> }> {
   const id = characterId.trim();
+  if (isGuestCharacterId(id)) {
+    saveGuestCharacter(id, dirty);
+    const updatedAt = new Date().toISOString();
+    rememberCharacterLockToken(id, updatedAt);
+    return { updatedAt, applied: dirty };
+  }
   return enqueueCharacterSave(id, async () => {
     try {
       const result = await saveCharacter(id, dirty, {
@@ -185,6 +209,11 @@ export async function deleteCharacter(characterId: string): Promise<void> {
     throw new Error('Invalid character ID');
   }
 
+  if (isGuestCharacterId(characterId)) {
+    deleteGuestCharacter(characterId.trim());
+    return;
+  }
+
   await apiFetch<void>(`${API_BASE}/${encodeURIComponent(characterId.trim())}`, {
     method: 'DELETE',
   });
@@ -197,6 +226,10 @@ export async function deleteCharacter(characterId: string): Promise<void> {
 export async function duplicateCharacter(characterId: string): Promise<string> {
   if (!characterId?.trim()) {
     throw new Error('Invalid character ID');
+  }
+
+  if (isGuestCharacterId(characterId)) {
+    return duplicateGuestCharacter(characterId.trim());
   }
 
   const result = await apiFetch<{ id: string }>(API_BASE, {

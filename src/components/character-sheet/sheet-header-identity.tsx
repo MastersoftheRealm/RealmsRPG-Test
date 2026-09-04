@@ -198,10 +198,10 @@ export function SheetHeaderIdentity({
             />
           ) : (
             <h1
-              className="flex min-w-0 items-center gap-2 text-2xl font-bold text-text-primary md:text-3xl"
+              className="flex min-w-0 items-start gap-2 text-2xl font-bold text-text-primary md:text-3xl"
               title={character.name}
             >
-              <span className="min-w-0 truncate">{character.name}</span>
+              <span className="line-clamp-2 min-w-0 break-words">{character.name}</span>
               {onNameChange && isEditMode && (
                 <button
                   onClick={() => setIsEditingName(true)}
@@ -260,7 +260,7 @@ export function SheetHeaderIdentity({
               {onEditArchetype && (
                 <button
                   onClick={onEditArchetype}
-                  className="inline-flex min-h-[44px] min-w-[44px] items-center justify-center text-primary-fg transition-colors hover:scale-110 hover:text-primary-fg-hover"
+                  className="shrink-0 text-primary-fg transition-colors hover:scale-110 hover:text-primary-fg-hover"
                   title="Edit archetype and ability"
                   aria-label="Edit archetype and ability"
                 >

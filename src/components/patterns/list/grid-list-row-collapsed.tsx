@@ -14,7 +14,11 @@ import {
   GRID_LIST_ROW_RIGHT_SLOT_FLEX_WIDTH,
   GRID_LIST_ROW_SELECTION_COLUMN_WIDTH,
 } from './grid-list-row-chrome';
-import { columnDisplayLabel, columnHasDisplayValue } from './grid-list-row-columns';
+import {
+  columnDisplayLabel,
+  columnHasDisplayValue,
+  collapsedColumnOverflowClass,
+} from './grid-list-row-columns';
 import type { ColumnValue } from './grid-list-row-types';
 import { ListRowThumbnail, type ListRowThumbnailProps } from './list-row-thumbnail';
 
@@ -99,8 +103,6 @@ interface GridListRowCollapsedProps {
   columns: ColumnValue[];
   columnSpans?: (number | undefined)[] | undefined;
   suppressDescriptionPreview: boolean;
-  /** When expanded, column facts render in the body — omit from header tracks (TASK-898). */
-  suppressColumnFactsWhenExpanded: boolean;
   allDataColumnsAreDescription: boolean;
   headerColumns: ColumnValue[];
   inlineWarning: boolean;
@@ -147,7 +149,6 @@ export function GridListRowCollapsed({
   columns,
   columnSpans,
   suppressDescriptionPreview,
-  suppressColumnFactsWhenExpanded,
   allDataColumnsAreDescription,
   headerColumns,
   inlineWarning,
@@ -284,11 +285,8 @@ export function GridListRowCollapsed({
           )}
         </div>
 
-        {/* Data columns (non-name). Description teaser clears while expanded when body has the full text. */}
+        {/* Data columns (non-name). Description teasers omit when the expanded body has full text. */}
         {columns.map((col, colIndex) => {
-          if (suppressColumnFactsWhenExpanded && columnHasDisplayValue(col)) {
-            return null;
-          }
           if (suppressDescriptionPreview && col.key === 'description') {
             // Description-only layouts: name spans those tracks (no empty hole).
             if (allDataColumnsAreDescription) return null;
@@ -315,7 +313,7 @@ export function GridListRowCollapsed({
                   : undefined
               }
               className={cn(
-                'min-w-0 truncate text-sm',
+                collapsedColumnOverflowClass(col),
                 col.hideOnMobile !== false && 'hidden lg:block',
                 col.className,
                 col.highlight ? 'font-medium text-primary-link-fg' : 'text-text-primary',
@@ -373,10 +371,7 @@ export function GridListRowCollapsed({
         )}
         {inlineSelectable && (
           <div
-            className={cn(
-              'flex items-center justify-center',
-              disabled && 'cursor-not-allowed opacity-50',
-            )}
+            className={cn('flex items-center justify-center', disabled && 'cursor-not-allowed')}
             onClick={(e) => e.stopPropagation()}
             role="presentation"
             title={disabled && warningMessage && !inlineWarning ? warningMessage : undefined}
@@ -465,7 +460,7 @@ export function GridListRowExternalChrome({
         <div
           className={cn(
             'flex flex-shrink-0 items-center justify-center',
-            disabled && 'cursor-not-allowed opacity-50',
+            disabled && 'cursor-not-allowed',
           )}
           style={{ width: GRID_LIST_ROW_SELECTION_COLUMN_WIDTH }}
           onClick={(e) => e.stopPropagation()}

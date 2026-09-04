@@ -85,9 +85,8 @@ export const MOVEMENT_DESCRIPTIONS: Record<string, string> = {
 
 export const SIMPLE_LIST_COLUMNS: ListColumn[] = [
   { key: 'name', label: 'Name', width: 'minmax(160px, 1fr)' },
-  { key: 'description', label: 'Description', width: '2fr' },
 ];
-export const SIMPLE_LIST_GRID = 'minmax(160px, 1fr) 2fr';
+export const SIMPLE_LIST_GRID = 'minmax(160px, 1fr)';
 
 export function formatArchetype(power = 0, martial = 0): string {
   if (power > 0 && martial > 0) return 'Powered-Martial';

@@ -1,13 +1,13 @@
 /**
  * Character Creation Entry Chooser
  * ================================
- * Guided / Custom / Legacy — copy in `src/lib/constants/copy/guided-creator-copy.ts`.
- * Custom → cohesive guided creator Path L3; Legacy → transitional tabbed wizard (`/advanced`).
+ * Guided / Custom — copy in `src/lib/constants/copy/guided-creator-copy.ts`.
+ * Custom → cohesive guided creator Path L3.
  * Server page: `returnTo` comes from `searchParams` (no client `useSearchParams`).
  */
 
 import Link from 'next/link';
-import { Sparkles, SlidersHorizontal, History, Check } from 'lucide-react';
+import { Sparkles, SlidersHorizontal, Check } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { sanitizeRedirectPath } from '@/lib/safe-redirect';
 import { DescriptorChip } from '@/components/ui';
@@ -30,13 +30,6 @@ const MODES = [
     href: '/characters/new/guided?entry=custom',
     ...copy.modes.custom,
     icon: SlidersHorizontal,
-    showFirstTimerBadge: false,
-  },
-  {
-    id: 'legacy' as const,
-    href: '/characters/new/advanced',
-    ...copy.modes.legacy,
-    icon: History,
     showFirstTimerBadge: false,
   },
 ];
@@ -68,7 +61,7 @@ export default async function NewCharacterChooserPage({
       <CreatorFunnelHero align="center" title={copy.title} subtitle={copy.subtitle} />
 
       <div className="layout-shell-wide px-4 py-10 sm:py-14">
-        <div className="mx-auto grid max-w-6xl gap-6 md:grid-cols-2 lg:grid-cols-3">
+        <div className="mx-auto grid max-w-4xl gap-6 md:grid-cols-2">
           {MODES.map((mode) => {
             const Icon = mode.icon;
             return (

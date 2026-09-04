@@ -317,6 +317,8 @@ Stores short-term admin edit history for codex/core-rules entities. Each change 
 
 Retention rule: DB trigger keeps only the latest 10 rows per `(entity_type, entity_id)`.
 
+**Diffs (TASK-874):** `changed_fields` and the admin UI omit empty-equivalent pairs (`null` / `""` / `[]` / `{}`) and bookkeeping timestamps (`updated_at`, `created_at`). **Creates** persist and display identity only (name + kind); **deletes** keep the prior-state field dump. Full `before_data` / `after_data` snapshots still persist on update/delete until DEV-Q07.
+
 **Migration:** `sql/supabase-codex-change-logs.sql`
 
 ---

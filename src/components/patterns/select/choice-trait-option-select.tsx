@@ -61,7 +61,7 @@ export function ChoiceTraitOptionListPicker({
                     type="button"
                     variant={isSelected ? 'secondary' : 'outline'}
                     size="sm"
-                    className="min-h-[44px] px-3"
+                    className="px-3"
                     onClick={(e) => {
                       e.preventDefault(); // don't toggle details
                       onChange(isSelected ? '' : optId);

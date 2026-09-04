@@ -213,6 +213,11 @@ function PowerCreatorWorkspace({
             { label: 'Range', value: ws.rangeDisplay },
             { label: 'Area', value: ws.areaDisplay },
             { label: 'Duration', value: ws.durationDisplay },
+            {
+              label: 'Targets',
+              value:
+                ws.targetedDefenses.length > 0 ? ws.targetedDefenses.join(', ') : 'None specified',
+            },
           ]}
           breakdowns={
             ws.costs.tpSources.length > 0
@@ -221,8 +226,8 @@ function PowerCreatorWorkspace({
           }
         >
           <AdvancedCalculationsPanel
-            rows={ws.advancedCalcRows}
-            ruleText="Rule: Final energy is the ceiling of raw energy; TP sums part contributions."
+            groups={ws.advancedCalcGroups}
+            ruleText="Energy is rounded up at the end. Training Points are listed separately above when a part has them."
           />
         </CreatorSummaryPanel>
       }
@@ -246,6 +251,10 @@ function PowerCreatorWorkspace({
         actionTypeDisplay={ws.actionTypeDisplay}
         attackMode={ws.attackMode}
         onAttackModeChange={ws.setAttackMode}
+        targetedDefenses={ws.targetedDefenses}
+        onTargetedDefensesChange={ws.setTargetedDefenses}
+        suggestionPartsDb={ws.powerParts}
+        suggestionSelectedParts={ws.suggestionSelectedParts}
         range={ws.range}
         onRangeChange={ws.setRange}
         rangeSummary={ws.rangeSummary}

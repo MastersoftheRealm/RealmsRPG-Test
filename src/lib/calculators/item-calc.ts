@@ -13,6 +13,7 @@ import {
   type HasIdAndName,
 } from '@/lib/id-constants';
 import { ITEM_PROPERTY_CONSTANTS } from '@/lib/game/constants';
+import type { WeaponRangeType } from '@/lib/game/creator-constants';
 import {
   compactResolvedWeaponRange,
   formatDamageDisplay,
@@ -20,17 +21,33 @@ import {
 } from '@/lib/utils/string';
 import type { ItemProperty } from '@/hooks/codex-types';
 
+export type { WeaponRangeType };
+
 export type { ItemProperty };
 
 // =============================================================================
 // Types
 // =============================================================================
 
+/** Creator Advanced Calculations section ids (display-only). */
+export type ItemCalcSectionId =
+  | 'handedness'
+  | 'range'
+  | 'abilityUtilized'
+  | 'damage'
+  | 'armor'
+  | 'shield'
+  | 'abilityReq'
+  | 'base'
+  | 'properties';
+
 export interface ItemPropertyPayload {
   id?: number | undefined;
   name?: string | undefined;
   op_1_lvl?: number | undefined;
   property?: ItemProperty | undefined;
+  /** Display-only. Advanced Calculations grouping; ignored by cost math. */
+  calcSection?: ItemCalcSectionId | undefined;
 }
 
 /** Codex / hook row shape for property TP lookup (IDs may be string or number from API). */
@@ -131,6 +148,10 @@ const MECHANIC_PROPERTY_IDS = new Set<number>([
   PROPERTY_IDS.AGILITY_REDUCTION,
   PROPERTY_IDS.SPLIT_DAMAGE_DICE,
   PROPERTY_IDS.RANGE,
+  PROPERTY_IDS.THROWN,
+  PROPERTY_IDS.REACH,
+  PROPERTY_IDS.FINESSE,
+  PROPERTY_IDS.HEAVY,
   PROPERTY_IDS.TWO_HANDED,
   PROPERTY_IDS.SHIELD_BASE,
   PROPERTY_IDS.ARMOR_BASE,
@@ -229,32 +250,44 @@ export function filterSavedItemPropertiesForList(
  * clamped to that band's `currencyMax` so it cannot spill into the next rarity
  * (GAME_RULES "Rarity & Currency").
  */
-export function calculateCurrencyCostAndRarity(
+/**
+ * Market currency before `Math.floor` (display / Rounded Down). Same band math as
+ * `calculateCurrencyCostAndRarity`.
+ */
+export function analyzeItemMarketCurrency(
   totalCurrency: number,
   totalIP: number,
-): RarityResult {
+): RarityResult & { currencyRaw: number } {
   const ip = Math.max(0, totalIP);
   const c = Math.max(0, totalCurrency);
   let rarity = 'Common';
-  let currencyCost = 0;
+  let currencyRaw = 0;
 
   for (const br of RARITY_BRACKETS) {
     if (ip >= br.ipLow && ip <= br.ipHigh) {
       rarity = br.name;
-      currencyCost = br.low * (1 + 0.125 * c);
+      currencyRaw = br.low * (1 + 0.125 * c);
       break;
     }
   }
 
   const bracket = RARITY_BRACKETS.find((b) => b.name === rarity);
   if (bracket) {
-    currencyCost = Math.max(currencyCost, bracket.low);
+    currencyRaw = Math.max(currencyRaw, bracket.low);
     if (Number.isFinite(bracket.currencyMax)) {
-      currencyCost = Math.min(currencyCost, bracket.currencyMax);
+      currencyRaw = Math.min(currencyRaw, bracket.currencyMax);
     }
   }
 
-  return { currencyCost: Math.floor(currencyCost), rarity };
+  return { currencyRaw, currencyCost: Math.floor(currencyRaw), rarity };
+}
+
+export function calculateCurrencyCostAndRarity(
+  totalCurrency: number,
+  totalIP: number,
+): RarityResult {
+  const { currencyCost, rarity } = analyzeItemMarketCurrency(totalCurrency, totalIP);
+  return { currencyCost, rarity };
 }
 
 // Legacy alias
@@ -400,20 +433,147 @@ export function resolveItemMarketPricing(
   return { ...costs, currencyCost, rarity, resolvedFromProperties };
 }
 
+export type WeaponRangeConfig = {
+  type: WeaponRangeType;
+  /** 0 when melee; otherwise a ladder value. */
+  spaces: number;
+};
+
+const WEAPON_RANGE_PROPERTY_NAMES: Record<Exclude<WeaponRangeType, 'melee'>, string[]> = {
+  thrown: ['thrown'],
+  reach: ['reach'],
+  ranged: ['range'],
+};
+
+function buildSpaceLadder(base: number, step: number, max: number): number[] {
+  const out: number[] = [];
+  for (let n = base; n <= max; n += step) out.push(n);
+  return out;
+}
+
+/** Closed space lists for Reach / Ranged / Thrown (TASK-919). */
+export function weaponRangeSpaceLadder(type: Exclude<WeaponRangeType, 'melee'>): number[] {
+  const c = ITEM_PROPERTY_CONSTANTS;
+  if (type === 'ranged') {
+    return buildSpaceLadder(c.RANGE_BASE_SPACES, c.RANGE_SPACES_PER_LEVEL, c.RANGE_MAX_SPACES);
+  }
+  if (type === 'thrown') {
+    return buildSpaceLadder(c.THROWN_BASE_SPACES, c.THROWN_SPACES_PER_LEVEL, c.THROWN_MAX_SPACES);
+  }
+  return buildSpaceLadder(c.REACH_BASE_SPACES, c.REACH_SPACES_PER_LEVEL, c.REACH_MAX_SPACES);
+}
+
+export function formatWeaponRangeConfig(config: WeaponRangeConfig): string {
+  if (config.type === 'melee' || config.spaces <= 0) return 'Melee';
+  const n = config.spaces;
+  return `${n} ${n === 1 ? 'space' : 'spaces'}`;
+}
+
+function findWeaponRangeProperty(
+  properties: ItemPropertyPayload[],
+  id: number,
+  names: string[],
+): ItemPropertyPayload | undefined {
+  return (properties || []).find((p) => {
+    if (p.id === id) return true;
+    const n = (p.name ?? '').trim().toLowerCase();
+    return names.includes(n);
+  });
+}
+
+function weaponRangeSpacesFromOpLevel(
+  type: Exclude<WeaponRangeType, 'melee'>,
+  opLevel: number | null | undefined,
+): number {
+  const ladder = weaponRangeSpaceLadder(type);
+  const lvl = Math.max(0, Math.floor(Number(opLevel) || 0));
+  return ladder[Math.min(lvl, ladder.length - 1)] ?? ladder[0] ?? 0;
+}
+
+export function weaponRangeOpLevelFromSpaces(
+  type: Exclude<WeaponRangeType, 'melee'>,
+  spaces: number,
+): number {
+  const ladder = weaponRangeSpaceLadder(type);
+  const exact = ladder.indexOf(spaces);
+  if (exact >= 0) return exact;
+  let best = 0;
+  let bestDist = Infinity;
+  for (let i = 0; i < ladder.length; i++) {
+    const d = Math.abs((ladder[i] ?? 0) - spaces);
+    if (d < bestDist) {
+      bestDist = d;
+      best = i;
+    }
+  }
+  return best;
+}
+
+export function snapWeaponRangeSpaces(type: WeaponRangeType, spaces: number): number {
+  if (type === 'melee') return 0;
+  return weaponRangeSpacesFromOpLevel(type, weaponRangeOpLevelFromSpaces(type, spaces));
+}
+
+/** Legacy document `rangeLevel` (1 = 8 spaces). 0 for melee / reach / thrown. */
+export function weaponRangeLegacyLevel(config: WeaponRangeConfig): number {
+  if (config.type !== 'ranged' || config.spaces <= 0) return 0;
+  return weaponRangeOpLevelFromSpaces('ranged', config.spaces) + 1;
+}
+
 /**
- * Format range from properties.
+ * Restore creator/display range from saved properties.
+ * Priority: Thrown → Reach → Range. Legacy Range-only `rangeLevel` is last.
+ */
+export function deriveWeaponRangeConfig(
+  properties: ItemPropertyPayload[] | null | undefined,
+  legacyRangeLevel?: number | null,
+): WeaponRangeConfig {
+  const props = properties ?? [];
+  const thrown = findWeaponRangeProperty(
+    props,
+    PROPERTY_IDS.THROWN,
+    WEAPON_RANGE_PROPERTY_NAMES.thrown,
+  );
+  if (thrown) {
+    return {
+      type: 'thrown',
+      spaces: weaponRangeSpacesFromOpLevel('thrown', thrown.op_1_lvl),
+    };
+  }
+  const reach = findWeaponRangeProperty(
+    props,
+    PROPERTY_IDS.REACH,
+    WEAPON_RANGE_PROPERTY_NAMES.reach,
+  );
+  if (reach) {
+    return {
+      type: 'reach',
+      spaces: weaponRangeSpacesFromOpLevel('reach', reach.op_1_lvl),
+    };
+  }
+  const range = findWeaponRangeProperty(
+    props,
+    PROPERTY_IDS.RANGE,
+    WEAPON_RANGE_PROPERTY_NAMES.ranged,
+  );
+  if (range) {
+    return {
+      type: 'ranged',
+      spaces: weaponRangeSpacesFromOpLevel('ranged', range.op_1_lvl),
+    };
+  }
+  const legacy = Number(legacyRangeLevel) || 0;
+  if (legacy > 0) {
+    return { type: 'ranged', spaces: weaponRangeSpacesFromOpLevel('ranged', legacy - 1) };
+  }
+  return { type: 'melee', spaces: 0 };
+}
+
+/**
+ * Format range from properties (Thrown / Reach / Range ladders).
  */
 export function formatRange(properties: ItemPropertyPayload[]): string {
-  const prop = (properties || []).find((p) => {
-    if (p.id === PROPERTY_IDS.RANGE) return true;
-    return p.name === 'Range';
-  });
-  if (!prop) return 'Melee';
-  const lvl = prop.op_1_lvl || 0;
-  const n =
-    ITEM_PROPERTY_CONSTANTS.RANGE_BASE_SPACES +
-    lvl * ITEM_PROPERTY_CONSTANTS.RANGE_SPACES_PER_LEVEL;
-  return `${n} ${n === 1 ? 'space' : 'spaces'}`;
+  return formatWeaponRangeConfig(deriveWeaponRangeConfig(properties));
 }
 
 /**

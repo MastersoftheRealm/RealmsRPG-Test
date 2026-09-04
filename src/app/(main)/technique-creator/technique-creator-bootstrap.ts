@@ -8,6 +8,7 @@ import type { TechniquePart } from '@/hooks';
 import { CREATOR_CACHE_KEYS } from '@/lib/game/creator-constants';
 import { readCreatorCache } from '@/lib/game/creator-cache';
 import { deriveTechniqueAttackMode, normalizeAttackMode, type AttackMode } from '@/lib/attack-mode';
+import { normalizeTargetedDefenses } from '@/lib/game/targeted-defenses';
 
 export const TECHNIQUE_CREATOR_CACHE_KEY = CREATOR_CACHE_KEYS.TECHNIQUE;
 
@@ -41,6 +42,7 @@ export interface TechniqueCreatorCache {
   attackMode: AttackMode;
   imageId?: string | null | undefined;
   imageUrl?: string | null | undefined;
+  targetedDefenses?: string[] | undefined;
   timestamp: number;
 }
 
@@ -54,6 +56,7 @@ export interface TechniqueCreatorFormState {
   attackMode: AttackMode;
   imageId: string | null;
   imageUrl: string | null;
+  targetedDefenses: string[];
 }
 
 export type TechniqueLibraryRecord = {
@@ -73,6 +76,7 @@ export type TechniqueLibraryRecord = {
   image_id?: string | null | undefined;
   imageUrl?: string | null | undefined;
   image_url?: string | null | undefined;
+  targetedDefenses?: string[] | undefined;
 };
 
 export function emptyTechniqueCreatorFormState(): TechniqueCreatorFormState {
@@ -86,6 +90,7 @@ export function emptyTechniqueCreatorFormState(): TechniqueCreatorFormState {
     attackMode: 'unarmed',
     imageId: null,
     imageUrl: null,
+    targetedDefenses: [],
   };
 }
 
@@ -119,6 +124,7 @@ export function restoreTechniqueCreatorFromCache(
     attackMode: normalizeAttackMode(parsed.attackMode) ?? 'unarmed',
     imageId: parsed.imageId ?? null,
     imageUrl: parsed.imageUrl ?? null,
+    targetedDefenses: normalizeTargetedDefenses(parsed.targetedDefenses),
   };
 }
 
@@ -190,6 +196,7 @@ export function techniqueLibraryRecordToFormState(
     attackMode,
     imageId: technique.imageId ?? technique.image_id ?? null,
     imageUrl: technique.imageUrl ?? technique.image_url ?? null,
+    targetedDefenses: normalizeTargetedDefenses(technique.targetedDefenses),
   };
 }
 

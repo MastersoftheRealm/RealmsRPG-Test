@@ -3,6 +3,7 @@
  */
 
 import type { Part } from '@/hooks';
+import { normalizeTargetedDefenses } from '@/lib/game/targeted-defenses';
 
 export type PartFormState = {
   name: string;
@@ -96,10 +97,9 @@ export function percentToOptionEn(percentStr: string): number | undefined {
   return p / 100;
 }
 
-/** Normalize stored defense tags (e.g. legacy lowercase "evasion") for editor chips. */
+/** Normalize stored defense tags for editor chips (canonical shared helper). */
 export function normalizePartTargetedDefenses(defenses: string[] | undefined): string[] {
-  if (!Array.isArray(defenses)) return [];
-  return defenses.map((d) => (String(d).toLowerCase() === 'evasion' ? 'Evasion' : d));
+  return normalizeTargetedDefenses(defenses);
 }
 
 function rawOptNum(v: unknown): number | undefined {

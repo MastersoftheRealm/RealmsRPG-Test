@@ -2,9 +2,11 @@ import { describe, expect, it } from 'vitest';
 import { PROPERTY_IDS } from '@/lib/id-constants';
 import {
   deriveAbilityRequirementFromProperties,
+  deriveWeaponAbilityUtilized,
   getWeaponAttackAbility,
   getWeaponAttackBonusFromProperties,
   hasThrownProperty,
+  weaponAbilityUtilizedOptions,
   weaponMatchesArchetypeAbilities,
 } from '@/lib/game/weapon-attack-ability';
 import type { Abilities } from '@/types';
@@ -40,6 +42,73 @@ describe('weapon-attack-ability', () => {
 
   it('defaults to strength for melee', () => {
     expect(getWeaponAttackAbility([])).toBe('strength');
+  });
+
+  it('uses strength for reach (not acuity from spaces display)', () => {
+    expect(getWeaponAttackAbility([{ id: PROPERTY_IDS.REACH, name: 'Reach', op_1_lvl: 2 }])).toBe(
+      'strength',
+    );
+  });
+
+  it('uses strength for heavy ranged', () => {
+    expect(
+      getWeaponAttackAbility([
+        { id: PROPERTY_IDS.HEAVY, name: 'Heavy' },
+        { id: PROPERTY_IDS.RANGE, name: 'Range', op_1_lvl: 1 },
+      ]),
+    ).toBe('strength');
+  });
+
+  it('uses agility when finesse and heavy are both present', () => {
+    expect(
+      getWeaponAttackAbility([
+        { id: PROPERTY_IDS.FINESSE, name: 'Finesse' },
+        { id: PROPERTY_IDS.HEAVY, name: 'Heavy' },
+        { id: PROPERTY_IDS.RANGE, name: 'Range', op_1_lvl: 0 },
+      ]),
+    ).toBe('agility');
+  });
+
+  it('matches heavy by name when id is missing', () => {
+    expect(
+      getWeaponAttackAbility([
+        { name: 'Heavy' },
+        { id: PROPERTY_IDS.RANGE, name: 'Range', op_1_lvl: 0 },
+      ]),
+    ).toBe('strength');
+  });
+
+  describe('deriveWeaponAbilityUtilized', () => {
+    it('defaults melee/reach/thrown to strength and ranged to acuity', () => {
+      expect(deriveWeaponAbilityUtilized([], 'melee')).toBe('strength');
+      expect(deriveWeaponAbilityUtilized([], 'reach')).toBe('strength');
+      expect(deriveWeaponAbilityUtilized([], 'thrown')).toBe('strength');
+      expect(deriveWeaponAbilityUtilized([], 'ranged')).toBe('acuity');
+    });
+
+    it('uses agility for finesse on any range type', () => {
+      const finesse = [{ id: PROPERTY_IDS.FINESSE, name: 'Finesse' }];
+      expect(deriveWeaponAbilityUtilized(finesse, 'melee')).toBe('agility');
+      expect(deriveWeaponAbilityUtilized(finesse, 'ranged')).toBe('agility');
+    });
+
+    it('uses strength for heavy only on ranged', () => {
+      const heavy = [{ id: PROPERTY_IDS.HEAVY, name: 'Heavy' }];
+      expect(deriveWeaponAbilityUtilized(heavy, 'ranged')).toBe('strength');
+      expect(deriveWeaponAbilityUtilized(heavy, 'melee')).toBe('strength');
+    });
+
+    it('lists acuity + strength + agility for ranged and strength + agility otherwise', () => {
+      expect(weaponAbilityUtilizedOptions('ranged').map((o) => o.value)).toEqual([
+        'acuity',
+        'strength',
+        'agility',
+      ]);
+      expect(weaponAbilityUtilizedOptions('melee').map((o) => o.value)).toEqual([
+        'strength',
+        'agility',
+      ]);
+    });
   });
 
   describe('deriveAbilityRequirementFromProperties', () => {
@@ -105,6 +174,24 @@ describe('weapon-attack-ability', () => {
         bonus: 4,
         abilityName: 'Acuity',
         ability: 'acuity',
+      });
+    });
+
+    it('adds strength + martial proficiency for heavy ranged', () => {
+      expect(
+        getWeaponAttackBonusFromProperties(
+          [
+            { id: PROPERTY_IDS.HEAVY, name: 'Heavy' },
+            { id: PROPERTY_IDS.RANGE, name: 'Range', op_1_lvl: 1 },
+          ],
+          abilities,
+          martialProficiency,
+          '16 spaces',
+        ),
+      ).toEqual({
+        bonus: 5,
+        abilityName: 'Strength',
+        ability: 'strength',
       });
     });
 

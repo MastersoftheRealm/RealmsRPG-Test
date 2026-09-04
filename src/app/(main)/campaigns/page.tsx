@@ -29,6 +29,7 @@ import {
 import { InfoTippy } from '@/components/patterns';
 import { campaignsHelp } from '../../../../public/tooltip-text';
 import { cn } from '@/lib/utils';
+import { isGuestCharacterId } from '@/lib/guest-character-storage';
 import { PortraitThumb } from '@/components/character/portrait-thumb';
 import { useCampaigns, useCharacters, useInvalidateCampaigns, useAuth } from '@/hooks';
 import { createCampaignAction, joinCampaignAction } from './actions';
@@ -161,7 +162,7 @@ function CampaignsContent() {
         )}
         {activeTab === 'join' && (
           <JoinCampaignTab
-            characters={characters}
+            characters={characters.filter((c) => !isGuestCharacterId(c.id))}
             isLoading={charactersLoading}
             onSuccess={() => {
               invalidateCampaigns();

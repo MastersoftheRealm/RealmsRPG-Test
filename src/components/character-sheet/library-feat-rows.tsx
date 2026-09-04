@@ -14,9 +14,7 @@ import { Button, Input, Textarea } from '@/components/ui';
 import type { FeatTraitCustomization } from '@/types/feats';
 import { descriptorChipData } from '@/lib/chip/chip-data-helpers';
 import { glrSurfaceDetailSections, metadataDetailSection } from '@/lib/chip/list-row-metadata';
-import { capitalize, formatAbilityList, truncateText } from '@/lib/utils';
-
-const DESCRIPTION_EXTENDED_TRUNCATE = 220;
+import { capitalize, formatAbilityList } from '@/lib/utils';
 
 /** Stable trait id for customization lookup (prefers codex id). */
 export function resolveTraitCustomizationKey(
@@ -259,7 +257,7 @@ function buildUsesStepper(
 ): ReactNode {
   if (uses && onDecrement && onIncrement) {
     return (
-      <div className="flex items-center justify-center gap-1">
+      <div className="inline-flex items-center gap-1">
         <DecrementButton onClick={onDecrement} disabled={uses.current <= 0} size="sm" />
         <span className="min-w-[2.5rem] text-center text-sm font-medium tabular-nums">
           {uses.current}/{uses.max}
@@ -279,28 +277,16 @@ function buildUsesStepper(
 }
 
 function buildFeatTraitColumns(
-  description: string | undefined,
   uses: { current: number; max: number } | undefined,
   recovery: string | undefined,
   usesStepper: ReactNode,
-): { columns: ColumnValue[]; columnSpans?: (number | undefined)[] | undefined } {
+): { columns: ColumnValue[] } {
   const recoveryDisplay = formatRecoveryAbbrev(recovery);
-  const noUsesOrRecovery = !uses && !recoveryDisplay;
-  if (noUsesOrRecovery) {
-    return {
-      columns: [
-        {
-          key: 'description',
-          value: truncateText(description, DESCRIPTION_EXTENDED_TRUNCATE),
-          hideOnMobile: true,
-        },
-      ],
-      columnSpans: [3],
-    };
+  if (!uses && !recoveryDisplay) {
+    return { columns: [] };
   }
   return {
     columns: [
-      { key: 'description', value: truncateText(description, uses ? 60 : 100), hideOnMobile: true },
       { key: 'uses', value: usesStepper, align: 'center' },
       { key: 'recovery', value: recoveryDisplay, align: 'center' },
     ],
@@ -357,12 +343,7 @@ export function mapTraitRows(traits: TraitRowInput[], ctx: FeatRowContext): Enti
       uses && ctx.onTraitUsesChange ? () => ctx.onTraitUsesChange!(trait.name, -1) : undefined,
       uses && ctx.onTraitUsesChange ? () => ctx.onTraitUsesChange!(trait.name, 1) : undefined,
     );
-    const { columns, columnSpans } = buildFeatTraitColumns(
-      trait.description,
-      uses,
-      trait.recoveryPeriod,
-      usesStepper,
-    );
+    const { columns } = buildFeatTraitColumns(uses, trait.recoveryPeriod, usesStepper);
     const kindSection = traitKindDetailSection(trait.category);
 
     const traitKey = trait.traitKey ?? trait.name;
@@ -389,7 +370,6 @@ export function mapTraitRows(traits: TraitRowInput[], ctx: FeatRowContext): Enti
       description: trait.description,
       gridColumns: FEAT_GRID,
       columns,
-      columnSpans,
       detailSections: kindSection ? [kindSection] : undefined,
       uses,
       hideUsesInName: !!(uses && ctx.onTraitUsesChange),
@@ -424,12 +404,7 @@ export function mapFeatRows(
       uses && ctx.onFeatUsesChange ? () => ctx.onFeatUsesChange!(featId, -1) : undefined,
       uses && ctx.onFeatUsesChange ? () => ctx.onFeatUsesChange!(featId, 1) : undefined,
     );
-    const { columns, columnSpans } = buildFeatTraitColumns(
-      feat.description,
-      uses,
-      feat.recovery,
-      usesStepper,
-    );
+    const { columns } = buildFeatTraitColumns(uses, feat.recovery, usesStepper);
     const extraSections = ctx.getFeatLevelDetailSections?.(featId, listType);
     const detailSections = glrSurfaceDetailSections(
       'character-sheet-feat',
@@ -463,7 +438,6 @@ export function mapFeatRows(
       description: feat.description,
       gridColumns: FEAT_GRID,
       columns,
-      columnSpans,
       badges: options?.badge ? [options.badge] : undefined,
       detailSections: detailSections.length > 0 ? detailSections : undefined,
       uses,

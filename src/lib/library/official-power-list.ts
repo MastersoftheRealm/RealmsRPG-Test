@@ -25,7 +25,13 @@ import {
   rowMatchesPathRecommendedIds,
 } from '@/lib/game/path-recommendation-index';
 import { glrColumnKeyFor, glrListChrome } from '@/lib/glr';
-import { glrSurfaceDetailSections, partsProficienciesSection } from '@/lib/chip/list-row-metadata';
+import {
+  glrSurfaceDetailSections,
+  mergeDetailSections,
+  metadataDetailSection,
+  partsProficienciesSection,
+} from '@/lib/chip/list-row-metadata';
+import { targetsFactChip } from '@/lib/detail-option/compact-facts';
 
 const officialPowerChrome = glrListChrome({ entityType: 'power', mode: 'browse' });
 
@@ -102,10 +108,16 @@ export function buildOfficialPowerRows(
 
 export function officialPowerDetailSections(row: OfficialPowerRow) {
   const parts = partsProficienciesSection(row.parts, 'power');
-  return glrSurfaceDetailSections(
-    'library-official-power',
-    { trainingPoints: row.tp > 0 ? row.tp : undefined },
-    parts ? [parts] : undefined,
+  const targets = metadataDetailSection(
+    [targetsFactChip(row.raw.targetedDefenses)].filter(Boolean) as ChipData[],
+  );
+  return mergeDetailSections(
+    glrSurfaceDetailSections(
+      'library-official-power',
+      { trainingPoints: row.tp > 0 ? row.tp : undefined },
+      parts ? [parts] : undefined,
+    ),
+    targets,
   );
 }
 

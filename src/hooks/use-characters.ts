@@ -19,7 +19,8 @@ import {
   type GetCharacterResult,
 } from '@/services/character-service';
 import { useAuthStore } from '@/stores/auth-store';
-import type { Character } from '@/types';
+import type { Character, CharacterSummary } from '@/types';
+import { getGuestCharactersList, isGuestCharacterId } from '@/lib/guest-character-storage';
 
 /** Viewer segment for `characterKeys` (ADR-0013 / TASK-741). */
 export function characterViewerId(userId?: string | null): string {
@@ -61,6 +62,11 @@ export function mergeCharacterDetailQueryData(
   };
 }
 
+/** Invalidate character list queries for a viewer (`anon` when signed out). */
+export function invalidateCharacterLists(queryClient: QueryClient, userId?: string | null): void {
+  queryClient.invalidateQueries({ queryKey: characterKeys.lists(userId ?? '') });
+}
+
 /** Sheet `setCharacter` — writes `characterKeys.detail` (TASK-750). */
 export function patchCharacterDetailQuery(
   queryClient: QueryClient,
@@ -74,20 +80,25 @@ export function patchCharacterDetailQuery(
 }
 
 export interface UseCharactersOptions {
-  /** When false, the query does not run (e.g. when user is not signed in). */
+  /** When false, the query does not run. */
   enabled?: boolean | undefined;
 }
 
 /**
- * Get all characters for the current user.
+ * Get all characters for the current user, or browser-local guests when signed out.
  */
 export function useCharacters(options?: UseCharactersOptions) {
-  const { user } = useAuthStore();
+  const { user, initialized } = useAuthStore();
   const userId = user?.uid || '';
-  const enabled = (options?.enabled ?? true) && !!userId;
+  const enabled = (options?.enabled ?? true) && initialized;
   return useQuery({
     queryKey: characterKeys.list(userId),
-    queryFn: getCharacters,
+    queryFn: async (): Promise<CharacterSummary[]> => {
+      if (!user) return getGuestCharactersList();
+      const cloud = await getCharacters();
+      const leftover = getGuestCharactersList();
+      return leftover.length > 0 ? [...leftover, ...cloud] : cloud;
+    },
     enabled,
   });
 }
@@ -104,10 +115,11 @@ export interface UseCharacterOptions {
 export function useCharacter(characterId: string | undefined, options?: UseCharacterOptions) {
   const { user, loading: authLoading } = useAuthStore();
   const userId = characterViewerId(user?.uid);
+  const guestSheet = isGuestCharacterId(characterId);
   return useQuery({
     queryKey: characterKeys.detail(userId, characterId || ''),
     queryFn: () => getCharacter(characterId || ''),
-    enabled: !!characterId && !authLoading,
+    enabled: !!characterId && (guestSheet || !authLoading),
     ...(options?.refetchOnWindowFocus !== undefined
       ? { refetchOnWindowFocus: options.refetchOnWindowFocus }
       : {}),

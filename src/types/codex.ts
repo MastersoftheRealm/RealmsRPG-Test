@@ -67,6 +67,8 @@ interface CodexTechniquePartFields extends CodexRowVersion {
   op_3_tp?: number | undefined;
   percentage?: boolean | undefined;
   mechanic?: boolean | undefined;
+  /** Targeted defenses (subset of the 6 canonical defenses + Evasion). */
+  defense?: string[] | undefined;
   type?: string | undefined;
 }
 

@@ -15,7 +15,6 @@ export type {
   UseCreatorSaveOptions,
   UseCreatorSaveReturn,
 } from './use-creator-save';
-export { useCreatorPathData } from './use-creator-path-data';
 export {
   buildGuidedEquipmentEligibilityContext,
   useGuidedEquipmentCatalog,
@@ -99,6 +98,7 @@ export {
   characterKeys,
   characterViewerId,
   patchCharacterDetailQuery,
+  invalidateCharacterLists,
 } from './use-characters';
 
 // Codex Data (Supabase via API) — per-collection fetches under the ['codex'] key prefix (TASK-775)

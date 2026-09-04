@@ -164,6 +164,24 @@ describe('feat/trait columns omit empty uses and recovery (TASK-868)', () => {
     expect(row.columns?.some((col) => col.value === '-')).toBe(false);
   });
 
+  it('does not put truncated description in header columns (TASK-909)', () => {
+    const row = defined(
+      mapFeatRows(
+        [
+          {
+            name: 'Second Wind',
+            description: 'Catch a breath.',
+            maxUses: 1,
+            recovery: 'Partial Recovery',
+          },
+        ],
+        ctx,
+      )[0],
+    );
+    expect(row.columns?.some((col) => col.key === 'description')).toBe(false);
+    expect(row.description).toBe('Catch a breath.');
+  });
+
   it('keeps valued recovery without a uses dash', () => {
     const row = defined(
       mapFeatRows(

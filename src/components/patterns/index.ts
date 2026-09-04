@@ -16,7 +16,7 @@ export { RollButton } from './chrome/roll-button';
 // PointStatus - Unified point allocation display (creators, character sheet edit mode)
 export { PointStatus } from './chrome/point-status';
 
-// LoadoutBudgetBar - Currency + Training Points budget row (Guided + Advanced creators; ADR-0008)
+// LoadoutBudgetBar - Currency + Training Points budget row (Guided creator; ADR-0008)
 export { LoadoutBudgetBar } from './chrome/loadout-budget-bar';
 
 // AbilityScoreGrid - Six-ability tile row (sheet layout; display or edit)
@@ -155,7 +155,7 @@ export { SummaryChipList } from './list/summary-chip-list';
 export type { SummaryChipItem } from './list/summary-chip-list';
 
 // SkillRow - UNIFIED skill display component
-// Use for ALL skill rows across: character sheet, character creator, creature creator
+// Use for ALL skill rows across: character sheet, Guided creator, creature creator
 export { SkillRow } from './list/skill-row';
 export type { SkillRowProps } from './list/skill-row';
 
@@ -166,7 +166,7 @@ export type {
   DefenseBonusesCardProps,
 } from './list/skills-allocation-page';
 
-// Add Skill / Add Sub-Skill modals — shared by character sheet and character creator
+// Add Skill / Add Sub-Skill modals — shared by character sheet and Guided creator
 export { AddSkillModal } from './select/add-skill-modal';
 export type { AddSkillModalProps } from './select/add-skill-modal';
 export { AddSubSkillModal } from './select/add-sub-skill-modal';
@@ -302,13 +302,9 @@ export type {
   RealmsImagePickerSelection,
 } from './chrome/realms-image-picker';
 
-// GuidedChoiceShell - Unified Layer 1/2/3 chrome for creator steps (three-layer model)
-export { GuidedChoiceShell, GuidedLayerNav, GuidedInlineCatalogList } from './guided-choice';
-export type {
-  GuidedChoiceShellProps,
-  GuidedLayerNavProps,
-  GuidedInlineCatalogListProps,
-} from './guided-choice';
+// Guided layer nav + L3 inline catalog (three-layer model)
+export { GuidedLayerNav, GuidedInlineCatalogList } from './guided-choice';
+export type { GuidedLayerNavProps, GuidedInlineCatalogListProps } from './guided-choice';
 export { AbilityPickButton } from './select/ability-pick-button';
 export { MixedSpeciesModal } from './select/mixed-species-modal';
 export { MixedSpeciesSkillPicker } from './select/mixed-species-skill-picker';

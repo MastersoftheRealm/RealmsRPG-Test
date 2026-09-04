@@ -9,7 +9,17 @@
 
 import { useState, useCallback, useEffect } from 'react';
 import { useCreatorSave, type ItemProperty } from '@/hooks';
-import type { ItemDamage } from '@/lib/calculators';
+import {
+  weaponRangeLegacyLevel,
+  weaponRangeSpaceLadder,
+  type ItemDamage,
+  type WeaponRangeType,
+} from '@/lib/calculators';
+import {
+  clampWeaponAbilityUtilized,
+  defaultWeaponAbilityUtilized,
+  type WeaponAttackAbility,
+} from '@/lib/game/weapon-attack-ability';
 import {
   itemLibraryRecordToFormState,
   ITEM_CREATOR_CACHE_KEY,
@@ -45,7 +55,11 @@ export function useItemCreatorWorkspace({
   );
   const [damage, setDamage] = useState<DamageConfig>(initialFormState.damage);
   const [isTwoHanded, setIsTwoHanded] = useState(initialFormState.isTwoHanded);
-  const [rangeLevel, setRangeLevel] = useState(initialFormState.rangeLevel);
+  const [rangeType, setRangeTypeState] = useState<WeaponRangeType>(initialFormState.rangeType);
+  const [rangeSpaces, setRangeSpaces] = useState(initialFormState.rangeSpaces);
+  const [attackAbility, setAttackAbility] = useState<WeaponAttackAbility>(
+    initialFormState.attackAbility,
+  );
   const [damageReduction, setDamageReduction] = useState(initialFormState.damageReduction);
   const [agilityReduction, setAgilityReduction] = useState(initialFormState.agilityReduction);
   const [criticalRangeIncrease, setCriticalRangeIncrease] = useState(
@@ -85,7 +99,10 @@ export function useItemCreatorWorkspace({
       })),
       damage,
       isTwoHanded,
-      rangeLevel,
+      rangeType,
+      rangeSpaces,
+      rangeLevel: weaponRangeLegacyLevel({ type: rangeType, spaces: rangeSpaces }),
+      attackAbility,
       damageReduction,
       agilityReduction,
       criticalRangeIncrease,
@@ -106,7 +123,9 @@ export function useItemCreatorWorkspace({
     selectedProperties,
     damage,
     isTwoHanded,
-    rangeLevel,
+    rangeType,
+    rangeSpaces,
+    attackAbility,
     damageReduction,
     agilityReduction,
     criticalRangeIncrease,
@@ -117,6 +136,25 @@ export function useItemCreatorWorkspace({
     imageId,
     imageUrl,
   ]);
+
+  const changeRangeType = useCallback((next: WeaponRangeType) => {
+    setRangeTypeState(next);
+    setAttackAbility((prev) =>
+      prev === 'agility' ? 'agility' : defaultWeaponAbilityUtilized(next),
+    );
+    if (next === 'melee') {
+      setRangeSpaces(0);
+      return;
+    }
+    setRangeSpaces(weaponRangeSpaceLadder(next)[0] ?? 0);
+  }, []);
+
+  const changeAttackAbility = useCallback(
+    (next: WeaponAttackAbility) => {
+      setAttackAbility(clampWeaponAbilityUtilized(next, rangeType));
+    },
+    [rangeType],
+  );
 
   const changeArmamentType = useCallback((next: ArmamentType) => {
     setArmamentType(next);
@@ -145,7 +183,7 @@ export function useItemCreatorWorkspace({
     itemSectionCosts,
     currencyCost,
     rarity,
-    advancedCalcRows,
+    advancedCalcGroups,
     damageDisplay,
   } = useItemCreatorCostDerivation({
     armamentType,
@@ -153,7 +191,9 @@ export function useItemCreatorWorkspace({
     itemProperties,
     damage,
     isTwoHanded,
-    rangeLevel,
+    rangeType,
+    rangeSpaces,
+    attackAbility,
     damageReduction,
     agilityReduction,
     criticalRangeIncrease,
@@ -192,7 +232,7 @@ export function useItemCreatorWorkspace({
       ...(imageUrl ? { imageUrl } : {}),
       ...(armamentType === 'Weapon' && {
         isTwoHanded,
-        rangeLevel,
+        rangeLevel: weaponRangeLegacyLevel({ type: rangeType, spaces: rangeSpaces }),
         abilityRequirement: abilityRequirement
           ? {
               id: abilityRequirement.id,
@@ -234,7 +274,8 @@ export function useItemCreatorWorkspace({
     imageId,
     imageUrl,
     isTwoHanded,
-    rangeLevel,
+    rangeType,
+    rangeSpaces,
     abilityRequirement,
     damageReduction,
     agilityReduction,
@@ -272,7 +313,9 @@ export function useItemCreatorWorkspace({
     setSelectedProperties([]);
     setDamage({ amount: 1, size: 6, type: 'slashing' });
     setIsTwoHanded(false);
-    setRangeLevel(0);
+    setRangeTypeState('melee');
+    setRangeSpaces(0);
+    setAttackAbility('strength');
     setDamageReduction(0);
     setAgilityReduction(0);
     setCriticalRangeIncrease(0);
@@ -293,7 +336,9 @@ export function useItemCreatorWorkspace({
     setSelectedProperties(next.selectedProperties);
     setDamage(next.damage);
     setIsTwoHanded(next.isTwoHanded);
-    setRangeLevel(next.rangeLevel);
+    setRangeTypeState(next.rangeType);
+    setRangeSpaces(next.rangeSpaces);
+    setAttackAbility(next.attackAbility);
     setDamageReduction(next.damageReduction);
     setAgilityReduction(next.agilityReduction);
     setCriticalRangeIncrease(next.criticalRangeIncrease);
@@ -327,8 +372,12 @@ export function useItemCreatorWorkspace({
     setDamage,
     isTwoHanded,
     setIsTwoHanded,
-    rangeLevel,
-    setRangeLevel,
+    rangeType,
+    changeRangeType,
+    rangeSpaces,
+    setRangeSpaces,
+    attackAbility,
+    changeAttackAbility,
     damageReduction,
     setDamageReduction,
     agilityReduction,
@@ -360,7 +409,7 @@ export function useItemCreatorWorkspace({
     itemSectionCosts,
     currencyCost,
     rarity,
-    advancedCalcRows,
+    advancedCalcGroups,
     damageDisplay,
     addProperty,
     removeProperty,

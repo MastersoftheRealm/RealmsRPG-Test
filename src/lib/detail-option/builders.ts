@@ -36,7 +36,7 @@ export interface DetailOptionItemModel {
   /** Plain-text expanded hint (legacy). Prefer chips with descriptions. */
   expandedHint?: string | undefined;
   hideUsesInName?: boolean | undefined;
-  /** Dim row (e.g. unresolved legacy refs) — maps to GridListRow disabled opacity. */
+  /** Non-interactive row (e.g. unresolved legacy refs) — GridListRow `disabled` (no extra fade). */
   disabled?: boolean | undefined;
 }
 

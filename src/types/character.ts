@@ -92,6 +92,8 @@ interface CharacterPowerFields {
   /** Bank art (persisted when added from library). */
   image_id?: string | null | undefined;
   image_url?: string | null | undefined;
+  /** Defenses this power actually targets (if any). */
+  targetedDefenses?: string[] | undefined;
   // Parts can be either just names (string[]) or full part data with TP info
   parts?:
     | Array<
@@ -128,6 +130,8 @@ interface CharacterTechniqueFields {
   /** Bank art (persisted when added from library). */
   image_id?: string | null | undefined;
   image_url?: string | null | undefined;
+  /** Defenses this technique actually targets (if any). */
+  targetedDefenses?: string[] | undefined;
   // Parts can be either just names (string[]) or full part data with TP info
   parts?:
     | Array<

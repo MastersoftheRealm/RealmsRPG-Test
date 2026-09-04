@@ -62,7 +62,7 @@ export function CraftingOptionalRulesSection({
               onChange={(e) =>
                 setOptionModifier('reduceTimeByDifficultySteps', Number(e.target.value))
               }
-              className="min-h-[44px] rounded-lg border border-border bg-background px-3 py-2 text-text-primary"
+              className="touch-tier-standard h-10 rounded-lg border border-border bg-background px-3 py-2 text-text-primary"
               aria-label="Reduce time by increasing difficulty"
             >
               <option value={0}>No change</option>
@@ -103,7 +103,7 @@ export function CraftingOptionalRulesSection({
               id="opt-rt-cost"
               value={mods.reduceTimeByCostSteps ?? 0}
               onChange={(e) => setOptionModifier('reduceTimeByCostSteps', Number(e.target.value))}
-              className="min-h-[44px] rounded-lg border border-border bg-background px-3 py-2 text-text-primary"
+              className="touch-tier-standard h-10 rounded-lg border border-border bg-background px-3 py-2 text-text-primary"
               aria-label="Reduce time by increasing cost"
             >
               <option value={0}>No change</option>
@@ -150,7 +150,7 @@ export function CraftingOptionalRulesSection({
                     : 0
               }
               onChange={(e) => setOptionModifier('reduceDifficultyByTime', Number(e.target.value))}
-              className="min-h-[44px] rounded-lg border border-border bg-background px-3 py-2 text-text-primary"
+              className="touch-tier-standard h-10 rounded-lg border border-border bg-background px-3 py-2 text-text-primary"
               aria-label="Reduce difficulty by spending more time"
             >
               <option value={0}>No change</option>
@@ -186,7 +186,7 @@ export function CraftingOptionalRulesSection({
               onChange={(e) =>
                 setOptionModifier('reduceDifficultyByCostSteps', Number(e.target.value))
               }
-              className="min-h-[44px] rounded-lg border border-border bg-background px-3 py-2 text-text-primary"
+              className="touch-tier-standard h-10 rounded-lg border border-border bg-background px-3 py-2 text-text-primary"
               aria-label="Reduce difficulty by spending more resources"
             >
               <option value={0}>No change</option>

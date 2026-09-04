@@ -1,8 +1,7 @@
 /**
  * Characters List Page
  * ======================
- * Displays user's characters with create/delete functionality.
- * Guests can view the page with an empty state and create a character (unsaved) to try the creator.
+ * Displays account characters, plus browser-local guest sheets (ADR-0026).
  */
 
 'use client';
@@ -14,6 +13,7 @@ import { PageContainer, PageHeader, EmptyState, useToast } from '@/components/ui
 import { Alert } from '@/components/ui/alert';
 import { DeleteConfirmModal, ErrorDisplay } from '@/components/patterns';
 import { useCharacters, useDeleteCharacter, useDuplicateCharacter, useAuth } from '@/hooks';
+import { isGuestCharacterId } from '@/lib/guest-character-storage';
 import { UserPlus } from 'lucide-react';
 
 export default function CharactersPage() {
@@ -24,7 +24,14 @@ function CharactersContent() {
   const router = useRouter();
   const { showToast } = useToast();
   const { user, initialized: authInitialized } = useAuth();
-  const { data: characters = [], isLoading, error, refetch } = useCharacters({ enabled: !!user });
+  const {
+    data: characters = [],
+    isLoading,
+    error,
+    refetch,
+  } = useCharacters({
+    enabled: authInitialized,
+  });
   const deleteCharacter = useDeleteCharacter();
   const duplicateCharacter = useDuplicateCharacter();
   const [deletingId, setDeletingId] = useState<string | null>(null);
@@ -147,7 +154,7 @@ function CharactersContent() {
           description={
             user
               ? 'Create your first character to begin your adventure in Realms RPG.'
-              : 'Create a character to try the creator. Sign in to save characters to your account.'
+              : 'Create a character to try the sheet in this browser. Sign in to keep characters on your account.'
           }
           action={{
             label: 'Create Character',
@@ -169,7 +176,7 @@ function CharactersContent() {
           isOpen={true}
           itemName={deleteTarget.name}
           itemType="character"
-          deleteContext="account"
+          deleteContext={isGuestCharacterId(deleteTarget.id) ? 'browser' : 'account'}
           isDeleting={deletingId === deleteTarget.id}
           onConfirm={handleConfirmDelete}
           onClose={() => setDeleteTarget(null)}

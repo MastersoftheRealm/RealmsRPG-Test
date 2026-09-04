@@ -52,6 +52,7 @@ import { useCharacterSheetDerived } from '@/components/character-sheet';
 import { useToast } from '@/components/ui';
 import { createClient } from '@/lib/supabase/client';
 import { shouldSuppressRemoteResourceMerge } from '@/lib/encounter/character-resource-sync';
+import { isGuestCharacterId } from '@/lib/guest-character-storage';
 import type { Character } from '@/types';
 
 export function useCharacterSheetPageData(id: string) {
@@ -71,7 +72,8 @@ export function useCharacterSheetPageData(id: string) {
   const libraryForView = characterResult?.libraryForView;
   const enrichment = characterResult?.enrichment;
   const loadCatalog = !characterPending && !enrichment;
-  const loading = authLoading || characterPending;
+  const isGuestSheet = isGuestCharacterId(id);
+  const loading = (isGuestSheet ? false : authLoading) || characterPending;
   const [actionError, setError] = useState<string | null>(null);
   const loadError = characterQueryError
     ? 'Failed to load character'
@@ -221,7 +223,7 @@ export function useCharacterSheetPageData(id: string) {
   }, [character?.name, loading, error]);
 
   useEffect(() => {
-    if (!character?.id) return;
+    if (!character?.id || isGuestCharacterId(character.id)) return;
     const supabase = createClient();
     const channel = supabase
       .channel(`character:${character.id}`)
@@ -273,9 +275,9 @@ export function useCharacterSheetPageData(id: string) {
     };
   }, [character?.id, setCharacter]);
 
-  const isOwner = Boolean(character && user && character.userId === user.uid);
+  const isOwner = Boolean(character && (isGuestSheet || (user && character.userId === user.uid)));
 
-  useCharacterResourceSync(character, isOwner);
+  useCharacterResourceSync(character, isOwner && !isGuestSheet);
 
   const pathProfAppliedKeyRef = useRef<string | null>(null);
   useEffect(() => {
@@ -309,7 +311,7 @@ export function useCharacterSheetPageData(id: string) {
   const { hasUnsavedChanges, saveNow } = useAutoSave({
     data: character,
     onSave: async (data) => {
-      if (!user || !data) return;
+      if (!data) return;
       const cleaned = cleanForSave(data) as Record<string, unknown>;
       const dirty = pickDirtyCharacterFields(cleaned, savedCleanRef.current);
       if (Object.keys(dirty).length === 0) {
@@ -353,7 +355,6 @@ export function useCharacterSheetPageData(id: string) {
   return {
     id,
     user,
-    authLoading,
     showToast,
     rules,
     character,
@@ -362,6 +363,7 @@ export function useCharacterSheetPageData(id: string) {
     error,
     setError,
     isOwner,
+    isGuestSheet,
     isInCampaign,
     campaignContext,
     hasUnsavedChanges,

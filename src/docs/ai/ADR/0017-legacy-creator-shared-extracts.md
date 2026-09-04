@@ -13,7 +13,7 @@ TASK-791 already extracted currency + appearance-age into `lib/`. This ADR is th
 
 ## Decision
 
-Move the five modules to kebab-case files under `src/components/patterns/` (chrome/select/help buckets per ADR-0019), export them from `@/components/patterns`, and update all call sites (Legacy, Guided, sheet). No re-export shims in `character-creator/`. No behavior or prop API changes. Do **not** delete `/characters/new/advanced`. `MixedSpeciesModal` stays an intentional non-USM dual picker (TASK-605). `mixed-species-skill-picker.tsx` leftover extracted in ADR-0018 / TASK-820.
+Move the five modules to kebab-case files under `src/components/patterns/` (chrome/select/help buckets per ADR-0019), export them from `@/components/patterns`, and update all call sites (Guided, sheet; Legacy wizard later deleted in TASK-912). No re-export shims in `character-creator/`. No behavior or prop API changes. `MixedSpeciesModal` stays an intentional non-USM dual picker (TASK-605). `mixed-species-skill-picker.tsx` leftover extracted in ADR-0018 / TASK-820. **2026-09-02:** `/characters/new/advanced` deleted (TASK-912); these extracts remain.
 
 ## Consequences
 

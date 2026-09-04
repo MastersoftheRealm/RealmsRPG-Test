@@ -7,6 +7,9 @@
 import { useCallback } from 'react';
 import { saveCharacterWithConflictRetry } from '@/services/character-service';
 import { apiUpload } from '@/lib/api-client';
+import { isGuestCharacterId } from '@/lib/guest-character-storage';
+import { MAX_PORTRAIT_DATA_URL_LENGTH, PORTRAIT_DRAFT_TOO_LARGE } from '@/lib/portrait';
+import { readFileAsDataUrl } from '@/lib/crop-image';
 import {
   getArchetypeCodexLookupId,
   applyLevelUpProficiencyUpdates,
@@ -114,7 +117,9 @@ export function useSheetResourceActions({
 
   const handlePortraitChange = useCallback(
     async (file: File) => {
-      if (!character || !user) return;
+      if (!character) return;
+      const guestSheet = isGuestCharacterId(character.id);
+      if (!user && !guestSheet) return;
 
       if (!file.type.startsWith('image/')) {
         setError('Please select an image file');
@@ -129,6 +134,33 @@ export function useSheetResourceActions({
       try {
         setUploadingPortrait(true);
         setError(null);
+
+        if (guestSheet) {
+          const dataUrl = await readFileAsDataUrl(file);
+          if (dataUrl.length > MAX_PORTRAIT_DATA_URL_LENGTH) {
+            setError(PORTRAIT_DRAFT_TOO_LARGE);
+            return;
+          }
+          setCharacter((prev) => (prev ? { ...prev, portrait: dataUrl } : null));
+          setPortraitRefreshKey(Date.now());
+          const result = await saveCharacterWithConflictRetry(
+            character.id,
+            { portrait: dataUrl },
+            {
+              updatedAt: character.updatedAt,
+              mergeOnConflict: (remote) => ({
+                dirty: { portrait: dataUrl },
+                updatedAt: remote.updatedAt,
+              }),
+            },
+          );
+          if (result.updatedAt) {
+            setCharacter((prev) =>
+              prev ? { ...prev, portrait: dataUrl, updatedAt: result.updatedAt } : null,
+            );
+          }
+          return;
+        }
 
         const formData = new FormData();
         formData.append('file', file);

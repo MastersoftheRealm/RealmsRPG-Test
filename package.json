@@ -31,7 +31,6 @@
     "verify:auth-visual:update": "npm run build && playwright test -c playwright.auth.config.ts tests/visual/auth-screenshots.pw.ts --update-snapshots",
     "verify:auth-a11y": "npm run build && playwright test -c playwright.auth.config.ts tests/visual/auth-a11y.pw.ts",
     "verify:auth-a11y:update": "npm run build && cross-env UPDATE_AUTH_A11Y_BASELINE=1 playwright test -c playwright.auth.config.ts tests/visual/auth-a11y.pw.ts --workers=1",
-    "verify:creator-audit": "npm run build && playwright test -c playwright.creator-audit.config.ts",
     "verify:shell-creators-audit": "npm run build && playwright test -c playwright.shell-creators-audit.config.ts",
     "verify:responsive": "npm run build && playwright test -c playwright.responsive.config.ts",
     "verify:responsive:update": "npm run build && cross-env UPDATE_RESPONSIVE_BASELINE=1 playwright test -c playwright.responsive.config.ts --workers=1",

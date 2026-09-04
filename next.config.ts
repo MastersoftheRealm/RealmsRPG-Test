@@ -17,6 +17,7 @@ const nextConfig: NextConfig = {
   // - /browse was a redundant duplicate of the Library page's public (Realms) mode.
   // - /encounter-tracker was the old name for the Encounters hub.
   // - /crafting/new now opens directly from the crafting hub into /crafting/[id].
+  // - /characters/new/advanced was the retired 9-step Legacy character creator (TASK-912).
   async redirects() {
     return [
       {
@@ -32,6 +33,11 @@ const nextConfig: NextConfig = {
       {
         source: '/crafting/new',
         destination: '/crafting',
+        permanent: true,
+      },
+      {
+        source: '/characters/new/advanced',
+        destination: '/characters/new',
         permanent: true,
       },
     ];

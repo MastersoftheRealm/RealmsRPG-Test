@@ -241,7 +241,6 @@ export function useCharacterSheetPage(id: string) {
 
   return {
     id: data.id,
-    authLoading: data.authLoading,
     loading: data.loading,
     error: data.error,
     character: data.character,
@@ -251,6 +250,7 @@ export function useCharacterSheetPage(id: string) {
     isTempModifierMode: ui.isTempModifierMode,
     effectiveTempModifierMode,
     isOwner: data.isOwner,
+    isGuestSheet: data.isGuestSheet,
     isInCampaign: data.isInCampaign,
     campaignContext: data.campaignContext,
     sheetEditNotification: data.sheetEditNotification,

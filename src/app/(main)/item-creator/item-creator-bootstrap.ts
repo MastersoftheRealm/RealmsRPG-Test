@@ -7,7 +7,19 @@
 import type { ItemProperty } from '@/hooks';
 import { CREATOR_CACHE_KEYS } from '@/lib/game/creator-constants';
 import { readCreatorCache } from '@/lib/game/creator-cache';
-import { filterSavedItemPropertiesForList } from '@/lib/calculators';
+import {
+  deriveWeaponRangeConfig,
+  filterSavedItemPropertiesForList,
+  isMechanicProperty,
+  snapWeaponRangeSpaces,
+  type ItemPropertyPayload,
+  type WeaponRangeType,
+} from '@/lib/calculators';
+import {
+  clampWeaponAbilityUtilized,
+  deriveWeaponAbilityUtilized,
+  type WeaponAttackAbility,
+} from '@/lib/game/weapon-attack-ability';
 
 export const ITEM_CREATOR_CACHE_KEY = CREATOR_CACHE_KEYS.ITEM;
 
@@ -40,7 +52,10 @@ export interface ItemCreatorCache {
   }>;
   damage: ItemDamageConfig;
   isTwoHanded: boolean;
-  rangeLevel: number;
+  rangeType?: WeaponRangeType | undefined;
+  rangeSpaces?: number | undefined;
+  rangeLevel?: number | undefined;
+  attackAbility?: WeaponAttackAbility | undefined;
   damageReduction: number;
   agilityReduction: number;
   criticalRangeIncrease: number;
@@ -60,7 +75,9 @@ export interface ItemCreatorFormState {
   selectedProperties: ItemSelectedProperty[];
   damage: ItemDamageConfig;
   isTwoHanded: boolean;
-  rangeLevel: number;
+  rangeType: WeaponRangeType;
+  rangeSpaces: number;
+  attackAbility: WeaponAttackAbility;
   damageReduction: number;
   agilityReduction: number;
   criticalRangeIncrease: number;
@@ -70,6 +87,34 @@ export interface ItemCreatorFormState {
   abilityRequirement: ItemAbilityRequirement | null;
   imageId: string | null;
   imageUrl: string | null;
+}
+
+function parseWeaponRangeType(value: unknown): WeaponRangeType | null {
+  if (value === 'melee' || value === 'reach' || value === 'ranged' || value === 'thrown') {
+    return value;
+  }
+  return null;
+}
+
+function parseWeaponAttackAbility(value: unknown): WeaponAttackAbility | null {
+  if (value === 'strength' || value === 'agility' || value === 'acuity') {
+    return value;
+  }
+  return null;
+}
+
+function rangeFormFromCache(
+  parsed: ItemCreatorCache,
+): Pick<ItemCreatorFormState, 'rangeType' | 'rangeSpaces'> {
+  const cachedType = parseWeaponRangeType(parsed.rangeType);
+  if (cachedType) {
+    return {
+      rangeType: cachedType,
+      rangeSpaces: snapWeaponRangeSpaces(cachedType, Number(parsed.rangeSpaces) || 0),
+    };
+  }
+  const derived = deriveWeaponRangeConfig([], parsed.rangeLevel);
+  return { rangeType: derived.type, rangeSpaces: derived.spaces };
 }
 
 export type ItemLibraryRecord = {
@@ -105,7 +150,9 @@ export function emptyItemCreatorFormState(): ItemCreatorFormState {
     selectedProperties: [],
     damage: { amount: 1, size: 4, type: 'slashing' },
     isTwoHanded: false,
-    rangeLevel: 0,
+    rangeType: 'melee',
+    rangeSpaces: 0,
+    attackAbility: 'strength',
     damageReduction: 0,
     agilityReduction: 0,
     criticalRangeIncrease: 0,
@@ -126,13 +173,22 @@ export function restoreItemCreatorFromCache(
 
   const base = emptyItemCreatorFormState();
 
-  const selectedProperties: ItemSelectedProperty[] = [];
+  const range = rangeFormFromCache(parsed);
+  const rawSelected: ItemSelectedProperty[] = [];
   for (const savedProp of parsed.selectedProperties ?? []) {
     const foundProp = itemProperties.find((p) => String(p.id) === String(savedProp.propertyId));
     if (foundProp) {
-      selectedProperties.push({ property: foundProp, op_1_lvl: savedProp.op_1_lvl });
+      rawSelected.push({ property: foundProp, op_1_lvl: savedProp.op_1_lvl });
     }
   }
+  const cachedAbility = parseWeaponAttackAbility(parsed.attackAbility);
+  const attackAbility = cachedAbility
+    ? clampWeaponAbilityUtilized(cachedAbility, range.rangeType)
+    : deriveWeaponAbilityUtilized(
+        rawSelected.map((sp) => ({ id: Number(sp.property.id), name: sp.property.name })),
+        range.rangeType,
+      );
+  const selectedProperties = rawSelected.filter((sp) => !isMechanicProperty(sp.property));
 
   return {
     ...base,
@@ -142,7 +198,8 @@ export function restoreItemCreatorFromCache(
     selectedProperties,
     damage: parsed.damage || base.damage,
     isTwoHanded: parsed.isTwoHanded || false,
-    rangeLevel: parsed.rangeLevel || 0,
+    ...range,
+    attackAbility,
     damageReduction: parsed.damageReduction || 0,
     agilityReduction: parsed.agilityReduction || 0,
     criticalRangeIncrease: parsed.criticalRangeIncrease || 0,
@@ -176,7 +233,7 @@ export function itemLibraryRecordToFormState(
   let selectedProperties: ItemSelectedProperty[] = [];
   if (item.properties && Array.isArray(item.properties) && itemProperties.length > 0) {
     // Only non-mechanic properties belong in the selectable list; mechanic properties
-    // are driven by dedicated UI fields (damage, rangeLevel, DR, etc.).
+    // are driven by dedicated UI fields (damage, range type/spaces, DR, etc.).
     selectedProperties = filterSavedItemPropertiesForList(
       item.properties as Array<{
         id?: number | string | undefined;
@@ -213,6 +270,18 @@ export function itemLibraryRecordToFormState(
         }
       : null;
 
+  const propertyPayloads = Array.isArray(item.properties)
+    ? (item.properties as ItemPropertyPayload[])
+    : [];
+  const range =
+    armamentType === 'Weapon'
+      ? deriveWeaponRangeConfig(propertyPayloads, item.rangeLevel)
+      : { type: 'melee' as const, spaces: 0 };
+  const attackAbility =
+    armamentType === 'Weapon'
+      ? deriveWeaponAbilityUtilized(propertyPayloads, range.type)
+      : 'strength';
+
   return {
     ...base,
     name: item.name || '',
@@ -228,7 +297,9 @@ export function itemLibraryRecordToFormState(
         : null,
     isTwoHanded:
       armamentType === 'Weapon' || armamentType === 'Shield' ? item.isTwoHanded || false : false,
-    rangeLevel: armamentType === 'Weapon' ? item.rangeLevel || 0 : 0,
+    rangeType: range.type,
+    rangeSpaces: range.spaces,
+    attackAbility,
     abilityRequirement,
     damageReduction: armamentType === 'Armor' ? (item.damageReduction ?? item.armorValue ?? 0) : 0,
     agilityReduction: armamentType === 'Armor' ? item.agilityReduction || 0 : 0,

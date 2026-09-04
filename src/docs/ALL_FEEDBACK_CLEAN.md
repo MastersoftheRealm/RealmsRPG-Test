@@ -1,6 +1,104 @@
 # ALL_FEEDBACK — Consolidated & Curated
 
-Last updated: 2026-08-24
+Last updated: 2026-09-03
+
+**Raw Feedback Log — 2026-09-03 (Creators: targeted defenses placement + asterisks; weapon range display)**
+- Context: Creators — power/technique targeted defenses UX; weapon range display after TASK-919 type+spaces
+- Priority: High (creator honesty + sheet/Library range grammar)
+- Feedback (verbatim summary): Remove Targeted Defenses as its own section; put it as a simple portion of the power summary at the top (below description, to the right of image) to pick which defense the power targets. Defenses dropdown currently lists all parts that ever target that defense — wrong. Intention: pick any targeted defenses; asterisk only names parts that are actually on this specific power (one–three), including damage types (selected damage types need only name the damage type). When displaying a weapon, show Melee, Reach #, Thrown #, and Range # properly. Those # values come from core-rule property ladders (not arbitrary level increments). For Thrown and Ranged, display `#/4*#` (normal/long); long range gets a hover tooltip that the weapon can be used at 4× normal range with a −5 penalty.
+- Misinterpretation / code note: Display SoT still prints bare `N spaces` via `formatWeaponRangeConfig` / `resolveWeaponRangeDisplay`; `formatRangeFact` prefixes non-Melee with “Range …”, which would mislabel Reach/Thrown. Long-range 4×/−5 is already in GAME_RULES § Ranged Attack Penalties but not in UI copy.
+- Disposition: **Targeted defenses — already implemented** (TASK-921 + TASK-925; pending-qa DEV-V-057). **Weapon range display — filed TASK-926** (typed labels + Thrown/Ranged normal/long + tooltip). No code this turn.
+
+**Raw Feedback Log — 2026-09-03 (Creators: targeted defenses picker + Codex fill)**
+- Context: Power / technique / empowered creators after TASK-921
+- Priority: High (creator UX + honest Codex data)
+- Feedback (verbatim summary): Follow-up to fill only relevant empty parts with targeted defenses — not all parts have them, but some descriptions say e.g. “Targets your choice of fortitude, mental fortitude, or discernment” or “Targets Evasion”. Include targeted defense in the damage section and as a desc chip on added parts. Do not worry about damage types in core rules. Remove Targeted Defenses as its own section; put it in the identity/summary card at the top (below description, to the right of image). Dropdown should list all defenses; asterisks only for parts actually on this power (one to three), including damage types named as the type if selected — not every Codex part that can target that defense.
+- Misinterpretation / code note: TASK-921 ChipSelect lived in its own CollapsibleSection. Option labels dumped catalog part names when the full parts DB was treated as suggestion sources. `core_rules.DAMAGE_TYPES` stays `{ all, armorExceptions, note }`.
+- Disposition: **TASK-925** implemented (identity ChipSelect, this-entry `*` sources, damage-row can-target, part Targets chip). **TASK-924** filed for owner-gated Codex fills (`sql/codex-parts-targeted-defenses-proposed.sql`). No DAMAGE_TYPES JSON work.
+
+**Raw Feedback Log — 2026-09-03 (Creators: Advanced Calculations breakdown)**
+- Context: Creator summary **Advanced Calculations** (start with `/power-creator`)
+- Priority: High (truthful cost display; no math change)
+- Feedback (verbatim summary): Advanced calculations should show the raw energy contribution (no training points) from each individual part/property divided by section and all added together; omit a section if it contributes nothing. Example: Action Type with X% from free action, X% from reaction; Attack with weapon selected; range, area of effect, mechanics, parts, damage. Full layout of base costs, what they equal, modifiers, especially effective duration extra from duration-affected parts. Should not change the calculation. For all creators but start with power creator to perfect the style. User-facing language (Rounded Down / Rounded Up, not floor/ceil) and do not overdo decimals when there are no significant figures.
+- Misinterpretation / code note: Panel was a four-line dump (`Energy (raw)`, `ceil(...)`, TP raw/floor). Cost math already lives in `calculatePowerCosts` / `calculatePowerSectionContribution`. Display-only groups via `analyzePowerEnergy` + `power-energy-breakdown.ts`; other creators remain on `rows` until TASK-923.
+- Disposition: **TASK-922** (power creator style; archived pending-qa DEV-V-058). Follow-up **TASK-923** for technique / empowered / item.
+
+**Raw Feedback Log — 2026-09-03 (Power Creator: drop hybrid / Empowered CTA)**
+- Context: `/power-creator` meta card (hybrid prompt + Open Empowered Creator link)
+- Priority: Low (creator chrome clutter)
+- Feedback (verbatim summary): Remove “Building a hybrid? Use the dedicated empowered creator…” and the Open Empowered Creator control from the power creator.
+- Misinterpretation / code note: Banner lived in `power-creator-editor-meta.tsx` (previously an always-on 44px link; later shared `Button asChild`). Empowered Techniques remains in Creators nav / library create links — not removed sitewide.
+- Disposition: **Implemented in-session** (no TASK) — deleted the banner + CTA; trimmed TASK-913 named-surface scan for that file; DEV-V-055 T009 no longer mentions the button.
+
+**Raw Feedback Log — 2026-09-03 (Armament Creator: type buttons, range, ability)**
+- Context: `/item-creator` Item Type chips (Weapon / Armor / Shield); Weapon Configuration Range stepper; character-sheet attack bonuses from relevant ability
+- Priority: High (creator contrast + hardwired range/ability so sheet Martial Bonus stays true)
+- Feedback (verbatim summary): No clear outline of the different types of item selector (weapon armor shield) in the UI — they blend with the background and aren’t obvious buttons due to low contrast of button/background in dark and light mode. Need to update the range option for weapons to include a dropdown between melee, ranged, and thrown (updating thrown to a mechanic property, with built-in selections that work like duration: pick type of range, then distance from a pre-set list). On the armament creator you’d pick melee, reach, ranged, or thrown, then pick spaces if applicable. Reach can be 2, 3, 4, etc. via the Reach property, which also becomes a mechanic property (built-in, not on the add list). Thrown ranges are 3 per base thrown range plus two per each level of increase (dropdown 3, 5, 7, 9, … into the mid-30s). Ranged is 8 spaces per level, cap around 64. Reach capped around 6. Also add Ability utilized on weapon configuration: melee/reach/thrown default Strength (change to Agility via Finesse, now mechanic); ranged default Acuity (change to Strength via Heavy, now mechanic). Dropdown defaults to the normal ability; you can change it to Agility or Strength. Hardwiring fits the sheet displaying attack bonuses from the relevant ability.
+- Misinterpretation / code note (pre-fix): Item Type was a low-contrast custom button grid; Range was a `ValueStepper` on `rangeLevel` only; Thrown/Reach/Finesse sat on Add property; seed lacked Heavy. Sheet SoT was `getWeaponAttackAbility` without Heavy.
+- Disposition: **TASK-918 done** (Item Type → `SegmentedControl`). **TASK-919 done** (Melee/Reach/Ranged/Thrown + space ladders; Thrown/Reach mechanic IDs). **TASK-920 done** (Ability utilized select; Finesse/Heavy mechanic; `PROPERTY_IDS.HEAVY` 50; Heavy already live `mechanic=true` — no Codex apply). Save path persists ability via properties only. pending-qa DEV-V-018 T019–T021.
+
+**Raw Feedback Log — 2026-09-03 (Admin changelog creates vs deletes)**
+- Context: `/admin/changelogs` after empty-row filter
+- Priority: Medium (admin audit clutter; TASK-874)
+- Feedback (verbatim summary): Create changelogs don’t need all the details. Deletes do, so we know what it was before it was deleted. Creates only need an entry with the thing’s name/type — e.g. Create “Feat Name” type “feat”.
+- Misinterpretation / code note: Creates currently write/show every new field as a before/after row. Display should ignore create field dumps (including historical rows); new writes persist identity only. Deletes keep `before_data` + field diffs.
+- Disposition: **TASK-874** (continue partial) — create identity headline; delete prior-state dump; DEV-Q07 still open for update snapshots.
+
+**Raw Feedback Log — 2026-09-03 (Admin changelog blank-blank rows)**
+- Context: `/admin/changelogs` feat update example (Find the Chink → Find the Gap, entity 246, Aug 21 2026)
+- Priority: Medium (admin audit clutter; TASK-874 display)
+- Feedback (verbatim summary): Changelog still lists fields that were blank before and after (`ability_req`, `abil_req_val`, `skill_req`, `skill_req_val` all `—` / `—`). That is the clutter: do not show no-op empty fields.
+- Misinterpretation / code note: TASK-874 already swapped JSON dumps for field-diff tables, but `computeChangedFields` treated `null` vs `""` vs `[]` as changes, and `formatCodexChangeValue` rendered both sides as `—`. `updated_at` also always changes on save.
+- Disposition: **TASK-874** (continue partial) — hide empty-equivalent + bookkeeping timestamp rows in display and new `changed_fields` writes. Snapshot retention still DEV-Q07.
+
+**Raw Feedback Log — 2026-09-02 (Guided Your Hero: leftover review instead of a grey Create)**
+- Context: Guided creator → Your Hero (`RevealStep`) — Create character disabled; footer said “Some earlier chapters still need choices.”
+- Priority: High (activation; last-step confusion)
+- Feedback (verbatim summary): That earlier-chapters line isn’t clear enough — maybe click it to see the issues. Usually the issue is character name and HP/EN allocation; are those clear as non-optional needed things without being obnoxious? Follow-up: what if hitting Create on the last page opened a review of what wasn’t complete and was needed (skill points to spend, etc.), clickable to tab back to that section — like the Legacy creator but better.
+- Misinterpretation / code note: `isGuidedDraftSaveable` includes Reveal’s name + HP/EN, so the footer blamed earlier chapters for this-page leftovers. Create was `disabled={!canSave}` with no review. Legacy Finalize keeps Create clickable and opens `ValidationModal` (emoji rows, not jump links; Health/Energy leftover is only a warning). Guided Skills Continue already requires remaining 0, but the chapter rail can still land on Reveal with unspent Skill/Ability points because rail satisfaction is a structural floor.
+- Disposition: **TASK-911** — Create stays clickable; leftover review names name / Health-Energy / Skill points / Ability points / unfinished chapters; each row jumps to that field or chapter. Name labeled; Age/appearance/backstory stay “(optional)”. No required asterisks.
+
+**Raw Feedback Log — 2026-09-02 (Stepper + contrast; GLR expand should not dump column facts)**
+- Context: ValueStepper `+` (Uses/Qty and other ±) in light and dark; GridListRow expand (sheet Library powers/feats and the same GLR elsewhere)
+- Priority: High (play-surface contrast + expanded-row clutter)
+- Feedback (verbatim summary): The + stepper isn’t visible clearly in dark or even light mode especially when greyed out (unclickable). For GLR, when something is expanded the column headers drop into the expanded section. That keeps facts true but is unneeded when the information is already in the column header (familiar place, we have the space). Description is better removed from the non-expanded header and placed in the expanded section — it is always truncated in the header anyway. Example: a power with Action, damage, area, duration, energy — moving each of those into the expanded view clutters it; keeping them in the unexpanded item header avoids duplicating them below.
+- Misinterpretation / code note: `.btn-stepper` disabled uses `text-border-light` on transparent (near-invisible glyphs); GLR rows also force `bg-transparent` (TASK-710). TASK-868/898 XOR moved column facts (Action/Uses/…) out of the header into the expanded body at every width so steppers would not overlap Recovery; owner now wants the opposite for glance facts — stay aligned under ListHeader — and wants truncated Description columns gone (full text already lives on the `description` prop).
+- Disposition: **TASK-909** (GLR: header keeps column facts; description expanded-only) + **TASK-910** (stepper + contrast, including disabled).
+
+**Raw Feedback Log — 2026-09-02 (Sheet header: identity too thin, quick-ref tiles too large)**
+- Context: Character sheet header (`SheetHeader`) at desktop width — identity | Speed/Evasion/DR/Crit | resources
+- Priority: High (play-surface layout; name truncated, vitals dominate)
+- Feedback (verbatim summary): The header section has spacing issues. The name/race/archetype/level/XP profile section seems too thin — the character name is truncated and other details are forced to wrap. The 4 quick-reference details are too big and take up too much space; they shouldn’t be wrapped unless they’re not as big; they should be spaced well on the header.
+- Misinterpretation / code note: TASK-839/885 capped identity at `minmax(0,20rem)` from `xl` and forced `lg:grid-cols-2` (2×2) plus `aspect-square` tiles (`max-w-[8.75rem]`, `text-4xl`). Equal `1fr` tracks at `lg` plus the 20rem cap starve the portrait+name column so even short names ellipsis. Owner wants identity readable and compact vitals in a row when they fit.
+- Disposition: **TASK-908 done** (pending-qa DEV-V-009 T079/T060/T069) — identity-weighted tracks (no 20rem cap); compact tiles; 4-across from `xl` (2×2 at phone and `lg`).
+
+**Raw Feedback Log — 2026-09-02 (Mobile character sheet: jump-clip scroll + side fade)**
+- Context: Character sheet below `md` after TASK-868/902 header-collapse + C1 carousel fade
+- Priority: High (play-surface; not following mobile scroll best practice)
+- Feedback (verbatim summary): Tap to scroll down from the top jump-clips to the middle of the lower section; from the lower section it jump-cuts to the higher section. Doesn’t scroll smoothly — like the second it hits the top of the scrolling section. Lower left/right scrolling section has greyed-out fade encroaching on the middle main content; doesn’t look clean.
+- Misinterpretation / code note: Header collapse is a discrete `max-h-0` toggle (200ms). Collapsing grows the panel viewport mid-gesture so content jumps; expanding at `scrollTop === 0` jump-cuts back. C1 rest fade reuses the tab-strip mask (`--tab-nav-overflow-fade` 3.25rem on coarse) on the whole carousel, greying the active panel.
+- Disposition: **TASK-907** — column is the vertical scroller (header in flow); inactive snap panels height 0; drop carousel fade; sticky compact `SegmentedControl` for C1.
+
+**Raw Feedback Log — 2026-09-02 (Mobile GLR: expanded Uses steppers off-center)**
+- Context: Character sheet Library → Feats/Traits expand on phone; Uses in the expanded body
+- Priority: High (play-surface layout; shared GLR)
+- Feedback (verbatim summary): Feats/traits with uses — the uses in the expanded section are way off centered, not adjacent to the Uses: title. Likely not isolated; same format/code across mobile GLR items. Fix globally, not a local bandaid.
+- Misinterpretation / code note: TASK-898 stacked interactive column values (`flex-col`) full-width in `GridListRowExpandedBody` so Uses steppers would not overlap Recovery in narrow header tracks. Combined with collapsed-column `justify-center` wrappers, the stepper recentered in the leftover width under a left-aligned **Uses:** label. Recovery (plain text) stayed `items-center` adjacent. Same path renders equipment Qty and any other ReactNode column.
+- Disposition: **TASK-906 done** (pending-qa DEV-V-016 T034) — shared expanded-body stats keep label + control inline; interactive values shrink-to-fit and span a full grid row (overlap still prevented).
+
+**Raw Feedback Log — 2026-09-02 (Realms /rules: Google Doc outline, formatting, search, duplicate TOC)**
+- Context: `/rules` first-party MDX rulebook (ADR-0021 / TASK-796 / TASK-853) vs published Google Doc manuscript
+- Priority: High (public rules surface; outline + findability)
+- Feedback (verbatim summary): Realms Page doesn’t match google doc layout — Encounters is a chapter, combat/skill encounters are subchapters; roll tables are a subchapter of character creation and leveling; Equipment, crafting & downtime is a chapter with subchapters crafting and harvesting, and downtime. Formatting and separation was lost in the embedded rulebook. Global Ctrl+F or rulebook search is now not possible. When you first open the page it has a duplicate chapter reference on the left and in the middle, one with more info.
+- Misinterpretation / code note: `chapters.json` is a flat list so Combat, Skill, Roll-Tables, Crafting, and Downtime are sibling chapters. `/rules` renders `RulebookNav` plus a second described chapter list. Chapter routes split the book so browser Find only searches the open page. Boxed notes were converted to 1-column markdown tables and wrapped in `TableScroll` `min-w-[32rem]`.
+- Disposition: **TASK-905** — nested outline matching the Doc; `/rules` opens Welcome (no duplicate TOC); rulebook search across MDX; 1-column tables render as callouts; restore list/heading separation.
+
+**Raw Feedback Log — 2026-09-02 (Guest: view/save a created sheet without signing in)**
+- Context: Character creator finalize (Guided Your Hero / Legacy Finalize) while signed out; try-the-game / try-a-character without an account
+- Priority: High (activation cliff — guest can build but cannot open a playable sheet)
+- Feedback (verbatim summary): We should have a non-signed-in option to view a created character sheet, but after hitting continue without signing in (instead of continue without saving) it can be saved/viewed locally without needing sign in. For those who wanna try the game or try a character without signing in. Tricky.
+- Misinterpretation / code note: Guest creator drafts already persist in zustand `localStorage`. Finalize/`RevealStep` still gates `createCharacter` behind `LoginPromptModal`. Tertiary **Continue Without Saving** (TASK-804) only dismisses the modal — draft stays in the wizard, nothing is created, `/characters` stays empty, the sheet route is never opened. Public sheets (TASK-649) are cloud rows with `is_public`, not local. Encounters already have the intended pattern: `guest-encounter-storage.ts` (`local-` ids) + hook branch in `use-encounters.ts` + `migrateGuestEncountersOnSignIn`. Product overview names this gap: Guest → save is an **activation cliff** not spec’d in Sections 1–5. UX goals still say “account required only when saving a character.”
+- Disposition: **TASK-904 done** (pending-qa DEV-V-051 T002/T011, DEV-V-001 T019, DEV-V-009 T077). Owner ack DEV-Q09 2026-09-02: clone guest encounters; **Continue without signing in** → local sheet; cap 3; play + local edit; auto-migrate. Library Load/Save stay dismiss-only.
 
 **Raw Feedback Log — 2026-08-24 (Tab away / tab back remounts UI state)**
 - Context: Any authenticated page with local UI state (sheet modals, expanded GLR rows, etc.)

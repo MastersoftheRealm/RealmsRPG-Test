@@ -6,7 +6,7 @@
 
 import Link from 'next/link';
 import { ChevronLeft, Pencil } from 'lucide-react';
-import { Button, PageHeader } from '@/components/ui';
+import { Button, IconButton, PageHeader } from '@/components/ui';
 import type { Campaign } from '@/types/campaign';
 
 export function CampaignDetailHeader({
@@ -80,16 +80,16 @@ export function CampaignDetailHeader({
                 className="mb-0"
                 actions={
                   isRealmMaster ? (
-                    <button
+                    <IconButton
                       type="button"
+                      variant="primary"
+                      size="sm"
                       onClick={onStartEditName}
-                      className="inline-flex min-h-[44px] min-w-[44px] items-center justify-center text-primary-fg transition-colors hover:scale-110 hover:text-primary-fg-hover"
-                      title="Edit campaign name"
-                      aria-label="Edit campaign name"
+                      label="Edit campaign name"
                       disabled={updateLoading}
                     >
                       <Pencil className="h-4 w-4" />
-                    </button>
+                    </IconButton>
                   ) : undefined
                 }
               />
@@ -116,16 +116,16 @@ export function CampaignDetailHeader({
                   {campaign.description ||
                     (isRealmMaster ? 'No description. Click the pencil to add one.' : '')}
                   {isRealmMaster && !editingName && (
-                    <button
+                    <IconButton
                       type="button"
+                      variant="primary"
+                      size="sm"
                       onClick={onStartEditDescription}
-                      className="text-primary-fg transition-colors hover:scale-110 hover:text-primary-fg-hover"
-                      title="Edit description"
-                      aria-label="Edit description"
+                      label="Edit description"
                       disabled={updateLoading}
                     >
                       <Pencil className="h-4 w-4" />
-                    </button>
+                    </IconButton>
                   )}
                 </p>
               )

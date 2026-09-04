@@ -12,7 +12,7 @@ import { cn } from '@/lib/utils';
 import type { ItemProperty } from '@/hooks';
 import { ValueStepper } from '@/components/patterns';
 import { IconButton, Card, TableScroll, DescriptorChip } from '@/components/ui';
-import { isGeneralProperty } from '@/lib/calculators';
+import { isGeneralProperty, isMechanicProperty } from '@/lib/calculators';
 import { PROPERTY_IDS } from '@/lib/id-constants';
 import { formatCost } from '@/lib/game/creator-constants';
 import { rarityChipVariant } from '@/lib/chip/rarity-chip-variant';
@@ -91,6 +91,7 @@ export function PropertyCard({
     return allProperties
       .filter((p) => {
         if (isGeneralProperty(p)) return false;
+        if (isMechanicProperty(p)) return false;
         const propType = (p.type || '').toLowerCase();
         if (!propType || propType === 'general') return true;
         return propType === armamentTypeLower;

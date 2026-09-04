@@ -38,31 +38,7 @@ export const GUIDED_CREATOR_COPY = {
           'Ideal if you already know the system or want full control',
         ],
       },
-      /** Temporary chooser peer until the tabbed wizard is fully absorbed (REALMS §5.0). */
-      legacy: {
-        label: 'Legacy',
-        tagline: 'The former Advanced creator — classic tabs while we finish the unified flow.',
-        bullets: [
-          'Original tabbed wizard with every step up front',
-          'Forge your own archetype in the classic layout',
-          'Use if you prefer the previous creator; Guided and Custom will replace it',
-        ],
-      },
     },
-  },
-
-  /**
-   * In-wizard chrome for `/characters/new/advanced`.
-   * User-facing name is Legacy; the route stays `advanced` until retirement.
-   */
-  legacyWizard: {
-    documentTitle: 'Legacy Character Creator',
-    documentDescription:
-      'The classic tabbed character creator. Guided and Custom will replace this flow.',
-    badge: 'Legacy',
-    title: 'Create New Character',
-    description: (stepIndex: number, totalSteps: number) =>
-      `Legacy creator — Step ${stepIndex} of ${totalSteps}. Follow the steps below to build your character.`,
   },
 
   shell: {
@@ -531,9 +507,8 @@ export const GUIDED_CREATOR_COPY = {
     },
     reveal: {
       title: 'Meet your hero',
-      description: 'Name them, set the finishing touches, then create your character.',
-      incompleteHint:
-        'Some earlier chapters still need choices. Use the chapters above to finish them.',
+      description:
+        'Give them a name and split Health & Energy to create. Age, appearance, and backstory are optional.',
       saveFailed: 'Could not create your character. Please try again.',
       saveRetryHint: 'Check My Characters before trying again so you do not create a duplicate.',
       nameLabel: 'Character name',
@@ -555,8 +530,6 @@ export const GUIDED_CREATOR_COPY = {
       appearancePlaceholder: 'Hair, eyes, distinguishing features…',
       descriptionLabel: 'Backstory (optional)',
       descriptionPlaceholder: 'Personality, history, or what drives them…',
-      allocateHint: (remaining: number) =>
-        `Allocate ${remaining} more point${remaining === 1 ? '' : 's'} between Health and Energy.`,
       save: 'Create character',
       saving: 'Creating…',
       portrait: {
@@ -570,12 +543,34 @@ export const GUIDED_CREATOR_COPY = {
       },
       healthEnergy: {
         title: 'Health & Energy',
-        description: 'Split your bonus points between Health and Energy.',
+        description: 'Use every bonus point — split them between Health and Energy.',
         autoAllocate: 'Auto-allocate',
         autoAllocateAria:
           'Set Energy to cover your highest Power or Technique cost, and put the rest into Health',
-        allocateHint: (remaining: number) =>
-          `Allocate ${remaining} more point${remaining === 1 ? '' : 's'} to continue.`,
+        allocateHint: (remaining: number) => {
+          if (remaining < 0) {
+            const extra = -remaining;
+            return `Remove ${extra} point${extra === 1 ? '' : 's'} so Health and Energy match the pool.`;
+          }
+          return `Allocate ${remaining} more point${remaining === 1 ? '' : 's'} before you can create.`;
+        },
+      },
+      review: {
+        title: 'Still needed to create',
+        description: 'Open an item to finish it, then come back and create.',
+        close: 'Back to Your Hero',
+        nameItem: 'Character name',
+        nameDetail: 'Give your hero a name on this page.',
+        healthEnergyItem: 'Health & Energy',
+        abilityPointsItem: 'Ability points',
+        skillPointsItem: 'Skill points',
+        abilityPointsUnit: 'Ability point',
+        skillPointsUnit: 'Skill point',
+        spendMore: (remaining: number, unit: string) =>
+          `Spend ${remaining} more ${unit}${remaining === 1 ? '' : 's'}.`,
+        removeExtra: (extra: number, unit: string) =>
+          `Remove ${extra} extra ${unit}${extra === 1 ? '' : 's'}.`,
+        chapterDetail: (title: string) => `Finish the remaining choices in ${title}.`,
       },
       summary: {
         title: 'Your build',

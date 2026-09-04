@@ -13,6 +13,7 @@ import { PowerCreatorEditorMeta } from './power-creator-editor-meta';
 import { PowerCreatorEditorPowerConfig } from './power-creator-editor-power-config';
 import { PowerCreatorEditorPowerDamage } from './power-creator-editor-power-damage';
 import { PowerCreatorEditorPowerParts } from './power-creator-editor-power-parts';
+import { TargetedDefensesSection } from '@/components/creator';
 
 export type { PowerCreatorEditorProps };
 
@@ -28,7 +29,16 @@ export function PowerCreatorEditor(props: PowerCreatorEditorProps) {
         imageId={props.imageId}
         imageUrl={props.imageUrl}
         onImageChange={props.onImageChange}
-      />
+      >
+        <TargetedDefensesSection
+          selected={props.targetedDefenses}
+          onChange={props.onTargetedDefensesChange}
+          parts={props.suggestionSelectedParts}
+          partsDb={props.suggestionPartsDb}
+          damageTypes={props.damages.map((d) => d.type).filter(Boolean)}
+          attackMode={props.attackMode}
+        />
+      </PowerCreatorEditorMeta>
 
       <PowerCreatorEditorActionProfile
         actionType={props.actionType}
@@ -75,6 +85,7 @@ export function PowerCreatorEditor(props: PowerCreatorEditorProps) {
         onDamagesChange={props.onDamagesChange}
         damageSummary={props.damageSummary}
         sectionCosts={props.sectionCosts}
+        partsDb={props.suggestionPartsDb}
       />
     </>
   );

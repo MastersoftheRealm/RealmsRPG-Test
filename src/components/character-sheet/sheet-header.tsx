@@ -14,6 +14,7 @@
 
 import { useMemo } from 'react';
 import { Card } from '@/components/ui';
+import { cn } from '@/lib/utils';
 import { useGameRules } from '@/hooks';
 import { calculateHealthEnergyPool } from '@/lib/game/formulas';
 import { calculateAllStats, calculateCriticalRange } from '@/lib/game/calculations';
@@ -195,16 +196,12 @@ export function SheetHeader({
   // changes that stat. Temp mode always shows both cards so a temp can be added.
   const showDamageReduction = isTempModifierMode || baseDamageReduction > 0 || drTemp !== 0;
   const showCriticalRange = isTempModifierMode || critIncrease > 0 || critTemp !== 0;
+  const vitalCount = 2 + Number(showDamageReduction) + Number(showCriticalRange);
 
   return (
     <Card className="mb-4 w-full min-w-0 p-4 shadow-md md:p-6" data-tour-id="sheet-tour-header">
-      {/*
-        C3/C5 (TASK-839): equal-track stat cards, not flex-wrap content-width children.
-        3-col identity | stats | resources from lg (1024) as equal `minmax(0,1fr)` tracks
-        so stats are never a leftover flex column (~119px). From xl, cap the side tracks.
-        Below lg: identity | resources, stats span (2-col phones, 4-col from md).
-      */}
-      <div className="grid min-w-0 grid-cols-1 items-stretch gap-6 md:grid-cols-2 lg:grid-cols-3 lg:items-center xl:grid-cols-[minmax(0,20rem)_minmax(0,1fr)_minmax(16rem,20rem)]">
+      {/* C3/C5 (TASK-908): identity-weighted 3-col from lg (no 20rem cap). 4-across from md and xl; 2×2 at phone and lg. */}
+      <div className="grid min-w-0 grid-cols-1 items-stretch gap-4 md:grid-cols-2 md:gap-5 lg:grid-cols-[minmax(0,1.4fr)_auto_minmax(15rem,1fr)] lg:items-center xl:grid-cols-[minmax(0,1.5fr)_auto_minmax(16rem,1.1fr)] xl:gap-6">
         <div className="min-w-0">
           <SheetHeaderIdentity
             character={character}
@@ -221,10 +218,17 @@ export function SheetHeader({
           />
         </div>
 
-        {/* C3/C5 (TASK-839): equal-track stat grid. TASK-885: w-max centered cluster — compact tiles, not full-bleed bars. */}
+        {/* 4-across from md and xl; 2×2 at lg so identity keeps width (TASK-908). */}
         <div className="flex min-w-0 justify-center md:col-span-2 lg:col-span-1 lg:col-start-2 lg:row-start-1">
           <div
-            className="grid w-max max-w-full grid-cols-2 gap-3 md:grid-cols-4 md:gap-4 lg:grid-cols-2"
+            className={cn(
+              'grid w-max max-w-full gap-2 md:gap-2.5',
+              vitalCount >= 4
+                ? 'grid-cols-2 md:grid-cols-4 lg:grid-cols-2 xl:grid-cols-4'
+                : vitalCount === 3
+                  ? 'grid-cols-2 sm:grid-cols-3'
+                  : 'grid-cols-2',
+            )}
             data-sheet-stat-grid
           >
             <LargeStatBlock

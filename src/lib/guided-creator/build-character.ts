@@ -23,7 +23,7 @@ import { clampSavedCurrency } from '@/lib/character-save';
 import { computeStartingCurrency } from '@/lib/guided-creator/equipment-currency';
 import { resolveArchetypeProficiencyStart } from '@/lib/game/formulas';
 import { buildSuggestedAbilityArray } from '@/lib/game/suggested-abilities';
-import { buildCreatorSkillSaveRows } from '@/lib/creator/build-creator-skills';
+import { buildCreatorSkillSaveRows } from '@/lib/character/build-creator-skills';
 import { buildRequiredProficiencies } from '@/lib/proficiencies';
 import { defaultLibraryTabVisibilityForArchetype } from '@/lib/character-library-tab-visibility';
 import { applyStarterEquippedFlags } from '@/lib/game/equipment-equipped';

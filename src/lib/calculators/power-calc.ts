@@ -12,6 +12,7 @@ import {
   computePartTrainingPointsRaw,
 } from '@/lib/calculators/part-training-points';
 import { dedupeSavedParts } from '@/lib/game/dedupe-saved-parts';
+import { appendCanTargetToDescription, defensesFromPart } from '@/lib/game/targeted-defenses';
 import type { AllowUndefinedOptionals } from '@/lib/utils/exact-optional';
 import { formatDurationFromTypeAndValue, formatDurationWithModifiers } from '@/lib/utils/duration';
 import { formatActionTypeForDisplay } from '@/lib/utils/action-type';
@@ -20,6 +21,8 @@ import { buildMechanicParts, type AreaConfig, type DurationConfig } from './mech
 import {
   POWER_ADVANCED_MECHANIC_CATEGORY_SET,
   POWER_AUTO_MECHANIC_PART_NAMES,
+  POWER_CALC_SECTION_BY_NAME,
+  type PowerCalcSectionId,
 } from './power-mechanic-constants';
 
 // =============================================================================
@@ -37,6 +40,34 @@ export interface PowerPartPayload {
   opt2Level?: number | undefined;
   opt3Level?: number | undefined;
   applyDuration?: boolean | undefined;
+  /** Display-only. Advanced Calculations grouping; ignored by cost math. */
+  calcSection?: PowerCalcSectionId | undefined;
+  /** Display-only label override; ignored by cost math. */
+  displayLabel?: string | undefined;
+}
+
+export type PowerEnergyLineKind = 'flat' | 'percentage' | 'duration';
+
+export interface PowerEnergyLine {
+  name: string;
+  displayLabel?: string | undefined;
+  section: PowerCalcSectionId;
+  kind: PowerEnergyLineKind;
+  contribution: number;
+  applyDuration: boolean;
+  optionLevels: { op1: number; op2: number; op3: number };
+}
+
+export interface PowerEnergyAnalysis {
+  lines: PowerEnergyLine[];
+  flatNormal: number;
+  flatDuration: number;
+  percAll: number;
+  percDur: number;
+  durAll: number;
+  hasDurationParts: boolean;
+  energyRaw: number;
+  totalEnergy: number;
 }
 
 export interface PowerCostResult {
@@ -80,9 +111,97 @@ function getOptionLevel(pl: PowerPartPayload, option: 1 | 2 | 3): number {
   return isUiShape ? (pl.op_3_lvl ?? pl.opt3Level ?? 0) : (pl.op_3_lvl ?? 0);
 }
 
+function resolvePowerPartDef(pl: PowerPartPayload, partsDb: PowerPart[]): PowerPart | undefined {
+  if (pl.part !== undefined) return pl.part;
+  return findByIdOrName(partsDb, pl);
+}
+
+function resolvePowerCalcSection(pl: PowerPartPayload, def: PowerPart): PowerCalcSectionId {
+  if (pl.calcSection) return pl.calcSection;
+  const byName = POWER_CALC_SECTION_BY_NAME[def.name];
+  if (byName) return byName;
+  return def.mechanic ? 'mechanics' : 'parts';
+}
+
+function partEnergyContribution(def: PowerPart, l1: number, l2: number, l3: number): number {
+  return (
+    (def.base_en || 0) + (def.op_1_en || 0) * l1 + (def.op_2_en || 0) * l2 + (def.op_3_en || 0) * l3
+  );
+}
+
 // =============================================================================
 // Core Cost Calculator
 // =============================================================================
+
+/**
+ * Per-part energy classification using the same equation as `calculatePowerCosts`.
+ * Display-only fields on the payload (`calcSection`, `displayLabel`) are ignored here.
+ */
+export function analyzePowerEnergy(
+  partsPayload: PowerPartPayload[] = [],
+  partsDb: PowerPart[] = [],
+): PowerEnergyAnalysis {
+  let flat_normal = 0;
+  let flat_duration = 0;
+  let perc_all = 1;
+  let perc_dur = 1;
+  let dur_all = 1;
+  let hasDurationParts = false;
+  const lines: PowerEnergyLine[] = [];
+
+  partsPayload.forEach((pl) => {
+    const def = resolvePowerPartDef(pl, partsDb);
+    if (!def) return;
+
+    const l1 = getOptionLevel(pl, 1);
+    const l2 = getOptionLevel(pl, 2);
+    const l3 = getOptionLevel(pl, 3);
+    const applyToDuration = pl.applyDuration || false;
+    const energyContribution = partEnergyContribution(def, l1, l2, l3);
+
+    let kind: PowerEnergyLineKind = 'flat';
+    if (def.duration) {
+      kind = 'duration';
+      dur_all *= energyContribution;
+      hasDurationParts = true;
+    } else if (def.percentage) {
+      kind = 'percentage';
+      perc_all *= energyContribution;
+      if (applyToDuration) perc_dur *= energyContribution;
+    } else {
+      flat_normal += energyContribution;
+      if (applyToDuration) flat_duration += energyContribution;
+    }
+
+    lines.push({
+      name: def.name,
+      displayLabel: pl.displayLabel,
+      section: resolvePowerCalcSection(pl, def),
+      kind,
+      contribution: energyContribution,
+      applyDuration: applyToDuration,
+      optionLevels: { op1: l1, op2: l2, op3: l3 },
+    });
+  });
+
+  if (!hasDurationParts) dur_all = 0;
+
+  const energyRaw =
+    flat_normal * perc_all + (dur_all + 1) * flat_duration * perc_dur - flat_duration * perc_dur;
+  const totalEnergy = Math.max(0, Math.ceil(energyRaw));
+
+  return {
+    lines,
+    flatNormal: flat_normal,
+    flatDuration: flat_duration,
+    percAll: perc_all,
+    percDur: perc_dur,
+    durAll: dur_all,
+    hasDurationParts,
+    energyRaw,
+    totalEnergy,
+  };
+}
 
 /**
  * Calculate total energy, TP and list TP sources for a power.
@@ -93,12 +212,7 @@ export function calculatePowerCosts(
   partsPayload: PowerPartPayload[] = [],
   partsDb: PowerPart[] = [],
 ): PowerCostResult {
-  let flat_normal = 0;
-  let flat_duration = 0;
-  let perc_all = 1;
-  let perc_dur = 1;
-  let dur_all = 1;
-  let hasDurationParts = false;
+  const energy = analyzePowerEnergy(partsPayload, partsDb);
   let totalTP = 0;
   let tpRaw = 0;
   const tpSources: string[] = [];
@@ -106,45 +220,12 @@ export function calculatePowerCosts(
   // Each payload entry is an independent cost contribution (e.g. multiple elemental
   // damage rows share a part id but must each add base_en + option energy).
   partsPayload.forEach((pl) => {
-    // Normalize to support both saved-format and UI-format
-    const isUiShape = pl.part !== undefined;
-
-    // Get part definition - prefer ID lookup, fallback to name
-    let def: PowerPart | undefined;
-    if (isUiShape) {
-      def = pl.part;
-    } else {
-      def = findByIdOrName(partsDb, pl);
-    }
+    const def = resolvePowerPartDef(pl, partsDb);
     if (!def) return;
 
     const l1 = getOptionLevel(pl, 1);
     const l2 = getOptionLevel(pl, 2);
     const l3 = getOptionLevel(pl, 3);
-    const applyToDuration = pl.applyDuration || false;
-
-    // Energy contribution (effective energy)
-    const energyContribution =
-      (def.base_en || 0) +
-      (def.op_1_en || 0) * l1 +
-      (def.op_2_en || 0) * l2 +
-      (def.op_3_en || 0) * l3;
-
-    // Categorize based on part flags
-    const isDuration = def.duration;
-    const isPercentage = def.percentage;
-
-    if (isDuration) {
-      // Duration parts multiply into dur_all (used in formula: (dur_all + 1) * flat_duration * perc_dur)
-      dur_all *= energyContribution;
-      hasDurationParts = true;
-    } else if (isPercentage) {
-      perc_all *= energyContribution;
-      if (applyToDuration) perc_dur *= energyContribution;
-    } else {
-      flat_normal += energyContribution;
-      if (applyToDuration) flat_duration += energyContribution;
-    }
 
     const tpLevels = { op_1_lvl: l1, op_2_lvl: l2, op_3_lvl: l3 };
     tpRaw += computePartTrainingPointsRaw(def, tpLevels, 'power');
@@ -159,17 +240,13 @@ export function calculatePowerCosts(
     totalTP += partTP;
   });
 
-  // If no duration parts exist, dur_all should be 0 (not 1)
-  if (!hasDurationParts) dur_all = 0;
-
-  // Unified power energy equation
-  const totalEnergyRaw =
-    flat_normal * perc_all + (dur_all + 1) * flat_duration * perc_dur - flat_duration * perc_dur;
-  // Reduction parts (e.g. No Attack) and negative base_en rows can drive the sum below
-  // zero; Energy cannot be negative (GAME_RULES "Energy Below Zero").
-  const totalEnergy = Math.max(0, Math.ceil(totalEnergyRaw));
-
-  return { totalEnergy, totalTP, tpRaw, tpSources, energyRaw: totalEnergyRaw };
+  return {
+    totalEnergy: energy.totalEnergy,
+    totalTP,
+    tpRaw,
+    tpSources,
+    energyRaw: energy.energyRaw,
+  };
 }
 
 /**
@@ -487,7 +564,7 @@ export function formatPowerPartChip(def: PowerPart, pl: PowerPartPayload): PartC
 
   return {
     text,
-    description: def.description || '',
+    description: appendCanTargetToDescription(def.description || '', defensesFromPart(def)) ?? '',
     finalTP,
     hasTP: finalTP > 0,
     optionLevel: optionLevel > 0 ? optionLevel : undefined,
@@ -670,6 +747,7 @@ interface PowerDocumentFields {
         sustain?: number | undefined;
       }
     | undefined;
+  targetedDefenses?: string[] | undefined;
 }
 
 export type PowerDocument = AllowUndefinedOptionals<PowerDocumentFields>;

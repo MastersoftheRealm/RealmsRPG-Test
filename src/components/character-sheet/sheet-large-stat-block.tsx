@@ -7,7 +7,7 @@ import { tempModifierTintFromDelta, tempModifierValueClass } from '@/lib/charact
 import { TempModifierStepperRow, useTempModifierActive } from './sheet-temp-modifier-controls';
 
 /**
- * Large stat block for Speed / Evasion / DR / Critical Range.
+ * Compact header tiles for Speed / Evasion / DR / Critical Range (TASK-908).
  * Temp Modifier mode: per-stat sliders toggle (ADR-0006 / TASK-782). No pencil / permanent base edit.
  * `value` is the final display number/string (temps already applied by caller).
  * Terminal threshold lives on the Health resource header — not a quick-reference card.
@@ -39,12 +39,12 @@ export function LargeStatBlock({
   return (
     <Card
       className={cn(
-        'flex w-full max-w-[8.75rem] min-w-[6.75rem] flex-col items-center justify-center bg-surface-alt px-2.5 py-2 shadow-none',
-        !showTempControls && 'aspect-square',
+        'flex h-full flex-col items-center justify-center bg-surface-alt px-1.5 py-1.5 shadow-none',
+        showTempControls ? 'w-[7.5rem]' : 'w-[6.25rem]',
       )}
     >
-      <div className="flex w-full min-w-0 flex-wrap items-center justify-center gap-1.5">
-        <span className="min-w-0 text-center text-xs leading-tight font-semibold tracking-wide break-normal text-text-secondary uppercase sm:text-sm">
+      <div className="flex w-full min-w-0 flex-wrap items-center justify-center gap-1">
+        <span className="min-w-0 text-center text-xs leading-tight font-semibold tracking-normal break-normal text-text-secondary uppercase">
           {label}
         </span>
         {canTemp && (
@@ -58,14 +58,14 @@ export function LargeStatBlock({
       </div>
       <span
         className={cn(
-          'mt-1 text-3xl font-bold tabular-nums sm:text-4xl',
+          'mt-0.5 text-2xl font-bold tabular-nums sm:text-3xl',
           tempModifierValueClass(tempDelta) || 'text-text-primary',
         )}
         aria-label={valueAriaLabel}
       >
         {value}
         {valueSuffix ? (
-          <span className="ml-0.5 text-xl font-semibold text-text-secondary">{valueSuffix}</span>
+          <span className="ml-0.5 text-base font-semibold text-text-secondary">{valueSuffix}</span>
         ) : null}
       </span>
 

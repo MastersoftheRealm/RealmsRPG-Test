@@ -608,7 +608,8 @@ if (RUN_SHEET_GEOMETRY) {
         );
         if (carousel instanceof HTMLElement && library instanceof HTMLElement) {
           carousel.scrollLeft = library.offsetLeft;
-          library.scrollTop = 0;
+          const column = library.closest('[data-sheet-mobile-column]');
+          if (column instanceof HTMLElement) column.scrollTop = library.offsetTop;
         }
       });
       await page.waitForTimeout(800);
