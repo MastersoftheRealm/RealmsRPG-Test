@@ -16,6 +16,7 @@ import {
   useUserCreatures,
 } from './use-user-library';
 import { useOfficialLibrary } from './use-official-library';
+import { useAdmin } from './use-admin';
 import {
   useCodexPowerParts,
   useCodexTechniqueParts,
@@ -112,6 +113,8 @@ export function useLoadModalLibrary(
 
   const alwaysFetch = needPowers || needTechniques || needEmpowered || needItems;
   const fetchEnabled = alwaysFetch || showLoadModal || !!options?.prefetch;
+  const { isAdmin } = useAdmin();
+  const includeUnlisted = isAdmin;
 
   const { data: userPowers = [], isLoading: powersLoading } = useUserPowers({
     enabled: needPowers && fetchEnabled,
@@ -135,34 +138,46 @@ export function useLoadModalLibrary(
     data: publicPowers = [],
     isLoading: publicPowersLoading,
     isError: publicPowersError,
-  } = useOfficialLibrary('powers', { enabled: needPowers && fetchEnabled });
+  } = useOfficialLibrary('powers', {
+    enabled: needPowers && fetchEnabled,
+    includeUnlisted,
+  });
   const {
     data: publicTechniques = [],
     isLoading: publicTechniquesLoading,
     isError: publicTechniquesError,
-  } = useOfficialLibrary('techniques', { enabled: needTechniques && fetchEnabled });
+  } = useOfficialLibrary('techniques', {
+    enabled: needTechniques && fetchEnabled,
+    includeUnlisted,
+  });
   const {
     data: publicEmpoweredTechniques = [],
     isLoading: publicEmpoweredTechniquesLoading,
     isError: publicEmpoweredTechniquesError,
-  } = useOfficialLibrary('empowered-techniques', { enabled: needEmpowered && fetchEnabled });
+  } = useOfficialLibrary('empowered-techniques', {
+    enabled: needEmpowered && fetchEnabled,
+    includeUnlisted,
+  });
   const {
     data: publicItems = [],
     isLoading: publicItemsLoading,
     isError: publicItemsError,
-  } = useOfficialLibrary('items', { enabled: needItems && fetchEnabled });
+  } = useOfficialLibrary('items', { enabled: needItems && fetchEnabled, includeUnlisted });
   const {
     data: publicSpecies = [],
     isLoading: publicSpeciesLoading,
     isError: publicSpeciesError,
-  } = useOfficialLibrary('species', { enabled: needSpecies && fetchEnabled });
+  } = useOfficialLibrary('species', { enabled: needSpecies && fetchEnabled, includeUnlisted });
   const {
     data: publicCreatures = [],
     isLoading: publicCreaturesLoading,
     isError: publicCreaturesError,
-  } = useOfficialLibrary('creatures', { enabled: needCreatures && fetchEnabled });
+  } = useOfficialLibrary('creatures', { enabled: needCreatures && fetchEnabled, includeUnlisted });
 
-  const { data: codexSpecies = [] } = useCodexSpecies({ enabled: needSpecies && fetchEnabled });
+  const { data: codexSpecies = [] } = useCodexSpecies({
+    enabled: needSpecies && fetchEnabled,
+    includeUnlisted,
+  });
   const { data: powerPartsDb = [] } = useCodexPowerParts({
     enabled: (needPowers || needEmpowered) && fetchEnabled,
   });

@@ -480,12 +480,31 @@ describe('columnarViewSelect', () => {
   });
 });
 
-describe('columnarViewSelect', () => {
-  it('lists identity, payload, and scalars without user_id', () => {
-    const columns = columnarViewSelect('powers').split(', ');
-    expect(columns).toContain('id');
-    expect(columns).toContain('payload');
-    expect(columns).toContain('name');
-    expect(columns).not.toContain('user_id');
+describe('catalog listing (ADR-0027)', () => {
+  it('keeps catalogListing off user payloads', () => {
+    const { scalars, payload } = bodyToColumnar('powers', {
+      name: 'Acid Spit',
+      catalogListing: 'unlisted',
+    });
+    expect(payload.catalogListing).toBeUndefined();
+    expect(payload.catalog_listing).toBeUndefined();
+    expect(scalars.catalogListing).toBeUndefined();
+    expect(scalars.catalog_listing).toBeUndefined();
+  });
+
+  it('stamps catalogListing on official reads only', () => {
+    const official = rowToItem(
+      'powers',
+      { id: 'p1', name: 'Acid Spit', catalog_listing: 'unlisted', payload: {} },
+      'official',
+    );
+    const user = rowToItem(
+      'powers',
+      { id: 'p1', name: 'Acid Spit', catalog_listing: 'unlisted', payload: {} },
+      'user',
+    );
+    expect(official.catalogListing).toBe('unlisted');
+    expect(official._source).toBe('official');
+    expect(user.catalogListing).toBeUndefined();
   });
 });

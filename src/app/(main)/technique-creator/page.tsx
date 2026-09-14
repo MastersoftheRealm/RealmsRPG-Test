@@ -40,6 +40,10 @@ import {
 } from './technique-creator-bootstrap';
 import { TechniqueCreatorEditor } from './technique-creator-editor';
 import { useTechniqueCreatorWorkspace } from './use-technique-creator-workspace';
+import {
+  findLoadedLibraryItem,
+  resolveCreatorSaveTargetFromItem,
+} from '@/lib/library/catalog-listing';
 
 function TechniqueCreatorContent() {
   const { user } = useAuthStore();
@@ -124,6 +128,9 @@ function TechniqueCreatorWorkspace({
     initialFormState,
     editTechniqueId,
     techniqueParts,
+    initialSaveTarget: resolveCreatorSaveTargetFromItem(
+      findLoadedLibraryItem(load.rawItems, editTechniqueId),
+    ),
   });
 
   return (
@@ -133,7 +140,7 @@ function TechniqueCreatorWorkspace({
       description="Design custom martial techniques by combining technique parts. Each part contributes to the total energy cost and training point requirements."
       user={user}
       auth={{ returnPath: '/technique-creator', contentType: 'technique' }}
-      showPublicPrivate={isAdmin}
+      showSaveTarget={isAdmin}
       saveTarget={ws.save.saveTarget}
       onSaveTargetChange={ws.save.setSaveTarget}
       onSave={ws.save.handleSave}

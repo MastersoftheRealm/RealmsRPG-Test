@@ -25,6 +25,7 @@ import {
 } from '@/lib/library/official-creature-list';
 import { resolveListRowThumbnail } from '@/lib/list-row-image';
 import { formatCreatureLevel } from '@/lib/game';
+import type { CatalogListing } from '@/lib/library/catalog-listing';
 
 export type { OfficialCreatureRow };
 
@@ -45,6 +46,7 @@ export interface OfficialCreatureListProps {
   onAddRequest?: ((row: OfficialCreatureRow) => void) | undefined;
   onEdit?: ((id: string) => void) | undefined;
   onDelete?: ((id: string, name: string) => void) | undefined;
+  onCatalogListingChange?: ((id: string, listing: CatalogListing) => void) | undefined;
 }
 
 export function OfficialCreatureList({
@@ -64,6 +66,7 @@ export function OfficialCreatureList({
   onAddRequest,
   onEdit,
   onDelete,
+  onCatalogListingChange,
 }: OfficialCreatureListProps) {
   if (variant === 'library') {
     return (
@@ -138,6 +141,7 @@ export function OfficialCreatureList({
       onAddRequest={onAddRequest}
       onEdit={onEdit}
       onDelete={onDelete}
+      onCatalogListingChange={onCatalogListingChange}
     />
   );
 }

@@ -143,6 +143,7 @@ export {
   useOfficialLibrary,
   useOfficialLibraryCounts,
   useAddOfficialToLibrary,
+  usePatchOfficialCatalogListing,
   officialLibraryKeys,
 } from './use-official-library';
 

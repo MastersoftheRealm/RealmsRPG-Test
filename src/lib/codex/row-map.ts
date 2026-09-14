@@ -8,6 +8,7 @@
 
 import { normalizeFeatAbilities } from '@/lib/codex/feat-ability';
 import { mapCodexBaseSkillToId } from '@/lib/game/character-legality';
+import { parseCatalogListing } from '@/lib/library/catalog-listing';
 import type {
   CodexCreatureFeat,
   CodexEquipmentItem,
@@ -153,6 +154,7 @@ export function mapCodexSpecies(r: CodexDbRow): CodexSpecies {
     is_starter: r.is_starter === true,
     image_url: optionalImage(r.image_url),
     image_id: optionalImage(r.image_id),
+    catalog_listing: parseCatalogListing(r.catalog_listing),
   };
 }
 

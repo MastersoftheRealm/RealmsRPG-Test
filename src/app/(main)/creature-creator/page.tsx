@@ -122,7 +122,7 @@ function CreatureCreatorContent() {
       description="Design custom creatures, monsters, and NPCs. Configure abilities, defenses, skills, and combat options."
       user={user}
       auth={{ returnPath: '/creature-creator', contentType: 'creature' }}
-      showPublicPrivate={isAdmin}
+      showSaveTarget={isAdmin}
       saveTarget={save.saveTarget}
       onSaveTargetChange={save.setSaveTarget}
       onSave={handleSave}

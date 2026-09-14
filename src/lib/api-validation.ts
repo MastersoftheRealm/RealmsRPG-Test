@@ -504,7 +504,16 @@ export const campaignRollCreateSchema = z.object({
 export const publicItemSchema = withSafeJsonBlob({
   id: z.string().optional(),
   name: z.string().min(1, 'Name is required').max(200).optional(),
+  catalogListing: z.enum(['listed', 'unlisted']).optional(),
 });
+
+/** PATCH /api/official/[type] — listing-only class change (ADR-0027). */
+export const officialCatalogListingPatchSchema = z
+  .object({
+    id: z.string().min(1),
+    catalogListing: z.enum(['listed', 'unlisted']),
+  })
+  .strict();
 
 // =============================================================================
 // Admin API Schemas

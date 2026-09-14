@@ -21,6 +21,7 @@ import {
 import { CreatorLayout } from './CreatorLayout';
 import { CreatorSaveToolbar } from './CreatorSaveToolbar';
 import { LoadFromLibraryModal, type LoadFromLibraryModalProps } from './LoadFromLibraryModal';
+import type { CreatorSaveTarget } from '@/lib/library/catalog-listing';
 
 export type CreatorPageAuthConfig = {
   /** Path returned to after login (e.g. "/power-creator") */
@@ -70,10 +71,10 @@ export type CreatorPageShellProps = {
 
   user: unknown;
   auth: CreatorPageAuthConfig;
-  showPublicPrivate?: boolean | undefined;
+  showSaveTarget?: boolean | undefined;
 
-  saveTarget: 'private' | 'public';
-  onSaveTargetChange: (target: 'private' | 'public') => void;
+  saveTarget: CreatorSaveTarget;
+  onSaveTargetChange: (target: CreatorSaveTarget) => void;
   saving: boolean;
   saveDisabled?: boolean | undefined;
   /** Unauthenticated save handler — shell gates login */
@@ -108,7 +109,7 @@ export function CreatorPageShell({
   headerClassName,
   user,
   auth,
-  showPublicPrivate = false,
+  showSaveTarget = false,
   saveTarget,
   onSaveTargetChange,
   saving,
@@ -191,7 +192,7 @@ export function CreatorPageShell({
           onReset={onReset}
           saving={saving}
           saveDisabled={saveDisabled || !!loading?.isLoading}
-          showPublicPrivate={showPublicPrivate}
+          showSaveTarget={showSaveTarget}
           user={user}
           requireAuthToLoad={requireAuthToLoad}
           loadHelp={toolbarHelp?.load}

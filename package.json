@@ -5,10 +5,11 @@
   "engines": {
     "node": "24.x"
   },
-  "//overrides": "Transitive pins added by `chore: apply npm audit fixes` (133aa520). postcss 8.5.25 hoists one copy across @tailwindcss/postcss, next and vitest's vite; sharp 0.35.3 pins next's optional image-optimization dep; fast-uri 3.1.7 patches GHSA advisories under ajv-formats→ajv (3.0.0–3.1.5). `npm audit` is clean WITH these pins in place, so neither advisory can be re-confirmed from here: to retire them, delete this block, run `npm install`, then `npm audit` — if it stays at 0 vulnerabilities the pins were leftovers and should stay deleted.",
+  "//overrides": "Transitive pins for `npm audit --audit-level=high` (CI verify). postcss 8.5.25 hoists one copy across @tailwindcss/postcss, next and vitest's vite; sharp 0.35.4 patches GHSA-rgj7-g3m4-5g8c (libheif); js-yaml 4.3.2 patches GHSA-2883-xcg3-v3hh; fast-uri 3.1.7 patches GHSA advisories under ajv-formats→ajv. Direct next 16.3.5 patches GHSA-p293-qw3h-jr36 / GHSA-2xp9-vwfh-vxw4. To retire a pin: delete it, npm install, npm audit — keep only if the advisory returns.",
   "overrides": {
     "postcss": "8.5.25",
-    "sharp": "0.35.3",
+    "sharp": "0.35.4",
+    "js-yaml": "4.3.2",
     "fast-uri": "3.1.7"
   },
   "scripts": {
@@ -67,7 +68,7 @@
     "@marsidev/react-turnstile": "^1.6.0",
     "@mdx-js/loader": "^3.1.1",
     "@mdx-js/react": "^3.1.1",
-    "@next/mdx": "16.2.12",
+    "@next/mdx": "16.3.5",
     "@radix-ui/react-slot": "^1.2.4",
     "@sentry/nextjs": "^10.70.0",
     "@supabase/ssr": "^0.8.0",
@@ -80,7 +81,7 @@
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "lucide-react": "^0.562.0",
-    "next": "16.2.12",
+    "next": "16.3.5",
     "next-themes": "^0.4.6",
     "react": "19.2.3",
     "react-dom": "19.2.3",
@@ -102,7 +103,7 @@
     "cross-env": "^10.1.0",
     "dotenv": "^17.2.4",
     "eslint": "^9",
-    "eslint-config-next": "16.2.12",
+    "eslint-config-next": "16.3.5",
     "eslint-plugin-jsx-a11y": "^6.10.2",
     "husky": "^9.1.7",
     "lint-staged": "^16.4.0",
@@ -110,7 +111,7 @@
     "prettier-plugin-tailwindcss": "^0.7.2",
     "tailwindcss": "^4",
     "typescript": "^5",
-    "vitest": "^4.1.6"
+    "vitest": "^4.1.11"
   },
   "lint-staged": {
     "*.{js,jsx,mjs,cjs,ts,tsx}": [

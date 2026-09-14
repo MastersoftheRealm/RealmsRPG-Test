@@ -9,6 +9,7 @@
 
 import { useState, useMemo, useCallback, useEffect } from 'react';
 import { useCreatorSave, type PowerPart } from '@/hooks';
+import type { CreatorSaveTarget } from '@/lib/library/catalog-listing';
 import type { AreaConfig, DurationConfig } from '@/lib/calculators';
 import { dedupeSavedParts } from '@/lib/game/dedupe-saved-parts';
 import type { AttackMode } from '@/lib/attack-mode';
@@ -28,12 +29,14 @@ type UsePowerCreatorWorkspaceArgs = {
   initialFormState: PowerCreatorFormState;
   editPowerId: string | null;
   powerParts: PowerPart[];
+  initialSaveTarget?: CreatorSaveTarget | undefined;
 };
 
 export function usePowerCreatorWorkspace({
   initialFormState,
   editPowerId,
   powerParts,
+  initialSaveTarget,
 }: UsePowerCreatorWorkspaceArgs) {
   const [name, setName] = useState(initialFormState.name);
   const [description, setDescription] = useState(initialFormState.description);
@@ -245,6 +248,7 @@ export function usePowerCreatorWorkspace({
         : `Are you sure you wish to publish this power "${n}" to the Realms Library? All users will be able to see and use it.`,
     successMessage: 'Power saved successfully!',
     publicSuccessMessage: 'Power saved to Realms Library!',
+    initialSaveTarget,
     onSaveSuccess: () => {
       setName('');
       setDescription('');
@@ -318,6 +322,7 @@ export function usePowerCreatorWorkspace({
   const handleLoadPower = useCallback(
     (power: PowerLibraryRecord) => {
       applyFormState(powerLibraryRecordToFormState(power, powerParts));
+      save.applyLoadedLibraryItem(power);
       save.setSaveMessage({ type: 'success', text: 'Power loaded successfully!' });
       setTimeout(() => save.setSaveMessage(null), 2000);
     },

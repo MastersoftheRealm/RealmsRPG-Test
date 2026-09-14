@@ -3,23 +3,24 @@
 /**
  * CreatorSaveToolbar — Unified save/load/reset actions for standalone creators
  * ==========================================================================
- * Private/Public toggle (admin), Load, Reset, Save. Used by CreatorPageShell.
+ * My / Public / Admin library save target (admin), Load, Reset, Save. Used by CreatorPageShell.
  */
 
 import type { ReactNode } from 'react';
 import { FolderOpen } from 'lucide-react';
 import { Button } from '@/components/ui';
 import { SegmentedControl } from '@/components/patterns';
+import { CREATOR_SAVE_TARGET_OPTIONS, type CreatorSaveTarget } from '@/lib/library/catalog-listing';
 
 export interface CreatorSaveToolbarProps {
-  saveTarget: 'private' | 'public';
-  onSaveTargetChange: (target: 'private' | 'public') => void;
+  saveTarget: CreatorSaveTarget;
+  onSaveTargetChange: (target: CreatorSaveTarget) => void;
   onSave: () => void | Promise<void>;
   onLoad: () => void;
   onReset: () => void;
   saving: boolean;
   saveDisabled?: boolean | undefined;
-  showPublicPrivate?: boolean | undefined;
+  showSaveTarget?: boolean | undefined;
   user: unknown;
   /**
    * When false, Load is usable while logged out (species creator).
@@ -41,7 +42,7 @@ export function CreatorSaveToolbar({
   onReset,
   saving,
   saveDisabled = false,
-  showPublicPrivate = false,
+  showSaveTarget = false,
   user,
   requireAuthToLoad = true,
   loadHelp,
@@ -52,15 +53,12 @@ export function CreatorSaveToolbar({
 
   return (
     <div className="flex flex-wrap items-center gap-2">
-      {showPublicPrivate && (
+      {showSaveTarget && (
         <SegmentedControl
           value={saveTarget}
           onChange={onSaveTargetChange}
-          options={[
-            { value: 'private', label: 'My library' },
-            { value: 'public', label: 'Public library' },
-          ]}
-          aria-label="Save to my library or Realms Library"
+          options={CREATOR_SAVE_TARGET_OPTIONS}
+          aria-label="Save to my library, public library, or admin library"
         />
       )}
       <span className="inline-flex items-center gap-1">

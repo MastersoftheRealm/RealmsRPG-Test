@@ -740,6 +740,7 @@ export type Database = {
       }
       codex_species: {
         Row: {
+          catalog_listing: string
           adulthood_lifespan: string | null
           ancestry_traits: string | null
           ave_hgt_cm: number | null
@@ -760,6 +761,7 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          catalog_listing?: string
           adulthood_lifespan?: string | null
           ancestry_traits?: string | null
           ave_hgt_cm?: number | null
@@ -780,6 +782,7 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          catalog_listing?: string
           adulthood_lifespan?: string | null
           ancestry_traits?: string | null
           ave_hgt_cm?: number | null
@@ -939,6 +942,7 @@ export type Database = {
       }
       official_creatures: {
         Row: {
+          catalog_listing: string
           created_at: string | null
           description: string | null
           energy_points: number | null
@@ -954,6 +958,7 @@ export type Database = {
           updated_at: string | null
         }
         Insert: {
+          catalog_listing?: string
           created_at?: string | null
           description?: string | null
           energy_points?: number | null
@@ -969,6 +974,7 @@ export type Database = {
           updated_at?: string | null
         }
         Update: {
+          catalog_listing?: string
           created_at?: string | null
           description?: string | null
           energy_points?: number | null
@@ -995,6 +1001,7 @@ export type Database = {
       }
       official_empowered_techniques: {
         Row: {
+          catalog_listing: string
           action_type: string | null
           created_at: string | null
           damage: Json
@@ -1010,6 +1017,7 @@ export type Database = {
           updated_at: string | null
         }
         Insert: {
+          catalog_listing?: string
           action_type?: string | null
           created_at?: string | null
           damage?: Json
@@ -1025,6 +1033,7 @@ export type Database = {
           updated_at?: string | null
         }
         Update: {
+          catalog_listing?: string
           action_type?: string | null
           created_at?: string | null
           damage?: Json
@@ -1051,6 +1060,7 @@ export type Database = {
       }
       official_enhanced_items: {
         Row: {
+          catalog_listing: string
           base_item_description: string | null
           base_item_id: string | null
           base_item_name: string
@@ -1070,6 +1080,7 @@ export type Database = {
           uses_type: string
         }
         Insert: {
+          catalog_listing?: string
           base_item_description?: string | null
           base_item_id?: string | null
           base_item_name: string
@@ -1089,6 +1100,7 @@ export type Database = {
           uses_type: string
         }
         Update: {
+          catalog_listing?: string
           base_item_description?: string | null
           base_item_id?: string | null
           base_item_name?: string
@@ -1111,6 +1123,7 @@ export type Database = {
       }
       official_items: {
         Row: {
+          catalog_listing: string
           ability_requirement: Json | null
           agility_reduction: number | null
           armor_value: number | null
@@ -1135,6 +1148,7 @@ export type Database = {
           updated_at: string | null
         }
         Insert: {
+          catalog_listing?: string
           ability_requirement?: Json | null
           agility_reduction?: number | null
           armor_value?: number | null
@@ -1159,6 +1173,7 @@ export type Database = {
           updated_at?: string | null
         }
         Update: {
+          catalog_listing?: string
           ability_requirement?: Json | null
           agility_reduction?: number | null
           armor_value?: number | null
@@ -1194,6 +1209,7 @@ export type Database = {
       }
       official_powers: {
         Row: {
+          catalog_listing: string
           action_type: string | null
           area_level: number | null
           area_type: string | null
@@ -1213,6 +1229,7 @@ export type Database = {
           updated_at: string | null
         }
         Insert: {
+          catalog_listing?: string
           action_type?: string | null
           area_level?: number | null
           area_type?: string | null
@@ -1232,6 +1249,7 @@ export type Database = {
           updated_at?: string | null
         }
         Update: {
+          catalog_listing?: string
           action_type?: string | null
           area_level?: number | null
           area_type?: string | null
@@ -1262,6 +1280,7 @@ export type Database = {
       }
       official_techniques: {
         Row: {
+          catalog_listing: string
           action_type: string | null
           created_at: string | null
           damage: Json
@@ -1277,6 +1296,7 @@ export type Database = {
           updated_at: string | null
         }
         Insert: {
+          catalog_listing?: string
           action_type?: string | null
           created_at?: string | null
           damage?: Json
@@ -1292,6 +1312,7 @@ export type Database = {
           updated_at?: string | null
         }
         Update: {
+          catalog_listing?: string
           action_type?: string | null
           created_at?: string | null
           damage?: Json

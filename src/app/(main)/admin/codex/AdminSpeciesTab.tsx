@@ -6,12 +6,14 @@ import {
   CodexBrowseListShell,
   ErrorDisplay as ErrorState,
   GridListRow,
+  SegmentedControl,
   type ChipData,
 } from '@/components/patterns';
 import {
   useSpecies,
   useCodexSkills,
   useTraits,
+  usePatchOfficialCatalogListing,
   type Species,
   type Trait,
   type Skill,
@@ -19,6 +21,12 @@ import {
 import { formatListCellLabel } from '@/lib/utils';
 import { resolveSpeciesListRowThumbnail } from '@/lib/list-row-image';
 import { speciesSkillToChipData } from '@/lib/chip/species-skill-chips';
+import {
+  CATALOG_LISTING_SCOPE_OPTIONS,
+  catalogListingClassOptions,
+  parseCatalogListing,
+  type CatalogListingScope,
+} from '@/lib/library/catalog-listing';
 import { useSort } from '@/hooks/use-sort';
 import { COPY_NAME_SUFFIX } from './admin-codex-copy-suffix';
 import {
@@ -32,9 +40,11 @@ import { useAdminCodexEntity } from './use-admin-codex-entity';
 import { AdminCodexRowActions } from './admin-codex-row-actions';
 
 export function AdminSpeciesTab() {
-  const { data: species, isLoading, error, refetch } = useSpecies();
+  const { data: species, isLoading, error, refetch } = useSpecies({ includeUnlisted: true });
   const { data: skills = [] } = useCodexSkills();
   const { data: traits = [] } = useTraits();
+  const patchListing = usePatchOfficialCatalogListing('species');
+  const [listingScope, setListingScope] = useState<CatalogListingScope>('all');
   const {
     modalOpen,
     editing,
@@ -86,6 +96,9 @@ export function AdminSpeciesTab() {
       if (typeFilters.length > 0 && !typeFilters.includes(s.type)) return false;
       if (sizeFilters.length > 0 && !s.sizes?.some((sz: string) => sizeFilters.includes(sz)))
         return false;
+      if (listingScope !== 'all' && parseCatalogListing(s.catalog_listing) !== listingScope) {
+        return false;
+      }
       return true;
     }),
   );
@@ -129,23 +142,32 @@ export function AdminSpeciesTab() {
         onSearchChange={setSearch}
         searchPlaceholder="Search species..."
         filters={
-          <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-            <ChipSelect
-              label="Type"
-              placeholder="Choose type"
-              options={filterOptions.types.map((t) => ({ value: t, label: t }))}
-              selectedValues={typeFilters}
-              onSelect={(v) => setTypeFilters((prev) => [...prev, v])}
-              onRemove={(v) => setTypeFilters((prev) => prev.filter((t) => t !== v))}
+          <div className="flex flex-col gap-4">
+            <SegmentedControl
+              size="compact"
+              value={listingScope}
+              onChange={setListingScope}
+              options={CATALOG_LISTING_SCOPE_OPTIONS}
+              aria-label="Filter by library classification"
             />
-            <ChipSelect
-              label="Size"
-              placeholder="Choose size"
-              options={filterOptions.sizes.map((s) => ({ value: s, label: s }))}
-              selectedValues={sizeFilters}
-              onSelect={(v) => setSizeFilters((prev) => [...prev, v])}
-              onRemove={(v) => setSizeFilters((prev) => prev.filter((s) => s !== v))}
-            />
+            <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+              <ChipSelect
+                label="Type"
+                placeholder="Choose type"
+                options={filterOptions.types.map((t) => ({ value: t, label: t }))}
+                selectedValues={typeFilters}
+                onSelect={(v) => setTypeFilters((prev) => [...prev, v])}
+                onRemove={(v) => setTypeFilters((prev) => prev.filter((t) => t !== v))}
+              />
+              <ChipSelect
+                label="Size"
+                placeholder="Choose size"
+                options={filterOptions.sizes.map((s) => ({ value: s, label: s }))}
+                selectedValues={sizeFilters}
+                onSelect={(v) => setSizeFilters((prev) => [...prev, v])}
+                onRemove={(v) => setSizeFilters((prev) => prev.filter((s) => s !== v))}
+              />
+            </div>
           </div>
         }
         headerColumns={[
@@ -220,12 +242,25 @@ export function AdminSpeciesTab() {
               ]}
               detailSections={detailSections.length > 0 ? detailSections : undefined}
               rightSlot={
-                <AdminCodexRowActions
-                  entity={s}
-                  onEdit={openEdit}
-                  onDuplicate={openDuplicate}
-                  onDelete={askDelete}
-                />
+                <div className="flex items-center gap-2">
+                  <div onClick={(e) => e.stopPropagation()} onKeyDown={(e) => e.stopPropagation()}>
+                    <SegmentedControl
+                      size="compact"
+                      value={parseCatalogListing(s.catalog_listing)}
+                      onChange={(listing) => {
+                        void patchListing(s.id, listing);
+                      }}
+                      options={catalogListingClassOptions(true)}
+                      aria-label="Library classification"
+                    />
+                  </div>
+                  <AdminCodexRowActions
+                    entity={s}
+                    onEdit={openEdit}
+                    onDuplicate={openDuplicate}
+                    onDelete={askDelete}
+                  />
+                </div>
               }
             />
           );

@@ -9,6 +9,7 @@
 
 import { useState, useCallback, useEffect } from 'react';
 import { useCreatorSave, type ItemProperty } from '@/hooks';
+import type { CreatorSaveTarget } from '@/lib/library/catalog-listing';
 import {
   weaponRangeLegacyLevel,
   weaponRangeSpaceLadder,
@@ -39,6 +40,7 @@ type UseItemCreatorWorkspaceArgs = {
   editItemId: string | null;
   itemProperties: ItemProperty[];
   closeLoadModal: () => void;
+  initialSaveTarget?: CreatorSaveTarget | undefined;
 };
 
 export function useItemCreatorWorkspace({
@@ -46,6 +48,7 @@ export function useItemCreatorWorkspace({
   editItemId,
   itemProperties,
   closeLoadModal,
+  initialSaveTarget,
 }: UseItemCreatorWorkspaceArgs) {
   const [name, setName] = useState(initialFormState.name);
   const [description, setDescription] = useState(initialFormState.description);
@@ -296,6 +299,7 @@ export function useItemCreatorWorkspace({
         : `Are you sure you wish to publish this ${armamentType.toLowerCase()} "${n}" to the Realms Library? All users will be able to see and use it.`,
     successMessage: 'Item saved successfully!',
     publicSuccessMessage: 'Item saved to Realms Library!',
+    initialSaveTarget,
     onSaveSuccess: () => {
       setName('');
       setDescription('');
@@ -353,6 +357,7 @@ export function useItemCreatorWorkspace({
   const handleLoadItem = useCallback(
     (item: ItemLibraryRecord) => {
       applyFormState(itemLibraryRecordToFormState(item, itemProperties));
+      save.applyLoadedLibraryItem(item);
       closeLoadModal();
       save.setSaveMessage({ type: 'success', text: 'Armament loaded successfully!' });
       setTimeout(() => save.setSaveMessage(null), 2000);

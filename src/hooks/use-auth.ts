@@ -214,7 +214,9 @@ export function useAuth() {
       await supabase.auth.signOut();
       setUser(null);
       if (typeof window !== 'undefined') {
-        window.location.href = '/login';
+        // Hard navigation so auth cookies + client stores reset. Absolute URL
+        // satisfies @next/next/no-location-assign-relative-destination.
+        window.location.assign(new URL('/login', window.location.origin).href);
       }
     } catch (err) {
       const message = err instanceof Error ? err.message : 'Failed to sign out';

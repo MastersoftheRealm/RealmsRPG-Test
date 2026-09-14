@@ -8744,6 +8744,88 @@ Grouped Advanced Calculations on technique, empowered technique, and item creato
 
 ---
 
+## DEV-V-060 — Official catalog listing (Public vs Admin library) (TASK-927)
+
+`catalog_listing` on official created items + Codex species (ADR-0027). Listed = player Public library catalogs. Unlisted = Admin library (hidden from `/library` and `/codex` lists; still resolves on published creatures/characters).
+
+#### DEV-V-060-T001 — Admin three-way creator save
+
+| Field | Value |
+|-------|-------|
+| **Suite** | DEV-V-060 — Official catalog listing |
+| **Related task** | TASK-927 |
+| **Where** | `/power-creator` (spot-check `/item-creator`) |
+| **Needs** | Signed-in **admin** |
+
+**Steps**
+1. Open `/power-creator`. Confirm save destination is **My library | Public library | Admin library**.
+2. Name a unique power. Save to **Admin library**. Confirm toast/copy is Admin library (not “Realms Library / all users”).
+3. Reload `/power-creator`, Load from library. Confirm the power appears for admin. Open `?edit=` of that id and confirm the toolbar stays on **Admin library**.
+
+**Expected**
+- Non-admin still sees only My library (no Public/Admin toggle). Admin can publish listed or unlisted without a third table.
+
+**Report** — `[ ] PASS` · `[ ] FAIL` · `[ ] SKIP` — Notes:
+
+#### DEV-V-060-T002 — Player catalogs hide unlisted
+
+| Field | Value |
+|-------|-------|
+| **Suite** | DEV-V-060 |
+| **Related task** | TASK-927 |
+| **Where** | `/library`, `/codex` Species |
+| **Needs** | Admin-saved unlisted power (T001) + unlisted species optional |
+
+**Steps**
+1. Signed in as a **non-admin** (or admin but on player `/library`, not Official Library Editor): Realms tab does **not** list the Admin-library power. Tab counts do not include it.
+2. `/codex` Species tab does not list an unlisted species. Guided add-X / USM official lists likewise omit it.
+3. As admin, `/admin/public-library` Powers still lists it (All or Admin library filter).
+
+**Expected**
+- `/library` and public `/codex` stay listed-only even when the viewer is admin. Unlisted is opt-in via editor/Load (`includeUnlisted`), not auto-included.
+
+**Report** — `[ ] PASS` · `[ ] FAIL` · `[ ] SKIP` — Notes:
+
+#### DEV-V-060-T003 — Published parent still shows unlisted attachments
+
+| Field | Value |
+|-------|-------|
+| **Suite** | DEV-V-060 |
+| **Related task** | TASK-927 |
+| **Where** | `/creature-creator`, `/library` Creatures, creature/character view |
+| **Needs** | Admin; unlisted item or power from T001 |
+
+**Steps**
+1. Attach the unlisted power/item to an official **listed** creature. Save the creature to Public library.
+2. Open that creature on `/library` (non-admin). Confirm the attached unlisted row still displays on the stat block (snapshot / resolved by id).
+3. Optional: character that references the unlisted id still shows it on a published/shared sheet.
+
+**Expected**
+- Unlisted is not secret. Player catalogs omit the standalone row; published parents still resolve it.
+
+**Report** — `[ ] PASS` · `[ ] FAIL` · `[ ] SKIP` — Notes:
+
+#### DEV-V-060-T004 — Admin list Public ↔ Admin toggle
+
+| Field | Value |
+|-------|-------|
+| **Suite** | DEV-V-060 |
+| **Related task** | TASK-927 |
+| **Where** | `/admin/public-library`, `/admin/codex` Species |
+| **Needs** | Admin |
+
+**Steps**
+1. Official Library Editor: filter All / Public library / Admin library. Compact **Public | Admin** on a row flips listing without opening the creator.
+2. After flipping to Public, the row appears on player `/library`. Flip back to Admin; it leaves the player catalog.
+3. Codex Species: same listing toggle + filter; public `/codex` Species matches listed-only.
+
+**Expected**
+- PATCH listing does not require a full overwrite. Spreadsheet/species modal save also persists `catalog_listing`.
+
+**Report** — `[ ] PASS` · `[ ] FAIL` · `[ ] SKIP` — Notes:
+
+---
+
 ## DEV-V-007 — Auth UI (TASK-361, TASK-899)
 
 #### DEV-V-007-T006 — Register Turnstile + server-side CAPTCHA enforcement (TASK-899)

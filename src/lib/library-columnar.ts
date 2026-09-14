@@ -12,6 +12,7 @@ import {
   type AttackMode,
 } from '@/lib/attack-mode';
 import { dedupeSavedParts } from '@/lib/game/dedupe-saved-parts';
+import { parseCatalogListing } from '@/lib/library/catalog-listing';
 
 export const COLUMNAR_LIBRARY_TYPES = [
   'powers',
@@ -238,6 +239,9 @@ export function rowToItem(
   if (row.name !== undefined && row.name !== null) base.name = row.name;
   if (row.description !== undefined && row.description !== null) base.description = row.description;
   if (source) base._source = source;
+  if (source === 'official') {
+    base.catalogListing = parseCatalogListing(v(row, 'catalogListing', 'catalog_listing'));
+  }
   if (type === 'powers') {
     assignIfPresent('actionType', v(row, 'actionType', 'action_type'));
     assignIfPresent('isReaction', v(row, 'isReaction', 'is_reaction'));
@@ -458,6 +462,9 @@ export function bodyToColumnar(
     'imageUrl',
     'image_id',
     'image_url',
+    // Official catalog class is a real column (ADR-0027); never payload. User_* have no column.
+    'catalogListing',
+    'catalog_listing',
     ...(type === 'powers' ? ['range', 'duration', 'area', 'damage'] : []),
     ...(type === 'techniques' || type === 'empowered-techniques'
       ? [
@@ -640,6 +647,7 @@ export function bodyToColumnarSpecies(body: Record<string, unknown>): {
     if (k === 'id' || k === 'docId' || k === '_source') continue;
     // Image refs are columnar only (camel or snake) — never duplicate into payload JSONB.
     if (k === 'imageId' || k === 'imageUrl' || k === 'image_id' || k === 'image_url') continue;
+    if (k === 'catalogListing' || k === 'catalog_listing') continue;
     if (scalarKeys.has(k)) {
       if (
         SPECIES_ARRAY_KEYS.includes(k as (typeof SPECIES_ARRAY_KEYS)[number]) &&

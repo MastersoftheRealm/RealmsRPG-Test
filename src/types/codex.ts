@@ -161,6 +161,7 @@ interface CodexSpeciesFields extends CodexRowVersion {
   is_starter?: boolean | undefined;
   image_id?: string | null | undefined;
   image_url?: string | null | undefined;
+  catalog_listing?: 'listed' | 'unlisted' | undefined;
 }
 
 export type CodexSpecies = AllowUndefinedOptionals<CodexSpeciesFields>;

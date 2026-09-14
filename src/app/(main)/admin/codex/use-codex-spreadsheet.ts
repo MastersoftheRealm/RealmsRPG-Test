@@ -68,7 +68,7 @@ function displayName(row: CodexSpreadsheetRow): string {
 
 export function useCodexSpreadsheet({ activeTab }: UseCodexSpreadsheetArgs) {
   const { showToast } = useToast();
-  const { data: codex, isLoading, error, refetch } = useCodexFull();
+  const { data: codex, isLoading, error, refetch } = useCodexFull({ includeUnlisted: true });
   const queryClient = useQueryClient();
   const [rows, setRows] = useState<CodexSpreadsheetRow[]>([]);
   const [dirty, setDirty] = useState<Set<string>>(new Set());

@@ -4,6 +4,10 @@ import { useCallback, useState, type Dispatch, type SetStateAction } from 'react
 import type { SelectableItem } from '@/components/patterns';
 import { useCreatorSave } from '@/hooks';
 import {
+  findLoadedLibraryItem,
+  resolveCreatorSaveTargetFromItem,
+} from '@/lib/library/catalog-listing';
+import {
   appendCreatureInventoryItems,
   removeCreatureInventoryItem,
 } from '@/lib/game/creature-inventory';
@@ -21,7 +25,9 @@ type UseCreatureCreatorWorkspacePersistenceArgs = {
   stats: CreatureSaveStats;
   load: {
     closeLoadModal: () => void;
+    rawItems: unknown[];
   };
+  editCreatureId: string | null;
 };
 
 export function useCreatureCreatorWorkspacePersistence({
@@ -29,6 +35,7 @@ export function useCreatureCreatorWorkspacePersistence({
   setCreature,
   stats,
   load,
+  editCreatureId,
 }: UseCreatureCreatorWorkspacePersistenceArgs) {
   const getPayload = useCallback(() => {
     return {
@@ -48,6 +55,9 @@ export function useCreatureCreatorWorkspacePersistence({
         : `Are you sure you wish to publish this creature "${n}" to the Realms Library? All users will be able to see and use it.`,
     successMessage: 'Creature saved!',
     publicSuccessMessage: 'Creature saved to Realms Library!',
+    initialSaveTarget: resolveCreatorSaveTargetFromItem(
+      findLoadedLibraryItem(load.rawItems, editCreatureId),
+    ),
   });
 
   const [showResetConfirm, setShowResetConfirm] = useState(false);
@@ -55,6 +65,7 @@ export function useCreatureCreatorWorkspacePersistence({
   const handleLoadCreature = useCallback(
     (item: SelectableItem) => {
       setCreature(rawRecordToCreatureState(item.data as Record<string, unknown>));
+      save.applyLoadedLibraryItem(item.data);
       load.closeLoadModal();
       save.setSaveMessage({ type: 'success', text: 'Creature loaded successfully!' });
       setTimeout(() => save.setSaveMessage(null), 2000);

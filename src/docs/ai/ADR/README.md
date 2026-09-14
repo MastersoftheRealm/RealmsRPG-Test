@@ -49,3 +49,4 @@ Lightweight process for **Architect**-role changes. Keep each ADR short.
 | 0024 | Enable `exactOptionalPropertyTypes` | Accepted (TASK-824) |
 | 0025 | Admin Codex CRUD chrome stays tab-local | Accepted (TASK-842 / TASK-845) |
 | 0026 | Guest local characters (browser-only sheet) | Accepted (TASK-904 / DEV-Q09) |
+| 0027 | Official catalog listing (Public vs Admin library) | Accepted (TASK-927) |

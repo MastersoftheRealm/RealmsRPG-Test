@@ -9,6 +9,7 @@ import type { ChipData } from '@/components/patterns';
 import type { ColumnValue } from '@/components/patterns/list/grid-list-row';
 import type { ItemProperty } from '@/hooks/codex-types';
 import type { LibraryItem } from '@/types/library';
+import { parseCatalogListing } from '@/lib/library/catalog-listing';
 import {
   deriveAgilityReductionFromProperties,
   deriveCriticalRangeIncreaseFromProperties,
@@ -119,6 +120,7 @@ export interface OfficialItemRow {
   criticalRangeIncrease: number;
   block: string;
   parts: ChipData[];
+  catalogListing?: LibraryItem['catalogListing'];
 }
 
 function propertyChipsForItem(item: LibraryItem, propertiesDb: ItemProperty[]): ChipData[] {
@@ -213,6 +215,7 @@ export function buildOfficialItemRows(
       criticalRangeIncrease,
       block: block !== '-' ? block : '-',
       parts: propertyChipsForItem(item, propertiesDb),
+      catalogListing: parseCatalogListing(item.catalogListing),
     };
   });
 }

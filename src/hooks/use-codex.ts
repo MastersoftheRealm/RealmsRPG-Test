@@ -24,7 +24,11 @@ const DEFAULT_OPTIONS = {
   refetchOnMount: true,
 };
 
-export type CodexQueryOptions = { enabled?: boolean | undefined };
+export type CodexQueryOptions = {
+  enabled?: boolean | undefined;
+  /** Species only: admin Official/Codex editors pass true (ADR-0027). */
+  includeUnlisted?: boolean | undefined;
+};
 
 /** Query keys for `/api/codex`. Collection keys sit under `['codex']` so prefix invalidation covers them. */
 export const codexKeys = {
@@ -47,9 +51,14 @@ function useCodexCollection<K extends CodexCollectionKey, TResult>(
   select: (payload: Pick<CodexPayload, K>) => TResult,
   options?: CodexQueryOptions,
 ): UseQueryResult<TResult, Error> {
+  const includeUnlisted = options?.includeUnlisted === true;
+  const queryKey =
+    collection === 'species'
+      ? ([...codexKeys.collection(collection), includeUnlisted ? 'all' : 'listed'] as const)
+      : codexKeys.collection(collection);
   return useQuery({
-    queryKey: codexKeys.collection(collection),
-    queryFn: () => fetchCodexCollection(collection),
+    queryKey,
+    queryFn: () => fetchCodexCollection(collection, { includeUnlisted }),
     select,
     ...withCodexEnabled(options),
   });
@@ -78,9 +87,10 @@ const SELECT_TECHNIQUE_PARTS = (
 
 /** Full codex response (all collections). Use for spreadsheet or multi-collection views. */
 export function useCodexFull(options?: CodexQueryOptions): UseQueryResult<CodexPayload, Error> {
+  const includeUnlisted = options?.includeUnlisted === true;
   return useQuery({
-    queryKey: codexKeys.all,
-    queryFn: fetchCodex,
+    queryKey: includeUnlisted ? ([...codexKeys.all, 'all'] as const) : codexKeys.all,
+    queryFn: () => fetchCodex({ includeUnlisted }),
     ...withCodexEnabled(options),
   });
 }

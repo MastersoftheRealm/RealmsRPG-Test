@@ -3,6 +3,7 @@
  */
 
 import type { OfficialEnhancedItem } from '@/types/crafting';
+import { parseCatalogListing } from '@/lib/library/catalog-listing';
 
 /** Data columns only — edit/delete/add use OfficialEntityList `rowChrome`. */
 export const OFFICIAL_ENHANCED_GRID = '1.6fr 1.3fr 1.3fr 0.9fr 0.9fr 0.9fr';
@@ -26,6 +27,7 @@ export interface OfficialEnhancedRow {
   rarity: string;
   cost: number;
   uses: string;
+  catalogListing?: OfficialEnhancedItem['catalog_listing'];
 }
 
 export function formatEnhancedUsesLabel(item: OfficialEnhancedItem): string {
@@ -44,6 +46,7 @@ export function buildOfficialEnhancedRows(items: OfficialEnhancedItem[]): Offici
     rarity: e.rarity,
     cost: e.currency_cost,
     uses: formatEnhancedUsesLabel(e),
+    catalogListing: parseCatalogListing(e.catalog_listing),
   }));
 }
 

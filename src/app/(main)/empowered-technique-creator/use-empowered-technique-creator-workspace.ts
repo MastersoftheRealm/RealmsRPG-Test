@@ -9,6 +9,7 @@
 
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useCreatorSave, type PowerPart, type TechniquePart } from '@/hooks';
+import type { CreatorSaveTarget } from '@/lib/library/catalog-listing';
 import { dedupeSavedParts } from '@/lib/game/dedupe-saved-parts';
 import type { AreaConfig, DurationConfig } from '@/lib/calculators';
 import { EXCLUDED_PARTS } from '@/app/(main)/power-creator/power-creator-constants';
@@ -34,6 +35,7 @@ type UseEmpoweredTechniqueCreatorWorkspaceArgs = {
   techniqueParts: TechniquePart[];
   powerPartsError?: Error | null | undefined;
   techniquePartsError?: Error | null | undefined;
+  initialSaveTarget?: CreatorSaveTarget | undefined;
 };
 
 export function useEmpoweredTechniqueCreatorWorkspace({
@@ -43,6 +45,7 @@ export function useEmpoweredTechniqueCreatorWorkspace({
   techniqueParts,
   powerPartsError = null,
   techniquePartsError = null,
+  initialSaveTarget,
 }: UseEmpoweredTechniqueCreatorWorkspaceArgs) {
   const [name, setName] = useState(initialFormState.name);
   const [description, setDescription] = useState(initialFormState.description);
@@ -301,6 +304,7 @@ export function useEmpoweredTechniqueCreatorWorkspace({
         : `Are you sure you wish to publish this empowered technique "${itemName}" to the Realms Library?`,
     successMessage: 'Empowered technique saved successfully!',
     publicSuccessMessage: 'Empowered technique saved to Realms Library!',
+    initialSaveTarget,
     onSaveSuccess: resetState,
   });
 
@@ -309,6 +313,7 @@ export function useEmpoweredTechniqueCreatorWorkspace({
       const next = empoweredLibraryRecordToFormState(doc, powerParts, techniqueParts);
       if (!next) return;
       applyFormState(next);
+      save.applyLoadedLibraryItem(doc);
       save.setSaveMessage({ type: 'success', text: 'Empowered technique loaded successfully!' });
       setTimeout(() => save.setSaveMessage(null), 2000);
     },

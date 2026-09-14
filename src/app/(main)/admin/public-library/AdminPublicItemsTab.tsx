@@ -9,15 +9,18 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { DeleteConfirmModal, OfficialItemList, SegmentedControl } from '@/components/patterns';
 import { useToast } from '@/components/ui';
-import { officialLibraryKeys, useOfficialLibrary, useItemProperties } from '@/hooks';
+import {
+  officialLibraryKeys,
+  useOfficialLibrary,
+  usePatchOfficialCatalogListing,
+  useItemProperties,
+} from '@/hooks';
 import { useQueryClient } from '@tanstack/react-query';
 import { apiFetch } from '@/lib/api-client';
 import {
   ARMAMENT_LABELS_BY_KIND,
   type ArmamentLibraryKind,
 } from '@/lib/library/armament-library-labels';
-
-const QUERY_KEY = ['official-library', 'items'] as const;
 
 const ARMAMENT_KIND_OPTIONS: { value: ArmamentLibraryKind; label: string }[] = [
   { value: 'weapon', label: 'Weapons' },
@@ -30,8 +33,16 @@ export function AdminPublicItemsTab() {
   const router = useRouter();
   const queryClient = useQueryClient();
   const [armamentKind, setArmamentKind] = useState<ArmamentLibraryKind>('weapon');
-  const { data: items = [], isLoading, error, refetch } = useOfficialLibrary('items');
+  const {
+    data: items = [],
+    isLoading,
+    error,
+    refetch,
+  } = useOfficialLibrary('items', {
+    includeUnlisted: true,
+  });
   const { data: propertiesDb = [] } = useItemProperties();
+  const patchListing = usePatchOfficialCatalogListing('items');
   const [deleteConfirm, setDeleteConfirm] = useState<{ id: string; name: string } | null>(null);
 
   const handleDeleteFromList = async () => {
@@ -40,9 +51,9 @@ export function AdminPublicItemsTab() {
       await apiFetch(`/api/official/items?id=${encodeURIComponent(deleteConfirm.id)}`, {
         method: 'DELETE',
       });
-      queryClient.invalidateQueries({ queryKey: QUERY_KEY });
-      queryClient.invalidateQueries({ queryKey: officialLibraryKeys.counts });
-      await queryClient.refetchQueries({ queryKey: QUERY_KEY });
+      queryClient.invalidateQueries({ queryKey: officialLibraryKeys.all, refetchType: 'all' });
+      queryClient.invalidateQueries({ queryKey: officialLibraryKeys.counts, refetchType: 'all' });
+      await queryClient.refetchQueries({ queryKey: officialLibraryKeys.all });
       setDeleteConfirm(null);
     } catch (e) {
       showToast(e instanceof Error ? e.message : 'Failed to delete', 'error');
@@ -83,6 +94,7 @@ export function AdminPublicItemsTab() {
         variant="admin"
         onEdit={(id) => router.push(`/item-creator?edit=${encodeURIComponent(id)}`)}
         onDelete={(id, name) => setDeleteConfirm({ id, name })}
+        onCatalogListingChange={patchListing}
       />
 
       {deleteConfirm && (

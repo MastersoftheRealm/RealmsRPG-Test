@@ -1,3 +1,88 @@
+- id: TASK-927
+  title: Official catalog listing (Public vs Admin library)
+  created_at: 2026-09-14
+  completed_at: 2026-09-14
+  created_by: owner
+  implemented_by: agent
+  priority: high
+  status: done
+  verification_status: pending-qa
+  build_validation: |
+    suite: DEV-V-060
+    tests:
+      - DEV-V-060-T001
+      - DEV-V-060-T002
+      - DEV-V-060-T003
+      - DEV-V-060-T004
+  developer_test_plan: |
+    Suite DEV-V-060 T001-T004 - see BUILD_VALIDATION.md. Vitest: catalog-listing, official/[type], official counts helper, library-columnar, GET /api/codex, row-map.
+  related_files:
+    - src/docs/ai/ADR/0027-official-catalog-listing.md
+    - src/docs/ai/ADR/README.md
+    - sql/official-catalog-listing.sql
+    - sql/README.md
+    - src/lib/library/catalog-listing.ts
+    - src/lib/library/catalog-listing.test.ts
+    - src/lib/library-columnar.ts
+    - src/lib/library-columnar.test.ts
+    - src/lib/library/fetch-library-tab-counts.ts
+    - src/lib/codex/row-map.ts
+    - src/lib/codex/row-map.test.ts
+    - src/lib/api-validation.ts
+    - src/lib/api-client.ts
+    - src/app/api/official/[type]/route.ts
+    - src/app/api/official/[type]/route.test.ts
+    - src/app/api/official/counts/route.ts
+    - src/app/api/official/enhanced-items/route.ts
+    - src/app/api/codex/route.ts
+    - src/app/api/codex/route.test.ts
+    - src/hooks/use-official-library.ts
+    - src/hooks/use-library-counts.keys.test.ts
+    - src/app/(main)/admin/public-library/AdminPublicTechniquesTab.tsx
+    - src/app/(main)/admin/public-library/AdminPublicItemsTab.tsx
+    - src/app/(main)/admin/public-library/AdminPublicCreaturesTab.tsx
+    - src/app/(main)/power-creator/page.tsx
+    - src/app/(main)/technique-creator/page.tsx
+    - src/app/(main)/item-creator/page.tsx
+    - src/app/(main)/empowered-technique-creator/page.tsx
+    - src/app/(main)/creature-creator/page.tsx
+    - src/app/(main)/species-creator/page.tsx
+    - src/hooks/use-creator-save.ts
+    - src/hooks/use-load-modal-library.ts
+    - src/hooks/use-codex.ts
+    - src/hooks/index.ts
+    - src/services/library-service.ts
+    - src/components/creator/CreatorSaveToolbar.tsx
+    - src/components/creator/CreatorPageShell.tsx
+    - src/components/creator/index.ts
+    - src/components/patterns/list/official-entity-list.tsx
+    - src/app/(main)/admin/public-library/AdminPublicPowersTab.tsx
+    - src/app/(main)/admin/codex/AdminSpeciesTab.tsx
+    - src/app/(main)/admin/codex/admin-species-form.ts
+    - src/app/(main)/admin/codex/admin-species-edit-modal.tsx
+    - src/app/(main)/admin/codex/codex-column-map.ts
+    - src/types/library.ts
+    - src/types/codex.ts
+    - src/types/database.types.ts
+    - src/types/crafting.ts
+    - src/docs/SUPABASE_SCHEMA.md
+    - src/docs/ai/FEATURE_INDEX.md
+    - src/docs/ai/FEATURE_INDEX_BARRELS.generated.md
+    - src/docs/ai/BUILD_VALIDATION.md
+    - src/docs/ai/DEVELOPER_TASK_QUEUE.md
+    - src/docs/ai/AI_CHANGELOG.md
+    - src/docs/ALL_FEEDBACK_CLEAN.md
+  description: |
+    Unified listed/unlisted catalog class on official created items and Codex species so creature-specific rows stay off player Libraries/pickers while still resolving on published parents. Codex piece packs deferred.
+  acceptance_criteria:
+    - Same official/codex tables plus catalog_listing; no third table; no content_pack_id on created items.
+    - Player /library and /codex lists and official counts are listed-only; includeUnlisted=1 is admin-only.
+    - Admin creator save is My library | Public library | Admin library; Official Library Editor and Codex Species can toggle listing.
+    - Unlisted remains publicly readable by id (RLS unchanged); attached rows still display on published creatures/characters.
+  notes: |
+    Live migration official_catalog_listing already applied. RLS stays public SELECT. Do not auto-include unlisted because the viewer is admin.
+    Cleanup 2026-09-14: deleted CatalogListingToggle + unused isListedInPlayerCatalog; listing/save options live in catalog-listing.ts; admin delete invalidates officialLibraryKeys.all; showSaveTarget rename; query-key test matches listed/all.
+
 - id: TASK-923
   title: Apply power-style Advanced Calculations to other creators
   created_at: 2026-09-03
@@ -206,7 +291,7 @@
     tests:
       - DEV-V-055-T009
   developer_test_plan: |
-    Suite DEV-V-055 T009 — see BUILD_VALIDATION.md
+    Suite DEV-V-055 T009 ï¿½ see BUILD_VALIDATION.md
   related_files:
     - src/app/(main)/power-creator/power-creator-editor-power-damage.tsx
     - src/app/(main)/power-creator/power-creator-editor-meta.tsx
@@ -239,7 +324,7 @@
     - `npm run build`; extend DEV-V-055 (T009) + button-tiers source ratchet if one exists.
     - `npm run verify:responsive` if layout classes change.
   notes: |
-    Filed from /global-audit ? /debt 2026-09-03. Implementer. Do not blanket 44×44. DEV-V-055-T009 added in BUILD_VALIDATION.
+    Filed from /global-audit ? /debt 2026-09-03. Implementer. Do not blanket 44ï¿½44. DEV-V-055-T009 added in BUILD_VALIDATION.
 
 ---
 - id: TASK-912

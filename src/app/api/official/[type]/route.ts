@@ -10,7 +10,12 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createClient, createServiceRoleClient } from '@/lib/supabase/server';
 import { getSession } from '@/lib/supabase/session';
 import { isAdmin } from '@/lib/admin';
-import { validateJson, verifyMutationRequest, publicItemSchema } from '@/lib/api-validation';
+import {
+  validateJson,
+  verifyMutationRequest,
+  publicItemSchema,
+  officialCatalogListingPatchSchema,
+} from '@/lib/api-validation';
 import { apiErrorResponse, logApiError } from '@/lib/api-error';
 import {
   rowToItem,
@@ -23,6 +28,11 @@ import {
 } from '@/lib/library-columnar';
 import { enrichRowsWithBankImageUrls } from '@/lib/entity-image-enrich-server';
 import { allocateCodexNumericId, retireCodexId } from '@/lib/codex/id-allocation';
+import {
+  parseCatalogListing,
+  wantsIncludeUnlisted,
+  type CatalogListing,
+} from '@/lib/library/catalog-listing';
 
 const SPECIES_TABLE = 'codex_species';
 
@@ -61,6 +71,7 @@ const SPECIES_CODEX_DB_KEYS = new Set([
   'payload',
   'image_id',
   'image_url',
+  'catalog_listing',
 ]);
 
 /** Creator payloads use ave_height / ave_weight; columnar expects ave_hgt_cm / ave_wgt_kg. */
@@ -87,10 +98,20 @@ function filterSpeciesCodexRow(row: Record<string, unknown>): Record<string, unk
   return out;
 }
 
-export async function GET(
-  _request: NextRequest,
-  { params }: { params: Promise<{ type: string }> },
-) {
+function catalogListingFromBody(body: Record<string, unknown>): CatalogListing | undefined {
+  const raw = body.catalogListing ?? body.catalog_listing;
+  if (raw === undefined) return undefined;
+  return parseCatalogListing(raw);
+}
+
+async function adminMayIncludeUnlisted(request: NextRequest): Promise<boolean> {
+  if (!wantsIncludeUnlisted(request.nextUrl.searchParams)) return false;
+  const { user } = await getSession();
+  if (!user?.uid) return false;
+  return isAdmin(user.uid);
+}
+
+export async function GET(request: NextRequest, { params }: { params: Promise<{ type: string }> }) {
   try {
     const { type } = await params;
     if (!VALID_TYPES.includes(type as OfficialType)) {
@@ -100,9 +121,13 @@ export async function GET(
     // Public read via the anon (RLS-backed) client; "Anyone can read official_*"
     // / codex_species policies apply. Service role is reserved for admin writes (SEC-01).
     const supabase = await createClient();
+    const includeUnlisted = await adminMayIncludeUnlisted(request);
 
     if (type === 'species') {
-      const { data: rows, error } = await supabase.from(SPECIES_TABLE).select('*');
+      const speciesQuery = includeUnlisted
+        ? supabase.from(SPECIES_TABLE).select('*')
+        : supabase.from(SPECIES_TABLE).select('*').eq('catalog_listing', 'listed');
+      const { data: rows, error } = await speciesQuery;
       if (error) {
         if (error.code === '42P01' || error.message?.includes('does not exist')) {
           console.warn('[API] Official library table not found for type:', type, error.message);
@@ -115,6 +140,7 @@ export async function GET(
       const items = speciesRows.map((r) => {
         const item = rowToItemSpecies(r as Record<string, unknown>);
         (item as Record<string, unknown>)._source = 'official';
+        (item as Record<string, unknown>).catalogListing = parseCatalogListing(r.catalog_listing);
         return item;
       });
       items.sort((a, b) => {
@@ -126,9 +152,11 @@ export async function GET(
       return NextResponse.json(items, { headers: { 'Cache-Control': cacheControl } });
     }
 
-    const { data: rows, error } = await supabase
-      .from(TABLE_MAP[type as ColumnarLibraryType])
-      .select('*');
+    const table = TABLE_MAP[type as ColumnarLibraryType];
+    const officialQuery = includeUnlisted
+      ? supabase.from(table).select('*')
+      : supabase.from(table).select('*').eq('catalog_listing', 'listed');
+    const { data: rows, error } = await officialQuery;
 
     if (error) {
       if (error.code === '42P01' || error.message?.includes('does not exist')) {
@@ -187,6 +215,8 @@ export async function POST(
       const withUpdated = { ...normalized, updatedAt: new Date().toISOString() };
       const { scalars, payload } = bodyToColumnarSpecies(withUpdated);
       const dbRow = filterSpeciesCodexRow(toDbRowSpecies({ ...scalars, payload }));
+      const listing = catalogListingFromBody(body);
+      if (listing) dbRow.catalog_listing = listing;
       const existingId = body.id as string | undefined;
 
       if (existingId) {
@@ -212,7 +242,7 @@ export async function POST(
         const id = await allocateCodexNumericId(supabase, SPECIES_TABLE);
         const { error: insertError } = await supabase
           .from(SPECIES_TABLE)
-          .insert({ id, ...dbRow })
+          .insert({ id, catalog_listing: listing ?? 'listed', ...dbRow })
           .select('id')
           .single();
         if (!insertError) {
@@ -233,6 +263,8 @@ export async function POST(
     const withUpdated = { ...body, updatedAt: new Date().toISOString() };
     const { scalars, payload } = bodyToColumnar(type as ColumnarLibraryType, withUpdated);
     const dbRow = toDbRow({ ...scalars, payload, updatedAt: withUpdated.updatedAt });
+    const listing = catalogListingFromBody(body);
+    if (listing) dbRow.catalog_listing = listing;
     const existingId = body.id as string | undefined;
     const table = TABLE_MAP[type as ColumnarLibraryType];
 
@@ -260,6 +292,7 @@ export async function POST(
       .from(table)
       .insert({
         id,
+        catalog_listing: listing ?? 'listed',
         ...dbRow,
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString(),
@@ -278,6 +311,61 @@ export async function POST(
   } catch (err) {
     logApiError('POST /api/official/[type]', err);
     return apiErrorResponse('Failed to save item', 500);
+  }
+}
+
+export async function PATCH(
+  request: NextRequest,
+  { params }: { params: Promise<{ type: string }> },
+) {
+  try {
+    const { user, error } = await getSession();
+    if (error || !user?.uid) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+    if (!(await isAdmin(user.uid))) {
+      return NextResponse.json({ error: 'Admin only' }, { status: 403 });
+    }
+
+    const denied = verifyMutationRequest(request);
+    if (denied) return denied;
+
+    const { type } = await params;
+    if (!VALID_TYPES.includes(type as OfficialType)) {
+      return NextResponse.json({ error: 'Invalid type' }, { status: 400 });
+    }
+
+    const validation = await validateJson(request, officialCatalogListingPatchSchema);
+    if (!validation.success) return validation.error;
+
+    const supabase = createServiceRoleClient();
+    const table = type === 'species' ? SPECIES_TABLE : TABLE_MAP[type as ColumnarLibraryType];
+    const { data: updatedRows, error: updateError } = await supabase
+      .from(table)
+      .update({
+        catalog_listing: validation.data.catalogListing,
+        updated_at: new Date().toISOString(),
+      })
+      .eq('id', validation.data.id)
+      .select('id');
+    if (updateError) {
+      return apiErrorResponse(
+        'Failed to update listing',
+        500,
+        'PATCH /api/official/[type]',
+        updateError,
+      );
+    }
+    if (!updatedRows || updatedRows.length === 0) {
+      return NextResponse.json({ error: 'Item not found' }, { status: 404 });
+    }
+    return NextResponse.json({
+      id: validation.data.id,
+      catalogListing: validation.data.catalogListing,
+    });
+  } catch (err) {
+    logApiError('PATCH /api/official/[type]', err);
+    return apiErrorResponse('Failed to update listing', 500);
   }
 }
 

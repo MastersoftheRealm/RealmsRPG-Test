@@ -154,15 +154,19 @@ export function useCreatureCreatorWorkspace() {
   const { data: itemPropertiesDb = [] } = useItemProperties();
   const { data: publicPowers = [] } = useOfficialLibrary('powers', {
     enabled: libraryQueriesEnabled,
+    includeUnlisted: isAdmin,
   });
   const { data: publicTechniques = [] } = useOfficialLibrary('techniques', {
     enabled: libraryQueriesEnabled,
+    includeUnlisted: isAdmin,
   });
   const { data: publicEmpoweredTechniques = [] } = useOfficialLibrary('empowered-techniques', {
     enabled: libraryQueriesEnabled,
+    includeUnlisted: isAdmin,
   });
   const { data: publicItems = [] } = useOfficialLibrary('items', {
     enabled: libraryQueriesEnabled,
+    includeUnlisted: isAdmin,
   });
 
   const powerList = useMemo(
@@ -414,6 +418,7 @@ export function useCreatureCreatorWorkspace() {
     setCreature,
     stats: { isOverBudget },
     load,
+    editCreatureId,
   });
 
   const featsSummary = useMemo(() => buildCreatureFeatsSummary(creature), [creature]);

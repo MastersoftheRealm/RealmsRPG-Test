@@ -193,6 +193,7 @@ export interface OfficialEnhancedItem {
   power_name: string;
   uses_type: string;
   uses_count: number | null;
+  catalog_listing?: 'listed' | 'unlisted' | undefined;
   /** JSONB; may be null from DB — hook normalizes to `{}` on fetch. */
   payload: OfficialEnhancedItemPayload | null;
   created_at?: string | undefined;
