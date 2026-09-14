@@ -5,6 +5,7 @@ import { ChipSelect } from '@/components/patterns/filters';
 import {
   GridListRow,
   RealmsImageField,
+  SegmentedControl,
   UnifiedSelectionModal,
   type SelectableItem,
   type SelectionColumnHeader,
@@ -20,6 +21,7 @@ import {
 } from './admin-species-form';
 import { AdminCodexCopySourceBanner } from './admin-codex-copy-source-banner';
 import { AdminCodexEditModalFooter } from './admin-codex-edit-modal-footer';
+import { catalogListingClassOptions } from '@/lib/library/catalog-listing';
 
 const TRAIT_PICKER_GRID = '1.5fr 0.6fr 0.6fr';
 const TRAIT_PICKER_COLUMNS: SelectionColumnHeader[] = [
@@ -203,6 +205,15 @@ export function AdminSpeciesEditModal({
                   Starter species (guided creator)
                 </span>
               </label>
+            </div>
+            <div>
+              <p className="mb-1 text-sm font-medium text-text-secondary">Library</p>
+              <SegmentedControl
+                value={form.catalogListing}
+                onChange={(catalogListing) => setForm((f) => ({ ...f, catalogListing }))}
+                options={catalogListingClassOptions(false)}
+                aria-label="Library classification"
+              />
             </div>
           </div>
           <div className="grid grid-cols-2 gap-4">

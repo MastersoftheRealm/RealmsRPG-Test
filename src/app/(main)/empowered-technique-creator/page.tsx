@@ -35,6 +35,10 @@ import {
   type EmpoweredTechniqueFormState,
 } from './empowered-technique-bootstrap';
 import { useEmpoweredTechniqueCreatorWorkspace } from './use-empowered-technique-creator-workspace';
+import {
+  findLoadedLibraryItem,
+  resolveCreatorSaveTargetFromItem,
+} from '@/lib/library/catalog-listing';
 
 function EmpoweredTechniqueCreatorContent() {
   const { user } = useAuthStore();
@@ -147,6 +151,9 @@ function EmpoweredTechniqueWorkspace({
     techniqueParts,
     powerPartsError,
     techniquePartsError,
+    initialSaveTarget: resolveCreatorSaveTargetFromItem(
+      findLoadedLibraryItem(load.rawItems, editId),
+    ),
   });
 
   return (
@@ -156,7 +163,7 @@ function EmpoweredTechniqueWorkspace({
       description="Build an empowered technique by combining power and technique parts in one shared action profile."
       user={user}
       auth={{ returnPath: '/empowered-technique-creator', contentType: 'empowered technique' }}
-      showPublicPrivate={isAdmin}
+      showSaveTarget={isAdmin}
       saveTarget={ws.save.saveTarget}
       onSaveTargetChange={ws.save.setSaveTarget}
       onSave={ws.save.handleSave}

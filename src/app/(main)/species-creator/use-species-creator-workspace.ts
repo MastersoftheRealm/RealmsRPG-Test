@@ -180,6 +180,7 @@ export function useSpeciesCreatorWorkspace({
   const loadSpeciesIntoForm = useCallback(
     (s: Species | Record<string, unknown>) => {
       setForm(speciesLibraryRecordToFormState(s, traits, skills));
+      save.applyLoadedLibraryItem(s);
       closeLoadModal();
       save.setSaveMessage({ type: 'success', text: 'Species loaded successfully!' });
       setTimeout(() => save.setSaveMessage(null), 2000);

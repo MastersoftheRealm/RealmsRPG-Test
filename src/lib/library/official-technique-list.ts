@@ -6,6 +6,7 @@ import type { ChipData } from '@/components/patterns';
 import type { ColumnValue } from '@/components/patterns/list/grid-list-row';
 import type { TechniquePart } from '@/hooks/codex-types';
 import type { LibraryTechnique } from '@/types/library';
+import { parseCatalogListing } from '@/lib/library/catalog-listing';
 import { deriveTechniqueDisplay, formatTechniqueDamage } from '@/lib/calculators/technique-calc';
 import { libraryItemToTechniqueDocument } from '@/lib/library-selectable-builders';
 import { partChipsFromDisplay } from '@/lib/chip/part-chips-from-display';
@@ -61,6 +62,7 @@ export interface OfficialTechniqueRow {
   parts: ChipData[];
   partIds: string[];
   partNames: string[];
+  catalogListing?: LibraryTechnique['catalogListing'];
 }
 
 export function getEmpoweredTechniqueTotals(
@@ -109,6 +111,7 @@ export function buildOfficialTechniqueRows(
       partNames: savedParts
         .map((part) => (part.name != null ? String(part.name) : ''))
         .filter(Boolean),
+      catalogListing: parseCatalogListing(t.catalogListing),
     };
   });
 }

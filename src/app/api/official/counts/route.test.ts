@@ -44,6 +44,6 @@ describe('GET /api/official/counts', () => {
       powers: 12,
       enhanced: 0,
     });
-    expect(mockFetchCounts).toHaveBeenCalledWith({}, expect.any(Object));
+    expect(mockFetchCounts).toHaveBeenCalledWith({}, expect.any(Object), undefined, true);
   });
 });

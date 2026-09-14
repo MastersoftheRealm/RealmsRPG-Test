@@ -32,6 +32,7 @@ import {
   partsProficienciesSection,
 } from '@/lib/chip/list-row-metadata';
 import { targetsFactChip } from '@/lib/detail-option/compact-facts';
+import { parseCatalogListing } from '@/lib/library/catalog-listing';
 
 const officialPowerChrome = glrListChrome({ entityType: 'power', mode: 'browse' });
 
@@ -65,6 +66,7 @@ export interface OfficialPowerRow {
   parts: ChipData[];
   partIds: string[];
   partNames: string[];
+  catalogListing?: LibraryPower['catalogListing'];
 }
 
 export function buildOfficialPowerRows(
@@ -102,6 +104,7 @@ export function buildOfficialPowerRows(
       partNames: savedParts
         .map((part) => (part.name != null ? String(part.name) : ''))
         .filter(Boolean),
+      catalogListing: parseCatalogListing(p.catalogListing),
     };
   });
 }

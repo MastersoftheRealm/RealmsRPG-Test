@@ -16,9 +16,9 @@ type CountQueryResult<T> = {
   count?: number | null | undefined;
 };
 
-/** Thenable + `.eq()` — matches the PostgREST builder used by both count routes. */
+/** Thenable + chainable `.eq()` — matches the PostgREST builder used by both count routes. */
 export type LibraryCountQuery<T> = PromiseLike<CountQueryResult<T>> & {
-  eq: (column: string, value: string) => PromiseLike<CountQueryResult<T>>;
+  eq: (column: string, value: string) => LibraryCountQuery<T>;
 };
 
 export type LibraryCountsClient = {
@@ -53,10 +53,12 @@ function isMissingTable(error: CountError): boolean {
 async function countRows(
   supabase: LibraryCountsClient,
   table: string,
-  userId?: string,
+  options?: { userId?: string | undefined; listedOnly?: boolean | undefined },
 ): Promise<number> {
-  const query = supabase.from(table).select('id', { count: 'exact', head: true });
-  const { count, error } = userId ? await query.eq('user_id', userId) : await query;
+  let query = supabase.from(table).select('id', { count: 'exact', head: true });
+  if (options?.userId) query = query.eq('user_id', options.userId);
+  if (options?.listedOnly) query = query.eq('catalog_listing', 'listed');
+  const { count, error } = await query;
   if (error) {
     if (isMissingTable(error)) return 0;
     throw error;
@@ -67,10 +69,12 @@ async function countRows(
 async function itemTypes(
   supabase: LibraryCountsClient,
   table: string,
-  userId?: string,
+  options?: { userId?: string | undefined; listedOnly?: boolean | undefined },
 ): Promise<Array<string | undefined>> {
-  const query = supabase.from(table).select('type');
-  const { data, error } = userId ? await query.eq('user_id', userId) : await query;
+  let query = supabase.from(table).select('type');
+  if (options?.userId) query = query.eq('user_id', options.userId);
+  if (options?.listedOnly) query = query.eq('catalog_listing', 'listed');
+  const { data, error } = await query;
   if (error) {
     if (isMissingTable(error)) return [];
     throw error;
@@ -78,21 +82,21 @@ async function itemTypes(
   return ((data ?? []) as Array<{ type?: string | undefined }>).map((row) => row.type);
 }
 
-export async function fetchLibraryTabCounts(
+export function fetchLibraryTabCounts(
   supabase: LibraryCountsClient,
   tables: LibraryCountTables,
   userId?: string,
+  listedOnly?: boolean,
 ): Promise<LibraryTabCounts> {
-  const [powers, techniques, empoweredTechniques, creatures, enhanced, types] = await Promise.all([
-    countRows(supabase, tables.powers, userId),
-    countRows(supabase, tables.techniques, userId),
-    countRows(supabase, tables.empoweredTechniques, userId),
-    countRows(supabase, tables.creatures, userId),
-    tables.enhanced ? countRows(supabase, tables.enhanced, userId) : Promise.resolve(0),
-    itemTypes(supabase, tables.items, userId),
-  ]);
-
-  return {
+  const scope = { userId, listedOnly };
+  return Promise.all([
+    countRows(supabase, tables.powers, scope),
+    countRows(supabase, tables.techniques, scope),
+    countRows(supabase, tables.empoweredTechniques, scope),
+    countRows(supabase, tables.creatures, scope),
+    tables.enhanced ? countRows(supabase, tables.enhanced, scope) : Promise.resolve(0),
+    itemTypes(supabase, tables.items, scope),
+  ]).then(([powers, techniques, empoweredTechniques, creatures, enhanced, types]) => ({
     ...EMPTY_LIBRARY_TAB_COUNTS,
     powers,
     techniques,
@@ -100,7 +104,7 @@ export async function fetchLibraryTabCounts(
     creatures,
     enhanced,
     ...countArmamentsFromTypes(types),
-  };
+  }));
 }
 
 export const USER_LIBRARY_COUNT_TABLES: LibraryCountTables = {

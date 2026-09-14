@@ -126,8 +126,11 @@ import type { CodexPayload, CodexPayloadKey } from '@/types/codex';
  *
  * Returns the canonical `CodexPayload` — individual hooks narrow via `select`.
  */
-export async function fetchCodex(): Promise<CodexPayload> {
-  return apiFetch<CodexPayload>('/api/codex', { cache: 'no-store' });
+export async function fetchCodex(options?: {
+  includeUnlisted?: boolean | undefined;
+}): Promise<CodexPayload> {
+  const path = options?.includeUnlisted ? '/api/codex?includeUnlisted=1' : '/api/codex';
+  return apiFetch<CodexPayload>(path, { cache: 'no-store' });
 }
 
 /**
@@ -136,9 +139,9 @@ export async function fetchCodex(): Promise<CodexPayload> {
  */
 export async function fetchCodexCollection<K extends CodexPayloadKey>(
   collection: K,
+  options?: { includeUnlisted?: boolean | undefined },
 ): Promise<Pick<CodexPayload, K>> {
-  return apiFetch<Pick<CodexPayload, K>>(
-    `/api/codex?collection=${encodeURIComponent(collection)}`,
-    { cache: 'no-store' },
-  );
+  const params = new URLSearchParams({ collection });
+  if (options?.includeUnlisted) params.set('includeUnlisted', '1');
+  return apiFetch<Pick<CodexPayload, K>>(`/api/codex?${params.toString()}`, { cache: 'no-store' });
 }

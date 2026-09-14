@@ -39,7 +39,7 @@ All codex tables are **columnar** and live in **public** (no `codex` schema). Ar
 |-------|--------|------------------------|
 | `codex_feats` | Columnar | id (PK), name, description, req_desc, ability_req (TEXT), abil_req_val (TEXT), skill_req (TEXT), skill_req_val (TEXT), feat_cat_req, pow_abil_req, mart_abil_req, pow_prof_req, mart_prof_req, speed_req, feat_lvl, lvl_req, uses_per_rec, rec_period, category, ability, tags (TEXT), char_feat, state_feat, base_feat_id (TEXT, nullable) |
 | `codex_skills` | Columnar | id (PK), name, description, ability, base_skill (TEXT), success_desc, failure_desc, ds_calc, craft_failure_desc, craft_success_desc |
-| `codex_species` | Columnar | id (PK), name, description, type, sizes (TEXT), skills (TEXT), species_traits (TEXT), ancestry_traits (TEXT), flaws (TEXT), characteristics (TEXT), ave_hgt_cm, ave_wgt_kg, adulthood_lifespan (TEXT), languages (TEXT), **is_starter (BOOLEAN)**, **image_id (UUID, nullable FK → realms_images)**, **image_url (TEXT, nullable)** — denormalized cache synced from bank (ADR-0003 / TASK-494; TASK-498 backfilled legacy entity-tied URLs) |
+| `codex_species` | Columnar | id (PK), name, description, type, sizes (TEXT), skills (TEXT), species_traits (TEXT), ancestry_traits (TEXT), flaws (TEXT), characteristics (TEXT), ave_hgt_cm, ave_wgt_kg, adulthood_lifespan (TEXT), languages (TEXT), **is_starter (BOOLEAN)**, **catalog_listing (TEXT NOT NULL DEFAULT `listed`; `listed`\|`unlisted`, ADR-0027)**, **image_id (UUID, nullable FK → realms_images)**, **image_url (TEXT, nullable)** — denormalized cache synced from bank (ADR-0003 / TASK-494; TASK-498 backfilled legacy entity-tied URLs) |
 | `codex_traits` | Columnar | id (PK), name, description, uses_per_rec, rec_period, flaw, characteristic, option_trait_ids (TEXT) |
 | `codex_parts` | Columnar | id (PK), name, description, category, base_en, base_tp, op_1_desc, op_1_en, op_1_tp, op_2_desc, op_2_en, op_2_tp, op_3_desc, op_3_en, op_3_tp, type, mechanic, percentage, duration, defense (TEXT) |
 | `codex_properties` | Columnar | id (PK), name, description, base_ip, base_tp, base_c, op_1_desc, op_1_ip, op_1_tp, op_1_c, type, mechanic |
@@ -57,15 +57,15 @@ All **columnar** (scalars + `payload` JSONB). Legacy `public_*` JSONB tables (`p
 
 | Table | Shape | Key columns |
 |-------|--------|-------------|
-| `official_powers` | Columnar | id (PK), name, description, action_type, is_reaction, innate, range/duration/area/damage columns, **image_id (UUID, nullable FK → realms_images)**, **image_url (TEXT, nullable)** cache, payload (JSONB), created_at, updated_at |
-| `official_techniques` | Columnar | id (PK), name, description, action_type, promoted columns, **image_id**, **image_url** cache, payload (JSONB; `attackMode` + parts; Attack label derived in app — **dropped** `weapon_name` 2026-07-20), created_at, updated_at |
-| `official_empowered_techniques` | Columnar | Same shape as official_techniques + **image_id** (picker uses power\|technique tags — no separate category), **image_url** cache |
-| `official_items` | Columnar | id (PK), name, description, type, rarity, armor_value, damage_reduction, promoted columns, **image_id (UUID, nullable FK → realms_images)**, **image_url (TEXT, nullable)** — armament/equipment art cache, payload (JSONB), created_at, updated_at |
-| `official_creatures` | Columnar | id (PK), name, description, level, type, size, hit_points, energy_points, **image_id**, **image_url** cache, payload (JSONB), created_at, updated_at |
+| `official_powers` | Columnar | id (PK), name, description, action_type, is_reaction, innate, range/duration/area/damage columns, **image_id (UUID, nullable FK → realms_images)**, **image_url (TEXT, nullable)** cache, payload (JSONB), **catalog_listing (TEXT NOT NULL DEFAULT `listed`; `listed`\|`unlisted`)**, created_at, updated_at |
+| `official_techniques` | Columnar | id (PK), name, description, action_type, promoted columns, **image_id**, **image_url** cache, payload (JSONB; `attackMode` + parts; Attack label derived in app — **dropped** `weapon_name` 2026-07-20), **catalog_listing**, created_at, updated_at |
+| `official_empowered_techniques` | Columnar | Same shape as official_techniques + **image_id** (picker uses power\|technique tags — no separate category), **image_url** cache, **catalog_listing** |
+| `official_items` | Columnar | id (PK), name, description, type, rarity, armor_value, damage_reduction, promoted columns, **image_id (UUID, nullable FK → realms_images)**, **image_url (TEXT, nullable)** — armament/equipment art cache, payload (JSONB), **catalog_listing**, created_at, updated_at |
+| `official_creatures` | Columnar | id (PK), name, description, level, type, size, hit_points, energy_points, **image_id**, **image_url** cache, payload (JSONB), **catalog_listing**, created_at, updated_at |
 
-**API:** `GET /api/public/[type]` reads `official_*` only (returns `[]` if the table is missing). `POST`/`DELETE` require admin and write to `official_*`. Legacy `public_*` JSONB tables were dropped; do not reference them in app code.
+**API:** `GET /api/official/[type]` defaults to `catalog_listing = listed` (player Public library). `?includeUnlisted=1` is honored only for an admin session (Admin library + editor). `POST`/`PATCH`/`DELETE` require admin and write to `official_*` / `codex_species`. Unlisted rows stay publicly **readable** by id (RLS `Anyone can read official_*`); they are omitted from list/count APIs. Legacy `public_*` JSONB tables were dropped; do not reference them in app code.
 
-**Migrations:** `sql/supabase-official-library-public-schema.sql` (create + RLS), `sql/supabase-official-library-columnar-expansion.sql` (powers columns), `sql/supabase-library-columnar-parity-expansion.sql` (promoted columns + `sync_library_promoted_columns` trigger on official_* and user_*), `sql/official-powers-strip-redundant-auto-mechanic-parts-applied.sql` (TASK-627 — strip auto-mechanic duplicates from `payload.parts` when promoted columns exist; helper `public._official_power_rebuilt_mechanic_part_names()` for idempotent re-runs).
+**Migrations:** `sql/supabase-official-library-public-schema.sql` (create + RLS), `sql/supabase-official-library-columnar-expansion.sql` (powers columns), `sql/supabase-library-columnar-parity-expansion.sql` (promoted columns + `sync_library_promoted_columns` trigger on official_* and user_*), `sql/official-powers-strip-redundant-auto-mechanic-parts-applied.sql` (TASK-627 — strip auto-mechanic duplicates from `payload.parts` when promoted columns exist; helper `public._official_power_rebuilt_mechanic_part_names()` for idempotent re-runs), `sql/official-catalog-listing.sql` (TASK-927 / ADR-0027 — `catalog_listing` on official created-item tables + `codex_species`).
 
 **`payload.parts` (powers):** User and advanced parts only after TASK-627 cleanup; auto-mechanic parts derivable from promoted columns (`range_steps`, `duration_*`, `area_*`, `damage`, `action_type`, `is_reaction`) are rebuilt on read in app (`mechanic-builder.ts`) and were removed from official rows in live codex data.
 
@@ -242,7 +242,7 @@ CREATE POLICY user_enhanced_items_delete ON public.user_enhanced_items FOR DELET
 
 | Table | Shape | Key columns |
 |-------|--------|-------------|
-| `official_enhanced_items` | Columnar + payload | id (PK), name, description, currency_cost, rarity, base_item_source, base_item_id, base_item_name, base_item_description, power_source, power_id, power_name, uses_type, uses_count, payload (JSONB), created_at, updated_at |
+| `official_enhanced_items` | Columnar + payload | id (PK), name, description, currency_cost, rarity, base_item_source, base_item_id, base_item_name, base_item_description, power_source, power_id, power_name, uses_type, uses_count, **catalog_listing**, payload (JSONB), created_at, updated_at |
 
 Stores **official** enhanced equipment for the Realms library (base item + imbued power). Unlike `user_enhanced_items`, `currency_cost` and `rarity` are derived from the **ideal enhanced crafting rules** (assuming proper successes) rather than a specific crafting outcome.
 
@@ -373,7 +373,7 @@ Live on RealmsRPG-Test after **`sql/task-649-anon-least-privilege-applied.sql`**
 | Table group | Tables | RLS |
 |-------------|--------|-----|
 | Codex + rules | `codex_*` (10 tables), `core_rules` | `Anyone can read …` (`TO public`) |
-| Official library | `official_powers`, `official_techniques`, `official_empowered_techniques`, `official_items`, `official_creatures`, `official_enhanced_items` | `Anyone can read official_*` |
+| Official library | `official_powers`, `official_techniques`, `official_empowered_techniques`, `official_items`, `official_creatures`, `official_enhanced_items` | `Anyone can read official_*` (unlisted `catalog_listing` rows stay publicly readable; list APIs filter) |
 | Image bank metadata | `realms_images`, `realms_image_categories` | `Anyone can read realms images*` |
 | Guest public sheets | `characters` | `characters_select_public_anon` — `visibility = 'public'` only |
 

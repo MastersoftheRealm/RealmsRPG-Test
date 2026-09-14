@@ -98,6 +98,7 @@ describe('mapCodexSpecies', () => {
     expect(species.ave_height).toBe(175);
     expect(species.image_url).toBe('https://img/h.png');
     expect(species.speed).toBe(6);
+    expect(species.catalog_listing).toBe('listed');
   });
 });
 

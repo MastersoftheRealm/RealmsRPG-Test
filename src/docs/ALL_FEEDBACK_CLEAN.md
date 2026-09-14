@@ -1,6 +1,12 @@
 # ALL_FEEDBACK — Consolidated & Curated
 
-Last updated: 2026-09-03
+Last updated: 2026-09-14
+
+**Raw Feedback Log — 2026-09-14 (Admin library / hide created items from player catalogs)**
+- Context: Official created items on creatures (Giant Bear Claws, Acid Spit, Banshee Wail) clutter player Libraries/pickers; later Codex piece packs deferred
+- Priority: High (catalog honesty; not a paywall)
+- Feedback (verbatim summary): Unified, simple, changeable way to hide created content from player catalogs while it still resolves on published creatures. Now: creature-specific created items. Later: monetize Codex pieces via packs (created items are not SKUs).
+- Disposition: **TASK-927 implemented** — `catalog_listing` listed/unlisted on the same official/`codex_species` tables (ADR-0027). Creator My \| Public \| Admin library. Player `/library` + `/codex` listed-only. Unlisted not secret (RLS public SELECT; enrichment-by-id). Packs deferred. pending-qa DEV-V-060.
 
 **Raw Feedback Log — 2026-09-03 (Creators: targeted defenses placement + asterisks; weapon range display)**
 - Context: Creators — power/technique targeted defenses UX; weapon range display after TASK-919 type+spaces

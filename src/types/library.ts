@@ -6,6 +6,7 @@
  */
 
 import type { AttackMode } from '@/lib/attack-mode';
+import type { CatalogListing } from '@/lib/library/catalog-listing';
 
 /** Library collection keys (user + official APIs). */
 export type LibraryItemType =
@@ -70,6 +71,8 @@ export interface LibraryPower {
   updatedAt?: Date | string | undefined;
   /** Present on official-library rows when copied from Realms Library. */
   _source?: 'official' | string | undefined;
+  /** Official rows only: Public vs Admin library (ADR-0027). */
+  catalogListing?: CatalogListing | undefined;
   /** Defenses this power actually targets (if any). */
   targetedDefenses?: string[] | undefined;
 }
@@ -96,6 +99,7 @@ export interface LibraryTechnique {
   createdAt?: Date | string | undefined;
   updatedAt?: Date | string | undefined;
   _source?: 'official' | string | undefined;
+  catalogListing?: CatalogListing | undefined;
   /** Present on empowered-technique library rows. */
   empoweredTechnique?: boolean | undefined;
   empowered_technique?: boolean | undefined;
@@ -145,6 +149,7 @@ export interface LibraryItem {
   createdAt?: Date | string | undefined;
   updatedAt?: Date | string | undefined;
   _source?: 'official' | string | undefined;
+  catalogListing?: CatalogListing | undefined;
 }
 
 export interface LibrarySpecies {
@@ -170,6 +175,7 @@ export interface LibrarySpecies {
   createdAt?: string | undefined;
   updatedAt?: string | undefined;
   _source?: 'official' | string | undefined;
+  catalogListing?: CatalogListing | undefined;
 }
 
 export interface LibraryCreature {
@@ -220,6 +226,7 @@ export interface LibraryCreature {
   createdAt?: Date | string | undefined;
   updatedAt?: Date | string | undefined;
   _source?: 'official' | string | undefined;
+  catalogListing?: CatalogListing | undefined;
 }
 
 /** Map library kind → item shape returned by rowToItem / GET list endpoints. */

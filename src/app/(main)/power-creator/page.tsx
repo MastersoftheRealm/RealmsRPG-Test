@@ -41,6 +41,10 @@ import {
 import { PowerCreatorEditor } from './power-creator-editor';
 import { usePowerCreatorWorkspace } from './use-power-creator-workspace';
 import { PowerCreatorHelp } from './power-creator-help';
+import {
+  findLoadedLibraryItem,
+  resolveCreatorSaveTargetFromItem,
+} from '@/lib/library/catalog-listing';
 
 function PowerCreatorContent() {
   const { user } = useAuthStore();
@@ -125,6 +129,9 @@ function PowerCreatorWorkspace({
     initialFormState,
     editPowerId,
     powerParts,
+    initialSaveTarget: resolveCreatorSaveTargetFromItem(
+      findLoadedLibraryItem(load.rawItems, editPowerId),
+    ),
   });
 
   return (
@@ -134,7 +141,7 @@ function PowerCreatorWorkspace({
       description="Design custom powers by combining power parts. Each part contributes to the total energy cost and training point requirements."
       user={user}
       auth={{ returnPath: '/power-creator', contentType: 'power' }}
-      showPublicPrivate={isAdmin}
+      showSaveTarget={isAdmin}
       saveTarget={ws.save.saveTarget}
       onSaveTargetChange={ws.save.setSaveTarget}
       onSave={ws.save.handleSave}

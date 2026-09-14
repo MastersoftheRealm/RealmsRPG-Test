@@ -31,6 +31,7 @@ import {
 import type { PowerTechniqueCharacterContext } from '@/lib/library/power-technique-character-context';
 import { empoweredTechniquePartsSection } from '@/lib/library/empowered-technique-display';
 import { resolveListRowThumbnail } from '@/lib/list-row-image';
+import type { CatalogListing } from '@/lib/library/catalog-listing';
 import {
   libraryRowPathIds,
   pathChipLabelsForEntity,
@@ -60,6 +61,7 @@ export interface OfficialTechniqueListProps {
   onAddRequest?: ((row: OfficialTechniqueRow) => void) | undefined;
   onEdit?: ((id: string) => void) | undefined;
   onDelete?: ((id: string, name: string) => void) | undefined;
+  onCatalogListingChange?: ((id: string, listing: CatalogListing) => void) | undefined;
 }
 
 export function OfficialTechniqueList({
@@ -82,6 +84,7 @@ export function OfficialTechniqueList({
   onAddRequest,
   onEdit,
   onDelete,
+  onCatalogListingChange,
 }: OfficialTechniqueListProps) {
   const empowered = mode === 'empowered';
   const [advancedFilters, setAdvancedFilters] = useState<PowerTechniqueFilterState>(
@@ -213,6 +216,7 @@ export function OfficialTechniqueList({
         }
         onEdit={onEdit}
         onDelete={onDelete}
+        onCatalogListingChange={onCatalogListingChange}
       />
       {addToCharacter.confirmModal}
     </>

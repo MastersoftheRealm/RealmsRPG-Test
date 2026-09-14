@@ -114,6 +114,7 @@ export const COLUMNAR_FIELDS: Record<CodexCollection, string[]> = {
     'adulthoodLifespan',
     'languages',
     'isStarter',
+    'catalogListing',
     'imageId',
     'imageUrl',
   ],

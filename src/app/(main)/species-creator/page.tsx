@@ -50,7 +50,7 @@ export default function SpeciesCreatorPage() {
       description="Create custom species. Add traits (species, ancestry, characteristic, flaw), choose base skills and sizes, and set languages. Load from Realms Codex or My Codex; save to My Codex."
       user={user}
       auth={{ returnPath: '/species-creator', contentType: 'species', requireAuthToLoad: false }}
-      showPublicPrivate={isAdmin}
+      showSaveTarget={isAdmin}
       saveTarget={ws.save.saveTarget}
       onSaveTargetChange={ws.save.setSaveTarget}
       onSave={ws.handleSave}

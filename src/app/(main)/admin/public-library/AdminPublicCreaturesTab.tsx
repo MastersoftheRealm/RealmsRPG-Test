@@ -9,18 +9,24 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { DeleteConfirmModal, OfficialCreatureList } from '@/components/patterns';
 import { useToast } from '@/components/ui';
-import { officialLibraryKeys, useOfficialLibrary } from '@/hooks';
+import { officialLibraryKeys, useOfficialLibrary, usePatchOfficialCatalogListing } from '@/hooks';
 import { useQueryClient } from '@tanstack/react-query';
 import { apiFetch } from '@/lib/api-client';
 import { Users } from 'lucide-react';
-
-const QUERY_KEY = ['official-library', 'creatures'] as const;
 
 export function AdminPublicCreaturesTab() {
   const { showToast } = useToast();
   const router = useRouter();
   const queryClient = useQueryClient();
-  const { data: items = [], isLoading, error, refetch } = useOfficialLibrary('creatures');
+  const {
+    data: items = [],
+    isLoading,
+    error,
+    refetch,
+  } = useOfficialLibrary('creatures', {
+    includeUnlisted: true,
+  });
+  const patchListing = usePatchOfficialCatalogListing('creatures');
   const [deleteConfirm, setDeleteConfirm] = useState<{ id: string; name: string } | null>(null);
 
   const handleDeleteFromList = async () => {
@@ -29,9 +35,9 @@ export function AdminPublicCreaturesTab() {
       await apiFetch(`/api/official/creatures?id=${encodeURIComponent(deleteConfirm.id)}`, {
         method: 'DELETE',
       });
-      queryClient.invalidateQueries({ queryKey: QUERY_KEY });
-      queryClient.invalidateQueries({ queryKey: officialLibraryKeys.counts });
-      await queryClient.refetchQueries({ queryKey: QUERY_KEY });
+      queryClient.invalidateQueries({ queryKey: officialLibraryKeys.all, refetchType: 'all' });
+      queryClient.invalidateQueries({ queryKey: officialLibraryKeys.counts, refetchType: 'all' });
+      await queryClient.refetchQueries({ queryKey: officialLibraryKeys.all });
       setDeleteConfirm(null);
     } catch (e) {
       showToast(e instanceof Error ? e.message : 'Failed to delete', 'error');
@@ -55,6 +61,7 @@ export function AdminPublicCreaturesTab() {
         variant="admin"
         onEdit={(id) => router.push(`/creature-creator?edit=${encodeURIComponent(id)}`)}
         onDelete={(id, name) => setDeleteConfirm({ id, name })}
+        onCatalogListingChange={patchListing}
       />
 
       {deleteConfirm && (

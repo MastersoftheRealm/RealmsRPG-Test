@@ -27,6 +27,7 @@ const enhancedBodySchema = z
     usesType: z.enum(['full', 'partial', 'permanent']),
     usesCount: z.number().int().min(0).optional(),
     payload: z.record(z.string(), z.unknown()).optional(),
+    catalogListing: z.enum(['listed', 'unlisted']).optional(),
   })
   .strict();
 
@@ -46,6 +47,7 @@ const enhancedPatchBodySchema = z
     usesType: z.enum(['full', 'partial', 'permanent']).optional(),
     usesCount: z.number().int().min(0).nullable().optional(),
     payload: z.record(z.string(), z.unknown()).optional(),
+    catalogListing: z.enum(['listed', 'unlisted']).optional(),
   })
   .strict()
   .refine((v) => Object.keys(v).length > 0, { message: 'No fields to update' });
@@ -105,7 +107,7 @@ export async function GET() {
     const { data, error } = await supabase
       .from('official_enhanced_items')
       .select(
-        'id, name, description, currency_cost, rarity, base_item_source, base_item_id, base_item_name, base_item_description, power_source, power_id, power_name, uses_type, uses_count, payload, created_at, updated_at',
+        'id, name, description, currency_cost, rarity, base_item_source, base_item_id, base_item_name, base_item_description, power_source, power_id, power_name, uses_type, uses_count, catalog_listing, payload, created_at, updated_at',
       )
       .order('updated_at', { ascending: false });
 
@@ -164,6 +166,7 @@ export async function POST(req: NextRequest) {
       power_name: parsed.powerName,
       uses_type: parsed.usesType,
       uses_count: parsed.usesType === 'permanent' ? null : (parsed.usesCount ?? 1),
+      catalog_listing: parsed.catalogListing ?? 'listed',
       payload: parsed.payload ?? {},
     });
 
@@ -242,6 +245,7 @@ export async function PATCH(req: NextRequest) {
       updates.uses_count = body.usesCount;
     }
     if (body.payload !== undefined) updates.payload = body.payload;
+    if (body.catalogListing !== undefined) updates.catalog_listing = body.catalogListing;
 
     // Cost and rarity are derived, so they have to be recomputed whenever the power or its
     // uses change; leaving the stored values would price the item off its previous power.

@@ -8,6 +8,10 @@ vi.mock('@/lib/supabase/session', () => ({
   getSession: vi.fn(),
 }));
 
+vi.mock('@/lib/admin', () => ({
+  isAdmin: vi.fn(),
+}));
+
 vi.mock('@/lib/core-rules-server', () => ({
   fetchCoreRules: vi.fn(async () => ({ PROGRESSION_PLAYER: { baseHealth: 8 } })),
 }));
@@ -15,17 +19,22 @@ vi.mock('@/lib/core-rules-server', () => ({
 import { GET } from './route';
 import { createClient } from '@/lib/supabase/server';
 import { getSession } from '@/lib/supabase/session';
+import { isAdmin } from '@/lib/admin';
 import { fetchCoreRules } from '@/lib/core-rules-server';
 import { CODEX_PAYLOAD_KEYS, type CodexPayload } from '@/types/codex';
 
 const mockCreateClient = vi.mocked(createClient);
 const mockGetSession = vi.mocked(getSession);
+const mockIsAdmin = vi.mocked(isAdmin);
 const mockFetchCoreRules = vi.mocked(fetchCoreRules);
 
 const ROWS: Record<string, Record<string, unknown>[]> = {
   codex_feats: [{ id: 'feat-1', name: 'Cleave' }],
   codex_skills: [{ id: 'skill-1', name: 'Athletics', ability: 'STR' }],
-  codex_species: [{ id: 'species-1', name: 'Human', sizes: 'Medium' }],
+  codex_species: [
+    { id: 'species-1', name: 'Human', sizes: 'Medium', catalog_listing: 'listed' },
+    { id: 'species-hidden', name: 'Admin Only', sizes: 'Medium', catalog_listing: 'unlisted' },
+  ],
   codex_traits: [{ id: 'trait-1', name: 'Keen Sight' }],
   codex_parts: [
     { id: 'part-1', name: 'Damage', type: 'power' },
@@ -66,6 +75,7 @@ describe('GET /api/codex', () => {
       PROGRESSION_PLAYER: { baseHealth: 8 },
     } as never);
     mockCreateClient.mockResolvedValue(mockSupabase());
+    mockIsAdmin.mockResolvedValue(false);
   });
 
   it('returns every collection when ?collection= is omitted', async () => {
@@ -117,6 +127,29 @@ describe('GET /api/codex', () => {
     const powerParts = await getJson('http://localhost/api/codex?collection=powerParts');
     expect(Object.keys(powerParts)).toEqual(['powerParts']);
     expect(powerParts.powerParts?.map((part) => part.id)).toEqual(['part-1']);
+  });
+
+  it('hides unlisted species from public catalog reads', async () => {
+    const body = await getJson('http://localhost/api/codex?collection=species');
+    expect(body.species?.map((s) => s.id)).toEqual(['species-1']);
+    expect(mockGetSession).not.toHaveBeenCalled();
+  });
+
+  it('keeps unlisted species hidden when includeUnlisted=1 without admin', async () => {
+    mockGetSession.mockResolvedValue({ user: null, error: 'No session' });
+    const body = await getJson('http://localhost/api/codex?collection=species&includeUnlisted=1');
+    expect(body.species?.map((s) => s.id)).toEqual(['species-1']);
+    expect(mockGetSession).toHaveBeenCalled();
+  });
+
+  it('includes unlisted species for an admin with includeUnlisted=1', async () => {
+    mockGetSession.mockResolvedValue({
+      user: { uid: 'admin-1', email: 'admin@example.com' },
+      error: null,
+    });
+    mockIsAdmin.mockResolvedValue(true);
+    const body = await getJson('http://localhost/api/codex?collection=species&includeUnlisted=1');
+    expect(body.species?.map((s) => s.id)).toEqual(['species-1', 'species-hidden']);
   });
 
   it('rejects an unknown collection without echoing the value', async () => {

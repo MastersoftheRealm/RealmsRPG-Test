@@ -18,7 +18,12 @@ const CACHE_CONTROL = 'private, max-age=0, must-revalidate';
 export async function GET() {
   try {
     const supabase = asLibraryCountsClient(await createClient());
-    const counts = await fetchLibraryTabCounts(supabase, OFFICIAL_LIBRARY_COUNT_TABLES);
+    const counts = await fetchLibraryTabCounts(
+      supabase,
+      OFFICIAL_LIBRARY_COUNT_TABLES,
+      undefined,
+      true,
+    );
     return NextResponse.json(counts, { headers: { 'Cache-Control': CACHE_CONTROL } });
   } catch (err) {
     logApiError('GET /api/official/counts', err);

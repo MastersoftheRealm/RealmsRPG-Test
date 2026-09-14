@@ -9,6 +9,7 @@
 
 import { useState, useMemo, useCallback, useEffect } from 'react';
 import { useCreatorSave, type TechniquePart } from '@/hooks';
+import type { CreatorSaveTarget } from '@/lib/library/catalog-listing';
 import {
   calculateTechniqueCosts,
   computeTechniqueActionTypeFromSelection,
@@ -52,12 +53,14 @@ type UseTechniqueCreatorWorkspaceArgs = {
   initialFormState: TechniqueCreatorFormState;
   editTechniqueId: string | null;
   techniqueParts: TechniquePart[];
+  initialSaveTarget?: CreatorSaveTarget | undefined;
 };
 
 export function useTechniqueCreatorWorkspace({
   initialFormState,
   editTechniqueId,
   techniqueParts,
+  initialSaveTarget,
 }: UseTechniqueCreatorWorkspaceArgs) {
   const [name, setName] = useState(initialFormState.name);
   const [description, setDescription] = useState(initialFormState.description);
@@ -338,6 +341,7 @@ export function useTechniqueCreatorWorkspace({
         : `Are you sure you wish to publish this technique "${n}" to the Realms Library? All users will be able to see and use it.`,
     successMessage: 'Technique saved successfully!',
     publicSuccessMessage: 'Technique saved to Realms Library!',
+    initialSaveTarget,
     onSaveSuccess: () => {
       setName('');
       setDescription('');
@@ -388,6 +392,7 @@ export function useTechniqueCreatorWorkspace({
   const handleLoadTechnique = useCallback(
     (technique: TechniqueLibraryRecord) => {
       applyFormState(techniqueLibraryRecordToFormState(technique, techniqueParts));
+      save.applyLoadedLibraryItem(technique);
       save.setSaveMessage({ type: 'success', text: 'Technique loaded successfully!' });
       setTimeout(() => save.setSaveMessage(null), 2000);
     },

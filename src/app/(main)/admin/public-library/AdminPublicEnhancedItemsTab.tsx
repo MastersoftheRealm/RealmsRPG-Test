@@ -10,6 +10,7 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { DeleteConfirmModal, OfficialEnhancedList } from '@/components/patterns';
 import {
   useOfficialLibrary,
+  usePatchOfficialCatalogListing,
   useEnhancedItems,
   useCreateOfficialEnhancedItem,
   useDeleteOfficialEnhancedItem,
@@ -38,8 +39,9 @@ function useUpdateOfficialEnhancedItem() {
 
 export function AdminPublicEnhancedItemsTab() {
   const { data: enhanced = [], isLoading, error, refetch } = useEnhancedItems('official');
-  const { data: items = [] } = useOfficialLibrary('items');
-  const { data: powers = [] } = useOfficialLibrary('powers');
+  const { data: items = [] } = useOfficialLibrary('items', { includeUnlisted: true });
+  const { data: powers = [] } = useOfficialLibrary('powers', { includeUnlisted: true });
+  const patchListing = usePatchOfficialCatalogListing('enhanced-items');
 
   const [deleteConfirm, setDeleteConfirm] = useState<{ id: string; name: string } | null>(null);
   const [editTarget, setEditTarget] = useState<OfficialEnhancedItem | null>(null);
@@ -70,6 +72,7 @@ export function AdminPublicEnhancedItemsTab() {
           setIsCreateOpen(true);
         }}
         onDelete={(id, name) => setDeleteConfirm({ id, name })}
+        onCatalogListingChange={patchListing}
         searchTrailing={
           <Button
             size="sm"

@@ -3,6 +3,7 @@
  */
 
 import type { Species, Skill, Trait } from '@/hooks';
+import { parseCatalogListing } from '@/lib/library/catalog-listing';
 
 export type TraitPickerField =
   | 'speciesTraitIds'
@@ -34,6 +35,7 @@ export type SpeciesFormState = {
   maxAge: string;
   languages: string;
   isStarter: boolean;
+  catalogListing: 'listed' | 'unlisted';
   imageId: string | null;
   imageUrl: string | null;
 };
@@ -55,6 +57,7 @@ export const EMPTY_SPECIES_FORM: SpeciesFormState = {
   maxAge: '',
   languages: '',
   isStarter: false,
+  catalogListing: 'listed',
   imageId: null,
   imageUrl: null,
 };
@@ -104,6 +107,10 @@ export function speciesToFormState(
     maxAge: max,
     languages: (s.languages || []).join(', '),
     isStarter: Boolean((s as Species & { is_starter?: boolean | undefined }).is_starter),
+    catalogListing: parseCatalogListing(
+      (s as Species & { catalog_listing?: unknown; catalogListing?: unknown }).catalog_listing ??
+        (s as Species & { catalogListing?: unknown }).catalogListing,
+    ),
     imageId: s.image_id ?? null,
     imageUrl: s.image_url ?? null,
   };
@@ -139,6 +146,7 @@ export function speciesFormToSavePayload(form: SpeciesFormState): Record<string,
     adulthood_lifespan,
     languages,
     isStarter: form.isStarter,
+    catalogListing: form.catalogListing,
     imageId: form.imageId,
     imageUrl: form.imageUrl,
   };

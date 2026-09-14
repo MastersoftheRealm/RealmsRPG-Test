@@ -9,6 +9,7 @@ import { type ReactNode } from 'react';
 import { Sparkles } from 'lucide-react';
 import { OfficialEntityList } from '@/components/patterns/list/official-entity-list';
 import type { OfficialEnhancedItem } from '@/types/crafting';
+import type { CatalogListing } from '@/lib/library/catalog-listing';
 import {
   buildOfficialEnhancedRows,
   filterOfficialEnhancedRows,
@@ -36,6 +37,7 @@ export interface OfficialEnhancedListProps {
   onAddRequest?: ((row: OfficialEnhancedRow) => void) | undefined;
   onEdit?: ((id: string) => void) | undefined;
   onDelete?: ((id: string, name: string) => void) | undefined;
+  onCatalogListingChange?: ((id: string, listing: CatalogListing) => void) | undefined;
   searchTrailing?: ReactNode | undefined;
 }
 
@@ -56,6 +58,7 @@ export function OfficialEnhancedList({
   onAddRequest,
   onEdit,
   onDelete,
+  onCatalogListingChange,
   searchTrailing,
 }: OfficialEnhancedListProps) {
   return (
@@ -88,6 +91,7 @@ export function OfficialEnhancedList({
       onAddRequest={onAddRequest}
       onEdit={onEdit}
       onDelete={onDelete}
+      onCatalogListingChange={onCatalogListingChange}
       searchTrailing={searchTrailing}
     />
   );

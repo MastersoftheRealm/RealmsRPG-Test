@@ -6,6 +6,7 @@ import type { CreatureData } from '@/components/patterns/list/creature-stat-bloc
 import { formatListCellLabel } from '@/lib/utils';
 import { resolveCreatureInventoryBuckets } from '@/lib/game/creature-inventory';
 import type { LibraryCreature } from '@/types/library';
+import { parseCatalogListing } from '@/lib/library/catalog-listing';
 
 /** Full stat-block list chrome (Realms + My Library creature tabs). */
 export const CREATURE_STAT_BLOCK_GRID = '1.8fr 0.6fr 0.8fr 1fr 1fr 0.6fr 0.6fr';
@@ -36,6 +37,7 @@ export interface OfficialCreatureRow {
   description: string;
   level: number;
   type: string;
+  catalogListing?: LibraryCreature['catalogListing'];
 }
 
 export function buildOfficialCreatureRows(items: LibraryCreature[]): OfficialCreatureRow[] {
@@ -46,6 +48,7 @@ export function buildOfficialCreatureRows(items: LibraryCreature[]): OfficialCre
     description: String(c.description ?? ''),
     level: Number(c.level ?? 0),
     type: String(c.type ?? ''),
+    catalogListing: parseCatalogListing(c.catalogListing),
   }));
 }
 

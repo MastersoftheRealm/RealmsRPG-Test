@@ -44,6 +44,10 @@ import {
 import { ItemCreatorEditor } from './item-creator-editor';
 import { RarityReferenceTable } from './item-creator-helpers';
 import { useItemCreatorWorkspace } from './use-item-creator-workspace';
+import {
+  findLoadedLibraryItem,
+  resolveCreatorSaveTargetFromItem,
+} from '@/lib/library/catalog-listing';
 import { formatCost } from '@/lib/game/creator-constants';
 import { rarityChipVariant } from '@/lib/chip/rarity-chip-variant';
 
@@ -138,6 +142,9 @@ function ItemCreatorWorkspace({
     editItemId,
     itemProperties,
     closeLoadModal: load.closeLoadModal,
+    initialSaveTarget: resolveCreatorSaveTargetFromItem(
+      findLoadedLibraryItem(load.rawItems, editItemId),
+    ),
   });
 
   return (
@@ -147,7 +154,7 @@ function ItemCreatorWorkspace({
       description="Design custom weapons, armor, and shields by combining item properties. Properties determine the item's rarity and cost."
       user={user}
       auth={{ returnPath: '/item-creator', contentType: 'armament' }}
-      showPublicPrivate={isAdmin}
+      showSaveTarget={isAdmin}
       saveTarget={ws.save.saveTarget}
       onSaveTargetChange={ws.save.setSaveTarget}
       onSave={ws.save.handleSave}
