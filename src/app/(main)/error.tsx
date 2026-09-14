@@ -9,6 +9,7 @@
 
 import { useEffect } from 'react';
 import { AlertCircle, RefreshCw, Home } from 'lucide-react';
+import Link from 'next/link';
 import { Button, PageHeader } from '@/components/ui';
 
 interface ErrorProps {
@@ -41,9 +42,11 @@ export default function MainError({ error, reset }: ErrorProps) {
             <RefreshCw className="mr-1.5 h-4 w-4" />
             Try Again
           </Button>
-          <Button variant="secondary" size="md" onClick={() => (window.location.href = '/')}>
-            <Home className="mr-1.5 h-4 w-4" />
-            Home
+          <Button variant="secondary" size="md" asChild>
+            <Link href="/">
+              <Home className="mr-1.5 h-4 w-4" />
+              Home
+            </Link>
           </Button>
         </div>
       </div>
