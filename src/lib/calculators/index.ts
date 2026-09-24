@@ -46,7 +46,9 @@ export {
   getAreaPartForDisplay,
   formatAreaForDisplay,
   derivePowerDisplay,
+  derivePlainPowerDisplay,
   formatPowerDamage,
+  type DerivePowerDisplayOptions,
   type PowerPartPayload,
   type PowerCostResult,
   type PowerDisplayData,
@@ -55,6 +57,33 @@ export {
   type PowerEnergyAnalysis,
   type PowerEnergyLine,
 } from './power-calc';
+
+// Power composition / built-in variants (ADR-0029)
+export {
+  POWER_COMPOSITION_STRUCTURES,
+  POWER_COMPOSITION_STRUCTURE_LABELS,
+  POWER_COMPOSITION_CODEX_PART_IDS,
+  POWER_RANDOMIZE_DIE_SIDES,
+  POWER_ALTERNATE_HELP,
+  normalizePowerComposition,
+  isRandomizeDieComplete,
+  isPowerCompositionMechanicPart,
+  resolvePowerComposition,
+  selectedResolvedVariant,
+  composedPowerDamage,
+  composedPowerSavedParts,
+  composedPowerDurationLabel,
+  formatPowerCompositionSummary,
+  type PowerComposition,
+  type PowerCompositionStructure,
+  type PowerCompositionResolution,
+  type PowerVariant,
+  type PowerVariantSpec,
+  type PowerVariantPolarity,
+  type PowerReverseSpec,
+  type PowerRandomizeDie,
+  type ResolvedPowerVariant,
+} from './power-composition';
 
 export {
   buildPowerAdvancedCalculationGroups,

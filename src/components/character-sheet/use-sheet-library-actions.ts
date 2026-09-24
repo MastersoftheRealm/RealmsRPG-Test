@@ -87,6 +87,25 @@ export function useSheetLibraryActions({
     [character, setCharacter],
   );
 
+  const handleSelectPowerVariant = useCallback(
+    (powerId: string | number, variantId: string) => {
+      if (!character) return;
+      setCharacter((prev) =>
+        prev
+          ? {
+              ...prev,
+              powers: (prev.powers || []).map((p) =>
+                p.id === powerId || String(p.id) === String(powerId)
+                  ? { ...p, selectedVariantId: variantId }
+                  : p,
+              ),
+            }
+          : null,
+      );
+    },
+    [character, setCharacter],
+  );
+
   const handleUsePower = useCallback(
     (_powerId: string | number, energyCost: number) => {
       if (!calculatedStats) return;
@@ -433,6 +452,7 @@ export function useSheetLibraryActions({
   return {
     handleRemovePower,
     handleTogglePowerInnate,
+    handleSelectPowerVariant,
     handleUsePower,
     handleRemoveTechnique,
     handleUseTechnique,

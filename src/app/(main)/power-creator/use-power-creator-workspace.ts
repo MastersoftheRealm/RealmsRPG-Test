@@ -3,6 +3,8 @@
  * =================================================================
  * Owns form state, draft cache, save/load. Cost derivation and part actions
  * are co-located modules; presentational sections stay in the editor facade.
+ * Built-in variants (ADR-0029): the field state below is the open tab; the other
+ * tabs live in `usePowerCreatorComposition`.
  */
 
 'use client';
@@ -10,12 +12,19 @@
 import { useState, useMemo, useCallback, useEffect } from 'react';
 import { useCreatorSave, type PowerPart } from '@/hooks';
 import type { CreatorSaveTarget } from '@/lib/library/catalog-listing';
-import type { AreaConfig, DurationConfig } from '@/lib/calculators';
-import { dedupeSavedParts } from '@/lib/game/dedupe-saved-parts';
+import {
+  isPowerCompositionMechanicPart,
+  isRandomizeDieComplete,
+  resolvePowerComposition,
+  type AreaConfig,
+  type DurationConfig,
+  type PowerDocument,
+} from '@/lib/calculators';
 import type { AttackMode } from '@/lib/attack-mode';
 import type { SelectedPart, AdvancedPart, DamageConfig, RangeConfig } from './power-creator-types';
 import { POWER_CREATOR_CACHE_KEY, EXCLUDED_PARTS } from './power-creator-constants';
 import {
+  emptyPowerCreatorFormState,
   powerLibraryRecordToFormState,
   type PowerCreatorCache,
   type PowerCreatorFormState,
@@ -24,6 +33,18 @@ import {
 import { writeCreatorCache, clearCreatorCache } from '@/lib/game/creator-cache';
 import { usePowerCreatorCostDerivation } from './power-creator-cost-derivation';
 import { usePowerCreatorPartActions } from './power-creator-part-actions';
+import {
+  REVERSE_TAB_ID,
+  SHARED_TAB_ID,
+  pickTabForm,
+  tabFormToSpec,
+  topLevelForm,
+  type PowerTabForm,
+} from './power-creator-composition';
+import {
+  compositionInitFromSaved,
+  usePowerCreatorComposition,
+} from './use-power-creator-composition';
 
 type UsePowerCreatorWorkspaceArgs = {
   initialFormState: PowerCreatorFormState;
@@ -59,6 +80,58 @@ export function usePowerCreatorWorkspace({
     initialFormState.targetedDefenses,
   );
 
+  const liveForm: PowerTabForm = useMemo(
+    () => ({
+      selectedParts,
+      selectedAdvancedParts,
+      actionType,
+      isReaction,
+      damages,
+      range,
+      area,
+      duration,
+      attackMode,
+    }),
+    [
+      selectedParts,
+      selectedAdvancedParts,
+      actionType,
+      isReaction,
+      damages,
+      range,
+      area,
+      duration,
+      attackMode,
+    ],
+  );
+
+  const applyTabForm = useCallback((form: PowerTabForm) => {
+    setSelectedParts(form.selectedParts);
+    setSelectedAdvancedParts(form.selectedAdvancedParts);
+    setActionType(form.actionType);
+    setIsReaction(form.isReaction);
+    setDamages(form.damages);
+    setRange(form.range);
+    setArea(form.area);
+    setDuration(form.duration);
+    setAttackMode(form.attackMode);
+  }, []);
+
+  const [compositionInit] = useState(() =>
+    compositionInitFromSaved(
+      initialFormState.composition,
+      pickTabForm(initialFormState),
+      powerParts,
+    ),
+  );
+  const variants = usePowerCreatorComposition({
+    init: compositionInit,
+    liveForm,
+    applyTabForm,
+  });
+  const composition = variants.composition;
+  const topForm = composition ? topLevelForm(variants.collected) : liveForm;
+
   useEffect(() => {
     if (editPowerId) clearCreatorCache(POWER_CREATOR_CACHE_KEY);
   }, [editPowerId]);
@@ -69,7 +142,7 @@ export function usePowerCreatorWorkspace({
     const cache: PowerCreatorCache = {
       name,
       description,
-      selectedParts: selectedParts.map((sp) => ({
+      selectedParts: topForm.selectedParts.map((sp) => ({
         partId: sp.part.id,
         op_1_lvl: sp.op_1_lvl,
         op_2_lvl: sp.op_2_lvl,
@@ -77,51 +150,41 @@ export function usePowerCreatorWorkspace({
         applyDuration: sp.applyDuration,
         selectedCategory: sp.selectedCategory,
       })),
-      selectedAdvancedParts: selectedAdvancedParts.map((ap) => ({
+      selectedAdvancedParts: topForm.selectedAdvancedParts.map((ap) => ({
         partId: ap.part.id,
         op_1_lvl: ap.op_1_lvl,
         op_2_lvl: ap.op_2_lvl,
         op_3_lvl: ap.op_3_lvl,
         applyDuration: ap.applyDuration,
       })),
-      actionType,
-      isReaction,
-      damage: damages,
-      range,
-      area,
-      duration,
-      attackMode,
+      actionType: topForm.actionType,
+      isReaction: topForm.isReaction,
+      damage: topForm.damages,
+      range: topForm.range,
+      area: topForm.area,
+      duration: topForm.duration,
+      attackMode: topForm.attackMode,
       imageId,
       imageUrl,
       targetedDefenses,
+      ...(composition ? { composition } : {}),
       timestamp: Date.now(),
     };
     writeCreatorCache(POWER_CREATOR_CACHE_KEY, cache);
-  }, [
-    editPowerId,
-    name,
-    description,
-    selectedParts,
-    selectedAdvancedParts,
-    actionType,
-    isReaction,
-    damages,
-    range,
-    area,
-    duration,
-    attackMode,
-    imageId,
-    imageUrl,
-    targetedDefenses,
-  ]);
+  }, [editPowerId, name, description, topForm, composition, imageId, imageUrl, targetedDefenses]);
 
   const nonMechanicParts = useMemo(
     () => powerParts.filter((p: PowerPart) => !p.mechanic),
     [powerParts],
   );
 
+  // Choice / Split / Randomize / Reverse Effects are built-in variants now (ADR-0029).
   const mechanicPartsForList = useMemo(
-    () => powerParts.filter((p: PowerPart) => p.mechanic && !EXCLUDED_PARTS.has(p.name)),
+    () =>
+      powerParts.filter(
+        (p: PowerPart) =>
+          p.mechanic && !EXCLUDED_PARTS.has(p.name) && !isPowerCompositionMechanicPart(p),
+      ),
     [powerParts],
   );
 
@@ -173,69 +236,50 @@ export function usePowerCreatorWorkspace({
     [selectedParts, selectedAdvancedParts],
   );
 
-  const getPayload = useCallback(() => {
-    // User + advanced parts only; auto mechanics are derived from action/damage/range/area/duration/attackMode on load.
-    const partsToSave = dedupeSavedParts([
-      ...selectedParts.map((sp) => ({
-        id: Number(sp.part.id),
-        name: sp.part.name,
-        op_1_lvl: sp.op_1_lvl,
-        op_2_lvl: sp.op_2_lvl,
-        op_3_lvl: sp.op_3_lvl,
-        applyDuration: sp.applyDuration,
-      })),
-      ...selectedAdvancedParts.map((ap) => ({
-        id: Number(ap.part.id),
-        name: ap.part.name,
-        op_1_lvl: ap.op_1_lvl,
-        op_2_lvl: ap.op_2_lvl,
-        op_3_lvl: ap.op_3_lvl,
-        applyDuration: ap.applyDuration,
-        isAdvanced: true,
-      })),
-    ]);
-    const damageToSave = damages
-      .filter((d) => d.type !== 'none' && d.amount > 0)
-      .map((d) => ({
-        amount: d.amount,
-        size: d.size,
-        type: d.type,
-        applyDuration: d.applyDuration ?? false,
-      }));
-    return {
+  const powerData = useMemo(
+    () => ({
       name: name.trim(),
-      data: {
-        name: name.trim(),
-        description: description.trim(),
-        parts: partsToSave,
-        damage: damageToSave,
-        actionType,
-        isReaction,
-        range,
-        area,
-        duration,
-        attackMode,
-        ...(targetedDefenses.length > 0 ? { targetedDefenses } : {}),
-        ...(imageId ? { imageId } : {}),
-        ...(imageUrl ? { imageUrl } : {}),
-      },
-    };
-  }, [
-    name,
-    description,
-    selectedParts,
-    selectedAdvancedParts,
-    damages,
-    actionType,
-    isReaction,
-    range,
-    area,
-    duration,
-    attackMode,
-    targetedDefenses,
-    imageId,
-    imageUrl,
-  ]);
+      description: description.trim(),
+      // User + advanced parts only; auto mechanics are derived from action/damage/range/area/duration/attackMode on load.
+      ...tabFormToSpec(topForm),
+      ...(targetedDefenses.length > 0 ? { targetedDefenses } : {}),
+      ...(imageId ? { imageId } : {}),
+      ...(imageUrl ? { imageUrl } : {}),
+      ...(composition ? { composition } : {}),
+    }),
+    [name, description, topForm, targetedDefenses, imageId, imageUrl, composition],
+  );
+
+  const getPayload = useCallback(() => ({ name: name.trim(), data: powerData }), [name, powerData]);
+
+  /** Composed totals for the summary (open tab drives which variant the stat rows follow). */
+  const composedSummary = useMemo(() => {
+    if (!composition) return null;
+    const res = resolvePowerComposition(powerData as PowerDocument, powerParts, {
+      selectedVariantId: variants.activeVariant?.id,
+    });
+    if (!res) return null;
+    const tab =
+      variants.activeTabId === REVERSE_TAB_ID
+        ? res.reverse?.display
+        : variants.activeTabId === SHARED_TAB_ID
+          ? res.shared?.display
+          : res.variants.find((v) => v.id === variants.activeTabId)?.display;
+    return { res, tabDisplay: tab ?? null };
+  }, [composition, powerData, powerParts, variants.activeVariant, variants.activeTabId]);
+
+  const dieIncomplete = !!composition && !isRandomizeDieComplete(composition);
+
+  const resetFields = useCallback(() => {
+    const empty = emptyPowerCreatorFormState();
+    setName(empty.name);
+    setDescription(empty.description);
+    applyTabForm(pickTabForm(empty));
+    setImageId(null);
+    setImageUrl(null);
+    setTargetedDefenses([]);
+    variants.reset();
+  }, [applyTabForm, variants]);
 
   const save = useCreatorSave({
     type: 'powers',
@@ -249,75 +293,29 @@ export function usePowerCreatorWorkspace({
     successMessage: 'Power saved successfully!',
     publicSuccessMessage: 'Power saved to Realms Library!',
     initialSaveTarget,
-    onSaveSuccess: () => {
-      setName('');
-      setDescription('');
-      setSelectedParts([]);
-      setSelectedAdvancedParts([]);
-      setActionType('basic');
-      setIsReaction(false);
-      setDamages([{ amount: 0, size: 6, type: 'none', applyDuration: false }]);
-      setRange({ steps: 0 });
-      setArea({ type: 'none', level: 1, applyDuration: false });
-      setDuration({
-        type: 'instant',
-        value: 1,
-        applyDuration: false,
-        focus: false,
-        noHarm: false,
-        endsOnActivation: false,
-        sustain: 0,
-      });
-      setAttackMode('none');
-      setImageId(null);
-      setImageUrl(null);
-      setTargetedDefenses([]);
-    },
+    onSaveSuccess: resetFields,
   });
 
   const handleReset = useCallback(() => {
-    setName('');
-    setDescription('');
-    setSelectedParts([]);
-    setSelectedAdvancedParts([]);
-    setActionType('basic');
-    setIsReaction(false);
-    setDamages([{ amount: 0, size: 6, type: 'none', applyDuration: false }]);
-    setRange({ steps: 0 });
-    setArea({ type: 'none', level: 1, applyDuration: false });
-    setDuration({
-      type: 'instant',
-      value: 1,
-      applyDuration: false,
-      focus: false,
-      noHarm: false,
-      endsOnActivation: false,
-      sustain: 0,
-    });
-    setAttackMode('none');
-    setImageId(null);
-    setImageUrl(null);
-    setTargetedDefenses([]);
+    resetFields();
     save.setSaveMessage(null);
     clearCreatorCache(POWER_CREATOR_CACHE_KEY);
-  }, [save]);
+  }, [resetFields, save]);
 
-  const applyFormState = useCallback((next: PowerCreatorFormState) => {
-    setName(next.name);
-    setDescription(next.description);
-    setSelectedParts(next.selectedParts);
-    setSelectedAdvancedParts(next.selectedAdvancedParts);
-    setActionType(next.actionType);
-    setIsReaction(next.isReaction);
-    setDamages(next.damages);
-    setRange(next.range);
-    setArea(next.area);
-    setDuration(next.duration);
-    setAttackMode(next.attackMode);
-    setImageId(next.imageId);
-    setImageUrl(next.imageUrl);
-    setTargetedDefenses(next.targetedDefenses);
-  }, []);
+  const applyFormState = useCallback(
+    (next: PowerCreatorFormState) => {
+      setName(next.name);
+      setDescription(next.description);
+      applyTabForm(pickTabForm(next));
+      setImageId(next.imageId);
+      setImageUrl(next.imageUrl);
+      setTargetedDefenses(next.targetedDefenses);
+      variants.loadFromSaved(
+        compositionInitFromSaved(next.composition, pickTabForm(next), powerParts),
+      );
+    },
+    [applyTabForm, variants, powerParts],
+  );
 
   const handleLoadPower = useCallback(
     (power: PowerLibraryRecord) => {
@@ -380,6 +378,9 @@ export function usePowerCreatorWorkspace({
     addMechanicPart,
     removeAdvancedPart,
     updateAdvancedPart,
+    variants,
+    composedSummary,
+    dieIncomplete,
     save,
     handleReset,
     handleLoadPower,

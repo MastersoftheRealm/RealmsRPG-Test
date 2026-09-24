@@ -11,6 +11,7 @@ import type { UserPower, UserTechnique, UserItem } from '@/hooks/use-user-librar
 import type { CreatureFeat as CodexCreatureFeat, ItemProperty } from '@/hooks/codex-types';
 import type { PowerPart, TechniquePart } from '@/hooks';
 import { derivePowerDisplay, formatPowerDamage } from '@/lib/calculators/power-calc';
+import { composedPowerDamage } from '@/lib/calculators/power-composition';
 import { deriveTechniqueDisplay } from '@/lib/calculators/technique-calc';
 import {
   deriveItemDisplay,
@@ -146,10 +147,22 @@ export function transformUserPowerToDisplayItem(
       description: power.description,
       parts: power.parts || [],
       damage: power.damage,
+      ...(power.composition
+        ? {
+            actionType: power.actionType,
+            isReaction: power.isReaction,
+            range: power.range,
+            area: power.area,
+            duration: power.duration,
+            composition: power.composition,
+          }
+        : {}),
     },
     partsDb,
   );
-  const damageStr = formatPowerDamage(power.damage);
+  const damageStr = formatPowerDamage(
+    display.composition ? composedPowerDamage(display.composition) : power.damage,
+  );
 
   const stats: ItemStat[] = [
     { label: 'Energy', value: display.energy ?? '-' },

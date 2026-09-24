@@ -647,6 +647,28 @@ export const powerCreatorDurationHelp = (
 export const powerCreatorPartsHelp =
   'These are the payload of your Power — what the Power does. There are limitless options and you can combine them in many ways, but the best Powers often have only one to three parts.';
 
+export const powerCreatorStructureHelp = (
+  <div>
+    <div>
+      <strong>Variants</strong> are the versions of this power you switch between or combine.
+    </div>
+    <div>
+      <strong>Choice</strong>: pick one portion when used; pay the most expensive.{' '}
+      <strong>Alternate</strong>: each variant is a whole power; pay the one you use.{' '}
+      <strong>Modify</strong>: pieces with their own stipulations, all on one cast; costs add.{' '}
+      <strong>Randomize</strong>: a die picks the outcome; positive faces add, negative faces
+      subtract (minimum 1 Energy).
+    </div>
+  </div>
+);
+
+export const powerCreatorReverseHelp = (
+  <div>
+    If the power benefits you or an ally, add a drawback on the Reverse tab. The drawback reduces
+    the cost by 50% of its own energy and cannot be nullified or reduced by you or an ally.
+  </div>
+);
+
 export const powerCreatorMechanicsHelp = (
   <div>
     <div>

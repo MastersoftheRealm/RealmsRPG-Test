@@ -7,6 +7,16 @@ import type { ColumnValue } from '@/components/patterns/list/grid-list-row';
 import type { PowerPart } from '@/hooks/codex-types';
 import type { LibraryPower } from '@/types/library';
 import { derivePowerDisplay, formatPowerDamage } from '@/lib/calculators/power-calc';
+import {
+  composedPowerDamage,
+  composedPowerSavedParts,
+  type PowerCompositionResolution,
+} from '@/lib/calculators/power-composition';
+import {
+  snapshotOfficialPowerForInnate,
+  type InnatePowerSnapshot,
+} from '@/lib/game/innate-eligibility';
+import { powerVariantsDetailSection } from '@/lib/power-variant-chips';
 import { libraryItemToPowerDocument } from '@/lib/library-selectable-builders';
 import { partChipsFromDisplay } from '@/lib/chip/part-chips-from-display';
 import {
@@ -67,6 +77,10 @@ export interface OfficialPowerRow {
   partIds: string[];
   partNames: string[];
   catalogListing?: LibraryPower['catalogListing'];
+  /** Built-in variants resolved for browse (ADR-0029). */
+  composition?: PowerCompositionResolution | undefined;
+  /** Appendix G snapshot for composed powers (all parts / every duration; Alternate per variant). */
+  innateSnapshot?: InnatePowerSnapshot | undefined;
 }
 
 export function buildOfficialPowerRows(
@@ -75,13 +89,15 @@ export function buildOfficialPowerRows(
 ): OfficialPowerRow[] {
   return items.map((p) => {
     const doc = libraryItemToPowerDocument(p);
-    const savedParts = doc.parts ?? [];
     const display = derivePowerDisplay(doc, partsDb);
-    const damageStr = formatPowerDamage(doc.damage);
+    const composition = display.composition;
+    const savedParts = composition ? composedPowerSavedParts(composition) : (doc.parts ?? []);
+    const damage = composition ? composedPowerDamage(composition) : doc.damage;
+    const damageStr = formatPowerDamage(damage);
     const parts = partChipsFromDisplay(display.partChips, { stripOptionSuffix: true });
     const categories = withDamageCategory(
       derivePartCategories(savedParts, partsDb),
-      powerHasDamageCategory(doc.damage),
+      powerHasDamageCategory(damage),
     );
     return {
       id: String(p.id ?? p.docId ?? ''),
@@ -105,6 +121,12 @@ export function buildOfficialPowerRows(
         .map((part) => (part.name != null ? String(part.name) : ''))
         .filter(Boolean),
       catalogListing: parseCatalogListing(p.catalogListing),
+      ...(composition
+        ? {
+            composition,
+            innateSnapshot: snapshotOfficialPowerForInnate({ ...p, parts: p.parts ?? [] }, partsDb),
+          }
+        : {}),
     };
   });
 }
@@ -121,6 +143,7 @@ export function officialPowerDetailSections(row: OfficialPowerRow) {
       parts ? [parts] : undefined,
     ),
     targets,
+    powerVariantsDetailSection(row.composition),
   );
 }
 

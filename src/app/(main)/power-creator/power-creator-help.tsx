@@ -19,6 +19,8 @@ import {
   powerCreatorPartsHelp,
   powerCreatorReactionHelp,
   powerCreatorResetHelp,
+  powerCreatorReverseHelp,
+  powerCreatorStructureHelp,
   powerCreatorTrainingPointsHelp,
 } from '../../../../public/tooltip-text';
 
@@ -37,6 +39,8 @@ const POWER_CREATOR_TIPS = {
   tp: { content: powerCreatorTrainingPointsHelp, label: 'Training Points help' },
   load: { content: powerCreatorLoadHelp, label: 'Load help' },
   reset: { content: powerCreatorResetHelp, label: 'Reset help' },
+  structure: { content: powerCreatorStructureHelp, label: 'Structure help' },
+  reverse: { content: powerCreatorReverseHelp, label: 'Reverse effects help' },
 } as const;
 
 export type PowerCreatorHelpTopic = keyof typeof POWER_CREATOR_TIPS;

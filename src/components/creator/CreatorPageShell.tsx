@@ -93,6 +93,8 @@ export type CreatorPageShellProps = {
   stickySidebar?: boolean | undefined;
   sidebar: ReactNode;
   children: ReactNode;
+  /** Band above the editor/summary grid (CreatorLayout `aboveGrid`). */
+  aboveGrid?: ReactNode | undefined;
   extraModals?: ReactNode | undefined;
   /** Optional InfoTippy beside toolbar Load / Reset (power creator). */
   toolbarHelp?: {
@@ -124,6 +126,7 @@ export function CreatorPageShell({
   stickySidebar = true,
   sidebar,
   children,
+  aboveGrid,
   extraModals,
   toolbarHelp,
 }: CreatorPageShellProps) {
@@ -183,6 +186,7 @@ export function CreatorPageShell({
       description={description}
       size={size}
       headerClassName={headerClassName}
+      aboveGrid={loading?.isLoading ? undefined : aboveGrid}
       actions={
         <CreatorSaveToolbar
           saveTarget={saveTarget}

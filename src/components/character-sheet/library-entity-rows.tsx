@@ -58,6 +58,15 @@ import {
 import type { ChipData } from '@/components/patterns';
 import { rangeFactChip, targetsFactChip } from '@/lib/detail-option/compact-facts';
 import { derivePowerDisplay, formatPowerDamage } from '@/lib/calculators/power-calc';
+import {
+  composedPowerDamage,
+  composedPowerSavedParts,
+  selectedResolvedVariant,
+} from '@/lib/calculators/power-composition';
+import { composedPowerDamageLabel, powerVariantsDetailSection } from '@/lib/power-variant-chips';
+import { partChipsFromDisplay } from '@/lib/chip/part-chips-from-display';
+import { DIE_MAX, generateRollId, type DieType } from '@/lib/rolls/die';
+import type { LibraryPower } from '@/types/library';
 import { deriveTechniqueDisplay } from '@/lib/calculators/technique-calc';
 import {
   resolveItemMarketPricing,
@@ -99,6 +108,7 @@ export type LibraryEntityRowContext = {
   onUsePower?: ((id: string | number, energyCost: number) => void) | undefined;
   onRemovePower?: ((id: string | number) => void) | undefined;
   onTogglePowerInnate?: ((id: string | number, isInnate: boolean) => void) | undefined;
+  onSelectPowerVariant?: ((id: string | number, variantId: string) => void) | undefined;
   onUseTechnique?: ((id: string | number, energyCost: number) => void) | undefined;
   onRemoveTechnique?: ((id: string | number) => void) | undefined;
   onRemoveWeapon?: ((id: string | number) => void) | undefined;
@@ -213,6 +223,21 @@ function buildEnergyButton(
   );
 }
 
+/** Roll-log entry for a Randomize die roll (face picks the outcome). */
+function buildRandomizeRollEntry(powerName: string, face: number, sides: number, label: string) {
+  const dieType = `d${sides}` as DieType;
+  const known = dieType in DIE_MAX;
+  return {
+    id: generateRollId(),
+    type: 'custom' as const,
+    title: `${powerName}: 1d${sides} → ${label}`,
+    dice: known ? [{ type: dieType, value: face, isMax: face === sides, isMin: face === 1 }] : [],
+    modifier: 0,
+    total: face,
+    timestamp: new Date(),
+  };
+}
+
 export function mapPowerRows(
   powers: CharacterPower[],
   ctx: LibraryEntityRowContext,
@@ -222,37 +247,83 @@ export function mapPowerRows(
     const isInnate = power.innate === true;
     const powerIsReaction = (power as CharacterPower & { isReaction?: boolean | undefined })
       .isReaction;
+    const libraryItem = (power as CharacterPower & { libraryItem?: LibraryPower | undefined })
+      .libraryItem;
+    const composedDoc =
+      power.composition && libraryItem
+        ? libraryItemToPowerDocument({ ...libraryItem, composition: power.composition })
+        : undefined;
     const display = derivePowerDisplay(
-      libraryItemToPowerDocument({
-        name: power.name,
-        description: power.description,
-        parts: power.parts,
-        damage: Array.isArray(power.damage) ? power.damage : undefined,
-        actionType: power.actionType,
-        isReaction: powerIsReaction,
-      }),
+      composedDoc ??
+        libraryItemToPowerDocument({
+          name: power.name,
+          description: power.description,
+          parts: power.parts,
+          damage: Array.isArray(power.damage) ? power.damage : undefined,
+          actionType: power.actionType,
+          isReaction: powerIsReaction,
+        }),
       ctx.powerPartsDb as PowerPart[],
+      { selectedVariantId: power.selectedVariantId },
     );
+    const composition = display.composition;
+    const pickedVariant = composition ? selectedResolvedVariant(composition) : null;
     const energyCost =
       typeof display.energy === 'number' && display.energy > 0 ? display.energy : (power.cost ?? 0);
     const canUse = ctx.currentEnergy !== undefined && ctx.currentEnergy >= energyCost;
-    const partChips = partDataToChips(partsToPartData(power.parts, ctx.powerPartsDb));
+    const partChips = composition
+      ? partChipsFromDisplay(display.partChips)
+      : partDataToChips(partsToPartData(power.parts, ctx.powerPartsDb));
     const partsSection = partsProficienciesSection(partChips, 'power');
+    const categoryParts = composition
+      ? composedPowerSavedParts(composition)
+      : partsForCategories(power.parts);
     const categories = withDamageCategory(
-      derivePartCategories(partsForCategories(power.parts), ctx.powerPartsDb),
-      powerHasDamageCategory(Array.isArray(power.damage) ? power.damage : undefined),
+      derivePartCategories(categoryParts, ctx.powerPartsDb),
+      powerHasDamageCategory(
+        composition
+          ? composedPowerDamage(composition)
+          : Array.isArray(power.damage)
+            ? power.damage
+            : undefined,
+      ),
     );
-    const damageStr =
-      formatPowerDamage(Array.isArray(power.damage) ? power.damage : undefined) ||
-      formatDamageType(typeof power.damage === 'string' ? power.damage : undefined);
+    const damageStr = composition
+      ? composedPowerDamageLabel(composition)
+      : formatPowerDamage(Array.isArray(power.damage) ? power.damage : undefined) ||
+        formatDamageType(typeof power.damage === 'string' ? power.damage : undefined);
+    const variantsSection = composition
+      ? powerVariantsDetailSection(composition, {
+          select: ctx.onSelectPowerVariant
+            ? {
+                powerName: power.name,
+                onSelectVariant: (variantId) => ctx.onSelectPowerVariant!(id, variantId),
+              }
+            : undefined,
+          roll:
+            ctx.onSelectPowerVariant && ctx.rollContext?.canRoll !== false
+              ? {
+                  powerName: power.name,
+                  onRolled: (variantId, face, sides, label) => {
+                    ctx.onSelectPowerVariant!(id, variantId);
+                    ctx.rollContext?.addRoll(
+                      buildRandomizeRollEntry(power.name, face, sides, label),
+                    );
+                  },
+                }
+              : undefined,
+        })
+      : undefined;
     const rangeValue =
-      typeof power.range === 'string' && power.range.trim()
-        ? power.range
-        : typeof power.range === 'number'
+      composition && display.range && display.range !== '-'
+        ? display.range
+        : typeof power.range === 'string' && power.range.trim()
           ? power.range
-          : display.range && display.range !== '-'
-            ? display.range
-            : undefined;
+          : typeof power.range === 'number'
+            ? power.range
+            : display.range && display.range !== '-'
+              ? display.range
+              : undefined;
 
     const damageCell =
       damageStr && damageStr !== '-' && ctx.rollContext?.rollDamage ? (
@@ -311,12 +382,13 @@ export function mapPowerRows(
       metadataDetailSection(
         [targetsFactChip(power.targetedDefenses)].filter(Boolean) as ChipData[],
       ),
+      variantsSection,
     );
 
     return {
       id,
       name: power.name,
-      description: power.description,
+      description: pickedVariant?.description ?? power.description,
       thumbnail: resolveListRowThumbnail('power', power, power.name),
       columns,
       gridColumns: POWER_GRID,
