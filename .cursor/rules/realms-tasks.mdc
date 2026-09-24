@@ -1,5 +1,5 @@
 ---
-description: Agent task workflow - ACTIVE_TASKS, WAITING, DoD
+description: Agent task workflow - ACTIVE_TASKS, WAITING, DoD, ClickUp/GitHub sync
 alwaysApply: true
 ---
 
@@ -7,11 +7,14 @@ alwaysApply: true
 
 **Session start:** `ARCHITECTURE_CONSTITUTION.md` + `ACTIVE_TASKS.md` (not `WAITING_TASKS.md`, not done archive, not full `AGENT_GUIDE.md`).
 
+**Delivery sync (default — owner may override):** `CLICKUP_GITHUB_WORKFLOW.md` (ADR-0028). One Website ClickUp card + branch + PR per delivery unit. **MCP budget:** ~2–3 ClickUp calls (start + handoff); no search/comment spam; on rate limit set `clickup_sync: pending` and keep shipping — flush once when the task/PR finishes.
+
 **Before implementing:**
 1. Pick highest-priority open task in `src/docs/ai/ACTIVE_TASKS.md`.
 2. Search `FEATURE_INDEX.md` + barrels (+ generated barrel inventory) — confirm it doesn't already exist.
 3. Game copy / caps / formulas → `GAME_RULES.md`. UI → `MOBILE_UX.md` + a11y rule.
-4. **Model escalation (pause once):** If the task matches a trigger below, **stop before coding** and tell the owner in 2–4 sentences: why a stronger model is safer, which TASK-###, and wait for “proceed” / model switch / narrower instructions. Do **not** pause again in the same chat after the owner says proceed.
+4. Checkout `task/TASK-###-short-slug`; create/update **one** Website ClickUp card → **`in development`** (or `clickup_sync: pending` if MCP limited). Store `clickup_task_id` / `clickup_url` / `github_branch` when linked. Owner batch → one card listing all `TASK-###`s.
+5. **Model escalation (pause once):** If the task matches a trigger below, **stop before coding** and tell the owner in 2–4 sentences: why a stronger model is safer, which TASK-###, and wait for “proceed” / model switch / narrower instructions. Do **not** pause again in the same chat after the owner says proceed.
 
    **Pause triggers (only these):** Architect work (new shared/ui, new store, new API contract, migration *strategy*); live DB/schema migrations or cascade delete/replace; multi-system refactors with irreversible data risk; task notes explicitly say “Architect” / “stronger model” / “owner ack before implement.”
 
@@ -21,13 +24,14 @@ alwaysApply: true
 - `in-progress` → `done` when implementable AC met (build/tests/docs); else `partial` + `completed_work` / `remaining_work` / `follow_up_tasks`.
 - On archive: set `verification_status` (`pending-qa` if user-facing manual QA not run; see constitution Verification gate).
 - Move `done` blocks from `ACTIVE_TASKS.md` → `archive/TASK_QUEUE_DONE.md`; list `pending-qa` in `DEVELOPER_TASK_QUEUE.md`.
-- Do **not** create a commit per task. Mark `done` in the archive without committing. Before push: one batch commit whose subject lists every newly done `TASK-###` (space-separated; ranges like `TASK-530–534` do not count), then `npm run tasks:validate`. `related_files` paths must exist.
+- **Hand off:** commit on the task branch (subject includes `TASK-###`), open PR → `master`, one ClickUp update → **`in review`** + Collin + PR URL (or leave `clickup_sync: pending`). Agent stops unless asked for review fixes. Humans: merge → **`testing`**; QA clear → **`shipped`**.
 - Blocked / human-owned → `WAITING_TASKS.md`. Human-only steps → `DEVELOPER_TASK_QUEUE.md`.
 - User-facing: `BUILD_VALIDATION.md` + changelog.
 - New shared/ui file → ADR + update `scripts/shared-ui-allowlist.json` (`npm run tasks:validate-shared-ui`).
 - Barrel export changes → `npm run tasks:generate-index`.
+- Before push/PR: `npm run tasks:validate`. `related_files` paths must exist.
 
-**New tasks:** `AI_REQUEST_TEMPLATE.md` → `ACTIVE_TASKS.md` (next TASK-###). Process: `AI_TASK_QUEUE.md`.
+**New tasks:** `AI_REQUEST_TEMPLATE.md` → `ACTIVE_TASKS.md` (next TASK-###). ClickUp card when starting implementation (not required at file-time). Process: `AI_TASK_QUEUE.md`.
 
 **Migrations:** Prefer Supabase MCP `apply_migration`; else Dashboard SQL. SQL in `sql/`. Codex: `realms-codex-data.mdc`.
 

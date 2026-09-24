@@ -2,6 +2,12 @@
 
 Newest **150** entries. Older: [`archive/AI_CHANGELOG_ARCHIVE.md`](archive/AI_CHANGELOG_ARCHIVE.md).
 
+- 2026-09-24 | agent | TASK-928 — ClickUp MCP budget + pending flush | files: CLICKUP_GITHUB_WORKFLOW, ADR-0028, AI_TASK_QUEUE, realms-tasks/project, AGENTS, constitution, AI_REQUEST_TEMPLATE, PR_CHECKLIST, ALL_FEEDBACK_CLEAN, AI_CHANGELOG | Summary: **Tightened** delivery sync to ~2–3 MCP calls per unit; drop default search/comments/subtasks; `clickup_sync: pending` + flush on done/PR; bulk QA lists not via MCP. verification_status n/a.
+
+- 2026-09-24 | agent | TASK-928 — dependent-batch parent/subtask exception | files: CLICKUP_GITHUB_WORKFLOW, ADR-0028, AI_TASK_QUEUE, realms-tasks, AI_REQUEST_TEMPLATE, PR_CHECKLIST, AI_CHANGELOG | Summary: **Documented** owner-directed multi-task PRs: parent ClickUp owns branch/PR/board status; each TASK-### is a subtask. verification_status n/a.
+
+- 2026-09-24 | agent | TASK-928 — ClickUp ↔ TASK-### ↔ GitHub delivery sync | files: CLICKUP_GITHUB_WORKFLOW, ADR-0028, AI_TASK_QUEUE, realms-tasks/project.mdc, ARCHITECTURE_CONSTITUTION, AGENTS, AI_REQUEST_TEMPLATE, PR_CHECKLIST, ADR README, ACTIVE/archive, ALL_FEEDBACK_CLEAN, AI_CHANGELOG | Summary: **Adopted** per-task ClickUp Website + branch + PR → Collin (`in review`) → testing → shipped; owner override retained. verification_status n/a (docs/process).
+
 - 2026-09-14 | agent | CI: Next 16.3.5 + audit pins so verify can merge | files: package.json/lock, error.tsx Home Link, use-auth hard-nav absolute URL | Summary: **Bumped** next/eslint-config-next/@next/mdx to 16.3.5, sharp 0.35.4, js-yaml 4.3.2, vitest 4.1.11 so `npm audit --audit-level=high` is clean. **Wired** error Home onto `Link`. verification_status n/a (CI unblock on PR 124).
 
 - 2026-09-14 | agent | /cleanup TASK-927 — drop CatalogListingToggle + unused listing helper | files: deleted catalog-listing-toggle, catalog-listing(+test), creator index/shell/toolbar, OfficialEntityList, admin species tab+modal, admin public-library delete invalidation, use-library-counts.keys.test, FEATURE_INDEX, archive related_files, AI_CHANGELOG | Summary: **Deleted** `CatalogListingToggle` and unused `isListedInPlayerCatalog`. **Wired** listing/save SegmentedControl options to `catalog-listing.ts`. Admin official delete now invalidates `officialLibraryKeys.all` (player `listed` keys too). Query-key test matches `listed`/`all`. verification_status pending-qa (DEV-V-060).

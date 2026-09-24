@@ -3278,3 +3278,26 @@ Notes
 - Feedback (verbatim): Recovery modal hugs border of full recovery/cancel buttons in bottom right instead of having a border margin like the rest of the borders/edges of the modal, may be an issue elsewhere. Damage reduction shouldn’t be in the header when character has no armor, or if that armor doesn’t modify the value at all, same for critical range. Also critical range should be calculating as evasion +10 + critical range increase property from armor giving 1 + Op1 level of critical range or something like that I believe.
 - Expected: Modal footer inset matching content/header gutters (sitewide, not Recovery-only). Play/edit: header shows Damage Reduction / Critical Range only when equipped armor (or a leftover temp) changes that stat. **Temp mode always shows both cards** so a temp can be added. Formula: Evasion + 10 + (1 + Option 1 level).
 - Disposition: Filed and implemented **TASK-787** / **TASK-788**. Cleanup: Temp mode shows DR/crit cards; archetype `QuickArmorTable` uses `calculateCriticalRange` (deleted inline `10 + agility + 10`). pending-qa **DEV-V-009-T052 / T053** (+ DEV-V-008-T015).
+
+**Raw Feedback Log — 2026-09-24 (ClickUp ↔ codebase ↔ GitHub agent delivery sync)**
+- Date: 2026-09-24
+- Context: Agent OS / delivery workflow
+- Priority: High
+- Feedback (verbatim summary): All agent tasks should also be ClickUp tasks (or update existing activity) with descriptions in Web Development → Website. When an agent starts, move to in progress (Website: in development). Tie tasks across ClickUp, codebase, and GitHub with individual branches per task unless owner overrides. When finished with branch/MR, assign Collin and move to in review. After Collin merges to master → testing (QA). After QA clears → shipped. Owner has final say.
+- Expected: Documented default pipeline; agents follow unless overridden.
+- Disposition: **TASK-928** done (docs/process). Authority `CLICKUP_GITHUB_WORKFLOW.md` + ADR-0028. ClickUp [TASK-928: Agent delivery sync](https://app.clickup.com/t/86e3e8n93). Branch `task/TASK-928-clickup-github-workflow`. PR/Collin handoff pending owner commit ask.
+
+**Raw Feedback Log — 2026-09-24 (Dependent multi-task PR = parent + subtasks)**
+- Date: 2026-09-24
+- Context: ClickUp/GitHub delivery sync exception
+- Priority: Medium
+- Feedback (verbatim summary): When deciding to do multiple things in one MR due to dependent work, make the tasks all subtasks of a main task that covers all work done / the branch; each subtask associated with individual/independent work.
+- Disposition: **Amended** same day for MCP budget: default is **one** Website card listing every `TASK-###` (repo tasks stay separate). ClickUp subtasks only when the owner explicitly asks. See `CLICKUP_GITHUB_WORKFLOW.md`.
+
+**Raw Feedback Log — 2026-09-24 (ClickUp MCP rate limit / avoid burning workspace quota)**
+- Date: 2026-09-24
+- Context: Build Test Sweep + delivery sync; workspace MCP hit 100/100
+- Priority: High
+- Feedback (verbatim summary): Fix methods so agents avoid using all ClickUp workspace MCP credits; if limited, double-check after each completed task for pending ClickUp filing; don't add too much red tape; clean up overly heavy AI workflow we added.
+- Expected: Lean ClickUp sync; pending flush; less ceremony.
+- Disposition: Updated `CLICKUP_GITHUB_WORKFLOW.md` + ADR-0028 + rules/pointers (TASK-928 amend). MCP budget ~2–3 calls/delivery; `clickup_sync: pending` + flush on done/PR; dropped default search/comments/subtasks and file-time ClickUp create.

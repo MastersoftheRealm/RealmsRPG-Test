@@ -30,6 +30,7 @@ Do **not** load full `AI_TASK_QUEUE.md`, full `AGENT_GUIDE.md` / `guide/` append
 | Responsive / mobile | `MOBILE_UX.md` (ADR-0023 — six-width contracts, tiered touch targets) |
 | Design constraints | `DESIGN_INTENT.md` + `// DESIGN_INTENT:` comments |
 | Architecture decisions | `ADR/` |
+| ClickUp ↔ TASK-### ↔ GitHub delivery | `CLICKUP_GITHUB_WORKFLOW.md` (ADR-0028) |
 
 ## Non-negotiables
 
@@ -51,10 +52,10 @@ A task may be `done` only when **all** acceptance criteria are met **and**:
 1. `npm run build` passes (and targeted tests if the area has them). When touching TS/JS: `npm run typecheck` + `npm run lint` (`--max-warnings 0`) — CI-hard since TASK-655/656.
 2. No new parallel pattern introduced (or Architect ADR + owner ack) — **prefer net remove** when cleaning or consolidating (delete weaker forks / dead code rather than leaving compat layers)
 3. `ACTIVE_TASKS.md` updated (`done` → move block to `archive/TASK_QUEUE_DONE.md`; bump status fields)
-4. Do **not** create a git commit per task. Missing commit is not a mark-done or `/audit` blocker. The owner often finishes several tasks (`/audit` → `/cleanup` each), then **one** commit/push whose subject lists every newly `done` `TASK-###` (see `AI_TASK_QUEUE.md` § Evidence / CI).
+4. **Delivery sync (default — owner may override):** Branch `task/TASK-###-slug` + PR with `TASK-###` in subject(s); one Website ClickUp card → **`in review`** + Collin when MCP allows (else `clickup_sync: pending`). See `CLICKUP_GITHUB_WORKFLOW.md` (MCP budget).
 5. `AI_CHANGELOG.md` entry appended (cleanup/debt entries **must lead with a deletion or consolidation bullet**; docs-only honesty is not enough)
 6. User-facing work: `BUILD_VALIDATION.md` tests + `developer_test_plan` when required
-7. Before push: `npm run tasks:validate` when tasks/archives/`related_files` changed. The landing commit subject(s) must list every newly `done` `TASK-###` (space-separated; en-dash ranges do not count).
+7. Before push/PR: `npm run tasks:validate` when tasks/archives/`related_files` changed. Commit subject(s) must list every newly `done` `TASK-###` (space-separated; en-dash ranges do not count).
 
 If any AC remains open → **`partial`** with `completed_work` / `remaining_work` / `follow_up_tasks`. Never mark `done` to “finish later.” Prefer follow-up tasks over audit-after-done rediscovery.
 
@@ -71,9 +72,9 @@ Implementation **`status`** and product **`verification_status`** are separate:
 | `verification_status: skipped` | Owner explicitly waived manual QA. |
 | `verification_status: n/a` | No manual QA needed (docs-only, purely automated checks). |
 
-**Agents:** On archive, set `verification_status` honestly. List `pending-qa` tasks in `DEVELOPER_TASK_QUEUE.md` → **Pending owner QA**. Do **not** keep implementation-complete tasks in `ACTIVE_TASKS` waiting for QA.
+**Agents:** On archive, set `verification_status` honestly. List `pending-qa` tasks in `DEVELOPER_TASK_QUEUE.md` → **Pending owner QA**. Do **not** keep implementation-complete tasks in `ACTIVE_TASKS` waiting for QA. After PR open: one ClickUp update → **`in review`** (Collin), or leave `clickup_sync: pending`. Do **not** set ClickUp `testing` / `shipped` unless the owner says merge/QA already happened.
 
-**Owner:** Run linked `DEV-V-###` tests; update archive `verification_status` to `verified` or `failed`; remove row from Pending owner QA when closed.
+**Owner / Collin / QA:** Merge → ClickUp **`testing`**. Run linked `DEV-V-###` tests; update archive `verification_status` to `verified` or `failed`; ClickUp **`shipped`** when cleared; remove row from Pending owner QA when closed.
 
 ## Human review gates (stop and ask / DEV queue)
 

@@ -33,6 +33,7 @@ Do **not** load full historical queues, full `AGENT_GUIDE.md`, or archive audits
 | Responsive / mobile | `MOBILE_UX.md` (ADR-0023) |
 | Accessibility | `ACCESSIBILITY.md` |
 | Open tasks | `ACTIVE_TASKS.md` · waiting `WAITING_TASKS.md` · process `AI_TASK_QUEUE.md` · human `DEVELOPER_TASK_QUEUE.md` |
+| ClickUp ↔ TASK-### ↔ GitHub | `CLICKUP_GITHUB_WORKFLOW.md` (ADR-0028) — one Website card + branch + PR → Collin; MCP budget / `clickup_sync: pending` |
 | Audit remediation status | `REMEDIATION_STATUS_2026-08.md` (June snapshot: `REMEDIATION_STATUS_2026-06.md`) |
 | **Sitewide audit (2026-08-13) + fix program** | `AUDIT_REMEDIATION_2026-08.md` → findings in `reports/audit-2026-08-13/` |
 | Design constraints | `DESIGN_INTENT.md` |
@@ -57,7 +58,7 @@ Rules under `.cursor/rules/` are terse pointers. If a rule and an authority disa
 
 ## Definition of Done (summary)
 
-Build + targeted tests + all implementable AC met + no new parallel pattern + update `ACTIVE_TASKS` (move `done` to archive with `verification_status`) + changelog. Do **not** commit per task — the owner batches work, then one commit whose subject lists every newly done `TASK-###`. User-facing work: `pending-qa` until owner runs `BUILD_VALIDATION` (see `DEVELOPER_TASK_QUEUE`). Incomplete → `partial` + follow-ups. Never mark `done` early.
+Build + targeted tests + all implementable AC met + no new parallel pattern + update `ACTIVE_TASKS` (move `done` to archive with `verification_status`) + changelog + **delivery sync** (branch + PR → Collin; one ClickUp card or `clickup_sync: pending` — see `CLICKUP_GITHUB_WORKFLOW.md`). User-facing: `pending-qa` until QA runs `BUILD_VALIDATION`. Incomplete → `partial` + follow-ups. Never mark `done` early.
 
 ## Migrations (one policy)
 

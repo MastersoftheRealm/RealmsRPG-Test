@@ -27162,3 +27162,32 @@ Firebase/RTDB - the project is Supabase-only.
     - Unit tests; npm run build for in-scope files.
   notes: |
     Owner 2026-09-03. ChipSelect chipLabel keeps selected chips as defense names. TASK-924 is the Codex fill follow-up.
+
+- id: TASK-928
+  title: Adopt ClickUp ↔ TASK-### ↔ GitHub delivery sync for agents
+  created_at: 2026-09-24
+  created_by: owner
+  priority: high
+  status: done
+  completed_at: 2026-09-24
+  verification_status: n/a
+  clickup_task_id: 86e3e8n93
+  clickup_url: https://app.clickup.com/t/86e3e8n93
+  github_branch: task/TASK-928-clickup-github-workflow
+  related_files:
+    - src/docs/ai/CLICKUP_GITHUB_WORKFLOW.md
+    - src/docs/ai/ADR/0028-clickup-github-delivery-sync.md
+    - src/docs/ai/AI_TASK_QUEUE.md
+    - src/docs/ai/ARCHITECTURE_CONSTITUTION.md
+    - src/docs/ai/AI_REQUEST_TEMPLATE.md
+    - src/docs/ai/PR_CHECKLIST.md
+    - .cursor/rules/realms-tasks.mdc
+    - AGENTS.md
+  description: |
+    Encode owner delivery policy: every agent TASK-### links to a ClickUp Website task, a per-task git branch, and a PR. Start → in development; finish → in review + Collin; merge → testing; QA → shipped. Owner override retained.
+  acceptance_criteria:
+    - Authority doc CLICKUP_GITHUB_WORKFLOW.md + ADR-0028
+    - Agent OS (constitution, AI_TASK_QUEUE, realms-tasks, AGENTS, template, PR checklist) updated
+    - ClickUp Website task created and linked
+  notes: |
+    Docs implemented on branch task/TASK-928-clickup-github-workflow. PR + Collin handoff pending owner commit/push ask.

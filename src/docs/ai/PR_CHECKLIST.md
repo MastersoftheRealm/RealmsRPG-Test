@@ -6,22 +6,23 @@ Use before marking a task `done` or opening a PR. Keep answers short.
 2. **No parallel pattern** — Extended existing shell/hook/API, or ADR/owner ack?
 3. **AC complete** — Every acceptance criterion met? Else `partial` + follow-ups.
 4. **related_files** — Every listed path exists in the repo (real file/dir; no invented module names)? Match the diff? Globs (`*`) ok; directories ok if tracked children exist.
-5. **Commit subjects (push gate, not session DoD)** — When the owner commits/pushes, the landing subject lists every newly `done` `TASK-###` (`git log --grep=TASK-###`). **One commit may cover many tasks** (preferred). Do not require or create a commit per task. Missing commit during `/audit` / mark-done is **not** a gap. Ranges like `TASK-530–534` do **not** count — list IDs explicitly. Squash merges that drop subjects need a follow-up reconcile commit.
-6. **Build** — `npm run build` green? When touching TS/JS: `npm run typecheck` + `npm run lint` (`--max-warnings 0`) + targeted tests (TASK-655/656)?
-7. **Tokens** — Semantic / `*-fg`; no raw palette outside exemptions?
-8. **Responsive** — `fullScreenOnMobile` where needed? Touch tier assigned (not blanket 44px)? Contracts C1–C6 hold at 360 / 390 / 768 / 1024 / 1280 / 1440 (`npm run verify:responsive`)?
-9. **A11y** — Labels, headings, modal title/`titleA11y`?
-10. **Uploads** — Went through `apiUpload`?
-11. **Domain parsers** — Used `src/lib/game/*` not a local fork?
-12. **Schema/codex** — SQL in `sql/`; owner approve for live codex mutate?
-13. **ACTIVE_TASKS** — Status updated; `done` moved to archive with `verification_status` set?
-14. **Owner QA** — User-facing? `pending-qa` + indexed in `DEVELOPER_TASK_QUEUE` Pending owner QA until owner PASS?
-15. **Changelog** — `AI_CHANGELOG.md` entry?
-16. **Design intent** — Non-obvious constraint documented (`DESIGN_INTENT` / comment)?
-17. **Human gates** — New shared/ui file on allowlist + ADR? Store / API contract reviewed?
-18. **Uploads** — No raw `fetch('/api/upload…')` (eslint `realms/no-raw-upload-fetch`)?
-19. **Barrels** — If you changed shared/ui/hooks/services exports, ran `npm run tasks:generate-index`?
-20. **Task CI locally** — Before push to `master` / PR: `npm run tasks:validate` (strict reconcile + related_files + docs/index/allowlist)? Local reconcile allows done tasks not yet in HEAD (batch commit later); CI does not.
+5. **Delivery sync (default)** — Branch `task/TASK-###-…`? PR open with `TASK-###` in subject? One Website ClickUp card **`in review`** + Collin, or `clickup_sync: pending` noted? Owner batch → one card listing all ids. MCP budget: no mass ClickUp calls (`CLICKUP_GITHUB_WORKFLOW.md`).
+6. **Commit subjects** — Subject(s) list every newly `done` `TASK-###` (`git log --grep=TASK-###`). Batched PRs must list **all** IDs. Ranges like `TASK-530–534` do **not** count. Squash merges that drop subjects need a follow-up reconcile commit.
+7. **Build** — `npm run build` green? When touching TS/JS: `npm run typecheck` + `npm run lint` (`--max-warnings 0`) + targeted tests (TASK-655/656)?
+8. **Tokens** — Semantic / `*-fg`; no raw palette outside exemptions?
+9. **Responsive** — `fullScreenOnMobile` where needed? Touch tier assigned (not blanket 44px)? Contracts C1–C6 hold at 360 / 390 / 768 / 1024 / 1280 / 1440 (`npm run verify:responsive`)?
+10. **A11y** — Labels, headings, modal title/`titleA11y`?
+11. **Uploads** — Went through `apiUpload`?
+12. **Domain parsers** — Used `src/lib/game/*` not a local fork?
+13. **Schema/codex** — SQL in `sql/`; owner approve for live codex mutate?
+14. **ACTIVE_TASKS** — Status updated; `done` moved to archive with `verification_status` set?
+15. **Owner QA** — User-facing? `pending-qa` + indexed in `DEVELOPER_TASK_QUEUE` Pending owner QA until owner PASS? (ClickUp **`testing`** after merge.)
+16. **Changelog** — `AI_CHANGELOG.md` entry?
+17. **Design intent** — Non-obvious constraint documented (`DESIGN_INTENT` / comment)?
+18. **Human gates** — New shared/ui file on allowlist + ADR? Store / API contract reviewed?
+19. **Uploads** — No raw `fetch('/api/upload…')` (eslint `realms/no-raw-upload-fetch`)?
+20. **Barrels** — If you changed shared/ui/hooks/services exports, ran `npm run tasks:generate-index`?
+21. **Task CI locally** — Before push / PR: `npm run tasks:validate` (strict reconcile + related_files + docs/index/allowlist)?
 
 ## Owner commands
 
