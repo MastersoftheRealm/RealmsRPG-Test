@@ -17,6 +17,7 @@
     Suite DEV-V-061 — see BUILD_VALIDATION.md. Vitest: power-composition, innate-eligibility, power-variant-chips.
   clickup_sync: pending
   github_branch: task/TASK-929-power-variants
+  pr_link: https://github.com/MastersoftheRealm/RealmsRPG-Test/pull/125
   related_files:
     - src/docs/ai/ADR/0029-power-composition-variants.md
     - src/lib/calculators/power-composition.ts
@@ -53,6 +54,7 @@
     DEV-V-061-T001 — /power-creator at 360 / 390 / 768 / 1024 / 1280 / 1440.
   clickup_sync: pending
   github_branch: task/TASK-929-power-variants
+  pr_link: https://github.com/MastersoftheRealm/RealmsRPG-Test/pull/125
   related_files:
     - src/app/(main)/power-creator/page.tsx
     - src/app/(main)/power-creator/power-creator-composition-band.tsx
@@ -86,6 +88,7 @@
     DEV-V-061-T002 — sheet Powers at 360 and 1280.
   clickup_sync: pending
   github_branch: task/TASK-929-power-variants
+  pr_link: https://github.com/MastersoftheRealm/RealmsRPG-Test/pull/125
   related_files:
     - src/lib/power-variant-chips.ts
     - src/lib/power-variant-chips.test.ts
@@ -117,6 +120,7 @@
     DEV-V-061-T003.
   clickup_sync: pending
   github_branch: task/TASK-929-power-variants
+  pr_link: https://github.com/MastersoftheRealm/RealmsRPG-Test/pull/125
   related_files:
     - src/lib/library/official-power-list.ts
     - src/lib/library-selectable-builders.ts
@@ -149,6 +153,7 @@
     DEV-V-061-T003 step 1.
   clickup_sync: pending
   github_branch: task/TASK-929-power-variants
+  pr_link: https://github.com/MastersoftheRealm/RealmsRPG-Test/pull/125
   related_files:
     - sql/official-powers-composition-examples.sql
   description: |
