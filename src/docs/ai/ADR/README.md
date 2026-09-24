@@ -51,3 +51,4 @@ Lightweight process for **Architect**-role changes. Keep each ADR short.
 | 0026 | Guest local characters (browser-only sheet) | Accepted (TASK-904 / DEV-Q09) |
 | 0027 | Official catalog listing (Public vs Admin library) | Accepted (TASK-927) |
 | 0028 | ClickUp ↔ TASK-### ↔ GitHub delivery sync | Accepted (TASK-928) |
+| 0029 | Power composition (built-in variants) | Accepted (TASK-929) |

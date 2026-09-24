@@ -332,7 +332,7 @@ export function cleanForSave(data: Character): Partial<Character> {
     }
   }
 
-  // Clean up powers — save id + name (compat) + innate flag only.
+  // Clean up powers — save id + name (compat) + innate flag + variant pick only.
   // description, parts, cost, damage, etc. derived from library enrichment on load.
   if (Array.isArray(cleaned.powers)) {
     cleaned.powers = dedupeEntityRefs(
@@ -344,11 +344,13 @@ export function cleanForSave(data: Character): Partial<Character> {
               id?: string | number | undefined;
               name?: string | undefined;
               innate?: boolean | undefined;
+              selectedVariantId?: string | undefined;
             };
             const clean: Record<string, unknown> = {};
             if (power.id) clean.id = power.id;
             if (power.name) clean.name = power.name; // Backward compat lookup key
             clean.innate = !!power.innate;
+            if (power.selectedVariantId) clean.selectedVariantId = power.selectedVariantId;
             return clean;
           }
           return null;

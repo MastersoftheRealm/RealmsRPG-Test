@@ -30,6 +30,8 @@ export interface CreatorLayoutProps {
   size?: ContainerSize | undefined;
   /** Optional className for PageHeader */
   headerClassName?: string | undefined;
+  /** Full-width band above the grid (above the summary on mobile), e.g. power variants. */
+  aboveGrid?: ReactNode | undefined;
 }
 
 export function CreatorLayout({
@@ -42,6 +44,7 @@ export function CreatorLayout({
   modals,
   size = 'xl',
   headerClassName = 'mb-6',
+  aboveGrid,
 }: CreatorLayoutProps) {
   return (
     <PageContainer size={size}>
@@ -53,6 +56,7 @@ export function CreatorLayout({
         className={headerClassName}
       />
       {modals}
+      {aboveGrid}
       <div className="grid gap-6 lg:grid-cols-3">
         <div className="order-2 min-w-0 space-y-6 lg:order-1 lg:col-span-2">{children}</div>
         <div className="order-1 min-w-0 lg:order-2">{sidebar}</div>

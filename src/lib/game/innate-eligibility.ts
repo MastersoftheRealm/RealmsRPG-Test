@@ -22,6 +22,11 @@ import {
   deriveStructuredDuration,
   type PowerDocument,
 } from '@/lib/calculators/power-calc';
+import {
+  resolvePowerComposition,
+  type PowerComposition,
+  type PowerCompositionResolution,
+} from '@/lib/calculators/power-composition';
 import { resolvePartCategoryList } from '@/lib/library/power-technique-categories';
 
 type Rules = Partial<CoreRulesMap>;
@@ -67,6 +72,11 @@ export interface InnatePowerSnapshot {
   partCategories?: string[] | undefined;
   /** Structured duration; null when unknown (fail closed for innate lists). */
   duration?: InnatePowerDuration | null | undefined;
+  /**
+   * Alternate powers (ADR-0029): each variant is checked on its own. The power qualifies
+   * when any variant passes; a failing sibling does not disqualify it.
+   */
+  alternates?: InnatePowerSnapshot[] | undefined;
 }
 
 export interface InnateEligibilityIssue {
@@ -165,6 +175,13 @@ export function evaluateInnatePowerEligibility(
   power: InnatePowerSnapshot,
   innateThreshold: number,
 ): InnateEligibilityIssue[] {
+  if (power.alternates && power.alternates.length > 0) {
+    const perVariant = power.alternates.map((v) =>
+      evaluateInnatePowerEligibility(v, innateThreshold),
+    );
+    if (perVariant.some((issues) => issues.length === 0)) return [];
+    return perVariant[0] ?? [];
+  }
   const issues: InnateEligibilityIssue[] = [];
   const label = power.name?.trim() || power.id;
 
@@ -309,6 +326,7 @@ export function snapshotOfficialPowerForInnate(
         }
       | null
       | undefined;
+    composition?: unknown;
   },
   partsDb: PowerPart[],
 ): InnatePowerSnapshot {
@@ -320,6 +338,13 @@ export function snapshotOfficialPowerForInnate(
     isReaction: power.isReaction === true,
     duration: power.duration ?? undefined,
   };
+  const composed = resolvePowerComposition(
+    { ...(power as PowerDocument), ...doc, composition: power.composition as PowerComposition },
+    partsDb,
+  );
+  if (composed) {
+    return snapshotComposedPowerForInnate(id, power, composed, partsDb);
+  }
   const display = derivePowerDisplay(doc, partsDb);
   const parts = Array.isArray(power.parts) ? power.parts : [];
   const partIds = parts.map((p) => (p.id != null ? String(p.id) : ''));
@@ -343,6 +368,82 @@ export function snapshotOfficialPowerForInnate(
       ? { type: structuredDuration.type, value: structuredDuration.value }
       : null,
   };
+}
+
+function longestInnateDuration(docs: PowerDocument[]): InnatePowerDuration | null {
+  let longest: InnatePowerDuration | null = null;
+  let longestMinutes = -1;
+  for (const d of docs) {
+    const structured = deriveStructuredDuration(
+      d.parts,
+      d.duration?.type ? { type: d.duration.type, value: d.duration.value ?? 1 } : undefined,
+    );
+    if (!structured) return null;
+    const minutes = innateDurationToMinutes(structured) ?? Number.POSITIVE_INFINITY;
+    if (minutes > longestMinutes) {
+      longestMinutes = minutes;
+      longest = { type: structured.type, value: structured.value };
+    }
+  }
+  return longest;
+}
+
+function castSnapshot(
+  id: string,
+  name: string | undefined,
+  energy: number,
+  docs: PowerDocument[],
+  partsDb: PowerPart[],
+): InnatePowerSnapshot {
+  const parts = docs.flatMap((d) => d.parts ?? []);
+  const failingAction = docs.find((d) => !isInnateEligibleActionType(d.actionType, !!d.isReaction));
+  const actionDoc = failingAction ?? docs[0];
+  return {
+    id,
+    name,
+    energy: Math.max(0, Math.round(energy)),
+    actionType: actionDoc?.actionType,
+    isReaction: actionDoc?.isReaction === true,
+    partIds: parts.map((p) => (p.id != null ? String(p.id) : '')),
+    partNames: parts.map((p) => (p.name != null ? String(p.name) : '')),
+    partCategories: resolvePartCategoryList(parts, partsDb),
+    duration: longestInnateDuration(docs),
+  };
+}
+
+/**
+ * Appendix G on a composed power (ADR-0029). Choice / Modify / Randomize / plain + Reverse are
+ * one cast: every part and every duration is checked. Alternate checks each variant alone.
+ */
+function snapshotComposedPowerForInnate(
+  id: string,
+  power: { name?: string | null | undefined; composition?: unknown },
+  res: PowerCompositionResolution,
+  partsDb: PowerPart[],
+): InnatePowerSnapshot {
+  const name = power.name ? String(power.name) : undefined;
+  const reverseDocs = res.reverse ? [res.reverse.doc] : [];
+  if (res.structure === 'alternate' && res.variants.length > 0) {
+    const alternates = res.variants.map((v) => {
+      const energy =
+        res.reverse != null ? Math.max(0, Math.ceil(v.energy - res.reverse.discount)) : v.energy;
+      return castSnapshot(
+        `${id}:${v.id}`,
+        `${name ?? id} (${v.label})`,
+        energy,
+        [v.doc, ...reverseDocs],
+        partsDb,
+      );
+    });
+    const first = alternates[0]!;
+    return { ...first, id, name, alternates };
+  }
+  const docs = [
+    ...(res.shared ? [res.shared.doc] : []),
+    ...res.variants.map((v) => v.doc),
+    ...reverseDocs,
+  ];
+  return castSnapshot(id, name, res.energy, docs, partsDb);
 }
 
 export function validateRecommendedInnatePowers(
@@ -437,6 +538,9 @@ export function isPowerInnateEligible(
   power: InnatePowerSnapshot,
   innateThreshold?: number | null,
 ): boolean {
+  if (power.alternates && power.alternates.length > 0) {
+    return power.alternates.some((v) => isPowerInnateEligible(v, innateThreshold));
+  }
   if (!isInnateEligibleActionType(power.actionType, power.isReaction)) return false;
 
   if (!isInnateEligibleDuration(power.duration)) return false;

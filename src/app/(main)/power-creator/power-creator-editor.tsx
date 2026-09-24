@@ -40,16 +40,18 @@ export function PowerCreatorEditor(props: PowerCreatorEditorProps) {
         />
       </PowerCreatorEditorMeta>
 
-      <PowerCreatorEditorActionProfile
-        actionType={props.actionType}
-        onActionTypeChange={props.onActionTypeChange}
-        isReaction={props.isReaction}
-        onIsReactionChange={props.onIsReactionChange}
-        actionTypeDisplay={props.actionTypeDisplay}
-        attackMode={props.attackMode}
-        onAttackModeChange={props.onAttackModeChange}
-        sectionCosts={props.sectionCosts}
-      />
+      {props.showActionProfile !== false ? (
+        <PowerCreatorEditorActionProfile
+          actionType={props.actionType}
+          onActionTypeChange={props.onActionTypeChange}
+          isReaction={props.isReaction}
+          onIsReactionChange={props.onIsReactionChange}
+          actionTypeDisplay={props.actionTypeDisplay}
+          attackMode={props.attackMode}
+          onAttackModeChange={props.onAttackModeChange}
+          sectionCosts={props.sectionCosts}
+        />
+      ) : null}
 
       <PowerCreatorEditorPowerConfig
         range={props.range}

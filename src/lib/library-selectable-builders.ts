@@ -30,6 +30,13 @@ import {
   formatPowerDamage,
 } from '@/lib/calculators/power-calc';
 import type { PowerDocument } from '@/lib/calculators/power-calc';
+import {
+  composedPowerDamage,
+  composedPowerSavedParts,
+  resolvePowerComposition,
+} from '@/lib/calculators/power-composition';
+import { powerVariantsDetailSection } from '@/lib/power-variant-chips';
+import { snapshotOfficialPowerForInnate } from '@/lib/game/innate-eligibility';
 import { resolvePartCategoryList } from '@/lib/library/power-technique-categories';
 import { deriveTechniqueDisplay } from '@/lib/calculators/technique-calc';
 import type { TechniqueDocument } from '@/lib/calculators/technique-calc';
@@ -205,6 +212,7 @@ type PowerTechniqueBudgetItem = {
   attackMode?: AttackMode | undefined;
   weapon?: TechniqueDocument['weapon'] | undefined;
   weaponName?: string | undefined;
+  composition?: PowerDocument['composition'] | undefined;
 };
 
 /** Match `buildOfficialPowerRows` / `buildSelectableItem` PowerDocument shape (TASK-708). */
@@ -222,6 +230,7 @@ export function libraryItemToPowerDocument(item: PowerTechniqueBudgetItem): Powe
     range: item.range,
     area: item.area,
     duration: item.duration,
+    ...(item.composition ? { composition: item.composition } : {}),
   };
 }
 
@@ -393,7 +402,15 @@ export function buildPowerTechniqueFilterableRow(
   techniquePartsDb: TechniquePart[],
 ): PowerTechniqueFilterableRow {
   const facts = derivePowerTechniqueBudgetFacts(kind, item, powerPartsDb, techniquePartsDb);
-  const parts = Array.isArray(item.parts) ? item.parts : [];
+  const composed =
+    kind === 'power' && item.composition
+      ? resolvePowerComposition(libraryItemToPowerDocument(item), powerPartsDb)
+      : null;
+  const parts: unknown[] = composed
+    ? composedPowerSavedParts(composed)
+    : Array.isArray(item.parts)
+      ? item.parts
+      : [];
   const partsDb = kind === 'technique' ? techniquePartsDb : powerPartsDb;
   let categories = derivePartCategories(
     parts as Parameters<typeof derivePartCategories>[0],
@@ -436,6 +453,18 @@ export function buildPowerTechniqueFilterableRow(
             parts as Parameters<typeof resolvePartCategoryList>[0],
             powerPartsDb,
           ),
+          ...(item.composition
+            ? {
+                innateSnapshot: snapshotOfficialPowerForInnate(
+                  {
+                    ...libraryItemToPowerDocument(item),
+                    id: item.id ?? item.docId,
+                    composition: item.composition,
+                  } as Parameters<typeof snapshotOfficialPowerForInnate>[0],
+                  powerPartsDb,
+                ),
+              }
+            : {}),
         }
       : {}),
   };
@@ -649,11 +678,17 @@ export function buildSelectableItem(
     const p = item as UserPower;
     const doc = libraryItemToPowerDocument(p);
     const display = derivePowerDisplay(doc, powerPartsDb);
+    const composition = display.composition;
+    const damage = composition ? composedPowerDamage(composition) : doc.damage;
     const partChips = partChipsFromDisplay(display.partChips);
     const parts = partsProficienciesSection(partChips, 'power');
+    const variantsSection = powerVariantsDetailSection(composition);
     const categories = withDamageCategory(
-      derivePartCategories(doc.parts, powerPartsDb),
-      powerHasDamageCategory(doc.damage),
+      derivePartCategories(
+        composition ? composedPowerSavedParts(composition) : doc.parts,
+        powerPartsDb,
+      ),
+      powerHasDamageCategory(damage),
     );
     const categoryText = formatPartCategoriesColumn(categories);
     const sections = buildGlrFactDetailSections({
@@ -664,14 +699,14 @@ export function buildSelectableItem(
         category: categoryText && categoryText !== '—' ? categoryText : undefined,
         trainingPoints: display.tp > 0 ? display.tp : undefined,
       },
-      extraSections: parts ? [parts] : undefined,
+      extraSections: [...(parts ? [parts] : []), ...(variantsSection ? [variantsSection] : [])],
     });
     detailSections = sections.length > 0 ? sections : undefined;
     powerDisplay = {
       energy: display.energy,
       actionType: display.actionType || formatSavedActionTypeForDisplay(p.actionType, p.isReaction),
       duration: display.duration || '-',
-      damage: formatPowerDamage(doc.damage) || '-',
+      damage: formatPowerDamage(damage) || '-',
       area: display.area || '-',
     };
   } else if (itemType === 'technique') {

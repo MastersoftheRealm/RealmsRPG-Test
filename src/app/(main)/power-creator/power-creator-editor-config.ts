@@ -71,4 +71,7 @@ export type PowerCreatorEditorProps = {
   damageSummary: string;
 
   sectionCosts: PowerSectionCosts;
+
+  /** False on overlay tabs (Choice/Modify/Randomize variants, Reverse): action comes from Shared. */
+  showActionProfile?: boolean | undefined;
 };

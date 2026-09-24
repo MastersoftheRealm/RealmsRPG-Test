@@ -9,6 +9,7 @@ import {
   isInnateEligibleDuration,
   isPowerInnateEligible,
   listInnateThresholdFilterOptions,
+  snapshotOfficialPowerForInnate,
   validateRecommendedInnatePowers,
   type InnatePowerSnapshot,
 } from './innate-eligibility';
@@ -196,5 +197,82 @@ describe('innate-eligibility', () => {
         8,
       ),
     ).toBe(false);
+  });
+});
+
+describe('innate eligibility on composed powers (ADR-0029)', () => {
+  const partsDb = [
+    {
+      id: '376',
+      name: 'Duration (Hour)',
+      description: '',
+      category: 'Duration',
+      mechanic: true,
+      duration: true,
+      percentage: false,
+      base_en: 3,
+      base_tp: 0,
+    },
+    {
+      id: '900',
+      name: 'Immobile',
+      description: '',
+      category: 'General',
+      mechanic: false,
+      percentage: false,
+      duration: false,
+      base_en: 2,
+      base_tp: 0,
+    },
+  ];
+
+  it('Modify fails when any piece lasts longer than 1 minute', () => {
+    const snapshot = snapshotOfficialPowerForInnate(
+      {
+        id: 'm',
+        name: 'Frost',
+        actionType: 'basic',
+        composition: {
+          structure: 'modify',
+          variants: [
+            { id: 'a', label: 'Freeze', parts: [{ id: 900, name: 'Immobile' }] },
+            { id: 'b', label: 'Chill', duration: { type: 'hours', value: 1 } },
+          ],
+        },
+      },
+      partsDb,
+    );
+    expect(isPowerInnateEligible(snapshot, 20)).toBe(false);
+  });
+
+  it('Alternate passes when one variant passes even if a sibling fails', () => {
+    const snapshot = snapshotOfficialPowerForInnate(
+      {
+        id: 'alt',
+        name: 'Shift',
+        actionType: 'basic',
+        composition: {
+          structure: 'alternate',
+          variants: [
+            {
+              id: 'long',
+              label: 'Long',
+              actionType: 'basic',
+              duration: { type: 'hours', value: 1 },
+            },
+            {
+              id: 'quick',
+              label: 'Quick',
+              actionType: 'basic',
+              parts: [{ id: 900, name: 'Immobile' }],
+            },
+          ],
+        },
+      },
+      partsDb,
+    );
+    expect(snapshot.alternates).toHaveLength(2);
+    expect(isPowerInnateEligible(snapshot, 20)).toBe(true);
+    expect(evaluateInnatePowerEligibility(snapshot, 20)).toEqual([]);
   });
 });

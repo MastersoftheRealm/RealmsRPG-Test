@@ -32,7 +32,14 @@ import {
   AdvancedCalculationsPanel,
   CreatorSummaryPanel,
 } from '@/components/creator';
-import { LoadingState } from '@/components/ui';
+import { LoadingState, TabContentPanel, useTabGroup } from '@/components/ui';
+import {
+  formatPowerCompositionSummary,
+  POWER_COMPOSITION_STRUCTURE_LABELS,
+  type PowerCompositionResolution,
+} from '@/lib/calculators';
+import { PowerCreatorCompositionBand } from './power-creator-composition-band';
+import { REVERSE_TAB_ID, SHARED_TAB_ID } from './power-creator-composition';
 import {
   bootstrapPowerCreatorFormState,
   type PowerCreatorFormState,
@@ -45,6 +52,42 @@ import {
   findLoadedLibraryItem,
   resolveCreatorSaveTargetFromItem,
 } from '@/lib/library/catalog-listing';
+
+/** Summary lines: each variant's energy, the Reverse discount, and how the structure combines them. */
+function variantEnergyLines(res: PowerCompositionResolution): string[] {
+  const lines = res.variants.map((v) => {
+    if (res.structure === 'randomize') {
+      const sign = v.polarity === 'negative' ? '−' : '+';
+      return `${v.label}: ${sign}${v.energy} EN × ${v.faces.length} ${v.faces.length === 1 ? 'face' : 'faces'}`;
+    }
+    return `${v.label}: ${v.energy} EN`;
+  });
+  if (res.structure === 'randomize' && res.shared) {
+    lines.unshift(`Shared chassis: ${res.shared.display.energy} EN`);
+  }
+  const rule: Partial<Record<PowerCompositionResolution['structure'], string>> = {
+    choice: 'Choice pays the most expensive portion',
+    modify: 'Modify adds every piece',
+    alternate: 'Alternate pays the selected variant',
+    randomize: 'Randomize: chassis + signed faces (minimum 1)',
+  };
+  const ruleText = rule[res.structure];
+  if (ruleText) {
+    lines.push(`${ruleText}: ${res.structureEnergy} EN`);
+  }
+  if (res.reverse) {
+    const d = res.reverse.discount;
+    lines.push(
+      `Reverse drawback ${res.reverse.energy} EN → −${Number.isInteger(d) ? d : d.toFixed(1)} EN`,
+    );
+  }
+  const totalLabel =
+    res.structure === 'none'
+      ? 'Total'
+      : `${POWER_COMPOSITION_STRUCTURE_LABELS[res.structure]} total`;
+  lines.push(`${totalLabel}: ${res.energy} EN`);
+  return lines;
+}
 
 function PowerCreatorContent() {
   const { user } = useAuthStore();
@@ -134,6 +177,69 @@ function PowerCreatorWorkspace({
     ),
   });
 
+  const variantTabGroup = useTabGroup('power-variants');
+  const composed = ws.composedSummary;
+  const tabDisplay = composed?.tabDisplay ?? null;
+  const showVariantTabs = ws.variants.tabIds.length > 1;
+  const onOverlayTab =
+    ws.variants.activeTabId === REVERSE_TAB_ID ||
+    (ws.variants.activeTabId !== SHARED_TAB_ID &&
+      ws.variants.structure !== 'alternate' &&
+      ws.variants.structure !== 'none');
+
+  const editor = (
+    <PowerCreatorEditor
+      isAdmin={isAdmin}
+      name={ws.name}
+      onNameChange={ws.setName}
+      description={ws.description}
+      onDescriptionChange={ws.setDescription}
+      imageId={ws.imageId}
+      imageUrl={ws.imageUrl}
+      onImageChange={(selection) => {
+        ws.setImageId(selection.imageId);
+        ws.setImageUrl(selection.imageUrl);
+      }}
+      actionType={ws.actionType}
+      onActionTypeChange={ws.setActionType}
+      isReaction={ws.isReaction}
+      onIsReactionChange={ws.setIsReaction}
+      actionTypeDisplay={ws.actionTypeDisplay}
+      attackMode={ws.attackMode}
+      onAttackModeChange={ws.setAttackMode}
+      targetedDefenses={ws.targetedDefenses}
+      onTargetedDefensesChange={ws.setTargetedDefenses}
+      suggestionPartsDb={ws.powerParts}
+      suggestionSelectedParts={ws.suggestionSelectedParts}
+      range={ws.range}
+      onRangeChange={ws.setRange}
+      rangeSummary={ws.rangeSummary}
+      area={ws.area}
+      onAreaChange={ws.setArea}
+      areaPartInfo={ws.areaPartInfo}
+      duration={ws.duration}
+      onDurationChange={ws.setDuration}
+      durationSummary={ws.durationSummary}
+      selectedParts={ws.selectedParts}
+      nonMechanicParts={ws.nonMechanicParts}
+      powerPartsSummary={ws.powerPartsSummary}
+      onAddPart={ws.addPart}
+      onRemovePart={ws.removePart}
+      onUpdatePart={ws.updatePart}
+      selectedAdvancedParts={ws.selectedAdvancedParts}
+      mechanicPartsForList={ws.mechanicPartsForList}
+      powerMechanicsSummary={ws.powerMechanicsSummary}
+      onAddMechanicPart={ws.addMechanicPart}
+      onRemoveAdvancedPart={ws.removeAdvancedPart}
+      onUpdateAdvancedPart={ws.updateAdvancedPart}
+      damages={ws.damages}
+      onDamagesChange={ws.setDamages}
+      damageSummary={ws.damageSummary}
+      sectionCosts={ws.sectionCosts}
+      showActionProfile={!onOverlayTab}
+    />
+  );
+
   return (
     <CreatorPageShell
       icon={<Wand2 className="h-8 w-8 text-primary-link-fg" />}
@@ -152,7 +258,15 @@ function PowerCreatorWorkspace({
         reset: <PowerCreatorHelp topic="reset" />,
       }}
       saving={ws.save.saving}
-      saveDisabled={!ws.name.trim()}
+      saveDisabled={!ws.name.trim() || ws.dieIncomplete}
+      aboveGrid={
+        <PowerCreatorCompositionBand
+          state={ws.variants}
+          powerParts={ws.powerParts}
+          tabGroupId={variantTabGroup.tabGroupId}
+          sharedPanelId={variantTabGroup.sharedPanelId}
+        />
+      }
       loading={{
         isLoading,
         loadingMessage: 'Loading power parts...',
@@ -195,14 +309,14 @@ function PowerCreatorWorkspace({
           costStats={[
             {
               label: 'Energy Cost',
-              value: ws.costs.totalEnergy,
+              value: composed ? composed.res.energy : ws.costs.totalEnergy,
               icon: <Zap className="h-6 w-6" />,
               color: 'energy',
               help: <PowerCreatorHelp topic="energy" tone="current" />,
             },
             {
               label: 'Training Points',
-              value: ws.costs.totalTP,
+              value: composed ? composed.res.tp : ws.costs.totalTP,
               icon: <Target className="h-6 w-6" />,
               color: 'tp',
               help: <PowerCreatorHelp topic="tp" tone="current" />,
@@ -215,22 +329,33 @@ function PowerCreatorWorkspace({
             </div>
           }
           statRows={[
-            { label: 'Action', value: ws.actionTypeDisplay },
+            ...(composed
+              ? [{ label: 'Structure', value: formatPowerCompositionSummary(composed.res) }]
+              : []),
+            { label: 'Action', value: tabDisplay?.actionType ?? ws.actionTypeDisplay },
             { label: 'Attack', value: ws.attackModeLabel },
-            { label: 'Range', value: ws.rangeDisplay },
-            { label: 'Area', value: ws.areaDisplay },
-            { label: 'Duration', value: ws.durationDisplay },
+            { label: 'Range', value: tabDisplay?.range ?? ws.rangeDisplay },
+            { label: 'Area', value: tabDisplay?.area ?? ws.areaDisplay },
+            { label: 'Duration', value: tabDisplay?.duration ?? ws.durationDisplay },
             {
               label: 'Targets',
               value:
                 ws.targetedDefenses.length > 0 ? ws.targetedDefenses.join(', ') : 'None specified',
             },
           ]}
-          breakdowns={
-            ws.costs.tpSources.length > 0
-              ? [{ title: 'TP Breakdown', items: ws.costs.tpSources }]
-              : undefined
-          }
+          breakdowns={[
+            ...(composed
+              ? [{ title: 'Variant Energy', items: variantEnergyLines(composed.res) }]
+              : []),
+            ...((composed ? composed.res.tpSources : ws.costs.tpSources).length > 0
+              ? [
+                  {
+                    title: 'TP Breakdown',
+                    items: composed ? composed.res.tpSources : ws.costs.tpSources,
+                  },
+                ]
+              : []),
+          ]}
         >
           <AdvancedCalculationsPanel
             groups={ws.advancedCalcGroups}
@@ -239,55 +364,18 @@ function PowerCreatorWorkspace({
         </CreatorSummaryPanel>
       }
     >
-      <PowerCreatorEditor
-        isAdmin={isAdmin}
-        name={ws.name}
-        onNameChange={ws.setName}
-        description={ws.description}
-        onDescriptionChange={ws.setDescription}
-        imageId={ws.imageId}
-        imageUrl={ws.imageUrl}
-        onImageChange={(selection) => {
-          ws.setImageId(selection.imageId);
-          ws.setImageUrl(selection.imageUrl);
-        }}
-        actionType={ws.actionType}
-        onActionTypeChange={ws.setActionType}
-        isReaction={ws.isReaction}
-        onIsReactionChange={ws.setIsReaction}
-        actionTypeDisplay={ws.actionTypeDisplay}
-        attackMode={ws.attackMode}
-        onAttackModeChange={ws.setAttackMode}
-        targetedDefenses={ws.targetedDefenses}
-        onTargetedDefensesChange={ws.setTargetedDefenses}
-        suggestionPartsDb={ws.powerParts}
-        suggestionSelectedParts={ws.suggestionSelectedParts}
-        range={ws.range}
-        onRangeChange={ws.setRange}
-        rangeSummary={ws.rangeSummary}
-        area={ws.area}
-        onAreaChange={ws.setArea}
-        areaPartInfo={ws.areaPartInfo}
-        duration={ws.duration}
-        onDurationChange={ws.setDuration}
-        durationSummary={ws.durationSummary}
-        selectedParts={ws.selectedParts}
-        nonMechanicParts={ws.nonMechanicParts}
-        powerPartsSummary={ws.powerPartsSummary}
-        onAddPart={ws.addPart}
-        onRemovePart={ws.removePart}
-        onUpdatePart={ws.updatePart}
-        selectedAdvancedParts={ws.selectedAdvancedParts}
-        mechanicPartsForList={ws.mechanicPartsForList}
-        powerMechanicsSummary={ws.powerMechanicsSummary}
-        onAddMechanicPart={ws.addMechanicPart}
-        onRemoveAdvancedPart={ws.removeAdvancedPart}
-        onUpdateAdvancedPart={ws.updateAdvancedPart}
-        damages={ws.damages}
-        onDamagesChange={ws.setDamages}
-        damageSummary={ws.damageSummary}
-        sectionCosts={ws.sectionCosts}
-      />
+      {showVariantTabs ? (
+        <TabContentPanel
+          tabGroupId={variantTabGroup.tabGroupId}
+          activeTab={ws.variants.activeTabId}
+          id={variantTabGroup.sharedPanelId}
+          className="space-y-6"
+        >
+          {editor}
+        </TabContentPanel>
+      ) : (
+        editor
+      )}
     </CreatorPageShell>
   );
 }

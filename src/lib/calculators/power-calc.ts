@@ -24,6 +24,11 @@ import {
   POWER_CALC_SECTION_BY_NAME,
   type PowerCalcSectionId,
 } from './power-mechanic-constants';
+import {
+  deriveComposedPowerDisplay,
+  type PowerComposition,
+  type PowerCompositionResolution,
+} from './power-composition';
 
 // =============================================================================
 // Types
@@ -90,6 +95,8 @@ export interface PowerDisplayData {
   tp: number;
   tpSources: string[];
   partChips: PartChipData[];
+  /** Present when the power has built-in variants (ADR-0029). */
+  composition?: PowerCompositionResolution | undefined;
 }
 
 export interface PartChipData {
@@ -601,7 +608,7 @@ function powerDocHasCreatorStyleFields(powerDoc: PowerDocument): boolean {
   );
 }
 
-function buildPowerPartsPayloadForCost(
+export function buildPowerPartsPayloadForCost(
   powerDoc: PowerDocument,
   partsDb: PowerPart[],
 ): PowerPartPayload[] {
@@ -748,14 +755,34 @@ interface PowerDocumentFields {
       }
     | undefined;
   targetedDefenses?: string[] | undefined;
+  /** Built-in variants (ADR-0029). Absent on a normal power. */
+  composition?: PowerComposition | undefined;
 }
 
 export type PowerDocument = AllowUndefinedOptionals<PowerDocumentFields>;
 
+export interface DerivePowerDisplayOptions {
+  /** Play-state pick (sheet). Omit for browse energy (Choice max, Alternate first, …). */
+  selectedVariantId?: string | null | undefined;
+}
+
 /**
- * Build complete display data from a saved power document
+ * Build complete display data from a saved power document.
+ * Composed powers (ADR-0029) resolve through `resolvePowerComposition`.
  */
 export function derivePowerDisplay(
+  powerDoc: PowerDocument,
+  partsDb: PowerPart[],
+  options?: DerivePowerDisplayOptions,
+): PowerDisplayData {
+  return (
+    deriveComposedPowerDisplay(powerDoc, partsDb, options) ??
+    derivePlainPowerDisplay(powerDoc, partsDb)
+  );
+}
+
+/** Single-chassis display (ignores `composition`). */
+export function derivePlainPowerDisplay(
   powerDoc: PowerDocument,
   partsDb: PowerPart[],
 ): PowerDisplayData {
