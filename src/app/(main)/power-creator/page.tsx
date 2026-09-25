@@ -34,6 +34,7 @@ import {
 } from '@/components/creator';
 import { LoadingState, TabContentPanel, useTabGroup } from '@/components/ui';
 import {
+  formatEnergyNumber,
   formatPowerCompositionSummary,
   POWER_COMPOSITION_STRUCTURE_LABELS,
   type PowerCompositionResolution,
@@ -76,9 +77,8 @@ function variantEnergyLines(res: PowerCompositionResolution): string[] {
     lines.push(`${ruleText}: ${res.structureEnergy} EN`);
   }
   if (res.reverse) {
-    const d = res.reverse.discount;
     lines.push(
-      `Reverse drawback ${res.reverse.energy} EN → −${Number.isInteger(d) ? d : d.toFixed(1)} EN`,
+      `Reverse drawback ${res.reverse.energy} EN → −${formatEnergyNumber(res.reverse.discount)} EN`,
     );
   }
   const totalLabel =

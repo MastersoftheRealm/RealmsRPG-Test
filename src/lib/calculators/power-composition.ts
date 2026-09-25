@@ -8,8 +8,10 @@
 
 import type { PowerPart } from '@/hooks/codex-types';
 import type { CharacterPower } from '@/types';
-import { PART_IDS } from '@/lib/id-constants';
+import { findByIdOrName, PART_IDS } from '@/lib/id-constants';
+import { normalizeAttackMode, type AttackMode } from '@/lib/attack-mode';
 import { dedupeSavedParts } from '@/lib/game/dedupe-saved-parts';
+import { formatCost } from '@/lib/game/creator-constants';
 import { buildRequiredProficiencies, calculateProficiencyTP } from '@/lib/proficiencies';
 import {
   buildPowerPartsPayloadForCost,
@@ -46,7 +48,10 @@ export type PowerVariantPolarity = 'positive' | 'negative';
 export type PowerVariantSpec = Pick<
   PowerDocument,
   'description' | 'parts' | 'damage' | 'actionType' | 'isReaction' | 'range' | 'area' | 'duration'
->;
+> & {
+  /** Creator round-trip for Alternate variants; pricing does not read it. */
+  attackMode?: AttackMode | undefined;
+};
 
 export interface PowerVariant extends PowerVariantSpec {
   id: string;
@@ -79,15 +84,27 @@ export const POWER_COMPOSITION_STRUCTURE_LABELS: Record<PowerCompositionStructur
 };
 
 /** Codex part that documents each structure (Alternate has none). */
-export const POWER_COMPOSITION_CODEX_PART_IDS: Partial<Record<PowerCompositionStructure, number>> =
-  {
-    choice: PART_IDS.POWER_CHOICE,
-    modify: PART_IDS.POWER_SPLIT_GROUPS,
-    randomize: PART_IDS.POWER_RANDOMIZE,
-  };
+const POWER_COMPOSITION_CODEX_PART_IDS: Partial<Record<PowerCompositionStructure, number>> = {
+  choice: PART_IDS.POWER_CHOICE,
+  modify: PART_IDS.POWER_SPLIT_GROUPS,
+  randomize: PART_IDS.POWER_RANDOMIZE,
+};
 
-export const POWER_ALTERNATE_HELP =
+const POWER_ALTERNATE_HELP =
   'Each variant is a complete power (action, range, area, duration, damage, and parts). When you use the power you pick one variant and pay that variant’s energy, which may cost less, the same, or more than the others.';
+
+/** Rule text for a structure or the Reverse add-on (codex part description; Alternate has none). */
+export function powerCompositionHelpText(
+  key: PowerCompositionStructure | 'reverse',
+  partsDb: PowerPart[],
+): string {
+  if (key === 'none') return '';
+  if (key === 'alternate') return POWER_ALTERNATE_HELP;
+  const id =
+    key === 'reverse' ? PART_IDS.POWER_REVERSE_EFFECTS : POWER_COMPOSITION_CODEX_PART_IDS[key];
+  if (id == null) return '';
+  return findByIdOrName(partsDb, { id })?.description?.trim() ?? '';
+}
 
 const COMPOSITION_MECHANIC_PART_IDS = new Set<number>([
   PART_IDS.POWER_RANDOMIZE,
@@ -131,6 +148,8 @@ function pickSpec(raw: Record<string, unknown>): PowerVariantSpec {
   if (isRecord(raw.range)) spec.range = raw.range as PowerVariantSpec['range'];
   if (isRecord(raw.area)) spec.area = raw.area as PowerVariantSpec['area'];
   if (isRecord(raw.duration)) spec.duration = raw.duration as PowerVariantSpec['duration'];
+  const attackMode = normalizeAttackMode(raw.attackMode);
+  if (attackMode) spec.attackMode = attackMode;
   return spec;
 }
 
@@ -146,7 +165,7 @@ export function normalizePowerComposition(raw: unknown): PowerComposition | null
     structure === 'none' || !Array.isArray(raw.variants)
       ? []
       : raw.variants.filter(isRecord).map((v, i) => ({
-          ...pickSpec(v),
+          ...pickSpec(structure === 'modify' ? { ...v, description: undefined } : v),
           id: typeof v.id === 'string' && v.id.trim() ? v.id : `v${i + 1}`,
           label:
             typeof v.label === 'string' && v.label.trim() ? v.label.trim() : `Variant ${i + 1}`,
@@ -206,6 +225,8 @@ export interface ResolvedPowerVariant {
 
 export interface PowerCompositionResolution {
   structure: PowerCompositionStructure;
+  /** `powerCompositionHelpText(structure)` — shown beside the sheet / browse variant chips. */
+  structureHelp: string;
   variants: ResolvedPowerVariant[];
   /** Shared chassis (Choice / Modify / Randomize / plain + Reverse). Null for Alternate. */
   shared: { doc: PowerDocument; display: PowerDisplayData } | null;
@@ -450,6 +471,7 @@ export function resolvePowerComposition(
 
   return {
     structure,
+    structureHelp: powerCompositionHelpText(structure, partsDb),
     variants,
     shared,
     reverse,
@@ -558,10 +580,6 @@ export function formatPowerCompositionSummary(res: PowerCompositionResolution): 
     parts.push(names ? `${label}: ${names}` : label);
   }
   if (res.die) parts.push(`1d${res.die.sides}`);
-  if (res.reverse) parts.push(`Reverse −${formatHalf(res.reverse.discount)} EN`);
+  if (res.reverse) parts.push(`Reverse −${formatCost(res.reverse.discount)} EN`);
   return parts.join(' · ');
-}
-
-function formatHalf(n: number): string {
-  return Number.isInteger(n) ? String(n) : n.toFixed(1);
 }

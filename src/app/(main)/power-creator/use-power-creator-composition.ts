@@ -13,7 +13,6 @@ import {
   normalizePowerComposition,
   type PowerComposition,
   type PowerCompositionStructure,
-  type PowerVariantPolarity,
 } from '@/lib/calculators';
 import {
   REVERSE_TAB_ID,
@@ -48,7 +47,7 @@ type CompositionInit = {
 
 const DEFAULT_DIE_SIDES = 4;
 
-export function tabIdsFor(
+function tabIdsFor(
   structure: PowerCompositionStructure,
   reverseEnabled: boolean,
   variants: PowerVariantTab[],
@@ -358,4 +357,3 @@ export function usePowerCreatorComposition({
 }
 
 export type PowerCreatorCompositionState = ReturnType<typeof usePowerCreatorComposition>;
-export type { CompositionInit, PowerVariantPolarity };

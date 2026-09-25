@@ -64,7 +64,8 @@ export interface CharacterSheetDerivedHandlers {
   setCharacter: React.Dispatch<React.SetStateAction<Character | null>>;
   handleRemovePower: NonNullable<LibrarySectionData['onRemovePower']>;
   handleTogglePowerInnate: NonNullable<LibrarySectionData['onTogglePowerInnate']>;
-  handleSelectPowerVariant: NonNullable<LibrarySectionData['onSelectPowerVariant']>;
+  /** Omitted on read-only sheets so variant chips render as plain descriptors. */
+  handleSelectPowerVariant?: LibrarySectionData['onSelectPowerVariant'];
   handleUsePower: NonNullable<LibrarySectionData['onUsePower']>;
   handleRemoveTechnique: NonNullable<LibrarySectionData['onRemoveTechnique']>;
   handleUseTechnique: NonNullable<LibrarySectionData['onUseTechnique']>;

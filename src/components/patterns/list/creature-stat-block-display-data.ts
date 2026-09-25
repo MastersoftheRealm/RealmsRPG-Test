@@ -2,7 +2,11 @@ import { resolveListRowThumbnail } from '@/lib/list-row-image';
 import type { EntityPowerRow, EntityTechniqueRow } from './entity-library-sections';
 import { derivePowerDisplay, formatPowerDamage } from '@/lib/calculators/power-calc';
 import { deriveTechniqueDisplay } from '@/lib/calculators/technique-calc';
-import { composedPowerDamageLabel, powerVariantsDetailSection } from '@/lib/power-variant-chips';
+import {
+  composedPowerDamageLabel,
+  powerVariantsDetailSection,
+  withPowerReverseNote,
+} from '@/lib/power-variant-chips';
 import {
   calculateSkillBonusWithProficiency,
   calculateSubSkillBonusWithProficiency,
@@ -191,7 +195,9 @@ export function buildPowersForDisplay(
     return {
       id: `${creature.id}-power-${refId ?? idx}`,
       name: baseName,
-      description: baseDescription,
+      description: composition
+        ? withPowerReverseNote(baseDescription, composition)
+        : baseDescription,
       thumbnail: resolveListRowThumbnail('power', imageRecord, baseName),
       actionType: derived.actionType || ref.action,
       damage: damageStr,

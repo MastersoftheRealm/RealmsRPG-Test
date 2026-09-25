@@ -16,7 +16,7 @@ import {
   snapshotOfficialPowerForInnate,
   type InnatePowerSnapshot,
 } from '@/lib/game/innate-eligibility';
-import { powerVariantsDetailSection } from '@/lib/power-variant-chips';
+import { powerVariantsDetailSection, withPowerReverseNote } from '@/lib/power-variant-chips';
 import { libraryItemToPowerDocument } from '@/lib/library-selectable-builders';
 import { partChipsFromDisplay } from '@/lib/chip/part-chips-from-display';
 import {
@@ -103,7 +103,7 @@ export function buildOfficialPowerRows(
       id: String(p.id ?? p.docId ?? ''),
       raw: p,
       name: display.name,
-      description: display.description,
+      description: withPowerReverseNote(display.description, composition),
       categories,
       category: formatPartCategoriesColumn(categories),
       energy: display.energy,

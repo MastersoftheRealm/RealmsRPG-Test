@@ -68,6 +68,8 @@
     - Each tab edits its own fields; summary shows composed Energy / TP + Variant Energy breakdown.
     - Alternate add copies the open tab; Choice/Modify/Randomize variants are overlays on Shared.
     - Draft cache + Load round-trip composition.
+  notes: |
+    Limit (ADR-0029): an empty variant field means use Shared, so a Choice / Modify / Randomize variant cannot reset range, area, or duration to none / Instant when Shared sets one. Set that field per variant instead. Alternate variants are full powers and are not affected.
 
 - id: TASK-931
   title: Sheet play — selectedVariantId + feat-style variant chips

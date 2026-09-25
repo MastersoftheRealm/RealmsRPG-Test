@@ -257,4 +257,16 @@ describe('normalizePowerComposition', () => {
     expect(c.die?.faces).toEqual(['a', '']);
     expect(isRandomizeDieComplete(c)).toBe(false);
   });
+
+  it('keeps an Alternate variant attack mode for the creator round-trip', () => {
+    const c = normalizePowerComposition({
+      structure: 'alternate',
+      variants: [
+        { id: 'a', label: 'A', attackMode: 'weapon' },
+        { id: 'b', label: 'B', attackMode: 'bogus' },
+      ],
+    })!;
+    expect(c.variants[0]?.attackMode).toBe('weapon');
+    expect(c.variants[1]?.attackMode).toBeUndefined();
+  });
 });

@@ -26,5 +26,5 @@ A power is one chassis (one `duration`, `range`, `area`, `damage[]`, `parts[]`) 
 ## Consequences
 
 - Positive: one resolver for every surface; exclusive portions and concurrent pieces are priced from real specs; drawbacks follow the written 50% rule.
-- Negative / follow-ups: no nested structures; techniques not covered; legacy Choice powers keep fudge math until re-authored (official examples rewritten in TASK-933).
+- Negative / follow-ups: no nested structures; techniques not covered; legacy Choice powers keep fudge math until re-authored (official examples rewritten in TASK-933). An empty overlay field means "use Shared", so a Choice / Modify / Randomize variant cannot reset range, area, or duration to none / Instant when Shared sets one (leave that field empty on Shared and set it per variant instead); there is no explicit-null override. Modify pieces carry no description of their own (normalize drops it). Reverse drawbacks render as row description text (`withPowerReverseNote`), never a chip; the structure's rule text rides on the variant section label tip (`powerCompositionHelpText` → `MetadataDetailSection.labelHelp`).
 - Rejected: a new SQL column (payload JSONB already round-trips); a new tab/chip component (TabNavigation + GridListChip carry it); calling them "options" or "levels" (collide with part option levels and feat ranks).

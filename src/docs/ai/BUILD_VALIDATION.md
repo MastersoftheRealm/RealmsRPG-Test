@@ -8868,7 +8868,10 @@ Built-in variants in `payload.composition` (ADR-0029). Resolver: `lib/calculator
 2. Click **Ice**: the damage button reads `1d10 ice`; Energy stays at the max. Reload — the pick persists (`selectedVariantId`).
 3. Alternate power: switching the chip changes damage, duration, area, and the Energy button (a cheaper variant costs less).
 4. Modify power: chips are browse-only (expand to read piece facts); Duration column joins pieces (`2 Rounds / 1 Minute`); one Energy button spends the sum.
-5. Randomize power: the **Roll 1dN** chip rolls, marks the face's variant, and logs to the roll log. Clicking a variant chip sets it without rolling. Reverse chip notes the drawbacks cannot be nullified.
+5. Randomize power: the **Roll 1dN** chip rolls, marks the face's variant, and logs to the roll log. Clicking a variant chip sets it without rolling.
+6. Power with Reverse effects: no Reverse chip. The expanded description ends with "Reverse Effects (drawbacks): always applies and cannot be nullified…" and the EN discount. Same text on Library / add-modal / creature rows.
+7. The **Choice Variants** (or Alternate / Modify / Randomize) label has an info tip with the same rule text the creator band shows.
+8. Campaign read-only character view: variant chips show but are not clickable (no hover/press affordance); no Roll chip action.
 
 **Expected**
 - Single-variant power shows no chip row. Chips keep the existing coarse-pointer hit size.
