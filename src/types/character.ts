@@ -113,6 +113,8 @@ interface CharacterPowerFields {
             op_2_tp?: number | undefined;
             op_3_lvl?: number | undefined;
             op_3_tp?: number | undefined;
+            /** Composed powers: this row's own damage type (`null` = untyped); overrides `damage`. */
+            damageType?: string | null | undefined;
           }
       >
     | undefined;

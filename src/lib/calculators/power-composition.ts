@@ -312,34 +312,29 @@ function structuredDurationOf(doc: PowerDocument): StructuredPowerDuration | nul
   );
 }
 
-/** One pseudo power per payload row so each damage part carries only its own damage type. */
-function proficiencyPowersFor(doc: PowerDocument, partsDb: PowerPart[]): CharacterPower[] {
+type ProficiencyPart = NonNullable<CharacterPower['parts']>[number] & object;
+
+/** Payload rows of one spec; each damage row carries only its own damage type. */
+function proficiencyPartsFor(doc: PowerDocument, partsDb: PowerPart[]): ProficiencyPart[] {
   const payload = buildPowerPartsPayloadForCost(doc, partsDb);
   const validDamages = (doc.damage ?? []).filter(
     (d) => d.type && d.type !== 'none' && Number(d.amount) > 0,
   );
   let cursor = 0;
-  return payload.map((pl, i) => {
+  return payload.map((pl) => {
     const name = pl.name ?? pl.part?.name ?? '';
     const isDamageRow =
       POWER_CALC_SECTION_BY_NAME[name] === 'damage' && name !== 'Power Split Damage Dice';
     const dmg = isDamageRow ? validDamages[cursor++] : undefined;
     const id = pl.id ?? pl.part?.id;
-    const power = {
-      id: `composition-tp-${i}`,
+    return {
+      id: id != null ? String(id) : undefined,
       name,
-      parts: [
-        {
-          id: id != null ? String(id) : undefined,
-          name,
-          op_1_lvl: pl.op_1_lvl ?? 0,
-          op_2_lvl: pl.op_2_lvl ?? 0,
-          op_3_lvl: pl.op_3_lvl ?? 0,
-        },
-      ],
-      ...(dmg ? { damage: [{ type: dmg.type }] } : {}),
+      op_1_lvl: pl.op_1_lvl ?? 0,
+      op_2_lvl: pl.op_2_lvl ?? 0,
+      op_3_lvl: pl.op_3_lvl ?? 0,
+      damageType: dmg?.type ?? null,
     };
-    return power as unknown as CharacterPower;
   });
 }
 
@@ -348,7 +343,13 @@ function computeCompositionTp(
   partsDb: PowerPart[],
 ): { tp: number; tpSources: string[] } {
   const required = buildRequiredProficiencies({
-    powers: docs.flatMap((d) => proficiencyPowersFor(d, partsDb)),
+    powers: [
+      {
+        id: 'composition-tp',
+        name: '',
+        parts: docs.flatMap((d) => proficiencyPartsFor(d, partsDb)),
+      },
+    ],
     techniques: [],
     weapons: [],
     armor: [],
@@ -509,6 +510,24 @@ export function composedPowerSavedParts(
     ...res.variants.flatMap((v) => v.doc.parts ?? []),
     ...(res.reverse?.doc.parts ?? []),
   ]);
+}
+
+/**
+ * Parts the character must be proficient in (feed as `CharacterPower.parts` to
+ * `buildRequiredProficiencies`). Choice / Modify / Randomize: shared + every variant + Reverse,
+ * independent of the pick. Alternate: only the picked variant (+ Reverse) — that is the power in use.
+ */
+export function composedPowerProficiencyParts(
+  res: PowerCompositionResolution,
+  partsDb: PowerPart[],
+): ProficiencyPart[] {
+  const docs =
+    res.structure === 'alternate'
+      ? [selectedResolvedVariant(res)?.doc]
+      : [res.shared?.doc, ...res.variants.map((v) => v.doc)];
+  return [...docs, res.reverse?.doc]
+    .filter((d): d is PowerDocument => !!d)
+    .flatMap((d) => proficiencyPartsFor(d, partsDb));
 }
 
 /** Damage rows the row's damage button should roll. */

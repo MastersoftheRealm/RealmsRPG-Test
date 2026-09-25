@@ -8897,6 +8897,27 @@ Built-in variants in `payload.composition` (ADR-0029). Resolver: `lib/calculator
 
 **Report** — `[ ] PASS` · `[ ] FAIL` · `[ ] SKIP` — Notes:
 
+#### DEV-V-061-T004 — Character proficiencies follow every variant (Choice) / the pick (Alternate)
+
+| Field | Value |
+|-------|-------|
+| **Suite** | DEV-V-061 |
+| **Related task** | TASK-934 |
+| **Where** | Character sheet → Library → Powers + Proficiencies tab (1280); `/library` Realms Powers add-to-character; Guided save |
+| **Needs** | Signed in; a character without fire / ice / lightning Elemental Damage proficiency |
+
+**Steps**
+1. Sheet **Add Power** → Elemental Burst. Proficiencies tab lists Elemental Damage for **fire, ice, and lightning** plus Power Range once (TP matches the power's TP).
+2. Expand Elemental Burst and click **Ice**, then **Lightning**. The Proficiencies tab list and the row's needs-proficiency badge do not change. The damage button follows the chip (`1d10 ice` → `1d10 lightning`).
+3. Remove one of the three damage-type proficiencies (Edit mode): Elemental Burst shows the needs-proficiency badge regardless of the chip.
+4. `/library` Realms Powers → add Elemental Burst to a character: the same three damage-type proficiencies are added. Guided creator with Elemental Burst: the saved character has the same three.
+5. Alternate power (e.g. Inferno fire / Frost ice): the required damage type follows the picked variant; switching to a variant the character lacks shows the badge.
+
+**Expected**
+- Choice / Modify / Randomize requirements never change with the chip. Modify charges shared range/area once.
+
+**Report** — `[ ] PASS` · `[ ] FAIL` · `[ ] SKIP` — Notes:
+
 ---
 
 ## DEV-V-007 — Auth UI (TASK-361, TASK-899)

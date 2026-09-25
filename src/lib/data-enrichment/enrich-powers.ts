@@ -3,7 +3,7 @@ import type { UserPower } from '@/hooks/use-user-library';
 import type { PowerPart } from '@/hooks/codex-types';
 import {
   composedPowerDamage,
-  composedPowerSavedParts,
+  composedPowerProficiencyParts,
   derivePowerDisplay,
   formatPowerDamage,
 } from '@/lib/calculators';
@@ -65,17 +65,17 @@ export function enrichPowers(
         id: identityId,
         name: libraryItem.name,
         description: libraryItem.description || '',
-        // Composed powers: every variant's parts count toward proficiency (ADR-0029).
-        parts: dedupeSavedParts(
-          composition ? composedPowerSavedParts(composition) : libraryItem.parts || [],
-        ).map((part) => ({
-          id: String(part.id || ''),
-          name: part.name || '',
-          op_1_lvl: part.op_1_lvl,
-          op_2_lvl: part.op_2_lvl,
-          op_3_lvl: part.op_3_lvl,
-          ...(part.applyDuration ? { applyDuration: true } : {}),
-        })),
+        // Composed powers: the resolver's proficiency rows, each damage row typed (ADR-0029).
+        parts: composition
+          ? composedPowerProficiencyParts(composition, powerPartsDb)
+          : dedupeSavedParts(libraryItem.parts || []).map((part) => ({
+              id: String(part.id || ''),
+              name: part.name || '',
+              op_1_lvl: part.op_1_lvl,
+              op_2_lvl: part.op_2_lvl,
+              op_3_lvl: part.op_3_lvl,
+              ...(part.applyDuration ? { applyDuration: true } : {}),
+            })),
         innate,
         libraryItem,
         // Calculated display fields from derivePowerDisplay
