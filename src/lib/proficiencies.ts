@@ -201,8 +201,13 @@ export function buildRequiredProficiencies(
       op3TP: Number(partObj?.op_3_tp ?? codex?.op_3_tp ?? 0) || 0,
     };
 
-    if (isDamagePartName(name) && damageTypes.length > 0) {
-      damageTypes.forEach((dt) => {
+    // A part that names its own damage type (composed power rows; `null` = untyped) ignores the power's damage.
+    const partDamageTypes =
+      partObj?.damageType !== undefined
+        ? [normalizeDamageType(partObj.damageType)].filter((t): t is string => Boolean(t))
+        : damageTypes;
+    if (isDamagePartName(name) && partDamageTypes.length > 0) {
+      partDamageTypes.forEach((dt) => {
         const withDmg = { ...profBase, damageType: dt, id: nextProfId() };
         if (calculateProficiencyTP(withDmg) > 0) out.push(withDmg);
       });

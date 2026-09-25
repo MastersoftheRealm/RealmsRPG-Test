@@ -256,29 +256,3 @@ Do **not** read the done archive at session start.
   notes: |
     Creator config UI (TASK-919) stays as-is. Do not invent a second range ladder. Tooltip copy should match GAME_RULES (long range = 4× normal, −5). Owner QA after implement → pending-qa.
 
----
-
-- id: TASK-934
-  title: Composed powers — character proficiency requirements follow every variant, not the sheet pick
-  created_at: 2026-09-24
-  created_by: agent
-  priority: medium
-  status: not-started
-  clickup_sync: pending
-  related_files:
-    - src/lib/data-enrichment/enrich-powers.ts
-    - src/lib/proficiencies.ts
-    - src/components/character-sheet/use-sheet-auto-proficiencies.ts
-    - src/components/character-sheet/use-library-section-rows.ts
-    - src/hooks/use-add-to-character-from-library.tsx
-    - src/lib/calculators/power-composition.ts
-  description: |
-    Follow-up from /cleanup of TASK-929–933 (ADR-0029). `enrichPowers` gives composed powers every variant's `parts` but `damage` from `composedPowerDamage` (the selected Choice / Alternate / Randomize variant only). `buildRequiredProficiencies` splits damage parts by `power.damage` types, so on the sheet Elemental Burst requires only the picked element and switching the chip changes the character's required proficiencies (auto-proficiency sync, needs-proficiency badge). The power's own TP (`resolvePowerComposition`) counts fire, ice, and lightning. Add-from-library builds requirements from the raw library row, which has no top-level damage after TASK-933.
-  acceptance_criteria:
-    - Required proficiencies for a composed power come from the same proficiency set the resolver prices (every variant + Reverse; damage split by type), independent of `selectedVariantId`.
-    - Sheet auto-proficiencies, badge, Proficiencies tab, and add-from-library agree for Elemental Burst (three damage types) and do not change when the chip changes.
-    - The row's damage button keeps following the pick.
-    - Vitest covering a Choice fixture through enrichment → `buildRequiredProficiencies`; BUILD_VALIDATION step under DEV-V-061.
-  notes: |
-    Prefer one exported helper in `power-composition.ts` (the resolver already builds per-row pseudo powers for TP) over a second damage-type walk.
-

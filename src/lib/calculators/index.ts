@@ -71,6 +71,7 @@ export {
   selectedResolvedVariant,
   composedPowerDamage,
   composedPowerSavedParts,
+  composedPowerProficiencyParts,
   formatPowerCompositionSummary,
   type PowerComposition,
   type PowerCompositionStructure,

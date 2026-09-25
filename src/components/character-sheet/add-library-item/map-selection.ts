@@ -6,8 +6,11 @@ import type {
   EqItem,
   PowerSelectionMode,
 } from '@/hooks/add-library-item/types';
+import type { PowerPart } from '@/hooks/codex-types';
 import type { CharacterPower, CharacterTechnique, Item } from '@/types';
+import { composedPowerProficiencyParts, resolvePowerComposition } from '@/lib/calculators';
 import { persistEquipmentCost } from '@/lib/codex/equipment-list';
+import { libraryItemToPowerDocument } from '@/lib/library-selectable-builders';
 
 interface CodexPartLike {
   id?: string | number | undefined;
@@ -25,6 +28,7 @@ interface SavedPartLike {
   op_2_lvl?: number | undefined;
   op_3_lvl?: number | undefined;
   applyDuration?: boolean | undefined;
+  damageType?: string | null | undefined;
 }
 
 function findCodexPart(codexList: CodexPartLike[], part: SavedPartLike): CodexPartLike | undefined {
@@ -60,6 +64,7 @@ function enrichSavedPart(part: SavedPartLike, codexList: CodexPartLike[]) {
     op_3_lvl: part.op_3_lvl ?? 0,
     op_3_tp: codex?.op_3_tp ?? 0,
     ...(part.applyDuration ? { applyDuration: true } : {}),
+    ...(part.damageType !== undefined ? { damageType: part.damageType } : {}),
   };
 }
 
@@ -105,11 +110,20 @@ export function mapSelectedToCharacterItems(
         };
       }
       const power = entry as UserPower;
+      const composition = power.composition
+        ? resolvePowerComposition(
+            libraryItemToPowerDocument(power),
+            (dbs?.powerPartsDb ?? []) as PowerPart[],
+          )
+        : null;
+      const savedParts: SavedPartLike[] = composition
+        ? composedPowerProficiencyParts(composition, (dbs?.powerPartsDb ?? []) as PowerPart[])
+        : power.parts || [];
       return {
         id: power.id,
         name: power.name,
         description: power.description || '',
-        parts: (power.parts || []).map((p) => enrichSavedPart(p, powerPartsDb)),
+        parts: savedParts.map((p) => enrichSavedPart(p, powerPartsDb)),
         cost: 0,
         level: 1,
         damage: power.damage as CharacterPower['damage'],

@@ -1,3 +1,40 @@
+- id: TASK-934
+  title: Composed powers — character proficiency requirements follow every variant, not the sheet pick
+  created_at: 2026-09-24
+  completed_at: 2026-09-24
+  created_by: agent
+  implemented_by: agent
+  priority: medium
+  status: done
+  verification_status: pending-qa
+  build_validation: |
+    suite: DEV-V-061
+    tests:
+      - DEV-V-061-T004
+  developer_test_plan: |
+    DEV-V-061-T004 (sheet Proficiencies tab + badge + add-from-library with Elemental Burst; Alternate follows the pick).
+  clickup_sync: pending
+  github_branch: task/TASK-934-choice-proficiency
+  related_files:
+    - src/lib/calculators/power-composition.ts
+    - src/lib/proficiencies.ts
+    - src/lib/data-enrichment/enrich-powers.ts
+    - src/lib/data-enrichment/enrich-powers.test.ts
+    - src/components/character-sheet/add-library-item/map-selection.ts
+    - src/components/character-sheet/add-library-item/map-selection.test.ts
+    - src/lib/guided-creator/build-character.ts
+    - src/types/character.ts
+  description: |
+    Follow-up from /cleanup of TASK-929–933 (ADR-0029). The sheet required only the picked Choice variant's damage type, so switching the Fire / Ice / Lightning chip changed required proficiencies while the power's TP counted all three.
+  acceptance_criteria:
+    - Required proficiencies for a composed power come from the same proficiency set the resolver prices (every variant + Reverse; damage split by type), independent of `selectedVariantId`. Owner override: Alternate follows the picked variant only.
+    - Sheet auto-proficiencies (add), badge, Proficiencies tab, add-from-library, and Guided save agree for Elemental Burst (three damage types) and do not change when the chip changes.
+    - The row's damage button keeps following the pick.
+    - Vitest covering a Choice fixture through enrichment → `buildRequiredProficiencies`; BUILD_VALIDATION step under DEV-V-061.
+  completed_work: |
+    `composedPowerProficiencyParts(res, partsDb)` in power-composition.ts returns the resolver's payload rows with each damage row tagged by its own `damageType` (Choice / Modify / Randomize: shared + every variant + Reverse; Alternate: picked variant + Reverse). `buildRequiredProficiencies` honours a per-part `damageType` (`null` = untyped) over the power's damage. The resolver's TP uses the same rows. Enrichment, the add-to-character mapper (sheet Add Power + Library add-to-character), and the Guided save payload use the helper. Modify still dedupes shared Power Range.
+  notes: |
+    Open for owner: resolver TP for Alternate still counts every variant (unchanged), while the character's required proficiencies follow the pick. Background sync on sheet load only sees powers added in-session (saved powers are lean refs) — unchanged; switching an Alternate pick to an unowned variant shows the needs-proficiency badge instead of auto-adding.
 - id: TASK-929
   title: Power variants — ADR-0029, composition resolver, cost tests, Reverse Effects codex fix
   created_at: 2026-09-24
