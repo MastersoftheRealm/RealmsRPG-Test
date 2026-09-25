@@ -6,6 +6,7 @@ import {
   buildPowerVariantChips,
   powerVariantsDetailSection,
   rollPowerRandomizeDie,
+  withPowerReverseNote,
 } from './power-variant-chips';
 
 const partsDb: PowerPart[] = [
@@ -86,5 +87,59 @@ describe('buildPowerVariantChips', () => {
     )!;
     expect(rollPowerRandomizeDie(res, () => 0.9)?.variant.id).toBe('ice');
     expect(rollPowerRandomizeDie(res, () => 0)?.face).toBe(1);
+  });
+
+  it('puts Reverse drawbacks in the description, never a chip', () => {
+    const reverse = { damage: [{ amount: 1, size: 10, type: 'fire' }] };
+    const plain = resolvePowerComposition(
+      { ...burst, composition: { structure: 'none', variants: [], reverse } },
+      partsDb,
+    )!;
+    expect(powerVariantsDetailSection(plain)).toBeUndefined();
+    const res = resolvePowerComposition(
+      { ...burst, composition: { ...burst.composition!, reverse } },
+      partsDb,
+    )!;
+    const section = powerVariantsDetailSection(res)!;
+    expect(section.chips.map((c) => c.name)).toEqual(['Fire', 'Ice']);
+    const text = withPowerReverseNote('Blast.', res);
+    expect(text.startsWith('Blast. Reverse Effects (1d10 fire)')).toBe(true);
+    expect(text).toContain('cannot be nullified');
+    expect(withPowerReverseNote('Blast.', undefined)).toBe('Blast.');
+  });
+
+  it('puts the structure rule text on the section label tip', () => {
+    const choicePart = {
+      ...partsDb[0]!,
+      id: String(PART_IDS.POWER_CHOICE),
+      name: 'Choice',
+      description: 'Pick one portion when you cast.',
+    };
+    const res = resolvePowerComposition(burst, [...partsDb, choicePart])!;
+    expect(powerVariantsDetailSection(res)?.labelHelp).toBe('Pick one portion when you cast.');
+    const noCodex = resolvePowerComposition(burst, partsDb)!;
+    expect(powerVariantsDetailSection(noCodex)?.labelHelp).toBeUndefined();
+  });
+
+  it('renders plain descriptor chips when no select handler is passed (read-only sheet)', () => {
+    const res = resolvePowerComposition(burst, partsDb)!;
+    const chips = buildPowerVariantChips(res);
+    expect(chips.every((c) => c.onSelect === undefined)).toBe(true);
+  });
+
+  it('ignores a Modify piece description (one description for the power)', () => {
+    const res = resolvePowerComposition(
+      {
+        ...burst,
+        description: 'Cold.',
+        composition: {
+          structure: 'modify',
+          variants: burst.composition!.variants.map((v) => ({ ...v, description: 'Invented.' })),
+        },
+      },
+      partsDb,
+    )!;
+    expect(res.variants.every((v) => v.description === undefined)).toBe(true);
+    expect(res.variants.every((v) => v.doc.description === 'Cold.')).toBe(true);
   });
 });

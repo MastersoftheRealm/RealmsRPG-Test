@@ -3301,3 +3301,11 @@ Notes
 - Feedback (verbatim summary): Fix methods so agents avoid using all ClickUp workspace MCP credits; if limited, double-check after each completed task for pending ClickUp filing; don't add too much red tape; clean up overly heavy AI workflow we added.
 - Expected: Lean ClickUp sync; pending flush; less ceremony.
 - Disposition: Updated `CLICKUP_GITHUB_WORKFLOW.md` + ADR-0028 + rules/pointers (TASK-928 amend). MCP budget ~2–3 calls/delivery; `clickup_sync: pending` + flush on done/PR; dropped default search/comments/subtasks and file-time ClickUp create.
+
+**Raw Feedback Log — 2026-09-24 (Power variants: Choice / Alternate / Modify / Randomize + Reverse)**
+- Date: 2026-09-24
+- Context: Power creator, character sheet Powers, browse surfaces, codex part 388
+- Priority: High
+- Feedback (verbatim summary): Replace the Choice / Split / Randomize / Reverse Effects part hacks with built-in variants. Structures Choice, Alternate, Modify, Randomize; Reverse is a checkbox worth 50% of the drawback's energy. Fix codex Reverse Effects `op_1_en` (−1.5 → −0.5). TP via existing proficiency dedupe (damage split by type); Modify does not charge shared range per piece. Innate = Appendix G on the whole power, Alternate per variant. Creator: Structure + Reverse + mechanic description above the grid, TabNavigation, hide parts 401/402/371/388. Sheet: feat-style variant chips (names, not "Level N"); Choice/Alternate switch; Modify browse-only with summed energy and joined durations; Randomize roll + click; no Reverse chip; one description. Other surfaces show resolved energy with no play control. Rewrite official Elemental Burst / Elemental Bolt / Judgement onto Choice.
+- Expected: Plan "Power composition model" (ADR-0029).
+- Disposition: **TASK-929–933** done, pending-qa (DEV-V-061), PR #125. /cleanup: Reverse moved from chip to description text; structure rule text on the sheet variant label tip; Guided path detail shows variant damage; read-only chips not clickable; Modify piece descriptions ignored; Alternate `attackMode` round-trips. Filed **TASK-934** (proficiency requirements follow every variant, not the pick). Known limit: a variant cannot reset Shared's range / area / duration to none (ADR-0029).

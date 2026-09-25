@@ -35,7 +35,7 @@ import {
   composedPowerSavedParts,
   resolvePowerComposition,
 } from '@/lib/calculators/power-composition';
-import { powerVariantsDetailSection } from '@/lib/power-variant-chips';
+import { powerVariantsDetailSection, withPowerReverseNote } from '@/lib/power-variant-chips';
 import { snapshotOfficialPowerForInnate } from '@/lib/game/innate-eligibility';
 import { resolvePartCategoryList } from '@/lib/library/power-technique-categories';
 import { deriveTechniqueDisplay } from '@/lib/calculators/technique-calc';
@@ -674,11 +674,13 @@ export function buildSelectableItem(
   const effectiveType = itemType;
 
   let powerDisplay: PowerColumnDisplay | undefined;
+  let composedDescription: string | undefined;
   if (itemType === 'power') {
     const p = item as UserPower;
     const doc = libraryItemToPowerDocument(p);
     const display = derivePowerDisplay(doc, powerPartsDb);
     const composition = display.composition;
+    if (composition) composedDescription = withPowerReverseNote(p.description, composition);
     const damage = composition ? composedPowerDamage(composition) : doc.damage;
     const partChips = partChipsFromDisplay(display.partChips);
     const parts = partsProficienciesSection(partChips, 'power');
@@ -839,6 +841,7 @@ export function buildSelectableItem(
     id: String(item.id),
     name,
     description:
+      composedDescription ||
       String((item as UserPower | UserTechnique | UserItem).description ?? '') ||
       'No description available.',
     columns,

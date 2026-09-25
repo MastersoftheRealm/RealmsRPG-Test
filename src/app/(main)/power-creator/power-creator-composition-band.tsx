@@ -17,10 +17,8 @@ import {
   TabNavigation,
   Textarea,
 } from '@/components/ui';
-import { findByIdOrName, PART_IDS } from '@/lib/id-constants';
 import {
-  POWER_ALTERNATE_HELP,
-  POWER_COMPOSITION_CODEX_PART_IDS,
+  powerCompositionHelpText,
   POWER_COMPOSITION_STRUCTURES,
   POWER_COMPOSITION_STRUCTURE_LABELS,
   POWER_RANDOMIZE_DIE_SIDES,
@@ -36,17 +34,6 @@ const STRUCTURE_OPTIONS = POWER_COMPOSITION_STRUCTURES.map((s) => ({
 }));
 
 const DIE_OPTIONS = POWER_RANDOMIZE_DIE_SIDES.map((s) => ({ value: String(s), label: `1d${s}` }));
-
-function codexDescription(powerParts: PowerPart[], id: number | undefined): string {
-  if (id == null) return '';
-  return findByIdOrName(powerParts, { id })?.description?.trim() ?? '';
-}
-
-function structureDescription(structure: PowerCompositionStructure, powerParts: PowerPart[]) {
-  if (structure === 'none') return '';
-  if (structure === 'alternate') return POWER_ALTERNATE_HELP;
-  return codexDescription(powerParts, POWER_COMPOSITION_CODEX_PART_IDS[structure]);
-}
 
 function tabHint(structure: PowerCompositionStructure, activeTabId: string): string {
   if (activeTabId === REVERSE_TAB_ID) {
@@ -80,10 +67,8 @@ export function PowerCreatorCompositionBand({
   sharedPanelId,
 }: PowerCreatorCompositionBandProps) {
   const { structure, reverseEnabled, variants, activeVariant, activeTabId } = state;
-  const description = structureDescription(structure, powerParts);
-  const reverseDescription = reverseEnabled
-    ? codexDescription(powerParts, PART_IDS.POWER_REVERSE_EFFECTS)
-    : '';
+  const description = powerCompositionHelpText(structure, powerParts);
+  const reverseDescription = reverseEnabled ? powerCompositionHelpText('reverse', powerParts) : '';
 
   const tabs = state.tabIds.map((id) => {
     if (id === SHARED_TAB_ID) {

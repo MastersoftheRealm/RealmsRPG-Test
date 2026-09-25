@@ -63,7 +63,11 @@ import {
   composedPowerSavedParts,
   selectedResolvedVariant,
 } from '@/lib/calculators/power-composition';
-import { composedPowerDamageLabel, powerVariantsDetailSection } from '@/lib/power-variant-chips';
+import {
+  composedPowerDamageLabel,
+  powerVariantsDetailSection,
+  withPowerReverseNote,
+} from '@/lib/power-variant-chips';
 import { partChipsFromDisplay } from '@/lib/chip/part-chips-from-display';
 import { DIE_MAX, generateRollId, type DieType } from '@/lib/rolls/die';
 import type { LibraryPower } from '@/types/library';
@@ -388,7 +392,10 @@ export function mapPowerRows(
     return {
       id,
       name: power.name,
-      description: pickedVariant?.description ?? power.description,
+      description: withPowerReverseNote(
+        pickedVariant?.description ?? power.description,
+        composition,
+      ),
       thumbnail: resolveListRowThumbnail('power', power, power.name),
       columns,
       gridColumns: POWER_GRID,

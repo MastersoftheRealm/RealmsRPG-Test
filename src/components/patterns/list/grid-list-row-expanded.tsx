@@ -157,7 +157,9 @@ export function GridListRowExpandedBody({
             const sectionKey = `detail-${sectionIdx}`;
             const sectionOpen = collapsible ? (openDetailSections[sectionKey] ?? false) : true;
             const helpKey = section.labelHelpKey ?? helpKeyForPartsOrPropertiesLabel(section.label);
-            const helpContent = helpKey ? partsPropertiesHelpContent(helpKey) : null;
+            const helpContent = helpKey
+              ? partsPropertiesHelpContent(helpKey)
+              : section.labelHelp || null;
             return (
               <div key={sectionIdx} className={cn('space-y-3', sectionIdx > 0 && 'mt-4')}>
                 {showLabel && (

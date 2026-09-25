@@ -27,7 +27,6 @@ export function buildReadOnlyLibraryHandlers(
     setCharacter,
     handleRemovePower: noop,
     handleTogglePowerInnate: noop,
-    handleSelectPowerVariant: noop,
     handleUsePower: noop,
     handleRemoveTechnique: noop,
     handleUseTechnique: noop,

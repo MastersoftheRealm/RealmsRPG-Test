@@ -97,7 +97,7 @@ function savedDamage(form: PowerTabForm) {
 }
 
 /** Full power spec (plain power top-level, Alternate variant, Shared chassis). */
-export function tabFormToSpec(form: PowerTabForm): PowerVariantSpec & { attackMode: string } {
+export function tabFormToSpec(form: PowerTabForm): PowerVariantSpec {
   return {
     parts: savedParts(form),
     damage: savedDamage(form),
