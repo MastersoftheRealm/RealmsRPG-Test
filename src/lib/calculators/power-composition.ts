@@ -514,18 +514,16 @@ export function composedPowerSavedParts(
 
 /**
  * Parts the character must be proficient in (feed as `CharacterPower.parts` to
- * `buildRequiredProficiencies`). Choice / Modify / Randomize: shared + every variant + Reverse,
- * independent of the pick. Alternate: only the picked variant (+ Reverse) — that is the power in use.
+ * `buildRequiredProficiencies`). Every structure: shared + every variant + Reverse.
+ * The chip does not change this. Requirements match the power's training-point total:
+ * what the power can do, including every Alternate version.
  */
 export function composedPowerProficiencyParts(
   res: PowerCompositionResolution,
   partsDb: PowerPart[],
 ): ProficiencyPart[] {
-  const docs =
-    res.structure === 'alternate'
-      ? [selectedResolvedVariant(res)?.doc]
-      : [res.shared?.doc, ...res.variants.map((v) => v.doc)];
-  return [...docs, res.reverse?.doc]
+  const docs = [res.shared?.doc, ...res.variants.map((v) => v.doc), res.reverse?.doc];
+  return docs
     .filter((d): d is PowerDocument => !!d)
     .flatMap((d) => proficiencyPartsFor(d, partsDb));
 }
