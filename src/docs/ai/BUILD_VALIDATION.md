@@ -8897,7 +8897,7 @@ Built-in variants in `payload.composition` (ADR-0029). Resolver: `lib/calculator
 
 **Report** — `[ ] PASS` · `[ ] FAIL` · `[ ] SKIP` — Notes:
 
-#### DEV-V-061-T004 — Character proficiencies follow every variant (Choice) / the pick (Alternate)
+#### DEV-V-061-T004 — Character proficiencies follow every version, including Alternates
 
 | Field | Value |
 |-------|-------|
@@ -8911,10 +8911,10 @@ Built-in variants in `payload.composition` (ADR-0029). Resolver: `lib/calculator
 2. Expand Elemental Burst and click **Ice**, then **Lightning**. The Proficiencies tab list and the row's needs-proficiency badge do not change. The damage button follows the chip (`1d10 ice` → `1d10 lightning`).
 3. Remove one of the three damage-type proficiencies (Edit mode): Elemental Burst shows the needs-proficiency badge regardless of the chip.
 4. `/library` Realms Powers → add Elemental Burst to a character: the same three damage-type proficiencies are added. Guided creator with Elemental Burst: the saved character has the same three.
-5. Alternate power (e.g. Inferno fire / Frost ice): the required damage type follows the picked variant; switching to a variant the character lacks shows the badge.
+5. Alternate power (e.g. Inferno fire / Frost ice): Proficiencies lists both damage types plus every part either version uses (Immobile, Power Range). Switching Inferno and Frost does not change that list. Energy and the damage button follow the chip.
 
 **Expected**
-- Choice / Modify / Randomize requirements never change with the chip. Modify charges shared range/area once.
+- Requirements match the power's training-point total and never change with the chip. Modify charges shared range/area once.
 
 **Report** — `[ ] PASS` · `[ ] FAIL` · `[ ] SKIP` — Notes:
 

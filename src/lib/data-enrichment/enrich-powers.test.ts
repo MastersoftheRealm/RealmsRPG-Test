@@ -140,15 +140,15 @@ describe('enrichPowers → buildRequiredProficiencies (composed powers, TASK-934
     expect(damageTypes(required)).toEqual(['ice']);
   });
 
-  it('Alternate requires only the picked variant', () => {
-    const inferno = requiredFor(flame, 'inferno');
-    expect(damageTypes(inferno)).toEqual(['fire']);
-    expect(inferno.map((p) => p.name)).toContain('Immobile');
-
-    const frost = requiredFor(flame, 'frost');
-    expect(damageTypes(frost)).toEqual(['ice']);
-    expect(frost.map((p) => p.name)).not.toContain('Immobile');
-    expect(frost.map((p) => p.name)).not.toContain('Power Range');
+  it('Alternate requires every version, whichever chip is picked', () => {
+    const baseline = summary(requiredFor(flame));
+    expect(damageTypes(requiredFor(flame))).toEqual(['fire', 'ice']);
+    expect(requiredFor(flame).map((p) => p.name)).toEqual(
+      expect.arrayContaining(['Immobile', 'Power Range']),
+    );
+    for (const pick of ['inferno', 'frost']) {
+      expect(summary(requiredFor(flame, pick))).toEqual(baseline);
+    }
   });
 
   it("the row's damage still follows the Choice pick", () => {
