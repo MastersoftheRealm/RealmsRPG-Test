@@ -3,11 +3,13 @@
  */
 
 import type { ItemProperty } from '@/hooks';
+import { codexSourceForSave } from './admin-codex-source';
 
 export type PropertyFormState = {
   name: string;
   description: string;
   type: string;
+  source: string;
   base_ip: number | undefined;
   base_tp: number | undefined;
   base_c: number | undefined;
@@ -22,6 +24,7 @@ export const EMPTY_PROPERTY_FORM: PropertyFormState = {
   name: '',
   description: '',
   type: 'Armor',
+  source: '',
   base_ip: undefined,
   base_tp: undefined,
   base_c: undefined,
@@ -55,6 +58,7 @@ export function propertyToFormState(p: ItemProperty, copyName?: string): Propert
     name: copyName ?? p.name,
     description: p.description || '',
     type: normalizePropertyType(p.type),
+    source: p.source || '',
     base_ip: p.base_ip,
     base_tp: p.base_tp,
     base_c: p.base_c,
@@ -76,6 +80,7 @@ export function propertyFormToSavePayload(form: PropertyFormState): Record<strin
     name: form.name.trim(),
     description: form.description.trim(),
     type: form.type,
+    source: codexSourceForSave(form.source),
     base_ip: form.base_ip ?? undefined,
     base_tp: form.base_tp ?? undefined,
     base_c: form.base_c ?? undefined,
@@ -98,6 +103,7 @@ export function savedPropertyFromPayload(id: string, data: Record<string, unknow
     name: String(data.name ?? ''),
     description: String(data.description ?? ''),
     type: savedType,
+    source: codexSourceForSave(data.source),
     tp_cost: 0,
     gold_cost: 0,
     base_ip: (data.base_ip as number | undefined) ?? undefined,

@@ -24,6 +24,7 @@ export type SaveArchetypeWithPathInput = {
   name: string;
   type: 'power' | 'martial' | 'powered-martial';
   description?: string | undefined;
+  source?: string | undefined;
   archetype_ability?: string | undefined;
   secondary_ability?: string | undefined;
   power_prof_start?: number | undefined;
@@ -61,6 +62,7 @@ export function buildArchetypeRow(
     name: payload.name,
     type: payload.type,
     description: payload.description ?? null,
+    source: payload.source ?? null,
     archetype_ability: payload.archetype_ability ?? null,
     secondary_ability: payload.secondary_ability ?? null,
     power_prof_start: payload.power_prof_start ?? null,

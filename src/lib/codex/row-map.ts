@@ -65,6 +65,12 @@ function optionalString(val: unknown): string | undefined {
   return s || undefined;
 }
 
+export function mapSource(val: unknown): string | undefined {
+  if (val == null) return undefined;
+  const s = String(val).trim();
+  return s || undefined;
+}
+
 function optionalImage(val: unknown): string | null {
   return typeof val === 'string' && val.trim() ? val.trim() : null;
 }
@@ -90,6 +96,7 @@ export function mapCodexFeat(r: CodexDbRow): CodexFeat {
     name: asString(r.name),
     description: asString(r.description),
     category: asString(r.category),
+    source: mapSource(r.source),
     ability: ability.length > 0 ? ability : undefined,
     ability_req: toStrArray(r.ability_req),
     abil_req_val: toNumArray(r.abil_req_val),
@@ -121,6 +128,7 @@ export function mapCodexSkill(r: CodexDbRow): CodexSkill {
     name: asString(r.name),
     description: asString(r.description),
     ability: asString(r.ability),
+    source: mapSource(r.source),
     base_skill_id: mapCodexBaseSkillToId(r.base_skill),
     success_desc: optionalString(r.success_desc),
     failure_desc: optionalString(r.failure_desc),
@@ -152,6 +160,7 @@ export function mapCodexSpecies(r: CodexDbRow): CodexSpecies {
     ave_weight: r.ave_wgt_kg != null ? toNum(r.ave_wgt_kg) : undefined,
     adulthood_lifespan: toAdulthoodLifespan(r.adulthood_lifespan),
     is_starter: r.is_starter === true,
+    source: mapSource(r.source),
     image_url: optionalImage(r.image_url),
     image_id: optionalImage(r.image_id),
     catalog_listing: parseCatalogListing(r.catalog_listing),
@@ -163,6 +172,7 @@ export function mapCodexTrait(r: CodexDbRow): CodexTrait {
     id: asString(r.id),
     name: asString(r.name),
     description: asString(r.description),
+    source: mapSource(r.source),
     species: [],
     uses_per_rec: toNum(r.uses_per_rec),
     rec_period: optionalString(r.rec_period),
@@ -179,6 +189,7 @@ export function mapCodexPart(r: CodexDbRow): CodexPart {
     name: asString(r.name),
     description: asString(r.description),
     category: asString(r.category),
+    source: mapSource(r.source),
     type,
     base_en: toNum(r.base_en) as number,
     base_tp: toNum(r.base_tp) as number,
@@ -203,6 +214,7 @@ export function mapCodexProperty(r: CodexDbRow): CodexItemProperty {
     id: asString(r.id),
     name: asString(r.name),
     description: asString(r.description),
+    source: mapSource(r.source),
     type: r.type == null || r.type === '' ? undefined : (r.type as CodexItemProperty['type']),
     tp_cost: 0,
     gold_cost: 0,
@@ -224,6 +236,7 @@ export function mapCodexEquipment(r: CodexDbRow): CodexEquipmentItem {
     name: asString(r.name),
     type: 'equipment',
     category: optionalString(r.category),
+    source: mapSource(r.source),
     description: asString(r.description),
     gold_cost: cost,
     currency: cost,
@@ -240,6 +253,7 @@ export function mapCodexCreatureFeat(r: CodexDbRow): CodexCreatureFeat {
     id: asString(r.id),
     name: asString(r.name),
     description: asString(r.description),
+    source: mapSource(r.source),
     points: pointsVal as number,
     feat_points: pointsVal,
     feat_lvl: toNum(r.feat_lvl),

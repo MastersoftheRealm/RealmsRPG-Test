@@ -21,6 +21,7 @@ import {
 } from './admin-species-form';
 import { AdminCodexCopySourceBanner } from './admin-codex-copy-source-banner';
 import { AdminCodexEditModalFooter } from './admin-codex-edit-modal-footer';
+import { AdminCodexSourceField } from './admin-codex-source-field';
 import { catalogListingClassOptions } from '@/lib/library/catalog-listing';
 
 const TRAIT_PICKER_GRID = '1.5fr 0.6fr 0.6fr';
@@ -40,6 +41,7 @@ export type AdminSpeciesEditModalProps = {
   setForm: React.Dispatch<React.SetStateAction<SpeciesFormState>>;
   skills: Skill[];
   traits: Trait[];
+  sourceOptions: string[];
   saving: boolean;
   onDelete?: (() => void) | undefined;
   onSave: () => void;
@@ -55,6 +57,7 @@ export function AdminSpeciesEditModal({
   setForm,
   skills,
   traits,
+  sourceOptions,
   saving,
   onDelete,
   onSave,
@@ -205,6 +208,14 @@ export function AdminSpeciesEditModal({
                   Starter species (guided creator)
                 </span>
               </label>
+            </div>
+            <div className="col-span-2 min-w-0">
+              <AdminCodexSourceField
+                value={form.source}
+                options={sourceOptions}
+                onChange={(source) => setForm((f) => ({ ...f, source }))}
+                hint="Which rules source this species comes from, such as Core Rules. Starter species stays a separate checkbox."
+              />
             </div>
             <div>
               <p className="mb-1 text-sm font-medium text-text-secondary">Library</p>

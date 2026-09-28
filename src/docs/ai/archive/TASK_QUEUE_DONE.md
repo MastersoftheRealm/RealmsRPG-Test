@@ -1,3 +1,80 @@
+- id: TASK-928
+  title: Codex entry rules source (expansions)
+  created_at: 2026-09-28
+  completed_at: 2026-09-28
+  created_by: owner
+  implemented_by: agent
+  priority: high
+  status: done
+  verification_status: pending-qa
+  clickup_task_id: 86e3ffgab
+  clickup_url: https://app.clickup.com/t/86e3ffgab
+  github_branch: task/TASK-928-codex-entry-source
+  clickup_sync: pending
+  build_validation: |
+    suite: DEV-V-028
+    tests:
+      - DEV-V-028-T008
+  developer_test_plan: |
+    Suite DEV-V-028 T008 — see BUILD_VALIDATION.md. Vitest: admin-codex-source, row-map, codex read/write parity.
+  related_files:
+    - sql/codex-entry-source.sql
+    - sql/README.md
+    - src/types/database.types.ts
+    - src/types/codex.ts
+    - src/types/archetype.ts
+    - src/lib/codex/row-map.ts
+    - src/lib/codex/row-map.test.ts
+    - src/app/api/codex/route.ts
+    - src/app/(main)/admin/codex/codex-column-map.ts
+    - src/app/(main)/admin/codex/codex-archetype-write.ts
+    - src/app/(main)/admin/codex/codex-spreadsheet-config.ts
+    - src/app/(main)/admin/codex/admin-codex-source.ts
+    - src/app/(main)/admin/codex/admin-codex-source.test.ts
+    - src/app/(main)/admin/codex/admin-codex-source-field.tsx
+    - src/app/(main)/admin/codex/admin-feat-form.ts
+    - src/app/(main)/admin/codex/admin-feat-edit-modal.tsx
+    - src/app/(main)/admin/codex/admin-feat-edit-modal-fields.tsx
+    - src/app/(main)/admin/codex/admin-skill-edit-modal.tsx
+    - src/app/(main)/admin/codex/AdminSkillsTab.tsx
+    - src/app/(main)/admin/codex/admin-part-form.ts
+    - src/app/(main)/admin/codex/admin-part-edit-modal.tsx
+    - src/app/(main)/admin/codex/AdminPartsTab.tsx
+    - src/app/(main)/admin/codex/admin-property-form.ts
+    - src/app/(main)/admin/codex/admin-property-edit-modal.tsx
+    - src/app/(main)/admin/codex/AdminPropertiesTab.tsx
+    - src/app/(main)/admin/codex/admin-species-form.ts
+    - src/app/(main)/admin/codex/admin-species-edit-modal.tsx
+    - src/app/(main)/admin/codex/AdminSpeciesTab.tsx
+    - src/app/(main)/admin/codex/admin-trait-form.ts
+    - src/app/(main)/admin/codex/admin-trait-edit-modal.tsx
+    - src/app/(main)/admin/codex/AdminTraitsTab.tsx
+    - src/app/(main)/admin/codex/admin-equipment-edit-modal.tsx
+    - src/app/(main)/admin/codex/AdminEquipmentTab.tsx
+    - src/app/(main)/admin/codex/admin-creature-feat-edit-modal.tsx
+    - src/app/(main)/admin/codex/AdminCreatureFeatsTab.tsx
+    - src/app/(main)/admin/codex/admin-archetype-path-form.ts
+    - src/app/(main)/admin/codex/admin-archetype-workspace-open.ts
+    - src/app/(main)/admin/codex/admin-archetype-workspace-save.ts
+    - src/app/(main)/admin/codex/admin-archetype-editor-config.ts
+    - src/app/(main)/admin/codex/admin-archetype-editor.tsx
+    - src/app/(main)/admin/codex/admin-archetype-editor-meta.tsx
+    - src/app/(main)/admin/codex/use-admin-archetype-workspace.ts
+    - src/app/(main)/admin/codex/AdminArchetypesTab.tsx
+    - src/docs/SUPABASE_SCHEMA.md
+    - src/docs/ai/FEATURE_INDEX.md
+    - src/docs/ai/BUILD_VALIDATION.md
+    - src/docs/ai/DEVELOPER_TASK_QUEUE.md
+    - src/docs/ai/AI_CHANGELOG.md
+  description: |
+    Each codex entry (feat, skill, part, property, species, trait, equipment, archetype, creature feat) stores a rules source such as Core Rules or Crafting Expansion. Admins set it in the edit modal the same way as category. Species keeps is_starter for the guided starter flag and uses source for the rules product. No permission gating yet. Existing rows stay null.
+  acceptance_criteria:
+    - Nullable source text on every columnar codex entry table. No backfill.
+    - Admin edit modals can pick an existing source or add a new one, and the value saves and reloads.
+    - Species starter checkbox is unchanged and independent of source.
+  notes: |
+    clickup_sync pending — ClickUp MCP daily limit; card already in development (86e3ffgab). Flush to in review with Collin + PR URL when a PR opens. Live migration codex_entry_source applied 2026-09-28.
+
 - id: TASK-927
   title: Official catalog listing (Public vs Admin library)
   created_at: 2026-09-14

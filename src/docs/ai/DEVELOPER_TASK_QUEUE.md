@@ -178,6 +178,7 @@ Archived tasks waiting on owner manual validation. Implementation is complete (`
 
 | Task | Suite / tests | What to verify |
 | ---- | ------------- | -------------- |
+| **TASK-928** | DEV-V-028 **T008** | Admin Codex edit modals (Feats, Species, and a spot-check of Skills / Parts / Archetypes): Source select under the description, Add new source, save/reopen. Species starter checkbox stays independent. ~360px, no page scroll; coarse select ≥44px. |
 | **TASK-927** | DEV-V-060 **T001–T004** | Admin creators: My / Public / Admin library save. Player `/library` + `/codex` hide unlisted; Official Library Editor + Codex Species still show them. Listed creature with an unlisted attachment still displays it. Compact Public↔Admin toggle on admin lists. Desktop + ~360px. |
 | **TASK-920** | DEV-V-018 **T021** | `/item-creator` Weapon Configuration Ability utilized is a `<select>` (melee/reach/thrown STR↔AGI; ranged ACU↔STR + AGI). Finesse/Heavy stay off Add property. Save/load restores ability via those mechanic rows. Optional sheet: Finesse melee uses Agility; Heavy ranged uses Strength. 360/390 coarse ≥44px; fine desktop compact. |
 | **TASK-919** | DEV-V-018 **T020** | `/item-creator` Weapon Configuration Range is type + spaces `<select>`s (Melee / Reach / Ranged / Thrown; closed ladders). Thrown/Reach stay off Add property. Save/load restores type+spaces; legacy Range-only still maps to the 8-space ladder. 360/390 coarse ≥44px; fine desktop compact. |
