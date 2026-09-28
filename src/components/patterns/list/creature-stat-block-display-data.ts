@@ -3,6 +3,11 @@ import type { EntityPowerRow, EntityTechniqueRow } from './entity-library-sectio
 import { derivePowerDisplay, formatPowerDamage } from '@/lib/calculators/power-calc';
 import { deriveTechniqueDisplay } from '@/lib/calculators/technique-calc';
 import {
+  composedPowerDamageLabel,
+  powerVariantsDetailSection,
+  withPowerReverseNote,
+} from '@/lib/power-variant-chips';
+import {
   calculateSkillBonusWithProficiency,
   calculateSubSkillBonusWithProficiency,
 } from '@/lib/game/formulas';
@@ -111,6 +116,7 @@ export function buildPowersForDisplay(
           duration: userMatch.duration,
           image_id: userMatch.image_id,
           image_url: userMatch.image_url,
+          composition: userMatch.composition,
         }
       : officialMatch
         ? {
@@ -125,6 +131,7 @@ export function buildPowersForDisplay(
             duration: officialMatch.duration,
             image_id: officialMatch.image_id,
             image_url: officialMatch.image_url,
+            composition: officialMatch.composition,
           }
         : null;
 
@@ -146,13 +153,23 @@ export function buildPowersForDisplay(
         damage: Array.isArray(damage) ? damage : undefined,
         actionType: enriched?.actionType,
         isReaction: enriched?.isReaction,
+        ...(enriched?.composition
+          ? {
+              range: enriched.range,
+              area: enriched.area,
+              duration: enriched.duration,
+              composition: enriched.composition,
+            }
+          : {}),
       },
       powerPartsDb,
     );
+    const composition = derived.composition;
 
     const partsChips = partsToChips(parts, powerPartsDb as CodexPart[]);
     const partsSection = partsProficienciesSection(partsChips, 'power');
     const damageStr =
+      (composition ? composedPowerDamageLabel(composition) : '') ||
       formatPowerDamage(Array.isArray(damage) ? damage : undefined) ||
       (typeof ref.damage === 'string' ? ref.damage : undefined);
     const rangeValue = derived.range && derived.range !== '-' ? derived.range : ref.range;
@@ -161,7 +178,10 @@ export function buildPowersForDisplay(
       powerHasDamageCategory(Array.isArray(damage) ? damage : undefined),
     );
     const categoryText = formatPartCategoriesColumn(categories);
-    const tp = partsChips.reduce((sum, chip) => sum + (chip.cost ?? 0), 0);
+    const tp = composition
+      ? derived.tp
+      : partsChips.reduce((sum, chip) => sum + (chip.cost ?? 0), 0);
+    const variantsSection = powerVariantsDetailSection(composition);
     const detailSections = glrSurfaceDetailSections(
       'creature-stat-block-power',
       {
@@ -169,13 +189,15 @@ export function buildPowersForDisplay(
         range: rangeValue,
         trainingPoints: tp > 0 ? tp : undefined,
       },
-      partsSection ? [partsSection] : undefined,
+      [...(partsSection ? [partsSection] : []), ...(variantsSection ? [variantsSection] : [])],
     );
 
     return {
       id: `${creature.id}-power-${refId ?? idx}`,
       name: baseName,
-      description: baseDescription,
+      description: composition
+        ? withPowerReverseNote(baseDescription, composition)
+        : baseDescription,
       thumbnail: resolveListRowThumbnail('power', imageRecord, baseName),
       actionType: derived.actionType || ref.action,
       damage: damageStr,

@@ -27,6 +27,7 @@ import {
 } from '@/lib/library/official-technique-list';
 import { partsProficienciesSection, glrSurfaceDetailSections } from '@/lib/chip/list-row-metadata';
 import { resolveListRowThumbnail } from '@/lib/list-row-image';
+import { powerVariantsDetailSection } from '@/lib/power-variant-chips';
 import {
   applyPowerTechniqueFilters,
   toInnateSnapshot,
@@ -200,6 +201,7 @@ export function buildPowersTechniquesL2Items(opts: {
       }
 
       const section = partsProficienciesSection(row.parts, 'power');
+      const variantsSection = powerVariantsDetailSection(row.composition);
       const detailSections = glrSurfaceDetailSections(
         'guided-powers-l3',
         {
@@ -207,7 +209,7 @@ export function buildPowersTechniquesL2Items(opts: {
           range: row.range,
           trainingPoints: row.tp > 0 ? row.tp : undefined,
         },
-        section ? [section] : undefined,
+        [...(section ? [section] : []), ...(variantsSection ? [variantsSection] : [])],
       );
 
       rows.push({

@@ -152,6 +152,7 @@ export function LibrarySection({
     onUsePower: data?.onUsePower,
     onRemovePower: data?.onRemovePower,
     onTogglePowerInnate: data?.onTogglePowerInnate,
+    onSelectPowerVariant: data?.onSelectPowerVariant,
     onUseTechnique: data?.onUseTechnique,
     onRemoveTechnique: data?.onRemoveTechnique,
     onRemoveWeapon: data?.onRemoveWeapon,

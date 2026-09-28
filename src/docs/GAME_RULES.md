@@ -566,6 +566,22 @@ A power qualifies as **Innate** only when **all** of the following are true:
 
 Combined innate Energy across all innate powers must stay within **Innate Energy** (Pools × Threshold).
 
+**Powers with variants** (ADR-0029): Choice, Modify, Randomize, and a power with Reverse Effects are one power — every part and every duration the cast can apply is checked, and Energy is the cast cost after the Reverse discount. **Alternate** checks each variant on its own; a variant that passes can be innate even if a sibling fails.
+
+#### Power variants (Choice / Alternate / Modify / Randomize / Reverse Effects)
+
+Built into the Power Creator (replaces the Choice, Split Power Parts into Groups, Randomize, and Reverse Effects mechanic parts on new powers). The things you switch between are **variants** (not "options", which are part option levels).
+
+| Structure | What the variants are | Energy |
+|-----------|----------------------|--------|
+| **Choice** | Portions of one power; pick one on use | Shared + the **most expensive** portion |
+| **Alternate** | Complete powers on one library entry | The variant you use (may be less, equal, or more) |
+| **Modify** (Split Power Parts into Groups) | Pieces with their own stipulations, all on one cast. Range, area, duration, and action match Shared until a piece overrides them. Parts and damage are not copied onto the piece. | **Sum** of (shared + each piece that adds something). An empty piece adds nothing; if every piece is empty, energy is Shared once |
+| **Randomize** | Outcomes on an even-sided die (1d2–1d100); a variant may fill many faces | Shared chassis + each positive face − each negative face; **minimum 1** |
+| **Reverse Effects** (add-on) | Drawback for you or an ally on a beneficial power | Subtract **50%** of the drawback's own Energy; cannot be nullified or reduced by you or an ally |
+
+**Training Points:** every part on the power (shared, every variant, Reverse) counts once at its highest option level; damage parts split by damage type (Elemental Damage fire and ice are two proficiencies).
+
 ### Martial Character Progression
 
 | Level | Bonus Archetype Feats | Total Archetype Feats | Armament Prof | Martial Prof |

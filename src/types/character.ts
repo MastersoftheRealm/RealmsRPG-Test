@@ -11,6 +11,7 @@ import type { CharacterAncestry } from './ancestry';
 import type { CharacterSkillRow, CharacterSkills, DefenseSkills } from './skills';
 import type { CharacterFeat, FeatTraitCustomization } from './feats';
 import type { CharacterEquipment } from './equipment';
+import type { PowerComposition } from '@/lib/calculators/power-composition';
 
 /**
  * Persisted Temp Modifier deltas (ADR-0006 / TASK-585).
@@ -83,6 +84,10 @@ interface CharacterPowerFields {
   cost?: number | undefined;
   description?: string | undefined;
   innate?: boolean | undefined; // Whether this power is marked as innate
+  /** Play state: which built-in variant is active (ADR-0029). Persisted like `innate`. */
+  selectedVariantId?: string | undefined;
+  /** Display-only (enrichment): library `composition`, never persisted on the character. */
+  composition?: PowerComposition | undefined;
   // Display fields for character sheet (like vanilla site)
   actionType?: string | undefined; // e.g., "Basic Action", "Free Action", "Quick Action"
   damage?: string | undefined; // e.g., "2d6 fire"
@@ -108,6 +113,8 @@ interface CharacterPowerFields {
             op_2_tp?: number | undefined;
             op_3_lvl?: number | undefined;
             op_3_tp?: number | undefined;
+            /** Composed powers: this row's own damage type (`null` = untyped); overrides `damage`. */
+            damageType?: string | null | undefined;
           }
       >
     | undefined;

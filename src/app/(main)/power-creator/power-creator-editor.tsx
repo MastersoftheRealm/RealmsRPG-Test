@@ -49,6 +49,8 @@ export function PowerCreatorEditor(props: PowerCreatorEditorProps) {
         attackMode={props.attackMode}
         onAttackModeChange={props.onAttackModeChange}
         sectionCosts={props.sectionCosts}
+        actionInheritance={props.inheritance?.action ?? null}
+        attackInheritance={props.inheritance?.attack ?? null}
       />
 
       <PowerCreatorEditorPowerConfig
@@ -62,6 +64,9 @@ export function PowerCreatorEditor(props: PowerCreatorEditorProps) {
         onDurationChange={props.onDurationChange}
         durationSummary={props.durationSummary}
         sectionCosts={props.sectionCosts}
+        rangeInheritance={props.inheritance?.range ?? null}
+        areaInheritance={props.inheritance?.area ?? null}
+        durationInheritance={props.inheritance?.duration ?? null}
       />
 
       <PowerCreatorEditorPowerParts
@@ -78,6 +83,8 @@ export function PowerCreatorEditor(props: PowerCreatorEditorProps) {
         onRemoveAdvancedPart={props.onRemoveAdvancedPart}
         onUpdateAdvancedPart={props.onUpdateAdvancedPart}
         sectionCosts={props.sectionCosts}
+        sharedPartNames={props.inheritance?.sharedPartNames}
+        sharedMechanicNames={props.inheritance?.sharedMechanicNames}
       />
 
       <PowerCreatorEditorPowerDamage
@@ -86,6 +93,7 @@ export function PowerCreatorEditor(props: PowerCreatorEditorProps) {
         damageSummary={props.damageSummary}
         sectionCosts={props.sectionCosts}
         partsDb={props.suggestionPartsDb}
+        damageInheritance={props.inheritance?.damage ?? null}
       />
     </>
   );

@@ -31,8 +31,17 @@ Use this template when converting raw feedback into an actionable request to be 
     - path/to/file.tsx
   implemented_by: |
     # Optional: agent or human who implemented changes
+  clickup_task_id: |
+    # ClickUp Website task id when linked (one card per delivery unit). See CLICKUP_GITHUB_WORKFLOW.md
+  clickup_url: |
+    # https://app.clickup.com/t/<id>
+  clickup_sync: |
+    # Optional: pending — create/handoff still owed (rate limit or deferred). Clear when flushed.
+  github_branch: |
+    # task/TASK-###-short-slug (or owner batch branch)
   pr_link: |
-    # Optional: URL of PR that implements this task (required before marking done)
+    # URL of PR that implements this task (set when opening PR / before in-review handoff)
+
   merged_at: |
     # Optional: YYYY-MM-DD when PR was merged
   evidence: |
@@ -40,6 +49,7 @@ Use this template when converting raw feedback into an actionable request to be 
   verification_status: |
     # Required when archiving user-facing work: pending-qa | verified | failed | skipped | n/a
     # pending-qa = implementation done, owner manual QA not run yet (default for BUILD_VALIDATION tasks)
+    # Maps to ClickUp: pending-qa ≈ testing; verified ≈ shipped
   automated_check: |
     # Optional: command to run for automated acceptance (e.g., "npm run build && node scripts/smoke_check.js")
   description: |
@@ -50,6 +60,7 @@ Use this template when converting raw feedback into an actionable request to be 
     - Deployment: notes (secrets, build step)
   notes: |
     Any extra context, links to vanilla site, screenshots, or previous PRs.
+    Include ClickUp link and branch name once created.
 
 ---
 Example:

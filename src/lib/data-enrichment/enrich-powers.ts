@@ -1,7 +1,12 @@
 import type { CharacterPower } from '@/types';
 import type { UserPower } from '@/hooks/use-user-library';
 import type { PowerPart } from '@/hooks/codex-types';
-import { derivePowerDisplay, formatPowerDamage } from '@/lib/calculators';
+import {
+  composedPowerDamage,
+  composedPowerProficiencyParts,
+  derivePowerDisplay,
+  formatPowerDamage,
+} from '@/lib/calculators';
 import { dedupeEntityRefs, dedupeSavedParts } from '@/lib/game/dedupe-saved-parts';
 import type { EnrichedPower } from './types';
 import { findInLibrary } from './find-in-library';
@@ -22,6 +27,10 @@ export function enrichPowers(
   return uniquePowers.map((charPower) => {
     const name = typeof charPower === 'string' ? charPower : charPower.name;
     const innate = typeof charPower === 'object' ? !!charPower.innate : false;
+    const selectedVariantId =
+      typeof charPower === 'object' && charPower.selectedVariantId
+        ? charPower.selectedVariantId
+        : undefined;
 
     let libraryItem = findInLibrary(userPowerLibrary, charPower);
     if (!libraryItem && publicPowerLibrary?.length) {
@@ -41,9 +50,12 @@ export function enrichPowers(
           area: libraryItem.area,
           duration: libraryItem.duration,
           damage: libraryItem.damage,
+          composition: libraryItem.composition,
         },
         powerPartsDb,
+        { selectedVariantId },
       );
+      const composition = displayData.composition;
       // Preserve character's power id so toggles/remove match character.powers (library id can differ when matched by name)
       const identityId =
         typeof charPower === 'object' && (charPower as CharacterPower).id != null
@@ -53,14 +65,17 @@ export function enrichPowers(
         id: identityId,
         name: libraryItem.name,
         description: libraryItem.description || '',
-        parts: dedupeSavedParts(libraryItem.parts || []).map((part) => ({
-          id: String(part.id || ''),
-          name: part.name || '',
-          op_1_lvl: part.op_1_lvl,
-          op_2_lvl: part.op_2_lvl,
-          op_3_lvl: part.op_3_lvl,
-          ...(part.applyDuration ? { applyDuration: true } : {}),
-        })),
+        // Composed powers: the resolver's proficiency rows, each damage row typed (ADR-0029).
+        parts: composition
+          ? composedPowerProficiencyParts(composition, powerPartsDb)
+          : dedupeSavedParts(libraryItem.parts || []).map((part) => ({
+              id: String(part.id || ''),
+              name: part.name || '',
+              op_1_lvl: part.op_1_lvl,
+              op_2_lvl: part.op_2_lvl,
+              op_3_lvl: part.op_3_lvl,
+              ...(part.applyDuration ? { applyDuration: true } : {}),
+            })),
         innate,
         libraryItem,
         // Calculated display fields from derivePowerDisplay
@@ -69,7 +84,13 @@ export function enrichPowers(
         area: displayData.area,
         duration: displayData.duration,
         range: displayData.range,
-        damage: formatPowerDamage(libraryItem.damage),
+        damage: formatPowerDamage(
+          composition ? composedPowerDamage(composition) : libraryItem.damage,
+        ),
+        ...(libraryItem.composition ? { composition: libraryItem.composition } : {}),
+        ...(composition?.selectedVariantId
+          ? { selectedVariantId: composition.selectedVariantId }
+          : {}),
       };
     }
 

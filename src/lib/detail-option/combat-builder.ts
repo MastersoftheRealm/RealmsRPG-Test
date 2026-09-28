@@ -5,6 +5,7 @@
 
 import { logClientError } from '@/lib/api-client';
 import { derivePowerDisplay, formatPowerDamage } from '@/lib/calculators/power-calc';
+import { composedPowerDamage, composedPowerSavedParts } from '@/lib/calculators/power-composition';
 import { deriveTechniqueDisplay } from '@/lib/calculators/technique-calc';
 import { glrSurfaceDetailSections } from '@/lib/chip/list-row-metadata';
 import type { ChipData } from '@/components/patterns/list/grid-list-row-types';
@@ -41,9 +42,14 @@ export function powerToDetailOption(
   let chips: ChipData[] = [];
   try {
     const disp = derivePowerDisplay(libraryItemToPowerDocument(power), powerPartsDb);
+    const composition = disp.composition;
+    const damage = composition ? composedPowerDamage(composition) : power.damage;
     const categories = withDamageCategory(
-      derivePartCategories(power.parts ?? [], powerPartsDb),
-      powerHasDamageCategory(power.damage),
+      derivePartCategories(
+        composition ? composedPowerSavedParts(composition) : (power.parts ?? []),
+        powerPartsDb,
+      ),
+      powerHasDamageCategory(damage),
     );
     chips = glrSurfaceDetailSections('detail-option-power', {
       category: formatPartCategoriesColumn(categories),
@@ -52,7 +58,7 @@ export function powerToDetailOption(
       duration: disp.duration,
       range: disp.range,
       area: disp.area,
-      damage: formatPowerDamage(power.damage),
+      damage: formatPowerDamage(damage),
       trainingPoints: disp.tp,
     }).flatMap((section) => section.chips);
   } catch (err) {

@@ -11,4 +11,6 @@ alwaysApply: true
 
 **Agent OS:** `ARCHITECTURE_CONSTITUTION.md` · tasks `ACTIVE_TASKS.md` · SoT map in root `AGENTS.md`.
 
-**Before PR / push to master:** `npm run build` + `npm run tasks:validate`. Strict reconcile: the landing commit subject lists every newly done `TASK-###` (one commit may cover many tasks — not one commit per task). `related_files` paths must exist. UI gates: lint/contrast/build + visual/a11y.
+**Delivery (default):** One Website ClickUp card + branch `task/TASK-###-slug` + PR → Collin (`CLICKUP_GITHUB_WORKFLOW.md`; MCP budget / pending flush). Owner may override.
+
+**Before PR / push:** `npm run build` + `npm run tasks:validate`. Strict reconcile: commit subject(s) list every newly done `TASK-###`. `related_files` paths must exist. UI gates: lint/contrast/build + visual/a11y.

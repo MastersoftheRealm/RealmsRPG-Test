@@ -4,7 +4,12 @@
  */
 
 import type { PowerPart } from '@/hooks';
-import type { AreaConfig, DurationConfig } from '@/lib/calculators';
+import {
+  normalizePowerComposition,
+  type AreaConfig,
+  type DurationConfig,
+  type PowerComposition,
+} from '@/lib/calculators';
 import { derivePowerAttackMode, normalizeAttackMode, type AttackMode } from '@/lib/attack-mode';
 import { readCreatorCache } from '@/lib/game/creator-cache';
 import { normalizeTargetedDefenses } from '@/lib/game/targeted-defenses';
@@ -45,6 +50,7 @@ export type PowerLibraryRecord = {
   imageUrl?: string | null | undefined;
   image_url?: string | null | undefined;
   targetedDefenses?: string[] | undefined;
+  composition?: unknown;
 };
 
 export interface PowerCreatorCache {
@@ -75,6 +81,8 @@ export interface PowerCreatorCache {
   imageId?: string | null | undefined;
   imageUrl?: string | null | undefined;
   targetedDefenses?: string[] | undefined;
+  /** Built-in variants draft (ADR-0029); top-level fields are the shared / first variant. */
+  composition?: PowerComposition | undefined;
   timestamp: number;
 }
 
@@ -93,6 +101,7 @@ export interface PowerCreatorFormState {
   imageId: string | null;
   imageUrl: string | null;
   targetedDefenses: string[];
+  composition: PowerComposition | null;
 }
 
 const DEFAULT_DURATION: DurationConfig = {
@@ -121,6 +130,7 @@ export function emptyPowerCreatorFormState(): PowerCreatorFormState {
     imageId: null,
     imageUrl: null,
     targetedDefenses: [],
+    composition: null,
   };
 }
 
@@ -208,6 +218,7 @@ export function restorePowerCreatorFromCache(
     imageId: parsed.imageId ?? null,
     imageUrl: parsed.imageUrl ?? null,
     targetedDefenses: normalizeTargetedDefenses(parsed.targetedDefenses),
+    composition: normalizePowerComposition(parsed.composition),
   };
 }
 
@@ -340,6 +351,7 @@ export function powerLibraryRecordToFormState(
     targetedDefenses: normalizeTargetedDefenses(
       (power as { targetedDefenses?: string[] | undefined }).targetedDefenses,
     ),
+    composition: normalizePowerComposition(power.composition),
   };
 }
 
