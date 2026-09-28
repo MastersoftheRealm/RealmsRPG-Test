@@ -162,6 +162,56 @@ describe('resolvePowerComposition', () => {
     expect(res.tpSources.filter((s) => s.includes('Sphere of Effect'))).toHaveLength(1);
   });
 
+  it('Modify does not charge empty pieces, so two blank tabs do not double Shared', () => {
+    const shared = {
+      actionType: 'basic' as const,
+      range: { steps: 2 },
+      area: { type: 'sphere' as const, level: 2 },
+      duration: { type: 'rounds' as const, value: 2 },
+      parts: [{ id: 910, name: 'Restrained' }],
+    };
+    const base = derivePlainPowerDisplay(shared, partsDb).energy;
+    const blank: PowerDocument = {
+      name: 'Freezing Wind',
+      ...shared,
+      composition: {
+        structure: 'modify',
+        variants: [
+          { id: 'v1', label: 'Variant 1' },
+          { id: 'v2', label: 'Variant 2' },
+        ],
+      },
+    };
+    expect(resolvePowerComposition(blank, partsDb)!.energy).toBe(base);
+
+    const withSlow: PowerDocument = {
+      ...blank,
+      composition: {
+        structure: 'modify',
+        variants: [
+          { id: 'v1', label: 'Variant 1' },
+          {
+            id: 'v2',
+            label: 'Slow',
+            parts: [{ id: 901, name: 'Slow', op_1_lvl: 2 }],
+            duration: { type: 'minutes', value: 1 },
+          },
+        ],
+      },
+    };
+    const piece = derivePlainPowerDisplay(
+      {
+        ...shared,
+        parts: [...shared.parts, { id: 901, name: 'Slow', op_1_lvl: 2 }],
+        duration: { type: 'minutes', value: 1 },
+      },
+      partsDb,
+    ).energy;
+    const res = resolvePowerComposition(withSlow, partsDb)!;
+    expect(res.energy).toBe(piece);
+    expect(res.variants.find((v) => v.id === 'v1')!.energy).toBe(0);
+  });
+
   it('Alternate pays the selected variant, including a cheaper one', () => {
     const doc: PowerDocument = {
       name: 'Flame',

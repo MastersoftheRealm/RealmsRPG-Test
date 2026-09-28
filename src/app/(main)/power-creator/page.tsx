@@ -40,7 +40,28 @@ import {
   type PowerCompositionResolution,
 } from '@/lib/calculators';
 import { PowerCreatorCompositionBand } from './power-creator-composition-band';
-import { REVERSE_TAB_ID, SHARED_TAB_ID } from './power-creator-composition';
+import {
+  emptyTabForm,
+  REVERSE_TAB_ID,
+  SHARED_TAB_ID,
+  type PowerTabForm,
+} from './power-creator-composition';
+import type { PowerCreatorInheritance } from './power-creator-editor-config';
+import {
+  actionIsOverride,
+  areaIsOverride,
+  attackIsOverride,
+  damageIsOverride,
+  durationIsOverride,
+  rangeIsOverride,
+  sharedActionLabel,
+  sharedAreaLabel,
+  sharedAttackLabel,
+  sharedDamageLabel,
+  sharedDurationLabel,
+  sharedRangeLabel,
+  type InheritedField,
+} from './power-creator-from-shared';
 import {
   bootstrapPowerCreatorFormState,
   type PowerCreatorFormState,
@@ -55,12 +76,23 @@ import {
 } from '@/lib/library/catalog-listing';
 
 /** Summary lines: each variant's energy, the Reverse discount, and how the structure combines them. */
+function inheritField(
+  overridden: boolean,
+  label: string,
+  onOverride: () => void,
+  onUseShared: () => void,
+): InheritedField {
+  return { overridden, label, onOverride, onUseShared };
+}
+
 function variantEnergyLines(res: PowerCompositionResolution): string[] {
   const lines = res.variants.map((v) => {
     if (res.structure === 'randomize') {
       const sign = v.polarity === 'negative' ? '−' : '+';
       return `${v.label}: ${sign}${v.energy} EN × ${v.faces.length} ${v.faces.length === 1 ? 'face' : 'faces'}`;
     }
+    if (res.structure === 'modify' && v.energy === 0) return `${v.label}: nothing added`;
+    if (res.structure === 'modify') return `${v.label}: Shared plus this piece, ${v.energy} EN`;
     return `${v.label}: ${v.energy} EN`;
   });
   if (res.structure === 'randomize' && res.shared) {
@@ -68,7 +100,7 @@ function variantEnergyLines(res: PowerCompositionResolution): string[] {
   }
   const rule: Partial<Record<PowerCompositionResolution['structure'], string>> = {
     choice: 'Choice pays the most expensive portion',
-    modify: 'Modify adds every piece',
+    modify: 'Modify adds every piece that changes Shared',
     alternate: 'Alternate pays the selected variant',
     randomize: 'Randomize: chassis + signed faces (minimum 1)',
   };
@@ -180,12 +212,85 @@ function PowerCreatorWorkspace({
   const variantTabGroup = useTabGroup('power-variants');
   const composed = ws.composedSummary;
   const tabDisplay = composed?.tabDisplay ?? null;
-  const showVariantTabs = ws.variants.tabIds.length > 1;
+  const showVariantTabs = ws.variants.structure !== 'none' || ws.variants.reverseEnabled;
   const onOverlayTab =
     ws.variants.activeTabId === REVERSE_TAB_ID ||
     (ws.variants.activeTabId !== SHARED_TAB_ID &&
       ws.variants.structure !== 'alternate' &&
       ws.variants.structure !== 'none');
+
+  const shared = ws.variants.collected.shared;
+  const live: PowerTabForm = {
+    ...emptyTabForm(),
+    actionType: ws.actionType,
+    isReaction: ws.isReaction,
+    attackMode: ws.attackMode,
+    range: ws.range,
+    area: ws.area,
+    duration: ws.duration,
+    damages: ws.damages,
+    selectedParts: ws.selectedParts,
+    selectedAdvancedParts: ws.selectedAdvancedParts,
+  };
+  const inheritance: PowerCreatorInheritance | null = onOverlayTab
+    ? {
+        action: inheritField(
+          actionIsOverride(live),
+          sharedActionLabel(shared),
+          () => {
+            ws.setActionType(shared.actionType);
+            ws.setIsReaction(shared.isReaction);
+          },
+          () => {
+            const blank = emptyTabForm();
+            ws.setActionType(blank.actionType);
+            ws.setIsReaction(blank.isReaction);
+          },
+        ),
+        attack: inheritField(
+          attackIsOverride(live),
+          sharedAttackLabel(shared),
+          () => {
+            ws.setAttackMode(shared.attackMode);
+          },
+          () => ws.setAttackMode(emptyTabForm().attackMode),
+        ),
+        range: inheritField(
+          rangeIsOverride(live),
+          sharedRangeLabel(shared),
+          () => {
+            ws.setRange(shared.range);
+          },
+          () => ws.setRange(emptyTabForm().range),
+        ),
+        area: inheritField(
+          areaIsOverride(live),
+          sharedAreaLabel(shared),
+          () => {
+            ws.setArea(shared.area);
+          },
+          () => ws.setArea(emptyTabForm().area),
+        ),
+        duration: inheritField(
+          durationIsOverride(live),
+          sharedDurationLabel(shared),
+          () => {
+            ws.setDuration(shared.duration);
+          },
+          () => ws.setDuration(emptyTabForm().duration),
+        ),
+        damage: inheritField(
+          damageIsOverride(live.damages),
+          sharedDamageLabel(shared),
+          () => {
+            ws.setDamages(shared.damages);
+          },
+          () => ws.setDamages(emptyTabForm().damages),
+        ),
+        sharedPartNames: shared.selectedParts.map((p) => p.part.name),
+        sharedMechanicNames: shared.selectedAdvancedParts.map((p) => p.part.name),
+      }
+    : null;
 
   const editor = (
     <PowerCreatorEditor
@@ -236,7 +341,7 @@ function PowerCreatorWorkspace({
       onDamagesChange={ws.setDamages}
       damageSummary={ws.damageSummary}
       sectionCosts={ws.sectionCosts}
-      showActionProfile={!onOverlayTab}
+      inheritance={inheritance}
     />
   );
 

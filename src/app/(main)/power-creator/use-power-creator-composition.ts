@@ -145,7 +145,7 @@ export function usePowerCreatorComposition({
   const readTab = useCallback((src: CollectedCompositionForms, tabId: string): PowerTabForm => {
     if (tabId === SHARED_TAB_ID) return src.shared;
     if (tabId === REVERSE_TAB_ID) return src.reverse;
-    return src.variants.find((v) => v.id === tabId)?.form ?? src.shared;
+    return src.variants.find((v) => v.id === tabId)?.form ?? emptyTabForm();
   }, []);
 
   const commit = useCallback(
@@ -204,24 +204,6 @@ export function usePowerCreatorComposition({
         if (next !== 'none') {
           variants = variants.map((v) => ({ ...v, form: diffAgainstShared(shared, v.form) }));
         }
-      }
-      if (next !== 'none' && !isAlternate && variants.length === 0) {
-        variants = [
-          {
-            id: 'v1',
-            label: 'Variant 1',
-            polarity: 'positive',
-            description: '',
-            form: emptyTabForm(),
-          },
-          {
-            id: 'v2',
-            label: 'Variant 2',
-            polarity: 'positive',
-            description: '',
-            form: emptyTabForm(),
-          },
-        ];
       }
       if (next === 'randomize' && dieFaces.every((f) => !f)) {
         setDieFaces(spreadDieFaces(dieSides, variants));
