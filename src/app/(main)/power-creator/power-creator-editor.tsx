@@ -40,18 +40,18 @@ export function PowerCreatorEditor(props: PowerCreatorEditorProps) {
         />
       </PowerCreatorEditorMeta>
 
-      {props.showActionProfile !== false ? (
-        <PowerCreatorEditorActionProfile
-          actionType={props.actionType}
-          onActionTypeChange={props.onActionTypeChange}
-          isReaction={props.isReaction}
-          onIsReactionChange={props.onIsReactionChange}
-          actionTypeDisplay={props.actionTypeDisplay}
-          attackMode={props.attackMode}
-          onAttackModeChange={props.onAttackModeChange}
-          sectionCosts={props.sectionCosts}
-        />
-      ) : null}
+      <PowerCreatorEditorActionProfile
+        actionType={props.actionType}
+        onActionTypeChange={props.onActionTypeChange}
+        isReaction={props.isReaction}
+        onIsReactionChange={props.onIsReactionChange}
+        actionTypeDisplay={props.actionTypeDisplay}
+        attackMode={props.attackMode}
+        onAttackModeChange={props.onAttackModeChange}
+        sectionCosts={props.sectionCosts}
+        actionInheritance={props.inheritance?.action ?? null}
+        attackInheritance={props.inheritance?.attack ?? null}
+      />
 
       <PowerCreatorEditorPowerConfig
         range={props.range}
@@ -64,6 +64,9 @@ export function PowerCreatorEditor(props: PowerCreatorEditorProps) {
         onDurationChange={props.onDurationChange}
         durationSummary={props.durationSummary}
         sectionCosts={props.sectionCosts}
+        rangeInheritance={props.inheritance?.range ?? null}
+        areaInheritance={props.inheritance?.area ?? null}
+        durationInheritance={props.inheritance?.duration ?? null}
       />
 
       <PowerCreatorEditorPowerParts
@@ -80,6 +83,8 @@ export function PowerCreatorEditor(props: PowerCreatorEditorProps) {
         onRemoveAdvancedPart={props.onRemoveAdvancedPart}
         onUpdateAdvancedPart={props.onUpdateAdvancedPart}
         sectionCosts={props.sectionCosts}
+        sharedPartNames={props.inheritance?.sharedPartNames}
+        sharedMechanicNames={props.inheritance?.sharedMechanicNames}
       />
 
       <PowerCreatorEditorPowerDamage
@@ -88,6 +93,7 @@ export function PowerCreatorEditor(props: PowerCreatorEditorProps) {
         damageSummary={props.damageSummary}
         sectionCosts={props.sectionCosts}
         partsDb={props.suggestionPartsDb}
+        damageInheritance={props.inheritance?.damage ?? null}
       />
     </>
   );

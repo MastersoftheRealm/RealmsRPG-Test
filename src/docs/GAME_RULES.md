@@ -576,7 +576,7 @@ Built into the Power Creator (replaces the Choice, Split Power Parts into Groups
 |-----------|----------------------|--------|
 | **Choice** | Portions of one power; pick one on use | Shared + the **most expensive** portion |
 | **Alternate** | Complete powers on one library entry | The variant you use (may be less, equal, or more) |
-| **Modify** (Split Power Parts into Groups) | Pieces with their own stipulations, all on one cast | **Sum** of (shared + each piece) |
+| **Modify** (Split Power Parts into Groups) | Pieces with their own stipulations, all on one cast. Range, area, duration, and action match Shared until a piece overrides them. Parts and damage are not copied onto the piece. | **Sum** of (shared + each piece that adds something). An empty piece adds nothing; if every piece is empty, energy is Shared once |
 | **Randomize** | Outcomes on an even-sided die (1d2–1d100); a variant may fill many faces | Shared chassis + each positive face − each negative face; **minimum 1** |
 | **Reverse Effects** (add-on) | Drawback for you or an ally on a beneficial power | Subtract **50%** of the drawback's own Energy; cannot be nullified or reduced by you or an ally |
 

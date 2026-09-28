@@ -42,15 +42,15 @@ function tabHint(structure: PowerCompositionStructure, activeTabId: string): str
   if (activeTabId === SHARED_TAB_ID) {
     return structure === 'none'
       ? 'Power: the benefit this drawback is attached to.'
-      : 'Shared: fields every variant uses. A variant field replaces the shared one; variant parts are added.';
+      : 'Shared holds the range, area, duration, and action every piece starts from, plus parts that apply to the whole power.';
   }
   if (structure === 'alternate') {
     return 'Each variant is a complete power. New variants copy the tab you are on.';
   }
   if (structure === 'modify') {
-    return 'This piece: set only what differs from Shared (its duration, damage, area, range, parts).';
+    return 'Mechanics say From Shared until you press Override. Parts you add here belong only to this piece. An empty piece does not raise the energy.';
   }
-  return 'This variant: set only what differs from Shared (duration, damage, area, range, parts).';
+  return 'Mechanics say From Shared until you press Override. Parts and damage you add here belong only to this variant.';
 }
 
 type PowerCreatorCompositionBandProps = {
@@ -80,21 +80,20 @@ export function PowerCreatorCompositionBand({
     return {
       id,
       label,
-      suffix:
-        variants.length > 1 ? (
-          <IconButton
-            size="sm"
-            variant="danger"
-            label={`Remove ${label}`}
-            onClick={() => state.removeVariant(id)}
-          >
-            <X className="h-3.5 w-3.5" aria-hidden />
-          </IconButton>
-        ) : undefined,
+      suffix: (
+        <IconButton
+          size="sm"
+          variant="danger"
+          label={`Remove ${label}`}
+          onClick={() => state.removeVariant(id)}
+        >
+          <X className="h-3.5 w-3.5" aria-hidden />
+        </IconButton>
+      ),
     };
   });
 
-  const showTabs = tabs.length > 1;
+  const showTabs = structure !== 'none' || reverseEnabled;
   const isVariantTab = !!activeVariant && structure !== 'none';
 
   return (
@@ -157,7 +156,7 @@ export function PowerCreatorCompositionBand({
               structure !== 'none' ? (
                 <Button size="sm" variant="outline" onClick={state.addVariant}>
                   <Plus className="h-3.5 w-3.5" aria-hidden />
-                  Add variant
+                  {structure === 'modify' ? 'Add piece' : 'Add variant'}
                 </Button>
               ) : undefined
             }

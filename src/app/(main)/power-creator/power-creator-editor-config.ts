@@ -7,6 +7,7 @@ import type { AreaConfig, DurationConfig } from '@/lib/calculators';
 import type { AttackMode } from '@/lib/attack-mode';
 import type { SelectedPart, AdvancedPart, DamageConfig, RangeConfig } from './power-creator-types';
 import type { PowerSectionCosts } from './power-creator-cost-derivation';
+import type { InheritedField } from './power-creator-from-shared';
 
 export type PowerAreaPartInfo = {
   description: string;
@@ -72,6 +73,17 @@ export type PowerCreatorEditorProps = {
 
   sectionCosts: PowerSectionCosts;
 
-  /** False on overlay tabs (Choice/Modify/Randomize variants, Reverse): action comes from Shared. */
-  showActionProfile?: boolean | undefined;
+  /** Set on a Choice / Modify / Randomize / Reverse tab. Mechanics show as From Shared until overridden. */
+  inheritance?: PowerCreatorInheritance | null | undefined;
+};
+
+export type PowerCreatorInheritance = {
+  action: InheritedField;
+  attack: InheritedField;
+  range: InheritedField;
+  area: InheritedField;
+  duration: InheritedField;
+  damage: InheritedField;
+  sharedPartNames: string[];
+  sharedMechanicNames: string[];
 };

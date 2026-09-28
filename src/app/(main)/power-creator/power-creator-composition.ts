@@ -113,6 +113,7 @@ export function tabFormToSpec(form: PowerTabForm): PowerVariantSpec {
 /** Only the fields a portion / piece / outcome / drawback sets (overlay on the shared chassis). */
 export function tabFormToOverlay(form: PowerTabForm): PowerVariantSpec {
   const spec: PowerVariantSpec = {};
+  const empty = emptyTabForm();
   const parts = savedParts(form);
   if (parts.length > 0) spec.parts = parts;
   const damage = savedDamage(form);
@@ -120,6 +121,9 @@ export function tabFormToOverlay(form: PowerTabForm): PowerVariantSpec {
   if (form.range.steps > 0) spec.range = form.range;
   if (form.area.type !== 'none') spec.area = form.area;
   if (form.duration.type !== 'instant') spec.duration = form.duration;
+  if (form.actionType !== empty.actionType) spec.actionType = form.actionType;
+  if (form.isReaction !== empty.isReaction) spec.isReaction = form.isReaction;
+  if (form.attackMode !== empty.attackMode) spec.attackMode = form.attackMode;
   return spec;
 }
 
@@ -166,6 +170,9 @@ export function diffAgainstShared(shared: PowerTabForm, v: PowerTabForm): PowerT
     range: sameJson(v.range, shared.range) ? empty.range : v.range,
     area: sameJson(v.area, shared.area) ? empty.area : v.area,
     duration: sameJson(v.duration, shared.duration) ? empty.duration : v.duration,
+    actionType: v.actionType === shared.actionType ? empty.actionType : v.actionType,
+    isReaction: v.isReaction === shared.isReaction ? empty.isReaction : v.isReaction,
+    attackMode: v.attackMode === shared.attackMode ? empty.attackMode : v.attackMode,
   };
 }
 
@@ -211,7 +218,9 @@ export function buildCompositionPayload(
       : c.variants.map((v) => ({
           id: v.id,
           label: v.label.trim() || v.id,
-          ...(isAlternate ? tabFormToSpec(v.form) : tabFormToOverlay(v.form)),
+          ...(isAlternate
+            ? tabFormToSpec(v.form)
+            : tabFormToOverlay(diffAgainstShared(c.shared, v.form))),
           ...(v.description.trim() && c.structure !== 'modify'
             ? { description: v.description.trim() }
             : {}),

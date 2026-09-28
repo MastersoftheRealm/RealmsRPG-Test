@@ -255,6 +255,19 @@ function hasDamage(damage: PowerDocument['damage']): boolean {
   return (damage ?? []).some((d) => d.type && d.type !== 'none' && Number(d.amount) > 0);
 }
 
+/** A Modify piece that adds parts, damage, or a mechanic override. An untouched tab does not. */
+function variantSpecifiesPiece(v: PowerVariantSpec): boolean {
+  if (stripCompositionParts(v.parts).length > 0) return true;
+  if (hasDamage(v.damage)) return true;
+  if (v.range != null) return true;
+  if (v.area != null) return true;
+  if (v.duration != null) return true;
+  if (v.actionType != null) return true;
+  if (v.isReaction != null) return true;
+  if (v.attackMode != null) return true;
+  return false;
+}
+
 function chassisOf(doc: PowerDocument): PowerDocument {
   const rest = { ...doc };
   delete rest.composition;
@@ -402,10 +415,13 @@ export function resolvePowerComposition(
   const variants: ResolvedPowerVariant[] = composition.variants.map((v) => {
     const doc = isAlternate ? fullVariantDoc(name, v) : overlayVariant(chassis, v);
     const display = derivePlainPowerDisplay(doc, partsDb);
+    const specifiesPiece = variantSpecifiesPiece(v);
     const energy =
-      structure === 'randomize'
-        ? derivePlainPowerDisplay(ownSpecDoc(name, v, chassis.duration), partsDb).energy
-        : display.energy;
+      structure === 'modify' && !specifiesPiece
+        ? 0
+        : structure === 'randomize'
+          ? derivePlainPowerDisplay(ownSpecDoc(name, v, chassis.duration), partsDb).energy
+          : display.energy;
     return {
       id: v.id,
       label: v.label,
@@ -430,10 +446,11 @@ export function resolvePowerComposition(
       structureEnergy =
         variants.length > 0 ? Math.max(...variants.map((v) => v.energy)) : sharedEnergy;
       break;
-    case 'modify':
-      structureEnergy =
-        variants.length > 0 ? variants.reduce((sum, v) => sum + v.energy, 0) : sharedEnergy;
+    case 'modify': {
+      const anyPiece = composition.variants.some(variantSpecifiesPiece);
+      structureEnergy = anyPiece ? variants.reduce((sum, v) => sum + v.energy, 0) : sharedEnergy;
       break;
+    }
     case 'alternate':
       structureEnergy = selected?.energy ?? derivePlainPowerDisplay(chassis, partsDb).energy;
       break;
