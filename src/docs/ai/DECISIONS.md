@@ -98,9 +98,17 @@ Game runner = **RM (Realm Master)** — never GM.
 - QA accounts only for testing; prefix records `QA` / `QA Test`; clean up; never save/publish official library/Codex from QA (esp. qa-admin).
 - Test accounts: `/workspace/qa/test-accounts.txt` + Realms Restricted. Authorized for bots; never paste passwords into chat.
 - Never paste API keys in chat, ClickUp, ordinary Drive docs, or the repo.
+- After any dependency or framework bump merges, QA Tester repeats a short production smoke covering home, sign-in, characters and sheet, one creator (load-only), codex, rules, the /opengraph-image PNG and console/hydration.
+- Page-speed budgets come from the S25 medians. Re-run them after each perf fix, not on every small UI PR. TBT alone is not filed as a bug.
+- Security-header checks are re-run when CSP, CORS or header fixes land. Role-separation checks are re-run on any PR touching RLS, auth or permissions, and any exposure is reported to Kadin privately.
+- Bots may retest ClickUp tasks in testing and add dated comments or description updates through Clickup Manager, but never move a task out of testing. Final tests stay human (Bob).
+- The Website QA check routine and these standing triggers are delegated to QA Tester. New ad-hoc sweeps still need Kadin or Web Manager.
+- CI security audit (PR #128): `npm audit --audit-level=high --omit=dev` blocks merges, and a full-tree audit runs as a warning only.
+- Advisory and vulnerability IDs stay out of public repo files, PR text and commit messages (the repo is public). ClickUp holds them.
 
 ---
 
 ## Changelog
 
+- **2026-10-05 (~4:54 PM ET):** Appended standing QA triggers (post-dep smoke, S25 page-speed budgets, security-header/RLS retests, testing-status bot limits, Website QA check delegated to QA Tester, CI npm audit policy, no CVE IDs in public repo).
 - **2026-10-05:** Initial seed from `/workspace/qa/intent.md` settled rulings + Oct 5 Dev Team / Kadin corrections (ability hard caps −5/+10; Drive vs GAME_RULES ask-first; Realm Master spelling).
