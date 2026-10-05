@@ -203,7 +203,7 @@ On the free tier, watch **Edge Requests**, **Fast Data Transfer** (CDN → users
 
 ### Step 3: Deploy
 
-1. **Deployments** → **Redeploy** (or push to `master` to trigger auto-deploy).
+1. **Deployments** → **Redeploy** (or merge a reviewed PR to `master` to trigger auto-deploy). Agents never push to `master` directly.
 2. After build, visit your Vercel URL (e.g. `realms-rpg-next.vercel.app`) or your custom domain (e.g. **realmsrpg.com**).
 3. Test: sign in, create a character, upload a portrait.
 

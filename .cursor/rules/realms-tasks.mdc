@@ -10,7 +10,7 @@ alwaysApply: true
 **Session start:** [Realms Dev Workflow](https://docs.google.com/document/d/1F6iZUKP9nN0YTFzOkZ6Y82sySaw0iW101f_a-7ZeQdI/edit) → `DECISIONS.md` → `ARCHITECTURE_CONSTITUTION.md` for coding constraints. Then claim a ClickUp task.
 
 **Before implementing:**
-1. Claim the ClickUp task (move status **to do → in progress**).
+1. Claim the ClickUp task. When Kadin has told you to write to ClickUp, move status **to do → in progress**; otherwise note the claim in the PR and let a human or Clickup Manager move the task.
 2. Search `FEATURE_INDEX.md` + barrels (+ generated barrel inventory) — confirm it doesn't already exist.
 3. Game copy / caps / formulas → `GAME_RULES.md`. UI → `MOBILE_UX.md` + a11y rule.
 4. **Model escalation (pause once):** If the task matches a trigger below, **stop before coding** and tell the owner in 2–4 sentences: why a stronger model is safer, which ClickUp task, and wait for "proceed" / model switch / narrower instructions. Do **not** pause again in the same chat after the owner says proceed.
