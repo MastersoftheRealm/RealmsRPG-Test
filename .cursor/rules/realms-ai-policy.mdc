@@ -5,7 +5,7 @@ alwaysApply: true
 
 # AI Policy (RealmsRPG)
 
-AI agents (Cursor and Grok bots) must follow the ClickUp wiki page **[Using AI at Realms](https://app.clickup.com/8631005/v/dc/8cqwdmc-517)** and the [Realms Dev Workflow & Agent Rules](https://docs.google.com/document/d/1F6iZUKP9nN0YTFzOkZ6Y82sySaw0iW101f_a-7ZeQdI/edit) §6.2.
+AI agents (Cursor and Grok bots) must follow the ClickUp wiki page **[Using AI at Realms](https://app.clickup.com/9017636492/docs/8cqwdmc-3357/8cqwdmc-517)** and the [Realms Dev Workflow & Agent Rules](https://docs.google.com/document/d/1F6iZUKP9nN0YTFzOkZ6Y82sySaw0iW101f_a-7ZeQdI/edit) §6 item 2.
 
 **Never generate:** art, images, creative names, item names, feat renames, plot, lore, or flavor text.
 

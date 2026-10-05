@@ -29,7 +29,7 @@ Do **not** load full `AI_TASK_QUEUE.md`, full `AGENT_GUIDE.md` / `guide/` append
 | Product / UX intent | `REALMS_PRODUCT_OVERVIEW.md` + `human/USER_EXPERIENCE_GOALS.md` |
 | Exists already? | `FEATURE_INDEX.md` → barrels |
 | Schema | `SUPABASE_SCHEMA.md` |
-| Game terms / formulas | `GAME_RULES.md` |
+| Game terms / formulas | `GAME_RULES.md` (if it conflicts with Drive Alpha on core text or math, Drive wins by default — ask Kadin before changing either side, since some entries may be test rules) |
 | Shared UI patterns | `AGENT_GUIDE.md` hub → `guide/` appendices (on demand) + `realms-unification.mdc` |
 | Tokens / contrast | `DESIGN_SYSTEM.md` + `ACCESSIBILITY.md` — prefer `*-fg` theme-aware tokens |
 | Responsive / mobile | `MOBILE_UX.md` (ADR-0023 — six-width contracts, tiered touch targets) |
@@ -56,13 +56,13 @@ Do **not** load full `AI_TASK_QUEUE.md`, full `AGENT_GUIDE.md` / `guide/` append
 
 A task may be `done` only when **all** acceptance criteria are met **and**:
 
-1. `npm run build` passes (and targeted tests if the area has them). When touching TS/JS: `npm run typecheck` + `npm run lint` (`--max-warnings 0`) + targeted tests (TASK-655/656).
+1. `npm run build` passes (and targeted tests if the area has them). When touching TS/JS: `npm run typecheck` + `npm run lint` (`--max-warnings 0`) — CI-hard since TASK-655/656.
 2. No new parallel pattern introduced (or Architect ADR + owner ack) — **prefer net remove** when cleaning or consolidating (delete weaker forks / dead code rather than leaving compat layers)
 3. ClickUp task linked in PR. Optionally update `ACTIVE_TASKS.md` engineering notes if used (move `done` notes to `archive/TASK_QUEUE_DONE.md`).
 4. Do **not** create a git commit per task. Missing commit is not a mark-done or `/audit` blocker. The owner often finishes several tasks (`/audit` → `/cleanup` each), then **one** commit/push.
 5. `AI_CHANGELOG.md` entry appended (cleanup/debt entries **must lead with a deletion or consolidation bullet**; docs-only honesty is not enough)
 6. User-facing work: `BUILD_VALIDATION.md` tests + `developer_test_plan` when required
-7. Before push: `npm run tasks:validate` when tasks/archives/`related_files` changed.
+7. Before opening or updating a PR: `npm run tasks:validate` when tasks/archives/`related_files` changed. If you mark any TASK-### done in `ACTIVE_TASKS.md`, the commit subject must list each ID (space-separated; en-dash ranges do not count). CI `ai-task-verifier` enforces this. Squash merges that rewrite subjects need a follow-up reconcile commit.
 8. **Every fixed bug → regression test from its repro** when feasible.
 
 If any AC remains open → **`partial`** with `completed_work` / `remaining_work` / `follow_up_tasks`. Never mark `done` to "finish later." Prefer follow-up tasks over audit-after-done rediscovery.
@@ -93,7 +93,16 @@ Require owner review before merging:
 - API contract changes (request/response shapes clients depend on)
 - Live codex `UPDATE`/`INSERT`/`DELETE`
 
-**High-risk sign-off (Kadin explicit OK before merge/apply):** schema/migrations, auth/RLS/permissions, rules math (EN/TP/HP formulas), deletes of user/official data, live Codex data changes, secrets/domain/billing. See [Realms Dev Workflow §4](https://docs.google.com/document/d/1F6iZUKP9nN0YTFzOkZ6Y82sySaw0iW101f_a-7ZeQdI/edit).
+**High-risk sign-off (Kadin explicit OK before merge/apply):**
+
+1. Schema / migrations (`sql/`, Supabase migrations).
+2. Auth / RLS / permissions / role limits.
+3. Rules math (EN/TP/HP formulas, proficiency, soft caps) — PR Reviewer also routes these to Production Manager for a Drive/Codex check before Kadin signs off.
+4. Deletes of user or official data; destructive admin tools.
+5. Live Codex / `core_rules` / official library `UPDATE`/`INSERT`/`DELETE`.
+6. Secrets, domain/DNS, billing, anything sent outside the team.
+
+See [Realms Dev Workflow §4](https://docs.google.com/document/d/1F6iZUKP9nN0YTFzOkZ6Y82sySaw0iW101f_a-7ZeQdI/edit).
 
 **Model escalation:** Before implementing Architect-class or irreversible-data work, pause once and flag that a stronger model may be safer — see `.cursor/rules/realms-tasks.mdc` (narrow triggers; do not stall routine Implementer tasks).
 
@@ -112,4 +121,5 @@ Require owner review before merging:
 - Feature map → `FEATURE_INDEX.md` + generated `FEATURE_INDEX_BARRELS.generated.md`
 - PR failure-mode checklist → `PR_CHECKLIST.md` (includes owner commands)
 - Slash commands → `.cursor/commands/` (`audit`, `cleanup`, `global-audit`, `debt`)
-- Task process → `AI_TASK_QUEUE.md` (process only; ClickUp is the work queue)
+- Task process → `AI_TASK_QUEUE.md` (process notes only; ClickUp is the only work queue)
+- ClickUp ↔ GitHub status mapping → `CLICKUP_GITHUB_WORKFLOW.md`

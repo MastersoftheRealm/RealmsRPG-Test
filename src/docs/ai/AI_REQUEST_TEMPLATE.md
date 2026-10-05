@@ -1,6 +1,6 @@
 # AI Request Template
 
-Use this template when converting raw feedback into an actionable request to be added to `ACTIVE_TASKS.md`.
+Use this template when adding **optional engineering notes** to `ACTIVE_TASKS.md`. The work queue lives in **ClickUp** — file new tasks via Clickup Manager or directly in ClickUp on Kadin's orders.
 
 ---
 - id: TASK-###

@@ -12,7 +12,7 @@ We target **WCAG 2.2 Level AA** for contrast, focus, labels, headings, images, t
 | **Headings** | Levels increase by at most one (no h1 → h3). Page title = h1; first section = h2; subsections = h3. In wizards, step title = h2; section titles within step = h3. SectionHeader renders h2; GridListRow / ExpandableChip section labels render h3; EmptyState title renders h2. |
 | **Modals** | Use `Modal` with `title` (and optional `description`). If using custom header with no visible title, set `titleA11y` for screen readers. |
 | **Touch targets** | Coarse pointer uses the Primary (48) / Standard (44) / Dense (32 painted + 44 expanded hit) tiers in `MOBILE_UX.md` (ADR-0023). Fine pointer stays compact. Owner feedback is desktop-first unless labeled `mobile feedback:`. |
-| **Target size (WCAG 2.2)** | SC 2.5.8 — interactive targets ≥ 24×24 CSS px (or inline exception). Our Dense tier (32px painted + expanded hit) satisfies this. |
+| **Target size (WCAG 2.2)** | SC 2.5.8 — interactive targets ≥ 24×24 CSS px (or inline/spacing exception). Our Dense tier (32px painted + expanded hit) satisfies this on coarse pointer; verify compact fine-pointer controls meet 2.5.8 via size or the spacing exception. |
 | **Focus not obscured (WCAG 2.2)** | SC 2.4.11 — focused element must not be entirely hidden by sticky/fixed chrome. Use scroll-margin / padding to account for fixed headers/footers. |
 | **Images** | Decorative or when the same info is visible as text (e.g. dice "d4" next to image), use `alt=""`. Otherwise use descriptive `alt`. |
 
@@ -38,7 +38,7 @@ Use these patterns so elements meet WCAG 2.2 AA in **both light and dark** theme
 - **Icon-only buttons** on dark UI (e.g. roll log MOD +/-): avoid `bg-white/10` only; add `dark:bg-white/20 dark:hover:bg-white/35`. Keep icon `text-white` or use a token that contrasts on the button.
 - **Form inputs** (HP/EN, etc.): Use `bg-surface dark:bg-surface-alt` so the field is visible in dark mode. Every `<input>` and `<select>` must have an accessible name (`label` + `id`/`htmlFor` or `aria-label`).
 - **Modals:** Use `Modal` from `@/components/ui/modal`. Provide `title` (and optional `description`) for the dialog; if using a custom header with no visible title, pass `titleA11y` so screen readers get an accessible name.
-- **Touch targets:** Assign a tier from `MOBILE_UX.md` / ADR-0023. Coarse-pointer Standard is 44×44; Dense keeps a small painted box and expands the hit area (`.hit-area-dense` height-first, `.hit-area-dense-square` for icon-only, `.hit-area-layout-neutral` for 16px paint). Fine pointer stays compact (WCAG 2.2 AA Target Size minimum is 24×24 — SC 2.5.8; our tiers exceed this).
+- **Touch targets:** Assign a tier from `MOBILE_UX.md` / ADR-0023. Coarse-pointer Standard is 44×44; Dense keeps a small painted box and expands the hit area (`.hit-area-dense` height-first, `.hit-area-dense-square` for icon-only, `.hit-area-layout-neutral` for 16px paint). Fine pointer stays compact; meet WCAG 2.2 SC 2.5.8 (24×24 minimum) via size or the spacing exception — verify compact fine-pointer controls.
 - **Focus not obscured (WCAG 2.2):** SC 2.4.11 — ensure focused elements are not entirely covered by sticky headers, footers, or overlays.
 - **Primary text in dark mode:** Prefer the design token `text-text-primary` (no override). In `globals.css`, `.dark` sets `--color-text-primary` for contrast; avoid ad-hoc overrides like `dark:text-neutral-300` unless the token is insufficient for a specific background.
 

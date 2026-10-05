@@ -21,9 +21,9 @@ alwaysApply: true
 
 **While implementing:**
 - Branch: `bug|feat/<clickUpId>-short-slug`. **Never push `master`.** Never merge.
-- Move ClickUp status through **in progress → in review** when PR is opened; assign **Collin**.
+- Move ClickUp status through **in progress → in review** when PR is opened (when Kadin has told you to write to ClickUp; otherwise note the status change in the PR); assign **Collin**.
 - Link ClickUp task ID in the PR. Optionally maintain TASK-### notes in `ACTIVE_TASKS.md` for engineering hygiene.
-- If using `ACTIVE_TASKS.md` notes: `in-progress` → `done` when implementable AC met (build/tests/docs); else `partial` + `completed_work` / `remaining_work` / `follow_up_tasks`. Move `done` blocks to `archive/TASK_QUEUE_DONE.md`.
+- If using `ACTIVE_TASKS.md` notes: `in-progress` → `done` when implementable AC met (build/tests/docs); else `partial` + `completed_work` / `remaining_work` / `follow_up_tasks`. Move `done` blocks to `archive/TASK_QUEUE_DONE.md`. If you mark any TASK-### done, the commit subject must list each ID (CI `ai-task-verifier` enforces this).
 - Blocked / human-owned → `WAITING_TASKS.md`. Human-only steps → `DEVELOPER_TASK_QUEUE.md`.
 - User-facing: `BUILD_VALIDATION.md` + changelog.
 - New shared/ui file → ADR + update `scripts/shared-ui-allowlist.json` (`npm run tasks:validate-shared-ui`).
@@ -38,4 +38,4 @@ alwaysApply: true
 
 1. Log raw feedback in `ALL_FEEDBACK_CLEAN.md`.
 2. Extract discrete items; cross-ref ClickUp tasks (and `ACTIVE_TASKS.md` / `WAITING_TASKS.md` if notes are used).
-3. Add tasks or implement; summarize dispositions.
+3. File new tasks via Clickup Manager (or directly to ClickUp on Kadin's orders); implement; summarize dispositions.

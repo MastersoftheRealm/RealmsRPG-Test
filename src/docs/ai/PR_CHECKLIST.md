@@ -6,7 +6,7 @@ Use before marking a task `done` or opening a PR. Keep answers short.
 2. **No parallel pattern** — Extended existing shell/hook/API, or ADR/owner ack?
 3. **AC complete** — Every acceptance criterion met? Else `partial` + follow-ups.
 4. **related_files** — Every listed path exists in the repo (real file/dir; no invented module names)? Match the diff? Globs (`*`) ok; directories ok if tracked children exist.
-5. **ClickUp link** — PR links the ClickUp task ID? Risk flags checked in the PR template?
+5. **ClickUp link + commit subjects** — PR links the ClickUp task ID? Risk flags checked in the PR template? If any TASK-### is marked done, each ID listed in the commit subject (CI `ai-task-verifier` enforces this)?
 6. **Build** — `npm run build` green? When touching TS/JS: `npm run typecheck` + `npm run lint` (`--max-warnings 0`) + targeted tests (TASK-655/656)?
 7. **Tokens** — Semantic / `*-fg`; no raw palette outside exemptions?
 8. **Responsive** — `fullScreenOnMobile` where needed? Touch tier assigned (not blanket 44px)? Contracts C1–C6 hold at 360 / 390 / 768 / 1024 / 1280 / 1440 (`npm run verify:responsive`)?
@@ -14,7 +14,7 @@ Use before marking a task `done` or opening a PR. Keep answers short.
 10. **Uploads** — Went through `apiUpload`?
 11. **Domain parsers** — Used `src/lib/game/*` not a local fork?
 12. **Schema/codex** — SQL in `sql/`; owner approve for live codex mutate? High-risk items flagged per [Workflow §4](https://docs.google.com/document/d/1F6iZUKP9nN0YTFzOkZ6Y82sySaw0iW101f_a-7ZeQdI/edit)?
-13. **ClickUp status** — Moved to **in review**? Assigned **Collin**?
+13. **ClickUp status** — When Kadin has told you to write to ClickUp: moved to **in review**? Assigned **Collin**? Otherwise note the status change in the PR.
 14. **Owner QA** — User-facing? `pending-qa` + indexed in `DEVELOPER_TASK_QUEUE` Pending owner QA until owner/QA Tester PASS?
 15. **Changelog** — `AI_CHANGELOG.md` entry?
 16. **Design intent** — Non-obvious constraint documented (`DESIGN_INTENT` / comment)?
