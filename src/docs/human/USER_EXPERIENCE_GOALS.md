@@ -118,7 +118,7 @@ When implementing or reviewing **any** UI, copy, or flow that touches onboarding
 | **UX goals, terminology, done/backlog** | This file: `src/docs/USER_EXPERIENCE_GOALS.md` |
 | **Full UX plan (source)** | Plan doc (e.g. `realms_ux_retention_onboarding_*.plan.md`) — goals, personas, journey, priorities |
 | **Responsive / touch** | `src/docs/MOBILE_UX.md` (ADR-0023) — six-width contracts, tiered touch targets, fullScreenOnMobile, side-scroll/collapse |
-| **Accessibility and contrast** | `src/docs/ACCESSIBILITY.md`, `.cursor/rules/realms-accessibility.mdc` — WCAG 2.1 AA, labels, headings, modals |
+| **Accessibility and contrast** | `src/docs/ACCESSIBILITY.md`, `.cursor/rules/realms-accessibility.mdc` — WCAG 2.2 AA, labels, headings, modals |
 | **Game rules and terminology** | `src/docs/GAME_RULES.md` — ability names, formulas, display conventions |
 | **Owner feedback and tasks** | `src/docs/ALL_FEEDBACK_CLEAN.md` (curated + raw log), `src/docs/ai/ACTIVE_TASKS.md` (process: `AI_TASK_QUEUE.md`) |
 

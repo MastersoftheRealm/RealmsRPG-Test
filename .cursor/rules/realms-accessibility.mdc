@@ -1,9 +1,11 @@
 ---
-description: WCAG 2.1 AA — prefer theme-aware *-fg tokens
+description: WCAG 2.2 AA — prefer theme-aware *-fg tokens
 alwaysApply: true
 ---
 
 # Accessibility (RealmsRPG)
+
+Target: **WCAG 2.2 Level AA** on all UI work.
 
 When **creating or editing** UI:
 
@@ -19,6 +21,10 @@ When **creating or editing** UI:
 
 6. **Touch targets:** assign a tier from `MOBILE_UX.md` / ADR-0023 (Primary 48 / Standard 44 / Dense 32+expanded hit). Do not apply a blanket 44×44 to every control.
 
-7. **Images:** Decorative → `alt=""`; meaningful → descriptive alt.
+7. **Target size (2.2):** Interactive elements must meet WCAG 2.2 SC 2.5.8 (Target Size minimum — 24×24 CSS px, or inline exception). Dense tier (32px painted + expanded hit) satisfies this.
 
-8. Fix `jsx-a11y` lint violations.
+8. **Focus not obscured (2.2):** Focused elements must not be entirely hidden by sticky headers, footers, or overlays (SC 2.4.11). Ensure scroll-margin / padding accounts for fixed chrome.
+
+9. **Images:** Decorative → `alt=""`; meaningful → descriptive alt.
+
+10. Fix `jsx-a11y` lint violations.

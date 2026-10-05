@@ -1,5 +1,7 @@
 # Active AI Tasks
 
+> **Note:** This file contains **optional engineering notes** only. The work queue and schedule live in **ClickUp**. Do not pick tasks from this file as the primary queue. See the [Realms Dev Workflow](https://docs.google.com/document/d/1F6iZUKP9nN0YTFzOkZ6Y82sySaw0iW101f_a-7ZeQdI/edit) for process.
+
 **Hot path only** — agent-eligible open work: `not-started` | `in-progress` | `partial`.
 Skip `blocked` and human `assignee:` (those live in [`WAITING_TASKS.md`](WAITING_TASKS.md)).
 Do **not** read the done archive at session start.

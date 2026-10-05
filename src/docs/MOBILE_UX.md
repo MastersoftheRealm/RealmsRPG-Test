@@ -56,7 +56,7 @@ Viewport width is a *proxy* for input method, and it is wrong at both ends — a
 - **Do not inflate desktop chrome.** Never "fix" desktop by applying mobile min-size padding that leaves empty painted space around icons (`EditSectionToggle`, sheet header actions).
 - **Spacing supplements, never replaces, target size.** Small targets stay hard to hit accurately even when well spaced.
 - **Owner feedback is desktop-first** unless prefixed `mobile feedback:`. Do not read a desktop screenshot as a request to enlarge targets sitewide.
-- **Legal note:** WCAG 2.1 **AA** has no target-size criterion. 44px is our choice (2.5.5 is AAA, plus Apple HIG / Material). Prefer cleanliness on desktop where they conflict.
+- **Legal note:** We target **WCAG 2.2 AA**, which adds SC 2.5.8 Target Size (Minimum) — 24×24 CSS px. Our Dense tier (32px painted + expanded hit) exceeds this. The 44px choice comes from Apple HIG / Material + SC 2.5.5 (AAA). Prefer cleanliness on desktop where they conflict.
 
 ---
 
