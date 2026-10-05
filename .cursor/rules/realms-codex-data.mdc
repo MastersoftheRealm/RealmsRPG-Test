@@ -15,6 +15,17 @@ Applies to **`codex_*`**, **`core_rules`**, and any bulk edits to official libra
 | Draft SQL in `sql/*.sql` | `execute_sql` / `apply_migration` that mutates codex data |
 | Repo-only seed/CSV edits (not live DB) | Supabase MCP writes that change live reference data |
 
+## High-risk sign-off list
+
+These categories require **Kadin explicit OK before merge/apply** (see [Realms Dev Workflow §4](https://docs.google.com/document/d/1F6iZUKP9nN0YTFzOkZ6Y82sySaw0iW101f_a-7ZeQdI/edit)):
+
+1. **Schema / migrations** (`sql/`, Supabase migrations).
+2. **Auth / RLS / permissions / role limits.**
+3. **Rules math** (EN/TP/HP formulas, proficiency, soft caps) — PR Reviewer also routes these to Production Manager for a Drive/Codex check before Kadin signs off.
+4. **Deletes of user or official data; destructive admin tools.**
+5. **Live Codex / `core_rules` / official library** `UPDATE`/`INSERT`/`DELETE`.
+6. **Secrets, domain/DNS, billing, anything sent outside the team.**
+
 ## Workflow for bulk or policy changes (tags, categories, merges, migrations)
 
 1. **Audit** — query or export current state; cite counts and examples.
@@ -30,7 +41,7 @@ When the owner gives a **specific correction in the current message** (e.g. "use
 
 ## Terminology
 
-Match **`src/docs/GAME_RULES.md`** for game terms in codex fields (e.g. **Skill Roll**, not Skill Check).
+Match **`src/docs/GAME_RULES.md`** for game terms in codex fields (e.g. **Skill Roll**, not Skill Check). Game runner = **RM** (Realm Master), not "GM".
 
 ## After approved codex data changes
 

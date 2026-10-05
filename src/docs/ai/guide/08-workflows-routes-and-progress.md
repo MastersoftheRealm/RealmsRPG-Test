@@ -41,7 +41,7 @@
 
 ## Creating New Tasks
 
-Use `src/docs/ai/AI_REQUEST_TEMPLATE.md` format. Add to `ACTIVE_TASKS.md` with next TASK-### ID.
+File new tasks in **ClickUp** via Clickup Manager (or directly on Kadin's orders). Optionally add engineering notes to `ACTIVE_TASKS.md` using `src/docs/ai/AI_REQUEST_TEMPLATE.md` format.
 Create tasks when: audits reveal issues; implementation uncovers follow-up work; complex work needs phase breakdown.
 Set `priority`, `status: not-started`, `related_files`, and clear `acceptance_criteria`.
 

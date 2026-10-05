@@ -9,6 +9,8 @@ alwaysApply: true
 
 **Dirs:** `src/app/`, `src/components/{ui,patterns,...}/`, `src/hooks/`, `src/stores/`, `src/lib/`, `src/services/`.
 
-**Agent OS:** `ARCHITECTURE_CONSTITUTION.md` · tasks `ACTIVE_TASKS.md` · SoT map in root `AGENTS.md`.
+**Agent OS:** `ARCHITECTURE_CONSTITUTION.md` · work from **ClickUp** (only queue) · SoT map in root `AGENTS.md`.
 
-**Before PR / push to master:** `npm run build` + `npm run tasks:validate`. Strict reconcile: the landing commit subject lists every newly done `TASK-###` (one commit may cover many tasks — not one commit per task). `related_files` paths must exist. UI gates: lint/contrast/build + visual/a11y.
+**Workflow:** [Realms Dev Workflow & Agent Rules](https://docs.google.com/document/d/1F6iZUKP9nN0YTFzOkZ6Y82sySaw0iW101f_a-7ZeQdI/edit) (Drive SoT).
+
+**Git rules:** **Never push directly to `master`**; every change goes through a PR. Branch naming: `bug|feat/<clickUpId>-short-slug`. Include the ClickUp task ID in the branch name and the PR. Before PR: `npm run build` + `npm run tasks:validate`. `related_files` paths must exist. If you mark any TASK-### done in `ACTIVE_TASKS.md`, the commit subject must list each ID (CI `ai-task-verifier` enforces this). UI gates: lint/contrast/build + visual/a11y.

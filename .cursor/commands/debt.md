@@ -23,7 +23,7 @@ Whole repo within gates below. Prefer evidence (grep, `FEATURE_INDEX`, barrels) 
 
 1. **Intake** — If a `/global-audit` report exists in this chat, prioritize its **debt-safe** rows (honor **do-not-fold**). Else run a quick inventory (not a full global-audit writeup unless needed).
 2. **Apply in-scope** — Delete weaker duplicates, slim hot-path docs, rotate changelog (see checklist).
-3. **File follow-ups** — Gated → new `TASK-###` in `ACTIVE_TASKS.md` (specific fix), not more ritual prose. Use **atomic task-filing** below.
+3. **File follow-ups** — Gated → file in ClickUp via Clickup Manager (or directly on Kadin's orders). Optionally add a `TASK-###` note in `ACTIVE_TASKS.md` for engineering hygiene. Use **atomic task-filing** below if adding notes.
 4. **Doc sanity** — After FEATURE_INDEX table edits, grep for collapsed cells (`||` with empty middle). Confirm deleted symbols are not still advertised as live.
 5. **Verify** — `npm run build` if code changed; targeted tests if behavior touched; `npm run tasks:generate-index` + `tasks:validate-shared-ui` if barrels/allowlist touched.
 6. **Log** — Append `AI_CHANGELOG.md` listing **deletions/consolidations** (required every run). First Summary bullet = a deletion or consolidation; prefer **net remove** on the diff.

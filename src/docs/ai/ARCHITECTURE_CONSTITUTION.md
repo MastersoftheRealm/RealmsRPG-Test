@@ -11,9 +11,11 @@
 
 ## Session start (mandatory reads)
 
-1. **This file** (`ARCHITECTURE_CONSTITUTION.md`)
-2. **`ACTIVE_TASKS.md`** — open tasks only (skip `blocked` + human `assignee:`)
-3. When implementing: **`FEATURE_INDEX.md`** + barrel greps (`patterns/index.ts`, `ui/index.ts`, `hooks/index.ts`, `services/index.ts`)
+1. **[Realms Dev Workflow & Agent Rules](https://docs.google.com/document/d/1F6iZUKP9nN0YTFzOkZ6Y82sySaw0iW101f_a-7ZeQdI/edit)** — process playbook (Drive SoT).
+2. **`src/docs/ai/DECISIONS.md`** — settled product/QA decisions (repo copy; Drive wins on conflict).
+3. **This file** (`ARCHITECTURE_CONSTITUTION.md`) — coding constraints.
+4. Pick work from **ClickUp** (the only work queue). `ACTIVE_TASKS.md` / TASK-### are optional engineering notes.
+5. When implementing: **`FEATURE_INDEX.md`** + barrel greps (`patterns/index.ts`, `ui/index.ts`, `hooks/index.ts`, `services/index.ts`)
 
 Do **not** load full `AI_TASK_QUEUE.md`, full `AGENT_GUIDE.md` / `guide/` appendices, or archive history at session start. Pull topic docs on demand via the SoT map in `AGENTS.md`.
 
@@ -21,13 +23,17 @@ Do **not** load full `AI_TASK_QUEUE.md`, full `AGENT_GUIDE.md` / `guide/` append
 
 | Topic | Authority |
 |-------|-----------|
+| Process / workflow | [Realms Dev Workflow](https://docs.google.com/document/d/1F6iZUKP9nN0YTFzOkZ6Y82sySaw0iW101f_a-7ZeQdI/edit) (Drive SoT) |
+| Settled decisions | [Realms Web Decisions](https://docs.google.com/document/d/1tGebelYXZPegt4iZiycOjI3RBHD6N_QKZW6CI0ckxkg/edit) → repo `DECISIONS.md` |
+| Work queue | **ClickUp only** |
 | Product / UX intent | `REALMS_PRODUCT_OVERVIEW.md` + `human/USER_EXPERIENCE_GOALS.md` |
 | Exists already? | `FEATURE_INDEX.md` → barrels |
 | Schema | `SUPABASE_SCHEMA.md` |
-| Game terms / formulas | `GAME_RULES.md` |
+| Game terms / formulas | `GAME_RULES.md` (if it conflicts with Drive Alpha on core text or math, Drive wins by default — ask Kadin before changing either side, since some entries may be test rules) |
 | Shared UI patterns | `AGENT_GUIDE.md` hub → `guide/` appendices (on demand) + `realms-unification.mdc` |
 | Tokens / contrast | `DESIGN_SYSTEM.md` + `ACCESSIBILITY.md` — prefer `*-fg` theme-aware tokens |
 | Responsive / mobile | `MOBILE_UX.md` (ADR-0023 — six-width contracts, tiered touch targets) |
+| Accessibility | `ACCESSIBILITY.md` — **WCAG 2.2 AA** everywhere |
 | Design constraints | `DESIGN_INTENT.md` + `// DESIGN_INTENT:` comments |
 | Architecture decisions | `ADR/` |
 
@@ -43,6 +49,8 @@ Do **not** load full `AI_TASK_QUEUE.md`, full `AGENT_GUIDE.md` / `guide/` append
 - **Parsers** — domain parsers in `src/lib/game/` (e.g. `archetype-path.ts`); no admin-local forks.
 - **UI gates** — keep `realms/no-raw-color`, contrast, visual/a11y Playwright. Prefer `text-success-fg` / `text-danger-fg` / `text-warning-fg` / `text-power-fg` / `text-martial-fg` over numbered ramp + ad-hoc `dark:`.
 - **Mobile** — `fullScreenOnMobile` on large modals; ≥44px touch targets.
+- **Accessibility** — **WCAG 2.2 AA** everywhere. Labels, contrast, modals, touch tiers per `MOBILE_UX.md`.
+- **Git** — **Never push directly to `master`.** Never merge PRs. Every change goes through a PR with a ClickUp task ID linked.
 
 ## Definition of Done
 
@@ -50,13 +58,14 @@ A task may be `done` only when **all** acceptance criteria are met **and**:
 
 1. `npm run build` passes (and targeted tests if the area has them). When touching TS/JS: `npm run typecheck` + `npm run lint` (`--max-warnings 0`) — CI-hard since TASK-655/656.
 2. No new parallel pattern introduced (or Architect ADR + owner ack) — **prefer net remove** when cleaning or consolidating (delete weaker forks / dead code rather than leaving compat layers)
-3. `ACTIVE_TASKS.md` updated (`done` → move block to `archive/TASK_QUEUE_DONE.md`; bump status fields)
-4. Do **not** create a git commit per task. Missing commit is not a mark-done or `/audit` blocker. The owner often finishes several tasks (`/audit` → `/cleanup` each), then **one** commit/push whose subject lists every newly `done` `TASK-###` (see `AI_TASK_QUEUE.md` § Evidence / CI).
+3. ClickUp task linked in PR. Optionally update `ACTIVE_TASKS.md` engineering notes if used (move `done` notes to `archive/TASK_QUEUE_DONE.md`).
+4. Do **not** create a git commit per task. Missing commit is not a mark-done or `/audit` blocker. The owner often finishes several tasks (`/audit` → `/cleanup` each), then **one** commit/push.
 5. `AI_CHANGELOG.md` entry appended (cleanup/debt entries **must lead with a deletion or consolidation bullet**; docs-only honesty is not enough)
 6. User-facing work: `BUILD_VALIDATION.md` tests + `developer_test_plan` when required
-7. Before push: `npm run tasks:validate` when tasks/archives/`related_files` changed. The landing commit subject(s) must list every newly `done` `TASK-###` (space-separated; en-dash ranges do not count).
+7. Before opening or updating a PR: `npm run tasks:validate` when tasks/archives/`related_files` changed. If you mark any TASK-### done in `ACTIVE_TASKS.md`, the commit subject must list each ID (space-separated; en-dash ranges do not count). CI `ai-task-verifier` enforces this. Squash merges that rewrite subjects need a follow-up reconcile commit.
+8. **Every fixed bug → regression test from its repro** when feasible.
 
-If any AC remains open → **`partial`** with `completed_work` / `remaining_work` / `follow_up_tasks`. Never mark `done` to “finish later.” Prefer follow-up tasks over audit-after-done rediscovery.
+If any AC remains open → **`partial`** with `completed_work` / `remaining_work` / `follow_up_tasks`. Never mark `done` to "finish later." Prefer follow-up tasks over audit-after-done rediscovery.
 
 ### Verification gate (owner QA)
 
@@ -84,6 +93,17 @@ Require owner review before merging:
 - API contract changes (request/response shapes clients depend on)
 - Live codex `UPDATE`/`INSERT`/`DELETE`
 
+**High-risk sign-off (Kadin explicit OK before merge/apply):**
+
+1. Schema / migrations (`sql/`, Supabase migrations).
+2. Auth / RLS / permissions / role limits.
+3. Rules math (EN/TP/HP formulas, proficiency, soft caps) — PR Reviewer also routes these to Production Manager for a Drive/Codex check before Kadin signs off.
+4. Deletes of user or official data; destructive admin tools.
+5. Live Codex / `core_rules` / official library `UPDATE`/`INSERT`/`DELETE`.
+6. Secrets, domain/DNS, billing, anything sent outside the team.
+
+See [Realms Dev Workflow §4](https://docs.google.com/document/d/1F6iZUKP9nN0YTFzOkZ6Y82sySaw0iW101f_a-7ZeQdI/edit).
+
 **Model escalation:** Before implementing Architect-class or irreversible-data work, pause once and flag that a stronger model may be safer — see `.cursor/rules/realms-tasks.mdc` (narrow triggers; do not stall routine Implementer tasks).
 
 ## Anti-debt
@@ -91,9 +111,9 @@ Require owner review before merging:
 - Prefer **delete** the weaker of two parallel systems.
 - Prefer **extend** existing shared/ui/hook/lib (`FEATURE_INDEX` + barrels) over new parallel helpers/modals/parsers.
 - Cleanup must **remove** clutter and prove feedback/AC in code — not grow docs theater. Prefer **net remove** on cleanup/debt diffs.
-- When consolidating, ship a first slice + precise follow-ups in `ACTIVE_TASKS.md` — not aspirational prose only.
+- When consolidating, ship a first slice + precise follow-ups — not aspirational prose only.
 - Blocked / human-owned work lives in `WAITING_TASKS.md` (not the session hot path).
-- **Session (on demand):** `/audit` → `/cleanup` (one TASK-### / this chat). **Repo (on demand):** `/global-audit` → `/debt`. See `PR_CHECKLIST.md` § Owner commands.
+- **Session (on demand):** `/audit` → `/cleanup` (one task / this chat). **Repo (on demand):** `/global-audit` → `/debt`. See `PR_CHECKLIST.md` § Owner commands.
 
 ## On-demand deep refs
 
@@ -101,4 +121,5 @@ Require owner review before merging:
 - Feature map → `FEATURE_INDEX.md` + generated `FEATURE_INDEX_BARRELS.generated.md`
 - PR failure-mode checklist → `PR_CHECKLIST.md` (includes owner commands)
 - Slash commands → `.cursor/commands/` (`audit`, `cleanup`, `global-audit`, `debt`)
-- Task process → `AI_TASK_QUEUE.md` (process only; tasks live in `ACTIVE_TASKS.md` / `WAITING_TASKS.md`)
+- Task process → `AI_TASK_QUEUE.md` (process notes only; ClickUp is the only work queue)
+- ClickUp ↔ GitHub status mapping → `CLICKUP_GITHUB_WORKFLOW.md`

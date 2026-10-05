@@ -1,6 +1,6 @@
 # Agent Guide — Deep Reference (on demand)
 
-**Not a session-start mandatory read.** Always-loadable core: [`ARCHITECTURE_CONSTITUTION.md`](ARCHITECTURE_CONSTITUTION.md). Open tasks: [`ACTIVE_TASKS.md`](ACTIVE_TASKS.md). SoT map: root `AGENTS.md`.
+**Not a session-start mandatory read.** Always-loadable core: [`ARCHITECTURE_CONSTITUTION.md`](ARCHITECTURE_CONSTITUTION.md). Work queue: **ClickUp** (optional engineering notes: [`ACTIVE_TASKS.md`](ACTIVE_TASKS.md)). SoT map: root `AGENTS.md`.
 
 Verified against codebase (Jun 2026+). Use this hub when you need component locations, list/selection patterns, art pipeline, or creator load rules — then open the matching appendix under [`guide/`](guide/).
 

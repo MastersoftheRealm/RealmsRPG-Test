@@ -1,40 +1,41 @@
 ---
-description: Agent task workflow - ACTIVE_TASKS, WAITING, DoD
+description: ClickUp-primary task workflow — ACTIVE_TASKS optional notes only
 alwaysApply: true
 ---
 
 # Task Workflow
 
-**Session start:** `ARCHITECTURE_CONSTITUTION.md` + `ACTIVE_TASKS.md` (not `WAITING_TASKS.md`, not done archive, not full `AGENT_GUIDE.md`).
+**Work queue:** **ClickUp is the only work queue.** Pick tasks from ClickUp, not `ACTIVE_TASKS.md`. Repo `ACTIVE_TASKS.md` / TASK-### are **optional engineering notes** — never treat them as the schedule.
+
+**Session start:** [Realms Dev Workflow](https://docs.google.com/document/d/1F6iZUKP9nN0YTFzOkZ6Y82sySaw0iW101f_a-7ZeQdI/edit) → `DECISIONS.md` → `ARCHITECTURE_CONSTITUTION.md` for coding constraints. Then claim a ClickUp task.
 
 **Before implementing:**
-1. Pick highest-priority open task in `src/docs/ai/ACTIVE_TASKS.md`.
+1. Claim the ClickUp task. When Kadin has told you to write to ClickUp, move status **to do → in progress**; otherwise note the claim in the PR and let a human or Clickup Manager move the task.
 2. Search `FEATURE_INDEX.md` + barrels (+ generated barrel inventory) — confirm it doesn't already exist.
 3. Game copy / caps / formulas → `GAME_RULES.md`. UI → `MOBILE_UX.md` + a11y rule.
-4. **Model escalation (pause once):** If the task matches a trigger below, **stop before coding** and tell the owner in 2–4 sentences: why a stronger model is safer, which TASK-###, and wait for “proceed” / model switch / narrower instructions. Do **not** pause again in the same chat after the owner says proceed.
+4. **Model escalation (pause once):** If the task matches a trigger below, **stop before coding** and tell the owner in 2–4 sentences: why a stronger model is safer, which ClickUp task, and wait for "proceed" / model switch / narrower instructions. Do **not** pause again in the same chat after the owner says proceed.
 
-   **Pause triggers (only these):** Architect work (new shared/ui, new store, new API contract, migration *strategy*); live DB/schema migrations or cascade delete/replace; multi-system refactors with irreversible data risk; task notes explicitly say “Architect” / “stronger model” / “owner ack before implement.”
+   **Pause triggers (only these):** Architect work (new shared/ui, new store, new API contract, migration *strategy*); live DB/schema migrations or cascade delete/replace; multi-system refactors with irreversible data risk; task notes explicitly say "Architect" / "stronger model" / "owner ack before implement."
 
-   **Do not pause for:** routine UI wiring, copy, BUILD_VALIDATION, extending an existing pattern, continuing a `partial` with clear remaining_work, or work the owner already scoped to this agent/model.
+   **Do not pause for:** routine UI wiring, copy, BUILD_VALIDATION, extending an existing pattern, continuing work with clear remaining items, or work the owner already scoped to this agent/model.
 
 **While implementing:**
-- `in-progress` → `done` when implementable AC met (build/tests/docs); else `partial` + `completed_work` / `remaining_work` / `follow_up_tasks`.
-- On archive: set `verification_status` (`pending-qa` if user-facing manual QA not run; see constitution Verification gate).
-- Move `done` blocks from `ACTIVE_TASKS.md` → `archive/TASK_QUEUE_DONE.md`; list `pending-qa` in `DEVELOPER_TASK_QUEUE.md`.
-- Do **not** create a commit per task. Mark `done` in the archive without committing. Before push: one batch commit whose subject lists every newly done `TASK-###` (space-separated; ranges like `TASK-530–534` do not count), then `npm run tasks:validate`. `related_files` paths must exist.
+- Branch: `bug|feat/<clickUpId>-short-slug`. **Never push `master`.** Never merge.
+- Move ClickUp status through **in progress → in review** when PR is opened (when Kadin has told you to write to ClickUp; otherwise note the status change in the PR); assign **Collin**.
+- Link ClickUp task ID in the PR. Optionally maintain TASK-### notes in `ACTIVE_TASKS.md` for engineering hygiene.
+- If using `ACTIVE_TASKS.md` notes: `in-progress` → `done` when implementable AC met (build/tests/docs); else `partial` + `completed_work` / `remaining_work` / `follow_up_tasks`. Move `done` blocks to `archive/TASK_QUEUE_DONE.md`. If you mark any TASK-### done, the commit subject must list each ID (CI `ai-task-verifier` enforces this).
 - Blocked / human-owned → `WAITING_TASKS.md`. Human-only steps → `DEVELOPER_TASK_QUEUE.md`.
 - User-facing: `BUILD_VALIDATION.md` + changelog.
 - New shared/ui file → ADR + update `scripts/shared-ui-allowlist.json` (`npm run tasks:validate-shared-ui`).
 - Barrel export changes → `npm run tasks:generate-index`.
-
-**New tasks:** `AI_REQUEST_TEMPLATE.md` → `ACTIVE_TASKS.md` (next TASK-###). Process: `AI_TASK_QUEUE.md`.
+- **Every fixed bug → regression test from its repro** when feasible.
 
 **Migrations:** Prefer Supabase MCP `apply_migration`; else Dashboard SQL. SQL in `sql/`. Codex: `realms-codex-data.mdc`.
 
-**Owner commands (on demand):** `/audit` → `/cleanup` (session / one TASK-###; pillars: remove clutter, meet feedback/AC, constitutional shared-first additions); `/global-audit` → `/debt` (repo inventory then apply). Authority: `PR_CHECKLIST.md` § Owner commands; `.cursor/commands/`.
+**Owner commands (on demand):** `/audit` → `/cleanup` (session); `/global-audit` → `/debt` (repo). Authority: `PR_CHECKLIST.md` § Owner commands; `.cursor/commands/`.
 
 # Feedback Processing
 
 1. Log raw feedback in `ALL_FEEDBACK_CLEAN.md`.
-2. Extract discrete items; cross-ref `ACTIVE_TASKS.md` / `WAITING_TASKS.md`.
-3. Add tasks or implement; summarize dispositions.
+2. Extract discrete items; cross-ref ClickUp tasks (and `ACTIVE_TASKS.md` / `WAITING_TASKS.md` if notes are used).
+3. File new tasks via Clickup Manager (or directly to ClickUp on Kadin's orders); implement; summarize dispositions.
