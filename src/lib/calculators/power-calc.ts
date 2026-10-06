@@ -84,7 +84,7 @@ export interface PowerEnergyAnalysis {
 export interface PowerCostResult {
   totalEnergy: number;
   totalTP: number;
-  /** Sum of per-part TP before `Math.floor` (for debug / advanced cost display). */
+  /** Sum of per-part TP before each instance is rounded up. */
   tpRaw: number;
   tpSources: string[];
   energyRaw: number;

@@ -66,6 +66,8 @@ export {
   POWER_COMPOSITION_STRUCTURE_LABELS,
   POWER_RANDOMIZE_DIE_SIDES,
   normalizePowerComposition,
+  isIndependentRandomizeFace,
+  expandLegacyRandomizeFace,
   isRandomizeDieComplete,
   powerCreatorSaveBlockReason,
   isPowerCompositionMechanicPart,

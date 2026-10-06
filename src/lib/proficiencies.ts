@@ -46,12 +46,13 @@ export function getTrainingPointLimit(
   return calculateTrainingPoints(lvl, abil, rules);
 }
 
+/** One proficiency instance, rounded up. 2.5 TP is 3. Callers add these integers. */
 export function calculateProficiencyTP(prof: CharacterProficiency): number {
   const base = prof.baseTP ?? 0;
   const op1 = (prof.op1TP ?? 0) * (prof.op1Level ?? 0);
   const op2 = (prof.op2TP ?? 0) * (prof.op2Level ?? 0);
   const op3 = (prof.op3TP ?? 0) * (prof.op3Level ?? 0);
-  return Math.floor(base + op1 + op2 + op3);
+  return Math.ceil(base + op1 + op2 + op3);
 }
 
 function normalize(s: unknown): string {

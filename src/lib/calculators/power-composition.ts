@@ -413,6 +413,35 @@ function fullVariantDoc(name: string | undefined, v: PowerVariantSpec): PowerDoc
 }
 
 /**
+ * A creator-saved independent face stores range, area, duration, and damage,
+ * including the empty values. An overlay face omits the fields it inherited.
+ */
+export function isIndependentRandomizeFace(v: PowerVariantSpec): boolean {
+  return v.range != null && v.area != null && v.duration != null && v.damage != null;
+}
+
+/**
+ * Old Randomize saves stored Shared plus a face delta. On read, that delta
+ * becomes a full face: Shared’s range, area, duration, damage, and parts, plus
+ * the face’s own parts. A face that already stores those four fields is unchanged,
+ * so Shared defaults are not priced twice.
+ */
+export function expandLegacyRandomizeFace(shared: PowerVariantSpec, v: PowerVariant): PowerVariant {
+  if (isIndependentRandomizeFace(v)) return v;
+  return {
+    ...v,
+    range: v.range ?? shared.range,
+    area: v.area ?? shared.area,
+    duration: v.duration ?? shared.duration,
+    damage: v.damage !== undefined ? v.damage : shared.damage,
+    parts: dedupeSavedParts([
+      ...stripCompositionParts(shared.parts),
+      ...stripCompositionParts(v.parts),
+    ]),
+  };
+}
+
+/**
  * Randomize face. Own range, area, duration, damage, and parts.
  * Action type is Shared’s, including Reaction. Shared parts are not copied on.
  */
@@ -710,7 +739,8 @@ export function resolvePowerComposition(
     !!chassis.isReaction,
     partsDb,
   );
-  const variants: ResolvedPowerVariant[] = composition.variants.map((v) => {
+  const variants: ResolvedPowerVariant[] = composition.variants.map((raw) => {
+    const v = structure === 'randomize' ? expandLegacyRandomizeFace(chassis, raw) : raw;
     const doc =
       structure === 'randomize'
         ? randomizeFaceDoc(name, chassis, v)

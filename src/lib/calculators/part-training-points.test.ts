@@ -3,7 +3,16 @@ import { PART_IDS } from '@/lib/id-constants';
 import { computePartTrainingPoints } from './part-training-points';
 
 describe('computePartTrainingPoints', () => {
-  it('sums base and option TP with floor on total', () => {
+  it('rounds a 2.5 TP instance up to 3', () => {
+    expect(
+      computePartTrainingPoints(
+        { id: 297, name: 'Elemental Damage', base_tp: 2, op_1_tp: 0.5 },
+        { op_1_lvl: 1 },
+      ),
+    ).toBe(3);
+  });
+
+  it('sums base and option TP and rounds the instance up', () => {
     expect(
       computePartTrainingPoints(
         { id: 1, name: 'Test', base_tp: 2, op_1_tp: 1, op_2_tp: 0, op_3_tp: 0 },

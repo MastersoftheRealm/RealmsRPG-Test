@@ -17,10 +17,10 @@ export interface CodexPartTpDef {
 }
 
 /**
- * Per-part Training Points before rounding. Single source of truth for the
- * base + option-level sum (and the technique-side Additional Damage opt1 floor)
- * shared by the power, technique and library cost paths. Do not ceil this raw
- * value; `computePartTrainingPoints` floors it (GAME_RULES "Rounding").
+ * Per-part Training Points before the instance is rounded up. Single source of
+ * truth for the base + option-level sum (and the technique-side Additional
+ * Damage opt1 floor) shared by the power, technique and library cost paths.
+ * `computePartTrainingPoints` rounds this instance up (GAME_RULES "Rounding").
  */
 export function computePartTrainingPointsRaw(
   def: Pick<CodexPartTpDef, 'id' | 'name' | 'base_tp' | 'op_1_tp' | 'op_2_tp' | 'op_3_tp'>,
@@ -48,8 +48,8 @@ export function computePartTrainingPointsRaw(
 
 /**
  * Shared TP calculation used by library PartData and calculator chip formatters.
- * Floors **this part** before it is added to a total (GAME_RULES "Rounding" —
- * the only round-down exception). Energy still ceils once at the end.
+ * Rounds **this part** up before it is added to a total (GAME_RULES "Rounding").
+ * A 2.5 TP instance is 3. Energy still ceils once at the end of the power.
  */
 export function computePartTrainingPoints(
   def: Pick<CodexPartTpDef, 'id' | 'name' | 'base_tp' | 'op_1_tp' | 'op_2_tp' | 'op_3_tp'>,
@@ -60,5 +60,5 @@ export function computePartTrainingPoints(
   },
   variant: PartTpVariant = 'power',
 ): number {
-  return Math.floor(computePartTrainingPointsRaw(def, levels, variant));
+  return Math.ceil(computePartTrainingPointsRaw(def, levels, variant));
 }

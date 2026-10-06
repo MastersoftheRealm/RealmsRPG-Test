@@ -25,6 +25,7 @@ import {
   powerCreatorSaveBlockReason,
   resolvePowerComposition,
   reverseDiscountApplied,
+  type PowerVariant,
 } from './power-composition';
 
 function part(p: Partial<PowerPart> & Pick<PowerPart, 'id' | 'name'>): PowerPart {
@@ -58,6 +59,17 @@ const partsDb: PowerPart[] = [
 ];
 
 const d10 = (type: string) => [{ amount: 1, size: 10, type }];
+
+/** A saved independent face always stores these, including when they are empty. */
+function independentFace(spec: PowerVariant): PowerVariant {
+  return {
+    range: { steps: 0 },
+    area: { type: 'none' as const, level: 1 },
+    duration: { type: 'instant' as const, value: 1 },
+    damage: [],
+    ...spec,
+  };
+}
 
 function rawEnergy(doc: PowerDocument, db: PowerPart[] = partsDb): number {
   return calculatePowerCosts(buildPowerPartsPayloadForCost(doc, db), db).energyRaw;
@@ -108,8 +120,8 @@ describe('resolvePowerComposition', () => {
     const res = resolvePowerComposition(burst, partsDb, { selectedVariantId: 'ice' })!;
     expect(res.energy).toBe(bolt.energy);
     expect(composedPowerDamage(res)).toEqual(d10('ice'));
-    // Snapshot Power Range at 3 steps floors to 1 TP. Each 1d10 Elemental Damage floors 3.5 to 3.
-    expect(res.tp).toBe(1 + 3 * 3);
+    // Snapshot Power Range at 3 steps is 1.5 TP → 2. Each 1d10 Elemental Damage is 3.5 → 4.
+    expect(res.tp).toBe(2 + 3 * 4);
     expect(res.tpSources.filter((s) => s.includes('Power Range'))).toHaveLength(1);
   });
 
@@ -402,14 +414,19 @@ describe('resolvePowerComposition', () => {
       composition: {
         structure: 'randomize',
         variants: [
-          { id: 'bad', label: 'Stunned 3', polarity: 'negative', parts: [stun] },
-          {
+          independentFace({
+            id: 'bad',
+            label: 'Stunned 3',
+            polarity: 'negative',
+            parts: [stun],
+          }),
+          independentFace({
             id: 'good',
             label: 'Buff three allies',
             parts: buffParts,
             range: buffRange,
             area: buffArea,
-          },
+          }),
         ],
         die: {
           sides: 10,
@@ -428,8 +445,8 @@ describe('resolvePowerComposition', () => {
     expect(stunBasic).toBeCloseTo(15);
     expect(good.energyRaw).toBeCloseTo(goodAlone);
     expect(good.doc.actionType).toBe('free');
-    expect(bad.doc.range).toBeUndefined();
-    expect(bad.doc.area).toBeUndefined();
+    expect(bad.doc.range).toEqual({ steps: 0 });
+    expect(bad.doc.area).toEqual({ type: 'none', level: 1 });
     expect(bad.energyRaw).toBeCloseTo(-drawbackReductionForAction(stunBasic, 1.5));
     expect(bad.energyRaw).toBeCloseTo(-5);
     expect(res.shared!.rawEnergy).toBeGreaterThan(good.energyRaw);
@@ -450,13 +467,13 @@ describe('resolvePowerComposition', () => {
       composition: {
         structure: 'randomize',
         variants: [
-          { id: 'slow', label: 'Slow', parts: [{ id: 901, name: 'Slow' }] },
-          {
+          independentFace({ id: 'slow', label: 'Slow', parts: [{ id: 901, name: 'Slow' }] }),
+          independentFace({
             id: 'blind',
             label: 'Blinded',
             polarity: 'negative',
             parts: [{ id: 902, name: 'Blinded' }],
-          },
+          }),
         ],
         die: { sides: 4, faces: ['slow', 'slow', 'slow', 'blind'] },
       },
@@ -737,14 +754,14 @@ describe('resolvePowerComposition', () => {
         composition: {
           structure: 'randomize',
           variants: [
-            { id: 'plain', label: 'Plain', parts: [{ id: 901, name: 'Slow' }] },
-            {
+            independentFace({ id: 'plain', label: 'Plain', parts: [{ id: 901, name: 'Slow' }] }),
+            independentFace({
               id: 'bad',
               label: 'Bad',
               polarity: 'negative',
               range: { steps: 1 },
               parts: [{ id: 902, name: 'Blinded' }],
-            },
+            }),
           ],
           die: { sides: 2, faces: ['plain', 'bad'] },
         },
@@ -1123,12 +1140,12 @@ describe('resolvePowerComposition', () => {
           composition: {
             structure: 'randomize',
             variants: [
-              {
+              independentFace({
                 id: 'bad',
                 label: 'Bad',
                 polarity: 'negative',
                 parts: [{ id: 920, name: 'Drawback' }],
-              },
+              }),
             ],
             die: { sides: 2, faces: ['bad', 'bad'] },
           },
@@ -1223,6 +1240,83 @@ describe('resolvePowerComposition', () => {
     expect(light.energy).toBe(5);
     expect(necrotic.energy).toBe(6);
     expect(res.energy).toBe(necrotic.energy);
+  });
+
+  it('expands a legacy overlay Randomize on read into independent faces', () => {
+    const doc: PowerDocument = {
+      name: 'Old coin',
+      actionType: 'quick',
+      range: { steps: 2 },
+      duration: { type: 'rounds', value: 2 },
+      parts: [{ id: 900, name: 'Immobile' }],
+      composition: {
+        structure: 'randomize',
+        variants: [
+          {
+            id: 'good',
+            label: 'Good',
+            polarity: 'positive',
+            parts: [{ id: 901, name: 'Slow', op_1_lvl: 1 }],
+          },
+          { id: 'bad', label: 'Bad', polarity: 'negative' },
+        ],
+        die: { sides: 2, faces: ['good', 'bad'] },
+      },
+    };
+    const res = resolvePowerComposition(doc, partsDb)!;
+    const good = res.variants.find((v) => v.id === 'good')!;
+    const bad = res.variants.find((v) => v.id === 'bad')!;
+    expect(good.doc.parts?.map((p) => p.id)).toEqual([900, 901]);
+    expect(bad.doc.parts?.map((p) => p.id)).toEqual([900]);
+    expect(good.doc.range).toEqual({ steps: 2 });
+    expect(bad.doc.duration).toEqual({ type: 'rounds', value: 2 });
+    expect(good.doc.actionType).toBe('quick');
+    expect(bad.doc.actionType).toBe('quick');
+    const expandedGood = rawEnergy({
+      actionType: 'quick',
+      range: { steps: 2 },
+      duration: { type: 'rounds', value: 2 },
+      parts: [
+        { id: 900, name: 'Immobile' },
+        { id: 901, name: 'Slow', op_1_lvl: 1 },
+      ],
+    });
+    const expandedBad = rawEnergy({
+      actionType: 'basic',
+      isReaction: false,
+      range: { steps: 2 },
+      duration: { type: 'rounds', value: 2 },
+      parts: [{ id: 900, name: 'Immobile' }],
+    });
+    expect(good.energyRaw).toBeCloseTo(expandedGood);
+    expect(bad.energyRaw).toBeCloseTo(-drawbackReductionForAction(expandedBad, 1.25));
+    expect(res.energy).toBeGreaterThan(0);
+    expect(res.shared?.rawEnergy).toBeGreaterThan(0);
+    expect(res.structureEnergy).toBeCloseTo((good.energyRaw + bad.energyRaw) / 2);
+
+    const alreadyIndependent = resolvePowerComposition(
+      {
+        ...doc,
+        composition: {
+          structure: 'randomize',
+          variants: [
+            {
+              id: 'good',
+              label: 'Good',
+              parts: [{ id: 901, name: 'Slow', op_1_lvl: 1 }],
+              range: { steps: 0 },
+              area: { type: 'none', level: 1 },
+              duration: { type: 'instant', value: 1 },
+              damage: [],
+            },
+          ],
+          die: { sides: 2, faces: ['good', 'good'] },
+        },
+      },
+      partsDb,
+    )!;
+    expect(alreadyIndependent.variants[0]?.doc.parts?.map((p) => p.id)).toEqual([901]);
+    expect(alreadyIndependent.variants[0]?.doc.range).toEqual({ steps: 0 });
   });
 
   it('names the Randomize save block when a variant has no face', () => {

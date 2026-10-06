@@ -130,10 +130,10 @@ describe('calculatePowerCosts', () => {
     const costs = calculatePowerCosts(payload, [elementalDamagePart]);
     // 1d6 -> opt1 level 1 -> 3 base + 1 option = 4 EN per row, 3 rows = 12
     expect(costs.totalEnergy).toBe(12);
-    // T6 / M6 — GAME_RULES "Rounding": floor each part, then sum.
-    // Each Elemental Damage row is base_tp 2 + op_1_tp 0.5 × 1 = 2.5 → floor 2.
-    // Three parts → 6. Do not ceil the combined 7.5 to 8.
-    expect(costs.totalTP).toBe(6);
+    // GAME_RULES "Rounding": round each part up, then sum.
+    // Each Elemental Damage row is base_tp 2 + op_1_tp 0.5 × 1 = 2.5 → 3.
+    // Three parts → 9. Do not ceil the combined 7.5 to 8.
+    expect(costs.totalTP).toBe(9);
     expect(costs.totalTP).not.toBe(8);
   });
 
@@ -177,7 +177,7 @@ describe('derivePowerDisplay', () => {
     );
 
     expect(display.energy).toBe(12);
-    expect(display.tp).toBe(6);
+    expect(display.tp).toBe(9);
   });
 
   it('dedupes mechanic parts when promoted columns and payload.parts both exist (Menace)', () => {

@@ -1,5 +1,7 @@
 import { describe, expect, it } from 'vitest';
+import type { PowerPart } from '@/hooks';
 import { actionIsOverride, durationIsOverride, rangeIsOverride } from './power-creator-from-shared';
+import { compositionInitFromSaved } from './use-power-creator-composition';
 import { normalizePowerComposition } from '@/lib/calculators';
 import {
   buildCompositionPayload,
@@ -311,5 +313,69 @@ describe('Override on an empty Shared value (86e3kfkbg, 86e3kfkbp)', () => {
     expect(
       showsFieldOverride(rangeIsOverride(live), isOverlayFieldForced(flags, 'v1', 'area')),
     ).toBe(false);
+  });
+});
+
+describe('legacy Randomize overlay', () => {
+  it('loads Shared plus each face delta as a full face that saves independently', () => {
+    const catalog = [
+      { id: '900', name: 'Immobile', category: 'General', mechanic: false },
+      { id: '901', name: 'Slow', category: 'General', mechanic: false },
+    ] as PowerPart[];
+    const shared = emptyTabForm();
+    shared.actionType = 'quick';
+    shared.range = { steps: 2 };
+    shared.duration = { ...shared.duration, type: 'rounds', value: 2 };
+    shared.selectedParts = [
+      {
+        part: catalog[0]!,
+        op_1_lvl: 0,
+        op_2_lvl: 0,
+        op_3_lvl: 0,
+        applyDuration: false,
+        selectedCategory: 'any',
+      },
+    ] as typeof shared.selectedParts;
+
+    const init = compositionInitFromSaved(
+      {
+        structure: 'randomize',
+        variants: [
+          {
+            id: 'good',
+            label: 'Good',
+            polarity: 'positive',
+            parts: [{ id: 901, name: 'Slow', op_1_lvl: 1 }],
+          },
+          { id: 'bad', label: 'Bad', polarity: 'negative' },
+        ],
+        die: { sides: 2, faces: ['good', 'bad'] },
+      },
+      shared,
+      catalog,
+    );
+
+    const good = init.stored.variants.find((v) => v.id === 'good');
+    const bad = init.stored.variants.find((v) => v.id === 'bad');
+    expect(good?.form.range.steps).toBe(2);
+    expect(good?.form.duration.type).toBe('rounds');
+    expect(good?.form.selectedParts.map((p) => p.part.id)).toEqual(['900', '901']);
+    expect(bad?.form.selectedParts.map((p) => p.part.id)).toEqual(['900']);
+
+    const payload = buildCompositionPayload({
+      structure: 'randomize',
+      reverseEnabled: false,
+      shared,
+      variants: init.stored.variants,
+      reverse: emptyTabForm(),
+      dieSides: init.dieSides,
+      dieFaces: init.dieFaces,
+    });
+    const savedGood = payload?.variants.find((v) => v.id === 'good');
+    expect(savedGood?.range).toEqual({ steps: 2 });
+    expect(savedGood?.area).toBeDefined();
+    expect(savedGood?.duration?.type).toBe('rounds');
+    expect(savedGood?.damage).toEqual([]);
+    expect(savedGood?.parts?.map((p) => p.id)).toEqual([900, 901]);
   });
 });

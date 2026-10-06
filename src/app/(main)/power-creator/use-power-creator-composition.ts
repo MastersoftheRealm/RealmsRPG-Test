@@ -10,6 +10,7 @@ import { useCallback, useMemo, useRef, useState } from 'react';
 import type { PowerPart } from '@/hooks';
 import {
   POWER_RANDOMIZE_DIE_SIDES,
+  expandLegacyRandomizeFace,
   normalizePowerComposition,
   type PowerComposition,
   type PowerCompositionStructure,
@@ -30,6 +31,7 @@ import {
   pruneOverlayFlags,
   setOverlayField,
   specToTabForm,
+  tabFormToSpec,
   spreadDieFaces,
   variantHighWater,
   type CollectedCompositionForms,
@@ -93,7 +95,12 @@ export function compositionInitFromSaved(
       overlayFlags: {},
     };
   }
-  const variants: PowerVariantTab[] = composition.variants.map((v) => ({
+  const sharedSpec = tabFormToSpec(topForm);
+  const loadedVariants =
+    composition.structure === 'randomize'
+      ? composition.variants.map((v) => expandLegacyRandomizeFace(sharedSpec, v))
+      : composition.variants;
+  const variants: PowerVariantTab[] = loadedVariants.map((v) => ({
     id: v.id,
     label: v.label,
     polarity: v.polarity ?? 'positive',
