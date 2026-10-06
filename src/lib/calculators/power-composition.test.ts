@@ -123,7 +123,9 @@ describe('resolvePowerComposition', () => {
     expect(res.energy).toBe(bolt.energy);
     expect(composedPowerDamage(res)).toEqual(d10('ice'));
     // Power Range at 3 steps: base 0.5 + option 1, each rounded up → 2. Each 1d10: base 2 + option 1.5, each rounded up → 4.
+    // Fire, ice, and lightning are three proficiencies of Elemental Damage, so they are not one repeated part.
     expect(res.tp).toBe(2 + 3 * 4);
+    expect(res.tpSources.filter((s) => s.includes('Elemental Damage'))).toHaveLength(3);
     expect(res.tpSources.filter((s) => s.includes('Power Range'))).toHaveLength(1);
   });
 
@@ -569,6 +571,13 @@ describe('resolvePowerComposition', () => {
     );
     expect(resolved.variants[0]!.rangeDelta).toBe(0);
     expect(resolved.energy).toBe(33);
+    expect(resolved.tp).toBe(11);
+    expect(resolved.tpSources).toEqual([
+      '2 TP: Restrained',
+      '3 TP: Elemental Damage (ice) (Opt1 2)',
+      '2 TP: Power Range (Opt1 1)',
+      '4 TP: Slow (Opt1 2)',
+    ]);
     expect(resolved.energy).toBe(
       finalizePowerEnergy(sharedOnly + resolved.variants[0]!.energyRaw, true),
     );
@@ -1333,6 +1342,11 @@ describe('resolvePowerComposition', () => {
     }
     expect(new Set(bolt.variants.map((v) => v.energy))).toEqual(new Set([bolt.energy]));
     expect(bolt.energy).toBe(6);
+    expect(bolt.tp).toBe(12);
+    expect(bolt.tpSources.filter((s) => s.includes('Power Range'))).toEqual([
+      '3 TP: Power Range (Opt1 3)',
+    ]);
+    expect(bolt.tpSources.filter((s) => s.includes('Elemental Damage'))).toHaveLength(3);
     expect(bolt.energy).toBe(
       finalizePowerEnergy(
         (bolt.shared?.rawEnergy ?? 0) + Math.max(...bolt.variants.map((v) => v.energyRaw)),
@@ -1725,6 +1739,11 @@ describe('resolvePowerComposition', () => {
     expect(light.energy).toBe(5);
     expect(necrotic.energy).toBe(6);
     expect(res.energy).toBe(necrotic.energy);
+    expect(res.tp).toBe(6);
+    expect(res.tpSources).toEqual([
+      '3 TP: Light Damage (light) (Opt1 1)',
+      '3 TP: Poison or Necrotic Damage (necrotic) (Opt1 1)',
+    ]);
   });
 
   it('expands a legacy overlay Randomize on read into independent faces', () => {
@@ -1906,6 +1925,167 @@ describe('resolvePowerComposition', () => {
     expect(derivePowerDisplay(doc, db, { selectedVariantId: 'b' })?.range).toBe('3 spaces');
   });
 
+  it('counts a repeated part once, at its highest Training Points, across tabs', () => {
+    const db = loadRepoCodexParts();
+    const slow = (level: number) => ({ id: 329, name: 'Slow', op_1_lvl: level });
+    const repeated = resolvePowerComposition(
+      {
+        name: 'Repeated Slow',
+        actionType: 'basic',
+        parts: [slow(0)],
+        composition: {
+          structure: 'choice',
+          variants: [
+            { id: 'high', label: 'High', parts: [slow(2)] },
+            { id: 'mid', label: 'Mid', parts: [slow(1)] },
+          ],
+        },
+      },
+      db,
+    )!;
+    const highestOnly = resolvePowerComposition(
+      {
+        name: 'Highest Slow',
+        actionType: 'basic',
+        parts: [slow(2)],
+        composition: { structure: 'choice', variants: [{ id: 'high', label: 'High' }] },
+      },
+      db,
+    )!;
+    expect(repeated.tp).toBe(highestOnly.tp);
+    expect(repeated.tpSources.filter((s) => s.includes('Slow'))).toEqual(['4 TP: Slow (Opt1 2)']);
+    const summed = 2 + 3 + 4;
+    expect(repeated.tp).toBeLessThan(summed);
+  });
+
+  it('counts fire damage once across tabs and still counts ice on its own', () => {
+    const db = loadRepoCodexParts();
+    const fire = (size: number) => [{ amount: 1, size, type: 'fire' }];
+    const repeated = resolvePowerComposition(
+      {
+        name: 'Fires',
+        actionType: 'basic',
+        damage: fire(4),
+        composition: {
+          structure: 'choice',
+          variants: [
+            { id: 'big', label: 'Big', damage: fire(10) },
+            { id: 'small', label: 'Small', damage: fire(6) },
+            { id: 'ice', label: 'Ice', damage: [{ amount: 1, size: 10, type: 'ice' }] },
+          ],
+        },
+      },
+      db,
+    )!;
+    const elemental = repeated.tpSources.filter((s) => s.includes('Elemental Damage'));
+    expect(elemental).toContain('4 TP: Elemental Damage (fire) (Opt1 3)');
+    expect(elemental).toContain('4 TP: Elemental Damage (ice) (Opt1 3)');
+    expect(elemental).toHaveLength(2);
+    expect(repeated.tp).toBe(8);
+  });
+
+  it('counts a repeated part once across Randomize faces, at the highest instance', () => {
+    const db = loadRepoCodexParts();
+    const stun = (level: number) => ({ id: 341, name: 'Stun', op_1_lvl: level });
+    const repeated = resolvePowerComposition(
+      {
+        name: 'Two stuns',
+        actionType: 'basic',
+        composition: {
+          structure: 'randomize',
+          variants: [
+            independentFace({ id: 'low', label: 'Stun 1', parts: [stun(0)] }),
+            independentFace({ id: 'high', label: 'Stun 3', parts: [stun(2)] }),
+          ],
+          die: { sides: 2, faces: ['low', 'high'] },
+        },
+      },
+      db,
+    )!;
+    const highestOnly = resolvePowerComposition(
+      {
+        name: 'One stun',
+        actionType: 'basic',
+        composition: {
+          structure: 'randomize',
+          variants: [independentFace({ id: 'high', label: 'Stun 3', parts: [stun(2)] })],
+          die: { sides: 2, faces: ['high', 'high'] },
+        },
+      },
+      db,
+    )!;
+    expect(repeated.tp).toBe(highestOnly.tp);
+    expect(repeated.tp).toBe(4);
+    expect(repeated.tpSources.filter((s) => s.includes('Stun'))).toEqual(['4 TP: Stun (Opt1 2)']);
+  });
+
+  it('an unassigned Randomize face adds no TP and no EN', () => {
+    const db = loadRepoCodexParts();
+    const stun = { id: 341, name: 'Stun', op_1_lvl: 2 };
+    const assigned: PowerDocument = {
+      name: 'Wild Buff',
+      actionType: 'free',
+      parts: [{ id: 317, name: 'Regenerate' }],
+      range: { steps: 4 },
+      composition: {
+        structure: 'randomize',
+        variants: [
+          independentFace({
+            id: 'bad',
+            label: 'Stunned 3',
+            polarity: 'negative',
+            parts: [stun],
+          }),
+          independentFace({
+            id: 'good',
+            label: 'Buff three allies',
+            parts: [
+              { id: 307, name: 'Heal' },
+              { id: 235, name: 'Add Multiple Targets', op_1_lvl: 1 },
+            ],
+            range: { steps: 1 },
+            area: { type: 'sphere', level: 1 },
+          }),
+        ],
+        die: {
+          sides: 10,
+          faces: ['bad', 'bad', 'good', 'good', 'good', 'good', 'good', 'good', 'good', 'good'],
+        },
+      },
+    };
+    const withExtra: PowerDocument = {
+      ...assigned,
+      composition: {
+        ...assigned.composition!,
+        variants: [
+          ...assigned.composition!.variants,
+          independentFace({
+            id: 'extra',
+            label: 'Regenerate',
+            parts: [{ id: 317, name: 'Regenerate' }],
+          }),
+        ],
+      },
+    };
+    const base = resolvePowerComposition(assigned, db)!;
+    const extra = resolvePowerComposition(withExtra, db)!;
+    expect(base.tp).toBe(9);
+    expect(base.tpSources).toEqual([
+      '4 TP: Stun (Opt1 2)',
+      '2 TP: Heal',
+      '2 TP: Add Multiple Targets (Opt1 1)',
+      '1 TP: Power Range',
+    ]);
+    expect(extra.tp).toBe(base.tp);
+    expect(extra.energy).toBe(base.energy);
+    expect(extra.structureEnergy).toBeCloseTo(base.structureEnergy);
+    expect(extra.tpSources.some((s) => s.includes('Regenerate'))).toBe(false);
+    expect(composedPowerSavedParts(extra).some((p) => p.name === 'Regenerate')).toBe(false);
+    expect(powerCreatorSaveBlockReason({ composition: withExtra.composition })).toContain(
+      'Regenerate is not on any die result. It adds no Energy and no Training Points.',
+    );
+  });
+
   it('names the Randomize save block when a variant has no face', () => {
     const reason = powerCreatorSaveBlockReason({
       composition: {
@@ -1917,7 +2097,9 @@ describe('resolvePowerComposition', () => {
         die: { sides: 2, faces: ['a', 'a'] },
       },
     });
-    expect(reason).toContain('Alt B has no die face');
+    expect(reason).toContain(
+      'Alt B is not on any die result. It adds no Energy and no Training Points.',
+    );
     expect(
       powerCreatorSaveBlockReason({
         composition: { structure: 'alternate', variants: [{ id: 'a', label: 'A' }] },

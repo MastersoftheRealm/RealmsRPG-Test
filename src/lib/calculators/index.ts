@@ -70,6 +70,7 @@ export {
   expandLegacyRandomizeFace,
   isRandomizeDieComplete,
   powerCreatorSaveBlockReason,
+  randomizeFacesNotOnDieWarning,
   isPowerCompositionMechanicPart,
   powerCompositionHelpText,
   resolvePowerComposition,

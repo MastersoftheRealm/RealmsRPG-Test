@@ -7,6 +7,7 @@
 
 import { Plus, X } from 'lucide-react';
 import {
+  Alert,
   Button,
   Card,
   Checkbox,
@@ -21,6 +22,7 @@ import {
   POWER_COMPOSITION_STRUCTURES,
   POWER_COMPOSITION_STRUCTURE_LABELS,
   POWER_RANDOMIZE_DIE_SIDES,
+  randomizeFacesNotOnDieWarning,
   type PowerCompositionStructure,
 } from '@/lib/calculators';
 import { PowerCreatorHelp } from './power-creator-help';
@@ -97,6 +99,10 @@ export function PowerCreatorCompositionBand({
 
   const showTabs = structure !== 'none' || reverseEnabled;
   const isVariantTab = !!activeVariant && structure !== 'none';
+  const activeFaceOffDie =
+    structure === 'randomize' && activeVariant && !state.dieFaces.includes(activeVariant.id)
+      ? randomizeFacesNotOnDieWarning([activeVariant.label.trim() || activeVariant.id])
+      : null;
 
   return (
     <Card className="mb-6 p-4 shadow-md md:p-6">
@@ -164,6 +170,11 @@ export function PowerCreatorCompositionBand({
             }
           />
           <p className="mt-2 text-sm text-text-muted">{tabHint(structure, activeTabId)}</p>
+          {activeFaceOffDie ? (
+            <Alert variant="warning" className="mt-3" role="status">
+              {activeFaceOffDie}
+            </Alert>
+          ) : null}
         </div>
       ) : null}
 
@@ -218,6 +229,9 @@ function RandomizeDieFields({ state }: { state: PowerCreatorCompositionState }) 
   ];
   const unassigned = state.dieFaces.filter((f) => !state.variants.some((v) => v.id === f)).length;
   const faceless = state.variants.filter((v) => !state.dieFaces.includes(v.id));
+  const facelessWarning = randomizeFacesNotOnDieWarning(
+    faceless.map((v) => v.label.trim() || v.id),
+  );
   return (
     <fieldset className="mt-4 min-w-0 border-t border-border-light pt-4">
       <legend className="sr-only">Randomize die</legend>
@@ -251,11 +265,10 @@ function RandomizeDieFields({ state }: { state: PowerCreatorCompositionState }) 
           to save.
         </p>
       ) : null}
-      {faceless.length > 0 ? (
-        <p className="mt-2 text-sm text-warning-fg" role="status">
-          {faceless.map((v) => v.label.trim() || v.id).join(', ')}{' '}
-          {faceless.length === 1 ? 'has' : 'have'} no die face. Give every variant a face to save.
-        </p>
+      {facelessWarning ? (
+        <Alert variant="warning" className="mt-3" role="status">
+          {facelessWarning}
+        </Alert>
       ) : null}
     </fieldset>
   );

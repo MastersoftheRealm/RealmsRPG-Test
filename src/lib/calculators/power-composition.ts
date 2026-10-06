@@ -112,7 +112,7 @@ const POWER_ALTERNATE_HELP =
   'Each variant is a complete power (action, range, area, duration, damage, and parts). When you use the power you pick one variant and pay that variant’s energy, which may cost less, the same, or more than the others.';
 
 const POWER_RANDOMIZE_HELP =
-  'Each face is its own effect and shares only the action type. Shared holds the action type plus range, area, and duration defaults. Those defaults pre-fill a new face and add no energy. Parts and damage are added on each face. Changing Shared later does not change a face that already exists. A good outcome costs its full energy, including that action. A bad outcome subtracts half the drawback, priced as a basic action on that face alone, divided by the action-type multiplier, including Reaction. A slower action removes more and a quicker action removes less. Basic stays half. Each face is weighted by its chance. Once the power has positive energy, it costs at least 1 EN. If nothing is positive, Energy is a dash.';
+  'Each face is its own effect and shares only the action type. Shared holds the action type plus range, area, and duration defaults. Those defaults pre-fill a new face and add no energy. Parts and damage are added on each face. Changing Shared later does not change a face that already exists. A good outcome costs its full energy, including that action. A bad outcome subtracts half the drawback, priced as a basic action on that face alone, divided by the action-type multiplier, including Reaction. A slower action removes more and a quicker action removes less. Basic stays half. Each face is weighted by its chance. A face that is not on any die result adds no Energy and no Training Points. Once the power has positive energy, it costs at least 1 EN. If nothing is positive, Energy is a dash.';
 
 const POWER_REVERSE_ACTION_NOTE =
   'A drawback on a power that benefits you or an ally uses the Reverse tab’s own range, area, and duration (Shared’s, until you override them). A longer range adds only the extra range cost, once; a shorter range refunds the difference on that tab. That difference is priced with the tab’s area and action. Its reduction is half that energy divided by the action-type multiplier, including Reaction, so a slower action removes more and a quicker action removes less. Basic stays half. It cannot be nullified or reduced by you or an ally.';
@@ -249,6 +249,20 @@ export function normalizePowerComposition(raw: unknown): PowerComposition | null
   };
 }
 
+/**
+ * Warning when one or more Randomize variants are not named by any die face.
+ * Those faces add no Energy and no Training Points.
+ */
+export function randomizeFacesNotOnDieWarning(labels: readonly string[]): string | null {
+  const names = labels.map((label) => label.trim()).filter((label) => label.length > 0);
+  if (names.length === 0) return null;
+  const list = names.join(', ');
+  if (names.length === 1) {
+    return `${list} is not on any die result. It adds no Energy and no Training Points.`;
+  }
+  return `${list} are not on any die result. They add no Energy and no Training Points.`;
+}
+
 /** Why Save is disabled for an incomplete Randomize die or an empty Reverse drawback. */
 export function powerCreatorSaveBlockReason(input: {
   composition?: PowerComposition | null | undefined;
@@ -274,8 +288,8 @@ export function powerCreatorSaveBlockReason(input: {
         );
       }
       if (faceless.length > 0) {
-        const names = faceless.map((v) => v.label).join(', ');
-        bits.push(faceless.length === 1 ? `${names} has no die face` : `${names} have no die face`);
+        const warning = randomizeFacesNotOnDieWarning(faceless.map((v) => v.label));
+        if (warning) bits.push(warning);
       }
     }
     parts.push(`${bits.join(', ')}. Assign every face and give every variant a face to save.`);
@@ -716,6 +730,35 @@ function proficiencyPartsFor(doc: PowerDocument, partsDb: PowerPart[]): Proficie
   });
 }
 
+/**
+ * Same part, same damage type. Option level is not part of the key: a repeated
+ * part keeps the instance with the highest Training Points (Kadin, Oct 6, 11:48 AM ET).
+ * Fire and ice stay separate. A higher option level wins a tie, matching coverage.
+ */
+function compositionTpInstanceKey(prof: {
+  kind: string;
+  refId?: string | undefined;
+  name: string;
+  damageType?: string | null | undefined;
+}): string {
+  const damage = String(prof.damageType ?? '')
+    .trim()
+    .toLowerCase();
+  const id =
+    String(prof.refId ?? '')
+      .trim()
+      .toLowerCase() || prof.name.trim().toLowerCase();
+  return `${prof.kind}:${id}:${damage}`;
+}
+
+function optionLevelSum(prof: {
+  op1Level?: number | undefined;
+  op2Level?: number | undefined;
+  op3Level?: number | undefined;
+}): number {
+  return (prof.op1Level ?? 0) + (prof.op2Level ?? 0) + (prof.op3Level ?? 0);
+}
+
 function computeCompositionTp(
   docs: PowerDocument[],
   partsDb: PowerPart[],
@@ -733,11 +776,28 @@ function computeCompositionTp(
     armor: [],
     powerPartsDb: partsDb,
   });
+  const highest = new Map<string, (typeof required)[number]>();
+  for (const prof of required) {
+    if (calculateProficiencyTP(prof) <= 0) continue;
+    const key = compositionTpInstanceKey(prof);
+    const existing = highest.get(key);
+    if (!existing) {
+      highest.set(key, prof);
+      continue;
+    }
+    const existingTp = calculateProficiencyTP(existing);
+    const nextTp = calculateProficiencyTP(prof);
+    const higherTp = nextTp > existingTp;
+    const sameTpHigherLevel =
+      nextTp === existingTp && optionLevelSum(prof) > optionLevelSum(existing);
+    if (higherTp || sameTpHigherLevel) {
+      highest.set(key, prof);
+    }
+  }
   let tp = 0;
   const tpSources: string[] = [];
-  for (const prof of required) {
+  for (const prof of highest.values()) {
     const partTp = calculateProficiencyTP(prof);
-    if (partTp <= 0) continue;
     tp += partTp;
     let src = `${partTp} TP: ${prof.name}`;
     if (prof.damageType) src += ` (${prof.damageType})`;
@@ -904,12 +964,14 @@ export function resolvePowerComposition(
   const energyBeforeReverse = finalizePowerEnergy(structureEnergy, hasPositiveEnergy);
   const energy = finalizePowerEnergy(structureEnergy - (reverse?.discount ?? 0), hasPositiveEnergy);
 
+  const pricedVariants =
+    structure === 'randomize' ? variants.filter((v) => v.faces.length > 0) : variants;
   const tpDocs =
     structure === 'randomize'
-      ? [...variants.map((v) => v.doc), ...(reverse ? [reverse.doc] : [])]
+      ? [...pricedVariants.map((v) => v.doc), ...(reverse ? [reverse.doc] : [])]
       : [
           ...(shared ? [shared.doc] : []),
-          ...variants.map((v) => v.doc),
+          ...pricedVariants.map((v) => v.doc),
           ...(reverse ? [reverse.doc] : []),
         ];
   const { tp, tpSources } = computeCompositionTp(tpDocs, partsDb);
@@ -951,15 +1013,18 @@ export function selectedResolvedVariant(
 
 /**
  * Parts listed for categories and filters. Choice, Modify, and Alternate include
- * Shared. Randomize lists each face and Reverse only; Shared parts are defaults
- * for converting good faces and are not a saved part list.
+ * Shared. Randomize lists each face that is on the die, and Reverse. Shared
+ * parts are defaults for converting good faces and are not a saved part list.
+ * A face that is not on any die result is left out.
  */
 export function composedPowerSavedParts(
   res: PowerCompositionResolution,
 ): NonNullable<PowerDocument['parts']> {
+  const variants =
+    res.structure === 'randomize' ? res.variants.filter((v) => v.faces.length > 0) : res.variants;
   return dedupeSavedParts([
     ...(res.structure === 'randomize' ? [] : (res.shared?.doc.parts ?? [])),
-    ...res.variants.flatMap((v) => v.doc.parts ?? []),
+    ...variants.flatMap((v) => v.doc.parts ?? []),
     ...(res.reverse?.doc.parts ?? []),
   ]);
 }
@@ -967,18 +1032,21 @@ export function composedPowerSavedParts(
 /**
  * Parts the character must be proficient in (feed as `CharacterPower.parts` to
  * `buildRequiredProficiencies`). Choice, Modify, and Alternate: shared + every
- * variant + Reverse. Randomize: every face + Reverse (Shared defaults are not
- * a cast). The chip does not change this. Requirements match the power's
- * training-point total: what the power can do, including every Alternate version.
+ * variant + Reverse. Randomize: each face that is on the die + Reverse (Shared
+ * defaults are not a cast, and a face left off the die is not either). The chip
+ * does not change this. Requirements match the power's training-point total:
+ * what the power can do, including every Alternate version.
  */
 export function composedPowerProficiencyParts(
   res: PowerCompositionResolution,
   partsDb: PowerPart[],
 ): ProficiencyPart[] {
+  const variants =
+    res.structure === 'randomize' ? res.variants.filter((v) => v.faces.length > 0) : res.variants;
   const docs =
     res.structure === 'randomize'
-      ? [...res.variants.map((v) => v.doc), res.reverse?.doc]
-      : [res.shared?.doc, ...res.variants.map((v) => v.doc), res.reverse?.doc];
+      ? [...variants.map((v) => v.doc), res.reverse?.doc]
+      : [res.shared?.doc, ...variants.map((v) => v.doc), res.reverse?.doc];
   return docs
     .filter((d): d is PowerDocument => !!d)
     .flatMap((d) => proficiencyPartsFor(d, partsDb));
@@ -1005,12 +1073,14 @@ export function composedPowerDamage(res: PowerCompositionResolution): PowerDocum
   return sharedRows;
 }
 
-/** Damage that counts as the Damage category. Randomize counts each face, not Shared. */
+/** Damage that counts as the Damage category. Randomize counts each face on the die, not Shared and not a face left off the die. */
 export function composedPowerCategoryDamage(
   res: PowerCompositionResolution,
 ): NonNullable<PowerDocument['damage']> {
   if (res.structure !== 'randomize') return composedPowerDamage(res) ?? [];
-  return res.variants.flatMap((variant) => variant.doc.damage ?? []);
+  return res.variants
+    .filter((variant) => variant.faces.length > 0)
+    .flatMap((variant) => variant.doc.damage ?? []);
 }
 
 /** Empty when the action is basic (multiplier 1). */
