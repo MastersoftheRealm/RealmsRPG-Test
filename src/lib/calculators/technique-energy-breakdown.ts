@@ -8,7 +8,7 @@ import type { TechniquePart } from '@/hooks/codex-types';
 import { findByIdOrName } from '@/lib/id-constants';
 import { dedupeSavedParts } from '@/lib/game/dedupe-saved-parts';
 import { formatEnergyNumber, formatPercentagePartModifier } from './power-energy-breakdown';
-import { finalizePowerEnergy } from './power-calc';
+import { finalizePowerEnergy, formatEnergyStat } from './power-calc';
 import { type TechniqueCalcSectionId, type TechniquePartPayload } from './technique-calc';
 
 export type { TechniqueCalcSectionId };
@@ -269,7 +269,7 @@ function buildTotalsGroup(analysis: TechniqueEnergyAnalysis): TechniqueAdvancedC
 
   rows.push({
     label: 'Energy Cost',
-    value: hasCostedParts ? formatEnergyNumber(totalEnergy) : '—',
+    value: hasCostedParts ? formatEnergyNumber(totalEnergy) : String(formatEnergyStat(0)),
   });
 
   return { title: 'Combined Energy', rows };

@@ -1,6 +1,7 @@
 'use client';
 
 import type { ReactNode } from 'react';
+import { formatEnergyStat } from '@/lib/calculators';
 import type { ColumnValue } from '@/components/patterns/list/grid-list-row-types';
 import { ListHeader } from '@/components/patterns/list/list-header';
 import { SectionHeader } from '@/components/patterns/chrome/section-header';
@@ -38,7 +39,7 @@ export function powerListFactCells(
     (col) => col.key !== 'name',
   );
   const values: Record<string, string | number> = {
-    energy: row.energyCost ? row.energyCost : '-',
+    energy: formatEnergyStat(row.energyCost ?? 0),
     action: row.actionType ?? '-',
     duration: row.duration ?? '-',
     area: row.area ?? '-',
@@ -212,7 +213,7 @@ export function TechniquesListSection({
                     { key: 'action', value: row.actionType ?? '-', align: 'center' as const },
                     {
                       key: 'energy',
-                      value: row.energyCost ? row.energyCost : '-',
+                      value: formatEnergyStat(row.energyCost ?? 0),
                       align: 'center' as const,
                     },
                     { key: 'weapon', value: row.weaponName ?? '-', align: 'center' as const },

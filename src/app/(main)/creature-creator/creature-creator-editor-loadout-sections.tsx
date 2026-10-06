@@ -4,6 +4,7 @@
 
 'use client';
 
+import { formatEnergyStat } from '@/lib/calculators';
 import { formatListCellLabel } from '@/lib/utils';
 import { GridListRow, ListHeader, InnateToggle, ValueStepper } from '@/components/patterns';
 import { resolveListRowThumbnail } from '@/lib/list-row-image';
@@ -220,7 +221,7 @@ export function CreatureCreatorEditorLoadoutSections({
                     columns={[
                       {
                         key: 'Energy',
-                        value: power.energy ? power.energy : '-',
+                        value: formatEnergyStat(power.energy ?? 0),
                         align: 'center' as const,
                       },
                       { key: 'Action', value: power.action ?? '-', align: 'center' as const },
@@ -316,7 +317,7 @@ export function CreatureCreatorEditorLoadoutSections({
                     columns={[
                       {
                         key: 'Energy',
-                        value: tech.energy ? tech.energy : '-',
+                        value: formatEnergyStat(tech.energy ?? 0),
                         align: 'center' as const,
                       },
                       { key: 'Weapon', value: tech.weapon ?? '-', align: 'center' as const },

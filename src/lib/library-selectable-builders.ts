@@ -27,6 +27,7 @@ import { deriveAbilityRequirementFromProperties } from '@/lib/game/weapon-attack
 import {
   derivePowerDisplay,
   deriveStructuredDuration,
+  formatEnergyStat,
   formatPowerDamage,
 } from '@/lib/calculators/power-calc';
 import type { PowerDocument } from '@/lib/calculators/power-calc';
@@ -294,13 +295,19 @@ export function derivePowerTechniqueBudgetFacts(
   }
 }
 
+function asEnergyNumber(energy: number | string | null | undefined): number {
+  if (typeof energy === 'number') return Number.isFinite(energy) ? energy : 0;
+  const n = Number(energy);
+  return Number.isFinite(n) ? n : 0;
+}
+
 /** Guided L2/L3 budget columns: Action Type | Energy | Training Points. */
 export function getPowerTechniqueBudgetColumns(facts: PowerTechniqueBudgetFacts): ColumnValue[] {
   return [
     { key: 'action', value: facts.actionType || '—', align: 'center' },
     {
       key: 'energy',
-      value: facts.energy ? String(facts.energy) : '—',
+      value: String(formatEnergyStat(facts.energy ?? 0)),
       align: 'center',
     },
     { key: 'tp', value: String(facts.tp), align: 'center' },
@@ -479,7 +486,7 @@ export function getItemColumns(
   if (itemType === 'power') {
     const values: Record<string, string> = powerDisplay
       ? {
-          Energy: powerDisplay.energy ? String(powerDisplay.energy) : '-',
+          Energy: String(formatEnergyStat(asEnergyNumber(powerDisplay.energy))),
           Action: powerDisplay.actionType || '-',
           Duration: powerDisplay.duration || '-',
           Damage: powerDisplay.damage || '-',
@@ -488,7 +495,7 @@ export function getItemColumns(
       : (() => {
           const power = item as UserPower;
           return {
-            Energy: '-',
+            Energy: String(formatEnergyStat(0)),
             Action: formatSavedActionTypeForDisplay(power.actionType, power.isReaction),
             Duration: '-',
             Area: power.area?.type ? capitalize(power.area.type) : '-',
@@ -505,13 +512,13 @@ export function getItemColumns(
     const values: Record<string, string> = techniqueDisplay
       ? {
           Action: techniqueDisplay.actionType || '-',
-          Energy: techniqueDisplay.energy ? String(techniqueDisplay.energy) : '-',
+          Energy: String(formatEnergyStat(techniqueDisplay.energy ?? 0)),
           Attack: techniqueDisplay.weaponName || '-',
           'Training Pts': String(techniqueDisplay.tp),
         }
       : {
           Action: formatActionTypeForDisplay(technique.actionType ?? ''),
-          Energy: '-',
+          Energy: String(formatEnergyStat(0)),
           Attack: attackModeColumnLabel(
             deriveTechniqueAttackMode({
               attackMode: technique.attackMode,

@@ -10,7 +10,11 @@ import type { DisplayItem, ItemStat } from '@/types/items';
 import type { UserPower, UserTechnique, UserItem } from '@/hooks/use-user-library';
 import type { CreatureFeat as CodexCreatureFeat, ItemProperty } from '@/hooks/codex-types';
 import type { PowerPart, TechniquePart } from '@/hooks';
-import { derivePowerDisplay, formatPowerDamage } from '@/lib/calculators/power-calc';
+import {
+  derivePowerDisplay,
+  formatEnergyStat,
+  formatPowerDamage,
+} from '@/lib/calculators/power-calc';
 import { composedPowerDamage } from '@/lib/calculators/power-composition';
 import { powerVariantsDetailSection, withPowerReverseNote } from '@/lib/power-variant-chips';
 import { deriveTechniqueDisplay } from '@/lib/calculators/technique-calc';
@@ -176,7 +180,7 @@ export function transformUserPowerToDisplayItem(
     : power.description;
 
   const stats: ItemStat[] = [
-    { label: 'Energy', value: display.energy ? display.energy : '-' },
+    { label: 'Energy', value: formatEnergyStat(display.energy ?? 0) },
     { label: 'Action', value: display.actionType },
     { label: 'Damage', value: damageStr || '-' },
     { label: 'Area', value: display.area && display.area !== '-' ? display.area : '-' },
@@ -245,7 +249,7 @@ export function transformUserTechniqueToDisplayItem(
   );
 
   const stats: ItemStat[] = [
-    { label: 'Energy', value: display.energy },
+    { label: 'Energy', value: formatEnergyStat(display.energy ?? 0) },
     { label: 'Action', value: display.actionType },
     { label: 'Attack', value: display.weaponName || '-' },
     { label: 'Training Pts', value: display.tp },

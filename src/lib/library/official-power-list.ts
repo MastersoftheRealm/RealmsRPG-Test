@@ -6,7 +6,11 @@ import type { ChipData } from '@/components/patterns';
 import type { ColumnValue } from '@/components/patterns/list/grid-list-row';
 import type { PowerPart } from '@/hooks/codex-types';
 import type { LibraryPower } from '@/types/library';
-import { derivePowerDisplay, formatPowerDamage } from '@/lib/calculators/power-calc';
+import {
+  derivePowerDisplay,
+  formatEnergyStat,
+  formatPowerDamage,
+} from '@/lib/calculators/power-calc';
 import {
   composedPowerDamage,
   composedPowerSavedParts,
@@ -151,7 +155,7 @@ export function officialPowerDetailSections(row: OfficialPowerRow) {
 export function officialPowerRowColumns(row: OfficialPowerRow): ColumnValue[] {
   const values: Record<string, string | number> = {
     category: row.category || '-',
-    energy: row.energy ? row.energy : '-',
+    energy: formatEnergyStat(typeof row.energy === 'number' ? row.energy : 0),
     action: row.action || '-',
     duration: row.duration || '-',
     range: row.range || '-',

@@ -14,6 +14,7 @@ import {
   type PowerCalcSectionId,
 } from './power-mechanic-constants';
 import {
+  formatEnergyStat,
   formatPowerRangeFromSteps,
   type PowerEnergyAnalysis,
   type PowerEnergyLine,
@@ -271,7 +272,7 @@ function buildTotalsGroup(analysis: PowerEnergyAnalysis): PowerAdvancedCalcGroup
 
   rows.push({
     label: 'Energy Cost',
-    value: hasCostedParts ? formatEnergyNumber(totalEnergy) : '—',
+    value: hasCostedParts ? formatEnergyNumber(totalEnergy) : String(formatEnergyStat(0)),
   });
 
   return { title: 'Combined Energy', rows };
