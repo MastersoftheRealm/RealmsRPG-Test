@@ -6,6 +6,13 @@ This document is intentionally focused on architecture, runtime behavior, data f
 
 ---
 
+## 0) Local environment
+
+- **Node:** Use **Node 24.x** (`package.json` `engines`). CI and Vercel match this runtime.
+- **Lockfile:** Regenerate `package-lock.json` only with Node 24’s npm (`npm install` after dependency or `overrides` changes). Older npm versions can rewrite platform optional-deps metadata (`libc` on Linux binaries, dev flags) and produce noisy unrelated diffs.
+
+---
+
 ## 1) Stack and Runtime Model
 
 - Framework: Next.js App Router (`src/app`) with React 19 and TypeScript.
