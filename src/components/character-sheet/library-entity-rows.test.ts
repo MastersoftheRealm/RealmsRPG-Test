@@ -61,7 +61,7 @@ describe('mapPowerRows / mapTechniqueRows — Energy is rightSlot only (TASK-502
     expect(row.rightSlot).toBeTruthy();
   });
 
-  it('a power with no costed parts shows a dash instead of a 1 EN spend control', () => {
+  it('a power with no energy shows a dash instead of a 1 EN spend control', () => {
     const powers: CharacterPower[] = [
       { id: 'innate', name: 'Innate', cost: 0, innate: true } as CharacterPower,
     ];

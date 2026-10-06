@@ -859,6 +859,12 @@ export function composedPowerDamage(res: PowerCompositionResolution): PowerDocum
   return sharedRows;
 }
 
+/** Empty when the action is basic (multiplier 1). */
+export function reverseActionDivisorNote(actionMultiplier: number): string {
+  if (Math.abs(actionMultiplier - 1) <= 1e-9) return '';
+  return `, divided by the action multiplier ${formatEnergyIntermediate(actionMultiplier)}`;
+}
+
 /** How much of the Reverse discount actually changes the published energy. */
 export function reverseDiscountApplied(res: PowerCompositionResolution): {
   applied: number;
@@ -910,10 +916,7 @@ export function powerCompositionEnergyLines(res: PowerCompositionResolution): st
     const { applied, limitedByFloor } = reverseDiscountApplied(res);
     const drawback = formatEnergyIntermediate(res.reverse.rawEnergy);
     const reduction = formatEnergyIntermediate(res.reverse.discount);
-    const actionNote =
-      Math.abs(res.reverse.actionMultiplier - 1) > 1e-9
-        ? `, divided by the action multiplier ${formatEnergyIntermediate(res.reverse.actionMultiplier)}`
-        : '';
+    const actionNote = reverseActionDivisorNote(res.reverse.actionMultiplier);
     lines.push(
       limitedByFloor
         ? `Reverse drawback ${drawback} EN → −${formatEnergyIntermediate(applied)} EN (1 EN floor; the reduction is ${reduction} EN${actionNote})`

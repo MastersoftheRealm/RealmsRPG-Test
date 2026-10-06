@@ -5,14 +5,14 @@
  */
 
 import type { PowerPart } from '@/hooks';
-import type {
-  PowerComposition,
-  PowerCompositionStructure,
-  PowerVariantOverrideField,
-  PowerVariantPolarity,
-  PowerVariantSpec,
+import {
+  powerSpecHasContent,
+  type PowerComposition,
+  type PowerCompositionStructure,
+  type PowerVariantOverrideField,
+  type PowerVariantPolarity,
+  type PowerVariantSpec,
 } from '@/lib/calculators';
-import { powerSpecHasContent } from '@/lib/calculators';
 import { dedupeSavedParts } from '@/lib/game/dedupe-saved-parts';
 import {
   emptyPowerCreatorFormState,

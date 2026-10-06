@@ -11,6 +11,7 @@ import {
   formatPowerDamage,
   POWER_COMPOSITION_STRUCTURE_LABELS,
   formatEnergyIntermediate,
+  reverseActionDivisorNote,
   reverseDiscountApplied,
   type PowerCompositionResolution,
   type ResolvedPowerVariant,
@@ -175,10 +176,7 @@ export function withPowerReverseNote(
   const { applied, limitedByFloor } = reverseDiscountApplied(res);
   const drawback = formatEnergyIntermediate(res.reverse.rawEnergy);
   const reductionAmount = formatEnergyIntermediate(res.reverse.discount);
-  const actionNote =
-    Math.abs(res.reverse.actionMultiplier - 1) > 1e-9
-      ? `, divided by the action multiplier ${formatEnergyIntermediate(res.reverse.actionMultiplier)}`
-      : '';
+  const actionNote = reverseActionDivisorNote(res.reverse.actionMultiplier);
   const reduction = limitedByFloor
     ? `reduces the cost by ${formatEnergyIntermediate(applied)} EN. The drawback reduction is ${reductionAmount} EN${actionNote}, and the 1 EN floor means only ${formatEnergyIntermediate(applied)} EN comes off`
     : `reduces the cost by ${reductionAmount} EN (50% of the drawback's ${drawback} EN${actionNote})`;
