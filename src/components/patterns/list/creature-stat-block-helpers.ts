@@ -166,7 +166,14 @@ export function partsToChips(
     const opt3 = typeof part === 'object' ? Number(part.op_3_lvl ?? 0) : 0;
     const tp = codexPart
       ? computePartTrainingPoints(
-          codexPart,
+          {
+            id: codexPart.id,
+            name: codexPart.name ?? partName,
+            base_tp: codexPart.base_tp,
+            op_1_tp: codexPart.op_1_tp,
+            op_2_tp: codexPart.op_2_tp,
+            op_3_tp: codexPart.op_3_tp,
+          },
           { op_1_lvl: opt1, op_2_lvl: opt2, op_3_lvl: opt3 },
           variant,
         )
