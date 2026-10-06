@@ -72,6 +72,11 @@ interface ChipDataFields {
   onSelect?: (() => void) | undefined;
   /** Accessible name for `onSelect` (e.g. `Set Speedy to Level 2`). */
   selectAriaLabel?: string | undefined;
+  /**
+   * Stable identity for the React key. Category and current state must not be part of the key,
+   * or activating the chip remounts it and focus drops to the document body.
+   */
+  chipKey?: string | undefined;
   /** Unavailable control — muted, not clickable. Description is the tip. */
   disabled?: boolean | undefined;
   /** Current selection among a chip group (`aria-current`). */

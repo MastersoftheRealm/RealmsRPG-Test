@@ -62,3 +62,11 @@ export function formatGridListChipLabel(chip: ChipData): string {
   const levelSuffix = chip.level != null && chip.level > 0 ? ` (Lv.${chip.level})` : '';
   return `${chip.name}${levelSuffix}`;
 }
+
+/**
+ * React key for a grid-list chip. Ignores category so a chip that becomes current
+ * (category `success`) stays the same DOM node and keeps keyboard focus.
+ */
+export function gridListChipReactKey(chip: ChipData, index: number): string {
+  return `${chip.chipKey ?? chip.name}-${index}`;
+}

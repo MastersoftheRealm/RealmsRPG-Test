@@ -1,5 +1,6 @@
 'use client';
 
+import { useLayoutEffect, useRef } from 'react';
 import { DescriptorChip, ExpandableChip } from '@/components/ui';
 import { DescriptorChipWithTip } from '@/components/patterns/help/descriptor-chip-with-tip';
 import { InfoTippy } from '@/components/patterns/help/info-tippy';
@@ -52,17 +53,30 @@ export function GridListChip({
   );
 }
 
+/** Variant id (or name) of the select chip whose activation should keep focus after re-render. */
+let pendingSelectChipFocus: string | null = null;
+
 function GridListSelectChip({ chip }: { chip: ChipData }) {
   const variant = descriptorChipVariantForGridList(chip.category ?? 'default');
   const tip = chip.description?.trim();
   const showTip = Boolean(tip && tip !== 'No additional details.');
+  const buttonRef = useRef<HTMLButtonElement>(null);
+  const focusId = chip.chipKey ?? chip.name;
+
+  useLayoutEffect(() => {
+    if (pendingSelectChipFocus !== focusId || !buttonRef.current) return;
+    buttonRef.current.focus();
+    pendingSelectChipFocus = null;
+  });
 
   return (
     <span className="inline-flex max-w-full items-center gap-0.5">
       <button
+        ref={buttonRef}
         type="button"
         onClick={(e) => {
           e.stopPropagation();
+          pendingSelectChipFocus = focusId;
           chip.onSelect?.();
         }}
         className="hit-area-dense inline-flex items-center rounded-md focus-visible:ring-2 focus-visible:ring-primary-outline-border focus-visible:outline-none"
