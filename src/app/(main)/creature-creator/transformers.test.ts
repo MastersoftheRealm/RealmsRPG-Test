@@ -34,6 +34,22 @@ describe('transformUserPowerToDisplayItem variants (86e3kfkc2)', () => {
     expect(power.variantLabel).toMatch(/Choice/);
     expect(power.variantChips?.map((chip) => chip.name)).toEqual(['Fire', 'Ice']);
   });
+
+  it('shows a partless power as its saved quick action and 2 rounds', () => {
+    const item = transformUserPowerToDisplayItem(
+      {
+        id: 'glance',
+        docId: 'glance',
+        name: 'Glance',
+        parts: [],
+        actionType: 'quick',
+        duration: { type: 'rounds', value: 2 },
+      } as UserPower,
+      [],
+    );
+    expect(item.stats.find((stat) => stat.label === 'Action')?.value).toBe('Quick action');
+    expect(item.details?.find((detail) => detail.label === 'Duration')?.value).toBe('2 Rounds');
+  });
 });
 
 describe('customEquipmentItemToCreatureArmament (DEV-V-016-T027 / TASK-816)', () => {

@@ -197,11 +197,14 @@ function PowerCreatorWorkspace({
     selectedAdvancedParts: ws.selectedAdvancedParts,
   };
   const overlayTabId = ws.variants.activeTabId;
+  const badFaceActionLocked =
+    ws.variants.structure === 'randomize' && ws.variants.activeVariant?.polarity === 'negative';
   const actionLocked =
     onOverlayTab &&
     (overlayTabId === REVERSE_TAB_ID ||
       ws.variants.structure === 'modify' ||
-      ws.variants.structure === 'choice');
+      ws.variants.structure === 'choice' ||
+      badFaceActionLocked);
   const inheritance: PowerCreatorInheritance | null = onOverlayTab
     ? {
         action: {

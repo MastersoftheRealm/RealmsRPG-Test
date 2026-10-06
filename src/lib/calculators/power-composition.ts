@@ -8,13 +8,14 @@
 
 import type { PowerPart } from '@/hooks/codex-types';
 import type { CharacterPower } from '@/types';
-import { findByIdOrName, PART_IDS } from '@/lib/id-constants';
+import { PART_IDS } from '@/lib/id-constants';
 import { normalizeAttackMode, type AttackMode } from '@/lib/attack-mode';
 import { dedupeSavedParts } from '@/lib/game/dedupe-saved-parts';
 import { formatCost } from '@/lib/game/creator-constants';
 import { buildMechanicParts } from './mechanic-builder';
 import { buildRequiredProficiencies, calculateProficiencyTP } from '@/lib/proficiencies';
 import {
+  analyzePowerEnergy,
   buildPowerPartsPayloadForCost,
   calculatePowerCosts,
   derivePlainPowerDisplay,
@@ -452,6 +453,16 @@ export function formatEnergyIntermediate(value: number): string {
   return String(rounded);
 }
 
+/**
+ * Action-type multipliers come from Codex in 0.125 steps (long is 0.875).
+ * Energy intermediates stay at 2 decimals; this keeps the multiplier exact.
+ */
+function formatActionMultiplier(value: number): string {
+  const rounded = Math.round(value * 1000) / 1000;
+  if (Math.abs(rounded) < 0.0005) return '0';
+  return String(rounded);
+}
+
 function rangeSteps(range: PowerDocument['range']): number {
   return range?.steps ?? 0;
 }
@@ -459,6 +470,7 @@ function rangeSteps(range: PowerDocument['range']): number {
 /**
  * Normal action-type multiplier from the codex part (quick / free / long).
  * Basic, or a missing part, is 1. Reaction is not included.
+ * The percentage product is `analyzePowerEnergy` — the same part-cost formula as every other energy.
  */
 function actionTypeEnergyMultiplier(actionType: string | undefined, partsDb: PowerPart[]): number {
   const type = actionType && actionType.length > 0 ? actionType : 'basic';
@@ -468,17 +480,7 @@ function actionTypeEnergyMultiplier(actionType: string | undefined, partsDb: Pow
     partsDb,
     action: { type, isReaction: false },
   });
-  let multiplier = 1;
-  for (const row of rows) {
-    const def = findByIdOrName(partsDb, { id: row.id, name: row.name });
-    if (!def?.percentage) continue;
-    const contribution =
-      (def.base_en || 0) +
-      (def.op_1_en || 0) * (row.op_1_lvl || 0) +
-      (def.op_2_en || 0) * (row.op_2_lvl || 0) +
-      (def.op_3_en || 0) * (row.op_3_lvl || 0);
-    if (contribution > 1e-9) multiplier *= contribution;
-  }
+  const multiplier = analyzePowerEnergy(rows, partsDb).percAll;
   return multiplier > 1e-9 ? multiplier : 1;
 }
 
@@ -678,11 +680,13 @@ export function resolvePowerComposition(
             ? rawEnergyOf(doc, partsDb) - sharedRaw
             : display.energy;
     const energy =
-      structure === 'modify' || structure === 'choice'
-        ? publishContribution(energyRaw)
-        : structure === 'randomize'
-          ? publishSigned(energyRaw)
-          : display.energy;
+      structure === 'choice'
+        ? finalizePowerEnergy(sharedRaw + energyRaw)
+        : structure === 'modify'
+          ? publishContribution(energyRaw)
+          : structure === 'randomize'
+            ? publishSigned(energyRaw)
+            : display.energy;
     return {
       id: v.id,
       label: v.label,
@@ -754,7 +758,10 @@ export function resolvePowerComposition(
     };
   }
 
-  const benefitDocs = [...(shared ? [shared.doc] : []), ...variants.map((v) => v.doc)];
+  const benefitDocs = [
+    ...(shared ? [shared.doc] : []),
+    ...variants.filter((v) => v.polarity !== 'negative').map((v) => v.doc),
+  ];
   const hasPositiveEnergy =
     structureEnergy > 1e-9 ||
     benefitDocs.some(
@@ -862,7 +869,7 @@ export function composedPowerDamage(res: PowerCompositionResolution): PowerDocum
 /** Empty when the action is basic (multiplier 1). */
 export function reverseActionDivisorNote(actionMultiplier: number): string {
   if (Math.abs(actionMultiplier - 1) <= 1e-9) return '';
-  return `, divided by the action multiplier ${formatEnergyIntermediate(actionMultiplier)}`;
+  return `, divided by the action multiplier ${formatActionMultiplier(actionMultiplier)}`;
 }
 
 /** How much of the Reverse discount actually changes the published energy. */
@@ -900,6 +907,9 @@ export function powerCompositionEnergyLines(res: PowerCompositionResolution): st
   });
   if (res.structure === 'randomize' && res.shared) {
     lines.unshift(`Shared chassis: ${formatEnergyIntermediate(res.shared.rawEnergy)} EN`);
+  }
+  if (res.structure === 'choice' && res.shared) {
+    lines.unshift(`Shared: ${formatEnergyIntermediate(res.shared.rawEnergy)} EN`);
   }
   const rule: Partial<Record<PowerCompositionResolution['structure'], string>> = {
     choice: 'Choice pays the most expensive portion',

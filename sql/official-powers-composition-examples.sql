@@ -5,6 +5,8 @@
 -- Owner-approved in the "Power composition model" plan (slice 5). Applied 2026-09-24 via Supabase MCP.
 -- Only these three rows. Do not bulk-edit user powers.
 --
+-- Energy preview (live codex part costs, 2026-09-24). Those arrows are that day's preview, not targets.
+-- The 2026-10-06 recomputation is in the PR. Do not re-run this file.
 -- Energy preview (live codex part costs, 2026-09-24):
 --   Elemental Burst  range 9, 1d10 fire|ice|lightning   legacy ≈ 8–9 (3×1d10 + split − Choice 12) → 8 (range 1.5 + 1d10 6)
 --   Elemental Bolt   range 12, 1d6 ice|fire|lightning   legacy ≈ 6  (3×1d6 + split − Choice 9)   → 6 (range 2 + 1d6 4)

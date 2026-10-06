@@ -107,7 +107,8 @@ describe('buildPowerVariantChips', () => {
     expect(section.chips.map((c) => c.name)).toEqual(['Fire', 'Ice']);
     const text = withPowerReverseNote('Blast.', res);
     expect(text.startsWith('Blast. Reverse Effects (1d10 Fire)')).toBe(true);
-    expect(text).toContain("drawback's");
+    expect(text).toContain("half the drawback's");
+    expect(text).not.toMatch(/50%/);
     expect(text).not.toContain('â');
     expect(text).toContain('cannot be nullified');
     expect(withPowerReverseNote('Blast.', undefined)).toBe('Blast.');

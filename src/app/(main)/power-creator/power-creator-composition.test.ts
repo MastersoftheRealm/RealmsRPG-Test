@@ -145,6 +145,48 @@ describe('action type stays on Shared', () => {
     expect(reversePayload?.reverse?.overrides ?? []).not.toContain('action');
   });
 
+  it('drops a stored action override on a Randomize bad face and keeps a good face’s action', () => {
+    const shared = emptyTabForm();
+    const flags = setOverlayField(
+      setOverlayField({}, 'bad', 'action', true),
+      'good',
+      'action',
+      true,
+    );
+    const payload = buildCompositionPayload({
+      structure: 'randomize',
+      reverseEnabled: false,
+      shared,
+      variants: [
+        {
+          id: 'good',
+          label: 'Good',
+          polarity: 'positive',
+          description: '',
+          form: pieceWithQuickAction(),
+        },
+        {
+          id: 'bad',
+          label: 'Bad',
+          polarity: 'negative',
+          description: '',
+          form: pieceWithQuickAction(),
+        },
+      ],
+      reverse: emptyTabForm(),
+      dieSides: 2,
+      dieFaces: ['good', 'bad'],
+      overlayFlags: flags,
+    });
+    const good = payload?.variants.find((v) => v.id === 'good');
+    const bad = payload?.variants.find((v) => v.id === 'bad');
+    expect(good?.actionType).toBe('quick');
+    expect(good?.isReaction).toBe(true);
+    expect(bad?.actionType).toBeUndefined();
+    expect(bad?.isReaction).toBeUndefined();
+    expect(bad?.overrides ?? []).not.toContain('action');
+  });
+
   it('keeps an Alternate variant’s own action type', () => {
     const payload = buildCompositionPayload({
       structure: 'alternate',

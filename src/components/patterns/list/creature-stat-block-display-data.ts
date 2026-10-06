@@ -1,6 +1,7 @@
 import { resolveListRowThumbnail } from '@/lib/list-row-image';
 import type { EntityPowerRow, EntityTechniqueRow } from './entity-library-sections';
 import { derivePowerDisplay, formatPowerDamage } from '@/lib/calculators/power-calc';
+import { libraryItemToPowerDocument } from '@/lib/library-selectable-builders';
 import { deriveTechniqueDisplay } from '@/lib/calculators/technique-calc';
 import {
   composedPowerDamageLabel,
@@ -146,22 +147,25 @@ export function buildPowersForDisplay(
     };
 
     const derived = derivePowerDisplay(
-      {
-        name: baseName,
-        description: baseDescription,
-        parts: objectPartsOnly(parts),
-        damage: Array.isArray(damage) ? damage : undefined,
-        actionType: enriched?.actionType,
-        isReaction: enriched?.isReaction,
-        ...(enriched?.composition
-          ? {
-              range: enriched.range,
-              area: enriched.area,
-              duration: enriched.duration,
-              composition: enriched.composition,
-            }
-          : {}),
-      },
+      enriched
+        ? libraryItemToPowerDocument({
+            name: baseName,
+            description: baseDescription,
+            parts: enriched.parts,
+            damage: enriched.damage,
+            actionType: enriched.actionType,
+            isReaction: enriched.isReaction,
+            range: enriched.range,
+            area: enriched.area,
+            duration: enriched.duration,
+            composition: enriched.composition,
+          })
+        : {
+            name: baseName,
+            description: baseDescription,
+            parts: objectPartsOnly(parts),
+            damage: Array.isArray(damage) ? damage : undefined,
+          },
       powerPartsDb,
     );
     const composition = derived.composition;

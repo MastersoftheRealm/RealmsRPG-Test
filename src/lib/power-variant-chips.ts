@@ -179,7 +179,7 @@ export function withPowerReverseNote(
   const actionNote = reverseActionDivisorNote(res.reverse.actionMultiplier);
   const reduction = limitedByFloor
     ? `reduces the cost by ${formatEnergyIntermediate(applied)} EN. The drawback reduction is ${reductionAmount} EN${actionNote}, and the 1 EN floor means only ${formatEnergyIntermediate(applied)} EN comes off`
-    : `reduces the cost by ${reductionAmount} EN (50% of the drawback's ${drawback} EN${actionNote})`;
+    : `reduces the cost by ${reductionAmount} EN (half the drawback's ${drawback} EN${actionNote})`;
   const note = `Reverse Effects${list ? ` (${list})` : ''}: always applies and cannot be nullified or reduced by you or an ally; ${reduction}.`;
   return base ? `${base} ${note}` : note;
 }

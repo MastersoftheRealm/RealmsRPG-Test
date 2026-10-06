@@ -15,6 +15,7 @@ import {
   formatEnergyStat,
   formatPowerDamage,
 } from '@/lib/calculators/power-calc';
+import { libraryItemToPowerDocument } from '@/lib/library-selectable-builders';
 import { composedPowerDamage } from '@/lib/calculators/power-composition';
 import { powerVariantsDetailSection, withPowerReverseNote } from '@/lib/power-variant-chips';
 import { deriveTechniqueDisplay } from '@/lib/calculators/technique-calc';
@@ -150,25 +151,7 @@ export function transformUserPowerToDisplayItem(
   power: UserPower,
   partsDb: PowerPart[],
 ): DisplayItem {
-  const display = derivePowerDisplay(
-    {
-      name: power.name,
-      description: power.description,
-      parts: power.parts || [],
-      damage: power.damage,
-      ...(power.composition
-        ? {
-            actionType: power.actionType,
-            isReaction: power.isReaction,
-            range: power.range,
-            area: power.area,
-            duration: power.duration,
-            composition: power.composition,
-          }
-        : {}),
-    },
-    partsDb,
-  );
+  const display = derivePowerDisplay(libraryItemToPowerDocument(power), partsDb);
   const damageStr = formatPowerDamage(
     display.composition ? composedPowerDamage(display.composition) : power.damage,
   );

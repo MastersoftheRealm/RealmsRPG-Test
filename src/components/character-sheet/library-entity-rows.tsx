@@ -259,20 +259,21 @@ export function mapPowerRows(
       .isReaction;
     const libraryItem = (power as CharacterPower & { libraryItem?: LibraryPower | undefined })
       .libraryItem;
-    const composedDoc =
-      power.composition && libraryItem
-        ? libraryItemToPowerDocument({ ...libraryItem, composition: power.composition })
-        : undefined;
     const display = derivePowerDisplay(
-      composedDoc ??
-        libraryItemToPowerDocument({
-          name: power.name,
-          description: power.description,
-          parts: power.parts,
-          damage: Array.isArray(power.damage) ? power.damage : undefined,
-          actionType: power.actionType,
-          isReaction: powerIsReaction,
-        }),
+      libraryItem
+        ? libraryItemToPowerDocument({
+            ...libraryItem,
+            ...(power.composition ? { composition: power.composition } : {}),
+          })
+        : libraryItemToPowerDocument({
+            name: power.name,
+            description: power.description,
+            parts: power.parts,
+            damage: Array.isArray(power.damage) ? power.damage : undefined,
+            // A sheet row stores the display label ("Quick Action"), not `quick`.
+            // Passing that label makes the resolver print Basic action.
+            isReaction: powerIsReaction,
+          }),
       ctx.powerPartsDb as PowerPart[],
       { selectedVariantId: power.selectedVariantId },
     );
@@ -348,8 +349,11 @@ export function mapPowerRows(
         damageStr
       );
 
-    const actionDisplay =
-      display.actionType || formatSavedActionTypeForDisplay(power.actionType, powerIsReaction);
+    const actionDisplay = libraryItem
+      ? display.actionType
+      : power.actionType
+        ? formatSavedActionTypeForDisplay(power.actionType, powerIsReaction)
+        : display.actionType;
 
     const columns: ColumnValue[] = [
       { key: 'action', value: actionDisplay, align: 'center' },
@@ -361,10 +365,11 @@ export function mapPowerRows(
       },
       {
         key: 'duration',
-        value:
-          display.duration && display.duration !== '-'
-            ? display.duration
-            : formatDurationCompact(power.duration),
+        value: libraryItem
+          ? display.duration
+          : power.duration
+            ? formatDurationCompact(power.duration)
+            : display.duration,
         align: 'center',
       },
     ];

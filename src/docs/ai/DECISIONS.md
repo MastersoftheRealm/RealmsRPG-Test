@@ -52,9 +52,11 @@ Game runner = **RM (Realm Master)** — never GM.
 
 Kadin confirmed these. They clarify the Oct 4–5 dash and minimum-energy bullets above.
 
-- The 1 EN floor applies only when positive energy is reduced below 1. No parts, only 0 EN parts, quick-only, duration-only, and No Attack alone are a dash (powers, techniques, empowered techniques, and the Energy Cost row).
-- Modify, Choice, and Reverse: action type is the only locked mechanic (it stays on Shared, or on the benefit for Reverse). Range, area, and duration start as Shared and can be overridden, including none or Instant. Each tab’s parts are priced at that tab’s footprint. A larger range costs extra only on that tab’s parts. A smaller footprint prices those parts cheaper. Choice pays Shared plus its most expensive option. Alternate keeps its own action type.
-- Reverse and Randomize bad faces: reduction = ½ · drawback ÷ (normal action-type multiplier). Basic stays half. Taking longer to harm yourself or others refunds more energy. This direction is final. Randomize good faces stay on the existing extra-cost formula.
+- The 1 EN floor applies only when positive energy is reduced below 1. No parts, only 0 EN parts, quick-only, duration-only, No Attack alone, and a Randomize power with an empty Shared chassis and only bad faces are a dash (powers, techniques, empowered techniques, and the Energy Cost row). Drawback parts do not turn the floor on by themselves.
+- Modify, Choice, and Reverse: action type is the only locked mechanic (it stays on Shared, or on the benefit for Reverse). Randomize bad faces lock action type to Shared the same way. Range, area, and duration start as Shared and can be overridden, including none or Instant. Each tab’s parts are priced at that tab’s footprint. A larger range costs extra only on that tab’s parts. A smaller footprint prices those parts cheaper. Choice pays Shared plus its most expensive option. A Choice chip shows Shared plus that option. Alternate and Randomize good faces keep their own action type.
+- Reverse and Randomize bad faces: reduction = ½ · drawback ÷ (normal action-type multiplier). Basic stays half. Taking longer to harm yourself or others refunds more energy. This direction is final. The multiplier is the action-type part only (quick, free, long). Reaction is left out. Breakdowns show that multiplier at its Codex value (0.875, not 0.88). Energy intermediates stay at most 2 decimals. Randomize good faces stay on the existing extra-cost formula.
+- `overrides` on a variant or on Reverse lists the creator-forced fields (`action`, `attack`, `range`, `area`, `duration`, `damage`). Explicit none or Instant stays stored when that flag is set.
+- Published energy is Codex part costs plus this math. Figures such as Freezing Wind, Elemental Burst, Elemental Bolt, and Judgement are results of that calculation on the current Codex rows. They are not targets.
 
 ---
 

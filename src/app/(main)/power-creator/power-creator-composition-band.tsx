@@ -36,7 +36,7 @@ const DIE_OPTIONS = POWER_RANDOMIZE_DIE_SIDES.map((s) => ({ value: String(s), la
 
 function tabHint(structure: PowerCompositionStructure, activeTabId: string): string {
   if (activeTabId === REVERSE_TAB_ID) {
-    return 'Reverse: add the drawback parts. Its duration defaults to the power’s. Summary shows the 50% discount.';
+    return 'Reverse: add the drawback parts. Range, area, and duration start as the power’s. The summary shows half the drawback divided by the action-type multiplier.';
   }
   if (activeTabId === SHARED_TAB_ID) {
     return structure === 'none'

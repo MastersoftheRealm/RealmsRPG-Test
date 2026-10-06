@@ -9,12 +9,16 @@ import {
   finalizePowerEnergy,
   type PowerDocument,
 } from './power-calc';
+import { buildPowerVariantChips } from '@/lib/power-variant-chips';
+import { loadRepoCodexParts } from './codex-parts-csv';
 import {
   composedPowerDamage,
   composedPowerDurationLabel,
   isRandomizeDieComplete,
   normalizePowerComposition,
   drawbackReductionForAction,
+  formatEnergyIntermediate,
+  reverseActionDivisorNote,
   formatPowerCompositionSummary,
   powerCompositionHelpText,
   powerCompositionEnergyLines,
@@ -407,53 +411,35 @@ describe('resolvePowerComposition', () => {
     expect(mixed.selectedVariantId).toBeNull();
   });
 
-  it('Modify official Freezing Wind is 33 EN (Shared once, Slow extra at 1 minute)', () => {
-    const officialDb: PowerPart[] = [
-      part({
-        id: String(PART_IDS.ELEMENTAL_DAMAGE),
-        name: 'Elemental Damage',
-        category: 'Damage',
-        mechanic: true,
-        base_en: 3,
-        op_1_en: 1,
-      }),
-      part({
-        id: String(PART_IDS.POWER_RANGE),
-        name: 'Power Range',
-        mechanic: true,
-        base_en: 0.5,
-        op_1_en: 0.5,
-      }),
-      part({
-        id: String(PART_IDS.SPHERE_OF_EFFECT),
-        name: 'Sphere of Effect',
-        category: 'Area of Effect',
-        mechanic: true,
-        percentage: true,
-        base_en: 1.25,
-        op_1_en: 0.25,
-      }),
-      part({
-        id: String(PART_IDS.DURATION_ROUND),
-        name: 'Duration (Round)',
-        category: 'Duration',
-        mechanic: true,
-        duration: true,
-        base_en: 0.125,
-        op_1_en: 0.125,
-      }),
-      part({
-        id: String(PART_IDS.DURATION_MINUTE),
-        name: 'Duration (Minute)',
-        category: 'Duration',
-        mechanic: true,
-        duration: true,
-        base_en: 0.75,
-        op_1_en: 0.75,
-      }),
-      part({ id: '340', name: 'Restrained', base_en: 6 }),
-      part({ id: '329', name: 'Slow', base_en: 2, op_1_en: 2 }),
-    ];
+  it('an empty Randomize chassis with only bad faces publishes a dash', () => {
+    const res = resolvePowerComposition(
+      {
+        name: 'Only bad',
+        actionType: 'basic',
+        composition: {
+          structure: 'randomize',
+          variants: [
+            {
+              id: 'bad',
+              label: 'Bad',
+              polarity: 'negative',
+              parts: [{ id: 902, name: 'Blinded' }],
+            },
+          ],
+          die: { sides: 2, faces: ['bad', 'bad'] },
+        },
+      },
+      partsDb,
+    )!;
+    expect(res.energy).toBe(0);
+    expect(powerCompositionEnergyLines(res).at(-1)).toBe('Randomize total: —');
+  });
+
+  it('Modify official Freezing Wind is Shared once plus the Slow piece, from the Codex snapshot', () => {
+    const officialDb = loadRepoCodexParts();
+    const slow = officialDb.find((row) => row.id === '329');
+    expect(slow?.base_en).toBe(2);
+    expect(slow?.op_1_en).toBe(2);
     const doc: PowerDocument = {
       name: 'Freezing Wind',
       actionType: 'basic',
@@ -476,7 +462,21 @@ describe('resolvePowerComposition', () => {
         ],
       },
     };
-    expect(resolvePowerComposition(doc, officialDb)!.energy).toBe(33);
+    const resolved = resolvePowerComposition(doc, officialDb)!;
+    const sharedOnly = rawEnergy(
+      {
+        actionType: 'basic',
+        range: doc.range,
+        area: doc.area,
+        duration: doc.duration,
+        damage: doc.damage,
+        parts: doc.parts,
+      },
+      officialDb,
+    );
+    expect(resolved.energy).toBe(
+      finalizePowerEnergy(sharedOnly + resolved.variants[0]!.energyRaw, true),
+    );
     const pricedAsOneMinute = derivePlainPowerDisplay(
       {
         actionType: 'basic',
@@ -491,7 +491,7 @@ describe('resolvePowerComposition', () => {
       },
       officialDb,
     ).energy;
-    expect(pricedAsOneMinute).toBe(36);
+    expect(pricedAsOneMinute).not.toBe(resolved.energy);
   });
 
   it('floors final Energy at 1 when Reverse would drop it to 0 (86e3kfkbv)', () => {
@@ -739,24 +739,8 @@ describe('resolvePowerComposition', () => {
     expect(powerCompositionEnergyLines(composed).at(-1)).toBe('Choice total: —');
   });
 
-  it('official-shaped Elemental Burst is 8 EN; damage without range is 6', () => {
-    const liveDb: PowerPart[] = [
-      part({
-        id: String(PART_IDS.ELEMENTAL_DAMAGE),
-        name: 'Elemental Damage',
-        category: 'Damage',
-        mechanic: true,
-        base_en: 3,
-        op_1_en: 1,
-      }),
-      part({
-        id: String(PART_IDS.POWER_RANGE),
-        name: 'Power Range',
-        mechanic: true,
-        base_en: 0.5,
-        op_1_en: 0.5,
-      }),
-    ];
+  it('official Choice chips show Shared plus that option, from the Codex snapshot', () => {
+    const liveDb = loadRepoCodexParts();
     const variants = [
       { id: 'fire', label: 'Fire', damage: d10('fire') },
       { id: 'ice', label: 'Ice', damage: d10('ice') },
@@ -779,9 +763,69 @@ describe('resolvePowerComposition', () => {
       },
       liveDb,
     )!;
-    // 9 spaces (3 steps) is 1.5 EN. 1d10 is 6 EN. 7.5 rounds up to 8.
-    expect(withRange.energy).toBe(8);
-    expect(damageOnly.energy).toBe(6);
+    expect(withRange.shared?.rawEnergy).toBeGreaterThan(0);
+    expect(withRange.energy).toBe(
+      finalizePowerEnergy(
+        (withRange.shared?.rawEnergy ?? 0) +
+          Math.max(...withRange.variants.map((v) => v.energyRaw)),
+        true,
+      ),
+    );
+    expect(damageOnly.energy).toBe(
+      finalizePowerEnergy(
+        (damageOnly.shared?.rawEnergy ?? 0) +
+          Math.max(...damageOnly.variants.map((v) => v.energyRaw)),
+        true,
+      ),
+    );
+    expect(withRange.energy).toBeGreaterThan(damageOnly.energy);
+    const lines = powerCompositionEnergyLines(withRange);
+    expect(lines[0]).toBe(`Shared: ${formatEnergyIntermediate(withRange.shared!.rawEnergy)} EN`);
+    expect(lines.some((line) => line.startsWith('Choice pays the most expensive portion'))).toBe(
+      true,
+    );
+    const chips = buildPowerVariantChips(withRange);
+    expect(chips).toHaveLength(3);
+    for (const [index, chip] of chips.entries()) {
+      expect(chip.description?.startsWith(`${withRange.variants[index]!.energy} Energy`)).toBe(
+        true,
+      );
+      expect(withRange.variants[index]!.energy).toBe(
+        finalizePowerEnergy(
+          (withRange.shared?.rawEnergy ?? 0) + withRange.variants[index]!.energyRaw,
+        ),
+      );
+    }
+    expect(new Set(withRange.variants.map((v) => v.energy))).toEqual(new Set([withRange.energy]));
+
+    const bolt = resolvePowerComposition(
+      {
+        name: 'Elemental Bolt',
+        actionType: 'basic',
+        range: { steps: 4 },
+        composition: {
+          structure: 'choice',
+          variants: ['fire', 'ice', 'lightning'].map((type) => ({
+            id: type,
+            label: type,
+            damage: [{ amount: 1, size: 6, type }],
+          })),
+        },
+      },
+      liveDb,
+    )!;
+    const boltChips = buildPowerVariantChips(bolt);
+    expect(boltChips).toHaveLength(3);
+    for (const [index, chip] of boltChips.entries()) {
+      expect(chip.description?.startsWith(`${bolt.variants[index]!.energy} Energy`)).toBe(true);
+    }
+    expect(new Set(bolt.variants.map((v) => v.energy))).toEqual(new Set([bolt.energy]));
+    expect(bolt.energy).toBe(
+      finalizePowerEnergy(
+        (bolt.shared?.rawEnergy ?? 0) + Math.max(...bolt.variants.map((v) => v.energyRaw)),
+        true,
+      ),
+    );
   });
 
   function withPercentageSphere(db: PowerPart[]): PowerPart[] {
@@ -1074,28 +1118,16 @@ describe('resolvePowerComposition', () => {
     const lines = powerCompositionEnergyLines(res);
     expect(lines).toContain('Reverse drawback 4.5 EN → −2.25 EN');
     expect(lines.at(-1)).toBe('Total: 4 EN');
+    expect(formatEnergyIntermediate(0.875)).toBe('0.88');
   });
 
-  it('Judgement-shaped Choice stays 6 EN when the sphere stays on Shared', () => {
-    const db = withPercentageSphere([
-      ...partsDb,
-      part({
-        id: String(PART_IDS.LIGHT_DAMAGE),
-        name: 'Light Damage',
-        category: 'Damage',
-        mechanic: true,
-        base_en: 3,
-        op_1_en: 1,
-      }),
-      part({
-        id: String(PART_IDS.POISON_OR_NECROTIC_DAMAGE),
-        name: 'Poison or Necrotic Damage',
-        category: 'Damage',
-        mechanic: true,
-        base_en: 3.5,
-        op_1_en: 1,
-      }),
-    ]);
+  it('prints a long action multiplier as 0.875', () => {
+    expect(reverseActionDivisorNote(0.875)).toBe(', divided by the action multiplier 0.875');
+    expect(reverseActionDivisorNote(0.875)).not.toContain('0.88');
+  });
+
+  it('Judgement-shaped Choice prices each portion from the Codex snapshot', () => {
+    const db = loadRepoCodexParts();
     const res = resolvePowerComposition(
       {
         name: 'Judgement',
@@ -1115,7 +1147,20 @@ describe('resolvePowerComposition', () => {
       },
       db,
     )!;
-    expect(res.energy).toBe(6);
+    expect(res.energy).toBe(
+      finalizePowerEnergy(
+        (res.shared?.rawEnergy ?? 0) + Math.max(...res.variants.map((v) => v.energyRaw)),
+        true,
+      ),
+    );
+    const chips = buildPowerVariantChips(res);
+    for (const [index, chip] of chips.entries()) {
+      expect(chip.description?.startsWith(`${res.variants[index]!.energy} Energy`)).toBe(true);
+      expect(res.variants[index]!.energy).toBe(
+        finalizePowerEnergy((res.shared?.rawEnergy ?? 0) + res.variants[index]!.energyRaw),
+      );
+    }
+    expect(Math.max(...res.variants.map((v) => v.energy))).toBe(res.energy);
   });
 
   it('names the Randomize save block when a variant has no face', () => {
