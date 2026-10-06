@@ -1,7 +1,7 @@
 /**
- * Load `codex_csv/Realms Codex Test - Parts.csv` for tests.
+ * Test-only loader for `codex_csv/Realms Codex Test - Parts.csv`.
  * Official energy checks use this snapshot instead of hand-typed part costs.
- * Runtime pricing still reads the Codex catalog passed into the calculators.
+ * Not a runtime pricing path, and not exported from the calculators barrel.
  */
 
 import fs from 'node:fs';
@@ -102,5 +102,15 @@ export function loadRepoCodexParts(
     if (tp2 !== undefined) part.op_2_tp = tp2;
     if (tp3 !== undefined) part.op_3_tp = tp3;
     return part;
+  });
+}
+
+/** Snapshot rows for real Codex ids. Missing ids throw so a fixture cannot silently invent a cost. */
+export function snapshotParts(ids: readonly number[], file?: string): PowerPart[] {
+  const catalog = loadRepoCodexParts(file);
+  return ids.map((id) => {
+    const row = catalog.find((part) => part.id === String(id));
+    if (!row) throw new Error(`Codex snapshot is missing part ${id}`);
+    return row;
   });
 }

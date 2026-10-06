@@ -10,7 +10,7 @@ import {
   type PowerDocument,
 } from './power-calc';
 import { buildPowerVariantChips } from '@/lib/power-variant-chips';
-import { loadRepoCodexParts } from './codex-parts-csv';
+import { loadRepoCodexParts, snapshotParts } from './power-composition.fixture';
 import {
   composedPowerDamage,
   composedPowerDurationLabel,
@@ -40,55 +40,21 @@ function part(p: Partial<PowerPart> & Pick<PowerPart, 'id' | 'name'>): PowerPart
   };
 }
 
+/** Real Codex ids come from the snapshot. 900+ are synthetic and are not Codex rows. */
 const partsDb: PowerPart[] = [
-  part({
-    id: String(PART_IDS.ELEMENTAL_DAMAGE),
-    name: 'Elemental Damage',
-    category: 'Damage',
-    mechanic: true,
-    base_en: 3,
-    op_1_en: 1,
-    base_tp: 2,
-    op_1_tp: 0.5,
-  }),
-  part({
-    id: String(PART_IDS.POWER_RANGE),
-    name: 'Power Range',
-    mechanic: true,
-    base_en: 1,
-    op_1_en: 1,
-    base_tp: 1,
-  }),
-  part({
-    id: String(PART_IDS.SPHERE_OF_EFFECT),
-    name: 'Sphere of Effect',
-    category: 'Area of Effect',
-    mechanic: true,
-    base_en: 2,
-    op_1_en: 1,
-    base_tp: 1,
-  }),
-  part({
-    id: String(PART_IDS.DURATION_ROUND),
-    name: 'Duration (Round)',
-    category: 'Duration',
-    mechanic: true,
-    duration: true,
-    base_en: 1.5,
-    op_1_en: 0.25,
-  }),
-  part({
-    id: String(PART_IDS.DURATION_MINUTE),
-    name: 'Duration (Minute)',
-    category: 'Duration',
-    mechanic: true,
-    duration: true,
-    base_en: 2,
-  }),
+  ...snapshotParts([
+    PART_IDS.ELEMENTAL_DAMAGE,
+    PART_IDS.POWER_RANGE,
+    PART_IDS.SPHERE_OF_EFFECT,
+    PART_IDS.DURATION_ROUND,
+    PART_IDS.DURATION_MINUTE,
+    PART_IDS.POWER_CHOICE,
+    PART_IDS.POWER_QUICK_OR_FREE_ACTION,
+    PART_IDS.POWER_LONG_ACTION,
+  ]),
   part({ id: '900', name: 'Immobile', base_en: 4, base_tp: 1 }),
   part({ id: '901', name: 'Slow', base_en: 2, op_1_en: 1, base_tp: 1 }),
   part({ id: '902', name: 'Blinded', base_en: 4 }),
-  part({ id: String(PART_IDS.POWER_CHOICE), name: 'Choice', mechanic: true, op_1_en: -1 }),
 ];
 
 const d10 = (type: string) => [{ amount: 1, size: 10, type }];
@@ -98,6 +64,16 @@ function rawEnergy(doc: PowerDocument, db: PowerPart[] = partsDb): number {
 }
 
 describe('resolvePowerComposition', () => {
+  it('loads real Codex part ids from the snapshot', () => {
+    const range = partsDb.find((row) => row.id === String(PART_IDS.POWER_RANGE));
+    const sphere = partsDb.find((row) => row.id === String(PART_IDS.SPHERE_OF_EFFECT));
+    expect(range?.base_en).toBe(0.5);
+    expect(range?.op_1_en).toBe(0.5);
+    expect(sphere?.percentage).toBe(true);
+    expect(sphere?.base_en).toBe(1.25);
+    expect(sphere?.op_1_en).toBe(0.25);
+  });
+
   it('leaves a normal power unchanged', () => {
     const doc: PowerDocument = {
       name: 'Bolt',
@@ -132,7 +108,7 @@ describe('resolvePowerComposition', () => {
     const res = resolvePowerComposition(burst, partsDb, { selectedVariantId: 'ice' })!;
     expect(res.energy).toBe(bolt.energy);
     expect(composedPowerDamage(res)).toEqual(d10('ice'));
-    // Range once (1) + Elemental Damage split by type: fire, ice, lightning (floor 3.5 = 3 each).
+    // Snapshot Power Range at 3 steps floors to 1 TP. Each 1d10 Elemental Damage floors 3.5 to 3.
     expect(res.tp).toBe(1 + 3 * 3);
     expect(res.tpSources.filter((s) => s.includes('Power Range'))).toHaveLength(1);
   });
@@ -178,7 +154,8 @@ describe('resolvePowerComposition', () => {
     expect(res.energy).toBeLessThan(overlaySum);
     expect(composedPowerDurationLabel(res)).toContain(' / ');
     expect(res.tpSources.filter((s) => s.includes('Power Range'))).toHaveLength(1);
-    expect(res.tpSources.filter((s) => s.includes('Sphere of Effect'))).toHaveLength(1);
+    // Snapshot Sphere of Effect is 0 TP, so it is not a training-point source.
+    expect(res.tpSources.filter((s) => s.includes('Sphere of Effect'))).toHaveLength(0);
   });
 
   it('Modify does not charge empty pieces, so two blank tabs do not double Shared', () => {
@@ -331,18 +308,7 @@ describe('resolvePowerComposition', () => {
   });
 
   it('Randomize applies speed premiums only to good faces (free-action premium is not skipped)', () => {
-    const pricingDb: PowerPart[] = [
-      ...partsDb,
-      part({
-        id: String(PART_IDS.POWER_QUICK_OR_FREE_ACTION),
-        name: 'Power Quick or Free Action',
-        mechanic: true,
-        percentage: true,
-        base_en: 1.25,
-        op_1_en: 0.25,
-      }),
-      part({ id: '910', name: 'Boost', base_en: 6 }),
-    ];
+    const pricingDb: PowerPart[] = [...partsDb, part({ id: '910', name: 'Boost', base_en: 6 })];
     const faces = ['good', 'good', 'good', 'bad', 'bad', 'bad'];
     const doc: PowerDocument = {
       name: 'Free Coin Flip',
@@ -639,7 +605,6 @@ describe('resolvePowerComposition', () => {
 
   it('Reverse on a basic action subtracts half the drawback energy', () => {
     const base: PowerDocument = { name: 'Ward', actionType: 'basic', range: { steps: 3 } };
-    const plain = derivePlainPowerDisplay(base, partsDb).energy;
     const res = resolvePowerComposition(
       {
         ...base,
@@ -651,23 +616,13 @@ describe('resolvePowerComposition', () => {
       },
       partsDb,
     )!;
-    expect(res.reverse?.energy).toBe(4);
-    expect(res.energy).toBe(Math.ceil(plain - 2));
+    expect(res.reverse?.rawEnergy).toBeCloseTo(4);
+    expect(res.reverse?.discount).toBeCloseTo(2);
+    expect(res.energy).toBe(finalizePowerEnergy(rawEnergy(base) - 2, true));
   });
 
   it('a good Randomize face cheaper than Shared shows its negative contribution', () => {
-    const pricingDb: PowerPart[] = [
-      ...partsDb,
-      part({
-        id: String(PART_IDS.POWER_QUICK_OR_FREE_ACTION),
-        name: 'Power Quick or Free Action',
-        mechanic: true,
-        percentage: true,
-        base_en: 1.25,
-        op_1_en: 0.25,
-      }),
-      part({ id: '910', name: 'Boost', base_en: 6 }),
-    ];
+    const pricingDb: PowerPart[] = [...partsDb, part({ id: '910', name: 'Boost', base_en: 6 })];
     const res = resolvePowerComposition(
       {
         name: 'Cheaper face',
@@ -828,19 +783,8 @@ describe('resolvePowerComposition', () => {
     );
   });
 
-  function withPercentageSphere(db: PowerPart[]): PowerPart[] {
-    return db.map((row) =>
-      row.id === String(PART_IDS.SPHERE_OF_EFFECT)
-        ? { ...row, percentage: true, base_en: 1.25, op_1_en: 0.25 }
-        : row,
-    );
-  }
-
   it('Modify prices a single-target Daze piece without Shared’s sphere', () => {
-    const db = withPercentageSphere([
-      ...partsDb,
-      part({ id: String(PART_IDS.DAZE), name: 'Daze', base_en: 4 }),
-    ]);
+    const db = [...partsDb, part({ id: '940', name: 'Synthetic Daze', base_en: 4 })];
     const shared: PowerDocument = {
       name: 'Ice Field',
       actionType: 'basic',
@@ -854,7 +798,7 @@ describe('resolvePowerComposition', () => {
       actionType: 'basic',
       range: shared.range,
       duration: pieceDuration,
-      parts: [{ id: PART_IDS.DAZE, name: 'Daze' }],
+      parts: [{ id: 940, name: 'Synthetic Daze' }],
     };
     const extra = rawEnergy(pieceFoot, db) - rawEnergy({ ...pieceFoot, parts: [] }, db);
     const insideSphere =
@@ -872,7 +816,7 @@ describe('resolvePowerComposition', () => {
               label: 'Daze',
               area: { type: 'none', level: 1 },
               duration: pieceDuration,
-              parts: [{ id: PART_IDS.DAZE, name: 'Daze' }],
+              parts: [{ id: 940, name: 'Synthetic Daze' }],
             },
           ],
         },
@@ -884,7 +828,7 @@ describe('resolvePowerComposition', () => {
   });
 
   it('Modify charges a bigger area only on that piece’s parts', () => {
-    const db = withPercentageSphere(partsDb);
+    const db = partsDb;
     const shared: PowerDocument = {
       name: 'Reach',
       actionType: 'basic',
@@ -925,7 +869,7 @@ describe('resolvePowerComposition', () => {
   });
 
   it('Choice prices a longer, wider portion at that portion’s footprint', () => {
-    const db = withPercentageSphere(partsDb);
+    const db = partsDb;
     const shared: PowerDocument = {
       name: 'Choice Reach',
       actionType: 'basic',
@@ -979,7 +923,7 @@ describe('resolvePowerComposition', () => {
   });
 
   it('Reverse prices the drawback at a smaller footprint than Shared', () => {
-    const db = withPercentageSphere(partsDb);
+    const db = partsDb;
     const sharedArea = { type: 'sphere' as const, level: 2 };
     const base: PowerDocument = {
       name: 'Ward',
@@ -1021,22 +965,6 @@ describe('resolvePowerComposition', () => {
   it('refunds more energy when a drawback takes longer to harm you', () => {
     const db: PowerPart[] = [
       ...partsDb,
-      part({
-        id: String(PART_IDS.POWER_QUICK_OR_FREE_ACTION),
-        name: 'Power Quick or Free Action',
-        mechanic: true,
-        percentage: true,
-        base_en: 1.25,
-        op_1_en: 0.25,
-      }),
-      part({
-        id: String(PART_IDS.POWER_LONG_ACTION),
-        name: 'Power Long Action',
-        mechanic: true,
-        percentage: true,
-        base_en: 0.875,
-        op_1_en: -0.125,
-      }),
       part({ id: '920', name: 'Drawback', base_en: 4 }),
       part({ id: '921', name: 'Benefit', base_en: 20 }),
     ];
@@ -1119,6 +1047,8 @@ describe('resolvePowerComposition', () => {
     expect(lines).toContain('Reverse drawback 4.5 EN → −2.25 EN');
     expect(lines.at(-1)).toBe('Total: 4 EN');
     expect(formatEnergyIntermediate(0.875)).toBe('0.88');
+    expect(formatEnergyIntermediate(-2)).toBe('−2');
+    expect(formatEnergyIntermediate(-1.5)).toBe('−1.5');
   });
 
   it('prints a long action multiplier as 0.875', () => {
@@ -1161,6 +1091,15 @@ describe('resolvePowerComposition', () => {
       );
     }
     expect(Math.max(...res.variants.map((v) => v.energy))).toBe(res.energy);
+    const light = res.variants.find((v) => v.id === 'light')!;
+    const necrotic = res.variants.find((v) => v.id === 'necrotic')!;
+    expect(light.energyRaw).toBe(5);
+    expect(formatEnergyIntermediate(necrotic.energyRaw)).toBe('5.63');
+    expect(light.energy).toBe(finalizePowerEnergy(light.energyRaw));
+    expect(necrotic.energy).toBe(finalizePowerEnergy(necrotic.energyRaw));
+    expect(light.energy).toBe(5);
+    expect(necrotic.energy).toBe(6);
+    expect(res.energy).toBe(necrotic.energy);
   });
 
   it('names the Randomize save block when a variant has no face', () => {

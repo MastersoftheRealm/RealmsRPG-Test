@@ -450,7 +450,8 @@ function publishSigned(raw: number): number {
 export function formatEnergyIntermediate(value: number): string {
   const rounded = Math.round(value * 100) / 100;
   if (Math.abs(rounded) < 0.001) return '0';
-  return String(rounded);
+  const text = String(Math.abs(rounded));
+  return rounded < 0 ? `−${text}` : text;
 }
 
 /**

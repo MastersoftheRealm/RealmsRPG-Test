@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest';
+import { snapshotParts } from '@/lib/calculators/power-composition.fixture';
 import { defined } from '@/lib/utils';
 import { PART_IDS } from '@/lib/id-constants';
 import { buildRequiredProficiencies } from '@/lib/proficiencies';
@@ -8,19 +9,7 @@ import type { SelectableItem } from '@/components/patterns/select/unified-select
 
 describe('mapSelectedToCharacterItems (composed power)', () => {
   it('adds every Choice variant damage type to the required proficiencies (TASK-934)', () => {
-    const powerPartsDb = [
-      {
-        id: String(PART_IDS.ELEMENTAL_DAMAGE),
-        name: 'Elemental Damage',
-        category: 'Damage',
-        mechanic: true,
-        base_en: 3,
-        op_1_en: 1,
-        base_tp: 2,
-        op_1_tp: 0.5,
-      },
-      { id: String(PART_IDS.POWER_RANGE), name: 'Power Range', mechanic: true, base_tp: 1 },
-    ];
+    const powerPartsDb = snapshotParts([PART_IDS.ELEMENTAL_DAMAGE, PART_IDS.POWER_RANGE]);
     const d10 = (type: string) => [{ amount: 1, size: 10, type }];
     const burst = {
       id: 'burst',

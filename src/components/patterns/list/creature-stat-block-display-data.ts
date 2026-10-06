@@ -42,6 +42,7 @@ type SavedPartRef =
       op_1_lvl?: number | undefined;
       op_2_lvl?: number | undefined;
       op_3_lvl?: number | undefined;
+      applyDuration?: boolean | undefined;
     };
 
 function objectPartsOnly(
@@ -55,7 +56,13 @@ function objectPartsOnly(
       op_1_lvl: part.op_1_lvl,
       op_2_lvl: part.op_2_lvl,
       op_3_lvl: part.op_3_lvl,
+      ...(part.applyDuration ? { applyDuration: true } : {}),
     }));
+}
+
+function structuredMechanic<T>(value: string | T | undefined): T | undefined {
+  if (value == null || typeof value === 'string') return undefined;
+  return value;
 }
 
 type SkillDbEntry = {
@@ -147,25 +154,18 @@ export function buildPowersForDisplay(
     };
 
     const derived = derivePowerDisplay(
-      enriched
-        ? libraryItemToPowerDocument({
-            name: baseName,
-            description: baseDescription,
-            parts: enriched.parts,
-            damage: enriched.damage,
-            actionType: enriched.actionType,
-            isReaction: enriched.isReaction,
-            range: enriched.range,
-            area: enriched.area,
-            duration: enriched.duration,
-            composition: enriched.composition,
-          })
-        : {
-            name: baseName,
-            description: baseDescription,
-            parts: objectPartsOnly(parts),
-            damage: Array.isArray(damage) ? damage : undefined,
-          },
+      libraryItemToPowerDocument({
+        name: baseName,
+        description: baseDescription,
+        parts: enriched ? enriched.parts : objectPartsOnly(parts),
+        damage: enriched ? enriched.damage : Array.isArray(damage) ? damage : undefined,
+        actionType: enriched?.actionType ?? ref.actionType,
+        isReaction: enriched?.isReaction ?? ref.isReaction,
+        range: enriched?.range ?? structuredMechanic(ref.range),
+        area: enriched?.area ?? structuredMechanic(ref.area),
+        duration: enriched?.duration ?? structuredMechanic(ref.duration),
+        composition: enriched?.composition ?? ref.composition,
+      }),
       powerPartsDb,
     );
     const composition = derived.composition;
@@ -176,7 +176,12 @@ export function buildPowersForDisplay(
       (composition ? composedPowerDamageLabel(composition) : '') ||
       formatPowerDamage(Array.isArray(damage) ? damage : undefined) ||
       (typeof ref.damage === 'string' ? ref.damage : undefined);
-    const rangeValue = derived.range && derived.range !== '-' ? derived.range : ref.range;
+    const rangeValue =
+      derived.range && derived.range !== '-'
+        ? derived.range
+        : typeof ref.range === 'string'
+          ? ref.range
+          : undefined;
     const categories = withDamageCategory(
       derivePartCategories(objectPartsOnly(parts), powerPartsDb),
       powerHasDamageCategory(Array.isArray(damage) ? damage : undefined),
@@ -205,8 +210,8 @@ export function buildPowersForDisplay(
       thumbnail: resolveListRowThumbnail('power', imageRecord, baseName),
       actionType: derived.actionType || ref.action,
       damage: damageStr,
-      area: derived.area || ref.area,
-      duration: derived.duration || ref.duration,
+      area: derived.area || (typeof ref.area === 'string' ? ref.area : undefined),
+      duration: derived.duration || (typeof ref.duration === 'string' ? ref.duration : undefined),
       energyCost: typeof derived.energy === 'number' ? derived.energy : ref.energy,
       innate: ref.innate,
       detailSections: detailSections.length > 0 ? detailSections : undefined,

@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import type { PowerPart } from '@/hooks/codex-types';
 import type { UserPower } from '@/hooks/use-user-library';
+import { snapshotParts } from '@/lib/calculators/power-composition.fixture';
 import { PART_IDS } from '@/lib/id-constants';
 import { buildRequiredProficiencies } from '@/lib/proficiencies';
 import type { CharacterPower, CharacterProficiency } from '@/types';
@@ -20,24 +21,7 @@ function part(p: Partial<PowerPart> & Pick<PowerPart, 'id' | 'name'>): PowerPart
 }
 
 const partsDb: PowerPart[] = [
-  part({
-    id: String(PART_IDS.ELEMENTAL_DAMAGE),
-    name: 'Elemental Damage',
-    category: 'Damage',
-    mechanic: true,
-    base_en: 3,
-    op_1_en: 1,
-    base_tp: 2,
-    op_1_tp: 0.5,
-  }),
-  part({
-    id: String(PART_IDS.POWER_RANGE),
-    name: 'Power Range',
-    mechanic: true,
-    base_en: 1,
-    op_1_en: 1,
-    base_tp: 1,
-  }),
+  ...snapshotParts([PART_IDS.ELEMENTAL_DAMAGE, PART_IDS.POWER_RANGE]),
   part({ id: '900', name: 'Immobile', base_en: 4, base_tp: 1 }),
   part({ id: '901', name: 'Slow', base_en: 2, op_1_en: 1, base_tp: 1 }),
 ];

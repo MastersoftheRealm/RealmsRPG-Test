@@ -1,3 +1,5 @@
+import type { PowerComposition } from '@/lib/calculators/power-composition';
+import type { LibraryPower } from '@/types/library';
 import type { ListHeaderRowChrome } from './grid-list-row-chrome';
 
 export interface CreatureAbilities {
@@ -91,10 +93,16 @@ export interface CreatureData {
         description?: string | undefined;
         energy?: number | undefined;
         action?: string | undefined;
-        area?: string | undefined;
-        duration?: string | undefined;
+        actionType?: string | undefined;
+        isReaction?: boolean | undefined;
+        /** Display string, or the structured mechanic when the library row is missing. */
+        area?: string | NonNullable<LibraryPower['area']> | undefined;
+        /** Display string, or the structured mechanic when the library row is missing. */
+        duration?: string | NonNullable<LibraryPower['duration']> | undefined;
         damage?: string | undefined;
-        range?: string | undefined;
+        /** Display string, or the structured mechanic when the library row is missing. */
+        range?: string | NonNullable<LibraryPower['range']> | undefined;
+        composition?: PowerComposition | undefined;
         innate?: boolean | undefined;
         image_id?: string | null | undefined;
         image_url?: string | null | undefined;
@@ -107,6 +115,7 @@ export interface CreatureData {
                   op_1_lvl?: number | undefined;
                   op_2_lvl?: number | undefined;
                   op_3_lvl?: number | undefined;
+                  applyDuration?: boolean | undefined;
                 }
             >
           | undefined;
