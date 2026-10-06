@@ -8,6 +8,7 @@
 import type { Item } from '@/types';
 import type { DisplayItem, ItemStat } from '@/types/items';
 import type { UserPower, UserTechnique, UserItem } from '@/hooks/use-user-library';
+import type { PowerComposition } from '@/lib/calculators/power-composition';
 import type { CreatureFeat as CodexCreatureFeat, ItemProperty } from '@/hooks/codex-types';
 import type { PowerPart, TechniquePart } from '@/hooks';
 import {
@@ -47,6 +48,15 @@ export interface CreaturePower {
   variantLabel?: string | undefined;
   variantHelp?: string | undefined;
   variantChips?: { name: string; description?: string | undefined }[] | undefined;
+  /** Library parts and composition, so an unmatched row can recompute from live Codex. */
+  parts?: UserPower['parts'] | undefined;
+  composition?: PowerComposition | undefined;
+  actionType?: string | undefined;
+  isReaction?: boolean | undefined;
+  rangeValue?: UserPower['range'] | undefined;
+  areaValue?: UserPower['area'] | undefined;
+  durationValue?: UserPower['duration'] | undefined;
+  damageValue?: UserPower['damage'] | undefined;
 }
 
 export interface CreatureTechnique {
@@ -194,6 +204,14 @@ export function transformUserPowerToDisplayItem(
       image_id: power.image_id ?? null,
       image_url: power.image_url ?? null,
       description,
+      parts: power.parts ?? [],
+      ...(power.composition ? { composition: power.composition } : {}),
+      ...(power.actionType ? { actionType: power.actionType } : {}),
+      ...(power.isReaction ? { isReaction: true } : {}),
+      ...(power.range ? { rangeValue: power.range } : {}),
+      ...(power.area ? { areaValue: power.area } : {}),
+      ...(power.duration ? { durationValue: power.duration } : {}),
+      ...(power.damage ? { damageValue: power.damage } : {}),
       ...(variantSection
         ? {
             variantLabel: variantSection.label,

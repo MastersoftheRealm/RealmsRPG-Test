@@ -14,6 +14,7 @@ import {
 import { calculateTechniqueCosts } from './technique-calc';
 import { calculateEmpoweredTechniqueCosts } from './empowered-technique-calc';
 import { buildPowerAdvancedCalculationGroups } from './power-energy-breakdown';
+import { snapshotParts } from './power-composition.fixture';
 import type { TechniquePart } from '@/hooks/codex-types';
 
 const elementalDamagePart: PowerPart = {
@@ -330,29 +331,20 @@ describe('finalizePowerEnergy', () => {
 });
 
 describe('zero energy is a dash until positive energy is reduced below 1', () => {
-  const quick: PowerPart = {
-    id: String(PART_IDS.POWER_QUICK_OR_FREE_ACTION),
-    name: 'Power Quick or Free Action',
-    description: 'Quick',
-    category: 'Action',
-    mechanic: true,
-    percentage: true,
-    base_en: 1.25,
-    base_tp: 0,
-    op_1_en: 0.25,
-  };
-  const duration: PowerPart = {
-    id: String(PART_IDS.DURATION_MINUTE),
-    name: 'Duration (Minute)',
-    description: 'Duration',
-    category: 'Duration',
-    mechanic: true,
-    duration: true,
-    base_en: 2,
-    base_tp: 0,
-  };
+  const snap = snapshotParts([
+    PART_IDS.POWER_QUICK_OR_FREE_ACTION,
+    PART_IDS.DURATION_MINUTE,
+    PART_IDS.NO_ATTACK,
+    4,
+    PART_IDS.NO_ATTACK,
+  ]);
+  const quick = snap[0] as PowerPart;
+  const duration = snap[1] as PowerPart;
+  const noAttack = snap[2] as PowerPart;
+  const quickTech = snap[3] as TechniquePart;
+  const noAttackTech = snap[4] as TechniquePart;
   const zero: PowerPart = {
-    id: '1',
+    id: '900',
     name: 'Marker',
     description: 'Marker',
     category: 'General',
@@ -360,17 +352,8 @@ describe('zero energy is a dash until positive energy is reduced below 1', () =>
     base_en: 0,
     base_tp: 0,
   };
-  const noAttack: PowerPart = {
-    id: '415',
-    name: 'No Attack',
-    description: 'No Attack',
-    category: 'General',
-    mechanic: true,
-    base_en: -2,
-    base_tp: 0,
-  };
   const spark: PowerPart = {
-    id: '2',
+    id: '901',
     name: 'Spark',
     description: 'Spark',
     category: 'Damage',
@@ -379,7 +362,7 @@ describe('zero energy is a dash until positive energy is reduced below 1', () =>
     base_tp: 0,
   };
   const limit: PowerPart = {
-    id: '3',
+    id: '902',
     name: 'Limit',
     description: 'Limit',
     category: 'General',
@@ -388,31 +371,12 @@ describe('zero energy is a dash until positive energy is reduced below 1', () =>
     base_en: 0.1,
     base_tp: 0,
   };
-  const quickTech: TechniquePart = {
-    id: '4',
-    name: 'Quick or Free Action',
-    description: 'Quick',
-    category: 'Action',
-    mechanic: true,
-    percentage: true,
-    base_en: 1.25,
-    base_tp: 0,
-  };
   const zeroTech: TechniquePart = {
-    id: '5',
+    id: '903',
     name: 'Marker',
     description: 'Marker',
     category: 'General',
     base_en: 0,
-    base_tp: 0,
-  };
-  const noAttackTech: TechniquePart = {
-    id: '415',
-    name: 'No Attack',
-    description: 'No Attack',
-    category: 'General',
-    mechanic: true,
-    base_en: -2,
     base_tp: 0,
   };
 
@@ -423,7 +387,7 @@ describe('zero energy is a dash until positive energy is reduced below 1', () =>
 
   it('shows a dash for no parts, a 0 EN part, quick-only, duration-only, and No Attack only', () => {
     expectDash(calculatePowerCosts([], []).totalEnergy);
-    expectDash(calculatePowerCosts([{ id: 1, name: 'Marker' }], [zero]).totalEnergy);
+    expectDash(calculatePowerCosts([{ id: 900, name: 'Marker' }], [zero]).totalEnergy);
     expectDash(
       calculatePowerCosts([{ id: PART_IDS.POWER_QUICK_OR_FREE_ACTION, name: quick.name }], [quick])
         .totalEnergy,
@@ -432,7 +396,10 @@ describe('zero energy is a dash until positive energy is reduced below 1', () =>
       calculatePowerCosts([{ id: PART_IDS.DURATION_MINUTE, name: duration.name }], [duration])
         .totalEnergy,
     );
-    expectDash(calculatePowerCosts([{ id: 415, name: 'No Attack' }], [noAttack]).totalEnergy);
+    expectDash(
+      calculatePowerCosts([{ id: PART_IDS.NO_ATTACK, name: noAttack.name }], [noAttack])
+        .totalEnergy,
+    );
 
     const quickGroups = buildPowerAdvancedCalculationGroups(
       analyzePowerEnergy([{ id: PART_IDS.POWER_QUICK_OR_FREE_ACTION, name: quick.name }], [quick]),
@@ -443,10 +410,11 @@ describe('zero energy is a dash until positive energy is reduced below 1', () =>
     expect(energyCost?.value).toBe('—');
 
     expectDash(calculateTechniqueCosts([], []).totalEnergy);
-    expectDash(calculateTechniqueCosts([{ id: 5, name: 'Marker' }], [zeroTech]).totalEnergy);
+    expectDash(calculateTechniqueCosts([{ id: 903, name: 'Marker' }], [zeroTech]).totalEnergy);
     expectDash(calculateTechniqueCosts([{ id: 4, name: quickTech.name }], [quickTech]).totalEnergy);
     expectDash(
-      calculateTechniqueCosts([{ id: 415, name: 'No Attack' }], [noAttackTech]).totalEnergy,
+      calculateTechniqueCosts([{ id: PART_IDS.NO_ATTACK, name: noAttackTech.name }], [noAttackTech])
+        .totalEnergy,
     );
 
     expectDash(
@@ -459,7 +427,7 @@ describe('zero energy is a dash until positive energy is reduced below 1', () =>
     );
     expectDash(
       calculateEmpoweredTechniqueCosts({
-        powerPartsPayload: [{ id: 1, name: 'Marker' }],
+        powerPartsPayload: [{ id: 900, name: 'Marker' }],
         techniquePartsPayload: [],
         powerPartsDb: [zero],
         techniquePartsDb: [],
@@ -484,7 +452,7 @@ describe('zero energy is a dash until positive energy is reduced below 1', () =>
     expectDash(
       calculateEmpoweredTechniqueCosts({
         powerPartsPayload: [],
-        techniquePartsPayload: [{ id: 415, name: 'No Attack' }],
+        techniquePartsPayload: [{ id: PART_IDS.NO_ATTACK, name: 'No Attack' }],
         powerPartsDb: [],
         techniquePartsDb: [noAttackTech],
       }).totalEnergy,
@@ -494,8 +462,8 @@ describe('zero energy is a dash until positive energy is reduced below 1', () =>
   it('floors at 1 when a positive cost is reduced below 1', () => {
     const reduced = calculatePowerCosts(
       [
-        { id: 2, name: 'Spark' },
-        { id: 3, name: 'Limit' },
+        { id: 901, name: 'Spark' },
+        { id: 902, name: 'Limit' },
       ],
       [spark, limit],
     );

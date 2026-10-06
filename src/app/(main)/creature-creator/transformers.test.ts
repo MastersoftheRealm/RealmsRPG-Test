@@ -33,6 +33,34 @@ describe('transformUserPowerToDisplayItem variants (86e3kfkc2)', () => {
     const power = displayItemToCreaturePower(item);
     expect(power.variantLabel).toMatch(/Choice/);
     expect(power.variantChips?.map((chip) => chip.name)).toEqual(['Fire', 'Ice']);
+    expect(power.parts).toEqual([]);
+    expect(power.composition?.structure).toBe('choice');
+  });
+
+  it('saves parts and composition so a later unmatched row can recompute', () => {
+    const item = transformUserPowerToDisplayItem(
+      {
+        id: 'daze',
+        docId: 'daze',
+        name: 'Daze',
+        description: '',
+        parts: [{ id: 339, name: 'Daze', applyDuration: true }],
+        actionType: 'quick',
+        duration: { type: 'rounds', value: 2 },
+        composition: {
+          structure: 'modify',
+          variants: [{ id: 'extra', label: 'Extra' }],
+        },
+      } as UserPower,
+      [],
+    );
+    const power = displayItemToCreaturePower(item);
+    expect(power.parts).toEqual([{ id: 339, name: 'Daze', applyDuration: true }]);
+    expect(power.composition?.structure).toBe('modify');
+    expect(power.actionType).toBe('quick');
+    expect(power.durationValue).toEqual({ type: 'rounds', value: 2 });
+    expect(power.action).toBeTruthy();
+    expect(power.duration).toBeTruthy();
   });
 
   it('shows a partless power as its saved quick action and 2 rounds', () => {

@@ -146,12 +146,29 @@ export function buildPowersForDisplay(
     const baseName = enriched?.name || refName;
     const baseDescription = enriched?.description ?? ref.description;
     const parts: SavedPartRef[] = enriched?.parts ?? ref.parts ?? [];
-    const damage = enriched?.damage ?? ref.damage;
+    const damage = enriched?.damage ?? ref.damageValue ?? ref.damage;
     const imageRecord = {
       image_id: enriched?.image_id ?? (ref as { image_id?: string | null | undefined }).image_id,
       image_url:
         enriched?.image_url ?? (ref as { image_url?: string | null | undefined }).image_url,
     };
+    const hasObjectParts = parts.some((part) => typeof part !== 'string');
+    const canRecompute = !!enriched || hasObjectParts || !!ref.composition;
+
+    if (!canRecompute) {
+      return {
+        id: `${creature.id}-power-${refId ?? idx}`,
+        name: baseName,
+        description: baseDescription,
+        thumbnail: resolveListRowThumbnail('power', imageRecord, baseName),
+        actionType: ref.action,
+        damage: typeof ref.damage === 'string' ? ref.damage : undefined,
+        area: typeof ref.area === 'string' ? ref.area : undefined,
+        duration: typeof ref.duration === 'string' ? ref.duration : undefined,
+        energyCost: ref.energy,
+        innate: ref.innate,
+      };
+    }
 
     const derived = derivePowerDisplay(
       libraryItemToPowerDocument({
@@ -161,9 +178,9 @@ export function buildPowersForDisplay(
         damage: enriched ? enriched.damage : Array.isArray(damage) ? damage : undefined,
         actionType: enriched?.actionType ?? ref.actionType,
         isReaction: enriched?.isReaction ?? ref.isReaction,
-        range: enriched?.range ?? structuredMechanic(ref.range),
-        area: enriched?.area ?? structuredMechanic(ref.area),
-        duration: enriched?.duration ?? structuredMechanic(ref.duration),
+        range: enriched?.range ?? ref.rangeValue ?? structuredMechanic(ref.range),
+        area: enriched?.area ?? ref.areaValue ?? structuredMechanic(ref.area),
+        duration: enriched?.duration ?? ref.durationValue ?? structuredMechanic(ref.duration),
         composition: enriched?.composition ?? ref.composition,
       }),
       powerPartsDb,

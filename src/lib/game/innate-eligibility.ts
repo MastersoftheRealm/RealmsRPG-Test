@@ -414,8 +414,9 @@ function castSnapshot(
 }
 
 /**
- * Appendix G on a composed power (ADR-0029). Choice / Modify / Randomize / plain + Reverse are
- * one cast: every part and every duration is checked. Alternate checks each variant alone.
+ * Appendix G on a composed power (ADR-0029). Choice / Modify / plain + Reverse are one
+ * cast: shared plus every part and every duration is checked. Randomize checks every
+ * face (Shared defaults are not a cast). Alternate checks each variant alone.
  */
 function snapshotComposedPowerForInnate(
   id: string,
@@ -441,11 +442,14 @@ function snapshotComposedPowerForInnate(
     const first = alternates[0]!;
     return { ...first, id, name, alternates };
   }
-  const docs = [
-    ...(res.shared ? [res.shared.doc] : []),
-    ...res.variants.map((v) => v.doc),
-    ...reverseDocs,
-  ];
+  const docs =
+    res.structure === 'randomize'
+      ? [...res.variants.map((v) => v.doc), ...reverseDocs]
+      : [
+          ...(res.shared ? [res.shared.doc] : []),
+          ...res.variants.map((v) => v.doc),
+          ...reverseDocs,
+        ];
   return castSnapshot(id, name, res.energy, docs, partsDb);
 }
 

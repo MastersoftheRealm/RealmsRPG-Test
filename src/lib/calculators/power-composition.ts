@@ -112,10 +112,10 @@ const POWER_ALTERNATE_HELP =
   'Each variant is a complete power (action, range, area, duration, damage, and parts). When you use the power you pick one variant and pay that variant’s energy, which may cost less, the same, or more than the others.';
 
 const POWER_RANDOMIZE_HELP =
-  'Each good outcome adds its extra cost times its chance of being rolled. Each bad outcome subtracts its drawback reduction times its chance. That reduction is half the drawback divided by the action-type multiplier: a slower action removes more energy, and a quicker action removes less. Basic stays half. Speed premiums apply to good outcomes at the normal multiplier. Once the power has positive energy, it costs at least 1 EN.';
+  'Each face is its own effect and shares only the action type. Shared defaults pre-fill a new face and add no energy. A good outcome costs its full energy, including that action. A bad outcome subtracts half the drawback, priced as a basic action on that face alone, divided by the action-type multiplier, including Reaction. A slower action removes more and a quicker action removes less. Basic stays half. Each face is weighted by its chance. Once the power has positive energy, it costs at least 1 EN. If nothing is positive, Energy is a dash.';
 
 const POWER_REVERSE_ACTION_NOTE =
-  'A drawback on a power that benefits you or an ally uses the Reverse tab’s own range, area, and duration (Shared’s, until you override them). Its reduction is half that energy divided by the action-type multiplier, so a slower action removes more and a quicker action removes less. Basic stays half. It cannot be nullified or reduced by you or an ally.';
+  'A drawback on a power that benefits you or an ally uses the Reverse tab’s own range, area, and duration (Shared’s, until you override them). Its reduction is half that energy divided by the action-type multiplier, including Reaction, so a slower action removes more and a quicker action removes less. Basic stays half. It cannot be nullified or reduced by you or an ally.';
 
 const POWER_REVERSE_FLOOR_NOTE =
   'The 1 EN floor still applies when the power has positive energy, so the discount cannot drop it below 1 EN.';
@@ -313,9 +313,9 @@ export interface ResolvedPowerVariant {
   display: PowerDisplayData;
   /**
    * Energy this variant contributes. Choice / Alternate = the published variant cost.
-   * Modify = extra parts only (0 stays 0). Randomize = the signed face term before dividing
-   * by the number of faces: good faces are (face − Shared), and a cheaper face is negative;
-   * a bad face is minus half its drawback divided by the action-type multiplier.
+   * Modify = extra parts only (0 stays 0). Randomize = the face’s own energy before
+   * weighting by its chance: a good face is its full cost, and a bad face is minus half
+   * its basic-action energy divided by the action-type multiplier, including Reaction.
    */
   energy: number;
   /** Unrounded contribution. Breakdowns show this; chips use `energy`. */
@@ -412,7 +412,43 @@ function fullVariantDoc(name: string | undefined, v: PowerVariantSpec): PowerDoc
   };
 }
 
-/** A spec priced on its own (Randomize drawback face, Reverse) as a basic action. */
+/**
+ * Randomize face. Own range, area, duration, damage, and parts.
+ * Action type is Shared’s, including Reaction. Shared parts are not copied on.
+ */
+function randomizeFaceDoc(
+  name: string | undefined,
+  shared: PowerDocument,
+  v: PowerVariantSpec,
+): PowerDocument {
+  return {
+    name,
+    description: v.description,
+    actionType: shared.actionType,
+    isReaction: !!shared.isReaction,
+    range: v.range,
+    area: v.area,
+    duration: v.duration,
+    damage: v.damage,
+    parts: stripCompositionParts(v.parts),
+  };
+}
+
+/** Bad Randomize face priced as a basic action on that face’s own footprint. */
+function randomizeBadFootprint(name: string | undefined, v: PowerVariantSpec): PowerDocument {
+  return {
+    name,
+    actionType: 'basic',
+    isReaction: false,
+    range: v.range,
+    area: v.area,
+    duration: v.duration,
+    damage: v.damage,
+    parts: stripCompositionParts(v.parts),
+  };
+}
+
+/** A spec priced on its own (Reverse) as a basic action. */
 function ownSpecDoc(
   name: string | undefined,
   v: PowerVariantSpec,
@@ -469,17 +505,21 @@ function rangeSteps(range: PowerDocument['range']): number {
 }
 
 /**
- * Normal action-type multiplier from the codex part (quick / free / long).
- * Basic, or a missing part, is 1. Reaction is not included.
+ * Action-type multiplier from the codex parts (quick / free / long, and Reaction).
+ * Basic with no Reaction, or a missing part, is 1. Reaction multiplies in with the action.
  * The percentage product is `analyzePowerEnergy` — the same part-cost formula as every other energy.
  */
-function actionTypeEnergyMultiplier(actionType: string | undefined, partsDb: PowerPart[]): number {
+function actionTypeEnergyMultiplier(
+  actionType: string | undefined,
+  isReaction: boolean,
+  partsDb: PowerPart[],
+): number {
   const type = actionType && actionType.length > 0 ? actionType : 'basic';
-  if (type === 'basic') return 1;
+  if (type === 'basic' && !isReaction) return 1;
   const rows = buildMechanicParts({
     creatorType: 'power',
     partsDb,
-    action: { type, isReaction: false },
+    action: { type, isReaction },
   });
   const multiplier = analyzePowerEnergy(rows, partsDb).percAll;
   return multiplier > 1e-9 ? multiplier : 1;
@@ -665,20 +705,29 @@ export function resolvePowerComposition(
     facesByVariant.set(variantId, list);
   });
 
-  const actionMultiplier = actionTypeEnergyMultiplier(chassis.actionType, partsDb);
+  const actionMultiplier = actionTypeEnergyMultiplier(
+    chassis.actionType,
+    !!chassis.isReaction,
+    partsDb,
+  );
   const variants: ResolvedPowerVariant[] = composition.variants.map((v) => {
-    const doc = isAlternate ? fullVariantDoc(name, v) : overlayVariant(chassis, v);
+    const doc =
+      structure === 'randomize'
+        ? randomizeFaceDoc(name, chassis, v)
+        : isAlternate
+          ? fullVariantDoc(name, v)
+          : overlayVariant(chassis, v);
     const display = derivePlainPowerDisplay(doc, partsDb);
     const energyRaw =
       structure === 'modify' || structure === 'choice'
         ? beneficialTabExtra(chassis, v, partsDb)
         : structure === 'randomize' && v.polarity === 'negative'
           ? -drawbackReductionForAction(
-              rawEnergyOf(ownSpecDoc(name, v, chassis.duration), partsDb),
+              rawEnergyOf(randomizeBadFootprint(name, v), partsDb),
               actionMultiplier,
             )
           : structure === 'randomize'
-            ? rawEnergyOf(doc, partsDb) - sharedRaw
+            ? rawEnergyOf(doc, partsDb)
             : display.energy;
     const energy =
       structure === 'choice'
@@ -728,7 +777,7 @@ export function resolvePowerComposition(
         const v = variants.find((x) => x.id === id);
         if (!v || n === 0) return sum;
         return sum + v.energyRaw / n;
-      }, sharedRaw);
+      }, 0);
       break;
     }
     default:
@@ -739,7 +788,7 @@ export function resolvePowerComposition(
   if (composition.reverse) {
     const benefit = isAlternate ? (selected?.doc ?? chassis) : chassis;
     const benefitMultiplier = isAlternate
-      ? actionTypeEnergyMultiplier(benefit.actionType, partsDb)
+      ? actionTypeEnergyMultiplier(benefit.actionType, !!benefit.isReaction, partsDb)
       : actionMultiplier;
     const doc = ownSpecDoc(name, composition.reverse, benefit.duration);
     const priced: PowerDocument = {
@@ -759,10 +808,13 @@ export function resolvePowerComposition(
     };
   }
 
-  const benefitDocs = [
-    ...(shared ? [shared.doc] : []),
-    ...variants.filter((v) => v.polarity !== 'negative').map((v) => v.doc),
-  ];
+  const benefitDocs =
+    structure === 'randomize'
+      ? variants.filter((v) => v.polarity !== 'negative' && v.faces.length > 0).map((v) => v.doc)
+      : [
+          ...(shared ? [shared.doc] : []),
+          ...variants.filter((v) => v.polarity !== 'negative').map((v) => v.doc),
+        ];
   const hasPositiveEnergy =
     structureEnergy > 1e-9 ||
     benefitDocs.some(
@@ -772,11 +824,14 @@ export function resolvePowerComposition(
   const energyBeforeReverse = finalizePowerEnergy(structureEnergy, hasPositiveEnergy);
   const energy = finalizePowerEnergy(structureEnergy - (reverse?.discount ?? 0), hasPositiveEnergy);
 
-  const tpDocs = [
-    ...(shared ? [shared.doc] : []),
-    ...variants.map((v) => v.doc),
-    ...(reverse ? [reverse.doc] : []),
-  ];
+  const tpDocs =
+    structure === 'randomize'
+      ? [...variants.map((v) => v.doc), ...(reverse ? [reverse.doc] : [])]
+      : [
+          ...(shared ? [shared.doc] : []),
+          ...variants.map((v) => v.doc),
+          ...(reverse ? [reverse.doc] : []),
+        ];
   const { tp, tpSources } = computeCompositionTp(tpDocs, partsDb);
 
   return {
@@ -827,15 +882,19 @@ export function composedPowerSavedParts(
 
 /**
  * Parts the character must be proficient in (feed as `CharacterPower.parts` to
- * `buildRequiredProficiencies`). Every structure: shared + every variant + Reverse.
- * The chip does not change this. Requirements match the power's training-point total:
- * what the power can do, including every Alternate version.
+ * `buildRequiredProficiencies`). Choice, Modify, and Alternate: shared + every
+ * variant + Reverse. Randomize: every face + Reverse (Shared defaults are not
+ * a cast). The chip does not change this. Requirements match the power's
+ * training-point total: what the power can do, including every Alternate version.
  */
 export function composedPowerProficiencyParts(
   res: PowerCompositionResolution,
   partsDb: PowerPart[],
 ): ProficiencyPart[] {
-  const docs = [res.shared?.doc, ...res.variants.map((v) => v.doc), res.reverse?.doc];
+  const docs =
+    res.structure === 'randomize'
+      ? [...res.variants.map((v) => v.doc), res.reverse?.doc]
+      : [res.shared?.doc, ...res.variants.map((v) => v.doc), res.reverse?.doc];
   return docs
     .filter((d): d is PowerDocument => !!d)
     .flatMap((d) => proficiencyPartsFor(d, partsDb));
@@ -854,16 +913,11 @@ export function composedPowerDamage(res: PowerCompositionResolution): PowerDocum
     }
     return out;
   }
-  const picked = selectedResolvedVariant(res);
-  if (picked) {
-    // A bad Randomize face still does Shared, then adds the drawback's own damage.
-    if (res.structure === 'randomize' && picked.polarity === 'negative') {
-      const own = picked.doc.damage;
-      if (!own || own === sharedRef || !hasDamage(own)) return sharedRows;
-      return [...sharedRows, ...own];
-    }
-    return picked.doc.damage ?? [];
+  if (res.structure === 'randomize') {
+    return selectedResolvedVariant(res)?.doc.damage ?? [];
   }
+  const picked = selectedResolvedVariant(res);
+  if (picked) return picked.doc.damage ?? [];
   return sharedRows;
 }
 
@@ -906,9 +960,6 @@ export function powerCompositionEnergyLines(res: PowerCompositionResolution): st
       return `${v.label}: ${formatEnergyIntermediate(v.energyRaw)} EN`;
     return `${v.label}: ${v.energy} EN`;
   });
-  if (res.structure === 'randomize' && res.shared) {
-    lines.unshift(`Shared chassis: ${formatEnergyIntermediate(res.shared.rawEnergy)} EN`);
-  }
   if (res.structure === 'choice' && res.shared) {
     lines.unshift(`Shared: ${formatEnergyIntermediate(res.shared.rawEnergy)} EN`);
   }
@@ -916,8 +967,7 @@ export function powerCompositionEnergyLines(res: PowerCompositionResolution): st
     choice: 'Choice pays the most expensive portion',
     modify: 'Shared is paid once; each piece adds its parts at that piece’s footprint',
     alternate: 'Alternate pays the selected variant',
-    randomize:
-      'Shared plus each good face’s extra cost times its chance, minus each drawback’s reduction times its chance',
+    randomize: 'Each face at its own cost, weighted by its chance. Shared adds no energy',
   };
   const ruleText = rule[res.structure];
   if (ruleText) {
@@ -951,6 +1001,12 @@ export function composedPowerDurationLabel(res: PowerCompositionResolution): str
       ' / ',
     );
   }
+  if (res.structure === 'randomize' && !selectedResolvedVariant(res)) {
+    return uniqueJoin(
+      res.variants.map((v) => v.display.duration),
+      ' / ',
+    );
+  }
   return (selectedResolvedVariant(res)?.display ?? res.shared?.display)?.duration ?? '';
 }
 
@@ -962,11 +1018,27 @@ export function deriveComposedPowerDisplay(
   const res = resolvePowerComposition(powerDoc, partsDb, options);
   if (!res) return null;
   const picked = selectedResolvedVariant(res);
-  const base = picked?.display ?? res.shared?.display ?? res.variants[0]?.display;
+  const sharedDisplay = res.shared?.display;
+  let base = picked?.display ?? (res.structure === 'randomize' ? undefined : sharedDisplay);
+  base = base ?? res.variants[0]?.display;
   if (!base) return null;
+  if (res.structure === 'randomize' && !picked && sharedDisplay) {
+    base = {
+      ...sharedDisplay,
+      range: uniqueJoin(
+        res.variants.map((v) => v.display.range),
+        ' / ',
+      ),
+      area: uniqueJoin(
+        res.variants.map((v) => v.display.area),
+        ' / ',
+      ),
+      partChips: [],
+    };
+  }
 
   const chipDisplays = [
-    ...(res.shared ? [res.shared.display] : []),
+    ...(res.shared && res.structure !== 'randomize' ? [res.shared.display] : []),
     ...res.variants.map((v) => v.display),
     ...(res.reverse ? [res.reverse.display] : []),
   ];

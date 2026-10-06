@@ -200,27 +200,34 @@ export function usePowerCreatorComposition({
       let variants = src.variants;
       const wasAlternate = structure === 'alternate';
       const isAlternate = next === 'alternate';
+      const wasRandomize = structure === 'randomize';
+      const isRandomize = next === 'randomize';
       const freshTabs = (copyShared: boolean) => {
         const first = variantSeq.current + 1;
         variantSeq.current = first + 1;
         return defaultVariantTabs(shared, copyShared, first);
       };
-      if (isAlternate && !wasAlternate) {
-        variants =
-          variants.length === 0
-            ? freshTabs(true)
-            : variants.map((v) => ({ ...v, form: mergeOverlayIntoShared(shared, v.form) }));
+      const asFullFaces = () =>
+        variants.map((v) => ({ ...v, form: mergeOverlayIntoShared(shared, v.form) }));
+      const asOverlays = () =>
+        variants.map((v) => ({
+          ...v,
+          form: diffAgainstShared(shared, v.form, overlayFlagsForTab(overlayByTab, v.id)),
+        }));
+      if (isAlternate && !wasAlternate && !wasRandomize) {
+        variants = variants.length === 0 ? freshTabs(true) : asFullFaces();
+      } else if (wasAlternate && isRandomize) {
+        shared = variants[0]?.form ?? shared;
+      } else if (isRandomize && !wasRandomize && !wasAlternate) {
+        variants = variants.length === 0 ? freshTabs(true) : asFullFaces();
       } else if (wasAlternate && !isAlternate) {
         shared = variants[0]?.form ?? shared;
-        if (next !== 'none') {
-          variants = variants.map((v) => ({
-            ...v,
-            form: diffAgainstShared(shared, v.form, overlayFlagsForTab(overlayByTab, v.id)),
-          }));
-        }
+        if (next !== 'none' && !isRandomize) variants = asOverlays();
+      } else if (wasRandomize && !isRandomize && next !== 'alternate' && next !== 'none') {
+        variants = asOverlays();
       }
       if (next !== 'none' && variants.length === 0) {
-        variants = freshTabs(false);
+        variants = freshTabs(isAlternate || isRandomize);
       }
       setOverlayByTab((prev) => pruneOverlayFlags(prev, overlayTabIds(reverseEnabled, variants)));
       if (next === 'randomize' && dieFaces.every((f) => !f)) {
@@ -255,7 +262,9 @@ export function usePowerCreatorComposition({
         ? (src.variants.find((v) => v.id === activeTabId)?.form ??
           src.variants[0]?.form ??
           src.shared)
-        : emptyTabForm();
+        : structure === 'randomize'
+          ? src.shared
+          : emptyTabForm();
     const id = nextVariantId(src.variants, variantSeq.current);
     variantSeq.current = variantHighWater([...src.variants, { id }]);
     const tab: PowerVariantTab = {

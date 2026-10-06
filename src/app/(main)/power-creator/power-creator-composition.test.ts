@@ -145,8 +145,21 @@ describe('action type stays on Shared', () => {
     expect(reversePayload?.reverse?.overrides ?? []).not.toContain('action');
   });
 
-  it('drops a stored action override on a Randomize bad face and keeps a good face’s action', () => {
+  it('saves each Randomize face in full and locks every face’s action to Shared', () => {
     const shared = emptyTabForm();
+    shared.actionType = 'free';
+    const goodForm = pieceWithQuickAction();
+    goodForm.range = { steps: 2 };
+    goodForm.selectedParts = [
+      {
+        part: { id: '910', name: 'Boost' },
+        op_1_lvl: 0,
+        op_2_lvl: 0,
+        op_3_lvl: 0,
+        applyDuration: false,
+        selectedCategory: 'any',
+      },
+    ] as typeof goodForm.selectedParts;
     const flags = setOverlayField(
       setOverlayField({}, 'bad', 'action', true),
       'good',
@@ -163,7 +176,7 @@ describe('action type stays on Shared', () => {
           label: 'Good',
           polarity: 'positive',
           description: '',
-          form: pieceWithQuickAction(),
+          form: goodForm,
         },
         {
           id: 'bad',
@@ -180,11 +193,14 @@ describe('action type stays on Shared', () => {
     });
     const good = payload?.variants.find((v) => v.id === 'good');
     const bad = payload?.variants.find((v) => v.id === 'bad');
-    expect(good?.actionType).toBe('quick');
-    expect(good?.isReaction).toBe(true);
+    expect(good?.actionType).toBeUndefined();
+    expect(good?.isReaction).toBeUndefined();
+    expect(good?.overrides).toBeUndefined();
+    expect(good?.range).toEqual({ steps: 2 });
+    expect(good?.parts).toEqual([expect.objectContaining({ id: 910, name: 'Boost' })]);
     expect(bad?.actionType).toBeUndefined();
     expect(bad?.isReaction).toBeUndefined();
-    expect(bad?.overrides ?? []).not.toContain('action');
+    expect(bad?.overrides).toBeUndefined();
   });
 
   it('keeps an Alternate variant’s own action type', () => {

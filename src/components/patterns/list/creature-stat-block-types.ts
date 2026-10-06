@@ -119,6 +119,11 @@ export interface CreatureData {
                 }
             >
           | undefined;
+        /** Structured mechanics saved with the creature power. Display strings stay on range/area/duration. */
+        rangeValue?: LibraryPower['range'] | undefined;
+        areaValue?: LibraryPower['area'] | undefined;
+        durationValue?: LibraryPower['duration'] | undefined;
+        damageValue?: LibraryPower['damage'] | undefined;
       }>
     | undefined;
   techniques?:

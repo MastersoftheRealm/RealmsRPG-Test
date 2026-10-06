@@ -1,6 +1,7 @@
 /**
- * Overlay tabs (Choice / Modify / Randomize / Reverse) show Shared mechanics
+ * Overlay tabs (Choice / Modify / Reverse) show Shared mechanics
  * as inherited until the author presses Override.
+ * A Randomize face locks action to Shared and edits its other fields itself.
  */
 
 'use client';

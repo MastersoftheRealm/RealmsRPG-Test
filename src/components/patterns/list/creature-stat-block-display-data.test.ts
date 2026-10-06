@@ -90,4 +90,62 @@ describe('buildPowersForDisplay energy', () => {
     expect(row?.duration).toBe(priced.duration);
     expect(row?.area).toBe(priced.area);
   });
+
+  it('keeps a matched power’s energy, action, and duration after the library row is gone', () => {
+    const partsDb = loadRepoCodexParts();
+    const power = {
+      id: 'saved-daze',
+      docId: 'saved-daze',
+      name: 'Saved Daze',
+      description: '',
+      parts: [{ id: 339, name: 'Daze', applyDuration: true }],
+      actionType: 'quick',
+      range: { steps: 2 },
+      duration: { type: 'rounds' as const, value: 2 },
+      composition: {
+        structure: 'modify' as const,
+        variants: [{ id: 'extra', label: 'Extra', parts: [{ id: 329, name: 'Slow' }] }],
+      },
+    } satisfies LibraryPower;
+
+    const creature = {
+      id: 'c3',
+      name: 'Matched',
+      powers: [
+        {
+          id: 'saved-daze',
+          name: 'Saved Daze',
+          parts: power.parts,
+          actionType: power.actionType,
+          rangeValue: power.range,
+          durationValue: power.duration,
+          composition: power.composition,
+          energy: 1,
+          action: 'Basic Action',
+          duration: 'Instant',
+        },
+      ],
+    } satisfies CreatureData;
+
+    const matched = buildPowersForDisplay(creature, [power], [], partsDb)[0];
+    const unmatched = buildPowersForDisplay(creature, [], [], partsDb)[0];
+    expect(matched?.energyCost).toBeGreaterThan(0);
+    expect(unmatched?.energyCost).toBe(matched?.energyCost);
+    expect(unmatched?.actionType).toBe(matched?.actionType);
+    expect(unmatched?.duration).toBe(matched?.duration);
+    expect(unmatched?.actionType).not.toBe('Basic Action');
+    expect(unmatched?.duration).not.toBe('Instant');
+  });
+
+  it('shows a legacy partless snapshot’s saved energy, action, and duration', () => {
+    const creature = {
+      id: 'c4',
+      name: 'Legacy',
+      powers: [{ name: 'Old Bolt', energy: 9, action: 'Quick', duration: '2 Rounds' }],
+    } satisfies CreatureData;
+    const row = buildPowersForDisplay(creature, [], [], [])[0];
+    expect(row?.energyCost).toBe(9);
+    expect(row?.actionType).toBe('Quick');
+    expect(row?.duration).toBe('2 Rounds');
+  });
 });

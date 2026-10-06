@@ -73,17 +73,18 @@ export type PowerCreatorEditorProps = {
 
   sectionCosts: PowerSectionCosts;
 
-  /** Set on a Choice / Modify / Randomize / Reverse tab. Mechanics show as From Shared until overridden. */
+  /** Set on a Choice / Modify / Reverse tab. A Randomize face passes only the locked action. */
   inheritance?: PowerCreatorInheritance | null | undefined;
 };
 
 export type PowerCreatorInheritance = {
   action: InheritedField;
-  attack: InheritedField;
-  range: InheritedField;
-  area: InheritedField;
-  duration: InheritedField;
-  damage: InheritedField;
-  sharedPartNames: string[];
-  sharedMechanicNames: string[];
+  attack?: InheritedField | undefined;
+  range?: InheritedField | undefined;
+  area?: InheritedField | undefined;
+  duration?: InheritedField | undefined;
+  damage?: InheritedField | undefined;
+  /** Set on overlay tabs. Omitted on a Randomize face, which owns its parts. */
+  sharedPartNames?: string[] | undefined;
+  sharedMechanicNames?: string[] | undefined;
 };

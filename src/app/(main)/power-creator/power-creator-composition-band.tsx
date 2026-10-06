@@ -39,12 +39,17 @@ function tabHint(structure: PowerCompositionStructure, activeTabId: string): str
     return 'Reverse: add the drawback parts. Range, area, and duration start as the power’s. The summary shows half the drawback divided by the action-type multiplier.';
   }
   if (activeTabId === SHARED_TAB_ID) {
-    return structure === 'none'
-      ? 'Power: the benefit this drawback is attached to.'
-      : 'Shared holds the range, area, duration, and action every piece starts from, plus parts that apply to the whole power.';
+    if (structure === 'none') return 'Power: the benefit this drawback is attached to.';
+    if (structure === 'randomize') {
+      return 'Shared holds the action type for every face, plus optional defaults that pre-fill a new face. Those defaults add no energy.';
+    }
+    return 'Shared holds the range, area, duration, and action every piece starts from, plus parts that apply to the whole power.';
   }
   if (structure === 'alternate') {
     return 'Each variant is a complete power. New variants copy the tab you are on.';
+  }
+  if (structure === 'randomize') {
+    return 'This face has its own range, area, duration, and parts. Action type stays on Shared. A new face starts as a copy of Shared’s defaults.';
   }
   if (structure === 'modify') {
     return 'Mechanics say From Shared until you press Override. Parts you add here belong only to this piece. An empty piece does not raise the energy.';
@@ -175,8 +180,8 @@ export function PowerCreatorCompositionBand({
               label="Outcome"
               value={activeVariant.polarity}
               options={[
-                { value: 'positive', label: 'Positive (adds its energy)' },
-                { value: 'negative', label: 'Negative (subtracts its energy)' },
+                { value: 'positive', label: 'Positive (this face’s full energy)' },
+                { value: 'negative', label: 'Negative (a drawback on this face)' },
               ]}
               onChange={(e) =>
                 state.updateVariantMeta(activeVariant.id, {

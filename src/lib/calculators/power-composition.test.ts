@@ -327,9 +327,119 @@ describe('resolvePowerComposition', () => {
         die: { sides: 6, faces },
       },
     };
-    // Good overlay at free = 6 × 1.5 = 9; extra vs empty shared 0.
-    // Bad reduction = ½ · 4 ÷ 1.5 = 1.333…. 0.5·9 − 0.5·1.333… = 4.5 − 0.667 = 3.833 → 4 EN.
+    // Good face at free = 6 × 1.5 = 9, weight 1/2 → 4.5.
+    // Bad reduction = ½ · 4 ÷ 1.5 ≈ 1.333, weight 1/2 → 0.667. 4.5 − 0.667 = 3.833 → 4 EN.
     expect(resolvePowerComposition(doc, pricingDb)!.energy).toBe(4);
+  });
+
+  it('includes Reaction in the drawback divisor for bad faces and Reverse', () => {
+    const db: PowerPart[] = [
+      ...snapshotParts([PART_IDS.POWER_REACTION, PART_IDS.POWER_QUICK_OR_FREE_ACTION]),
+      part({ id: '920', name: 'Drawback', base_en: 4 }),
+      part({ id: '921', name: 'Benefit', base_en: 20 }),
+    ];
+    const priced = (isReaction: boolean) =>
+      resolvePowerComposition(
+        {
+          name: 'Harm',
+          actionType: 'free',
+          isReaction,
+          parts: [{ id: 921, name: 'Benefit' }],
+          composition: {
+            structure: 'none',
+            variants: [],
+            reverse: { parts: [{ id: 920, name: 'Drawback' }] },
+          },
+        },
+        db,
+      )!;
+    const free = priced(false);
+    const reaction = priced(true);
+    expect(free.reverse?.actionMultiplier).toBeCloseTo(1.5);
+    expect(reaction.reverse?.actionMultiplier).toBeCloseTo(1.5 * 1.25);
+    expect(reaction.reverse?.discount).toBeCloseTo(2 / (1.5 * 1.25));
+    expect(reaction.reverse!.discount).toBeLessThan(free.reverse!.discount);
+
+    const bad = (isReaction: boolean) =>
+      resolvePowerComposition(
+        {
+          name: 'Wild',
+          actionType: 'free',
+          isReaction,
+          composition: {
+            structure: 'randomize',
+            variants: [
+              {
+                id: 'bad',
+                label: 'Bad',
+                polarity: 'negative',
+                parts: [{ id: 920, name: 'Drawback' }],
+              },
+            ],
+            die: { sides: 2, faces: ['bad', 'bad'] },
+          },
+        },
+        db,
+      )!;
+    expect(bad(true).structureEnergy).toBeCloseTo(-(2 / (1.5 * 1.25)));
+    expect(bad(true).structureEnergy).toBeGreaterThan(bad(false).structureEnergy);
+  });
+
+  it('prices a free-action 20/80 Randomize from snapshot parts, faces independent', () => {
+    const db = loadRepoCodexParts();
+    const stun = { id: 341, name: 'Stun', op_1_lvl: 2 };
+    const buffParts = [
+      { id: 307, name: 'Heal' },
+      { id: 235, name: 'Add Multiple Targets', op_1_lvl: 1 },
+    ];
+    const buffRange = { steps: 1 };
+    const buffArea = { type: 'sphere' as const, level: 1 };
+    const doc: PowerDocument = {
+      name: 'Wild Buff',
+      actionType: 'free',
+      parts: [{ id: 317, name: 'Regenerate' }],
+      range: { steps: 4 },
+      composition: {
+        structure: 'randomize',
+        variants: [
+          { id: 'bad', label: 'Stunned 3', polarity: 'negative', parts: [stun] },
+          {
+            id: 'good',
+            label: 'Buff three allies',
+            parts: buffParts,
+            range: buffRange,
+            area: buffArea,
+          },
+        ],
+        die: {
+          sides: 10,
+          faces: ['bad', 'bad', 'good', 'good', 'good', 'good', 'good', 'good', 'good', 'good'],
+        },
+      },
+    };
+    const res = resolvePowerComposition(doc, db)!;
+    const good = res.variants.find((v) => v.id === 'good')!;
+    const bad = res.variants.find((v) => v.id === 'bad')!;
+    const goodAlone = rawEnergy(
+      { actionType: 'free', parts: buffParts, range: buffRange, area: buffArea },
+      db,
+    );
+    const stunBasic = rawEnergy({ actionType: 'basic', isReaction: false, parts: [stun] }, db);
+    expect(stunBasic).toBeCloseTo(15);
+    expect(good.energyRaw).toBeCloseTo(goodAlone);
+    expect(good.doc.actionType).toBe('free');
+    expect(bad.doc.range).toBeUndefined();
+    expect(bad.doc.area).toBeUndefined();
+    expect(bad.energyRaw).toBeCloseTo(-drawbackReductionForAction(stunBasic, 1.5));
+    expect(bad.energyRaw).toBeCloseTo(-5);
+    expect(res.shared!.rawEnergy).toBeGreaterThan(good.energyRaw);
+    expect(res.structureEnergy).toBeCloseTo(good.energyRaw * 0.8 + bad.energyRaw * 0.2);
+    expect(res.energy).toBe(finalizePowerEnergy(res.structureEnergy, true));
+    const stunWithBuffFootprint = rawEnergy(
+      { actionType: 'basic', parts: [stun], range: buffRange, area: buffArea },
+      db,
+    );
+    expect(stunBasic).toBeLessThan(stunWithBuffFootprint);
   });
 
   it('Randomize expected value is cheaper than the old signed-face sum', () => {
@@ -352,16 +462,14 @@ describe('resolvePowerComposition', () => {
       },
     };
     const mixed = resolvePowerComposition(doc, partsDb)!;
-    const sharedRaw = rawEnergy(chassis);
-    const extraGood = rawEnergy({ ...chassis, parts: [{ id: 901, name: 'Slow' }] }) - sharedRaw;
+    const goodRaw = rawEnergy({ actionType: 'basic', parts: [{ id: 901, name: 'Slow' }] });
     const badRaw = rawEnergy({
       actionType: 'basic',
       isReaction: false,
       parts: [{ id: 902, name: 'Blinded' }],
     });
-    expect(mixed.energy).toBe(
-      finalizePowerEnergy(sharedRaw + (3 * extraGood) / 4 - (0.5 * badRaw) / 4),
-    );
+    expect(mixed.structureEnergy).toBeCloseTo((3 * goodRaw) / 4 - (0.5 * badRaw) / 4);
+    expect(mixed.energy).toBe(finalizePowerEnergy(mixed.structureEnergy, true));
     expect(mixed.variants.find((v) => v.id === 'slow')?.faces).toEqual([1, 2, 3]);
     const allNegative = resolvePowerComposition(
       {
@@ -373,7 +481,7 @@ describe('resolvePowerComposition', () => {
       },
       partsDb,
     )!;
-    expect(allNegative.energy).toBe(1);
+    expect(allNegative.energy).toBe(0);
     expect(mixed.selectedVariantId).toBeNull();
   });
 
@@ -568,7 +676,7 @@ describe('resolvePowerComposition', () => {
     };
     const unread = resolvePowerComposition(doc, partsDb)!;
     expect(unread.selectedVariantId).toBeNull();
-    expect(composedPowerDamage(unread)).toEqual([{ amount: 1, size: 4, type: 'magic' }]);
+    expect(composedPowerDamage(unread)).toEqual([]);
     const rolled = resolvePowerComposition(doc, partsDb, { selectedVariantId: 'b' })!;
     expect(rolled.selectedVariantId).toBe('b');
     expect(composedPowerDamage(rolled)).toEqual([{ amount: 2, size: 6, type: 'lightning' }]);
@@ -590,10 +698,7 @@ describe('resolvePowerComposition', () => {
       },
     };
     const bad = resolvePowerComposition(badDoc, partsDb, { selectedVariantId: 'b' })!;
-    expect(composedPowerDamage(bad)).toEqual([
-      { amount: 1, size: 4, type: 'magic' },
-      { amount: 1, size: 4, type: 'poison' },
-    ]);
+    expect(composedPowerDamage(bad)).toEqual([{ amount: 1, size: 4, type: 'poison' }]);
   });
 
   it('Reverse help states the inverse rule, not the stale codex sentence', () => {
@@ -621,35 +726,53 @@ describe('resolvePowerComposition', () => {
     expect(res.energy).toBe(finalizePowerEnergy(rawEnergy(base) - 2, true));
   });
 
-  it('a good Randomize face cheaper than Shared shows its negative contribution', () => {
+  it('a Randomize face does not pay for Shared parts or another face’s range', () => {
     const pricingDb: PowerPart[] = [...partsDb, part({ id: '910', name: 'Boost', base_en: 6 })];
     const res = resolvePowerComposition(
       {
-        name: 'Cheaper face',
+        name: 'Independent faces',
         actionType: 'free',
         parts: [{ id: 910, name: 'Boost' }],
+        range: { steps: 3 },
         composition: {
           structure: 'randomize',
           variants: [
-            { id: 'cheap', label: 'Basic', actionType: 'basic', isReaction: false },
+            { id: 'plain', label: 'Plain', parts: [{ id: 901, name: 'Slow' }] },
             {
               id: 'bad',
               label: 'Bad',
               polarity: 'negative',
+              range: { steps: 1 },
               parts: [{ id: 902, name: 'Blinded' }],
             },
           ],
-          die: { sides: 2, faces: ['cheap', 'bad'] },
+          die: { sides: 2, faces: ['plain', 'bad'] },
         },
       },
       pricingDb,
     )!;
-    // Shared at free = 6 × 1.5 = 9. Basic overlay = 6. Contribution = −3, not +0.
-    expect(res.variants.find((v) => v.id === 'cheap')?.energy).toBe(-3);
-    // Raw reduction is ½ · 4 ÷ 1.5. The chip rounds that magnitude up to 2.
-    expect(res.variants.find((v) => v.id === 'bad')?.energyRaw).toBeCloseTo(-(2 / 1.5));
-    expect(res.variants.find((v) => v.id === 'bad')?.energy).toBe(-2);
-    expect(res.energy).toBeLessThan(9);
+    const plain = res.variants.find((v) => v.id === 'plain')!;
+    const bad = res.variants.find((v) => v.id === 'bad')!;
+    expect(plain.energyRaw).toBeCloseTo(
+      rawEnergy({ actionType: 'free', parts: [{ id: 901, name: 'Slow' }] }, pricingDb),
+    );
+    expect(plain.energyRaw).toBeLessThan(res.shared?.rawEnergy ?? 0);
+    expect(bad.doc.range).toEqual({ steps: 1 });
+    expect(bad.energyRaw).toBeCloseTo(
+      -drawbackReductionForAction(
+        rawEnergy(
+          {
+            actionType: 'basic',
+            isReaction: false,
+            range: { steps: 1 },
+            parts: [{ id: 902, name: 'Blinded' }],
+          },
+          pricingDb,
+        ),
+        1.5,
+      ),
+    );
+    expect(res.structureEnergy).toBeCloseTo((plain.energyRaw + bad.energyRaw) / 2);
   });
 
   it('Randomize breakdown shows raw Shared and the halved drawback (not the 1 EN floor)', () => {
@@ -674,7 +797,7 @@ describe('resolvePowerComposition', () => {
       partsDb,
     )!;
     const lines = powerCompositionEnergyLines(res);
-    expect(lines[0]).toBe('Shared chassis: 0 EN');
+    expect(lines.some((line) => line.startsWith('Shared chassis'))).toBe(false);
     expect(lines.some((line) => line.startsWith('Bad: −2 EN'))).toBe(true);
     expect(lines.some((line) => line.includes('−4'))).toBe(false);
     expect(res.shared?.display.energy).toBe(0);
@@ -1012,7 +1135,7 @@ describe('resolvePowerComposition', () => {
         },
         db,
       )!;
-      return res.structureEnergy - (res.shared?.rawEnergy ?? 0);
+      return res.structureEnergy;
     });
     badDeltas.forEach((delta, index) => {
       expect(delta).toBeCloseTo(-expected[index]!);

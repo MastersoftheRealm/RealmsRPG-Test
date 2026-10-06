@@ -177,10 +177,15 @@ function PowerCreatorWorkspace({
   const composed = ws.composedSummary;
   const tabDisplay = composed?.tabDisplay ?? null;
   const showVariantTabs = ws.variants.structure !== 'none' || ws.variants.reverseEnabled;
+  const onRandomizeFace =
+    ws.variants.structure === 'randomize' &&
+    ws.variants.activeTabId !== SHARED_TAB_ID &&
+    ws.variants.activeTabId !== REVERSE_TAB_ID;
   const onOverlayTab =
     ws.variants.activeTabId === REVERSE_TAB_ID ||
     (ws.variants.activeTabId !== SHARED_TAB_ID &&
       ws.variants.structure !== 'alternate' &&
+      ws.variants.structure !== 'randomize' &&
       ws.variants.structure !== 'none');
 
   const shared = ws.variants.collected.shared;
@@ -197,116 +202,124 @@ function PowerCreatorWorkspace({
     selectedAdvancedParts: ws.selectedAdvancedParts,
   };
   const overlayTabId = ws.variants.activeTabId;
-  const badFaceActionLocked =
-    ws.variants.structure === 'randomize' && ws.variants.activeVariant?.polarity === 'negative';
   const actionLocked =
-    onOverlayTab &&
-    (overlayTabId === REVERSE_TAB_ID ||
-      ws.variants.structure === 'modify' ||
-      ws.variants.structure === 'choice' ||
-      badFaceActionLocked);
-  const inheritance: PowerCreatorInheritance | null = onOverlayTab
+    onRandomizeFace ||
+    (onOverlayTab &&
+      (overlayTabId === REVERSE_TAB_ID ||
+        ws.variants.structure === 'modify' ||
+        ws.variants.structure === 'choice'));
+  const inheritance: PowerCreatorInheritance | null = onRandomizeFace
     ? {
         action: {
-          ...inheritField(
-            showsFieldOverride(
-              actionIsOverride(live),
-              ws.variants.isFieldForcedOverride(overlayTabId, 'action'),
-            ),
-            sharedActionLabel(shared),
-            () => {
-              ws.variants.markFieldOverridden(overlayTabId, 'action');
-              ws.setActionType(shared.actionType);
-              ws.setIsReaction(shared.isReaction);
-            },
-            () => {
-              ws.variants.clearFieldOverridden(overlayTabId, 'action');
-              const blank = emptyTabForm();
-              ws.setActionType(blank.actionType);
-              ws.setIsReaction(blank.isReaction);
-            },
-          ),
-          ...(actionLocked ? { locked: true, overridden: false } : {}),
+          label: sharedActionLabel(shared),
+          overridden: false,
+          locked: true,
+          onOverride: () => {},
+          onUseShared: () => {},
         },
-        attack: inheritField(
-          showsFieldOverride(
-            attackIsOverride(live),
-            ws.variants.isFieldForcedOverride(overlayTabId, 'attack'),
-          ),
-          sharedAttackLabel(shared),
-          () => {
-            ws.variants.markFieldOverridden(overlayTabId, 'attack');
-            ws.setAttackMode(shared.attackMode);
-          },
-          () => {
-            ws.variants.clearFieldOverridden(overlayTabId, 'attack');
-            ws.setAttackMode(emptyTabForm().attackMode);
-          },
-        ),
-        range: inheritField(
-          showsFieldOverride(
-            rangeIsOverride(live),
-            ws.variants.isFieldForcedOverride(overlayTabId, 'range'),
-          ),
-          sharedRangeLabel(shared),
-          () => {
-            ws.variants.markFieldOverridden(overlayTabId, 'range');
-            ws.setRange(shared.range);
-          },
-          () => {
-            ws.variants.clearFieldOverridden(overlayTabId, 'range');
-            ws.setRange(emptyTabForm().range);
-          },
-        ),
-        area: inheritField(
-          showsFieldOverride(
-            areaIsOverride(live),
-            ws.variants.isFieldForcedOverride(overlayTabId, 'area'),
-          ),
-          sharedAreaLabel(shared),
-          () => {
-            ws.variants.markFieldOverridden(overlayTabId, 'area');
-            ws.setArea(shared.area);
-          },
-          () => {
-            ws.variants.clearFieldOverridden(overlayTabId, 'area');
-            ws.setArea(emptyTabForm().area);
-          },
-        ),
-        duration: inheritField(
-          showsFieldOverride(
-            durationIsOverride(live),
-            ws.variants.isFieldForcedOverride(overlayTabId, 'duration'),
-          ),
-          sharedDurationLabel(shared),
-          () => {
-            ws.variants.markFieldOverridden(overlayTabId, 'duration');
-            ws.setDuration(shared.duration);
-          },
-          () => {
-            ws.variants.clearFieldOverridden(overlayTabId, 'duration');
-            ws.setDuration(emptyTabForm().duration);
-          },
-        ),
-        damage: inheritField(
-          showsFieldOverride(
-            damageIsOverride(live.damages),
-            ws.variants.isFieldForcedOverride(overlayTabId, 'damage'),
-          ),
-          sharedDamageLabel(shared),
-          () => {
-            ws.variants.markFieldOverridden(overlayTabId, 'damage');
-            ws.setDamages(shared.damages);
-          },
-          () => {
-            ws.variants.clearFieldOverridden(overlayTabId, 'damage');
-            ws.setDamages(emptyTabForm().damages);
-          },
-        ),
-        sharedPartNames: shared.selectedParts.map((p) => p.part.name),
-        sharedMechanicNames: shared.selectedAdvancedParts.map((p) => p.part.name),
       }
-    : null;
+    : onOverlayTab
+      ? {
+          action: {
+            ...inheritField(
+              showsFieldOverride(
+                actionIsOverride(live),
+                ws.variants.isFieldForcedOverride(overlayTabId, 'action'),
+              ),
+              sharedActionLabel(shared),
+              () => {
+                ws.variants.markFieldOverridden(overlayTabId, 'action');
+                ws.setActionType(shared.actionType);
+                ws.setIsReaction(shared.isReaction);
+              },
+              () => {
+                ws.variants.clearFieldOverridden(overlayTabId, 'action');
+                const blank = emptyTabForm();
+                ws.setActionType(blank.actionType);
+                ws.setIsReaction(blank.isReaction);
+              },
+            ),
+            ...(actionLocked ? { locked: true, overridden: false } : {}),
+          },
+          attack: inheritField(
+            showsFieldOverride(
+              attackIsOverride(live),
+              ws.variants.isFieldForcedOverride(overlayTabId, 'attack'),
+            ),
+            sharedAttackLabel(shared),
+            () => {
+              ws.variants.markFieldOverridden(overlayTabId, 'attack');
+              ws.setAttackMode(shared.attackMode);
+            },
+            () => {
+              ws.variants.clearFieldOverridden(overlayTabId, 'attack');
+              ws.setAttackMode(emptyTabForm().attackMode);
+            },
+          ),
+          range: inheritField(
+            showsFieldOverride(
+              rangeIsOverride(live),
+              ws.variants.isFieldForcedOverride(overlayTabId, 'range'),
+            ),
+            sharedRangeLabel(shared),
+            () => {
+              ws.variants.markFieldOverridden(overlayTabId, 'range');
+              ws.setRange(shared.range);
+            },
+            () => {
+              ws.variants.clearFieldOverridden(overlayTabId, 'range');
+              ws.setRange(emptyTabForm().range);
+            },
+          ),
+          area: inheritField(
+            showsFieldOverride(
+              areaIsOverride(live),
+              ws.variants.isFieldForcedOverride(overlayTabId, 'area'),
+            ),
+            sharedAreaLabel(shared),
+            () => {
+              ws.variants.markFieldOverridden(overlayTabId, 'area');
+              ws.setArea(shared.area);
+            },
+            () => {
+              ws.variants.clearFieldOverridden(overlayTabId, 'area');
+              ws.setArea(emptyTabForm().area);
+            },
+          ),
+          duration: inheritField(
+            showsFieldOverride(
+              durationIsOverride(live),
+              ws.variants.isFieldForcedOverride(overlayTabId, 'duration'),
+            ),
+            sharedDurationLabel(shared),
+            () => {
+              ws.variants.markFieldOverridden(overlayTabId, 'duration');
+              ws.setDuration(shared.duration);
+            },
+            () => {
+              ws.variants.clearFieldOverridden(overlayTabId, 'duration');
+              ws.setDuration(emptyTabForm().duration);
+            },
+          ),
+          damage: inheritField(
+            showsFieldOverride(
+              damageIsOverride(live.damages),
+              ws.variants.isFieldForcedOverride(overlayTabId, 'damage'),
+            ),
+            sharedDamageLabel(shared),
+            () => {
+              ws.variants.markFieldOverridden(overlayTabId, 'damage');
+              ws.setDamages(shared.damages);
+            },
+            () => {
+              ws.variants.clearFieldOverridden(overlayTabId, 'damage');
+              ws.setDamages(emptyTabForm().damages);
+            },
+          ),
+          sharedPartNames: shared.selectedParts.map((p) => p.part.name),
+          sharedMechanicNames: shared.selectedAdvancedParts.map((p) => p.part.name),
+        }
+      : null;
 
   const editor = (
     <PowerCreatorEditor

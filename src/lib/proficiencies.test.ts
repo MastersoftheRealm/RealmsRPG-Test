@@ -1,0 +1,25 @@
+import { describe, expect, it } from 'vitest';
+import type { CharacterProficiency } from '@/types';
+import { hasSufficientProficiency } from './proficiencies';
+
+function fire(op1Level: number): CharacterProficiency {
+  return {
+    id: `fire-${op1Level}`,
+    kind: 'power_part',
+    name: 'Elemental Damage',
+    damageType: 'fire',
+    baseTP: 2,
+    op1TP: 0.5,
+    op1Level,
+  };
+}
+
+describe('hasSufficientProficiency', () => {
+  it('treats a higher die of the same damage type as covering a lower die', () => {
+    const owned = fire(4);
+    expect(hasSufficientProficiency([owned], fire(0))).toBe(true);
+    expect(hasSufficientProficiency([owned], fire(4))).toBe(true);
+    expect(hasSufficientProficiency([fire(0)], fire(4))).toBe(false);
+    expect(hasSufficientProficiency([fire(4)], { ...fire(0), damageType: 'ice' })).toBe(false);
+  });
+});

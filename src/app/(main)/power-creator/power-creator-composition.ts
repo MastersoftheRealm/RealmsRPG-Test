@@ -319,7 +319,7 @@ export interface CollectedCompositionForms {
   overlayFlags?: OverlayFlagMap | undefined;
 }
 
-/** Modify, Choice, Reverse, and Randomize bad faces keep Shared’s action type. Drop a stored action override. */
+/** Modify, Choice, Reverse, and every Randomize face keep Shared’s action type. Drop a stored action override. */
 function withoutLockedAction<T extends PowerVariantSpec>(
   spec: T,
   overrides: PowerVariantOverrideField[],
@@ -342,17 +342,21 @@ export function buildCompositionPayload(
       : c.variants.map((v) => {
           const keep = overlayFlagsForTab(c.overlayFlags ?? {}, v.id);
           let overrides = [...keep];
-          let spec = isAlternate
-            ? tabFormToSpec(v.form)
-            : tabFormToOverlay(diffAgainstShared(c.shared, v.form, keep), keep);
-          const lockVariantAction =
-            c.structure === 'modify' ||
-            c.structure === 'choice' ||
-            (c.structure === 'randomize' && v.polarity === 'negative');
-          if (lockVariantAction) {
-            const locked = withoutLockedAction(spec, overrides);
+          let spec: PowerVariantSpec;
+          if (c.structure === 'randomize') {
+            const locked = withoutLockedAction(tabFormToSpec(v.form), []);
             spec = locked.spec;
-            overrides = locked.overrides;
+            overrides = [];
+          } else {
+            spec = isAlternate
+              ? tabFormToSpec(v.form)
+              : tabFormToOverlay(diffAgainstShared(c.shared, v.form, keep), keep);
+            const lockVariantAction = c.structure === 'modify' || c.structure === 'choice';
+            if (lockVariantAction) {
+              const locked = withoutLockedAction(spec, overrides);
+              spec = locked.spec;
+              overrides = locked.overrides;
+            }
           }
           return {
             id: v.id,
