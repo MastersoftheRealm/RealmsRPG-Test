@@ -32,6 +32,7 @@ import {
 } from '@/lib/calculators/power-calc';
 import type { PowerDocument } from '@/lib/calculators/power-calc';
 import {
+  composedPowerCategoryDamage,
   composedPowerDamage,
   composedPowerSavedParts,
   resolvePowerComposition,
@@ -424,7 +425,10 @@ export function buildPowerTechniqueFilterableRow(
     partsDb,
   );
   if (kind === 'power') {
-    categories = withDamageCategory(categories, powerHasDamageCategory(item.damage));
+    categories = withDamageCategory(
+      categories,
+      powerHasDamageCategory(composed ? composedPowerCategoryDamage(composed) : item.damage),
+    );
   }
   const partIds = parts.map((part) => {
     const p = part as { id?: string | number | undefined };
@@ -697,7 +701,7 @@ export function buildSelectableItem(
         composition ? composedPowerSavedParts(composition) : doc.parts,
         powerPartsDb,
       ),
-      powerHasDamageCategory(damage),
+      powerHasDamageCategory(composition ? composedPowerCategoryDamage(composition) : damage),
     );
     const categoryText = formatPartCategoriesColumn(categories);
     const sections = buildGlrFactDetailSections({

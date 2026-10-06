@@ -59,7 +59,7 @@ import type { ChipData } from '@/components/patterns';
 import { rangeFactChip, targetsFactChip } from '@/lib/detail-option/compact-facts';
 import { derivePowerDisplay, formatPowerDamage } from '@/lib/calculators/power-calc';
 import {
-  composedPowerDamage,
+  composedPowerCategoryDamage,
   composedPowerSavedParts,
   selectedResolvedVariant,
 } from '@/lib/calculators/power-composition';
@@ -292,7 +292,7 @@ export function mapPowerRows(
       derivePartCategories(categoryParts, ctx.powerPartsDb),
       powerHasDamageCategory(
         composition
-          ? composedPowerDamage(composition)
+          ? composedPowerCategoryDamage(composition)
           : Array.isArray(power.damage)
             ? power.damage
             : undefined,

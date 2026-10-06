@@ -65,6 +65,17 @@ export function emptyTabForm(): PowerTabForm {
   return pickTabForm(emptyPowerCreatorFormState());
 }
 
+/** Randomize Shared is the action type plus range, area, and duration defaults. */
+export function randomizeSharedDefaults(shared: PowerTabForm): PowerTabForm {
+  const empty = emptyTabForm();
+  return {
+    ...shared,
+    selectedParts: empty.selectedParts,
+    selectedAdvancedParts: empty.selectedAdvancedParts,
+    damages: empty.damages,
+  };
+}
+
 function savedParts(form: PowerTabForm) {
   return dedupeSavedParts([
     ...form.selectedParts.map((sp) => ({
@@ -393,5 +404,6 @@ export function buildCompositionPayload(
 /** Top-level payload form: Alternate mirrors variant 1 for legacy readers. */
 export function topLevelForm(c: CollectedCompositionForms): PowerTabForm {
   if (c.structure === 'alternate' && c.variants[0]) return c.variants[0].form;
+  if (c.structure === 'randomize') return randomizeSharedDefaults(c.shared);
   return c.shared;
 }

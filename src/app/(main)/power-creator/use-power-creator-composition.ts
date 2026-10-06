@@ -26,6 +26,7 @@ import {
   nextVariantId,
   nextVariantLabel,
   defaultVariantTabs,
+  randomizeSharedDefaults,
   overlayFlagsForTab,
   overlayFlagsFromComposition,
   pruneOverlayFlags,
@@ -116,7 +117,7 @@ export function compositionInitFromSaved(
     structure: composition.structure,
     reverseEnabled,
     stored: {
-      shared: topForm,
+      shared: composition.structure === 'randomize' ? randomizeSharedDefaults(topForm) : topForm,
       variants,
       reverse: composition.reverse
         ? specToTabForm(composition.reverse, powerParts)
@@ -224,9 +225,10 @@ export function usePowerCreatorComposition({
       if (isAlternate && !wasAlternate && !wasRandomize) {
         variants = variants.length === 0 ? freshTabs(true) : asFullFaces();
       } else if (wasAlternate && isRandomize) {
-        shared = variants[0]?.form ?? shared;
+        shared = randomizeSharedDefaults(variants[0]?.form ?? shared);
       } else if (isRandomize && !wasRandomize && !wasAlternate) {
         variants = variants.length === 0 ? freshTabs(true) : asFullFaces();
+        shared = randomizeSharedDefaults(shared);
       } else if (wasAlternate && !isAlternate) {
         shared = variants[0]?.form ?? shared;
         if (next !== 'none' && !isRandomize) variants = asOverlays();
@@ -270,7 +272,7 @@ export function usePowerCreatorComposition({
           src.variants[0]?.form ??
           src.shared)
         : structure === 'randomize'
-          ? src.shared
+          ? randomizeSharedDefaults(src.shared)
           : emptyTabForm();
     const id = nextVariantId(src.variants, variantSeq.current);
     variantSeq.current = variantHighWater([...src.variants, { id }]);

@@ -7,6 +7,7 @@ import {
   buildCompositionPayload,
   defaultVariantTabs,
   emptyTabForm,
+  topLevelForm,
   isOverlayFieldForced,
   nextVariantId,
   overlayFlagsFromComposition,
@@ -363,13 +364,25 @@ describe('legacy Randomize overlay', () => {
     expect(good?.form.damages).toEqual([
       expect.objectContaining({ amount: 1, size: 4, type: 'magic' }),
     ]);
-    expect(bad?.form.damages).toEqual([
-      expect.objectContaining({ amount: 1, size: 4, type: 'magic' }),
-    ]);
+    expect(bad?.form.damages.some((d) => d.type === 'magic')).toBe(false);
+    expect(bad?.form.range.steps).toBe(0);
+    expect(bad?.form.duration.type).not.toBe('rounds');
     expect(good?.form.selectedParts.map((p) => p.part.id)).toEqual(['900', '901']);
-    expect(bad?.form.selectedParts.map((p) => p.part.id)).toEqual(['900']);
+    expect(bad?.form.selectedParts).toEqual([]);
+    expect(init.stored.shared.selectedParts).toEqual([]);
+    expect(init.stored.shared.range.steps).toBe(2);
+    expect(init.stored.shared.actionType).toBe('quick');
 
     const payload = buildCompositionPayload({
+      structure: 'randomize',
+      reverseEnabled: false,
+      shared: init.stored.shared,
+      variants: init.stored.variants,
+      reverse: emptyTabForm(),
+      dieSides: init.dieSides,
+      dieFaces: init.dieFaces,
+    });
+    const top = topLevelForm({
       structure: 'randomize',
       reverseEnabled: false,
       shared,
@@ -378,7 +391,15 @@ describe('legacy Randomize overlay', () => {
       dieSides: init.dieSides,
       dieFaces: init.dieFaces,
     });
+    expect(top.selectedParts).toEqual([]);
+    expect(top.damages.every((d) => d.type === 'none' || d.amount === 0)).toBe(true);
+    expect(top.range.steps).toBe(2);
+    expect(top.actionType).toBe('quick');
     const savedGood = payload?.variants.find((v) => v.id === 'good');
+    const savedBad = payload?.variants.find((v) => v.id === 'bad');
+    expect(savedBad?.parts ?? []).toEqual([]);
+    expect(savedBad?.damage ?? []).toEqual([]);
+    expect(savedBad?.range).toEqual({ steps: 0 });
     expect(savedGood?.range).toEqual({ steps: 2 });
     expect(savedGood?.area).toBeDefined();
     expect(savedGood?.duration?.type).toBe('rounds');

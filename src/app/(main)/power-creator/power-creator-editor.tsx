@@ -71,34 +71,38 @@ export function PowerCreatorEditor(props: PowerCreatorEditorProps) {
         durationInheritance={props.inheritance?.duration ?? null}
       />
 
-      <PowerCreatorEditorPowerParts
-        selectedParts={props.selectedParts}
-        nonMechanicParts={props.nonMechanicParts}
-        powerPartsSummary={props.powerPartsSummary}
-        onAddPart={props.onAddPart}
-        onRemovePart={props.onRemovePart}
-        onUpdatePart={props.onUpdatePart}
-        selectedAdvancedParts={props.selectedAdvancedParts}
-        mechanicPartsForList={props.mechanicPartsForList}
-        powerMechanicsSummary={props.powerMechanicsSummary}
-        onAddMechanicPart={props.onAddMechanicPart}
-        onRemoveAdvancedPart={props.onRemoveAdvancedPart}
-        onUpdateAdvancedPart={props.onUpdateAdvancedPart}
-        sectionCosts={props.sectionCosts}
-        sectionsUnpriced={props.sectionsUnpriced}
-        sharedPartNames={props.inheritance?.sharedPartNames}
-        sharedMechanicNames={props.inheritance?.sharedMechanicNames}
-      />
+      {props.hidePartsAndDamage ? null : (
+        <>
+          <PowerCreatorEditorPowerParts
+            selectedParts={props.selectedParts}
+            nonMechanicParts={props.nonMechanicParts}
+            powerPartsSummary={props.powerPartsSummary}
+            onAddPart={props.onAddPart}
+            onRemovePart={props.onRemovePart}
+            onUpdatePart={props.onUpdatePart}
+            selectedAdvancedParts={props.selectedAdvancedParts}
+            mechanicPartsForList={props.mechanicPartsForList}
+            powerMechanicsSummary={props.powerMechanicsSummary}
+            onAddMechanicPart={props.onAddMechanicPart}
+            onRemoveAdvancedPart={props.onRemoveAdvancedPart}
+            onUpdateAdvancedPart={props.onUpdateAdvancedPart}
+            sectionCosts={props.sectionCosts}
+            sectionsUnpriced={props.sectionsUnpriced}
+            sharedPartNames={props.inheritance?.sharedPartNames}
+            sharedMechanicNames={props.inheritance?.sharedMechanicNames}
+          />
 
-      <PowerCreatorEditorPowerDamage
-        damages={props.damages}
-        onDamagesChange={props.onDamagesChange}
-        damageSummary={props.damageSummary}
-        sectionCosts={props.sectionCosts}
-        sectionsUnpriced={props.sectionsUnpriced}
-        partsDb={props.suggestionPartsDb}
-        damageInheritance={props.inheritance?.damage ?? null}
-      />
+          <PowerCreatorEditorPowerDamage
+            damages={props.damages}
+            onDamagesChange={props.onDamagesChange}
+            damageSummary={props.damageSummary}
+            sectionCosts={props.sectionCosts}
+            sectionsUnpriced={props.sectionsUnpriced}
+            partsDb={props.suggestionPartsDb}
+            damageInheritance={props.inheritance?.damage ?? null}
+          />
+        </>
+      )}
     </>
   );
 }

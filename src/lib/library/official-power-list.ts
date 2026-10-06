@@ -12,6 +12,7 @@ import {
   formatPowerDamage,
 } from '@/lib/calculators/power-calc';
 import {
+  composedPowerCategoryDamage,
   composedPowerDamage,
   composedPowerSavedParts,
   type PowerCompositionResolution,
@@ -24,6 +25,7 @@ import { powerVariantsDetailSection, withPowerReverseNote } from '@/lib/power-va
 import { libraryItemToPowerDocument } from '@/lib/library-selectable-builders';
 import { partChipsFromDisplay } from '@/lib/chip/part-chips-from-display';
 import {
+  collectCategoryFilterOptions,
   derivePartCategories,
   formatPartCategoriesColumn,
   powerHasDamageCategory,
@@ -101,7 +103,7 @@ export function buildOfficialPowerRows(
     const parts = partChipsFromDisplay(display.partChips, { stripOptionSuffix: true });
     const categories = withDamageCategory(
       derivePartCategories(savedParts, partsDb),
-      powerHasDamageCategory(damage),
+      powerHasDamageCategory(composition ? composedPowerCategoryDamage(composition) : doc.damage),
     );
     return {
       id: String(p.id ?? p.docId ?? ''),
@@ -133,6 +135,16 @@ export function buildOfficialPowerRows(
         : {}),
     };
   });
+}
+
+/** Filter options from the same categories the rows show, including composed faces. */
+export function officialPowerCategoryOptions(
+  items: LibraryPower[],
+  partsDb: PowerPart[],
+): string[] {
+  return collectCategoryFilterOptions(
+    buildOfficialPowerRows(items, partsDb).map((row) => row.categories),
+  );
 }
 
 export function officialPowerDetailSections(row: OfficialPowerRow) {

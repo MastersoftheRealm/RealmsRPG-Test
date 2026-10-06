@@ -373,6 +373,7 @@ function PowerCreatorWorkspace({
       damageSummary={ws.damageSummary}
       sectionCosts={ws.sectionCosts}
       sectionsUnpriced={randomizeSharedUnpriced}
+      hidePartsAndDamage={randomizeSharedUnpriced}
       inheritance={inheritance}
     />
   );
@@ -507,7 +508,7 @@ function PowerCreatorWorkspace({
             }
             ruleText={
               randomizeSharedUnpriced
-                ? 'Action and defaults for new faces. Adds no energy. Defaults only pre-fill faces added later.'
+                ? 'Shared holds the action type plus range, area, and duration defaults. Those defaults pre-fill a new face and add no energy. Parts and damage are added on each face. Changing Shared later does not change a face that already exists.'
                 : 'Energy is rounded up at the end. Training Points are listed separately above when a part has them.'
             }
           />

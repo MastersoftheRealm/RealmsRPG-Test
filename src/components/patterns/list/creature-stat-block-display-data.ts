@@ -1,6 +1,10 @@
 import { resolveListRowThumbnail } from '@/lib/list-row-image';
 import type { EntityPowerRow, EntityTechniqueRow } from './entity-library-sections';
 import { derivePowerDisplay, formatPowerDamage } from '@/lib/calculators/power-calc';
+import {
+  composedPowerCategoryDamage,
+  composedPowerSavedParts,
+} from '@/lib/calculators/power-composition';
 import { libraryItemToPowerDocument } from '@/lib/library-selectable-builders';
 import { deriveTechniqueDisplay } from '@/lib/calculators/technique-calc';
 import {
@@ -200,8 +204,17 @@ export function buildPowersForDisplay(
           ? ref.range
           : undefined;
     const categories = withDamageCategory(
-      derivePartCategories(objectPartsOnly(parts), powerPartsDb),
-      powerHasDamageCategory(Array.isArray(damage) ? damage : undefined),
+      derivePartCategories(
+        composition ? composedPowerSavedParts(composition) : objectPartsOnly(parts),
+        powerPartsDb,
+      ),
+      powerHasDamageCategory(
+        composition
+          ? composedPowerCategoryDamage(composition)
+          : Array.isArray(damage)
+            ? damage
+            : undefined,
+      ),
     );
     const categoryText = formatPartCategoriesColumn(categories);
     const tp = composition

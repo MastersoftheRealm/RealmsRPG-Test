@@ -9,7 +9,6 @@ import { formatCost } from '@/lib/game/creator-constants';
 import {
   composedPowerDamage,
   formatPowerDamage,
-  formatPowerRangeFromSteps,
   POWER_COMPOSITION_STRUCTURE_LABELS,
   formatEnergyIntermediate,
   reverseActionDivisorNote,
@@ -68,10 +67,8 @@ function powerVariantChipDescription(
     );
   } else {
     lines.push(`${v.energy} Energy`);
-    if ((res.structure === 'modify' || res.structure === 'choice') && v.rangeEnergy > 1e-9) {
-      const steps = v.doc.range?.steps;
-      const reach = steps != null && steps > 0 ? ` (${formatPowerRangeFromSteps(steps)})` : '';
-      lines.push(`Range${reach}: ${formatEnergyIntermediate(v.rangeEnergy)} EN`);
+    if ((res.structure === 'modify' || res.structure === 'choice') && v.rangeDelta < -1e-9) {
+      lines.push(`Range refund: ${formatEnergyIntermediate(v.rangeDelta)} EN`);
     }
   }
   const damage = formatPowerDamage(v.doc.damage);
@@ -186,13 +183,11 @@ export function withPowerReverseNote(
   const reduction = limitedByFloor
     ? `reduces the cost by ${formatEnergyIntermediate(applied)} EN. The drawback reduction is ${reductionAmount} EN${actionNote}, and the 1 EN floor means only ${formatEnergyIntermediate(applied)} EN comes off`
     : `reduces the cost by ${reductionAmount} EN (half the drawback's ${drawback} EN${actionNote})`;
-  const steps = res.reverse.doc.range?.steps;
-  const reach = steps != null && steps > 0 ? ` (${formatPowerRangeFromSteps(steps)})` : '';
-  const rangeNote =
-    res.reverse.rangeEnergy > 1e-9
-      ? ` Range${reach}: ${formatEnergyIntermediate(res.reverse.rangeEnergy)} EN.`
+  const refund =
+    res.reverse.rangeDelta < -1e-9
+      ? ` Range refund: ${formatEnergyIntermediate(res.reverse.rangeDelta)} EN.`
       : '';
-  const note = `Reverse Effects${list ? ` (${list})` : ''}: always applies and cannot be nullified or reduced by you or an ally; ${reduction}.${rangeNote}`;
+  const note = `Reverse Effects${list ? ` (${list})` : ''}: always applies and cannot be nullified or reduced by you or an ally; ${reduction}.${refund}`;
   return base ? `${base} ${note}` : note;
 }
 

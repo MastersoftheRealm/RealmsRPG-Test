@@ -5,7 +5,11 @@
 
 import { logClientError } from '@/lib/api-client';
 import { derivePowerDisplay, formatPowerDamage } from '@/lib/calculators/power-calc';
-import { composedPowerDamage, composedPowerSavedParts } from '@/lib/calculators/power-composition';
+import {
+  composedPowerCategoryDamage,
+  composedPowerDamage,
+  composedPowerSavedParts,
+} from '@/lib/calculators/power-composition';
 import { deriveTechniqueDisplay } from '@/lib/calculators/technique-calc';
 import { glrSurfaceDetailSections } from '@/lib/chip/list-row-metadata';
 import type { ChipData } from '@/components/patterns/list/grid-list-row-types';
@@ -49,7 +53,7 @@ export function powerToDetailOption(
         composition ? composedPowerSavedParts(composition) : (power.parts ?? []),
         powerPartsDb,
       ),
-      powerHasDamageCategory(damage),
+      powerHasDamageCategory(composition ? composedPowerCategoryDamage(composition) : damage),
     );
     chips = glrSurfaceDetailSections('detail-option-power', {
       category: formatPartCategoriesColumn(categories),

@@ -75,6 +75,7 @@ export {
   resolvePowerComposition,
   selectedResolvedVariant,
   composedPowerDamage,
+  composedPowerCategoryDamage,
   reverseDiscountApplied,
   powerCompositionEnergyLines,
   composedPowerSavedParts,

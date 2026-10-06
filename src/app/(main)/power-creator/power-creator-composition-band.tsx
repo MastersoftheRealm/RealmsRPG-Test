@@ -41,7 +41,7 @@ function tabHint(structure: PowerCompositionStructure, activeTabId: string): str
   if (activeTabId === SHARED_TAB_ID) {
     if (structure === 'none') return 'Power: the benefit this drawback is attached to.';
     if (structure === 'randomize') {
-      return 'Action and defaults for new faces. Adds no energy. Defaults only pre-fill faces added later.';
+      return 'Shared holds the action type plus range, area, and duration defaults. Those defaults pre-fill a new face and add no energy. Parts and damage are added on each face. Changing Shared later does not change a face that already exists.';
     }
     return 'Shared holds the range, area, duration, and action every piece starts from, plus parts that apply to the whole power.';
   }
@@ -49,7 +49,7 @@ function tabHint(structure: PowerCompositionStructure, activeTabId: string): str
     return 'Each variant is a complete power. New variants copy the tab you are on.';
   }
   if (structure === 'randomize') {
-    return 'This face has its own range, area, duration, and parts. Action type stays on Shared. A new face starts as a copy of Shared’s defaults. Changing Shared later does not change this face.';
+    return 'This face has its own range, area, duration, parts, and damage. Action type stays on Shared. A new face starts as a copy of Shared’s range, area, and duration defaults. Changing Shared later does not change this face.';
   }
   if (structure === 'modify') {
     return 'Mechanics say From Shared until you press Override. Parts you add here belong only to this piece. An empty piece does not raise the energy.';

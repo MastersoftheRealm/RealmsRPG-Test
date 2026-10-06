@@ -74,6 +74,8 @@ export type PowerCreatorEditorProps = {
   sectionCosts: PowerSectionCosts;
   /** Randomize Shared tab: section numbers are defaults, not a cost. */
   sectionsUnpriced?: boolean | undefined;
+  /** Randomize Shared tab: parts and damage are added on faces, not here. */
+  hidePartsAndDamage?: boolean | undefined;
 
   /** Set on a Choice / Modify / Reverse tab. A Randomize face passes only the locked action. */
   inheritance?: PowerCreatorInheritance | null | undefined;
