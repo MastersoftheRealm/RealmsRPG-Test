@@ -24,7 +24,7 @@ describe('computePartTrainingPoints', () => {
   it('sums base and option TP and rounds the instance up', () => {
     expect(
       computePartTrainingPoints(
-        { id: 1, name: 'Test', base_tp: 2, op_1_tp: 1, op_2_tp: 0, op_3_tp: 0 },
+        { id: 901, name: 'Test', base_tp: 2, op_1_tp: 1, op_2_tp: 0, op_3_tp: 0 },
         { op_1_lvl: 2 },
       ),
     ).toBe(4);
