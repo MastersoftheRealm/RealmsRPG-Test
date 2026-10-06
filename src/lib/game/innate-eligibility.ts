@@ -20,7 +20,6 @@ import {
 import {
   derivePowerDisplay,
   deriveStructuredDuration,
-  finalizePowerEnergy,
   type PowerDocument,
 } from '@/lib/calculators/power-calc';
 import {
@@ -339,12 +338,14 @@ export function snapshotOfficialPowerForInnate(
     isReaction: power.isReaction === true,
     duration: power.duration ?? undefined,
   };
-  const composed = resolvePowerComposition(
-    { ...(power as PowerDocument), ...doc, composition: power.composition as PowerComposition },
-    partsDb,
-  );
+  const powerDoc: PowerDocument = {
+    ...(power as PowerDocument),
+    ...doc,
+    composition: power.composition as PowerComposition,
+  };
+  const composed = resolvePowerComposition(powerDoc, partsDb);
   if (composed) {
-    return snapshotComposedPowerForInnate(id, power, composed, partsDb);
+    return snapshotComposedPowerForInnate(id, powerDoc, composed, partsDb);
   }
   const display = derivePowerDisplay(doc, partsDb);
   const parts = Array.isArray(power.parts) ? power.parts : [];
@@ -418,25 +419,21 @@ function castSnapshot(
  */
 function snapshotComposedPowerForInnate(
   id: string,
-  power: { name?: string | null | undefined; composition?: unknown },
+  powerDoc: PowerDocument,
   res: PowerCompositionResolution,
   partsDb: PowerPart[],
 ): InnatePowerSnapshot {
-  const name = power.name ? String(power.name) : undefined;
+  const name = powerDoc.name ? String(powerDoc.name) : undefined;
   const reverseDocs = res.reverse ? [res.reverse.doc] : [];
   if (res.structure === 'alternate' && res.variants.length > 0) {
     const alternates = res.variants.map((v) => {
-      const energy =
-        res.reverse != null
-          ? finalizePowerEnergy(
-              v.energy - res.reverse.discount,
-              v.energy > 0 || res.reverse.energy > 0,
-            )
-          : v.energy;
+      // Same round-up as the sheet and creator. Do not subtract Reverse from the
+      // already-published variant cost.
+      const priced = resolvePowerComposition(powerDoc, partsDb, { selectedVariantId: v.id });
       return castSnapshot(
         `${id}:${v.id}`,
         `${name ?? id} (${v.label})`,
-        energy,
+        priced?.energy ?? v.energy,
         [v.doc, ...reverseDocs],
         partsDb,
       );

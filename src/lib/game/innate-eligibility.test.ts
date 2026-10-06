@@ -14,6 +14,7 @@ import {
   type InnatePowerSnapshot,
 } from './innate-eligibility';
 import { defined } from '@/lib/utils';
+import { resolvePowerComposition } from '@/lib/calculators/power-composition';
 
 function snap(partial: Partial<InnatePowerSnapshot> & { id: string }): InnatePowerSnapshot {
   return {
@@ -274,5 +275,64 @@ describe('innate eligibility on composed powers (ADR-0029)', () => {
     expect(snapshot.alternates).toHaveLength(2);
     expect(isPowerInnateEligible(snapshot, 20)).toBe(true);
     expect(evaluateInnatePowerEligibility(snapshot, 20)).toEqual([]);
+  });
+
+  it('Alternate + Reverse innate energy matches the resolver', () => {
+    const db = [
+      {
+        id: '340',
+        name: 'Restrained',
+        description: '',
+        category: 'General',
+        mechanic: false,
+        percentage: false,
+        duration: false,
+        base_en: 6,
+        base_tp: 0,
+      },
+      {
+        id: '904',
+        name: 'Tiny',
+        description: '',
+        category: 'General',
+        mechanic: false,
+        percentage: false,
+        duration: false,
+        base_en: 0.1,
+        base_tp: 0,
+      },
+      {
+        id: '902',
+        name: 'Blinded',
+        description: '',
+        category: 'General',
+        mechanic: false,
+        percentage: false,
+        duration: false,
+        base_en: 4.5,
+        base_tp: 0,
+      },
+    ];
+    const composition = {
+      structure: 'alternate' as const,
+      variants: [
+        {
+          id: 'a',
+          label: 'A',
+          actionType: 'basic',
+          parts: [
+            { id: 340, name: 'Restrained' },
+            { id: 904, name: 'Tiny' },
+          ],
+        },
+      ],
+      reverse: { parts: [{ id: 902, name: 'Blinded' }] },
+    };
+    const doc = { name: 'A', actionType: 'basic', composition };
+    const res = resolvePowerComposition(doc, db, { selectedVariantId: 'a' })!;
+    const snap = snapshotOfficialPowerForInnate({ id: 'x', ...doc }, db);
+    // 6.1 raw − 2.25 discount = 3.85, one round-up → 4. Subtracting the published 7 first would be 5.
+    expect(res.energy).toBe(4);
+    expect(snap.alternates?.[0]?.energy).toBe(res.energy);
   });
 });
