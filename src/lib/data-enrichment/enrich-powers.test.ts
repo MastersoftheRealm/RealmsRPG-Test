@@ -157,7 +157,7 @@ describe('enrichPowers → buildRequiredProficiencies (composed powers, TASK-934
       [burst],
       partsDb,
     );
-    expect(String(enriched?.damage)).toContain('ice');
-    expect(String(enriched?.damage)).not.toContain('fire');
+    expect(String(enriched?.damage)).toContain('Ice');
+    expect(String(enriched?.damage)).not.toContain('Fire');
   });
 });
