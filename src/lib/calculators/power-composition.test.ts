@@ -565,6 +565,7 @@ describe('resolvePowerComposition', () => {
       },
       officialDb,
     );
+    expect(resolved.energy).toBe(33);
     expect(resolved.energy).toBe(
       finalizePowerEnergy(sharedOnly + resolved.variants[0]!.energyRaw, true),
     );
@@ -582,6 +583,7 @@ describe('resolvePowerComposition', () => {
       },
       officialDb,
     ).energy;
+    expect(pricedAsOneMinute).toBe(36);
     expect(pricedAsOneMinute).not.toBe(resolved.energy);
   });
 
@@ -874,6 +876,7 @@ describe('resolvePowerComposition', () => {
         true,
       ),
     );
+    expect(withRange.energy).toBe(8);
     expect(withRange.energy).toBeGreaterThan(damageOnly.energy);
     const lines = powerCompositionEnergyLines(withRange);
     expect(lines[0]).toBe(`Shared: ${formatEnergyIntermediate(withRange.shared!.rawEnergy)} EN`);
@@ -916,6 +919,7 @@ describe('resolvePowerComposition', () => {
       expect(chip.description?.startsWith(`${bolt.variants[index]!.energy} Energy`)).toBe(true);
     }
     expect(new Set(bolt.variants.map((v) => v.energy))).toEqual(new Set([bolt.energy]));
+    expect(bolt.energy).toBe(6);
     expect(bolt.energy).toBe(
       finalizePowerEnergy(
         (bolt.shared?.rawEnergy ?? 0) + Math.max(...bolt.variants.map((v) => v.energyRaw)),
@@ -1061,6 +1065,246 @@ describe('resolvePowerComposition', () => {
     )!;
     expect(res.variants[0]!.energyRaw).toBeCloseTo(extra);
     expect(res.energy).toBe(finalizePowerEnergy(rawEnergy(shared, db) + extra, true));
+  });
+
+  it('refunds a shorter range on Modify, Choice, and Reverse, and clamps the tab at 0', () => {
+    const db = partsDb;
+    const immobile = [{ id: 900, name: 'Immobile' }];
+    const emptyAt = (steps: number) => rawEnergy({ actionType: 'basic', range: { steps } }, db);
+    const longerDelta = emptyAt(3) - emptyAt(1);
+    const shorterDelta = emptyAt(1) - emptyAt(3);
+    expect(longerDelta).toBeGreaterThan(0);
+    expect(shorterDelta).toBeCloseTo(-longerDelta);
+
+    const sharedLong: PowerDocument = {
+      name: 'Reach',
+      actionType: 'basic',
+      range: { steps: 3 },
+      parts: immobile,
+    };
+    const modify = resolvePowerComposition(
+      {
+        ...sharedLong,
+        composition: {
+          structure: 'modify',
+          variants: [
+            {
+              id: 'near',
+              label: 'Near',
+              range: { steps: 1 },
+              parts: [{ id: 902, name: 'Blinded' }],
+            },
+            { id: 'blank', label: 'Blank', range: { steps: 1 } },
+          ],
+        },
+      },
+      db,
+    )!;
+    const near = modify.variants.find((v) => v.id === 'near')!;
+    const blindedAt = (steps: number) =>
+      rawEnergy(
+        { actionType: 'basic', range: { steps }, parts: [{ id: 902, name: 'Blinded' }] },
+        db,
+      ) - emptyAt(steps);
+    expect(near.rangeDelta).toBeCloseTo(shorterDelta);
+    expect(near.energyRaw).toBeCloseTo(blindedAt(1) + shorterDelta);
+    expect(near.energyRaw).toBeGreaterThan(0);
+    expect(modify.variants.find((v) => v.id === 'blank')!.rangeDelta).toBe(0);
+    expect(modify.energy).toBe(
+      finalizePowerEnergy(rawEnergy(sharedLong, db) + near.energyRaw, true),
+    );
+    const modifyLines = powerCompositionEnergyLines(modify);
+    expect(modifyLines).toContain(
+      `Near range refund: ${formatEnergyIntermediate(shorterDelta)} EN`,
+    );
+    expect(modifyLines.some((line) => line.startsWith('Blank range refund'))).toBe(false);
+    const modifyChips = buildPowerVariantChips(modify);
+    expect(modifyChips.find((chip) => chip.name === 'Near')?.description).toContain(
+      `Range refund: ${formatEnergyIntermediate(shorterDelta)} EN`,
+    );
+    expect(formatEnergyIntermediate(shorterDelta)).toContain('−');
+
+    const choice = resolvePowerComposition(
+      {
+        ...sharedLong,
+        composition: {
+          structure: 'choice',
+          variants: [
+            {
+              id: 'near',
+              label: 'Near',
+              range: { steps: 1 },
+              parts: [{ id: 902, name: 'Blinded' }],
+            },
+            { id: 'far', label: 'Far', range: { steps: 3 }, parts: [{ id: 901, name: 'Slow' }] },
+          ],
+        },
+      },
+      db,
+    )!;
+    const choiceNear = choice.variants.find((v) => v.id === 'near')!;
+    expect(choiceNear.rangeDelta).toBeCloseTo(shorterDelta);
+    expect(choiceNear.energyRaw).toBeCloseTo(blindedAt(1) + shorterDelta);
+    expect(choice.variants.find((v) => v.id === 'far')!.rangeDelta).toBe(0);
+    expect(choiceNear.energy).toBe(
+      finalizePowerEnergy((choice.shared?.rawEnergy ?? 0) + choiceNear.energyRaw),
+    );
+    expect(powerCompositionEnergyLines(choice)).toContain(
+      `Near range refund: ${formatEnergyIntermediate(shorterDelta)} EN`,
+    );
+    const choiceChips = buildPowerVariantChips(choice);
+    expect(choiceChips.find((chip) => chip.name === 'Near')?.description).toContain('−');
+
+    const sameRange = resolvePowerComposition(
+      {
+        name: 'Ward',
+        actionType: 'basic',
+        range: { steps: 3 },
+        parts: immobile,
+        composition: {
+          structure: 'none',
+          variants: [],
+          reverse: { parts: [{ id: 902, name: 'Blinded' }] },
+        },
+      },
+      db,
+    )!;
+    const shorterReverse = resolvePowerComposition(
+      {
+        name: 'Ward',
+        actionType: 'basic',
+        range: { steps: 3 },
+        parts: immobile,
+        composition: {
+          structure: 'none',
+          variants: [],
+          reverse: { range: { steps: 1 }, parts: [{ id: 902, name: 'Blinded' }] },
+        },
+      },
+      db,
+    )!;
+    expect(shorterReverse.reverse!.rangeDelta).toBeCloseTo(shorterDelta);
+    expect(shorterReverse.reverse!.rawEnergy).toBeCloseTo(blindedAt(1) + shorterDelta);
+    expect(shorterReverse.reverse!.rawEnergy).toBeLessThan(sameRange.reverse!.rawEnergy);
+    expect(shorterReverse.reverse!.discount).toBeCloseTo(shorterReverse.reverse!.rawEnergy / 2);
+    expect(powerCompositionEnergyLines(shorterReverse)).toContain(
+      `Reverse range refund: ${formatEnergyIntermediate(shorterDelta)} EN`,
+    );
+
+    const clampDb: PowerPart[] = [...db, part({ id: '940', name: 'Spark', base_en: 0.25 })];
+    const refund = emptyAt(0) - emptyAt(3);
+    expect(refund).toBeLessThan(-0.25);
+    for (const structure of ['modify', 'choice'] as const) {
+      const clamped = resolvePowerComposition(
+        {
+          name: 'Clamp',
+          actionType: 'basic',
+          range: { steps: 3 },
+          composition: {
+            structure,
+            variants: [
+              {
+                id: 'near',
+                label: 'Near',
+                range: { steps: 0 },
+                parts: [{ id: 940, name: 'Spark' }],
+              },
+              { id: 'other', label: 'Other', parts: immobile },
+            ],
+          },
+        },
+        clampDb,
+      )!;
+      const tab = clamped.variants.find((v) => v.id === 'near')!;
+      expect(tab.rangeDelta).toBeCloseTo(refund);
+      expect(tab.energyRaw).toBe(0);
+      expect(powerCompositionEnergyLines(clamped)).toContain(
+        `Near range refund: ${formatEnergyIntermediate(refund)} EN`,
+      );
+    }
+    const clampedReverse = resolvePowerComposition(
+      {
+        name: 'Clamp',
+        actionType: 'basic',
+        range: { steps: 3 },
+        parts: immobile,
+        composition: {
+          structure: 'none',
+          variants: [],
+          reverse: { range: { steps: 0 }, parts: [{ id: 940, name: 'Spark' }] },
+        },
+      },
+      clampDb,
+    )!;
+    expect(clampedReverse.reverse!.rangeDelta).toBeCloseTo(refund);
+    expect(clampedReverse.reverse!.rawEnergy).toBe(0);
+    expect(clampedReverse.reverse!.discount).toBe(0);
+    expect(powerCompositionEnergyLines(clampedReverse)).toContain(
+      `Reverse range refund: ${formatEnergyIntermediate(refund)} EN`,
+    );
+
+    const randomize = resolvePowerComposition(
+      {
+        name: 'Own range',
+        actionType: 'basic',
+        range: { steps: 3 },
+        parts: immobile,
+        composition: {
+          structure: 'randomize',
+          variants: [
+            independentFace({
+              id: 'near',
+              label: 'Near',
+              range: { steps: 1 },
+              parts: [{ id: 902, name: 'Blinded' }],
+            }),
+          ],
+          die: { sides: 2, faces: ['near', 'near'] },
+        },
+      },
+      db,
+    )!;
+    expect(randomize.variants[0]!.rangeDelta).toBe(0);
+    expect(randomize.variants[0]!.energyRaw).toBeCloseTo(
+      rawEnergy(
+        { actionType: 'basic', range: { steps: 1 }, parts: [{ id: 902, name: 'Blinded' }] },
+        db,
+      ),
+    );
+    expect(
+      powerCompositionEnergyLines(randomize).some((line) => line.includes('range refund')),
+    ).toBe(false);
+
+    const alternateDoc: PowerDocument = {
+      name: 'Versions',
+      composition: {
+        structure: 'alternate',
+        variants: [
+          {
+            id: 'far',
+            label: 'Far',
+            actionType: 'basic',
+            range: { steps: 3 },
+            parts: immobile,
+          },
+          {
+            id: 'near',
+            label: 'Near',
+            actionType: 'basic',
+            range: { steps: 1 },
+            parts: [{ id: 902, name: 'Blinded' }],
+          },
+        ],
+      },
+    };
+    const alternate = resolvePowerComposition(alternateDoc, db)!;
+    expect(alternate.variants.every((v) => v.rangeDelta === 0)).toBe(true);
+    expect(resolvePowerComposition(alternateDoc, db, { selectedVariantId: 'near' })!.energy).toBe(
+      derivePlainPowerDisplay(
+        { actionType: 'basic', range: { steps: 1 }, parts: [{ id: 902, name: 'Blinded' }] },
+        db,
+      ).energy,
+    );
   });
 
   it('Reverse prices the drawback at a smaller footprint than Shared', () => {

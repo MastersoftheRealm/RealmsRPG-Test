@@ -115,16 +115,16 @@ const POWER_RANDOMIZE_HELP =
   'Each face is its own effect and shares only the action type. Shared defaults pre-fill a new face and add no energy. Changing Shared later does not change a face that already exists. A good outcome costs its full energy, including that action. A bad outcome subtracts half the drawback, priced as a basic action on that face alone, divided by the action-type multiplier, including Reaction. A slower action removes more and a quicker action removes less. Basic stays half. Each face is weighted by its chance. Once the power has positive energy, it costs at least 1 EN. If nothing is positive, Energy is a dash.';
 
 const POWER_REVERSE_ACTION_NOTE =
-  'A drawback on a power that benefits you or an ally uses the Reverse tab’s own range, area, and duration (Shared’s, until you override them). Its reduction is half that energy divided by the action-type multiplier, including Reaction, so a slower action removes more and a quicker action removes less. Basic stays half. It cannot be nullified or reduced by you or an ally.';
+  'A drawback on a power that benefits you or an ally uses the Reverse tab’s own range, area, and duration (Shared’s, until you override them). A longer range adds only the extra range cost, once; a shorter range refunds the difference on that tab. Its reduction is half that energy divided by the action-type multiplier, including Reaction, so a slower action removes more and a quicker action removes less. Basic stays half. It cannot be nullified or reduced by you or an ally.';
 
 const POWER_REVERSE_FLOOR_NOTE =
   'The 1 EN floor still applies when the power has positive energy, so the discount cannot drop it below 1 EN.';
 
 const POWER_MODIFY_HELP =
-  'Shared is paid once, including its action type, which is locked on each piece. Range, area, and duration start as Shared and can be overridden. Each piece adds only its own parts and damage, priced at that piece’s range, area, and duration. A larger range than Shared costs extra only on that piece’s parts. A smaller area, including no area, prices those parts at the smaller footprint.';
+  'Shared is paid once, including its action type, which is locked on each piece. Range, area, and duration start as Shared and can be overridden. Each piece adds only its own parts and damage, priced at that piece’s range, area, and duration. A longer range adds only the extra range cost, once; a shorter range refunds the difference on that piece. A larger area or longer duration raises only that piece’s parts; a smaller area or shorter duration lowers them.';
 
 const POWER_CHOICE_HELP =
-  'Portions of one power. Action type is locked to Shared. Each portion’s range, area, and duration start as Shared and can be overridden. You pay Shared once, plus the most expensive portion, and each portion’s parts are priced at that portion’s own range, area, and duration.';
+  'Portions of one power. Action type is locked to Shared. Each portion’s range, area, and duration start as Shared and can be overridden. You pay Shared once, plus the most expensive portion, and each portion’s parts are priced at that portion’s own range, area, and duration. A longer range adds only the extra range cost, once; a shorter range refunds the difference on that portion.';
 
 /** Half the basic-footprint drawback, before dividing by the action-type multiplier. */
 const DRAWBACK_WEIGHT = 0.5;
@@ -320,6 +320,13 @@ export interface ResolvedPowerVariant {
   energy: number;
   /** Unrounded contribution. Breakdowns show this; chips use `energy`. */
   energyRaw: number;
+  /**
+   * Signed range difference against Shared, priced on an empty copy of the tab.
+   * Positive when the tab is longer; negative when it refunds. 0 for Alternate,
+   * Randomize, and a tab that does not change range. Not a second subtraction:
+   * `energyRaw` already includes it.
+   */
+  rangeDelta: number;
   /** Randomize face numbers (1-based) that roll this variant. */
   faces: number[];
   duration: StructuredPowerDuration | null;
@@ -341,6 +348,11 @@ export interface PowerCompositionResolution {
     rawEnergy: number;
     /** Unrounded reduction: half the drawback divided by the action-type multiplier. */
     discount: number;
+    /**
+     * Signed range difference against the benefit, on an empty copy of the Reverse tab.
+     * Negative when the tab is shorter. Already included in `rawEnergy`.
+     */
+    rangeDelta: number;
     /** Normal action-type multiplier. Basic is 1. Quicker is above 1; slower is below 1. */
     actionMultiplier: number;
   } | null;
@@ -596,34 +608,46 @@ function beneficialFootprint(shared: PowerDocument, spec: PowerVariantSpec): Pow
 }
 
 /**
- * Extra range above Shared, priced on an empty copy of the tab’s footprint
- * (so Shared’s parts are not re-priced). A shorter range does not refund Shared.
+ * Range difference against Shared, priced on an empty copy of the tab so Shared’s
+ * parts are not priced again. Longer range is positive (the extra only). Shorter
+ * range is the same difference, negative. Equal range is 0.
  */
-function biggerRangeCost(shared: PowerDocument, foot: PowerDocument, partsDb: PowerPart[]): number {
-  if (rangeSteps(foot.range) <= rangeSteps(shared.range)) return 0;
+function rangeCostDelta(shared: PowerDocument, foot: PowerDocument, partsDb: PowerPart[]): number {
+  if (rangeSteps(foot.range) === rangeSteps(shared.range)) return 0;
   const atTab = rawEnergyOf({ ...foot, parts: [], damage: [] }, partsDb);
   const atShared = rawEnergyOf({ ...foot, parts: [], damage: [], range: shared.range }, partsDb);
-  return Math.max(0, atTab - atShared);
+  return atTab - atShared;
+}
+
+/**
+ * A tab's added cost does not go below 0. Not a Kadin ruling — see DECISIONS
+ * pending notes. The range refund itself stays on `rangeDelta` so the breakdown
+ * can still show it.
+ */
+function clampTabContribution(raw: number): number {
+  return raw > 0 ? raw : 0;
 }
 
 /**
  * Modify piece or Choice option: own parts and damage at the tab’s range, area,
  * and duration. Shared’s action, range, and area are not billed again. A longer
- * range adds only that extra, once. A smaller area prices the parts cheaper.
+ * range adds only that extra, once. A shorter range subtracts the same difference.
+ * An empty tab adds nothing, including no range refund.
  */
 function beneficialTabExtra(
   shared: PowerDocument,
   spec: PowerVariantSpec,
   partsDb: PowerPart[],
-): number {
+): { energyRaw: number; rangeDelta: number } {
   const pieceParts = stripCompositionParts(spec.parts);
   const pieceDamage = hasDamage(spec.damage) ? (spec.damage ?? []) : [];
-  if (pieceParts.length === 0 && pieceDamage.length === 0) return 0;
+  if (pieceParts.length === 0 && pieceDamage.length === 0) return { energyRaw: 0, rangeDelta: 0 };
   const foot = beneficialFootprint(shared, spec);
   const partsEnergy =
     rawEnergyOf({ ...foot, parts: pieceParts, damage: pieceDamage }, partsDb) -
     rawEnergyOf(foot, partsDb);
-  return partsEnergy + biggerRangeCost(shared, foot, partsDb);
+  const rangeDelta = rangeCostDelta(shared, foot, partsDb);
+  return { energyRaw: clampTabContribution(partsEnergy + rangeDelta), rangeDelta };
 }
 
 /** Reverse drawback at the tab’s footprint, as a basic action, before the reduction. */
@@ -631,10 +655,10 @@ function reverseDrawbackEnergy(
   shared: PowerDocument,
   spec: PowerVariantSpec,
   partsDb: PowerPart[],
-): number {
+): { rawEnergy: number; rangeDelta: number } {
   const pieceParts = stripCompositionParts(spec.parts);
   const pieceDamage = hasDamage(spec.damage) ? (spec.damage ?? []) : [];
-  if (pieceParts.length === 0 && pieceDamage.length === 0) return 0;
+  if (pieceParts.length === 0 && pieceDamage.length === 0) return { rawEnergy: 0, rangeDelta: 0 };
   const foot: PowerDocument = {
     name: shared.name,
     actionType: 'basic',
@@ -648,7 +672,8 @@ function reverseDrawbackEnergy(
   const partsEnergy =
     rawEnergyOf({ ...foot, parts: pieceParts, damage: pieceDamage }, partsDb) -
     rawEnergyOf(foot, partsDb);
-  return partsEnergy + biggerRangeCost(shared, foot, partsDb);
+  const rangeDelta = rangeCostDelta(shared, foot, partsDb);
+  return { rawEnergy: clampTabContribution(partsEnergy + rangeDelta), rangeDelta };
 }
 
 function structuredDurationOf(doc: PowerDocument): StructuredPowerDuration | null {
@@ -760,17 +785,21 @@ export function resolvePowerComposition(
           ? fullVariantDoc(name, v)
           : overlayVariant(chassis, v);
     const display = derivePlainPowerDisplay(doc, partsDb);
-    const energyRaw =
+    const tabExtra =
       structure === 'modify' || structure === 'choice'
         ? beneficialTabExtra(chassis, v, partsDb)
-        : structure === 'randomize' && v.polarity === 'negative'
-          ? -drawbackReductionForAction(
-              rawEnergyOf(randomizeBadFootprint(name, v), partsDb),
-              actionMultiplier,
-            )
-          : structure === 'randomize'
-            ? rawEnergyOf(doc, partsDb)
-            : display.energy;
+        : null;
+    const energyRaw = tabExtra
+      ? tabExtra.energyRaw
+      : structure === 'randomize' && v.polarity === 'negative'
+        ? -drawbackReductionForAction(
+            rawEnergyOf(randomizeBadFootprint(name, v), partsDb),
+            actionMultiplier,
+          )
+        : structure === 'randomize'
+          ? rawEnergyOf(doc, partsDb)
+          : display.energy;
+    const rangeDelta = tabExtra?.rangeDelta ?? 0;
     const energy =
       structure === 'choice'
         ? finalizePowerEnergy(sharedRaw + energyRaw)
@@ -788,6 +817,7 @@ export function resolvePowerComposition(
       display,
       energy,
       energyRaw,
+      rangeDelta,
       faces: facesByVariant.get(v.id) ?? [],
       duration: structuredDurationOf(doc),
     };
@@ -839,14 +869,15 @@ export function resolvePowerComposition(
       area: composition.reverse.area != null ? composition.reverse.area : benefit.area,
     };
     const display = derivePlainPowerDisplay(priced, partsDb);
-    const reverseRaw = reverseDrawbackEnergy(benefit, composition.reverse, partsDb);
+    const drawback = reverseDrawbackEnergy(benefit, composition.reverse, partsDb);
     reverse = {
       doc: priced,
       display,
-      energy: Math.max(0, Math.ceil(reverseRaw - 1e-9)),
-      rawEnergy: reverseRaw,
-      discount: drawbackReductionForAction(reverseRaw, benefitMultiplier),
+      energy: Math.max(0, Math.ceil(drawback.rawEnergy - 1e-9)),
+      rawEnergy: drawback.rawEnergy,
+      discount: drawbackReductionForAction(drawback.rawEnergy, benefitMultiplier),
       actionMultiplier: benefitMultiplier,
+      rangeDelta: drawback.rangeDelta,
     };
   }
 
@@ -983,8 +1014,14 @@ export function reverseDiscountApplied(res: PowerCompositionResolution): {
 }
 
 /** Creator / sheet breakdown lines for a composed power's energy. */
+function rangeRefundLine(label: string, rangeDelta: number): string | null {
+  if (rangeDelta >= -1e-9) return null;
+  return `${label} range refund: ${formatEnergyIntermediate(rangeDelta)} EN`;
+}
+
 export function powerCompositionEnergyLines(res: PowerCompositionResolution): string[] {
-  const lines = res.variants.map((v) => {
+  const lines: string[] = [];
+  for (const v of res.variants) {
     if (res.structure === 'randomize') {
       const raw = v.energyRaw;
       const shown =
@@ -992,16 +1029,21 @@ export function powerCompositionEnergyLines(res: PowerCompositionResolution): st
           ? `−${formatEnergyIntermediate(Math.abs(raw))}`
           : `+${formatEnergyIntermediate(raw)}`;
       const faces = res.die?.sides ?? Math.max(1, v.faces.length);
-      return `${v.label}: ${shown} EN × ${v.faces.length}/${faces}`;
+      lines.push(`${v.label}: ${shown} EN × ${v.faces.length}/${faces}`);
+      continue;
     }
-    if (res.structure === 'modify' && Math.abs(v.energyRaw) < 1e-9)
-      return `${v.label}: nothing added`;
-    if (res.structure === 'modify')
-      return `${v.label}: extra ${formatEnergyIntermediate(v.energyRaw)} EN`;
-    if (res.structure === 'choice')
-      return `${v.label}: ${formatEnergyIntermediate(v.energyRaw)} EN`;
-    return `${v.label}: ${v.energy} EN`;
-  });
+    if (res.structure === 'modify' && Math.abs(v.energyRaw) < 1e-9) {
+      lines.push(`${v.label}: nothing added`);
+    } else if (res.structure === 'modify') {
+      lines.push(`${v.label}: extra ${formatEnergyIntermediate(v.energyRaw)} EN`);
+    } else if (res.structure === 'choice') {
+      lines.push(`${v.label}: ${formatEnergyIntermediate(v.energyRaw)} EN`);
+    } else {
+      lines.push(`${v.label}: ${v.energy} EN`);
+    }
+    const refund = rangeRefundLine(v.label, v.rangeDelta);
+    if (refund) lines.push(refund);
+  }
   if (res.structure === 'choice' && res.shared) {
     lines.unshift(`Shared: ${formatEnergyIntermediate(res.shared.rawEnergy)} EN`);
   }
@@ -1019,6 +1061,8 @@ export function powerCompositionEnergyLines(res: PowerCompositionResolution): st
     lines.push(`${ruleText}: ${formatEnergyIntermediate(res.structureEnergy)} EN`);
   }
   if (res.reverse) {
+    const refund = rangeRefundLine('Reverse', res.reverse.rangeDelta);
+    if (refund) lines.push(refund);
     const { applied, limitedByFloor } = reverseDiscountApplied(res);
     const drawback = formatEnergyIntermediate(res.reverse.rawEnergy);
     const reduction = formatEnergyIntermediate(res.reverse.discount);

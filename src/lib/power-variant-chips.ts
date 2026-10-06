@@ -67,6 +67,9 @@ function powerVariantChipDescription(
     );
   } else {
     lines.push(`${v.energy} Energy`);
+    if ((res.structure === 'modify' || res.structure === 'choice') && v.rangeDelta < -1e-9) {
+      lines.push(`Range refund: ${formatEnergyIntermediate(v.rangeDelta)} EN`);
+    }
   }
   const damage = formatPowerDamage(v.doc.damage);
   if (damage) lines.push(`Damage: ${damage}`);
@@ -180,7 +183,11 @@ export function withPowerReverseNote(
   const reduction = limitedByFloor
     ? `reduces the cost by ${formatEnergyIntermediate(applied)} EN. The drawback reduction is ${reductionAmount} EN${actionNote}, and the 1 EN floor means only ${formatEnergyIntermediate(applied)} EN comes off`
     : `reduces the cost by ${reductionAmount} EN (half the drawback's ${drawback} EN${actionNote})`;
-  const note = `Reverse Effects${list ? ` (${list})` : ''}: always applies and cannot be nullified or reduced by you or an ally; ${reduction}.`;
+  const refund =
+    res.reverse.rangeDelta < -1e-9
+      ? ` Range refund: ${formatEnergyIntermediate(res.reverse.rangeDelta)} EN.`
+      : '';
+  const note = `Reverse Effects${list ? ` (${list})` : ''}: always applies and cannot be nullified or reduced by you or an ally; ${reduction}.${refund}`;
   return base ? `${base} ${note}` : note;
 }
 
