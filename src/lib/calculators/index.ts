@@ -48,6 +48,7 @@ export {
   derivePowerDisplay,
   derivePlainPowerDisplay,
   formatPowerDamage,
+  finalizePowerEnergy,
   type DerivePowerDisplayOptions,
   type PowerPartPayload,
   type PowerCostResult,

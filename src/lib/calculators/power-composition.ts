@@ -15,8 +15,10 @@ import { formatCost } from '@/lib/game/creator-constants';
 import { buildRequiredProficiencies, calculateProficiencyTP } from '@/lib/proficiencies';
 import {
   buildPowerPartsPayloadForCost,
+  calculatePowerCosts,
   derivePlainPowerDisplay,
   deriveStructuredDuration,
+  finalizePowerEnergy,
   type DerivePowerDisplayOptions,
   type PartChipData,
   type PowerDisplayData,
@@ -83,25 +85,32 @@ export const POWER_COMPOSITION_STRUCTURE_LABELS: Record<PowerCompositionStructur
   randomize: 'Randomize',
 };
 
-/** Codex part that documents each structure (Alternate has none). */
-const POWER_COMPOSITION_CODEX_PART_IDS: Partial<Record<PowerCompositionStructure, number>> = {
-  choice: PART_IDS.POWER_CHOICE,
-  modify: PART_IDS.POWER_SPLIT_GROUPS,
-  randomize: PART_IDS.POWER_RANDOMIZE,
-};
-
 const POWER_ALTERNATE_HELP =
   'Each variant is a complete power (action, range, area, duration, damage, and parts). When you use the power you pick one variant and pay that variant’s energy, which may cost less, the same, or more than the others.';
 
-/** Rule text for a structure or the Reverse add-on (codex part description; Alternate has none). */
+const POWER_RANDOMIZE_HELP =
+  'Each good outcome adds its extra cost times its chance of being rolled. Each bad outcome subtracts half its drawback cost times its chance. Speed premiums and slow-action discounts apply only to good outcomes. A power always costs at least 1 EN.';
+
+const POWER_MODIFY_HELP =
+  'Shared is paid once. Each piece pays only the extra energy its own parts add, at that piece’s own duration and other stipulations; it does not buy range or area again.';
+
+const POWER_CHOICE_HELP =
+  'Portions of one power. When you use it you pick one portion. You pay Shared plus the most expensive portion.';
+
+/** Drawback faces (and Reverse) are worth half their own energy. */
+const DRAWBACK_WEIGHT = 0.5;
+
+/** Rule text for a structure or the Reverse add-on. */
 export function powerCompositionHelpText(
   key: PowerCompositionStructure | 'reverse',
   partsDb: PowerPart[],
 ): string {
   if (key === 'none') return '';
   if (key === 'alternate') return POWER_ALTERNATE_HELP;
-  const id =
-    key === 'reverse' ? PART_IDS.POWER_REVERSE_EFFECTS : POWER_COMPOSITION_CODEX_PART_IDS[key];
+  if (key === 'randomize') return POWER_RANDOMIZE_HELP;
+  if (key === 'modify') return POWER_MODIFY_HELP;
+  if (key === 'choice') return POWER_CHOICE_HELP;
+  const id = key === 'reverse' ? PART_IDS.POWER_REVERSE_EFFECTS : undefined;
   if (id == null) return '';
   return findByIdOrName(partsDb, { id })?.description?.trim() ?? '';
 }
@@ -191,7 +200,7 @@ export function normalizePowerComposition(raw: unknown): PowerComposition | null
   };
 }
 
-/** True when every Randomize face names an existing variant (creator save gate). */
+/** True when every Randomize face names an existing variant and every variant has a face. */
 export function isRandomizeDieComplete(composition: PowerComposition): boolean {
   if (composition.structure !== 'randomize') return true;
   const die = composition.die;
@@ -305,7 +314,7 @@ function fullVariantDoc(name: string | undefined, v: PowerVariantSpec): PowerDoc
   };
 }
 
-/** A spec priced on its own (Randomize outcome, Reverse drawback) inheriting a duration. */
+/** A spec priced on its own (Randomize drawback face, Reverse) as a basic action. */
 function ownSpecDoc(
   name: string | undefined,
   v: PowerVariantSpec,
@@ -313,12 +322,55 @@ function ownSpecDoc(
 ): PowerDocument {
   return {
     name,
+    actionType: 'basic',
+    isReaction: false,
     range: v.range,
     area: v.area,
     duration: v.duration ?? inheritedDuration,
     damage: v.damage,
     parts: stripCompositionParts(v.parts),
   };
+}
+
+function rawEnergyOf(doc: PowerDocument, partsDb: PowerPart[]): number {
+  return calculatePowerCosts(buildPowerPartsPayloadForCost(doc, partsDb), partsDb).energyRaw;
+}
+
+/** Ceil a piece/face contribution for display; 0 extra stays 0 (the 1 EN floor is on the total). */
+function publishContribution(raw: number): number {
+  return Math.max(0, Math.ceil(raw - 1e-9));
+}
+
+/**
+ * Modify extra for one piece: own parts/damage at the piece's settings, minus Shared
+ * at those same settings (so Shared range/area/parts are not billed again).
+ *
+ * Provisional: if the piece's range or area is larger than Shared, only the piece's
+ * own parts are priced at that reach — the extra delivery itself is not billed.
+ * Kadin has not confirmed this edge (ADR-0029).
+ */
+function modifyPieceExtra(
+  shared: PowerDocument,
+  v: PowerVariantSpec,
+  partsDb: PowerPart[],
+): number {
+  const pieceParts = stripCompositionParts(v.parts);
+  const pieceDamage = hasDamage(v.damage) ? (v.damage ?? []) : [];
+  if (pieceParts.length === 0 && pieceDamage.length === 0) return 0;
+  const settings: PowerDocument = {
+    ...shared,
+    actionType: v.actionType ?? shared.actionType,
+    isReaction: v.isReaction ?? shared.isReaction,
+    range: v.range ?? shared.range,
+    area: v.area ?? shared.area,
+    duration: v.duration ?? shared.duration,
+  };
+  const withPiece: PowerDocument = {
+    ...settings,
+    parts: [...(settings.parts ?? []), ...pieceParts],
+    damage: [...(settings.damage ?? []), ...pieceDamage],
+  };
+  return rawEnergyOf(withPiece, partsDb) - rawEnergyOf(settings, partsDb);
 }
 
 function structuredDurationOf(doc: PowerDocument): StructuredPowerDuration | null {
@@ -418,13 +470,16 @@ export function resolvePowerComposition(
   const variants: ResolvedPowerVariant[] = composition.variants.map((v) => {
     const doc = isAlternate ? fullVariantDoc(name, v) : overlayVariant(chassis, v);
     const display = derivePlainPowerDisplay(doc, partsDb);
-    const specifiesPiece = powerSpecHasContent(v);
     const energy =
-      structure === 'modify' && !specifiesPiece
-        ? 0
-        : structure === 'randomize'
-          ? derivePlainPowerDisplay(ownSpecDoc(name, v, chassis.duration), partsDb).energy
-          : display.energy;
+      structure === 'modify'
+        ? publishContribution(modifyPieceExtra(chassis, v, partsDb))
+        : structure === 'randomize' && v.polarity === 'negative'
+          ? publishContribution(rawEnergyOf(ownSpecDoc(name, v, chassis.duration), partsDb))
+          : structure === 'randomize'
+            ? publishContribution(
+                rawEnergyOf(overlayVariant(chassis, v), partsDb) - rawEnergyOf(chassis, partsDb),
+              )
+            : display.energy;
     return {
       id: v.id,
       label: v.label,
@@ -441,37 +496,46 @@ export function resolvePowerComposition(
   const requested = options?.selectedVariantId;
   const requestedMatch = requested ? (variants.find((v) => v.id === requested) ?? null) : null;
   const selected = requestedMatch ?? (structure === 'randomize' ? null : (variants[0] ?? null));
-  const sharedEnergy = shared?.display.energy ?? 0;
+  const sharedRaw = shared ? rawEnergyOf(shared.doc, partsDb) : 0;
 
   let structureEnergy: number;
-  let floor = 0;
   switch (structure) {
     case 'choice':
       structureEnergy =
-        variants.length > 0 ? Math.max(...variants.map((v) => v.energy)) : sharedEnergy;
+        composition.variants.length > 0
+          ? Math.max(
+              ...composition.variants.map((v) => rawEnergyOf(overlayVariant(chassis, v), partsDb)),
+            )
+          : sharedRaw;
       break;
-    case 'modify': {
-      const anyPiece = composition.variants.some(powerSpecHasContent);
-      structureEnergy = anyPiece ? variants.reduce((sum, v) => sum + v.energy, 0) : sharedEnergy;
+    case 'modify':
+      structureEnergy =
+        sharedRaw +
+        composition.variants.reduce((sum, v) => sum + modifyPieceExtra(chassis, v, partsDb), 0);
       break;
-    }
     case 'alternate':
-      structureEnergy = selected?.energy ?? derivePlainPowerDisplay(chassis, partsDb).energy;
+      structureEnergy = selected
+        ? rawEnergyOf(selected.doc, partsDb)
+        : rawEnergyOf(chassis, partsDb);
       break;
     case 'randomize': {
-      floor = 1;
-      const byId = new Map(variants.map((v) => [v.id, v]));
-      const faceIds = composition.die ? composition.die.faces : variants.map((v) => v.id);
-      const signed = faceIds.reduce((sum, id) => {
-        const v = byId.get(id);
-        if (!v) return sum;
-        return sum + (v.polarity === 'negative' ? -v.energy : v.energy);
-      }, 0);
-      structureEnergy = Math.max(1, sharedEnergy + signed);
+      const faces = composition.die?.faces ?? [];
+      const n = faces.length;
+      structureEnergy = faces.reduce((sum, id) => {
+        const v = composition.variants.find((x) => x.id === id);
+        if (!v || n === 0) return sum;
+        if (v.polarity === 'negative') {
+          return (
+            sum -
+            (DRAWBACK_WEIGHT * rawEnergyOf(ownSpecDoc(name, v, chassis.duration), partsDb)) / n
+          );
+        }
+        return sum + (rawEnergyOf(overlayVariant(chassis, v), partsDb) - sharedRaw) / n;
+      }, sharedRaw);
       break;
     }
     default:
-      structureEnergy = sharedEnergy;
+      structureEnergy = sharedRaw;
   }
 
   let reverse: PowerCompositionResolution['reverse'] = null;
@@ -479,10 +543,16 @@ export function resolvePowerComposition(
     const benefitDuration = isAlternate ? selected?.doc.duration : chassis.duration;
     const doc = ownSpecDoc(name, composition.reverse, benefitDuration);
     const display = derivePlainPowerDisplay(doc, partsDb);
-    reverse = { doc, display, energy: display.energy, discount: display.energy * 0.5 };
+    const reverseRaw = rawEnergyOf(doc, partsDb);
+    reverse = {
+      doc,
+      display,
+      energy: display.energy,
+      discount: reverseRaw * DRAWBACK_WEIGHT,
+    };
   }
 
-  const energy = Math.max(floor, Math.ceil(structureEnergy - (reverse?.discount ?? 0)));
+  const energy = finalizePowerEnergy(structureEnergy - (reverse?.discount ?? 0));
 
   const tpDocs = [
     ...(shared ? [shared.doc] : []),
@@ -514,7 +584,7 @@ function uniqueJoin(values: string[], sep: string): string {
   return [...new Set(values.filter((v) => v && v !== '-'))].join(sep);
 }
 
-/** Selected variant, or null when the structure has no pick (Modify / plain + Reverse). */
+/** Selected variant, or null when the structure has no pick (Modify / plain + Reverse / unrolled Randomize). */
 export function selectedResolvedVariant(
   res: PowerCompositionResolution,
 ): ResolvedPowerVariant | null {

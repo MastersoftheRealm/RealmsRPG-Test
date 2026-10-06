@@ -655,9 +655,11 @@ export const powerCreatorStructureHelp = (
     <div>
       <strong>Choice</strong>: pick one portion when used; pay the most expensive.{' '}
       <strong>Alternate</strong>: each variant is a whole power; pay the one you use.{' '}
-      <strong>Modify</strong>: pieces with their own stipulations, all on one cast; costs add.{' '}
-      <strong>Randomize</strong>: a die picks the outcome; positive faces add, negative faces
-      subtract (minimum 1 Energy).
+      <strong>Modify</strong>: Shared is paid once. Each piece pays only the extra energy its own
+      parts add, at that piece&apos;s own duration and other stipulations.{' '}
+      <strong>Randomize</strong>: each good outcome adds its extra cost times its chance; each bad
+      outcome subtracts half its drawback cost times its chance. Speed premiums apply only to good
+      outcomes. A power always costs at least 1 Energy.
     </div>
   </div>
 );

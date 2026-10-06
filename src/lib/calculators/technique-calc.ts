@@ -18,6 +18,7 @@ import {
   type AttackMode,
 } from '@/lib/attack-mode';
 import { deriveActionType, actionTypeFromSelection } from './action-type';
+import { finalizePowerEnergy } from './power-calc';
 
 // Re-export for convenience
 export type { TechniquePart };
@@ -225,9 +226,7 @@ export function calculateTechniqueCosts(
   });
 
   const energyRaw = sumNonPercentage * productPercentage;
-  // Reduction parts (e.g. No Attack) can drive the sum below zero; Energy cannot be
-  // negative (GAME_RULES "Energy Below Zero").
-  const totalEnergy = Math.max(0, Math.ceil(energyRaw));
+  const totalEnergy = finalizePowerEnergy(energyRaw);
   return { totalEnergy, totalTP, tpSources, energyRaw };
 }
 

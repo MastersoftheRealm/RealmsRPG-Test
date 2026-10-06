@@ -572,12 +572,14 @@ Combined innate Energy across all innate powers must stay within **Innate Energy
 
 Built into the Power Creator (replaces the Choice, Split Power Parts into Groups, Randomize, and Reverse Effects mechanic parts on new powers). The things you switch between are **variants** (not "options", which are part option levels).
 
+A power or technique's final Energy is rounded up once and is never less than **1 EN**. That floor is on the finished cost, not a base cost.
+
 | Structure | What the variants are | Energy |
 |-----------|----------------------|--------|
 | **Choice** | Portions of one power; pick one on use | Shared + the **most expensive** portion |
 | **Alternate** | Complete powers on one library entry | The variant you use (may be less, equal, or more) |
-| **Modify** (Split Power Parts into Groups) | Pieces with their own stipulations, all on one cast. Range, area, duration, and action match Shared until a piece overrides them. Parts and damage are not copied onto the piece. | **Sum** of (shared + each piece that adds something). An empty piece adds nothing; if every piece is empty, energy is Shared once |
-| **Randomize** | Outcomes on an even-sided die (1d2–1d100); a variant may fill many faces | Shared chassis + each positive face − each negative face; **minimum 1** |
+| **Modify** (Split Power Parts into Groups) | Pieces with their own stipulations, all on one cast. Range, area, duration, and action match Shared until a piece overrides them. Parts and damage are not copied onto the piece. | **Shared once**, at Shared's own settings. Each piece adds only the extra cost of its own parts and damage, at that piece's duration and settings. Shared's range, area, and parts are not billed again. An empty piece adds nothing |
+| **Randomize** | Outcomes on an even-sided die (1d2–1d100); a variant may fill many faces. On a weighted die, a face counts once per side it occupies. Shared still happens on a bad roll | Shared, plus each good face's extra cost times its chance, minus half of each bad face's drawback cost times its chance. Round up. Speed premiums and slow-action discounts apply only to good faces; a drawback is priced as a basic action, the same as Reverse |
 | **Reverse Effects** (add-on) | Drawback for you or an ally on a beneficial power | Subtract **50%** of the drawback's own Energy; cannot be nullified or reduced by you or an ally |
 
 **Training Points:** every part on the power (shared, every variant, Reverse) counts once at its highest option level; damage parts split by damage type (Elemental Damage fire and ice are two proficiencies).

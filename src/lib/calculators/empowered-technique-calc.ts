@@ -1,5 +1,5 @@
 import type { PowerPart, TechniquePart } from '@/hooks/codex-types';
-import { calculatePowerCosts, type PowerPartPayload } from './power-calc';
+import { calculatePowerCosts, finalizePowerEnergy, type PowerPartPayload } from './power-calc';
 import { calculateTechniqueCosts, type TechniquePartPayload } from './technique-calc';
 import { findByIdOrName } from '@/lib/id-constants';
 import { dedupeSavedParts } from '@/lib/game/dedupe-saved-parts';
@@ -67,7 +67,7 @@ export function calculateEmpoweredTechniqueCosts(
   const energyRaw = adjustedPowerEnergyRaw + techniqueCosts.energyRaw;
 
   return {
-    totalEnergy: Math.ceil(energyRaw),
+    totalEnergy: finalizePowerEnergy(energyRaw),
     totalTP: powerCosts.totalTP + techniqueCosts.totalTP,
     tpSources: [
       ...powerCosts.tpSources.map((src) => `[Power] ${src}`),

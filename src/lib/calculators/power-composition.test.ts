@@ -1,7 +1,14 @@
 import { describe, expect, it } from 'vitest';
 import type { PowerPart } from '@/hooks/codex-types';
 import { PART_IDS } from '@/lib/id-constants';
-import { derivePlainPowerDisplay, derivePowerDisplay, type PowerDocument } from './power-calc';
+import {
+  buildPowerPartsPayloadForCost,
+  calculatePowerCosts,
+  derivePlainPowerDisplay,
+  derivePowerDisplay,
+  finalizePowerEnergy,
+  type PowerDocument,
+} from './power-calc';
 import {
   composedPowerDamage,
   composedPowerDurationLabel,
@@ -76,6 +83,10 @@ const partsDb: PowerPart[] = [
 
 const d10 = (type: string) => [{ amount: 1, size: 10, type }];
 
+function rawEnergy(doc: PowerDocument, db: PowerPart[] = partsDb): number {
+  return calculatePowerCosts(buildPowerPartsPayloadForCost(doc, db), db).energyRaw;
+}
+
 describe('resolvePowerComposition', () => {
   it('leaves a normal power unchanged', () => {
     const doc: PowerDocument = {
@@ -116,48 +127,46 @@ describe('resolvePowerComposition', () => {
     expect(res.tpSources.filter((s) => s.includes('Power Range'))).toHaveLength(1);
   });
 
-  it('Modify (ice power) equals Freeze priced alone plus Chill priced alone', () => {
-    const shared = { actionType: 'basic', range: { steps: 4 }, area: { type: 'sphere', level: 2 } };
-    const freeze: PowerDocument = {
-      ...shared,
+  it('Modify pays Shared once and each piece only for its extra parts (not overlay-sum)', () => {
+    const shared = {
+      actionType: 'basic' as const,
+      range: { steps: 4 },
+      area: { type: 'sphere' as const, level: 2 },
+    };
+    const freezePiece = {
       damage: d10('ice'),
       parts: [{ id: 900, name: 'Immobile' }],
-      duration: { type: 'rounds', value: 2 },
+      duration: { type: 'rounds' as const, value: 2 },
     };
-    const chill: PowerDocument = {
-      ...shared,
+    const chillPiece = {
       parts: [{ id: 901, name: 'Slow', op_1_lvl: 1 }],
-      duration: { type: 'minutes', value: 1 },
+      duration: { type: 'minutes' as const, value: 1 },
     };
-    const expected =
-      derivePlainPowerDisplay(freeze, partsDb).energy +
-      derivePlainPowerDisplay(chill, partsDb).energy;
+    const freezeSettings: PowerDocument = { ...shared, duration: freezePiece.duration };
+    const chillSettings: PowerDocument = { ...shared, duration: chillPiece.duration };
+    const expected = finalizePowerEnergy(
+      rawEnergy(shared) +
+        (rawEnergy({ ...freezeSettings, ...freezePiece }) - rawEnergy(freezeSettings)) +
+        (rawEnergy({ ...chillSettings, ...chillPiece }) - rawEnergy(chillSettings)),
+    );
     const doc: PowerDocument = {
       name: 'Frost Field',
       ...shared,
       composition: {
         structure: 'modify',
         variants: [
-          {
-            id: 'freeze',
-            label: 'Freeze',
-            damage: d10('ice'),
-            parts: [{ id: 900, name: 'Immobile' }],
-            duration: { type: 'rounds', value: 2 },
-          },
-          {
-            id: 'chill',
-            label: 'Chill',
-            parts: [{ id: 901, name: 'Slow', op_1_lvl: 1 }],
-            duration: { type: 'minutes', value: 1 },
-          },
+          { id: 'freeze', label: 'Freeze', ...freezePiece },
+          { id: 'chill', label: 'Chill', ...chillPiece },
         ],
       },
     };
     const res = resolvePowerComposition(doc, partsDb)!;
     expect(res.energy).toBe(expected);
+    const overlaySum =
+      derivePlainPowerDisplay({ ...shared, ...freezePiece }, partsDb).energy +
+      derivePlainPowerDisplay({ ...shared, ...chillPiece }, partsDb).energy;
+    expect(res.energy).toBeLessThan(overlaySum);
     expect(composedPowerDurationLabel(res)).toContain(' / ');
-    // Power Range and Sphere are charged once, not once per piece.
     expect(res.tpSources.filter((s) => s.includes('Power Range'))).toHaveLength(1);
     expect(res.tpSources.filter((s) => s.includes('Sphere of Effect'))).toHaveLength(1);
   });
@@ -199,16 +208,14 @@ describe('resolvePowerComposition', () => {
         ],
       },
     };
-    const piece = derivePlainPowerDisplay(
-      {
+    const extraSlow =
+      rawEnergy({
         ...shared,
         parts: [...shared.parts, { id: 901, name: 'Slow', op_1_lvl: 2 }],
         duration: { type: 'minutes', value: 1 },
-      },
-      partsDb,
-    ).energy;
+      }) - rawEnergy({ ...shared, duration: { type: 'minutes', value: 1 } });
     const res = resolvePowerComposition(withSlow, partsDb)!;
-    expect(res.energy).toBe(piece);
+    expect(res.energy).toBe(finalizePowerEnergy(rawEnergy(shared) + extraSlow));
     expect(res.variants.find((v) => v.id === 'v1')!.energy).toBe(0);
   });
 
@@ -246,10 +253,112 @@ describe('resolvePowerComposition', () => {
     );
   });
 
-  it('Randomize counts repeated faces and signs, then adds the chassis', () => {
-    const chassis = { actionType: 'basic', range: { steps: 1 } };
-    const chassisEnergy = derivePlainPowerDisplay(chassis, partsDb).energy;
-    const doc = (faces: string[]): PowerDocument => ({
+  it('Randomize uses expected value: identical faces equal the effect’s normal cost', () => {
+    const face: PowerDocument = {
+      actionType: 'basic',
+      parts: [{ id: 901, name: 'Slow' }],
+    };
+    const faces = Array.from({ length: 20 }, () => 'slow');
+    const doc: PowerDocument = {
+      name: 'Always Slow',
+      composition: {
+        structure: 'randomize',
+        variants: [{ id: 'slow', label: 'Slow', parts: [{ id: 901, name: 'Slow' }] }],
+        die: { sides: 20, faces },
+      },
+    };
+    expect(resolvePowerComposition(doc, partsDb)!.energy).toBe(
+      derivePlainPowerDisplay(face, partsDb).energy,
+    );
+  });
+
+  it('Randomize 1d6 with 3 good 6 EN faces and 3 drawbacks of 4 EN is 2 EN', () => {
+    const pricingDb: PowerPart[] = [...partsDb, part({ id: '910', name: 'Boost', base_en: 6 })];
+    const faces = ['good', 'good', 'good', 'bad', 'bad', 'bad'];
+    const doc: PowerDocument = {
+      name: 'Coin Flip',
+      composition: {
+        structure: 'randomize',
+        variants: [
+          { id: 'good', label: 'Good', parts: [{ id: 910, name: 'Boost' }] },
+          {
+            id: 'bad',
+            label: 'Bad',
+            polarity: 'negative',
+            parts: [{ id: 902, name: 'Blinded' }],
+          },
+        ],
+        die: { sides: 6, faces },
+      },
+    };
+    expect(resolvePowerComposition(doc, pricingDb)!.energy).toBe(2);
+  });
+
+  it('Randomize d20 with 19 faces of a 10 EN effect and 1 drawback of 50 EN is 9 EN', () => {
+    const pricingDb: PowerPart[] = [
+      ...partsDb,
+      part({ id: '911', name: 'Ten', base_en: 10 }),
+      part({ id: '912', name: 'Fifty', base_en: 50 }),
+    ];
+    const faces = [...Array.from({ length: 19 }, () => 'good'), 'bad'];
+    const doc: PowerDocument = {
+      name: 'Nearly Always Ten',
+      composition: {
+        structure: 'randomize',
+        variants: [
+          { id: 'good', label: 'Good', parts: [{ id: 911, name: 'Ten' }] },
+          {
+            id: 'bad',
+            label: 'Bad',
+            polarity: 'negative',
+            parts: [{ id: 912, name: 'Fifty' }],
+          },
+        ],
+        die: { sides: 20, faces },
+      },
+    };
+    expect(resolvePowerComposition(doc, pricingDb)!.energy).toBe(9);
+  });
+
+  it('Randomize applies speed premiums only to good faces (free-action premium is not skipped)', () => {
+    const pricingDb: PowerPart[] = [
+      ...partsDb,
+      part({
+        id: String(PART_IDS.POWER_QUICK_OR_FREE_ACTION),
+        name: 'Power Quick or Free Action',
+        mechanic: true,
+        percentage: true,
+        base_en: 1.25,
+        op_1_en: 0.25,
+      }),
+      part({ id: '910', name: 'Boost', base_en: 6 }),
+    ];
+    const faces = ['good', 'good', 'good', 'bad', 'bad', 'bad'];
+    const doc: PowerDocument = {
+      name: 'Free Coin Flip',
+      actionType: 'free',
+      composition: {
+        structure: 'randomize',
+        variants: [
+          { id: 'good', label: 'Good', parts: [{ id: 910, name: 'Boost' }] },
+          {
+            id: 'bad',
+            label: 'Bad',
+            polarity: 'negative',
+            parts: [{ id: 902, name: 'Blinded' }],
+          },
+        ],
+        die: { sides: 6, faces },
+      },
+    };
+    // Good overlay at free = 6 × 1.5 = 9; extra vs empty shared 0. Bad at basic = 4.
+    // 0.5·9 − 0.5·½·4 = 4.5 − 1 = 3.5 → 4 EN. Without the premium it would be 2.
+    expect(resolvePowerComposition(doc, pricingDb)!.energy).toBe(4);
+  });
+
+  it('Randomize expected value is cheaper than the old signed-face sum', () => {
+    const chassis = { actionType: 'basic' as const, range: { steps: 1 } };
+    const doc: PowerDocument = {
       name: 'Wild Surge',
       ...chassis,
       composition: {
@@ -263,18 +372,207 @@ describe('resolvePowerComposition', () => {
             parts: [{ id: 902, name: 'Blinded' }],
           },
         ],
-        die: { sides: 4, faces },
+        die: { sides: 4, faces: ['slow', 'slow', 'slow', 'blind'] },
       },
+    };
+    const mixed = resolvePowerComposition(doc, partsDb)!;
+    const sharedRaw = rawEnergy(chassis);
+    const extraGood = rawEnergy({ ...chassis, parts: [{ id: 901, name: 'Slow' }] }) - sharedRaw;
+    const badRaw = rawEnergy({
+      actionType: 'basic',
+      isReaction: false,
+      parts: [{ id: 902, name: 'Blinded' }],
     });
-    // Three positive 2-energy faces and one negative 4-energy face = 2 before chassis.
-    const mixed = resolvePowerComposition(doc(['slow', 'slow', 'slow', 'blind']), partsDb)!;
-    expect(mixed.energy).toBe(chassisEnergy + 2);
+    expect(mixed.energy).toBe(
+      finalizePowerEnergy(sharedRaw + (3 * extraGood) / 4 - (0.5 * badRaw) / 4),
+    );
     expect(mixed.variants.find((v) => v.id === 'slow')?.faces).toEqual([1, 2, 3]);
     const allNegative = resolvePowerComposition(
-      doc(['blind', 'blind', 'blind', 'blind']),
+      {
+        ...doc,
+        composition: {
+          ...doc.composition!,
+          die: { sides: 4, faces: ['blind', 'blind', 'blind', 'blind'] },
+        },
+      },
       partsDb,
     )!;
     expect(allNegative.energy).toBe(1);
+    expect(mixed.selectedVariantId).toBeNull();
+  });
+
+  it('Modify official Freezing Wind is 33 EN (Shared once, Slow extra at 1 minute)', () => {
+    const officialDb: PowerPart[] = [
+      part({
+        id: String(PART_IDS.ELEMENTAL_DAMAGE),
+        name: 'Elemental Damage',
+        category: 'Damage',
+        mechanic: true,
+        base_en: 3,
+        op_1_en: 1,
+      }),
+      part({
+        id: String(PART_IDS.POWER_RANGE),
+        name: 'Power Range',
+        mechanic: true,
+        base_en: 0.5,
+        op_1_en: 0.5,
+      }),
+      part({
+        id: String(PART_IDS.SPHERE_OF_EFFECT),
+        name: 'Sphere of Effect',
+        category: 'Area of Effect',
+        mechanic: true,
+        percentage: true,
+        base_en: 1.25,
+        op_1_en: 0.25,
+      }),
+      part({
+        id: String(PART_IDS.DURATION_ROUND),
+        name: 'Duration (Round)',
+        category: 'Duration',
+        mechanic: true,
+        duration: true,
+        base_en: 0.125,
+        op_1_en: 0.125,
+      }),
+      part({
+        id: String(PART_IDS.DURATION_MINUTE),
+        name: 'Duration (Minute)',
+        category: 'Duration',
+        mechanic: true,
+        duration: true,
+        base_en: 0.75,
+        op_1_en: 0.75,
+      }),
+      part({ id: '340', name: 'Restrained', base_en: 6 }),
+      part({ id: '329', name: 'Slow', base_en: 2, op_1_en: 2 }),
+    ];
+    const doc: PowerDocument = {
+      name: 'Freezing Wind',
+      actionType: 'basic',
+      range: { steps: 2 },
+      area: { type: 'sphere', level: 2, applyDuration: false },
+      duration: { type: 'rounds', value: 2 },
+      damage: [{ amount: 1, size: 8, type: 'ice', applyDuration: false }],
+      parts: [{ id: 340, name: 'Restrained', applyDuration: true }],
+      composition: {
+        structure: 'modify',
+        variants: [
+          {
+            id: 'v2',
+            label: 'Slow 3 (1 Minute)',
+            range: { steps: 2 },
+            area: { type: 'sphere', level: 2, applyDuration: false },
+            duration: { type: 'minutes', value: 1 },
+            parts: [{ id: 329, name: 'Slow', op_1_lvl: 2, applyDuration: true }],
+          },
+        ],
+      },
+    };
+    expect(resolvePowerComposition(doc, officialDb)!.energy).toBe(33);
+    const pricedAsOneMinute = derivePlainPowerDisplay(
+      {
+        actionType: 'basic',
+        range: { steps: 2 },
+        area: { type: 'sphere', level: 2, applyDuration: false },
+        duration: { type: 'minutes', value: 1 },
+        damage: [{ amount: 1, size: 8, type: 'ice', applyDuration: false }],
+        parts: [
+          { id: 340, name: 'Restrained', applyDuration: true },
+          { id: 329, name: 'Slow', op_1_lvl: 2, applyDuration: true },
+        ],
+      },
+      officialDb,
+    ).energy;
+    expect(pricedAsOneMinute).toBe(36);
+  });
+
+  it('floors final Energy at 1 when Reverse would drop it to 0 (86e3kfkbv)', () => {
+    const res = resolvePowerComposition(
+      {
+        name: 'Daze',
+        actionType: 'basic',
+        parts: [{ id: 901, name: 'Slow' }],
+        composition: {
+          structure: 'none',
+          variants: [],
+          reverse: {
+            parts: [
+              { id: 902, name: 'Blinded' },
+              { id: 900, name: 'Immobile' },
+            ],
+          },
+        },
+      },
+      partsDb,
+    )!;
+    expect(res.reverse?.energy).toBeGreaterThan(res.structureEnergy * 2);
+    expect(res.energy).toBe(1);
+  });
+
+  it('Modify damage lists Shared once, then each piece’s own rows (86e3kfkbt)', () => {
+    const sharedDmg = [{ amount: 1, size: 6, type: 'fire' }];
+    const res = resolvePowerComposition(
+      {
+        name: 'QA MT 18',
+        actionType: 'basic',
+        damage: sharedDmg,
+        composition: {
+          structure: 'modify',
+          variants: [
+            { id: 'v1', label: 'Range only', range: { steps: 2 } },
+            { id: 'v2', label: 'Empty' },
+          ],
+        },
+      },
+      partsDb,
+    )!;
+    expect(composedPowerDamage(res)).toEqual(sharedDmg);
+
+    const mixed = resolvePowerComposition(
+      {
+        name: 'QA PC126 Modify',
+        actionType: 'basic',
+        damage: [{ amount: 1, size: 4, type: 'fire' }],
+        composition: {
+          structure: 'modify',
+          variants: [
+            { id: 'a', label: 'A', damage: [{ amount: 1, size: 6, type: 'fire' }] },
+            { id: 'b', label: 'B', damage: [{ amount: 1, size: 8, type: 'ice' }] },
+            { id: 'c', label: 'C', damage: [{ amount: 1, size: 4, type: 'acid' }] },
+          ],
+        },
+      },
+      partsDb,
+    )!;
+    expect(composedPowerDamage(mixed)).toEqual([
+      { amount: 1, size: 6, type: 'fire' },
+      { amount: 1, size: 8, type: 'ice' },
+      { amount: 1, size: 4, type: 'acid' },
+    ]);
+  });
+
+  it('Randomize does not pick outcome A until a face is selected (86e3kfkc0)', () => {
+    const doc: PowerDocument = {
+      name: 'Wild',
+      actionType: 'basic',
+      damage: [{ amount: 1, size: 4, type: 'magic' }],
+      composition: {
+        structure: 'randomize',
+        variants: [
+          { id: 'a', label: 'Out A', damage: [{ amount: 1, size: 6, type: 'fire' }] },
+          { id: 'b', label: 'Out B', damage: [{ amount: 2, size: 6, type: 'lightning' }] },
+        ],
+        die: { sides: 2, faces: ['a', 'b'] },
+      },
+    };
+    const unread = resolvePowerComposition(doc, partsDb)!;
+    expect(unread.selectedVariantId).toBeNull();
+    expect(composedPowerDamage(unread)).toEqual([{ amount: 1, size: 4, type: 'magic' }]);
+    const rolled = resolvePowerComposition(doc, partsDb, { selectedVariantId: 'b' })!;
+    expect(rolled.selectedVariantId).toBe('b');
+    expect(composedPowerDamage(rolled)).toEqual([{ amount: 2, size: 6, type: 'lightning' }]);
   });
 
   it('Reverse subtracts 50% of the drawback energy', () => {
@@ -306,6 +604,20 @@ describe('normalizePowerComposition', () => {
     })!;
     expect(c.die?.faces).toEqual(['a', '']);
     expect(isRandomizeDieComplete(c)).toBe(false);
+  });
+
+  it('treats a Randomize variant with no faces as incomplete (86e3kfkc6)', () => {
+    expect(
+      isRandomizeDieComplete({
+        structure: 'randomize',
+        variants: [
+          { id: 'a', label: 'A' },
+          { id: 'b', label: 'B' },
+          { id: 'c', label: 'C' },
+        ],
+        die: { sides: 2, faces: ['a', 'b'] },
+      }),
+    ).toBe(false);
   });
 
   it('keeps an Alternate variant attack mode for the creator round-trip', () => {

@@ -14,6 +14,7 @@ import {
 import { dedupeSavedParts } from '@/lib/game/dedupe-saved-parts';
 import { appendCanTargetToDescription, defensesFromPart } from '@/lib/game/targeted-defenses';
 import type { AllowUndefinedOptionals } from '@/lib/utils/exact-optional';
+import { capitalize } from '@/lib/utils/string';
 import { formatDurationFromTypeAndValue, formatDurationWithModifiers } from '@/lib/utils/duration';
 import { formatActionTypeForDisplay } from '@/lib/utils/action-type';
 import { deriveActionType, actionTypeFromSelection } from './action-type';
@@ -136,6 +137,11 @@ function partEnergyContribution(def: PowerPart, l1: number, l2: number, l3: numb
   );
 }
 
+/** Final published Energy: round up once, never below 1. */
+export function finalizePowerEnergy(raw: number): number {
+  return Math.max(1, Math.ceil(raw - 1e-9));
+}
+
 // =============================================================================
 // Core Cost Calculator
 // =============================================================================
@@ -195,7 +201,7 @@ export function analyzePowerEnergy(
 
   const energyRaw =
     flat_normal * perc_all + (dur_all + 1) * flat_duration * perc_dur - flat_duration * perc_dur;
-  const totalEnergy = Math.max(0, Math.ceil(energyRaw));
+  const totalEnergy = finalizePowerEnergy(energyRaw);
 
   return {
     lines,
@@ -864,7 +870,7 @@ export function derivePlainPowerDisplay(
 // =============================================================================
 
 /**
- * Format power damage as [amount]d[size] [type]. Supports multiple damage types (e.g. "2d6 slashing, 1d4 fire").
+ * Format power damage as [amount]d[size] [Type]. Supports multiple damage types (e.g. "2d6 Slashing, 1d4 Fire").
  */
 export function formatPowerDamage(
   damageArr?: Array<{
@@ -876,6 +882,6 @@ export function formatPowerDamage(
   if (!Array.isArray(damageArr)) return '';
   const parts = damageArr
     .filter((d) => d && d.amount && d.size && d.type && d.type !== 'none')
-    .map((d) => `${d.amount}d${d.size} ${d.type}`);
+    .map((d) => `${d.amount}d${d.size} ${capitalize(String(d.type))}`);
   return parts.join(', ') || '';
 }

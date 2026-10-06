@@ -6,6 +6,8 @@ import {
   calculatePowerCosts,
   calculatePowerSectionContribution,
   derivePowerDisplay,
+  finalizePowerEnergy,
+  formatPowerDamage,
 } from './power-calc';
 
 const elementalDamagePart: PowerPart = {
@@ -305,6 +307,28 @@ describe('derivePowerDisplay', () => {
     expect(withoutApply.energy).toBe(4);
     // dur_all = 2, flat_normal = 4, flat_duration = 4 → 4 + 2*4 = 12
     expect(withApply.energy).toBe(12);
+  });
+});
+
+describe('finalizePowerEnergy', () => {
+  it('floors every power at 1 EN after rounding up (86e3jrfyu)', () => {
+    expect(finalizePowerEnergy(0)).toBe(1);
+    expect(finalizePowerEnergy(-30)).toBe(1);
+    expect(finalizePowerEnergy(0.1)).toBe(1);
+    expect(finalizePowerEnergy(8.25)).toBe(9);
+    expect(calculatePowerCosts([], [elementalDamagePart]).totalEnergy).toBe(1);
+  });
+});
+
+describe('formatPowerDamage', () => {
+  it('capitalizes damage types like the plain-power sheet path (86e3kfkc7)', () => {
+    expect(formatPowerDamage([{ amount: 1, size: 8, type: 'fire' }])).toBe('1d8 Fire');
+    expect(
+      formatPowerDamage([
+        { amount: 1, size: 6, type: 'fire' },
+        { amount: 1, size: 8, type: 'ice' },
+      ]),
+    ).toBe('1d6 Fire, 1d8 Ice');
   });
 });
 

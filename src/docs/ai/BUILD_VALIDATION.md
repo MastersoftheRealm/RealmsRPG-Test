@@ -8841,11 +8841,11 @@ Built-in variants in `payload.composition` (ADR-0029). Resolver: `lib/calculator
 
 **Steps**
 1. Above the editor (and above Power Summary on mobile): labeled **Structure** select (None / Choice / Alternate / Modify / Randomize) and **Reverse effects** checkbox, each with an InfoTippy.
-2. Pick **Choice**. The Choice codex description appears as text. Tabs **Shared · Variant 1 · Variant 2** appear (C1 tab scroller with chevrons when narrow) plus **Add variant**.
+2. Pick **Choice**. The structure help text appears (pay Shared plus the most expensive portion). Tabs **Shared · Variant 1 · Variant 2** appear (C1 tab scroller with chevrons when narrow) plus **Add variant**.
 3. Shared: range 9 spaces. Variant 1: name "Fire", 1d10 fire. Variant 2: "Ice", 1d10 ice. Power Summary Energy = the more expensive portion; Variant Energy breakdown lists each + "Choice pays the most expensive portion".
-4. Switch to **Alternate**: tabs become full powers; **Add variant** copies the open tab. Switch to **Modify**: total is the sum of pieces.
-5. **Randomize**: Die select (1d2…1d100), one Face select per side, "Assign faces evenly". Save stays disabled while any face is Unassigned.
-6. Tick **Reverse effects**: Reverse tab; drawback parts show "Reverse drawback X EN → −X/2 EN" in the breakdown.
+4. Switch to **Alternate**: tabs become full powers; **Add variant** copies the open tab. Switch to **Modify**: Shared is paid once; each piece lists only its extra Energy. Load official **Freezing Wind** and confirm Energy is **33** (was 36).
+5. **Randomize**: Die select (1d2…1d100), one Face select per side, "Assign faces evenly". Save stays disabled while any face is Unassigned, and while any outcome has no face. The help text matches the breakdown: each good face's extra cost times its chance, minus half each drawback times its chance (not "+1 EN per positive outcome"). A die of identical faces costs that effect's normal Energy.
+6. Tick **Reverse effects**: Reverse tab; drawback parts show "Reverse drawback X EN → −X/2 EN" in the breakdown. An empty Reverse tab cannot be saved. Final Energy is never below 1.
 7. Power Mechanics "Add" picker no longer offers Choice, Split Power Parts into Groups, Randomize, Reverse Effects.
 8. Save, reload via Load: structure, tabs, names, faces, and Reverse restore.
 
@@ -8865,7 +8865,7 @@ Built-in variants in `payload.composition` (ADR-0029). Resolver: `lib/calculator
 
 **Steps**
 1. Expand Elemental Burst: section **Choice Variants** with chips **Fire · Ice · Lightning** (not "Level N"); the current chip is marked.
-2. Click **Ice**: the damage button reads `1d10 ice`; Energy stays at the max. Reload — the pick persists (`selectedVariantId`).
+2. Click **Ice**: the damage button reads `1d10 Ice`; Energy stays at the max. Reload — the pick persists (`selectedVariantId`).
 3. Alternate power: switching the chip changes damage, duration, area, and the Energy button (a cheaper variant costs less).
 4. Modify power: chips are browse-only (expand to read piece facts); Duration column joins pieces (`2 Rounds / 1 Minute`); one Energy button spends the sum.
 5. Randomize power: the **Roll 1dN** chip rolls, marks the face's variant, and logs to the roll log. Clicking a variant chip sets it without rolling.

@@ -254,12 +254,12 @@ function buildTotalsGroup(analysis: PowerEnergyAnalysis): PowerAdvancedCalcGroup
   }
 
   const needsRoundUp = totalEnergy > 0 && !nearlyEqual(energyRaw, totalEnergy) && energyRaw > 0;
-  const clampedFromNegative = energyRaw < 0 && totalEnergy === 0;
+  const clampedToMinimum = energyRaw < 1;
 
-  if (clampedFromNegative) {
+  if (clampedToMinimum) {
     rows.push({ label: 'Combined Energy', value: formatEnergyNumber(energyRaw) });
     rows.push({
-      label: 'Cannot go below 0',
+      label: 'Cannot go below 1',
       value: formatEnergyNumber(totalEnergy),
     });
   } else if (needsRoundUp) {

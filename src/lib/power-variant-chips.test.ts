@@ -45,6 +45,7 @@ describe('buildPowerVariantChips', () => {
     });
     expect(chips.map((c) => c.name)).toEqual(['Fire', 'Ice']);
     expect(chips[1]?.current).toBe(true);
+    expect(chips[1]?.onSelect).toEqual(expect.any(Function));
     chips[0]?.onSelect?.();
     expect(onSelectVariant).toHaveBeenCalledWith('fire');
     expect(chips.some((c) => /Level/.test(c.name))).toBe(false);
@@ -103,22 +104,83 @@ describe('buildPowerVariantChips', () => {
     const section = powerVariantsDetailSection(res)!;
     expect(section.chips.map((c) => c.name)).toEqual(['Fire', 'Ice']);
     const text = withPowerReverseNote('Blast.', res);
-    expect(text.startsWith('Blast. Reverse Effects (1d10 fire)')).toBe(true);
+    expect(text.startsWith('Blast. Reverse Effects (1d10 Fire)')).toBe(true);
+    expect(text).toContain("drawback's");
+    expect(text).not.toContain('â');
     expect(text).toContain('cannot be nullified');
     expect(withPowerReverseNote('Blast.', undefined)).toBe('Blast.');
   });
 
   it('puts the structure rule text on the section label tip', () => {
-    const choicePart = {
-      ...partsDb[0]!,
-      id: String(PART_IDS.POWER_CHOICE),
-      name: 'Choice',
-      description: 'Pick one portion when you cast.',
-    };
-    const res = resolvePowerComposition(burst, [...partsDb, choicePart])!;
-    expect(powerVariantsDetailSection(res)?.labelHelp).toBe('Pick one portion when you cast.');
-    const noCodex = resolvePowerComposition(burst, partsDb)!;
-    expect(powerVariantsDetailSection(noCodex)?.labelHelp).toBeUndefined();
+    const res = resolvePowerComposition(burst, partsDb)!;
+    expect(powerVariantsDetailSection(res)?.labelHelp).toMatch(/most expensive/);
+  });
+
+  it('Randomize help matches the expected-value cost (86e3kfkcc)', () => {
+    const res = resolvePowerComposition(
+      {
+        ...burst,
+        composition: {
+          structure: 'randomize',
+          variants: burst.composition!.variants,
+          die: { sides: 2, faces: ['fire', 'ice'] },
+        },
+      },
+      partsDb,
+    )!;
+    const help = powerVariantsDetailSection(res)?.labelHelp ?? '';
+    expect(help).toMatch(/good outcome/i);
+    expect(help).toMatch(/half its drawback/);
+    expect(help).not.toMatch(/\+1 EN/);
+  });
+
+  it('does not mark a Randomize outcome current before a roll (86e3kfkc0)', () => {
+    const res = resolvePowerComposition(
+      {
+        ...burst,
+        composition: {
+          structure: 'randomize',
+          variants: burst.composition!.variants,
+          die: { sides: 2, faces: ['fire', 'ice'] },
+        },
+      },
+      partsDb,
+    )!;
+    const chips = buildPowerVariantChips(res, {
+      select: { powerName: 'Wild', onSelectVariant: () => {} },
+    });
+    expect(chips.every((c) => !c.current)).toBe(true);
+    expect(res.selectedVariantId).toBeNull();
+  });
+
+  it('uses ASCII apostrophes and a readable minus in Randomize copy (86e3kfkby)', () => {
+    const res = resolvePowerComposition(
+      {
+        ...burst,
+        composition: {
+          structure: 'randomize',
+          variants: [
+            { id: 'fire', label: 'Out A', damage: [{ amount: 1, size: 10, type: 'fire' }] },
+            {
+              id: 'ice',
+              label: 'Out C',
+              polarity: 'negative',
+              damage: [{ amount: 1, size: 4, type: 'poison' }],
+            },
+          ],
+          die: { sides: 2, faces: ['fire', 'ice'] },
+        },
+      },
+      partsDb,
+    )!;
+    const chips = buildPowerVariantChips(res);
+    const joined = chips.map((c) => `${c.name}\n${c.description}`).join('\n');
+    expect(joined).toContain('−');
+    expect(joined).toContain('·');
+    expect(joined).not.toContain('â');
+    expect(
+      powerVariantsDetailSection(res)?.chips.some((c) => c.description?.includes("creature's")),
+    ).toBe(true);
   });
 
   it('renders plain descriptor chips when no select handler is passed (read-only sheet)', () => {
