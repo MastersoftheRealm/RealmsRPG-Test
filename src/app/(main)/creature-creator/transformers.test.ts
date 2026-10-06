@@ -47,7 +47,7 @@ describe('transformUserPowerToDisplayItem variants (86e3kfkc2)', () => {
       } as UserPower,
       [],
     );
-    expect(item.stats.find((stat) => stat.label === 'Action')?.value).toBe('Quick action');
+    expect(item.stats?.find((stat) => stat.label === 'Action')?.value).toBe('Quick action');
     expect(item.details?.find((detail) => detail.label === 'Duration')?.value).toBe('2 Rounds');
   });
 });
