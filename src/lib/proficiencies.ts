@@ -321,8 +321,9 @@ export function mergeOwnedWithRequired(
  * A higher option level covers a lower one of the same part. Rounded TP is not
  * the comparison when the part id matches: neighbouring levels can publish the
  * same integer (1d6 and 1d8 Elemental Damage are both 3 TP). A saved row with
- * no part id matches that part by name before falling back to Training Points,
- * so a nameless 1d6 still does not cover 1d8. Damage type is the proficiency
+ * no part id matches that part by name and kind (power, technique, or item)
+ * before falling back to Training Points, so a nameless 1d6 still does not
+ * cover 1d8 of the same kind. Damage type is the proficiency
  * key, so fire does not satisfy ice. Two different part ids that share a
  * damage type (Additional Damage fire and Elemental Damage fire) are compared
  * by rounded Training Points. For a damage part, die size is option 1
@@ -366,7 +367,9 @@ export function hasSufficientProficiency(
   }
   if (partIdsMatch(match, required)) return optionLevelsCover(match, required);
   const missingPartId = partRefId(match).length === 0 || partRefId(required).length === 0;
-  if (missingPartId && partNamesMatch(match, required)) return optionLevelsCover(match, required);
+  if (missingPartId && partNamesMatch(match, required) && match.kind === required.kind) {
+    return optionLevelsCover(match, required);
+  }
   return calculateProficiencyTP(match) >= calculateProficiencyTP(required);
 }
 

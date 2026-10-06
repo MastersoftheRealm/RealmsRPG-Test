@@ -81,6 +81,20 @@ describe('hasSufficientProficiency', () => {
     expect(hasSufficientProficiency([fire(1, '906')], fire(2, '907'))).toBe(true);
   });
 
+  it('does not use the name fallback across power, technique, and item parts', () => {
+    const powerDie = fire(1, null);
+    const techniqueDie: CharacterProficiency = {
+      ...fire(2, null),
+      id: 'tech-2',
+      kind: 'technique_part',
+    };
+    // Both publish as 3 TP, so option level would reject this and Training Points would not.
+    expect(calculateProficiencyTP(powerDie)).toBe(3);
+    expect(calculateProficiencyTP(techniqueDie)).toBe(3);
+    expect(hasSufficientProficiency([powerDie], techniqueDie)).toBe(true);
+    expect(hasSufficientProficiency([techniqueDie], powerDie)).toBe(true);
+  });
+
   it('compares Training Points when two parts share a damage type', () => {
     const elemental = fire(2);
     const additional = (op1Level: number, baseTP: number, op1TP: number): CharacterProficiency => ({

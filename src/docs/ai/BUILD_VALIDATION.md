@@ -8888,7 +8888,7 @@ Built-in variants in `payload.composition` (ADR-0029). Resolver: `lib/calculator
 | **Needs** | Official Elemental Burst / Elemental Bolt / Judgement (rewritten onto Choice) |
 
 **Steps**
-1. Library Realms: chips show Shared plus that option. On the 2026-10-06 Codex snapshot, Elemental Burst chips compute as **8**, Elemental Bolt chips as **6**, and Judgement’s Light chip as **5** and Necrotic chip as **6** while the power computes as **6**. Freezing Wind (Modify) computes as **33**. A Slow piece at range step 1 computes as **32**, and with no range as **31**. These are results, not targets. Damage column shows the first variant. Expanded row lists the variant chips (not clickable).
+1. Library Realms: chips show Shared plus that option. On the 2026-10-06 Codex snapshot, Elemental Burst chips compute as **8**, Elemental Bolt chips as **6**, and Judgement’s Light chip as **5** and Necrotic chip as **6** while the power computes as **6**. Freezing Wind (Modify) computes as **33**. A Slow piece at range step 1 computes as **33**, and with no range as **33**. These are results, not targets. Damage column shows the first variant. Expanded row lists the variant chips (not clickable).
 2. Add Power modal and Guided L3 show the same energy + variant section. Innate Eligible filter still behaves.
 3. Creature stat block with a composed power: energy + variant section, no spend control. At 390px the power card still shows the damage dice (Energy, Action, Duration, and Damage), including while the row is expanded.
 
