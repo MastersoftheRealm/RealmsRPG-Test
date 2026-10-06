@@ -21,6 +21,7 @@ type PowerCreatorEditorPowerDamageProps = {
   onDamagesChange: (updater: (prev: DamageConfig[]) => DamageConfig[]) => void;
   damageSummary: string;
   sectionCosts: PowerSectionCosts;
+  sectionsUnpriced?: boolean | undefined;
   partsDb: PowerPart[];
   damageInheritance?: InheritedField | null;
 };
@@ -30,6 +31,7 @@ export function PowerCreatorEditorPowerDamage({
   onDamagesChange,
   damageSummary,
   sectionCosts,
+  sectionsUnpriced = false,
   partsDb,
   damageInheritance = null,
 }: PowerCreatorEditorPowerDamageProps) {
@@ -43,7 +45,11 @@ export function PowerCreatorEditorPowerDamage({
       titleAddon={<PowerCreatorHelp topic="damage" />}
       rightSlot={
         damageFromShared ? undefined : (
-          <SectionCostBadge en={sectionCosts.damage.energyRaw} tp={sectionCosts.damage.totalTP} />
+          <SectionCostBadge
+            en={sectionCosts.damage.energyRaw}
+            tp={sectionCosts.damage.totalTP}
+            unpriced={sectionsUnpriced}
+          />
         )
       }
     >

@@ -814,6 +814,7 @@ describe('resolvePowerComposition', () => {
       partsDb,
     )!;
     const lines = powerCompositionEnergyLines(res);
+    expect(lines[0]).toBe('Shared: not priced');
     expect(lines.some((line) => line.startsWith('Shared chassis'))).toBe(false);
     expect(lines.some((line) => line.startsWith('Bad: −2 EN'))).toBe(true);
     expect(lines.some((line) => line.includes('−4'))).toBe(false);
@@ -1317,6 +1318,49 @@ describe('resolvePowerComposition', () => {
     )!;
     expect(alreadyIndependent.variants[0]?.doc.parts?.map((p) => p.id)).toEqual([901]);
     expect(alreadyIndependent.variants[0]?.doc.range).toEqual({ steps: 0 });
+    expect(alreadyIndependent.variants[0]?.doc.damage).toEqual([]);
+  });
+
+  it('converts a legacy Randomize overlay so each face keeps Shared range and damage', () => {
+    const db = [...partsDb, ...snapshotParts([PART_IDS.MAGIC_DAMAGE])];
+    const damage = [{ amount: 1, size: 4, type: 'magic' }];
+    const doc: PowerDocument = {
+      name: 'QA PC126 Randomize',
+      actionType: 'basic',
+      range: { steps: 1 },
+      damage,
+      composition: {
+        structure: 'randomize',
+        variants: [
+          { id: 'a', label: 'A', polarity: 'positive' },
+          { id: 'b', label: 'B', polarity: 'positive', range: { steps: 0 }, damage: [] },
+        ],
+        die: { sides: 2, faces: ['a', 'b'] },
+      },
+    };
+    const res = resolvePowerComposition(doc, db)!;
+    for (const face of res.variants) {
+      expect(face.doc.range).toEqual({ steps: 1 });
+      expect(face.doc.damage).toEqual(damage);
+    }
+    const display = derivePowerDisplay(doc, db)!;
+    const atSharedRange = derivePlainPowerDisplay(
+      { name: doc.name, actionType: 'basic', range: { steps: 1 }, damage },
+      db,
+    );
+    const atOneSpace = derivePlainPowerDisplay({ name: doc.name, actionType: 'basic', damage }, db);
+    expect(display.range).toBe('3 spaces');
+    expect(display.range).not.toBe('1 space');
+    expect(atSharedRange.energy).not.toBe(atOneSpace.energy);
+    expect(display.energy).toBe(atSharedRange.energy);
+    expect(powerCompositionEnergyLines(res)[0]).toBe('Shared: not priced');
+    expect(powerCompositionHelpText('randomize')).toContain(
+      'Changing Shared later does not change a face that already exists.',
+    );
+
+    const rolled = resolvePowerComposition(doc, db, { selectedVariantId: 'b' })!;
+    expect(composedPowerDamage(rolled)).toEqual(damage);
+    expect(derivePowerDisplay(doc, db, { selectedVariantId: 'b' })?.range).toBe('3 spaces');
   });
 
   it('names the Randomize save block when a variant has no face', () => {

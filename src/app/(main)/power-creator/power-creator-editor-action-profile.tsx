@@ -26,6 +26,7 @@ type PowerCreatorEditorActionProfileProps = {
   attackMode: AttackMode;
   onAttackModeChange: (mode: AttackMode) => void;
   sectionCosts: PowerSectionCosts;
+  sectionsUnpriced?: boolean | undefined;
   actionInheritance?: InheritedField | null;
   attackInheritance?: InheritedField | null;
 };
@@ -39,6 +40,7 @@ export function PowerCreatorEditorActionProfile({
   attackMode,
   onAttackModeChange,
   sectionCosts,
+  sectionsUnpriced = false,
   actionInheritance = null,
   attackInheritance = null,
 }: PowerCreatorEditorActionProfileProps) {
@@ -55,7 +57,11 @@ export function PowerCreatorEditorActionProfile({
         titleAddon={<PowerCreatorHelp topic="actionType" />}
         rightSlot={
           actionFromShared ? undefined : (
-            <SectionCostBadge en={sectionCosts.action.energyRaw} tp={sectionCosts.action.totalTP} />
+            <SectionCostBadge
+              en={sectionCosts.action.energyRaw}
+              tp={sectionCosts.action.totalTP}
+              unpriced={sectionsUnpriced}
+            />
           )
         }
       >
@@ -96,7 +102,11 @@ export function PowerCreatorEditorActionProfile({
         titleAddon={<PowerCreatorHelp topic="attack" />}
         rightSlot={
           attackFromShared ? undefined : (
-            <SectionCostBadge en={sectionCosts.weapon.energyRaw} tp={sectionCosts.weapon.totalTP} />
+            <SectionCostBadge
+              en={sectionCosts.weapon.energyRaw}
+              tp={sectionCosts.weapon.totalTP}
+              unpriced={sectionsUnpriced}
+            />
           )
         }
       >

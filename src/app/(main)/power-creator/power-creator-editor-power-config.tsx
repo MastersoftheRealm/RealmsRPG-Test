@@ -27,6 +27,7 @@ type PowerCreatorEditorPowerConfigProps = {
   onDurationChange: (next: DurationConfig | ((prev: DurationConfig) => DurationConfig)) => void;
   durationSummary: string;
   sectionCosts: PowerSectionCosts;
+  sectionsUnpriced?: boolean | undefined;
   rangeInheritance?: InheritedField | null;
   areaInheritance?: InheritedField | null;
   durationInheritance?: InheritedField | null;
@@ -43,6 +44,7 @@ export function PowerCreatorEditorPowerConfig({
   onDurationChange,
   durationSummary,
   sectionCosts,
+  sectionsUnpriced = false,
   rangeInheritance = null,
   areaInheritance = null,
   durationInheritance = null,
@@ -58,7 +60,11 @@ export function PowerCreatorEditorPowerConfig({
         collapsedSummary={rangeFromShared ? `From Shared: ${rangeInheritance.label}` : rangeSummary}
         rightSlot={
           rangeFromShared ? undefined : (
-            <SectionCostBadge en={sectionCosts.range.energyRaw} tp={sectionCosts.range.totalTP} />
+            <SectionCostBadge
+              en={sectionCosts.range.energyRaw}
+              tp={sectionCosts.range.totalTP}
+              unpriced={sectionsUnpriced}
+            />
           )
         }
       >
@@ -91,7 +97,11 @@ export function PowerCreatorEditorPowerConfig({
         titleAddon={<PowerCreatorHelp topic="area" />}
         rightSlot={
           areaFromShared ? undefined : (
-            <SectionCostBadge en={sectionCosts.area.energyRaw} tp={sectionCosts.area.totalTP} />
+            <SectionCostBadge
+              en={sectionCosts.area.energyRaw}
+              tp={sectionCosts.area.totalTP}
+              unpriced={sectionsUnpriced}
+            />
           )
         }
       >
@@ -162,6 +172,7 @@ export function PowerCreatorEditorPowerConfig({
             <SectionCostBadge
               en={sectionCosts.duration.energyRaw}
               tp={sectionCosts.duration.totalTP}
+              unpriced={sectionsUnpriced}
             />
           )
         }

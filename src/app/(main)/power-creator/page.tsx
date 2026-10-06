@@ -176,6 +176,8 @@ function PowerCreatorWorkspace({
   const variantTabGroup = useTabGroup('power-variants');
   const composed = ws.composedSummary;
   const tabDisplay = composed?.tabDisplay ?? null;
+  const randomizeSharedUnpriced =
+    ws.variants.structure === 'randomize' && ws.variants.activeTabId === SHARED_TAB_ID;
   const showVariantTabs = ws.variants.structure !== 'none' || ws.variants.reverseEnabled;
   const onRandomizeFace =
     ws.variants.structure === 'randomize' &&
@@ -370,6 +372,7 @@ function PowerCreatorWorkspace({
       onDamagesChange={ws.setDamages}
       damageSummary={ws.damageSummary}
       sectionCosts={ws.sectionCosts}
+      sectionsUnpriced={randomizeSharedUnpriced}
       inheritance={inheritance}
     />
   );
@@ -497,8 +500,16 @@ function PowerCreatorWorkspace({
           ]}
         >
           <AdvancedCalculationsPanel
-            groups={ws.advancedCalcGroups}
-            ruleText="Energy is rounded up at the end. Training Points are listed separately above when a part has them."
+            groups={
+              randomizeSharedUnpriced
+                ? [{ title: 'Energy', rows: [{ label: 'Shared tab', value: 'Not priced' }] }]
+                : ws.advancedCalcGroups
+            }
+            ruleText={
+              randomizeSharedUnpriced
+                ? 'Action and defaults for new faces. Adds no energy. Defaults only pre-fill faces added later.'
+                : 'Energy is rounded up at the end. Training Points are listed separately above when a part has them.'
+            }
           />
         </CreatorSummaryPanel>
       }

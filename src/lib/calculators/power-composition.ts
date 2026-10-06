@@ -112,7 +112,7 @@ const POWER_ALTERNATE_HELP =
   'Each variant is a complete power (action, range, area, duration, damage, and parts). When you use the power you pick one variant and pay that variant’s energy, which may cost less, the same, or more than the others.';
 
 const POWER_RANDOMIZE_HELP =
-  'Each face is its own effect and shares only the action type. Shared defaults pre-fill a new face and add no energy. A good outcome costs its full energy, including that action. A bad outcome subtracts half the drawback, priced as a basic action on that face alone, divided by the action-type multiplier, including Reaction. A slower action removes more and a quicker action removes less. Basic stays half. Each face is weighted by its chance. Once the power has positive energy, it costs at least 1 EN. If nothing is positive, Energy is a dash.';
+  'Each face is its own effect and shares only the action type. Shared defaults pre-fill a new face and add no energy. Changing Shared later does not change a face that already exists. A good outcome costs its full energy, including that action. A bad outcome subtracts half the drawback, priced as a basic action on that face alone, divided by the action-type multiplier, including Reaction. A slower action removes more and a quicker action removes less. Basic stays half. Each face is weighted by its chance. Once the power has positive energy, it costs at least 1 EN. If nothing is positive, Energy is a dash.';
 
 const POWER_REVERSE_ACTION_NOTE =
   'A drawback on a power that benefits you or an ally uses the Reverse tab’s own range, area, and duration (Shared’s, until you override them). Its reduction is half that energy divided by the action-type multiplier, including Reaction, so a slower action removes more and a quicker action removes less. Basic stays half. It cannot be nullified or reduced by you or an ally.';
@@ -414,26 +414,38 @@ function fullVariantDoc(name: string | undefined, v: PowerVariantSpec): PowerDoc
 
 /**
  * A creator-saved independent face stores range, area, duration, and damage,
- * including the empty values. An overlay face omits the fields it inherited.
+ * including the empty values. An overlay face omits a field, or stores only the
+ * empty default, for anything it inherited from Shared.
  */
 export function isIndependentRandomizeFace(v: PowerVariantSpec): boolean {
   return v.range != null && v.area != null && v.duration != null && v.damage != null;
 }
 
+function legacyFaceForces(v: PowerVariant, field: PowerVariantOverrideField): boolean {
+  return (v.overrides ?? []).includes(field);
+}
+
 /**
  * Old Randomize saves stored Shared plus a face delta. On read, that delta
  * becomes a full face: Shared’s range, area, duration, damage, and parts, plus
- * the face’s own parts. A face that already stores those four fields is unchanged,
- * so Shared defaults are not priced twice.
+ * the face’s own parts. An empty default (1 space, no area, Instant, no damage)
+ * is the overlay’s “use Shared”, not a chosen melee footprint. A face that
+ * already stores all four fields is unchanged, so a real independent face is
+ * not repriced from Shared.
  */
 export function expandLegacyRandomizeFace(shared: PowerVariantSpec, v: PowerVariant): PowerVariant {
   if (isIndependentRandomizeFace(v)) return v;
+  const rangeStepsSet = (v.range?.steps ?? 0) > 0;
+  const areaSet = v.area != null && v.area.type !== 'none';
+  const durationSet = v.duration != null && v.duration.type !== 'instant';
+  const damageSet = Array.isArray(v.damage) && v.damage.length > 0;
   return {
     ...v,
-    range: v.range ?? shared.range,
-    area: v.area ?? shared.area,
-    duration: v.duration ?? shared.duration,
-    damage: v.damage !== undefined ? v.damage : shared.damage,
+    range: legacyFaceForces(v, 'range') || rangeStepsSet ? v.range : (shared.range ?? v.range),
+    area: legacyFaceForces(v, 'area') || areaSet ? v.area : (shared.area ?? v.area),
+    duration:
+      legacyFaceForces(v, 'duration') || durationSet ? v.duration : (shared.duration ?? v.duration),
+    damage: legacyFaceForces(v, 'damage') || damageSet ? v.damage : (shared.damage ?? v.damage),
     parts: dedupeSavedParts([
       ...stripCompositionParts(shared.parts),
       ...stripCompositionParts(v.parts),
@@ -992,6 +1004,9 @@ export function powerCompositionEnergyLines(res: PowerCompositionResolution): st
   });
   if (res.structure === 'choice' && res.shared) {
     lines.unshift(`Shared: ${formatEnergyIntermediate(res.shared.rawEnergy)} EN`);
+  }
+  if (res.structure === 'randomize') {
+    lines.unshift('Shared: not priced');
   }
   const rule: Partial<Record<PowerCompositionResolution['structure'], string>> = {
     choice: 'Choice pays the most expensive portion',

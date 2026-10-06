@@ -65,7 +65,7 @@ Kadin adopted composed-power pricing Oct 5 (10:21 PM ET) and revised it Oct 6 (7
 - Breakdowns show the action-type multiplier at its Codex value (0.875, not 0.88). Energy intermediates stay at most 2 decimals.
 - `overrides` on a Choice, Modify, or Reverse tab lists the creator-forced fields (`action`, `attack`, `range`, `area`, `duration`, `damage`). Explicit none or Instant stays stored when that flag is set. Pricing does not read `overrides`, and it does not pin an official power's energy. Randomize faces are complete specs, so they do not store overlay overrides.
 - Footprint wording used in `GAME_RULES` and ADR-0029. The last clause is not confirmed by Kadin: "A longer range adds only the extra range cost, once. A larger area or longer duration raises only that tab's parts; a smaller area or shorter duration lowers them. A shorter range does not refund Shared's range."
-- A saved Randomize face that omits range, area, duration, or damage is expanded on read from Shared plus that face's parts. A face that already stores those fields stays as saved.
+- A saved Randomize face that omits range, area, duration, or damage, or that stores only the empty default, is expanded on read: each face receives Shared's range, area, duration, parts, and damage, plus that face's own parts. A face that already stores all four fields stays as saved. The Randomize Shared tab is action and defaults for faces added later. It is shown as not priced, and editing it does not change faces that already exist.
 
 ---
 

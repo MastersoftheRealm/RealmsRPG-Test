@@ -326,6 +326,7 @@ describe('legacy Randomize overlay', () => {
     shared.actionType = 'quick';
     shared.range = { steps: 2 };
     shared.duration = { ...shared.duration, type: 'rounds', value: 2 };
+    shared.damages = [{ amount: 1, size: 4, type: 'magic', applyDuration: false }];
     shared.selectedParts = [
       {
         part: catalog[0]!,
@@ -359,6 +360,12 @@ describe('legacy Randomize overlay', () => {
     const bad = init.stored.variants.find((v) => v.id === 'bad');
     expect(good?.form.range.steps).toBe(2);
     expect(good?.form.duration.type).toBe('rounds');
+    expect(good?.form.damages).toEqual([
+      expect.objectContaining({ amount: 1, size: 4, type: 'magic' }),
+    ]);
+    expect(bad?.form.damages).toEqual([
+      expect.objectContaining({ amount: 1, size: 4, type: 'magic' }),
+    ]);
     expect(good?.form.selectedParts.map((p) => p.part.id)).toEqual(['900', '901']);
     expect(bad?.form.selectedParts.map((p) => p.part.id)).toEqual(['900']);
 
@@ -375,7 +382,9 @@ describe('legacy Randomize overlay', () => {
     expect(savedGood?.range).toEqual({ steps: 2 });
     expect(savedGood?.area).toBeDefined();
     expect(savedGood?.duration?.type).toBe('rounds');
-    expect(savedGood?.damage).toEqual([]);
+    expect(savedGood?.damage).toEqual([
+      { amount: 1, size: 4, type: 'magic', applyDuration: false },
+    ]);
     expect(savedGood?.parts?.map((p) => p.id)).toEqual([900, 901]);
   });
 });

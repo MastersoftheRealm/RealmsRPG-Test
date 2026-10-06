@@ -28,6 +28,7 @@ type PowerCreatorEditorPowerPartsProps = {
   onRemoveAdvancedPart: (index: number) => void;
   onUpdateAdvancedPart: (index: number, updates: Partial<AdvancedPart>) => void;
   sectionCosts: PowerSectionCosts;
+  sectionsUnpriced?: boolean | undefined;
   sharedPartNames?: string[] | undefined;
   sharedMechanicNames?: string[] | undefined;
 };
@@ -46,6 +47,7 @@ export function PowerCreatorEditorPowerParts({
   onRemoveAdvancedPart,
   onUpdateAdvancedPart,
   sectionCosts,
+  sectionsUnpriced = false,
   sharedPartNames,
   sharedMechanicNames,
 }: PowerCreatorEditorPowerPartsProps) {
@@ -65,6 +67,7 @@ export function PowerCreatorEditorPowerParts({
             <SectionCostBadge
               en={sectionCosts.powerParts.energyRaw}
               tp={sectionCosts.powerParts.totalTP}
+              unpriced={sectionsUnpriced}
             />
             <Button
               type="button"
@@ -118,6 +121,7 @@ export function PowerCreatorEditorPowerParts({
             <SectionCostBadge
               en={sectionCosts.powerMechanics.energyRaw}
               tp={sectionCosts.powerMechanics.totalTP}
+              unpriced={sectionsUnpriced}
             />
             <Button
               type="button"
