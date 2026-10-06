@@ -131,7 +131,7 @@
 | Feat tags (normalize + taxonomy) | `lib/codex/feat-tags.ts`, `lib/codex/feat-list.ts` (`normalizeFeatCategory` maps leftover `Offense` → Offensive for filters/display — TASK-876; live UPDATE waits on DEV-Q06); `sql/feat-tags-unification-phase*.sql` (phase 4 = live normalize chain) |
 | Part/property chips | `ExpandableChip` + `expandableChipPropsFromPartData` (`lib/chip/expandable-chip-props.ts`); `PartData` in `lib/chip/part-data.ts` (re-exported from `@/components/patterns`); `partChipsFromDisplay` in `lib/chip/part-chips-from-display.ts` |
 | Part/property → PartData (library rows) | `lib/library/part-display.ts` — `characterPartsToPartData`, `itemPropertiesToPartData` |
-| Part TP math (powers/techniques) | `lib/calculators/part-training-points.ts` — `computePartTrainingPointsRaw` + `computePartTrainingPoints` (per-part **floor** is the GAME_RULES rounding exception), `PartTpVariant` |
+| Part TP math (powers/techniques) | `lib/calculators/part-training-points.ts` — `computePartTrainingPointsRaw` + `computePartTrainingPoints` (one round-up of the instance's raw sum is the GAME_RULES rounding exception), `PartTpVariant` |
 | Path loadout flatten | `lib/game/loadout-entries.ts` — `flattenLoadoutEntries` |
 | Dedupe saved parts / entity refs | `lib/game/dedupe-saved-parts.ts` — `dedupeSavedParts`, `dedupeEntityRefs` (creators save, sync, calc, sheet chips) |
 | Empowered technique part chips (nested power + technique) | `lib/library/empowered-technique-display.ts` — `buildEmpoweredPowerDocument`, `deriveEmpoweredTechniquePartChips`, `empoweredTechniquePartsSection`; wired by Library empowered rows + `buildEmpoweredPowerSelectableItem` (TASK-626) |

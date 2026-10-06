@@ -338,8 +338,9 @@ export function resolveItemPropertyCodexRow(
 }
 
 /**
- * Training points for one property line: base TP (+ legacy tp_cost) + option-1 TP × op_1_lvl.
- * Matches `calculateItemCosts` per property (used for chips so TP is visible when base is 0 but options cost TP).
+ * Training points for one property instance: one round-up of base TP (+ legacy tp_cost)
+ * plus option-1 TP × op_1_lvl. Matches `calculateItemCosts` per property (used for chips
+ * so TP is visible when base is 0 but options cost TP).
  */
 export function trainingPointsForItemPropertyRef(
   ref: unknown,
@@ -351,7 +352,7 @@ export function trainingPointsForItemPropertyRef(
   const lvl = payload.op_1_lvl || 0;
   const baseTP = data.base_tp || data.tp_cost || 0;
   const op1TP = data.op_1_tp || 0;
-  return Math.ceil(baseTP) + Math.ceil(op1TP * lvl);
+  return Math.ceil(baseTP + op1TP * lvl);
 }
 
 /**
@@ -699,10 +700,10 @@ export function extractProficiencies(
     if (!data) return;
 
     const lvl = ref.op_1_lvl || 0;
-    const baseTP = Math.ceil(data.base_tp || 0);
+    const baseTP = data.base_tp || 0;
     const op1TP = data.op_1_tp || 0;
-    const optTP = Math.ceil(lvl > 0 ? op1TP * lvl : 0);
-    const totalTP = baseTP + optTP;
+    const optTP = lvl > 0 ? op1TP * lvl : 0;
+    const totalTP = Math.ceil(baseTP + optTP);
 
     if (totalTP > 0) {
       profs.push({

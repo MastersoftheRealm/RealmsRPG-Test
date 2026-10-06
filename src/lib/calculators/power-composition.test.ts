@@ -122,7 +122,7 @@ describe('resolvePowerComposition', () => {
     const res = resolvePowerComposition(burst, partsDb, { selectedVariantId: 'ice' })!;
     expect(res.energy).toBe(bolt.energy);
     expect(composedPowerDamage(res)).toEqual(d10('ice'));
-    // Power Range at 3 steps: base 0.5 + option 1, each rounded up → 2. Each 1d10: base 2 + option 1.5, each rounded up → 4.
+    // Power Range at 3 steps (9 spaces): ceil(0.5 + 1) = 2. Each 1d10: ceil(2 + 1.5) = 4.
     // Fire, ice, and lightning are three proficiencies of Elemental Damage, so they are not one repeated part.
     expect(res.tp).toBe(2 + 3 * 4);
     expect(res.tpSources.filter((s) => s.includes('Elemental Damage'))).toHaveLength(3);
@@ -571,11 +571,11 @@ describe('resolvePowerComposition', () => {
     );
     expect(resolved.variants[0]!.rangeDelta).toBe(0);
     expect(resolved.energy).toBe(33);
-    expect(resolved.tp).toBe(11);
+    expect(resolved.tp).toBe(10);
     expect(resolved.tpSources).toEqual([
       '2 TP: Restrained',
       '3 TP: Elemental Damage (ice) (Opt1 2)',
-      '2 TP: Power Range (Opt1 1)',
+      '1 TP: Power Range (Opt1 1)',
       '4 TP: Slow (Opt1 2)',
     ]);
     expect(resolved.energy).toBe(
@@ -1342,9 +1342,9 @@ describe('resolvePowerComposition', () => {
     }
     expect(new Set(bolt.variants.map((v) => v.energy))).toEqual(new Set([bolt.energy]));
     expect(bolt.energy).toBe(6);
-    expect(bolt.tp).toBe(12);
+    expect(bolt.tp).toBe(11);
     expect(bolt.tpSources.filter((s) => s.includes('Power Range'))).toEqual([
-      '3 TP: Power Range (Opt1 3)',
+      '2 TP: Power Range (Opt1 3)',
     ]);
     expect(bolt.tpSources.filter((s) => s.includes('Elemental Damage'))).toHaveLength(3);
     expect(bolt.energy).toBe(

@@ -23,9 +23,9 @@ type PartTpLevels = {
 };
 
 /**
- * Unrounded base and each option, before they are rounded up on their own.
- * Technique Additional Damage floors its option-1 product first; that floored
- * term is what then rounds up. `computePartTrainingPoints` ceils each term.
+ * Unrounded base and each option product.
+ * Technique Additional Damage floors its option-1 product first. That floored
+ * term stays inside the sum that `computePartTrainingPoints` rounds up once.
  */
 function partTrainingPointTerms(
   def: Pick<CodexPartTpDef, 'id' | 'name' | 'base_tp' | 'op_1_tp' | 'op_2_tp' | 'op_3_tp'>,
@@ -55,7 +55,7 @@ function partTrainingPointTerms(
 /**
  * Unrounded base + option sum for `tpRaw`. Technique Additional Damage still
  * floors its option-1 product inside that sum. Published TP uses
- * `computePartTrainingPoints`, which rounds each term up on its own.
+ * `computePartTrainingPoints`, which rounds that sum up once.
  */
 export function computePartTrainingPointsRaw(
   def: Pick<CodexPartTpDef, 'id' | 'name' | 'base_tp' | 'op_1_tp' | 'op_2_tp' | 'op_3_tp'>,
@@ -68,9 +68,9 @@ export function computePartTrainingPointsRaw(
 
 /**
  * Shared TP calculation used by library PartData and calculator chip formatters.
- * Rounds the base and each option up before they are added (GAME_RULES
- * "Rounding"). Range 3 is the base step only (0.5) and costs 1 TP, not 0.
- * Callers add these integers. Energy still ceils once at the end of the power.
+ * One instance is one round-up of the raw sum (GAME_RULES "Rounding"). Range 3
+ * is the base step only and costs 1 TP. Callers add these integers. Energy
+ * still ceils once at the end of the power.
  */
 export function computePartTrainingPoints(
   def: Pick<CodexPartTpDef, 'id' | 'name' | 'base_tp' | 'op_1_tp' | 'op_2_tp' | 'op_3_tp'>,
@@ -78,7 +78,5 @@ export function computePartTrainingPoints(
   variant: PartTpVariant = 'power',
 ): number {
   const terms = partTrainingPointTerms(def, levels, variant);
-  return (
-    Math.ceil(terms.base) + Math.ceil(terms.opt1) + Math.ceil(terms.opt2) + Math.ceil(terms.opt3)
-  );
+  return Math.ceil(terms.base + terms.opt1 + terms.opt2 + terms.opt3);
 }

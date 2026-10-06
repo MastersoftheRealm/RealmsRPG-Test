@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { PART_IDS } from '@/lib/id-constants';
 import { computePartTrainingPoints } from './part-training-points';
+import { snapshotParts } from './power-composition.fixture';
 
 describe('computePartTrainingPoints', () => {
   it('rounds a 2.5 TP instance up to 3', () => {
@@ -69,13 +70,28 @@ describe('computePartTrainingPoints', () => {
     ).toBe(3);
   });
 
-  it('rounds Range 3 (base 0.5, no option) up to 1, and each option on its own', () => {
+  it('rounds Range 3 (base only) up to 1, and one option with it up to 1', () => {
     const range = { id: 383, name: 'Power Range', base_tp: 0.5, op_1_tp: 0.5 };
     expect(computePartTrainingPoints(range, { op_1_lvl: 0 })).toBe(1);
-    expect(computePartTrainingPoints(range, { op_1_lvl: 1 })).toBe(2);
+    expect(computePartTrainingPoints(range, { op_1_lvl: 1 })).toBe(1);
   });
 
-  it('floors technique Additional Damage option 1 before that term rounds up', () => {
+  it('rounds one Power Range instance up once: 6 spaces is 1 TP and 12 spaces is 2 TP', () => {
+    const range = snapshotParts([PART_IDS.POWER_RANGE])[0]!;
+    // Codex base is 3 spaces. Each option adds 3 spaces, so option level is spaces/3 - 1.
+    const levelForSpaces = (spaces: number) => spaces / 3 - 1;
+    const expected = (spaces: number) =>
+      Math.ceil((range.base_tp ?? 0) + (range.op_1_tp ?? 0) * levelForSpaces(spaces));
+
+    expect(levelForSpaces(6)).toBe(1);
+    expect(levelForSpaces(12)).toBe(3);
+    expect(computePartTrainingPoints(range, { op_1_lvl: levelForSpaces(6) })).toBe(expected(6));
+    expect(expected(6)).toBe(1);
+    expect(computePartTrainingPoints(range, { op_1_lvl: levelForSpaces(12) })).toBe(expected(12));
+    expect(expected(12)).toBe(2);
+  });
+
+  it('floors technique Additional Damage option 1 before the instance rounds up', () => {
     expect(
       computePartTrainingPoints(
         {

@@ -8893,7 +8893,7 @@ Built-in variants in `payload.composition` (ADR-0029). Resolver: `lib/calculator
 3. Creature stat block with a composed power: energy + variant section, no spend control. At 390px the power card still shows the damage dice (Energy, Action, Duration, and Damage), including while the row is expanded.
 
 **Expected**
-- No surface shows the legacy Choice part on these three powers. TP: Elemental Damage counted per damage type, Power Range once. On the 2026-10-06 Codex snapshot, Elemental Burst is **14** TP, Elemental Bolt is **12**, Judgement is **6**, and Freezing Wind is **11**. These are results, not targets. A repeated part counts once, at its highest instance.
+- No surface shows the legacy Choice part on these three powers. TP: Elemental Damage counted per damage type, Power Range once. On the 2026-10-06 Codex snapshot, Elemental Burst is **14** TP, Elemental Bolt is **11**, Judgement is **6**, and Freezing Wind is **10**. These are results, not targets. A repeated part counts once, at its highest instance.
 
 **Report** — `[ ] PASS` · `[ ] FAIL` · `[ ] SKIP` — Notes:
 
