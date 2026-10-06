@@ -42,6 +42,7 @@ import {
 import { PowerCreatorCompositionBand } from './power-creator-composition-band';
 import {
   emptyTabForm,
+  showsFieldOverride,
   REVERSE_TAB_ID,
   SHARED_TAB_ID,
   type PowerTabForm,
@@ -238,7 +239,10 @@ function PowerCreatorWorkspace({
   const inheritance: PowerCreatorInheritance | null = onOverlayTab
     ? {
         action: inheritField(
-          actionIsOverride(live) || ws.variants.isFieldForcedOverride(overlayTabId, 'action'),
+          showsFieldOverride(
+            actionIsOverride(live),
+            ws.variants.isFieldForcedOverride(overlayTabId, 'action'),
+          ),
           sharedActionLabel(shared),
           () => {
             ws.variants.markFieldOverridden(overlayTabId, 'action');
@@ -253,7 +257,10 @@ function PowerCreatorWorkspace({
           },
         ),
         attack: inheritField(
-          attackIsOverride(live) || ws.variants.isFieldForcedOverride(overlayTabId, 'attack'),
+          showsFieldOverride(
+            attackIsOverride(live),
+            ws.variants.isFieldForcedOverride(overlayTabId, 'attack'),
+          ),
           sharedAttackLabel(shared),
           () => {
             ws.variants.markFieldOverridden(overlayTabId, 'attack');
@@ -265,7 +272,10 @@ function PowerCreatorWorkspace({
           },
         ),
         range: inheritField(
-          rangeIsOverride(live) || ws.variants.isFieldForcedOverride(overlayTabId, 'range'),
+          showsFieldOverride(
+            rangeIsOverride(live),
+            ws.variants.isFieldForcedOverride(overlayTabId, 'range'),
+          ),
           sharedRangeLabel(shared),
           () => {
             ws.variants.markFieldOverridden(overlayTabId, 'range');
@@ -277,7 +287,10 @@ function PowerCreatorWorkspace({
           },
         ),
         area: inheritField(
-          areaIsOverride(live) || ws.variants.isFieldForcedOverride(overlayTabId, 'area'),
+          showsFieldOverride(
+            areaIsOverride(live),
+            ws.variants.isFieldForcedOverride(overlayTabId, 'area'),
+          ),
           sharedAreaLabel(shared),
           () => {
             ws.variants.markFieldOverridden(overlayTabId, 'area');
@@ -289,7 +302,10 @@ function PowerCreatorWorkspace({
           },
         ),
         duration: inheritField(
-          durationIsOverride(live) || ws.variants.isFieldForcedOverride(overlayTabId, 'duration'),
+          showsFieldOverride(
+            durationIsOverride(live),
+            ws.variants.isFieldForcedOverride(overlayTabId, 'duration'),
+          ),
           sharedDurationLabel(shared),
           () => {
             ws.variants.markFieldOverridden(overlayTabId, 'duration');
@@ -301,8 +317,10 @@ function PowerCreatorWorkspace({
           },
         ),
         damage: inheritField(
-          damageIsOverride(live.damages) ||
+          showsFieldOverride(
+            damageIsOverride(live.damages),
             ws.variants.isFieldForcedOverride(overlayTabId, 'damage'),
+          ),
           sharedDamageLabel(shared),
           () => {
             ws.variants.markFieldOverridden(overlayTabId, 'damage');

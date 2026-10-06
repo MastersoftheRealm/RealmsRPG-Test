@@ -3,6 +3,7 @@ import { ABILITIES } from '@/types/abilities';
 import type { CoreRulesMap } from '@/types/core-rules';
 import type { DefenseSkills } from '@/types/skills';
 import { calculateAbilityPoints, calculateSkillPointsForEntity } from '@/lib/game/formulas';
+import { powerCompositionHelpText } from '@/lib/calculators';
 
 // Navbar
 export const navbarLibrary = `Realms Library contains official content.
@@ -653,13 +654,10 @@ export const powerCreatorStructureHelp = (
       <strong>Variants</strong> are the versions of this power you switch between or combine.
     </div>
     <div>
-      <strong>Choice</strong>: pick one portion when used; pay the most expensive.{' '}
-      <strong>Alternate</strong>: each variant is a whole power; pay the one you use.{' '}
-      <strong>Modify</strong>: Shared is paid once. Each piece pays only the extra energy its own
-      parts add, at that piece&apos;s own duration and other stipulations.{' '}
-      <strong>Randomize</strong>: each good outcome adds its extra cost times its chance; each bad
-      outcome subtracts half its drawback cost times its chance. Speed premiums apply only to good
-      outcomes. A power always costs at least 1 Energy.
+      <strong>Choice</strong>: {powerCompositionHelpText('choice', [])}{' '}
+      <strong>Alternate</strong>: {powerCompositionHelpText('alternate', [])}{' '}
+      <strong>Modify</strong>: {powerCompositionHelpText('modify', [])}{' '}
+      <strong>Randomize</strong>: {powerCompositionHelpText('randomize', [])}
     </div>
   </div>
 );

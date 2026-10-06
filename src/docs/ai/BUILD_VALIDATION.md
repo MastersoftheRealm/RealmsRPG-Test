@@ -8888,7 +8888,7 @@ Built-in variants in `payload.composition` (ADR-0029). Resolver: `lib/calculator
 | **Needs** | Official Elemental Burst / Elemental Bolt / Judgement (rewritten onto Choice) |
 
 **Steps**
-1. Library Realms: Elemental Burst Energy **8**, Elemental Bolt **6**, Judgement **6** (Choice = max portion). Damage column shows the first variant. Expanded row lists the variant chips with each portion's energy (not clickable).
+1. Library Realms: Elemental Burst Energy **6**, Elemental Bolt **6**, Judgement **6** (Choice = the most expensive portion). Freezing Wind (Modify) is **33**. Damage column shows the first variant. Expanded row lists the variant chips with each portion's energy (not clickable).
 2. Add Power modal and Guided L3 show the same energy + variant section. Innate Eligible filter still behaves.
 3. Creature stat block with a composed power: energy + variant section, no spend control.
 
@@ -8908,7 +8908,7 @@ Built-in variants in `payload.composition` (ADR-0029). Resolver: `lib/calculator
 
 **Steps**
 1. Sheet **Add Power** → Elemental Burst. Proficiencies tab lists Elemental Damage for **fire, ice, and lightning** plus Power Range once (TP matches the power's TP).
-2. Expand Elemental Burst and click **Ice**, then **Lightning**. The Proficiencies tab list and the row's needs-proficiency badge do not change. The damage button follows the chip (`1d10 ice` → `1d10 lightning`).
+2. Expand Elemental Burst and click **Ice**, then **Lightning**. The Proficiencies tab list and the row's needs-proficiency badge do not change. The damage button follows the chip (`1d10 Ice` → `1d10 Lightning`).
 3. Remove one of the three damage-type proficiencies (Edit mode): Elemental Burst shows the needs-proficiency badge regardless of the chip.
 4. `/library` Realms Powers → add Elemental Burst to a character: the same three damage-type proficiencies are added. Guided creator with Elemental Burst: the saved character has the same three.
 5. Alternate power (e.g. Inferno fire / Frost ice): Proficiencies lists both damage types plus every part either version uses (Immobile, Power Range). Switching Inferno and Frost does not change that list. Energy and the damage button follow the chip.

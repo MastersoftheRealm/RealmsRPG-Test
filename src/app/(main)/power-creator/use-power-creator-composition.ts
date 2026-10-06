@@ -20,13 +20,17 @@ import {
   buildCompositionPayload,
   diffAgainstShared,
   emptyTabForm,
+  isOverlayFieldForced,
   mergeOverlayIntoShared,
   nextVariantId,
   nextVariantLabel,
   defaultVariantTabs,
+  setOverlayField,
   specToTabForm,
   spreadDieFaces,
   type CollectedCompositionForms,
+  type OverlayFieldKey,
+  type OverlayFlagMap,
   type PowerTabForm,
   type PowerVariantTab,
 } from './power-creator-composition';
@@ -47,9 +51,6 @@ type CompositionInit = {
 };
 
 const DEFAULT_DIE_SIDES = 4;
-
-export type OverlayFieldKey = 'action' | 'attack' | 'range' | 'area' | 'duration' | 'damage';
-type OverlayFlags = Partial<Record<OverlayFieldKey, boolean>>;
 
 function tabIdsFor(
   structure: PowerCompositionStructure,
@@ -125,7 +126,7 @@ export function usePowerCreatorComposition({
   const [activeTabId, setActiveTabId] = useState(init.activeTabId);
   const [dieSides, setDieSidesState] = useState(init.dieSides);
   const [dieFaces, setDieFaces] = useState<string[]>(init.dieFaces);
-  const [overlayByTab, setOverlayByTab] = useState<Record<string, OverlayFlags>>({});
+  const [overlayByTab, setOverlayByTab] = useState<OverlayFlagMap>({});
 
   const collected: CollectedCompositionForms = useMemo(
     () => ({
@@ -308,15 +309,15 @@ export function usePowerCreatorComposition({
   const activeVariant = stored.variants.find((v) => v.id === activeTabId) ?? null;
 
   const markFieldOverridden = useCallback((tabId: string, field: OverlayFieldKey) => {
-    setOverlayByTab((prev) => ({ ...prev, [tabId]: { ...prev[tabId], [field]: true } }));
+    setOverlayByTab((prev) => setOverlayField(prev, tabId, field, true));
   }, []);
 
   const clearFieldOverridden = useCallback((tabId: string, field: OverlayFieldKey) => {
-    setOverlayByTab((prev) => ({ ...prev, [tabId]: { ...prev[tabId], [field]: false } }));
+    setOverlayByTab((prev) => setOverlayField(prev, tabId, field, false));
   }, []);
 
   const isFieldForcedOverride = useCallback(
-    (tabId: string, field: OverlayFieldKey) => overlayByTab[tabId]?.[field] === true,
+    (tabId: string, field: OverlayFieldKey) => isOverlayFieldForced(overlayByTab, tabId, field),
     [overlayByTab],
   );
 

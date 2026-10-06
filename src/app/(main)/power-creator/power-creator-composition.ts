@@ -191,6 +191,35 @@ export function nextVariantLabel(existing: PowerVariantTab[]): string {
   return `Variant ${n}`;
 }
 
+export type OverlayFieldKey = 'action' | 'attack' | 'range' | 'area' | 'duration' | 'damage';
+export type OverlayFlagMap = Record<string, Partial<Record<OverlayFieldKey, boolean>>>;
+
+/** Sticky Override. Copying Shared onto a tab can still equal the empty tab, so form comparison alone is not enough. */
+export function setOverlayField(
+  flags: OverlayFlagMap,
+  tabId: string,
+  field: OverlayFieldKey,
+  forced: boolean,
+): OverlayFlagMap {
+  return { ...flags, [tabId]: { ...flags[tabId], [field]: forced } };
+}
+
+export function isOverlayFieldForced(
+  flags: OverlayFlagMap,
+  tabId: string,
+  field: OverlayFieldKey,
+): boolean {
+  return flags[tabId]?.[field] === true;
+}
+
+/** True when the field editor should show, including a sticky Override that copied an empty Shared value. */
+export function showsFieldOverride(
+  formDiffersFromEmpty: boolean,
+  stickyOverride: boolean,
+): boolean {
+  return formDiffersFromEmpty || stickyOverride;
+}
+
 /** Choice / Modify / Randomize / Alternate open with two tabs (DEV-V-061-T001). */
 export function defaultVariantTabs(shared: PowerTabForm, copyShared: boolean): PowerVariantTab[] {
   return [

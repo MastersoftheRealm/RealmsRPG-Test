@@ -1,6 +1,7 @@
 'use client';
 
 import type { ReactNode } from 'react';
+import type { ColumnValue } from '@/components/patterns/list/grid-list-row-types';
 import { ListHeader } from '@/components/patterns/list/list-header';
 import { SectionHeader } from '@/components/patterns/chrome/section-header';
 import {
@@ -22,6 +23,33 @@ import type {
   EntityPowerRow,
   EntityTechniqueRow,
 } from './entity-library-sections-types';
+
+function damageCellValue(damage: EntityPowerRow['damage']): string {
+  if (typeof damage === 'string' || damage == null) return damage ?? '-';
+  return String(damage);
+}
+
+/** Fact cells in header order. Select density (stat block) is Energy, Action, Duration, Area, Damage. */
+export function powerListFactCells(
+  row: Pick<EntityPowerRow, 'energyCost' | 'actionType' | 'duration' | 'area' | 'damage'>,
+  includeEnergyColumn: boolean,
+): ColumnValue[] {
+  const headers = (includeEnergyColumn ? POWER_COLUMNS_WITH_ENERGY : POWER_COLUMNS).filter(
+    (col) => col.key !== 'name',
+  );
+  const values: Record<string, string> = {
+    energy: row.energyCost ?? '-',
+    action: row.actionType ?? '-',
+    duration: row.duration ?? '-',
+    area: row.area ?? '-',
+    damage: damageCellValue(row.damage),
+  };
+  return headers.map((col) => ({
+    key: col.key,
+    value: values[col.key] ?? '-',
+    align: 'center' as const,
+  }));
+}
 
 export function PowersListSection({
   title = 'Powers',
@@ -92,27 +120,7 @@ export function PowersListSection({
               {renderInteractiveGridRows(
                 items,
                 grid,
-                (power) => {
-                  const row = power as EntityPowerRow;
-                  const damageVal =
-                    typeof row.damage === 'string' || row.damage == null
-                      ? (row.damage ?? '-')
-                      : row.damage;
-                  return includeEnergyColumn
-                    ? [
-                        { key: 'energy', value: row.energyCost ?? '-', align: 'center' as const },
-                        { key: 'action', value: row.actionType ?? '-', align: 'center' as const },
-                        { key: 'duration', value: row.duration ?? '-', align: 'center' as const },
-                        { key: 'area', value: row.area ?? '-', align: 'center' as const },
-                        { key: 'damage', value: damageVal, align: 'center' as const },
-                      ]
-                    : [
-                        { key: 'action', value: row.actionType ?? '-', align: 'center' as const },
-                        { key: 'damage', value: damageVal, align: 'center' as const },
-                        { key: 'area', value: row.area ?? '-', align: 'center' as const },
-                        { key: 'duration', value: row.duration ?? '-', align: 'center' as const },
-                      ];
-                },
+                (power) => powerListFactCells(power as EntityPowerRow, includeEnergyColumn),
                 compactRows,
               )}
             </div>
