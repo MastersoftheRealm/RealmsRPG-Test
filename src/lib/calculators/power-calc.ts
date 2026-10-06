@@ -85,8 +85,8 @@ export interface PowerCostResult {
   totalEnergy: number;
   totalTP: number;
   /**
-   * Unrounded sum of each part’s base and options. totalTP adds those terms
-   * after each one is rounded up.
+   * Unrounded sum of each part’s base and options. totalTP rounds each
+   * instance up once, after that instance’s base and options are added.
    */
   tpRaw: number;
   tpSources: string[];

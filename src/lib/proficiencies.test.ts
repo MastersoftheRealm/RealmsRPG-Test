@@ -1,17 +1,23 @@
 import { describe, expect, it } from 'vitest';
 import type { CharacterProficiency } from '@/types';
 import { PART_IDS } from '@/lib/id-constants';
+import { snapshotParts } from '@/lib/calculators/power-composition.fixture';
 import { calculateProficiencyTP, hasSufficientProficiency } from './proficiencies';
 
-function fire(op1Level: number): CharacterProficiency {
+const elementalDamage = snapshotParts([PART_IDS.ELEMENTAL_DAMAGE])[0]!;
+
+function fire(
+  op1Level: number,
+  refId: string | null = String(PART_IDS.ELEMENTAL_DAMAGE),
+): CharacterProficiency {
   return {
-    id: `fire-${op1Level}`,
+    id: `fire-${op1Level}-${refId ?? 'none'}`,
     kind: 'power_part',
-    refId: String(PART_IDS.ELEMENTAL_DAMAGE),
-    name: 'Elemental Damage',
+    ...(refId != null ? { refId } : {}),
+    name: elementalDamage.name,
     damageType: 'fire',
-    baseTP: 2,
-    op1TP: 0.5,
+    baseTP: elementalDamage.base_tp ?? 0,
+    op1TP: elementalDamage.op_1_tp ?? 0,
     op1Level,
   };
 }
@@ -63,13 +69,25 @@ describe('hasSufficientProficiency', () => {
     expect(hasSufficientProficiency([row(2)], row(1))).toBe(true);
   });
 
+  it('matches by part name when a saved proficiency has no part id, so 1d6 does not cover 1d8', () => {
+    const unnamed = (level: number) => fire(level, null);
+    expect(calculateProficiencyTP(unnamed(1))).toBe(3);
+    expect(calculateProficiencyTP(unnamed(2))).toBe(3);
+    expect(hasSufficientProficiency([unnamed(1)], unnamed(2))).toBe(false);
+    expect(hasSufficientProficiency([unnamed(2)], unnamed(1))).toBe(true);
+    expect(hasSufficientProficiency([unnamed(1)], fire(2))).toBe(false);
+    expect(hasSufficientProficiency([fire(2)], unnamed(1))).toBe(true);
+    // Both sides have ids, so a shared name still falls through to Training Points.
+    expect(hasSufficientProficiency([fire(1, '906')], fire(2, '907'))).toBe(true);
+  });
+
   it('compares Training Points when two parts share a damage type', () => {
     const elemental = fire(2);
     const additional = (op1Level: number, baseTP: number, op1TP: number): CharacterProficiency => ({
       id: `add-${op1Level}-${baseTP}`,
       kind: 'technique_part',
-      refId: String(PART_IDS.ADDITIONAL_DAMAGE),
-      name: 'Additional Damage',
+      refId: '906',
+      name: 'Synthetic Damage',
       damageType: 'fire',
       baseTP,
       op1TP,

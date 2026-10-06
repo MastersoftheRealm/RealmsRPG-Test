@@ -320,11 +320,13 @@ export function mergeOwnedWithRequired(
 /**
  * A higher option level covers a lower one of the same part. Rounded TP is not
  * the comparison when the part id matches: neighbouring levels can publish the
- * same integer (1d6 and 1d8 Elemental Damage are both 3 TP). Damage type is
- * the proficiency key, so fire does not satisfy ice. A different part that
- * shares that damage type (Additional Damage fire and Elemental Damage fire)
- * is compared by rounded Training Points. For a damage part, die size is
- * option 1 (`calculateDamageOptionLevel`: 1d4 → 0, 1d6 → 1, 1d8 → 2).
+ * same integer (1d6 and 1d8 Elemental Damage are both 3 TP). A saved row with
+ * no part id matches that part by name before falling back to Training Points,
+ * so a nameless 1d6 still does not cover 1d8. Damage type is the proficiency
+ * key, so fire does not satisfy ice. Two different part ids that share a
+ * damage type (Additional Damage fire and Elemental Damage fire) are compared
+ * by rounded Training Points. For a damage part, die size is option 1
+ * (`calculateDamageOptionLevel`: 1d4 → 0, 1d6 → 1, 1d8 → 2).
  */
 function optionLevelsCover(owned: CharacterProficiency, required: CharacterProficiency): boolean {
   return (
@@ -334,14 +336,22 @@ function optionLevelsCover(owned: CharacterProficiency, required: CharacterProfi
   );
 }
 
+function partRefId(row: CharacterProficiency): string {
+  return String(row.refId ?? '')
+    .trim()
+    .toLowerCase();
+}
+
 function partIdsMatch(owned: CharacterProficiency, required: CharacterProficiency): boolean {
-  const ownedId = String(owned.refId ?? '')
-    .trim()
-    .toLowerCase();
-  const requiredId = String(required.refId ?? '')
-    .trim()
-    .toLowerCase();
+  const ownedId = partRefId(owned);
+  const requiredId = partRefId(required);
   return ownedId.length > 0 && ownedId === requiredId;
+}
+
+function partNamesMatch(owned: CharacterProficiency, required: CharacterProficiency): boolean {
+  const ownedName = (owned.name ?? '').trim().toLowerCase();
+  const requiredName = (required.name ?? '').trim().toLowerCase();
+  return ownedName.length > 0 && ownedName === requiredName;
 }
 
 export function hasSufficientProficiency(
@@ -355,6 +365,8 @@ export function hasSufficientProficiency(
     return false;
   }
   if (partIdsMatch(match, required)) return optionLevelsCover(match, required);
+  const missingPartId = partRefId(match).length === 0 || partRefId(required).length === 0;
+  if (missingPartId && partNamesMatch(match, required)) return optionLevelsCover(match, required);
   return calculateProficiencyTP(match) >= calculateProficiencyTP(required);
 }
 
