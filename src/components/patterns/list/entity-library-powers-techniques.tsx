@@ -37,7 +37,7 @@ export function powerListFactCells(
   const headers = (includeEnergyColumn ? POWER_COLUMNS_WITH_ENERGY : POWER_COLUMNS).filter(
     (col) => col.key !== 'name',
   );
-  const values: Record<string, string> = {
+  const values: Record<string, string | number> = {
     energy: row.energyCost ?? '-',
     action: row.actionType ?? '-',
     duration: row.duration ?? '-',

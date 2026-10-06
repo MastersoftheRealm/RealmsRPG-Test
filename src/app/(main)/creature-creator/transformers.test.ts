@@ -15,6 +15,7 @@ describe('transformUserPowerToDisplayItem variants (86e3kfkc2)', () => {
   it('stores variant chips on the creature power so the row can expand', () => {
     const item = transformUserPowerToDisplayItem(
       {
+        id: 'burst',
         docId: 'burst',
         name: 'Burst',
         description: 'Cold.',

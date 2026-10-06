@@ -3,7 +3,7 @@ import { POWER_COLUMNS, POWER_COLUMNS_WITH_ENERGY } from './entity-library-secti
 import { powerListFactCells } from './entity-library-powers-techniques';
 
 const row = {
-  energyCost: '4',
+  energyCost: 4,
   actionType: 'Basic',
   duration: '2 Rounds',
   area: 'Sphere 2',
