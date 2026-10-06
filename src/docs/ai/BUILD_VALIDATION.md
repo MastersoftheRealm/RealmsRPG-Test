@@ -8890,7 +8890,7 @@ Built-in variants in `payload.composition` (ADR-0029). Resolver: `lib/calculator
 **Steps**
 1. Library Realms: Elemental Burst Energy **8**, Elemental Bolt **6**, Judgement **6** (Choice = the most expensive portion). Burst is 9 spaces (1.5 EN) plus one 1d10 (6 EN) = 7.5, rounded up to 8. Freezing Wind (Modify) is **33**. Damage column shows the first variant. Expanded row lists the variant chips with each portion's energy (not clickable).
 2. Add Power modal and Guided L3 show the same energy + variant section. Innate Eligible filter still behaves.
-3. Creature stat block with a composed power: energy + variant section, no spend control.
+3. Creature stat block with a composed power: energy + variant section, no spend control. At 390px the power card still shows the damage dice (Energy, Action, Duration, and Damage), including while the row is expanded.
 
 **Expected**
 - No surface shows the legacy Choice part on these three powers. TP: Elemental Damage counted per damage type, Power Range once.
