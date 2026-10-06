@@ -130,8 +130,8 @@ describe('calculatePowerCosts', () => {
     const costs = calculatePowerCosts(payload, [elementalDamagePart]);
     // 1d6 -> opt1 level 1 -> 3 base + 1 option = 4 EN per row, 3 rows = 12
     expect(costs.totalEnergy).toBe(12);
-    // GAME_RULES "Rounding": round each part up, then sum.
-    // Each Elemental Damage row is base_tp 2 + op_1_tp 0.5 × 1 = 2.5 → 3.
+    // GAME_RULES "Rounding": round the base and each option up, then sum.
+    // Each Elemental Damage row is ceil(2) + ceil(0.5) = 3.
     // Three parts → 9. Do not ceil the combined 7.5 to 8.
     expect(costs.totalTP).toBe(9);
     expect(costs.totalTP).not.toBe(8);

@@ -322,7 +322,7 @@ export function buildTechniquesForDisplay(
       techniquePartsDb,
     );
 
-    const partsChips = partsToChips(parts, techniquePartsDb as CodexPart[]);
+    const partsChips = partsToChips(parts, techniquePartsDb as CodexPart[], 'technique');
     const partsSection = partsProficienciesSection(partsChips, 'technique');
     const damageStr =
       derived.damageStr !== '-'

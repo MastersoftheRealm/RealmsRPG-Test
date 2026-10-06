@@ -39,26 +39,33 @@ Game runner = **RM (Realm Master)** — never GM.
 ---
 
 ## Creators / powers / TP / EN (Oct 4–5, 2026)
-
-- Empty power/technique (no parts): show a **dash**, not 0 or 1.
-- Min final power/technique EN = **1** after rounding (not a base cost). Site max(0) is a bug.
+- Empty power/technique/empowered technique (no parts), or one with nothing contributing positive energy: show a **dash**, not 0 or 1 (see Power composition pricing below).
+- Min final power/technique EN = **1** after rounding, applied only when real positive costs are reduced below 1 (not a base cost). Site max(0) is a bug.
 - Max Power EN = max(Power Prof, ½ Archetype Prof) × **15**, applied to calculated cost **before** feat/attribute reductions. Reductions cannot make an over-limit power usable.
 - Max EN in creator: **informational** (like Innate Power), not limiting.
-- Range (and similar mechanics) **does cost TP**; round **up each instance** (e.g. Range 3 = 0.5 → 1 TP), not sum-then-round.
+- Range (and similar mechanics) **does cost TP**; round **up each instance** (e.g. Range 3 = 0.5 → 1 TP), not sum-then-round. A power's TP total is informational (see Power composition pricing below).
 - Duration: 1 round and Instant cost the same (no duration). Duration modifiers multiply each other before applying. Rounds capped at 5; 6 rounds = 1 minute option only. 1 minute = 6 rounds (10-second rounds). Sustain up to 4 AP is fine.
 - Empowered techniques: whole-thing scalers (e.g. action type / Quick Action) apply to both halves; type-specific only to that half. Creator out of MVP/Open Beta scope for remaining empowered design.
 
-## Creators / energy (Oct 6, 2026)
+## Power composition pricing (Oct 5–6, 2026)
+Kadin adopted composed-power pricing Oct 5 (10:21 PM ET) and revised it Oct 6 (7:15–7:17 AM, QA Tester footprint ruling, 9:33 AM). The Oct 6 rulings win where they differ. Covers Choice, Alternate, Modify (Split Power Parts into Groups), Randomize, and Reverse Effects. Live Codex text for parts 371, 388, 401, and 402 is older until Kadin approves new wording.
+- **Shared.** Action type is the only mechanic every tab must share. Exception: each Alternate version keeps its own action type. Other tabs start with Shared's range, area, and duration and may change them.
+- **Modify, Choice, and Reverse price the same way.** Shared is paid once, including its range and action type. Each tab's parts are priced at that tab's own range, area, and duration. A bigger range or area adds cost only on that tab's parts; a smaller footprint costs less. Modify = Shared + every piece. Choice = Shared + the most expensive option.
+- **Alternate.** Each version is a complete power with its own action type; you pay for the version you use. Proficiency is required in every version, Innate is checked per version, and a part's TP is counted once.
+- **Randomize.** Faces are independent, like Alternate versions, and share only the action type (spend the action, then roll). Each face is priced at its own range, area, duration, and parts. The user marks each face good or bad. Shared holds the action type plus optional defaults that pre-fill new faces; Shared adds no energy. A bad face never pays for another face's range or area.
+  - **EN** = Σ good faces (p × face energy) − Σ bad faces (p × ½ × face basic-action energy ÷ action-type multiplier). p = 1 ÷ die sides, once per side a face fills. Round up once.
+  - Kadin's example: free action (×1.5), d10. 2 faces Stunned 3 on self: basic 15 EN, reduction ½ × 15 ÷ 1.5 = 5. 8 faces ranged sphere heal with a third target: 10.3125 EN at free action. 0.8 × 10.3125 − 0.2 × 5 = 7.25 → **8 EN**.
+- **Inverse action scaling on drawbacks.** Reverse Effects and Randomize bad faces: reduction = ½ × drawback energy priced as a Basic Action ÷ action-type multiplier. Slower action = bigger reduction, quicker action = smaller reduction, Basic stays ½. Reaction is part of the multiplier. Good faces and benefits pay the normal action-type increase or decrease.
+- **Dash vs. 1 EN floor.** A power, technique, or empowered technique with nothing contributing positive energy (only 0 EN parts, quick-only, duration-only, No Attack alone, or a Randomize power whose faces are all bad) shows a **dash** everywhere, not 1 EN. The 1 EN floor applies only when real positive costs are reduced below 1.
+- **TP and proficiency.** TP rounds up per instance. The real requirement is proficiency with each part; a higher level of the same part covers lower levels (1d12 fire covers 1d4–1d12 fire). A power's TP total is informational, not spent when the power is used.
+- **Official powers** always compute from live Codex part data plus this math; their energy is never overridden. Published numbers are results of that math, not targets.
 
-Kadin confirmed these. They clarify the Oct 4–5 dash and minimum-energy bullets above.
+## Pending / implementation notes (not Kadin-confirmed)
 
-- The 1 EN floor applies only when positive energy is reduced below 1. No parts, only 0 EN parts, quick-only, duration-only, No Attack alone, and a Randomize power whose rolled faces are all drawbacks are a dash (powers, techniques, empowered techniques, and the Energy Cost row). Drawback parts do not turn the floor on by themselves.
-- Modify, Choice, and Reverse: action type is the only locked mechanic (it stays on Shared, or on the benefit for Reverse). Range, area, and duration start as Shared and can be overridden, including none or Instant. Each tab’s parts are priced at that tab’s footprint. A larger range costs extra only on that tab’s parts. A smaller footprint prices those parts cheaper. Choice pays Shared plus its most expensive option. A Choice chip shows Shared plus that option. Alternate keeps its own action type on every version. Proficiency is required in every Alternate version, innate is checked per version, and that part’s TP is counted once.
-- Randomize faces are independent, like Alternate, and share only the action type. Every face’s action is locked to Shared. Each face has its own range, area, duration, and parts, and is priced on that footprint. Shared holds the action type plus optional defaults that pre-fill a new face; Shared adds no energy. A good face costs its full energy. A bad face is a drawback: reduction = ½ · that face’s basic-action energy ÷ (action-type multiplier). Faces are weighted by their roll chance. Round up once. Dash if nothing positive is rolled; otherwise at least 1 EN. A bad face does not pay for a good face’s range or area. A saved overlay face that omits range, area, duration, or damage is expanded on read from Shared plus that face’s parts. A face that already stores those fields stays as saved.
-- Reverse and Randomize bad faces: reduction = ½ · drawback ÷ (action-type multiplier). The multiplier includes Reaction as well as quick, free, and long. Basic stays half. Taking longer to harm yourself or others refunds more energy. This direction is final. Breakdowns show that multiplier at its Codex value (0.875, not 0.88). Energy intermediates stay at most 2 decimals.
-- `overrides` on a Choice, Modify, or Reverse tab lists the creator-forced fields (`action`, `attack`, `range`, `area`, `duration`, `damage`). Explicit none or Instant stays stored when that flag is set. Pricing does not read `overrides`, and it does not pin an official power’s energy. Randomize faces are complete specs, so they do not store overlay overrides.
-- Published energy is Codex part costs plus this math. Figures such as Freezing Wind, Elemental Burst, Elemental Bolt, and Judgement are results of that calculation on the current Codex rows. They are not targets. Official powers are not given a cost override.
-- A power’s TP total is informational. Round up each instance (Range 3 = 0.5 → 1 TP). A higher option level of the same part covers a lower level of that part. The total is not a resource spent when the power is used.
+- Breakdowns show the action-type multiplier at its Codex value (0.875, not 0.88). Energy intermediates stay at most 2 decimals.
+- `overrides` on a Choice, Modify, or Reverse tab lists the creator-forced fields (`action`, `attack`, `range`, `area`, `duration`, `damage`). Explicit none or Instant stays stored when that flag is set. Pricing does not read `overrides`, and it does not pin an official power's energy. Randomize faces are complete specs, so they do not store overlay overrides.
+- Footprint wording used in `GAME_RULES` and ADR-0029. The last clause is not confirmed by Kadin: "A longer range adds only the extra range cost, once. A larger area or longer duration raises only that tab's parts; a smaller area or shorter duration lowers them. A shorter range does not refund Shared's range."
+- A saved Randomize face that omits range, area, duration, or damage is expanded on read from Shared plus that face's parts. A face that already stores those fields stays as saved.
 
 ---
 

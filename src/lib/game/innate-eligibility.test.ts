@@ -164,19 +164,42 @@ describe('innate-eligibility', () => {
           id: '1',
           energy: 4,
           actionType: 'basic',
-          duration: { type: 'rounds', value: 10 },
+          duration: { type: 'rounds', value: 6 },
         }),
         8,
       ),
     ).toBe(true);
+    expect(
+      isPowerInnateEligible(
+        snap({
+          id: '1',
+          energy: 4,
+          actionType: 'basic',
+          duration: { type: 'rounds', value: 7 },
+        }),
+        8,
+      ),
+    ).toBe(false);
+    expect(
+      isPowerInnateEligible(
+        snap({
+          id: '1',
+          energy: 4,
+          actionType: 'basic',
+          duration: { type: 'rounds', value: 10 },
+        }),
+        8,
+      ),
+    ).toBe(false);
     expect(
       isPowerInnateEligible(snap({ id: '1', energy: 4, actionType: 'basic', duration: null }), 8),
     ).toBe(false);
   });
 
   it('duration helpers respect 1-minute cap and round conversion', () => {
-    expect(innateDurationToMinutes({ type: 'rounds', value: 10 })).toBe(1);
-    expect(innateDurationToMinutes({ type: 'rounds', value: 11 })).toBeCloseTo(1.1);
+    expect(innateDurationToMinutes({ type: 'rounds', value: 6 })).toBe(1);
+    expect(innateDurationToMinutes({ type: 'rounds', value: 7 })).toBeCloseTo(7 / 6);
+    expect(innateDurationToMinutes({ type: 'rounds', value: 10 })).toBeCloseTo(10 / 6);
     expect(isInnateEligibleDuration({ type: 'minutes', value: 1 })).toBe(true);
     expect(isInnateEligibleDuration({ type: 'minutes', value: 2 })).toBe(false);
     expect(isInnateEligibleDuration({ type: 'hours', value: 1 })).toBe(false);

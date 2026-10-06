@@ -31,8 +31,8 @@ import { resolvePartCategoryList } from '@/lib/library/power-technique-categorie
 
 type Rules = Partial<CoreRulesMap>;
 
-/** GAME_RULES: 1 minute = 10 rounds (10 seconds per round). */
-export const INNATE_ROUNDS_PER_MINUTE = 10;
+/** GAME_RULES: 1 minute = 6 rounds (10 seconds per round). */
+export const INNATE_ROUNDS_PER_MINUTE = 6;
 
 /** Max duration for an innate power (inclusive). */
 export const INNATE_MAX_DURATION_MINUTES = 1;
@@ -126,7 +126,7 @@ export function innateDurationToMinutes(duration: InnatePowerDuration): number |
 }
 
 /**
- * Innate powers: duration at most 1 minute (Instant and ≤10 Rounds qualify).
+ * Innate powers: duration at most 1 minute (Instant and ≤6 Rounds qualify).
  * Missing/unknown duration fails closed.
  */
 export function isInnateEligibleDuration(

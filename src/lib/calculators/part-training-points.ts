@@ -16,49 +16,69 @@ export interface CodexPartTpDef {
   op_3_tp?: number | undefined;
 }
 
+type PartTpLevels = {
+  op_1_lvl?: number | undefined;
+  op_2_lvl?: number | undefined;
+  op_3_lvl?: number | undefined;
+};
+
 /**
- * Per-part Training Points before the instance is rounded up. Single source of
- * truth for the base + option-level sum (and the technique-side Additional
- * Damage opt1 floor) shared by the power, technique and library cost paths.
- * `computePartTrainingPoints` rounds this instance up (GAME_RULES "Rounding").
+ * Unrounded base and each option, before they are rounded up on their own.
+ * Technique Additional Damage floors its option-1 product first; that floored
+ * term is what then rounds up. `computePartTrainingPoints` ceils each term.
  */
-export function computePartTrainingPointsRaw(
+function partTrainingPointTerms(
   def: Pick<CodexPartTpDef, 'id' | 'name' | 'base_tp' | 'op_1_tp' | 'op_2_tp' | 'op_3_tp'>,
-  levels: {
-    op_1_lvl?: number | undefined;
-    op_2_lvl?: number | undefined;
-    op_3_lvl?: number | undefined;
-  },
-  variant: PartTpVariant = 'power',
-): number {
+  levels: PartTpLevels,
+  variant: PartTpVariant,
+): { base: number; opt1: number; opt2: number; opt3: number } {
   const l1 = levels.op_1_lvl ?? 0;
   const l2 = levels.op_2_lvl ?? 0;
   const l3 = levels.op_3_lvl ?? 0;
 
-  let opt1Contribution = (def.op_1_tp || 0) * l1;
+  let opt1 = (def.op_1_tp || 0) * l1;
   if (variant === 'technique') {
     const defId = typeof def.id === 'string' ? parseInt(def.id, 10) : def.id;
     if (defId === PART_IDS.ADDITIONAL_DAMAGE || def.name === 'Additional Damage') {
-      opt1Contribution = Math.floor(opt1Contribution);
+      opt1 = Math.floor(opt1);
     }
   }
 
-  return (def.base_tp || 0) + opt1Contribution + (def.op_2_tp || 0) * l2 + (def.op_3_tp || 0) * l3;
+  return {
+    base: def.base_tp || 0,
+    opt1,
+    opt2: (def.op_2_tp || 0) * l2,
+    opt3: (def.op_3_tp || 0) * l3,
+  };
+}
+
+/**
+ * Unrounded base + option sum for `tpRaw`. Technique Additional Damage still
+ * floors its option-1 product inside that sum. Published TP uses
+ * `computePartTrainingPoints`, which rounds each term up on its own.
+ */
+export function computePartTrainingPointsRaw(
+  def: Pick<CodexPartTpDef, 'id' | 'name' | 'base_tp' | 'op_1_tp' | 'op_2_tp' | 'op_3_tp'>,
+  levels: PartTpLevels,
+  variant: PartTpVariant = 'power',
+): number {
+  const terms = partTrainingPointTerms(def, levels, variant);
+  return terms.base + terms.opt1 + terms.opt2 + terms.opt3;
 }
 
 /**
  * Shared TP calculation used by library PartData and calculator chip formatters.
- * Rounds **this part** up before it is added to a total (GAME_RULES "Rounding").
- * A 2.5 TP instance is 3. Energy still ceils once at the end of the power.
+ * Rounds the base and each option up before they are added (GAME_RULES
+ * "Rounding"). Range 3 is the base step only (0.5) and costs 1 TP, not 0.
+ * Callers add these integers. Energy still ceils once at the end of the power.
  */
 export function computePartTrainingPoints(
   def: Pick<CodexPartTpDef, 'id' | 'name' | 'base_tp' | 'op_1_tp' | 'op_2_tp' | 'op_3_tp'>,
-  levels: {
-    op_1_lvl?: number | undefined;
-    op_2_lvl?: number | undefined;
-    op_3_lvl?: number | undefined;
-  },
+  levels: PartTpLevels,
   variant: PartTpVariant = 'power',
 ): number {
-  return Math.ceil(computePartTrainingPointsRaw(def, levels, variant));
+  const terms = partTrainingPointTerms(def, levels, variant);
+  return (
+    Math.ceil(terms.base) + Math.ceil(terms.opt1) + Math.ceil(terms.opt2) + Math.ceil(terms.opt3)
+  );
 }

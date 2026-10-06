@@ -46,13 +46,17 @@ export function getTrainingPointLimit(
   return calculateTrainingPoints(lvl, abil, rules);
 }
 
-/** One proficiency instance, rounded up. 2.5 TP is 3. Callers add these integers. */
+/**
+ * One proficiency instance. The base and each option round up on their own,
+ * then those integers are added. Range 3 (base 0.5, no option) is 1 TP.
+ * Callers add these integers. Do not ceil the combined sum.
+ */
 export function calculateProficiencyTP(prof: CharacterProficiency): number {
   const base = prof.baseTP ?? 0;
   const op1 = (prof.op1TP ?? 0) * (prof.op1Level ?? 0);
   const op2 = (prof.op2TP ?? 0) * (prof.op2Level ?? 0);
   const op3 = (prof.op3TP ?? 0) * (prof.op3Level ?? 0);
-  return Math.ceil(base + op1 + op2 + op3);
+  return Math.ceil(base) + Math.ceil(op1) + Math.ceil(op2) + Math.ceil(op3);
 }
 
 function normalize(s: unknown): string {
@@ -314,6 +318,21 @@ export function mergeOwnedWithRequired(
   return filterZeroCostProficiencies(merged);
 }
 
+/**
+ * A higher option level covers a lower one of the same part. Rounded TP is not
+ * the comparison: neighbouring levels can publish the same integer (1d6 and
+ * 1d8 Elemental Damage are both 3 TP). Damage type is the proficiency key, so
+ * fire does not satisfy ice. For a damage part, die size is option 1
+ * (`calculateDamageOptionLevel`: 1d4 → 0, 1d6 → 1, 1d8 → 2).
+ */
+function optionLevelsCover(owned: CharacterProficiency, required: CharacterProficiency): boolean {
+  return (
+    (owned.op1Level ?? 0) >= (required.op1Level ?? 0) &&
+    (owned.op2Level ?? 0) >= (required.op2Level ?? 0) &&
+    (owned.op3Level ?? 0) >= (required.op3Level ?? 0)
+  );
+}
+
 export function hasSufficientProficiency(
   owned: CharacterProficiency[],
   required: CharacterProficiency,
@@ -321,7 +340,10 @@ export function hasSufficientProficiency(
   const key = proficiencyKey(required);
   const match = owned.find((p) => proficiencyKey(p) === key);
   if (!match) return false;
-  return calculateProficiencyTP(match) >= calculateProficiencyTP(required);
+  if (normalizeDamageType(match.damageType) !== normalizeDamageType(required.damageType)) {
+    return false;
+  }
+  return optionLevelsCover(match, required);
 }
 
 export function getMissingRequiredProficiencies(

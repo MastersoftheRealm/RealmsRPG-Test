@@ -35,4 +35,28 @@ describe('hasSufficientProficiency', () => {
     expect(hasSufficientProficiency([fire(1)], fire(0))).toBe(true);
     expect(hasSufficientProficiency([fire(0)], fire(1))).toBe(false);
   });
+
+  it('fails a higher die when rounded TP collides, and a higher die covers the lower one', () => {
+    // 1d6 is option level 1; 1d8 is option level 2. Both publish as 3 TP.
+    expect(calculateProficiencyTP(fire(1))).toBe(3);
+    expect(calculateProficiencyTP(fire(2))).toBe(3);
+    expect(hasSufficientProficiency([fire(1)], fire(2))).toBe(false);
+    expect(hasSufficientProficiency([fire(2)], fire(1))).toBe(true);
+    expect(hasSufficientProficiency([fire(2)], { ...fire(1), damageType: 'ice' })).toBe(false);
+  });
+
+  it('compares option level when a fractional option rounds to the same TP', () => {
+    const row = (level: number): CharacterProficiency => ({
+      id: `opt-${level}`,
+      kind: 'power_part',
+      name: 'Narrow Step',
+      baseTP: 0.5,
+      op1TP: 0.1,
+      op1Level: level,
+    });
+    expect(calculateProficiencyTP(row(1))).toBe(2);
+    expect(calculateProficiencyTP(row(2))).toBe(2);
+    expect(hasSufficientProficiency([row(1)], row(2))).toBe(false);
+    expect(hasSufficientProficiency([row(2)], row(1))).toBe(true);
+  });
 });

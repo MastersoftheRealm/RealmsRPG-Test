@@ -120,7 +120,7 @@ describe('resolvePowerComposition', () => {
     const res = resolvePowerComposition(burst, partsDb, { selectedVariantId: 'ice' })!;
     expect(res.energy).toBe(bolt.energy);
     expect(composedPowerDamage(res)).toEqual(d10('ice'));
-    // Snapshot Power Range at 3 steps is 1.5 TP → 2. Each 1d10 Elemental Damage is 3.5 → 4.
+    // Power Range at 3 steps: base 0.5 + option 1, each rounded up → 2. Each 1d10: base 2 + option 1.5, each rounded up → 4.
     expect(res.tp).toBe(2 + 3 * 4);
     expect(res.tpSources.filter((s) => s.includes('Power Range'))).toHaveLength(1);
   });
