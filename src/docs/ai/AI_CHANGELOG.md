@@ -2,6 +2,8 @@
 
 Newest **150** entries. Older: [`archive/AI_CHANGELOG_ARCHIVE.md`](archive/AI_CHANGELOG_ARCHIVE.md).
 
+- 2026-10-06 | agent | CI: sharp override 0.35.5 | files: package.json/lock, AI_CHANGELOG | Summary: **Pinned** `sharp` 0.35.5 via the existing npm `overrides` entry so the production audit gate passes a high-severity sharp advisory. Latest stable next (16.3.8) still depends on `sharp` ^0.35.4. verification_status n/a.
+
 - 2026-10-06 | agent | CI: source-map-js override (86e3kgdff) | files: package.json/lock, ENGINEERING_ONBOARDING, AI_CHANGELOG | Summary: **Pinned** `source-map-js` 1.2.2 via npm `overrides` (postcss chain) so `npm audit --omit=dev --audit-level=high` passes. verification_status n/a (PR 130).
 
 - 2026-09-14 | agent | CI: Next 16.3.5 + audit pins so verify can merge | files: package.json/lock, error.tsx Home Link, use-auth hard-nav absolute URL | Summary: **Bumped** next/eslint-config-next/@next/mdx to 16.3.5, sharp 0.35.4, js-yaml 4.3.2, vitest 4.1.11 so `npm audit --audit-level=high` is clean. **Wired** error Home onto `Link`. verification_status n/a (CI unblock on PR 124).
