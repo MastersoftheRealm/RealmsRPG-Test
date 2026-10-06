@@ -69,4 +69,39 @@ describe('calculateEmpoweredTechniqueCosts (T8 / N2)', () => {
     expect(duplicated.totalEnergy).toBe(unique.totalEnergy);
     expect(duplicated.energyRaw).toBe(powerRaw * 2 + techniqueRaw);
   });
+
+  it('shows no energy for an empty shell, and still floors once a side contributes', () => {
+    const noAttack: TechniquePart = {
+      id: '415',
+      name: 'No Attack',
+      description: 'No Attack',
+      category: 'General',
+      mechanic: true,
+      base_en: -2,
+      base_tp: 0,
+      percentage: false,
+    };
+    const empty = calculateEmpoweredTechniqueCosts({
+      powerPartsPayload: [],
+      techniquePartsPayload: [],
+      powerPartsDb: [],
+      techniquePartsDb: [],
+    });
+    const reductionOnly = calculateEmpoweredTechniqueCosts({
+      powerPartsPayload: [],
+      techniquePartsPayload: [{ id: 415, name: 'No Attack' }],
+      powerPartsDb: [],
+      techniquePartsDb: [noAttack],
+    });
+    const reduced = calculateEmpoweredTechniqueCosts({
+      powerPartsPayload: [{ id: 1, name: powerPart.name }],
+      techniquePartsPayload: [{ id: 415, name: 'No Attack' }],
+      powerPartsDb: [{ ...powerPart, base_en: 0.4 }],
+      techniquePartsDb: [noAttack],
+    });
+    expect(empty.totalEnergy).toBe(0);
+    expect(reductionOnly.energyRaw).toBeLessThan(0);
+    expect(reductionOnly.totalEnergy).toBe(0);
+    expect(reduced.totalEnergy).toBe(1);
+  });
 });

@@ -14,6 +14,17 @@ export interface EmpoweredTechniqueCostResult {
   techniquePercentageMultiplier: number;
 }
 
+/** True when the 1 EN floor should publish a number. An empty shell stays 0. */
+export function empoweredEnergyFloorApplies(
+  powerRaw: number,
+  techniqueRaw: number,
+  combinedRaw: number,
+  hasResolvedParts: boolean,
+): boolean {
+  if (!hasResolvedParts) return false;
+  return powerRaw > 1e-9 || techniqueRaw > 1e-9 || combinedRaw > 1e-9;
+}
+
 function getTechniquePartEnergyContribution(
   part: TechniquePart,
   payload: TechniquePartPayload,
@@ -65,7 +76,16 @@ export function calculateEmpoweredTechniqueCosts(
   // Empowered rule: technique percentage mechanics also scale the power side.
   const adjustedPowerEnergyRaw = powerCosts.energyRaw * techniquePercentageMultiplier;
   const energyRaw = adjustedPowerEnergyRaw + techniqueCosts.energyRaw;
-  const hasCostedParts = powerCosts.hasCostedParts || techniqueCosts.hasCostedParts;
+  const hasResolvedParts = powerCosts.hasCostedParts || techniqueCosts.hasCostedParts;
+  // A reduction on an empty shell (default No Attack) has raw ≤ 0. That is a dash,
+  // same as an empty power or technique. The 1 EN floor still applies once a side
+  // contributes positive energy.
+  const hasCostedParts = empoweredEnergyFloorApplies(
+    powerCosts.energyRaw,
+    techniqueCosts.energyRaw,
+    energyRaw,
+    hasResolvedParts,
+  );
 
   return {
     totalEnergy: finalizePowerEnergy(energyRaw, hasCostedParts),
