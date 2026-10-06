@@ -6,8 +6,11 @@ import { DescriptorChipWithTip } from '@/components/patterns/help/descriptor-chi
 import { InfoTippy } from '@/components/patterns/help/info-tippy';
 import { expandableChipPropsFromChipData } from '@/lib/chip/expandable-chip-props';
 import {
+  armSelectChipFocus,
+  consumeSelectChipFocus,
   descriptorChipVariantForGridList,
   isGridListChipExpandable,
+  type SelectChipFocusSlot,
 } from '@/lib/chip/grid-list-chip-utils';
 import type { ChipData } from './grid-list-row-types';
 
@@ -53,20 +56,16 @@ export function GridListChip({
   );
 }
 
-/** Variant id (or name) of the select chip whose activation should keep focus after re-render. */
-let pendingSelectChipFocus: string | null = null;
-
 function GridListSelectChip({ chip }: { chip: ChipData }) {
   const variant = descriptorChipVariantForGridList(chip.category ?? 'default');
   const tip = chip.description?.trim();
   const showTip = Boolean(tip && tip !== 'No additional details.');
   const buttonRef = useRef<HTMLButtonElement>(null);
-  const focusId = chip.chipKey ?? chip.name;
+  const focusSlot = useRef<SelectChipFocusSlot>({ pending: false });
 
   useLayoutEffect(() => {
-    if (pendingSelectChipFocus !== focusId || !buttonRef.current) return;
+    if (!consumeSelectChipFocus(focusSlot.current) || !buttonRef.current) return;
     buttonRef.current.focus();
-    pendingSelectChipFocus = null;
   });
 
   return (
@@ -76,8 +75,11 @@ function GridListSelectChip({ chip }: { chip: ChipData }) {
         type="button"
         onClick={(e) => {
           e.stopPropagation();
-          pendingSelectChipFocus = focusId;
+          armSelectChipFocus(focusSlot.current);
           chip.onSelect?.();
+        }}
+        onBlur={() => {
+          focusSlot.current.pending = false;
         }}
         className="hit-area-dense inline-flex items-center rounded-md focus-visible:ring-2 focus-visible:ring-primary-outline-border focus-visible:outline-none"
         aria-label={chip.selectAriaLabel ?? `Select ${chip.name}`}
