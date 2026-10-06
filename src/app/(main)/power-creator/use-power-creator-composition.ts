@@ -6,7 +6,7 @@
 
 'use client';
 
-import { useCallback, useMemo, useState } from 'react';
+import { useCallback, useMemo, useRef, useState } from 'react';
 import type { PowerPart } from '@/hooks';
 import {
   POWER_RANDOMIZE_DIE_SIDES,
@@ -25,9 +25,13 @@ import {
   nextVariantId,
   nextVariantLabel,
   defaultVariantTabs,
+  overlayFlagsForTab,
+  overlayFlagsFromVariants,
+  pruneOverlayFlags,
   setOverlayField,
   specToTabForm,
   spreadDieFaces,
+  variantHighWater,
   type CollectedCompositionForms,
   type OverlayFieldKey,
   type OverlayFlagMap,
@@ -48,6 +52,7 @@ type CompositionInit = {
   activeTabId: string;
   dieSides: number;
   dieFaces: string[];
+  overlayFlags: OverlayFlagMap;
 };
 
 const DEFAULT_DIE_SIDES = 4;
@@ -79,6 +84,7 @@ export function compositionInitFromSaved(
       activeTabId: SHARED_TAB_ID,
       dieSides: DEFAULT_DIE_SIDES,
       dieFaces: [],
+      overlayFlags: {},
     };
   }
   const variants: PowerVariantTab[] = composition.variants.map((v) => ({
@@ -106,6 +112,7 @@ export function compositionInitFromSaved(
     activeTabId: ids[0] ?? SHARED_TAB_ID,
     dieSides: composition.die?.sides ?? DEFAULT_DIE_SIDES,
     dieFaces: composition.die?.faces ?? [],
+    overlayFlags: overlayFlagsFromVariants(composition.variants),
   };
 }
 
@@ -126,7 +133,8 @@ export function usePowerCreatorComposition({
   const [activeTabId, setActiveTabId] = useState(init.activeTabId);
   const [dieSides, setDieSidesState] = useState(init.dieSides);
   const [dieFaces, setDieFaces] = useState<string[]>(init.dieFaces);
-  const [overlayByTab, setOverlayByTab] = useState<OverlayFlagMap>({});
+  const [overlayByTab, setOverlayByTab] = useState<OverlayFlagMap>(init.overlayFlags);
+  const variantSeq = useRef(variantHighWater(init.stored.variants));
 
   const collected: CollectedCompositionForms = useMemo(
     () => ({
@@ -137,8 +145,9 @@ export function usePowerCreatorComposition({
       reverse: activeTabId === REVERSE_TAB_ID ? liveForm : stored.reverse,
       dieSides,
       dieFaces: Array.from({ length: dieSides }, (_, i) => dieFaces[i] ?? ''),
+      overlayFlags: overlayByTab,
     }),
-    [structure, reverseEnabled, activeTabId, liveForm, stored, dieSides, dieFaces],
+    [structure, reverseEnabled, activeTabId, liveForm, stored, dieSides, dieFaces, overlayByTab],
   );
 
   const composition = useMemo(() => buildCompositionPayload(collected), [collected]);
@@ -185,20 +194,34 @@ export function usePowerCreatorComposition({
       let variants = src.variants;
       const wasAlternate = structure === 'alternate';
       const isAlternate = next === 'alternate';
+      const freshTabs = (copyShared: boolean) => {
+        const first = variantSeq.current + 1;
+        variantSeq.current = first + 1;
+        return defaultVariantTabs(shared, copyShared, first);
+      };
       if (isAlternate && !wasAlternate) {
         variants =
           variants.length === 0
-            ? defaultVariantTabs(shared, true)
+            ? freshTabs(true)
             : variants.map((v) => ({ ...v, form: mergeOverlayIntoShared(shared, v.form) }));
       } else if (wasAlternate && !isAlternate) {
         shared = variants[0]?.form ?? shared;
         if (next !== 'none') {
-          variants = variants.map((v) => ({ ...v, form: diffAgainstShared(shared, v.form) }));
+          variants = variants.map((v) => ({
+            ...v,
+            form: diffAgainstShared(shared, v.form, overlayFlagsForTab(overlayByTab, v.id)),
+          }));
         }
       }
       if (next !== 'none' && variants.length === 0) {
-        variants = defaultVariantTabs(shared, false);
+        variants = freshTabs(false);
       }
+      setOverlayByTab((prev) =>
+        pruneOverlayFlags(
+          prev,
+          variants.map((v) => v.id),
+        ),
+      );
       if (next === 'randomize' && dieFaces.every((f) => !f)) {
         setDieFaces(spreadDieFaces(dieSides, variants));
       }
@@ -206,7 +229,7 @@ export function usePowerCreatorComposition({
       const first = tabIdsFor(next, reverseEnabled, variants)[0] ?? SHARED_TAB_ID;
       commit({ shared, variants, reverse: src.reverse }, first, src);
     },
-    [structure, collected, dieFaces, dieSides, reverseEnabled, commit],
+    [structure, collected, dieFaces, dieSides, reverseEnabled, commit, overlayByTab],
   );
 
   const setReverseEnabled = useCallback(
@@ -229,8 +252,10 @@ export function usePowerCreatorComposition({
           src.variants[0]?.form ??
           src.shared)
         : emptyTabForm();
+    const id = nextVariantId(src.variants, variantSeq.current);
+    variantSeq.current = variantHighWater([...src.variants, { id }]);
     const tab: PowerVariantTab = {
-      id: nextVariantId(src.variants),
+      id,
       label: nextVariantLabel(src.variants),
       polarity: 'positive',
       description: '',
@@ -247,6 +272,12 @@ export function usePowerCreatorComposition({
     (id: string) => {
       const src = collected;
       const variants = src.variants.filter((v) => v.id !== id);
+      setOverlayByTab((prev) =>
+        pruneOverlayFlags(
+          prev,
+          variants.map((v) => v.id),
+        ),
+      );
       setDieFaces((prev) => prev.map((f) => (f === id ? '' : f)));
       const nextActive =
         activeTabId === id
@@ -292,7 +323,8 @@ export function usePowerCreatorComposition({
     setActiveTabId(next.activeTabId);
     setDieSidesState(next.dieSides);
     setDieFaces(next.dieFaces);
-    setOverlayByTab({});
+    setOverlayByTab(next.overlayFlags);
+    variantSeq.current = variantHighWater(next.stored.variants);
   }, []);
 
   const reset = useCallback(() => {
@@ -303,6 +335,7 @@ export function usePowerCreatorComposition({
       activeTabId: SHARED_TAB_ID,
       dieSides: DEFAULT_DIE_SIDES,
       dieFaces: [],
+      overlayFlags: {},
     });
   }, [loadFromSaved]);
 

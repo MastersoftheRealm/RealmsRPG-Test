@@ -5,8 +5,12 @@ import {
   defaultVariantTabs,
   emptyTabForm,
   isOverlayFieldForced,
+  nextVariantId,
+  overlayFlagsFromVariants,
+  pruneOverlayFlags,
   setOverlayField,
   showsFieldOverride,
+  variantHighWater,
 } from './power-creator-composition';
 
 describe('Modify variant tabs', () => {
@@ -45,6 +49,45 @@ describe('Modify variant tabs', () => {
     });
 
     expect(payload?.variants).toEqual([{ id: 'v1', label: 'Variant 1' }]);
+  });
+
+  it('keeps a damage override that equals the empty default, and reloads the flag', () => {
+    const shared = emptyTabForm();
+    shared.damages = [{ amount: 2, size: 10, type: 'fire', applyDuration: false }];
+    const piece = emptyTabForm();
+    const flags = setOverlayField({}, 'v1', 'damage', true);
+    const payload = buildCompositionPayload({
+      structure: 'modify',
+      reverseEnabled: false,
+      shared,
+      variants: [
+        {
+          id: 'v1',
+          label: 'Variant 1',
+          polarity: 'positive',
+          description: '',
+          form: piece,
+        },
+      ],
+      reverse: emptyTabForm(),
+      dieSides: 2,
+      dieFaces: ['', ''],
+      overlayFlags: flags,
+    });
+    expect(payload?.variants[0]?.damage).toEqual([]);
+    expect(payload?.variants[0]?.overrides).toEqual(['damage']);
+    expect(overlayFlagsFromVariants(payload?.variants ?? [])).toEqual({ v1: { damage: true } });
+  });
+});
+
+describe('variant ids are not reused', () => {
+  it('issues the next id above the high-water mark after a tab is removed', () => {
+    const existing = [{ id: 'v1' }];
+    expect(variantHighWater([{ id: 'v1' }, { id: 'v2' }])).toBe(2);
+    expect(nextVariantId(existing, 2)).toBe('v3');
+    expect(pruneOverlayFlags({ v1: { damage: true }, v2: { range: true } }, ['v1'])).toEqual({
+      v1: { damage: true },
+    });
   });
 });
 

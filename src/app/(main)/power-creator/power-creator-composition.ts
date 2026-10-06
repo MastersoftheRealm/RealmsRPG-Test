@@ -8,6 +8,7 @@ import type { PowerPart } from '@/hooks';
 import type {
   PowerComposition,
   PowerCompositionStructure,
+  PowerVariantOverrideField,
   PowerVariantPolarity,
   PowerVariantSpec,
 } from '@/lib/calculators';
@@ -112,19 +113,28 @@ export function tabFormToSpec(form: PowerTabForm): PowerVariantSpec {
 }
 
 /** Only the fields a portion / piece / outcome / drawback sets (overlay on the shared chassis). */
-export function tabFormToOverlay(form: PowerTabForm): PowerVariantSpec {
+export function tabFormToOverlay(
+  form: PowerTabForm,
+  keep: ReadonlySet<OverlayFieldKey> = new Set(),
+): PowerVariantSpec {
   const spec: PowerVariantSpec = {};
   const empty = emptyTabForm();
   const parts = savedParts(form);
   if (parts.length > 0) spec.parts = parts;
   const damage = savedDamage(form);
-  if (damage.length > 0) spec.damage = damage;
-  if (form.range.steps > 0) spec.range = form.range;
-  if (form.area.type !== 'none') spec.area = form.area;
-  if (form.duration.type !== 'instant') spec.duration = form.duration;
-  if (form.actionType !== empty.actionType) spec.actionType = form.actionType;
-  if (form.isReaction !== empty.isReaction) spec.isReaction = form.isReaction;
-  if (form.attackMode !== empty.attackMode) spec.attackMode = form.attackMode;
+  if (damage.length > 0 || keep.has('damage')) spec.damage = damage;
+  if (form.range.steps > 0 || keep.has('range')) spec.range = form.range;
+  if (form.area.type !== 'none' || keep.has('area')) spec.area = form.area;
+  if (form.duration.type !== 'instant' || keep.has('duration')) spec.duration = form.duration;
+  if (
+    form.actionType !== empty.actionType ||
+    form.isReaction !== empty.isReaction ||
+    keep.has('action')
+  ) {
+    spec.actionType = form.actionType;
+    spec.isReaction = form.isReaction;
+  }
+  if (form.attackMode !== empty.attackMode || keep.has('attack')) spec.attackMode = form.attackMode;
   return spec;
 }
 
@@ -146,15 +156,19 @@ export function mergeOverlayIntoShared(shared: PowerTabForm, v: PowerTabForm): P
   };
 }
 
-/** Overlay from a full power: drop what the shared chassis already has. */
-export function diffAgainstShared(shared: PowerTabForm, v: PowerTabForm): PowerTabForm {
+/** Overlay from a full power: drop what the shared chassis already has. Kept overrides stay, even at the empty default. */
+export function diffAgainstShared(
+  shared: PowerTabForm,
+  v: PowerTabForm,
+  keep: ReadonlySet<OverlayFieldKey> = new Set(),
+): PowerTabForm {
   const sameJson = (a: unknown, b: unknown) => JSON.stringify(a) === JSON.stringify(b);
   const sharedPartKeys = new Set(
     [...shared.selectedParts, ...shared.selectedAdvancedParts].map(
       (p) => `${p.part.id}:${p.op_1_lvl}:${p.op_2_lvl}:${p.op_3_lvl}`,
     ),
   );
-  const keep = <
+  const withoutSharedParts = <
     T extends { part: { id: string }; op_1_lvl: number; op_2_lvl: number; op_3_lvl: number },
   >(
     list: T[],
@@ -165,23 +179,32 @@ export function diffAgainstShared(shared: PowerTabForm, v: PowerTabForm): PowerT
   const empty = emptyTabForm();
   return {
     ...v,
-    selectedParts: keep(v.selectedParts),
-    selectedAdvancedParts: keep(v.selectedAdvancedParts),
-    damages: sameJson(v.damages, shared.damages) ? empty.damages : v.damages,
-    range: sameJson(v.range, shared.range) ? empty.range : v.range,
-    area: sameJson(v.area, shared.area) ? empty.area : v.area,
-    duration: sameJson(v.duration, shared.duration) ? empty.duration : v.duration,
-    actionType: v.actionType === shared.actionType ? empty.actionType : v.actionType,
-    isReaction: v.isReaction === shared.isReaction ? empty.isReaction : v.isReaction,
-    attackMode: v.attackMode === shared.attackMode ? empty.attackMode : v.attackMode,
+    selectedParts: withoutSharedParts(v.selectedParts),
+    selectedAdvancedParts: withoutSharedParts(v.selectedAdvancedParts),
+    damages: !keep.has('damage') && sameJson(v.damages, shared.damages) ? empty.damages : v.damages,
+    range: !keep.has('range') && sameJson(v.range, shared.range) ? empty.range : v.range,
+    area: !keep.has('area') && sameJson(v.area, shared.area) ? empty.area : v.area,
+    duration:
+      !keep.has('duration') && sameJson(v.duration, shared.duration) ? empty.duration : v.duration,
+    actionType:
+      !keep.has('action') && v.actionType === shared.actionType ? empty.actionType : v.actionType,
+    isReaction:
+      !keep.has('action') && v.isReaction === shared.isReaction ? empty.isReaction : v.isReaction,
+    attackMode:
+      !keep.has('attack') && v.attackMode === shared.attackMode ? empty.attackMode : v.attackMode,
   };
 }
 
-export function nextVariantId(existing: PowerVariantTab[]): string {
-  const used = new Set(existing.map((v) => v.id));
-  let n = existing.length + 1;
-  while (used.has(`v${n}`)) n += 1;
-  return `v${n}`;
+/** Highest `vN` already issued. New tabs start above this so a removed tab's id is not reused. */
+export function variantHighWater(existing: { id: string }[]): number {
+  return existing.reduce((max, v) => {
+    const match = /^v(\d+)$/.exec(v.id);
+    return match ? Math.max(max, Number(match[1])) : max;
+  }, 0);
+}
+
+export function nextVariantId(existing: { id: string }[], highWater = 0): string {
+  return `v${Math.max(highWater, variantHighWater(existing)) + 1}`;
 }
 
 export function nextVariantLabel(existing: PowerVariantTab[]): string {
@@ -191,7 +214,7 @@ export function nextVariantLabel(existing: PowerVariantTab[]): string {
   return `Variant ${n}`;
 }
 
-export type OverlayFieldKey = 'action' | 'attack' | 'range' | 'area' | 'duration' | 'damage';
+export type OverlayFieldKey = PowerVariantOverrideField;
 export type OverlayFlagMap = Record<string, Partial<Record<OverlayFieldKey, boolean>>>;
 
 /** Sticky Override. Copying Shared onto a tab can still equal the empty tab, so form comparison alone is not enough. */
@@ -220,24 +243,50 @@ export function showsFieldOverride(
   return formDiffersFromEmpty || stickyOverride;
 }
 
+/** Drop flags for tabs that no longer exist so a later id cannot inherit them. */
+export function pruneOverlayFlags(
+  flags: OverlayFlagMap,
+  tabIds: readonly string[],
+): OverlayFlagMap {
+  const keep = new Set(tabIds);
+  return Object.fromEntries(Object.entries(flags).filter(([id]) => keep.has(id)));
+}
+
+export function overlayFlagsFromVariants(
+  variants: { id: string; overrides?: PowerVariantOverrideField[] | undefined }[],
+): OverlayFlagMap {
+  const flags: OverlayFlagMap = {};
+  for (const variant of variants) {
+    if (!variant.overrides?.length) continue;
+    flags[variant.id] = {};
+    for (const field of variant.overrides) flags[variant.id]![field] = true;
+  }
+  return flags;
+}
+
+export function overlayFlagsForTab(flags: OverlayFlagMap, tabId: string): Set<OverlayFieldKey> {
+  const row = flags[tabId];
+  const keep = new Set<OverlayFieldKey>();
+  if (!row) return keep;
+  for (const [field, on] of Object.entries(row)) {
+    if (on) keep.add(field as OverlayFieldKey);
+  }
+  return keep;
+}
+
 /** Choice / Modify / Randomize / Alternate open with two tabs (DEV-V-061-T001). */
-export function defaultVariantTabs(shared: PowerTabForm, copyShared: boolean): PowerVariantTab[] {
-  return [
-    {
-      id: 'v1',
-      label: 'Variant 1',
-      polarity: 'positive',
-      description: '',
-      form: copyShared ? shared : emptyTabForm(),
-    },
-    {
-      id: 'v2',
-      label: 'Variant 2',
-      polarity: 'positive',
-      description: '',
-      form: copyShared ? shared : emptyTabForm(),
-    },
-  ];
+export function defaultVariantTabs(
+  shared: PowerTabForm,
+  copyShared: boolean,
+  firstNumber = 1,
+): PowerVariantTab[] {
+  return [0, 1].map((offset) => ({
+    id: `v${firstNumber + offset}`,
+    label: `Variant ${firstNumber + offset}`,
+    polarity: 'positive' as const,
+    description: '',
+    form: copyShared ? shared : emptyTabForm(),
+  }));
 }
 
 /** Evenly spread variants across the die faces in order (1, 2, 1, 2, …). */
@@ -254,6 +303,7 @@ export interface CollectedCompositionForms {
   reverse: PowerTabForm;
   dieSides: number;
   dieFaces: string[];
+  overlayFlags?: OverlayFlagMap | undefined;
 }
 
 /** Saved `composition` (or undefined for a plain power). */
@@ -265,17 +315,22 @@ export function buildCompositionPayload(
   const variants =
     c.structure === 'none'
       ? []
-      : c.variants.map((v) => ({
-          id: v.id,
-          label: v.label.trim() || v.id,
-          ...(isAlternate
-            ? tabFormToSpec(v.form)
-            : tabFormToOverlay(diffAgainstShared(c.shared, v.form))),
-          ...(v.description.trim() && c.structure !== 'modify'
-            ? { description: v.description.trim() }
-            : {}),
-          ...(c.structure === 'randomize' ? { polarity: v.polarity } : {}),
-        }));
+      : c.variants.map((v) => {
+          const keep = overlayFlagsForTab(c.overlayFlags ?? {}, v.id);
+          const overrides = [...keep];
+          return {
+            id: v.id,
+            label: v.label.trim() || v.id,
+            ...(isAlternate
+              ? tabFormToSpec(v.form)
+              : tabFormToOverlay(diffAgainstShared(c.shared, v.form, keep), keep)),
+            ...(v.description.trim() && c.structure !== 'modify'
+              ? { description: v.description.trim() }
+              : {}),
+            ...(c.structure === 'randomize' ? { polarity: v.polarity } : {}),
+            ...(overrides.length > 0 ? { overrides } : {}),
+          };
+        });
   const reverseOverlay = tabFormToOverlay(c.reverse);
   return {
     structure: c.structure,
