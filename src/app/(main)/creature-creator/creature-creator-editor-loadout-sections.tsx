@@ -204,6 +204,10 @@ export function CreatureCreatorEditorLoadoutSections({
                   area?: string | undefined;
                   duration?: string | undefined;
                   innate?: boolean | undefined;
+                  description?: string | undefined;
+                  variantLabel?: string | undefined;
+                  variantHelp?: string | undefined;
+                  variantChips?: { name: string; description?: string | undefined }[] | undefined;
                   image_id?: string | null | undefined;
                   image_url?: string | null | undefined;
                 }) => (
@@ -211,6 +215,7 @@ export function CreatureCreatorEditorLoadoutSections({
                     key={power.id}
                     id={power.id}
                     name={power.name}
+                    description={power.description}
                     thumbnail={resolveListRowThumbnail('power', power, power.name)}
                     columns={[
                       { key: 'Energy', value: power.energy ?? '-', align: 'center' as const },
@@ -220,6 +225,21 @@ export function CreatureCreatorEditorLoadoutSections({
                       { key: 'Duration', value: power.duration ?? '-', align: 'center' as const },
                     ]}
                     gridColumns="1.4fr 0.6fr 0.8fr 0.8fr 0.7fr 0.8fr"
+                    detailSections={
+                      power.variantChips && power.variantChips.length > 0
+                        ? [
+                            {
+                              label: power.variantLabel ?? 'Variants',
+                              chips: power.variantChips.map((chip) => ({
+                                name: chip.name,
+                                ...(chip.description ? { description: chip.description } : {}),
+                                kind: 'descriptor' as const,
+                              })),
+                              ...(power.variantHelp ? { labelHelp: power.variantHelp } : {}),
+                            },
+                          ]
+                        : undefined
+                    }
                     innate={power.innate === true}
                     leftSlot={
                       <InnateToggle

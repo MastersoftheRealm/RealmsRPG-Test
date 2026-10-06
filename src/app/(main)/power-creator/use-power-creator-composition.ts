@@ -23,6 +23,7 @@ import {
   mergeOverlayIntoShared,
   nextVariantId,
   nextVariantLabel,
+  defaultVariantTabs,
   specToTabForm,
   spreadDieFaces,
   type CollectedCompositionForms,
@@ -46,6 +47,9 @@ type CompositionInit = {
 };
 
 const DEFAULT_DIE_SIDES = 4;
+
+export type OverlayFieldKey = 'action' | 'attack' | 'range' | 'area' | 'duration' | 'damage';
+type OverlayFlags = Partial<Record<OverlayFieldKey, boolean>>;
 
 function tabIdsFor(
   structure: PowerCompositionStructure,
@@ -121,6 +125,7 @@ export function usePowerCreatorComposition({
   const [activeTabId, setActiveTabId] = useState(init.activeTabId);
   const [dieSides, setDieSidesState] = useState(init.dieSides);
   const [dieFaces, setDieFaces] = useState<string[]>(init.dieFaces);
+  const [overlayByTab, setOverlayByTab] = useState<Record<string, OverlayFlags>>({});
 
   const collected: CollectedCompositionForms = useMemo(
     () => ({
@@ -182,28 +187,16 @@ export function usePowerCreatorComposition({
       if (isAlternate && !wasAlternate) {
         variants =
           variants.length === 0
-            ? [
-                {
-                  id: 'v1',
-                  label: 'Variant 1',
-                  polarity: 'positive',
-                  description: '',
-                  form: shared,
-                },
-                {
-                  id: 'v2',
-                  label: 'Variant 2',
-                  polarity: 'positive',
-                  description: '',
-                  form: shared,
-                },
-              ]
+            ? defaultVariantTabs(shared, true)
             : variants.map((v) => ({ ...v, form: mergeOverlayIntoShared(shared, v.form) }));
       } else if (wasAlternate && !isAlternate) {
         shared = variants[0]?.form ?? shared;
         if (next !== 'none') {
           variants = variants.map((v) => ({ ...v, form: diffAgainstShared(shared, v.form) }));
         }
+      }
+      if (next !== 'none' && variants.length === 0) {
+        variants = defaultVariantTabs(shared, false);
       }
       if (next === 'randomize' && dieFaces.every((f) => !f)) {
         setDieFaces(spreadDieFaces(dieSides, variants));
@@ -298,6 +291,7 @@ export function usePowerCreatorComposition({
     setActiveTabId(next.activeTabId);
     setDieSidesState(next.dieSides);
     setDieFaces(next.dieFaces);
+    setOverlayByTab({});
   }, []);
 
   const reset = useCallback(() => {
@@ -312,6 +306,19 @@ export function usePowerCreatorComposition({
   }, [loadFromSaved]);
 
   const activeVariant = stored.variants.find((v) => v.id === activeTabId) ?? null;
+
+  const markFieldOverridden = useCallback((tabId: string, field: OverlayFieldKey) => {
+    setOverlayByTab((prev) => ({ ...prev, [tabId]: { ...prev[tabId], [field]: true } }));
+  }, []);
+
+  const clearFieldOverridden = useCallback((tabId: string, field: OverlayFieldKey) => {
+    setOverlayByTab((prev) => ({ ...prev, [tabId]: { ...prev[tabId], [field]: false } }));
+  }, []);
+
+  const isFieldForcedOverride = useCallback(
+    (tabId: string, field: OverlayFieldKey) => overlayByTab[tabId]?.[field] === true,
+    [overlayByTab],
+  );
 
   return {
     structure,
@@ -333,6 +340,9 @@ export function usePowerCreatorComposition({
     spreadFaces,
     collected,
     composition,
+    markFieldOverridden,
+    clearFieldOverridden,
+    isFieldForcedOverride,
     loadFromSaved,
     reset,
   };

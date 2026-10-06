@@ -15,6 +15,7 @@ import type { CreatorSaveTarget } from '@/lib/library/catalog-listing';
 import {
   isPowerCompositionMechanicPart,
   isRandomizeDieComplete,
+  powerSpecHasContent,
   resolvePowerComposition,
   type AreaConfig,
   type DurationConfig,
@@ -37,6 +38,7 @@ import {
   REVERSE_TAB_ID,
   SHARED_TAB_ID,
   pickTabForm,
+  tabFormToOverlay,
   tabFormToSpec,
   topLevelForm,
   type PowerTabForm,
@@ -269,6 +271,8 @@ export function usePowerCreatorWorkspace({
   }, [composition, powerData, powerParts, variants.activeVariant, variants.activeTabId]);
 
   const dieIncomplete = !!composition && !isRandomizeDieComplete(composition);
+  const reverseIncomplete =
+    variants.reverseEnabled && !powerSpecHasContent(tabFormToOverlay(variants.collected.reverse));
 
   const resetFields = useCallback(() => {
     const empty = emptyPowerCreatorFormState();
@@ -381,6 +385,7 @@ export function usePowerCreatorWorkspace({
     variants,
     composedSummary,
     dieIncomplete,
+    reverseIncomplete,
     save,
     handleReset,
     handleLoadPower,

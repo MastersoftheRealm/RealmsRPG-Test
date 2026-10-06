@@ -39,6 +39,17 @@ describe('columnHasDisplayValue / mobile expand facts (TASK-868 / TASK-909)', ()
     expect(columnHasDisplayValue({ key: 'recovery', value: 'FR' })).toBe(true);
   });
 
+  it('keeps Duration on the mobile summary when it is past the first three columns (86e3kfkca)', () => {
+    expect(
+      columnsForMobileSummary([
+        { key: 'action', value: 'Basic' },
+        { key: 'damage', value: '1d8 Ice' },
+        { key: 'area', value: 'Sphere 2' },
+        { key: 'duration', value: '2 Rounds / 1 Minute' },
+      ]).map((col) => col.key),
+    ).toEqual(['action', 'damage', 'area', 'duration']);
+  });
+
   it('omits blank columns from the mobile summary', () => {
     expect(
       columnsForMobileSummary([

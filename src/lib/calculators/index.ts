@@ -73,6 +73,7 @@ export {
   composedPowerSavedParts,
   composedPowerProficiencyParts,
   formatPowerCompositionSummary,
+  powerSpecHasContent,
   type PowerComposition,
   type PowerCompositionStructure,
   type PowerCompositionResolution,

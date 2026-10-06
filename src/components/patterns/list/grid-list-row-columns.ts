@@ -51,12 +51,14 @@ export function columnHasDisplayValue(col: ColumnValue): boolean {
 /** Columns hidden from the mobile grid (`hideOnMobile` default true). Skip blanks
  *  and description teasers (full text is expanded-only, TASK-909). */
 export function columnsForMobileSummary(columns: ColumnValue[]): ColumnValue[] {
-  return columns
-    .filter(
-      (col) =>
-        col.key !== 'description' && col.hideOnMobile !== false && columnHasDisplayValue(col),
-    )
-    .slice(0, 3);
+  const visible = columns.filter(
+    (col) => col.key !== 'description' && col.hideOnMobile !== false && columnHasDisplayValue(col),
+  );
+  const summary = visible.slice(0, 3);
+  // Modify joins per-piece durations in this column; keep it when it falls past the first three (86e3kfkca).
+  const duration = visible.find((col) => col.key.trim().toLowerCase() === 'duration');
+  if (duration && !summary.includes(duration)) summary.push(duration);
+  return summary;
 }
 
 /**

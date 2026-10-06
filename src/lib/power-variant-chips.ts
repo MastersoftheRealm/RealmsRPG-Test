@@ -1,5 +1,5 @@
 /**
- * Power variant chips (ADR-0029) â€” sibling of `buildFeatLevelChips` (`leveled-feats.ts`).
+ * Power variant chips (ADR-0029) — sibling of `buildFeatLevelChips` (`leveled-feats.ts`).
  * Same `ChipData` / `GridListChip` shape; labels are the variant names (Fire, Freeze), never "Level N".
  */
 
@@ -55,9 +55,9 @@ function powerVariantChipDescription(
 ): string {
   const lines: string[] = [];
   if (res.structure === 'randomize') {
-    const sign = v.polarity === 'negative' ? 'âˆ’' : '+';
+    const sign = v.polarity === 'negative' ? '−' : '+';
     lines.push(
-      `${formatFaces(v.faces)} Â· ${v.polarity === 'negative' ? 'Negative' : 'Positive'} (${sign}${v.energy} EN)`,
+      `${formatFaces(v.faces)} · ${v.polarity === 'negative' ? 'Negative' : 'Positive'} (${sign}${v.energy} EN)`,
     );
   } else {
     lines.push(`${v.energy} Energy`);
@@ -75,7 +75,7 @@ function powerVariantChipDescription(
 /**
  * One chip per variant. Current = marked descriptor. With `select`, other chips call
  * `onSelectVariant` (Choice / Alternate / Randomize). Modify chips stay browse-only
- * (expandable piece facts) â€” every piece happens on one cast.
+ * (expandable piece facts) — every piece happens on one cast.
  */
 export function buildPowerVariantChips(
   res: PowerCompositionResolution,
@@ -85,9 +85,21 @@ export function buildPowerVariantChips(
   const select = res.structure === 'modify' ? undefined : options?.select;
   return res.variants.map((v) => {
     const description = powerVariantChipDescription(res, v);
-    const isCurrent = res.structure !== 'modify' && v.id === res.selectedVariantId;
+    const isCurrent =
+      res.structure !== 'modify' && !!res.selectedVariantId && v.id === res.selectedVariantId;
     if (res.structure === 'modify') {
       return { name: v.label, description } satisfies ChipData;
+    }
+    if (isCurrent && select) {
+      return {
+        name: v.label,
+        description,
+        category: 'success',
+        kind: 'descriptor',
+        current: true,
+        onSelect: () => select.onSelectVariant(v.id),
+        selectAriaLabel: `Using ${v.label} for ${select.powerName}`,
+      } satisfies ChipData;
     }
     if (isCurrent) {
       return {
@@ -120,7 +132,7 @@ function randomizeDieChips(
   const sides = res.die.sides;
   const name = `Roll 1d${sides}`;
   const description =
-    'Roll when you use this power; the face picks the outcome. If the power lasts longer than one round, you may re-roll at the start of each affected creatureâ€™s turn. A negative outcome cannot be resisted if used on an ally.';
+    "Roll when you use this power; the face picks the outcome. If the power lasts longer than one round, you may re-roll at the start of each affected creature's turn. A negative outcome cannot be resisted if used on an ally.";
   if (!roll) return [{ name, description }];
   return [
     {
@@ -152,7 +164,7 @@ export function withPowerReverseNote(
     .filter((n): n is string => !!n);
   const damage = formatPowerDamage(res.reverse.doc.damage);
   const list = [...new Set([...drawbacks, ...(damage ? [damage] : [])])].join(', ');
-  const note = `Reverse Effects${list ? ` (${list})` : ''}: always applies and cannot be nullified or reduced by you or an ally; reduces the cost by ${formatCost(res.reverse.discount)} EN (50% of the drawbackâ€™s ${res.reverse.energy} EN).`;
+  const note = `Reverse Effects${list ? ` (${list})` : ''}: always applies and cannot be nullified or reduced by you or an ally; reduces the cost by ${formatCost(res.reverse.discount)} EN (50% of the drawback's ${res.reverse.energy} EN).`;
   return base ? `${base} ${note}` : note;
 }
 
@@ -164,10 +176,16 @@ export function powerVariantsDetailSection(
   if (!res || res.structure === 'none') return undefined;
   const chips = [...buildPowerVariantChips(res, options), ...randomizeDieChips(res, options?.roll)];
   if (chips.length === 0) return undefined;
+  const current = res.variants.find((v) => v.id === res.selectedVariantId);
+  const liveAnnouncement =
+    options?.select && current
+      ? `Using ${current.label} for ${options.select.powerName}`
+      : undefined;
   return {
     label: `${POWER_COMPOSITION_STRUCTURE_LABELS[res.structure]} Variants`,
     chips,
     ...(res.structureHelp ? { labelHelp: res.structureHelp } : {}),
+    ...(liveAnnouncement ? { liveAnnouncement } : {}),
   };
 }
 

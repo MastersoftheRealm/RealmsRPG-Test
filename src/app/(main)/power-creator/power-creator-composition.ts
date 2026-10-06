@@ -11,6 +11,7 @@ import type {
   PowerVariantPolarity,
   PowerVariantSpec,
 } from '@/lib/calculators';
+import { powerSpecHasContent } from '@/lib/calculators';
 import { dedupeSavedParts } from '@/lib/game/dedupe-saved-parts';
 import {
   emptyPowerCreatorFormState,
@@ -190,6 +191,26 @@ export function nextVariantLabel(existing: PowerVariantTab[]): string {
   return `Variant ${n}`;
 }
 
+/** Choice / Modify / Randomize / Alternate open with two tabs (DEV-V-061-T001). */
+export function defaultVariantTabs(shared: PowerTabForm, copyShared: boolean): PowerVariantTab[] {
+  return [
+    {
+      id: 'v1',
+      label: 'Variant 1',
+      polarity: 'positive',
+      description: '',
+      form: copyShared ? shared : emptyTabForm(),
+    },
+    {
+      id: 'v2',
+      label: 'Variant 2',
+      polarity: 'positive',
+      description: '',
+      form: copyShared ? shared : emptyTabForm(),
+    },
+  ];
+}
+
 /** Evenly spread variants across the die faces in order (1, 2, 1, 2, …). */
 export function spreadDieFaces(sides: number, variants: PowerVariantTab[]): string[] {
   if (variants.length === 0) return Array.from({ length: sides }, () => '');
@@ -226,10 +247,11 @@ export function buildCompositionPayload(
             : {}),
           ...(c.structure === 'randomize' ? { polarity: v.polarity } : {}),
         }));
+  const reverseOverlay = tabFormToOverlay(c.reverse);
   return {
     structure: c.structure,
     variants,
-    ...(c.reverseEnabled ? { reverse: tabFormToOverlay(c.reverse) } : {}),
+    ...(c.reverseEnabled && powerSpecHasContent(reverseOverlay) ? { reverse: reverseOverlay } : {}),
     ...(c.structure === 'randomize' ? { die: { sides: c.dieSides, faces: c.dieFaces } } : {}),
   };
 }

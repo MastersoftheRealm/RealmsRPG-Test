@@ -12,6 +12,7 @@ import type { CreatureFeat as CodexCreatureFeat, ItemProperty } from '@/hooks/co
 import type { PowerPart, TechniquePart } from '@/hooks';
 import { derivePowerDisplay, formatPowerDamage } from '@/lib/calculators/power-calc';
 import { composedPowerDamage } from '@/lib/calculators/power-composition';
+import { powerVariantsDetailSection, withPowerReverseNote } from '@/lib/power-variant-chips';
 import { deriveTechniqueDisplay } from '@/lib/calculators/technique-calc';
 import {
   deriveItemDisplay,
@@ -37,6 +38,10 @@ export interface CreaturePower {
   innate?: boolean | undefined;
   image_id?: string | null | undefined;
   image_url?: string | null | undefined;
+  description?: string | undefined;
+  variantLabel?: string | undefined;
+  variantHelp?: string | undefined;
+  variantChips?: { name: string; description?: string | undefined }[] | undefined;
 }
 
 export interface CreatureTechnique {
@@ -163,6 +168,12 @@ export function transformUserPowerToDisplayItem(
   const damageStr = formatPowerDamage(
     display.composition ? composedPowerDamage(display.composition) : power.damage,
   );
+  const variantSection = display.composition
+    ? powerVariantsDetailSection(display.composition)
+    : undefined;
+  const description = display.composition
+    ? withPowerReverseNote(power.description, display.composition)
+    : power.description;
 
   const stats: ItemStat[] = [
     { label: 'Energy', value: display.energy ?? '-' },
@@ -174,7 +185,7 @@ export function transformUserPowerToDisplayItem(
   return {
     id: power.docId,
     name: power.name,
-    description: power.description,
+    description,
     category: 'power',
     stats,
     details: [
@@ -195,6 +206,17 @@ export function transformUserPowerToDisplayItem(
       innate: false,
       image_id: power.image_id ?? null,
       image_url: power.image_url ?? null,
+      description,
+      ...(variantSection
+        ? {
+            variantLabel: variantSection.label,
+            ...(variantSection.labelHelp ? { variantHelp: variantSection.labelHelp } : {}),
+            variantChips: variantSection.chips.map((chip) => ({
+              name: chip.name,
+              ...(chip.description ? { description: chip.description } : {}),
+            })),
+          }
+        : {}),
     },
   };
 }

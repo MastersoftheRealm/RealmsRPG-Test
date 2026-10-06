@@ -67,6 +67,8 @@ function GridListSelectChip({ chip }: { chip: ChipData }) {
         }}
         className="hit-area-dense inline-flex items-center rounded-md focus-visible:ring-2 focus-visible:ring-primary-outline-border focus-visible:outline-none"
         aria-label={chip.selectAriaLabel ?? `Select ${chip.name}`}
+        aria-current={chip.current ? 'true' : undefined}
+        aria-pressed={chip.current ? true : undefined}
       >
         <DescriptorChip
           variant={variant}

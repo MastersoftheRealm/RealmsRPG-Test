@@ -89,10 +89,11 @@ function variantEnergyLines(res: PowerCompositionResolution): string[] {
   const lines = res.variants.map((v) => {
     if (res.structure === 'randomize') {
       const sign = v.polarity === 'negative' ? '−' : '+';
-      return `${v.label}: ${sign}${v.energy} EN × ${v.faces.length} ${v.faces.length === 1 ? 'face' : 'faces'}`;
+      const faces = res.die?.sides ?? Math.max(1, v.faces.length);
+      return `${v.label}: ${sign}${v.energy} EN × ${v.faces.length}/${faces}`;
     }
     if (res.structure === 'modify' && v.energy === 0) return `${v.label}: nothing added`;
-    if (res.structure === 'modify') return `${v.label}: Shared plus this piece, ${v.energy} EN`;
+    if (res.structure === 'modify') return `${v.label}: extra ${v.energy} EN`;
     return `${v.label}: ${v.energy} EN`;
   });
   if (res.structure === 'randomize' && res.shared) {
@@ -100,13 +101,14 @@ function variantEnergyLines(res: PowerCompositionResolution): string[] {
   }
   const rule: Partial<Record<PowerCompositionResolution['structure'], string>> = {
     choice: 'Choice pays the most expensive portion',
-    modify: 'Modify adds every piece that changes Shared',
+    modify: 'Shared is paid once; each piece adds only its extra',
     alternate: 'Alternate pays the selected variant',
-    randomize: 'Randomize: chassis + signed faces (minimum 1)',
+    randomize:
+      'Shared plus each good face’s extra cost times its chance, minus half each drawback times its chance',
   };
   const ruleText = rule[res.structure];
   if (ruleText) {
-    lines.push(`${ruleText}: ${res.structureEnergy} EN`);
+    lines.push(`${ruleText}: ${formatEnergyNumber(res.structureEnergy)} EN`);
   }
   if (res.reverse) {
     lines.push(
@@ -232,60 +234,84 @@ function PowerCreatorWorkspace({
     selectedParts: ws.selectedParts,
     selectedAdvancedParts: ws.selectedAdvancedParts,
   };
+  const overlayTabId = ws.variants.activeTabId;
   const inheritance: PowerCreatorInheritance | null = onOverlayTab
     ? {
         action: inheritField(
-          actionIsOverride(live),
+          actionIsOverride(live) || ws.variants.isFieldForcedOverride(overlayTabId, 'action'),
           sharedActionLabel(shared),
           () => {
+            ws.variants.markFieldOverridden(overlayTabId, 'action');
             ws.setActionType(shared.actionType);
             ws.setIsReaction(shared.isReaction);
           },
           () => {
+            ws.variants.clearFieldOverridden(overlayTabId, 'action');
             const blank = emptyTabForm();
             ws.setActionType(blank.actionType);
             ws.setIsReaction(blank.isReaction);
           },
         ),
         attack: inheritField(
-          attackIsOverride(live),
+          attackIsOverride(live) || ws.variants.isFieldForcedOverride(overlayTabId, 'attack'),
           sharedAttackLabel(shared),
           () => {
+            ws.variants.markFieldOverridden(overlayTabId, 'attack');
             ws.setAttackMode(shared.attackMode);
           },
-          () => ws.setAttackMode(emptyTabForm().attackMode),
+          () => {
+            ws.variants.clearFieldOverridden(overlayTabId, 'attack');
+            ws.setAttackMode(emptyTabForm().attackMode);
+          },
         ),
         range: inheritField(
-          rangeIsOverride(live),
+          rangeIsOverride(live) || ws.variants.isFieldForcedOverride(overlayTabId, 'range'),
           sharedRangeLabel(shared),
           () => {
+            ws.variants.markFieldOverridden(overlayTabId, 'range');
             ws.setRange(shared.range);
           },
-          () => ws.setRange(emptyTabForm().range),
+          () => {
+            ws.variants.clearFieldOverridden(overlayTabId, 'range');
+            ws.setRange(emptyTabForm().range);
+          },
         ),
         area: inheritField(
-          areaIsOverride(live),
+          areaIsOverride(live) || ws.variants.isFieldForcedOverride(overlayTabId, 'area'),
           sharedAreaLabel(shared),
           () => {
+            ws.variants.markFieldOverridden(overlayTabId, 'area');
             ws.setArea(shared.area);
           },
-          () => ws.setArea(emptyTabForm().area),
+          () => {
+            ws.variants.clearFieldOverridden(overlayTabId, 'area');
+            ws.setArea(emptyTabForm().area);
+          },
         ),
         duration: inheritField(
-          durationIsOverride(live),
+          durationIsOverride(live) || ws.variants.isFieldForcedOverride(overlayTabId, 'duration'),
           sharedDurationLabel(shared),
           () => {
+            ws.variants.markFieldOverridden(overlayTabId, 'duration');
             ws.setDuration(shared.duration);
           },
-          () => ws.setDuration(emptyTabForm().duration),
+          () => {
+            ws.variants.clearFieldOverridden(overlayTabId, 'duration');
+            ws.setDuration(emptyTabForm().duration);
+          },
         ),
         damage: inheritField(
-          damageIsOverride(live.damages),
+          damageIsOverride(live.damages) ||
+            ws.variants.isFieldForcedOverride(overlayTabId, 'damage'),
           sharedDamageLabel(shared),
           () => {
+            ws.variants.markFieldOverridden(overlayTabId, 'damage');
             ws.setDamages(shared.damages);
           },
-          () => ws.setDamages(emptyTabForm().damages),
+          () => {
+            ws.variants.clearFieldOverridden(overlayTabId, 'damage');
+            ws.setDamages(emptyTabForm().damages);
+          },
         ),
         sharedPartNames: shared.selectedParts.map((p) => p.part.name),
         sharedMechanicNames: shared.selectedAdvancedParts.map((p) => p.part.name),
@@ -363,7 +389,7 @@ function PowerCreatorWorkspace({
         reset: <PowerCreatorHelp topic="reset" />,
       }}
       saving={ws.save.saving}
-      saveDisabled={!ws.name.trim() || ws.dieIncomplete}
+      saveDisabled={!ws.name.trim() || ws.dieIncomplete || ws.reverseIncomplete}
       aboveGrid={
         <PowerCreatorCompositionBand
           state={ws.variants}

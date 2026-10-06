@@ -196,8 +196,11 @@ export function isRandomizeDieComplete(composition: PowerComposition): boolean {
   if (composition.structure !== 'randomize') return true;
   const die = composition.die;
   if (!die || die.faces.length !== die.sides) return false;
+  if (composition.variants.length === 0) return false;
   const ids = new Set(composition.variants.map((v) => v.id));
-  return die.faces.every((f) => ids.has(f));
+  if (!die.faces.every((f) => ids.has(f))) return false;
+  const assigned = new Set(die.faces);
+  return composition.variants.every((v) => assigned.has(v.id));
 }
 
 // =============================================================================
@@ -256,7 +259,7 @@ function hasDamage(damage: PowerDocument['damage']): boolean {
 }
 
 /** A Modify piece that adds parts, damage, or a mechanic override. An untouched tab does not. */
-function variantSpecifiesPiece(v: PowerVariantSpec): boolean {
+export function powerSpecHasContent(v: PowerVariantSpec): boolean {
   if (stripCompositionParts(v.parts).length > 0) return true;
   if (hasDamage(v.damage)) return true;
   if (v.range != null) return true;
@@ -415,7 +418,7 @@ export function resolvePowerComposition(
   const variants: ResolvedPowerVariant[] = composition.variants.map((v) => {
     const doc = isAlternate ? fullVariantDoc(name, v) : overlayVariant(chassis, v);
     const display = derivePlainPowerDisplay(doc, partsDb);
-    const specifiesPiece = variantSpecifiesPiece(v);
+    const specifiesPiece = powerSpecHasContent(v);
     const energy =
       structure === 'modify' && !specifiesPiece
         ? 0
@@ -436,7 +439,8 @@ export function resolvePowerComposition(
   });
 
   const requested = options?.selectedVariantId;
-  const selected = variants.find((v) => v.id === requested) ?? variants[0] ?? null;
+  const requestedMatch = requested ? (variants.find((v) => v.id === requested) ?? null) : null;
+  const selected = requestedMatch ?? (structure === 'randomize' ? null : (variants[0] ?? null));
   const sharedEnergy = shared?.display.energy ?? 0;
 
   let structureEnergy: number;
@@ -447,7 +451,7 @@ export function resolvePowerComposition(
         variants.length > 0 ? Math.max(...variants.map((v) => v.energy)) : sharedEnergy;
       break;
     case 'modify': {
-      const anyPiece = composition.variants.some(variantSpecifiesPiece);
+      const anyPiece = composition.variants.some(powerSpecHasContent);
       structureEnergy = anyPiece ? variants.reduce((sum, v) => sum + v.energy, 0) : sharedEnergy;
       break;
     }
@@ -515,7 +519,10 @@ export function selectedResolvedVariant(
   res: PowerCompositionResolution,
 ): ResolvedPowerVariant | null {
   if (res.structure === 'modify' || res.structure === 'none') return null;
-  return res.variants.find((v) => v.id === res.selectedVariantId) ?? res.variants[0] ?? null;
+  const picked = res.variants.find((v) => v.id === res.selectedVariantId) ?? null;
+  if (picked) return picked;
+  if (res.structure === 'randomize') return null;
+  return res.variants[0] ?? null;
 }
 
 /** Every saved part on the power (shared, each variant, Reverse) — categories, proficiency. */
@@ -548,7 +555,20 @@ export function composedPowerProficiencyParts(
 /** Damage rows the row's damage button should roll. */
 export function composedPowerDamage(res: PowerCompositionResolution): PowerDocument['damage'] {
   if (res.structure === 'modify') {
-    return res.variants.flatMap((v) => (hasDamage(v.doc.damage) ? (v.doc.damage ?? []) : []));
+    if (res.variants.length === 0) return res.shared?.doc.damage ?? [];
+    const sharedRef = res.shared?.doc.damage;
+    const out: NonNullable<PowerDocument['damage']> = [];
+    let includedShared = false;
+    for (const v of res.variants) {
+      const d = v.doc.damage;
+      if (!hasDamage(d)) continue;
+      if (sharedRef && d === sharedRef) {
+        if (includedShared) continue;
+        includedShared = true;
+      }
+      out.push(...(d ?? []));
+    }
+    return out;
   }
   const picked = selectedResolvedVariant(res);
   if (picked) return picked.doc.damage ?? [];

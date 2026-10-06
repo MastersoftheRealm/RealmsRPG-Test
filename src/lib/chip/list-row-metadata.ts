@@ -61,6 +61,8 @@ export type MetadataDetailSection = {
   labelHelpKey?: PartsPropertiesHelpKey | undefined;
   /** Plain-text InfoTippy beside the label when no `labelHelpKey` applies (power variant rules). */
   labelHelp?: string | undefined;
+  /** Polite live region when a selectable chip in this section is current (86e3kfkbx). */
+  liveAnnouncement?: string | undefined;
 };
 
 export const PARTS_PROFICIENCIES_LABEL = 'Parts & Proficiencies';

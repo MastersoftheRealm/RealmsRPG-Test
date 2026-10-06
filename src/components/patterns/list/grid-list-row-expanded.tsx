@@ -162,6 +162,11 @@ export function GridListRowExpandedBody({
               : section.labelHelp || null;
             return (
               <div key={sectionIdx} className={cn('space-y-3', sectionIdx > 0 && 'mt-4')}>
+                {section.liveAnnouncement ? (
+                  <span className="sr-only" aria-live="polite">
+                    {section.liveAnnouncement}
+                  </span>
+                ) : null}
                 {showLabel && (
                   <DetailSectionLabel
                     label={section.label}
