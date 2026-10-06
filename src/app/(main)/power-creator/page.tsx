@@ -34,10 +34,10 @@ import {
 } from '@/components/creator';
 import { LoadingState, TabContentPanel, useTabGroup } from '@/components/ui';
 import {
-  formatEnergyNumber,
+  formatEnergyStat,
   formatPowerCompositionSummary,
-  POWER_COMPOSITION_STRUCTURE_LABELS,
-  type PowerCompositionResolution,
+  powerCompositionEnergyLines,
+  powerCreatorSaveBlockReason,
 } from '@/lib/calculators';
 import { PowerCreatorCompositionBand } from './power-creator-composition-band';
 import {
@@ -76,7 +76,6 @@ import {
   resolveCreatorSaveTargetFromItem,
 } from '@/lib/library/catalog-listing';
 
-/** Summary lines: each variant's energy, the Reverse discount, and how the structure combines them. */
 function inheritField(
   overridden: boolean,
   label: string,
@@ -84,44 +83,6 @@ function inheritField(
   onUseShared: () => void,
 ): InheritedField {
   return { overridden, label, onOverride, onUseShared };
-}
-
-function variantEnergyLines(res: PowerCompositionResolution): string[] {
-  const lines = res.variants.map((v) => {
-    if (res.structure === 'randomize') {
-      const sign = v.polarity === 'negative' ? '−' : '+';
-      const faces = res.die?.sides ?? Math.max(1, v.faces.length);
-      return `${v.label}: ${sign}${v.energy} EN × ${v.faces.length}/${faces}`;
-    }
-    if (res.structure === 'modify' && v.energy === 0) return `${v.label}: nothing added`;
-    if (res.structure === 'modify') return `${v.label}: extra ${v.energy} EN`;
-    return `${v.label}: ${v.energy} EN`;
-  });
-  if (res.structure === 'randomize' && res.shared) {
-    lines.unshift(`Shared chassis: ${res.shared.display.energy} EN`);
-  }
-  const rule: Partial<Record<PowerCompositionResolution['structure'], string>> = {
-    choice: 'Choice pays the most expensive portion',
-    modify: 'Shared is paid once; each piece adds only its extra',
-    alternate: 'Alternate pays the selected variant',
-    randomize:
-      'Shared plus each good face’s extra cost times its chance, minus half each drawback times its chance',
-  };
-  const ruleText = rule[res.structure];
-  if (ruleText) {
-    lines.push(`${ruleText}: ${formatEnergyNumber(res.structureEnergy)} EN`);
-  }
-  if (res.reverse) {
-    lines.push(
-      `Reverse drawback ${res.reverse.energy} EN → −${formatEnergyNumber(res.reverse.discount)} EN`,
-    );
-  }
-  const totalLabel =
-    res.structure === 'none'
-      ? 'Total'
-      : `${POWER_COMPOSITION_STRUCTURE_LABELS[res.structure]} total`;
-  lines.push(`${totalLabel}: ${res.energy} EN`);
-  return lines;
 }
 
 function PowerCreatorContent() {
@@ -408,6 +369,12 @@ function PowerCreatorWorkspace({
       }}
       saving={ws.save.saving}
       saveDisabled={!ws.name.trim() || ws.dieIncomplete || ws.reverseIncomplete}
+      saveDisabledReason={
+        powerCreatorSaveBlockReason({
+          composition: ws.variants.composition,
+          reverseIncomplete: ws.reverseIncomplete,
+        }) ?? undefined
+      }
       aboveGrid={
         <PowerCreatorCompositionBand
           state={ws.variants}
@@ -458,7 +425,7 @@ function PowerCreatorWorkspace({
           costStats={[
             {
               label: 'Energy Cost',
-              value: composed ? composed.res.energy : ws.costs.totalEnergy,
+              value: formatEnergyStat(composed ? composed.res.energy : ws.costs.totalEnergy),
               icon: <Zap className="h-6 w-6" />,
               color: 'energy',
               help: <PowerCreatorHelp topic="energy" tone="current" />,
@@ -494,7 +461,7 @@ function PowerCreatorWorkspace({
           ]}
           breakdowns={[
             ...(composed
-              ? [{ title: 'Variant Energy', items: variantEnergyLines(composed.res) }]
+              ? [{ title: 'Variant Energy', items: powerCompositionEnergyLines(composed.res) }]
               : []),
             ...((composed ? composed.res.tpSources : ws.costs.tpSources).length > 0
               ? [

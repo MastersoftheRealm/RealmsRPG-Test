@@ -572,7 +572,7 @@ Combined innate Energy across all innate powers must stay within **Innate Energy
 
 Built into the Power Creator (replaces the Choice, Split Power Parts into Groups, Randomize, and Reverse Effects mechanic parts on new powers). The things you switch between are **variants** (not "options", which are part option levels).
 
-A power or technique's final Energy is rounded up once and is never less than **1 EN**. That floor is on the finished cost, not a base cost.
+A power or technique's final Energy is rounded up once. When it has at least one costed part, that total is never less than **1 EN**. A power or technique with no costed parts has no Energy cost. The floor is on the finished cost, not a base cost.
 
 | Structure | What the variants are | Energy |
 |-----------|----------------------|--------|

@@ -77,6 +77,8 @@ export type CreatorPageShellProps = {
   onSaveTargetChange: (target: CreatorSaveTarget) => void;
   saving: boolean;
   saveDisabled?: boolean | undefined;
+  /** Shown beside Save and linked with aria-describedby while Save is disabled. */
+  saveDisabledReason?: string | undefined;
   /** Unauthenticated save handler — shell gates login */
   onSave: () => void | Promise<void>;
   onReset: () => void;
@@ -116,6 +118,7 @@ export function CreatorPageShell({
   onSaveTargetChange,
   saving,
   saveDisabled = false,
+  saveDisabledReason,
   onSave,
   onReset,
   onLoad,
@@ -196,6 +199,7 @@ export function CreatorPageShell({
           onReset={onReset}
           saving={saving}
           saveDisabled={saveDisabled || !!loading?.isLoading}
+          saveDisabledReason={saveDisabledReason}
           showSaveTarget={showSaveTarget}
           user={user}
           requireAuthToLoad={requireAuthToLoad}

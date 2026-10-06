@@ -65,9 +65,10 @@ export function calculateEmpoweredTechniqueCosts(
   // Empowered rule: technique percentage mechanics also scale the power side.
   const adjustedPowerEnergyRaw = powerCosts.energyRaw * techniquePercentageMultiplier;
   const energyRaw = adjustedPowerEnergyRaw + techniqueCosts.energyRaw;
+  const hasCostedParts = powerCosts.hasCostedParts || techniqueCosts.hasCostedParts;
 
   return {
-    totalEnergy: finalizePowerEnergy(energyRaw),
+    totalEnergy: finalizePowerEnergy(energyRaw, hasCostedParts),
     totalTP: powerCosts.totalTP + techniqueCosts.totalTP,
     tpSources: [
       ...powerCosts.tpSources.map((src) => `[Power] ${src}`),

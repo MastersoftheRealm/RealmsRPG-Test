@@ -17,7 +17,7 @@ A power is one chassis (one `duration`, `range`, `area`, `damage[]`, `parts[]`) 
    - `reverse?`: drawback spec (its own `parts`, optional `duration`/`damage`).
    - `die?` (randomize only): `{ sides, faces: variantId[] }`, `faces.length === sides`; sides ∈ 2, 4, 6, 8, 10, 12, 20, 100.
 2. **Overlay.** Choice / Modify / Randomize: the top-level power is the shared chassis; a variant field that is set replaces the shared field; variant parts are appended. Alternate: each variant is a full power (no inheritance); top-level mirrors variant 1 for legacy readers.
-3. **Cost** (`src/lib/calculators/power-composition.ts`, ADR-0010 layer). Energies stay raw until one round-up at the end. Every power and technique floors at **1 EN** after that round-up (`finalizePowerEnergy`).
+3. **Cost** (`src/lib/calculators/power-composition.ts`, ADR-0010 layer). Energies stay raw until one round-up at the end. When a power or technique has at least one costed part, it floors at **1 EN** after that round-up (`finalizePowerEnergy`). With no costed parts the published cost is empty (a dash), not 1 EN.
    - **Choice** = the most expensive of (Shared plus that portion).
    - **Alternate** = the selected variant.
    - **Modify** = Shared once, at Shared's own settings, plus each piece's extra: the cost of Shared's parts and damage together with the piece's parts and damage, at the piece's duration and settings, minus Shared's parts and damage at those same settings. An empty piece, or a piece that only changes a setting, adds 0. Shared's range, area, and parts are not billed again per piece.

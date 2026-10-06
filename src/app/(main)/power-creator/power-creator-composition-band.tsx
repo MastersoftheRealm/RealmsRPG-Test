@@ -215,6 +215,7 @@ function RandomizeDieFields({ state }: { state: PowerCreatorCompositionState }) 
     ...state.variants.map((v) => ({ value: v.id, label: v.label.trim() || v.id })),
   ];
   const unassigned = state.dieFaces.filter((f) => !state.variants.some((v) => v.id === f)).length;
+  const faceless = state.variants.filter((v) => !state.dieFaces.includes(v.id));
   return (
     <fieldset className="mt-4 min-w-0 border-t border-border-light pt-4">
       <legend className="sr-only">Randomize die</legend>
@@ -246,6 +247,12 @@ function RandomizeDieFields({ state }: { state: PowerCreatorCompositionState }) 
         <p className="mt-2 text-sm text-warning-fg" role="status">
           {unassigned} {unassigned === 1 ? 'face has' : 'faces have'} no variant. Assign every face
           to save.
+        </p>
+      ) : null}
+      {faceless.length > 0 ? (
+        <p className="mt-2 text-sm text-warning-fg" role="status">
+          {faceless.map((v) => v.label.trim() || v.id).join(', ')}{' '}
+          {faceless.length === 1 ? 'has' : 'have'} no die face. Give every variant a face to save.
         </p>
       ) : null}
     </fieldset>

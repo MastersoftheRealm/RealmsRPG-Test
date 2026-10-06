@@ -10,6 +10,7 @@ import {
   composedPowerDamage,
   formatPowerDamage,
   POWER_COMPOSITION_STRUCTURE_LABELS,
+  reverseDiscountApplied,
   type PowerCompositionResolution,
   type ResolvedPowerVariant,
 } from '@/lib/calculators';
@@ -55,9 +56,12 @@ function powerVariantChipDescription(
 ): string {
   const lines: string[] = [];
   if (res.structure === 'randomize') {
-    const sign = v.polarity === 'negative' ? '−' : '+';
+    const shown =
+      v.energy < 0 || (v.energy === 0 && v.polarity === 'negative')
+        ? `−${formatCost(Math.abs(v.energy))}`
+        : `+${formatCost(v.energy)}`;
     lines.push(
-      `${formatFaces(v.faces)} · ${v.polarity === 'negative' ? 'Negative' : 'Positive'} (${sign}${v.energy} EN)`,
+      `${formatFaces(v.faces)} · ${v.polarity === 'negative' ? 'Negative' : 'Positive'} (${shown} EN)`,
     );
   } else {
     lines.push(`${v.energy} Energy`);
@@ -88,7 +92,7 @@ export function buildPowerVariantChips(
     const isCurrent =
       res.structure !== 'modify' && !!res.selectedVariantId && v.id === res.selectedVariantId;
     if (res.structure === 'modify') {
-      return { name: v.label, description } satisfies ChipData;
+      return { name: v.label, description, chipKey: v.id } satisfies ChipData;
     }
     if (isCurrent && select) {
       return {
@@ -96,6 +100,7 @@ export function buildPowerVariantChips(
         description,
         category: 'success',
         kind: 'descriptor',
+        chipKey: v.id,
         current: true,
         onSelect: () => select.onSelectVariant(v.id),
         selectAriaLabel: `Using ${v.label} for ${select.powerName}`,
@@ -107,16 +112,18 @@ export function buildPowerVariantChips(
         description,
         category: 'success',
         kind: 'descriptor',
+        chipKey: v.id,
         current: true,
       } satisfies ChipData;
     }
     if (!select) {
-      return { name: v.label, description, kind: 'descriptor' } satisfies ChipData;
+      return { name: v.label, description, kind: 'descriptor', chipKey: v.id } satisfies ChipData;
     }
     return {
       name: v.label,
       description,
       kind: 'descriptor',
+      chipKey: v.id,
       onSelect: () => select.onSelectVariant(v.id),
       selectAriaLabel: `Use ${v.label} for ${select.powerName}`,
     } satisfies ChipData;
@@ -164,7 +171,11 @@ export function withPowerReverseNote(
     .filter((n): n is string => !!n);
   const damage = formatPowerDamage(res.reverse.doc.damage);
   const list = [...new Set([...drawbacks, ...(damage ? [damage] : [])])].join(', ');
-  const note = `Reverse Effects${list ? ` (${list})` : ''}: always applies and cannot be nullified or reduced by you or an ally; reduces the cost by ${formatCost(res.reverse.discount)} EN (50% of the drawback's ${res.reverse.energy} EN).`;
+  const { applied, limitedByFloor } = reverseDiscountApplied(res);
+  const reduction = limitedByFloor
+    ? `reduces the cost by ${formatCost(applied)} EN. Half the drawback is ${formatCost(res.reverse.discount)} EN, and the 1 EN floor means only ${formatCost(applied)} EN comes off`
+    : `reduces the cost by ${formatCost(applied)} EN (50% of the drawback's ${res.reverse.energy} EN)`;
+  const note = `Reverse Effects${list ? ` (${list})` : ''}: always applies and cannot be nullified or reduced by you or an ally; ${reduction}.`;
   return base ? `${base} ${note}` : note;
 }
 

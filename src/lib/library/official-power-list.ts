@@ -151,7 +151,7 @@ export function officialPowerDetailSections(row: OfficialPowerRow) {
 export function officialPowerRowColumns(row: OfficialPowerRow): ColumnValue[] {
   const values: Record<string, string | number> = {
     category: row.category || '-',
-    energy: row.energy ?? '-',
+    energy: row.energy ? row.energy : '-',
     action: row.action || '-',
     duration: row.duration || '-',
     range: row.range || '-',

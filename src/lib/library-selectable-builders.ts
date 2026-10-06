@@ -300,7 +300,7 @@ export function getPowerTechniqueBudgetColumns(facts: PowerTechniqueBudgetFacts)
     { key: 'action', value: facts.actionType || '—', align: 'center' },
     {
       key: 'energy',
-      value: facts.energy != null ? String(facts.energy) : '—',
+      value: facts.energy ? String(facts.energy) : '—',
       align: 'center',
     },
     { key: 'tp', value: String(facts.tp), align: 'center' },
@@ -479,7 +479,7 @@ export function getItemColumns(
   if (itemType === 'power') {
     const values: Record<string, string> = powerDisplay
       ? {
-          Energy: String(powerDisplay.energy ?? '-'),
+          Energy: powerDisplay.energy ? String(powerDisplay.energy) : '-',
           Action: powerDisplay.actionType || '-',
           Duration: powerDisplay.duration || '-',
           Damage: powerDisplay.damage || '-',
@@ -505,7 +505,7 @@ export function getItemColumns(
     const values: Record<string, string> = techniqueDisplay
       ? {
           Action: techniqueDisplay.actionType || '-',
-          Energy: String(techniqueDisplay.energy),
+          Energy: techniqueDisplay.energy ? String(techniqueDisplay.energy) : '-',
           Attack: techniqueDisplay.weaponName || '-',
           'Training Pts': String(techniqueDisplay.tp),
         }

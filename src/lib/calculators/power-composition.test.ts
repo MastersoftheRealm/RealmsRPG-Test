@@ -14,7 +14,10 @@ import {
   composedPowerDurationLabel,
   isRandomizeDieComplete,
   normalizePowerComposition,
+  powerCompositionEnergyLines,
+  powerCreatorSaveBlockReason,
   resolvePowerComposition,
+  reverseDiscountApplied,
 } from './power-composition';
 
 function part(p: Partial<PowerPart> & Pick<PowerPart, 'id' | 'name'>): PowerPart {
@@ -509,6 +512,10 @@ describe('resolvePowerComposition', () => {
     )!;
     expect(res.reverse?.energy).toBeGreaterThan(res.structureEnergy * 2);
     expect(res.energy).toBe(1);
+    const applied = reverseDiscountApplied(res);
+    expect(applied.limitedByFloor).toBe(true);
+    expect(applied.applied).toBe(res.energyBeforeReverse - 1);
+    expect(powerCompositionEnergyLines(res).some((line) => line.includes('1 EN floor'))).toBe(true);
   });
 
   it('Modify damage lists Shared once, then each piece’s own rows (86e3kfkbt)', () => {
@@ -547,9 +554,29 @@ describe('resolvePowerComposition', () => {
       partsDb,
     )!;
     expect(composedPowerDamage(mixed)).toEqual([
+      { amount: 1, size: 4, type: 'fire' },
       { amount: 1, size: 6, type: 'fire' },
       { amount: 1, size: 8, type: 'ice' },
       { amount: 1, size: 4, type: 'acid' },
+    ]);
+  });
+
+  it('Modify rolls Shared damage together with each piece (review: 2d10 fire + 1d4 ice)', () => {
+    const res = resolvePowerComposition(
+      {
+        name: 'Shared plus piece',
+        actionType: 'basic',
+        damage: [{ amount: 2, size: 10, type: 'fire' }],
+        composition: {
+          structure: 'modify',
+          variants: [{ id: 'ice', label: 'Ice', damage: [{ amount: 1, size: 4, type: 'ice' }] }],
+        },
+      },
+      partsDb,
+    )!;
+    expect(composedPowerDamage(res)).toEqual([
+      { amount: 2, size: 10, type: 'fire' },
+      { amount: 1, size: 4, type: 'ice' },
     ]);
   });
 
@@ -573,6 +600,28 @@ describe('resolvePowerComposition', () => {
     const rolled = resolvePowerComposition(doc, partsDb, { selectedVariantId: 'b' })!;
     expect(rolled.selectedVariantId).toBe('b');
     expect(composedPowerDamage(rolled)).toEqual([{ amount: 2, size: 6, type: 'lightning' }]);
+
+    const badDoc: PowerDocument = {
+      ...doc,
+      composition: {
+        structure: 'randomize',
+        variants: [
+          { id: 'a', label: 'Out A', damage: [{ amount: 1, size: 6, type: 'fire' }] },
+          {
+            id: 'b',
+            label: 'Out B',
+            polarity: 'negative',
+            damage: [{ amount: 1, size: 4, type: 'poison' }],
+          },
+        ],
+        die: { sides: 2, faces: ['a', 'b'] },
+      },
+    };
+    const bad = resolvePowerComposition(badDoc, partsDb, { selectedVariantId: 'b' })!;
+    expect(composedPowerDamage(bad)).toEqual([
+      { amount: 1, size: 4, type: 'magic' },
+      { amount: 1, size: 4, type: 'poison' },
+    ]);
   });
 
   it('Reverse subtracts 50% of the drawback energy', () => {
@@ -591,6 +640,153 @@ describe('resolvePowerComposition', () => {
     )!;
     expect(res.reverse?.energy).toBe(4);
     expect(res.energy).toBe(Math.ceil(plain - 2));
+  });
+
+  it('a good Randomize face cheaper than Shared shows its negative contribution', () => {
+    const pricingDb: PowerPart[] = [
+      ...partsDb,
+      part({
+        id: String(PART_IDS.POWER_QUICK_OR_FREE_ACTION),
+        name: 'Power Quick or Free Action',
+        mechanic: true,
+        percentage: true,
+        base_en: 1.25,
+        op_1_en: 0.25,
+      }),
+      part({ id: '910', name: 'Boost', base_en: 6 }),
+    ];
+    const res = resolvePowerComposition(
+      {
+        name: 'Cheaper face',
+        actionType: 'free',
+        parts: [{ id: 910, name: 'Boost' }],
+        composition: {
+          structure: 'randomize',
+          variants: [
+            { id: 'cheap', label: 'Basic', actionType: 'basic', isReaction: false },
+            {
+              id: 'bad',
+              label: 'Bad',
+              polarity: 'negative',
+              parts: [{ id: 902, name: 'Blinded' }],
+            },
+          ],
+          die: { sides: 2, faces: ['cheap', 'bad'] },
+        },
+      },
+      pricingDb,
+    )!;
+    // Shared at free = 6 × 1.5 = 9. Basic overlay = 6. Contribution = −3, not +0.
+    expect(res.variants.find((v) => v.id === 'cheap')?.energy).toBe(-3);
+    // Blinded is 4 EN; the face lists half (−2), not the full −4.
+    expect(res.variants.find((v) => v.id === 'bad')?.energy).toBe(-2);
+    expect(res.energy).toBeLessThan(9);
+  });
+
+  it('Randomize breakdown shows raw Shared and the halved drawback (not the 1 EN floor)', () => {
+    const res = resolvePowerComposition(
+      {
+        name: 'Empty chassis',
+        actionType: 'basic',
+        composition: {
+          structure: 'randomize',
+          variants: [
+            { id: 'good', label: 'Good', parts: [{ id: 901, name: 'Slow' }] },
+            {
+              id: 'bad',
+              label: 'Bad',
+              polarity: 'negative',
+              parts: [{ id: 902, name: 'Blinded' }],
+            },
+          ],
+          die: { sides: 2, faces: ['good', 'bad'] },
+        },
+      },
+      partsDb,
+    )!;
+    const lines = powerCompositionEnergyLines(res);
+    expect(lines[0]).toBe('Shared chassis: 0 EN');
+    expect(lines.some((line) => line.startsWith('Bad: −2 EN'))).toBe(true);
+    expect(lines.some((line) => line.includes('−4'))).toBe(false);
+    expect(res.shared?.display.energy).toBe(0);
+  });
+
+  it('an empty power publishes no energy (the 1 EN floor needs a costed part)', () => {
+    expect(derivePlainPowerDisplay({ name: 'Blank', actionType: 'basic' }, partsDb).energy).toBe(0);
+    const composed = resolvePowerComposition(
+      {
+        name: 'Blank choice',
+        actionType: 'basic',
+        composition: { structure: 'choice', variants: [] },
+      },
+      partsDb,
+    )!;
+    expect(composed.energy).toBe(0);
+    expect(powerCompositionEnergyLines(composed).at(-1)).toBe('Choice total: —');
+  });
+
+  it('official-shaped Elemental Burst is 8 EN; damage without range is 6', () => {
+    const liveDb: PowerPart[] = [
+      part({
+        id: String(PART_IDS.ELEMENTAL_DAMAGE),
+        name: 'Elemental Damage',
+        category: 'Damage',
+        mechanic: true,
+        base_en: 3,
+        op_1_en: 1,
+      }),
+      part({
+        id: String(PART_IDS.POWER_RANGE),
+        name: 'Power Range',
+        mechanic: true,
+        base_en: 0.5,
+        op_1_en: 0.5,
+      }),
+    ];
+    const variants = [
+      { id: 'fire', label: 'Fire', damage: d10('fire') },
+      { id: 'ice', label: 'Ice', damage: d10('ice') },
+      { id: 'lightning', label: 'Lightning', damage: d10('lightning') },
+    ];
+    const withRange = resolvePowerComposition(
+      {
+        name: 'Elemental Burst',
+        actionType: 'basic',
+        range: { steps: 3 },
+        composition: { structure: 'choice', variants },
+      },
+      liveDb,
+    )!;
+    const damageOnly = resolvePowerComposition(
+      {
+        name: 'Elemental Burst',
+        actionType: 'basic',
+        composition: { structure: 'choice', variants },
+      },
+      liveDb,
+    )!;
+    // 9 spaces (3 steps) is 1.5 EN. 1d10 is 6 EN. 7.5 rounds up to 8.
+    expect(withRange.energy).toBe(8);
+    expect(damageOnly.energy).toBe(6);
+  });
+
+  it('names the Randomize save block when a variant has no face', () => {
+    const reason = powerCreatorSaveBlockReason({
+      composition: {
+        structure: 'randomize',
+        variants: [
+          { id: 'a', label: 'Alt A' },
+          { id: 'b', label: 'Alt B' },
+        ],
+        die: { sides: 2, faces: ['a', 'a'] },
+      },
+    });
+    expect(reason).toContain('Alt B has no die face');
+    expect(
+      powerCreatorSaveBlockReason({
+        composition: { structure: 'alternate', variants: [{ id: 'a', label: 'A' }] },
+      }),
+    ).toBeNull();
   });
 });
 

@@ -218,7 +218,11 @@ export function CreatureCreatorEditorLoadoutSections({
                     description={power.description}
                     thumbnail={resolveListRowThumbnail('power', power, power.name)}
                     columns={[
-                      { key: 'Energy', value: power.energy ?? '-', align: 'center' as const },
+                      {
+                        key: 'Energy',
+                        value: power.energy ? power.energy : '-',
+                        align: 'center' as const,
+                      },
                       { key: 'Action', value: power.action ?? '-', align: 'center' as const },
                       { key: 'Damage', value: power.damage ?? '-', align: 'center' as const },
                       { key: 'Area', value: power.area ?? '-', align: 'center' as const },
@@ -310,7 +314,11 @@ export function CreatureCreatorEditorLoadoutSections({
                     name={tech.name}
                     thumbnail={resolveListRowThumbnail('technique', tech, tech.name)}
                     columns={[
-                      { key: 'Energy', value: tech.energy ?? '-', align: 'center' as const },
+                      {
+                        key: 'Energy',
+                        value: tech.energy ? tech.energy : '-',
+                        align: 'center' as const,
+                      },
                       { key: 'Weapon', value: tech.weapon ?? '-', align: 'center' as const },
                       { key: 'Training Pts', value: tech.tp ?? '-', align: 'center' as const },
                     ]}

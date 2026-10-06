@@ -199,7 +199,13 @@ function buildEnergyButton(
   id: string | number,
   variant: 'primary' | 'success',
 ): ReactNode {
-  if (energyCost < 1) return null;
+  if (energyCost < 1) {
+    return (
+      <span className="text-sm text-text-secondary" aria-label="No energy cost">
+        —
+      </span>
+    );
+  }
 
   if (onUse) {
     return (
@@ -272,10 +278,7 @@ export function mapPowerRows(
     );
     const composition = display.composition;
     const pickedVariant = composition ? selectedResolvedVariant(composition) : null;
-    const energyCost = Math.max(
-      1,
-      typeof display.energy === 'number' && display.energy > 0 ? display.energy : (power.cost ?? 1),
-    );
+    const energyCost = display.energy > 0 ? display.energy : 0;
     const canUse = ctx.currentEnergy !== undefined && ctx.currentEnergy >= energyCost;
     const partChips = composition
       ? partChipsFromDisplay(display.partChips)
@@ -433,10 +436,7 @@ export function mapTechniqueRows(
       }),
       ctx.techniquePartsDb as TechniquePart[],
     );
-    const energyCost = Math.max(
-      1,
-      typeof display.energy === 'number' && display.energy > 0 ? display.energy : (tech.cost ?? 1),
-    );
+    const energyCost = display.energy > 0 ? display.energy : 0;
     const canUse = ctx.currentEnergy !== undefined && ctx.currentEnergy >= energyCost;
     const partChips = partDataToChips(
       partsToPartData(tech.parts, ctx.techniquePartsDb, 'technique'),

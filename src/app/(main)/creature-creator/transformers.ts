@@ -176,7 +176,7 @@ export function transformUserPowerToDisplayItem(
     : power.description;
 
   const stats: ItemStat[] = [
-    { label: 'Energy', value: display.energy ?? '-' },
+    { label: 'Energy', value: display.energy ? display.energy : '-' },
     { label: 'Action', value: display.actionType },
     { label: 'Damage', value: damageStr || '-' },
     { label: 'Area', value: display.area && display.area !== '-' ? display.area : '-' },

@@ -139,7 +139,7 @@ export function officialTechniqueDetailSections(row: OfficialTechniqueRow) {
 export function officialTechniqueRowColumns(row: OfficialTechniqueRow): ColumnValue[] {
   const values: Record<string, string | number> = {
     category: row.category || '-',
-    energy: row.energy ?? '-',
+    energy: row.energy ? row.energy : '-',
     tp: row.tp,
     action: row.action || '-',
     weapon: row.weapon || '-',

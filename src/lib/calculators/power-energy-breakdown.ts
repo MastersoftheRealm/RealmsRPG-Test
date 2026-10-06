@@ -253,8 +253,10 @@ function buildTotalsGroup(analysis: PowerEnergyAnalysis): PowerAdvancedCalcGroup
     });
   }
 
-  const needsRoundUp = totalEnergy > 0 && !nearlyEqual(energyRaw, totalEnergy) && energyRaw > 0;
-  const clampedToMinimum = energyRaw < 1;
+  const hasCostedParts = lines.length > 0;
+  const needsRoundUp =
+    hasCostedParts && totalEnergy > 0 && !nearlyEqual(energyRaw, totalEnergy) && energyRaw > 0;
+  const clampedToMinimum = hasCostedParts && energyRaw < 1;
 
   if (clampedToMinimum) {
     rows.push({ label: 'Combined Energy', value: formatEnergyNumber(energyRaw) });
@@ -267,7 +269,10 @@ function buildTotalsGroup(analysis: PowerEnergyAnalysis): PowerAdvancedCalcGroup
     rows.push({ label: 'Rounded Up', value: formatEnergyNumber(totalEnergy) });
   }
 
-  rows.push({ label: 'Energy Cost', value: formatEnergyNumber(totalEnergy) });
+  rows.push({
+    label: 'Energy Cost',
+    value: hasCostedParts ? formatEnergyNumber(totalEnergy) : '—',
+  });
 
   return { title: 'Combined Energy', rows };
 }

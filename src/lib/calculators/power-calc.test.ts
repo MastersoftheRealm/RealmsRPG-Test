@@ -316,7 +316,9 @@ describe('finalizePowerEnergy', () => {
     expect(finalizePowerEnergy(-30)).toBe(1);
     expect(finalizePowerEnergy(0.1)).toBe(1);
     expect(finalizePowerEnergy(8.25)).toBe(9);
-    expect(calculatePowerCosts([], [elementalDamagePart]).totalEnergy).toBe(1);
+    expect(finalizePowerEnergy(0, false)).toBe(0);
+    expect(calculatePowerCosts([], [elementalDamagePart]).totalEnergy).toBe(0);
+    expect(calculatePowerCosts([], [elementalDamagePart]).hasCostedParts).toBe(false);
   });
 });
 

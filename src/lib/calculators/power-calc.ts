@@ -74,6 +74,8 @@ export interface PowerEnergyAnalysis {
   hasDurationParts: boolean;
   energyRaw: number;
   totalEnergy: number;
+  /** False when nothing resolved into the cost equation. The 1 EN floor does not apply. */
+  hasCostedParts: boolean;
 }
 
 export interface PowerCostResult {
@@ -83,6 +85,8 @@ export interface PowerCostResult {
   tpRaw: number;
   tpSources: string[];
   energyRaw: number;
+  /** False when nothing resolved into the cost equation. The 1 EN floor does not apply. */
+  hasCostedParts: boolean;
 }
 
 export interface PowerDisplayData {
@@ -137,9 +141,19 @@ function partEnergyContribution(def: PowerPart, l1: number, l2: number, l3: numb
   );
 }
 
-/** Final published Energy: round up once, never below 1. */
-export function finalizePowerEnergy(raw: number): number {
+/**
+ * Final published Energy: round up once.
+ * The 1 EN floor applies only when at least one part resolved into the cost.
+ * An empty power or technique (no costed parts) publishes 0, which the UI shows as a dash.
+ */
+export function finalizePowerEnergy(raw: number, hasCostedParts = true): number {
+  if (!hasCostedParts) return 0;
   return Math.max(1, Math.ceil(raw - 1e-9));
+}
+
+/** Sidebar / column energy. 0 (no costed parts) is a dash. */
+export function formatEnergyStat(energy: number): string | number {
+  return energy < 1 ? '—' : energy;
 }
 
 // =============================================================================
@@ -201,7 +215,8 @@ export function analyzePowerEnergy(
 
   const energyRaw =
     flat_normal * perc_all + (dur_all + 1) * flat_duration * perc_dur - flat_duration * perc_dur;
-  const totalEnergy = finalizePowerEnergy(energyRaw);
+  const hasCostedParts = lines.length > 0;
+  const totalEnergy = finalizePowerEnergy(energyRaw, hasCostedParts);
 
   return {
     lines,
@@ -213,6 +228,7 @@ export function analyzePowerEnergy(
     hasDurationParts,
     energyRaw,
     totalEnergy,
+    hasCostedParts,
   };
 }
 
@@ -255,6 +271,7 @@ export function calculatePowerCosts(
 
   return {
     totalEnergy: energy.totalEnergy,
+    hasCostedParts: energy.hasCostedParts,
     totalTP,
     tpRaw,
     tpSources,

@@ -49,6 +49,8 @@ export interface TechniqueCostResult {
   totalTP: number;
   tpSources: string[];
   energyRaw: number;
+  /** False when nothing resolved into the cost equation. The 1 EN floor does not apply. */
+  hasCostedParts: boolean;
 }
 
 export interface TechniqueDisplayData {
@@ -182,6 +184,7 @@ export function calculateTechniqueCosts(
   let sumNonPercentage = 0;
   let productPercentage = 1;
   let totalTP = 0;
+  let hasCostedParts = false;
   const tpSources: string[] = [];
 
   const uniqueParts = dedupeSavedParts(partsPayload);
@@ -192,6 +195,7 @@ export function calculateTechniqueCosts(
       name: pl.name ?? pl.part?.name,
     });
     if (!def) return;
+    hasCostedParts = true;
 
     const l1 = pl.op_1_lvl || 0;
     const l2 = pl.op_2_lvl || 0;
@@ -226,8 +230,8 @@ export function calculateTechniqueCosts(
   });
 
   const energyRaw = sumNonPercentage * productPercentage;
-  const totalEnergy = finalizePowerEnergy(energyRaw);
-  return { totalEnergy, totalTP, tpSources, energyRaw };
+  const totalEnergy = finalizePowerEnergy(energyRaw, hasCostedParts);
+  return { totalEnergy, totalTP, tpSources, energyRaw, hasCostedParts };
 }
 
 // =============================================================================

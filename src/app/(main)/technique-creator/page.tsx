@@ -27,6 +27,7 @@ import {
 } from '@/hooks';
 import { useAuthStore } from '@/stores';
 import { LoadingState } from '@/components/ui';
+import { formatEnergyStat } from '@/lib/calculators';
 import {
   CreatorPageShell,
   AdvancedCalculationsPanel,
@@ -190,7 +191,7 @@ function TechniqueCreatorWorkspace({
           costStats={[
             {
               label: 'Energy Cost',
-              value: ws.costs.totalEnergy,
+              value: formatEnergyStat(ws.costs.totalEnergy),
               icon: <Zap className="h-6 w-6" />,
               color: 'energy',
             },

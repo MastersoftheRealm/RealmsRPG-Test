@@ -45,6 +45,8 @@ describe('buildPowerVariantChips', () => {
     });
     expect(chips.map((c) => c.name)).toEqual(['Fire', 'Ice']);
     expect(chips[1]?.current).toBe(true);
+    expect(chips[0]?.chipKey).toBe('fire');
+    expect(chips[1]?.chipKey).toBe('ice');
     expect(chips[1]?.onSelect).toEqual(expect.any(Function));
     chips[0]?.onSelect?.();
     expect(onSelectVariant).toHaveBeenCalledWith('fire');

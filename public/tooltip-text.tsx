@@ -665,7 +665,9 @@ export const powerCreatorStructureHelp = (
 export const powerCreatorReverseHelp = (
   <div>
     If the power benefits you or an ally, add a drawback on the Reverse tab. The drawback reduces
-    the cost by 50% of its own energy and cannot be nullified or reduced by you or an ally.
+    the cost by 50% of its own energy and cannot be nullified or reduced by you or an ally. Once
+    the power has a costed part, the 1 EN floor still applies, so the discount cannot drop the
+    cost below 1 EN.
   </div>
 );
 

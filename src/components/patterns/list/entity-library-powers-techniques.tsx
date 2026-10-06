@@ -38,7 +38,7 @@ export function powerListFactCells(
     (col) => col.key !== 'name',
   );
   const values: Record<string, string | number> = {
-    energy: row.energyCost ?? '-',
+    energy: row.energyCost ? row.energyCost : '-',
     action: row.actionType ?? '-',
     duration: row.duration ?? '-',
     area: row.area ?? '-',
@@ -210,7 +210,11 @@ export function TechniquesListSection({
                   }
                   return [
                     { key: 'action', value: row.actionType ?? '-', align: 'center' as const },
-                    { key: 'energy', value: row.energyCost ?? '-', align: 'center' as const },
+                    {
+                      key: 'energy',
+                      value: row.energyCost ? row.energyCost : '-',
+                      align: 'center' as const,
+                    },
                     { key: 'weapon', value: row.weaponName ?? '-', align: 'center' as const },
                     { key: 'tp', value: row.tp ?? '-', align: 'center' as const },
                   ];

@@ -20,6 +20,7 @@ import {
 import {
   derivePowerDisplay,
   deriveStructuredDuration,
+  finalizePowerEnergy,
   type PowerDocument,
 } from '@/lib/calculators/power-calc';
 import {
@@ -426,7 +427,12 @@ function snapshotComposedPowerForInnate(
   if (res.structure === 'alternate' && res.variants.length > 0) {
     const alternates = res.variants.map((v) => {
       const energy =
-        res.reverse != null ? Math.max(1, Math.ceil(v.energy - res.reverse.discount)) : v.energy;
+        res.reverse != null
+          ? finalizePowerEnergy(
+              v.energy - res.reverse.discount,
+              v.energy > 0 || res.reverse.energy > 0,
+            )
+          : v.energy;
       return castSnapshot(
         `${id}:${v.id}`,
         `${name ?? id} (${v.label})`,

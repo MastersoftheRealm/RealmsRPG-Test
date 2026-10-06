@@ -61,14 +61,14 @@ describe('mapPowerRows / mapTechniqueRows — Energy is rightSlot only (TASK-502
     expect(row.rightSlot).toBeTruthy();
   });
 
-  it('a stored cost of 0 still shows a 1 EN spend control', () => {
+  it('a power with no costed parts shows a dash instead of a 1 EN spend control', () => {
     const powers: CharacterPower[] = [
       { id: 'innate', name: 'Innate', cost: 0, innate: true } as CharacterPower,
     ];
     const row = defined(mapPowerRows(powers, baseCtx)[0]);
-    const slot = row.rightSlot as { props?: { displayValue?: string; value?: number } } | null;
-    expect(slot?.props?.displayValue).toBe('1');
-    expect(slot?.props?.value).toBe(1);
+    const slot = row.rightSlot as { props?: { 'aria-label'?: string; children?: string } } | null;
+    expect(slot?.props?.['aria-label']).toBe('No energy cost');
+    expect(slot?.props?.children).toBe('—');
   });
 
   it('view-only (no onUse): still renders disabled spend chrome, not a static column', () => {
