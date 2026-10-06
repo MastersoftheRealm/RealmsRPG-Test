@@ -14,6 +14,7 @@ import {
   composedPowerDurationLabel,
   isRandomizeDieComplete,
   normalizePowerComposition,
+  formatPowerCompositionSummary,
   powerCompositionEnergyLines,
   powerCreatorSaveBlockReason,
   resolvePowerComposition,
@@ -516,6 +517,9 @@ describe('resolvePowerComposition', () => {
     expect(applied.limitedByFloor).toBe(true);
     expect(applied.applied).toBe(res.energyBeforeReverse - 1);
     expect(powerCompositionEnergyLines(res).some((line) => line.includes('1 EN floor'))).toBe(true);
+    const summary = formatPowerCompositionSummary(res);
+    expect(summary).toContain(`Reverse −${applied.applied} EN`);
+    expect(summary).not.toContain(`Reverse −${res.reverse!.discount}`);
   });
 
   it('Modify damage lists Shared once, then each piece’s own rows (86e3kfkbt)', () => {

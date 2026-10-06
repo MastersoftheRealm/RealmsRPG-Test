@@ -26,7 +26,7 @@ import {
   nextVariantLabel,
   defaultVariantTabs,
   overlayFlagsForTab,
-  overlayFlagsFromVariants,
+  overlayFlagsFromComposition,
   pruneOverlayFlags,
   setOverlayField,
   specToTabForm,
@@ -56,6 +56,12 @@ type CompositionInit = {
 };
 
 const DEFAULT_DIE_SIDES = 4;
+
+function overlayTabIds(reverseEnabled: boolean, variants: { id: string }[]): string[] {
+  const ids = variants.map((v) => v.id);
+  if (reverseEnabled) ids.push(REVERSE_TAB_ID);
+  return ids;
+}
 
 function tabIdsFor(
   structure: PowerCompositionStructure,
@@ -112,7 +118,7 @@ export function compositionInitFromSaved(
     activeTabId: ids[0] ?? SHARED_TAB_ID,
     dieSides: composition.die?.sides ?? DEFAULT_DIE_SIDES,
     dieFaces: composition.die?.faces ?? [],
-    overlayFlags: overlayFlagsFromVariants(composition.variants),
+    overlayFlags: overlayFlagsFromComposition(composition),
   };
 }
 
@@ -216,12 +222,7 @@ export function usePowerCreatorComposition({
       if (next !== 'none' && variants.length === 0) {
         variants = freshTabs(false);
       }
-      setOverlayByTab((prev) =>
-        pruneOverlayFlags(
-          prev,
-          variants.map((v) => v.id),
-        ),
-      );
+      setOverlayByTab((prev) => pruneOverlayFlags(prev, overlayTabIds(reverseEnabled, variants)));
       if (next === 'randomize' && dieFaces.every((f) => !f)) {
         setDieFaces(spreadDieFaces(dieSides, variants));
       }
@@ -235,10 +236,13 @@ export function usePowerCreatorComposition({
   const setReverseEnabled = useCallback(
     (on: boolean) => {
       setReverseEnabledState(on);
-      if (!on && activeTabId === REVERSE_TAB_ID) {
+      if (!on) {
         const src = collected;
-        const first = tabIdsFor(structure, false, src.variants)[0] ?? SHARED_TAB_ID;
-        commit({ shared: src.shared, variants: src.variants, reverse: src.reverse }, first, src);
+        setOverlayByTab((prev) => pruneOverlayFlags(prev, overlayTabIds(false, src.variants)));
+        if (activeTabId === REVERSE_TAB_ID) {
+          const first = tabIdsFor(structure, false, src.variants)[0] ?? SHARED_TAB_ID;
+          commit({ shared: src.shared, variants: src.variants, reverse: src.reverse }, first, src);
+        }
       }
     },
     [activeTabId, collected, structure, commit],
@@ -272,12 +276,7 @@ export function usePowerCreatorComposition({
     (id: string) => {
       const src = collected;
       const variants = src.variants.filter((v) => v.id !== id);
-      setOverlayByTab((prev) =>
-        pruneOverlayFlags(
-          prev,
-          variants.map((v) => v.id),
-        ),
-      );
+      setOverlayByTab((prev) => pruneOverlayFlags(prev, overlayTabIds(reverseEnabled, variants)));
       setDieFaces((prev) => prev.map((f) => (f === id ? '' : f)));
       const nextActive =
         activeTabId === id

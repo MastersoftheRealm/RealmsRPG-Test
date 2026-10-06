@@ -264,6 +264,19 @@ export function overlayFlagsFromVariants(
   return flags;
 }
 
+/** Variant flags plus the Reverse tab. A removed tab's id is not in this map. */
+export function overlayFlagsFromComposition(composition: {
+  variants: { id: string; overrides?: PowerVariantOverrideField[] | undefined }[];
+  reverse?: { overrides?: PowerVariantOverrideField[] | undefined } | null | undefined;
+}): OverlayFlagMap {
+  const flags = overlayFlagsFromVariants(composition.variants);
+  const overrides = composition.reverse?.overrides;
+  if (!overrides?.length) return flags;
+  flags[REVERSE_TAB_ID] = {};
+  for (const field of overrides) flags[REVERSE_TAB_ID]![field] = true;
+  return flags;
+}
+
 export function overlayFlagsForTab(flags: OverlayFlagMap, tabId: string): Set<OverlayFieldKey> {
   const row = flags[tabId];
   const keep = new Set<OverlayFieldKey>();
@@ -331,11 +344,20 @@ export function buildCompositionPayload(
             ...(overrides.length > 0 ? { overrides } : {}),
           };
         });
-  const reverseOverlay = tabFormToOverlay(c.reverse);
+  const reverseKeep = overlayFlagsForTab(c.overlayFlags ?? {}, REVERSE_TAB_ID);
+  const reverseOverlay = tabFormToOverlay(c.reverse, reverseKeep);
+  const reverseOverrides = [...reverseKeep];
   return {
     structure: c.structure,
     variants,
-    ...(c.reverseEnabled && powerSpecHasContent(reverseOverlay) ? { reverse: reverseOverlay } : {}),
+    ...(c.reverseEnabled && powerSpecHasContent(reverseOverlay)
+      ? {
+          reverse: {
+            ...reverseOverlay,
+            ...(reverseOverrides.length > 0 ? { overrides: reverseOverrides } : {}),
+          },
+        }
+      : {}),
     ...(c.structure === 'randomize' ? { die: { sides: c.dieSides, faces: c.dieFaces } } : {}),
   };
 }

@@ -19,6 +19,7 @@ import {
   derivePlainPowerDisplay,
   deriveStructuredDuration,
   finalizePowerEnergy,
+  formatEnergyStat,
   type DerivePowerDisplayOptions,
   type PartChipData,
   type PowerDisplayData,
@@ -79,7 +80,10 @@ export interface PowerVariant extends PowerVariantSpec {
   overrides?: PowerVariantOverrideField[] | undefined;
 }
 
-export type PowerReverseSpec = PowerVariantSpec;
+export type PowerReverseSpec = PowerVariantSpec & {
+  /** Sticky Override flags for the Reverse tab. Same meaning as `PowerVariant.overrides`. */
+  overrides?: PowerVariantOverrideField[] | undefined;
+};
 
 export interface PowerRandomizeDie {
   sides: number;
@@ -218,7 +222,14 @@ export function normalizePowerComposition(raw: unknown): PowerComposition | null
             ...(overrides ? { overrides } : {}),
           };
         });
-  const reverse = isRecord(raw.reverse) ? pickSpec(raw.reverse) : undefined;
+  let reverse: PowerReverseSpec | undefined;
+  if (isRecord(raw.reverse)) {
+    const overrides = pickOverrides(raw.reverse);
+    reverse = {
+      ...pickSpec(raw.reverse),
+      ...(overrides ? { overrides } : {}),
+    };
+  }
   let die: PowerRandomizeDie | undefined;
   if (structure === 'randomize' && isRecord(raw.die)) {
     const sides = Number(raw.die.sides);
@@ -797,7 +808,8 @@ export function powerCompositionEnergyLines(res: PowerCompositionResolution): st
     res.structure === 'none'
       ? 'Total'
       : `${POWER_COMPOSITION_STRUCTURE_LABELS[res.structure]} total`;
-  lines.push(`${totalLabel}: ${res.energy < 1 ? '—' : `${formatCost(res.energy)} EN`}`);
+  const totalStat = formatEnergyStat(res.energy);
+  lines.push(`${totalLabel}: ${totalStat === '—' ? '—' : `${formatCost(res.energy)} EN`}`);
   return lines;
 }
 
@@ -860,6 +872,9 @@ export function formatPowerCompositionSummary(res: PowerCompositionResolution): 
     parts.push(names ? `${label}: ${names}` : label);
   }
   if (res.die) parts.push(`1d${res.die.sides}`);
-  if (res.reverse) parts.push(`Reverse −${formatCost(res.reverse.discount)} EN`);
+  if (res.reverse) {
+    const { applied } = reverseDiscountApplied(res);
+    parts.push(`Reverse −${formatCost(applied)} EN`);
+  }
   return parts.join(' · ');
 }

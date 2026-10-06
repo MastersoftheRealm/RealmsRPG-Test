@@ -1,13 +1,16 @@
 import { describe, expect, it } from 'vitest';
 import { actionIsOverride, durationIsOverride, rangeIsOverride } from './power-creator-from-shared';
+import { normalizePowerComposition } from '@/lib/calculators';
 import {
   buildCompositionPayload,
   defaultVariantTabs,
   emptyTabForm,
   isOverlayFieldForced,
   nextVariantId,
+  overlayFlagsFromComposition,
   overlayFlagsFromVariants,
   pruneOverlayFlags,
+  REVERSE_TAB_ID,
   setOverlayField,
   showsFieldOverride,
   variantHighWater,
@@ -77,6 +80,44 @@ describe('Modify variant tabs', () => {
     expect(payload?.variants[0]?.damage).toEqual([]);
     expect(payload?.variants[0]?.overrides).toEqual(['damage']);
     expect(overlayFlagsFromVariants(payload?.variants ?? [])).toEqual({ v1: { damage: true } });
+  });
+});
+
+describe('Reverse tab overrides', () => {
+  it('keeps an Instant duration override through save and load', () => {
+    const shared = emptyTabForm();
+    shared.duration = { ...shared.duration, type: 'minutes', value: 1 };
+    const reverse = emptyTabForm();
+    reverse.selectedParts = [
+      {
+        part: { id: '902', name: 'Blinded' },
+        op_1_lvl: 0,
+        op_2_lvl: 0,
+        op_3_lvl: 0,
+        applyDuration: false,
+        selectedCategory: 'any',
+      },
+    ] as typeof reverse.selectedParts;
+    const flags = setOverlayField({}, REVERSE_TAB_ID, 'duration', true);
+    const payload = buildCompositionPayload({
+      structure: 'none',
+      reverseEnabled: true,
+      shared,
+      variants: [],
+      reverse,
+      dieSides: 2,
+      dieFaces: [],
+      overlayFlags: flags,
+    });
+    expect(payload?.reverse?.duration).toMatchObject({ type: 'instant' });
+    expect(payload?.reverse?.overrides).toEqual(['duration']);
+    const loaded = normalizePowerComposition(payload);
+    expect(loaded?.reverse?.duration).toMatchObject({ type: 'instant' });
+    expect(loaded?.reverse?.overrides).toEqual(['duration']);
+    expect(overlayFlagsFromComposition(loaded!)).toEqual({ reverse: { duration: true } });
+    expect(
+      pruneOverlayFlags({ v1: { damage: true }, reverse: { duration: true } }, [REVERSE_TAB_ID]),
+    ).toEqual({ reverse: { duration: true } });
   });
 });
 
