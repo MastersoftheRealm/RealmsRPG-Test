@@ -50,6 +50,18 @@ describe('columnHasDisplayValue / mobile expand facts (TASK-868 / TASK-909)', ()
     ).toEqual(['action', 'damage', 'area', 'duration']);
   });
 
+  it('keeps Damage on the mobile summary when stat-block order puts it past the first three', () => {
+    expect(
+      columnsForMobileSummary([
+        { key: 'energy', value: 8 },
+        { key: 'action', value: 'Basic' },
+        { key: 'duration', value: 'Instant' },
+        { key: 'area', value: '—' },
+        { key: 'damage', value: '1d10 Fire' },
+      ]).map((col) => col.key),
+    ).toEqual(['energy', 'action', 'duration', 'damage']);
+  });
+
   it('omits blank columns from the mobile summary', () => {
     expect(
       columnsForMobileSummary([

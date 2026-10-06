@@ -50,14 +50,21 @@ export function columnHasDisplayValue(col: ColumnValue): boolean {
 
 /** Columns hidden from the mobile grid (`hideOnMobile` default true). Skip blanks
  *  and description teasers (full text is expanded-only, TASK-909). */
+function appendMobileFact(summary: ColumnValue[], visible: ColumnValue[], key: string): void {
+  const col = visible.find((candidate) => candidate.key.trim().toLowerCase() === key);
+  if (col && !summary.includes(col)) summary.push(col);
+}
+
 export function columnsForMobileSummary(columns: ColumnValue[]): ColumnValue[] {
   const visible = columns.filter(
     (col) => col.key !== 'description' && col.hideOnMobile !== false && columnHasDisplayValue(col),
   );
   const summary = visible.slice(0, 3);
-  // Modify joins per-piece durations in this column; keep it when it falls past the first three (86e3kfkca).
-  const duration = visible.find((col) => col.key.trim().toLowerCase() === 'duration');
-  if (duration && !summary.includes(duration)) summary.push(duration);
+  // Duration can fall past the first three after a Modify join (86e3kfkca).
+  // Stat-block order is Energy, Action, Duration, Area, Damage, so Damage is fifth
+  // and would otherwise never show below `lg`, including while the row is expanded.
+  appendMobileFact(summary, visible, 'duration');
+  appendMobileFact(summary, visible, 'damage');
   return summary;
 }
 
