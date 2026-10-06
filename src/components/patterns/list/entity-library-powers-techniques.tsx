@@ -102,9 +102,9 @@ export function PowersListSection({
                     ? [
                         { key: 'energy', value: row.energyCost ?? '-', align: 'center' as const },
                         { key: 'action', value: row.actionType ?? '-', align: 'center' as const },
-                        { key: 'damage', value: damageVal, align: 'center' as const },
-                        { key: 'area', value: row.area ?? '-', align: 'center' as const },
                         { key: 'duration', value: row.duration ?? '-', align: 'center' as const },
+                        { key: 'area', value: row.area ?? '-', align: 'center' as const },
+                        { key: 'damage', value: damageVal, align: 'center' as const },
                       ]
                     : [
                         { key: 'action', value: row.actionType ?? '-', align: 'center' as const },
