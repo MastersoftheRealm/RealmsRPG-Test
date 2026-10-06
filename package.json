@@ -5,12 +5,13 @@
   "engines": {
     "node": "24.x"
   },
-  "//overrides": "Transitive pins for the CI production-deps audit gate (`npm audit --audit-level=high --omit=dev`). postcss 8.5.25 hoists one copy across @tailwindcss/postcss, next and vitest's vite; sharp 0.35.4 (libheif security patch); js-yaml 4.3.2 (security patch); fast-uri 3.1.8 (security patch under ajv-formats). Known dev-only exception (full-tree report-only step): eslint-config-next → @next/eslint-plugin-next → fast-glob 3.3.1 → micromatch → braces (all braces versions affected, no upstream fix); drop once @next/eslint-plugin-next stops pinning fast-glob 3.3.1. To retire a pin: delete it, npm install, npm audit — keep only if the advisory returns.",
+  "//overrides": "Transitive pins for the CI production-deps audit gate (`npm audit --audit-level=high --omit=dev`). postcss 8.5.25 hoists one copy across @tailwindcss/postcss, next and vitest's vite; sharp 0.35.4 (libheif security patch); js-yaml 4.3.2 (security patch); fast-uri 3.1.8 (security patch under ajv-formats); source-map-js 1.2.2 (security patch under postcss). Known dev-only exception (full-tree report-only step): eslint-config-next → @next/eslint-plugin-next → fast-glob 3.3.1 → micromatch → braces (all braces versions affected, no upstream fix); drop once @next/eslint-plugin-next stops pinning fast-glob 3.3.1. To retire a pin: delete it, npm install, npm audit — keep only if the advisory returns.",
   "overrides": {
     "postcss": "8.5.25",
     "sharp": "0.35.4",
     "js-yaml": "4.3.2",
-    "fast-uri": "3.1.8"
+    "fast-uri": "3.1.8",
+    "source-map-js": "1.2.2"
   },
   "scripts": {
     "dev": "next dev",
