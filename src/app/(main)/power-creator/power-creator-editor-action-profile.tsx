@@ -42,7 +42,8 @@ export function PowerCreatorEditorActionProfile({
   actionInheritance = null,
   attackInheritance = null,
 }: PowerCreatorEditorActionProfileProps) {
-  const actionFromShared = !!actionInheritance && !actionInheritance.overridden;
+  const actionLocked = !!actionInheritance?.locked;
+  const actionFromShared = actionLocked || (!!actionInheritance && !actionInheritance.overridden);
   const attackFromShared = !!attackInheritance && !attackInheritance.overridden;
   return (
     <>

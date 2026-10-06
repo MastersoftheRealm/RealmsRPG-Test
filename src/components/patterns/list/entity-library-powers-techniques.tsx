@@ -49,6 +49,8 @@ export function powerListFactCells(
     key: col.key,
     value: values[col.key] ?? '-',
     align: 'center' as const,
+    // Stat-block order puts Damage fifth. Only that list keeps it on the mobile summary.
+    ...(includeEnergyColumn && col.key === 'damage' ? { keepOnMobileSummary: true } : {}),
   }));
 }
 

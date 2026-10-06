@@ -12,6 +12,7 @@ import { findByIdOrName, PART_IDS } from '@/lib/id-constants';
 import { normalizeAttackMode, type AttackMode } from '@/lib/attack-mode';
 import { dedupeSavedParts } from '@/lib/game/dedupe-saved-parts';
 import { formatCost } from '@/lib/game/creator-constants';
+import { buildMechanicParts } from './mechanic-builder';
 import { buildRequiredProficiencies, calculateProficiencyTP } from '@/lib/proficiencies';
 import {
   buildPowerPartsPayloadForCost,
@@ -110,34 +111,34 @@ const POWER_ALTERNATE_HELP =
   'Each variant is a complete power (action, range, area, duration, damage, and parts). When you use the power you pick one variant and pay that variant’s energy, which may cost less, the same, or more than the others.';
 
 const POWER_RANDOMIZE_HELP =
-  'Each good outcome adds its extra cost times its chance of being rolled. Each bad outcome subtracts half its drawback cost times its chance. Speed premiums and slow-action discounts apply only to good outcomes. Once a power has a costed part, it always costs at least 1 EN.';
+  'Each good outcome adds its extra cost times its chance of being rolled. Each bad outcome subtracts its drawback reduction times its chance. That reduction is half the drawback divided by the action-type multiplier: a slower action removes more energy, and a quicker action removes less. Basic stays half. Speed premiums apply to good outcomes at the normal multiplier. Once the power has positive energy, it costs at least 1 EN.';
+
+const POWER_REVERSE_ACTION_NOTE =
+  'A drawback on a power that benefits you or an ally uses the Reverse tab’s own range, area, and duration (Shared’s, until you override them). Its reduction is half that energy divided by the action-type multiplier, so a slower action removes more and a quicker action removes less. Basic stays half. It cannot be nullified or reduced by you or an ally.';
 
 const POWER_REVERSE_FLOOR_NOTE =
-  'The 1 EN floor still applies: once the power has a costed part, the discount cannot drop it below 1 EN.';
+  'The 1 EN floor still applies when the power has positive energy, so the discount cannot drop it below 1 EN.';
 
 const POWER_MODIFY_HELP =
-  'Shared is paid once. Each piece pays only the extra energy its own parts add, at that piece’s own duration and other stipulations; it does not buy range or area again.';
+  'Shared is paid once, including its action type, which is locked on each piece. Range, area, and duration start as Shared and can be overridden. Each piece adds only its own parts and damage, priced at that piece’s range, area, and duration. A larger range than Shared costs extra only on that piece’s parts. A smaller area, including no area, prices those parts at the smaller footprint.';
 
 const POWER_CHOICE_HELP =
-  'Portions of one power. When you use it you pick one portion. You pay Shared plus the most expensive portion.';
+  'Portions of one power. Action type is locked to Shared. Each portion’s range, area, and duration start as Shared and can be overridden. You pay Shared once, plus the most expensive portion, and each portion’s parts are priced at that portion’s own range, area, and duration.';
 
-/** Drawback faces (and Reverse) are worth half their own energy. */
+/** Half the basic-footprint drawback, before dividing by the action-type multiplier. */
 const DRAWBACK_WEIGHT = 0.5;
 
 /** Rule text for a structure or the Reverse add-on. */
-export function powerCompositionHelpText(
-  key: PowerCompositionStructure | 'reverse',
-  partsDb: PowerPart[],
-): string {
+export function powerCompositionHelpText(key: PowerCompositionStructure | 'reverse'): string {
   if (key === 'none') return '';
   if (key === 'alternate') return POWER_ALTERNATE_HELP;
   if (key === 'randomize') return POWER_RANDOMIZE_HELP;
   if (key === 'modify') return POWER_MODIFY_HELP;
   if (key === 'choice') return POWER_CHOICE_HELP;
-  const id = key === 'reverse' ? PART_IDS.POWER_REVERSE_EFFECTS : undefined;
-  if (id == null) return '';
-  const description = findByIdOrName(partsDb, { id })?.description?.trim() ?? '';
-  return description ? `${description} ${POWER_REVERSE_FLOOR_NOTE}` : POWER_REVERSE_FLOOR_NOTE;
+  if (key !== 'reverse') return '';
+  // The live codex sentence for part 388 still says a flat 50%. Do not show it
+  // until that rewrite is applied. The confirmed rule is the note below.
+  return `${POWER_REVERSE_ACTION_NOTE} ${POWER_REVERSE_FLOOR_NOTE}`;
 }
 
 const COMPOSITION_MECHANIC_PART_IDS = new Set<number>([
@@ -313,9 +314,11 @@ export interface ResolvedPowerVariant {
    * Energy this variant contributes. Choice / Alternate = the published variant cost.
    * Modify = extra parts only (0 stays 0). Randomize = the signed face term before dividing
    * by the number of faces: good faces are (face − Shared), and a cheaper face is negative;
-   * a bad face is minus half its drawback.
+   * a bad face is minus half its drawback divided by the action-type multiplier.
    */
   energy: number;
+  /** Unrounded contribution. Breakdowns show this; chips use `energy`. */
+  energyRaw: number;
   /** Randomize face numbers (1-based) that roll this variant. */
   faces: number[];
   duration: StructuredPowerDuration | null;
@@ -331,17 +334,23 @@ export interface PowerCompositionResolution {
   reverse: {
     doc: PowerDocument;
     display: PowerDisplayData;
+    /** Rounded drawback energy, before the half and the action divisor. */
     energy: number;
+    /** Unrounded drawback energy at the Reverse footprint, before the reduction. */
+    rawEnergy: number;
+    /** Unrounded reduction: half the drawback divided by the action-type multiplier. */
     discount: number;
+    /** Normal action-type multiplier. Basic is 1. Quicker is above 1; slower is below 1. */
+    actionMultiplier: number;
   } | null;
   die: PowerRandomizeDie | null;
   /** Variant the display follows (play pick, else the first variant). */
   selectedVariantId: string | null;
   /** Structure total before the Reverse discount (raw, before the final round-up). */
   structureEnergy: number;
-  /** Published energy of the structure before Reverse (floor applies only with a costed part). */
+  /** Published energy of the structure before Reverse. The 1 EN floor needs positive energy. */
   energyBeforeReverse: number;
-  /** Final cast energy. 0 when the power has no costed parts. */
+  /** Final cast energy. 0 when nothing contributes positive energy. */
   energy: number;
   tp: number;
   tpSources: string[];
@@ -436,36 +445,126 @@ function publishSigned(raw: number): number {
   return sign * Math.ceil(Math.abs(raw) - 1e-9);
 }
 
+/** Unrounded intermediate for breakdowns and row notes. At most 2 decimal places. */
+export function formatEnergyIntermediate(value: number): string {
+  const rounded = Math.round(value * 100) / 100;
+  if (Math.abs(rounded) < 0.001) return '0';
+  return String(rounded);
+}
+
+function rangeSteps(range: PowerDocument['range']): number {
+  return range?.steps ?? 0;
+}
+
 /**
- * Modify extra for one piece: own parts/damage at the piece's settings, minus Shared
- * at those same settings (so Shared range/area/parts are not billed again).
- *
- * Provisional: if the piece's range or area is larger than Shared, only the piece's
- * own parts are priced at that reach — the extra delivery itself is not billed.
- * Kadin has not confirmed this edge (ADR-0029).
+ * Normal action-type multiplier from the codex part (quick / free / long).
+ * Basic, or a missing part, is 1. Reaction is not included.
  */
-function modifyPieceExtra(
+function actionTypeEnergyMultiplier(actionType: string | undefined, partsDb: PowerPart[]): number {
+  const type = actionType && actionType.length > 0 ? actionType : 'basic';
+  if (type === 'basic') return 1;
+  const rows = buildMechanicParts({
+    creatorType: 'power',
+    partsDb,
+    action: { type, isReaction: false },
+  });
+  let multiplier = 1;
+  for (const row of rows) {
+    const def = findByIdOrName(partsDb, { id: row.id, name: row.name });
+    if (!def?.percentage) continue;
+    const contribution =
+      (def.base_en || 0) +
+      (def.op_1_en || 0) * (row.op_1_lvl || 0) +
+      (def.op_2_en || 0) * (row.op_2_lvl || 0) +
+      (def.op_3_en || 0) * (row.op_3_lvl || 0);
+    if (contribution > 1e-9) multiplier *= contribution;
+  }
+  return multiplier > 1e-9 ? multiplier : 1;
+}
+
+/**
+ * Drawback reduction. Half the basic-footprint drawback, divided by the normal
+ * action-type multiplier. Basic stays 1×. A quicker action (multiplier > 1)
+ * shrinks the reduction; a slower action (multiplier < 1) grows it.
+ * Kadin confirmed this inverse on Oct 6: taking longer to harm yourself refunds
+ * more energy. This division is the one line that sets that direction.
+ */
+export function drawbackReductionForAction(
+  drawbackEnergy: number,
+  actionTypeMultiplier: number,
+): number {
+  const multiplier = actionTypeMultiplier > 1e-9 ? actionTypeMultiplier : 1;
+  return (DRAWBACK_WEIGHT * drawbackEnergy) / multiplier;
+}
+
+/** Action stays on Shared. An explicit area, including none, replaces Shared’s area. */
+function beneficialFootprint(shared: PowerDocument, spec: PowerVariantSpec): PowerDocument {
+  return {
+    name: shared.name,
+    actionType: shared.actionType,
+    isReaction: !!shared.isReaction,
+    range: spec.range ?? shared.range,
+    area: spec.area != null ? spec.area : shared.area,
+    duration: spec.duration ?? shared.duration,
+    parts: [],
+    damage: [],
+  };
+}
+
+/**
+ * Extra range above Shared, priced on an empty copy of the tab’s footprint
+ * (so Shared’s parts are not re-priced). A shorter range does not refund Shared.
+ */
+function biggerRangeCost(shared: PowerDocument, foot: PowerDocument, partsDb: PowerPart[]): number {
+  if (rangeSteps(foot.range) <= rangeSteps(shared.range)) return 0;
+  const atTab = rawEnergyOf({ ...foot, parts: [], damage: [] }, partsDb);
+  const atShared = rawEnergyOf({ ...foot, parts: [], damage: [], range: shared.range }, partsDb);
+  return Math.max(0, atTab - atShared);
+}
+
+/**
+ * Modify piece or Choice option: own parts and damage at the tab’s range, area,
+ * and duration. Shared’s action, range, and area are not billed again. A longer
+ * range adds only that extra, once. A smaller area prices the parts cheaper.
+ */
+function beneficialTabExtra(
   shared: PowerDocument,
-  v: PowerVariantSpec,
+  spec: PowerVariantSpec,
   partsDb: PowerPart[],
 ): number {
-  const pieceParts = stripCompositionParts(v.parts);
-  const pieceDamage = hasDamage(v.damage) ? (v.damage ?? []) : [];
+  const pieceParts = stripCompositionParts(spec.parts);
+  const pieceDamage = hasDamage(spec.damage) ? (spec.damage ?? []) : [];
   if (pieceParts.length === 0 && pieceDamage.length === 0) return 0;
-  const settings: PowerDocument = {
-    ...shared,
-    actionType: v.actionType ?? shared.actionType,
-    isReaction: v.isReaction ?? shared.isReaction,
-    range: v.range ?? shared.range,
-    area: v.area ?? shared.area,
-    duration: v.duration ?? shared.duration,
+  const foot = beneficialFootprint(shared, spec);
+  const partsEnergy =
+    rawEnergyOf({ ...foot, parts: pieceParts, damage: pieceDamage }, partsDb) -
+    rawEnergyOf(foot, partsDb);
+  return partsEnergy + biggerRangeCost(shared, foot, partsDb);
+}
+
+/** Reverse drawback at the tab’s footprint, as a basic action, before the reduction. */
+function reverseDrawbackEnergy(
+  shared: PowerDocument,
+  spec: PowerVariantSpec,
+  partsDb: PowerPart[],
+): number {
+  const pieceParts = stripCompositionParts(spec.parts);
+  const pieceDamage = hasDamage(spec.damage) ? (spec.damage ?? []) : [];
+  if (pieceParts.length === 0 && pieceDamage.length === 0) return 0;
+  const foot: PowerDocument = {
+    name: shared.name,
+    actionType: 'basic',
+    isReaction: false,
+    range: spec.range ?? shared.range,
+    area: spec.area != null ? spec.area : shared.area,
+    duration: spec.duration ?? shared.duration,
+    parts: [],
+    damage: [],
   };
-  const withPiece: PowerDocument = {
-    ...settings,
-    parts: [...(settings.parts ?? []), ...pieceParts],
-    damage: [...(settings.damage ?? []), ...pieceDamage],
-  };
-  return rawEnergyOf(withPiece, partsDb) - rawEnergyOf(settings, partsDb);
+  const partsEnergy =
+    rawEnergyOf({ ...foot, parts: pieceParts, damage: pieceDamage }, partsDb) -
+    rawEnergyOf(foot, partsDb);
+  return partsEnergy + biggerRangeCost(shared, foot, partsDb);
 }
 
 function structuredDurationOf(doc: PowerDocument): StructuredPowerDuration | null {
@@ -563,19 +662,27 @@ export function resolvePowerComposition(
     facesByVariant.set(variantId, list);
   });
 
+  const actionMultiplier = actionTypeEnergyMultiplier(chassis.actionType, partsDb);
   const variants: ResolvedPowerVariant[] = composition.variants.map((v) => {
     const doc = isAlternate ? fullVariantDoc(name, v) : overlayVariant(chassis, v);
     const display = derivePlainPowerDisplay(doc, partsDb);
-    const energy =
-      structure === 'modify'
-        ? publishContribution(modifyPieceExtra(chassis, v, partsDb))
+    const energyRaw =
+      structure === 'modify' || structure === 'choice'
+        ? beneficialTabExtra(chassis, v, partsDb)
         : structure === 'randomize' && v.polarity === 'negative'
-          ? publishSigned(
-              -DRAWBACK_WEIGHT * rawEnergyOf(ownSpecDoc(name, v, chassis.duration), partsDb),
+          ? -drawbackReductionForAction(
+              rawEnergyOf(ownSpecDoc(name, v, chassis.duration), partsDb),
+              actionMultiplier,
             )
           : structure === 'randomize'
-            ? publishSigned(rawEnergyOf(overlayVariant(chassis, v), partsDb) - sharedRaw)
+            ? rawEnergyOf(doc, partsDb) - sharedRaw
             : display.energy;
+    const energy =
+      structure === 'modify' || structure === 'choice'
+        ? publishContribution(energyRaw)
+        : structure === 'randomize'
+          ? publishSigned(energyRaw)
+          : display.energy;
     return {
       id: v.id,
       label: v.label,
@@ -584,6 +691,7 @@ export function resolvePowerComposition(
       doc,
       display,
       energy,
+      energyRaw,
       faces: facesByVariant.get(v.id) ?? [],
       duration: structuredDurationOf(doc),
     };
@@ -595,18 +703,13 @@ export function resolvePowerComposition(
 
   let structureEnergy: number;
   switch (structure) {
-    case 'choice':
-      structureEnergy =
-        composition.variants.length > 0
-          ? Math.max(
-              ...composition.variants.map((v) => rawEnergyOf(overlayVariant(chassis, v), partsDb)),
-            )
-          : sharedRaw;
+    case 'choice': {
+      const extras = variants.map((v) => v.energyRaw);
+      structureEnergy = sharedRaw + (extras.length > 0 ? Math.max(...extras) : 0);
       break;
+    }
     case 'modify':
-      structureEnergy =
-        sharedRaw +
-        composition.variants.reduce((sum, v) => sum + modifyPieceExtra(chassis, v, partsDb), 0);
+      structureEnergy = sharedRaw + variants.reduce((sum, v) => sum + v.energyRaw, 0);
       break;
     case 'alternate':
       structureEnergy = selected
@@ -617,15 +720,9 @@ export function resolvePowerComposition(
       const faces = composition.die?.faces ?? [];
       const n = faces.length;
       structureEnergy = faces.reduce((sum, id) => {
-        const v = composition.variants.find((x) => x.id === id);
+        const v = variants.find((x) => x.id === id);
         if (!v || n === 0) return sum;
-        if (v.polarity === 'negative') {
-          return (
-            sum -
-            (DRAWBACK_WEIGHT * rawEnergyOf(ownSpecDoc(name, v, chassis.duration), partsDb)) / n
-          );
-        }
-        return sum + (rawEnergyOf(overlayVariant(chassis, v), partsDb) - sharedRaw) / n;
+        return sum + v.energyRaw / n;
       }, sharedRaw);
       break;
     }
@@ -635,29 +732,37 @@ export function resolvePowerComposition(
 
   let reverse: PowerCompositionResolution['reverse'] = null;
   if (composition.reverse) {
-    const benefitDuration = isAlternate ? selected?.doc.duration : chassis.duration;
-    const doc = ownSpecDoc(name, composition.reverse, benefitDuration);
-    const display = derivePlainPowerDisplay(doc, partsDb);
-    const reverseRaw = rawEnergyOf(doc, partsDb);
+    const benefit = isAlternate ? (selected?.doc ?? chassis) : chassis;
+    const benefitMultiplier = isAlternate
+      ? actionTypeEnergyMultiplier(benefit.actionType, partsDb)
+      : actionMultiplier;
+    const doc = ownSpecDoc(name, composition.reverse, benefit.duration);
+    const priced: PowerDocument = {
+      ...doc,
+      range: composition.reverse.range ?? benefit.range,
+      area: composition.reverse.area != null ? composition.reverse.area : benefit.area,
+    };
+    const display = derivePlainPowerDisplay(priced, partsDb);
+    const reverseRaw = reverseDrawbackEnergy(benefit, composition.reverse, partsDb);
     reverse = {
-      doc,
+      doc: priced,
       display,
-      energy: display.energy,
-      discount: reverseRaw * DRAWBACK_WEIGHT,
+      energy: Math.max(0, Math.ceil(reverseRaw - 1e-9)),
+      rawEnergy: reverseRaw,
+      discount: drawbackReductionForAction(reverseRaw, benefitMultiplier),
+      actionMultiplier: benefitMultiplier,
     };
   }
 
-  const costedDocs = [
-    ...(shared ? [shared.doc] : []),
-    ...variants.map((v) => v.doc),
-    ...(reverse ? [reverse.doc] : []),
-  ];
-  const hasCostedParts = costedDocs.some(
-    (doc) =>
-      calculatePowerCosts(buildPowerPartsPayloadForCost(doc, partsDb), partsDb).hasCostedParts,
-  );
-  const energyBeforeReverse = finalizePowerEnergy(structureEnergy, hasCostedParts);
-  const energy = finalizePowerEnergy(structureEnergy - (reverse?.discount ?? 0), hasCostedParts);
+  const benefitDocs = [...(shared ? [shared.doc] : []), ...variants.map((v) => v.doc)];
+  const hasPositiveEnergy =
+    structureEnergy > 1e-9 ||
+    benefitDocs.some(
+      (doc) =>
+        calculatePowerCosts(buildPowerPartsPayloadForCost(doc, partsDb), partsDb).hasPositiveEnergy,
+    );
+  const energyBeforeReverse = finalizePowerEnergy(structureEnergy, hasPositiveEnergy);
+  const energy = finalizePowerEnergy(structureEnergy - (reverse?.discount ?? 0), hasPositiveEnergy);
 
   const tpDocs = [
     ...(shared ? [shared.doc] : []),
@@ -668,7 +773,7 @@ export function resolvePowerComposition(
 
   return {
     structure,
-    structureHelp: powerCompositionHelpText(structure, partsDb),
+    structureHelp: powerCompositionHelpText(structure),
     variants,
     shared,
     reverse,
@@ -771,37 +876,48 @@ export function reverseDiscountApplied(res: PowerCompositionResolution): {
 export function powerCompositionEnergyLines(res: PowerCompositionResolution): string[] {
   const lines = res.variants.map((v) => {
     if (res.structure === 'randomize') {
+      const raw = v.energyRaw;
       const shown =
-        v.energy < 0 || (v.energy === 0 && v.polarity === 'negative')
-          ? `−${formatCost(Math.abs(v.energy))}`
-          : `+${formatCost(v.energy)}`;
+        raw < 0 || (Math.abs(raw) < 1e-9 && v.polarity === 'negative')
+          ? `−${formatEnergyIntermediate(Math.abs(raw))}`
+          : `+${formatEnergyIntermediate(raw)}`;
       const faces = res.die?.sides ?? Math.max(1, v.faces.length);
       return `${v.label}: ${shown} EN × ${v.faces.length}/${faces}`;
     }
-    if (res.structure === 'modify' && v.energy === 0) return `${v.label}: nothing added`;
-    if (res.structure === 'modify') return `${v.label}: extra ${v.energy} EN`;
+    if (res.structure === 'modify' && Math.abs(v.energyRaw) < 1e-9)
+      return `${v.label}: nothing added`;
+    if (res.structure === 'modify')
+      return `${v.label}: extra ${formatEnergyIntermediate(v.energyRaw)} EN`;
+    if (res.structure === 'choice')
+      return `${v.label}: ${formatEnergyIntermediate(v.energyRaw)} EN`;
     return `${v.label}: ${v.energy} EN`;
   });
   if (res.structure === 'randomize' && res.shared) {
-    lines.unshift(`Shared chassis: ${formatCost(res.shared.rawEnergy)} EN`);
+    lines.unshift(`Shared chassis: ${formatEnergyIntermediate(res.shared.rawEnergy)} EN`);
   }
   const rule: Partial<Record<PowerCompositionResolution['structure'], string>> = {
     choice: 'Choice pays the most expensive portion',
-    modify: 'Shared is paid once; each piece adds only its extra',
+    modify: 'Shared is paid once; each piece adds its parts at that piece’s footprint',
     alternate: 'Alternate pays the selected variant',
     randomize:
-      'Shared plus each good face’s extra cost times its chance, minus half each drawback times its chance',
+      'Shared plus each good face’s extra cost times its chance, minus each drawback’s reduction times its chance',
   };
   const ruleText = rule[res.structure];
   if (ruleText) {
-    lines.push(`${ruleText}: ${formatCost(res.structureEnergy)} EN`);
+    lines.push(`${ruleText}: ${formatEnergyIntermediate(res.structureEnergy)} EN`);
   }
   if (res.reverse) {
     const { applied, limitedByFloor } = reverseDiscountApplied(res);
+    const drawback = formatEnergyIntermediate(res.reverse.rawEnergy);
+    const reduction = formatEnergyIntermediate(res.reverse.discount);
+    const actionNote =
+      Math.abs(res.reverse.actionMultiplier - 1) > 1e-9
+        ? `, divided by the action multiplier ${formatEnergyIntermediate(res.reverse.actionMultiplier)}`
+        : '';
     lines.push(
       limitedByFloor
-        ? `Reverse drawback ${formatCost(res.reverse.energy)} EN → −${formatCost(applied)} EN (1 EN floor; half the drawback is ${formatCost(res.reverse.discount)} EN)`
-        : `Reverse drawback ${formatCost(res.reverse.energy)} EN → −${formatCost(applied)} EN`,
+        ? `Reverse drawback ${drawback} EN → −${formatEnergyIntermediate(applied)} EN (1 EN floor; the reduction is ${reduction} EN${actionNote})`
+        : `Reverse drawback ${drawback} EN → −${reduction} EN${actionNote}`,
     );
   }
   const totalLabel =
@@ -873,8 +989,9 @@ export function formatPowerCompositionSummary(res: PowerCompositionResolution): 
   }
   if (res.die) parts.push(`1d${res.die.sides}`);
   if (res.reverse) {
-    const { applied } = reverseDiscountApplied(res);
-    parts.push(`Reverse −${formatCost(applied)} EN`);
+    const { applied, limitedByFloor } = reverseDiscountApplied(res);
+    const shown = limitedByFloor ? applied : res.reverse.discount;
+    parts.push(`Reverse −${formatEnergyIntermediate(shown)} EN`);
   }
   return parts.join(' · ');
 }

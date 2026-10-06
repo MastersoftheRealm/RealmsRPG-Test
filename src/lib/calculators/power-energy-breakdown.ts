@@ -14,6 +14,7 @@ import {
   type PowerCalcSectionId,
 } from './power-mechanic-constants';
 import {
+  energyFloorApplies,
   formatEnergyStat,
   formatPowerRangeFromSteps,
   type PowerEnergyAnalysis,
@@ -203,6 +204,7 @@ function buildTotalsGroup(analysis: PowerEnergyAnalysis): PowerAdvancedCalcGroup
     hasDurationParts,
     energyRaw,
     totalEnergy,
+    hasPositiveEnergy,
     lines,
   } = analysis;
 
@@ -254,10 +256,10 @@ function buildTotalsGroup(analysis: PowerEnergyAnalysis): PowerAdvancedCalcGroup
     });
   }
 
-  const hasCostedParts = lines.length > 0;
+  const publishesEnergy = energyFloorApplies(hasPositiveEnergy, energyRaw);
   const needsRoundUp =
-    hasCostedParts && totalEnergy > 0 && !nearlyEqual(energyRaw, totalEnergy) && energyRaw > 0;
-  const clampedToMinimum = hasCostedParts && energyRaw < 1;
+    publishesEnergy && totalEnergy > 0 && !nearlyEqual(energyRaw, totalEnergy) && energyRaw > 0;
+  const clampedToMinimum = publishesEnergy && energyRaw < 1;
 
   if (clampedToMinimum) {
     rows.push({ label: 'Combined Energy', value: formatEnergyNumber(energyRaw) });
@@ -272,7 +274,7 @@ function buildTotalsGroup(analysis: PowerEnergyAnalysis): PowerAdvancedCalcGroup
 
   rows.push({
     label: 'Energy Cost',
-    value: hasCostedParts ? formatEnergyNumber(totalEnergy) : String(formatEnergyStat(0)),
+    value: publishesEnergy ? formatEnergyNumber(totalEnergy) : String(formatEnergyStat(0)),
   });
 
   return { title: 'Combined Energy', rows };

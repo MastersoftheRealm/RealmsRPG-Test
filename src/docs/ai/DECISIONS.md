@@ -48,6 +48,14 @@ Game runner = **RM (Realm Master)** — never GM.
 - Duration: 1 round and Instant cost the same (no duration). Duration modifiers multiply each other before applying. Rounds capped at 5; 6 rounds = 1 minute option only. 1 minute = 6 rounds (10-second rounds). Sustain up to 4 AP is fine.
 - Empowered techniques: whole-thing scalers (e.g. action type / Quick Action) apply to both halves; type-specific only to that half. Creator out of MVP/Open Beta scope for remaining empowered design.
 
+## Creators / energy (Oct 6, 2026)
+
+Kadin confirmed these. They clarify the Oct 4–5 dash and minimum-energy bullets above.
+
+- The 1 EN floor applies only when positive energy is reduced below 1. No parts, only 0 EN parts, quick-only, duration-only, and No Attack alone are a dash (powers, techniques, empowered techniques, and the Energy Cost row).
+- Modify, Choice, and Reverse: action type is the only locked mechanic (it stays on Shared, or on the benefit for Reverse). Range, area, and duration start as Shared and can be overridden, including none or Instant. Each tab’s parts are priced at that tab’s footprint. A larger range costs extra only on that tab’s parts. A smaller footprint prices those parts cheaper. Choice pays Shared plus its most expensive option. Alternate keeps its own action type.
+- Reverse and Randomize bad faces: reduction = ½ · drawback ÷ (normal action-type multiplier). Basic stays half. Taking longer to harm yourself or others refunds more energy. This direction is final. Randomize good faces stay on the existing extra-cost formula.
+
 ---
 
 ## Sheet / combat (Oct 4–5, 2026)

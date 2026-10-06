@@ -85,7 +85,7 @@ describe('buildTechniqueAdvancedCalculationGroups', () => {
     expect(energyCost?.value).toBe(String(costs.totalEnergy));
   });
 
-  it('omits empty sections and shows Cannot go below 1 when clamped', () => {
+  it('omits empty sections and shows a dash when No Attack is the only part', () => {
     const payload = [
       {
         id: Number(noAttack.id),
@@ -103,7 +103,7 @@ describe('buildTechniqueAdvancedCalculationGroups', () => {
     expect(titles).not.toContain('Technique Parts');
 
     const combined = groups.find((g) => g.title === 'Combined Energy');
-    expect(combined?.rows.some((r) => r.label === 'Cannot go below 1')).toBe(true);
-    expect(combined?.rows.some((r) => r.label === 'Energy Cost' && r.value === '1')).toBe(true);
+    expect(combined?.rows.some((r) => r.label === 'Cannot go below 1')).toBe(false);
+    expect(combined?.rows.some((r) => r.label === 'Energy Cost' && r.value === '—')).toBe(true);
   });
 });

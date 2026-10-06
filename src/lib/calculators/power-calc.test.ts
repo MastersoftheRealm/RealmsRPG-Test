@@ -3,12 +3,18 @@ import type { PowerPart } from '@/hooks/codex-types';
 import { PART_IDS } from '@/lib/id-constants';
 import { buildMechanicParts, calculateDamageOptionLevel } from './mechanic-builder';
 import {
+  analyzePowerEnergy,
   calculatePowerCosts,
   calculatePowerSectionContribution,
   derivePowerDisplay,
   finalizePowerEnergy,
+  formatEnergyStat,
   formatPowerDamage,
 } from './power-calc';
+import { calculateTechniqueCosts } from './technique-calc';
+import { calculateEmpoweredTechniqueCosts } from './empowered-technique-calc';
+import { buildPowerAdvancedCalculationGroups } from './power-energy-breakdown';
+import type { TechniquePart } from '@/hooks/codex-types';
 
 const elementalDamagePart: PowerPart = {
   id: String(PART_IDS.ELEMENTAL_DAMAGE),
@@ -311,14 +317,192 @@ describe('derivePowerDisplay', () => {
 });
 
 describe('finalizePowerEnergy', () => {
-  it('floors every power at 1 EN after rounding up (86e3jrfyu)', () => {
-    expect(finalizePowerEnergy(0)).toBe(1);
-    expect(finalizePowerEnergy(-30)).toBe(1);
+  it('rounds positive energy up, and floors only when that energy is reduced below 1', () => {
+    expect(finalizePowerEnergy(0)).toBe(0);
+    expect(finalizePowerEnergy(-30)).toBe(0);
     expect(finalizePowerEnergy(0.1)).toBe(1);
     expect(finalizePowerEnergy(8.25)).toBe(9);
     expect(finalizePowerEnergy(0, false)).toBe(0);
+    expect(finalizePowerEnergy(-2, true)).toBe(1);
     expect(calculatePowerCosts([], [elementalDamagePart]).totalEnergy).toBe(0);
-    expect(calculatePowerCosts([], [elementalDamagePart]).hasCostedParts).toBe(false);
+    expect(calculatePowerCosts([], [elementalDamagePart]).hasPositiveEnergy).toBe(false);
+  });
+});
+
+describe('zero energy is a dash until positive energy is reduced below 1', () => {
+  const quick: PowerPart = {
+    id: String(PART_IDS.POWER_QUICK_OR_FREE_ACTION),
+    name: 'Power Quick or Free Action',
+    description: 'Quick',
+    category: 'Action',
+    mechanic: true,
+    percentage: true,
+    base_en: 1.25,
+    base_tp: 0,
+    op_1_en: 0.25,
+  };
+  const duration: PowerPart = {
+    id: String(PART_IDS.DURATION_MINUTE),
+    name: 'Duration (Minute)',
+    description: 'Duration',
+    category: 'Duration',
+    mechanic: true,
+    duration: true,
+    base_en: 2,
+    base_tp: 0,
+  };
+  const zero: PowerPart = {
+    id: '1',
+    name: 'Marker',
+    description: 'Marker',
+    category: 'General',
+    mechanic: false,
+    base_en: 0,
+    base_tp: 0,
+  };
+  const noAttack: PowerPart = {
+    id: '415',
+    name: 'No Attack',
+    description: 'No Attack',
+    category: 'General',
+    mechanic: true,
+    base_en: -2,
+    base_tp: 0,
+  };
+  const spark: PowerPart = {
+    id: '2',
+    name: 'Spark',
+    description: 'Spark',
+    category: 'Damage',
+    mechanic: false,
+    base_en: 4,
+    base_tp: 0,
+  };
+  const limit: PowerPart = {
+    id: '3',
+    name: 'Limit',
+    description: 'Limit',
+    category: 'General',
+    mechanic: true,
+    percentage: true,
+    base_en: 0.1,
+    base_tp: 0,
+  };
+  const quickTech: TechniquePart = {
+    id: '4',
+    name: 'Quick or Free Action',
+    description: 'Quick',
+    category: 'Action',
+    mechanic: true,
+    percentage: true,
+    base_en: 1.25,
+    base_tp: 0,
+  };
+  const zeroTech: TechniquePart = {
+    id: '5',
+    name: 'Marker',
+    description: 'Marker',
+    category: 'General',
+    base_en: 0,
+    base_tp: 0,
+  };
+  const noAttackTech: TechniquePart = {
+    id: '415',
+    name: 'No Attack',
+    description: 'No Attack',
+    category: 'General',
+    mechanic: true,
+    base_en: -2,
+    base_tp: 0,
+  };
+
+  function expectDash(energy: number) {
+    expect(energy).toBe(0);
+    expect(formatEnergyStat(energy)).toBe('—');
+  }
+
+  it('shows a dash for no parts, a 0 EN part, quick-only, duration-only, and No Attack only', () => {
+    expectDash(calculatePowerCosts([], []).totalEnergy);
+    expectDash(calculatePowerCosts([{ id: 1, name: 'Marker' }], [zero]).totalEnergy);
+    expectDash(
+      calculatePowerCosts([{ id: PART_IDS.POWER_QUICK_OR_FREE_ACTION, name: quick.name }], [quick])
+        .totalEnergy,
+    );
+    expectDash(
+      calculatePowerCosts([{ id: PART_IDS.DURATION_MINUTE, name: duration.name }], [duration])
+        .totalEnergy,
+    );
+    expectDash(calculatePowerCosts([{ id: 415, name: 'No Attack' }], [noAttack]).totalEnergy);
+
+    const quickGroups = buildPowerAdvancedCalculationGroups(
+      analyzePowerEnergy([{ id: PART_IDS.POWER_QUICK_OR_FREE_ACTION, name: quick.name }], [quick]),
+    );
+    const energyCost = quickGroups
+      .flatMap((group) => group.rows)
+      .find((row) => row.label === 'Energy Cost');
+    expect(energyCost?.value).toBe('—');
+
+    expectDash(calculateTechniqueCosts([], []).totalEnergy);
+    expectDash(calculateTechniqueCosts([{ id: 5, name: 'Marker' }], [zeroTech]).totalEnergy);
+    expectDash(calculateTechniqueCosts([{ id: 4, name: quickTech.name }], [quickTech]).totalEnergy);
+    expectDash(
+      calculateTechniqueCosts([{ id: 415, name: 'No Attack' }], [noAttackTech]).totalEnergy,
+    );
+
+    expectDash(
+      calculateEmpoweredTechniqueCosts({
+        powerPartsPayload: [],
+        techniquePartsPayload: [],
+        powerPartsDb: [],
+        techniquePartsDb: [],
+      }).totalEnergy,
+    );
+    expectDash(
+      calculateEmpoweredTechniqueCosts({
+        powerPartsPayload: [{ id: 1, name: 'Marker' }],
+        techniquePartsPayload: [],
+        powerPartsDb: [zero],
+        techniquePartsDb: [],
+      }).totalEnergy,
+    );
+    expectDash(
+      calculateEmpoweredTechniqueCosts({
+        powerPartsPayload: [{ id: PART_IDS.POWER_QUICK_OR_FREE_ACTION, name: quick.name }],
+        techniquePartsPayload: [],
+        powerPartsDb: [quick],
+        techniquePartsDb: [],
+      }).totalEnergy,
+    );
+    expectDash(
+      calculateEmpoweredTechniqueCosts({
+        powerPartsPayload: [{ id: PART_IDS.DURATION_MINUTE, name: duration.name }],
+        techniquePartsPayload: [],
+        powerPartsDb: [duration],
+        techniquePartsDb: [],
+      }).totalEnergy,
+    );
+    expectDash(
+      calculateEmpoweredTechniqueCosts({
+        powerPartsPayload: [],
+        techniquePartsPayload: [{ id: 415, name: 'No Attack' }],
+        powerPartsDb: [],
+        techniquePartsDb: [noAttackTech],
+      }).totalEnergy,
+    );
+  });
+
+  it('floors at 1 when a positive cost is reduced below 1', () => {
+    const reduced = calculatePowerCosts(
+      [
+        { id: 2, name: 'Spark' },
+        { id: 3, name: 'Limit' },
+      ],
+      [spark, limit],
+    );
+    expect(reduced.energyRaw).toBeCloseTo(0.4);
+    expect(reduced.hasPositiveEnergy).toBe(true);
+    expect(reduced.totalEnergy).toBe(1);
+    expect(formatEnergyStat(reduced.totalEnergy)).toBe(1);
   });
 });
 

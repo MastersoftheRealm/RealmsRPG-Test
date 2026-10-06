@@ -14,7 +14,9 @@ import {
   composedPowerDurationLabel,
   isRandomizeDieComplete,
   normalizePowerComposition,
+  drawbackReductionForAction,
   formatPowerCompositionSummary,
+  powerCompositionHelpText,
   powerCompositionEnergyLines,
   powerCreatorSaveBlockReason,
   resolvePowerComposition,
@@ -355,8 +357,8 @@ describe('resolvePowerComposition', () => {
         die: { sides: 6, faces },
       },
     };
-    // Good overlay at free = 6 × 1.5 = 9; extra vs empty shared 0. Bad at basic = 4.
-    // 0.5·9 − 0.5·½·4 = 4.5 − 1 = 3.5 → 4 EN. Without the premium it would be 2.
+    // Good overlay at free = 6 × 1.5 = 9; extra vs empty shared 0.
+    // Bad reduction = ½ · 4 ÷ 1.5 = 1.333…. 0.5·9 − 0.5·1.333… = 4.5 − 0.667 = 3.833 → 4 EN.
     expect(resolvePowerComposition(doc, pricingDb)!.energy).toBe(4);
   });
 
@@ -628,7 +630,14 @@ describe('resolvePowerComposition', () => {
     ]);
   });
 
-  it('Reverse subtracts 50% of the drawback energy', () => {
+  it('Reverse help states the inverse rule, not the stale codex sentence', () => {
+    const help = powerCompositionHelpText('reverse');
+    expect(help).toMatch(/divided by the action-type multiplier/);
+    expect(help).toMatch(/slower action removes more/);
+    expect(help).not.toMatch(/50% the energy/);
+  });
+
+  it('Reverse on a basic action subtracts half the drawback energy', () => {
     const base: PowerDocument = { name: 'Ward', actionType: 'basic', range: { steps: 3 } };
     const plain = derivePlainPowerDisplay(base, partsDb).energy;
     const res = resolvePowerComposition(
@@ -682,7 +691,8 @@ describe('resolvePowerComposition', () => {
     )!;
     // Shared at free = 6 × 1.5 = 9. Basic overlay = 6. Contribution = −3, not +0.
     expect(res.variants.find((v) => v.id === 'cheap')?.energy).toBe(-3);
-    // Blinded is 4 EN; the face lists half (−2), not the full −4.
+    // Raw reduction is ½ · 4 ÷ 1.5. The chip rounds that magnitude up to 2.
+    expect(res.variants.find((v) => v.id === 'bad')?.energyRaw).toBeCloseTo(-(2 / 1.5));
     expect(res.variants.find((v) => v.id === 'bad')?.energy).toBe(-2);
     expect(res.energy).toBeLessThan(9);
   });
@@ -715,7 +725,7 @@ describe('resolvePowerComposition', () => {
     expect(res.shared?.display.energy).toBe(0);
   });
 
-  it('an empty power publishes no energy (the 1 EN floor needs a costed part)', () => {
+  it('an empty power publishes no energy until positive energy exists', () => {
     expect(derivePlainPowerDisplay({ name: 'Blank', actionType: 'basic' }, partsDb).energy).toBe(0);
     const composed = resolvePowerComposition(
       {
@@ -772,6 +782,340 @@ describe('resolvePowerComposition', () => {
     // 9 spaces (3 steps) is 1.5 EN. 1d10 is 6 EN. 7.5 rounds up to 8.
     expect(withRange.energy).toBe(8);
     expect(damageOnly.energy).toBe(6);
+  });
+
+  function withPercentageSphere(db: PowerPart[]): PowerPart[] {
+    return db.map((row) =>
+      row.id === String(PART_IDS.SPHERE_OF_EFFECT)
+        ? { ...row, percentage: true, base_en: 1.25, op_1_en: 0.25 }
+        : row,
+    );
+  }
+
+  it('Modify prices a single-target Daze piece without Shared’s sphere', () => {
+    const db = withPercentageSphere([
+      ...partsDb,
+      part({ id: String(PART_IDS.DAZE), name: 'Daze', base_en: 4 }),
+    ]);
+    const shared: PowerDocument = {
+      name: 'Ice Field',
+      actionType: 'basic',
+      range: { steps: 2 },
+      area: { type: 'sphere', level: 2 },
+      damage: [{ amount: 1, size: 8, type: 'ice' }],
+      parts: [{ id: 901, name: 'Slow' }],
+    };
+    const pieceDuration = { type: 'minutes' as const, value: 1 };
+    const pieceFoot: PowerDocument = {
+      actionType: 'basic',
+      range: shared.range,
+      duration: pieceDuration,
+      parts: [{ id: PART_IDS.DAZE, name: 'Daze' }],
+    };
+    const extra = rawEnergy(pieceFoot, db) - rawEnergy({ ...pieceFoot, parts: [] }, db);
+    const insideSphere =
+      rawEnergy({ ...pieceFoot, area: shared.area }, db) -
+      rawEnergy({ ...pieceFoot, parts: [], area: shared.area }, db);
+    expect(extra).toBeLessThan(insideSphere);
+    const res = resolvePowerComposition(
+      {
+        ...shared,
+        composition: {
+          structure: 'modify',
+          variants: [
+            {
+              id: 'daze',
+              label: 'Daze',
+              area: { type: 'none', level: 1 },
+              duration: pieceDuration,
+              parts: [{ id: PART_IDS.DAZE, name: 'Daze' }],
+            },
+          ],
+        },
+      },
+      db,
+    )!;
+    expect(res.variants[0]!.energyRaw).toBeCloseTo(extra);
+    expect(res.energy).toBe(finalizePowerEnergy(rawEnergy(shared, db) + extra, true));
+  });
+
+  it('Modify charges a bigger area only on that piece’s parts', () => {
+    const db = withPercentageSphere(partsDb);
+    const shared: PowerDocument = {
+      name: 'Reach',
+      actionType: 'basic',
+      range: { steps: 1 },
+      parts: [{ id: 900, name: 'Immobile' }],
+    };
+    const pieceArea = { type: 'sphere' as const, level: 2 };
+    const foot: PowerDocument = {
+      actionType: 'basic',
+      range: shared.range,
+      area: pieceArea,
+      parts: [{ id: 901, name: 'Slow' }],
+    };
+    const extra = rawEnergy(foot, db) - rawEnergy({ ...foot, parts: [] }, db);
+    const fullOverlay = rawEnergy(
+      {
+        ...shared,
+        area: pieceArea,
+        parts: [...(shared.parts ?? []), { id: 901, name: 'Slow' }],
+      },
+      db,
+    );
+    expect(rawEnergy(shared, db) + extra).toBeLessThan(fullOverlay);
+    const res = resolvePowerComposition(
+      {
+        ...shared,
+        composition: {
+          structure: 'modify',
+          variants: [
+            { id: 'slow', label: 'Slow', area: pieceArea, parts: [{ id: 901, name: 'Slow' }] },
+          ],
+        },
+      },
+      db,
+    )!;
+    expect(res.variants[0]!.energyRaw).toBeCloseTo(extra);
+    expect(res.energy).toBe(finalizePowerEnergy(rawEnergy(shared, db) + extra, true));
+  });
+
+  it('Choice prices a longer, wider portion at that portion’s footprint', () => {
+    const db = withPercentageSphere(partsDb);
+    const shared: PowerDocument = {
+      name: 'Choice Reach',
+      actionType: 'basic',
+      range: { steps: 1 },
+      area: { type: 'sphere', level: 1 },
+      parts: [{ id: 900, name: 'Immobile' }],
+    };
+    const optionRange = { steps: 3 };
+    const optionArea = { type: 'sphere' as const, level: 2 };
+    const foot: PowerDocument = {
+      actionType: 'basic',
+      range: optionRange,
+      area: optionArea,
+      parts: [{ id: 902, name: 'Blinded' }],
+    };
+    const partsEnergy = rawEnergy(foot, db) - rawEnergy({ ...foot, parts: [] }, db);
+    const rangeDelta =
+      rawEnergy({ ...foot, parts: [] }, db) -
+      rawEnergy({ ...foot, parts: [], range: shared.range }, db);
+    const extra = partsEnergy + rangeDelta;
+    const fullOverlay = rawEnergy(
+      {
+        ...shared,
+        range: optionRange,
+        area: optionArea,
+        parts: [...(shared.parts ?? []), { id: 902, name: 'Blinded' }],
+      },
+      db,
+    );
+    expect(rawEnergy(shared, db) + extra).not.toBeCloseTo(fullOverlay);
+    const res = resolvePowerComposition(
+      {
+        ...shared,
+        composition: {
+          structure: 'choice',
+          variants: [
+            {
+              id: 'far',
+              label: 'Far',
+              range: optionRange,
+              area: optionArea,
+              parts: [{ id: 902, name: 'Blinded' }],
+            },
+          ],
+        },
+      },
+      db,
+    )!;
+    expect(res.variants[0]!.energyRaw).toBeCloseTo(extra);
+    expect(res.energy).toBe(finalizePowerEnergy(rawEnergy(shared, db) + extra, true));
+  });
+
+  it('Reverse prices the drawback at a smaller footprint than Shared', () => {
+    const db = withPercentageSphere(partsDb);
+    const sharedArea = { type: 'sphere' as const, level: 2 };
+    const base: PowerDocument = {
+      name: 'Ward',
+      actionType: 'basic',
+      range: { steps: 2 },
+      area: sharedArea,
+      parts: [{ id: 901, name: 'Slow' }],
+    };
+    const inherited = resolvePowerComposition(
+      {
+        ...base,
+        composition: {
+          structure: 'none',
+          variants: [],
+          reverse: { parts: [{ id: 902, name: 'Blinded' }] },
+        },
+      },
+      db,
+    )!;
+    const smaller = resolvePowerComposition(
+      {
+        ...base,
+        composition: {
+          structure: 'none',
+          variants: [],
+          reverse: {
+            area: { type: 'none', level: 1 },
+            parts: [{ id: 902, name: 'Blinded' }],
+          },
+        },
+      },
+      db,
+    )!;
+    expect(smaller.reverse!.rawEnergy).toBeLessThan(inherited.reverse!.rawEnergy);
+    expect(smaller.reverse!.actionMultiplier).toBe(1);
+    expect(smaller.reverse!.discount).toBeCloseTo(smaller.reverse!.rawEnergy / 2);
+  });
+
+  it('refunds more energy when a drawback takes longer to harm you', () => {
+    const db: PowerPart[] = [
+      ...partsDb,
+      part({
+        id: String(PART_IDS.POWER_QUICK_OR_FREE_ACTION),
+        name: 'Power Quick or Free Action',
+        mechanic: true,
+        percentage: true,
+        base_en: 1.25,
+        op_1_en: 0.25,
+      }),
+      part({
+        id: String(PART_IDS.POWER_LONG_ACTION),
+        name: 'Power Long Action',
+        mechanic: true,
+        percentage: true,
+        base_en: 0.875,
+        op_1_en: -0.125,
+      }),
+      part({ id: '920', name: 'Drawback', base_en: 4 }),
+      part({ id: '921', name: 'Benefit', base_en: 20 }),
+    ];
+    const actions = ['free', 'quick', 'basic', 'long4'] as const;
+    const expected = [2 / 1.5, 2 / 1.25, 2, 2 / 0.75];
+    const discounts = actions.map((actionType) => {
+      const res = resolvePowerComposition(
+        {
+          name: 'Harm',
+          actionType,
+          parts: [{ id: 921, name: 'Benefit' }],
+          composition: {
+            structure: 'none',
+            variants: [],
+            reverse: { parts: [{ id: 920, name: 'Drawback' }] },
+          },
+        },
+        db,
+      )!;
+      return res.reverse!.discount;
+    });
+    discounts.forEach((discount, index) => expect(discount).toBeCloseTo(expected[index]!));
+    expect(discounts[0]!).toBeLessThan(discounts[1]!);
+    expect(discounts[1]!).toBeLessThan(discounts[2]!);
+    expect(discounts[2]!).toBeLessThan(discounts[3]!);
+
+    const badDeltas = actions.map((actionType) => {
+      const res = resolvePowerComposition(
+        {
+          name: 'Wild',
+          actionType,
+          parts: [{ id: 921, name: 'Benefit' }],
+          composition: {
+            structure: 'randomize',
+            variants: [
+              {
+                id: 'bad',
+                label: 'Bad',
+                polarity: 'negative',
+                parts: [{ id: 920, name: 'Drawback' }],
+              },
+            ],
+            die: { sides: 2, faces: ['bad', 'bad'] },
+          },
+        },
+        db,
+      )!;
+      return res.structureEnergy - (res.shared?.rawEnergy ?? 0);
+    });
+    badDeltas.forEach((delta, index) => {
+      expect(delta).toBeCloseTo(-expected[index]!);
+      expect(delta).toBeCloseTo(-drawbackReductionForAction(4, [1.5, 1.25, 1, 0.75][index]!));
+    });
+    expect(badDeltas[0]!).toBeGreaterThan(badDeltas[3]!);
+  });
+
+  it('shows unrounded Reverse intermediates in the breakdown', () => {
+    const db: PowerPart[] = [
+      ...partsDb,
+      part({ id: '930', name: 'Benefit', base_en: 6.25 }),
+      part({ id: '931', name: 'Drawback', base_en: 4.5 }),
+    ];
+    const res = resolvePowerComposition(
+      {
+        name: 'Ward',
+        actionType: 'basic',
+        parts: [{ id: 930, name: 'Benefit' }],
+        composition: {
+          structure: 'none',
+          variants: [],
+          reverse: { parts: [{ id: 931, name: 'Drawback' }] },
+        },
+      },
+      db,
+    )!;
+    expect(res.reverse!.rawEnergy).toBeCloseTo(4.5);
+    expect(res.reverse!.discount).toBeCloseTo(2.25);
+    expect(res.energy).toBe(4);
+    const lines = powerCompositionEnergyLines(res);
+    expect(lines).toContain('Reverse drawback 4.5 EN → −2.25 EN');
+    expect(lines.at(-1)).toBe('Total: 4 EN');
+  });
+
+  it('Judgement-shaped Choice stays 6 EN when the sphere stays on Shared', () => {
+    const db = withPercentageSphere([
+      ...partsDb,
+      part({
+        id: String(PART_IDS.LIGHT_DAMAGE),
+        name: 'Light Damage',
+        category: 'Damage',
+        mechanic: true,
+        base_en: 3,
+        op_1_en: 1,
+      }),
+      part({
+        id: String(PART_IDS.POISON_OR_NECROTIC_DAMAGE),
+        name: 'Poison or Necrotic Damage',
+        category: 'Damage',
+        mechanic: true,
+        base_en: 3.5,
+        op_1_en: 1,
+      }),
+    ]);
+    const res = resolvePowerComposition(
+      {
+        name: 'Judgement',
+        actionType: 'basic',
+        area: { type: 'sphere', level: 1 },
+        composition: {
+          structure: 'choice',
+          variants: [
+            { id: 'light', label: 'Light', damage: [{ amount: 1, size: 6, type: 'light' }] },
+            {
+              id: 'necrotic',
+              label: 'Necrotic',
+              damage: [{ amount: 1, size: 6, type: 'necrotic' }],
+            },
+          ],
+        },
+      },
+      db,
+    )!;
+    expect(res.energy).toBe(6);
   });
 
   it('names the Randomize save block when a variant has no face', () => {

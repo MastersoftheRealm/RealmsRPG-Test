@@ -83,6 +83,91 @@ describe('Modify variant tabs', () => {
   });
 });
 
+describe('action type stays on Shared', () => {
+  function pieceWithQuickAction() {
+    const form = emptyTabForm();
+    form.actionType = 'quick';
+    form.isReaction = true;
+    return form;
+  }
+
+  it('drops a stored action override on Modify, Choice, and Reverse', () => {
+    const shared = emptyTabForm();
+    const flags = setOverlayField({}, 'v1', 'action', true);
+    for (const structure of ['modify', 'choice'] as const) {
+      const payload = buildCompositionPayload({
+        structure,
+        reverseEnabled: false,
+        shared,
+        variants: [
+          {
+            id: 'v1',
+            label: 'Variant 1',
+            polarity: 'positive',
+            description: '',
+            form: pieceWithQuickAction(),
+          },
+        ],
+        reverse: emptyTabForm(),
+        dieSides: 2,
+        dieFaces: ['', ''],
+        overlayFlags: flags,
+      });
+      expect(payload?.variants[0]?.actionType).toBeUndefined();
+      expect(payload?.variants[0]?.isReaction).toBeUndefined();
+      expect(payload?.variants[0]?.overrides ?? []).not.toContain('action');
+    }
+
+    const reverse = pieceWithQuickAction();
+    reverse.selectedParts = [
+      {
+        part: { id: '902', name: 'Blinded' },
+        op_1_lvl: 0,
+        op_2_lvl: 0,
+        op_3_lvl: 0,
+        applyDuration: false,
+        selectedCategory: 'any',
+      },
+    ] as typeof reverse.selectedParts;
+    const reverseFlags = setOverlayField({}, REVERSE_TAB_ID, 'action', true);
+    const reversePayload = buildCompositionPayload({
+      structure: 'none',
+      reverseEnabled: true,
+      shared,
+      variants: [],
+      reverse,
+      dieSides: 2,
+      dieFaces: [],
+      overlayFlags: reverseFlags,
+    });
+    expect(reversePayload?.reverse?.actionType).toBeUndefined();
+    expect(reversePayload?.reverse?.isReaction).toBeUndefined();
+    expect(reversePayload?.reverse?.overrides ?? []).not.toContain('action');
+  });
+
+  it('keeps an Alternate variant’s own action type', () => {
+    const payload = buildCompositionPayload({
+      structure: 'alternate',
+      reverseEnabled: false,
+      shared: emptyTabForm(),
+      variants: [
+        {
+          id: 'v1',
+          label: 'Variant 1',
+          polarity: 'positive',
+          description: '',
+          form: pieceWithQuickAction(),
+        },
+      ],
+      reverse: emptyTabForm(),
+      dieSides: 2,
+      dieFaces: ['', ''],
+    });
+    expect(payload?.variants[0]?.actionType).toBe('quick');
+    expect(payload?.variants[0]?.isReaction).toBe(true);
+  });
+});
+
 describe('Reverse tab overrides', () => {
   it('keeps an Instant duration override through save and load', () => {
     const shared = emptyTabForm();

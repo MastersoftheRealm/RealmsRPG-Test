@@ -319,24 +319,42 @@ export interface CollectedCompositionForms {
   overlayFlags?: OverlayFlagMap | undefined;
 }
 
+/** Modify, Choice, and Reverse keep Shared’s action type. Drop a stored action override. */
+function withoutLockedAction<T extends PowerVariantSpec>(
+  spec: T,
+  overrides: PowerVariantOverrideField[],
+): { spec: T; overrides: PowerVariantOverrideField[] } {
+  const next = { ...spec };
+  delete next.actionType;
+  delete next.isReaction;
+  return { spec: next, overrides: overrides.filter((field) => field !== 'action') };
+}
+
 /** Saved `composition` (or undefined for a plain power). */
 export function buildCompositionPayload(
   c: CollectedCompositionForms,
 ): PowerComposition | undefined {
   if (c.structure === 'none' && !c.reverseEnabled) return undefined;
   const isAlternate = c.structure === 'alternate';
+  const lockVariantAction = c.structure === 'modify' || c.structure === 'choice';
   const variants =
     c.structure === 'none'
       ? []
       : c.variants.map((v) => {
           const keep = overlayFlagsForTab(c.overlayFlags ?? {}, v.id);
-          const overrides = [...keep];
+          let overrides = [...keep];
+          let spec = isAlternate
+            ? tabFormToSpec(v.form)
+            : tabFormToOverlay(diffAgainstShared(c.shared, v.form, keep), keep);
+          if (lockVariantAction) {
+            const locked = withoutLockedAction(spec, overrides);
+            spec = locked.spec;
+            overrides = locked.overrides;
+          }
           return {
             id: v.id,
             label: v.label.trim() || v.id,
-            ...(isAlternate
-              ? tabFormToSpec(v.form)
-              : tabFormToOverlay(diffAgainstShared(c.shared, v.form, keep), keep)),
+            ...spec,
             ...(v.description.trim() && c.structure !== 'modify'
               ? { description: v.description.trim() }
               : {}),
@@ -345,8 +363,11 @@ export function buildCompositionPayload(
           };
         });
   const reverseKeep = overlayFlagsForTab(c.overlayFlags ?? {}, REVERSE_TAB_ID);
-  const reverseOverlay = tabFormToOverlay(c.reverse, reverseKeep);
-  const reverseOverrides = [...reverseKeep];
+  const reverseBuilt = withoutLockedAction(tabFormToOverlay(c.reverse, reverseKeep), [
+    ...reverseKeep,
+  ]);
+  const reverseOverlay = reverseBuilt.spec;
+  const reverseOverrides = reverseBuilt.overrides;
   return {
     structure: c.structure,
     variants,

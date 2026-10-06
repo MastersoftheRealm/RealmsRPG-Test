@@ -18,6 +18,8 @@ export type InheritedField = {
   overridden: boolean;
   onOverride: () => void;
   onUseShared: () => void;
+  /** Action type on Modify, Choice, and Reverse. Shown from Shared, with no Override. */
+  locked?: boolean | undefined;
 };
 
 const same = (a: unknown, b: unknown) => JSON.stringify(a) === JSON.stringify(b);
@@ -66,7 +68,23 @@ export function sharedDamageLabel(form: PowerTabForm): string {
   return rows.map((d) => `${d.amount}d${d.size} ${d.type}`).join(', ');
 }
 
-export function FromSharedNotice({ label, overridden, onOverride, onUseShared }: InheritedField) {
+export function FromSharedNotice({
+  label,
+  overridden,
+  onOverride,
+  onUseShared,
+  locked = false,
+}: InheritedField) {
+  if (locked) {
+    return (
+      <div className="mb-3 rounded-lg border border-border-light bg-surface-alt px-3 py-2">
+        <p className="min-w-0 text-sm text-text-secondary">
+          <span className="font-medium text-text-primary">From Shared:</span> {label}. Action type
+          stays on Shared for this tab.
+        </p>
+      </div>
+    );
+  }
   if (overridden) {
     return (
       <div className="mb-3">

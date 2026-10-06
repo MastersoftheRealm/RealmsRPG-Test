@@ -132,7 +132,7 @@ describe('buildPowerVariantChips', () => {
     )!;
     const help = powerVariantsDetailSection(res)?.labelHelp ?? '';
     expect(help).toMatch(/good outcome/i);
-    expect(help).toMatch(/half its drawback/);
+    expect(help).toMatch(/half the drawback/);
     expect(help).not.toMatch(/\+1 EN/);
   });
 

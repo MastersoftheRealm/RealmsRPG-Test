@@ -654,22 +654,15 @@ export const powerCreatorStructureHelp = (
       <strong>Variants</strong> are the versions of this power you switch between or combine.
     </div>
     <div>
-      <strong>Choice</strong>: {powerCompositionHelpText('choice', [])}{' '}
-      <strong>Alternate</strong>: {powerCompositionHelpText('alternate', [])}{' '}
-      <strong>Modify</strong>: {powerCompositionHelpText('modify', [])}{' '}
-      <strong>Randomize</strong>: {powerCompositionHelpText('randomize', [])}
+      <strong>Choice</strong>: {powerCompositionHelpText('choice')}{' '}
+      <strong>Alternate</strong>: {powerCompositionHelpText('alternate')}{' '}
+      <strong>Modify</strong>: {powerCompositionHelpText('modify')}{' '}
+      <strong>Randomize</strong>: {powerCompositionHelpText('randomize')}
     </div>
   </div>
 );
 
-export const powerCreatorReverseHelp = (
-  <div>
-    If the power benefits you or an ally, add a drawback on the Reverse tab. The drawback reduces
-    the cost by 50% of its own energy and cannot be nullified or reduced by you or an ally. Once
-    the power has a costed part, the 1 EN floor still applies, so the discount cannot drop the
-    cost below 1 EN.
-  </div>
-);
+export const powerCreatorReverseHelp = <div>{powerCompositionHelpText('reverse')}</div>;
 
 export const powerCreatorMechanicsHelp = (
   <div>

@@ -1,5 +1,10 @@
 import type { PowerPart, TechniquePart } from '@/hooks/codex-types';
-import { calculatePowerCosts, finalizePowerEnergy, type PowerPartPayload } from './power-calc';
+import {
+  calculatePowerCosts,
+  energyFloorApplies,
+  finalizePowerEnergy,
+  type PowerPartPayload,
+} from './power-calc';
 import { calculateTechniqueCosts, type TechniquePartPayload } from './technique-calc';
 import { findByIdOrName } from '@/lib/id-constants';
 import { dedupeSavedParts } from '@/lib/game/dedupe-saved-parts';
@@ -12,17 +17,6 @@ export interface EmpoweredTechniqueCostResult {
   powerEnergyRaw: number;
   techniqueEnergyRaw: number;
   techniquePercentageMultiplier: number;
-}
-
-/** True when the 1 EN floor should publish a number. An empty shell stays 0. */
-export function empoweredEnergyFloorApplies(
-  powerRaw: number,
-  techniqueRaw: number,
-  combinedRaw: number,
-  hasResolvedParts: boolean,
-): boolean {
-  if (!hasResolvedParts) return false;
-  return powerRaw > 1e-9 || techniqueRaw > 1e-9 || combinedRaw > 1e-9;
 }
 
 function getTechniquePartEnergyContribution(
@@ -76,19 +70,15 @@ export function calculateEmpoweredTechniqueCosts(
   // Empowered rule: technique percentage mechanics also scale the power side.
   const adjustedPowerEnergyRaw = powerCosts.energyRaw * techniquePercentageMultiplier;
   const energyRaw = adjustedPowerEnergyRaw + techniqueCosts.energyRaw;
-  const hasResolvedParts = powerCosts.hasCostedParts || techniqueCosts.hasCostedParts;
-  // A reduction on an empty shell (default No Attack) has raw ≤ 0. That is a dash,
-  // same as an empty power or technique. The 1 EN floor still applies once a side
-  // contributes positive energy.
-  const hasCostedParts = empoweredEnergyFloorApplies(
-    powerCosts.energyRaw,
-    techniqueCosts.energyRaw,
+  // Same floor as powers and techniques: only a positive flat (or a raw total
+  // still above 0) publishes a number. No Attack alone stays a dash.
+  const hasPositiveEnergy = energyFloorApplies(
+    powerCosts.hasPositiveEnergy || techniqueCosts.hasPositiveEnergy,
     energyRaw,
-    hasResolvedParts,
   );
 
   return {
-    totalEnergy: finalizePowerEnergy(energyRaw, hasCostedParts),
+    totalEnergy: finalizePowerEnergy(energyRaw, hasPositiveEnergy),
     totalTP: powerCosts.totalTP + techniqueCosts.totalTP,
     tpSources: [
       ...powerCosts.tpSources.map((src) => `[Power] ${src}`),

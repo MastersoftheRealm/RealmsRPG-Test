@@ -4,8 +4,7 @@
  * scaling of the power side, and Combined Energy. Does not change cost formulas.
  */
 
-import { formatEnergyStat, type PowerEnergyAnalysis } from './power-calc';
-import { empoweredEnergyFloorApplies } from './empowered-technique-calc';
+import { energyFloorApplies, formatEnergyStat, type PowerEnergyAnalysis } from './power-calc';
 import {
   buildPowerEnergySectionGroups,
   formatEnergyNumber,
@@ -83,11 +82,9 @@ export function buildEmpoweredAdvancedCalculationGroups(
     });
   }
 
-  const publishesEnergy = empoweredEnergyFloorApplies(
-    input.powerAnalysis.energyRaw,
-    input.techniqueAnalysis.energyRaw,
+  const publishesEnergy = energyFloorApplies(
+    input.powerAnalysis.hasPositiveEnergy || input.techniqueAnalysis.hasPositiveEnergy,
     energyRaw,
-    input.powerAnalysis.lines.length > 0 || input.techniqueAnalysis.lines.length > 0,
   );
   const needsRoundUp =
     publishesEnergy && totalEnergy > 0 && !nearlyEqual(energyRaw, totalEnergy) && energyRaw > 0;

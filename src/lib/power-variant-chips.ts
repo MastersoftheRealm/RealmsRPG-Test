@@ -10,6 +10,7 @@ import {
   composedPowerDamage,
   formatPowerDamage,
   POWER_COMPOSITION_STRUCTURE_LABELS,
+  formatEnergyIntermediate,
   reverseDiscountApplied,
   type PowerCompositionResolution,
   type ResolvedPowerVariant,
@@ -172,9 +173,15 @@ export function withPowerReverseNote(
   const damage = formatPowerDamage(res.reverse.doc.damage);
   const list = [...new Set([...drawbacks, ...(damage ? [damage] : [])])].join(', ');
   const { applied, limitedByFloor } = reverseDiscountApplied(res);
+  const drawback = formatEnergyIntermediate(res.reverse.rawEnergy);
+  const reductionAmount = formatEnergyIntermediate(res.reverse.discount);
+  const actionNote =
+    Math.abs(res.reverse.actionMultiplier - 1) > 1e-9
+      ? `, divided by the action multiplier ${formatEnergyIntermediate(res.reverse.actionMultiplier)}`
+      : '';
   const reduction = limitedByFloor
-    ? `reduces the cost by ${formatCost(applied)} EN. Half the drawback is ${formatCost(res.reverse.discount)} EN, and the 1 EN floor means only ${formatCost(applied)} EN comes off`
-    : `reduces the cost by ${formatCost(applied)} EN (50% of the drawback's ${res.reverse.energy} EN)`;
+    ? `reduces the cost by ${formatEnergyIntermediate(applied)} EN. The drawback reduction is ${reductionAmount} EN${actionNote}, and the 1 EN floor means only ${formatEnergyIntermediate(applied)} EN comes off`
+    : `reduces the cost by ${reductionAmount} EN (50% of the drawback's ${drawback} EN${actionNote})`;
   const note = `Reverse Effects${list ? ` (${list})` : ''}: always applies and cannot be nullified or reduced by you or an ally; ${reduction}.`;
   return base ? `${base} ${note}` : note;
 }

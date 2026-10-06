@@ -26,11 +26,12 @@ describe('powerListFactCells', () => {
       'damage',
     ]);
     expect(cells.find((cell) => cell.key === 'damage')?.value).toBe('1d8 Ice');
+    expect(cells.find((cell) => cell.key === 'damage')?.keepOnMobileSummary).toBe(true);
   });
 
   it('follows the sheet play headers when the energy column is off', () => {
-    expect(powerListFactCells(row, false).map((cell) => cell.key)).toEqual(
-      headerFactKeys(POWER_COLUMNS),
-    );
+    const cells = powerListFactCells(row, false);
+    expect(cells.map((cell) => cell.key)).toEqual(headerFactKeys(POWER_COLUMNS));
+    expect(cells.find((cell) => cell.key === 'damage')?.keepOnMobileSummary).toBeUndefined();
   });
 });

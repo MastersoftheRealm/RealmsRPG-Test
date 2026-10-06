@@ -6,7 +6,6 @@
 'use client';
 
 import { Plus, X } from 'lucide-react';
-import type { PowerPart } from '@/hooks';
 import {
   Button,
   Card,
@@ -55,20 +54,18 @@ function tabHint(structure: PowerCompositionStructure, activeTabId: string): str
 
 type PowerCreatorCompositionBandProps = {
   state: PowerCreatorCompositionState;
-  powerParts: PowerPart[];
   tabGroupId: string;
   sharedPanelId: string;
 };
 
 export function PowerCreatorCompositionBand({
   state,
-  powerParts,
   tabGroupId,
   sharedPanelId,
 }: PowerCreatorCompositionBandProps) {
   const { structure, reverseEnabled, variants, activeVariant, activeTabId } = state;
-  const description = powerCompositionHelpText(structure, powerParts);
-  const reverseDescription = reverseEnabled ? powerCompositionHelpText('reverse', powerParts) : '';
+  const description = powerCompositionHelpText(structure);
+  const reverseDescription = reverseEnabled ? powerCompositionHelpText('reverse') : '';
 
   const tabs = state.tabIds.map((id) => {
     if (id === SHARED_TAB_ID) {

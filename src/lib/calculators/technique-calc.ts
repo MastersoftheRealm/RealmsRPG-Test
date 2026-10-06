@@ -49,8 +49,8 @@ export interface TechniqueCostResult {
   totalTP: number;
   tpSources: string[];
   energyRaw: number;
-  /** False when nothing resolved into the cost equation. The 1 EN floor does not apply. */
-  hasCostedParts: boolean;
+  /** True when a flat contribution is above 0. The 1 EN floor reads this. */
+  hasPositiveEnergy: boolean;
 }
 
 export interface TechniqueDisplayData {
@@ -184,7 +184,7 @@ export function calculateTechniqueCosts(
   let sumNonPercentage = 0;
   let productPercentage = 1;
   let totalTP = 0;
-  let hasCostedParts = false;
+  let positiveEnergy = 0;
   const tpSources: string[] = [];
 
   const uniqueParts = dedupeSavedParts(partsPayload);
@@ -195,7 +195,6 @@ export function calculateTechniqueCosts(
       name: pl.name ?? pl.part?.name,
     });
     if (!def) return;
-    hasCostedParts = true;
 
     const l1 = pl.op_1_lvl || 0;
     const l2 = pl.op_2_lvl || 0;
@@ -212,6 +211,7 @@ export function calculateTechniqueCosts(
       productPercentage *= energyContribution;
     } else {
       sumNonPercentage += energyContribution;
+      if (energyContribution > 1e-9) positiveEnergy += energyContribution;
     }
 
     const partTP = computePartTrainingPoints(
@@ -230,8 +230,9 @@ export function calculateTechniqueCosts(
   });
 
   const energyRaw = sumNonPercentage * productPercentage;
-  const totalEnergy = finalizePowerEnergy(energyRaw, hasCostedParts);
-  return { totalEnergy, totalTP, tpSources, energyRaw, hasCostedParts };
+  const hasPositiveEnergy = positiveEnergy > 1e-9;
+  const totalEnergy = finalizePowerEnergy(energyRaw, hasPositiveEnergy);
+  return { totalEnergy, totalTP, tpSources, energyRaw, hasPositiveEnergy };
 }
 
 // =============================================================================

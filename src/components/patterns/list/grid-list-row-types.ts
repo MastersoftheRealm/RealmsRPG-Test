@@ -98,6 +98,11 @@ interface ColumnValueFields {
   className?: string | undefined;
   /** Hide on mobile */
   hideOnMobile?: boolean | undefined;
+  /**
+   * Keep this fact on the mobile summary even when it falls past the first three.
+   * Creature stat-block Damage uses this. Other lists leave it unset.
+   */
+  keepOnMobileSummary?: boolean | undefined;
   /** Text alignment */
   align?: 'left' | 'center' | 'right' | undefined;
 }

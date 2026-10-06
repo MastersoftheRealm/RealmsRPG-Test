@@ -197,26 +197,34 @@ function PowerCreatorWorkspace({
     selectedAdvancedParts: ws.selectedAdvancedParts,
   };
   const overlayTabId = ws.variants.activeTabId;
+  const actionLocked =
+    onOverlayTab &&
+    (overlayTabId === REVERSE_TAB_ID ||
+      ws.variants.structure === 'modify' ||
+      ws.variants.structure === 'choice');
   const inheritance: PowerCreatorInheritance | null = onOverlayTab
     ? {
-        action: inheritField(
-          showsFieldOverride(
-            actionIsOverride(live),
-            ws.variants.isFieldForcedOverride(overlayTabId, 'action'),
+        action: {
+          ...inheritField(
+            showsFieldOverride(
+              actionIsOverride(live),
+              ws.variants.isFieldForcedOverride(overlayTabId, 'action'),
+            ),
+            sharedActionLabel(shared),
+            () => {
+              ws.variants.markFieldOverridden(overlayTabId, 'action');
+              ws.setActionType(shared.actionType);
+              ws.setIsReaction(shared.isReaction);
+            },
+            () => {
+              ws.variants.clearFieldOverridden(overlayTabId, 'action');
+              const blank = emptyTabForm();
+              ws.setActionType(blank.actionType);
+              ws.setIsReaction(blank.isReaction);
+            },
           ),
-          sharedActionLabel(shared),
-          () => {
-            ws.variants.markFieldOverridden(overlayTabId, 'action');
-            ws.setActionType(shared.actionType);
-            ws.setIsReaction(shared.isReaction);
-          },
-          () => {
-            ws.variants.clearFieldOverridden(overlayTabId, 'action');
-            const blank = emptyTabForm();
-            ws.setActionType(blank.actionType);
-            ws.setIsReaction(blank.isReaction);
-          },
-        ),
+          ...(actionLocked ? { locked: true, overridden: false } : {}),
+        },
         attack: inheritField(
           showsFieldOverride(
             attackIsOverride(live),
@@ -378,7 +386,6 @@ function PowerCreatorWorkspace({
       aboveGrid={
         <PowerCreatorCompositionBand
           state={ws.variants}
-          powerParts={ws.powerParts}
           tabGroupId={variantTabGroup.tabGroupId}
           sharedPanelId={variantTabGroup.sharedPanelId}
         />
