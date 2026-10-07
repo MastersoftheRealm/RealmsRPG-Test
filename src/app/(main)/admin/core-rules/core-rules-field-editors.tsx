@@ -1,3 +1,5 @@
+import * as React from 'react';
+
 /** Standard-tier add-row text control — coarse 44, fine compact. Do not shrink with `md:min-h-*`. */
 export const CORE_RULES_ADD_ROW_CLASS =
   'mt-2 flex touch-tier-standard items-center gap-1 text-xs text-primary-link-fg hover:text-primary-fg-hover';
