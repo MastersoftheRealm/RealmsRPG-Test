@@ -188,6 +188,7 @@ function EmpoweredTechniqueWorkspace({
         onClose: () => ws.save.setShowPublishConfirm(false),
         onConfirm: () => ws.save.confirmPublish(),
         title: ws.save.publishConfirmTitle,
+        confirmLabel: ws.save.publishConfirmLabel,
         description:
           ws.save.publishConfirmDescription?.(ws.name.trim(), {
             existingInPublic: ws.save.publishExistingInPublic,

@@ -38,11 +38,15 @@ export function CreatorNameField({
   value,
   onChange,
   placeholder,
+  label,
+  'aria-label': ariaLabel,
 }: {
   id: string;
   value: string;
   onChange: (value: string) => void;
   placeholder: string;
+  label?: string;
+  'aria-label'?: string;
 }) {
   const [truncated, setTruncated] = useState(false);
   const counter = `${value.length} of ${CREATOR_NAME_MAX_LENGTH} characters`;
@@ -50,6 +54,8 @@ export function CreatorNameField({
     <Input
       id={id}
       type="text"
+      label={label}
+      aria-label={ariaLabel}
       value={value}
       maxLength={CREATOR_NAME_MAX_LENGTH}
       placeholder={placeholder}
@@ -76,6 +82,8 @@ export function CreatorDescriptionField({
   placeholder,
   rows = 3,
   className,
+  label,
+  'aria-label': ariaLabel,
 }: {
   id: string;
   value: string;
@@ -83,6 +91,8 @@ export function CreatorDescriptionField({
   placeholder: string;
   rows?: number;
   className?: string;
+  label?: string;
+  'aria-label'?: string;
 }) {
   const [truncated, setTruncated] = useState(false);
   const showCounter = truncated || value.length >= CREATOR_DESCRIPTION_COUNTER_FROM;
@@ -90,6 +100,8 @@ export function CreatorDescriptionField({
   return (
     <Textarea
       id={id}
+      label={label}
+      aria-label={ariaLabel}
       value={value}
       maxLength={CREATOR_DESCRIPTION_MAX_LENGTH}
       placeholder={placeholder}

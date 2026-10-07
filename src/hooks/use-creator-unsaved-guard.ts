@@ -2,8 +2,15 @@
 
 import { useCallback, useEffect, useRef, useState } from 'react';
 import {
+  creatorBackSentinelAction,
+  creatorBackSentinelState,
+  creatorBeforeUnloadListener,
   creatorDraftIsDirty,
   creatorInternalNavigationHref,
+  finishCreatorSentinelRemoval,
+  isCreatorBackSentinel,
+  stepCreatorBackUntilLeft,
+  takeCreatorSentinelRemoval,
 } from '@/lib/creator/creator-unsaved-guard';
 
 /** Tracks the last accepted draft. Call acceptDraft after save, load, or reset. */
@@ -43,14 +50,11 @@ export function useCreatorLeaveBlocker(isDirty: boolean): {
 } {
   const [request, setRequest] = useState<CreatorLeaveRequest | null>(null);
   const leavingRef = useRef(false);
+  const removingRef = useRef(false);
 
   useEffect(() => {
     if (!isDirty) return;
-    const onBeforeUnload = (event: BeforeUnloadEvent) => {
-      if (leavingRef.current) return;
-      event.preventDefault();
-      event.returnValue = '';
-    };
+    const onBeforeUnload = creatorBeforeUnloadListener(() => !leavingRef.current);
     window.addEventListener('beforeunload', onBeforeUnload);
     return () => window.removeEventListener('beforeunload', onBeforeUnload);
   }, [isDirty]);
@@ -80,12 +84,28 @@ export function useCreatorLeaveBlocker(isDirty: boolean): {
   }, [isDirty]);
 
   useEffect(() => {
-    if (!isDirty) return;
+    const action = creatorBackSentinelAction(isDirty, window.history.state);
     const creatorUrl = window.location.href;
-    window.history.pushState({ creatorUnsavedGuard: true }, '', creatorUrl);
+    if (action === 'push') {
+      finishCreatorSentinelRemoval();
+      window.history.pushState(creatorBackSentinelState(window.history.state), '', creatorUrl);
+    } else if (action === 'back' && takeCreatorSentinelRemoval()) {
+      removingRef.current = true;
+      window.history.back();
+    } else if (action === 'none') {
+      finishCreatorSentinelRemoval();
+    }
+    if (!isDirty) return;
     const onPop = () => {
+      if (removingRef.current) {
+        removingRef.current = false;
+        finishCreatorSentinelRemoval();
+        return;
+      }
       if (leavingRef.current) return;
-      window.history.pushState({ creatorUnsavedGuard: true }, '', creatorUrl);
+      if (!isCreatorBackSentinel(window.history.state)) {
+        window.history.pushState(creatorBackSentinelState(window.history.state), '', creatorUrl);
+      }
       setRequest({ type: 'back' });
     };
     window.addEventListener('popstate', onPop);
@@ -103,7 +123,10 @@ export function useCreatorLeaveBlocker(isDirty: boolean): {
       window.location.assign(pending.href);
       return;
     }
-    window.history.go(-2);
+    stepCreatorBackUntilLeft(window.history, window.location, (onPop) => {
+      window.addEventListener('popstate', onPop);
+      return () => window.removeEventListener('popstate', onPop);
+    });
   }, [request]);
 
   return { request, dismiss, confirm };

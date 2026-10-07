@@ -19,6 +19,7 @@ import {
   type LoginPromptReason,
 } from '@/components/patterns';
 import { useCreatorLeaveBlocker } from '@/hooks/use-creator-unsaved-guard';
+import { creatorToolbarLoadAction } from '@/lib/creator/creator-unsaved-guard';
 import type { CreatorSaveTarget } from '@/lib/library/catalog-listing';
 import { CreatorLayout } from './CreatorLayout';
 import { CreatorSaveToolbar } from './CreatorSaveToolbar';
@@ -153,12 +154,16 @@ export function CreatorPageShell({
   }, [user, onSave]);
 
   const handleLoad = useCallback(() => {
-    if (requireAuthToLoad && !user) {
+    const loadAction = creatorToolbarLoadAction({
+      unsavedDirty,
+      needsLogin: requireAuthToLoad && !user,
+    });
+    if (loadAction === 'login') {
       setLoginReason('load');
       setShowLoginPrompt(true);
       return;
     }
-    if (unsavedDirty) {
+    if (loadAction === 'confirm-discard') {
       setDiscardAction('load');
       return;
     }
@@ -253,9 +258,7 @@ export function CreatorPageShell({
             onConfirm={() => void publish.onConfirm()}
             title={publish.title}
             description={publish.description}
-            confirmLabel={
-              publish.confirmLabel ?? (publish.title.startsWith('Replace ') ? 'Replace' : 'Publish')
-            }
+            confirmLabel={publish.confirmLabel ?? 'Publish'}
             icon="publish"
           />
           <ConfirmActionModal

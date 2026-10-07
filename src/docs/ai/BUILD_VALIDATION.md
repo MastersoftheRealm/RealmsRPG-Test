@@ -5587,11 +5587,11 @@ islands (Phase 4) and workspace hook (Phase 5). **T012–T014** cover expanded h
 |-------|-------|
 | **Suite** | DEV-V-018 — CreatorPageShell parity |
 | **Related task** | 86e3jx8ww |
-| **Where** | `/power-creator` (also item, technique, empowered technique, creature) |
+| **Where** | `/power-creator` (also item, technique, empowered technique, creature, species) |
 | **Needs** | A signed-in account that can save to My Library |
 
 **Steps**
-1. Open `/power-creator`. Confirm the name field shows a live counter and `maxlength="100"`. Paste 101 characters.
+1. Open `/power-creator` and `/species-creator`. Confirm each name field shows a live counter and `maxlength="100"`. Paste 101 characters.
 2. Save. Confirm the stored name is 100 characters and the toast names that limit if save is still rejected.
 3. Paste a description of 10,000 characters and save. Then try to go past 10,000.
 
@@ -5606,17 +5606,19 @@ islands (Phase 4) and workspace hook (Phase 5). **T012–T014** cover expanded h
 |-------|-------|
 | **Suite** | DEV-V-018 — CreatorPageShell parity |
 | **Related task** | 86e3jp7e1 |
-| **Where** | `/power-creator` (also item, technique, empowered technique, creature) |
+| **Where** | `/power-creator` (also item, technique, empowered technique, creature, species) |
 | **Needs** | A signed-in account with two My library powers |
 
 **Steps**
 1. Save a power named X. Reset. Build a different power, name it X, and click Save.
 2. Cancel the confirm. Confirm X in My library is unchanged. Save again and choose Replace.
 3. Open the first power with `?edit=`, change its description, and Save. Then Reset, name the draft an existing different power, and Save.
+4. On `/species-creator`, Load a My library species, Reset, then Save the same name.
 
 **Expected**
 - The first save of a new name does not ask. A second save of that name asks before it overwrites, and Cancel leaves the older item. Replace updates that older item.
 - Saving the open `?edit=` item with its own name does not ask. Saving it under a different existing name asks before that other item is overwritten.
+- Species Reset drops the loaded id. Saving that name again asks before it replaces the row.
 
 **Report** — `[ ] PASS` · `[ ] FAIL` · `[ ] SKIP` — Notes:
 
@@ -5645,16 +5647,18 @@ islands (Phase 4) and workspace hook (Phase 5). **T012–T014** cover expanded h
 |-------|-------|
 | **Suite** | DEV-V-018 — CreatorPageShell parity |
 | **Related task** | 86e3jzbkx |
-| **Where** | `/power-creator` (also item, technique, empowered technique, creature) |
+| **Where** | `/power-creator` (also item, technique, empowered technique, creature, species) |
 | **Needs** | A signed-in account |
 
 **Steps**
 1. Change the name or description without saving. Reload. Choose to stay, then reload and leave.
 2. Click the site logo, then Back. Keep editing, then confirm discard.
 3. Click Load. Keep editing, then confirm and load another row.
+4. On `/species-creator`, edit the name, then reload, Back, Load, and header Login. Save, edit again, and press Back.
 
 **Expected**
-- Each of those asks before the draft is discarded. Keep editing leaves the draft in place. A successful save or a completed load does not ask again until the next edit.
+- Each of those asks before the draft is discarded. Keep editing leaves the draft in place. A successful save, a completed load, or Reset does not ask again until the next edit.
+- Species is guarded. Header Login asks only when the draft is dirty. Back after save then another edit leaves the creator.
 
 **Report** — `[ ] PASS` · `[ ] FAIL` · `[ ] SKIP` — Notes:
 

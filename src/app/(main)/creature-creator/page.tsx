@@ -141,6 +141,7 @@ function CreatureCreatorContent() {
         onClose: () => save.setShowPublishConfirm(false),
         onConfirm: () => save.confirmPublish(),
         title: save.publishConfirmTitle,
+        confirmLabel: save.publishConfirmLabel,
         description:
           save.publishConfirmDescription?.(creature.name.trim(), {
             existingInPublic: save.publishExistingInPublic,
