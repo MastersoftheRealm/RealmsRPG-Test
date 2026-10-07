@@ -231,6 +231,11 @@ export function speciesLibraryRecordToFormState(
   };
 }
 
+/** Official Library and My Codex Edit target for an existing species id. */
+export function speciesCreatorEditHref(id: string): string {
+  return `/species-creator?edit=${encodeURIComponent(id)}`;
+}
+
 /** Map a `?edit=` library row into the creator form. Null when that id is not loaded. */
 export function resolveSpeciesEditForm(
   editSpeciesId: string,

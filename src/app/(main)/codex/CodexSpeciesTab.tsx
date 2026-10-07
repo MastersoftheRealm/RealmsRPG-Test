@@ -7,7 +7,9 @@
 'use client';
 
 import { useState, useMemo } from 'react';
+import { useRouter } from 'next/navigation';
 import { formatListCellLabel } from '@/lib/utils';
+import { speciesCreatorEditHref } from '../species-creator/species-creator-bootstrap';
 import { ChipSelect } from '@/components/patterns/filters';
 import {
   CodexBrowseListShell,
@@ -48,10 +50,12 @@ function SpeciesCard({
   species,
   allTraits,
   skillIdToName,
+  onEdit,
 }: {
   species: Species;
   allTraits: Trait[];
   skillIdToName: Map<string, string>;
+  onEdit?: (() => void) | undefined;
 }) {
   const speciesTraits = useMemo(
     () => resolveTraitIds(species.species_traits || [], allTraits),
@@ -98,6 +102,7 @@ function SpeciesCard({
       description={species.description}
       gridColumns={SPECIES_GRID_COLUMNS}
       columns={columns}
+      onEdit={onEdit}
       expandedContent={
         <div className="space-y-4">
           {species.description && <p className="text-text-secondary">{species.description}</p>}
@@ -224,6 +229,7 @@ export function CodexSpeciesTab({
 }) {
   const isPublic = codexMode === 'public';
   const isMy = codexMode === 'my';
+  const router = useRouter();
   const {
     data: codexSpecies = [],
     isLoading: codexLoading,
@@ -375,6 +381,7 @@ export function CodexSpeciesTab({
         headerColumns={SPECIES_COLUMNS}
         gridColumns={SPECIES_GRID_COLUMNS}
         hasThumbnailColumn
+        rowChrome={isMy ? { edit: true } : undefined}
         sortState={sortState}
         onSort={handleSort}
         isLoading={isLoading}
@@ -388,6 +395,13 @@ export function CodexSpeciesTab({
             species={s}
             allTraits={allTraits || []}
             skillIdToName={skillIdToName}
+            onEdit={
+              isMy
+                ? () => {
+                    router.push(speciesCreatorEditHref(String(s.id)));
+                  }
+                : undefined
+            }
           />
         ))}
       </CodexBrowseListShell>

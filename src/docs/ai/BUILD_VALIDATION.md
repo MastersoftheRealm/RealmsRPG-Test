@@ -8964,6 +8964,29 @@ Built-in variants in `payload.composition` (ADR-0029). Resolver: `lib/calculator
 
 ---
 
+## Species reopen (86e3jmhkn)
+
+Official Library Species tab and My Codex species Edit. `?edit=` load is unchanged. verification_status pending-qa.
+
+#### 86e3jmhkn — Species tab and My Codex Edit
+
+| Field | Value |
+|-------|-------|
+| **Where** | `/admin/public-library`, `/codex` (My Codex → Species), `/species-creator?edit=` |
+| **Needs** | Admin for Official Library. A saved My Codex species for the Edit row. |
+
+**Steps**
+1. Open `/admin/public-library`. Confirm **Species** sits with the other tabs (same tab role and hit area as **Creatures**).
+2. Open Species. Confirm the list matches the creatures row pattern (search, name, Edit). Edit goes to `/species-creator?edit=<id>` and the creator loads that species.
+3. Open `/codex`, choose **My Codex**, then Species. Each row’s Edit goes to `/species-creator?edit=<id>`. Realms Codex species rows have no Edit.
+
+**Expected**
+- Opening the creator with `?edit=` still loads that species. Reset is unchanged.
+
+**Report** — `[ ] PASS` · `[ ] FAIL` · `[ ] SKIP` — Notes:
+
+---
+
 ## Planned suites (split from legacy DEV-T)
 
 | Suite | Topic | Legacy | Status |
