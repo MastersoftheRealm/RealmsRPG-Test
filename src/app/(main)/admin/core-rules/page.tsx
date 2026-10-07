@@ -173,6 +173,7 @@ export default function AdminCoreRulesPage() {
       </div>
 
       <TabNavigation
+        className="admin-core-rules-tabs"
         variant="underline"
         tabs={TABS.map((t) => ({ id: t.id, label: t.label }))}
         activeTab={activeTab}
