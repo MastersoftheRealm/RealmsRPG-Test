@@ -129,6 +129,20 @@ describe('library-selectable-builders (DEV-V-016 parity)', () => {
       emptyCodex,
     );
     expect(shield.columns?.map((c) => c.key)).toEqual(['Block', 'Damage']);
+
+    const withDamage = buildSelectableItem(
+      {
+        id: 's2',
+        name: 'Buckler',
+        type: 'shield',
+        description: '',
+        properties: [],
+        shieldDamage: { amount: 1, size: 4 },
+      },
+      'shield',
+      emptyCodex,
+    );
+    expect(withDamage.columns?.find((c) => c.key === 'Damage')?.value).toBe('1d4 Bludgeoning');
   });
 
   it('buildSelectableItem preserves data for sheet add mapping (DEV-V-016-T006)', () => {

@@ -15,6 +15,7 @@ import {
   deriveCriticalRangeIncreaseFromProperties,
   deriveShieldAmountFromProperties,
   deriveShieldDamageFromProperties,
+  formatStoredShieldDamage,
   resolveItemMarketPricing,
   resolveWeaponRangeDisplay,
   type ItemPropertyPayload,
@@ -196,6 +197,7 @@ export function buildOfficialItemRows(
     const block = deriveShieldAmountFromProperties(props);
     const shieldDamage =
       deriveShieldDamageFromProperties(props) ??
+      formatStoredShieldDamage(item.shieldDamage) ??
       (item.damage ? formatDamageDisplay(item.damage) : null);
     return {
       id: String(item.id ?? item.docId ?? ''),

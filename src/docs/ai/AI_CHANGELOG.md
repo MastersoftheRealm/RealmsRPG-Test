@@ -2,6 +2,7 @@
 
 Newest **150** entries. Older: [`archive/AI_CHANGELOG_ARCHIVE.md`](archive/AI_CHANGELOG_ARCHIVE.md).
 
+- 2026-10-07 | agent | Shield Damage shows in Library and Load columns | files: item-calc formatStoredShieldDamage, official-item-list, library-selectable-builders shield branch | Summary: A saved shield's damage dice were blank because those columns only read a Shield Damage property. They now also show the stored amount and size as Bludgeoning. verification_status pending-qa (86e3jwwrt).
 - 2026-10-07 | agent | Reopening a shield keeps its ability requirement | files: item-creator bootstrap(+test), shield save payload | Summary: Shields save the ability requirement field. Reopen also reads an older copy that stored only the requirement property, so the requirement is not dropped. verification_status pending-qa (86e3jpr0q).
 - 2026-10-07 | agent | Add Property stops once every item property is used | files: item-creator-property-options(+test), property actions, Add Property button | Summary: Add Property no longer falls back to the first property (Critical Range) after the selectable list is used up. The button disables, and string and number ids count as the same property. verification_status pending-qa (86e3jww88).
 - 2026-10-07 | agent | Item creator property dropdown hides properties already on the item | files: item-creator-property-options(+test), property card | Summary: A property used on another card is left out of the dropdown. The card still shows its own current property. verification_status pending-qa (86e3jww87).

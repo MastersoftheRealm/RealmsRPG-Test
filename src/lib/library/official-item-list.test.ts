@@ -100,6 +100,26 @@ describe('official-item-list armament kinds', () => {
     expect(cols.find((c) => c.key === 'criticalRangeIncrease')?.value).toBe('+1');
   });
 
+  it('shield damage column reads stored dice when there is no Shield Damage property (86e3jwwrt)', () => {
+    const rows = buildOfficialItemRows(
+      [
+        item({
+          id: 's-dmg',
+          name: 'Buckler',
+          type: 'shield',
+          shieldDamage: { amount: 1, size: 4 },
+          properties: [{ id: 39, name: 'Shield Amount', op_1_lvl: 0 }],
+        }),
+      ],
+      propertiesDb,
+      'shield',
+    );
+    expect(rows[0]?.damage).toBe('1d4 Bludgeoning');
+    expect(armamentRowColumns(rows[0]!, 'shield').find((c) => c.key === 'damage')?.value).toBe(
+      '1d4 Bludgeoning',
+    );
+  });
+
   it('shield rows expose block and damage columns', () => {
     const rows = buildOfficialItemRows(catalog, propertiesDb, 'shield');
     const row = rows[0]!;

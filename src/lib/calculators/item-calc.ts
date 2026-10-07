@@ -687,6 +687,23 @@ export function deriveShieldDamageFromProperties(properties: ItemPropertyPayload
 }
 
 /**
+ * Creator saves shield damage as `{ amount, size }` with a fixed Bludgeoning type.
+ * Library columns that only read the Shield Damage property miss that field.
+ */
+export function formatStoredShieldDamage(
+  shieldDamage:
+    | { amount?: number | null | undefined; size?: number | null | undefined }
+    | null
+    | undefined,
+): string | null {
+  if (!shieldDamage) return null;
+  const amount = Number(shieldDamage.amount);
+  const size = Number(shieldDamage.size);
+  if (!Number.isInteger(amount) || !Number.isInteger(size) || amount < 1 || size < 1) return null;
+  return `${amount}d${size} Bludgeoning`;
+}
+
+/**
  * Extract proficiencies (TP sources) from properties.
  */
 export function extractProficiencies(
