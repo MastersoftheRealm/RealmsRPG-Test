@@ -51,4 +51,20 @@ describe('Admin core rules number labels (86e3k0cgu)', () => {
       }
     }
   });
+
+  it('includes the visible column header in the accessible name', () => {
+    const labelOf = (block: string) => block.match(/\blabel=\{`([^`]*)`\}/)?.[1];
+    const crafting = readFileSync(path.join(dir, 'core-rules-crafting-rules-editor.tsx'), 'utf8');
+    const armament = readFileSync(path.join(dir, 'core-rules-armament-editor.tsx'), 'utf8');
+
+    const craftingNames = openingTags(crafting, 'NumInput')
+      .map(labelOf)
+      .filter((name): name is string => Boolean(name));
+    expect(craftingNames).toContain('General crafting row ${i + 1} DS');
+
+    const armamentNames = openingTags(armament, 'NumInput')
+      .map(labelOf)
+      .filter((name): name is string => Boolean(name));
+    expect(armamentNames).toContain('Armament row ${i + 1} Armament Max (TP)');
+  });
 });
