@@ -26,8 +26,9 @@ afterEach(() => {
 describe('creator draft discard', () => {
   it('drops the stored draft and does not let the leaving page write it back', () => {
     const storage = installStorage();
+    type Draft = { name: string; timestamp: number };
     persistCreatorDraft(KEY, { name: 'Kept', timestamp: Date.now() }, false);
-    expect(readCreatorCache<{ name: string }>(KEY)?.name).toBe('Kept');
+    expect(readCreatorCache<Draft>(KEY)?.name).toBe('Kept');
 
     const discard = createCreatorDraftDiscard();
     discard.discard(KEY);
@@ -37,6 +38,6 @@ describe('creator draft discard', () => {
     expect(storage.getItem(KEY)).toBeNull();
 
     persistCreatorDraft(KEY, { name: 'Next', timestamp: Date.now() }, false);
-    expect(readCreatorCache<{ name: string }>(KEY)?.name).toBe('Next');
+    expect(readCreatorCache<Draft>(KEY)?.name).toBe('Next');
   });
 });
