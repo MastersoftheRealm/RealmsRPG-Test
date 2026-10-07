@@ -94,7 +94,6 @@ export function useItemCreatorWorkspace({
 
   const { discardDraft } = useCreatorEditDraftDecision(
     true,
-    editItemId,
     editReplacesDraft,
     ITEM_CREATOR_CACHE_KEY,
   );

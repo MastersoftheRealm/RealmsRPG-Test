@@ -86,7 +86,6 @@ export function useTechniqueCreatorWorkspace({
 
   const { discardDraft } = useCreatorEditDraftDecision(
     true,
-    editTechniqueId,
     editReplacesDraft,
     TECHNIQUE_CREATOR_CACHE_KEY,
   );

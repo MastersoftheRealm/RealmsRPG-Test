@@ -116,12 +116,3 @@ export function creatorEditReplacesDraft(
 export function creatorEditMissMessage(kind: string): string {
   return `This ${kind} couldn't be found. Your unsaved draft is unchanged.`;
 }
-
-/** Discard the draft only after a non-empty edit id is confirmed in the library. */
-export function creatorEditDraftDecision(
-  editId: string | null | undefined,
-  replacesDraft: boolean,
-): 'discard' | 'keep' {
-  const id = editId?.trim() ?? '';
-  return id && replacesDraft ? 'discard' : 'keep';
-}
