@@ -3,6 +3,12 @@
  * Updating the open row stays a direct save. A different row needs a confirm.
  */
 
+import { getErrorMessage } from '@/lib/api-client';
+import {
+  CREATOR_DESCRIPTION_TOO_LONG_MESSAGE,
+  CREATOR_NAME_TOO_LONG_MESSAGE,
+} from '@/lib/creator/creator-text-limits';
+
 export type PrivateLibraryNameSave =
   | { kind: 'create' }
   | { kind: 'update'; id: string }
@@ -37,4 +43,28 @@ export function decidePrivateLibraryNameSave(
   const other = ids[0];
   if (!other) return { kind: 'create' };
   return { kind: 'confirm-replace', id: other, matchCount: ids.length };
+}
+
+/** Same text as a failed creator save toast. */
+export function creatorSaveFailureText(err: unknown): string {
+  const message = getErrorMessage(err, 'Failed to save');
+  if (message.includes(CREATOR_NAME_TOO_LONG_MESSAGE)) return CREATOR_NAME_TOO_LONG_MESSAGE;
+  if (message.includes(CREATOR_DESCRIPTION_TOO_LONG_MESSAGE))
+    return CREATOR_DESCRIPTION_TOO_LONG_MESSAGE;
+  return `Failed to save: ${message}`;
+}
+
+/**
+ * My library name lookup used by `handleSave`.
+ * A throw becomes the save error toast. Official lookup is not this function.
+ */
+export async function readPrivateLibraryNameMatches(
+  findMatches: () => Promise<ReadonlyArray<{ id: string }>>,
+): Promise<{ ids: string[] } | { errorText: string }> {
+  try {
+    const rows = await findMatches();
+    return { ids: rows.map((row) => row.id) };
+  } catch (err) {
+    return { errorText: creatorSaveFailureText(err) };
+  }
 }

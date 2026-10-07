@@ -1,7 +1,10 @@
+import { readFileSync } from 'node:fs';
+import path from 'node:path';
 import { describe, expect, it } from 'vitest';
 import {
   decidePrivateLibraryNameSave,
   libraryItemId,
+  readPrivateLibraryNameMatches,
 } from '@/lib/creator/private-library-name-save';
 
 describe('private library name save', () => {
@@ -45,5 +48,48 @@ describe('private library name save', () => {
     expect(libraryItemId({ id: 'row-1', docId: 'doc-1' })).toBe('row-1');
     expect(libraryItemId({ docId: 'doc-1' })).toBe('doc-1');
     expect(libraryItemId({ name: 'Only a name' })).toBeNull();
+  });
+
+  it('turns a thrown My library name lookup into the save error toast', async () => {
+    const result = await readPrivateLibraryNameMatches(async () => {
+      throw new Error('library unavailable');
+    });
+    expect(result).toEqual({ errorText: 'Failed to save: library unavailable' });
+
+    const hook = readFileSync(
+      path.join(import.meta.dirname, '../../hooks/use-creator-save.ts'),
+      'utf8',
+    );
+    const start = hook.indexOf('const handleSave = useCallback');
+    const end = hook.indexOf('const confirmPublish = useCallback');
+    const body = hook.slice(start, end);
+    expect(body).toContain('readPrivateLibraryNameMatches');
+    expect(body).toContain("setSaveMessage({ type: 'error', text: lookup.errorText })");
+    expect(body.indexOf('findOfficialLibraryItemByName')).toBeGreaterThan(-1);
+    expect(body.indexOf('readPrivateLibraryNameMatches')).toBeGreaterThan(
+      body.indexOf('findOfficialLibraryItemByName'),
+    );
+  });
+
+  it('passes publishConfirmLabel and does not infer Replace from the title', () => {
+    const shell = readFileSync(
+      path.join(import.meta.dirname, '../../components/creator/CreatorPageShell.tsx'),
+      'utf8',
+    );
+    expect(shell).toContain('publish.confirmLabel');
+    expect(shell).not.toContain("startsWith('Replace ");
+
+    const pages = [
+      'power-creator/page.tsx',
+      'item-creator/page.tsx',
+      'technique-creator/page.tsx',
+      'empowered-technique-creator/page.tsx',
+      'creature-creator/page.tsx',
+      'species-creator/page.tsx',
+    ];
+    for (const page of pages) {
+      const source = readFileSync(path.join(import.meta.dirname, '../../app/(main)', page), 'utf8');
+      expect(source).toContain('publishConfirmLabel');
+    }
   });
 });
