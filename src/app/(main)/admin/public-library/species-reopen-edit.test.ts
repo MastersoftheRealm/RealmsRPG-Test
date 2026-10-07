@@ -21,7 +21,8 @@ describe('species reopen from library and My Codex', () => {
     expect(tab).toContain("useOfficialLibrary('species'");
     expect(tab).toContain('speciesCreatorEditHref');
     expect(codex).toContain('speciesCreatorEditHref');
-    expect(codex).toContain('rowChrome={isMy ? { edit: true } : undefined}');
+    expect(codex).toContain('rowChrome={MY_CODEX_SPECIES_ROW_CHROME}');
+    expect(codex).toContain('edit: true');
     expect(codex).toContain('isMy');
 
     expect(speciesCreatorEditHref('user-species-1')).toBe('/species-creator?edit=user-species-1');

@@ -20,6 +20,7 @@ import type { ColumnValue } from '@/components/patterns/list/grid-list-row';
 import { useSort, sortByColumn } from '@/hooks/use-sort';
 
 const SPECIES_GRID_COLUMNS = '1.5fr 1fr 0.8fr 1fr';
+const MY_CODEX_SPECIES_ROW_CHROME = { edit: true } as const;
 const SPECIES_COLUMNS = [
   { key: 'name', label: 'NAME' },
   { key: 'type', label: 'TYPE' },
@@ -350,61 +351,70 @@ export function CodexSpeciesTab({
       />
     );
 
+  const speciesFilters = (
+    <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+      <ChipSelect
+        label="Type"
+        placeholder="Choose type"
+        options={filterOptions.types.map((t) => ({ value: t, label: t }))}
+        selectedValues={filters.types}
+        onSelect={(v) => setFilters((f) => ({ ...f, types: [...f.types, v] }))}
+        onRemove={(v) => setFilters((f) => ({ ...f, types: f.types.filter((t) => t !== v) }))}
+      />
+
+      <ChipSelect
+        label="Size"
+        placeholder="Choose size"
+        options={filterOptions.sizes.map((s) => ({ value: s, label: s }))}
+        selectedValues={filters.sizes}
+        onSelect={(v) => setFilters((f) => ({ ...f, sizes: [...f.sizes, v] }))}
+        onRemove={(v) => setFilters((f) => ({ ...f, sizes: f.sizes.filter((s) => s !== v) }))}
+      />
+    </div>
+  );
+
+  const speciesRows = filteredSpecies.map((s: Species) => (
+    <SpeciesCard
+      key={s.id}
+      species={s}
+      allTraits={allTraits || []}
+      skillIdToName={skillIdToName}
+      onEdit={
+        isMy
+          ? () => {
+              router.push(speciesCreatorEditHref(String(s.id)));
+            }
+          : undefined
+      }
+    />
+  ));
+
+  const listShellProps = {
+    search: filters.search,
+    onSearchChange: (v: string) => setFilters((f) => ({ ...f, search: v })),
+    searchPlaceholder: 'Search...',
+    filters: speciesFilters,
+    headerColumns: SPECIES_COLUMNS,
+    gridColumns: SPECIES_GRID_COLUMNS,
+    hasThumbnailColumn: true,
+    sortState,
+    onSort: handleSort,
+    isLoading,
+    isEmpty: filteredSpecies.length === 0,
+    emptyTitle: codexMode === 'my' ? 'No custom species yet' : 'No species match your filters.',
+    emptyMessage: codexMode === 'my' ? 'Create one in the Species Creator.' : undefined,
+  };
+
   return (
     <div>
       <h2 className="sr-only">Species</h2>
-      <CodexBrowseListShell
-        search={filters.search}
-        onSearchChange={(v) => setFilters((f) => ({ ...f, search: v }))}
-        searchPlaceholder="Search..."
-        filters={
-          <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-            <ChipSelect
-              label="Type"
-              placeholder="Choose type"
-              options={filterOptions.types.map((t) => ({ value: t, label: t }))}
-              selectedValues={filters.types}
-              onSelect={(v) => setFilters((f) => ({ ...f, types: [...f.types, v] }))}
-              onRemove={(v) => setFilters((f) => ({ ...f, types: f.types.filter((t) => t !== v) }))}
-            />
-
-            <ChipSelect
-              label="Size"
-              placeholder="Choose size"
-              options={filterOptions.sizes.map((s) => ({ value: s, label: s }))}
-              selectedValues={filters.sizes}
-              onSelect={(v) => setFilters((f) => ({ ...f, sizes: [...f.sizes, v] }))}
-              onRemove={(v) => setFilters((f) => ({ ...f, sizes: f.sizes.filter((s) => s !== v) }))}
-            />
-          </div>
-        }
-        headerColumns={SPECIES_COLUMNS}
-        gridColumns={SPECIES_GRID_COLUMNS}
-        hasThumbnailColumn
-        rowChrome={isMy ? { edit: true } : undefined}
-        sortState={sortState}
-        onSort={handleSort}
-        isLoading={isLoading}
-        isEmpty={filteredSpecies.length === 0}
-        emptyTitle={codexMode === 'my' ? 'No custom species yet' : 'No species match your filters.'}
-        emptyMessage={codexMode === 'my' ? 'Create one in the Species Creator.' : undefined}
-      >
-        {filteredSpecies.map((s: Species) => (
-          <SpeciesCard
-            key={s.id}
-            species={s}
-            allTraits={allTraits || []}
-            skillIdToName={skillIdToName}
-            onEdit={
-              isMy
-                ? () => {
-                    router.push(speciesCreatorEditHref(String(s.id)));
-                  }
-                : undefined
-            }
-          />
-        ))}
-      </CodexBrowseListShell>
+      {isMy ? (
+        <CodexBrowseListShell {...listShellProps} rowChrome={MY_CODEX_SPECIES_ROW_CHROME}>
+          {speciesRows}
+        </CodexBrowseListShell>
+      ) : (
+        <CodexBrowseListShell {...listShellProps}>{speciesRows}</CodexBrowseListShell>
+      )}
     </div>
   );
 }
