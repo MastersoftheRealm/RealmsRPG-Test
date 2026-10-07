@@ -8964,6 +8964,33 @@ Built-in variants in `payload.composition` (ADR-0029). Resolver: `lib/calculator
 
 ---
 
+## DEV-V-063 — Admin spreadsheet field save (ClickUp 86e3mezkn)
+
+Spreadsheet mode on `/admin/codex` keeps edits on the same columns list mode writes. **Needs:** admin account.
+
+#### DEV-V-063-T001 — Spreadsheet edits survive reload
+
+| Field | Value |
+|-------|-------|
+| **Suite** | DEV-V-063 — Admin spreadsheet field save |
+| **Related task** | ClickUp 86e3mezkn |
+| **Where** | `/admin/codex` Spreadsheet mode |
+| **Needs** | Admin account |
+
+**Steps**
+1. Open Feats, Species, Parts, Properties, Equipment, Creature Feats, and Archetypes in Spreadsheet mode.
+2. Change a text field, a number, a checkbox, and on Archetypes `level1_innate_powers` or `level1_guidance_groups`. Save the row.
+3. Reload `/admin/codex`.
+
+**Expected**
+- Each edited column still shows the new value.
+- Species has no `size`, `speed`, or `traits` column (`sizes` and `species_traits` remain). Equipment has `currency`, not `gold_cost`. Creature feats have `feat_points`, not `points`.
+- Archetype progression levels are unchanged when those columns were not edited.
+
+**Report** — `[ ] PASS` · `[ ] FAIL` · `[ ] SKIP` — Notes:
+
+---
+
 ## DEV-V-062 — Admin Users layout (ClickUp 86e3jzu53)
 
 Card rows on `/admin/users` so Effective limits and Change role stay on screen at 768 and 1024. **Needs:** admin account.
@@ -9037,5 +9064,6 @@ Card rows on `/admin/users` so Effective limits and Change role stay on screen a
 | DEV-V-054 | Codex per-collection fetch + virtualized browse rows (TASK-775) | — | Automated (`api/codex/route.test`, `use-codex.keys.test`) + manual DEV-V-054 T001–T003 |
 | DEV-V-055 | ADR-0023 control touch tiers (TASK-841, TASK-847, TASK-830, TASK-850, TASK-851, TASK-857, TASK-865, TASK-901, TASK-913) | — | Automated (`button-tiers.test.ts` + `verify:responsive` creator form-height probe) + manual DEV-V-055 T001–T009 |
 | DEV-V-062 | Admin Users layout (ClickUp 86e3jzu53) | — | Automated (`admin-users-layout.test.ts`) + manual DEV-V-062-T001 |
+| DEV-V-063 | Admin spreadsheet field save (ClickUp 86e3mezkn) | — | Automated (`codex-spreadsheet-save.test.ts`) + manual DEV-V-063-T001 |
 
 When implementing a related task, replace the legacy **DEV-T-###** block with granular **DEV-V-###** tests in this file.

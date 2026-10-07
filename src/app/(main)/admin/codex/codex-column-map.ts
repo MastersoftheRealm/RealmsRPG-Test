@@ -51,9 +51,30 @@ function dbColumnName(collection: CodexCollection, key: string): string {
   return collection === 'codex_archetypes' ? camelToSnakeAttachedDigits(key) : camelToSnake(key);
 }
 
+/**
+ * JSONB columns. Comma-joining these (the TEXT-array path) turns a group into
+ * "[object Object]" and the spreadsheet edit does not survive reload.
+ */
+const JSON_CAMEL_FIELDS = new Set([
+  'level1GuidanceGroups',
+  'level1RecommendedAbilities',
+  'level1Loadouts',
+]);
+
 /** Serialize value for columnar TEXT columns: arrays become comma-separated */
-function toColumnValue(val: unknown): unknown {
+function toColumnValue(camel: string, val: unknown): unknown {
   if (val == null) return null;
+  if (JSON_CAMEL_FIELDS.has(camel)) {
+    if (val === '') return null;
+    if (typeof val === 'string') {
+      try {
+        return JSON.parse(val) as unknown;
+      } catch {
+        return val;
+      }
+    }
+    return val;
+  }
   if (Array.isArray(val)) return val.map(String).join(', ');
   if (typeof val === 'object' && !(val instanceof Date)) return JSON.stringify(val);
   return val;
@@ -183,6 +204,11 @@ export const COLUMNAR_FIELDS: Record<CodexCollection, string[]> = {
     'level1RemoveTechniques',
     'level1RemoveArmaments',
     'level1Notes',
+    'level1InnatePowers',
+    'level1RecommendUnarmedProwess',
+    'level1GuidanceGroups',
+    'level1RecommendedAbilities',
+    'level1Loadouts',
   ],
   codex_creature_feats: ['name', 'description', 'featPoints', 'featLvl', 'lvlReq', 'mechanic'],
   core_rules: [],
@@ -199,7 +225,7 @@ export function toColumnarPayload(
     if (key === 'id' || key === 'data') continue;
     const camel = columnarSourceKeyToCamel(collection, key);
     if (allowed.size > 0 && !allowed.has(camel)) continue;
-    out[camel] = toColumnValue(value);
+    out[camel] = toColumnValue(camel, value);
   }
   return out;
 }
