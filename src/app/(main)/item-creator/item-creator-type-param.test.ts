@@ -14,7 +14,13 @@ vi.mock('@/lib/game/creator-cache', () => ({
 }));
 
 import { readCreatorCache } from '@/lib/game/creator-cache';
-import { bootstrapItemCreatorFormState, parseItemCreatorTypeParam } from './item-creator-bootstrap';
+import {
+  bootstrapItemCreatorFormState,
+  itemCreatorHrefForArmamentType,
+  itemCreatorTypeQueryConflict,
+  parseItemCreatorTypeParam,
+  shouldWriteItemCreatorDraft,
+} from './item-creator-bootstrap';
 
 const readCache = vi.mocked(readCreatorCache);
 
@@ -54,9 +60,7 @@ describe('item creator ?type= (86e3jzd2w)', () => {
     expect(parseItemCreatorTypeParam(null)).toBeNull();
   });
 
-  it('opens as Armor or Shield even when a Weapon draft is cached', () => {
-    readCache.mockReturnValue(cachedDraft('Weapon', 'Cached Blade'));
-
+  it('opens as Armor or Shield when nothing is cached', () => {
     const armor = bootstrapItemCreatorFormState({
       editItemId: null,
       itemProperties: [],
@@ -74,6 +78,57 @@ describe('item creator ?type= (86e3jzd2w)', () => {
     });
     expect(shield.armamentType).toBe('Shield');
     expect(shield.name).toBe('');
+  });
+
+  it('keeps a different-type draft instead of an empty form', () => {
+    readCache.mockReturnValue(cachedDraft('Weapon', 'Cached Blade'));
+
+    const armor = bootstrapItemCreatorFormState({
+      editItemId: null,
+      itemProperties: [],
+      rawItems: [],
+      requestedType: 'Armor',
+    });
+    expect(armor.armamentType).toBe('Weapon');
+    expect(armor.name).toBe('Cached Blade');
+
+    const shield = bootstrapItemCreatorFormState({
+      editItemId: null,
+      itemProperties: [],
+      rawItems: [],
+      requestedType: 'Shield',
+    });
+    expect(shield.armamentType).toBe('Weapon');
+    expect(shield.name).toBe('Cached Blade');
+  });
+
+  it('keeps an in-form type change when reload still has the old ?type=', () => {
+    readCache.mockReturnValue(cachedDraft('Shield', 'Moved Shield'));
+
+    const form = bootstrapItemCreatorFormState({
+      editItemId: null,
+      itemProperties: [],
+      rawItems: [],
+      requestedType: 'Armor',
+    });
+    expect(form.armamentType).toBe('Shield');
+    expect(form.name).toBe('Moved Shield');
+    expect(itemCreatorHrefForArmamentType('Shield')).toBe('/item-creator?type=shield');
+    expect(itemCreatorHrefForArmamentType('Armor')).toBe('/item-creator?type=armor');
+  });
+
+  it('does not write the draft cache while a type-query conflict is open', () => {
+    expect(shouldWriteItemCreatorDraft(false, true)).toBe(false);
+    expect(shouldWriteItemCreatorDraft(true, false)).toBe(false);
+    expect(shouldWriteItemCreatorDraft(false, false)).toBe(true);
+  });
+
+  it('warns for a different ?type= and stays quiet while that query is being replaced', () => {
+    expect(itemCreatorTypeQueryConflict('Weapon', 'Armor', null)).toBe('Armor');
+    expect(itemCreatorTypeQueryConflict('Weapon', 'Shield', null)).toBe('Shield');
+    expect(itemCreatorTypeQueryConflict('Weapon', 'Armor', 'Armor')).toBeNull();
+    expect(itemCreatorTypeQueryConflict('Armor', 'Armor', null)).toBeNull();
+    expect(itemCreatorTypeQueryConflict('Shield', null, null)).toBeNull();
   });
 
   it('keeps a cached draft when it is already the requested type', () => {
@@ -128,5 +183,17 @@ describe('item creator ?type= (86e3jzd2w)', () => {
     const creatorPage = readFileSync(path.join(import.meta.dirname, 'page.tsx'), 'utf8');
     expect(creatorPage).toContain("parseItemCreatorTypeParam(searchParams.get('type'))");
     expect(creatorPage).toContain('requestedType');
+    expect(creatorPage).toContain("const sessionKey = editItemId ?? 'draft'");
+    expect(creatorPage).toContain('Discard unsaved draft?');
+    expect(creatorPage).toContain('Keep draft');
+
+    const workspace = readFileSync(
+      path.join(import.meta.dirname, 'use-item-creator-workspace.ts'),
+      'utf8',
+    );
+    expect(workspace).toContain('shouldWriteItemCreatorDraft');
+    expect(workspace).toContain('itemCreatorHrefForArmamentType');
+    expect(workspace).toContain('itemCreatorTypeQueryConflict');
+    expect(workspace).not.toContain('emptyItemCreatorFormState(), armamentType: requestedType');
   });
 });

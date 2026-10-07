@@ -24,6 +24,9 @@ type AddableProperty = {
   mechanic?: boolean | undefined;
 };
 
+/** Shown when Add Property is disabled. Not a title tooltip — disabled buttons swallow those. */
+export const ADD_PROPERTY_DISABLED_REASON = 'All properties are already on this item';
+
 /** Next property Add Property can attach, or null when every selectable property is used. */
 export function findAddableItemProperty<T extends AddableProperty>(
   itemProperties: readonly T[],

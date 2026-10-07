@@ -36,4 +36,19 @@ describe('reopening a shield keeps its ability requirement (86e3jpr0q)', () => {
     const form = itemLibraryRecordToFormState({ name: 'Buckler', type: 'shield' }, []);
     expect(form.abilityRequirement).toBeNull();
   });
+
+  it('keeps None when the requirement was cleared, even if a requirement property remains', () => {
+    for (const type of ['shield', 'weapon', 'armor'] as const) {
+      const form = itemLibraryRecordToFormState(
+        {
+          name: 'Cleared',
+          type,
+          abilityRequirement: null,
+          properties: [{ id: 6, name: 'Weapon Strength Requirement', op_1_lvl: 1 }],
+        },
+        [],
+      );
+      expect(form.abilityRequirement).toBeNull();
+    }
+  });
 });
