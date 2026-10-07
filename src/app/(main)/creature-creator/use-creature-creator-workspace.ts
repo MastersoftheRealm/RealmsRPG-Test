@@ -240,7 +240,6 @@ export function useCreatureCreatorWorkspace() {
 
   const { discardDraft } = useCreatorEditDraftDecision(
     bootstrapApplied,
-    editCreatureId,
     creatorEditReplacesDraft(editCreatureId, load.rawItems),
     CREATURE_CREATOR_CACHE_KEY,
   );

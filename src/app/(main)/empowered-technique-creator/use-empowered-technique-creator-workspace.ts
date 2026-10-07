@@ -81,7 +81,7 @@ export function useEmpoweredTechniqueCreatorWorkspace({
     initialFormState.targetedDefenses,
   );
 
-  const { discardDraft } = useCreatorEditDraftDecision(true, editId, editReplacesDraft, CACHE_KEY);
+  const { discardDraft } = useCreatorEditDraftDecision(true, editReplacesDraft, CACHE_KEY);
 
   const nonMechanicPowerParts = useMemo(
     () => powerParts.filter((part: PowerPart) => !part.mechanic),

@@ -4,7 +4,6 @@ import {
   CREATOR_SAVE_TARGET_OPTIONS,
   catalogListingClassOptions,
   catalogListingToSaveTarget,
-  creatorEditDraftDecision,
   creatorEditMissMessage,
   creatorEditReplacesDraft,
   findLoadedLibraryItem,
@@ -97,14 +96,10 @@ describe('creator edit draft', () => {
     expect(creatorEditReplacesDraft('00000000-bad-id', items)).toBe(false);
     expect(creatorEditReplacesDraft('  ', items)).toBe(false);
     expect(creatorEditReplacesDraft(null, items)).toBe(false);
-    expect(creatorEditDraftDecision('00000000-bad-id', false)).toBe('keep');
-    expect(creatorEditDraftDecision(null, false)).toBe('keep');
   });
 
   it('replaces the draft only after the id is in the loaded library', () => {
     expect(creatorEditReplacesDraft('species-1', items)).toBe(true);
-    expect(creatorEditDraftDecision('species-1', true)).toBe('discard');
-    expect(creatorEditDraftDecision('species-1', false)).toBe('keep');
   });
 
   it('tells the user the row could not be found and that the draft is unchanged', () => {

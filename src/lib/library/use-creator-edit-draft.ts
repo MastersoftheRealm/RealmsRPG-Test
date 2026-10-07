@@ -7,22 +7,22 @@
 
 import { useEffect, useRef, useState } from 'react';
 import { clearCreatorCache } from '@/lib/game/creator-cache';
-import { creatorEditDraftDecision, creatorEditMissMessage } from '@/lib/library/catalog-listing';
+import { creatorEditMissMessage } from '@/lib/library/catalog-listing';
 
 /**
  * Latch the lookup once `settled` is true. Power, technique, armament, and
  * empowered technique mount the workspace only after the library query settles,
  * so they pass `settled: true`. Creature passes `settled` when its bootstrap runs.
+ * `replacesDraft` is `creatorEditReplacesDraft`: true only for a confirmed id.
  */
 export function useCreatorEditDraftDecision(
   settled: boolean,
-  editId: string | null | undefined,
   replacesDraft: boolean,
   cacheKey: string,
 ): { discardDraft: boolean } {
   const [decision, setDecision] = useState<'pending' | 'discard' | 'keep'>('pending');
   if (settled && decision === 'pending') {
-    setDecision(creatorEditDraftDecision(editId, replacesDraft));
+    setDecision(replacesDraft ? 'discard' : 'keep');
   }
   const discardDraft = decision === 'discard';
 
