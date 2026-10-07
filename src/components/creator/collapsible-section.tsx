@@ -35,6 +35,11 @@ export interface CollapsibleSectionProps {
   titleAddon?: ReactNode | undefined;
   /** Actions next to the expand control (not nested inside it) */
   rightSlot?: ReactNode | undefined;
+  /**
+   * Place header actions on their own full-width row below `lg`.
+   * Narrow creator headers (several text buttons) otherwise overflow the title row.
+   */
+  actionsOnOwnRow?: boolean | undefined;
   children: ReactNode;
   className?: string | undefined;
   /**
@@ -57,6 +62,7 @@ export function CollapsibleSection({
   icon,
   titleAddon,
   rightSlot,
+  actionsOnOwnRow = false,
   children,
   className,
   headingLevel = 2,
@@ -109,7 +115,12 @@ export function CollapsibleSection({
           aria-expanded={isExpanded}
           aria-label={isExpanded ? `Collapse ${title}` : `Expand ${title}`}
         />
-        <div className="pointer-events-none relative z-10 flex items-center gap-2">
+        <div
+          className={cn(
+            'pointer-events-none relative z-10 flex items-center gap-2',
+            actionsOnOwnRow && 'flex-wrap',
+          )}
+        >
           {icon && <span className="flex-shrink-0 text-xl">{icon}</span>}
           <div className="min-w-0 flex-1">
             <div className="flex flex-wrap items-center gap-1.5">
@@ -143,8 +154,11 @@ export function CollapsibleSection({
           {hasTrailingActions ? (
             <div
               className={cn(
-                'pointer-events-auto flex flex-shrink-0 items-center gap-2',
-                optional ? 'self-stretch' : 'self-center',
+                'pointer-events-auto flex items-center gap-2',
+                actionsOnOwnRow
+                  ? 'min-w-0 basis-full flex-wrap max-lg:w-full lg:basis-auto lg:flex-shrink-0'
+                  : 'flex-shrink-0',
+                !actionsOnOwnRow && (optional ? 'self-stretch' : 'self-center'),
               )}
             >
               {rightSlot}
