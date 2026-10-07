@@ -161,6 +161,7 @@ function ItemCreatorWorkspace({
       onLoad={load.openLoadModal}
       onReset={ws.handleReset}
       unsavedDirty={ws.unsavedDirty}
+      onDiscardLocalDraft={ws.discardLocalDraft}
       saving={ws.save.saving}
       saveDisabled={!ws.name.trim()}
       loading={{

@@ -12,6 +12,7 @@ import {
   stepCreatorBackUntilLeft,
   takeCreatorSentinelRemoval,
 } from '@/lib/creator/creator-unsaved-guard';
+import { createCreatorDraftDiscard } from '@/lib/game/creator-cache';
 
 /** Tracks the last accepted draft. Call acceptDraft after save, load, or reset. */
 export function useCreatorDraftDirty(snapshot: string): {
@@ -35,6 +36,20 @@ export function useCreatorDraftDirty(snapshot: string): {
     isDirty: creatorDraftIsDirty(snapshot, acceptToken === seenToken ? cleanSnapshot : snapshot),
     acceptDraft,
   };
+}
+
+/** Clears this mount's local draft when the user confirms leaving. A new visit starts over. */
+export function useDiscardableCreatorDraft(cacheKey: string): {
+  discardLocalDraft: () => void;
+  isLocalDraftDiscarded: () => boolean;
+} {
+  // Pass the factory itself. useState calls it once and keeps that discard for this mount.
+  const [discard] = useState(createCreatorDraftDiscard);
+  const discardLocalDraft = useCallback(() => {
+    discard.discard(cacheKey);
+  }, [cacheKey, discard]);
+  const isLocalDraftDiscarded = useCallback(() => discard.isDiscarded(), [discard]);
+  return { discardLocalDraft, isLocalDraftDiscarded };
 }
 
 export type CreatorLeaveRequest = { type: 'href'; href: string } | { type: 'back' };

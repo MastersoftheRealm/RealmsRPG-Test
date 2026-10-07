@@ -9,8 +9,12 @@
 
 import { useState, useCallback, useMemo, useEffect, useRef } from 'react';
 import { useCreatorSave, type Species, type Trait, type Skill } from '@/hooks';
-import { useCreatorDraftDirty } from '@/hooks/use-creator-unsaved-guard';
+import {
+  useCreatorDraftDirty,
+  useDiscardableCreatorDraft,
+} from '@/hooks/use-creator-unsaved-guard';
 import { CACHE_EXPIRY_MS } from '@/lib/game/creator-constants';
+import { persistCreatorDraft } from '@/lib/game/creator-cache';
 import { findByNormalizedId } from '@/lib/utils';
 import {
   SPECIES_CREATOR_CACHE_KEY,
@@ -70,6 +74,8 @@ export function useSpeciesCreatorWorkspace({
   const [form, setForm] = useState<SpeciesFormState>(initialSpeciesFormState);
   const cacheBootstrapRef = useRef(false);
   const [cacheReady, setCacheReady] = useState(false);
+  const { discardLocalDraft, isLocalDraftDiscarded } =
+    useDiscardableCreatorDraft(SPECIES_CREATOR_CACHE_KEY);
 
   // Load draft from localStorage once codex lists are ready (same 30-day window as other creators)
   useEffect(() => {
@@ -96,13 +102,12 @@ export function useSpeciesCreatorWorkspace({
   // Persist draft across refresh (mirrors item/power creator cache pattern)
   useEffect(() => {
     if (!cacheReady) return;
-    try {
-      const cache: SpeciesCreatorCache = { form, timestamp: Date.now() };
-      localStorage.setItem(SPECIES_CREATOR_CACHE_KEY, JSON.stringify(cache));
-    } catch {
-      // ignore quota / private mode
-    }
-  }, [cacheReady, form]);
+    persistCreatorDraft(
+      SPECIES_CREATOR_CACHE_KEY,
+      { form, timestamp: Date.now() },
+      isLocalDraftDiscarded(),
+    );
+  }, [cacheReady, form, isLocalDraftDiscarded]);
 
   // Base skills only (no sub-skills) for species skill selection
   const skillOptions = useMemo(() => {
@@ -378,6 +383,7 @@ export function useSpeciesCreatorWorkspace({
     setForm,
     save,
     unsavedDirty,
+    discardLocalDraft,
     handleSave,
     handleReset,
     loadSpeciesIntoForm,

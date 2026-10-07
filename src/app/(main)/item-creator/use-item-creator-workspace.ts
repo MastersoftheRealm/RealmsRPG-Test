@@ -9,7 +9,10 @@
 
 import { useState, useCallback, useEffect } from 'react';
 import { useCreatorSave, type ItemProperty } from '@/hooks';
-import { useCreatorDraftDirty } from '@/hooks/use-creator-unsaved-guard';
+import {
+  useCreatorDraftDirty,
+  useDiscardableCreatorDraft,
+} from '@/hooks/use-creator-unsaved-guard';
 import type { CreatorSaveTarget } from '@/lib/library/catalog-listing';
 import {
   weaponRangeLegacyLevel,
@@ -32,7 +35,7 @@ import {
   type ItemSelectedProperty as SelectedProperty,
   type ItemDamageConfig as DamageConfig,
 } from './item-creator-bootstrap';
-import { writeCreatorCache, clearCreatorCache } from '@/lib/game/creator-cache';
+import { persistCreatorDraft, clearCreatorCache } from '@/lib/game/creator-cache';
 import { useItemCreatorCostDerivation } from './item-creator-cost-derivation';
 import { useItemCreatorPropertyActions } from './item-creator-property-actions';
 
@@ -85,6 +88,8 @@ export function useItemCreatorWorkspace({
   const [imageUrl, setImageUrl] = useState<string | null>(initialFormState.imageUrl);
 
   const imageCategory = armamentType.toLowerCase() as 'weapon' | 'armor' | 'shield';
+  const { discardLocalDraft, isLocalDraftDiscarded } =
+    useDiscardableCreatorDraft(ITEM_CREATOR_CACHE_KEY);
 
   useEffect(() => {
     if (editItemId) clearCreatorCache(ITEM_CREATOR_CACHE_KEY);
@@ -118,7 +123,7 @@ export function useItemCreatorWorkspace({
       imageUrl,
       timestamp: Date.now(),
     };
-    writeCreatorCache(ITEM_CREATOR_CACHE_KEY, cache);
+    persistCreatorDraft(ITEM_CREATOR_CACHE_KEY, cache, isLocalDraftDiscarded());
   }, [
     editItemId,
     name,
@@ -139,6 +144,7 @@ export function useItemCreatorWorkspace({
     abilityRequirement,
     imageId,
     imageUrl,
+    isLocalDraftDiscarded,
   ]);
 
   const changeRangeType = useCallback((next: WeaponRangeType) => {
@@ -430,6 +436,7 @@ export function useItemCreatorWorkspace({
     updateProperty,
     save,
     unsavedDirty,
+    discardLocalDraft,
     handleReset,
     handleLoadItem,
   };
