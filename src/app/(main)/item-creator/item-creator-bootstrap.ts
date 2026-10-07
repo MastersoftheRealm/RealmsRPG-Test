@@ -263,6 +263,8 @@ function readItemAbilityRequirement(
   if (armamentType !== 'Weapon' && armamentType !== 'Armor' && armamentType !== 'Shield') {
     return null;
   }
+  // Explicit None. A leftover requirement property must not put it back.
+  if (item.abilityRequirement === null) return null;
   return abilityRequirementFromField(item) ?? abilityRequirementFromProperties(item);
 }
 
