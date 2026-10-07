@@ -81,6 +81,8 @@ export interface UseCreatorSaveOptions {
   publicSuccessMessage?: string | undefined;
   /** Success message for admin-library save. */
   adminSuccessMessage?: string | undefined;
+  /** Called after a successful save, before the success toast clears. */
+  onSaveCommitted?: (() => void) | undefined;
   /** When loading ?edit= of an official row, start on Public/Admin library. */
   initialSaveTarget?: CreatorSaveTarget | undefined;
   /** User-library id from ?edit=, so a same-name save updates that row. */
@@ -128,6 +130,7 @@ export function useCreatorSave(options: UseCreatorSaveOptions): UseCreatorSaveRe
     publishConfirmTitle = 'Publish to Realms Library',
     publishConfirmDescription,
     onSaveSuccess,
+    onSaveCommitted,
     successMessage = DEFAULT_SUCCESS,
     publicSuccessMessage = DEFAULT_PUBLIC_SUCCESS,
     adminSuccessMessage = DEFAULT_ADMIN_SUCCESS,
@@ -228,6 +231,7 @@ export function useCreatorSave(options: UseCreatorSaveOptions): UseCreatorSaveRe
           if (onSaveSuccess) setLoadedLibraryId(null);
           onSaveSuccess?.();
         }, 2000);
+        onSaveCommitted?.();
       } catch (err) {
         const message = getErrorMessage(err, 'Failed to save');
         const text = message.includes(CREATOR_NAME_TOO_LONG_MESSAGE)
@@ -250,6 +254,7 @@ export function useCreatorSave(options: UseCreatorSaveOptions): UseCreatorSaveRe
       publicSuccessMessage,
       adminSuccessMessage,
       onSaveSuccess,
+      onSaveCommitted,
       queryClient,
     ],
   );

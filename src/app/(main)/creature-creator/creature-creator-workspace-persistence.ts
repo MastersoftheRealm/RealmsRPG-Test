@@ -3,6 +3,7 @@
 import { useCallback, useState, type Dispatch, type SetStateAction } from 'react';
 import type { SelectableItem } from '@/components/patterns';
 import { useCreatorSave } from '@/hooks';
+import { useCreatorDraftDirty } from '@/hooks/use-creator-unsaved-guard';
 import {
   findLoadedLibraryItem,
   resolveCreatorSaveTargetFromItem,
@@ -43,6 +44,8 @@ export function useCreatureCreatorWorkspacePersistence({
       data: { ...creature },
     };
   }, [creature]);
+  const draftSnapshot = JSON.stringify(getPayload());
+  const { isDirty: unsavedDirty, acceptDraft } = useCreatorDraftDirty(draftSnapshot);
 
   const save = useCreatorSave({
     type: 'creatures',
@@ -59,6 +62,7 @@ export function useCreatureCreatorWorkspacePersistence({
       findLoadedLibraryItem(load.rawItems, editCreatureId),
     ),
     editingId: editCreatureId,
+    onSaveCommitted: acceptDraft,
   });
 
   const [showResetConfirm, setShowResetConfirm] = useState(false);
@@ -67,11 +71,12 @@ export function useCreatureCreatorWorkspacePersistence({
     (item: SelectableItem) => {
       setCreature(rawRecordToCreatureState(item.data as Record<string, unknown>));
       save.applyLoadedLibraryItem(item.data);
+      acceptDraft();
       load.closeLoadModal();
       save.setSaveMessage({ type: 'success', text: 'Creature loaded successfully!' });
       setTimeout(() => save.setSaveMessage(null), 2000);
     },
-    [load, save, setCreature],
+    [acceptDraft, load, save, setCreature],
   );
 
   const handleSave = useCallback(async () => {
@@ -154,6 +159,8 @@ export function useCreatureCreatorWorkspacePersistence({
 
   return {
     save,
+    unsavedDirty,
+    acceptDraft,
     handleSave,
     handleReset,
     handleLoadCreature,

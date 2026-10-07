@@ -9,6 +9,7 @@
 
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useCreatorSave, type PowerPart, type TechniquePart } from '@/hooks';
+import { useCreatorDraftDirty } from '@/hooks/use-creator-unsaved-guard';
 import type { CreatorSaveTarget } from '@/lib/library/catalog-listing';
 import { dedupeSavedParts } from '@/lib/game/dedupe-saved-parts';
 import type { AreaConfig, DurationConfig } from '@/lib/calculators';
@@ -292,6 +293,8 @@ export function useEmpoweredTechniqueCreatorWorkspace({
     techniqueDamage,
     techniqueDamageMechanicParts,
   ]);
+  const draftSnapshot = JSON.stringify(getPayload());
+  const { isDirty: unsavedDirty, acceptDraft } = useCreatorDraftDirty(draftSnapshot);
 
   const save = useCreatorSave({
     type: 'empowered-techniques',
@@ -306,7 +309,11 @@ export function useEmpoweredTechniqueCreatorWorkspace({
     publicSuccessMessage: 'Empowered technique saved to Realms Library!',
     initialSaveTarget,
     editingId: editId,
-    onSaveSuccess: resetState,
+    onSaveCommitted: acceptDraft,
+    onSaveSuccess: () => {
+      resetState();
+      acceptDraft();
+    },
   });
 
   const handleLoadEmpoweredTechnique = useCallback(
@@ -315,10 +322,11 @@ export function useEmpoweredTechniqueCreatorWorkspace({
       if (!next) return;
       applyFormState(next);
       save.applyLoadedLibraryItem(doc);
+      acceptDraft();
       save.setSaveMessage({ type: 'success', text: 'Empowered technique loaded successfully!' });
       setTimeout(() => save.setSaveMessage(null), 2000);
     },
-    [powerParts, techniqueParts, applyFormState, save],
+    [powerParts, techniqueParts, applyFormState, save, acceptDraft],
   );
 
   // Auto-save draft to localStorage (skip when editing an existing library row via ?edit=)
@@ -398,7 +406,8 @@ export function useEmpoweredTechniqueCreatorWorkspace({
   const handleReset = useCallback(() => {
     resetState();
     save.forgetLoadedLibraryItem();
-  }, [resetState, save]);
+    acceptDraft();
+  }, [acceptDraft, resetState, save]);
 
   return {
     name,
@@ -459,6 +468,7 @@ export function useEmpoweredTechniqueCreatorWorkspace({
     setSelectedPowerAdvancedParts,
     setSelectedTechniqueParts,
     save,
+    unsavedDirty,
     attackModeLabel: attackModeColumnLabel(attackMode),
   };
 }

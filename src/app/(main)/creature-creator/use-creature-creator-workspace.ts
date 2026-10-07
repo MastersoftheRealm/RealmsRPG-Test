@@ -402,6 +402,8 @@ export function useCreatureCreatorWorkspace() {
 
   const {
     save,
+    unsavedDirty,
+    acceptDraft,
     handleSave,
     handleReset,
     handleLoadCreature,
@@ -457,6 +459,8 @@ export function useCreatureCreatorWorkspace() {
     bootstrapApplied,
     load,
     save,
+    unsavedDirty,
+    acceptDraft,
     handleSave,
     handleReset,
     handleLoadCreature,

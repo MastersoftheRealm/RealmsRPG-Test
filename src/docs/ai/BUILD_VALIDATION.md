@@ -5639,6 +5639,25 @@ islands (Phase 4) and workspace hook (Phase 5). **T012–T014** cover expanded h
 
 **Report** — `[ ] PASS` · `[ ] FAIL` · `[ ] SKIP` — Notes:
 
+#### DEV-V-018-T025 — Creators warn before discarding unsaved edits (86e3jzbkx)
+
+| Field | Value |
+|-------|-------|
+| **Suite** | DEV-V-018 — CreatorPageShell parity |
+| **Related task** | 86e3jzbkx |
+| **Where** | `/power-creator` (also item, technique, empowered technique, creature) |
+| **Needs** | A signed-in account |
+
+**Steps**
+1. Change the name or description without saving. Reload. Choose to stay, then reload and leave.
+2. Click the site logo, then Back. Keep editing, then confirm discard.
+3. Click Load. Keep editing, then confirm and load another row.
+
+**Expected**
+- Each of those asks before the draft is discarded. Keep editing leaves the draft in place. A successful save or a completed load does not ask again until the next edit.
+
+**Report** — `[ ] PASS` · `[ ] FAIL` · `[ ] SKIP` — Notes:
+
 ---
 
 ## DEV-V-019 — React Compiler hook cleanup (TASK-430)

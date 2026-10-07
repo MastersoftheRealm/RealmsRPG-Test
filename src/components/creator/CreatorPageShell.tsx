@@ -18,10 +18,11 @@ import {
   ErrorDisplay,
   type LoginPromptReason,
 } from '@/components/patterns';
+import { useCreatorLeaveBlocker } from '@/hooks/use-creator-unsaved-guard';
+import type { CreatorSaveTarget } from '@/lib/library/catalog-listing';
 import { CreatorLayout } from './CreatorLayout';
 import { CreatorSaveToolbar } from './CreatorSaveToolbar';
 import { LoadFromLibraryModal, type LoadFromLibraryModalProps } from './LoadFromLibraryModal';
-import type { CreatorSaveTarget } from '@/lib/library/catalog-listing';
 
 export type CreatorPageAuthConfig = {
   /** Path returned to after login (e.g. "/power-creator") */
@@ -84,6 +85,8 @@ export type CreatorPageShellProps = {
   onReset: () => void;
   /** Opens the load modal (or custom load flow) — shell may gate auth */
   onLoad: () => void;
+  /** When true, reload, leave, Back, Load, and Reset ask before discarding edits. */
+  unsavedDirty?: boolean | undefined;
 
   publish: CreatorPagePublishConfig;
   resetConfirm?: CreatorPageResetConfirmConfig | undefined;
@@ -122,6 +125,7 @@ export function CreatorPageShell({
   onSave,
   onReset,
   onLoad,
+  unsavedDirty = false,
   publish,
   resetConfirm,
   loading,
@@ -135,6 +139,8 @@ export function CreatorPageShell({
 }: CreatorPageShellProps) {
   const [showLoginPrompt, setShowLoginPrompt] = useState(false);
   const [loginReason, setLoginReason] = useState<LoginPromptReason>('save');
+  const [discardAction, setDiscardAction] = useState<'load' | 'reset' | null>(null);
+  const leaveBlocker = useCreatorLeaveBlocker(unsavedDirty);
   const requireAuthToLoad = auth.requireAuthToLoad !== false;
 
   const handleSave = useCallback(() => {
@@ -152,8 +158,31 @@ export function CreatorPageShell({
       setShowLoginPrompt(true);
       return;
     }
+    if (unsavedDirty) {
+      setDiscardAction('load');
+      return;
+    }
     onLoad();
-  }, [requireAuthToLoad, user, onLoad]);
+  }, [requireAuthToLoad, user, onLoad, unsavedDirty]);
+
+  const handleReset = useCallback(() => {
+    if (unsavedDirty && !resetConfirm) {
+      setDiscardAction('reset');
+      return;
+    }
+    onReset();
+  }, [onReset, resetConfirm, unsavedDirty]);
+
+  const confirmDiscard = useCallback(() => {
+    const action = discardAction;
+    setDiscardAction(null);
+    if (leaveBlocker.request) {
+      leaveBlocker.confirm();
+      return;
+    }
+    if (action === 'load') onLoad();
+    if (action === 'reset') onReset();
+  }, [discardAction, leaveBlocker, onLoad, onReset]);
 
   // Keep title / Load / Reset / Save chrome visible during load & error so
   // chrome audits and signed-out UX do not depend on codex data being present
@@ -196,7 +225,7 @@ export function CreatorPageShell({
           onSaveTargetChange={onSaveTargetChange}
           onSave={handleSave}
           onLoad={handleLoad}
-          onReset={onReset}
+          onReset={handleReset}
           saving={saving}
           saveDisabled={saveDisabled || !!loading?.isLoading}
           saveDisabledReason={saveDisabledReason}
@@ -228,6 +257,20 @@ export function CreatorPageShell({
               publish.confirmLabel ?? (publish.title.startsWith('Replace ') ? 'Replace' : 'Publish')
             }
             icon="publish"
+          />
+          <ConfirmActionModal
+            isOpen={unsavedDirty && (discardAction !== null || leaveBlocker.request !== null)}
+            onClose={() => {
+              setDiscardAction(null);
+              leaveBlocker.dismiss();
+            }}
+            onConfirm={confirmDiscard}
+            title="Discard unsaved changes?"
+            description="This creator has edits that are not saved. Continuing will discard them."
+            confirmLabel="Discard"
+            cancelLabel="Keep editing"
+            confirmVariant="danger"
+            icon="warning"
           />
           {resetConfirm ? (
             <ConfirmActionModal

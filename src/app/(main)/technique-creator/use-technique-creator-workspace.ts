@@ -9,6 +9,7 @@
 
 import { useState, useMemo, useCallback, useEffect } from 'react';
 import { useCreatorSave, type TechniquePart } from '@/hooks';
+import { useCreatorDraftDirty } from '@/hooks/use-creator-unsaved-guard';
 import type { CreatorSaveTarget } from '@/lib/library/catalog-listing';
 import {
   calculateTechniqueCosts,
@@ -329,6 +330,8 @@ export function useTechniqueCreatorWorkspace({
     imageId,
     imageUrl,
   ]);
+  const draftSnapshot = JSON.stringify(getPayload());
+  const { isDirty: unsavedDirty, acceptDraft } = useCreatorDraftDirty(draftSnapshot);
 
   const save = useCreatorSave({
     type: 'techniques',
@@ -343,6 +346,7 @@ export function useTechniqueCreatorWorkspace({
     publicSuccessMessage: 'Technique saved to Realms Library!',
     initialSaveTarget,
     editingId: editTechniqueId,
+    onSaveCommitted: acceptDraft,
     onSaveSuccess: () => {
       setName('');
       setDescription('');
@@ -354,6 +358,7 @@ export function useTechniqueCreatorWorkspace({
       setImageId(null);
       setImageUrl(null);
       setTargetedDefenses([]);
+      acceptDraft();
     },
   });
 
@@ -371,7 +376,8 @@ export function useTechniqueCreatorWorkspace({
     save.forgetLoadedLibraryItem();
     save.setSaveMessage(null);
     clearCreatorCache(TECHNIQUE_CREATOR_CACHE_KEY);
-  }, [save]);
+    acceptDraft();
+  }, [acceptDraft, save]);
 
   const applyFormState = useCallback((next: TechniqueCreatorFormState) => {
     setName(next.name);
@@ -395,10 +401,11 @@ export function useTechniqueCreatorWorkspace({
     (technique: TechniqueLibraryRecord) => {
       applyFormState(techniqueLibraryRecordToFormState(technique, techniqueParts));
       save.applyLoadedLibraryItem(technique);
+      acceptDraft();
       save.setSaveMessage({ type: 'success', text: 'Technique loaded successfully!' });
       setTimeout(() => save.setSaveMessage(null), 2000);
     },
-    [techniqueParts, applyFormState, save],
+    [techniqueParts, applyFormState, save, acceptDraft],
   );
 
   return {
@@ -439,6 +446,7 @@ export function useTechniqueCreatorWorkspace({
     removePart,
     updatePart,
     save,
+    unsavedDirty,
     handleReset,
     handleLoadTechnique,
   };

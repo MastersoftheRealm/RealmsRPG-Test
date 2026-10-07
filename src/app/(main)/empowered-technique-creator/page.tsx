@@ -170,6 +170,7 @@ function EmpoweredTechniqueWorkspace({
       onSave={ws.save.handleSave}
       onLoad={load.openLoadModal}
       onReset={ws.resetState}
+      unsavedDirty={ws.unsavedDirty}
       saving={ws.save.saving}
       saveDisabled={!ws.name.trim()}
       loading={{

@@ -11,6 +11,7 @@
 
 import { useState, useMemo, useCallback, useEffect } from 'react';
 import { useCreatorSave, type PowerPart } from '@/hooks';
+import { useCreatorDraftDirty } from '@/hooks/use-creator-unsaved-guard';
 import type { CreatorSaveTarget } from '@/lib/library/catalog-listing';
 import {
   isPowerCompositionMechanicPart,
@@ -253,6 +254,8 @@ export function usePowerCreatorWorkspace({
   );
 
   const getPayload = useCallback(() => ({ name: name.trim(), data: powerData }), [name, powerData]);
+  const draftSnapshot = JSON.stringify(getPayload());
+  const { isDirty: unsavedDirty, acceptDraft } = useCreatorDraftDirty(draftSnapshot);
 
   /** Composed totals for the summary (open tab drives which variant the stat rows follow). */
   const composedSummary = useMemo(() => {
@@ -283,7 +286,8 @@ export function usePowerCreatorWorkspace({
     setImageUrl(null);
     setTargetedDefenses([]);
     variants.reset();
-  }, [applyTabForm, variants]);
+    acceptDraft();
+  }, [acceptDraft, applyTabForm, variants]);
 
   const save = useCreatorSave({
     type: 'powers',
@@ -299,6 +303,7 @@ export function usePowerCreatorWorkspace({
     initialSaveTarget,
     editingId: editPowerId,
     onSaveSuccess: resetFields,
+    onSaveCommitted: acceptDraft,
   });
 
   const handleReset = useCallback(() => {
@@ -327,10 +332,11 @@ export function usePowerCreatorWorkspace({
     (power: PowerLibraryRecord) => {
       applyFormState(powerLibraryRecordToFormState(power, powerParts));
       save.applyLoadedLibraryItem(power);
+      acceptDraft();
       save.setSaveMessage({ type: 'success', text: 'Power loaded successfully!' });
       setTimeout(() => save.setSaveMessage(null), 2000);
     },
-    [powerParts, applyFormState, save],
+    [powerParts, applyFormState, save, acceptDraft],
   );
 
   return {
@@ -389,6 +395,7 @@ export function usePowerCreatorWorkspace({
     dieIncomplete,
     reverseIncomplete,
     save,
+    unsavedDirty,
     handleReset,
     handleLoadPower,
   };

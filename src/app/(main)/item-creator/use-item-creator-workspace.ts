@@ -9,6 +9,7 @@
 
 import { useState, useCallback, useEffect } from 'react';
 import { useCreatorSave, type ItemProperty } from '@/hooks';
+import { useCreatorDraftDirty } from '@/hooks/use-creator-unsaved-guard';
 import type { CreatorSaveTarget } from '@/lib/library/catalog-listing';
 import {
   weaponRangeLegacyLevel,
@@ -287,6 +288,8 @@ export function useItemCreatorWorkspace({
     hasShieldDamage,
     shieldDamage,
   ]);
+  const draftSnapshot = JSON.stringify(getPayload());
+  const { isDirty: unsavedDirty, acceptDraft } = useCreatorDraftDirty(draftSnapshot);
 
   const save = useCreatorSave({
     type: 'items',
@@ -301,6 +304,7 @@ export function useItemCreatorWorkspace({
     publicSuccessMessage: 'Item saved to Realms Library!',
     initialSaveTarget,
     editingId: editItemId,
+    onSaveCommitted: acceptDraft,
     onSaveSuccess: () => {
       setName('');
       setDescription('');
@@ -308,6 +312,7 @@ export function useItemCreatorWorkspace({
       setDamage({ amount: 1, size: 6, type: 'slashing' });
       setImageId(null);
       setImageUrl(null);
+      acceptDraft();
     },
   });
 
@@ -333,7 +338,8 @@ export function useItemCreatorWorkspace({
     save.forgetLoadedLibraryItem();
     save.setSaveMessage(null);
     clearCreatorCache(ITEM_CREATOR_CACHE_KEY);
-  }, [save]);
+    acceptDraft();
+  }, [acceptDraft, save]);
 
   const applyFormState = useCallback((next: ItemCreatorFormState) => {
     setName(next.name);
@@ -360,11 +366,12 @@ export function useItemCreatorWorkspace({
     (item: ItemLibraryRecord) => {
       applyFormState(itemLibraryRecordToFormState(item, itemProperties));
       save.applyLoadedLibraryItem(item);
+      acceptDraft();
       closeLoadModal();
       save.setSaveMessage({ type: 'success', text: 'Armament loaded successfully!' });
       setTimeout(() => save.setSaveMessage(null), 2000);
     },
-    [itemProperties, applyFormState, closeLoadModal, save],
+    [itemProperties, applyFormState, closeLoadModal, save, acceptDraft],
   );
 
   return {
@@ -422,6 +429,7 @@ export function useItemCreatorWorkspace({
     removeProperty,
     updateProperty,
     save,
+    unsavedDirty,
     handleReset,
     handleLoadItem,
   };

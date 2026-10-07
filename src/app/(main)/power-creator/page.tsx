@@ -391,6 +391,7 @@ function PowerCreatorWorkspace({
       onSave={ws.save.handleSave}
       onLoad={load.openLoadModal}
       onReset={ws.handleReset}
+      unsavedDirty={ws.unsavedDirty}
       toolbarHelp={{
         load: <PowerCreatorHelp topic="load" />,
         reset: <PowerCreatorHelp topic="reset" />,
