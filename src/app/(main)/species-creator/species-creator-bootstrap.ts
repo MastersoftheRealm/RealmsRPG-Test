@@ -53,6 +53,33 @@ export function traitSelectionLimitMessage(
   return `${sentenceLabel} have ${slotText}. Deselect ${extraText} before adding.`;
 }
 
+/**
+ * Add the picked traits when they fit. A pick past the open slots does not call
+ * `onAddBatch`. The third species trait still asks for confirmation.
+ */
+export function commitSpeciesTraitBatch(args: {
+  ids: readonly string[];
+  category: TraitCategory;
+  currentCount: number;
+  limit: number;
+  onAddBatch: (traitIds: string[], category: TraitCategory) => void;
+  onThirdSpeciesTrait?: ((traitId: string) => void) | undefined;
+  onClose: () => void;
+}): void {
+  if (args.ids.length === 0) return;
+  const openSlots = openTraitSlots(args.currentCount, args.limit);
+  if (args.ids.length > openSlots) return;
+  if (args.category === 'species_traits' && args.ids.length === 1 && args.currentCount === 2) {
+    const firstId = args.ids[0];
+    if (!firstId) return;
+    args.onThirdSpeciesTrait?.(firstId);
+    args.onClose();
+    return;
+  }
+  args.onAddBatch([...args.ids], args.category);
+  args.onClose();
+}
+
 export interface SpeciesFormState {
   name: string;
   description: string;

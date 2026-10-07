@@ -8964,6 +8964,29 @@ Built-in variants in `payload.composition` (ADR-0029). Resolver: `lib/calculator
 
 ---
 
+## Species trait cap (86e3jx1kq)
+
+A pick that would exceed open trait slots is refused. The disabled Add button describes that reason. verification_status pending-qa.
+
+#### 86e3jx1kq — Disabled Add explains the cap
+
+| Field | Value |
+|-------|-------|
+| **Where** | `/species-creator` trait pickers (species, ancestry, characteristics, flaws) |
+| **Needs** | Signed in. Fill a category until one slot remains, or until none remain. |
+
+**Steps**
+1. Open Add species or ancestry traits. Select more traits than the open slots. Confirm both Add buttons are disabled and the visible slot message is what a screen reader gets from the button (`aria-describedby`), not only a hover tooltip.
+2. Confirm those traits are not added.
+3. Select a count that fits. Confirm Add still works. Name and description fields are unchanged.
+
+**Expected**
+- Over-cap picks do not land on the species. The reason stays available when the Add control cannot be hovered.
+
+**Report** — `[ ] PASS` · `[ ] FAIL` · `[ ] SKIP` — Notes:
+
+---
+
 ## Planned suites (split from legacy DEV-T)
 
 | Suite | Topic | Legacy | Status |

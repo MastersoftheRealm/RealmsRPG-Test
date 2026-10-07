@@ -4,7 +4,7 @@
 
 'use client';
 
-import { useMemo } from 'react';
+import { useId, useMemo } from 'react';
 import { Plus } from 'lucide-react';
 import type { Trait } from '@/hooks';
 import { CREATURE_TYPES } from '@/lib/game/creator-constants';
@@ -25,6 +25,7 @@ import {
   MAX_SIZES,
   MAX_LANGUAGES,
   SIZE_OPTIONS,
+  commitSpeciesTraitBatch,
   openTraitSlots,
   traitSelectionLimitMessage,
   type SpeciesFormState,
@@ -499,7 +500,10 @@ export function TraitListModal({
   }, [traits, filter, alreadyUsed]);
 
   const speciesRemaining = openTraitSlots(form.species_traits.length, traitLimits.species_traits);
-  const ancestryRemaining = openTraitSlots(form.ancestry_traits.length, traitLimits.ancestry_traits);
+  const ancestryRemaining = openTraitSlots(
+    form.ancestry_traits.length,
+    traitLimits.ancestry_traits,
+  );
   const flawRemaining = openTraitSlots(form.flaws.length, traitLimits.flaws);
   const characteristicRemaining = openTraitSlots(
     form.characteristics.length,
@@ -508,24 +512,22 @@ export function TraitListModal({
 
   const canAddFlaw = flawRemaining > 0;
   const canAddCharacteristic = characteristicRemaining > 0;
+  const speciesLimitId = useId();
+  const ancestryLimitId = useId();
 
   const description =
     mode === 'species_ancestry' ? 'Add as species traits or ancestry traits.' : undefined;
 
   const addIds = (selected: SelectableItem[], category: TraitCategory) => {
-    const ids = selected.map((s) => String(s.id));
-    if (!ids.length) return;
-    const openSlots = openTraitSlots(form[category].length, traitLimits[category]);
-    if (ids.length > openSlots) return;
-    if (category === 'species_traits' && ids.length === 1 && form.species_traits.length === 2) {
-      const firstId = ids[0];
-      if (!firstId) return;
-      onThirdSpeciesTrait?.(firstId);
-      onClose();
-      return;
-    }
-    onAddBatch(ids, category);
-    onClose();
+    commitSpeciesTraitBatch({
+      ids: selected.map((item) => String(item.id)),
+      category,
+      currentCount: form[category].length,
+      limit: traitLimits[category],
+      onAddBatch,
+      onClose,
+      ...(onThirdSpeciesTrait ? { onThirdSpeciesTrait } : {}),
+    });
   };
 
   return (
@@ -569,16 +571,21 @@ export function TraitListModal({
       footerExtra={
         mode === 'species_ancestry'
           ? (selected) => {
-              const notes = [
-                traitSelectionLimitMessage('species traits', selected.length, speciesRemaining),
-                traitSelectionLimitMessage('ancestry traits', selected.length, ancestryRemaining),
-              ].filter((note): note is string => note != null);
-              if (!notes.length) return null;
+              const speciesNote = traitSelectionLimitMessage(
+                'species traits',
+                selected.length,
+                speciesRemaining,
+              );
+              const ancestryNote = traitSelectionLimitMessage(
+                'ancestry traits',
+                selected.length,
+                ancestryRemaining,
+              );
+              if (!speciesNote && !ancestryNote) return null;
               return (
                 <div role="status" className="space-y-1 text-sm text-warning-fg">
-                  {notes.map((note) => (
-                    <p key={note}>{note}</p>
-                  ))}
+                  {speciesNote ? <p id={speciesLimitId}>{speciesNote}</p> : null}
+                  {ancestryNote ? <p id={ancestryLimitId}>{ancestryNote}</p> : null}
                 </div>
               );
             }
@@ -592,6 +599,7 @@ export function TraitListModal({
                   size="lg"
                   onClick={() => addIds(selected, 'species_traits')}
                   disabled={selected.length === 0 || selected.length > speciesRemaining}
+                  aria-describedby={selected.length > speciesRemaining ? speciesLimitId : undefined}
                 >
                   Add selected as species trait{selected.length !== 1 ? 's' : ''}
                 </Button>
@@ -599,6 +607,9 @@ export function TraitListModal({
                   size="lg"
                   onClick={() => addIds(selected, 'ancestry_traits')}
                   disabled={selected.length === 0 || selected.length > ancestryRemaining}
+                  aria-describedby={
+                    selected.length > ancestryRemaining ? ancestryLimitId : undefined
+                  }
                 >
                   Add selected as ancestry trait{selected.length !== 1 ? 's' : ''}
                 </Button>
