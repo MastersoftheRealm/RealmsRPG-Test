@@ -3,13 +3,30 @@ import { libraryItemCreateSchema, libraryItemUpdateSchema } from '@/lib/api-vali
 import {
   CREATOR_DESCRIPTION_MAX_LENGTH,
   CREATOR_DESCRIPTION_TOO_LONG_MESSAGE,
+  CREATOR_DESCRIPTION_TRUNCATED_MESSAGE,
   CREATOR_NAME_MAX_LENGTH,
   CREATOR_NAME_TOO_LONG_MESSAGE,
   clampCreatorText,
+  formatCreatorTextCounter,
   insertCreatorText,
 } from './creator-text-limits';
 
 describe('creator text limits', () => {
+  it('shows the description counter with the same thousands separator as the paste note', () => {
+    expect(
+      formatCreatorTextCounter(CREATOR_DESCRIPTION_MAX_LENGTH, CREATOR_DESCRIPTION_MAX_LENGTH),
+    ).toBe('10,000 of 10,000 characters');
+    expect(formatCreatorTextCounter(9_000, CREATOR_DESCRIPTION_MAX_LENGTH)).toBe(
+      '9,000 of 10,000 characters',
+    );
+    expect(CREATOR_DESCRIPTION_TRUNCATED_MESSAGE).toBe(
+      'Pasted description was shortened to 10,000 characters.',
+    );
+    expect(formatCreatorTextCounter(CREATOR_NAME_MAX_LENGTH, CREATOR_NAME_MAX_LENGTH)).toBe(
+      '100 of 100 characters',
+    );
+  });
+
   it('stops a pasted creator name at 100 characters', () => {
     const pasted = insertCreatorText('', 'n'.repeat(101), 0, 0, CREATOR_NAME_MAX_LENGTH);
     expect(pasted.truncated).toBe(true);
@@ -24,9 +41,9 @@ describe('creator text limits', () => {
     });
     expect(rejected.success).toBe(false);
     if (!rejected.success) {
-      expect(rejected.error.issues.some((issue) => issue.message === CREATOR_NAME_TOO_LONG_MESSAGE)).toBe(
-        true,
-      );
+      expect(
+        rejected.error.issues.some((issue) => issue.message === CREATOR_NAME_TOO_LONG_MESSAGE),
+      ).toBe(true);
     }
 
     const saved = libraryItemCreateSchema.safeParse({
