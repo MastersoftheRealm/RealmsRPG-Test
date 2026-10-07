@@ -10,17 +10,64 @@ describe('official shield copy uses the Shield Amount ladder (86e3jx7xx)', () =>
     ).toBe('2d4');
   });
 
-  it('loads block from Shield Amount when the stored shield field disagrees', () => {
+  it('opens an official shield on the Shield Amount ladder when the stored die disagrees', () => {
     const form = itemLibraryRecordToFormState(
       {
         name: 'Tower Shield',
         type: 'shield',
+        _source: 'official',
         shieldDR: { amount: 1, size: 10 },
         properties: [
           { id: 15, name: 'Shield Base', op_1_lvl: 0 },
           { id: PROPERTY_IDS.SHIELD_AMOUNT, name: 'Shield Amount', op_1_lvl: 3 },
           { id: 6, name: 'Weapon Strength Requirement', op_1_lvl: 1 },
         ],
+      },
+      [],
+    );
+    expect(form.shieldDR).toEqual({ amount: 2, size: 4 });
+  });
+
+  it('reopens a user 1d10 shield on the stored die when Shield Amount is level 3', () => {
+    const form = itemLibraryRecordToFormState(
+      {
+        name: 'User Shield',
+        type: 'shield',
+        _source: 'user',
+        shieldDR: { amount: 1, size: 10 },
+        properties: [
+          { id: 15, name: 'Shield Base', op_1_lvl: 0 },
+          { id: PROPERTY_IDS.SHIELD_AMOUNT, name: 'Shield Amount', op_1_lvl: 3 },
+          { id: 6, name: 'Weapon Strength Requirement', op_1_lvl: 1 },
+        ],
+      },
+      [],
+    );
+    expect(form.shieldDR).toEqual({ amount: 1, size: 10 });
+  });
+
+  it('reopens a user 1d12 shield on the stored die when Shield Amount is level 4', () => {
+    const form = itemLibraryRecordToFormState(
+      {
+        name: 'User Shield',
+        type: 'shield',
+        _source: 'user',
+        shieldDR: { amount: 1, size: 12 },
+        properties: [{ id: PROPERTY_IDS.SHIELD_AMOUNT, name: 'Shield Amount', op_1_lvl: 4 }],
+      },
+      [],
+    );
+    expect(form.shieldDR).toEqual({ amount: 1, size: 12 });
+  });
+
+  it('keeps a stored 2d4 on a user shield', () => {
+    const form = itemLibraryRecordToFormState(
+      {
+        name: 'User Shield',
+        type: 'shield',
+        _source: 'user',
+        shieldDR: { amount: 2, size: 4 },
+        properties: [{ id: PROPERTY_IDS.SHIELD_AMOUNT, name: 'Shield Amount', op_1_lvl: 2 }],
       },
       [],
     );
