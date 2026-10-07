@@ -4,6 +4,7 @@
 
 'use client';
 
+import { useId } from 'react';
 import { Plus, Info } from 'lucide-react';
 import type { ItemProperty } from '@/hooks';
 import { ValueStepper, SectionCostBadge } from '@/components/patterns';
@@ -19,7 +20,10 @@ import {
   PropertyCard,
 } from './item-creator-helpers';
 import type { ItemSectionCosts } from './item-creator-cost-derivation';
-import { findAddableItemProperty } from './item-creator-property-options';
+import {
+  ADD_PROPERTY_DISABLED_REASON,
+  findAddableItemProperty,
+} from './item-creator-property-options';
 
 type ItemCreatorEditorAbilityPropertiesProps = {
   armamentType: ArmamentType;
@@ -55,6 +59,7 @@ export function ItemCreatorEditorAbilityProperties({
   onUpdateProperty,
   itemSectionCosts,
 }: ItemCreatorEditorAbilityPropertiesProps) {
+  const addPropertyReasonId = useId();
   const canAddProperty =
     findAddableItemProperty(
       itemProperties,
@@ -130,6 +135,16 @@ export function ItemCreatorEditorAbilityProperties({
       <CollapsibleSection
         title={`Properties (${selectedProperties.length})`}
         collapsedSummary={propertiesSummary}
+        titleAddon={
+          canAddProperty ? null : (
+            <span
+              id={addPropertyReasonId}
+              className="max-w-full min-w-0 text-sm font-normal whitespace-normal text-warning-fg"
+            >
+              {ADD_PROPERTY_DISABLED_REASON}
+            </span>
+          )
+        }
         rightSlot={
           <Button
             type="button"
@@ -138,14 +153,9 @@ export function ItemCreatorEditorAbilityProperties({
             className="flex items-center gap-1 bg-warning-600 text-text-on-dark hover:bg-warning-700 dark:bg-warning-700 dark:hover:bg-warning-600"
             onClick={onAddProperty}
             disabled={!canAddProperty}
-            title={canAddProperty ? undefined : 'All properties are already on this item'}
-            aria-label={
-              canAddProperty
-                ? 'Add Property'
-                : 'Add Property, all properties are already on this item'
-            }
+            aria-describedby={canAddProperty ? undefined : addPropertyReasonId}
           >
-            <Plus className="h-4 w-4" />
+            <Plus className="h-4 w-4" aria-hidden />
             Add Property
           </Button>
         }
