@@ -11,7 +11,10 @@
 
 import { useState, useMemo, useCallback, useEffect } from 'react';
 import { useCreatorSave, type PowerPart } from '@/hooks';
-import { useCreatorDraftDirty } from '@/hooks/use-creator-unsaved-guard';
+import {
+  useCreatorDraftDirty,
+  useDiscardableCreatorDraft,
+} from '@/hooks/use-creator-unsaved-guard';
 import type { CreatorSaveTarget } from '@/lib/library/catalog-listing';
 import {
   isPowerCompositionMechanicPart,
@@ -32,7 +35,7 @@ import {
   type PowerCreatorFormState,
   type PowerLibraryRecord,
 } from './power-creator-bootstrap';
-import { writeCreatorCache, clearCreatorCache } from '@/lib/game/creator-cache';
+import { persistCreatorDraft, clearCreatorCache } from '@/lib/game/creator-cache';
 import { usePowerCreatorCostDerivation } from './power-creator-cost-derivation';
 import { usePowerCreatorPartActions } from './power-creator-part-actions';
 import {
@@ -134,6 +137,8 @@ export function usePowerCreatorWorkspace({
   });
   const composition = variants.composition;
   const topForm = composition ? topLevelForm(variants.collected) : liveForm;
+  const { discardLocalDraft, isLocalDraftDiscarded } =
+    useDiscardableCreatorDraft(POWER_CREATOR_CACHE_KEY);
 
   useEffect(() => {
     if (editPowerId) clearCreatorCache(POWER_CREATOR_CACHE_KEY);
@@ -173,8 +178,18 @@ export function usePowerCreatorWorkspace({
       ...(composition ? { composition } : {}),
       timestamp: Date.now(),
     };
-    writeCreatorCache(POWER_CREATOR_CACHE_KEY, cache);
-  }, [editPowerId, name, description, topForm, composition, imageId, imageUrl, targetedDefenses]);
+    persistCreatorDraft(POWER_CREATOR_CACHE_KEY, cache, isLocalDraftDiscarded());
+  }, [
+    editPowerId,
+    name,
+    description,
+    topForm,
+    composition,
+    imageId,
+    imageUrl,
+    targetedDefenses,
+    isLocalDraftDiscarded,
+  ]);
 
   const nonMechanicParts = useMemo(
     () => powerParts.filter((p: PowerPart) => !p.mechanic),
@@ -396,6 +411,7 @@ export function usePowerCreatorWorkspace({
     reverseIncomplete,
     save,
     unsavedDirty,
+    discardLocalDraft,
     handleReset,
     handleLoadPower,
   };

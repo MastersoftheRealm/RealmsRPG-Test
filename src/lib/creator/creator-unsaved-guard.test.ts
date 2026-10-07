@@ -255,4 +255,42 @@ describe('creator unsaved guard', () => {
     expect(header).toContain('data-login-link="header"');
     expect(header).not.toContain("router.push('/login')");
   });
+
+  it('clears the stored draft when Discard confirms leaving, on every creator', () => {
+    const shell = readFileSync(
+      path.join(import.meta.dirname, '../../components/creator/CreatorPageShell.tsx'),
+      'utf8',
+    );
+    const leaveAt = shell.indexOf('onDiscardLocalDraft?.()');
+    const confirmAt = shell.indexOf('leaveBlocker.confirm()');
+    expect(leaveAt).toBeGreaterThan(-1);
+    expect(confirmAt).toBeGreaterThan(leaveAt);
+
+    const creators = [
+      ['power-creator/page.tsx', 'power-creator/use-power-creator-workspace.ts'],
+      ['item-creator/page.tsx', 'item-creator/use-item-creator-workspace.ts'],
+      ['technique-creator/page.tsx', 'technique-creator/use-technique-creator-workspace.ts'],
+      [
+        'empowered-technique-creator/page.tsx',
+        'empowered-technique-creator/use-empowered-technique-creator-workspace.ts',
+      ],
+      ['creature-creator/page.tsx', 'creature-creator/use-creature-creator-workspace.ts'],
+      ['species-creator/page.tsx', 'species-creator/use-species-creator-workspace.ts'],
+    ] as const;
+
+    for (const [pageFile, workspaceFile] of creators) {
+      const creatorPage = readFileSync(
+        path.join(import.meta.dirname, `../../app/(main)/${pageFile}`),
+        'utf8',
+      );
+      const workspace = readFileSync(
+        path.join(import.meta.dirname, `../../app/(main)/${workspaceFile}`),
+        'utf8',
+      );
+      expect(creatorPage).toContain('onDiscardLocalDraft=');
+      expect(workspace).toContain('useDiscardableCreatorDraft');
+      expect(workspace).toContain('persistCreatorDraft');
+      expect(workspace).toContain('isLocalDraftDiscarded');
+    }
+  });
 });

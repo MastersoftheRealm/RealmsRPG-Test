@@ -88,6 +88,8 @@ export type CreatorPageShellProps = {
   onLoad: () => void;
   /** When true, reload, leave, Back, Load, and Reset ask before discarding edits. */
   unsavedDirty?: boolean | undefined;
+  /** Clears the locally stored draft when the user confirms leaving. */
+  onDiscardLocalDraft?: (() => void) | undefined;
 
   publish: CreatorPagePublishConfig;
   resetConfirm?: CreatorPageResetConfirmConfig | undefined;
@@ -127,6 +129,7 @@ export function CreatorPageShell({
   onReset,
   onLoad,
   unsavedDirty = false,
+  onDiscardLocalDraft,
   publish,
   resetConfirm,
   loading,
@@ -180,14 +183,16 @@ export function CreatorPageShell({
 
   const confirmDiscard = useCallback(() => {
     const action = discardAction;
+    const leaving = leaveBlocker.request !== null;
     setDiscardAction(null);
-    if (leaveBlocker.request) {
+    if (leaving) {
+      onDiscardLocalDraft?.();
       leaveBlocker.confirm();
       return;
     }
     if (action === 'load') onLoad();
     if (action === 'reset') onReset();
-  }, [discardAction, leaveBlocker, onLoad, onReset]);
+  }, [discardAction, leaveBlocker, onDiscardLocalDraft, onLoad, onReset]);
 
   // Keep title / Load / Reset / Save chrome visible during load & error so
   // chrome audits and signed-out UX do not depend on codex data being present

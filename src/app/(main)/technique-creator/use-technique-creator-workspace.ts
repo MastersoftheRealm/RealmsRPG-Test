@@ -9,7 +9,10 @@
 
 import { useState, useMemo, useCallback, useEffect } from 'react';
 import { useCreatorSave, type TechniquePart } from '@/hooks';
-import { useCreatorDraftDirty } from '@/hooks/use-creator-unsaved-guard';
+import {
+  useCreatorDraftDirty,
+  useDiscardableCreatorDraft,
+} from '@/hooks/use-creator-unsaved-guard';
 import type { CreatorSaveTarget } from '@/lib/library/catalog-listing';
 import {
   calculateTechniqueCosts,
@@ -32,7 +35,7 @@ import {
   type TechniqueSelectedPart as SelectedPart,
   type TechniqueDamageConfig as DamageConfig,
 } from './technique-creator-bootstrap';
-import { writeCreatorCache, clearCreatorCache } from '@/lib/game/creator-cache';
+import { persistCreatorDraft, clearCreatorCache } from '@/lib/game/creator-cache';
 
 function toTechniquePartPayload(part: {
   id: string | number;
@@ -77,6 +80,9 @@ export function useTechniqueCreatorWorkspace({
   const [targetedDefenses, setTargetedDefenses] = useState<string[]>(
     initialFormState.targetedDefenses,
   );
+  const { discardLocalDraft, isLocalDraftDiscarded } = useDiscardableCreatorDraft(
+    TECHNIQUE_CREATOR_CACHE_KEY,
+  );
 
   // ?edit= mode: clear any stale draft once on mount (parity with the old hydrate
   // effect, which removed the cache after loading the edit target).
@@ -107,7 +113,7 @@ export function useTechniqueCreatorWorkspace({
       targetedDefenses,
       timestamp: Date.now(),
     };
-    writeCreatorCache(TECHNIQUE_CREATOR_CACHE_KEY, cache);
+    persistCreatorDraft(TECHNIQUE_CREATOR_CACHE_KEY, cache, isLocalDraftDiscarded());
   }, [
     editTechniqueId,
     name,
@@ -120,6 +126,7 @@ export function useTechniqueCreatorWorkspace({
     imageId,
     imageUrl,
     targetedDefenses,
+    isLocalDraftDiscarded,
   ]);
 
   // Build mechanic parts from action type, damage, and attack mode.
@@ -447,6 +454,7 @@ export function useTechniqueCreatorWorkspace({
     updatePart,
     save,
     unsavedDirty,
+    discardLocalDraft,
     handleReset,
     handleLoadTechnique,
   };

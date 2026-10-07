@@ -42,6 +42,7 @@ import {
   displayItemToCreatureArmament,
 } from './transformers';
 import { useSort } from '@/hooks/use-sort';
+import { useDiscardableCreatorDraft } from '@/hooks/use-creator-unsaved-guard';
 import type { AbilityName } from '@/types';
 import type { CreatureSkill, CreatureState } from './creature-creator-types';
 import {
@@ -54,7 +55,7 @@ import {
 } from './creature-creator-constants';
 import { allocationsToCreatureSkills, creatureSkillsToAllocations } from './creature-skill-utils';
 import { bootstrapCreatureState } from './creature-creator-bootstrap';
-import { writeCreatorCache, clearCreatorCache } from '@/lib/game/creator-cache';
+import { persistCreatorDraft, clearCreatorCache } from '@/lib/game/creator-cache';
 import { normalizeCreatureInventoryType } from '@/lib/game/creature-inventory';
 import { mergeLibraryBySource } from '@/lib/library/source-scope';
 import { mergeCreatureFeatsOnAdd } from './creature-feat-utils';
@@ -232,6 +233,9 @@ export function useCreatureCreatorWorkspace() {
     setCreature(bootstrapCreatureState({ editCreatureId, rawItems: load.rawItems }));
   }
   const bootstrapApplied = bootstrapKey === sessionKey;
+  const { discardLocalDraft, isLocalDraftDiscarded } = useDiscardableCreatorDraft(
+    CREATURE_CREATOR_CACHE_KEY,
+  );
 
   useEffect(() => {
     if (editCreatureId) clearCreatorCache(CREATURE_CREATOR_CACHE_KEY);
@@ -239,11 +243,15 @@ export function useCreatureCreatorWorkspace() {
 
   useEffect(() => {
     if (editCreatureId || !bootstrapApplied) return;
-    writeCreatorCache(CREATURE_CREATOR_CACHE_KEY, {
-      creature,
-      timestamp: Date.now(),
-    });
-  }, [editCreatureId, bootstrapApplied, creature]);
+    persistCreatorDraft(
+      CREATURE_CREATOR_CACHE_KEY,
+      {
+        creature,
+        timestamp: Date.now(),
+      },
+      isLocalDraftDiscarded(),
+    );
+  }, [editCreatureId, bootstrapApplied, creature, isLocalDraftDiscarded]);
 
   const featPointsMap = useMemo(() => {
     const map = new Map<string, number>();
@@ -460,6 +468,7 @@ export function useCreatureCreatorWorkspace() {
     load,
     save,
     unsavedDirty,
+    discardLocalDraft,
     acceptDraft,
     handleSave,
     handleReset,

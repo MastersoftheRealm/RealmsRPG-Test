@@ -5596,7 +5596,7 @@ islands (Phase 4) and workspace hook (Phase 5). **T012–T014** cover expanded h
 3. Paste a description of 10,000 characters and save. Then try to go past 10,000.
 
 **Expected**
-- Names stop at 100 with a visible counter. A 10,000-character description saves. The description field does not accept a 10,001st character.
+- Names stop at 100 with a visible counter. A 10,000-character description saves. The description field does not accept a 10,001st character. Once the description counter is visible, it uses the same grouping as the paste note ("10,000 of 10,000 characters", and "9,000 of 10,000 characters" at the threshold). The name counter uses that same format ("100 of 100 characters").
 
 **Report** — `[ ] PASS` · `[ ] FAIL` · `[ ] SKIP` — Notes:
 
@@ -5655,10 +5655,12 @@ islands (Phase 4) and workspace hook (Phase 5). **T012–T014** cover expanded h
 2. Click the site logo, then Back. Keep editing, then confirm discard.
 3. Click Load. Keep editing, then confirm and load another row.
 4. On `/species-creator`, edit the name, then reload, Back, Load, and header Login. Save, edit again, and press Back.
+5. On `/power-creator`, type a name, click the logo, and choose Discard. Open `/power-creator` again. Repeat on item, technique, empowered technique, creature, and species.
 
 **Expected**
 - Each of those asks before the draft is discarded. Keep editing leaves the draft in place. A successful save, a completed load, or Reset does not ask again until the next edit.
 - Species is guarded. Header Login asks only when the draft is dirty. Back after save then another edit leaves the creator.
+- Discard on the logo or Back clears the locally stored draft. The name is gone when the creator is opened again.
 
 **Report** — `[ ] PASS` · `[ ] FAIL` · `[ ] SKIP` — Notes:
 

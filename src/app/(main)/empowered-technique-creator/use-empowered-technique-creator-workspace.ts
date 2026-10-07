@@ -9,7 +9,10 @@
 
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useCreatorSave, type PowerPart, type TechniquePart } from '@/hooks';
-import { useCreatorDraftDirty } from '@/hooks/use-creator-unsaved-guard';
+import {
+  useCreatorDraftDirty,
+  useDiscardableCreatorDraft,
+} from '@/hooks/use-creator-unsaved-guard';
 import type { CreatorSaveTarget } from '@/lib/library/catalog-listing';
 import { dedupeSavedParts } from '@/lib/game/dedupe-saved-parts';
 import type { AreaConfig, DurationConfig } from '@/lib/calculators';
@@ -25,7 +28,7 @@ import {
   type SelectedPowerPart,
   type SelectedTechniquePart,
 } from './empowered-technique-bootstrap';
-import { writeCreatorCache, clearCreatorCache } from '@/lib/game/creator-cache';
+import { persistCreatorDraft, clearCreatorCache } from '@/lib/game/creator-cache';
 import { useEmpoweredTechniqueCostDerivation } from './empowered-technique-cost-derivation';
 import { useEmpoweredTechniquePartActions } from './empowered-technique-part-actions';
 
@@ -74,6 +77,7 @@ export function useEmpoweredTechniqueCreatorWorkspace({
   const [targetedDefenses, setTargetedDefenses] = useState<string[]>(
     initialFormState.targetedDefenses,
   );
+  const { discardLocalDraft, isLocalDraftDiscarded } = useDiscardableCreatorDraft(CACHE_KEY);
 
   // ?edit= mode: clear any stale draft once on mount (parity with the old hydrate
   // effect, which removed the cache after loading the edit target).
@@ -371,7 +375,7 @@ export function useEmpoweredTechniqueCreatorWorkspace({
       targetedDefenses,
       timestamp: Date.now(),
     };
-    writeCreatorCache(CACHE_KEY, cache);
+    persistCreatorDraft(CACHE_KEY, cache, isLocalDraftDiscarded());
   }, [
     actionType,
     area,
@@ -390,6 +394,7 @@ export function useEmpoweredTechniqueCreatorWorkspace({
     techniqueDamage,
     attackMode,
     targetedDefenses,
+    isLocalDraftDiscarded,
   ]);
 
   const loadError =
@@ -469,6 +474,7 @@ export function useEmpoweredTechniqueCreatorWorkspace({
     setSelectedTechniqueParts,
     save,
     unsavedDirty,
+    discardLocalDraft,
     attackModeLabel: attackModeColumnLabel(attackMode),
   };
 }

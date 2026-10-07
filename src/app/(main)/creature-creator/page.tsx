@@ -130,6 +130,7 @@ function CreatureCreatorContent() {
       onLoad={load.openLoadModal}
       onReset={handleReset}
       unsavedDirty={ws.unsavedDirty}
+      onDiscardLocalDraft={ws.discardLocalDraft}
       saving={save.saving}
       saveDisabled={!creature.name.trim() || isOverBudget}
       loading={{
