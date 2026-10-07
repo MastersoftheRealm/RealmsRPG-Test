@@ -6,6 +6,7 @@
 import type { Trait, Skill, Species } from '@/hooks';
 import { defined } from '@/lib/utils';
 import { CREATOR_CACHE_KEYS } from '@/lib/game/creator-constants';
+import { findLoadedLibraryItem } from '@/lib/library/catalog-listing';
 
 export const MAX_SPECIES_TRAITS = 3;
 export const MAX_ANCESTRY_TRAITS = 6;
@@ -227,5 +228,24 @@ export function speciesLibraryRecordToFormState(
     imageId: typeof (d.imageId ?? d.image_id) === 'string' ? String(d.imageId ?? d.image_id) : null,
     imageUrl:
       typeof (d.imageUrl ?? d.image_url) === 'string' ? String(d.imageUrl ?? d.image_url) : null,
+  };
+}
+
+/** Map a `?edit=` library row into the creator form. Null when that id is not loaded. */
+export function resolveSpeciesEditForm(
+  editSpeciesId: string,
+  rawItems: readonly unknown[],
+  allTraits: Trait[],
+  allSkills: Skill[],
+): { form: SpeciesFormState; item: unknown } | null {
+  const item = findLoadedLibraryItem(rawItems, editSpeciesId);
+  if (!item || typeof item !== 'object') return null;
+  return {
+    item,
+    form: speciesLibraryRecordToFormState(
+      item as Species | Record<string, unknown>,
+      allTraits,
+      allSkills,
+    ),
   };
 }

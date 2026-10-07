@@ -26,6 +26,7 @@ import {
   isSpeciesFormSaveReady,
   mergeCachedSpeciesForm,
   speciesLibraryRecordToFormState,
+  resolveSpeciesEditForm,
   type SpeciesFormState,
   type SpeciesCreatorCache,
   type TraitCategory,
@@ -37,6 +38,10 @@ type UseSpeciesCreatorWorkspaceArgs = {
   skillsLoading: boolean;
   traitsLoading: boolean;
   closeLoadModal: () => void;
+  /** `?edit=` id. When set, that library row replaces the local draft. */
+  editSpeciesId?: string | null | undefined;
+  rawItems?: readonly unknown[] | undefined;
+  libraryLoading?: boolean | undefined;
 };
 
 function resolveSpeciesSkillLabel(skills: Skill[], id: string): string {
@@ -50,6 +55,9 @@ export function useSpeciesCreatorWorkspace({
   skillsLoading,
   traitsLoading,
   closeLoadModal,
+  editSpeciesId = null,
+  rawItems = [],
+  libraryLoading = false,
 }: UseSpeciesCreatorWorkspaceArgs) {
   const [showAddSpeciesAncestryModal, setShowAddSpeciesAncestryModal] = useState(false);
   const [showAddFlawModal, setShowAddFlawModal] = useState(false);
@@ -68,12 +76,24 @@ export function useSpeciesCreatorWorkspace({
   const [form, setForm] = useState<SpeciesFormState>(initialSpeciesFormState);
   const cacheBootstrapRef = useRef(false);
   const [cacheReady, setCacheReady] = useState(false);
+  const [appliedEditId, setAppliedEditId] = useState<string | null>(null);
+  const editSession = editSpeciesId?.trim() ? editSpeciesId.trim() : null;
 
-  // Load draft from localStorage once codex lists are ready (same 30-day window as other creators)
+  // Load draft from localStorage once codex lists are ready (same 30-day window as other creators).
+  // ?edit= replaces the draft with the library row, so a stale cache must not win.
   useEffect(() => {
     if (skillsLoading || traitsLoading) return;
     if (cacheBootstrapRef.current) return;
     cacheBootstrapRef.current = true;
+    if (editSpeciesId) {
+      try {
+        localStorage.removeItem(SPECIES_CREATOR_CACHE_KEY);
+      } catch {
+        // ignore
+      }
+      queueMicrotask(() => setCacheReady(true));
+      return;
+    }
     try {
       const raw = localStorage.getItem(SPECIES_CREATOR_CACHE_KEY);
       if (raw) {
@@ -89,18 +109,18 @@ export function useSpeciesCreatorWorkspace({
       localStorage.removeItem(SPECIES_CREATOR_CACHE_KEY);
     }
     queueMicrotask(() => setCacheReady(true));
-  }, [skillsLoading, traitsLoading, traits, skills]);
+  }, [skillsLoading, traitsLoading, traits, skills, editSpeciesId]);
 
   // Persist draft across refresh (mirrors item/power creator cache pattern)
   useEffect(() => {
-    if (!cacheReady) return;
+    if (!cacheReady || editSpeciesId) return;
     try {
       const cache: SpeciesCreatorCache = { form, timestamp: Date.now() };
       localStorage.setItem(SPECIES_CREATOR_CACHE_KEY, JSON.stringify(cache));
     } catch {
       // ignore quota / private mode
     }
-  }, [cacheReady, form]);
+  }, [cacheReady, form, editSpeciesId]);
 
   // Base skills only (no sub-skills) for species skill selection
   const skillOptions = useMemo(() => {
@@ -159,6 +179,21 @@ export function useSpeciesCreatorWorkspace({
       setForm(initialSpeciesFormState);
     },
   });
+
+  const editLibraryReady = !skillsLoading && !traitsLoading && !libraryLoading;
+  const editApplyRef = useRef<string | null>(null);
+  useEffect(() => {
+    if (!editSession || !editLibraryReady) return;
+    if (editApplyRef.current === editSession) return;
+    editApplyRef.current = editSession;
+    const resolved = resolveSpeciesEditForm(editSession, rawItems, traits, skills);
+    queueMicrotask(() => {
+      setAppliedEditId(editSession);
+      if (!resolved) return;
+      setForm(resolved.form);
+      save.applyLoadedLibraryItem(resolved.item);
+    });
+  }, [editSession, editLibraryReady, rawItems, traits, skills, save]);
 
   const handleSave = useCallback(async () => {
     if (!isSpeciesFormSaveReady(form)) {
@@ -397,5 +432,6 @@ export function useSpeciesCreatorWorkspace({
     setPendingBatch,
     isSaveReady: isSpeciesFormSaveReady(form),
     skillLabel: (id: string) => resolveSpeciesSkillLabel(skills, id),
+    editBootstrapPending: Boolean(editSession) && appliedEditId !== editSession,
   };
 }
