@@ -263,6 +263,13 @@ export function useItemCreatorWorkspace({
         shieldDamage: hasShieldDamage
           ? { amount: shieldDamage.amount, size: shieldDamage.size }
           : null,
+        abilityRequirement: abilityRequirement
+          ? {
+              id: abilityRequirement.id,
+              name: abilityRequirement.name,
+              level: abilityRequirement.level,
+            }
+          : null,
       }),
     };
     return { name: name.trim(), data: itemData };
