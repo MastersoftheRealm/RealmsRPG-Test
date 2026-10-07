@@ -4,7 +4,7 @@
  * A card's dropdown still lists its own current property.
  */
 
-import { isGeneralProperty, isMechanicProperty } from '@/lib/calculators';
+import { isGeneralProperty, isMechanicProperty, type ItemPropertyPayload } from '@/lib/calculators';
 
 export function propertyOptionsForCard<T extends { id: string | number }>(
   selectable: readonly T[],
@@ -24,6 +24,9 @@ type AddableProperty = {
   mechanic?: boolean | undefined;
 };
 
+/** Shown when Add Property is disabled. Not a title tooltip — disabled buttons swallow those. */
+export const ADD_PROPERTY_DISABLED_REASON = 'All properties are already on this item';
+
 /** Next property Add Property can attach, or null when every selectable property is used. */
 export function findAddableItemProperty<T extends AddableProperty>(
   itemProperties: readonly T[],
@@ -32,7 +35,8 @@ export function findAddableItemProperty<T extends AddableProperty>(
 ): T | null {
   const armamentTypeLower = armamentType.toLowerCase();
   const selectable = itemProperties.filter((property) => {
-    if (isGeneralProperty(property)) return false;
+    // id may be a string or a number; the check only reads id and name.
+    if (isGeneralProperty(property as ItemPropertyPayload)) return false;
     if (isMechanicProperty(property)) return false;
     const propType = (property.type || '').toLowerCase();
     if (!propType || propType === 'general') return true;
