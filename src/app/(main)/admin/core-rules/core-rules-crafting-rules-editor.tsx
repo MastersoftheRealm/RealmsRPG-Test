@@ -159,7 +159,7 @@ export function CraftingRulesEditor({
                 </td>
                 <td className="px-1 py-1">
                   <NumInput
-                    label={`General crafting row ${i + 1} difficulty score`}
+                    label={`General crafting row ${i + 1} DS`}
                     value={(row.difficultyScore as number) ?? 14}
                     onChange={(v) => setGeneralRow(i, 'difficultyScore', v)}
                     min={1}
