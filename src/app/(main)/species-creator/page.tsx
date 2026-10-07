@@ -27,7 +27,11 @@ import {
 import { CreatorPageShell, CreatorSummaryPanel } from '@/components/creator';
 import { SourceFilter, sourceFilterSummary } from '@/components/patterns/filters/source-filter';
 import { ConfirmActionModal } from '@/components/patterns';
-import { SPECIES_TRAIT_WARNING, TRAIT_LIMITS } from './species-creator-bootstrap';
+import {
+  SPECIES_TRAIT_WARNING,
+  TRAIT_LIMITS,
+  speciesCreatorEditHref,
+} from './species-creator-bootstrap';
 import { SpeciesCreatorEditor, TraitListModal } from './species-creator-editor';
 import { useSpeciesCreatorWorkspace } from './use-species-creator-workspace';
 
@@ -58,9 +62,7 @@ function SpeciesCreatorPage() {
       description="Create custom species. Add traits (species, ancestry, characteristic, flaw), choose base skills and sizes, and set languages. Load from Realms Codex or My Codex; save to My Codex."
       user={user}
       auth={{
-        returnPath: editSpeciesId
-          ? `/species-creator?edit=${encodeURIComponent(editSpeciesId)}`
-          : '/species-creator',
+        returnPath: editSpeciesId ? speciesCreatorEditHref(editSpeciesId) : '/species-creator',
         contentType: 'species',
         requireAuthToLoad: false,
       }}

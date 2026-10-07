@@ -11,6 +11,10 @@ import { useState, useCallback, useEffect } from 'react';
 import { useCreatorSave, type ItemProperty } from '@/hooks';
 import type { CreatorSaveTarget } from '@/lib/library/catalog-listing';
 import {
+  useCreatorEditDraftDecision,
+  useCreatorEditMissNotice,
+} from '@/lib/library/use-creator-edit-draft';
+import {
   weaponRangeLegacyLevel,
   weaponRangeSpaceLadder,
   type ItemDamage,
@@ -38,6 +42,8 @@ import { useItemCreatorPropertyActions } from './item-creator-property-actions';
 type UseItemCreatorWorkspaceArgs = {
   initialFormState: ItemCreatorFormState;
   editItemId: string | null;
+  /** True only when editItemId matched a loaded library row. */
+  editReplacesDraft: boolean;
   itemProperties: ItemProperty[];
   closeLoadModal: () => void;
   initialSaveTarget?: CreatorSaveTarget | undefined;
@@ -46,6 +52,7 @@ type UseItemCreatorWorkspaceArgs = {
 export function useItemCreatorWorkspace({
   initialFormState,
   editItemId,
+  editReplacesDraft,
   itemProperties,
   closeLoadModal,
   initialSaveTarget,
@@ -85,12 +92,15 @@ export function useItemCreatorWorkspace({
 
   const imageCategory = armamentType.toLowerCase() as 'weapon' | 'armor' | 'shield';
 
-  useEffect(() => {
-    if (editItemId) clearCreatorCache(ITEM_CREATOR_CACHE_KEY);
-  }, [editItemId]);
+  const { discardDraft } = useCreatorEditDraftDecision(
+    true,
+    editItemId,
+    editReplacesDraft,
+    ITEM_CREATOR_CACHE_KEY,
+  );
 
   useEffect(() => {
-    if (editItemId) return;
+    if (discardDraft) return;
 
     const cache: ItemCreatorCache = {
       name,
@@ -119,7 +129,7 @@ export function useItemCreatorWorkspace({
     };
     writeCreatorCache(ITEM_CREATOR_CACHE_KEY, cache);
   }, [
-    editItemId,
+    discardDraft,
     name,
     description,
     armamentType,
@@ -309,6 +319,8 @@ export function useItemCreatorWorkspace({
       setImageUrl(null);
     },
   });
+
+  useCreatorEditMissNotice(Boolean(editItemId) && !discardDraft, 'armament', save.setSaveMessage);
 
   const handleReset = useCallback(() => {
     setName('');

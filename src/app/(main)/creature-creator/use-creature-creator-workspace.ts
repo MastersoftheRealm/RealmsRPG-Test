@@ -55,6 +55,11 @@ import {
 import { allocationsToCreatureSkills, creatureSkillsToAllocations } from './creature-skill-utils';
 import { bootstrapCreatureState } from './creature-creator-bootstrap';
 import { writeCreatorCache, clearCreatorCache } from '@/lib/game/creator-cache';
+import { creatorEditReplacesDraft } from '@/lib/library/catalog-listing';
+import {
+  useCreatorEditDraftDecision,
+  useCreatorEditMissNotice,
+} from '@/lib/library/use-creator-edit-draft';
 import { normalizeCreatureInventoryType } from '@/lib/game/creature-inventory';
 import { mergeLibraryBySource } from '@/lib/library/source-scope';
 import { mergeCreatureFeatsOnAdd } from './creature-feat-utils';
@@ -233,17 +238,20 @@ export function useCreatureCreatorWorkspace() {
   }
   const bootstrapApplied = bootstrapKey === sessionKey;
 
-  useEffect(() => {
-    if (editCreatureId) clearCreatorCache(CREATURE_CREATOR_CACHE_KEY);
-  }, [editCreatureId]);
+  const { discardDraft } = useCreatorEditDraftDecision(
+    bootstrapApplied,
+    editCreatureId,
+    creatorEditReplacesDraft(editCreatureId, load.rawItems),
+    CREATURE_CREATOR_CACHE_KEY,
+  );
 
   useEffect(() => {
-    if (editCreatureId || !bootstrapApplied) return;
+    if (!bootstrapApplied || discardDraft) return;
     writeCreatorCache(CREATURE_CREATOR_CACHE_KEY, {
       creature,
       timestamp: Date.now(),
     });
-  }, [editCreatureId, bootstrapApplied, creature]);
+  }, [bootstrapApplied, discardDraft, creature]);
 
   const featPointsMap = useMemo(() => {
     const map = new Map<string, number>();
@@ -420,6 +428,12 @@ export function useCreatureCreatorWorkspace() {
     load,
     editCreatureId,
   });
+
+  useCreatorEditMissNotice(
+    bootstrapApplied && !discardDraft && Boolean(editCreatureId),
+    'creature',
+    save.setSaveMessage,
+  );
 
   const featsSummary = useMemo(() => buildCreatureFeatsSummary(creature), [creature]);
   const powersSummary = useMemo(() => buildCreaturePowersSummary(creature), [creature]);
