@@ -54,6 +54,8 @@ function dbColumnName(collection: CodexCollection, key: string): string {
 /**
  * JSONB columns. Comma-joining these (the TEXT-array path) turns a group into
  * "[object Object]" and the spreadsheet edit does not survive reload.
+ * A string that will not parse must not be stored as a JSON string scalar:
+ * the creator treats that as missing, and a later list-mode save writes null.
  */
 const JSON_CAMEL_FIELDS = new Set([
   'level1GuidanceGroups',
@@ -61,18 +63,24 @@ const JSON_CAMEL_FIELDS = new Set([
   'level1Loadouts',
 ]);
 
+/** Parse a JSONB cell. Throws so the save returns an error before any update. */
+function parseJsonColumn(camel: string, raw: string): unknown {
+  try {
+    return JSON.parse(raw) as unknown;
+  } catch {
+    const column = camelToSnakeAttachedDigits(camel);
+    throw new Error(
+      `${column} is not valid JSON, so this save was rejected and nothing was written.`,
+    );
+  }
+}
+
 /** Serialize value for columnar TEXT columns: arrays become comma-separated */
 function toColumnValue(camel: string, val: unknown): unknown {
   if (val == null) return null;
   if (JSON_CAMEL_FIELDS.has(camel)) {
     if (val === '') return null;
-    if (typeof val === 'string') {
-      try {
-        return JSON.parse(val) as unknown;
-      } catch {
-        return val;
-      }
-    }
+    if (typeof val === 'string') return parseJsonColumn(camel, val);
     return val;
   }
   if (Array.isArray(val)) return val.map(String).join(', ');

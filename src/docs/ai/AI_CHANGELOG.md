@@ -2,6 +2,7 @@
 
 Newest **150** entries. Older: [`archive/AI_CHANGELOG_ARCHIVE.md`](archive/AI_CHANGELOG_ARCHIVE.md).
 
+- 2026-10-07 | agent | Admin spreadsheet rejects archetype JSON that will not parse | files: codex-column-map, codex-spreadsheet-save.test, actions.test, BUILD_VALIDATION DEV-V-063 | Summary: Guidance groups, loadouts, and recommended abilities that will not parse are no longer stored as plain text. The save returns an error before the database update, so the row is unchanged. A valid JSON string still parses, and clearing the cell still stores null. verification_status pending-qa (DEV-V-063).
 - 2026-10-07 | agent | Admin Core Rules names include the visible header | files: core-rules armament/crafting editors(+test), BUILD_VALIDATION DEV-V-064 | Summary: Crafting DS and Armament Max (TP) inputs include that visible header text in the accessible name. verification_status pending-qa (DEV-V-064).
 - 2026-10-07 | agent | Admin spreadsheet keeps archetype level-1 loadouts | files: codex-spreadsheet-config(+test), BUILD_VALIDATION DEV-V-063 | Summary: Parsed path data keeps armor step and shared equipment beside the loadouts list. Spreadsheet save writes those back, so level1_loadouts is not stored as null. verification_status pending-qa (DEV-V-063).
 - 2026-10-07 | agent | Admin Core Rules uses Back to Admin | files: core-rules page(+test), BUILD_VALIDATION DEV-V-067 | Summary: The Core Rules header uses the same Back to Admin control as Users and Roles. The accessible name is that visible text. verification_status pending-qa (DEV-V-067).

@@ -161,6 +161,42 @@ describe('optimistic locking', () => {
   });
 });
 
+describe('archetype JSON columns', () => {
+  it('writes valid JSON and rejects JSON that will not parse without changing the row', async () => {
+    const saved = await updateCodexDoc('codex_archetypes', '5', {
+      name: 'Blade',
+      level1_guidance_groups: [{ id: 'g', title: 'Goal' }],
+      level1_recommended_abilities: { strength: 3 },
+      level1_loadouts: {
+        armorStep: 'optional',
+        sharedEquipment: [{ id: '3', quantity: 4 }],
+      },
+    });
+
+    expect(saved.success).toBe(true);
+    const written = defined(defined(currentDb.tables.codex_archetypes)[0]);
+    expect(written.level1_loadouts).toEqual({
+      armorStep: 'optional',
+      sharedEquipment: [{ id: '3', quantity: 4 }],
+    });
+    expect(written.level1_guidance_groups).toEqual([{ id: 'g', title: 'Goal' }]);
+    expect(written.level1_recommended_abilities).toEqual({ strength: 3 });
+
+    const before = structuredClone(currentDb.tables.codex_archetypes);
+    const rejected = await updateCodexDoc('codex_archetypes', '5', {
+      name: 'Blade',
+      level1_guidance_groups: '[{"id":"g","title":"T","feats":["1"]}',
+      level1_loadouts: '{"armorStep":"optional"',
+      level1_recommended_abilities: '{strength:3}',
+    });
+
+    expect(rejected.success).toBe(false);
+    expect(rejected.error).toMatch(/level1_guidance_groups is not valid JSON/);
+    expect(rejected.error).toMatch(/nothing was written/);
+    expect(currentDb.tables.codex_archetypes).toEqual(before);
+  });
+});
+
 describe('archetype progression replace', () => {
   const baseArchetype = {
     id: '5',
