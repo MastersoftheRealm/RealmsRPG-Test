@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { parseArchetypePathData } from '@/lib/game/archetype-path';
 import { toColumnarPayload, toDbPayload } from './codex-column-map';
 import { spreadsheetSourceRow, visibleSpreadsheetColumns } from './codex-spreadsheet-config';
-import { rowDataWithoutId } from './codex-spreadsheet-helpers';
+import { rowDataWithoutId, stringToCellValue } from './codex-spreadsheet-helpers';
 
 describe('spreadsheet saves every real column (86e3mezkn)', () => {
   it('writes archetype fields the grid shows and list mode already saves', () => {
@@ -94,5 +94,77 @@ describe('spreadsheet saves every real column (86e3mezkn)', () => {
       base_en: null,
       name: 'Bolt',
     });
+  });
+
+  it('rejects archetype JSON that will not parse so the save builds no write payload', () => {
+    const brokenGuidance = stringToCellValue('[{"id":"g","title":"T","feats":["1"]}', [
+      { id: 'g', title: 'Goal' },
+    ]);
+    const brokenLoadouts = stringToCellValue('{"armorStep":"optional"', null);
+    const brokenAbilities = stringToCellValue('{strength:3}', { strength: 3 });
+
+    expect(brokenGuidance).toBe('[{"id":"g","title":"T","feats":["1"]}');
+    expect(brokenLoadouts).toBe('{"armorStep":"optional"');
+    expect(brokenAbilities).toBe('{strength:3}');
+
+    expect(() =>
+      toDbPayload(
+        'codex_archetypes',
+        toColumnarPayload('codex_archetypes', {
+          name: 'Blade',
+          level1_guidance_groups: brokenGuidance,
+          level1_recommended_abilities: { strength: 3 },
+          level1_loadouts: { armorStep: 'optional' },
+        }),
+      ),
+    ).toThrow(/level1_guidance_groups is not valid JSON/);
+
+    expect(() =>
+      toColumnarPayload('codex_archetypes', {
+        name: 'Blade',
+        level1_loadouts: brokenLoadouts,
+      }),
+    ).toThrow(/level1_loadouts is not valid JSON/);
+
+    expect(() =>
+      toColumnarPayload('codex_archetypes', {
+        name: 'Blade',
+        level1_recommended_abilities: brokenAbilities,
+      }),
+    ).toThrow(/level1_recommended_abilities is not valid JSON/);
+  });
+
+  it('still parses valid archetype JSON and still clears an empty JSON cell', () => {
+    const loadoutsFromNullCell = stringToCellValue(
+      '{"armorStep":"optional","sharedEquipment":[{"id":"3","quantity":4}]}',
+      null,
+    );
+    const db = toDbPayload(
+      'codex_archetypes',
+      toColumnarPayload('codex_archetypes', {
+        name: 'Blade',
+        level1_guidance_groups: '[{"id":"g","title":"Goal"}]',
+        level1_recommended_abilities: '{"strength":3}',
+        level1_loadouts: loadoutsFromNullCell,
+      }),
+    );
+    expect(db.level1_guidance_groups).toEqual([{ id: 'g', title: 'Goal' }]);
+    expect(db.level1_recommended_abilities).toEqual({ strength: 3 });
+    expect(db.level1_loadouts).toEqual({
+      armorStep: 'optional',
+      sharedEquipment: [{ id: '3', quantity: 4 }],
+    });
+
+    const cleared = toDbPayload(
+      'codex_archetypes',
+      toColumnarPayload('codex_archetypes', {
+        level1_guidance_groups: '',
+        level1_recommended_abilities: null,
+        level1_loadouts: undefined,
+      }),
+    );
+    expect(cleared.level1_guidance_groups).toBeNull();
+    expect(cleared.level1_recommended_abilities).toBeNull();
+    expect(cleared.level1_loadouts).toBeNull();
   });
 });
