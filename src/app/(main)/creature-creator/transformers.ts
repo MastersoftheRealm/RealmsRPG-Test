@@ -8,9 +8,17 @@
 import type { Item } from '@/types';
 import type { DisplayItem, ItemStat } from '@/types/items';
 import type { UserPower, UserTechnique, UserItem } from '@/hooks/use-user-library';
+import type { PowerComposition } from '@/lib/calculators/power-composition';
 import type { CreatureFeat as CodexCreatureFeat, ItemProperty } from '@/hooks/codex-types';
 import type { PowerPart, TechniquePart } from '@/hooks';
-import { derivePowerDisplay, formatPowerDamage } from '@/lib/calculators/power-calc';
+import {
+  derivePowerDisplay,
+  formatEnergyStat,
+  formatPowerDamage,
+} from '@/lib/calculators/power-calc';
+import { libraryItemToPowerDocument } from '@/lib/library-selectable-builders';
+import { composedPowerDamage } from '@/lib/calculators/power-composition';
+import { powerVariantsDetailSection, withPowerReverseNote } from '@/lib/power-variant-chips';
 import { deriveTechniqueDisplay } from '@/lib/calculators/technique-calc';
 import {
   deriveItemDisplay,
@@ -36,6 +44,19 @@ export interface CreaturePower {
   innate?: boolean | undefined;
   image_id?: string | null | undefined;
   image_url?: string | null | undefined;
+  description?: string | undefined;
+  variantLabel?: string | undefined;
+  variantHelp?: string | undefined;
+  variantChips?: { name: string; description?: string | undefined }[] | undefined;
+  /** Library parts and composition, so an unmatched row can recompute from live Codex. */
+  parts?: UserPower['parts'] | undefined;
+  composition?: PowerComposition | undefined;
+  actionType?: string | undefined;
+  isReaction?: boolean | undefined;
+  rangeValue?: UserPower['range'] | undefined;
+  areaValue?: UserPower['area'] | undefined;
+  durationValue?: UserPower['duration'] | undefined;
+  damageValue?: UserPower['damage'] | undefined;
 }
 
 export interface CreatureTechnique {
@@ -140,19 +161,19 @@ export function transformUserPowerToDisplayItem(
   power: UserPower,
   partsDb: PowerPart[],
 ): DisplayItem {
-  const display = derivePowerDisplay(
-    {
-      name: power.name,
-      description: power.description,
-      parts: power.parts || [],
-      damage: power.damage,
-    },
-    partsDb,
+  const display = derivePowerDisplay(libraryItemToPowerDocument(power), partsDb);
+  const damageStr = formatPowerDamage(
+    display.composition ? composedPowerDamage(display.composition) : power.damage,
   );
-  const damageStr = formatPowerDamage(power.damage);
+  const variantSection = display.composition
+    ? powerVariantsDetailSection(display.composition)
+    : undefined;
+  const description = display.composition
+    ? withPowerReverseNote(power.description, display.composition)
+    : power.description;
 
   const stats: ItemStat[] = [
-    { label: 'Energy', value: display.energy ?? '-' },
+    { label: 'Energy', value: formatEnergyStat(display.energy ?? 0) },
     { label: 'Action', value: display.actionType },
     { label: 'Damage', value: damageStr || '-' },
     { label: 'Area', value: display.area && display.area !== '-' ? display.area : '-' },
@@ -161,7 +182,7 @@ export function transformUserPowerToDisplayItem(
   return {
     id: power.docId,
     name: power.name,
-    description: power.description,
+    description,
     category: 'power',
     stats,
     details: [
@@ -182,6 +203,25 @@ export function transformUserPowerToDisplayItem(
       innate: false,
       image_id: power.image_id ?? null,
       image_url: power.image_url ?? null,
+      description,
+      parts: power.parts ?? [],
+      ...(power.composition ? { composition: power.composition } : {}),
+      ...(power.actionType ? { actionType: power.actionType } : {}),
+      ...(power.isReaction ? { isReaction: true } : {}),
+      ...(power.range ? { rangeValue: power.range } : {}),
+      ...(power.area ? { areaValue: power.area } : {}),
+      ...(power.duration ? { durationValue: power.duration } : {}),
+      ...(power.damage ? { damageValue: power.damage } : {}),
+      ...(variantSection
+        ? {
+            variantLabel: variantSection.label,
+            ...(variantSection.labelHelp ? { variantHelp: variantSection.labelHelp } : {}),
+            variantChips: variantSection.chips.map((chip) => ({
+              name: chip.name,
+              ...(chip.description ? { description: chip.description } : {}),
+            })),
+          }
+        : {}),
     },
   };
 }
@@ -210,7 +250,7 @@ export function transformUserTechniqueToDisplayItem(
   );
 
   const stats: ItemStat[] = [
-    { label: 'Energy', value: display.energy },
+    { label: 'Energy', value: formatEnergyStat(display.energy ?? 0) },
     { label: 'Action', value: display.actionType },
     { label: 'Attack', value: display.weaponName || '-' },
     { label: 'Training Pts', value: display.tp },

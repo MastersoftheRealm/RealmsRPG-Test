@@ -39,6 +39,41 @@ describe('columnHasDisplayValue / mobile expand facts (TASK-868 / TASK-909)', ()
     expect(columnHasDisplayValue({ key: 'recovery', value: 'FR' })).toBe(true);
   });
 
+  it('keeps Duration on the mobile summary when it is past the first three columns (86e3kfkca)', () => {
+    expect(
+      columnsForMobileSummary([
+        { key: 'action', value: 'Basic' },
+        { key: 'damage', value: '1d8 Ice' },
+        { key: 'area', value: 'Sphere 2' },
+        { key: 'duration', value: '2 Rounds / 1 Minute' },
+      ]).map((col) => col.key),
+    ).toEqual(['action', 'damage', 'area', 'duration']);
+  });
+
+  it('keeps an energy dash, and keeps Damage only when the column asks to stay', () => {
+    expect(columnHasDisplayValue({ key: 'energy', value: '—' })).toBe(true);
+    expect(columnHasDisplayValue({ key: 'area', value: '—' })).toBe(false);
+    const statBlock = [
+      { key: 'energy', value: '—' as const },
+      { key: 'action', value: 'Basic' },
+      { key: 'duration', value: 'Instant' },
+      { key: 'area', value: '—' },
+      { key: 'damage', value: '1d10 Fire' },
+    ];
+    expect(columnsForMobileSummary(statBlock).map((col) => col.key)).toEqual([
+      'energy',
+      'action',
+      'duration',
+    ]);
+    expect(
+      columnsForMobileSummary(
+        statBlock.map((col) =>
+          col.key === 'damage' ? { ...col, keepOnMobileSummary: true } : col,
+        ),
+      ).map((col) => col.key),
+    ).toEqual(['energy', 'action', 'duration', 'damage']);
+  });
+
   it('omits blank columns from the mobile summary', () => {
     expect(
       columnsForMobileSummary([

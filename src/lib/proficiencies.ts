@@ -46,12 +46,16 @@ export function getTrainingPointLimit(
   return calculateTrainingPoints(lvl, abil, rules);
 }
 
+/**
+ * One proficiency instance. Round up once after adding the base and every
+ * option. Range 3 (base only) is 1 TP. Callers add these integers.
+ */
 export function calculateProficiencyTP(prof: CharacterProficiency): number {
   const base = prof.baseTP ?? 0;
   const op1 = (prof.op1TP ?? 0) * (prof.op1Level ?? 0);
   const op2 = (prof.op2TP ?? 0) * (prof.op2Level ?? 0);
   const op3 = (prof.op3TP ?? 0) * (prof.op3Level ?? 0);
-  return Math.floor(base + op1 + op2 + op3);
+  return Math.ceil(base + op1 + op2 + op3);
 }
 
 function normalize(s: unknown): string {
@@ -201,8 +205,13 @@ export function buildRequiredProficiencies(
       op3TP: Number(partObj?.op_3_tp ?? codex?.op_3_tp ?? 0) || 0,
     };
 
-    if (isDamagePartName(name) && damageTypes.length > 0) {
-      damageTypes.forEach((dt) => {
+    // A part that names its own damage type (composed power rows; `null` = untyped) ignores the power's damage.
+    const partDamageTypes =
+      partObj?.damageType !== undefined
+        ? [normalizeDamageType(partObj.damageType)].filter((t): t is string => Boolean(t))
+        : damageTypes;
+    if (isDamagePartName(name) && partDamageTypes.length > 0) {
+      partDamageTypes.forEach((dt) => {
         const withDmg = { ...profBase, damageType: dt, id: nextProfId() };
         if (calculateProficiencyTP(withDmg) > 0) out.push(withDmg);
       });
@@ -308,6 +317,44 @@ export function mergeOwnedWithRequired(
   return filterZeroCostProficiencies(merged);
 }
 
+/**
+ * A higher option level covers a lower one of the same part. Rounded TP is not
+ * the comparison when the part id matches: neighbouring levels can publish the
+ * same integer (1d6 and 1d8 Elemental Damage are both 3 TP). A saved row with
+ * no part id matches that part by name and kind (power, technique, or item)
+ * before falling back to Training Points, so a nameless 1d6 still does not
+ * cover 1d8 of the same kind. Damage type is the proficiency
+ * key, so fire does not satisfy ice. Two different part ids that share a
+ * damage type (Additional Damage fire and Elemental Damage fire) are compared
+ * by rounded Training Points. For a damage part, die size is option 1
+ * (`calculateDamageOptionLevel`: 1d4 → 0, 1d6 → 1, 1d8 → 2).
+ */
+function optionLevelsCover(owned: CharacterProficiency, required: CharacterProficiency): boolean {
+  return (
+    (owned.op1Level ?? 0) >= (required.op1Level ?? 0) &&
+    (owned.op2Level ?? 0) >= (required.op2Level ?? 0) &&
+    (owned.op3Level ?? 0) >= (required.op3Level ?? 0)
+  );
+}
+
+function partRefId(row: CharacterProficiency): string {
+  return String(row.refId ?? '')
+    .trim()
+    .toLowerCase();
+}
+
+function partIdsMatch(owned: CharacterProficiency, required: CharacterProficiency): boolean {
+  const ownedId = partRefId(owned);
+  const requiredId = partRefId(required);
+  return ownedId.length > 0 && ownedId === requiredId;
+}
+
+function partNamesMatch(owned: CharacterProficiency, required: CharacterProficiency): boolean {
+  const ownedName = (owned.name ?? '').trim().toLowerCase();
+  const requiredName = (required.name ?? '').trim().toLowerCase();
+  return ownedName.length > 0 && ownedName === requiredName;
+}
+
 export function hasSufficientProficiency(
   owned: CharacterProficiency[],
   required: CharacterProficiency,
@@ -315,6 +362,14 @@ export function hasSufficientProficiency(
   const key = proficiencyKey(required);
   const match = owned.find((p) => proficiencyKey(p) === key);
   if (!match) return false;
+  if (normalizeDamageType(match.damageType) !== normalizeDamageType(required.damageType)) {
+    return false;
+  }
+  if (partIdsMatch(match, required)) return optionLevelsCover(match, required);
+  const missingPartId = partRefId(match).length === 0 || partRefId(required).length === 0;
+  if (missingPartId && partNamesMatch(match, required) && match.kind === required.kind) {
+    return optionLevelsCover(match, required);
+  }
   return calculateProficiencyTP(match) >= calculateProficiencyTP(required);
 }
 

@@ -17,13 +17,13 @@ import type { LibraryPower } from '@/types/library';
 import {
   buildOfficialPowerRows,
   filterOfficialPowerRows,
+  officialPowerCategoryOptions,
   officialPowerDetailSections,
   officialPowerRowColumns,
   OFFICIAL_POWER_GRID,
   OFFICIAL_POWER_HEADER_COLUMNS,
   type OfficialPowerRow,
 } from '@/lib/library/official-power-list';
-import { collectCategoryOptionsFromItems } from '@/lib/library/power-technique-categories';
 import {
   EMPTY_POWER_TECHNIQUE_FILTERS,
   countActivePowerTechniqueFilters,
@@ -96,7 +96,7 @@ export function OfficialPowerList({
     usePathListFilter({ entities: items, kind: POWER_LIST_PATH_KINDS });
 
   const categoryOptions = useMemo(
-    () => collectCategoryOptionsFromItems(items, partsDb, { includeDamageCategory: true }),
+    () => officialPowerCategoryOptions(items, partsDb),
     [items, partsDb],
   );
 

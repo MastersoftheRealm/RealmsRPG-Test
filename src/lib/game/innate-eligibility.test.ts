@@ -9,10 +9,12 @@ import {
   isInnateEligibleDuration,
   isPowerInnateEligible,
   listInnateThresholdFilterOptions,
+  snapshotOfficialPowerForInnate,
   validateRecommendedInnatePowers,
   type InnatePowerSnapshot,
 } from './innate-eligibility';
 import { defined } from '@/lib/utils';
+import { resolvePowerComposition } from '@/lib/calculators/power-composition';
 
 function snap(partial: Partial<InnatePowerSnapshot> & { id: string }): InnatePowerSnapshot {
   return {
@@ -162,19 +164,42 @@ describe('innate-eligibility', () => {
           id: '1',
           energy: 4,
           actionType: 'basic',
-          duration: { type: 'rounds', value: 10 },
+          duration: { type: 'rounds', value: 6 },
         }),
         8,
       ),
     ).toBe(true);
+    expect(
+      isPowerInnateEligible(
+        snap({
+          id: '1',
+          energy: 4,
+          actionType: 'basic',
+          duration: { type: 'rounds', value: 7 },
+        }),
+        8,
+      ),
+    ).toBe(false);
+    expect(
+      isPowerInnateEligible(
+        snap({
+          id: '1',
+          energy: 4,
+          actionType: 'basic',
+          duration: { type: 'rounds', value: 10 },
+        }),
+        8,
+      ),
+    ).toBe(false);
     expect(
       isPowerInnateEligible(snap({ id: '1', energy: 4, actionType: 'basic', duration: null }), 8),
     ).toBe(false);
   });
 
   it('duration helpers respect 1-minute cap and round conversion', () => {
-    expect(innateDurationToMinutes({ type: 'rounds', value: 10 })).toBe(1);
-    expect(innateDurationToMinutes({ type: 'rounds', value: 11 })).toBeCloseTo(1.1);
+    expect(innateDurationToMinutes({ type: 'rounds', value: 6 })).toBe(1);
+    expect(innateDurationToMinutes({ type: 'rounds', value: 7 })).toBeCloseTo(7 / 6);
+    expect(innateDurationToMinutes({ type: 'rounds', value: 10 })).toBeCloseTo(10 / 6);
     expect(isInnateEligibleDuration({ type: 'minutes', value: 1 })).toBe(true);
     expect(isInnateEligibleDuration({ type: 'minutes', value: 2 })).toBe(false);
     expect(isInnateEligibleDuration({ type: 'hours', value: 1 })).toBe(false);
@@ -196,5 +221,141 @@ describe('innate-eligibility', () => {
         8,
       ),
     ).toBe(false);
+  });
+});
+
+describe('innate eligibility on composed powers (ADR-0029)', () => {
+  const partsDb = [
+    {
+      id: '376',
+      name: 'Duration (Hour)',
+      description: '',
+      category: 'Duration',
+      mechanic: true,
+      duration: true,
+      percentage: false,
+      base_en: 3,
+      base_tp: 0,
+    },
+    {
+      id: '900',
+      name: 'Immobile',
+      description: '',
+      category: 'General',
+      mechanic: false,
+      percentage: false,
+      duration: false,
+      base_en: 2,
+      base_tp: 0,
+    },
+  ];
+
+  it('Modify fails when any piece lasts longer than 1 minute', () => {
+    const snapshot = snapshotOfficialPowerForInnate(
+      {
+        id: 'm',
+        name: 'Frost',
+        actionType: 'basic',
+        composition: {
+          structure: 'modify',
+          variants: [
+            { id: 'a', label: 'Freeze', parts: [{ id: 900, name: 'Immobile' }] },
+            { id: 'b', label: 'Chill', duration: { type: 'hours', value: 1 } },
+          ],
+        },
+      },
+      partsDb,
+    );
+    expect(isPowerInnateEligible(snapshot, 20)).toBe(false);
+  });
+
+  it('Alternate passes when one variant passes even if a sibling fails', () => {
+    const snapshot = snapshotOfficialPowerForInnate(
+      {
+        id: 'alt',
+        name: 'Shift',
+        actionType: 'basic',
+        composition: {
+          structure: 'alternate',
+          variants: [
+            {
+              id: 'long',
+              label: 'Long',
+              actionType: 'basic',
+              duration: { type: 'hours', value: 1 },
+            },
+            {
+              id: 'quick',
+              label: 'Quick',
+              actionType: 'basic',
+              parts: [{ id: 900, name: 'Immobile' }],
+            },
+          ],
+        },
+      },
+      partsDb,
+    );
+    expect(snapshot.alternates).toHaveLength(2);
+    expect(isPowerInnateEligible(snapshot, 20)).toBe(true);
+    expect(evaluateInnatePowerEligibility(snapshot, 20)).toEqual([]);
+  });
+
+  it('Alternate + Reverse innate energy matches the resolver', () => {
+    const db = [
+      {
+        id: '340',
+        name: 'Restrained',
+        description: '',
+        category: 'General',
+        mechanic: false,
+        percentage: false,
+        duration: false,
+        base_en: 6,
+        base_tp: 0,
+      },
+      {
+        id: '904',
+        name: 'Tiny',
+        description: '',
+        category: 'General',
+        mechanic: false,
+        percentage: false,
+        duration: false,
+        base_en: 0.1,
+        base_tp: 0,
+      },
+      {
+        id: '902',
+        name: 'Blinded',
+        description: '',
+        category: 'General',
+        mechanic: false,
+        percentage: false,
+        duration: false,
+        base_en: 4.5,
+        base_tp: 0,
+      },
+    ];
+    const composition = {
+      structure: 'alternate' as const,
+      variants: [
+        {
+          id: 'a',
+          label: 'A',
+          actionType: 'basic',
+          parts: [
+            { id: 340, name: 'Restrained' },
+            { id: 904, name: 'Tiny' },
+          ],
+        },
+      ],
+      reverse: { parts: [{ id: 902, name: 'Blinded' }] },
+    };
+    const doc = { name: 'A', actionType: 'basic', composition };
+    const res = resolvePowerComposition(doc, db, { selectedVariantId: 'a' })!;
+    const snap = snapshotOfficialPowerForInnate({ id: 'x', ...doc }, db);
+    // 6.1 raw − 2.25 discount = 3.85, one round-up → 4. Subtracting the published 7 first would be 5.
+    expect(res.energy).toBe(4);
+    expect(snap.alternates?.[0]?.energy).toBe(res.energy);
   });
 });

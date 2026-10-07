@@ -4,6 +4,7 @@
 
 'use client';
 
+import { formatEnergyStat } from '@/lib/calculators';
 import { formatListCellLabel } from '@/lib/utils';
 import { GridListRow, ListHeader, InnateToggle, ValueStepper } from '@/components/patterns';
 import { resolveListRowThumbnail } from '@/lib/list-row-image';
@@ -204,6 +205,10 @@ export function CreatureCreatorEditorLoadoutSections({
                   area?: string | undefined;
                   duration?: string | undefined;
                   innate?: boolean | undefined;
+                  description?: string | undefined;
+                  variantLabel?: string | undefined;
+                  variantHelp?: string | undefined;
+                  variantChips?: { name: string; description?: string | undefined }[] | undefined;
                   image_id?: string | null | undefined;
                   image_url?: string | null | undefined;
                 }) => (
@@ -211,15 +216,35 @@ export function CreatureCreatorEditorLoadoutSections({
                     key={power.id}
                     id={power.id}
                     name={power.name}
+                    description={power.description}
                     thumbnail={resolveListRowThumbnail('power', power, power.name)}
                     columns={[
-                      { key: 'Energy', value: power.energy ?? '-', align: 'center' as const },
+                      {
+                        key: 'Energy',
+                        value: formatEnergyStat(power.energy ?? 0),
+                        align: 'center' as const,
+                      },
                       { key: 'Action', value: power.action ?? '-', align: 'center' as const },
                       { key: 'Damage', value: power.damage ?? '-', align: 'center' as const },
                       { key: 'Area', value: power.area ?? '-', align: 'center' as const },
                       { key: 'Duration', value: power.duration ?? '-', align: 'center' as const },
                     ]}
                     gridColumns="1.4fr 0.6fr 0.8fr 0.8fr 0.7fr 0.8fr"
+                    detailSections={
+                      power.variantChips && power.variantChips.length > 0
+                        ? [
+                            {
+                              label: power.variantLabel ?? 'Variants',
+                              chips: power.variantChips.map((chip) => ({
+                                name: chip.name,
+                                ...(chip.description ? { description: chip.description } : {}),
+                                kind: 'descriptor' as const,
+                              })),
+                              ...(power.variantHelp ? { labelHelp: power.variantHelp } : {}),
+                            },
+                          ]
+                        : undefined
+                    }
                     innate={power.innate === true}
                     leftSlot={
                       <InnateToggle
@@ -290,7 +315,11 @@ export function CreatureCreatorEditorLoadoutSections({
                     name={tech.name}
                     thumbnail={resolveListRowThumbnail('technique', tech, tech.name)}
                     columns={[
-                      { key: 'Energy', value: tech.energy ?? '-', align: 'center' as const },
+                      {
+                        key: 'Energy',
+                        value: formatEnergyStat(tech.energy ?? 0),
+                        align: 'center' as const,
+                      },
                       { key: 'Weapon', value: tech.weapon ?? '-', align: 'center' as const },
                       { key: 'Training Pts', value: tech.tp ?? '-', align: 'center' as const },
                     ]}

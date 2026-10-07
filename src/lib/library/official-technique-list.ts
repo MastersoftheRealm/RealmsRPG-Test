@@ -7,6 +7,7 @@ import type { ColumnValue } from '@/components/patterns/list/grid-list-row';
 import type { TechniquePart } from '@/hooks/codex-types';
 import type { LibraryTechnique } from '@/types/library';
 import { parseCatalogListing } from '@/lib/library/catalog-listing';
+import { formatEnergyStat } from '@/lib/calculators/power-calc';
 import { deriveTechniqueDisplay, formatTechniqueDamage } from '@/lib/calculators/technique-calc';
 import { libraryItemToTechniqueDocument } from '@/lib/library-selectable-builders';
 import { partChipsFromDisplay } from '@/lib/chip/part-chips-from-display';
@@ -139,7 +140,7 @@ export function officialTechniqueDetailSections(row: OfficialTechniqueRow) {
 export function officialTechniqueRowColumns(row: OfficialTechniqueRow): ColumnValue[] {
   const values: Record<string, string | number> = {
     category: row.category || '-',
-    energy: row.energy ?? '-',
+    energy: formatEnergyStat(typeof row.energy === 'number' ? row.energy : 0),
     tp: row.tp,
     action: row.action || '-',
     weapon: row.weapon || '-',

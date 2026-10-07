@@ -490,7 +490,10 @@ export function RollEntryCard({
                 {characterName}
               </span>
             )}
-            <span className="block truncate text-sm font-semibold text-primary-fg">
+            <span
+              className="block truncate text-sm font-semibold text-primary-fg"
+              title={roll.title}
+            >
               {roll.title}
             </span>
           </div>

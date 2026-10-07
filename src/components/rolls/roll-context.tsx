@@ -11,6 +11,7 @@ import React, { createContext, useContext, useCallback, useState, useEffect } fr
 import { useQueryClient } from '@tanstack/react-query';
 import { rollDie, generateRollId, DIE_MAX, type DieType } from '@/lib/rolls/die';
 import { resolveRollModifierLabel } from '@/lib/rolls/modifier-label';
+import { parseDamageRollGroups } from '@/lib/rolls/parse-damage-string';
 
 // Types
 export interface DieResult {
@@ -251,44 +252,43 @@ export function RollProvider({
     [makeD20Roll],
   );
 
-  // Roll damage (parses damage strings like "2d6", "1d8+2", "1d6 Slashing")
+  // Roll damage (parses "2d6", "1d8+2", "1d6 Slashing", and joined Modify labels)
   const rollDamage = useCallback(
     (damageStr: string, bonus: number = 0, titleOverride?: string, modifierLabel?: string) => {
       if (!canRoll) return;
-      // Validate input is a string
       if (typeof damageStr !== 'string') {
         return;
       }
 
-      const match = damageStr.match(/(\d+)d(\d+)([+-]\d+)?(?:\s+([a-zA-Z]+))?/);
-      if (!match) return;
-
-      const [, numDice, dieSize, modifier, dmgType] = match;
-      if (numDice === undefined || dieSize === undefined) return;
-      const num = parseInt(numDice);
-      const size = parseInt(dieSize);
-      const mod = modifier ? parseInt(modifier) : 0;
-      const totalBonus = mod + bonus;
+      const groups = parseDamageRollGroups(damageStr);
+      if (groups.length === 0) return;
 
       const diceResults: DieResult[] = [];
-      let total = totalBonus;
+      let embeddedMod = 0;
 
-      for (let i = 0; i < num; i++) {
-        const dieType = `d${size}` as DieResult['type'];
-        const value = rollDie(dieType);
-        diceResults.push({
-          type: dieType,
-          value,
-          isMax: value === size,
-          isMin: value === 1,
-        });
-        total += value;
+      for (const group of groups) {
+        embeddedMod += group.modifier;
+        const dieType = `d${group.size}` as DieResult['type'];
+        if (!(dieType in DIE_MAX)) continue;
+        for (let i = 0; i < group.count; i++) {
+          const value = rollDie(dieType);
+          diceResults.push({
+            type: dieType,
+            value,
+            isMax: value === group.size,
+            isMin: value === 1,
+          });
+        }
       }
+      if (diceResults.length === 0) return;
 
+      const totalBonus = embeddedMod + bonus;
+      const total = diceResults.reduce((sum, die) => sum + die.value, 0) + totalBonus;
+      const types = [...new Set(groups.map((g) => g.type).filter((t): t is string => !!t))];
       const title =
         titleOverride ??
-        (dmgType
-          ? `${dmgType.charAt(0).toUpperCase() + dmgType.slice(1).toLowerCase()} Damage`
+        (types.length > 0
+          ? `${types.map((t) => t.charAt(0).toUpperCase() + t.slice(1).toLowerCase()).join(', ')} Damage`
           : 'Damage');
 
       const newRoll: RollEntry = {

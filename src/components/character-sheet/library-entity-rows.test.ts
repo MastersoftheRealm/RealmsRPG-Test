@@ -7,6 +7,7 @@ import {
   type LibraryEntityRowContext,
 } from './library-entity-rows';
 import type { CharacterPower, CharacterTechnique } from '@/types';
+import type { LibraryPower } from '@/types/library';
 
 const baseCtx: LibraryEntityRowContext = {
   powerPartsDb: [],
@@ -61,12 +62,53 @@ describe('mapPowerRows / mapTechniqueRows — Energy is rightSlot only (TASK-502
     expect(row.rightSlot).toBeTruthy();
   });
 
-  it('zero-cost rows omit the energy rightSlot control', () => {
+  it('a power with no energy shows a dash instead of a 1 EN spend control', () => {
     const powers: CharacterPower[] = [
       { id: 'innate', name: 'Innate', cost: 0, innate: true } as CharacterPower,
     ];
     const row = defined(mapPowerRows(powers, baseCtx)[0]);
-    expect(row.rightSlot).toBeNull();
+    const slot = row.rightSlot as { props?: { 'aria-label'?: string; children?: string } } | null;
+    expect(slot?.props?.['aria-label']).toBe('No energy cost');
+    expect(slot?.props?.children).toBe('—');
+  });
+
+  it('shows a partless power as its saved quick action and 2 rounds', () => {
+    const libraryItem = {
+      id: 'glance',
+      docId: 'glance',
+      name: 'Glance',
+      parts: [],
+      actionType: 'quick',
+      duration: { type: 'rounds', value: 2 },
+    } as LibraryPower;
+    const powers: CharacterPower[] = [
+      {
+        id: 'glance',
+        name: 'Glance',
+        parts: [],
+        actionType: 'Basic action',
+        duration: 'Instant',
+        libraryItem,
+      } as CharacterPower,
+    ];
+    const row = defined(mapPowerRows(powers, baseCtx)[0]);
+    expect(row.columns?.find((c) => c.key === 'action')?.value).toBe('Quick action');
+    expect(row.columns?.find((c) => c.key === 'duration')?.value).toBe('2 Rounds');
+  });
+
+  it('keeps a saved action and duration when the library row is missing', () => {
+    const powers: CharacterPower[] = [
+      {
+        id: 'glance',
+        name: 'Glance',
+        parts: [],
+        actionType: 'Quick Action',
+        duration: '2 Rounds',
+      } as CharacterPower,
+    ];
+    const row = defined(mapPowerRows(powers, baseCtx)[0]);
+    expect(row.columns?.find((c) => c.key === 'action')?.value).toBe('Quick action');
+    expect(row.columns?.find((c) => c.key === 'duration')?.value).toBe('2 RNDS');
   });
 
   it('view-only (no onUse): still renders disabled spend chrome, not a static column', () => {

@@ -3,6 +3,7 @@ import { ABILITIES } from '@/types/abilities';
 import type { CoreRulesMap } from '@/types/core-rules';
 import type { DefenseSkills } from '@/types/skills';
 import { calculateAbilityPoints, calculateSkillPointsForEntity } from '@/lib/game/formulas';
+import { powerCompositionHelpText } from '@/lib/calculators';
 
 // Navbar
 export const navbarLibrary = `Realms Library contains official content.
@@ -646,6 +647,22 @@ export const powerCreatorDurationHelp = (
 
 export const powerCreatorPartsHelp =
   'These are the payload of your Power — what the Power does. There are limitless options and you can combine them in many ways, but the best Powers often have only one to three parts.';
+
+export const powerCreatorStructureHelp = (
+  <div>
+    <div>
+      <strong>Variants</strong> are the versions of this power you switch between or combine.
+    </div>
+    <div>
+      <strong>Choice</strong>: {powerCompositionHelpText('choice')}{' '}
+      <strong>Alternate</strong>: {powerCompositionHelpText('alternate')}{' '}
+      <strong>Modify</strong>: {powerCompositionHelpText('modify')}{' '}
+      <strong>Randomize</strong>: {powerCompositionHelpText('randomize')}
+    </div>
+  </div>
+);
+
+export const powerCreatorReverseHelp = <div>{powerCompositionHelpText('reverse')}</div>;
 
 export const powerCreatorMechanicsHelp = (
   <div>

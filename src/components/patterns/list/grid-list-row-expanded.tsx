@@ -6,7 +6,10 @@ import { cn } from '@/lib/utils';
 import { formatCostDisplay } from '@/lib/game/creator-constants';
 import { Button, DescriptorChip } from '@/components/ui';
 import { GridListChip } from './grid-list-chip';
-import { descriptorChipVariantForBadgeColor } from '@/lib/chip/grid-list-chip-utils';
+import {
+  descriptorChipVariantForBadgeColor,
+  gridListChipReactKey,
+} from '@/lib/chip/grid-list-chip-utils';
 import {
   helpKeyForPartsOrPropertiesLabel,
   isPartsOrPropertiesProficienciesSection,
@@ -157,9 +160,16 @@ export function GridListRowExpandedBody({
             const sectionKey = `detail-${sectionIdx}`;
             const sectionOpen = collapsible ? (openDetailSections[sectionKey] ?? false) : true;
             const helpKey = section.labelHelpKey ?? helpKeyForPartsOrPropertiesLabel(section.label);
-            const helpContent = helpKey ? partsPropertiesHelpContent(helpKey) : null;
+            const helpContent = helpKey
+              ? partsPropertiesHelpContent(helpKey)
+              : section.labelHelp || null;
             return (
               <div key={sectionIdx} className={cn('space-y-3', sectionIdx > 0 && 'mt-4')}>
+                {section.liveAnnouncement ? (
+                  <span className="sr-only" aria-live="polite">
+                    {section.liveAnnouncement}
+                  </span>
+                ) : null}
                 {showLabel && (
                   <DetailSectionLabel
                     label={section.label}
@@ -180,7 +190,7 @@ export function GridListRowExpandedBody({
                       const index = sectionOffset + chipIdx;
                       return (
                         <GridListChip
-                          key={`${chip.name}-${chip.category ?? 'default'}-${chipIdx}`}
+                          key={gridListChipReactKey(chip, chipIdx)}
                           chip={chip}
                           costLabel={costLabel}
                           expanded={expandedChipIndex === index}

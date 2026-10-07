@@ -70,6 +70,7 @@ export type LibrarySectionRowsInput = {
   onUsePower?: ((id: string | number, energyCost: number) => void) | undefined;
   onRemovePower?: ((id: string | number) => void) | undefined;
   onTogglePowerInnate?: ((id: string | number, isInnate: boolean) => void) | undefined;
+  onSelectPowerVariant?: ((id: string | number, variantId: string) => void) | undefined;
   onUseTechnique?: ((id: string | number, energyCost: number) => void) | undefined;
   onRemoveTechnique?: ((id: string | number) => void) | undefined;
   onRemoveWeapon?: ((id: string | number) => void) | undefined;
@@ -103,6 +104,7 @@ export function useLibrarySectionRows({
   onUsePower,
   onRemovePower,
   onTogglePowerInnate,
+  onSelectPowerVariant,
   onUseTechnique,
   onRemoveTechnique,
   onRemoveWeapon,
@@ -189,6 +191,7 @@ export function useLibrarySectionRows({
       onUsePower,
       onRemovePower,
       onTogglePowerInnate,
+      onSelectPowerVariant,
       onUseTechnique,
       onRemoveTechnique,
       onRemoveWeapon,
@@ -214,6 +217,7 @@ export function useLibrarySectionRows({
       onUsePower,
       onRemovePower,
       onTogglePowerInnate,
+      onSelectPowerVariant,
       onUseTechnique,
       onRemoveTechnique,
       onRemoveWeapon,

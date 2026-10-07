@@ -1,7 +1,17 @@
 import { resolveListRowThumbnail } from '@/lib/list-row-image';
 import type { EntityPowerRow, EntityTechniqueRow } from './entity-library-sections';
 import { derivePowerDisplay, formatPowerDamage } from '@/lib/calculators/power-calc';
+import {
+  composedPowerCategoryDamage,
+  composedPowerSavedParts,
+} from '@/lib/calculators/power-composition';
+import { libraryItemToPowerDocument } from '@/lib/library-selectable-builders';
 import { deriveTechniqueDisplay } from '@/lib/calculators/technique-calc';
+import {
+  composedPowerDamageLabel,
+  powerVariantsDetailSection,
+  withPowerReverseNote,
+} from '@/lib/power-variant-chips';
 import {
   calculateSkillBonusWithProficiency,
   calculateSubSkillBonusWithProficiency,
@@ -36,6 +46,7 @@ type SavedPartRef =
       op_1_lvl?: number | undefined;
       op_2_lvl?: number | undefined;
       op_3_lvl?: number | undefined;
+      applyDuration?: boolean | undefined;
     };
 
 function objectPartsOnly(
@@ -49,7 +60,13 @@ function objectPartsOnly(
       op_1_lvl: part.op_1_lvl,
       op_2_lvl: part.op_2_lvl,
       op_3_lvl: part.op_3_lvl,
+      ...(part.applyDuration ? { applyDuration: true } : {}),
     }));
+}
+
+function structuredMechanic<T>(value: string | T | undefined): T | undefined {
+  if (value == null || typeof value === 'string') return undefined;
+  return value;
 }
 
 type SkillDbEntry = {
@@ -111,6 +128,7 @@ export function buildPowersForDisplay(
           duration: userMatch.duration,
           image_id: userMatch.image_id,
           image_url: userMatch.image_url,
+          composition: userMatch.composition,
         }
       : officialMatch
         ? {
@@ -125,43 +143,84 @@ export function buildPowersForDisplay(
             duration: officialMatch.duration,
             image_id: officialMatch.image_id,
             image_url: officialMatch.image_url,
+            composition: officialMatch.composition,
           }
         : null;
 
     const baseName = enriched?.name || refName;
     const baseDescription = enriched?.description ?? ref.description;
     const parts: SavedPartRef[] = enriched?.parts ?? ref.parts ?? [];
-    const damage = enriched?.damage ?? ref.damage;
+    const damage = enriched?.damage ?? ref.damageValue ?? ref.damage;
     const imageRecord = {
       image_id: enriched?.image_id ?? (ref as { image_id?: string | null | undefined }).image_id,
       image_url:
         enriched?.image_url ?? (ref as { image_url?: string | null | undefined }).image_url,
     };
+    const hasObjectParts = parts.some((part) => typeof part !== 'string');
+    const canRecompute = !!enriched || hasObjectParts || !!ref.composition;
 
-    const derived = derivePowerDisplay(
-      {
+    if (!canRecompute) {
+      return {
+        id: `${creature.id}-power-${refId ?? idx}`,
         name: baseName,
         description: baseDescription,
-        parts: objectPartsOnly(parts),
-        damage: Array.isArray(damage) ? damage : undefined,
-        actionType: enriched?.actionType,
-        isReaction: enriched?.isReaction,
-      },
+        thumbnail: resolveListRowThumbnail('power', imageRecord, baseName),
+        actionType: ref.action,
+        damage: typeof ref.damage === 'string' ? ref.damage : undefined,
+        area: typeof ref.area === 'string' ? ref.area : undefined,
+        duration: typeof ref.duration === 'string' ? ref.duration : undefined,
+        energyCost: ref.energy,
+        innate: ref.innate,
+      };
+    }
+
+    const derived = derivePowerDisplay(
+      libraryItemToPowerDocument({
+        name: baseName,
+        description: baseDescription,
+        parts: enriched ? enriched.parts : objectPartsOnly(parts),
+        damage: enriched ? enriched.damage : Array.isArray(damage) ? damage : undefined,
+        actionType: enriched?.actionType ?? ref.actionType,
+        isReaction: enriched?.isReaction ?? ref.isReaction,
+        range: enriched?.range ?? ref.rangeValue ?? structuredMechanic(ref.range),
+        area: enriched?.area ?? ref.areaValue ?? structuredMechanic(ref.area),
+        duration: enriched?.duration ?? ref.durationValue ?? structuredMechanic(ref.duration),
+        composition: enriched?.composition ?? ref.composition,
+      }),
       powerPartsDb,
     );
+    const composition = derived.composition;
 
     const partsChips = partsToChips(parts, powerPartsDb as CodexPart[]);
     const partsSection = partsProficienciesSection(partsChips, 'power');
     const damageStr =
+      (composition ? composedPowerDamageLabel(composition) : '') ||
       formatPowerDamage(Array.isArray(damage) ? damage : undefined) ||
       (typeof ref.damage === 'string' ? ref.damage : undefined);
-    const rangeValue = derived.range && derived.range !== '-' ? derived.range : ref.range;
+    const rangeValue =
+      derived.range && derived.range !== '-'
+        ? derived.range
+        : typeof ref.range === 'string'
+          ? ref.range
+          : undefined;
     const categories = withDamageCategory(
-      derivePartCategories(objectPartsOnly(parts), powerPartsDb),
-      powerHasDamageCategory(Array.isArray(damage) ? damage : undefined),
+      derivePartCategories(
+        composition ? composedPowerSavedParts(composition) : objectPartsOnly(parts),
+        powerPartsDb,
+      ),
+      powerHasDamageCategory(
+        composition
+          ? composedPowerCategoryDamage(composition)
+          : Array.isArray(damage)
+            ? damage
+            : undefined,
+      ),
     );
     const categoryText = formatPartCategoriesColumn(categories);
-    const tp = partsChips.reduce((sum, chip) => sum + (chip.cost ?? 0), 0);
+    const tp = composition
+      ? derived.tp
+      : partsChips.reduce((sum, chip) => sum + (chip.cost ?? 0), 0);
+    const variantsSection = powerVariantsDetailSection(composition);
     const detailSections = glrSurfaceDetailSections(
       'creature-stat-block-power',
       {
@@ -169,18 +228,20 @@ export function buildPowersForDisplay(
         range: rangeValue,
         trainingPoints: tp > 0 ? tp : undefined,
       },
-      partsSection ? [partsSection] : undefined,
+      [...(partsSection ? [partsSection] : []), ...(variantsSection ? [variantsSection] : [])],
     );
 
     return {
       id: `${creature.id}-power-${refId ?? idx}`,
       name: baseName,
-      description: baseDescription,
+      description: composition
+        ? withPowerReverseNote(baseDescription, composition)
+        : baseDescription,
       thumbnail: resolveListRowThumbnail('power', imageRecord, baseName),
       actionType: derived.actionType || ref.action,
       damage: damageStr,
-      area: derived.area || ref.area,
-      duration: derived.duration || ref.duration,
+      area: derived.area || (typeof ref.area === 'string' ? ref.area : undefined),
+      duration: derived.duration || (typeof ref.duration === 'string' ? ref.duration : undefined),
       energyCost: typeof derived.energy === 'number' ? derived.energy : ref.energy,
       innate: ref.innate,
       detailSections: detailSections.length > 0 ? detailSections : undefined,
@@ -274,7 +335,7 @@ export function buildTechniquesForDisplay(
       techniquePartsDb,
     );
 
-    const partsChips = partsToChips(parts, techniquePartsDb as CodexPart[]);
+    const partsChips = partsToChips(parts, techniquePartsDb as CodexPart[], 'technique');
     const partsSection = partsProficienciesSection(partsChips, 'technique');
     const damageStr =
       derived.damageStr !== '-'

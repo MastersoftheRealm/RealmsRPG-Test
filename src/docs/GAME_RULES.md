@@ -63,7 +63,7 @@ Several rules use **½** or "half":
 | Unit | Value |
 |------|-------|
 | 1 round/turn | 10 seconds |
-| 1 minute | 10 rounds |
+| 1 minute | 6 rounds |
 | 1 space | ~1.5 m or 5 ft |
 | Falling speed | 30 spaces (45 m) per round |
 
@@ -243,7 +243,7 @@ Shared formatters live in `src/lib/detail-option/compact-facts.ts`. Feature UI m
 
 **Round up** whenever you get a fraction or decimal from division. Complete all calculations first, then round up only at the end.
 
-**Exception — Training Points:** Floor each part or property’s TP contribution **before** adding it to the sum. A part that contributes 2.5 TP costs **2** TP. Do not ceil the combined total. Energy still ceils at the end. This is the only rounding-down exception.
+**Exception — Training Points:** Round **up** once per part instance, after adding the base and every option of that part or property. Not per term, and never floored. An instance is that whole part. Range 3 is the base step and costs **1** TP. Range 6 (one option) is **1** TP. Range 12 (three options) is **2** TP. Energy rounds up once, at the end of the whole power, never per part or per tab. A power’s TP total is informational: it is the proficiency cost of what the power can do, not a cost you spend when you use the power.
 
 ---
 
@@ -561,10 +561,28 @@ A power qualifies as **Innate** only when **all** of the following are true:
 
 1. **Action type:** Basic Action or Basic Reaction only (not Quick, Free, or Long).
 2. **Energy:** At or below your **Innate Threshold** for your level.
-3. **Duration:** Instant, or at most **1 minute** (10 rounds = 1 minute). Longer durations (hours, days, permanent, or >1 minute) do not qualify. Powers with unknown/unresolved duration do not qualify.
+3. **Duration:** Instant, or at most **1 minute** (1 minute = 6 rounds). Longer durations (hours, days, permanent, or >1 minute) do not qualify. Powers with unknown/unresolved duration do not qualify.
 4. **Parts:** No **Healing** or **energy-gain** parts (e.g. Heal, Siphon). No parts whose codex **category** is **Adaptation** (distinct from the “No Harm or Adaptation for Duration” mechanic part).
 
 Combined innate Energy across all innate powers must stay within **Innate Energy** (Pools × Threshold).
+
+**Powers with variants** (ADR-0029): Choice, Modify, and a power with Reverse Effects are one power — every part and every duration the cast can apply is checked, and Energy is the cast cost after the Reverse discount. **Randomize** checks every face the die can roll (Shared defaults are not part of the cast, and a face that is not on any die result is not either). **Alternate** checks each variant on its own; a variant that passes can be innate even if a sibling fails. Proficiency is required in every Alternate version, and that part’s TP is counted once, at its highest instance.
+
+#### Power variants (Choice / Alternate / Modify / Randomize / Reverse Effects)
+
+Built into the Power Creator (replaces the Choice, Split Power Parts into Groups, Randomize, and Reverse Effects mechanic parts on new powers). The things you switch between are **variants** (not "options", which are part option levels).
+
+A power or technique's final Energy is rounded up once, at the end of the whole power, never per part or per tab. The **1 EN** floor applies only when positive energy is reduced below 1. No parts, only 0 EN parts, a quick-only or duration-only multiplier, No Attack alone, and a Randomize power whose rolled faces are all drawbacks publish no Energy (a dash). Drawback parts do not turn the floor on by themselves. The floor is on the finished cost, not a base cost. Official published energies are that math applied to the Codex part rows. They are results, not targets. Breakdowns show the action-type multiplier at its Codex value (0.875 stays 0.875). Other energy intermediates show at most 2 decimals.
+
+| Structure | What the variants are | Energy |
+|-----------|----------------------|--------|
+| **Choice** | Portions of one power; pick one on use. Action type is locked to Shared. Range, area, and duration start as Shared and can be overridden, including none or Instant. Each chip shows Shared plus that option. | Shared once, plus the **most expensive** portion. Each portion’s parts are priced at that portion’s own range, area, and duration. Range bought on Shared is paid once and any tab may use it for free. A tab that adds its own range has a separate range and pays its full range cost at that tab’s footprint. There is no refund for a shorter range. A larger area or longer duration raises only that tab's parts; a smaller area or shorter duration lowers them. |
+| **Alternate** | Complete powers on one library entry. Each variant keeps its own action type. | The variant you use (may be less, equal, or more) |
+| **Modify** (Split Power Parts into Groups) | Pieces with their own stipulations, all on one cast. Action type is locked to Shared. Range, area, and duration start as Shared and can be overridden, including none or Instant. Parts and damage are not copied onto the piece. | **Shared once**, including its range, area, and action. Each piece adds only its own parts and damage, priced at that piece’s range, area, and duration. Range bought on Shared is paid once and any tab may use it for free. A tab that adds its own range has a separate range and pays its full range cost at that tab’s footprint. There is no refund for a shorter range. A larger area or longer duration raises only that tab's parts; a smaller area or shorter duration lowers them. A piece with no parts, no damage, and no range of its own adds nothing. A piece whose only content is its own range still pays for that range |
+| **Randomize** | Outcomes on an even-sided die (1d2–1d100); a variant may fill many faces. On a weighted die, a face counts once per side it occupies. Each face has its own range, area, duration, parts, and damage. Every face’s action type is locked to Shared. Shared holds the action type plus range, area, and duration defaults that pre-fill a new face. Parts and damage are added on each face. Those defaults add no energy, are not rolled, and do not change a face that already exists. A face that is not on any die result is not rolled. | Each face weighted by its chance. A good face costs its full energy, including the shared action. A bad face subtracts half its own basic-action energy divided by the action-type multiplier, including Reaction (basic stays half; slower removes more; quicker removes less). Round up once. Dash if nothing positive is rolled; otherwise at least 1 EN. A bad face does not pay for a good face’s range or area. A face that is not on any die result adds no Energy and no Training Points |
+| **Reverse Effects** (add-on) | Drawback for you or an ally on a beneficial power. Action type stays on the benefit. The Reverse tab’s range, area, and duration start as the benefit’s and can be overridden. | Subtract half the drawback’s energy at that footprint, divided by the benefit’s action-type multiplier, including Reaction. Basic stays half. Range bought on Shared is paid once and any tab may use it for free. On a Reverse tab, its own range is part of the drawback and is priced with it like the tab's other parts, so a farther-reaching drawback deepens the discount (Kadin, Oct 6, 4:44 PM ET). A larger area or longer duration raises only that tab's parts; a smaller area or shorter duration lowers them. A slower action refunds more; a quicker action refunds less. Cannot be nullified or reduced by you or an ally |
+
+**Training Points:** proficiency is per part, not per power (Kadin, Oct 6, 11:48 AM ET). Every part the power can use (Shared, every tab, option, face, or version, and Reverse) counts once, at the instance with the highest Training Points, never as a sum of repeats. Randomize counts a face only when that face is on a die result. Shared defaults are not a cast, and a face left off the die adds no Training Points and no Energy. Damage parts still split by damage type (Elemental Damage fire and ice are two proficiencies, so fire on several tabs counts once and ice still counts on its own). That one instance rounds up once, after its base and options are added. A higher option level of the same part covers a lower one. The same part is a matching part id, or, when a saved row has no part id, a matching part name of the same kind (power, technique, or item), so 1d6 does not cover 1d8. A repeated part counts only at its highest instance in the character's budget as well as in the power. For a damage part that level is the die size, and the damage type must match (1d12 fire covers 1d4–1d12 fire; fire does not cover ice). A different part that shares the damage type is compared by that rounded total, so Additional Damage fire is not compared by option level to Elemental Damage fire. The total is informational, not a cost paid when the power is used.
 
 ### Martial Character Progression
 

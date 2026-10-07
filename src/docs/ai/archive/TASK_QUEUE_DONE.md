@@ -1,3 +1,202 @@
+- id: TASK-934
+  title: Composed powers — character proficiency requirements follow every variant, not the sheet pick
+  created_at: 2026-09-24
+  completed_at: 2026-09-24
+  created_by: agent
+  implemented_by: agent
+  priority: medium
+  status: done
+  verification_status: pending-qa
+  build_validation: |
+    suite: DEV-V-061
+    tests:
+      - DEV-V-061-T004
+  developer_test_plan: |
+    DEV-V-061-T004 (sheet Proficiencies tab + badge + add-from-library with Elemental Burst; Alternate follows the pick).
+  clickup_sync: pending
+  github_branch: task/TASK-934-choice-proficiency
+  related_files:
+    - src/lib/calculators/power-composition.ts
+    - src/lib/proficiencies.ts
+    - src/lib/data-enrichment/enrich-powers.ts
+    - src/lib/data-enrichment/enrich-powers.test.ts
+    - src/components/character-sheet/add-library-item/map-selection.ts
+    - src/components/character-sheet/add-library-item/map-selection.test.ts
+    - src/lib/guided-creator/build-character.ts
+    - src/types/character.ts
+  description: |
+    Follow-up from /cleanup of TASK-929–933 (ADR-0029). The sheet required only the picked Choice variant's damage type, so switching the Fire / Ice / Lightning chip changed required proficiencies while the power's TP counted all three.
+  acceptance_criteria:
+    - Required proficiencies for a composed power come from the same proficiency set the resolver prices (every variant + Reverse; damage split by type), independent of `selectedVariantId`. Owner override: Alternate follows the picked variant only.
+    - Sheet auto-proficiencies (add), badge, Proficiencies tab, add-from-library, and Guided save agree for Elemental Burst (three damage types) and do not change when the chip changes.
+    - The row's damage button keeps following the pick.
+    - Vitest covering a Choice fixture through enrichment → `buildRequiredProficiencies`; BUILD_VALIDATION step under DEV-V-061.
+  completed_work: |
+    `composedPowerProficiencyParts(res, partsDb)` in power-composition.ts returns the resolver's payload rows with each damage row tagged by its own `damageType` (Choice / Modify / Randomize: shared + every variant + Reverse; Alternate: picked variant + Reverse). `buildRequiredProficiencies` honours a per-part `damageType` (`null` = untyped) over the power's damage. The resolver's TP uses the same rows. Enrichment, the add-to-character mapper (sheet Add Power + Library add-to-character), and the Guided save payload use the helper. Modify still dedupes shared Power Range.
+  notes: |
+    Open for owner: resolver TP for Alternate still counts every variant (unchanged), while the character's required proficiencies follow the pick. Background sync on sheet load only sees powers added in-session (saved powers are lean refs) — unchanged; switching an Alternate pick to an unowned variant shows the needs-proficiency badge instead of auto-adding.
+- id: TASK-929
+  title: Power variants — ADR-0029, composition resolver, cost tests, Reverse Effects codex fix
+  created_at: 2026-09-24
+  completed_at: 2026-09-24
+  created_by: owner
+  implemented_by: agent
+  priority: high
+  status: done
+  verification_status: pending-qa
+  build_validation: |
+    suite: DEV-V-061
+    tests:
+      - DEV-V-061-T001
+      - DEV-V-061-T002
+      - DEV-V-061-T003
+  developer_test_plan: |
+    Suite DEV-V-061 — see BUILD_VALIDATION.md. Vitest: power-composition, innate-eligibility, power-variant-chips.
+  clickup_sync: pending
+  github_branch: task/TASK-929-power-variants
+  related_files:
+    - src/docs/ai/ADR/0029-power-composition-variants.md
+    - src/lib/calculators/power-composition.ts
+    - src/lib/calculators/power-composition.test.ts
+    - src/lib/calculators/power-calc.ts
+    - src/lib/game/innate-eligibility.ts
+    - src/lib/game/innate-eligibility.test.ts
+    - src/types/library.ts
+    - sql/codex-parts-reverse-effects-op1-en.sql
+  description: |
+    Epic TASK-929–TASK-933 (plan "Power composition model"). Payload `composition` (choice | alternate | modify | randomize, variants[], reverse, die) replaces the Choice / Split / Randomize / Reverse Effects part hacks.
+  acceptance_criteria:
+    - ADR-0029 + README index.
+    - Resolver in lib/calculators (Choice max, Modify sum, Alternate selected, Randomize signed faces floor 1, Reverse −50%); legacy 371/388/401/402 ignored on composed powers.
+    - TP = deduped proficiency set (damage parts split by type); innate = Appendix G on all parts / durations, Alternate per variant.
+    - codex_parts 388 op_1_en −1.5 → −0.5 applied; seed CSVs aligned.
+  notes: |
+    Live apply 2026-09-24 via Supabase MCP (1 row). Preview: no saved power referenced part 388. ClickUp daily MCP limit hit at start → one Website batch card still owed (TASK-929–933, in review + Collin + PR URL).
+
+- id: TASK-930
+  title: Power creator — Structure select, Reverse checkbox, variant tabs, Randomize die faces
+  created_at: 2026-09-24
+  completed_at: 2026-09-24
+  created_by: owner
+  implemented_by: agent
+  priority: high
+  status: done
+  verification_status: pending-qa
+  build_validation: |
+    suite: DEV-V-061
+    tests:
+      - DEV-V-061-T001
+  developer_test_plan: |
+    DEV-V-061-T001 — /power-creator at 360 / 390 / 768 / 1024 / 1280 / 1440.
+  clickup_sync: pending
+  github_branch: task/TASK-929-power-variants
+  related_files:
+    - src/app/(main)/power-creator/page.tsx
+    - src/app/(main)/power-creator/power-creator-composition-band.tsx
+    - src/app/(main)/power-creator/power-creator-composition.ts
+    - src/app/(main)/power-creator/use-power-creator-composition.ts
+    - src/app/(main)/power-creator/use-power-creator-workspace.ts
+    - src/app/(main)/power-creator/power-creator-bootstrap.ts
+    - src/components/creator/CreatorLayout.tsx
+    - src/components/creator/CreatorPageShell.tsx
+  description: |
+    Band above the creator grid (CreatorLayout `aboveGrid`): labeled Structure Select + Reverse effects Checkbox + mechanic description text + InfoTippy; TabNavigation for Shared / variants / Reverse; die select + per-face selects (save gated until complete). Four legacy mechanic parts hidden from the picker. Saves `payload.composition`.
+  acceptance_criteria:
+    - Each tab edits its own fields; summary shows composed Energy / TP + Variant Energy breakdown.
+    - Alternate add copies the open tab; Choice/Modify/Randomize variants are overlays on Shared.
+    - Draft cache + Load round-trip composition.
+  notes: |
+    Limit (ADR-0029): an empty variant field means use Shared, so a Choice / Modify / Randomize variant cannot reset range, area, or duration to none / Instant when Shared sets one. Set that field per variant instead. Alternate variants are full powers and are not affected.
+
+- id: TASK-931
+  title: Sheet play — selectedVariantId + feat-style variant chips
+  created_at: 2026-09-24
+  completed_at: 2026-09-24
+  created_by: owner
+  implemented_by: agent
+  priority: high
+  status: done
+  verification_status: pending-qa
+  build_validation: |
+    suite: DEV-V-061
+    tests:
+      - DEV-V-061-T002
+  developer_test_plan: |
+    DEV-V-061-T002 — sheet Powers at 360 and 1280.
+  clickup_sync: pending
+  github_branch: task/TASK-929-power-variants
+  related_files:
+    - src/lib/power-variant-chips.ts
+    - src/lib/power-variant-chips.test.ts
+    - src/lib/data-enrichment/enrich-powers.ts
+    - src/lib/data-enrichment/clean-for-save.ts
+    - src/components/character-sheet/library-entity-rows.tsx
+    - src/components/character-sheet/use-sheet-library-actions.ts
+    - src/types/character.ts
+  description: |
+    `CharacterPower.selectedVariantId` persisted like `innate`. `buildPowerVariantChips` (sibling of `buildFeatLevelChips`) returns ChipData labelled with variant names; Choice/Alternate/Randomize chips select, Modify chips are browse-only. Randomize roll chip logs to the roll log.
+  acceptance_criteria:
+    - Damage / duration / area / energy follow the pick per structure rules; Modify joins durations and sums energy.
+    - Enrichment includes every variant's parts for proficiency checks.
+
+- id: TASK-932
+  title: Browse surfaces — composed energy + variant section without a play control
+  created_at: 2026-09-24
+  completed_at: 2026-09-24
+  created_by: owner
+  implemented_by: agent
+  priority: medium
+  status: done
+  verification_status: pending-qa
+  build_validation: |
+    suite: DEV-V-061
+    tests:
+      - DEV-V-061-T003
+  developer_test_plan: |
+    DEV-V-061-T003.
+  clickup_sync: pending
+  github_branch: task/TASK-929-power-variants
+  related_files:
+    - src/lib/library/official-power-list.ts
+    - src/lib/library-selectable-builders.ts
+    - src/lib/library/power-technique-filters.ts
+    - src/lib/guided-creator/powers-techniques-l2.ts
+    - src/components/patterns/list/creature-stat-block-display-data.ts
+    - src/app/(main)/creature-creator/transformers.ts
+    - src/app/(main)/crafting/[id]/_components/crafting-tool-derived.ts
+  description: |
+    Library / add-modal / Guided L3 / creature stat block / crafting read `composition` through `derivePowerDisplay` (browse energy) and show the variants section; innate filter uses the composed Appendix G snapshot.
+  acceptance_criteria:
+    - No spend control on browse surfaces; categories and damage come from resolved variants.
+  notes: |
+    Empowered-technique creator has no "load a library power" path, so no composed power can be loaded into it; empowered display tolerates powers without composition (unchanged).
+
+- id: TASK-933
+  title: Official examples — Elemental Burst, Elemental Bolt, Judgement onto Choice variants
+  created_at: 2026-09-24
+  completed_at: 2026-09-24
+  created_by: owner
+  implemented_by: agent
+  priority: medium
+  status: done
+  verification_status: pending-qa
+  build_validation: |
+    suite: DEV-V-061
+    tests:
+      - DEV-V-061-T003
+  developer_test_plan: |
+    DEV-V-061-T003 step 1.
+  clickup_sync: pending
+  github_branch: task/TASK-929-power-variants
+  related_files:
+    - sql/official-powers-composition-examples.sql
+  description: |
+    Three official_powers rows rewritten: shared chassis + one Choice variant per damage type; legacy Choice part and multi-type `damage` column removed. Rollback SQL in the file.
+  acceptance_criteria:
+    - Energy preview: Burst 8 → 8, Bolt 6 → 6, Judgement 5 → 6 (pricier Necrotic portion); TP drops the Choice part's 2 TP.
+    - No user powers edited.
+  notes: |
+    Elemental Burst description says 1d6 while stored damage is 1d10 — kept as stored; owner may want to align copy.
 - id: TASK-927
   title: Official catalog listing (Public vs Admin library)
   created_at: 2026-09-14
