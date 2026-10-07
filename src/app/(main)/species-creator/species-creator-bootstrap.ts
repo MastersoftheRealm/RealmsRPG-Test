@@ -210,6 +210,10 @@ export function speciesLibraryRecordToFormState(
   if (!sizes.length) sizes = ['Medium'];
   const languages = Array.isArray(d.languages) ? (d.languages as string[]) : [];
   const lifespan = d.adulthood_lifespan as number[] | undefined;
+  // Official rows store centimetres/kilograms as ave_hgt_cm / ave_wgt_kg.
+  // Creator saves use ave_height / ave_weight.
+  const aveHeight = d.ave_height != null && d.ave_height !== '' ? d.ave_height : d.ave_hgt_cm;
+  const aveWeight = d.ave_weight != null && d.ave_weight !== '' ? d.ave_weight : d.ave_wgt_kg;
   return {
     name: String(d.name ?? ''),
     description: String(d.description ?? ''),
@@ -221,8 +225,8 @@ export function speciesLibraryRecordToFormState(
     characteristics: characteristics.slice(0, MAX_CHARACTERISTICS),
     flaws: flaws.slice(0, MAX_FLAWS),
     languages: languages.length ? languages.slice(0, MAX_LANGUAGES) : [...DEFAULT_LANGUAGES],
-    ave_height: d.ave_height != null ? Number(d.ave_height) : '',
-    ave_weight: d.ave_weight != null ? Number(d.ave_weight) : '',
+    ave_height: coerceNumberOrEmpty(aveHeight),
+    ave_weight: coerceNumberOrEmpty(aveWeight),
     adulthood_lifespan:
       lifespan && lifespan.length >= 2 ? [defined(lifespan[0]), defined(lifespan[1])] : ['', ''],
     imageId: typeof (d.imageId ?? d.image_id) === 'string' ? String(d.imageId ?? d.image_id) : null,
