@@ -7,6 +7,7 @@
 
 import type { AttackMode } from '@/lib/attack-mode';
 import type { CatalogListing } from '@/lib/library/catalog-listing';
+import type { PowerComposition } from '@/lib/calculators/power-composition';
 
 /** Library collection keys (user + official APIs). */
 export type LibraryItemType =
@@ -75,6 +76,8 @@ export interface LibraryPower {
   catalogListing?: CatalogListing | undefined;
   /** Defenses this power actually targets (if any). */
   targetedDefenses?: string[] | undefined;
+  /** Built-in variants in payload JSONB (ADR-0029). Absent on a normal power. */
+  composition?: PowerComposition | undefined;
 }
 
 export interface LibraryTechnique {

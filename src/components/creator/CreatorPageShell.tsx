@@ -77,6 +77,8 @@ export type CreatorPageShellProps = {
   onSaveTargetChange: (target: CreatorSaveTarget) => void;
   saving: boolean;
   saveDisabled?: boolean | undefined;
+  /** Shown beside Save and linked with aria-describedby while Save is disabled. */
+  saveDisabledReason?: string | undefined;
   /** Unauthenticated save handler — shell gates login */
   onSave: () => void | Promise<void>;
   onReset: () => void;
@@ -93,6 +95,8 @@ export type CreatorPageShellProps = {
   stickySidebar?: boolean | undefined;
   sidebar: ReactNode;
   children: ReactNode;
+  /** Band above the editor/summary grid (CreatorLayout `aboveGrid`). */
+  aboveGrid?: ReactNode | undefined;
   extraModals?: ReactNode | undefined;
   /** Optional InfoTippy beside toolbar Load / Reset (power creator). */
   toolbarHelp?: {
@@ -114,6 +118,7 @@ export function CreatorPageShell({
   onSaveTargetChange,
   saving,
   saveDisabled = false,
+  saveDisabledReason,
   onSave,
   onReset,
   onLoad,
@@ -124,6 +129,7 @@ export function CreatorPageShell({
   stickySidebar = true,
   sidebar,
   children,
+  aboveGrid,
   extraModals,
   toolbarHelp,
 }: CreatorPageShellProps) {
@@ -183,6 +189,7 @@ export function CreatorPageShell({
       description={description}
       size={size}
       headerClassName={headerClassName}
+      aboveGrid={loading?.isLoading ? undefined : aboveGrid}
       actions={
         <CreatorSaveToolbar
           saveTarget={saveTarget}
@@ -192,6 +199,7 @@ export function CreatorPageShell({
           onReset={onReset}
           saving={saving}
           saveDisabled={saveDisabled || !!loading?.isLoading}
+          saveDisabledReason={saveDisabledReason}
           showSaveTarget={showSaveTarget}
           user={user}
           requireAuthToLoad={requireAuthToLoad}

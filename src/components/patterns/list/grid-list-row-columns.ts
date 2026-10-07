@@ -37,26 +37,45 @@ export function columnsAlreadyShowTrainingPoints(
   });
 }
 
+function isEnergyFact(col: ColumnValue): boolean {
+  return col.key.trim().toLowerCase() === 'energy';
+}
+
 /**
  * True when a column has a real value to paint. Empty / `-` / `—` / `none` stay off
  * the row (collapsed header, mobile summary, and expanded body).
+ * Energy is the exception: a dash is the empty-cost stat and stays visible.
  */
 export function columnHasDisplayValue(col: ColumnValue): boolean {
   const value = col.value;
   if (value == null) return false;
+  if (isEnergyFact(col)) {
+    if (typeof value === 'string') return value.trim().length > 0;
+    return true;
+  }
   if (typeof value === 'string' || typeof value === 'number') return !isBlank(value);
   return true;
 }
 
 /** Columns hidden from the mobile grid (`hideOnMobile` default true). Skip blanks
  *  and description teasers (full text is expanded-only, TASK-909). */
+function appendMobileFact(summary: ColumnValue[], visible: ColumnValue[], key: string): void {
+  const col = visible.find((candidate) => candidate.key.trim().toLowerCase() === key);
+  if (col && !summary.includes(col)) summary.push(col);
+}
+
 export function columnsForMobileSummary(columns: ColumnValue[]): ColumnValue[] {
-  return columns
-    .filter(
-      (col) =>
-        col.key !== 'description' && col.hideOnMobile !== false && columnHasDisplayValue(col),
-    )
-    .slice(0, 3);
+  const visible = columns.filter(
+    (col) => col.key !== 'description' && col.hideOnMobile !== false && columnHasDisplayValue(col),
+  );
+  const summary = visible.slice(0, 3);
+  // Duration can fall past the first three after a Modify join (86e3kfkca).
+  appendMobileFact(summary, visible, 'duration');
+  // Damage stays past the first three only when the caller marks it (creature stat block).
+  for (const col of visible) {
+    if (col.keepOnMobileSummary && !summary.includes(col)) summary.push(col);
+  }
+  return summary;
 }
 
 /**

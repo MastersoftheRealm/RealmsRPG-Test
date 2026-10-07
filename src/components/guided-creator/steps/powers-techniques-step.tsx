@@ -69,6 +69,7 @@ import { GUIDED_CREATOR_COPY } from '@/lib/constants/site-copy';
 import { useGuidedDeepEntryOnArrival } from '@/lib/guided-creator/use-guided-deep-entry-on-arrival';
 import { prefersDeepCatalogEntry } from '@/lib/guided-creator/creator-entry-mode';
 import { mergeLibraryBySource } from '@/lib/library/source-scope';
+import { officialPowerCategoryOptions } from '@/lib/library/official-power-list';
 import { collectCategoryOptionsFromItems } from '@/lib/library/power-technique-categories';
 import {
   EMPTY_POWER_TECHNIQUE_FILTERS,
@@ -198,14 +199,10 @@ export function PowersTechniquesStep() {
   const { rules } = useGameRules();
   const ptCategoryOptions = useMemo(
     () =>
-      collectCategoryOptionsFromItems(
-        libraryItems,
-        isTechniques ? techniquePartsDb : powerPartsDb,
-        {
-          includeDamageCategory: !isTechniques,
-        },
-      ),
-    [libraryItems, isTechniques, techniquePartsDb, powerPartsDb],
+      isTechniques
+        ? collectCategoryOptionsFromItems(libraryItems, techniquePartsDb)
+        : officialPowerCategoryOptions(powerLibraryItems, powerPartsDb),
+    [isTechniques, libraryItems, powerLibraryItems, techniquePartsDb, powerPartsDb],
   );
   const innateThresholdOptions = useMemo(() => listInnateThresholdFilterOptions(rules), [rules]);
   const ptFilterActiveCount =

@@ -18,6 +18,7 @@ import {
   type AttackMode,
 } from '@/lib/attack-mode';
 import { deriveActionType, actionTypeFromSelection } from './action-type';
+import { finalizePowerEnergy } from './power-calc';
 
 // Re-export for convenience
 export type { TechniquePart };
@@ -48,6 +49,8 @@ export interface TechniqueCostResult {
   totalTP: number;
   tpSources: string[];
   energyRaw: number;
+  /** True when a flat contribution is above 0. The 1 EN floor reads this. */
+  hasPositiveEnergy: boolean;
 }
 
 export interface TechniqueDisplayData {
@@ -181,6 +184,7 @@ export function calculateTechniqueCosts(
   let sumNonPercentage = 0;
   let productPercentage = 1;
   let totalTP = 0;
+  let positiveEnergy = 0;
   const tpSources: string[] = [];
 
   const uniqueParts = dedupeSavedParts(partsPayload);
@@ -207,6 +211,7 @@ export function calculateTechniqueCosts(
       productPercentage *= energyContribution;
     } else {
       sumNonPercentage += energyContribution;
+      if (energyContribution > 1e-9) positiveEnergy += energyContribution;
     }
 
     const partTP = computePartTrainingPoints(
@@ -225,10 +230,9 @@ export function calculateTechniqueCosts(
   });
 
   const energyRaw = sumNonPercentage * productPercentage;
-  // Reduction parts (e.g. No Attack) can drive the sum below zero; Energy cannot be
-  // negative (GAME_RULES "Energy Below Zero").
-  const totalEnergy = Math.max(0, Math.ceil(energyRaw));
-  return { totalEnergy, totalTP, tpSources, energyRaw };
+  const hasPositiveEnergy = positiveEnergy > 1e-9;
+  const totalEnergy = finalizePowerEnergy(energyRaw, hasPositiveEnergy);
+  return { totalEnergy, totalTP, tpSources, energyRaw, hasPositiveEnergy };
 }
 
 // =============================================================================

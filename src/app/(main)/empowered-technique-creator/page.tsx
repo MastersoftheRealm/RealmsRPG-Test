@@ -28,6 +28,7 @@ import {
   AdvancedCalculationsPanel,
 } from '@/components/creator';
 import { LoadingState } from '@/components/ui';
+import { formatEnergyStat } from '@/lib/calculators';
 import { SourceFilter, sourceFilterSummary } from '@/components/patterns/filters/source-filter';
 import { EmpoweredTechniqueCreatorEditor } from './empowered-technique-creator-editor';
 import {
@@ -214,7 +215,7 @@ function EmpoweredTechniqueWorkspace({
           costStats={[
             {
               label: 'Energy Cost',
-              value: ws.costs.totalEnergy,
+              value: formatEnergyStat(ws.costs.totalEnergy),
               icon: <Zap className="h-6 w-6" />,
               color: 'energy',
             },

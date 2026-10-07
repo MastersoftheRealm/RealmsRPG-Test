@@ -27,9 +27,18 @@ import { deriveAbilityRequirementFromProperties } from '@/lib/game/weapon-attack
 import {
   derivePowerDisplay,
   deriveStructuredDuration,
+  formatEnergyStat,
   formatPowerDamage,
 } from '@/lib/calculators/power-calc';
 import type { PowerDocument } from '@/lib/calculators/power-calc';
+import {
+  composedPowerCategoryDamage,
+  composedPowerDamage,
+  composedPowerSavedParts,
+  resolvePowerComposition,
+} from '@/lib/calculators/power-composition';
+import { powerVariantsDetailSection, withPowerReverseNote } from '@/lib/power-variant-chips';
+import { snapshotOfficialPowerForInnate } from '@/lib/game/innate-eligibility';
 import { resolvePartCategoryList } from '@/lib/library/power-technique-categories';
 import { deriveTechniqueDisplay } from '@/lib/calculators/technique-calc';
 import type { TechniqueDocument } from '@/lib/calculators/technique-calc';
@@ -205,6 +214,7 @@ type PowerTechniqueBudgetItem = {
   attackMode?: AttackMode | undefined;
   weapon?: TechniqueDocument['weapon'] | undefined;
   weaponName?: string | undefined;
+  composition?: PowerDocument['composition'] | undefined;
 };
 
 /** Match `buildOfficialPowerRows` / `buildSelectableItem` PowerDocument shape (TASK-708). */
@@ -222,6 +232,7 @@ export function libraryItemToPowerDocument(item: PowerTechniqueBudgetItem): Powe
     range: item.range,
     area: item.area,
     duration: item.duration,
+    ...(item.composition ? { composition: item.composition } : {}),
   };
 }
 
@@ -285,13 +296,19 @@ export function derivePowerTechniqueBudgetFacts(
   }
 }
 
+function asEnergyNumber(energy: number | string | null | undefined): number {
+  if (typeof energy === 'number') return Number.isFinite(energy) ? energy : 0;
+  const n = Number(energy);
+  return Number.isFinite(n) ? n : 0;
+}
+
 /** Guided L2/L3 budget columns: Action Type | Energy | Training Points. */
 export function getPowerTechniqueBudgetColumns(facts: PowerTechniqueBudgetFacts): ColumnValue[] {
   return [
     { key: 'action', value: facts.actionType || '—', align: 'center' },
     {
       key: 'energy',
-      value: facts.energy != null ? String(facts.energy) : '—',
+      value: String(formatEnergyStat(facts.energy ?? 0)),
       align: 'center',
     },
     { key: 'tp', value: String(facts.tp), align: 'center' },
@@ -393,14 +410,25 @@ export function buildPowerTechniqueFilterableRow(
   techniquePartsDb: TechniquePart[],
 ): PowerTechniqueFilterableRow {
   const facts = derivePowerTechniqueBudgetFacts(kind, item, powerPartsDb, techniquePartsDb);
-  const parts = Array.isArray(item.parts) ? item.parts : [];
+  const composed =
+    kind === 'power' && item.composition
+      ? resolvePowerComposition(libraryItemToPowerDocument(item), powerPartsDb)
+      : null;
+  const parts: unknown[] = composed
+    ? composedPowerSavedParts(composed)
+    : Array.isArray(item.parts)
+      ? item.parts
+      : [];
   const partsDb = kind === 'technique' ? techniquePartsDb : powerPartsDb;
   let categories = derivePartCategories(
     parts as Parameters<typeof derivePartCategories>[0],
     partsDb,
   );
   if (kind === 'power') {
-    categories = withDamageCategory(categories, powerHasDamageCategory(item.damage));
+    categories = withDamageCategory(
+      categories,
+      powerHasDamageCategory(composed ? composedPowerCategoryDamage(composed) : item.damage),
+    );
   }
   const partIds = parts.map((part) => {
     const p = part as { id?: string | number | undefined };
@@ -436,6 +464,18 @@ export function buildPowerTechniqueFilterableRow(
             parts as Parameters<typeof resolvePartCategoryList>[0],
             powerPartsDb,
           ),
+          ...(item.composition
+            ? {
+                innateSnapshot: snapshotOfficialPowerForInnate(
+                  {
+                    ...libraryItemToPowerDocument(item),
+                    id: item.id ?? item.docId,
+                    composition: item.composition,
+                  } as Parameters<typeof snapshotOfficialPowerForInnate>[0],
+                  powerPartsDb,
+                ),
+              }
+            : {}),
         }
       : {}),
   };
@@ -450,7 +490,7 @@ export function getItemColumns(
   if (itemType === 'power') {
     const values: Record<string, string> = powerDisplay
       ? {
-          Energy: String(powerDisplay.energy ?? '-'),
+          Energy: String(formatEnergyStat(asEnergyNumber(powerDisplay.energy))),
           Action: powerDisplay.actionType || '-',
           Duration: powerDisplay.duration || '-',
           Damage: powerDisplay.damage || '-',
@@ -459,7 +499,7 @@ export function getItemColumns(
       : (() => {
           const power = item as UserPower;
           return {
-            Energy: '-',
+            Energy: String(formatEnergyStat(0)),
             Action: formatSavedActionTypeForDisplay(power.actionType, power.isReaction),
             Duration: '-',
             Area: power.area?.type ? capitalize(power.area.type) : '-',
@@ -476,13 +516,13 @@ export function getItemColumns(
     const values: Record<string, string> = techniqueDisplay
       ? {
           Action: techniqueDisplay.actionType || '-',
-          Energy: String(techniqueDisplay.energy),
+          Energy: String(formatEnergyStat(techniqueDisplay.energy ?? 0)),
           Attack: techniqueDisplay.weaponName || '-',
           'Training Pts': String(techniqueDisplay.tp),
         }
       : {
           Action: formatActionTypeForDisplay(technique.actionType ?? ''),
-          Energy: '-',
+          Energy: String(formatEnergyStat(0)),
           Attack: attackModeColumnLabel(
             deriveTechniqueAttackMode({
               attackMode: technique.attackMode,
@@ -645,15 +685,23 @@ export function buildSelectableItem(
   const effectiveType = itemType;
 
   let powerDisplay: PowerColumnDisplay | undefined;
+  let composedDescription: string | undefined;
   if (itemType === 'power') {
     const p = item as UserPower;
     const doc = libraryItemToPowerDocument(p);
     const display = derivePowerDisplay(doc, powerPartsDb);
+    const composition = display.composition;
+    if (composition) composedDescription = withPowerReverseNote(p.description, composition);
+    const damage = composition ? composedPowerDamage(composition) : doc.damage;
     const partChips = partChipsFromDisplay(display.partChips);
     const parts = partsProficienciesSection(partChips, 'power');
+    const variantsSection = powerVariantsDetailSection(composition);
     const categories = withDamageCategory(
-      derivePartCategories(doc.parts, powerPartsDb),
-      powerHasDamageCategory(doc.damage),
+      derivePartCategories(
+        composition ? composedPowerSavedParts(composition) : doc.parts,
+        powerPartsDb,
+      ),
+      powerHasDamageCategory(composition ? composedPowerCategoryDamage(composition) : damage),
     );
     const categoryText = formatPartCategoriesColumn(categories);
     const sections = buildGlrFactDetailSections({
@@ -664,14 +712,14 @@ export function buildSelectableItem(
         category: categoryText && categoryText !== '—' ? categoryText : undefined,
         trainingPoints: display.tp > 0 ? display.tp : undefined,
       },
-      extraSections: parts ? [parts] : undefined,
+      extraSections: [...(parts ? [parts] : []), ...(variantsSection ? [variantsSection] : [])],
     });
     detailSections = sections.length > 0 ? sections : undefined;
     powerDisplay = {
       energy: display.energy,
       actionType: display.actionType || formatSavedActionTypeForDisplay(p.actionType, p.isReaction),
       duration: display.duration || '-',
-      damage: formatPowerDamage(doc.damage) || '-',
+      damage: formatPowerDamage(damage) || '-',
       area: display.area || '-',
     };
   } else if (itemType === 'technique') {
@@ -804,6 +852,7 @@ export function buildSelectableItem(
     id: String(item.id),
     name,
     description:
+      composedDescription ||
       String((item as UserPower | UserTechnique | UserItem).description ?? '') ||
       'No description available.',
     columns,

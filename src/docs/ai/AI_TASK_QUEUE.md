@@ -1,16 +1,18 @@
 # AI Task Queue — Process
 
-**Agent-eligible tasks:** [`ACTIVE_TASKS.md`](ACTIVE_TASKS.md)  
+> **Work queue:** **ClickUp is the only work queue.** `ACTIVE_TASKS.md` / TASK-### are optional engineering notes — not the work picker. See the [Realms Dev Workflow](https://docs.google.com/document/d/1F6iZUKP9nN0YTFzOkZ6Y82sySaw0iW101f_a-7ZeQdI/edit).
+
+**Optional engineering notes:** [`ACTIVE_TASKS.md`](ACTIVE_TASKS.md)  
 **Blocked / human-owned:** [`WAITING_TASKS.md`](WAITING_TASKS.md)  
 **Done history:** [`archive/TASK_QUEUE_DONE.md`](archive/TASK_QUEUE_DONE.md) · snapshot [`archive/TASK_QUEUE_DONE_2026-07-15.md`](archive/TASK_QUEUE_DONE_2026-07-15.md)
 
-Agents must **not** load WAITING, the done archive, or historical dumps at session start. Read **`ARCHITECTURE_CONSTITUTION.md`** + **`ACTIVE_TASKS.md`**.
+Agents must **not** load WAITING, the done archive, or historical dumps at session start. Read the Dev Workflow → `DECISIONS.md` → `ARCHITECTURE_CONSTITUTION.md`. Pick work from **ClickUp**.
 
-**Next task ID:** see header of `ACTIVE_TASKS.md`.
+**Next task ID (if using TASK-### notes):** see header of `ACTIVE_TASKS.md`.
 
 ## Workflow
 
-1. Pick highest-priority open task in `ACTIVE_TASKS.md` (`not-started` / continue `partial` / `in-progress`).
+1. Pick work from **ClickUp**. Optionally check `ACTIVE_TASKS.md` for engineering notes on the same task (`not-started` / continue `partial` / `in-progress`).
 2. Blocked or human `assignee:` work stays in `WAITING_TASKS.md` until unblocked.
 3. Set `status: in-progress` while working.
 4. Mark **`done`** when all implementable acceptance criteria pass (build, targeted tests, docs — see constitution Definition of Done). Set **`verification_status`** on archive (see Verification gate). Otherwise **`partial`** + `completed_work` / `remaining_work` / `follow_up_tasks`. Do **not** git-commit per task.
@@ -20,11 +22,11 @@ Agents must **not** load WAITING, the done archive, or historical dumps at sessi
 
 ## New tasks
 
-Use [`AI_REQUEST_TEMPLATE.md`](AI_REQUEST_TEMPLATE.md). Add to **`ACTIVE_TASKS.md`** (or `WAITING_TASKS.md` if blocked/human). Update the Next task ID on ACTIVE.
+File new tasks via Clickup Manager, or directly in ClickUp on Kadin's orders. Optionally use [`AI_REQUEST_TEMPLATE.md`](AI_REQUEST_TEMPLATE.md) to add engineering notes to `ACTIVE_TASKS.md` (or `WAITING_TASKS.md` if blocked/human).
 
 ## Evidence / CI
 
-`npm run tasks:validate` — strict reconcile, doc links, FEATURE_INDEX + generated barrels, related_files, shared/ui allowlist. Run **before push** to `master` / opening a PR when you touched tasks or archives — not after each task.
+`npm run tasks:validate` — strict reconcile, doc links, FEATURE_INDEX + generated barrels, related_files, shared/ui allowlist. Run **before opening or updating the PR** when you touched tasks or archives — not after each task.
 
 **Batch commits (default):** The owner often implements several tasks, `/audit` → `/cleanup` each, then **one** commit/push. Agents must **not** create a git commit per task and must **not** treat a missing commit as a mark-done or `/audit` gap.
 

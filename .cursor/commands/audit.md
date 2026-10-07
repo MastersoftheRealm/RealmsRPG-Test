@@ -66,7 +66,7 @@ Optional args: `/audit TASK-502` = primary task; else infer from this chat + rec
 ## Hard rules
 
 - **Zero product edits.** Report only — do not “fix while auditing.”
-- **Follow-up filing exception:** If the owner’s message explicitly says to file tasks (e.g. “file follow-ups” / “make follow-up tasks”), you may edit `ACTIVE_TASKS.md` (+ brief changelog) **after** the report — use the **atomic task-filing** rules in `debt.md`. Still no product-code fixes in `/audit`.
+- **Follow-up filing exception:** If the owner’s message explicitly says to file tasks (e.g. “file follow-ups” / “make follow-up tasks”), file them in ClickUp via Clickup Manager (or directly on Kadin's orders). Optionally add engineering notes in `ACTIVE_TASKS.md` — use the **atomic task-filing** rules in `debt.md`. Still no product-code fixes in `/audit`.
 - Evidence over vibes.
 - If AC or owner feedback is unmet, verdict must not be “ready for done.”
 - “Docs honesty” alone is not a pass on pillar 1 if dead forks remain in scope.

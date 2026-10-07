@@ -8,6 +8,7 @@ import type { TechniquePart } from '@/hooks/codex-types';
 import { findByIdOrName } from '@/lib/id-constants';
 import { dedupeSavedParts } from '@/lib/game/dedupe-saved-parts';
 import { formatEnergyNumber, formatPercentagePartModifier } from './power-energy-breakdown';
+import { energyFloorApplies, finalizePowerEnergy, formatEnergyStat } from './power-calc';
 import { type TechniqueCalcSectionId, type TechniquePartPayload } from './technique-calc';
 
 export type { TechniqueCalcSectionId };
@@ -54,6 +55,7 @@ export interface TechniqueEnergyAnalysis {
   productPercentage: number;
   energyRaw: number;
   totalEnergy: number;
+  hasPositiveEnergy: boolean;
 }
 
 export interface TechniqueAdvancedCalcRow {
@@ -132,6 +134,7 @@ export function analyzeTechniqueEnergy(
 ): TechniqueEnergyAnalysis {
   let sumNonPercentage = 0;
   let productPercentage = 1;
+  let positiveEnergy = 0;
   const lines: TechniqueEnergyLine[] = [];
 
   const uniqueParts = dedupeSavedParts(partsPayload);
@@ -152,6 +155,7 @@ export function analyzeTechniqueEnergy(
       productPercentage *= energyContribution;
     } else {
       sumNonPercentage += energyContribution;
+      if (energyContribution > 1e-9) positiveEnergy += energyContribution;
     }
 
     lines.push({
@@ -165,7 +169,8 @@ export function analyzeTechniqueEnergy(
   });
 
   const energyRaw = sumNonPercentage * productPercentage;
-  const totalEnergy = Math.max(0, Math.ceil(energyRaw));
+  const hasPositiveEnergy = positiveEnergy > 1e-9;
+  const totalEnergy = finalizePowerEnergy(energyRaw, hasPositiveEnergy);
 
   return {
     lines,
@@ -173,6 +178,7 @@ export function analyzeTechniqueEnergy(
     productPercentage,
     energyRaw,
     totalEnergy,
+    hasPositiveEnergy,
   };
 }
 
@@ -249,13 +255,15 @@ function buildTotalsGroup(analysis: TechniqueEnergyAnalysis): TechniqueAdvancedC
     }
   }
 
-  const needsRoundUp = totalEnergy > 0 && !nearlyEqual(energyRaw, totalEnergy) && energyRaw > 0;
-  const clampedFromNegative = energyRaw < 0 && totalEnergy === 0;
+  const publishesEnergy = energyFloorApplies(analysis.hasPositiveEnergy, energyRaw);
+  const needsRoundUp =
+    publishesEnergy && totalEnergy > 0 && !nearlyEqual(energyRaw, totalEnergy) && energyRaw > 0;
+  const clampedToMinimum = publishesEnergy && energyRaw < 1;
 
-  if (clampedFromNegative) {
+  if (clampedToMinimum) {
     rows.push({ label: 'Combined Energy', value: formatEnergyNumber(energyRaw) });
     rows.push({
-      label: 'Cannot go below 0',
+      label: 'Cannot go below 1',
       value: formatEnergyNumber(totalEnergy),
     });
   } else if (needsRoundUp) {
@@ -263,7 +271,10 @@ function buildTotalsGroup(analysis: TechniqueEnergyAnalysis): TechniqueAdvancedC
     rows.push({ label: 'Rounded Up', value: formatEnergyNumber(totalEnergy) });
   }
 
-  rows.push({ label: 'Energy Cost', value: formatEnergyNumber(totalEnergy) });
+  rows.push({
+    label: 'Energy Cost',
+    value: publishesEnergy ? formatEnergyNumber(totalEnergy) : String(formatEnergyStat(0)),
+  });
 
   return { title: 'Combined Energy', rows };
 }

@@ -1,4 +1,8 @@
 import type { ChipData } from '@/components/patterns/list/grid-list-row';
+import {
+  computePartTrainingPoints,
+  type PartTpVariant,
+} from '@/lib/calculators/part-training-points';
 import { DEFENSE_DISPLAY_NAMES } from '@/lib/game/constants';
 import type { ListColumn } from './list-header';
 import type { CreatureAbilities, CreatureDefenses } from './creature-stat-block-types';
@@ -147,6 +151,7 @@ export function partsToChips(
       >
     | undefined,
   codexParts: CodexPart[],
+  variant: PartTpVariant = 'power',
 ): ChipData[] {
   if (!parts || parts.length === 0) return [];
   return parts.map((part) => {
@@ -159,11 +164,20 @@ export function partsToChips(
     const opt1 = typeof part === 'object' ? Number(part.op_1_lvl ?? 0) : 0;
     const opt2 = typeof part === 'object' ? Number(part.op_2_lvl ?? 0) : 0;
     const opt3 = typeof part === 'object' ? Number(part.op_3_lvl ?? 0) : 0;
-    const tp =
-      (codexPart?.base_tp ?? 0) +
-      (codexPart?.op_1_tp ?? 0) * opt1 +
-      (codexPart?.op_2_tp ?? 0) * opt2 +
-      (codexPart?.op_3_tp ?? 0) * opt3;
+    const tp = codexPart
+      ? computePartTrainingPoints(
+          {
+            id: codexPart.id,
+            name: codexPart.name ?? partName,
+            base_tp: codexPart.base_tp,
+            op_1_tp: codexPart.op_1_tp,
+            op_2_tp: codexPart.op_2_tp,
+            op_3_tp: codexPart.op_3_tp,
+          },
+          { op_1_lvl: opt1, op_2_lvl: opt2, op_3_lvl: opt3 },
+          variant,
+        )
+      : 0;
     const options: Array<{ label: string; description?: string | undefined; level: number }> = [];
     if (opt1 > 0)
       options.push({ label: 'Option 1', description: codexPart?.op_1_desc, level: opt1 });
@@ -216,7 +230,7 @@ export function propertiesToChips(
     );
     const level = Number(p.op_1_lvl ?? 1);
     const baseTp = codexProp?.base_tp ?? codexProp?.tp_cost ?? 0;
-    const tp = baseTp * level;
+    const tp = Math.ceil(baseTp * level);
     return {
       name: codexProp?.name || p.name || 'Property',
       description: codexProp?.description,

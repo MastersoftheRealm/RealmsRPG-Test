@@ -23,12 +23,12 @@ import { getPowerSyncResult, sanitizePowerForSync } from '@/lib/library-sync';
 import {
   buildOfficialPowerRows,
   filterOfficialPowerRows,
+  officialPowerCategoryOptions,
   officialPowerDetailSections,
   officialPowerRowColumns,
   OFFICIAL_POWER_GRID,
   OFFICIAL_POWER_HEADER_COLUMNS,
 } from '@/lib/library/official-power-list';
-import { collectCategoryOptionsFromItems } from '@/lib/library/power-technique-categories';
 import {
   EMPTY_POWER_TECHNIQUE_FILTERS,
   countActivePowerTechniqueFilters,
@@ -89,7 +89,7 @@ export function LibraryPowersTab({ onDelete }: LibraryPowersTabProps) {
   }, [powers, partsDb]);
 
   const categoryOptions = useMemo(
-    () => collectCategoryOptionsFromItems(powers, partsDb, { includeDamageCategory: true }),
+    () => officialPowerCategoryOptions(powers, partsDb),
     [powers, partsDb],
   );
 

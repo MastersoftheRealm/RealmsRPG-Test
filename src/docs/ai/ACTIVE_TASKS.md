@@ -1,10 +1,12 @@
 # Active AI Tasks
 
+> **Note:** This file contains **optional engineering notes** only. The work queue and schedule live in **ClickUp**. Do not pick tasks from this file as the primary queue. See the [Realms Dev Workflow](https://docs.google.com/document/d/1F6iZUKP9nN0YTFzOkZ6Y82sySaw0iW101f_a-7ZeQdI/edit) for process.
+
 **Hot path only** — agent-eligible open work: `not-started` | `in-progress` | `partial`.
 Skip `blocked` and human `assignee:` (those live in [`WAITING_TASKS.md`](WAITING_TASKS.md)).
 Do **not** read the done archive at session start.
 
-**Next task ID:** TASK-929
+**Next task ID:** TASK-935
 **Waiting / blocked / human:** [WAITING_TASKS.md](WAITING_TASKS.md)
 **Done archive:** [archive/TASK_QUEUE_DONE.md](archive/TASK_QUEUE_DONE.md) · snapshot [archive/TASK_QUEUE_DONE_2026-07-15.md](archive/TASK_QUEUE_DONE_2026-07-15.md)
 **Process:** [AI_TASK_QUEUE.md](AI_TASK_QUEUE.md) · Template: [AI_REQUEST_TEMPLATE.md](AI_REQUEST_TEMPLATE.md)
@@ -12,7 +14,7 @@ Do **not** read the done archive at session start.
 
 **Agent rules:** Prefer highest `priority` among `not-started` / continue `partial` / `in-progress`. Human-only → `DEVELOPER_TASK_QUEUE.md`. Done summaries live in the archive — do not re-list them here.
 
-**Counts:** 8 agent-eligible (3 partial owner-gated, 5 not-started) · waiting/blocked in WAITING_TASKS · done in archive.
+**Counts:** 9 agent-eligible (3 partial owner-gated, 6 not-started) · waiting/blocked in WAITING_TASKS · done in archive.
 
 **Hot notes:** **Architect / owner ack before implement:** TASK-871 (DEV-Q05), TASK-876 (DEV-Q06), TASK-874 (DEV-Q07), TASK-914 (Admin Archetypes list shell), TASK-915 (power/empowered editor extract). **WAITING:** TASK-834 (OneDrive), TASK-823 (manuscript), TASK-917 (pending-QA snapshot — DEV-016). TASK-410–414 deferred. Mobile audit: `reports/mobile-audit-2026-08-18/MOBILE_AUDIT.md`.
 

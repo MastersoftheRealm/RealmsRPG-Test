@@ -14,6 +14,7 @@ import {
 import { dedupeSavedParts } from '@/lib/game/dedupe-saved-parts';
 import { appendCanTargetToDescription, defensesFromPart } from '@/lib/game/targeted-defenses';
 import type { AllowUndefinedOptionals } from '@/lib/utils/exact-optional';
+import { capitalize } from '@/lib/utils/string';
 import { formatDurationFromTypeAndValue, formatDurationWithModifiers } from '@/lib/utils/duration';
 import { formatActionTypeForDisplay } from '@/lib/utils/action-type';
 import { deriveActionType, actionTypeFromSelection } from './action-type';
@@ -24,6 +25,11 @@ import {
   POWER_CALC_SECTION_BY_NAME,
   type PowerCalcSectionId,
 } from './power-mechanic-constants';
+import {
+  deriveComposedPowerDisplay,
+  type PowerComposition,
+  type PowerCompositionResolution,
+} from './power-composition';
 
 // =============================================================================
 // Types
@@ -68,15 +74,25 @@ export interface PowerEnergyAnalysis {
   hasDurationParts: boolean;
   energyRaw: number;
   totalEnergy: number;
+  /**
+   * True when a flat contribution is above 0. Percentages, duration multipliers,
+   * 0 EN parts, and reductions alone do not count. The 1 EN floor reads this.
+   */
+  hasPositiveEnergy: boolean;
 }
 
 export interface PowerCostResult {
   totalEnergy: number;
   totalTP: number;
-  /** Sum of per-part TP before `Math.floor` (for debug / advanced cost display). */
+  /**
+   * Unrounded sum of each part’s base and options. totalTP rounds each
+   * instance up once, after that instance’s base and options are added.
+   */
   tpRaw: number;
   tpSources: string[];
   energyRaw: number;
+  /** True when a flat contribution is above 0. The 1 EN floor reads this. */
+  hasPositiveEnergy: boolean;
 }
 
 export interface PowerDisplayData {
@@ -90,6 +106,8 @@ export interface PowerDisplayData {
   tp: number;
   tpSources: string[];
   partChips: PartChipData[];
+  /** Present when the power has built-in variants (ADR-0029). */
+  composition?: PowerCompositionResolution | undefined;
 }
 
 export interface PartChipData {
@@ -129,6 +147,30 @@ function partEnergyContribution(def: PowerPart, l1: number, l2: number, l3: numb
   );
 }
 
+/**
+ * True when the 1 EN floor should publish a number.
+ * A positive flat, or a raw total still above 0, counts. No parts, only 0 EN
+ * parts, a quick-only or duration-only multiplier, and No Attack alone do not.
+ */
+export function energyFloorApplies(hasPositiveEnergy: boolean, raw: number): boolean {
+  return hasPositiveEnergy || raw > 1e-9;
+}
+
+/**
+ * Final published Energy: round up once.
+ * The 1 EN floor applies only when positive energy was reduced below 1.
+ * Otherwise an empty or non-positive cost publishes 0, which the UI shows as a dash.
+ */
+export function finalizePowerEnergy(raw: number, hasPositiveEnergy = false): number {
+  if (!energyFloorApplies(hasPositiveEnergy, raw)) return 0;
+  return Math.max(1, Math.ceil(raw - 1e-9));
+}
+
+/** Sidebar / column energy. 0 (no positive energy) is a dash. */
+export function formatEnergyStat(energy: number): string | number {
+  return energy < 1 ? '—' : energy;
+}
+
 // =============================================================================
 // Core Cost Calculator
 // =============================================================================
@@ -147,6 +189,7 @@ export function analyzePowerEnergy(
   let perc_dur = 1;
   let dur_all = 1;
   let hasDurationParts = false;
+  let positiveEnergy = 0;
   const lines: PowerEnergyLine[] = [];
 
   partsPayload.forEach((pl) => {
@@ -171,6 +214,7 @@ export function analyzePowerEnergy(
     } else {
       flat_normal += energyContribution;
       if (applyToDuration) flat_duration += energyContribution;
+      if (energyContribution > 1e-9) positiveEnergy += energyContribution;
     }
 
     lines.push({
@@ -188,7 +232,8 @@ export function analyzePowerEnergy(
 
   const energyRaw =
     flat_normal * perc_all + (dur_all + 1) * flat_duration * perc_dur - flat_duration * perc_dur;
-  const totalEnergy = Math.max(0, Math.ceil(energyRaw));
+  const hasPositiveEnergy = positiveEnergy > 1e-9;
+  const totalEnergy = finalizePowerEnergy(energyRaw, hasPositiveEnergy);
 
   return {
     lines,
@@ -200,6 +245,7 @@ export function analyzePowerEnergy(
     hasDurationParts,
     energyRaw,
     totalEnergy,
+    hasPositiveEnergy,
   };
 }
 
@@ -242,6 +288,7 @@ export function calculatePowerCosts(
 
   return {
     totalEnergy: energy.totalEnergy,
+    hasPositiveEnergy: energy.hasPositiveEnergy,
     totalTP,
     tpRaw,
     tpSources,
@@ -601,7 +648,7 @@ function powerDocHasCreatorStyleFields(powerDoc: PowerDocument): boolean {
   );
 }
 
-function buildPowerPartsPayloadForCost(
+export function buildPowerPartsPayloadForCost(
   powerDoc: PowerDocument,
   partsDb: PowerPart[],
 ): PowerPartPayload[] {
@@ -748,14 +795,34 @@ interface PowerDocumentFields {
       }
     | undefined;
   targetedDefenses?: string[] | undefined;
+  /** Built-in variants (ADR-0029). Absent on a normal power. */
+  composition?: PowerComposition | undefined;
 }
 
 export type PowerDocument = AllowUndefinedOptionals<PowerDocumentFields>;
 
+export interface DerivePowerDisplayOptions {
+  /** Play-state pick (sheet). Omit for browse energy (Choice max, Alternate first, …). */
+  selectedVariantId?: string | null | undefined;
+}
+
 /**
- * Build complete display data from a saved power document
+ * Build complete display data from a saved power document.
+ * Composed powers (ADR-0029) resolve through `resolvePowerComposition`.
  */
 export function derivePowerDisplay(
+  powerDoc: PowerDocument,
+  partsDb: PowerPart[],
+  options?: DerivePowerDisplayOptions,
+): PowerDisplayData {
+  return (
+    deriveComposedPowerDisplay(powerDoc, partsDb, options) ??
+    derivePlainPowerDisplay(powerDoc, partsDb)
+  );
+}
+
+/** Single-chassis display (ignores `composition`). */
+export function derivePlainPowerDisplay(
   powerDoc: PowerDocument,
   partsDb: PowerPart[],
 ): PowerDisplayData {
@@ -837,7 +904,7 @@ export function derivePowerDisplay(
 // =============================================================================
 
 /**
- * Format power damage as [amount]d[size] [type]. Supports multiple damage types (e.g. "2d6 slashing, 1d4 fire").
+ * Format power damage as [amount]d[size] [Type]. Supports multiple damage types (e.g. "2d6 Slashing, 1d4 Fire").
  */
 export function formatPowerDamage(
   damageArr?: Array<{
@@ -849,6 +916,6 @@ export function formatPowerDamage(
   if (!Array.isArray(damageArr)) return '';
   const parts = damageArr
     .filter((d) => d && d.amount && d.size && d.type && d.type !== 'none')
-    .map((d) => `${d.amount}d${d.size} ${d.type}`);
+    .map((d) => `${d.amount}d${d.size} ${capitalize(String(d.type))}`);
   return parts.join(', ') || '';
 }

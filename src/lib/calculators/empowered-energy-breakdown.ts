@@ -4,7 +4,7 @@
  * scaling of the power side, and Combined Energy. Does not change cost formulas.
  */
 
-import type { PowerEnergyAnalysis } from './power-calc';
+import { energyFloorApplies, formatEnergyStat, type PowerEnergyAnalysis } from './power-calc';
 import {
   buildPowerEnergySectionGroups,
   formatEnergyNumber,
@@ -82,13 +82,18 @@ export function buildEmpoweredAdvancedCalculationGroups(
     });
   }
 
-  const needsRoundUp = totalEnergy > 0 && !nearlyEqual(energyRaw, totalEnergy) && energyRaw > 0;
-  const clampedFromNegative = energyRaw < 0 && totalEnergy === 0;
+  const publishesEnergy = energyFloorApplies(
+    input.powerAnalysis.hasPositiveEnergy || input.techniqueAnalysis.hasPositiveEnergy,
+    energyRaw,
+  );
+  const needsRoundUp =
+    publishesEnergy && totalEnergy > 0 && !nearlyEqual(energyRaw, totalEnergy) && energyRaw > 0;
+  const clampedToMinimum = publishesEnergy && energyRaw < 1;
 
-  if (clampedFromNegative) {
+  if (clampedToMinimum) {
     totalsRows.push({ label: 'Combined Energy', value: formatEnergyNumber(energyRaw) });
     totalsRows.push({
-      label: 'Cannot go below 0',
+      label: 'Cannot go below 1',
       value: formatEnergyNumber(totalEnergy),
     });
   } else if (needsRoundUp) {
@@ -96,7 +101,10 @@ export function buildEmpoweredAdvancedCalculationGroups(
     totalsRows.push({ label: 'Rounded Up', value: formatEnergyNumber(totalEnergy) });
   }
 
-  totalsRows.push({ label: 'Energy Cost', value: formatEnergyNumber(totalEnergy) });
+  totalsRows.push({
+    label: 'Energy Cost',
+    value: publishesEnergy ? formatEnergyNumber(totalEnergy) : String(formatEnergyStat(0)),
+  });
 
   groups.push({ title: 'Combined Energy', rows: totalsRows });
   return groups;

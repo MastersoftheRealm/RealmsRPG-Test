@@ -6,7 +6,7 @@
  * My / Public / Admin library save target (admin), Load, Reset, Save. Used by CreatorPageShell.
  */
 
-import type { ReactNode } from 'react';
+import { useId, type ReactNode } from 'react';
 import { FolderOpen } from 'lucide-react';
 import { Button } from '@/components/ui';
 import { SegmentedControl } from '@/components/patterns';
@@ -20,6 +20,8 @@ export interface CreatorSaveToolbarProps {
   onReset: () => void;
   saving: boolean;
   saveDisabled?: boolean | undefined;
+  /** Shown beside Save and linked with aria-describedby while Save is disabled. */
+  saveDisabledReason?: string | undefined;
   showSaveTarget?: boolean | undefined;
   user: unknown;
   /**
@@ -42,6 +44,7 @@ export function CreatorSaveToolbar({
   onReset,
   saving,
   saveDisabled = false,
+  saveDisabledReason,
   showSaveTarget = false,
   user,
   requireAuthToLoad = true,
@@ -50,6 +53,8 @@ export function CreatorSaveToolbar({
 }: CreatorSaveToolbarProps) {
   const loadNeedsLogin = requireAuthToLoad && !user;
   const loadLabel = loadNeedsLogin ? 'Log in to load from library' : 'Load from library';
+  const reasonId = useId();
+  const showReason = saveDisabled && !!saveDisabledReason;
 
   return (
     <div className="flex flex-wrap items-center gap-2">
@@ -79,9 +84,16 @@ export function CreatorSaveToolbar({
         disabled={saving || saveDisabled}
         isLoading={saving}
         aria-label={saving ? 'Saving' : 'Save'}
+        aria-describedby={showReason ? reasonId : undefined}
+        title={showReason ? saveDisabledReason : undefined}
       >
         {saving ? 'Saving...' : 'Save'}
       </Button>
+      {showReason ? (
+        <p id={reasonId} className="basis-full text-sm text-warning-fg" role="status">
+          {saveDisabledReason}
+        </p>
+      ) : null}
     </div>
   );
 }

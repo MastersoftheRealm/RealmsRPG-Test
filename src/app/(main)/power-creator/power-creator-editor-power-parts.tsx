@@ -12,6 +12,7 @@ import { Button } from '@/components/ui';
 import type { SelectedPart, AdvancedPart } from './power-creator-types';
 import type { PowerSectionCosts } from './power-creator-cost-derivation';
 import { PowerCreatorHelp } from './power-creator-help';
+import { FromSharedParts } from './power-creator-from-shared';
 
 type PowerCreatorEditorPowerPartsProps = {
   selectedParts: SelectedPart[];
@@ -27,6 +28,9 @@ type PowerCreatorEditorPowerPartsProps = {
   onRemoveAdvancedPart: (index: number) => void;
   onUpdateAdvancedPart: (index: number, updates: Partial<AdvancedPart>) => void;
   sectionCosts: PowerSectionCosts;
+  sectionsUnpriced?: boolean | undefined;
+  sharedPartNames?: string[] | undefined;
+  sharedMechanicNames?: string[] | undefined;
 };
 
 export function PowerCreatorEditorPowerParts({
@@ -43,11 +47,19 @@ export function PowerCreatorEditorPowerParts({
   onRemoveAdvancedPart,
   onUpdateAdvancedPart,
   sectionCosts,
+  sectionsUnpriced = false,
+  sharedPartNames,
+  sharedMechanicNames,
 }: PowerCreatorEditorPowerPartsProps) {
+  const onPiece = sharedPartNames != null;
   return (
     <>
       <CollapsibleSection
-        title={`Power Parts (${selectedParts.length})`}
+        title={
+          onPiece
+            ? `Parts on this piece (${selectedParts.length})`
+            : `Power Parts (${selectedParts.length})`
+        }
         collapsedSummary={powerPartsSummary}
         titleAddon={<PowerCreatorHelp topic="parts" />}
         rightSlot={
@@ -55,6 +67,7 @@ export function PowerCreatorEditorPowerParts({
             <SectionCostBadge
               en={sectionCosts.powerParts.energyRaw}
               tp={sectionCosts.powerParts.totalTP}
+              unpriced={sectionsUnpriced}
             />
             <Button
               type="button"
@@ -69,10 +82,15 @@ export function PowerCreatorEditorPowerParts({
           </>
         }
       >
+        {onPiece ? <FromSharedParts names={sharedPartNames ?? []} /> : null}
         {selectedParts.length === 0 ? (
           <div className="py-8 text-center text-text-muted">
             <Info className="mx-auto mb-2 h-12 w-12 opacity-50" />
-            <p>No parts added yet. Click &quot;Add Part&quot; to begin building your power.</p>
+            <p>
+              {onPiece
+                ? 'No parts on this piece. Parts from Shared still apply.'
+                : 'No parts added yet. Click "Add Part" to begin building your power.'}
+            </p>
           </div>
         ) : (
           <div className="space-y-4">
@@ -91,7 +109,11 @@ export function PowerCreatorEditorPowerParts({
       </CollapsibleSection>
 
       <CollapsibleSection
-        title={`Power Mechanics (${selectedAdvancedParts.length})`}
+        title={
+          onPiece
+            ? `Mechanics on this piece (${selectedAdvancedParts.length})`
+            : `Power Mechanics (${selectedAdvancedParts.length})`
+        }
         collapsedSummary={powerMechanicsSummary}
         titleAddon={<PowerCreatorHelp topic="mechanics" />}
         rightSlot={
@@ -99,6 +121,7 @@ export function PowerCreatorEditorPowerParts({
             <SectionCostBadge
               en={sectionCosts.powerMechanics.energyRaw}
               tp={sectionCosts.powerMechanics.totalTP}
+              unpriced={sectionsUnpriced}
             />
             <Button
               type="button"
@@ -113,6 +136,7 @@ export function PowerCreatorEditorPowerParts({
           </>
         }
       >
+        {onPiece ? <FromSharedParts names={sharedMechanicNames ?? []} /> : null}
         {selectedAdvancedParts.length === 0 ? (
           <div className="py-8 text-center text-text-muted">
             <Info className="mx-auto mb-2 h-12 w-12 opacity-50" />

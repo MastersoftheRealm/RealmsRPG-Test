@@ -25,6 +25,9 @@ import { resolveArchetypeProficiencyStart } from '@/lib/game/formulas';
 import { buildSuggestedAbilityArray } from '@/lib/game/suggested-abilities';
 import { buildCreatorSkillSaveRows } from '@/lib/character/build-creator-skills';
 import { buildRequiredProficiencies } from '@/lib/proficiencies';
+import type { PowerPart } from '@/hooks/codex-types';
+import { composedPowerProficiencyParts, resolvePowerComposition } from '@/lib/calculators';
+import { libraryItemToPowerDocument } from '@/lib/library-selectable-builders';
 import { defaultLibraryTabVisibilityForArchetype } from '@/lib/character-library-tab-visibility';
 import { applyStarterEquippedFlags } from '@/lib/game/equipment-equipped';
 import { resolveArmorDamageReduction } from '@/lib/game/resolve-armor-damage-reduction';
@@ -78,6 +81,7 @@ export interface BuildGuidedCharacterContext {
 function resolvePowersForProficiency(
   draft: GuidedDraft,
   officialPowers: LibraryPower[] = [],
+  powerPartsDb: CodexPartLike[] = [],
 ): CharacterPower[] {
   const innatePowerIds = dedupeEntityRefs(draft.innatePowerIds ?? []);
   const innateKeys = new Set(innatePowerIds.map((id) => normalizeId(id)));
@@ -88,11 +92,16 @@ function resolvePowersForProficiency(
 
   return orderedIds.map((id) => {
     const lib = findByNormalizedId(officialPowers, id);
+    const composition = lib?.composition
+      ? resolvePowerComposition(libraryItemToPowerDocument(lib), powerPartsDb as PowerPart[])
+      : null;
     return {
       id,
       name: lib?.name ?? String(id),
       innate: innateKeys.has(normalizeId(id)),
-      parts: lib?.parts ?? [],
+      parts: composition
+        ? composedPowerProficiencyParts(composition, powerPartsDb as PowerPart[])
+        : (lib?.parts ?? []),
       damage: lib?.damage,
     } as CharacterPower;
   });
@@ -316,7 +325,7 @@ export function buildGuidedCharacterPayload(
   // official/codex libraries here so buildRequiredProficiencies matches custom
   // getCharacter(), then persist the computed list — cleanForSave strips power/item
   // parts but keeps `proficiencies` (SAVEABLE_FIELDS).
-  const powersForProf = resolvePowersForProficiency(draft, ctx.officialPowers);
+  const powersForProf = resolvePowersForProficiency(draft, ctx.officialPowers, ctx.powerPartsDb);
   const techniquesForProf = resolveTechniquesForProficiency(draft, ctx.officialTechniques);
   const armamentsForProf = resolveArmamentsForProficiency(
     equippedInventory,

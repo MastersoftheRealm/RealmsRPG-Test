@@ -88,6 +88,8 @@ All **columnar** (scalars + `payload` JSONB). Species matches codex_species colu
 | `user_creatures` | Columnar | id (PK), user_id (FK), name, description, level, type, size, hit_points, energy_points, **image_id**, **image_url** cache, created_at, updated_at, payload (JSONB) |
 | `user_species` | Columnar | id (PK), user_id (FK), name, description, type, sizes, skills, species_traits, ancestry_traits, flaws, characteristics, ave_hgt_cm, ave_wgt_kg, adulthood_lifespan, languages, **image_id**, **image_url** cache, created_at, updated_at, payload (JSONB) — same semantics as `codex_species` |
 
+**Power variants (ADR-0029, TASK-929):** `official_powers.payload` / `user_powers.payload` may carry `composition` `{ structure: none|choice|alternate|modify|randomize, variants[], reverse?, die? }` — JSONB only, no new columns. Composed Choice rows keep the shared chassis in the columns and leave `damage` empty (variants own damage). Character `powers[]` entries persist `selectedVariantId` beside `innate`.
+
 **User-library image parity (TASK-497, ADR-0003, REALMS §5.0.3):** `user_powers`, `user_techniques`, `user_empowered_techniques`, `user_items`, `user_creatures`, and `user_species` have nullable `image_id` matching official/codex counterparts (`sql/realms-image-user-entity-columns.sql` — **applied** 2026-07-17). Copy official → user on add-to-library copies `image_id` (and cache URL). Creators pick bank images; non-admins do not upload into the bank. No separate `user_equipment` table (armament art on `user_items`). No art columns on feats/skills/archetypes/parts/properties/creature feats/traits.
 
 ### 2.5a Realms Image Library (ADR-0003, TASK-492)

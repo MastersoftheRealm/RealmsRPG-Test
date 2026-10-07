@@ -7,6 +7,7 @@
 
 import { useState, useMemo, useId } from 'react';
 import { ChevronDown, ChevronUp, X } from 'lucide-react';
+import { computePartTrainingPoints } from '@/lib/calculators/part-training-points';
 import { formatCost } from '@/lib/game/creator-constants';
 import { partChipVariant } from '@/lib/chip/part-chip-variant';
 import { defensesFromPart, formatTargetsFact } from '@/lib/game/targeted-defenses';
@@ -85,11 +86,15 @@ export function PowerPartCard({
     (part.op_2_en || 0) * selectedPart.op_2_lvl +
     (part.op_3_en || 0) * selectedPart.op_3_lvl;
 
-  const partTP =
-    (part.base_tp || 0) +
-    (part.op_1_tp || 0) * selectedPart.op_1_lvl +
-    (part.op_2_tp || 0) * selectedPart.op_2_lvl +
-    (part.op_3_tp || 0) * selectedPart.op_3_lvl;
+  const partTP = computePartTrainingPoints(
+    part,
+    {
+      op_1_lvl: selectedPart.op_1_lvl,
+      op_2_lvl: selectedPart.op_2_lvl,
+      op_3_lvl: selectedPart.op_3_lvl,
+    },
+    showApplyDuration ? 'power' : 'technique',
+  );
   const targetsFact = formatTargetsFact(defensesFromPart(part));
 
   return (

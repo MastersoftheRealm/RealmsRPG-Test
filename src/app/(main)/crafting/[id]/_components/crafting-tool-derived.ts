@@ -48,6 +48,7 @@ type PowerEnergySource = Pick<
   | 'range'
   | 'area'
   | 'duration'
+  | 'composition'
 >;
 
 const CRAFT_BASE_SKILL_ID = 13;
@@ -81,6 +82,7 @@ export function buildCraftingPowerOptions(
       range: raw.range,
       area: raw.area,
       duration: raw.duration,
+      composition: raw.composition,
     };
     return derivePowerDisplay(doc, powerPartsDb).energy;
   };

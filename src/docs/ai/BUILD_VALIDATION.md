@@ -8847,6 +8847,100 @@ Grouped Advanced Calculations on technique, empowered technique, and item creato
 
 ---
 
+## DEV-V-061 — Power variants (Choice / Alternate / Modify / Randomize / Reverse) (TASK-929–TASK-933)
+
+Built-in variants in `payload.composition` (ADR-0029). Resolver: `lib/calculators/power-composition.ts`. Chips: `lib/power-variant-chips.ts`.
+
+#### DEV-V-061-T001 — Creator Structure band + tabs
+
+| Field | Value |
+|-------|-------|
+| **Suite** | DEV-V-061 — Power variants |
+| **Related task** | TASK-930 |
+| **Where** | `/power-creator` at 360 / 390 / 768 / 1024 / 1280 / 1440 |
+| **Needs** | Signed in (save) |
+
+**Steps**
+1. Above the editor (and above Power Summary on mobile): labeled **Structure** select (None / Choice / Alternate / Modify / Randomize) and **Reverse effects** checkbox, each with an InfoTippy.
+2. Pick **Choice**. The structure help text appears (pay Shared plus the most expensive portion). Tabs **Shared · Variant 1 · Variant 2** appear (C1 tab scroller with chevrons when narrow) plus **Add variant**.
+3. Shared: range 9 spaces. Variant 1: name "Fire", 1d10 fire. Variant 2: "Ice", 1d10 ice. Power Summary Energy = the more expensive portion. The Variant Energy breakdown lists **Shared**, then each portion, and those add up to the Choice line (round only the total).
+4. Switch to **Alternate**: tabs become full powers; **Add variant** copies the open tab; action type stays editable. Switch to **Modify** or **Choice**: action type is locked to Shared; range, area, and duration start as Shared and can be overridden. Each piece or portion adds only its own parts at that tab’s footprint. Range bought on Shared is paid once and any tab may use it for free. A tab that adds its own range pays that range’s full cost at the tab’s footprint. There is no refund for a shorter range. The breakdown shows that range as a positive line. Freezing Wind’s authored Slow piece stores the same 6-space range as Shared and does not force range, so the power stays **33**. Giving that Slow piece its own 12-space range (step 4), with Shared’s basic action and sphere 2, computes as **36**. Load official **Freezing Wind** and confirm Energy matches the Codex parts plus this math. A one-minute overlay of the same parts still computes as 36. A piece that omits range adds 0 range cost. Elemental Burst computes as **8**, Elemental Bolt as **6**, Judgement as **6**. These are results, not targets. Every Randomize face locks action type to Shared and edits its own range, area, duration, and parts.
+5. **Randomize**: Shared holds the action type plus range, area, and duration defaults. The Shared tab has no parts or damage sections. **Add variant** copies those defaults onto a new face; parts and damage are added on each face. Later edits to Shared do not change faces already created. Die select (1d2…1d100), one Face select per side, "Assign faces evenly". Save stays disabled while any face is Unassigned, and while any outcome has no face. A variant that is not on any die result shows a warning that it is not on any die result and that it adds no Energy and no Training Points. The help text matches the breakdown: each face at its own cost, weighted by its chance. A good face is its full energy. A bad face subtracts half its own basic-action energy divided by the action-type multiplier, including Reaction (slower removes more; basic stays half). Shared adds no energy. A die of identical faces costs that effect's normal Energy. Mark a face bad and confirm it does not pick up another face’s range or area. The same part on two tabs, or on two faces, counts once in Training Points, at the higher instance. Fire on several tabs counts once; ice still counts separately.
+6. Tick **Reverse effects**: Reverse tab; drawback parts show "Reverse drawback X EN → −(half ÷ action multiplier) EN" in the breakdown (basic action is −X/2). A long action shows the multiplier as **0.875**, not 0.88. An empty Reverse tab cannot be saved. Final Energy is a dash when nothing contributes positive energy, and at least 1 only when positive energy is reduced below 1.
+7. Power Mechanics "Add" picker no longer offers Choice, Split Power Parts into Groups, Randomize, Reverse Effects.
+8. Save, reload via Load: structure, tabs, names, faces, and Reverse restore.
+
+**Expected**
+- No horizontal page scroll at 360px; text buttons have no `min-w`; one Save dock. Remove-variant ✕ has an accessible name.
+
+**Report** — `[ ] PASS` · `[ ] FAIL` · `[ ] SKIP` — Notes:
+
+#### DEV-V-061-T002 — Sheet variant chips (play)
+
+| Field | Value |
+|-------|-------|
+| **Suite** | DEV-V-061 |
+| **Related task** | TASK-931 |
+| **Where** | Character sheet → Library → Powers, 360 and 1280 |
+| **Needs** | Character with **Elemental Burst** (official) or a Choice/Alternate/Modify/Randomize power |
+
+**Steps**
+1. Expand Elemental Burst: section **Choice Variants** with chips **Fire · Ice · Lightning** (not "Level N"); the current chip is marked.
+2. Click **Ice**: the damage button reads `1d10 Ice`; Energy stays at the max. Reload — the pick persists (`selectedVariantId`).
+3. Alternate power: switching the chip changes damage, duration, area, and the Energy button (a cheaper variant costs less).
+4. Modify power: chips are browse-only (expand to read piece facts); Duration column joins pieces (`2 Rounds / 1 Minute`); one Energy button spends the sum.
+5. Randomize power: the **Roll 1dN** chip rolls, marks the face's variant, and logs to the roll log. Clicking a variant chip sets it without rolling.
+6. Power with Reverse effects: no Reverse chip. The expanded description ends with "Reverse Effects (drawbacks): always applies and cannot be nullified…" and the EN discount. Same text on Library / add-modal / creature rows.
+7. The **Choice Variants** (or Alternate / Modify / Randomize) label has an info tip with the same rule text the creator band shows.
+8. Campaign read-only character view: variant chips show but are not clickable (no hover/press affordance); no Roll chip action.
+
+**Expected**
+- Single-variant power shows no chip row. Chips keep the existing coarse-pointer hit size.
+
+**Report** — `[ ] PASS` · `[ ] FAIL` · `[ ] SKIP` — Notes:
+
+#### DEV-V-061-T003 — Browse surfaces (no play control)
+
+| Field | Value |
+|-------|-------|
+| **Suite** | DEV-V-061 |
+| **Related task** | TASK-932 / TASK-933 |
+| **Where** | `/library` Realms Powers, sheet Add Power modal, Guided powers step, creature stat block |
+| **Needs** | Official Elemental Burst / Elemental Bolt / Judgement (rewritten onto Choice) |
+
+**Steps**
+1. Library Realms: chips show Shared plus that option. On the 2026-10-06 Codex snapshot, Elemental Burst chips compute as **8**, Elemental Bolt chips as **6**, and Judgement’s Light chip as **5** and Necrotic chip as **6** while the power computes as **6**. Freezing Wind (Modify) computes as **33**. A Slow piece at range step 1 computes as **33**, and with no range as **33**. These are results, not targets. Damage column shows the first variant. Expanded row lists the variant chips (not clickable).
+2. Add Power modal and Guided L3 show the same energy + variant section. Innate Eligible filter still behaves.
+3. Creature stat block with a composed power: energy + variant section, no spend control. At 390px the power card still shows the damage dice (Energy, Action, Duration, and Damage), including while the row is expanded.
+
+**Expected**
+- No surface shows the legacy Choice part on these three powers. TP: Elemental Damage counted per damage type, Power Range once. On the 2026-10-06 Codex snapshot, Elemental Burst is **14** TP, Elemental Bolt is **11**, Judgement is **6**, and Freezing Wind is **10**. These are results, not targets. A repeated part counts once, at its highest instance.
+
+**Report** — `[ ] PASS` · `[ ] FAIL` · `[ ] SKIP` — Notes:
+
+#### DEV-V-061-T004 — Character proficiencies follow every version, including Alternates
+
+| Field | Value |
+|-------|-------|
+| **Suite** | DEV-V-061 |
+| **Related task** | TASK-934 |
+| **Where** | Character sheet → Library → Powers + Proficiencies tab (1280); `/library` Realms Powers add-to-character; Guided save |
+| **Needs** | Signed in; a character without fire / ice / lightning Elemental Damage proficiency |
+
+**Steps**
+1. Sheet **Add Power** → Elemental Burst. Proficiencies tab lists Elemental Damage for **fire, ice, and lightning** plus Power Range once (TP matches the power's TP).
+2. Expand Elemental Burst and click **Ice**, then **Lightning**. The Proficiencies tab list and the row's needs-proficiency badge do not change. The damage button follows the chip (`1d10 Ice` → `1d10 Lightning`).
+3. Remove one of the three damage-type proficiencies (Edit mode): Elemental Burst shows the needs-proficiency badge regardless of the chip.
+4. `/library` Realms Powers → add Elemental Burst to a character: the same three damage-type proficiencies are added. Guided creator with Elemental Burst: the saved character has the same three.
+5. Alternate power (e.g. Inferno fire / Frost ice): Proficiencies lists both damage types plus every part either version uses (Immobile, Power Range). Switching Inferno and Frost does not change that list. Energy and the damage button follow the chip.
+
+**Expected**
+- Requirements match the power's training-point total and never change with the chip. Modify charges shared range/area once.
+
+**Report** — `[ ] PASS` · `[ ] FAIL` · `[ ] SKIP` — Notes:
+
+---
+
 ## DEV-V-007 — Auth UI (TASK-361, TASK-899)
 
 #### DEV-V-007-T006 — Register Turnstile + server-side CAPTCHA enforcement (TASK-899)
