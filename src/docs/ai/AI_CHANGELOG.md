@@ -2,6 +2,7 @@
 
 Newest **150** entries. Older: [`archive/AI_CHANGELOG_ARCHIVE.md`](archive/AI_CHANGELOG_ARCHIVE.md).
 
+- 2026-10-07 | agent | Admin Core Rules uses Back to Admin | files: core-rules page(+test), BUILD_VALIDATION DEV-V-067 | Summary: The Core Rules header uses the same Back to Admin control as Users and Roles. The accessible name is that visible text. verification_status pending-qa (DEV-V-067).
 - 2026-10-07 | agent | Admin Codex row actions stay inside the row | files: admin codex row actions(+test), browse shell, feat/skill rows, admin list tabs, BUILD_VALIDATION DEV-V-066 | Summary: Feats reserve room for four icon buttons, so Add level, Edit, Duplicate, and Delete stay inside the row at 768 and 1280. verification_status pending-qa (DEV-V-066).
 - 2026-10-07 | agent | Admin Core Rules tabs wrap instead of clipping under a chevron | files: core-rules page, globals.css tab strip(+test), BUILD_VALIDATION DEV-V-065 | Summary: The Core Rules tab list wraps, so Armament Prof. and Crafting stay readable at 768 and 1280 without a horizontal scrollbar. verification_status pending-qa (DEV-V-065).
 - 2026-10-07 | agent | Admin Core Rules number inputs have programmatic labels | files: core-rules field editors, sizes/rarities/armament/crafting editors(+test), BUILD_VALIDATION DEV-V-064 | Summary: Each Core Rules field label is tied to its input. Table number cells name the row and column. verification_status pending-qa (DEV-V-064).
