@@ -24,7 +24,7 @@ export type SaveArchetypeWithPathInput = {
   name: string;
   type: 'power' | 'martial' | 'powered-martial';
   description?: string | undefined;
-  source?: string | undefined;
+  source?: string | null | undefined;
   archetype_ability?: string | undefined;
   secondary_ability?: string | undefined;
   power_prof_start?: number | undefined;

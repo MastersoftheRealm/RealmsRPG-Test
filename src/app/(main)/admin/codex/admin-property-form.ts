@@ -103,7 +103,7 @@ export function savedPropertyFromPayload(id: string, data: Record<string, unknow
     name: String(data.name ?? ''),
     description: String(data.description ?? ''),
     type: savedType,
-    source: codexSourceForSave(data.source),
+    source: codexSourceForSave(data.source) ?? undefined,
     tp_cost: 0,
     gold_cost: 0,
     base_ip: (data.base_ip as number | undefined) ?? undefined,

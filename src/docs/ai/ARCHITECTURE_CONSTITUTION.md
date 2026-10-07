@@ -122,4 +122,3 @@ See [Realms Dev Workflow §4](https://docs.google.com/document/d/1F6iZUKP9nN0YTF
 - PR failure-mode checklist → `PR_CHECKLIST.md` (includes owner commands)
 - Slash commands → `.cursor/commands/` (`audit`, `cleanup`, `global-audit`, `debt`)
 - Task process → `AI_TASK_QUEUE.md` (process notes only; ClickUp is the only work queue)
-- ClickUp ↔ GitHub status mapping → `CLICKUP_GITHUB_WORKFLOW.md`

@@ -3,6 +3,8 @@ import {
   codexSourceForSave,
   codexSourceSelectValue,
   collectCodexSources,
+  commitCodexSourceDraft,
+  mergeCodexSourceOptions,
   nextCodexSourceSelection,
 } from './admin-codex-source';
 
@@ -42,9 +44,20 @@ describe('codex source select', () => {
     });
   });
 
-  it('saves a trimmed source and clears blanks', () => {
+  it('accepts a typed source on Enter and keeps an existing spelling', () => {
+    expect(commitCodexSourceDraft('  Core  ', [])).toEqual({ value: 'Core', addingNew: false });
+    expect(commitCodexSourceDraft('core rules', ['Core Rules'])).toEqual({
+      value: 'Core Rules',
+      addingNew: false,
+    });
+    expect(commitCodexSourceDraft('   ', ['Core Rules'])).toBeNull();
+    expect(mergeCodexSourceOptions(['Core Rules'], ['Core'])).toEqual(['Core', 'Core Rules']);
+  });
+
+  it('saves a trimmed source and clears blanks as null', () => {
     expect(codexSourceForSave('  Core Rules  ')).toBe('Core Rules');
-    expect(codexSourceForSave('   ')).toBeUndefined();
-    expect(codexSourceForSave(null)).toBeUndefined();
+    expect(codexSourceForSave('   ')).toBeNull();
+    expect(codexSourceForSave('')).toBeNull();
+    expect(codexSourceForSave(null)).toBeNull();
   });
 });

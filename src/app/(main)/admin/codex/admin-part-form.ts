@@ -178,7 +178,7 @@ export function savedPartFromPayload(id: string, data: Record<string, unknown>):
     name: String(data.name ?? ''),
     description: String(data.description ?? ''),
     category: String(data.category ?? ''),
-    source: codexSourceForSave(data.source),
+    source: codexSourceForSave(data.source) ?? undefined,
     type: (data.type === 'technique' ? 'technique' : 'power') as 'power' | 'technique',
     base_en: (data.base_en as number | undefined) ?? 0,
     base_tp: (data.base_tp as number | undefined) ?? 0,

@@ -14,11 +14,14 @@ export function collectCodexSources(
   return [...values].sort((a, b) => a.localeCompare(b));
 }
 
-/** Empty clears the column. Form strings and raw payload values share this trim. */
-export function codexSourceForSave(value: unknown): string | undefined {
-  if (value == null) return undefined;
+/**
+ * Empty clears the column. Null (not undefined) so the key survives the server
+ * action; an omitted key leaves the previous source in place.
+ */
+export function codexSourceForSave(value: unknown): string | null {
+  if (value == null) return null;
   const trimmed = String(value).trim();
-  return trimmed ? trimmed : undefined;
+  return trimmed ? trimmed : null;
 }
 
 export function codexSourceSelectValue(
@@ -42,4 +45,28 @@ export function nextCodexSourceSelection(
     };
   }
   return { value: selected, addingNew: false };
+}
+
+/** Sources typed this session plus sources already stored on other rows. */
+export function mergeCodexSourceOptions(
+  options: readonly string[],
+  extra: readonly string[],
+): string[] {
+  return collectCodexSources([...options, ...extra].map((source) => ({ source })));
+}
+
+/**
+ * Enter accepts a typed source. A case-insensitive match uses the existing
+ * spelling. Blank text stays in the add box.
+ */
+export function commitCodexSourceDraft(
+  draft: string,
+  options: readonly string[],
+): { value: string; addingNew: false } | null {
+  const trimmed = draft.trim();
+  if (!trimmed) return null;
+  const existing = options.find(
+    (option) => option.localeCompare(trimmed, undefined, { sensitivity: 'accent' }) === 0,
+  );
+  return { value: existing ?? trimmed, addingNew: false };
 }

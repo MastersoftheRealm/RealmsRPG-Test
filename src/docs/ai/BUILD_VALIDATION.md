@@ -5028,13 +5028,13 @@ Admin Codex tabs, Codex browse tabs (including Codex Archetypes header chrome), 
 
 **Steps**
 1. Open **Feats** → Edit a feat. Confirm a **Source** select (None / Add new source...) under Description, separate from Category.
-2. Choose **Add new source...**, type `Core Rules`, Save. Reopen the feat — Source is `Core Rules`.
+2. Choose **Add new source...**, type `Core Rules`, press Enter. The text box closes and the Source select shows `Core Rules` before you save. Save, then reopen the feat — Source is still `Core Rules`. Set Source back to **None**, Save, reopen (refresh if needed) — Source stays **None**.
 3. Open **Species** → Edit a species. Confirm **Starter species** is still a checkbox, and **Source** is its own field (hint mentions Core Rules and that starter stays separate). Set Source to `Core Rules` on one species and Save. Reopen — both starter and source hold.
 4. Spot-check **Skills**, **Parts**, and **Archetypes** edit modals: the same Source control is present. On each tab, choose **Add new source...**, type `Core Rules`, and Save. A source typed on Feats is not in another tab’s list until that tab has used it.
 5. At ~360px, the Source select and the “type new source” input stay inside the modal (no page-wide horizontal scroll). Coarse pointer: the select is at least 44px tall.
 
 **Expected**
-- Source saves and reloads on feats, species, and the spot-checked types. Species starter flag is unchanged by setting Source. Add new source creates a value later entries of that same type can pick.
+- Source saves and reloads on feats, species, and the spot-checked types. Choosing **None** clears a saved source. Species starter flag is unchanged by setting Source. Add new source creates a value later entries of that same type can pick.
 
 **Report** — `[ ] PASS` · `[ ] FAIL` · `[ ] SKIP` — Notes:
 
