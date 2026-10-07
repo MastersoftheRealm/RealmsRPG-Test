@@ -9,6 +9,7 @@ import {
   CREATOR_NAME_MAX_LENGTH,
   CREATOR_NAME_TRUNCATED_MESSAGE,
   clampCreatorText,
+  formatCreatorTextCounter,
   insertCreatorText,
 } from '@/lib/creator/creator-text-limits';
 
@@ -49,7 +50,7 @@ export function CreatorNameField({
   'aria-label'?: string;
 }) {
   const [truncated, setTruncated] = useState(false);
-  const counter = `${value.length} of ${CREATOR_NAME_MAX_LENGTH} characters`;
+  const counter = formatCreatorTextCounter(value.length, CREATOR_NAME_MAX_LENGTH);
   return (
     <Input
       id={id}
@@ -96,7 +97,7 @@ export function CreatorDescriptionField({
 }) {
   const [truncated, setTruncated] = useState(false);
   const showCounter = truncated || value.length >= CREATOR_DESCRIPTION_COUNTER_FROM;
-  const counter = `${value.length} of ${CREATOR_DESCRIPTION_MAX_LENGTH} characters`;
+  const counter = formatCreatorTextCounter(value.length, CREATOR_DESCRIPTION_MAX_LENGTH);
   return (
     <Textarea
       id={id}
