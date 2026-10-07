@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest';
+import { parseArchetypePathData } from '@/lib/game/archetype-path';
 import { toColumnarPayload, toDbPayload } from './codex-column-map';
 import { spreadsheetSourceRow, visibleSpreadsheetColumns } from './codex-spreadsheet-config';
 import { rowDataWithoutId } from './codex-spreadsheet-helpers';
@@ -28,21 +29,37 @@ describe('spreadsheet saves every real column (86e3mezkn)', () => {
   });
 
   it('lifts nested archetype fields onto editable columns and hides display copies', () => {
+    const parsed = parseArchetypePathData({
+      level1: {
+        recommendUnarmedProwess: true,
+        recommended_abilities: { strength: 3 },
+        loadouts: {
+          armorStep: 'optional',
+          sharedEquipment: [{ id: '3', quantity: 4 }],
+        },
+      },
+      levels: [{ level: 2 }],
+    });
+    expect(parsed?.level1?.loadouts).toBeUndefined();
+    expect(parsed?.level1?.armorStep).toBe('optional');
+
     const row = spreadsheetSourceRow('archetypes', {
       id: '1',
       name: 'Blade',
-      path_data: {
-        level1: {
-          recommendUnarmedProwess: true,
-          recommended_abilities: { strength: 3 },
-          loadouts: { armorStep: 1 },
-        },
-        levels: [{ level: 2 }],
-      },
+      path_data: parsed,
     });
 
     expect(row.level1_recommend_unarmed_prowess).toBe(true);
     expect(row.level1_recommended_abilities).toEqual({ strength: 3 });
+    expect(row.level1_loadouts).toEqual({
+      armorStep: 'optional',
+      sharedEquipment: [{ id: '3', quantity: 4 }],
+    });
+    const saved = toDbPayload('codex_archetypes', toColumnarPayload('codex_archetypes', row));
+    expect(saved.level1_loadouts).toEqual({
+      armorStep: 'optional',
+      sharedEquipment: [{ id: '3', quantity: 4 }],
+    });
     expect(
       visibleSpreadsheetColumns('archetypes', [...Object.keys(row), 'level1_feats']),
     ).not.toContain('path_data');

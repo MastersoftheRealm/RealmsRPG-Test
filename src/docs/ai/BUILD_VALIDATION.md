@@ -9055,10 +9055,11 @@ Number inputs on `/admin/core-rules` expose a programmatic name. **Needs:** admi
 
 **Steps**
 1. Open `/admin/core-rules` on the Progression tab.
-2. Inspect a number field such as Minimum. Repeat on Sizes, Rarities, Armament Prof., and Crafting table cells.
+2. Inspect a number field such as Base Ability Points. Repeat on Sizes, Rarities, Armament Prof., and Crafting table cells.
 
 **Expected**
 - Each number input has an accessible name from its field label or from a row-and-column name.
+- That name includes the visible header text, including DS on Crafting and Armament Max (TP) on Armament Prof.
 
 **Report** — `[ ] PASS` · `[ ] FAIL` · `[ ] SKIP` — Notes:
 
@@ -9086,6 +9087,7 @@ Spreadsheet mode on `/admin/codex` keeps edits on the same columns list mode wri
 - Each edited column still shows the new value.
 - Species has no `size`, `speed`, or `traits` column (`sizes` and `species_traits` remain). Equipment has `currency`, not `gold_cost`. Creature feats have `feat_points`, not `points`.
 - Archetype progression levels are unchanged when those columns were not edited.
+- Archetype level-1 loadouts (armor step and shared equipment) are still present after reload when that cell was not cleared.
 
 **Report** — `[ ] PASS` · `[ ] FAIL` · `[ ] SKIP` — Notes:
 
