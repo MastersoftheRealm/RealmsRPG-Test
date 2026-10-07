@@ -120,8 +120,9 @@ const SHARED_RANGE_RULE =
 
 const POWER_REVERSE_ACTION_NOTE =
   'A drawback on a power that benefits you or an ally uses the Reverse tab’s own range, area, and duration (Shared’s, until you override them). ' +
-  SHARED_RANGE_RULE +
-  ' Its reduction is half that energy divided by the action-type multiplier, including Reaction, so a slower action removes more and a quicker action removes less. Basic stays half. It cannot be nullified or reduced by you or an ally.';
+  'Range bought on Shared is paid once and any tab may use it for free. ' +
+  "On a Reverse tab, its own range is part of the drawback and is priced with it like the tab's other parts, so a farther-reaching drawback deepens the discount (Kadin, Oct 6, 4:44 PM ET). " +
+  'Its reduction is half that energy divided by the action-type multiplier, including Reaction, so a slower action removes more and a quicker action removes less. Basic stays half. It cannot be nullified or reduced by you or an ally.';
 
 const POWER_REVERSE_FLOOR_NOTE =
   'The 1 EN floor still applies when the power has positive energy, so the discount cannot drop it below 1 EN.';
