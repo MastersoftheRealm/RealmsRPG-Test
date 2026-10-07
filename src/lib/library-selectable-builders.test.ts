@@ -143,6 +143,20 @@ describe('library-selectable-builders (DEV-V-016 parity)', () => {
       emptyCodex,
     );
     expect(withDamage.columns?.find((c) => c.key === 'Damage')?.value).toBe('1d4 Bludgeoning');
+
+    const savedOverLadder = buildSelectableItem(
+      {
+        id: 's3',
+        name: 'Tower Shield',
+        type: 'shield',
+        description: '',
+        shieldDamage: { amount: 2, size: 4 },
+        properties: [{ id: 40, name: 'Shield Damage', op_1_lvl: 2 }],
+      },
+      'shield',
+      emptyCodex,
+    );
+    expect(savedOverLadder.columns?.find((c) => c.key === 'Damage')?.value).toBe('2d4 Bludgeoning');
   });
 
   it('buildSelectableItem preserves data for sheet add mapping (DEV-V-016-T006)', () => {

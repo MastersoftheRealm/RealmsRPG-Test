@@ -673,6 +673,7 @@ export function deriveShieldAmountFromProperties(properties: ItemPropertyPayload
 
 /**
  * Derive shield damage dice (e.g. "1d4 Bludgeoning") from Shield Damage property, if present.
+ * Property level reverses onto the 1d4/1d6/1d8 ladder. Use this only when no shieldDamage scalar was saved.
  */
 export function deriveShieldDamageFromProperties(properties: ItemPropertyPayload[]): string | null {
   const prop = (properties || []).find((p) => {
@@ -687,20 +688,29 @@ export function deriveShieldDamageFromProperties(properties: ItemPropertyPayload
 }
 
 /**
- * Creator saves shield damage as `{ amount, size }` with a fixed Bludgeoning type.
- * Library columns that only read the Shield Damage property miss that field.
+ * Library and Load damage cells. A stored shieldDamage scalar wins over the property ladder.
  */
-export function formatStoredShieldDamage(
-  shieldDamage:
-    | { amount?: number | null | undefined; size?: number | null | undefined }
-    | null
-    | undefined,
-): string | null {
-  if (!shieldDamage) return null;
-  const amount = Number(shieldDamage.amount);
-  const size = Number(shieldDamage.size);
-  if (!Number.isInteger(amount) || !Number.isInteger(size) || amount < 1 || size < 1) return null;
-  return `${amount}d${size} Bludgeoning`;
+export function resolveShieldDamageDisplay(input: {
+  shieldDamage?: unknown;
+  properties?: ItemPropertyPayload[] | null | undefined;
+  damage?: unknown;
+}): string | null {
+  if (input.shieldDamage != null) {
+    const raw = input.shieldDamage;
+    const stored = formatDamageDisplay(
+      typeof raw === 'object' && !Array.isArray(raw)
+        ? {
+            ...(raw as Record<string, unknown>),
+            type: (raw as { type?: unknown }).type || 'bludgeoning',
+          }
+        : raw,
+    );
+    if (stored) return stored;
+  }
+  return (
+    deriveShieldDamageFromProperties(input.properties ?? []) ??
+    (input.damage != null ? formatDamageDisplay(input.damage) || null : null)
+  );
 }
 
 /**
