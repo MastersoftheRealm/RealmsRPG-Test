@@ -13,7 +13,7 @@ import { useSort } from '@/hooks/use-sort';
 import { useModalListState } from '@/hooks/use-modal-list-state';
 import { createCodexDoc } from './actions';
 import { useAdminCodexEntity } from './use-admin-codex-entity';
-import { AdminCodexRowActions } from './admin-codex-row-actions';
+import { AdminCodexRowActions, ADMIN_CODEX_ROW_ACTIONS_WIDTH } from './admin-codex-row-actions';
 import { COPY_NAME_SUFFIX } from './admin-codex-copy-suffix';
 import {
   EMPTY_TRAIT_FORM,
@@ -149,6 +149,7 @@ export function AdminTraitsTab() {
         headerColumns={ADMIN_TRAIT_COLUMNS}
         gridColumns={ADMIN_TRAIT_GRID}
         rowChrome={{ rightSlot: true }}
+        rightSlotWidth={ADMIN_CODEX_ROW_ACTIONS_WIDTH}
         sortState={sortState}
         onSort={handleSort}
         isLoading={isLoading}
@@ -179,6 +180,7 @@ export function AdminTraitsTab() {
                   ? [{ label: 'Choice options', chips: choiceOptionChips }]
                   : undefined
               }
+              rightSlotWidth={ADMIN_CODEX_ROW_ACTIONS_WIDTH}
               rightSlot={
                 <AdminCodexRowActions
                   entity={t}

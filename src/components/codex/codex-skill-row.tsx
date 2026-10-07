@@ -10,12 +10,14 @@ export function CodexSkillRow({
   skill,
   skillIdToName,
   rightSlot,
+  rightSlotWidth,
   variant = 'codex',
   nameChipLabels,
 }: {
   skill: Skill;
   skillIdToName: Map<string, string>;
   rightSlot?: ReactNode | undefined;
+  rightSlotWidth?: string | undefined;
   variant?: 'codex' | 'admin' | undefined;
   nameChipLabels?: string[] | undefined;
 }) {
@@ -49,6 +51,7 @@ export function CodexSkillRow({
       badges={nameChips}
       showBadgesInName={Boolean(nameChips)}
       rightSlot={rightSlot}
+      rightSlotWidth={rightSlotWidth}
     />
   );
 }

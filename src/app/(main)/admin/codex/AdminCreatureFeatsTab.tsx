@@ -10,7 +10,7 @@ import { useCreatureFeats, type CreatureFeat } from '@/hooks';
 import { useSort } from '@/hooks/use-sort';
 import { COPY_NAME_SUFFIX } from './admin-codex-copy-suffix';
 import { useAdminCodexEntity } from './use-admin-codex-entity';
-import { AdminCodexRowActions } from './admin-codex-row-actions';
+import { AdminCodexRowActions, ADMIN_CODEX_ROW_ACTIONS_WIDTH } from './admin-codex-row-actions';
 import {
   AdminCreatureFeatEditModal,
   EMPTY_CREATURE_FEAT_FORM,
@@ -123,6 +123,7 @@ export function AdminCreatureFeatsTab() {
         ]}
         gridColumns="1.5fr 0.5fr 0.5fr 0.5fr"
         rowChrome={{ rightSlot: true }}
+        rightSlotWidth={ADMIN_CODEX_ROW_ACTIONS_WIDTH}
         sortState={sortState}
         onSort={handleSort}
         isLoading={isLoading}
@@ -143,6 +144,7 @@ export function AdminCreatureFeatsTab() {
               { key: 'Feat Lvl', value: f.feat_lvl != null ? String(f.feat_lvl) : '-' },
               { key: 'Req. Lvl', value: f.lvl_req != null ? formatCreatureLevel(f.lvl_req) : '-' },
             ]}
+            rightSlotWidth={ADMIN_CODEX_ROW_ACTIONS_WIDTH}
             rightSlot={
               <AdminCodexRowActions
                 entity={f}

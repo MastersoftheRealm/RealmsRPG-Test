@@ -45,6 +45,8 @@ export interface CodexBrowseListShellProps {
   hasThumbnailColumn?: boolean | undefined;
   /** Reserve header space for GridListRow rightSlot / edit / delete chrome. */
   rowChrome?: ListHeaderRowChrome | undefined;
+  /** Matches GridListRow `rightSlotWidth` so admin actions stay inside the row. */
+  rightSlotWidth?: string | undefined;
   isLoading?: boolean | undefined;
   loadingMessage?: string | undefined;
   isEmpty?: boolean | undefined;
@@ -155,6 +157,7 @@ export function CodexBrowseListShell({
   onSort,
   hasThumbnailColumn,
   rowChrome,
+  rightSlotWidth,
   isLoading = false,
   loadingMessage,
   isEmpty = false,
@@ -191,6 +194,7 @@ export function CodexBrowseListShell({
         onSort={onSort}
         hasThumbnailColumn={hasThumbnailColumn}
         rowChrome={rowChrome}
+        rightSlotWidth={rightSlotWidth}
       />
 
       <div className="mt-2 flex flex-col gap-1">
