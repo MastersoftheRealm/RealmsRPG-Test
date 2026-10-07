@@ -25,7 +25,7 @@ Do **not** load full `AI_TASK_QUEUE.md`, full `AGENT_GUIDE.md` / `guide/` append
 |-------|-----------|
 | Process / workflow | [Realms Dev Workflow](https://docs.google.com/document/d/1F6iZUKP9nN0YTFzOkZ6Y82sySaw0iW101f_a-7ZeQdI/edit) (Drive SoT) |
 | Settled decisions | [Realms Web Decisions](https://docs.google.com/document/d/1tGebelYXZPegt4iZiycOjI3RBHD6N_QKZW6CI0ckxkg/edit) → repo `DECISIONS.md` |
-| Work queue | **ClickUp only** |
+| Work queue | **ClickUp only**. Writes use `CLICKUP_API_TOKEN` in `.env.local` (API v2), not the ClickUp plugin. |
 | Product / UX intent | `REALMS_PRODUCT_OVERVIEW.md` + `human/USER_EXPERIENCE_GOALS.md` |
 | Exists already? | `FEATURE_INDEX.md` → barrels |
 | Schema | `SUPABASE_SCHEMA.md` |
