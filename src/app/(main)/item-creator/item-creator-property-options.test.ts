@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { propertyOptionsForCard } from './item-creator-property-options';
+import { findAddableItemProperty, propertyOptionsForCard } from './item-creator-property-options';
 
 const properties = [
   { id: 1, name: 'Critical Range' },
@@ -21,5 +21,21 @@ describe('property dropdown excludes used properties (86e3jww87)', () => {
   it('still lists every property on the first card', () => {
     const options = propertyOptionsForCard(properties, 1, []);
     expect(options).toHaveLength(3);
+  });
+});
+
+describe('Add Property stops when every property is used (86e3jww88)', () => {
+  const catalog = [
+    { id: 9001, name: 'Critical Range', type: 'weapon' },
+    { id: 9002, name: 'Finesse', type: 'weapon' },
+  ];
+
+  it('returns the next unused property', () => {
+    expect(findAddableItemProperty(catalog, 'Weapon', [9001])?.name).toBe('Finesse');
+  });
+
+  it('returns null instead of repeating Critical Range once all properties are used', () => {
+    expect(findAddableItemProperty(catalog, 'Weapon', [9001, '9002'])).toBeNull();
+    expect(findAddableItemProperty(catalog, 'Weapon', ['9001', 9002])).toBeNull();
   });
 });

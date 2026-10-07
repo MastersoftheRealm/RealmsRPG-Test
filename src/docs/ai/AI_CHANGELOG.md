@@ -2,6 +2,7 @@
 
 Newest **150** entries. Older: [`archive/AI_CHANGELOG_ARCHIVE.md`](archive/AI_CHANGELOG_ARCHIVE.md).
 
+- 2026-10-07 | agent | Add Property stops once every item property is used | files: item-creator-property-options(+test), property actions, Add Property button | Summary: Add Property no longer falls back to the first property (Critical Range) after the selectable list is used up. The button disables, and string and number ids count as the same property. verification_status pending-qa (86e3jww88).
 - 2026-10-07 | agent | Item creator property dropdown hides properties already on the item | files: item-creator-property-options(+test), property card | Summary: A property used on another card is left out of the dropdown. The card still shows its own current property. verification_status pending-qa (86e3jww87).
 - 2026-10-07 | agent | Item creator property option stepper wraps on a phone | files: item-creator-helpers(+test) | Summary: The property option row wraps, and each cost label stays on one line. The level stepper, including +, stays inside the card at 360–390px. verification_status pending-qa (86e3jx9gf).
 - 2026-10-07 | agent | Create Armor and Create Shield open that item type | files: item-creator bootstrap/page(+test), library create hrefs | Summary: Library Create Armor and Create Shield go to `/item-creator?type=armor` and `?type=shield`. The creator opens as that type. A cached draft of a different type does not override the query. Editing a saved item still uses the saved type. verification_status pending-qa (86e3jzd2w).

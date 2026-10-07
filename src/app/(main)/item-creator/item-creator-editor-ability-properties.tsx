@@ -19,6 +19,7 @@ import {
   PropertyCard,
 } from './item-creator-helpers';
 import type { ItemSectionCosts } from './item-creator-cost-derivation';
+import { findAddableItemProperty } from './item-creator-property-options';
 
 type ItemCreatorEditorAbilityPropertiesProps = {
   armamentType: ArmamentType;
@@ -54,6 +55,13 @@ export function ItemCreatorEditorAbilityProperties({
   onUpdateProperty,
   itemSectionCosts,
 }: ItemCreatorEditorAbilityPropertiesProps) {
+  const canAddProperty =
+    findAddableItemProperty(
+      itemProperties,
+      armamentType,
+      selectedProperties.map((selected) => selected.property.id),
+    ) != null;
+
   return (
     <>
       <CollapsibleSection
@@ -129,6 +137,13 @@ export function ItemCreatorEditorAbilityProperties({
             size="sm"
             className="flex items-center gap-1 bg-warning-600 text-text-on-dark hover:bg-warning-700 dark:bg-warning-700 dark:hover:bg-warning-600"
             onClick={onAddProperty}
+            disabled={!canAddProperty}
+            title={canAddProperty ? undefined : 'All properties are already on this item'}
+            aria-label={
+              canAddProperty
+                ? 'Add Property'
+                : 'Add Property, all properties are already on this item'
+            }
           >
             <Plus className="h-4 w-4" />
             Add Property
