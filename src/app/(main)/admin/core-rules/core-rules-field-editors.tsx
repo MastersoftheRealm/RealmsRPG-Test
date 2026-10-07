@@ -11,22 +11,34 @@ export function FieldRow({
   children: React.ReactNode;
   hint?: string | undefined;
 }) {
+  const id = React.useId();
+  const control = React.isValidElement(children)
+    ? React.cloneElement(children as React.ReactElement<{ id?: string }>, { id })
+    : children;
+
   return (
     <div className="flex flex-col gap-1 border-b border-border-subtle py-2 last:border-0 sm:flex-row sm:items-center sm:gap-4">
-      <label className="shrink-0 text-sm font-medium text-text-secondary sm:w-64">{label}</label>
-      <div className="flex-1">{children}</div>
+      <label htmlFor={id} className="shrink-0 text-sm font-medium text-text-secondary sm:w-64">
+        {label}
+      </label>
+      <div className="min-w-0 flex-1">{control}</div>
       {hint && <span className="ml-2 shrink-0 text-xs text-text-muted">{hint}</span>}
     </div>
   );
 }
 
 export function NumInput({
+  id,
+  label,
   value,
   onChange,
   min,
   max,
   step,
 }: {
+  id?: string | undefined;
+  /** Accessible name when this input is not inside FieldRow. */
+  label?: string | undefined;
   value: number;
   onChange: (v: number) => void;
   min?: number | undefined;
@@ -35,7 +47,9 @@ export function NumInput({
 }) {
   return (
     <input
+      id={id}
       type="number"
+      aria-label={label}
       value={value}
       min={min}
       max={max}
@@ -47,11 +61,13 @@ export function NumInput({
 }
 
 export function TextInput({
+  id,
   value,
   onChange,
   wide,
   placeholder,
 }: {
+  id?: string | undefined;
   value: string;
   onChange: (v: string) => void;
   wide?: boolean | undefined;
@@ -59,6 +75,7 @@ export function TextInput({
 }) {
   return (
     <input
+      id={id}
       type="text"
       value={value}
       onChange={(e) => onChange(e.target.value)}
