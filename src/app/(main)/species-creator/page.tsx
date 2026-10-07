@@ -69,6 +69,7 @@ export default function SpeciesCreatorPage() {
         onClose: () => ws.save.setShowPublishConfirm(false),
         onConfirm: () => void ws.save.confirmPublish(),
         title: ws.save.publishConfirmTitle,
+        confirmLabel: ws.save.publishConfirmLabel,
         description:
           ws.save.publishConfirmDescription?.(ws.form.name.trim(), {
             existingInPublic: ws.save.publishExistingInPublic,

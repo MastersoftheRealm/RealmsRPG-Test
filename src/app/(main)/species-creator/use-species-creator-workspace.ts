@@ -31,6 +31,7 @@ import {
   type SpeciesCreatorCache,
   type TraitCategory,
 } from './species-creator-bootstrap';
+import { applySpeciesCreatorReset } from './species-creator-reset';
 
 type UseSpeciesCreatorWorkspaceArgs = {
   traits: Trait[];
@@ -174,13 +175,18 @@ export function useSpeciesCreatorWorkspace({
   }, [save, form]);
 
   const handleReset = useCallback(() => {
-    try {
-      localStorage.removeItem(SPECIES_CREATOR_CACHE_KEY);
-    } catch {
-      // ignore
-    }
-    setForm(initialSpeciesFormState);
-    save.setSaveMessage(null);
+    applySpeciesCreatorReset({
+      clearDraftCache: () => {
+        try {
+          localStorage.removeItem(SPECIES_CREATOR_CACHE_KEY);
+        } catch {
+          // ignore
+        }
+      },
+      resetForm: () => setForm(initialSpeciesFormState),
+      forgetLoadedLibraryItem: () => save.forgetLoadedLibraryItem(),
+      clearSaveMessage: () => save.setSaveMessage(null),
+    });
     acceptDraft();
   }, [acceptDraft, save]);
 
