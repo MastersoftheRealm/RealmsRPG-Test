@@ -15,12 +15,10 @@ import {
   deriveWeaponRangeConfig,
   filterSavedItemPropertiesForList,
   isMechanicProperty,
-  shieldDiceFromOptionLevel,
   snapWeaponRangeSpaces,
   type ItemPropertyPayload,
   type WeaponRangeType,
 } from '@/lib/calculators';
-import { PROPERTY_IDS } from '@/lib/id-constants';
 import {
   clampWeaponAbilityUtilized,
   deriveWeaponAbilityUtilized,
@@ -184,7 +182,7 @@ export type ItemLibraryRecord = {
   shieldDR?: { amount?: number | undefined; size?: number | undefined } | undefined;
   hasShieldDamage?: boolean | undefined;
   shieldDamage?: { amount?: number | undefined; size?: number | undefined } | undefined;
-  /** Library read marker. Official rows use the Shield Amount ladder; user rows do not. */
+  /** Library read marker. Reopen ignores it; official and user shields use the stored die. */
   _source?: string | undefined;
   abilityRequirement?:
     | { id?: number | string | undefined; name?: string | undefined; level?: number | undefined }
@@ -294,39 +292,12 @@ function abilityRequirementFromProperties(item: ItemLibraryRecord): ItemAbilityR
   return null;
 }
 
-function shieldBlockFromAmountProperty(
-  item: ItemLibraryRecord,
-): { amount: number; size: number } | null {
-  if (!Array.isArray(item.properties)) return null;
-  const prop = (
-    item.properties as Array<{
-      id?: number | string | undefined;
-      name?: string | undefined;
-      op_1_lvl?: number | undefined;
-    }>
-  ).find(
-    (entry) => Number(entry.id) === PROPERTY_IDS.SHIELD_AMOUNT || entry.name === 'Shield Amount',
-  );
-  if (!prop) return null;
-  return shieldDiceFromOptionLevel(Number(prop.op_1_lvl) || 0);
-}
-
+/** Saved block die. Reopen never derives dice from Shield Amount or from `_source`. */
 function storedShieldBlock(item: ItemLibraryRecord): { amount: number; size: number } | null {
   const amount = Number(item.shieldDR?.amount);
   const size = Number(item.shieldDR?.size);
   if (!Number.isInteger(amount) || !Number.isInteger(size) || amount < 1 || size < 1) return null;
   return { amount, size };
-}
-
-/**
- * Official library shields open on the Shield Amount ladder (Tower Shield is 2d4).
- * A user shield keeps the die it saved. Those rows can store the same die and the
- * same property level, so the ladder is not a substitute for the saved die.
- */
-function shieldBlockForReopen(item: ItemLibraryRecord): { amount: number; size: number } | null {
-  const fromProperty = shieldBlockFromAmountProperty(item);
-  if (item._source === 'official' && fromProperty) return fromProperty;
-  return storedShieldBlock(item) ?? fromProperty;
 }
 
 function readItemAbilityRequirement(
@@ -419,7 +390,7 @@ export function itemLibraryRecordToFormState(
     agilityReduction: armamentType === 'Armor' ? item.agilityReduction || 0 : 0,
     criticalRangeIncrease: armamentType === 'Armor' ? item.criticalRangeIncrease || 0 : 0,
     shieldDR:
-      armamentType === 'Shield' ? (shieldBlockForReopen(item) ?? base.shieldDR) : base.shieldDR,
+      armamentType === 'Shield' ? (storedShieldBlock(item) ?? base.shieldDR) : base.shieldDR,
     hasShieldDamage: armamentType === 'Shield' ? item.hasShieldDamage || false : false,
     shieldDamage:
       armamentType === 'Shield' && item.shieldDamage

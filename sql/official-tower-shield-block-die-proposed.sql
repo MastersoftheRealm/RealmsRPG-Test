@@ -1,0 +1,63 @@
+-- ClickUp 86e3jx7xx — official Tower Shield stored block die (preview only)
+-- Codex / library-data policy: audit → propose → owner "apply" → run once.
+-- DO NOT RUN the UPDATE below until Kadin says apply.
+-- This file does not change costs, rarity, or Shield Amount.
+--
+-- Live audit 2026-10-07 (project lbqhiwudvifmkjtkccdg), SELECT only:
+--   official_items.id 2697fadb-e95c-4a8b-9ba0-2936dce78e55
+--   name Tower Shield, type shield, rarity Common
+--   shield_dr {"amount":1,"size":10}   -- stored 1d10
+--   shield_damage null
+--   properties:
+--     id 15 Shield Base, op_1_lvl 0
+--     id 39 Shield Amount, op_1_lvl 3
+--     id 6  Weapon Strength Requirement, op_1_lvl 1
+--   costs {"totalIP":3.75,"totalTP":8,"totalCurrency":9}
+--   payload has no shieldDR key
+--
+-- What #146 was trying to show:
+--   The library block column maps Shield Amount through the display ladder
+--   (level 0 = 1d4, 1 = 1d6, 2 = 1d8, 3 = 2d4). Level 3 therefore displays 2d4.
+--   The creator used to rewrite an official reopen onto that ladder, so Tower
+--   Shield opened as 2d4 while shield_dr stayed 1d10. That official-only branch
+--   is gone. Reopen now uses shield_dr for every shield. Tower Shield opens
+--   as 1d10 because that is what this row stores.
+--
+-- Why the two numbers disagree:
+--   Creator save prices a die as level = max(0, (amount * size - 4) / 2).
+--   1d10 prices as level 3. 2d4 prices as level 2. The display ladder is not
+--   the inverse of that formula, so level 3 displays as 2d4 and a saved 2d4
+--   (level 2) displays as 1d8.
+--
+-- Preview (run before any apply):
+-- SELECT id, name, type, rarity, shield_dr, properties, costs,
+--        (payload ? 'shieldDR') AS payload_has_shield_dr
+-- FROM public.official_items
+-- WHERE id = '2697fadb-e95c-4a8b-9ba0-2936dce78e55';
+--
+-- Proposed apply, commented until Kadin says apply.
+-- Updates the shield_dr column only. payload has no shieldDR, and
+-- sync_library_promoted_columns keeps NEW.shield_dr via COALESCE, so the
+-- column is what rowToItem reads.
+--
+-- UPDATE public.official_items
+-- SET shield_dr = '{"amount":2,"size":4}'::jsonb
+-- WHERE id = '2697fadb-e95c-4a8b-9ba0-2936dce78e55'
+--   AND type = 'shield'
+--   AND shield_dr = '{"amount":1,"size":10}'::jsonb;
+--
+-- Not in this statement, and not proposed as an apply:
+--   Do not change properties, costs, or rarity here.
+--   A later creator save of a 2d4 block die would rewrite Shield Amount
+--   op_1_lvl from 3 to 2, because (2 * 4 - 4) / 2 = 2. That changes the
+--   item's price. Library display of level 2 is 1d8, not 2d4.
+--   Aligning the property level, and the Common 53 / TP 8 card gap, is a
+--   separate rules decision.
+--
+-- Post-apply verification, after an approved run:
+-- SELECT id, name, shield_dr, properties, costs
+-- FROM public.official_items
+-- WHERE id = '2697fadb-e95c-4a8b-9ba0-2936dce78e55';
+-- Expected shield_dr: {"amount":2,"size":4}
+-- Expected Shield Amount op_1_lvl: still 3
+-- Expected costs: still {"totalIP":3.75,"totalTP":8,"totalCurrency":9}
