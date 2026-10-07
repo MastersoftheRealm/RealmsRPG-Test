@@ -21,6 +21,7 @@ import {
 import {
   decidePrivateLibraryNameSave,
   libraryItemId,
+  readPrivateLibraryNameMatches,
 } from '@/lib/creator/private-library-name-save';
 import {
   saveToLibrary,
@@ -273,11 +274,14 @@ export function useCreatorSave(options: UseCreatorSaveOptions): UseCreatorSaveRe
       return;
     }
     if (!isOfficialSaveTarget(saveTarget)) {
-      const matches = await findLibraryItemsByName(type, trimmedName);
-      const decision = decidePrivateLibraryNameSave(
-        matches.map((row) => row.id),
-        loadedLibraryId,
+      const lookup = await readPrivateLibraryNameMatches(() =>
+        findLibraryItemsByName(type, trimmedName),
       );
+      if ('errorText' in lookup) {
+        setSaveMessage({ type: 'error', text: lookup.errorText });
+        return;
+      }
+      const decision = decidePrivateLibraryNameSave(lookup.ids, loadedLibraryId);
       if (decision.kind === 'confirm-replace') {
         setPublishExistingId(decision.id);
         setReplaceMatchCount(decision.matchCount);
