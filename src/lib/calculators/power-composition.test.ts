@@ -825,7 +825,7 @@ describe('resolvePowerComposition', () => {
     );
     expect(withPowerReverseNote(undefined, reverse)).not.toContain('refund');
 
-    for (const key of ['modify', 'choice', 'reverse'] as const) {
+    for (const key of ['modify', 'choice'] as const) {
       const help = powerCompositionHelpText(key);
       expect(help).toContain(
         'Range bought on Shared is paid once and any tab may use it for free.',
@@ -833,6 +833,15 @@ describe('resolvePowerComposition', () => {
       expect(help).toContain('There is no refund for a shorter range.');
       expect(help).not.toContain('refunds the difference');
     }
+    const reverseHelp = powerCompositionHelpText('reverse');
+    expect(reverseHelp).toContain(
+      'Range bought on Shared is paid once and any tab may use it for free.',
+    );
+    expect(reverseHelp).toContain(
+      "On a Reverse tab, its own range is part of the drawback and is priced with it like the tab's other parts, so a farther-reaching drawback deepens the discount (Kadin, Oct 6, 4:44 PM ET).",
+    );
+    expect(reverseHelp).not.toContain('pays its full range cost');
+    expect(reverseHelp).not.toContain('refunds the difference');
   });
 
   it('Freezing Wind stays 33, and a Slow piece with its own range 4 is 36', () => {
