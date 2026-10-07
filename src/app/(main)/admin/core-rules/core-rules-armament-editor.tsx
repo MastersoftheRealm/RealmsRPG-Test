@@ -44,7 +44,7 @@ export function ArmamentProficiencyEditor({
                 </td>
                 <td className="px-4 py-1 text-center">
                   <NumInput
-                    label={`Armament row ${i + 1} armament max`}
+                    label={`Armament row ${i + 1} Armament Max (TP)`}
                     value={row.armamentMax}
                     onChange={(v) => {
                       const u = [...table];

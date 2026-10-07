@@ -3,6 +3,7 @@
  */
 
 import type { CodexCollection } from '@/lib/codex/collections';
+import { parseArchetypePathData, serializeLevel1LoadoutsField } from '@/lib/game/archetype-path';
 
 export type CodexSpreadsheetTabId =
   | 'feats'
@@ -161,14 +162,16 @@ export function spreadsheetSourceRow(
   data: Record<string, unknown>,
 ): Record<string, unknown> {
   if (tab !== 'archetypes') return data;
-  const path = data.path_data;
-  if (!path || typeof path !== 'object' || Array.isArray(path)) return data;
-  const level1 = (path as { level1?: Record<string, unknown> }).level1 ?? {};
+  const level1 = parseArchetypePathData(data.path_data)?.level1;
+  if (!level1) return data;
   return {
     ...data,
     level1_recommend_unarmed_prowess: level1.recommendUnarmedProwess === true,
     level1_recommended_abilities: level1.recommended_abilities ?? null,
-    level1_loadouts: level1.loadouts ?? null,
+    level1_loadouts: serializeLevel1LoadoutsField({
+      armorStep: level1.armorStep,
+      sharedEquipment: level1.sharedEquipment,
+    }),
   };
 }
 
