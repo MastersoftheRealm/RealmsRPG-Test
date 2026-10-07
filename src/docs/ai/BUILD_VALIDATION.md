@@ -8986,6 +8986,7 @@ Spreadsheet mode on `/admin/codex` keeps edits on the same columns list mode wri
 - Each edited column still shows the new value.
 - Species has no `size`, `speed`, or `traits` column (`sizes` and `species_traits` remain). Equipment has `currency`, not `gold_cost`. Creature feats have `feat_points`, not `points`.
 - Archetype progression levels are unchanged when those columns were not edited.
+- Archetype level-1 loadouts (armor step and shared equipment) are still present after reload when that cell was not cleared.
 
 **Report** — `[ ] PASS` · `[ ] FAIL` · `[ ] SKIP` — Notes:
 
