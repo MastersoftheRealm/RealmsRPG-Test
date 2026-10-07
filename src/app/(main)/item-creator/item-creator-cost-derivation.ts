@@ -11,6 +11,7 @@ import {
   calculateItemCosts,
   formatWeaponRangeConfig,
   resolveItemMarketPricing,
+  shieldOptionLevelFromDice,
   weaponRangeOpLevelFromSpaces,
   buildItemAdvancedCalculationGroups,
   type ItemPropertyPayload,
@@ -310,7 +311,7 @@ export function useItemCreatorCostDerivation({
             p.name === 'Shield Amount' || Number(p.id) === PROPERTY_IDS.SHIELD_AMOUNT,
         );
         if (shieldAmountProp) {
-          const shieldDRLevel = Math.max(0, (shieldDR.amount * shieldDR.size - 4) / 2);
+          const shieldDRLevel = shieldOptionLevelFromDice(shieldDR.amount, shieldDR.size);
           baseProps.push({
             id: Number(shieldAmountProp.id),
             name: 'Shield Amount',
@@ -325,7 +326,10 @@ export function useItemCreatorCostDerivation({
             p.name === 'Shield Damage' || Number(p.id) === PROPERTY_IDS.SHIELD_DAMAGE,
         );
         if (shieldDamageProp) {
-          const shieldDamageLevel = Math.max(0, (shieldDamage.amount * shieldDamage.size - 4) / 2);
+          const shieldDamageLevel = shieldOptionLevelFromDice(
+            shieldDamage.amount,
+            shieldDamage.size,
+          );
           baseProps.push({
             id: Number(shieldDamageProp.id),
             name: 'Shield Damage',

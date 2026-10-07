@@ -656,8 +656,26 @@ export function deriveCriticalRangeIncreaseFromProperties(
 const SHIELD_DICE_SIZES = [4, 6, 8] as const;
 
 /**
+ * Library ladder for Shield Amount / Shield Damage.
+ * Level 0 = 1d4, 1 = 1d6, 2 = 1d8, 3 = 2d4. d10 and d12 stay on the older product encoding.
+ */
+export function shieldDiceFromOptionLevel(level: number): { amount: number; size: number } {
+  const safe = Math.max(0, Math.floor(level));
+  return {
+    amount: Math.floor(safe / 3) + 1,
+    size: SHIELD_DICE_SIZES[safe % 3] ?? 4,
+  };
+}
+
+export function shieldOptionLevelFromDice(amount: number, size: number): number {
+  const dice = Math.max(1, Math.floor(amount));
+  const ladderIndex = (SHIELD_DICE_SIZES as readonly number[]).indexOf(size);
+  if (ladderIndex >= 0) return (dice - 1) * 3 + ladderIndex;
+  return Math.max(0, (dice * size - 4) / 2);
+}
+
+/**
  * Derive shield block amount (e.g. "1d4") from Shield Amount property.
- * Item creator formula: level = ((amount*size) - 4) / 2. Reverse: amount = floor(level/3)+1, size = [4,6,8][level%3].
  */
 export function deriveShieldAmountFromProperties(properties: ItemPropertyPayload[]): string {
   const prop = (properties || []).find((p) => {
@@ -665,9 +683,7 @@ export function deriveShieldAmountFromProperties(properties: ItemPropertyPayload
     return p.name === 'Shield Amount';
   });
   if (!prop) return '-';
-  const level = Math.max(0, prop.op_1_lvl ?? 0);
-  const amount = Math.floor(level / 3) + 1;
-  const size = SHIELD_DICE_SIZES[level % 3];
+  const { amount, size } = shieldDiceFromOptionLevel(prop.op_1_lvl ?? 0);
   return `${amount}d${size}`;
 }
 
@@ -680,9 +696,7 @@ export function deriveShieldDamageFromProperties(properties: ItemPropertyPayload
     return p.name === 'Shield Damage';
   });
   if (!prop || (prop.op_1_lvl ?? 0) <= 0) return null;
-  const level = Math.max(0, prop.op_1_lvl ?? 0);
-  const amount = Math.floor(level / 3) + 1;
-  const size = SHIELD_DICE_SIZES[level % 3];
+  const { amount, size } = shieldDiceFromOptionLevel(prop.op_1_lvl ?? 0);
   return `${amount}d${size} Bludgeoning`;
 }
 

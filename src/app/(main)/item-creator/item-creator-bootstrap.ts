@@ -11,10 +11,12 @@ import {
   deriveWeaponRangeConfig,
   filterSavedItemPropertiesForList,
   isMechanicProperty,
+  shieldDiceFromOptionLevel,
   snapWeaponRangeSpaces,
   type ItemPropertyPayload,
   type WeaponRangeType,
 } from '@/lib/calculators';
+import { PROPERTY_IDS } from '@/lib/id-constants';
 import {
   clampWeaponAbilityUtilized,
   deriveWeaponAbilityUtilized,
@@ -256,6 +258,23 @@ function abilityRequirementFromProperties(item: ItemLibraryRecord): ItemAbilityR
   return null;
 }
 
+function shieldBlockFromAmountProperty(
+  item: ItemLibraryRecord,
+): { amount: number; size: number } | null {
+  if (!Array.isArray(item.properties)) return null;
+  const prop = (
+    item.properties as Array<{
+      id?: number | string | undefined;
+      name?: string | undefined;
+      op_1_lvl?: number | undefined;
+    }>
+  ).find(
+    (entry) => Number(entry.id) === PROPERTY_IDS.SHIELD_AMOUNT || entry.name === 'Shield Amount',
+  );
+  if (!prop) return null;
+  return shieldDiceFromOptionLevel(Number(prop.op_1_lvl) || 0);
+}
+
 function readItemAbilityRequirement(
   item: ItemLibraryRecord,
   armamentType: ArmamentType,
@@ -344,8 +363,11 @@ export function itemLibraryRecordToFormState(
     agilityReduction: armamentType === 'Armor' ? item.agilityReduction || 0 : 0,
     criticalRangeIncrease: armamentType === 'Armor' ? item.criticalRangeIncrease || 0 : 0,
     shieldDR:
-      armamentType === 'Shield' && item.shieldDR
-        ? { amount: item.shieldDR.amount || 1, size: item.shieldDR.size || 4 }
+      armamentType === 'Shield'
+        ? (shieldBlockFromAmountProperty(item) ??
+          (item.shieldDR
+            ? { amount: item.shieldDR.amount || 1, size: item.shieldDR.size || 4 }
+            : base.shieldDR))
         : base.shieldDR,
     hasShieldDamage: armamentType === 'Shield' ? item.hasShieldDamage || false : false,
     shieldDamage:
