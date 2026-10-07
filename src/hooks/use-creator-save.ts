@@ -11,6 +11,13 @@
 import { useState, useCallback, useEffect } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import { useToast } from '@/components/ui';
+import { getErrorMessage } from '@/lib/api-client';
+import {
+  CREATOR_DESCRIPTION_MAX_LENGTH,
+  CREATOR_DESCRIPTION_TOO_LONG_MESSAGE,
+  CREATOR_NAME_MAX_LENGTH,
+  CREATOR_NAME_TOO_LONG_MESSAGE,
+} from '@/lib/creator/creator-text-limits';
 import {
   saveToLibrary,
   saveToOfficialLibrary,
@@ -150,6 +157,16 @@ export function useCreatorSave(options: UseCreatorSaveOptions): UseCreatorSaveRe
   const executeSave = useCallback(
     async (target: CreatorSaveTarget, existingOfficialId?: string) => {
       const { name, data } = getPayload();
+      const trimmedName = name.trim();
+      if (trimmedName.length > CREATOR_NAME_MAX_LENGTH) {
+        setSaveMessage({ type: 'error', text: CREATOR_NAME_TOO_LONG_MESSAGE });
+        return;
+      }
+      const description = typeof data.description === 'string' ? data.description : '';
+      if (description.length > CREATOR_DESCRIPTION_MAX_LENGTH) {
+        setSaveMessage({ type: 'error', text: CREATOR_DESCRIPTION_TOO_LONG_MESSAGE });
+        return;
+      }
       const payload = { ...data, createdAt: new Date().toISOString(), updatedAt: new Date() };
       setSaving(true);
       setSaveMessage(null);
@@ -193,9 +210,15 @@ export function useCreatorSave(options: UseCreatorSaveOptions): UseCreatorSaveRe
           onSaveSuccess?.();
         }, 2000);
       } catch (err) {
+        const message = getErrorMessage(err, 'Failed to save');
+        const text = message.includes(CREATOR_NAME_TOO_LONG_MESSAGE)
+          ? CREATOR_NAME_TOO_LONG_MESSAGE
+          : message.includes(CREATOR_DESCRIPTION_TOO_LONG_MESSAGE)
+            ? CREATOR_DESCRIPTION_TOO_LONG_MESSAGE
+            : `Failed to save: ${message}`;
         setSaveMessage({
           type: 'error',
-          text: `Failed to save: ${(err as Error).message}`,
+          text,
         });
       } finally {
         setSaving(false);
