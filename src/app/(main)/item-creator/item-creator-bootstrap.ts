@@ -25,6 +25,18 @@ export const ITEM_CREATOR_CACHE_KEY = CREATOR_CACHE_KEYS.ITEM;
 
 export type ArmamentType = 'Weapon' | 'Armor' | 'Shield';
 
+const ARMAMENT_TYPE_BY_QUERY: Record<string, ArmamentType> = {
+  weapon: 'Weapon',
+  armor: 'Armor',
+  shield: 'Shield',
+};
+
+/** `?type=armor` / `shield` / `weapon`. Unknown values are ignored. */
+export function parseItemCreatorTypeParam(value: string | null | undefined): ArmamentType | null {
+  if (!value) return null;
+  return ARMAMENT_TYPE_BY_QUERY[value.trim().toLowerCase()] ?? null;
+}
+
 export interface ItemSelectedProperty {
   property: ItemProperty;
   op_1_lvl: number;
@@ -320,8 +332,10 @@ export function bootstrapItemCreatorFormState(options: {
   editItemId: string | null;
   itemProperties: ItemProperty[];
   rawItems: unknown[];
+  /** From `?type=`. Edit load wins. A different cached draft does not. */
+  requestedType?: ArmamentType | null;
 }): ItemCreatorFormState {
-  const { editItemId, itemProperties, rawItems } = options;
+  const { editItemId, itemProperties, rawItems, requestedType = null } = options;
 
   if (editItemId) {
     const itemToEdit = rawItems.find((it) => {
@@ -334,5 +348,11 @@ export function bootstrapItemCreatorFormState(options: {
     return itemLibraryRecordToFormState(itemToEdit as ItemLibraryRecord, itemProperties);
   }
 
-  return restoreItemCreatorFromCache(itemProperties) ?? emptyItemCreatorFormState();
+  const cached = restoreItemCreatorFromCache(itemProperties);
+  if (requestedType) {
+    if (cached?.armamentType === requestedType) return cached;
+    return { ...emptyItemCreatorFormState(), armamentType: requestedType };
+  }
+
+  return cached ?? emptyItemCreatorFormState();
 }

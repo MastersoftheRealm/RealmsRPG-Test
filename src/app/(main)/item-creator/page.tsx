@@ -38,6 +38,7 @@ import { SegmentedControl } from '@/components/patterns';
 import { useAuthStore } from '@/stores';
 import {
   bootstrapItemCreatorFormState,
+  parseItemCreatorTypeParam,
   type ItemCreatorFormState,
   type ItemLibraryRecord,
 } from './item-creator-bootstrap';
@@ -56,12 +57,13 @@ function ItemCreatorContent() {
   const { isAdmin } = useAdmin();
   const searchParams = useSearchParams();
   const editItemId = searchParams.get('edit');
+  const requestedType = editItemId ? null : parseItemCreatorTypeParam(searchParams.get('type'));
   const [loadKind, setLoadKind] = useState<LoadModalArmamentKind>('weapon');
   const load = useLoadModalLibrary('item', { itemKind: loadKind });
 
   const { data: itemProperties = [], isLoading, error, refetch } = useItemProperties();
 
-  const sessionKey = editItemId ?? 'draft';
+  const sessionKey = editItemId ?? `draft:${requestedType ?? 'cached'}`;
   // Settle when the properties query finishes (empty/error OK — shell chrome must
   // still render for chrome audits / secret-less CI). In ?edit= mode also wait for library.
   const bootstrapReady = !isLoading && (!editItemId || !load.isLoading);
@@ -73,13 +75,16 @@ function ItemCreatorContent() {
     form: ItemCreatorFormState;
   } | null>(null);
   if (bootstrapReady && bootstrapState?.key !== sessionKey) {
+    const form = bootstrapItemCreatorFormState({
+      editItemId,
+      itemProperties,
+      rawItems: load.rawItems,
+      requestedType,
+    });
+    setLoadKind(form.armamentType.toLowerCase() as LoadModalArmamentKind);
     setBootstrapState({
       key: sessionKey,
-      form: bootstrapItemCreatorFormState({
-        editItemId,
-        itemProperties,
-        rawItems: load.rawItems,
-      }),
+      form,
     });
   }
   const initialFormState = bootstrapState?.key === sessionKey ? bootstrapState.form : null;

@@ -12,6 +12,7 @@ import { useState } from 'react';
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
 import { Plus, Wand2, Swords, Shield, Shirt, Sword, Users, LogIn, Sparkles } from 'lucide-react';
+import { itemCreatorTypeHref } from '@/lib/library/armament-library-labels';
 import { libraryTabCount, type LibraryPageTabId } from '@/lib/library/library-tab-counts';
 import { useAuth } from '@/hooks';
 import {
@@ -81,21 +82,21 @@ const TABS: Tab[] = [
     id: 'weapons',
     label: 'Weapons',
     icon: <Sword className="h-4 w-4" />,
-    createHref: '/item-creator',
+    createHref: itemCreatorTypeHref('weapon'),
     createLabel: 'Create Weapon',
   },
   {
     id: 'armor',
     label: 'Armor',
     icon: <Shirt className="h-4 w-4" />,
-    createHref: '/item-creator',
+    createHref: itemCreatorTypeHref('armor'),
     createLabel: 'Create Armor',
   },
   {
     id: 'shields',
     label: 'Shields',
     icon: <Shield className="h-4 w-4" />,
-    createHref: '/item-creator',
+    createHref: itemCreatorTypeHref('shield'),
     createLabel: 'Create Shield',
   },
   {
