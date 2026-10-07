@@ -25,6 +25,8 @@ import {
   MAX_SIZES,
   MAX_LANGUAGES,
   SIZE_OPTIONS,
+  openTraitSlots,
+  traitSelectionLimitMessage,
   type SpeciesFormState,
   type TraitCategory,
 } from './species-creator-bootstrap';
@@ -496,10 +498,16 @@ export function TraitListModal({
       }));
   }, [traits, filter, alreadyUsed]);
 
-  const canAddSpecies = form.species_traits.length < traitLimits.species_traits;
-  const canAddAncestry = form.ancestry_traits.length < traitLimits.ancestry_traits;
-  const canAddFlaw = form.flaws.length < traitLimits.flaws;
-  const canAddCharacteristic = form.characteristics.length < traitLimits.characteristics;
+  const speciesRemaining = openTraitSlots(form.species_traits.length, traitLimits.species_traits);
+  const ancestryRemaining = openTraitSlots(form.ancestry_traits.length, traitLimits.ancestry_traits);
+  const flawRemaining = openTraitSlots(form.flaws.length, traitLimits.flaws);
+  const characteristicRemaining = openTraitSlots(
+    form.characteristics.length,
+    traitLimits.characteristics,
+  );
+
+  const canAddFlaw = flawRemaining > 0;
+  const canAddCharacteristic = characteristicRemaining > 0;
 
   const description =
     mode === 'species_ancestry' ? 'Add as species traits or ancestry traits.' : undefined;
@@ -507,6 +515,8 @@ export function TraitListModal({
   const addIds = (selected: SelectableItem[], category: TraitCategory) => {
     const ids = selected.map((s) => String(s.id));
     if (!ids.length) return;
+    const openSlots = openTraitSlots(form[category].length, traitLimits[category]);
+    if (ids.length > openSlots) return;
     if (category === 'species_traits' && ids.length === 1 && form.species_traits.length === 2) {
       const firstId = ids[0];
       if (!firstId) return;
@@ -549,6 +559,31 @@ export function TraitListModal({
             ? () => !canAddCharacteristic
             : undefined
       }
+      maxSelections={
+        mode === 'flaw'
+          ? flawRemaining
+          : mode === 'characteristic'
+            ? characteristicRemaining
+            : undefined
+      }
+      footerExtra={
+        mode === 'species_ancestry'
+          ? (selected) => {
+              const notes = [
+                traitSelectionLimitMessage('species traits', selected.length, speciesRemaining),
+                traitSelectionLimitMessage('ancestry traits', selected.length, ancestryRemaining),
+              ].filter((note): note is string => note != null);
+              if (!notes.length) return null;
+              return (
+                <div role="status" className="space-y-1 text-sm text-warning-fg">
+                  {notes.map((note) => (
+                    <p key={note}>{note}</p>
+                  ))}
+                </div>
+              );
+            }
+          : undefined
+      }
       primaryActions={
         mode === 'species_ancestry'
           ? (selected) => (
@@ -556,14 +591,14 @@ export function TraitListModal({
                 <Button
                   size="lg"
                   onClick={() => addIds(selected, 'species_traits')}
-                  disabled={selected.length === 0 || !canAddSpecies}
+                  disabled={selected.length === 0 || selected.length > speciesRemaining}
                 >
                   Add selected as species trait{selected.length !== 1 ? 's' : ''}
                 </Button>
                 <Button
                   size="lg"
                   onClick={() => addIds(selected, 'ancestry_traits')}
-                  disabled={selected.length === 0 || !canAddAncestry}
+                  disabled={selected.length === 0 || selected.length > ancestryRemaining}
                 >
                   Add selected as ancestry trait{selected.length !== 1 ? 's' : ''}
                 </Button>

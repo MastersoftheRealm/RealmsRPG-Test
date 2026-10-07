@@ -32,6 +32,27 @@ export const TRAIT_LIMITS: Record<TraitCategory, number> = {
   flaws: MAX_FLAWS,
 };
 
+export function openTraitSlots(currentCount: number, limit: number): number {
+  return Math.max(0, limit - currentCount);
+}
+
+/** Null when the selection fits. Otherwise tell the user to deselect before adding. */
+export function traitSelectionLimitMessage(
+  label: string,
+  selectedCount: number,
+  openSlots: number,
+): string | null {
+  if (selectedCount <= openSlots) return null;
+  const sentenceLabel = label.charAt(0).toUpperCase() + label.slice(1);
+  if (openSlots <= 0) {
+    return `No open slots for ${label}. Remove one before adding more.`;
+  }
+  const extra = selectedCount - openSlots;
+  const extraText = extra === 1 ? '1 extra trait' : `${extra} extra traits`;
+  const slotText = openSlots === 1 ? '1 open slot' : `${openSlots} open slots`;
+  return `${sentenceLabel} have ${slotText}. Deselect ${extraText} before adding.`;
+}
+
 export interface SpeciesFormState {
   name: string;
   description: string;
