@@ -565,6 +565,7 @@ export function getItemColumns(
     const block = deriveShieldAmountFromProperties(props);
     const dmg = resolveShieldDamageDisplay({
       shieldDamage: 'shieldDamage' in shield ? shield.shieldDamage : null,
+      hasShieldDamage: 'hasShieldDamage' in shield ? shield.hasShieldDamage : undefined,
       properties: props,
       damage: shield.damage,
     });
