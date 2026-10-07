@@ -300,6 +300,7 @@ export function useItemCreatorWorkspace({
     successMessage: 'Item saved successfully!',
     publicSuccessMessage: 'Item saved to Realms Library!',
     initialSaveTarget,
+    editingId: editItemId,
     onSaveSuccess: () => {
       setName('');
       setDescription('');
@@ -329,6 +330,7 @@ export function useItemCreatorWorkspace({
     setAbilityRequirement(null);
     setImageId(null);
     setImageUrl(null);
+    save.forgetLoadedLibraryItem();
     save.setSaveMessage(null);
     clearCreatorCache(ITEM_CREATOR_CACHE_KEY);
   }, [save]);

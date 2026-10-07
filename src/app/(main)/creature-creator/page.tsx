@@ -149,6 +149,7 @@ function CreatureCreatorContent() {
         onClose: () => setShowResetConfirm(false),
         onConfirm: () => {
           setCreature(initialState);
+          save.forgetLoadedLibraryItem();
           clearCreatorCache(CREATURE_CREATOR_CACHE_KEY);
           setShowResetConfirm(false);
         },

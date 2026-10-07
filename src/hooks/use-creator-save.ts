@@ -19,9 +19,13 @@ import {
   CREATOR_NAME_TOO_LONG_MESSAGE,
 } from '@/lib/creator/creator-text-limits';
 import {
+  decidePrivateLibraryNameSave,
+  libraryItemId,
+} from '@/lib/creator/private-library-name-save';
+import {
   saveToLibrary,
   saveToOfficialLibrary,
-  findLibraryItemByName,
+  findLibraryItemsByName,
   findOfficialLibraryItemByName,
 } from '@/services/library-service';
 import { officialLibraryKeys } from '@/hooks/use-official-library';
@@ -79,6 +83,8 @@ export interface UseCreatorSaveOptions {
   adminSuccessMessage?: string | undefined;
   /** When loading ?edit= of an official row, start on Public/Admin library. */
   initialSaveTarget?: CreatorSaveTarget | undefined;
+  /** User-library id from ?edit=, so a same-name save updates that row. */
+  editingId?: string | null | undefined;
 }
 
 export interface UseCreatorSaveReturn {
@@ -87,7 +93,10 @@ export interface UseCreatorSaveReturn {
   saveTarget: CreatorSaveTarget;
   setSaveTarget: (target: CreatorSaveTarget) => void;
   applyLoadedLibraryItem: (item: unknown) => void;
+  /** Drop the open row id after Reset, so the next same-name save asks first. */
+  forgetLoadedLibraryItem: () => void;
   saving: boolean;
+  publishConfirmLabel: string;
   handleSave: () => Promise<void>;
   showPublishConfirm: boolean;
   setShowPublishConfirm: (show: boolean) => void;
@@ -123,6 +132,7 @@ export function useCreatorSave(options: UseCreatorSaveOptions): UseCreatorSaveRe
     publicSuccessMessage = DEFAULT_PUBLIC_SUCCESS,
     adminSuccessMessage = DEFAULT_ADMIN_SUCCESS,
     initialSaveTarget = 'private',
+    editingId = null,
   } = options;
 
   const queryClient = useQueryClient();
@@ -144,6 +154,8 @@ export function useCreatorSave(options: UseCreatorSaveOptions): UseCreatorSaveRe
   const [saving, setSaving] = useState(false);
   const [showPublishConfirm, setShowPublishConfirmState] = useState(false);
   const [publishExistingId, setPublishExistingId] = useState<string | null>(null);
+  const [replaceMatchCount, setReplaceMatchCount] = useState(1);
+  const [loadedLibraryId, setLoadedLibraryId] = useState<string | null>(editingId?.trim() || null);
 
   const setShowPublishConfirm = useCallback((show: boolean) => {
     setShowPublishConfirmState(show);
@@ -152,10 +164,15 @@ export function useCreatorSave(options: UseCreatorSaveOptions): UseCreatorSaveRe
 
   const applyLoadedLibraryItem = useCallback((item: unknown) => {
     setSaveTarget(resolveCreatorSaveTargetFromItem(item));
+    setLoadedLibraryId(libraryItemId(item));
+  }, []);
+
+  const forgetLoadedLibraryItem = useCallback(() => {
+    setLoadedLibraryId(null);
   }, []);
 
   const executeSave = useCallback(
-    async (target: CreatorSaveTarget, existingOfficialId?: string) => {
+    async (target: CreatorSaveTarget, existingId?: string) => {
       const { name, data } = getPayload();
       const trimmedName = name.trim();
       if (trimmedName.length > CREATOR_NAME_MAX_LENGTH) {
@@ -174,7 +191,7 @@ export function useCreatorSave(options: UseCreatorSaveOptions): UseCreatorSaveRe
         if (isOfficialSaveTarget(target)) {
           const listing = saveTargetToCatalogListing(target);
           await saveToOfficialLibrary(type, payload, {
-            ...(existingOfficialId ? { existingId: existingOfficialId } : {}),
+            ...(existingId ? { existingId } : {}),
             ...(listing ? { catalogListing: listing } : {}),
           });
           await queryClient.invalidateQueries({
@@ -193,8 +210,7 @@ export function useCreatorSave(options: UseCreatorSaveOptions): UseCreatorSaveRe
             text: target === 'admin' ? adminSuccessMessage : publicSuccessMessage,
           });
         } else {
-          const existing = await findLibraryItemByName(type, name.trim());
-          await saveToLibrary(type, payload, existing ? { existingId: existing.id } : undefined);
+          await saveToLibrary(type, payload, existingId ? { existingId } : undefined);
           await queryClient.invalidateQueries({
             queryKey: [...USER_LIBRARY_QUERY_KEYS[type]],
             refetchType: 'all',
@@ -207,6 +223,7 @@ export function useCreatorSave(options: UseCreatorSaveOptions): UseCreatorSaveRe
         }
         setTimeout(() => {
           setSaveMessage(null);
+          if (onSaveSuccess) setLoadedLibraryId(null);
           onSaveSuccess?.();
         }, 2000);
       } catch (err) {
@@ -244,16 +261,32 @@ export function useCreatorSave(options: UseCreatorSaveOptions): UseCreatorSaveRe
       });
       return;
     }
+    const trimmedName = name.trim();
     if (isOfficialSaveTarget(saveTarget) && requirePublishConfirm) {
-      const existing = await findOfficialLibraryItemByName(type, name.trim(), {
+      const existing = await findOfficialLibraryItemByName(type, trimmedName, {
         includeUnlisted: true,
       });
       setPublishExistingId(existing?.id ?? null);
       setShowPublishConfirmState(true);
       return;
     }
+    if (!isOfficialSaveTarget(saveTarget)) {
+      const matches = await findLibraryItemsByName(type, trimmedName);
+      const decision = decidePrivateLibraryNameSave(
+        matches.map((row) => row.id),
+        loadedLibraryId,
+      );
+      if (decision.kind === 'confirm-replace') {
+        setPublishExistingId(decision.id);
+        setReplaceMatchCount(decision.matchCount);
+        setShowPublishConfirmState(true);
+        return;
+      }
+      await executeSave(saveTarget, decision.kind === 'update' ? decision.id : undefined);
+      return;
+    }
     await executeSave(saveTarget);
-  }, [getPayload, type, saveTarget, requirePublishConfirm, executeSave]);
+  }, [getPayload, type, saveTarget, requirePublishConfirm, executeSave, loadedLibraryId]);
 
   const confirmPublish = useCallback(async () => {
     const existingId = publishExistingId;
@@ -264,6 +297,12 @@ export function useCreatorSave(options: UseCreatorSaveOptions): UseCreatorSaveRe
 
   const wrappedPublishDescription = useCallback(
     (itemName: string, opts: { existingInPublic: boolean }) => {
+      if (saveTarget === 'private') {
+        if (replaceMatchCount > 1) {
+          return `More than one item in My library is named “${itemName}”. Replace one of them? The others stay as they are.`;
+        }
+        return `Replace “${itemName}” in My library? The older item will be overwritten.`;
+      }
       if (saveTarget === 'admin') return adminPublishDescription(itemName, opts.existingInPublic);
       return (
         publishConfirmDescription?.(itemName, opts) ??
@@ -272,7 +311,7 @@ export function useCreatorSave(options: UseCreatorSaveOptions): UseCreatorSaveRe
           : `Publish “${itemName}” to the Realms Library? All users will be able to see and use it.`)
       );
     },
-    [publishConfirmDescription, saveTarget],
+    [publishConfirmDescription, replaceMatchCount, saveTarget],
   );
 
   return {
@@ -281,12 +320,19 @@ export function useCreatorSave(options: UseCreatorSaveOptions): UseCreatorSaveRe
     saveTarget,
     setSaveTarget,
     applyLoadedLibraryItem,
+    forgetLoadedLibraryItem,
     saving,
     handleSave,
     showPublishConfirm,
     setShowPublishConfirm,
     confirmPublish,
-    publishConfirmTitle: saveTarget === 'admin' ? 'Save to Admin library' : publishConfirmTitle,
+    publishConfirmTitle:
+      saveTarget === 'admin'
+        ? 'Save to Admin library'
+        : saveTarget === 'private'
+          ? 'Replace item in My library'
+          : publishConfirmTitle,
+    publishConfirmLabel: saveTarget === 'private' ? 'Replace' : 'Publish',
     publishConfirmDescription: wrappedPublishDescription,
     publishExistingInPublic: !!publishExistingId,
   };

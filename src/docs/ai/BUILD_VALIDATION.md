@@ -5600,6 +5600,26 @@ islands (Phase 4) and workspace hook (Phase 5). **T012–T014** cover expanded h
 
 **Report** — `[ ] PASS` · `[ ] FAIL` · `[ ] SKIP` — Notes:
 
+#### DEV-V-018-T023 — Same-name creator save asks before overwrite (86e3jp7e1)
+
+| Field | Value |
+|-------|-------|
+| **Suite** | DEV-V-018 — CreatorPageShell parity |
+| **Related task** | 86e3jp7e1 |
+| **Where** | `/power-creator` (also item, technique, empowered technique, creature) |
+| **Needs** | A signed-in account with two My library powers |
+
+**Steps**
+1. Save a power named X. Reset. Build a different power, name it X, and click Save.
+2. Cancel the confirm. Confirm X in My library is unchanged. Save again and choose Replace.
+3. Open the first power with `?edit=`, change its description, and Save. Then Reset, name the draft an existing different power, and Save.
+
+**Expected**
+- The first save of a new name does not ask. A second save of that name asks before it overwrites, and Cancel leaves the older item. Replace updates that older item.
+- Saving the open `?edit=` item with its own name does not ask. Saving it under a different existing name asks before that other item is overwritten.
+
+**Report** — `[ ] PASS` · `[ ] FAIL` · `[ ] SKIP` — Notes:
+
 ---
 
 ## DEV-V-019 — React Compiler hook cleanup (TASK-430)

@@ -297,11 +297,13 @@ export function usePowerCreatorWorkspace({
     successMessage: 'Power saved successfully!',
     publicSuccessMessage: 'Power saved to Realms Library!',
     initialSaveTarget,
+    editingId: editPowerId,
     onSaveSuccess: resetFields,
   });
 
   const handleReset = useCallback(() => {
     resetFields();
+    save.forgetLoadedLibraryItem();
     save.setSaveMessage(null);
     clearCreatorCache(POWER_CREATOR_CACHE_KEY);
   }, [resetFields, save]);

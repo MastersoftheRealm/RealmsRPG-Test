@@ -305,6 +305,7 @@ export function useEmpoweredTechniqueCreatorWorkspace({
     successMessage: 'Empowered technique saved successfully!',
     publicSuccessMessage: 'Empowered technique saved to Realms Library!',
     initialSaveTarget,
+    editingId: editId,
     onSaveSuccess: resetState,
   });
 
@@ -394,6 +395,11 @@ export function useEmpoweredTechniqueCreatorWorkspace({
           ? new Error(`Failed to load technique parts: ${techniquePartsError.message}`)
           : null;
 
+  const handleReset = useCallback(() => {
+    resetState();
+    save.forgetLoadedLibraryItem();
+  }, [resetState, save]);
+
   return {
     name,
     setName,
@@ -440,7 +446,7 @@ export function useEmpoweredTechniqueCreatorWorkspace({
     powerDamageSummary,
     techniqueDamageSummary,
     loadError,
-    resetState,
+    resetState: handleReset,
     handleLoadEmpoweredTechnique,
     addPowerPart,
     addPowerMechanicPart,

@@ -224,7 +224,9 @@ export function CreatorPageShell({
             onConfirm={() => void publish.onConfirm()}
             title={publish.title}
             description={publish.description}
-            confirmLabel={publish.confirmLabel ?? 'Publish'}
+            confirmLabel={
+              publish.confirmLabel ?? (publish.title.startsWith('Replace ') ? 'Replace' : 'Publish')
+            }
             icon="publish"
           />
           {resetConfirm ? (
