@@ -56,6 +56,7 @@ export default function SpeciesCreatorPage() {
       onSave={ws.handleSave}
       onLoad={load.openLoadModal}
       onReset={ws.handleReset}
+      unsavedDirty={ws.unsavedDirty}
       saving={ws.save.saving}
       saveDisabled={!ws.isSaveReady}
       stickySidebar={false}

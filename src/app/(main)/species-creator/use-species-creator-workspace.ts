@@ -9,6 +9,7 @@
 
 import { useState, useCallback, useMemo, useEffect, useRef } from 'react';
 import { useCreatorSave, type Species, type Trait, type Skill } from '@/hooks';
+import { useCreatorDraftDirty } from '@/hooks/use-creator-unsaved-guard';
 import { CACHE_EXPIRY_MS } from '@/lib/game/creator-constants';
 import { findByNormalizedId } from '@/lib/utils';
 import {
@@ -139,6 +140,9 @@ export function useSpeciesCreatorWorkspace({
     };
   }, [form]);
 
+  const draftSnapshot = JSON.stringify(getPayload());
+  const { isDirty: unsavedDirty, acceptDraft } = useCreatorDraftDirty(draftSnapshot);
+
   const save = useCreatorSave({
     type: 'species',
     getPayload,
@@ -150,6 +154,7 @@ export function useSpeciesCreatorWorkspace({
         : `Are you sure you wish to publish this species "${n}" to the Realms Codex? All users will be able to see and use it.`,
     successMessage: 'Species saved to My Codex!',
     publicSuccessMessage: 'Species saved to Realms Codex!',
+    onSaveCommitted: acceptDraft,
     onSaveSuccess: () => {
       try {
         localStorage.removeItem(SPECIES_CREATOR_CACHE_KEY);
@@ -157,6 +162,7 @@ export function useSpeciesCreatorWorkspace({
         // ignore
       }
       setForm(initialSpeciesFormState);
+      acceptDraft();
     },
   });
 
@@ -175,17 +181,19 @@ export function useSpeciesCreatorWorkspace({
     }
     setForm(initialSpeciesFormState);
     save.setSaveMessage(null);
-  }, [save]);
+    acceptDraft();
+  }, [acceptDraft, save]);
 
   const loadSpeciesIntoForm = useCallback(
     (s: Species | Record<string, unknown>) => {
       setForm(speciesLibraryRecordToFormState(s, traits, skills));
       save.applyLoadedLibraryItem(s);
+      acceptDraft();
       closeLoadModal();
       save.setSaveMessage({ type: 'success', text: 'Species loaded successfully!' });
       setTimeout(() => save.setSaveMessage(null), 2000);
     },
-    [traits, skills, closeLoadModal, save],
+    [traits, skills, closeLoadModal, save, acceptDraft],
   );
 
   /** Add multiple traits at once; respects limits and shows third-species-trait confirm when needed. */
@@ -363,6 +371,7 @@ export function useSpeciesCreatorWorkspace({
     form,
     setForm,
     save,
+    unsavedDirty,
     handleSave,
     handleReset,
     loadSpeciesIntoForm,
