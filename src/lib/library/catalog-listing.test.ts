@@ -4,6 +4,9 @@ import {
   CREATOR_SAVE_TARGET_OPTIONS,
   catalogListingClassOptions,
   catalogListingToSaveTarget,
+  creatorEditDraftDecision,
+  creatorEditMissMessage,
+  creatorEditReplacesDraft,
   findLoadedLibraryItem,
   officialLibraryQueryPath,
   parseCatalogListing,
@@ -84,5 +87,29 @@ describe('findLoadedLibraryItem', () => {
     expect(findLoadedLibraryItem(items, null)).toBeUndefined();
     expect(findLoadedLibraryItem(items, 'a')).toEqual(items[0]);
     expect(findLoadedLibraryItem(items, 'doc-b')).toEqual(items[1]);
+  });
+});
+
+describe('creator edit draft', () => {
+  const items = [{ id: 'species-1', name: 'Saved' }];
+
+  it('does not replace the draft for an unknown or blank edit id', () => {
+    expect(creatorEditReplacesDraft('00000000-bad-id', items)).toBe(false);
+    expect(creatorEditReplacesDraft('  ', items)).toBe(false);
+    expect(creatorEditReplacesDraft(null, items)).toBe(false);
+    expect(creatorEditDraftDecision('00000000-bad-id', false)).toBe('keep');
+    expect(creatorEditDraftDecision(null, false)).toBe('keep');
+  });
+
+  it('replaces the draft only after the id is in the loaded library', () => {
+    expect(creatorEditReplacesDraft('species-1', items)).toBe(true);
+    expect(creatorEditDraftDecision('species-1', true)).toBe('discard');
+    expect(creatorEditDraftDecision('species-1', false)).toBe('keep');
+  });
+
+  it('tells the user the row could not be found and that the draft is unchanged', () => {
+    expect(creatorEditMissMessage('species')).toBe(
+      "This species couldn't be found. Your unsaved draft is unchanged.",
+    );
   });
 });

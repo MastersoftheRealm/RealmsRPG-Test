@@ -9,7 +9,7 @@
 
 import { useState, useCallback, useMemo, useEffect, useRef } from 'react';
 import { useCreatorSave, type Species, type Trait, type Skill } from '@/hooks';
-import { CACHE_EXPIRY_MS } from '@/lib/game/creator-constants';
+import { creatorEditMissMessage } from '@/lib/library/catalog-listing';
 import { findByNormalizedId } from '@/lib/utils';
 import {
   SPECIES_CREATOR_CACHE_KEY,
@@ -24,9 +24,9 @@ import {
   TRAIT_LIMITS,
   initialSpeciesFormState,
   isSpeciesFormSaveReady,
-  mergeCachedSpeciesForm,
+  planSpeciesCreatorEdit,
+  readStoredSpeciesDraft,
   speciesLibraryRecordToFormState,
-  resolveSpeciesEditForm,
   type SpeciesFormState,
   type SpeciesCreatorCache,
   type TraitCategory,
@@ -38,7 +38,7 @@ type UseSpeciesCreatorWorkspaceArgs = {
   skillsLoading: boolean;
   traitsLoading: boolean;
   closeLoadModal: () => void;
-  /** `?edit=` id. When set, that library row replaces the local draft. */
+  /** `?edit=` id. Replaces the draft only after that id is found in the library. */
   editSpeciesId?: string | null | undefined;
   rawItems?: readonly unknown[] | undefined;
   libraryLoading?: boolean | undefined;
@@ -74,53 +74,25 @@ export function useSpeciesCreatorWorkspace({
   const [newLanguage, setNewLanguage] = useState('');
 
   const [form, setForm] = useState<SpeciesFormState>(initialSpeciesFormState);
-  const cacheBootstrapRef = useRef(false);
+  const settledEditKeyRef = useRef<string | null>(null);
+  const draftHydratedRef = useRef(false);
   const [cacheReady, setCacheReady] = useState(false);
   const [appliedEditId, setAppliedEditId] = useState<string | null>(null);
+  const [preserveDraftDuringEdit, setPreserveDraftDuringEdit] = useState(false);
   const editSession = editSpeciesId?.trim() ? editSpeciesId.trim() : null;
+  const editLibraryReady = !skillsLoading && !traitsLoading && !libraryLoading;
 
-  // Load draft from localStorage once codex lists are ready (same 30-day window as other creators).
-  // ?edit= replaces the draft with the library row, so a stale cache must not win.
+  // Persist draft across refresh (mirrors item/power creator cache pattern).
+  // A confirmed ?edit= load does not write the library row back over the draft.
   useEffect(() => {
-    if (skillsLoading || traitsLoading) return;
-    if (cacheBootstrapRef.current) return;
-    cacheBootstrapRef.current = true;
-    if (editSpeciesId) {
-      try {
-        localStorage.removeItem(SPECIES_CREATOR_CACHE_KEY);
-      } catch {
-        // ignore
-      }
-      queueMicrotask(() => setCacheReady(true));
-      return;
-    }
-    try {
-      const raw = localStorage.getItem(SPECIES_CREATOR_CACHE_KEY);
-      if (raw) {
-        const parsed = JSON.parse(raw) as SpeciesCreatorCache;
-        if (parsed.timestamp && Date.now() - parsed.timestamp < CACHE_EXPIRY_MS) {
-          const merged = mergeCachedSpeciesForm(parsed, traits, skills);
-          if (merged) queueMicrotask(() => setForm(merged));
-        } else {
-          localStorage.removeItem(SPECIES_CREATOR_CACHE_KEY);
-        }
-      }
-    } catch {
-      localStorage.removeItem(SPECIES_CREATOR_CACHE_KEY);
-    }
-    queueMicrotask(() => setCacheReady(true));
-  }, [skillsLoading, traitsLoading, traits, skills, editSpeciesId]);
-
-  // Persist draft across refresh (mirrors item/power creator cache pattern)
-  useEffect(() => {
-    if (!cacheReady || editSpeciesId) return;
+    if (!cacheReady || (editSession && !preserveDraftDuringEdit)) return;
     try {
       const cache: SpeciesCreatorCache = { form, timestamp: Date.now() };
       localStorage.setItem(SPECIES_CREATOR_CACHE_KEY, JSON.stringify(cache));
     } catch {
       // ignore quota / private mode
     }
-  }, [cacheReady, form, editSpeciesId]);
+  }, [cacheReady, form, editSession, preserveDraftDuringEdit]);
 
   // Base skills only (no sub-skills) for species skill selection
   const skillOptions = useMemo(() => {
@@ -180,20 +152,60 @@ export function useSpeciesCreatorWorkspace({
     },
   });
 
-  const editLibraryReady = !skillsLoading && !traitsLoading && !libraryLoading;
-  const editApplyRef = useRef<string | null>(null);
+  // ?edit= replaces the draft only after that id is in the loaded library.
+  // An unknown id keeps the draft, including when the creator was already open.
   useEffect(() => {
-    if (!editSession || !editLibraryReady) return;
-    if (editApplyRef.current === editSession) return;
-    editApplyRef.current = editSession;
-    const resolved = resolveSpeciesEditForm(editSession, rawItems, traits, skills);
-    queueMicrotask(() => {
-      setAppliedEditId(editSession);
-      if (!resolved) return;
-      setForm(resolved.form);
-      save.applyLoadedLibraryItem(resolved.item);
+    if (skillsLoading || traitsLoading) return;
+    const editKey = editSession ?? '';
+    if (settledEditKeyRef.current === editKey) return;
+    const plan = planSpeciesCreatorEdit({
+      editSpeciesId: editSession,
+      libraryReady: editLibraryReady,
+      rawItems,
+      traits,
+      skills,
     });
-  }, [editSession, editLibraryReady, rawItems, traits, skills, save]);
+    if (plan.type === 'wait') return;
+    settledEditKeyRef.current = editKey;
+
+    if (plan.type === 'replace') {
+      draftHydratedRef.current = true;
+      try {
+        localStorage.removeItem(SPECIES_CREATOR_CACHE_KEY);
+      } catch {
+        // ignore
+      }
+      queueMicrotask(() => {
+        setPreserveDraftDuringEdit(false);
+        setForm(plan.form);
+        setAppliedEditId(editSession);
+        setCacheReady(true);
+        save.applyLoadedLibraryItem(plan.item);
+      });
+      return;
+    }
+
+    if (plan.type === 'missing') {
+      const draft = draftHydratedRef.current ? null : readStoredSpeciesDraft(traits, skills);
+      draftHydratedRef.current = true;
+      queueMicrotask(() => {
+        if (draft) setForm(draft);
+        setPreserveDraftDuringEdit(true);
+        setAppliedEditId(editSession);
+        setCacheReady(true);
+        save.setSaveMessage({ type: 'error', text: creatorEditMissMessage('species') });
+      });
+      return;
+    }
+
+    const draft = draftHydratedRef.current ? null : readStoredSpeciesDraft(traits, skills);
+    draftHydratedRef.current = true;
+    queueMicrotask(() => {
+      if (draft) setForm(draft);
+      setPreserveDraftDuringEdit(false);
+      setCacheReady(true);
+    });
+  }, [skillsLoading, traitsLoading, traits, skills, editSession, editLibraryReady, rawItems, save]);
 
   const handleSave = useCallback(async () => {
     if (!isSpeciesFormSaveReady(form)) {

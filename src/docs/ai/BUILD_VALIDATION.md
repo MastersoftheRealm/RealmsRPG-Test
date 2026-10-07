@@ -8985,6 +8985,26 @@ Official Library Species tab and My Codex species Edit. `?edit=` load is unchang
 
 **Report** — `[ ] PASS` · `[ ] FAIL` · `[ ] SKIP` — Notes:
 
+#### 86e3mhqay — Unknown edit id keeps the draft
+
+| Field | Value |
+|-------|-------|
+| **Where** | `/species-creator` |
+| **Needs** | No save. Do not write a species. |
+
+**Steps**
+1. Open `/species-creator`. Type a name and do not save.
+2. Open `/species-creator?edit=00000000-bad-id`.
+3. Confirm the form still shows that name and a message says the species couldn't be found.
+4. Open `/species-creator` again. Confirm the same unsaved name is still there.
+5. Open `/species-creator?edit=` with a real saved species id. Confirm that species loads.
+
+**Expected**
+- An unknown edit id does not blank the form or delete the draft.
+- A real edit id still loads that species.
+
+**Report** — `[ ] PASS` · `[ ] FAIL` · `[ ] SKIP` — Notes:
+
 ---
 
 ## Planned suites (split from legacy DEV-T)
