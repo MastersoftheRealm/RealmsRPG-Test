@@ -143,7 +143,6 @@ export function usePowerCreatorWorkspace({
 
   const { discardDraft } = useCreatorEditDraftDecision(
     true,
-    editPowerId,
     editReplacesDraft,
     POWER_CREATOR_CACHE_KEY,
   );
