@@ -175,7 +175,6 @@ export {
   deriveShieldAmountFromProperties,
   deriveShieldDamageFromProperties,
   shieldDiceFromOptionLevel,
-  shieldOptionLevelFromDice,
   formatStoredShieldDamage,
   deriveItemDisplay,
   isGeneralProperty,

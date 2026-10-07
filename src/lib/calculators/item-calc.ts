@@ -656,8 +656,8 @@ export function deriveCriticalRangeIncreaseFromProperties(
 const SHIELD_DICE_SIZES = [4, 6, 8] as const;
 
 /**
- * Library ladder for Shield Amount / Shield Damage.
- * Level 0 = 1d4, 1 = 1d6, 2 = 1d8, 3 = 2d4. d10 and d12 stay on the older product encoding.
+ * Library display for Shield Amount / Shield Damage.
+ * Level 0 = 1d4, 1 = 1d6, 2 = 1d8, 3 = 2d4.
  */
 export function shieldDiceFromOptionLevel(level: number): { amount: number; size: number } {
   const safe = Math.max(0, Math.floor(level));
@@ -667,15 +667,9 @@ export function shieldDiceFromOptionLevel(level: number): { amount: number; size
   };
 }
 
-export function shieldOptionLevelFromDice(amount: number, size: number): number {
-  const dice = Math.max(1, Math.floor(amount));
-  const ladderIndex = (SHIELD_DICE_SIZES as readonly number[]).indexOf(size);
-  if (ladderIndex >= 0) return (dice - 1) * 3 + ladderIndex;
-  return Math.max(0, (dice * size - 4) / 2);
-}
-
 /**
  * Derive shield block amount (e.g. "1d4") from Shield Amount property.
+ * Display only. Creator save still prices dice with ((amount * size) - 4) / 2.
  */
 export function deriveShieldAmountFromProperties(properties: ItemPropertyPayload[]): string {
   const prop = (properties || []).find((p) => {
