@@ -5,7 +5,9 @@ import {
   CHARACTER_NAME_TOO_LONG_MESSAGE,
   characterSaveWithoutOverlongName,
   clampCharacterNameInput,
+  clampTextToLength,
   insertCharacterNameText,
+  insertTextToLength,
 } from './character-name-limit';
 
 const OVER = 'a'.repeat(CHARACTER_NAME_MAX_LENGTH + 1);
@@ -17,6 +19,12 @@ describe('character name limit', () => {
     expect(pasted.truncated).toBe(true);
     expect(pasted.value).toHaveLength(CHARACTER_NAME_MAX_LENGTH);
     expect(clampCharacterNameInput(EXACT)).toEqual({ value: EXACT, truncated: false });
+  });
+
+  it('stops inserted text at the length it is given', () => {
+    const pasted = insertTextToLength('ab', 'xyz', 1, 1, 4);
+    expect(pasted).toEqual({ value: 'axyz', truncated: true });
+    expect(clampTextToLength('abcdef', 4)).toEqual({ value: 'abcd', truncated: true });
   });
 
   it('keeps a notes edit when the name is 101 characters (sheet save repro)', () => {
@@ -45,14 +53,14 @@ describe('character name limit', () => {
     expect(update.success).toBe(false);
     expect(create.success).toBe(false);
     if (!update.success) {
-      expect(update.error.issues.some((issue) => issue.message === CHARACTER_NAME_TOO_LONG_MESSAGE)).toBe(
-        true,
-      );
+      expect(
+        update.error.issues.some((issue) => issue.message === CHARACTER_NAME_TOO_LONG_MESSAGE),
+      ).toBe(true);
     }
     if (!create.success) {
-      expect(create.error.issues.some((issue) => issue.message === CHARACTER_NAME_TOO_LONG_MESSAGE)).toBe(
-        true,
-      );
+      expect(
+        create.error.issues.some((issue) => issue.message === CHARACTER_NAME_TOO_LONG_MESSAGE),
+      ).toBe(true);
     }
     expect(characterUpdateSchema.safeParse({ name: EXACT }).success).toBe(true);
   });

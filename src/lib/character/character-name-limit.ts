@@ -3,6 +3,9 @@
  * A name over this limit is rejected by `characterUpdateSchema`. If that name
  * stays on the local character, every later PATCH includes it and the server
  * rejects the whole body, so unrelated edits never persist.
+ *
+ * `clampTextToLength` and `insertTextToLength` are the shared limit helpers.
+ * Creator name and description use them with their own maximums.
  */
 
 import { pickDirtyCharacterFields } from '@/lib/character/dirty-patch';
@@ -20,9 +23,30 @@ export function isCharacterNameOverLimit(name: unknown): boolean {
   return typeof name === 'string' && name.length > CHARACTER_NAME_MAX_LENGTH;
 }
 
+export function clampTextToLength(
+  value: string,
+  maxLength: number,
+): { value: string; truncated: boolean } {
+  if (value.length <= maxLength) return { value, truncated: false };
+  return { value: value.slice(0, maxLength), truncated: true };
+}
+
+/** Insert text at the selection, then stop at `maxLength`. */
+export function insertTextToLength(
+  current: string,
+  insert: string,
+  selectionStart: number,
+  selectionEnd: number,
+  maxLength: number,
+): { value: string; truncated: boolean } {
+  const length = current.length;
+  const start = Math.min(Math.max(0, selectionStart), length);
+  const end = Math.min(Math.max(start, selectionEnd), length);
+  return clampTextToLength(current.slice(0, start) + insert + current.slice(end), maxLength);
+}
+
 export function clampCharacterNameInput(value: string): { value: string; truncated: boolean } {
-  if (value.length <= CHARACTER_NAME_MAX_LENGTH) return { value, truncated: false };
-  return { value: value.slice(0, CHARACTER_NAME_MAX_LENGTH), truncated: true };
+  return clampTextToLength(value, CHARACTER_NAME_MAX_LENGTH);
 }
 
 /** Insert text at the selection, then stop at the name limit. */
@@ -32,10 +56,13 @@ export function insertCharacterNameText(
   selectionStart: number,
   selectionEnd: number,
 ): { value: string; truncated: boolean } {
-  const max = current.length;
-  const start = Math.min(Math.max(0, selectionStart), max);
-  const end = Math.min(Math.max(start, selectionEnd), max);
-  return clampCharacterNameInput(current.slice(0, start) + insert + current.slice(end));
+  return insertTextToLength(
+    current,
+    insert,
+    selectionStart,
+    selectionEnd,
+    CHARACTER_NAME_MAX_LENGTH,
+  );
 }
 
 /**
