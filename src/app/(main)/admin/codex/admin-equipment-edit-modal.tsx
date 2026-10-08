@@ -5,6 +5,7 @@ import { RealmsImageField } from '@/components/patterns';
 import { Modal, Input, Textarea } from '@/components/ui';
 import { AdminCodexCopySourceBanner } from './admin-codex-copy-source-banner';
 import { AdminCodexEditModalFooter } from './admin-codex-edit-modal-footer';
+import { AdminCodexSourceField } from './admin-codex-source-field';
 
 export type EquipmentFormState = {
   name: string;
@@ -12,6 +13,7 @@ export type EquipmentFormState = {
   category: string;
   currency: number;
   rarity: string;
+  source: string;
   imageId: string | null;
   imageUrl: string | null;
 };
@@ -22,6 +24,7 @@ export const EMPTY_EQUIPMENT_FORM: EquipmentFormState = {
   category: '',
   currency: 0,
   rarity: 'Common',
+  source: '',
   imageId: null,
   imageUrl: null,
 };
@@ -37,6 +40,7 @@ type AdminEquipmentEditModalProps = {
   categoryIsNew: boolean;
   setCategoryIsNew: Dispatch<SetStateAction<boolean>>;
   categories: string[];
+  sourceOptions: string[];
   saving: boolean;
   onDelete?: (() => void) | undefined;
   onSave: () => void;
@@ -53,6 +57,7 @@ export function AdminEquipmentEditModal({
   categoryIsNew,
   setCategoryIsNew,
   categories,
+  sourceOptions,
   saving,
   onDelete,
   onSave,
@@ -94,6 +99,11 @@ export function AdminEquipmentEditModal({
             rows={4}
           />
         </div>
+        <AdminCodexSourceField
+          value={form.source}
+          options={sourceOptions}
+          onChange={(source) => setForm((f) => ({ ...f, source }))}
+        />
         <RealmsImageField
           categories="equipment"
           imageId={form.imageId}
