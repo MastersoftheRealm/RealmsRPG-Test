@@ -2,6 +2,7 @@
 
 Newest **150** entries. Older: [`archive/AI_CHANGELOG_ARCHIVE.md`](archive/AI_CHANGELOG_ARCHIVE.md).
 
+- 2026-10-07 | agent | Admin Users keeps limits and Change role on screen at 768 | files: admin/users page(+test), BUILD_VALIDATION DEV-V-062 | Summary: User Management is a wrapping card per person. Effective limits wrap in full, and Change role stays in the card at 768 and beside it from 1024. The six-column table no longer clips those fields. verification_status pending-qa (DEV-V-062).
 - 2026-10-07 | agent | ClickUp writes use the local API token | files: realms-tasks.mdc, AGENTS.md, PR_CHECKLIST, .env.example | Summary: Cursor agents call ClickUp API v2 with `CLICKUP_API_TOKEN` from `.env.local`. The ClickUp plugin is not the write path. The token stays local. verification_status n/a.
 - 2026-10-07 | agent | /cleanup — drop ClickUp GitHub workflow pointer | files: deleted CLICKUP_GITHUB_WORKFLOW.md, AGENTS.md, ARCHITECTURE_CONSTITUTION | Summary: **Deleted** `CLICKUP_GITHUB_WORKFLOW.md`. ClickUp status and delivery rules stay in the Drive Realms Dev Workflow. verification_status n/a.
 - 2026-10-07 | agent | TASK-928 — Enter accepts a new Source | files: admin-codex-source(+test), admin-codex-source-field, BUILD_VALIDATION T008 | Summary: Pressing Enter on a typed source closes the text box and shows that source in the select. A case-insensitive match uses the existing spelling. verification_status pending-qa (DEV-V-028 T008).

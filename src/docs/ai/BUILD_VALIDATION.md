@@ -8985,6 +8985,32 @@ Built-in variants in `payload.composition` (ADR-0029). Resolver: `lib/calculator
 
 ---
 
+## DEV-V-062 — Admin Users layout (ClickUp 86e3jzu53)
+
+Card rows on `/admin/users` so Effective limits and Change role stay on screen at 768 and 1024. **Needs:** admin account.
+
+#### DEV-V-062-T001 — Users list fits at 768 and 1024
+
+| Field | Value |
+|-------|-------|
+| **Suite** | DEV-V-062 — Admin Users layout |
+| **Related task** | ClickUp 86e3jzu53 |
+| **Where** | `/admin/users` |
+| **Needs** | Admin account with at least one user row |
+
+**Steps**
+1. Open `/admin/users` at 768px wide.
+2. Repeat at 1024px wide.
+
+**Expected**
+- Each user is a card. **Effective limits** shows Campaigns, Players/campaign, Characters, Powers, Techniques, Armaments, Creatures, and Profile pic, wrapping inside the card.
+- **Change role** is on screen in the same card (below the limits at 768, beside them at 1024).
+- The page does not scroll horizontally.
+
+**Report** — `[ ] PASS` · `[ ] FAIL` · `[ ] SKIP` — Notes:
+
+---
+
 ## Planned suites (split from legacy DEV-T)
 
 | Suite | Topic | Legacy | Status |
@@ -9031,5 +9057,6 @@ Built-in variants in `payload.composition` (ADR-0029). Resolver: `lib/calculator
 | DEV-V-053 | Wave 3A SEO + token hygiene (TASK-769 / TASK-770 / TASK-771 / TASK-793 / TASK-853 / TASK-905) | — | Automated (`site-url`, `robots-sitemap`, `rulebook`) + manual DEV-V-053 T001–T007 |
 | DEV-V-054 | Codex per-collection fetch + virtualized browse rows (TASK-775) | — | Automated (`api/codex/route.test`, `use-codex.keys.test`) + manual DEV-V-054 T001–T003 |
 | DEV-V-055 | ADR-0023 control touch tiers (TASK-841, TASK-847, TASK-830, TASK-850, TASK-851, TASK-857, TASK-865, TASK-901, TASK-913) | — | Automated (`button-tiers.test.ts` + `verify:responsive` creator form-height probe) + manual DEV-V-055 T001–T009 |
+| DEV-V-062 | Admin Users layout (ClickUp 86e3jzu53) | — | Automated (`admin-users-layout.test.ts`) + manual DEV-V-062-T001 |
 
 When implementing a related task, replace the legacy **DEV-T-###** block with granular **DEV-V-###** tests in this file.
