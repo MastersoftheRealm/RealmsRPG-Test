@@ -34,10 +34,12 @@ import {
   CreatorSummaryPanel,
 } from '@/components/creator';
 import { SourceFilter, sourceFilterSummary } from '@/components/patterns/filters/source-filter';
-import { SegmentedControl } from '@/components/patterns';
+import { ConfirmActionModal, SegmentedControl } from '@/components/patterns';
 import { useAuthStore } from '@/stores';
 import {
   bootstrapItemCreatorFormState,
+  parseItemCreatorTypeParam,
+  type ArmamentType,
   type ItemCreatorFormState,
   type ItemLibraryRecord,
 } from './item-creator-bootstrap';
@@ -56,11 +58,14 @@ function ItemCreatorContent() {
   const { isAdmin } = useAdmin();
   const searchParams = useSearchParams();
   const editItemId = searchParams.get('edit');
+  const requestedType = editItemId ? null : parseItemCreatorTypeParam(searchParams.get('type'));
   const [loadKind, setLoadKind] = useState<LoadModalArmamentKind>('weapon');
   const load = useLoadModalLibrary('item', { itemKind: loadKind });
 
   const { data: itemProperties = [], isLoading, error, refetch } = useItemProperties();
 
+  // Stable across ?type= changes. Remounting on the query would rebuild an empty
+  // form and autosave it over a different-type draft. The workspace warns instead.
   const sessionKey = editItemId ?? 'draft';
   // Settle when the properties query finishes (empty/error OK — shell chrome must
   // still render for chrome audits / secret-less CI). In ?edit= mode also wait for library.
@@ -73,13 +78,16 @@ function ItemCreatorContent() {
     form: ItemCreatorFormState;
   } | null>(null);
   if (bootstrapReady && bootstrapState?.key !== sessionKey) {
+    const form = bootstrapItemCreatorFormState({
+      editItemId,
+      itemProperties,
+      rawItems: load.rawItems,
+      requestedType,
+    });
+    setLoadKind(form.armamentType.toLowerCase() as LoadModalArmamentKind);
     setBootstrapState({
       key: sessionKey,
-      form: bootstrapItemCreatorFormState({
-        editItemId,
-        itemProperties,
-        rawItems: load.rawItems,
-      }),
+      form,
     });
   }
   const initialFormState = bootstrapState?.key === sessionKey ? bootstrapState.form : null;
@@ -97,6 +105,7 @@ function ItemCreatorContent() {
       key={sessionKey}
       initialFormState={initialFormState}
       editItemId={editItemId}
+      requestedType={requestedType}
       user={user}
       isAdmin={isAdmin}
       itemProperties={itemProperties}
@@ -113,6 +122,7 @@ function ItemCreatorContent() {
 interface ItemCreatorWorkspaceProps {
   initialFormState: ItemCreatorFormState;
   editItemId: string | null;
+  requestedType: ArmamentType | null;
   user: ReturnType<typeof useAuthStore.getState>['user'];
   isAdmin: boolean;
   itemProperties: ItemProperty[];
@@ -127,6 +137,7 @@ interface ItemCreatorWorkspaceProps {
 function ItemCreatorWorkspace({
   initialFormState,
   editItemId,
+  requestedType,
   user,
   isAdmin,
   itemProperties,
@@ -140,6 +151,7 @@ function ItemCreatorWorkspace({
   const ws = useItemCreatorWorkspace({
     initialFormState,
     editItemId,
+    requestedType,
     itemProperties,
     closeLoadModal: load.closeLoadModal,
     initialSaveTarget: resolveCreatorSaveTargetFromItem(
@@ -293,6 +305,22 @@ function ItemCreatorWorkspace({
           </CreatorSummaryPanel>
           <RarityReferenceTable currentIP={ws.costs.totalIP} />
         </>
+      }
+      extraModals={
+        <ConfirmActionModal
+          isOpen={ws.typeQueryConflict != null}
+          title="Discard unsaved draft?"
+          description={
+            ws.typeQueryConflict
+              ? `This ${ws.armamentType} draft has unsaved work. Opening ${ws.typeQueryConflict} will discard it.`
+              : ''
+          }
+          confirmLabel="Discard draft"
+          cancelLabel="Keep draft"
+          confirmVariant="danger"
+          onConfirm={ws.discardDraft}
+          onClose={ws.keepDraft}
+        />
       }
     >
       <ItemCreatorEditor
