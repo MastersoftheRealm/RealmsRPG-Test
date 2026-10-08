@@ -11,7 +11,6 @@
 import { useState, useCallback, useEffect } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import { useToast } from '@/components/ui';
-import { getErrorMessage } from '@/lib/api-client';
 import {
   CREATOR_DESCRIPTION_MAX_LENGTH,
   CREATOR_DESCRIPTION_TOO_LONG_MESSAGE,
@@ -19,6 +18,7 @@ import {
   CREATOR_NAME_TOO_LONG_MESSAGE,
 } from '@/lib/creator/creator-text-limits';
 import {
+  creatorSaveFailureText,
   decidePrivateLibraryNameSave,
   libraryItemId,
   readPrivateLibraryNameMatches,
@@ -211,7 +211,12 @@ export function useCreatorSave(options: UseCreatorSaveOptions): UseCreatorSaveRe
             text: target === 'admin' ? adminSuccessMessage : publicSuccessMessage,
           });
         } else {
-          await saveToLibrary(type, payload, existingId ? { existingId } : undefined);
+          const savedId = await saveToLibrary(
+            type,
+            payload,
+            existingId ? { existingId } : undefined,
+          );
+          setLoadedLibraryId(savedId);
           await queryClient.invalidateQueries({
             queryKey: [...USER_LIBRARY_QUERY_KEYS[type]],
             refetchType: 'all',
@@ -228,15 +233,9 @@ export function useCreatorSave(options: UseCreatorSaveOptions): UseCreatorSaveRe
           onSaveSuccess?.();
         }, 2000);
       } catch (err) {
-        const message = getErrorMessage(err, 'Failed to save');
-        const text = message.includes(CREATOR_NAME_TOO_LONG_MESSAGE)
-          ? CREATOR_NAME_TOO_LONG_MESSAGE
-          : message.includes(CREATOR_DESCRIPTION_TOO_LONG_MESSAGE)
-            ? CREATOR_DESCRIPTION_TOO_LONG_MESSAGE
-            : `Failed to save: ${message}`;
         setSaveMessage({
           type: 'error',
-          text,
+          text: creatorSaveFailureText(err),
         });
       } finally {
         setSaving(false);
