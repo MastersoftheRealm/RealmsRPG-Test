@@ -166,21 +166,24 @@ export function PropertyCard({
 
           {hasOption && (
             <div className={cn('rounded-lg p-3', statusPanel.warning)}>
-              <div className="mb-2 flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <span className="text-sm font-semibold text-tp-text">Option</span>
+              <div className="mb-2 flex flex-wrap items-center justify-between gap-x-3 gap-y-2">
+                <div className="flex min-w-0 flex-wrap items-center gap-x-2 gap-y-1">
+                  <span className="text-sm font-semibold whitespace-nowrap text-tp-text">
+                    Option
+                  </span>
                   {property.op_1_tp && (
-                    <span className="text-sm font-medium text-tp-text">
+                    <span className="text-sm font-medium whitespace-nowrap text-tp-text">
                       TP +{formatCost(property.op_1_tp)}/level
                     </span>
                   )}
                   {property.op_1_c && (
-                    <span className="text-sm font-medium text-currency-text">
+                    <span className="text-sm font-medium whitespace-nowrap text-currency-text">
                       C +{formatCost(property.op_1_c)}/level
                     </span>
                   )}
                 </div>
                 <ValueStepper
+                  className="shrink-0"
                   value={selectedProperty.op_1_lvl}
                   onChange={(v) => onUpdate({ op_1_lvl: v })}
                   label="Level:"
