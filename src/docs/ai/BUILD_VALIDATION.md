@@ -1836,6 +1836,25 @@ Manual QA for library/feats modularization and shared part display. **Needs:** c
 
 **Report** — `[ ] PASS` · `[ ] FAIL` · `[ ] SKIP` — Notes:
 
+#### DEV-V-009-T080 — Character name stops at 100 characters (86e3jvzrb)
+
+| Field | Value |
+|-------|-------|
+| **Suite** | DEV-V-009 — Character sheet refactor |
+| **Related task** | 86e3jvzrb |
+| **Where** | `/characters/[id]` edit mode, header name |
+| **Needs** | A saved character you can edit |
+
+**Steps**
+1. Turn on edit mode and choose Edit name. Paste 101 characters and press Enter.
+2. Confirm the field stops at 100, a short note says the paste was shortened, and a counter is visible near the limit (from 80 characters).
+3. Edit General Notes, wait for the save, and reload.
+
+**Expected**
+- The paste is cut to 100 characters, the note says so, and that 100-character name saves. General Notes from step 3 are still there after reload. The name field has `maxlength="100"`. A name that is still over 100 when it reaches save shows "Name must be 100 characters or fewer." and does not block the notes save.
+
+**Report** — `[ ] PASS` · `[ ] FAIL` · `[ ] SKIP` — Notes:
+
 #### DEV-V-009-T065 — Notes Age + Backstory fields (TASK-886)
 
 | Field | Value |

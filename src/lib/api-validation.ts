@@ -15,6 +15,10 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { z, ZodSchema } from 'zod';
+import {
+  CHARACTER_NAME_MAX_LENGTH,
+  CHARACTER_NAME_TOO_LONG_MESSAGE,
+} from '@/lib/character/character-name-limit';
 
 // =============================================================================
 // Helpers
@@ -211,7 +215,10 @@ function withSafeJsonBlob<T extends z.ZodRawShape>(shape: T) {
 
 /** Minimal required fields for character creation. Additional character fields allowed via catchall. */
 export const characterCreateSchema = withSafeJsonBlob({
-  name: z.string().min(1, 'Name is required').max(100, 'Name too long'),
+  name: z
+    .string()
+    .min(1, 'Name is required')
+    .max(CHARACTER_NAME_MAX_LENGTH, CHARACTER_NAME_TOO_LONG_MESSAGE),
   level: z.number().int().min(1).max(20).optional().default(1),
   duplicateOf: z.string().uuid().optional(),
   /**
@@ -223,7 +230,11 @@ export const characterCreateSchema = withSafeJsonBlob({
 
 /** Character update — partial, all fields optional. `updatedAt` is the lock token (ADR-0013). */
 export const characterUpdateSchema = withSafeJsonBlob({
-  name: z.string().min(1).max(100).optional(),
+  name: z
+    .string()
+    .min(1)
+    .max(CHARACTER_NAME_MAX_LENGTH, CHARACTER_NAME_TOO_LONG_MESSAGE)
+    .optional(),
   level: z.number().int().min(1).max(20).optional(),
   visibility: z.enum(['private', 'campaign', 'public']).optional(),
   /** Storage public URL or external URL after upload */
