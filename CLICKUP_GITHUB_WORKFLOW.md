@@ -9,3 +9,12 @@ Short pointer — full process lives in the [Realms Dev Workflow & Agent Rules](
 ## Cursor agent ClickUp writes
 
 Cursor agents may move tasks, add comments, and edit descriptions **only when Kadin tells them to** (Workflow §10.1). Clickup Manager (using Kadin's personal API token) is the only Grok bot that writes to ClickUp; Cursor agents use the workspace connector's call quota.
+
+## Bypass merge
+
+Collin merges normally. After a bypass merge without Collin:
+
+- Move the task to **testing**.
+- Comment QA instructions for what changed.
+- Add James Owenby, and keep Collin assigned.
+- Collin can move the task to **in review** if he still wants to review it.

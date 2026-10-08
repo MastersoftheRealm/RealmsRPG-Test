@@ -14,7 +14,7 @@ Use before marking a task `done` or opening a PR. Keep answers short.
 10. **Uploads** — Went through `apiUpload`?
 11. **Domain parsers** — Used `src/lib/game/*` not a local fork?
 12. **Schema/codex** — SQL in `sql/`; owner approve for live codex mutate? High-risk items flagged per [Workflow §4](https://docs.google.com/document/d/1F6iZUKP9nN0YTFzOkZ6Y82sySaw0iW101f_a-7ZeQdI/edit)?
-13. **ClickUp status** — When Kadin has told you to write to ClickUp: moved to **in review**? Assigned **Collin**? Otherwise note the status change in the PR.
+13. **ClickUp status** — When Kadin has told you to write to ClickUp: moved to **in review**? Assigned **Collin**? Otherwise note the status change in the PR. After a bypass merge: task in **testing**, QA instructions for what changed, James Owenby added, Collin still assigned (he can move it back to **in review**)?
 14. **Owner QA** — User-facing? `pending-qa` + indexed in `DEVELOPER_TASK_QUEUE` Pending owner QA until owner/QA Tester PASS?
 15. **Changelog** — `AI_CHANGELOG.md` entry?
 16. **Design intent** — Non-obvious constraint documented (`DESIGN_INTENT` / comment)?
