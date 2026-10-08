@@ -6,6 +6,7 @@ import { Plus, X } from 'lucide-react';
 import { PROPERTY_TYPES, type PropertyFormState } from './admin-property-form';
 import { AdminCodexCopySourceBanner } from './admin-codex-copy-source-banner';
 import { AdminCodexEditModalFooter } from './admin-codex-edit-modal-footer';
+import { AdminCodexSourceField } from './admin-codex-source-field';
 
 export type AdminPropertyEditModalProps = {
   isOpen: boolean;
@@ -15,6 +16,7 @@ export type AdminPropertyEditModalProps = {
   editingId: string | null;
   form: PropertyFormState;
   setForm: Dispatch<SetStateAction<PropertyFormState>>;
+  sourceOptions: string[];
   optionSlotCount: number;
   setOptionSlotCount: Dispatch<SetStateAction<number>>;
   clearOption: () => void;
@@ -31,6 +33,7 @@ export function AdminPropertyEditModal({
   editingId,
   form,
   setForm,
+  sourceOptions,
   optionSlotCount,
   setOptionSlotCount,
   clearOption,
@@ -75,6 +78,11 @@ export function AdminPropertyEditModal({
             rows={5}
           />
         </div>
+        <AdminCodexSourceField
+          value={form.source}
+          options={sourceOptions}
+          onChange={(source) => setForm((f) => ({ ...f, source }))}
+        />
         <div className="grid grid-cols-2 gap-4">
           <div>
             <label className="mb-1 block text-sm font-medium text-text-secondary">Type</label>
