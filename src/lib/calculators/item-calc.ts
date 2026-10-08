@@ -696,14 +696,19 @@ export function deriveShieldDamageFromProperties(properties: ItemPropertyPayload
 }
 
 /**
- * Library and Load damage cells. A stored shieldDamage scalar wins over the property ladder.
+ * Library and Load damage cells.
+ * While shield damage is on, and when the on/off flag was never saved, a stored
+ * shieldDamage die wins over the property ladder.
+ * hasShieldDamage false means damage is off. The save writes null for the die,
+ * and a null update leaves the old die in the column, so that stored die is ignored.
  */
 export function resolveShieldDamageDisplay(input: {
   shieldDamage?: unknown;
+  hasShieldDamage?: boolean | null | undefined;
   properties?: ItemPropertyPayload[] | null | undefined;
   damage?: unknown;
 }): string | null {
-  if (input.shieldDamage != null) {
+  if (input.hasShieldDamage !== false && input.shieldDamage != null) {
     const raw = input.shieldDamage;
     const stored = formatDamageDisplay(
       typeof raw === 'object' && !Array.isArray(raw)

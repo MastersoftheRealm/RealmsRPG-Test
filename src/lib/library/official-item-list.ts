@@ -196,6 +196,7 @@ export function buildOfficialItemRows(
     const block = deriveShieldAmountFromProperties(props);
     const shieldDamage = resolveShieldDamageDisplay({
       shieldDamage: item.shieldDamage,
+      hasShieldDamage: item.hasShieldDamage,
       properties: props,
       damage: item.damage,
     });

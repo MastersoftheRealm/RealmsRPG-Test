@@ -157,6 +157,36 @@ describe('library-selectable-builders (DEV-V-016 parity)', () => {
       emptyCodex,
     );
     expect(savedOverLadder.columns?.find((c) => c.key === 'Damage')?.value).toBe('2d4 Bludgeoning');
+
+    const damageOff = buildSelectableItem(
+      {
+        id: 's-off',
+        name: 'Buckler',
+        type: 'shield',
+        description: '',
+        hasShieldDamage: false,
+        shieldDamage: { amount: 1, size: 6 },
+        properties: [{ id: 39, name: 'Shield Amount', op_1_lvl: 0 }],
+      },
+      'shield',
+      emptyCodex,
+    );
+    expect(damageOff.columns?.find((c) => c.key === 'Damage')?.value).toBe('-');
+
+    const damageOn = buildSelectableItem(
+      {
+        id: 's-on',
+        name: 'Spiked Shield',
+        type: 'shield',
+        description: '',
+        hasShieldDamage: true,
+        shieldDamage: { amount: 2, size: 4 },
+        properties: [{ id: 40, name: 'Shield Damage', op_1_lvl: 2 }],
+      },
+      'shield',
+      emptyCodex,
+    );
+    expect(damageOn.columns?.find((c) => c.key === 'Damage')?.value).toBe('2d4 Bludgeoning');
   });
 
   it('buildSelectableItem preserves data for sheet add mapping (DEV-V-016-T006)', () => {

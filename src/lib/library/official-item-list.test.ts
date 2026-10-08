@@ -155,6 +155,41 @@ describe('official-item-list armament kinds', () => {
     expect(rows.find((row) => row.id === 'property-only')?.damage).toBe('1d8 Bludgeoning');
   });
 
+  it('hides a leftover shield damage die when shield damage is off (86e3mmnz5)', () => {
+    const rows = buildOfficialItemRows(
+      [
+        item({
+          id: 'damage-off',
+          name: 'Buckler',
+          type: 'shield',
+          hasShieldDamage: false,
+          shieldDamage: { amount: 1, size: 6 },
+          properties: [{ id: 39, name: 'Shield Amount', op_1_lvl: 0 }],
+        }),
+        item({
+          id: 'damage-on',
+          name: 'Spiked Shield',
+          type: 'shield',
+          hasShieldDamage: true,
+          shieldDamage: { amount: 2, size: 4 },
+          properties: [
+            { id: 39, name: 'Shield Amount', op_1_lvl: 0 },
+            { id: 40, name: 'Shield Damage', op_1_lvl: 2 },
+          ],
+        }),
+      ],
+      propertiesDb,
+      'shield',
+    );
+    expect(rows.find((row) => row.id === 'damage-off')?.damage).toBe('-');
+    expect(
+      armamentRowColumns(rows.find((row) => row.id === 'damage-off')!, 'shield').find(
+        (column) => column.key === 'damage',
+      )?.value,
+    ).toBe('-');
+    expect(rows.find((row) => row.id === 'damage-on')?.damage).toBe('2d4 Bludgeoning');
+  });
+
   it('shield rows expose block and damage columns', () => {
     const rows = buildOfficialItemRows(catalog, propertiesDb, 'shield');
     const row = rows[0]!;
