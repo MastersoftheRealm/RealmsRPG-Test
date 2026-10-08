@@ -216,7 +216,12 @@ export function useCreatorSave(options: UseCreatorSaveOptions): UseCreatorSaveRe
             text: target === 'admin' ? adminSuccessMessage : publicSuccessMessage,
           });
         } else {
-          await saveToLibrary(type, payload, existingId ? { existingId } : undefined);
+          const savedId = await saveToLibrary(
+            type,
+            payload,
+            existingId ? { existingId } : undefined,
+          );
+          setLoadedLibraryId(savedId);
           await queryClient.invalidateQueries({
             queryKey: [...USER_LIBRARY_QUERY_KEYS[type]],
             refetchType: 'all',
