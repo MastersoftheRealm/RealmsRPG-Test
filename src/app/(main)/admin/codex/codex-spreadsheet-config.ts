@@ -51,6 +51,7 @@ const PREFERRED_ORDER_AFTER_DESC = [
   'uses_per_rec',
   'uses_per_rec_per_tier',
   'category',
+  'source',
   'type',
   'size',
   'speed',

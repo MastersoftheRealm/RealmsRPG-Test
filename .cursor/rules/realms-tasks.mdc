@@ -9,8 +9,10 @@ alwaysApply: true
 
 **Session start:** [Realms Dev Workflow](https://docs.google.com/document/d/1F6iZUKP9nN0YTFzOkZ6Y82sySaw0iW101f_a-7ZeQdI/edit) → `DECISIONS.md` → `ARCHITECTURE_CONSTITUTION.md` for coding constraints. Then claim a ClickUp task.
 
+**ClickUp writes:** Do not use the ClickUp plugin. When Kadin has told you to write to ClickUp, call the ClickUp API v2 with `CLICKUP_API_TOKEN` from `.env.local` (`Authorization` header, `https://api.clickup.com/api/v2`). Never print the token. Never commit `.env.local`.
+
 **Before implementing:**
-1. Claim the ClickUp task. When Kadin has told you to write to ClickUp, move status **to do → in progress**; otherwise note the claim in the PR and let a human or Clickup Manager move the task.
+1. Claim the ClickUp task. When Kadin has told you to write to ClickUp, move status **to do → in progress** with that API token; otherwise note the claim in the PR and let a human move the task.
 2. Search `FEATURE_INDEX.md` + barrels (+ generated barrel inventory) — confirm it doesn't already exist.
 3. Game copy / caps / formulas → `GAME_RULES.md`. UI → `MOBILE_UX.md` + a11y rule.
 4. **Model escalation (pause once):** If the task matches a trigger below, **stop before coding** and tell the owner in 2–4 sentences: why a stronger model is safer, which ClickUp task, and wait for "proceed" / model switch / narrower instructions. Do **not** pause again in the same chat after the owner says proceed.
@@ -21,7 +23,7 @@ alwaysApply: true
 
 **While implementing:**
 - Branch: `bug|feat/<clickUpId>-short-slug`. **Never push `master`.** Never merge.
-- Move ClickUp status through **in progress → in review** when PR is opened (when Kadin has told you to write to ClickUp; otherwise note the status change in the PR); assign **Collin**.
+- Move ClickUp status through **in progress → in review** when the branch is ready for review (when Kadin has told you to write to ClickUp, use `CLICKUP_API_TOKEN`; otherwise note the status change in the PR); assign **Collin**.
 - After a bypass merge without Collin, move the task to **testing**, comment QA instructions for what changed, add **James Owenby**, and keep **Collin** assigned. Collin can move it back to **in review**.
 - Link ClickUp task ID in the PR. Optionally maintain TASK-### notes in `ACTIVE_TASKS.md` for engineering hygiene.
 - If using `ACTIVE_TASKS.md` notes: `in-progress` → `done` when implementable AC met (build/tests/docs); else `partial` + `completed_work` / `remaining_work` / `follow_up_tasks`. Move `done` blocks to `archive/TASK_QUEUE_DONE.md`. If you mark any TASK-### done, the commit subject must list each ID (CI `ai-task-verifier` enforces this).
