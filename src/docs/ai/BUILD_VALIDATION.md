@@ -1836,6 +1836,25 @@ Manual QA for library/feats modularization and shared part display. **Needs:** c
 
 **Report** — `[ ] PASS` · `[ ] FAIL` · `[ ] SKIP` — Notes:
 
+#### DEV-V-009-T080 — Character name stops at 100 characters (86e3jvzrb)
+
+| Field | Value |
+|-------|-------|
+| **Suite** | DEV-V-009 — Character sheet refactor |
+| **Related task** | 86e3jvzrb |
+| **Where** | `/characters/[id]` edit mode, header name |
+| **Needs** | A saved character you can edit |
+
+**Steps**
+1. Turn on edit mode and choose Edit name. Paste 101 characters and press Enter.
+2. Confirm the field stops at 100, a short note says the paste was shortened, and a counter is visible near the limit (from 80 characters).
+3. Edit General Notes, wait for the save, and reload.
+
+**Expected**
+- The paste is cut to 100 characters, the note says so, and that 100-character name saves. General Notes from step 3 are still there after reload. The name field has `maxlength="100"`. A name that is still over 100 when it reaches save shows "Name must be 100 characters or fewer." and does not block the notes save.
+
+**Report** — `[ ] PASS` · `[ ] FAIL` · `[ ] SKIP` — Notes:
+
 #### DEV-V-009-T065 — Notes Age + Backstory fields (TASK-886)
 
 | Field | Value |
@@ -8985,6 +9004,32 @@ Built-in variants in `payload.composition` (ADR-0029). Resolver: `lib/calculator
 
 ---
 
+## DEV-V-062 — Admin Users layout (ClickUp 86e3jzu53)
+
+Card rows on `/admin/users` so Effective limits and Change role stay on screen at 768 and 1024. **Needs:** admin account.
+
+#### DEV-V-062-T001 — Users list fits at 768 and 1024
+
+| Field | Value |
+|-------|-------|
+| **Suite** | DEV-V-062 — Admin Users layout |
+| **Related task** | ClickUp 86e3jzu53 |
+| **Where** | `/admin/users` |
+| **Needs** | Admin account with at least one user row |
+
+**Steps**
+1. Open `/admin/users` at 768px wide.
+2. Repeat at 1024px wide.
+
+**Expected**
+- Each user is a card. **Effective limits** shows Campaigns, Players/campaign, Characters, Powers, Techniques, Armaments, Creatures, and Profile pic, wrapping inside the card.
+- **Change role** is on screen in the same card (below the limits at 768, beside them at 1024).
+- The page does not scroll horizontally.
+
+**Report** — `[ ] PASS` · `[ ] FAIL` · `[ ] SKIP` — Notes:
+
+---
+
 ## Planned suites (split from legacy DEV-T)
 
 | Suite | Topic | Legacy | Status |
@@ -9031,5 +9076,6 @@ Built-in variants in `payload.composition` (ADR-0029). Resolver: `lib/calculator
 | DEV-V-053 | Wave 3A SEO + token hygiene (TASK-769 / TASK-770 / TASK-771 / TASK-793 / TASK-853 / TASK-905) | — | Automated (`site-url`, `robots-sitemap`, `rulebook`) + manual DEV-V-053 T001–T007 |
 | DEV-V-054 | Codex per-collection fetch + virtualized browse rows (TASK-775) | — | Automated (`api/codex/route.test`, `use-codex.keys.test`) + manual DEV-V-054 T001–T003 |
 | DEV-V-055 | ADR-0023 control touch tiers (TASK-841, TASK-847, TASK-830, TASK-850, TASK-851, TASK-857, TASK-865, TASK-901, TASK-913) | — | Automated (`button-tiers.test.ts` + `verify:responsive` creator form-height probe) + manual DEV-V-055 T001–T009 |
+| DEV-V-062 | Admin Users layout (ClickUp 86e3jzu53) | — | Automated (`admin-users-layout.test.ts`) + manual DEV-V-062-T001 |
 
 When implementing a related task, replace the legacy **DEV-T-###** block with granular **DEV-V-###** tests in this file.
