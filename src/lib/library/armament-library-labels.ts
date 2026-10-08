@@ -4,6 +4,11 @@
 
 export type ArmamentLibraryKind = 'weapon' | 'armor' | 'shield';
 
+/** Library "Create …" links. The item creator reads `type` and opens as that armament. */
+export function itemCreatorTypeHref(kind: ArmamentLibraryKind): string {
+  return `/item-creator?type=${kind}`;
+}
+
 export interface ArmamentKindChromeLabels {
   entitySingular: string;
   entityPlural: string;
