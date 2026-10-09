@@ -17,6 +17,7 @@ export function CodexFeatRow({
   name,
   variant = 'codex',
   rightSlot,
+  rightSlotWidth,
   nameChipLabels,
 }: {
   feat: Feat;
@@ -25,6 +26,7 @@ export function CodexFeatRow({
   name?: string | undefined;
   variant?: 'codex' | 'admin' | undefined;
   rightSlot?: ReactNode | undefined;
+  rightSlotWidth?: string | undefined;
   /**
    * Labels shown beside the name while a list filter needs them — the archetype paths that
    * recommend this feat (ADR-0014). Empty / omitted renders nothing.
@@ -47,6 +49,7 @@ export function CodexFeatRow({
       badges={nameChips}
       showBadgesInName={Boolean(nameChips)}
       rightSlot={rightSlot}
+      rightSlotWidth={rightSlotWidth}
     />
   );
 }

@@ -12,7 +12,7 @@ import { useSort } from '@/hooks/use-sort';
 import { collectCodexSources, codexSourceForSave } from './admin-codex-source';
 import { COPY_NAME_SUFFIX } from './admin-codex-copy-suffix';
 import { useAdminCodexEntity } from './use-admin-codex-entity';
-import { AdminCodexRowActions } from './admin-codex-row-actions';
+import { AdminCodexRowActions, ADMIN_CODEX_ROW_ACTIONS_WIDTH } from './admin-codex-row-actions';
 import {
   AdminEquipmentEditModal,
   EMPTY_EQUIPMENT_FORM,
@@ -180,6 +180,7 @@ export function AdminEquipmentTab() {
         onSort={handleSort}
         hasThumbnailColumn
         rowChrome={{ rightSlot: true }}
+        rightSlotWidth={ADMIN_CODEX_ROW_ACTIONS_WIDTH}
         isLoading={isLoading}
         isEmpty={filteredEquipment.length === 0}
         emptyTitle={pathFilterActive ? pathFilterEmptyTitle('equipment') : 'No equipment found'}
@@ -205,6 +206,7 @@ export function AdminEquipmentTab() {
               detailSections={detailSections.length > 0 ? detailSections : undefined}
               badges={nameChips}
               showBadgesInName={Boolean(nameChips)}
+              rightSlotWidth={ADMIN_CODEX_ROW_ACTIONS_WIDTH}
               rightSlot={
                 <AdminCodexRowActions
                   entity={e}
