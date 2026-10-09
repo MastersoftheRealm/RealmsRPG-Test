@@ -113,6 +113,7 @@ export const COLUMNAR_FIELDS: Record<CodexCollection, string[]> = {
     'charFeat',
     'stateFeat',
     'baseFeatId',
+    'source',
   ],
   codex_skills: [
     'name',
@@ -125,6 +126,7 @@ export const COLUMNAR_FIELDS: Record<CodexCollection, string[]> = {
     'dsCalc',
     'craftFailureDesc',
     'craftSuccessDesc',
+    'source',
   ],
   codex_species: [
     'name',
@@ -146,6 +148,7 @@ export const COLUMNAR_FIELDS: Record<CodexCollection, string[]> = {
     'catalogListing',
     'imageId',
     'imageUrl',
+    'source',
   ],
   codex_traits: [
     'name',
@@ -155,6 +158,7 @@ export const COLUMNAR_FIELDS: Record<CodexCollection, string[]> = {
     'flaw',
     'characteristic',
     'optionTraitIds',
+    'source',
   ],
   codex_parts: [
     'name',
@@ -176,6 +180,7 @@ export const COLUMNAR_FIELDS: Record<CodexCollection, string[]> = {
     'percentage',
     'duration',
     'defense',
+    'source',
   ],
   codex_properties: [
     'name',
@@ -189,8 +194,18 @@ export const COLUMNAR_FIELDS: Record<CodexCollection, string[]> = {
     'op1C',
     'type',
     'mechanic',
+    'source',
   ],
-  codex_equipment: ['name', 'description', 'category', 'currency', 'rarity', 'imageId', 'imageUrl'],
+  codex_equipment: [
+    'name',
+    'description',
+    'category',
+    'currency',
+    'rarity',
+    'imageId',
+    'imageUrl',
+    'source',
+  ],
   codex_archetypes: [
     'name',
     'type',
@@ -217,8 +232,17 @@ export const COLUMNAR_FIELDS: Record<CodexCollection, string[]> = {
     'level1GuidanceGroups',
     'level1RecommendedAbilities',
     'level1Loadouts',
+    'source',
   ],
-  codex_creature_feats: ['name', 'description', 'featPoints', 'featLvl', 'lvlReq', 'mechanic'],
+  codex_creature_feats: [
+    'name',
+    'description',
+    'featPoints',
+    'featLvl',
+    'lvlReq',
+    'mechanic',
+    'source',
+  ],
   core_rules: [],
 };
 

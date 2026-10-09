@@ -42,6 +42,7 @@ import {
 import { TechniqueCreatorEditor } from './technique-creator-editor';
 import { useTechniqueCreatorWorkspace } from './use-technique-creator-workspace';
 import {
+  creatorEditReplacesDraft,
   findLoadedLibraryItem,
   resolveCreatorSaveTargetFromItem,
 } from '@/lib/library/catalog-listing';
@@ -91,6 +92,7 @@ function TechniqueCreatorContent() {
       key={sessionKey}
       initialFormState={initialFormState}
       editTechniqueId={editTechniqueId}
+      editReplacesDraft={creatorEditReplacesDraft(editTechniqueId, load.rawItems)}
       user={user}
       isAdmin={isAdmin}
       techniqueParts={techniqueParts}
@@ -105,6 +107,7 @@ function TechniqueCreatorContent() {
 interface TechniqueCreatorWorkspaceProps {
   initialFormState: TechniqueCreatorFormState;
   editTechniqueId: string | null;
+  editReplacesDraft: boolean;
   user: ReturnType<typeof useAuthStore.getState>['user'];
   isAdmin: boolean;
   techniqueParts: TechniquePart[];
@@ -117,6 +120,7 @@ interface TechniqueCreatorWorkspaceProps {
 function TechniqueCreatorWorkspace({
   initialFormState,
   editTechniqueId,
+  editReplacesDraft,
   user,
   isAdmin,
   techniqueParts,
@@ -128,6 +132,7 @@ function TechniqueCreatorWorkspace({
   const ws = useTechniqueCreatorWorkspace({
     initialFormState,
     editTechniqueId,
+    editReplacesDraft,
     techniqueParts,
     initialSaveTarget: resolveCreatorSaveTargetFromItem(
       findLoadedLibraryItem(load.rawItems, editTechniqueId),
@@ -147,6 +152,8 @@ function TechniqueCreatorWorkspace({
       onSave={ws.save.handleSave}
       onLoad={load.openLoadModal}
       onReset={ws.handleReset}
+      unsavedDirty={ws.unsavedDirty}
+      onDiscardLocalDraft={ws.discardLocalDraft}
       saving={ws.save.saving}
       saveDisabled={!ws.name.trim()}
       loading={{
@@ -163,6 +170,7 @@ function TechniqueCreatorWorkspace({
         onClose: () => ws.save.setShowPublishConfirm(false),
         onConfirm: () => ws.save.confirmPublish(),
         title: ws.save.publishConfirmTitle,
+        confirmLabel: ws.save.publishConfirmLabel,
         description:
           ws.save.publishConfirmDescription?.(ws.name.trim(), {
             existingInPublic: ws.save.publishExistingInPublic,

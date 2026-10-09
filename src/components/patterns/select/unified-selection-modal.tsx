@@ -15,7 +15,7 @@
  * - Flexible column/chip configuration per item type
  */
 
-import { useState, useMemo, useCallback } from 'react';
+import { useState, useMemo, useCallback, useId } from 'react';
 import { cn } from '@/lib/utils';
 import { Alert, Modal } from '@/components/ui';
 import { useSort } from '@/hooks/use-sort';
@@ -76,6 +76,7 @@ export function UnifiedSelectionModal({
   className,
   flexLayout = true,
   primaryActions,
+  wrapFooterActions = false,
 }: UnifiedSelectionModalProps) {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
@@ -281,6 +282,8 @@ export function UnifiedSelectionModal({
 
   const resolvedSearchPlaceholder = searchPlaceholder || `Search ${itemLabel}s...`;
   const resolvedEmptyMessage = emptyMessage || `No ${itemLabel}s found`;
+  const selectionLimitId = useId();
+  const confirmDescribedBy = limitWarningText && isConfirmDisabled ? selectionLimitId : undefined;
 
   return (
     <>
@@ -306,8 +309,10 @@ export function UnifiedSelectionModal({
             onRequestClose={handleRequestClose}
             onConfirm={handleConfirm}
             isConfirmDisabled={isConfirmDisabled}
+            confirmDescribedBy={confirmDescribedBy}
             confirmLabel={confirmLabel}
             primaryActions={primaryActions}
+            wrapFooterActions={wrapFooterActions}
           />
         }
       >
@@ -328,7 +333,7 @@ export function UnifiedSelectionModal({
         />
 
         {limitWarningText ? (
-          <Alert variant="warning" className="shrink-0">
+          <Alert id={selectionLimitId} variant="warning" className="shrink-0">
             {limitWarningText}
           </Alert>
         ) : null}
@@ -367,6 +372,7 @@ export function UnifiedSelectionModal({
         showConfirm={!primaryActions}
         onConfirm={handleConfirm}
         isConfirmDisabled={isConfirmDisabled}
+        confirmDescribedBy={confirmDescribedBy}
         confirmLabel={confirmLabel}
         selectedCount={selectedIds.size}
         onDiscard={handleDiscardAndClose}

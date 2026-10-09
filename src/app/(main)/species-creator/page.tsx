@@ -10,8 +10,11 @@
 
 'use client';
 
+import { Suspense } from 'react';
+import { useSearchParams } from 'next/navigation';
 import { Users } from 'lucide-react';
 import { useAuthStore } from '@/stores';
+import { LoadingState } from '@/components/ui';
 import {
   useCodexSkills,
   useTraits,
@@ -24,13 +27,19 @@ import {
 import { CreatorPageShell, CreatorSummaryPanel } from '@/components/creator';
 import { SourceFilter, sourceFilterSummary } from '@/components/patterns/filters/source-filter';
 import { ConfirmActionModal } from '@/components/patterns';
-import { SPECIES_TRAIT_WARNING, TRAIT_LIMITS } from './species-creator-bootstrap';
+import {
+  SPECIES_TRAIT_WARNING,
+  TRAIT_LIMITS,
+  speciesCreatorEditHref,
+} from './species-creator-bootstrap';
 import { SpeciesCreatorEditor, TraitListModal } from './species-creator-editor';
 import { useSpeciesCreatorWorkspace } from './use-species-creator-workspace';
 
-export default function SpeciesCreatorPage() {
+function SpeciesCreatorPage() {
   const { user } = useAuthStore();
-  const load = useLoadModalLibrary('species');
+  const searchParams = useSearchParams();
+  const editSpeciesId = searchParams.get('edit');
+  const load = useLoadModalLibrary('species', { prefetch: !!editSpeciesId });
   const { data: skills = [], isLoading: skillsLoading } = useCodexSkills();
   const { data: traits = [], isLoading: traitsLoading } = useTraits();
   const { isAdmin } = useAdmin();
@@ -41,6 +50,9 @@ export default function SpeciesCreatorPage() {
     skillsLoading,
     traitsLoading,
     closeLoadModal: load.closeLoadModal,
+    editSpeciesId,
+    rawItems: load.rawItems,
+    libraryLoading: load.isLoading,
   });
 
   return (
@@ -49,18 +61,27 @@ export default function SpeciesCreatorPage() {
       title="Species Creator"
       description="Create custom species. Add traits (species, ancestry, characteristic, flaw), choose base skills and sizes, and set languages. Load from Realms Codex or My Codex; save to My Codex."
       user={user}
-      auth={{ returnPath: '/species-creator', contentType: 'species', requireAuthToLoad: false }}
+      auth={{
+        returnPath: editSpeciesId ? speciesCreatorEditHref(editSpeciesId) : '/species-creator',
+        contentType: 'species',
+        requireAuthToLoad: false,
+      }}
       showSaveTarget={isAdmin}
       saveTarget={ws.save.saveTarget}
       onSaveTargetChange={ws.save.setSaveTarget}
       onSave={ws.handleSave}
       onLoad={load.openLoadModal}
       onReset={ws.handleReset}
+      unsavedDirty={ws.unsavedDirty}
+      onDiscardLocalDraft={ws.discardLocalDraft}
       saving={ws.save.saving}
       saveDisabled={!ws.isSaveReady}
       stickySidebar={false}
       loading={{
-        isLoading: skillsLoading || traitsLoading,
+        isLoading:
+          skillsLoading ||
+          traitsLoading ||
+          (!!editSpeciesId && (load.isLoading || ws.editBootstrapPending)),
         loadingMessage: 'Loading species creator...',
       }}
       publish={{
@@ -68,6 +89,7 @@ export default function SpeciesCreatorPage() {
         onClose: () => ws.save.setShowPublishConfirm(false),
         onConfirm: () => void ws.save.confirmPublish(),
         title: ws.save.publishConfirmTitle,
+        confirmLabel: ws.save.publishConfirmLabel,
         description:
           ws.save.publishConfirmDescription?.(ws.form.name.trim(), {
             existingInPublic: ws.save.publishExistingInPublic,
@@ -186,5 +208,13 @@ export default function SpeciesCreatorPage() {
         heightWeightLifespanSummary={ws.heightWeightLifespanSummary}
       />
     </CreatorPageShell>
+  );
+}
+
+export default function SpeciesCreatorPageSuspense() {
+  return (
+    <Suspense fallback={<LoadingState message="Loading..." padding="md" />}>
+      <SpeciesCreatorPage />
+    </Suspense>
   );
 }

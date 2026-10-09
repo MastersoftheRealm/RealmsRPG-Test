@@ -11,7 +11,15 @@
 
 import { useState, useMemo, useCallback, useEffect } from 'react';
 import { useCreatorSave, type PowerPart } from '@/hooks';
+import {
+  useCreatorDraftDirty,
+  useDiscardableCreatorDraft,
+} from '@/hooks/use-creator-unsaved-guard';
 import type { CreatorSaveTarget } from '@/lib/library/catalog-listing';
+import {
+  useCreatorEditDraftDecision,
+  useCreatorEditMissNotice,
+} from '@/lib/library/use-creator-edit-draft';
 import {
   isPowerCompositionMechanicPart,
   isRandomizeDieComplete,
@@ -31,7 +39,7 @@ import {
   type PowerCreatorFormState,
   type PowerLibraryRecord,
 } from './power-creator-bootstrap';
-import { writeCreatorCache, clearCreatorCache } from '@/lib/game/creator-cache';
+import { persistCreatorDraft, clearCreatorCache } from '@/lib/game/creator-cache';
 import { usePowerCreatorCostDerivation } from './power-creator-cost-derivation';
 import { usePowerCreatorPartActions } from './power-creator-part-actions';
 import {
@@ -51,6 +59,8 @@ import {
 type UsePowerCreatorWorkspaceArgs = {
   initialFormState: PowerCreatorFormState;
   editPowerId: string | null;
+  /** True only when editPowerId matched a loaded library row. */
+  editReplacesDraft: boolean;
   powerParts: PowerPart[];
   initialSaveTarget?: CreatorSaveTarget | undefined;
 };
@@ -58,6 +68,7 @@ type UsePowerCreatorWorkspaceArgs = {
 export function usePowerCreatorWorkspace({
   initialFormState,
   editPowerId,
+  editReplacesDraft,
   powerParts,
   initialSaveTarget,
 }: UsePowerCreatorWorkspaceArgs) {
@@ -133,13 +144,17 @@ export function usePowerCreatorWorkspace({
   });
   const composition = variants.composition;
   const topForm = composition ? topLevelForm(variants.collected) : liveForm;
+  const { discardLocalDraft, isLocalDraftDiscarded } =
+    useDiscardableCreatorDraft(POWER_CREATOR_CACHE_KEY);
+
+  const { discardDraft } = useCreatorEditDraftDecision(
+    true,
+    editReplacesDraft,
+    POWER_CREATOR_CACHE_KEY,
+  );
 
   useEffect(() => {
-    if (editPowerId) clearCreatorCache(POWER_CREATOR_CACHE_KEY);
-  }, [editPowerId]);
-
-  useEffect(() => {
-    if (editPowerId) return;
+    if (discardDraft) return;
 
     const cache: PowerCreatorCache = {
       name,
@@ -172,8 +187,18 @@ export function usePowerCreatorWorkspace({
       ...(composition ? { composition } : {}),
       timestamp: Date.now(),
     };
-    writeCreatorCache(POWER_CREATOR_CACHE_KEY, cache);
-  }, [editPowerId, name, description, topForm, composition, imageId, imageUrl, targetedDefenses]);
+    persistCreatorDraft(POWER_CREATOR_CACHE_KEY, cache, isLocalDraftDiscarded());
+  }, [
+    discardDraft,
+    name,
+    description,
+    topForm,
+    composition,
+    imageId,
+    imageUrl,
+    targetedDefenses,
+    isLocalDraftDiscarded,
+  ]);
 
   const nonMechanicParts = useMemo(
     () => powerParts.filter((p: PowerPart) => !p.mechanic),
@@ -253,6 +278,8 @@ export function usePowerCreatorWorkspace({
   );
 
   const getPayload = useCallback(() => ({ name: name.trim(), data: powerData }), [name, powerData]);
+  const draftSnapshot = JSON.stringify(getPayload());
+  const { isDirty: unsavedDirty, acceptDraft } = useCreatorDraftDirty(draftSnapshot);
 
   /** Composed totals for the summary (open tab drives which variant the stat rows follow). */
   const composedSummary = useMemo(() => {
@@ -283,7 +310,8 @@ export function usePowerCreatorWorkspace({
     setImageUrl(null);
     setTargetedDefenses([]);
     variants.reset();
-  }, [applyTabForm, variants]);
+    acceptDraft();
+  }, [acceptDraft, applyTabForm, variants]);
 
   const save = useCreatorSave({
     type: 'powers',
@@ -297,11 +325,16 @@ export function usePowerCreatorWorkspace({
     successMessage: 'Power saved successfully!',
     publicSuccessMessage: 'Power saved to Realms Library!',
     initialSaveTarget,
+    editingId: editPowerId,
     onSaveSuccess: resetFields,
+    onSaveCommitted: acceptDraft,
   });
+
+  useCreatorEditMissNotice(Boolean(editPowerId) && !discardDraft, 'power', save.setSaveMessage);
 
   const handleReset = useCallback(() => {
     resetFields();
+    save.forgetLoadedLibraryItem();
     save.setSaveMessage(null);
     clearCreatorCache(POWER_CREATOR_CACHE_KEY);
   }, [resetFields, save]);
@@ -325,10 +358,11 @@ export function usePowerCreatorWorkspace({
     (power: PowerLibraryRecord) => {
       applyFormState(powerLibraryRecordToFormState(power, powerParts));
       save.applyLoadedLibraryItem(power);
+      acceptDraft();
       save.setSaveMessage({ type: 'success', text: 'Power loaded successfully!' });
       setTimeout(() => save.setSaveMessage(null), 2000);
     },
-    [powerParts, applyFormState, save],
+    [powerParts, applyFormState, save, acceptDraft],
   );
 
   return {
@@ -387,6 +421,8 @@ export function usePowerCreatorWorkspace({
     dieIncomplete,
     reverseIncomplete,
     save,
+    unsavedDirty,
+    discardLocalDraft,
     handleReset,
     handleLoadPower,
   };

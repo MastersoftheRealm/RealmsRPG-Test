@@ -9,7 +9,15 @@
 
 import { useState, useMemo, useCallback, useEffect } from 'react';
 import { useCreatorSave, type TechniquePart } from '@/hooks';
+import {
+  useCreatorDraftDirty,
+  useDiscardableCreatorDraft,
+} from '@/hooks/use-creator-unsaved-guard';
 import type { CreatorSaveTarget } from '@/lib/library/catalog-listing';
+import {
+  useCreatorEditDraftDecision,
+  useCreatorEditMissNotice,
+} from '@/lib/library/use-creator-edit-draft';
 import {
   calculateTechniqueCosts,
   computeTechniqueActionTypeFromSelection,
@@ -31,7 +39,7 @@ import {
   type TechniqueSelectedPart as SelectedPart,
   type TechniqueDamageConfig as DamageConfig,
 } from './technique-creator-bootstrap';
-import { writeCreatorCache, clearCreatorCache } from '@/lib/game/creator-cache';
+import { persistCreatorDraft, clearCreatorCache } from '@/lib/game/creator-cache';
 
 function toTechniquePartPayload(part: {
   id: string | number;
@@ -52,6 +60,8 @@ function toTechniquePartPayload(part: {
 type UseTechniqueCreatorWorkspaceArgs = {
   initialFormState: TechniqueCreatorFormState;
   editTechniqueId: string | null;
+  /** True only when editTechniqueId matched a loaded library row. */
+  editReplacesDraft: boolean;
   techniqueParts: TechniquePart[];
   initialSaveTarget?: CreatorSaveTarget | undefined;
 };
@@ -59,6 +69,7 @@ type UseTechniqueCreatorWorkspaceArgs = {
 export function useTechniqueCreatorWorkspace({
   initialFormState,
   editTechniqueId,
+  editReplacesDraft,
   techniqueParts,
   initialSaveTarget,
 }: UseTechniqueCreatorWorkspaceArgs) {
@@ -76,16 +87,19 @@ export function useTechniqueCreatorWorkspace({
   const [targetedDefenses, setTargetedDefenses] = useState<string[]>(
     initialFormState.targetedDefenses,
   );
+  const { discardLocalDraft, isLocalDraftDiscarded } = useDiscardableCreatorDraft(
+    TECHNIQUE_CREATOR_CACHE_KEY,
+  );
 
-  // ?edit= mode: clear any stale draft once on mount (parity with the old hydrate
-  // effect, which removed the cache after loading the edit target).
-  useEffect(() => {
-    if (editTechniqueId) clearCreatorCache(TECHNIQUE_CREATOR_CACHE_KEY);
-  }, [editTechniqueId]);
+  const { discardDraft } = useCreatorEditDraftDecision(
+    true,
+    editReplacesDraft,
+    TECHNIQUE_CREATOR_CACHE_KEY,
+  );
 
-  // Auto-save draft to localStorage (skip when editing an existing library row via ?edit=)
+  // Auto-save draft. A confirmed ?edit= load does not write the library row over the draft.
   useEffect(() => {
-    if (editTechniqueId) return;
+    if (discardDraft) return;
 
     const cache: TechniqueCreatorCache = {
       name,
@@ -106,9 +120,9 @@ export function useTechniqueCreatorWorkspace({
       targetedDefenses,
       timestamp: Date.now(),
     };
-    writeCreatorCache(TECHNIQUE_CREATOR_CACHE_KEY, cache);
+    persistCreatorDraft(TECHNIQUE_CREATOR_CACHE_KEY, cache, isLocalDraftDiscarded());
   }, [
-    editTechniqueId,
+    discardDraft,
     name,
     description,
     selectedParts,
@@ -119,6 +133,7 @@ export function useTechniqueCreatorWorkspace({
     imageId,
     imageUrl,
     targetedDefenses,
+    isLocalDraftDiscarded,
   ]);
 
   // Build mechanic parts from action type, damage, and attack mode.
@@ -329,6 +344,8 @@ export function useTechniqueCreatorWorkspace({
     imageId,
     imageUrl,
   ]);
+  const draftSnapshot = JSON.stringify(getPayload());
+  const { isDirty: unsavedDirty, acceptDraft } = useCreatorDraftDirty(draftSnapshot);
 
   const save = useCreatorSave({
     type: 'techniques',
@@ -342,6 +359,8 @@ export function useTechniqueCreatorWorkspace({
     successMessage: 'Technique saved successfully!',
     publicSuccessMessage: 'Technique saved to Realms Library!',
     initialSaveTarget,
+    editingId: editTechniqueId,
+    onSaveCommitted: acceptDraft,
     onSaveSuccess: () => {
       setName('');
       setDescription('');
@@ -353,8 +372,15 @@ export function useTechniqueCreatorWorkspace({
       setImageId(null);
       setImageUrl(null);
       setTargetedDefenses([]);
+      acceptDraft();
     },
   });
+
+  useCreatorEditMissNotice(
+    Boolean(editTechniqueId) && !discardDraft,
+    'technique',
+    save.setSaveMessage,
+  );
 
   const handleReset = useCallback(() => {
     setName('');
@@ -367,9 +393,11 @@ export function useTechniqueCreatorWorkspace({
     setImageId(null);
     setImageUrl(null);
     setTargetedDefenses([]);
+    save.forgetLoadedLibraryItem();
     save.setSaveMessage(null);
     clearCreatorCache(TECHNIQUE_CREATOR_CACHE_KEY);
-  }, [save]);
+    acceptDraft();
+  }, [acceptDraft, save]);
 
   const applyFormState = useCallback((next: TechniqueCreatorFormState) => {
     setName(next.name);
@@ -393,10 +421,11 @@ export function useTechniqueCreatorWorkspace({
     (technique: TechniqueLibraryRecord) => {
       applyFormState(techniqueLibraryRecordToFormState(technique, techniqueParts));
       save.applyLoadedLibraryItem(technique);
+      acceptDraft();
       save.setSaveMessage({ type: 'success', text: 'Technique loaded successfully!' });
       setTimeout(() => save.setSaveMessage(null), 2000);
     },
-    [techniqueParts, applyFormState, save],
+    [techniqueParts, applyFormState, save, acceptDraft],
   );
 
   return {
@@ -437,6 +466,8 @@ export function useTechniqueCreatorWorkspace({
     removePart,
     updatePart,
     save,
+    unsavedDirty,
+    discardLocalDraft,
     handleReset,
     handleLoadTechnique,
   };

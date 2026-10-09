@@ -113,6 +113,7 @@ function CreatureCreatorContent() {
     initialState,
     clearCreatorCache,
     CREATURE_CREATOR_CACHE_KEY,
+    acceptDraft,
   } = ws;
 
   return (
@@ -128,6 +129,8 @@ function CreatureCreatorContent() {
       onSave={handleSave}
       onLoad={load.openLoadModal}
       onReset={handleReset}
+      unsavedDirty={ws.unsavedDirty}
+      onDiscardLocalDraft={ws.discardLocalDraft}
       saving={save.saving}
       saveDisabled={!creature.name.trim() || isOverBudget}
       loading={{
@@ -139,6 +142,7 @@ function CreatureCreatorContent() {
         onClose: () => save.setShowPublishConfirm(false),
         onConfirm: () => save.confirmPublish(),
         title: save.publishConfirmTitle,
+        confirmLabel: save.publishConfirmLabel,
         description:
           save.publishConfirmDescription?.(creature.name.trim(), {
             existingInPublic: save.publishExistingInPublic,
@@ -149,6 +153,8 @@ function CreatureCreatorContent() {
         onClose: () => setShowResetConfirm(false),
         onConfirm: () => {
           setCreature(initialState);
+          save.forgetLoadedLibraryItem();
+          acceptDraft();
           clearCreatorCache(CREATURE_CREATOR_CACHE_KEY);
           setShowResetConfirm(false);
         },

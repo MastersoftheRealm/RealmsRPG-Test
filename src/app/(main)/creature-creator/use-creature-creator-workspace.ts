@@ -42,6 +42,7 @@ import {
   displayItemToCreatureArmament,
 } from './transformers';
 import { useSort } from '@/hooks/use-sort';
+import { useDiscardableCreatorDraft } from '@/hooks/use-creator-unsaved-guard';
 import type { AbilityName } from '@/types';
 import type { CreatureSkill, CreatureState } from './creature-creator-types';
 import {
@@ -54,7 +55,12 @@ import {
 } from './creature-creator-constants';
 import { allocationsToCreatureSkills, creatureSkillsToAllocations } from './creature-skill-utils';
 import { bootstrapCreatureState } from './creature-creator-bootstrap';
-import { writeCreatorCache, clearCreatorCache } from '@/lib/game/creator-cache';
+import { persistCreatorDraft, clearCreatorCache } from '@/lib/game/creator-cache';
+import { creatorEditReplacesDraft } from '@/lib/library/catalog-listing';
+import {
+  useCreatorEditDraftDecision,
+  useCreatorEditMissNotice,
+} from '@/lib/library/use-creator-edit-draft';
 import { normalizeCreatureInventoryType } from '@/lib/game/creature-inventory';
 import { mergeLibraryBySource } from '@/lib/library/source-scope';
 import { mergeCreatureFeatsOnAdd } from './creature-feat-utils';
@@ -232,18 +238,27 @@ export function useCreatureCreatorWorkspace() {
     setCreature(bootstrapCreatureState({ editCreatureId, rawItems: load.rawItems }));
   }
   const bootstrapApplied = bootstrapKey === sessionKey;
+  const { discardLocalDraft, isLocalDraftDiscarded } = useDiscardableCreatorDraft(
+    CREATURE_CREATOR_CACHE_KEY,
+  );
+
+  const { discardDraft } = useCreatorEditDraftDecision(
+    bootstrapApplied,
+    creatorEditReplacesDraft(editCreatureId, load.rawItems),
+    CREATURE_CREATOR_CACHE_KEY,
+  );
 
   useEffect(() => {
-    if (editCreatureId) clearCreatorCache(CREATURE_CREATOR_CACHE_KEY);
-  }, [editCreatureId]);
-
-  useEffect(() => {
-    if (editCreatureId || !bootstrapApplied) return;
-    writeCreatorCache(CREATURE_CREATOR_CACHE_KEY, {
-      creature,
-      timestamp: Date.now(),
-    });
-  }, [editCreatureId, bootstrapApplied, creature]);
+    if (!bootstrapApplied || discardDraft) return;
+    persistCreatorDraft(
+      CREATURE_CREATOR_CACHE_KEY,
+      {
+        creature,
+        timestamp: Date.now(),
+      },
+      isLocalDraftDiscarded(),
+    );
+  }, [bootstrapApplied, creature, discardDraft, isLocalDraftDiscarded]);
 
   const featPointsMap = useMemo(() => {
     const map = new Map<string, number>();
@@ -402,6 +417,8 @@ export function useCreatureCreatorWorkspace() {
 
   const {
     save,
+    unsavedDirty,
+    acceptDraft,
     handleSave,
     handleReset,
     handleLoadCreature,
@@ -420,6 +437,12 @@ export function useCreatureCreatorWorkspace() {
     load,
     editCreatureId,
   });
+
+  useCreatorEditMissNotice(
+    bootstrapApplied && !discardDraft && Boolean(editCreatureId),
+    'creature',
+    save.setSaveMessage,
+  );
 
   const featsSummary = useMemo(() => buildCreatureFeatsSummary(creature), [creature]);
   const powersSummary = useMemo(() => buildCreaturePowersSummary(creature), [creature]);
@@ -457,6 +480,9 @@ export function useCreatureCreatorWorkspace() {
     bootstrapApplied,
     load,
     save,
+    unsavedDirty,
+    discardLocalDraft,
+    acceptDraft,
     handleSave,
     handleReset,
     handleLoadCreature,

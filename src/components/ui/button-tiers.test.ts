@@ -42,7 +42,7 @@ describe('ADR-0023 button touch tiers (TASK-841)', () => {
   });
 
   it('tags USM Add Selected as Primary size lg, not a blanket min-h-11 slab', () => {
-    expect(usmFooterSource).toMatch(/<Button size="lg" onClick=\{onConfirm\}/);
+    expect(usmFooterSource).toMatch(/<Button[^>]*size="lg"[^>]*onClick=\{onConfirm\}/);
     expect(usmFooterSource).not.toContain('[&_button]:min-h-11');
   });
 
@@ -120,13 +120,20 @@ describe('ADR-0023 form field Standard tier (TASK-830)', () => {
     expect(filterUtils).toContain('rounded-md');
   });
 
-  it('wires item-creator Description onto shared Textarea', () => {
+  it('wires item-creator Description onto CreatorDescriptionField', () => {
     const meta = readFileSync(
       path.join(import.meta.dirname, '../../app/(main)/item-creator/item-creator-editor-meta.tsx'),
       'utf8',
     );
-    expect(meta).toContain('<Textarea');
+    expect(meta).toContain('<CreatorDescriptionField');
     expect(meta).not.toMatch(/<textarea\b/);
+
+    const fields = readFileSync(
+      path.join(import.meta.dirname, '../creator/creator-text-fields.tsx'),
+      'utf8',
+    );
+    expect(fields).toContain('<Textarea');
+    expect(fields).not.toMatch(/<textarea\b/);
   });
 });
 
