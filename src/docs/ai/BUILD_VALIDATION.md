@@ -9023,6 +9023,31 @@ Built-in variants in `payload.composition` (ADR-0029). Resolver: `lib/calculator
 
 ---
 
+## DEV-V-064 — Admin Core Rules number labels (ClickUp 86e3k0cgu)
+
+Number inputs on `/admin/core-rules` expose a programmatic name. **Needs:** admin account.
+
+#### DEV-V-064-T001 — Core Rules numbers are named
+
+| Field | Value |
+|-------|-------|
+| **Suite** | DEV-V-064 — Admin Core Rules number labels |
+| **Related task** | ClickUp 86e3k0cgu |
+| **Where** | `/admin/core-rules` |
+| **Needs** | Admin account |
+
+**Steps**
+1. Open `/admin/core-rules` on the Progression tab.
+2. Inspect a number field such as Base Ability Points. Repeat on Sizes, Rarities, Armament Prof., and Crafting table cells.
+
+**Expected**
+- Each number input has an accessible name from its field label or from a row-and-column name.
+- That name includes the visible header text, including DS on Crafting and Armament Max (TP) on Armament Prof.
+
+**Report** — `[ ] PASS` · `[ ] FAIL` · `[ ] SKIP` — Notes:
+
+---
+
 ## DEV-V-063 — Admin spreadsheet field save (ClickUp 86e3mezkn)
 
 Spreadsheet mode on `/admin/codex` keeps edits on the same columns list mode writes. **Needs:** admin account.
@@ -9147,5 +9172,6 @@ Card rows on `/admin/users` so Effective limits and Change role stay on screen a
 | DEV-V-055 | ADR-0023 control touch tiers (TASK-841, TASK-847, TASK-830, TASK-850, TASK-851, TASK-857, TASK-865, TASK-901, TASK-913) | — | Automated (`button-tiers.test.ts` + `verify:responsive` creator form-height probe) + manual DEV-V-055 T001–T009 |
 | DEV-V-062 | Admin Users layout (ClickUp 86e3jzu53) | — | Automated (`admin-users-layout.test.ts`) + manual DEV-V-062-T001 |
 | DEV-V-063 | Admin spreadsheet field save (ClickUp 86e3mezkn) | — | Automated (`codex-spreadsheet-save.test.ts`, `actions.test.ts`) + manual DEV-V-063-T001–T002 |
+| DEV-V-064 | Admin Core Rules number labels (ClickUp 86e3k0cgu) | — | Automated (`core-rules-number-labels.test.ts`) + manual DEV-V-064-T001 |
 
 When implementing a related task, replace the legacy **DEV-T-###** block with granular **DEV-V-###** tests in this file.
