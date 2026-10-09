@@ -5602,6 +5602,25 @@ islands (Phase 4) and workspace hook (Phase 5). **T012–T014** cover expanded h
 
 **Report** — `[ ] PASS` · `[ ] FAIL` · `[ ] SKIP` — Notes:
 
+#### DEV-V-018-T022 — Creator name stops at 100 characters (86e3jx8ww)
+
+| Field | Value |
+|-------|-------|
+| **Suite** | DEV-V-018 — CreatorPageShell parity |
+| **Related task** | 86e3jx8ww |
+| **Where** | `/power-creator` (also item, technique, empowered technique, creature, species) |
+| **Needs** | A signed-in account that can save to My Library |
+
+**Steps**
+1. Open `/power-creator` and `/species-creator`. Confirm each name field shows a live counter and `maxlength="100"`. Paste 101 characters.
+2. Save. Confirm the stored name is 100 characters and the toast names that limit if save is still rejected.
+3. Paste a description of 10,000 characters and save. Then try to go past 10,000.
+
+**Expected**
+- Names stop at 100 with a visible counter. A 10,000-character description saves. The description field does not accept a 10,001st character. Once the description counter is visible, it uses the same grouping as the paste note ("10,000 of 10,000 characters", and "9,000 of 10,000 characters" at the threshold). The name counter uses that same format ("100 of 100 characters").
+
+**Report** — `[ ] PASS` · `[ ] FAIL` · `[ ] SKIP` — Notes:
+
 ---
 
 ## DEV-V-019 — React Compiler hook cleanup (TASK-430)
