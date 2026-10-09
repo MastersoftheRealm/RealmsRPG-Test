@@ -5,7 +5,11 @@
 'use client';
 
 import { RealmsImageField, SegmentedControl } from '@/components/patterns';
-import { Card, Input, Textarea } from '@/components/ui';
+import { Card } from '@/components/ui';
+import {
+  CreatorDescriptionField,
+  CreatorNameField,
+} from '@/components/creator/creator-text-fields';
 import type { ArmamentType } from './item-creator-bootstrap';
 import { ARMAMENT_TYPES } from './item-creator-helpers';
 
@@ -46,11 +50,10 @@ export function ItemCreatorEditorMeta({
           >
             Item Name *
           </label>
-          <Input
+          <CreatorNameField
             id="item-creator-name"
-            type="text"
             value={name}
-            onChange={(e) => onNameChange(e.target.value)}
+            onChange={onNameChange}
             placeholder="Enter item name..."
           />
         </div>
@@ -90,10 +93,10 @@ export function ItemCreatorEditorMeta({
           >
             Description
           </label>
-          <Textarea
+          <CreatorDescriptionField
             id="item-creator-description"
             value={description}
-            onChange={(e) => onDescriptionChange(e.target.value)}
+            onChange={onDescriptionChange}
             placeholder="Describe your item..."
             rows={2}
             className="min-h-0"

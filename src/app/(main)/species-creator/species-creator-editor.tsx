@@ -10,11 +10,15 @@ import type { Trait } from '@/hooks';
 import { CREATURE_TYPES } from '@/lib/game/creator-constants';
 import { CollapsibleSection } from '@/components/creator';
 import {
+  CreatorDescriptionField,
+  CreatorNameField,
+} from '@/components/creator/creator-text-fields';
+import {
   UnifiedSelectionModal,
   type SelectableItem,
 } from '@/components/patterns/select/unified-selection-modal';
 import { RealmsImageField } from '@/components/patterns';
-import { Button, Input, Textarea } from '@/components/ui';
+import { Button, Input } from '@/components/ui';
 import { ChipList } from '../creature-creator/CreatureCreatorHelpers';
 import { formatListCellLabel } from '@/lib/utils';
 import {
@@ -83,12 +87,13 @@ export function SpeciesCreatorEditor({
       <CollapsibleSection title="Basics" collapsedSummary={basicsSummary}>
         <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
           <div>
-            <Input
+            <CreatorNameField
+              id="species-creator-name"
               label="Name *"
-              value={form.name}
-              onChange={(e) => onFormChange((p) => ({ ...p, name: e.target.value }))}
-              placeholder="Species name"
               aria-label="Species name"
+              value={form.name}
+              onChange={(value) => onFormChange((p) => ({ ...p, name: value }))}
+              placeholder="Species name"
             />
           </div>
           <div>
@@ -115,14 +120,15 @@ export function SpeciesCreatorEditor({
           </div>
         </div>
         <div className="mt-4">
-          <Textarea
+          <CreatorDescriptionField
+            id="species-creator-description"
             label="Description"
+            aria-label="Species description"
             value={form.description}
-            onChange={(e) => onFormChange((p) => ({ ...p, description: e.target.value }))}
+            onChange={(value) => onFormChange((p) => ({ ...p, description: value }))}
             placeholder="Species description"
             rows={3}
             className="w-full"
-            aria-label="Species description"
           />
         </div>
         {isAdmin && (
@@ -238,8 +244,9 @@ export function SpeciesCreatorEditor({
       <CollapsibleSection
         title="Traits"
         collapsedSummary={traitsSummary}
+        actionsOnOwnRow
         rightSlot={
-          <div className="flex flex-wrap gap-2">
+          <div className="flex flex-wrap gap-3">
             <Button
               size="sm"
               onClick={onOpenSpeciesAncestryModal}
@@ -570,6 +577,7 @@ export function TraitListModal({
             )
           : undefined
       }
+      wrapFooterActions={mode === 'species_ancestry'}
       size="lg"
       className="max-h-[60vh]"
     />

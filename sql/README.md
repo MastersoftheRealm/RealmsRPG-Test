@@ -63,6 +63,7 @@ These are recorded in `supabase_migrations.schema_migrations` on RealmsRPG-Test.
 | `normalize_codex_feat_ability_delimiters` | 20260703144039 | [normalize-codex-feat-ability-delimiters.sql](normalize-codex-feat-ability-delimiters.sql) |
 | `realms_image_library` | 20260716 (MCP) | [realms-image-library.sql](realms-image-library.sql) |
 | `official_catalog_listing` | 20260914 (MCP) | [official-catalog-listing.sql](official-catalog-listing.sql) |
+| `codex_entry_source` | 20260928 (MCP) | [codex-entry-source.sql](codex-entry-source.sql) |
 
 ---
 

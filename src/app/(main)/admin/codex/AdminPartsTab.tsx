@@ -12,6 +12,7 @@ import { useParts, type Part } from '@/hooks';
 import { ABILITIES_AND_DEFENSES } from '@/lib/game/constants';
 import { formatListCellLabel } from '@/lib/utils';
 import { useSort } from '@/hooks/use-sort';
+import { collectCodexSources } from './admin-codex-source';
 import { COPY_NAME_SUFFIX } from './admin-codex-copy-suffix';
 import {
   EMPTY_PART_FORM,
@@ -362,6 +363,7 @@ export function AdminPartsTab() {
         form={form}
         setForm={setForm}
         filterCategories={filterOptions.categories}
+        sourceOptions={collectCodexSources(parts)}
         targetedDefenseOptions={targetedDefenseOptions}
         optionSlotCount={optionSlotCount}
         setOptionSlotCount={setOptionSlotCount}

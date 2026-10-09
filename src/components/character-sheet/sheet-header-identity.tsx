@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, type ClipboardEvent } from 'react';
 import Image from 'next/image';
 import { Camera, Pencil } from 'lucide-react';
 import { cn } from '@/lib/utils';
@@ -18,6 +18,13 @@ import {
   isMixedSpeciesHeaderLine,
 } from '@/lib/character/sheet-header-species-label';
 import { ArchetypePathGuidance } from './archetype-path-identity';
+import {
+  CHARACTER_NAME_COUNTER_FROM,
+  CHARACTER_NAME_MAX_LENGTH,
+  CHARACTER_NAME_TRUNCATED_MESSAGE,
+  clampCharacterNameInput,
+  insertCharacterNameText,
+} from '@/lib/character/character-name-limit';
 
 export function SheetHeaderIdentity({
   character,
@@ -47,6 +54,7 @@ export function SheetHeaderIdentity({
   // State for editing character name
   const [isEditingName, setIsEditingName] = useState(false);
   const [nameInput, setNameInput] = useState(character.name || '');
+  const [nameTruncated, setNameTruncated] = useState(false);
 
   // State for editing XP
   const [isEditingXP, setIsEditingXP] = useState(false);
@@ -128,10 +136,34 @@ export function SheetHeaderIdentity({
 
   // Handle name editing
   const handleNameSubmit = () => {
-    if (nameInput.trim() && nameInput !== character.name && onNameChange) {
-      onNameChange(nameInput.trim());
+    const trimmed = nameInput.trim();
+    if (trimmed && trimmed !== character.name && onNameChange) {
+      onNameChange(trimmed);
     }
     setIsEditingName(false);
+    setNameTruncated(false);
+  };
+
+  const handleNameInputChange = (raw: string) => {
+    const next = clampCharacterNameInput(raw);
+    setNameInput(next.value);
+    if (next.truncated) setNameTruncated(true);
+  };
+
+  const handleNamePaste = (event: ClipboardEvent<HTMLInputElement>) => {
+    const pasted = event.clipboardData.getData('text');
+    if (!pasted) return;
+    const field = event.currentTarget;
+    const next = insertCharacterNameText(
+      nameInput,
+      pasted,
+      field.selectionStart ?? nameInput.length,
+      field.selectionEnd ?? nameInput.length,
+    );
+    if (!next.truncated) return;
+    event.preventDefault();
+    setNameInput(next.value);
+    setNameTruncated(true);
   };
 
   const normalizedPowerAbility = character.pow_abil?.trim().toLowerCase();
@@ -181,21 +213,52 @@ export function SheetHeaderIdentity({
         <div className="flex min-w-0 flex-1 flex-col justify-center">
           {/* Editable Name - Always available with pencil icon */}
           {isEditingName && onNameChange ? (
-            <input
-              type="text"
-              value={nameInput}
-              onChange={(e) => setNameInput(e.target.value)}
-              onBlur={handleNameSubmit}
-              onKeyDown={(e) => {
-                if (e.key === 'Enter') handleNameSubmit();
-                if (e.key === 'Escape') {
-                  setNameInput(character.name || '');
-                  setIsEditingName(false);
+            <div className="min-w-0">
+              <input
+                type="text"
+                value={nameInput}
+                maxLength={CHARACTER_NAME_MAX_LENGTH}
+                onChange={(e) => handleNameInputChange(e.target.value)}
+                onPaste={handleNamePaste}
+                onBlur={handleNameSubmit}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') handleNameSubmit();
+                  if (e.key === 'Escape') {
+                    setNameInput(character.name || '');
+                    setNameTruncated(false);
+                    setIsEditingName(false);
+                  }
+                }}
+                className="touch-tier-standard w-full min-w-0 rounded-lg border-2 border-primary-outline-border px-2 py-1 text-2xl font-bold text-text-primary focus:ring-2 focus:ring-primary-outline-border md:text-3xl"
+                autoFocus
+                aria-label="Character name"
+                aria-describedby={
+                  [
+                    nameInput.length >= CHARACTER_NAME_COUNTER_FROM
+                      ? 'sheet-character-name-count'
+                      : null,
+                    nameTruncated ? 'sheet-character-name-cutoff' : null,
+                  ]
+                    .filter(Boolean)
+                    .join(' ') || undefined
                 }
-              }}
-              className="rounded-lg border-2 border-primary-outline-border px-2 py-1 text-2xl font-bold text-text-primary focus:ring-2 focus:ring-primary-outline-border md:text-3xl"
-              autoFocus
-            />
+              />
+              {nameInput.length >= CHARACTER_NAME_COUNTER_FROM ? (
+                <p id="sheet-character-name-count" className="mt-1 text-sm text-text-muted">
+                  <span className="sr-only">Character name, </span>
+                  {nameInput.length} of {CHARACTER_NAME_MAX_LENGTH} characters
+                </p>
+              ) : null}
+              {nameTruncated ? (
+                <p
+                  id="sheet-character-name-cutoff"
+                  className="mt-1 text-sm text-warning-fg"
+                  role="status"
+                >
+                  {CHARACTER_NAME_TRUNCATED_MESSAGE}
+                </p>
+              ) : null}
+            </div>
           ) : (
             <h1
               className="flex min-w-0 items-start gap-2 text-2xl font-bold text-text-primary md:text-3xl"
@@ -204,7 +267,11 @@ export function SheetHeaderIdentity({
               <span className="line-clamp-2 min-w-0 break-words">{character.name}</span>
               {onNameChange && isEditMode && (
                 <button
-                  onClick={() => setIsEditingName(true)}
+                  onClick={() => {
+                    setNameInput(character.name || '');
+                    setNameTruncated(false);
+                    setIsEditingName(true);
+                  }}
                   className="shrink-0 text-primary-fg transition-colors hover:scale-110 hover:text-primary-fg-hover"
                   title="Edit name"
                   aria-label="Edit name"
