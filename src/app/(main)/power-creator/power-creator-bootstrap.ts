@@ -356,8 +356,9 @@ export function powerLibraryRecordToFormState(
 }
 
 /**
- * Pure — safe to call during render. The ?edit= draft-cache clear happens in a
- * workspace mount effect, not here.
+ * Pure — safe to call during render. The draft cache is cleared only after this
+ * returns a library row (see useCreatorEditDraftDecision). An unknown id falls
+ * through to the local draft.
  */
 export function bootstrapPowerCreatorFormState(options: {
   editPowerId: string | null;
@@ -371,10 +372,9 @@ export function bootstrapPowerCreatorFormState(options: {
       const row = p as { docId?: string | undefined; id?: string | undefined };
       return String(row.docId) === editPowerId || String(row.id) === editPowerId;
     });
-    if (!powerToEdit) {
-      return emptyPowerCreatorFormState();
+    if (powerToEdit) {
+      return powerLibraryRecordToFormState(powerToEdit as PowerLibraryRecord, powerParts);
     }
-    return powerLibraryRecordToFormState(powerToEdit as PowerLibraryRecord, powerParts);
   }
 
   return restorePowerCreatorFromCache(powerParts) ?? emptyPowerCreatorFormState();

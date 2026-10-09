@@ -1014,6 +1014,13 @@
     scroll-padding-inline: var(--tab-nav-overflow-fade);
   }
 
+  /* Core Rules has 14 tabs. Wrap them so every label stays readable at 768 and 1280. */
+  .admin-core-rules-tabs .tab-nav-list {
+    flex-wrap: wrap;
+    overflow: visible;
+    scrollbar-width: none;
+  }
+
   .tab-nav-list[data-overflow-end='true'] {
     mask-image: linear-gradient(
       to right,

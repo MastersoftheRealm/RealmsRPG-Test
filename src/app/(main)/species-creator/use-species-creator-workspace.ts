@@ -13,8 +13,8 @@ import {
   useCreatorDraftDirty,
   useDiscardableCreatorDraft,
 } from '@/hooks/use-creator-unsaved-guard';
-import { CACHE_EXPIRY_MS } from '@/lib/game/creator-constants';
 import { persistCreatorDraft } from '@/lib/game/creator-cache';
+import { creatorEditMissMessage } from '@/lib/library/catalog-listing';
 import { findByNormalizedId } from '@/lib/utils';
 import {
   SPECIES_CREATOR_CACHE_KEY,
@@ -29,10 +29,10 @@ import {
   TRAIT_LIMITS,
   initialSpeciesFormState,
   isSpeciesFormSaveReady,
-  mergeCachedSpeciesForm,
+  planSpeciesCreatorEdit,
+  readStoredSpeciesDraft,
   speciesLibraryRecordToFormState,
   type SpeciesFormState,
-  type SpeciesCreatorCache,
   type TraitCategory,
 } from './species-creator-bootstrap';
 import { applySpeciesCreatorReset } from './species-creator-reset';
@@ -43,6 +43,10 @@ type UseSpeciesCreatorWorkspaceArgs = {
   skillsLoading: boolean;
   traitsLoading: boolean;
   closeLoadModal: () => void;
+  /** `?edit=` id. Replaces the draft only after that id is found in the library. */
+  editSpeciesId?: string | null | undefined;
+  rawItems?: readonly unknown[] | undefined;
+  libraryLoading?: boolean | undefined;
 };
 
 function resolveSpeciesSkillLabel(skills: Skill[], id: string): string {
@@ -56,6 +60,9 @@ export function useSpeciesCreatorWorkspace({
   skillsLoading,
   traitsLoading,
   closeLoadModal,
+  editSpeciesId = null,
+  rawItems = [],
+  libraryLoading = false,
 }: UseSpeciesCreatorWorkspaceArgs) {
   const [showAddSpeciesAncestryModal, setShowAddSpeciesAncestryModal] = useState(false);
   const [showAddFlawModal, setShowAddFlawModal] = useState(false);
@@ -72,42 +79,26 @@ export function useSpeciesCreatorWorkspace({
   const [newLanguage, setNewLanguage] = useState('');
 
   const [form, setForm] = useState<SpeciesFormState>(initialSpeciesFormState);
-  const cacheBootstrapRef = useRef(false);
+  const settledEditKeyRef = useRef<string | null>(null);
+  const draftHydratedRef = useRef(false);
   const [cacheReady, setCacheReady] = useState(false);
   const { discardLocalDraft, isLocalDraftDiscarded } =
     useDiscardableCreatorDraft(SPECIES_CREATOR_CACHE_KEY);
+  const [appliedEditId, setAppliedEditId] = useState<string | null>(null);
+  const [preserveDraftDuringEdit, setPreserveDraftDuringEdit] = useState(false);
+  const editSession = editSpeciesId?.trim() ? editSpeciesId.trim() : null;
+  const editLibraryReady = !skillsLoading && !traitsLoading && !libraryLoading;
 
-  // Load draft from localStorage once codex lists are ready (same 30-day window as other creators)
+  // Persist draft across refresh (mirrors item/power creator cache pattern).
+  // A confirmed ?edit= load does not write the library row back over the draft.
   useEffect(() => {
-    if (skillsLoading || traitsLoading) return;
-    if (cacheBootstrapRef.current) return;
-    cacheBootstrapRef.current = true;
-    try {
-      const raw = localStorage.getItem(SPECIES_CREATOR_CACHE_KEY);
-      if (raw) {
-        const parsed = JSON.parse(raw) as SpeciesCreatorCache;
-        if (parsed.timestamp && Date.now() - parsed.timestamp < CACHE_EXPIRY_MS) {
-          const merged = mergeCachedSpeciesForm(parsed, traits, skills);
-          if (merged) queueMicrotask(() => setForm(merged));
-        } else {
-          localStorage.removeItem(SPECIES_CREATOR_CACHE_KEY);
-        }
-      }
-    } catch {
-      localStorage.removeItem(SPECIES_CREATOR_CACHE_KEY);
-    }
-    queueMicrotask(() => setCacheReady(true));
-  }, [skillsLoading, traitsLoading, traits, skills]);
-
-  // Persist draft across refresh (mirrors item/power creator cache pattern)
-  useEffect(() => {
-    if (!cacheReady) return;
+    if (!cacheReady || (editSession && !preserveDraftDuringEdit)) return;
     persistCreatorDraft(
       SPECIES_CREATOR_CACHE_KEY,
       { form, timestamp: Date.now() },
       isLocalDraftDiscarded(),
     );
-  }, [cacheReady, form, isLocalDraftDiscarded]);
+  }, [cacheReady, form, editSession, isLocalDraftDiscarded, preserveDraftDuringEdit]);
 
   // Base skills only (no sub-skills) for species skill selection
   const skillOptions = useMemo(() => {
@@ -171,6 +162,61 @@ export function useSpeciesCreatorWorkspace({
       acceptDraft();
     },
   });
+
+  // ?edit= replaces the draft only after that id is in the loaded library.
+  // An unknown id keeps the draft, including when the creator was already open.
+  useEffect(() => {
+    if (skillsLoading || traitsLoading) return;
+    const editKey = editSession ?? '';
+    if (settledEditKeyRef.current === editKey) return;
+    const plan = planSpeciesCreatorEdit({
+      editSpeciesId: editSession,
+      libraryReady: editLibraryReady,
+      rawItems,
+      traits,
+      skills,
+    });
+    if (plan.type === 'wait') return;
+    settledEditKeyRef.current = editKey;
+
+    if (plan.type === 'replace') {
+      draftHydratedRef.current = true;
+      try {
+        localStorage.removeItem(SPECIES_CREATOR_CACHE_KEY);
+      } catch {
+        // ignore
+      }
+      queueMicrotask(() => {
+        setPreserveDraftDuringEdit(false);
+        setForm(plan.form);
+        setAppliedEditId(editSession);
+        setCacheReady(true);
+        save.applyLoadedLibraryItem(plan.item);
+      });
+      return;
+    }
+
+    if (plan.type === 'missing') {
+      const draft = draftHydratedRef.current ? null : readStoredSpeciesDraft(traits, skills);
+      draftHydratedRef.current = true;
+      queueMicrotask(() => {
+        if (draft) setForm(draft);
+        setPreserveDraftDuringEdit(true);
+        setAppliedEditId(editSession);
+        setCacheReady(true);
+        save.setSaveMessage({ type: 'error', text: creatorEditMissMessage('species') });
+      });
+      return;
+    }
+
+    const draft = draftHydratedRef.current ? null : readStoredSpeciesDraft(traits, skills);
+    draftHydratedRef.current = true;
+    queueMicrotask(() => {
+      if (draft) setForm(draft);
+      setPreserveDraftDuringEdit(false);
+      setCacheReady(true);
+    });
+  }, [skillsLoading, traitsLoading, traits, skills, editSession, editLibraryReady, rawItems, save]);
 
   const handleSave = useCallback(async () => {
     if (!isSpeciesFormSaveReady(form)) {
@@ -418,5 +464,6 @@ export function useSpeciesCreatorWorkspace({
     setPendingBatch,
     isSaveReady: isSpeciesFormSaveReady(form),
     skillLabel: (id: string) => resolveSpeciesSkillLabel(skills, id),
+    editBootstrapPending: Boolean(editSession) && appliedEditId !== editSession,
   };
 }

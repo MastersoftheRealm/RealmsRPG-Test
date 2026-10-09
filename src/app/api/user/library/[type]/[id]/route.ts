@@ -167,12 +167,7 @@ export async function PATCH(
     if (!validation.success) return validation.error;
     const data = validation.data as Record<string, unknown>;
     const existingRow = existing as Record<string, unknown>;
-    let merged: Record<string, unknown>;
-    if (existingRow.data !== undefined && existingRow.data !== null) {
-      merged = { ...(existingRow.data as Record<string, unknown>), ...data };
-    } else {
-      merged = { ...rowToItemSpecies(existingRow), ...data };
-    }
+    const merged: Record<string, unknown> = { ...rowToItemSpecies(existingRow), ...data };
     delete (merged as Record<string, unknown>).id;
     delete (merged as Record<string, unknown>).docId;
     delete (merged as Record<string, unknown>)._source;
@@ -184,18 +179,7 @@ export async function PATCH(
       .update(updateRow)
       .eq('id', id.trim())
       .eq('user_id', user.uid);
-    if (updateErr) {
-      if (updateErr.message?.includes('column')) {
-        const { error: legErr } = await supabase
-          .from('user_species')
-          .update({ data: merged })
-          .eq('id', id.trim())
-          .eq('user_id', user.uid);
-        if (legErr) throw legErr;
-        return NextResponse.json({ ok: true });
-      }
-      throw updateErr;
-    }
+    if (updateErr) throw updateErr;
     return NextResponse.json({ ok: true });
   } catch (err) {
     console.error('[API Error] PATCH /api/user/library/[type]/[id]:', err);

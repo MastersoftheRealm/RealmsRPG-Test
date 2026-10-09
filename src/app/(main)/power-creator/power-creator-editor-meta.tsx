@@ -7,7 +7,10 @@
 import type { ReactNode } from 'react';
 import { RealmsImageField } from '@/components/patterns';
 import { Card } from '@/components/ui';
-import { CreatorDescriptionField, CreatorNameField } from '@/components/creator/creator-text-fields';
+import {
+  CreatorDescriptionField,
+  CreatorNameField,
+} from '@/components/creator/creator-text-fields';
 import { PowerCreatorHelp } from './power-creator-help';
 
 type PowerCreatorEditorMetaProps = {

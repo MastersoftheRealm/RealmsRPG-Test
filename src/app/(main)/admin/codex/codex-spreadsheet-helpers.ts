@@ -48,7 +48,11 @@ export function generateNextNumericId(existingIds: Set<string>): string {
 }
 
 export function rowDataWithoutId(row: Record<string, unknown>): Record<string, unknown> {
-  return Object.fromEntries(Object.entries(row).filter(([key]) => key !== 'id'));
+  return Object.fromEntries(
+    Object.entries(row)
+      .filter(([key]) => key !== 'id')
+      .map(([key, value]) => [key, value === undefined ? null : value]),
+  );
 }
 
 /** Columns whose value differs from the snapshot taken when the grid loaded. */

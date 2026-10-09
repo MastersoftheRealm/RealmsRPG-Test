@@ -3,6 +3,7 @@
  */
 
 import type { CodexCollection } from '@/lib/codex/collections';
+import { parseArchetypePathData, serializeLevel1LoadoutsField } from '@/lib/game/archetype-path';
 
 export type CodexSpreadsheetTabId =
   | 'feats'
@@ -51,6 +52,7 @@ const PREFERRED_ORDER_AFTER_DESC = [
   'uses_per_rec',
   'uses_per_rec_per_tier',
   'category',
+  'source',
   'type',
   'size',
   'speed',
@@ -134,6 +136,46 @@ export const READONLY_COLUMNS = new Set(['id']);
 /** Carried on the row for the optimistic lock, not shown as a column. */
 export const HIDDEN_COLUMNS = new Set(['updated_at']);
 
+/**
+ * Display copies and composites. They are not the columns list mode writes, so an edit
+ * here used to vanish on reload (points vs feat_points, gold_cost vs currency, path_data).
+ */
+const DERIVED_COLUMNS: Record<CodexSpreadsheetTabId, ReadonlySet<string>> = {
+  feats: new Set(),
+  skills: new Set(),
+  species: new Set(['size', 'speed', 'traits']),
+  traits: new Set(['species']),
+  parts: new Set(),
+  properties: new Set(['tp_cost', 'gold_cost']),
+  equipment: new Set(['type', 'gold_cost', 'properties']),
+  archetypes: new Set(['path_data']),
+  creature_feats: new Set(['points', 'prereqs']),
+};
+
+export function visibleSpreadsheetColumns(tab: CodexSpreadsheetTabId, keys: string[]): string[] {
+  const derived = DERIVED_COLUMNS[tab];
+  return orderColumns(keys.filter((key) => !HIDDEN_COLUMNS.has(key) && !derived.has(key)));
+}
+
+/** Copy nested archetype fields onto the row so spreadsheet edits hit the columns list mode writes. */
+export function spreadsheetSourceRow(
+  tab: CodexSpreadsheetTabId,
+  data: Record<string, unknown>,
+): Record<string, unknown> {
+  if (tab !== 'archetypes') return data;
+  const level1 = parseArchetypePathData(data.path_data)?.level1;
+  if (!level1) return data;
+  return {
+    ...data,
+    level1_recommend_unarmed_prowess: level1.recommendUnarmedProwess === true,
+    level1_recommended_abilities: level1.recommended_abilities ?? null,
+    level1_loadouts: serializeLevel1LoadoutsField({
+      armorStep: level1.armorStep,
+      sharedEquipment: level1.sharedEquipment,
+    }),
+  };
+}
+
 /** Columns find/replace is allowed to rewrite. */
 export function searchableColumns(columns: string[]): string[] {
   return columns.filter((col) => !READONLY_COLUMNS.has(col));
@@ -148,6 +190,8 @@ export const BOOLEAN_COLUMNS = new Set([
   'percentage',
   'duration',
   'mechanic',
+  'is_starter',
+  'level1_recommend_unarmed_prowess',
 ]);
 
 /** Column width in px: narrow for id/boolean/short fields, wider for description. */

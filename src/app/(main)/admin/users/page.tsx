@@ -2,6 +2,8 @@
  * Admin User Management
  * =====================
  * List users by username and change role.
+ * Card rows keep Effective limits and Change role on screen at 768 and 1024
+ * (ClickUp 86e3jzu53). A six-column table was clipped by page overflow.
  */
 
 'use client';
@@ -17,7 +19,7 @@ import {
   EmptyState,
   Alert,
   SearchInput,
-  TableScroll,
+  Select,
 } from '@/components/ui';
 import { ConfirmActionModal, ErrorDisplay } from '@/components/patterns';
 import { apiFetch } from '@/lib/api-client';
@@ -51,6 +53,11 @@ const ROLE_LABELS: Record<UserRole, string> = {
   developer: 'Developer',
   admin: 'Admin',
 };
+
+const ROLE_OPTIONS = (Object.keys(ROLE_LABELS) as UserRole[]).map((role) => ({
+  value: role,
+  label: ROLE_LABELS[role],
+}));
 
 export default function AdminUsersPage() {
   const [users, setUsers] = useState<UserRow[]>([]);
@@ -172,62 +179,60 @@ export default function AdminUsersPage() {
       ) : filteredUsers.length === 0 ? (
         <EmptyState title="No users found." size="sm" />
       ) : (
-        <TableScroll className="rounded-lg border border-border bg-surface">
-          <table className="w-full text-sm">
-            <thead className="border-b border-border bg-surface-alt">
-              <tr>
-                <th className="px-4 py-3 text-left font-semibold text-text-primary">Username</th>
-                <th className="px-4 py-3 text-left font-semibold text-text-primary">
-                  Display Name
-                </th>
-                <th className="px-4 py-3 text-left font-semibold text-text-primary">Email</th>
-                <th className="px-4 py-3 text-left font-semibold text-text-primary">Role</th>
-                <th className="px-4 py-3 text-left font-semibold text-text-primary">
-                  Effective limits
-                </th>
-                <th className="px-4 py-3 text-left font-semibold text-text-primary">Change role</th>
-              </tr>
-            </thead>
-            <tbody>
-              {filteredUsers.map((u) => (
-                <tr key={u.id} className="border-b border-border-light last:border-0">
-                  <td className="px-4 py-3 font-medium text-text-primary">
-                    {u.usernameDisplay || u.username || '(none)'}
-                  </td>
-                  <td className="px-4 py-3 text-text-secondary">{u.displayName || '(none)'}</td>
-                  <td className="px-4 py-3 text-text-secondary">{u.email || '(none)'}</td>
-                  <td className="px-4 py-3 text-text-secondary">{ROLE_LABELS[u.role]}</td>
-                  <td className="px-4 py-3 text-text-secondary">
-                    <RoleLimitsCell role={u.role} rolePolicies={rolePolicies} />
-                  </td>
-                  <td className="px-4 py-3">
-                    <select
-                      value={u.role}
-                      onChange={(e) => {
-                        const newRole = e.target.value as UserRole;
-                        if (newRole === u.role) return;
-                        setPendingChange({
-                          userId: u.id,
-                          label: u.usernameDisplay || u.username || 'user',
-                          oldRole: u.role,
-                          newRole,
-                        });
-                      }}
-                      disabled={updating === u.id}
-                      className="rounded border border-border bg-background px-2 py-1 text-sm"
-                      aria-label={`Role for ${u.usernameDisplay || u.username || 'user'}`}
+        <ul className="min-w-0 space-y-3">
+          {filteredUsers.map((u) => {
+            const name = u.usernameDisplay || u.username;
+            const label = name || 'user';
+            return (
+              <li
+                key={u.id}
+                className="grid min-w-0 gap-4 rounded-lg border border-border bg-surface p-4 lg:grid-cols-[minmax(0,1fr)_minmax(0,12.5rem)] lg:items-start"
+              >
+                <div className="min-w-0 space-y-3">
+                  <div className="min-w-0">
+                    <p className="truncate font-medium text-text-primary" title={name || undefined}>
+                      {name || '(none)'}
+                    </p>
+                    <p
+                      className="truncate text-sm text-text-secondary"
+                      title={u.displayName || undefined}
                     >
-                      <option value="new_player">New Player</option>
-                      <option value="playtester">Playtester</option>
-                      <option value="developer">Developer</option>
-                      <option value="admin">Admin</option>
-                    </select>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </TableScroll>
+                      {u.displayName || '(none)'}
+                    </p>
+                    <p
+                      className="truncate text-sm text-text-secondary"
+                      title={u.email || undefined}
+                    >
+                      {u.email || '(none)'}
+                    </p>
+                    <p className="text-sm text-text-secondary">Role: {ROLE_LABELS[u.role]}</p>
+                  </div>
+                  <div className="min-w-0">
+                    <p className="mb-1 text-sm font-medium text-text-primary">Effective limits</p>
+                    <RoleLimits role={u.role} rolePolicies={rolePolicies} />
+                  </div>
+                </div>
+                <Select
+                  label="Change role"
+                  aria-label={`Change role for ${label}`}
+                  value={u.role}
+                  options={ROLE_OPTIONS}
+                  disabled={updating === u.id}
+                  onChange={(e) => {
+                    const newRole = e.target.value as UserRole;
+                    if (newRole === u.role) return;
+                    setPendingChange({
+                      userId: u.id,
+                      label,
+                      oldRole: u.role,
+                      newRole,
+                    });
+                  }}
+                />
+              </li>
+            );
+          })}
+        </ul>
       )}
 
       <ConfirmActionModal
@@ -275,7 +280,7 @@ export default function AdminUsersPage() {
   );
 }
 
-function RoleLimitsCell({
+function RoleLimits({
   role,
   rolePolicies,
 }: {
@@ -283,27 +288,28 @@ function RoleLimitsCell({
   rolePolicies: Record<UserRole, RolePolicyRow> | null;
 }) {
   const p = rolePolicies?.[role];
-  if (!p) return <span className="text-text-muted">—</span>;
+  if (!p) return <p className="text-sm text-text-muted">—</p>;
 
   const canUpload = Boolean(p.permissions?.can_upload_profile_picture);
-  const parts = [
-    `Campaigns: ${p.max_campaigns}`,
-    `Players/campaign: ${p.max_players_per_campaign}`,
-    `Characters: ${p.max_characters}`,
-    `Powers: ${p.max_custom_powers}`,
-    `Techniques: ${p.max_custom_techniques}`,
-    `Armaments: ${p.max_custom_armaments}`,
-    `Creatures: ${p.max_custom_creatures}`,
-    `Profile pic: ${canUpload ? 'Yes' : 'No'}`,
-  ];
+  const items = [
+    ['Campaigns', String(p.max_campaigns)],
+    ['Players/campaign', String(p.max_players_per_campaign)],
+    ['Characters', String(p.max_characters)],
+    ['Powers', String(p.max_custom_powers)],
+    ['Techniques', String(p.max_custom_techniques)],
+    ['Armaments', String(p.max_custom_armaments)],
+    ['Creatures', String(p.max_custom_creatures)],
+    ['Profile pic', canUpload ? 'Yes' : 'No'],
+  ] as const;
 
   return (
-    <div className="space-y-1">
-      <div className="text-text-primary">{`Campaigns: ${p.max_campaigns} · Players/campaign: ${p.max_players_per_campaign} · Characters: ${p.max_characters}`}</div>
-      <div className="text-xs text-text-muted">
-        {`Powers ${p.max_custom_powers} · Techniques ${p.max_custom_techniques} · Armaments ${p.max_custom_armaments} · Creatures ${p.max_custom_creatures} · Profile pic ${canUpload ? 'Yes' : 'No'}`}
-      </div>
-      <span className="sr-only">{parts.join(', ')}</span>
-    </div>
+    <ul className="flex min-w-0 flex-wrap gap-x-3 gap-y-1 text-sm">
+      {items.map(([name, value]) => (
+        <li key={name} className="min-w-0">
+          <span className="text-text-secondary">{name}: </span>
+          <span className="text-text-primary">{value}</span>
+        </li>
+      ))}
+    </ul>
   );
 }

@@ -17,6 +17,10 @@ import {
 } from '@/hooks/use-creator-unsaved-guard';
 import type { CreatorSaveTarget } from '@/lib/library/catalog-listing';
 import {
+  useCreatorEditDraftDecision,
+  useCreatorEditMissNotice,
+} from '@/lib/library/use-creator-edit-draft';
+import {
   isPowerCompositionMechanicPart,
   isRandomizeDieComplete,
   powerSpecHasContent,
@@ -55,6 +59,8 @@ import {
 type UsePowerCreatorWorkspaceArgs = {
   initialFormState: PowerCreatorFormState;
   editPowerId: string | null;
+  /** True only when editPowerId matched a loaded library row. */
+  editReplacesDraft: boolean;
   powerParts: PowerPart[];
   initialSaveTarget?: CreatorSaveTarget | undefined;
 };
@@ -62,6 +68,7 @@ type UsePowerCreatorWorkspaceArgs = {
 export function usePowerCreatorWorkspace({
   initialFormState,
   editPowerId,
+  editReplacesDraft,
   powerParts,
   initialSaveTarget,
 }: UsePowerCreatorWorkspaceArgs) {
@@ -140,12 +147,14 @@ export function usePowerCreatorWorkspace({
   const { discardLocalDraft, isLocalDraftDiscarded } =
     useDiscardableCreatorDraft(POWER_CREATOR_CACHE_KEY);
 
-  useEffect(() => {
-    if (editPowerId) clearCreatorCache(POWER_CREATOR_CACHE_KEY);
-  }, [editPowerId]);
+  const { discardDraft } = useCreatorEditDraftDecision(
+    true,
+    editReplacesDraft,
+    POWER_CREATOR_CACHE_KEY,
+  );
 
   useEffect(() => {
-    if (editPowerId) return;
+    if (discardDraft) return;
 
     const cache: PowerCreatorCache = {
       name,
@@ -180,7 +189,7 @@ export function usePowerCreatorWorkspace({
     };
     persistCreatorDraft(POWER_CREATOR_CACHE_KEY, cache, isLocalDraftDiscarded());
   }, [
-    editPowerId,
+    discardDraft,
     name,
     description,
     topForm,
@@ -320,6 +329,8 @@ export function usePowerCreatorWorkspace({
     onSaveSuccess: resetFields,
     onSaveCommitted: acceptDraft,
   });
+
+  useCreatorEditMissNotice(Boolean(editPowerId) && !discardDraft, 'power', save.setSaveMessage);
 
   const handleReset = useCallback(() => {
     resetFields();

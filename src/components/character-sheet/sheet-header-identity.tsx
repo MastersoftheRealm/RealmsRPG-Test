@@ -229,7 +229,7 @@ export function SheetHeaderIdentity({
                     setIsEditingName(false);
                   }
                 }}
-                className="w-full min-w-0 touch-tier-standard rounded-lg border-2 border-primary-outline-border px-2 py-1 text-2xl font-bold text-text-primary focus:ring-2 focus:ring-primary-outline-border md:text-3xl"
+                className="touch-tier-standard w-full min-w-0 rounded-lg border-2 border-primary-outline-border px-2 py-1 text-2xl font-bold text-text-primary focus:ring-2 focus:ring-primary-outline-border md:text-3xl"
                 autoFocus
                 aria-label="Character name"
                 aria-describedby={

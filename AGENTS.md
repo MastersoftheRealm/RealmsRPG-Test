@@ -23,7 +23,7 @@ Do **not** load full historical queues, full `AGENT_GUIDE.md`, or archive audits
 ## Git Rules
 
 - **Never push directly to `master`.** Every change goes through a PR.
-- **Never merge PRs.** Collin merges normally; Kadin may bypass-merge per the workflow doc.
+- **Never merge PRs.** Collin merges normally; Kadin may bypass-merge per the workflow doc. A bypass merge moves the ClickUp task to **testing** with QA instructions for what changed, adds James Owenby, and keeps Collin assigned so he can move it back to **in review**.
 - Branch naming: `bug|feat/<clickUpId>-short-slug`.
 - Before opening a PR: `npm run build` + `npm run tasks:validate`.
 
@@ -40,7 +40,7 @@ Do **not** load full historical queues, full `AGENT_GUIDE.md`, or archive audits
 | Settled product/QA decisions | [Realms Web Decisions](https://docs.google.com/document/d/1tGebelYXZPegt4iZiycOjI3RBHD6N_QKZW6CI0ckxkg/edit) (Drive SoT) → repo copy `src/docs/ai/DECISIONS.md` |
 | AI creative policy | ClickUp wiki [Using AI at Realms](https://app.clickup.com/9017636492/docs/8cqwdmc-3357/8cqwdmc-517) |
 | Work queue | **ClickUp only** — `ACTIVE_TASKS.md` / TASK-### are optional engineering notes |
-| ClickUp ↔ GitHub status mapping | `CLICKUP_GITHUB_WORKFLOW.md` |
+| ClickUp writes | `CLICKUP_API_TOKEN` in `.env.local`, ClickUp API v2. Not the ClickUp plugin. Never print or commit the token. |
 | Product / UX / selection grammar | `REALMS_PRODUCT_OVERVIEW.md` + `human/USER_EXPERIENCE_GOALS.md` |
 | Exists already? | `FEATURE_INDEX.md` → `patterns` / `ui` / `hooks` / `services` barrels |
 | DB schema | `SUPABASE_SCHEMA.md` |

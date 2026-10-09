@@ -4,6 +4,7 @@ import type { Dispatch, SetStateAction } from 'react';
 import { Modal, Input, Textarea } from '@/components/ui';
 import { AdminCodexCopySourceBanner } from './admin-codex-copy-source-banner';
 import { AdminCodexEditModalFooter } from './admin-codex-edit-modal-footer';
+import { AdminCodexSourceField } from './admin-codex-source-field';
 
 export type CreatureFeatFormState = {
   name: string;
@@ -12,6 +13,7 @@ export type CreatureFeatFormState = {
   feat_lvl: number | undefined;
   lvl_req: number | undefined;
   mechanic: boolean;
+  source: string;
 };
 
 export const EMPTY_CREATURE_FEAT_FORM: CreatureFeatFormState = {
@@ -21,6 +23,7 @@ export const EMPTY_CREATURE_FEAT_FORM: CreatureFeatFormState = {
   feat_lvl: undefined,
   lvl_req: undefined,
   mechanic: false,
+  source: '',
 };
 
 type AdminCreatureFeatEditModalProps = {
@@ -31,6 +34,7 @@ type AdminCreatureFeatEditModalProps = {
   editingId: string | null;
   form: CreatureFeatFormState;
   setForm: Dispatch<SetStateAction<CreatureFeatFormState>>;
+  sourceOptions: string[];
   saving: boolean;
   onDelete?: (() => void) | undefined;
   onSave: () => void;
@@ -44,6 +48,7 @@ export function AdminCreatureFeatEditModal({
   editingId,
   form,
   setForm,
+  sourceOptions,
   saving,
   onDelete,
   onSave,
@@ -85,6 +90,11 @@ export function AdminCreatureFeatEditModal({
             rows={3}
           />
         </div>
+        <AdminCodexSourceField
+          value={form.source}
+          options={sourceOptions}
+          onChange={(source) => setForm((f) => ({ ...f, source }))}
+        />
         <div className="grid grid-cols-3 gap-4">
           <div>
             <label className="mb-1 block text-sm font-medium text-text-secondary">
