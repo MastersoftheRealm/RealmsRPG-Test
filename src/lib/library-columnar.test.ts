@@ -523,6 +523,39 @@ describe('library-columnar image_id parity (TASK-497)', () => {
   });
 });
 
+describe('shield damage clear on save (86e3jwwrt)', () => {
+  it('writes null when shield damage is off, and does not keep the die in payload', () => {
+    const { scalars, payload } = bodyToColumnar('items', {
+      name: 'Shield',
+      type: 'shield',
+      hasShieldDamage: false,
+      shieldDamage: null,
+      properties: [],
+    });
+    expect(scalars.shieldDamage).toBeNull();
+    expect(payload).not.toHaveProperty('shieldDamage');
+    expect(toDbRow(scalars).shield_damage).toBeNull();
+
+    const loaded = apiRoundTrip('items', {
+      name: 'Shield',
+      type: 'shield',
+      hasShieldDamage: false,
+      shieldDamage: null,
+      properties: [],
+    });
+    expect(loaded.shieldDamage ?? null).toBeNull();
+  });
+
+  it('leaves the shield damage column untouched when the key is omitted', () => {
+    const { scalars } = bodyToColumnar('items', {
+      name: 'Shield',
+      type: 'shield',
+      properties: [],
+    });
+    expect(scalars).not.toHaveProperty('shieldDamage');
+  });
+});
+
 describe('columnarViewSelect', () => {
   it('lists identity, payload, and scalars without user_id', () => {
     const columns = columnarViewSelect('powers').split(', ');
