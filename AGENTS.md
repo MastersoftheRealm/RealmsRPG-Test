@@ -23,7 +23,7 @@ Do **not** load full historical queues, full `AGENT_GUIDE.md`, or archive audits
 ## Git Rules
 
 - **Never push directly to `master`.** Every change goes through a PR.
-- **Never merge PRs.** Collin merges normally; Kadin may bypass-merge per the workflow doc.
+- **Never merge PRs.** Collin merges normally; Kadin may bypass-merge per the workflow doc. A bypass merge moves the ClickUp task to **testing** with QA instructions for what changed, adds James Owenby, and keeps Collin assigned so he can move it back to **in review**.
 - Branch naming: `bug|feat/<clickUpId>-short-slug`.
 - Before opening a PR: `npm run build` + `npm run tasks:validate`.
 
