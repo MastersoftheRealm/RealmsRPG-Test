@@ -452,7 +452,8 @@ export function bodyToColumnar(
     if (body.criticalRangeIncrease != null)
       scalars.criticalRangeIncrease = body.criticalRangeIncrease;
     if (body.shieldDR != null) scalars.shieldDR = body.shieldDR;
-    if (body.shieldDamage != null) scalars.shieldDamage = body.shieldDamage;
+    // Null is an explicit clear. Omitting the key leaves a previously saved die in the column.
+    if (body.shieldDamage !== undefined) scalars.shieldDamage = body.shieldDamage;
   }
 
   applyImageScalarsFromBody(scalars, body);
