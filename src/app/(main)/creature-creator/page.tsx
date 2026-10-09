@@ -139,6 +139,7 @@ function CreatureCreatorContent() {
         onClose: () => save.setShowPublishConfirm(false),
         onConfirm: () => save.confirmPublish(),
         title: save.publishConfirmTitle,
+        confirmLabel: save.publishConfirmLabel,
         description:
           save.publishConfirmDescription?.(creature.name.trim(), {
             existingInPublic: save.publishExistingInPublic,
@@ -149,6 +150,7 @@ function CreatureCreatorContent() {
         onClose: () => setShowResetConfirm(false),
         onConfirm: () => {
           setCreature(initialState);
+          save.forgetLoadedLibraryItem();
           clearCreatorCache(CREATURE_CREATOR_CACHE_KEY);
           setShowResetConfirm(false);
         },

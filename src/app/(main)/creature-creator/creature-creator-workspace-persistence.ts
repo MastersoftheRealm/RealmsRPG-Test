@@ -58,6 +58,7 @@ export function useCreatureCreatorWorkspacePersistence({
     initialSaveTarget: resolveCreatorSaveTargetFromItem(
       findLoadedLibraryItem(load.rawItems, editCreatureId),
     ),
+    editingId: editCreatureId,
   });
 
   const [showResetConfirm, setShowResetConfirm] = useState(false);

@@ -40,21 +40,22 @@ export async function saveToLibrary(
 }
 
 /**
- * Find a user-library row by exact name.
- * Returns `null` when no row matches. API/network failures **throw** (do not
- * treat transport errors as "not found" — see ARCHITECTURE.md client errors).
+ * Every user-library row whose name matches (trim + case-insensitive on the server).
+ * Lookup miss → empty list. API/network failures throw (callers toast).
+ * See ARCHITECTURE.md client errors.
  */
-export async function findLibraryItemByName(
+export async function findLibraryItemsByName(
   type: LibraryType,
   name: string,
-): Promise<{ id: string } | null> {
+): Promise<Array<{ id: string }>> {
   // PERF-01: server-side name lookup returns only matching `{ id, name }`
   // rows instead of the whole library.
   const matches = await apiFetch<Array<{ id: string; name?: string | undefined }>>(
     `${API_BASE}/${type}?name=${encodeURIComponent(name.trim())}`,
   );
-  const found = matches[0];
-  return found ? { id: found.id } : null;
+  return matches
+    .map((row) => ({ id: String(row.id ?? '').trim() }))
+    .filter((row) => row.id.length > 0);
 }
 
 /** Fetch official library items. Defaults to listed (player catalogs). */

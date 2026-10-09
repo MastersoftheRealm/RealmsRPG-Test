@@ -47,6 +47,7 @@ import { ItemCreatorEditor } from './item-creator-editor';
 import { RarityReferenceTable } from './item-creator-helpers';
 import { useItemCreatorWorkspace } from './use-item-creator-workspace';
 import {
+  creatorEditReplacesDraft,
   findLoadedLibraryItem,
   resolveCreatorSaveTargetFromItem,
 } from '@/lib/library/catalog-listing';
@@ -105,6 +106,7 @@ function ItemCreatorContent() {
       key={sessionKey}
       initialFormState={initialFormState}
       editItemId={editItemId}
+      editReplacesDraft={creatorEditReplacesDraft(editItemId, load.rawItems)}
       requestedType={requestedType}
       user={user}
       isAdmin={isAdmin}
@@ -122,6 +124,7 @@ function ItemCreatorContent() {
 interface ItemCreatorWorkspaceProps {
   initialFormState: ItemCreatorFormState;
   editItemId: string | null;
+  editReplacesDraft: boolean;
   requestedType: ArmamentType | null;
   user: ReturnType<typeof useAuthStore.getState>['user'];
   isAdmin: boolean;
@@ -137,6 +140,7 @@ interface ItemCreatorWorkspaceProps {
 function ItemCreatorWorkspace({
   initialFormState,
   editItemId,
+  editReplacesDraft,
   requestedType,
   user,
   isAdmin,
@@ -151,6 +155,7 @@ function ItemCreatorWorkspace({
   const ws = useItemCreatorWorkspace({
     initialFormState,
     editItemId,
+    editReplacesDraft,
     requestedType,
     itemProperties,
     closeLoadModal: load.closeLoadModal,
@@ -188,6 +193,7 @@ function ItemCreatorWorkspace({
         onClose: () => ws.save.setShowPublishConfirm(false),
         onConfirm: () => ws.save.confirmPublish(),
         title: ws.save.publishConfirmTitle,
+        confirmLabel: ws.save.publishConfirmLabel,
         description:
           ws.save.publishConfirmDescription?.(ws.name.trim(), {
             existingInPublic: ws.save.publishExistingInPublic,

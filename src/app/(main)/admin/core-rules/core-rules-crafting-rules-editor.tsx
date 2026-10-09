@@ -129,6 +129,7 @@ export function CraftingRulesEditor({
               <tr key={i} className="border-b border-border-subtle">
                 <td className="px-1 py-1">
                   <NumInput
+                    label={`General crafting row ${i + 1} currency min`}
                     value={(row.currencyMin as number) ?? 0}
                     onChange={(v) => setGeneralRow(i, 'currencyMin', v)}
                     min={0}
@@ -145,7 +146,7 @@ export function CraftingRulesEditor({
                     }}
                     className="w-20 rounded border border-border-light bg-surface px-2 py-1 text-sm"
                     placeholder="-"
-                    aria-label="Currency max"
+                    aria-label={`General crafting row ${i + 1} currency max`}
                   />
                 </td>
                 <td className="px-1 py-1">
@@ -158,6 +159,7 @@ export function CraftingRulesEditor({
                 </td>
                 <td className="px-1 py-1">
                   <NumInput
+                    label={`General crafting row ${i + 1} DS`}
                     value={(row.difficultyScore as number) ?? 14}
                     onChange={(v) => setGeneralRow(i, 'difficultyScore', v)}
                     min={1}
@@ -165,6 +167,7 @@ export function CraftingRulesEditor({
                 </td>
                 <td className="px-1 py-1">
                   <NumInput
+                    label={`General crafting row ${i + 1} successes`}
                     value={(row.successes as number) ?? 1}
                     onChange={(v) => setGeneralRow(i, 'successes', v)}
                     min={1}
@@ -172,6 +175,7 @@ export function CraftingRulesEditor({
                 </td>
                 <td className="px-1 py-1">
                   <NumInput
+                    label={`General crafting row ${i + 1} time`}
                     value={(row.timeValue as number) ?? 0}
                     onChange={(v) => setGeneralRow(i, 'timeValue', v)}
                     min={0}
@@ -253,6 +257,7 @@ export function CraftingRulesEditor({
               <tr key={i} className="border-b border-border-subtle">
                 <td className="px-1 py-1">
                   <NumInput
+                    label={`Successes row ${i + 1} delta`}
                     value={(row.delta as number) ?? 0}
                     onChange={(v) => setSuccessesRow(i, 'delta', v)}
                     min={0}
@@ -276,6 +281,7 @@ export function CraftingRulesEditor({
                 </td>
                 <td className="px-1 py-1">
                   <NumInput
+                    label={`Successes row ${i + 1} fail percent`}
                     value={(row.failureItemWorthPercent as number) ?? 0}
                     onChange={(v) => setSuccessesRow(i, 'failureItemWorthPercent', v)}
                     min={0}
@@ -284,6 +290,7 @@ export function CraftingRulesEditor({
                 </td>
                 <td className="px-1 py-1">
                   <NumInput
+                    label={`Successes row ${i + 1} success percent`}
                     value={(row.successItemWorthPercent as number) ?? 0}
                     onChange={(v) => setSuccessesRow(i, 'successItemWorthPercent', v)}
                     min={0}
@@ -292,6 +299,7 @@ export function CraftingRulesEditor({
                 </td>
                 <td className="px-1 py-1">
                   <NumInput
+                    label={`Successes row ${i + 1} retain percent`}
                     value={(row.materialsRetainedPercent as number) ?? 0}
                     onChange={(v) => setSuccessesRow(i, 'materialsRetainedPercent', v)}
                     min={0}

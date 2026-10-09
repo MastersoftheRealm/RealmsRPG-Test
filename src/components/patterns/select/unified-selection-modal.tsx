@@ -76,6 +76,7 @@ export function UnifiedSelectionModal({
   className,
   flexLayout = true,
   primaryActions,
+  wrapFooterActions = false,
 }: UnifiedSelectionModalProps) {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
@@ -308,6 +309,7 @@ export function UnifiedSelectionModal({
             isConfirmDisabled={isConfirmDisabled}
             confirmLabel={confirmLabel}
             primaryActions={primaryActions}
+            wrapFooterActions={wrapFooterActions}
           />
         }
       >

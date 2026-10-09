@@ -49,7 +49,13 @@ describe('mapCodexFeat', () => {
     expect(feat.lvl_req).toBeUndefined();
     expect(feat.uses_per_rec).toBeUndefined();
     expect(feat.char_feat).toBe(true);
+    expect(feat.source).toBeUndefined();
     expect(feat.state_feat).toBe(false);
+  });
+
+  it('trims a rules source and drops blanks', () => {
+    expect(mapCodexFeat({ id: '1', name: 'A', source: ' Core Rules ' }).source).toBe('Core Rules');
+    expect(mapCodexSkill({ id: '1', name: 'S', source: '   ' }).source).toBeUndefined();
   });
 
   it('keeps a hard lvl_req of 0 distinct from missing', () => {
@@ -99,6 +105,7 @@ describe('mapCodexSpecies', () => {
     expect(species.image_url).toBe('https://img/h.png');
     expect(species.speed).toBe(6);
     expect(species.catalog_listing).toBe('listed');
+    expect(species.source).toBeUndefined();
   });
 });
 

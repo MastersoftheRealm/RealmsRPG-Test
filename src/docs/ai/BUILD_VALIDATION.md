@@ -1836,6 +1836,25 @@ Manual QA for library/feats modularization and shared part display. **Needs:** c
 
 **Report** — `[ ] PASS` · `[ ] FAIL` · `[ ] SKIP` — Notes:
 
+#### DEV-V-009-T080 — Character name stops at 100 characters (86e3jvzrb)
+
+| Field | Value |
+|-------|-------|
+| **Suite** | DEV-V-009 — Character sheet refactor |
+| **Related task** | 86e3jvzrb |
+| **Where** | `/characters/[id]` edit mode, header name |
+| **Needs** | A saved character you can edit |
+
+**Steps**
+1. Turn on edit mode and choose Edit name. Paste 101 characters and press Enter.
+2. Confirm the field stops at 100, a short note says the paste was shortened, and a counter is visible near the limit (from 80 characters).
+3. Edit General Notes, wait for the save, and reload.
+
+**Expected**
+- The paste is cut to 100 characters, the note says so, and that 100-character name saves. General Notes from step 3 are still there after reload. The name field has `maxlength="100"`. A name that is still over 100 when it reaches save shows "Name must be 100 characters or fewer." and does not block the notes save.
+
+**Report** — `[ ] PASS` · `[ ] FAIL` · `[ ] SKIP` — Notes:
+
 #### DEV-V-009-T065 — Notes Age + Backstory fields (TASK-886)
 
 | Field | Value |
@@ -5017,6 +5036,27 @@ Admin Codex tabs, Codex browse tabs (including Codex Archetypes header chrome), 
 
 **Report** — `[ ] PASS` · `[ ] FAIL` · `[ ] SKIP` — Notes:
 
+#### DEV-V-028-T008 — Codex entry Source (TASK-928)
+
+| Field | Value |
+|-------|-------|
+| **Suite** | DEV-V-028 — Codex browse list shell |
+| **Task** | TASK-928 |
+| **Where** | `/admin/codex` — Feats, Skills, Species, Traits, Parts, Properties, Equipment, Archetypes, Creature Feats (edit modal). Spreadsheet tab optional. |
+| **Needs** | Admin account. Desktop and ~360px. |
+
+**Steps**
+1. Open **Feats** → Edit a feat. Confirm a **Source** select (None / Add new source...) under Description, separate from Category.
+2. Choose **Add new source...**, type `Core Rules`, press Enter. The text box closes and the Source select shows `Core Rules` before you save. Save, then reopen the feat — Source is still `Core Rules`. Set Source back to **None**, Save, reopen (refresh if needed) — Source stays **None**.
+3. Open **Species** → Edit a species. Confirm **Starter species** is still a checkbox, and **Source** is its own field (hint mentions Core Rules and that starter stays separate). Set Source to `Core Rules` on one species and Save. Reopen — both starter and source hold.
+4. Spot-check **Skills**, **Parts**, and **Archetypes** edit modals: the same Source control is present. On each tab, choose **Add new source...**, type `Core Rules`, and Save. A source typed on Feats is not in another tab’s list until that tab has used it.
+5. At ~360px, the Source select and the “type new source” input stay inside the modal (no page-wide horizontal scroll). Coarse pointer: the select is at least 44px tall.
+
+**Expected**
+- Source saves and reloads on feats, species, and the spot-checked types. Choosing **None** clears a saved source. Species starter flag is unchanged by setting Source. Add new source creates a value later entries of that same type can pick.
+
+**Report** — `[ ] PASS` · `[ ] FAIL` · `[ ] SKIP` — Notes:
+
 ---
 
 ## DEV-V-017 — Site copy modules (TASK-390)
@@ -5559,6 +5599,47 @@ islands (Phase 4) and workspace hook (Phase 5). **T012–T014** cover expanded h
 
 **Expected**
 - Ability utilized persists only via Finesse/Heavy mechanic properties (no free-form ability string on the saved item). Sheet uses `getWeaponAttackAbility` (no parallel formula). Heavy id 50 already live mechanic=true — no Codex apply required.
+
+**Report** — `[ ] PASS` · `[ ] FAIL` · `[ ] SKIP` — Notes:
+
+#### DEV-V-018-T022 — Creator name stops at 100 characters (86e3jx8ww)
+
+| Field | Value |
+|-------|-------|
+| **Suite** | DEV-V-018 — CreatorPageShell parity |
+| **Related task** | 86e3jx8ww |
+| **Where** | `/power-creator` (also item, technique, empowered technique, creature, species) |
+| **Needs** | A signed-in account that can save to My Library |
+
+**Steps**
+1. Open `/power-creator` and `/species-creator`. Confirm each name field shows a live counter and `maxlength="100"`. Paste 101 characters.
+2. Save. Confirm the stored name is 100 characters and the toast names that limit if save is still rejected.
+3. Paste a description of 10,000 characters and save. Then try to go past 10,000.
+
+**Expected**
+- Names stop at 100 with a visible counter. A 10,000-character description saves. The description field does not accept a 10,001st character. Once the description counter is visible, it uses the same grouping as the paste note ("10,000 of 10,000 characters", and "9,000 of 10,000 characters" at the threshold). The name counter uses that same format ("100 of 100 characters").
+
+**Report** — `[ ] PASS` · `[ ] FAIL` · `[ ] SKIP` — Notes:
+
+#### DEV-V-018-T023 — Same-name creator save asks before overwrite (86e3jp7e1)
+
+| Field | Value |
+|-------|-------|
+| **Suite** | DEV-V-018 — CreatorPageShell parity |
+| **Related task** | 86e3jp7e1 |
+| **Where** | `/power-creator` (also item, technique, empowered technique, creature, species) |
+| **Needs** | A signed-in account with two My library powers |
+
+**Steps**
+1. Save a power named X. Reset. Build a different power, name it X, and click Save.
+2. Cancel the confirm. Confirm X in My library is unchanged. Save again and choose Replace.
+3. Open the first power with `?edit=`, change its description, and Save. Then Reset, name the draft an existing different power, and Save.
+4. On `/species-creator`, Load a My library species, Reset, then Save the same name.
+
+**Expected**
+- The first save of a new name does not ask. A second save of that name asks before it overwrites, and Cancel leaves the older item. Replace updates that older item.
+- Saving the open `?edit=` item with its own name does not ask. Saving it under a different existing name asks before that other item is overwritten.
+- Species Reset drops the loaded id. Saving that name again asks before it replaces the row.
 
 **Report** — `[ ] PASS` · `[ ] FAIL` · `[ ] SKIP` — Notes:
 
@@ -8964,6 +9045,146 @@ Built-in variants in `payload.composition` (ADR-0029). Resolver: `lib/calculator
 
 ---
 
+## Species reopen (86e3jmhkn)
+
+Official Library Species tab and My Codex species Edit. `?edit=` load is unchanged. verification_status pending-qa.
+
+#### 86e3jmhkn — Species tab and My Codex Edit
+
+| Field | Value |
+|-------|-------|
+| **Where** | `/admin/public-library`, `/codex` (My Codex → Species), `/species-creator?edit=` |
+| **Needs** | Admin for Official Library. A saved My Codex species for the Edit row. |
+
+**Steps**
+1. Open `/admin/public-library`. Confirm **Species** sits with the other tabs (same tab role and hit area as **Creatures**).
+2. Open Species. Confirm the list matches the creatures row pattern (search, name, Edit). Edit goes to `/species-creator?edit=<id>` and the creator loads that species.
+3. Open `/codex`, choose **My Codex**, then Species. Each row’s Edit goes to `/species-creator?edit=<id>`. Realms Codex species rows have no Edit.
+
+**Expected**
+- Opening the creator with `?edit=` still loads that species. Reset is unchanged.
+
+**Report** — `[ ] PASS` · `[ ] FAIL` · `[ ] SKIP` — Notes:
+
+#### 86e3mhqay — Unknown edit id keeps the draft
+
+| Field | Value |
+|-------|-------|
+| **Where** | `/species-creator` |
+| **Needs** | No save. Do not write a species. |
+
+**Steps**
+1. Open `/species-creator`. Type a name and do not save.
+2. Open `/species-creator?edit=00000000-bad-id`.
+3. Confirm the form still shows that name and a message says the species couldn't be found.
+4. Open `/species-creator` again. Confirm the same unsaved name is still there.
+5. Open `/species-creator?edit=` with a real saved species id. Confirm that species loads.
+
+**Expected**
+- An unknown edit id does not blank the form or delete the draft.
+- A real edit id still loads that species.
+
+## DEV-V-064 — Admin Core Rules number labels (ClickUp 86e3k0cgu)
+
+Number inputs on `/admin/core-rules` expose a programmatic name. **Needs:** admin account.
+
+#### DEV-V-064-T001 — Core Rules numbers are named
+
+| Field | Value |
+|-------|-------|
+| **Suite** | DEV-V-064 — Admin Core Rules number labels |
+| **Related task** | ClickUp 86e3k0cgu |
+| **Where** | `/admin/core-rules` |
+| **Needs** | Admin account |
+
+**Steps**
+1. Open `/admin/core-rules` on the Progression tab.
+2. Inspect a number field such as Base Ability Points. Repeat on Sizes, Rarities, Armament Prof., and Crafting table cells.
+
+**Expected**
+- Each number input has an accessible name from its field label or from a row-and-column name.
+- That name includes the visible header text, including DS on Crafting and Armament Max (TP) on Armament Prof.
+
+**Report** — `[ ] PASS` · `[ ] FAIL` · `[ ] SKIP` — Notes:
+
+---
+
+## DEV-V-063 — Admin spreadsheet field save (ClickUp 86e3mezkn)
+
+Spreadsheet mode on `/admin/codex` keeps edits on the same columns list mode writes. **Needs:** admin account.
+
+#### DEV-V-063-T001 — Spreadsheet edits survive reload
+
+| Field | Value |
+|-------|-------|
+| **Suite** | DEV-V-063 — Admin spreadsheet field save |
+| **Related task** | ClickUp 86e3mezkn |
+| **Where** | `/admin/codex` Spreadsheet mode |
+| **Needs** | Admin account |
+
+**Steps**
+1. Open Feats, Species, Parts, Properties, Equipment, Creature Feats, and Archetypes in Spreadsheet mode.
+2. Change a text field, a number, a checkbox, and on Archetypes `level1_innate_powers` or `level1_guidance_groups`. Save the row.
+3. Reload `/admin/codex`.
+
+**Expected**
+- Each edited column still shows the new value.
+- Species has no `size`, `speed`, or `traits` column (`sizes` and `species_traits` remain). Equipment has `currency`, not `gold_cost`. Creature feats have `feat_points`, not `points`.
+- Archetype progression levels are unchanged when those columns were not edited.
+- Archetype level-1 loadouts (armor step and shared equipment) are still present after reload when that cell was not cleared.
+
+**Report** — `[ ] PASS` · `[ ] FAIL` · `[ ] SKIP` — Notes:
+
+#### DEV-V-063-T002 — Invalid archetype JSON is not saved
+
+| Field | Value |
+|-------|-------|
+| **Suite** | DEV-V-063 — Admin spreadsheet field save |
+| **Related task** | ClickUp 86e3mmnyz |
+| **Where** | `/admin/codex` Spreadsheet mode, Archetypes |
+| **Needs** | Admin account; an archetype with guidance groups, loadouts, or recommended abilities |
+
+**Steps**
+1. Open Archetypes in Spreadsheet mode.
+2. In `level1_guidance_groups`, `level1_loadouts`, or `level1_recommended_abilities`, type JSON that will not parse (for example, drop a closing bracket).
+3. Save the row.
+4. Reload `/admin/codex`.
+
+**Expected**
+- The save shows an error that the column is not valid JSON and nothing was written.
+- That archetype's guidance groups, loadouts, and recommended abilities are unchanged after reload.
+- Clearing a cell and saving still clears that column.
+
+**Report** — `[ ] PASS` · `[ ] FAIL` · `[ ] SKIP` — Notes:
+
+---
+
+## DEV-V-062 — Admin Users layout (ClickUp 86e3jzu53)
+
+Card rows on `/admin/users` so Effective limits and Change role stay on screen at 768 and 1024. **Needs:** admin account.
+
+#### DEV-V-062-T001 — Users list fits at 768 and 1024
+
+| Field | Value |
+|-------|-------|
+| **Suite** | DEV-V-062 — Admin Users layout |
+| **Related task** | ClickUp 86e3jzu53 |
+| **Where** | `/admin/users` |
+| **Needs** | Admin account with at least one user row |
+
+**Steps**
+1. Open `/admin/users` at 768px wide.
+2. Repeat at 1024px wide.
+
+**Expected**
+- Each user is a card. **Effective limits** shows Campaigns, Players/campaign, Characters, Powers, Techniques, Armaments, Creatures, and Profile pic, wrapping inside the card.
+- **Change role** is on screen in the same card (below the limits at 768, beside them at 1024).
+- The page does not scroll horizontally.
+
+**Report** — `[ ] PASS` · `[ ] FAIL` · `[ ] SKIP` — Notes:
+
+---
+
 ## Planned suites (split from legacy DEV-T)
 
 | Suite | Topic | Legacy | Status |
@@ -9010,5 +9231,8 @@ Built-in variants in `payload.composition` (ADR-0029). Resolver: `lib/calculator
 | DEV-V-053 | Wave 3A SEO + token hygiene (TASK-769 / TASK-770 / TASK-771 / TASK-793 / TASK-853 / TASK-905) | — | Automated (`site-url`, `robots-sitemap`, `rulebook`) + manual DEV-V-053 T001–T007 |
 | DEV-V-054 | Codex per-collection fetch + virtualized browse rows (TASK-775) | — | Automated (`api/codex/route.test`, `use-codex.keys.test`) + manual DEV-V-054 T001–T003 |
 | DEV-V-055 | ADR-0023 control touch tiers (TASK-841, TASK-847, TASK-830, TASK-850, TASK-851, TASK-857, TASK-865, TASK-901, TASK-913) | — | Automated (`button-tiers.test.ts` + `verify:responsive` creator form-height probe) + manual DEV-V-055 T001–T009 |
+| DEV-V-062 | Admin Users layout (ClickUp 86e3jzu53) | — | Automated (`admin-users-layout.test.ts`) + manual DEV-V-062-T001 |
+| DEV-V-063 | Admin spreadsheet field save (ClickUp 86e3mezkn) | — | Automated (`codex-spreadsheet-save.test.ts`, `actions.test.ts`) + manual DEV-V-063-T001–T002 |
+| DEV-V-064 | Admin Core Rules number labels (ClickUp 86e3k0cgu) | — | Automated (`core-rules-number-labels.test.ts`) + manual DEV-V-064-T001 |
 
 When implementing a related task, replace the legacy **DEV-T-###** block with granular **DEV-V-###** tests in this file.
