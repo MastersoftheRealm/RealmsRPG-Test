@@ -32,6 +32,10 @@ import type {
 import type { CoreRulesMap } from '@/types/core-rules';
 import type { CodexFeat, Trait } from '@/hooks/codex-types';
 import { patchTempModifiers } from '@/lib/character/temp-modifiers';
+import {
+  CHARACTER_NAME_TOO_LONG_MESSAGE,
+  isCharacterNameOverLimit,
+} from '@/lib/character/character-name-limit';
 import type { CharacterSheetStats } from './use-character-sheet-derived';
 
 type UseSheetResourceActionsArgs = {
@@ -110,9 +114,15 @@ export function useSheetResourceActions({
   const handleNameChange = useCallback(
     (name: string) => {
       if (!character) return;
-      setCharacter((prev) => (prev ? { ...prev, name } : null));
+      const next = name.trim();
+      if (isCharacterNameOverLimit(next)) {
+        showToast(CHARACTER_NAME_TOO_LONG_MESSAGE, 'error');
+        return;
+      }
+      if (!next) return;
+      setCharacter((prev) => (prev ? { ...prev, name: next } : null));
     },
-    [character, setCharacter],
+    [character, setCharacter, showToast],
   );
 
   const handlePortraitChange = useCallback(

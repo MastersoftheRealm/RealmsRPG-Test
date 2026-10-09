@@ -134,7 +134,7 @@ export function CodexSpreadsheetTable({
                   const isSticky = left !== undefined;
                   const isReadOnly = READONLY_COLUMNS.has(colKey);
                   const isNumCol = NUMERIC_COLUMNS.has(colKey);
-                  const isBool = BOOLEAN_COLUMNS.has(colKey);
+                  const isBool = BOOLEAN_COLUMNS.has(colKey) || typeof value === 'boolean';
                   const isDesc = colKey === 'description';
                   const canRenderAsNumber =
                     isNumCol &&

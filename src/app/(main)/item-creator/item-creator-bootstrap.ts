@@ -8,6 +8,10 @@ import type { ItemProperty } from '@/hooks';
 import { CREATOR_CACHE_KEYS } from '@/lib/game/creator-constants';
 import { readCreatorCache } from '@/lib/game/creator-cache';
 import {
+  itemCreatorTypeHref,
+  type ArmamentLibraryKind,
+} from '@/lib/library/armament-library-labels';
+import {
   deriveWeaponRangeConfig,
   filterSavedItemPropertiesForList,
   isMechanicProperty,
@@ -24,6 +28,48 @@ import {
 export const ITEM_CREATOR_CACHE_KEY = CREATOR_CACHE_KEYS.ITEM;
 
 export type ArmamentType = 'Weapon' | 'Armor' | 'Shield';
+
+const ARMAMENT_TYPE_BY_QUERY: Record<string, ArmamentType> = {
+  weapon: 'Weapon',
+  armor: 'Armor',
+  shield: 'Shield',
+};
+
+/** `?type=armor` / `shield` / `weapon`. Unknown values are ignored. */
+export function parseItemCreatorTypeParam(value: string | null | undefined): ArmamentType | null {
+  if (!value) return null;
+  return ARMAMENT_TYPE_BY_QUERY[value.trim().toLowerCase()] ?? null;
+}
+
+/** In-form type changes publish this href so reload does not keep a stale `?type=`. */
+export function itemCreatorHrefForArmamentType(armamentType: ArmamentType): string {
+  return itemCreatorTypeHref(armamentType.toLowerCase() as ArmamentLibraryKind);
+}
+
+/**
+ * Skip the draft cache write while editing, and while `?type=` still names a
+ * different armament than the draft on screen. Writing in that window replaces
+ * the stored draft with an empty form.
+ */
+export function shouldWriteItemCreatorDraft(editing: boolean, typeQueryConflict: boolean): boolean {
+  return !editing && !typeQueryConflict;
+}
+
+/**
+ * `?type=` blocks on a different stored draft until the user discards it.
+ * `ignoredRequestedType` is the query this session just replaced (in-form type
+ * change or Keep draft) and must not raise a second warning while the URL catches up.
+ */
+export function itemCreatorTypeQueryConflict(
+  draftType: ArmamentType,
+  requestedType: ArmamentType | null,
+  ignoredRequestedType: ArmamentType | null,
+): ArmamentType | null {
+  if (!requestedType || requestedType === draftType || requestedType === ignoredRequestedType) {
+    return null;
+  }
+  return requestedType;
+}
 
 export interface ItemSelectedProperty {
   property: ItemProperty;
@@ -217,6 +263,45 @@ export function restoreItemCreatorFromCache(
  * Load modal). Restores shield block/damage config on the edit path too, which
  * the old per-path edit effect missed.
  */
+function abilityRequirementFromField(item: ItemLibraryRecord): ItemAbilityRequirement | null {
+  const saved = item.abilityRequirement;
+  if (!saved?.name) return null;
+  return {
+    id: typeof saved.id === 'number' ? saved.id : Number(saved.id) || 0,
+    name: saved.name,
+    level: saved.level || 0,
+  };
+}
+
+/** Older shields stored the requirement as a property and left the field empty. */
+function abilityRequirementFromProperties(item: ItemLibraryRecord): ItemAbilityRequirement | null {
+  if (!Array.isArray(item.properties)) return null;
+  for (const prop of item.properties as Array<{
+    id?: number | string | undefined;
+    name?: string | undefined;
+    op_1_lvl?: number | undefined;
+  }>) {
+    const name = String(prop.name ?? '');
+    if (!name.includes('Requirement')) continue;
+    const id = typeof prop.id === 'number' ? prop.id : Number(prop.id);
+    if (!id) continue;
+    return { id, name, level: 1 + (Number(prop.op_1_lvl) || 0) };
+  }
+  return null;
+}
+
+function readItemAbilityRequirement(
+  item: ItemLibraryRecord,
+  armamentType: ArmamentType,
+): ItemAbilityRequirement | null {
+  if (armamentType !== 'Weapon' && armamentType !== 'Armor' && armamentType !== 'Shield') {
+    return null;
+  }
+  // Explicit None. A leftover requirement property must not put it back.
+  if (item.abilityRequirement === null) return null;
+  return abilityRequirementFromField(item) ?? abilityRequirementFromProperties(item);
+}
+
 export function itemLibraryRecordToFormState(
   item: ItemLibraryRecord,
   itemProperties: ItemProperty[],
@@ -258,17 +343,7 @@ export function itemLibraryRecordToFormState(
     };
   }
 
-  const abilityRequirement: ItemAbilityRequirement | null =
-    (armamentType === 'Weapon' || armamentType === 'Armor') && item.abilityRequirement
-      ? {
-          id:
-            typeof item.abilityRequirement.id === 'number'
-              ? item.abilityRequirement.id
-              : Number(item.abilityRequirement.id) || 0,
-          name: item.abilityRequirement.name || '',
-          level: item.abilityRequirement.level || 0,
-        }
-      : null;
+  const abilityRequirement = readItemAbilityRequirement(item, armamentType);
 
   const propertyPayloads = Array.isArray(item.properties)
     ? (item.properties as ItemPropertyPayload[])
@@ -320,8 +395,13 @@ export function bootstrapItemCreatorFormState(options: {
   editItemId: string | null;
   itemProperties: ItemProperty[];
   rawItems: unknown[];
+  /**
+   * From `?type=`. Edit load wins. A stored draft of a different type is kept;
+   * the caller warns before discarding it. Never substitute an empty form.
+   */
+  requestedType?: ArmamentType | null;
 }): ItemCreatorFormState {
-  const { editItemId, itemProperties, rawItems } = options;
+  const { editItemId, itemProperties, rawItems, requestedType = null } = options;
 
   if (editItemId) {
     const itemToEdit = rawItems.find((it) => {
@@ -333,5 +413,12 @@ export function bootstrapItemCreatorFormState(options: {
     }
   }
 
-  return restoreItemCreatorFromCache(itemProperties) ?? emptyItemCreatorFormState();
+  const cached = restoreItemCreatorFromCache(itemProperties);
+  if (!cached) {
+    return requestedType
+      ? { ...emptyItemCreatorFormState(), armamentType: requestedType }
+      : emptyItemCreatorFormState();
+  }
+  // Matching type, no type query, or a different-type draft: keep the draft.
+  return cached;
 }

@@ -2,18 +2,20 @@
 
 import { Input } from '@/components/ui';
 import { AdminCodexCopySourceBanner } from './admin-codex-copy-source-banner';
+import { AdminCodexSourceField } from './admin-codex-source-field';
 import { ABILITY_OPTIONS } from './admin-archetype-path-form';
 import type { AdminArchetypeEditorProps } from './admin-archetype-editor-config';
 
 export type AdminArchetypeEditorMetaProps = Pick<
   AdminArchetypeEditorProps,
-  'form' | 'setForm' | 'copySourceName'
+  'form' | 'setForm' | 'copySourceName' | 'sourceOptions'
 >;
 
 export function AdminArchetypeEditorMeta({
   form,
   setForm,
   copySourceName,
+  sourceOptions,
 }: AdminArchetypeEditorMetaProps) {
   return (
     <>
@@ -145,6 +147,11 @@ export function AdminArchetypeEditorMeta({
           rows={3}
         />
       </div>
+      <AdminCodexSourceField
+        value={form.source}
+        options={sourceOptions}
+        onChange={(source) => setForm((f) => ({ ...f, source }))}
+      />
     </>
   );
 }

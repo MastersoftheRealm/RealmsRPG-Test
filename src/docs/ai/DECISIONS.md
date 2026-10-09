@@ -16,7 +16,7 @@ Game runner = **RM (Realm Master)** — never GM.
 ## Process / workflow (Oct 5, 2026)
 
 - ClickUp is the **only work queue**. Repo `ACTIVE_TASKS` / TASK-### are optional engineering notes.
-- Collin merges normally. Kadin may bypass-merge only after full best practice; task stays **in review**, assigned to Collin, with a dated Bypass merge note.
+- Collin merges normally. Kadin may bypass-merge only after full best practice. A bypass merge moves the ClickUp task to **testing**, with QA instructions for what changed, **James Owenby** added, and **Collin** kept assigned. Collin can move the task back to **in review** to review it.
 - QA Tester checks the Vercel preview before merge or shortly after. Post-merge QA: QA Tester + Bob, or Bob alone.
 - WCAG **2.2 AA** everywhere.
 - Keep branch name **`master`**; ban direct pushes.
@@ -132,5 +132,6 @@ Kadin adopted composed-power pricing Oct 5 (10:21 PM ET) and revised it Oct 6 (7
 
 ## Changelog
 
+- **2026-10-08:** Bypass merge moves the ClickUp task to testing with QA instructions for what changed, adds James Owenby, and keeps Collin assigned. Collin can move it back to in review.
 - **2026-10-05 (~4:54 PM ET):** Appended standing QA triggers (post-dep smoke, S25 page-speed budgets, security-header/RLS retests, testing-status bot limits, Website QA check delegated to QA Tester, CI npm audit policy, no CVE IDs in public repo).
 - **2026-10-05:** Initial seed from `/workspace/qa/intent.md` settled rulings + Oct 5 Dev Team / Kadin corrections (ability hard caps −5/+10; Drive vs GAME_RULES ask-first; Realm Master spelling).
