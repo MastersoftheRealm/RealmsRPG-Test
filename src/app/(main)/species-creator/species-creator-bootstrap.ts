@@ -5,7 +5,8 @@
 
 import type { Trait, Skill, Species } from '@/hooks';
 import { defined } from '@/lib/utils';
-import { CREATOR_CACHE_KEYS } from '@/lib/game/creator-constants';
+import { CACHE_EXPIRY_MS, CREATOR_CACHE_KEYS } from '@/lib/game/creator-constants';
+import { findLoadedLibraryItem } from '@/lib/library/catalog-listing';
 
 export const MAX_SPECIES_TRAITS = 3;
 export const MAX_ANCESTRY_TRAITS = 6;
@@ -30,6 +31,54 @@ export const TRAIT_LIMITS: Record<TraitCategory, number> = {
   characteristics: MAX_CHARACTERISTICS,
   flaws: MAX_FLAWS,
 };
+
+export function openTraitSlots(currentCount: number, limit: number): number {
+  return Math.max(0, limit - currentCount);
+}
+
+/** Null when the selection fits. Otherwise tell the user to deselect before adding. */
+export function traitSelectionLimitMessage(
+  label: string,
+  selectedCount: number,
+  openSlots: number,
+): string | null {
+  if (selectedCount <= openSlots) return null;
+  const sentenceLabel = label.charAt(0).toUpperCase() + label.slice(1);
+  if (openSlots <= 0) {
+    return `No open slots for ${label}. Remove one before adding more.`;
+  }
+  const extra = selectedCount - openSlots;
+  const extraText = extra === 1 ? '1 extra trait' : `${extra} extra traits`;
+  const slotText = openSlots === 1 ? '1 open slot' : `${openSlots} open slots`;
+  return `${sentenceLabel} have ${slotText}. Deselect ${extraText} before adding.`;
+}
+
+/**
+ * Add the picked traits when they fit. A pick past the open slots does not call
+ * `onAddBatch`. The third species trait still asks for confirmation.
+ */
+export function commitSpeciesTraitBatch(args: {
+  ids: readonly string[];
+  category: TraitCategory;
+  currentCount: number;
+  limit: number;
+  onAddBatch: (traitIds: string[], category: TraitCategory) => void;
+  onThirdSpeciesTrait?: ((traitId: string) => void) | undefined;
+  onClose: () => void;
+}): void {
+  if (args.ids.length === 0) return;
+  const openSlots = openTraitSlots(args.currentCount, args.limit);
+  if (args.ids.length > openSlots) return;
+  if (args.category === 'species_traits' && args.ids.length === 1 && args.currentCount === 2) {
+    const firstId = args.ids[0];
+    if (!firstId) return;
+    args.onThirdSpeciesTrait?.(firstId);
+    args.onClose();
+    return;
+  }
+  args.onAddBatch([...args.ids], args.category);
+  args.onClose();
+}
 
 export interface SpeciesFormState {
   name: string;
@@ -209,6 +258,10 @@ export function speciesLibraryRecordToFormState(
   if (!sizes.length) sizes = ['Medium'];
   const languages = Array.isArray(d.languages) ? (d.languages as string[]) : [];
   const lifespan = d.adulthood_lifespan as number[] | undefined;
+  // Official rows store centimetres/kilograms as ave_hgt_cm / ave_wgt_kg.
+  // Creator saves use ave_height / ave_weight.
+  const aveHeight = d.ave_height != null && d.ave_height !== '' ? d.ave_height : d.ave_hgt_cm;
+  const aveWeight = d.ave_weight != null && d.ave_weight !== '' ? d.ave_weight : d.ave_wgt_kg;
   return {
     name: String(d.name ?? ''),
     description: String(d.description ?? ''),
@@ -220,12 +273,88 @@ export function speciesLibraryRecordToFormState(
     characteristics: characteristics.slice(0, MAX_CHARACTERISTICS),
     flaws: flaws.slice(0, MAX_FLAWS),
     languages: languages.length ? languages.slice(0, MAX_LANGUAGES) : [...DEFAULT_LANGUAGES],
-    ave_height: d.ave_height != null ? Number(d.ave_height) : '',
-    ave_weight: d.ave_weight != null ? Number(d.ave_weight) : '',
+    ave_height: coerceNumberOrEmpty(aveHeight),
+    ave_weight: coerceNumberOrEmpty(aveWeight),
     adulthood_lifespan:
       lifespan && lifespan.length >= 2 ? [defined(lifespan[0]), defined(lifespan[1])] : ['', ''],
     imageId: typeof (d.imageId ?? d.image_id) === 'string' ? String(d.imageId ?? d.image_id) : null,
     imageUrl:
       typeof (d.imageUrl ?? d.image_url) === 'string' ? String(d.imageUrl ?? d.image_url) : null,
   };
+}
+
+/** Official Library and My Codex Edit target for an existing species id. */
+export function speciesCreatorEditHref(id: string): string {
+  return `/species-creator?edit=${encodeURIComponent(id)}`;
+}
+
+/** Map a `?edit=` library row into the creator form. Null when that id is not loaded. */
+export function resolveSpeciesEditForm(
+  editSpeciesId: string,
+  rawItems: readonly unknown[],
+  allTraits: Trait[],
+  allSkills: Skill[],
+): { form: SpeciesFormState; item: unknown } | null {
+  const item = findLoadedLibraryItem(rawItems, editSpeciesId);
+  if (!item || typeof item !== 'object') return null;
+  return {
+    item,
+    form: speciesLibraryRecordToFormState(
+      item as Species | Record<string, unknown>,
+      allTraits,
+      allSkills,
+    ),
+  };
+}
+
+export type SpeciesCreatorEditPlan =
+  | { type: 'use-draft' }
+  | { type: 'wait' }
+  | { type: 'replace'; form: SpeciesFormState; item: unknown }
+  | { type: 'missing' };
+
+/**
+ * Decide what ?edit= may do to the local draft.
+ * `wait` means the library has not settled — do not read or delete the draft.
+ * `missing` means the id is unknown — keep the draft and tell the user.
+ * `replace` is the only plan that may delete the draft.
+ */
+export function planSpeciesCreatorEdit(options: {
+  editSpeciesId: string | null | undefined;
+  libraryReady: boolean;
+  rawItems: readonly unknown[];
+  traits: Trait[];
+  skills: Skill[];
+}): SpeciesCreatorEditPlan {
+  const id = options.editSpeciesId?.trim() ?? '';
+  if (!id) return { type: 'use-draft' };
+  if (!options.libraryReady) return { type: 'wait' };
+  const resolved = resolveSpeciesEditForm(id, options.rawItems, options.traits, options.skills);
+  if (!resolved) return { type: 'missing' };
+  return { type: 'replace', form: resolved.form, item: resolved.item };
+}
+
+/**
+ * Read the species draft. Drops an expired or corrupt entry.
+ * Does not treat an edit id as a reason to delete the draft.
+ */
+export function readStoredSpeciesDraft(traits: Trait[], skills: Skill[]): SpeciesFormState | null {
+  if (typeof window === 'undefined') return null;
+  try {
+    const raw = localStorage.getItem(SPECIES_CREATOR_CACHE_KEY);
+    if (!raw) return null;
+    const parsed = JSON.parse(raw) as SpeciesCreatorCache;
+    if (!parsed.timestamp || Date.now() - parsed.timestamp >= CACHE_EXPIRY_MS) {
+      localStorage.removeItem(SPECIES_CREATOR_CACHE_KEY);
+      return null;
+    }
+    return mergeCachedSpeciesForm(parsed, traits, skills);
+  } catch {
+    try {
+      localStorage.removeItem(SPECIES_CREATOR_CACHE_KEY);
+    } catch {
+      // ignore quota / private mode
+    }
+    return null;
+  }
 }

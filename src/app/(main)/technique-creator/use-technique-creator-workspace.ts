@@ -15,6 +15,10 @@ import {
 } from '@/hooks/use-creator-unsaved-guard';
 import type { CreatorSaveTarget } from '@/lib/library/catalog-listing';
 import {
+  useCreatorEditDraftDecision,
+  useCreatorEditMissNotice,
+} from '@/lib/library/use-creator-edit-draft';
+import {
   calculateTechniqueCosts,
   computeTechniqueActionTypeFromSelection,
   buildMechanicParts,
@@ -56,6 +60,8 @@ function toTechniquePartPayload(part: {
 type UseTechniqueCreatorWorkspaceArgs = {
   initialFormState: TechniqueCreatorFormState;
   editTechniqueId: string | null;
+  /** True only when editTechniqueId matched a loaded library row. */
+  editReplacesDraft: boolean;
   techniqueParts: TechniquePart[];
   initialSaveTarget?: CreatorSaveTarget | undefined;
 };
@@ -63,6 +69,7 @@ type UseTechniqueCreatorWorkspaceArgs = {
 export function useTechniqueCreatorWorkspace({
   initialFormState,
   editTechniqueId,
+  editReplacesDraft,
   techniqueParts,
   initialSaveTarget,
 }: UseTechniqueCreatorWorkspaceArgs) {
@@ -84,15 +91,15 @@ export function useTechniqueCreatorWorkspace({
     TECHNIQUE_CREATOR_CACHE_KEY,
   );
 
-  // ?edit= mode: clear any stale draft once on mount (parity with the old hydrate
-  // effect, which removed the cache after loading the edit target).
-  useEffect(() => {
-    if (editTechniqueId) clearCreatorCache(TECHNIQUE_CREATOR_CACHE_KEY);
-  }, [editTechniqueId]);
+  const { discardDraft } = useCreatorEditDraftDecision(
+    true,
+    editReplacesDraft,
+    TECHNIQUE_CREATOR_CACHE_KEY,
+  );
 
-  // Auto-save draft to localStorage (skip when editing an existing library row via ?edit=)
+  // Auto-save draft. A confirmed ?edit= load does not write the library row over the draft.
   useEffect(() => {
-    if (editTechniqueId) return;
+    if (discardDraft) return;
 
     const cache: TechniqueCreatorCache = {
       name,
@@ -115,7 +122,7 @@ export function useTechniqueCreatorWorkspace({
     };
     persistCreatorDraft(TECHNIQUE_CREATOR_CACHE_KEY, cache, isLocalDraftDiscarded());
   }, [
-    editTechniqueId,
+    discardDraft,
     name,
     description,
     selectedParts,
@@ -368,6 +375,12 @@ export function useTechniqueCreatorWorkspace({
       acceptDraft();
     },
   });
+
+  useCreatorEditMissNotice(
+    Boolean(editTechniqueId) && !discardDraft,
+    'technique',
+    save.setSaveMessage,
+  );
 
   const handleReset = useCallback(() => {
     setName('');

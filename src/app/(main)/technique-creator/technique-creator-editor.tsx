@@ -12,7 +12,10 @@ import type { TechniquePart } from '@/hooks';
 import { ValueStepper, SectionCostBadge, RealmsImageField } from '@/components/patterns';
 import { CollapsibleSection, PowerPartCard, TargetedDefensesSection } from '@/components/creator';
 import { Checkbox, Button, Card } from '@/components/ui';
-import { CreatorDescriptionField, CreatorNameField } from '@/components/creator/creator-text-fields';
+import {
+  CreatorDescriptionField,
+  CreatorNameField,
+} from '@/components/creator/creator-text-fields';
 import { ACTION_OPTIONS, DIE_SIZES } from '@/lib/game/creator-constants';
 import { ATTACK_MODE_SELECT_OPTIONS, type AttackMode } from '@/lib/attack-mode';
 import { formatAttackModeCanTargetHint } from '@/lib/game/targeted-defenses';

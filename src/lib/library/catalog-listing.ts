@@ -98,3 +98,21 @@ export function findLoadedLibraryItem(
     return String(row.id ?? '') === editId || String(row.docId ?? '') === editId;
   });
 }
+
+/**
+ * True only when ?edit= matches a row already in the loaded library.
+ * An unknown or invalid id must not discard the local draft.
+ */
+export function creatorEditReplacesDraft(
+  editId: string | null | undefined,
+  rawItems: readonly unknown[],
+): boolean {
+  const id = editId?.trim();
+  if (!id) return false;
+  return findLoadedLibraryItem(rawItems, id) != null;
+}
+
+/** Toast copy when ?edit= does not match a loaded library row. */
+export function creatorEditMissMessage(kind: string): string {
+  return `This ${kind} couldn't be found. Your unsaved draft is unchanged.`;
+}

@@ -27,6 +27,7 @@ export function AdminArchetypesTab() {
     editing,
     saving,
     copySourceName,
+    sourceOptions,
     form,
     setForm,
     filtered,
@@ -98,7 +99,7 @@ export function AdminArchetypesTab() {
                   columns={[{ key: 'Type', value: formatListCellLabel(a.type) }]}
                 />
               </div>
-              <div className="min-w-0">
+              <div className="shrink-0">
                 <AdminCodexRowActions
                   entity={a}
                   onEdit={openEdit}
@@ -139,6 +140,7 @@ export function AdminArchetypesTab() {
           form={form}
           setForm={setForm}
           copySourceName={copySourceName}
+          sourceOptions={sourceOptions}
           isSelectionDataLoading={isSelectionDataLoading}
           showToast={showToast}
           optionsByField={optionsByField}

@@ -16,7 +16,7 @@ import { IconButton, useToast } from '@/components/ui';
 import { useCodexFeats, useCodexSkills, usePathListFilter, type Feat, type Skill } from '@/hooks';
 import { useSort } from '@/hooks/use-sort';
 import { useAdminCodexEntity } from './use-admin-codex-entity';
-import { AdminCodexRowActions } from './admin-codex-row-actions';
+import { AdminCodexRowActions, ADMIN_CODEX_ROW_ACTIONS_WIDTH } from './admin-codex-row-actions';
 import { updateCodexDoc } from './actions';
 import { Layers } from 'lucide-react';
 import {
@@ -346,6 +346,7 @@ export function AdminFeatsTab() {
         sortState={sortState}
         onSort={handleSort}
         rowChrome={{ rightSlot: true }}
+        rightSlotWidth={ADMIN_CODEX_ROW_ACTIONS_WIDTH}
         isLoading={isLoading}
         isEmpty={groupedFeats.length === 0}
         emptyTitle={
@@ -386,6 +387,7 @@ export function AdminFeatsTab() {
                 }
               />
             }
+            rightSlotWidth={ADMIN_CODEX_ROW_ACTIONS_WIDTH}
           />
         ))}
       </CodexBrowseListShell>

@@ -28,6 +28,7 @@ import {
   type CatalogListingScope,
 } from '@/lib/library/catalog-listing';
 import { useSort } from '@/hooks/use-sort';
+import { collectCodexSources } from './admin-codex-source';
 import { COPY_NAME_SUFFIX } from './admin-codex-copy-suffix';
 import {
   EMPTY_SPECIES_FORM,
@@ -37,7 +38,7 @@ import {
 } from './admin-species-form';
 import { AdminSpeciesEditModal } from './admin-species-edit-modal';
 import { useAdminCodexEntity } from './use-admin-codex-entity';
-import { AdminCodexRowActions } from './admin-codex-row-actions';
+import { AdminCodexRowActions, ADMIN_CODEX_SPECIES_ACTIONS_WIDTH } from './admin-codex-row-actions';
 
 export function AdminSpeciesTab() {
   const { data: species, isLoading, error, refetch } = useSpecies({ includeUnlisted: true });
@@ -178,6 +179,7 @@ export function AdminSpeciesTab() {
         gridColumns="1.5fr 1fr 0.8fr"
         hasThumbnailColumn
         rowChrome={{ rightSlot: true }}
+        rightSlotWidth={ADMIN_CODEX_SPECIES_ACTIONS_WIDTH}
         sortState={sortState}
         onSort={handleSort}
         isLoading={isLoading}
@@ -241,6 +243,7 @@ export function AdminSpeciesTab() {
                 { key: 'Sizes', value: (s.sizes || []).join(', ') || s.size || '-' },
               ]}
               detailSections={detailSections.length > 0 ? detailSections : undefined}
+              rightSlotWidth={ADMIN_CODEX_SPECIES_ACTIONS_WIDTH}
               rightSlot={
                 <div className="flex items-center gap-2">
                   <div onClick={(e) => e.stopPropagation()} onKeyDown={(e) => e.stopPropagation()}>
@@ -277,6 +280,7 @@ export function AdminSpeciesTab() {
         setForm={setForm}
         skills={skillsArr}
         traits={traitsArr}
+        sourceOptions={collectCodexSources(species)}
         saving={saving}
         onDelete={editing ? () => askDelete(editing) : undefined}
         onSave={handleSave}

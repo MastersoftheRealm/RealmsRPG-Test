@@ -48,6 +48,7 @@ export function RaritiesEditor({
                 </td>
                 <td className="px-1 py-1 text-center">
                   <NumInput
+                    label={`Rarity tier ${i + 1} level min`}
                     value={(t.levelMin as number) ?? 0}
                     onChange={(v) => setTierField(i, 'levelMin', v)}
                     min={0}
@@ -55,6 +56,7 @@ export function RaritiesEditor({
                 </td>
                 <td className="px-1 py-1 text-center">
                   <NumInput
+                    label={`Rarity tier ${i + 1} level max`}
                     value={(t.levelMax as number) ?? 0}
                     onChange={(v) => setTierField(i, 'levelMax', v || null)}
                     min={0}
@@ -62,6 +64,7 @@ export function RaritiesEditor({
                 </td>
                 <td className="px-1 py-1 text-center">
                   <NumInput
+                    label={`Rarity tier ${i + 1} currency min`}
                     value={(t.currencyMin as number) ?? 0}
                     onChange={(v) => setTierField(i, 'currencyMin', v)}
                     min={0}
@@ -69,6 +72,7 @@ export function RaritiesEditor({
                 </td>
                 <td className="px-1 py-1 text-center">
                   <NumInput
+                    label={`Rarity tier ${i + 1} currency max`}
                     value={(t.currencyMax as number) ?? 0}
                     onChange={(v) => setTierField(i, 'currencyMax', v || null)}
                     min={0}

@@ -11,6 +11,7 @@ export interface UnifiedSelectionModalLeavePromptProps {
   showConfirm: boolean;
   onConfirm: () => void;
   isConfirmDisabled: boolean;
+  confirmDescribedBy?: string | undefined;
   confirmLabel: string;
   selectedCount: number;
   onDiscard: () => void;
@@ -25,6 +26,7 @@ export function UnifiedSelectionModalLeavePrompt({
   showConfirm,
   onConfirm,
   isConfirmDisabled,
+  confirmDescribedBy,
   confirmLabel,
   selectedCount,
   onDiscard,
@@ -47,6 +49,7 @@ export function UnifiedSelectionModalLeavePrompt({
             size="lg"
             onClick={onConfirm}
             disabled={isConfirmDisabled}
+            aria-describedby={confirmDescribedBy}
             className="w-full sm:w-auto"
           >
             {confirmLabel}
