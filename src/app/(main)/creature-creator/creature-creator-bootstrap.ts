@@ -27,8 +27,7 @@ export function bootstrapCreatureState(options: {
         String((x as { id?: string | undefined; docId?: string | undefined }).docId) ===
           editCreatureId,
     );
-    if (!match) return initialState;
-    return rawRecordToCreatureState(match as Record<string, unknown>);
+    if (match) return rawRecordToCreatureState(match as Record<string, unknown>);
   }
 
   const parsed = readCreatorCache<CreatureCreatorCache>(CREATURE_CREATOR_CACHE_KEY);

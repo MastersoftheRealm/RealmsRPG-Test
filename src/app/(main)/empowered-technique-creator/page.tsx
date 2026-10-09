@@ -37,6 +37,7 @@ import {
 } from './empowered-technique-bootstrap';
 import { useEmpoweredTechniqueCreatorWorkspace } from './use-empowered-technique-creator-workspace';
 import {
+  creatorEditReplacesDraft,
   findLoadedLibraryItem,
   resolveCreatorSaveTargetFromItem,
 } from '@/lib/library/catalog-listing';
@@ -99,6 +100,7 @@ function EmpoweredTechniqueCreatorContent() {
       key={sessionKey}
       initialFormState={initialFormState}
       editId={editId}
+      editReplacesDraft={creatorEditReplacesDraft(editId, load.rawItems)}
       user={user}
       isAdmin={isAdmin}
       powerParts={powerParts}
@@ -117,6 +119,7 @@ function EmpoweredTechniqueCreatorContent() {
 interface EmpoweredTechniqueWorkspaceProps {
   initialFormState: EmpoweredTechniqueFormState;
   editId: string | null;
+  editReplacesDraft: boolean;
   user: ReturnType<typeof useAuthStore.getState>['user'];
   isAdmin: boolean;
   powerParts: PowerPart[];
@@ -133,6 +136,7 @@ interface EmpoweredTechniqueWorkspaceProps {
 function EmpoweredTechniqueWorkspace({
   initialFormState,
   editId,
+  editReplacesDraft,
   user,
   isAdmin,
   powerParts,
@@ -148,6 +152,7 @@ function EmpoweredTechniqueWorkspace({
   const ws = useEmpoweredTechniqueCreatorWorkspace({
     initialFormState,
     editId,
+    editReplacesDraft,
     powerParts,
     techniqueParts,
     powerPartsError,
@@ -187,6 +192,7 @@ function EmpoweredTechniqueWorkspace({
         onClose: () => ws.save.setShowPublishConfirm(false),
         onConfirm: () => ws.save.confirmPublish(),
         title: ws.save.publishConfirmTitle,
+        confirmLabel: ws.save.publishConfirmLabel,
         description:
           ws.save.publishConfirmDescription?.(ws.name.trim(), {
             existingInPublic: ws.save.publishExistingInPublic,

@@ -37,6 +37,11 @@ import {
 import { useGameRules } from '@/hooks/use-game-rules';
 import { sheetCatalogFromEnrichment } from '@/lib/character-view-enrichment';
 import { cleanForSave } from '@/lib/data-enrichment';
+import { getErrorMessage } from '@/lib/api-client';
+import {
+  CHARACTER_NAME_TOO_LONG_MESSAGE,
+  characterSaveWithoutOverlongName,
+} from '@/lib/character/character-name-limit';
 import {
   characterLockToken,
   mergeRemotePreservingDirty,
@@ -312,8 +317,19 @@ export function useCharacterSheetPageData(id: string) {
     data: character,
     onSave: async (data) => {
       if (!data) return;
-      const cleaned = cleanForSave(data) as Record<string, unknown>;
-      const dirty = pickDirtyCharacterFields(cleaned, savedCleanRef.current);
+      const rawCleaned = cleanForSave(data) as Record<string, unknown>;
+      const prepared = characterSaveWithoutOverlongName(rawCleaned, savedCleanRef.current);
+      if (prepared.rejected) {
+        showToast(CHARACTER_NAME_TOO_LONG_MESSAGE, 'error');
+        if (typeof prepared.cleaned.name === 'string') {
+          const revertName = prepared.cleaned.name;
+          setCharacter((prev) =>
+            prev && prev.name !== revertName ? { ...prev, name: revertName } : prev,
+          );
+        }
+      }
+      const cleaned = prepared.cleaned;
+      const dirty = prepared.dirty;
       if (Object.keys(dirty).length === 0) {
         savedCleanRef.current = cleaned;
         return;
@@ -347,8 +363,14 @@ export function useCharacterSheetPageData(id: string) {
     },
     delay: 2000,
     enabled: isOwner,
-    onSaveError: () => {
-      showToast('Failed to save character', 'error');
+    onSaveError: (error) => {
+      const message = getErrorMessage(error, 'Failed to save character');
+      showToast(
+        message.includes(CHARACTER_NAME_TOO_LONG_MESSAGE)
+          ? CHARACTER_NAME_TOO_LONG_MESSAGE
+          : 'Failed to save character',
+        'error',
+      );
     },
   });
 

@@ -656,8 +656,20 @@ export function deriveCriticalRangeIncreaseFromProperties(
 const SHIELD_DICE_SIZES = [4, 6, 8] as const;
 
 /**
+ * Library display for Shield Amount / Shield Damage.
+ * Level 0 = 1d4, 1 = 1d6, 2 = 1d8, 3 = 2d4.
+ */
+export function shieldDiceFromOptionLevel(level: number): { amount: number; size: number } {
+  const safe = Math.max(0, Math.floor(level));
+  return {
+    amount: Math.floor(safe / 3) + 1,
+    size: SHIELD_DICE_SIZES[safe % 3] ?? 4,
+  };
+}
+
+/**
  * Derive shield block amount (e.g. "1d4") from Shield Amount property.
- * Item creator formula: level = ((amount*size) - 4) / 2. Reverse: amount = floor(level/3)+1, size = [4,6,8][level%3].
+ * Display only. Creator save still prices dice with ((amount * size) - 4) / 2.
  */
 export function deriveShieldAmountFromProperties(properties: ItemPropertyPayload[]): string {
   const prop = (properties || []).find((p) => {
@@ -665,14 +677,13 @@ export function deriveShieldAmountFromProperties(properties: ItemPropertyPayload
     return p.name === 'Shield Amount';
   });
   if (!prop) return '-';
-  const level = Math.max(0, prop.op_1_lvl ?? 0);
-  const amount = Math.floor(level / 3) + 1;
-  const size = SHIELD_DICE_SIZES[level % 3];
+  const { amount, size } = shieldDiceFromOptionLevel(prop.op_1_lvl ?? 0);
   return `${amount}d${size}`;
 }
 
 /**
  * Derive shield damage dice (e.g. "1d4 Bludgeoning") from Shield Damage property, if present.
+ * Property level reverses onto the 1d4/1d6/1d8 ladder. Use this only when no shieldDamage scalar was saved.
  */
 export function deriveShieldDamageFromProperties(properties: ItemPropertyPayload[]): string | null {
   const prop = (properties || []).find((p) => {
@@ -680,10 +691,39 @@ export function deriveShieldDamageFromProperties(properties: ItemPropertyPayload
     return p.name === 'Shield Damage';
   });
   if (!prop || (prop.op_1_lvl ?? 0) <= 0) return null;
-  const level = Math.max(0, prop.op_1_lvl ?? 0);
-  const amount = Math.floor(level / 3) + 1;
-  const size = SHIELD_DICE_SIZES[level % 3];
+  const { amount, size } = shieldDiceFromOptionLevel(prop.op_1_lvl ?? 0);
   return `${amount}d${size} Bludgeoning`;
+}
+
+/**
+ * Library and Load damage cells.
+ * While shield damage is on, and when the on/off flag was never saved, a stored
+ * shieldDamage die wins over the property ladder.
+ * hasShieldDamage false means damage is off. The save writes null for the die,
+ * and a null update leaves the old die in the column, so that stored die is ignored.
+ */
+export function resolveShieldDamageDisplay(input: {
+  shieldDamage?: unknown;
+  hasShieldDamage?: boolean | null | undefined;
+  properties?: ItemPropertyPayload[] | null | undefined;
+  damage?: unknown;
+}): string | null {
+  if (input.hasShieldDamage !== false && input.shieldDamage != null) {
+    const raw = input.shieldDamage;
+    const stored = formatDamageDisplay(
+      typeof raw === 'object' && !Array.isArray(raw)
+        ? {
+            ...(raw as Record<string, unknown>),
+            type: (raw as { type?: unknown }).type || 'bludgeoning',
+          }
+        : raw,
+    );
+    if (stored) return stored;
+  }
+  return (
+    deriveShieldDamageFromProperties(input.properties ?? []) ??
+    (input.damage != null ? formatDamageDisplay(input.damage) || null : null)
+  );
 }
 
 /**

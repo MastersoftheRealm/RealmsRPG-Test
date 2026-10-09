@@ -14,7 +14,7 @@ import {
   deriveAgilityReductionFromProperties,
   deriveCriticalRangeIncreaseFromProperties,
   deriveShieldAmountFromProperties,
-  deriveShieldDamageFromProperties,
+  resolveShieldDamageDisplay,
   resolveItemMarketPricing,
   resolveWeaponRangeDisplay,
   type ItemPropertyPayload,
@@ -194,9 +194,12 @@ export function buildOfficialItemRows(
     const abilityRequirement = abilityReqResult.display;
     const abilityReq = abilityReqResult.req;
     const block = deriveShieldAmountFromProperties(props);
-    const shieldDamage =
-      deriveShieldDamageFromProperties(props) ??
-      (item.damage ? formatDamageDisplay(item.damage) : null);
+    const shieldDamage = resolveShieldDamageDisplay({
+      shieldDamage: item.shieldDamage,
+      hasShieldDamage: item.hasShieldDamage,
+      properties: props,
+      damage: item.damage,
+    });
     return {
       id: String(item.id ?? item.docId ?? ''),
       raw: item,

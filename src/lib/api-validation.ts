@@ -15,6 +15,16 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { z, ZodSchema } from 'zod';
+import {
+  CHARACTER_NAME_MAX_LENGTH,
+  CHARACTER_NAME_TOO_LONG_MESSAGE,
+} from '@/lib/character/character-name-limit';
+import {
+  CREATOR_DESCRIPTION_MAX_LENGTH,
+  CREATOR_DESCRIPTION_TOO_LONG_MESSAGE,
+  CREATOR_NAME_MAX_LENGTH,
+  CREATOR_NAME_TOO_LONG_MESSAGE,
+} from '@/lib/creator/creator-text-limits';
 
 // =============================================================================
 // Helpers
@@ -211,7 +221,10 @@ function withSafeJsonBlob<T extends z.ZodRawShape>(shape: T) {
 
 /** Minimal required fields for character creation. Additional character fields allowed via catchall. */
 export const characterCreateSchema = withSafeJsonBlob({
-  name: z.string().min(1, 'Name is required').max(100, 'Name too long'),
+  name: z
+    .string()
+    .min(1, 'Name is required')
+    .max(CHARACTER_NAME_MAX_LENGTH, CHARACTER_NAME_TOO_LONG_MESSAGE),
   level: z.number().int().min(1).max(20).optional().default(1),
   duplicateOf: z.string().uuid().optional(),
   /**
@@ -223,7 +236,11 @@ export const characterCreateSchema = withSafeJsonBlob({
 
 /** Character update — partial, all fields optional. `updatedAt` is the lock token (ADR-0013). */
 export const characterUpdateSchema = withSafeJsonBlob({
-  name: z.string().min(1).max(100).optional(),
+  name: z
+    .string()
+    .min(1)
+    .max(CHARACTER_NAME_MAX_LENGTH, CHARACTER_NAME_TOO_LONG_MESSAGE)
+    .optional(),
   level: z.number().int().min(1).max(20).optional(),
   visibility: z.enum(['private', 'campaign', 'public']).optional(),
   /** Storage public URL or external URL after upload */
@@ -467,13 +484,23 @@ export const enhancedItemPatchSchema = z
 // Library Item Schemas
 // =============================================================================
 
+const creatorDescriptionSchema = z
+  .string()
+  .max(CREATOR_DESCRIPTION_MAX_LENGTH, CREATOR_DESCRIPTION_TOO_LONG_MESSAGE)
+  .nullish();
+
 export const libraryItemCreateSchema = withSafeJsonBlob({
-  name: z.string().min(1, 'Name is required').max(200, 'Name too long'),
+  name: z
+    .string()
+    .min(1, 'Name is required')
+    .max(CREATOR_NAME_MAX_LENGTH, CREATOR_NAME_TOO_LONG_MESSAGE),
+  description: creatorDescriptionSchema,
   duplicateOf: z.string().uuid().optional(),
 });
 
 export const libraryItemUpdateSchema = withSafeJsonBlob({
-  name: z.string().min(1).max(200).optional(),
+  name: z.string().min(1).max(CREATOR_NAME_MAX_LENGTH, CREATOR_NAME_TOO_LONG_MESSAGE).optional(),
+  description: creatorDescriptionSchema,
 });
 
 // =============================================================================
@@ -503,7 +530,12 @@ export const campaignRollCreateSchema = z.object({
 /** Permissive schema for admin public item creation/update — validates shape, not content. */
 export const publicItemSchema = withSafeJsonBlob({
   id: z.string().optional(),
-  name: z.string().min(1, 'Name is required').max(200).optional(),
+  name: z
+    .string()
+    .min(1, 'Name is required')
+    .max(CREATOR_NAME_MAX_LENGTH, CREATOR_NAME_TOO_LONG_MESSAGE)
+    .optional(),
+  description: creatorDescriptionSchema,
   catalogListing: z.enum(['listed', 'unlisted']).optional(),
 });
 

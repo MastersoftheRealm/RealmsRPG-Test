@@ -80,21 +80,15 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
           .filter((r) => r.name.trim().toLowerCase() === target);
         return NextResponse.json(matches);
       }
-      // Species: legacy rows keep the name inside `data`, so scan the (small)
-      // species set and match the column or the JSON name.
+      // Columnar user_species stores the name in `name`. The legacy `data` column
+      // was dropped; selecting it returns Postgres 42703 and blocks save.
       const { data: rows, error: dbError } = await supabase
         .from('user_species')
-        .select('id, name, data')
+        .select('id, name')
         .eq('user_id', user.uid);
       if (dbError) throw dbError;
       const matches = ((rows ?? []) as Array<Record<string, unknown>>)
-        .map((r) => {
-          const name =
-            r.name != null
-              ? String(r.name)
-              : String(((r.data as Record<string, unknown>)?.name as string) ?? '');
-          return { id: String(r.id), name };
-        })
+        .map((r) => ({ id: String(r.id), name: String(r.name ?? '') }))
         .filter((r) => r.name.trim().toLowerCase() === target);
       return NextResponse.json(matches);
     }
@@ -350,25 +344,7 @@ export async function POST(
         updated_at: now,
       });
       const { error: insertErr } = await supabase.from('user_species').insert(row);
-      if (insertErr) {
-        if (insertErr.message?.includes('column') && existingRow.data !== undefined) {
-          const d = (existingRow.data as Record<string, unknown>) ?? {};
-          const newData = {
-            ...d,
-            name: `${(d.name as string) || 'Item'} (Copy)`,
-            createdAt: now,
-            updatedAt: now,
-          };
-          const { data: created, error: legErr } = await supabase
-            .from('user_species')
-            .insert({ id: newId, user_id: user.uid, data: newData })
-            .select('id')
-            .single();
-          if (legErr) throw legErr;
-          return NextResponse.json({ id: created.id });
-        }
-        throw insertErr;
-      }
+      if (insertErr) throw insertErr;
       return NextResponse.json({ id: newId });
     }
 
@@ -383,19 +359,7 @@ export async function POST(
       updated_at: now,
     });
     const { error: insertErr } = await supabase.from('user_species').insert(row);
-    if (insertErr) {
-      if (insertErr.message?.includes('column')) {
-        const cleaned = { ...body, createdAt: now, updatedAt: now } as Record<string, unknown>;
-        const { data: created, error: legErr } = await supabase
-          .from('user_species')
-          .insert({ id: newId, user_id: user.uid, data: cleaned })
-          .select('id')
-          .single();
-        if (legErr) throw legErr;
-        return NextResponse.json({ id: created.id });
-      }
-      throw insertErr;
-    }
+    if (insertErr) throw insertErr;
     return NextResponse.json({ id: newId });
   } catch (err) {
     console.error('[API Error] POST /api/user/library/[type]:', err);

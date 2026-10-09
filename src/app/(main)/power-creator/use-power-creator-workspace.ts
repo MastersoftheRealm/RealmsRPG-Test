@@ -13,6 +13,10 @@ import { useState, useMemo, useCallback, useEffect } from 'react';
 import { useCreatorSave, type PowerPart } from '@/hooks';
 import type { CreatorSaveTarget } from '@/lib/library/catalog-listing';
 import {
+  useCreatorEditDraftDecision,
+  useCreatorEditMissNotice,
+} from '@/lib/library/use-creator-edit-draft';
+import {
   isPowerCompositionMechanicPart,
   isRandomizeDieComplete,
   powerSpecHasContent,
@@ -51,6 +55,8 @@ import {
 type UsePowerCreatorWorkspaceArgs = {
   initialFormState: PowerCreatorFormState;
   editPowerId: string | null;
+  /** True only when editPowerId matched a loaded library row. */
+  editReplacesDraft: boolean;
   powerParts: PowerPart[];
   initialSaveTarget?: CreatorSaveTarget | undefined;
 };
@@ -58,6 +64,7 @@ type UsePowerCreatorWorkspaceArgs = {
 export function usePowerCreatorWorkspace({
   initialFormState,
   editPowerId,
+  editReplacesDraft,
   powerParts,
   initialSaveTarget,
 }: UsePowerCreatorWorkspaceArgs) {
@@ -134,12 +141,14 @@ export function usePowerCreatorWorkspace({
   const composition = variants.composition;
   const topForm = composition ? topLevelForm(variants.collected) : liveForm;
 
-  useEffect(() => {
-    if (editPowerId) clearCreatorCache(POWER_CREATOR_CACHE_KEY);
-  }, [editPowerId]);
+  const { discardDraft } = useCreatorEditDraftDecision(
+    true,
+    editReplacesDraft,
+    POWER_CREATOR_CACHE_KEY,
+  );
 
   useEffect(() => {
-    if (editPowerId) return;
+    if (discardDraft) return;
 
     const cache: PowerCreatorCache = {
       name,
@@ -173,7 +182,7 @@ export function usePowerCreatorWorkspace({
       timestamp: Date.now(),
     };
     writeCreatorCache(POWER_CREATOR_CACHE_KEY, cache);
-  }, [editPowerId, name, description, topForm, composition, imageId, imageUrl, targetedDefenses]);
+  }, [discardDraft, name, description, topForm, composition, imageId, imageUrl, targetedDefenses]);
 
   const nonMechanicParts = useMemo(
     () => powerParts.filter((p: PowerPart) => !p.mechanic),
@@ -297,11 +306,15 @@ export function usePowerCreatorWorkspace({
     successMessage: 'Power saved successfully!',
     publicSuccessMessage: 'Power saved to Realms Library!',
     initialSaveTarget,
+    editingId: editPowerId,
     onSaveSuccess: resetFields,
   });
 
+  useCreatorEditMissNotice(Boolean(editPowerId) && !discardDraft, 'power', save.setSaveMessage);
+
   const handleReset = useCallback(() => {
     resetFields();
+    save.forgetLoadedLibraryItem();
     save.setSaveMessage(null);
     clearCreatorCache(POWER_CREATOR_CACHE_KEY);
   }, [resetFields, save]);
