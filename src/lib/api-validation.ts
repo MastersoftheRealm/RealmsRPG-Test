@@ -19,6 +19,12 @@ import {
   CHARACTER_NAME_MAX_LENGTH,
   CHARACTER_NAME_TOO_LONG_MESSAGE,
 } from '@/lib/character/character-name-limit';
+import {
+  CREATOR_DESCRIPTION_MAX_LENGTH,
+  CREATOR_DESCRIPTION_TOO_LONG_MESSAGE,
+  CREATOR_NAME_MAX_LENGTH,
+  CREATOR_NAME_TOO_LONG_MESSAGE,
+} from '@/lib/creator/creator-text-limits';
 
 // =============================================================================
 // Helpers
@@ -478,13 +484,27 @@ export const enhancedItemPatchSchema = z
 // Library Item Schemas
 // =============================================================================
 
+const creatorDescriptionSchema = z
+  .string()
+  .max(CREATOR_DESCRIPTION_MAX_LENGTH, CREATOR_DESCRIPTION_TOO_LONG_MESSAGE)
+  .nullish();
+
 export const libraryItemCreateSchema = withSafeJsonBlob({
-  name: z.string().min(1, 'Name is required').max(200, 'Name too long'),
+  name: z
+    .string()
+    .min(1, 'Name is required')
+    .max(CREATOR_NAME_MAX_LENGTH, CREATOR_NAME_TOO_LONG_MESSAGE),
+  description: creatorDescriptionSchema,
   duplicateOf: z.string().uuid().optional(),
 });
 
 export const libraryItemUpdateSchema = withSafeJsonBlob({
-  name: z.string().min(1).max(200).optional(),
+  name: z
+    .string()
+    .min(1)
+    .max(CREATOR_NAME_MAX_LENGTH, CREATOR_NAME_TOO_LONG_MESSAGE)
+    .optional(),
+  description: creatorDescriptionSchema,
 });
 
 // =============================================================================
@@ -514,7 +534,12 @@ export const campaignRollCreateSchema = z.object({
 /** Permissive schema for admin public item creation/update — validates shape, not content. */
 export const publicItemSchema = withSafeJsonBlob({
   id: z.string().optional(),
-  name: z.string().min(1, 'Name is required').max(200).optional(),
+  name: z
+    .string()
+    .min(1, 'Name is required')
+    .max(CREATOR_NAME_MAX_LENGTH, CREATOR_NAME_TOO_LONG_MESSAGE)
+    .optional(),
+  description: creatorDescriptionSchema,
   catalogListing: z.enum(['listed', 'unlisted']).optional(),
 });
 

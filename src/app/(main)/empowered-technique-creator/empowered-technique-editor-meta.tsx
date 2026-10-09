@@ -2,7 +2,8 @@
 
 import type { ReactNode } from 'react';
 import { RealmsImageField } from '@/components/patterns';
-import { Input, Textarea, Card } from '@/components/ui';
+import { Card } from '@/components/ui';
+import { CreatorDescriptionField, CreatorNameField } from '@/components/creator/creator-text-fields';
 import type { EmpoweredTechniqueCreatorEditorProps } from './empowered-technique-editor-config';
 
 export type EmpoweredTechniqueEditorMetaProps = Pick<
@@ -34,20 +35,30 @@ export function EmpoweredTechniqueEditorMeta({
   return (
     <Card className="space-y-4 p-6 shadow-md">
       <div>
-        <label className="mb-1 block text-sm font-medium text-text-secondary">
+        <label
+          htmlFor="empowered-technique-creator-name"
+          className="mb-1 block text-sm font-medium text-text-secondary"
+        >
           Empowered Technique Name *
         </label>
-        <Input
+        <CreatorNameField
+          id="empowered-technique-creator-name"
           value={name}
-          onChange={(event) => onNameChange(event.target.value)}
+          onChange={onNameChange}
           placeholder="Enter empowered technique name..."
         />
       </div>
       <div>
-        <label className="mb-1 block text-sm font-medium text-text-secondary">Description</label>
-        <Textarea
+        <label
+          htmlFor="empowered-technique-creator-description"
+          className="mb-1 block text-sm font-medium text-text-secondary"
+        >
+          Description
+        </label>
+        <CreatorDescriptionField
+          id="empowered-technique-creator-description"
           value={description}
-          onChange={(event) => onDescriptionChange(event.target.value)}
+          onChange={onDescriptionChange}
           rows={3}
           placeholder="Describe your empowered technique..."
         />

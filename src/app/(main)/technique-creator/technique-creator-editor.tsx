@@ -11,7 +11,8 @@ import { Plus, Info } from 'lucide-react';
 import type { TechniquePart } from '@/hooks';
 import { ValueStepper, SectionCostBadge, RealmsImageField } from '@/components/patterns';
 import { CollapsibleSection, PowerPartCard, TargetedDefensesSection } from '@/components/creator';
-import { Checkbox, Button, Input, Textarea, Card } from '@/components/ui';
+import { Checkbox, Button, Card } from '@/components/ui';
+import { CreatorDescriptionField, CreatorNameField } from '@/components/creator/creator-text-fields';
 import { ACTION_OPTIONS, DIE_SIZES } from '@/lib/game/creator-constants';
 import { ATTACK_MODE_SELECT_OPTIONS, type AttackMode } from '@/lib/attack-mode';
 import { formatAttackModeCanTargetHint } from '@/lib/game/targeted-defenses';
@@ -105,23 +106,30 @@ export function TechniqueCreatorEditor({
       <Card className="p-6 shadow-md">
         <div className="space-y-4">
           <div>
-            <label className="mb-1 block text-sm font-medium text-text-secondary">
+            <label
+              htmlFor="technique-creator-name"
+              className="mb-1 block text-sm font-medium text-text-secondary"
+            >
               Technique Name *
             </label>
-            <Input
-              type="text"
+            <CreatorNameField
+              id="technique-creator-name"
               value={name}
-              onChange={(e) => onNameChange(e.target.value)}
+              onChange={onNameChange}
               placeholder="Enter technique name..."
             />
           </div>
           <div>
-            <label className="mb-1 block text-sm font-medium text-text-secondary">
+            <label
+              htmlFor="technique-creator-description"
+              className="mb-1 block text-sm font-medium text-text-secondary"
+            >
               Description
             </label>
-            <Textarea
+            <CreatorDescriptionField
+              id="technique-creator-description"
               value={description}
-              onChange={(e) => onDescriptionChange(e.target.value)}
+              onChange={onDescriptionChange}
               placeholder="Describe what your technique does..."
               rows={3}
             />
