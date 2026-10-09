@@ -5685,6 +5685,25 @@ islands (Phase 4) and workspace hook (Phase 5). **T012–T014** cover expanded h
 
 **Report** — `[ ] PASS` · `[ ] FAIL` · `[ ] SKIP` — Notes:
 
+#### DEV-V-018-T026 — Deleted creator save does not create a new id (86e3jzfxy)
+
+| Field | Value |
+|-------|-------|
+| **Suite** | DEV-V-018 — CreatorPageShell parity |
+| **Related task** | 86e3jzfxy |
+| **Where** | `/power-creator?edit=` (also item, technique, empowered technique, creature) |
+| **Needs** | A signed-in account and one saved My library power |
+
+**Steps**
+1. Open Library, Edit the power, so the URL has `?edit=`.
+2. In another tab, delete that library row.
+3. Return to the creator and click Save without changing the name.
+
+**Expected**
+- Save says the item was deleted and was not saved as a new item. My library does not gain a new row. The old id is still gone.
+
+**Report** — `[ ] PASS` · `[ ] FAIL` · `[ ] SKIP` — Notes:
+
 ---
 
 ## DEV-V-019 — React Compiler hook cleanup (TASK-430)

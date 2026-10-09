@@ -17,8 +17,8 @@ import {
   CREATOR_NAME_MAX_LENGTH,
   CREATOR_NAME_TOO_LONG_MESSAGE,
 } from '@/lib/creator/creator-text-limits';
+import { creatorLibrarySaveErrorMessage } from '@/lib/creator/creator-save-error';
 import {
-  creatorSaveFailureText,
   decidePrivateLibraryNameSave,
   libraryItemId,
   readPrivateLibraryNameMatches,
@@ -241,7 +241,9 @@ export function useCreatorSave(options: UseCreatorSaveOptions): UseCreatorSaveRe
       } catch (err) {
         setSaveMessage({
           type: 'error',
-          text: creatorSaveFailureText(err),
+          text: creatorLibrarySaveErrorMessage(err, {
+            updatingExisting: !isOfficialSaveTarget(target) && Boolean(existingId),
+          }),
         });
       } finally {
         setSaving(false);

@@ -74,7 +74,8 @@ describe('private library name save', () => {
     expect(body).toContain("setSaveMessage({ type: 'error', text: lookup.errorText })");
     expect(hook).toContain('const savedId = await saveToLibrary');
     expect(hook).toContain('setLoadedLibraryId(savedId)');
-    expect(hook).toContain('creatorSaveFailureText(err)');
+    expect(hook).toContain('creatorLibrarySaveErrorMessage');
+    expect(hook).not.toContain('creatorSaveFailureText');
     expect(hook).not.toContain('Failed to save: ${message}');
     expect(body.indexOf('findOfficialLibraryItemByName')).toBeGreaterThan(-1);
     expect(body.indexOf('readPrivateLibraryNameMatches')).toBeGreaterThan(
