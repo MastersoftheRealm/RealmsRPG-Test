@@ -99,7 +99,7 @@ export function AdminArchetypesTab() {
                   columns={[{ key: 'Type', value: formatListCellLabel(a.type) }]}
                 />
               </div>
-              <div className="min-w-0">
+              <div className="shrink-0">
                 <AdminCodexRowActions
                   entity={a}
                   onEdit={openEdit}

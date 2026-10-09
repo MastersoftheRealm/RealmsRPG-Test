@@ -9087,6 +9087,31 @@ Built-in variants in `payload.composition` (ADR-0029). Resolver: `lib/calculator
 
 ---
 
+## DEV-V-066 — Admin Codex row actions (ClickUp 86e3jzu5m)
+
+Codex list row actions stay inside the row at 768 and 1280. **Needs:** admin account.
+
+#### DEV-V-066-T001 — Fourth feat action is inside the row
+
+| Field | Value |
+|-------|-------|
+| **Suite** | DEV-V-066 — Admin Codex row actions |
+| **Related task** | ClickUp 86e3jzu5m |
+| **Where** | `/admin/codex` Feats list |
+| **Needs** | Admin account, light and dark |
+
+**Steps**
+1. Open `/admin/codex` on Feats at 1280px, light and dark.
+2. Repeat at 768px.
+
+**Expected**
+- Add level, Edit, Duplicate, and Delete are fully inside the row.
+- The page does not scroll sideways.
+
+**Report** — `[ ] PASS` · `[ ] FAIL` · `[ ] SKIP` — Notes:
+
+---
+
 ## DEV-V-065 — Admin Core Rules tab strip (ClickUp 86e3jzu59)
 
 Core Rules tabs stay fully readable at 768 and 1280. **Needs:** admin account.
@@ -9252,6 +9277,29 @@ Card rows on `/admin/users` so Effective limits and Change role stay on screen a
 
 ---
 
+## Species trait cap (86e3jx1kq)
+
+A pick that would exceed open trait slots is refused. The disabled Add button describes that reason. verification_status pending-qa.
+
+#### 86e3jx1kq — Disabled Add explains the cap
+
+| Field | Value |
+|-------|-------|
+| **Where** | `/species-creator` trait pickers (species, ancestry, characteristics, flaws) |
+| **Needs** | Signed in. Fill a category until one slot remains, or until none remain. |
+
+**Steps**
+1. Open Add species or ancestry traits. Select more traits than the open slots. Confirm both Add buttons are disabled and the visible slot message is what a screen reader gets from the button (`aria-describedby`), not only a hover tooltip.
+2. Confirm those traits are not added.
+3. Select a count that fits. Confirm Add still works. Name and description fields are unchanged.
+
+**Expected**
+- Over-cap picks do not land on the species. The reason stays available when the Add control cannot be hovered.
+
+**Report** — `[ ] PASS` · `[ ] FAIL` · `[ ] SKIP` — Notes:
+
+---
+
 ## Planned suites (split from legacy DEV-T)
 
 | Suite | Topic | Legacy | Status |
@@ -9302,5 +9350,6 @@ Card rows on `/admin/users` so Effective limits and Change role stay on screen a
 | DEV-V-063 | Admin spreadsheet field save (ClickUp 86e3mezkn) | — | Automated (`codex-spreadsheet-save.test.ts`, `actions.test.ts`) + manual DEV-V-063-T001–T002 |
 | DEV-V-064 | Admin Core Rules number labels (ClickUp 86e3k0cgu) | — | Automated (`core-rules-number-labels.test.ts`) + manual DEV-V-064-T001 |
 | DEV-V-065 | Admin Core Rules tab strip (ClickUp 86e3jzu59) | — | Automated (`core-rules-tab-strip.test.ts`) + manual DEV-V-065-T001 |
+| DEV-V-066 | Admin Codex row actions (ClickUp 86e3jzu5m) | — | Automated (`admin-codex-row-actions.test.ts`) + manual DEV-V-066-T001 |
 
 When implementing a related task, replace the legacy **DEV-T-###** block with granular **DEV-V-###** tests in this file.

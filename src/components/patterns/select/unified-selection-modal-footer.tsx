@@ -14,6 +14,8 @@ export interface UnifiedSelectionModalFooterProps {
   onRequestClose: () => void;
   onConfirm: () => void;
   isConfirmDisabled: boolean;
+  /** Visible limit text the disabled Add button describes. */
+  confirmDescribedBy?: string | undefined;
   confirmLabel: string;
   primaryActions?: ReactNode | ((selectedItems: SelectableItem[]) => ReactNode) | undefined;
   wrapFooterActions?: boolean | undefined;
@@ -28,6 +30,7 @@ export function UnifiedSelectionModalFooter({
   onRequestClose,
   onConfirm,
   isConfirmDisabled,
+  confirmDescribedBy,
   confirmLabel,
   primaryActions,
   wrapFooterActions = false,
@@ -59,7 +62,12 @@ export function UnifiedSelectionModalFooter({
               primaryActions
             )
           ) : (
-            <Button size="lg" onClick={onConfirm} disabled={isConfirmDisabled}>
+            <Button
+              size="lg"
+              onClick={onConfirm}
+              disabled={isConfirmDisabled}
+              aria-describedby={confirmDescribedBy}
+            >
               {confirmLabel}
               {selectedCount > 0 ? ` (${selectedCount})` : ''}
             </Button>

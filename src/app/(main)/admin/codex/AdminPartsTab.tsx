@@ -27,7 +27,7 @@ import {
 } from './admin-part-form';
 import { AdminPartEditModal } from './admin-part-edit-modal';
 import { useAdminCodexEntity } from './use-admin-codex-entity';
-import { AdminCodexRowActions } from './admin-codex-row-actions';
+import { AdminCodexRowActions, ADMIN_CODEX_ROW_ACTIONS_WIDTH } from './admin-codex-row-actions';
 
 const ADMIN_PART_COLUMNS = [
   { key: 'name', label: 'NAME' },
@@ -258,6 +258,7 @@ export function AdminPartsTab() {
         sortState={sortState}
         onSort={handleSort}
         rowChrome={{ rightSlot: true }}
+        rightSlotWidth={ADMIN_CODEX_ROW_ACTIONS_WIDTH}
         isLoading={isLoading}
         isEmpty={filteredParts.length === 0}
         emptyTitle="No parts found"
@@ -341,6 +342,7 @@ export function AdminPartsTab() {
                 },
               ]}
               detailSections={detailSections}
+              rightSlotWidth={ADMIN_CODEX_ROW_ACTIONS_WIDTH}
               rightSlot={
                 <AdminCodexRowActions
                   entity={p}
