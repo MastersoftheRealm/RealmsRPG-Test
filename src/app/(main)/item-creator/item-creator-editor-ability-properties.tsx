@@ -150,6 +150,9 @@ export function ItemCreatorEditorAbilityProperties({
                 onUpdate={(updates) => onUpdateProperty(idx, updates)}
                 allProperties={itemProperties}
                 armamentType={armamentType}
+                otherSelectedIds={selectedProperties
+                  .filter((_, otherIdx) => otherIdx !== idx)
+                  .map((other) => other.property.id)}
               />
             ))}
           </div>

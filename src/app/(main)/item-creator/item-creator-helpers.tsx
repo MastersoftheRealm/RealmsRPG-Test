@@ -21,6 +21,7 @@ import type {
   ArmamentType,
   ItemSelectedProperty as SelectedProperty,
 } from './item-creator-bootstrap';
+import { propertyOptionsForCard } from './item-creator-property-options';
 
 export const ARMAMENT_TYPES: { value: ArmamentType; label: string; icon: typeof Sword }[] = [
   { value: 'Weapon', label: 'Weapon', icon: Sword },
@@ -76,19 +77,21 @@ export function PropertyCard({
   onUpdate,
   allProperties,
   armamentType,
+  otherSelectedIds,
 }: {
   selectedProperty: SelectedProperty;
   onRemove: () => void;
   onUpdate: (updates: Partial<SelectedProperty>) => void;
   allProperties: ItemProperty[];
   armamentType: ArmamentType;
+  otherSelectedIds: readonly (string | number)[];
 }) {
   const [expanded, setExpanded] = useState(true);
   const { property } = selectedProperty;
 
   const selectableProperties = useMemo(() => {
     const armamentTypeLower = armamentType.toLowerCase();
-    return allProperties
+    const forType = allProperties
       .filter((p) => {
         if (isGeneralProperty(p)) return false;
         if (isMechanicProperty(p)) return false;
@@ -97,7 +100,8 @@ export function PropertyCard({
         return propType === armamentTypeLower;
       })
       .sort((a, b) => a.name.localeCompare(b.name));
-  }, [allProperties, armamentType]);
+    return propertyOptionsForCard(forType, property.id, otherSelectedIds);
+  }, [allProperties, armamentType, property.id, otherSelectedIds]);
 
   const propIP =
     ((property.base_ip as number | undefined) || 0) +
