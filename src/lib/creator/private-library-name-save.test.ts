@@ -8,9 +8,15 @@ import {
 } from '@/lib/creator/private-library-name-save';
 
 describe('private library name save', () => {
-  it('creates when the name is new', () => {
+  it('creates when the name is new and no row is open', () => {
     expect(decidePrivateLibraryNameSave([], null)).toEqual({ kind: 'create' });
-    expect(decidePrivateLibraryNameSave([], 'loaded-1')).toEqual({ kind: 'create' });
+  });
+
+  it('renames the open row when the new name is unused', () => {
+    expect(decidePrivateLibraryNameSave([], 'loaded-1')).toEqual({
+      kind: 'update',
+      id: 'loaded-1',
+    });
   });
 
   it('asks before a new save overwrites an older item with the same name', () => {
@@ -44,10 +50,11 @@ describe('private library name save', () => {
     });
   });
 
-  it('reads the library id from a loaded row', () => {
+  it('reads the library id from a loaded user row', () => {
     expect(libraryItemId({ id: 'row-1', docId: 'doc-1' })).toBe('row-1');
     expect(libraryItemId({ docId: 'doc-1' })).toBe('doc-1');
     expect(libraryItemId({ name: 'Only a name' })).toBeNull();
+    expect(libraryItemId({ id: 'official-1', _source: 'official' })).toBeNull();
   });
 
   it('turns a thrown My library name lookup into the save error toast', async () => {

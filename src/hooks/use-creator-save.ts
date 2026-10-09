@@ -156,7 +156,9 @@ export function useCreatorSave(options: UseCreatorSaveOptions): UseCreatorSaveRe
   const [showPublishConfirm, setShowPublishConfirmState] = useState(false);
   const [publishExistingId, setPublishExistingId] = useState<string | null>(null);
   const [replaceMatchCount, setReplaceMatchCount] = useState(1);
-  const [loadedLibraryId, setLoadedLibraryId] = useState<string | null>(editingId?.trim() || null);
+  const [loadedLibraryId, setLoadedLibraryId] = useState<string | null>(
+    isOfficialSaveTarget(initialSaveTarget) ? null : editingId?.trim() || null,
+  );
 
   const setShowPublishConfirm = useCallback((show: boolean) => {
     setShowPublishConfirmState(show);
