@@ -2,6 +2,7 @@
 
 Newest **150** entries. Older: [`archive/AI_CHANGELOG_ARCHIVE.md`](archive/AI_CHANGELOG_ARCHIVE.md).
 
+- 2026-10-07 | agent | Add Property stops once every item property is used | files: item-creator-property-options(+test), property actions, Add Property button | Summary: **Removed** the title-only tooltip on a disabled Add Property button. The button still disables when the selectable list is used up, and the reason is visible text linked with aria-describedby. String and number ids still count as the same property. verification_status pending-qa (86e3jww88).
 - 2026-10-07 | agent | Item creator property dropdown hides properties already on the item | files: item-creator-property-options(+test), property card | Summary: A property used on another card is left out of the dropdown. The card still shows its own current property. verification_status pending-qa (86e3jww87).
 - 2026-10-08 | agent | Creator name limits use the shared text clamp | files: creator-text-limits | Summary: Creator names use the character name maximum, message, and clamp. Descriptions still stop at 10,000 through that same clamp. verification_status pending-qa (86e3jx8ww).
 - 2026-10-07 | agent | Creator description counter uses a thousands separator (86e3mh8qu) | files: creator-text-limits(+test), creator-text-fields, BUILD_VALIDATION T022, DEVELOPER_TASK_QUEUE, AI_CHANGELOG | Summary: The name and description counters now use the same grouping as the paste note, so a full description reads "10,000 of 10,000 characters". verification_status pending-qa (DEV-V-018 T022).
