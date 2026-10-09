@@ -263,6 +263,45 @@ export function restoreItemCreatorFromCache(
  * Load modal). Restores shield block/damage config on the edit path too, which
  * the old per-path edit effect missed.
  */
+function abilityRequirementFromField(item: ItemLibraryRecord): ItemAbilityRequirement | null {
+  const saved = item.abilityRequirement;
+  if (!saved?.name) return null;
+  return {
+    id: typeof saved.id === 'number' ? saved.id : Number(saved.id) || 0,
+    name: saved.name,
+    level: saved.level || 0,
+  };
+}
+
+/** Older shields stored the requirement as a property and left the field empty. */
+function abilityRequirementFromProperties(item: ItemLibraryRecord): ItemAbilityRequirement | null {
+  if (!Array.isArray(item.properties)) return null;
+  for (const prop of item.properties as Array<{
+    id?: number | string | undefined;
+    name?: string | undefined;
+    op_1_lvl?: number | undefined;
+  }>) {
+    const name = String(prop.name ?? '');
+    if (!name.includes('Requirement')) continue;
+    const id = typeof prop.id === 'number' ? prop.id : Number(prop.id);
+    if (!id) continue;
+    return { id, name, level: 1 + (Number(prop.op_1_lvl) || 0) };
+  }
+  return null;
+}
+
+function readItemAbilityRequirement(
+  item: ItemLibraryRecord,
+  armamentType: ArmamentType,
+): ItemAbilityRequirement | null {
+  if (armamentType !== 'Weapon' && armamentType !== 'Armor' && armamentType !== 'Shield') {
+    return null;
+  }
+  // Explicit None. A leftover requirement property must not put it back.
+  if (item.abilityRequirement === null) return null;
+  return abilityRequirementFromField(item) ?? abilityRequirementFromProperties(item);
+}
+
 export function itemLibraryRecordToFormState(
   item: ItemLibraryRecord,
   itemProperties: ItemProperty[],
@@ -304,17 +343,7 @@ export function itemLibraryRecordToFormState(
     };
   }
 
-  const abilityRequirement: ItemAbilityRequirement | null =
-    (armamentType === 'Weapon' || armamentType === 'Armor') && item.abilityRequirement
-      ? {
-          id:
-            typeof item.abilityRequirement.id === 'number'
-              ? item.abilityRequirement.id
-              : Number(item.abilityRequirement.id) || 0,
-          name: item.abilityRequirement.name || '',
-          level: item.abilityRequirement.level || 0,
-        }
-      : null;
+  const abilityRequirement = readItemAbilityRequirement(item, armamentType);
 
   const propertyPayloads = Array.isArray(item.properties)
     ? (item.properties as ItemPropertyPayload[])

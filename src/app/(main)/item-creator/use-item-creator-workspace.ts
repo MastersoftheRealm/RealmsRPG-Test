@@ -307,6 +307,13 @@ export function useItemCreatorWorkspace({
   });
 
   const getPayload = useCallback(() => {
+    const savedAbilityRequirement = abilityRequirement
+      ? {
+          id: abilityRequirement.id,
+          name: abilityRequirement.name,
+          level: abilityRequirement.level,
+        }
+      : null;
     const propertiesToSave = propertiesPayload.map((pp) => ({
       id: pp.id,
       name: pp.name,
@@ -329,25 +336,13 @@ export function useItemCreatorWorkspace({
       ...(armamentType === 'Weapon' && {
         isTwoHanded,
         rangeLevel: weaponRangeLegacyLevel({ type: rangeType, spaces: rangeSpaces }),
-        abilityRequirement: abilityRequirement
-          ? {
-              id: abilityRequirement.id,
-              name: abilityRequirement.name,
-              level: abilityRequirement.level,
-            }
-          : null,
+        abilityRequirement: savedAbilityRequirement,
       }),
       ...(armamentType === 'Armor' && {
         damageReduction,
         agilityReduction,
         criticalRangeIncrease,
-        abilityRequirement: abilityRequirement
-          ? {
-              id: abilityRequirement.id,
-              name: abilityRequirement.name,
-              level: abilityRequirement.level,
-            }
-          : null,
+        abilityRequirement: savedAbilityRequirement,
       }),
       ...(armamentType === 'Shield' && {
         isTwoHanded,
@@ -356,6 +351,7 @@ export function useItemCreatorWorkspace({
         shieldDamage: hasShieldDamage
           ? { amount: shieldDamage.amount, size: shieldDamage.size }
           : null,
+        abilityRequirement: savedAbilityRequirement,
       }),
     };
     return { name: name.trim(), data: itemData };
