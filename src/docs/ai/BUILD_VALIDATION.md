@@ -5643,6 +5643,25 @@ islands (Phase 4) and workspace hook (Phase 5). **T012–T014** cover expanded h
 
 **Report** — `[ ] PASS` · `[ ] FAIL` · `[ ] SKIP` — Notes:
 
+#### DEV-V-018-T024 — Loaded creator save renames instead of copying (86e3jzbkr)
+
+| Field | Value |
+|-------|-------|
+| **Suite** | DEV-V-018 — CreatorPageShell parity |
+| **Related task** | 86e3jzbkr |
+| **Where** | `/power-creator` (also item, technique, empowered technique, creature) |
+| **Needs** | A signed-in account and one saved My library power |
+
+**Steps**
+1. Open Library, Edit that power, so the creator URL has `?edit=`.
+2. Change the name to a name that is not already in My library. Save.
+3. Open Load and check the list.
+
+**Expected**
+- My library has one row, under the new name, with the same id as the `?edit=` link. The original name is gone. A blank creator save still adds a new row.
+
+**Report** — `[ ] PASS` · `[ ] FAIL` · `[ ] SKIP` — Notes:
+
 ---
 
 ## DEV-V-019 — React Compiler hook cleanup (TASK-430)
