@@ -50,7 +50,7 @@ Do **not** load full `AI_TASK_QUEUE.md`, full `AGENT_GUIDE.md` / `guide/` append
 - **UI gates** — keep `realms/no-raw-color`, contrast, visual/a11y Playwright. Prefer `text-success-fg` / `text-danger-fg` / `text-warning-fg` / `text-power-fg` / `text-martial-fg` over numbered ramp + ad-hoc `dark:`.
 - **Mobile** — `fullScreenOnMobile` on large modals; ≥44px touch targets.
 - **Accessibility** — **WCAG 2.2 AA** everywhere. Labels, contrast, modals, touch tiers per `MOBILE_UX.md`.
-- **Git** — **Never push directly to `master`.** Never merge PRs. Every change goes through a PR with a ClickUp task ID linked.
+- **Git** — **Never push directly to `master`.** Never merge PRs. Every change goes through a PR with a ClickUp task ID linked. A bypass merge moves that task to **testing** with QA instructions for what changed, adds James Owenby, and keeps Collin assigned so he can move it back to **in review**. See `DECISIONS.md`.
 
 ## Definition of Done
 

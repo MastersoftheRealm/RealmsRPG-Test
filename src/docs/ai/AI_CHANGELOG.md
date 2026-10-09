@@ -2,6 +2,7 @@
 
 Newest **150** entries. Older: [`archive/AI_CHANGELOG_ARCHIVE.md`](archive/AI_CHANGELOG_ARCHIVE.md).
 
+- 2026-10-08 | agent | Bypass merge moves the ClickUp task to testing | files: DECISIONS, realms-tasks, PR_CHECKLIST, AGENTS, ARCHITECTURE_CONSTITUTION | Summary: A bypass merge without Collin sets the task to testing, adds QA instructions for what changed, adds James Owenby, and keeps Collin assigned. Collin can move the task back to in review. verification_status n/a.
 - 2026-10-07 | agent | Add Property stops once every item property is used | files: item-creator-property-options(+test), property actions, Add Property button | Summary: **Removed** the title-only tooltip on a disabled Add Property button. The button still disables when the selectable list is used up, and the reason is visible text linked with aria-describedby. String and number ids still count as the same property. verification_status pending-qa (86e3jww88).
 - 2026-10-07 | agent | Item creator property dropdown hides properties already on the item | files: item-creator-property-options(+test), property card | Summary: A property used on another card is left out of the dropdown. The card still shows its own current property. verification_status pending-qa (86e3jww87).
 - 2026-10-08 | agent | Creator name limits use the shared text clamp | files: creator-text-limits | Summary: Creator names use the character name maximum, message, and clamp. Descriptions still stop at 10,000 through that same clamp. verification_status pending-qa (86e3jx8ww).

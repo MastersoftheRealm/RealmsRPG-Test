@@ -24,6 +24,7 @@ alwaysApply: true
 **While implementing:**
 - Branch: `bug|feat/<clickUpId>-short-slug`. **Never push `master`.** Never merge.
 - Move ClickUp status through **in progress → in review** when the branch is ready for review (when Kadin has told you to write to ClickUp, use `CLICKUP_API_TOKEN`; otherwise note the status change in the PR); assign **Collin**.
+- After a bypass merge without Collin, move the task to **testing**, comment QA instructions for what changed, add **James Owenby**, and keep **Collin** assigned. Collin can move it back to **in review**.
 - Link ClickUp task ID in the PR. Optionally maintain TASK-### notes in `ACTIVE_TASKS.md` for engineering hygiene.
 - If using `ACTIVE_TASKS.md` notes: `in-progress` → `done` when implementable AC met (build/tests/docs); else `partial` + `completed_work` / `remaining_work` / `follow_up_tasks`. Move `done` blocks to `archive/TASK_QUEUE_DONE.md`. If you mark any TASK-### done, the commit subject must list each ID (CI `ai-task-verifier` enforces this).
 - Blocked / human-owned → `WAITING_TASKS.md`. Human-only steps → `DEVELOPER_TASK_QUEUE.md`.
