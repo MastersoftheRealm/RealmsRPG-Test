@@ -6,7 +6,10 @@
 
 import { RealmsImageField, SegmentedControl } from '@/components/patterns';
 import { Card } from '@/components/ui';
-import { CreatorDescriptionField, CreatorNameField } from '@/components/creator/creator-text-fields';
+import {
+  CreatorDescriptionField,
+  CreatorNameField,
+} from '@/components/creator/creator-text-fields';
 import type { ArmamentType } from './item-creator-bootstrap';
 import { ARMAMENT_TYPES } from './item-creator-helpers';
 

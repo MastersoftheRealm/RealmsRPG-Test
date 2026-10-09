@@ -156,7 +156,7 @@ export function CollapsibleSection({
               className={cn(
                 'pointer-events-auto flex items-center gap-2',
                 actionsOnOwnRow
-                  ? 'min-w-0 basis-full flex-wrap max-lg:w-full lg:basis-auto lg:flex-shrink-0'
+                  ? 'min-w-0 basis-full flex-wrap max-lg:w-full lg:flex-shrink-0 lg:basis-auto'
                   : 'flex-shrink-0',
                 !actionsOnOwnRow && (optional ? 'self-stretch' : 'self-center'),
               )}
