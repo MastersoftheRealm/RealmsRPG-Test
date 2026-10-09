@@ -7,15 +7,6 @@ const sql = readFileSync(
   'utf8',
 );
 
-/** Same rule as campaign_members_insert_owner_self WITH CHECK. */
-function authenticatedMayInsertCampaignMember(input: {
-  callerOwnsCampaign: boolean;
-  rowUserId: string;
-  authUid: string;
-}): boolean {
-  return input.callerOwnsCampaign && input.rowUserId === input.authUid;
-}
-
 function insertWithCheck(source: string): string {
   const match = source.match(
     /CREATE POLICY campaign_members_insert_owner_self[\s\S]*?WITH CHECK \(([\s\S]*?)\);/,
@@ -27,39 +18,15 @@ function insertWithCheck(source: string): string {
 }
 
 describe('campaign_members insert (86e3jryyr)', () => {
-  it('rejects a signed-in user adding themselves to a campaign they do not own', () => {
-    expect(
-      authenticatedMayInsertCampaignMember({
-        callerOwnsCampaign: false,
-        rowUserId: 'player',
-        authUid: 'player',
-      }),
-    ).toBe(false);
-
+  it('lets an authenticated user insert only their own row on a campaign they own', () => {
     const check = insertWithCheck(sql);
     expect(check).toContain('private.auth_is_campaign_owner(campaign_id)');
     expect(check).toMatch(/user_id = \(\(SELECT auth\.uid\(\)\)::text\)/);
+    expect(check).toMatch(/auth_is_campaign_owner\(campaign_id\)\s+AND\s+user_id/);
     expect(check).not.toMatch(/\bOR\b/);
-  });
-
-  it('rejects an owner inserting a different user id', () => {
-    expect(
-      authenticatedMayInsertCampaignMember({
-        callerOwnsCampaign: true,
-        rowUserId: 'other-player',
-        authUid: 'realm-master',
-      }),
-    ).toBe(false);
-  });
-
-  it('allows the owner to insert their own membership', () => {
-    expect(
-      authenticatedMayInsertCampaignMember({
-        callerOwnsCampaign: true,
-        rowUserId: 'realm-master',
-        authUid: 'realm-master',
-      }),
-    ).toBe(true);
+    expect(sql).toMatch(
+      /DROP POLICY IF EXISTS campaign_members_insert_owner_or_self\s+ON public\.campaign_members;/,
+    );
   });
 
   it('drops the update policy so a membership row cannot move to another campaign', () => {
