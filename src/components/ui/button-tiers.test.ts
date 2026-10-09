@@ -120,13 +120,20 @@ describe('ADR-0023 form field Standard tier (TASK-830)', () => {
     expect(filterUtils).toContain('rounded-md');
   });
 
-  it('wires item-creator Description onto shared Textarea', () => {
+  it('wires item-creator Description onto CreatorDescriptionField', () => {
     const meta = readFileSync(
       path.join(import.meta.dirname, '../../app/(main)/item-creator/item-creator-editor-meta.tsx'),
       'utf8',
     );
-    expect(meta).toContain('<Textarea');
+    expect(meta).toContain('<CreatorDescriptionField');
     expect(meta).not.toMatch(/<textarea\b/);
+
+    const fields = readFileSync(
+      path.join(import.meta.dirname, '../creator/creator-text-fields.tsx'),
+      'utf8',
+    );
+    expect(fields).toContain('<Textarea');
+    expect(fields).not.toMatch(/<textarea\b/);
   });
 });
 

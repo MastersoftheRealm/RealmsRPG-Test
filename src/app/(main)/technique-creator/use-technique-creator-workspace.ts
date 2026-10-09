@@ -349,6 +349,7 @@ export function useTechniqueCreatorWorkspace({
     successMessage: 'Technique saved successfully!',
     publicSuccessMessage: 'Technique saved to Realms Library!',
     initialSaveTarget,
+    editingId: editTechniqueId,
     onSaveSuccess: () => {
       setName('');
       setDescription('');
@@ -380,6 +381,7 @@ export function useTechniqueCreatorWorkspace({
     setImageId(null);
     setImageUrl(null);
     setTargetedDefenses([]);
+    save.forgetLoadedLibraryItem();
     save.setSaveMessage(null);
     clearCreatorCache(TECHNIQUE_CREATOR_CACHE_KEY);
   }, [save]);

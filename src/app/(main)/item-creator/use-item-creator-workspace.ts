@@ -8,6 +8,7 @@
 'use client';
 
 import { useState, useCallback, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import { useCreatorSave, type ItemProperty } from '@/hooks';
 import type { CreatorSaveTarget } from '@/lib/library/catalog-listing';
 import {
@@ -26,8 +27,12 @@ import {
   type WeaponAttackAbility,
 } from '@/lib/game/weapon-attack-ability';
 import {
+  emptyItemCreatorFormState,
+  itemCreatorHrefForArmamentType,
+  itemCreatorTypeQueryConflict,
   itemLibraryRecordToFormState,
   ITEM_CREATOR_CACHE_KEY,
+  shouldWriteItemCreatorDraft,
   type ArmamentType,
   type ItemCreatorCache,
   type ItemCreatorFormState,
@@ -44,19 +49,65 @@ type UseItemCreatorWorkspaceArgs = {
   editItemId: string | null;
   /** True only when editItemId matched a loaded library row. */
   editReplacesDraft: boolean;
+  /** Live `?type=` value. Edit mode passes null. */
+  requestedType: ArmamentType | null;
   itemProperties: ItemProperty[];
   closeLoadModal: () => void;
   initialSaveTarget?: CreatorSaveTarget | undefined;
 };
 
+function toItemCreatorCache(form: ItemCreatorFormState, rangeLevel: number): ItemCreatorCache {
+  return {
+    name: form.name,
+    description: form.description,
+    armamentType: form.armamentType,
+    selectedProperties: form.selectedProperties.map((sp) => ({
+      propertyId: sp.property.id,
+      op_1_lvl: sp.op_1_lvl,
+    })),
+    damage: form.damage,
+    isTwoHanded: form.isTwoHanded,
+    rangeType: form.rangeType,
+    rangeSpaces: form.rangeSpaces,
+    rangeLevel,
+    attackAbility: form.attackAbility,
+    damageReduction: form.damageReduction,
+    agilityReduction: form.agilityReduction,
+    criticalRangeIncrease: form.criticalRangeIncrease,
+    shieldDR: form.shieldDR,
+    hasShieldDamage: form.hasShieldDamage,
+    shieldDamage: form.shieldDamage,
+    abilityRequirement: form.abilityRequirement,
+    imageId: form.imageId,
+    imageUrl: form.imageUrl,
+    timestamp: Date.now(),
+  };
+}
+
+function propertiesForArmament(
+  properties: SelectedProperty[],
+  armamentType: ArmamentType,
+): SelectedProperty[] {
+  const armamentTypeLower = armamentType.toLowerCase();
+  return properties.filter((sp) => {
+    const propType = (sp.property.type || '').toLowerCase();
+    if (!propType || propType === 'general') return true;
+    return propType === armamentTypeLower;
+  });
+}
+
 export function useItemCreatorWorkspace({
   initialFormState,
   editItemId,
   editReplacesDraft,
+  requestedType,
   itemProperties,
   closeLoadModal,
   initialSaveTarget,
 }: UseItemCreatorWorkspaceArgs) {
+  const router = useRouter();
+  /** Stale `?type=` this session has already answered, until `requestedType` moves on. */
+  const [ignoredRequestedType, setIgnoredRequestedType] = useState<ArmamentType | null>(null);
   const [name, setName] = useState(initialFormState.name);
   const [description, setDescription] = useState(initialFormState.description);
   const [armamentType, setArmamentType] = useState<ArmamentType>(initialFormState.armamentType);
@@ -91,29 +142,40 @@ export function useItemCreatorWorkspace({
   const [imageUrl, setImageUrl] = useState<string | null>(initialFormState.imageUrl);
 
   const imageCategory = armamentType.toLowerCase() as 'weapon' | 'armor' | 'shield';
+  if (
+    ignoredRequestedType &&
+    (requestedType !== ignoredRequestedType || requestedType === armamentType)
+  ) {
+    setIgnoredRequestedType(null);
+  }
+  const typeQueryConflict = editItemId
+    ? null
+    : itemCreatorTypeQueryConflict(
+        armamentType,
+        requestedType,
+        ignoredRequestedType &&
+          requestedType === ignoredRequestedType &&
+          requestedType !== armamentType
+          ? ignoredRequestedType
+          : null,
+      );
 
-  const { discardDraft } = useCreatorEditDraftDecision(
+  const { discardDraft: replaceDraftWithEdit } = useCreatorEditDraftDecision(
     true,
     editReplacesDraft,
     ITEM_CREATOR_CACHE_KEY,
   );
 
-  useEffect(() => {
-    if (discardDraft) return;
-
-    const cache: ItemCreatorCache = {
+  const formSnapshot = useCallback(
+    (overrides?: Partial<ItemCreatorFormState>): ItemCreatorFormState => ({
       name,
       description,
       armamentType,
-      selectedProperties: selectedProperties.map((sp) => ({
-        propertyId: sp.property.id,
-        op_1_lvl: sp.op_1_lvl,
-      })),
+      selectedProperties,
       damage,
       isTwoHanded,
       rangeType,
       rangeSpaces,
-      rangeLevel: weaponRangeLegacyLevel({ type: rangeType, spaces: rangeSpaces }),
       attackAbility,
       damageReduction,
       agilityReduction,
@@ -124,30 +186,50 @@ export function useItemCreatorWorkspace({
       abilityRequirement,
       imageId,
       imageUrl,
-      timestamp: Date.now(),
-    };
-    writeCreatorCache(ITEM_CREATOR_CACHE_KEY, cache);
-  }, [
-    discardDraft,
-    name,
-    description,
-    armamentType,
-    selectedProperties,
-    damage,
-    isTwoHanded,
-    rangeType,
-    rangeSpaces,
-    attackAbility,
-    damageReduction,
-    agilityReduction,
-    criticalRangeIncrease,
-    shieldDR,
-    hasShieldDamage,
-    shieldDamage,
-    abilityRequirement,
-    imageId,
-    imageUrl,
-  ]);
+      ...overrides,
+    }),
+    [
+      name,
+      description,
+      armamentType,
+      selectedProperties,
+      damage,
+      isTwoHanded,
+      rangeType,
+      rangeSpaces,
+      attackAbility,
+      damageReduction,
+      agilityReduction,
+      criticalRangeIncrease,
+      shieldDR,
+      hasShieldDamage,
+      shieldDamage,
+      abilityRequirement,
+      imageId,
+      imageUrl,
+    ],
+  );
+
+  const alignTypeQuery = useCallback(
+    (next: ArmamentType) => {
+      if (editItemId || requestedType === next) return;
+      if (requestedType) setIgnoredRequestedType(requestedType);
+      router.replace(itemCreatorHrefForArmamentType(next), { scroll: false });
+    },
+    [editItemId, requestedType, router],
+  );
+
+  useEffect(() => {
+    if (!shouldWriteItemCreatorDraft(replaceDraftWithEdit, typeQueryConflict != null)) return;
+
+    writeCreatorCache(
+      ITEM_CREATOR_CACHE_KEY,
+      toItemCreatorCache(
+        formSnapshot(),
+        weaponRangeLegacyLevel({ type: rangeType, spaces: rangeSpaces }),
+      ),
+    );
+  }, [formSnapshot, rangeSpaces, rangeType, replaceDraftWithEdit, typeQueryConflict]);
 
   const changeRangeType = useCallback((next: WeaponRangeType) => {
     setRangeTypeState(next);
@@ -168,18 +250,29 @@ export function useItemCreatorWorkspace({
     [rangeType],
   );
 
-  const changeArmamentType = useCallback((next: ArmamentType) => {
-    setArmamentType(next);
-    const armamentTypeLower = next.toLowerCase();
-    setSelectedProperties((prev) =>
-      prev.filter((sp) => {
-        const propType = (sp.property.type || '').toLowerCase();
-        if (!propType || propType === 'general') return true;
-        return propType === armamentTypeLower;
-      }),
-    );
-    setAbilityRequirement(null);
-  }, []);
+  const changeArmamentType = useCallback(
+    (next: ArmamentType) => {
+      const nextProperties = propertiesForArmament(selectedProperties, next);
+      setArmamentType(next);
+      setSelectedProperties(nextProperties);
+      setAbilityRequirement(null);
+      if (editItemId) return;
+      const nextForm = formSnapshot({
+        armamentType: next,
+        selectedProperties: nextProperties,
+        abilityRequirement: null,
+      });
+      writeCreatorCache(
+        ITEM_CREATOR_CACHE_KEY,
+        toItemCreatorCache(
+          nextForm,
+          weaponRangeLegacyLevel({ type: rangeType, spaces: rangeSpaces }),
+        ),
+      );
+      alignTypeQuery(next);
+    },
+    [alignTypeQuery, editItemId, formSnapshot, rangeSpaces, rangeType, selectedProperties],
+  );
 
   const {
     rangeDisplay,
@@ -223,6 +316,13 @@ export function useItemCreatorWorkspace({
   });
 
   const getPayload = useCallback(() => {
+    const savedAbilityRequirement = abilityRequirement
+      ? {
+          id: abilityRequirement.id,
+          name: abilityRequirement.name,
+          level: abilityRequirement.level,
+        }
+      : null;
     const propertiesToSave = propertiesPayload.map((pp) => ({
       id: pp.id,
       name: pp.name,
@@ -245,25 +345,13 @@ export function useItemCreatorWorkspace({
       ...(armamentType === 'Weapon' && {
         isTwoHanded,
         rangeLevel: weaponRangeLegacyLevel({ type: rangeType, spaces: rangeSpaces }),
-        abilityRequirement: abilityRequirement
-          ? {
-              id: abilityRequirement.id,
-              name: abilityRequirement.name,
-              level: abilityRequirement.level,
-            }
-          : null,
+        abilityRequirement: savedAbilityRequirement,
       }),
       ...(armamentType === 'Armor' && {
         damageReduction,
         agilityReduction,
         criticalRangeIncrease,
-        abilityRequirement: abilityRequirement
-          ? {
-              id: abilityRequirement.id,
-              name: abilityRequirement.name,
-              level: abilityRequirement.level,
-            }
-          : null,
+        abilityRequirement: savedAbilityRequirement,
       }),
       ...(armamentType === 'Shield' && {
         isTwoHanded,
@@ -272,6 +360,7 @@ export function useItemCreatorWorkspace({
         shieldDamage: hasShieldDamage
           ? { amount: shieldDamage.amount, size: shieldDamage.size }
           : null,
+        abilityRequirement: savedAbilityRequirement,
       }),
     };
     return { name: name.trim(), data: itemData };
@@ -309,6 +398,7 @@ export function useItemCreatorWorkspace({
     successMessage: 'Item saved successfully!',
     publicSuccessMessage: 'Item saved to Realms Library!',
     initialSaveTarget,
+    editingId: editItemId,
     onSaveSuccess: () => {
       setName('');
       setDescription('');
@@ -319,7 +409,11 @@ export function useItemCreatorWorkspace({
     },
   });
 
-  useCreatorEditMissNotice(Boolean(editItemId) && !discardDraft, 'armament', save.setSaveMessage);
+  useCreatorEditMissNotice(
+    Boolean(editItemId) && !replaceDraftWithEdit,
+    'armament',
+    save.setSaveMessage,
+  );
 
   const handleReset = useCallback(() => {
     setName('');
@@ -340,9 +434,11 @@ export function useItemCreatorWorkspace({
     setAbilityRequirement(null);
     setImageId(null);
     setImageUrl(null);
+    save.forgetLoadedLibraryItem();
     save.setSaveMessage(null);
     clearCreatorCache(ITEM_CREATOR_CACHE_KEY);
-  }, [save]);
+    alignTypeQuery('Weapon');
+  }, [alignTypeQuery, save]);
 
   const applyFormState = useCallback((next: ItemCreatorFormState) => {
     setName(next.name);
@@ -365,15 +461,35 @@ export function useItemCreatorWorkspace({
     setImageUrl(next.imageUrl);
   }, []);
 
+  const keepDraft = useCallback(() => {
+    alignTypeQuery(armamentType);
+  }, [alignTypeQuery, armamentType]);
+
+  const discardDraft = useCallback(() => {
+    if (!typeQueryConflict) return;
+    applyFormState({ ...emptyItemCreatorFormState(), armamentType: typeQueryConflict });
+  }, [applyFormState, typeQueryConflict]);
+
   const handleLoadItem = useCallback(
     (item: ItemLibraryRecord) => {
-      applyFormState(itemLibraryRecordToFormState(item, itemProperties));
+      const next = itemLibraryRecordToFormState(item, itemProperties);
+      applyFormState(next);
+      if (!editItemId) {
+        writeCreatorCache(
+          ITEM_CREATOR_CACHE_KEY,
+          toItemCreatorCache(
+            next,
+            weaponRangeLegacyLevel({ type: next.rangeType, spaces: next.rangeSpaces }),
+          ),
+        );
+        alignTypeQuery(next.armamentType);
+      }
       save.applyLoadedLibraryItem(item);
       closeLoadModal();
       save.setSaveMessage({ type: 'success', text: 'Armament loaded successfully!' });
       setTimeout(() => save.setSaveMessage(null), 2000);
     },
-    [itemProperties, applyFormState, closeLoadModal, save],
+    [alignTypeQuery, applyFormState, closeLoadModal, editItemId, itemProperties, save],
   );
 
   return {
@@ -433,5 +549,8 @@ export function useItemCreatorWorkspace({
     save,
     handleReset,
     handleLoadItem,
+    typeQueryConflict,
+    keepDraft,
+    discardDraft,
   };
 }

@@ -63,6 +63,7 @@ export function SizesEditor({
                 </td>
                 <td className="px-1 py-1 text-center">
                   <NumInput
+                    label={`Size ${i + 1} spaces`}
                     value={(s.spaces as number) ?? 1}
                     onChange={(v) => setSizeField(i, 'spaces', v)}
                     min={0}
@@ -70,6 +71,7 @@ export function SizesEditor({
                 </td>
                 <td className="px-1 py-1 text-center">
                   <NumInput
+                    label={`Size ${i + 1} base carry`}
                     value={(s.baseCarry as number) ?? 0}
                     onChange={(v) => setSizeField(i, 'baseCarry', v)}
                     min={0}
@@ -77,6 +79,7 @@ export function SizesEditor({
                 </td>
                 <td className="px-1 py-1 text-center">
                   <NumInput
+                    label={`Size ${i + 1} per STR`}
                     value={(s.perStrCarry as number) ?? 0}
                     onChange={(v) => setSizeField(i, 'perStrCarry', v)}
                     min={0}
@@ -84,6 +87,7 @@ export function SizesEditor({
                 </td>
                 <td className="px-1 py-1 text-center">
                   <NumInput
+                    label={`Size ${i + 1} min carry`}
                     value={(s.minCarry as number) ?? 0}
                     onChange={(v) => setSizeField(i, 'minCarry', v)}
                     min={0}

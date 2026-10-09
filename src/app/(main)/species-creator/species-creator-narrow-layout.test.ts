@@ -7,7 +7,10 @@ const section = readFileSync(
   'utf8',
 );
 const footer = readFileSync(
-  new URL('../../../components/patterns/select/unified-selection-modal-footer.tsx', import.meta.url),
+  new URL(
+    '../../../components/patterns/select/unified-selection-modal-footer.tsx',
+    import.meta.url,
+  ),
   'utf8',
 );
 
@@ -20,7 +23,7 @@ describe('species creator narrow layout (86e3jxbr8)', () => {
   });
 
   it('wraps the species/ancestry modal footer inside the dialog', () => {
-    expect(editor).toContain('wrapFooterActions={mode === \'species_ancestry\'}');
+    expect(editor).toContain("wrapFooterActions={mode === 'species_ancestry'}");
     expect(footer).toContain('wrapFooterActions');
     expect(footer).toContain('flex-wrap');
     expect(footer).toContain('[&_button]:max-w-full');

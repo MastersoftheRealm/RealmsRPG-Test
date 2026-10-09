@@ -378,6 +378,59 @@ describe('library-columnar API round-trip — items (migration hardening)', () =
   });
 });
 
+describe('item ability requirement save and clear (86e3jpr0q)', () => {
+  const requirement = { id: 6, name: 'Weapon Strength Requirement', level: 2 };
+
+  it('saves a shield, weapon, or armor requirement', () => {
+    for (const type of ['shield', 'weapon', 'armor']) {
+      const { scalars } = bodyToColumnar('items', {
+        name: 'Piece',
+        type,
+        abilityRequirement: requirement,
+        properties: [],
+      });
+      expect(scalars.abilityRequirement).toEqual(requirement);
+      expect(toDbRow(scalars).ability_requirement).toEqual(requirement);
+
+      const loaded = apiRoundTrip('items', {
+        name: 'Piece',
+        type,
+        abilityRequirement: requirement,
+        properties: [{ id: 6, name: 'Weapon Strength Requirement', op_1_lvl: 1 }],
+      });
+      expect(loaded.abilityRequirement).toEqual(requirement);
+    }
+  });
+
+  it('writes an explicit None so reopen does not keep the previous requirement', () => {
+    for (const type of ['shield', 'weapon', 'armor']) {
+      const { scalars, payload } = bodyToColumnar('items', {
+        name: 'Piece',
+        type,
+        abilityRequirement: null,
+        properties: [{ id: 15, name: 'Shield Base', op_1_lvl: 0 }],
+      });
+      expect(scalars.abilityRequirement).toBeNull();
+      expect(payload).not.toHaveProperty('abilityRequirement');
+      expect(toDbRow(scalars).ability_requirement).toBeNull();
+
+      const loaded = apiRoundTrip('items', {
+        name: 'Piece',
+        type,
+        abilityRequirement: null,
+        properties: [{ id: 15, name: 'Shield Base', op_1_lvl: 0 }],
+      });
+      expect(loaded.abilityRequirement ?? null).toBeNull();
+      expect(loaded.properties).toEqual([{ id: 15, name: 'Shield Base', op_1_lvl: 0 }]);
+    }
+  });
+
+  it('leaves the requirement column untouched when the key is omitted', () => {
+    const { scalars } = bodyToColumnar('items', { name: 'Piece', type: 'shield', properties: [] });
+    expect(scalars).not.toHaveProperty('abilityRequirement');
+  });
+});
+
 describe('library-columnar bodyToColumnar payload isolation', () => {
   it('does not put mechanic parts into scalar columns for techniques', () => {
     const { scalars, payload } = bodyToColumnar('techniques', {
@@ -467,6 +520,39 @@ describe('library-columnar image_id parity (TASK-497)', () => {
     expect(scalars.imageUrl).toBe('https://example.com/elf.jpg');
     expect(payload.imageId).toBeUndefined();
     expect(payload.imageUrl).toBeUndefined();
+  });
+});
+
+describe('shield damage clear on save (86e3jwwrt)', () => {
+  it('writes null when shield damage is off, and does not keep the die in payload', () => {
+    const { scalars, payload } = bodyToColumnar('items', {
+      name: 'Shield',
+      type: 'shield',
+      hasShieldDamage: false,
+      shieldDamage: null,
+      properties: [],
+    });
+    expect(scalars.shieldDamage).toBeNull();
+    expect(payload).not.toHaveProperty('shieldDamage');
+    expect(toDbRow(scalars).shield_damage).toBeNull();
+
+    const loaded = apiRoundTrip('items', {
+      name: 'Shield',
+      type: 'shield',
+      hasShieldDamage: false,
+      shieldDamage: null,
+      properties: [],
+    });
+    expect(loaded.shieldDamage ?? null).toBeNull();
+  });
+
+  it('leaves the shield damage column untouched when the key is omitted', () => {
+    const { scalars } = bodyToColumnar('items', {
+      name: 'Shield',
+      type: 'shield',
+      properties: [],
+    });
+    expect(scalars).not.toHaveProperty('shieldDamage');
   });
 });
 
