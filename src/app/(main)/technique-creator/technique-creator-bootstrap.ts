@@ -212,13 +212,12 @@ export function bootstrapTechniqueCreatorFormState(options: {
       const row = t as { docId?: string | undefined; id?: string | undefined };
       return String(row.docId) === editTechniqueId || String(row.id) === editTechniqueId;
     });
-    if (!techniqueToEdit) {
-      return emptyTechniqueCreatorFormState();
+    if (techniqueToEdit) {
+      return techniqueLibraryRecordToFormState(
+        techniqueToEdit as TechniqueLibraryRecord,
+        techniqueParts,
+      );
     }
-    return techniqueLibraryRecordToFormState(
-      techniqueToEdit as TechniqueLibraryRecord,
-      techniqueParts,
-    );
   }
 
   return restoreTechniqueCreatorFromCache(techniqueParts) ?? emptyTechniqueCreatorFormState();

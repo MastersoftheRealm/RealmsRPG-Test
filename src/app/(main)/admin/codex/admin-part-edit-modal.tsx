@@ -1,4 +1,4 @@
-﻿'use client';
+'use client';
 
 import type { Dispatch, SetStateAction } from 'react';
 import { ChipSelect } from '@/components/patterns/filters';
@@ -7,6 +7,7 @@ import { baseEnToPercent, percentToBaseEn, type PartFormState } from './admin-pa
 import { AdminPartEditModalOptions } from './admin-part-edit-modal-options';
 import { AdminCodexCopySourceBanner } from './admin-codex-copy-source-banner';
 import { AdminCodexEditModalFooter } from './admin-codex-edit-modal-footer';
+import { AdminCodexSourceField } from './admin-codex-source-field';
 
 export type AdminPartEditModalProps = {
   isOpen: boolean;
@@ -17,6 +18,7 @@ export type AdminPartEditModalProps = {
   form: PartFormState;
   setForm: Dispatch<SetStateAction<PartFormState>>;
   filterCategories: string[];
+  sourceOptions: string[];
   targetedDefenseOptions: string[];
   optionSlotCount: number;
   setOptionSlotCount: Dispatch<SetStateAction<number>>;
@@ -35,6 +37,7 @@ export function AdminPartEditModal({
   form,
   setForm,
   filterCategories,
+  sourceOptions,
   targetedDefenseOptions,
   optionSlotCount,
   setOptionSlotCount,
@@ -80,6 +83,11 @@ export function AdminPartEditModal({
             rows={4}
           />
         </div>
+        <AdminCodexSourceField
+          value={form.source}
+          options={sourceOptions}
+          onChange={(source) => setForm((f) => ({ ...f, source }))}
+        />
         <div className="grid grid-cols-2 gap-4">
           <div>
             <label className="mb-1 block text-sm font-medium text-text-secondary">Category</label>

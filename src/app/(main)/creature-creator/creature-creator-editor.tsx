@@ -11,7 +11,10 @@ import type { ReactNode } from 'react';
 import { SkillsAllocationPage, InfoTippy, RealmsImageField } from '@/components/patterns';
 import { subSkillsHelp } from '../../../../public/tooltip-text';
 import { Select, Card } from '@/components/ui';
-import { CreatorDescriptionField, CreatorNameField } from '@/components/creator/creator-text-fields';
+import {
+  CreatorDescriptionField,
+  CreatorNameField,
+} from '@/components/creator/creator-text-fields';
 import { HealthEnergyAllocator, AbilityScoreEditor, ArchetypeSelector } from '@/components/creator';
 import type { AbilityName } from '@/types';
 import type { Feat } from '@/hooks';

@@ -244,8 +244,9 @@ export function SpeciesCreatorEditor({
       <CollapsibleSection
         title="Traits"
         collapsedSummary={traitsSummary}
+        actionsOnOwnRow
         rightSlot={
-          <div className="flex flex-wrap gap-2">
+          <div className="flex flex-wrap gap-3">
             <Button
               size="sm"
               onClick={onOpenSpeciesAncestryModal}
@@ -576,6 +577,7 @@ export function TraitListModal({
             )
           : undefined
       }
+      wrapFooterActions={mode === 'species_ancestry'}
       size="lg"
       className="max-h-[60vh]"
     />

@@ -443,7 +443,8 @@ export function bodyToColumnar(
     if (body.rangeLevel != null) scalars.rangeSteps = body.rangeLevel;
     if (body.rangeSteps != null) scalars.rangeSteps = body.rangeSteps;
     if (body.isTwoHanded != null) scalars.isTwoHanded = body.isTwoHanded;
-    if (body.abilityRequirement != null) scalars.abilityRequirement = body.abilityRequirement;
+    // Null is an explicit clear (None). Omitting the key leaves the column alone.
+    if (body.abilityRequirement !== undefined) scalars.abilityRequirement = body.abilityRequirement;
     if (body.costs != null) scalars.costs = body.costs;
     if (Array.isArray(body.damage)) scalars.damage = body.damage;
     if (Array.isArray(body.properties)) scalars.properties = body.properties;
@@ -451,7 +452,8 @@ export function bodyToColumnar(
     if (body.criticalRangeIncrease != null)
       scalars.criticalRangeIncrease = body.criticalRangeIncrease;
     if (body.shieldDR != null) scalars.shieldDR = body.shieldDR;
-    if (body.shieldDamage != null) scalars.shieldDamage = body.shieldDamage;
+    // Null is an explicit clear. Omitting the key leaves a previously saved die in the column.
+    if (body.shieldDamage !== undefined) scalars.shieldDamage = body.shieldDamage;
   }
 
   applyImageScalarsFromBody(scalars, body);

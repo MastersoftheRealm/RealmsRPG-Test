@@ -368,13 +368,12 @@ export function bootstrapEmpoweredTechniqueFormState(options: {
           editId ||
         String((item as { docId?: string | undefined; id?: string | undefined }).id) === editId,
     );
-    if (!match) {
-      return emptyEmpoweredTechniqueFormState();
+    if (match) {
+      return (
+        empoweredLibraryRecordToFormState(match, powerParts, techniqueParts) ??
+        emptyEmpoweredTechniqueFormState()
+      );
     }
-    return (
-      empoweredLibraryRecordToFormState(match, powerParts, techniqueParts) ??
-      emptyEmpoweredTechniqueFormState()
-    );
   }
 
   return (

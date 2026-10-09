@@ -18,11 +18,12 @@ import {
   ACTIONS_COL_WIDTH,
   getColumnWidth,
   HIDDEN_COLUMNS,
-  orderColumns,
   READONLY_COLUMNS,
   searchableColumns as filterSearchableColumns,
+  spreadsheetSourceRow,
   TAB_CONFIG,
   type CodexSpreadsheetTabId,
+  visibleSpreadsheetColumns,
 } from './codex-spreadsheet-config';
 import {
   cellValueToString,
@@ -92,14 +93,14 @@ export function useCodexSpreadsheet({ activeTab }: UseCodexSpreadsheetArgs) {
     if (!rawArray || rawArray.length === 0) return ['id'];
     const keySet = new Set<string>(['id']);
     rawArray.forEach((row) => {
-      if (row && typeof row === 'object') {
-        Object.keys(row as Record<string, unknown>).forEach((k) => {
-          if (!HIDDEN_COLUMNS.has(k)) keySet.add(k);
-        });
-      }
+      if (!row || typeof row !== 'object') return;
+      const source = spreadsheetSourceRow(activeTab, row as Record<string, unknown>);
+      Object.keys(source).forEach((key) => {
+        if (!HIDDEN_COLUMNS.has(key)) keySet.add(key);
+      });
     });
-    return orderColumns(Array.from(keySet));
-  }, [rawArray]);
+    return visibleSpreadsheetColumns(activeTab, Array.from(keySet));
+  }, [rawArray, activeTab]);
 
   /** Find/replace must never rewrite ids: one Replace-all could retarget hundreds of saves. */
   const searchableColumns = useMemo(() => filterSearchableColumns(columns), [columns]);
@@ -144,7 +145,8 @@ export function useCodexSpreadsheet({ activeTab }: UseCodexSpreadsheetArgs) {
     } else {
       setRows(
         rawArray.map((r) => {
-          const data = r && typeof r === 'object' ? { ...(r as Record<string, unknown>) } : {};
+          const raw = r && typeof r === 'object' ? { ...(r as Record<string, unknown>) } : {};
+          const data = spreadsheetSourceRow(activeTab, raw);
           const id = data.id != null ? String(data.id) : '';
           return {
             key: nextRowKey(),

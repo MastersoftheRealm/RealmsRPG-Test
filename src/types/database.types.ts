@@ -294,6 +294,7 @@ export type Database = {
           power_prof_start: number | null
           secondary_ability: string | null
           type: string | null
+          source: string | null
           updated_at: string
         }
         Insert: {
@@ -324,6 +325,7 @@ export type Database = {
           power_prof_start?: number | null
           secondary_ability?: string | null
           type?: string | null
+          source?: string | null
           updated_at?: string
         }
         Update: {
@@ -354,6 +356,7 @@ export type Database = {
           power_prof_start?: number | null
           secondary_ability?: string | null
           type?: string | null
+          source?: string | null
           updated_at?: string
         }
         Relationships: []
@@ -403,6 +406,7 @@ export type Database = {
           lvl_req: number | null
           mechanic: boolean | null
           name: string | null
+          source: string | null
           updated_at: string
         }
         Insert: {
@@ -413,6 +417,7 @@ export type Database = {
           lvl_req?: number | null
           mechanic?: boolean | null
           name?: string | null
+          source?: string | null
           updated_at?: string
         }
         Update: {
@@ -423,6 +428,7 @@ export type Database = {
           lvl_req?: number | null
           mechanic?: boolean | null
           name?: string | null
+          source?: string | null
           updated_at?: string
         }
         Relationships: []
@@ -437,6 +443,7 @@ export type Database = {
           image_url: string | null
           name: string | null
           rarity: string | null
+          source: string | null
           updated_at: string
         }
         Insert: {
@@ -448,6 +455,7 @@ export type Database = {
           image_url?: string | null
           name?: string | null
           rarity?: string | null
+          source?: string | null
           updated_at?: string
         }
         Update: {
@@ -459,6 +467,7 @@ export type Database = {
           image_url?: string | null
           name?: string | null
           rarity?: string | null
+          source?: string | null
           updated_at?: string
         }
         Relationships: [
@@ -496,6 +505,7 @@ export type Database = {
           speed_req: number | null
           state_feat: boolean | null
           tags: string | null
+          source: string | null
           updated_at: string
           uses_per_rec: number | null
         }
@@ -523,6 +533,7 @@ export type Database = {
           speed_req?: number | null
           state_feat?: boolean | null
           tags?: string | null
+          source?: string | null
           updated_at?: string
           uses_per_rec?: number | null
         }
@@ -550,6 +561,7 @@ export type Database = {
           speed_req?: number | null
           state_feat?: boolean | null
           tags?: string | null
+          source?: string | null
           updated_at?: string
           uses_per_rec?: number | null
         }
@@ -577,6 +589,7 @@ export type Database = {
           op_3_tp: number | null
           percentage: boolean | null
           type: string | null
+          source: string | null
           updated_at: string
         }
         Insert: {
@@ -600,6 +613,7 @@ export type Database = {
           op_3_tp?: number | null
           percentage?: boolean | null
           type?: string | null
+          source?: string | null
           updated_at?: string
         }
         Update: {
@@ -623,6 +637,7 @@ export type Database = {
           op_3_tp?: number | null
           percentage?: boolean | null
           type?: string | null
+          source?: string | null
           updated_at?: string
         }
         Relationships: []
@@ -641,6 +656,7 @@ export type Database = {
           op_1_ip: number | null
           op_1_tp: number | null
           type: string | null
+          source: string | null
           updated_at: string
         }
         Insert: {
@@ -656,6 +672,7 @@ export type Database = {
           op_1_ip?: number | null
           op_1_tp?: number | null
           type?: string | null
+          source?: string | null
           updated_at?: string
         }
         Update: {
@@ -671,6 +688,7 @@ export type Database = {
           op_1_ip?: number | null
           op_1_tp?: number | null
           type?: string | null
+          source?: string | null
           updated_at?: string
         }
         Relationships: []
@@ -708,6 +726,7 @@ export type Database = {
           id: string
           name: string | null
           success_desc: string | null
+          source: string | null
           updated_at: string
         }
         Insert: {
@@ -721,6 +740,7 @@ export type Database = {
           id: string
           name?: string | null
           success_desc?: string | null
+          source?: string | null
           updated_at?: string
         }
         Update: {
@@ -734,6 +754,7 @@ export type Database = {
           id?: string
           name?: string | null
           success_desc?: string | null
+          source?: string | null
           updated_at?: string
         }
         Relationships: []
@@ -758,6 +779,7 @@ export type Database = {
           skills: string | null
           species_traits: string | null
           type: string | null
+          source: string | null
           updated_at: string
         }
         Insert: {
@@ -779,6 +801,7 @@ export type Database = {
           skills?: string | null
           species_traits?: string | null
           type?: string | null
+          source?: string | null
           updated_at?: string
         }
         Update: {
@@ -800,6 +823,7 @@ export type Database = {
           skills?: string | null
           species_traits?: string | null
           type?: string | null
+          source?: string | null
           updated_at?: string
         }
         Relationships: [
@@ -821,6 +845,7 @@ export type Database = {
           name: string | null
           option_trait_ids: string | null
           rec_period: string | null
+          source: string | null
           updated_at: string
           uses_per_rec: number | null
         }
@@ -832,6 +857,7 @@ export type Database = {
           name?: string | null
           option_trait_ids?: string | null
           rec_period?: string | null
+          source?: string | null
           updated_at?: string
           uses_per_rec?: number | null
         }
@@ -843,6 +869,7 @@ export type Database = {
           name?: string | null
           option_trait_ids?: string | null
           rec_period?: string | null
+          source?: string | null
           updated_at?: string
           uses_per_rec?: number | null
         }
