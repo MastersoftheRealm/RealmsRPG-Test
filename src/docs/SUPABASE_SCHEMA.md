@@ -166,6 +166,8 @@ Membership source of truth: `campaign_members`. Realtime: `public.campaign_rolls
 
 **Join-by-invite (app behavior):** RLS on `campaigns` allows SELECT only for the owner or existing members, so a new player cannot load a campaign row with the normal user-scoped Supabase client. The app uses **`SUPABASE_SERVICE_ROLE_KEY`** (server-only) in `joinCampaignAction` and in `GET /api/campaigns/invite/[code]` to look up by `invite_code` and update roster/members after the user is authenticated and character ownership is verified.
 
+**RLS (`campaign_members`) — applied 2026-10-09 on RealmsRPG-Test (86e3jryyr):** Authenticated INSERT is `campaign_members_insert_owner_self`: `private.auth_is_campaign_owner(campaign_id)` AND `user_id = auth.uid()`. A signed-in user cannot insert their own row on a campaign they do not own, and cannot insert another user's row. There is no UPDATE policy (`campaign_members_update_self` is dropped), so a membership row cannot be moved onto another campaign. SELECT remains `campaign_members_select_participants` (self or owner). DELETE remains `campaign_members_delete_owner_or_self` (self or owner). A valid invite code is the only way to join a campaign you do not own; that write uses the service role in `joinCampaignAction`. The owner still inserts their own membership with the user client in `createCampaignAction`. Replay: `sql/86e3jryyr-campaign-members-insert-owner-self.sql`.
+
 If logs show **`permission denied for table campaign_members`**, run **`sql/supabase-campaign-members-grants.sql`** — the `authenticated` role needs explicit `GRANT` on the table (RLS does not replace table privileges).
 
 ---
