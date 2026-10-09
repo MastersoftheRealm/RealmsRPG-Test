@@ -42,7 +42,7 @@ describe('ADR-0023 button touch tiers (TASK-841)', () => {
   });
 
   it('tags USM Add Selected as Primary size lg, not a blanket min-h-11 slab', () => {
-    expect(usmFooterSource).toMatch(/<Button size="lg" onClick=\{onConfirm\}/);
+    expect(usmFooterSource).toMatch(/<Button[^>]*size="lg"[^>]*onClick=\{onConfirm\}/);
     expect(usmFooterSource).not.toContain('[&_button]:min-h-11');
   });
 

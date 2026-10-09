@@ -32,6 +32,54 @@ export const TRAIT_LIMITS: Record<TraitCategory, number> = {
   flaws: MAX_FLAWS,
 };
 
+export function openTraitSlots(currentCount: number, limit: number): number {
+  return Math.max(0, limit - currentCount);
+}
+
+/** Null when the selection fits. Otherwise tell the user to deselect before adding. */
+export function traitSelectionLimitMessage(
+  label: string,
+  selectedCount: number,
+  openSlots: number,
+): string | null {
+  if (selectedCount <= openSlots) return null;
+  const sentenceLabel = label.charAt(0).toUpperCase() + label.slice(1);
+  if (openSlots <= 0) {
+    return `No open slots for ${label}. Remove one before adding more.`;
+  }
+  const extra = selectedCount - openSlots;
+  const extraText = extra === 1 ? '1 extra trait' : `${extra} extra traits`;
+  const slotText = openSlots === 1 ? '1 open slot' : `${openSlots} open slots`;
+  return `${sentenceLabel} have ${slotText}. Deselect ${extraText} before adding.`;
+}
+
+/**
+ * Add the picked traits when they fit. A pick past the open slots does not call
+ * `onAddBatch`. The third species trait still asks for confirmation.
+ */
+export function commitSpeciesTraitBatch(args: {
+  ids: readonly string[];
+  category: TraitCategory;
+  currentCount: number;
+  limit: number;
+  onAddBatch: (traitIds: string[], category: TraitCategory) => void;
+  onThirdSpeciesTrait?: ((traitId: string) => void) | undefined;
+  onClose: () => void;
+}): void {
+  if (args.ids.length === 0) return;
+  const openSlots = openTraitSlots(args.currentCount, args.limit);
+  if (args.ids.length > openSlots) return;
+  if (args.category === 'species_traits' && args.ids.length === 1 && args.currentCount === 2) {
+    const firstId = args.ids[0];
+    if (!firstId) return;
+    args.onThirdSpeciesTrait?.(firstId);
+    args.onClose();
+    return;
+  }
+  args.onAddBatch([...args.ids], args.category);
+  args.onClose();
+}
+
 export interface SpeciesFormState {
   name: string;
   description: string;
