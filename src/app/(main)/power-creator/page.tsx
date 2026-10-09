@@ -72,6 +72,7 @@ import { PowerCreatorEditor } from './power-creator-editor';
 import { usePowerCreatorWorkspace } from './use-power-creator-workspace';
 import { PowerCreatorHelp } from './power-creator-help';
 import {
+  creatorEditReplacesDraft,
   findLoadedLibraryItem,
   resolveCreatorSaveTargetFromItem,
 } from '@/lib/library/catalog-listing';
@@ -130,6 +131,7 @@ function PowerCreatorContent() {
       key={sessionKey}
       initialFormState={initialFormState}
       editPowerId={editPowerId}
+      editReplacesDraft={creatorEditReplacesDraft(editPowerId, load.rawItems)}
       user={user}
       isAdmin={isAdmin}
       powerParts={powerParts}
@@ -144,6 +146,7 @@ function PowerCreatorContent() {
 interface PowerCreatorWorkspaceProps {
   initialFormState: PowerCreatorFormState;
   editPowerId: string | null;
+  editReplacesDraft: boolean;
   user: ReturnType<typeof useAuthStore.getState>['user'];
   isAdmin: boolean;
   powerParts: PowerPart[];
@@ -156,6 +159,7 @@ interface PowerCreatorWorkspaceProps {
 function PowerCreatorWorkspace({
   initialFormState,
   editPowerId,
+  editReplacesDraft,
   user,
   isAdmin,
   powerParts,
@@ -167,6 +171,7 @@ function PowerCreatorWorkspace({
   const ws = usePowerCreatorWorkspace({
     initialFormState,
     editPowerId,
+    editReplacesDraft,
     powerParts,
     initialSaveTarget: resolveCreatorSaveTargetFromItem(
       findLoadedLibraryItem(load.rawItems, editPowerId),
@@ -424,6 +429,7 @@ function PowerCreatorWorkspace({
         onClose: () => ws.save.setShowPublishConfirm(false),
         onConfirm: () => ws.save.confirmPublish(),
         title: ws.save.publishConfirmTitle,
+        confirmLabel: ws.save.publishConfirmLabel,
         description:
           ws.save.publishConfirmDescription?.(ws.name.trim(), {
             existingInPublic: ws.save.publishExistingInPublic,

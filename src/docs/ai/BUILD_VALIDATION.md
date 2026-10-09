@@ -1836,6 +1836,25 @@ Manual QA for library/feats modularization and shared part display. **Needs:** c
 
 **Report** — `[ ] PASS` · `[ ] FAIL` · `[ ] SKIP` — Notes:
 
+#### DEV-V-009-T080 — Character name stops at 100 characters (86e3jvzrb)
+
+| Field | Value |
+|-------|-------|
+| **Suite** | DEV-V-009 — Character sheet refactor |
+| **Related task** | 86e3jvzrb |
+| **Where** | `/characters/[id]` edit mode, header name |
+| **Needs** | A saved character you can edit |
+
+**Steps**
+1. Turn on edit mode and choose Edit name. Paste 101 characters and press Enter.
+2. Confirm the field stops at 100, a short note says the paste was shortened, and a counter is visible near the limit (from 80 characters).
+3. Edit General Notes, wait for the save, and reload.
+
+**Expected**
+- The paste is cut to 100 characters, the note says so, and that 100-character name saves. General Notes from step 3 are still there after reload. The name field has `maxlength="100"`. A name that is still over 100 when it reaches save shows "Name must be 100 characters or fewer." and does not block the notes save.
+
+**Report** — `[ ] PASS` · `[ ] FAIL` · `[ ] SKIP` — Notes:
+
 #### DEV-V-009-T065 — Notes Age + Backstory fields (TASK-886)
 
 | Field | Value |
@@ -5017,6 +5036,27 @@ Admin Codex tabs, Codex browse tabs (including Codex Archetypes header chrome), 
 
 **Report** — `[ ] PASS` · `[ ] FAIL` · `[ ] SKIP` — Notes:
 
+#### DEV-V-028-T008 — Codex entry Source (TASK-928)
+
+| Field | Value |
+|-------|-------|
+| **Suite** | DEV-V-028 — Codex browse list shell |
+| **Task** | TASK-928 |
+| **Where** | `/admin/codex` — Feats, Skills, Species, Traits, Parts, Properties, Equipment, Archetypes, Creature Feats (edit modal). Spreadsheet tab optional. |
+| **Needs** | Admin account. Desktop and ~360px. |
+
+**Steps**
+1. Open **Feats** → Edit a feat. Confirm a **Source** select (None / Add new source...) under Description, separate from Category.
+2. Choose **Add new source...**, type `Core Rules`, press Enter. The text box closes and the Source select shows `Core Rules` before you save. Save, then reopen the feat — Source is still `Core Rules`. Set Source back to **None**, Save, reopen (refresh if needed) — Source stays **None**.
+3. Open **Species** → Edit a species. Confirm **Starter species** is still a checkbox, and **Source** is its own field (hint mentions Core Rules and that starter stays separate). Set Source to `Core Rules` on one species and Save. Reopen — both starter and source hold.
+4. Spot-check **Skills**, **Parts**, and **Archetypes** edit modals: the same Source control is present. On each tab, choose **Add new source...**, type `Core Rules`, and Save. A source typed on Feats is not in another tab’s list until that tab has used it.
+5. At ~360px, the Source select and the “type new source” input stay inside the modal (no page-wide horizontal scroll). Coarse pointer: the select is at least 44px tall.
+
+**Expected**
+- Source saves and reloads on feats, species, and the spot-checked types. Choosing **None** clears a saved source. Species starter flag is unchanged by setting Source. Add new source creates a value later entries of that same type can pick.
+
+**Report** — `[ ] PASS` · `[ ] FAIL` · `[ ] SKIP` — Notes:
+
 ---
 
 ## DEV-V-017 — Site copy modules (TASK-390)
@@ -5559,6 +5599,47 @@ islands (Phase 4) and workspace hook (Phase 5). **T012–T014** cover expanded h
 
 **Expected**
 - Ability utilized persists only via Finesse/Heavy mechanic properties (no free-form ability string on the saved item). Sheet uses `getWeaponAttackAbility` (no parallel formula). Heavy id 50 already live mechanic=true — no Codex apply required.
+
+**Report** — `[ ] PASS` · `[ ] FAIL` · `[ ] SKIP` — Notes:
+
+#### DEV-V-018-T022 — Creator name stops at 100 characters (86e3jx8ww)
+
+| Field | Value |
+|-------|-------|
+| **Suite** | DEV-V-018 — CreatorPageShell parity |
+| **Related task** | 86e3jx8ww |
+| **Where** | `/power-creator` (also item, technique, empowered technique, creature, species) |
+| **Needs** | A signed-in account that can save to My Library |
+
+**Steps**
+1. Open `/power-creator` and `/species-creator`. Confirm each name field shows a live counter and `maxlength="100"`. Paste 101 characters.
+2. Save. Confirm the stored name is 100 characters and the toast names that limit if save is still rejected.
+3. Paste a description of 10,000 characters and save. Then try to go past 10,000.
+
+**Expected**
+- Names stop at 100 with a visible counter. A 10,000-character description saves. The description field does not accept a 10,001st character. Once the description counter is visible, it uses the same grouping as the paste note ("10,000 of 10,000 characters", and "9,000 of 10,000 characters" at the threshold). The name counter uses that same format ("100 of 100 characters").
+
+**Report** — `[ ] PASS` · `[ ] FAIL` · `[ ] SKIP` — Notes:
+
+#### DEV-V-018-T023 — Same-name creator save asks before overwrite (86e3jp7e1)
+
+| Field | Value |
+|-------|-------|
+| **Suite** | DEV-V-018 — CreatorPageShell parity |
+| **Related task** | 86e3jp7e1 |
+| **Where** | `/power-creator` (also item, technique, empowered technique, creature, species) |
+| **Needs** | A signed-in account with two My library powers |
+
+**Steps**
+1. Save a power named X. Reset. Build a different power, name it X, and click Save.
+2. Cancel the confirm. Confirm X in My library is unchanged. Save again and choose Replace.
+3. Open the first power with `?edit=`, change its description, and Save. Then Reset, name the draft an existing different power, and Save.
+4. On `/species-creator`, Load a My library species, Reset, then Save the same name.
+
+**Expected**
+- The first save of a new name does not ask. A second save of that name asks before it overwrites, and Cancel leaves the older item. Replace updates that older item.
+- Saving the open `?edit=` item with its own name does not ask. Saving it under a different existing name asks before that other item is overwritten.
+- Species Reset drops the loaded id. Saving that name again asks before it replaces the row.
 
 **Report** — `[ ] PASS` · `[ ] FAIL` · `[ ] SKIP` — Notes:
 
@@ -8988,6 +9069,45 @@ Core Rules tabs stay fully readable at 768 and 1280. **Needs:** admin account.
 **Report** — `[ ] PASS` · `[ ] FAIL` · `[ ] SKIP` — Notes:
 
 ---
+
+## Species reopen (86e3jmhkn)
+
+Official Library Species tab and My Codex species Edit. `?edit=` load is unchanged. verification_status pending-qa.
+
+#### 86e3jmhkn — Species tab and My Codex Edit
+
+| Field | Value |
+|-------|-------|
+| **Where** | `/admin/public-library`, `/codex` (My Codex → Species), `/species-creator?edit=` |
+| **Needs** | Admin for Official Library. A saved My Codex species for the Edit row. |
+
+**Steps**
+1. Open `/admin/public-library`. Confirm **Species** sits with the other tabs (same tab role and hit area as **Creatures**).
+2. Open Species. Confirm the list matches the creatures row pattern (search, name, Edit). Edit goes to `/species-creator?edit=<id>` and the creator loads that species.
+3. Open `/codex`, choose **My Codex**, then Species. Each row’s Edit goes to `/species-creator?edit=<id>`. Realms Codex species rows have no Edit.
+
+**Expected**
+- Opening the creator with `?edit=` still loads that species. Reset is unchanged.
+
+**Report** — `[ ] PASS` · `[ ] FAIL` · `[ ] SKIP` — Notes:
+
+#### 86e3mhqay — Unknown edit id keeps the draft
+
+| Field | Value |
+|-------|-------|
+| **Where** | `/species-creator` |
+| **Needs** | No save. Do not write a species. |
+
+**Steps**
+1. Open `/species-creator`. Type a name and do not save.
+2. Open `/species-creator?edit=00000000-bad-id`.
+3. Confirm the form still shows that name and a message says the species couldn't be found.
+4. Open `/species-creator` again. Confirm the same unsaved name is still there.
+5. Open `/species-creator?edit=` with a real saved species id. Confirm that species loads.
+
+**Expected**
+- An unknown edit id does not blank the form or delete the draft.
+- A real edit id still loads that species.
 
 ## DEV-V-064 — Admin Core Rules number labels (ClickUp 86e3k0cgu)
 

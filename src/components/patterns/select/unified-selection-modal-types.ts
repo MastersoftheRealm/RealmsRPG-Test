@@ -177,6 +177,11 @@ interface UnifiedSelectionModalPropsFields {
    * Cancel remains. Caller is responsible for closing the modal after actions.
    */
   primaryActions?: ReactNode | ((selectedItems: SelectableItem[]) => ReactNode) | undefined;
+  /**
+   * Let footer actions wrap inside the modal instead of one nowrap row.
+   * Use when more than one long primary label would clip past the dialog edge.
+   */
+  wrapFooterActions?: boolean | undefined;
 }
 
 export type UnifiedSelectionModalProps = AllowUndefinedOptionals<UnifiedSelectionModalPropsFields>;

@@ -174,7 +174,7 @@ export function useLoadModalLibrary(
     isError: publicCreaturesError,
   } = useOfficialLibrary('creatures', { enabled: needCreatures && fetchEnabled, includeUnlisted });
 
-  const { data: codexSpecies = [] } = useCodexSpecies({
+  const { data: codexSpecies = [], isLoading: codexSpeciesLoading } = useCodexSpecies({
     enabled: needSpecies && fetchEnabled,
     includeUnlisted,
   });
@@ -308,7 +308,8 @@ export function useLoadModalLibrary(
         return true;
       });
       const loading =
-        (source !== 'public' && userSpeciesLoading) || (source !== 'my' && publicSpeciesLoading);
+        (source !== 'public' && userSpeciesLoading) ||
+        (source !== 'my' && (publicSpeciesLoading || codexSpeciesLoading));
       return {
         selectableItems: selectable,
         rawItems: raw,
@@ -379,6 +380,7 @@ export function useLoadModalLibrary(
     empoweredTechniquesLoading,
     itemsLoading,
     userSpeciesLoading,
+    codexSpeciesLoading,
     userCreaturesLoading,
     publicPowersLoading,
     publicTechniquesLoading,

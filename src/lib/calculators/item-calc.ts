@@ -673,6 +673,7 @@ export function deriveShieldAmountFromProperties(properties: ItemPropertyPayload
 
 /**
  * Derive shield damage dice (e.g. "1d4 Bludgeoning") from Shield Damage property, if present.
+ * Property level reverses onto the 1d4/1d6/1d8 ladder. Use this only when no shieldDamage scalar was saved.
  */
 export function deriveShieldDamageFromProperties(properties: ItemPropertyPayload[]): string | null {
   const prop = (properties || []).find((p) => {
@@ -684,6 +685,37 @@ export function deriveShieldDamageFromProperties(properties: ItemPropertyPayload
   const amount = Math.floor(level / 3) + 1;
   const size = SHIELD_DICE_SIZES[level % 3];
   return `${amount}d${size} Bludgeoning`;
+}
+
+/**
+ * Library and Load damage cells.
+ * While shield damage is on, and when the on/off flag was never saved, a stored
+ * shieldDamage die wins over the property ladder.
+ * hasShieldDamage false means damage is off. The save writes null for the die,
+ * and a null update leaves the old die in the column, so that stored die is ignored.
+ */
+export function resolveShieldDamageDisplay(input: {
+  shieldDamage?: unknown;
+  hasShieldDamage?: boolean | null | undefined;
+  properties?: ItemPropertyPayload[] | null | undefined;
+  damage?: unknown;
+}): string | null {
+  if (input.hasShieldDamage !== false && input.shieldDamage != null) {
+    const raw = input.shieldDamage;
+    const stored = formatDamageDisplay(
+      typeof raw === 'object' && !Array.isArray(raw)
+        ? {
+            ...(raw as Record<string, unknown>),
+            type: (raw as { type?: unknown }).type || 'bludgeoning',
+          }
+        : raw,
+    );
+    if (stored) return stored;
+  }
+  return (
+    deriveShieldDamageFromProperties(input.properties ?? []) ??
+    (input.damage != null ? formatDamageDisplay(input.damage) || null : null)
+  );
 }
 
 /**
