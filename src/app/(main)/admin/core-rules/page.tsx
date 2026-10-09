@@ -10,7 +10,6 @@
 import { useState, useCallback } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import Link from 'next/link';
-import { ChevronLeft } from 'lucide-react';
 import {
   PageContainer,
   PageHeader,
@@ -162,14 +161,14 @@ export default function AdminCoreRulesPage() {
 
   return (
     <PageContainer size="xl">
-      <div className="mb-4 flex items-center gap-3">
-        <Link href="/admin" className="text-text-muted transition-colors hover:text-text-primary">
-          <ChevronLeft className="h-5 w-5" />
-        </Link>
-        <PageHeader
-          title="Core Rules Editor"
-          description="Edit game rules. Changes take effect for all users after you save."
-        />
+      <PageHeader
+        title="Core Rules Editor"
+        description="Edit game rules. Changes take effect for all users after you save."
+      />
+      <div className="mb-4">
+        <Button variant="secondary" asChild>
+          <Link href="/admin">← Back to Admin</Link>
+        </Button>
       </div>
 
       <TabNavigation

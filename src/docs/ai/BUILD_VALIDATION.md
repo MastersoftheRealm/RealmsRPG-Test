@@ -9087,6 +9087,32 @@ Built-in variants in `payload.composition` (ADR-0029). Resolver: `lib/calculator
 
 ---
 
+## DEV-V-067 — Admin Core Rules back control (ClickUp 86e3jzu5g)
+
+Core Rules uses the same Back to Admin control as Users and Roles. **Needs:** admin account.
+
+#### DEV-V-067-T001 — Back to Admin is labeled
+
+| Field | Value |
+|-------|-------|
+| **Suite** | DEV-V-067 — Admin Core Rules back control |
+| **Related task** | ClickUp 86e3jzu5g |
+| **Where** | `/admin/core-rules` |
+| **Needs** | Admin account |
+
+**Steps**
+1. Open `/admin/core-rules`.
+2. Compare the control under the title with `/admin/users`.
+
+**Expected**
+- The control reads ← Back to Admin.
+- Its accessible name includes Back to Admin.
+- The title is not shifted by a lone chevron.
+
+**Report** — `[ ] PASS` · `[ ] FAIL` · `[ ] SKIP` — Notes:
+
+---
+
 ## DEV-V-066 — Admin Codex row actions (ClickUp 86e3jzu5m)
 
 Codex list row actions stay inside the row at 768 and 1280. **Needs:** admin account.
@@ -9351,5 +9377,6 @@ A pick that would exceed open trait slots is refused. The disabled Add button de
 | DEV-V-064 | Admin Core Rules number labels (ClickUp 86e3k0cgu) | — | Automated (`core-rules-number-labels.test.ts`) + manual DEV-V-064-T001 |
 | DEV-V-065 | Admin Core Rules tab strip (ClickUp 86e3jzu59) | — | Automated (`core-rules-tab-strip.test.ts`) + manual DEV-V-065-T001 |
 | DEV-V-066 | Admin Codex row actions (ClickUp 86e3jzu5m) | — | Automated (`admin-codex-row-actions.test.ts`) + manual DEV-V-066-T001 |
+| DEV-V-067 | Admin Core Rules back control (ClickUp 86e3jzu5g) | — | Automated (`core-rules-back-link.test.ts`) + manual DEV-V-067-T001 |
 
 When implementing a related task, replace the legacy **DEV-T-###** block with granular **DEV-V-###** tests in this file.
