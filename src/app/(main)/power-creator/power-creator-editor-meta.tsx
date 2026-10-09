@@ -6,7 +6,11 @@
 
 import type { ReactNode } from 'react';
 import { RealmsImageField } from '@/components/patterns';
-import { Card, Input, Textarea } from '@/components/ui';
+import { Card } from '@/components/ui';
+import {
+  CreatorDescriptionField,
+  CreatorNameField,
+} from '@/components/creator/creator-text-fields';
 import { PowerCreatorHelp } from './power-creator-help';
 
 type PowerCreatorEditorMetaProps = {
@@ -44,11 +48,10 @@ export function PowerCreatorEditorMeta({
           >
             Power Name *
           </label>
-          <Input
+          <CreatorNameField
             id="power-creator-name"
-            type="text"
             value={name}
-            onChange={(e) => onNameChange(e.target.value)}
+            onChange={onNameChange}
             placeholder="Enter power name..."
           />
         </div>
@@ -62,10 +65,10 @@ export function PowerCreatorEditorMeta({
             </label>
             <PowerCreatorHelp topic="description" />
           </div>
-          <Textarea
+          <CreatorDescriptionField
             id="power-creator-description"
             value={description}
-            onChange={(e) => onDescriptionChange(e.target.value)}
+            onChange={onDescriptionChange}
             placeholder="Describe what your power does..."
             rows={3}
           />
