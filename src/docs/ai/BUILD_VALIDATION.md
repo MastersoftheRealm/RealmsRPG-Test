@@ -9023,6 +9023,45 @@ Built-in variants in `payload.composition` (ADR-0029). Resolver: `lib/calculator
 
 ---
 
+## Species reopen (86e3jmhkn)
+
+Official Library Species tab and My Codex species Edit. `?edit=` load is unchanged. verification_status pending-qa.
+
+#### 86e3jmhkn — Species tab and My Codex Edit
+
+| Field | Value |
+|-------|-------|
+| **Where** | `/admin/public-library`, `/codex` (My Codex → Species), `/species-creator?edit=` |
+| **Needs** | Admin for Official Library. A saved My Codex species for the Edit row. |
+
+**Steps**
+1. Open `/admin/public-library`. Confirm **Species** sits with the other tabs (same tab role and hit area as **Creatures**).
+2. Open Species. Confirm the list matches the creatures row pattern (search, name, Edit). Edit goes to `/species-creator?edit=<id>` and the creator loads that species.
+3. Open `/codex`, choose **My Codex**, then Species. Each row’s Edit goes to `/species-creator?edit=<id>`. Realms Codex species rows have no Edit.
+
+**Expected**
+- Opening the creator with `?edit=` still loads that species. Reset is unchanged.
+
+**Report** — `[ ] PASS` · `[ ] FAIL` · `[ ] SKIP` — Notes:
+
+#### 86e3mhqay — Unknown edit id keeps the draft
+
+| Field | Value |
+|-------|-------|
+| **Where** | `/species-creator` |
+| **Needs** | No save. Do not write a species. |
+
+**Steps**
+1. Open `/species-creator`. Type a name and do not save.
+2. Open `/species-creator?edit=00000000-bad-id`.
+3. Confirm the form still shows that name and a message says the species couldn't be found.
+4. Open `/species-creator` again. Confirm the same unsaved name is still there.
+5. Open `/species-creator?edit=` with a real saved species id. Confirm that species loads.
+
+**Expected**
+- An unknown edit id does not blank the form or delete the draft.
+- A real edit id still loads that species.
+
 ## DEV-V-064 — Admin Core Rules number labels (ClickUp 86e3k0cgu)
 
 Number inputs on `/admin/core-rules` expose a programmatic name. **Needs:** admin account.

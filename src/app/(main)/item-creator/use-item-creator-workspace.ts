@@ -12,6 +12,10 @@ import { useRouter } from 'next/navigation';
 import { useCreatorSave, type ItemProperty } from '@/hooks';
 import type { CreatorSaveTarget } from '@/lib/library/catalog-listing';
 import {
+  useCreatorEditDraftDecision,
+  useCreatorEditMissNotice,
+} from '@/lib/library/use-creator-edit-draft';
+import {
   weaponRangeLegacyLevel,
   weaponRangeSpaceLadder,
   type ItemDamage,
@@ -43,6 +47,8 @@ import { useItemCreatorPropertyActions } from './item-creator-property-actions';
 type UseItemCreatorWorkspaceArgs = {
   initialFormState: ItemCreatorFormState;
   editItemId: string | null;
+  /** True only when editItemId matched a loaded library row. */
+  editReplacesDraft: boolean;
   /** Live `?type=` value. Edit mode passes null. */
   requestedType: ArmamentType | null;
   itemProperties: ItemProperty[];
@@ -93,6 +99,7 @@ function propertiesForArmament(
 export function useItemCreatorWorkspace({
   initialFormState,
   editItemId,
+  editReplacesDraft,
   requestedType,
   itemProperties,
   closeLoadModal,
@@ -153,6 +160,12 @@ export function useItemCreatorWorkspace({
           : null,
       );
 
+  const { discardDraft: replaceDraftWithEdit } = useCreatorEditDraftDecision(
+    true,
+    editReplacesDraft,
+    ITEM_CREATOR_CACHE_KEY,
+  );
+
   const formSnapshot = useCallback(
     (overrides?: Partial<ItemCreatorFormState>): ItemCreatorFormState => ({
       name,
@@ -207,11 +220,7 @@ export function useItemCreatorWorkspace({
   );
 
   useEffect(() => {
-    if (editItemId) clearCreatorCache(ITEM_CREATOR_CACHE_KEY);
-  }, [editItemId]);
-
-  useEffect(() => {
-    if (!shouldWriteItemCreatorDraft(editItemId != null, typeQueryConflict != null)) return;
+    if (!shouldWriteItemCreatorDraft(replaceDraftWithEdit, typeQueryConflict != null)) return;
 
     writeCreatorCache(
       ITEM_CREATOR_CACHE_KEY,
@@ -220,7 +229,7 @@ export function useItemCreatorWorkspace({
         weaponRangeLegacyLevel({ type: rangeType, spaces: rangeSpaces }),
       ),
     );
-  }, [editItemId, formSnapshot, rangeSpaces, rangeType, typeQueryConflict]);
+  }, [formSnapshot, rangeSpaces, rangeType, replaceDraftWithEdit, typeQueryConflict]);
 
   const changeRangeType = useCallback((next: WeaponRangeType) => {
     setRangeTypeState(next);
@@ -398,6 +407,12 @@ export function useItemCreatorWorkspace({
       setImageUrl(null);
     },
   });
+
+  useCreatorEditMissNotice(
+    Boolean(editItemId) && !replaceDraftWithEdit,
+    'armament',
+    save.setSaveMessage,
+  );
 
   const handleReset = useCallback(() => {
     setName('');

@@ -5,7 +5,8 @@
 
 import type { Trait, Skill, Species } from '@/hooks';
 import { defined } from '@/lib/utils';
-import { CREATOR_CACHE_KEYS } from '@/lib/game/creator-constants';
+import { CACHE_EXPIRY_MS, CREATOR_CACHE_KEYS } from '@/lib/game/creator-constants';
+import { findLoadedLibraryItem } from '@/lib/library/catalog-listing';
 
 export const MAX_SPECIES_TRAITS = 3;
 export const MAX_ANCESTRY_TRAITS = 6;
@@ -228,4 +229,80 @@ export function speciesLibraryRecordToFormState(
     imageUrl:
       typeof (d.imageUrl ?? d.image_url) === 'string' ? String(d.imageUrl ?? d.image_url) : null,
   };
+}
+
+/** Official Library and My Codex Edit target for an existing species id. */
+export function speciesCreatorEditHref(id: string): string {
+  return `/species-creator?edit=${encodeURIComponent(id)}`;
+}
+
+/** Map a `?edit=` library row into the creator form. Null when that id is not loaded. */
+export function resolveSpeciesEditForm(
+  editSpeciesId: string,
+  rawItems: readonly unknown[],
+  allTraits: Trait[],
+  allSkills: Skill[],
+): { form: SpeciesFormState; item: unknown } | null {
+  const item = findLoadedLibraryItem(rawItems, editSpeciesId);
+  if (!item || typeof item !== 'object') return null;
+  return {
+    item,
+    form: speciesLibraryRecordToFormState(
+      item as Species | Record<string, unknown>,
+      allTraits,
+      allSkills,
+    ),
+  };
+}
+
+export type SpeciesCreatorEditPlan =
+  | { type: 'use-draft' }
+  | { type: 'wait' }
+  | { type: 'replace'; form: SpeciesFormState; item: unknown }
+  | { type: 'missing' };
+
+/**
+ * Decide what ?edit= may do to the local draft.
+ * `wait` means the library has not settled — do not read or delete the draft.
+ * `missing` means the id is unknown — keep the draft and tell the user.
+ * `replace` is the only plan that may delete the draft.
+ */
+export function planSpeciesCreatorEdit(options: {
+  editSpeciesId: string | null | undefined;
+  libraryReady: boolean;
+  rawItems: readonly unknown[];
+  traits: Trait[];
+  skills: Skill[];
+}): SpeciesCreatorEditPlan {
+  const id = options.editSpeciesId?.trim() ?? '';
+  if (!id) return { type: 'use-draft' };
+  if (!options.libraryReady) return { type: 'wait' };
+  const resolved = resolveSpeciesEditForm(id, options.rawItems, options.traits, options.skills);
+  if (!resolved) return { type: 'missing' };
+  return { type: 'replace', form: resolved.form, item: resolved.item };
+}
+
+/**
+ * Read the species draft. Drops an expired or corrupt entry.
+ * Does not treat an edit id as a reason to delete the draft.
+ */
+export function readStoredSpeciesDraft(traits: Trait[], skills: Skill[]): SpeciesFormState | null {
+  if (typeof window === 'undefined') return null;
+  try {
+    const raw = localStorage.getItem(SPECIES_CREATOR_CACHE_KEY);
+    if (!raw) return null;
+    const parsed = JSON.parse(raw) as SpeciesCreatorCache;
+    if (!parsed.timestamp || Date.now() - parsed.timestamp >= CACHE_EXPIRY_MS) {
+      localStorage.removeItem(SPECIES_CREATOR_CACHE_KEY);
+      return null;
+    }
+    return mergeCachedSpeciesForm(parsed, traits, skills);
+  } catch {
+    try {
+      localStorage.removeItem(SPECIES_CREATOR_CACHE_KEY);
+    } catch {
+      // ignore quota / private mode
+    }
+    return null;
+  }
 }

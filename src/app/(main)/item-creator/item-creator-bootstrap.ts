@@ -408,10 +408,9 @@ export function bootstrapItemCreatorFormState(options: {
       const row = it as { docId?: string | undefined; id?: string | undefined };
       return String(row.docId) === editItemId || String(row.id) === editItemId;
     });
-    if (!itemToEdit) {
-      return emptyItemCreatorFormState();
+    if (itemToEdit) {
+      return itemLibraryRecordToFormState(itemToEdit as ItemLibraryRecord, itemProperties);
     }
-    return itemLibraryRecordToFormState(itemToEdit as ItemLibraryRecord, itemProperties);
   }
 
   const cached = restoreItemCreatorFromCache(itemProperties);
