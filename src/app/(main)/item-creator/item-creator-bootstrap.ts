@@ -182,6 +182,8 @@ export type ItemLibraryRecord = {
   shieldDR?: { amount?: number | undefined; size?: number | undefined } | undefined;
   hasShieldDamage?: boolean | undefined;
   shieldDamage?: { amount?: number | undefined; size?: number | undefined } | undefined;
+  /** Library read marker. Reopen ignores it; official and user shields use the stored die. */
+  _source?: string | undefined;
   abilityRequirement?:
     | { id?: number | string | undefined; name?: string | undefined; level?: number | undefined }
     | null
@@ -290,6 +292,14 @@ function abilityRequirementFromProperties(item: ItemLibraryRecord): ItemAbilityR
   return null;
 }
 
+/** Saved block die. Reopen never derives dice from Shield Amount or from `_source`. */
+function storedShieldBlock(item: ItemLibraryRecord): { amount: number; size: number } | null {
+  const amount = Number(item.shieldDR?.amount);
+  const size = Number(item.shieldDR?.size);
+  if (!Number.isInteger(amount) || !Number.isInteger(size) || amount < 1 || size < 1) return null;
+  return { amount, size };
+}
+
 function readItemAbilityRequirement(
   item: ItemLibraryRecord,
   armamentType: ArmamentType,
@@ -380,9 +390,7 @@ export function itemLibraryRecordToFormState(
     agilityReduction: armamentType === 'Armor' ? item.agilityReduction || 0 : 0,
     criticalRangeIncrease: armamentType === 'Armor' ? item.criticalRangeIncrease || 0 : 0,
     shieldDR:
-      armamentType === 'Shield' && item.shieldDR
-        ? { amount: item.shieldDR.amount || 1, size: item.shieldDR.size || 4 }
-        : base.shieldDR,
+      armamentType === 'Shield' ? (storedShieldBlock(item) ?? base.shieldDR) : base.shieldDR,
     hasShieldDamage: armamentType === 'Shield' ? item.hasShieldDamage || false : false,
     shieldDamage:
       armamentType === 'Shield' && item.shieldDamage
