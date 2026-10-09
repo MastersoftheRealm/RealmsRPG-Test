@@ -10,6 +10,10 @@
 import { useState, useCallback, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useCreatorSave, type ItemProperty } from '@/hooks';
+import {
+  useCreatorDraftDirty,
+  useDiscardableCreatorDraft,
+} from '@/hooks/use-creator-unsaved-guard';
 import type { CreatorSaveTarget } from '@/lib/library/catalog-listing';
 import {
   useCreatorEditDraftDecision,
@@ -40,7 +44,11 @@ import {
   type ItemSelectedProperty as SelectedProperty,
   type ItemDamageConfig as DamageConfig,
 } from './item-creator-bootstrap';
-import { writeCreatorCache, clearCreatorCache } from '@/lib/game/creator-cache';
+import {
+  persistCreatorDraft,
+  writeCreatorCache,
+  clearCreatorCache,
+} from '@/lib/game/creator-cache';
 import { useItemCreatorCostDerivation } from './item-creator-cost-derivation';
 import { useItemCreatorPropertyActions } from './item-creator-property-actions';
 
@@ -142,6 +150,8 @@ export function useItemCreatorWorkspace({
   const [imageUrl, setImageUrl] = useState<string | null>(initialFormState.imageUrl);
 
   const imageCategory = armamentType.toLowerCase() as 'weapon' | 'armor' | 'shield';
+  const { discardLocalDraft, isLocalDraftDiscarded } =
+    useDiscardableCreatorDraft(ITEM_CREATOR_CACHE_KEY);
   if (
     ignoredRequestedType &&
     (requestedType !== ignoredRequestedType || requestedType === armamentType)
@@ -222,14 +232,22 @@ export function useItemCreatorWorkspace({
   useEffect(() => {
     if (!shouldWriteItemCreatorDraft(replaceDraftWithEdit, typeQueryConflict != null)) return;
 
-    writeCreatorCache(
+    persistCreatorDraft(
       ITEM_CREATOR_CACHE_KEY,
       toItemCreatorCache(
         formSnapshot(),
         weaponRangeLegacyLevel({ type: rangeType, spaces: rangeSpaces }),
       ),
+      isLocalDraftDiscarded(),
     );
-  }, [formSnapshot, rangeSpaces, rangeType, replaceDraftWithEdit, typeQueryConflict]);
+  }, [
+    formSnapshot,
+    isLocalDraftDiscarded,
+    rangeSpaces,
+    rangeType,
+    replaceDraftWithEdit,
+    typeQueryConflict,
+  ]);
 
   const changeRangeType = useCallback((next: WeaponRangeType) => {
     setRangeTypeState(next);
@@ -385,6 +403,8 @@ export function useItemCreatorWorkspace({
     hasShieldDamage,
     shieldDamage,
   ]);
+  const draftSnapshot = JSON.stringify(getPayload());
+  const { isDirty: unsavedDirty, acceptDraft } = useCreatorDraftDirty(draftSnapshot);
 
   const save = useCreatorSave({
     type: 'items',
@@ -399,6 +419,7 @@ export function useItemCreatorWorkspace({
     publicSuccessMessage: 'Item saved to Realms Library!',
     initialSaveTarget,
     editingId: editItemId,
+    onSaveCommitted: acceptDraft,
     onSaveSuccess: () => {
       setName('');
       setDescription('');
@@ -406,6 +427,7 @@ export function useItemCreatorWorkspace({
       setDamage({ amount: 1, size: 6, type: 'slashing' });
       setImageId(null);
       setImageUrl(null);
+      acceptDraft();
     },
   });
 
@@ -437,8 +459,9 @@ export function useItemCreatorWorkspace({
     save.forgetLoadedLibraryItem();
     save.setSaveMessage(null);
     clearCreatorCache(ITEM_CREATOR_CACHE_KEY);
+    acceptDraft();
     alignTypeQuery('Weapon');
-  }, [alignTypeQuery, save]);
+  }, [acceptDraft, alignTypeQuery, save]);
 
   const applyFormState = useCallback((next: ItemCreatorFormState) => {
     setName(next.name);
@@ -485,11 +508,12 @@ export function useItemCreatorWorkspace({
         alignTypeQuery(next.armamentType);
       }
       save.applyLoadedLibraryItem(item);
+      acceptDraft();
       closeLoadModal();
       save.setSaveMessage({ type: 'success', text: 'Armament loaded successfully!' });
       setTimeout(() => save.setSaveMessage(null), 2000);
     },
-    [alignTypeQuery, applyFormState, closeLoadModal, editItemId, itemProperties, save],
+    [acceptDraft, alignTypeQuery, applyFormState, closeLoadModal, editItemId, itemProperties, save],
   );
 
   return {
@@ -547,6 +571,8 @@ export function useItemCreatorWorkspace({
     removeProperty,
     updateProperty,
     save,
+    unsavedDirty,
+    discardLocalDraft,
     handleReset,
     handleLoadItem,
     typeQueryConflict,

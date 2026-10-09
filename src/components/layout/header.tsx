@@ -9,7 +9,7 @@
 import { useState, useRef, useEffect, type KeyboardEvent as ReactKeyboardEvent } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
-import { usePathname, useRouter } from 'next/navigation';
+import { usePathname } from 'next/navigation';
 import { cn } from '@/lib/utils';
 import { useAuth, useAdmin, useProfile } from '@/hooks';
 import { ThemeToggle, InfoTippy } from '@/components/patterns';
@@ -25,7 +25,6 @@ const FOCUSABLE_SELECTOR =
 
 export function Header() {
   const pathname = usePathname();
-  const router = useRouter();
   const { user, signOut } = useAuth();
   const { isAdmin } = useAdmin();
   const { profile } = useProfile();
@@ -83,14 +82,18 @@ export function Header() {
     }
   };
 
-  // Handle login click - store current path for redirect after login
-  const handleLoginClick = () => {
-    // Store current path in sessionStorage for redirect after login
-    if (typeof window !== 'undefined') {
-      sessionStorage.setItem('loginRedirect', pathname);
-    }
-    router.push('/login');
-  };
+  // Store the return path before the creator leave guard can cancel the click.
+  useEffect(() => {
+    const rememberLoginRedirect = (event: MouseEvent) => {
+      const target = event.target;
+      if (!(target instanceof Element)) return;
+      const anchor = target.closest('a');
+      if (!anchor || anchor.getAttribute('data-login-link') !== 'header') return;
+      sessionStorage.setItem('loginRedirect', pathname ?? window.location.pathname);
+    };
+    window.addEventListener('click', rememberLoginRedirect, true);
+    return () => window.removeEventListener('click', rememberLoginRedirect, true);
+  }, [pathname]);
 
   return (
     <header className="sticky top-0 z-header h-20 w-full border-b border-divider bg-surface-secondary">
@@ -181,13 +184,13 @@ export function Header() {
             {user ? (
               <AccountDropdown profile={profile} signOut={signOut} />
             ) : (
-              <button
-                type="button"
-                onClick={handleLoginClick}
+              <Link
+                href="/login"
+                data-login-link="header"
                 className="flex min-h-[44px] items-center px-2 text-base font-semibold whitespace-nowrap text-primary-fg transition-colors hover:text-primary-fg-hover 2xl:text-lg"
               >
                 Login
-              </button>
+              </Link>
             )}
 
             {/* Compact / tablet menu (below xl) */}

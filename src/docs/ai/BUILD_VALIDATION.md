@@ -5662,6 +5662,29 @@ islands (Phase 4) and workspace hook (Phase 5). **T012–T014** cover expanded h
 
 **Report** — `[ ] PASS` · `[ ] FAIL` · `[ ] SKIP` — Notes:
 
+#### DEV-V-018-T025 — Creators warn before discarding unsaved edits (86e3jzbkx)
+
+| Field | Value |
+|-------|-------|
+| **Suite** | DEV-V-018 — CreatorPageShell parity |
+| **Related task** | 86e3jzbkx |
+| **Where** | `/power-creator` (also item, technique, empowered technique, creature, species) |
+| **Needs** | A signed-in account |
+
+**Steps**
+1. Change the name or description without saving. Reload. Choose to stay, then reload and leave.
+2. Click the site logo, then Back. Keep editing, then confirm discard.
+3. Click Load. Keep editing, then confirm and load another row.
+4. On `/species-creator`, edit the name, then reload, Back, Load, and header Login. Save, edit again, and press Back.
+5. On `/power-creator`, type a name, click the logo, and choose Discard. Open `/power-creator` again. Repeat on item, technique, empowered technique, creature, and species.
+
+**Expected**
+- Each of those asks before the draft is discarded. Keep editing leaves the draft in place. A successful save, a completed load, or Reset does not ask again until the next edit.
+- Species is guarded. Header Login asks only when the draft is dirty. Back after save then another edit leaves the creator.
+- Discard on the logo or Back clears the locally stored draft. The name is gone when the creator is opened again.
+
+**Report** — `[ ] PASS` · `[ ] FAIL` · `[ ] SKIP` — Notes:
+
 ---
 
 ## DEV-V-019 — React Compiler hook cleanup (TASK-430)

@@ -9,6 +9,10 @@
 
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useCreatorSave, type PowerPart, type TechniquePart } from '@/hooks';
+import {
+  useCreatorDraftDirty,
+  useDiscardableCreatorDraft,
+} from '@/hooks/use-creator-unsaved-guard';
 import type { CreatorSaveTarget } from '@/lib/library/catalog-listing';
 import {
   useCreatorEditDraftDecision,
@@ -28,7 +32,7 @@ import {
   type SelectedPowerPart,
   type SelectedTechniquePart,
 } from './empowered-technique-bootstrap';
-import { writeCreatorCache, clearCreatorCache } from '@/lib/game/creator-cache';
+import { persistCreatorDraft, clearCreatorCache } from '@/lib/game/creator-cache';
 import { useEmpoweredTechniqueCostDerivation } from './empowered-technique-cost-derivation';
 import { useEmpoweredTechniquePartActions } from './empowered-technique-part-actions';
 
@@ -80,6 +84,7 @@ export function useEmpoweredTechniqueCreatorWorkspace({
   const [targetedDefenses, setTargetedDefenses] = useState<string[]>(
     initialFormState.targetedDefenses,
   );
+  const { discardLocalDraft, isLocalDraftDiscarded } = useDiscardableCreatorDraft(CACHE_KEY);
 
   const { discardDraft } = useCreatorEditDraftDecision(true, editReplacesDraft, CACHE_KEY);
 
@@ -295,6 +300,8 @@ export function useEmpoweredTechniqueCreatorWorkspace({
     techniqueDamage,
     techniqueDamageMechanicParts,
   ]);
+  const draftSnapshot = JSON.stringify(getPayload());
+  const { isDirty: unsavedDirty, acceptDraft } = useCreatorDraftDirty(draftSnapshot);
 
   const save = useCreatorSave({
     type: 'empowered-techniques',
@@ -309,7 +316,11 @@ export function useEmpoweredTechniqueCreatorWorkspace({
     publicSuccessMessage: 'Empowered technique saved to Realms Library!',
     initialSaveTarget,
     editingId: editId,
-    onSaveSuccess: resetState,
+    onSaveCommitted: acceptDraft,
+    onSaveSuccess: () => {
+      resetState();
+      acceptDraft();
+    },
   });
 
   useCreatorEditMissNotice(
@@ -324,10 +335,11 @@ export function useEmpoweredTechniqueCreatorWorkspace({
       if (!next) return;
       applyFormState(next);
       save.applyLoadedLibraryItem(doc);
+      acceptDraft();
       save.setSaveMessage({ type: 'success', text: 'Empowered technique loaded successfully!' });
       setTimeout(() => save.setSaveMessage(null), 2000);
     },
-    [powerParts, techniqueParts, applyFormState, save],
+    [powerParts, techniqueParts, applyFormState, save, acceptDraft],
   );
 
   // Auto-save draft to localStorage (skip when editing an existing library row via ?edit=)
@@ -372,7 +384,7 @@ export function useEmpoweredTechniqueCreatorWorkspace({
       targetedDefenses,
       timestamp: Date.now(),
     };
-    writeCreatorCache(CACHE_KEY, cache);
+    persistCreatorDraft(CACHE_KEY, cache, isLocalDraftDiscarded());
   }, [
     actionType,
     area,
@@ -391,6 +403,7 @@ export function useEmpoweredTechniqueCreatorWorkspace({
     techniqueDamage,
     attackMode,
     targetedDefenses,
+    isLocalDraftDiscarded,
   ]);
 
   const loadError =
@@ -407,7 +420,8 @@ export function useEmpoweredTechniqueCreatorWorkspace({
   const handleReset = useCallback(() => {
     resetState();
     save.forgetLoadedLibraryItem();
-  }, [resetState, save]);
+    acceptDraft();
+  }, [acceptDraft, resetState, save]);
 
   return {
     name,
@@ -468,6 +482,8 @@ export function useEmpoweredTechniqueCreatorWorkspace({
     setSelectedPowerAdvancedParts,
     setSelectedTechniqueParts,
     save,
+    unsavedDirty,
+    discardLocalDraft,
     attackModeLabel: attackModeColumnLabel(attackMode),
   };
 }

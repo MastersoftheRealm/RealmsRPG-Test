@@ -42,6 +42,7 @@ import {
   displayItemToCreatureArmament,
 } from './transformers';
 import { useSort } from '@/hooks/use-sort';
+import { useDiscardableCreatorDraft } from '@/hooks/use-creator-unsaved-guard';
 import type { AbilityName } from '@/types';
 import type { CreatureSkill, CreatureState } from './creature-creator-types';
 import {
@@ -54,7 +55,7 @@ import {
 } from './creature-creator-constants';
 import { allocationsToCreatureSkills, creatureSkillsToAllocations } from './creature-skill-utils';
 import { bootstrapCreatureState } from './creature-creator-bootstrap';
-import { writeCreatorCache, clearCreatorCache } from '@/lib/game/creator-cache';
+import { persistCreatorDraft, clearCreatorCache } from '@/lib/game/creator-cache';
 import { creatorEditReplacesDraft } from '@/lib/library/catalog-listing';
 import {
   useCreatorEditDraftDecision,
@@ -237,6 +238,9 @@ export function useCreatureCreatorWorkspace() {
     setCreature(bootstrapCreatureState({ editCreatureId, rawItems: load.rawItems }));
   }
   const bootstrapApplied = bootstrapKey === sessionKey;
+  const { discardLocalDraft, isLocalDraftDiscarded } = useDiscardableCreatorDraft(
+    CREATURE_CREATOR_CACHE_KEY,
+  );
 
   const { discardDraft } = useCreatorEditDraftDecision(
     bootstrapApplied,
@@ -246,11 +250,15 @@ export function useCreatureCreatorWorkspace() {
 
   useEffect(() => {
     if (!bootstrapApplied || discardDraft) return;
-    writeCreatorCache(CREATURE_CREATOR_CACHE_KEY, {
-      creature,
-      timestamp: Date.now(),
-    });
-  }, [bootstrapApplied, discardDraft, creature]);
+    persistCreatorDraft(
+      CREATURE_CREATOR_CACHE_KEY,
+      {
+        creature,
+        timestamp: Date.now(),
+      },
+      isLocalDraftDiscarded(),
+    );
+  }, [bootstrapApplied, creature, discardDraft, isLocalDraftDiscarded]);
 
   const featPointsMap = useMemo(() => {
     const map = new Map<string, number>();
@@ -409,6 +417,8 @@ export function useCreatureCreatorWorkspace() {
 
   const {
     save,
+    unsavedDirty,
+    acceptDraft,
     handleSave,
     handleReset,
     handleLoadCreature,
@@ -470,6 +480,9 @@ export function useCreatureCreatorWorkspace() {
     bootstrapApplied,
     load,
     save,
+    unsavedDirty,
+    discardLocalDraft,
+    acceptDraft,
     handleSave,
     handleReset,
     handleLoadCreature,

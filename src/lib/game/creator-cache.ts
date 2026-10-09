@@ -42,3 +42,28 @@ export function clearCreatorCache(key: string): void {
     // ignore quota / private mode
   }
 }
+
+/** Skip the write after Discard so the leaving page cannot put the draft back. */
+export function persistCreatorDraft<T>(key: string, value: T, discarded: boolean): void {
+  if (discarded) return;
+  writeCreatorCache(key, value);
+}
+
+export type CreatorDraftDiscard = {
+  discard: (key: string) => void;
+  isDiscarded: () => boolean;
+};
+
+/** One creator mount. Discard clears that mount's stored draft and blocks later writes. */
+export function createCreatorDraftDiscard(): CreatorDraftDiscard {
+  let discarded = false;
+  return {
+    discard(key: string) {
+      discarded = true;
+      clearCreatorCache(key);
+    },
+    isDiscarded() {
+      return discarded;
+    },
+  };
+}

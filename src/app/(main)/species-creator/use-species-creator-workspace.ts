@@ -9,6 +9,11 @@
 
 import { useState, useCallback, useMemo, useEffect, useRef } from 'react';
 import { useCreatorSave, type Species, type Trait, type Skill } from '@/hooks';
+import {
+  useCreatorDraftDirty,
+  useDiscardableCreatorDraft,
+} from '@/hooks/use-creator-unsaved-guard';
+import { persistCreatorDraft } from '@/lib/game/creator-cache';
 import { creatorEditMissMessage } from '@/lib/library/catalog-listing';
 import { findByNormalizedId } from '@/lib/utils';
 import {
@@ -28,7 +33,6 @@ import {
   readStoredSpeciesDraft,
   speciesLibraryRecordToFormState,
   type SpeciesFormState,
-  type SpeciesCreatorCache,
   type TraitCategory,
 } from './species-creator-bootstrap';
 import { applySpeciesCreatorReset } from './species-creator-reset';
@@ -78,6 +82,8 @@ export function useSpeciesCreatorWorkspace({
   const settledEditKeyRef = useRef<string | null>(null);
   const draftHydratedRef = useRef(false);
   const [cacheReady, setCacheReady] = useState(false);
+  const { discardLocalDraft, isLocalDraftDiscarded } =
+    useDiscardableCreatorDraft(SPECIES_CREATOR_CACHE_KEY);
   const [appliedEditId, setAppliedEditId] = useState<string | null>(null);
   const [preserveDraftDuringEdit, setPreserveDraftDuringEdit] = useState(false);
   const editSession = editSpeciesId?.trim() ? editSpeciesId.trim() : null;
@@ -87,13 +93,12 @@ export function useSpeciesCreatorWorkspace({
   // A confirmed ?edit= load does not write the library row back over the draft.
   useEffect(() => {
     if (!cacheReady || (editSession && !preserveDraftDuringEdit)) return;
-    try {
-      const cache: SpeciesCreatorCache = { form, timestamp: Date.now() };
-      localStorage.setItem(SPECIES_CREATOR_CACHE_KEY, JSON.stringify(cache));
-    } catch {
-      // ignore quota / private mode
-    }
-  }, [cacheReady, form, editSession, preserveDraftDuringEdit]);
+    persistCreatorDraft(
+      SPECIES_CREATOR_CACHE_KEY,
+      { form, timestamp: Date.now() },
+      isLocalDraftDiscarded(),
+    );
+  }, [cacheReady, form, editSession, isLocalDraftDiscarded, preserveDraftDuringEdit]);
 
   // Base skills only (no sub-skills) for species skill selection
   const skillOptions = useMemo(() => {
@@ -132,6 +137,9 @@ export function useSpeciesCreatorWorkspace({
     };
   }, [form]);
 
+  const draftSnapshot = JSON.stringify(getPayload());
+  const { isDirty: unsavedDirty, acceptDraft } = useCreatorDraftDirty(draftSnapshot);
+
   const save = useCreatorSave({
     type: 'species',
     getPayload,
@@ -143,6 +151,7 @@ export function useSpeciesCreatorWorkspace({
         : `Are you sure you wish to publish this species "${n}" to the Realms Codex? All users will be able to see and use it.`,
     successMessage: 'Species saved to My Codex!',
     publicSuccessMessage: 'Species saved to Realms Codex!',
+    onSaveCommitted: acceptDraft,
     onSaveSuccess: () => {
       try {
         localStorage.removeItem(SPECIES_CREATOR_CACHE_KEY);
@@ -150,6 +159,7 @@ export function useSpeciesCreatorWorkspace({
         // ignore
       }
       setForm(initialSpeciesFormState);
+      acceptDraft();
     },
   });
 
@@ -228,17 +238,19 @@ export function useSpeciesCreatorWorkspace({
       forgetLoadedLibraryItem: () => save.forgetLoadedLibraryItem(),
       clearSaveMessage: () => save.setSaveMessage(null),
     });
-  }, [save]);
+    acceptDraft();
+  }, [acceptDraft, save]);
 
   const loadSpeciesIntoForm = useCallback(
     (s: Species | Record<string, unknown>) => {
       setForm(speciesLibraryRecordToFormState(s, traits, skills));
       save.applyLoadedLibraryItem(s);
+      acceptDraft();
       closeLoadModal();
       save.setSaveMessage({ type: 'success', text: 'Species loaded successfully!' });
       setTimeout(() => save.setSaveMessage(null), 2000);
     },
-    [traits, skills, closeLoadModal, save],
+    [traits, skills, closeLoadModal, save, acceptDraft],
   );
 
   /** Add multiple traits at once; respects limits and shows third-species-trait confirm when needed. */
@@ -416,6 +428,8 @@ export function useSpeciesCreatorWorkspace({
     form,
     setForm,
     save,
+    unsavedDirty,
+    discardLocalDraft,
     handleSave,
     handleReset,
     loadSpeciesIntoForm,

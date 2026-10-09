@@ -9,6 +9,10 @@
 
 import { useState, useMemo, useCallback, useEffect } from 'react';
 import { useCreatorSave, type TechniquePart } from '@/hooks';
+import {
+  useCreatorDraftDirty,
+  useDiscardableCreatorDraft,
+} from '@/hooks/use-creator-unsaved-guard';
 import type { CreatorSaveTarget } from '@/lib/library/catalog-listing';
 import {
   useCreatorEditDraftDecision,
@@ -35,7 +39,7 @@ import {
   type TechniqueSelectedPart as SelectedPart,
   type TechniqueDamageConfig as DamageConfig,
 } from './technique-creator-bootstrap';
-import { writeCreatorCache, clearCreatorCache } from '@/lib/game/creator-cache';
+import { persistCreatorDraft, clearCreatorCache } from '@/lib/game/creator-cache';
 
 function toTechniquePartPayload(part: {
   id: string | number;
@@ -83,6 +87,9 @@ export function useTechniqueCreatorWorkspace({
   const [targetedDefenses, setTargetedDefenses] = useState<string[]>(
     initialFormState.targetedDefenses,
   );
+  const { discardLocalDraft, isLocalDraftDiscarded } = useDiscardableCreatorDraft(
+    TECHNIQUE_CREATOR_CACHE_KEY,
+  );
 
   const { discardDraft } = useCreatorEditDraftDecision(
     true,
@@ -113,7 +120,7 @@ export function useTechniqueCreatorWorkspace({
       targetedDefenses,
       timestamp: Date.now(),
     };
-    writeCreatorCache(TECHNIQUE_CREATOR_CACHE_KEY, cache);
+    persistCreatorDraft(TECHNIQUE_CREATOR_CACHE_KEY, cache, isLocalDraftDiscarded());
   }, [
     discardDraft,
     name,
@@ -126,6 +133,7 @@ export function useTechniqueCreatorWorkspace({
     imageId,
     imageUrl,
     targetedDefenses,
+    isLocalDraftDiscarded,
   ]);
 
   // Build mechanic parts from action type, damage, and attack mode.
@@ -336,6 +344,8 @@ export function useTechniqueCreatorWorkspace({
     imageId,
     imageUrl,
   ]);
+  const draftSnapshot = JSON.stringify(getPayload());
+  const { isDirty: unsavedDirty, acceptDraft } = useCreatorDraftDirty(draftSnapshot);
 
   const save = useCreatorSave({
     type: 'techniques',
@@ -350,6 +360,7 @@ export function useTechniqueCreatorWorkspace({
     publicSuccessMessage: 'Technique saved to Realms Library!',
     initialSaveTarget,
     editingId: editTechniqueId,
+    onSaveCommitted: acceptDraft,
     onSaveSuccess: () => {
       setName('');
       setDescription('');
@@ -361,6 +372,7 @@ export function useTechniqueCreatorWorkspace({
       setImageId(null);
       setImageUrl(null);
       setTargetedDefenses([]);
+      acceptDraft();
     },
   });
 
@@ -384,7 +396,8 @@ export function useTechniqueCreatorWorkspace({
     save.forgetLoadedLibraryItem();
     save.setSaveMessage(null);
     clearCreatorCache(TECHNIQUE_CREATOR_CACHE_KEY);
-  }, [save]);
+    acceptDraft();
+  }, [acceptDraft, save]);
 
   const applyFormState = useCallback((next: TechniqueCreatorFormState) => {
     setName(next.name);
@@ -408,10 +421,11 @@ export function useTechniqueCreatorWorkspace({
     (technique: TechniqueLibraryRecord) => {
       applyFormState(techniqueLibraryRecordToFormState(technique, techniqueParts));
       save.applyLoadedLibraryItem(technique);
+      acceptDraft();
       save.setSaveMessage({ type: 'success', text: 'Technique loaded successfully!' });
       setTimeout(() => save.setSaveMessage(null), 2000);
     },
-    [techniqueParts, applyFormState, save],
+    [techniqueParts, applyFormState, save, acceptDraft],
   );
 
   return {
@@ -452,6 +466,8 @@ export function useTechniqueCreatorWorkspace({
     removePart,
     updatePart,
     save,
+    unsavedDirty,
+    discardLocalDraft,
     handleReset,
     handleLoadTechnique,
   };
