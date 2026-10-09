@@ -499,11 +499,7 @@ export const libraryItemCreateSchema = withSafeJsonBlob({
 });
 
 export const libraryItemUpdateSchema = withSafeJsonBlob({
-  name: z
-    .string()
-    .min(1)
-    .max(CREATOR_NAME_MAX_LENGTH, CREATOR_NAME_TOO_LONG_MESSAGE)
-    .optional(),
+  name: z.string().min(1).max(CREATOR_NAME_MAX_LENGTH, CREATOR_NAME_TOO_LONG_MESSAGE).optional(),
   description: creatorDescriptionSchema,
 });
 

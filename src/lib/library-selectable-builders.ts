@@ -18,7 +18,7 @@ import {
   deriveAgilityReductionFromProperties,
   deriveCriticalRangeIncreaseFromProperties,
   deriveShieldAmountFromProperties,
-  deriveShieldDamageFromProperties,
+  resolveShieldDamageDisplay,
   resolveWeaponRangeDisplay,
   resolveItemMarketPricing,
   type ItemPropertyPayload,
@@ -563,9 +563,12 @@ export function getItemColumns(
       op_1_lvl?: number | undefined;
     }>;
     const block = deriveShieldAmountFromProperties(props);
-    const dmg =
-      deriveShieldDamageFromProperties(props) ??
-      (shield.damage ? formatDamageDisplay(shield.damage) : null);
+    const dmg = resolveShieldDamageDisplay({
+      shieldDamage: 'shieldDamage' in shield ? shield.shieldDamage : null,
+      hasShieldDamage: 'hasShieldDamage' in shield ? shield.hasShieldDamage : undefined,
+      properties: props,
+      damage: shield.damage,
+    });
     const values: Record<string, string> = {
       Block: block !== '-' ? block : '-',
       Damage: dmg ? String(dmg) : '-',

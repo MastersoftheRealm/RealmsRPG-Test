@@ -51,9 +51,38 @@ function dbColumnName(collection: CodexCollection, key: string): string {
   return collection === 'codex_archetypes' ? camelToSnakeAttachedDigits(key) : camelToSnake(key);
 }
 
+/**
+ * JSONB columns. Comma-joining these (the TEXT-array path) turns a group into
+ * "[object Object]" and the spreadsheet edit does not survive reload.
+ * A string that will not parse must not be stored as a JSON string scalar:
+ * the creator treats that as missing, and a later list-mode save writes null.
+ */
+const JSON_CAMEL_FIELDS = new Set([
+  'level1GuidanceGroups',
+  'level1RecommendedAbilities',
+  'level1Loadouts',
+]);
+
+/** Parse a JSONB cell. Throws so the save returns an error before any update. */
+function parseJsonColumn(camel: string, raw: string): unknown {
+  try {
+    return JSON.parse(raw) as unknown;
+  } catch {
+    const column = camelToSnakeAttachedDigits(camel);
+    throw new Error(
+      `${column} is not valid JSON, so this save was rejected and nothing was written.`,
+    );
+  }
+}
+
 /** Serialize value for columnar TEXT columns: arrays become comma-separated */
-function toColumnValue(val: unknown): unknown {
+function toColumnValue(camel: string, val: unknown): unknown {
   if (val == null) return null;
+  if (JSON_CAMEL_FIELDS.has(camel)) {
+    if (val === '') return null;
+    if (typeof val === 'string') return parseJsonColumn(camel, val);
+    return val;
+  }
   if (Array.isArray(val)) return val.map(String).join(', ');
   if (typeof val === 'object' && !(val instanceof Date)) return JSON.stringify(val);
   return val;
@@ -84,6 +113,7 @@ export const COLUMNAR_FIELDS: Record<CodexCollection, string[]> = {
     'charFeat',
     'stateFeat',
     'baseFeatId',
+    'source',
   ],
   codex_skills: [
     'name',
@@ -96,6 +126,7 @@ export const COLUMNAR_FIELDS: Record<CodexCollection, string[]> = {
     'dsCalc',
     'craftFailureDesc',
     'craftSuccessDesc',
+    'source',
   ],
   codex_species: [
     'name',
@@ -117,6 +148,7 @@ export const COLUMNAR_FIELDS: Record<CodexCollection, string[]> = {
     'catalogListing',
     'imageId',
     'imageUrl',
+    'source',
   ],
   codex_traits: [
     'name',
@@ -126,6 +158,7 @@ export const COLUMNAR_FIELDS: Record<CodexCollection, string[]> = {
     'flaw',
     'characteristic',
     'optionTraitIds',
+    'source',
   ],
   codex_parts: [
     'name',
@@ -147,6 +180,7 @@ export const COLUMNAR_FIELDS: Record<CodexCollection, string[]> = {
     'percentage',
     'duration',
     'defense',
+    'source',
   ],
   codex_properties: [
     'name',
@@ -160,8 +194,18 @@ export const COLUMNAR_FIELDS: Record<CodexCollection, string[]> = {
     'op1C',
     'type',
     'mechanic',
+    'source',
   ],
-  codex_equipment: ['name', 'description', 'category', 'currency', 'rarity', 'imageId', 'imageUrl'],
+  codex_equipment: [
+    'name',
+    'description',
+    'category',
+    'currency',
+    'rarity',
+    'imageId',
+    'imageUrl',
+    'source',
+  ],
   codex_archetypes: [
     'name',
     'type',
@@ -183,8 +227,22 @@ export const COLUMNAR_FIELDS: Record<CodexCollection, string[]> = {
     'level1RemoveTechniques',
     'level1RemoveArmaments',
     'level1Notes',
+    'level1InnatePowers',
+    'level1RecommendUnarmedProwess',
+    'level1GuidanceGroups',
+    'level1RecommendedAbilities',
+    'level1Loadouts',
+    'source',
   ],
-  codex_creature_feats: ['name', 'description', 'featPoints', 'featLvl', 'lvlReq', 'mechanic'],
+  codex_creature_feats: [
+    'name',
+    'description',
+    'featPoints',
+    'featLvl',
+    'lvlReq',
+    'mechanic',
+    'source',
+  ],
   core_rules: [],
 };
 
@@ -199,7 +257,7 @@ export function toColumnarPayload(
     if (key === 'id' || key === 'data') continue;
     const camel = columnarSourceKeyToCamel(collection, key);
     if (allowed.size > 0 && !allowed.has(camel)) continue;
-    out[camel] = toColumnValue(value);
+    out[camel] = toColumnValue(camel, value);
   }
   return out;
 }

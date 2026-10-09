@@ -13,6 +13,7 @@ import { Plus } from 'lucide-react';
 import type { TraitFormState } from './admin-trait-form';
 import { AdminCodexCopySourceBanner } from './admin-codex-copy-source-banner';
 import { AdminCodexEditModalFooter } from './admin-codex-edit-modal-footer';
+import { AdminCodexSourceField } from './admin-codex-source-field';
 
 const CHOICE_TRAIT_GRID = '1.5fr 0.6fr 0.6fr';
 
@@ -27,6 +28,7 @@ export type AdminTraitEditModalProps = {
   sortedChoiceTraits: Trait[];
   choiceSearch: string;
   setChoiceSearch: (v: string) => void;
+  sourceOptions: string[];
   choiceSortState: SortState;
   handleChoiceSort: (col: string) => void;
   saving: boolean;
@@ -46,6 +48,7 @@ export function AdminTraitEditModal({
   sortedChoiceTraits,
   choiceSearch,
   setChoiceSearch,
+  sourceOptions,
   choiceSortState,
   handleChoiceSort,
   saving,
@@ -90,6 +93,11 @@ export function AdminTraitEditModal({
             rows={4}
           />
         </div>
+        <AdminCodexSourceField
+          value={form.source}
+          options={sourceOptions}
+          onChange={(source) => setForm((f) => ({ ...f, source }))}
+        />
         <div className="grid grid-cols-2 gap-4">
           <div>
             <label className="mb-1 block text-sm font-medium text-text-secondary">

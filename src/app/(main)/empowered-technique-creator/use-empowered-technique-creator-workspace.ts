@@ -10,6 +10,10 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useCreatorSave, type PowerPart, type TechniquePart } from '@/hooks';
 import type { CreatorSaveTarget } from '@/lib/library/catalog-listing';
+import {
+  useCreatorEditDraftDecision,
+  useCreatorEditMissNotice,
+} from '@/lib/library/use-creator-edit-draft';
 import { dedupeSavedParts } from '@/lib/game/dedupe-saved-parts';
 import type { AreaConfig, DurationConfig } from '@/lib/calculators';
 import { EXCLUDED_PARTS } from '@/app/(main)/power-creator/power-creator-constants';
@@ -31,6 +35,8 @@ import { useEmpoweredTechniquePartActions } from './empowered-technique-part-act
 type UseEmpoweredTechniqueCreatorWorkspaceArgs = {
   initialFormState: EmpoweredTechniqueFormState;
   editId: string | null;
+  /** True only when editId matched a loaded library row. */
+  editReplacesDraft: boolean;
   powerParts: PowerPart[];
   techniqueParts: TechniquePart[];
   powerPartsError?: Error | null | undefined;
@@ -41,6 +47,7 @@ type UseEmpoweredTechniqueCreatorWorkspaceArgs = {
 export function useEmpoweredTechniqueCreatorWorkspace({
   initialFormState,
   editId,
+  editReplacesDraft,
   powerParts,
   techniqueParts,
   powerPartsError = null,
@@ -74,11 +81,7 @@ export function useEmpoweredTechniqueCreatorWorkspace({
     initialFormState.targetedDefenses,
   );
 
-  // ?edit= mode: clear any stale draft once on mount (parity with the old hydrate
-  // effect, which removed the cache after loading the edit target).
-  useEffect(() => {
-    if (editId) clearCreatorCache(CACHE_KEY);
-  }, [editId]);
+  const { discardDraft } = useCreatorEditDraftDecision(true, editReplacesDraft, CACHE_KEY);
 
   const nonMechanicPowerParts = useMemo(
     () => powerParts.filter((part: PowerPart) => !part.mechanic),
@@ -309,6 +312,12 @@ export function useEmpoweredTechniqueCreatorWorkspace({
     onSaveSuccess: resetState,
   });
 
+  useCreatorEditMissNotice(
+    Boolean(editId) && !discardDraft,
+    'empowered technique',
+    save.setSaveMessage,
+  );
+
   const handleLoadEmpoweredTechnique = useCallback(
     (doc: unknown) => {
       const next = empoweredLibraryRecordToFormState(doc, powerParts, techniqueParts);
@@ -323,7 +332,7 @@ export function useEmpoweredTechniqueCreatorWorkspace({
 
   // Auto-save draft to localStorage (skip when editing an existing library row via ?edit=)
   useEffect(() => {
-    if (editId) return;
+    if (discardDraft) return;
     const cache: EmpoweredTechniqueCache = {
       name,
       description,
@@ -369,7 +378,7 @@ export function useEmpoweredTechniqueCreatorWorkspace({
     area,
     description,
     duration,
-    editId,
+    discardDraft,
     isReaction,
     imageId,
     imageUrl,

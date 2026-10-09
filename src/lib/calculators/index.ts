@@ -174,6 +174,8 @@ export {
   deriveCriticalRangeIncreaseFromProperties,
   deriveShieldAmountFromProperties,
   deriveShieldDamageFromProperties,
+  shieldDiceFromOptionLevel,
+  resolveShieldDamageDisplay,
   deriveItemDisplay,
   isGeneralProperty,
   isMechanicProperty,
