@@ -28,6 +28,7 @@ import {
   type CatalogListingScope,
 } from '@/lib/library/catalog-listing';
 import { useSort } from '@/hooks/use-sort';
+import { collectCodexSources } from './admin-codex-source';
 import { COPY_NAME_SUFFIX } from './admin-codex-copy-suffix';
 import {
   EMPTY_SPECIES_FORM,
@@ -277,6 +278,7 @@ export function AdminSpeciesTab() {
         setForm={setForm}
         skills={skillsArr}
         traits={traitsArr}
+        sourceOptions={collectCodexSources(species)}
         saving={saving}
         onDelete={editing ? () => askDelete(editing) : undefined}
         onSave={handleSave}
