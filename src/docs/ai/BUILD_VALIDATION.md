@@ -9064,6 +9064,31 @@ Built-in variants in `payload.composition` (ADR-0029). Resolver: `lib/calculator
 
 ---
 
+## DEV-V-065 — Admin Core Rules tab strip (ClickUp 86e3jzu59)
+
+Core Rules tabs stay fully readable at 768 and 1280. **Needs:** admin account.
+
+#### DEV-V-065-T001 — Every Core Rules tab is readable
+
+| Field | Value |
+|-------|-------|
+| **Suite** | DEV-V-065 — Admin Core Rules tab strip |
+| **Related task** | ClickUp 86e3jzu59 |
+| **Where** | `/admin/core-rules` |
+| **Needs** | Admin account |
+
+**Steps**
+1. Open `/admin/core-rules` at 1280px wide.
+2. Repeat at 768px wide.
+
+**Expected**
+- Armament Prof. and Crafting are fully visible.
+- The tab strip has no horizontal scrollbar, and the page does not scroll sideways.
+
+**Report** — `[ ] PASS` · `[ ] FAIL` · `[ ] SKIP` — Notes:
+
+---
+
 ## Species reopen (86e3jmhkn)
 
 Official Library Species tab and My Codex species Edit. `?edit=` load is unchanged. verification_status pending-qa.
@@ -9253,5 +9278,6 @@ Card rows on `/admin/users` so Effective limits and Change role stay on screen a
 | DEV-V-062 | Admin Users layout (ClickUp 86e3jzu53) | — | Automated (`admin-users-layout.test.ts`) + manual DEV-V-062-T001 |
 | DEV-V-063 | Admin spreadsheet field save (ClickUp 86e3mezkn) | — | Automated (`codex-spreadsheet-save.test.ts`, `actions.test.ts`) + manual DEV-V-063-T001–T002 |
 | DEV-V-064 | Admin Core Rules number labels (ClickUp 86e3k0cgu) | — | Automated (`core-rules-number-labels.test.ts`) + manual DEV-V-064-T001 |
+| DEV-V-065 | Admin Core Rules tab strip (ClickUp 86e3jzu59) | — | Automated (`core-rules-tab-strip.test.ts`) + manual DEV-V-065-T001 |
 
 When implementing a related task, replace the legacy **DEV-T-###** block with granular **DEV-V-###** tests in this file.
