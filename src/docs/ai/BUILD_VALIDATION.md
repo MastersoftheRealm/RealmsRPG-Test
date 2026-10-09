@@ -7616,6 +7616,26 @@ Post-apply smoke for D6 `multiple_permissive_policies` on `public.campaigns`. Au
 
 **Report** — `[ ] PASS` · `[ ] FAIL` · `[ ] SKIP` — Notes:
 
+#### DEV-V-042-T004 — Invite is the only way to join a campaign you do not own (86e3jryyr)
+
+| Field | Value |
+|-------|-------|
+| **Suite** | DEV-V-042 |
+| **Related task** | 86e3jryyr |
+| **Where** | `/campaigns` Create and Join; `sql/86e3jryyr-campaign-members-insert-verify.sql` |
+| **Needs** | Two signed-in accounts, one with a character. Database probe needs RealmsRPG-Test. |
+
+**Steps**
+1. Sign in and create a campaign. The success state shows an 8-character invite code.
+2. Sign in as someone else and join with that code and one of their characters.
+3. Re-run `sql/86e3jryyr-campaign-members-insert-verify.sql` on RealmsRPG-Test. It raises if a non-owner can insert their own membership, if an owner can insert someone else, or if an update moves a row.
+
+**Expected**
+- Create still adds the Realm Master. A valid invite code still joins. A bad code still does not.
+- The verify script exits without an exception. Agent run on 2026-10-09 passed and rolled the probe rows back. Browser steps 1–2 are still open.
+
+**Report** — `[ ] PASS` · `[ ] FAIL` · `[ ] SKIP` — Notes:
+
 ---
 
 ## DEV-V-044 — Power Creator AoE apply duration + duration modifiers (TASK-672)
@@ -9384,7 +9404,7 @@ A pick that would exceed open trait slots is refused. The disabled Add button de
 | DEV-V-046 | Library power/technique categories + filters (TASK-673 / TASK-676 / TASK-731 / TASK-725 / TASK-746) | — | Automated (category/filter/innate/formulas tests) + manual DEV-V-046 T001–T008 |
 | DEV-V-044 | Power Creator AoE applyDuration persistence (TASK-672) | — | Automated (library-columnar + power-calc tests) + manual DEV-V-044-T001 |
 | DEV-V-041 | Supabase least-privilege Phase 2 (TASK-649 / TASK-735) | — | Manual DEV-V-041 T001–T004 + `node scripts/verify-task-649.mjs` |
-| DEV-V-042 | Campaigns RLS SELECT consolidation (TASK-650 / TASK-802) | — | `node scripts/verify-task-650.mjs` + DEV-V-042-T002/T003 browser |
+| DEV-V-042 | Campaigns RLS SELECT consolidation (TASK-650 / TASK-802 / 86e3jryyr) | — | `node scripts/verify-task-650.mjs` + `campaign-members-rls.test.ts` + DEV-V-042-T002/T003/T004 |
 | DEV-V-043 | Wave 5 page facade splits (TASK-666 / TASK-762) | — | Manual — see suite above |
 | DEV-V-051 | Guided funnel entry, trusted create, feat choice (TASK-738 / TASK-754) | — | Automated (`character-legality`, characters route, `creator-entry-mode`, `feat-selection`, `character-save` create-error copy) + manual DEV-V-051 T001–T010 |
 | DEV-V-052 | Archetype Path list filter (TASK-751 / TASK-752 / TASK-753) | — | Automated (`path-recommendation-index`, `feat-list`, `skill-list`, `equipment-list`) + manual DEV-V-052 T001–T006 |
