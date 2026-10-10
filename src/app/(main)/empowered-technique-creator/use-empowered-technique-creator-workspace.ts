@@ -206,36 +206,30 @@ export function useEmpoweredTechniqueCreatorWorkspace({
   );
 
   const getPayload = useCallback(() => {
-    const powerPartsToSave = dedupeSavedParts(
-      selectedPowerParts.map((selected) => ({
-        id: Number(selected.part.id),
-        name: selected.part.name,
-        op_1_lvl: selected.op_1_lvl,
-        op_2_lvl: selected.op_2_lvl,
-        op_3_lvl: selected.op_3_lvl,
-        applyDuration: selected.applyDuration,
-      })),
-    );
-    const powerAdvancedToSave = dedupeSavedParts(
-      selectedPowerAdvancedParts.map((selected) => ({
-        id: Number(selected.part.id),
-        name: selected.part.name,
-        op_1_lvl: selected.op_1_lvl,
-        op_2_lvl: selected.op_2_lvl,
-        op_3_lvl: selected.op_3_lvl,
-        applyDuration: selected.applyDuration,
-        isAdvanced: true,
-      })),
-    );
-    const techniquePartsToSave = dedupeSavedParts(
-      selectedTechniqueParts.map((selected) => ({
-        id: Number(selected.part.id),
-        name: selected.part.name,
-        op_1_lvl: selected.op_1_lvl,
-        op_2_lvl: selected.op_2_lvl,
-        op_3_lvl: selected.op_3_lvl,
-      })),
-    );
+    const powerPartsToSave = selectedPowerParts.map((selected) => ({
+      id: Number(selected.part.id),
+      name: selected.part.name,
+      op_1_lvl: selected.op_1_lvl,
+      op_2_lvl: selected.op_2_lvl,
+      op_3_lvl: selected.op_3_lvl,
+      applyDuration: selected.applyDuration,
+    }));
+    const powerAdvancedToSave = selectedPowerAdvancedParts.map((selected) => ({
+      id: Number(selected.part.id),
+      name: selected.part.name,
+      op_1_lvl: selected.op_1_lvl,
+      op_2_lvl: selected.op_2_lvl,
+      op_3_lvl: selected.op_3_lvl,
+      applyDuration: selected.applyDuration,
+      isAdvanced: true,
+    }));
+    const techniquePartsToSave = selectedTechniqueParts.map((selected) => ({
+      id: Number(selected.part.id),
+      name: selected.part.name,
+      op_1_lvl: selected.op_1_lvl,
+      op_2_lvl: selected.op_2_lvl,
+      op_3_lvl: selected.op_3_lvl,
+    }));
 
     return {
       name: name.trim(),

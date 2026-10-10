@@ -1,10 +1,9 @@
 /**
- * Deduplicate saved library parts / entity refs.
+ * Collapse repeated saved refs to the first row, keeping the higher option level.
  *
- * DESIGN_INTENT: Creators concatenate manual + advanced + auto-mechanic parts.
- * Without a final uniqueness pass, the same part id can be persisted 2–3× and
- * then render as duplicate expandable chips on the character sheet / Library.
- * Keep the first occurrence; bump option levels when a later duplicate has higher.
+ * Item properties cannot be added twice, and proficiency / cost paths that count
+ * a repeated part once still use this. Creator saves of power and technique parts
+ * do not: identical parts may be added more than once, and Save keeps every copy.
  */
 
 import { normalizeId } from '@/lib/utils/normalize-id';

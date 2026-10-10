@@ -13,7 +13,6 @@ import {
   type PowerVariantPolarity,
   type PowerVariantSpec,
 } from '@/lib/calculators';
-import { dedupeSavedParts } from '@/lib/game/dedupe-saved-parts';
 import {
   emptyPowerCreatorFormState,
   powerLibraryRecordToFormState,
@@ -76,8 +75,12 @@ export function randomizeSharedDefaults(shared: PowerTabForm): PowerTabForm {
   };
 }
 
+/**
+ * Every user-added copy is written. Identical parts are allowed (86e3jx8wv).
+ * Auto mechanics are not stored here; they are rebuilt from action, damage, and footprint.
+ */
 function savedParts(form: PowerTabForm) {
-  return dedupeSavedParts([
+  return [
     ...form.selectedParts.map((sp) => ({
       id: Number(sp.part.id),
       name: sp.part.name,
@@ -95,7 +98,7 @@ function savedParts(form: PowerTabForm) {
       applyDuration: ap.applyDuration,
       isAdvanced: true,
     })),
-  ]);
+  ];
 }
 
 function savedDamage(form: PowerTabForm) {

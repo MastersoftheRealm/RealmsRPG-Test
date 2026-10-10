@@ -29,9 +29,9 @@ import {
   type TechniquePartPayload,
 } from '@/lib/calculators';
 import { attackModeColumnLabel, type AttackMode } from '@/lib/attack-mode';
-import { dedupeSavedParts } from '@/lib/game/dedupe-saved-parts';
 import {
   techniqueLibraryRecordToFormState,
+  techniquePartsForSave,
   TECHNIQUE_CREATOR_CACHE_KEY,
   type TechniqueCreatorCache,
   type TechniqueCreatorFormState,
@@ -299,22 +299,7 @@ export function useTechniqueCreatorWorkspace({
   }, []);
 
   const getPayload = useCallback(() => {
-    const partsToSave = dedupeSavedParts([
-      ...selectedParts.map((sp) => ({
-        id: Number(sp.part.id),
-        name: sp.part.name,
-        op_1_lvl: sp.op_1_lvl,
-        op_2_lvl: sp.op_2_lvl,
-        op_3_lvl: sp.op_3_lvl,
-      })),
-      ...mechanicParts.map((mp) => ({
-        id: mp.id,
-        name: mp.name,
-        op_1_lvl: mp.op_1_lvl,
-        op_2_lvl: mp.op_2_lvl,
-        op_3_lvl: mp.op_3_lvl,
-      })),
-    ]);
+    const partsToSave = techniquePartsForSave(selectedParts, mechanicParts);
     const damageToSave = damage.amount > 0 ? [{ amount: damage.amount, size: damage.size }] : [];
     return {
       name: name.trim(),

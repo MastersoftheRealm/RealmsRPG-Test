@@ -3,10 +3,12 @@ import type { PowerPart } from '@/hooks';
 import { actionIsOverride, durationIsOverride, rangeIsOverride } from './power-creator-from-shared';
 import { compositionInitFromSaved } from './use-power-creator-composition';
 import { normalizePowerComposition } from '@/lib/calculators';
+import { powerLibraryRecordToFormState } from './power-creator-bootstrap';
 import {
   buildCompositionPayload,
   defaultVariantTabs,
   emptyTabForm,
+  tabFormToSpec,
   topLevelForm,
   isOverlayFieldForced,
   nextVariantId,
@@ -407,5 +409,73 @@ describe('legacy Randomize overlay', () => {
       { amount: 1, size: 4, type: 'magic', applyDuration: false },
     ]);
     expect(savedGood?.parts?.map((p) => p.id)).toEqual([900, 901]);
+  });
+});
+
+describe('identical power parts on save (86e3jx8wv)', () => {
+  const potency = {
+    id: '12',
+    name: 'Potency Increase',
+    mechanic: false,
+    category: 'Attack',
+  } as PowerPart;
+
+  function potencyRow(op1 = 0) {
+    return {
+      part: potency,
+      op_1_lvl: op1,
+      op_2_lvl: 0,
+      op_3_lvl: 0,
+      applyDuration: false,
+      selectedCategory: 'any',
+    };
+  }
+
+  it('keeps thirty identical parts, then a second copy added in edit', () => {
+    const form = emptyTabForm();
+    form.selectedParts = Array.from({ length: 30 }, () => potencyRow());
+
+    const saved = tabFormToSpec(form);
+    expect(saved.parts).toHaveLength(30);
+    expect(saved.parts?.every((part) => part.id === 12 && part.name === 'Potency Increase')).toBe(
+      true,
+    );
+
+    const reloaded = powerLibraryRecordToFormState({ name: 'QA CR Power 8', parts: saved.parts }, [
+      potency,
+    ]);
+    expect(reloaded.selectedParts).toHaveLength(30);
+
+    const edited = emptyTabForm();
+    edited.selectedParts = [...reloaded.selectedParts, potencyRow(0)];
+    const savedAgain = tabFormToSpec(edited);
+    expect(savedAgain.parts).toHaveLength(31);
+    expect(
+      powerLibraryRecordToFormState({ parts: savedAgain.parts }, [potency]).selectedParts,
+    ).toHaveLength(31);
+  });
+
+  it('keeps two copies when their option levels differ', () => {
+    const form = emptyTabForm();
+    form.selectedParts = [potencyRow(0), potencyRow(2)];
+    const saved = tabFormToSpec(form);
+    expect(saved.parts).toEqual([
+      {
+        id: 12,
+        name: 'Potency Increase',
+        op_1_lvl: 0,
+        op_2_lvl: 0,
+        op_3_lvl: 0,
+        applyDuration: false,
+      },
+      {
+        id: 12,
+        name: 'Potency Increase',
+        op_1_lvl: 2,
+        op_2_lvl: 0,
+        op_3_lvl: 0,
+        applyDuration: false,
+      },
+    ]);
   });
 });
