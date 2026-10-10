@@ -9435,6 +9435,32 @@ A pick that would exceed open trait slots is refused. The disabled Add button de
 
 ---
 
+## DEV-V-069 — Library duplicate (ClickUp 86e3jx7xt)
+
+#### DEV-V-069-T001 — Duplicate a power, a weapon, and a creature
+
+| Field | Value |
+|-------|-------|
+| **Suite** | DEV-V-069 |
+| **Related task** | 86e3jx7xt |
+| **Where** | `/library` Powers, Weapons, and Creatures |
+| **Needs** | A signed-in account with at least one power, one weapon, and one creature |
+
+**Steps**
+1. Open `/library` › Powers, expand a power, choose Duplicate, then confirm.
+2. Repeat on Weapons for one item.
+3. Repeat on Creatures for one creature.
+4. Duplicate one of the new copies a second time.
+
+**Expected**
+- Each confirm shows a copy icon.
+- A toast reads `Duplicated "<name>"` and a new row appears as `<name> (Copy)`.
+- The second duplicate adds another copy. The original row stays.
+
+**Report** — `[ ] PASS` · `[ ] FAIL` · `[ ] SKIP` — Notes:
+
+---
+
 ## Planned suites (split from legacy DEV-T)
 
 | Suite | Topic | Legacy | Status |
@@ -9488,5 +9514,6 @@ A pick that would exceed open trait slots is refused. The disabled Add button de
 | DEV-V-066 | Admin Codex row actions (ClickUp 86e3jzu5m) | — | Automated (`admin-codex-row-actions.test.ts`) + manual DEV-V-066-T001 |
 | DEV-V-067 | Admin Core Rules back control (ClickUp 86e3jzu5g) | — | Automated (`core-rules-back-link.test.ts`) + manual DEV-V-067-T001 |
 | DEV-V-068 | Email confirmation PKCE link (ClickUp 86e3jmkct) | — | Automated (`auth/confirm/route.test.ts`) + manual DEV-V-068-T001 |
+| DEV-V-069 | Library duplicate (ClickUp 86e3jx7xt) | — | Automated (`creator-text-limits.test.ts`) + manual DEV-V-069-T001 |
 
 When implementing a related task, replace the legacy **DEV-T-###** block with granular **DEV-V-###** tests in this file.

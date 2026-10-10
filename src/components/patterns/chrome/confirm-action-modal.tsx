@@ -11,7 +11,7 @@
 
 import { Modal } from '@/components/ui/modal';
 import { Button } from '@/components/ui/button';
-import { AlertTriangle, Upload } from 'lucide-react';
+import { AlertTriangle, Copy, Upload } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 interface ConfirmActionModalProps {
@@ -35,8 +35,8 @@ interface ConfirmActionModalProps {
   isLoading?: boolean | undefined;
   /** Label for confirm button when loading (default: "Publishing..." when confirmVariant is primary, else "Confirming...") */
   loadingLabel?: string | undefined;
-  /** Icon to display: 'warning' | 'publish' (default: 'warning') */
-  icon?: 'warning' | 'publish' | undefined;
+  /** Icon to display: 'warning' | 'publish' | 'copy' (default: 'warning') */
+  icon?: 'warning' | 'publish' | 'copy' | undefined;
 }
 
 export function ConfirmActionModal({
@@ -57,9 +57,9 @@ export function ConfirmActionModal({
   const defaultLoadingLabel = confirmVariant === 'primary' ? 'Publishing...' : 'Confirming...';
   const confirmButtonLabel = isLoading ? (loadingLabel ?? defaultLoadingLabel) : confirmLabel;
 
-  const IconComponent = icon === 'publish' ? Upload : AlertTriangle;
-  const iconBg = icon === 'publish' ? 'bg-primary-subtle-bg' : 'bg-danger-light';
-  const iconColor = icon === 'publish' ? 'text-primary-link-fg' : 'text-danger-fg';
+  const IconComponent = icon === 'publish' ? Upload : icon === 'copy' ? Copy : AlertTriangle;
+  const iconBg = icon === 'warning' ? 'bg-danger-light' : 'bg-primary-subtle-bg';
+  const iconColor = icon === 'warning' ? 'text-danger-fg' : 'text-primary-link-fg';
 
   return (
     <Modal

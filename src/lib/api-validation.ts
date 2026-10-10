@@ -489,13 +489,18 @@ const creatorDescriptionSchema = z
   .max(CREATOR_DESCRIPTION_MAX_LENGTH, CREATOR_DESCRIPTION_TOO_LONG_MESSAGE)
   .nullish();
 
+/** A new row needs a name. Duplicate sends only `duplicateOf`; the route copies the source name. */
 export const libraryItemCreateSchema = withSafeJsonBlob({
   name: z
     .string()
     .min(1, 'Name is required')
-    .max(CREATOR_NAME_MAX_LENGTH, CREATOR_NAME_TOO_LONG_MESSAGE),
+    .max(CREATOR_NAME_MAX_LENGTH, CREATOR_NAME_TOO_LONG_MESSAGE)
+    .optional(),
   description: creatorDescriptionSchema,
   duplicateOf: z.string().uuid().optional(),
+}).refine((body) => body.duplicateOf != null || (body.name != null && body.name.length > 0), {
+  message: 'Name is required',
+  path: ['name'],
 });
 
 export const libraryItemUpdateSchema = withSafeJsonBlob({
