@@ -64,4 +64,20 @@ describe('creator text limits', () => {
       ).toBe(true);
     }
   });
+
+  it('accepts a library duplicate that sends only duplicateOf (86e3jx7xt)', () => {
+    const duplicated = libraryItemCreateSchema.safeParse({
+      duplicateOf: '11111111-1111-4111-8111-111111111111',
+    });
+    expect(duplicated.success).toBe(true);
+    if (duplicated.success) {
+      expect(duplicated.data.name).toBeUndefined();
+    }
+
+    const missingName = libraryItemCreateSchema.safeParse({});
+    expect(missingName.success).toBe(false);
+    if (!missingName.success) {
+      expect(missingName.error.issues.some((issue) => issue.path.join('.') === 'name')).toBe(true);
+    }
+  });
 });
