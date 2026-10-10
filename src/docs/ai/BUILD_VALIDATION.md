@@ -9387,6 +9387,32 @@ A pick that would exceed open trait slots is refused. The disabled Add button de
 
 ---
 
+## DEV-V-068 — Email confirmation PKCE link (ClickUp 86e3jmkct)
+
+#### DEV-V-068-T001 — Confirmation link signs in and keeps the chosen username
+
+| Field | Value |
+|-------|-------|
+| **Suite** | DEV-V-068 |
+| **Related task** | 86e3jmkct |
+| **Where** | `/register`, the confirmation email, `/my-account`, `/forgot-password` |
+| **Needs** | An inbox that can receive a Supabase auth email. The built-in mailer is capped at about two emails an hour (86e3jmjmg). |
+
+**Steps**
+1. Register at `/register` with an email, a password, and a username.
+2. Open the confirmation link in that email.
+3. Sign in if the link did not leave you signed in, then open `/my-account`.
+4. When a reset email can be sent, use `/forgot-password` and open that link.
+
+**Expected**
+- The confirmation link does not land on `/login?error=confirm`.
+- `/my-account` shows the username chosen at sign-up.
+- A password-reset link opens `/reset-password` instead of the confirmation-failed alert.
+
+**Report** — `[ ] PASS` · `[ ] FAIL` · `[ ] SKIP` — Notes:
+
+---
+
 ## Planned suites (split from legacy DEV-T)
 
 | Suite | Topic | Legacy | Status |
@@ -9439,5 +9465,6 @@ A pick that would exceed open trait slots is refused. The disabled Add button de
 | DEV-V-065 | Admin Core Rules tab strip (ClickUp 86e3jzu59) | — | Automated (`core-rules-tab-strip.test.ts`) + manual DEV-V-065-T001 |
 | DEV-V-066 | Admin Codex row actions (ClickUp 86e3jzu5m) | — | Automated (`admin-codex-row-actions.test.ts`) + manual DEV-V-066-T001 |
 | DEV-V-067 | Admin Core Rules back control (ClickUp 86e3jzu5g) | — | Automated (`core-rules-back-link.test.ts`) + manual DEV-V-067-T001 |
+| DEV-V-068 | Email confirmation PKCE link (ClickUp 86e3jmkct) | — | Automated (`auth/confirm/route.test.ts`) + manual DEV-V-068-T001 |
 
 When implementing a related task, replace the legacy **DEV-T-###** block with granular **DEV-V-###** tests in this file.
