@@ -148,6 +148,8 @@ Single document in `data`; list columns for list/filter. Realtime: `public.chara
 
 **Cross-user read (campaign / public):** `/api/characters/[id]` applies visibility in app code, but Supabase RLS runs first. If the only SELECT policy is “own rows,” other users get no row → “Character not found.” Run **`sql/supabase-characters-rls-cross-read.sql`** to add SELECT policies for `data.visibility = 'public'` and for `campaign` when the reader is the campaign owner or in `campaign_members` and the character appears on that campaign’s `characters` JSON roster (`userId`/`characterId` or snake_case).
 
+**Campaign roster read (86e3jryyt) — applied 2026-10-09 on RealmsRPG-Test:** `characters_select_authenticated` still matches those roster keys, and also requires `private.campaign_roster_user_joined`: the roster user is that campaign’s owner or a current `campaign_members` row. A leftover JSON entry does not grant the read after the membership row is gone. Replay: `sql/86e3jryyt-campaign-roster-members-only.sql`.
+
 **Guest public sheets (TASK-649):** Applied 2026-08-03. `characters_select_authenticated` remains `TO authenticated`; **`sql/task-649-characters-anon-public-read-applied.sql`** adds `characters_select_public_anon` for guests (`visibility = 'public'`). Owner library on public views still uses service_role in `getOwnerLibraryForView`.
 
 ---
@@ -163,6 +165,8 @@ Single document in `data`; list columns for list/filter. Realtime: `public.chara
 Membership source of truth: `campaign_members`. Realtime: `public.campaign_rolls`.
 
 **RLS (`campaigns`):** One permissive SELECT policy per role — `campaigns_select_participants` (`owner_id = auth.uid()` **or** `private.auth_is_campaign_participant(id)`). The `owner_id` short-circuit is required so `INSERT … RETURNING` can see the in-flight owner row (STABLE helper lookup cannot; TASK-802). Owner write policies: `campaigns_owner_insert`, `campaigns_owner_update`, `campaigns_owner_delete`. Do not restore a second `campaigns_owner_select` policy (TASK-650 / `multiple_permissive_policies`). Replay: `sql/task-802-campaigns-select-owner-short-circuit.sql`.
+
+**Roster JSON (86e3jryyt) — applied 2026-10-09 on RealmsRPG-Test:** Trigger `campaigns_roster_members_only` runs before insert or before update of `characters`. A signed-in owner can add a roster entry only for their own character. The service role can add another user’s character only when that user already has a `campaign_members` row and owns the character. Entries already stored stay, including a slot whose character row is gone. `campaign_members` policies are unchanged. Migration `campaign_roster_members_only` (`20261009202856`). Replay: `sql/86e3jryyt-campaign-roster-members-only.sql`.
 
 **Join-by-invite (app behavior):** RLS on `campaigns` allows SELECT only for the owner or existing members, so a new player cannot load a campaign row with the normal user-scoped Supabase client. The app uses **`SUPABASE_SERVICE_ROLE_KEY`** (server-only) in `joinCampaignAction` and in `GET /api/campaigns/invite/[code]` to look up by `invite_code` and update roster/members after the user is authenticated and character ownership is verified.
 
