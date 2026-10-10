@@ -275,10 +275,11 @@ export function syncPowerParts(
     nextParts.push(next);
   }
 
-  const deduped = dedupeSavedParts(nextParts);
+  // Identical power and technique parts are allowed. Sync drops missing refs and
+  // stale option levels; it does not collapse a second copy of the same part.
   const before = JSON.stringify(parts ?? []);
-  const after = JSON.stringify(deduped);
-  return { value: deduped, issues, hasDrift: issues.length > 0, changed: before !== after };
+  const after = JSON.stringify(nextParts);
+  return { value: nextParts, issues, hasDrift: issues.length > 0, changed: before !== after };
 }
 
 export function syncTechniqueParts(

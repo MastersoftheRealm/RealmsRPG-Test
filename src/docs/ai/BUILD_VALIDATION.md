@@ -5704,6 +5704,28 @@ islands (Phase 4) and workspace hook (Phase 5). **T012–T014** cover expanded h
 
 **Report** — `[ ] PASS` · `[ ] FAIL` · `[ ] SKIP` — Notes:
 
+#### DEV-V-018-T027 — Identical power parts stay after save (86e3jx8wv)
+
+| Field | Value |
+|-------|-------|
+| **Suite** | DEV-V-018 — CreatorPageShell parity |
+| **Related task** | 86e3jx8wv |
+| **Where** | `/power-creator` (also `/technique-creator`) |
+| **Needs** | A signed-in account |
+
+**Steps**
+1. Open `/power-creator`. Click Add Part several times without changing the part, so Power Parts shows more than one of the same part. Note the Training Points.
+2. Name it, save to My library, then Library → Edit that power.
+3. Add the same part once more, save, and edit it again.
+4. On `/technique-creator`, click Add Part several times. Confirm Parts shows that count. Save, then Library → Edit.
+
+**Expected**
+- Each save keeps every copy. Edit shows the same Power Parts count as before that save, including the extra copy from step 3.
+- The technique edit shows the same Parts count. A repeated item property is still not added twice.
+- Library energy and Training Points for a repeated part can still differ from the creator total. That display is a separate check.
+
+**Report** — `[ ] PASS` · `[ ] FAIL` · `[ ] SKIP` — Notes:
+
 ---
 
 ## DEV-V-019 — React Compiler hook cleanup (TASK-430)

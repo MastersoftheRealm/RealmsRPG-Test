@@ -79,6 +79,46 @@ export type TechniqueLibraryRecord = {
   targetedDefenses?: string[] | undefined;
 };
 
+export type TechniqueSavedPart = {
+  id: number | string;
+  name: string;
+  op_1_lvl: number;
+  op_2_lvl: number;
+  op_3_lvl: number;
+};
+
+/**
+ * User-added copies stay in order. Auto mechanics are appended after them and
+ * skipped again on load. Identical parts are not collapsed (86e3jx8wv).
+ */
+export function techniquePartsForSave(
+  selectedParts: TechniqueSelectedPart[],
+  mechanicParts: Array<{
+    id: number | string;
+    name: string;
+    op_1_lvl: number;
+    op_2_lvl: number;
+    op_3_lvl: number;
+  }>,
+): TechniqueSavedPart[] {
+  return [
+    ...selectedParts.map((sp) => ({
+      id: Number(sp.part.id),
+      name: sp.part.name,
+      op_1_lvl: sp.op_1_lvl,
+      op_2_lvl: sp.op_2_lvl,
+      op_3_lvl: sp.op_3_lvl,
+    })),
+    ...mechanicParts.map((mp) => ({
+      id: mp.id,
+      name: mp.name,
+      op_1_lvl: mp.op_1_lvl,
+      op_2_lvl: mp.op_2_lvl,
+      op_3_lvl: mp.op_3_lvl,
+    })),
+  ];
+}
+
 export function emptyTechniqueCreatorFormState(): TechniqueCreatorFormState {
   return {
     name: '',
