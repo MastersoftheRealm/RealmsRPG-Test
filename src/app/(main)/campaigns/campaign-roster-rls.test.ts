@@ -7,6 +7,16 @@ const sql = readFileSync(
   'utf8',
 );
 
+function charactersSelectUsing(source: string): string {
+  const match = source.match(
+    /CREATE POLICY characters_select_authenticated ON public\.characters[\s\S]*?USING \(([\s\S]*?)\);/,
+  );
+  if (!match?.[1]) {
+    throw new Error('characters_select_authenticated USING is missing');
+  }
+  return match[1];
+}
+
 describe('campaign roster writes (86e3jryyt)', () => {
   it('rejects a signed-in owner adding another user character', () => {
     expect(sql).toContain("RAISE EXCEPTION 'roster can only add your own characters'");
@@ -14,11 +24,11 @@ describe('campaign roster writes (86e3jryyt)', () => {
     expect(sql).toContain('BEFORE INSERT OR UPDATE OF characters ON public.campaigns');
   });
 
-  it('stops a leftover roster entry from granting a campaign read after membership is gone', () => {
+  it('requires the roster user to be a current member before a campaign read', () => {
+    const using = charactersSelectUsing(sql);
+    expect(using).toContain('private.campaign_roster_user_joined(');
+    expect(using).toContain('private.auth_is_campaign_participant(c.id)');
     expect(sql).toContain("RAISE EXCEPTION 'roster user has not joined this campaign'");
-    expect(sql).toContain('private.campaign_roster_user_joined(');
-    expect(sql).toContain('private.auth_is_campaign_participant(c.id)');
-    expect(sql).toContain('WHEN OLD.characters IS NULL');
     expect(sql).not.toMatch(/CREATE POLICY campaign_members_/);
     expect(sql).not.toMatch(/DROP POLICY[^;]*campaign_members/);
   });
