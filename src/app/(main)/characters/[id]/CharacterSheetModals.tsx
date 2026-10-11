@@ -109,9 +109,11 @@ export function CharacterSheetModals() {
     onPartialRecovery,
     onArchetypeSave,
     onSpeciesSave,
+    characterSpeciesSkills,
   } = useCharacterSheet();
 
   const traitsDb = libraryModel?.traitsDb ?? [];
+  const featsDb = libraryModel?.featsDb ?? [];
   const scopedExistingIds = useMemo(
     () => existingIdsForAddModal(character, addModalType),
     [character, addModalType],
@@ -195,6 +197,8 @@ export function CharacterSheetModals() {
           onClose={() => setShowLevelUpModal(false)}
           character={character}
           displayCharacter={displayCharacter ?? character}
+          characterSpeciesSkills={characterSpeciesSkills}
+          featsDb={featsDb}
           onConfirm={onLevelUp}
         />
       )}

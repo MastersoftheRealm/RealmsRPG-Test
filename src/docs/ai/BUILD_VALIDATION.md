@@ -10100,6 +10100,32 @@ A pick that would exceed open trait slots is refused. The disabled Add button de
 
 ---
 
+## DEV-V-099 — Level down warns about overspent points (ClickUp 86e3jv2hz)
+
+#### DEV-V-099-T001 — Adjust Level modal shows overspend warning
+
+| Field | Value |
+|-------|-------|
+| **Suite** | DEV-V-099 |
+| **Related task** | 86e3jv2hz |
+| **Where** | `/characters/[id]` → Level Up (Adjust Level) |
+| **Needs** | A character at level 3 with all ability, skill, Health/Energy, and feat points spent. ~390px or desktop. |
+
+**Steps**
+1. Open Adjust Level and press − until the new level is 1.
+2. Read the warning above the gains grid.
+3. Click **Set Level to 1** and confirm the level change still applies.
+
+**Expected**
+- A danger alert appears while the target level would leave overspent pools (same **Over budget** wording as the sheet edit toolbar).
+- **Set Level to 1** stays enabled and applies the change. Point pools on the sheet may show red overspend; nothing is trimmed automatically.
+
+**Automated** | `npm test` — `src/lib/character/sheet-edit-notification.test.ts` (`buildLevelDownOverspendWarning`)
+
+**Report** — `[ ] PASS` · `[ ] FAIL` · `[ ] SKIP` — Notes:
+
+---
+
 ## DEV-V-098 — Recovery leaves over-max Health and Energy (ClickUp 86e3jv000)
 
 #### DEV-V-098-T001 — Recovery does not lower over-max Health or Energy
@@ -10434,6 +10460,7 @@ A pick that would exceed open trait slots is refused. The disabled Add button de
 | DEV-V-093 | Core Rules editor unsaved edits (ClickUp 86e3jtrak) | — | Automated (`core-rules-unsaved-leave.test.ts`) + manual DEV-V-093-T001 |
 | DEV-V-094 | Sheet Currency in a second tab (ClickUp 86e3juw07) | — | Automated (`currency-field-commit.test.ts`) + manual DEV-V-094-T001 |
 | DEV-V-095 | Core Rules Conditions editor (ClickUp 86e3juy5z) | — | Automated (`core-rules-conditions.test.ts`) + manual DEV-V-095-T001 |
+| DEV-V-099 | Level down warns about overspent points (ClickUp 86e3jv2hz) | — | Automated (`sheet-edit-notification.test.ts`) + manual DEV-V-099-T001 |
 | DEV-V-098 | Recovery leaves over-max Health and Energy (ClickUp 86e3jv000) | — | Automated (`recovery-over-max.test.ts`) + manual DEV-V-098-T001 |
 | DEV-V-097 | Current Health and Energy follow a lower max (ClickUp 86e3juy8e) | — | Automated (`current-follows-max.test.ts`) + manual DEV-V-097-T001 |
 | DEV-V-083 | Assigned base skill information (ClickUp 86e2q66jv) | — | Automated (`guided-skills-panel.test.tsx`) + manual DEV-V-083-T001 |
