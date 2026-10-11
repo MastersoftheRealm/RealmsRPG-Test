@@ -9844,6 +9844,32 @@ A pick that would exceed open trait slots is refused. The disabled Add button de
 
 ---
 
+## DEV-V-085 — Codex search field labels (ClickUp 86e3jmdp9)
+
+#### DEV-V-085-T001 — Each Codex tab search field has an accessible name
+
+| Field | Value |
+|-------|-------|
+| **Suite** | DEV-V-085 |
+| **Related task** | 86e3jmdp9 |
+| **Where** | `/codex` |
+| **Needs** | Realms Codex. Open Advanced for Parts, Properties, Creature Feats, and Traits. |
+
+**Steps**
+1. Open Feats, Skills, Species, Archetypes, and Equipment. On each tab, focus the search field.
+2. Open Advanced, then Parts, Properties, Creature Feats, and Traits. Focus the search field on each.
+3. Confirm the filter controls on Feats still have their labels.
+
+**Expected**
+- A screen reader names the search field. Feats: "Search names, tags, descriptions". Skills: "Search names, descriptions". Species: "Search species". Archetypes: "Search archetype paths". Equipment: "Search equipment". Properties: "Search properties". Parts: "Search parts". Traits: "Search traits". Creature Feats: "Search creature feats".
+- The field is the existing search. Filters stay labeled. No second search row appears.
+
+**Automated** | `npm test` — `codex-search-labels.test.tsx`
+
+**Report** — `[ ] PASS` · `[ ] FAIL` · `[ ] SKIP` — Notes:
+
+---
+
 ## DEV-V-083 — Assigned base skill information (ClickUp 86e2q66jv)
 
 #### DEV-V-083-T001 — An assigned skill still shows the add-list information
@@ -10020,6 +10046,7 @@ A pick that would exceed open trait slots is refused. The disabled Add button de
 | DEV-V-080 | Character sheet library tab panels (ClickUp 86e3k0cfz) | — | Automated (`library-section-tabs.test.tsx`) + manual DEV-V-080-T001 |
 | DEV-V-081 | Grid rows that nested buttons (ClickUp 86e3k0ch6) | — | Automated (`grid-row-nested-interactive.test.tsx`) + manual DEV-V-081-T001 |
 | DEV-V-084 | Websocket console error (ClickUp 86e1z8j9e) | — | Automated (`content-security-policy.test.ts`) + manual DEV-V-084-T001 |
+| DEV-V-085 | Codex search field labels (ClickUp 86e3jmdp9) | — | Automated (`codex-search-labels.test.tsx`) + manual DEV-V-085-T001 |
 | DEV-V-083 | Assigned base skill information (ClickUp 86e2q66jv) | — | Automated (`guided-skills-panel.test.tsx`) + manual DEV-V-083-T001 |
 
 When implementing a related task, replace the legacy **DEV-T-###** block with granular **DEV-V-###** tests in this file.

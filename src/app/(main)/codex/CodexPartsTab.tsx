@@ -196,6 +196,7 @@ export function CodexPartsTab({
       search={filters.search}
       onSearchChange={(v) => setFilters((f) => ({ ...f, search: v }))}
       searchPlaceholder="Search parts..."
+      searchAriaLabel="Search parts"
       filters={
         <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4">
           <SelectFilter

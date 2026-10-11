@@ -147,6 +147,7 @@ export function CodexFeatsTab({
         search={filters.search}
         onSearchChange={(v) => setFilters((f) => ({ ...f, search: v }))}
         searchPlaceholder="Search names, tags, descriptions..."
+        searchAriaLabel="Search names, tags, descriptions"
         filters={
           <>
             <div className="mb-4 flex flex-wrap items-end gap-3 empty:hidden">
