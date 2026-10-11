@@ -116,20 +116,27 @@ function AttackBonusesTable({
     <div className="mb-4 rounded-lg bg-surface-alt p-3">
       <SectionHeader title="Attack Bonuses" className="mb-2" />
       <TableScroll>
-        <table className="w-full text-sm">
+        <table className="w-full min-w-[17.25rem] table-fixed text-sm">
+          <colgroup>
+            <col />
+            <col className="w-[4.5rem]" />
+            <col className="w-[4.75rem]" />
+          </colgroup>
           <thead>
             <tr className="text-xs text-text-muted">
               <th className="py-1 text-left"></th>
-              <th className="py-1 text-center">Prof.</th>
-              <th className="py-1 text-center">Unprof.</th>
+              <th className="overflow-hidden py-1 text-center whitespace-nowrap">Prof.</th>
+              <th className="overflow-hidden py-1 text-center whitespace-nowrap">Unprof.</th>
             </tr>
           </thead>
           <tbody>
             {/* Martial rows - always show for unproficient attacks */}
             {(['strength', 'agility', 'acuity'] as const).map((key) => (
               <tr key={key}>
-                <td className="py-1 font-medium text-text-secondary capitalize">⚔️ {key}</td>
-                <td className="py-1 text-center">
+                <td className="min-w-0 overflow-hidden py-1 font-medium text-text-secondary capitalize">
+                  <span className="block min-w-0 truncate">⚔️ {key}</span>
+                </td>
+                <td className="overflow-hidden py-1 text-center">
                   {onRollBonus ? (
                     <RollButton
                       value={martialBonuses[key].prof}
@@ -149,7 +156,7 @@ function AttackBonusesTable({
                     </span>
                   )}
                 </td>
-                <td className="py-1 text-center">
+                <td className="overflow-hidden py-1 text-center">
                   {onRollBonus ? (
                     <RollButton
                       value={martialBonuses[key].unprof}
@@ -262,7 +269,7 @@ function WeaponsSection({
   const unarmedRow = (
     <tr className="border-t border-border-light align-top">
       <td className={QUICK_WEAPON_COL.nameTd}>
-        <div>Unarmed Prowess</div>
+        <div className="min-w-0 break-normal">Unarmed Prowess</div>
       </td>
       <td className={QUICK_WEAPON_COL.rangeTd}>Melee</td>
       <td className={QUICK_WEAPON_COL.attackTd}>
