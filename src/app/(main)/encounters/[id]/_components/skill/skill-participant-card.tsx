@@ -199,7 +199,7 @@ export function ParticipantCard({
             </Button>
           ) : participant.hasRolled ? (
             <>
-              <div className="flex flex-wrap items-center gap-2">
+              <div className="flex max-w-full min-w-0 flex-wrap items-center gap-2">
                 <div
                   className={cn(
                     'rounded-lg px-3 py-1 text-sm font-bold',
