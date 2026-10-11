@@ -32,17 +32,17 @@ export function CombatantCardResources({
 
   if (variant === 'compact') {
     return (
-      <div className="mb-2 flex items-center gap-3">
+      <div className="mb-2 grid min-w-0 grid-cols-1 gap-3 sm:grid-cols-2">
         <div
           className={cn(
-            'flex min-w-0 flex-1 flex-col rounded-lg border p-2',
+            'flex min-w-0 flex-col rounded-lg border p-2',
             'border-health-border bg-health-light',
           )}
         >
           <span className="mb-0.5 text-[10px] font-semibold tracking-wide text-health-text uppercase">
             Health
           </span>
-          <div className="flex items-center gap-1">
+          <div className="flex min-w-0 flex-wrap items-center gap-1">
             {linkedResourcesReadOnly ? (
               <span className="text-sm font-bold text-health-text" title={linkedResourcesTitle}>
                 {combatant.currentHealth} / {combatant.maxHealth}
@@ -56,7 +56,7 @@ export function CombatantCardResources({
                     onUpdate({ currentHealth: clampHealth(parseInt(e.target.value, 10) || 0) })
                   }
                   className={cn(
-                    'touch-tier-standard w-10 rounded border px-0.5 py-0 text-center text-sm font-bold',
+                    'touch-tier-standard w-10 min-w-0 rounded border px-0.5 py-0 text-center text-sm font-bold',
                     'border-health-border text-health-text',
                   )}
                 />
@@ -74,7 +74,7 @@ export function CombatantCardResources({
               </>
             )}
           </div>
-          <div className="relative mt-1 h-1.5 overflow-hidden rounded-full bg-surface">
+          <div className="relative mt-1 h-1.5 min-w-0 overflow-hidden rounded-full bg-surface">
             <div
               className={cn(
                 'absolute inset-y-0 left-0 rounded-full transition-all',
@@ -86,14 +86,14 @@ export function CombatantCardResources({
         </div>
         <div
           className={cn(
-            'flex min-w-0 flex-1 flex-col rounded-lg border p-2',
+            'flex min-w-0 flex-col rounded-lg border p-2',
             'border-energy-border bg-energy-light',
           )}
         >
           <span className="mb-0.5 text-[10px] font-semibold tracking-wide text-energy-text uppercase">
             Energy
           </span>
-          <div className="flex items-center gap-1">
+          <div className="flex min-w-0 flex-wrap items-center gap-1">
             {linkedResourcesReadOnly ? (
               <span className="text-sm font-bold text-energy-text" title={linkedResourcesTitle}>
                 {combatant.currentEnergy} / {combatant.maxEnergy}
@@ -104,7 +104,7 @@ export function CombatantCardResources({
                   type="number"
                   value={combatant.currentEnergy}
                   onChange={(e) => onUpdate({ currentEnergy: parseInt(e.target.value) || 0 })}
-                  className="touch-tier-standard w-10 rounded border border-energy-border px-0.5 py-0 text-center text-sm font-bold text-energy-text"
+                  className="touch-tier-standard w-10 min-w-0 rounded border border-energy-border px-0.5 py-0 text-center text-sm font-bold text-energy-text"
                 />
                 <span className="text-xs text-energy-text">/ {combatant.maxEnergy}</span>
                 <ValueStepper
@@ -120,7 +120,7 @@ export function CombatantCardResources({
               </>
             )}
           </div>
-          <div className="relative mt-1 h-1.5 overflow-hidden rounded-full bg-surface">
+          <div className="relative mt-1 h-1.5 min-w-0 overflow-hidden rounded-full bg-surface">
             <div
               className="absolute inset-y-0 left-0 rounded-full bg-energy transition-all"
               style={{ width: `${Math.max(0, Math.min(100, energyPercent))}%` }}

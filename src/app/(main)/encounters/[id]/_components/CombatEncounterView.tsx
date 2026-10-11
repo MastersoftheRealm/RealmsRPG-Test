@@ -47,11 +47,11 @@ function CombatEncounterViewInner(props: CombatEncounterViewProps & { encounter:
     <>
       <div
         className={cn(
-          'grid gap-6 lg:grid-cols-4 lg:items-stretch',
+          'grid min-w-0 grid-cols-1 gap-6 lg:grid-cols-4 lg:items-stretch',
           showRollLog && ENCOUNTER_TRACKER_DOCK_FRAME_CLASS,
         )}
       >
-        <div className="flex min-h-0 flex-col gap-4 lg:col-span-3">
+        <div className="flex min-h-0 min-w-0 flex-col gap-4 lg:col-span-3">
           <CombatRoundControls
             encounter={encounter}
             setEncounter={setEncounter}

@@ -787,7 +787,9 @@
   }
 
   /* Encounter combat/skill trackers: end + bottom gutter so Roll Log FAB does not cover
-     Energy steppers (~375) or Conditions chips when scrolled (~1280) — 86e3k915w. */
+     Energy steppers (~375) or Conditions chips when scrolled (~1280) — 86e3k915w.
+     The gutter only moves controls when the play column is min-w-0. A min-content
+     column paints through this padding. */
   .encounter-tracker-dock-frame {
     box-sizing: border-box;
     padding-inline-end: var(--sheet-mobile-fab-gutter);

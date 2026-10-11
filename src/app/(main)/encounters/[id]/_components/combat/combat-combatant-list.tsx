@@ -63,7 +63,7 @@ export function CombatCombatantList({
         </div>
       )}
 
-      <div className="min-h-[300px] flex-1 space-y-3 overflow-y-auto scroll-smooth pr-2">
+      <div className="min-h-[300px] min-w-0 flex-1 space-y-3 overflow-y-auto scroll-smooth pr-2">
         {sortedCombatants.length === 0 ? (
           <Card>
             <CardContent>
