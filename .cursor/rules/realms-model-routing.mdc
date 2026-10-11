@@ -7,14 +7,14 @@ alwaysApply: true
 
 **Never** a slug ending in `-fast`. Pass the standard slug. Fast is the product default.
 
+`composer-2.5` is the **default whenever possible**, including small UI, copy, labels, straightforward bug, mechanical edit of an approved plan, and a **local save or input fix** whose expected behavior is already written. A save, click handler, or field parse does **not** by itself leave Composer. Step up only when Composer cannot do the task well.
+
 | Work | Slug |
 |------|------|
-| Clear local change: small UI, copy, labels, straightforward bug, mechanical edit of an approved plan | `composer-2.5` |
+| Default, including local save or input fix with behavior already written | `composer-2.5` |
 | Bug that crosses systems — daily problem-solving | `grok-4.7-medium` |
-| Rules math, Supabase, RLS, schema, migrations, architecture | `grok-4.7-high` |
+| Rules math, missing written rule, Supabase, RLS, schema, migrations, architecture | `grok-4.7-high` |
 | Only after High has failed on that problem — note it on the task | `grok-4.7-xhigh` |
-
-**Step up** as soon as a cheaper model would change a cost, a permission, a save, or schema.
 
 **Do not start** Claude, GPT, or any Other Models slug. Comment the recommendation (`claude-opus-5-5-high` or `gpt-5.6-sol-high`) on the ClickUp task and leave the task **to do** (no branch) or **in progress** (branch exists) for Kadin to approve.
 
