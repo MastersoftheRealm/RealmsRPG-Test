@@ -10072,6 +10072,34 @@ A pick that would exceed open trait slots is refused. The disabled Add button de
 
 ---
 
+## DEV-V-094 — Sheet Currency in a second tab (ClickUp 86e3juw07)
+
+#### DEV-V-094-T001 — An unedited Currency field does not overwrite a newer value
+
+| Field | Value |
+|-------|-------|
+| **Suite** | DEV-V-094 |
+| **Related task** | 86e3juw07 |
+| **Where** | `/characters/[id]` Library → Inventory, Currency field |
+| **Needs** | A saved character you can edit, open in two browser tabs. About 500px wide is enough. |
+
+**Steps**
+1. Open the same character sheet in tab A and tab B. Note the Currency number (the repro started at 86).
+2. In tab B, click into Currency. Do not type.
+3. In tab A, set Currency to 100 and wait until the save finishes.
+4. Click out of the Currency field in tab B. Reload tab B.
+
+**Expected**
+- Currency stays 100 after the reload. Tab B does not put 86 back.
+- Typing a different number in Currency and clicking out still saves that number.
+- +5 or -10 and Enter still adds or subtracts from the current Currency.
+
+**Automated** | `npm test` — `currency-field-commit.test.ts`
+
+**Report** — `[ ] PASS` · `[ ] FAIL` · `[ ] SKIP` — Notes:
+
+---
+
 ## DEV-V-092 — Codex editor unsaved edits (ClickUp 86e3jthxr)
 
 #### DEV-V-092-T001 — Leaving a changed Codex record asks first
@@ -10285,6 +10313,7 @@ A pick that would exceed open trait slots is refused. The disabled Add button de
 | DEV-V-089 | Selecting text in an open GLR item (ClickUp 86e3jrjfg) | — | Automated (`grid-list-row-expand-click.test.ts`) + manual DEV-V-089-T001 |
 | DEV-V-091 | Sheet viewers cannot use edit controls (ClickUp 86e3jryyp) | — | Automated (`sheet-viewer-edits.test.ts`) + manual DEV-V-091-T001 |
 | DEV-V-093 | Core Rules editor unsaved edits (ClickUp 86e3jtrak) | — | Automated (`core-rules-unsaved-leave.test.ts`) + manual DEV-V-093-T001 |
+| DEV-V-094 | Sheet Currency in a second tab (ClickUp 86e3juw07) | — | Automated (`currency-field-commit.test.ts`) + manual DEV-V-094-T001 |
 | DEV-V-083 | Assigned base skill information (ClickUp 86e2q66jv) | — | Automated (`guided-skills-panel.test.tsx`) + manual DEV-V-083-T001 |
 
 When implementing a related task, replace the legacy **DEV-T-###** block with granular **DEV-V-###** tests in this file.

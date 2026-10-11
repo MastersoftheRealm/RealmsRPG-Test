@@ -4,7 +4,7 @@
 
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import {
   TabSummarySection,
   SummaryItem,
@@ -17,6 +17,7 @@ import {
 } from '@/components/patterns';
 import { armamentProficiencyHelp } from '../../../public/tooltip-text';
 import { calculateArmamentProficiency } from '@/lib/game/formulas';
+import { currencyDraftOnBlur, currencyDraftOnEnter } from './currency-field-commit';
 import type {
   EntityWeaponRow,
   EntityShieldRow,
@@ -77,13 +78,31 @@ export function LibraryInventoryPanel({
   onAddEquipment,
   onRemoveEquipment,
 }: LibraryInventoryPanelProps) {
-  const [currencyInput, setCurrencyInput] = useState(currency.toString());
+  const [currencyInput, setCurrencyInput] = useState(String(currency));
+  const [isEditing, setIsEditing] = useState(false);
+  const editedRef = useRef(false);
+  const shownCurrency = isEditing ? currencyInput : String(currency);
+
+  useEffect(() => {
+    if (!editedRef.current) setCurrencyInput(String(currency));
+  }, [currency]);
+
+  const handleCurrencyFocus = () => {
+    editedRef.current = false;
+    setCurrencyInput(String(currency));
+    setIsEditing(true);
+  };
 
   const handleCurrencyBlur = () => {
-    const value = parseInt(currencyInput) || 0;
-    if (value !== currency && onCurrencyChange) {
-      onCurrencyChange(value);
-    }
+    const result = currencyDraftOnBlur({
+      draft: currencyInput,
+      currency,
+      edited: editedRef.current,
+    });
+    editedRef.current = false;
+    setIsEditing(false);
+    setCurrencyInput(result.display);
+    if (result.save != null) onCurrencyChange?.(result.save);
   };
 
   return (
@@ -97,21 +116,23 @@ export function LibraryInventoryPanel({
             </span>
             <input
               type="text"
-              value={currencyInput}
-              onChange={(e) => setCurrencyInput(e.target.value)}
+              value={shownCurrency}
+              onChange={(e) => {
+                editedRef.current = true;
+                setCurrencyInput(e.target.value);
+              }}
+              onFocus={handleCurrencyFocus}
               onBlur={handleCurrencyBlur}
               onKeyDown={(e) => {
-                if (e.key === 'Enter') {
-                  const raw = currencyInput.trim();
-                  let newValue = currency;
-                  if (raw.startsWith('+')) newValue = currency + (parseInt(raw.substring(1)) || 0);
-                  else if (raw.startsWith('-'))
-                    newValue = currency - (parseInt(raw.substring(1)) || 0);
-                  else newValue = parseInt(raw) || 0;
-                  newValue = Math.max(0, newValue);
-                  setCurrencyInput(String(newValue));
-                  onCurrencyChange?.(newValue);
-                }
+                if (e.key !== 'Enter') return;
+                const result = currencyDraftOnEnter({
+                  draft: currencyInput,
+                  currency,
+                  edited: editedRef.current,
+                });
+                editedRef.current = false;
+                setCurrencyInput(result.display);
+                if (result.save != null) onCurrencyChange?.(result.save);
               }}
               className="w-20 rounded border border-currency-border bg-surface px-2 py-1 text-sm font-bold text-warning-fg focus:ring-2 focus:ring-currency-border"
               title="Use +5, -10, or a number"
