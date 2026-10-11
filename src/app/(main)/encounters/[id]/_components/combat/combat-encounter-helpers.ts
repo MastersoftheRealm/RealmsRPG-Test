@@ -4,12 +4,15 @@
  * Pure turn-order / initiative / roster builders for the combat encounter facade.
  */
 
-import type { Combatant, CombatantType, TrackedCombatant } from '@/types/encounter';
+import type { Combatant, CombatantType, Encounter, TrackedCombatant } from '@/types/encounter';
 import type { CampaignCharacter, CampaignCharacterEncounterData } from '@/types/campaign';
 import { generateId, rollInitiative } from '../encounter-view-helpers';
 
 /** Initiative order used for turn tracking and drag-reorder remapping. */
-export function sortCombatantsForTurnOrder(combatants: Combatant[], round: number): Combatant[] {
+export function sortCombatantsForTurnOrder<T extends Combatant>(
+  combatants: readonly T[],
+  round: number,
+): T[] {
   const companions = combatants.filter((c) => c.combatantType === 'companion');
   const nonCompanions = combatants.filter((c) => c.combatantType !== 'companion');
   if (round === 1) {
@@ -18,6 +21,53 @@ export function sortCombatantsForTurnOrder(combatants: Combatant[], round: numbe
     return [...notSurprised, ...surprised, ...companions];
   }
   return [...nonCompanions, ...companions];
+}
+
+/** Same groups the turn-order sort enforces. A move that crosses groups would snap back. */
+function turnOrderGroup(combatant: Combatant, round: number): 'companion' | 'surprised' | 'open' {
+  if (combatant.combatantType === 'companion') return 'companion';
+  if (round === 1 && combatant.isSurprised) return 'surprised';
+  return 'open';
+}
+
+/**
+ * Move one step in the displayed turn order.
+ * Returns null when the combatant is already at the edge of its group.
+ */
+export function moveCombatantInTurnOrder<T extends Combatant>(
+  combatants: readonly T[],
+  round: number,
+  id: string,
+  direction: -1 | 1,
+): T[] | null {
+  const sorted = sortCombatantsForTurnOrder(combatants, round);
+  const index = sorted.findIndex((c) => c.id === id);
+  const nextIndex = index + direction;
+  if (index < 0 || nextIndex < 0 || nextIndex >= sorted.length) return null;
+  const current = sorted[index];
+  const neighbor = sorted[nextIndex];
+  if (!current || !neighbor) return null;
+  if (turnOrderGroup(current, round) !== turnOrderGroup(neighbor, round)) return null;
+  const next = [...sorted];
+  next[index] = neighbor;
+  next[nextIndex] = current;
+  return next;
+}
+
+/** Apply a keyboard move and keep the current turn on the same combatant. */
+export function applyCombatantTurnOrderMove(
+  encounter: Encounter,
+  id: string,
+  direction: -1 | 1,
+): Encounter {
+  const oldSorted = sortCombatantsForTurnOrder(encounter.combatants, encounter.round);
+  const combatants = moveCombatantInTurnOrder(encounter.combatants, encounter.round, id, direction);
+  if (!combatants) return encounter;
+  return {
+    ...encounter,
+    combatants,
+    currentTurnIndex: remapTurnIndexAfterReorder(encounter.currentTurnIndex, oldSorted, combatants),
+  };
 }
 
 export function remapTurnIndexAfterReorder(

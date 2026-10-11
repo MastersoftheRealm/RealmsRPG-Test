@@ -57,6 +57,7 @@ export function useCombatEncounterView({
     handleDragOver: roster.handleDragOver,
     handleDragLeave: roster.handleDragLeave,
     handleDrop: roster.handleDrop,
+    moveCombatant: roster.moveCombatant,
     addCombatant: roster.addCombatant,
     addCombatantsFromModal: roster.addCombatantsFromModal,
     addAllCampaignCharacters: roster.addAllCampaignCharacters,

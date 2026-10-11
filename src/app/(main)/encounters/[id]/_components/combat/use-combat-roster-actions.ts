@@ -1,5 +1,5 @@
 /**
- * Combat roster actions — add / mutate / drag-reorder (TASK-666a)
+ * Combat roster actions — add / mutate / drag-reorder / keyboard move (TASK-666a)
  * ===============================================================
  */
 
@@ -18,6 +18,7 @@ import type { Campaign } from '@/types/campaign';
 import {
   sortCombatantsForTurnOrder,
   remapTurnIndexAfterReorder,
+  applyCombatantTurnOrderMove,
   createEmptyNewCombatantForm,
   buildManualCombatantsFromForm,
   buildDuplicateCombatant,
@@ -102,6 +103,13 @@ export function useCombatRosterActions({
       setDragOverId(null);
     },
     [draggedId, setEncounter],
+  );
+
+  const moveCombatant = useCallback(
+    (id: string, direction: -1 | 1) => {
+      setEncounter((prev) => (prev ? applyCombatantTurnOrderMove(prev, id, direction) : prev));
+    },
+    [setEncounter],
   );
 
   const addCombatant = () => {
@@ -308,6 +316,7 @@ export function useCombatRosterActions({
     handleDragOver,
     handleDragLeave,
     handleDrop,
+    moveCombatant,
     addCombatant,
     addCombatantsFromModal,
     addAllCampaignCharacters,

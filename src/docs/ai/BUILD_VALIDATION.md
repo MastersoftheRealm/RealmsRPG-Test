@@ -9817,6 +9817,33 @@ A pick that would exceed open trait slots is refused. The disabled Add button de
 
 ---
 
+## DEV-V-082 — Encounter combat turn order keyboard (ClickUp 86e3k0h3f)
+
+#### DEV-V-082-T001 — Keyboard can change combat turn order
+
+| Field | Value |
+|-------|-------|
+| **Suite** | DEV-V-082 |
+| **Related task** | 86e3k0h3f |
+| **Where** | `/encounters/[id]/combat` |
+| **Needs** | A signed-in account with a combat encounter that has at least two combatants. Keyboard only. |
+
+**Steps**
+1. Open the encounter combat view. From **Clear All**, Tab into the first combatant.
+2. The initiative number comes before the name. **Move up** on the first combatant is inactive. **Move down** is a button on that combatant.
+3. Activate **Move down**. Activate the initiative number, type a new value, and press Enter.
+
+**Expected**
+- The first combatant moves one place down. The last combatant's Move down control is inactive. A companion does not move above a non-companion, and in round 1 a surprised combatant does not move above one that is not surprised.
+- The initiative number becomes an editable field, and the new value stays after Enter.
+- Sort Initiative still sorts the values.
+
+**Automated** | `npm test` — `combatant-turn-order.test.tsx`
+
+**Report** — `[ ] PASS` · `[ ] FAIL` · `[ ] SKIP` — Notes:
+
+---
+
 ## DEV-V-081 — Grid rows that nested buttons (ClickUp 86e3k0ch6)
 
 #### DEV-V-081-T001 — A row button does not contain another button

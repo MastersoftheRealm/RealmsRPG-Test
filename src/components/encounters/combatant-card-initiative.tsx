@@ -35,46 +35,52 @@ export function CombatantCardInitiative({
     }
   }, [isEditingInitiative]);
 
+  const initiativeName = `Edit initiative for ${combatant.name}: ${combatant.initiative}`;
+
   return (
-    <div
-      draggable
-      onDragStart={onDragStart}
-      onDragEnd={onDragEnd}
-      className="flex cursor-grab flex-col items-center gap-1 select-none active:cursor-grabbing"
-    >
-      <div className="hit-area-dense-square flex items-center justify-center rounded p-1 text-text-muted hover:bg-surface-alt hover:text-text-primary dark:hover:text-text-primary">
-        <GripVertical className="h-5 w-5" />
-      </div>
+    <div className="flex flex-col items-center gap-2">
       <div
-        className={cn(
-          'flex h-11 w-11 cursor-pointer flex-col items-center justify-center rounded-lg transition-colors md:h-10 md:w-10',
-          isCurrentTurn
-            ? 'bg-primary-button text-text-on-dark'
-            : 'bg-surface-alt text-text-secondary hover:bg-surface',
-        )}
-        onClick={onStartEditInitiative}
-        title="Click to edit initiative"
+        draggable
+        onDragStart={onDragStart}
+        onDragEnd={onDragEnd}
+        aria-hidden="true"
+        className="flex cursor-grab flex-col items-center select-none active:cursor-grabbing"
       >
-        {isEditingInitiative ? (
-          <input
-            ref={initiativeInputRef}
-            type="number"
-            value={combatant.initiative}
-            onChange={(e) => onUpdate({ initiative: parseInt(e.target.value) || 0 })}
-            onBlur={onStopEditInitiative}
-            onKeyDown={(e) => e.key === 'Enter' && onStopEditInitiative()}
-            className="h-8 w-8 border-none bg-transparent text-center text-sm font-bold outline-none"
-            autoFocus
-          />
-        ) : (
-          <>
-            <span className="text-lg leading-none font-bold">{combatant.initiative}</span>
-            {combatant.acuity !== 0 && (
-              <span className="text-[10px] leading-none text-text-muted">+{combatant.acuity}</span>
-            )}
-          </>
-        )}
+        <div className="hit-area-dense-square flex items-center justify-center rounded p-1 text-text-muted hover:bg-surface-alt hover:text-text-primary">
+          <GripVertical className="h-5 w-5" />
+        </div>
       </div>
+      {isEditingInitiative ? (
+        <input
+          ref={initiativeInputRef}
+          type="number"
+          value={combatant.initiative}
+          aria-label={`Initiative for ${combatant.name}`}
+          onChange={(e) => onUpdate({ initiative: parseInt(e.target.value) || 0 })}
+          onBlur={onStopEditInitiative}
+          onKeyDown={(e) => e.key === 'Enter' && onStopEditInitiative()}
+          className="h-10 w-10 rounded-lg border-none bg-surface-alt text-center text-sm font-bold text-text-primary outline-none focus-visible:ring-2 focus-visible:ring-primary-outline-border [@media(pointer:coarse)]:h-11 [@media(pointer:coarse)]:w-11"
+          autoFocus
+        />
+      ) : (
+        <button
+          type="button"
+          onClick={onStartEditInitiative}
+          aria-label={initiativeName}
+          title="Edit initiative"
+          className={cn(
+            'flex h-10 w-10 cursor-pointer flex-col items-center justify-center rounded-lg transition-colors focus-visible:ring-2 focus-visible:ring-primary-outline-border focus-visible:ring-offset-2 focus-visible:outline-none [@media(pointer:coarse)]:h-11 [@media(pointer:coarse)]:w-11',
+            isCurrentTurn
+              ? 'bg-primary-button text-text-on-dark'
+              : 'bg-surface-alt text-text-secondary hover:bg-surface',
+          )}
+        >
+          <span className="text-lg leading-none font-bold">{combatant.initiative}</span>
+          {combatant.acuity !== 0 && (
+            <span className="text-[10px] leading-none text-text-muted">+{combatant.acuity}</span>
+          )}
+        </button>
+      )}
     </div>
   );
 }
