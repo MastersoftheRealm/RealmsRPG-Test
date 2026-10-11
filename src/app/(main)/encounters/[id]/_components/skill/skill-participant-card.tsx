@@ -122,77 +122,84 @@ export function ParticipantCard({
         isDragging && 'opacity-50',
       )}
     >
-      <div className="flex items-start gap-3">
-        {useInitiative && (
-          <div
-            draggable
-            onDragStart={onDragStart}
-            onDragEnd={onDragEnd}
-            className="flex cursor-grab flex-col items-center gap-1 select-none active:cursor-grabbing"
-          >
-            <div className="rounded p-1 text-text-muted hover:bg-surface-alt hover:text-text-primary">
-              <GripVertical className="h-5 w-5" aria-hidden />
-            </div>
+      <div className="flex flex-col gap-3 md:flex-row md:items-start">
+        <div className="flex min-w-0 items-start gap-3 md:flex-1">
+          {useInitiative && (
             <div
-              className="flex h-10 w-10 cursor-pointer flex-col items-center justify-center rounded-lg bg-surface-alt text-sm font-bold text-text-secondary transition-colors hover:bg-surface [@media(pointer:coarse)]:h-11 [@media(pointer:coarse)]:w-11"
-              onClick={onRollInitiative}
-              title="Roll initiative (d20)"
-              role="button"
-              tabIndex={0}
-              onKeyDown={(e) => e.key === 'Enter' && onRollInitiative?.()}
-              aria-label={`Initiative: ${participant.initiative ?? 'not set'}. Click to roll.`}
+              draggable
+              onDragStart={onDragStart}
+              onDragEnd={onDragEnd}
+              className="flex shrink-0 cursor-grab flex-col items-center gap-1 select-none active:cursor-grabbing"
             >
-              {participant.initiative ?? '-'}
-            </div>
-          </div>
-        )}
-
-        <div className="min-w-0 flex-1">
-          <div className="mb-1 flex flex-wrap items-center gap-2">
-            <div className="font-bold text-text-primary">{participant.name}</div>
-            {useInitiative && onUpdateParticipantType && (
-              <select
-                value={participant.participantType ?? 'ally'}
-                onChange={(e) => onUpdateParticipantType(e.target.value as SkillParticipantType)}
-                aria-label="Participant side"
-                className={cn(
-                  'cursor-pointer rounded border px-1.5 py-0.5 text-[10px] font-medium',
-                  (participant.participantType ?? 'ally') === 'ally' &&
-                    'border-ally bg-ally-light text-ally-text',
-                  participant.participantType === 'enemy' &&
-                    'border-enemy bg-enemy-light text-enemy-text',
-                )}
+              <div className="rounded p-1 text-text-muted hover:bg-surface-alt hover:text-text-primary">
+                <GripVertical className="h-5 w-5" aria-hidden />
+              </div>
+              <div
+                className="flex h-10 w-10 cursor-pointer flex-col items-center justify-center rounded-lg bg-surface-alt text-sm font-bold text-text-secondary transition-colors hover:bg-surface [@media(pointer:coarse)]:h-11 [@media(pointer:coarse)]:w-11"
+                onClick={onRollInitiative}
+                title="Roll initiative (d20)"
+                role="button"
+                tabIndex={0}
+                onKeyDown={(e) => e.key === 'Enter' && onRollInitiative?.()}
+                aria-label={`Initiative: ${participant.initiative ?? 'not set'}. Click to roll.`}
               >
-                <option value="ally">Ally</option>
-                <option value="enemy">Enemy</option>
+                {participant.initiative ?? '-'}
+              </div>
+            </div>
+          )}
+
+          <div className="min-w-0 flex-1">
+            <div className="mb-1 flex min-w-0 flex-wrap items-center gap-2">
+              <div
+                className="min-w-0 truncate font-bold text-text-primary"
+                title={participant.name}
+              >
+                {participant.name}
+              </div>
+              {useInitiative && onUpdateParticipantType && (
+                <select
+                  value={participant.participantType ?? 'ally'}
+                  onChange={(e) => onUpdateParticipantType(e.target.value as SkillParticipantType)}
+                  aria-label="Participant side"
+                  className={cn(
+                    'cursor-pointer rounded border px-1.5 py-0.5 text-[10px] font-medium',
+                    (participant.participantType ?? 'ally') === 'ally' &&
+                      'border-ally bg-ally-light text-ally-text',
+                    participant.participantType === 'enemy' &&
+                      'border-enemy bg-enemy-light text-enemy-text',
+                  )}
+                >
+                  <option value="ally">Ally</option>
+                  <option value="enemy">Enemy</option>
+                </select>
+              )}
+            </div>
+            <div className="flex min-w-0 flex-wrap items-center gap-2">
+              <select
+                aria-label="Skill for participant"
+                value={participant.skillUsed || ''}
+                onChange={(e) => onUpdateSkill(e.target.value)}
+                className="w-full min-w-[6rem] rounded border border-border-light bg-transparent px-1 py-0.5 text-xs text-text-secondary focus:border-primary-outline-border focus:outline-none md:w-auto md:max-w-[140px]"
+              >
+                <option value="">Skill...</option>
+                {codexSkills.map((s) => (
+                  <option key={s.id} value={s.name}>
+                    {s.name}
+                  </option>
+                ))}
               </select>
-            )}
-          </div>
-          <div className="flex flex-wrap items-center gap-2">
-            <select
-              aria-label="Skill for participant"
-              value={participant.skillUsed || ''}
-              onChange={(e) => onUpdateSkill(e.target.value)}
-              className="max-w-[140px] min-w-0 rounded border border-border-light bg-transparent px-1 py-0.5 text-xs text-text-secondary focus:border-primary-outline-border focus:outline-none"
-            >
-              <option value="">Skill...</option>
-              {codexSkills.map((s) => (
-                <option key={s.id} value={s.name}>
-                  {s.name}
-                </option>
-              ))}
-            </select>
+            </div>
           </div>
         </div>
 
-        <div className="flex flex-shrink-0 flex-wrap items-center justify-end gap-2">
+        <div className="flex w-full min-w-0 flex-wrap items-center gap-2 md:w-auto md:flex-shrink-0 md:justify-end">
           {participant.isHelping ? (
             <Button size="sm" variant="ghost" onClick={() => onSetHelping(false)}>
               Undo Helping
             </Button>
           ) : participant.hasRolled ? (
             <>
-              <div className="flex flex-wrap items-center gap-2">
+              <div className="flex max-w-full min-w-0 flex-wrap items-center gap-2">
                 <div
                   className={cn(
                     'rounded-lg px-3 py-1 text-sm font-bold',
