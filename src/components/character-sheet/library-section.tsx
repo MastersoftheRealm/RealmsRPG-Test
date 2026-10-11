@@ -21,7 +21,7 @@ import {
   CHARACTER_SHEET_ENERGY_SPEND_ROW_CHROME,
 } from '@/components/patterns';
 import { Card } from '@/components/ui';
-import { TabNavigation } from '@/components/ui/tab-navigation';
+import { TabContentPanel, TabNavigation, useTabGroup } from '@/components/ui/tab-navigation';
 import { useGameRules } from '@/hooks';
 import { useCharacterSheet } from './character-sheet-context';
 import type { TabType } from './library-tab-config';
@@ -165,6 +165,8 @@ export function LibrarySection({
     onEquipmentQuantityChange: data?.onEquipmentQuantityChange,
   });
 
+  const { tabGroupId, sharedPanelId } = useTabGroup('character-sheet-library');
+
   if (!data) return null;
 
   const {
@@ -240,7 +242,12 @@ export function LibrarySection({
   } = data;
 
   return (
-    <Card className={cn('relative flex w-full min-w-0 max-w-full flex-col p-4 shadow-md md:p-6', className)}>
+    <Card
+      className={cn(
+        'relative flex w-full max-w-full min-w-0 flex-col p-4 shadow-md md:p-6',
+        className,
+      )}
+    >
       {isEditMode && (
         <div className="absolute top-3 right-3 z-10">
           <EditSectionToggle
@@ -271,9 +278,16 @@ export function LibrarySection({
         variant="underline"
         size="md"
         className="mb-4"
+        tabGroupId={tabGroupId}
+        sharedTabPanelId={sharedPanelId}
       />
 
-      <div className="min-h-0 flex-1 space-y-2 max-md:overflow-visible md:overflow-y-auto">
+      <TabContentPanel
+        tabGroupId={tabGroupId}
+        id={sharedPanelId}
+        activeTab={resolvedActiveTab}
+        className="min-h-0 flex-1 space-y-2 max-md:overflow-visible md:overflow-y-auto"
+      >
         {resolvedActiveTab === 'powers' && (
           <LibraryPowersPanel
             innateEnergy={innateEnergy}
@@ -422,7 +436,7 @@ export function LibrarySection({
             Character abilities not loaded
           </p>
         )}
-      </div>
+      </TabContentPanel>
     </Card>
   );
 }
