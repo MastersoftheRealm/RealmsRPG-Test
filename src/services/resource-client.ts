@@ -13,7 +13,7 @@ export interface ResourceClient<TFull, TSummary, TCreate, TUpdate> {
   list: () => Promise<TSummary[]>;
   get: (id: string) => Promise<TFull | null>;
   create: (data: TCreate) => Promise<string>;
-  save: (id: string, data: TUpdate) => Promise<void>;
+  save: (id: string, data: TUpdate, options?: { keepalive?: boolean }) => Promise<void>;
   remove: (id: string) => Promise<void>;
 }
 
@@ -35,8 +35,12 @@ export function createResourceClient<
       });
       return result.id;
     },
-    save: (id: string, data: TUpdate) =>
-      apiFetch<void>(itemPath(id), { method: 'PATCH', body: JSON.stringify(data) }),
+    save: (id: string, data: TUpdate, options?: { keepalive?: boolean }) =>
+      apiFetch<void>(itemPath(id), {
+        method: 'PATCH',
+        body: JSON.stringify(data),
+        ...(options?.keepalive ? { keepalive: true } : {}),
+      }),
     remove: (id: string) => apiFetch<void>(itemPath(id), { method: 'DELETE' }),
   };
 }

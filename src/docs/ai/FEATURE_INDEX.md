@@ -72,7 +72,7 @@
 | Save a creator's output | `useCreatorSave`; load into a modal: `useLoadModalLibrary` (incl. species/creature + `prefetch`) |
 | Archetype Path list filter | `usePathRecommendationIndex` / `usePathListFilter` (`hooks/use-path-recommendation-index.ts`) — memoized off `['codex', 'archetypes']`; browse lists pass `kind` (or `POWER_LIST_PATH_KINDS` / `EQUIPMENT_LIST_PATH_KINDS`); creator See more passes `autoSelectType` |
 | Guided creator path data | `useGuidedPathData` in `components/guided-creator/use-guided-path-data.ts` (returns `isLoading` while codex archetypes load for selected path — Loadout phase entry waits on it, TASK-527) |
-| Autosave (debounced) | `useAutoSave` — callbacks in refs so re-renders do not reset the debounce; failed saves retry 2s/5s/15s/60s; `pagehide` / hidden tab flush dirty data (TASK-736) |
+| Autosave (debounced) | `useAutoSave` — callbacks in refs so re-renders do not reset the debounce; failed saves retry 2s/5s/15s/60s; `pagehide` / hidden tab flush dirty data (TASK-736). Skill encounter flush sends that same PATCH with `keepalive` so a refresh during Unsaved changes keeps the roll, totals, and selected skill (86e3jrra4) |
 | Sheet ↔ encounter HP/EN/AP | `useCharacterResourceSync` + `lib/encounter/character-resource-sync.ts` — debounce 400ms; `skipLock` LWW; schedule only when HP/EN/AP change (`nextResourceSyncCursor`, TASK-786) |
 | Client-only mount (portals / theme) | `useIsClient` — prefer over `useEffect(() => setMounted(true))` (TASK-430) |
 | List sorting / modal list state | `useSort`, `sortByColumn`, `useModalListState` (rare non-USM — AdminTraitsTab browse list; nested choice picker in `admin-trait-edit-modal` uses ListHeader+GLR without the hook — TASK-572) |

@@ -10,7 +10,8 @@
 import { useState, use } from 'react';
 import Link from 'next/link';
 import { PageContainer, LoadingState, Alert, useToast } from '@/components/ui';
-import { useEncounter, useSaveEncounter, useAutoSave, useCampaignsFull } from '@/hooks';
+import { useAuth, useEncounter, useSaveEncounter, useAutoSave, useCampaignsFull } from '@/hooks';
+import { encounterAutosaveBody, persistEncounterSave } from '@/services/encounter-service';
 import { RollProvider } from '@/components/rolls';
 import type { Encounter } from '@/types/encounter';
 import { defaultSkillEncounterState } from '@/types/encounter';
@@ -82,15 +83,21 @@ function SkillEncounterContent({ params }: { params: Promise<{ id: string }> }) 
   }
   const isInitialized = initializedEncounterId === encounterId;
 
+  const { user } = useAuth();
   const { showToast } = useToast();
   const { isSaving, hasUnsavedChanges } = useAutoSave({
     data: encounter,
-    onSave: async (data) => {
+    onSave: async (data, flush) => {
       if (!data || !encounterId) return;
-      const { id, createdAt, ...rest } = data;
-      void id;
-      void createdAt;
-      await saveMutation.mutateAsync({ id: encounterId, data: rest });
+      const body = encounterAutosaveBody(data);
+      if (flush?.unload) {
+        await persistEncounterSave(encounterId, body, {
+          signedIn: !!user,
+          keepalive: true,
+        });
+        return;
+      }
+      await saveMutation.mutateAsync({ id: encounterId, data: body });
     },
     delay: 1500,
     enabled: isInitialized && !!encounter,
