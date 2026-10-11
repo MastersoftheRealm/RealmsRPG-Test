@@ -9952,6 +9952,35 @@ A pick that would exceed open trait slots is refused. The disabled Add button de
 
 ---
 
+## DEV-V-089 — Selecting text in an open GLR item (ClickUp 86e3jrjfg)
+
+#### DEV-V-089-T001 — A drag to select text does not close the open item
+
+| Field | Value |
+|-------|-------|
+| **Suite** | DEV-V-089 |
+| **Related task** | 86e3jrjfg |
+| **Where** | Any open GridListRow, such as Library or Codex |
+| **Needs** | A row whose expanded details include a description. |
+
+**Steps**
+1. Open a list row so its description shows.
+2. Click and hold inside that description, drag across some words, and release.
+3. Copy the selection.
+4. Click once in the description without dragging.
+5. Open the row again and click the name.
+
+**Expected**
+- After the drag, the row stays open and the dragged words stay selected so they can be copied.
+- A plain click in the description closes the row.
+- Clicking the name closes the row.
+
+**Automated** | `npm test` — `grid-list-row-expand-click.test.ts`
+
+**Report** — `[ ] PASS` · `[ ] FAIL` · `[ ] SKIP` — Notes:
+
+---
+
 ## DEV-V-083 — Assigned base skill information (ClickUp 86e2q66jv)
 
 #### DEV-V-083-T001 — An assigned skill still shows the add-list information
@@ -10132,6 +10161,7 @@ A pick that would exceed open trait slots is refused. The disabled Add button de
 | DEV-V-086 | 1-round duration modifiers (ClickUp 86e3jrhtq) | — | Automated (`power-calc.test.ts`) + manual DEV-V-086-T001 |
 | DEV-V-087 | Day duration labels (ClickUp 86e3jrhvb) | — | Automated (`power-calc.test.ts`) + manual DEV-V-087-T001 |
 | DEV-V-088 | A minute is 6 rounds (ClickUp 86e3jrj8h) | — | Automated (`state-duration-copy.test.ts`, `innate-eligibility.test.ts`) + manual DEV-V-088-T001 |
+| DEV-V-089 | Selecting text in an open GLR item (ClickUp 86e3jrjfg) | — | Automated (`grid-list-row-expand-click.test.ts`) + manual DEV-V-089-T001 |
 | DEV-V-083 | Assigned base skill information (ClickUp 86e2q66jv) | — | Automated (`guided-skills-panel.test.tsx`) + manual DEV-V-083-T001 |
 
 When implementing a related task, replace the legacy **DEV-T-###** block with granular **DEV-V-###** tests in this file.
