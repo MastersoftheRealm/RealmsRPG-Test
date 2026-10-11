@@ -1,5 +1,6 @@
-import { defined } from '@/lib/utils';
+import type { PowerPart } from '@/hooks/codex-types';
 import { chipLabelsFromDetailSections } from '@/lib/glr';
+import { defined } from '@/lib/utils';
 import { describe, expect, it } from 'vitest';
 import {
   mapPowerRows,
@@ -109,6 +110,52 @@ describe('mapPowerRows / mapTechniqueRows — Energy is rightSlot only (TASK-502
     const row = defined(mapPowerRows(powers, baseCtx)[0]);
     expect(row.columns?.find((c) => c.key === 'action')?.value).toBe('Quick action');
     expect(row.columns?.find((c) => c.key === 'duration')?.value).toBe('2 RNDS');
+  });
+
+  it('an innate power shows its Energy without a Spend control (86e3jvfmf)', () => {
+    const charmPart: PowerPart = {
+      id: 'charm',
+      name: 'Charm',
+      description: 'Charm',
+      category: 'Effect',
+      base_en: 7,
+      base_tp: 1,
+    };
+    const charm: CharacterPower = {
+      id: 'charm-beast',
+      name: 'Charm Beast',
+      innate: true,
+      parts: [{ id: 'charm', name: 'Charm' }],
+    } as CharacterPower;
+    const ctx: LibraryEntityRowContext = {
+      ...baseCtx,
+      powerPartsDb: [charmPart],
+      currentEnergy: 18,
+    };
+    const innate = defined(mapPowerRows([charm], ctx)[0]);
+    const mark = innate.rightSlot as {
+      type?: unknown;
+      props?: { 'aria-label'?: string; title?: string; onClick?: () => void; children?: number };
+    };
+    expect(mark.type).toBe('span');
+    expect(mark.props?.onClick).toBeUndefined();
+    expect(mark.props?.children).toBe(7);
+    expect(mark.props?.['aria-label']).toBe('Innate, 7 Energy, no Energy spent');
+    expect(mark.props?.title).toBe('Innate — no Energy spent');
+
+    const spent: Array<number> = [];
+    const regular = defined(
+      mapPowerRows([{ ...charm, innate: false }], {
+        ...ctx,
+        onUsePower: (_id, cost) => spent.push(cost),
+      })[0],
+    );
+    const button = regular.rightSlot as {
+      props?: { title?: string; onClick?: () => void };
+    };
+    expect(button.props?.title).toBe('Spend 7 Energy');
+    button.props?.onClick?.();
+    expect(spent).toEqual([7]);
   });
 
   it('view-only (no onUse): still renders disabled spend chrome, not a static column', () => {

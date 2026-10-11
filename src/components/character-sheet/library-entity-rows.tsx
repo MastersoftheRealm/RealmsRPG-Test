@@ -188,6 +188,22 @@ function needsProfBadge(
 }
 
 /**
+ * Innate powers require no Energy to use. The number stays visible because it
+ * still counts against Innate Energy, but it is not a spend control.
+ */
+function buildInnateEnergyMark(energyCost: number): ReactNode {
+  return (
+    <span
+      className="text-sm font-medium text-text-secondary"
+      title="Innate — no Energy spent"
+      aria-label={`Innate, ${energyCost} Energy, no Energy spent`}
+    >
+      {energyCost}
+    </span>
+  );
+}
+
+/**
  * Energy cost control for play-sheet powers/techniques.
  * Cost appears ONLY here (rightSlot) — never also as a static Energy column.
  * View-only (no onUse): same chrome, disabled — do not pass noop handlers.
@@ -414,7 +430,10 @@ export function mapPowerRows(
       innate: isInnate,
       hideInnateBadge: isInnate,
       leftSlot: innateToggle,
-      rightSlot: buildEnergyButton(energyCost, canUse, ctx.onUsePower, id, 'primary'),
+      rightSlot:
+        isInnate && energyCost > 0
+          ? buildInnateEnergyMark(energyCost)
+          : buildEnergyButton(energyCost, canUse, ctx.onUsePower, id, 'primary'),
       onDelete:
         ctx.showLibraryEditControls && ctx.onRemovePower ? () => ctx.onRemovePower!(id) : undefined,
     };
