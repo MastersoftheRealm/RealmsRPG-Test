@@ -9629,6 +9629,34 @@ A pick that would exceed open trait slots is refused. The disabled Add button de
 
 ---
 
+## DEV-V-074 — Technique reload when part names repeat (ClickUp 86e3jpq36)
+
+#### DEV-V-074-T001 — Actions Brace stays Actions Brace after Load
+
+| Field | Value |
+|-------|-------|
+| **Suite** | DEV-V-074 |
+| **Related task** | 86e3jpq36 |
+| **Where** | `/technique-creator`, then Load and My Library Edit. Empowered technique creator uses the same technique-part match. |
+| **Needs** | A signed-in account that can save a technique |
+
+**Steps**
+1. Open `/technique-creator`. Add a part and set Category to All Categories. Open the Part list.
+2. Set Category to Actions and choose Brace. Set Attack to Weapon Attack. Note Energy and Training Points (5 and 1). Save.
+3. Load that technique in the creator. Also open it with Library Edit.
+4. Repeat Load for an Actions-only Brace with no weapon (2 Energy and 1 Training Point).
+
+**Expected**
+- All Categories shows Brace (Actions) and Brace (Vitality), and the same for Evade and Defend. A single category still shows the name alone.
+- Load and Library Edit keep Actions, 5 Energy, and 1 Training Point. They do not switch to Vitality or 2 Training Points.
+- Actions Brace alone stays 2 Energy and 1 Training Point.
+
+**Automated** | `npm test` — `technique-creator-parts-save.test.ts` + `power-part-card.test.ts`
+
+**Report** — `[ ] PASS` · `[ ] FAIL` · `[ ] SKIP` — Notes:
+
+---
+
 ## DEV-V-071 — Profile column writes (ClickUp 86e3jt562)
 
 #### DEV-V-071-T001 — Direct profile writes stay on the server
@@ -9714,5 +9742,6 @@ A pick that would exceed open trait slots is refused. The disabled Add button de
 | DEV-V-070 | Guest sign-in import (ClickUp 86e3jmw1m) | — | Automated (`guest-character-migration.test.ts`, `guest-encounter-migration.test.ts`) + manual DEV-V-070-T001 |
 | DEV-V-072 | Character duplicate (ClickUp 86e3jmcn3) | — | Automated (`characters/route.test.ts`, `character-name-limit.test.ts`) + manual DEV-V-072-T001 |
 | DEV-V-073 | Weapon power cost outside the creator (ClickUp 86e3jpq1x) | — | Automated (`power-calc.test.ts`, `library-selectable-builders.test.ts`) + manual DEV-V-073-T001 |
+| DEV-V-074 | Technique reload when part names repeat (ClickUp 86e3jpq36) | — | Automated (`technique-creator-parts-save.test.ts`, `power-part-card.test.ts`) + manual DEV-V-074-T001 |
 
 When implementing a related task, replace the legacy **DEV-T-###** block with granular **DEV-V-###** tests in this file.
