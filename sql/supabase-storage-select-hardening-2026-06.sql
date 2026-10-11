@@ -84,6 +84,7 @@ USING (
   AND name LIKE ((select auth.uid())::text || '.%')
 );
 
+-- Role gate is sql/86e3jt562-profile-column-writes.sql. Do not restore a uid-only write.
 DROP POLICY IF EXISTS "Users can upload own profile picture" ON storage.objects;
 CREATE POLICY "Users can upload own profile picture"
 ON storage.objects FOR INSERT
@@ -91,6 +92,7 @@ TO authenticated
 WITH CHECK (
   bucket_id = 'profile-pictures'
   AND name LIKE ((select auth.uid())::text || '.%')
+  AND public.auth_can_upload_profile_picture()
 );
 
 DROP POLICY IF EXISTS "Users can update own profile picture" ON storage.objects;
@@ -100,10 +102,12 @@ TO authenticated
 USING (
   bucket_id = 'profile-pictures'
   AND name LIKE ((select auth.uid())::text || '.%')
+  AND public.auth_can_upload_profile_picture()
 )
 WITH CHECK (
   bucket_id = 'profile-pictures'
   AND name LIKE ((select auth.uid())::text || '.%')
+  AND public.auth_can_upload_profile_picture()
 );
 
 DROP POLICY IF EXISTS "Users can delete own profile picture" ON storage.objects;

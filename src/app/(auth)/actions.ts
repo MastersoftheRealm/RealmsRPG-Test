@@ -8,17 +8,13 @@
 
 import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
-import { createClient } from '@supabase/supabase-js';
 import { headers } from 'next/headers';
 import { requireAuth, getSession } from '@/lib/supabase/session';
-import { createClient as createServerClient } from '@/lib/supabase/server';
+import { createClient as createServerClient, createServiceRoleClient } from '@/lib/supabase/server';
 import { isAdmin } from '@/lib/admin';
 import { getRolePolicyForUser } from '@/lib/role-policy';
 import { validateUsername } from '@/lib/username-rules';
 import { buildRateLimitKey, resolveClientIp, strictLimiter } from '@/lib/rate-limit';
-
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!;
 
 /** Postgres unique-violation; RLS/permission denial. */
 const UNIQUE_VIOLATION = '23505';
@@ -116,8 +112,11 @@ export async function createUserProfileAction(data: {
       // Only a generated name may be swapped for another on collision.
       const canRetry = chosenUsername === null && attempt < MAX_GENERATED_USERNAME_ATTEMPTS;
 
+      // Username, email, and the cooldown timestamp are not writable by the
+      // session client (86e3jt562). The checks above already ran.
+      const writer = createServiceRoleClient();
       const profileWrite = existing
-        ? await supabase
+        ? await writer
             .from('user_profiles')
             .update({
               email,
@@ -132,7 +131,7 @@ export async function createUserProfileAction(data: {
                 : {}),
             })
             .eq('id', uid)
-        : await supabase.from('user_profiles').insert({
+        : await writer.from('user_profiles').insert({
             id: uid,
             email,
             display_name: data.displayName ?? null,
@@ -151,7 +150,7 @@ export async function createUserProfileAction(data: {
       }
 
       // Keep the `usernames` mapping in step with what the profile now holds.
-      const { error: usernameError } = await supabase
+      const { error: usernameError } = await writer
         .from('usernames')
         .upsert({ username: normalized, user_id: uid }, { onConflict: 'username' });
       if (usernameError) {
@@ -321,7 +320,9 @@ export async function changeUsernameAction(newUsername: string) {
     // No availability pre-check: RLS hides other users' rows, so it could only ever
     // report "free". `usernames.username` is the primary key, so claiming the new
     // row IS the uniqueness test — and it happens before the old row is released.
-    const { error: claimError } = await supabase
+    // The session client cannot write usernames or the username columns.
+    const writer = createServiceRoleClient();
+    const { error: claimError } = await writer
       .from('usernames')
       .insert({ username: normalized, user_id: user.uid });
     const claimedNewRow = !claimError;
@@ -338,7 +339,7 @@ export async function changeUsernameAction(newUsername: string) {
       if (!ownRow) return { success: false, error: USERNAME_TAKEN_ERROR };
     }
 
-    const { error: updateError } = await supabase
+    const { error: updateError } = await writer
       .from('user_profiles')
       .update({
         username: normalized,
@@ -349,7 +350,7 @@ export async function changeUsernameAction(newUsername: string) {
     if (updateError) {
       if (claimedNewRow) {
         // Release the name we reserved so a failed rename leaves nothing behind.
-        const { error: releaseError } = await supabase
+        const { error: releaseError } = await writer
           .from('usernames')
           .delete()
           .eq('username', normalized)
@@ -364,7 +365,7 @@ export async function changeUsernameAction(newUsername: string) {
 
     // Only now is the previous mapping safe to drop.
     if (currentUsername) {
-      const { error: oldRowError } = await supabase
+      const { error: oldRowError } = await writer
         .from('usernames')
         .delete()
         .eq('username', currentUsername)
@@ -380,6 +381,72 @@ export async function changeUsernameAction(newUsername: string) {
   } catch (error) {
     console.error('Error changing username:', error);
     return { success: false, error: 'Failed to change username' };
+  }
+}
+
+const LIBRARY_PORTRAIT_CATEGORIES = new Set(['species', 'creature']);
+const LIBRARY_PHOTO_ERROR = 'Choose a picture from the Realms library.';
+
+/** Strip a cache-buster so the value can match `realms_images.public_url`. */
+function libraryPhotoUrl(raw: string): string | null {
+  const trimmed = raw.trim();
+  if (!trimmed) return null;
+  let parsed: URL;
+  try {
+    parsed = new URL(trimmed);
+  } catch {
+    return null;
+  }
+  if (parsed.protocol !== 'https:' && parsed.protocol !== 'http:') return null;
+  parsed.search = '';
+  parsed.hash = '';
+  return parsed.toString();
+}
+
+/**
+ * Set photo_url from a Realms library portrait.
+ * The session client cannot write photo_url (86e3jt562). An arbitrary URL is rejected.
+ */
+export async function setProfilePhotoFromLibraryAction(
+  publicUrl: string,
+): Promise<{ success: true; photoUrl: string } | { success: false; error: string }> {
+  try {
+    const user = await requireAuth();
+    const base = libraryPhotoUrl(publicUrl);
+    if (!base) return { success: false, error: LIBRARY_PHOTO_ERROR };
+
+    const writer = createServiceRoleClient();
+    const { data, error } = await writer
+      .from('realms_images')
+      .select('public_url, realms_image_categories(category)')
+      .eq('public_url', base)
+      .maybeSingle();
+    if (error) throw error;
+
+    const row = data as {
+      public_url?: string | null;
+      realms_image_categories?: Array<{ category?: string | null }> | null;
+    } | null;
+    const stored = row?.public_url?.toString() ?? '';
+    const categories = row?.realms_image_categories ?? [];
+    const isPortrait = categories.some(
+      (entry) => !!entry.category && LIBRARY_PORTRAIT_CATEGORIES.has(entry.category),
+    );
+    if (!stored || stored !== base || !isPortrait) {
+      return { success: false, error: LIBRARY_PHOTO_ERROR };
+    }
+
+    const { error: updateError } = await writer
+      .from('user_profiles')
+      .update({ photo_url: stored, updated_at: new Date().toISOString() })
+      .eq('id', user.uid);
+    if (updateError) throw updateError;
+
+    revalidatePath('/my-account');
+    return { success: true, photoUrl: stored };
+  } catch (error) {
+    console.error('Error setting profile picture from the library:', error);
+    return { success: false, error: 'Failed to update profile picture' };
   }
 }
 
@@ -400,7 +467,7 @@ type DeleteAccountResult = { success: true } | { success: false; error: string }
 export async function deleteAccountAction(): Promise<DeleteAccountResult> {
   try {
     const user = await requireAuth();
-    const supabaseAdmin = createClient(supabaseUrl, supabaseServiceKey);
+    const supabaseAdmin = createServiceRoleClient();
 
     const failed = (step: string, error: unknown): DeleteAccountResult => {
       console.error(`Error deleting account (${step}):`, error);

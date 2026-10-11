@@ -11,7 +11,11 @@ import { useRouter } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
 import { apiUpload, getErrorMessage } from '@/lib/api-client';
 import { getAuthErrorMessage } from '@/lib/auth-errors';
-import { changeUsernameAction, deleteAccountAction } from '@/app/(auth)/actions';
+import {
+  changeUsernameAction,
+  deleteAccountAction,
+  setProfilePhotoFromLibraryAction,
+} from '@/app/(auth)/actions';
 import { useAuthStore } from '@/stores';
 import { useAdmin, useAccountProfile } from '@/hooks';
 import { fileFromCroppedBlob } from '@/lib/crop-image';
@@ -102,17 +106,17 @@ export function useMyAccountPage() {
     setUploadingPicture(true);
     setPictureMessage(null);
     try {
+      const result = await setProfilePhotoFromLibraryAction(url);
+      if (!result.success) {
+        setPictureMessage({ type: 'error', text: result.error });
+        return;
+      }
       const supabase = createClient();
-      const { error: profileError } = await supabase
-        .from('user_profiles')
-        .upsert(
-          { id: user.uid, photo_url: url, updated_at: new Date().toISOString() },
-          { onConflict: 'id' },
-        );
-      if (profileError) throw profileError;
-      const { error: authError } = await supabase.auth.updateUser({ data: { avatar_url: url } });
+      const { error: authError } = await supabase.auth.updateUser({
+        data: { avatar_url: result.photoUrl },
+      });
       if (authError) throw authError;
-      patchProfile({ photoURL: `${url}?t=${Date.now()}` });
+      patchProfile({ photoURL: `${result.photoUrl}?t=${Date.now()}` });
       setPictureMessage({ type: 'success', text: 'Profile picture updated!' });
     } catch (err: unknown) {
       setPictureMessage({
