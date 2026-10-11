@@ -125,6 +125,7 @@ export function CodexEquipmentTab({
       search={listFilters.search}
       onSearchChange={(v) => setListFilters((f) => ({ ...f, search: v }))}
       searchPlaceholder="Search equipment..."
+      searchAriaLabel="Search equipment"
       filters={
         <ArmamentFilters
           value={armamentFilters}

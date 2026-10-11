@@ -66,6 +66,7 @@ export function CodexCreatureFeatsTab({
       search={search}
       onSearchChange={setSearch}
       searchPlaceholder="Search creature feats..."
+      searchAriaLabel="Search creature feats"
       headerColumns={CREATURE_FEAT_COLUMNS}
       gridColumns={CREATURE_FEAT_GRID_COLUMNS}
       sortState={sortState}

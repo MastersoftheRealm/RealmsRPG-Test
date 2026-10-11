@@ -393,6 +393,7 @@ export function CodexSpeciesTab({
     search: filters.search,
     onSearchChange: (v: string) => setFilters((f) => ({ ...f, search: v })),
     searchPlaceholder: 'Search...',
+    searchAriaLabel: 'Search species',
     filters: speciesFilters,
     headerColumns: SPECIES_COLUMNS,
     gridColumns: SPECIES_GRID_COLUMNS,

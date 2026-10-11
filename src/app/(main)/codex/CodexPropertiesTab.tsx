@@ -152,6 +152,7 @@ export function CodexPropertiesTab({
       search={filters.search}
       onSearchChange={(v) => setFilters((f) => ({ ...f, search: v }))}
       searchPlaceholder="Search properties..."
+      searchAriaLabel="Search properties"
       filters={
         <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
           <SelectFilter

@@ -192,6 +192,7 @@ Archived tasks waiting on owner manual validation. Implementation is complete (`
 
 | Task | Suite / tests | What to verify |
 | ---- | ------------- | -------------- |
+| **86e3jmdp9** | DEV-V-085 **T001** | `/codex`. Feats, Skills, Species, Archetypes, and Equipment each name the search field. Advanced: Parts, Properties, Creature Feats, and Traits do the same. Archetypes stays "Search archetype paths". Species is "Search species". The other names match the existing search text. Filters stay labeled. |
 | **86e1z8j9e** | DEV-V-084 **T001** | On a preview with the toolbar visible, the console does not repeat a Content Security Policy block for a websocket. Local `npm run dev` does not repeat that block for `ws://localhost`. Character, campaign roll, and encounter updates still use the existing Supabase realtime client. |
 | **86e2q66jv** | DEV-V-083 **T001** | Guided creator, Your Skills. Add a base skill, then expand it in the assigned list. The Codex description and the additional descriptions (success, failure, difficulty, craft) are readable. A skill whose only text is an additional description still has that expand control. |
 | **86e3k0h3f** | DEV-V-082 **T001** | Encounter combat, keyboard only. From Clear All, the initiative number comes before the name and can be edited. Move up and Move down change the order by one. Move up is inactive on the first combatant. A companion stays last, and in round 1 a surprised combatant stays after one that is not surprised. |
