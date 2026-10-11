@@ -9767,6 +9767,31 @@ A pick that would exceed open trait slots is refused. The disabled Add button de
 
 ---
 
+## DEV-V-079 — Lab layout shift on combat, codex, and characters (ClickUp 86e3k9fyg)
+
+#### DEV-V-079-T001 — The site footer is not in the first screen while those pages load
+
+| Field | Value |
+|-------|-------|
+| **Suite** | DEV-V-079 |
+| **Related task** | 86e3k9fyg |
+| **Where** | `/encounters/[id]/combat`, `/codex`, `/characters` |
+| **Needs** | A signed-in account with at least one character for `/characters` and a combat encounter. Codex can be signed out. Desktop width about 1350px, and a phone width for combat. |
+
+**Steps**
+1. Open a combat encounter. While it says Loading encounter, the site footer (Play / Learn / Create / Legal) is below the first screen, not pinned to the bottom of the window. After the tracker appears, the footer is still below the first screen.
+2. Open `/codex` at desktop width. While feats are loading, the footer is below the first screen. After the feat list appears, the footer stays below that list.
+3. Open `/characters` at desktop width. While the portrait placeholders show, the footer is below the first screen. After the character cards appear, the footer is not sitting on top of the first row.
+
+**Expected**
+- The footer does not jump down from the bottom of the window when the tracker, the feat list, or the character cards arrive.
+
+**Automated** | `npm test` — `page-container.test.ts`
+
+**Report** — `[ ] PASS` · `[ ] FAIL` · `[ ] SKIP` — Notes:
+
+---
+
 ## DEV-V-071 — Profile column writes (ClickUp 86e3jt562)
 
 #### DEV-V-071-T001 — Direct profile writes stay on the server
