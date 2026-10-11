@@ -1894,6 +1894,29 @@ Manual QA for library/feats modularization and shared part display. **Needs:** c
 
 **Report** — `[ ] PASS` · `[ ] FAIL` · `[ ] SKIP` — Notes:
 
+#### DEV-V-009-T083 — Using an innate power does not spend Energy (86e3jvfmf)
+
+| Field | Value |
+|-------|-------|
+| **Suite** | DEV-V-009 — Character sheet refactor |
+| **Related task** | 86e3jvfmf |
+| **Where** | `/characters/[id]` Library → Powers |
+| **Needs** | A character with current Energy and a power that costs Energy (the report used Charm Beast, 7 EN, current Energy 18) |
+
+**Steps**
+1. Turn on edit mode. Mark that power innate. Leave edit mode.
+2. In Innate Powers, read the Energy control on that row.
+3. Note current Energy, then use the power the same way a non-innate power spends Energy.
+
+**Expected**
+- The control does not say Spend Energy. It shows the power's Energy number and says no Energy is spent.
+- Current Energy stays the same (18 stays 18).
+- A power that is not innate still says Spend and lowers current Energy by that cost.
+
+**Automated** | `npm test` — `power-energy-spend.test.ts` + `library-entity-rows.test.ts`
+
+**Report** — `[ ] PASS` · `[ ] FAIL` · `[ ] SKIP` — Notes:
+
 #### DEV-V-009-T065 — Notes Age + Backstory fields (TASK-886)
 
 | Field | Value |

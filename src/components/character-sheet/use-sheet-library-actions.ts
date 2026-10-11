@@ -8,6 +8,7 @@
 'use client';
 
 import { useCallback } from 'react';
+import { energyAfterPowerUse } from '@/lib/character/power-energy-spend';
 import { toggleSheetArmorEquipped } from '@/lib/game/equipment-equipped';
 import { mergeEquipmentIntoInventory } from '@/lib/game/skill-allocation';
 import type { Character, CharacterPower, CharacterTechnique, Item } from '@/types';
@@ -107,13 +108,14 @@ export function useSheetLibraryActions({
   );
 
   const handleUsePower = useCallback(
-    (_powerId: string | number, energyCost: number) => {
+    (powerId: string | number, energyCost: number) => {
       if (!calculatedStats) return;
       setCharacter((prev) => {
         if (!prev) return null;
         const curEnergy = prev.currentEnergy ?? prev.energy?.current ?? calculatedStats.maxEnergy;
-        if (curEnergy < energyCost) return prev;
-        return { ...prev, currentEnergy: curEnergy - energyCost };
+        const next = energyAfterPowerUse(prev.powers, powerId, energyCost, curEnergy);
+        if (!next.spent) return prev;
+        return { ...prev, currentEnergy: next.currentEnergy };
       });
     },
     [calculatedStats, setCharacter],
