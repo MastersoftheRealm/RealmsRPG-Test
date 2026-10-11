@@ -1,6 +1,7 @@
 ---
-description: WCAG 2.2 AA — prefer theme-aware *-fg tokens
-alwaysApply: true
+description: WCAG 2.2 AA — prefer theme-aware *-fg tokens. Apply when editing UI.
+globs: src/**/*.tsx,src/**/*.css
+alwaysApply: false
 ---
 
 # Accessibility (RealmsRPG)

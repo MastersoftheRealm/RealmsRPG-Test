@@ -1,6 +1,6 @@
 ﻿# AI Changelog (hot)
 
-Newest **150** entries. Older: [`archive/AI_CHANGELOG_ARCHIVE.md`](archive/AI_CHANGELOG_ARCHIVE.md).
+History only. Per-bug entries are not required (2026-10-11). The PR and the ClickUp comment are the note. Older: [`archive/AI_CHANGELOG_ARCHIVE.md`](archive/AI_CHANGELOG_ARCHIVE.md).
 
 - 2026-10-11 | agent | Library GLR names distinguishable at 375px (86e3jxbrc) | files: grid-list-row(+chrome), grid-list-row-* tests, BUILD_VALIDATION DEV-V-101 | Summary: Below `lg`, edit/delete/+ stay in column 2 so the expanded body and mobile summary stay on the content column. The collapsed name still spans the card, and a blank right-slot reserve no longer pads it, so QA CR Power 1, 2, 5, and 10 do not share one ellipsis. Longer names still truncate with `title`. verification_status pending-qa (86e3jxbrc).
 - 2026-10-11 | agent | Level down removes auto milestone proficiency (86e3jv2j4) | files: archetype-display(+test), use-sheet-resource-actions, BUILD_VALIDATION DEV-V-100 | Summary: Adjust Level reverses the same pure-side +1 Martial or Power Proficiency that level-up auto-assigns when the proficiency cap drops (every 5 levels). A pure Martial at level 5 with Martial +3 returns to +2 at level 2. Powered-Martial splits are unchanged. Overspend warning on level down is unchanged. verification_status pending-qa (86e3jv2j4).

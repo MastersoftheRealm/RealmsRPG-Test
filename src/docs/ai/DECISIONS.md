@@ -16,7 +16,7 @@ Game runner = **RM (Realm Master)** — never GM.
 ## Process / workflow (Oct 5, 2026)
 
 - ClickUp is the **only work queue**. Repo `ACTIVE_TASKS` / TASK-### are optional engineering notes.
-- Collin merges normally. Kadin may bypass-merge only after full best practice. A bypass merge moves the ClickUp task to **testing**, with QA instructions for what changed, **James Owenby** added, and **Collin** kept assigned. Collin can move the task back to **in review** to review it.
+- Collin merges, or Kadin says bypass. Merge commit only. Never squash. Never push `master`. **In review** means a human can merge. **Testing** assigns Bob (`95261690`; legally James Owenby) and keeps Collin (`44381886`), with QA steps in the comment. Human QA moves the task to **complete**. Agents do not. In prose say Bob.
 - QA Tester checks the Vercel preview before merge or shortly after. Post-merge QA: QA Tester + Bob, or Bob alone.
 - WCAG **2.2 AA** everywhere.
 - Keep branch name **`master`**; ban direct pushes.

@@ -2,38 +2,17 @@
 
 # Verification & UI Gates
 
-## Verification Before Marking Done
+## Verification
 
-Before marking a task `done`, verify:
+Agents do not mark a ClickUp task **complete**. Human QA does that. Locally, run the repro test. CI runs the suite and the build. QA steps go in the **testing** comment. Add a `BUILD_VALIDATION.md` row only when that suite does not already cover the check. Do not update `ACTIVE_TASKS.md` or append `AI_CHANGELOG.md`.
 
-1. **Acceptance criteria** — Every criterion is fully met. Do not mark `done` if any bullet is incomplete.
-2. **Related files** — Paths in the task's `related_files` match the actual codebase. Update the task if you correct paths.
-3. **Build** — `npm run build` passes.
-4. **Manual check** — For UI changes, spot-check in the browser if feasible.
-
-### If work is incomplete
-
-Use **`status: partial`**, not `done` with "deferred" in notes:
-
-- **`completed_work`** — bullets of what shipped
-- **`remaining_work`** — open acceptance criteria
-- **`follow_up_tasks`** — new TASK-### IDs for the remainder (no orphan audit findings)
-
-Human-only steps (Dashboard, prod smoke, product decisions) go in [`DEVELOPER_TASK_QUEUE.md`](../DEVELOPER_TASK_QUEUE.md), not buried in notes.
-
-### Build validation (QA how-to)
-
-For **user-facing** tasks (UI, auth, campaigns, sheet, admin, security, DB RLS):
-
-1. Set **`build_validation`** on the task (suite id + test ids) and a short **`developer_test_plan`** pointer.
-2. **Add or update** granular tests in [`BUILD_VALIDATION.md`](../../BUILD_VALIDATION.md) — **one behavior per DEV-V-###-T### test** (steps + expected + report line).
-3. **Index** the suite in [`DEVELOPER_TASK_QUEUE.md`](../DEVELOPER_TASK_QUEUE.md) → Build validation index.
+A vague remainder stays on the ClickUp task for the filer to split. The coding agent does not invent the split.
 
 Do **not** write cramped multi-check smoke paragraphs. Split "pick archetype AND check skills AND check feats" into separate tests under one **DEV-V-###** category.
 
 Automated-only tasks (`npm run build`, lint) do not need build validation unless behavior is hard to verify in CI.
 
-If a task was wrongly marked `done`, re-open as `partial` or add/finish follow-up tasks.
+If QA fails, the person moves the ClickUp task. Agents do not mark it **complete**, and they do not file a `TASK-###` follow-up.
 
 ## Design-system safety net (UI verification)
 

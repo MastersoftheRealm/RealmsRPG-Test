@@ -17,9 +17,9 @@
 | **mobile-slices.mjs** | Capture one route as readable viewport-height slices with rule-breaking controls outlined (red = under 44px, orange = text overflowing its box). | `node scripts/mobile-slices.mjs /creature-creator 6 390`. |
 | **mobile-compare.mjs** | Measure control-height distribution, list-row height, and chrome-before-content on our pages against an external reference (D&D Beyond), so density claims are numbers not vibes. | `node scripts/mobile-compare.mjs`. Needs network + a running server. |
 | **verify:responsive** | Multi-width layout gate (ADR-0023): 8 guest routes × 360/390/768/1024/1280/1440. Fails when overflow, clip-without-ellipsis, or fixed-element collision counts *increase* vs `tests/visual/responsive-baseline.json`. | `npm run verify:responsive`. Update: `npm run verify:responsive:update` (`--workers=1`). Wired in `ui-verify.yml`. |
-| **reconcile_tasks.js** | Reconcile AI_TASK_QUEUE.md with git history; writes `reports/task-reconcile-report.json`. `--apply` appends to AI_CHANGELOG; `--strict` fails if any done task has no matching commit. | CI (report-only) or locally. |
-| **extract_feedback.js** | Parse raw entries from ALL_FEEDBACK_CLEAN.md and append task stubs to AI_TASK_QUEUE. | After adding raw feedback; review before merge. |
-| **triage_tasks.js** | Infer `related_files` for tasks with empty related_files. `--apply` to update queue. | Optional; dry-run by default. |
+| **reconcile_tasks.js** | Duplicate and non-canonical `TASK-###` ids in the historical task files. Writes `reports/task-reconcile-report.json`. The commit-subject gate is retired: `--strict` does not fail, and `--apply` does not append `AI_CHANGELOG.md`. | CI, or locally when those historical files change. |
+| **extract_feedback.js** | Retired. Exits without writing. File new work in ClickUp. | Do not run to create tasks. |
+| **triage_tasks.js** | Retired. Exits without writing. File new work in ClickUp. | Do not run to update `AI_TASK_QUEUE.md`. |
 | **run-task-649-phase2.mjs** / **verify-task-649.mjs** | Replay + verify the TASK-649 least-privilege migration. | Referenced as the replay path by `SUPABASE_SCHEMA.md` §4.1 and `BUILD_VALIDATION.md` DEV-V-041. |
 | **run-task-650.mjs** / **verify-task-650.mjs** | Replay + verify the TASK-650 campaigns RLS consolidation. | Referenced by `sql/README.md` and `BUILD_VALIDATION.md` DEV-V-042. |
 
@@ -45,11 +45,11 @@ Husky (`core.hooksPath=.husky/_`):
 | Hook | Runs | Skip |
 |------|------|------|
 | `pre-commit` | `lint-staged` → ESLint `--fix --max-warnings 0` on staged JS/TS. | `git commit --no-verify` |
-| `pre-push` | `npm run typecheck` (whole project) + `npm test`. | `REALMS_SKIP_PREPUSH=1 git push` |
+| `pre-push` | Nothing. Typecheck and the unit suite run in CI (`ai-task-verifier.yml`). | `REALMS_SKIP_PREPUSH=1` is accepted and unused. |
 
-The whole-project typecheck lives in `pre-push`, not `pre-commit`: the previous
-`typecheck-staged.mjs` built a temp tsconfig containing only the staged files, so it could
-not see any consumer of a changed type. It has been removed.
+Typecheck is not a local pre-push hook. `typecheck-staged.mjs` was already removed
+because a staged-only config could not see consumers of a changed type. CI runs
+`npm run typecheck` and `npm test` on the pull request.
 
 **Database schema:** See [src/docs/SUPABASE_SCHEMA.md](../src/docs/SUPABASE_SCHEMA.md). SQL run order: [sql/README.md](../sql/README.md).
 

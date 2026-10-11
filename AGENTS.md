@@ -1,86 +1,33 @@
 # RealmsRPG — Agent Instructions
 
-You are working on RealmsRPG, a D&D Beyond–like TTRPG web app built with Next.js, React, Tailwind, **Supabase** (PostgreSQL, Auth, Storage), and **Vercel**.
+Next.js, React, Tailwind, Supabase, Vercel. No Prisma. Game runner = **RM** (Realm Master), never "GM". Repo `MastersoftheRealm/RealmsRPG-Test`, branch **`master`**. Never push `master`. Never merge.
 
-> **Stack:** Supabase + Next.js + Vercel. No Prisma; no Firebase.  
-> **Data:** Supabase client (`.from()`, `.rpc()`); schema = `src/docs/SUPABASE_SCHEMA.md`; SQL in `sql/`.
-> **Product:** realmsrpg.com (Realms TTRPG). Game runner = **Realm Master (RM)** — never "GM".
-> **Repo:** `MastersoftheRealm/RealmsRPG-Test` (canonical branch **`master`**). Hosting: Vercel. DB: Supabase. Tracker: ClickUp.
+This file is already in the prompt. Do not re-read it. Kickoffs point at the workflow. Do not paste the playbook.
 
-## Session Start
+## Before coding
 
-1. Read the **[Realms Dev Workflow & Agent Rules](https://docs.google.com/document/d/1F6iZUKP9nN0YTFzOkZ6Y82sySaw0iW101f_a-7ZeQdI/edit)** (process playbook — Drive SoT).
-2. Read **`src/docs/ai/DECISIONS.md`** (repo copy of the Drive decisions file; Drive wins on conflict).
-3. Read **`src/docs/ai/ARCHITECTURE_CONSTITUTION.md`** (roles, DoD, coding constraints).
-4. Pick work from **ClickUp** (the only work queue). `ACTIVE_TASKS.md` / TASK-### are optional engineering notes, not the work picker.
-5. When implementing: search **`FEATURE_INDEX.md`** + barrels before building anything new.
-6. Owner feedback → log in `ALL_FEEDBACK_CLEAN.md` and process per `realms-tasks.mdc`.
+1. The ClickUp task: title, acceptance criteria, latest comments. ClickUp is the only work queue.
+2. Search `FEATURE_INDEX.md` if you might add a component, hook, store, or service.
 
-**AI policy:** Follow the ClickUp wiki page **[Using AI at Realms](https://app.clickup.com/9017636492/docs/8cqwdmc-3357/8cqwdmc-517)** — no art, creative names, lore, or flavor text; technical work only.
+That is the list. Do not open the Drive playbook, `DECISIONS.md`, `ARCHITECTURE_CONSTITUTION.md`, `ACTIVE_TASKS.md`, `AI_TASK_QUEUE.md`, `WAITING_TASKS.md`, `AI_CHANGELOG.md`, or `AGENT_GUIDE.md` before you code.
 
-Do **not** load full historical queues, full `AGENT_GUIDE.md`, or archive audits at session start. Pull topic docs on demand.
+## On demand
 
-**Model choice:** Follow `.cursor/rules/realms-model-routing.mdc` (standard slugs only, never `-fast`). `/audit` must use a different model than the implementer — see `.cursor/commands/audit.md`.
+Read a doc when the diff touches that topic. Search, do not load the whole file.
 
-## Git Rules
+| Topic | Read |
+|-------|------|
+| Layout | `src/docs/MOBILE_UX.md` (mobile and accessibility rules attach when a `.tsx` file is in context) |
+| Game math or a missing written rule | `src/docs/GAME_RULES.md`. Hold if the rule is not written. Do not invent a formula. |
+| Settled product ruling | Search `src/docs/ai/DECISIONS.md` for the topic |
+| Schema or SQL | `src/docs/SUPABASE_SCHEMA.md`. Codex writes: `realms-codex-data` rule |
+| New shared UI, store, API contract, or migration strategy | `src/docs/ai/ARCHITECTURE_CONSTITUTION.md` |
+| What already exists | `FEATURE_INDEX.md` and the barrels |
 
-- **Never push directly to `master`.** Every change goes through a PR.
-- **Never merge PRs.** Collin merges normally; Kadin may bypass-merge per the workflow doc. A bypass merge moves the ClickUp task to **testing** with QA instructions for what changed, adds James Owenby, and keeps Collin assigned so he can move it back to **in review**.
-- Branch naming: `bug|feat/<clickUpId>-short-slug`.
-- Before opening a PR: `npm run build` + `npm run tasks:validate`.
+## Order
 
-## Roles
+The status order is `.cursor/rules/realms-tasks.mdc`. It is already in the prompt. Do not restate it. In prose say Bob (`95261690`). Collin is `44381886`. Agents do not mark a task **complete**.
 
-- **Implementer** (default): extend existing patterns only.
-- **Architect** (rare): new shared UI, stores, API contracts, migrations → ADR in `src/docs/ai/ADR/` or owner ack.
+Model slugs: `.cursor/rules/realms-model-routing.mdc`. Never a slug ending in `-fast`. Do not start Claude or GPT.
 
-## Source-of-Truth Map
-
-| For… | Authority |
-|------|-----------|
-| Process / workflow | [Realms Dev Workflow & Agent Rules](https://docs.google.com/document/d/1F6iZUKP9nN0YTFzOkZ6Y82sySaw0iW101f_a-7ZeQdI/edit) (Drive SoT) |
-| Settled product/QA decisions | [Realms Web Decisions](https://docs.google.com/document/d/1tGebelYXZPegt4iZiycOjI3RBHD6N_QKZW6CI0ckxkg/edit) (Drive SoT) → repo copy `src/docs/ai/DECISIONS.md` |
-| AI creative policy | ClickUp wiki [Using AI at Realms](https://app.clickup.com/9017636492/docs/8cqwdmc-3357/8cqwdmc-517) |
-| Work queue | **ClickUp only** — `ACTIVE_TASKS.md` / TASK-### are optional engineering notes |
-| ClickUp writes | `CLICKUP_API_TOKEN` in `.env.local`, ClickUp API v2. Not the ClickUp plugin. Never print or commit the token. |
-| Product / UX / selection grammar | `REALMS_PRODUCT_OVERVIEW.md` + `human/USER_EXPERIENCE_GOALS.md` |
-| Exists already? | `FEATURE_INDEX.md` → `patterns` / `ui` / `hooks` / `services` barrels |
-| DB schema | `SUPABASE_SCHEMA.md` |
-| Game formulas & terminology | `GAME_RULES.md` (if it conflicts with Drive Alpha on core text or math, Drive wins by default — ask Kadin before changing either side, since some entries may be test rules) |
-| GLR required facts (column vs chip) | `lib/glr/glr-fact-catalog.ts` + `glr-density.ts` + `resolve-glr-fact-layout.ts` (ADR-0016; supersedes ADR-0009) |
-| Deep component patterns | `AGENT_GUIDE.md` hub → `guide/` appendices (on demand) |
-| Design tokens | `DESIGN_SYSTEM.md` — prefer `*-fg` tokens |
-| Responsive / mobile | `MOBILE_UX.md` (ADR-0023) |
-| Accessibility | `ACCESSIBILITY.md` — **WCAG 2.2 AA** everywhere |
-| Open tasks (optional notes) | `ACTIVE_TASKS.md` · waiting `WAITING_TASKS.md` · process `AI_TASK_QUEUE.md` · human `DEVELOPER_TASK_QUEUE.md` |
-| Audit remediation status | `REMEDIATION_STATUS_2026-08.md` (June snapshot: `REMEDIATION_STATUS_2026-06.md`) |
-| **Sitewide audit (2026-08-13) + fix program** | `AUDIT_REMEDIATION_2026-08.md` → findings in `reports/audit-2026-08-13/` |
-| Design constraints | `DESIGN_INTENT.md` |
-| ADRs | `src/docs/ai/ADR/` |
-| PR failure-mode checklist | `src/docs/ai/PR_CHECKLIST.md` (incl. owner commands) |
-| Owner commands | `/audit` → `/cleanup` (session); `/global-audit` → `/debt` (repo) — `.cursor/commands/` |
-| Barrel inventory (generated) | `FEATURE_INDEX_BARRELS.generated.md` (`npm run tasks:generate-index`) |
-| QA steps | `BUILD_VALIDATION.md` |
-| Deploy / secrets | `DEPLOYMENT_AND_SECRETS_SUPABASE.md` |
-| Feedback log | `ALL_FEEDBACK_CLEAN.md` |
-| History (not session-start) | `archive/HISTORY_INDEX.md` |
-
-Rules under `.cursor/rules/` are terse pointers. If a rule and an authority disagree, trust the authority and fix the rule.
-
-## Core Principles
-
-- Search before you build (anti-re-implementation).
-- Unification over duplication; delete parallel systems when consolidating.
-- Verify in code — docs can lag.
-- Responsive + a11y on every UI change (`MOBILE_UX.md` / ADR-0023, `ACCESSIBILITY.md`).
-- Prefer theme-aware `*-fg` status/archetype tokens over numbered ramp + ad-hoc `dark:`.
-- **WCAG 2.2 AA** on all UI work.
-- Terminology: **RM** (Realm Master), never "GM".
-
-## Definition of Done (summary)
-
-Build + targeted tests + all implementable AC met + no new parallel pattern + changelog. Every fixed bug adds a regression test from its repro when feasible. Link the ClickUp task ID in the PR. Optionally update `ACTIVE_TASKS` / archive engineering notes if used — if you mark any TASK-### done, the commit subject must list each ID (CI `ai-task-verifier` enforces this). Do **not** commit per task. User-facing work: `pending-qa` until owner or QA Tester runs validation (see `DEVELOPER_TASK_QUEUE`). Incomplete → `partial` + follow-ups. Never mark `done` early.
-
-## Migrations (one policy)
-
-Prefer **Supabase MCP `apply_migration`** when available; else **Dashboard SQL Editor**. Always keep SQL in `sql/` and update `SUPABASE_SCHEMA.md`. **Codex data:** audit → propose → owner approve → apply. See `realms-codex-data.mdc`.
+Drive still says to read the playbook first and to run `npm run build` plus `npm run tasks:validate` before a PR. Kadin approved a different order on 2026-10-11 and will update Drive himself. The Google Doc was not edited.

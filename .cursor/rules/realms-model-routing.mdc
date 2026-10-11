@@ -18,4 +18,6 @@ alwaysApply: true
 
 **Do not start** Claude, GPT, or any Other Models slug. Comment the recommendation (`claude-opus-5-5-high` or `gpt-5.6-sol-high`) on the ClickUp task and leave the task **to do** (no branch) or **in progress** (branch exists) for Kadin to approve.
 
-**Audit:** use a **different** model from the implementer chat — see `.cursor/commands/audit.md` (read-only; never `-fast`).
+**After a miss:** A cross-system or layout interaction steps up once (Composer → `grok-4.7-medium`, Medium → `grok-4.7-high`). Do not redo that bug on the same model. `grok-4.7-xhigh` only after High has failed, noted on the task.
+
+**Audit:** a different model from the implementer — `.cursor/commands/audit.md` (read-only; never `-fast`). Read the diff and the rules that diff touches. A re-audit checks only the failed point.

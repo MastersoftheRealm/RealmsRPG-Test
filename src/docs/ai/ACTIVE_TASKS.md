@@ -1,6 +1,6 @@
 # Active AI Tasks
 
-> **Note:** This file contains **optional engineering notes** only. The work queue and schedule live in **ClickUp**. Do not pick tasks from this file as the primary queue. See the [Realms Dev Workflow](https://docs.google.com/document/d/1F6iZUKP9nN0YTFzOkZ6Y82sySaw0iW101f_a-7ZeQdI/edit) for process.
+> **Retired as agent workflow (2026-10-11).** Do not read or update this file to do a task. ClickUp status, the PR, and the task comment are the record. Notes below are history. Do not add `TASK-###` to a commit subject.
 
 **Hot path only** — agent-eligible open work: `not-started` | `in-progress` | `partial`.
 Skip `blocked` and human `assignee:` (those live in [`WAITING_TASKS.md`](WAITING_TASKS.md)).
@@ -12,7 +12,7 @@ Do **not** read the done archive at session start.
 **Process:** [AI_TASK_QUEUE.md](AI_TASK_QUEUE.md) · Template: [AI_REQUEST_TEMPLATE.md](AI_REQUEST_TEMPLATE.md)
 **Pending owner QA:** [DEVELOPER_TASK_QUEUE.md](DEVELOPER_TASK_QUEUE.md) → Pending owner QA. Do not keep implementation-complete tasks in this file waiting for QA.
 
-**Agent rules:** Prefer highest `priority` among `not-started` / continue `partial` / `in-progress`. Human-only → `DEVELOPER_TASK_QUEUE.md`. Done summaries live in the archive — do not re-list them here.
+**Do not pick work from this file.** ClickUp is the queue. The blocks below are historical notes.
 
 **Counts:** 9 agent-eligible (3 partial owner-gated, 6 not-started) · waiting/blocked in WAITING_TASKS · done in archive.
 
