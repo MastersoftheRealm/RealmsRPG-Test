@@ -38,7 +38,7 @@ export function CombatAddSidebar({
   onAddCombatant,
 }: CombatAddSidebarProps) {
   return (
-    <div className="flex min-h-0 flex-col space-y-6">
+    <div className="flex min-h-0 min-w-0 flex-col space-y-6">
       <Card className="flex-shrink-0 p-6 shadow-md">
         <h2 className="mb-4 text-lg font-bold text-text-primary">Add Combatant</h2>
         <div className="mb-4 space-y-2">

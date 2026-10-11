@@ -10,6 +10,8 @@
 'use client';
 
 import { AddCombatantModal } from '@/components/encounters/add-combatant-modal';
+import { ENCOUNTER_TRACKER_DOCK_FRAME_CLASS } from '@/components/encounters/encounter-constants';
+import { cn } from '@/lib/utils/cn';
 import { RollLog } from '@/components/rolls';
 import type { Encounter, SkillEncounterState } from '@/types/encounter';
 import { useSkillEncounterView } from './skill/use-skill-encounter-view';
@@ -68,7 +70,12 @@ function SkillEncounterViewInner(
 
   return (
     <>
-      <div className="grid gap-6 lg:grid-cols-3">
+      <div
+        className={cn(
+          'grid gap-6 lg:grid-cols-3',
+          showRollLog && ENCOUNTER_TRACKER_DOCK_FRAME_CLASS,
+        )}
+      >
         <div className="min-w-0 space-y-4 lg:col-span-2">
           <SkillTrackersSection
             derivedRollSuccesses={derivedRollSuccesses}

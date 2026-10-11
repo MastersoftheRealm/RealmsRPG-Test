@@ -9,6 +9,8 @@
 'use client';
 
 import { AddCombatantModal } from '@/components/encounters/add-combatant-modal';
+import { ENCOUNTER_TRACKER_DOCK_FRAME_CLASS } from '@/components/encounters/encounter-constants';
+import { cn } from '@/lib/utils/cn';
 import { RollLog } from '@/components/rolls';
 import type { Encounter } from '@/types/encounter';
 import { useCombatEncounterView } from './combat/use-combat-encounter-view';
@@ -43,8 +45,13 @@ function CombatEncounterViewInner(props: CombatEncounterViewProps & { encounter:
 
   return (
     <>
-      <div className="grid gap-6 lg:grid-cols-4 lg:items-stretch">
-        <div className="flex min-h-0 flex-col gap-4 lg:col-span-3">
+      <div
+        className={cn(
+          'grid min-w-0 grid-cols-1 gap-6 lg:grid-cols-4 lg:items-stretch',
+          showRollLog && ENCOUNTER_TRACKER_DOCK_FRAME_CLASS,
+        )}
+      >
+        <div className="flex min-h-0 min-w-0 flex-col gap-4 lg:col-span-3">
           <CombatRoundControls
             encounter={encounter}
             setEncounter={setEncounter}
