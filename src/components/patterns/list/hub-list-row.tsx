@@ -18,8 +18,12 @@ type DescriptorVariant = NonNullable<VariantProps<typeof chipVariants>['variant'
 /** Default delete + chevron (crafting hub). */
 export const HUB_LIST_ROW_MOBILE_CHROME_END_DEFAULT = '5.5rem';
 
-/** Custom rightSlot with two IconButtons + chevron (encounters hub). */
-export const HUB_LIST_ROW_MOBILE_CHROME_END_SLOT = '9.5rem';
+/**
+ * Encounter rightSlot below `lg`. The two icon buttons are hover-only;
+ * the painted trailing control is the chevron (`h-5`) plus a small gap.
+ * Reserving both buttons as well collapsed the name to a few pixels at 375px.
+ */
+export const HUB_LIST_ROW_MOBILE_CHROME_END_SLOT = '1.5rem';
 
 /** Trailing chrome reserve below `lg` (86e3k9143). */
 export function hubListRowMobileChromeEnd(input: {
