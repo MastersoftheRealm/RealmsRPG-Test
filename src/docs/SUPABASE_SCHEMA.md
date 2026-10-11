@@ -29,6 +29,8 @@ Tables are listed in dependency-friendly order. **Columnar** = proper columns; *
 | `user_profiles` | Columnar | id (PK), email, display_name, username (canonical lowercase), username_display (preserved casing), photo_url, last_username_change, created_at, updated_at, role (UserRole enum) |
 | `usernames` | Columnar | username (PK), user_id (FK → user_profiles) |
 
+**Session writes (86e3jt562):** `authenticated` may INSERT `id`, `display_name`, `created_at`, `updated_at` and UPDATE `display_name`, `updated_at` on `user_profiles`. Username, email, `photo_url`, `last_username_change`, and `role` are written by the service role after the server checks the rules. `usernames` is SELECT-only for `authenticated`. Profile-picture storage INSERT/UPDATE also requires `role_policies.permissions.can_upload_profile_picture`. SQL: `sql/86e3jt562-profile-column-writes.sql`.
+
 ---
 
 ### 2.3 Codex (reference data) — all in `public`

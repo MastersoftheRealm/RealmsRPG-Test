@@ -9528,6 +9528,34 @@ A pick that would exceed open trait slots is refused. The disabled Add button de
 
 ---
 
+## DEV-V-071 — Profile column writes (ClickUp 86e3jt562)
+
+#### DEV-V-071-T001 — Direct profile writes stay on the server
+
+| Field | Value |
+|-------|-------|
+| **Suite** | DEV-V-071 |
+| **Related task** | 86e3jt562 |
+| **Where** | `/my-account`; `sql/86e3jt562-profile-column-writes-verify.sql` |
+| **Needs** | A signed-in account that can change its username, and a new_player account. Database probe needs RealmsRPG-Test. |
+
+**Steps**
+1. Re-run `sql/86e3jt562-profile-column-writes-verify.sql` on RealmsRPG-Test.
+2. On My Account, change the display name and reload.
+3. Change the username to a new allowed name. Try again immediately.
+4. As a role that can upload, choose a library portrait and upload a picture. As new_player, the upload API still returns 403.
+
+**Expected**
+- The verify script exits without an exception and rolls its probe back.
+- Display name saves. The first username change saves. The second says to wait.
+- A library portrait saves. An outside URL does not. new_player still cannot upload a file.
+
+**Automated** | `npm test` — `profile-column-writes.test.ts` + `actions.test.ts`
+
+**Report** — `[ ] PASS` · `[ ] FAIL` · `[ ] SKIP` — Notes:
+
+---
+
 ## Planned suites (split from legacy DEV-T)
 
 | Suite | Topic | Legacy | Status |
