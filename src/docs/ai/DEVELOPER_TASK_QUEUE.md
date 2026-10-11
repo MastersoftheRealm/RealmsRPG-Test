@@ -192,6 +192,7 @@ Archived tasks waiting on owner manual validation. Implementation is complete (`
 
 | Task | Suite / tests | What to verify |
 | ---- | ------------- | -------------- |
+| **86e3jryyp** | DEV-V-091 **T001** | Public sheet as a second account, and the campaign Realm Master view. Health, Energy, Action Points, XP, Use, equip, quantity, feat uses, add, notes, and Sync Proficiencies are not usable. The roll log opens without the dice builder. The owner can still use those controls. |
 | **86e3jrra4** | DEV-V-090 **T001** | Skill encounter. Add a participant, choose Athletics, submit a roll, and refresh while the status says Unsaved changes. The participant, Athletics, the totals, the success or failure status, and the acted count are still there. Waiting for Saved to cloud and refreshing keeps the same fields. |
 | **86e3jmdp9** | DEV-V-085 **T001** | `/codex`. Feats, Skills, Species, Archetypes, and Equipment each name the search field. Advanced: Parts, Properties, Creature Feats, and Traits do the same. Archetypes stays "Search archetype paths". Species is "Search species". The other names match the existing search text. Filters stay labeled. |
 | **86e1z8j9e** | DEV-V-084 **T001** | On a preview with the toolbar visible, the console does not repeat a Content Security Policy block for a websocket. Local `npm run dev` does not repeat that block for `ws://localhost`. Character, campaign roll, and encounter updates still use the existing Supabase realtime client. |

@@ -24,6 +24,7 @@ import { RollLog, RollProvider } from '@/components/rolls';
 import { SheetTourOfferModal, SheetTour, LevelUpGuideCard } from '@/components/onboarding';
 import { CharacterSheetModals } from './CharacterSheetModals';
 import { useCharacterSheetPage } from './use-character-sheet-page';
+import { whenSheetOwner } from '@/components/character-sheet/sheet-viewer-edits';
 
 interface PageParams {
   params: Promise<{ id: string }>;
@@ -176,17 +177,17 @@ export default function CharacterSheetPage({ params }: PageParams) {
                     character={characterForDisplay ?? character}
                     calculatedStats={calculatedStats}
                     isEditMode={effectiveEditMode}
-                    onHealthChange={handleHealthChange}
-                    onEnergyChange={handleEnergyChange}
-                    onActionPointsChange={handleActionPointsChange}
-                    onHealthPointsChange={handleHealthPointsChange}
-                    onEnergyPointsChange={handleEnergyPointsChange}
+                    onHealthChange={whenSheetOwner(isOwner, handleHealthChange)}
+                    onEnergyChange={whenSheetOwner(isOwner, handleEnergyChange)}
+                    onActionPointsChange={whenSheetOwner(isOwner, handleActionPointsChange)}
+                    onHealthPointsChange={whenSheetOwner(isOwner, handleHealthPointsChange)}
+                    onEnergyPointsChange={whenSheetOwner(isOwner, handleEnergyPointsChange)}
                     onPortraitChange={handlePortraitChange}
                     onPortraitUrlChange={handlePortraitUrlChange}
                     isUploadingPortrait={uploadingPortrait}
                     portraitRefreshKey={portraitRefreshKey}
                     onNameChange={effectiveEditMode ? handleNameChange : undefined}
-                    onExperienceChange={handleExperienceChange}
+                    onExperienceChange={whenSheetOwner(isOwner, handleExperienceChange)}
                     speedDisplayUnit={character.speedDisplayUnit ?? 'spaces'}
                     innateThreshold={archetypeProgression?.innateThreshold || 0}
                     innatePools={archetypeProgression?.innatePools || 0}

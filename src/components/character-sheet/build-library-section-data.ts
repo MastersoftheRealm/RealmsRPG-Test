@@ -16,7 +16,9 @@ import { characterToFeatRequirementCharacter } from '@/lib/game/feat-requirement
 import { calculateMaxArchetypeFeats, calculateMaxCharacterFeats } from '@/lib/game/formulas';
 import { getArchetypeAbilityScore, calculatePowerAttackBonus } from '@/lib/game/calculations';
 import { withAbilitiesForResourceMaxima } from '@/lib/character/temp-modifiers';
+import type { CharacterNote } from './notes-tab';
 import type { LibrarySectionData, SheetLibraryModel } from './library-section-props';
+import { whenSheetOwner } from './sheet-viewer-edits';
 import type { CharacterSheetDerivedHandlers } from './use-character-sheet-derived';
 
 export function buildLibrarySectionData(input: {
@@ -24,8 +26,10 @@ export function buildLibrarySectionData(input: {
   enrichedData: EnrichedCharacterData | null | undefined;
   libraryModel: SheetLibraryModel;
   handlers: CharacterSheetDerivedHandlers;
+  /** False for a public, campaign, or Realm Master viewer. Owner and guest sheet stay true. */
+  isOwner: boolean;
 }): LibrarySectionData {
-  const { character, enrichedData, libraryModel: m, handlers } = input;
+  const { character, enrichedData, libraryModel: m, handlers, isOwner } = input;
   const {
     setCharacter,
     handleRemovePower,
@@ -72,17 +76,17 @@ export function buildLibrarySectionData(input: {
     onRemovePower: handleRemovePower,
     onTogglePowerInnate: handleTogglePowerInnate,
     onSelectPowerVariant: handleSelectPowerVariant,
-    onUsePower: handleUsePower,
+    onUsePower: whenSheetOwner(isOwner, handleUsePower),
     onRemoveTechnique: handleRemoveTechnique,
-    onUseTechnique: handleUseTechnique,
+    onUseTechnique: whenSheetOwner(isOwner, handleUseTechnique),
     onRemoveWeapon: handleRemoveWeapon,
-    onToggleEquipWeapon: handleToggleEquipWeapon,
+    onToggleEquipWeapon: whenSheetOwner(isOwner, handleToggleEquipWeapon),
     onRemoveShield: handleRemoveShield,
-    onToggleEquipShield: handleToggleEquipShield,
+    onToggleEquipShield: whenSheetOwner(isOwner, handleToggleEquipShield),
     onRemoveArmor: handleRemoveArmor,
-    onToggleEquipArmor: handleToggleEquipArmor,
+    onToggleEquipArmor: whenSheetOwner(isOwner, handleToggleEquipArmor),
     onRemoveEquipment: handleRemoveEquipment,
-    onEquipmentQuantityChange: handleEquipmentQuantityChange,
+    onEquipmentQuantityChange: whenSheetOwner(isOwner, handleEquipmentQuantityChange),
     onCurrencyChange: handleCurrencyChange,
     weight: character.weight,
     height: character.height,
@@ -107,21 +111,26 @@ export function buildLibrarySectionData(input: {
     visibility: character.visibility,
     onVisibilityChange: (v) => setCharacter((prev) => (prev ? { ...prev, visibility: v } : null)),
     speedDisplayUnit: character.speedDisplayUnit ?? 'spaces',
-    onAppearanceChange: (v) =>
+    onAppearanceChange: whenSheetOwner(isOwner, (v: string) =>
       setCharacter((prev) => (prev ? { ...prev, appearance: appearanceDraftFromEdit(v) } : null)),
-    onBackstoryChange: (v) =>
+    ),
+    onBackstoryChange: whenSheetOwner(isOwner, (v: string) =>
       setCharacter((prev) => (prev ? { ...prev, backstory: backstoryDraftFromEdit(v) } : null)),
-    onArchetypeDescChange: (v) =>
+    ),
+    onArchetypeDescChange: whenSheetOwner(isOwner, (v: string) =>
       setCharacter((prev) => (prev ? { ...prev, archetypeDesc: v } : null)),
-    onNotesChange: (v) => setCharacter((prev) => (prev ? { ...prev, notes: v } : null)),
+    ),
+    onNotesChange: whenSheetOwner(isOwner, (v: string) =>
+      setCharacter((prev) => (prev ? { ...prev, notes: v } : null)),
+    ),
     namedNotes: character.namedNotes,
-    onAddNote: () => {
+    onAddNote: whenSheetOwner(isOwner, () => {
       const newNote = { id: `note_${Date.now()}`, name: 'New Note', content: '' };
       setCharacter((prev) =>
         prev ? { ...prev, namedNotes: [...(prev.namedNotes || []), newNote] } : null,
       );
-    },
-    onUpdateNote: (id, updates) => {
+    }),
+    onUpdateNote: whenSheetOwner(isOwner, (id: string, updates: Partial<CharacterNote>) => {
       setCharacter((prev) =>
         prev
           ? {
@@ -132,14 +141,14 @@ export function buildLibrarySectionData(input: {
             }
           : null,
       );
-    },
-    onDeleteNote: (id) => {
+    }),
+    onDeleteNote: whenSheetOwner(isOwner, (id: string) => {
       setCharacter((prev) =>
         prev
           ? { ...prev, namedNotes: (prev.namedNotes || []).filter((note) => note.id !== id) }
           : null,
       );
-    },
+    }),
     level: character.level,
     // TP limit respects ability temps only when applyAbilityToResourceMaxima is on (ADR-0006)
     archetypeAbility: getArchetypeAbilityScore(withAbilitiesForResourceMaxima(character)),
@@ -147,8 +156,9 @@ export function buildLibrarySectionData(input: {
     techniquePartsDb: m.techniquePartsDb,
     itemPropertiesDb: m.itemPropertiesDb,
     proficiencies: character.proficiencies,
-    onProficienciesChange: (next: CharacterProficiency[]) =>
+    onProficienciesChange: whenSheetOwner(isOwner, (next: CharacterProficiency[]) =>
       setCharacter((prev) => (prev ? { ...prev, proficiencies: next } : null)),
+    ),
     unarmedProwess: character.unarmedProwess ?? 0,
     onUnarmedProwessChange: (level) =>
       setCharacter((prev) => (prev ? { ...prev, unarmedProwess: level } : null)),
@@ -168,7 +178,7 @@ export function buildLibrarySectionData(input: {
     stateFeats: m.stateFeatsList,
     stateUsesCurrent: m.stateUsesCurrent,
     stateUsesMax: m.stateUsesMax,
-    onStateUsesChange: handleStateUsesChange,
+    onStateUsesChange: whenSheetOwner(isOwner, handleStateUsesChange),
     onEnterState: handleEnterState,
     maxArchetypeFeats: calculateMaxArchetypeFeats(
       character.level || 1,
@@ -177,14 +187,14 @@ export function buildLibrarySectionData(input: {
       character.archetypeChoices,
     ),
     maxCharacterFeats: calculateMaxCharacterFeats(character.level || 1),
-    onFeatUsesChange: handleFeatUsesChange,
+    onFeatUsesChange: whenSheetOwner(isOwner, handleFeatUsesChange),
     onFeatLevelChange: handleFeatLevelChange,
     featRequirementCharacter: characterToFeatRequirementCharacter(character),
     onRemoveFeat: handleRequestRemoveFeat,
     traitsDb: m.traitsDb,
     featsDb: m.featsDb,
     traitUses: character.traitUses,
-    onTraitUsesChange: handleTraitUsesChange,
+    onTraitUsesChange: whenSheetOwner(isOwner, handleTraitUsesChange),
     traitCustomizations: character.traitCustomizations,
     onFeatCustomizationChange: handleFeatCustomizationChange,
     onTraitCustomizationChange: handleTraitCustomizationChange,

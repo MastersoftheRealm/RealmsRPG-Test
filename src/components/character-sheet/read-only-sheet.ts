@@ -1,6 +1,8 @@
 /**
  * Read-only character sheet assemble (campaign RM view).
- * Uses isEditMode/isOwner false + no-op mutators — no parallel section fork (TASK-597).
+ * Uses isEditMode/isOwner false. Play controls are omitted when isOwner is false
+ * (buildLibrarySectionData / whenSheetOwner) — a noop is still a function, so the
+ * control would stay on screen. Edit-mode mutators stay no-ops (TASK-597).
  */
 
 import type { Dispatch, SetStateAction } from 'react';
