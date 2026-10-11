@@ -6,6 +6,7 @@
  */
 
 import type { PowerPart } from '@/hooks/codex-types';
+import { derivePowerAttackMode, type AttackMode } from '@/lib/attack-mode';
 import { PART_IDS, findByIdOrName } from '@/lib/id-constants';
 import {
   computePartTrainingPoints,
@@ -648,6 +649,55 @@ function powerDocHasCreatorStyleFields(powerDoc: PowerDocument): boolean {
   );
 }
 
+/**
+ * Weapon Attack is saved as `attackMode`, not as a part. The creator adds
+ * Add Weapon to Power at option level 0 (attack-mode.ts / GAME_RULES). Rebuild
+ * that same flat part here so library, sheet, and picker costs match the creator.
+ */
+function weaponAttackPartPayload(
+  powerDoc: PowerDocument,
+  partsDb: PowerPart[],
+): PowerPartPayload | null {
+  const mode = derivePowerAttackMode({
+    attackMode: powerDoc.attackMode,
+    parts: powerDoc.parts,
+  });
+  if (mode !== 'weapon') return null;
+  const part = findByIdOrName(partsDb, {
+    id: PART_IDS.ADD_WEAPON_TO_POWER,
+    name: 'Add Weapon to Power',
+  });
+  if (!part) return null;
+  return {
+    id: part.id,
+    name: part.name,
+    op_1_lvl: 0,
+    op_2_lvl: 0,
+    op_3_lvl: 0,
+    applyDuration: false,
+  };
+}
+
+function isWeaponAttackRow(row: PowerPartPayload): boolean {
+  const id = row.id ?? row.part?.id;
+  const name = String(row.name ?? row.part?.name ?? '')
+    .trim()
+    .toLowerCase();
+  return String(id) === String(PART_IDS.ADD_WEAPON_TO_POWER) || name === 'add weapon to power';
+}
+
+function withWeaponAttackPart(
+  payload: PowerPartPayload[],
+  powerDoc: PowerDocument,
+  partsDb: PowerPart[],
+): PowerPartPayload[] {
+  // The saved row is not the price. Weapon Attack is always the flat base part.
+  const withoutSavedWeapon = payload.filter((row) => !isWeaponAttackRow(row));
+  const weapon = weaponAttackPartPayload(powerDoc, partsDb);
+  if (!weapon) return withoutSavedWeapon;
+  return [...withoutSavedWeapon, weapon];
+}
+
 export function buildPowerPartsPayloadForCost(
   powerDoc: PowerDocument,
   partsDb: PowerPart[],
@@ -655,15 +705,19 @@ export function buildPowerPartsPayloadForCost(
   const savedParts = Array.isArray(powerDoc.parts) ? powerDoc.parts : [];
 
   if (!powerDocHasCreatorStyleFields(powerDoc)) {
-    return dedupeSavedParts(
-      savedParts.map((p) => ({
-        id: p.id,
-        name: p.name,
-        op_1_lvl: p.op_1_lvl || 0,
-        op_2_lvl: p.op_2_lvl || 0,
-        op_3_lvl: p.op_3_lvl || 0,
-        applyDuration: p.applyDuration || false,
-      })),
+    return withWeaponAttackPart(
+      dedupeSavedParts(
+        savedParts.map((p) => ({
+          id: p.id,
+          name: p.name,
+          op_1_lvl: p.op_1_lvl || 0,
+          op_2_lvl: p.op_2_lvl || 0,
+          op_3_lvl: p.op_3_lvl || 0,
+          applyDuration: p.applyDuration || false,
+        })),
+      ),
+      powerDoc,
+      partsDb,
     );
   }
 
@@ -742,7 +796,11 @@ export function buildPowerPartsPayloadForCost(
 
   // Dedupe saved-side rows only — mechanicPayload may intentionally repeat the same
   // part id per damage row (e.g. three Elemental Damage lines for fire/ice/lightning).
-  return [...dedupeSavedParts([...userParts, ...legacyAutoMechanics]), ...mechanicPayload];
+  return withWeaponAttackPart(
+    [...dedupeSavedParts([...userParts, ...legacyAutoMechanics]), ...mechanicPayload],
+    powerDoc,
+    partsDb,
+  );
 }
 
 interface PowerDocumentFields {
@@ -795,6 +853,11 @@ interface PowerDocumentFields {
       }
     | undefined;
   targetedDefenses?: string[] | undefined;
+  /**
+   * Saved attack mode. Weapon Attack is not stored as a part; the cost path
+   * rebuilds Add Weapon to Power (flat base, no option levels).
+   */
+  attackMode?: AttackMode | undefined;
   /** Built-in variants (ADR-0029). Absent on a normal power. */
   composition?: PowerComposition | undefined;
 }

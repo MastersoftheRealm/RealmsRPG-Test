@@ -530,3 +530,54 @@ describe('library-selectable-builders (DEV-V-016 parity)', () => {
     expect(chips).not.toContain('Currency 2');
   });
 });
+
+describe('weapon power library cost (86e3jpq1x)', () => {
+  it('shows the creator cost for a saved Weapon Attack (6 EN / 3 TP)', () => {
+    const partsDb: PowerPart[] = [
+      {
+        id: '79',
+        name: 'Attack / Potency Increase',
+        description: 'Increase the attack roll or potency of this Power by +1.',
+        category: 'General',
+        mechanic: false,
+        base_en: 1.125,
+        base_tp: 2,
+        op_1_en: 0.125,
+        op_1_tp: 0,
+        percentage: true,
+        duration: false,
+      },
+      {
+        id: String(PART_IDS.ADD_WEAPON_TO_POWER),
+        name: 'Add Weapon to Power',
+        description: 'Weapon Attack',
+        category: 'General',
+        mechanic: true,
+        base_en: 4.5,
+        base_tp: 1,
+        percentage: false,
+        duration: false,
+      },
+    ];
+    const power: LibraryPower = {
+      id: 'potency-strike',
+      docId: 'potency-strike',
+      name: 'Potency Strike',
+      description: 'A weapon power.',
+      actionType: 'basic',
+      attackMode: 'weapon',
+      parts: [{ id: 79, name: 'Attack / Potency Increase', op_1_lvl: 0 }],
+    };
+
+    const display = derivePowerDisplay(libraryItemToPowerDocument(power), partsDb);
+    const facts = derivePowerTechniqueBudgetFacts('power', power, partsDb, []);
+    const row = buildOfficialPowerRows([power], partsDb)[0];
+
+    expect(display.energy).toBe(6);
+    expect(display.tp).toBe(3);
+    expect(facts.energy).toBe(6);
+    expect(facts.tp).toBe(3);
+    expect(row?.energy).toBe(6);
+    expect(row?.tp).toBe(3);
+  });
+});

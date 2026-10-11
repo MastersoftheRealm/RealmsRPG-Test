@@ -50,6 +50,7 @@ export function enrichPowers(
           area: libraryItem.area,
           duration: libraryItem.duration,
           damage: libraryItem.damage,
+          attackMode: libraryItem.attackMode,
           composition: libraryItem.composition,
         },
         powerPartsDb,

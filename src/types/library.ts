@@ -52,6 +52,8 @@ export interface LibraryPower {
   damage?: SavedDamage[] | undefined;
   actionType?: string | undefined;
   isReaction?: boolean | undefined;
+  /** Saved attack mode. Weapon Attack is priced by rebuilding Add Weapon to Power. */
+  attackMode?: AttackMode | undefined;
   range?: { steps?: number | undefined; applyDuration?: boolean | undefined } | undefined;
   area?:
     | { type?: string | undefined; level?: number | undefined; applyDuration?: boolean | undefined }

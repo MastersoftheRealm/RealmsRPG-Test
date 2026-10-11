@@ -240,8 +240,9 @@ describe('library-columnar API round-trip — powers', () => {
     expect(scalars.durationValue).toBe(3);
     expect(payload.parts).toHaveLength(1);
 
-    const loaded = apiRoundTrip('powers', body);
+    const loaded = apiRoundTrip('powers', { ...body, attackMode: 'weapon' });
 
+    expect(loaded.attackMode).toBe('weapon');
     expect((loaded.range as { steps?: number | undefined }).steps).toBe(4);
     expect((loaded.area as { type?: string | undefined; level?: number | undefined }).type).toBe(
       'sphere',

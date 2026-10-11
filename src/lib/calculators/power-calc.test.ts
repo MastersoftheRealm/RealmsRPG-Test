@@ -315,6 +315,78 @@ describe('derivePowerDisplay', () => {
     // dur_all = 2, flat_normal = 4, flat_duration = 4 → 4 + 2*4 = 12
     expect(withApply.energy).toBe(12);
   });
+
+  it('rebuilds Weapon Attack so the library cost matches the creator (86e3jpq1x)', () => {
+    // Codex rows: Attack / Potency Increase is a 1.125 multiplier (2 TP).
+    // Add Weapon to Power is 4.5 Energy and 1 TP, flat, no option levels.
+    // 4.5 × 1.125 = 5.0625, rounded up once → 6 EN. Training Points 2 + 1 = 3.
+    const potency: PowerPart = {
+      id: '79',
+      name: 'Attack / Potency Increase',
+      description: 'Increase the attack roll or potency of this Power by +1.',
+      category: 'General',
+      mechanic: false,
+      base_en: 1.125,
+      base_tp: 2,
+      op_1_en: 0.125,
+      op_1_tp: 0,
+      percentage: true,
+      duration: false,
+    };
+    const addWeapon: PowerPart = {
+      id: String(PART_IDS.ADD_WEAPON_TO_POWER),
+      name: 'Add Weapon to Power',
+      description: 'Weapon Attack',
+      category: 'General',
+      mechanic: true,
+      base_en: 4.5,
+      base_tp: 1,
+      op_1_en: 99,
+      op_1_tp: 9,
+      percentage: false,
+      duration: false,
+    };
+    const partsDb = [potency, addWeapon];
+    const saved = {
+      name: 'Potency Strike',
+      actionType: 'basic',
+      parts: [{ id: 79, name: 'Attack / Potency Increase', op_1_lvl: 0 }],
+    };
+
+    const staleSavedPart = {
+      id: PART_IDS.ADD_WEAPON_TO_POWER,
+      name: 'Add Weapon to Power',
+      op_1_lvl: 2,
+    };
+    const withoutWeapon = derivePowerDisplay(
+      { ...saved, attackMode: 'none', parts: [...saved.parts, staleSavedPart] },
+      partsDb,
+    );
+    expect(withoutWeapon.energy).toBe(0);
+    expect(withoutWeapon.tp).toBe(2);
+
+    const unarmed = derivePowerDisplay({ ...saved, attackMode: 'unarmed' }, partsDb);
+    expect(unarmed.energy).toBe(0);
+    expect(unarmed.tp).toBe(2);
+
+    const weapon = derivePowerDisplay({ ...saved, attackMode: 'weapon' }, partsDb);
+    expect(weapon.energy).toBe(6);
+    expect(weapon.tp).toBe(3);
+
+    const savedPartToo = derivePowerDisplay(
+      {
+        ...saved,
+        attackMode: 'weapon',
+        parts: [
+          ...saved.parts,
+          { id: PART_IDS.ADD_WEAPON_TO_POWER, name: 'Add Weapon to Power', op_1_lvl: 2 },
+        ],
+      },
+      partsDb,
+    );
+    expect(savedPartToo.energy).toBe(6);
+    expect(savedPartToo.tp).toBe(3);
+  });
 });
 
 describe('finalizePowerEnergy', () => {
