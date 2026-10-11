@@ -179,7 +179,14 @@ export function buildGuidedCharacterPayload(
     ctx.rules,
     martAbil,
   );
-  const maxEnergy = calculateMaxEnergyForArchetype(enAlloc, abilities, level, powAbil, martAbil);
+  const maxEnergy = calculateMaxEnergyForArchetype(
+    enAlloc,
+    abilities,
+    level,
+    powAbil,
+    martAbil,
+    type,
+  );
 
   const mixedPhysical =
     draft.speciesMixed && ctx.speciesA && ctx.speciesB

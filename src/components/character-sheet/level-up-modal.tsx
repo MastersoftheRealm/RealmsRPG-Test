@@ -103,7 +103,7 @@ export function LevelUpModal({
   const isLevelChange = targetLevel !== currentLevel;
   const isLevelDown = targetLevel < currentLevel;
 
-  // Highest of power + martial archetype ability scores (matches TP formula / sheet)
+  // Archetype Ability for Training Points: martial only, power only, or the higher of the two.
   const highestAbility = useMemo(() => getArchetypeAbilityScore(character), [character]);
 
   // Calculate level gains
