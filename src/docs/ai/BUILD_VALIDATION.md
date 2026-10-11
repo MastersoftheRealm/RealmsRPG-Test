@@ -9817,6 +9817,33 @@ A pick that would exceed open trait slots is refused. The disabled Add button de
 
 ---
 
+## DEV-V-084 — Websocket console error (ClickUp 86e1z8j9e)
+
+#### DEV-V-084-T001 — The console does not repeat a blocked websocket
+
+| Field | Value |
+|-------|-------|
+| **Suite** | DEV-V-084 |
+| **Related task** | 86e1z8j9e |
+| **Where** | A preview deployment with the Vercel toolbar, and local `npm run dev` |
+| **Needs** | A Vercel account that can see the toolbar on the preview. A local dev server for the `ws://localhost` check. |
+
+**Steps**
+1. Open the preview. Leave the console open for about 10 seconds with the toolbar on the page.
+2. Run `npm run dev`, open the local site, and leave the console open for about 10 seconds.
+3. On a signed-in character sheet, change nothing and confirm the page still loads. Campaign roll log and encounter combat still subscribe through the existing Supabase client.
+
+**Expected**
+- The console does not repeat `violates the following Content Security Policy directive` for a websocket.
+- Local development does not repeat that message for `ws://localhost`.
+- Hosted realtime still connects to `wss://*.supabase.co`.
+
+**Automated** | `npm test` — `content-security-policy.test.ts`
+
+**Report** — `[ ] PASS` · `[ ] FAIL` · `[ ] SKIP` — Notes:
+
+---
+
 ## DEV-V-083 — Assigned base skill information (ClickUp 86e2q66jv)
 
 #### DEV-V-083-T001 — An assigned skill still shows the add-list information
@@ -9992,6 +10019,7 @@ A pick that would exceed open trait slots is refused. The disabled Add button de
 | DEV-V-078 | Weapons and Shields tables from 1024 to 1440 (ClickUp 86e3jvv37) | — | Automated (`sheet-desktop-columns.test.ts`) + manual DEV-V-078-T001 |
 | DEV-V-080 | Character sheet library tab panels (ClickUp 86e3k0cfz) | — | Automated (`library-section-tabs.test.tsx`) + manual DEV-V-080-T001 |
 | DEV-V-081 | Grid rows that nested buttons (ClickUp 86e3k0ch6) | — | Automated (`grid-row-nested-interactive.test.tsx`) + manual DEV-V-081-T001 |
+| DEV-V-084 | Websocket console error (ClickUp 86e1z8j9e) | — | Automated (`content-security-policy.test.ts`) + manual DEV-V-084-T001 |
 | DEV-V-083 | Assigned base skill information (ClickUp 86e2q66jv) | — | Automated (`guided-skills-panel.test.tsx`) + manual DEV-V-083-T001 |
 
 When implementing a related task, replace the legacy **DEV-T-###** block with granular **DEV-V-###** tests in this file.
