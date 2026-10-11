@@ -11,7 +11,7 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
-import { Plus, Wand2, Swords, Shield, Shirt, Sword, Users, LogIn, Sparkles } from 'lucide-react';
+import { Plus, Wand2, Swords, Shield, Shirt, Sword, Users, Sparkles } from 'lucide-react';
 import { itemCreatorTypeHref } from '@/lib/library/armament-library-labels';
 import { libraryTabCount, type LibraryPageTabId } from '@/lib/library/library-tab-counts';
 import { useAuth } from '@/hooks';
@@ -45,6 +45,7 @@ import { LibraryItemsTab } from './LibraryItemsTab';
 import { LibraryCreaturesTab } from './LibraryCreaturesTab';
 import { LibraryEnhancedTab } from './LibraryEnhancedTab';
 import { LibraryPublicContent, type LibraryPublicTabId } from './LibraryPublicContent';
+import { LibraryGuestNotice } from './library-guest-notice';
 
 type TabId = LibraryPageTabId;
 
@@ -237,20 +238,7 @@ function LibraryContent() {
 
   return (
     <PageContainer size="xl">
-      {isGuest && (
-        <div className="mb-4 flex items-center justify-between gap-4 rounded-lg border border-primary-subtle-border bg-primary-subtle-bg px-4 py-3 text-text-primary">
-          <span>
-            You&apos;re browsing the Realms Library. Sign in to see My Library and add items to your
-            collection.
-          </span>
-          <Link href="/login?returnTo=/library">
-            <Button variant="primary" size="sm">
-              <LogIn className="h-4 w-4" aria-hidden />
-              Sign in
-            </Button>
-          </Link>
-        </div>
-      )}
+      {isGuest && <LibraryGuestNotice />}
       <PageHeader
         title={isPublic ? 'Realms Library' : 'My Library'}
         description={
