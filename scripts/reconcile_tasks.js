@@ -17,13 +17,13 @@ const { parseRelatedFilesFromBlock } = require('./parse-related-files');
 const repoRoot = path.resolve(__dirname, '..');
 const aiDir = path.join(repoRoot, 'src', 'docs', 'ai');
 const archiveDir = path.join(aiDir, 'archive');
-const changelogPath = path.join(aiDir, 'AI_CHANGELOG.md');
+const changelogPath = path.join(archiveDir, 'AI_CHANGELOG.md');
 const reportsDir = path.join(repoRoot, 'reports');
 
 if (!fs.existsSync(reportsDir)) fs.mkdirSync(reportsDir);
 
 function collectTaskFiles() {
-  const files = [path.join(aiDir, 'ACTIVE_TASKS.md')];
+  const files = [path.join(archiveDir, 'ACTIVE_TASKS.md')];
   if (fs.existsSync(archiveDir)) {
     for (const name of fs.readdirSync(archiveDir)) {
       if (/^TASK_QUEUE_DONE/i.test(name) && name.endsWith('.md')) {
@@ -31,8 +31,7 @@ function collectTaskFiles() {
       }
     }
   }
-  // Legacy fallback if someone still has tasks in the process file
-  const queuePath = path.join(aiDir, 'AI_TASK_QUEUE.md');
+  const queuePath = path.join(archiveDir, 'AI_TASK_QUEUE.md');
   if (fs.existsSync(queuePath)) files.push(queuePath);
   return files.filter((f) => fs.existsSync(f));
 }
@@ -65,8 +64,8 @@ function parseTasksFromFile(filePath) {
 /** Live queues where a repeated `- id:` is a collision, not a July-15 snapshot copy. */
 function liveIdentityFiles() {
   return [
-    path.join(aiDir, 'ACTIVE_TASKS.md'),
-    path.join(aiDir, 'WAITING_TASKS.md'),
+    path.join(archiveDir, 'ACTIVE_TASKS.md'),
+    path.join(archiveDir, 'WAITING_TASKS.md'),
     path.join(archiveDir, 'TASK_QUEUE_DONE.md'),
   ].filter((f) => fs.existsSync(f));
 }
@@ -116,7 +115,7 @@ const identityTasks = identityFiles.flatMap((file) => parseTasksFromFile(file));
 const identityDupes = duplicateIdGroups(identityTasks);
 if (identityDupes.length) {
   console.error(
-    'Duplicate TASK-### in ACTIVE_TASKS.md, WAITING_TASKS.md, and/or archive/TASK_QUEUE_DONE.md (not the dated snapshot):',
+    'Duplicate TASK-### in archive/ACTIVE_TASKS.md, archive/WAITING_TASKS.md, and/or archive/TASK_QUEUE_DONE.md (not the dated snapshot):',
   );
   for (const [id, list] of identityDupes) {
     console.error(`  ${id}:`);
@@ -131,7 +130,6 @@ const byId = new Map();
 for (const file of collectTaskFiles()) {
   for (const t of parseTasksFromFile(file)) {
     if (!t.id) continue;
-    // Snapshot copies may reuse IDs; live ACTIVE/WAITING/TASK_QUEUE_DONE.md uniqueness is gated above.
     if (!byId.has(t.id) || String(t.source).includes('ACTIVE_TASKS')) {
       byId.set(t.id, t);
     }

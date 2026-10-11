@@ -105,5 +105,5 @@ See [Realms Dev Workflow §4](https://docs.google.com/document/d/1F6iZUKP9nN0YTF
 - Patterns / components / gotchas → `AGENT_GUIDE.md` hub → `guide/` appendices
 - Feature map → `FEATURE_INDEX.md` + generated `FEATURE_INDEX_BARRELS.generated.md`
 - PR failure-mode checklist → `PR_CHECKLIST.md` (includes owner commands)
-- Slash commands → `.cursor/commands/` (`audit`, `cleanup`, `global-audit`, `debt`)
+- Slash commands → `.cursor/commands/` (`audit`, `cleanup`). Retired stubs: `archive/global-audit.md`, `archive/debt.md` (not live commands).
 - Task record → the ClickUp task, the branch, and the PR. Not `AI_TASK_QUEUE.md`.
