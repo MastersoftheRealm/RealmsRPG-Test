@@ -3,7 +3,7 @@
  * =========
  * Physical attributes, movement calculations, and character notes
  * Features:
- * - Appearance, backstory, and general notes are always editable
+ * - Appearance, backstory, and general notes are editable for the owner
  * - Support for multiple named notes with add/delete functionality
  * - Weight, height, and age require edit mode for modification
  *
@@ -62,15 +62,71 @@ interface NotesTabProps {
   onDeleteNote?: ((id: string) => void) | undefined;
 }
 
-// Collapsible note component with editable name
-function NoteCard({
+/** Appearance, backstory, and notes. A viewer (no onChange) sees the text, not a field. */
+export function SheetNoteField({
+  value,
+  onChange,
+  placeholder,
+  label,
+  className,
+}: {
+  value: string;
+  onChange?: ((value: string) => void) | undefined;
+  placeholder: string;
+  label: string;
+  className?: string | undefined;
+}) {
+  if (!onChange) {
+    return (
+      <p className="text-sm whitespace-pre-wrap text-text-primary" aria-label={label}>
+        {value.trim() ? value : <span className="text-text-muted">{placeholder}</span>}
+      </p>
+    );
+  }
+  return (
+    <Textarea
+      value={value}
+      onChange={(e) => onChange(e.target.value)}
+      placeholder={placeholder}
+      aria-label={label}
+      className={className}
+    />
+  );
+}
+
+function ReadOnlyNoteCard({ note }: { note: CharacterNote }) {
+  const [isExpanded, setIsExpanded] = useState(true);
+  return (
+    <div className="overflow-hidden rounded-lg border border-border-light">
+      <button
+        type="button"
+        className="flex w-full items-center gap-2 bg-surface-alt px-3 py-2 text-left"
+        onClick={() => setIsExpanded(!isExpanded)}
+        aria-expanded={isExpanded}
+      >
+        <span className="flex-1 text-sm font-medium text-text-primary">{note.name}</span>
+      </button>
+      {isExpanded ? (
+        <div className="p-3">
+          <SheetNoteField
+            value={note.content}
+            placeholder="Write your note here..."
+            label={note.name}
+          />
+        </div>
+      ) : null}
+    </div>
+  );
+}
+
+function EditableNoteCard({
   note,
   onUpdate,
   onDelete,
   isEditMode,
 }: {
   note: CharacterNote;
-  onUpdate?: ((updates: Partial<CharacterNote>) => void) | undefined;
+  onUpdate: (updates: Partial<CharacterNote>) => void;
   onDelete?: (() => void) | undefined;
   isEditMode?: boolean | undefined;
 }) {
@@ -80,7 +136,7 @@ function NoteCard({
 
   const handleNameSubmit = () => {
     if (nameInput.trim() && nameInput !== note.name) {
-      onUpdate?.({ name: nameInput.trim() });
+      onUpdate({ name: nameInput.trim() });
     }
     setIsEditingName(false);
   };
@@ -130,18 +186,37 @@ function NoteCard({
         )}
       </div>
 
-      {/* Content - always editable */}
       {isExpanded && (
         <div className="p-3">
-          <Textarea
+          <SheetNoteField
             value={note.content}
-            onChange={(e) => onUpdate?.({ content: e.target.value })}
+            onChange={(content) => onUpdate({ content })}
             placeholder="Write your note here..."
+            label={note.name}
             className="min-h-[80px]"
           />
         </div>
       )}
     </div>
+  );
+}
+
+function NoteCard({
+  note,
+  onUpdate,
+  onDelete,
+  isEditMode,
+}: {
+  note: CharacterNote;
+  onUpdate?: ((updates: Partial<CharacterNote>) => void) | undefined;
+  onDelete?: (() => void) | undefined;
+  isEditMode?: boolean | undefined;
+}) {
+  if (!onUpdate) {
+    return <ReadOnlyNoteCard note={note} />;
+  }
+  return (
+    <EditableNoteCard note={note} onUpdate={onUpdate} onDelete={onDelete} isEditMode={isEditMode} />
   );
 }
 
@@ -330,19 +405,21 @@ export function NotesTab({
       </TabSummarySection>
 
       <LibraryCollapsibleSection title="Appearance" itemCount={appearance.trim() ? 1 : 0}>
-        <Textarea
+        <SheetNoteField
           value={appearance}
-          onChange={(e) => onAppearanceChange?.(e.target.value)}
+          onChange={onAppearanceChange}
           placeholder="Describe your character's appearance..."
+          label="Appearance"
           className="min-h-[80px]"
         />
       </LibraryCollapsibleSection>
 
       <LibraryCollapsibleSection title="Backstory" itemCount={backstory.trim() ? 1 : 0}>
-        <Textarea
+        <SheetNoteField
           value={backstory}
-          onChange={(e) => onBackstoryChange?.(e.target.value)}
+          onChange={onBackstoryChange}
           placeholder="Background, personality, bonds, and history..."
+          label="Backstory"
           className="min-h-[80px]"
         />
       </LibraryCollapsibleSection>
@@ -351,19 +428,21 @@ export function NotesTab({
         title="Archetype Description"
         itemCount={archetypeDesc.trim() ? 1 : 0}
       >
-        <Textarea
+        <SheetNoteField
           value={archetypeDesc}
-          onChange={(e) => onArchetypeDescChange?.(e.target.value)}
+          onChange={onArchetypeDescChange}
           placeholder="Describe your character's archetype background..."
+          label="Archetype Description"
           className="min-h-[80px]"
         />
       </LibraryCollapsibleSection>
 
       <LibraryCollapsibleSection title="General Notes" itemCount={notes.trim() ? 1 : 0}>
-        <Textarea
+        <SheetNoteField
           value={notes}
-          onChange={(e) => onNotesChange?.(e.target.value)}
+          onChange={onNotesChange}
           placeholder="Additional notes, goals, and reminders..."
+          label="General Notes"
           className="min-h-[120px]"
         />
       </LibraryCollapsibleSection>
@@ -388,7 +467,7 @@ export function NotesTab({
           </div>
         ) : (
           <p className="py-4 text-center text-sm text-text-muted italic">
-            No custom notes yet. Click + to add one.
+            {onAddNote ? 'No custom notes yet. Click + to add one.' : 'No custom notes yet.'}
           </p>
         )}
       </LibraryCollapsibleSection>

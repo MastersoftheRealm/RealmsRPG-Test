@@ -10008,6 +10008,37 @@ A pick that would exceed open trait slots is refused. The disabled Add button de
 
 ---
 
+## DEV-V-091 — Sheet viewers cannot use edit controls (ClickUp 86e3jryyp)
+
+#### DEV-V-091-T001 — A viewer cannot change a public sheet
+
+| Field | Value |
+|-------|-------|
+| **Suite** | DEV-V-091 |
+| **Related task** | 86e3jryyp |
+| **Where** | `/characters/[id]` as a second account, and the campaign Realm Master view |
+| **Needs** | Two accounts. Player A has a Public character. Player B is not the owner. A campaign where the Realm Master opens that character. |
+
+**Steps**
+1. As player A, set a character to Public.
+2. As player B, open that sheet.
+3. Try Health, Energy, and Action Points, the XP pencil, Use, equip, quantity, a feat use stepper, Add weapon, Add power, Add new note, the note fields, and Sync Proficiencies.
+4. Open the roll log.
+5. As the owner, repeat those controls.
+6. As the Realm Master, open the campaign view of that character and try equip, quantity, a feat use stepper, an add button, Add new note, the note fields, Sync Proficiencies, and typing Health or Energy.
+
+**Expected**
+- Player B sees the sheet and the words View only. Those controls are not usable. A refresh is unchanged because nothing was edited.
+- The roll log opens. The dice builder is not there.
+- The owner can still change Health, Energy, Action Points, XP, Use, equip, quantity, feat uses, add, notes, and Sync Proficiencies.
+- The Realm Master view shows the same controls as text or hides them. Sync Proficiencies does not open.
+
+**Automated** | `npm test` — `sheet-viewer-edits.test.ts`
+
+**Report** — `[ ] PASS` · `[ ] FAIL` · `[ ] SKIP` — Notes:
+
+---
+
 ## DEV-V-083 — Assigned base skill information (ClickUp 86e2q66jv)
 
 #### DEV-V-083-T001 — An assigned skill still shows the add-list information
@@ -10189,6 +10220,7 @@ A pick that would exceed open trait slots is refused. The disabled Add button de
 | DEV-V-087 | Day duration labels (ClickUp 86e3jrhvb) | — | Automated (`power-calc.test.ts`) + manual DEV-V-087-T001 |
 | DEV-V-088 | A minute is 6 rounds (ClickUp 86e3jrj8h) | — | Automated (`state-duration-copy.test.ts`, `innate-eligibility.test.ts`) + manual DEV-V-088-T001 |
 | DEV-V-089 | Selecting text in an open GLR item (ClickUp 86e3jrjfg) | — | Automated (`grid-list-row-expand-click.test.ts`) + manual DEV-V-089-T001 |
+| DEV-V-091 | Sheet viewers cannot use edit controls (ClickUp 86e3jryyp) | — | Automated (`sheet-viewer-edits.test.ts`) + manual DEV-V-091-T001 |
 | DEV-V-083 | Assigned base skill information (ClickUp 86e2q66jv) | — | Automated (`guided-skills-panel.test.tsx`) + manual DEV-V-083-T001 |
 
 When implementing a related task, replace the legacy **DEV-T-###** block with granular **DEV-V-###** tests in this file.

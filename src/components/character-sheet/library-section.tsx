@@ -30,6 +30,7 @@ import { useLibraryTabNavigation } from './use-library-tab-navigation';
 import { LibraryPowersPanel } from './library-powers-panel';
 import { LibraryInventoryPanel } from './library-inventory-panel';
 import { buildLibrarySectionData } from './build-library-section-data';
+import { sheetLibraryAddActions } from './sheet-viewer-edits';
 import type { LibrarySectionProps } from './library-section-props';
 import {
   computeSheetPointPools,
@@ -48,6 +49,7 @@ export function LibrarySection({
     character,
     enrichedData,
     isEditMode,
+    isOwner,
     libraryModel,
     libraryHandlers,
     characterSpeciesSkills,
@@ -63,16 +65,19 @@ export function LibrarySection({
       enrichedData,
       libraryModel,
       handlers: libraryHandlers,
+      isOwner,
     });
-  }, [character, enrichedData, libraryModel, libraryHandlers]);
+  }, [character, enrichedData, libraryModel, libraryHandlers, isOwner]);
 
-  const onAddPower = setAddModalType ? () => setAddModalType('power') : undefined;
-  const onAddInnatePower = setAddModalType ? () => setAddModalType('innate-power') : undefined;
-  const onAddTechnique = setAddModalType ? () => setAddModalType('technique') : undefined;
-  const onAddWeapon = setAddModalType ? () => setAddModalType('weapon') : undefined;
-  const onAddShield = setAddModalType ? () => setAddModalType('shield') : undefined;
-  const onAddArmor = setAddModalType ? () => setAddModalType('armor') : undefined;
-  const onAddEquipment = setAddModalType ? () => setAddModalType('equipment') : undefined;
+  const {
+    onAddPower,
+    onAddInnatePower,
+    onAddTechnique,
+    onAddWeapon,
+    onAddShield,
+    onAddArmor,
+    onAddEquipment,
+  } = sheetLibraryAddActions(isOwner, setAddModalType);
   const onAddArchetypeFeat = setFeatModalType ? () => setFeatModalType('archetype') : undefined;
   const onAddCharacterFeat = setFeatModalType ? () => setFeatModalType('character') : undefined;
   const onAddStateFeat = setFeatModalType ? () => setFeatModalType('state') : undefined;
