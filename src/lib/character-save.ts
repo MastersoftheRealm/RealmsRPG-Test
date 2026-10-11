@@ -88,8 +88,9 @@ export function prepareCharacterForSave(data: Partial<Character>): Record<string
   delete cleaned.defenses;
   delete cleaned.defenseBonuses;
 
-  // Same sparse Temp Modifier contract as cleanForSave (ADR-0006)
-  if (cleaned.tempModifiers !== undefined) {
+  // Same sparse Temp Modifier contract as cleanForSave (ADR-0006).
+  // JSON null is a dirty-key clear (86e3juw04) and must survive this normalize.
+  if (cleaned.tempModifiers !== null && cleaned.tempModifiers !== undefined) {
     const normalized = normalizeTempModifiers(
       cleaned.tempModifiers as CharacterTempModifiers | undefined,
     );

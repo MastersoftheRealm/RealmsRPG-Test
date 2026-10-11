@@ -94,6 +94,21 @@ describe('guest-character-storage', () => {
     expect(getGuestCharacter(id)?.name).toBe('Aerin');
   });
 
+  it('drops a cleared temp modifier instead of keeping the stored one (86e3juw04)', () => {
+    const id = createGuestCharacter({
+      name: 'Aerin',
+      level: 1,
+      abilities: DEFAULT_ABILITIES,
+      tempModifiers: { abilities: { strength: 1 } },
+    });
+    saveGuestCharacter(id, {
+      tempModifiers: null,
+    } as unknown as Parameters<typeof saveGuestCharacter>[1]);
+    const stored = getGuestCharacter(id);
+    expect(stored).not.toHaveProperty('tempModifiers');
+    expect(stored?.name).toBe('Aerin');
+  });
+
   it('enforces the browser cap', () => {
     for (let i = 0; i < GUEST_CHARACTER_CAP; i += 1) {
       createGuestCharacter({ name: `Hero ${i}`, level: 1, abilities: DEFAULT_ABILITIES });
