@@ -508,7 +508,7 @@ export function deriveDuration(partsPayload: PowerPartPayload[] = []): string {
   const dayPart = findPartById(PART_IDS.DURATION_DAYS, 'Duration (Days)');
   if (dayPart) {
     const lvl = getLvl(dayPart);
-    const days = [1, 10, 20, 30][lvl] ?? 1;
+    const days = [1, 7, 14][lvl] ?? 1;
     return formatDurationFromTypeAndValue('days', days);
   }
 
@@ -583,7 +583,7 @@ export function deriveStructuredDuration(
   const dayPart = findPartById(PART_IDS.DURATION_DAYS, 'Duration (Days)');
   if (dayPart) {
     const lvl = getLvl(dayPart);
-    const days = [1, 10, 20, 30][lvl] ?? 1;
+    const days = [1, 7, 14][lvl] ?? 1;
     return { type: 'days', value: days };
   }
 

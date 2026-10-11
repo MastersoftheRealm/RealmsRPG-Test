@@ -6,7 +6,9 @@ import {
   analyzePowerEnergy,
   calculatePowerCosts,
   calculatePowerSectionContribution,
+  deriveDuration,
   derivePowerDisplay,
+  deriveStructuredDuration,
   finalizePowerEnergy,
   formatEnergyStat,
   formatPowerDamage,
@@ -294,6 +296,67 @@ describe('1-round duration modifiers (86e3jrhtq)', () => {
     // Existing equation: dur_all 2 without Focus is 30; Focus × 0.5 makes dur_all 1, so 20.
     expect(longerPlain.energy).toBe(30);
     expect(longer.energy).toBe(20);
+  });
+});
+
+describe('day duration labels (86e3jrhvb)', () => {
+  const durationDays: PowerPart = {
+    id: String(PART_IDS.DURATION_DAYS),
+    name: 'Duration (Days)',
+    description: 'Duration (Days)',
+    category: 'Duration',
+    mechanic: true,
+    base_en: 8,
+    base_tp: 0,
+    percentage: false,
+    duration: true,
+  };
+
+  function dayParts(value: number) {
+    return buildMechanicParts({
+      creatorType: 'power',
+      partsDb: [durationDays],
+      duration: { type: 'days', value },
+    });
+  }
+
+  it('shows 7 Days and 14 Days, and 1 Day stays 1 Day', () => {
+    const one = dayParts(1);
+    const seven = dayParts(7);
+    const fourteen = dayParts(14);
+
+    expect(deriveDuration(one)).toBe('1 Day');
+    expect(deriveDuration(seven)).toBe('7 Days');
+    expect(deriveDuration(fourteen)).toBe('14 Days');
+    expect(deriveStructuredDuration(one)).toEqual({ type: 'days', value: 1 });
+    expect(deriveStructuredDuration(seven)).toEqual({ type: 'days', value: 7 });
+    expect(deriveStructuredDuration(fourteen)).toEqual({ type: 'days', value: 14 });
+  });
+
+  it('uses those labels for a library power that has no stored duration', () => {
+    const seven = dayParts(7)[0];
+    const fourteen = dayParts(14)[0];
+    if (!seven || !fourteen) throw new Error('missing day part');
+    expect(seven.op_1_lvl).toBe(1);
+    expect(fourteen.op_1_lvl).toBe(2);
+
+    const sevenDisplay = derivePowerDisplay(
+      {
+        name: 'Day power',
+        parts: [{ id: Number(seven.id), name: seven.name, op_1_lvl: seven.op_1_lvl }],
+      },
+      [durationDays],
+    );
+    const fourteenDisplay = derivePowerDisplay(
+      {
+        name: 'Day power',
+        parts: [{ id: Number(fourteen.id), name: fourteen.name, op_1_lvl: fourteen.op_1_lvl }],
+      },
+      [durationDays],
+    );
+
+    expect(sevenDisplay.duration).toBe('7 Days');
+    expect(fourteenDisplay.duration).toBe('14 Days');
   });
 });
 

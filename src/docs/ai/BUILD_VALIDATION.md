@@ -9897,6 +9897,35 @@ A pick that would exceed open trait slots is refused. The disabled Add button de
 
 ---
 
+## DEV-V-087 — Day duration labels (ClickUp 86e3jrhvb)
+
+#### DEV-V-087-T001 — 7 days and 14 days show as 7 Days and 14 Days
+
+| Field | Value |
+|-------|-------|
+| **Suite** | DEV-V-087 |
+| **Related task** | 86e3jrhvb |
+| **Where** | Power creator, and the Empowered Technique creator |
+| **Needs** | A power or empowered technique whose duration can be set to Days. |
+
+**Steps**
+1. Open the Power creator. Set Duration to Days, then 7 days. Read the Duration summary.
+2. Set it to 14 days. Read the Duration summary again.
+3. Set it to 1 day. Read the Duration summary.
+4. Repeat steps 1–3 in the Empowered Technique creator.
+
+**Expected**
+- 7 days shows **7 Days**.
+- 14 days shows **14 Days**.
+- 1 day shows **1 Day**.
+- Energy does not change because of this label.
+
+**Automated** | `npm test` — `power-calc.test.ts`
+
+**Report** — `[ ] PASS` · `[ ] FAIL` · `[ ] SKIP` — Notes:
+
+---
+
 ## DEV-V-083 — Assigned base skill information (ClickUp 86e2q66jv)
 
 #### DEV-V-083-T001 — An assigned skill still shows the add-list information
@@ -10075,6 +10104,7 @@ A pick that would exceed open trait slots is refused. The disabled Add button de
 | DEV-V-084 | Websocket console error (ClickUp 86e1z8j9e) | — | Automated (`content-security-policy.test.ts`) + manual DEV-V-084-T001 |
 | DEV-V-085 | Codex search field labels (ClickUp 86e3jmdp9) | — | Automated (`codex-search-labels.test.tsx`) + manual DEV-V-085-T001 |
 | DEV-V-086 | 1-round duration modifiers (ClickUp 86e3jrhtq) | — | Automated (`power-calc.test.ts`) + manual DEV-V-086-T001 |
+| DEV-V-087 | Day duration labels (ClickUp 86e3jrhvb) | — | Automated (`power-calc.test.ts`) + manual DEV-V-087-T001 |
 | DEV-V-083 | Assigned base skill information (ClickUp 86e2q66jv) | — | Automated (`guided-skills-panel.test.tsx`) + manual DEV-V-083-T001 |
 
 When implementing a related task, replace the legacy **DEV-T-###** block with granular **DEV-V-###** tests in this file.
