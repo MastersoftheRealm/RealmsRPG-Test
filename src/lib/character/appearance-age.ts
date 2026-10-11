@@ -5,9 +5,14 @@ export function parseAgeFromAppearance(appearance?: string): string {
   return match?.[1] ?? '';
 }
 
+/** Appearance body after a legacy `Age: N` line, including spaces and line breaks. */
+function appearanceBody(appearance?: string): string {
+  return appearance?.replace(AGE_IN_APPEARANCE, '') ?? '';
+}
+
 /** Remove legacy `Age: N` prefix merged into appearance before TASK-886. */
 export function stripAgeFromAppearance(appearance?: string): string {
-  return appearance?.replace(AGE_IN_APPEARANCE, '').trim() ?? '';
+  return appearanceBody(appearance).trim();
 }
 
 export function resolveCharacterAge(age?: string, appearance?: string): string {
@@ -17,14 +22,28 @@ export function resolveCharacterAge(age?: string, appearance?: string): string {
 }
 
 export function resolveCharacterAppearance(appearance?: string): string {
-  return stripAgeFromAppearance(appearance);
+  return appearanceBody(appearance);
+}
+
+/**
+ * Value stored while Appearance is edited. Keeps spaces and line breaks.
+ * A finished legacy `Age: N` line is still removed; save-time trim stays on
+ * `stripAgeFromAppearance`.
+ */
+export function appearanceDraftFromEdit(value: string): string | undefined {
+  const next = appearanceBody(value);
+  return next.length > 0 ? next : undefined;
 }
 
 /** Creator `description` predates dedicated `backstory` on the character JSON. */
 export function resolveCharacterBackstory(backstory?: string, description?: string): string {
-  const trimmed = backstory?.trim();
-  if (trimmed) return trimmed;
+  if (typeof backstory === 'string' && backstory.length > 0) return backstory;
   return description?.trim() ?? '';
+}
+
+/** Value stored while Backstory is edited. Keeps spaces and line breaks. */
+export function backstoryDraftFromEdit(value: string): string | undefined {
+  return value.length > 0 ? value : undefined;
 }
 
 /**
