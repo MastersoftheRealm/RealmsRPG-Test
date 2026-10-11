@@ -10100,6 +10100,36 @@ A pick that would exceed open trait slots is refused. The disabled Add button de
 
 ---
 
+## DEV-V-098 — Recovery leaves over-max Health and Energy (ClickUp 86e3jv000)
+
+#### DEV-V-098-T001 — Recovery does not lower over-max Health or Energy
+
+| Field | Value |
+|-------|-------|
+| **Suite** | DEV-V-098 |
+| **Related task** | 86e3jv000 |
+| **Where** | `/characters/[id]` → Recovery |
+| **Needs** | A character you can edit. Set Health to 25 with a max of 20, and Energy to 5 with a max of 18. About 500px wide is enough. |
+
+**Steps**
+1. Open Recovery, choose Partial, then 2 hours, then Automatic.
+2. Read the preview. Apply it and read the toast.
+3. Set Energy to 25 with a max of 18. Open Partial recovery again and read the Energy preview.
+4. Set Health back to 25/20 and Energy to 5/18. Choose Full Recovery and apply it.
+
+**Expected**
+- The partial preview shows Health 25 → 25 and +0 HP. It does not show 25 → 20 or "+-5".
+- Energy in that preview rises (5 → 15, +10 EN for 2 hours). The toast says Recovered 0 HP and 10 EN. It does not say Recovered -5 HP.
+- Energy already at 25/18 stays 25. The preview does not show "+-7" or a negative recovered amount.
+- Full recovery leaves Health at 25 and raises Energy from 5 to 18. It does not lower Health to 20.
+- Health or Energy that is below max still restores up to max, and does not go past max.
+
+**Automated** | `npm test` — `src/lib/character/recovery-over-max.test.ts`
+
+**Report** — `[ ] PASS` · `[ ] FAIL` · `[ ] SKIP` — Notes:
+
+---
+
 ## DEV-V-097 — Current Health and Energy follow a lower max (ClickUp 86e3juy8e)
 
 #### DEV-V-097-T001 — Lowering max Health or Energy lowers current to that max
@@ -10404,6 +10434,7 @@ A pick that would exceed open trait slots is refused. The disabled Add button de
 | DEV-V-093 | Core Rules editor unsaved edits (ClickUp 86e3jtrak) | — | Automated (`core-rules-unsaved-leave.test.ts`) + manual DEV-V-093-T001 |
 | DEV-V-094 | Sheet Currency in a second tab (ClickUp 86e3juw07) | — | Automated (`currency-field-commit.test.ts`) + manual DEV-V-094-T001 |
 | DEV-V-095 | Core Rules Conditions editor (ClickUp 86e3juy5z) | — | Automated (`core-rules-conditions.test.ts`) + manual DEV-V-095-T001 |
+| DEV-V-098 | Recovery leaves over-max Health and Energy (ClickUp 86e3jv000) | — | Automated (`recovery-over-max.test.ts`) + manual DEV-V-098-T001 |
 | DEV-V-097 | Current Health and Energy follow a lower max (ClickUp 86e3juy8e) | — | Automated (`current-follows-max.test.ts`) + manual DEV-V-097-T001 |
 | DEV-V-083 | Assigned base skill information (ClickUp 86e2q66jv) | — | Automated (`guided-skills-panel.test.tsx`) + manual DEV-V-083-T001 |
 

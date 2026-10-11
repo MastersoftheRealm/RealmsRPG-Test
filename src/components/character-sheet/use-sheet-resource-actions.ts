@@ -20,6 +20,10 @@ import {
   applySheetEnergyPointsChange,
   applySheetHealthPointsChange,
 } from '@/lib/character/current-follows-max';
+import {
+  resourceAfterFullRecovery,
+  resourceAfterPartialRecovery,
+} from '@/lib/character/recovery-over-max';
 import { ACTION_POINT_DEFAULTS } from '@/lib/game/constants';
 import { DEFAULT_DEFENSE_SKILLS } from '@/types/skills';
 import {
@@ -352,6 +356,10 @@ export function useSheetResourceActions({
     }
 
     const stateUsesMaxRec = calculateProficiency(character.level || 1, false, rules);
+    const currentHP =
+      character.currentHealth ?? character.health?.current ?? calculatedStats.maxHealth;
+    const currentEN =
+      character.currentEnergy ?? character.energy?.current ?? calculatedStats.maxEnergy;
     setCharacter((prev) =>
       prev
         ? withSyncedResourceFields(
@@ -364,8 +372,8 @@ export function useSheetResourceActions({
               stateUsesCurrent: stateUsesMaxRec,
             },
             {
-              currentHealth: calculatedStats.maxHealth,
-              currentEnergy: calculatedStats.maxEnergy,
+              currentHealth: resourceAfterFullRecovery(currentHP, calculatedStats.maxHealth),
+              currentEnergy: resourceAfterFullRecovery(currentEN, calculatedStats.maxEnergy),
             },
           )
         : null,
@@ -440,14 +448,25 @@ export function useSheetResourceActions({
                 traitUses: { ...(prev.traitUses || {}), ...resetTraitUses },
               },
               {
-                currentHealth: Math.min(currentHP + hpRestored, calculatedStats.maxHealth),
-                currentEnergy: Math.min(currentEN + enRestored, calculatedStats.maxEnergy),
+                currentHealth: resourceAfterPartialRecovery(
+                  currentHP,
+                  hpRestored,
+                  calculatedStats.maxHealth,
+                ),
+                currentEnergy: resourceAfterPartialRecovery(
+                  currentEN,
+                  enRestored,
+                  calculatedStats.maxEnergy,
+                ),
               },
             )
           : null,
       );
 
-      showToast(`Recovered ${hpRestored} HP and ${enRestored} EN`, 'success');
+      showToast(
+        `Recovered ${Math.max(0, hpRestored)} HP and ${Math.max(0, enRestored)} EN`,
+        'success',
+      );
     },
     [character, calculatedStats, traitsDb, featsDb, showToast, setCharacter],
   );
