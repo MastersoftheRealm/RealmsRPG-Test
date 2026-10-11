@@ -6,6 +6,9 @@ import type { ConditionDef } from './encounter-combatant-types';
 
 export const STORAGE_KEY = 'realms-encounter-tracker';
 
+/** C4 reserve when RollLog mounts on combat/skill encounter play surfaces (86e3k915w). */
+export const ENCOUNTER_TRACKER_DOCK_FRAME_CLASS = 'encounter-tracker-dock-frame';
+
 export const CONDITION_OPTIONS: ConditionDef[] = [
   {
     name: 'Bleed',

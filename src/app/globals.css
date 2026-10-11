@@ -786,6 +786,21 @@
     padding-bottom: var(--dock-reserved-end);
   }
 
+  /* Encounter combat/skill trackers: end + bottom gutter so Roll Log FAB does not cover
+     Energy steppers (~375) or Conditions chips when scrolled (~1280) — 86e3k915w. */
+  .encounter-tracker-dock-frame {
+    box-sizing: border-box;
+    padding-inline-end: var(--sheet-mobile-fab-gutter);
+    padding-bottom: var(--sheet-mobile-fab-gutter);
+  }
+
+  @media (min-width: 768px) {
+    .encounter-tracker-dock-frame {
+      padding-inline-end: 0;
+      padding-bottom: var(--dock-reserved-end);
+    }
+  }
+
   body:has([aria-modal='true']) .floating-dock-bottom-right,
   body:has([aria-modal='true']) .sheet-mobile-action-dock {
     visibility: hidden;
