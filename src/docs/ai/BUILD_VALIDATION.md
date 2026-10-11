@@ -10039,6 +10039,39 @@ A pick that would exceed open trait slots is refused. The disabled Add button de
 
 ---
 
+## DEV-V-093 — Core Rules editor unsaved edits (ClickUp 86e3jtrak)
+
+#### DEV-V-093-T001 — Leaving a changed Core Rules value asks first
+
+| Field | Value |
+|-------|-------|
+| **Suite** | DEV-V-093 |
+| **Related task** | 86e3jtrak |
+| **Where** | Admin → Core Rules Editor, Progression tab |
+| **Needs** | An admin account. About 500px wide is enough; the exits do not depend on width. |
+
+**Steps**
+1. Open the Core Rules editor. On Progression, change Base Ability Points from 7 to 8. The page says Unsaved changes.
+2. Click ← Back to Admin. Choose Keep editing.
+3. Press Escape. Choose Keep editing.
+4. Press Escape again. Choose Discard. Open the Core Rules editor again.
+5. Change Base Ability Points from 7 to 8 again. Refresh the page. Stay on the page, then refresh again and leave.
+6. Change Base Ability Points from 7 to 8. Open the Combat tab. Choose Keep editing.
+7. Change the value back to 7, or save, so the page is no longer dirty. Click ← Back to Admin. Press Escape.
+
+**Expected**
+- Back and Escape ask before the edit is discarded. Keep editing stays on Progression and Base Ability Points is still 8.
+- Discard leaves the editor. Opening it again shows 7. The 8 was not saved.
+- Refresh shows the browser warning. Staying keeps 8. Leaving does not save it.
+- Opening Combat asks the same way. Keep editing stays on Progression with 8.
+- A clean editor leaves without asking, and Escape does nothing. The browser Back button asks the same way as ← Back to Admin while the edit is dirty. This page has no close button.
+
+**Automated** | `npm test` — `core-rules-unsaved-leave.test.ts`
+
+**Report** — `[ ] PASS` · `[ ] FAIL` · `[ ] SKIP` — Notes:
+
+---
+
 ## DEV-V-092 — Codex editor unsaved edits (ClickUp 86e3jthxr)
 
 #### DEV-V-092-T001 — Leaving a changed Codex record asks first
@@ -10251,6 +10284,7 @@ A pick that would exceed open trait slots is refused. The disabled Add button de
 | DEV-V-088 | A minute is 6 rounds (ClickUp 86e3jrj8h) | — | Automated (`state-duration-copy.test.ts`, `innate-eligibility.test.ts`) + manual DEV-V-088-T001 |
 | DEV-V-089 | Selecting text in an open GLR item (ClickUp 86e3jrjfg) | — | Automated (`grid-list-row-expand-click.test.ts`) + manual DEV-V-089-T001 |
 | DEV-V-091 | Sheet viewers cannot use edit controls (ClickUp 86e3jryyp) | — | Automated (`sheet-viewer-edits.test.ts`) + manual DEV-V-091-T001 |
+| DEV-V-093 | Core Rules editor unsaved edits (ClickUp 86e3jtrak) | — | Automated (`core-rules-unsaved-leave.test.ts`) + manual DEV-V-093-T001 |
 | DEV-V-083 | Assigned base skill information (ClickUp 86e2q66jv) | — | Automated (`guided-skills-panel.test.tsx`) + manual DEV-V-083-T001 |
 
 When implementing a related task, replace the legacy **DEV-T-###** block with granular **DEV-V-###** tests in this file.
