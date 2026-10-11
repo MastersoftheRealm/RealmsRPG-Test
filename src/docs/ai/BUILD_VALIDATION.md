@@ -9817,6 +9817,33 @@ A pick that would exceed open trait slots is refused. The disabled Add button de
 
 ---
 
+## DEV-V-081 — Grid rows that nested buttons (ClickUp 86e3k0ch6)
+
+#### DEV-V-081-T001 — A row button does not contain another button
+
+| Field | Value |
+|-------|-------|
+| **Suite** | DEV-V-081 |
+| **Related task** | 86e3k0ch6 |
+| **Where** | `/library` (signed out), `/encounters`, `/admin/public-library` |
+| **Needs** | A signed-in player with an encounter for `/encounters`. An admin account for public library. Library can be signed out. |
+
+**Steps**
+1. Open `/library`. On a row with a picture, the name expands the row. The picture opens its own preview. Neither control is inside the other.
+2. Open `/encounters`. The encounter name opens it. Mark complete and Delete are their own buttons.
+3. Open `/admin/public-library`. A row name expands the row. The picture, classification control, and edit or delete actions are their own controls.
+
+**Expected**
+- No row is a button that contains another button, link, or input.
+- The name still expands a library or admin row, and still opens an encounter.
+- The picture, quantity, Roll, Mark complete, and Delete controls still do their own action.
+
+**Automated** | `npm test` — `grid-row-nested-interactive.test.tsx`
+
+**Report** — `[ ] PASS` · `[ ] FAIL` · `[ ] SKIP` — Notes:
+
+---
+
 ## DEV-V-071 — Profile column writes (ClickUp 86e3jt562)
 
 #### DEV-V-071-T001 — Direct profile writes stay on the server
@@ -9908,5 +9935,6 @@ A pick that would exceed open trait slots is refused. The disabled Add button de
 | DEV-V-077 | Pure Martial max Energy and Training Points (ClickUp 86e3jv2hr) | — | Automated (`calculations.test.ts`) + manual DEV-V-077-T001 |
 | DEV-V-078 | Weapons and Shields tables from 1024 to 1440 (ClickUp 86e3jvv37) | — | Automated (`sheet-desktop-columns.test.ts`) + manual DEV-V-078-T001 |
 | DEV-V-080 | Character sheet library tab panels (ClickUp 86e3k0cfz) | — | Automated (`library-section-tabs.test.tsx`) + manual DEV-V-080-T001 |
+| DEV-V-081 | Grid rows that nested buttons (ClickUp 86e3k0ch6) | — | Automated (`grid-row-nested-interactive.test.tsx`) + manual DEV-V-081-T001 |
 
 When implementing a related task, replace the legacy **DEV-T-###** block with granular **DEV-V-###** tests in this file.
