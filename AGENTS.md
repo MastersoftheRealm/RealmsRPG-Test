@@ -20,6 +20,8 @@ You are working on RealmsRPG, a D&D Beyond–like TTRPG web app built with Next.
 
 Do **not** load full historical queues, full `AGENT_GUIDE.md`, or archive audits at session start. Pull topic docs on demand.
 
+**Model choice:** Follow `.cursor/rules/realms-model-routing.mdc` (standard slugs only, never `-fast`). `/audit` must use a different model than the implementer — see `.cursor/commands/audit.md`.
+
 ## Git Rules
 
 - **Never push directly to `master`.** Every change goes through a PR.

@@ -65,6 +65,11 @@ Optional args: `/audit TASK-502` = primary task; else infer from this chat + rec
 
 ## Hard rules
 
+- **Different model than implementer.** The audit chat must not use the same model as the chat that wrote the diff. Never use a slug ending in `-fast`. The audit stays read-only (see **Zero product edits** below).
+  - Implementer was `composer-2.5`: audit with `grok-4.7-medium`.
+  - Implementer was `grok-4.7-medium` or `grok-4.7-high`, and the diff is layout, labels, or wiring: audit with `composer-2.5`.
+  - Implementer was `grok-4.7-medium`, and the diff is rules math, permissions, saves, or schema: audit with `grok-4.7-high`.
+  - Implementer was already `grok-4.7-high` on that kind of diff: a fresh `grok-4.7-high` chat that did not write the code. If that audit disagrees, or the change can lose or expose data, do **not** start Claude or GPT. Say so in the audit report and stop; comment `claude-opus-5-5-high` or `gpt-5.6-sol-high` on the ClickUp task and leave the PR in **in review**.
 - **Zero product edits.** Report only — do not “fix while auditing.”
 - **Follow-up filing exception:** If the owner’s message explicitly says to file tasks (e.g. “file follow-ups” / “make follow-up tasks”), file them in ClickUp via Clickup Manager (or directly on Kadin's orders). Optionally add engineering notes in `ACTIVE_TASKS.md` — use the **atomic task-filing** rules in `debt.md`. Still no product-code fixes in `/audit`.
 - Evidence over vibes.
