@@ -59,10 +59,9 @@ export const DEFENSE_INFO: Record<keyof DefenseSkills, { name: string; shortName
 };
 
 export const ABILITY_CONSTRAINTS = {
-  /** Level-1 creation minimum; sheet editing can go lower for effects. */
+  /** Ability scores never go below −2. Temp modifiers are a separate control. */
   MIN_ABILITY: -2,
-  /** Floor when editing on character sheet (effects may reduce below -2). */
-  MIN_ABILITY_SHEET_EDIT: -10,
+  /** Total of negative ability scores cannot go below −3. */
   MAX_NEGATIVE_SUM: -3,
   getMaxAbility: (level: number): number => {
     if (level <= 1) return 3;
@@ -80,8 +79,7 @@ export function canDecreaseAbility(abilities: Abilities, abilityName: AbilityNam
   const currentValue = abilities[abilityName] ?? 0;
   const newValue = currentValue - 1;
 
-  if (newValue < ABILITY_CONSTRAINTS.MIN_ABILITY_SHEET_EDIT) return false;
-  if (newValue < ABILITY_CONSTRAINTS.MIN_ABILITY) return true;
+  if (newValue < ABILITY_CONSTRAINTS.MIN_ABILITY) return false;
 
   if (newValue < 0) {
     const currentNegSum = Object.values(abilities)

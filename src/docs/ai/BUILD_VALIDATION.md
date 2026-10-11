@@ -1917,6 +1917,30 @@ Manual QA for library/feats modularization and shared part display. **Needs:** c
 
 **Report** — `[ ] PASS` · `[ ] FAIL` · `[ ] SKIP` — Notes:
 
+#### DEV-V-009-T084 — An ability score cannot go below −2 (86e3jv3yv)
+
+| Field | Value |
+|-------|-------|
+| **Suite** | DEV-V-009 — Character sheet refactor |
+| **Related task** | 86e3jv3yv |
+| **Where** | `/characters/[id]` Abilities, edit mode |
+| **Needs** | A character whose ability point pool is visible (the report used a pool of 8) |
+
+**Steps**
+1. Turn on edit mode and open Abilities.
+2. Lower Strength to −2. Note the ability point pool.
+3. Click Strength's − button eight more times.
+4. Set Strength to −2 and Intelligence to −1, then try to lower either one again.
+
+**Expected**
+- Strength stays at −2. The − button does not go further.
+- The pool does not gain a point for those eight clicks (it does not become 9/8 from a 1/8 pool).
+- Strength −2 with Intelligence −1 still blocks another decrease. One ability can still reach −2 when the negatives together stay at or above −3.
+
+**Automated** | `npm test` — `ability-defense-stat-model.test.ts`
+
+**Report** — `[ ] PASS` · `[ ] FAIL` · `[ ] SKIP` — Notes:
+
 #### DEV-V-009-T065 — Notes Age + Backstory fields (TASK-886)
 
 | Field | Value |
