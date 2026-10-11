@@ -14,6 +14,9 @@ import {
   type InnatePowerSnapshot,
 } from './innate-eligibility';
 import { defined } from '@/lib/utils';
+import { PART_IDS } from '@/lib/id-constants';
+import type { PowerPart } from '@/hooks/codex-types';
+import { derivePowerDisplay } from '@/lib/calculators/power-calc';
 import { resolvePowerComposition } from '@/lib/calculators/power-composition';
 
 function snap(partial: Partial<InnatePowerSnapshot> & { id: string }): InnatePowerSnapshot {
@@ -357,5 +360,106 @@ describe('innate eligibility on composed powers (ADR-0029)', () => {
     // 6.1 raw − 2.25 discount = 3.85, one round-up → 4. Subtracting the published 7 first would be 5.
     expect(res.energy).toBe(4);
     expect(snap.alternates?.[0]?.energy).toBe(res.energy);
+  });
+});
+
+describe('innate Energy includes damage, range, and area', () => {
+  const userPart: PowerPart = {
+    id: '1',
+    name: 'Sample Part',
+    description: '',
+    category: 'Offense',
+    mechanic: false,
+    percentage: false,
+    duration: false,
+    base_en: 2,
+    base_tp: 0,
+  };
+  const magicDamagePart: PowerPart = {
+    id: String(PART_IDS.MAGIC_DAMAGE),
+    name: 'Magic Damage',
+    description: '',
+    category: 'Damage',
+    mechanic: true,
+    percentage: false,
+    duration: false,
+    base_en: 3,
+    base_tp: 0,
+    op_1_en: 1,
+  };
+  const rangePart: PowerPart = {
+    id: String(PART_IDS.POWER_RANGE),
+    name: 'Power Range',
+    description: '',
+    category: 'Range',
+    mechanic: true,
+    percentage: false,
+    duration: false,
+    base_en: 2,
+    base_tp: 0,
+    op_1_en: 1,
+  };
+  const spherePart: PowerPart = {
+    id: String(PART_IDS.SPHERE_OF_EFFECT),
+    name: 'Sphere of Effect',
+    description: '',
+    category: 'Area of Effect',
+    mechanic: true,
+    percentage: false,
+    duration: false,
+    base_en: 6,
+    base_tp: 0,
+    op_1_en: 2,
+  };
+  const partsDb = [userPart, magicDamagePart, rangePart, spherePart];
+  const fireball = {
+    id: 'fireball',
+    name: 'Fireball',
+    actionType: 'basic',
+    duration: { type: 'instant', value: 0 },
+    parts: [{ id: 1, name: userPart.name }],
+    damage: [{ type: 'magic', amount: 2, size: 12 }],
+    range: { steps: 4 },
+    area: { type: 'sphere', level: 3 },
+  };
+
+  it('matches the creator Energy and blocks a power over the threshold', () => {
+    const creator = derivePowerDisplay(
+      {
+        name: fireball.name,
+        parts: fireball.parts,
+        damage: fireball.damage,
+        actionType: fireball.actionType,
+        range: fireball.range,
+        area: fireball.area,
+        duration: fireball.duration,
+      },
+      partsDb,
+    );
+    const snapshot = snapshotOfficialPowerForInnate(fireball, partsDb);
+    const partsOnly = snapshotOfficialPowerForInnate(
+      { ...fireball, damage: undefined, range: undefined, area: undefined },
+      partsDb,
+    );
+
+    expect(snapshot.energy).toBe(Math.max(0, Math.round(creator.energy ?? 0)));
+    expect(snapshot.energy).toBeGreaterThan(16);
+    expect(partsOnly.energy).toBeLessThanOrEqual(8);
+    expect(snapshot.energy).toBeGreaterThan(partsOnly.energy);
+
+    const overSixteen = evaluateInnatePowerEligibility(snapshot, 16);
+    expect(
+      overSixteen.some((issue) => issue.message.includes('exceeds Innate Threshold (16)')),
+    ).toBe(true);
+
+    const publish = validateRecommendedInnatePowers([fireball.id], {
+      archetypeType: 'power',
+      resolvePower: () => snapshot,
+    });
+    expect(
+      publish.some((issue) =>
+        issue.message.includes(`Energy (${snapshot.energy}) exceeds Innate Threshold (8)`),
+      ),
+    ).toBe(true);
   });
 });

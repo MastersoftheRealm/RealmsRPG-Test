@@ -9657,6 +9657,32 @@ A pick that would exceed open trait slots is refused. The disabled Add button de
 
 ---
 
+## DEV-V-075 — Admin innate Energy includes damage, range, and area (ClickUp 86e3jpr0e)
+
+#### DEV-V-075-T001 — Fireball over the Innate Threshold cannot be a recommended innate power
+
+| Field | Value |
+|-------|-------|
+| **Suite** | DEV-V-075 |
+| **Related task** | 86e3jpr0e |
+| **Where** | `/admin/codex` → Archetypes → edit a Power path |
+| **Needs** | An admin account. Official Fireball (34 Energy). |
+
+**Steps**
+1. Open a Power archetype path in the admin archetype editor.
+2. Add Fireball as a recommended innate power. Confirm the library row shows 34 Energy.
+3. Save.
+
+**Expected**
+- Save is blocked. The message names Fireball and says its Energy (34) exceeds Innate Threshold (8). Power level 1 Innate Threshold is 8. Innate Energy, the pool, is 16. 34 is over both.
+- The helper line under Innate Powers still explains Appendix G. It is not the only message.
+
+**Automated** | `npm test` — `innate-eligibility.test.ts`
+
+**Report** — `[ ] PASS` · `[ ] FAIL` · `[ ] SKIP` — Notes:
+
+---
+
 ## DEV-V-071 — Profile column writes (ClickUp 86e3jt562)
 
 #### DEV-V-071-T001 — Direct profile writes stay on the server
@@ -9743,5 +9769,6 @@ A pick that would exceed open trait slots is refused. The disabled Add button de
 | DEV-V-072 | Character duplicate (ClickUp 86e3jmcn3) | — | Automated (`characters/route.test.ts`, `character-name-limit.test.ts`) + manual DEV-V-072-T001 |
 | DEV-V-073 | Weapon power cost outside the creator (ClickUp 86e3jpq1x) | — | Automated (`power-calc.test.ts`, `library-selectable-builders.test.ts`) + manual DEV-V-073-T001 |
 | DEV-V-074 | Technique reload when part names repeat (ClickUp 86e3jpq36) | — | Automated (`technique-creator-parts-save.test.ts`, `power-part-card.test.ts`) + manual DEV-V-074-T001 |
+| DEV-V-075 | Admin innate Energy includes damage, range, and area (ClickUp 86e3jpr0e) | — | Automated (`innate-eligibility.test.ts`) + manual DEV-V-075-T001 |
 
 When implementing a related task, replace the legacy **DEV-T-###** block with granular **DEV-V-###** tests in this file.
