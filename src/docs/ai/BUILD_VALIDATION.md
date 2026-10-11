@@ -1593,7 +1593,7 @@ Manual QA for library/feats modularization and shared part display. **Needs:** c
 2. Scroll the page / panel to the end of Abilities. Confirm you reach the last ability/defense content with at most one viewport of trailing blank — not ~3 empty viewport heights.
 3. Swipe to Skills, Archetype, and Library. Confirm horizontal snap still stops on each panel (`scroll-snap-stop: always`).
 4. On Library, scroll through the list; confirm the panel scrolls internally and the page does not grow to ~4700px.
-5. Repeat at ~360px. Optional ≥768px: confirm the `md+` grid (`lg:grid-cols-[1fr_1fr_2fr]`) is visually unchanged.
+5. Repeat at ~360px. From 768 through 1024 the Skills, Archetype, and Library sections stack. From 1280 they sit in three columns (`minmax(22.5rem,1fr) minmax(22.5rem,1fr) minmax(26rem,2fr)`), and those cards are only as tall as their content.
 
 **Expected**
 - Each mobile panel is bounded to the remaining viewport and scrolls its own content. Page height does not follow the tallest sibling. Snap and desktop grid unchanged.
@@ -9741,6 +9741,32 @@ A pick that would exceed open trait slots is refused. The disabled Add button de
 
 ---
 
+## DEV-V-078 — Weapons and Shields tables from 1024 to 1440 (ClickUp 86e3jvv37)
+
+#### DEV-V-078-T001 — Weapon names and column headers stay in their columns
+
+| Field | Value |
+|-------|-------|
+| **Suite** | DEV-V-078 |
+| **Related task** | 86e3jvv37 |
+| **Where** | `/characters/[id]` and a campaign Realm Master view of the same sheet |
+| **Needs** | Equipped weapons (Battleaxe, Greatsword, Finesse Bow or similar), a shield, armor, and Unarmed Prowess. Light and dark. |
+
+**Steps**
+1. Open the sheet at 1024px. Confirm Skills, Archetype, and Library stack in one column. Weapon names are readable. Name, Range, Attack, and Damage do not overlap. The Skills Bonus buttons are fully visible.
+2. Repeat at 1280px and 1440px, light and dark. The three sections sit side by side. The weapon name cell is wide enough to read those names (about 100px or more). Unarmed Prowess stays in the Name cell and does not cover Melee. Shields shows Block, Damage, and Attack. Armor shows DMG Red., Crit Rng, and Abl Req. Attack Bonuses shows Unprof.
+3. Confirm Archetype and Library are only as tall as their content, not stretched down to the Skills list.
+4. At 1920px the same three columns still show the names. At 360px the weapons table can scroll sideways inside its card; the page does not.
+
+**Expected**
+- Headers line up and every weapon name shows from 1024 through 1440. Nothing in those tables is clipped by the next column.
+
+**Automated** | `npm test` — `sheet-desktop-columns.test.ts`
+
+**Report** — `[ ] PASS` · `[ ] FAIL` · `[ ] SKIP` — Notes:
+
+---
+
 ## DEV-V-071 — Profile column writes (ClickUp 86e3jt562)
 
 #### DEV-V-071-T001 — Direct profile writes stay on the server
@@ -9830,5 +9856,6 @@ A pick that would exceed open trait slots is refused. The disabled Add button de
 | DEV-V-075 | Admin innate Energy includes damage, range, and area (ClickUp 86e3jpr0e) | — | Automated (`innate-eligibility.test.ts`) + manual DEV-V-075-T001 |
 | DEV-V-076 | Character sheet at narrow widths (ClickUp 86e3jt15m) | — | Automated (`sheet-mobile-carousel.test.ts`, `tab-navigation.test.ts`) + manual DEV-V-076-T001 |
 | DEV-V-077 | Pure Martial max Energy and Training Points (ClickUp 86e3jv2hr) | — | Automated (`calculations.test.ts`) + manual DEV-V-077-T001 |
+| DEV-V-078 | Weapons and Shields tables from 1024 to 1440 (ClickUp 86e3jvv37) | — | Automated (`sheet-desktop-columns.test.ts`) + manual DEV-V-078-T001 |
 
 When implementing a related task, replace the legacy **DEV-T-###** block with granular **DEV-V-###** tests in this file.

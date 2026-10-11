@@ -4,7 +4,7 @@
  * Catalog-all Codex base skills (TASK-584) with compact All/Proficient + Sub-Skills filters (TASK-778).
  * Sub-skills: proficient always shown; unproficient only when user-added.
  * Spend − clears value → proficiency (and removes sub-skill when applicable); no per-row X.
- * Spend/temp steppers sit in the Bonus cell (TASK-800) so the narrow lg column does not hide mode.
+ * Spend/temp steppers sit in the Bonus cell (TASK-800) so the Skills column does not hide mode.
  */
 
 'use client';
@@ -426,11 +426,11 @@ export function SkillsSection({
       )}
 
       {/* DESIGN_INTENT: sheet spend/temp steppers stay in the Bonus cell (TASK-800); no fifth column / TableScroll */}
-      <table className="w-full text-sm">
+      <table className="w-full table-fixed text-sm">
         <thead>
           <tr className="border-b-2 border-border-light text-xs tracking-wider text-text-muted uppercase">
             <th className="w-10 min-w-10 py-2 text-center [@media(pointer:coarse)]:py-4">Prof</th>
-            <th className="py-2 pl-2 text-left [@media(pointer:coarse)]:py-4">Skill</th>
+            <th className="min-w-0 py-2 pl-2 text-left [@media(pointer:coarse)]:py-4">Skill</th>
             <th className="w-16 min-w-16 py-2 text-center [@media(pointer:coarse)]:py-4">
               Ability
             </th>

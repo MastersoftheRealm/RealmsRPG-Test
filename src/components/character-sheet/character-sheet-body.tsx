@@ -18,6 +18,7 @@ import { SkillsSection } from './skills-section';
 import { ArchetypeSection } from './archetype-section';
 import { LibrarySection } from './library-section';
 import { useCharacterSheet } from './character-sheet-context';
+import { SHEET_DESKTOP_GRID_CLASSNAME } from './sheet-desktop-columns';
 import {
   SHEET_CAROUSEL_AXIS_PX,
   SHEET_CAROUSEL_PANEL_OPTIONS,
@@ -336,7 +337,10 @@ export function CharacterSheetBody() {
         ref={carouselRef}
         id="character-sheet-mobile-carousel"
         data-sheet-mobile-carousel
-        className="flex snap-x snap-mandatory flex-nowrap gap-4 overflow-x-auto pb-4 max-md:min-h-0 max-md:w-full max-md:min-w-0 max-md:shrink-0 max-md:touch-pan-x max-md:items-start max-md:overflow-y-hidden md:grid md:snap-none md:grid-cols-1 md:items-stretch md:overflow-visible md:pb-0 lg:grid-cols-[1fr_1fr_2fr]"
+        className={cn(
+          'flex snap-x snap-mandatory flex-nowrap gap-4 overflow-x-auto pb-4 max-md:min-h-0 max-md:w-full max-md:min-w-0 max-md:shrink-0 max-md:touch-pan-x max-md:items-start max-md:overflow-y-hidden',
+          SHEET_DESKTOP_GRID_CLASSNAME,
+        )}
         style={{ WebkitOverflowScrolling: 'touch' }}
       >
         <section
@@ -356,7 +360,7 @@ export function CharacterSheetBody() {
           data-sheet-panel-active={activeId === 'skills' || undefined}
           className={cn(MOBILE_SNAP_PANEL_CLASSNAME, DESKTOP_GRID_PANEL_CLASSNAME)}
         >
-          <SkillsPanel className="min-h-0 flex-1 md:min-h-0" />
+          <SkillsPanel className="min-h-0 flex-1 md:min-h-0 md:flex-none" />
         </section>
 
         <section
@@ -365,7 +369,7 @@ export function CharacterSheetBody() {
           data-sheet-panel-active={activeId === 'archetype' || undefined}
           className={cn(MOBILE_SNAP_PANEL_CLASSNAME, DESKTOP_GRID_PANEL_CLASSNAME)}
         >
-          <ArchetypePanel className="min-h-0 flex-1 md:min-h-0" />
+          <ArchetypePanel className="min-h-0 flex-1 md:min-h-0 md:flex-none" />
         </section>
 
         <section
@@ -375,7 +379,7 @@ export function CharacterSheetBody() {
           data-sheet-panel-active={activeId === 'library' || undefined}
           className={cn(MOBILE_SNAP_PANEL_CLASSNAME, DESKTOP_GRID_PANEL_CLASSNAME)}
         >
-          <LibraryPanel className="min-h-0 flex-1 md:min-h-0" />
+          <LibraryPanel className="min-h-0 flex-1 md:min-h-0 md:flex-none" />
         </section>
       </div>
     </>

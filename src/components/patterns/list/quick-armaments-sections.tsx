@@ -19,18 +19,20 @@ import { useRollsOptional } from '@/components/rolls';
 
 /**
  * QuickWeaponsTable column classes — content-sized metric cols (not large %) so the table
- * stays inside the panel; Name takes leftover width and wraps property bullets.
+ * stays inside the panel; Name takes leftover width and truncates with an ellipsis.
+ * Headers stay in their own cells (overflow hidden) so Name cannot paint over Range.
  * Use the same `*Td` classes on `trailingRows` (e.g. Unarmed) so columns stay aligned.
+ * `min-w-[18rem]` is 6.25rem name + these three metric cols; TableScroll scrolls below that.
  */
 export const QUICK_WEAPON_COL = {
-  nameTh: 'min-w-0 text-left py-1 pr-1.5',
-  rangeTh: 'w-[3.75rem] text-center py-1 px-0.5',
-  attackTh: 'w-[3.75rem] text-center py-1 px-0.5',
-  damageTh: 'w-[4.25rem] text-center py-1 px-0.5',
-  nameTd: 'min-w-0 py-2 pr-1.5 font-medium text-text-secondary align-top',
-  rangeTd: 'text-center py-2 px-0.5 text-text-muted align-top',
-  attackTd: 'text-center py-2 px-0.5 align-top',
-  damageTd: 'text-center py-2 px-0.5 align-top',
+  nameTh: 'min-w-0 overflow-hidden whitespace-nowrap text-left py-1 pr-1.5',
+  rangeTh: 'w-[3.75rem] overflow-hidden whitespace-nowrap text-center py-1 px-0.5',
+  attackTh: 'w-[3.75rem] overflow-hidden whitespace-nowrap text-center py-1 px-0.5',
+  damageTh: 'w-[4.25rem] overflow-hidden whitespace-nowrap text-center py-1 px-0.5',
+  nameTd: 'min-w-0 overflow-hidden py-2 pr-1.5 font-medium text-text-secondary align-top',
+  rangeTd: 'overflow-hidden text-center py-2 px-0.5 text-text-muted align-top',
+  attackTd: 'overflow-hidden text-center py-2 px-0.5 align-top',
+  damageTd: 'overflow-hidden text-center py-2 px-0.5 align-top',
 } as const;
 
 export type QuickArmamentAbilities = {
@@ -143,9 +145,10 @@ export function QuickWeaponsTable({
       {showHeader && <SectionHeader title={title} className="mb-2" />}
       <TableScroll>
         {/* DESIGN_INTENT: tight content-sized metric cols; Name wraps props so the row fits the panel */}
-        <table className="w-full table-fixed text-sm">
+        <table className="w-full min-w-[18rem] table-fixed text-sm">
           <colgroup>
             <col />
+            <col className="w-[3.75rem]" />
             <col className="w-[3.75rem]" />
             <col className="w-[4.25rem]" />
           </colgroup>
@@ -225,7 +228,14 @@ export function QuickWeaponsTable({
                       ) : (
                         <span className="text-sm font-medium text-text-muted">{dice}</span>
                       )}
-                      {type && <span className="text-[10px] text-text-muted">{type}</span>}
+                      {type && (
+                        <span
+                          className="max-w-full truncate text-[10px] text-text-muted"
+                          title={type}
+                        >
+                          {type}
+                        </span>
+                      )}
                     </div>
                   </td>
                 </tr>
@@ -269,13 +279,19 @@ export function QuickShieldsTable({
     <div className={cn('mb-4 rounded-lg bg-surface-alt p-3', className)}>
       {showHeader && <SectionHeader title={title} className="mb-2" />}
       <TableScroll>
-        <table className="w-full text-sm">
+        <table className="w-full min-w-[18rem] table-fixed text-sm">
+          <colgroup>
+            <col />
+            <col className="w-[3.75rem]" />
+            <col className="w-[4.25rem]" />
+            <col className="w-[3.75rem]" />
+          </colgroup>
           <thead>
             <tr className="text-xs text-text-muted">
-              <th className="py-1 text-left">Name</th>
-              <th className="py-1 text-center">Block</th>
-              <th className="py-1 text-center">Damage</th>
-              <th className="py-1 text-center">Attack</th>
+              <th className="min-w-0 overflow-hidden py-1 text-left whitespace-nowrap">Name</th>
+              <th className="overflow-hidden py-1 text-center whitespace-nowrap">Block</th>
+              <th className="overflow-hidden py-1 text-center whitespace-nowrap">Damage</th>
+              <th className="overflow-hidden py-1 text-center whitespace-nowrap">Attack</th>
             </tr>
           </thead>
           <tbody>
@@ -304,11 +320,13 @@ export function QuickShieldsTable({
                   key={String(shield.id ?? idx)}
                   className="border-b border-border-subtle align-top last:border-0"
                 >
-                  <td className="py-2 font-medium text-text-secondary">
-                    {shield.name}
+                  <td className="min-w-0 overflow-hidden py-2 font-medium text-text-secondary">
+                    <div className="min-w-0 truncate" title={shield.name}>
+                      {shield.name}
+                    </div>
                     <NamedPropertiesUnderName names={displayProps} />
                   </td>
-                  <td className="py-2 text-center">
+                  <td className="overflow-hidden py-2 text-center">
                     {blockStr !== '-' && rollContext?.canRoll !== false && rollContext ? (
                       <RollButton
                         value={0}
@@ -328,7 +346,7 @@ export function QuickShieldsTable({
                       <span className="text-text-muted">{blockStr}</span>
                     )}
                   </td>
-                  <td className="py-2 text-center">
+                  <td className="overflow-hidden py-2 text-center">
                     {hasDamage && rollContext?.canRoll !== false && rollContext ? (
                       <RollButton
                         value={0}
@@ -352,7 +370,7 @@ export function QuickShieldsTable({
                       </span>
                     )}
                   </td>
-                  <td className="py-2 text-center">
+                  <td className="overflow-hidden py-2 text-center">
                     {hasDamage && rollContext?.canRoll !== false && rollContext ? (
                       <RollButton
                         value={strBonus}
@@ -407,13 +425,19 @@ export function QuickArmorTable({
     <div className={cn('mb-4 rounded-lg bg-surface-alt p-3', className)}>
       {showHeader && <SectionHeader title={title} className="mb-2" />}
       <TableScroll>
-        <table className="w-full text-sm">
+        <table className="w-full min-w-[18.5rem] table-fixed text-sm">
+          <colgroup>
+            <col />
+            <col className="w-[4.25rem]" />
+            <col className="w-[4rem]" />
+            <col className="w-[4rem]" />
+          </colgroup>
           <thead>
             <tr className="text-xs text-text-muted">
-              <th className="py-1 text-left">Name</th>
-              <th className="py-1 text-center">DMG Red.</th>
-              <th className="py-1 text-center">Crit Rng</th>
-              <th className="py-1 text-center">Abl Req.</th>
+              <th className="min-w-0 overflow-hidden py-1 text-left whitespace-nowrap">Name</th>
+              <th className="overflow-hidden py-1 text-center whitespace-nowrap">DMG Red.</th>
+              <th className="overflow-hidden py-1 text-center whitespace-nowrap">Crit Rng</th>
+              <th className="overflow-hidden py-1 text-center whitespace-nowrap">Abl Req.</th>
             </tr>
           </thead>
           <tbody>
@@ -452,13 +476,21 @@ export function QuickArmorTable({
                   key={String(armorItem.id ?? idx)}
                   className="border-b border-border-subtle align-top last:border-0"
                 >
-                  <td className="py-1 font-medium text-text-secondary">
-                    {armorItem.name}
+                  <td className="min-w-0 overflow-hidden py-1 font-medium text-text-secondary">
+                    <div className="min-w-0 truncate" title={armorItem.name}>
+                      {armorItem.name}
+                    </div>
                     <NamedPropertiesUnderName names={displayProps} />
                   </td>
-                  <td className="py-1 text-center font-mono">{damageReduction || 0}</td>
-                  <td className="py-1 text-center font-mono">{critRange}</td>
-                  <td className="py-1 text-center text-xs">{abilityReqs.join(', ') || 'None'}</td>
+                  <td className="overflow-hidden py-1 text-center font-mono whitespace-nowrap">
+                    {damageReduction || 0}
+                  </td>
+                  <td className="overflow-hidden py-1 text-center font-mono whitespace-nowrap">
+                    {critRange}
+                  </td>
+                  <td className="overflow-hidden py-1 text-center text-xs whitespace-nowrap">
+                    {abilityReqs.join(', ') || 'None'}
+                  </td>
                 </tr>
               );
             })}

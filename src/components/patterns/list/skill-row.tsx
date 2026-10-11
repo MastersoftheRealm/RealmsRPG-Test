@@ -126,15 +126,22 @@ function SkillNameLabel({
   name,
   description,
   compact,
+  className,
 }: {
   name: string;
   description?: string | undefined;
   compact?: boolean | undefined;
+  className?: string | undefined;
 }) {
-  if (!description) return name;
+  if (!description) return <span className="block min-w-0 truncate">{name}</span>;
   return (
-    <WordHelpTip content={description} label={`About ${name}`} compact={compact}>
-      {name}
+    <WordHelpTip
+      content={description}
+      label={`About ${name}`}
+      compact={compact}
+      className={className}
+    >
+      <span className="block min-w-0 truncate">{name}</span>
     </WordHelpTip>
   );
 }
@@ -249,24 +256,33 @@ export const SkillRow = memo(function SkillRow({
         {/* DESIGN_INTENT: sheet play view = uniform skill list; source/lock chrome only while editing */}
         <td
           className={cn(
-            'pl-2 font-medium text-text-primary',
+            'min-w-0 pl-2 font-medium text-text-primary',
             tableCellY,
             isSubSkill && 'italic',
             !isUnlocked && 'text-text-muted',
           )}
         >
-          {isSubSkill && (
-            <span className="mr-1 text-text-muted" aria-hidden="true">
-              └
+          <div className="flex min-w-0 items-baseline">
+            {isSubSkill && (
+              <span className="mr-1 shrink-0 text-text-muted" aria-hidden="true">
+                └
+              </span>
+            )}
+            <span className="min-w-0 flex-1" title={name}>
+              <SkillNameLabel
+                name={name}
+                description={description}
+                compact
+                className="block w-full max-w-full min-w-0 text-left"
+              />
             </span>
-          )}
-          <SkillNameLabel name={name} description={description} compact />
-          {isEditing && isSpeciesSkill && (
-            <span className="ml-1 text-xs text-text-muted">(species)</span>
-          )}
-          {isEditing && sourceLabel && !isSpeciesSkill && (
-            <span className="ml-1 text-xs text-text-muted">({sourceLabel})</span>
-          )}
+            {isEditing && isSpeciesSkill && (
+              <span className="ml-1 shrink-0 text-xs text-text-muted">(species)</span>
+            )}
+            {isEditing && sourceLabel && !isSpeciesSkill && (
+              <span className="ml-1 shrink-0 text-xs text-text-muted">({sourceLabel})</span>
+            )}
+          </div>
         </td>
 
         {/* Ability */}
