@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import type { Character } from '@/types';
 import {
+  buildLevelDownOverspendWarning,
   buildSheetEditNotification,
   computeSheetPointPools,
   resolveFeatLibraryEditState,
@@ -123,6 +124,66 @@ describe('resolveFeatLibraryEditState', () => {
     expect(
       resolveFeatLibraryEditState({ archetypeFeatRemaining: -1, characterFeatRemaining: 0 }),
     ).toBe('over-budget');
+  });
+});
+
+describe('buildLevelDownOverspendWarning', () => {
+  it('warns when a lower level would leave overspent pools', () => {
+    const character: Character = {
+      ...baseCharacter,
+      level: 3,
+      abilities: {
+        strength: 0,
+        vitality: 0,
+        agility: 0,
+        acuity: 0,
+        intelligence: 0,
+        charisma: 4,
+      },
+      healthPoints: 6,
+      energyPoints: 12,
+      feats: [
+        { id: '1', name: 'Feat A' },
+        { id: '2', name: 'Feat B' },
+        { id: '3', name: 'Feat C' },
+      ],
+    };
+
+    const warning = buildLevelDownOverspendWarning({
+      character,
+      targetLevel: 1,
+      characterSpeciesSkills: [],
+      featsDb: [],
+      rules: undefined,
+    });
+
+    expect(warning).not.toBeNull();
+    expect(warning?.severity === 'overspent' || warning?.severity === 'mixed').toBe(true);
+    expect(warning?.title).toContain('Over budget');
+  });
+
+  it('returns null when leveling down would not overspend', () => {
+    const warning = buildLevelDownOverspendWarning({
+      character: { ...baseCharacter, level: 3 },
+      targetLevel: 2,
+      characterSpeciesSkills: [],
+      featsDb: [],
+      rules: undefined,
+    });
+
+    expect(warning).toBeNull();
+  });
+
+  it('returns null when target level is not lower', () => {
+    const warning = buildLevelDownOverspendWarning({
+      character: baseCharacter,
+      targetLevel: 5,
+      characterSpeciesSkills: [],
+      featsDb: [],
+      rules: undefined,
+    });
+
+    expect(warning).toBeNull();
   });
 });
 
