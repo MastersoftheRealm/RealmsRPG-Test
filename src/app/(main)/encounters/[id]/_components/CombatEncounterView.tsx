@@ -74,6 +74,7 @@ function CombatEncounterViewInner(props: CombatEncounterViewProps & { encounter:
             onDragOver={model.handleDragOver}
             onDragLeave={model.handleDragLeave}
             onDrop={model.handleDrop}
+            onMove={model.moveCombatant}
           />
         </div>
 

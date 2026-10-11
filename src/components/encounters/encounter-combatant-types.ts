@@ -42,6 +42,11 @@ export interface CombatantCardProps {
   onDragOver: (e: DragEvent<HTMLDivElement>) => void;
   onDragLeave: () => void;
   onDrop: (e: DragEvent<HTMLDivElement>) => void;
+  /** Keyboard / single-pointer alternative to dragging the grip. */
+  onMoveUp?: (() => void) | undefined;
+  onMoveDown?: (() => void) | undefined;
+  canMoveUp?: boolean | undefined;
+  canMoveDown?: boolean | undefined;
   /** Compact/quick-reference mode: ResourceInput-style HP/EN, no damage/heal buttons, larger AP */
   variant?: 'full' | 'compact' | undefined;
   /** When true, the logged-in user owns this linked character and may edit HP/EN/AP on the encounter card. */
