@@ -9500,6 +9500,34 @@ A pick that would exceed open trait slots is refused. The disabled Add button de
 
 ---
 
+## DEV-V-070 — Guest sign-in import (ClickUp 86e3jmw1m)
+
+#### DEV-V-070-T001 — One guest character and one guest encounter after sign-in
+
+| Field | Value |
+|-------|-------|
+| **Suite** | DEV-V-070 |
+| **Related task** | 86e3jmw1m |
+| **Where** | Signed out on `/`, then `/characters` and `/encounters` after sign-in |
+| **Needs** | A signed-out browser. An account under its character limit (a new_player account allows 3). |
+
+**Steps**
+1. Signed out, create and save one character locally (Continue without signing in).
+2. Create one local encounter with two combatants.
+3. In that same window, sign in.
+4. Open My Characters and Encounters.
+
+**Expected**
+- The guest character appears once. The account stays within its character limit.
+- The guest encounter appears once.
+- An account that is already at its character limit keeps the guest character in this browser and does not add another cloud character.
+
+**Automated** | `npm test` — `guest-character-migration.test.ts` + `guest-encounter-migration.test.ts`
+
+**Report** — `[ ] PASS` · `[ ] FAIL` · `[ ] SKIP` — Notes:
+
+---
+
 ## Planned suites (split from legacy DEV-T)
 
 | Suite | Topic | Legacy | Status |
@@ -9554,5 +9582,6 @@ A pick that would exceed open trait slots is refused. The disabled Add button de
 | DEV-V-067 | Admin Core Rules back control (ClickUp 86e3jzu5g) | — | Automated (`core-rules-back-link.test.ts`) + manual DEV-V-067-T001 |
 | DEV-V-068 | Email confirmation PKCE link (ClickUp 86e3jmkct) | — | Automated (`auth/confirm/route.test.ts`) + manual DEV-V-068-T001 |
 | DEV-V-069 | Library duplicate (ClickUp 86e3jx7xt) | — | Automated (`creator-text-limits.test.ts`) + manual DEV-V-069-T001 |
+| DEV-V-070 | Guest sign-in import (ClickUp 86e3jmw1m) | — | Automated (`guest-character-migration.test.ts`, `guest-encounter-migration.test.ts`) + manual DEV-V-070-T001 |
 
 When implementing a related task, replace the legacy **DEV-T-###** block with granular **DEV-V-###** tests in this file.

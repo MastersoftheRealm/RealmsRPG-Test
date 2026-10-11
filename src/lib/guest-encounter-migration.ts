@@ -11,9 +11,12 @@ import {
   getGuestEncounter,
   deleteGuestEncounter,
 } from '@/lib/guest-encounter-storage';
+import { beginSingleFlight } from '@/lib/guest-migration-lock';
 import type { Encounter } from '@/types/encounter';
 
 const MIGRATION_FLAG = 'realms_guest_encounters_migrated';
+
+const migrationSlot: { current: Promise<number> | null } = { current: null };
 
 export function hasGuestEncountersToMigrate(): boolean {
   if (typeof window === 'undefined') return false;
@@ -22,12 +25,16 @@ export function hasGuestEncountersToMigrate(): boolean {
 
 /**
  * Upload guest encounters to the API and clear local copies.
- * Safe to call multiple times; skips when list is empty or migration already ran this session.
+ * Concurrent callers share one flight. Encounter creates have no idempotency
+ * column, so this lock is what stops a second POST of the same guest encounter.
  */
-export async function migrateGuestEncountersOnSignIn(): Promise<number> {
-  if (typeof window === 'undefined') return 0;
-  if (sessionStorage.getItem(MIGRATION_FLAG) === '1') return 0;
+export function migrateGuestEncountersOnSignIn(): Promise<number> {
+  if (typeof window === 'undefined') return Promise.resolve(0);
+  if (sessionStorage.getItem(MIGRATION_FLAG) === '1') return Promise.resolve(0);
+  return beginSingleFlight(migrationSlot, migrateGuestEncountersOnce);
+}
 
+async function migrateGuestEncountersOnce(): Promise<number> {
   const summaries = getGuestEncountersList();
   if (summaries.length === 0) return 0;
 
@@ -49,7 +56,7 @@ export async function migrateGuestEncountersOnSignIn(): Promise<number> {
     }
   }
 
-  if (migrated > 0 || summaries.length === 0) {
+  if (migrated > 0 || getGuestEncountersList().length === 0) {
     sessionStorage.setItem(MIGRATION_FLAG, '1');
   }
   return migrated;

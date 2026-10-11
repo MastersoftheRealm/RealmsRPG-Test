@@ -133,6 +133,8 @@ export function useAuth() {
           queryClient.clear();
         }
         if (event === 'SIGNED_IN' && session?.user) {
+          // Every mounted useAuth listener fires this. Migration claims one
+          // in-flight promise before its first request (86e3jmw1m).
           migrateGuestDataOnSignIn();
         }
       }
