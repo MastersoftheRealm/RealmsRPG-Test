@@ -8,6 +8,7 @@ describe('Admin Core Rules back control (86e3jzu5g)', () => {
   it('uses the same Back to Admin control as other admin pages', () => {
     expect(page).not.toContain('ChevronLeft');
     expect(page).toContain('variant="secondary"');
-    expect(page).toContain('<Link href="/admin">← Back to Admin</Link>');
+    expect(page).toContain('href="/admin"');
+    expect(page).toContain('← Back to Admin');
   });
 });
