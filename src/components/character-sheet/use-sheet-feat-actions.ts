@@ -27,6 +27,18 @@ type UseSheetFeatActionsArgs = {
   stateUsesMax: number;
 };
 
+/** Unset `traitUses` entry means full uses remaining (same as `mapTraitRows` display). */
+export function traitUsesAfterDelta(
+  prevTraitUses: Record<string, number> | undefined,
+  traitName: string,
+  delta: number,
+  maxUses: number,
+): Record<string, number> {
+  const currentUses = prevTraitUses?.[traitName] ?? maxUses;
+  const newUses = Math.max(0, Math.min(maxUses, currentUses + delta));
+  return { ...(prevTraitUses || {}), [traitName]: newUses };
+}
+
 function applyFeatCustomization(
   feats: CharacterFeat[] | undefined,
   featId: string,
@@ -366,19 +378,14 @@ export function useSheetFeatActions({
       if (!character) return;
       setCharacter((prev) => {
         if (!prev) return null;
-        const currentUses = prev.traitUses?.[traitName] ?? 0;
         const traitData = traitsDb.find(
           (t: Trait) => t.name?.toLowerCase() === traitName.toLowerCase(),
         );
         const maxUses =
           (traitData as Trait & { uses_per_rec?: number | undefined })?.uses_per_rec ?? 999;
-        const newUses = Math.max(0, Math.min(maxUses, currentUses + delta));
         return {
           ...prev,
-          traitUses: {
-            ...(prev.traitUses || {}),
-            [traitName]: newUses,
-          },
+          traitUses: traitUsesAfterDelta(prev.traitUses, traitName, delta, maxUses),
         };
       });
     },
