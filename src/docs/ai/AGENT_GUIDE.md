@@ -1,6 +1,6 @@
 # Agent Guide — Deep Reference (on demand)
 
-**Not a session-start mandatory read.** Always-loadable core: [`ARCHITECTURE_CONSTITUTION.md`](ARCHITECTURE_CONSTITUTION.md). Work queue: **ClickUp** (optional engineering notes: [`ACTIVE_TASKS.md`](ACTIVE_TASKS.md)). SoT map: root `AGENTS.md`.
+**Not a session-start read.** Work queue: **ClickUp**. The status order is `.cursor/rules/realms-tasks.mdc`. Open this hub for a component, list, or creator question. Do not update `ACTIVE_TASKS.md` from here.
 
 Verified against codebase (Jun 2026+). Use this hub when you need component locations, list/selection patterns, art pipeline, or creator load rules — then open the matching appendix under [`guide/`](guide/).
 
@@ -8,7 +8,7 @@ Verified against codebase (Jun 2026+). Use this hub when you need component loca
 > **Remediation status:** [`REMEDIATION_STATUS_2026-08.md`](REMEDIATION_STATUS_2026-08.md) (June snapshot: [`REMEDIATION_STATUS_2026-06.md`](REMEDIATION_STATUS_2026-06.md)).  
 > **History:** [`archive/HISTORY_INDEX.md`](archive/HISTORY_INDEX.md) — not current open work.
 
-**Note:** When implementing a task, verify `related_files` in [`ACTIVE_TASKS.md`](ACTIVE_TASKS.md) against the actual codebase — some entries may have been corrected; paths can become stale (e.g., `header-section.tsx` was replaced by `sheet-action-toolbar.tsx`).
+**Note:** Path corrections below are historical. The task record is the ClickUp task, not `ACTIVE_TASKS.md`.
 
 ## Table of contents (appendices)
 

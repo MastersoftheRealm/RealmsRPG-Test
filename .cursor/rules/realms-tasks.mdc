@@ -1,29 +1,23 @@
 ---
-description: ClickUp task workflow — what to read, write, and skip
+description: ClickUp task order — status moves, audit, and what not to write
 alwaysApply: true
 ---
 
-# Task Workflow
+# Task order
 
-**Work queue:** ClickUp only. Do not read or update `ACTIVE_TASKS.md`, `AI_TASK_QUEUE.md`, or `WAITING_TASKS.md` to do the task. A hold that exists only in `WAITING_TASKS.md` stays until it is on the ClickUp task.
+ClickUp is the only queue. In prose say Bob (`95261690`). Collin Morrison is `44381886`. Write to ClickUp only when Kadin has said to, with `CLICKUP_API_TOKEN` from `.env.local`. Never print the token.
 
-**Before coding:** the ClickUp task, then `FEATURE_INDEX.md` if you might add a pattern. Do not re-read the Drive playbook, `DECISIONS.md`, or `ARCHITECTURE_CONSTITUTION.md`. Those are on demand. See `AGENTS.md`.
+1. A person or a bot files the task. A vague task is split by the filer, or it stays **to do** with a comment. Do not invent the split.
+2. Start: **to do → in progress**. One comment: agent, time, model, one line. Stop with no PR → back to **to do**. Nothing stays **in progress**.
+3. Branch from current `origin/master`: `bug|feat/<clickUpId>-short-slug`. Read the task, then search. Do not load the whole codebase or the constitution.
+4. Open the draft PR when the fix is ready so CI starts. Locally, the repro test only.
+5. A different model audits while CI runs. Four checks: one task, no new pattern, no overwritten fix, no invented rule. CI checks regressions. The audit is not a second QA pass.
+6. `/cleanup` only when the audit names an in-scope gap. Then CI again. The re-audit checks only that gap. A layout or cross-system miss steps up one model.
+7. Audit clean and CI green → **in review**, Collin assigned. PR review and preview QA bots finish first when they are on. When they are off, CI is the gate. **In review** means a human can merge.
+8. Collin merges, or Kadin says bypass. Merge commit only. Never push `master`. Never squash. Do not merge unless Kadin said bypass.
+9. **Testing**. Assign Bob, keep Collin, QA steps in the comment. Post-merge bot smoke only when that bot is on.
+10. Human QA moves it to **complete**. Agents do not.
 
-**ClickUp writes:** Do not use the ClickUp plugin. When Kadin has told you to write to ClickUp, call the ClickUp API v2 with `CLICKUP_API_TOKEN` from `.env.local` (`Authorization` header, `https://api.clickup.com/api/v2`). Never print the token. Never commit `.env.local`.
+Already fixed on master: no branch, **testing**, Bob and Collin. Covered or superseded: stay **to do** with a comment. A missing written rule is a hold. Urgent, then high, then normal, then low. Skip unfinished dependencies.
 
-**While implementing:**
-- Branch: `bug|feat/<clickUpId>-short-slug` from current `origin/master`. **Never push `master`.** Never merge.
-- One task, one branch, one PR. Link the ClickUp id. Comment what changed and how to test.
-- When Kadin has told you to write to ClickUp: **to do → in progress** when you claim it, **in review** and assign **Collin** when the PR is ready. After a bypass merge: **testing**, QA comment, add **James Owenby**, keep **Collin**.
-- Locally, run the regression test for the repro. Do not run `npm test`, `npm run build`, or `npm run tasks:validate` as well. CI does.
-- Do not append `AI_CHANGELOG.md` or put `TASK-###` in the commit subject.
-- User-facing: QA steps on the ClickUp comment. `BUILD_VALIDATION.md` only when that suite does not already cover the check.
-- New shared/ui file → ADR + `scripts/shared-ui-allowlist.json` (`npm run tasks:validate-shared-ui`).
-- Barrel export changes → `npm run tasks:generate-index`.
-- **Every fixed bug → regression test from its repro** when feasible.
-
-**Model pause (once):** Stop before coding and ask only for Architect work (new shared/ui, new store, new API contract, migration strategy), live DB/schema migrations or cascade delete/replace, multi-system refactors with irreversible data risk, or notes that say "Architect" / "stronger model" / "owner ack before implement." Do not pause for a routine fix, a local save whose behavior is written, or work already scoped to this model. After the owner says proceed, do not pause again.
-
-**After a miss:** A cross-system or layout interaction miss steps up once. Do not redo that bug on the same model. `/audit` reads the diff. A re-audit checks only the failed point. `/cleanup` only for an in-scope behavior or code gap. Doc nits are not a second pass. `/global-audit` and `/debt` are unused on a task.
-
-**Migrations:** Prefer Supabase MCP `apply_migration`; else Dashboard SQL. SQL in `sql/`. Codex: `realms-codex-data.mdc`.
+Do not write `ACTIVE_TASKS.md`, `AI_TASK_QUEUE.md`, `AI_CHANGELOG.md`, or `TASK-###` in the commit subject. A hold that exists only in `WAITING_TASKS.md` stays. `/global-audit` and `/debt` are unused on a task.

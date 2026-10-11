@@ -1,6 +1,6 @@
 # Architecture Constitution
 
-**Always-loadable agent core** (~2 pages). Deep detail lives in on-demand docs — do not re-read `AGENT_GUIDE.md` or its `guide/` appendices every session.
+On demand. Do not load this file up front. An audit checks four points from it: one task, no new pattern, no overwritten fix, no invented rule. It does not re-read this file, and it is not a second QA pass.
 
 ## Roles
 
@@ -48,7 +48,7 @@ Do not read `ACTIVE_TASKS.md`, `AI_TASK_QUEUE.md`, `WAITING_TASKS.md`, `AI_CHANG
 - **UI gates** — keep `realms/no-raw-color`, contrast, visual/a11y Playwright. Prefer `text-success-fg` / `text-danger-fg` / `text-warning-fg` / `text-power-fg` / `text-martial-fg` over numbered ramp + ad-hoc `dark:`.
 - **Mobile** — `fullScreenOnMobile` on large modals; ≥44px touch targets.
 - **Accessibility** — **WCAG 2.2 AA** everywhere. Labels, contrast, modals, touch tiers per `MOBILE_UX.md`.
-- **Git** — **Never push directly to `master`.** Never merge PRs. Every change goes through a PR with a ClickUp task ID linked. A bypass merge moves that task to **testing** with QA instructions for what changed, adds James Owenby, and keeps Collin assigned so he can move it back to **in review**. See `DECISIONS.md`.
+- **Git** — Never push `master`. Never squash. Collin merges, or Kadin says bypass. Merge commit only. The agent does not merge unless Kadin said bypass. **In review** means a human can merge. **Testing** assigns Bob (`95261690`) and keeps Collin (`44381886`). Human QA marks **complete**. Agents do not.
 
 ## Definition of Done
 

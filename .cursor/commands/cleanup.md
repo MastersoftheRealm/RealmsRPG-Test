@@ -1,6 +1,6 @@
 # Cleanup
 
-Apply only an in-scope behavior or code gap from the latest `/audit`. Doc nits are not a cleanup. Do not start a cleanup when the audit found nothing.
+Apply only the in-scope gap the latest `/audit` named. Doc nits are not a cleanup. Do not start a cleanup when the audit found nothing. After the fix, CI runs again. A re-audit checks only that gap.
 
 ## Scope
 

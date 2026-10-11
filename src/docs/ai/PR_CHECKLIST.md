@@ -1,11 +1,11 @@
 # PR Checklist — AI failure modes
 
-Use before marking a task `done` or opening a PR. Keep answers short.
+Use before opening the draft PR. Keep answers short. Agents do not mark the ClickUp task **complete**.
 
 1. **Search first** — Checked `FEATURE_INDEX` + barrels? Not re-implementing?
 2. **No parallel pattern** — Extended existing shell/hook/API, or ADR/owner ack?
 3. **AC complete** — Every acceptance criterion met? Else `partial` + follow-ups.
-4. **related_files** — Every listed path exists in the repo (real file/dir; no invented module names)? Match the diff? Globs (`*`) ok; directories ok if tracked children exist.
+4. **One task** — The diff is only this ClickUp task? It does not overwrite a fix already on `master`?
 5. **ClickUp** — Id in the branch and the PR? Risk flags checked? Task comment says what changed? No `TASK-###` commit-subject requirement.
 6. **Tests** — Regression test for the repro run locally? CI runs typecheck, the unit suite, and the build. Do not also run them locally.
 7. **Tokens** — Semantic / `*-fg`; no raw palette outside exemptions?
@@ -14,7 +14,7 @@ Use before marking a task `done` or opening a PR. Keep answers short.
 10. **Uploads** — Went through `apiUpload`?
 11. **Domain parsers** — Used `src/lib/game/*` not a local fork?
 12. **Schema/codex** — SQL in `sql/`; owner approve for live codex mutate? High-risk items flagged per [Workflow §4](https://docs.google.com/document/d/1F6iZUKP9nN0YTFzOkZ6Y82sySaw0iW101f_a-7ZeQdI/edit)?
-13. **ClickUp status** — When Kadin has told you to write to ClickUp: moved to **in review** with `CLICKUP_API_TOKEN` from `.env.local` (not the ClickUp plugin)? Assigned **Collin**? Otherwise note the status change in the PR. After a bypass merge: task in **testing**, QA instructions for what changed, James Owenby added, Collin still assigned (he can move it back to **in review**)?
+13. **ClickUp status** — **In progress** only while you are on it? Stopped with no PR → **to do**? **In review** and Collin (`44381886`) only after the audit is clean and CI is green? After merge, **testing** with Bob (`95261690`), Collin kept, QA steps in the comment? Agents do not mark **complete**.
 14. **Owner QA** — User-facing? QA steps on the ClickUp comment? `BUILD_VALIDATION.md` only when that suite does not already cover the check?
 15. **Notes** — PR and ClickUp comment only? No new `AI_CHANGELOG.md` entry?
 16. **Design intent** — Non-obvious constraint documented (`DESIGN_INTENT` / comment)?
@@ -32,7 +32,7 @@ Use before marking a task `done` or opening a PR. Keep answers short.
 
 | Command | Status | What it does |
 |---------|--------|----------------|
-| `/audit` | Stays | Read-only. Different model. The diff, not the constitution. |
+| `/audit` | Stays | Read-only. Different model. Four checks, while CI runs. Not a QA pass. |
 | `/cleanup` | Stays | Fixes that in-scope gap. Re-runs the repro test. |
 | `/global-audit` | Unused on a task | Do not run. |
 | `/debt` | Unused on a task | Do not run. |

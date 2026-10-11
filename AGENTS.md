@@ -24,27 +24,10 @@ Read a doc when the diff touches that topic. Search, do not load the whole file.
 | New shared UI, store, API contract, or migration strategy | `src/docs/ai/ARCHITECTURE_CONSTITUTION.md` |
 | What already exists | `FEATURE_INDEX.md` and the barrels |
 
-## Write
+## Order
 
-- Branch `bug|feat/<clickUpId>-short-slug` from current `origin/master`. One task, one branch, one PR.
-- Put the ClickUp id in the branch and the PR. Comment the task with what changed and how to test. Move status when Kadin has told you to write to ClickUp.
-- Add a regression test from the repro and run that test. CI runs typecheck, the full unit suite, and the build.
-- User-facing work: QA steps on the ClickUp comment. Add a `BUILD_VALIDATION.md` row only when that suite does not already cover the check.
-
-## Do not write
-
-- `AI_CHANGELOG.md`. History stays. New per-bug entries are not required. Do not start another log.
-- `ACTIVE_TASKS.md`, `AI_TASK_QUEUE.md`, and `TASK-###` in commit subjects. ClickUp, the PR, and the task comment are the record.
-- A hold that exists only in `WAITING_TASKS.md`. Leave it. New holds go on the ClickUp task.
-- Doc nits. They are not a second pass.
-
-## Check
-
-- `/audit` before merge, on a different model than the implementer. Read the diff and the rules that diff touches. Do not re-read the constitution.
-- A miss on a cross-system or layout interaction steps up once. Do not redo that bug on the same model. The re-audit checks only the failed point.
-- `/cleanup` only for an in-scope behavior or code gap from that audit.
-- `/global-audit` and `/debt` are unused on a task.
+The status order is `.cursor/rules/realms-tasks.mdc`. It is already in the prompt. Do not restate it. In prose say Bob (`95261690`). Collin is `44381886`. Agents do not mark a task **complete**.
 
 Model slugs: `.cursor/rules/realms-model-routing.mdc`. Never a slug ending in `-fast`. Do not start Claude or GPT.
 
-Drive still says to read the playbook first and to run `npm run build` plus `npm run tasks:validate` before a PR. Kadin changed that on 2026-10-11. The Google Doc was not edited.
+Drive still says to read the playbook first and to run `npm run build` plus `npm run tasks:validate` before a PR. Kadin approved a different order on 2026-10-11 and will update Drive himself. The Google Doc was not edited.

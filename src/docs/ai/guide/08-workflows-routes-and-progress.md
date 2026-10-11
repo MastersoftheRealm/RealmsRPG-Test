@@ -16,13 +16,15 @@
 
 ## Recording Progress
 
+The record is the ClickUp task and the PR. Status moves are in `.cursor/rules/realms-tasks.mdc`. Do not write the files in this table. They are history.
+
 | What | Where |
 |------|-------|
-| Open tasks | `src/docs/ai/ACTIVE_TASKS.md` |
-| Task process | `src/docs/ai/AI_TASK_QUEUE.md` |
-| Done archive | `src/docs/ai/archive/TASK_QUEUE_DONE.md` |
-| Changelog | `src/docs/ai/AI_CHANGELOG.md` |
-| Raw feedback | `src/docs/ALL_FEEDBACK_CLEAN.md` |
+| Open tasks (history) | `src/docs/ai/ACTIVE_TASKS.md` |
+| Task process (retired) | `src/docs/ai/AI_TASK_QUEUE.md` |
+| Done archive (history) | `src/docs/ai/archive/TASK_QUEUE_DONE.md` |
+| Changelog (history) | `src/docs/ai/AI_CHANGELOG.md` |
+| Raw feedback (history) | `src/docs/ALL_FEEDBACK_CLEAN.md` |
 | Game rules | `src/docs/GAME_RULES.md` — terminology, formulas, display conventions |
 | **Current remediation status** | `src/docs/ai/REMEDIATION_STATUS_2026-08.md` — Aug 2026 audit completion/open-gap truth (TASK-642–669). June snapshot: `REMEDIATION_STATUS_2026-06.md`. |
 | Historical audits & task backup | `src/docs/ai/archive/HISTORY_INDEX.md` — Aug/July/June 2026 audits, full queue backup, older plans |

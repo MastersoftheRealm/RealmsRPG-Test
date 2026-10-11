@@ -18,8 +18,8 @@
 | **mobile-compare.mjs** | Measure control-height distribution, list-row height, and chrome-before-content on our pages against an external reference (D&D Beyond), so density claims are numbers not vibes. | `node scripts/mobile-compare.mjs`. Needs network + a running server. |
 | **verify:responsive** | Multi-width layout gate (ADR-0023): 8 guest routes × 360/390/768/1024/1280/1440. Fails when overflow, clip-without-ellipsis, or fixed-element collision counts *increase* vs `tests/visual/responsive-baseline.json`. | `npm run verify:responsive`. Update: `npm run verify:responsive:update` (`--workers=1`). Wired in `ui-verify.yml`. |
 | **reconcile_tasks.js** | Duplicate and non-canonical `TASK-###` ids in the historical task files. Writes `reports/task-reconcile-report.json`. The commit-subject gate is retired: `--strict` does not fail, and `--apply` does not append `AI_CHANGELOG.md`. | CI, or locally when those historical files change. |
-| **extract_feedback.js** | Parse raw entries from ALL_FEEDBACK_CLEAN.md and append task stubs to AI_TASK_QUEUE. | After adding raw feedback; review before merge. |
-| **triage_tasks.js** | Infer `related_files` for tasks with empty related_files. `--apply` to update queue. | Optional; dry-run by default. |
+| **extract_feedback.js** | Retired. Exits without writing. File new work in ClickUp. | Do not run to create tasks. |
+| **triage_tasks.js** | Retired. Exits without writing. File new work in ClickUp. | Do not run to update `AI_TASK_QUEUE.md`. |
 | **run-task-649-phase2.mjs** / **verify-task-649.mjs** | Replay + verify the TASK-649 least-privilege migration. | Referenced as the replay path by `SUPABASE_SCHEMA.md` §4.1 and `BUILD_VALIDATION.md` DEV-V-041. |
 | **run-task-650.mjs** / **verify-task-650.mjs** | Replay + verify the TASK-650 campaigns RLS consolidation. | Referenced by `sql/README.md` and `BUILD_VALIDATION.md` DEV-V-042. |
 
