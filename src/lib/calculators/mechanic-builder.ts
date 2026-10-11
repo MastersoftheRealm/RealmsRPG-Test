@@ -328,18 +328,21 @@ export function buildMechanicParts(ctx: MechanicBuilderContext): MechanicPartRes
       sustain,
     } = ctx.duration;
 
-    // Duration modifiers
-    if (focus) {
-      addPart(PART_IDS.DURATION_FOCUS || 304, 'Focus for Duration', 0);
-    }
-    if (noHarm) {
-      addPart(PART_IDS.DURATION_NO_HARM || 303, 'No Harm or Adaptation for Duration', 0);
-    }
-    if (endsOnActivation) {
-      addPart(PART_IDS.DURATION_ENDS_ON_ACTIVATION || 302, 'Duration Ends On Activation', 0);
-    }
-    if (sustain && sustain > 0) {
-      addPart(PART_IDS.DURATION_SUSTAIN || 305, 'Sustain for Duration', Math.max(0, sustain - 1));
+    // 1 round is no duration, the same as Instant. A modifier has nothing to change.
+    const hasDurationLength = type !== 'rounds' || value > 1;
+    if (hasDurationLength) {
+      if (focus) {
+        addPart(PART_IDS.DURATION_FOCUS || 304, 'Focus for Duration', 0);
+      }
+      if (noHarm) {
+        addPart(PART_IDS.DURATION_NO_HARM || 303, 'No Harm or Adaptation for Duration', 0);
+      }
+      if (endsOnActivation) {
+        addPart(PART_IDS.DURATION_ENDS_ON_ACTIVATION || 302, 'Duration Ends On Activation', 0);
+      }
+      if (sustain && sustain > 0) {
+        addPart(PART_IDS.DURATION_SUSTAIN || 305, 'Sustain for Duration', Math.max(0, sustain - 1));
+      }
     }
 
     // Duration base type: map UI value to part option index (op_1_lvl)

@@ -161,6 +161,142 @@ describe('calculatePowerCosts', () => {
   });
 });
 
+describe('1-round duration modifiers (86e3jrhtq)', () => {
+  const flatPart: PowerPart = {
+    id: '9100',
+    name: 'Flat Part',
+    description: 'Flat part',
+    category: 'General',
+    mechanic: false,
+    base_en: 10,
+    base_tp: 0,
+    percentage: false,
+    duration: false,
+  };
+  const durationRound: PowerPart = {
+    id: String(PART_IDS.DURATION_ROUND),
+    name: 'Duration (Round)',
+    description: 'Duration (Round)',
+    category: 'Duration',
+    mechanic: true,
+    base_en: 2,
+    base_tp: 0,
+    percentage: false,
+    duration: true,
+  };
+  const focusPart: PowerPart = {
+    id: String(PART_IDS.DURATION_FOCUS),
+    name: 'Focus for Duration',
+    description: 'Focus for Duration',
+    category: 'Duration',
+    mechanic: true,
+    base_en: 0.5,
+    base_tp: 0,
+    percentage: false,
+    duration: true,
+  };
+  const noHarmPart: PowerPart = {
+    id: String(PART_IDS.DURATION_NO_HARM),
+    name: 'No Harm or Adaptation for Duration',
+    description: 'No Harm or Adaptation for Duration',
+    category: 'Duration',
+    mechanic: true,
+    base_en: 0.5,
+    base_tp: 0,
+    percentage: false,
+    duration: true,
+  };
+  const endsPart: PowerPart = {
+    id: String(PART_IDS.DURATION_ENDS_ON_ACTIVATION),
+    name: 'Duration Ends On Activation',
+    description: 'Duration Ends On Activation',
+    category: 'Duration',
+    mechanic: true,
+    base_en: 0.5,
+    base_tp: 0,
+    percentage: false,
+    duration: true,
+  };
+  const sustainPart: PowerPart = {
+    id: String(PART_IDS.DURATION_SUSTAIN),
+    name: 'Sustain for Duration',
+    description: 'Sustain for Duration',
+    category: 'Duration',
+    mechanic: true,
+    base_en: 0.75,
+    base_tp: 0,
+    percentage: false,
+    duration: true,
+  };
+  const partsDb = [flatPart, durationRound, focusPart, noHarmPart, endsPart, sustainPart];
+
+  function display(duration: {
+    type: 'rounds' | 'instant';
+    value: number;
+    focus?: boolean;
+    noHarm?: boolean;
+    endsOnActivation?: boolean;
+    sustain?: number;
+  }) {
+    return derivePowerDisplay(
+      {
+        name: 'Held',
+        actionType: 'basic',
+        parts: [{ id: Number(flatPart.id), name: flatPart.name, applyDuration: true }],
+        duration,
+      },
+      partsDb,
+    );
+  }
+
+  it('does not add Energy when a 1-round power still has duration modifiers', () => {
+    const plain = display({ type: 'rounds', value: 1 });
+    const withModifiers = display({
+      type: 'rounds',
+      value: 1,
+      focus: true,
+      noHarm: true,
+      endsOnActivation: true,
+      sustain: 1,
+    });
+    const instant = display({ type: 'instant', value: 1, focus: true, sustain: 1 });
+
+    expect(plain.energy).toBe(10);
+    expect(withModifiers.energy).toBe(10);
+    expect(instant.energy).toBe(10);
+    expect(withModifiers.partChips.some((chip) => chip.text.includes('Focus for Duration'))).toBe(
+      false,
+    );
+  });
+
+  it('still prices duration modifiers when the duration is longer than 1 round', () => {
+    const parts = buildMechanicParts({
+      creatorType: 'power',
+      partsDb,
+      duration: {
+        type: 'rounds',
+        value: 2,
+        focus: true,
+        noHarm: true,
+        endsOnActivation: true,
+        sustain: 1,
+      },
+    });
+    const names = parts.map((part) => part.name);
+    expect(names).toContain('Duration (Round)');
+    expect(names).toContain('Focus for Duration');
+    expect(names).toContain('No Harm or Adaptation for Duration');
+    expect(names).toContain('Duration Ends On Activation');
+    expect(names).toContain('Sustain for Duration');
+
+    const longer = display({ type: 'rounds', value: 2, focus: true });
+    const longerPlain = display({ type: 'rounds', value: 2 });
+    // Existing equation: dur_all 2 without Focus is 30; Focus × 0.5 makes dur_all 1, so 20.
+    expect(longerPlain.energy).toBe(30);
+    expect(longer.energy).toBe(20);
+  });
+});
+
 describe('derivePowerDisplay', () => {
   it('rebuilds multi-row elemental damage from the damage array', () => {
     const display = derivePowerDisplay(

@@ -9870,6 +9870,33 @@ A pick that would exceed open trait slots is refused. The disabled Add button de
 
 ---
 
+## DEV-V-086 — 1-round duration modifiers (ClickUp 86e3jrhtq)
+
+#### DEV-V-086-T001 — A duration modifier does not add Energy at 1 round
+
+| Field | Value |
+|-------|-------|
+| **Suite** | DEV-V-086 |
+| **Related task** | 86e3jrhtq |
+| **Where** | Power creator |
+| **Needs** | A part that can tick Apply duration. |
+
+**Steps**
+1. Open the Power creator. Add a flat part and tick Apply duration. Leave the duration at 1 round.
+2. Note the Energy. The duration modifiers are inactive.
+3. Set the duration to 2 rounds, tick Focus, then set the duration back to 1 round.
+
+**Expected**
+- At 1 round, Energy matches the same power with Focus, No Harm or Adaptation, Ends on Activation, and Sustain off. It matches Instant.
+- After step 3, Focus is off and Energy is the 1-round cost. It does not stay higher because Focus was ticked.
+- At 2 rounds, Focus still changes Energy.
+
+**Automated** | `npm test` — `power-calc.test.ts`
+
+**Report** — `[ ] PASS` · `[ ] FAIL` · `[ ] SKIP` — Notes:
+
+---
+
 ## DEV-V-083 — Assigned base skill information (ClickUp 86e2q66jv)
 
 #### DEV-V-083-T001 — An assigned skill still shows the add-list information
@@ -10047,6 +10074,7 @@ A pick that would exceed open trait slots is refused. The disabled Add button de
 | DEV-V-081 | Grid rows that nested buttons (ClickUp 86e3k0ch6) | — | Automated (`grid-row-nested-interactive.test.tsx`) + manual DEV-V-081-T001 |
 | DEV-V-084 | Websocket console error (ClickUp 86e1z8j9e) | — | Automated (`content-security-policy.test.ts`) + manual DEV-V-084-T001 |
 | DEV-V-085 | Codex search field labels (ClickUp 86e3jmdp9) | — | Automated (`codex-search-labels.test.tsx`) + manual DEV-V-085-T001 |
+| DEV-V-086 | 1-round duration modifiers (ClickUp 86e3jrhtq) | — | Automated (`power-calc.test.ts`) + manual DEV-V-086-T001 |
 | DEV-V-083 | Assigned base skill information (ClickUp 86e2q66jv) | — | Automated (`guided-skills-panel.test.tsx`) + manual DEV-V-083-T001 |
 
 When implementing a related task, replace the legacy **DEV-T-###** block with granular **DEV-V-###** tests in this file.
