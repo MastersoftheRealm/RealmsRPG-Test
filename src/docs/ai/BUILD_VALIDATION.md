@@ -10100,6 +10100,34 @@ A pick that would exceed open trait slots is refused. The disabled Add button de
 
 ---
 
+## DEV-V-095 — Core Rules Conditions editor (ClickUp 86e3juy5z)
+
+#### DEV-V-095-T001 — The Conditions tab lists the stored conditions
+
+| Field | Value |
+|-------|-------|
+| **Suite** | DEV-V-095 |
+| **Related task** | 86e3juy5z |
+| **Where** | Admin → Core Rules Editor → Conditions |
+| **Needs** | An admin account. The live CONDITIONS row is the flat name-and-description map. About 500px wide is enough. |
+
+**Steps**
+1. Open the Core Rules editor and choose Conditions.
+2. Count the Standard Conditions heading and the Leveled Conditions heading.
+3. Find Blinded under Standard and Bleed under Leveled. Confirm each description is the stored text, not a blank field.
+4. Change Blinded's description, save, reload Conditions, and change the description back.
+
+**Expected**
+- Standard Conditions shows 13, including Blinded. Leveled Conditions shows 10, including Bleed. Neither heading says 0.
+- Stacking Rules stays empty, because that row has no stacking rules field.
+- After save and reload, Blinded and Bleed are still listed, and the other conditions are still there.
+
+**Automated** | `npm test` — `core-rules-conditions.test.ts`
+
+**Report** — `[ ] PASS` · `[ ] FAIL` · `[ ] SKIP` — Notes:
+
+---
+
 ## DEV-V-092 — Codex editor unsaved edits (ClickUp 86e3jthxr)
 
 #### DEV-V-092-T001 — Leaving a changed Codex record asks first
@@ -10314,6 +10342,7 @@ A pick that would exceed open trait slots is refused. The disabled Add button de
 | DEV-V-091 | Sheet viewers cannot use edit controls (ClickUp 86e3jryyp) | — | Automated (`sheet-viewer-edits.test.ts`) + manual DEV-V-091-T001 |
 | DEV-V-093 | Core Rules editor unsaved edits (ClickUp 86e3jtrak) | — | Automated (`core-rules-unsaved-leave.test.ts`) + manual DEV-V-093-T001 |
 | DEV-V-094 | Sheet Currency in a second tab (ClickUp 86e3juw07) | — | Automated (`currency-field-commit.test.ts`) + manual DEV-V-094-T001 |
+| DEV-V-095 | Core Rules Conditions editor (ClickUp 86e3juy5z) | — | Automated (`core-rules-conditions.test.ts`) + manual DEV-V-095-T001 |
 | DEV-V-083 | Assigned base skill information (ClickUp 86e2q66jv) | — | Automated (`guided-skills-panel.test.tsx`) + manual DEV-V-083-T001 |
 
 When implementing a related task, replace the legacy **DEV-T-###** block with granular **DEV-V-###** tests in this file.
