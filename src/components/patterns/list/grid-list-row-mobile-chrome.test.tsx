@@ -20,7 +20,8 @@ describe('GridListRow mobile external chrome overlay', () => {
 
     expect(html).toContain('--glr-mobile-chrome-reserve');
     expect(html).toContain('max-lg:[padding-inline-end:var(--glr-mobile-chrome-reserve)]');
-    expect(html).toContain('max-lg:[grid-template-columns:minmax(0,1fr)]');
+    expect(html).toContain('max-lg:col-span-full');
+    expect(html).not.toContain('max-lg:[grid-template-columns:minmax(0,1fr)]');
     expect(html).toContain('class="block min-w-0 truncate"');
   });
 });
