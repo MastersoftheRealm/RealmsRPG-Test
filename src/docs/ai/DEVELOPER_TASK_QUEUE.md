@@ -192,6 +192,7 @@ Archived tasks waiting on owner manual validation. Implementation is complete (`
 
 | Task | Suite / tests | What to verify |
 | ---- | ------------- | -------------- |
+| **86e3jv000** | DEV-V-098 **T001** | Character sheet Recovery. Health 25/20 and Energy 5/18, Partial, 2 hours, Automatic: Health stays 25 and the preview shows +0 HP, not "+-5". The toast says Recovered 0 HP and 10 EN. Energy 25/18 stays 25. Full recovery leaves Health at 25 and raises Energy from 5 to 18. |
 | **86e3juy8e** | DEV-V-097 **T001** | Character sheet edit mode. At full Health, remove 3 Health allocation points and current Health matches the new max after reload. The same for Energy allocation, Vitality, and Charisma. Current that is already under the new max stays there. |
 | **86e3juy89** | DEV-V-096 **T001** | Character sheet header. Three quick Health minus clicks from 20 leave 17 after reload. Three quick Action Points minus clicks from 10 leave 7 after reload. A paused click still moves by 1, and holding minus keeps stepping until release. |
 | **86e3juw07** | DEV-V-094 **T001** | Same character sheet in two tabs. In tab B, click Currency and do not type. In tab A, set Currency to 100 and wait for the save. Click out of Currency in tab B and reload. Currency stays 100. Typing a number, or +5 / -10 and Enter, still saves that change. |

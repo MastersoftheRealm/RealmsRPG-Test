@@ -16,6 +16,13 @@ import { useState, useMemo, useCallback } from 'react';
 import { Moon, Sun, Clock, Zap, Heart, Sparkles, RotateCcw } from 'lucide-react';
 import { Modal, Button } from '@/components/ui';
 import { SegmentedControl } from '@/components/patterns';
+import {
+  autoRecoveryQuarters,
+  formatRecoveredAmount,
+  partialAmountRestored,
+  quarterRestoreAmount,
+  resourceAfterFullRecovery,
+} from '@/lib/character/recovery-over-max';
 import { statusPanel } from '@/lib/ui/status-surface-classes';
 import { cn } from '@/lib/utils';
 
@@ -54,9 +61,6 @@ type RecoveryMode = 'full' | 'partial';
 type PartialHours = '2' | '4' | '6';
 type AllocationMode = 'manual' | 'automatic';
 
-// Round up helper
-const roundUp = (value: number): number => Math.ceil(value);
-
 export function RecoveryModal({
   isOpen,
   onClose,
@@ -77,64 +81,23 @@ export function RecoveryModal({
   const totalQuarters = Number(hours);
   const [hpQuarters, setHpQuarters] = useState(2);
 
-  // Calculate deficits
-  const hpDeficit = maxHealth - currentHealth;
-  const enDeficit = maxEnergy - currentEnergy;
-
   // Calculate what each quarter restores
-  const hpPerQuarter = roundUp(maxHealth / 4);
-  const enPerQuarter = roundUp(maxEnergy / 4);
+  const hpPerQuarter = quarterRestoreAmount(maxHealth);
+  const enPerQuarter = quarterRestoreAmount(maxEnergy);
 
-  // Automatic allocation: optimize based on percentage recovered
-  const autoAllocation = useMemo(() => {
-    if (hpDeficit === 0 && enDeficit === 0) {
-      // Both full - doesn't matter, split evenly
-      const halfQuarters = Math.floor(totalQuarters / 2);
-      return { hp: halfQuarters, en: totalQuarters - halfQuarters };
-    }
-
-    if (hpDeficit === 0) {
-      // HP full, all to EN
-      return { hp: 0, en: totalQuarters };
-    }
-
-    if (enDeficit === 0) {
-      // EN full, all to HP
-      return { hp: totalQuarters, en: 0 };
-    }
-
-    // Both have deficits - find optimal allocation
-    // Try all possible allocations and pick the one with highest total % recovered
-    let bestAllocation = { hp: 0, en: 0 };
-    let bestScore = -1;
-
-    for (let hpQ = 0; hpQ <= totalQuarters; hpQ++) {
-      const enQ = totalQuarters - hpQ;
-
-      // Calculate how much would be restored (capped at deficit)
-      const hpRestored = Math.min(hpQ * hpPerQuarter, hpDeficit);
-      const enRestored = Math.min(enQ * enPerQuarter, enDeficit);
-
-      // Calculate percentage of total possible recovery
-      const hpRecoveredPercent = maxHealth > 0 ? hpRestored / maxHealth : 0;
-      const enRecoveredPercent = maxEnergy > 0 ? enRestored / maxEnergy : 0;
-      const totalScore = hpRecoveredPercent + enRecoveredPercent;
-
-      if (totalScore > bestScore) {
-        bestScore = totalScore;
-        bestAllocation = { hp: hpQ, en: enQ };
-      } else if (totalScore === bestScore) {
-        // When tied, prefer balanced allocation
-        const currentBalance = Math.abs(bestAllocation.hp - bestAllocation.en);
-        const newBalance = Math.abs(hpQ - enQ);
-        if (newBalance < currentBalance) {
-          bestAllocation = { hp: hpQ, en: enQ };
-        }
-      }
-    }
-
-    return bestAllocation;
-  }, [totalQuarters, hpDeficit, enDeficit, hpPerQuarter, enPerQuarter, maxHealth, maxEnergy]);
+  // Automatic allocation: optimize based on percentage recovered.
+  // A pool already at or above max has no gap, so those quarters go to the other pool.
+  const autoAllocation = useMemo(
+    () =>
+      autoRecoveryQuarters({
+        totalQuarters,
+        currentHealth,
+        maxHealth,
+        currentEnergy,
+        maxEnergy,
+      }),
+    [totalQuarters, currentHealth, maxHealth, currentEnergy, maxEnergy],
+  );
 
   // Get current allocation based on mode
   const currentAllocation =
@@ -142,13 +105,25 @@ export function RecoveryModal({
       ? autoAllocation
       : { hp: hpQuarters, en: totalQuarters - hpQuarters };
 
-  // Calculate restored amounts
-  const hpRestored = Math.min(currentAllocation.hp * hpPerQuarter, hpDeficit);
-  const enRestored = Math.min(currentAllocation.en * enPerQuarter, enDeficit);
+  // Restored amounts stop at max and are never negative. Over-max stays put.
+  const hpRestored = partialAmountRestored(
+    currentAllocation.hp,
+    hpPerQuarter,
+    currentHealth,
+    maxHealth,
+  );
+  const enRestored = partialAmountRestored(
+    currentAllocation.en,
+    enPerQuarter,
+    currentEnergy,
+    maxEnergy,
+  );
 
   // New totals after recovery
   const newHealth = currentHealth + hpRestored;
   const newEnergy = currentEnergy + enRestored;
+  const fullHealth = resourceAfterFullRecovery(currentHealth, maxHealth);
+  const fullEnergy = resourceAfterFullRecovery(currentEnergy, maxEnergy);
 
   // Count feats/traits that will be reset
   const partialFeatsCount = feats.filter(
@@ -239,7 +214,8 @@ export function RecoveryModal({
         {mode === 'full' && (
           <div className="space-y-4 rounded-lg border border-primary-subtle-border bg-primary-subtle-bg p-4">
             <p className="text-sm text-primary-subtle-fg">
-              A full recovery restores all resources to maximum and resets all ability uses.
+              A full recovery restores Health and Energy that are below maximum, and resets all
+              ability uses. Health or Energy already above maximum stays there.
             </p>
 
             <div className="grid grid-cols-2 gap-4">
@@ -249,7 +225,14 @@ export function RecoveryModal({
                 <div>
                   <div className="text-xs text-text-muted">Health</div>
                   <div className="font-bold">
-                    {currentHealth} → <span className="text-success-fg">{maxHealth}</span>
+                    {currentHealth} →{' '}
+                    <span
+                      className={cn(
+                        fullHealth > currentHealth ? 'text-success-fg' : 'text-text-primary',
+                      )}
+                    >
+                      {fullHealth}
+                    </span>
                   </div>
                 </div>
               </div>
@@ -260,7 +243,14 @@ export function RecoveryModal({
                 <div>
                   <div className="text-xs text-text-muted">Energy</div>
                   <div className="font-bold">
-                    {currentEnergy} → <span className="text-success-fg">{maxEnergy}</span>
+                    {currentEnergy} →{' '}
+                    <span
+                      className={cn(
+                        fullEnergy > currentEnergy ? 'text-success-fg' : 'text-text-primary',
+                      )}
+                    >
+                      {fullEnergy}
+                    </span>
                   </div>
                 </div>
               </div>
@@ -386,7 +376,8 @@ export function RecoveryModal({
                       </span>
                     </div>
                     <div className="text-xs text-success-fg">
-                      +{hpRestored} HP ({currentAllocation.hp}/{totalQuarters} quarters)
+                      {formatRecoveredAmount(hpRestored)} HP ({currentAllocation.hp}/{totalQuarters}{' '}
+                      quarters)
                     </div>
                   </div>
                 </div>
@@ -403,7 +394,8 @@ export function RecoveryModal({
                       </span>
                     </div>
                     <div className="text-xs text-success-fg">
-                      +{enRestored} EN ({currentAllocation.en}/{totalQuarters} quarters)
+                      {formatRecoveredAmount(enRestored)} EN ({currentAllocation.en}/{totalQuarters}{' '}
+                      quarters)
                     </div>
                   </div>
                 </div>
