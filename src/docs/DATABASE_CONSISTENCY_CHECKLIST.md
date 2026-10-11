@@ -31,7 +31,7 @@ Use this checklist to keep your Supabase database in sync with the app and fix c
 
 ## 3. User library / profile errors after migration
 
-- **“null value in column updated_at”** or **“user_items_user_id_fkey”**: Run **sql/supabase-user-profiles-timestamps-default.sql** and ensure the app uses `ensureUserProfile` (or equivalent) before any insert into `user_items`, `user_powers`, etc. See [AI_CHANGELOG](../ai/AI_CHANGELOG.md) 2026-03-02.
+- **“null value in column updated_at”** or **“user_items_user_id_fkey”**: Run **sql/supabase-user-profiles-timestamps-default.sql** and ensure the app uses `ensureUserProfile` (or equivalent) before any insert into `user_items`, `user_powers`, etc. See [AI_CHANGELOG](../ai/archive/AI_CHANGELOG.md) 2026-03-02.
 - **Profile not found:** Ensure a row exists in `user_profiles` for the user’s `id` (auth.uid()); the app creates it on first login or before library writes.
 
 ---
