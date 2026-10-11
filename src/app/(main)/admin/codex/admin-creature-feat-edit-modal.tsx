@@ -30,6 +30,13 @@ export const EMPTY_CREATURE_FEAT_FORM: CreatureFeatFormState = {
   source: '',
 };
 
+/** Parse admin number inputs that may be fractional (e.g. feat point cost 0.5 or -0.5). */
+export function parseOptionalAdminDecimalInput(raw: string): number | undefined {
+  if (raw === '') return undefined;
+  const n = parseFloat(raw);
+  return Number.isNaN(n) ? undefined : n;
+}
+
 type AdminCreatureFeatEditModalProps = {
   isOpen: boolean;
   onClose: () => void;
@@ -108,13 +115,12 @@ export function AdminCreatureFeatEditModal({
             </label>
             <Input
               type="number"
-              min={0}
+              step="any"
               value={form.points ?? ''}
               onChange={(e) =>
                 setForm((f) => ({
                   ...f,
-                  points:
-                    e.target.value === '' ? undefined : (parseInt(e.target.value, 10) ?? undefined),
+                  points: parseOptionalAdminDecimalInput(e.target.value),
                 }))
               }
               placeholder="No value"
