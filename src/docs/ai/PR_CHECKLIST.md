@@ -37,4 +37,4 @@ Use before opening the draft PR. Keep answers short. Agents do not mark the Clic
 | `/global-audit` | Unused on a task | Do not run. |
 | `/debt` | Unused on a task | Do not run. |
 
-**Implementations:** `.cursor/commands/audit.md`, `cleanup.md`. `global-audit.md` and `debt.md` only say they are unused.
+**Implementations:** `.cursor/commands/audit.md`, `cleanup.md`. Retired stubs (not live commands): `src/docs/ai/archive/global-audit.md`, `archive/debt.md`.
