@@ -373,14 +373,15 @@ export const GridListRow = memo(function GridListRow({
         <div
           className={cn(
             'flex min-h-[44px] min-w-0 items-center',
-            // Row 1 only: span content+chrome tracks so the name is not squeezed (86e3jxbrc).
-            // Expanded/summary rows stay in contentCol so width matches pre-fix behavior.
+            // Row 1 only: span both chrome-grid tracks below `lg` (86e3jxbrc). Inline
+            // `gridColumn` beats `col-span-full`, so use arbitrary grid-column in a class.
+            // Expanded/summary rows keep inline gridColumn on contentCol (~193px).
             mobileExternalChromeOverlay &&
-              'max-lg:col-span-full max-lg:w-full max-lg:[padding-inline-end:var(--glr-mobile-chrome-reserve)]',
+              'max-lg:[grid-column:1/-1] max-lg:w-full max-lg:[padding-inline-end:var(--glr-mobile-chrome-reserve)] lg:col-start-1',
           )}
           style={{
-            gridColumn: contentCol,
             gridRow: 1,
+            ...(!mobileExternalChromeOverlay ? { gridColumn: contentCol } : {}),
             ...(mobileChromeReserve
               ? { ['--glr-mobile-chrome-reserve' as string]: mobileChromeReserve }
               : {}),
@@ -437,9 +438,12 @@ export const GridListRow = memo(function GridListRow({
             className={cn(
               'flex min-h-[44px] items-center justify-center',
               mobileExternalChromeOverlay &&
-                'max-lg:pointer-events-none max-lg:z-10 max-lg:col-span-full max-lg:justify-self-end max-lg:[&_a]:pointer-events-auto max-lg:[&_button]:pointer-events-auto',
+                'max-lg:pointer-events-none max-lg:z-10 max-lg:[grid-column:1/-1] max-lg:justify-self-end lg:col-start-2 max-lg:[&_a]:pointer-events-auto max-lg:[&_button]:pointer-events-auto',
             )}
-            style={{ gridColumn: chromeCol, gridRow: 1 }}
+            style={{
+              gridRow: 1,
+              ...(!mobileExternalChromeOverlay ? { gridColumn: chromeCol } : {}),
+            }}
           >
             <GridListRowExternalChrome
               disabled={disabled}

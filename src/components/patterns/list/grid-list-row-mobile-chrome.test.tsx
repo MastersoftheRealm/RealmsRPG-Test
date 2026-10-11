@@ -20,7 +20,11 @@ describe('GridListRow mobile external chrome overlay', () => {
 
     expect(html).toContain('--glr-mobile-chrome-reserve');
     expect(html).toContain('max-lg:[padding-inline-end:var(--glr-mobile-chrome-reserve)]');
-    expect(html).toContain('max-lg:col-span-full');
+    expect(html).toContain('max-lg:[grid-column:1/-1]');
+    // Row 1 must not pin to the narrow content track below `lg` (inline gridColumn wins over col-span).
+    const row1Content = html.match(/max-lg:\[grid-column:1\/-1\][^>]*style="([^"]*)"/)?.[1];
+    expect(row1Content).toBeDefined();
+    expect(row1Content).not.toMatch(/grid-column:\s*1\b/);
     expect(html).not.toContain('max-lg:[grid-template-columns:minmax(0,1fr)]');
     expect(html).toContain('class="block min-w-0 truncate"');
   });
