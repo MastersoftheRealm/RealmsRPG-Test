@@ -16,6 +16,7 @@ import type {
   Item,
   Abilities,
   CharacterProficiency,
+  CharacterTempModifiers,
 } from '@/types';
 import {
   mapPowerRows,
@@ -81,6 +82,7 @@ export type LibrarySectionRowsInput = {
   onToggleEquipArmor?: ((id: string | number) => void) | undefined;
   onRemoveEquipment?: ((id: string | number) => void) | undefined;
   onEquipmentQuantityChange?: ((id: string | number, delta: number) => void) | undefined;
+  tempModifiers?: CharacterTempModifiers | undefined;
 };
 
 export function useLibrarySectionRows({
@@ -115,6 +117,7 @@ export function useLibrarySectionRows({
   onToggleEquipArmor,
   onRemoveEquipment,
   onEquipmentQuantityChange,
+  tempModifiers,
 }: LibrarySectionRowsInput) {
   const rollContext = useRollsOptional();
 
@@ -202,6 +205,7 @@ export function useLibrarySectionRows({
       onToggleEquipArmor,
       onRemoveEquipment,
       onEquipmentQuantityChange,
+      tempModifiers,
     }),
     [
       powerPartsDb,
@@ -228,6 +232,7 @@ export function useLibrarySectionRows({
       onToggleEquipArmor,
       onRemoveEquipment,
       onEquipmentQuantityChange,
+      tempModifiers,
     ],
   );
 

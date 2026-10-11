@@ -7,6 +7,11 @@
 import type { ReactNode } from 'react';
 import { formatDurationCompact, formatSavedActionTypeForDisplay } from '@/lib/utils';
 import { calculateCriticalRange, calculateEvasion } from '@/lib/game/calculations';
+import {
+  applyTempModifier,
+  getScalarTempModifier,
+  tempModifierValueClass,
+} from '@/lib/character/temp-modifiers';
 import { resolveWeaponRangeDisplay, type ItemPropertyPayload } from '@/lib/calculators';
 import {
   InnateToggle,
@@ -32,7 +37,13 @@ import {
 } from '@/components/patterns/list/entity-library-sections';
 import { buildCreatureEquipmentColumns } from '@/components/patterns/list/entity-library-sections-columns';
 import type { useRollsOptional } from '@/components/rolls';
-import type { Abilities, CharacterPower, CharacterTechnique, Item } from '@/types';
+import type {
+  Abilities,
+  CharacterPower,
+  CharacterTechnique,
+  CharacterTempModifiers,
+  Item,
+} from '@/types';
 import { resolveListRowThumbnail } from '@/lib/list-row-image';
 import {
   type CodexPart,
@@ -123,6 +134,8 @@ export type LibraryEntityRowContext = {
   onToggleEquipArmor?: ((id: string | number) => void) | undefined;
   onRemoveEquipment?: ((id: string | number) => void) | undefined;
   onEquipmentQuantityChange?: ((id: string | number, delta: number) => void) | undefined;
+  /** Sheet temp deltas. Critical Range stacks on the armor-row threshold (ADR-0006). */
+  tempModifiers?: CharacterTempModifiers | undefined;
 };
 
 function categoryFactValue(categories: string[]): string | undefined {
@@ -773,10 +786,13 @@ export function mapArmorRows(armor: Item[], ctx: LibraryEntityRowContext): Entit
       item as ItemWithLibrarySource,
     );
     const evasion = calculateEvasion(ctx.abilities?.agility ?? 0);
-    const critThreshold =
+    const baseCrit =
       criticalRangeIncrease > 0
         ? calculateCriticalRange(evasion, criticalRangeIncrease)
         : undefined;
+    const critTemp = getScalarTempModifier(ctx.tempModifiers, 'criticalRange');
+    const critThreshold = baseCrit != null ? applyTempModifier(baseCrit, critTemp) : undefined;
+    const critTint = baseCrit != null ? tempModifierValueClass(critTemp) : '';
 
     const propertySection = propertiesProficienciesSection(propertyChips, 'armor');
     const detailSections = glrSurfaceDetailSections(
@@ -804,7 +820,12 @@ export function mapArmorRows(armor: Item[], ctx: LibraryEntityRowContext): Entit
           className: 'text-primary-link-fg font-medium',
           align: 'center',
         },
-        { key: 'crit', value: critThreshold ?? '-', align: 'center' },
+        {
+          key: 'crit',
+          value: critThreshold ?? '-',
+          align: 'center',
+          ...(critTint ? { className: critTint } : {}),
+        },
       ],
       detailSections: detailSections.length > 0 ? detailSections : undefined,
       badges: needsProfBadge(ctx, { armor: [item] }),

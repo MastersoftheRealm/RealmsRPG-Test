@@ -168,6 +168,7 @@ export function LibrarySection({
     onToggleEquipArmor: data?.onToggleEquipArmor,
     onRemoveEquipment: data?.onRemoveEquipment,
     onEquipmentQuantityChange: data?.onEquipmentQuantityChange,
+    tempModifiers: character?.tempModifiers,
   });
 
   const { tabGroupId, sharedPanelId } = useTabGroup('character-sheet-library');
