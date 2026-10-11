@@ -47,6 +47,18 @@ export function finishCreatorSentinelRemoval(): void {
   creatorSentinelRemovalQueued = false;
 }
 
+/**
+ * A dirty editor that unmounts still has the same-URL Back sentinel.
+ * Leaving already steps through history, so that path must not pop again.
+ */
+export function shouldReleaseCreatorSentinel(input: {
+  unmounting: boolean;
+  leaving: boolean;
+  state: unknown;
+}): boolean {
+  return input.unmounting && !input.leaving && isCreatorBackSentinel(input.state);
+}
+
 export type CreatorBackHistory = {
   readonly state: unknown;
   readonly length: number;

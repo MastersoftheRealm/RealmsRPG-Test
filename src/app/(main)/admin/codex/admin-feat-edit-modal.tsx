@@ -9,6 +9,8 @@ import { featToFormState, type FeatFormState } from './admin-feat-form';
 import { AdminFeatEditModalFields } from './admin-feat-edit-modal-fields';
 import { AdminCodexCopySourceBanner } from './admin-codex-copy-source-banner';
 import { AdminCodexEditModalFooter } from './admin-codex-edit-modal-footer';
+import { codexFeatEditorIsDirty } from './admin-codex-unsaved-leave';
+import { useCodexEditorLeaveGuard } from './admin-codex-unsaved-leave-guard';
 
 export function AdminFeatEditModal({
   isOpen,
@@ -125,6 +127,16 @@ export function AdminFeatEditModal({
     [hasLevels, selectedEditId, markDirty],
   );
 
+  const leave = useCodexEditorLeaveGuard(
+    codexFeatEditorIsDirty({
+      hasLevels,
+      dirtyLevelCount: dirtyIds.size,
+      form,
+      initialForm,
+    }),
+    onClose,
+  );
+
   const handleSelectLevel = (nextId: string) => {
     // Persist current level draft before switching
     if (hasLevels && selectedEditId) {
@@ -150,14 +162,14 @@ export function AdminFeatEditModal({
   return (
     <Modal
       isOpen={isOpen}
-      onClose={onClose}
+      onClose={leave.requestClose}
       title={title}
       size="full"
       fullScreenOnMobile
       footer={
         <AdminCodexEditModalFooter
           onDelete={canDelete ? onDelete : undefined}
-          onClose={onClose}
+          onClose={leave.requestClose}
           onSave={() => {
             if (hasLevels) {
               // Ensure current form is captured before bulk-save.
@@ -266,6 +278,7 @@ export function AdminFeatEditModal({
           sourceResetKey={selectedEditId ?? 'new'}
         />
       </div>
+      {leave.prompt}
     </Modal>
   );
 }

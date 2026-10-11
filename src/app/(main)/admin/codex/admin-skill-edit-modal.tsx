@@ -6,6 +6,10 @@ import { Modal, Input, Textarea } from '@/components/ui';
 import { AdminCodexCopySourceBanner } from './admin-codex-copy-source-banner';
 import { AdminCodexEditModalFooter } from './admin-codex-edit-modal-footer';
 import { AdminCodexSourceField } from './admin-codex-source-field';
+import {
+  useCodexEditorDraftDirty,
+  useCodexEditorLeaveGuard,
+} from './admin-codex-unsaved-leave-guard';
 
 export type SkillFormState = {
   name: string;
@@ -64,17 +68,19 @@ export function AdminSkillEditModal({
   onDelete,
   onSave,
 }: AdminSkillEditModalProps) {
+  const dirty = useCodexEditorDraftDirty(form, isOpen);
+  const leave = useCodexEditorLeaveGuard(dirty, onClose);
   return (
     <Modal
       isOpen={isOpen}
-      onClose={onClose}
+      onClose={leave.requestClose}
       title={title}
       size="full"
       fullScreenOnMobile
       footer={
         <AdminCodexEditModalFooter
           onDelete={editingId ? onDelete : undefined}
-          onClose={onClose}
+          onClose={leave.requestClose}
           onSave={onSave}
           saveDisabled={saving || !form.name.trim()}
           saving={saving}
@@ -199,6 +205,7 @@ export function AdminSkillEditModal({
           </select>
         </div>
       </div>
+      {leave.prompt}
     </Modal>
   );
 }

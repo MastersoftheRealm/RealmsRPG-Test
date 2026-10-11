@@ -22,6 +22,10 @@ import {
 import { AdminCodexCopySourceBanner } from './admin-codex-copy-source-banner';
 import { AdminCodexEditModalFooter } from './admin-codex-edit-modal-footer';
 import { AdminCodexSourceField } from './admin-codex-source-field';
+import {
+  useCodexEditorDraftDirty,
+  useCodexEditorLeaveGuard,
+} from './admin-codex-unsaved-leave-guard';
 import { catalogListingClassOptions } from '@/lib/library/catalog-listing';
 
 const TRAIT_PICKER_GRID = '1.5fr 0.6fr 0.6fr';
@@ -63,6 +67,11 @@ export function AdminSpeciesEditModal({
   onSave,
 }: AdminSpeciesEditModalProps) {
   const [traitPickerFor, setTraitPickerFor] = useState<TraitPickerField | null>(null);
+  const dirty = useCodexEditorDraftDirty(form, isOpen);
+  const leave = useCodexEditorLeaveGuard(dirty, () => {
+    setTraitPickerFor(null);
+    onClose();
+  });
 
   const skillOptions = useMemo(
     () => skills.map((s) => ({ value: String(s.id), label: s.name })),
@@ -111,23 +120,18 @@ export function AdminSpeciesEditModal({
     setTraitPickerFor(null);
   };
 
-  const handleClose = () => {
-    setTraitPickerFor(null);
-    onClose();
-  };
-
   return (
     <>
       <Modal
         isOpen={isOpen}
-        onClose={handleClose}
+        onClose={leave.requestClose}
         title={title}
         size="full"
         fullScreenOnMobile
         footer={
           <AdminCodexEditModalFooter
             onDelete={editingId ? onDelete : undefined}
-            onClose={handleClose}
+            onClose={leave.requestClose}
             onSave={onSave}
             saveDisabled={saving || !form.name.trim()}
             saving={saving}
@@ -371,6 +375,7 @@ export function AdminSpeciesEditModal({
         confirmLabel="Add Selected"
         size="lg"
       />
+      {leave.prompt}
     </>
   );
 }

@@ -10039,6 +10039,36 @@ A pick that would exceed open trait slots is refused. The disabled Add button de
 
 ---
 
+## DEV-V-092 — Codex editor unsaved edits (ClickUp 86e3jthxr)
+
+#### DEV-V-092-T001 — Leaving a changed Codex record asks first
+
+| Field | Value |
+|-------|-------|
+| **Suite** | DEV-V-092 |
+| **Related task** | 86e3jthxr |
+| **Where** | Admin Codex, Feats edit modal. Also try one other Codex record editor. |
+| **Needs** | An admin account. One saved feat. About 500px wide is enough; the exits do not depend on width. |
+
+**Steps**
+1. Open a feat's edit modal and change a field.
+2. Press Escape. Choose Keep editing.
+3. Click the X. Choose Discard.
+4. Open the feat again, change a field, and press the browser Back button. Choose Keep editing, then Back again and choose Discard.
+5. Open the feat again, change a field, and refresh.
+
+**Expected**
+- Escape and the X ask before the edits are discarded. Keep editing leaves the modal open with the change. Discard closes it, and the saved feat is unchanged.
+- Back asks the same way. Keep editing stays on the editor. Discard leaves the page, and the saved feat is unchanged.
+- Refresh shows the browser warning. Staying on the page keeps the change. Leaving does not save it.
+- Opening the feat and closing it without a change does not ask.
+
+**Automated** | `npm test` — `admin-codex-unsaved-leave.test.ts`
+
+**Report** — `[ ] PASS` · `[ ] FAIL` · `[ ] SKIP` — Notes:
+
+---
+
 ## DEV-V-083 — Assigned base skill information (ClickUp 86e2q66jv)
 
 #### DEV-V-083-T001 — An assigned skill still shows the add-list information
