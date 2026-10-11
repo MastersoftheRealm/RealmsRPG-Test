@@ -15,7 +15,11 @@ import {
   applyLevelUpProficiencyUpdates,
 } from '@/lib/game/archetype-display';
 import { calculateProficiency } from '@/lib/game/formulas';
-import { computeMaxHealthEnergy } from '@/lib/game/calculations';
+import {
+  applySheetAbilityChange,
+  applySheetEnergyPointsChange,
+  applySheetHealthPointsChange,
+} from '@/lib/character/current-follows-max';
 import { ACTION_POINT_DEFAULTS } from '@/lib/game/constants';
 import { DEFAULT_DEFENSE_SKILLS } from '@/types/skills';
 import {
@@ -242,16 +246,9 @@ export function useSheetResourceActions({
   const handleAbilityChange = useCallback(
     (ability: AbilityName, value: number) => {
       if (!character) return;
-      setCharacter((prev) =>
-        prev
-          ? {
-              ...prev,
-              abilities: { ...prev.abilities, [ability]: value },
-            }
-          : null,
-      );
+      setCharacter((prev) => (prev ? applySheetAbilityChange(prev, ability, value, rules) : null));
     },
-    [character, setCharacter],
+    [character, setCharacter, rules],
   );
 
   const handleDefenseChange = useCallback(
@@ -290,23 +287,7 @@ export function useSheetResourceActions({
   const handleHealthPointsChange = useCallback(
     (value: number) => {
       if (!character) return;
-      setCharacter((prev) => {
-        if (!prev) return null;
-        const oldPoints = prev.healthPoints ?? 0;
-        const delta = value - oldPoints;
-        const newPoints = Math.max(0, value);
-        if (delta <= 0) {
-          return { ...prev, healthPoints: newPoints };
-        }
-        const { maxHealth: oldMax } = computeMaxHealthEnergy(prev, rules);
-        const currentHP = prev.currentHealth ?? prev.health?.current ?? oldMax;
-        const shouldBump = currentHP >= oldMax;
-        const newCurrent = shouldBump ? currentHP + delta : currentHP;
-        return withSyncedResourceFields(
-          { ...prev, healthPoints: newPoints },
-          { currentHealth: newCurrent },
-        );
-      });
+      setCharacter((prev) => (prev ? applySheetHealthPointsChange(prev, value, rules) : null));
     },
     [character, setCharacter, rules],
   );
@@ -314,23 +295,7 @@ export function useSheetResourceActions({
   const handleEnergyPointsChange = useCallback(
     (value: number) => {
       if (!character) return;
-      setCharacter((prev) => {
-        if (!prev) return null;
-        const oldPoints = prev.energyPoints ?? 0;
-        const delta = value - oldPoints;
-        const newPoints = Math.max(0, value);
-        if (delta <= 0) {
-          return { ...prev, energyPoints: newPoints };
-        }
-        const { maxEnergy: oldMax } = computeMaxHealthEnergy(prev, rules);
-        const currentEN = prev.currentEnergy ?? prev.energy?.current ?? oldMax;
-        const shouldBump = currentEN >= oldMax;
-        const newCurrent = shouldBump ? currentEN + delta : currentEN;
-        return withSyncedResourceFields(
-          { ...prev, energyPoints: newPoints },
-          { currentEnergy: newCurrent },
-        );
-      });
+      setCharacter((prev) => (prev ? applySheetEnergyPointsChange(prev, value, rules) : null));
     },
     [character, setCharacter, rules],
   );
