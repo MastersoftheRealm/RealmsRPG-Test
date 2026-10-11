@@ -192,6 +192,7 @@ Archived tasks waiting on owner manual validation. Implementation is complete (`
 
 | Task | Suite / tests | What to verify |
 | ---- | ------------- | -------------- |
+| **86e3juw07** | DEV-V-094 **T001** | Same character sheet in two tabs. In tab B, click Currency and do not type. In tab A, set Currency to 100 and wait for the save. Click out of Currency in tab B and reload. Currency stays 100. Typing a number, or +5 / -10 and Enter, still saves that change. |
 | **86e3jryyp** | DEV-V-091 **T001** | Public sheet as a second account, and the campaign Realm Master view. Health, Energy, Action Points, XP, Use, equip, quantity, feat uses, add, notes, and Sync Proficiencies are not usable. The roll log opens without the dice builder. The owner can still use those controls. |
 | **86e3jrra4** | DEV-V-090 **T001** | Skill encounter. Add a participant, choose Athletics, submit a roll, and refresh while the status says Unsaved changes. The participant, Athletics, the totals, the success or failure status, and the acted count are still there. Waiting for Saved to cloud and refreshing keeps the same fields. |
 | **86e3jmdp9** | DEV-V-085 **T001** | `/codex`. Feats, Skills, Species, Archetypes, and Equipment each name the search field. Advanced: Parts, Properties, Creature Feats, and Traits do the same. Archetypes stays "Search archetype paths". Species is "Search species". The other names match the existing search text. Filters stay labeled. |
