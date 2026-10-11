@@ -17,6 +17,19 @@ import type { PowerPart, TechniquePart } from '@/hooks';
 
 type CreatorPart = PowerPart | TechniquePart;
 
+/** All Categories lists Brace, Evade, and Defend twice. The category tells them apart. */
+export function creatorPartOptionLabel(
+  part: { id: string | number; name: string; category?: string | undefined },
+  partsInList: ReadonlyArray<{ id: string | number; name: string; category?: string | undefined }>,
+): string {
+  const duplicated = partsInList.some(
+    (other) => String(other.id) !== String(part.id) && other.name === part.name,
+  );
+  if (!duplicated) return part.name;
+  const category = part.category?.trim();
+  return category ? `${part.name} (${category})` : part.name;
+}
+
 interface SelectedPartLike {
   part: CreatorPart;
   op_1_lvl: number;
@@ -208,7 +221,7 @@ export function PowerPartCard({
               >
                 {filteredParts.map((p, idx) => (
                   <option key={p.id} value={idx}>
-                    {p.name}
+                    {creatorPartOptionLabel(p, filteredParts)}
                   </option>
                 ))}
               </select>

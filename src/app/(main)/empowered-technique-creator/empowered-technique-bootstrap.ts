@@ -10,6 +10,7 @@ import { CREATOR_CACHE_KEYS } from '@/lib/game/creator-constants';
 import { readCreatorCache } from '@/lib/game/creator-cache';
 import { deriveEmpoweredAttackMode, normalizeAttackMode, type AttackMode } from '@/lib/attack-mode';
 import { normalizeTargetedDefenses } from '@/lib/game/targeted-defenses';
+import { findByIdOrName } from '@/lib/id-constants';
 
 export const EMPOWERED_TECHNIQUE_CREATOR_CACHE_KEY = CREATOR_CACHE_KEYS.EMPOWERED_TECHNIQUE;
 
@@ -250,8 +251,10 @@ function mapTechniqueRows(
   return rows
     .map((row) => {
       const key = row.partId ?? row.id;
-      const part = techniqueParts.find(
-        (dbPart) => String(dbPart.id) === String(key) || (matchByName && dbPart.name === row.name),
+      // Id first. A repeated technique-part name must not replace the saved id (86e3jpq36).
+      const part = findByIdOrName(
+        techniqueParts,
+        matchByName ? { id: key, name: row.name } : { id: key },
       );
       if (!part) return null;
       return {

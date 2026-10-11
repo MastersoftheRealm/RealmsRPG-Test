@@ -9,6 +9,7 @@ import { CREATOR_CACHE_KEYS } from '@/lib/game/creator-constants';
 import { readCreatorCache } from '@/lib/game/creator-cache';
 import { deriveTechniqueAttackMode, normalizeAttackMode, type AttackMode } from '@/lib/attack-mode';
 import { normalizeTargetedDefenses } from '@/lib/game/targeted-defenses';
+import { findByIdOrName } from '@/lib/id-constants';
 
 export const TECHNIQUE_CREATOR_CACHE_KEY = CREATOR_CACHE_KEYS.TECHNIQUE;
 
@@ -184,9 +185,12 @@ export function techniqueLibraryRecordToFormState(
   // action / damage / attack mode and are re-created by buildMechanicParts.
   const loadedParts: TechniqueSelectedPart[] = [];
   for (const savedPart of savedParts) {
-    const matchedPart = techniqueParts.find(
-      (p) => p.id === String(savedPart.id) || p.name === savedPart.name,
-    );
+    // Id first. Brace, Evade, and Defend each exist twice, so a name match
+    // would keep whichever copy is earlier in the catalog (86e3jpq36).
+    const matchedPart = findByIdOrName(techniqueParts, {
+      id: savedPart.id,
+      name: savedPart.name,
+    });
     if (matchedPart && !matchedPart.mechanic) {
       loadedParts.push({
         part: matchedPart,
