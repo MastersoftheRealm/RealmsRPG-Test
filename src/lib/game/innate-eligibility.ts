@@ -326,6 +326,7 @@ export function snapshotOfficialPowerForInnate(
         }
       | null
       | undefined;
+    attackMode?: PowerDocument['attackMode'] | null | undefined;
     composition?: unknown;
   },
   partsDb: PowerPart[],
@@ -337,6 +338,7 @@ export function snapshotOfficialPowerForInnate(
     actionType: power.actionType ?? undefined,
     isReaction: power.isReaction === true,
     duration: power.duration ?? undefined,
+    attackMode: power.attackMode ?? undefined,
   };
   const powerDoc: PowerDocument = {
     ...(power as PowerDocument),

@@ -9602,6 +9602,33 @@ A pick that would exceed open trait slots is refused. The disabled Add button de
 
 ---
 
+## DEV-V-073 — Weapon power cost outside the creator (ClickUp 86e3jpq1x)
+
+#### DEV-V-073-T001 — Library matches the power creator for Weapon Attack
+
+| Field | Value |
+|-------|-------|
+| **Suite** | DEV-V-073 |
+| **Related task** | 86e3jpq1x |
+| **Where** | `/power-creator`, then My Library, a character sheet power row, and an add-power picker |
+| **Needs** | A signed-in account that can save a power |
+
+**Steps**
+1. Open `/power-creator`. Add the part Attack / Potency Increase. Set Attack to Weapon Attack. Note the Energy and Training Points.
+2. Save to My Library. Open that power in the library list and in its detail.
+3. Add the power to a character and open the sheet. Open an add-power picker that lists it.
+4. Repeat with Attack set to No Weapon/Attack, and again with Unarmed Attack.
+
+**Expected**
+- Weapon Attack shows 6 Energy and 3 Training Points in the creator, the library list, the library detail, the sheet row, and the picker.
+- No Weapon/Attack and Unarmed Attack show 0 Energy and 2 Training Points. They do not add the weapon part.
+
+**Automated** | `npm test` — `power-calc.test.ts` + `library-selectable-builders.test.ts`
+
+**Report** — `[ ] PASS` · `[ ] FAIL` · `[ ] SKIP` — Notes:
+
+---
+
 ## DEV-V-071 — Profile column writes (ClickUp 86e3jt562)
 
 #### DEV-V-071-T001 — Direct profile writes stay on the server
@@ -9686,5 +9713,6 @@ A pick that would exceed open trait slots is refused. The disabled Add button de
 | DEV-V-069 | Library duplicate (ClickUp 86e3jx7xt) | — | Automated (`creator-text-limits.test.ts`) + manual DEV-V-069-T001 |
 | DEV-V-070 | Guest sign-in import (ClickUp 86e3jmw1m) | — | Automated (`guest-character-migration.test.ts`, `guest-encounter-migration.test.ts`) + manual DEV-V-070-T001 |
 | DEV-V-072 | Character duplicate (ClickUp 86e3jmcn3) | — | Automated (`characters/route.test.ts`, `character-name-limit.test.ts`) + manual DEV-V-072-T001 |
+| DEV-V-073 | Weapon power cost outside the creator (ClickUp 86e3jpq1x) | — | Automated (`power-calc.test.ts`, `library-selectable-builders.test.ts`) + manual DEV-V-073-T001 |
 
 When implementing a related task, replace the legacy **DEV-T-###** block with granular **DEV-V-###** tests in this file.

@@ -48,6 +48,7 @@ type PowerEnergySource = Pick<
   | 'range'
   | 'area'
   | 'duration'
+  | 'attackMode'
   | 'composition'
 >;
 
@@ -82,6 +83,7 @@ export function buildCraftingPowerOptions(
       range: raw.range,
       area: raw.area,
       duration: raw.duration,
+      attackMode: raw.attackMode,
       composition: raw.composition,
     };
     return derivePowerDisplay(doc, powerPartsDb).energy;

@@ -232,6 +232,7 @@ export function libraryItemToPowerDocument(item: PowerTechniqueBudgetItem): Powe
     range: item.range,
     area: item.area,
     duration: item.duration,
+    attackMode: item.attackMode,
     ...(item.composition ? { composition: item.composition } : {}),
   };
 }
