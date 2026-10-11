@@ -192,6 +192,7 @@ Archived tasks waiting on owner manual validation. Implementation is complete (`
 
 | Task | Suite / tests | What to verify |
 | ---- | ------------- | -------------- |
+| **86e3juy89** | DEV-V-096 **T001** | Character sheet header. Three quick Health minus clicks from 20 leave 17 after reload. Three quick Action Points minus clicks from 10 leave 7 after reload. A paused click still moves by 1, and holding minus keeps stepping until release. |
 | **86e3juw07** | DEV-V-094 **T001** | Same character sheet in two tabs. In tab B, click Currency and do not type. In tab A, set Currency to 100 and wait for the save. Click out of Currency in tab B and reload. Currency stays 100. Typing a number, or +5 / -10 and Enter, still saves that change. |
 | **86e3jryyp** | DEV-V-091 **T001** | Public sheet as a second account, and the campaign Realm Master view. Health, Energy, Action Points, XP, Use, equip, quantity, feat uses, add, notes, and Sync Proficiencies are not usable. The roll log opens without the dice builder. The owner can still use those controls. |
 | **86e3jrra4** | DEV-V-090 **T001** | Skill encounter. Add a participant, choose Athletics, submit a roll, and refresh while the status says Unsaved changes. The participant, Athletics, the totals, the success or failure status, and the acted count are still there. Waiting for Saved to cloud and refreshing keeps the same fields. |
