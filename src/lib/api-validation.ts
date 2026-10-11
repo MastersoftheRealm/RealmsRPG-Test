@@ -219,12 +219,16 @@ function withSafeJsonBlob<T extends z.ZodRawShape>(shape: T) {
     .refine(isSafeMutationPayload, { message: 'Payload has too many fields or invalid keys' });
 }
 
-/** Minimal required fields for character creation. Additional character fields allowed via catchall. */
+/**
+ * A new character needs a name. Duplicate sends only `duplicateOf`; the route copies the
+ * source name. Additional character fields are allowed via catchall.
+ */
 export const characterCreateSchema = withSafeJsonBlob({
   name: z
     .string()
     .min(1, 'Name is required')
-    .max(CHARACTER_NAME_MAX_LENGTH, CHARACTER_NAME_TOO_LONG_MESSAGE),
+    .max(CHARACTER_NAME_MAX_LENGTH, CHARACTER_NAME_TOO_LONG_MESSAGE)
+    .optional(),
   level: z.number().int().min(1).max(20).optional().default(1),
   duplicateOf: z.string().uuid().optional(),
   /**
@@ -232,6 +236,9 @@ export const characterCreateSchema = withSafeJsonBlob({
    * instead of inserting a second character. Stored in its own column, not the JSON blob.
    */
   clientRequestId: z.string().uuid().optional(),
+}).refine((body) => body.duplicateOf != null || (body.name != null && body.name.length > 0), {
+  message: 'Name is required',
+  path: ['name'],
 });
 
 /** Character update — partial, all fields optional. `updatedAt` is the lock token (ADR-0013). */

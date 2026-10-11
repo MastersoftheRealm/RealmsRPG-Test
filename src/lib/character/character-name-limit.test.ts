@@ -64,4 +64,20 @@ describe('character name limit', () => {
     }
     expect(characterUpdateSchema.safeParse({ name: EXACT }).success).toBe(true);
   });
+
+  it('accepts a character duplicate that sends only duplicateOf (86e3jmcn3)', () => {
+    const duplicated = characterCreateSchema.safeParse({
+      duplicateOf: '11111111-1111-4111-8111-111111111111',
+    });
+    expect(duplicated.success).toBe(true);
+    if (duplicated.success) {
+      expect(duplicated.data.name).toBeUndefined();
+    }
+
+    const missingName = characterCreateSchema.safeParse({});
+    expect(missingName.success).toBe(false);
+    if (!missingName.success) {
+      expect(missingName.error.issues.some((issue) => issue.path.join('.') === 'name')).toBe(true);
+    }
+  });
 });
