@@ -16,11 +16,31 @@ export function nextAutosaveRetryDelayMs(failedAttemptIndex: number): number {
   return AUTOSAVE_RETRY_DELAYS_MS[idx]!;
 }
 
+/** Passed when the save is the pagehide / hidden-tab flush, not the debounce timer. */
+export interface AutoSaveFlush {
+  unload: true;
+}
+
+/**
+ * A refresh during "Unsaved changes" must still send the latest document.
+ * The debounced request has not finished, and the browser drops it on unload
+ * unless this flush runs.
+ */
+export function flushDirtyAutosave<T>(args: {
+  enabled: boolean;
+  dirty: boolean;
+  data: T;
+  save: (data: T, flush: AutoSaveFlush) => void;
+}): void {
+  if (!args.enabled || !args.dirty) return;
+  args.save(args.data, { unload: true });
+}
+
 interface AutoSaveOptions<T> {
   /** Data to watch for changes */
   data: T;
-  /** Function to call when saving */
-  onSave: (data: T) => Promise<void>;
+  /** Function to call when saving. `flush` is set for the unload flush. */
+  onSave: (data: T, flush?: AutoSaveFlush) => Promise<void>;
   /** Debounce delay in milliseconds (default: 2000) */
   delay?: number | undefined;
   /** Whether auto-save is enabled (default: true) */
@@ -69,7 +89,9 @@ export function useAutoSave<T>({
   const pendingResaveRef = useRef(false);
   const prevEnabledRef = useRef(false);
   const retryAttemptRef = useRef(0);
-  const performSaveRef = useRef<(dataToSave: T) => Promise<void>>(async () => {});
+  const performSaveRef = useRef<(dataToSave: T, flush?: AutoSaveFlush) => Promise<void>>(
+    async () => {},
+  );
   const enabledRef = useRef(enabled);
   const hasUnsavedChangesRef = useRef(hasUnsavedChanges);
 
@@ -104,8 +126,18 @@ export function useAutoSave<T>({
     }
   };
 
-  const performSave = useCallback(async (dataToSave: T) => {
+  const performSave = useCallback(async (dataToSave: T, flush?: AutoSaveFlush) => {
     if (saveInProgressRef.current) {
+      if (flush?.unload) {
+        // The in-flight debounce request is cancelled when the page goes away.
+        // Send the latest document on this flush instead of waiting to resave.
+        try {
+          await onSaveRef.current(dataToSave, flush);
+        } catch (err) {
+          onSaveErrorRef.current?.(err instanceof Error ? err : new Error('Save failed'));
+        }
+        return;
+      }
       pendingResaveRef.current = true;
       return;
     }
@@ -115,7 +147,7 @@ export function useAutoSave<T>({
     onSaveStartRef.current?.();
 
     try {
-      await onSaveRef.current(dataToSave);
+      await onSaveRef.current(dataToSave, flush);
       retryAttemptRef.current = 0;
       clearRetry();
       setLastSaved(new Date());
@@ -250,8 +282,14 @@ export function useAutoSave<T>({
 
   useEffect(() => {
     const flush = () => {
-      if (!enabledRef.current || !hasUnsavedChangesRef.current) return;
-      void performSaveRef.current(currentDataRef.current);
+      flushDirtyAutosave({
+        enabled: enabledRef.current,
+        dirty: hasUnsavedChangesRef.current,
+        data: currentDataRef.current,
+        save: (data, meta) => {
+          void performSaveRef.current(data, meta);
+        },
+      });
     };
     const onVisibility = () => {
       if (document.visibilityState === 'hidden') flush();

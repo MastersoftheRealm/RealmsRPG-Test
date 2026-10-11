@@ -9981,6 +9981,33 @@ A pick that would exceed open trait slots is refused. The disabled Add button de
 
 ---
 
+## DEV-V-090 — Skill encounter autosave on refresh (ClickUp 86e3jrra4)
+
+#### DEV-V-090-T001 — A refresh during Unsaved changes keeps the skill roll
+
+| Field | Value |
+|-------|-------|
+| **Suite** | DEV-V-090 |
+| **Related task** | 86e3jrra4 |
+| **Where** | A skill encounter |
+| **Needs** | Signed in. One skill encounter. |
+
+**Steps**
+1. Open the skill encounter and add a participant.
+2. Choose Athletics for that participant and submit a roll.
+3. Refresh while the status still says Unsaved changes.
+4. Repeat the roll, wait until the status says Saved to cloud, and refresh again.
+
+**Expected**
+- After the early refresh, the participant is still there. Athletics, the roll totals, the success or failure status, and the acted count are still there.
+- After Saved to cloud, a refresh keeps the same fields.
+
+**Automated** | `npm test` — `skill-encounter-autosave.test.ts`
+
+**Report** — `[ ] PASS` · `[ ] FAIL` · `[ ] SKIP` — Notes:
+
+---
+
 ## DEV-V-083 — Assigned base skill information (ClickUp 86e2q66jv)
 
 #### DEV-V-083-T001 — An assigned skill still shows the add-list information
