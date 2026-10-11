@@ -8,6 +8,17 @@
 import * as React from 'react';
 import { cn } from '@/lib/utils/cn';
 
+/**
+ * Page body is at least one viewport tall, so the site footer starts below the fold.
+ * Main is a flex-1 child of a min-h-screen column: a short first paint pins the
+ * footer to the bottom of the window. Combat, Codex, and Characters then grow
+ * (encounter tracker, feat list, character grid) and that footer jumps.
+ * The header is already in the first viewport, so this minimum puts the footer
+ * one header-height past the fold. Later growth moves a footer that was not visible.
+ * Lab CLS 86e3k9fyg.
+ */
+export const PAGE_FILLS_VIEWPORT_CLASSNAME = 'min-h-screen';
+
 type ContainerSize = 'xs' | 'sm' | 'prose' | 'md' | 'content' | 'lg' | 'xl' | 'tool' | 'full';
 
 const sizeClasses: Record<ContainerSize, string> = {

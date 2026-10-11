@@ -9,7 +9,13 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { CharacterCard, AddCharacterCard } from '@/components/character';
-import { PageContainer, PageHeader, EmptyState, useToast } from '@/components/ui';
+import {
+  PageContainer,
+  PAGE_FILLS_VIEWPORT_CLASSNAME,
+  PageHeader,
+  EmptyState,
+  useToast,
+} from '@/components/ui';
 import { Alert } from '@/components/ui/alert';
 import { DeleteConfirmModal, ErrorDisplay } from '@/components/patterns';
 import { useCharacters, useDeleteCharacter, useDuplicateCharacter, useAuth } from '@/hooks';
@@ -86,7 +92,7 @@ function CharactersContent() {
   // see the guest empty state before their characters query is enabled.
   if (!authInitialized || isLoading) {
     return (
-      <PageContainer size="xl">
+      <PageContainer size="xl" className={PAGE_FILLS_VIEWPORT_CLASSNAME}>
         <PageHeader title="Characters" />
         <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
           {[1, 2, 3].map((i) => (
@@ -105,7 +111,7 @@ function CharactersContent() {
 
   if (error && user) {
     return (
-      <PageContainer size="xl">
+      <PageContainer size="xl" className={PAGE_FILLS_VIEWPORT_CLASSNAME}>
         <PageHeader title="Characters" />
         <ErrorDisplay
           message="Error loading characters"
@@ -121,7 +127,7 @@ function CharactersContent() {
   const hasCharacters = characters.length > 0;
 
   return (
-    <PageContainer size="xl">
+    <PageContainer size="xl" className={PAGE_FILLS_VIEWPORT_CLASSNAME}>
       <PageHeader title="Characters" />
 
       {deleteError && (
