@@ -319,6 +319,10 @@ export function snapshotOfficialPowerForInnate(
       op_3_lvl?: number | undefined;
       applyDuration?: boolean | undefined;
     }> | null;
+    /** Creator damage, range, and area. Their mechanic parts are part of Energy. */
+    damage?: PowerDocument['damage'];
+    range?: PowerDocument['range'];
+    area?: PowerDocument['area'];
     duration?:
       | {
           type?: string | undefined;
@@ -335,8 +339,11 @@ export function snapshotOfficialPowerForInnate(
   const doc: PowerDocument = {
     name: power.name ?? undefined,
     parts: (power.parts ?? []) as PowerDocument['parts'],
+    damage: power.damage,
     actionType: power.actionType ?? undefined,
     isReaction: power.isReaction === true,
+    range: power.range,
+    area: power.area,
     duration: power.duration ?? undefined,
     attackMode: power.attackMode ?? undefined,
   };
