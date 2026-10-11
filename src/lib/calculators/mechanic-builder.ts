@@ -366,7 +366,7 @@ export function buildMechanicParts(ctx: MechanicBuilderContext): MechanicPartRes
         op1 = hourIndex >= 0 ? hourIndex : 0;
         addPart(durationInfo.id, durationInfo.name, op1, durationApplyDuration ?? false);
       } else if (type === 'days') {
-        // UI may use 1, 7, 14; part options often 1, 10, 20, 30 - use index by value order
+        // UI and part options are 1, 7, 14 → op_1_lvl 0, 1, 2 (see deriveDuration [1, 7, 14][lvl])
         const dayValues = [1, 7, 14];
         const dayIndex = dayValues.indexOf(value);
         op1 = dayIndex >= 0 ? dayIndex : 0;
