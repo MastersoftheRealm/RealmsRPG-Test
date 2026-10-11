@@ -252,6 +252,46 @@ export function applyProficiencyGainForLevelUp(
   return null;
 }
 
+/**
+ * When proficiency cap falls on level-down (+1 every 5 levels), undo the same auto-assign
+ * that {@link applyProficiencyGainForLevelUp} applied on the way up. Mixed splits are unchanged.
+ */
+export function applyProficiencyLossForLevelDown(
+  character: Character,
+  oldLevel: number,
+  newLevel: number,
+  rules?: Partial<CoreRulesMap>,
+): { pow_prof: number; mart_prof: number } | null {
+  if (newLevel >= oldLevel) return null;
+
+  const oldCap = calculateProficiency(oldLevel, false, rules);
+  const newCap = calculateProficiency(newLevel, false, rules);
+  const lost = oldCap - newCap;
+  if (lost <= 0) return null;
+
+  const currentMart = character.mart_prof ?? character.martialProficiency ?? 0;
+  const currentPow = character.pow_prof ?? character.powerProficiency ?? 0;
+
+  if (currentMart > 0 && currentPow === 0) {
+    return { mart_prof: Math.max(0, currentMart - lost), pow_prof: 0 };
+  }
+  if (currentPow > 0 && currentMart === 0) {
+    return { pow_prof: Math.max(0, currentPow - lost), mart_prof: 0 };
+  }
+  return null;
+}
+
+/** Level-down: reverse pure-side auto-assign from milestone proficiency only. */
+export function applyLevelDownProficiencyUpdates(
+  character: Character,
+  oldLevel: number,
+  newLevel: number,
+  _pathArchetype?: CharacterArchetype | null,
+  rules?: Partial<CoreRulesMap>,
+): { pow_prof: number; mart_prof: number } | null {
+  return applyProficiencyLossForLevelDown(character, oldLevel, newLevel, rules);
+}
+
 /** Level-up: pure-side auto-assign, then admin level-5 path floors (if any). */
 export function applyLevelUpProficiencyUpdates(
   character: Character,

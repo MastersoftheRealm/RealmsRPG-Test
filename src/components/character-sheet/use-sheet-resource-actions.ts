@@ -12,6 +12,7 @@ import { MAX_PORTRAIT_DATA_URL_LENGTH, PORTRAIT_DRAFT_TOO_LARGE } from '@/lib/po
 import { readFileAsDataUrl } from '@/lib/crop-image';
 import {
   getArchetypeCodexLookupId,
+  applyLevelDownProficiencyUpdates,
   applyLevelUpProficiencyUpdates,
 } from '@/lib/game/archetype-display';
 import { calculateProficiency } from '@/lib/game/formulas';
@@ -479,13 +480,24 @@ export function useSheetResourceActions({
       const pathArch = lookupId
         ? (codexArchetypes.find((a) => a.id === lookupId) as Character['archetype'] | undefined)
         : undefined;
-      const profUpdate = applyLevelUpProficiencyUpdates(
-        character,
-        oldLevel,
-        newLevel,
-        pathArch ?? character.archetype,
-        rules,
-      );
+      const profUpdate =
+        newLevel > oldLevel
+          ? applyLevelUpProficiencyUpdates(
+              character,
+              oldLevel,
+              newLevel,
+              pathArch ?? character.archetype,
+              rules,
+            )
+          : newLevel < oldLevel
+            ? applyLevelDownProficiencyUpdates(
+                character,
+                oldLevel,
+                newLevel,
+                pathArch ?? character.archetype,
+                rules,
+              )
+            : null;
 
       setCharacter((prev) => {
         if (!prev) return null;
