@@ -192,6 +192,7 @@ Archived tasks waiting on owner manual validation. Implementation is complete (`
 
 | Task | Suite / tests | What to verify |
 | ---- | ------------- | -------------- |
+| **86e2q66jv** | DEV-V-083 **T001** | Guided creator, Your Skills. Add a base skill, then expand it in the assigned list. The Codex description and the additional descriptions (success, failure, difficulty, craft) are readable. A skill whose only text is an additional description still has that expand control. |
 | **86e3k0h3f** | DEV-V-082 **T001** | Encounter combat, keyboard only. From Clear All, the initiative number comes before the name and can be edited. Move up and Move down change the order by one. Move up is inactive on the first combatant. A companion stays last, and in round 1 a surprised combatant stays after one that is not surprised. |
 | **86e3k0ch6** | DEV-V-081 **T001** | Library, Encounters, and Admin public library rows. The row name opens or expands the row. The picture, quantity, Roll, Mark complete, and Delete controls are separate buttons, not inside the row button. |
 | **86e3k0cfz** | DEV-V-080 **T001** | Character sheet Library tabs (Feats, Powers, Techniques, Inventory, Proficiencies, Notes). Each tab's aria-controls is `character-sheet-library-panel`, and that id is on the Library content. |
