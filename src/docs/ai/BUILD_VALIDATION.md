@@ -9926,6 +9926,32 @@ A pick that would exceed open trait slots is refused. The disabled Add button de
 
 ---
 
+## DEV-V-088 — A minute is 6 rounds (ClickUp 86e3jrj8h)
+
+#### DEV-V-088-T001 — Character creation says 1 minute is 6 rounds
+
+| Field | Value |
+|-------|-------|
+| **Suite** | DEV-V-088 |
+| **Related task** | 86e3jrj8h |
+| **Where** | Rules → Character Creation → Feats → States & State Feats |
+| **Needs** | The public rules page. |
+
+**Steps**
+1. Open the character creation rules page.
+2. Find States & State Feats.
+3. Read the default duration sentence.
+
+**Expected**
+- The sentence says a state's default duration is **1 minute (6 Rounds)**.
+- An innate power of 6 rounds still qualifies. An innate power of 7 rounds or more does not. That check was already 6 rounds.
+
+**Automated** | `npm test` — `state-duration-copy.test.ts`, `innate-eligibility.test.ts`
+
+**Report** — `[ ] PASS` · `[ ] FAIL` · `[ ] SKIP` — Notes:
+
+---
+
 ## DEV-V-083 — Assigned base skill information (ClickUp 86e2q66jv)
 
 #### DEV-V-083-T001 — An assigned skill still shows the add-list information
@@ -10105,6 +10131,7 @@ A pick that would exceed open trait slots is refused. The disabled Add button de
 | DEV-V-085 | Codex search field labels (ClickUp 86e3jmdp9) | — | Automated (`codex-search-labels.test.tsx`) + manual DEV-V-085-T001 |
 | DEV-V-086 | 1-round duration modifiers (ClickUp 86e3jrhtq) | — | Automated (`power-calc.test.ts`) + manual DEV-V-086-T001 |
 | DEV-V-087 | Day duration labels (ClickUp 86e3jrhvb) | — | Automated (`power-calc.test.ts`) + manual DEV-V-087-T001 |
+| DEV-V-088 | A minute is 6 rounds (ClickUp 86e3jrj8h) | — | Automated (`state-duration-copy.test.ts`, `innate-eligibility.test.ts`) + manual DEV-V-088-T001 |
 | DEV-V-083 | Assigned base skill information (ClickUp 86e2q66jv) | — | Automated (`guided-skills-panel.test.tsx`) + manual DEV-V-083-T001 |
 
 When implementing a related task, replace the legacy **DEV-T-###** block with granular **DEV-V-###** tests in this file.
