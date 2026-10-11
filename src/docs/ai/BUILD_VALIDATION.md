@@ -9817,6 +9817,35 @@ A pick that would exceed open trait slots is refused. The disabled Add button de
 
 ---
 
+## DEV-V-083 — Assigned base skill information (ClickUp 86e2q66jv)
+
+#### DEV-V-083-T001 — An assigned skill still shows the add-list information
+
+| Field | Value |
+|-------|-------|
+| **Suite** | DEV-V-083 |
+| **Related task** | 86e2q66jv |
+| **Where** | `/characters/new/guided` → Your Skills |
+| **Needs** | A new character far enough to reach Skills, with at least one Skill Point left. |
+
+**Steps**
+1. Open Add Character and continue to Your Skills.
+2. Add a base skill from Browse all Skills. Expand that skill in the add list first and note the description and any Success Outcomes, Failure Outcomes, DS Calculation, or craft text.
+3. Add the skill. Confirm it leaves the add list and appears in the assigned list.
+4. Expand the assigned skill name.
+
+**Expected**
+- The assigned row expands.
+- The Codex description is readable.
+- Success Outcomes, Failure Outcomes, DS Calculation, Craft Success, and Craft Failure appear when that skill has them, with the same text as the add list.
+- A skill that has only those additional descriptions still has the expand control.
+
+**Automated** | `npm test` — `guided-skills-panel.test.tsx`
+
+**Report** — `[ ] PASS` · `[ ] FAIL` · `[ ] SKIP` — Notes:
+
+---
+
 ## DEV-V-082 — Encounter combat turn order keyboard (ClickUp 86e3k0h3f)
 
 #### DEV-V-082-T001 — Keyboard can change combat turn order
@@ -9963,5 +9992,6 @@ A pick that would exceed open trait slots is refused. The disabled Add button de
 | DEV-V-078 | Weapons and Shields tables from 1024 to 1440 (ClickUp 86e3jvv37) | — | Automated (`sheet-desktop-columns.test.ts`) + manual DEV-V-078-T001 |
 | DEV-V-080 | Character sheet library tab panels (ClickUp 86e3k0cfz) | — | Automated (`library-section-tabs.test.tsx`) + manual DEV-V-080-T001 |
 | DEV-V-081 | Grid rows that nested buttons (ClickUp 86e3k0ch6) | — | Automated (`grid-row-nested-interactive.test.tsx`) + manual DEV-V-081-T001 |
+| DEV-V-083 | Assigned base skill information (ClickUp 86e2q66jv) | — | Automated (`guided-skills-panel.test.tsx`) + manual DEV-V-083-T001 |
 
 When implementing a related task, replace the legacy **DEV-T-###** block with granular **DEV-V-###** tests in this file.

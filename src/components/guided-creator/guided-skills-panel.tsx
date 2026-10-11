@@ -1,6 +1,7 @@
 /**
  * GuidedSkillsPanel — Layer 1 skill allocation for the guided creator.
- * Simplified rows: name + ability + source chip, bonus ± with formula tip, X remove, expand description.
+ * Simplified rows: name + ability + source chip, bonus ± with formula tip, X remove.
+ * Expand a row for the Codex description and the same additional descriptions the add list shows.
  * Layer 2 browse lives in the parent step (below recommended skills), not on this list.
  */
 
@@ -32,6 +33,7 @@ import {
 import { FilterNativeSelect } from '@/components/patterns/filters';
 import { DescriptorChip, IconButton, Spinner } from '@/components/ui';
 import { GUIDED_CREATOR_COPY } from '@/lib/constants/site-copy';
+import { getSkillExtraDescriptionDetailSections } from '@/lib/skill-extra-descriptions';
 import { getGuidedSkillBonusHelp } from '../../../public/tooltip-text';
 import type { Abilities, AbilityName, DefenseSkills } from '@/types';
 
@@ -72,6 +74,48 @@ interface GuidedSkillRowItem {
   canDecrease: boolean;
 }
 
+/** Same Codex text the add-skill row shows: description, then additional descriptions. */
+export function AssignedSkillDetails({ skill }: { skill: Skill }) {
+  const description = skill.description?.trim() ?? '';
+  const sections = getSkillExtraDescriptionDetailSections(skill);
+  if (!description && sections.length === 0) return null;
+
+  return (
+    <div className="min-w-0 pr-2 pb-2.5 break-words">
+      {description ? (
+        <p className="font-nunito text-sm leading-relaxed whitespace-pre-wrap text-text-secondary">
+          {description}
+        </p>
+      ) : null}
+      {sections.map((section) => (
+        <div key={section.label} className={description ? 'mt-3' : undefined}>
+          <h3 className="m-0 text-xs font-semibold tracking-wider text-text-muted uppercase">
+            {section.label}
+          </h3>
+          <dl className="m-0 mt-1 space-y-2">
+            {section.chips.map((chip) => (
+              <div key={chip.name} className="min-w-0">
+                <dt className="font-nunito text-sm font-semibold text-text-primary">{chip.name}</dt>
+                {chip.description ? (
+                  <dd className="m-0 font-nunito text-sm leading-relaxed whitespace-pre-wrap text-text-secondary">
+                    {chip.description}
+                  </dd>
+                ) : null}
+              </div>
+            ))}
+          </dl>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+function assignedSkillHasInfo(skill: Skill): boolean {
+  return (
+    Boolean(skill.description?.trim()) || getSkillExtraDescriptionDetailSections(skill).length > 0
+  );
+}
+
 function GuidedSkillRow({
   item,
   pathSourceLabel,
@@ -109,7 +153,8 @@ function GuidedSkillRow({
   const bonusTone =
     bonus > 0 ? 'text-success-fg' : bonus < 0 ? 'text-danger-fg' : 'text-text-secondary';
 
-  const hasDescription = Boolean(skill.description);
+  const hasInfo = assignedSkillHasInfo(skill);
+  const detailsId = useId();
   const skillName = skill.name ?? 'skill';
   const bonusHelp = abilityLabel
     ? getGuidedSkillBonusHelp({
@@ -130,24 +175,23 @@ function GuidedSkillRow({
           <div className="flex flex-wrap items-center gap-x-1.5 gap-y-1">
             <button
               type="button"
-              onClick={() => hasDescription && setExpanded(!expanded)}
-              disabled={!hasDescription}
+              onClick={() => hasInfo && setExpanded(!expanded)}
+              disabled={!hasInfo}
               className={cn(
                 'inline-flex min-h-11 max-w-full shrink-0 items-center gap-1.5 py-0 text-left',
-                hasDescription ? 'cursor-pointer' : 'cursor-default',
+                hasInfo ? 'cursor-pointer' : 'cursor-default',
               )}
-              aria-expanded={hasDescription ? expanded : undefined}
+              aria-expanded={hasInfo ? expanded : undefined}
+              aria-controls={hasInfo && expanded ? detailsId : undefined}
               aria-label={
-                hasDescription
-                  ? `${expanded ? 'Collapse' : 'Expand'} ${skillName} description`
-                  : undefined
+                hasInfo ? `${expanded ? 'Collapse' : 'Expand'} ${skillName} details` : undefined
               }
             >
               <span className="font-nunito font-semibold text-text-primary">
                 {item.isSubSkill ? <span className="pl-1 text-text-secondary">↳ </span> : null}
                 {skill.name}
               </span>
-              {hasDescription && (
+              {hasInfo && (
                 <ChevronDown
                   className={cn(
                     'h-4 w-4 shrink-0 text-text-muted transition-transform',
@@ -264,13 +308,11 @@ function GuidedSkillRow({
         </div>
       </div>
 
-      {expanded && skill.description && (
-        <div className="pr-2 pb-2.5">
-          <p className="font-nunito text-sm leading-relaxed text-text-secondary">
-            {skill.description}
-          </p>
+      {expanded && hasInfo ? (
+        <div id={detailsId}>
+          <AssignedSkillDetails skill={skill} />
         </div>
-      )}
+      ) : null}
     </li>
   );
 }
