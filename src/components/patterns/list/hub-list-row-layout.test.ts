@@ -4,7 +4,7 @@ import {
   HUB_LIST_ROW_MOBILE_CHROME_END_DEFAULT,
   HUB_LIST_ROW_MOBILE_CHROME_END_SLOT,
   hubListRowMobileChromeEnd,
-} from './hub-list-row-chrome';
+} from './hub-list-row';
 
 const row = readFileSync(new URL('./hub-list-row.tsx', import.meta.url), 'utf8');
 const encountersPage = readFileSync(

@@ -12,9 +12,24 @@ import { ChevronRight, Trash2 } from 'lucide-react';
 import type { VariantProps } from 'class-variance-authority';
 import { IconButton, Card, DescriptorChip, type chipVariants } from '@/components/ui';
 import { cn } from '@/lib/utils';
-import { hubListRowMobileChromeEnd } from './hub-list-row-chrome';
 
 type DescriptorVariant = NonNullable<VariantProps<typeof chipVariants>['variant']>;
+
+/** Default delete + chevron (crafting hub). */
+export const HUB_LIST_ROW_MOBILE_CHROME_END_DEFAULT = '5.5rem';
+
+/** Custom rightSlot with two IconButtons + chevron (encounters hub). */
+export const HUB_LIST_ROW_MOBILE_CHROME_END_SLOT = '9.5rem';
+
+/** Trailing chrome reserve below `lg` (86e3k9143). */
+export function hubListRowMobileChromeEnd(input: {
+  rightSlot: boolean;
+  showDefaultChrome: boolean;
+}): string | undefined {
+  if (input.rightSlot) return HUB_LIST_ROW_MOBILE_CHROME_END_SLOT;
+  if (input.showDefaultChrome) return HUB_LIST_ROW_MOBILE_CHROME_END_DEFAULT;
+  return undefined;
+}
 
 const ROW_BASE_CLASS =
   'relative isolate flex items-center gap-4 p-4 hover:border-primary-outline-border transition-colors cursor-pointer group shadow-none';
