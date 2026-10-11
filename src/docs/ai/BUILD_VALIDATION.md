@@ -9575,6 +9575,33 @@ A pick that would exceed open trait slots is refused. The disabled Add button de
 
 ---
 
+## DEV-V-072 — Character duplicate (ClickUp 86e3jmcn3)
+
+#### DEV-V-072-T001 — Duplicate any character from My Characters
+
+| Field | Value |
+|-------|-------|
+| **Suite** | DEV-V-072 |
+| **Related task** | 86e3jmcn3 |
+| **Where** | `/characters` |
+| **Needs** | A signed-in account with at least one character |
+
+**Steps**
+1. Open `/characters`.
+2. Hover a character and click Duplicate.
+3. Repeat on a second character (a guided one and a custom one, if both exist).
+
+**Expected**
+- The toast reads `Duplicated "<name>"` and the new sheet opens.
+- The new character is named `<name> (Copy)`. The source character stays on the list.
+- The request is not `Validation failed: name`.
+
+**Automated** | `npm test` — `characters/route.test.ts` + `character-name-limit.test.ts`
+
+**Report** — `[ ] PASS` · `[ ] FAIL` · `[ ] SKIP` — Notes:
+
+---
+
 ## DEV-V-071 — Profile column writes (ClickUp 86e3jt562)
 
 #### DEV-V-071-T001 — Direct profile writes stay on the server
@@ -9658,5 +9685,6 @@ A pick that would exceed open trait slots is refused. The disabled Add button de
 | DEV-V-068 | Email confirmation PKCE link (ClickUp 86e3jmkct) | — | Automated (`auth/confirm/route.test.ts`) + manual DEV-V-068-T001 |
 | DEV-V-069 | Library duplicate (ClickUp 86e3jx7xt) | — | Automated (`creator-text-limits.test.ts`) + manual DEV-V-069-T001 |
 | DEV-V-070 | Guest sign-in import (ClickUp 86e3jmw1m) | — | Automated (`guest-character-migration.test.ts`, `guest-encounter-migration.test.ts`) + manual DEV-V-070-T001 |
+| DEV-V-072 | Character duplicate (ClickUp 86e3jmcn3) | — | Automated (`characters/route.test.ts`, `character-name-limit.test.ts`) + manual DEV-V-072-T001 |
 
 When implementing a related task, replace the legacy **DEV-T-###** block with granular **DEV-V-###** tests in this file.
