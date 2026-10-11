@@ -133,6 +133,20 @@ export function saveGuestCharacter(
   };
   delete updated.userId;
   if (!portrait) delete updated.portrait;
+  const record = updated as Record<string, unknown>;
+  for (const [key, value] of Object.entries(data)) {
+    if (
+      value === null &&
+      key !== 'portrait' &&
+      key !== 'id' &&
+      key !== 'createdAt' &&
+      key !== 'updatedAt' &&
+      key !== 'visibility' &&
+      key !== 'userId'
+    ) {
+      delete record[key];
+    }
+  }
   localStorage.setItem(characterStorageKey(id), JSON.stringify(updated));
   const list = getGuestCharactersList();
   const idx = list.findIndex((c) => c.id === id);

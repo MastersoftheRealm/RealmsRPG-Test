@@ -10,6 +10,7 @@ import {
   characterLockToken,
   mergeRemotePreservingDirty,
   pickDirtyCharacterFields,
+  withDirtyClears,
 } from '@/lib/character/dirty-patch';
 import { mergeResourceUpdatesIntoCharacter } from '@/lib/encounter/character-resource-sync';
 
@@ -89,8 +90,10 @@ export function mergeSheetRealtimePayload(
 ): SheetRealtimeMerge {
   const prevRecord = prev as unknown as Record<string, unknown>;
   const cleaned = cleanForSave(prev) as Record<string, unknown>;
-  const dirtyKeys = Object.keys(pickDirtyCharacterFields(cleaned, baseline));
-  const overlaid = overlayRemoteNonResource(prevRecord, remoteData, dirtyKeys, options?.updatedAt);
+  const dirty = pickDirtyCharacterFields(cleaned, baseline);
+  const dirtyKeys = Object.keys(dirty);
+  const localPrev = withDirtyClears(prevRecord, dirty);
+  const overlaid = overlayRemoteNonResource(localPrev, remoteData, dirtyKeys, options?.updatedAt);
   let next = overlaid as unknown as Character;
   if (!options?.suppressResources) {
     next = mergeResourceUpdatesIntoCharacter(next, remoteData) ?? next;

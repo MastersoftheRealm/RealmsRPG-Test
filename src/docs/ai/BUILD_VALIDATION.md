@@ -1855,6 +1855,26 @@ Manual QA for library/feats modularization and shared part display. **Needs:** c
 
 **Report** — `[ ] PASS` · `[ ] FAIL` · `[ ] SKIP` — Notes:
 
+#### DEV-V-009-T081 — Clearing a sheet value stays cleared (86e3juw04)
+
+| Field | Value |
+|-------|-------|
+| **Suite** | DEV-V-009 — Character sheet refactor |
+| **Related task** | 86e3juw04 |
+| **Where** | `/characters/[id]` temp mode, and a trait's custom name |
+| **Needs** | A saved character you can edit. Hard reload after each wait. |
+
+**Steps**
+1. Turn on temp mode. Set Strength temp to +1 and wait for the save. Set it back to 0, wait, and hard reload.
+2. Add a Skills temp on one skill (Acrobatics +1), wait, set it back to 0, wait, and hard reload. Roll that skill.
+3. Set Speed temp to +1, wait, set it back to 0, wait, and hard reload.
+4. On a trait, set a custom name and a note, wait, clear both fields, wait, and hard reload.
+
+**Expected**
+- Strength temp and the Might change from that temp are gone after reload. The skill shows its normal bonus, with no leftover temp, and the roll uses that bonus. Speed is back to the sheet's normal speed. The trait shows its original name and no note.
+
+**Report** — `[ ] PASS` · `[ ] FAIL` · `[ ] SKIP` — Notes:
+
 #### DEV-V-009-T065 — Notes Age + Backstory fields (TASK-886)
 
 | Field | Value |

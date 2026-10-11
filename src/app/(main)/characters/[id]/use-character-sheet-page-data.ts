@@ -46,6 +46,7 @@ import {
   characterLockToken,
   mergeRemotePreservingDirty,
   pickDirtyCharacterFields,
+  withDirtyClears,
 } from '@/lib/character/dirty-patch';
 import { rememberCharacterLockToken } from '@/lib/character/save-lock';
 import { mergeSheetRealtimePayload } from '@/lib/character/realtime-merge';
@@ -339,13 +340,26 @@ export function useCharacterSheetPageData(id: string) {
         updatedAt: characterLockToken(data.updatedAt),
         mergeOnConflict: (remote) => {
           const remoteClean = cleanForSave(remote) as Record<string, unknown>;
-          const mergedClean = mergeRemotePreservingDirty(remoteClean, cleaned, Object.keys(dirty));
+          const localClean = withDirtyClears(cleaned, dirty);
+          const mergedClean = mergeRemotePreservingDirty(
+            remoteClean,
+            localClean,
+            Object.keys(dirty),
+          );
           mergedCleanRef.current = mergedClean;
           savedCleanRef.current = remoteClean;
           setCharacter((prev) => {
             if (!prev || prev.id !== remote.id) return prev;
-            const kept = Object.fromEntries(Object.keys(dirty).map((key) => [key, cleaned[key]]));
-            return { ...prev, ...remote, ...kept, updatedAt: remote.updatedAt };
+            const next: Record<string, unknown> = {
+              ...prev,
+              ...remote,
+              updatedAt: remote.updatedAt,
+            };
+            for (const key of Object.keys(dirty)) {
+              if (dirty[key] === null) delete next[key];
+              else if (key in cleaned) next[key] = cleaned[key];
+            }
+            return next as Character;
           });
           return {
             dirty: pickDirtyCharacterFields(mergedClean, remoteClean) as Partial<Character>,
