@@ -37,8 +37,16 @@ export function GuidedHealthEnergySection() {
   const abilities = draft.abilities;
   const powAbil = draft.pow_abil ?? undefined;
   const martAbil = draft.mart_abil ?? undefined;
+  const archetypeType = draft.archetypeType ?? undefined;
 
-  const baseEnergy = calculateMaxEnergyForArchetype(0, abilities, level, powAbil, martAbil);
+  const baseEnergy = calculateMaxEnergyForArchetype(
+    0,
+    abilities,
+    level,
+    powAbil,
+    martAbil,
+    archetypeType,
+  );
   const hePool = calculateHealthEnergyPool(level, 'PLAYER', false, rules);
 
   const hpBonus = draft.hpAllocated ?? 0;
@@ -54,7 +62,14 @@ export function GuidedHealthEnergySection() {
     rules,
     martAbil,
   );
-  const maxEnergy = calculateMaxEnergyForArchetype(enBonus, abilities, level, powAbil, martAbil);
+  const maxEnergy = calculateMaxEnergyForArchetype(
+    enBonus,
+    abilities,
+    level,
+    powAbil,
+    martAbil,
+    archetypeType,
+  );
 
   const highestPick = useMemo(
     () =>

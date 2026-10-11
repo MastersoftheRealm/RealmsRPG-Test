@@ -9714,6 +9714,33 @@ A pick that would exceed open trait slots is refused. The disabled Add button de
 
 ---
 
+## DEV-V-077 — Pure Martial max Energy and Training Points (ClickUp 86e3jv2hr)
+
+#### DEV-V-077-T001 — A pure Martial character ignores a leftover Power Ability
+
+| Field | Value |
+|-------|-------|
+| **Suite** | DEV-V-077 |
+| **Related task** | 86e3jv2hr |
+| **Where** | A character sheet for a pure Martial character |
+| **Needs** | Martial path, Martial Ability Strength 0, a leftover Power Ability Charisma 3, Health/Energy points 6 / 12, level 2. |
+
+**Steps**
+1. Open the character. Read max Energy.
+2. Open Adjust Level and set the target to 3. Read the Training Points gain, then confirm.
+3. Read max Energy at level 3.
+
+**Expected**
+- Max Energy is 12 at level 2 and 12 at level 3 (12 + Strength 0 × level). It is not 18 or 21.
+- The level-up Training Points gain from 2 to 3 is +2, not +5.
+- A Powered-Martial character still uses the higher of its two Archetype Abilities.
+
+**Automated** | `npm test` — `calculations.test.ts`
+
+**Report** — `[ ] PASS` · `[ ] FAIL` · `[ ] SKIP` — Notes:
+
+---
+
 ## DEV-V-071 — Profile column writes (ClickUp 86e3jt562)
 
 #### DEV-V-071-T001 — Direct profile writes stay on the server
@@ -9802,5 +9829,6 @@ A pick that would exceed open trait slots is refused. The disabled Add button de
 | DEV-V-074 | Technique reload when part names repeat (ClickUp 86e3jpq36) | — | Automated (`technique-creator-parts-save.test.ts`, `power-part-card.test.ts`) + manual DEV-V-074-T001 |
 | DEV-V-075 | Admin innate Energy includes damage, range, and area (ClickUp 86e3jpr0e) | — | Automated (`innate-eligibility.test.ts`) + manual DEV-V-075-T001 |
 | DEV-V-076 | Character sheet at narrow widths (ClickUp 86e3jt15m) | — | Automated (`sheet-mobile-carousel.test.ts`, `tab-navigation.test.ts`) + manual DEV-V-076-T001 |
+| DEV-V-077 | Pure Martial max Energy and Training Points (ClickUp 86e3jv2hr) | — | Automated (`calculations.test.ts`) + manual DEV-V-077-T001 |
 
 When implementing a related task, replace the legacy **DEV-T-###** block with granular **DEV-V-###** tests in this file.

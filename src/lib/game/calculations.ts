@@ -17,6 +17,7 @@ import type {
   DefenseSkills,
   Character,
   AbilityName,
+  ArchetypeCategory,
   Item,
 } from '@/types';
 import type { CoreRulesMap } from '@/types/core-rules';
@@ -162,15 +163,42 @@ export function calculateMaxEnergy(
 }
 
 /**
- * Archetype Ability used for Energy: the higher of the Power and Martial Archetype
- * Abilities (GAME_RULES "Archetype Ability" / "Health & Energy Allocation" — a
- * Powered-Martial path has two, and neither is secondary).
+ * Path category for one Archetype Ability score.
+ * Stored path type wins. With no type, a one-sided proficiency split is that
+ * pure path. Both sides spent, or no signal at all, is not a pure path.
+ */
+function archetypeCategoryForEnergy(
+  charData: Partial<Character> | Record<string, unknown>,
+): ArchetypeCategory | undefined {
+  const record = charData as Record<string, unknown>;
+  const archetype = record.archetype as { type?: string | undefined } | undefined;
+  const type = archetype?.type;
+  if (type === 'power' || type === 'martial' || type === 'powered-martial') {
+    return type;
+  }
+  const mart = Number(record.mart_prof ?? record.martialProficiency ?? 0) || 0;
+  const pow = Number(record.pow_prof ?? record.powerProficiency ?? 0) || 0;
+  if (pow > 0 && mart === 0) return 'power';
+  if (mart > 0 && pow === 0) return 'martial';
+  return undefined;
+}
+
+/**
+ * Archetype Ability used for Energy and Training Points (GAME_RULES
+ * "Archetype Ability" / "Health & Energy Allocation").
+ * A pure Martial path uses only its Martial Ability. A pure Power path uses
+ * only its Power Ability. A leftover ability on the other side is not an
+ * Archetype Ability. Powered-Martial has two, and the score is the higher one.
+ * When the path type is unknown, both named abilities are compared the same way.
  */
 export function resolveEnergyArchetypeAbility(
   abilities: Partial<Abilities>,
   powAbil: AbilityName | string | undefined,
   martAbil: AbilityName | string | undefined,
+  archetypeType?: ArchetypeCategory,
 ): AbilityName | string | undefined {
+  if (archetypeType === 'martial') return martAbil;
+  if (archetypeType === 'power') return powAbil;
   if (!powAbil) return martAbil;
   if (!martAbil) return powAbil;
   const powVal = abilities?.[powAbil.toLowerCase() as keyof Abilities] ?? 0;
@@ -178,42 +206,41 @@ export function resolveEnergyArchetypeAbility(
   return martVal > powVal ? martAbil : powAbil;
 }
 
-/** Max Energy using the higher of pow/mart Archetype Abilities. */
+/** Max Energy from the Archetype Ability for this path type. */
 export function calculateMaxEnergyForArchetype(
   energyPoints: number,
   abilities: Partial<Abilities>,
   level: number,
   powAbil: AbilityName | string | undefined,
   martAbil: AbilityName | string | undefined,
+  archetypeType?: ArchetypeCategory,
 ): number {
   return calculateMaxEnergy(
     energyPoints,
-    resolveEnergyArchetypeAbility(abilities, powAbil, martAbil),
+    resolveEnergyArchetypeAbility(abilities, powAbil, martAbil, archetypeType),
     abilities,
     level,
   );
 }
 
 /**
- * Get the archetype ability score for a character.
+ * Archetype Ability score for Energy and Training Points.
+ * Pure Martial uses the martial ability. Pure Power uses the power ability.
+ * Powered-Martial uses the higher of the two.
  */
 export function getArchetypeAbilityScore(charData: Partial<Character>): number {
   if (!charData?.abilities) return 0;
 
   const powAbil = charData.pow_abil || charData.archetype?.pow_abil || charData.archetype?.ability;
   const martAbil = charData.mart_abil || charData.archetype?.mart_abil;
-
-  let powVal = 0;
-  let martVal = 0;
-
-  if (powAbil) {
-    powVal = charData.abilities[powAbil.toLowerCase() as keyof Abilities] || 0;
-  }
-  if (martAbil) {
-    martVal = charData.abilities[martAbil.toLowerCase() as keyof Abilities] || 0;
-  }
-
-  return Math.max(powVal, martVal);
+  const chosen = resolveEnergyArchetypeAbility(
+    charData.abilities,
+    powAbil,
+    martAbil,
+    archetypeCategoryForEnergy(charData),
+  );
+  if (!chosen) return 0;
+  return charData.abilities[chosen.toLowerCase() as keyof Abilities] || 0;
 }
 
 // =============================================================================
@@ -363,6 +390,7 @@ export function calculateAllStats(character: Partial<Character>, rules?: Rules):
     level,
     powAbil,
     martAbil,
+    archetypeCategoryForEnergy(character),
   );
 
   const terminal = calculateTerminal(maxHealth);
@@ -426,6 +454,7 @@ export function computeMaxHealthEnergy(
     level,
     powAbil,
     martAbil,
+    archetypeCategoryForEnergy(record),
   );
 
   return { maxHealth, maxEnergy };
