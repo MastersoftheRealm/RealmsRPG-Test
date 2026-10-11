@@ -3,11 +3,12 @@ import { chipLabelsFromDetailSections } from '@/lib/glr';
 import { defined } from '@/lib/utils';
 import { describe, expect, it } from 'vitest';
 import {
+  mapArmorRows,
   mapPowerRows,
   mapTechniqueRows,
   type LibraryEntityRowContext,
 } from './library-entity-rows';
-import type { CharacterPower, CharacterTechnique } from '@/types';
+import type { Abilities, CharacterPower, CharacterTechnique, Item } from '@/types';
 import type { LibraryPower } from '@/types/library';
 
 const baseCtx: LibraryEntityRowContext = {
@@ -165,5 +166,52 @@ describe('mapPowerRows / mapTechniqueRows — Energy is rightSlot only (TASK-502
     const row = defined(mapPowerRows(powers, { ...baseCtx, onUsePower: undefined })[0]);
     expect(columnKeys(row)).not.toContain('energy');
     expect(row.rightSlot).toBeTruthy();
+  });
+});
+
+describe('mapArmorRows Critical Range temp (86e3jv5vx)', () => {
+  it('shows 23 when a Critical Range temp of +1 is added to a 22 threshold', () => {
+    const abilities: Abilities = {
+      strength: 0,
+      vitality: 0,
+      agility: 1,
+      acuity: 0,
+      intelligence: 0,
+      charisma: 0,
+    };
+    const chainmail = {
+      id: 'chain',
+      name: 'Chainmail Shirt',
+      equipped: true,
+      properties: [{ id: 22, name: 'Critical Range +1', op_1_lvl: 0 }],
+    } as unknown as Item;
+    const plain = defined(mapArmorRows([chainmail], { ...baseCtx, abilities })[0]);
+    expect(plain.columns?.find((c) => c.key === 'crit')?.value).toBe(22);
+
+    const withTemp = defined(
+      mapArmorRows([chainmail], {
+        ...baseCtx,
+        abilities,
+        tempModifiers: { criticalRange: 1 },
+      })[0],
+    );
+    const crit = withTemp.columns?.find((c) => c.key === 'crit');
+    expect(crit?.value).toBe(23);
+    expect(crit?.className).toBe('text-warning-fg');
+
+    const noIncrease = {
+      id: 'cloth',
+      name: 'Cloth',
+      equipped: true,
+      armorValue: 0,
+    } as Item;
+    const dash = defined(
+      mapArmorRows([noIncrease], {
+        ...baseCtx,
+        abilities,
+        tempModifiers: { criticalRange: 1 },
+      })[0],
+    );
+    expect(dash.columns?.find((c) => c.key === 'crit')?.value).toBe('-');
   });
 });
