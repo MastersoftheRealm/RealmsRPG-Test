@@ -60,7 +60,7 @@ export function CategoryEditor({
     case 'SKILLS_AND_DEFENSES':
       return <SkillsAndDefensesEditor data={data} set={set} />;
     case 'CONDITIONS':
-      return <ConditionsEditor data={data} set={set} />;
+      return <ConditionsEditor data={data} onChange={onChange} />;
     case 'SIZES':
       return <SizesEditor data={data} set={set} />;
     case 'RARITIES':
