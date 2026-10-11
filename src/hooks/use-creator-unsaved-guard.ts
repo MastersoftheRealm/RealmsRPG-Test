@@ -9,6 +9,7 @@ import {
   creatorInternalNavigationHref,
   finishCreatorSentinelRemoval,
   isCreatorBackSentinel,
+  shouldReleaseCreatorSentinel,
   stepCreatorBackUntilLeft,
   takeCreatorSentinelRemoval,
 } from '@/lib/creator/creator-unsaved-guard';
@@ -66,6 +67,7 @@ export function useCreatorLeaveBlocker(isDirty: boolean): {
   const [request, setRequest] = useState<CreatorLeaveRequest | null>(null);
   const leavingRef = useRef(false);
   const removingRef = useRef(false);
+  const unmountingRef = useRef(false);
 
   useEffect(() => {
     if (!isDirty) return;
@@ -124,8 +126,29 @@ export function useCreatorLeaveBlocker(isDirty: boolean): {
       setRequest({ type: 'back' });
     };
     window.addEventListener('popstate', onPop);
-    return () => window.removeEventListener('popstate', onPop);
+    return () => {
+      window.removeEventListener('popstate', onPop);
+      if (
+        !shouldReleaseCreatorSentinel({
+          unmounting: unmountingRef.current,
+          leaving: leavingRef.current,
+          state: window.history.state,
+        })
+      ) {
+        return;
+      }
+      if (!takeCreatorSentinelRemoval()) return;
+      window.history.back();
+      finishCreatorSentinelRemoval();
+    };
   }, [isDirty]);
+
+  useEffect(() => {
+    unmountingRef.current = false;
+    return () => {
+      unmountingRef.current = true;
+    };
+  }, []);
 
   const dismiss = useCallback(() => setRequest(null), []);
 
