@@ -10100,6 +10100,30 @@ A pick that would exceed open trait slots is refused. The disabled Add button de
 
 ---
 
+## DEV-V-100 — Level down removes auto milestone proficiency (ClickUp 86e3jv2j4)
+
+#### DEV-V-100-T001 — Pure Martial loses auto +1 proficiency when leveling down
+
+| Field | Value |
+|-------|-------|
+| **Suite** | DEV-V-100 |
+| **Related task** | 86e3jv2j4 |
+| **Where** | `/characters/[id]` → Level Up (Adjust Level) |
+| **Needs** | Pure Martial character at level 2 with Martial Prof +2 and Power Prof 0. ~390px or desktop. |
+
+**Steps**
+1. Open Adjust Level and raise level to 5. Confirm the success toast shows Martial Prof increased (e.g. Power 0, Martial 3).
+2. Open Adjust Level again and set level back to 2.
+3. Open the Proficiencies tab (or archetype prof display) and read Martial Prof.
+
+**Expected**
+- After step 2, Martial Prof is +2 again (the milestone +1 from level 5 is removed). Power Prof stays 0.
+- Other pools may still show overspend from level down; that warning behavior is unchanged.
+
+**Automated** | `npm test` — `src/lib/game/archetype-display.test.ts` (`applyProficiencyLossForLevelDown`, `applyLevelDownProficiencyUpdates`)
+
+---
+
 ## DEV-V-099 — Level down warns about overspent points (ClickUp 86e3jv2hz)
 
 #### DEV-V-099-T001 — Adjust Level modal shows overspend warning
@@ -10460,6 +10484,7 @@ A pick that would exceed open trait slots is refused. The disabled Add button de
 | DEV-V-093 | Core Rules editor unsaved edits (ClickUp 86e3jtrak) | — | Automated (`core-rules-unsaved-leave.test.ts`) + manual DEV-V-093-T001 |
 | DEV-V-094 | Sheet Currency in a second tab (ClickUp 86e3juw07) | — | Automated (`currency-field-commit.test.ts`) + manual DEV-V-094-T001 |
 | DEV-V-095 | Core Rules Conditions editor (ClickUp 86e3juy5z) | — | Automated (`core-rules-conditions.test.ts`) + manual DEV-V-095-T001 |
+| DEV-V-100 | Level down removes auto milestone proficiency (ClickUp 86e3jv2j4) | — | Automated (`archetype-display.test.ts`) + manual DEV-V-100-T001 |
 | DEV-V-099 | Level down warns about overspent points (ClickUp 86e3jv2hz) | — | Automated (`sheet-edit-notification.test.ts`) + manual DEV-V-099-T001 |
 | DEV-V-098 | Recovery leaves over-max Health and Energy (ClickUp 86e3jv000) | — | Automated (`recovery-over-max.test.ts`) + manual DEV-V-098-T001 |
 | DEV-V-097 | Current Health and Energy follow a lower max (ClickUp 86e3juy8e) | — | Automated (`current-follows-max.test.ts`) + manual DEV-V-097-T001 |
