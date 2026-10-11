@@ -6,10 +6,11 @@
 import type { CharacterProficiency, Item, Character, CharacterAncestry } from '@/types';
 import type { EnrichedCharacterData } from '@/lib/data-enrichment';
 import {
+  appearanceDraftFromEdit,
+  backstoryDraftFromEdit,
   resolveCharacterAge,
   resolveCharacterAppearance,
   resolveCharacterBackstory,
-  stripAgeFromAppearance,
 } from '@/lib/character/appearance-age';
 import { characterToFeatRequirementCharacter } from '@/lib/game/feat-requirements';
 import { calculateMaxArchetypeFeats, calculateMaxCharacterFeats } from '@/lib/game/formulas';
@@ -99,7 +100,7 @@ export function buildLibrarySectionData(input: {
           ? {
               ...prev,
               age: v || undefined,
-              appearance: stripAgeFromAppearance(prev.appearance) || undefined,
+              appearance: appearanceDraftFromEdit(prev.appearance ?? ''),
             }
           : null,
       ),
@@ -107,16 +108,9 @@ export function buildLibrarySectionData(input: {
     onVisibilityChange: (v) => setCharacter((prev) => (prev ? { ...prev, visibility: v } : null)),
     speedDisplayUnit: character.speedDisplayUnit ?? 'spaces',
     onAppearanceChange: (v) =>
-      setCharacter((prev) =>
-        prev
-          ? {
-              ...prev,
-              appearance: stripAgeFromAppearance(v) || undefined,
-            }
-          : null,
-      ),
+      setCharacter((prev) => (prev ? { ...prev, appearance: appearanceDraftFromEdit(v) } : null)),
     onBackstoryChange: (v) =>
-      setCharacter((prev) => (prev ? { ...prev, backstory: v.trim() || undefined } : null)),
+      setCharacter((prev) => (prev ? { ...prev, backstory: backstoryDraftFromEdit(v) } : null)),
     onArchetypeDescChange: (v) =>
       setCharacter((prev) => (prev ? { ...prev, archetypeDesc: v } : null)),
     onNotesChange: (v) => setCharacter((prev) => (prev ? { ...prev, notes: v } : null)),

@@ -1875,6 +1875,25 @@ Manual QA for library/feats modularization and shared part display. **Needs:** c
 
 **Report** — `[ ] PASS` · `[ ] FAIL` · `[ ] SKIP` — Notes:
 
+#### DEV-V-009-T082 — Spaces and line breaks in Appearance and Backstory (86e3jvzre)
+
+| Field | Value |
+|-------|-------|
+| **Suite** | DEV-V-009 — Character sheet refactor |
+| **Related task** | 86e3jvzre |
+| **Where** | `/characters/[id]` Library → Notes, Appearance and Backstory |
+| **Needs** | A saved character you can edit |
+
+**Steps**
+1. Click into Appearance and type `Tall and wide`. Press Enter and type a second line.
+2. Click into Backstory and type `Born in the north`. Press Enter and type a second line.
+3. Wait for the save and hard reload.
+
+**Expected**
+- Each field shows the spaces and the line break as typed, including after reload. Typing in the middle of existing text still keeps spaces.
+
+**Report** — `[ ] PASS` · `[ ] FAIL` · `[ ] SKIP` — Notes:
+
 #### DEV-V-009-T065 — Notes Age + Backstory fields (TASK-886)
 
 | Field | Value |
