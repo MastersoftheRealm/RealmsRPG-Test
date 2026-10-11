@@ -169,16 +169,6 @@ export const GridListRow = memo(function GridListRow({
   const isRowClickable =
     (showExpander || selectable) && !(disabled && (!selectable || !showExpander));
 
-  const handleRowClickWithGuard = (e: React.MouseEvent) => {
-    const target = e.target as HTMLElement;
-    const rowTrigger = target.closest?.('[data-grid-row-trigger]');
-    const interactive = target.closest?.(
-      'button, [role="button"], a, input, select, textarea, [data-expand-ignore]',
-    );
-    if (interactive && interactive !== rowTrigger) return;
-    handleRowClick();
-  };
-
   const handleRowBodyClickWithGuard = (e: React.MouseEvent) => {
     const target = e.target as HTMLElement;
     const interactive = target.closest?.(
@@ -318,7 +308,6 @@ export const GridListRow = memo(function GridListRow({
             isExpanded={showExpander ? isExpanded : undefined}
             expandedPanelId={showExpanded ? expandedPanelId : undefined}
             isRowClickable={isRowClickable}
-            handleRowClickWithGuard={handleRowClickWithGuard}
             handleRowClick={handleRowClick}
             compact={compact}
             disabled={disabled}

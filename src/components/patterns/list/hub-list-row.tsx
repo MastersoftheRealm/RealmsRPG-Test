@@ -4,7 +4,7 @@
  * HubListRow — Unified list row for hub pages (Encounters, Crafting, etc.)
  * ==========================================================================
  * Single source of truth for the "icon + title + badge + subtitle + actions" row pattern.
- * Use for any clickable list row with optional delete and consistent styling.
+ * The title is the button. Delete and other actions are siblings above its hit area.
  */
 
 import { type ReactNode } from 'react';
@@ -16,7 +16,14 @@ import { cn } from '@/lib/utils';
 type DescriptorVariant = NonNullable<VariantProps<typeof chipVariants>['variant']>;
 
 const ROW_BASE_CLASS =
-  'flex items-center gap-4 p-4 hover:border-primary-outline-border transition-colors cursor-pointer group shadow-none';
+  'relative isolate flex items-center gap-4 p-4 hover:border-primary-outline-border transition-colors cursor-pointer group shadow-none';
+
+/** Name is the row button. Actions stay above its stretched hit area. */
+const ROW_NAME_BUTTON_CLASS =
+  "block max-w-full cursor-pointer overflow-visible border-0 bg-transparent p-0 text-left font-[inherit] text-text-primary focus-visible:ring-2 focus-visible:ring-primary-outline-border focus-visible:ring-offset-2 focus-visible:outline-none after:absolute after:inset-0 after:z-0 after:cursor-pointer after:content-['']";
+
+const ROW_ACTIONS_CLASS =
+  'pointer-events-none relative z-10 flex flex-shrink-0 items-center gap-2 [&_a]:pointer-events-auto [&_button]:pointer-events-auto [&_input]:pointer-events-auto [&_select]:pointer-events-auto [&_textarea]:pointer-events-auto';
 
 export interface HubListRowProps {
   /** Icon (e.g. Hammer, Brain). Rendered in iconContainerClassName box. */
@@ -65,22 +72,7 @@ export function HubListRow({
 }: HubListRowProps) {
   const clickable = typeof onClick === 'function';
   return (
-    <Card
-      role={clickable ? 'button' : undefined}
-      tabIndex={clickable ? 0 : undefined}
-      onClick={clickable ? onClick : undefined}
-      onKeyDown={
-        clickable
-          ? (e) => {
-              if (e.key === 'Enter' || e.key === ' ') {
-                e.preventDefault();
-                onClick?.();
-              }
-            }
-          : undefined
-      }
-      className={cn(ROW_BASE_CLASS, !clickable && 'cursor-default', className)}
-    >
+    <Card className={cn(ROW_BASE_CLASS, !clickable && 'cursor-default', className)}>
       <div
         className={cn(
           'flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-lg',
@@ -91,7 +83,15 @@ export function HubListRow({
       </div>
       <div className="min-w-0 flex-1">
         <div className="flex items-center gap-2">
-          <h2 className="truncate font-semibold text-text-primary">{title}</h2>
+          <h2 className="min-w-0 font-semibold text-text-primary">
+            {onClick ? (
+              <button type="button" onClick={() => onClick()} className={ROW_NAME_BUTTON_CLASS}>
+                <span className="block truncate">{title}</span>
+              </button>
+            ) : (
+              <span className="block truncate">{title}</span>
+            )}
+          </h2>
           {badge != null && badge !== '' && (
             <DescriptorChip variant={badgeVariant} size="sm" className={badgeClassName}>
               {badge}
@@ -103,7 +103,7 @@ export function HubListRow({
           <p className="mt-0.5 truncate text-xs text-text-muted">{description}</p>
         )}
       </div>
-      <div className="flex flex-shrink-0 items-center gap-2">
+      <div className={ROW_ACTIONS_CLASS}>
         {rightSlot ?? (
           <>
             {onDelete && (
