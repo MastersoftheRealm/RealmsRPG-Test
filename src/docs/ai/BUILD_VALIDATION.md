@@ -10100,6 +10100,35 @@ A pick that would exceed open trait slots is refused. The disabled Add button de
 
 ---
 
+## DEV-V-096 — HP and AP stepper clicks (ClickUp 86e3juy89)
+
+#### DEV-V-096-T001 — Three quick minus clicks each change Health or Action Points
+
+| Field | Value |
+|-------|-------|
+| **Suite** | DEV-V-096 |
+| **Related task** | 86e3juy89 |
+| **Where** | `/characters/[id]` header, Health and Action Points |
+| **Needs** | A character you can edit. Health at 20. Action Points at 10. About 500px wide is enough. |
+
+**Steps**
+1. Click the Health minus button 3 times quickly.
+2. Wait for the sheet to save, then reload.
+3. Set Action Points to 10. Click its minus button 3 times quickly.
+4. Wait for the save, then reload.
+5. Click Health minus once, wait, and click it again. Then press and hold Health minus for about a second and release.
+
+**Expected**
+- Three quick Health clicks leave Health at 17, including after reload.
+- Three quick Action Points clicks leave Action Points at 7, including after reload.
+- A click with a pause still changes the number by 1. Holding minus keeps stepping and stops when you release.
+
+**Automated** | `npm test` — `src/lib/stepper-value-memory.test.ts`
+
+**Report** — `[ ] PASS` · `[ ] FAIL` · `[ ] SKIP` — Notes:
+
+---
+
 ## DEV-V-095 — Core Rules Conditions editor (ClickUp 86e3juy5z)
 
 #### DEV-V-095-T001 — The Conditions tab lists the stored conditions
