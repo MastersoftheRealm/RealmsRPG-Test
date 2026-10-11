@@ -18,7 +18,7 @@
  * - Accessible and responsive
  */
 
-import { useEffect, useId, useState, memo } from 'react';
+import { useEffect, useId, useRef, useState, memo } from 'react';
 import { cn } from '@/lib/utils';
 import {
   helpKeyForPartsOrPropertiesLabel,
@@ -42,6 +42,40 @@ import {
 } from './grid-list-row-columns';
 import { GridListRowExpandedBody, GridListRowMobileSummary } from './grid-list-row-expanded';
 import type { GridListRowProps } from './grid-list-row-types';
+
+/** Pointer jitter at or under this is still a plain click (86e3jrjfg). */
+export const GLR_EXPAND_CLICK_DRAG_SLOP_PX = 5;
+
+export function selectedTextInside(
+  root: { contains: (node: Node | null) => boolean } | null,
+  selection: {
+    isCollapsed: boolean;
+    anchorNode: Node | null;
+    toString: () => string;
+  } | null,
+): string {
+  if (!root || !selection || selection.isCollapsed || selection.anchorNode == null) return '';
+  if (!root.contains(selection.anchorNode)) return '';
+  return selection.toString();
+}
+
+/**
+ * A plain click on the open body toggles the row (TASK-539).
+ * A nested control, a drag, or text selected inside this item does not,
+ * so a description can be copied (86e3jrjfg).
+ */
+export function expandedBodyClickShouldToggle(input: {
+  interactive: boolean;
+  deltaX: number;
+  deltaY: number;
+  selectedText: string;
+}): boolean {
+  if (input.interactive) return false;
+  if (input.selectedText.length > 0) return false;
+  const moved = Math.hypot(input.deltaX, input.deltaY);
+  if (moved > GLR_EXPAND_CLICK_DRAG_SLOP_PX) return false;
+  return true;
+}
 
 export type {
   ChipData,
@@ -103,6 +137,7 @@ export const GridListRow = memo(function GridListRow({
   const [expandedOptionsChipIndex, setExpandedOptionsChipIndex] = useState<number | null>(null);
   const [openDetailSections, setOpenDetailSections] = useState<Record<string, boolean>>({});
   const expandedPanelId = useId();
+  const expandPointerOrigin = useRef<{ x: number; y: number } | null>(null);
 
   const isExpanded = controlledExpanded !== undefined ? controlledExpanded : internalExpanded;
 
@@ -169,12 +204,33 @@ export const GridListRow = memo(function GridListRow({
   const isRowClickable =
     (showExpander || selectable) && !(disabled && (!selectable || !showExpander));
 
+  const handleExpandedPointerDown = (e: React.PointerEvent) => {
+    expandPointerOrigin.current = { x: e.clientX, y: e.clientY };
+  };
+
   const handleRowBodyClickWithGuard = (e: React.MouseEvent) => {
     const target = e.target as HTMLElement;
-    const interactive = target.closest?.(
-      'button, [role="button"], a, input, select, textarea, [data-expand-ignore], [data-chip-group]',
+    const interactive = Boolean(
+      target.closest?.(
+        'button, [role="button"], a, input, select, textarea, [data-expand-ignore], [data-chip-group]',
+      ),
     );
-    if (interactive) return;
+    const origin = expandPointerOrigin.current;
+    expandPointerOrigin.current = null;
+    const selectedText = selectedTextInside(
+      e.currentTarget instanceof Node ? e.currentTarget : null,
+      typeof window !== 'undefined' ? window.getSelection() : null,
+    );
+    if (
+      !expandedBodyClickShouldToggle({
+        interactive,
+        deltaX: origin ? e.clientX - origin.x : 0,
+        deltaY: origin ? e.clientY - origin.y : 0,
+        selectedText,
+      })
+    ) {
+      return;
+    }
     handleRowClick();
   };
 
@@ -375,6 +431,7 @@ export const GridListRow = memo(function GridListRow({
             <GridListRowMobileSummary
               mobileSummaryColumns={mobileSummaryColumns}
               isRowClickable={isRowClickable}
+              handleExpandedPointerDown={handleExpandedPointerDown}
               handleRowBodyClickWithGuard={handleRowBodyClickWithGuard}
             />
           </div>
@@ -398,6 +455,7 @@ export const GridListRow = memo(function GridListRow({
                 compact={compact}
                 selectable={inlineSelectable}
                 isRowClickable={isRowClickable}
+                handleExpandedPointerDown={handleExpandedPointerDown}
                 handleRowBodyClickWithGuard={handleRowBodyClickWithGuard}
                 expandedContent={expandedContent}
                 descTrimmed={descTrimmed}

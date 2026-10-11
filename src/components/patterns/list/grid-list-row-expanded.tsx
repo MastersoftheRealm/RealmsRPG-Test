@@ -1,7 +1,7 @@
 'use client';
 
 import { Edit, Copy, BookPlus, AlertCircle } from 'lucide-react';
-import type { Dispatch, MouseEvent, ReactNode, SetStateAction } from 'react';
+import type { Dispatch, MouseEvent, PointerEvent, ReactNode, SetStateAction } from 'react';
 import { cn } from '@/lib/utils';
 import { formatCostDisplay } from '@/lib/game/creator-constants';
 import { Button, DescriptorChip } from '@/components/ui';
@@ -24,6 +24,7 @@ interface GridListRowExpandedBodyProps {
   compact: boolean;
   selectable: boolean;
   isRowClickable: boolean;
+  handleExpandedPointerDown: (e: PointerEvent) => void;
   handleRowBodyClickWithGuard: (e: MouseEvent) => void;
   expandedContent?: ReactNode | undefined;
   descTrimmed: string;
@@ -56,6 +57,7 @@ export function GridListRowExpandedBody({
   compact,
   selectable,
   isRowClickable,
+  handleExpandedPointerDown,
   handleRowBodyClickWithGuard,
   expandedContent,
   descTrimmed,
@@ -91,6 +93,7 @@ export function GridListRowExpandedBody({
         selectable && 'mr-10',
         isRowClickable && 'cursor-pointer',
       )}
+      onPointerDown={isRowClickable ? handleExpandedPointerDown : undefined}
       onClick={isRowClickable ? handleRowBodyClickWithGuard : undefined}
     >
       {/* Custom expanded content takes precedence */}
@@ -263,6 +266,7 @@ export function GridListRowExpandedBody({
 interface GridListRowMobileSummaryProps {
   mobileSummaryColumns: ColumnValue[];
   isRowClickable: boolean;
+  handleExpandedPointerDown: (e: PointerEvent) => void;
   handleRowBodyClickWithGuard: (e: MouseEvent) => void;
 }
 
@@ -270,6 +274,7 @@ interface GridListRowMobileSummaryProps {
 export function GridListRowMobileSummary({
   mobileSummaryColumns,
   isRowClickable,
+  handleExpandedPointerDown,
   handleRowBodyClickWithGuard,
 }: GridListRowMobileSummaryProps) {
   return (
@@ -278,6 +283,7 @@ export function GridListRowMobileSummary({
         'flex flex-wrap gap-2 px-4 pb-2 text-xs text-text-secondary lg:hidden',
         isRowClickable && 'cursor-pointer',
       )}
+      onPointerDown={isRowClickable ? handleExpandedPointerDown : undefined}
       onClick={isRowClickable ? handleRowBodyClickWithGuard : undefined}
     >
       {mobileSummaryColumns.map((col) => (
