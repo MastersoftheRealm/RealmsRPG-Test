@@ -168,12 +168,20 @@ export function CharacterSheetSettingsModal({
                 </p>
               ) : null}
               {canEdit && onVisibilityChange ? (
-                <Select
-                  aria-label="Character visibility"
-                  options={visibilityOptions}
-                  value={selectedVisibility}
-                  onChange={(e) => setSelectedVisibility(e.target.value as CharacterVisibility)}
-                />
+                <>
+                  <Select
+                    aria-label="Character visibility"
+                    options={visibilityOptions}
+                    value={selectedVisibility}
+                    title={
+                      visibilityOptions.find((opt) => opt.value === selectedVisibility)?.label
+                    }
+                    onChange={(e) => setSelectedVisibility(e.target.value as CharacterVisibility)}
+                  />
+                  <p className="mt-2 text-sm break-normal text-text-primary md:hidden">
+                    {visibilityOptions.find((opt) => opt.value === selectedVisibility)?.label}
+                  </p>
+                </>
               ) : (
                 <p className="text-sm font-medium text-text-primary">
                   {VISIBILITY_OPTIONS.find((o) => o.value === visibility)?.label ?? visibility}

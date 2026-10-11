@@ -359,6 +359,8 @@
   --z-index-popover: 70;
   --z-index-toast: 100;
   --z-index-floating: 1000;
+  /* Sheet modals cover the roll-log dock (z-floating). Toasts stay on z-toast-stack. */
+  --z-index-modal: 1050;
   --z-index-tour: 1100;
   --z-index-skip-link: 9999;
   --z-index-toast-stack: 10000;
@@ -380,8 +382,8 @@
   --dock-fab-size: 3.5rem;
   --dock-bottom: var(--dock-gap);
   --sheet-mobile-dock-height: calc(4.5rem + env(safe-area-inset-bottom, 0px));
-  /* Same length as the owner dock; used as panel end-pad when no toolbar (TASK-843). */
-  --sheet-mobile-fab-gutter: var(--sheet-mobile-dock-height);
+  /* FAB overlap below md when the sheet has no action-dock strip (RM / view-only). */
+  --sheet-mobile-fab-gutter: calc(var(--dock-fab-size) + var(--dock-gap));
   --dock-reserved-end: calc(var(--dock-fab-size) + var(--dock-gap) * 2);
 }
 
@@ -712,18 +714,24 @@
     );
   }
 
-  /* C1 frame vs C4 reserve (TASK-843): height-bound class stays shared.
-     Owner `.has-sheet-mobile-dock` keeps the opaque action-dock strip.
-     RM / other frames pad scrollable panels with the FAB gutter instead. */
+  /* C1 frame vs C4 reserve (TASK-843 / 86e3jt15m): every sheet frame clears the
+     roll-log FAB. Owner `.has-sheet-mobile-dock` reserves the action-dock strip
+     instead. Panel end-pad stays 1rem so it does not stack on that reserve. */
   .character-sheet-mobile-frame {
-    --sheet-mobile-bottom-reserve: 0px;
-    --sheet-panel-end-pad: var(--sheet-mobile-fab-gutter);
+    --sheet-mobile-bottom-reserve: var(--sheet-mobile-fab-gutter);
+    --sheet-panel-end-pad: 1rem;
   }
 
   /* TASK-907: column is the vertical scroller. Inactive height 0 is the
      Tailwind `:not([data-sheet-panel-active])` utilities (they beat `pb-4`).
      Lock height while panning so the incoming panel is visible. */
   @media (max-width: 767px) {
+    /* Apply the reserve here so clearance does not depend on a scanned utility. */
+    .character-sheet-mobile-frame {
+      box-sizing: border-box;
+      padding-bottom: var(--sheet-mobile-bottom-reserve);
+    }
+
     [data-sheet-mobile-column] {
       -webkit-overflow-scrolling: touch;
     }
@@ -766,6 +774,12 @@
       padding-right: var(--dock-reserved-end);
       padding-bottom: var(--dock-reserved-end);
     }
+
+    /* The site footer is outside #main-content. Reserve the FAB so the
+       copyright line can scroll clear (86e3jt15m). */
+    body:has(.floating-dock-bottom-right) footer {
+      padding-bottom: var(--dock-reserved-end);
+    }
   }
 
   #main-content:has(.floating-dock-bottom-right):not(:has(.character-sheet-mobile-frame)) {
@@ -776,6 +790,7 @@
   body:has([aria-modal='true']) .sheet-mobile-action-dock {
     visibility: hidden;
     pointer-events: none;
+    z-index: 0;
   }
 
   /* C1: the sheet frame is viewport-bounded. Hide the site footer below md so
@@ -1000,7 +1015,9 @@
      Fade is chevron width + 8px so Dense/Standard hits do not overlap unfaded tabs.
      Sheet carousel does not reuse this mask (TASK-907 — content fade encroached). */
   .tab-nav-scroll {
-    --tab-nav-overflow-fade: 2.5rem;
+    --tab-nav-scroll-btn-width: 2rem;
+    /* Button width plus an 8px gap so unfaded labels do not meet the chevron. */
+    --tab-nav-overflow-fade: calc(var(--tab-nav-scroll-btn-width) + 0.5rem);
   }
 
   .tab-nav-scroll {
@@ -1026,6 +1043,7 @@
       to right,
       black 0,
       black calc(100% - var(--tab-nav-overflow-fade)),
+      transparent calc(100% - var(--tab-nav-scroll-btn-width)),
       transparent 100%
     );
   }
@@ -1034,6 +1052,7 @@
     mask-image: linear-gradient(
       to right,
       transparent 0,
+      transparent var(--tab-nav-scroll-btn-width),
       black var(--tab-nav-overflow-fade),
       black 100%
     );
@@ -1043,8 +1062,10 @@
     mask-image: linear-gradient(
       to right,
       transparent 0,
+      transparent var(--tab-nav-scroll-btn-width),
       black var(--tab-nav-overflow-fade),
       black calc(100% - var(--tab-nav-overflow-fade)),
+      transparent calc(100% - var(--tab-nav-scroll-btn-width)),
       transparent 100%
     );
   }
@@ -1055,11 +1076,11 @@
 
   @media (pointer: coarse) {
     .tab-nav-scroll {
-      --tab-nav-overflow-fade: 3.25rem;
+      --tab-nav-scroll-btn-width: 2.75rem;
     }
 
     .tab-nav-scroll-btn {
-      width: 2.75rem;
+      width: var(--tab-nav-scroll-btn-width);
     }
   }
 

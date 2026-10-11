@@ -33,8 +33,8 @@ import {
 /**
  * Site `Header` is `h-20` (5rem). Below md, lock the sheet column to the leftover
  * viewport so the carousel cannot stretch to the tallest sibling (TASK-838 / C1).
- * Bottom reserve is `--sheet-mobile-bottom-reserve` (TASK-843): owner dock height
- * when `.has-sheet-mobile-dock` wraps the frame, else 0 (FAB gutter lives on panels).
+ * Bottom reserve is `--sheet-mobile-bottom-reserve` (TASK-843 / 86e3jt15m): the FAB
+ * gutter on every frame, or the owner dock height when `.has-sheet-mobile-dock` wraps it.
  */
 export const CHARACTER_SHEET_MOBILE_FRAME_CLASSNAME =
   'character-sheet-mobile-frame max-md:box-border max-md:flex max-md:h-[calc(100svh-5rem)] max-md:min-w-0 max-md:w-full max-md:flex-col max-md:overflow-hidden max-md:pb-[var(--sheet-mobile-bottom-reserve)]';

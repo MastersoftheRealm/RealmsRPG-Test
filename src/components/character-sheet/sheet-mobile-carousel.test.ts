@@ -5,6 +5,12 @@ import { isSheetCarouselNearSnap, nearestSheetCarouselIndex } from './sheet-mobi
 
 const sheetBody = readFileSync(path.join(import.meta.dirname, 'character-sheet-body.tsx'), 'utf8');
 const globals = readFileSync(path.join(import.meta.dirname, '../../app/globals.css'), 'utf8');
+const sheetPage = readFileSync(
+  path.join(import.meta.dirname, '../../app/(main)/characters/[id]/page.tsx'),
+  'utf8',
+);
+const toolbar = readFileSync(path.join(import.meta.dirname, 'sheet-action-toolbar.tsx'), 'utf8');
+const modal = readFileSync(path.join(import.meta.dirname, '../ui/modal.tsx'), 'utf8');
 
 describe('sheet mobile carousel snap math (TASK-907)', () => {
   it('uses panel width plus gap as the snap stride', () => {
@@ -39,5 +45,29 @@ describe('sheet carousel C1 chrome (TASK-907)', () => {
     expect(sheetBody).not.toContain('nextSheetHeaderCollapsed');
     expect(globals).not.toContain("[data-sheet-mobile-carousel][data-overflow-end='true']");
     expect(globals).toContain('[data-sheet-mobile-column]');
+  });
+});
+
+describe('narrow sheet clearance (86e3jt15m)', () => {
+  it('reserves the FAB on every sheet frame and the owner dock when that strip is mounted', () => {
+    expect(globals).toContain(
+      '--sheet-mobile-bottom-reserve: var(--sheet-mobile-fab-gutter)',
+    );
+    expect(globals).toContain(
+      '--sheet-mobile-bottom-reserve: var(--sheet-mobile-dock-height)',
+    );
+    expect(globals).toContain('padding-bottom: var(--sheet-mobile-bottom-reserve)');
+    expect(globals).toContain('body:has(.floating-dock-bottom-right) footer');
+    expect(sheetBody).toContain('max-md:min-w-0');
+  });
+
+  it('keeps modal footers above the roll-log dock and view-only copy in the page flow', () => {
+    expect(modal).toContain('z-modal');
+    expect(modal).not.toContain('z-overlay');
+    expect(globals).toContain('--z-index-modal: 1050');
+    expect(globals).toContain("body:has([aria-modal='true']) .floating-dock-bottom-right");
+    expect(toolbar).not.toContain('fixed top-24');
+    expect(sheetPage).toContain('View only');
+    expect(sheetPage).toContain('isOwner ? CHARACTER_SHEET_MOBILE_DOCK_SCOPE_CLASSNAME');
   });
 });

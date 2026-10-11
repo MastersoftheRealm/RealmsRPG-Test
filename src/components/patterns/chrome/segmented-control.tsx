@@ -109,7 +109,12 @@ export function SegmentedControl<T extends string>({
             className={classNameBtn}
           >
             {opt.icon ? <span className="shrink-0 [&_svg]:shrink-0">{opt.icon}</span> : null}
-            <span className={cn(opt.icon && 'min-w-0 truncate')}>{opt.label}</span>
+            <span
+              className={cn((opt.icon || equalWidth) && 'min-w-0 truncate')}
+              title={opt.label}
+            >
+              {opt.label}
+            </span>
           </button>
         );
       })}

@@ -108,20 +108,22 @@ export default function CharacterSheetPage({ params }: PageParams) {
     <RollProvider campaignContext={campaignContext} canRoll={isOwner}>
       <CharacterSheetProvider value={sheetContextValue!}>
         <div
-          className={`bg-background md:min-h-screen ${CHARACTER_SHEET_MOBILE_DOCK_SCOPE_CLASSNAME}`}
+          className={`bg-background md:min-h-screen ${isOwner ? CHARACTER_SHEET_MOBILE_DOCK_SCOPE_CLASSNAME : ''}`}
         >
-          <SheetActionToolbar
-            isEditMode={isEditMode}
-            isTempModifierMode={isTempModifierMode}
-            sheetEditNotification={sheetEditNotification}
-            hasTempModifiers={hasTempModifiers}
-            onToggleEditMode={handleToggleEditMode}
-            onToggleTempModifierMode={handleToggleTempModifierMode}
-            onRecovery={() => setShowRecoveryModal(true)}
-            onLevelUp={() => setShowLevelUpModal(true)}
-            onSettings={isOwner ? () => setShowSettingsModal(true) : undefined}
-            canEdit={isOwner}
-          />
+          {isOwner ? (
+            <SheetActionToolbar
+              isEditMode={isEditMode}
+              isTempModifierMode={isTempModifierMode}
+              sheetEditNotification={sheetEditNotification}
+              hasTempModifiers={hasTempModifiers}
+              onToggleEditMode={handleToggleEditMode}
+              onToggleTempModifierMode={handleToggleTempModifierMode}
+              onRecovery={() => setShowRecoveryModal(true)}
+              onLevelUp={() => setShowLevelUpModal(true)}
+              onSettings={() => setShowSettingsModal(true)}
+              canEdit
+            />
+          ) : null}
 
           {showSettingsModal && (
             <CharacterSheetSettingsModal
@@ -152,6 +154,9 @@ export default function CharacterSheetPage({ params }: PageParams) {
               centered={false}
               className="pt-4 max-md:flex max-md:min-h-0 max-md:w-full max-md:min-w-0 max-md:flex-1 max-md:flex-col md:mx-auto"
             >
+              {!isOwner ? (
+                <p className="mb-4 shrink-0 px-4 text-sm text-text-muted">View only</p>
+              ) : null}
               {isGuestSheet ? (
                 <Alert variant="info" className="mb-4 px-4">
                   <span className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">

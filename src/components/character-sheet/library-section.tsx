@@ -240,7 +240,7 @@ export function LibrarySection({
   } = data;
 
   return (
-    <Card className={cn('relative flex flex-col p-4 shadow-md md:p-6', className)}>
+    <Card className={cn('relative flex w-full min-w-0 max-w-full flex-col p-4 shadow-md md:p-6', className)}>
       {isEditMode && (
         <div className="absolute top-3 right-3 z-10">
           <EditSectionToggle

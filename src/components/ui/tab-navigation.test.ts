@@ -81,7 +81,8 @@ describe('TabNavigation overflow affordance (TASK-840)', () => {
     expect(globals).toContain('mask-image');
     expect(globals).toContain('.tab-nav-scroll-btn');
     expect(globals).toContain("[data-overflow-end='true']");
-    expect(globals).toContain('3.25rem');
+    expect(globals).toContain('--tab-nav-scroll-btn-width: 2.75rem');
+    expect(globals).toContain('transparent calc(100% - var(--tab-nav-scroll-btn-width))');
   });
 });
 

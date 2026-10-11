@@ -211,7 +211,7 @@ export function Modal({
   if (!isOpen && captureCloseClicks) {
     return createPortal(
       <div
-        className="fixed inset-0 z-overlay"
+        className="fixed inset-0 z-modal"
         aria-hidden="true"
         data-testid="modal-close-click-capture"
       />,
@@ -262,7 +262,7 @@ export function Modal({
   const modalContent = (
     <div
       className={cn(
-        'fixed inset-0 z-overlay flex',
+        'fixed inset-0 z-modal flex',
         useFullScreenMobile ? 'items-stretch' : 'items-center justify-center p-4',
       )}
     >
