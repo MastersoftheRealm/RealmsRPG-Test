@@ -70,7 +70,7 @@ const ABOVE_ROW_HIT_CLASS =
   "[&_:is(a[href],button,input,select,textarea,summary,[role='button'],[role='link'],[role='checkbox'],[role='switch'],[data-expand-ignore]):not([data-grid-row-trigger])]:relative [&_:is(a[href],button,input,select,textarea,summary,[role='button'],[role='link'],[role='checkbox'],[role='switch'],[data-expand-ignore]):not([data-grid-row-trigger])]:z-10";
 
 const ROW_NAME_BUTTON_CLASS =
-  "min-w-0 max-w-full cursor-pointer overflow-visible border-0 bg-transparent p-0 text-left font-[inherit] text-text-primary focus-visible:ring-2 focus-visible:ring-primary-outline-border focus-visible:outline-none focus-visible:ring-inset after:absolute after:inset-0 after:z-0 after:cursor-pointer after:content-['']";
+  "w-full min-w-0 max-w-full cursor-pointer overflow-visible border-0 bg-transparent p-0 text-left font-[inherit] text-text-primary focus-visible:ring-2 focus-visible:ring-primary-outline-border focus-visible:outline-none focus-visible:ring-inset after:absolute after:inset-0 after:z-0 after:cursor-pointer after:content-['']";
 
 interface GridListRowCollapsedProps {
   isRowClickable: boolean;
