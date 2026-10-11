@@ -1,5 +1,5 @@
 ---
-description: RealmsRPG stack pointers — details in constitution / AGENTS.md
+description: RealmsRPG stack pointers — details on demand, not a second read of AGENTS.md
 alwaysApply: true
 ---
 
@@ -9,8 +9,8 @@ alwaysApply: true
 
 **Dirs:** `src/app/`, `src/components/{ui,patterns,...}/`, `src/hooks/`, `src/stores/`, `src/lib/`, `src/services/`.
 
-**Agent OS:** `ARCHITECTURE_CONSTITUTION.md` · work from **ClickUp** (only queue) · SoT map in root `AGENTS.md`.
+**Git:** Never push `master`. Never merge. Branch `bug|feat/<clickUpId>-short-slug` from current `origin/master`. One task, one PR. ClickUp id in the branch and the PR.
 
-**Workflow:** [Realms Dev Workflow & Agent Rules](https://docs.google.com/document/d/1F6iZUKP9nN0YTFzOkZ6Y82sySaw0iW101f_a-7ZeQdI/edit) (Drive SoT).
+**Check locally:** the regression test for the repro. CI runs typecheck, the unit suite, and the build.
 
-**Git rules:** **Never push directly to `master`**; every change goes through a PR. Branch naming: `bug|feat/<clickUpId>-short-slug`. Include the ClickUp task ID in the branch name and the PR. Before PR: `npm run build` + `npm run tasks:validate`. `related_files` paths must exist. If you mark any TASK-### done in `ACTIVE_TASKS.md`, the commit subject must list each ID (CI `ai-task-verifier` enforces this). UI gates: lint/contrast/build + visual/a11y.
+**Terms:** RM (Realm Master), never GM. Do not invent formulas, names, lore, or flavor.

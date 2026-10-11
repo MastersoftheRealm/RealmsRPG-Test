@@ -1,78 +1,43 @@
-# Audit (session / task)
+# Audit (before merge)
 
-**Read-only by default.** Score this chat / TASK-### against the three pillars below. Do **not** edit product code or “fix” gaps — report only.
+**Read-only.** A different model than the chat that wrote the diff. Never a slug ending in `-fast`. Do not edit product code.
 
-Authority: `PR_CHECKLIST.md` § Owner commands + `ARCHITECTURE_CONSTITUTION.md`.
+- Implementer was `composer-2.5`: audit with `grok-4.7-medium`.
+- Implementer was `grok-4.7-medium` or `grok-4.7-high`, and the diff is layout, labels, or wiring: audit with `composer-2.5`.
+- Implementer was `grok-4.7-medium`, and the diff is rules math, permissions, saves, or schema: audit with `grok-4.7-high`.
+- Implementer was already `grok-4.7-high` on that kind of diff: a fresh `grok-4.7-high` chat that did not write the code. If that audit disagrees, or the change can lose or expose data, do not start Claude or GPT. Comment `claude-opus-5-5-high` or `gpt-5.6-sol-high` on the ClickUp task and leave the PR in **in review**.
 
-Optional args: `/audit TASK-502` = primary task; else infer from this chat + recent `ACTIVE_TASKS` / archive.
+## What to read
 
-## Three pillars (score all three)
+The diff, and the rules that diff touches (mobile and accessibility when UI files changed, codex when SQL or reference data changed, `GAME_RULES.md` when math changed). Do not re-read `ARCHITECTURE_CONSTITUTION.md`, the Drive playbook, `ACTIVE_TASKS.md`, or `AI_CHANGELOG.md`.
 
-1. **Clutter & honesty** — Dead code, unused exports, duplicate helpers, unneeded lines/compat shims, docs that claim more than the code does (or lag the code). Prefer delete over documenting forever.
-2. **Feedback / AC fidelity** — Did we actually do what the owner feedback and task acceptance criteria asked for? Diff the AC + `ALL_FEEDBACK_CLEAN` disposition against behavior in code (not against changelog prose).
-3. **Necessary + constitutional additions** — Anything this session *added*: was it required for the AC? Did it extend `FEATURE_INDEX` + barrels (`shared` / `ui` / hooks / lib) instead of forking a parallel component/helper/modal/parser/upload path? Architect gates honored?
+A re-audit checks only the failed point. It does not score the whole change again.
 
-## Scope (strict)
+## What to score
 
-1. Files touched in this conversation (`git status` / diff).
-2. Task `related_files` / `related_tasks`.
-3. Docs that claim DoD (`ACTIVE_TASKS`, archive, `AI_CHANGELOG`, `BUILD_VALIDATION`, `FEATURE_INDEX` as relevant).
+1. The diff does what the ClickUp acceptance criteria ask. Evidence is the code and the repro test, not a changelog.
+2. The diff does not add a parallel pattern. It extends the existing one.
+3. In-scope dead code the diff itself added.
 
-**Out of scope:** repo-wide deep dive (`/global-audit`), `/debt` apply, unrelated dirty files, live DB/codex mutation.
+Doc wording, missing changelog lines, and task-note honesty are not gaps.
 
-## Procedure
-
-1. Identify target task(s) and in-scope file set.
-2. Score **pillars 1–3** with evidence (paths, AC quotes, greps).
-3. Walk **PR Checklist** 1–18 as a checklist under those pillars (tokens, mobile, a11y, uploads, barrels, verification_status, etc.).
-4. Call out AI failure modes: parallel shells, premature `done`, docs-only “honesty” that adds lines without removing clutter, new files that should have been props on shared components.
-5. End with whether the owner should run `/cleanup` next.
-
-## Report format
+## Report
 
 ```markdown
-## Audit — TASK-### (or session)
+## Audit
 
-**Verdict:** ready for done | gaps remain | not ready (partial)
+**Verdict:** ready | gap
 
-### Pillar scores
-| Pillar | Score | Notes |
-|--------|-------|-------|
-| 1 Clutter & honesty | pass / gaps | … |
-| 2 Feedback / AC fidelity | pass / gaps | … |
-| 3 Necessary + constitutional additions | pass / gaps | … |
+### Failed point
+- One finding, or "none". Path and what the AC asked for.
 
-### Scope
-- Files / tasks reviewed
-
-### Pass
-- Short bullets
-
-### Gaps (fix before done)
-| Severity | Pillar | Finding | Evidence | Suggested fix |
-|----------|--------|---------|----------|---------------|
-| blocker / major / minor | 1/2/3 | … | path or AC | … |
-
-### Cleanup candidates
-- Removals / wire-to-canonical safe for `/cleanup` (even if not DoD blockers)
-
-### Follow-ups (propose only unless owner asked to file)
-- Items for `/global-audit`, `/debt`, or a new TASK-### — do not expand blast radius
-
-### Next
-- Say `/cleanup` to apply in-scope fixes, or address blockers manually.
+### Cleanup
+- Say `/cleanup` only when that finding is an in-scope behavior or code gap.
+- A cross-system or layout miss steps up once. It is not a same-model redo, and it is not a full re-audit.
 ```
 
 ## Hard rules
 
-- **Different model than implementer.** The audit chat must not use the same model as the chat that wrote the diff. Never use a slug ending in `-fast`. The audit stays read-only (see **Zero product edits** below).
-  - Implementer was `composer-2.5`: audit with `grok-4.7-medium`.
-  - Implementer was `grok-4.7-medium` or `grok-4.7-high`, and the diff is layout, labels, or wiring: audit with `composer-2.5`.
-  - Implementer was `grok-4.7-medium`, and the diff is rules math, permissions, saves, or schema: audit with `grok-4.7-high`.
-  - Implementer was already `grok-4.7-high` on that kind of diff: a fresh `grok-4.7-high` chat that did not write the code. If that audit disagrees, or the change can lose or expose data, do **not** start Claude or GPT. Say so in the audit report and stop; comment `claude-opus-5-5-high` or `gpt-5.6-sol-high` on the ClickUp task and leave the PR in **in review**.
-- **Zero product edits.** Report only — do not “fix while auditing.”
-- **Follow-up filing exception:** If the owner’s message explicitly says to file tasks (e.g. “file follow-ups” / “make follow-up tasks”), file them in ClickUp via Clickup Manager (or directly on Kadin's orders). Optionally add engineering notes in `ACTIVE_TASKS.md` — use the **atomic task-filing** rules in `debt.md`. Still no product-code fixes in `/audit`.
-- Evidence over vibes.
-- If AC or owner feedback is unmet, verdict must not be “ready for done.”
-- “Docs honesty” alone is not a pass on pillar 1 if dead forks remain in scope.
-- **Commits:** PR Checklist item 5 is a **push gate**. Do not flag “no git commit yet” as a gap. One commit may list many `TASK-###`. Do not tell the owner to commit per task.
+- Zero product edits.
+- If the acceptance criteria are unmet, the verdict is not ready.
+- Do not file `TASK-###` notes. A follow-up the owner asked for goes on ClickUp.

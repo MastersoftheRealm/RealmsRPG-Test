@@ -1,6 +1,6 @@
 # Waiting / Blocked / Human-owned AI Tasks
 
-Not part of the agent session-start hot path. Agents may skim for dependencies, but **do not** load this file every session.
+Not a session-start read. Do not delete a hold here unless that hold is also on the ClickUp task. Some of these notes are still the only record. New holds go on the ClickUp task.
 
 Move a task back to [`ACTIVE_TASKS.md`](ACTIVE_TASKS.md) when it becomes unblocked / unassigned to a human.
 

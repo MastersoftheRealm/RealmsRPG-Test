@@ -1,44 +1,29 @@
 ---
-description: ClickUp-primary task workflow — ACTIVE_TASKS optional notes only
+description: ClickUp task workflow — what to read, write, and skip
 alwaysApply: true
 ---
 
 # Task Workflow
 
-**Work queue:** **ClickUp is the only work queue.** Pick tasks from ClickUp, not `ACTIVE_TASKS.md`. Repo `ACTIVE_TASKS.md` / TASK-### are **optional engineering notes** — never treat them as the schedule.
+**Work queue:** ClickUp only. Do not read or update `ACTIVE_TASKS.md`, `AI_TASK_QUEUE.md`, or `WAITING_TASKS.md` to do the task. A hold that exists only in `WAITING_TASKS.md` stays until it is on the ClickUp task.
 
-**Session start:** [Realms Dev Workflow](https://docs.google.com/document/d/1F6iZUKP9nN0YTFzOkZ6Y82sySaw0iW101f_a-7ZeQdI/edit) → `DECISIONS.md` → `ARCHITECTURE_CONSTITUTION.md` for coding constraints. Then claim a ClickUp task.
+**Before coding:** the ClickUp task, then `FEATURE_INDEX.md` if you might add a pattern. Do not re-read the Drive playbook, `DECISIONS.md`, or `ARCHITECTURE_CONSTITUTION.md`. Those are on demand. See `AGENTS.md`.
 
 **ClickUp writes:** Do not use the ClickUp plugin. When Kadin has told you to write to ClickUp, call the ClickUp API v2 with `CLICKUP_API_TOKEN` from `.env.local` (`Authorization` header, `https://api.clickup.com/api/v2`). Never print the token. Never commit `.env.local`.
 
-**Before implementing:**
-1. Claim the ClickUp task. When Kadin has told you to write to ClickUp, move status **to do → in progress** with that API token; otherwise note the claim in the PR and let a human move the task.
-2. Search `FEATURE_INDEX.md` + barrels (+ generated barrel inventory) — confirm it doesn't already exist.
-3. Game copy / caps / formulas → `GAME_RULES.md`. UI → `MOBILE_UX.md` + a11y rule.
-4. **Model escalation (pause once):** If the task matches a trigger below, **stop before coding** and tell the owner in 2–4 sentences: why a stronger model is safer, which ClickUp task, and wait for "proceed" / model switch / narrower instructions. Do **not** pause again in the same chat after the owner says proceed.
-
-   **Pause triggers (only these):** Architect work (new shared/ui, new store, new API contract, migration *strategy*); live DB/schema migrations or cascade delete/replace; multi-system refactors with irreversible data risk; task notes explicitly say "Architect" / "stronger model" / "owner ack before implement."
-
-   **Do not pause for:** routine UI wiring, copy, BUILD_VALIDATION, extending an existing pattern, continuing work with clear remaining items, or work the owner already scoped to this agent/model.
-
 **While implementing:**
-- Branch: `bug|feat/<clickUpId>-short-slug`. **Never push `master`.** Never merge.
-- Move ClickUp status through **in progress → in review** when the branch is ready for review (when Kadin has told you to write to ClickUp, use `CLICKUP_API_TOKEN`; otherwise note the status change in the PR); assign **Collin**.
-- After a bypass merge without Collin, move the task to **testing**, comment QA instructions for what changed, add **James Owenby**, and keep **Collin** assigned. Collin can move it back to **in review**.
-- Link ClickUp task ID in the PR. Optionally maintain TASK-### notes in `ACTIVE_TASKS.md` for engineering hygiene.
-- If using `ACTIVE_TASKS.md` notes: `in-progress` → `done` when implementable AC met (build/tests/docs); else `partial` + `completed_work` / `remaining_work` / `follow_up_tasks`. Move `done` blocks to `archive/TASK_QUEUE_DONE.md`. If you mark any TASK-### done, the commit subject must list each ID (CI `ai-task-verifier` enforces this).
-- Blocked / human-owned → `WAITING_TASKS.md`. Human-only steps → `DEVELOPER_TASK_QUEUE.md`.
-- User-facing: `BUILD_VALIDATION.md` + changelog.
-- New shared/ui file → ADR + update `scripts/shared-ui-allowlist.json` (`npm run tasks:validate-shared-ui`).
+- Branch: `bug|feat/<clickUpId>-short-slug` from current `origin/master`. **Never push `master`.** Never merge.
+- One task, one branch, one PR. Link the ClickUp id. Comment what changed and how to test.
+- When Kadin has told you to write to ClickUp: **to do → in progress** when you claim it, **in review** and assign **Collin** when the PR is ready. After a bypass merge: **testing**, QA comment, add **James Owenby**, keep **Collin**.
+- Locally, run the regression test for the repro. Do not run `npm test`, `npm run build`, or `npm run tasks:validate` as well. CI does.
+- Do not append `AI_CHANGELOG.md` or put `TASK-###` in the commit subject.
+- User-facing: QA steps on the ClickUp comment. `BUILD_VALIDATION.md` only when that suite does not already cover the check.
+- New shared/ui file → ADR + `scripts/shared-ui-allowlist.json` (`npm run tasks:validate-shared-ui`).
 - Barrel export changes → `npm run tasks:generate-index`.
 - **Every fixed bug → regression test from its repro** when feasible.
 
+**Model pause (once):** Stop before coding and ask only for Architect work (new shared/ui, new store, new API contract, migration strategy), live DB/schema migrations or cascade delete/replace, multi-system refactors with irreversible data risk, or notes that say "Architect" / "stronger model" / "owner ack before implement." Do not pause for a routine fix, a local save whose behavior is written, or work already scoped to this model. After the owner says proceed, do not pause again.
+
+**After a miss:** A cross-system or layout interaction miss steps up once. Do not redo that bug on the same model. `/audit` reads the diff. A re-audit checks only the failed point. `/cleanup` only for an in-scope behavior or code gap. Doc nits are not a second pass. `/global-audit` and `/debt` are unused on a task.
+
 **Migrations:** Prefer Supabase MCP `apply_migration`; else Dashboard SQL. SQL in `sql/`. Codex: `realms-codex-data.mdc`.
-
-**Owner commands (on demand):** `/audit` → `/cleanup` (session); `/global-audit` → `/debt` (repo). Authority: `PR_CHECKLIST.md` § Owner commands; `.cursor/commands/`.
-
-# Feedback Processing
-
-1. Log raw feedback in `ALL_FEEDBACK_CLEAN.md`.
-2. Extract discrete items; cross-ref ClickUp tasks (and `ACTIVE_TASKS.md` / `WAITING_TASKS.md` if notes are used).
-3. File new tasks via Clickup Manager (or directly to ClickUp on Kadin's orders); implement; summarize dispositions.
