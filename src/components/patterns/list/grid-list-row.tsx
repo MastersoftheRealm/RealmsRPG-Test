@@ -18,7 +18,7 @@
  * - Accessible and responsive
  */
 
-import { useEffect, useId, useRef, useState, memo } from 'react';
+import { useEffect, useId, useRef, useState, memo, type CSSProperties } from 'react';
 import { cn } from '@/lib/utils';
 import {
   helpKeyForPartsOrPropertiesLabel,
@@ -28,6 +28,7 @@ import {
 import {
   buildMobileCollapsedGridColumns,
   countGridTemplateTracks,
+  externalChromeFootprintWidth,
   gridTemplateColumnsWithThumbnail,
   GRID_LIST_ROW_EXPANDED_BAND_CLASS,
   GRID_LIST_ROW_LEFT_SLOT_WIDTH,
@@ -331,6 +332,19 @@ export const GridListRow = memo(function GridListRow({
     .filter((part): part is string => Boolean(part))
     .join(' ');
 
+  // Below `lg`, a side-by-side content | chrome column steals ~half the card (86e3jxbrc).
+  // Overlay chrome on row 1 so the name track can use the full width minus icon reserve.
+  const mobileExternalChromeOverlay = hasExternalChrome && !showLeftChrome;
+  const mobileChromeReserve = mobileExternalChromeOverlay
+    ? externalChromeFootprintWidth({
+        showRightSlot: showRightSlotChrome,
+        onEdit: externalEdit,
+        onDelete: externalDelete,
+        selectable: externalSelectable,
+        rightSlotWidth,
+      })
+    : undefined;
+
   return (
     <div className={rowStyles}>
       {/* DESIGN_INTENT (TASK-702 / TASK-710): stretch grid so collapsed header + action
@@ -340,10 +354,21 @@ export const GridListRow = memo(function GridListRow({
           data-glr-row makes .btn-stepper inherit that surface (no island/hole). */}
       <div
         data-glr-row
-        className={cn('grid items-stretch', hoverClass)}
+        className={cn(
+          'grid items-stretch',
+          mobileExternalChromeOverlay &&
+            'max-lg:[grid-template-columns:minmax(0,1fr)] lg:[grid-template-columns:var(--glr-chrome-desktop)]',
+          hoverClass,
+        )}
         // Chrome columns only — not the data-column template (that stays on
         // --glr-desktop-grid / --glr-mobile-grid so max-lg collapse still works).
-        style={{ gridTemplateColumns: chromeGridTemplateColumns }}
+        style={
+          mobileExternalChromeOverlay
+            ? ({
+                ['--glr-chrome-desktop' as string]: chromeGridTemplateColumns,
+              } as CSSProperties)
+            : { gridTemplateColumns: chromeGridTemplateColumns }
+        }
       >
         {showLeftChrome && (
           <div
@@ -357,8 +382,18 @@ export const GridListRow = memo(function GridListRow({
         )}
 
         <div
-          className="flex min-h-[44px] min-w-0 items-center"
-          style={{ gridColumn: contentCol, gridRow: 1 }}
+          className={cn(
+            'flex min-h-[44px] min-w-0 items-center',
+            mobileExternalChromeOverlay &&
+              'max-lg:col-start-1 max-lg:w-full max-lg:[padding-inline-end:var(--glr-mobile-chrome-reserve)]',
+          )}
+          style={{
+            gridColumn: contentCol,
+            gridRow: 1,
+            ...(mobileChromeReserve
+              ? { ['--glr-mobile-chrome-reserve' as string]: mobileChromeReserve }
+              : {}),
+          }}
         >
           <GridListRowCollapsed
             isExpanded={showExpander ? isExpanded : undefined}
@@ -408,7 +443,11 @@ export const GridListRow = memo(function GridListRow({
 
         {hasExternalChrome && (
           <div
-            className="flex min-h-[44px] items-center justify-center"
+            className={cn(
+              'flex min-h-[44px] items-center justify-center',
+              mobileExternalChromeOverlay &&
+                'max-lg:pointer-events-none max-lg:z-10 max-lg:col-start-1 max-lg:justify-self-end max-lg:[&_a]:pointer-events-auto max-lg:[&_button]:pointer-events-auto',
+            )}
             style={{ gridColumn: chromeCol, gridRow: 1 }}
           >
             <GridListRowExternalChrome
@@ -427,7 +466,10 @@ export const GridListRow = memo(function GridListRow({
         )}
 
         {hasMobileSummary && (
-          <div className="min-w-0" style={{ gridColumn: contentCol, gridRow: summaryRow }}>
+          <div
+            className={cn('min-w-0', mobileExternalChromeOverlay && 'max-lg:col-start-1')}
+            style={{ gridColumn: contentCol, gridRow: summaryRow }}
+          >
             <GridListRowMobileSummary
               mobileSummaryColumns={mobileSummaryColumns}
               isRowClickable={isRowClickable}
@@ -448,7 +490,7 @@ export const GridListRow = memo(function GridListRow({
             )}
             <div
               id={expandedPanelId}
-              className="min-w-0"
+              className={cn('min-w-0', mobileExternalChromeOverlay && 'max-lg:col-start-1')}
               style={{ gridColumn: contentCol, gridRow: expandedRow }}
             >
               <GridListRowExpandedBody

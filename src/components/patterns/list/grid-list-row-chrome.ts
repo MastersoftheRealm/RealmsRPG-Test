@@ -216,6 +216,27 @@ export interface MobileCollapsedGridColumnsOptions {
  * Callers must apply this via a CSS variable + `max-lg:[grid-template-columns:…]`
  * class — not inline `style.gridTemplateColumns` (inline beats the media query).
  */
+export interface ExternalChromeFootprintInput {
+  showRightSlot: boolean;
+  onEdit?: boolean | undefined;
+  onDelete?: boolean | undefined;
+  selectable?: boolean | undefined;
+  rightSlotWidth?: string | undefined;
+}
+
+/** Horizontal space reserved by far-right external chrome (Library edit/delete/+). */
+export function externalChromeFootprintWidth(input: ExternalChromeFootprintInput): string {
+  const parts: string[] = [];
+  if (input.showRightSlot) {
+    parts.push(input.rightSlotWidth ?? GRID_LIST_ROW_RIGHT_SLOT_FLEX_WIDTH);
+  }
+  if (input.onEdit) parts.push(GRID_LIST_ROW_ICON_COLUMN_WIDTH);
+  if (input.onDelete) parts.push(GRID_LIST_ROW_ICON_COLUMN_WIDTH);
+  if (input.selectable) parts.push(GRID_LIST_ROW_SELECTION_COLUMN_WIDTH);
+  if (parts.length === 0) return '0px';
+  return `calc(${parts.join(' + ')})`;
+}
+
 export function buildMobileCollapsedGridColumns(
   options: MobileCollapsedGridColumnsOptions,
 ): string {

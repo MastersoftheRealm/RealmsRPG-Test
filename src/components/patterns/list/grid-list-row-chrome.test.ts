@@ -1,10 +1,13 @@
 import { describe, expect, it } from 'vitest';
 import {
+  GRID_LIST_ROW_ICON_COLUMN_WIDTH,
+  GRID_LIST_ROW_RIGHT_SLOT_FLEX_WIDTH,
   GRID_LIST_ROW_THUMBNAIL_COLUMN_WIDTH,
   GRID_LIST_ROW_EXPANDED_BAND_CLASS,
   buildMobileCollapsedGridColumns,
   countGridTemplateTracks,
   expandGridTemplateTokens,
+  externalChromeFootprintWidth,
   gridTemplateColumnsWithThumbnail,
 } from './grid-list-row-chrome';
 
@@ -71,6 +74,20 @@ describe('grid-list-row-chrome mobile collapse', () => {
         mobileVisibleDataTracks: 1,
       }),
     ).toBe('minmax(0, 1fr) auto 40px');
+  });
+});
+
+describe('external chrome footprint (86e3jxbrc)', () => {
+  it('sums rightSlot + edit + delete for Library My Powers rows', () => {
+    expect(
+      externalChromeFootprintWidth({
+        showRightSlot: true,
+        onEdit: true,
+        onDelete: true,
+      }),
+    ).toBe(
+      `calc(${GRID_LIST_ROW_RIGHT_SLOT_FLEX_WIDTH} + ${GRID_LIST_ROW_ICON_COLUMN_WIDTH} + ${GRID_LIST_ROW_ICON_COLUMN_WIDTH})`,
+    );
   });
 });
 
