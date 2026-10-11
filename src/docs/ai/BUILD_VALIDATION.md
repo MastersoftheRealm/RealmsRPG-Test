@@ -9657,6 +9657,37 @@ A pick that would exceed open trait slots is refused. The disabled Add button de
 
 ---
 
+## DEV-V-076 — Character sheet at narrow widths (ClickUp 86e3jt15m)
+
+#### DEV-V-076-T001 — Narrow sheet content and modal actions stay reachable
+
+| Field | Value |
+|-------|-------|
+| **Suite** | DEV-V-076 |
+| **Related task** | 86e3jt15m |
+| **Where** | A character sheet, signed in and signed out. Widths 375, 480, 500, and 768. |
+| **Needs** | A character with Health, Library tabs (Feats, Powers, Techniques, Inventory), and a long visibility label. Dark and light. |
+
+**Steps**
+1. Open the sheet at about 480px wide. Scroll to the bottom of the header.
+2. Open Recovery, Add Character Feat, and Character settings at 375px wide.
+3. On Library, scroll the tab strip until a chevron is showing.
+4. At 768px wide, scroll to the site footer.
+5. Sign out (or open the sheet as someone who cannot edit) at 500px wide.
+
+**Expected**
+- The Health card, including its stepper, sits above the bottom toolbar. The last content can scroll clear of that bar. The page does not scroll sideways.
+- Full Recovery, Add Selected, and Done are fully visible and tappable. The dice button is not on top of them.
+- A library tab label is not readable through the chevron. The Campaign visibility sentence is readable in Character settings.
+- The copyright line is not under the dice button.
+- View only is in the page, not a floating pill over the name.
+
+**Automated** | `npm test` — `sheet-mobile-carousel.test.ts`, `tab-navigation.test.ts`
+
+**Report** — `[ ] PASS` · `[ ] FAIL` · `[ ] SKIP` — Notes:
+
+---
+
 ## DEV-V-075 — Admin innate Energy includes damage, range, and area (ClickUp 86e3jpr0e)
 
 #### DEV-V-075-T001 — Fireball over the Innate Threshold cannot be a recommended innate power
@@ -9770,5 +9801,6 @@ A pick that would exceed open trait slots is refused. The disabled Add button de
 | DEV-V-073 | Weapon power cost outside the creator (ClickUp 86e3jpq1x) | — | Automated (`power-calc.test.ts`, `library-selectable-builders.test.ts`) + manual DEV-V-073-T001 |
 | DEV-V-074 | Technique reload when part names repeat (ClickUp 86e3jpq36) | — | Automated (`technique-creator-parts-save.test.ts`, `power-part-card.test.ts`) + manual DEV-V-074-T001 |
 | DEV-V-075 | Admin innate Energy includes damage, range, and area (ClickUp 86e3jpr0e) | — | Automated (`innate-eligibility.test.ts`) + manual DEV-V-075-T001 |
+| DEV-V-076 | Character sheet at narrow widths (ClickUp 86e3jt15m) | — | Automated (`sheet-mobile-carousel.test.ts`, `tab-navigation.test.ts`) + manual DEV-V-076-T001 |
 
 When implementing a related task, replace the legacy **DEV-T-###** block with granular **DEV-V-###** tests in this file.

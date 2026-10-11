@@ -48,11 +48,7 @@ export function SheetActionToolbar({
   canEdit = true,
 }: SheetActionToolbarProps) {
   if (!canEdit) {
-    return (
-      <div className="fixed top-24 right-4 z-overlay flex items-center gap-2 rounded-full border border-border-light bg-surface px-3 py-2 text-sm text-text-muted">
-        View only
-      </div>
-    );
+    return null;
   }
 
   return (
