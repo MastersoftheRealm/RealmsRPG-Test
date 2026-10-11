@@ -237,6 +237,45 @@ export function externalChromeFootprintWidth(input: ExternalChromeFootprintInput
   return `calc(${parts.join(' + ')})`;
 }
 
+/**
+ * Padding on the collapsed name row below `lg` (86e3jxbrc).
+ * Column 2 still includes a blank right-slot reserve so the expanded body stays
+ * on the content track. That spacer is not a control, so it does not eat the name.
+ * An occupied right slot, edit, delete, and selection stay clear of the text.
+ */
+export function mobileCollapsedNameInlineEndReserve(
+  input: ExternalChromeFootprintInput & { rightSlotOccupied: boolean },
+): string {
+  return externalChromeFootprintWidth({
+    showRightSlot: input.showRightSlot && input.rightSlotOccupied,
+    onEdit: input.onEdit,
+    onDelete: input.onDelete,
+    selectable: input.selectable,
+    rightSlotWidth: input.rightSlotWidth,
+  });
+}
+
+/**
+ * Collapsed name-track width for a card content box.
+ * Matches the measured 375px library row: page `px-4`, card border, row `px-4`,
+ * `gap-2`, and a 44px thumb (86e3jxbrc).
+ */
+export function collapsedNameTrackWidthPx(input: {
+  cardContentPx: number;
+  paddingInlineEndPx: number;
+  rowPaddingInlinePx: number;
+  columnGapPx: number;
+  leadingTrackPx: number;
+}): number {
+  return (
+    input.cardContentPx -
+    input.paddingInlineEndPx -
+    input.rowPaddingInlinePx -
+    input.columnGapPx -
+    input.leadingTrackPx
+  );
+}
+
 export function buildMobileCollapsedGridColumns(
   options: MobileCollapsedGridColumnsOptions,
 ): string {

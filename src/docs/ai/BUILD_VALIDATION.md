@@ -10100,6 +10100,32 @@ A pick that would exceed open trait slots is refused. The disabled Add button de
 
 ---
 
+## DEV-V-101 — Library card names at 375px (ClickUp 86e3jxbrc)
+
+#### DEV-V-101-T001 — Short My Library power names do not share one ellipsis
+
+| Field | Value |
+|-------|-------|
+| **Suite** | DEV-V-101 |
+| **Related task** | 86e3jxbrc |
+| **Where** | `/library` → Powers. ~375px wide. |
+| **Needs** | My Library powers named like `QA CR Power 1`, `QA CR Power 2`, `QA CR Power 5`, and `QA CR Power 10`, with edit and delete and no add-to-character button on the row. |
+
+**Steps**
+1. At 375px, read the four collapsed names.
+2. Open one row and compare the expanded description width to the card.
+
+**Expected**
+- The four names do not paint as the same ellipsis. `QA CR Power 10` is readable as a different string from `QA CR Power 1`.
+- A longer name still ends in an ellipsis, and hovering or focusing it shows the full name.
+- The expanded description is the content column beside the action band, not the full card width.
+
+**Automated** | `npm test` — `grid-list-row-mobile-chrome.test.tsx`, `grid-list-row-chrome.test.ts`
+
+**Report** — `[ ] PASS` · `[ ] FAIL` · `[ ] SKIP` — Notes:
+
+---
+
 ## DEV-V-100 — Level down removes auto milestone proficiency (ClickUp 86e3jv2j4)
 
 #### DEV-V-100-T001 — Pure Martial loses auto +1 proficiency when leveling down
@@ -10484,6 +10510,7 @@ A pick that would exceed open trait slots is refused. The disabled Add button de
 | DEV-V-093 | Core Rules editor unsaved edits (ClickUp 86e3jtrak) | — | Automated (`core-rules-unsaved-leave.test.ts`) + manual DEV-V-093-T001 |
 | DEV-V-094 | Sheet Currency in a second tab (ClickUp 86e3juw07) | — | Automated (`currency-field-commit.test.ts`) + manual DEV-V-094-T001 |
 | DEV-V-095 | Core Rules Conditions editor (ClickUp 86e3juy5z) | — | Automated (`core-rules-conditions.test.ts`) + manual DEV-V-095-T001 |
+| DEV-V-101 | Library card names at 375px (ClickUp 86e3jxbrc) | — | Automated (`grid-list-row-mobile-chrome.test.tsx`) + manual DEV-V-101-T001 |
 | DEV-V-100 | Level down removes auto milestone proficiency (ClickUp 86e3jv2j4) | — | Automated (`archetype-display.test.ts`) + manual DEV-V-100-T001 |
 | DEV-V-099 | Level down warns about overspent points (ClickUp 86e3jv2hz) | — | Automated (`sheet-edit-notification.test.ts`) + manual DEV-V-099-T001 |
 | DEV-V-098 | Recovery leaves over-max Health and Energy (ClickUp 86e3jv000) | — | Automated (`recovery-over-max.test.ts`) + manual DEV-V-098-T001 |

@@ -28,8 +28,8 @@ import {
 import {
   buildMobileCollapsedGridColumns,
   countGridTemplateTracks,
-  externalChromeFootprintWidth,
   gridTemplateColumnsWithThumbnail,
+  mobileCollapsedNameInlineEndReserve,
   GRID_LIST_ROW_EXPANDED_BAND_CLASS,
   GRID_LIST_ROW_LEFT_SLOT_WIDTH,
 } from './grid-list-row-chrome';
@@ -332,12 +332,16 @@ export const GridListRow = memo(function GridListRow({
     .filter((part): part is string => Boolean(part))
     .join(' ');
 
-  // Below `lg`, a side-by-side content | chrome column steals ~half the card (86e3jxbrc).
-  // Overlay chrome on row 1 so the name track can use the full width minus icon reserve.
+  // Below `lg`, keep external chrome in column 2 so `auto` keeps that intrinsic
+  // width. Spanning the chrome collapses the track and stretches the expanded
+  // body to the full card (86e3jxbrc). Row 1 still spans both tracks. Padding
+  // clears real controls only — a blank right-slot reserve stays in column 2
+  // for the body width, and the name uses that blank space.
   const mobileExternalChromeOverlay = hasExternalChrome && !showLeftChrome;
   const mobileChromeReserve = mobileExternalChromeOverlay
-    ? externalChromeFootprintWidth({
+    ? mobileCollapsedNameInlineEndReserve({
         showRightSlot: showRightSlotChrome,
+        rightSlotOccupied: Boolean(rightSlot),
         onEdit: externalEdit,
         onDelete: externalDelete,
         selectable: externalSelectable,
@@ -371,11 +375,12 @@ export const GridListRow = memo(function GridListRow({
         )}
 
         <div
+          data-glr-collapsed-header
           className={cn(
             'flex min-h-[44px] min-w-0 items-center',
-            // Row 1 only: span both chrome-grid tracks below `lg` (86e3jxbrc). Inline
-            // `gridColumn` beats `col-span-full`, so use arbitrary grid-column in a class.
-            // Expanded/summary rows keep inline gridColumn on contentCol (~193px).
+            // Row 1 only: span both tracks below `lg` via a class. Inline `gridColumn`
+            // beats that class and, with the reserve, zeroed the name (86e3jxbrc).
+            // Expanded/summary rows keep inline gridColumn on contentCol.
             mobileExternalChromeOverlay &&
               'max-lg:[grid-column:1/-1] max-lg:w-full max-lg:[padding-inline-end:var(--glr-mobile-chrome-reserve)] lg:col-start-1',
           )}
@@ -435,14 +440,17 @@ export const GridListRow = memo(function GridListRow({
 
         {hasExternalChrome && (
           <div
+            data-glr-external-chrome
             className={cn(
               'flex min-h-[44px] items-center justify-center',
+              // Column 2 only. Spanning `1 / -1` drops the auto track to 0px and
+              // the expanded body becomes the full card (86e3jxbrc).
               mobileExternalChromeOverlay &&
-                'max-lg:pointer-events-none max-lg:z-10 max-lg:[grid-column:1/-1] max-lg:justify-self-end lg:col-start-2 max-lg:[&_a]:pointer-events-auto max-lg:[&_button]:pointer-events-auto',
+                'max-lg:pointer-events-none max-lg:z-10 max-lg:[&_a]:pointer-events-auto max-lg:[&_button]:pointer-events-auto',
             )}
             style={{
               gridRow: 1,
-              ...(!mobileExternalChromeOverlay ? { gridColumn: chromeCol } : {}),
+              gridColumn: chromeCol,
             }}
           >
             <GridListRowExternalChrome
@@ -461,7 +469,11 @@ export const GridListRow = memo(function GridListRow({
         )}
 
         {hasMobileSummary && (
-          <div className="min-w-0" style={{ gridColumn: contentCol, gridRow: summaryRow }}>
+          <div
+            data-glr-mobile-summary
+            className="min-w-0"
+            style={{ gridColumn: contentCol, gridRow: summaryRow }}
+          >
             <GridListRowMobileSummary
               mobileSummaryColumns={mobileSummaryColumns}
               isRowClickable={isRowClickable}
@@ -482,6 +494,7 @@ export const GridListRow = memo(function GridListRow({
             )}
             <div
               id={expandedPanelId}
+              data-glr-expanded-body
               className="min-w-0"
               style={{ gridColumn: contentCol, gridRow: expandedRow }}
             >
