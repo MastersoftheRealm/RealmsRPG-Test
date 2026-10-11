@@ -10100,6 +10100,38 @@ A pick that would exceed open trait slots is refused. The disabled Add button de
 
 ---
 
+## DEV-V-097 — Current Health and Energy follow a lower max (ClickUp 86e3juy8e)
+
+#### DEV-V-097-T001 — Lowering max Health or Energy lowers current to that max
+
+| Field | Value |
+|-------|-------|
+| **Suite** | DEV-V-097 |
+| **Related task** | 86e3juy8e |
+| **Where** | `/characters/[id]` in edit mode. Health and Energy allocation, then Vitality and Charisma. |
+| **Needs** | A character at full Health and full Energy. Charisma is the Archetype Ability for Energy. About 500px wide is enough. |
+
+**Steps**
+1. Note Health, for example 21/21. Remove 3 Health allocation points so the max becomes 18. Save and reload.
+2. Note Energy at its max. Remove Energy allocation points until the max drops by 2. Save and reload.
+3. Set Health back to its max. Lower Vitality by 1. Save and reload.
+4. Set Energy back to its max. Lower Charisma by 1. Save and reload.
+5. Set Health below its max, then remove Health allocation that still leaves the max above that current value.
+
+**Expected**
+- After step 1, Health shows the new max over the new max (18/18), not the old current over the new max.
+- After step 2, Energy shows the new max over the new max.
+- After step 3, Health shows the new max over the new max.
+- After step 4, Energy shows the new max over the new max.
+- After step 5, current Health stays at the lower number. It does not jump up to the new max.
+- Adding allocation while Health or Energy is already at its max still raises current with the max.
+
+**Automated** | `npm test` — `src/lib/character/current-follows-max.test.ts`
+
+**Report** — `[ ] PASS` · `[ ] FAIL` · `[ ] SKIP` — Notes:
+
+---
+
 ## DEV-V-096 — HP and AP stepper clicks (ClickUp 86e3juy89)
 
 #### DEV-V-096-T001 — Three quick minus clicks each change Health or Action Points
@@ -10372,6 +10404,7 @@ A pick that would exceed open trait slots is refused. The disabled Add button de
 | DEV-V-093 | Core Rules editor unsaved edits (ClickUp 86e3jtrak) | — | Automated (`core-rules-unsaved-leave.test.ts`) + manual DEV-V-093-T001 |
 | DEV-V-094 | Sheet Currency in a second tab (ClickUp 86e3juw07) | — | Automated (`currency-field-commit.test.ts`) + manual DEV-V-094-T001 |
 | DEV-V-095 | Core Rules Conditions editor (ClickUp 86e3juy5z) | — | Automated (`core-rules-conditions.test.ts`) + manual DEV-V-095-T001 |
+| DEV-V-097 | Current Health and Energy follow a lower max (ClickUp 86e3juy8e) | — | Automated (`current-follows-max.test.ts`) + manual DEV-V-097-T001 |
 | DEV-V-083 | Assigned base skill information (ClickUp 86e2q66jv) | — | Automated (`guided-skills-panel.test.tsx`) + manual DEV-V-083-T001 |
 
 When implementing a related task, replace the legacy **DEV-T-###** block with granular **DEV-V-###** tests in this file.
