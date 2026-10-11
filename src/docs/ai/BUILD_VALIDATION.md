@@ -9792,6 +9792,31 @@ A pick that would exceed open trait slots is refused. The disabled Add button de
 
 ---
 
+## DEV-V-080 — Character sheet library tab panels (ClickUp 86e3k0cfz)
+
+#### DEV-V-080-T001 — Feats, Powers, Techniques, Inventory, Proficiencies, and Notes control a panel that exists
+
+| Field | Value |
+|-------|-------|
+| **Suite** | DEV-V-080 |
+| **Related task** | 86e3k0cfz |
+| **Where** | A character sheet, Library section |
+| **Needs** | Any character. The six library tabs are visible. |
+
+**Steps**
+1. Open the character sheet and find the Library tabs: Feats, Powers, Techniques, Inventory, Proficiencies, Notes.
+2. For each tab, read `aria-controls` and search the page for an element with that id.
+
+**Expected**
+- Every tab's `aria-controls` is `character-sheet-library-panel`.
+- That id is on the Library content (role `tabpanel`). It is not a missing id such as `*-panel-feats`.
+
+**Automated** | `npm test` — `library-section-tabs.test.tsx`
+
+**Report** — `[ ] PASS` · `[ ] FAIL` · `[ ] SKIP` — Notes:
+
+---
+
 ## DEV-V-071 — Profile column writes (ClickUp 86e3jt562)
 
 #### DEV-V-071-T001 — Direct profile writes stay on the server
@@ -9882,5 +9907,6 @@ A pick that would exceed open trait slots is refused. The disabled Add button de
 | DEV-V-076 | Character sheet at narrow widths (ClickUp 86e3jt15m) | — | Automated (`sheet-mobile-carousel.test.ts`, `tab-navigation.test.ts`) + manual DEV-V-076-T001 |
 | DEV-V-077 | Pure Martial max Energy and Training Points (ClickUp 86e3jv2hr) | — | Automated (`calculations.test.ts`) + manual DEV-V-077-T001 |
 | DEV-V-078 | Weapons and Shields tables from 1024 to 1440 (ClickUp 86e3jvv37) | — | Automated (`sheet-desktop-columns.test.ts`) + manual DEV-V-078-T001 |
+| DEV-V-080 | Character sheet library tab panels (ClickUp 86e3k0cfz) | — | Automated (`library-section-tabs.test.tsx`) + manual DEV-V-080-T001 |
 
 When implementing a related task, replace the legacy **DEV-T-###** block with granular **DEV-V-###** tests in this file.
