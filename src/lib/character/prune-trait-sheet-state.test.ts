@@ -79,4 +79,33 @@ describe('pruneTraitSheetStateAfterAncestryChange (86e3jv9qf)', () => {
 
     expect(pruned.traitUses).toEqual({ Lucky: 0 });
   });
+
+  it('keeps uses stored under the custom name of a trait that remains', () => {
+    const halflingAncestry: CharacterAncestry = {
+      id: 'species-halfling',
+      name: 'Halfling',
+      selectedTraits: [],
+    };
+
+    const character: PruneTraitSheetStateCharacterInput = {
+      species: 'Halfling',
+      traitUses: { Lucky: 1, 'Extra lucky': 0, 'Spore mind': 3 },
+      traitCustomizations: {
+        'trait-lucky': { customName: 'Extra lucky' },
+        'trait-mycelial': { customName: 'Spore mind', note: 'fungal' },
+      },
+    };
+
+    const pruned = pruneTraitSheetStateAfterAncestryChange(
+      character,
+      halflingAncestry,
+      [halfling, human],
+      traitsDb,
+    );
+
+    expect(pruned.traitUses).toEqual({ Lucky: 1, 'Extra lucky': 0 });
+    expect(pruned.traitCustomizations).toEqual({
+      'trait-lucky': { customName: 'Extra lucky' },
+    });
+  });
 });

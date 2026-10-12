@@ -103,6 +103,17 @@ export function pruneTraitSheetStateAfterAncestryChange(
     rows.map((row) => traitCustomizationKey(resolveTraitDisplayName(row.name, traitsDb), traitsDb)),
   );
 
+  // The Feats stepper writes traitUses under the row name. That name is the
+  // custom name when one is set, so a remaining trait's custom name is a live key.
+  if (character.traitCustomizations) {
+    for (const [key, value] of Object.entries(character.traitCustomizations)) {
+      if (!activeCustomizationKeys.has(key)) continue;
+      const customName = value.customName?.trim();
+      if (!customName) continue;
+      activeNameKeys.add(normalizeId(resolveTraitDisplayName(customName, traitsDb)));
+    }
+  }
+
   const nextTraitUses: Record<string, number> = {};
   if (character.traitUses) {
     for (const [key, value] of Object.entries(character.traitUses)) {
