@@ -1,6 +1,8 @@
 import { describe, expect, it } from 'vitest';
 import {
   characterSupportsInnatePowers,
+  isInnateEnergyTotalOverBudget,
+  isInnatePowerOverThreshold,
   resolveCharacterInnateEnergy,
 } from './innate-power-capacity';
 import type { Character } from '@/types';
@@ -28,5 +30,14 @@ describe('innate-power-capacity (86e3jvfm2)', () => {
     } as Character;
     expect(resolveCharacterInnateEnergy(power)).toBeGreaterThan(0);
     expect(characterSupportsInnatePowers(power)).toBe(true);
+  });
+});
+
+describe('innate budget warnings (86e3pbwf2)', () => {
+  it('flags per-power threshold and total energy overages', () => {
+    expect(isInnatePowerOverThreshold(9, 8)).toBe(true);
+    expect(isInnatePowerOverThreshold(8, 8)).toBe(false);
+    expect(isInnateEnergyTotalOverBudget(8, [4, 5])).toBe(true);
+    expect(isInnateEnergyTotalOverBudget(8, [4, 4])).toBe(false);
   });
 });

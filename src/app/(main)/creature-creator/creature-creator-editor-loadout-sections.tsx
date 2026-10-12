@@ -4,7 +4,15 @@
 
 'use client';
 
+import { useMemo } from 'react';
 import { formatEnergyStat } from '@/lib/calculators';
+import { calculateArchetypeProgression } from '@/lib/game/formulas';
+import {
+  INNATE_ENERGY_TOTAL_WARNING,
+  INNATE_THRESHOLD_WARNING,
+  isInnateEnergyTotalOverBudget,
+  isInnatePowerOverThreshold,
+} from '@/lib/character/innate-power-capacity';
 import { formatListCellLabel } from '@/lib/utils';
 import { GridListRow, ListHeader, InnateToggle, ValueStepper } from '@/components/patterns';
 import { resolveListRowThumbnail } from '@/lib/list-row-image';
@@ -71,6 +79,25 @@ export function CreatureCreatorEditorLoadoutSections({
   onOpenTechniqueModal,
   onOpenArmamentModal,
 }: LoadoutSectionsProps) {
+  const innateBudget = useMemo(() => {
+    const progression = calculateArchetypeProgression(
+      creature.level,
+      creature.martialProficiency,
+      creature.powerProficiency,
+    );
+    const innateEnergies = creature.powers
+      .filter((p) => p.innate === true)
+      .map((p) => p.energy ?? 0);
+    return {
+      innateEnergyMax: progression.innateEnergy,
+      innateThreshold: progression.innateThreshold,
+      overEnergy: isInnateEnergyTotalOverBudget(progression.innateEnergy, innateEnergies),
+      overThreshold: innateEnergies.some((energy) =>
+        isInnatePowerOverThreshold(energy, progression.innateThreshold),
+      ),
+    };
+  }, [creature.level, creature.martialProficiency, creature.powerProficiency, creature.powers]);
+
   return (
     <>
       <CollapsibleSection
@@ -177,6 +204,26 @@ export function CreatureCreatorEditorLoadoutSections({
         onEnabledChange={(enabled) => updateCreature({ enablePowers: enabled })}
         itemCount={creature.powers.length}
       >
+        {innateBudget.innateEnergyMax > 0 ? (
+          <p className="mb-3 text-sm text-text-secondary">
+            Innate Energy:{' '}
+            {innateBudget.innateEnergyMax -
+              creature.powers
+                .filter((p) => p.innate === true)
+                .reduce((sum, p) => sum + (p.energy ?? 0), 0)}{' '}
+            / {innateBudget.innateEnergyMax} · Threshold {innateBudget.innateThreshold}
+          </p>
+        ) : null}
+        {innateBudget.overEnergy ? (
+          <p className="mb-3 font-nunito text-sm text-warning-fg" role="status">
+            {INNATE_ENERGY_TOTAL_WARNING}
+          </p>
+        ) : null}
+        {innateBudget.overThreshold ? (
+          <p className="mb-3 font-nunito text-sm text-warning-fg" role="status">
+            {INNATE_THRESHOLD_WARNING}
+          </p>
+        ) : null}
         {creature.powers.length === 0 ? (
           <p className="mb-4 text-sm text-text-muted italic">No powers added</p>
         ) : (
@@ -246,6 +293,12 @@ export function CreatureCreatorEditorLoadoutSections({
                         : undefined
                     }
                     innate={power.innate === true}
+                    warningMessage={
+                      power.innate === true &&
+                      isInnatePowerOverThreshold(power.energy, innateBudget.innateThreshold)
+                        ? INNATE_THRESHOLD_WARNING
+                        : undefined
+                    }
                     leftSlot={
                       <InnateToggle
                         isInnate={power.innate === true}
