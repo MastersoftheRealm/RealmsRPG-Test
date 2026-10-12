@@ -10,7 +10,9 @@ import {
 import { PART_IDS } from '@/lib/id-constants';
 import { snapshotParts } from '@/lib/calculators/power-composition.fixture';
 import { cleanForSave } from '@/lib/data-enrichment';
+import { calculateAllStats } from '@/lib/game/calculations';
 import { calculateProficiencyTP } from '@/lib/proficiencies';
+import type { CoreRulesMap } from '@/types/core-rules';
 import type { Character } from '@/types';
 import type { Item } from '@/types/equipment';
 import type { LibraryItem, LibraryPower } from '@/types/library';
@@ -606,5 +608,29 @@ describe('computeGuidedRequiredTrainingSpent (86e3krpzp)', () => {
     const names = (payload.proficiencies ?? []).map((prof) => prof.name).sort();
     expect(names).toEqual(['Elemental Damage', 'Power Range']);
     expect(spent).toBeGreaterThan(0);
+  });
+
+  it('health.max uses core_rules baseHealth on create and cleanForSave (86e1wp5vc)', () => {
+    const rules = { PROGRESSION_PLAYER: { baseHealth: 10 } } as Partial<CoreRulesMap>;
+    const emptyCtx = {
+      officialItems: [],
+      officialPowers: [],
+      officialTechniques: [],
+      codexSkills: [],
+      codexFeats: [],
+      codexEquipment: [],
+      powerPartsDb: [],
+      techniquePartsDb: [],
+      itemPropertiesDb: [],
+      rules,
+    };
+    const payload = buildGuidedCharacterPayload(minimalDraft(), emptyCtx);
+    const stats = calculateAllStats(payload as Character, rules);
+    expect(payload.health?.max).toBe(stats.maxHealth);
+    expect(payload.currentHealth).toBe(stats.maxHealth);
+
+    const lean = cleanForSave(payload as Character, rules);
+    expect(lean.health?.max).toBe(stats.maxHealth);
+    expect(lean.health?.max).toBe(14);
   });
 });

@@ -273,7 +273,7 @@ export function RevealStep() {
         techniquePartsDb,
         itemPropertiesDb,
       });
-      const lean = cleanForSave(payload as Character);
+      const lean = cleanForSave(payload as Character, rules);
       const hasBase64Portrait =
         draft.portraitUrl &&
         typeof draft.portraitUrl === 'string' &&
