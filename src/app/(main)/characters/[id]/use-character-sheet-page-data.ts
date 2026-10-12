@@ -411,6 +411,7 @@ export function useCharacterSheetPageData(id: string) {
     itemPropertiesDb: catalog.itemPropertiesDb,
     codexSkills: catalog.codexSkills,
     codexArchetypes: catalog.codexArchetypes,
+    allSpecies,
     enrichedData,
     characterSpeciesTraits,
     characterSpeciesSkills,

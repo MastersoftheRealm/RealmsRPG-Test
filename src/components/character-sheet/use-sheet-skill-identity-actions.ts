@@ -6,6 +6,8 @@
 
 import { useCallback } from 'react';
 import type { Character, CharacterSkillRow } from '@/types';
+import type { Species, Trait } from '@/hooks/codex-types';
+import { pruneTraitSheetStateAfterAncestryChange } from '@/lib/character/prune-trait-sheet-state';
 import type { EditArchetypeResult } from './edit-archetype-modal';
 import type { SkillModalType } from './character-sheet-context';
 
@@ -15,6 +17,8 @@ type UseSheetSkillIdentityActionsArgs = {
   setSkillModalType: (type: SkillModalType) => void;
   setShowEditArchetypeModal: (value: boolean) => void;
   setShowEditSpeciesModal: (value: boolean) => void;
+  allSpecies: Species[];
+  traitsDb: Trait[];
 };
 
 function getSkillRows(skills: Character['skills'] | undefined): CharacterSkillRow[] {
@@ -32,6 +36,8 @@ export function useSheetSkillIdentityActions({
   setSkillModalType,
   setShowEditArchetypeModal,
   setShowEditSpeciesModal,
+  allSpecies,
+  traitsDb,
 }: UseSheetSkillIdentityActionsArgs) {
   const handleAddSkills = useCallback(
     (
@@ -211,10 +217,25 @@ export function useSheetSkillIdentityActions({
           ],
         };
       }
-      setCharacter((prev) => (prev ? { ...prev, ancestry, skills: updates.skills } : null));
+      setCharacter((prev) => {
+        if (!prev) return null;
+        const pruned = pruneTraitSheetStateAfterAncestryChange(
+          prev,
+          ancestry,
+          allSpecies,
+          traitsDb,
+        );
+        return {
+          ...prev,
+          ancestry,
+          skills: updates.skills,
+          traitUses: pruned.traitUses,
+          traitCustomizations: pruned.traitCustomizations,
+        };
+      });
       setShowEditSpeciesModal(false);
     },
-    [character, setCharacter, setShowEditSpeciesModal],
+    [character, setCharacter, setShowEditSpeciesModal, allSpecies, traitsDb],
   );
 
   const handleMilestoneChoiceChange = useCallback(

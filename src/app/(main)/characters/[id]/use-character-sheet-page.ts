@@ -92,6 +92,7 @@ export function useCharacterSheetPage(id: string) {
     setShowEditSpeciesModal: ui.setShowEditSpeciesModal,
     stateFeatsList: data.stateFeatsList,
     stateUsesMax: data.stateUsesMax,
+    allSpecies: data.allSpecies,
   });
 
   const handleLevelUp = useCallback(
