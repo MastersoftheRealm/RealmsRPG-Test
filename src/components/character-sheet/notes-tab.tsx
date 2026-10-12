@@ -104,7 +104,12 @@ function ReadOnlyNoteCard({ note }: { note: CharacterNote }) {
         onClick={() => setIsExpanded(!isExpanded)}
         aria-expanded={isExpanded}
       >
-        <span className="flex-1 text-sm font-medium text-text-primary">{note.name}</span>
+        <span
+          className="min-w-0 flex-1 truncate text-sm font-medium text-text-primary"
+          title={note.name}
+        >
+          {note.name}
+        </span>
       </button>
       {isExpanded ? (
         <div className="p-3">
@@ -162,27 +167,29 @@ function EditableNoteCard({
                 setIsEditingName(false);
               }
             }}
-            className="flex-1 rounded border border-primary-subtle-border px-2 py-0.5 text-sm font-medium focus:ring-2 focus:ring-primary-outline-border"
+            className="min-w-0 flex-1 rounded border border-primary-subtle-border px-2 py-0.5 text-sm font-medium focus:ring-2 focus:ring-primary-outline-border"
             autoFocus
           />
         ) : (
           <span
-            className="flex-1 cursor-pointer text-sm font-medium text-text-primary hover:text-primary-fg-hover"
+            className="flex min-w-0 flex-1 cursor-pointer items-center gap-1 text-sm font-medium text-text-primary hover:text-primary-fg-hover"
             onClick={(e) => {
               e.stopPropagation();
               setIsEditingName(true);
             }}
-            title="Click to rename"
+            title={note.name}
           >
-            {note.name}
-            <Pencil className="ml-1 inline h-3 w-3 text-text-muted" />
+            <span className="truncate">{note.name}</span>
+            <Pencil className="h-3 w-3 shrink-0 text-text-muted" />
           </span>
         )}
 
         {isEditMode && onDelete && (
-          <IconButton variant="danger" size="sm" onClick={onDelete} label="Delete note">
-            <X className="h-4 w-4" />
-          </IconButton>
+          <span className="shrink-0">
+            <IconButton variant="danger" size="sm" onClick={onDelete} label="Delete note">
+              <X className="h-4 w-4" />
+            </IconButton>
+          </span>
         )}
       </div>
 
