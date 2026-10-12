@@ -21,8 +21,8 @@ import {
   removeCharacterFromCampaignAction,
   deleteCampaignAction,
   updateCampaignAction,
-} from '../../actions';
-import { MAX_CAMPAIGN_CHARACTERS, OWNER_MAX_CHARACTERS } from '../../constants';
+} from '@/app/(main)/campaigns/actions';
+import { MAX_CAMPAIGN_CHARACTERS, OWNER_MAX_CHARACTERS } from '@/app/(main)/campaigns/constants';
 import { isGuestCharacterId } from '@/lib/guest-character-storage';
 import type { CampaignCharacter } from '@/types/campaign';
 import type { AddableCampaignCharacter } from './add-character-modal';

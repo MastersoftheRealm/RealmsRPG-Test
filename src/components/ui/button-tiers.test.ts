@@ -430,8 +430,8 @@ describe('ADR-0023 leftover always-on 44 slabs (TASK-913)', () => {
     '../../app/(main)/admin/codex/admin-archetype-path-rows.tsx',
     '../../app/(main)/admin/codex/admin-archetype-editor-level1.tsx',
     '../../app/(main)/admin/roles/page.tsx',
-    '../../app/(main)/campaigns/[id]/_components/character-chip.tsx',
-    '../../app/(main)/campaigns/[id]/_components/campaign-detail-header.tsx',
+    '../../app/(detail)/campaigns/[id]/_components/character-chip.tsx',
+    '../../app/(detail)/campaigns/[id]/_components/campaign-detail-header.tsx',
     '../../app/(main)/creature-creator/AddCreatureFeatModal.tsx',
     '../creator/collapsible-section.tsx',
     '../character-sheet/edit-species-ancestry-step.tsx',
@@ -486,7 +486,7 @@ describe('ADR-0023 leftover always-on 44 slabs (TASK-913)', () => {
     const chip = readFileSync(
       path.join(
         import.meta.dirname,
-        '../../app/(main)/campaigns/[id]/_components/character-chip.tsx',
+        '../../app/(detail)/campaigns/[id]/_components/character-chip.tsx',
       ),
       'utf8',
     );

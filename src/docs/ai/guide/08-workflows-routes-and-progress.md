@@ -4,7 +4,7 @@
 
 ## Pages / Routes
 
-- `(main)/characters`, `(main)/characters/[id]`
+- `(main)/characters`, `(detail)/characters/[id]`
 - `(main)/characters/new` — Guided / Custom / Legacy chooser
 - `(main)/characters/new/guided` — Guided ("Simple") creator
 - `(main)/characters/new/advanced` — Classic 9-step creator

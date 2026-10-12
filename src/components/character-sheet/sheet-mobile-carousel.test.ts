@@ -6,7 +6,7 @@ import { isSheetCarouselNearSnap, nearestSheetCarouselIndex } from './sheet-mobi
 const sheetBody = readFileSync(path.join(import.meta.dirname, 'character-sheet-body.tsx'), 'utf8');
 const globals = readFileSync(path.join(import.meta.dirname, '../../app/globals.css'), 'utf8');
 const sheetPage = readFileSync(
-  path.join(import.meta.dirname, '../../app/(main)/characters/[id]/character-sheet-route.tsx'),
+  path.join(import.meta.dirname, '../../app/(detail)/characters/[id]/character-sheet-route.tsx'),
   'utf8',
 );
 const toolbar = readFileSync(path.join(import.meta.dirname, 'sheet-action-toolbar.tsx'), 'utf8');
