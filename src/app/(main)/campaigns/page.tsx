@@ -39,9 +39,24 @@ import type { CampaignSummary } from '@/types/campaign';
 type TabId = 'my-campaigns' | 'create' | 'join';
 
 const TABS = [
-  { id: 'my-campaigns' as TabId, label: 'My Campaigns', icon: <Users className="h-4 w-4" /> },
-  { id: 'create' as TabId, label: 'Create Campaign', icon: <PlusCircle className="h-4 w-4" /> },
-  { id: 'join' as TabId, label: 'Join Campaign', icon: <LogIn className="h-4 w-4" /> },
+  {
+    id: 'my-campaigns' as TabId,
+    label: 'My Campaigns',
+    labelMobile: 'My',
+    icon: <Users className="h-4 w-4" />,
+  },
+  {
+    id: 'create' as TabId,
+    label: 'Create Campaign',
+    labelMobile: 'Create',
+    icon: <PlusCircle className="h-4 w-4" />,
+  },
+  {
+    id: 'join' as TabId,
+    label: 'Join Campaign',
+    labelMobile: 'Join',
+    icon: <LogIn className="h-4 w-4" />,
+  },
 ];
 
 export default function CampaignsPage() {

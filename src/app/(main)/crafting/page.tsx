@@ -45,10 +45,10 @@ const STATUS_VARIANTS: Record<CraftingSessionStatus, 'descriptor' | 'success'> =
 
 type TabId = 'all' | 'in_progress' | 'completed';
 
-const TABS: Array<{ id: TabId; label: string }> = [
+const TABS: Array<{ id: TabId; label: string; labelMobile?: string }> = [
   { id: 'all', label: 'All' },
-  { id: 'in_progress', label: 'In progress' },
-  { id: 'completed', label: 'Completed' },
+  { id: 'in_progress', label: 'In progress', labelMobile: 'Progress' },
+  { id: 'completed', label: 'Completed', labelMobile: 'Done' },
 ];
 
 export default function CraftingHubPage() {
