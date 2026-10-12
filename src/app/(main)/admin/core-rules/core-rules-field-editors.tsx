@@ -89,8 +89,8 @@ export function TextInput({
 
 export function SectionTitle({ children }: { children: React.ReactNode }) {
   return (
-    <h3 className="mt-4 mb-2 border-b border-border pb-1 text-base font-semibold text-text-primary">
+    <h2 className="mt-4 mb-2 border-b border-border pb-1 text-base font-semibold text-text-primary">
       {children}
-    </h3>
+    </h2>
   );
 }
