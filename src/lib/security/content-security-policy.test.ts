@@ -16,6 +16,17 @@ describe('buildContentSecurityPolicy', () => {
     expect(connect).not.toContain('ws://127.0.0.1');
   });
 
+  it('omits unsafe-eval outside development', () => {
+    const production = buildContentSecurityPolicy('production');
+    const scriptSrc = production.split('; ').find((part) => part.startsWith('script-src '));
+    expect(scriptSrc).toBe(
+      "script-src 'self' 'unsafe-inline' https://vercel.live https://va.vercel-scripts.com",
+    );
+    expect(buildContentSecurityPolicy('development')).toContain(
+      "script-src 'self' 'unsafe-inline' 'unsafe-eval'",
+    );
+  });
+
   it('allows the local ws socket in development and still allows hosted realtime', () => {
     const connect = connectSrc(buildContentSecurityPolicy('development'));
     expect(connect).toContain('ws://localhost:*');
