@@ -9,6 +9,7 @@ import { formatDurationCompact, formatSavedActionTypeForDisplay } from '@/lib/ut
 import { calculateCriticalRange, calculateEvasion } from '@/lib/game/calculations';
 import {
   applyTempModifier,
+  getEffectiveAbilities,
   getScalarTempModifier,
   tempModifierValueClass,
 } from '@/lib/character/temp-modifiers';
@@ -535,12 +536,18 @@ export function mapTechniqueRows(
   });
 }
 
+function abilitiesForAttackRolls(ctx: LibraryEntityRowContext) {
+  if (!ctx.abilities) return undefined;
+  return getEffectiveAbilities(ctx.abilities, ctx.tempModifiers);
+}
+
 export function mapWeaponRows(weapons: Item[], ctx: LibraryEntityRowContext): EntityWeaponRow[] {
+  const rollAbilities = abilitiesForAttackRolls(ctx);
   return weapons.map((item, i) => {
     const id = item.id ?? item.name ?? i;
     const { bonus: attackBonus, abilityName } = getWeaponAttackBonus(
       item,
-      ctx.abilities,
+      rollAbilities,
       ctx.martialProficiency,
     );
     const propertyChips = partDataToChips(
@@ -635,6 +642,7 @@ export function mapWeaponRows(weapons: Item[], ctx: LibraryEntityRowContext): En
 }
 
 export function mapShieldRows(shields: Item[], ctx: LibraryEntityRowContext): EntityShieldRow[] {
+  const rollAbilities = abilitiesForAttackRolls(ctx);
   return shields.map((item, i) => {
     const id = item.id ?? item.name ?? i;
     const enriched = item as Item & {
@@ -645,7 +653,7 @@ export function mapShieldRows(shields: Item[], ctx: LibraryEntityRowContext): En
     const shieldDamageStr = enriched.shieldDamage ?? (item.damage ? String(item.damage) : '-');
     const { bonus: attackBonus } = getWeaponAttackBonus(
       item,
-      ctx.abilities,
+      rollAbilities,
       ctx.martialProficiency,
     );
     const rangeValue = resolveWeaponRangeDisplay(

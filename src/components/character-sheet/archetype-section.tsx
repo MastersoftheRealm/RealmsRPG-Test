@@ -6,7 +6,7 @@
 
 'use client';
 
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { cn, defined } from '@/lib/utils';
 import {
   calculateProficiency,
@@ -35,6 +35,7 @@ import {
 } from '@/components/patterns';
 import { Card, DescriptorChip } from '@/components/ui';
 import { profPointsDescriptorVariant } from '@/lib/chip/descriptor-chip-variants';
+import { getEffectiveAbilities } from '@/lib/character/temp-modifiers';
 
 function toQuickArmamentItems(items: Array<EnrichedItem | Item>): QuickArmamentItem[] {
   return items.map((item) => {
@@ -225,22 +226,20 @@ const UNARMED_PROWESS_DAMAGE: { level: number; damage: string | null }[] = [
 
 // Weapons Section - displays equipped weapons with attack/damage rolls
 function WeaponsSection({
-  character,
+  abilities,
   martialProf,
   unarmedProwess = 0,
   onRollAttack,
   onRollDamage,
   enrichedWeapons,
 }: {
-  character: Character;
+  abilities: Abilities;
   martialProf: number;
   unarmedProwess?: number | undefined;
   onRollAttack?: ((name: string, bonus: number) => void) | undefined;
   onRollDamage?: ((damageStr: string, bonus: number) => void) | undefined;
   enrichedWeapons?: EnrichedItem[] | undefined;
 }) {
-  const abilities = character.abilities || {};
-
   // Use enriched weapons if available, fallback to raw character equipment
   const weapons = enrichedWeapons || ((character.equipment?.weapons || []) as Item[]);
   const equippedWeapons = weapons.filter((w) => w.equipped);
@@ -332,16 +331,17 @@ function WeaponsSection({
 // Shields Section - displays equipped shields: Name, Block, Damage, Attack (same horizontal layout as weapons)
 function ShieldsSection({
   character,
+  abilities,
   martialProf,
   enrichedShields,
 }: {
   character: Character;
+  abilities: Abilities;
   martialProf: number;
   onRollAttack?: ((name: string, bonus: number) => void) | undefined;
   onRollDamage?: ((damageStr: string, bonus: number) => void) | undefined;
   enrichedShields?: EnrichedItem[] | undefined;
 }) {
-  const abilities = character.abilities || {};
   const shields = enrichedShields || ((character.equipment?.shields || []) as Item[]);
   const equippedShields = shields.filter((s) => s.equipped);
 
@@ -358,13 +358,13 @@ function ShieldsSection({
 // Armor Section - displays equipped armor with stats
 function ArmorSection({
   character,
+  abilities,
   enrichedArmor,
 }: {
   character: Character;
+  abilities: Abilities;
   enrichedArmor?: EnrichedItem[] | undefined;
 }) {
-  const abilities = character.abilities || {};
-
   // Use enriched armor if available, fallback to raw character equipment
   const armor = enrichedArmor || ((character.equipment?.armor || character.armor || []) as Item[]);
   const armorArray = Array.isArray(armor) ? armor : [armor].filter(Boolean);
@@ -397,6 +397,10 @@ export function ArchetypeSection({
   const powerProf = character.pow_prof ?? character.powerProficiency ?? 0;
   const rollContext = useRollsOptional();
   const { rules } = useGameRules();
+  const rollAbilities = useMemo(
+    () => getEffectiveAbilities(character.abilities ?? ({} as Abilities), character.tempModifiers),
+    [character.abilities, character.tempModifiers],
+  );
 
   // Local state for whether this section is actively being edited
   const [isSectionEditing, setIsSectionEditing] = useState(false);
@@ -586,7 +590,7 @@ export function ArchetypeSection({
       {/* Attack Bonuses Table */}
       {character.abilities && (
         <AttackBonusesTable
-          abilities={character.abilities}
+          abilities={rollAbilities}
           martialProf={martialProf}
           powerProf={powerProf}
           powerAbility={character.pow_abil}
@@ -596,7 +600,7 @@ export function ArchetypeSection({
 
       {/* Weapons Section */}
       <WeaponsSection
-        character={character}
+        abilities={rollAbilities}
         martialProf={martialProf}
         unarmedProwess={unarmedProwess}
         onRollAttack={rollContext?.canRoll !== false ? handleRollBonus : undefined}
@@ -607,6 +611,7 @@ export function ArchetypeSection({
       {/* Shields Section */}
       <ShieldsSection
         character={character}
+        abilities={rollAbilities}
         martialProf={martialProf}
         onRollAttack={rollContext?.canRoll !== false ? handleRollBonus : undefined}
         onRollDamage={rollContext?.canRoll !== false ? handleRollDamage : undefined}
@@ -614,7 +619,7 @@ export function ArchetypeSection({
       />
 
       {/* Armor Section */}
-      <ArmorSection character={character} enrichedArmor={enrichedArmor} />
+      <ArmorSection character={character} abilities={rollAbilities} enrichedArmor={enrichedArmor} />
     </Card>
   );
 }
