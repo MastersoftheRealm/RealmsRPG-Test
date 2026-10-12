@@ -1,7 +1,8 @@
 /**
  * Campaign roll attribution (86e3jvv8d).
  * The Realm Master may roll from a player's sheet. The log keeps the character
- * name and says the Realm Master made that roll.
+ * name and says the Realm Master made that roll. The campaign page and the
+ * sheet's campaign list both use this label.
  */
 
 export function realmMasterRolledForCharacter(
