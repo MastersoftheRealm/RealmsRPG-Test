@@ -34,7 +34,7 @@ import type { UserItem, UserPower, UserTechnique } from '@/hooks/use-user-librar
 import {
   calculateStats,
   type CharacterSheetStats,
-} from '@/app/(main)/characters/[id]/character-sheet-utils';
+} from '@/app/(detail)/characters/[id]/character-sheet-utils';
 import type { LibrarySectionData } from './library-section-props';
 
 export type { CharacterSheetStats };

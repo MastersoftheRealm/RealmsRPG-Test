@@ -274,7 +274,10 @@ describe('sheet viewers cannot use edit controls (86e3jryyp)', () => {
 
   it('does not pass header play handlers to a viewer on the sheet page', () => {
     const page = readFileSync(
-      path.join(import.meta.dirname, '../../app/(main)/characters/[id]/character-sheet-route.tsx'),
+      path.join(
+        import.meta.dirname,
+        '../../app/(detail)/characters/[id]/character-sheet-route.tsx',
+      ),
       'utf8',
     );
     expect(page).toContain('onHealthChange={whenSheetOwner(isOwner, handleHealthChange)}');

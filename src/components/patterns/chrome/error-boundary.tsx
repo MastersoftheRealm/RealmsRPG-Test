@@ -13,6 +13,7 @@
  */
 
 import { Component, ReactNode } from 'react';
+import { unstable_rethrow } from 'next/navigation';
 import { AlertCircle, RefreshCw } from 'lucide-react';
 import { Button } from '@/components/ui';
 
@@ -36,10 +37,14 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
   }
 
   static getDerivedStateFromError(error: Error): ErrorBoundaryState {
+    // notFound() / redirect() must reach Next's HTTP fallback. Swallowing them
+    // renders this boundary as a 200 "Something went wrong" page.
+    unstable_rethrow(error);
     return { hasError: true, error };
   }
 
   componentDidCatch(error: Error, errorInfo: React.ErrorInfo) {
+    unstable_rethrow(error);
     console.error(
       `[ErrorBoundary${this.props.section ? ` – ${this.props.section}` : ''}]`,
       error,
