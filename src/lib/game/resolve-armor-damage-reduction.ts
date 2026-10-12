@@ -48,3 +48,35 @@ export function resolveArmorDamageReduction(source: ArmorDrSource): number {
   }
   return deriveDamageReductionFromProperties(propertiesForDr(source.properties));
 }
+
+/**
+ * Armor DR for one reduction this turn (Core Rulebook / GAME_RULES).
+ * `priorReductionsThisTurn` is how many times this armor already reduced damage
+ * since the turn began. The first reduction is the full base. Each later
+ * reduction is half the previous amount, rounded up. Half of 1 stays 1.
+ * Rulebook example, base 5: 5, then 3, then 2, then 1.
+ */
+export function armorDamageReductionForHit(
+  baseDamageReduction: number,
+  priorReductionsThisTurn: number,
+): number {
+  if (!Number.isFinite(baseDamageReduction) || baseDamageReduction <= 0) return 0;
+  const steps = Number.isFinite(priorReductionsThisTurn)
+    ? Math.max(0, Math.floor(priorReductionsThisTurn))
+    : 0;
+  let dr = baseDamageReduction;
+  for (let i = 0; i < steps; i++) {
+    dr = Math.ceil(dr / 2);
+  }
+  return dr;
+}
+
+/**
+ * Health lost after armor DR. A positive instance is at least 1.
+ * Zero or less is not a hit and stays 0.
+ */
+export function damageAfterArmorReduction(incomingDamage: number, effectiveDr: number): number {
+  if (!Number.isFinite(incomingDamage) || incomingDamage <= 0) return 0;
+  const dr = Number.isFinite(effectiveDr) ? Math.max(0, effectiveDr) : 0;
+  return Math.max(1, incomingDamage - dr);
+}
