@@ -6,8 +6,9 @@ import {
   composedPowerProficiencyParts,
   derivePowerDisplay,
   formatPowerDamage,
+  plainPowerProficiencyParts,
 } from '@/lib/calculators';
-import { dedupeEntityRefs, dedupeSavedParts } from '@/lib/game/dedupe-saved-parts';
+import { dedupeEntityRefs } from '@/lib/game/dedupe-saved-parts';
 import type { EnrichedPower } from './types';
 import { findInLibrary } from './find-in-library';
 
@@ -38,24 +39,21 @@ export function enrichPowers(
     }
 
     if (libraryItem) {
+      const powerDoc = {
+        name: libraryItem.name,
+        description: libraryItem.description,
+        parts: libraryItem.parts || [],
+        actionType: libraryItem.actionType,
+        isReaction: libraryItem.isReaction,
+        range: libraryItem.range,
+        area: libraryItem.area,
+        duration: libraryItem.duration,
+        damage: libraryItem.damage,
+        attackMode: libraryItem.attackMode,
+        composition: libraryItem.composition,
+      };
       // Use derivePowerDisplay to calculate all display values including cost
-      const displayData = derivePowerDisplay(
-        {
-          name: libraryItem.name,
-          description: libraryItem.description,
-          parts: libraryItem.parts || [],
-          actionType: libraryItem.actionType,
-          isReaction: libraryItem.isReaction,
-          range: libraryItem.range,
-          area: libraryItem.area,
-          duration: libraryItem.duration,
-          damage: libraryItem.damage,
-          attackMode: libraryItem.attackMode,
-          composition: libraryItem.composition,
-        },
-        powerPartsDb,
-        { selectedVariantId },
-      );
+      const displayData = derivePowerDisplay(powerDoc, powerPartsDb, { selectedVariantId });
       const composition = displayData.composition;
       // Preserve character's power id so toggles/remove match character.powers (library id can differ when matched by name)
       const identityId =
@@ -66,17 +64,19 @@ export function enrichPowers(
         id: identityId,
         name: libraryItem.name,
         description: libraryItem.description || '',
-        // Composed powers: the resolver's proficiency rows, each damage row typed (ADR-0029).
-        parts: composition
+        // Proficiency rows. Plain powers rebuild Range and damage from the document
+        // because those mechanic parts are not stored on `parts`.
+        parts: (composition
           ? composedPowerProficiencyParts(composition, powerPartsDb)
-          : dedupeSavedParts(libraryItem.parts || []).map((part) => ({
-              id: String(part.id || ''),
-              name: part.name || '',
-              op_1_lvl: part.op_1_lvl,
-              op_2_lvl: part.op_2_lvl,
-              op_3_lvl: part.op_3_lvl,
-              ...(part.applyDuration ? { applyDuration: true } : {}),
-            })),
+          : plainPowerProficiencyParts(powerDoc, powerPartsDb)
+        ).map((part) => ({
+          id: part.id != null ? String(part.id) : '',
+          name: part.name || '',
+          op_1_lvl: part.op_1_lvl,
+          op_2_lvl: part.op_2_lvl,
+          op_3_lvl: part.op_3_lvl,
+          ...(part.damageType !== undefined ? { damageType: part.damageType } : {}),
+        })),
         innate,
         libraryItem,
         // Calculated display fields from derivePowerDisplay
