@@ -159,6 +159,7 @@ function EmpoweredTechniqueWorkspace({
     techniquePartsError,
     initialSaveTarget: resolveCreatorSaveTargetFromItem(
       findLoadedLibraryItem(load.rawItems, editId),
+      { canSaveToOfficial: isAdmin },
     ),
   });
 

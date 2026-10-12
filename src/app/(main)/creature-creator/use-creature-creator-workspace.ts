@@ -436,6 +436,7 @@ export function useCreatureCreatorWorkspace() {
     stats: { isOverBudget },
     load,
     editCreatureId,
+    isAdmin,
   });
 
   useCreatorEditMissNotice(

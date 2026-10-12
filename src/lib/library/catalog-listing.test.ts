@@ -66,6 +66,18 @@ describe('resolveCreatorSaveTargetFromItem', () => {
       resolveCreatorSaveTargetFromItem({ _source: 'official', catalog_listing: 'unlisted' }),
     ).toBe('admin');
   });
+
+  it('uses My Library for official rows when the player cannot publish (86e3kcduh)', () => {
+    expect(
+      resolveCreatorSaveTargetFromItem({ _source: 'official' }, { canSaveToOfficial: false }),
+    ).toBe('private');
+    expect(
+      resolveCreatorSaveTargetFromItem(
+        { _source: 'official', catalogListing: 'unlisted' },
+        { canSaveToOfficial: false },
+      ),
+    ).toBe('private');
+  });
 });
 
 describe('query helpers', () => {

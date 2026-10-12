@@ -161,6 +161,7 @@ function ItemCreatorWorkspace({
     closeLoadModal: load.closeLoadModal,
     initialSaveTarget: resolveCreatorSaveTargetFromItem(
       findLoadedLibraryItem(load.rawItems, editItemId),
+      { canSaveToOfficial: isAdmin },
     ),
   });
 

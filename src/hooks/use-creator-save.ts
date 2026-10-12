@@ -31,6 +31,7 @@ import {
 } from '@/services/library-service';
 import { officialLibraryKeys } from '@/hooks/use-official-library';
 import { userLibraryKeys } from '@/hooks/use-user-library';
+import { useAdmin } from '@/hooks/use-admin';
 import {
   isOfficialSaveTarget,
   resolveCreatorSaveTargetFromItem,
@@ -86,6 +87,8 @@ export interface UseCreatorSaveOptions {
   onSaveCommitted?: (() => void) | undefined;
   /** When loading ?edit= of an official row, start on Public/Admin library. */
   initialSaveTarget?: CreatorSaveTarget | undefined;
+  /** Defaults to `isAdmin` from session; false forces My Library after loading official rows. */
+  canSaveToOfficial?: boolean | undefined;
   /** User-library id from ?edit=, so a same-name save updates that row. */
   editingId?: string | null | undefined;
 }
@@ -137,7 +140,11 @@ export function useCreatorSave(options: UseCreatorSaveOptions): UseCreatorSaveRe
     adminSuccessMessage = DEFAULT_ADMIN_SUCCESS,
     initialSaveTarget = 'private',
     editingId = null,
+    canSaveToOfficial: canSaveToOfficialOption,
   } = options;
+
+  const { isAdmin } = useAdmin();
+  const canSaveToOfficial = canSaveToOfficialOption ?? isAdmin;
 
   const queryClient = useQueryClient();
   const { showToast } = useToast();
@@ -168,10 +175,13 @@ export function useCreatorSave(options: UseCreatorSaveOptions): UseCreatorSaveRe
     if (!show) setPublishExistingId(null);
   }, []);
 
-  const applyLoadedLibraryItem = useCallback((item: unknown) => {
-    setSaveTarget(resolveCreatorSaveTargetFromItem(item));
-    setLoadedLibraryId(libraryItemId(item));
-  }, []);
+  const applyLoadedLibraryItem = useCallback(
+    (item: unknown) => {
+      setSaveTarget(resolveCreatorSaveTargetFromItem(item, { canSaveToOfficial }));
+      setLoadedLibraryId(libraryItemId(item));
+    },
+    [canSaveToOfficial],
+  );
 
   const forgetLoadedLibraryItem = useCallback(() => {
     setLoadedLibraryId(null);
