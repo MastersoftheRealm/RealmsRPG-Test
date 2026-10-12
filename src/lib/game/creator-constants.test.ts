@@ -1,5 +1,12 @@
 import { describe, expect, it } from 'vitest';
-import { maxRarityForCharacterLevel, rarityAtOrBelowMax } from './creator-constants';
+import { maxRarityForCharacterLevel, rarityAtOrBelowMax, SPECIES_TYPES } from './creator-constants';
+
+describe('SPECIES_TYPES (86e3jx1kj)', () => {
+  it('includes codex species types used by official species rows', () => {
+    expect(SPECIES_TYPES).toContain('Mammalian');
+    expect(SPECIES_TYPES).toContain('Dragonoid');
+  });
+});
 
 describe('maxRarityForCharacterLevel', () => {
   it('maps GAME_RULES level brackets', () => {

@@ -7,7 +7,7 @@
 import { useId, useMemo } from 'react';
 import { Plus } from 'lucide-react';
 import type { Trait } from '@/hooks';
-import { CREATURE_TYPES } from '@/lib/game/creator-constants';
+import { SPECIES_TYPES } from '@/lib/game/creator-constants';
 import { CollapsibleSection } from '@/components/creator';
 import {
   CreatorDescriptionField,
@@ -114,7 +114,7 @@ export function SpeciesCreatorEditor({
               aria-label="Creature type"
             >
               <option value="">Select type</option>
-              {CREATURE_TYPES.map((t) => (
+              {[...new Set([...SPECIES_TYPES, form.type].filter(Boolean))].sort().map((t) => (
                 <option key={t} value={t}>
                   {t}
                 </option>

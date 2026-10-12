@@ -174,6 +174,19 @@ export const CREATURE_TYPES = [
 
 export type CreatureType = (typeof CREATURE_TYPES)[number];
 
+/** Species codex `type` values (not creature stat-block types). */
+export const SPECIES_TYPES = [
+  'Construct',
+  'Dragonoid',
+  'Fey',
+  'Humanoid',
+  'Mammalian',
+  'Plant',
+  'Undead',
+] as const;
+
+export type SpeciesType = (typeof SPECIES_TYPES)[number];
+
 export const CREATURE_SIZES = [
   {
     value: 'miniscule',
