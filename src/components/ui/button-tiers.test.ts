@@ -332,10 +332,11 @@ describe('ADR-0023 remaining viewport 44 slabs (TASK-865)', () => {
   });
 
   it('uses IconButton and touch-tier-standard on Codex spreadsheet hits, not md 36 slabs', () => {
-    const src = readFileSync(
-      path.join(import.meta.dirname, '../../app/(main)/admin/codex/codex-spreadsheet-table.tsx'),
-      'utf8',
-    );
+    const codexDir = path.join(import.meta.dirname, '../../app/(main)/admin/codex');
+    const src = [
+      readFileSync(path.join(codexDir, 'codex-spreadsheet-table.tsx'), 'utf8'),
+      readFileSync(path.join(codexDir, 'codex-spreadsheet-table-row.tsx'), 'utf8'),
+    ].join('\n');
     expect(src).toContain('<IconButton');
     expect(src).toContain('touch-tier-standard');
     expect(src).not.toContain('md:min-h-[36px]');
