@@ -1,11 +1,13 @@
+import { isValidElement, type ReactElement } from 'react';
 import type { PowerPart } from '@/hooks/codex-types';
 import { chipLabelsFromDetailSections } from '@/lib/glr';
 import { defined } from '@/lib/utils';
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 import {
   mapArmorRows,
   mapPowerRows,
   mapTechniqueRows,
+  mapWeaponRows,
   type LibraryEntityRowContext,
 } from './library-entity-rows';
 import type { Abilities, CharacterPower, CharacterTechnique, Item } from '@/types';
@@ -197,6 +199,50 @@ describe('mapPowerRows / mapTechniqueRows — Energy is rightSlot only (TASK-502
     const row = defined(mapPowerRows(powers, { ...baseCtx, onUsePower: undefined })[0]);
     expect(columnKeys(row)).not.toContain('energy');
     expect(row.rightSlot).toBeTruthy();
+  });
+});
+
+describe('mapWeaponRows — inventory damage rolls (86e3jwaw0)', () => {
+  it('passes proficient attack bonus into rollDamage like the archetype quick table', () => {
+    const rollDamage = vi.fn();
+    const abilities: Abilities = {
+      strength: 1,
+      vitality: 0,
+      agility: 0,
+      acuity: 0,
+      intelligence: 0,
+      charisma: 0,
+    };
+    const battleaxe = {
+      id: 'battleaxe',
+      name: 'Battleaxe',
+      damage: '1d8 Slashing',
+      properties: [],
+    } as Item;
+    const row = defined(
+      mapWeaponRows([battleaxe], {
+        ...baseCtx,
+        abilities,
+        martialProficiency: 9,
+        rollContext: {
+          canRoll: true,
+          rollAttack: vi.fn(),
+          rollDamage,
+        } as unknown as LibraryEntityRowContext['rollContext'],
+      })[0],
+    );
+    const damageCol = row.columns?.find((c) => c.key === 'damage');
+    const damageRoot = damageCol?.value;
+    let rollOnClick: (() => void) | undefined;
+    if (isValidElement(damageRoot)) {
+      const children = (damageRoot as ReactElement<{ children?: unknown }>).props.children;
+      const rollButton = Array.isArray(children) ? children[0] : children;
+      if (isValidElement(rollButton)) {
+        rollOnClick = (rollButton as ReactElement<{ onClick?: () => void }>).props.onClick;
+      }
+    }
+    rollOnClick?.();
+    expect(rollDamage).toHaveBeenCalledWith('1d8 Slashing', 10, 'Battleaxe damage');
   });
 });
 
