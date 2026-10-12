@@ -45,6 +45,7 @@ type RosterEntry = {
 function createRollsSupabase(opts: {
   campaign: { id: string; owner_id: string; characters?: RosterEntry[] } | null;
   memberUserIds?: string[] | undefined;
+  rolls?: Array<{ id: string; data: Record<string, unknown>; created_at: string }> | undefined;
 }) {
   const memberUserIds = opts.memberUserIds ?? [];
   const insert = vi.fn().mockResolvedValue({ error: null });
@@ -81,7 +82,7 @@ function createRollsSupabase(opts: {
         const listChain: Record<string, unknown> = {};
         listChain.eq = vi.fn().mockReturnValue(listChain);
         listChain.order = vi.fn().mockReturnValue(listChain);
-        listChain.limit = vi.fn().mockResolvedValue({ data: [], error: null });
+        listChain.limit = vi.fn().mockResolvedValue({ data: opts.rolls ?? [], error: null });
         return {
           select: vi.fn(
             (
@@ -259,5 +260,90 @@ describe('POST /api/campaigns/[id]/rolls', () => {
     expect(response.status).toBe(200);
     await expect(readJson(response)).resolves.toEqual({ success: true });
     expect(supabase.insert).toHaveBeenCalled();
+    const saved = supabase.insert.mock.calls[0]?.[0] as { data: { rolledByRealmMaster?: boolean } };
+    expect(saved.data.rolledByRealmMaster).toBe(false);
+  });
+
+  it('records that the Realm Master rolled a player character', async () => {
+    mockGetSession.mockResolvedValue({ user: OWNER, error: null });
+    const supabase = createRollsSupabase({
+      campaign: { id: 'camp-1', owner_id: OWNER.uid, characters: MEMBER_ROSTER },
+      memberUserIds: [OWNER.uid, MEMBER.uid],
+    });
+    mockCreateClient.mockResolvedValue(supabase as never);
+
+    const response = await POST(
+      makePostRequest('camp-1', rollBody('char-member', 'Spoofed Name')),
+      params('camp-1'),
+    );
+
+    expect(response.status).toBe(200);
+    const saved = supabase.insert.mock.calls[0]?.[0] as {
+      data: { characterName: string; userId: string; rolledByRealmMaster: boolean };
+    };
+    expect(saved.data.characterName).toBe('Member Hero');
+    expect(saved.data.userId).toBe(OWNER.uid);
+    expect(saved.data.rolledByRealmMaster).toBe(true);
+  });
+
+  it('does not mark the Realm Master rolling their own character', async () => {
+    mockGetSession.mockResolvedValue({ user: OWNER, error: null });
+    const supabase = createRollsSupabase({
+      campaign: { id: 'camp-1', owner_id: OWNER.uid, characters: MEMBER_ROSTER },
+    });
+    mockCreateClient.mockResolvedValue(supabase as never);
+
+    const response = await POST(
+      makePostRequest('camp-1', rollBody('char-owner', 'RM Hero')),
+      params('camp-1'),
+    );
+
+    expect(response.status).toBe(200);
+    const saved = supabase.insert.mock.calls[0]?.[0] as { data: { rolledByRealmMaster: boolean } };
+    expect(saved.data.rolledByRealmMaster).toBe(false);
+  });
+});
+
+describe('GET /api/campaigns/[id]/rolls attribution', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  it('marks an older RM roll that was stored only under the character name', async () => {
+    mockGetSession.mockResolvedValue({ user: MEMBER, error: null });
+    mockCreateClient.mockResolvedValue(
+      createRollsSupabase({
+        campaign: { id: 'camp-1', owner_id: OWNER.uid, characters: MEMBER_ROSTER },
+        memberUserIds: [MEMBER.uid],
+        rolls: [
+          {
+            id: 'roll-1',
+            created_at: '2026-10-04T00:00:00.000Z',
+            data: {
+              characterId: 'char-member',
+              characterName: 'Member Hero',
+              userId: OWNER.uid,
+              type: 'ability',
+              title: 'Strength',
+              dice: [],
+              modifier: 0,
+              total: 12,
+              timestamp: '2026-10-04T00:00:00.000Z',
+            },
+          },
+        ],
+      }) as never,
+    );
+
+    const response = await GET(makeGetRequest('camp-1'), params('camp-1'));
+    expect(response.status).toBe(200);
+    const body =
+      await readJson<Array<{ characterName: string; rolledByRealmMaster?: boolean }>>(response);
+    expect(body).toEqual([
+      expect.objectContaining({
+        characterName: 'Member Hero',
+        rolledByRealmMaster: true,
+      }),
+    ]);
   });
 });

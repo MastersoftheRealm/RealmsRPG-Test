@@ -20,6 +20,7 @@ import { Button, LoadingState, EmptyState, Card } from '@/components/ui';
 import type { CampaignRollEntry } from '@/types/campaign-roll';
 import { formatRollTimestamp } from '@/lib/roll-timestamp';
 import { DIE_IMAGES, DIE_MAX, generateRollId, rollDie, type DieType } from '@/lib/rolls/die';
+import { campaignRollCharacterLabel } from '@/lib/rolls/campaign-roll-attribution';
 import { resolveRollModifierLabel } from '@/lib/rolls/modifier-label';
 
 // Re-export types for convenience
@@ -333,7 +334,9 @@ export function RollLog({ className, viewOnlyCampaignId }: RollLogProps) {
                 <RollEntryCard
                   key={roll.id}
                   roll={roll}
-                  characterName={'characterName' in roll ? roll.characterName : undefined}
+                  characterName={
+                    'characterName' in roll ? campaignRollCharacterLabel(roll) : undefined
+                  }
                 />
               ))
             )}
