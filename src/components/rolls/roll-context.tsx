@@ -126,7 +126,9 @@ export function RollProvider({
       if (event.key !== personalStorageKey || event.newValue == null) return;
       try {
         const remote = readPersonalRollLog(personalStorageKey);
-        setRolls((prev) => mergeRollLogsById(prev, remote).slice(-maxHistory));
+        setRolls((prev) =>
+          mergeRollLogsById<RollEntry>(prev, remote as RollEntry[]).slice(-maxHistory),
+        );
       } catch {
         /* ignore parse errors */
       }
