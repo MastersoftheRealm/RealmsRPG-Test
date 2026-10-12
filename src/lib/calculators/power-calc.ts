@@ -11,6 +11,7 @@ import { PART_IDS, findByIdOrName } from '@/lib/id-constants';
 import {
   computePartTrainingPoints,
   computePartTrainingPointsRaw,
+  publishedTrainingPointLevels,
 } from '@/lib/calculators/part-training-points';
 import { dedupeSavedParts } from '@/lib/game/dedupe-saved-parts';
 import { appendCanTargetToDescription, defensesFromPart } from '@/lib/game/targeted-defenses';
@@ -278,10 +279,11 @@ export function calculatePowerCosts(
     tpRaw += computePartTrainingPointsRaw(def, tpLevels, 'power');
     const partTP = computePartTrainingPoints(def, tpLevels, 'power');
     if (partTP > 0) {
+      const shown = publishedTrainingPointLevels(def, tpLevels);
       let src = `${partTP} TP: ${def.name}`;
-      if (l1 > 0) src += ` (Opt1 ${l1})`;
-      if (l2 > 0) src += ` (Opt2 ${l2})`;
-      if (l3 > 0) src += ` (Opt3 ${l3})`;
+      if (shown.op1 > 0) src += ` (Opt1 ${shown.op1})`;
+      if (shown.op2 > 0) src += ` (Opt2 ${shown.op2})`;
+      if (shown.op3 > 0) src += ` (Opt3 ${shown.op3})`;
       tpSources.push(src);
     }
     totalTP += partTP;

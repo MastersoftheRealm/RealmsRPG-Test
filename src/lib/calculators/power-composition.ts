@@ -735,6 +735,17 @@ function structuredDurationOf(doc: PowerDocument): StructuredPowerDuration | nul
 
 type ProficiencyPart = NonNullable<CharacterPower['parts']>[number] & object;
 
+/**
+ * Plain official powers store range and damage on the document, not only in
+ * `parts`. These rows are what proficiency must register.
+ */
+export function plainPowerProficiencyParts(
+  doc: PowerDocument,
+  partsDb: PowerPart[],
+): ProficiencyPart[] {
+  return proficiencyPartsFor(doc, partsDb);
+}
+
 /** Payload rows of one spec; each damage row carries only its own damage type. */
 function proficiencyPartsFor(doc: PowerDocument, partsDb: PowerPart[]): ProficiencyPart[] {
   const payload = buildPowerPartsPayloadForCost(doc, partsDb);
@@ -760,9 +771,9 @@ function proficiencyPartsFor(doc: PowerDocument, partsDb: PowerPart[]): Proficie
 }
 
 /**
- * Same part, same damage type. Option level is not part of the key: a repeated
- * part keeps the instance with the highest Training Points (Kadin, Oct 6, 11:48 AM ET).
- * Fire and ice stay separate. A higher option level wins a tie, matching coverage.
+ * Same part, same damage type. The required row already paid the base once and
+ * raised each option to a whole-number Training Point level. Fire and ice stay
+ * separate. A higher option level wins a tie, matching coverage.
  */
 function compositionTpInstanceKey(prof: {
   kind: string;

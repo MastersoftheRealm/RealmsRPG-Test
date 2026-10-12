@@ -30,7 +30,11 @@ import {
   type BuildRequiredProficienciesInput,
 } from '@/lib/proficiencies';
 import type { PowerPart } from '@/hooks/codex-types';
-import { composedPowerProficiencyParts, resolvePowerComposition } from '@/lib/calculators';
+import {
+  composedPowerProficiencyParts,
+  plainPowerProficiencyParts,
+  resolvePowerComposition,
+} from '@/lib/calculators';
 import { libraryItemToPowerDocument } from '@/lib/library-selectable-builders';
 import { defaultLibraryTabVisibilityForArchetype } from '@/lib/character-library-tab-visibility';
 import { applyStarterEquippedFlags } from '@/lib/game/equipment-equipped';
@@ -96,16 +100,18 @@ function resolvePowersForProficiency(
 
   return orderedIds.map((id) => {
     const lib = findByNormalizedId(officialPowers, id);
-    const composition = lib?.composition
-      ? resolvePowerComposition(libraryItemToPowerDocument(lib), powerPartsDb as PowerPart[])
-      : null;
+    const doc = lib ? libraryItemToPowerDocument(lib) : null;
+    const composition =
+      doc?.composition != null ? resolvePowerComposition(doc, powerPartsDb as PowerPart[]) : null;
     return {
       id,
       name: lib?.name ?? String(id),
       innate: innateKeys.has(normalizeId(id)),
       parts: composition
         ? composedPowerProficiencyParts(composition, powerPartsDb as PowerPart[])
-        : (lib?.parts ?? []),
+        : doc
+          ? plainPowerProficiencyParts(doc, powerPartsDb as PowerPart[])
+          : [],
       damage: lib?.damage,
     } as CharacterPower;
   });
@@ -373,6 +379,10 @@ export function buildGuidedCharacterPayload(
     },
   );
 
+  const equippedInventory = applyStarterEquippedFlags(
+    buildGuidedEquippedInventory(draft, ctx),
+    (row) => drForGuidedInventoryRow(row, ctx),
+  );
   const profInput = buildGuidedProficiencyInput(draft, ctx);
   const proficiencies = buildRequiredProficiencies(profInput);
 

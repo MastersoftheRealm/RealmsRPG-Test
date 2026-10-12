@@ -74,6 +74,8 @@ export interface CreatureTechnique {
   damage: string;
   image_id?: string | null | undefined;
   image_url?: string | null | undefined;
+  /** Library parts, so repeated technique parts can be priced from live Codex. */
+  parts?: UserTechnique['parts'] | undefined;
 }
 
 /** Where a creature builder feat was chosen from (shown in feat list and persisted on save). */
@@ -279,6 +281,7 @@ export function transformUserTechniqueToDisplayItem(
       damage: display.damageStr,
       image_id: technique.image_id ?? null,
       image_url: technique.image_url ?? null,
+      parts: technique.parts || [],
     },
   };
 }
