@@ -102,6 +102,7 @@ import {
   powerHasDamageCategory,
   withDamageCategory,
 } from '@/lib/library/power-technique-categories';
+import { SHEET_INNATE_NOT_ALLOWED_WARNING } from '@/lib/character/innate-power-capacity';
 type RollContext = ReturnType<typeof useRollsOptional>;
 
 export type LibraryEntityRowContext = {
@@ -124,6 +125,8 @@ export type LibraryEntityRowContext = {
   onUsePower?: ((id: string | number, energyCost: number) => void) | undefined;
   onRemovePower?: ((id: string | number) => void) | undefined;
   onTogglePowerInnate?: ((id: string | number, isInnate: boolean) => void) | undefined;
+  /** False for Pure-Martial (and any path with Innate Energy 0). */
+  canMarkPowersInnate?: boolean | undefined;
   onSelectPowerVariant?: ((id: string | number, variantId: string) => void) | undefined;
   onUseTechnique?: ((id: string | number, energyCost: number) => void) | undefined;
   onRemoveTechnique?: ((id: string | number) => void) | undefined;
@@ -404,14 +407,18 @@ export function mapPowerRows(
       },
     ];
 
-    const innateToggle =
-      ctx.showLibraryEditControls && ctx.onTogglePowerInnate ? (
-        <InnateToggle
-          isInnate={isInnate}
-          onToggle={() => ctx.onTogglePowerInnate!(id, !isInnate)}
-          size="md"
-        />
-      ) : undefined;
+    const canMarkInnate = ctx.canMarkPowersInnate !== false;
+    const innateNotAllowed = isInnate && !canMarkInnate;
+    const showInnateToggle =
+      ctx.showLibraryEditControls && ctx.onTogglePowerInnate && (canMarkInnate || isInnate);
+    const innateToggle = showInnateToggle ? (
+      <InnateToggle
+        isInnate={isInnate}
+        onToggle={() => ctx.onTogglePowerInnate!(id, !isInnate)}
+        disabled={!canMarkInnate && !isInnate}
+        size="md"
+      />
+    ) : undefined;
 
     const detailSections = mergeDetailSections(
       glrSurfaceDetailSections(
@@ -443,6 +450,7 @@ export function mapPowerRows(
       badges: needsProfBadge(ctx, { powers: [power] }),
       innate: isInnate,
       hideInnateBadge: isInnate,
+      warningMessage: innateNotAllowed ? SHEET_INNATE_NOT_ALLOWED_WARNING : undefined,
       leftSlot: innateToggle,
       rightSlot:
         isInnate && energyCost > 0

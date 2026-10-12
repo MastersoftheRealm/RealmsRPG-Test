@@ -8,6 +8,7 @@
 'use client';
 
 import { useCallback } from 'react';
+import { characterSupportsInnatePowers } from '@/lib/character/innate-power-capacity';
 import { energyAfterPowerUse } from '@/lib/character/power-energy-spend';
 import { toggleSheetArmorEquipped } from '@/lib/game/equipment-equipped';
 import { mergeEquipmentIntoInventory } from '@/lib/game/skill-allocation';
@@ -40,6 +41,7 @@ export function useSheetLibraryActions({
   const handleAddPowers = useCallback(
     (powers: CharacterPower[], asInnate = false) => {
       if (!character) return;
+      if (asInnate && !characterSupportsInnatePowers(character)) return;
       const toAdd = asInnate ? powers.map((p) => ({ ...p, innate: true })) : powers;
       const candidate: Character = {
         ...character,
@@ -72,6 +74,7 @@ export function useSheetLibraryActions({
   const handleTogglePowerInnate = useCallback(
     (powerId: string | number, isInnate: boolean) => {
       if (!character) return;
+      if (isInnate && !characterSupportsInnatePowers(character)) return;
       setCharacter((prev) =>
         prev
           ? {
