@@ -168,3 +168,15 @@ describe('spreadsheet saves every real column (86e3mezkn)', () => {
     expect(cleared.level1_loadouts).toBeNull();
   });
 });
+
+describe('spreadsheet text cells keep trailing spaces while typing (86e3mkt95)', () => {
+  it('does not trim plain string cells on each keystroke', () => {
+    expect(stringToCellValue('ideals are. ', 'ideals are.')).toBe('ideals are. ');
+    expect(stringToCellValue('ideals are. QA', 'ideals are. ')).toBe('ideals are. QA');
+    expect(stringToCellValue('  padded  ', 'plain')).toBe('  padded  ');
+  });
+
+  it('still clears whitespace-only string cells', () => {
+    expect(stringToCellValue('   ', 'had text')).toBeUndefined();
+  });
+});
