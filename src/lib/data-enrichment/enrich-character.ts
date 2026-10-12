@@ -39,7 +39,10 @@ function toEquipmentArray(items: unknown): Array<{
             result.type = obj.type.trim();
           }
           if (obj.equipped) result.equipped = true;
-          if (obj.quantity && obj.quantity !== 1) result.quantity = obj.quantity as number;
+          // Quantity 0 is stored. Quantity 1 stays omitted as the default.
+          if (obj.quantity === 0 || (obj.quantity && obj.quantity !== 1)) {
+            result.quantity = obj.quantity as number;
+          }
           return result;
         }
         return null;

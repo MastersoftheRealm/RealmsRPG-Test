@@ -415,7 +415,8 @@ export function cleanForSave(data: Character): Partial<Character> {
         if (i.id) clean.id = i.id;
         if (i.name) clean.name = i.name;
         if (i.equipped) clean.equipped = true;
-        if (i.quantity && i.quantity !== 1) clean.quantity = i.quantity;
+        // Quantity 0 is stored. Quantity 1 stays omitted as the default.
+        if (i.quantity === 0 || (i.quantity && i.quantity !== 1)) clean.quantity = i.quantity;
         // One-off custom inventory rows are not in codex/library — persist type + notes.
         const idStr = i.id != null ? String(i.id) : '';
         if (idStr.startsWith('custom-')) {
