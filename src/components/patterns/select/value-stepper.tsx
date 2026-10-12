@@ -172,10 +172,18 @@ function StepperGlyphButton({
   hold: StepperHold;
   className?: string | undefined;
 }) {
+  const activateFromKeyboard = (event: React.KeyboardEvent<HTMLButtonElement>) => {
+    if (disabled) return;
+    if (event.key !== 'Enter' && event.key !== ' ') return;
+    event.preventDefault();
+    onActivate();
+  };
+
   return (
     <button
       type="button"
       onClick={enableHoldRepeat ? undefined : onActivate}
+      onKeyDown={enableHoldRepeat ? activateFromKeyboard : undefined}
       onPointerDown={
         enableHoldRepeat
           ? (e) => {
