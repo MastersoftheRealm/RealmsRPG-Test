@@ -25,13 +25,12 @@ import {
   buildRequiredProficiencies,
   calculateProficiencyTP,
   dedupeHighestProficiencies,
-  filterToRequiredAndCustom,
+  syncProficienciesToLoadout,
   filterZeroCostProficiencies,
   generateProficiencyId,
   getMissingRequiredProficiencies,
   getTrainingPointLimit,
   isCustomProficiency,
-  mergeOwnedWithRequired,
 } from '@/lib/proficiencies';
 
 interface CodexPart {
@@ -285,8 +284,7 @@ export function ProficienciesTab({
   };
 
   const confirmSyncProficiencies = () => {
-    const kept = filterToRequiredAndCustom(owned, required);
-    persistProficiencies(mergeOwnedWithRequired(kept, required));
+    persistProficiencies(syncProficienciesToLoadout(owned, required));
     setShowSyncConfirm(false);
   };
 

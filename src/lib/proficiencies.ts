@@ -318,6 +318,19 @@ export function mergeOwnedWithRequired(
 }
 
 /**
+ * Sync Proficiencies: the current loadout is the cost. Drop saved rows the
+ * loadout no longer needs, add what it needs, and replace a stale higher cost
+ * with the required row. Custom proficiencies stay as saved.
+ */
+export function syncProficienciesToLoadout(
+  owned: CharacterProficiency[] = [],
+  required: CharacterProficiency[] = [],
+): CharacterProficiency[] {
+  const customs = owned.filter(isCustomProficiency);
+  return filterZeroCostProficiencies(dedupeHighestProficiencies([...customs, ...required]));
+}
+
+/**
  * A higher option level covers a lower one of the same part. Rounded TP is not
  * the comparison when the part id matches: neighbouring levels can publish the
  * same integer (1d6 and 1d8 Elemental Damage are both 3 TP). A saved row with
