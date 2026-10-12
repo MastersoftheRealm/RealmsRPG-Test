@@ -7,6 +7,8 @@ import {
   listPlayerVisiblePaths,
   pathCategoryGroupLabel,
   redistributeProficiency,
+  resolveLeanArchetypeIdForForgeSave,
+  isForgeArchetypeTypeId,
 } from './archetype-edit';
 
 describe('redistributeProficiency / infer category', () => {
@@ -69,6 +71,39 @@ describe('listPlayerVisiblePaths / groupPathsByCategory', () => {
     expect(grouped.power.map((p) => p.id)).toEqual(['p1']);
     expect(grouped.martial.map((p) => p.id)).toEqual(['p2']);
     expect(pathCategoryGroupLabel('powered-martial')).toBe('Powered-Martial Paths');
+  });
+});
+
+describe('resolveLeanArchetypeIdForForgeSave', () => {
+  it('keeps official codex id when type changes without leaving the path', () => {
+    const warrior = {
+      archetype: { id: '8', type: 'martial' },
+      mart_prof: 4,
+      pow_prof: 0,
+    } as Character;
+
+    expect(
+      resolveLeanArchetypeIdForForgeSave(warrior, 'powered-martial', { leftOfficialPath: false }),
+    ).toBe('8');
+    expect(
+      resolveLeanArchetypeIdForForgeSave(warrior, 'martial', { leftOfficialPath: false }),
+    ).toBe('8');
+  });
+
+  it('uses type slug after confirming switch to forge your own', () => {
+    const warrior = {
+      archetypePathId: '8',
+      archetype: { id: '8', type: 'martial' },
+    } as Character;
+
+    expect(resolveLeanArchetypeIdForForgeSave(warrior, 'martial', { leftOfficialPath: true })).toBe(
+      'martial',
+    );
+  });
+
+  it('treats forge category strings as replaceable ids', () => {
+    expect(isForgeArchetypeTypeId('martial')).toBe(true);
+    expect(isForgeArchetypeTypeId('8')).toBe(false);
   });
 });
 
