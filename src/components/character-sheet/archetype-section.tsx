@@ -36,6 +36,7 @@ import {
 import { Card, DescriptorChip } from '@/components/ui';
 import { profPointsDescriptorVariant } from '@/lib/chip/descriptor-chip-variants';
 import { getEffectiveAbilities } from '@/lib/character/temp-modifiers';
+import { normalizeArchetypeChoices } from '@/lib/character/schema-normalize';
 
 function toQuickArmamentItems(items: Array<EnrichedItem | Item>): QuickArmamentItem[] {
   return items.map((item) => {
@@ -418,7 +419,9 @@ export function ArchetypeSection({
   // Determine archetype type for milestone UI
   const archetypeType = getArchetypeType(martialProf, powerProf);
   const milestoneLevels = getArchetypeMilestoneLevels(level, rules);
-  const archetypeChoices = character.archetypeChoices || {};
+  const archetypeChoices = normalizeArchetypeChoices(character.archetypeChoices);
+  const showMilestoneChoices = archetypeType === 'powered-martial' && milestoneLevels.length > 0;
+  const canEditMilestoneChoices = showEditControls && !!onMilestoneChoiceChange;
 
   // Three-state color for proficiency points
   const profPointsVariant = profPointsDescriptorVariant(remainingProfPoints);
@@ -537,21 +540,27 @@ export function ArchetypeSection({
         </div>
       )}
 
-      {/* Mixed Archetype Milestone Choices — edit mode only */}
-      {archetypeType === 'powered-martial' && milestoneLevels.length > 0 && showEditControls && (
+      {/* Mixed Archetype Milestone Choices — visible after save/reload; editable in section edit */}
+      {showMilestoneChoices ? (
         <div className="mb-4 rounded-lg border border-warning-border bg-gradient-to-r from-warning-light to-power-light p-3">
           <SectionHeader title="Milestone Choices" className="mb-2" />
           <div className="flex flex-wrap gap-2">
             {milestoneLevels.map((milestoneLevel) => {
               const currentChoice = archetypeChoices[milestoneLevel];
+              const choiceLabel =
+                currentChoice === 'innate'
+                  ? 'Innate'
+                  : currentChoice === 'feat'
+                    ? 'Feat'
+                    : 'Not chosen';
               return (
                 <div key={milestoneLevel} className="flex items-center gap-1">
                   <span className="min-w-[32px] text-xs text-text-muted">Lv.{milestoneLevel}:</span>
-                  {onMilestoneChoiceChange ? (
+                  {canEditMilestoneChoices ? (
                     <div className="flex gap-1">
                       <button
                         type="button"
-                        onClick={() => onMilestoneChoiceChange(milestoneLevel, 'innate')}
+                        onClick={() => onMilestoneChoiceChange!(milestoneLevel, 'innate')}
                         className={cn(
                           'rounded px-2 py-0.5 text-xs transition-colors',
                           currentChoice === 'innate'
@@ -564,7 +573,7 @@ export function ArchetypeSection({
                       </button>
                       <button
                         type="button"
-                        onClick={() => onMilestoneChoiceChange(milestoneLevel, 'feat')}
+                        onClick={() => onMilestoneChoiceChange!(milestoneLevel, 'feat')}
                         className={cn(
                           'rounded px-2 py-0.5 text-xs transition-colors',
                           currentChoice === 'feat'
@@ -576,17 +585,33 @@ export function ArchetypeSection({
                         🎯 Feat
                       </button>
                     </div>
-                  ) : null}
+                  ) : (
+                    <span
+                      className={cn(
+                        'rounded px-2 py-0.5 text-xs font-medium',
+                        currentChoice === 'innate'
+                          ? 'bg-power-light text-power-fg'
+                          : currentChoice === 'feat'
+                            ? 'bg-martial-light text-martial-fg'
+                            : 'bg-surface-alt text-text-muted',
+                      )}
+                    >
+                      {choiceLabel}
+                    </span>
+                  )}
                 </div>
               );
             })}
           </div>
           <p className="mt-2 text-[10px] text-text-muted">
-            Mixed archetypes choose at levels 4, 7, 10, etc.: Increase Innate Power (6→8, then +1;
-            +1 Pool) OR Additional Feat
+            {canEditMilestoneChoices
+              ? 'Mixed archetypes choose at levels 4, 7, 10, etc.: Increase Innate Power (6→8, then +1; +1 Pool) OR Additional Feat'
+              : isEditMode
+                ? 'Open archetype editing (pencil) to change milestone choices.'
+                : 'Mixed archetypes choose at levels 4, 7, 10, etc.: Increase Innate Power (6→8, then +1; +1 Pool) OR Additional Feat'}
           </p>
         </div>
-      )}
+      ) : null}
 
       {/* Unarmed Prowess Display - show if character has unarmed prowess */}
       {/* Attack Bonuses Table */}
