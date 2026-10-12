@@ -9,6 +9,7 @@ import { CHARACTER_SHEET_ENERGY_SPEND_ROW_CHROME, type SortState } from '@/compo
 import { toggleSort, sortByColumn } from '@/hooks/use-sort';
 import { useRollsOptional } from '@/components/rolls';
 import { calculateRemainingInnateEnergy } from '@/lib/game/formulas';
+import { INNATE_THRESHOLD_WARNING } from '@/lib/character/innate-power-capacity';
 import { buildRequiredProficiencies, getMissingRequiredProficiencies } from '@/lib/proficiencies';
 import type {
   CharacterPower,
@@ -36,6 +37,7 @@ export type LibrarySectionRowsInput = {
   armor: Item[];
   equipment: Item[];
   innateEnergy: number;
+  innateThreshold?: number | undefined;
   canMarkPowersInnate?: boolean | undefined;
   currentInnateEnergy?: number | undefined;
   currentEnergy: number;
@@ -94,6 +96,7 @@ export function useLibrarySectionRows({
   armor,
   equipment,
   innateEnergy,
+  innateThreshold = 0,
   canMarkPowersInnate = innateEnergy > 0,
   currentInnateEnergy,
   currentEnergy,
@@ -197,6 +200,7 @@ export function useLibrarySectionRows({
       onRemovePower,
       onTogglePowerInnate,
       canMarkPowersInnate,
+      innateThreshold,
       onSelectPowerVariant,
       onUseTechnique,
       onRemoveTechnique,
@@ -225,6 +229,7 @@ export function useLibrarySectionRows({
       onRemovePower,
       onTogglePowerInnate,
       canMarkPowersInnate,
+      innateThreshold,
       onSelectPowerVariant,
       onUseTechnique,
       onRemoveTechnique,
@@ -271,6 +276,10 @@ export function useLibrarySectionRows({
     [currentInnateEnergy, innateEnergy, powers],
   );
   const innateEnergyOverBudget = displayedCurrentInnateEnergy < 0;
+  const innateThresholdOverBudget = useMemo(
+    () => innatePowerRows.some((row) => row.warningMessage === INNATE_THRESHOLD_WARNING),
+    [innatePowerRows],
+  );
   const regularPowerRows = useMemo(
     () => mapPowerRows(sortedRegularPowers, entityRowContext),
     [sortedRegularPowers, entityRowContext],
@@ -344,5 +353,6 @@ export function useLibrarySectionRows({
     equipmentRows,
     displayedCurrentInnateEnergy,
     innateEnergyOverBudget,
+    innateThresholdOverBudget,
   };
 }

@@ -102,7 +102,11 @@ import {
   powerHasDamageCategory,
   withDamageCategory,
 } from '@/lib/library/power-technique-categories';
-import { SHEET_INNATE_NOT_ALLOWED_WARNING } from '@/lib/character/innate-power-capacity';
+import {
+  INNATE_THRESHOLD_WARNING,
+  SHEET_INNATE_NOT_ALLOWED_WARNING,
+  isInnatePowerOverThreshold,
+} from '@/lib/character/innate-power-capacity';
 type RollContext = ReturnType<typeof useRollsOptional>;
 
 export type LibraryEntityRowContext = {
@@ -127,6 +131,7 @@ export type LibraryEntityRowContext = {
   onTogglePowerInnate?: ((id: string | number, isInnate: boolean) => void) | undefined;
   /** False for Pure-Martial (and any path with Innate Energy 0). */
   canMarkPowersInnate?: boolean | undefined;
+  innateThreshold?: number | undefined;
   onSelectPowerVariant?: ((id: string | number, variantId: string) => void) | undefined;
   onUseTechnique?: ((id: string | number, energyCost: number) => void) | undefined;
   onRemoveTechnique?: ((id: string | number) => void) | undefined;
@@ -409,6 +414,8 @@ export function mapPowerRows(
 
     const canMarkInnate = ctx.canMarkPowersInnate !== false;
     const innateNotAllowed = isInnate && !canMarkInnate;
+    const innateOverThreshold =
+      isInnate && canMarkInnate && isInnatePowerOverThreshold(energyCost, ctx.innateThreshold ?? 0);
     const showInnateToggle =
       ctx.showLibraryEditControls && ctx.onTogglePowerInnate && (canMarkInnate || isInnate);
     const innateToggle = showInnateToggle ? (
@@ -450,7 +457,11 @@ export function mapPowerRows(
       badges: needsProfBadge(ctx, { powers: [power] }),
       innate: isInnate,
       hideInnateBadge: isInnate,
-      warningMessage: innateNotAllowed ? SHEET_INNATE_NOT_ALLOWED_WARNING : undefined,
+      warningMessage: innateNotAllowed
+        ? SHEET_INNATE_NOT_ALLOWED_WARNING
+        : innateOverThreshold
+          ? INNATE_THRESHOLD_WARNING
+          : undefined,
       leftSlot: innateToggle,
       rightSlot:
         isInnate && energyCost > 0
