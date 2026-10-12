@@ -126,7 +126,9 @@ function AttackBonusesTable({
           </colgroup>
           <thead>
             <tr className="text-xs text-text-muted">
-              <th className="py-1 text-left"></th>
+              <th className="py-1 text-left">
+                <span className="sr-only">Ability</span>
+              </th>
               <th className="overflow-hidden py-1 text-center whitespace-nowrap">Prof.</th>
               <th className="overflow-hidden py-1 text-center whitespace-nowrap">Unprof.</th>
             </tr>
