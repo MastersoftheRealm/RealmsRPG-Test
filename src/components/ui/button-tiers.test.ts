@@ -28,6 +28,16 @@ describe('ADR-0023 button touch tiers (TASK-841)', () => {
     expect(buttonVariants({ size: 'xl' })).toContain('touch-tier-primary');
   });
 
+  it('keeps a forced-colors border on filled primary and danger (86e3k719e)', () => {
+    for (const variant of ['primary', 'danger'] as const) {
+      const classes = buttonVariants({ variant, size: 'md' });
+      expect(classes).toContain('border-transparent');
+      expect(classes).toMatch(/forced-colors:active/);
+      expect(classes).toContain('ButtonBorder');
+    }
+    expect(buttonVariants({ variant: 'outline', size: 'md' })).not.toContain('ButtonBorder');
+  });
+
   it('maps size sm and variant link to Dense expanded hit', () => {
     expect(buttonVariants({ size: 'sm' })).toContain('hit-area-dense');
     expect(buttonVariants({ size: 'sm' })).not.toContain('touch-tier-standard');
