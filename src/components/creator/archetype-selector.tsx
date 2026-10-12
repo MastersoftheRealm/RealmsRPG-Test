@@ -99,7 +99,7 @@ export function ArchetypeSelector({
                 <span className="text-2xl" aria-hidden="true">
                   {ARCHETYPE_ICONS[type]}
                 </span>
-                <h4 className="font-bold text-primary-fg">{info.title}</h4>
+                <h3 className="font-bold text-primary-fg">{info.title}</h3>
               </div>
               {!compact && (
                 <p className="text-secondary text-xs dark:text-text-secondary">
