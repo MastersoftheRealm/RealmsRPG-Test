@@ -11,6 +11,7 @@ import {
   deriveStructuredDuration,
   finalizePowerEnergy,
   formatEnergyStat,
+  formatTrainingPointStat,
   formatPowerDamage,
 } from './power-calc';
 import { calculateTechniqueCosts } from './technique-calc';
@@ -654,6 +655,7 @@ describe('zero energy is a dash until positive energy is reduced below 1', () =>
   function expectDash(energy: number) {
     expect(energy).toBe(0);
     expect(formatEnergyStat(energy)).toBe('—');
+    expect(formatTrainingPointStat(energy)).toBe('—');
   }
 
   it('shows a dash for no parts, a 0 EN part, quick-only, duration-only, and No Attack only', () => {

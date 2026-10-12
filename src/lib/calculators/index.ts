@@ -50,6 +50,7 @@ export {
   formatPowerDamage,
   finalizePowerEnergy,
   formatEnergyStat,
+  formatTrainingPointStat,
   type DerivePowerDisplayOptions,
   type PowerPartPayload,
   type PowerCostResult,

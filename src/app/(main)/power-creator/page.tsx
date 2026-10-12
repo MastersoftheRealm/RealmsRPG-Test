@@ -35,6 +35,7 @@ import {
 import { LoadingState, TabContentPanel, useTabGroup } from '@/components/ui';
 import {
   formatEnergyStat,
+  formatTrainingPointStat,
   formatPowerCompositionSummary,
   powerCompositionEnergyLines,
   powerCreatorSaveBlockReason,
@@ -467,7 +468,7 @@ function PowerCreatorWorkspace({
             },
             {
               label: 'Training Points',
-              value: composed ? composed.res.tp : ws.costs.totalTP,
+              value: formatTrainingPointStat(composed ? composed.res.tp : ws.costs.totalTP),
               icon: <Target className="h-6 w-6" />,
               color: 'tp',
               help: <PowerCreatorHelp topic="tp" tone="current" />,

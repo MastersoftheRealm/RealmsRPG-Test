@@ -172,6 +172,11 @@ export function formatEnergyStat(energy: number): string | number {
   return energy < 1 ? '—' : energy;
 }
 
+/** Sidebar / column training points. 0 (no TP yet) is a dash. */
+export function formatTrainingPointStat(tp: number): string | number {
+  return tp < 1 ? '—' : tp;
+}
+
 // =============================================================================
 // Core Cost Calculator
 // =============================================================================
