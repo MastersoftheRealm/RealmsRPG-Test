@@ -48,10 +48,13 @@ export type PowerCreatorHelpTopic = keyof typeof POWER_CREATOR_TIPS;
 export function PowerCreatorHelp({
   topic,
   tone,
+  label,
 }: {
   topic: PowerCreatorHelpTopic;
   tone?: InfoTippyTone | undefined;
+  /** Overrides the default accessible name for the (?) control. */
+  label?: string | undefined;
 }) {
   const tip = POWER_CREATOR_TIPS[topic];
-  return <InfoTippy content={tip.content} label={tip.label} tone={tone} />;
+  return <InfoTippy content={tip.content} label={label ?? tip.label} tone={tone} />;
 }
