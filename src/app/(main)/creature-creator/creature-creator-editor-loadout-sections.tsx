@@ -6,6 +6,8 @@
 
 import { useMemo } from 'react';
 import { formatEnergyStat } from '@/lib/calculators';
+import { publishedTechniqueTrainingPoints } from '@/lib/library/published-training-points';
+import { useTechniqueParts } from '@/hooks';
 import { calculateArchetypeProgression } from '@/lib/game/formulas';
 import {
   INNATE_ENERGY_TOTAL_WARNING,
@@ -80,6 +82,7 @@ export function CreatureCreatorEditorLoadoutSections({
   onOpenTechniqueModal,
   onOpenArmamentModal,
 }: LoadoutSectionsProps) {
+  const { data: techniquePartsDb = [] } = useTechniqueParts();
   const innateBudget = useMemo(() => {
     const progression = calculateArchetypeProgression(
       creature.level,
@@ -336,16 +339,10 @@ export function CreatureCreatorEditorLoadoutSections({
               rowChrome={CREATURE_REMOVE_ROW_CHROME}
             />
             <div className="flex flex-col gap-1">
-              {creature.techniques.map(
-                (tech: {
-                  id: string;
-                  name: string;
-                  energy?: number | undefined;
-                  weapon?: string | undefined;
-                  tp?: number | undefined;
-                  image_id?: string | null | undefined;
-                  image_url?: string | null | undefined;
-                }) => (
+              {creature.techniques.map((tech) => {
+                const published = publishedTechniqueTrainingPoints(tech, techniquePartsDb);
+                const trainingPoints = published.priced ? published.tp : (tech.tp ?? '-');
+                return (
                   <GridListRow
                     key={tech.id}
                     id={tech.id}
@@ -358,7 +355,7 @@ export function CreatureCreatorEditorLoadoutSections({
                         align: 'center' as const,
                       },
                       { key: 'Weapon', value: tech.weapon ?? '-', align: 'center' as const },
-                      { key: 'Training Pts', value: tech.tp ?? '-', align: 'center' as const },
+                      { key: 'Training Pts', value: trainingPoints, align: 'center' as const },
                     ]}
                     gridColumns="1.4fr 0.7fr 1fr 0.8fr"
                     rightSlot={
@@ -373,8 +370,8 @@ export function CreatureCreatorEditorLoadoutSections({
                     }
                     compact
                   />
-                ),
-              )}
+                );
+              })}
             </div>
           </div>
         )}

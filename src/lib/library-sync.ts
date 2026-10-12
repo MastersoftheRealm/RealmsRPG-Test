@@ -12,6 +12,12 @@ import {
   resolveCreatureInventoryBuckets,
   type CreatureInventoryBuckets,
 } from '@/lib/game/creature-inventory';
+import {
+  applyPublishedPowerTrainingPoints,
+  applyPublishedTechniqueTrainingPoints,
+  type PowerTrainingSnapshot,
+  type TechniqueTrainingSnapshot,
+} from '@/lib/library/published-training-points';
 
 type PartLike = {
   id?: string | number | undefined;
@@ -515,24 +521,24 @@ type CreatureInventorySavedItem = {
   properties?: SavedProperty[] | undefined;
 };
 
+type CreatureSavedPower = PowerTrainingSnapshot & {
+  id?: string | undefined;
+  name: string;
+  parts?: SavedPart[] | undefined;
+};
+
+type CreatureSavedTechnique = TechniqueTrainingSnapshot & {
+  id?: string | undefined;
+  name: string;
+  parts?: SavedPart[] | undefined;
+};
+
 type CreatureLike = {
   id?: string | undefined;
   docId?: string | undefined;
   name?: string | undefined;
-  powers?:
-    | Array<{
-        id?: string | undefined;
-        name: string;
-        parts?: SavedPart[] | undefined;
-      }>
-    | undefined;
-  techniques?:
-    | Array<{
-        id?: string | undefined;
-        name: string;
-        parts?: SavedPart[] | undefined;
-      }>
-    | undefined;
+  powers?: CreatureSavedPower[] | undefined;
+  techniques?: CreatureSavedTechnique[] | undefined;
   weapons?: CreatureInventorySavedItem[] | undefined;
   armor?: CreatureInventorySavedItem[] | undefined;
   shields?: CreatureInventorySavedItem[] | undefined;
@@ -617,8 +623,8 @@ function creatureInventoryHasPropertyRefs(
 function withCreatureInventoryBuckets(
   creature: CreatureLike,
   buckets: CreatureInventoryBuckets<CreatureInventorySavedItem>,
-  nextPowers: CreatureLike['powers'],
-  nextTechniques: CreatureLike['techniques'],
+  nextPowers: CreatureSavedPower[] | undefined,
+  nextTechniques: CreatureSavedTechnique[] | undefined,
 ): CreatureLike {
   const rest = { ...creature };
   delete rest.armaments;
@@ -643,6 +649,38 @@ function creatureInventoryFingerprint(
   }));
 }
 
+function refreshCreaturePowerTrainingPoints(
+  power: CreatureSavedPower,
+  parts: SavedPart[],
+  partsDb: PartLike[],
+  issues: SyncIssue[],
+): { power: CreatureSavedPower; changed: boolean } {
+  const priced = applyPublishedPowerTrainingPoints({ ...power, parts }, partsDb);
+  if (!priced.changed) return { power: priced.value, changed: false };
+  issues.push({
+    code: 'definitions_changed',
+    itemName: power.name,
+    message: `${power.name} Training Points were recalculated for the current rules.`,
+  });
+  return { power: priced.value, changed: true };
+}
+
+function refreshCreatureTechniqueTrainingPoints(
+  technique: CreatureSavedTechnique,
+  parts: SavedPart[],
+  partsDb: PartLike[],
+  issues: SyncIssue[],
+): { technique: CreatureSavedTechnique; changed: boolean } {
+  const priced = applyPublishedTechniqueTrainingPoints({ ...technique, parts }, partsDb);
+  if (!priced.changed) return { technique: priced.value, changed: false };
+  issues.push({
+    code: 'definitions_changed',
+    itemName: technique.name,
+    message: `${technique.name} Training Points were recalculated for the current rules.`,
+  });
+  return { technique: priced.value, changed: true };
+}
+
 export function getCreatureSyncResult(
   creature: CreatureLike,
   powerPartsDb: PartLike[],
@@ -660,7 +698,9 @@ export function getCreatureSyncResult(
     );
     if (r.hasDrift) issues.push(...r.issues);
     if (r.changed) changed = true;
-    return { ...p, parts: r.value };
+    const priced = refreshCreaturePowerTrainingPoints(p, r.value, powerPartsDb, issues);
+    if (priced.changed) changed = true;
+    return priced.power;
   });
 
   const nextTechniques = (creature.techniques ?? []).map((t) => {
@@ -671,7 +711,9 @@ export function getCreatureSyncResult(
     );
     if (r.hasDrift) issues.push(...r.issues);
     if (r.changed) changed = true;
-    return { ...t, parts: r.value };
+    const priced = refreshCreatureTechniqueTrainingPoints(t, r.value, techniquePartsDb, issues);
+    if (priced.changed) changed = true;
+    return priced.technique;
   });
 
   const inventory = syncCreatureInventory(creature, itemPropertiesDb);
@@ -743,7 +785,9 @@ export function sanitizeCreatureForSync(
     );
     if (r.hasDrift) issues.push(...r.issues);
     if (r.changed) changed = true;
-    return { ...p, parts: r.value };
+    const priced = refreshCreaturePowerTrainingPoints(p, r.value, powerPartsDb, issues);
+    if (priced.changed) changed = true;
+    return priced.power;
   });
 
   const nextTechniques = (creature.techniques ?? []).map((t) => {
@@ -755,7 +799,9 @@ export function sanitizeCreatureForSync(
     );
     if (r.hasDrift) issues.push(...r.issues);
     if (r.changed) changed = true;
-    return { ...t, parts: r.value };
+    const priced = refreshCreatureTechniqueTrainingPoints(t, r.value, techniquePartsDb, issues);
+    if (priced.changed) changed = true;
+    return priced.technique;
   });
 
   const inventory = syncCreatureInventory(creature, itemPropertiesDb, { dropMissingRefs: true });

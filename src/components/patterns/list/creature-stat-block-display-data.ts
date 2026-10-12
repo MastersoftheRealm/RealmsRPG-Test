@@ -161,7 +161,17 @@ export function buildPowersForDisplay(
         enriched?.image_url ?? (ref as { image_url?: string | null | undefined }).image_url,
     };
     const hasObjectParts = parts.some((part) => typeof part !== 'string');
-    const canRecompute = !!enriched || hasObjectParts || !!ref.composition;
+    const hasCreatorMechanics = !!(
+      ref.actionType ||
+      ref.rangeValue ||
+      ref.areaValue ||
+      ref.durationValue ||
+      ref.damageValue ||
+      structuredMechanic(ref.range) ||
+      structuredMechanic(ref.area) ||
+      structuredMechanic(ref.duration)
+    );
+    const canRecompute = !!enriched || hasObjectParts || !!ref.composition || hasCreatorMechanics;
 
     if (!canRecompute) {
       return {
@@ -222,9 +232,7 @@ export function buildPowersForDisplay(
       ),
     );
     const categoryText = formatPartCategoriesColumn(categories);
-    const tp = composition
-      ? derived.tp
-      : partsChips.reduce((sum, chip) => sum + (chip.cost ?? 0), 0);
+    const tp = derived.tp;
     const variantsSection = powerVariantsDetailSection(composition);
     const detailSections = glrSurfaceDetailSections(
       'creature-stat-block-power',
