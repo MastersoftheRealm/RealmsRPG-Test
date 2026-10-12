@@ -205,7 +205,7 @@ export function useSheetSkillIdentityActions({
 
   const handleEditSpeciesSave = useCallback(
     (updates: { ancestry: Character['ancestry']; skills: CharacterSkillRow[] }) => {
-      if (!character) return;
+      if (!character || !updates.ancestry) return;
       let ancestry = updates.ancestry;
       if (ancestry?.mixed === true && Array.isArray(ancestry.selectedSpeciesTraits)) {
         const st = ancestry.selectedSpeciesTraits;

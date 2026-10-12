@@ -61,18 +61,19 @@ function traitCustomizationKey(
   return byName?.id ?? traitNameOrId;
 }
 
+export type PruneTraitSheetStateCharacterInput = Pick<
+  Character,
+  | 'traitUses'
+  | 'traitCustomizations'
+  | 'ancestryTraits'
+  | 'flawTrait'
+  | 'characteristicTrait'
+  | 'speciesTraits'
+  | 'species'
+>;
+
 export function pruneTraitSheetStateAfterAncestryChange(
-  character: Pick<
-    Character,
-    | 'traitUses'
-    | 'traitCustomizations'
-    | 'traits'
-    | 'ancestryTraits'
-    | 'flawTrait'
-    | 'characteristicTrait'
-    | 'speciesTraits'
-    | 'species'
-  >,
+  character: PruneTraitSheetStateCharacterInput,
   newAncestry: CharacterAncestry,
   allSpecies: Species[],
   traitsDb: Trait[],
@@ -93,7 +94,6 @@ export function pruneTraitSheetStateAfterAncestryChange(
       characteristicTrait: character.characteristicTrait,
       speciesTraits: character.speciesTraits,
     },
-    legacyTraits: character.traits,
   });
 
   const activeNameKeys = new Set(
