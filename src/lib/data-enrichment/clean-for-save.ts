@@ -1,4 +1,5 @@
 import type { Character } from '@/types';
+import type { CoreRulesMap } from '@/types/core-rules';
 import { normalizeAgeAppearanceForSave } from '@/lib/character/appearance-age';
 import { computeMaxHealthEnergy } from '@/lib/game/calculations';
 import { dedupeByNormalizedId, dedupeEntityRefs } from '@/lib/game/dedupe-saved-parts';
@@ -120,7 +121,10 @@ function removeUndefinedValues<T>(obj: T): T {
  * Only keeps the minimal data needed - everything else is calculated on load.
  * Mirrors the vanilla site's cleanForSave() function.
  */
-export function cleanForSave(data: Character): Partial<Character> {
+export function cleanForSave(
+  data: Character,
+  rules?: Partial<CoreRulesMap> | undefined,
+): Partial<Character> {
   const cleaned: Record<string, unknown> = {};
 
   // Only copy saveable fields
@@ -160,8 +164,10 @@ export function cleanForSave(data: Character): Partial<Character> {
     | undefined;
   const healthCurrent = (cleaned.currentHealth as number) ?? dataHealth?.current;
   const energyCurrent = (cleaned.currentEnergy as number) ?? dataEnergy?.current;
-  const { maxHealth: computedMaxHealth, maxEnergy: computedMaxEnergy } =
-    computeMaxHealthEnergy(data);
+  const { maxHealth: computedMaxHealth, maxEnergy: computedMaxEnergy } = computeMaxHealthEnergy(
+    data,
+    rules,
+  );
   if (typeof healthCurrent === 'number') {
     cleaned.health = {
       current: healthCurrent,

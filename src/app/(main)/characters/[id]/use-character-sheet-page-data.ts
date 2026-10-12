@@ -102,7 +102,7 @@ export function useCharacterSheetPageData(id: string) {
     if (character?.id === id) {
       if (savedSnapshotIdRef.current === id) return;
       savedSnapshotIdRef.current = id;
-      savedCleanRef.current = cleanForSave(character) as Record<string, unknown>;
+      savedCleanRef.current = cleanForSave(character, rules) as Record<string, unknown>;
       rememberCharacterLockToken(id, character.updatedAt);
       return;
     }
@@ -110,7 +110,7 @@ export function useCharacterSheetPageData(id: string) {
       savedSnapshotIdRef.current = null;
       savedCleanRef.current = null;
     }
-  }, [character, id]);
+  }, [character, id, rules]);
 
   const { data: userPowers = [] } = useUserPowers({ enabled: loadCatalog });
   const { data: userTechniques = [] } = useUserTechniques({ enabled: loadCatalog });
@@ -318,7 +318,7 @@ export function useCharacterSheetPageData(id: string) {
     data: character,
     onSave: async (data) => {
       if (!data) return;
-      const rawCleaned = cleanForSave(data) as Record<string, unknown>;
+      const rawCleaned = cleanForSave(data, rules) as Record<string, unknown>;
       const prepared = characterSaveWithoutOverlongName(rawCleaned, savedCleanRef.current);
       if (prepared.rejected) {
         showToast(CHARACTER_NAME_TOO_LONG_MESSAGE, 'error');
@@ -339,7 +339,7 @@ export function useCharacterSheetPageData(id: string) {
       const result = await saveCharacterWithConflictRetry(id, dirty as Partial<Character>, {
         updatedAt: characterLockToken(data.updatedAt),
         mergeOnConflict: (remote) => {
-          const remoteClean = cleanForSave(remote) as Record<string, unknown>;
+          const remoteClean = cleanForSave(remote, rules) as Record<string, unknown>;
           const localClean = withDirtyClears(cleaned, dirty);
           const mergedClean = mergeRemotePreservingDirty(
             remoteClean,
