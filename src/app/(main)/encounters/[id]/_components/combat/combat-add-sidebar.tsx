@@ -88,7 +88,7 @@ export function CombatAddSidebar({
             onChange={(e) => setNewCombatant((prev) => ({ ...prev, name: e.target.value }))}
             placeholder="Creature name..."
           />
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid min-w-0 grid-cols-2 gap-3">
             <Input
               label="Roll"
               type="number"
@@ -114,7 +114,7 @@ export function CombatAddSidebar({
               placeholder="Acuity"
             />
           </div>
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid min-w-0 grid-cols-2 gap-3">
             <Input
               label="Max HP"
               type="number"
