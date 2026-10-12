@@ -7,6 +7,10 @@ const encounterConstants = readFileSync(
   'utf8',
 );
 const combatView = readFileSync(new URL('./CombatEncounterView.tsx', import.meta.url), 'utf8');
+const combatLayout = readFileSync(
+  new URL('./combat/combat-encounter-layout.ts', import.meta.url),
+  'utf8',
+);
 const skillView = readFileSync(new URL('./SkillEncounterView.tsx', import.meta.url), 'utf8');
 const combatList = readFileSync(
   new URL('./combat/combat-combatant-list.tsx', import.meta.url),
@@ -45,8 +49,9 @@ describe('encounter tracker Roll Log dock clearance (86e3k915w)', () => {
 
   it('lets the gutter move Energy controls instead of painting through the padding', () => {
     expect(compactResources.length).toBeGreaterThan(0);
-    expect(combatView).toMatch(/grid min-w-0 grid-cols-1 gap-6 lg:grid-cols-4/);
-    expect(combatView).toMatch(/flex min-h-0 min-w-0 flex-col gap-4 lg:col-span-3/);
+    expect(combatView).toContain('COMBAT_ENCOUNTER_LAYOUT_CLASS');
+    expect(combatLayout).toMatch(/grid min-w-0 grid-cols-1 gap-6/);
+    expect(combatView).toMatch(/flex min-h-0 min-w-0 flex-col gap-4/);
     expect(combatList).toMatch(/min-h-\[300px\] min-w-0 flex-1/);
     expect(combatSidebar).toMatch(/flex min-h-0 min-w-0 flex-col space-y-6/);
     expect(compactResources).toContain('mb-2 grid min-w-0 grid-cols-1 gap-3 sm:grid-cols-2');
