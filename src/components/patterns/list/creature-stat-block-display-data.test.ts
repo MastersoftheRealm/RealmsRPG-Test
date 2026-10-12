@@ -137,6 +137,34 @@ describe('buildPowersForDisplay energy', () => {
     expect(unmatched?.duration).not.toBe('Instant');
   });
 
+  it('shows live Codex Training Points for a matched official power, not a stale snapshot', () => {
+    const partsDb = loadRepoCodexParts();
+    const official = {
+      id: 'ice-bolt',
+      docId: 'ice-bolt',
+      name: 'Ice Bolt',
+      description: '',
+      parts: [],
+      range: { steps: 2 },
+      damage: [{ amount: 1, size: 6, type: 'ice' }],
+      actionType: 'basic',
+    } satisfies LibraryPower;
+    const live = derivePowerDisplay(libraryItemToPowerDocument(official), partsDb).tp;
+    expect(live).toBeGreaterThan(1);
+
+    const creature = {
+      id: 'c-stale',
+      name: 'Caster',
+      powers: [{ id: 'ice-bolt', name: 'Ice Bolt' }],
+    } satisfies CreatureData;
+    const row = buildPowersForDisplay(creature, [], [official], partsDb)[0];
+    const chipNames = (row?.detailSections ?? []).flatMap((section) =>
+      section.chips.map((chip) => chip.name),
+    );
+    expect(chipNames).toContain(`Training Points ${live}`);
+    expect(chipNames).not.toContain('Training Points 1');
+  });
+
   it('shows a legacy partless snapshot’s saved energy, action, and duration', () => {
     const creature = {
       id: 'c4',
