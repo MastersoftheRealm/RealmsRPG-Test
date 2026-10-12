@@ -25,11 +25,14 @@ export const GUIDED_CHOICE_CARD_PRESETS: Record<
     bodyMinHeight: 'min-h-[6.5rem]',
     bodyClamp: 'line-clamp-5',
   },
-  /** Paths — medium copy; 4-line preview (~160 chars). */
+  /**
+   * Paths — medium copy; no line-clamp (WCAG 1.4.12 text spacing must not clip).
+   * Collapsed preview height comes from bodyMinHeight + optional See more when overflow.
+   */
   path: {
     cardCollapsed: 'min-h-[11rem] sm:min-h-[10.5rem]',
     bodyMinHeight: 'min-h-[5.25rem]',
-    bodyClamp: 'line-clamp-4',
+    bodyClamp: '',
   },
   /** Feats, traits, loadouts — short copy; 3-line preview (~120 chars). */
   compact: {
