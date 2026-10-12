@@ -408,9 +408,19 @@ export function useCreatureCreatorWorkspace() {
     }));
   }, []);
 
+  const proficiencyCtx = useMemo(
+    () => ({
+      powerPartsDb,
+      techniquePartsDb,
+      itemPropertiesDb,
+    }),
+    [powerPartsDb, techniquePartsDb, itemPropertiesDb],
+  );
+
   const stats = useMemo(
-    () => calculateCreatureCreatorStats(creature, featPointsMap, subSkillNames, rules),
-    [creature, featPointsMap, subSkillNames, rules],
+    () =>
+      calculateCreatureCreatorStats(creature, featPointsMap, subSkillNames, rules, proficiencyCtx),
+    [creature, featPointsMap, subSkillNames, rules, proficiencyCtx],
   );
 
   const isOverBudget = useMemo(() => isCreatureOverBudget(stats), [stats]);

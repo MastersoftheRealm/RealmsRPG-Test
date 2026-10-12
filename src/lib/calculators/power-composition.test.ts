@@ -575,11 +575,11 @@ describe('resolvePowerComposition', () => {
     expect(powerCompositionEnergyLines(resolved).some((line) => line.includes('refund'))).toBe(
       false,
     );
-    expect(resolved.tp).toBe(10);
+    expect(resolved.tp).toBe(11);
     expect(resolved.tpSources).toEqual([
       '2 TP: Restrained',
       '3 TP: Elemental Damage (ice) (Opt1 2)',
-      '1 TP: Power Range (Opt1 1)',
+      '2 TP: Power Range (Opt1 2)',
       '4 TP: Slow (Opt1 2)',
     ]);
     expect(resolved.energy).toBe(
@@ -1257,9 +1257,9 @@ describe('resolvePowerComposition', () => {
     }
     expect(new Set(bolt.variants.map((v) => v.energy))).toEqual(new Set([bolt.energy]));
     expect(bolt.energy).toBe(6);
-    expect(bolt.tp).toBe(11);
+    expect(bolt.tp).toBe(12);
     expect(bolt.tpSources.filter((s) => s.includes('Power Range'))).toEqual([
-      '2 TP: Power Range (Opt1 3)',
+      '3 TP: Power Range (Opt1 4)',
     ]);
     expect(bolt.tpSources.filter((s) => s.includes('Elemental Damage'))).toHaveLength(3);
     expect(bolt.energy).toBe(
@@ -1656,8 +1656,8 @@ describe('resolvePowerComposition', () => {
     expect(res.energy).toBe(necrotic.energy);
     expect(res.tp).toBe(6);
     expect(res.tpSources).toEqual([
-      '3 TP: Light Damage (light) (Opt1 1)',
-      '3 TP: Poison or Necrotic Damage (necrotic) (Opt1 1)',
+      '3 TP: Light Damage (light) (Opt1 2)',
+      '3 TP: Poison or Necrotic Damage (necrotic) (Opt1 2)',
     ]);
   });
 
@@ -1893,8 +1893,8 @@ describe('resolvePowerComposition', () => {
       db,
     )!;
     const elemental = repeated.tpSources.filter((s) => s.includes('Elemental Damage'));
-    expect(elemental).toContain('4 TP: Elemental Damage (fire) (Opt1 3)');
-    expect(elemental).toContain('4 TP: Elemental Damage (ice) (Opt1 3)');
+    expect(elemental).toContain('4 TP: Elemental Damage (fire) (Opt1 4)');
+    expect(elemental).toContain('4 TP: Elemental Damage (ice) (Opt1 4)');
     expect(elemental).toHaveLength(2);
     expect(repeated.tp).toBe(8);
   });

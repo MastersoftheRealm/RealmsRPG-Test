@@ -135,6 +135,20 @@ describe('enrichPowers → buildRequiredProficiencies (composed powers, TASK-934
     }
   });
 
+  it('registers Range and damage for a plain official power', () => {
+    const bolt = {
+      id: 'bolt',
+      name: 'Bolt',
+      parts: [],
+      actionType: 'basic',
+      range: { steps: 1 },
+      damage: [{ amount: 1, size: 6, type: 'fire' }],
+    } as unknown as UserPower;
+    const required = requiredFor(bolt);
+    expect(required.map((prof) => prof.name).sort()).toEqual(['Elemental Damage', 'Power Range']);
+    expect(required.find((prof) => prof.name === 'Elemental Damage')?.damageType).toBe('fire');
+  });
+
   it("the row's damage still follows the Choice pick", () => {
     const [enriched] = enrichPowers(
       [{ id: 'burst', name: 'Elemental Burst', selectedVariantId: 'ice' } as CharacterPower],

@@ -8,7 +8,11 @@ import type {
 } from '@/hooks/add-library-item/types';
 import type { PowerPart } from '@/hooks/codex-types';
 import type { CharacterPower, CharacterTechnique, Item } from '@/types';
-import { composedPowerProficiencyParts, resolvePowerComposition } from '@/lib/calculators';
+import {
+  composedPowerProficiencyParts,
+  plainPowerProficiencyParts,
+  resolvePowerComposition,
+} from '@/lib/calculators';
 import { persistEquipmentCost } from '@/lib/codex/equipment-list';
 import { libraryItemToPowerDocument } from '@/lib/library-selectable-builders';
 
@@ -110,15 +114,12 @@ export function mapSelectedToCharacterItems(
         };
       }
       const power = entry as UserPower;
-      const composition = power.composition
-        ? resolvePowerComposition(
-            libraryItemToPowerDocument(power),
-            (dbs?.powerPartsDb ?? []) as PowerPart[],
-          )
-        : null;
+      const doc = libraryItemToPowerDocument(power);
+      const partsDb = (dbs?.powerPartsDb ?? []) as PowerPart[];
+      const composition = power.composition ? resolvePowerComposition(doc, partsDb) : null;
       const savedParts: SavedPartLike[] = composition
-        ? composedPowerProficiencyParts(composition, (dbs?.powerPartsDb ?? []) as PowerPart[])
-        : power.parts || [];
+        ? composedPowerProficiencyParts(composition, partsDb)
+        : plainPowerProficiencyParts(doc, partsDb);
       return {
         id: power.id,
         name: power.name,

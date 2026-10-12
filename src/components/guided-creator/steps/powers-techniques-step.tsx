@@ -18,6 +18,7 @@ import {
   usePowerParts,
   useTechniqueParts,
   useGuidedEquipmentCatalog,
+  useItemProperties,
   useUserPowers,
   useUserTechniques,
   useGameRules,
@@ -50,7 +51,10 @@ import {
   buildLookup,
   resolveLibraryItem,
 } from '@/lib/guided-creator/powers-techniques-step-helpers';
-import { combineGuidedTpBudgets } from '@/lib/guided-creator/loadout-tp';
+import type { SelectableItem } from '@/components/patterns/select/unified-selection-modal';
+import type { GuidedDraft } from '@/stores/guided-creator-store';
+import { computeGuidedRequiredTrainingSpent } from '@/lib/guided-creator/build-character';
+import { selectedIdsFromL2Items } from '@/lib/guided-creator/powers-techniques-l2';
 import {
   calculateGuidedL1TheoreticalMaxEnergy,
   GUIDED_L2_ENERGY_FALLBACK_MAX,
@@ -136,6 +140,7 @@ export function PowersTechniquesStep() {
   const { tpSummary: loadoutTp } = useGuidedEquipmentCatalog(draft, officialItems, codexEquipment);
   const { data: powerPartsDb = [] } = usePowerParts();
   const { data: techniquePartsDb = [] } = useTechniqueParts();
+  const { data: itemPropertiesDb = [] } = useItemProperties();
 
   const isLoading =
     (needsPowers && (powersLoading || userPowersLoading)) ||
@@ -330,11 +335,39 @@ export function PowersTechniquesStep() {
   const regularTpSpent = isTechniques ? techniqueTpSpent : powerTpSpent;
   const siblingTpSpent = isTechniques ? powerTpSpent + innateTpSpent : techniqueTpSpent;
 
-  const combatTpSpent = powerTpSpent + techniqueTpSpent + innateTpSpent;
+  const guidedProfCtx = useMemo(
+    () => ({
+      officialPowers: powerLibraryItems,
+      officialTechniques: techniqueLibraryItems,
+      officialItems,
+      codexEquipment,
+      powerPartsDb,
+      techniquePartsDb,
+      itemPropertiesDb,
+    }),
+    [
+      powerLibraryItems,
+      techniqueLibraryItems,
+      officialItems,
+      codexEquipment,
+      powerPartsDb,
+      techniquePartsDb,
+      itemPropertiesDb,
+    ],
+  );
+
+  const dedupedTrainingSpent = useMemo(
+    () => computeGuidedRequiredTrainingSpent(draft, guidedProfCtx),
+    [draft, guidedProfCtx],
+  );
 
   const tpBudget = useMemo(
-    () => combineGuidedTpBudgets(loadoutTp, combatTpSpent),
-    [loadoutTp, combatTpSpent],
+    () => ({
+      spent: dedupedTrainingSpent,
+      limit: loadoutTp.limit,
+      remaining: loadoutTp.limit - dedupedTrainingSpent,
+    }),
+    [dedupedTrainingSpent, loadoutTp.limit],
   );
 
   const innateEnergySpent = useMemo(
@@ -530,6 +563,20 @@ export function PowersTechniquesStep() {
       : isTechniques
         ? powerTpSpent + innateTpSpent
         : innateTpSpent + techniqueTpSpent);
+
+  const resolveL2TotalTpSpent = useCallback(
+    (selected: SelectableItem[]) => {
+      const ids = selectedIdsFromL2Items(selected);
+      const patch: Partial<GuidedDraft> =
+        l2Modal === 'innate'
+          ? { innatePowerIds: ids }
+          : isTechniques
+            ? { techniqueIds: ids }
+            : { powerIds: ids };
+      return computeGuidedRequiredTrainingSpent({ ...draft, ...patch }, guidedProfCtx);
+    },
+    [draft, guidedProfCtx, isTechniques, l2Modal],
+  );
 
   const onL2Confirm = useCallback(
     (ids: string[]) => {
@@ -733,6 +780,7 @@ export function PowersTechniquesStep() {
           techniquePartsDb={techniquePartsDb}
           initialSelectedIds={l2Modal === 'innate' ? selectedInnateIds : selectedIds}
           loadoutTpSpent={l2BaseTpSpent}
+          resolveTotalTpSpent={resolveL2TotalTpSpent}
           tpLimit={loadoutTp.limit}
           archetypeAbility={archetypeAbility}
           abilities={draft.abilities}

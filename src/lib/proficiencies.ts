@@ -19,7 +19,7 @@ interface CodexPropertyLike {
   op_1_tp?: number | undefined;
 }
 
-interface BuildRequiredProficienciesInput {
+export interface BuildRequiredProficienciesInput {
   powers: CharacterPower[];
   techniques: CharacterTechnique[];
   weapons: Item[];
@@ -46,16 +46,45 @@ export function getTrainingPointLimit(
   return calculateTrainingPoints(lvl, abil, rules);
 }
 
+/** Whole-number Training Points. A value already on an integer stays there. */
+export function roundUpTrainingPoints(value: number): number {
+  if (!Number.isFinite(value)) return 0;
+  const nearest = Math.round(value);
+  if (Math.abs(value - nearest) < 1e-6) return nearest;
+  return Math.ceil(value);
+}
+
 /**
- * One proficiency instance. Round up once after adding the base and every
- * option. Range 3 (base only) is 1 TP. Callers add these integers.
+ * Lowest option level at or above `usedLevel` whose `rate * level` is a whole
+ * number. Level 0 is unused and stays 0. A zero rate stays at the used level.
+ * 0.5 per level used at 3 → 4. 0.25 per level used at 3 → 4.
+ */
+export function optionLevelForWholeTrainingPoints(rate: number, usedLevel: number): number {
+  if (!Number.isFinite(usedLevel)) return 0;
+  const used = Math.max(0, Math.trunc(usedLevel));
+  if (used === 0) return 0;
+  if (!Number.isFinite(rate) || rate === 0) return used;
+  const limit = used + 10000;
+  for (let level = used; level <= limit; level += 1) {
+    const tp = rate * level;
+    if (Number.isFinite(tp) && Math.abs(tp - Math.round(tp)) < 1e-6) return level;
+  }
+  return used;
+}
+
+/**
+ * One proficiency row. Each option is priced at the whole-number level, then
+ * the base is included once and the sum is rounded up (Power Range base 0.5).
  */
 export function calculateProficiencyTP(prof: CharacterProficiency): number {
   const base = prof.baseTP ?? 0;
-  const op1 = (prof.op1TP ?? 0) * (prof.op1Level ?? 0);
-  const op2 = (prof.op2TP ?? 0) * (prof.op2Level ?? 0);
-  const op3 = (prof.op3TP ?? 0) * (prof.op3Level ?? 0);
-  return Math.ceil(base + op1 + op2 + op3);
+  const op1Rate = prof.op1TP ?? 0;
+  const op2Rate = prof.op2TP ?? 0;
+  const op3Rate = prof.op3TP ?? 0;
+  const op1 = op1Rate * optionLevelForWholeTrainingPoints(op1Rate, prof.op1Level ?? 0);
+  const op2 = op2Rate * optionLevelForWholeTrainingPoints(op2Rate, prof.op2Level ?? 0);
+  const op3 = op3Rate * optionLevelForWholeTrainingPoints(op3Rate, prof.op3Level ?? 0);
+  return roundUpTrainingPoints(base + op1 + op2 + op3);
 }
 
 function normalize(s: unknown): string {
@@ -277,7 +306,81 @@ export function buildRequiredProficiencies(
     });
   });
 
-  return dedupeHighestProficiencies(out);
+  return aggregateCharacterWideProficiencies(out);
+}
+
+function partIdentityKey(prof: CharacterProficiency): string {
+  const damage = normalizeDamageType(prof.damageType) ?? '';
+  const id = partRefId(prof) || normalize(prof.name);
+  return `${prof.kind}:${id}:${damage}`;
+}
+
+function firstNonZeroRate(values: number[]): number {
+  for (const value of values) {
+    if (value !== 0 && Number.isFinite(value)) return value;
+  }
+  return 0;
+}
+
+function highestOptionLevel(
+  rows: CharacterProficiency[],
+  read: (row: CharacterProficiency) => number | undefined,
+): number {
+  return rows.reduce((max, row) => Math.max(max, read(row) ?? 0), 0);
+}
+
+/**
+ * Same part across powers: base once, each option at its highest used level,
+ * then that level rounded up until the option's Training Points are whole.
+ */
+function mergeSamePartUses(rows: CharacterProficiency[]): CharacterProficiency {
+  const baseTP = firstNonZeroRate(rows.map((row) => row.baseTP ?? 0));
+  const op1TP = firstNonZeroRate(rows.map((row) => row.op1TP ?? 0));
+  const op2TP = firstNonZeroRate(rows.map((row) => row.op2TP ?? 0));
+  const op3TP = firstNonZeroRate(rows.map((row) => row.op3TP ?? 0));
+  const first = rows[0]!;
+  return {
+    ...first,
+    id: nextProfId(),
+    baseTP,
+    op1TP,
+    op2TP,
+    op3TP,
+    op1Level: optionLevelForWholeTrainingPoints(
+      op1TP,
+      highestOptionLevel(rows, (row) => row.op1Level),
+    ),
+    op2Level: optionLevelForWholeTrainingPoints(
+      op2TP,
+      highestOptionLevel(rows, (row) => row.op2Level),
+    ),
+    op3Level: optionLevelForWholeTrainingPoints(
+      op3TP,
+      highestOptionLevel(rows, (row) => row.op3Level),
+    ),
+  };
+}
+
+function aggregateCharacterWideProficiencies(list: CharacterProficiency[]): CharacterProficiency[] {
+  const groups = new Map<string, CharacterProficiency[]>();
+  for (const prof of list) {
+    const key = partIdentityKey(prof);
+    const group = groups.get(key);
+    if (group) group.push(prof);
+    else groups.set(key, [prof]);
+  }
+  const merged = Array.from(groups.values(), (rows) => mergeSamePartUses(rows));
+  return dedupeHighestProficiencies(merged);
+}
+
+/** Character-level TP after repeated-part dedupe (sheet + guided save). */
+export function sumRequiredProficiencyTrainingPoints(
+  input: BuildRequiredProficienciesInput,
+): number {
+  return buildRequiredProficiencies(input).reduce(
+    (sum, prof) => sum + calculateProficiencyTP(prof),
+    0,
+  );
 }
 
 export function dedupeHighestProficiencies(list: CharacterProficiency[]): CharacterProficiency[] {

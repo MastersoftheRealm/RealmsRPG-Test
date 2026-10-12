@@ -58,6 +58,8 @@ export interface GuidedPowersTechniquesL2ModalProps {
    * (loadout + the other powers track: innate vs regular).
    */
   loadoutTpSpent: number;
+  /** When set, replaces per-row TP sum (character-level dedupe). */
+  resolveTotalTpSpent?: ((selected: SelectableItem[]) => number) | undefined;
   tpLimit: number;
   archetypeAbility?: AbilityName | string | null | undefined;
   abilities?: Partial<Abilities> | null | undefined;
@@ -119,6 +121,7 @@ export function GuidedPowersTechniquesL2Modal({
   techniquePartsDb,
   initialSelectedIds,
   loadoutTpSpent,
+  resolveTotalTpSpent,
   tpLimit,
   archetypeAbility,
   abilities,
@@ -190,9 +193,15 @@ export function GuidedPowersTechniquesL2Modal({
   // Innate: no header help (budget lives in footer). USM closes after onConfirm — do not double-close.
   const description = mode === 'innate' ? undefined : l2Copy.description(kind);
 
+  const totalTpSpent = useCallback(
+    (selected: SelectableItem[]) =>
+      resolveTotalTpSpent?.(selected) ?? computeL2PowersTechniquesTpSpent(selected, loadoutTpSpent),
+    [loadoutTpSpent, resolveTotalTpSpent],
+  );
+
   const handleConfirm = useCallback(
     (selected: SelectableItem[]) => {
-      const tpSpent = computeL2PowersTechniquesTpSpent(selected, loadoutTpSpent);
+      const tpSpent = totalTpSpent(selected);
       if (tpSpent > tpLimit) {
         setError(ptCopy.tpBlocked);
         return;
@@ -200,7 +209,7 @@ export function GuidedPowersTechniquesL2Modal({
       setError(null);
       onConfirm(selectedIdsFromL2Items(selected));
     },
-    [loadoutTpSpent, tpLimit, onConfirm],
+    [totalTpSpent, tpLimit, onConfirm],
   );
 
   const nextInnateSelectedIds = useCallback(
@@ -227,7 +236,7 @@ export function GuidedPowersTechniquesL2Modal({
 
   const footerExtra = useCallback(
     (selected: SelectableItem[]) => {
-      const tpSpent = computeL2PowersTechniquesTpSpent(selected, loadoutTpSpent);
+      const tpSpent = totalTpSpent(selected);
       const errorEl = error ? (
         <p className="text-center font-nunito text-sm text-warning-fg" role="alert">
           {error}
@@ -254,17 +263,17 @@ export function GuidedPowersTechniquesL2Modal({
         </LoadoutBudgetBar>
       );
     },
-    [mode, innateEnergyMax, loadoutTpSpent, tpLimit, error],
+    [mode, innateEnergyMax, totalTpSpent, tpLimit, error],
   );
 
   const confirmDisabled = useCallback(
     (selected: SelectableItem[]) => {
-      if (computeL2PowersTechniquesTpSpent(selected, loadoutTpSpent) > tpLimit) {
+      if (totalTpSpent(selected) > tpLimit) {
         return true;
       }
       return false;
     },
-    [loadoutTpSpent, tpLimit],
+    [totalTpSpent, tpLimit],
   );
 
   return (

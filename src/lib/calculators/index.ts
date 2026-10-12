@@ -81,6 +81,7 @@ export {
   powerCompositionEnergyLines,
   composedPowerSavedParts,
   composedPowerProficiencyParts,
+  plainPowerProficiencyParts,
   formatPowerCompositionSummary,
   formatEnergyIntermediate,
   reverseActionDivisorNote,

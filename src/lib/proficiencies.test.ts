@@ -63,8 +63,8 @@ describe('hasSufficientProficiency', () => {
       op1TP: 0.1,
       op1Level: level,
     });
-    expect(calculateProficiencyTP(row(1))).toBe(1);
-    expect(calculateProficiencyTP(row(2))).toBe(1);
+    expect(calculateProficiencyTP(row(1))).toBe(2);
+    expect(calculateProficiencyTP(row(2))).toBe(2);
     expect(hasSufficientProficiency([row(1)], row(2))).toBe(false);
     expect(hasSufficientProficiency([row(2)], row(1))).toBe(true);
   });
