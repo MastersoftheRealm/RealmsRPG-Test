@@ -30,5 +30,8 @@ export function snapshotPowerCreatorForInnate(
   powerData: PowerDocument,
   powerParts: PowerPart[],
 ): InnatePowerSnapshot {
-  return snapshotOfficialPowerForInnate({ id: 'draft', ...powerData }, powerParts);
+  return snapshotOfficialPowerForInnate(
+    { id: 'draft', ...powerData } as Parameters<typeof snapshotOfficialPowerForInnate>[0],
+    powerParts,
+  );
 }
