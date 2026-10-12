@@ -136,7 +136,7 @@ describe('getSheetFeatRequirementWarning (86e3jv9gz)', () => {
     expect(warning).toMatch(/Might 1/i);
   });
 
-  it('suppresses the flag when only temp modifiers cause failure', () => {
+  it('warns when a temp bonus covers a real miss', () => {
     const real = {
       level: 5,
       abilities: { ...DEFAULT_ABILITIES },
@@ -153,6 +153,27 @@ describe('getSheetFeatRequirementWarning (86e3jv9gz)', () => {
     };
     expect(checkFeatRequirements(feat, real, [], []).met).toBe(false);
     expect(checkFeatRequirements(feat, effective, [], []).met).toBe(true);
+    const warning = getSheetFeatRequirementWarning(feat, real, [], [], effective);
+    expect(warning).toMatch(/Might 2/i);
+  });
+
+  it('withholds the flag when a temp dip is the sole cause of failure', () => {
+    const real = {
+      level: 5,
+      abilities: { ...DEFAULT_ABILITIES },
+      defenseVals: { might: 2 },
+    };
+    const effective = applyTempModifiersForFeatRequirements(real, {
+      defenses: { might: -1 },
+    });
+    const feat = {
+      id: 'gated',
+      name: 'Needs Might',
+      ability_req: ['might'],
+      abil_req_val: [2],
+    };
+    expect(checkFeatRequirements(feat, real, [], []).met).toBe(true);
+    expect(checkFeatRequirements(feat, effective, [], []).met).toBe(false);
     expect(getSheetFeatRequirementWarning(feat, real, [], [], effective)).toBeUndefined();
   });
 });

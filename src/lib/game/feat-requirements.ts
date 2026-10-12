@@ -366,12 +366,15 @@ export function getSheetFeatRequirementWarning(
   effectiveCharacter?: CharacterForFeatRequirement,
 ): string | undefined {
   const base = checkFeatRequirements(feat, realCharacter, skillsDb, allFeats);
-  if (base.met) return undefined;
+  // Real values fail: flag even when a temp bonus makes the adjusted check pass.
+  if (!base.met) return base.reason;
+  // Real values pass. Withhold the flag when a temp modifier is the sole cause
+  // of failure (the temp-adjusted check fails).
   if (effectiveCharacter) {
     const effective = checkFeatRequirements(feat, effectiveCharacter, skillsDb, allFeats);
-    if (effective.met) return undefined;
+    if (!effective.met) return undefined;
   }
-  return base.reason;
+  return undefined;
 }
 
 export function characterToFeatRequirementCharacter(
