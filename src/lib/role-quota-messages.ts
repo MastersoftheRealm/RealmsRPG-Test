@@ -37,6 +37,15 @@ const RESOURCE_PHRASES: Record<
   custom_creatures: { item: 'custom creature', items: 'custom creatures', createVerb: 'create' },
 };
 
+/** True when a counted resource is at or past its role cap. Unknown caps do not block. */
+export function isAtRoleQuota(
+  currentCount: number,
+  maxAllowed: number | null | undefined,
+): boolean {
+  if (maxAllowed == null || !Number.isFinite(maxAllowed)) return false;
+  return currentCount >= maxAllowed;
+}
+
 export function formatRoleLabel(role: UserRole | string | null | undefined): string {
   if (!role) return ROLE_LABELS.new_player;
   if (role in ROLE_LABELS) return ROLE_LABELS[role as UserRole];

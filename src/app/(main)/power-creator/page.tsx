@@ -22,9 +22,12 @@ import {
   usePowerParts,
   useAdmin,
   useLoadModalLibrary,
+  useUserLibraryCounts,
   type PowerPart,
   type UseLoadModalLibraryReturn,
 } from '@/hooks';
+import { useAccountProfile } from '@/hooks/use-profile';
+import { formatRoleQuotaExceededMessage, isAtRoleQuota } from '@/lib/role-quota-messages';
 import { useAuthStore } from '@/stores';
 import { SourceFilter, sourceFilterSummary } from '@/components/patterns/filters/source-filter';
 import {
@@ -168,6 +171,20 @@ function PowerCreatorWorkspace({
   error,
   refetch,
 }: PowerCreatorWorkspaceProps) {
+  const { profile } = useAccountProfile(user);
+  const { data: libraryCounts } = useUserLibraryCounts({ enabled: !!user && !editPowerId });
+  const maxPowers = profile?.rolePolicy?.maxPowers;
+  const powerCount = libraryCounts?.powers ?? 0;
+  const powerQuotaMessage =
+    !editPowerId && isAtRoleQuota(powerCount, maxPowers) && maxPowers != null
+      ? formatRoleQuotaExceededMessage({
+          role: profile?.role ?? 'new_player',
+          resource: 'custom_powers',
+          currentCount: powerCount,
+          maxAllowed: maxPowers,
+        })
+      : null;
+
   const ws = usePowerCreatorWorkspace({
     initialFormState,
     editPowerId,
@@ -403,12 +420,16 @@ function PowerCreatorWorkspace({
         reset: <PowerCreatorHelp topic="reset" />,
       }}
       saving={ws.save.saving}
-      saveDisabled={!ws.name.trim() || ws.dieIncomplete || ws.reverseIncomplete}
+      saveDisabled={
+        !ws.name.trim() || ws.dieIncomplete || ws.reverseIncomplete || !!powerQuotaMessage
+      }
       saveDisabledReason={
+        powerQuotaMessage ??
         powerCreatorSaveBlockReason({
           composition: ws.variants.composition,
           reverseIncomplete: ws.reverseIncomplete,
-        }) ?? undefined
+        }) ??
+        undefined
       }
       aboveGrid={
         <PowerCreatorCompositionBand
