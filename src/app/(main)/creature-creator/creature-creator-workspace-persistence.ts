@@ -12,6 +12,10 @@ import {
   appendCreatureInventoryItems,
   removeCreatureInventoryItem,
 } from '@/lib/game/creature-inventory';
+import {
+  removeCreaturePowerByRowKey,
+  toggleCreaturePowerInnateByRowKey,
+} from '@/lib/game/creature-power-instances';
 import type { CreatureState } from './creature-creator-types';
 import { rawRecordToCreatureState } from './creature-skill-utils';
 import type { CreatureArmament } from './transformers';
@@ -106,22 +110,20 @@ export function useCreatureCreatorWorkspacePersistence({
   );
 
   const onTogglePowerInnate = useCallback(
-    (powerId: string) => {
+    (powerRowKey: string) => {
       setCreature((prev) => ({
         ...prev,
-        powers: prev.powers.map((p) =>
-          p.id === powerId ? { ...p, innate: !(p.innate === true) } : p,
-        ),
+        powers: toggleCreaturePowerInnateByRowKey(prev.powers, powerRowKey),
       }));
     },
     [setCreature],
   );
 
   const onRemovePower = useCallback(
-    (powerId: string) => {
+    (powerRowKey: string) => {
       setCreature((prev) => ({
         ...prev,
-        powers: prev.powers.filter((p) => p.id !== powerId),
+        powers: removeCreaturePowerByRowKey(prev.powers, powerRowKey),
       }));
     },
     [setCreature],
