@@ -8,7 +8,6 @@
 
 'use client';
 
-import { useState } from 'react';
 import { cn } from '@/lib/utils';
 import { PoweredMartialSlider } from '@/components/patterns';
 import { ARCHETYPE_CATEGORY_INFO } from '@/lib/constants/copy';
@@ -44,14 +43,13 @@ const ARCHETYPE_ICONS: Record<ArchetypeType, string> = {
 export function ArchetypeSelector({
   value,
   powerProficiency,
+  martialProficiency,
   maxProficiency,
   onTypeChange,
   onProficiencyChange,
   compact = false,
   disabled = false,
 }: ArchetypeSelectorProps) {
-  const [sliderValue, setSliderValue] = useState(powerProficiency);
-
   const handleTypeChange = (type: ArchetypeType) => {
     if (disabled) return;
     onTypeChange(type);
@@ -65,13 +63,7 @@ export function ArchetypeSelector({
       // Powered-martial: split evenly or keep current slider
       const power = Math.floor(maxProficiency / 2);
       onProficiencyChange(power, maxProficiency - power);
-      setSliderValue(power);
     }
-  };
-
-  const handleSliderChange = (powerValue: number) => {
-    setSliderValue(powerValue);
-    onProficiencyChange(powerValue, maxProficiency - powerValue);
   };
 
   return (
@@ -114,10 +106,10 @@ export function ArchetypeSelector({
       {/* Powered-Martial Slider */}
       {value === 'powered-martial' && (
         <PoweredMartialSlider
-          powerValue={sliderValue}
-          martialValue={maxProficiency - sliderValue}
+          powerValue={powerProficiency}
+          martialValue={martialProficiency}
           maxPoints={maxProficiency}
-          onChange={(power) => handleSliderChange(power)}
+          onChange={(power, martial) => onProficiencyChange(power, martial)}
           disabled={disabled}
         />
       )}
