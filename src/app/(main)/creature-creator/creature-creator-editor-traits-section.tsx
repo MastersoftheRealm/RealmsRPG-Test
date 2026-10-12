@@ -171,12 +171,7 @@ export function CreatureCreatorEditorTraitsSection({
 
       <Card className="p-6 shadow-md">
         <h2 className="mb-4 text-lg font-bold text-text-primary">Condition Immunities</h2>
-        <label className="mb-2 block text-sm font-medium text-text-secondary">
-          Conditions{' '}
-          <span className="font-normal text-primary-link-fg">
-            (+{stats.conditionImmunityFeatCost} pt each)
-          </span>
-        </label>
+        <label className="mb-2 block text-sm font-medium text-text-secondary">Conditions</label>
         <ChipList
           items={creature.conditionImmunities}
           onRemove={(item) => removeFromArray('conditionImmunities', item)}
