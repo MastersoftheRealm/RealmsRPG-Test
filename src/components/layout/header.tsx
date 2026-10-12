@@ -281,6 +281,17 @@ interface DropdownItem {
   dropdown?: { href: string; label: string }[] | undefined;
 }
 
+/** ClickUp 86e3jvjj2: hover opens before click; a toggle would immediately close the menu. */
+export function accountMenuPointerClickState(
+  openedByHover: boolean,
+  isOpen: boolean,
+): { open: boolean; consumeHoverFlag: boolean } {
+  if (openedByHover) {
+    return { open: true, consumeHoverFlag: true };
+  }
+  return { open: !isOpen, consumeHoverFlag: false };
+}
+
 function AccountDropdown({
   profile,
   signOut,
@@ -289,6 +300,7 @@ function AccountDropdown({
   signOut: () => void;
 }) {
   const [open, setOpen] = useState(false);
+  const openedByHoverRef = useRef(false);
   const ref = useRef<HTMLDivElement>(null);
   useEffect(() => {
     const handleClick = (e: MouseEvent) => {
@@ -301,8 +313,14 @@ function AccountDropdown({
     <div
       ref={ref}
       className="relative"
-      onMouseEnter={() => setOpen(true)}
-      onMouseLeave={() => setOpen(false)}
+      onMouseEnter={() => {
+        setOpen(true);
+        openedByHoverRef.current = true;
+      }}
+      onMouseLeave={() => {
+        setOpen(false);
+        openedByHoverRef.current = false;
+      }}
     >
       <button
         type="button"
@@ -311,7 +329,12 @@ function AccountDropdown({
         className="flex min-h-11 min-w-11 items-center gap-2"
         onClick={(e) => {
           e.stopPropagation();
-          setOpen((o) => !o);
+          const { open: nextOpen, consumeHoverFlag } = accountMenuPointerClickState(
+            openedByHoverRef.current,
+            open,
+          );
+          if (consumeHoverFlag) openedByHoverRef.current = false;
+          setOpen(nextOpen);
         }}
       >
         <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary-button font-bold text-text-on-dark">
