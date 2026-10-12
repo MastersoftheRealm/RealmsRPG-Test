@@ -14,7 +14,7 @@ import { mergeEquipmentIntoInventory } from '@/lib/game/skill-allocation';
 import type { Character, CharacterPower, CharacterTechnique, Item } from '@/types';
 import type { CharacterSheetStats } from './use-character-sheet-derived';
 import type { AddModalType } from './character-sheet-context';
-import { matchesSheetEquipmentItem } from './sheet-item-match';
+import { applySheetEquipmentQuantityDelta, matchesSheetEquipmentItem } from './sheet-item-match';
 import {
   deferProficiencyOverLimitToast,
   type ApplyAutoProficienciesResult,
@@ -382,12 +382,7 @@ export function useSheetLibraryActions({
       setCharacter((prev) => {
         if (!prev) return null;
         const currentItems = (prev.equipment?.items as Item[]) || [];
-        const items = currentItems.flatMap((item, idx) => {
-          if (!matchesSheetEquipmentItem(item, itemId, idx)) return [item];
-          const newQty = (item.quantity ?? 1) + delta;
-          if (newQty < 1) return [];
-          return [{ ...item, quantity: newQty }];
-        });
+        const items = applySheetEquipmentQuantityDelta(currentItems, itemId, delta);
         return {
           ...prev,
           equipment: { ...prev.equipment, items },

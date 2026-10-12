@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
-import { matchesSheetEquipmentItem } from './sheet-item-match';
+import { applySheetEquipmentQuantityDelta, matchesSheetEquipmentItem } from './sheet-item-match';
+import type { Item } from '@/types';
 
 describe('matchesSheetEquipmentItem', () => {
   it('matches by id', () => {
@@ -19,5 +20,21 @@ describe('matchesSheetEquipmentItem', () => {
 
   it('does not match unrelated rows', () => {
     expect(matchesSheetEquipmentItem({ id: 'a', name: 'Axe' }, 'b', 0)).toBe(false);
+  });
+});
+
+describe('applySheetEquipmentQuantityDelta', () => {
+  const bedRoll = { id: 'bed-roll', name: 'Bed Roll', type: 'equipment', quantity: 1 } as Item;
+
+  it('keeps the row at quantity 0 instead of removing it', () => {
+    const next = applySheetEquipmentQuantityDelta([bedRoll], 'bed-roll', -1);
+    expect(next).toHaveLength(1);
+    expect(next[0]?.quantity).toBe(0);
+  });
+
+  it('does not go below 0', () => {
+    const atZero = { ...bedRoll, quantity: 0 };
+    const next = applySheetEquipmentQuantityDelta([atZero], 'bed-roll', -1);
+    expect(next[0]?.quantity).toBe(0);
   });
 });
