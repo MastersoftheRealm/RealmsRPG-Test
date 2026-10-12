@@ -10,6 +10,7 @@
 import { useState, use } from 'react';
 import Link from 'next/link';
 import { PageContainer, LoadingState, Alert, useToast } from '@/components/ui';
+import { CloudSyncOfflineBanner } from '@/components/patterns';
 import { useAuth, useEncounter, useSaveEncounter, useAutoSave, useCampaignsFull } from '@/hooks';
 import { encounterAutosaveBody, persistEncounterSave } from '@/services/encounter-service';
 import { RollProvider } from '@/components/rolls';
@@ -85,7 +86,7 @@ function SkillEncounterContent({ params }: { params: Promise<{ id: string }> }) 
 
   const { user } = useAuth();
   const { showToast } = useToast();
-  const { isSaving, hasUnsavedChanges } = useAutoSave({
+  const { isSaving, hasUnsavedChanges, syncBlockedByNetwork, saveNow } = useAutoSave({
     data: encounter,
     onSave: async (data, flush) => {
       if (!data || !encounterId) return;
@@ -168,6 +169,12 @@ function SkillEncounterContent({ params }: { params: Promise<{ id: string }> }) 
           onCancelEdit={handleCancelEditName}
           isSaving={isSaving}
           hasUnsavedChanges={hasUnsavedChanges}
+        />
+
+        <CloudSyncOfflineBanner
+          enabled={!!user}
+          syncBlocked={syncBlockedByNetwork}
+          onRetry={() => void saveNow()}
         />
 
         <SkillEncounterView

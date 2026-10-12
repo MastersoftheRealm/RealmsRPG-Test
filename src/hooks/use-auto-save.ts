@@ -6,6 +6,7 @@
  */
 
 import { useState, useEffect, useCallback, useRef } from 'react';
+import { isLikelyNetworkFailure } from '@/lib/network-error';
 
 export const AUTOSAVE_RETRY_DELAYS_MS = [2_000, 5_000, 15_000, 60_000] as const;
 
@@ -60,6 +61,8 @@ interface AutoSaveResult {
   isSaving: boolean;
   /** Last save timestamp */
   lastSaved: Date | null;
+  /** Cloud save failed due to network; cleared on success */
+  syncBlockedByNetwork: boolean;
   /** Force an immediate save */
   saveNow: () => Promise<void>;
   /** Mark as saved without calling onSave */
@@ -80,6 +83,7 @@ export function useAutoSave<T>({
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [lastSaved, setLastSaved] = useState<Date | null>(null);
+  const [syncBlockedByNetwork, setSyncBlockedByNetwork] = useState(false);
 
   const initialDataRef = useRef<T>(data);
   const currentDataRef = useRef<T>(data);
@@ -150,6 +154,7 @@ export function useAutoSave<T>({
       await onSaveRef.current(dataToSave, flush);
       retryAttemptRef.current = 0;
       clearRetry();
+      setSyncBlockedByNetwork(false);
       setLastSaved(new Date());
       initialDataRef.current = dataToSave;
       if (JSON.stringify(currentDataRef.current) === JSON.stringify(dataToSave)) {
@@ -158,6 +163,9 @@ export function useAutoSave<T>({
       onSaveCompleteRef.current?.();
     } catch (err) {
       pendingResaveRef.current = false;
+      if (isLikelyNetworkFailure(err)) {
+        setSyncBlockedByNetwork(true);
+      }
       onSaveErrorRef.current?.(err instanceof Error ? err : new Error('Save failed'));
       const wait = nextAutosaveRetryDelayMs(retryAttemptRef.current);
       retryAttemptRef.current += 1;
@@ -281,6 +289,15 @@ export function useAutoSave<T>({
   }, [hasUnsavedChanges]);
 
   useEffect(() => {
+    const retryWhenOnline = () => {
+      if (!hasUnsavedChangesRef.current) return;
+      void performSaveRef.current(currentDataRef.current);
+    };
+    window.addEventListener('online', retryWhenOnline);
+    return () => window.removeEventListener('online', retryWhenOnline);
+  }, []);
+
+  useEffect(() => {
     const flush = () => {
       flushDirtyAutosave({
         enabled: enabledRef.current,
@@ -306,6 +323,7 @@ export function useAutoSave<T>({
     hasUnsavedChanges,
     isSaving,
     lastSaved,
+    syncBlockedByNetwork,
     saveNow,
     markSaved,
     reset,

@@ -51,6 +51,8 @@ export { TempModifierToggle } from './chrome/temp-modifier-toggle';
 // Modal components
 export { LoginPromptModal } from './chrome/login-prompt-modal';
 export type { LoginPromptReason } from './chrome/login-prompt-modal';
+export { CloudSyncOfflineBanner } from './chrome/cloud-sync-offline-banner';
+export type { CloudSyncOfflineBannerProps } from './chrome/cloud-sync-offline-banner';
 export { DeleteConfirmModal } from './chrome/delete-confirm-modal';
 export { ConfirmActionModal } from './chrome/confirm-action-modal';
 

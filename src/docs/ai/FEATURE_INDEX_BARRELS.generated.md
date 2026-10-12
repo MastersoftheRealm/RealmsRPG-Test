@@ -3,7 +3,7 @@
 > **Do not edit by hand.** Run `npm run tasks:generate-index` after changing barrel exports.
 > Curated narrative map: [`FEATURE_INDEX.md`](FEATURE_INDEX.md).
 
-Generated: 2026-10-11
+Generated: 2026-10-12
 
 ## `src/components/patterns/index.ts`
 
@@ -21,6 +21,7 @@ Generated: 2026-10-11
 - CHARACTER_SHEET_ENERGY_SPEND_ROW_CHROME
 - CharacterFilter
 - ChipSelect
+- CloudSyncOfflineBanner
 - CodexBrowseListShell
 - ConfirmActionModal
 - CreatorPortraitUpload
@@ -173,6 +174,7 @@ Generated: 2026-10-11
 
 ## `src/hooks/index.ts`
 
+- AUTOSAVE_RETRY_DELAYS_MS
 - buildGuidedEquipmentEligibilityContext
 - campaignKeys
 - characterKeys
@@ -182,6 +184,7 @@ Generated: 2026-10-11
 - findTraitByIdOrName
 - getGameRulesFallback
 - invalidateCharacterLists
+- nextAutosaveRetryDelayMs
 - officialLibraryKeys
 - patchCharacterDetailQuery
 - resolveSkillIdsToNames
@@ -221,6 +224,7 @@ Generated: 2026-10-11
 - useAuthCaptcha
 - useAuthStore
 - useAutoSave
+- useBrowserOffline
 - useCampaign
 - useCampaignCharacterEncounters
 - useCampaignCharacterView

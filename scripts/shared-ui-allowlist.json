@@ -1,5 +1,6 @@
 {
   "files": [
+    "src/components/patterns/chrome/cloud-sync-offline-banner.tsx",
     "src/components/patterns/chrome/confirm-action-modal.tsx",
     "src/components/patterns/chrome/creator-portrait-upload.tsx",
     "src/components/patterns/chrome/delete-confirm-modal.tsx",

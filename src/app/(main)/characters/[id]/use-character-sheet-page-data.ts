@@ -314,7 +314,7 @@ export function useCharacterSheetPageData(id: string) {
     }
   }, [character, catalog.codexArchetypes, setCharacter]);
 
-  const { hasUnsavedChanges, saveNow } = useAutoSave({
+  const { hasUnsavedChanges, saveNow, syncBlockedByNetwork } = useAutoSave({
     data: character,
     onSave: async (data) => {
       if (!data) return;
@@ -404,6 +404,7 @@ export function useCharacterSheetPageData(id: string) {
     campaignContext,
     hasUnsavedChanges,
     saveNow,
+    syncBlockedByNetwork,
     traitsDb: catalog.traitsDb,
     featsDb: catalog.featsDb,
     powerPartsDb: catalog.powerPartsDb,
