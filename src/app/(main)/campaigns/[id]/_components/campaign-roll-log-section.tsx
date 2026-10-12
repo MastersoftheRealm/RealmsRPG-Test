@@ -8,6 +8,7 @@ import type { RefObject } from 'react';
 import { Dices } from 'lucide-react';
 import { Alert, Button, EmptyState, LoadingState } from '@/components/ui';
 import { RollEntryCard } from '@/components/rolls';
+import { campaignRollCharacterLabel } from '@/lib/rolls/campaign-roll-attribution';
 import type { CampaignRollEntry } from '@/types/campaign-roll';
 import { CAMPAIGN_ROLL_LOG_SCROLL_CLASS } from './campaign-roll-log-scroll';
 
@@ -63,7 +64,11 @@ export function CampaignRollLogSection({
           [...rolls]
             .reverse()
             .map((roll) => (
-              <RollEntryCard key={roll.id} roll={roll} characterName={roll.characterName} />
+              <RollEntryCard
+                key={roll.id}
+                roll={roll}
+                characterName={campaignRollCharacterLabel(roll)}
+              />
             ))
         ) : (
           <p className="py-8 text-center text-sm text-text-secondary">

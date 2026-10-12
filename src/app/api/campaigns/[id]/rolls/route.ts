@@ -10,6 +10,7 @@ import { getSession } from '@/lib/supabase/session';
 import { validateJson, campaignRollCreateSchema } from '@/lib/api-validation';
 import { standardLimiter, buildRateLimitKey, resolveClientIp } from '@/lib/rate-limit';
 import { MAX_CAMPAIGN_ROLLS } from '@/app/(main)/campaigns/constants';
+import { realmMasterRolledForCharacter } from '@/lib/rolls/campaign-roll-attribution';
 import type { CampaignRollEntry } from '@/types/campaign-roll';
 
 type RollRow = {
@@ -39,6 +40,7 @@ function toEntry(row: RollRow): CampaignRollEntry {
     isCrit: d.isCrit as boolean | undefined,
     isCritFail: d.isCritFail as boolean | undefined,
     critMessage: d.critMessage as string | undefined,
+    rolledByRealmMaster: d.rolledByRealmMaster === true,
     timestamp:
       ts instanceof Date
         ? ts
@@ -109,15 +111,38 @@ export async function GET(_request: Request, { params }: { params: Promise<{ id:
       return NextResponse.json({ error: 'Failed to load rolls' }, { status: 500 });
     }
 
+    const roster =
+      (campaign.characters as Array<{
+        characterId?: string | undefined;
+        userId?: string | undefined;
+      }> | null) ?? [];
     const rosterCharacterIds = new Set(
-      ((campaign.characters as Array<{ characterId?: string | undefined }> | null) ?? [])
+      roster
         .map((entry) => entry.characterId)
         .filter((id): id is string => typeof id === 'string' && id.length > 0),
+    );
+    const characterOwnerById = new Map(
+      roster
+        .filter(
+          (entry): entry is { characterId: string; userId?: string | undefined } =>
+            typeof entry.characterId === 'string' && entry.characterId.length > 0,
+        )
+        .map((entry) => [entry.characterId, entry.userId] as const),
     );
 
     const rolls = (rows ?? [])
       .map((r) => toEntry(r as RollRow))
-      .filter((entry) => rosterCharacterIds.has(entry.characterId));
+      .filter((entry) => rosterCharacterIds.has(entry.characterId))
+      .map((entry) => ({
+        ...entry,
+        rolledByRealmMaster:
+          entry.rolledByRealmMaster ||
+          realmMasterRolledForCharacter(
+            entry.userId,
+            characterOwnerById.get(entry.characterId),
+            campaign.owner_id,
+          ),
+      }));
     return NextResponse.json(rolls);
   } catch (err) {
     console.error('[API Error] GET /api/campaigns/[id]/rolls:', err);
@@ -206,11 +231,17 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
       );
     }
     const resolvedCharacterName = rosterEntry.characterName ?? characterName;
+    const rolledByRealmMaster = realmMasterRolledForCharacter(
+      user.uid,
+      rosterEntry.userId,
+      campaign.owner_id,
+    );
 
     const rollData = {
       characterId,
       characterName: resolvedCharacterName,
       userId: user.uid,
+      rolledByRealmMaster,
       type: roll.type,
       title: roll.title,
       dice: roll.dice ?? [],

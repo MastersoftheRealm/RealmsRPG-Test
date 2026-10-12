@@ -18,6 +18,8 @@ export interface CampaignRollEntry {
   characterId: string;
   characterName: string;
   userId: string;
+  /** True when the campaign owner rolled this character for its player. */
+  rolledByRealmMaster?: boolean | undefined;
   type: CampaignRollType;
   title: string;
   dice: DieResult[];
