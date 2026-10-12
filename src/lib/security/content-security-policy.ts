@@ -1,6 +1,7 @@
 /**
  * Content-Security-Policy for every response.
  *
+ * Production script-src omits unsafe-eval. Development keeps it.
  * Hosted Supabase realtime (createBrowserClient) uses wss://*.supabase.co.
  * The Vercel toolbar websocket is wss://ws-us3.pusher.com.
  * next dev, and a local http Supabase URL, use ws://localhost or ws://127.0.0.1.
