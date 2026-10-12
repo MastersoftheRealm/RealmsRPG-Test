@@ -144,6 +144,7 @@ export function LibrarySection({
     armor: data?.armor ?? [],
     equipment: data?.equipment ?? [],
     innateEnergy: data?.innateEnergy ?? 0,
+    canMarkPowersInnate: (data?.innateEnergy ?? 0) > 0,
     currentInnateEnergy: data?.currentInnateEnergy,
     currentEnergy: data?.currentEnergy ?? 0,
     abilities: data?.abilities,
@@ -307,7 +308,7 @@ export function LibrarySection({
             powerSort={powerSort}
             onPowerSort={handlePowerSort}
             powerRowChrome={powerRowChrome}
-            onAddInnatePower={onAddInnatePower}
+            onAddInnatePower={innateEnergy > 0 ? onAddInnatePower : undefined}
             onAddPower={onAddPower}
           />
         )}

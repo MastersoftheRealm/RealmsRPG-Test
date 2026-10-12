@@ -36,6 +36,7 @@ export type LibrarySectionRowsInput = {
   armor: Item[];
   equipment: Item[];
   innateEnergy: number;
+  canMarkPowersInnate?: boolean | undefined;
   currentInnateEnergy?: number | undefined;
   currentEnergy: number;
   abilities?: Abilities | undefined;
@@ -93,6 +94,7 @@ export function useLibrarySectionRows({
   armor,
   equipment,
   innateEnergy,
+  canMarkPowersInnate = innateEnergy > 0,
   currentInnateEnergy,
   currentEnergy,
   abilities,
@@ -194,6 +196,7 @@ export function useLibrarySectionRows({
       onUsePower,
       onRemovePower,
       onTogglePowerInnate,
+      canMarkPowersInnate,
       onSelectPowerVariant,
       onUseTechnique,
       onRemoveTechnique,
@@ -221,6 +224,7 @@ export function useLibrarySectionRows({
       onUsePower,
       onRemovePower,
       onTogglePowerInnate,
+      canMarkPowersInnate,
       onSelectPowerVariant,
       onUseTechnique,
       onRemoveTechnique,
@@ -239,10 +243,20 @@ export function useLibrarySectionRows({
   const powerRowChrome = useMemo(
     () => ({
       ...CHARACTER_SHEET_ENERGY_SPEND_ROW_CHROME,
-      leftSlot: !!(showLibraryEditControls && onTogglePowerInnate),
+      leftSlot: !!(
+        showLibraryEditControls &&
+        onTogglePowerInnate &&
+        (canMarkPowersInnate || sortedInnatePowers.length > 0)
+      ),
       delete: !!(showLibraryEditControls && onRemovePower),
     }),
-    [showLibraryEditControls, onTogglePowerInnate, onRemovePower],
+    [
+      showLibraryEditControls,
+      onTogglePowerInnate,
+      canMarkPowersInnate,
+      sortedInnatePowers.length,
+      onRemovePower,
+    ],
   );
 
   const innatePowerRows = useMemo(

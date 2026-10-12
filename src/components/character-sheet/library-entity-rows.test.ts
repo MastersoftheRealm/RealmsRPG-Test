@@ -113,6 +113,37 @@ describe('mapPowerRows / mapTechniqueRows — Energy is rightSlot only (TASK-502
     expect(row.columns?.find((c) => c.key === 'duration')?.value).toBe('2 RNDS');
   });
 
+  it('hides innate toggle when the path has no Innate Energy (86e3jvfm2)', () => {
+    const powers: CharacterPower[] = [
+      { id: 'charm', name: 'Charm Beast', innate: false, parts: [] } as CharacterPower,
+    ];
+    const row = defined(
+      mapPowerRows(powers, {
+        ...baseCtx,
+        showLibraryEditControls: true,
+        onTogglePowerInnate: () => {},
+        canMarkPowersInnate: false,
+      })[0],
+    );
+    expect(row.leftSlot).toBeUndefined();
+  });
+
+  it('warns on innate powers when the path has no Innate Energy (86e3jvfm2)', () => {
+    const powers: CharacterPower[] = [
+      { id: 'beast', name: 'Beast Armor', innate: true, parts: [] } as CharacterPower,
+    ];
+    const row = defined(
+      mapPowerRows(powers, {
+        ...baseCtx,
+        showLibraryEditControls: true,
+        onTogglePowerInnate: () => {},
+        canMarkPowersInnate: false,
+      })[0],
+    );
+    expect(row.warningMessage).toContain('Innate Energy is 0');
+    expect(row.leftSlot).toBeTruthy();
+  });
+
   it('an innate power shows its Energy without a Spend control (86e3jvfmf)', () => {
     const charmPart: PowerPart = {
       id: 'charm',
