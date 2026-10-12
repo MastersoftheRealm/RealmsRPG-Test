@@ -118,21 +118,38 @@ function resourceReadout({
   const chrome = resourceChrome(colorVariant, current, max);
   return (
     <div className={cn('flex flex-col rounded-lg border p-3', chrome.bgColor)}>
-      <div className="mb-1 flex items-center justify-between gap-2">
-        <span className={cn('text-xs font-semibold tracking-wide uppercase', chrome.labelColor)}>
+      <div className="mb-1 flex min-w-0 items-center justify-between gap-2">
+        <span
+          className={cn(
+            'shrink-0 text-xs font-semibold tracking-wide uppercase',
+            chrome.labelColor,
+          )}
+        >
           {label}
         </span>
         {headerRight ??
-          (subLabel ? <span className="text-xs text-text-muted">{subLabel}</span> : null)}
+          (subLabel ? (
+            <span className="min-w-0 truncate text-xs text-text-muted">{subLabel}</span>
+          ) : null)}
       </div>
-      <div className="flex items-center gap-2">
+      <div className="flex min-w-0 flex-nowrap items-center gap-2">
         <span
-          className={cn('w-12 text-center text-lg font-bold', chrome.inputBorderText)}
+          className={cn(
+            'w-12 shrink-0 text-center text-lg font-bold tabular-nums',
+            chrome.inputBorderText,
+          )}
           aria-label={`Current ${label}`}
         >
           {current}
         </span>
-        <span className={cn('text-base font-medium', chrome.labelColor)}>/ {max}</span>
+        <span
+          className={cn(
+            'shrink-0 text-base font-medium whitespace-nowrap tabular-nums',
+            chrome.labelColor,
+          )}
+        >
+          / {max}
+        </span>
       </div>
       {showBar ? (
         <ResourceBar percentage={chrome.percentage} barColorClass={chrome.barColorClass} />
@@ -235,14 +252,21 @@ function ResourceInputEditor({
 
   return (
     <div className={cn('flex flex-col rounded-lg border p-3', chrome.bgColor)}>
-      <div className="mb-1 flex items-center justify-between gap-2">
-        <span className={cn('text-xs font-semibold tracking-wide uppercase', chrome.labelColor)}>
+      <div className="mb-1 flex min-w-0 items-center justify-between gap-2">
+        <span
+          className={cn(
+            'shrink-0 text-xs font-semibold tracking-wide uppercase',
+            chrome.labelColor,
+          )}
+        >
           {label}
         </span>
         {headerRight ??
-          (subLabel ? <span className="text-xs text-text-muted">{subLabel}</span> : null)}
+          (subLabel ? (
+            <span className="min-w-0 truncate text-xs text-text-muted">{subLabel}</span>
+          ) : null)}
       </div>
-      <div className="flex items-center gap-2">
+      <div className="flex min-w-0 flex-nowrap items-center gap-2">
         <input
           ref={inputRef}
           type="text"
@@ -259,7 +283,14 @@ function ResourceInputEditor({
           )}
           aria-label={`Current ${label}`}
         />
-        <span className={cn('text-base font-medium', chrome.labelColor)}>/ {max}</span>
+        <span
+          className={cn(
+            'shrink-0 text-base font-medium whitespace-nowrap tabular-nums',
+            chrome.labelColor,
+          )}
+        >
+          / {max}
+        </span>
         <ValueStepper
           value={current}
           onChange={handleStepperChange}
