@@ -8,6 +8,7 @@ import { normalizeId } from '@/lib/utils';
 import {
   applyInnateSelection,
   innateSelectionBlockMessage,
+  innateSelectionWarnMessage,
   pickAffordableIds,
   pickInnateFillIds,
   resolveLibraryItem,
@@ -277,6 +278,7 @@ export function usePowersTechniquesSelection({
         setBudgetMessage(innateSelectionBlockMessage(applied.reason));
         return;
       }
+      setBudgetMessage(applied.warn ? innateSelectionWarnMessage(applied.warn) : null);
       const nextRegular = isSelectedId(key, draft.powerIds)
         ? removeSelectedAlias(draft.powerIds, key)
         : draft.powerIds;
@@ -326,25 +328,18 @@ export function usePowersTechniquesSelection({
   const isInnateUnavailable = useCallback(
     (id: string) => {
       if (isSelectedId(id, selectedInnateIds)) return false;
-      const applied = applyInnateSelection({
-        selectedIds: selectedInnateIds,
-        id,
-        energyOf: resolveEnergy,
-        tpOf: resolveTpCost,
-        threshold: innateThreshold,
-        energyMax: innateEnergyMax,
-        otherTpSpent: loadoutTpSpent + siblingTpSpent + regularTpSpent,
-        tpLimit: loadoutTpLimit,
-      });
-      return !applied.ok;
+      const addTp = resolveTpCost(id);
+      const innateSpent = selectedInnateIds.reduce((sum, x) => sum + resolveTpCost(x), 0);
+      return wouldExceedSharedTp(
+        loadoutTpSpent + siblingTpSpent + regularTpSpent + innateSpent,
+        loadoutTpLimit,
+        addTp,
+      );
     },
     [
       isSelectedId,
       selectedInnateIds,
-      resolveEnergy,
       resolveTpCost,
-      innateThreshold,
-      innateEnergyMax,
       loadoutTpSpent,
       loadoutTpLimit,
       siblingTpSpent,
