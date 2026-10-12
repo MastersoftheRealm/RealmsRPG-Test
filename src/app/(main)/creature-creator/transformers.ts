@@ -26,6 +26,7 @@ import {
   type ItemDamage,
   type ItemPropertyPayload,
 } from '@/lib/calculators/item-calc';
+import { assignCreaturePowerInstance } from '@/lib/game/creature-power-instances';
 
 // =============================================================================
 // Creature Types (for conversion back from DisplayItem)
@@ -33,6 +34,10 @@ import {
 
 export interface CreaturePower {
   id: string;
+  /** Library document id when `id` is a per-row instance id (86e3jx636). */
+  sourceId?: string | undefined;
+  /** Unique per row in the creature loadout; used for remove/toggle when duplicates exist. */
+  instanceId?: string | undefined;
   name: string;
   energy: number;
   tp?: number | undefined;
@@ -227,7 +232,7 @@ export function transformUserPowerToDisplayItem(
 }
 
 export function displayItemToCreaturePower(item: DisplayItem): CreaturePower {
-  return item.sourceData as CreaturePower;
+  return assignCreaturePowerInstance(item.sourceData as CreaturePower);
 }
 
 // =============================================================================

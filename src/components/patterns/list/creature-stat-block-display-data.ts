@@ -104,7 +104,9 @@ export function buildPowersForDisplay(
   });
 
   return refs.map((ref, idx): EntityPowerRow => {
-    const refId = (ref as { id?: string | undefined }).id;
+    const refId =
+      (ref as { sourceId?: string | undefined; id?: string | undefined }).sourceId ??
+      (ref as { id?: string | undefined }).id;
     const refName = ref.name;
 
     const userMatch =

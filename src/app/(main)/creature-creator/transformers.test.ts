@@ -31,6 +31,8 @@ describe('transformUserPowerToDisplayItem variants (86e3kfkc2)', () => {
       [],
     );
     const power = displayItemToCreaturePower(item);
+    expect(power.instanceId).toBeTruthy();
+    expect(power.sourceId).toBe('burst');
     expect(power.variantLabel).toMatch(/Choice/);
     expect(power.variantChips?.map((chip) => chip.name)).toEqual(['Fire', 'Ice']);
     expect(power.parts).toEqual([]);
