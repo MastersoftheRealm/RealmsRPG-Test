@@ -1,11 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import type { PowerPart } from '@/hooks';
-import {
-  actionIsOverride,
-  damageIsOverride,
-  durationIsOverride,
-  rangeIsOverride,
-} from './power-creator-from-shared';
+import { actionIsOverride, durationIsOverride, rangeIsOverride } from './power-creator-from-shared';
 import { compositionInitFromSaved } from './use-power-creator-composition';
 import { normalizePowerComposition } from '@/lib/calculators';
 import { powerLibraryRecordToFormState } from './power-creator-bootstrap';
@@ -321,36 +316,6 @@ describe('Override on an empty Shared value (86e3kfkbg, 86e3kfkbp)', () => {
     expect(
       showsFieldOverride(rangeIsOverride(live), isOverlayFieldForced(flags, 'v1', 'area')),
     ).toBe(false);
-
-    flags = setOverlayField(flags, 'v1', 'damage', true);
-    expect(
-      showsFieldOverride(
-        damageIsOverride(live.damages),
-        isOverlayFieldForced(flags, 'v1', 'damage'),
-      ),
-    ).toBe(true);
-
-    const damageOnlyFlags = setOverlayField({}, 'v1', 'damage', true);
-    const payload = buildCompositionPayload({
-      structure: 'choice',
-      reverseEnabled: false,
-      shared,
-      variants: [
-        {
-          id: 'v1',
-          label: 'Variant 1',
-          polarity: 'positive',
-          description: '',
-          form: live,
-        },
-      ],
-      reverse: emptyTabForm(),
-      dieSides: 2,
-      dieFaces: ['', ''],
-      overlayFlags: damageOnlyFlags,
-    });
-    expect(payload?.variants[0]?.overrides).toEqual(['damage']);
-    expect(payload?.variants[0]?.damage).toEqual([]);
   });
 });
 

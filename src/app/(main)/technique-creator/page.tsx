@@ -27,7 +27,7 @@ import {
 } from '@/hooks';
 import { useAuthStore } from '@/stores';
 import { LoadingState } from '@/components/ui';
-import { formatEnergyStat, formatTrainingPointStat } from '@/lib/calculators';
+import { formatEnergyStat } from '@/lib/calculators';
 import {
   CreatorPageShell,
   AdvancedCalculationsPanel,
@@ -205,7 +205,7 @@ function TechniqueCreatorWorkspace({
             },
             {
               label: 'Training Points',
-              value: formatTrainingPointStat(ws.costs.totalTP),
+              value: ws.costs.totalTP,
               icon: <Target className="h-6 w-6" />,
               color: 'tp',
             },

@@ -3,7 +3,6 @@ import {
   buildMechanicParts,
   calculatePowerCosts,
   formatEnergyStat,
-  formatTrainingPointStat,
 } from '@/lib/calculators';
 import { loadRepoCodexParts } from '@/lib/calculators/power-composition.fixture';
 import { emptyPowerCreatorFormState } from './power-creator-bootstrap';
@@ -38,6 +37,5 @@ describe('empty power creator energy display (86e3k01ja)', () => {
     const costs = calculatePowerCosts(emptyCreatorPayload(partsDb), partsDb);
     expect(costs.totalEnergy).toBe(0);
     expect(formatEnergyStat(costs.totalEnergy)).toBe('—');
-    expect(formatTrainingPointStat(costs.totalTP)).toBe('—');
   });
 });
