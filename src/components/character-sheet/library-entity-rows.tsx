@@ -607,7 +607,9 @@ export function mapWeaponRows(weapons: Item[], ctx: LibraryEntityRowContext): En
             value={0}
             displayValue={damageDice}
             variant="danger"
-            onClick={() => ctx.rollContext!.rollDamage(String(damageRollStr))}
+            onClick={() =>
+              ctx.rollContext!.rollDamage(String(damageRollStr), attackBonus, `${item.name} damage`)
+            }
             size="sm"
             title="Roll damage"
           />
@@ -721,7 +723,13 @@ export function mapShieldRows(shields: Item[], ctx: LibraryEntityRowContext): En
             value={0}
             displayValue={shieldDamageDice}
             variant="danger"
-            onClick={() => ctx.rollContext!.rollDamage(String(shieldDamageRollStr))}
+            onClick={() =>
+              ctx.rollContext!.rollDamage(
+                String(shieldDamageRollStr),
+                attackBonus,
+                `${item.name} damage`,
+              )
+            }
             size="sm"
             title="Roll damage"
           />
