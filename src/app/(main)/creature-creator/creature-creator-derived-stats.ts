@@ -12,7 +12,10 @@ import {
   calculateSkillPointsForEntity,
 } from '@/lib/game/formulas';
 import { calculateCreatureSpeed, calculateEvasion } from '@/lib/game/calculations';
-import { DEFENSE_INCREASE_COST } from '@/lib/game/skill-allocation';
+import {
+  calculateSimpleSkillPointsSpent,
+  resolveSkillAllocationRules,
+} from '@/lib/game/skill-allocation';
 import { calculateCreatureMaxHealth, calculateCreatureMaxEnergy } from '@/lib/game/encounter-utils';
 import { CREATURE_FEAT_IDS } from '@/lib/id-constants';
 import { CREATURE_MECHANICAL_FEAT_POINTS } from '@/lib/game/creator-constants';
@@ -162,19 +165,28 @@ export function calculateCreatureCreatorStats(
 
   const abilitySpent = Object.values(abilities).reduce((sum, val) => sum + val, 0);
   const heSpent = creature.hitPoints + creature.energyPoints;
-  const skillSpent = creature.skills.reduce((sum, s) => {
+  const skillRules = resolveSkillAllocationRules(rules);
+  const skillAllocations: Record<string, number> = {};
+  const skillMeta = new Map<string, { isSubSkill: boolean }>();
+  for (const s of creature.skills) {
+    const skillId = String(s.id ?? s.name);
     const isSubSkill =
       s.isSubSkill === true ||
       (s.baseSkillId != null && s.baseSkillId !== '') ||
       subSkillNames.has(String(s.name ?? '').toLowerCase());
+    skillMeta.set(skillId, { isSubSkill });
     if (isSubSkill) {
-      return sum + Math.max(1, s.value);
+      skillAllocations[skillId] = Math.max(1, s.value);
+    } else if (s.proficient !== false) {
+      skillAllocations[skillId] = s.value;
     }
-    return sum + s.value + (s.proficient ? 1 : 0);
-  }, 0);
-  const defenseSpent = Object.values(creature.defenses).reduce(
-    (sum, val) => sum + val * DEFENSE_INCREASE_COST,
-    0,
+  }
+  const skillSpent = calculateSimpleSkillPointsSpent(
+    skillAllocations,
+    new Set<string>(),
+    skillMeta,
+    creature.defenses,
+    skillRules,
   );
 
   return {
@@ -199,7 +211,7 @@ export function calculateCreatureCreatorStats(
     abilitySpent,
     abilityRemaining: abilityPoints - abilitySpent,
     heRemaining: hePool - heSpent,
-    skillRemaining: skillPoints - skillSpent - defenseSpent,
+    skillRemaining: skillPoints - skillSpent,
     maxProficiencyPoints,
     proficiencySpent,
     proficiencyRemaining,

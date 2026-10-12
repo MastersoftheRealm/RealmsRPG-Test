@@ -31,6 +31,28 @@ describe('calculateCreatureCreatorStats', () => {
     expect(stats.featSpent).toBe(1);
   });
 
+  it('uses past-cap skill costs in summary remaining (86e3jx4dm)', () => {
+    const creature = {
+      ...initialState,
+      level: 3,
+      skills: [
+        { id: 'athletics', name: 'Athletics', value: 7, proficient: true },
+        {
+          id: 'smith',
+          name: 'Smith',
+          value: 1,
+          proficient: true,
+          isSubSkill: true,
+          baseSkillId: 'craft',
+        },
+      ],
+    };
+    const stats = calculateCreatureCreatorStats(creature, featPointsMap, new Set(), undefined);
+    expect(stats.skillPoints).toBe(11);
+    expect(stats.skillRemaining).toBe(-6);
+    expect(isCreatureOverBudget(stats)).toBe(true);
+  });
+
   it('sums currency and TP from kind buckets (TASK-812)', () => {
     const creature = {
       ...initialState,
