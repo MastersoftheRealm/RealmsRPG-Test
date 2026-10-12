@@ -20,6 +20,7 @@ import {
   CHARACTER_SHEET_MOBILE_DOCK_SCOPE_CLASSNAME,
   CHARACTER_SHEET_MOBILE_FRAME_CLASSNAME,
 } from '@/components/character-sheet';
+import { CloudSyncOfflineBanner } from '@/components/patterns';
 import { RollLog, RollProvider } from '@/components/rolls';
 import { SheetTourOfferModal, SheetTour, LevelUpGuideCard } from '@/components/onboarding';
 import { CharacterSheetModals } from './CharacterSheetModals';
@@ -103,6 +104,8 @@ export default function CharacterSheetPage({ params }: PageParams) {
     handleEnergyPointsChange,
     handleSettingsConfirmVisibility,
     handleSettingsConfirm,
+    saveNow,
+    syncBlockedByNetwork,
   } = model;
 
   return (
@@ -175,6 +178,14 @@ export default function CharacterSheetPage({ params }: PageParams) {
                     </Button>
                   </span>
                 </Alert>
+              ) : null}
+              {isOwner && !isGuestSheet ? (
+                <CloudSyncOfflineBanner
+                  enabled
+                  className="mx-4"
+                  syncBlocked={syncBlockedByNetwork}
+                  onRetry={() => void saveNow()}
+                />
               ) : null}
               {calculatedStats && (
                 <CharacterSheetColumn>

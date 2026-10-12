@@ -287,5 +287,7 @@ export function useCharacterSheetPage(id: string) {
     handleEnergyPointsChange,
     handleSettingsConfirmVisibility: ui.handleSettingsConfirmVisibility,
     handleSettingsConfirm: ui.handleSettingsConfirm,
+    saveNow: data.saveNow,
+    syncBlockedByNetwork: data.syncBlockedByNetwork,
   };
 }

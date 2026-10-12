@@ -16,7 +16,8 @@ import {
   Alert,
   useToast,
 } from '@/components/ui';
-import { useEncounter, useSaveEncounter, useAutoSave, useCampaignsFull } from '@/hooks';
+import { CloudSyncOfflineBanner } from '@/components/patterns';
+import { useAuth, useEncounter, useSaveEncounter, useAutoSave, useCampaignsFull } from '@/hooks';
 import { RollProvider } from '@/components/rolls';
 import type { Encounter } from '@/types/encounter';
 import CombatEncounterView from '../_components/CombatEncounterView';
@@ -46,8 +47,9 @@ function CombatEncounterContent({ params }: { params: Promise<{ id: string }> })
   }
   const isInitialized = initializedEncounterId === encounterId;
 
+  const { user } = useAuth();
   const { showToast } = useToast();
-  const { isSaving, hasUnsavedChanges } = useAutoSave({
+  const { isSaving, hasUnsavedChanges, syncBlockedByNetwork, saveNow } = useAutoSave({
     data: encounter,
     onSave: async (data) => {
       if (!data || !encounterId) return;
@@ -125,6 +127,12 @@ function CombatEncounterContent({ params }: { params: Promise<{ id: string }> })
           onCancelEdit={handleCancelEditName}
           isSaving={isSaving}
           hasUnsavedChanges={hasUnsavedChanges}
+        />
+
+        <CloudSyncOfflineBanner
+          enabled={!!user}
+          syncBlocked={syncBlockedByNetwork}
+          onRetry={() => void saveNow()}
         />
 
         <CombatEncounterView
