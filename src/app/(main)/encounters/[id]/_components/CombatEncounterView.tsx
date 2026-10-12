@@ -17,6 +17,7 @@ import { useCombatEncounterView } from './combat/use-combat-encounter-view';
 import { CombatRoundControls } from './combat/combat-round-controls';
 import { CombatCombatantList } from './combat/combat-combatant-list';
 import { CombatAddSidebar } from './combat/combat-add-sidebar';
+import { COMBAT_ENCOUNTER_LAYOUT_CLASS } from './combat/combat-encounter-layout';
 import type { CombatEncounterViewProps } from './combat/combat-encounter-view-props';
 
 export default function CombatEncounterView(props: CombatEncounterViewProps) {
@@ -47,11 +48,11 @@ function CombatEncounterViewInner(props: CombatEncounterViewProps & { encounter:
     <>
       <div
         className={cn(
-          'grid min-w-0 grid-cols-1 gap-6 lg:grid-cols-4 lg:items-stretch',
+          COMBAT_ENCOUNTER_LAYOUT_CLASS,
           showRollLog && ENCOUNTER_TRACKER_DOCK_FRAME_CLASS,
         )}
       >
-        <div className="flex min-h-0 min-w-0 flex-col gap-4 lg:col-span-3">
+        <div className="flex min-h-0 min-w-0 flex-col gap-4">
           <CombatRoundControls
             encounter={encounter}
             setEncounter={setEncounter}
