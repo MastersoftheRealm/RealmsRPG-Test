@@ -212,6 +212,7 @@ export function CreatureCreatorEditor(props: CreatureCreatorEditorProps) {
               martialProficiency: martial,
             })
           }
+          allowZeroEnds
         />
       </Card>
 
