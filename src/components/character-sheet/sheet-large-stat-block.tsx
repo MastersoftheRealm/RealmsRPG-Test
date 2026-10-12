@@ -52,7 +52,7 @@ export function LargeStatBlock({
             isActive={tempActive}
             tint={tint}
             onClick={() => setTempActive((prev) => !prev)}
-            title={tempActive ? 'Close Temp Modifier' : 'Temp Modifier'}
+            title={tempActive ? `Close ${label} Temp Modifier` : `${label} Temp Modifier`}
           />
         )}
       </div>
