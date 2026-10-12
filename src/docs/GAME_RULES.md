@@ -698,7 +698,9 @@ When healed, regain HP up to maximum. **Healing from a Power** adds the healer's
 
 - Applies to total damage in one instance, not per damage type
 - Minimum damage after reduction: 1 (unless Immunity)
-- Armor effectiveness decreases by 1 per hit in a turn until next turn
+- The first time armor reduces damage in a turn, use its full Damage Reduction. Each later reduction in that turn is half the previous amount, rounded up, until the beginning of the next turn. Damage Reduction 5 reduces by 5, then 3, then 2, then 1. Half of 1, rounded up, stays 1.
+- A hit the armor does not reduce does not count. Standard armor does not reduce Psychic, Spiritual, or Sonic damage (see Armor Exceptions).
+- Damage over time is reduced the first time it is applied, not on later turns.
 
 ---
 
