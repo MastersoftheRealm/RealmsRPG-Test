@@ -3,6 +3,7 @@ import type { Character } from '@/types';
 import { cleanForSave } from '@/lib/data-enrichment/clean-for-save';
 import {
   normalizeArchetypeCategoryValue,
+  normalizeArchetypeChoices,
   normalizeCharacterForSave,
   normalizeCharacterOnLoad,
   resolveDefenseVals,
@@ -29,6 +30,15 @@ describe('schema-normalize (TASK-663)', () => {
     );
   });
 
+  it('normalizeArchetypeChoices coerces JSON string keys (86e3jvjh4)', () => {
+    expect(normalizeArchetypeChoices({ '4': 'innate', '7': 'feat', 10: 'innate' })).toEqual({
+      4: 'innate',
+      7: 'feat',
+      10: 'innate',
+    });
+    expect(normalizeArchetypeChoices({ bad: 'innate', 4: 'other' })).toEqual({});
+  });
+
   it('normalizeCharacterOnLoad promotes legacy fields to canonical keys', () => {
     const loaded = normalizeCharacterOnLoad({
       defenseSkills: { might: 1 },
@@ -44,6 +54,13 @@ describe('schema-normalize (TASK-663)', () => {
     expect(loaded.pow_prof).toBe(1);
     expect(loaded.powerProficiency).toBeUndefined();
     expect(loaded.archetype).toEqual({ id: 'path-1', type: 'powered-martial' });
+  });
+
+  it('normalizeCharacterOnLoad normalizes archetypeChoices keys from JSONB', () => {
+    const loaded = normalizeCharacterOnLoad({
+      archetypeChoices: { '4': 'innate', '7': 'feat' },
+    }) as Record<string, unknown>;
+    expect(loaded.archetypeChoices).toEqual({ 4: 'innate', 7: 'feat' });
   });
 
   it('normalizeCharacterForSave writes canonical fields and strips legacy aliases', () => {
