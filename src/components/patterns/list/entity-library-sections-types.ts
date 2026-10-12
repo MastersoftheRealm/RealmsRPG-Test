@@ -37,6 +37,8 @@ type EntityRowExtrasFields = {
   supplementalExpandedContent?: ReactNode | undefined;
   /** Art-capable rows: pair with ListHeader `hasThumbnailColumn`. */
   thumbnail?: ListRowThumbnailProps | undefined;
+  className?: string | undefined;
+  warningMessage?: string | undefined;
 };
 
 export type EntityRowExtras = AllowUndefinedOptionals<EntityRowExtrasFields>;

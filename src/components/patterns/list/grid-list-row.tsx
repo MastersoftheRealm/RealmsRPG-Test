@@ -350,7 +350,7 @@ export const GridListRow = memo(function GridListRow({
     : undefined;
 
   return (
-    <div className={rowStyles}>
+    <div className={rowStyles} title={warningMessage || undefined}>
       {/* DESIGN_INTENT (TASK-702 / TASK-710): stretch grid so collapsed header + action
           chrome share row 1 (icons centered with name). Expanded surface-alt continues
           into the action column (same band class as the body) while + / qty / X stay in

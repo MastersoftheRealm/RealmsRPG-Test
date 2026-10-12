@@ -12,7 +12,10 @@ import {
   resolveCharacterAppearance,
   resolveCharacterBackstory,
 } from '@/lib/character/appearance-age';
-import { characterToFeatRequirementCharacter } from '@/lib/game/feat-requirements';
+import {
+  characterToEffectiveFeatRequirementCharacter,
+  characterToFeatRequirementCharacter,
+} from '@/lib/game/feat-requirements';
 import { calculateMaxArchetypeFeats, calculateMaxCharacterFeats } from '@/lib/game/formulas';
 import { getArchetypeAbilityScore, calculatePowerAttackBonus } from '@/lib/game/calculations';
 import { withAbilitiesForResourceMaxima } from '@/lib/character/temp-modifiers';
@@ -190,6 +193,7 @@ export function buildLibrarySectionData(input: {
     onFeatUsesChange: whenSheetOwner(isOwner, handleFeatUsesChange),
     onFeatLevelChange: handleFeatLevelChange,
     featRequirementCharacter: characterToFeatRequirementCharacter(character),
+    featRequirementEffectiveCharacter: characterToEffectiveFeatRequirementCharacter(character),
     onRemoveFeat: handleRequestRemoveFeat,
     traitsDb: m.traitsDb,
     featsDb: m.featsDb,

@@ -14,6 +14,7 @@ import { Button, Input, Textarea } from '@/components/ui';
 import type { FeatTraitCustomization } from '@/types/feats';
 import { descriptorChipData } from '@/lib/chip/chip-data-helpers';
 import { glrSurfaceDetailSections, metadataDetailSection } from '@/lib/chip/list-row-metadata';
+import { SHEET_UNMET_FEAT_REQUIREMENT_ROW_CLASS } from '@/lib/game/feat-requirements';
 import { capitalize, formatAbilityList } from '@/lib/utils';
 
 /** Stable trait id for customization lookup (prefers codex id). */
@@ -221,6 +222,8 @@ export type FeatRowInput = {
   category?: string | undefined;
   ability?: string | string[] | undefined;
   reqLevel?: number | undefined;
+  /** Sheet warning when real-stat requirements are not met (hover + red border). */
+  requirementWarning?: string | undefined;
   /** For state feats — which list to update when customizing. */
   listType?: 'archetype' | 'character' | undefined;
 };
@@ -432,6 +435,8 @@ export function mapFeatRows(
       },
     );
 
+    const requirementWarning = feat.requirementWarning?.trim();
+
     return {
       id: featId,
       name: feat.customName?.trim() || codexName,
@@ -440,6 +445,8 @@ export function mapFeatRows(
       columns,
       badges: options?.badge ? [options.badge] : undefined,
       detailSections: detailSections.length > 0 ? detailSections : undefined,
+      className: requirementWarning ? SHEET_UNMET_FEAT_REQUIREMENT_ROW_CLASS : undefined,
+      warningMessage: requirementWarning || undefined,
       uses,
       hideUsesInName: !!(uses && ctx.onFeatUsesChange),
       onDelete:

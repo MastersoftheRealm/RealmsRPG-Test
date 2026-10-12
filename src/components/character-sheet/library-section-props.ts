@@ -217,6 +217,9 @@ export interface LibrarySectionData {
   featRequirementCharacter?:
     | import('@/lib/game/feat-requirements').CharacterForFeatRequirement
     | undefined;
+  featRequirementEffectiveCharacter?:
+    | import('@/lib/game/feat-requirements').CharacterForFeatRequirement
+    | undefined;
   onTraitUsesChange?: ((traitName: string, delta: number) => void) | undefined;
   onAddArchetypeFeat?: (() => void) | undefined;
   onAddCharacterFeat?: (() => void) | undefined;
