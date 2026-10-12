@@ -3,7 +3,12 @@ import { DEFAULT_ABILITIES } from '@/types';
 import { CHARACTER_STARTING_CURRENCY } from '@/lib/game/constants';
 import { DEFAULT_DEFENSE_SKILLS } from '@/types';
 import type { GuidedDraft } from '@/stores/guided-creator-store';
-import { buildGuidedCharacterPayload } from '@/lib/guided-creator/build-character';
+import {
+  buildGuidedCharacterPayload,
+  computeGuidedRequiredTrainingSpent,
+} from '@/lib/guided-creator/build-character';
+import { PART_IDS } from '@/lib/id-constants';
+import { snapshotParts } from '@/lib/calculators/power-composition.fixture';
 import { cleanForSave } from '@/lib/data-enrichment';
 import { calculateProficiencyTP } from '@/lib/proficiencies';
 import type { Character } from '@/types';
@@ -490,5 +495,34 @@ describe('buildGuidedCharacterPayload', () => {
     expect(payload.backstory).toBe('Raised in the marshes.');
     expect(payload.description).toBeUndefined();
     expect(payload.appearance).not.toContain('Age:');
+  });
+});
+
+describe('computeGuidedRequiredTrainingSpent (86e3krpzp)', () => {
+  const range = snapshotParts([PART_IDS.POWER_RANGE])[0]!;
+
+  it('charges repeated Power Range once across two powers', () => {
+    const draft = minimalDraft({
+      powerIds: ['power-a', 'power-b'],
+      innatePowerIds: [],
+      techniqueIds: [],
+    });
+    const officialPowers: LibraryPower[] = [
+      {
+        id: 'power-a',
+        name: 'Power A',
+        parts: [{ id: String(range.id), name: range.name, op_1_lvl: 0 }],
+      },
+      {
+        id: 'power-b',
+        name: 'Power B',
+        parts: [{ id: String(range.id), name: range.name, op_1_lvl: 1 }],
+      },
+    ];
+    const spent = computeGuidedRequiredTrainingSpent(draft, {
+      officialPowers,
+      powerPartsDb: [range],
+    });
+    expect(spent).toBe(1);
   });
 });

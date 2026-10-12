@@ -19,7 +19,7 @@ interface CodexPropertyLike {
   op_1_tp?: number | undefined;
 }
 
-interface BuildRequiredProficienciesInput {
+export interface BuildRequiredProficienciesInput {
   powers: CharacterPower[];
   techniques: CharacterTechnique[];
   weapons: Item[];
@@ -278,6 +278,16 @@ export function buildRequiredProficiencies(
   });
 
   return dedupeHighestProficiencies(out);
+}
+
+/** Character-level TP after repeated-part dedupe (sheet + guided save). */
+export function sumRequiredProficiencyTrainingPoints(
+  input: BuildRequiredProficienciesInput,
+): number {
+  return buildRequiredProficiencies(input).reduce(
+    (sum, prof) => sum + calculateProficiencyTP(prof),
+    0,
+  );
 }
 
 export function dedupeHighestProficiencies(list: CharacterProficiency[]): CharacterProficiency[] {

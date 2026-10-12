@@ -24,7 +24,11 @@ import { computeStartingCurrency } from '@/lib/guided-creator/equipment-currency
 import { resolveArchetypeProficiencyStart } from '@/lib/game/formulas';
 import { buildSuggestedAbilityArray } from '@/lib/game/suggested-abilities';
 import { buildCreatorSkillSaveRows } from '@/lib/character/build-creator-skills';
-import { buildRequiredProficiencies } from '@/lib/proficiencies';
+import {
+  buildRequiredProficiencies,
+  sumRequiredProficiencyTrainingPoints,
+  type BuildRequiredProficienciesInput,
+} from '@/lib/proficiencies';
 import type { PowerPart } from '@/hooks/codex-types';
 import { composedPowerProficiencyParts, resolvePowerComposition } from '@/lib/calculators';
 import { libraryItemToPowerDocument } from '@/lib/library-selectable-builders';
@@ -157,6 +161,93 @@ function resolveArmamentsForProficiency(
   };
 }
 
+function buildGuidedEquippedInventory(
+  draft: GuidedDraft,
+  ctx: BuildGuidedCharacterContext,
+): Array<{
+  id: string;
+  name: string;
+  quantity: number;
+  type: 'weapon' | 'armor' | 'equipment' | 'shield';
+}> {
+  const lookup = buildEquipmentLookup(ctx.officialItems, ctx.codexEquipment);
+  const rows: Array<{
+    id: string;
+    name: string;
+    quantity: number;
+    type: 'weapon' | 'armor' | 'equipment' | 'shield';
+  }> = [];
+
+  const pushRow = (ref: { id: string; quantity: number }) => {
+    const resolved = resolveEquipmentRef(ref, lookup);
+    const official = findByNormalizedId(ctx.officialItems, ref.id);
+    const codex = findByNormalizedId(ctx.codexEquipment, ref.id);
+    const rawType = String(official?.type ?? codex?.type ?? '').toLowerCase();
+    let type: 'weapon' | 'armor' | 'equipment' | 'shield' = inventoryTypeForResolvedItem(resolved);
+    if (rawType === 'shield') type = 'shield';
+
+    rows.push({
+      id: ref.id,
+      name: resolved.name,
+      quantity: ref.quantity,
+      type,
+    });
+  };
+
+  draftArmamentRefs(draft).forEach(pushRow);
+  draft.equipment.forEach(pushRow);
+  return rows;
+}
+
+function drForGuidedInventoryRow(row: { id: string }, ctx: BuildGuidedCharacterContext): number {
+  const official = findByNormalizedId(ctx.officialItems, row.id);
+  if (official) return resolveArmorDamageReduction(official);
+  const codex = findByNormalizedId(ctx.codexEquipment, row.id);
+  if (codex) {
+    return resolveArmorDamageReduction({
+      armorValue: codex.armor_value,
+      properties: codex.properties?.map((name) => ({ name })),
+    });
+  }
+  return 0;
+}
+
+/** Resolve draft loadout + powers/techniques for character-level TP dedupe. */
+export function buildGuidedProficiencyInput(
+  draft: GuidedDraft,
+  ctx: BuildGuidedCharacterContext,
+): BuildRequiredProficienciesInput {
+  const inventory = buildGuidedEquippedInventory(draft, ctx);
+  const equippedInventory = applyStarterEquippedFlags(inventory, (row) =>
+    drForGuidedInventoryRow(row, ctx),
+  );
+  const powersForProf = resolvePowersForProficiency(draft, ctx.officialPowers, ctx.powerPartsDb);
+  const techniquesForProf = resolveTechniquesForProficiency(draft, ctx.officialTechniques);
+  const armamentsForProf = resolveArmamentsForProficiency(
+    equippedInventory,
+    ctx.officialItems,
+    ctx.codexEquipment,
+  );
+  return {
+    powers: powersForProf,
+    techniques: techniquesForProf,
+    weapons: armamentsForProf.weapons,
+    shields: armamentsForProf.shields,
+    armor: armamentsForProf.armor,
+    powerPartsDb: ctx.powerPartsDb ?? [],
+    techniquePartsDb: ctx.techniquePartsDb ?? [],
+    itemPropertiesDb: ctx.itemPropertiesDb ?? [],
+  };
+}
+
+/** Live guided/creature TP counter — dedupes repeated parts across loadout + combat picks. */
+export function computeGuidedRequiredTrainingSpent(
+  draft: GuidedDraft,
+  ctx: BuildGuidedCharacterContext,
+): number {
+  return sumRequiredProficiencyTrainingPoints(buildGuidedProficiencyInput(draft, ctx));
+}
+
 export function buildGuidedCharacterPayload(
   draft: GuidedDraft,
   ctx: BuildGuidedCharacterContext,
@@ -282,73 +373,8 @@ export function buildGuidedCharacterPayload(
     },
   );
 
-  const inventory = (() => {
-    const lookup = buildEquipmentLookup(ctx.officialItems, ctx.codexEquipment);
-    const rows: Array<{
-      id: string;
-      name: string;
-      quantity: number;
-      type: 'weapon' | 'armor' | 'equipment' | 'shield';
-    }> = [];
-
-    const pushRow = (ref: { id: string; quantity: number }) => {
-      const resolved = resolveEquipmentRef(ref, lookup);
-      const official = findByNormalizedId(ctx.officialItems, ref.id);
-      const codex = findByNormalizedId(ctx.codexEquipment, ref.id);
-      const rawType = String(official?.type ?? codex?.type ?? '').toLowerCase();
-      let type: 'weapon' | 'armor' | 'equipment' | 'shield' =
-        inventoryTypeForResolvedItem(resolved);
-      if (rawType === 'shield') type = 'shield';
-
-      rows.push({
-        id: ref.id,
-        name: resolved.name,
-        quantity: ref.quantity,
-        type,
-      });
-    };
-
-    draftArmamentRefs(draft).forEach(pushRow);
-    draft.equipment.forEach(pushRow);
-    return rows;
-  })();
-
-  const drForInventoryRow = (row: { id: string }) => {
-    const official = findByNormalizedId(ctx.officialItems, row.id);
-    if (official) return resolveArmorDamageReduction(official);
-    const codex = findByNormalizedId(ctx.codexEquipment, row.id);
-    if (codex) {
-      return resolveArmorDamageReduction({
-        armorValue: codex.armor_value,
-        properties: codex.properties?.map((name) => ({ name })),
-      });
-    }
-    return 0;
-  };
-
-  const equippedInventory = applyStarterEquippedFlags(inventory, drForInventoryRow);
-
-  // DESIGN_INTENT: Guided drafts store lean ids only. Resolve parts/properties from
-  // official/codex libraries here so buildRequiredProficiencies matches custom
-  // getCharacter(), then persist the computed list — cleanForSave strips power/item
-  // parts but keeps `proficiencies` (SAVEABLE_FIELDS).
-  const powersForProf = resolvePowersForProficiency(draft, ctx.officialPowers, ctx.powerPartsDb);
-  const techniquesForProf = resolveTechniquesForProficiency(draft, ctx.officialTechniques);
-  const armamentsForProf = resolveArmamentsForProficiency(
-    equippedInventory,
-    ctx.officialItems,
-    ctx.codexEquipment,
-  );
-  const proficiencies = buildRequiredProficiencies({
-    powers: powersForProf,
-    techniques: techniquesForProf,
-    weapons: armamentsForProf.weapons,
-    shields: armamentsForProf.shields,
-    armor: armamentsForProf.armor,
-    powerPartsDb: ctx.powerPartsDb ?? [],
-    techniquePartsDb: ctx.techniquePartsDb ?? [],
-    itemPropertiesDb: ctx.itemPropertiesDb ?? [],
-  });
+  const profInput = buildGuidedProficiencyInput(draft, ctx);
+  const proficiencies = buildRequiredProficiencies(profInput);
 
   const startingCurrency = computeStartingCurrency(level);
   const savedCurrency = clampSavedCurrency(

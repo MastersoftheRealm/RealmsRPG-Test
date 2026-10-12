@@ -27,6 +27,10 @@ import {
 import type { CoreRulesMap } from '@/types/core-rules';
 import { SENSE_TO_FEAT_ID, MOVEMENT_TO_FEAT_ID } from './creature-creator-constants';
 import type { CreatureState } from './creature-creator-types';
+import {
+  computeCreatureTrainingSpent,
+  type CreatureProficiencyDbContext,
+} from './creature-creator-training-spent';
 
 export type CreatureCreatorDerivedStats = {
   trainingPoints: number;
@@ -65,6 +69,7 @@ export function calculateCreatureCreatorStats(
   featPointsMap: Map<string, number>,
   subSkillNames: Set<string>,
   rules: Partial<CoreRulesMap> | undefined,
+  proficiencyCtx?: CreatureProficiencyDbContext,
 ): CreatureCreatorDerivedStats {
   const level = creature.level;
   const abilities = creature.abilities;
@@ -133,22 +138,7 @@ export function calculateCreatureCreatorStats(
   const manualFeatSpent = creature.feats.reduce((sum, f) => sum + (f.points ?? 1), 0);
   const featSpent = manualFeatSpent + mechanicalFeatPoints;
   const inventory = collectCreatureInventoryItems(creature);
-  const trainingSpent =
-    creature.powers.reduce(
-      (sum, power) =>
-        sum + (typeof power.tp === 'number' && Number.isFinite(power.tp) ? power.tp : 0),
-      0,
-    ) +
-    creature.techniques.reduce(
-      (sum, technique) =>
-        sum +
-        (typeof technique.tp === 'number' && Number.isFinite(technique.tp) ? technique.tp : 0),
-      0,
-    ) +
-    inventory.reduce((sum, armament) => {
-      const tp = typeof armament.tp === 'number' && Number.isFinite(armament.tp) ? armament.tp : 0;
-      return sum + tp * creatureInventoryQuantityMultiplier(armament.quantity);
-    }, 0);
+  const trainingSpent = computeCreatureTrainingSpent(creature, proficiencyCtx);
   const currencySpent = inventory.reduce((sum, armament) => {
     const currency =
       typeof armament.currency === 'number' && Number.isFinite(armament.currency)
