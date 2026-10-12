@@ -31,6 +31,8 @@ export interface ArchetypeSelectorProps {
   compact?: boolean | undefined;
   /** Whether selection is disabled/locked */
   disabled?: boolean | undefined;
+  /** Allow 0 power or 0 martial on the PM slider (creature creator) */
+  allowZeroEnds?: boolean | undefined;
 }
 
 /** Selector-only icons; titles/descriptions come from ARCHETYPE_CATEGORY_INFO. */
@@ -49,6 +51,7 @@ export function ArchetypeSelector({
   onProficiencyChange,
   compact = false,
   disabled = false,
+  allowZeroEnds = false,
 }: ArchetypeSelectorProps) {
   const handleTypeChange = (type: ArchetypeType) => {
     if (disabled) return;
@@ -111,6 +114,7 @@ export function ArchetypeSelector({
           maxPoints={maxProficiency}
           onChange={(power, martial) => onProficiencyChange(power, martial)}
           disabled={disabled}
+          allowZeroEnds={allowZeroEnds}
         />
       )}
 

@@ -40,4 +40,22 @@ describe('ArchetypeSelector powered-martial display (86e3jx4dn)', () => {
     expect(martialValues).not.toContain('2');
     expect(markupAtLevel5).toContain('Total: 3 points');
   });
+
+  it('matches slider thumb to Power 2 / Martial 0 when allowZeroEnds (86e3jywd3)', () => {
+    const markup = renderToStaticMarkup(
+      <ArchetypeSelector
+        value="powered-martial"
+        powerProficiency={2}
+        martialProficiency={0}
+        maxProficiency={2}
+        onTypeChange={vi.fn()}
+        onProficiencyChange={vi.fn()}
+        allowZeroEnds
+      />,
+    );
+
+    expect(markup).toMatch(/value="0"/);
+    expect(markup).toContain('>2<');
+    expect(markup).toContain('>0<');
+  });
 });
