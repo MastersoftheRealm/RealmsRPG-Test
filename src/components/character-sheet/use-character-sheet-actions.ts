@@ -17,7 +17,7 @@
 import { useMemo } from 'react';
 import type { Archetype, Character, CharacterFeat } from '@/types';
 import type { CoreRulesMap } from '@/types/core-rules';
-import type { CodexFeat, Skill, Trait } from '@/hooks/codex-types';
+import type { CodexFeat, Skill, Trait, Species } from '@/hooks/codex-types';
 import type {
   CharacterSheetStats,
   CharacterSheetDerivedHandlers,
@@ -56,6 +56,7 @@ export interface UseCharacterSheetActionsArgs {
   setShowEditSpeciesModal: (value: boolean) => void;
   stateFeatsList: Array<CharacterFeat & { type: 'archetype' | 'character' }>;
   stateUsesMax: number;
+  allSpecies: Species[];
 }
 
 export function useCharacterSheetActions(args: UseCharacterSheetActionsArgs) {
@@ -85,6 +86,7 @@ export function useCharacterSheetActions(args: UseCharacterSheetActionsArgs) {
     setShowEditSpeciesModal,
     stateFeatsList,
     stateUsesMax,
+    allSpecies,
   } = args;
 
   const resource = useSheetResourceActions({
@@ -139,6 +141,8 @@ export function useCharacterSheetActions(args: UseCharacterSheetActionsArgs) {
     setSkillModalType,
     setShowEditArchetypeModal,
     setShowEditSpeciesModal,
+    allSpecies,
+    traitsDb,
   });
 
   const libraryHandlers: CharacterSheetDerivedHandlers = useMemo(
