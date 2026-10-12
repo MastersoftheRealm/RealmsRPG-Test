@@ -62,7 +62,7 @@ export async function GET(_request: Request, { params }: { params: Promise<{ id:
 
     const { data: campaign, error: campaignError } = await supabase
       .from('campaigns')
-      .select('id, owner_id')
+      .select('id, owner_id, characters')
       .eq('id', campaignId)
       .maybeSingle();
     if (campaignError) {
@@ -109,7 +109,15 @@ export async function GET(_request: Request, { params }: { params: Promise<{ id:
       return NextResponse.json({ error: 'Failed to load rolls' }, { status: 500 });
     }
 
-    const rolls = (rows ?? []).map((r) => toEntry(r as RollRow));
+    const rosterCharacterIds = new Set(
+      ((campaign.characters as Array<{ characterId?: string | undefined }> | null) ?? [])
+        .map((entry) => entry.characterId)
+        .filter((id): id is string => typeof id === 'string' && id.length > 0),
+    );
+
+    const rolls = (rows ?? [])
+      .map((r) => toEntry(r as RollRow))
+      .filter((entry) => rosterCharacterIds.has(entry.characterId));
     return NextResponse.json(rolls);
   } catch (err) {
     console.error('[API Error] GET /api/campaigns/[id]/rolls:', err);

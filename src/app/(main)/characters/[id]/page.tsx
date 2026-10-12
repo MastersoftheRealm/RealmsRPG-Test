@@ -106,7 +106,12 @@ export default function CharacterSheetPage({ params }: PageParams) {
   } = model;
 
   return (
-    <RollProvider campaignContext={campaignContext} canRoll={isOwner}>
+    <RollProvider
+      key={character.id}
+      campaignContext={campaignContext}
+      canRoll={isOwner}
+      personalLogCharacterId={character.id}
+    >
       <CharacterSheetProvider value={sheetContextValue!}>
         <div
           className={`bg-background md:min-h-screen ${isOwner ? CHARACTER_SHEET_MOBILE_DOCK_SCOPE_CLASSNAME : ''}`}
