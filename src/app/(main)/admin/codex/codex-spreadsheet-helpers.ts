@@ -16,26 +16,26 @@ export function isFiniteNumberString(str: string): boolean {
 }
 
 export function stringToCellValue(str: string, original: unknown): unknown {
-  const trimmed = str.trim();
-  if (trimmed === '') return undefined;
+  if (str.trim() === '') return undefined;
   if (typeof original === 'number') {
-    const n = parseFloat(trimmed);
+    const n = parseFloat(str.trim());
     return isNaN(n) ? original : n;
   }
   if (typeof original === 'boolean') {
-    const lower = trimmed.toLowerCase();
+    const lower = str.trim().toLowerCase();
     if (lower === 'true') return true;
     if (lower === 'false') return false;
     return original;
   }
   if (Array.isArray(original) || (typeof original === 'object' && original !== null)) {
+    const trimmed = str.trim();
     try {
       return JSON.parse(trimmed);
     } catch {
       return trimmed;
     }
   }
-  return trimmed;
+  return str;
 }
 
 /** Next available numeric ID: max(existing numeric ids) + 1, or "1" if none. */
