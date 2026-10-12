@@ -33,6 +33,7 @@ type UseCreatureCreatorWorkspacePersistenceArgs = {
     rawItems: unknown[];
   };
   editCreatureId: string | null;
+  isAdmin: boolean;
 };
 
 export function useCreatureCreatorWorkspacePersistence({
@@ -41,6 +42,7 @@ export function useCreatureCreatorWorkspacePersistence({
   stats,
   load,
   editCreatureId,
+  isAdmin,
 }: UseCreatureCreatorWorkspacePersistenceArgs) {
   const getPayload = useCallback(() => {
     return {
@@ -64,6 +66,7 @@ export function useCreatureCreatorWorkspacePersistence({
     publicSuccessMessage: 'Creature saved to Realms Library!',
     initialSaveTarget: resolveCreatorSaveTargetFromItem(
       findLoadedLibraryItem(load.rawItems, editCreatureId),
+      { canSaveToOfficial: isAdmin },
     ),
     editingId: editCreatureId,
     onSaveCommitted: acceptDraft,

@@ -136,6 +136,7 @@ function TechniqueCreatorWorkspace({
     techniqueParts,
     initialSaveTarget: resolveCreatorSaveTargetFromItem(
       findLoadedLibraryItem(load.rawItems, editTechniqueId),
+      { canSaveToOfficial: isAdmin },
     ),
   });
 

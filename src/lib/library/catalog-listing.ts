@@ -74,8 +74,16 @@ export function officialLibraryQueryPath(type: string, includeUnlisted: boolean)
   return includeUnlisted ? `${base}?includeUnlisted=1` : base;
 }
 
+export type ResolveCreatorSaveTargetOptions = {
+  /** When false, loaded official rows save as a My Library copy (86e3kcduh). */
+  canSaveToOfficial?: boolean | undefined;
+};
+
 /** Resolve creator save destination from a loaded library row. */
-export function resolveCreatorSaveTargetFromItem(item: unknown): CreatorSaveTarget {
+export function resolveCreatorSaveTargetFromItem(
+  item: unknown,
+  options?: ResolveCreatorSaveTargetOptions,
+): CreatorSaveTarget {
   if (!item || typeof item !== 'object') return 'private';
   const row = item as {
     _source?: unknown;
@@ -83,6 +91,7 @@ export function resolveCreatorSaveTargetFromItem(item: unknown): CreatorSaveTarg
     catalog_listing?: unknown;
   };
   if (row._source !== 'official') return 'private';
+  if (options?.canSaveToOfficial === false) return 'private';
   return catalogListingToSaveTarget(parseCatalogListing(row.catalogListing ?? row.catalog_listing));
 }
 

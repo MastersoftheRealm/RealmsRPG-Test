@@ -192,6 +192,7 @@ function PowerCreatorWorkspace({
     powerParts,
     initialSaveTarget: resolveCreatorSaveTargetFromItem(
       findLoadedLibraryItem(load.rawItems, editPowerId),
+      { canSaveToOfficial: isAdmin },
     ),
   });
 
