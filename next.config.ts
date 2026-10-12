@@ -3,6 +3,7 @@ import createMDX from '@next/mdx';
 import { buildContentSecurityPolicy } from './src/lib/security/content-security-policy';
 
 const nextConfig: NextConfig = {
+  poweredByHeader: false,
   pageExtensions: ['ts', 'tsx', 'js', 'jsx', 'mdx'],
   // Allow character portraits (and profile pictures) from Supabase Storage public URLs
   images: {
