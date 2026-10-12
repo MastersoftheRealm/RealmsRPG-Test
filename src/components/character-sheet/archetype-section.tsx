@@ -226,6 +226,7 @@ const UNARMED_PROWESS_DAMAGE: { level: number; damage: string | null }[] = [
 
 // Weapons Section - displays equipped weapons with attack/damage rolls
 function WeaponsSection({
+  character,
   abilities,
   martialProf,
   unarmedProwess = 0,
@@ -233,6 +234,7 @@ function WeaponsSection({
   onRollDamage,
   enrichedWeapons,
 }: {
+  character: Character;
   abilities: Abilities;
   martialProf: number;
   unarmedProwess?: number | undefined;
@@ -600,6 +602,7 @@ export function ArchetypeSection({
 
       {/* Weapons Section */}
       <WeaponsSection
+        character={character}
         abilities={rollAbilities}
         martialProf={martialProf}
         unarmedProwess={unarmedProwess}
