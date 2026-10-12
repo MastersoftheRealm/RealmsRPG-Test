@@ -3,6 +3,8 @@ import path from 'node:path';
 import { describe, expect, it } from 'vitest';
 import {
   SHEET_HEADER_GRID_CLASSNAME,
+  SHEET_HEADER_IDENTITY_CLASSNAME,
+  SHEET_HEADER_RESOURCES_CLASSNAME,
   SHEET_HEADER_STATS_WRAP_CLASSNAME,
   sheetHeaderThreeColumnFits,
   sheetHeaderVitalGridClass,
@@ -13,6 +15,8 @@ const sheetHeader = readFileSync(path.join(import.meta.dirname, 'sheet-header.ts
 describe('sheet header layout at 1024 (86e3jvv3j)', () => {
   it('wires the shared grid classes instead of lg three-column tracks', () => {
     expect(sheetHeader).toContain('SHEET_HEADER_GRID_CLASSNAME');
+    expect(sheetHeader).toContain('SHEET_HEADER_IDENTITY_CLASSNAME');
+    expect(sheetHeader).toContain('SHEET_HEADER_RESOURCES_CLASSNAME');
     expect(sheetHeader).toContain('SHEET_HEADER_STATS_WRAP_CLASSNAME');
     expect(sheetHeader).toContain('sheetHeaderVitalGridClass');
     expect(SHEET_HEADER_GRID_CLASSNAME).not.toContain('lg:grid-cols-[minmax');
@@ -22,6 +26,28 @@ describe('sheet header layout at 1024 (86e3jvv3j)', () => {
     expect(SHEET_HEADER_STATS_WRAP_CLASSNAME).toContain('md:col-span-2');
     expect(SHEET_HEADER_STATS_WRAP_CLASSNAME).toContain('xl:col-span-1');
     expect(SHEET_HEADER_STATS_WRAP_CLASSNAME).not.toContain('lg:col-span');
+  });
+
+  it('puts identity beside resources at 1024 with vitals full width underneath', () => {
+    expect(SHEET_HEADER_GRID_CLASSNAME).toContain('md:grid-cols-2');
+    expect(SHEET_HEADER_GRID_CLASSNAME).not.toContain('lg:grid-cols');
+    expect(SHEET_HEADER_IDENTITY_CLASSNAME).toContain('md:col-start-1');
+    expect(SHEET_HEADER_IDENTITY_CLASSNAME).toContain('md:row-start-1');
+    expect(SHEET_HEADER_RESOURCES_CLASSNAME).toContain('md:col-start-2');
+    expect(SHEET_HEADER_RESOURCES_CLASSNAME).toContain('md:row-start-1');
+    expect(SHEET_HEADER_STATS_WRAP_CLASSNAME).toContain('md:col-span-2');
+    expect(SHEET_HEADER_STATS_WRAP_CLASSNAME).toContain('md:col-start-1');
+    expect(SHEET_HEADER_STATS_WRAP_CLASSNAME).toContain('md:row-start-2');
+    expect(SHEET_HEADER_GRID_CLASSNAME.startsWith('grid min-w-0 grid-cols-1')).toBe(true);
+  });
+
+  it('keeps the three-column header on one row from 1280', () => {
+    expect(SHEET_HEADER_IDENTITY_CLASSNAME).toContain('xl:col-start-1');
+    expect(SHEET_HEADER_STATS_WRAP_CLASSNAME).toContain('xl:col-start-2');
+    expect(SHEET_HEADER_STATS_WRAP_CLASSNAME).toContain('xl:col-span-1');
+    expect(SHEET_HEADER_STATS_WRAP_CLASSNAME).toContain('xl:row-start-1');
+    expect(SHEET_HEADER_RESOURCES_CLASSNAME).toContain('xl:col-start-3');
+    expect(SHEET_HEADER_RESOURCES_CLASSNAME).toContain('xl:row-start-1');
   });
 
   it('keeps two rows through 1024 and enables three columns from 1280', () => {

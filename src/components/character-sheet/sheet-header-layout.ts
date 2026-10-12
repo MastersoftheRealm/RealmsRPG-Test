@@ -27,8 +27,20 @@ const HEADER_COLUMN_GAP_PX = 20;
 export const SHEET_HEADER_GRID_CLASSNAME =
   'grid min-w-0 grid-cols-1 items-stretch gap-4 md:grid-cols-2 md:items-start md:gap-5 xl:grid-cols-[minmax(0,1.5fr)_auto_minmax(16rem,1.1fr)] xl:items-center xl:gap-6';
 
+/** Left cell of the shared row from `md` through `lg` (1024). Column 1 of the `xl` row. */
+export const SHEET_HEADER_IDENTITY_CLASSNAME =
+  'min-w-0 md:col-start-1 md:row-start-1 xl:col-start-1';
+
+/**
+ * Right cell of that same row. Explicit lines: a full-width vitals span does not
+ * leave this cell empty beside identity (86e3jvv3j). Column 3 on the `xl` row.
+ */
+export const SHEET_HEADER_RESOURCES_CLASSNAME =
+  'min-w-0 md:col-start-2 md:row-start-1 xl:col-start-3 xl:row-start-1';
+
+/** Full width under identity | resources until `xl`, then the middle column of one row. */
 export const SHEET_HEADER_STATS_WRAP_CLASSNAME =
-  'flex min-w-0 justify-center md:col-span-2 xl:col-span-1 xl:col-start-2 xl:row-start-1';
+  'flex min-w-0 justify-center md:col-span-2 md:col-start-1 md:row-start-2 xl:col-span-1 xl:col-start-2 xl:row-start-1';
 
 /** Four vitals: 2×2 on phones, four-across when the cluster is full-width, 2×2 in the middle column. */
 export function sheetHeaderVitalGridClass(vitalCount: number): string {

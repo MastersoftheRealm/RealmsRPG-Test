@@ -37,6 +37,8 @@ import { SheetHeaderIdentity } from './sheet-header-identity';
 import { SheetHeaderResources } from './sheet-header-resources';
 import {
   SHEET_HEADER_GRID_CLASSNAME,
+  SHEET_HEADER_IDENTITY_CLASSNAME,
+  SHEET_HEADER_RESOURCES_CLASSNAME,
   SHEET_HEADER_STATS_WRAP_CLASSNAME,
   sheetHeaderVitalGridClass,
 } from './sheet-header-layout';
@@ -207,7 +209,7 @@ export function SheetHeader({
     <Card className="mb-4 w-full min-w-0 p-4 shadow-md md:p-6" data-tour-id="sheet-tour-header">
       {/* C3/C5 (TASK-908 / 86e3jvv3j): 3-col from xl; identity | resources on md–lg with vitals full width. */}
       <div className={SHEET_HEADER_GRID_CLASSNAME}>
-        <div className="min-w-0">
+        <div className={SHEET_HEADER_IDENTITY_CLASSNAME}>
           <SheetHeaderIdentity
             character={character}
             isEditMode={isEditMode}
@@ -271,7 +273,7 @@ export function SheetHeader({
           </div>
         </div>
 
-        <div className="min-w-0">
+        <div className={SHEET_HEADER_RESOURCES_CLASSNAME}>
           <SheetHeaderResources
             actionPoints={actionPoints}
             onActionPointsChange={onActionPointsChange}
