@@ -311,6 +311,7 @@ function CreatureCreatorContent() {
                 onChange={setPowerModalTab}
                 aria-label="Power modal type"
                 tabs
+                equalWidth
                 options={[
                   { value: 'powers', label: 'Powers' },
                   { value: 'empowered', label: 'Empowered Techniques' },
