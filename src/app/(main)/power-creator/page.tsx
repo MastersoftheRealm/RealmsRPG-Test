@@ -15,7 +15,7 @@
 
 'use client';
 
-import { useState, Suspense } from 'react';
+import { useState, Suspense, useMemo } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { Wand2, Zap, Target } from 'lucide-react';
 import {
@@ -74,6 +74,12 @@ import {
 import { PowerCreatorEditor } from './power-creator-editor';
 import { usePowerCreatorWorkspace } from './use-power-creator-workspace';
 import { PowerCreatorHelp } from './power-creator-help';
+import {
+  innatePowerCreatorSummaryHelpLabel,
+  innatePowerCreatorSummaryLabel,
+  snapshotPowerCreatorForInnate,
+} from './power-creator-innate-label';
+import type { PowerDocument } from '@/lib/calculators';
 import {
   creatorEditReplacesDraft,
   findLoadedLibraryItem,
@@ -202,6 +208,11 @@ function PowerCreatorWorkspace({
   const randomizeSharedUnpriced =
     ws.variants.structure === 'randomize' && ws.variants.activeTabId === SHARED_TAB_ID;
   const showVariantTabs = ws.variants.structure !== 'none' || ws.variants.reverseEnabled;
+
+  const innateSummaryLabel = useMemo(() => {
+    const snapshot = snapshotPowerCreatorForInnate(ws.powerData as PowerDocument, powerParts);
+    return innatePowerCreatorSummaryLabel(snapshot);
+  }, [ws.powerData, powerParts]);
   const onRandomizeFace =
     ws.variants.structure === 'randomize' &&
     ws.variants.activeTabId !== SHARED_TAB_ID &&
@@ -497,8 +508,11 @@ function PowerCreatorWorkspace({
           ]}
           costHelp={
             <div className="flex items-center gap-1.5 text-sm text-text-secondary">
-              <span>Innate Power</span>
-              <PowerCreatorHelp topic="innate" />
+              <span>{innateSummaryLabel}</span>
+              <PowerCreatorHelp
+                topic="innate"
+                label={innatePowerCreatorSummaryHelpLabel(innateSummaryLabel)}
+              />
             </div>
           }
           statRows={[

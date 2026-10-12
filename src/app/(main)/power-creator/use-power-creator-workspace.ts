@@ -417,6 +417,7 @@ export function usePowerCreatorWorkspace({
     removeAdvancedPart,
     updateAdvancedPart,
     variants,
+    powerData,
     composedSummary,
     dieIncomplete,
     reverseIncomplete,
