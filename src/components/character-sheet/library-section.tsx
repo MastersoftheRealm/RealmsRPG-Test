@@ -233,6 +233,7 @@ export function LibrarySection({
     onFeatUsesChange,
     onFeatLevelChange,
     featRequirementCharacter,
+    featRequirementEffectiveCharacter,
     onTraitUsesChange,
     onRemoveFeat,
     traitCustomizations = {},
@@ -378,6 +379,7 @@ export function LibrarySection({
             onFeatUsesChange={onFeatUsesChange}
             onFeatLevelChange={onFeatLevelChange}
             featRequirementCharacter={featRequirementCharacter}
+            featRequirementEffectiveCharacter={featRequirementEffectiveCharacter}
             onTraitUsesChange={onTraitUsesChange}
             onAddArchetypeFeat={onAddArchetypeFeat}
             onAddCharacterFeat={onAddCharacterFeat}

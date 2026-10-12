@@ -15,8 +15,15 @@
  * in sync — "learn once, use forever".
  */
 
-import type { Abilities } from '@/types/abilities';
+import type { Abilities, DefenseName } from '@/types/abilities';
 import type { DefenseSkills } from '@/types/skills';
+import type { CharacterTempModifiers } from '@/types/character';
+import {
+  applyTempModifier,
+  getDefenseTempModifier,
+  getEffectiveAbilities,
+  getSkillTempModifier,
+} from '@/lib/character/temp-modifiers';
 import { calculateDefenses, calculateSpeed } from './calculations';
 import { getSkillBonusForFeatRequirement, type CodexSkillForFeat } from './formulas';
 import { getFeatFamilyId, getFeatLevel, formatFeatName } from '@/lib/leveled-feats';
@@ -278,6 +285,95 @@ export function checkFeatRequirements(
 }
 
 /** Map a saved character to the shape used by feat requirement checks. */
+/** Red border on sheet feat rows whose real-stat requirements are not met (86e3jv9gz). */
+export const SHEET_UNMET_FEAT_REQUIREMENT_ROW_CLASS = 'border-danger-300 dark:border-danger-600';
+
+const DEFENSE_TEMP_KEYS: DefenseName[] = [
+  'might',
+  'fortitude',
+  'reflex',
+  'discernment',
+  'mentalFortitude',
+  'resolve',
+];
+
+/** Layer temp modifiers onto a feat-requirement character (abilities, defenses, skills). */
+export function applyTempModifiersForFeatRequirements(
+  character: CharacterForFeatRequirement,
+  temps: CharacterTempModifiers | undefined,
+): CharacterForFeatRequirement {
+  if (!temps) return character;
+
+  const abilities = getEffectiveAbilities((character.abilities || {}) as Abilities, temps);
+
+  const defenseVals: Partial<DefenseSkills> = {
+    ...(character.defenseVals || character.defenseSkills || {}),
+  };
+  DEFENSE_TEMP_KEYS.forEach((key) => {
+    const delta = getDefenseTempModifier(temps, key);
+    if (delta !== 0) {
+      defenseVals[key] = applyTempModifier(defenseVals[key] ?? 0, delta);
+    }
+  });
+
+  let skills = character.skills;
+  if (temps.skills && skills && typeof skills === 'object' && !Array.isArray(skills)) {
+    const next: Record<string, number | { prof?: boolean | undefined; val?: number | undefined }> =
+      {};
+    Object.entries(skills).forEach(([key, sk]) => {
+      const delta = getSkillTempModifier(temps, key);
+      if (delta === 0) {
+        next[key] = sk;
+        return;
+      }
+      if (typeof sk === 'number') {
+        next[key] = applyTempModifier(sk, delta);
+      } else if (sk && typeof sk === 'object' && 'val' in sk) {
+        next[key] = { ...sk, val: applyTempModifier(sk.val ?? 0, delta) };
+      } else {
+        next[key] = sk;
+      }
+    });
+    skills = next;
+  }
+
+  return {
+    ...character,
+    abilities,
+    defenseVals,
+    skills,
+  };
+}
+
+export function characterToEffectiveFeatRequirementCharacter(
+  character: import('@/types').Character,
+): CharacterForFeatRequirement {
+  return applyTempModifiersForFeatRequirements(
+    characterToFeatRequirementCharacter(character),
+    character.tempModifiers,
+  );
+}
+
+/**
+ * Warning copy for a sheet feat row when real values fail requirements.
+ * Suppresses the flag when only temp modifiers (or other layered penalties) cause failure.
+ */
+export function getSheetFeatRequirementWarning(
+  feat: FeatForRequirement,
+  realCharacter: CharacterForFeatRequirement,
+  skillsDb: CodexSkillForFeat[],
+  allFeats: FeatForRequirement[],
+  effectiveCharacter?: CharacterForFeatRequirement,
+): string | undefined {
+  const base = checkFeatRequirements(feat, realCharacter, skillsDb, allFeats);
+  if (base.met) return undefined;
+  if (effectiveCharacter) {
+    const effective = checkFeatRequirements(feat, effectiveCharacter, skillsDb, allFeats);
+    if (effective.met) return undefined;
+  }
+  return base.reason;
+}
+
 export function characterToFeatRequirementCharacter(
   character: import('@/types').Character,
 ): CharacterForFeatRequirement {

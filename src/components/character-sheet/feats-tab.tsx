@@ -24,6 +24,7 @@ import {
 import {
   checkFeatRequirements,
   getMaxQualifiedFeatLevel,
+  getSheetFeatRequirementWarning,
   type CharacterForFeatRequirement,
 } from '@/lib/game/feat-requirements';
 import {
@@ -115,6 +116,7 @@ interface FeatsTabProps {
     | ((featId: string, targetLevel: number, listType: 'archetype' | 'character') => void)
     | undefined;
   featRequirementCharacter?: CharacterForFeatRequirement | undefined;
+  featRequirementEffectiveCharacter?: CharacterForFeatRequirement | undefined;
   onTraitUsesChange?: ((traitName: string, delta: number) => void) | undefined;
   onAddArchetypeFeat?: (() => void) | undefined;
   onAddCharacterFeat?: (() => void) | undefined;
@@ -154,6 +156,7 @@ export function FeatsTab({
   onFeatUsesChange,
   onFeatLevelChange,
   featRequirementCharacter,
+  featRequirementEffectiveCharacter,
   onTraitUsesChange,
   onAddArchetypeFeat,
   onAddCharacterFeat,
@@ -282,6 +285,16 @@ export function FeatsTab({
         featLvl != null && featLvl > 1
           ? formatFeatName({ id: String(feat.id ?? name), name, feat_lvl: featLvl })
           : name;
+      const requirementWarning =
+        dbFeat && featRequirementCharacter
+          ? getSheetFeatRequirementWarning(
+              dbFeat,
+              featRequirementCharacter,
+              codexSkills,
+              featsDb,
+              featRequirementEffectiveCharacter,
+            )
+          : undefined;
       return {
         ...feat,
         codexName,
@@ -292,9 +305,10 @@ export function FeatsTab({
         category: dbFeat?.category,
         ability: dbFeat?.ability,
         reqLevel: dbFeat?.lvl_req,
+        requirementWarning,
       };
     },
-    [featsDb],
+    [featsDb, featRequirementCharacter, featRequirementEffectiveCharacter, codexSkills],
   );
 
   const allTraitsWithCategories = useMemo(

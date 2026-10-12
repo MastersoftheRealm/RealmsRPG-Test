@@ -6,6 +6,7 @@ import {
   traitRowId,
   type FeatRowContext,
 } from './library-feat-rows';
+import { SHEET_UNMET_FEAT_REQUIREMENT_ROW_CLASS } from '@/lib/game/feat-requirements';
 import { defined } from '@/lib/utils';
 
 const ctx: FeatRowContext = {
@@ -47,6 +48,26 @@ describe('mapTraitRows — kind chip expanded-only (TASK-779)', () => {
 
     expect(row.badges).toBeUndefined();
     expect(row.detailSections).toBeUndefined();
+  });
+});
+
+describe('mapFeatRows — unmet requirement warning (86e3jv9gz)', () => {
+  it('paints red border and warningMessage when requirementWarning is set', () => {
+    const row = defined(
+      mapFeatRows(
+        [
+          {
+            id: 'um',
+            name: 'Unwavering Might',
+            requirementWarning: 'Requires level 20, Requires Might 1+',
+          },
+        ],
+        ctx,
+      )[0],
+    );
+
+    expect(row.className).toBe(SHEET_UNMET_FEAT_REQUIREMENT_ROW_CLASS);
+    expect(row.warningMessage).toBe('Requires level 20, Requires Might 1+');
   });
 });
 
