@@ -64,7 +64,7 @@ const RARITY_REFERENCE = [
   { name: 'Common', ipRange: '0 – 4', baseCost: 25 },
   { name: 'Uncommon', ipRange: '4 – 6', baseCost: 100 },
   { name: 'Rare', ipRange: '6 – 8', baseCost: 500 },
-  { name: 'Epic', ipRange: '8 – 11', baseCost: 2500 },
+  { name: 'Epic', ipRange: '8 – 11', baseCost: 1500 },
   { name: 'Legendary', ipRange: '11 – 14', baseCost: 10000 },
   { name: 'Mythic', ipRange: '14 – 16', baseCost: 50000 },
   { name: 'Ascended', ipRange: '16+', baseCost: 100000 },

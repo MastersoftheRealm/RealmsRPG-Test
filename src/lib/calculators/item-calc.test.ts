@@ -31,6 +31,12 @@ describe('calculateCurrencyCostAndRarity (T10 / M11)', () => {
     expect(calculateCurrencyCostAndRarity(0, 16.01).rarity).toBe('Ascended');
   });
 
+  it('uses 1,500 as the Epic currency floor (Core Rulebook / codex)', () => {
+    const priced = calculateCurrencyCostAndRarity(0, 9);
+    expect(priced.rarity).toBe('Epic');
+    expect(priced.currencyCost).toBe(1500);
+  });
+
   it('clamps high-c Uncommon currency inside the Uncommon band', () => {
     const priced = calculateCurrencyCostAndRarity(40, 5);
     expect(priced.rarity).toBe('Uncommon');

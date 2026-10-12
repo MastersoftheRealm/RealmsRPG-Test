@@ -136,7 +136,7 @@ const RARITY_BRACKETS = [
   { name: 'Common', low: 25, currencyMax: 99, ipLow: 0, ipHigh: 4 },
   { name: 'Uncommon', low: 100, currencyMax: 499, ipLow: 4.01, ipHigh: 6 },
   { name: 'Rare', low: 500, currencyMax: 1499, ipLow: 6.01, ipHigh: 8 },
-  { name: 'Epic', low: 2500, currencyMax: 9999, ipLow: 8.01, ipHigh: 11 },
+  { name: 'Epic', low: 1500, currencyMax: 9999, ipLow: 8.01, ipHigh: 11 },
   { name: 'Legendary', low: 10000, currencyMax: 49999, ipLow: 11.01, ipHigh: 14 },
   { name: 'Mythic', low: 50000, currencyMax: 99999, ipLow: 14.01, ipHigh: 16 },
   { name: 'Ascended', low: 100000, currencyMax: Infinity, ipLow: 16.01, ipHigh: Infinity },
