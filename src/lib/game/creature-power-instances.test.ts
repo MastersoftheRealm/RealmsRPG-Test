@@ -35,19 +35,21 @@ describe('creature power instances (86e3jx636)', () => {
       power({ id: 'lib-1', name: 'P1', tp: 1 }),
       power({ id: 'lib-4', name: 'P4', tp: 4 }),
     ];
-    const key = creaturePowerRowKey(rows[2], 2);
+    const third = rows[2]!;
+    const key = creaturePowerRowKey(third, 2);
     const next = removeCreaturePowerByRowKey(rows, key);
     expect(next).toHaveLength(3);
     expect(next.filter((p) => p.id === 'lib-1')).toHaveLength(2);
-    expect(next[2].id).toBe('lib-4');
+    expect(next[2]!.id).toBe('lib-4');
   });
 
   it('toggles innate on a single instance', () => {
     const withInstance = assignCreaturePowerInstance(power({ id: 'lib-1', name: 'P1' }));
     const rows = [withInstance, { ...withInstance, instanceId: 'other' }];
-    const key = creaturePowerRowKey(rows[0], 0);
+    const first = rows[0]!;
+    const key = creaturePowerRowKey(first, 0);
     const next = toggleCreaturePowerInnateByRowKey(rows, key);
-    expect(next[0].innate).toBe(true);
-    expect(next[1].innate).not.toBe(true);
+    expect(next[0]!.innate).toBe(true);
+    expect(next[1]!.innate).not.toBe(true);
   });
 });
