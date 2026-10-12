@@ -1,6 +1,6 @@
 /**
  * Guided powers/techniques L2 — UnifiedSelectionModal (TASK-463 / TASK-471 / TASK-573).
- * Innate mode: add-path uses applyInnateSelection (last-in energy swap, TASK-727).
+ * Innate mode: add-path uses applyInnateSelection (warn on threshold/energy, 86e3pbwf7).
  */
 
 'use client';
@@ -38,6 +38,7 @@ import type { PowersTechniquesKind } from '@/lib/guided-creator/power-technique-
 import {
   applyInnateSelection,
   innateSelectionBlockMessage,
+  innateSelectionWarnMessage,
 } from '@/lib/guided-creator/powers-techniques-step-helpers';
 import { GUIDED_CREATOR_COPY } from '@/lib/constants/site-copy';
 
@@ -196,16 +197,10 @@ export function GuidedPowersTechniquesL2Modal({
         setError(ptCopy.tpBlocked);
         return;
       }
-      if (mode === 'innate') {
-        if (energySpentOf(selected) > innateEnergyMax) {
-          setError(ptCopy.innateEnergyBlocked);
-          return;
-        }
-      }
       setError(null);
       onConfirm(selectedIdsFromL2Items(selected));
     },
-    [mode, loadoutTpSpent, tpLimit, innateEnergyMax, onConfirm],
+    [loadoutTpSpent, tpLimit, onConfirm],
   );
 
   const nextInnateSelectedIds = useCallback(
@@ -224,7 +219,7 @@ export function GuidedPowersTechniquesL2Modal({
         setError(innateSelectionBlockMessage(applied.reason));
         return currentIds;
       }
-      setError(null);
+      setError(applied.warn ? innateSelectionWarnMessage(applied.warn) : null);
       return applied.nextIds;
     },
     [selectable, innateThreshold, innateEnergyMax, loadoutTpSpent, tpLimit],
@@ -267,12 +262,9 @@ export function GuidedPowersTechniquesL2Modal({
       if (computeL2PowersTechniquesTpSpent(selected, loadoutTpSpent) > tpLimit) {
         return true;
       }
-      if (mode === 'innate') {
-        return energySpentOf(selected) > innateEnergyMax;
-      }
       return false;
     },
-    [mode, loadoutTpSpent, tpLimit, innateEnergyMax],
+    [loadoutTpSpent, tpLimit],
   );
 
   return (
