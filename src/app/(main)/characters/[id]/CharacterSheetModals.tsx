@@ -6,7 +6,6 @@
 'use client';
 
 import { useMemo } from 'react';
-import type { Character, Item } from '@/types';
 import {
   AddLibraryItemModal,
   AddFeatModal,
@@ -17,49 +16,8 @@ import {
 } from '@/components/character-sheet';
 import { DeleteConfirmModal, AddSubSkillModal } from '@/components/patterns';
 import type { AddLibraryItemType } from '@/hooks/use-add-library-item-data';
-import {
-  useCharacterSheet,
-  type AddModalType,
-} from '@/components/character-sheet/character-sheet-context';
-
-/**
- * DESIGN_INTENT: Add-modal exclusion set is type-scoped only.
- * Cross-table numeric ids (weapon id "1" vs codex Equipment id "1") must not hide rows.
- * Equipment is stackable — return empty so owned Equipment stays selectable (quantity merges).
- */
-function existingIdsForAddModal(
-  character: Character | null,
-  addModalType: AddModalType,
-): Set<string> {
-  const ids = new Set<string>();
-  if (!character || !addModalType) return ids;
-  const add = (id: string | number | undefined) => {
-    const s = String(id ?? '');
-    if (s) ids.add(s);
-  };
-  switch (addModalType) {
-    case 'power':
-    case 'innate-power':
-      character.powers?.forEach((p) => add(p.id));
-      break;
-    case 'technique':
-      character.techniques?.forEach((t) => add(t.id));
-      break;
-    case 'weapon':
-      ((character.equipment?.weapons as Item[]) || []).forEach((w) => add(w.id));
-      break;
-    case 'armor':
-      ((character.equipment?.armor as Item[]) || []).forEach((a) => add(a.id));
-      break;
-    case 'shield':
-      ((character.equipment?.shields as Item[]) || []).forEach((s) => add(s.id));
-      break;
-    case 'equipment':
-      // Stackable — do not exclude owned Equipment (quantity merges on add).
-      break;
-  }
-  return ids;
-}
+import { useCharacterSheet } from '@/components/character-sheet/character-sheet-context';
+import { existingIdsForAddModal } from '@/lib/character-sheet/add-modal-existing-ids';
 
 interface TraitForModal {
   name: string;
@@ -110,13 +68,14 @@ export function CharacterSheetModals() {
     onArchetypeSave,
     onSpeciesSave,
     characterSpeciesSkills,
+    enrichedData,
   } = useCharacterSheet();
 
   const traitsDb = libraryModel?.traitsDb ?? [];
   const featsDb = libraryModel?.featsDb ?? [];
   const scopedExistingIds = useMemo(
-    () => existingIdsForAddModal(character, addModalType),
-    [character, addModalType],
+    () => existingIdsForAddModal(character, addModalType, enrichedData),
+    [character, addModalType, enrichedData],
   );
 
   return (
