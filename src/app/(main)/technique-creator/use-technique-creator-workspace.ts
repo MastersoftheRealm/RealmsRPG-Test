@@ -39,6 +39,7 @@ import {
   type TechniqueSelectedPart as SelectedPart,
   type TechniqueDamageConfig as DamageConfig,
 } from './technique-creator-bootstrap';
+import { applyTechniqueCreatorReset } from './technique-creator-reset';
 import { persistCreatorDraft, clearCreatorCache } from '@/lib/game/creator-cache';
 
 function toTechniquePartPayload(part: {
@@ -367,7 +368,9 @@ export function useTechniqueCreatorWorkspace({
     save.setSaveMessage,
   );
 
-  const handleReset = useCallback(() => {
+  const [showResetConfirm, setShowResetConfirm] = useState(false);
+
+  const resetFormFields = useCallback(() => {
     setName('');
     setDescription('');
     setSelectedParts([]);
@@ -378,11 +381,22 @@ export function useTechniqueCreatorWorkspace({
     setImageId(null);
     setImageUrl(null);
     setTargetedDefenses([]);
-    save.forgetLoadedLibraryItem();
-    save.setSaveMessage(null);
-    clearCreatorCache(TECHNIQUE_CREATOR_CACHE_KEY);
-    acceptDraft();
-  }, [acceptDraft, save]);
+  }, []);
+
+  const handleReset = useCallback(() => {
+    setShowResetConfirm(true);
+  }, []);
+
+  const confirmReset = useCallback(() => {
+    applyTechniqueCreatorReset({
+      resetForm: resetFormFields,
+      forgetLoadedLibraryItem: () => save.forgetLoadedLibraryItem(),
+      clearSaveMessage: () => save.setSaveMessage(null),
+      clearDraftCache: () => clearCreatorCache(TECHNIQUE_CREATOR_CACHE_KEY),
+      acceptDraft,
+    });
+    setShowResetConfirm(false);
+  }, [acceptDraft, resetFormFields, save]);
 
   const applyFormState = useCallback((next: TechniqueCreatorFormState) => {
     setName(next.name);
@@ -454,6 +468,9 @@ export function useTechniqueCreatorWorkspace({
     unsavedDirty,
     discardLocalDraft,
     handleReset,
+    confirmReset,
+    showResetConfirm,
+    setShowResetConfirm,
     handleLoadTechnique,
   };
 }

@@ -176,6 +176,15 @@ function TechniqueCreatorWorkspace({
             existingInPublic: ws.save.publishExistingInPublic,
           }) ?? '',
       }}
+      resetConfirm={{
+        isOpen: ws.showResetConfirm,
+        onClose: () => ws.setShowResetConfirm(false),
+        onConfirm: ws.confirmReset,
+        title: 'Reset technique?',
+        description:
+          'This clears the loaded technique and all fields. You cannot undo this action.',
+        confirmLabel: 'Reset',
+      }}
       loadModal={{
         isOpen: load.showLoadModal,
         onClose: load.closeLoadModal,
