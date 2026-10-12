@@ -9,6 +9,7 @@ import {
   calculateHealthEnergyPool,
   calculateProficiency,
   calculateAbilityPoints,
+  calculateAbilityScoreCost,
   calculateSkillPointsForEntity,
 } from '@/lib/game/formulas';
 import { calculateCreatureSpeed, calculateEvasion } from '@/lib/game/calculations';
@@ -163,7 +164,10 @@ export function calculateCreatureCreatorStats(
   const speed = calculateCreatureSpeed(abilities.agility, rules);
   const evasion = calculateEvasion(abilities.agility, undefined, rules);
 
-  const abilitySpent = Object.values(abilities).reduce((sum, val) => sum + val, 0);
+  const abilitySpent = Object.values(abilities).reduce(
+    (sum, val) => sum + calculateAbilityScoreCost(val, rules),
+    0,
+  );
   const heSpent = creature.hitPoints + creature.energyPoints;
   const skillRules = resolveSkillAllocationRules(rules);
   const skillAllocations: Record<string, number> = {};

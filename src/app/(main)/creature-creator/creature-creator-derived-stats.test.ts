@@ -31,6 +31,19 @@ describe('calculateCreatureCreatorStats', () => {
     expect(stats.featSpent).toBe(1);
   });
 
+  it('uses doubled ability cost above +4 in summary (86e3jx4dk)', () => {
+    const creature = {
+      ...initialState,
+      level: 1,
+      abilities: { ...initialState.abilities, strength: 7 },
+    };
+    const stats = calculateCreatureCreatorStats(creature, featPointsMap, new Set(), undefined);
+    expect(stats.abilityPoints).toBe(7);
+    expect(stats.abilitySpent).toBe(10);
+    expect(stats.abilityRemaining).toBe(-3);
+    expect(isCreatureOverBudget(stats)).toBe(true);
+  });
+
   it('uses past-cap skill costs in summary remaining (86e3jx4dm)', () => {
     const creature = {
       ...initialState,
