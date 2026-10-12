@@ -21,6 +21,7 @@ import { DeleteConfirmModal, ErrorDisplay } from '@/components/patterns';
 import { useCharacters, useDeleteCharacter, useDuplicateCharacter, useAuth } from '@/hooks';
 import { isGuestCharacterId } from '@/lib/guest-character-storage';
 import { UserPlus } from 'lucide-react';
+import { useCharacterQuota } from './use-character-quota';
 
 export default function CharactersPage() {
   return <CharactersContent />;
@@ -44,8 +45,10 @@ function CharactersContent() {
   const [duplicatingId, setDuplicatingId] = useState<string | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<{ id: string; name: string } | null>(null);
   const [deleteError, setDeleteError] = useState<string | null>(null);
+  const { atQuota, message: quotaMessage } = useCharacterQuota();
 
   const handleCreateCharacter = () => {
+    if (atQuota) return;
     router.push('/characters/new');
   };
 
@@ -130,6 +133,14 @@ function CharactersContent() {
     <PageContainer size="xl" className={PAGE_FILLS_VIEWPORT_CLASSNAME}>
       <PageHeader title="Characters" />
 
+      {quotaMessage && (
+        <div className="mb-4">
+          <Alert variant="warning" title="Character limit reached">
+            {quotaMessage}
+          </Alert>
+        </div>
+      )}
+
       {deleteError && (
         <div className="mb-4">
           <Alert variant="danger" title="Delete failed">
@@ -151,7 +162,11 @@ function CharactersContent() {
             />
           ))}
 
-          <AddCharacterCard onClick={handleCreateCharacter} />
+          <AddCharacterCard
+            onClick={handleCreateCharacter}
+            disabled={atQuota}
+            disabledReason={quotaMessage ?? undefined}
+          />
         </div>
       ) : (
         <EmptyState
@@ -162,10 +177,14 @@ function CharactersContent() {
               ? 'Create your first character to begin your adventure in Realms RPG.'
               : 'Create a character to try the sheet in this browser. Sign in to keep characters on your account.'
           }
-          action={{
-            label: 'Create Character',
-            onClick: handleCreateCharacter,
-          }}
+          action={
+            atQuota
+              ? undefined
+              : {
+                  label: 'Create Character',
+                  onClick: handleCreateCharacter,
+                }
+          }
           secondaryAction={
             !user
               ? {

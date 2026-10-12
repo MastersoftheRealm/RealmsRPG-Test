@@ -15,6 +15,9 @@ import { Plus, Wand2, Swords, Shield, Shirt, Sword, Users, Sparkles } from 'luci
 import { itemCreatorTypeHref } from '@/lib/library/armament-library-labels';
 import { libraryTabCount, type LibraryPageTabId } from '@/lib/library/library-tab-counts';
 import { useAuth } from '@/hooks';
+import { useAccountProfile } from '@/hooks/use-profile';
+import { formatRoleQuotaExceededMessage, isAtRoleQuota } from '@/lib/role-quota-messages';
+import { Alert } from '@/components/ui/alert';
 import {
   PageContainer,
   PageHeader,
@@ -167,6 +170,21 @@ function LibraryContent() {
   const deleteCreature = useDeleteCreature();
   const deleteEnhancedItem = useDeleteEnhancedItem();
   const currentTab = TABS.find((t) => t.id === displayTab)!;
+  const { profile } = useAccountProfile(user);
+  const maxPowers = profile?.rolePolicy?.maxPowers;
+  const powerCount = myCounts?.powers ?? 0;
+  const powerQuotaMessage =
+    fetchMyLibrary &&
+    displayTab === 'powers' &&
+    isAtRoleQuota(powerCount, maxPowers) &&
+    maxPowers != null
+      ? formatRoleQuotaExceededMessage({
+          role: profile?.role ?? 'new_player',
+          resource: 'custom_powers',
+          currentCount: powerCount,
+          maxAllowed: maxPowers,
+        })
+      : null;
 
   const isDeleting =
     deletePower.isPending ||
@@ -249,17 +267,33 @@ function LibraryContent() {
         actions={
           <div className="flex items-center gap-2">
             {!isPublic && !isGuest ? (
-              <Link href={currentTab.createHref}>
-                <Button variant="primary">
+              powerQuotaMessage ? (
+                <Button variant="primary" disabled title={powerQuotaMessage}>
                   <Plus className="h-4 w-4" />
                   <span className="hidden sm:inline">{currentTab.createLabel}</span>
                   <span className="sm:hidden">New</span>
                 </Button>
-              </Link>
+              ) : (
+                <Link href={currentTab.createHref}>
+                  <Button variant="primary">
+                    <Plus className="h-4 w-4" />
+                    <span className="hidden sm:inline">{currentTab.createLabel}</span>
+                    <span className="sm:hidden">New</span>
+                  </Button>
+                </Link>
+              )
             ) : null}
           </div>
         }
       />
+
+      {powerQuotaMessage ? (
+        <div className="mb-4">
+          <Alert variant="warning" title="Power limit reached">
+            {powerQuotaMessage}
+          </Alert>
+        </div>
+      ) : null}
 
       <div className="mb-4 flex min-w-0 flex-wrap items-center gap-4">
         {!isGuest && (

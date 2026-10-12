@@ -134,22 +134,28 @@ export function CharacterCard({
 
 interface AddCharacterCardProps {
   onClick?: (() => void) | undefined;
+  disabled?: boolean | undefined;
+  disabledReason?: string | undefined;
 }
 
 /** Same outer size as CharacterCard: square portrait slot + fixed footer band. */
-export function AddCharacterCard({ onClick }: AddCharacterCardProps) {
+export function AddCharacterCard({ onClick, disabled, disabledReason }: AddCharacterCardProps) {
   return (
     // Wrapper so the grid cell stretches; native <button> min-size quirks won't shrink the tile.
     <div className="h-full min-h-0 w-full">
       <button
         type="button"
-        onClick={onClick}
+        onClick={disabled ? undefined : onClick}
+        disabled={disabled}
+        aria-disabled={disabled || undefined}
+        title={disabledReason}
         className={cn(
           'group flex h-full w-full flex-col overflow-hidden rounded-xl border-2 border-dashed border-border-light',
           'duration-base bg-surface-secondary transition-all ease-standard',
-          'hover:-translate-y-0.5 hover:border-primary-outline-border hover:bg-primary-subtle-bg hover:shadow-md',
-          'active:translate-y-0',
           'focus-visible:ring-2 focus-visible:ring-primary-outline-border focus-visible:ring-offset-2 focus-visible:outline-none',
+          disabled
+            ? 'cursor-not-allowed opacity-60'
+            : 'hover:-translate-y-0.5 hover:border-primary-outline-border hover:bg-primary-subtle-bg hover:shadow-md active:translate-y-0',
         )}
       >
         <div className="relative flex aspect-square shrink-0 items-center justify-center">

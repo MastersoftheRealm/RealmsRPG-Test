@@ -6,8 +6,8 @@
  * Server page: `returnTo` comes from `searchParams` (no client `useSearchParams`).
  */
 
-import Link from 'next/link';
 import { Sparkles, SlidersHorizontal, Check } from 'lucide-react';
+import { CharacterQuotaAlert, CharacterQuotaLink } from '../use-character-quota';
 import { cn } from '@/lib/utils';
 import { sanitizeRedirectPath } from '@/lib/safe-redirect';
 import { DescriptorChip } from '@/components/ui';
@@ -61,20 +61,21 @@ export default async function NewCharacterChooserPage({
       <CreatorFunnelHero align="center" title={copy.title} subtitle={copy.subtitle} />
 
       <div className="layout-shell-wide px-4 py-10 sm:py-14">
+        <CharacterQuotaAlert className="mx-auto mb-6 max-w-4xl" />
         <div className="mx-auto grid max-w-4xl gap-6 md:grid-cols-2">
           {MODES.map((mode) => {
             const Icon = mode.icon;
             return (
-              <Link
+              <CharacterQuotaLink
                 key={mode.id}
                 href={withReturnTo(mode.href, returnTo)}
+                ariaLabel={`${mode.label} character creator: ${mode.tagline}`}
                 className={cn(
                   'group flex min-h-[16rem] flex-col gap-4 rounded-card border p-6 text-left sm:p-7',
                   'border-border-light bg-surface-alt/60 dark:border-border',
                   'duration-base transition-shadow hover:shadow-raised',
                   'focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2 focus-visible:ring-offset-background focus-visible:outline-none',
                 )}
-                aria-label={`${mode.label} character creator: ${mode.tagline}`}
               >
                 <div className="flex w-full items-center gap-3">
                   <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-card bg-primary-subtle-bg text-primary-fg shadow-sm">
@@ -108,7 +109,7 @@ export default async function NewCharacterChooserPage({
                     </li>
                   ))}
                 </ul>
-              </Link>
+              </CharacterQuotaLink>
             );
           })}
         </div>
