@@ -121,6 +121,7 @@ function MobileSortMenu({
   onOpenChange,
   menuRef,
   onColumnClick,
+  compact = false,
 }: {
   sortableColumns: ListColumn[];
   sortState?: SortState | undefined;
@@ -130,9 +131,10 @@ function MobileSortMenu({
   onOpenChange: (open: boolean) => void;
   menuRef: RefObject<HTMLDivElement | null>;
   onColumnClick: (column: ListColumn) => void;
+  compact?: boolean | undefined;
 }) {
   return (
-    <div ref={menuRef} className="mb-2 lg:hidden">
+    <div ref={menuRef} className={cn('lg:hidden', compact ? 'mb-0' : 'mb-2')}>
       <button
         type="button"
         onClick={() => onOpenChange(!open)}
@@ -370,6 +372,7 @@ export function ListHeader({
             onOpenChange={setMobileSortOpen}
             menuRef={mobileSortRef}
             onColumnClick={handleColumnClick}
+            compact={compact}
           />
         )}
       </>
@@ -470,6 +473,7 @@ export function ListHeader({
             onOpenChange={setMobileSortOpen}
             menuRef={mobileSortRef}
             onColumnClick={handleColumnClick}
+            compact={compact}
           />
         )}
       </>
@@ -492,6 +496,7 @@ export function ListHeader({
           onOpenChange={setMobileSortOpen}
           menuRef={mobileSortRef}
           onColumnClick={handleColumnClick}
+          compact={compact}
         />
       )}
     </>

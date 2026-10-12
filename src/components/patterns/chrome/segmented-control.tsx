@@ -68,7 +68,7 @@ export function SegmentedControl<T extends string>({
         // Hug the pills unless equalWidth stretches the group (TASK-720 size pickers).
         'flex-wrap items-center border border-border-light bg-surface-alt',
         compact ? 'gap-0.5 rounded-md p-0.5' : 'gap-1 rounded-lg p-1',
-        equalWidth ? 'flex w-full' : 'inline-flex w-fit max-w-full',
+        equalWidth ? 'flex w-full flex-nowrap' : 'inline-flex w-fit max-w-full',
         className,
       )}
     >
@@ -109,10 +109,7 @@ export function SegmentedControl<T extends string>({
             className={classNameBtn}
           >
             {opt.icon ? <span className="shrink-0 [&_svg]:shrink-0">{opt.icon}</span> : null}
-            <span
-              className={cn((opt.icon || equalWidth) && 'min-w-0 truncate')}
-              title={opt.label}
-            >
+            <span className={cn((opt.icon || equalWidth) && 'min-w-0 truncate')} title={opt.label}>
               {opt.label}
             </span>
           </button>

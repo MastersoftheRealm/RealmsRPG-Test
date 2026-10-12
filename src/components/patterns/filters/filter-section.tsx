@@ -117,7 +117,7 @@ export function FilterSection({
         toggleButton
       )}
 
-      {belowToolbar ? <div className="mt-2 shrink-0">{belowToolbar}</div> : null}
+      {belowToolbar ? <div className="mt-1 shrink-0 md:mt-2">{belowToolbar}</div> : null}
 
       {!isExpanded && summary ? <p className="mt-2 text-xs text-text-muted">{summary}</p> : null}
 

@@ -35,14 +35,19 @@ export function UnifiedSelectionModalFooter({
   primaryActions,
   wrapFooterActions = false,
 }: UnifiedSelectionModalFooterProps) {
+  const countLabel = `${selectedCount} ${itemLabel}${selectedCount !== 1 ? 's' : ''} selected${
+    maxSelections !== undefined && maxSelections !== 1 ? ` (max ${maxSelections})` : ''
+  }`;
+
   return (
-    <div className="flex flex-col gap-3 border-t border-border-light bg-surface pt-3 md:pt-4">
+    <div className="flex flex-col gap-2 border-t border-border-light bg-surface">
       {footerExtra?.(selectedItems)}
-      <div className="flex flex-col-reverse gap-3 sm:flex-row sm:items-center sm:justify-between">
-        <span className="text-sm text-text-muted">
-          {selectedCount} {itemLabel}
-          {selectedCount !== 1 ? 's' : ''} selected
-          {maxSelections !== undefined && maxSelections !== 1 && ` (max ${maxSelections})`}
+      <div className="flex items-center justify-between gap-2">
+        <span
+          className="min-w-0 truncate text-sm text-text-muted max-sm:sr-only"
+          title={countLabel}
+        >
+          {countLabel}
         </span>
         <div
           className={cn(

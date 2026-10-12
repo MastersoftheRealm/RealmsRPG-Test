@@ -296,7 +296,7 @@ export function UnifiedSelectionModal({
         fullScreenOnMobile
         flexLayout={flexLayout}
         contentClassName={cn(
-          'flex flex-col flex-1 min-h-0 gap-2 overflow-hidden px-4 pt-4 pb-0 md:gap-3 md:px-6 md:pt-6 md:pb-0 md:max-h-[70vh]',
+          'flex flex-col flex-1 min-h-0 gap-1 overflow-hidden px-4 pt-2 pb-0 md:gap-3 md:px-6 md:pt-6 md:pb-0 md:max-h-[70vh]',
           className,
         )}
         footer={
