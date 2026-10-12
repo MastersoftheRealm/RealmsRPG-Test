@@ -31,6 +31,19 @@ import {
 
 export type { ListHeaderRowChrome } from './grid-list-row-chrome';
 
+/**
+ * Accessible name including sort direction (86e3k0jwe).
+ * `aria-sort` is not allowed on `button`; inactive headers keep their visible name.
+ */
+export function columnSortAccessibleName(
+  label: string,
+  isActive: boolean,
+  dir: number | undefined,
+): string | undefined {
+  if (!isActive) return undefined;
+  return `${label}, sorted ${dir === 1 ? 'ascending' : 'descending'}`;
+}
+
 interface ListColumnFields {
   /** Column key for sorting */
   key: string;
@@ -296,6 +309,8 @@ export function ListHeader({
         return (
           <button
             key={column.key}
+            type="button"
+            aria-label={columnSortAccessibleName(column.label, isActive, sortState?.dir)}
             onClick={() => handleColumnClick(column)}
             className={cn(
               'inline-flex w-full items-center gap-1 transition-colors hover:text-primary-fg-hover',
@@ -399,6 +414,11 @@ export function ListHeader({
               {rightSlotIsSortable ? (
                 <button
                   type="button"
+                  aria-label={columnSortAccessibleName(
+                    rightSlotLabel!,
+                    rightSlotActive,
+                    sortState?.dir,
+                  )}
                   onClick={() => onSort!(rightSlotSortKey!)}
                   className={cn(
                     'inline-flex w-full items-center justify-center gap-1 transition-colors hover:text-primary-fg-hover',
