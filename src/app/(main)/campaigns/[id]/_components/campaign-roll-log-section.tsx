@@ -9,6 +9,7 @@ import { Dices } from 'lucide-react';
 import { Alert, Button, EmptyState, LoadingState } from '@/components/ui';
 import { RollEntryCard } from '@/components/rolls';
 import type { CampaignRollEntry } from '@/types/campaign-roll';
+import { CAMPAIGN_ROLL_LOG_SCROLL_CLASS } from './campaign-roll-log-scroll';
 
 export function CampaignRollLogSection({
   rolls,
@@ -47,7 +48,7 @@ export function CampaignRollLogSection({
           </Button>
         </Alert>
       )}
-      <div ref={scrollRef} className="max-h-[400px] overflow-y-auto rounded-lg bg-surface-alt p-2">
+      <div ref={scrollRef} className={CAMPAIGN_ROLL_LOG_SCROLL_CLASS}>
         {loading && rolls.length === 0 && !isError ? (
           <LoadingState message="Loading campaign rolls…" />
         ) : rolls.length === 0 && !isError ? (
