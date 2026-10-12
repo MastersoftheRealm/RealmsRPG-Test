@@ -9,16 +9,16 @@ describe('shouldCloseDisclosureOnFocusLeave (86e3jw5n1)', () => {
       contains: (node: Node) => (node as { id?: string }).id === 'inner',
     } as HTMLElement;
 
-    expect(shouldCloseDisclosureOnFocusLeave(root, inner as EventTarget)).toBe(false);
+    expect(shouldCloseDisclosureOnFocusLeave(root, inner as unknown as EventTarget)).toBe(false);
   });
 
   it('closes when focus leaves the menu root or relatedTarget is null', () => {
     const root = {
       contains: () => false,
-    } as HTMLElement;
+    } as unknown as HTMLElement;
     const outside = { id: 'outside' };
 
-    expect(shouldCloseDisclosureOnFocusLeave(root, outside as EventTarget)).toBe(true);
+    expect(shouldCloseDisclosureOnFocusLeave(root, outside as unknown as EventTarget)).toBe(true);
     expect(shouldCloseDisclosureOnFocusLeave(root, null)).toBe(true);
   });
 });
