@@ -194,11 +194,13 @@ function CampaignCharacterViewContent() {
 
   return (
     <RollProvider
+      key={characterId}
       campaignContext={{
         campaignId,
         characterId,
         characterName: character.name,
       }}
+      personalLogCharacterId={characterId}
     >
       <CharacterSheetProvider value={sheetContextValue}>
         <div className="bg-background md:min-h-screen">
