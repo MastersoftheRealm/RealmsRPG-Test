@@ -60,6 +60,11 @@ export interface TechniqueCreatorFormState {
   targetedDefenses: string[];
 }
 
+/** Automatic combat parts are rebuilt from attack mode, action, and damage. */
+export function isManualTechniquePart(part: { mechanic?: boolean | null | undefined }): boolean {
+  return part.mechanic !== true;
+}
+
 export type TechniqueLibraryRecord = {
   name?: string | undefined;
   description?: string | undefined;
@@ -103,13 +108,15 @@ export function techniquePartsForSave(
   }>,
 ): TechniqueSavedPart[] {
   return [
-    ...selectedParts.map((sp) => ({
-      id: Number(sp.part.id),
-      name: sp.part.name,
-      op_1_lvl: sp.op_1_lvl,
-      op_2_lvl: sp.op_2_lvl,
-      op_3_lvl: sp.op_3_lvl,
-    })),
+    ...selectedParts
+      .filter((sp) => isManualTechniquePart(sp.part))
+      .map((sp) => ({
+        id: Number(sp.part.id),
+        name: sp.part.name,
+        op_1_lvl: sp.op_1_lvl,
+        op_2_lvl: sp.op_2_lvl,
+        op_3_lvl: sp.op_3_lvl,
+      })),
     ...mechanicParts.map((mp) => ({
       id: mp.id,
       name: mp.name,
@@ -144,7 +151,7 @@ export function restoreTechniqueCreatorFromCache(
   const selectedParts: TechniqueSelectedPart[] = [];
   for (const savedPart of parsed.selectedParts ?? []) {
     const foundPart = techniqueParts.find((p) => String(p.id) === String(savedPart.partId));
-    if (foundPart) {
+    if (foundPart && isManualTechniquePart(foundPart)) {
       selectedParts.push({
         part: foundPart,
         op_1_lvl: savedPart.op_1_lvl,

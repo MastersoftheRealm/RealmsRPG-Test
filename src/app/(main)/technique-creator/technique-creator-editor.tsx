@@ -19,9 +19,10 @@ import {
 import { ACTION_OPTIONS, DIE_SIZES } from '@/lib/game/creator-constants';
 import { ATTACK_MODE_SELECT_OPTIONS, type AttackMode } from '@/lib/attack-mode';
 import { formatAttackModeCanTargetHint } from '@/lib/game/targeted-defenses';
-import type {
-  TechniqueSelectedPart as SelectedPart,
-  TechniqueDamageConfig as DamageConfig,
+import {
+  isManualTechniquePart,
+  type TechniqueSelectedPart as SelectedPart,
+  type TechniqueDamageConfig as DamageConfig,
 } from './technique-creator-bootstrap';
 
 type SectionCostSlice = {
@@ -67,6 +68,10 @@ type TechniqueCreatorEditorProps = {
   onTargetedDefensesChange: (next: string[]) => void;
   suggestionSelectedParts: TechniquePart[];
 };
+
+function manualTechniqueParts(parts: TechniquePart[]): TechniquePart[] {
+  return parts.filter((part) => isManualTechniquePart(part));
+}
 
 export function TechniqueCreatorEditor({
   isAdmin,
@@ -254,7 +259,7 @@ export function TechniqueCreatorEditor({
                 _index={idx}
                 onRemove={() => onRemovePart(idx)}
                 onUpdate={(updates) => onUpdatePart(idx, updates)}
-                allParts={techniqueParts}
+                allParts={manualTechniqueParts(techniqueParts)}
                 showApplyDuration={false}
               />
             ))}
