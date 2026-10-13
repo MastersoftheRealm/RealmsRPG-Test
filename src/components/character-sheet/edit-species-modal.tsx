@@ -66,6 +66,7 @@ export function EditSpeciesModal({ isOpen, onClose, character, onSave }: EditSpe
         {m.step === 'species' && (
           <EditSpeciesSpeciesStep
             allSpecies={m.allSpecies}
+            userSpeciesIds={m.userSpeciesIds}
             draftAncestry={m.draftAncestry}
             isMixed={m.isMixed}
             onOpenMixed={() => m.setShowMixedModal(true)}
