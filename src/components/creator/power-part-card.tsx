@@ -112,11 +112,11 @@ export function PowerPartCard({
 
   return (
     <div className="overflow-hidden rounded-lg border border-border-light bg-surface shadow-sm">
-      <div className="flex items-center justify-between bg-surface-alt px-4 py-3">
+      <div className="flex flex-col gap-2 bg-surface-alt px-4 py-3 sm:flex-row sm:items-center sm:justify-between">
         <button
           type="button"
           onClick={() => setExpanded(!expanded)}
-          className="-ml-2 flex min-w-0 flex-1 items-center gap-2 rounded py-1 pl-2 text-left transition-colors hover:bg-surface-alt/80"
+          className="-ml-2 flex min-w-0 flex-1 flex-wrap items-center gap-2 rounded py-1 pl-2 text-left transition-colors hover:bg-surface-alt/80"
         >
           <span className="shrink-0 text-text-muted">
             {expanded ? <ChevronUp className="h-5 w-5" /> : <ChevronDown className="h-5 w-5" />}
@@ -125,30 +125,30 @@ export function PowerPartCard({
             <DescriptorChip
               variant={partChipVariant(part.category)}
               size="sm"
-              className="max-w-[7.5rem] shrink-0 truncate font-normal"
+              className="max-w-full shrink font-normal"
               title={part.category}
             >
               {part.category}
             </DescriptorChip>
           )}
-          <span className="min-w-0 truncate font-medium text-text-primary">{part.name}</span>
+          <span className="min-w-0 basis-full font-medium break-words whitespace-normal text-text-primary sm:basis-auto sm:truncate">
+            {part.name}
+          </span>
           {targetsFact ? (
-            <DescriptorChip
-              size="sm"
-              className="max-w-[12rem] shrink-0 truncate font-normal"
-              title={targetsFact}
-            >
+            <DescriptorChip size="sm" className="max-w-full shrink font-normal" title={targetsFact}>
               {targetsFact}
             </DescriptorChip>
           ) : null}
-          <span className="flex flex-shrink-0 items-center gap-2 text-sm font-semibold">
+        </button>
+        <div className="flex shrink-0 items-center justify-end gap-2">
+          <span className="flex items-center gap-2 text-sm font-semibold whitespace-nowrap">
             <span className="text-energy-text">EN: {formatCost(partEnergy)}</span>
             <span className="text-tp-text">TP: {formatCost(partTP)}</span>
           </span>
-        </button>
-        <IconButton onClick={onRemove} label="Remove part" variant="danger" size="sm">
-          <X className="h-5 w-5" />
-        </IconButton>
+          <IconButton onClick={onRemove} label="Remove part" variant="danger" size="sm">
+            <X className="h-5 w-5" />
+          </IconButton>
+        </div>
       </div>
 
       {expanded && (
@@ -244,14 +244,16 @@ export function PowerPartCard({
             <div className="space-y-3 border-t border-border-light pt-2">
               {hasOption(1) && (
                 <div className="rounded-lg border border-energy-border bg-energy-light p-3">
-                  <div className="mb-2 flex items-center justify-between">
-                    <div className="flex items-center gap-2">
-                      <span className="text-sm font-semibold text-energy-text">Option 1</span>
-                      <span className="text-sm font-medium text-energy-text">
+                  <div className="mb-2 flex flex-wrap items-center justify-between gap-2">
+                    <div className="flex min-w-0 flex-wrap items-center gap-x-2 gap-y-1">
+                      <span className="text-sm font-semibold whitespace-nowrap text-energy-text">
+                        Option 1
+                      </span>
+                      <span className="text-sm font-medium whitespace-nowrap text-energy-text">
                         EN {(part.op_1_en || 0) >= 0 ? '+' : ''}
                         {formatCost(part.op_1_en || 0)}
                       </span>
-                      <span className="text-sm font-medium text-tp-text">
+                      <span className="text-sm font-medium whitespace-nowrap text-tp-text">
                         TP {(part.op_1_tp || 0) >= 0 ? '+' : ''}
                         {formatCost(part.op_1_tp || 0)}
                       </span>
@@ -269,14 +271,16 @@ export function PowerPartCard({
 
               {hasOption(2) && (
                 <div className="rounded-lg border border-energy-border bg-energy-light p-3">
-                  <div className="mb-2 flex items-center justify-between">
-                    <div className="flex items-center gap-2">
-                      <span className="text-sm font-semibold text-energy-text">Option 2</span>
-                      <span className="text-sm font-medium text-energy-text">
+                  <div className="mb-2 flex flex-wrap items-center justify-between gap-2">
+                    <div className="flex min-w-0 flex-wrap items-center gap-x-2 gap-y-1">
+                      <span className="text-sm font-semibold whitespace-nowrap text-energy-text">
+                        Option 2
+                      </span>
+                      <span className="text-sm font-medium whitespace-nowrap text-energy-text">
                         EN {(part.op_2_en || 0) >= 0 ? '+' : ''}
                         {formatCost(part.op_2_en || 0)}
                       </span>
-                      <span className="text-sm font-medium text-tp-text">
+                      <span className="text-sm font-medium whitespace-nowrap text-tp-text">
                         TP {(part.op_2_tp || 0) >= 0 ? '+' : ''}
                         {formatCost(part.op_2_tp || 0)}
                       </span>
@@ -294,14 +298,16 @@ export function PowerPartCard({
 
               {hasOption(3) && (
                 <div className="rounded-lg border border-energy-border bg-energy-light p-3">
-                  <div className="mb-2 flex items-center justify-between">
-                    <div className="flex items-center gap-2">
-                      <span className="text-sm font-semibold text-energy-text">Option 3</span>
-                      <span className="text-sm font-medium text-energy-text">
+                  <div className="mb-2 flex flex-wrap items-center justify-between gap-2">
+                    <div className="flex min-w-0 flex-wrap items-center gap-x-2 gap-y-1">
+                      <span className="text-sm font-semibold whitespace-nowrap text-energy-text">
+                        Option 3
+                      </span>
+                      <span className="text-sm font-medium whitespace-nowrap text-energy-text">
                         EN {(part.op_3_en || 0) >= 0 ? '+' : ''}
                         {formatCost(part.op_3_en || 0)}
                       </span>
-                      <span className="text-sm font-medium text-tp-text">
+                      <span className="text-sm font-medium whitespace-nowrap text-tp-text">
                         TP {(part.op_3_tp || 0) >= 0 ? '+' : ''}
                         {formatCost(part.op_3_tp || 0)}
                       </span>

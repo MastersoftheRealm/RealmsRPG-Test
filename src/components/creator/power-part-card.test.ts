@@ -1,5 +1,8 @@
+import { readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
 import { creatorPartOptionLabel } from './power-part-card';
+
+const source = readFileSync(new URL('./power-part-card.tsx', import.meta.url), 'utf8');
 
 describe('creator part option labels (86e3jpq36)', () => {
   const vitality = { id: '40', name: 'Brace', category: 'Vitality' };
@@ -15,5 +18,18 @@ describe('creator part option labels (86e3jpq36)', () => {
 
   it('keeps the name when the open category has one copy', () => {
     expect(creatorPartOptionLabel(actions, [actions])).toBe('Brace');
+  });
+});
+
+describe('creator part card phone layout (86e3jx9gg)', () => {
+  it('keeps the remove control beside the costs and lets the name wrap', () => {
+    expect(source).toContain('flex shrink-0 items-center justify-end gap-2');
+    expect(source).toContain('break-words whitespace-normal');
+    expect(source).not.toContain('min-w-0 truncate font-medium');
+  });
+
+  it('wraps option headers as whole words', () => {
+    expect(source).toContain('flex flex-wrap items-center justify-between gap-2');
+    expect(source).toContain('whitespace-nowrap text-energy-text');
   });
 });
