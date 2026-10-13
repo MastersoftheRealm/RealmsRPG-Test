@@ -11,6 +11,8 @@ import { CREATOR_CACHE_KEYS } from './creator-constants';
 
 const BASE = CREATOR_CACHE_KEYS.POWER;
 
+type Draft = { name: string; timestamp: number };
+
 function installStorages() {
   const local = new Map<string, string>();
   const session = new Map<string, string>();
@@ -51,8 +53,8 @@ describe('scoped creator draft cache (86e3juw0a)', () => {
 
     const keyA = scopedCreatorCacheKey(BASE, 'power-a');
     const keyB = scopedCreatorCacheKey(BASE, 'power-b');
-    expect(readCreatorCache<{ name: string }>(keyA)?.name).toBe('Tab A');
-    expect(readCreatorCache<{ name: string }>(keyB)?.name).toBe('Tab B');
+    expect(readCreatorCache<Draft>(keyA)?.name).toBe('Tab A');
+    expect(readCreatorCache<Draft>(keyB)?.name).toBe('Tab B');
   });
 
   it('keeps new-draft autosave in sessionStorage per tab', () => {
@@ -63,7 +65,7 @@ describe('scoped creator draft cache (86e3juw0a)', () => {
 
     persistCreatorSessionDraft(BASE, null, false, { name: 'Draft 1', timestamp: now }, false);
     expect(session.get(newKey)).toContain('Draft 1');
-    expect(readNewCreatorDraftCache<{ name: string }>(BASE)?.name).toBe('Draft 1');
+    expect(readNewCreatorDraftCache<Draft>(BASE)?.name).toBe('Draft 1');
   });
 
   it('resolves session cache keys for edit vs new draft', () => {
