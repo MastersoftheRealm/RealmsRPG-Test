@@ -167,6 +167,11 @@ export function LevelUpModal({
     });
   }, [character, targetLevel, characterSpeciesSkills, featsDb, rules, isLevelDown, isLevelChange]);
 
+  const featGainLines = [
+    { label: 'Archetype', value: formatDelta(gains.archetypeFeats) },
+    { label: 'Character', value: formatDelta(gains.characterFeats) },
+  ];
+
   return (
     <Modal
       isOpen={isOpen}
@@ -256,8 +261,7 @@ export function LevelUpModal({
           <GainCard
             icon={<Star className="h-5 w-5 text-power-fg" />}
             label="Feats"
-            value={formatDelta(gains.archetypeFeats)}
-            description="Archetype & Character"
+            lines={featGainLines}
           />
         </div>
 
@@ -276,19 +280,34 @@ export function LevelUpModal({
 interface GainCardProps {
   icon: React.ReactNode;
   label: string;
-  value: string;
-  description: string;
+  value?: string;
+  description?: string;
+  lines?: Array<{ label: string; value: string }>;
 }
 
-function GainCard({ icon, label, value, description }: GainCardProps) {
+function GainCard({ icon, label, value, description, lines }: GainCardProps) {
   return (
     <div className="rounded-lg border border-border-light bg-surface-alt p-3">
       <div className="mb-1 flex items-center gap-2">
         {icon}
         <span className="text-sm font-medium text-text-secondary">{label}</span>
       </div>
-      <div className="text-2xl font-bold text-text-primary">{value}</div>
-      <div className="text-xs text-text-muted">{description}</div>
+      {lines && lines.length > 0 ? (
+        <ul className="space-y-0.5">
+          {lines.map((line) => (
+            <li
+              key={line.label}
+              className="flex min-w-0 flex-wrap items-baseline justify-between gap-x-2"
+            >
+              <span className="text-xs text-text-muted">{line.label}</span>
+              <span className="text-lg font-bold text-text-primary">{line.value}</span>
+            </li>
+          ))}
+        </ul>
+      ) : (
+        <div className="text-2xl font-bold text-text-primary">{value}</div>
+      )}
+      {description ? <div className="text-xs text-text-muted">{description}</div> : null}
     </div>
   );
 }
