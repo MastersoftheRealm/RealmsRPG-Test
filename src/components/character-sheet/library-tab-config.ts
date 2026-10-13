@@ -31,6 +31,17 @@ export const DEFAULT_TAB_VISIBILITY: Record<TabType, boolean> = {
   notes: true,
 };
 
+/** Hide is blocked when this tab is the only one still visible outside edit mode. */
+export function libraryTabHideBlocked(
+  visibility: Partial<Record<TabType, boolean>>,
+  tabId: TabType,
+): boolean {
+  const resolved = { ...DEFAULT_TAB_VISIBILITY, ...visibility };
+  if (resolved[tabId] === false) return false;
+  const visibleCount = LIBRARY_TAB_ORDER.filter((id) => resolved[id] !== false).length;
+  return visibleCount <= 1;
+}
+
 /** Resolve a visible library tab when the active tab is hidden outside edit mode. */
 export function resolveLibraryActiveTab(
   activeTab: TabType,
