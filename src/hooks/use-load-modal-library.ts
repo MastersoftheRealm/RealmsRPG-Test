@@ -466,7 +466,7 @@ export function useLoadModalLibrary(
             ? 'Official creatures can be added by admins via Admin → Realms Library Editor.'
             : 'Official content can be added by admins via Admin → Realms Library Editor.'
         : selectableItems.length === 0 && source === 'my' && type === 'species'
-          ? 'Save a species to My Codex first.'
+          ? 'Save a species to My Library first.'
           : selectableItems.length === 0 && type === 'creature' && source !== 'public'
             ? 'Create a creature and save it to your library first.'
             : selectableItems.length === 0
