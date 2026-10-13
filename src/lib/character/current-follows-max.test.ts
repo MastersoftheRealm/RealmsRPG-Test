@@ -26,19 +26,19 @@ function sheet(
 }
 
 describe('current follows a lower max (86e3juy8e)', () => {
-  it('drops Health from 21/21 to 18/18 when 3 allocation points are removed', () => {
+  it('drops Health from 25/25 to 22/22 when 3 allocation points are removed', () => {
     const prev = sheet({
       abilities: { vitality: 3 },
       healthPoints: 10,
-      currentHealth: 21,
+      currentHealth: 25,
     });
-    expect(computeMaxHealthEnergy(prev).maxHealth).toBe(21);
+    expect(computeMaxHealthEnergy(prev).maxHealth).toBe(25);
 
     const next = applySheetHealthPointsChange(prev, 7);
 
     expect(next.healthPoints).toBe(7);
-    expect(computeMaxHealthEnergy(next).maxHealth).toBe(18);
-    expect(next.currentHealth).toBe(18);
+    expect(computeMaxHealthEnergy(next).maxHealth).toBe(22);
+    expect(next.currentHealth).toBe(22);
     expect(next.currentEnergy).toBe(0);
   });
 
@@ -58,20 +58,20 @@ describe('current follows a lower max (86e3juy8e)', () => {
     expect(next.currentHealth).toBe(0);
   });
 
-  it('drops Health from 20 to 18 when Vitality lowers the max to 18', () => {
+  it('drops Health from 24 to 22 when Vitality lowers the max to 22', () => {
     const prev = sheet({
       level: 2,
       abilities: { vitality: 6 },
       healthPoints: 0,
-      currentHealth: 20,
+      currentHealth: 24,
     });
-    expect(computeMaxHealthEnergy(prev).maxHealth).toBe(20);
+    expect(computeMaxHealthEnergy(prev).maxHealth).toBe(24);
 
     const next = applySheetAbilityChange(prev, 'vitality', 5);
 
     expect(next.abilities.vitality).toBe(5);
-    expect(computeMaxHealthEnergy(next).maxHealth).toBe(18);
-    expect(next.currentHealth).toBe(18);
+    expect(computeMaxHealthEnergy(next).maxHealth).toBe(22);
+    expect(next.currentHealth).toBe(22);
   });
 
   it('drops Energy from 18 to 16 when Charisma lowers the max to 16', () => {
@@ -99,7 +99,7 @@ describe('current follows a lower max (86e3juy8e)', () => {
 
     const next = applySheetHealthPointsChange(prev, 7);
 
-    expect(computeMaxHealthEnergy(next).maxHealth).toBe(18);
+    expect(computeMaxHealthEnergy(next).maxHealth).toBe(22);
     expect(next.currentHealth).toBe(10);
   });
 
@@ -107,12 +107,12 @@ describe('current follows a lower max (86e3juy8e)', () => {
     const prev = sheet({
       abilities: { vitality: 3 },
       healthPoints: 10,
-      currentHealth: 25,
+      currentHealth: 30,
     });
 
     const next = applySheetHealthPointsChange(prev, 7);
 
-    expect(next.currentHealth).toBe(18);
+    expect(next.currentHealth).toBe(22);
   });
 
   it('leaves Health below 0 when the new max is still above it', () => {
@@ -131,13 +131,13 @@ describe('current follows a lower max (86e3juy8e)', () => {
     const prev = sheet({
       abilities: { vitality: 3 },
       healthPoints: 10,
-      currentHealth: 21,
+      currentHealth: 25,
     });
 
     const next = applySheetHealthPointsChange(prev, 13);
 
-    expect(computeMaxHealthEnergy(next).maxHealth).toBe(24);
-    expect(next.currentHealth).toBe(24);
+    expect(computeMaxHealthEnergy(next).maxHealth).toBe(28);
+    expect(next.currentHealth).toBe(28);
   });
 
   it('does not raise current Health when allocation rises and current is below max', () => {

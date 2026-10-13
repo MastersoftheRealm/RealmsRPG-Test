@@ -20,7 +20,7 @@ export const SHARED_CONSTANTS = {
 /** Player character specific constants */
 export const PLAYER_CONSTANTS = {
   BASE_HIT_ENERGY: 18,
-  BASE_HEALTH: 8,
+  BASE_HEALTH: 12,
   BASE_TRAINING_POINTS: 22,
   TP_PER_LEVEL_MULTIPLIER: 2,
 } as const;
@@ -30,7 +30,7 @@ export const CHARACTER_STARTING_CURRENCY = 200;
 
 /** Creature/NPC specific constants */
 export const CREATURE_CONSTANTS = {
-  BASE_HIT_ENERGY: 26,
+  BASE_HIT_ENERGY: 30,
   BASE_TRAINING_POINTS: 22,
   TP_PER_LEVEL: 2,
   BASE_SKILL_POINTS: 5,

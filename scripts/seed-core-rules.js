@@ -44,7 +44,7 @@ const CORE_RULES = {
     proficiencyPerIncrease: 1,
     baseTrainingPoints: 22,
     tpPerLevelMultiplier: 2, // TP formula: 22 + ability + (2 + ability) * (level - 1)
-    baseHealth: 8, // Health floor: 8 + healthAbility
+    baseHealth: 12, // Health floor: matches public.core_rules PROGRESSION_PLAYER
     xpToLevelFormula: 'level * 4',
     startingCurrency: 200,
     characterFeatsPerLevel: 1, // Always 1 per level
@@ -56,7 +56,7 @@ const CORE_RULES = {
     abilityPointsEveryNLevels: 3,
     skillPointsAtLevel1: 5,
     skillPointsPerLevel: 3, // 5 at L1, 8 at L2, 11 at L3
-    baseHitEnergyPool: 26,
+    baseHitEnergyPool: 30,
     hitEnergyPerLevel: 12,
     baseProficiency: 2,
     proficiencyEveryNLevels: 5,

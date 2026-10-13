@@ -10,6 +10,7 @@ import { createClient, createServiceRoleClient } from '@/lib/supabase/server';
 import { getSession } from '@/lib/supabase/session';
 import { isCharacterOnCampaignRoster } from '@/lib/campaign-roster';
 import { computeMaxHealthEnergy } from '@/lib/game/calculations';
+import { fetchCoreRules } from '@/lib/core-rules-server';
 import { getOwnerLibraryAndEnrichmentForView } from '@/lib/character-view-enrichment-server';
 import type { CharacterVisibility } from '@/types';
 
@@ -115,7 +116,11 @@ export async function GET(
         acuity: rawAbilities?.acuity ?? rawAbilities?.acu ?? 0,
         agility: rawAbilities?.agility ?? rawAbilities?.agi ?? 0,
       };
-      const { maxHealth, maxEnergy } = computeMaxHealthEnergy(charData as Record<string, unknown>);
+      const rules = await fetchCoreRules(supabase);
+      const { maxHealth, maxEnergy } = computeMaxHealthEnergy(
+        charData as Record<string, unknown>,
+        rules,
+      );
       const health = charData?.health as
         | { max?: number | undefined; current?: number | undefined }
         | undefined;

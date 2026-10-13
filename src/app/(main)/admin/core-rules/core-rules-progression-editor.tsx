@@ -84,7 +84,10 @@ export function ProgressionEditor({
         />
       </FieldRow>
       <FieldRow label="Base Health">
-        <NumInput value={(data.baseHealth as number) ?? 8} onChange={(v) => set('baseHealth', v)} />
+        <NumInput
+          value={(data.baseHealth as number) ?? 12}
+          onChange={(v) => set('baseHealth', v)}
+        />
       </FieldRow>
       <FieldRow label="Starting Currency">
         <NumInput
@@ -136,7 +139,7 @@ export function ProgressionEditor({
           </FieldRow>
           <FieldRow label="Base Health/Energy Pool">
             <NumInput
-              value={(creatureData.baseHitEnergyPool as number) ?? 26}
+              value={(creatureData.baseHitEnergyPool as number) ?? 30}
               onChange={(v) => setCreature('baseHitEnergyPool', v)}
             />
           </FieldRow>

@@ -132,6 +132,23 @@ function createMockSupabase({
         };
         return { select: vi.fn(() => chain) };
       }
+      if (table === 'core_rules') {
+        return {
+          select: vi.fn().mockResolvedValue({
+            data: [
+              {
+                id: 'PROGRESSION_PLAYER',
+                data: { baseHealth: 20 },
+              },
+              {
+                id: 'PROGRESSION_CREATURE',
+                data: { baseHitEnergyPool: 30 },
+              },
+            ],
+            error: null,
+          }),
+        };
+      }
       throw new Error(`Unexpected table: ${table}`);
     }),
   };
@@ -256,5 +273,23 @@ describe('GET /api/campaigns/[id]/characters/[userId]/[characterId]', () => {
     expect(body.currentEnergy).toBe(8);
     expect(body.actionPoints).toBe(3);
     expect(mockGetOwnerLibraryAndEnrichmentForView).not.toHaveBeenCalled();
+  });
+
+  it('fills a missing health max from core_rules baseHealth (86e3jtugd)', async () => {
+    stubAuthedClient({
+      user: MEMBER,
+      characterRow: makeCharacterRow({
+        level: 1,
+        abilities: { vitality: 0 },
+        healthPoints: 0,
+        health: { current: 4 },
+        energy: { current: 0 },
+      }),
+    });
+
+    const response = await GET(makeGetRequest('encounter'), routeParams());
+    expect(response.status).toBe(200);
+    const body = await readJson<{ health: { max: number } }>(response);
+    expect(body.health.max).toBe(20);
   });
 });
