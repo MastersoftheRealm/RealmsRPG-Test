@@ -339,7 +339,7 @@ export function itemLibraryRecordToFormState(
     );
   }
 
-  let damage = { amount: 1, size: 6, type: 'slashing' };
+  let damage = { amount: 1, size: 4, type: 'slashing' };
   if (item.damage && Array.isArray(item.damage) && item.damage.length > 0) {
     const dmg = item.damage[0] as {
       amount?: number | undefined;
