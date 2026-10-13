@@ -61,6 +61,14 @@ export function formatPercentagePartModifier(multiplier: number): string {
 }
 
 /**
+ * Percentage option energy is a delta added to the base multiplier.
+ * 0.125 → "+12.5%", not "(0.125 - 1) * 100" = "-87.5%".
+ */
+export function formatPercentageOptionEnergy(optionEn: number): string {
+  return formatSignedPercent(optionEn * 100);
+}
+
+/**
  * Duration type part (Minute/Hour/…): factor 0.75 → "+75%".
  * Duration modifier (Focus/…): factor 0.5 → "-50%".
  */

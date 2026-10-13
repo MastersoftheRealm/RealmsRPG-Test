@@ -1,3 +1,4 @@
+import { readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
 import type { PowerPart } from '@/hooks/codex-types';
 import { PART_IDS } from '@/lib/id-constants';
@@ -7,6 +8,7 @@ import {
   formatDamageEnergyLabel,
   formatDurationPartModifier,
   formatEnergyNumber,
+  formatPercentageOptionEnergy,
   formatPercentagePartModifier,
   formatSignedPercent,
 } from './power-energy-breakdown';
@@ -97,8 +99,26 @@ describe('energy display formatters', () => {
     expect(formatPercentagePartModifier(1.25)).toBe('+25%');
     expect(formatPercentagePartModifier(1.5)).toBe('+50%');
     expect(formatPercentagePartModifier(0.875)).toBe('-12.5%');
+    expect(formatPercentageOptionEnergy(0.125)).toBe('+12.5%');
+    expect(formatPercentageOptionEnergy(-0.125)).toBe('-12.5%');
     expect(formatDurationPartModifier('Duration (Minute)', 0.75)).toBe('+75%');
     expect(formatDurationPartModifier('Focus for Duration', 0.5)).toBe('-50%');
+  });
+
+  it('shows potency option 1 as +12.5%, not -87.5% (86e3jwt67)', () => {
+    const codex = readFileSync(
+      new URL('../../app/(main)/codex/CodexPartsTab.tsx', import.meta.url),
+      'utf8',
+    );
+    const admin = readFileSync(
+      new URL('../../app/(main)/admin/codex/AdminPartsTab.tsx', import.meta.url),
+      'utf8',
+    );
+    expect(formatPercentageOptionEnergy(0.125)).toBe('+12.5%');
+    expect(codex).toContain('formatOptionEnergyCost(part.op_1_en, part.percentage)');
+    expect(codex).not.toContain('formatEnergyCost(part.op_1_en, part.percentage)');
+    expect(admin).toContain('formatPercentageOptionEnergy(en)');
+    expect(admin).not.toContain('(en - 1) * 100');
   });
 
   it('capitalizes damage type in labels', () => {
