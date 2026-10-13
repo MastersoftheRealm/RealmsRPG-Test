@@ -78,6 +78,8 @@ export function ItemCreatorEditorMeta({
             value={armamentType}
             onChange={onArmamentTypeChange}
             aria-labelledby="item-creator-item-type"
+            equalWidth
+            className="w-full"
             options={ARMAMENT_TYPES.map((type) => ({
               value: type.value,
               label: type.label,
