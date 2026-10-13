@@ -8,6 +8,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { getSession } from '@/lib/supabase/session';
+import { characterPortraitStoragePaths } from '@/lib/portrait-storage';
 import { detectImageMime, extensionForImageMime } from '@/lib/validate-image';
 import { buildRateLimitKey, resolveClientIp, uploadLimiter } from '@/lib/rate-limit';
 import { apiErrorResponse, logApiError } from '@/lib/api-error';
@@ -90,21 +91,16 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Character not found' }, { status: 404 });
     }
 
-    // Delete any existing portrait for this character (different extensions).
+    // Drop other extensions before the new object is written. Listing the folder
+    // misses files the client can no longer see, which left characterId.png behind.
     // Cleanup only: a failure leaves an orphaned object but must not fail the upload.
-    const { data: existing, error: listError } = await supabase.storage.from(BUCKET).list(user.uid);
-    if (listError) {
-      logApiError('POST /api/upload/portrait (stale portrait list)', listError);
-    }
-    if (existing?.length) {
-      const toRemove = existing
-        .filter((f) => f.name?.startsWith(`${charId}.`))
-        .map((f) => `${user.uid}/${f.name}`);
-      if (toRemove.length) {
-        const { error: removeError } = await supabase.storage.from(BUCKET).remove(toRemove);
-        if (removeError) {
-          logApiError('POST /api/upload/portrait (stale portrait remove)', removeError);
-        }
+    const stalePaths = characterPortraitStoragePaths(user.uid, charId).filter(
+      (objectPath) => objectPath !== path,
+    );
+    if (stalePaths.length) {
+      const { error: removeError } = await supabase.storage.from(BUCKET).remove(stalePaths);
+      if (removeError) {
+        logApiError('POST /api/upload/portrait (stale portrait remove)', removeError);
       }
     }
 
