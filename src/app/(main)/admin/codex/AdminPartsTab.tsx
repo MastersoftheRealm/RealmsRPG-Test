@@ -10,6 +10,7 @@ import { useToast } from '@/components/ui';
 import { SelectFilter } from '@/components/patterns/filters';
 import { useParts, type Part } from '@/hooks';
 import { ABILITIES_AND_DEFENSES } from '@/lib/game/constants';
+import { formatPercentageOptionEnergy } from '@/lib/calculators/power-energy-breakdown';
 import { formatListCellLabel } from '@/lib/utils';
 import { useSort } from '@/hooks/use-sort';
 import { collectCodexSources } from './admin-codex-source';
@@ -268,11 +269,7 @@ export function AdminPartsTab() {
         {filteredParts.map((p: Part) => {
           const formatEnergyCostAllowZero = (en: number | undefined): string | null => {
             if (en === undefined || Number.isNaN(en)) return null;
-            if (p.percentage) {
-              const percentChange = (en - 1) * 100;
-              const sign = percentChange >= 0 ? '+' : '';
-              return `${sign}${formatDecimalPreserve(percentChange)}%`;
-            }
+            if (p.percentage) return formatPercentageOptionEnergy(en);
             return formatDecimalPreserve(en);
           };
 
