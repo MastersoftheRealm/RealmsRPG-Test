@@ -10,6 +10,7 @@ describe('computeCreatureTrainingSpent (86e3krpzp)', () => {
   it('dedupes repeated parts across creature powers', () => {
     const creature = {
       ...initialState,
+      enablePowers: true,
       powers: [
         {
           id: 'p1',
@@ -39,6 +40,7 @@ describe('computeCreatureTrainingSpent (86e3krpzp)', () => {
     const baseOnly = computeCreatureTrainingSpent(
       {
         ...initialState,
+        enablePowers: true,
         powers: [
           {
             id: 'only',
@@ -63,6 +65,7 @@ describe('computeCreatureTrainingSpent (86e3krpzp)', () => {
     const doubledBase = computeCreatureTrainingSpent(
       {
         ...initialState,
+        enablePowers: true,
         powers: [
           {
             id: 'a',
@@ -91,5 +94,47 @@ describe('computeCreatureTrainingSpent (86e3krpzp)', () => {
       { powerPartsDb: [range] },
     );
     expect(doubledBase).toBe(baseOnly);
+  });
+
+  it('hidden Powers, Techniques, and Inventory do not spend TP (86e3jx639)', () => {
+    const power = {
+      id: 'p1',
+      name: 'A',
+      energy: 1,
+      action: 'Action',
+      duration: '-',
+      range: '6',
+      area: '-',
+      damage: '-',
+      tp: 4,
+      parts: [{ id: Number(range.id), name: range.name, op_1_lvl: 0 }],
+    };
+    const hidden = computeCreatureTrainingSpent(
+      { ...initialState, enablePowers: false, powers: [power] },
+      { powerPartsDb: [range] },
+    );
+    const shown = computeCreatureTrainingSpent(
+      { ...initialState, enablePowers: true, powers: [power] },
+      { powerPartsDb: [range] },
+    );
+    expect(hidden).toBe(0);
+    expect(shown).toBeGreaterThan(0);
+
+    const legacyHidden = computeCreatureTrainingSpent({
+      ...initialState,
+      enableTechniques: false,
+      techniques: [
+        {
+          id: 't1',
+          name: 'Strike',
+          energy: 1,
+          tp: 3,
+          action: 'Action',
+          weapon: '-',
+          damage: '1',
+        },
+      ],
+    });
+    expect(legacyHidden).toBe(0);
   });
 });

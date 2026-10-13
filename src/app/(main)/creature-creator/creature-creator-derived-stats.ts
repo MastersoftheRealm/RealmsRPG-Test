@@ -29,6 +29,7 @@ import { SENSE_TO_FEAT_ID, MOVEMENT_TO_FEAT_ID } from './creature-creator-consta
 import type { CreatureState } from './creature-creator-types';
 import {
   computeCreatureTrainingSpent,
+  creatureLoadoutForBudget,
   type CreatureProficiencyDbContext,
 } from './creature-creator-training-spent';
 
@@ -137,7 +138,7 @@ export function calculateCreatureCreatorStats(
 
   const manualFeatSpent = creature.feats.reduce((sum, f) => sum + (f.points ?? 1), 0);
   const featSpent = manualFeatSpent + mechanicalFeatPoints;
-  const inventory = collectCreatureInventoryItems(creature);
+  const inventory = collectCreatureInventoryItems(creatureLoadoutForBudget(creature));
   const trainingSpent = computeCreatureTrainingSpent(creature, proficiencyCtx);
   const currencySpent = inventory.reduce((sum, armament) => {
     const currency =

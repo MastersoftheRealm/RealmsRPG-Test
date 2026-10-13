@@ -87,6 +87,7 @@ describe('calculateCreatureCreatorStats', () => {
   it('sums currency and TP from kind buckets (TASK-812)', () => {
     const creature = {
       ...initialState,
+      enableArmaments: true,
       weapons: [
         {
           id: 'w1',
@@ -112,5 +113,25 @@ describe('calculateCreatureCreatorStats', () => {
     const stats = calculateCreatureCreatorStats(creature, featPointsMap, new Set(), undefined);
     expect(stats.trainingSpent).toBe(2);
     expect(stats.currencySpent).toBe(16);
+  });
+
+  it('hidden Inventory does not spend Currency or TP (86e3jx639)', () => {
+    const creature = {
+      ...initialState,
+      enableArmaments: false,
+      weapons: [
+        {
+          id: 'w1',
+          name: 'Axe',
+          type: 'weapon',
+          tp: 2,
+          currency: 10,
+          rarity: 'Common',
+        },
+      ],
+    };
+    const stats = calculateCreatureCreatorStats(creature, featPointsMap, new Set(), undefined);
+    expect(stats.trainingSpent).toBe(0);
+    expect(stats.currencySpent).toBe(0);
   });
 });
