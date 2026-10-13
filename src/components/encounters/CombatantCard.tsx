@@ -125,7 +125,10 @@ export const CombatantCard = memo(function CombatantCard({
             />
 
             <button
+              type="button"
               onClick={() => setShowConditions(!showConditions)}
+              aria-expanded={showConditions}
+              aria-label={`${combatant.name} conditions`}
               className={cn(
                 'hit-area-dense inline-flex items-center justify-center rounded px-2 py-0.5 text-xs',
                 showConditions

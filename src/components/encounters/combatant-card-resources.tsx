@@ -23,6 +23,7 @@ export function CombatantCardResources({
   allowNegativeHealth = false,
   onUpdate,
 }: CombatantCardResourcesProps) {
+  const name = combatant.name;
   const healthMin = allowNegativeHealth ? Number.NEGATIVE_INFINITY : 0;
   const clampHealth = (value: number) => Math.max(healthMin, value);
   const healthPercent =
@@ -55,6 +56,7 @@ export function CombatantCardResources({
                   onChange={(e) =>
                     onUpdate({ currentHealth: clampHealth(parseInt(e.target.value, 10) || 0) })
                   }
+                  aria-label={`Current health for ${name}`}
                   className={cn(
                     'touch-tier-standard w-10 min-w-0 rounded border px-0.5 py-0 text-center text-sm font-bold',
                     'border-health-border text-health-text',
@@ -70,6 +72,8 @@ export function CombatantCardResources({
                   variant="compact"
                   hideValue
                   enableHoldRepeat
+                  decrementTitle={`Decrease ${name} health`}
+                  incrementTitle={`Increase ${name} health`}
                 />
               </>
             )}
@@ -104,6 +108,7 @@ export function CombatantCardResources({
                   type="number"
                   value={combatant.currentEnergy}
                   onChange={(e) => onUpdate({ currentEnergy: parseInt(e.target.value) || 0 })}
+                  aria-label={`Current energy for ${name}`}
                   className="touch-tier-standard w-10 min-w-0 rounded border border-energy-border px-0.5 py-0 text-center text-sm font-bold text-energy-text"
                 />
                 <span className="text-xs text-energy-text">/ {combatant.maxEnergy}</span>
@@ -116,6 +121,8 @@ export function CombatantCardResources({
                   variant="compact"
                   hideValue
                   enableHoldRepeat
+                  decrementTitle={`Decrease ${name} energy`}
+                  incrementTitle={`Increase ${name} energy`}
                 />
               </>
             )}
@@ -147,6 +154,7 @@ export function CombatantCardResources({
               onChange={(e) =>
                 onUpdate({ currentHealth: clampHealth(parseInt(e.target.value, 10) || 0) })
               }
+              aria-label={`Current health for ${name}`}
               className={cn(
                 'touch-tier-standard w-12 rounded border px-1 py-0.5 text-center text-xs font-medium',
                 combatant.currentHealth <= 0
@@ -159,6 +167,7 @@ export function CombatantCardResources({
               type="number"
               value={combatant.maxHealth}
               onChange={(e) => onUpdate({ maxHealth: parseInt(e.target.value) || 1 })}
+              aria-label={`Maximum health for ${name}`}
               className="touch-tier-standard w-12 rounded border border-border-light px-1 py-0.5 text-center text-xs"
             />
             <ValueStepper
@@ -170,6 +179,8 @@ export function CombatantCardResources({
               variant="compact"
               hideValue
               enableHoldRepeat
+              decrementTitle={`Decrease ${name} health`}
+              incrementTitle={`Increase ${name} health`}
             />
           </>
         )}
@@ -196,6 +207,7 @@ export function CombatantCardResources({
               type="number"
               value={combatant.currentEnergy}
               onChange={(e) => onUpdate({ currentEnergy: parseInt(e.target.value) || 0 })}
+              aria-label={`Current energy for ${name}`}
               className="touch-tier-standard w-12 rounded border border-border-light px-1 py-0.5 text-center text-xs font-medium"
             />
             <span className="text-xs text-text-muted">/</span>
@@ -203,6 +215,7 @@ export function CombatantCardResources({
               type="number"
               value={combatant.maxEnergy}
               onChange={(e) => onUpdate({ maxEnergy: parseInt(e.target.value) || 0 })}
+              aria-label={`Maximum energy for ${name}`}
               className="touch-tier-standard w-12 rounded border border-border-light px-1 py-0.5 text-center text-xs"
             />
             <ValueStepper
@@ -214,6 +227,8 @@ export function CombatantCardResources({
               variant="compact"
               hideValue
               enableHoldRepeat
+              decrementTitle={`Decrease ${name} energy`}
+              incrementTitle={`Increase ${name} energy`}
             />
           </>
         )}
