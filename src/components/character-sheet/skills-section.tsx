@@ -355,8 +355,8 @@ export function SkillsSection({
 
       {/* DESIGN_INTENT: pencil or Temp toggle floats top-right; compact filters below title (not SourceFilter chrome) */}
       <div className={cn('mb-4', showSectionToggle && 'pr-14')}>
-        <div className="flex flex-wrap items-baseline gap-x-2">
-          <h2 className="text-lg font-bold text-text-primary">Skills</h2>
+        <div className="flex flex-wrap items-baseline gap-x-2 max-md:sticky max-md:top-12 max-md:z-[1] max-md:-mx-4 max-md:bg-surface max-md:px-4 max-md:py-1">
+          <h2 className="text-lg font-bold text-text-primary max-md:scroll-mt-12">Skills</h2>
           {showEditControls && (
             <span
               role="status"
