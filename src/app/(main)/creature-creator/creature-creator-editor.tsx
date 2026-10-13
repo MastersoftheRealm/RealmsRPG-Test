@@ -128,7 +128,7 @@ export function CreatureCreatorEditor(props: CreatureCreatorEditorProps) {
   } = props;
 
   return (
-    <>
+    <div className="creature-creator-dock-frame space-y-6">
       <Card className="p-6 shadow-md">
         <h2 className="mb-4 text-lg font-bold text-text-primary">Basic Information</h2>
         <div className="space-y-4">
@@ -172,7 +172,7 @@ export function CreatureCreatorEditor(props: CreatureCreatorEditorProps) {
               hint="Uploads are saved to the shared image bank."
             />
           )}
-          <div className="grid min-w-0 grid-cols-3 gap-2 sm:gap-4">
+          <div className="grid min-w-0 grid-cols-1 gap-2 sm:grid-cols-3 sm:gap-4">
             <Select
               label="Level"
               value={String(creature.level)}
@@ -263,6 +263,6 @@ export function CreatureCreatorEditor(props: CreatureCreatorEditorProps) {
 
       <CreatureCreatorEditorTraitsSection {...props} />
       <CreatureCreatorEditorLoadoutSections {...props} />
-    </>
+    </div>
   );
 }
