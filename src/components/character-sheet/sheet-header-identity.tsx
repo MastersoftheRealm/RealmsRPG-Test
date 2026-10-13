@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, type ClipboardEvent } from 'react';
+import { useEffect, useRef, useState, type ClipboardEvent } from 'react';
 import Image from 'next/image';
 import { Camera, Pencil } from 'lucide-react';
 import { cn } from '@/lib/utils';
@@ -25,6 +25,7 @@ import {
   clampCharacterNameInput,
   insertCharacterNameText,
 } from '@/lib/character/character-name-limit';
+import { sheetHeaderNameClamped } from './sheet-header-name';
 
 export function SheetHeaderIdentity({
   character,
@@ -55,6 +56,15 @@ export function SheetHeaderIdentity({
   const [isEditingName, setIsEditingName] = useState(false);
   const [nameInput, setNameInput] = useState(character.name || '');
   const [nameTruncated, setNameTruncated] = useState(false);
+  const [nameExpanded, setNameExpanded] = useState(false);
+  const [nameClamped, setNameClamped] = useState(false);
+  const [measuredName, setMeasuredName] = useState(character.name);
+  const nameRef = useRef<HTMLSpanElement>(null);
+  if (character.name !== measuredName) {
+    setMeasuredName(character.name);
+    setNameExpanded(false);
+    setNameClamped(false);
+  }
 
   // State for editing XP
   const [isEditingXP, setIsEditingXP] = useState(false);
@@ -135,6 +145,21 @@ export function SheetHeaderIdentity({
   );
 
   // Handle name editing
+  useEffect(() => {
+    const el = nameRef.current;
+    if (!el || nameExpanded || isEditingName) return;
+    const measure = () => {
+      setNameClamped(sheetHeaderNameClamped(el.scrollHeight, el.clientHeight));
+    };
+    const observer = new ResizeObserver(measure);
+    observer.observe(el);
+    const frame = requestAnimationFrame(measure);
+    return () => {
+      cancelAnimationFrame(frame);
+      observer.disconnect();
+    };
+  }, [character.name, nameExpanded, nameClamped, isEditingName]);
+
   const handleNameSubmit = () => {
     const trimmed = nameInput.trim();
     if (trimmed && trimmed !== character.name && onNameChange) {
@@ -260,11 +285,26 @@ export function SheetHeaderIdentity({
               ) : null}
             </div>
           ) : (
-            <h1
-              className="flex min-w-0 items-start gap-2 text-2xl font-bold text-text-primary md:text-3xl"
-              title={character.name}
-            >
-              <span className="line-clamp-2 min-w-0 break-words">{character.name}</span>
+            <h1 className="flex w-full min-w-0 items-start gap-2 text-2xl font-bold text-text-primary md:text-3xl">
+              {nameClamped || nameExpanded ? (
+                <button
+                  type="button"
+                  className="min-w-0 flex-1 text-left"
+                  aria-expanded={nameExpanded}
+                  onClick={() => setNameExpanded((open) => !open)}
+                >
+                  <span
+                    ref={nameRef}
+                    className={cn('block break-normal', !nameExpanded && 'line-clamp-2')}
+                  >
+                    {character.name}
+                  </span>
+                </button>
+              ) : (
+                <span ref={nameRef} className="line-clamp-2 block min-w-0 flex-1 break-normal">
+                  {character.name}
+                </span>
+              )}
               {onNameChange && isEditMode && (
                 <button
                   onClick={() => {

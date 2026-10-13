@@ -283,7 +283,7 @@ export function Modal({
         tabIndex={-1}
         onKeyDown={handleFocusTrap}
         className={cn(
-          'relative z-10 w-full overflow-hidden border-border-light bg-surface shadow-2xl focus:outline-none',
+          'relative z-10 w-full min-w-0 overflow-hidden border-border-light bg-surface shadow-2xl focus:outline-none',
           useFullScreenMobile
             ? 'inset-0 flex h-full max-h-full min-h-0 flex-col rounded-none border-0'
             : cn(
