@@ -20,6 +20,8 @@ export function LargeStatBlock({
   isTempModifierMode,
   tempDelta = 0,
   onTempDeltaChange,
+  formatTempDelta,
+  tempStep,
 }: {
   label: string;
   value: number | string;
@@ -29,6 +31,8 @@ export function LargeStatBlock({
   isTempModifierMode?: boolean | undefined;
   tempDelta?: number | undefined;
   onTempDeltaChange?: ((delta: number) => void) | undefined;
+  formatTempDelta?: ((delta: number, deltaFormat: 'temp-label' | 'signed') => string) | undefined;
+  tempStep?: number | undefined;
 }) {
   const { tempActive, setTempActive, canTemp, showTempControls } = useTempModifierActive(
     isTempModifierMode,
@@ -74,6 +78,8 @@ export function LargeStatBlock({
           label={label}
           tempDelta={tempDelta}
           onTempDeltaChange={onTempDeltaChange}
+          formatTempDelta={formatTempDelta}
+          tempStep={tempStep}
           className="mt-2"
         />
       )}
