@@ -1,9 +1,9 @@
 /**
  * Collapse repeated saved refs to the first row, keeping the higher option level.
  *
- * Item properties cannot be added twice, and proficiency / cost paths that count
- * a repeated part once still use this. Creator saves of power and technique parts
- * do not: identical parts may be added more than once, and Save keeps every copy.
+ * Item properties cannot be added twice. Creator saves of power and technique parts
+ * do not dedupe: identical parts may be added more than once, and Save keeps every
+ * copy. Library and sheet pricing count each saved row (86e3jpq2k).
  */
 
 import { normalizeId } from '@/lib/utils/normalize-id';

@@ -10,7 +10,6 @@ import {
   computePartTrainingPoints,
   publishedTrainingPointLevels,
 } from '@/lib/calculators/part-training-points';
-import { dedupeSavedParts } from '@/lib/game/dedupe-saved-parts';
 import { appendCanTargetToDescription, defensesFromPart } from '@/lib/game/targeted-defenses';
 import type { TechniquePart } from '@/hooks/codex-types';
 import { formatActionTypeForDisplay } from '@/lib/utils/action-type';
@@ -190,8 +189,7 @@ export function calculateTechniqueCosts(
   let positiveEnergy = 0;
   const tpSources: string[] = [];
 
-  const uniqueParts = dedupeSavedParts(partsPayload);
-  uniqueParts.forEach((pl) => {
+  partsPayload.forEach((pl) => {
     // Find part by ID or name for backwards compatibility
     const def = findByIdOrName(partsDb, {
       id: pl.id ?? pl.part?.id,
@@ -279,17 +277,15 @@ export function deriveTechniqueDisplay(
   techniqueDoc: TechniqueDocument,
   partsDb: TechniquePart[],
 ): TechniqueDisplayData {
-  const partsPayload: TechniquePartPayload[] = dedupeSavedParts(
-    Array.isArray(techniqueDoc.parts)
-      ? techniqueDoc.parts.map((p) => ({
-          id: p.id,
-          name: p.name,
-          op_1_lvl: p.op_1_lvl || 0,
-          op_2_lvl: p.op_2_lvl || 0,
-          op_3_lvl: p.op_3_lvl || 0,
-        }))
-      : [],
-  );
+  const partsPayload: TechniquePartPayload[] = Array.isArray(techniqueDoc.parts)
+    ? techniqueDoc.parts.map((p) => ({
+        id: p.id,
+        name: p.name,
+        op_1_lvl: p.op_1_lvl || 0,
+        op_2_lvl: p.op_2_lvl || 0,
+        op_3_lvl: p.op_3_lvl || 0,
+      }))
+    : [];
 
   const calc = calculateTechniqueCosts(partsPayload, partsDb);
   // Use saved actionType/isReaction if available; fall back to derivation from parts

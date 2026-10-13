@@ -7,7 +7,6 @@ import {
 } from './power-calc';
 import { calculateTechniqueCosts, type TechniquePartPayload } from './technique-calc';
 import { findByIdOrName } from '@/lib/id-constants';
-import { dedupeSavedParts } from '@/lib/game/dedupe-saved-parts';
 
 export interface EmpoweredTechniqueCostResult {
   totalEnergy: number;
@@ -36,8 +35,7 @@ export function getTechniquePercentageMultiplier(
   techniquePartsDb: TechniquePart[],
 ): number {
   let multiplier = 1;
-  const uniqueParts = dedupeSavedParts(techniquePartsPayload);
-  uniqueParts.forEach((payload) => {
+  techniquePartsPayload.forEach((payload) => {
     const part = findByIdOrName(techniquePartsDb, {
       id: payload.id ?? payload.part?.id,
       name: payload.name ?? payload.part?.name,
