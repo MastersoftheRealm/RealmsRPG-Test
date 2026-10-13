@@ -38,6 +38,15 @@ export function shouldCloseDisclosureOnFocusLeave(
   return !root.contains(relatedTarget as Node);
 }
 
+/** ClickUp 86e3jywd8 — pointer down outside the menu root should dismiss without activating what's underneath. */
+export function shouldCloseDisclosureOnOutsidePointer(
+  root: HTMLElement | null,
+  target: EventTarget | null,
+): boolean {
+  if (!root || target === null) return false;
+  return !root.contains(target as Node);
+}
+
 function useDisclosureMenu({ closeOnScroll = false }: { closeOnScroll?: boolean } = {}) {
   const [open, setOpen] = useState(false);
   const rootRef = useRef<HTMLDivElement>(null);
@@ -47,11 +56,13 @@ function useDisclosureMenu({ closeOnScroll = false }: { closeOnScroll?: boolean 
 
   useEffect(() => {
     if (!open) return;
-    const handleClick = (e: MouseEvent) => {
-      if (rootRef.current && !rootRef.current.contains(e.target as Node)) setOpen(false);
+    const onPointerDown = (event: PointerEvent) => {
+      if (!shouldCloseDisclosureOnOutsidePointer(rootRef.current, event.target)) return;
+      setOpen(false);
+      event.preventDefault();
     };
-    document.addEventListener('click', handleClick);
-    return () => document.removeEventListener('click', handleClick);
+    document.addEventListener('pointerdown', onPointerDown, true);
+    return () => document.removeEventListener('pointerdown', onPointerDown, true);
   }, [open]);
 
   useEffect(() => {
