@@ -56,7 +56,7 @@ const energyInput = {
 };
 
 describe('buildPowersTechniquesL2Items innate threshold', () => {
-  it('includes powers with Energy ≤ Innate Threshold and excludes above', () => {
+  it('lists powers above Innate Threshold so warn-on-pick can fire (86e3pgfth)', () => {
     const rows = buildPowersTechniquesL2Items({
       kind: 'powers',
       mode: 'innate',
@@ -68,8 +68,8 @@ describe('buildPowersTechniquesL2Items innate threshold', () => {
     });
 
     const ids = rows.map((r) => r.id).sort();
-    expect(ids).toEqual(['bolt', 'spark']);
-    expect(rows.find((r) => r.id === 'nova')).toBeUndefined();
+    expect(ids).toEqual(['bolt', 'nova', 'spark']);
+    expect(rows.find((r) => r.id === 'nova')?.data).toMatchObject({ energy: 12 });
   });
 
   it('includes Energy exactly equal to threshold', () => {
@@ -150,18 +150,18 @@ describe('computeL2PowersTechniquesTpSpent + combineGuidedTpBudgets', () => {
       energyInput,
       innateThreshold: 8,
     });
-    // spark (2 TP) + bolt (3 TP); nova excluded by threshold
-    expect(innateRows).toHaveLength(2);
+    // spark (2 TP) + bolt (3 TP) + nova (5 TP)
+    expect(innateRows).toHaveLength(3);
 
     const loadoutSpent = 10;
     const totalSpent = computeL2PowersTechniquesTpSpent(innateRows, loadoutSpent);
-    expect(totalSpent).toBe(15);
+    expect(totalSpent).toBe(20);
 
     const combatOnly = totalSpent - loadoutSpent;
     const combined = combineGuidedTpBudgets(
       { spent: loadoutSpent, limit: 30, remaining: 20 },
       combatOnly,
     );
-    expect(combined).toEqual({ spent: 15, limit: 30, remaining: 15 });
+    expect(combined).toEqual({ spent: 20, limit: 30, remaining: 10 });
   });
 });
