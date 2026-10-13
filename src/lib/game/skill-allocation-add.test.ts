@@ -5,6 +5,7 @@ import {
   buildCharacterSkillsForSubModal,
   buildExistingSkillIdSet,
   buildExistingSkillNames,
+  removeAllocatedSkill,
 } from '@/lib/game/skill-allocation-add';
 import type { Skill } from '@/hooks';
 
@@ -35,6 +36,24 @@ describe('skill-allocation-add', () => {
       '10': 0,
     });
     expect(rows).toEqual([{ id: '10', name: 'Athletics', prof: true }]);
+  });
+
+  it('removing a base skill also removes its sub-skill (86e3jx4dp)', () => {
+    const craft = { id: '20', name: 'Craft' } as Skill;
+    const smith = { id: '21', name: 'Smith', base_skill_id: 20 } as Skill;
+    const other = { id: '22', name: 'Lore', base_skill_id: 10 } as Skill;
+    const next = removeAllocatedSkill({ '10': 0, '11': 1, '20': 2, '21': 1, '22': 1 }, '20', [
+      baseSkill,
+      subSkill,
+      craft,
+      smith,
+      other,
+    ]);
+    expect(next['20']).toBeUndefined();
+    expect(next['21']).toBeUndefined();
+    expect(next['10']).toBe(0);
+    expect(next['11']).toBe(1);
+    expect(next['22']).toBe(1);
   });
 
   it('buildExistingSkillNames resolves names from ids', () => {

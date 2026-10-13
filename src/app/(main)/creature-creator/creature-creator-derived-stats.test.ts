@@ -62,6 +62,48 @@ describe('calculateCreatureCreatorStats', () => {
     expect(isCreatureOverBudget(stats)).toBe(true);
   });
 
+  it('an orphaned sub-skill does not spend skill points (86e3jx4dp)', () => {
+    const withParent = calculateCreatureCreatorStats(
+      {
+        ...initialState,
+        skills: [
+          { id: 'craft', name: 'Craft', value: 0, proficient: true },
+          {
+            id: 'smith',
+            name: 'Smith',
+            value: 1,
+            proficient: true,
+            isSubSkill: true,
+            baseSkillId: 'craft',
+          },
+        ],
+      },
+      featPointsMap,
+      new Set(),
+      undefined,
+    );
+    const orphan = calculateCreatureCreatorStats(
+      {
+        ...initialState,
+        skills: [
+          { id: 'athletics', name: 'Athletics', value: 0, proficient: true },
+          {
+            id: 'smith',
+            name: 'Smith',
+            value: 1,
+            proficient: true,
+            isSubSkill: true,
+            baseSkillId: 'craft',
+          },
+        ],
+      },
+      featPointsMap,
+      new Set(),
+      undefined,
+    );
+    expect(orphan.skillRemaining).toBeGreaterThan(withParent.skillRemaining);
+  });
+
   it('uses past-cap skill costs in summary remaining (86e3jx4dm)', () => {
     const creature = {
       ...initialState,
@@ -74,7 +116,7 @@ describe('calculateCreatureCreatorStats', () => {
           value: 1,
           proficient: true,
           isSubSkill: true,
-          baseSkillId: 'craft',
+          baseSkillId: 'athletics',
         },
       ],
     };
