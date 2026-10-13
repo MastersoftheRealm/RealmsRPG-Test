@@ -22,6 +22,8 @@ import {
 type PartLike = {
   id?: string | number | undefined;
   name?: string | undefined;
+  base_en?: number | null | undefined;
+  base_tp?: number | null | undefined;
   op_1_desc?: string | null | undefined;
   op_2_desc?: string | null | undefined;
   op_3_desc?: string | null | undefined;
@@ -177,6 +179,8 @@ function buildPowerPartFingerprint(parts: SavedPart[] = [], partsDb: PartLike[] 
             op_1_tp: def.op_1_tp ?? null,
             op_2_tp: def.op_2_tp ?? null,
             op_3_tp: def.op_3_tp ?? null,
+            base_en: def.base_en ?? null,
+            base_tp: def.base_tp ?? null,
           }
         : null,
     };
