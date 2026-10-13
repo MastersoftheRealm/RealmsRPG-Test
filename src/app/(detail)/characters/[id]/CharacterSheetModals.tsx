@@ -18,16 +18,9 @@ import { DeleteConfirmModal, AddSubSkillModal } from '@/components/patterns';
 import type { AddLibraryItemType } from '@/hooks/use-add-library-item-data';
 import { useCharacterSheet } from '@/components/character-sheet/character-sheet-context';
 import { existingIdsForAddModal } from '@/lib/character-sheet/add-modal-existing-ids';
+import { findCodexFeatRecovery, resolvedFeatUses } from '@/lib/character/recovery-uses';
 
 interface TraitForModal {
-  name: string;
-  currentUses?: number | undefined;
-  maxUses?: number | undefined;
-  recovery?: string | undefined;
-}
-
-interface FeatForModal {
-  id: string;
   name: string;
   currentUses?: number | undefined;
   maxUses?: number | undefined;
@@ -174,24 +167,16 @@ export function CharacterSheetModals() {
             character.currentEnergy ?? character.energy?.current ?? calculatedStats.maxEnergy
           }
           maxEnergy={calculatedStats.maxEnergy}
-          feats={
-            [
-              ...(character.archetypeFeats || []).map((f) => ({
-                id: f.id || f.name,
-                name: f.name,
-                currentUses: f.currentUses,
-                maxUses: f.maxUses,
-                recovery: f.recovery,
-              })),
-              ...(character.feats || []).map((f) => ({
-                id: f.id || f.name,
-                name: f.name,
-                currentUses: f.currentUses,
-                maxUses: f.maxUses,
-                recovery: f.recovery,
-              })),
-            ] as FeatForModal[]
-          }
+          feats={[...(character.archetypeFeats || []), ...(character.feats || [])].map((f) => {
+            const resolved = resolvedFeatUses(f, findCodexFeatRecovery(f, featsDb));
+            return {
+              id: String(f.id || f.name),
+              name: f.name,
+              currentUses: f.currentUses,
+              maxUses: resolved.maxUses,
+              recovery: resolved.recovery,
+            };
+          })}
           traits={
             traitsDb
               .filter((t) => t.name != null && character.traitUses?.[t.name] !== undefined)

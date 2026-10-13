@@ -23,6 +23,7 @@ import {
   quarterRestoreAmount,
   resourceAfterFullRecovery,
 } from '@/lib/character/recovery-over-max';
+import { formatRecoveryUseReset, recoveryUseNames } from '@/lib/character/recovery-uses';
 import { statusPanel } from '@/lib/ui/status-surface-classes';
 import { cn } from '@/lib/utils';
 
@@ -125,34 +126,11 @@ export function RecoveryModal({
   const fullHealth = resourceAfterFullRecovery(currentHealth, maxHealth);
   const fullEnergy = resourceAfterFullRecovery(currentEnergy, maxEnergy);
 
-  // Count feats/traits that will be reset
-  const partialFeatsCount = feats.filter(
-    (f) =>
-      f.recovery?.toLowerCase().includes('partial') &&
-      f.maxUses &&
-      (f.currentUses || 0) < f.maxUses,
-  ).length;
-
-  const partialTraitsCount = traits.filter(
-    (t) =>
-      t.recovery?.toLowerCase().includes('partial') &&
-      t.maxUses &&
-      (t.currentUses || 0) < t.maxUses,
-  ).length;
-
-  const fullFeatsCount = feats.filter(
-    (f) =>
-      (f.recovery?.toLowerCase().includes('full') || !f.recovery) &&
-      f.maxUses &&
-      (f.currentUses || 0) < f.maxUses,
-  ).length;
-
-  const fullTraitsCount = traits.filter(
-    (t) =>
-      (t.recovery?.toLowerCase().includes('full') || !t.recovery) &&
-      t.maxUses &&
-      (t.currentUses || 0) < t.maxUses,
-  ).length;
+  const fullResetLabel = formatRecoveryUseReset(recoveryUseNames(feats, traits, 'full'), 'full');
+  const partialResetLabel = formatRecoveryUseReset(
+    recoveryUseNames(feats, traits, 'partial'),
+    'partial',
+  );
 
   const handleConfirm = useCallback(() => {
     if (mode === 'full') {
@@ -256,17 +234,10 @@ export function RecoveryModal({
               </div>
             </div>
 
-            {/* Feat/Trait Reset Info */}
-            {(fullFeatsCount > 0 ||
-              fullTraitsCount > 0 ||
-              partialFeatsCount > 0 ||
-              partialTraitsCount > 0) && (
-              <div className="flex items-center gap-2 text-sm text-info-fg">
-                <RotateCcw className="h-4 w-4" />
-                <span>
-                  Resets {fullFeatsCount + partialFeatsCount + fullTraitsCount + partialTraitsCount}{' '}
-                  ability uses
-                </span>
+            {fullResetLabel && (
+              <div className="flex items-start gap-2 text-sm text-info-fg">
+                <RotateCcw className="mt-0.5 h-4 w-4 shrink-0" aria-hidden />
+                <span>{fullResetLabel}</span>
               </div>
             )}
           </div>
@@ -401,13 +372,10 @@ export function RecoveryModal({
                 </div>
               </div>
 
-              {/* Feat/Trait Reset Info */}
-              {(partialFeatsCount > 0 || partialTraitsCount > 0) && (
-                <div className="mt-3 flex items-center gap-2 text-sm text-warning-fg">
-                  <RotateCcw className="h-4 w-4" />
-                  <span>
-                    Resets {partialFeatsCount + partialTraitsCount} partial-recovery ability uses
-                  </span>
+              {partialResetLabel && (
+                <div className="mt-3 flex items-start gap-2 text-sm text-warning-fg">
+                  <RotateCcw className="mt-0.5 h-4 w-4 shrink-0" aria-hidden />
+                  <span>{partialResetLabel}</span>
                 </div>
               )}
 

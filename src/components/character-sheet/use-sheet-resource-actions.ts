@@ -25,6 +25,13 @@ import {
   resourceAfterFullRecovery,
   resourceAfterPartialRecovery,
 } from '@/lib/character/recovery-over-max';
+import {
+  featUsesAfterFullRecovery,
+  featUsesAfterPartialRecovery,
+  findCodexFeatRecovery,
+  resolvedFeatUses,
+  traitUseResetValue,
+} from '@/lib/character/recovery-uses';
 import { ACTION_POINT_DEFAULTS } from '@/lib/game/constants';
 import { DEFAULT_DEFENSE_SKILLS } from '@/types/skills';
 import {
@@ -308,51 +315,23 @@ export function useSheetResourceActions({
   const handleFullRecovery = useCallback(() => {
     if (!character || !calculatedStats) return;
 
-    const hasFullOrPartialRecovery = (r?: string) => {
-      const lower = (r || '').toLowerCase();
-      return lower.includes('full') || lower.includes('partial');
-    };
-
-    const getCodexFeat = (feat: CharacterFeat) => {
-      let dbFeat = featsDb.find((f: CodexFeat) => f.id === String(feat.id));
-      if (!dbFeat && feat.name) {
-        dbFeat = featsDb.find(
-          (f: CodexFeat) =>
-            String(f.name ?? '').toLowerCase() === String(feat.name ?? '').toLowerCase(),
-        );
-      }
-      return dbFeat as CodexFeat | undefined;
-    };
-
-    const resetArchetypeFeats = (character.archetypeFeats || []).map((feat) => {
-      const codex = getCodexFeat(feat);
-      const maxUses = feat.maxUses ?? codex?.uses_per_rec;
-      const recovery = feat.recovery || codex?.rec_period;
+    const resetFeatUses = (feat: CharacterFeat) => {
+      const { recovery, maxUses } = resolvedFeatUses(feat, findCodexFeatRecovery(feat, featsDb));
       return {
         ...feat,
-        currentUses:
-          hasFullOrPartialRecovery(recovery) && maxUses != null ? maxUses : feat.currentUses,
+        currentUses: featUsesAfterFullRecovery(feat.currentUses, recovery, maxUses),
       };
-    });
+    };
 
-    const resetCharacterFeats = (character.feats || []).map((feat) => {
-      const codex = getCodexFeat(feat);
-      const maxUses = feat.maxUses ?? codex?.uses_per_rec;
-      const recovery = feat.recovery || codex?.rec_period;
-      return {
-        ...feat,
-        currentUses:
-          hasFullOrPartialRecovery(recovery) && maxUses != null ? maxUses : feat.currentUses,
-      };
-    });
+    const resetArchetypeFeats = (character.archetypeFeats || []).map(resetFeatUses);
+    const resetCharacterFeats = (character.feats || []).map(resetFeatUses);
 
     const resetTraitUses: Record<string, number> = {};
     if (character.traitUses) {
       Object.keys(character.traitUses).forEach((traitName) => {
         const trait = traitsDb.find((t: Trait) => t.name === traitName);
-        if (trait?.uses_per_rec) {
-          resetTraitUses[traitName] = trait.uses_per_rec;
-        }
+        const next = traitUseResetValue(trait, 'full');
+        if (next != null) resetTraitUses[traitName] = next;
       });
     }
 
@@ -392,50 +371,28 @@ export function useSheetResourceActions({
       const currentEN =
         character.currentEnergy ?? character.energy?.current ?? calculatedStats.maxEnergy;
 
-      const getCodexFeat = (feat: CharacterFeat) => {
-        let dbFeat = featsDb.find((f: CodexFeat) => f.id === String(feat.id));
-        if (!dbFeat && feat.name) {
-          dbFeat = featsDb.find(
-            (f: CodexFeat) =>
-              String(f.name ?? '').toLowerCase() === String(feat.name ?? '').toLowerCase(),
-          );
-        }
-        return dbFeat as CodexFeat | undefined;
+      const resetFeatUses = (feat: CharacterFeat) => {
+        const { recovery, maxUses } = resolvedFeatUses(feat, findCodexFeatRecovery(feat, featsDb));
+        return {
+          ...feat,
+          currentUses: featUsesAfterPartialRecovery(
+            feat.currentUses,
+            recovery,
+            maxUses,
+            resetPartialFeats,
+          ),
+        };
       };
 
-      const resetArchetypeFeats = (character.archetypeFeats || []).map((feat) => {
-        const codex = getCodexFeat(feat);
-        const maxUses = feat.maxUses ?? codex?.uses_per_rec;
-        const recovery = feat.recovery || codex?.rec_period;
-        return {
-          ...feat,
-          currentUses:
-            resetPartialFeats && recovery?.toLowerCase().includes('partial')
-              ? maxUses || feat.currentUses
-              : feat.currentUses,
-        };
-      });
-
-      const resetCharacterFeats = (character.feats || []).map((feat) => {
-        const codex = getCodexFeat(feat);
-        const maxUses = feat.maxUses ?? codex?.uses_per_rec;
-        const recovery = feat.recovery || codex?.rec_period;
-        return {
-          ...feat,
-          currentUses:
-            resetPartialFeats && recovery?.toLowerCase().includes('partial')
-              ? maxUses || feat.currentUses
-              : feat.currentUses,
-        };
-      });
+      const resetArchetypeFeats = (character.archetypeFeats || []).map(resetFeatUses);
+      const resetCharacterFeats = (character.feats || []).map(resetFeatUses);
 
       const resetTraitUses: Record<string, number> = {};
       if (character.traitUses && resetPartialFeats) {
         Object.keys(character.traitUses).forEach((traitName) => {
           const trait = traitsDb.find((t: Trait) => t.name === traitName);
-          if (trait?.uses_per_rec && trait.rec_period?.toLowerCase().includes('partial')) {
-            resetTraitUses[traitName] = trait.uses_per_rec;
-          }
+          const next = traitUseResetValue(trait, 'partial');
+          if (next != null) resetTraitUses[traitName] = next;
         });
       }
 
