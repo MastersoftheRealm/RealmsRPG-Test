@@ -5,6 +5,7 @@ import {
   serializeIdQuantityStrings,
   parseRecommendedAbilities,
   parseArchetypePathData,
+  publicArchetypeListingWarning,
   filterFeatGuidanceGroups,
   resolvePathGuidanceAudience,
   unionFeatIdsFromGuidanceGroups,
@@ -126,5 +127,23 @@ describe('PathGuidanceGroup audience (TASK-514)', () => {
       (parsed?.level1 as { recommended_species?: string[] | undefined } | undefined)
         ?.recommended_species,
     ).toBeUndefined();
+  });
+});
+
+describe('public archetype listing warning (86e3jth0a)', () => {
+  it('warns when Level 1 has no add recommendations', () => {
+    expect(publicArchetypeListingWarning(parseArchetypePathData({ level1: {} }))).toMatch(
+      /public Codex/,
+    );
+    expect(publicArchetypeListingWarning(undefined)).toMatch(/public Codex/);
+  });
+
+  it('keeps the notes-only warning and stays quiet when Level 1 adds exist', () => {
+    expect(
+      publicArchetypeListingWarning(parseArchetypePathData({ level1: { notes: 'Flavor' } })),
+    ).toMatch(/notes, remove lists/);
+    expect(
+      publicArchetypeListingWarning(parseArchetypePathData({ level1: { feats: ['1'] } })),
+    ).toBeNull();
   });
 });

@@ -10,7 +10,7 @@ import type { PathGuidanceGroup } from '@/types/archetype';
 import {
   mergeFeatGuidanceGroups,
   parseArchetypePathData,
-  pathHiddenFromPlayerPicker,
+  publicArchetypeListingWarning,
   parseOptionalJsonField,
   serializeLevel1LoadoutsField,
   unionFeatIdsFromGuidanceGroups,
@@ -142,17 +142,6 @@ export async function saveAdminArchetype({
     if (levelsPayload.length > 0) structuredPathData.levels = levelsPayload;
   }
 
-  if (
-    structuredPathData &&
-    pathHiddenFromPlayerPicker(parseArchetypePathData(structuredPathData))
-  ) {
-    showToast(
-      'Level 1 has notes, remove lists, or Unarmed Prowess only; no add recommendations. ' +
-        'This path will not appear in the character creator picker or public codex path list until you add level 1 feats, skills, powers, innate powers, techniques, armaments, or equipment.',
-      'warning',
-    );
-  }
-
   const recommendedAbilitiesValue = serializeRecommendedAbilities(form.guidedRecommendedAbilities);
 
   let level1Override: Record<string, unknown> | undefined;
@@ -192,6 +181,8 @@ export async function saveAdminArchetype({
         : {}),
     },
   });
+  const publicListingWarning = publicArchetypeListingWarning(pathForValidation);
+  if (publicListingWarning) showToast(publicListingWarning, 'warning');
   if (pathForValidation?.level1) {
     const officialById = new Map(officialPowers.map((p) => [String(p.id ?? ''), p]));
     const publishIssues = validatePathDataForPublish(pathForValidation, {
