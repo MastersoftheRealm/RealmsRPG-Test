@@ -14,6 +14,24 @@ describe('calculateCreatureCreatorStats', () => {
     [String(CREATURE_FEAT_IDS.CONDITION_IMMUNITY), 1],
   ]);
 
+  it('Speedy and Slow change the SPD chip (86e3jx63c)', () => {
+    const base = calculateCreatureCreatorStats(initialState, featPointsMap, new Set(), undefined);
+    const speedy = calculateCreatureCreatorStats(
+      { ...initialState, movementTypes: ['Speedy'] },
+      featPointsMap,
+      new Set(),
+      undefined,
+    );
+    const slow = calculateCreatureCreatorStats(
+      { ...initialState, movementTypes: ['Slow'] },
+      featPointsMap,
+      new Set(),
+      undefined,
+    );
+    expect(speedy.speed).toBe(base.speed + 2);
+    expect(slow.speed).toBe(base.speed - 2);
+  });
+
   it('returns positive remaining budgets for a fresh level-1 creature', () => {
     const stats = calculateCreatureCreatorStats(initialState, featPointsMap, new Set(), undefined);
     expect(stats.featRemaining).toBeGreaterThanOrEqual(0);

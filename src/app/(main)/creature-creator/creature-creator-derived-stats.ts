@@ -151,7 +151,7 @@ export function calculateCreatureCreatorStats(
   const minEnergy = highestNonVitality * Math.max(1, level);
   const maxEnergy = calculateCreatureMaxEnergy(level, abilities, creature.energyPoints);
 
-  const speed = calculateCreatureSpeed(abilities.agility, rules);
+  const speed = calculateCreatureSpeed(abilities.agility, rules, creature.movementTypes);
   const evasion = calculateEvasion(abilities.agility, undefined, rules);
 
   const abilitySpent = Object.values(abilities).reduce(
