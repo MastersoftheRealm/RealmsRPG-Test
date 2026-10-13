@@ -165,7 +165,7 @@ interface UnifiedSelectionModalPropsFields {
   error?: Error | null | undefined;
 
   // Styling
-  size?: 'md' | 'lg' | 'xl' | undefined;
+  size?: 'md' | 'lg' | 'xl' | '2xl' | undefined;
   className?: string | undefined;
   /**
    * Flex column layout for sticky header/footer + scrollable list.
