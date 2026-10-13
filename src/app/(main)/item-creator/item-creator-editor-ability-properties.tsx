@@ -139,7 +139,7 @@ export function ItemCreatorEditorAbilityProperties({
           canAddProperty ? null : (
             <span
               id={addPropertyReasonId}
-              className="max-w-full min-w-0 text-sm font-normal whitespace-normal text-warning-fg"
+              className="max-w-full min-w-0 text-sm font-medium whitespace-normal text-text-secondary"
             >
               {ADD_PROPERTY_DISABLED_REASON}
             </span>

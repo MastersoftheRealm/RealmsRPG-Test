@@ -34,7 +34,7 @@ function ChapterLink({
       aria-current={active ? 'page' : undefined}
     >
       {number != null ? (
-        <span className="mr-2 shrink-0 text-text-muted tabular-nums">{number}.</span>
+        <span className="mr-2 shrink-0 text-text-secondary tabular-nums">{number}.</span>
       ) : null}
       <span className="min-w-0 text-pretty">{chapter.title}</span>
     </Link>
