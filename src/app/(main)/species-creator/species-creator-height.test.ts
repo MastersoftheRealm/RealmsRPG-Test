@@ -47,3 +47,35 @@ describe('speciesLibraryRecordToFormState height and weight', () => {
     expect(isSpeciesFormSaveReady(form)).toBe(false);
   });
 });
+
+describe('species measure limits (86e3jzdrd)', () => {
+  const base = speciesLibraryRecordToFormState(
+    {
+      id: '4',
+      name: 'Human',
+      description: '',
+      type: 'Humanoid',
+      sizes: ['Medium'],
+      skills: ['0', '21'],
+      languages: ['Universal'],
+      ave_height: 175,
+      ave_weight: 70,
+      adulthood_lifespan: [18, 100],
+    },
+    [],
+    [],
+  );
+
+  it('rejects negative and decimal height or weight', () => {
+    expect(isSpeciesFormSaveReady({ ...base, ave_height: -1 })).toBe(false);
+    expect(isSpeciesFormSaveReady({ ...base, ave_height: 1.5 })).toBe(false);
+    expect(isSpeciesFormSaveReady({ ...base, ave_weight: -2 })).toBe(false);
+    expect(isSpeciesFormSaveReady({ ...base, ave_weight: 70.5 })).toBe(false);
+    expect(isSpeciesFormSaveReady({ ...base, ave_height: 0, ave_weight: 0 })).toBe(true);
+  });
+
+  it('rejects adulthood older than lifespan and keeps an equal pair', () => {
+    expect(isSpeciesFormSaveReady({ ...base, adulthood_lifespan: [101, 100] })).toBe(false);
+    expect(isSpeciesFormSaveReady({ ...base, adulthood_lifespan: [100, 100] })).toBe(true);
+  });
+});
