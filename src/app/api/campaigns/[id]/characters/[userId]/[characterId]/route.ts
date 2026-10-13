@@ -2,7 +2,7 @@
  * Campaign Character View API
  * ===========================
  * - Full view: RM only, returns full character for read-only sheet viewing.
- * - ?scope=encounter: Any campaign member can fetch minimal data for adding to encounters.
+ * - ?scope=encounter: Campaign members can fetch minimal vitals, except a private character, which only the owner and Realm Master can read.
  */
 
 import { NextRequest, NextResponse } from 'next/server';
@@ -99,14 +99,15 @@ export async function GET(
 
     const charData = (charRow.data as Record<string, unknown>) ?? {};
 
-    if (!forEncounter) {
-      const visibility = (charData?.visibility as CharacterVisibility) || 'private';
-      if (visibility === 'private') {
-        return NextResponse.json(
-          { error: 'This character is set to private and cannot be viewed' },
-          { status: 403 },
-        );
-      }
+    const visibility = (charData?.visibility as CharacterVisibility) || 'private';
+    const isOwner = user.uid === userId;
+    // Full sheet stays closed for private rows. Encounter lookup may return
+    // vitals to the owner and the Realm Master only (86e3jryyv).
+    if (visibility === 'private' && !(forEncounter && (isOwner || isRM))) {
+      return NextResponse.json(
+        { error: 'This character is set to private and cannot be viewed' },
+        { status: 403 },
+      );
     }
 
     if (forEncounter) {
