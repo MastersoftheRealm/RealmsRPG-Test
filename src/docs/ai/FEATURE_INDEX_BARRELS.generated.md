@@ -3,7 +3,7 @@
 > **Do not edit by hand.** Run `npm run tasks:generate-index` after changing barrel exports.
 > Curated narrative map: [`FEATURE_INDEX.md`](FEATURE_INDEX.md).
 
-Generated: 2026-10-12
+Generated: 2026-10-13
 
 ## `src/components/patterns/index.ts`
 
@@ -95,10 +95,13 @@ Generated: 2026-10-12
 - SegmentedControl
 - SelectFilter
 - SelectionToggle
+- SHEET_ABILITY_MAX
 - SHEET_SCORE_TIP_CLASS
 - SHEET_STAT_GRID_CLASS
 - SHEET_STAT_TILE_CLASS
 - SHEET_STAT_TIP_CLASS
+- sheetAbilityBudgetHint
+- sheetAbilityIncreaseTitle
 - ShieldsListSection
 - SkillRow
 - SkillsAllocationPage

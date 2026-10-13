@@ -38,6 +38,9 @@ export {
   SHEET_STAT_TIP_CLASS,
   SHEET_SCORE_TIP_CLASS,
   canDecreaseAbility,
+  SHEET_ABILITY_MAX,
+  sheetAbilityBudgetHint,
+  sheetAbilityIncreaseTitle,
 } from './stat-tiles';
 
 // ValueStepper - Unified +/- controls (ADR-0002: guided skills bonus chrome)

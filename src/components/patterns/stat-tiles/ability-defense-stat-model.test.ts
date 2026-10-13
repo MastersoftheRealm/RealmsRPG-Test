@@ -3,10 +3,14 @@ import { calculateAbilityScoreCost } from '@/lib/game/formulas';
 import { ABILITIES_AND_DEFENSES, DEFENSE_DISPLAY_NAMES } from '@/lib/game/constants';
 import type { Abilities, AbilityName } from '@/types';
 import {
+  ABILITY_CONSTRAINTS,
   ABILITY_INFO,
   ABILITY_ORDER,
   DEFENSE_INFO,
+  SHEET_ABILITY_MAX,
   canDecreaseAbility,
+  sheetAbilityBudgetHint,
+  sheetAbilityIncreaseTitle,
 } from './ability-defense-stat-model';
 
 const ZERO_ABILITIES: Abilities = {
@@ -34,6 +38,26 @@ describe('Sheet ability/defense tile labels (TASK-835)', () => {
     expect(DEFENSE_DISPLAY_NAMES.reflex).toBe('Reflexes');
     expect(DEFENSE_DISPLAY_NAMES.mentalFortitude).toBe('Mental Fortitude');
     expect(defenseNames.join(' ')).not.toMatch(/Fort\./);
+  });
+});
+
+describe('player sheet ability cap (86e3k01q7)', () => {
+  it('caps increases at +10 and does not call +5 the maximum', () => {
+    expect(SHEET_ABILITY_MAX).toBe(10);
+    expect(ABILITY_CONSTRAINTS.getMaxAbility(1)).toBe(3);
+
+    const hint = sheetAbilityBudgetHint(2, 4);
+    expect(hint).not.toMatch(/Max ability/i);
+    expect(hint).not.toMatch(/\+5/);
+    expect(hint).toMatch(/above \+4/i);
+    expect(hint).toContain('−5');
+    expect(hint).toContain('+10');
+    expect(hint).toContain('max +4');
+
+    expect(sheetAbilityIncreaseTitle(false, 10, 2)).toBe('Hard cap +10');
+    expect(sheetAbilityIncreaseTitle(false, 5, 2)).toBe('Not enough ability points');
+    expect(sheetAbilityIncreaseTitle(true, 4, 2)).toBe('Cost: 2 points');
+    expect(sheetAbilityIncreaseTitle(false, 6, 2)).not.toMatch(/level/i);
   });
 });
 
