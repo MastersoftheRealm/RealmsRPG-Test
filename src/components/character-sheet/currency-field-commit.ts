@@ -4,6 +4,8 @@
  * so a stale unedited value cannot overwrite a newer Currency from another tab.
  */
 
+import { clampSavedCurrency } from '@/lib/character-save';
+
 export type CurrencyFieldCommit = {
   /** Value to save. Null when the field was not edited, or the typed value matches Currency. */
   save: number | null;
@@ -11,9 +13,10 @@ export type CurrencyFieldCommit = {
   display: string;
 };
 
-/** Blur uses the same absolute parse as before: `parseInt` or 0, including a negative draft. */
+/** Blur stores an absolute number. A negative draft floors to 0, the value save will keep. */
 function absoluteCurrency(raw: string): number {
-  return parseInt(raw, 10) || 0;
+  const parsed = parseInt(raw, 10);
+  return clampSavedCurrency(Number.isFinite(parsed) ? parsed : 0);
 }
 
 /** Enter keeps +N / -N against the current Currency, and does not go below 0. */
@@ -23,7 +26,7 @@ function enteredCurrency(raw: string, currency: number): number {
   if (trimmed.startsWith('+')) next = currency + (parseInt(trimmed.substring(1), 10) || 0);
   else if (trimmed.startsWith('-')) next = currency - (parseInt(trimmed.substring(1), 10) || 0);
   else next = parseInt(trimmed, 10) || 0;
-  return Math.max(0, next);
+  return clampSavedCurrency(next);
 }
 
 function commit(value: number, currency: number): CurrencyFieldCommit {

@@ -31,6 +31,17 @@ describe('unedited Currency does not overwrite a newer value (86e3juw07)', () =>
     });
   });
 
+  it('shows 0 when a negative Currency is blurred, matching the saved floor (86e3juw0d)', () => {
+    expect(currencyDraftOnBlur({ draft: '-10', currency: 86, edited: true })).toEqual({
+      save: 0,
+      display: '0',
+    });
+    expect(currencyDraftOnBlur({ draft: '-10', currency: 0, edited: true })).toEqual({
+      save: null,
+      display: '0',
+    });
+  });
+
   it('still saves a cleared Currency field as 0', () => {
     expect(currencyDraftOnBlur({ draft: '', currency: 86, edited: true })).toEqual({
       save: 0,
