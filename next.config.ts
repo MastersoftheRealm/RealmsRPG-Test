@@ -20,11 +20,17 @@ const nextConfig: NextConfig = {
   // - /encounter-tracker was the old name for the Encounters hub.
   // - /crafting/new now opens directly from the crafting hub into /crafting/[id].
   // - /characters/new/advanced was the retired 9-step Legacy character creator (TASK-912).
+  // - /signup is the short alias for registration. Signed-in /login still shows its form.
   async redirects() {
     return [
       {
         source: '/browse',
         destination: '/library',
+        permanent: false,
+      },
+      {
+        source: '/signup',
+        destination: '/register',
         permanent: false,
       },
       {
