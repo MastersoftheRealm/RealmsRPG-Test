@@ -113,7 +113,8 @@ export function defaultPowerEnergyLineLabel(line: PowerEnergyLine): string {
     const ap = op1 + 1;
     return `Sustain (${ap} AP)`;
   }
-  if (name === 'Power Split Damage Dice') return 'Split damage dice';
+  if (name === 'Power Split Damage Dice' || name === 'Split Damage Dice')
+    return 'Split damage dice';
 
   return `${name}${formatOptionSuffix(op1, op2, op3)}`;
 }

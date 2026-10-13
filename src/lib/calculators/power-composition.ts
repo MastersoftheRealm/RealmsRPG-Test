@@ -772,7 +772,9 @@ function proficiencyPartsFor(doc: PowerDocument, partsDb: PowerPart[]): Proficie
   return payload.map((pl) => {
     const name = pl.name ?? pl.part?.name ?? '';
     const isDamageRow =
-      POWER_CALC_SECTION_BY_NAME[name] === 'damage' && name !== 'Power Split Damage Dice';
+      POWER_CALC_SECTION_BY_NAME[name] === 'damage' &&
+      name !== 'Power Split Damage Dice' &&
+      name !== 'Split Damage Dice';
     const dmg = isDamageRow ? validDamages[cursor++] : undefined;
     const id = pl.id ?? pl.part?.id;
     return {

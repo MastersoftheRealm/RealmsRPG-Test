@@ -17,6 +17,10 @@ import { calculateTechniqueCosts } from './technique-calc';
 import { calculateEmpoweredTechniqueCosts } from './empowered-technique-calc';
 import { buildPowerAdvancedCalculationGroups } from './power-energy-breakdown';
 import { snapshotParts } from './power-composition.fixture';
+import {
+  POWER_AUTO_MECHANIC_PART_NAMES,
+  POWER_CALC_SECTION_BY_NAME,
+} from './power-mechanic-constants';
 import type { TechniquePart } from '@/hooks/codex-types';
 
 const elementalDamagePart: PowerPart = {
@@ -160,6 +164,53 @@ describe('calculatePowerCosts', () => {
     const costs = calculatePowerCosts(payload, [elementalDamagePart, magicDamagePart]);
     // elemental 4 EN + magic 4 EN = 8
     expect(costs.totalEnergy).toBe(8);
+  });
+
+  it('counts catalog Split Damage Dice on damage and keeps it out of Mechanics (86e3jwt66)', () => {
+    const splitPart: PowerPart = {
+      id: String(PART_IDS.POWER_SPLIT_DAMAGE_DICE),
+      name: 'Split Damage Dice',
+      description: 'Split damage dice',
+      category: 'General',
+      mechanic: true,
+      base_en: 0.5,
+      base_tp: 0,
+      op_1_en: 0.5,
+      op_1_tp: 0,
+      percentage: false,
+      duration: false,
+    };
+    const mechanicParts = buildMechanicParts({
+      creatorType: 'power',
+      partsDb: [elementalDamagePart, splitPart],
+      powerDamage: [{ type: 'fire', diceAmount: 2, dieSize: 6 }],
+    });
+    const splitRow = mechanicParts.find(
+      (part) => String(part.id) === String(PART_IDS.POWER_SPLIT_DAMAGE_DICE),
+    );
+    expect(splitRow?.name).toBe('Split Damage Dice');
+    expect(POWER_AUTO_MECHANIC_PART_NAMES.has(splitRow?.name ?? '')).toBe(true);
+    expect(POWER_CALC_SECTION_BY_NAME[splitRow?.name ?? '']).toBe('damage');
+
+    const toPayload = (part: (typeof mechanicParts)[number]) => ({
+      id: part.id,
+      name: part.name,
+      op_1_lvl: part.op_1_lvl,
+      op_2_lvl: part.op_2_lvl,
+      op_3_lvl: part.op_3_lvl,
+    });
+    const damageRows = mechanicParts.filter((part) =>
+      ['Elemental Damage', 'Split Damage Dice', 'Power Split Damage Dice'].includes(part.name),
+    );
+    const withSplit = calculatePowerCosts(damageRows.map(toPayload), [
+      elementalDamagePart,
+      splitPart,
+    ]);
+    const withoutSplit = calculatePowerCosts(
+      mechanicParts.filter((part) => part.name === 'Elemental Damage').map(toPayload),
+      [elementalDamagePart, splitPart],
+    );
+    expect(withSplit.energyRaw).toBe(withoutSplit.energyRaw + 0.5);
   });
 });
 

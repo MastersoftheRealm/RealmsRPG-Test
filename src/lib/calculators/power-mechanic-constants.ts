@@ -47,6 +47,7 @@ export const POWER_AUTO_MECHANIC_PART_NAMES = new Set([
   'Sustain for Duration',
   'Power Range',
   'Power Split Damage Dice',
+  'Split Damage Dice',
   'Add Weapon to Power',
 ]);
 
@@ -121,4 +122,5 @@ export const POWER_CALC_SECTION_BY_NAME: Record<string, PowerCalcSectionId> = {
   'Psychic Damage': 'damage',
   'Physical Damage': 'damage',
   'Power Split Damage Dice': 'damage',
+  'Split Damage Dice': 'damage',
 };

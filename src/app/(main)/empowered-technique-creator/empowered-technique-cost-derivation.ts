@@ -296,6 +296,7 @@ export function useEmpoweredTechniqueCostDerivation({
       'Psychic Damage',
       'Physical Damage',
       'Power Split Damage Dice',
+      'Split Damage Dice',
     ];
 
     const actionParts = powerMechanicParts.filter((part) => actionPartNames.includes(part.name));
