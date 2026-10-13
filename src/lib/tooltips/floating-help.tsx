@@ -131,7 +131,7 @@ export function FloatingHelpPanel({
     className: cn(
       'z-popover rounded-lg border border-border-light bg-surface text-text-primary shadow-xl text-left',
       'outline-none will-change-opacity p-3',
-      interactive && 'pointer-events-auto',
+      interactive ? 'pointer-events-auto' : 'pointer-events-none',
       className,
     ),
     style: { ...floatingStyles, ...transitionStyles } as CSSProperties,
