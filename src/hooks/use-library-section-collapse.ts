@@ -1,6 +1,20 @@
 'use client';
 
-import { useCallback, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
+
+/**
+ * Open a library section when rows show up, unless the user already toggled it.
+ * The first count can be 0 while trait names are still resolving (86e3jvjh8).
+ */
+export function librarySectionExpandedForCount(
+  expanded: boolean,
+  userToggled: boolean,
+  itemCount: number,
+): boolean {
+  if (userToggled) return expanded;
+  if (itemCount > 0) return true;
+  return expanded;
+}
 
 /**
  * Session UI collapse for character sheet library sections.
@@ -12,6 +26,18 @@ export function useLibrarySectionCollapse(
   onAdd?: () => void,
 ) {
   const [expanded, setExpanded] = useState(() => itemCount > 0);
+  const userToggledRef = useRef(false);
+
+  useEffect(() => {
+    setExpanded((current) =>
+      librarySectionExpandedForCount(current, userToggledRef.current, itemCount),
+    );
+  }, [itemCount]);
+
+  const onExpandedChange = useCallback((next: boolean) => {
+    userToggledRef.current = true;
+    setExpanded(next);
+  }, []);
 
   const onAddWithExpand = useCallback(() => {
     onAdd?.();
@@ -26,7 +52,7 @@ export function useLibrarySectionCollapse(
     ? ({
         collapsible: true as const,
         expanded,
-        onExpandedChange: setExpanded,
+        onExpandedChange,
       } as const)
     : {};
 
