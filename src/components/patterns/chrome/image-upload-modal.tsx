@@ -12,7 +12,7 @@
 
 'use client';
 
-import { useState, useCallback, useRef, useEffect, lazy, Suspense } from 'react';
+import { useState, useCallback, useRef, useEffect, lazy, Suspense, useId } from 'react';
 import type { Area, Point } from 'react-easy-crop';
 import 'react-easy-crop/react-easy-crop.css';
 
@@ -60,6 +60,17 @@ function formatFileSize(bytes: number): string {
   return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
 }
 
+/** WCAG name + instructions for react-easy-crop focus target (86e3k0jw8). */
+export function imageCropperA11yProps(hintElementId: string) {
+  return {
+    'aria-label': 'Crop area',
+    'aria-describedby': hintElementId,
+  };
+}
+
+export const IMAGE_CROPPER_KEYBOARD_HINT =
+  'Use arrow keys to move the image within the crop frame.';
+
 // =============================================================================
 // Component
 // =============================================================================
@@ -85,6 +96,7 @@ export function ImageUploadModal({
   const [isDragging, setIsDragging] = useState(false);
   const [isLoadingImage, setIsLoadingImage] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const cropHintId = useId();
 
   const effectiveAspect = aspect ?? 1;
 
@@ -356,6 +368,7 @@ export function ImageUploadModal({
                   onZoomChange={setZoom}
                   showGrid={false}
                   objectFit="contain"
+                  cropperProps={imageCropperA11yProps(cropHintId)}
                   style={{
                     containerStyle: { borderRadius: '0.75rem' },
                     cropAreaStyle: {
@@ -363,6 +376,9 @@ export function ImageUploadModal({
                     },
                   }}
                 />
+                <p id={cropHintId} className="sr-only">
+                  {IMAGE_CROPPER_KEYBOARD_HINT}
+                </p>
               </Suspense>
             </div>
 
