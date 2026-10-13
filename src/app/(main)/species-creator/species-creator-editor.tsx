@@ -31,6 +31,7 @@ import {
   SIZE_OPTIONS,
   commitSpeciesTraitBatch,
   openTraitSlots,
+  speciesMeasureFieldErrors,
   traitSelectionLimitMessage,
   type SpeciesFormState,
   type TraitCategory,
@@ -85,6 +86,7 @@ export function SpeciesCreatorEditor({
   traitsSummary,
   heightWeightLifespanSummary,
 }: SpeciesCreatorEditorProps) {
+  const measureErrors = speciesMeasureFieldErrors(form);
   return (
     <div className="space-y-6">
       <CollapsibleSection title="Basics" collapsedSummary={basicsSummary}>
@@ -332,7 +334,9 @@ export function SpeciesCreatorEditor({
               label="Average height (cm) *"
               type="number"
               min={0}
+              step={1}
               value={form.ave_height}
+              error={measureErrors.height}
               onChange={(e) =>
                 onFormChange((p) => ({
                   ...p,
@@ -347,7 +351,9 @@ export function SpeciesCreatorEditor({
               label="Average weight (kg) *"
               type="number"
               min={0}
+              step={1}
               value={form.ave_weight}
+              error={measureErrors.weight}
               onChange={(e) =>
                 onFormChange((p) => ({
                   ...p,
@@ -363,6 +369,7 @@ export function SpeciesCreatorEditor({
               type="number"
               min={0}
               value={form.adulthood_lifespan[0]}
+              error={measureErrors.adulthood}
               onChange={(e) =>
                 onFormChange((p) => ({
                   ...p,
