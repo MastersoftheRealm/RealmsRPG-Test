@@ -20,8 +20,8 @@ function part(p: Partial<PowerPart> & Pick<PowerPart, 'id' | 'name'>): PowerPart
 }
 
 describe('final EN minimum 1 (86e3jrfyu)', () => {
-  const spark = part({ id: 'spark', name: 'Spark', base_en: 4 });
-  const limit = part({ id: 'lim', name: 'Limit', percentage: true, base_en: 0.1 });
+  const spark = part({ id: '903', name: 'Spark', base_en: 4 });
+  const limit = part({ id: '904', name: 'Limit', percentage: true, base_en: 0.1 });
   const partsDb: PowerPart[] = [
     ...snapshotParts([PART_IDS.SPHERE_OF_EFFECT]),
     spark,
@@ -34,8 +34,8 @@ describe('final EN minimum 1 (86e3jrfyu)', () => {
   it('plain power with positive flat reduced below 1 publishes 1 EN', () => {
     const costs = calculatePowerCosts(
       [
-        { id: 'spark', name: 'Spark' },
-        { id: 'lim', name: 'Limit' },
+        { id: 903, name: 'Spark' },
+        { id: 904, name: 'Limit' },
       ],
       partsDb,
     );
@@ -50,8 +50,8 @@ describe('final EN minimum 1 (86e3jrfyu)', () => {
         name: 'Pinned',
         actionType: 'basic',
         parts: [
-          { id: 'spark', name: 'Spark' },
-          { id: 'lim', name: 'Limit' },
+          { id: 903, name: 'Spark' },
+          { id: 904, name: 'Limit' },
         ],
         composition: {
           structure: 'choice',
@@ -79,8 +79,8 @@ describe('final EN minimum 1 (86e3jrfyu)', () => {
         name: 'Choice reverse floor',
         actionType: 'basic',
         parts: [
-          { id: 'spark', name: 'Spark' },
-          { id: 'lim', name: 'Limit' },
+          { id: 903, name: 'Spark' },
+          { id: 904, name: 'Limit' },
         ],
         composition: {
           structure: 'choice',
