@@ -275,6 +275,37 @@ describe('GET /api/campaigns/[id]/characters/[userId]/[characterId]', () => {
     expect(mockGetOwnerLibraryAndEnrichmentForView).not.toHaveBeenCalled();
   });
 
+  it('does not return private character stats to another campaign member (86e3jryyv)', async () => {
+    stubAuthedClient({
+      user: MEMBER,
+      characterRow: makeCharacterRow({ visibility: 'private' }),
+    });
+
+    const response = await GET(makeGetRequest('encounter'), routeParams());
+
+    expect(response.status).toBe(403);
+    await expect(readJson(response)).resolves.toEqual({
+      error: 'This character is set to private and cannot be viewed',
+    });
+  });
+
+  it('still returns private encounter stats to the Realm Master and the owner', async () => {
+    stubAuthedClient({
+      user: RM,
+      characterRow: makeCharacterRow({ visibility: 'private' }),
+    });
+    const asRm = await GET(makeGetRequest('encounter'), routeParams());
+    expect(asRm.status).toBe(200);
+
+    stubAuthedClient({
+      user: PLAYER,
+      memberUserIds: [MEMBER.uid, PLAYER.uid],
+      characterRow: makeCharacterRow({ visibility: 'private' }),
+    });
+    const asOwner = await GET(makeGetRequest('encounter'), routeParams());
+    expect(asOwner.status).toBe(200);
+  });
+
   it('fills a missing health max from core_rules baseHealth (86e3jtugd)', async () => {
     stubAuthedClient({
       user: MEMBER,
