@@ -38,6 +38,8 @@ import {
   getEffectiveAbilities,
   getSkillTempModifier,
   sectionTempModifierTint,
+  TEMP_MODIFIER_MAX,
+  TEMP_MODIFIER_MIN,
   tempModifierValueClass,
 } from '@/lib/character/temp-modifiers';
 import {
@@ -577,8 +579,13 @@ export function SkillsSection({
                 }}
                 canIncrease={showTempControls ? true : canIncreaseSkill(skill)}
                 minValue={
-                  showTempControls ? -99 : allowDecrease && !skill.prof && isSubSkill ? -1 : 0
+                  showTempControls
+                    ? TEMP_MODIFIER_MIN
+                    : allowDecrease && !skill.prof && isSubSkill
+                      ? -1
+                      : 0
                 }
+                maxValue={showTempControls ? TEMP_MODIFIER_MAX : undefined}
                 showRollButton={!showEditControls && rollContext?.canRoll !== false}
                 onRoll={() =>
                   rollContext?.rollSkill?.(

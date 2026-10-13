@@ -10,6 +10,8 @@ import { defenseScoreHelp, getDefenseHelp } from '../../../../public/tooltip-tex
 import {
   getAbilityTempModifier,
   getDefenseTempModifier,
+  TEMP_MODIFIER_MAX,
+  TEMP_MODIFIER_MIN,
   tempModifierValueClass,
 } from '@/lib/character/temp-modifiers';
 import type { AbilityName, CharacterTempModifiers, DefenseName, DefenseSkills } from '@/types';
@@ -128,6 +130,7 @@ export function DefenseStatTile({
                 defenses: { [defenseKey]: defenseTemp - 1 },
               })
             }
+            disabled={defenseTemp <= TEMP_MODIFIER_MIN}
             size="sm"
             title={`Decrease ${defenseInfo.name} Temp Modifier`}
           />
@@ -145,6 +148,7 @@ export function DefenseStatTile({
                 defenses: { [defenseKey]: defenseTemp + 1 },
               })
             }
+            disabled={defenseTemp >= TEMP_MODIFIER_MAX}
             size="sm"
             title={`Increase ${defenseInfo.name} Temp Modifier`}
           />

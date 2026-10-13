@@ -15,6 +15,14 @@ export type TempModifierScalarKey =
   | 'criticalRange'
   | 'terminal';
 
+/** Sheet temp modifiers stop at these bounds (Kadin, Oct 4 2026). */
+export const TEMP_MODIFIER_MIN = -99;
+export const TEMP_MODIFIER_MAX = 1000;
+
+export function clampTempModifier(value: number): number {
+  return Math.min(TEMP_MODIFIER_MAX, Math.max(TEMP_MODIFIER_MIN, value));
+}
+
 const SCALAR_KEYS: TempModifierScalarKey[] = [
   'speed',
   'evasion',
@@ -138,8 +146,9 @@ function prunePartialRecord<T extends string>(
   if (!record) return undefined;
   const next: Partial<Record<T, number>> = {};
   for (const [key, value] of Object.entries(record) as Array<[T, number | undefined]>) {
-    if (typeof value === 'number' && Number.isFinite(value) && value !== 0) {
-      next[key] = value;
+    if (typeof value === 'number' && Number.isFinite(value)) {
+      const clamped = clampTempModifier(value);
+      if (clamped !== 0) next[key] = clamped;
     }
   }
   return Object.keys(next).length > 0 ? next : undefined;
@@ -282,8 +291,9 @@ export function normalizeTempModifiers(
 
   for (const key of SCALAR_KEYS) {
     const n = mods[key];
-    if (typeof n === 'number' && Number.isFinite(n) && n !== 0) {
-      next[key] = n;
+    if (typeof n === 'number' && Number.isFinite(n)) {
+      const clamped = clampTempModifier(n);
+      if (clamped !== 0) next[key] = clamped;
     }
   }
 
@@ -296,8 +306,9 @@ export function normalizeTempModifiers(
   if (mods.skills) {
     const skills: Record<string, number> = {};
     for (const [id, value] of Object.entries(mods.skills)) {
-      if (typeof value === 'number' && Number.isFinite(value) && value !== 0) {
-        skills[id] = value;
+      if (typeof value === 'number' && Number.isFinite(value)) {
+        const clamped = clampTempModifier(value);
+        if (clamped !== 0) skills[id] = clamped;
       }
     }
     if (Object.keys(skills).length > 0) next.skills = skills;
