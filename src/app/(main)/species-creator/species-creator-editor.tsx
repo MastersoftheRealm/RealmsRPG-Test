@@ -388,6 +388,7 @@ export function SpeciesCreatorEditor({
               type="number"
               min={0}
               value={form.adulthood_lifespan[1]}
+              error={measureErrors.lifespan}
               onChange={(e) =>
                 onFormChange((p) => ({
                   ...p,

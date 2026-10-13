@@ -133,8 +133,14 @@ export function speciesMeasureFieldErrors(form: SpeciesFormState): {
   height?: string;
   weight?: string;
   adulthood?: string;
+  lifespan?: string;
 } {
-  const errors: { height?: string; weight?: string; adulthood?: string } = {};
+  const errors: {
+    height?: string;
+    weight?: string;
+    adulthood?: string;
+    lifespan?: string;
+  } = {};
   if (form.ave_height !== '' && !isWholeNonNegative(form.ave_height)) {
     errors.height = 'Use a whole number of centimeters, 0 or greater.';
   }
@@ -143,7 +149,18 @@ export function speciesMeasureFieldErrors(form: SpeciesFormState): {
   }
   const adulthood = form.adulthood_lifespan[0];
   const lifespan = form.adulthood_lifespan[1];
-  if (typeof adulthood === 'number' && typeof lifespan === 'number' && adulthood > lifespan) {
+  if (adulthood !== '' && !isWholeNonNegative(adulthood)) {
+    errors.adulthood = 'Use a whole number of years, 0 or greater.';
+  }
+  if (lifespan !== '' && !isWholeNonNegative(lifespan)) {
+    errors.lifespan = 'Use a whole number of years, 0 or greater.';
+  }
+  if (
+    !errors.adulthood &&
+    typeof adulthood === 'number' &&
+    typeof lifespan === 'number' &&
+    adulthood > lifespan
+  ) {
     errors.adulthood = 'Adulthood age cannot be higher than lifespan.';
   }
   return errors;

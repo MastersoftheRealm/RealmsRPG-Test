@@ -78,4 +78,11 @@ describe('species measure limits (86e3jzdrd)', () => {
     expect(isSpeciesFormSaveReady({ ...base, adulthood_lifespan: [101, 100] })).toBe(false);
     expect(isSpeciesFormSaveReady({ ...base, adulthood_lifespan: [100, 100] })).toBe(true);
   });
+
+  it('rejects negative adulthood age or lifespan (86e3ptj1a)', () => {
+    expect(isSpeciesFormSaveReady({ ...base, adulthood_lifespan: [-1, 100] })).toBe(false);
+    expect(isSpeciesFormSaveReady({ ...base, adulthood_lifespan: [18, -5] })).toBe(false);
+    expect(isSpeciesFormSaveReady({ ...base, adulthood_lifespan: [18.5, 100] })).toBe(false);
+    expect(isSpeciesFormSaveReady({ ...base, adulthood_lifespan: [0, 0] })).toBe(true);
+  });
 });
