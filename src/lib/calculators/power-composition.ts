@@ -551,6 +551,22 @@ function rawEnergyOf(doc: PowerDocument, partsDb: PowerPart[]): number {
   return calculatePowerCosts(buildPowerPartsPayloadForCost(doc, partsDb), partsDb).energyRaw;
 }
 
+function docHasPositiveFlatEnergy(doc: PowerDocument, partsDb: PowerPart[]): boolean {
+  return calculatePowerCosts(buildPowerPartsPayloadForCost(doc, partsDb), partsDb)
+    .hasPositiveEnergy;
+}
+
+/** One round-up at the end, with the 1 EN floor when positive flat EN was reduced below 1. */
+function finalizeCompositionEnergy(
+  raw: number,
+  docs: PowerDocument[],
+  partsDb: PowerPart[],
+): number {
+  const hasPositiveEnergy =
+    raw > 1e-9 || docs.some((doc) => docHasPositiveFlatEnergy(doc, partsDb));
+  return finalizePowerEnergy(raw, hasPositiveEnergy);
+}
+
 /** Ceil a non-negative piece contribution for display; 0 extra stays 0 (the 1 EN floor is on the total). */
 function publishContribution(raw: number): number {
   return Math.max(0, Math.ceil(raw - 1e-9));
@@ -907,9 +923,10 @@ export function resolvePowerComposition(
           ? rawEnergyOf(doc, partsDb)
           : display.energy;
     const rangeEnergy = tabExtra?.rangeEnergy ?? 0;
+    const variantRaw = sharedRaw + energyRaw;
     const energy =
       structure === 'choice'
-        ? finalizePowerEnergy(sharedRaw + energyRaw)
+        ? finalizeCompositionEnergy(variantRaw, [chassis, doc], partsDb)
         : structure === 'modify'
           ? publishContribution(energyRaw)
           : structure === 'randomize'
@@ -995,14 +1012,12 @@ export function resolvePowerComposition(
           ...(shared ? [shared.doc] : []),
           ...variants.filter((v) => v.polarity !== 'negative').map((v) => v.doc),
         ];
-  const hasPositiveEnergy =
-    structureEnergy > 1e-9 ||
-    benefitDocs.some(
-      (doc) =>
-        calculatePowerCosts(buildPowerPartsPayloadForCost(doc, partsDb), partsDb).hasPositiveEnergy,
-    );
-  const energyBeforeReverse = finalizePowerEnergy(structureEnergy, hasPositiveEnergy);
-  const energy = finalizePowerEnergy(structureEnergy - (reverse?.discount ?? 0), hasPositiveEnergy);
+  const energyBeforeReverse = finalizeCompositionEnergy(structureEnergy, benefitDocs, partsDb);
+  const energy = finalizeCompositionEnergy(
+    structureEnergy - (reverse?.discount ?? 0),
+    benefitDocs,
+    partsDb,
+  );
 
   const pricedVariants =
     structure === 'randomize' ? variants.filter((v) => v.faces.length > 0) : variants;
