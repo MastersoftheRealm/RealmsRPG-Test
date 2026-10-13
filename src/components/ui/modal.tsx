@@ -269,7 +269,8 @@ export function Modal({
       {/* Backdrop */}
       <div
         className={cn(
-          'duration-base fixed inset-0 bg-black/60 backdrop-blur-sm transition-opacity ease-standard',
+          'duration-base fixed inset-0 transition-opacity ease-standard',
+          useFullScreenMobile ? 'bg-background' : 'bg-black/60 backdrop-blur-sm',
           animating ? 'opacity-100' : 'opacity-0',
         )}
         onClick={onClose}
