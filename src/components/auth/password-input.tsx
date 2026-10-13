@@ -6,7 +6,7 @@
 
 'use client';
 
-import { forwardRef, useState, type InputHTMLAttributes } from 'react';
+import { forwardRef, useId, useState, type InputHTMLAttributes } from 'react';
 import { cn } from '@/lib/utils';
 
 export interface PasswordInputProps extends Omit<InputHTMLAttributes<HTMLInputElement>, 'type'> {
@@ -18,7 +18,9 @@ export interface PasswordInputProps extends Omit<InputHTMLAttributes<HTMLInputEl
 const PasswordInput = forwardRef<HTMLInputElement, PasswordInputProps>(
   ({ label, error, className, id, ...props }, ref) => {
     const [showPassword, setShowPassword] = useState(false);
-    const inputId = id ?? props.name ?? 'password';
+    const generatedId = useId();
+    const inputId = id ?? props.name ?? generatedId;
+    const errorId = `${inputId}-error`;
 
     return (
       <div className="space-y-1.5">
@@ -42,6 +44,8 @@ const PasswordInput = forwardRef<HTMLInputElement, PasswordInputProps>(
                 : 'border-border-light hover:border-border dark:border-border',
               className,
             )}
+            aria-invalid={error ? 'true' : undefined}
+            aria-describedby={error ? errorId : undefined}
             {...props}
           />
           <button
@@ -54,7 +58,11 @@ const PasswordInput = forwardRef<HTMLInputElement, PasswordInputProps>(
             {showPassword ? <EyeOffIcon className="h-5 w-5" /> : <EyeIcon className="h-5 w-5" />}
           </button>
         </div>
-        {error ? <p className="text-sm text-danger-fg">{error}</p> : null}
+        {error ? (
+          <p id={errorId} role="alert" className="text-sm text-danger-fg">
+            {error}
+          </p>
+        ) : null}
       </div>
     );
   },

@@ -6,7 +6,7 @@
 
 'use client';
 
-import { forwardRef, type InputHTMLAttributes } from 'react';
+import { forwardRef, useId, type InputHTMLAttributes } from 'react';
 import { cn } from '@/lib/utils';
 
 export interface FormInputProps extends InputHTMLAttributes<HTMLInputElement> {
@@ -17,7 +17,10 @@ export interface FormInputProps extends InputHTMLAttributes<HTMLInputElement> {
 
 const FormInput = forwardRef<HTMLInputElement, FormInputProps>(
   ({ label, error, helperText, className, id, ...props }, ref) => {
-    const inputId = id ?? props.name;
+    const generatedId = useId();
+    const inputId = id ?? props.name ?? generatedId;
+    const errorId = `${inputId}-error`;
+    const helperId = `${inputId}-helper`;
 
     return (
       <div className="space-y-1.5">
@@ -39,10 +42,20 @@ const FormInput = forwardRef<HTMLInputElement, FormInputProps>(
               : 'border-border-light hover:border-border dark:border-border',
             className,
           )}
+          aria-invalid={error ? 'true' : undefined}
+          aria-describedby={error ? errorId : helperText ? helperId : undefined}
           {...props}
         />
-        {error && <p className="text-sm text-danger-fg">{error}</p>}
-        {helperText && !error && <p className="text-sm text-text-secondary">{helperText}</p>}
+        {error ? (
+          <p id={errorId} role="alert" className="text-sm text-danger-fg">
+            {error}
+          </p>
+        ) : null}
+        {helperText && !error ? (
+          <p id={helperId} className="text-sm text-text-secondary">
+            {helperText}
+          </p>
+        ) : null}
       </div>
     );
   },
