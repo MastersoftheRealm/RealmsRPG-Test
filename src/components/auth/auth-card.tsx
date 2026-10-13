@@ -18,7 +18,7 @@ export function AuthCard({ children, title, subtitle, className }: AuthCardProps
     <div
       className={cn(
         'w-full max-w-md rounded-card p-6 sm:p-8',
-        'bg-surface/95 backdrop-blur-md',
+        'bg-surface md:bg-surface/95 md:backdrop-blur-md',
         'border border-border-light dark:border-border',
         'shadow-raised',
         className,

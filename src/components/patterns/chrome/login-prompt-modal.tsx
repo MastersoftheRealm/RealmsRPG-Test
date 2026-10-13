@@ -145,7 +145,7 @@ export function LoginPromptModal({
 
         <h2 className="mb-2 text-xl font-semibold text-text-primary">{title}</h2>
 
-        <p className="mb-6 text-text-muted">{message || defaultMessage}</p>
+        <p className="mb-6 text-text-secondary">{message || defaultMessage}</p>
 
         <Alert variant="info" className="text-left">
           {allowLocalSheet ? (
