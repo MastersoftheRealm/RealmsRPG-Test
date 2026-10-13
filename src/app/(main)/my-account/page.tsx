@@ -67,7 +67,14 @@ function AccountContent() {
         authProviderLabel={model.authProviderLabel}
         uploadingPicture={model.uploadingPicture}
         pictureMessage={model.pictureMessage}
-        onOpenPictureModal={() => model.setShowPictureModal(true)}
+        canUploadProfilePicture={model.profile?.rolePolicy?.canUploadProfilePicture === true}
+        onOpenPictureModal={() => {
+          if (model.profile?.rolePolicy?.canUploadProfilePicture) {
+            model.setShowPictureModal(true);
+          } else {
+            model.setShowPictureBank(true);
+          }
+        }}
       />
 
       <AccountTutorialsCard
@@ -127,15 +134,17 @@ function AccountContent() {
         onCancel={model.cancelDeleteConfirm}
       />
 
-      <ImageUploadModal
-        isOpen={model.showPictureModal}
-        onClose={() => model.setShowPictureModal(false)}
-        onConfirm={model.handleProfilePictureUpload}
-        onChooseFromLibrary={() => model.setShowPictureBank(true)}
-        cropShape="round"
-        aspect={1}
-        title="Upload Profile Picture"
-      />
+      {model.profile?.rolePolicy?.canUploadProfilePicture ? (
+        <ImageUploadModal
+          isOpen={model.showPictureModal}
+          onClose={() => model.setShowPictureModal(false)}
+          onConfirm={model.handleProfilePictureUpload}
+          onChooseFromLibrary={() => model.setShowPictureBank(true)}
+          cropShape="round"
+          aspect={1}
+          title="Upload Profile Picture"
+        />
+      ) : null}
       <RealmsImagePicker
         isOpen={model.showPictureBank}
         onClose={() => model.setShowPictureBank(false)}

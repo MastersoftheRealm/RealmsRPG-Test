@@ -11,11 +11,15 @@ import { Button, Card, Spinner } from '@/components/ui';
 import { ExpandableImage } from '@/components/patterns';
 import { formatMemberSince, type AccountMessage } from './account-helpers';
 
+export const PROFILE_PICTURE_UPLOAD_DENIED =
+  'Profile picture uploads are not allowed for your role. Choose from the image library.';
+
 type Props = {
   profile: AccountProfile | null;
   authProviderLabel: string;
   uploadingPicture: boolean;
   pictureMessage: AccountMessage | null;
+  canUploadProfilePicture: boolean;
   onOpenPictureModal: () => void;
 };
 
@@ -24,6 +28,7 @@ export function AccountProfileCard({
   authProviderLabel,
   uploadingPicture,
   pictureMessage,
+  canUploadProfilePicture,
   onOpenPictureModal,
 }: Props) {
   return (
@@ -65,7 +70,11 @@ export function AccountProfileCard({
             <Camera className="h-4 w-4" aria-hidden />
             {profile?.photoURL ? 'Change Picture' : 'Add Picture'}
           </Button>
-          <p className="mt-1 text-xs text-text-muted">JPG, PNG, GIF, or WebP. Max 5MB.</p>
+          <p className="mt-1 text-xs text-text-secondary">
+            {canUploadProfilePicture
+              ? 'JPG, PNG, GIF, or WebP. Max 5MB.'
+              : PROFILE_PICTURE_UPLOAD_DENIED}
+          </p>
           {pictureMessage && (
             <p
               className={cn(
