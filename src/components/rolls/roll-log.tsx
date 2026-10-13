@@ -11,6 +11,7 @@
 
 import * as React from 'react';
 import Image from 'next/image';
+import { usePathname } from 'next/navigation';
 import { cn } from '@/lib/utils/cn';
 import { Trash2, Users, User } from 'lucide-react';
 import { useRolls, type RollEntry, type RollType, type DieResult } from './roll-context';
@@ -58,7 +59,16 @@ export function rollLogShowsDiceBuilder(canRoll: boolean): boolean {
   return canRoll;
 }
 
+/** Standalone creator routes (power-creator, creature-creator, …). */
+export function isCreatorRoutePath(pathname: string): boolean {
+  return /\/(?:power|technique|item|species|creature|empowered-technique)-creator(?:\/|$)/.test(
+    pathname,
+  );
+}
+
 export function RollLog({ className, viewOnlyCampaignId }: RollLogProps) {
+  const pathname = usePathname();
+  const onCreatorRoute = isCreatorRoutePath(pathname);
   const { rolls, addRoll, clearHistory, subscribeToRolls, campaignContext, canRoll } = useRolls();
   // Normalize to string so query key matches campaign page (params.id) and realtime subscription is consistent
   const rawCampaignId = campaignContext?.campaignId ?? viewOnlyCampaignId;
@@ -233,6 +243,7 @@ export function RollLog({ className, viewOnlyCampaignId }: RollLogProps) {
       className={cn('floating-dock-bottom-right', className)}
       data-floating-dock="bottom-right"
       data-tour-id="sheet-tour-roll-log"
+      {...(onCreatorRoute ? { 'data-creator-roll-dock': '' } : {})}
     >
       {/*
         Closed panel is unmounted (TASK-826 / C6). A w-0 overflow-hidden Card still
@@ -350,6 +361,8 @@ export function RollLog({ className, viewOnlyCampaignId }: RollLogProps) {
                 {(['d4', 'd6', 'd8', 'd10', 'd12', 'd20'] as DieType[]).map((die) => (
                   <button
                     key={die}
+                    type="button"
+                    data-creator-dice-pick
                     onClick={() => addDie(die)}
                     onContextMenu={(e) => {
                       e.preventDefault();

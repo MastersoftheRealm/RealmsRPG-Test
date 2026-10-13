@@ -47,7 +47,7 @@ export function CreatorLayout({
   aboveGrid,
 }: CreatorLayoutProps) {
   return (
-    <PageContainer size={size}>
+    <PageContainer size={size} data-creator-page>
       <PageHeader
         icon={icon}
         title={title}

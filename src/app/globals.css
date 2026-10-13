@@ -872,6 +872,24 @@
     z-index: 1;
   }
 
+  /* Creator ± steppers: square 44px hit on coarse (86e3jx9gm) without widening grid rows site-wide. */
+  @media (pointer: coarse) {
+    [data-creator-page] .btn-stepper.hit-area-dense::after,
+    [data-creator-roll-dock] .btn-stepper.hit-area-dense::after {
+      top: 50%;
+      left: 50%;
+      right: auto;
+      width: max(100%, var(--touch-target-min, 44px));
+      height: max(100%, var(--touch-target-min, 44px));
+      transform: translate(-50%, -50%);
+    }
+
+    [data-creator-roll-dock] [data-creator-dice-pick] {
+      min-height: var(--touch-target-min, 44px);
+      min-width: var(--touch-target-min, 44px);
+    }
+  }
+
   /*
     Expand tap target without growing flex/grid track (TASK-725).
     Layout box stays the 16px icon; ::after is the extra hit area.
