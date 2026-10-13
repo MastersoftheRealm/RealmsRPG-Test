@@ -9,7 +9,7 @@
 
 'use client';
 
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { cn } from '@/lib/utils';
 import { Plus } from 'lucide-react';
 import { useRollsOptional } from '@/components/rolls';
@@ -48,6 +48,7 @@ import {
 } from '@/lib/character/sheet-skills-display';
 import { useCodexSkills, useGameRules } from '@/hooks';
 import type { Abilities, CharacterTempModifiers } from '@/types';
+import { skillsHeaderPinOffset } from './skills-header-pin';
 
 type Skill = SheetDisplaySkill;
 
@@ -102,6 +103,67 @@ export function SkillsSection({
   const showTempControls = isTempModifierMode && sectionAdjustOpen;
   const showEditControls = showSpendControls || showTempControls;
   const showSectionToggle = isEditMode || isTempModifierMode;
+  const cardRef = useRef<HTMLDivElement>(null);
+  const headerRef = useRef<HTMLDivElement>(null);
+  const pinYRef = useRef(0);
+
+  useEffect(() => {
+    const card = cardRef.current;
+    const header = headerRef.current;
+    if (!card || !header) return;
+
+    const column = card.closest<HTMLElement>('[data-sheet-mobile-column]');
+    if (!column) return;
+
+    const narrow = window.matchMedia('(max-width: 767px)');
+    let frame = 0;
+
+    const apply = () => {
+      frame = 0;
+      if (!narrow.matches) {
+        pinYRef.current = 0;
+        header.style.transform = '';
+        return;
+      }
+      const tabs = column.querySelector<HTMLElement>('[data-sheet-section-tabs]');
+      if (!tabs) {
+        pinYRef.current = 0;
+        header.style.transform = '';
+        return;
+      }
+      const headerRect = header.getBoundingClientRect();
+      const offset = skillsHeaderPinOffset({
+        naturalTop: headerRect.top - pinYRef.current,
+        headerHeight: headerRect.height,
+        stickLine: tabs.getBoundingClientRect().bottom,
+        cardBottom: card.getBoundingClientRect().bottom,
+      });
+      pinYRef.current = offset;
+      header.style.transform = offset > 0 ? `translateY(${offset}px)` : '';
+    };
+
+    const schedule = () => {
+      if (frame) return;
+      frame = requestAnimationFrame(apply);
+    };
+
+    schedule();
+    column.addEventListener('scroll', schedule, { passive: true });
+    window.addEventListener('resize', schedule);
+    narrow.addEventListener('change', schedule);
+    const observer = new ResizeObserver(schedule);
+    observer.observe(card);
+
+    return () => {
+      if (frame) cancelAnimationFrame(frame);
+      column.removeEventListener('scroll', schedule);
+      window.removeEventListener('resize', schedule);
+      narrow.removeEventListener('change', schedule);
+      observer.disconnect();
+      pinYRef.current = 0;
+      header.style.transform = '';
+    };
+  }, []);
 
   const effectiveAbilities = useMemo(
     () => getEffectiveAbilities(abilities, tempModifiers),
@@ -318,7 +380,7 @@ export function SkillsSection({
   const tempTint = sectionTempModifierTint(tempModifiers, 'skills');
 
   return (
-    <Card className={cn('relative p-4 shadow-md md:p-6', className)}>
+    <Card ref={cardRef} className={cn('relative p-4 shadow-md md:p-6', className)}>
       {showSectionToggle && (
         <div className="absolute top-3 right-3 z-10">
           {isEditMode ? (
@@ -353,10 +415,18 @@ export function SkillsSection({
         </div>
       )}
 
-      {/* DESIGN_INTENT: pencil or Temp toggle floats top-right; compact filters below title (not SourceFilter chrome) */}
-      <div className={cn('mb-4', showSectionToggle && 'pr-14')}>
-        <div className="flex flex-wrap items-baseline gap-x-2 max-md:sticky max-md:top-12 max-md:z-[1] max-md:-mx-4 max-md:bg-surface max-md:px-4 max-md:py-1">
-          <h2 className="text-lg font-bold text-text-primary max-md:scroll-mt-12">Skills</h2>
+      {/* DESIGN_INTENT: pencil or Temp toggle floats top-right; compact filters below title (not SourceFilter chrome).
+          Below md, pin this whole block (title + filters) under the section tabs for the life of the card. */}
+      <div
+        ref={headerRef}
+        data-skills-header-pin
+        className={cn(
+          'mb-4 max-md:relative max-md:z-[1] max-md:-mx-4 max-md:bg-surface max-md:pl-4',
+          showSectionToggle ? 'pr-14' : 'max-md:pr-4',
+        )}
+      >
+        <div className="flex flex-wrap items-baseline gap-x-2">
+          <h2 className="text-lg font-bold text-text-primary">Skills</h2>
           {showEditControls && (
             <span
               role="status"

@@ -340,7 +340,10 @@ export function CharacterSheetBody() {
         <AbilitiesPanel />
       </div>
 
-      <div className="sticky top-0 z-sticky mb-2 bg-background py-1 md:hidden">
+      <div
+        data-sheet-section-tabs
+        className="sticky top-0 z-sticky mb-2 bg-background py-1 md:hidden"
+      >
         <SegmentedControl
           size="compact"
           equalWidth
