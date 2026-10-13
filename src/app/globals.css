@@ -796,10 +796,20 @@
     padding-bottom: var(--sheet-mobile-fab-gutter);
   }
 
+  /* Creature creator: the Roll Log FAB covers Size and the right-hand controls at ~375 (86e3jx9gn). */
+  .creature-creator-dock-frame {
+    box-sizing: border-box;
+    padding-inline-end: var(--sheet-mobile-fab-gutter);
+  }
+
   @media (min-width: 768px) {
     .encounter-tracker-dock-frame {
       padding-inline-end: 0;
       padding-bottom: var(--dock-reserved-end);
+    }
+
+    .creature-creator-dock-frame {
+      padding-inline-end: 0;
     }
   }
 
