@@ -129,7 +129,7 @@ export function InfoTippy({
   const referenceProps = getReferenceProps(touchHoldProps);
 
   const triggerClassName = cn(
-    'inline-flex size-4 shrink-0 items-center justify-center rounded-full hit-area-layout-neutral',
+    'inline-flex min-h-6 min-w-6 shrink-0 items-center justify-center rounded-full hit-area-layout-neutral',
     TONE_CLASS[tone],
     'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-outline-border focus-visible:ring-offset-2',
     className,
