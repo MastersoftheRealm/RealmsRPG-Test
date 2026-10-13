@@ -8,7 +8,7 @@ describe('note header collapse (86e3jvzt3)', () => {
     expect(source).toContain('onClick={() => setIsExpanded(!isExpanded)}');
     expect(source).toContain('<div className="flex min-w-0 flex-1 items-center">');
     expect(source).toContain(
-      'className="flex min-w-0 max-w-full cursor-pointer items-center gap-1 text-sm font-medium text-text-primary hover:text-primary-fg-hover"',
+      'className="flex max-w-full min-w-0 cursor-pointer items-center gap-1 text-sm font-medium text-text-primary hover:text-primary-fg-hover"',
     );
     expect(source).not.toContain(
       'className="flex min-w-0 flex-1 cursor-pointer items-center gap-1 text-sm font-medium text-text-primary hover:text-primary-fg-hover"',
