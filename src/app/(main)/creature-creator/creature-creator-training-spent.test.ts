@@ -130,6 +130,7 @@ describe('computeCreatureTrainingSpent (86e3krpzp)', () => {
           energy: 1,
           tp: 3,
           action: 'Action',
+          weapon: '-',
           damage: '1',
         },
       ],
