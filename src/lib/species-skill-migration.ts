@@ -94,6 +94,7 @@ function costForNextValue(currentVal: number): number {
 /**
  * Migrate skills after species change.
  * - For each old species skill not in new: remove 1 point (reduce value or remove proficiency).
+ *   A row the player never invested in (value 0) is removed with that proficiency.
  * - For each new species skill not in old: add 1 point (add proficiency at 0, or +1 value if already proficient; if at soft cap, refund 1).
  */
 export function migrateSkillsAfterSpeciesChange(
@@ -121,7 +122,9 @@ export function migrateSkillsAfterSpeciesChange(
     return result.find((s) => normalizeId(s.name) === normalizeId(catalogName));
   };
 
-  // Remove 1 point from each old species skill that is not in new
+  // Remove 1 point from each old species skill that is not in new.
+  // Value 0 and proficiency-only means the player never invested; drop the row.
+  const dropUninvested = new Set<SkillEntry>();
   for (const id of oldIds) {
     if (id === '0' || newSet.has(id)) continue;
     const skill = skillById(id);
@@ -132,6 +135,13 @@ export function migrateSkillsAfterSpeciesChange(
       skill.skill_val = val - 1;
     } else if (prof) {
       skill.prof = false;
+      if ((skill.skill_val ?? 0) <= 0) dropUninvested.add(skill);
+    }
+  }
+  if (dropUninvested.size > 0) {
+    for (let i = result.length - 1; i >= 0; i--) {
+      const skill = result[i];
+      if (skill && dropUninvested.has(skill)) result.splice(i, 1);
     }
   }
 
