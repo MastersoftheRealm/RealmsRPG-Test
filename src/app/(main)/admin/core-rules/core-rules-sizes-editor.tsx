@@ -67,6 +67,7 @@ export function SizesEditor({
                     value={(s.spaces as number) ?? 1}
                     onChange={(v) => setSizeField(i, 'spaces', v)}
                     min={0}
+                    integer={false}
                   />
                 </td>
                 <td className="px-1 py-1 text-center">

@@ -46,7 +46,7 @@ export function NumInput({
   step,
   allowNegative,
   allowEmpty,
-  integer,
+  integer = true,
   className,
   placeholder,
 }: {

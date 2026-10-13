@@ -112,6 +112,81 @@ describe('core rules number parsing (86e3jtuge)', () => {
     );
   });
 
+  it('keeps count, points, and level fields whole and leaves fractional fields', () => {
+    expect(coreRulesDocumentNumberError('PROGRESSION_PLAYER', { baseAbilityPoints: 1.5 })).toBe(
+      CORE_RULES_NUMBER_WHOLE,
+    );
+    expect(coreRulesDocumentNumberError('PROGRESSION_PLAYER', { skillPointsPerLevel: 1.5 })).toBe(
+      CORE_RULES_NUMBER_WHOLE,
+    );
+    expect(coreRulesDocumentNumberError('PROGRESSION_PLAYER', { baseProficiency: 1.5 })).toBe(
+      CORE_RULES_NUMBER_WHOLE,
+    );
+    expect(
+      coreRulesDocumentNumberError('PROGRESSION_PLAYER', { characterFeatsPerLevel: 1.5 }),
+    ).toBe(CORE_RULES_NUMBER_WHOLE);
+    expect(coreRulesDocumentNumberError('PROGRESSION_PLAYER', { baseAbilityPoints: 7 })).toBeNull();
+    expect(
+      coreRulesDocumentNumberError('PROGRESSION_CREATURE', { baseFeatPoints: 0.5 }),
+    ).toBeNull();
+    expect(
+      coreRulesDocumentNumberError('PROGRESSION_CREATURE', { featPointsPerLevel: 0.5 }),
+    ).toBeNull();
+    expect(
+      coreRulesDocumentNumberError('PROGRESSION_CREATURE', { currencyGrowthRate: 1.45 }),
+    ).toBeNull();
+    expect(
+      coreRulesDocumentNumberError('PROGRESSION_PLAYER', { tpPerLevelMultiplier: 1.5 }),
+    ).toBeNull();
+    expect(coreRulesDocumentNumberError('SIZES', { categories: [{ spaces: 0.125 }] })).toBeNull();
+    expect(coreRulesDocumentNumberError('SIZES', { categories: [{ baseCarry: 1.5 }] })).toBe(
+      CORE_RULES_NUMBER_WHOLE,
+    );
+    expect(coreRulesDocumentNumberError('CRAFTING', { craftingCostMultiplier: 0.75 })).toBeNull();
+    expect(coreRulesDocumentNumberError('CRAFTING', { bulkCraftCount: 1.5 })).toBe(
+      CORE_RULES_NUMBER_WHOLE,
+    );
+    expect(
+      coreRulesDocumentNumberError('CRAFTING', {
+        successesTable: [{ failureItemWorthPercent: 12.5 }],
+      }),
+    ).toBeNull();
+    expect(
+      coreRulesDocumentNumberError('CRAFTING', {
+        multipleUseTable: [{ adjustedEnergyPercent: 12.5 }],
+        optionalReduceTimeByCost: { costIncreasePercentPerStep: 12.5 },
+      }),
+    ).toBeNull();
+    expect(coreRulesDocumentNumberError('COMBAT', { actionCosts: { attack: 1.5 } })).toBe(
+      CORE_RULES_NUMBER_WHOLE,
+    );
+    expect(coreRulesDocumentNumberError('ABILITY_RULES', { min: -2.5 })).toBe(
+      CORE_RULES_NUMBER_WHOLE,
+    );
+    expect(
+      coreRulesDocumentNumberError('ABILITY_RULES', { standardArrays: { basic: [1.5] } }),
+    ).toBe(CORE_RULES_NUMBER_WHOLE);
+  });
+
+  it('accepts the seeded core rules documents', () => {
+    const dataDir = path.join(dir, '../../../../../data/core-rules');
+    for (const file of [
+      'ABILITY_RULES.json',
+      'SIZES.json',
+      'PROGRESSION_PLAYER.json',
+      'PROGRESSION_CREATURE.json',
+      'COMBAT.json',
+      'SKILLS_AND_DEFENSES.json',
+      'ARCHETYPES.json',
+      'ARMAMENT_PROFICIENCY.json',
+      'RARITIES.json',
+    ]) {
+      const id = file.replace(/\.json$/, '');
+      const data = JSON.parse(readFileSync(path.join(dataDir, file), 'utf8'));
+      expect(coreRulesDocumentNumberError(id, data), file).toBeNull();
+    }
+  });
+
   it('wires the editor so a blank or invalid draft cannot be saved as 0', () => {
     const editors = readFileSync(path.join(dir, 'core-rules-field-editors.tsx'), 'utf8');
     const ability = readFileSync(path.join(dir, 'core-rules-ability-skills-editors.tsx'), 'utf8');
@@ -119,8 +194,45 @@ describe('core rules number parsing (86e3jtuge)', () => {
 
     expect(editors).not.toMatch(/\|\|\s*0/);
     expect(ability).not.toMatch(/parseInt\(/);
+    expect(editors).toContain('integer = true');
     expect(editors).toContain('CORE_RULES_NUMBER_ERROR_ATTR');
     expect(page).toContain('CORE_RULES_NUMBER_SAVE_BLOCKED');
+
+    const progression = readFileSync(path.join(dir, 'core-rules-progression-editor.tsx'), 'utf8');
+    const crafting = readFileSync(path.join(dir, 'core-rules-crafting-rules-editor.tsx'), 'utf8');
+    const sizes = readFileSync(path.join(dir, 'core-rules-sizes-editor.tsx'), 'utf8');
+    const around = (source: string, needle: string) => {
+      const parts: string[] = [];
+      let from = 0;
+      while (from < source.length) {
+        const at = source.indexOf(needle, from);
+        if (at < 0) break;
+        parts.push(source.slice(at, at + 320));
+        from = at + needle.length;
+      }
+      expect(parts.length, needle).toBeGreaterThan(0);
+      return parts;
+    };
+
+    for (const key of ['baseAbilityPoints', 'skillPointsPerLevel', 'baseProficiency']) {
+      for (const snippet of around(progression, key)) {
+        expect(snippet, key).not.toContain('integer={false}');
+      }
+    }
+    for (const key of [
+      'currencyGrowthRate',
+      'baseFeatPoints',
+      'featPointsPerLevel',
+      'tpPerLevelMultiplier',
+    ]) {
+      for (const snippet of around(progression, key)) {
+        expect(snippet, key).toContain('integer={false}');
+      }
+    }
+    expect(around(sizes, 'spaces')[0]).toContain('integer={false}');
+    expect(around(sizes, 'baseCarry')[0]).not.toContain('integer={false}');
+    expect(around(crafting, 'craftingCostMultiplier')[0]).toContain('integer={false}');
+    expect(around(crafting, 'bulkCraftCount')[0]).not.toContain('integer={false}');
     expect(page).toContain('CORE_RULES_NUMBER_ERROR_ATTR');
     expect(CORE_RULES_NUMBER_ERROR_ATTR).toBe('data-core-rules-number-error');
     expect(CORE_RULES_NUMBER_SAVE_BLOCKED).toBe('Fix the highlighted numbers before saving.');

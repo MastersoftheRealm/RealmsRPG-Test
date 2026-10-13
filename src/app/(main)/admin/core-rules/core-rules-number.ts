@@ -2,6 +2,8 @@
  * Core Rules number checks (86e3jtuge).
  * Blank is not 0. Values past the safe integer limit are rejected.
  * Negatives stay valid only on the ability and combat fields that already store them.
+ * Count, points, and level fields are whole numbers. Rates, feat points, size
+ * spaces, and crafting multipliers and percents may stay fractional.
  */
 
 export const CORE_RULES_NUMBER_REQUIRED = 'Enter a number.';
@@ -13,6 +15,12 @@ export const CORE_RULES_NUMBER_SERVER_NEGATIVE =
 export const CORE_RULES_NUMBER_ERROR_ATTR = 'data-core-rules-number-error';
 
 const NUMBER_TEXT = /^[-+]?(?:\d+(?:\.\d*)?|\.\d+)(?:[eE][-+]?\d+)?$/;
+
+/**
+ * Keys that store fractions and are not a percent, multiplier, or rate.
+ * Feat points are points, and they stay here on purpose. Size spaces are not a count.
+ */
+const FRACTIONAL_NUMBER_KEYS = new Set(['baseFeatPoints', 'featPointsPerLevel', 'spaces']);
 
 /** Top-level keys that already store negatives in seeded core rules. */
 const NEGATIVE_KEYS: Record<string, ReadonlySet<string>> = {
@@ -75,6 +83,13 @@ export function parseCoreRulesNumber(
   return { ok: true, value };
 }
 
+function fractionalAllowed(path: string[]): boolean {
+  const key = path[path.length - 1];
+  if (!key) return false;
+  if (FRACTIONAL_NUMBER_KEYS.has(key)) return true;
+  return /Percent|Multiplier|Rate/.test(key);
+}
+
 function negativeAllowed(docId: string, path: string[]): boolean {
   if (docId === 'ABILITY_RULES' && path[0] === 'standardArrays') return true;
   const keys = NEGATIVE_KEYS[docId];
@@ -88,6 +103,7 @@ function walkCoreRulesNumbers(docId: string, value: unknown, path: string[]): st
       return CORE_RULES_NUMBER_TOO_LARGE;
     }
     if (value < 0 && !negativeAllowed(docId, path)) return CORE_RULES_NUMBER_SERVER_NEGATIVE;
+    if (!Number.isInteger(value) && !fractionalAllowed(path)) return CORE_RULES_NUMBER_WHOLE;
     return null;
   }
 
