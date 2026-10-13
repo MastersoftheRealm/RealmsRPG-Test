@@ -3,6 +3,7 @@ import path from 'node:path';
 import { describe, expect, it } from 'vitest';
 import {
   SHEET_DESKTOP_GRID_CLASSNAME,
+  archetypeStackedWeaponNamePx,
   sheetSkillNameCellPx,
   sheetThreeColumnFits,
   sheetWeaponNameCellPx,
@@ -46,5 +47,17 @@ describe('sheet columns from 1024 to 1440 (86e3jvv37)', () => {
     expect(colgroup.match(/<col\b/g)).toHaveLength(4);
     expect(table).toContain('min-w-[18rem]');
     expect(table).toContain('table-fixed');
+  });
+
+  it('floors the weapons table at 18rem so a 320px card keeps a 100px name', () => {
+    const table = weapons.slice(weapons.indexOf('export function QuickWeaponsTable'));
+    const scroll = table.slice(table.indexOf('<TableScroll>'), table.indexOf('</TableScroll>'));
+    const wrapperAt = scroll.indexOf('className="min-w-[18rem]"');
+    const tableAt = scroll.indexOf('<table');
+    expect(wrapperAt).toBeGreaterThanOrEqual(0);
+    expect(tableAt).toBeGreaterThan(wrapperAt);
+    expect(scroll).not.toContain('min-w-[18rem] table-fixed');
+    expect(archetypeStackedWeaponNamePx(320)).toBeGreaterThanOrEqual(100);
+    expect(archetypeStackedWeaponNamePx(375)).toBeGreaterThanOrEqual(100);
   });
 });
