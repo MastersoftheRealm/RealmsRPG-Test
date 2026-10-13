@@ -43,6 +43,17 @@ export function formatRecoveredAmount(amount: number): string {
   return `+${Math.max(0, amount)}`;
 }
 
+/** Partial-recovery duration copy. Spaces stay in the string so JSX cannot drop them. */
+export function formatPartialRecoveryDuration(input: {
+  hours: number;
+  quarters: number;
+  hpPerQuarter: number;
+  enPerQuarter: number;
+}): string {
+  const quarterLabel = input.quarters === 1 ? 'quarter' : 'quarters';
+  return `Each 2 hours = 2 quarters (¼ HP + ¼ EN, or allocate freely). ${input.hours}h = ${input.quarters} ${quarterLabel} (${input.hpPerQuarter} HP or ${input.enPerQuarter} EN per quarter). Full recovery (8h) restores all.`;
+}
+
 export function autoRecoveryQuarters(input: {
   totalQuarters: number;
   currentHealth: number;
