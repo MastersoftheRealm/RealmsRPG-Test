@@ -6,11 +6,11 @@
 
 import { useCallback, type Dispatch, type SetStateAction } from 'react';
 import type { ItemProperty } from '@/hooks';
-import { isGeneralProperty, isMechanicProperty } from '@/lib/calculators';
 import type {
   ArmamentType,
   ItemSelectedProperty as SelectedProperty,
 } from './item-creator-bootstrap';
+import { findAddableItemProperty } from './item-creator-property-options';
 
 type UseItemCreatorPropertyActionsArgs = {
   itemProperties: ItemProperty[];
@@ -26,23 +26,12 @@ export function useItemCreatorPropertyActions({
   setSelectedProperties,
 }: UseItemCreatorPropertyActionsArgs) {
   const addProperty = useCallback(() => {
-    const armamentTypeLower = armamentType.toLowerCase();
-    const selectableProps = itemProperties.filter((p: ItemProperty) => {
-      if (isGeneralProperty(p)) return false;
-      if (isMechanicProperty(p)) return false;
-      const propType = (p.type || '').toLowerCase();
-      if (!propType || propType === 'general') return true;
-      return propType === armamentTypeLower;
-    });
-    if (selectableProps.length === 0) return;
-
-    const first = selectableProps[0];
-    if (!first) return;
-    const available =
-      selectableProps.find(
-        (p: ItemProperty) =>
-          !selectedProperties.some((sp: SelectedProperty) => sp.property.id === p.id),
-      ) ?? first;
+    const available = findAddableItemProperty(
+      itemProperties,
+      armamentType,
+      selectedProperties.map((sp) => sp.property.id),
+    );
+    if (!available) return;
 
     setSelectedProperties((prev) => [
       ...prev,

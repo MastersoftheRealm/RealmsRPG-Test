@@ -1,5 +1,6 @@
 {
   "files": [
+    "src/components/patterns/chrome/cloud-sync-offline-banner.tsx",
     "src/components/patterns/chrome/confirm-action-modal.tsx",
     "src/components/patterns/chrome/creator-portrait-upload.tsx",
     "src/components/patterns/chrome/delete-confirm-modal.tsx",
@@ -32,7 +33,6 @@
     "src/components/patterns/filters/select-filter.tsx",
     "src/components/patterns/filters/source-filter.tsx",
     "src/components/patterns/filters/tag-filter.tsx",
-    "src/components/patterns/guided-choice/guided-choice-shell.tsx",
     "src/components/patterns/guided-choice/guided-inline-catalog-list.tsx",
     "src/components/patterns/guided-choice/guided-layer-nav.tsx",
     "src/components/patterns/guided-choice/guided-nav-button-styles.ts",

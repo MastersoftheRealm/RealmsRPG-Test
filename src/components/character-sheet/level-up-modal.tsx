@@ -8,7 +8,7 @@
 
 import { useState, useMemo } from 'react';
 import { ArrowUp, ArrowDown, Star, Heart, Shield, Sword, Check } from 'lucide-react';
-import { Modal, Button } from '@/components/ui';
+import { Modal, Button, Alert } from '@/components/ui';
 import { DecrementButton, IncrementButton } from '@/components/patterns';
 import { PathLevelGuidance } from '@/components/character-sheet/path-level-guidance';
 import {
@@ -24,6 +24,7 @@ import { getArchetypeAbilityScore } from '@/lib/game/calculations';
 import { useGameRules } from '@/hooks';
 import type { CoreRulesMap } from '@/types/core-rules';
 import type { Character, ArchetypeCategory } from '@/types';
+import { buildLevelDownOverspendWarning } from '@/lib/character/sheet-edit-notification';
 
 interface LevelUpModalProps {
   isOpen: boolean;
@@ -31,6 +32,8 @@ interface LevelUpModalProps {
   character: Character;
   /** Codex-hydrated character for path guidance (name + path_data). Falls back to `character`. */
   displayCharacter?: Character | undefined;
+  characterSpeciesSkills?: string[] | undefined;
+  featsDb?: Array<{ id: string; feat_lvl?: number | undefined }> | undefined;
   onConfirm: (newLevel: number) => void;
 }
 
@@ -89,6 +92,8 @@ export function LevelUpModal({
   onClose,
   character,
   displayCharacter,
+  characterSpeciesSkills = [],
+  featsDb = [],
   onConfirm,
 }: LevelUpModalProps) {
   const { rules } = useGameRules();
@@ -103,7 +108,7 @@ export function LevelUpModal({
   const isLevelChange = targetLevel !== currentLevel;
   const isLevelDown = targetLevel < currentLevel;
 
-  // Highest of power + martial archetype ability scores (matches TP formula / sheet)
+  // Archetype Ability for Training Points: martial only, power only, or the higher of the two.
   const highestAbility = useMemo(() => getArchetypeAbilityScore(character), [character]);
 
   // Calculate level gains
@@ -151,6 +156,17 @@ export function LevelUpModal({
     pathCharacter.archetypePathId?.trim() &&
     pathCharacter.archetype;
 
+  const levelDownOverspendWarning = useMemo(() => {
+    if (!isLevelDown || !isLevelChange) return null;
+    return buildLevelDownOverspendWarning({
+      character,
+      targetLevel,
+      characterSpeciesSkills,
+      featsDb,
+      rules,
+    });
+  }, [character, targetLevel, characterSpeciesSkills, featsDb, rules, isLevelDown, isLevelChange]);
+
   return (
     <Modal
       isOpen={isOpen}
@@ -194,6 +210,10 @@ export function LevelUpModal({
             />
           </div>
         </div>
+
+        {levelDownOverspendWarning?.show && (
+          <Alert variant="danger">{levelDownOverspendWarning.title}</Alert>
+        )}
 
         {/* Milestones */}
         {milestones.length > 0 && !isLevelDown && (

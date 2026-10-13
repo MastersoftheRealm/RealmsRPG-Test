@@ -4,6 +4,11 @@ import type { Dispatch, SetStateAction } from 'react';
 import { Modal, Input, Textarea } from '@/components/ui';
 import { AdminCodexCopySourceBanner } from './admin-codex-copy-source-banner';
 import { AdminCodexEditModalFooter } from './admin-codex-edit-modal-footer';
+import { AdminCodexSourceField } from './admin-codex-source-field';
+import {
+  useCodexEditorDraftDirty,
+  useCodexEditorLeaveGuard,
+} from './admin-codex-unsaved-leave-guard';
 
 export type CreatureFeatFormState = {
   name: string;
@@ -12,6 +17,7 @@ export type CreatureFeatFormState = {
   feat_lvl: number | undefined;
   lvl_req: number | undefined;
   mechanic: boolean;
+  source: string;
 };
 
 export const EMPTY_CREATURE_FEAT_FORM: CreatureFeatFormState = {
@@ -21,7 +27,15 @@ export const EMPTY_CREATURE_FEAT_FORM: CreatureFeatFormState = {
   feat_lvl: undefined,
   lvl_req: undefined,
   mechanic: false,
+  source: '',
 };
+
+/** Parse admin number inputs that may be fractional (e.g. feat point cost 0.5 or -0.5). */
+export function parseOptionalAdminDecimalInput(raw: string): number | undefined {
+  if (raw === '') return undefined;
+  const n = parseFloat(raw);
+  return Number.isNaN(n) ? undefined : n;
+}
 
 type AdminCreatureFeatEditModalProps = {
   isOpen: boolean;
@@ -31,6 +45,7 @@ type AdminCreatureFeatEditModalProps = {
   editingId: string | null;
   form: CreatureFeatFormState;
   setForm: Dispatch<SetStateAction<CreatureFeatFormState>>;
+  sourceOptions: string[];
   saving: boolean;
   onDelete?: (() => void) | undefined;
   onSave: () => void;
@@ -44,21 +59,24 @@ export function AdminCreatureFeatEditModal({
   editingId,
   form,
   setForm,
+  sourceOptions,
   saving,
   onDelete,
   onSave,
 }: AdminCreatureFeatEditModalProps) {
+  const dirty = useCodexEditorDraftDirty(form, isOpen);
+  const leave = useCodexEditorLeaveGuard(dirty, onClose);
   return (
     <Modal
       isOpen={isOpen}
-      onClose={onClose}
+      onClose={leave.requestClose}
       title={title}
       size="full"
       fullScreenOnMobile
       footer={
         <AdminCodexEditModalFooter
           onDelete={editingId ? onDelete : undefined}
-          onClose={onClose}
+          onClose={leave.requestClose}
           onSave={onSave}
           saveDisabled={saving || !form.name.trim()}
           saving={saving}
@@ -85,6 +103,11 @@ export function AdminCreatureFeatEditModal({
             rows={3}
           />
         </div>
+        <AdminCodexSourceField
+          value={form.source}
+          options={sourceOptions}
+          onChange={(source) => setForm((f) => ({ ...f, source }))}
+        />
         <div className="grid grid-cols-3 gap-4">
           <div>
             <label className="mb-1 block text-sm font-medium text-text-secondary">
@@ -92,13 +115,12 @@ export function AdminCreatureFeatEditModal({
             </label>
             <Input
               type="number"
-              min={0}
+              step="any"
               value={form.points ?? ''}
               onChange={(e) =>
                 setForm((f) => ({
                   ...f,
-                  points:
-                    e.target.value === '' ? undefined : (parseInt(e.target.value, 10) ?? undefined),
+                  points: parseOptionalAdminDecimalInput(e.target.value),
                 }))
               }
               placeholder="No value"
@@ -150,6 +172,7 @@ export function AdminCreatureFeatEditModal({
           </span>
         </label>
       </div>
+      {leave.prompt}
     </Modal>
   );
 }

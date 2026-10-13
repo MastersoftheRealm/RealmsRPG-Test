@@ -23,7 +23,6 @@ export const CombatantCard = memo(function CombatantCard({
   onUpdate,
   onRemove,
   onDuplicate,
-  canDuplicate = true,
   onAddCondition,
   onRemoveCondition,
   onUpdateConditionLevel,
@@ -37,6 +36,10 @@ export const CombatantCard = memo(function CombatantCard({
   onDragOver,
   onDragLeave,
   onDrop,
+  onMoveUp,
+  onMoveDown,
+  canMoveUp = false,
+  canMoveDown = false,
   variant = 'full',
   canEditLinkedResources = false,
 }: CombatantCardProps) {
@@ -50,6 +53,8 @@ export const CombatantCard = memo(function CombatantCard({
     ? 'Synced with your character sheet'
     : 'Synced from character sheet';
   const isDead = combatant.currentHealth <= 0 && combatant.combatantType === 'enemy';
+  const moveButtonClass =
+    'hit-area-dense inline-flex items-center justify-center rounded bg-surface-alt px-2 py-0.5 text-xs text-text-secondary hover:bg-surface focus-visible:ring-2 focus-visible:ring-primary-outline-border focus-visible:ring-offset-2 focus-visible:outline-none disabled:cursor-not-allowed disabled:opacity-50';
 
   return (
     <Card
@@ -120,7 +125,10 @@ export const CombatantCard = memo(function CombatantCard({
             />
 
             <button
+              type="button"
               onClick={() => setShowConditions(!showConditions)}
+              aria-expanded={showConditions}
+              aria-label={`${combatant.name} conditions`}
               className={cn(
                 'hit-area-dense inline-flex items-center justify-center rounded px-2 py-0.5 text-xs',
                 showConditions
@@ -131,17 +139,33 @@ export const CombatantCard = memo(function CombatantCard({
               {showConditions ? '▲' : '▼'} Conditions
             </button>
 
-            <div className="ml-auto flex items-center gap-1">
-              {canDuplicate && (
-                <button
-                  onClick={onDuplicate}
-                  className="hit-area-dense inline-flex items-center justify-center rounded bg-surface-alt px-2 py-0.5 text-xs text-text-secondary hover:bg-surface"
-                  title="Duplicate this combatant"
-                  aria-label={`Duplicate ${combatant.name}`}
-                >
-                  📋
-                </button>
-              )}
+            <div className="ml-auto flex items-center gap-2">
+              <button
+                type="button"
+                onClick={onMoveUp}
+                disabled={!canMoveUp || !onMoveUp}
+                className={moveButtonClass}
+                aria-label={`Move ${combatant.name} up`}
+              >
+                Move up
+              </button>
+              <button
+                type="button"
+                onClick={onMoveDown}
+                disabled={!canMoveDown || !onMoveDown}
+                className={moveButtonClass}
+                aria-label={`Move ${combatant.name} down`}
+              >
+                Move down
+              </button>
+              <button
+                onClick={onDuplicate}
+                className="hit-area-dense inline-flex items-center justify-center rounded bg-surface-alt px-2 py-0.5 text-xs text-text-secondary hover:bg-surface"
+                title="Duplicate this combatant"
+                aria-label={`Duplicate ${combatant.name}`}
+              >
+                📋
+              </button>
               <button
                 onClick={onRemove}
                 className="hit-area-dense inline-flex items-center justify-center rounded bg-surface-alt px-2 py-0.5 text-xs text-text-secondary hover:bg-danger-light hover:text-danger-fg"

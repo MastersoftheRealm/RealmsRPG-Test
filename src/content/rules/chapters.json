@@ -103,22 +103,68 @@
   {
     "slug": "combat-encounters",
     "title": "Combat Encounters",
+    "parentSlug": "encounters",
     "description": "Initiative, actions, reactions, attacking, and damage.",
     "headings": [
       {
-        "id": "combat-encounters",
-        "title": "Combat Encounters"
+        "id": "initiative-starting-combat",
+        "title": "Initiative (Starting Combat)"
+      },
+      {
+        "id": "actions",
+        "title": "Actions"
+      },
+      {
+        "id": "additional-actions",
+        "title": "Additional Actions"
+      },
+      {
+        "id": "reactions",
+        "title": "Reactions"
+      },
+      {
+        "id": "additional-reactions",
+        "title": "Additional Reactions"
+      },
+      {
+        "id": "attacking",
+        "title": "Attacking"
+      },
+      {
+        "id": "attack-rolls",
+        "title": "Attack Rolls"
+      },
+      {
+        "id": "determine-damage",
+        "title": "Determine Damage"
+      },
+      {
+        "id": "critical-hits",
+        "title": "Critical Hits"
+      },
+      {
+        "id": "improvised-weapons-unarmed-prowess",
+        "title": "Improvised Weapons & Unarmed Prowess"
       }
     ]
   },
   {
     "slug": "skill-encounters",
     "title": "Skill Encounters",
+    "parentSlug": "encounters",
     "description": "Resolving skill encounters and their variants.",
     "headings": [
       {
-        "id": "skill-encounters",
-        "title": "Skill Encounters"
+        "id": "determining-success",
+        "title": "Determining Success"
+      },
+      {
+        "id": "the-order-of-skill-encounters",
+        "title": "The Order of Skill Encounters"
+      },
+      {
+        "id": "resolving-skill-encounters",
+        "title": "Resolving Skill Encounters"
       },
       {
         "id": "skill-encounter-variants",
@@ -148,13 +194,23 @@
   {
     "slug": "roll-tables",
     "title": "Roll-Tables",
+    "parentSlug": "character-creation",
     "description": "Random tables for species, archetypes, and flavor.",
-    "headings": []
+    "headings": [
+      {
+        "id": "species",
+        "title": "Species"
+      },
+      {
+        "id": "archetype",
+        "title": "Archetype"
+      }
+    ]
   },
   {
     "slug": "equipment",
-    "title": "Equipment",
-    "description": "Armaments, other gear, slots, and consumables.",
+    "title": "Equipment, Crafting & Downtime",
+    "description": "Armaments, other gear, crafting, harvesting, and downtime.",
     "headings": [
       {
         "id": "armaments",
@@ -169,6 +225,7 @@
   {
     "slug": "crafting",
     "title": "Crafting & Harvesting",
+    "parentSlug": "equipment",
     "description": "Craft items, enhance them, and harvest resources.",
     "headings": [
       {
@@ -188,6 +245,7 @@
   {
     "slug": "downtime",
     "title": "Downtime",
+    "parentSlug": "equipment",
     "description": "Between-session work, training, socializing, and more.",
     "headings": [
       {

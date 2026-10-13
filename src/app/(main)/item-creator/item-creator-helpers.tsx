@@ -12,7 +12,7 @@ import { cn } from '@/lib/utils';
 import type { ItemProperty } from '@/hooks';
 import { ValueStepper } from '@/components/patterns';
 import { IconButton, Card, TableScroll, DescriptorChip } from '@/components/ui';
-import { isGeneralProperty } from '@/lib/calculators';
+import { isGeneralProperty, isMechanicProperty } from '@/lib/calculators';
 import { PROPERTY_IDS } from '@/lib/id-constants';
 import { formatCost } from '@/lib/game/creator-constants';
 import { rarityChipVariant } from '@/lib/chip/rarity-chip-variant';
@@ -21,6 +21,7 @@ import type {
   ArmamentType,
   ItemSelectedProperty as SelectedProperty,
 } from './item-creator-bootstrap';
+import { propertyOptionsForCard } from './item-creator-property-options';
 
 export const ARMAMENT_TYPES: { value: ArmamentType; label: string; icon: typeof Sword }[] = [
   { value: 'Weapon', label: 'Weapon', icon: Sword },
@@ -63,7 +64,7 @@ const RARITY_REFERENCE = [
   { name: 'Common', ipRange: '0 – 4', baseCost: 25 },
   { name: 'Uncommon', ipRange: '4 – 6', baseCost: 100 },
   { name: 'Rare', ipRange: '6 – 8', baseCost: 500 },
-  { name: 'Epic', ipRange: '8 – 11', baseCost: 2500 },
+  { name: 'Epic', ipRange: '8 – 11', baseCost: 1500 },
   { name: 'Legendary', ipRange: '11 – 14', baseCost: 10000 },
   { name: 'Mythic', ipRange: '14 – 16', baseCost: 50000 },
   { name: 'Ascended', ipRange: '16+', baseCost: 100000 },
@@ -76,27 +77,31 @@ export function PropertyCard({
   onUpdate,
   allProperties,
   armamentType,
+  otherSelectedIds,
 }: {
   selectedProperty: SelectedProperty;
   onRemove: () => void;
   onUpdate: (updates: Partial<SelectedProperty>) => void;
   allProperties: ItemProperty[];
   armamentType: ArmamentType;
+  otherSelectedIds: readonly (string | number)[];
 }) {
   const [expanded, setExpanded] = useState(true);
   const { property } = selectedProperty;
 
   const selectableProperties = useMemo(() => {
     const armamentTypeLower = armamentType.toLowerCase();
-    return allProperties
+    const forType = allProperties
       .filter((p) => {
         if (isGeneralProperty(p)) return false;
+        if (isMechanicProperty(p)) return false;
         const propType = (p.type || '').toLowerCase();
         if (!propType || propType === 'general') return true;
         return propType === armamentTypeLower;
       })
       .sort((a, b) => a.name.localeCompare(b.name));
-  }, [allProperties, armamentType]);
+    return propertyOptionsForCard(forType, property.id, otherSelectedIds);
+  }, [allProperties, armamentType, property.id, otherSelectedIds]);
 
   const propIP =
     ((property.base_ip as number | undefined) || 0) +
@@ -165,21 +170,24 @@ export function PropertyCard({
 
           {hasOption && (
             <div className={cn('rounded-lg p-3', statusPanel.warning)}>
-              <div className="mb-2 flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <span className="text-sm font-semibold text-tp-text">Option</span>
+              <div className="mb-2 flex flex-wrap items-center justify-between gap-x-3 gap-y-2">
+                <div className="flex min-w-0 flex-wrap items-center gap-x-2 gap-y-1">
+                  <span className="text-sm font-semibold whitespace-nowrap text-tp-text">
+                    Option
+                  </span>
                   {property.op_1_tp && (
-                    <span className="text-sm font-medium text-tp-text">
+                    <span className="text-sm font-medium whitespace-nowrap text-tp-text">
                       TP +{formatCost(property.op_1_tp)}/level
                     </span>
                   )}
                   {property.op_1_c && (
-                    <span className="text-sm font-medium text-currency-text">
+                    <span className="text-sm font-medium whitespace-nowrap text-currency-text">
                       C +{formatCost(property.op_1_c)}/level
                     </span>
                   )}
                 </div>
                 <ValueStepper
+                  className="shrink-0"
                   value={selectedProperty.op_1_lvl}
                   onChange={(v) => onUpdate({ op_1_lvl: v })}
                   label="Level:"

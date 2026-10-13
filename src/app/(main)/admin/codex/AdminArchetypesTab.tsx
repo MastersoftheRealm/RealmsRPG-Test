@@ -13,6 +13,10 @@ import { AdminArchetypeEditor } from './admin-archetype-editor';
 import { useAdminArchetypeWorkspace, type ArchetypeItem } from './use-admin-archetype-workspace';
 import { AdminCodexRowActions } from './admin-codex-row-actions';
 import { AdminCodexEditModalFooter } from './admin-codex-edit-modal-footer';
+import {
+  useCodexEditorDraftDirty,
+  useCodexEditorLeaveGuard,
+} from './admin-codex-unsaved-leave-guard';
 import { formatListCellLabel } from '@/lib/utils';
 
 export function AdminArchetypesTab() {
@@ -27,6 +31,7 @@ export function AdminArchetypesTab() {
     editing,
     saving,
     copySourceName,
+    sourceOptions,
     form,
     setForm,
     filtered,
@@ -64,6 +69,9 @@ export function AdminArchetypesTab() {
     deleteModals,
   } = useAdminArchetypeWorkspace();
 
+  const dirty = useCodexEditorDraftDirty(form, modalOpen);
+  const leave = useCodexEditorLeaveGuard(dirty, closeModal);
+
   if (error)
     return (
       <ErrorState
@@ -98,7 +106,7 @@ export function AdminArchetypesTab() {
                   columns={[{ key: 'Type', value: formatListCellLabel(a.type) }]}
                 />
               </div>
-              <div className="min-w-0">
+              <div className="shrink-0">
                 <AdminCodexRowActions
                   entity={a}
                   onEdit={openEdit}
@@ -121,14 +129,14 @@ export function AdminArchetypesTab() {
 
       <Modal
         isOpen={modalOpen}
-        onClose={closeModal}
+        onClose={leave.requestClose}
         title={editing ? 'Edit Archetype' : 'Add Archetype'}
         size="full"
         fullScreenOnMobile
         footer={
           <AdminCodexEditModalFooter
             onDelete={editing ? () => askDelete(editing) : undefined}
-            onClose={closeModal}
+            onClose={leave.requestClose}
             onSave={handleSave}
             saveDisabled={saving || !form.name.trim() || isSelectionDataLoading}
             saving={saving}
@@ -139,6 +147,7 @@ export function AdminArchetypesTab() {
           form={form}
           setForm={setForm}
           copySourceName={copySourceName}
+          sourceOptions={sourceOptions}
           isSelectionDataLoading={isSelectionDataLoading}
           showToast={showToast}
           optionsByField={optionsByField}
@@ -167,6 +176,7 @@ export function AdminArchetypesTab() {
           removeLevel1Armament={removeLevel1Armament}
         />
       </Modal>
+      {leave.prompt}
       {deleteModals}
     </div>
   );

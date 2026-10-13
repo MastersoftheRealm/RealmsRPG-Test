@@ -29,6 +29,7 @@ import {
 import { InfoTippy } from '@/components/patterns';
 import { campaignsHelp } from '../../../../public/tooltip-text';
 import { cn } from '@/lib/utils';
+import { isGuestCharacterId } from '@/lib/guest-character-storage';
 import { PortraitThumb } from '@/components/character/portrait-thumb';
 import { useCampaigns, useCharacters, useInvalidateCampaigns, useAuth } from '@/hooks';
 import { createCampaignAction, joinCampaignAction } from './actions';
@@ -38,9 +39,24 @@ import type { CampaignSummary } from '@/types/campaign';
 type TabId = 'my-campaigns' | 'create' | 'join';
 
 const TABS = [
-  { id: 'my-campaigns' as TabId, label: 'My Campaigns', icon: <Users className="h-4 w-4" /> },
-  { id: 'create' as TabId, label: 'Create Campaign', icon: <PlusCircle className="h-4 w-4" /> },
-  { id: 'join' as TabId, label: 'Join Campaign', icon: <LogIn className="h-4 w-4" /> },
+  {
+    id: 'my-campaigns' as TabId,
+    label: 'My Campaigns',
+    labelMobile: 'My',
+    icon: <Users className="h-4 w-4" />,
+  },
+  {
+    id: 'create' as TabId,
+    label: 'Create Campaign',
+    labelMobile: 'Create',
+    icon: <PlusCircle className="h-4 w-4" />,
+  },
+  {
+    id: 'join' as TabId,
+    label: 'Join Campaign',
+    labelMobile: 'Join',
+    icon: <LogIn className="h-4 w-4" />,
+  },
 ];
 
 export default function CampaignsPage() {
@@ -161,7 +177,7 @@ function CampaignsContent() {
         )}
         {activeTab === 'join' && (
           <JoinCampaignTab
-            characters={characters}
+            characters={characters.filter((c) => !isGuestCharacterId(c.id))}
             isLoading={charactersLoading}
             onSuccess={() => {
               invalidateCampaigns();

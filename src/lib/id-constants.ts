@@ -86,6 +86,12 @@ export const PART_IDS = {
   // Power Split Damage Dice
   POWER_SPLIT_DAMAGE_DICE: 414,
 
+  // Power composition mechanics (legacy parts; superseded by payload.composition — ADR-0029)
+  POWER_RANDOMIZE: 371,
+  POWER_REVERSE_EFFECTS: 388,
+  POWER_CHOICE: 401,
+  POWER_SPLIT_GROUPS: 402,
+
   // Technique mechanics
   NO_ATTACK: 415,
 } as const;
@@ -124,6 +130,7 @@ export const PROPERTY_IDS = {
   CRITICAL_MULTIPLIER: 24,
   THROWN: 25,
   FINESSE: 26,
+  HEAVY: 50,
   DAMAGED: 27,
   GRAZE: 28,
   LOADING: 29,

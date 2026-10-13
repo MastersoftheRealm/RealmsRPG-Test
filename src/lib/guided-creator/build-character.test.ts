@@ -3,9 +3,16 @@ import { DEFAULT_ABILITIES } from '@/types';
 import { CHARACTER_STARTING_CURRENCY } from '@/lib/game/constants';
 import { DEFAULT_DEFENSE_SKILLS } from '@/types';
 import type { GuidedDraft } from '@/stores/guided-creator-store';
-import { buildGuidedCharacterPayload } from '@/lib/guided-creator/build-character';
+import {
+  buildGuidedCharacterPayload,
+  computeGuidedRequiredTrainingSpent,
+} from '@/lib/guided-creator/build-character';
+import { PART_IDS } from '@/lib/id-constants';
+import { snapshotParts } from '@/lib/calculators/power-composition.fixture';
 import { cleanForSave } from '@/lib/data-enrichment';
+import { calculateAllStats } from '@/lib/game/calculations';
 import { calculateProficiencyTP } from '@/lib/proficiencies';
+import type { CoreRulesMap } from '@/types/core-rules';
 import type { Character } from '@/types';
 import type { Item } from '@/types/equipment';
 import type { LibraryItem, LibraryPower } from '@/types/library';
@@ -490,5 +497,140 @@ describe('buildGuidedCharacterPayload', () => {
     expect(payload.backstory).toBe('Raised in the marshes.');
     expect(payload.description).toBeUndefined();
     expect(payload.appearance).not.toContain('Age:');
+  });
+});
+
+describe('computeGuidedRequiredTrainingSpent (86e3krpzp)', () => {
+  const range = snapshotParts([PART_IDS.POWER_RANGE])[0]!;
+
+  it('charges repeated Power Range once across two powers', () => {
+    const draft = minimalDraft({
+      powerIds: ['power-a', 'power-b'],
+      innatePowerIds: [],
+      techniqueIds: [],
+    });
+    const officialPowers: LibraryPower[] = [
+      {
+        id: 'power-a',
+        docId: 'power-a',
+        name: 'Power A',
+        parts: [{ id: Number(range.id), name: range.name, op_1_lvl: 0 }],
+      },
+      {
+        id: 'power-b',
+        docId: 'power-b',
+        name: 'Power B',
+        parts: [{ id: Number(range.id), name: range.name, op_1_lvl: 1 }],
+      },
+    ];
+    const spent = computeGuidedRequiredTrainingSpent(draft, {
+      officialPowers,
+      powerPartsDb: [range],
+    });
+    const baseOnly = computeGuidedRequiredTrainingSpent(
+      minimalDraft({ powerIds: ['power-a'], innatePowerIds: [], techniqueIds: [] }),
+      {
+        officialPowers: [officialPowers[0]!],
+        powerPartsDb: [range],
+      },
+    );
+    const doubledBase = computeGuidedRequiredTrainingSpent(
+      minimalDraft({
+        powerIds: ['power-a', 'power-c'],
+        innatePowerIds: [],
+        techniqueIds: [],
+      }),
+      {
+        officialPowers: [
+          officialPowers[0]!,
+          {
+            id: 'power-c',
+            docId: 'power-c',
+            name: 'Power C',
+            parts: [{ id: Number(range.id), name: range.name, op_1_lvl: 0 }],
+          },
+        ],
+        powerPartsDb: [range],
+      },
+    );
+    expect(range.base_tp).toBe(0.5);
+    expect(range.op_1_tp).toBe(0.5);
+    expect(baseOnly).toBe(1);
+    expect(doubledBase).toBe(baseOnly);
+    expect(spent).toBe(2);
+  });
+
+  it('registers Range and damage on a plain official power', () => {
+    const damage = snapshotParts([PART_IDS.ELEMENTAL_DAMAGE])[0]!;
+    const spent = computeGuidedRequiredTrainingSpent(
+      minimalDraft({ powerIds: ['bolt'], innatePowerIds: [], techniqueIds: [] }),
+      {
+        officialPowers: [
+          {
+            id: 'bolt',
+            docId: 'bolt',
+            name: 'Bolt',
+            parts: [],
+            actionType: 'basic',
+            range: { steps: 1 },
+            damage: [{ type: 'fire', amount: 1, size: 6 }],
+          },
+        ],
+        powerPartsDb: [range, damage],
+      },
+    );
+    const payload = buildGuidedCharacterPayload(
+      minimalDraft({
+        archetypeType: 'power',
+        pow_abil: 'intelligence',
+        mart_abil: null,
+        powerIds: ['bolt'],
+        innatePowerIds: [],
+        techniqueIds: [],
+        loadoutWeapons: [],
+        armaments: [],
+      }),
+      {
+        officialPowers: [
+          {
+            id: 'bolt',
+            docId: 'bolt',
+            name: 'Bolt',
+            parts: [],
+            actionType: 'basic',
+            range: { steps: 1 },
+            damage: [{ type: 'fire', amount: 1, size: 6 }],
+          },
+        ],
+        powerPartsDb: [range, damage],
+      },
+    );
+    const names = (payload.proficiencies ?? []).map((prof) => prof.name).sort();
+    expect(names).toEqual(['Elemental Damage', 'Power Range']);
+    expect(spent).toBeGreaterThan(0);
+  });
+
+  it('health.max uses core_rules baseHealth on create and cleanForSave (86e1wp5vc)', () => {
+    const rules = { PROGRESSION_PLAYER: { baseHealth: 10 } } as Partial<CoreRulesMap>;
+    const emptyCtx = {
+      officialItems: [],
+      officialPowers: [],
+      officialTechniques: [],
+      codexSkills: [],
+      codexFeats: [],
+      codexEquipment: [],
+      powerPartsDb: [],
+      techniquePartsDb: [],
+      itemPropertiesDb: [],
+      rules,
+    };
+    const payload = buildGuidedCharacterPayload(minimalDraft(), emptyCtx);
+    const stats = calculateAllStats(payload as Character, rules);
+    expect(payload.health?.max).toBe(stats.maxHealth);
+    expect(payload.currentHealth).toBe(stats.maxHealth);
+
+    const lean = cleanForSave(payload as Character, rules);
+    expect(lean.health?.max).toBe(stats.maxHealth);
+    expect(lean.health?.max).toBe(14);
   });
 });

@@ -10,8 +10,10 @@ import { useToast } from '@/components/ui';
 import { SelectFilter } from '@/components/patterns/filters';
 import { useParts, type Part } from '@/hooks';
 import { ABILITIES_AND_DEFENSES } from '@/lib/game/constants';
+import { formatPercentageOptionEnergy } from '@/lib/calculators/power-energy-breakdown';
 import { formatListCellLabel } from '@/lib/utils';
 import { useSort } from '@/hooks/use-sort';
+import { collectCodexSources } from './admin-codex-source';
 import { COPY_NAME_SUFFIX } from './admin-codex-copy-suffix';
 import {
   EMPTY_PART_FORM,
@@ -26,7 +28,7 @@ import {
 } from './admin-part-form';
 import { AdminPartEditModal } from './admin-part-edit-modal';
 import { useAdminCodexEntity } from './use-admin-codex-entity';
-import { AdminCodexRowActions } from './admin-codex-row-actions';
+import { AdminCodexRowActions, ADMIN_CODEX_ROW_ACTIONS_WIDTH } from './admin-codex-row-actions';
 
 const ADMIN_PART_COLUMNS = [
   { key: 'name', label: 'NAME' },
@@ -257,6 +259,7 @@ export function AdminPartsTab() {
         sortState={sortState}
         onSort={handleSort}
         rowChrome={{ rightSlot: true }}
+        rightSlotWidth={ADMIN_CODEX_ROW_ACTIONS_WIDTH}
         isLoading={isLoading}
         isEmpty={filteredParts.length === 0}
         emptyTitle="No parts found"
@@ -266,11 +269,7 @@ export function AdminPartsTab() {
         {filteredParts.map((p: Part) => {
           const formatEnergyCostAllowZero = (en: number | undefined): string | null => {
             if (en === undefined || Number.isNaN(en)) return null;
-            if (p.percentage) {
-              const percentChange = (en - 1) * 100;
-              const sign = percentChange >= 0 ? '+' : '';
-              return `${sign}${formatDecimalPreserve(percentChange)}%`;
-            }
+            if (p.percentage) return formatPercentageOptionEnergy(en);
             return formatDecimalPreserve(en);
           };
 
@@ -340,6 +339,7 @@ export function AdminPartsTab() {
                 },
               ]}
               detailSections={detailSections}
+              rightSlotWidth={ADMIN_CODEX_ROW_ACTIONS_WIDTH}
               rightSlot={
                 <AdminCodexRowActions
                   entity={p}
@@ -362,6 +362,7 @@ export function AdminPartsTab() {
         form={form}
         setForm={setForm}
         filterCategories={filterOptions.categories}
+        sourceOptions={collectCodexSources(parts)}
         targetedDefenseOptions={targetedDefenseOptions}
         optionSlotCount={optionSlotCount}
         setOptionSlotCount={setOptionSlotCount}

@@ -6,6 +6,8 @@
  */
 
 import type { AttackMode } from '@/lib/attack-mode';
+import type { CatalogListing } from '@/lib/library/catalog-listing';
+import type { PowerComposition } from '@/lib/calculators/power-composition';
 
 /** Library collection keys (user + official APIs). */
 export type LibraryItemType =
@@ -50,6 +52,8 @@ export interface LibraryPower {
   damage?: SavedDamage[] | undefined;
   actionType?: string | undefined;
   isReaction?: boolean | undefined;
+  /** Saved attack mode. Weapon Attack is priced by rebuilding Add Weapon to Power. */
+  attackMode?: AttackMode | undefined;
   range?: { steps?: number | undefined; applyDuration?: boolean | undefined } | undefined;
   area?:
     | { type?: string | undefined; level?: number | undefined; applyDuration?: boolean | undefined }
@@ -70,6 +74,12 @@ export interface LibraryPower {
   updatedAt?: Date | string | undefined;
   /** Present on official-library rows when copied from Realms Library. */
   _source?: 'official' | string | undefined;
+  /** Official rows only: Public vs Admin library (ADR-0027). */
+  catalogListing?: CatalogListing | undefined;
+  /** Defenses this power actually targets (if any). */
+  targetedDefenses?: string[] | undefined;
+  /** Built-in variants in payload JSONB (ADR-0029). Absent on a normal power. */
+  composition?: PowerComposition | undefined;
 }
 
 export interface LibraryTechnique {
@@ -94,12 +104,15 @@ export interface LibraryTechnique {
   createdAt?: Date | string | undefined;
   updatedAt?: Date | string | undefined;
   _source?: 'official' | string | undefined;
+  catalogListing?: CatalogListing | undefined;
   /** Present on empowered-technique library rows. */
   empoweredTechnique?: boolean | undefined;
   empowered_technique?: boolean | undefined;
   power?: Record<string, unknown> | undefined;
   technique?: Record<string, unknown> | undefined;
   totals?: { energy?: number | undefined; trainingPoints?: number | undefined } | undefined;
+  /** Defenses this technique / empowered entry actually targets (if any). */
+  targetedDefenses?: string[] | undefined;
 }
 
 export interface SavedProperty {
@@ -141,6 +154,7 @@ export interface LibraryItem {
   createdAt?: Date | string | undefined;
   updatedAt?: Date | string | undefined;
   _source?: 'official' | string | undefined;
+  catalogListing?: CatalogListing | undefined;
 }
 
 export interface LibrarySpecies {
@@ -166,6 +180,7 @@ export interface LibrarySpecies {
   createdAt?: string | undefined;
   updatedAt?: string | undefined;
   _source?: 'official' | string | undefined;
+  catalogListing?: CatalogListing | undefined;
 }
 
 export interface LibraryCreature {
@@ -216,6 +231,7 @@ export interface LibraryCreature {
   createdAt?: Date | string | undefined;
   updatedAt?: Date | string | undefined;
   _source?: 'official' | string | undefined;
+  catalogListing?: CatalogListing | undefined;
 }
 
 /** Map library kind → item shape returned by rowToItem / GET list endpoints. */

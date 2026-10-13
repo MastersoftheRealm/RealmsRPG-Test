@@ -10,7 +10,7 @@ Multiple ± control looks existed: hand-rolled guided skills buttons (`bg-surfac
 
 ## Decision
 
-1. **One chrome:** `.btn-stepper` matches guided skills bonus steppers — soft `bg-surface-alt`, no invasive border, `rounded-lg`, bold ± glyphs, disabled as muted text (not opaque red/green pills).
+1. **One chrome:** `.btn-stepper` matches guided skills bonus steppers — soft `bg-surface-alt`, no invasive border, `rounded-lg`, bold ± glyphs in `text-text-primary`, disabled keeps the plate with `text-text-muted` (not `text-border-light`, not `disabled:bg-transparent`, not opaque red/green pills). GLR rows inherit the row surface when enabled (TASK-710) but restore the plate when disabled so greyed ± stay visible (TASK-910).
 2. **One component family:** `ValueStepper` + `DecrementButton` / `IncrementButton` from `@/components/patterns`. `QuantitySelector` is a thin quantity wrapper (stopPropagation + quantity a11y) over `ValueStepper` — not a second visual system.
 3. **Allowed variation:** `size`, layout `variant` (`default` | `inline` | `compact`), `enableHoldRepeat` (HP/EN pools only), and **value** coloring (`colorVariant` / `colorValue` for the number only). Buttons stay neutral everywhere.
 4. **Forbidden:** hand-rolled ± buttons; `.btn-stepper-danger` / `.btn-stepper-success`; per-surface opaque colored stepper buttons.

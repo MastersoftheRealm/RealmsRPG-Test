@@ -6,9 +6,10 @@
  */
 
 import Link from 'next/link';
-import type { ReactNode } from 'react';
-import { ChevronLeft, Cloud, CloudOff } from 'lucide-react';
+import { ChevronLeft, Cloud, CloudOff, HardDrive } from 'lucide-react';
 import { PageHeader } from '@/components/ui';
+import { useAuth } from '@/hooks';
+import type { ReactNode } from 'react';
 
 export type EncounterTypeLabel = 'Combat' | 'Skill' | 'Mixed';
 
@@ -44,6 +45,8 @@ export function EncounterPageHeader({
   hasUnsavedChanges,
   actions,
 }: EncounterPageHeaderProps) {
+  const { user } = useAuth();
+  const usesLocalPersistence = !user;
   const typeLine = `${encounterType} Encounter${description ? ` \u2014 ${description}` : ''}`;
 
   return (
@@ -91,6 +94,11 @@ export function EncounterPageHeader({
               <span className="flex items-center gap-1 text-warning-fg">
                 <CloudOff className="h-3 w-3" aria-hidden />
                 Unsaved changes
+              </span>
+            ) : usesLocalPersistence ? (
+              <span className="flex items-center gap-1 text-success-fg">
+                <HardDrive className="h-3 w-3" aria-hidden />
+                Saved locally
               </span>
             ) : (
               <span className="flex items-center gap-1 text-success-fg">

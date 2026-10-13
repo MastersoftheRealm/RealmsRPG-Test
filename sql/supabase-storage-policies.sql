@@ -59,6 +59,8 @@ USING (
 -- Path: {userId}.{ext} — filename (before extension) must match auth.uid()
 -- -----------------------------------------------------------------------------
 
+-- Role gate lives in sql/86e3jt562-profile-column-writes.sql. Re-running this
+-- file must not restore a uid-only upload policy.
 DROP POLICY IF EXISTS "Users can upload own profile picture" ON storage.objects;
 CREATE POLICY "Users can upload own profile picture"
 ON storage.objects FOR INSERT
@@ -66,6 +68,7 @@ TO authenticated
 WITH CHECK (
   bucket_id = 'profile-pictures'
   AND name LIKE (auth.uid()::text || '.%')
+  AND public.auth_can_upload_profile_picture()
 );
 
 DROP POLICY IF EXISTS "Profile pictures are publicly readable" ON storage.objects;
@@ -81,10 +84,12 @@ TO authenticated
 USING (
   bucket_id = 'profile-pictures'
   AND name LIKE (auth.uid()::text || '.%')
+  AND public.auth_can_upload_profile_picture()
 )
 WITH CHECK (
   bucket_id = 'profile-pictures'
   AND name LIKE (auth.uid()::text || '.%')
+  AND public.auth_can_upload_profile_picture()
 );
 
 DROP POLICY IF EXISTS "Users can delete own profile picture" ON storage.objects;

@@ -1,68 +1,33 @@
 # RealmsRPG — Agent Instructions
 
-You are working on RealmsRPG, a D&D Beyond–like TTRPG web app built with Next.js, React, Tailwind, **Supabase** (PostgreSQL, Auth, Storage), and **Vercel**.
+Next.js, React, Tailwind, Supabase, Vercel. No Prisma. Game runner = **RM** (Realm Master), never "GM". Repo `MastersoftheRealm/RealmsRPG-Test`, branch **`master`**. Never push `master`. Never merge.
 
-> **Stack:** Supabase + Next.js + Vercel. No Prisma; no Firebase.  
-> **Data:** Supabase client (`.from()`, `.rpc()`); schema = `src/docs/SUPABASE_SCHEMA.md`; SQL in `sql/`.
+This file is already in the prompt. Do not re-read it. Kickoffs point at the workflow. Do not paste the playbook.
 
-## Session Start
+## Before coding
 
-1. Read **`src/docs/ai/ARCHITECTURE_CONSTITUTION.md`** (roles, DoD, non-negotiables).
-2. Read **`src/docs/ai/ACTIVE_TASKS.md`** — pick work; skip `blocked` + human `assignee:`.
-3. When implementing: search **`FEATURE_INDEX.md`** + barrels before building anything new.
-4. Owner feedback → log in `ALL_FEEDBACK_CLEAN.md` and process per `realms-tasks.mdc`.
+1. The ClickUp task: title, acceptance criteria, latest comments. ClickUp is the only work queue.
+2. Search `FEATURE_INDEX.md` if you might add a component, hook, store, or service.
 
-Do **not** load full historical queues, full `AGENT_GUIDE.md`, or archive audits at session start. Pull topic docs on demand.
+That is the list. Do not open the Drive playbook, `DECISIONS.md`, `ARCHITECTURE_CONSTITUTION.md`, `ACTIVE_TASKS.md`, `AI_TASK_QUEUE.md`, `WAITING_TASKS.md`, `AI_CHANGELOG.md`, or `AGENT_GUIDE.md` before you code.
 
-## Roles
+## On demand
 
-- **Implementer** (default): extend existing patterns only.
-- **Architect** (rare): new shared UI, stores, API contracts, migrations → ADR in `src/docs/ai/ADR/` or owner ack.
+Read a doc when the diff touches that topic. Search, do not load the whole file.
 
-## Source-of-Truth Map
+| Topic | Read |
+|-------|------|
+| Layout | `src/docs/MOBILE_UX.md` (mobile and accessibility rules attach when a `.tsx` file is in context) |
+| Game math or a missing written rule | `src/docs/GAME_RULES.md`. Hold if the rule is not written. Do not invent a formula. |
+| Settled product ruling | Search `src/docs/ai/DECISIONS.md` for the topic |
+| Schema or SQL | `src/docs/SUPABASE_SCHEMA.md`. Codex writes: `realms-codex-data` rule |
+| New shared UI, store, API contract, or migration strategy | `src/docs/ai/ARCHITECTURE_CONSTITUTION.md` |
+| What already exists | `FEATURE_INDEX.md` and the barrels |
 
-| For… | Authority |
-|------|-----------|
-| Product / UX / selection grammar | `REALMS_PRODUCT_OVERVIEW.md` + `human/USER_EXPERIENCE_GOALS.md` |
-| Exists already? | `FEATURE_INDEX.md` → `patterns` / `ui` / `hooks` / `services` barrels |
-| DB schema | `SUPABASE_SCHEMA.md` |
-| Game formulas & terminology | `GAME_RULES.md` |
-| GLR required facts (column vs chip) | `lib/glr/glr-fact-catalog.ts` + `glr-density.ts` + `resolve-glr-fact-layout.ts` (ADR-0016; supersedes ADR-0009) |
-| Deep component patterns | `AGENT_GUIDE.md` hub → `guide/` appendices (on demand) |
-| Design tokens | `DESIGN_SYSTEM.md` — prefer `*-fg` tokens |
-| Responsive / mobile | `MOBILE_UX.md` (ADR-0023) |
-| Accessibility | `ACCESSIBILITY.md` |
-| Open tasks | `ACTIVE_TASKS.md` · waiting `WAITING_TASKS.md` · process `AI_TASK_QUEUE.md` · human `DEVELOPER_TASK_QUEUE.md` |
-| Audit remediation status | `REMEDIATION_STATUS_2026-08.md` (June snapshot: `REMEDIATION_STATUS_2026-06.md`) |
-| **Sitewide audit (2026-08-13) + fix program** | `AUDIT_REMEDIATION_2026-08.md` → findings in `reports/audit-2026-08-13/` |
-| Design constraints | `DESIGN_INTENT.md` |
-| ADRs | `src/docs/ai/ADR/` |
-| PR failure-mode checklist | `src/docs/ai/PR_CHECKLIST.md` (incl. owner commands) |
-| Owner commands | `/audit` → `/cleanup` (session); `/global-audit` → `/debt` (repo) — `.cursor/commands/` |
-| Barrel inventory (generated) | `FEATURE_INDEX_BARRELS.generated.md` (`npm run tasks:generate-index`) |
-| QA steps | `BUILD_VALIDATION.md` |
-| Deploy / secrets | `DEPLOYMENT_AND_SECRETS_SUPABASE.md` |
-| Feedback log | `ALL_FEEDBACK_CLEAN.md` |
-| History (not session-start) | `archive/HISTORY_INDEX.md` |
+## Order
 
-Rules under `.cursor/rules/` are terse pointers. If a rule and an authority disagree, trust the authority and fix the rule.
+The status order is `.cursor/rules/realms-tasks.mdc`. It is already in the prompt. Do not restate it. In prose say Bob (`95261690`). Collin is `44381886`. Agents do not mark a task **complete**.
 
-## Core Principles
+Model slugs: `.cursor/rules/realms-model-routing.mdc`. Never a slug ending in `-fast`. Do not start Claude or GPT.
 
-- Search before you build (anti-re-implementation).
-- Unification over duplication; delete parallel systems when consolidating.
-- Verify in code — docs can lag.
-- Responsive + a11y on every UI change (`MOBILE_UX.md` / ADR-0023, `ACCESSIBILITY.md`).
-- Prefer theme-aware `*-fg` status/archetype tokens over numbered ramp + ad-hoc `dark:`.
-
-## Definition of Done (summary)
-
-Build + targeted tests + all implementable AC met + no new parallel pattern + update `ACTIVE_TASKS` (move `done` to archive with `verification_status`) + changelog. Do **not** commit per task — the owner batches work, then one commit whose subject lists every newly done `TASK-###`. User-facing work: `pending-qa` until owner runs `BUILD_VALIDATION` (see `DEVELOPER_TASK_QUEUE`). Incomplete → `partial` + follow-ups. Never mark `done` early.
-
-## Migrations (one policy)
-
-Prefer **Supabase MCP `apply_migration`** when available; else **Dashboard SQL Editor**. Always keep SQL in `sql/` and update `SUPABASE_SCHEMA.md`. **Codex data:** audit → propose → owner approve → apply. See `realms-codex-data.mdc`.
-
-## Creating tasks
-
-Template: `AI_REQUEST_TEMPLATE.md` → add to `ACTIVE_TASKS.md`.
+Drive still says to read the playbook first and to run `npm run build` plus `npm run tasks:validate` before a PR. Kadin approved a different order on 2026-10-11 and will update Drive himself. The Google Doc was not edited.

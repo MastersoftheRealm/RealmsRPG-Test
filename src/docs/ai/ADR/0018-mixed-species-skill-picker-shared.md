@@ -13,7 +13,7 @@ ADR-0017 extracted five Legacy creator symbols into `shared/` and deferred `mixe
 
 ## Decision
 
-Move `MixedSpeciesSkillPicker` to `src/components/patterns/select/mixed-species-skill-picker.tsx`, export from `@/components/patterns`, and update Legacy mixed ancestry + sheet Edit Species. No character-creator shim. No behavior or prop API changes. Do **not** delete `/characters/new/advanced`. Do not fold into TASK-799 list/modal clusters. Do not migrate onto USM (TraitSection-style selectable rows, not a dual species picker). Guided mixed skills stay `GuidedChoiceCard`.
+Move `MixedSpeciesSkillPicker` to `src/components/patterns/select/mixed-species-skill-picker.tsx`, export from `@/components/patterns`, and update sheet Edit Species (Legacy mixed ancestry later deleted in TASK-912). No character-creator shim. No behavior or prop API changes. Do not fold into TASK-799 list/modal clusters. Do not migrate onto USM (TraitSection-style selectable rows, not a dual species picker). Guided mixed skills stay `GuidedChoiceCard`. **2026-09-02:** `/characters/new/advanced` deleted (TASK-912); this extract remains.
 
 ## Consequences
 

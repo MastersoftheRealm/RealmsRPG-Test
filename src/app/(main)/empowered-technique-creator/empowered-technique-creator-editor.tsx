@@ -14,6 +14,7 @@ import { EmpoweredTechniqueEditorPowerConfig } from './empowered-technique-edito
 import { EmpoweredTechniqueEditorPowerDamage } from './empowered-technique-editor-power-damage';
 import { EmpoweredTechniqueEditorPowerParts } from './empowered-technique-editor-power-parts';
 import { EmpoweredTechniqueEditorTechniqueParts } from './empowered-technique-editor-technique-parts';
+import { TargetedDefensesSection } from '@/components/creator';
 
 export type { EmpoweredTechniqueCreatorEditorProps };
 
@@ -29,7 +30,16 @@ export function EmpoweredTechniqueCreatorEditor(props: EmpoweredTechniqueCreator
         imageId={props.imageId}
         imageUrl={props.imageUrl}
         onImageChange={props.onImageChange}
-      />
+      >
+        <TargetedDefensesSection
+          selected={props.targetedDefenses}
+          onChange={props.onTargetedDefensesChange}
+          parts={props.suggestionSelectedParts}
+          partsDb={props.suggestionPartsDb}
+          damageTypes={props.powerDamages.map((d) => d.type).filter((t) => t && t !== 'none')}
+          attackMode={props.attackMode}
+        />
+      </EmpoweredTechniqueEditorMeta>
 
       <EmpoweredTechniqueEditorActionProfile
         actionDisplay={props.actionDisplay}
@@ -59,6 +69,7 @@ export function EmpoweredTechniqueCreatorEditor(props: EmpoweredTechniqueCreator
         onPowerDamagesChange={props.onPowerDamagesChange}
         powerDamageSummary={props.powerDamageSummary}
         sectionCosts={props.sectionCosts}
+        partsDb={props.suggestionPartsDb}
       />
 
       <EmpoweredTechniqueEditorPowerParts
@@ -85,6 +96,7 @@ export function EmpoweredTechniqueCreatorEditor(props: EmpoweredTechniqueCreator
         onTechniqueDamageChange={props.onTechniqueDamageChange}
         techniqueDamageSummary={props.techniqueDamageSummary}
         sectionCosts={props.sectionCosts}
+        attackMode={props.attackMode}
       />
     </>
   );

@@ -19,7 +19,7 @@ Keep Admin Codex CRUD helpers **co-located** under `src/app/(main)/admin/codex/`
 - `AdminCodexCopySourceBanner` — Duplicate “Creating a copy of {name}” callout (`entityLabel`; TASK-852)
 - `AdminCodexDeleteModals` — `DeleteConfirmModal` then still-referenced `ConfirmActionModal`
 
-Do **not** put these in `shared/` / `ui/` / `patterns/`. Do not merge OfficialEntityList with My Library. Do not extend CodexBrowseListShell with save/row-action/footer props. Do not delete `/characters/new/advanced`.
+Do **not** put these in `shared/` / `ui/` / `patterns/`. Do not merge OfficialEntityList with My Library. Do not extend CodexBrowseListShell with save/row-action/footer props. The Legacy character wizard at `/characters/new/advanced` was deleted in TASK-912 (redirects to the chooser).
 
 ## Consequences
 

@@ -8,6 +8,7 @@ import { useState } from 'react';
 import { Button, Input, Card } from '@/components/ui';
 import { CONDITIONS } from '@/lib/game/creator-constants';
 import { DAMAGE_TYPES, SENSES, MOVEMENT_TYPES } from './creature-creator-constants';
+import { takenDamageModifiers } from './creature-damage-modifiers';
 import { ChipList, ExpandableChipList, AddItemDropdown } from './CreatureCreatorHelpers';
 import type { CreatureCreatorEditorProps } from './creature-creator-editor';
 
@@ -34,6 +35,7 @@ export function CreatureCreatorEditorTraitsSection({
   removeFromArray,
 }: TraitsSectionProps) {
   const [newLanguage, setNewLanguage] = useState('');
+  const takenDamageTypes = takenDamageModifiers(creature);
 
   const addLanguage = () => {
     if (newLanguage.trim() && !creature.languages.includes(newLanguage.trim())) {
@@ -68,7 +70,7 @@ export function CreatureCreatorEditorTraitsSection({
             />
             <AddItemDropdown
               options={DAMAGE_TYPES}
-              selectedItems={[...creature.resistances, ...creature.immunities]}
+              selectedItems={takenDamageTypes}
               onAdd={(item) => addToArray('resistances', item)}
               placeholder="Add resistance..."
               sectionCostLabel={`+${stats.resistanceFeatCost} pt each`}
@@ -90,7 +92,7 @@ export function CreatureCreatorEditorTraitsSection({
             />
             <AddItemDropdown
               options={DAMAGE_TYPES}
-              selectedItems={creature.weaknesses}
+              selectedItems={takenDamageTypes}
               onAdd={(item) => addToArray('weaknesses', item)}
               placeholder="Add weakness..."
               sectionCostLabel={`${stats.weaknessFeatCost} pt each`}
@@ -112,7 +114,7 @@ export function CreatureCreatorEditorTraitsSection({
             />
             <AddItemDropdown
               options={DAMAGE_TYPES}
-              selectedItems={[...creature.resistances, ...creature.immunities]}
+              selectedItems={takenDamageTypes}
               onAdd={(item) => addToArray('immunities', item)}
               placeholder="Add immunity..."
               sectionCostLabel={`+${stats.immunityFeatCost} pt each`}
@@ -127,8 +129,8 @@ export function CreatureCreatorEditorTraitsSection({
         <p className="mb-3 text-sm text-text-muted">
           Each sense and movement type has a feat point cost shown when adding and on each row.
         </p>
-        <div className="grid gap-4 md:grid-cols-2">
-          <div>
+        <div className="grid min-w-0 gap-4 md:grid-cols-2">
+          <div className="min-w-0">
             <label className="mb-2 block text-sm font-medium text-text-secondary">Senses</label>
             <ExpandableChipList
               items={creature.senses}
@@ -146,7 +148,7 @@ export function CreatureCreatorEditorTraitsSection({
               costForOption={(value) => getSenseCostLabel(value)?.replace(' pt', '')}
             />
           </div>
-          <div>
+          <div className="min-w-0">
             <label className="mb-2 block text-sm font-medium text-text-secondary">
               Movement Types
             </label>
@@ -171,12 +173,7 @@ export function CreatureCreatorEditorTraitsSection({
 
       <Card className="p-6 shadow-md">
         <h2 className="mb-4 text-lg font-bold text-text-primary">Condition Immunities</h2>
-        <label className="mb-2 block text-sm font-medium text-text-secondary">
-          Conditions{' '}
-          <span className="font-normal text-primary-link-fg">
-            (+{stats.conditionImmunityFeatCost} pt each)
-          </span>
-        </label>
+        <label className="mb-2 block text-sm font-medium text-text-secondary">Conditions</label>
         <ChipList
           items={creature.conditionImmunities}
           onRemove={(item) => removeFromArray('conditionImmunities', item)}

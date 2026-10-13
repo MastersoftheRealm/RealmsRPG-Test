@@ -17,6 +17,11 @@ describe('library count query keys (TASK-774)', () => {
 
   it('keeps official counts on a single public key', () => {
     expect(officialLibraryKeys.counts).toEqual(['official-library-counts']);
-    expect(officialLibraryKeys.byType('powers')).toEqual(['official-library', 'powers']);
+    expect(officialLibraryKeys.byType('powers')).toEqual(['official-library', 'powers', 'listed']);
+    expect(officialLibraryKeys.byType('powers', true)).toEqual([
+      'official-library',
+      'powers',
+      'all',
+    ]);
   });
 });

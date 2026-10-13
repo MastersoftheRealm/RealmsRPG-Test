@@ -129,6 +129,64 @@ describe('library-selectable-builders (DEV-V-016 parity)', () => {
       emptyCodex,
     );
     expect(shield.columns?.map((c) => c.key)).toEqual(['Block', 'Damage']);
+
+    const withDamage = buildSelectableItem(
+      {
+        id: 's2',
+        name: 'Buckler',
+        type: 'shield',
+        description: '',
+        properties: [],
+        shieldDamage: { amount: 1, size: 4 },
+      },
+      'shield',
+      emptyCodex,
+    );
+    expect(withDamage.columns?.find((c) => c.key === 'Damage')?.value).toBe('1d4 Bludgeoning');
+
+    const savedOverLadder = buildSelectableItem(
+      {
+        id: 's3',
+        name: 'Tower Shield',
+        type: 'shield',
+        description: '',
+        shieldDamage: { amount: 2, size: 4 },
+        properties: [{ id: 40, name: 'Shield Damage', op_1_lvl: 2 }],
+      },
+      'shield',
+      emptyCodex,
+    );
+    expect(savedOverLadder.columns?.find((c) => c.key === 'Damage')?.value).toBe('2d4 Bludgeoning');
+
+    const damageOff = buildSelectableItem(
+      {
+        id: 's-off',
+        name: 'Buckler',
+        type: 'shield',
+        description: '',
+        hasShieldDamage: false,
+        shieldDamage: { amount: 1, size: 6 },
+        properties: [{ id: 39, name: 'Shield Amount', op_1_lvl: 0 }],
+      },
+      'shield',
+      emptyCodex,
+    );
+    expect(damageOff.columns?.find((c) => c.key === 'Damage')?.value).toBe('-');
+
+    const damageOn = buildSelectableItem(
+      {
+        id: 's-on',
+        name: 'Spiked Shield',
+        type: 'shield',
+        description: '',
+        hasShieldDamage: true,
+        shieldDamage: { amount: 2, size: 4 },
+        properties: [{ id: 40, name: 'Shield Damage', op_1_lvl: 2 }],
+      },
+      'shield',
+      emptyCodex,
+    );
+    expect(damageOn.columns?.find((c) => c.key === 'Damage')?.value).toBe('2d4 Bludgeoning');
   });
 
   it('buildSelectableItem preserves data for sheet add mapping (DEV-V-016-T006)', () => {
@@ -470,5 +528,56 @@ describe('library-selectable-builders (DEV-V-016 parity)', () => {
     const chips = (selectable.detailSections ?? []).flatMap((s) => s.chips.map((c) => c.name));
     expect(chips).toContain('Currency 31');
     expect(chips).not.toContain('Currency 2');
+  });
+});
+
+describe('weapon power library cost (86e3jpq1x)', () => {
+  it('shows the creator cost for a saved Weapon Attack (6 EN / 3 TP)', () => {
+    const partsDb: PowerPart[] = [
+      {
+        id: '79',
+        name: 'Attack / Potency Increase',
+        description: 'Increase the attack roll or potency of this Power by +1.',
+        category: 'General',
+        mechanic: false,
+        base_en: 1.125,
+        base_tp: 2,
+        op_1_en: 0.125,
+        op_1_tp: 0,
+        percentage: true,
+        duration: false,
+      },
+      {
+        id: String(PART_IDS.ADD_WEAPON_TO_POWER),
+        name: 'Add Weapon to Power',
+        description: 'Weapon Attack',
+        category: 'General',
+        mechanic: true,
+        base_en: 4.5,
+        base_tp: 1,
+        percentage: false,
+        duration: false,
+      },
+    ];
+    const power: LibraryPower = {
+      id: 'potency-strike',
+      docId: 'potency-strike',
+      name: 'Potency Strike',
+      description: 'A weapon power.',
+      actionType: 'basic',
+      attackMode: 'weapon',
+      parts: [{ id: 79, name: 'Attack / Potency Increase', op_1_lvl: 0 }],
+    };
+
+    const display = derivePowerDisplay(libraryItemToPowerDocument(power), partsDb);
+    const facts = derivePowerTechniqueBudgetFacts('power', power, partsDb, []);
+    const row = buildOfficialPowerRows([power], partsDb)[0];
+
+    expect(display.energy).toBe(6);
+    expect(display.tp).toBe(3);
+    expect(facts.energy).toBe(6);
+    expect(facts.tp).toBe(3);
+    expect(row?.energy).toBe(6);
+    expect(row?.tp).toBe(3);
   });
 });

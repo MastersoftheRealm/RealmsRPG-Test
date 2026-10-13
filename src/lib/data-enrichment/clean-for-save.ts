@@ -1,4 +1,5 @@
 import type { Character } from '@/types';
+import type { CoreRulesMap } from '@/types/core-rules';
 import { normalizeAgeAppearanceForSave } from '@/lib/character/appearance-age';
 import { computeMaxHealthEnergy } from '@/lib/game/calculations';
 import { dedupeByNormalizedId, dedupeEntityRefs } from '@/lib/game/dedupe-saved-parts';
@@ -120,7 +121,10 @@ function removeUndefinedValues<T>(obj: T): T {
  * Only keeps the minimal data needed - everything else is calculated on load.
  * Mirrors the vanilla site's cleanForSave() function.
  */
-export function cleanForSave(data: Character): Partial<Character> {
+export function cleanForSave(
+  data: Character,
+  rules?: Partial<CoreRulesMap> | undefined,
+): Partial<Character> {
   const cleaned: Record<string, unknown> = {};
 
   // Only copy saveable fields
@@ -160,8 +164,10 @@ export function cleanForSave(data: Character): Partial<Character> {
     | undefined;
   const healthCurrent = (cleaned.currentHealth as number) ?? dataHealth?.current;
   const energyCurrent = (cleaned.currentEnergy as number) ?? dataEnergy?.current;
-  const { maxHealth: computedMaxHealth, maxEnergy: computedMaxEnergy } =
-    computeMaxHealthEnergy(data);
+  const { maxHealth: computedMaxHealth, maxEnergy: computedMaxEnergy } = computeMaxHealthEnergy(
+    data,
+    rules,
+  );
   if (typeof healthCurrent === 'number') {
     cleaned.health = {
       current: healthCurrent,
@@ -332,7 +338,7 @@ export function cleanForSave(data: Character): Partial<Character> {
     }
   }
 
-  // Clean up powers — save id + name (compat) + innate flag only.
+  // Clean up powers — save id + name (compat) + innate flag + variant pick only.
   // description, parts, cost, damage, etc. derived from library enrichment on load.
   if (Array.isArray(cleaned.powers)) {
     cleaned.powers = dedupeEntityRefs(
@@ -344,11 +350,13 @@ export function cleanForSave(data: Character): Partial<Character> {
               id?: string | number | undefined;
               name?: string | undefined;
               innate?: boolean | undefined;
+              selectedVariantId?: string | undefined;
             };
             const clean: Record<string, unknown> = {};
             if (power.id) clean.id = power.id;
             if (power.name) clean.name = power.name; // Backward compat lookup key
             clean.innate = !!power.innate;
+            if (power.selectedVariantId) clean.selectedVariantId = power.selectedVariantId;
             return clean;
           }
           return null;
@@ -413,7 +421,8 @@ export function cleanForSave(data: Character): Partial<Character> {
         if (i.id) clean.id = i.id;
         if (i.name) clean.name = i.name;
         if (i.equipped) clean.equipped = true;
-        if (i.quantity && i.quantity !== 1) clean.quantity = i.quantity;
+        // Quantity 0 is stored. Quantity 1 stays omitted as the default.
+        if (i.quantity === 0 || (i.quantity && i.quantity !== 1)) clean.quantity = i.quantity;
         // One-off custom inventory rows are not in codex/library — persist type + notes.
         const idStr = i.id != null ? String(i.id) : '';
         if (idStr.startsWith('custom-')) {

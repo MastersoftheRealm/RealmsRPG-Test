@@ -62,3 +62,30 @@ export function formatGridListChipLabel(chip: ChipData): string {
   const levelSuffix = chip.level != null && chip.level > 0 ? ` (Lv.${chip.level})` : '';
   return `${chip.name}${levelSuffix}`;
 }
+
+/**
+ * React key for a grid-list chip. Ignores category so a chip that becomes current
+ * (category `success`) stays the same DOM node and keeps keyboard focus.
+ */
+export function gridListChipReactKey(chip: ChipData, index: number): string {
+  return `${chip.chipKey ?? chip.name}-${index}`;
+}
+
+/**
+ * Focus restore for one select chip. Each chip holds its own slot so two rows that
+ * share a variant id (`v1`, `fire`) cannot steal each other's focus.
+ */
+export interface SelectChipFocusSlot {
+  pending: boolean;
+}
+
+export function armSelectChipFocus(slot: SelectChipFocusSlot): void {
+  slot.pending = true;
+}
+
+/** True once, then the slot is clear. A later render cannot focus this chip again. */
+export function consumeSelectChipFocus(slot: SelectChipFocusSlot): boolean {
+  if (!slot.pending) return false;
+  slot.pending = false;
+  return true;
+}

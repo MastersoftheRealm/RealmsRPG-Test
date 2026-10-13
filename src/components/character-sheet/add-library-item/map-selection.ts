@@ -6,8 +6,15 @@ import type {
   EqItem,
   PowerSelectionMode,
 } from '@/hooks/add-library-item/types';
+import type { PowerPart } from '@/hooks/codex-types';
 import type { CharacterPower, CharacterTechnique, Item } from '@/types';
+import {
+  composedPowerProficiencyParts,
+  plainPowerProficiencyParts,
+  resolvePowerComposition,
+} from '@/lib/calculators';
 import { persistEquipmentCost } from '@/lib/codex/equipment-list';
+import { libraryItemToPowerDocument } from '@/lib/library-selectable-builders';
 
 interface CodexPartLike {
   id?: string | number | undefined;
@@ -25,6 +32,7 @@ interface SavedPartLike {
   op_2_lvl?: number | undefined;
   op_3_lvl?: number | undefined;
   applyDuration?: boolean | undefined;
+  damageType?: string | null | undefined;
 }
 
 function findCodexPart(codexList: CodexPartLike[], part: SavedPartLike): CodexPartLike | undefined {
@@ -60,6 +68,7 @@ function enrichSavedPart(part: SavedPartLike, codexList: CodexPartLike[]) {
     op_3_lvl: part.op_3_lvl ?? 0,
     op_3_tp: codex?.op_3_tp ?? 0,
     ...(part.applyDuration ? { applyDuration: true } : {}),
+    ...(part.damageType !== undefined ? { damageType: part.damageType } : {}),
   };
 }
 
@@ -97,19 +106,29 @@ export function mapSelectedToCharacterItems(
           cost: 0,
           level: 1,
           damage: powerData.damage as CharacterPower['damage'],
+          targetedDefenses:
+            (powerData.targetedDefenses as string[] | undefined) ??
+            (entry as { targetedDefenses?: string[] }).targetedDefenses,
           image_id: (entry as UserTechnique).image_id ?? null,
           image_url: (entry as UserTechnique).image_url ?? null,
         };
       }
       const power = entry as UserPower;
+      const doc = libraryItemToPowerDocument(power);
+      const partsDb = (dbs?.powerPartsDb ?? []) as PowerPart[];
+      const composition = power.composition ? resolvePowerComposition(doc, partsDb) : null;
+      const savedParts: SavedPartLike[] = composition
+        ? composedPowerProficiencyParts(composition, partsDb)
+        : plainPowerProficiencyParts(doc, partsDb);
       return {
         id: power.id,
         name: power.name,
         description: power.description || '',
-        parts: (power.parts || []).map((p) => enrichSavedPart(p, powerPartsDb)),
+        parts: savedParts.map((p) => enrichSavedPart(p, powerPartsDb)),
         cost: 0,
         level: 1,
         damage: power.damage as CharacterPower['damage'],
+        targetedDefenses: (power as { targetedDefenses?: string[] }).targetedDefenses,
         image_id: power.image_id ?? null,
         image_url: power.image_url ?? null,
       };
@@ -126,6 +145,7 @@ export function mapSelectedToCharacterItems(
       actionType: t.actionType,
       isReaction: t.isReaction,
       damage: (t as { damage?: unknown | undefined }).damage as CharacterTechnique['damage'],
+      targetedDefenses: (t as { targetedDefenses?: string[] }).targetedDefenses,
       image_id: t.image_id ?? null,
       image_url: t.image_url ?? null,
     }));

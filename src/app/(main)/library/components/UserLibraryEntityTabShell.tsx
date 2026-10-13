@@ -202,6 +202,7 @@ export function UserLibraryEntityTabShell(props: UserLibraryEntityTabShellProps)
             confirmLabel="Duplicate"
             loadingLabel="Duplicating..."
             isLoading={props.duplicatePending}
+            icon="copy"
           />
 
           <ConfirmActionModal

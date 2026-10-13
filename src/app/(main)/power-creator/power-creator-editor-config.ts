@@ -7,6 +7,7 @@ import type { AreaConfig, DurationConfig } from '@/lib/calculators';
 import type { AttackMode } from '@/lib/attack-mode';
 import type { SelectedPart, AdvancedPart, DamageConfig, RangeConfig } from './power-creator-types';
 import type { PowerSectionCosts } from './power-creator-cost-derivation';
+import type { InheritedField } from './power-creator-from-shared';
 
 export type PowerAreaPartInfo = {
   description: string;
@@ -34,6 +35,11 @@ export type PowerCreatorEditorProps = {
 
   attackMode: AttackMode;
   onAttackModeChange: (mode: AttackMode) => void;
+
+  targetedDefenses: string[];
+  onTargetedDefensesChange: (next: string[]) => void;
+  suggestionPartsDb: PowerPart[];
+  suggestionSelectedParts: PowerPart[];
 
   range: RangeConfig;
   onRangeChange: (updater: (prev: RangeConfig) => RangeConfig) => void;
@@ -66,4 +72,23 @@ export type PowerCreatorEditorProps = {
   damageSummary: string;
 
   sectionCosts: PowerSectionCosts;
+  /** Randomize Shared tab: section numbers are defaults, not a cost. */
+  sectionsUnpriced?: boolean | undefined;
+  /** Randomize Shared tab: parts and damage are added on faces, not here. */
+  hidePartsAndDamage?: boolean | undefined;
+
+  /** Set on a Choice / Modify / Reverse tab. A Randomize face passes only the locked action. */
+  inheritance?: PowerCreatorInheritance | null | undefined;
+};
+
+export type PowerCreatorInheritance = {
+  action: InheritedField;
+  attack?: InheritedField | undefined;
+  range?: InheritedField | undefined;
+  area?: InheritedField | undefined;
+  duration?: InheritedField | undefined;
+  damage?: InheritedField | undefined;
+  /** Set on overlay tabs. Omitted on a Randomize face, which owns its parts. */
+  sharedPartNames?: string[] | undefined;
+  sharedMechanicNames?: string[] | undefined;
 };

@@ -9,6 +9,7 @@ import { CHARACTER_SHEET_ENERGY_SPEND_ROW_CHROME, type SortState } from '@/compo
 import { toggleSort, sortByColumn } from '@/hooks/use-sort';
 import { useRollsOptional } from '@/components/rolls';
 import { calculateRemainingInnateEnergy } from '@/lib/game/formulas';
+import { INNATE_THRESHOLD_WARNING } from '@/lib/character/innate-power-capacity';
 import { buildRequiredProficiencies, getMissingRequiredProficiencies } from '@/lib/proficiencies';
 import type {
   CharacterPower,
@@ -16,6 +17,7 @@ import type {
   Item,
   Abilities,
   CharacterProficiency,
+  CharacterTempModifiers,
 } from '@/types';
 import {
   mapPowerRows,
@@ -35,6 +37,8 @@ export type LibrarySectionRowsInput = {
   armor: Item[];
   equipment: Item[];
   innateEnergy: number;
+  innateThreshold?: number | undefined;
+  canMarkPowersInnate?: boolean | undefined;
   currentInnateEnergy?: number | undefined;
   currentEnergy: number;
   abilities?: Abilities | undefined;
@@ -70,6 +74,7 @@ export type LibrarySectionRowsInput = {
   onUsePower?: ((id: string | number, energyCost: number) => void) | undefined;
   onRemovePower?: ((id: string | number) => void) | undefined;
   onTogglePowerInnate?: ((id: string | number, isInnate: boolean) => void) | undefined;
+  onSelectPowerVariant?: ((id: string | number, variantId: string) => void) | undefined;
   onUseTechnique?: ((id: string | number, energyCost: number) => void) | undefined;
   onRemoveTechnique?: ((id: string | number) => void) | undefined;
   onRemoveWeapon?: ((id: string | number) => void) | undefined;
@@ -80,6 +85,7 @@ export type LibrarySectionRowsInput = {
   onToggleEquipArmor?: ((id: string | number) => void) | undefined;
   onRemoveEquipment?: ((id: string | number) => void) | undefined;
   onEquipmentQuantityChange?: ((id: string | number, delta: number) => void) | undefined;
+  tempModifiers?: CharacterTempModifiers | undefined;
 };
 
 export function useLibrarySectionRows({
@@ -90,6 +96,8 @@ export function useLibrarySectionRows({
   armor,
   equipment,
   innateEnergy,
+  innateThreshold = 0,
+  canMarkPowersInnate = innateEnergy > 0,
   currentInnateEnergy,
   currentEnergy,
   abilities,
@@ -103,6 +111,7 @@ export function useLibrarySectionRows({
   onUsePower,
   onRemovePower,
   onTogglePowerInnate,
+  onSelectPowerVariant,
   onUseTechnique,
   onRemoveTechnique,
   onRemoveWeapon,
@@ -113,6 +122,7 @@ export function useLibrarySectionRows({
   onToggleEquipArmor,
   onRemoveEquipment,
   onEquipmentQuantityChange,
+  tempModifiers,
 }: LibrarySectionRowsInput) {
   const rollContext = useRollsOptional();
 
@@ -189,6 +199,9 @@ export function useLibrarySectionRows({
       onUsePower,
       onRemovePower,
       onTogglePowerInnate,
+      canMarkPowersInnate,
+      innateThreshold,
+      onSelectPowerVariant,
       onUseTechnique,
       onRemoveTechnique,
       onRemoveWeapon,
@@ -199,6 +212,7 @@ export function useLibrarySectionRows({
       onToggleEquipArmor,
       onRemoveEquipment,
       onEquipmentQuantityChange,
+      tempModifiers,
     }),
     [
       powerPartsDb,
@@ -214,6 +228,9 @@ export function useLibrarySectionRows({
       onUsePower,
       onRemovePower,
       onTogglePowerInnate,
+      canMarkPowersInnate,
+      innateThreshold,
+      onSelectPowerVariant,
       onUseTechnique,
       onRemoveTechnique,
       onRemoveWeapon,
@@ -224,16 +241,27 @@ export function useLibrarySectionRows({
       onToggleEquipArmor,
       onRemoveEquipment,
       onEquipmentQuantityChange,
+      tempModifiers,
     ],
   );
 
   const powerRowChrome = useMemo(
     () => ({
       ...CHARACTER_SHEET_ENERGY_SPEND_ROW_CHROME,
-      leftSlot: !!(showLibraryEditControls && onTogglePowerInnate),
+      leftSlot: !!(
+        showLibraryEditControls &&
+        onTogglePowerInnate &&
+        (canMarkPowersInnate || sortedInnatePowers.length > 0)
+      ),
       delete: !!(showLibraryEditControls && onRemovePower),
     }),
-    [showLibraryEditControls, onTogglePowerInnate, onRemovePower],
+    [
+      showLibraryEditControls,
+      onTogglePowerInnate,
+      canMarkPowersInnate,
+      sortedInnatePowers.length,
+      onRemovePower,
+    ],
   );
 
   const innatePowerRows = useMemo(
@@ -248,6 +276,10 @@ export function useLibrarySectionRows({
     [currentInnateEnergy, innateEnergy, powers],
   );
   const innateEnergyOverBudget = displayedCurrentInnateEnergy < 0;
+  const innateThresholdOverBudget = useMemo(
+    () => innatePowerRows.some((row) => row.warningMessage === INNATE_THRESHOLD_WARNING),
+    [innatePowerRows],
+  );
   const regularPowerRows = useMemo(
     () => mapPowerRows(sortedRegularPowers, entityRowContext),
     [sortedRegularPowers, entityRowContext],
@@ -321,5 +353,6 @@ export function useLibrarySectionRows({
     equipmentRows,
     displayedCurrentInnateEnergy,
     innateEnergyOverBudget,
+    innateThresholdOverBudget,
   };
 }

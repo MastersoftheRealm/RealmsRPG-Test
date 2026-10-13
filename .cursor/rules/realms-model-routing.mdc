@@ -1,0 +1,23 @@
+---
+description: Which Cursor model slug to use for implement vs audit (Kadin 2026-10-11)
+alwaysApply: true
+---
+
+# Model routing (RealmsRPG)
+
+**Never** a slug ending in `-fast`. Pass the standard slug. Fast is the product default.
+
+`composer-2.5` is the **default whenever possible**, including small UI, copy, labels, straightforward bug, mechanical edit of an approved plan, and a **local save or input fix** whose expected behavior is already written. A save, click handler, or field parse does **not** by itself leave Composer. Step up only when Composer cannot do the task well.
+
+| Work | Slug |
+|------|------|
+| Default, including local save or input fix with behavior already written | `composer-2.5` |
+| Bug that crosses systems — daily problem-solving | `grok-4.7-medium` |
+| Rules math, missing written rule, Supabase, RLS, schema, migrations, architecture | `grok-4.7-high` |
+| Only after High has failed on that problem — note it on the task | `grok-4.7-xhigh` |
+
+**Do not start** Claude, GPT, or any Other Models slug. Comment the recommendation (`claude-opus-5-5-high` or `gpt-5.6-sol-high`) on the ClickUp task and leave the task **to do** (no branch) or **in progress** (branch exists) for Kadin to approve.
+
+**After a miss:** A cross-system or layout interaction steps up once (Composer → `grok-4.7-medium`, Medium → `grok-4.7-high`). Do not redo that bug on the same model. `grok-4.7-xhigh` only after High has failed, noted on the task.
+
+**Audit:** a different model from the implementer — `.cursor/commands/audit.md` (read-only; never `-fast`). Read the diff and the rules that diff touches. A re-audit checks only the failed point.

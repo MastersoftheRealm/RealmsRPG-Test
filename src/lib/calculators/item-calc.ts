@@ -13,6 +13,7 @@ import {
   type HasIdAndName,
 } from '@/lib/id-constants';
 import { ITEM_PROPERTY_CONSTANTS } from '@/lib/game/constants';
+import type { WeaponRangeType } from '@/lib/game/creator-constants';
 import {
   compactResolvedWeaponRange,
   formatDamageDisplay,
@@ -20,17 +21,33 @@ import {
 } from '@/lib/utils/string';
 import type { ItemProperty } from '@/hooks/codex-types';
 
+export type { WeaponRangeType };
+
 export type { ItemProperty };
 
 // =============================================================================
 // Types
 // =============================================================================
 
+/** Creator Advanced Calculations section ids (display-only). */
+export type ItemCalcSectionId =
+  | 'handedness'
+  | 'range'
+  | 'abilityUtilized'
+  | 'damage'
+  | 'armor'
+  | 'shield'
+  | 'abilityReq'
+  | 'base'
+  | 'properties';
+
 export interface ItemPropertyPayload {
   id?: number | undefined;
   name?: string | undefined;
   op_1_lvl?: number | undefined;
   property?: ItemProperty | undefined;
+  /** Display-only. Advanced Calculations grouping; ignored by cost math. */
+  calcSection?: ItemCalcSectionId | undefined;
 }
 
 /** Codex / hook row shape for property TP lookup (IDs may be string or number from API). */
@@ -119,7 +136,7 @@ const RARITY_BRACKETS = [
   { name: 'Common', low: 25, currencyMax: 99, ipLow: 0, ipHigh: 4 },
   { name: 'Uncommon', low: 100, currencyMax: 499, ipLow: 4.01, ipHigh: 6 },
   { name: 'Rare', low: 500, currencyMax: 1499, ipLow: 6.01, ipHigh: 8 },
-  { name: 'Epic', low: 2500, currencyMax: 9999, ipLow: 8.01, ipHigh: 11 },
+  { name: 'Epic', low: 1500, currencyMax: 9999, ipLow: 8.01, ipHigh: 11 },
   { name: 'Legendary', low: 10000, currencyMax: 49999, ipLow: 11.01, ipHigh: 14 },
   { name: 'Mythic', low: 50000, currencyMax: 99999, ipLow: 14.01, ipHigh: 16 },
   { name: 'Ascended', low: 100000, currencyMax: Infinity, ipLow: 16.01, ipHigh: Infinity },
@@ -131,6 +148,10 @@ const MECHANIC_PROPERTY_IDS = new Set<number>([
   PROPERTY_IDS.AGILITY_REDUCTION,
   PROPERTY_IDS.SPLIT_DAMAGE_DICE,
   PROPERTY_IDS.RANGE,
+  PROPERTY_IDS.THROWN,
+  PROPERTY_IDS.REACH,
+  PROPERTY_IDS.FINESSE,
+  PROPERTY_IDS.HEAVY,
   PROPERTY_IDS.TWO_HANDED,
   PROPERTY_IDS.SHIELD_BASE,
   PROPERTY_IDS.ARMOR_BASE,
@@ -229,32 +250,44 @@ export function filterSavedItemPropertiesForList(
  * clamped to that band's `currencyMax` so it cannot spill into the next rarity
  * (GAME_RULES "Rarity & Currency").
  */
-export function calculateCurrencyCostAndRarity(
+/**
+ * Market currency before `Math.floor` (display / Rounded Down). Same band math as
+ * `calculateCurrencyCostAndRarity`.
+ */
+export function analyzeItemMarketCurrency(
   totalCurrency: number,
   totalIP: number,
-): RarityResult {
+): RarityResult & { currencyRaw: number } {
   const ip = Math.max(0, totalIP);
   const c = Math.max(0, totalCurrency);
   let rarity = 'Common';
-  let currencyCost = 0;
+  let currencyRaw = 0;
 
   for (const br of RARITY_BRACKETS) {
     if (ip >= br.ipLow && ip <= br.ipHigh) {
       rarity = br.name;
-      currencyCost = br.low * (1 + 0.125 * c);
+      currencyRaw = br.low * (1 + 0.125 * c);
       break;
     }
   }
 
   const bracket = RARITY_BRACKETS.find((b) => b.name === rarity);
   if (bracket) {
-    currencyCost = Math.max(currencyCost, bracket.low);
+    currencyRaw = Math.max(currencyRaw, bracket.low);
     if (Number.isFinite(bracket.currencyMax)) {
-      currencyCost = Math.min(currencyCost, bracket.currencyMax);
+      currencyRaw = Math.min(currencyRaw, bracket.currencyMax);
     }
   }
 
-  return { currencyCost: Math.floor(currencyCost), rarity };
+  return { currencyRaw, currencyCost: Math.floor(currencyRaw), rarity };
+}
+
+export function calculateCurrencyCostAndRarity(
+  totalCurrency: number,
+  totalIP: number,
+): RarityResult {
+  const { currencyCost, rarity } = analyzeItemMarketCurrency(totalCurrency, totalIP);
+  return { currencyCost, rarity };
 }
 
 // Legacy alias
@@ -305,8 +338,9 @@ export function resolveItemPropertyCodexRow(
 }
 
 /**
- * Training points for one property line: base TP (+ legacy tp_cost) + option-1 TP × op_1_lvl.
- * Matches `calculateItemCosts` per property (used for chips so TP is visible when base is 0 but options cost TP).
+ * Training points for one property instance: one round-up of base TP (+ legacy tp_cost)
+ * plus option-1 TP × op_1_lvl. Matches `calculateItemCosts` per property (used for chips
+ * so TP is visible when base is 0 but options cost TP).
  */
 export function trainingPointsForItemPropertyRef(
   ref: unknown,
@@ -318,7 +352,7 @@ export function trainingPointsForItemPropertyRef(
   const lvl = payload.op_1_lvl || 0;
   const baseTP = data.base_tp || data.tp_cost || 0;
   const op1TP = data.op_1_tp || 0;
-  return baseTP + op1TP * lvl;
+  return Math.ceil(baseTP + op1TP * lvl);
 }
 
 /**
@@ -400,20 +434,147 @@ export function resolveItemMarketPricing(
   return { ...costs, currencyCost, rarity, resolvedFromProperties };
 }
 
+export type WeaponRangeConfig = {
+  type: WeaponRangeType;
+  /** 0 when melee; otherwise a ladder value. */
+  spaces: number;
+};
+
+const WEAPON_RANGE_PROPERTY_NAMES: Record<Exclude<WeaponRangeType, 'melee'>, string[]> = {
+  thrown: ['thrown'],
+  reach: ['reach'],
+  ranged: ['range'],
+};
+
+function buildSpaceLadder(base: number, step: number, max: number): number[] {
+  const out: number[] = [];
+  for (let n = base; n <= max; n += step) out.push(n);
+  return out;
+}
+
+/** Closed space lists for Reach / Ranged / Thrown (TASK-919). */
+export function weaponRangeSpaceLadder(type: Exclude<WeaponRangeType, 'melee'>): number[] {
+  const c = ITEM_PROPERTY_CONSTANTS;
+  if (type === 'ranged') {
+    return buildSpaceLadder(c.RANGE_BASE_SPACES, c.RANGE_SPACES_PER_LEVEL, c.RANGE_MAX_SPACES);
+  }
+  if (type === 'thrown') {
+    return buildSpaceLadder(c.THROWN_BASE_SPACES, c.THROWN_SPACES_PER_LEVEL, c.THROWN_MAX_SPACES);
+  }
+  return buildSpaceLadder(c.REACH_BASE_SPACES, c.REACH_SPACES_PER_LEVEL, c.REACH_MAX_SPACES);
+}
+
+export function formatWeaponRangeConfig(config: WeaponRangeConfig): string {
+  if (config.type === 'melee' || config.spaces <= 0) return 'Melee';
+  const n = config.spaces;
+  return `${n} ${n === 1 ? 'space' : 'spaces'}`;
+}
+
+function findWeaponRangeProperty(
+  properties: ItemPropertyPayload[],
+  id: number,
+  names: string[],
+): ItemPropertyPayload | undefined {
+  return (properties || []).find((p) => {
+    if (p.id === id) return true;
+    const n = (p.name ?? '').trim().toLowerCase();
+    return names.includes(n);
+  });
+}
+
+function weaponRangeSpacesFromOpLevel(
+  type: Exclude<WeaponRangeType, 'melee'>,
+  opLevel: number | null | undefined,
+): number {
+  const ladder = weaponRangeSpaceLadder(type);
+  const lvl = Math.max(0, Math.floor(Number(opLevel) || 0));
+  return ladder[Math.min(lvl, ladder.length - 1)] ?? ladder[0] ?? 0;
+}
+
+export function weaponRangeOpLevelFromSpaces(
+  type: Exclude<WeaponRangeType, 'melee'>,
+  spaces: number,
+): number {
+  const ladder = weaponRangeSpaceLadder(type);
+  const exact = ladder.indexOf(spaces);
+  if (exact >= 0) return exact;
+  let best = 0;
+  let bestDist = Infinity;
+  for (let i = 0; i < ladder.length; i++) {
+    const d = Math.abs((ladder[i] ?? 0) - spaces);
+    if (d < bestDist) {
+      bestDist = d;
+      best = i;
+    }
+  }
+  return best;
+}
+
+export function snapWeaponRangeSpaces(type: WeaponRangeType, spaces: number): number {
+  if (type === 'melee') return 0;
+  return weaponRangeSpacesFromOpLevel(type, weaponRangeOpLevelFromSpaces(type, spaces));
+}
+
+/** Legacy document `rangeLevel` (1 = 8 spaces). 0 for melee / reach / thrown. */
+export function weaponRangeLegacyLevel(config: WeaponRangeConfig): number {
+  if (config.type !== 'ranged' || config.spaces <= 0) return 0;
+  return weaponRangeOpLevelFromSpaces('ranged', config.spaces) + 1;
+}
+
 /**
- * Format range from properties.
+ * Restore creator/display range from saved properties.
+ * Priority: Thrown → Reach → Range. Legacy Range-only `rangeLevel` is last.
+ */
+export function deriveWeaponRangeConfig(
+  properties: ItemPropertyPayload[] | null | undefined,
+  legacyRangeLevel?: number | null,
+): WeaponRangeConfig {
+  const props = properties ?? [];
+  const thrown = findWeaponRangeProperty(
+    props,
+    PROPERTY_IDS.THROWN,
+    WEAPON_RANGE_PROPERTY_NAMES.thrown,
+  );
+  if (thrown) {
+    return {
+      type: 'thrown',
+      spaces: weaponRangeSpacesFromOpLevel('thrown', thrown.op_1_lvl),
+    };
+  }
+  const reach = findWeaponRangeProperty(
+    props,
+    PROPERTY_IDS.REACH,
+    WEAPON_RANGE_PROPERTY_NAMES.reach,
+  );
+  if (reach) {
+    return {
+      type: 'reach',
+      spaces: weaponRangeSpacesFromOpLevel('reach', reach.op_1_lvl),
+    };
+  }
+  const range = findWeaponRangeProperty(
+    props,
+    PROPERTY_IDS.RANGE,
+    WEAPON_RANGE_PROPERTY_NAMES.ranged,
+  );
+  if (range) {
+    return {
+      type: 'ranged',
+      spaces: weaponRangeSpacesFromOpLevel('ranged', range.op_1_lvl),
+    };
+  }
+  const legacy = Number(legacyRangeLevel) || 0;
+  if (legacy > 0) {
+    return { type: 'ranged', spaces: weaponRangeSpacesFromOpLevel('ranged', legacy - 1) };
+  }
+  return { type: 'melee', spaces: 0 };
+}
+
+/**
+ * Format range from properties (Thrown / Reach / Range ladders).
  */
 export function formatRange(properties: ItemPropertyPayload[]): string {
-  const prop = (properties || []).find((p) => {
-    if (p.id === PROPERTY_IDS.RANGE) return true;
-    return p.name === 'Range';
-  });
-  if (!prop) return 'Melee';
-  const lvl = prop.op_1_lvl || 0;
-  const n =
-    ITEM_PROPERTY_CONSTANTS.RANGE_BASE_SPACES +
-    lvl * ITEM_PROPERTY_CONSTANTS.RANGE_SPACES_PER_LEVEL;
-  return `${n} ${n === 1 ? 'space' : 'spaces'}`;
+  return formatWeaponRangeConfig(deriveWeaponRangeConfig(properties));
 }
 
 /**
@@ -495,8 +656,20 @@ export function deriveCriticalRangeIncreaseFromProperties(
 const SHIELD_DICE_SIZES = [4, 6, 8] as const;
 
 /**
+ * Library display for Shield Amount / Shield Damage.
+ * Level 0 = 1d4, 1 = 1d6, 2 = 1d8, 3 = 2d4.
+ */
+export function shieldDiceFromOptionLevel(level: number): { amount: number; size: number } {
+  const safe = Math.max(0, Math.floor(level));
+  return {
+    amount: Math.floor(safe / 3) + 1,
+    size: SHIELD_DICE_SIZES[safe % 3] ?? 4,
+  };
+}
+
+/**
  * Derive shield block amount (e.g. "1d4") from Shield Amount property.
- * Item creator formula: level = ((amount*size) - 4) / 2. Reverse: amount = floor(level/3)+1, size = [4,6,8][level%3].
+ * Display only. Creator save still prices dice with ((amount * size) - 4) / 2.
  */
 export function deriveShieldAmountFromProperties(properties: ItemPropertyPayload[]): string {
   const prop = (properties || []).find((p) => {
@@ -504,14 +677,13 @@ export function deriveShieldAmountFromProperties(properties: ItemPropertyPayload
     return p.name === 'Shield Amount';
   });
   if (!prop) return '-';
-  const level = Math.max(0, prop.op_1_lvl ?? 0);
-  const amount = Math.floor(level / 3) + 1;
-  const size = SHIELD_DICE_SIZES[level % 3];
+  const { amount, size } = shieldDiceFromOptionLevel(prop.op_1_lvl ?? 0);
   return `${amount}d${size}`;
 }
 
 /**
  * Derive shield damage dice (e.g. "1d4 Bludgeoning") from Shield Damage property, if present.
+ * Property level reverses onto the 1d4/1d6/1d8 ladder. Use this only when no shieldDamage scalar was saved.
  */
 export function deriveShieldDamageFromProperties(properties: ItemPropertyPayload[]): string | null {
   const prop = (properties || []).find((p) => {
@@ -519,10 +691,39 @@ export function deriveShieldDamageFromProperties(properties: ItemPropertyPayload
     return p.name === 'Shield Damage';
   });
   if (!prop || (prop.op_1_lvl ?? 0) <= 0) return null;
-  const level = Math.max(0, prop.op_1_lvl ?? 0);
-  const amount = Math.floor(level / 3) + 1;
-  const size = SHIELD_DICE_SIZES[level % 3];
+  const { amount, size } = shieldDiceFromOptionLevel(prop.op_1_lvl ?? 0);
   return `${amount}d${size} Bludgeoning`;
+}
+
+/**
+ * Library and Load damage cells.
+ * While shield damage is on, and when the on/off flag was never saved, a stored
+ * shieldDamage die wins over the property ladder.
+ * hasShieldDamage false means damage is off. The save writes null for the die,
+ * and a null update leaves the old die in the column, so that stored die is ignored.
+ */
+export function resolveShieldDamageDisplay(input: {
+  shieldDamage?: unknown;
+  hasShieldDamage?: boolean | null | undefined;
+  properties?: ItemPropertyPayload[] | null | undefined;
+  damage?: unknown;
+}): string | null {
+  if (input.hasShieldDamage !== false && input.shieldDamage != null) {
+    const raw = input.shieldDamage;
+    const stored = formatDamageDisplay(
+      typeof raw === 'object' && !Array.isArray(raw)
+        ? {
+            ...(raw as Record<string, unknown>),
+            type: (raw as { type?: unknown }).type || 'bludgeoning',
+          }
+        : raw,
+    );
+    if (stored) return stored;
+  }
+  return (
+    deriveShieldDamageFromProperties(input.properties ?? []) ??
+    (input.damage != null ? formatDamageDisplay(input.damage) || null : null)
+  );
 }
 
 /**
@@ -542,7 +743,7 @@ export function extractProficiencies(
     const baseTP = data.base_tp || 0;
     const op1TP = data.op_1_tp || 0;
     const optTP = lvl > 0 ? op1TP * lvl : 0;
-    const totalTP = baseTP + optTP;
+    const totalTP = Math.ceil(baseTP + optTP);
 
     if (totalTP > 0) {
       profs.push({

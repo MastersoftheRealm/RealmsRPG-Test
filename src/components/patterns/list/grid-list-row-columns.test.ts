@@ -1,13 +1,21 @@
 import { createElement } from 'react';
 import { describe, expect, it } from 'vitest';
 import {
+  collapsedColumnOverflowClass,
+  columnDisplayLabel,
   columnHasDisplayValue,
   columnHasInteractiveValue,
   columnsAlreadyShowTrainingPoints,
-  columnsForExpandedBodyStats,
   columnsForMobileSummary,
+  columnsWithoutDescriptionPreview,
   dataColumnTrackCount,
 } from './grid-list-row-columns';
+
+describe('columnDisplayLabel (86e3jyh53)', () => {
+  it('maps creature feat typeLabel key to Type on mobile summary', () => {
+    expect(columnDisplayLabel({ key: 'typeLabel', value: 'Creature' })).toBe('Type');
+  });
+});
 
 describe('columnsAlreadyShowTrainingPoints', () => {
   it('detects TP / Training Points column keys and labels', () => {
@@ -28,7 +36,7 @@ describe('columnsAlreadyShowTrainingPoints', () => {
   });
 });
 
-describe('columnHasDisplayValue / mobile expand facts (TASK-868)', () => {
+describe('columnHasDisplayValue / mobile expand facts (TASK-868 / TASK-909)', () => {
   it('treats empty, dash, and none as not displayable', () => {
     expect(columnHasDisplayValue({ key: 'uses', value: '-' })).toBe(false);
     expect(columnHasDisplayValue({ key: 'uses', value: '—' })).toBe(false);
@@ -38,6 +46,41 @@ describe('columnHasDisplayValue / mobile expand facts (TASK-868)', () => {
     expect(columnHasDisplayValue({ key: 'recovery', value: 'FR' })).toBe(true);
   });
 
+  it('keeps Duration on the mobile summary when it is past the first three columns (86e3kfkca)', () => {
+    expect(
+      columnsForMobileSummary([
+        { key: 'action', value: 'Basic' },
+        { key: 'damage', value: '1d8 Ice' },
+        { key: 'area', value: 'Sphere 2' },
+        { key: 'duration', value: '2 Rounds / 1 Minute' },
+      ]).map((col) => col.key),
+    ).toEqual(['action', 'damage', 'area', 'duration']);
+  });
+
+  it('keeps an energy dash, and keeps Damage only when the column asks to stay', () => {
+    expect(columnHasDisplayValue({ key: 'energy', value: '—' })).toBe(true);
+    expect(columnHasDisplayValue({ key: 'area', value: '—' })).toBe(false);
+    const statBlock = [
+      { key: 'energy', value: '—' as const },
+      { key: 'action', value: 'Basic' },
+      { key: 'duration', value: 'Instant' },
+      { key: 'area', value: '—' },
+      { key: 'damage', value: '1d10 Fire' },
+    ];
+    expect(columnsForMobileSummary(statBlock).map((col) => col.key)).toEqual([
+      'energy',
+      'action',
+      'duration',
+    ]);
+    expect(
+      columnsForMobileSummary(
+        statBlock.map((col) =>
+          col.key === 'damage' ? { ...col, keepOnMobileSummary: true } : col,
+        ),
+      ).map((col) => col.key),
+    ).toEqual(['energy', 'action', 'duration', 'damage']);
+  });
+
   it('omits blank columns from the mobile summary', () => {
     expect(
       columnsForMobileSummary([
@@ -45,30 +88,37 @@ describe('columnHasDisplayValue / mobile expand facts (TASK-868)', () => {
         { key: 'recovery', value: 'FR', hideOnMobile: true },
         { key: 'description', value: 'A feat.', hideOnMobile: true },
       ]).map((col) => col.key),
-    ).toEqual(['recovery', 'description']);
+    ).toEqual(['recovery']);
   });
 
-  it('omits blank and in-body description from expanded body stats', () => {
+  it('drops truncated description from header/summary when the body owns it', () => {
     expect(
-      columnsForExpandedBodyStats(
+      columnsWithoutDescriptionPreview(
         [
           { key: 'description', value: 'A feat.' },
-          { key: 'uses', value: '-' },
+          { key: 'uses', value: '1/2' },
           { key: 'recovery', value: 'PR' },
         ],
         true,
       ).map((col) => col.key),
-    ).toEqual(['recovery']);
+    ).toEqual(['uses', 'recovery']);
   });
 });
 
-describe('columnHasInteractiveValue / dataColumnTrackCount (TASK-898)', () => {
-  it('detects ReactNode column values that need stacked expanded layout', () => {
+describe('interactive header cells (TASK-909)', () => {
+  it('detects ReactNode column values that must not truncate', () => {
     expect(columnHasInteractiveValue({ key: 'uses', value: '1/2' })).toBe(false);
     expect(columnHasInteractiveValue({ key: 'uses', value: createElement('span') })).toBe(true);
   });
 
-  it('sums data column spans for expanded name grid-column span', () => {
+  it('skips text truncate on interactive header cells', () => {
+    expect(collapsedColumnOverflowClass({ key: 'action', value: 'Basic' })).toContain('truncate');
+    expect(
+      collapsedColumnOverflowClass({ key: 'uses', value: createElement('span') }),
+    ).not.toContain('truncate');
+  });
+
+  it('sums data column spans for description-only name grid-column span', () => {
     expect(
       dataColumnTrackCount(
         [

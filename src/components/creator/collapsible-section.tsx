@@ -35,6 +35,11 @@ export interface CollapsibleSectionProps {
   titleAddon?: ReactNode | undefined;
   /** Actions next to the expand control (not nested inside it) */
   rightSlot?: ReactNode | undefined;
+  /**
+   * Place header actions on their own full-width row below `lg`.
+   * Narrow creator headers (several text buttons) otherwise overflow the title row.
+   */
+  actionsOnOwnRow?: boolean | undefined;
   children: ReactNode;
   className?: string | undefined;
   /**
@@ -57,6 +62,7 @@ export function CollapsibleSection({
   icon,
   titleAddon,
   rightSlot,
+  actionsOnOwnRow = false,
   children,
   className,
   headingLevel = 2,
@@ -77,10 +83,10 @@ export function CollapsibleSection({
           className,
         )}
       >
-        <div className="flex items-center justify-between gap-3">
-          <div className="flex min-w-0 items-center gap-3">
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+          <div className="flex min-w-0 items-start gap-3 sm:items-center">
             {icon && (
-              <span className="text-2xl text-text-muted" aria-hidden>
+              <span className="shrink-0 text-2xl text-text-muted" aria-hidden>
                 {icon}
               </span>
             )}
@@ -88,14 +94,18 @@ export function CollapsibleSection({
               <HeadingTag className="font-bold text-text-secondary dark:text-text-primary">
                 {title}
               </HeadingTag>
-              {subtitleText ? <p className="text-sm text-text-muted">{subtitleText}</p> : null}
+              {subtitleText ? (
+                <p className="line-clamp-2 text-sm text-text-muted sm:line-clamp-none">
+                  {subtitleText}
+                </p>
+              ) : null}
             </div>
           </div>
           <Button
             variant="secondary"
             size="sm"
+            className="w-full shrink-0 sm:w-auto"
             onClick={() => onEnabledChange?.(true)}
-            className="min-h-[44px]"
           >
             + Enable {title}
           </Button>
@@ -114,7 +124,12 @@ export function CollapsibleSection({
           aria-expanded={isExpanded}
           aria-label={isExpanded ? `Collapse ${title}` : `Expand ${title}`}
         />
-        <div className="pointer-events-none relative z-10 flex items-center gap-2">
+        <div
+          className={cn(
+            'pointer-events-none relative z-10 flex items-center gap-2',
+            actionsOnOwnRow && 'flex-wrap',
+          )}
+        >
           {icon && <span className="flex-shrink-0 text-xl">{icon}</span>}
           <div className="min-w-0 flex-1">
             <div className="flex flex-wrap items-center gap-1.5">
@@ -148,8 +163,11 @@ export function CollapsibleSection({
           {hasTrailingActions ? (
             <div
               className={cn(
-                'pointer-events-auto flex flex-shrink-0 items-center gap-2',
-                optional ? 'min-h-[44px] self-stretch' : 'self-center',
+                'pointer-events-auto flex items-center gap-2',
+                actionsOnOwnRow
+                  ? 'min-w-0 basis-full flex-wrap max-lg:w-full lg:flex-shrink-0 lg:basis-auto'
+                  : 'flex-shrink-0',
+                !actionsOnOwnRow && (optional ? 'self-stretch' : 'self-center'),
               )}
             >
               {rightSlot}
@@ -158,7 +176,7 @@ export function CollapsibleSection({
                   variant="ghost"
                   size="sm"
                   onClick={() => onEnabledChange?.(false)}
-                  className="min-h-[44px] text-danger-fg hover:bg-danger-light"
+                  className="text-danger-fg hover:bg-danger-light"
                 >
                   Remove
                 </Button>

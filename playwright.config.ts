@@ -30,7 +30,6 @@ export default defineConfig({
     /shell-creators-audit\.pw\.ts/,
     /site-copy-audit\.pw\.ts/,
     /guided-.*-audit\.pw\.ts/,
-    /creator-ux-audit\.pw\.ts/,
     /chip-unification\.pw\.ts/,
     /responsive-layout\.pw\.ts/,
   ],

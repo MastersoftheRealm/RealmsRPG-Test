@@ -413,7 +413,7 @@ export function AddCreatureFeatModal({
             ))}
           </select>
         </div>
-        <label className="flex min-h-[44px] cursor-pointer items-center gap-2 text-sm text-text-muted">
+        <label className="touch-tier-standard flex cursor-pointer items-center gap-2 text-sm text-text-muted">
           <input
             type="checkbox"
             checked={showStateFeats}
@@ -422,7 +422,7 @@ export function AddCreatureFeatModal({
           />
           Show state feats
         </label>
-        <label className="flex min-h-[44px] cursor-pointer items-center gap-2 text-sm text-text-muted">
+        <label className="touch-tier-standard flex cursor-pointer items-center gap-2 text-sm text-text-muted">
           <input
             type="checkbox"
             checked={showBlocked}
@@ -436,7 +436,7 @@ export function AddCreatureFeatModal({
   } else if (activeTab === 'creature') {
     filterRow = (
       <div className="flex flex-wrap items-center gap-3">
-        <label className="flex min-h-[44px] cursor-pointer items-center gap-2 text-sm text-text-muted">
+        <label className="touch-tier-standard flex cursor-pointer items-center gap-2 text-sm text-text-muted">
           <input
             type="checkbox"
             checked={showBlocked}
@@ -462,13 +462,6 @@ export function AddCreatureFeatModal({
   const error = queryError ? `Failed to load feats: ${queryError.message}` : null;
   const isLoading = loadingCreatureFeats || loadingCodexFeats || loadingTraits;
 
-  const description =
-    activeTab === 'creature'
-      ? 'Codex creature feats (any feat point cost).'
-      : activeTab === 'library'
-        ? 'Character feats 0.5× level; archetype feats 1× level.'
-        : 'Flaws −0.5, characteristics 0, other traits 1 feat point.';
-
   return (
     <>
       {error && isOpen && (
@@ -480,7 +473,6 @@ export function AddCreatureFeatModal({
         isOpen={isOpen}
         onClose={onClose}
         title="Add feat"
-        description={description}
         items={allItems}
         isLoading={isLoading}
         onConfirm={handleConfirm}
@@ -523,6 +515,7 @@ export function AddCreatureFeatModal({
               ]}
               aria-label="Feat source"
               tabs
+              equalWidth
               tabPanelId="creature-feat-panel"
             />
           </div>

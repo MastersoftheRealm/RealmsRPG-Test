@@ -26,11 +26,20 @@ import type { ListHeaderRowChrome } from '@/components/patterns/list/grid-list-r
 import type { ListRowThumbnailProps } from '@/components/patterns/list/list-row-thumbnail';
 import type { MetadataDetailSection } from '@/lib/chip/list-row-metadata';
 import { useSort } from '@/hooks/use-sort';
+import { SegmentedControl } from '@/components/patterns/chrome/segmented-control';
+import {
+  CATALOG_LISTING_SCOPE_OPTIONS,
+  catalogListingClassOptions,
+  parseCatalogListing,
+  type CatalogListing,
+  type CatalogListingScope,
+} from '@/lib/library/catalog-listing';
 
 export interface OfficialEntityRow {
   id: string;
   name: string;
   description?: string | undefined;
+  catalogListing?: CatalogListing | undefined;
 }
 
 export interface OfficialEntityListProps<TRow extends OfficialEntityRow, TItem> {
@@ -94,6 +103,8 @@ export interface OfficialEntityListProps<TRow extends OfficialEntityRow, TItem> 
     | undefined;
   onEdit?: ((id: string) => void) | undefined;
   onDelete?: ((id: string, name: string) => void) | undefined;
+  /** Admin: Public ↔ Admin library without opening the creator. */
+  onCatalogListingChange?: ((id: string, listing: CatalogListing) => void) | undefined;
   /** Optional control after Filters (e.g. admin Create). Keeps list chrome when empty. */
   searchTrailing?: ReactNode | undefined;
   /** Filter panel body only — ListSearchToolbar wraps FilterSection compact (TASK-721). */
@@ -135,17 +146,23 @@ export function OfficialEntityList<TRow extends OfficialEntityRow, TItem>({
   addToCharacter,
   onEdit,
   onDelete,
+  onCatalogListingChange,
   searchTrailing,
   filters,
   filterActiveCount,
 }: OfficialEntityListProps<TRow, TItem>) {
   const [search, setSearch] = useState('');
+  const [listingScope, setListingScope] = useState<CatalogListingScope>('all');
   const { sortState, handleSort, sortItems } = useSort('name');
 
   const cardData = useMemo(() => buildRows(items), [buildRows, items]);
+  const listingFiltered = useMemo(() => {
+    if (variant !== 'admin' || listingScope === 'all') return cardData;
+    return cardData.filter((row) => parseCatalogListing(row.catalogListing) === listingScope);
+  }, [cardData, listingScope, variant]);
   const filtered = useMemo(
-    () => filterRows(cardData, search, sortItems),
-    [filterRows, cardData, search, sortItems],
+    () => filterRows(listingFiltered, search, sortItems),
+    [filterRows, listingFiltered, search, sortItems],
   );
 
   if (error) {
@@ -160,10 +177,11 @@ export function OfficialEntityList<TRow extends OfficialEntityRow, TItem>({
 
   const canAdd = () => variant === 'library' && !readOnly && !!onAddRequest;
   const canAddToCharacter = () => Boolean(addToCharacter);
+  const showListingToggle = variant === 'admin' && !!onCatalogListingChange;
   const hasThumbnailColumn = hasThumbnailColumnProp ?? Boolean(getThumbnail);
   const rowChrome: ListHeaderRowChrome | undefined = (() => {
     const chrome: ListHeaderRowChrome = {};
-    if (canAdd() || canAddToCharacter()) chrome.rightSlot = true;
+    if (canAdd() || canAddToCharacter() || showListingToggle) chrome.rightSlot = true;
     if (variant === 'admin' && onEdit) chrome.edit = true;
     if (variant === 'admin' && onDelete) chrome.delete = true;
     return chrome.rightSlot || chrome.edit || chrome.delete ? chrome : undefined;
@@ -172,6 +190,17 @@ export function OfficialEntityList<TRow extends OfficialEntityRow, TItem>({
   return (
     <div>
       {sectionTitle ? <SectionHeader title={sectionTitle} size="md" /> : null}
+      {showListingToggle ? (
+        <div className="mb-3">
+          <SegmentedControl
+            size="compact"
+            value={listingScope}
+            onChange={setListingScope}
+            options={CATALOG_LISTING_SCOPE_OPTIONS}
+            aria-label="Filter by library classification"
+          />
+        </div>
+      ) : null}
       <ListSearchToolbar
         search={search}
         onSearchChange={setSearch}
@@ -228,8 +257,22 @@ export function OfficialEntityList<TRow extends OfficialEntityRow, TItem>({
                 badges={badges.length > 0 ? badges : undefined}
                 showBadgesInName={nameBadges.length > 0}
                 rightSlot={
-                  canAdd() || canAddToCharacter() ? (
+                  canAdd() || canAddToCharacter() || showListingToggle ? (
                     <LibraryRowActionSlot>
+                      {showListingToggle ? (
+                        <div
+                          onClick={(e) => e.stopPropagation()}
+                          onKeyDown={(e) => e.stopPropagation()}
+                        >
+                          <SegmentedControl
+                            size="compact"
+                            value={parseCatalogListing(row.catalogListing)}
+                            onChange={(listing) => onCatalogListingChange?.(row.id, listing)}
+                            options={catalogListingClassOptions(true)}
+                            aria-label="Library classification"
+                          />
+                        </div>
+                      ) : null}
                       {canAddToCharacter() && !addToCharacter!.isOnCharacter(row) ? (
                         <LibraryAddToCharacterButton
                           kind={addToCharacter!.kind}

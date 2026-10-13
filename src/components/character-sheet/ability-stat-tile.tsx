@@ -16,12 +16,12 @@ import {
   SHEET_STAT_TIP_CLASS,
   SHEET_STAT_TILE_CLASS,
   canDecreaseAbility,
+  sheetAbilityIncreaseTitle,
 } from '@/components/patterns';
 
 export function AbilityStatTile({
   ability,
   abilities,
-  level,
   powerAbility,
   martialAbility,
   tempModifiers,
@@ -36,7 +36,6 @@ export function AbilityStatTile({
 }: {
   ability: AbilityName;
   abilities: Abilities;
-  level: number;
   powerAbility?: AbilityName | undefined;
   martialAbility?: AbilityName | undefined;
   tempModifiers?: CharacterTempModifiers | undefined;
@@ -113,13 +112,7 @@ export function AbilityStatTile({
             onClick={() => onAbilityChange?.(ability, baseValue + 1)}
             disabled={!canIncrease}
             size="sm"
-            title={
-              canIncrease
-                ? `Cost: ${cost} point${cost > 1 ? 's' : ''}`
-                : baseValue >= maxAbility
-                  ? `Max at level ${level}`
-                  : 'Not enough ability points'
-            }
+            title={sheetAbilityIncreaseTitle(canIncrease, baseValue, cost)}
           />
         </div>
       ) : showTempControls ? (

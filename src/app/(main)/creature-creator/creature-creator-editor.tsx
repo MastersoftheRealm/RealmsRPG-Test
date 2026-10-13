@@ -10,7 +10,11 @@
 import type { ReactNode } from 'react';
 import { SkillsAllocationPage, InfoTippy, RealmsImageField } from '@/components/patterns';
 import { subSkillsHelp } from '../../../../public/tooltip-text';
-import { Input, Select, Textarea, Card } from '@/components/ui';
+import { Select, Card } from '@/components/ui';
+import {
+  CreatorDescriptionField,
+  CreatorNameField,
+} from '@/components/creator/creator-text-fields';
 import { HealthEnergyAllocator, AbilityScoreEditor, ArchetypeSelector } from '@/components/creator';
 import type { AbilityName } from '@/types';
 import type { Feat } from '@/hooks';
@@ -124,26 +128,35 @@ export function CreatureCreatorEditor(props: CreatureCreatorEditorProps) {
   } = props;
 
   return (
-    <>
+    <div className="creature-creator-dock-frame space-y-6">
       <Card className="p-6 shadow-md">
         <h2 className="mb-4 text-lg font-bold text-text-primary">Basic Information</h2>
         <div className="space-y-4">
           <div>
-            <label className="mb-1 block text-sm font-medium text-text-secondary">Name</label>
-            <Input
-              type="text"
+            <label
+              htmlFor="creature-creator-name"
+              className="mb-1 block text-sm font-medium text-text-secondary"
+            >
+              Name
+            </label>
+            <CreatorNameField
+              id="creature-creator-name"
               value={creature.name}
-              onChange={(e) => updateCreature({ name: e.target.value })}
+              onChange={(name) => updateCreature({ name })}
               placeholder="Creature name..."
             />
           </div>
           <div>
-            <label className="mb-1 block text-sm font-medium text-text-secondary">
+            <label
+              htmlFor="creature-creator-description"
+              className="mb-1 block text-sm font-medium text-text-secondary"
+            >
               Description
             </label>
-            <Textarea
+            <CreatorDescriptionField
+              id="creature-creator-description"
               value={creature.description}
-              onChange={(e) => updateCreature({ description: e.target.value })}
+              onChange={(description) => updateCreature({ description })}
               placeholder="Describe this creature's appearance, behavior, and special abilities..."
               rows={3}
             />
@@ -159,7 +172,7 @@ export function CreatureCreatorEditor(props: CreatureCreatorEditorProps) {
               hint="Uploads are saved to the shared image bank."
             />
           )}
-          <div className="grid min-w-0 grid-cols-3 gap-2 sm:gap-4">
+          <div className="grid min-w-0 grid-cols-1 gap-2 sm:grid-cols-3 sm:gap-4">
             <Select
               label="Level"
               value={String(creature.level)}
@@ -199,6 +212,7 @@ export function CreatureCreatorEditor(props: CreatureCreatorEditorProps) {
               martialProficiency: martial,
             })
           }
+          allowZeroEnds
         />
       </Card>
 
@@ -249,6 +263,6 @@ export function CreatureCreatorEditor(props: CreatureCreatorEditorProps) {
 
       <CreatureCreatorEditorTraitsSection {...props} />
       <CreatureCreatorEditorLoadoutSections {...props} />
-    </>
+    </div>
   );
 }

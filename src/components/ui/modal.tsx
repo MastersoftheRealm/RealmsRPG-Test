@@ -211,7 +211,7 @@ export function Modal({
   if (!isOpen && captureCloseClicks) {
     return createPortal(
       <div
-        className="fixed inset-0 z-overlay"
+        className="fixed inset-0 z-modal"
         aria-hidden="true"
         data-testid="modal-close-click-capture"
       />,
@@ -262,14 +262,15 @@ export function Modal({
   const modalContent = (
     <div
       className={cn(
-        'fixed inset-0 z-overlay flex',
+        'fixed inset-0 z-modal flex',
         useFullScreenMobile ? 'items-stretch' : 'items-center justify-center p-4',
       )}
     >
       {/* Backdrop */}
       <div
         className={cn(
-          'duration-base fixed inset-0 bg-black/60 backdrop-blur-sm transition-opacity ease-standard',
+          'duration-base fixed inset-0 transition-opacity ease-standard',
+          useFullScreenMobile ? 'bg-background' : 'bg-black/60 backdrop-blur-sm',
           animating ? 'opacity-100' : 'opacity-0',
         )}
         onClick={onClose}
@@ -284,7 +285,7 @@ export function Modal({
         className={cn(
           'relative z-10 w-full overflow-hidden border-border-light bg-surface shadow-2xl focus:outline-none',
           useFullScreenMobile
-            ? 'inset-0 flex max-h-none flex-col rounded-none border-0'
+            ? 'inset-0 flex h-full max-h-full min-h-0 flex-col rounded-none border-0'
             : cn(
                 'rounded-2xl border',
                 flexLayout
@@ -317,7 +318,8 @@ export function Modal({
         {hasSimpleHeader && (
           <div
             className={cn(
-              'mx-4 mt-4 mb-2 shrink-0 rounded-xl border-b border-border-light bg-primary-subtle-bg px-4 py-3',
+              'shrink-0 rounded-xl border-b border-border-light bg-primary-subtle-bg',
+              useFullScreenMobile ? 'mx-4 mt-2 mb-0 px-4 py-1.5' : 'mx-4 mt-4 mb-2 px-4 py-3',
               showCloseButton && 'pr-12',
             )}
           >
@@ -343,7 +345,7 @@ export function Modal({
             variant="ghost"
             onClick={onClose}
             label="Close modal"
-            className="absolute top-4 right-4 z-10"
+            className={cn('absolute right-4 z-10', useFullScreenMobile ? 'top-2' : 'top-4')}
           >
             <X className="h-5 w-5" />
           </IconButton>
@@ -371,8 +373,9 @@ export function Modal({
             className={cn(
               // DESIGN_INTENT: Footer inset matches content `p-6` / header `mx-4` — do not
               // re-pad Cancel/Confirm rows inside `footer` (double gutter).
-              'shrink-0 px-4 pt-3 pb-3 md:px-6 md:pt-4 md:pb-4',
-              useFullScreenMobile && 'pb-[max(0.75rem,env(safe-area-inset-bottom,0px))]',
+              useFullScreenMobile
+                ? 'shrink-0 px-4 pt-1 pb-[max(0.5rem,env(safe-area-inset-bottom,0px))]'
+                : 'shrink-0 px-4 pt-3 pb-3 md:px-6 md:pt-4 md:pb-4',
             )}
           >
             {footer}

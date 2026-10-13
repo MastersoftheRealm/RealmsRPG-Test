@@ -1,8 +1,10 @@
 import { describe, expect, it } from 'vitest';
 import type { Character, CharacterArchetype } from '@/types';
 import {
+  applyLevelDownProficiencyUpdates,
   applyLevelUpProficiencyUpdates,
   applyProficiencyGainForLevelUp,
+  applyProficiencyLossForLevelDown,
   applyPathProficiencyForLevel,
 } from './archetype-display';
 
@@ -46,6 +48,51 @@ describe('applyProficiencyGainForLevelUp', () => {
 
   it('returns null on level down', () => {
     expect(applyProficiencyGainForLevelUp(char({ mart: 3, pow: 0 }), 5, 4)).toBeNull();
+  });
+});
+
+describe('applyProficiencyLossForLevelDown', () => {
+  it('auto-removes +1 from martial when all points are martial-only (level 5 → 2)', () => {
+    expect(applyProficiencyLossForLevelDown(char({ mart: 3, pow: 0, level: 5 }), 5, 2)).toEqual({
+      mart_prof: 2,
+      pow_prof: 0,
+    });
+  });
+
+  it('auto-removes +1 from power when all points are power-only', () => {
+    expect(applyProficiencyLossForLevelDown(char({ mart: 0, pow: 3, level: 5 }), 5, 2)).toEqual({
+      mart_prof: 0,
+      pow_prof: 2,
+    });
+  });
+
+  it('does not auto-remove when both sides have points (Powered-Martial split)', () => {
+    expect(applyProficiencyLossForLevelDown(char({ mart: 2, pow: 2, level: 5 }), 5, 2)).toBeNull();
+  });
+
+  it('removes multiple milestone gains when jumping several levels (pure martial 10 → 4)', () => {
+    expect(applyProficiencyLossForLevelDown(char({ mart: 4, pow: 0, level: 10 }), 10, 4)).toEqual({
+      mart_prof: 2,
+      pow_prof: 0,
+    });
+  });
+
+  it('returns null when proficiency cap does not decrease', () => {
+    expect(applyProficiencyLossForLevelDown(char({ mart: 2, pow: 0 }), 3, 4)).toBeNull();
+  });
+
+  it('returns null on level up', () => {
+    expect(applyProficiencyLossForLevelDown(char({ mart: 2, pow: 0 }), 4, 5)).toBeNull();
+  });
+});
+
+describe('applyLevelDownProficiencyUpdates', () => {
+  it('matches applyProficiencyLossForLevelDown for pure martial level 5 → 2', () => {
+    const character = char({ mart: 3, pow: 0, level: 5 });
+    expect(applyLevelDownProficiencyUpdates(character, 5, 2)).toEqual({
+      mart_prof: 2,
+      pow_prof: 0,
+    });
   });
 });
 

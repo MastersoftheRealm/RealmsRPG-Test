@@ -1,18 +1,21 @@
 'use client';
 
 import { Edit, Copy, BookPlus, AlertCircle } from 'lucide-react';
-import type { Dispatch, MouseEvent, ReactNode, SetStateAction } from 'react';
+import type { Dispatch, MouseEvent, PointerEvent, ReactNode, SetStateAction } from 'react';
 import { cn } from '@/lib/utils';
 import { formatCostDisplay } from '@/lib/game/creator-constants';
 import { Button, DescriptorChip } from '@/components/ui';
 import { GridListChip } from './grid-list-chip';
-import { descriptorChipVariantForBadgeColor } from '@/lib/chip/grid-list-chip-utils';
+import {
+  descriptorChipVariantForBadgeColor,
+  gridListChipReactKey,
+} from '@/lib/chip/grid-list-chip-utils';
 import {
   helpKeyForPartsOrPropertiesLabel,
   isPartsOrPropertiesProficienciesSection,
   type MetadataDetailSection,
 } from '@/lib/chip/list-row-metadata';
-import { columnDisplayLabel, columnHasInteractiveValue } from './grid-list-row-columns';
+import { columnDisplayLabel } from './grid-list-row-columns';
 import { GRID_LIST_ROW_EXPANDED_BAND_CLASS } from './grid-list-row-chrome';
 import { DetailSectionLabel, partsPropertiesHelpContent } from './grid-list-row-detail';
 import type { ColumnValue } from './grid-list-row-types';
@@ -21,6 +24,7 @@ interface GridListRowExpandedBodyProps {
   compact: boolean;
   selectable: boolean;
   isRowClickable: boolean;
+  handleExpandedPointerDown: (e: PointerEvent) => void;
   handleRowBodyClickWithGuard: (e: MouseEvent) => void;
   expandedContent?: ReactNode | undefined;
   descTrimmed: string;
@@ -31,8 +35,6 @@ interface GridListRowExpandedBodyProps {
     label: string;
     color?: 'blue' | 'purple' | 'green' | 'amber' | 'gray' | 'red' | undefined;
   }>;
-  gridColumns?: string | undefined;
-  expandedBodyStatColumns: ColumnValue[];
   totalCost?: number | undefined;
   costLabel: string;
   requirements?: ReactNode | undefined;
@@ -55,6 +57,7 @@ export function GridListRowExpandedBody({
   compact,
   selectable,
   isRowClickable,
+  handleExpandedPointerDown,
   handleRowBodyClickWithGuard,
   expandedContent,
   descTrimmed,
@@ -62,8 +65,6 @@ export function GridListRowExpandedBody({
   descriptionAfter,
   warningMessage,
   badges,
-  gridColumns,
-  expandedBodyStatColumns,
   totalCost,
   costLabel,
   requirements,
@@ -92,6 +93,7 @@ export function GridListRowExpandedBody({
         selectable && 'mr-10',
         isRowClickable && 'cursor-pointer',
       )}
+      onPointerDown={isRowClickable ? handleExpandedPointerDown : undefined}
       onClick={isRowClickable ? handleRowBodyClickWithGuard : undefined}
     >
       {/* Custom expanded content takes precedence */}
@@ -137,41 +139,6 @@ export function GridListRowExpandedBody({
             </div>
           )}
 
-          {/* Column facts (collapsed header when row is closed; body when expanded — TASK-868/898) */}
-          {gridColumns && expandedBodyStatColumns.length > 0 && (
-            <div className="mb-4 flex flex-col gap-3 text-sm min-[480px]:grid min-[480px]:grid-cols-2 min-[480px]:gap-x-4 min-[480px]:gap-y-2">
-              {expandedBodyStatColumns.map((col) => {
-                const interactive = columnHasInteractiveValue(col);
-                return (
-                  <div
-                    key={col.key}
-                    className={cn(
-                      'min-w-0',
-                      interactive
-                        ? 'flex flex-col gap-1 min-[480px]:col-span-2'
-                        : 'flex min-w-0 items-center gap-2',
-                    )}
-                  >
-                    <span className="shrink-0 text-text-muted">{columnDisplayLabel(col)}:</span>
-                    {interactive ? (
-                      <div className="min-w-0">{col.value}</div>
-                    ) : (
-                      <span
-                        className={cn(
-                          'min-w-0 font-medium text-text-primary',
-                          col.highlight && 'text-primary-link-fg',
-                          col.className,
-                        )}
-                      >
-                        {col.value}
-                      </span>
-                    )}
-                  </div>
-                );
-              })}
-            </div>
-          )}
-
           {/* Total Cost */}
           {totalCost !== undefined && totalCost > 0 && (
             <div className="mb-4 flex items-center gap-2">
@@ -196,9 +163,16 @@ export function GridListRowExpandedBody({
             const sectionKey = `detail-${sectionIdx}`;
             const sectionOpen = collapsible ? (openDetailSections[sectionKey] ?? false) : true;
             const helpKey = section.labelHelpKey ?? helpKeyForPartsOrPropertiesLabel(section.label);
-            const helpContent = helpKey ? partsPropertiesHelpContent(helpKey) : null;
+            const helpContent = helpKey
+              ? partsPropertiesHelpContent(helpKey)
+              : section.labelHelp || null;
             return (
               <div key={sectionIdx} className={cn('space-y-3', sectionIdx > 0 && 'mt-4')}>
+                {section.liveAnnouncement ? (
+                  <span className="sr-only" aria-live="polite">
+                    {section.liveAnnouncement}
+                  </span>
+                ) : null}
                 {showLabel && (
                   <DetailSectionLabel
                     label={section.label}
@@ -219,7 +193,7 @@ export function GridListRowExpandedBody({
                       const index = sectionOffset + chipIdx;
                       return (
                         <GridListChip
-                          key={`${chip.name}-${chip.category ?? 'default'}-${chipIdx}`}
+                          key={gridListChipReactKey(chip, chipIdx)}
                           chip={chip}
                           costLabel={costLabel}
                           expanded={expandedChipIndex === index}
@@ -292,13 +266,15 @@ export function GridListRowExpandedBody({
 interface GridListRowMobileSummaryProps {
   mobileSummaryColumns: ColumnValue[];
   isRowClickable: boolean;
+  handleExpandedPointerDown: (e: PointerEvent) => void;
   handleRowBodyClickWithGuard: (e: MouseEvent) => void;
 }
 
-/** Mobile summary — stats hidden from the collapsed grid; omitted while expanded (body owns them). */
+/** Mobile summary — glance facts stay here below `lg` even while the row is expanded. */
 export function GridListRowMobileSummary({
   mobileSummaryColumns,
   isRowClickable,
+  handleExpandedPointerDown,
   handleRowBodyClickWithGuard,
 }: GridListRowMobileSummaryProps) {
   return (
@@ -307,29 +283,17 @@ export function GridListRowMobileSummary({
         'flex flex-wrap gap-2 px-4 pb-2 text-xs text-text-secondary lg:hidden',
         isRowClickable && 'cursor-pointer',
       )}
+      onPointerDown={isRowClickable ? handleExpandedPointerDown : undefined}
       onClick={isRowClickable ? handleRowBodyClickWithGuard : undefined}
     >
-      {mobileSummaryColumns.map((col) =>
-        col.key === 'description' ? (
-          <div
-            key={col.key}
-            className={cn(
-              'w-full min-w-0 text-text-secondary',
-              col.className,
-              col.highlight && 'font-medium text-primary-link-fg',
-            )}
-          >
+      {mobileSummaryColumns.map((col) => (
+        <span key={col.key} className="flex items-center gap-1">
+          <span className="text-text-muted">{columnDisplayLabel(col)}:</span>
+          <span className={cn(col.highlight && 'font-medium text-primary-link-fg')}>
             {col.value}
-          </div>
-        ) : (
-          <span key={col.key} className="flex items-center gap-1">
-            <span className="text-text-muted">{columnDisplayLabel(col)}:</span>
-            <span className={cn(col.highlight && 'font-medium text-primary-link-fg')}>
-              {col.value}
-            </span>
           </span>
-        ),
-      )}
+        </span>
+      ))}
     </div>
   );
 }

@@ -35,10 +35,23 @@ export function creatureSkillsToAllocations(
   codexSkills: Skill[],
 ): Record<string, number> {
   const allocations: Record<string, number> = {};
+  const presentIds = new Set(
+    skills.map((skill) => {
+      const codex = resolveCodexSkill(skill, codexSkills);
+      return codex ? String(codex.id) : String(skill.id ?? skill.name);
+    }),
+  );
   for (const skill of skills) {
     const codex = resolveCodexSkill(skill, codexSkills);
     const key = codex ? String(codex.id) : String(skill.name);
     const isSub = isSubSkillEntry(skill, codex);
+    const parentId =
+      codex?.base_skill_id != null && Number(codex.base_skill_id) !== 0
+        ? String(codex.base_skill_id)
+        : skill.baseSkillId != null && skill.baseSkillId !== '' && Number(skill.baseSkillId) !== 0
+          ? String(skill.baseSkillId)
+          : undefined;
+    if (isSub && parentId && !presentIds.has(parentId)) continue;
     if (isSub) {
       allocations[key] = Math.max(1, skill.value);
     } else if (skill.proficient !== false) {

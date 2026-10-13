@@ -189,7 +189,7 @@ describe('GLR fact catalog — surface column configs (ADR-0016)', () => {
   it('character-sheet equipment play columns satisfy catalog bindings (TASK-873)', () => {
     const keys = headerKeys(CHARACTER_SHEET_EQUIPMENT_COLUMNS);
     expect(keys).not.toContain('type');
-    expect(keys).toEqual(['description', 'category', 'currency', 'rarity', 'quantity']);
+    expect(keys).toEqual(['category', 'currency', 'rarity', 'quantity']);
     assertSurfaceColumnConfig('character-sheet-gear', keys);
   });
 
@@ -503,7 +503,6 @@ describe('GLR fact catalog — row coverage (ADR-0016)', () => {
     expect(columnValueKeys(row.columns ?? [])).not.toContain('tp');
     expect(columnValueKeys(row.columns ?? [])).not.toContain('type');
     expect(columnValueKeys(row.columns ?? [])).toEqual([
-      'description',
       'category',
       'currency',
       'rarity',

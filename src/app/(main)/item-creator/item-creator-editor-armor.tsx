@@ -47,6 +47,7 @@ export function ItemCreatorEditorArmor({
             min={0}
             max={10}
             size="lg"
+            label="Damage reduction"
           />
           <p className="mt-1 text-xs text-text-muted">Reduces physical damage taken</p>
         </div>
@@ -66,6 +67,7 @@ export function ItemCreatorEditorArmor({
             min={0}
             max={6}
             size="lg"
+            label="Agility reduction"
           />
           <p className="mt-1 text-xs text-text-muted">Reduces Agility for wearing this armor</p>
         </div>
@@ -87,6 +89,7 @@ export function ItemCreatorEditorArmor({
             min={0}
             max={6}
             size="lg"
+            label="Critical range increase"
           />
           <p className="mt-1 text-xs text-text-muted">Increases critical hit range</p>
         </div>

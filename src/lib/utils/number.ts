@@ -29,12 +29,28 @@ export function formatSpeedForDisplay(
     case 'meters':
       return { value: spaces * 1.5, suffix: 'm' };
     default:
-      // No suffix for spaces — it's the default unit and implied
-      return { value: spaces, suffix: '' };
+      return { value: spaces, suffix: 'sp' };
   }
 }
 
-/** Format speed as a single string (e.g. "60 ft", "9 m", or "6" for spaces). */
+/** Speed temp modifiers are always stored and stepped in spaces (ADR / DECISIONS). */
+export const SPEED_TEMP_MODIFIER_STEP_SPACES = 1;
+
+/** Label for speed temp stepper (always spaces, even when speed displays as ft/m). */
+export function formatSpeedTempModifierDelta(
+  deltaSpaces: number,
+  deltaFormat: 'temp-label' | 'signed' = 'temp-label',
+): string {
+  const signed =
+    deltaFormat === 'signed'
+      ? deltaSpaces >= 0
+        ? `+${deltaSpaces}`
+        : String(deltaSpaces)
+      : `Temp: ${deltaSpaces >= 0 ? `+${deltaSpaces}` : deltaSpaces}`;
+  return `${signed} sp`;
+}
+
+/** Format speed as a single string (e.g. "6 sp", "60 ft", "9 m"). */
 export function formatSpeedString(spaces: number, unit: SpeedDisplayUnit = 'spaces'): string {
   const { value, suffix } = formatSpeedForDisplay(spaces, unit);
   const displayValue =

@@ -34,16 +34,23 @@ import {
   CreatorSummaryPanel,
 } from '@/components/creator';
 import { SourceFilter, sourceFilterSummary } from '@/components/patterns/filters/source-filter';
-import { SegmentedControl } from '@/components/patterns';
+import { ConfirmActionModal, SegmentedControl } from '@/components/patterns';
 import { useAuthStore } from '@/stores';
 import {
   bootstrapItemCreatorFormState,
+  parseItemCreatorTypeParam,
+  type ArmamentType,
   type ItemCreatorFormState,
   type ItemLibraryRecord,
 } from './item-creator-bootstrap';
 import { ItemCreatorEditor } from './item-creator-editor';
 import { RarityReferenceTable } from './item-creator-helpers';
 import { useItemCreatorWorkspace } from './use-item-creator-workspace';
+import {
+  creatorEditReplacesDraft,
+  findLoadedLibraryItem,
+  resolveCreatorSaveTargetFromItem,
+} from '@/lib/library/catalog-listing';
 import { formatCost } from '@/lib/game/creator-constants';
 import { rarityChipVariant } from '@/lib/chip/rarity-chip-variant';
 
@@ -52,11 +59,14 @@ function ItemCreatorContent() {
   const { isAdmin } = useAdmin();
   const searchParams = useSearchParams();
   const editItemId = searchParams.get('edit');
+  const requestedType = editItemId ? null : parseItemCreatorTypeParam(searchParams.get('type'));
   const [loadKind, setLoadKind] = useState<LoadModalArmamentKind>('weapon');
   const load = useLoadModalLibrary('item', { itemKind: loadKind });
 
   const { data: itemProperties = [], isLoading, error, refetch } = useItemProperties();
 
+  // Stable across ?type= changes. Remounting on the query would rebuild an empty
+  // form and autosave it over a different-type draft. The workspace warns instead.
   const sessionKey = editItemId ?? 'draft';
   // Settle when the properties query finishes (empty/error OK — shell chrome must
   // still render for chrome audits / secret-less CI). In ?edit= mode also wait for library.
@@ -69,13 +79,16 @@ function ItemCreatorContent() {
     form: ItemCreatorFormState;
   } | null>(null);
   if (bootstrapReady && bootstrapState?.key !== sessionKey) {
+    const form = bootstrapItemCreatorFormState({
+      editItemId,
+      itemProperties,
+      rawItems: load.rawItems,
+      requestedType,
+    });
+    setLoadKind(form.armamentType.toLowerCase() as LoadModalArmamentKind);
     setBootstrapState({
       key: sessionKey,
-      form: bootstrapItemCreatorFormState({
-        editItemId,
-        itemProperties,
-        rawItems: load.rawItems,
-      }),
+      form,
     });
   }
   const initialFormState = bootstrapState?.key === sessionKey ? bootstrapState.form : null;
@@ -93,6 +106,8 @@ function ItemCreatorContent() {
       key={sessionKey}
       initialFormState={initialFormState}
       editItemId={editItemId}
+      editReplacesDraft={creatorEditReplacesDraft(editItemId, load.rawItems)}
+      requestedType={requestedType}
       user={user}
       isAdmin={isAdmin}
       itemProperties={itemProperties}
@@ -109,6 +124,8 @@ function ItemCreatorContent() {
 interface ItemCreatorWorkspaceProps {
   initialFormState: ItemCreatorFormState;
   editItemId: string | null;
+  editReplacesDraft: boolean;
+  requestedType: ArmamentType | null;
   user: ReturnType<typeof useAuthStore.getState>['user'];
   isAdmin: boolean;
   itemProperties: ItemProperty[];
@@ -123,6 +140,8 @@ interface ItemCreatorWorkspaceProps {
 function ItemCreatorWorkspace({
   initialFormState,
   editItemId,
+  editReplacesDraft,
+  requestedType,
   user,
   isAdmin,
   itemProperties,
@@ -136,8 +155,14 @@ function ItemCreatorWorkspace({
   const ws = useItemCreatorWorkspace({
     initialFormState,
     editItemId,
+    editReplacesDraft,
+    requestedType,
     itemProperties,
     closeLoadModal: load.closeLoadModal,
+    initialSaveTarget: resolveCreatorSaveTargetFromItem(
+      findLoadedLibraryItem(load.rawItems, editItemId),
+      { canSaveToOfficial: isAdmin },
+    ),
   });
 
   return (
@@ -147,12 +172,14 @@ function ItemCreatorWorkspace({
       description="Design custom weapons, armor, and shields by combining item properties. Properties determine the item's rarity and cost."
       user={user}
       auth={{ returnPath: '/item-creator', contentType: 'armament' }}
-      showPublicPrivate={isAdmin}
+      showSaveTarget={isAdmin}
       saveTarget={ws.save.saveTarget}
       onSaveTargetChange={ws.save.setSaveTarget}
       onSave={ws.save.handleSave}
       onLoad={load.openLoadModal}
       onReset={ws.handleReset}
+      unsavedDirty={ws.unsavedDirty}
+      onDiscardLocalDraft={ws.discardLocalDraft}
       saving={ws.save.saving}
       saveDisabled={!ws.name.trim()}
       loading={{
@@ -169,6 +196,7 @@ function ItemCreatorWorkspace({
         onClose: () => ws.save.setShowPublishConfirm(false),
         onConfirm: () => ws.save.confirmPublish(),
         title: ws.save.publishConfirmTitle,
+        confirmLabel: ws.save.publishConfirmLabel,
         description:
           ws.save.publishConfirmDescription?.(ws.name.trim(), {
             existingInPublic: ws.save.publishExistingInPublic,
@@ -280,12 +308,28 @@ function ItemCreatorWorkspace({
             }
           >
             <AdvancedCalculationsPanel
-              rows={ws.advancedCalcRows}
-              ruleText="Rule: Final currency = base cost for rarity × (1 + 0.125 × C)."
+              groups={ws.advancedCalcGroups}
+              ruleText="Rule: Final currency = base cost for rarity × (1 + 0.125 × C), then rounded down. Training Points are not shown in this panel."
             />
           </CreatorSummaryPanel>
           <RarityReferenceTable currentIP={ws.costs.totalIP} />
         </>
+      }
+      extraModals={
+        <ConfirmActionModal
+          isOpen={ws.typeQueryConflict != null}
+          title="Discard unsaved draft?"
+          description={
+            ws.typeQueryConflict
+              ? `This ${ws.armamentType} draft has unsaved work. Opening ${ws.typeQueryConflict} will discard it.`
+              : ''
+          }
+          confirmLabel="Discard draft"
+          cancelLabel="Keep draft"
+          confirmVariant="danger"
+          onConfirm={ws.discardDraft}
+          onClose={ws.keepDraft}
+        />
       }
     >
       <ItemCreatorEditor
@@ -305,9 +349,12 @@ function ItemCreatorWorkspace({
         onArmamentTypeChange={ws.changeArmamentType}
         isTwoHanded={ws.isTwoHanded}
         onIsTwoHandedChange={ws.setIsTwoHanded}
-        rangeLevel={ws.rangeLevel}
-        onRangeLevelChange={ws.setRangeLevel}
-        rangeDisplay={ws.rangeDisplay}
+        rangeType={ws.rangeType}
+        onRangeTypeChange={ws.changeRangeType}
+        rangeSpaces={ws.rangeSpaces}
+        onRangeSpacesChange={ws.setRangeSpaces}
+        attackAbility={ws.attackAbility}
+        onAttackAbilityChange={ws.changeAttackAbility}
         weaponShieldConfigSummary={ws.weaponShieldConfigSummary}
         damage={ws.damage}
         onDamageChange={ws.setDamage}

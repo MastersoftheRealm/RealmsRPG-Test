@@ -100,6 +100,96 @@ describe('official-item-list armament kinds', () => {
     expect(cols.find((c) => c.key === 'criticalRangeIncrease')?.value).toBe('+1');
   });
 
+  it('shield damage column reads stored dice when there is no Shield Damage property (86e3jwwrt)', () => {
+    const rows = buildOfficialItemRows(
+      [
+        item({
+          id: 's-dmg',
+          name: 'Buckler',
+          type: 'shield',
+          shieldDamage: { amount: 1, size: 4 },
+          properties: [{ id: 39, name: 'Shield Amount', op_1_lvl: 0 }],
+        }),
+      ],
+      propertiesDb,
+      'shield',
+    );
+    expect(rows[0]?.damage).toBe('1d4 Bludgeoning');
+    expect(armamentRowColumns(rows[0]!, 'shield').find((c) => c.key === 'damage')?.value).toBe(
+      '1d4 Bludgeoning',
+    );
+  });
+
+  it('shows a saved shieldDamage die instead of the property ladder (86e3jwwrt)', () => {
+    const rows = buildOfficialItemRows(
+      [
+        item({
+          id: 'saved-2d4',
+          name: 'Tower Shield',
+          type: 'shield',
+          shieldDamage: { amount: 2, size: 4 },
+          properties: [
+            { id: 39, name: 'Shield Amount', op_1_lvl: 0 },
+            { id: 40, name: 'Shield Damage', op_1_lvl: 2 },
+          ],
+        }),
+        item({
+          id: 'saved-1d10',
+          name: 'Great Shield',
+          type: 'shield',
+          shieldDamage: { amount: 1, size: 10 },
+          properties: [{ id: 40, name: 'Shield Damage', op_1_lvl: 3 }],
+        }),
+        item({
+          id: 'property-only',
+          name: 'Old Shield',
+          type: 'shield',
+          properties: [{ id: 40, name: 'Shield Damage', op_1_lvl: 2 }],
+        }),
+      ],
+      propertiesDb,
+      'shield',
+    );
+    expect(rows.find((row) => row.id === 'saved-2d4')?.damage).toBe('2d4 Bludgeoning');
+    expect(rows.find((row) => row.id === 'saved-1d10')?.damage).toBe('1d10 Bludgeoning');
+    expect(rows.find((row) => row.id === 'property-only')?.damage).toBe('1d8 Bludgeoning');
+  });
+
+  it('hides a leftover shield damage die when shield damage is off (86e3mmnz5)', () => {
+    const rows = buildOfficialItemRows(
+      [
+        item({
+          id: 'damage-off',
+          name: 'Buckler',
+          type: 'shield',
+          hasShieldDamage: false,
+          shieldDamage: { amount: 1, size: 6 },
+          properties: [{ id: 39, name: 'Shield Amount', op_1_lvl: 0 }],
+        }),
+        item({
+          id: 'damage-on',
+          name: 'Spiked Shield',
+          type: 'shield',
+          hasShieldDamage: true,
+          shieldDamage: { amount: 2, size: 4 },
+          properties: [
+            { id: 39, name: 'Shield Amount', op_1_lvl: 0 },
+            { id: 40, name: 'Shield Damage', op_1_lvl: 2 },
+          ],
+        }),
+      ],
+      propertiesDb,
+      'shield',
+    );
+    expect(rows.find((row) => row.id === 'damage-off')?.damage).toBe('-');
+    expect(
+      armamentRowColumns(rows.find((row) => row.id === 'damage-off')!, 'shield').find(
+        (column) => column.key === 'damage',
+      )?.value,
+    ).toBe('-');
+    expect(rows.find((row) => row.id === 'damage-on')?.damage).toBe('2d4 Bludgeoning');
+  });
+
   it('shield rows expose block and damage columns', () => {
     const rows = buildOfficialItemRows(catalog, propertiesDb, 'shield');
     const row = rows[0]!;

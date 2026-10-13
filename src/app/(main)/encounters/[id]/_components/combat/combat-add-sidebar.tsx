@@ -40,7 +40,7 @@ export function CombatAddSidebar({
   onAddCombatant,
 }: CombatAddSidebarProps) {
   return (
-    <div className="flex min-h-0 flex-col space-y-6">
+    <div className="flex min-h-0 min-w-0 flex-col space-y-6">
       <Card className="flex-shrink-0 p-6 shadow-md">
         <h2 className="mb-4 text-lg font-bold text-text-primary">Add Combatant</h2>
         <div className="mb-4 space-y-2">
@@ -94,7 +94,7 @@ export function CombatAddSidebar({
             onChange={(e) => setNewCombatant((prev) => ({ ...prev, name: e.target.value }))}
             placeholder="Creature name..."
           />
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid min-w-0 grid-cols-2 gap-3">
             <Input
               label="Roll"
               type="number"
@@ -120,7 +120,7 @@ export function CombatAddSidebar({
               placeholder="Acuity"
             />
           </div>
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid min-w-0 grid-cols-2 gap-3">
             <Input
               label="Max HP"
               type="number"

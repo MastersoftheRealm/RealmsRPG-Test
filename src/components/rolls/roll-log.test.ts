@@ -25,6 +25,12 @@ describe('RollLog bonus source hover (TASK-893)', () => {
   });
 });
 
+describe('RollLog truncated titles (86e3kfkc1)', () => {
+  it('exposes the full roll title on hover when the line truncates', () => {
+    expect(source).toContain('title={roll.title}');
+  });
+});
+
 describe('RollLog outside click (TASK-895)', () => {
   it('closes on pointerdown outside and ignores roll triggers', () => {
     expect(source).toContain('pointerdown');

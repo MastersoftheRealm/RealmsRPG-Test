@@ -3,10 +3,25 @@ import type { PowerPart } from '@/hooks/codex-types';
 import { PART_IDS } from '@/lib/id-constants';
 import { buildMechanicParts, calculateDamageOptionLevel } from './mechanic-builder';
 import {
+  analyzePowerEnergy,
   calculatePowerCosts,
   calculatePowerSectionContribution,
+  deriveDuration,
   derivePowerDisplay,
+  deriveStructuredDuration,
+  finalizePowerEnergy,
+  formatEnergyStat,
+  formatPowerDamage,
 } from './power-calc';
+import { calculateTechniqueCosts } from './technique-calc';
+import { calculateEmpoweredTechniqueCosts } from './empowered-technique-calc';
+import { buildPowerAdvancedCalculationGroups } from './power-energy-breakdown';
+import { snapshotParts } from './power-composition.fixture';
+import {
+  POWER_AUTO_MECHANIC_PART_NAMES,
+  POWER_CALC_SECTION_BY_NAME,
+} from './power-mechanic-constants';
+import type { TechniquePart } from '@/hooks/codex-types';
 
 const elementalDamagePart: PowerPart = {
   id: String(PART_IDS.ELEMENTAL_DAMAGE),
@@ -121,10 +136,10 @@ describe('calculatePowerCosts', () => {
     const costs = calculatePowerCosts(payload, [elementalDamagePart]);
     // 1d6 -> opt1 level 1 -> 3 base + 1 option = 4 EN per row, 3 rows = 12
     expect(costs.totalEnergy).toBe(12);
-    // T6 / M6 — GAME_RULES "Rounding": floor each part, then sum.
-    // Each Elemental Damage row is base_tp 2 + op_1_tp 0.5 × 1 = 2.5 → floor 2.
-    // Three parts → 6. Do not ceil the combined 7.5 to 8.
-    expect(costs.totalTP).toBe(6);
+    // GAME_RULES "Rounding": one ceil of the instance sum.
+    // Each Elemental Damage row is ceil(2 + 0.5) = 3.
+    // Three parts → 9. Do not ceil the combined 7.5 to 8.
+    expect(costs.totalTP).toBe(9);
     expect(costs.totalTP).not.toBe(8);
   });
 
@@ -150,6 +165,250 @@ describe('calculatePowerCosts', () => {
     // elemental 4 EN + magic 4 EN = 8
     expect(costs.totalEnergy).toBe(8);
   });
+
+  it('counts catalog Split Damage Dice on damage and keeps it out of Mechanics (86e3jwt66)', () => {
+    const splitPart: PowerPart = {
+      id: String(PART_IDS.POWER_SPLIT_DAMAGE_DICE),
+      name: 'Split Damage Dice',
+      description: 'Split damage dice',
+      category: 'General',
+      mechanic: true,
+      base_en: 0.5,
+      base_tp: 0,
+      op_1_en: 0.5,
+      op_1_tp: 0,
+      percentage: false,
+      duration: false,
+    };
+    const mechanicParts = buildMechanicParts({
+      creatorType: 'power',
+      partsDb: [elementalDamagePart, splitPart],
+      powerDamage: [{ type: 'fire', diceAmount: 2, dieSize: 6 }],
+    });
+    const splitRow = mechanicParts.find(
+      (part) => String(part.id) === String(PART_IDS.POWER_SPLIT_DAMAGE_DICE),
+    );
+    expect(splitRow?.name).toBe('Split Damage Dice');
+    expect(POWER_AUTO_MECHANIC_PART_NAMES.has(splitRow?.name ?? '')).toBe(true);
+    expect(POWER_CALC_SECTION_BY_NAME[splitRow?.name ?? '']).toBe('damage');
+
+    const toPayload = (part: (typeof mechanicParts)[number]) => ({
+      id: part.id,
+      name: part.name,
+      op_1_lvl: part.op_1_lvl,
+      op_2_lvl: part.op_2_lvl,
+      op_3_lvl: part.op_3_lvl,
+    });
+    const damageRows = mechanicParts.filter((part) =>
+      ['Elemental Damage', 'Split Damage Dice', 'Power Split Damage Dice'].includes(part.name),
+    );
+    const withSplit = calculatePowerCosts(damageRows.map(toPayload), [
+      elementalDamagePart,
+      splitPart,
+    ]);
+    const withoutSplit = calculatePowerCosts(
+      mechanicParts.filter((part) => part.name === 'Elemental Damage').map(toPayload),
+      [elementalDamagePart, splitPart],
+    );
+    expect(withSplit.energyRaw).toBe(withoutSplit.energyRaw + 0.5);
+  });
+});
+
+describe('1-round duration modifiers (86e3jrhtq)', () => {
+  const flatPart: PowerPart = {
+    id: '9100',
+    name: 'Flat Part',
+    description: 'Flat part',
+    category: 'General',
+    mechanic: false,
+    base_en: 10,
+    base_tp: 0,
+    percentage: false,
+    duration: false,
+  };
+  const durationRound: PowerPart = {
+    id: String(PART_IDS.DURATION_ROUND),
+    name: 'Duration (Round)',
+    description: 'Duration (Round)',
+    category: 'Duration',
+    mechanic: true,
+    base_en: 2,
+    base_tp: 0,
+    percentage: false,
+    duration: true,
+  };
+  const focusPart: PowerPart = {
+    id: String(PART_IDS.DURATION_FOCUS),
+    name: 'Focus for Duration',
+    description: 'Focus for Duration',
+    category: 'Duration',
+    mechanic: true,
+    base_en: 0.5,
+    base_tp: 0,
+    percentage: false,
+    duration: true,
+  };
+  const noHarmPart: PowerPart = {
+    id: String(PART_IDS.DURATION_NO_HARM),
+    name: 'No Harm or Adaptation for Duration',
+    description: 'No Harm or Adaptation for Duration',
+    category: 'Duration',
+    mechanic: true,
+    base_en: 0.5,
+    base_tp: 0,
+    percentage: false,
+    duration: true,
+  };
+  const endsPart: PowerPart = {
+    id: String(PART_IDS.DURATION_ENDS_ON_ACTIVATION),
+    name: 'Duration Ends On Activation',
+    description: 'Duration Ends On Activation',
+    category: 'Duration',
+    mechanic: true,
+    base_en: 0.5,
+    base_tp: 0,
+    percentage: false,
+    duration: true,
+  };
+  const sustainPart: PowerPart = {
+    id: String(PART_IDS.DURATION_SUSTAIN),
+    name: 'Sustain for Duration',
+    description: 'Sustain for Duration',
+    category: 'Duration',
+    mechanic: true,
+    base_en: 0.75,
+    base_tp: 0,
+    percentage: false,
+    duration: true,
+  };
+  const partsDb = [flatPart, durationRound, focusPart, noHarmPart, endsPart, sustainPart];
+
+  function display(duration: {
+    type: 'rounds' | 'instant';
+    value: number;
+    focus?: boolean;
+    noHarm?: boolean;
+    endsOnActivation?: boolean;
+    sustain?: number;
+  }) {
+    return derivePowerDisplay(
+      {
+        name: 'Held',
+        actionType: 'basic',
+        parts: [{ id: Number(flatPart.id), name: flatPart.name, applyDuration: true }],
+        duration,
+      },
+      partsDb,
+    );
+  }
+
+  it('does not add Energy when a 1-round power still has duration modifiers', () => {
+    const plain = display({ type: 'rounds', value: 1 });
+    const withModifiers = display({
+      type: 'rounds',
+      value: 1,
+      focus: true,
+      noHarm: true,
+      endsOnActivation: true,
+      sustain: 1,
+    });
+    const instant = display({ type: 'instant', value: 1, focus: true, sustain: 1 });
+
+    expect(plain.energy).toBe(10);
+    expect(withModifiers.energy).toBe(10);
+    expect(instant.energy).toBe(10);
+    expect(withModifiers.partChips.some((chip) => chip.text.includes('Focus for Duration'))).toBe(
+      false,
+    );
+  });
+
+  it('still prices duration modifiers when the duration is longer than 1 round', () => {
+    const parts = buildMechanicParts({
+      creatorType: 'power',
+      partsDb,
+      duration: {
+        type: 'rounds',
+        value: 2,
+        focus: true,
+        noHarm: true,
+        endsOnActivation: true,
+        sustain: 1,
+      },
+    });
+    const names = parts.map((part) => part.name);
+    expect(names).toContain('Duration (Round)');
+    expect(names).toContain('Focus for Duration');
+    expect(names).toContain('No Harm or Adaptation for Duration');
+    expect(names).toContain('Duration Ends On Activation');
+    expect(names).toContain('Sustain for Duration');
+
+    const longer = display({ type: 'rounds', value: 2, focus: true });
+    const longerPlain = display({ type: 'rounds', value: 2 });
+    // Existing equation: dur_all 2 without Focus is 30; Focus × 0.5 makes dur_all 1, so 20.
+    expect(longerPlain.energy).toBe(30);
+    expect(longer.energy).toBe(20);
+  });
+});
+
+describe('day duration labels (86e3jrhvb)', () => {
+  const durationDays: PowerPart = {
+    id: String(PART_IDS.DURATION_DAYS),
+    name: 'Duration (Days)',
+    description: 'Duration (Days)',
+    category: 'Duration',
+    mechanic: true,
+    base_en: 8,
+    base_tp: 0,
+    percentage: false,
+    duration: true,
+  };
+
+  function dayParts(value: number) {
+    return buildMechanicParts({
+      creatorType: 'power',
+      partsDb: [durationDays],
+      duration: { type: 'days', value },
+    });
+  }
+
+  it('shows 7 Days and 14 Days, and 1 Day stays 1 Day', () => {
+    const one = dayParts(1);
+    const seven = dayParts(7);
+    const fourteen = dayParts(14);
+
+    expect(deriveDuration(one)).toBe('1 Day');
+    expect(deriveDuration(seven)).toBe('7 Days');
+    expect(deriveDuration(fourteen)).toBe('14 Days');
+    expect(deriveStructuredDuration(one)).toEqual({ type: 'days', value: 1 });
+    expect(deriveStructuredDuration(seven)).toEqual({ type: 'days', value: 7 });
+    expect(deriveStructuredDuration(fourteen)).toEqual({ type: 'days', value: 14 });
+  });
+
+  it('uses those labels for a library power that has no stored duration', () => {
+    const seven = dayParts(7)[0];
+    const fourteen = dayParts(14)[0];
+    if (!seven || !fourteen) throw new Error('missing day part');
+    expect(seven.op_1_lvl).toBe(1);
+    expect(fourteen.op_1_lvl).toBe(2);
+
+    const sevenDisplay = derivePowerDisplay(
+      {
+        name: 'Day power',
+        parts: [{ id: Number(seven.id), name: seven.name, op_1_lvl: seven.op_1_lvl }],
+      },
+      [durationDays],
+    );
+    const fourteenDisplay = derivePowerDisplay(
+      {
+        name: 'Day power',
+        parts: [{ id: Number(fourteen.id), name: fourteen.name, op_1_lvl: fourteen.op_1_lvl }],
+      },
+      [durationDays],
+    );
+
+    expect(sevenDisplay.duration).toBe('7 Days');
+    expect(fourteenDisplay.duration).toBe('14 Days');
+  });
 });
 
 describe('derivePowerDisplay', () => {
@@ -168,7 +427,7 @@ describe('derivePowerDisplay', () => {
     );
 
     expect(display.energy).toBe(12);
-    expect(display.tp).toBe(6);
+    expect(display.tp).toBe(9);
   });
 
   it('dedupes mechanic parts when promoted columns and payload.parts both exist (Menace)', () => {
@@ -305,6 +564,247 @@ describe('derivePowerDisplay', () => {
     expect(withoutApply.energy).toBe(4);
     // dur_all = 2, flat_normal = 4, flat_duration = 4 → 4 + 2*4 = 12
     expect(withApply.energy).toBe(12);
+  });
+
+  it('rebuilds Weapon Attack so the library cost matches the creator (86e3jpq1x)', () => {
+    // Codex rows: Attack / Potency Increase is a 1.125 multiplier (2 TP).
+    // Add Weapon to Power is 4.5 Energy and 1 TP, flat, no option levels.
+    // 4.5 × 1.125 = 5.0625, rounded up once → 6 EN. Training Points 2 + 1 = 3.
+    const potency: PowerPart = {
+      id: '79',
+      name: 'Attack / Potency Increase',
+      description: 'Increase the attack roll or potency of this Power by +1.',
+      category: 'General',
+      mechanic: false,
+      base_en: 1.125,
+      base_tp: 2,
+      op_1_en: 0.125,
+      op_1_tp: 0,
+      percentage: true,
+      duration: false,
+    };
+    const addWeapon: PowerPart = {
+      id: String(PART_IDS.ADD_WEAPON_TO_POWER),
+      name: 'Add Weapon to Power',
+      description: 'Weapon Attack',
+      category: 'General',
+      mechanic: true,
+      base_en: 4.5,
+      base_tp: 1,
+      op_1_en: 99,
+      op_1_tp: 9,
+      percentage: false,
+      duration: false,
+    };
+    const partsDb = [potency, addWeapon];
+    const saved = {
+      name: 'Potency Strike',
+      actionType: 'basic',
+      parts: [{ id: 79, name: 'Attack / Potency Increase', op_1_lvl: 0 }],
+    };
+
+    const staleSavedPart = {
+      id: PART_IDS.ADD_WEAPON_TO_POWER,
+      name: 'Add Weapon to Power',
+      op_1_lvl: 2,
+    };
+    const withoutWeapon = derivePowerDisplay(
+      { ...saved, attackMode: 'none', parts: [...saved.parts, staleSavedPart] },
+      partsDb,
+    );
+    expect(withoutWeapon.energy).toBe(0);
+    expect(withoutWeapon.tp).toBe(2);
+
+    const unarmed = derivePowerDisplay({ ...saved, attackMode: 'unarmed' }, partsDb);
+    expect(unarmed.energy).toBe(0);
+    expect(unarmed.tp).toBe(2);
+
+    const weapon = derivePowerDisplay({ ...saved, attackMode: 'weapon' }, partsDb);
+    expect(weapon.energy).toBe(6);
+    expect(weapon.tp).toBe(3);
+
+    const savedPartToo = derivePowerDisplay(
+      {
+        ...saved,
+        attackMode: 'weapon',
+        parts: [
+          ...saved.parts,
+          { id: PART_IDS.ADD_WEAPON_TO_POWER, name: 'Add Weapon to Power', op_1_lvl: 2 },
+        ],
+      },
+      partsDb,
+    );
+    expect(savedPartToo.energy).toBe(6);
+    expect(savedPartToo.tp).toBe(3);
+  });
+});
+
+describe('finalizePowerEnergy', () => {
+  it('rounds positive energy up, and floors only when that energy is reduced below 1', () => {
+    expect(finalizePowerEnergy(0)).toBe(0);
+    expect(finalizePowerEnergy(-30)).toBe(0);
+    expect(finalizePowerEnergy(0.1)).toBe(1);
+    expect(finalizePowerEnergy(8.25)).toBe(9);
+    expect(finalizePowerEnergy(0, false)).toBe(0);
+    expect(finalizePowerEnergy(-2, true)).toBe(1);
+    expect(calculatePowerCosts([], [elementalDamagePart]).totalEnergy).toBe(0);
+    expect(calculatePowerCosts([], [elementalDamagePart]).hasPositiveEnergy).toBe(false);
+  });
+});
+
+describe('zero energy is a dash until positive energy is reduced below 1', () => {
+  const snap = snapshotParts([
+    PART_IDS.POWER_QUICK_OR_FREE_ACTION,
+    PART_IDS.DURATION_MINUTE,
+    PART_IDS.NO_ATTACK,
+    4,
+    PART_IDS.NO_ATTACK,
+  ]);
+  const quick = snap[0] as PowerPart;
+  const duration = snap[1] as PowerPart;
+  const noAttack = snap[2] as PowerPart;
+  const quickTech = snap[3] as TechniquePart;
+  const noAttackTech = snap[4] as TechniquePart;
+  const zero: PowerPart = {
+    id: '900',
+    name: 'Marker',
+    description: 'Marker',
+    category: 'General',
+    mechanic: false,
+    base_en: 0,
+    base_tp: 0,
+  };
+  const spark: PowerPart = {
+    id: '901',
+    name: 'Spark',
+    description: 'Spark',
+    category: 'Damage',
+    mechanic: false,
+    base_en: 4,
+    base_tp: 0,
+  };
+  const limit: PowerPart = {
+    id: '902',
+    name: 'Limit',
+    description: 'Limit',
+    category: 'General',
+    mechanic: true,
+    percentage: true,
+    base_en: 0.1,
+    base_tp: 0,
+  };
+  const zeroTech: TechniquePart = {
+    id: '903',
+    name: 'Marker',
+    description: 'Marker',
+    category: 'General',
+    base_en: 0,
+    base_tp: 0,
+  };
+
+  function expectDash(energy: number) {
+    expect(energy).toBe(0);
+    expect(formatEnergyStat(energy)).toBe('—');
+  }
+
+  it('shows a dash for no parts, a 0 EN part, quick-only, duration-only, and No Attack only', () => {
+    expectDash(calculatePowerCosts([], []).totalEnergy);
+    expectDash(calculatePowerCosts([{ id: 900, name: 'Marker' }], [zero]).totalEnergy);
+    expectDash(
+      calculatePowerCosts([{ id: PART_IDS.POWER_QUICK_OR_FREE_ACTION, name: quick.name }], [quick])
+        .totalEnergy,
+    );
+    expectDash(
+      calculatePowerCosts([{ id: PART_IDS.DURATION_MINUTE, name: duration.name }], [duration])
+        .totalEnergy,
+    );
+    expectDash(
+      calculatePowerCosts([{ id: PART_IDS.NO_ATTACK, name: noAttack.name }], [noAttack])
+        .totalEnergy,
+    );
+
+    const quickGroups = buildPowerAdvancedCalculationGroups(
+      analyzePowerEnergy([{ id: PART_IDS.POWER_QUICK_OR_FREE_ACTION, name: quick.name }], [quick]),
+    );
+    const energyCost = quickGroups
+      .flatMap((group) => group.rows)
+      .find((row) => row.label === 'Energy Cost');
+    expect(energyCost?.value).toBe('—');
+
+    expectDash(calculateTechniqueCosts([], []).totalEnergy);
+    expectDash(calculateTechniqueCosts([{ id: 903, name: 'Marker' }], [zeroTech]).totalEnergy);
+    expectDash(calculateTechniqueCosts([{ id: 4, name: quickTech.name }], [quickTech]).totalEnergy);
+    expectDash(
+      calculateTechniqueCosts([{ id: PART_IDS.NO_ATTACK, name: noAttackTech.name }], [noAttackTech])
+        .totalEnergy,
+    );
+
+    expectDash(
+      calculateEmpoweredTechniqueCosts({
+        powerPartsPayload: [],
+        techniquePartsPayload: [],
+        powerPartsDb: [],
+        techniquePartsDb: [],
+      }).totalEnergy,
+    );
+    expectDash(
+      calculateEmpoweredTechniqueCosts({
+        powerPartsPayload: [{ id: 900, name: 'Marker' }],
+        techniquePartsPayload: [],
+        powerPartsDb: [zero],
+        techniquePartsDb: [],
+      }).totalEnergy,
+    );
+    expectDash(
+      calculateEmpoweredTechniqueCosts({
+        powerPartsPayload: [{ id: PART_IDS.POWER_QUICK_OR_FREE_ACTION, name: quick.name }],
+        techniquePartsPayload: [],
+        powerPartsDb: [quick],
+        techniquePartsDb: [],
+      }).totalEnergy,
+    );
+    expectDash(
+      calculateEmpoweredTechniqueCosts({
+        powerPartsPayload: [{ id: PART_IDS.DURATION_MINUTE, name: duration.name }],
+        techniquePartsPayload: [],
+        powerPartsDb: [duration],
+        techniquePartsDb: [],
+      }).totalEnergy,
+    );
+    expectDash(
+      calculateEmpoweredTechniqueCosts({
+        powerPartsPayload: [],
+        techniquePartsPayload: [{ id: PART_IDS.NO_ATTACK, name: 'No Attack' }],
+        powerPartsDb: [],
+        techniquePartsDb: [noAttackTech],
+      }).totalEnergy,
+    );
+  });
+
+  it('floors at 1 when a positive cost is reduced below 1', () => {
+    const reduced = calculatePowerCosts(
+      [
+        { id: 901, name: 'Spark' },
+        { id: 902, name: 'Limit' },
+      ],
+      [spark, limit],
+    );
+    expect(reduced.energyRaw).toBeCloseTo(0.4);
+    expect(reduced.hasPositiveEnergy).toBe(true);
+    expect(reduced.totalEnergy).toBe(1);
+    expect(formatEnergyStat(reduced.totalEnergy)).toBe(1);
+  });
+});
+
+describe('formatPowerDamage', () => {
+  it('capitalizes damage types like the plain-power sheet path (86e3kfkc7)', () => {
+    expect(formatPowerDamage([{ amount: 1, size: 8, type: 'fire' }])).toBe('1d8 Fire');
+    expect(
+      formatPowerDamage([
+        { amount: 1, size: 6, type: 'fire' },
+        { amount: 1, size: 8, type: 'ice' },
+      ]),
+    ).toBe('1d6 Fire, 1d8 Ice');
   });
 });
 

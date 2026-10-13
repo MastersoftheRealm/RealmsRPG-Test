@@ -2,6 +2,7 @@
 
 import { cn } from '@/lib/utils';
 import { ValueStepper } from '@/components/patterns';
+import { resourceCurrentValueClass } from '@/lib/character/resource-value-color';
 import type { Combatant } from '@/types/encounter';
 import { getHealthBarColor } from './combatant-card-helpers';
 
@@ -23,6 +24,7 @@ export function CombatantCardResources({
   allowNegativeHealth = false,
   onUpdate,
 }: CombatantCardResourcesProps) {
+  const name = combatant.name;
   const healthMin = allowNegativeHealth ? Number.NEGATIVE_INFINITY : 0;
   const clampHealth = (value: number) => Math.max(healthMin, value);
   const healthPercent =
@@ -32,20 +34,32 @@ export function CombatantCardResources({
 
   if (variant === 'compact') {
     return (
-      <div className="mb-2 flex items-center gap-3">
+      <div className="mb-2 grid min-w-0 grid-cols-1 gap-3 sm:grid-cols-2">
         <div
           className={cn(
-            'flex min-w-0 flex-1 flex-col rounded-lg border p-2',
+            'flex min-w-0 flex-col rounded-lg border p-2',
             'border-health-border bg-health-light',
           )}
         >
           <span className="mb-0.5 text-[10px] font-semibold tracking-wide text-health-text uppercase">
             Health
           </span>
-          <div className="flex items-center gap-1">
+          <div className="flex min-w-0 flex-wrap items-center gap-1">
             {linkedResourcesReadOnly ? (
-              <span className="text-sm font-bold text-health-text" title={linkedResourcesTitle}>
-                {combatant.currentHealth} / {combatant.maxHealth}
+              <span className="text-sm font-bold" title={linkedResourcesTitle}>
+                <span
+                  className={cn(
+                    'text-health-text',
+                    resourceCurrentValueClass(
+                      'health',
+                      combatant.currentHealth,
+                      combatant.maxHealth,
+                    ),
+                  )}
+                >
+                  {combatant.currentHealth}
+                </span>
+                <span className="text-health-text"> / {combatant.maxHealth}</span>
               </span>
             ) : (
               <>
@@ -55,9 +69,15 @@ export function CombatantCardResources({
                   onChange={(e) =>
                     onUpdate({ currentHealth: clampHealth(parseInt(e.target.value, 10) || 0) })
                   }
+                  aria-label={`Current health for ${name}`}
                   className={cn(
-                    'touch-tier-standard w-10 rounded border px-0.5 py-0 text-center text-sm font-bold',
+                    'touch-tier-standard w-10 min-w-0 rounded border px-0.5 py-0 text-center text-sm font-bold',
                     'border-health-border text-health-text',
+                    resourceCurrentValueClass(
+                      'health',
+                      combatant.currentHealth,
+                      combatant.maxHealth,
+                    ),
                   )}
                 />
                 <span className="text-xs text-health-text">/ {combatant.maxHealth}</span>
@@ -70,11 +90,13 @@ export function CombatantCardResources({
                   variant="compact"
                   hideValue
                   enableHoldRepeat
+                  decrementTitle={`Decrease ${name} health`}
+                  incrementTitle={`Increase ${name} health`}
                 />
               </>
             )}
           </div>
-          <div className="relative mt-1 h-1.5 overflow-hidden rounded-full bg-surface">
+          <div className="relative mt-1 h-1.5 min-w-0 overflow-hidden rounded-full bg-surface">
             <div
               className={cn(
                 'absolute inset-y-0 left-0 rounded-full transition-all',
@@ -86,17 +108,29 @@ export function CombatantCardResources({
         </div>
         <div
           className={cn(
-            'flex min-w-0 flex-1 flex-col rounded-lg border p-2',
+            'flex min-w-0 flex-col rounded-lg border p-2',
             'border-energy-border bg-energy-light',
           )}
         >
           <span className="mb-0.5 text-[10px] font-semibold tracking-wide text-energy-text uppercase">
             Energy
           </span>
-          <div className="flex items-center gap-1">
+          <div className="flex min-w-0 flex-wrap items-center gap-1">
             {linkedResourcesReadOnly ? (
-              <span className="text-sm font-bold text-energy-text" title={linkedResourcesTitle}>
-                {combatant.currentEnergy} / {combatant.maxEnergy}
+              <span className="text-sm font-bold" title={linkedResourcesTitle}>
+                <span
+                  className={cn(
+                    'text-energy-text',
+                    resourceCurrentValueClass(
+                      'energy',
+                      combatant.currentEnergy,
+                      combatant.maxEnergy,
+                    ),
+                  )}
+                >
+                  {combatant.currentEnergy}
+                </span>
+                <span className="text-energy-text"> / {combatant.maxEnergy}</span>
               </span>
             ) : (
               <>
@@ -104,7 +138,15 @@ export function CombatantCardResources({
                   type="number"
                   value={combatant.currentEnergy}
                   onChange={(e) => onUpdate({ currentEnergy: parseInt(e.target.value) || 0 })}
-                  className="touch-tier-standard w-10 rounded border border-energy-border px-0.5 py-0 text-center text-sm font-bold text-energy-text"
+                  aria-label={`Current energy for ${name}`}
+                  className={cn(
+                    'touch-tier-standard w-10 min-w-0 rounded border border-energy-border px-0.5 py-0 text-center text-sm font-bold text-energy-text',
+                    resourceCurrentValueClass(
+                      'energy',
+                      combatant.currentEnergy,
+                      combatant.maxEnergy,
+                    ),
+                  )}
                 />
                 <span className="text-xs text-energy-text">/ {combatant.maxEnergy}</span>
                 <ValueStepper
@@ -116,11 +158,13 @@ export function CombatantCardResources({
                   variant="compact"
                   hideValue
                   enableHoldRepeat
+                  decrementTitle={`Decrease ${name} energy`}
+                  incrementTitle={`Increase ${name} energy`}
                 />
               </>
             )}
           </div>
-          <div className="relative mt-1 h-1.5 overflow-hidden rounded-full bg-surface">
+          <div className="relative mt-1 h-1.5 min-w-0 overflow-hidden rounded-full bg-surface">
             <div
               className="absolute inset-y-0 left-0 rounded-full bg-energy transition-all"
               style={{ width: `${Math.max(0, Math.min(100, energyPercent))}%` }}
@@ -137,7 +181,15 @@ export function CombatantCardResources({
         <span className="shrink-0 text-xs font-medium text-health-text">Health</span>
         {linkedResourcesReadOnly ? (
           <span className="text-xs font-medium" title={linkedResourcesTitle}>
-            {combatant.currentHealth} / {combatant.maxHealth}
+            <span
+              className={cn(
+                'text-health-text',
+                resourceCurrentValueClass('health', combatant.currentHealth, combatant.maxHealth),
+              )}
+            >
+              {combatant.currentHealth}
+            </span>
+            {` / ${combatant.maxHealth}`}
           </span>
         ) : (
           <>
@@ -147,11 +199,13 @@ export function CombatantCardResources({
               onChange={(e) =>
                 onUpdate({ currentHealth: clampHealth(parseInt(e.target.value, 10) || 0) })
               }
+              aria-label={`Current health for ${name}`}
               className={cn(
                 'touch-tier-standard w-12 rounded border px-1 py-0.5 text-center text-xs font-medium',
                 combatant.currentHealth <= 0
                   ? 'border-danger-300 bg-danger-light text-danger-fg'
-                  : 'border-border-light',
+                  : 'border-border-light text-health-text',
+                resourceCurrentValueClass('health', combatant.currentHealth, combatant.maxHealth),
               )}
             />
             <span className="text-xs text-text-muted">/</span>
@@ -159,6 +213,7 @@ export function CombatantCardResources({
               type="number"
               value={combatant.maxHealth}
               onChange={(e) => onUpdate({ maxHealth: parseInt(e.target.value) || 1 })}
+              aria-label={`Maximum health for ${name}`}
               className="touch-tier-standard w-12 rounded border border-border-light px-1 py-0.5 text-center text-xs"
             />
             <ValueStepper
@@ -170,6 +225,8 @@ export function CombatantCardResources({
               variant="compact"
               hideValue
               enableHoldRepeat
+              decrementTitle={`Decrease ${name} health`}
+              incrementTitle={`Increase ${name} health`}
             />
           </>
         )}
@@ -188,7 +245,15 @@ export function CombatantCardResources({
         <span className="shrink-0 text-xs font-medium text-energy-text">Energy</span>
         {linkedResourcesReadOnly ? (
           <span className="text-xs font-medium" title={linkedResourcesTitle}>
-            {combatant.currentEnergy} / {combatant.maxEnergy}
+            <span
+              className={cn(
+                'text-energy-text',
+                resourceCurrentValueClass('energy', combatant.currentEnergy, combatant.maxEnergy),
+              )}
+            >
+              {combatant.currentEnergy}
+            </span>
+            {` / ${combatant.maxEnergy}`}
           </span>
         ) : (
           <>
@@ -196,13 +261,18 @@ export function CombatantCardResources({
               type="number"
               value={combatant.currentEnergy}
               onChange={(e) => onUpdate({ currentEnergy: parseInt(e.target.value) || 0 })}
-              className="touch-tier-standard w-12 rounded border border-border-light px-1 py-0.5 text-center text-xs font-medium"
+              aria-label={`Current energy for ${name}`}
+              className={cn(
+                'touch-tier-standard w-12 rounded border border-border-light px-1 py-0.5 text-center text-xs font-medium text-energy-text',
+                resourceCurrentValueClass('energy', combatant.currentEnergy, combatant.maxEnergy),
+              )}
             />
             <span className="text-xs text-text-muted">/</span>
             <input
               type="number"
               value={combatant.maxEnergy}
               onChange={(e) => onUpdate({ maxEnergy: parseInt(e.target.value) || 0 })}
+              aria-label={`Maximum energy for ${name}`}
               className="touch-tier-standard w-12 rounded border border-border-light px-1 py-0.5 text-center text-xs"
             />
             <ValueStepper
@@ -214,6 +284,8 @@ export function CombatantCardResources({
               variant="compact"
               hideValue
               enableHoldRepeat
+              decrementTitle={`Decrease ${name} energy`}
+              incrementTitle={`Increase ${name} energy`}
             />
           </>
         )}

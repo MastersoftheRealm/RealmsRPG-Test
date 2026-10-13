@@ -6,8 +6,10 @@
 
 import type { TechniquePart } from '@/hooks';
 import { CREATOR_CACHE_KEYS } from '@/lib/game/creator-constants';
-import { readCreatorCache } from '@/lib/game/creator-cache';
+import { readNewCreatorDraftCache } from '@/lib/game/creator-cache';
 import { deriveTechniqueAttackMode, normalizeAttackMode, type AttackMode } from '@/lib/attack-mode';
+import { normalizeTargetedDefenses } from '@/lib/game/targeted-defenses';
+import { findByIdOrName } from '@/lib/id-constants';
 
 export const TECHNIQUE_CREATOR_CACHE_KEY = CREATOR_CACHE_KEYS.TECHNIQUE;
 
@@ -41,6 +43,7 @@ export interface TechniqueCreatorCache {
   attackMode: AttackMode;
   imageId?: string | null | undefined;
   imageUrl?: string | null | undefined;
+  targetedDefenses?: string[] | undefined;
   timestamp: number;
 }
 
@@ -54,6 +57,12 @@ export interface TechniqueCreatorFormState {
   attackMode: AttackMode;
   imageId: string | null;
   imageUrl: string | null;
+  targetedDefenses: string[];
+}
+
+/** Automatic combat parts are rebuilt from attack mode, action, and damage. */
+export function isManualTechniquePart(part: { mechanic?: boolean | null | undefined }): boolean {
+  return part.mechanic !== true;
 }
 
 export type TechniqueLibraryRecord = {
@@ -73,7 +82,50 @@ export type TechniqueLibraryRecord = {
   image_id?: string | null | undefined;
   imageUrl?: string | null | undefined;
   image_url?: string | null | undefined;
+  targetedDefenses?: string[] | undefined;
 };
+
+export type TechniqueSavedPart = {
+  id: number | string;
+  name: string;
+  op_1_lvl: number;
+  op_2_lvl: number;
+  op_3_lvl: number;
+};
+
+/**
+ * User-added copies stay in order. Auto mechanics are appended after them and
+ * skipped again on load. Identical parts are not collapsed (86e3jx8wv).
+ */
+export function techniquePartsForSave(
+  selectedParts: TechniqueSelectedPart[],
+  mechanicParts: Array<{
+    id: number | string;
+    name: string;
+    op_1_lvl: number;
+    op_2_lvl: number;
+    op_3_lvl: number;
+  }>,
+): TechniqueSavedPart[] {
+  return [
+    ...selectedParts
+      .filter((sp) => isManualTechniquePart(sp.part))
+      .map((sp) => ({
+        id: Number(sp.part.id),
+        name: sp.part.name,
+        op_1_lvl: sp.op_1_lvl,
+        op_2_lvl: sp.op_2_lvl,
+        op_3_lvl: sp.op_3_lvl,
+      })),
+    ...mechanicParts.map((mp) => ({
+      id: mp.id,
+      name: mp.name,
+      op_1_lvl: mp.op_1_lvl,
+      op_2_lvl: mp.op_2_lvl,
+      op_3_lvl: mp.op_3_lvl,
+    })),
+  ];
+}
 
 export function emptyTechniqueCreatorFormState(): TechniqueCreatorFormState {
   return {
@@ -86,19 +138,20 @@ export function emptyTechniqueCreatorFormState(): TechniqueCreatorFormState {
     attackMode: 'unarmed',
     imageId: null,
     imageUrl: null,
+    targetedDefenses: [],
   };
 }
 
 export function restoreTechniqueCreatorFromCache(
   techniqueParts: TechniquePart[],
 ): TechniqueCreatorFormState | null {
-  const parsed = readCreatorCache<TechniqueCreatorCache>(TECHNIQUE_CREATOR_CACHE_KEY);
+  const parsed = readNewCreatorDraftCache<TechniqueCreatorCache>(TECHNIQUE_CREATOR_CACHE_KEY);
   if (!parsed) return null;
 
   const selectedParts: TechniqueSelectedPart[] = [];
   for (const savedPart of parsed.selectedParts ?? []) {
     const foundPart = techniqueParts.find((p) => String(p.id) === String(savedPart.partId));
-    if (foundPart) {
+    if (foundPart && isManualTechniquePart(foundPart)) {
       selectedParts.push({
         part: foundPart,
         op_1_lvl: savedPart.op_1_lvl,
@@ -119,6 +172,7 @@ export function restoreTechniqueCreatorFromCache(
     attackMode: normalizeAttackMode(parsed.attackMode) ?? 'unarmed',
     imageId: parsed.imageId ?? null,
     imageUrl: parsed.imageUrl ?? null,
+    targetedDefenses: normalizeTargetedDefenses(parsed.targetedDefenses),
   };
 }
 
@@ -138,9 +192,12 @@ export function techniqueLibraryRecordToFormState(
   // action / damage / attack mode and are re-created by buildMechanicParts.
   const loadedParts: TechniqueSelectedPart[] = [];
   for (const savedPart of savedParts) {
-    const matchedPart = techniqueParts.find(
-      (p) => p.id === String(savedPart.id) || p.name === savedPart.name,
-    );
+    // Id first. Brace, Evade, and Defend each exist twice, so a name match
+    // would keep whichever copy is earlier in the catalog (86e3jpq36).
+    const matchedPart = findByIdOrName(techniqueParts, {
+      id: savedPart.id,
+      name: savedPart.name,
+    });
     if (matchedPart && !matchedPart.mechanic) {
       loadedParts.push({
         part: matchedPart,
@@ -190,6 +247,7 @@ export function techniqueLibraryRecordToFormState(
     attackMode,
     imageId: technique.imageId ?? technique.image_id ?? null,
     imageUrl: technique.imageUrl ?? technique.image_url ?? null,
+    targetedDefenses: normalizeTargetedDefenses(technique.targetedDefenses),
   };
 }
 
@@ -205,13 +263,12 @@ export function bootstrapTechniqueCreatorFormState(options: {
       const row = t as { docId?: string | undefined; id?: string | undefined };
       return String(row.docId) === editTechniqueId || String(row.id) === editTechniqueId;
     });
-    if (!techniqueToEdit) {
-      return emptyTechniqueCreatorFormState();
+    if (techniqueToEdit) {
+      return techniqueLibraryRecordToFormState(
+        techniqueToEdit as TechniqueLibraryRecord,
+        techniqueParts,
+      );
     }
-    return techniqueLibraryRecordToFormState(
-      techniqueToEdit as TechniqueLibraryRecord,
-      techniqueParts,
-    );
   }
 
   return restoreTechniqueCreatorFromCache(techniqueParts) ?? emptyTechniqueCreatorFormState();

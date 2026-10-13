@@ -7,115 +7,140 @@ import {
   SectionTitle,
   TextInput,
 } from './core-rules-field-editors';
+import {
+  readConditionsEditor,
+  writeConditionsEditor,
+  type ConditionEditorRow,
+  type ConditionsEditorModel,
+} from './core-rules-conditions';
 
-type ConditionRow = { name: string; leveled: boolean; description: string };
+function ConditionList({
+  rows,
+  kind,
+  emptyLabel,
+  onName,
+  onDescription,
+  onRemove,
+}: {
+  rows: ConditionEditorRow[];
+  kind: 'standard' | 'leveled';
+  emptyLabel: string;
+  onName: (index: number, name: string) => void;
+  onDescription: (index: number, description: string) => void;
+  onRemove: (index: number) => void;
+}) {
+  if (rows.length === 0) {
+    return <p className="text-sm text-text-secondary">{emptyLabel}</p>;
+  }
+
+  const label = kind === 'standard' ? 'Standard' : 'Leveled';
+  return (
+    <div className="space-y-2">
+      {rows.map((row, i) => (
+        <div
+          key={row.key || `${kind}-${i}`}
+          className="flex items-start gap-2 rounded bg-surface-alt p-2"
+        >
+          <input
+            value={row.name}
+            aria-label={`${label} condition ${i + 1} name`}
+            onChange={(e) => onName(i, e.target.value)}
+            className="w-32 rounded border border-border-light bg-surface px-2 py-1 text-sm font-medium"
+          />
+          <input
+            value={row.description}
+            aria-label={`${label} condition ${i + 1} description`}
+            onChange={(e) => onDescription(i, e.target.value)}
+            className="flex-1 rounded border border-border-light bg-surface px-2 py-1 text-sm"
+            placeholder="Description..."
+          />
+          <button
+            type="button"
+            onClick={() => onRemove(i)}
+            className="hit-area-dense-square shrink-0 p-1 text-text-muted transition-colors hover:text-danger-fg"
+            aria-label={`Remove ${kind} condition ${row.name || i + 1}`}
+            title="Remove condition"
+          >
+            <Trash2 className="h-3.5 w-3.5" />
+          </button>
+        </div>
+      ))}
+    </div>
+  );
+}
 
 export function ConditionsEditor({
   data,
-  set,
+  onChange,
 }: {
   data: Record<string, unknown>;
-  set: (key: string, value: unknown) => void;
+  onChange: (data: Record<string, unknown>) => void;
 }) {
-  const standard = (data.standard || []) as ConditionRow[];
-  const leveled = (data.leveled || []) as ConditionRow[];
+  const model = readConditionsEditor(data);
+
+  const commit = (next: ConditionsEditorModel) => {
+    onChange(writeConditionsEditor(data, next));
+  };
+
+  const patchList = (
+    list: 'standard' | 'leveled',
+    index: number,
+    patch: Partial<ConditionEditorRow>,
+  ) => {
+    const rows = model[list].map((row, i) => (i === index ? { ...row, ...patch } : row));
+    commit({ ...model, [list]: rows });
+  };
 
   return (
     <>
-      <SectionTitle>Standard Conditions ({standard.length})</SectionTitle>
-      <div className="space-y-2">
-        {standard.map((c, i) => (
-          <div key={i} className="flex items-start gap-2 rounded bg-surface-alt p-2">
-            <input
-              value={c.name}
-              aria-label={`Standard condition ${i + 1} name`}
-              onChange={(e) => {
-                const updated = [...standard];
-                updated[i] = { ...c, name: e.target.value };
-                set('standard', updated);
-              }}
-              className="w-32 rounded border border-border-light bg-surface px-2 py-1 text-sm font-medium"
-            />
-            <input
-              value={c.description}
-              aria-label={`Standard condition ${i + 1} description`}
-              onChange={(e) => {
-                const updated = [...standard];
-                updated[i] = { ...c, description: e.target.value };
-                set('standard', updated);
-              }}
-              className="flex-1 rounded border border-border-light bg-surface px-2 py-1 text-sm"
-              placeholder="Description..."
-            />
-            <button
-              type="button"
-              onClick={() => {
-                const updated = standard.filter((_, idx) => idx !== i);
-                set('standard', updated);
-              }}
-              className="hit-area-dense-square shrink-0 p-1 text-text-muted transition-colors hover:text-danger-fg"
-              aria-label={`Remove standard condition ${c.name || i + 1}`}
-              title="Remove condition"
-            >
-              <Trash2 className="h-3.5 w-3.5" />
-            </button>
-          </div>
-        ))}
-      </div>
+      <SectionTitle>Standard Conditions ({model.standard.length})</SectionTitle>
+      <ConditionList
+        rows={model.standard}
+        kind="standard"
+        emptyLabel="No standard conditions stored."
+        onName={(index, name) => patchList('standard', index, { name })}
+        onDescription={(index, description) => patchList('standard', index, { description })}
+        onRemove={(index) =>
+          commit({ ...model, standard: model.standard.filter((_, i) => i !== index) })
+        }
+      />
       <button
         type="button"
         onClick={() =>
-          set('standard', [...standard, { name: 'New Condition', leveled: false, description: '' }])
+          commit({
+            ...model,
+            standard: [
+              ...model.standard,
+              { key: '', name: 'New Condition', description: '', leveled: false },
+            ],
+          })
         }
         className={CORE_RULES_ADD_ROW_CLASS}
       >
         <Plus className="h-3.5 w-3.5" /> Add Standard Condition
       </button>
 
-      <SectionTitle>Leveled Conditions ({leveled.length})</SectionTitle>
-      <div className="space-y-2">
-        {leveled.map((c, i) => (
-          <div key={i} className="flex items-start gap-2 rounded bg-surface-alt p-2">
-            <input
-              value={c.name}
-              aria-label={`Leveled condition ${i + 1} name`}
-              onChange={(e) => {
-                const updated = [...leveled];
-                updated[i] = { ...c, name: e.target.value };
-                set('leveled', updated);
-              }}
-              className="w-32 rounded border border-border-light bg-surface px-2 py-1 text-sm font-medium"
-            />
-            <input
-              value={c.description}
-              aria-label={`Leveled condition ${i + 1} description`}
-              onChange={(e) => {
-                const updated = [...leveled];
-                updated[i] = { ...c, description: e.target.value };
-                set('leveled', updated);
-              }}
-              className="flex-1 rounded border border-border-light bg-surface px-2 py-1 text-sm"
-              placeholder="Description..."
-            />
-            <button
-              type="button"
-              onClick={() => {
-                const updated = leveled.filter((_, idx) => idx !== i);
-                set('leveled', updated);
-              }}
-              className="hit-area-dense-square shrink-0 p-1 text-text-muted transition-colors hover:text-danger-fg"
-              aria-label={`Remove leveled condition ${c.name || i + 1}`}
-              title="Remove condition"
-            >
-              <Trash2 className="h-3.5 w-3.5" />
-            </button>
-          </div>
-        ))}
-      </div>
+      <SectionTitle>Leveled Conditions ({model.leveled.length})</SectionTitle>
+      <ConditionList
+        rows={model.leveled}
+        kind="leveled"
+        emptyLabel="No leveled conditions stored."
+        onName={(index, name) => patchList('leveled', index, { name })}
+        onDescription={(index, description) => patchList('leveled', index, { description })}
+        onRemove={(index) =>
+          commit({ ...model, leveled: model.leveled.filter((_, i) => i !== index) })
+        }
+      />
       <button
         type="button"
         onClick={() =>
-          set('leveled', [...leveled, { name: 'New Condition', leveled: true, description: '' }])
+          commit({
+            ...model,
+            leveled: [
+              ...model.leveled,
+              { key: '', name: 'New Condition', description: '', leveled: true },
+            ],
+          })
         }
         className={CORE_RULES_ADD_ROW_CLASS}
       >
@@ -125,8 +150,8 @@ export function ConditionsEditor({
       <FieldRow label="Stacking Rules">
         <TextInput
           wide
-          value={(data.stackingRules as string) ?? ''}
-          onChange={(v) => set('stackingRules', v)}
+          value={model.stackingRules}
+          onChange={(v) => commit({ ...model, stackingRules: v })}
         />
       </FieldRow>
     </>

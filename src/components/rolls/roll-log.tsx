@@ -11,6 +11,7 @@
 
 import * as React from 'react';
 import Image from 'next/image';
+import { usePathname } from 'next/navigation';
 import { cn } from '@/lib/utils/cn';
 import { Trash2, Users, User } from 'lucide-react';
 import { useRolls, type RollEntry, type RollType, type DieResult } from './roll-context';
@@ -19,7 +20,15 @@ import { DecrementButton, IncrementButton } from '@/components/patterns';
 import { Button, LoadingState, EmptyState, Card } from '@/components/ui';
 import type { CampaignRollEntry } from '@/types/campaign-roll';
 import { formatRollTimestamp } from '@/lib/roll-timestamp';
-import { DIE_IMAGES, DIE_MAX, generateRollId, rollDie, type DieType } from '@/lib/rolls/die';
+import {
+  DIE_IMAGES,
+  DIE_MAX,
+  d20CritAdjustment,
+  generateRollId,
+  rollDie,
+  type DieType,
+} from '@/lib/rolls/die';
+import { campaignRollCharacterLabel } from '@/lib/rolls/campaign-roll-attribution';
 import { resolveRollModifierLabel } from '@/lib/rolls/modifier-label';
 
 // Re-export types for convenience
@@ -52,8 +61,22 @@ interface RollLogProps {
 
 type RollLogMode = 'personal' | 'campaign';
 
+/** Viewers can open the roll log. The dice builder stays hidden when they cannot roll. */
+export function rollLogShowsDiceBuilder(canRoll: boolean): boolean {
+  return canRoll;
+}
+
+/** Standalone creator routes (power-creator, creature-creator, …). */
+export function isCreatorRoutePath(pathname: string): boolean {
+  return /\/(?:power|technique|item|species|creature|empowered-technique)-creator(?:\/|$)/.test(
+    pathname,
+  );
+}
+
 export function RollLog({ className, viewOnlyCampaignId }: RollLogProps) {
-  const { rolls, addRoll, clearHistory, subscribeToRolls, campaignContext } = useRolls();
+  const pathname = usePathname();
+  const onCreatorRoute = isCreatorRoutePath(pathname);
+  const { rolls, addRoll, clearHistory, subscribeToRolls, campaignContext, canRoll } = useRolls();
   // Normalize to string so query key matches campaign page (params.id) and realtime subscription is consistent
   const rawCampaignId = campaignContext?.campaignId ?? viewOnlyCampaignId;
   const campaignId = rawCampaignId != null ? String(rawCampaignId) : undefined;
@@ -154,8 +177,6 @@ export function RollLog({ className, viewOnlyCampaignId }: RollLogProps) {
   const executeRoll = () => {
     const diceResults: DieResult[] = [];
     let total = 0;
-    let hasD20 = false;
-    let d20Value = 0;
 
     // Roll each die in pool
     Object.entries(dicePool).forEach(([type, count]) => {
@@ -170,11 +191,6 @@ export function RollLog({ className, viewOnlyCampaignId }: RollLogProps) {
           isMin: value === 1,
         });
         total += value;
-
-        if (dieType === 'd20') {
-          hasD20 = true;
-          d20Value = value;
-        }
       }
     });
 
@@ -182,19 +198,15 @@ export function RollLog({ className, viewOnlyCampaignId }: RollLogProps) {
 
     total += modifier;
 
-    // Check for critical (only when rolling exactly 1d20)
-    const isCrit = hasD20 && d20Value === 20;
-    const isCritFail = hasD20 && d20Value === 1;
-
-    // Apply crit bonuses matching game rules
-    let critMessage: string | undefined;
-    if (isCrit) {
-      total += 2;
-      critMessage = 'Natural 20! +2 to the total!';
-    } else if (isCritFail) {
-      total -= 2;
-      critMessage = 'Natural 1! -2 from the total!';
-    }
+    // Nat 20 / nat 1 ±2 only for a single d20, not a mixed or multi-die pool.
+    const crit = d20CritAdjustment(diceResults);
+    total += crit.adjustment;
+    const { isCrit, isCritFail } = crit;
+    const critMessage = isCrit
+      ? 'Natural 20! +2 to the total!'
+      : isCritFail
+        ? 'Natural 1! -2 from the total!'
+        : undefined;
 
     const newRoll: RollEntry = {
       id: generateRollId(),
@@ -227,6 +239,7 @@ export function RollLog({ className, viewOnlyCampaignId }: RollLogProps) {
       className={cn('floating-dock-bottom-right', className)}
       data-floating-dock="bottom-right"
       data-tour-id="sheet-tour-roll-log"
+      {...(onCreatorRoute ? { 'data-creator-roll-dock': '' } : {})}
     >
       {/*
         Closed panel is unmounted (TASK-826 / C6). A w-0 overflow-hidden Card still
@@ -316,7 +329,9 @@ export function RollLog({ className, viewOnlyCampaignId }: RollLogProps) {
                 description={
                   isCampaignMode
                     ? 'Rolls from any character sheet will appear here.'
-                    : 'Build your dice pool below!'
+                    : canRoll
+                      ? 'Build your dice pool below!'
+                      : 'Rolls from this sheet will appear here.'
                 }
                 size="sm"
                 className="py-10"
@@ -326,89 +341,95 @@ export function RollLog({ className, viewOnlyCampaignId }: RollLogProps) {
                 <RollEntryCard
                   key={roll.id}
                   roll={roll}
-                  characterName={'characterName' in roll ? roll.characterName : undefined}
+                  characterName={
+                    'characterName' in roll ? campaignRollCharacterLabel(roll) : undefined
+                  }
                 />
               ))
             )}
           </div>
 
-          {/* Dice Builder - visible in both Personal and Campaign tabs so users can send custom rolls to campaign */}
-          <div className="border-t-2 border-border-light bg-primary-button p-3">
-            {/* Dice Grid - clickable images with labels and counts */}
-            <div className="mb-3 grid grid-cols-6 gap-1.5">
-              {(['d4', 'd6', 'd8', 'd10', 'd12', 'd20'] as DieType[]).map((die) => (
-                <button
-                  key={die}
-                  onClick={() => addDie(die)}
-                  onContextMenu={(e) => {
-                    e.preventDefault();
-                    removeDie(die);
-                  }}
-                  className={cn(
-                    'relative flex flex-col items-center justify-center rounded-lg px-1 py-1.5',
-                    'cursor-pointer bg-text-on-dark/10 transition-all hover:bg-text-on-dark/25 dark:bg-text-on-dark/20 dark:hover:bg-text-on-dark/35',
-                    dicePool[die] > 0 && 'bg-text-on-dark/20 ring-2 ring-warning-400',
-                  )}
-                  title={`Left-click: add ${die} · Right-click: remove`}
-                >
-                  <Image
-                    src={DIE_IMAGES[die]}
-                    alt=""
-                    width={32}
-                    height={32}
-                    className="h-8 w-8 object-contain drop-shadow-md"
-                  />
-                  <span className="mt-0.5 text-[10px] font-bold text-text-on-dark/80">{die}</span>
-                  {dicePool[die] > 0 && (
-                    <span className="absolute -top-1 -right-1 flex h-[18px] min-w-[18px] items-center justify-center rounded-full bg-warning-400 text-xs font-bold text-warning-900 shadow">
-                      {dicePool[die]}
-                    </span>
-                  )}
-                </button>
-              ))}
-            </div>
-
-            {/* Modifier Row */}
-            <div className="mb-3 flex items-center justify-between gap-2">
-              <div className="flex items-center gap-1.5">
-                <span className="text-xs font-semibold text-text-on-dark/70">MOD</span>
-                <DecrementButton
-                  onClick={() => setModifier((m) => m - 1)}
-                  size="sm"
-                  title="Decrease bonus"
-                />
-                <span className="min-w-[36px] text-center text-sm font-bold text-text-on-dark tabular-nums">
-                  {modifier >= 0 ? '+' : ''}
-                  {modifier}
-                </span>
-                <IncrementButton
-                  onClick={() => setModifier((m) => m + 1)}
-                  size="sm"
-                  title="Increase bonus"
-                />
+          {/* Dice Builder - hidden for a viewer. Owners can send custom rolls from either tab. */}
+          {rollLogShowsDiceBuilder(canRoll) ? (
+            <div className="border-t-2 border-border-light bg-primary-button p-3">
+              {/* Dice Grid - clickable images with labels and counts */}
+              <div className="mb-3 grid grid-cols-6 gap-1.5">
+                {(['d4', 'd6', 'd8', 'd10', 'd12', 'd20'] as DieType[]).map((die) => (
+                  <button
+                    key={die}
+                    type="button"
+                    data-creator-dice-pick
+                    onClick={() => addDie(die)}
+                    onContextMenu={(e) => {
+                      e.preventDefault();
+                      removeDie(die);
+                    }}
+                    className={cn(
+                      'relative flex flex-col items-center justify-center rounded-lg px-1 py-1.5',
+                      'cursor-pointer bg-text-on-dark/10 transition-all hover:bg-text-on-dark/25 dark:bg-text-on-dark/20 dark:hover:bg-text-on-dark/35',
+                      dicePool[die] > 0 && 'bg-text-on-dark/20 ring-2 ring-warning-400',
+                    )}
+                    title={`Left-click: add ${die} · Right-click: remove`}
+                  >
+                    <Image
+                      src={DIE_IMAGES[die]}
+                      alt=""
+                      width={32}
+                      height={32}
+                      className="h-8 w-8 object-contain drop-shadow-md"
+                    />
+                    <span className="mt-0.5 text-[10px] font-bold text-text-on-dark/80">{die}</span>
+                    {dicePool[die] > 0 && (
+                      <span className="absolute -top-1 -right-1 flex h-[18px] min-w-[18px] items-center justify-center rounded-full bg-warning-400 text-xs font-bold text-warning-900 shadow">
+                        {dicePool[die]}
+                      </span>
+                    )}
+                  </button>
+                ))}
               </div>
-              {totalDice > 0 && (
-                <button
-                  onClick={clearPool}
-                  className="text-xs text-text-on-dark/60 underline hover:text-text-on-dark"
-                >
-                  Clear pool
-                </button>
-              )}
-            </div>
 
-            {/* Roll Button — shared Button Standard tier (TASK-847 / ADR-0023) */}
-            <Button
-              type="button"
-              onClick={executeRoll}
-              disabled={totalDice === 0}
-              className="w-full bg-success-600 text-text-on-dark hover:bg-success-700 focus-visible:ring-success disabled:bg-text-muted"
-            >
-              {totalDice > 0
-                ? `Roll ${totalDice} ${totalDice === 1 ? 'die' : 'dice'}`
-                : 'Select dice to roll'}
-            </Button>
-          </div>
+              {/* Modifier Row */}
+              <div className="mb-3 flex items-center justify-between gap-2">
+                <div className="flex items-center gap-1.5">
+                  <span className="text-xs font-semibold text-text-on-dark/70">MOD</span>
+                  <DecrementButton
+                    onClick={() => setModifier((m) => m - 1)}
+                    size="sm"
+                    title="Decrease bonus"
+                  />
+                  <span className="min-w-[36px] text-center text-sm font-bold text-text-on-dark tabular-nums">
+                    {modifier >= 0 ? '+' : ''}
+                    {modifier}
+                  </span>
+                  <IncrementButton
+                    onClick={() => setModifier((m) => m + 1)}
+                    size="sm"
+                    title="Increase bonus"
+                  />
+                </div>
+                {totalDice > 0 && (
+                  <button
+                    onClick={clearPool}
+                    className="text-xs text-text-on-dark/60 underline hover:text-text-on-dark"
+                  >
+                    Clear pool
+                  </button>
+                )}
+              </div>
+
+              {/* Roll Button — shared Button Standard tier (TASK-847 / ADR-0023) */}
+              <Button
+                type="button"
+                onClick={executeRoll}
+                disabled={totalDice === 0}
+                className="w-full bg-success-600 text-text-on-dark hover:bg-success-700 focus-visible:ring-success disabled:bg-text-muted"
+              >
+                {totalDice > 0
+                  ? `Roll ${totalDice} ${totalDice === 1 ? 'die' : 'dice'}`
+                  : 'Select dice to roll'}
+              </Button>
+            </div>
+          ) : null}
         </Card>
       ) : null}
 
@@ -490,7 +511,10 @@ export function RollEntryCard({
                 {characterName}
               </span>
             )}
-            <span className="block truncate text-sm font-semibold text-primary-fg">
+            <span
+              className="block truncate text-sm font-semibold text-primary-fg"
+              title={roll.title}
+            >
               {roll.title}
             </span>
           </div>

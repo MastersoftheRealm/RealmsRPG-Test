@@ -19,6 +19,7 @@ import { useSort } from '@/hooks/use-sort';
 import { CodexMyCodexEmpty } from './CodexMyCodexEmpty';
 import { useParts } from '@/hooks';
 import { descriptorChipData } from '@/lib/chip/chip-data-helpers';
+import { formatPercentageOptionEnergy } from '@/lib/calculators/power-energy-breakdown';
 
 const PART_GRID_COLUMNS = '1.5fr 1fr 0.8fr 0.8fr';
 const PART_COLUMNS = [
@@ -38,6 +39,12 @@ function formatEnergyCost(en: number | undefined, isPercentage: boolean | undefi
   return String(en);
 }
 
+function formatOptionEnergyCost(en: number | undefined, isPercentage: boolean | undefined): string {
+  if (en === undefined || en === 0) return '-';
+  if (isPercentage) return formatPercentageOptionEnergy(en);
+  return String(en);
+}
+
 type Part = NonNullable<ReturnType<typeof useParts>['data']>[number];
 
 function PartCard({ part }: { part: Part }) {
@@ -54,7 +61,7 @@ function PartCard({ part }: { part: Part }) {
   if (part.op_1_desc) {
     const enStr =
       part.op_1_en !== undefined && part.op_1_en !== 0
-        ? formatEnergyCost(part.op_1_en, part.percentage)
+        ? formatOptionEnergyCost(part.op_1_en, part.percentage)
         : null;
     const tpStr = part.op_1_tp !== undefined && part.op_1_tp !== 0 ? String(part.op_1_tp) : null;
     const costParts = [enStr && `EN: ${enStr}`, tpStr && `TP: ${tpStr}`].filter(Boolean);
@@ -67,7 +74,7 @@ function PartCard({ part }: { part: Part }) {
   if (part.op_2_desc) {
     const enStr =
       part.op_2_en !== undefined && part.op_2_en !== 0
-        ? formatEnergyCost(part.op_2_en, part.percentage)
+        ? formatOptionEnergyCost(part.op_2_en, part.percentage)
         : null;
     const tpStr = part.op_2_tp !== undefined && part.op_2_tp !== 0 ? String(part.op_2_tp) : null;
     const costParts = [enStr && `EN: ${enStr}`, tpStr && `TP: ${tpStr}`].filter(Boolean);
@@ -80,7 +87,7 @@ function PartCard({ part }: { part: Part }) {
   if (part.op_3_desc) {
     const enStr =
       part.op_3_en !== undefined && part.op_3_en !== 0
-        ? formatEnergyCost(part.op_3_en, part.percentage)
+        ? formatOptionEnergyCost(part.op_3_en, part.percentage)
         : null;
     const tpStr = part.op_3_tp !== undefined && part.op_3_tp !== 0 ? String(part.op_3_tp) : null;
     const costParts = [enStr && `EN: ${enStr}`, tpStr && `TP: ${tpStr}`].filter(Boolean);
@@ -196,6 +203,7 @@ export function CodexPartsTab({
       search={filters.search}
       onSearchChange={(v) => setFilters((f) => ({ ...f, search: v }))}
       searchPlaceholder="Search parts..."
+      searchAriaLabel="Search parts"
       filters={
         <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4">
           <SelectFilter

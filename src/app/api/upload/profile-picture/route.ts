@@ -6,7 +6,7 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { createClient } from '@/lib/supabase/server';
+import { createClient, createServiceRoleClient } from '@/lib/supabase/server';
 import { getSession } from '@/lib/supabase/session';
 import { getRolePolicyForUser } from '@/lib/role-policy';
 import { detectImageMime, extensionForImageMime } from '@/lib/validate-image';
@@ -108,10 +108,11 @@ export async function POST(request: NextRequest) {
       data: { publicUrl },
     } = supabase.storage.from(BUCKET).getPublicUrl(path);
 
+    // photo_url is not writable by the session client (86e3jt562). The role
+    // check above already ran, and storage RLS enforces the same flag.
     // Do NOT set created_at here: upsert would clobber the original signup
-    // timestamp on every upload (TASK-331). created_at is set on first insert
-    // (DB default / ensureUserProfile); we only touch photo_url + updated_at.
-    const { error: profileError } = await supabase
+    // timestamp on every upload (TASK-331).
+    const { error: profileError } = await createServiceRoleClient()
       .from('user_profiles')
       .upsert(
         { id: user.uid, photo_url: publicUrl, updated_at: new Date().toISOString() },

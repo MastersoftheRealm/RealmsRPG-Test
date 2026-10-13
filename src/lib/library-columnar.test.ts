@@ -240,8 +240,9 @@ describe('library-columnar API round-trip — powers', () => {
     expect(scalars.durationValue).toBe(3);
     expect(payload.parts).toHaveLength(1);
 
-    const loaded = apiRoundTrip('powers', body);
+    const loaded = apiRoundTrip('powers', { ...body, attackMode: 'weapon' });
 
+    expect(loaded.attackMode).toBe('weapon');
     expect((loaded.range as { steps?: number | undefined }).steps).toBe(4);
     expect((loaded.area as { type?: string | undefined; level?: number | undefined }).type).toBe(
       'sphere',
@@ -319,6 +320,22 @@ describe('library-columnar API round-trip — powers', () => {
       true,
     );
   });
+
+  it('persists targetedDefenses in payload through columnar round-trip', () => {
+    const body = {
+      name: 'Mind Lance',
+      actionType: 'basic',
+      targetedDefenses: ['Mental Fortitude', 'Resolve'],
+      parts: [],
+      damage: [],
+    };
+
+    const { payload } = bodyToColumnar('powers', body);
+    expect(payload.targetedDefenses).toEqual(['Mental Fortitude', 'Resolve']);
+
+    const loaded = apiRoundTrip('powers', body);
+    expect(loaded.targetedDefenses).toEqual(['Mental Fortitude', 'Resolve']);
+  });
 });
 
 describe('library-columnar API round-trip — items (migration hardening)', () => {
@@ -359,6 +376,59 @@ describe('library-columnar API round-trip — items (migration hardening)', () =
 
     expect(loaded.armorValue).toBe(3);
     expect((loaded.properties as Array<{ name?: string | undefined }>)[0]?.name).toBe('Armor Base');
+  });
+});
+
+describe('item ability requirement save and clear (86e3jpr0q)', () => {
+  const requirement = { id: 6, name: 'Weapon Strength Requirement', level: 2 };
+
+  it('saves a shield, weapon, or armor requirement', () => {
+    for (const type of ['shield', 'weapon', 'armor']) {
+      const { scalars } = bodyToColumnar('items', {
+        name: 'Piece',
+        type,
+        abilityRequirement: requirement,
+        properties: [],
+      });
+      expect(scalars.abilityRequirement).toEqual(requirement);
+      expect(toDbRow(scalars).ability_requirement).toEqual(requirement);
+
+      const loaded = apiRoundTrip('items', {
+        name: 'Piece',
+        type,
+        abilityRequirement: requirement,
+        properties: [{ id: 6, name: 'Weapon Strength Requirement', op_1_lvl: 1 }],
+      });
+      expect(loaded.abilityRequirement).toEqual(requirement);
+    }
+  });
+
+  it('writes an explicit None so reopen does not keep the previous requirement', () => {
+    for (const type of ['shield', 'weapon', 'armor']) {
+      const { scalars, payload } = bodyToColumnar('items', {
+        name: 'Piece',
+        type,
+        abilityRequirement: null,
+        properties: [{ id: 15, name: 'Shield Base', op_1_lvl: 0 }],
+      });
+      expect(scalars.abilityRequirement).toBeNull();
+      expect(payload).not.toHaveProperty('abilityRequirement');
+      expect(toDbRow(scalars).ability_requirement).toBeNull();
+
+      const loaded = apiRoundTrip('items', {
+        name: 'Piece',
+        type,
+        abilityRequirement: null,
+        properties: [{ id: 15, name: 'Shield Base', op_1_lvl: 0 }],
+      });
+      expect(loaded.abilityRequirement ?? null).toBeNull();
+      expect(loaded.properties).toEqual([{ id: 15, name: 'Shield Base', op_1_lvl: 0 }]);
+    }
+  });
+
+  it('leaves the requirement column untouched when the key is omitted', () => {
+    const { scalars } = bodyToColumnar('items', { name: 'Piece', type: 'shield', properties: [] });
+    expect(scalars).not.toHaveProperty('abilityRequirement');
   });
 });
 
@@ -454,13 +524,36 @@ describe('library-columnar image_id parity (TASK-497)', () => {
   });
 });
 
-describe('columnarViewSelect', () => {
-  it('lists identity, payload, and scalars without user_id', () => {
-    const columns = columnarViewSelect('powers').split(', ');
-    expect(columns).toContain('id');
-    expect(columns).toContain('payload');
-    expect(columns).toContain('name');
-    expect(columns).not.toContain('user_id');
+describe('shield damage clear on save (86e3jwwrt)', () => {
+  it('writes null when shield damage is off, and does not keep the die in payload', () => {
+    const { scalars, payload } = bodyToColumnar('items', {
+      name: 'Shield',
+      type: 'shield',
+      hasShieldDamage: false,
+      shieldDamage: null,
+      properties: [],
+    });
+    expect(scalars.shieldDamage).toBeNull();
+    expect(payload).not.toHaveProperty('shieldDamage');
+    expect(toDbRow(scalars).shield_damage).toBeNull();
+
+    const loaded = apiRoundTrip('items', {
+      name: 'Shield',
+      type: 'shield',
+      hasShieldDamage: false,
+      shieldDamage: null,
+      properties: [],
+    });
+    expect(loaded.shieldDamage ?? null).toBeNull();
+  });
+
+  it('leaves the shield damage column untouched when the key is omitted', () => {
+    const { scalars } = bodyToColumnar('items', {
+      name: 'Shield',
+      type: 'shield',
+      properties: [],
+    });
+    expect(scalars).not.toHaveProperty('shieldDamage');
   });
 });
 
@@ -471,5 +564,34 @@ describe('columnarViewSelect', () => {
     expect(columns).toContain('payload');
     expect(columns).toContain('name');
     expect(columns).not.toContain('user_id');
+  });
+});
+
+describe('catalog listing (ADR-0027)', () => {
+  it('keeps catalogListing off user payloads', () => {
+    const { scalars, payload } = bodyToColumnar('powers', {
+      name: 'Acid Spit',
+      catalogListing: 'unlisted',
+    });
+    expect(payload.catalogListing).toBeUndefined();
+    expect(payload.catalog_listing).toBeUndefined();
+    expect(scalars.catalogListing).toBeUndefined();
+    expect(scalars.catalog_listing).toBeUndefined();
+  });
+
+  it('stamps catalogListing on official reads only', () => {
+    const official = rowToItem(
+      'powers',
+      { id: 'p1', name: 'Acid Spit', catalog_listing: 'unlisted', payload: {} },
+      'official',
+    );
+    const user = rowToItem(
+      'powers',
+      { id: 'p1', name: 'Acid Spit', catalog_listing: 'unlisted', payload: {} },
+      'user',
+    );
+    expect(official.catalogListing).toBe('unlisted');
+    expect(official._source).toBe('official');
+    expect(user.catalogListing).toBeUndefined();
   });
 });

@@ -151,6 +151,8 @@ interface ArchetypeFields {
   name: string;
   type: ArchetypeCategory;
   description?: string | undefined;
+  /** Rules product (Core Rules, an expansion). */
+  source?: string | undefined;
   archetype_ability?: AbilityName | undefined;
   secondary_ability?: AbilityName | undefined;
   power_prof_start?: number | undefined;

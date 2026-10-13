@@ -81,26 +81,18 @@ describe('TabNavigation overflow affordance (TASK-840)', () => {
     expect(globals).toContain('mask-image');
     expect(globals).toContain('.tab-nav-scroll-btn');
     expect(globals).toContain("[data-overflow-end='true']");
-    expect(globals).toContain('3.25rem');
+    expect(globals).toContain('--tab-nav-scroll-btn-width: 2.75rem');
+    expect(globals).toContain('transparent calc(100% - var(--tab-nav-scroll-btn-width))');
   });
 });
 
-describe('Creator / guided rails reuse tab overflow chrome (TASK-848)', () => {
-  const creatorTabBar = readFileSync(
-    path.join(import.meta.dirname, '../character-creator/creator-tab-bar.tsx'),
-    'utf8',
-  );
+describe('Guided rails reuse tab overflow chrome (TASK-848)', () => {
   const guidedShell = readFileSync(
     path.join(import.meta.dirname, '../guided-creator/guided-creator-shell.tsx'),
     'utf8',
   );
 
-  it('wires CreatorTabBar and ChapterRail onto TabNavOverflowScroller', () => {
-    expect(creatorTabBar).toContain('TabNavOverflowScroller');
-    expect(creatorTabBar).toContain('Show more steps');
-    expect(creatorTabBar).toContain('md:flex-wrap');
-    expect(creatorTabBar).not.toMatch(/overflow-x-auto/);
-    expect(creatorTabBar).not.toMatch(/\.scrollIntoView\s*\(/);
+  it('wires ChapterRail onto TabNavOverflowScroller', () => {
     expect(guidedShell).toContain('TabNavOverflowScroller');
     expect(guidedShell).toContain('Show more chapters');
     expect(guidedShell).not.toMatch(/overflow-x-auto/);
@@ -112,21 +104,6 @@ describe('Creator / guided rails reuse tab overflow chrome (TASK-848)', () => {
     expect(tabNav).toContain('scrollDeltaToRevealChild');
     expect(tabNav).toContain('querySelector(\'[aria-current="step"]\')');
     expect(tabNav).toMatch(/type OverflowListTag = 'nav' \| 'ol'/);
-    expect(creatorTabBar).not.toContain('getActiveElement');
     expect(guidedShell).not.toContain('getActiveElement');
-  });
-
-  it('sheet carousel reuses tabListOverflowState fade, not TabNavOverflowScroller', () => {
-    const sheetBody = readFileSync(
-      path.join(import.meta.dirname, '../character-sheet/character-sheet-body.tsx'),
-      'utf8',
-    );
-    expect(sheetBody).toContain('tabListOverflowState');
-    expect(sheetBody).toContain('data-sheet-mobile-carousel');
-    expect(sheetBody).not.toContain('TabNavOverflowScroller');
-    expect(sheetBody).not.toContain('max-h-[50%]');
-    expect(sheetBody).not.toContain('max-md:overflow-y-auto');
-    expect(globals).toContain('[data-sheet-mobile-carousel]');
-    expect(globals).toContain("[data-sheet-mobile-carousel][data-overflow-end='true']");
   });
 });

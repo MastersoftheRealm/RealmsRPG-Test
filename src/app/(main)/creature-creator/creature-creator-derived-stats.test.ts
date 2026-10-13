@@ -14,6 +14,24 @@ describe('calculateCreatureCreatorStats', () => {
     [String(CREATURE_FEAT_IDS.CONDITION_IMMUNITY), 1],
   ]);
 
+  it('Speedy and Slow change the SPD chip (86e3jx63c)', () => {
+    const base = calculateCreatureCreatorStats(initialState, featPointsMap, new Set(), undefined);
+    const speedy = calculateCreatureCreatorStats(
+      { ...initialState, movementTypes: ['Speedy'] },
+      featPointsMap,
+      new Set(),
+      undefined,
+    );
+    const slow = calculateCreatureCreatorStats(
+      { ...initialState, movementTypes: ['Slow'] },
+      featPointsMap,
+      new Set(),
+      undefined,
+    );
+    expect(speedy.speed).toBe(base.speed + 2);
+    expect(slow.speed).toBe(base.speed - 2);
+  });
+
   it('returns positive remaining budgets for a fresh level-1 creature', () => {
     const stats = calculateCreatureCreatorStats(initialState, featPointsMap, new Set(), undefined);
     expect(stats.featRemaining).toBeGreaterThanOrEqual(0);
@@ -31,9 +49,87 @@ describe('calculateCreatureCreatorStats', () => {
     expect(stats.featSpent).toBe(1);
   });
 
+  it('uses doubled ability cost above +4 in summary (86e3jx4dk)', () => {
+    const creature = {
+      ...initialState,
+      level: 1,
+      abilities: { ...initialState.abilities, strength: 7 },
+    };
+    const stats = calculateCreatureCreatorStats(creature, featPointsMap, new Set(), undefined);
+    expect(stats.abilityPoints).toBe(7);
+    expect(stats.abilitySpent).toBe(10);
+    expect(stats.abilityRemaining).toBe(-3);
+    expect(isCreatureOverBudget(stats)).toBe(true);
+  });
+
+  it('an orphaned sub-skill does not spend skill points (86e3jx4dp)', () => {
+    const withParent = calculateCreatureCreatorStats(
+      {
+        ...initialState,
+        skills: [
+          { id: 'craft', name: 'Craft', value: 0, proficient: true },
+          {
+            id: 'smith',
+            name: 'Smith',
+            value: 1,
+            proficient: true,
+            isSubSkill: true,
+            baseSkillId: 'craft',
+          },
+        ],
+      },
+      featPointsMap,
+      new Set(),
+      undefined,
+    );
+    const orphan = calculateCreatureCreatorStats(
+      {
+        ...initialState,
+        skills: [
+          { id: 'athletics', name: 'Athletics', value: 0, proficient: true },
+          {
+            id: 'smith',
+            name: 'Smith',
+            value: 1,
+            proficient: true,
+            isSubSkill: true,
+            baseSkillId: 'craft',
+          },
+        ],
+      },
+      featPointsMap,
+      new Set(),
+      undefined,
+    );
+    expect(orphan.skillRemaining).toBeGreaterThan(withParent.skillRemaining);
+  });
+
+  it('uses past-cap skill costs in summary remaining (86e3jx4dm)', () => {
+    const creature = {
+      ...initialState,
+      level: 3,
+      skills: [
+        { id: 'athletics', name: 'Athletics', value: 7, proficient: true },
+        {
+          id: 'smith',
+          name: 'Smith',
+          value: 1,
+          proficient: true,
+          isSubSkill: true,
+          baseSkillId: 'athletics',
+        },
+      ],
+    };
+    const stats = calculateCreatureCreatorStats(creature, featPointsMap, new Set(), undefined);
+    expect(stats.skillPoints).toBe(11);
+    expect(stats.skillRemaining).toBe(-6);
+    expect(isCreatureOverBudget(stats)).toBe(true);
+  });
+
   it('sums currency and TP from kind buckets (TASK-812)', () => {
     const creature = {
       ...initialState,
+      enableArmaments: true,
       weapons: [
         {
           id: 'w1',
@@ -59,5 +155,25 @@ describe('calculateCreatureCreatorStats', () => {
     const stats = calculateCreatureCreatorStats(creature, featPointsMap, new Set(), undefined);
     expect(stats.trainingSpent).toBe(2);
     expect(stats.currencySpent).toBe(16);
+  });
+
+  it('hidden Inventory does not spend Currency or TP (86e3jx639)', () => {
+    const creature = {
+      ...initialState,
+      enableArmaments: false,
+      weapons: [
+        {
+          id: 'w1',
+          name: 'Axe',
+          type: 'weapon',
+          tp: 2,
+          currency: 10,
+          rarity: 'Common',
+        },
+      ],
+    };
+    const stats = calculateCreatureCreatorStats(creature, featPointsMap, new Set(), undefined);
+    expect(stats.trainingSpent).toBe(0);
+    expect(stats.currencySpent).toBe(0);
   });
 });

@@ -37,8 +37,16 @@ export function GuidedHealthEnergySection() {
   const abilities = draft.abilities;
   const powAbil = draft.pow_abil ?? undefined;
   const martAbil = draft.mart_abil ?? undefined;
+  const archetypeType = draft.archetypeType ?? undefined;
 
-  const baseEnergy = calculateMaxEnergyForArchetype(0, abilities, level, powAbil, martAbil);
+  const baseEnergy = calculateMaxEnergyForArchetype(
+    0,
+    abilities,
+    level,
+    powAbil,
+    martAbil,
+    archetypeType,
+  );
   const hePool = calculateHealthEnergyPool(level, 'PLAYER', false, rules);
 
   const hpBonus = draft.hpAllocated ?? 0;
@@ -54,7 +62,14 @@ export function GuidedHealthEnergySection() {
     rules,
     martAbil,
   );
-  const maxEnergy = calculateMaxEnergyForArchetype(enBonus, abilities, level, powAbil, martAbil);
+  const maxEnergy = calculateMaxEnergyForArchetype(
+    enBonus,
+    abilities,
+    level,
+    powAbil,
+    martAbil,
+    archetypeType,
+  );
 
   const highestPick = useMemo(
     () =>
@@ -95,7 +110,11 @@ export function GuidedHealthEnergySection() {
   );
 
   return (
-    <div className="rounded-card border border-border-light bg-surface p-5 shadow-sm">
+    <div
+      id="guided-health-energy"
+      tabIndex={-1}
+      className="scroll-mt-24 scroll-mb-32 rounded-card border border-border-light bg-surface p-5 shadow-sm focus-visible:ring-2 focus-visible:ring-primary-outline-border focus-visible:outline-none"
+    >
       <div className="mb-3 flex flex-wrap items-start justify-between gap-3">
         <div className="min-w-0 flex-1">
           <GuidedSectionTitle>{copy.title}</GuidedSectionTitle>
@@ -128,9 +147,7 @@ export function GuidedHealthEnergySection() {
       />
 
       {remaining !== 0 && (
-        <p className="mt-3 font-nunito text-sm text-text-secondary">
-          {copy.allocateHint(remaining)}
-        </p>
+        <p className="mt-3 font-nunito text-sm text-warning-fg">{copy.allocateHint(remaining)}</p>
       )}
     </div>
   );

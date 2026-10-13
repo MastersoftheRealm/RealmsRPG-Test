@@ -19,6 +19,8 @@ import {
   powerCreatorPartsHelp,
   powerCreatorReactionHelp,
   powerCreatorResetHelp,
+  powerCreatorReverseHelp,
+  powerCreatorStructureHelp,
   powerCreatorTrainingPointsHelp,
 } from '../../../../public/tooltip-text';
 
@@ -37,6 +39,8 @@ const POWER_CREATOR_TIPS = {
   tp: { content: powerCreatorTrainingPointsHelp, label: 'Training Points help' },
   load: { content: powerCreatorLoadHelp, label: 'Load help' },
   reset: { content: powerCreatorResetHelp, label: 'Reset help' },
+  structure: { content: powerCreatorStructureHelp, label: 'Structure help' },
+  reverse: { content: powerCreatorReverseHelp, label: 'Reverse effects help' },
 } as const;
 
 export type PowerCreatorHelpTopic = keyof typeof POWER_CREATOR_TIPS;
@@ -44,10 +48,13 @@ export type PowerCreatorHelpTopic = keyof typeof POWER_CREATOR_TIPS;
 export function PowerCreatorHelp({
   topic,
   tone,
+  label,
 }: {
   topic: PowerCreatorHelpTopic;
   tone?: InfoTippyTone | undefined;
+  /** Overrides the default accessible name for the (?) control. */
+  label?: string | undefined;
 }) {
   const tip = POWER_CREATOR_TIPS[topic];
-  return <InfoTippy content={tip.content} label={tip.label} tone={tone} />;
+  return <InfoTippy content={tip.content} label={label ?? tip.label} tone={tone} />;
 }

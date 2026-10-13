@@ -216,6 +216,66 @@ export interface MobileCollapsedGridColumnsOptions {
  * Callers must apply this via a CSS variable + `max-lg:[grid-template-columns:…]`
  * class — not inline `style.gridTemplateColumns` (inline beats the media query).
  */
+export interface ExternalChromeFootprintInput {
+  showRightSlot: boolean;
+  onEdit?: boolean | undefined;
+  onDelete?: boolean | undefined;
+  selectable?: boolean | undefined;
+  rightSlotWidth?: string | undefined;
+}
+
+/** Horizontal space reserved by far-right external chrome (Library edit/delete/+). */
+export function externalChromeFootprintWidth(input: ExternalChromeFootprintInput): string {
+  const parts: string[] = [];
+  if (input.showRightSlot) {
+    parts.push(input.rightSlotWidth ?? GRID_LIST_ROW_RIGHT_SLOT_FLEX_WIDTH);
+  }
+  if (input.onEdit) parts.push(GRID_LIST_ROW_ICON_COLUMN_WIDTH);
+  if (input.onDelete) parts.push(GRID_LIST_ROW_ICON_COLUMN_WIDTH);
+  if (input.selectable) parts.push(GRID_LIST_ROW_SELECTION_COLUMN_WIDTH);
+  if (parts.length === 0) return '0px';
+  return `calc(${parts.join(' + ')})`;
+}
+
+/**
+ * Padding on the collapsed name row below `lg` (86e3jxbrc).
+ * Column 2 still includes a blank right-slot reserve so the expanded body stays
+ * on the content track. That spacer is not a control, so it does not eat the name.
+ * An occupied right slot, edit, delete, and selection stay clear of the text.
+ */
+export function mobileCollapsedNameInlineEndReserve(
+  input: ExternalChromeFootprintInput & { rightSlotOccupied: boolean },
+): string {
+  return externalChromeFootprintWidth({
+    showRightSlot: input.showRightSlot && input.rightSlotOccupied,
+    onEdit: input.onEdit,
+    onDelete: input.onDelete,
+    selectable: input.selectable,
+    rightSlotWidth: input.rightSlotWidth,
+  });
+}
+
+/**
+ * Collapsed name-track width for a card content box.
+ * Matches the measured 375px library row: page `px-4`, card border, row `px-4`,
+ * `gap-2`, and a 44px thumb (86e3jxbrc).
+ */
+export function collapsedNameTrackWidthPx(input: {
+  cardContentPx: number;
+  paddingInlineEndPx: number;
+  rowPaddingInlinePx: number;
+  columnGapPx: number;
+  leadingTrackPx: number;
+}): number {
+  return (
+    input.cardContentPx -
+    input.paddingInlineEndPx -
+    input.rowPaddingInlinePx -
+    input.columnGapPx -
+    input.leadingTrackPx
+  );
+}
+
 export function buildMobileCollapsedGridColumns(
   options: MobileCollapsedGridColumnsOptions,
 ): string {

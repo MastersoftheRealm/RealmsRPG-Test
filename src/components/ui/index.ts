@@ -14,7 +14,7 @@ export { Textarea } from './textarea';
 export { SearchInput } from './search-input';
 
 // Layout components
-export { PageContainer, type ContainerSize } from './page-container';
+export { PageContainer, PAGE_FILLS_VIEWPORT_CLASSNAME, type ContainerSize } from './page-container';
 export { PageHeader } from './page-header';
 export { TableScroll } from './table-scroll';
 export {

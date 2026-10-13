@@ -22,8 +22,8 @@ export function withPortraitCacheBust(url: string, refreshKey?: number | null): 
   return `${url}?t=${refreshKey}`;
 }
 
-/** Max data-URL length for draft portraits before save-time Storage upload. */
-const MAX_PORTRAIT_DATA_URL_LENGTH = 700 * 1024;
+/** Max data-URL length for draft portraits before save-time Storage upload (also guest local persist). */
+export const MAX_PORTRAIT_DATA_URL_LENGTH = 700 * 1024;
 
 export const PORTRAIT_DRAFT_TOO_LARGE = 'Image is still too large. Please use a smaller image.';
 

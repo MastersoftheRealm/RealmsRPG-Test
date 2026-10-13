@@ -4,10 +4,10 @@
  * HubListRow — Unified list row for hub pages (Encounters, Crafting, etc.)
  * ==========================================================================
  * Single source of truth for the "icon + title + badge + subtitle + actions" row pattern.
- * Use for any clickable list row with optional delete and consistent styling.
+ * The title is the button. Delete and other actions are siblings above its hit area.
  */
 
-import { type ReactNode } from 'react';
+import { type CSSProperties, type ReactNode } from 'react';
 import { ChevronRight, Trash2 } from 'lucide-react';
 import type { VariantProps } from 'class-variance-authority';
 import { IconButton, Card, DescriptorChip, type chipVariants } from '@/components/ui';
@@ -15,8 +15,35 @@ import { cn } from '@/lib/utils';
 
 type DescriptorVariant = NonNullable<VariantProps<typeof chipVariants>['variant']>;
 
+/** Default delete + chevron (crafting hub). */
+export const HUB_LIST_ROW_MOBILE_CHROME_END_DEFAULT = '5.5rem';
+
+/**
+ * Encounter rightSlot below `lg`. The two icon buttons are hover-only;
+ * the painted trailing control is the chevron (`h-5`) plus a small gap.
+ * Reserving both buttons as well collapsed the name to a few pixels at 375px.
+ */
+export const HUB_LIST_ROW_MOBILE_CHROME_END_SLOT = '1.5rem';
+
+/** Trailing chrome reserve below `lg` (86e3k9143). */
+export function hubListRowMobileChromeEnd(input: {
+  rightSlot: boolean;
+  showDefaultChrome: boolean;
+}): string | undefined {
+  if (input.rightSlot) return HUB_LIST_ROW_MOBILE_CHROME_END_SLOT;
+  if (input.showDefaultChrome) return HUB_LIST_ROW_MOBILE_CHROME_END_DEFAULT;
+  return undefined;
+}
+
 const ROW_BASE_CLASS =
-  'flex items-center gap-4 p-4 hover:border-primary-outline-border transition-colors cursor-pointer group shadow-none';
+  'relative isolate flex items-center gap-4 p-4 hover:border-primary-outline-border transition-colors cursor-pointer group shadow-none';
+
+/** Name is the row button. Actions stay above its stretched hit area. */
+const ROW_NAME_BUTTON_CLASS =
+  "block max-w-full cursor-pointer overflow-visible border-0 bg-transparent p-0 text-left font-[inherit] text-text-primary focus-visible:ring-2 focus-visible:ring-primary-outline-border focus-visible:ring-offset-2 focus-visible:outline-none after:absolute after:inset-0 after:z-0 after:cursor-pointer after:content-['']";
+
+const ROW_ACTIONS_CLASS =
+  'pointer-events-none relative z-10 flex flex-shrink-0 items-center gap-2 [&_a]:pointer-events-auto [&_button]:pointer-events-auto [&_input]:pointer-events-auto [&_select]:pointer-events-auto [&_textarea]:pointer-events-auto';
 
 export interface HubListRowProps {
   /** Icon (e.g. Hammer, Brain). Rendered in iconContainerClassName box. */
@@ -64,23 +91,13 @@ export function HubListRow({
   className,
 }: HubListRowProps) {
   const clickable = typeof onClick === 'function';
+  const showDefaultChrome = !rightSlot && (onDelete != null || showChevron);
+  const mobileChromeEnd = hubListRowMobileChromeEnd({
+    rightSlot: rightSlot != null,
+    showDefaultChrome,
+  });
   return (
-    <Card
-      role={clickable ? 'button' : undefined}
-      tabIndex={clickable ? 0 : undefined}
-      onClick={clickable ? onClick : undefined}
-      onKeyDown={
-        clickable
-          ? (e) => {
-              if (e.key === 'Enter' || e.key === ' ') {
-                e.preventDefault();
-                onClick?.();
-              }
-            }
-          : undefined
-      }
-      className={cn(ROW_BASE_CLASS, !clickable && 'cursor-default', className)}
-    >
+    <Card className={cn(ROW_BASE_CLASS, !clickable && 'cursor-default', className)}>
       <div
         className={cn(
           'flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-lg',
@@ -89,11 +106,37 @@ export function HubListRow({
       >
         {icon}
       </div>
-      <div className="min-w-0 flex-1">
-        <div className="flex items-center gap-2">
-          <h2 className="truncate font-semibold text-text-primary">{title}</h2>
+      <div
+        className={cn(
+          'min-w-0 flex-1',
+          mobileChromeEnd != null && 'max-lg:pe-[var(--hub-row-chrome-end)]',
+        )}
+        style={
+          mobileChromeEnd != null
+            ? ({ '--hub-row-chrome-end': mobileChromeEnd } as CSSProperties)
+            : undefined
+        }
+      >
+        <div className="flex min-w-0 items-center gap-2">
+          <h2 className="min-w-0 flex-1 font-semibold text-text-primary">
+            {onClick ? (
+              <button type="button" onClick={() => onClick()} className={ROW_NAME_BUTTON_CLASS}>
+                <span className="block truncate" title={title}>
+                  {title}
+                </span>
+              </button>
+            ) : (
+              <span className="block truncate" title={title}>
+                {title}
+              </span>
+            )}
+          </h2>
           {badge != null && badge !== '' && (
-            <DescriptorChip variant={badgeVariant} size="sm" className={badgeClassName}>
+            <DescriptorChip
+              variant={badgeVariant}
+              size="sm"
+              className={cn('shrink-0', badgeClassName)}
+            >
               {badge}
             </DescriptorChip>
           )}
@@ -103,7 +146,13 @@ export function HubListRow({
           <p className="mt-0.5 truncate text-xs text-text-muted">{description}</p>
         )}
       </div>
-      <div className="flex flex-shrink-0 items-center gap-2">
+      <div
+        className={cn(
+          ROW_ACTIONS_CLASS,
+          mobileChromeEnd != null &&
+            'max-lg:absolute max-lg:inset-y-0 max-lg:right-4 max-lg:flex max-lg:items-center',
+        )}
+      >
         {rightSlot ?? (
           <>
             {onDelete && (

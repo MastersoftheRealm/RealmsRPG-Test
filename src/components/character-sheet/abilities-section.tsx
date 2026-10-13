@@ -22,6 +22,8 @@ import {
   ABILITY_ORDER,
   ABILITY_CONSTRAINTS,
   DefenseStatTile,
+  SHEET_ABILITY_MAX,
+  sheetAbilityBudgetHint,
   SHEET_STAT_GRID_CLASS,
 } from '@/components/patterns';
 import { Card } from '@/components/ui';
@@ -131,7 +133,7 @@ export function AbilitiesSection({
     return 10 + getDefenseBonus(ability, useEffective);
   };
 
-  const maxAbility = ABILITY_CONSTRAINTS.getMaxAbility(level);
+  const maxAbility = SHEET_ABILITY_MAX;
   const maxDefenseSkill = ABILITY_CONSTRAINTS.getMaxDefenseSkill(level);
 
   const abilityRemaining =
@@ -209,8 +211,7 @@ export function AbilitiesSection({
             )}
           </div>
           <div className="text-xs text-text-muted">
-            Max ability: +{maxAbility} | Defense: {defenseIncreaseCost}sp per +1 (max +
-            {maxDefenseSkill})
+            {sheetAbilityBudgetHint(defenseIncreaseCost, maxDefenseSkill)}
           </div>
         </div>
       )}
@@ -251,7 +252,6 @@ export function AbilitiesSection({
             key={ability}
             ability={ability}
             abilities={abilities}
-            level={level}
             powerAbility={powerAbility}
             martialAbility={martialAbility}
             tempModifiers={tempModifiers}

@@ -9,11 +9,12 @@ import type { ChipData } from '@/components/patterns';
 import type { ColumnValue } from '@/components/patterns/list/grid-list-row';
 import type { ItemProperty } from '@/hooks/codex-types';
 import type { LibraryItem } from '@/types/library';
+import { parseCatalogListing } from '@/lib/library/catalog-listing';
 import {
   deriveAgilityReductionFromProperties,
   deriveCriticalRangeIncreaseFromProperties,
   deriveShieldAmountFromProperties,
-  deriveShieldDamageFromProperties,
+  resolveShieldDamageDisplay,
   resolveItemMarketPricing,
   resolveWeaponRangeDisplay,
   type ItemPropertyPayload,
@@ -119,6 +120,7 @@ export interface OfficialItemRow {
   criticalRangeIncrease: number;
   block: string;
   parts: ChipData[];
+  catalogListing?: LibraryItem['catalogListing'];
 }
 
 function propertyChipsForItem(item: LibraryItem, propertiesDb: ItemProperty[]): ChipData[] {
@@ -192,9 +194,12 @@ export function buildOfficialItemRows(
     const abilityRequirement = abilityReqResult.display;
     const abilityReq = abilityReqResult.req;
     const block = deriveShieldAmountFromProperties(props);
-    const shieldDamage =
-      deriveShieldDamageFromProperties(props) ??
-      (item.damage ? formatDamageDisplay(item.damage) : null);
+    const shieldDamage = resolveShieldDamageDisplay({
+      shieldDamage: item.shieldDamage,
+      hasShieldDamage: item.hasShieldDamage,
+      properties: props,
+      damage: item.damage,
+    });
     return {
       id: String(item.id ?? item.docId ?? ''),
       raw: item,
@@ -213,6 +218,7 @@ export function buildOfficialItemRows(
       criticalRangeIncrease,
       block: block !== '-' ? block : '-',
       parts: propertyChipsForItem(item, propertiesDb),
+      catalogListing: parseCatalogListing(item.catalogListing),
     };
   });
 }

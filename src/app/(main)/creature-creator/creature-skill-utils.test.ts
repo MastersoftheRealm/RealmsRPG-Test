@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
-import { rawRecordToCreatureState } from './creature-skill-utils';
+import type { Skill } from '@/hooks';
+import { creatureSkillsToAllocations, rawRecordToCreatureState } from './creature-skill-utils';
 
 describe('rawRecordToCreatureState inventory (TASK-812)', () => {
   it('migrates a mixed armaments bag into kind buckets', () => {
@@ -29,5 +30,29 @@ describe('rawRecordToCreatureState inventory (TASK-812)', () => {
       ],
     });
     expect(state.weapons.map((i) => i.id)).toEqual(['w2']);
+  });
+
+  it('drops a sub-skill whose base skill is gone (86e3jx4dp)', () => {
+    const codex = [
+      { id: '20', name: 'Craft' },
+      { id: '21', name: 'Smith', base_skill_id: 20 },
+      { id: '10', name: 'Athletics' },
+    ] as Skill[];
+    const allocations = creatureSkillsToAllocations(
+      [
+        { id: '10', name: 'Athletics', value: 1, proficient: true },
+        {
+          id: '21',
+          name: 'Smith',
+          value: 1,
+          proficient: true,
+          isSubSkill: true,
+          baseSkillId: '20',
+        },
+      ],
+      codex,
+    );
+    expect(allocations['10']).toBe(1);
+    expect(allocations['21']).toBeUndefined();
   });
 });

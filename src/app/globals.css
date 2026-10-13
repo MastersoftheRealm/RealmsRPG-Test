@@ -359,6 +359,8 @@
   --z-index-popover: 70;
   --z-index-toast: 100;
   --z-index-floating: 1000;
+  /* Sheet modals cover the roll-log dock (z-floating). Toasts stay on z-toast-stack. */
+  --z-index-modal: 1050;
   --z-index-tour: 1100;
   --z-index-skip-link: 9999;
   --z-index-toast-stack: 10000;
@@ -380,8 +382,8 @@
   --dock-fab-size: 3.5rem;
   --dock-bottom: var(--dock-gap);
   --sheet-mobile-dock-height: calc(4.5rem + env(safe-area-inset-bottom, 0px));
-  /* Same length as the owner dock; used as panel end-pad when no toolbar (TASK-843). */
-  --sheet-mobile-fab-gutter: var(--sheet-mobile-dock-height);
+  /* FAB overlap below md when the sheet has no action-dock strip (RM / view-only). */
+  --sheet-mobile-fab-gutter: calc(var(--dock-fab-size) + var(--dock-gap));
   --dock-reserved-end: calc(var(--dock-fab-size) + var(--dock-gap) * 2);
 }
 
@@ -712,12 +714,35 @@
     );
   }
 
-  /* C1 frame vs C4 reserve (TASK-843): height-bound class stays shared.
-     Owner `.has-sheet-mobile-dock` keeps the opaque action-dock strip.
-     RM / other frames pad scrollable panels with the FAB gutter instead. */
+  /* C1 frame vs C4 reserve (TASK-843 / 86e3jt15m): every sheet frame clears the
+     roll-log FAB. Owner `.has-sheet-mobile-dock` reserves the action-dock strip
+     instead. Panel end-pad stays 1rem so it does not stack on that reserve. */
   .character-sheet-mobile-frame {
-    --sheet-mobile-bottom-reserve: 0px;
-    --sheet-panel-end-pad: var(--sheet-mobile-fab-gutter);
+    --sheet-mobile-bottom-reserve: var(--sheet-mobile-fab-gutter);
+    --sheet-panel-end-pad: 1rem;
+  }
+
+  /* TASK-907: column is the vertical scroller. Inactive height 0 is the
+     Tailwind `:not([data-sheet-panel-active])` utilities (they beat `pb-4`).
+     Lock height while panning so the incoming panel is visible. */
+  @media (max-width: 767px) {
+    /* Apply the reserve here so clearance does not depend on a scanned utility. */
+    .character-sheet-mobile-frame {
+      box-sizing: border-box;
+      padding-bottom: var(--sheet-mobile-bottom-reserve);
+    }
+
+    [data-sheet-mobile-column] {
+      -webkit-overflow-scrolling: touch;
+    }
+
+    [data-sheet-mobile-carousel][data-sheet-carousel-panning] [data-sheet-mobile-panel] {
+      height: var(--sheet-carousel-lock-height);
+      min-height: var(--sheet-carousel-lock-height);
+      max-height: var(--sheet-carousel-lock-height);
+      overflow: hidden;
+      padding-bottom: 0;
+    }
   }
 
   .has-sheet-mobile-dock .character-sheet-mobile-frame {
@@ -749,16 +774,50 @@
       padding-right: var(--dock-reserved-end);
       padding-bottom: var(--dock-reserved-end);
     }
+
+    /* The site footer is outside #main-content. Reserve the FAB so the
+       copyright line can scroll clear (86e3jt15m). */
+    body:has(.floating-dock-bottom-right) footer {
+      padding-bottom: var(--dock-reserved-end);
+    }
   }
 
   #main-content:has(.floating-dock-bottom-right):not(:has(.character-sheet-mobile-frame)) {
     padding-bottom: var(--dock-reserved-end);
   }
 
+  /* Encounter combat/skill trackers: end + bottom gutter so Roll Log FAB does not cover
+     Energy steppers (~375) or Conditions chips when scrolled (~1280) — 86e3k915w.
+     The gutter only moves controls when the play column is min-w-0. A min-content
+     column paints through this padding. */
+  .encounter-tracker-dock-frame {
+    box-sizing: border-box;
+    padding-inline-end: var(--sheet-mobile-fab-gutter);
+    padding-bottom: var(--sheet-mobile-fab-gutter);
+  }
+
+  /* Creature creator: the Roll Log FAB covers Size and the right-hand controls at ~375 (86e3jx9gn). */
+  .creature-creator-dock-frame {
+    box-sizing: border-box;
+    padding-inline-end: var(--sheet-mobile-fab-gutter);
+  }
+
+  @media (min-width: 768px) {
+    .encounter-tracker-dock-frame {
+      padding-inline-end: 0;
+      padding-bottom: var(--dock-reserved-end);
+    }
+
+    .creature-creator-dock-frame {
+      padding-inline-end: 0;
+    }
+  }
+
   body:has([aria-modal='true']) .floating-dock-bottom-right,
   body:has([aria-modal='true']) .sheet-mobile-action-dock {
     visibility: hidden;
     pointer-events: none;
+    z-index: 0;
   }
 
   /* C1: the sheet frame is viewport-bounded. Hide the site footer below md so
@@ -821,6 +880,24 @@
   .hit-area-dense-square:hover,
   .hit-area-dense-square:focus-visible {
     z-index: 1;
+  }
+
+  /* Creator ± steppers: square 44px hit on coarse (86e3jx9gm) without widening grid rows site-wide. */
+  @media (pointer: coarse) {
+    [data-creator-page] .btn-stepper.hit-area-dense::after,
+    [data-creator-roll-dock] .btn-stepper.hit-area-dense::after {
+      top: 50%;
+      left: 50%;
+      right: auto;
+      width: max(100%, var(--touch-target-min, 44px));
+      height: max(100%, var(--touch-target-min, 44px));
+      transform: translate(-50%, -50%);
+    }
+
+    [data-creator-roll-dock] [data-creator-dice-pick] {
+      min-height: var(--touch-target-min, 44px);
+      min-width: var(--touch-target-min, 44px);
+    }
   }
 
   /*
@@ -981,10 +1058,11 @@
 
   /* C1 overflow chrome (TASK-840): fade + chevrons on the wrapper, not in trailing.
      Fade is chevron width + 8px so Dense/Standard hits do not overlap unfaded tabs.
-     Sheet carousel reuses the same fade metric/mask (TASK-868) — no second helper. */
-  .tab-nav-scroll,
-  [data-sheet-mobile-carousel] {
-    --tab-nav-overflow-fade: 2.5rem;
+     Sheet carousel does not reuse this mask (TASK-907 — content fade encroached). */
+  .tab-nav-scroll {
+    --tab-nav-scroll-btn-width: 2rem;
+    /* Button width plus an 8px gap so unfaded labels do not meet the chevron. */
+    --tab-nav-overflow-fade: calc(var(--tab-nav-scroll-btn-width) + 0.5rem);
   }
 
   .tab-nav-scroll {
@@ -998,41 +1076,43 @@
     scroll-padding-inline: var(--tab-nav-overflow-fade);
   }
 
-  .tab-nav-list[data-overflow-end='true'],
-  [data-sheet-mobile-carousel][data-overflow-end='true'] {
+  /* Core Rules has 14 tabs. Wrap them so every label stays readable at 768 and 1280. */
+  .admin-core-rules-tabs .tab-nav-list {
+    flex-wrap: wrap;
+    overflow: visible;
+    scrollbar-width: none;
+  }
+
+  .tab-nav-list[data-overflow-end='true'] {
     mask-image: linear-gradient(
       to right,
       black 0,
       black calc(100% - var(--tab-nav-overflow-fade)),
+      transparent calc(100% - var(--tab-nav-scroll-btn-width)),
       transparent 100%
     );
   }
 
-  .tab-nav-list[data-overflow-start='true'],
-  [data-sheet-mobile-carousel][data-overflow-start='true'] {
+  .tab-nav-list[data-overflow-start='true'] {
     mask-image: linear-gradient(
       to right,
       transparent 0,
+      transparent var(--tab-nav-scroll-btn-width),
       black var(--tab-nav-overflow-fade),
       black 100%
     );
   }
 
-  .tab-nav-list[data-overflow-start='true'][data-overflow-end='true'],
-  [data-sheet-mobile-carousel][data-overflow-start='true'][data-overflow-end='true'] {
+  .tab-nav-list[data-overflow-start='true'][data-overflow-end='true'] {
     mask-image: linear-gradient(
       to right,
       transparent 0,
+      transparent var(--tab-nav-scroll-btn-width),
       black var(--tab-nav-overflow-fade),
       black calc(100% - var(--tab-nav-overflow-fade)),
+      transparent calc(100% - var(--tab-nav-scroll-btn-width)),
       transparent 100%
     );
-  }
-
-  @media (min-width: 768px) {
-    [data-sheet-mobile-carousel] {
-      mask-image: none;
-    }
   }
 
   .tab-nav-scroll-btn {
@@ -1040,13 +1120,12 @@
   }
 
   @media (pointer: coarse) {
-    .tab-nav-scroll,
-    [data-sheet-mobile-carousel] {
-      --tab-nav-overflow-fade: 3.25rem;
+    .tab-nav-scroll {
+      --tab-nav-scroll-btn-width: 2.75rem;
     }
 
     .tab-nav-scroll-btn {
-      width: 2.75rem;
+      width: var(--tab-nav-scroll-btn-width);
     }
   }
 
@@ -1111,14 +1190,19 @@
    * DecrementButton / IncrementButton (QuantitySelector wraps ValueStepper).
    */
   .btn-stepper {
-    @apply flex items-center justify-center rounded-lg bg-surface-alt font-bold text-text-secondary transition-colors hover:bg-surface disabled:cursor-not-allowed disabled:bg-transparent disabled:text-border-light dark:disabled:bg-transparent dark:disabled:text-border-light;
+    @apply flex items-center justify-center rounded-lg bg-surface-alt p-0 leading-none font-bold text-text-primary transition-colors hover:bg-surface disabled:cursor-not-allowed disabled:bg-surface-alt disabled:text-text-muted;
     transition-duration: var(--duration-fast);
   }
 
   /* GridListRow: inherit the row surface so hover:bg-surface-alt is one band
-     (TASK-710). Do not change global stepper chrome on skills / sheet allocators. */
+     (TASK-710). Disabled keeps the plate so greyed ± stay a visible control
+     (TASK-910) — `bg-transparent` would otherwise win over :disabled. */
   [data-glr-row] .btn-stepper {
     @apply bg-transparent hover:bg-transparent;
+  }
+
+  [data-glr-row] .btn-stepper:disabled {
+    @apply bg-surface-alt text-text-muted;
   }
 
   /* ---------------------------------------------------------------------------

@@ -12,14 +12,13 @@ import {
   getEncounters,
   getEncounter,
   createEncounter,
-  saveEncounter,
+  persistEncounterSave,
   deleteEncounter,
 } from '@/services/encounter-service';
 import {
   getGuestEncountersList,
   getGuestEncounter,
   createGuestEncounter,
-  saveGuestEncounter,
   deleteGuestEncounter,
   isGuestEncounterId,
 } from '@/lib/guest-encounter-storage';
@@ -82,11 +81,7 @@ export function useSaveEncounter() {
     Error,
     { id: string; data: Partial<Omit<Encounter, 'id' | 'createdAt'>> }
   >({
-    mutationFn: ({ id, data }) => {
-      if (user || !isGuestEncounterId(id)) return saveEncounter(id, data);
-      saveGuestEncounter(id, data);
-      return Promise.resolve();
-    },
+    mutationFn: ({ id, data }) => persistEncounterSave(id, data, { signedIn: !!user }),
     onSuccess: (_, { id }) => {
       queryClient.invalidateQueries({ queryKey: encounterKeys.detail(id) });
       queryClient.invalidateQueries({ queryKey: encounterKeys.lists() });

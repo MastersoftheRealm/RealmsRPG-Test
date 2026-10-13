@@ -2,10 +2,8 @@
  * DetailOptionList — shared elongated expandable option rows for deep-dive catalogs
  * (Traits, Feats, Weapons, Armor, Powers, Techniques) and remodeled legacy trait lists.
  *
- * Collapsed row shows name + truncated description (mobile: prose below name, no column label).
- * When expanded, GridListRow hides the truncated description teaser so the full description only appears in the panel.
- * Fact/stats that would normally be columns (Damage Reduction, Range, Uses, Energy, etc.) belong as labeled chips in the
- * expanded body so the label states the value (e.g. "Damage Reduction 2"), not bare numbers.
+ * Collapsed row shows the name. Expand for the full description plus labeled fact chips
+ * (TASK-909 — truncated Description columns are not a glance surface).
  */
 
 'use client';
@@ -28,7 +26,7 @@ export interface DetailOptionListProps {
   className?: string | undefined;
   groupLabel?: string | undefined;
   groupHint?: string | undefined;
-  /** When false, hide Name/Description column headers for a cleaner catalog list. Default true. */
+  /** When false, hide Name column headers for a cleaner catalog list. Default true. */
   showColumnHeaders?: boolean | undefined;
   /** Semantic text styles for empty / group hint. */
   mutedClassName?: string | undefined;
@@ -52,7 +50,7 @@ export function DetailOptionList({
     return <p className={cn(mutedClassName, className)}>{emptyLabel}</p>;
   }
 
-  const gridColumns = 'minmax(7rem, 1fr) minmax(0, 2.2fr)';
+  const gridColumns = 'minmax(7rem, 1fr)';
 
   return (
     <div className={cn('space-y-2', className)}>
@@ -65,10 +63,7 @@ export function DetailOptionList({
 
       {showColumnHeaders ? (
         <ListHeader
-          columns={[
-            { key: 'name', label: 'Name', sortable: false },
-            { key: 'description', label: 'Description', sortable: false },
-          ]}
+          columns={[{ key: 'name', label: 'Name', sortable: false }]}
           gridColumns={gridColumns}
           compact
         />
@@ -97,19 +92,6 @@ export function DetailOptionList({
                 gridColumns={gridColumns}
                 chips={chips}
                 chipsLabel={item.chipsLabel ?? 'Details'}
-                columns={[
-                  {
-                    key: 'description',
-                    label: 'Description',
-                    align: 'left',
-                    hideOnMobile: true,
-                    value: desc ? (
-                      <span className="line-clamp-2 text-left text-text-secondary">{desc}</span>
-                    ) : (
-                      <span className="text-text-muted">None</span>
-                    ),
-                  },
-                ]}
                 supplementalExpandedContent={supplemental}
               />
             </li>

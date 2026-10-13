@@ -12,6 +12,7 @@ import {
   type AttackMode,
 } from '@/lib/attack-mode';
 import { dedupeSavedParts } from '@/lib/game/dedupe-saved-parts';
+import { parseCatalogListing } from '@/lib/library/catalog-listing';
 
 export const COLUMNAR_LIBRARY_TYPES = [
   'powers',
@@ -238,6 +239,9 @@ export function rowToItem(
   if (row.name !== undefined && row.name !== null) base.name = row.name;
   if (row.description !== undefined && row.description !== null) base.description = row.description;
   if (source) base._source = source;
+  if (source === 'official') {
+    base.catalogListing = parseCatalogListing(v(row, 'catalogListing', 'catalog_listing'));
+  }
   if (type === 'powers') {
     assignIfPresent('actionType', v(row, 'actionType', 'action_type'));
     assignIfPresent('isReaction', v(row, 'isReaction', 'is_reaction'));
@@ -439,7 +443,8 @@ export function bodyToColumnar(
     if (body.rangeLevel != null) scalars.rangeSteps = body.rangeLevel;
     if (body.rangeSteps != null) scalars.rangeSteps = body.rangeSteps;
     if (body.isTwoHanded != null) scalars.isTwoHanded = body.isTwoHanded;
-    if (body.abilityRequirement != null) scalars.abilityRequirement = body.abilityRequirement;
+    // Null is an explicit clear (None). Omitting the key leaves the column alone.
+    if (body.abilityRequirement !== undefined) scalars.abilityRequirement = body.abilityRequirement;
     if (body.costs != null) scalars.costs = body.costs;
     if (Array.isArray(body.damage)) scalars.damage = body.damage;
     if (Array.isArray(body.properties)) scalars.properties = body.properties;
@@ -447,7 +452,8 @@ export function bodyToColumnar(
     if (body.criticalRangeIncrease != null)
       scalars.criticalRangeIncrease = body.criticalRangeIncrease;
     if (body.shieldDR != null) scalars.shieldDR = body.shieldDR;
-    if (body.shieldDamage != null) scalars.shieldDamage = body.shieldDamage;
+    // Null is an explicit clear. Omitting the key leaves a previously saved die in the column.
+    if (body.shieldDamage !== undefined) scalars.shieldDamage = body.shieldDamage;
   }
 
   applyImageScalarsFromBody(scalars, body);
@@ -458,6 +464,9 @@ export function bodyToColumnar(
     'imageUrl',
     'image_id',
     'image_url',
+    // Official catalog class is a real column (ADR-0027); never payload. User_* have no column.
+    'catalogListing',
+    'catalog_listing',
     ...(type === 'powers' ? ['range', 'duration', 'area', 'damage'] : []),
     ...(type === 'techniques' || type === 'empowered-techniques'
       ? [
@@ -640,6 +649,7 @@ export function bodyToColumnarSpecies(body: Record<string, unknown>): {
     if (k === 'id' || k === 'docId' || k === '_source') continue;
     // Image refs are columnar only (camel or snake) — never duplicate into payload JSONB.
     if (k === 'imageId' || k === 'imageUrl' || k === 'image_id' || k === 'image_url') continue;
+    if (k === 'catalogListing' || k === 'catalog_listing') continue;
     if (scalarKeys.has(k)) {
       if (
         SPECIES_ARRAY_KEYS.includes(k as (typeof SPECIES_ARRAY_KEYS)[number]) &&

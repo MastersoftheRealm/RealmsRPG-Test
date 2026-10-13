@@ -14,6 +14,7 @@
 
 import { useMemo } from 'react';
 import { Card } from '@/components/ui';
+import { cn } from '@/lib/utils';
 import { useGameRules } from '@/hooks';
 import { calculateHealthEnergyPool } from '@/lib/game/formulas';
 import { calculateAllStats, calculateCriticalRange } from '@/lib/game/calculations';
@@ -26,7 +27,11 @@ import {
   type TempModifierScalarKey,
 } from '@/lib/character/temp-modifiers';
 import type { AllowUndefinedOptionals } from '@/lib/utils/exact-optional';
-import { formatSpeedForDisplay } from '@/lib/utils/number';
+import {
+  formatSpeedForDisplay,
+  formatSpeedTempModifierDelta,
+  SPEED_TEMP_MODIFIER_STEP_SPACES,
+} from '@/lib/utils/number';
 import { useCharacterSheetOptional } from './character-sheet-context';
 import { getEquippedArmorQuickRef } from './library-list-helpers';
 import type { Character, CharacterTempModifiers, Item } from '@/types';
@@ -34,6 +39,13 @@ import { getHealthColor } from './sheet-resource-input';
 import { LargeStatBlock } from './sheet-large-stat-block';
 import { SheetHeaderIdentity } from './sheet-header-identity';
 import { SheetHeaderResources } from './sheet-header-resources';
+import {
+  SHEET_HEADER_GRID_CLASSNAME,
+  SHEET_HEADER_IDENTITY_CLASSNAME,
+  SHEET_HEADER_RESOURCES_CLASSNAME,
+  SHEET_HEADER_STATS_WRAP_CLASSNAME,
+  sheetHeaderVitalGridClass,
+} from './sheet-header-layout';
 
 interface CalculatedStats {
   maxHealth: number;
@@ -195,17 +207,13 @@ export function SheetHeader({
   // changes that stat. Temp mode always shows both cards so a temp can be added.
   const showDamageReduction = isTempModifierMode || baseDamageReduction > 0 || drTemp !== 0;
   const showCriticalRange = isTempModifierMode || critIncrease > 0 || critTemp !== 0;
+  const vitalCount = 2 + Number(showDamageReduction) + Number(showCriticalRange);
 
   return (
     <Card className="mb-4 w-full min-w-0 p-4 shadow-md md:p-6" data-tour-id="sheet-tour-header">
-      {/*
-        C3/C5 (TASK-839): equal-track stat cards, not flex-wrap content-width children.
-        3-col identity | stats | resources from lg (1024) as equal `minmax(0,1fr)` tracks
-        so stats are never a leftover flex column (~119px). From xl, cap the side tracks.
-        Below lg: identity | resources, stats span (2-col phones, 4-col from md).
-      */}
-      <div className="grid min-w-0 grid-cols-1 items-stretch gap-6 md:grid-cols-2 lg:grid-cols-3 lg:items-center xl:grid-cols-[minmax(0,20rem)_minmax(0,1fr)_minmax(16rem,20rem)]">
-        <div className="min-w-0">
+      {/* C3/C5 (TASK-908 / 86e3jvv3j): 3-col from xl; identity | resources on md–lg with vitals full width. */}
+      <div className={SHEET_HEADER_GRID_CLASSNAME}>
+        <div className={SHEET_HEADER_IDENTITY_CLASSNAME}>
           <SheetHeaderIdentity
             character={character}
             isEditMode={isEditMode}
@@ -221,18 +229,16 @@ export function SheetHeader({
           />
         </div>
 
-        {/* C3/C5 (TASK-839): equal-track stat grid. TASK-885: w-max centered cluster — compact tiles, not full-bleed bars. */}
-        <div className="flex min-w-0 justify-center md:col-span-2 lg:col-span-1 lg:col-start-2 lg:row-start-1">
-          <div
-            className="grid w-max max-w-full grid-cols-2 gap-3 md:grid-cols-4 md:gap-4 lg:grid-cols-2"
-            data-sheet-stat-grid
-          >
+        <div className={SHEET_HEADER_STATS_WRAP_CLASSNAME}>
+          <div className={cn(sheetHeaderVitalGridClass(vitalCount))} data-sheet-stat-grid>
             <LargeStatBlock
               label="Speed"
               value={speedDisplayValue}
               valueSuffix={speedDisplay.suffix}
               isTempModifierMode={isTempModifierMode}
               tempDelta={speedTemp}
+              formatTempDelta={formatSpeedTempModifierDelta}
+              tempStep={SPEED_TEMP_MODIFIER_STEP_SPACES}
               onTempDeltaChange={
                 onTempModifiersChange ? (d) => setScalarTemp('speed', d) : undefined
               }
@@ -273,7 +279,7 @@ export function SheetHeader({
           </div>
         </div>
 
-        <div className="min-w-0">
+        <div className={SHEET_HEADER_RESOURCES_CLASSNAME}>
           <SheetHeaderResources
             actionPoints={actionPoints}
             onActionPointsChange={onActionPointsChange}

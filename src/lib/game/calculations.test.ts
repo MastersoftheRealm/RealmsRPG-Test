@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import type { Abilities, Character } from '@/types';
 import { DEFAULT_ABILITIES, DEFAULT_DEFENSE_SKILLS } from '@/types';
+import { calculateTrainingPoints } from '@/lib/game/formulas';
 import {
   abilityDefenseBonusesFromAbilities,
   calculateAllStats,
@@ -11,6 +12,8 @@ import {
   calculateMaxEnergy,
   calculateMaxEnergyForArchetype,
   calculateSpeed,
+  computeMaxHealthEnergy,
+  getArchetypeAbilityScore,
   resolveEnergyArchetypeAbility,
 } from '@/lib/game/calculations';
 
@@ -69,11 +72,107 @@ describe('calculateMaxEnergyForArchetype / calculateAllStats Powered-Martial Ene
   });
 });
 
+describe('pure Martial max Energy and Training Points (86e3jv2hr)', () => {
+  const abilities: Abilities = {
+    ...DEFAULT_ABILITIES,
+    strength: 0,
+    vitality: 1,
+    agility: 1,
+    acuity: 2,
+    intelligence: 0,
+    charisma: 3,
+  };
+
+  const pureMartial: Partial<Character> = {
+    level: 2,
+    healthPoints: 6,
+    energyPoints: 12,
+    pow_abil: 'charisma',
+    mart_abil: 'strength',
+    pow_prof: 0,
+    mart_prof: 2,
+    archetype: { id: '8', type: 'martial' },
+    abilities,
+  };
+
+  it('uses Strength 0, not the leftover Charisma 3', () => {
+    expect(resolveEnergyArchetypeAbility(abilities, 'charisma', 'strength', 'martial')).toBe(
+      'strength',
+    );
+    // 12 + 0 × level. Charisma 3 would have been 18 at level 2 and 21 at level 3.
+    expect(
+      calculateMaxEnergyForArchetype(12, abilities, 2, 'charisma', 'strength', 'martial'),
+    ).toBe(12);
+    expect(calculateAllStats(pureMartial).maxEnergy).toBe(12);
+    expect(calculateAllStats({ ...pureMartial, level: 3 }).maxEnergy).toBe(12);
+    expect(computeMaxHealthEnergy(pureMartial).maxEnergy).toBe(12);
+    expect(getArchetypeAbilityScore(pureMartial)).toBe(0);
+    expect(
+      calculateTrainingPoints(3, getArchetypeAbilityScore(pureMartial)) -
+        calculateTrainingPoints(2, getArchetypeAbilityScore(pureMartial)),
+    ).toBe(2);
+  });
+
+  it('uses the martial ability when the path type is missing and only Martial proficiency is spent', () => {
+    const withoutType = { ...pureMartial, archetype: undefined };
+    expect(calculateAllStats(withoutType).maxEnergy).toBe(12);
+    expect(getArchetypeAbilityScore(withoutType)).toBe(0);
+  });
+
+  it('still uses the higher Archetype Ability on a Powered-Martial path', () => {
+    expect(
+      calculateMaxEnergyForArchetype(
+        4,
+        poweredMartialAbilities,
+        10,
+        'intelligence',
+        'strength',
+        'powered-martial',
+      ),
+    ).toBe(34);
+    expect(
+      calculateAllStats({
+        ...poweredMartialLevel10,
+        archetype: { id: 'hybrid', type: 'powered-martial' },
+      }).maxEnergy,
+    ).toBe(34);
+  });
+
+  it('uses the Power Ability on a pure Power path and ignores a higher leftover martial ability', () => {
+    const powerAbilities: Abilities = {
+      ...DEFAULT_ABILITIES,
+      intelligence: 1,
+      strength: 4,
+    };
+    expect(
+      calculateMaxEnergyForArchetype(12, powerAbilities, 2, 'intelligence', 'strength', 'power'),
+    ).toBe(14);
+    expect(
+      getArchetypeAbilityScore({
+        pow_abil: 'intelligence',
+        mart_abil: 'strength',
+        archetype: { id: 'power', type: 'power' },
+        abilities: powerAbilities,
+      }),
+    ).toBe(1);
+  });
+});
+
 describe('calculateCreatureSpeed (M12 / D4)', () => {
   it('matches player Speed and does not add a size modifier', () => {
     expect(calculateCreatureSpeed(2)).toBe(calculateSpeed(2));
     expect(calculateCreatureSpeed(2)).toBe(7);
     expect(calculateCreatureSpeed(-2)).toBe(calculateSpeed(-2));
+  });
+
+  it('Speedy and Slow change Speed, and Speedy tiers do not add (86e3jx63c)', () => {
+    expect(calculateCreatureSpeed(2, undefined, ['Speedy'])).toBe(9);
+    expect(calculateCreatureSpeed(2, undefined, ['Speedy II'])).toBe(11);
+    expect(calculateCreatureSpeed(2, undefined, ['Speedy III'])).toBe(13);
+    expect(calculateCreatureSpeed(2, undefined, ['Slow'])).toBe(5);
+    expect(calculateCreatureSpeed(2, undefined, ['Speedy', 'Speedy III'])).toBe(13);
+    expect(calculateCreatureSpeed(2, undefined, ['Speedy III', 'Slow'])).toBe(11);
+    expect(calculateCreatureSpeed(2, undefined, ['Fly'])).toBe(7);
   });
 });
 
@@ -106,9 +205,9 @@ describe('calculateAllStats golden characters (T9)', () => {
         intelligence: 2,
       },
     });
-    expect(stats.maxHealth).toBe(9);
+    expect(stats.maxHealth).toBe(13);
     expect(stats.maxEnergy).toBe(2);
-    expect(stats.terminal).toBe(3);
+    expect(stats.terminal).toBe(4);
     expect(stats.speed).toBe(7);
     expect(stats.evasion).toBe(12);
     expect(stats.defenseBonuses.fortitude).toBe(1);
@@ -134,9 +233,9 @@ describe('calculateAllStats golden characters (T9)', () => {
       },
       defenseVals: { ...DEFAULT_DEFENSE_SKILLS, might: 2 },
     });
-    expect(stats.maxHealth).toBe(22);
+    expect(stats.maxHealth).toBe(26);
     expect(stats.maxEnergy).toBe(32);
-    expect(stats.terminal).toBe(6);
+    expect(stats.terminal).toBe(7);
     expect(stats.speed).toBe(7);
     expect(stats.evasion).toBe(12);
     expect(stats.defenseBonuses.might).toBe(5);
@@ -162,9 +261,9 @@ describe('calculateAllStats golden characters (T9)', () => {
         charisma: 1,
       },
     });
-    expect(stats.maxHealth).toBe(58);
+    expect(stats.maxHealth).toBe(62);
     expect(stats.maxEnergy).toBe(88);
-    expect(stats.terminal).toBe(15);
+    expect(stats.terminal).toBe(16);
     expect(stats.speed).toBe(8);
     expect(stats.evasion).toBe(13);
     expect(stats.defenseBonuses.might).toBe(4);

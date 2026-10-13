@@ -9,19 +9,30 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { DeleteConfirmModal, OfficialPowerList } from '@/components/patterns';
 import { useToast } from '@/components/ui';
-import { officialLibraryKeys, useOfficialLibrary, usePowerParts } from '@/hooks';
+import {
+  officialLibraryKeys,
+  useOfficialLibrary,
+  usePatchOfficialCatalogListing,
+  usePowerParts,
+} from '@/hooks';
 import { useQueryClient } from '@tanstack/react-query';
 import { apiFetch } from '@/lib/api-client';
 import { Wand2 } from 'lucide-react';
-
-const QUERY_KEY = ['official-library', 'powers'] as const;
 
 export function AdminPublicPowersTab() {
   const { showToast } = useToast();
   const router = useRouter();
   const queryClient = useQueryClient();
-  const { data: items = [], isLoading, error, refetch } = useOfficialLibrary('powers');
+  const {
+    data: items = [],
+    isLoading,
+    error,
+    refetch,
+  } = useOfficialLibrary('powers', {
+    includeUnlisted: true,
+  });
   const { data: partsDb = [] } = usePowerParts();
+  const patchListing = usePatchOfficialCatalogListing('powers');
   const [deleteConfirm, setDeleteConfirm] = useState<{ id: string; name: string } | null>(null);
 
   const handleDeleteFromList = async () => {
@@ -30,9 +41,9 @@ export function AdminPublicPowersTab() {
       await apiFetch(`/api/official/powers?id=${encodeURIComponent(deleteConfirm.id)}`, {
         method: 'DELETE',
       });
-      queryClient.invalidateQueries({ queryKey: QUERY_KEY });
-      queryClient.invalidateQueries({ queryKey: officialLibraryKeys.counts });
-      await queryClient.refetchQueries({ queryKey: QUERY_KEY });
+      queryClient.invalidateQueries({ queryKey: officialLibraryKeys.all, refetchType: 'all' });
+      queryClient.invalidateQueries({ queryKey: officialLibraryKeys.counts, refetchType: 'all' });
+      await queryClient.refetchQueries({ queryKey: officialLibraryKeys.all });
       setDeleteConfirm(null);
     } catch (e) {
       showToast(e instanceof Error ? e.message : 'Failed to delete', 'error');
@@ -57,6 +68,7 @@ export function AdminPublicPowersTab() {
         variant="admin"
         onEdit={(id) => router.push(`/power-creator?edit=${encodeURIComponent(id)}`)}
         onDelete={(id, name) => setDeleteConfirm({ id, name })}
+        onCatalogListingChange={patchListing}
       />
 
       {deleteConfirm && (

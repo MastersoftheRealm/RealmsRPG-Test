@@ -62,7 +62,7 @@ export function IconPairToggle({
   offIconClassName,
   onIconClassName,
   pressedClassName = 'text-success-fg',
-  idleClassName = 'text-text-muted hover:text-primary-fg-hover',
+  idleClassName = 'text-text-secondary hover:text-primary-fg-hover',
   touchFloor = 'always',
   paintedSize = SELECT_PAINTED,
 }: IconPairToggleProps) {
@@ -82,7 +82,7 @@ export function IconPairToggle({
         TOUCH_FLOOR[touchFloor],
         paintedSize[size],
         pressed ? pressedClassName : idleClassName,
-        disabled && 'cursor-not-allowed opacity-40 hover:bg-transparent',
+        disabled && 'cursor-not-allowed text-text-muted hover:bg-transparent hover:text-text-muted',
         className,
       )}
     >

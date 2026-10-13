@@ -5,6 +5,11 @@ import { RealmsImageField } from '@/components/patterns';
 import { Modal, Input, Textarea } from '@/components/ui';
 import { AdminCodexCopySourceBanner } from './admin-codex-copy-source-banner';
 import { AdminCodexEditModalFooter } from './admin-codex-edit-modal-footer';
+import { AdminCodexSourceField } from './admin-codex-source-field';
+import {
+  useCodexEditorDraftDirty,
+  useCodexEditorLeaveGuard,
+} from './admin-codex-unsaved-leave-guard';
 
 export type EquipmentFormState = {
   name: string;
@@ -12,6 +17,7 @@ export type EquipmentFormState = {
   category: string;
   currency: number;
   rarity: string;
+  source: string;
   imageId: string | null;
   imageUrl: string | null;
 };
@@ -22,6 +28,7 @@ export const EMPTY_EQUIPMENT_FORM: EquipmentFormState = {
   category: '',
   currency: 0,
   rarity: 'Common',
+  source: '',
   imageId: null,
   imageUrl: null,
 };
@@ -37,6 +44,7 @@ type AdminEquipmentEditModalProps = {
   categoryIsNew: boolean;
   setCategoryIsNew: Dispatch<SetStateAction<boolean>>;
   categories: string[];
+  sourceOptions: string[];
   saving: boolean;
   onDelete?: (() => void) | undefined;
   onSave: () => void;
@@ -53,21 +61,24 @@ export function AdminEquipmentEditModal({
   categoryIsNew,
   setCategoryIsNew,
   categories,
+  sourceOptions,
   saving,
   onDelete,
   onSave,
 }: AdminEquipmentEditModalProps) {
+  const dirty = useCodexEditorDraftDirty(form, isOpen);
+  const leave = useCodexEditorLeaveGuard(dirty, onClose);
   return (
     <Modal
       isOpen={isOpen}
-      onClose={onClose}
+      onClose={leave.requestClose}
       title={title}
       size="full"
       fullScreenOnMobile
       footer={
         <AdminCodexEditModalFooter
           onDelete={editingId ? onDelete : undefined}
-          onClose={onClose}
+          onClose={leave.requestClose}
           onSave={onSave}
           saveDisabled={saving || !form.name.trim()}
           saving={saving}
@@ -94,6 +105,11 @@ export function AdminEquipmentEditModal({
             rows={4}
           />
         </div>
+        <AdminCodexSourceField
+          value={form.source}
+          options={sourceOptions}
+          onChange={(source) => setForm((f) => ({ ...f, source }))}
+        />
         <RealmsImageField
           categories="equipment"
           imageId={form.imageId}
@@ -165,6 +181,7 @@ export function AdminEquipmentEditModal({
           </div>
         </div>
       </div>
+      {leave.prompt}
     </Modal>
   );
 }

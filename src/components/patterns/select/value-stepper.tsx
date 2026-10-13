@@ -25,6 +25,11 @@ import * as React from 'react';
 import { useRef, useCallback, useEffect } from 'react';
 import { cva, type VariantProps } from 'class-variance-authority';
 import { cn } from '@/lib/utils/cn';
+import {
+  createStepperValueMemory,
+  rememberStepperValue,
+  stepStepperValue,
+} from '@/lib/stepper-value-memory';
 
 // =============================================================================
 // Hold-to-Repeat Hook
@@ -148,6 +153,18 @@ const valueDisplayVariants = cva('text-center font-semibold tabular-nums', {
 
 type StepperHold = { start: () => void; stop: () => void };
 
+function stepperTitlesFromLabel(
+  label: string | undefined,
+  decrementTitle?: string,
+  incrementTitle?: string,
+): { decrementTitle: string; incrementTitle: string } {
+  const subject = label?.replace(/:\s*$/, '').trim();
+  return {
+    decrementTitle: decrementTitle ?? (subject ? `Decrease ${subject}` : 'Decrease'),
+    incrementTitle: incrementTitle ?? (subject ? `Increase ${subject}` : 'Increase'),
+  };
+}
+
 function StepperGlyphButton({
   glyph,
   onActivate,
@@ -167,10 +184,18 @@ function StepperGlyphButton({
   hold: StepperHold;
   className?: string | undefined;
 }) {
+  const activateFromKeyboard = (event: React.KeyboardEvent<HTMLButtonElement>) => {
+    if (disabled) return;
+    if (event.key !== 'Enter' && event.key !== ' ') return;
+    event.preventDefault();
+    onActivate();
+  };
+
   return (
     <button
       type="button"
       onClick={enableHoldRepeat ? undefined : onActivate}
+      onKeyDown={enableHoldRepeat ? activateFromKeyboard : undefined}
       onPointerDown={
         enableHoldRepeat
           ? (e) => {
@@ -273,23 +298,41 @@ export function ValueStepper({
   enableHoldRepeat = false,
   variant = 'default',
   className,
-  decrementTitle = 'Decrease',
-  incrementTitle = 'Increase',
+  decrementTitle,
+  incrementTitle,
 }: ValueStepperProps) {
+  const { decrementTitle: resolvedDecrementTitle, incrementTitle: resolvedIncrementTitle } =
+    stepperTitlesFromLabel(label, decrementTitle, incrementTitle);
   const canDecrement = !disabled && value > min;
   const canIncrement = !disabled && value < max;
 
-  const handleDecrement = useCallback(() => {
-    if (!disabled && value > min) {
-      onChange(Math.max(min, value - step));
-    }
-  }, [disabled, value, min, step, onChange]);
+  const memoryRef = useRef(createStepperValueMemory(value));
+  const onChangeRef = useRef(onChange);
+  const boundsRef = useRef({ min, max, step, disabled });
 
-  const handleIncrement = useCallback(() => {
-    if (!disabled && value < max) {
-      onChange(Math.min(max, value + step));
-    }
-  }, [disabled, value, max, step, onChange]);
+  useEffect(() => {
+    onChangeRef.current = onChange;
+    boundsRef.current = { min, max, step, disabled };
+    // A committed prop inside the current burst must not rewind clicks that
+    // already moved past it. An outside value replaces the burst.
+    memoryRef.current = rememberStepperValue(memoryRef.current, value);
+  }, [onChange, min, max, step, disabled, value]);
+
+  const applyStep = useCallback((direction: -1 | 1) => {
+    const bounds = boundsRef.current;
+    if (bounds.disabled) return;
+    const stepped = stepStepperValue(
+      memoryRef.current,
+      direction * bounds.step,
+      bounds.min,
+      bounds.max,
+    );
+    memoryRef.current = stepped.memory;
+    if (stepped.changed) onChangeRef.current(stepped.value);
+  }, []);
+
+  const handleDecrement = useCallback(() => applyStep(-1), [applyStep]);
+  const handleIncrement = useCallback(() => applyStep(1), [applyStep]);
 
   const decrementHold = useHoldRepeat(handleDecrement, enableHoldRepeat && canDecrement);
   const incrementHold = useHoldRepeat(handleIncrement, enableHoldRepeat && canIncrement);
@@ -334,7 +377,7 @@ export function ValueStepper({
         onActivate={handleDecrement}
         disabled={!canDecrement}
         size={size}
-        title={decrementTitle}
+        title={resolvedDecrementTitle}
         enableHoldRepeat={enableHoldRepeat}
         hold={decrementHold}
       />
@@ -350,7 +393,7 @@ export function ValueStepper({
         onActivate={handleIncrement}
         disabled={!canIncrement}
         size={size}
-        title={incrementTitle}
+        title={resolvedIncrementTitle}
         enableHoldRepeat={enableHoldRepeat}
         hold={incrementHold}
       />

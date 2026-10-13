@@ -20,17 +20,17 @@ export const SHARED_CONSTANTS = {
 /** Player character specific constants */
 export const PLAYER_CONSTANTS = {
   BASE_HIT_ENERGY: 18,
-  BASE_HEALTH: 8,
+  BASE_HEALTH: 12,
   BASE_TRAINING_POINTS: 22,
   TP_PER_LEVEL_MULTIPLIER: 2,
 } as const;
 
-/** Level-1 starting Currency (GAME_RULES). Shared by Guided + Legacy creators. */
+/** Level-1 starting Currency (GAME_RULES). Shared by character create. */
 export const CHARACTER_STARTING_CURRENCY = 200;
 
 /** Creature/NPC specific constants */
 export const CREATURE_CONSTANTS = {
-  BASE_HIT_ENERGY: 26,
+  BASE_HIT_ENERGY: 30,
   BASE_TRAINING_POINTS: 22,
   TP_PER_LEVEL: 2,
   BASE_SKILL_POINTS: 5,
@@ -84,10 +84,17 @@ export const ARCHETYPE_CONFIGS: Record<ArchetypeCategory, ArchetypeConfig> = {
   },
 } as const;
 
-/** Item property derivation (range spaces from Range property level). */
+/** Item property derivation (weapon range ladders from property option levels). */
 export const ITEM_PROPERTY_CONSTANTS = {
   RANGE_BASE_SPACES: 8,
   RANGE_SPACES_PER_LEVEL: 8,
+  RANGE_MAX_SPACES: 64,
+  THROWN_BASE_SPACES: 3,
+  THROWN_SPACES_PER_LEVEL: 2,
+  THROWN_MAX_SPACES: 35,
+  REACH_BASE_SPACES: 2,
+  REACH_SPACES_PER_LEVEL: 1,
+  REACH_MAX_SPACES: 6,
 } as const;
 
 /**

@@ -52,11 +52,11 @@ export function SheetHeaderResources({
   return (
     /* Right: Action Points (left, spans vertically) + Health & Energy (right) */
     <div className="flex w-full min-w-0 flex-col">
-      <div className="flex flex-col items-stretch gap-3 sm:flex-row">
-        {/* Action Points - left column, spans full height of Health+Energy */}
+      <div className="flex min-w-0 flex-col items-stretch gap-3 sm:flex-row sm:items-start">
+        {/* Action Points — content height only (no stretch beside Health/Energy). */}
         <div
           className={cn(
-            'flex min-w-[72px] flex-col justify-center rounded-lg border p-3',
+            'flex min-w-[4.5rem] shrink-0 flex-col justify-center self-start rounded-lg border p-3',
             'border-border-light bg-surface-alt dark:border-border dark:bg-surface',
           )}
         >
@@ -111,6 +111,7 @@ export function SheetHeaderResources({
             max={maxEnergy}
             onChange={onEnergyChange}
             colorVariant="energy"
+            min={Number.NEGATIVE_INFINITY}
             subLabel={
               innateThreshold > 0
                 ? `Innate: ${innateThreshold}${innatePools > 1 ? ` (${innatePools}×)` : ''}`

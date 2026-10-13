@@ -62,6 +62,8 @@ These are recorded in `supabase_migrations.schema_migrations` on RealmsRPG-Test.
 | `official_items_image_url` | 20260702143123 | [official-items-image-url.sql](official-items-image-url.sql) |
 | `normalize_codex_feat_ability_delimiters` | 20260703144039 | [normalize-codex-feat-ability-delimiters.sql](normalize-codex-feat-ability-delimiters.sql) |
 | `realms_image_library` | 20260716 (MCP) | [realms-image-library.sql](realms-image-library.sql) |
+| `official_catalog_listing` | 20260914 (MCP) | [official-catalog-listing.sql](official-catalog-listing.sql) |
+| `codex_entry_source` | 20260928 (MCP) | [codex-entry-source.sql](codex-entry-source.sql) |
 
 ---
 
@@ -159,7 +161,7 @@ These are recorded in `supabase_migrations.schema_migrations` on RealmsRPG-Test.
 |------|---------|
 | supabase-campaign-members.sql | `campaign_members` table |
 | supabase-campaign-members-grants.sql | GRANT if permission denied on `campaign_members` |
-| supabase-campaigns-owner-rls-hotfix-2026-07.sql | Restore owner SELECT/INSERT/UPDATE/DELETE policies if campaign creation hits RLS 42501 |
+| supabase-campaigns-owner-rls-hotfix-2026-07.sql | Restore the consolidated campaign SELECT policy and owner INSERT/UPDATE/DELETE policies if campaign creation hits RLS 42501 |
 | supabase-campaign-authz-2026-06.sql | Campaign/roll RLS hardening |
 | supabase-campaign-rpc-revoke-anon-2026-06.sql | Revoke anon on campaign RPCs |
 | supabase-characters-rls-cross-read.sql | Public + campaign visibility SELECT on `characters` |

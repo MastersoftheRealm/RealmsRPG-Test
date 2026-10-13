@@ -18,6 +18,9 @@ import {
   ErrorDisplay,
   type LoginPromptReason,
 } from '@/components/patterns';
+import { useCreatorLeaveBlocker } from '@/hooks/use-creator-unsaved-guard';
+import { creatorToolbarLoadAction } from '@/lib/creator/creator-unsaved-guard';
+import type { CreatorSaveTarget } from '@/lib/library/catalog-listing';
 import { CreatorLayout } from './CreatorLayout';
 import { CreatorSaveToolbar } from './CreatorSaveToolbar';
 import { LoadFromLibraryModal, type LoadFromLibraryModalProps } from './LoadFromLibraryModal';
@@ -70,17 +73,23 @@ export type CreatorPageShellProps = {
 
   user: unknown;
   auth: CreatorPageAuthConfig;
-  showPublicPrivate?: boolean | undefined;
+  showSaveTarget?: boolean | undefined;
 
-  saveTarget: 'private' | 'public';
-  onSaveTargetChange: (target: 'private' | 'public') => void;
+  saveTarget: CreatorSaveTarget;
+  onSaveTargetChange: (target: CreatorSaveTarget) => void;
   saving: boolean;
   saveDisabled?: boolean | undefined;
+  /** Shown beside Save and linked with aria-describedby while Save is disabled. */
+  saveDisabledReason?: string | undefined;
   /** Unauthenticated save handler — shell gates login */
   onSave: () => void | Promise<void>;
   onReset: () => void;
   /** Opens the load modal (or custom load flow) — shell may gate auth */
   onLoad: () => void;
+  /** When true, reload, leave, Back, Load, and Reset ask before discarding edits. */
+  unsavedDirty?: boolean | undefined;
+  /** Clears the locally stored draft when the user confirms leaving. */
+  onDiscardLocalDraft?: (() => void) | undefined;
 
   publish: CreatorPagePublishConfig;
   resetConfirm?: CreatorPageResetConfirmConfig | undefined;
@@ -92,6 +101,8 @@ export type CreatorPageShellProps = {
   stickySidebar?: boolean | undefined;
   sidebar: ReactNode;
   children: ReactNode;
+  /** Band above the editor/summary grid (CreatorLayout `aboveGrid`). */
+  aboveGrid?: ReactNode | undefined;
   extraModals?: ReactNode | undefined;
   /** Optional InfoTippy beside toolbar Load / Reset (power creator). */
   toolbarHelp?: {
@@ -108,14 +119,17 @@ export function CreatorPageShell({
   headerClassName,
   user,
   auth,
-  showPublicPrivate = false,
+  showSaveTarget = false,
   saveTarget,
   onSaveTargetChange,
   saving,
   saveDisabled = false,
+  saveDisabledReason,
   onSave,
   onReset,
   onLoad,
+  unsavedDirty = false,
+  onDiscardLocalDraft,
   publish,
   resetConfirm,
   loading,
@@ -123,11 +137,14 @@ export function CreatorPageShell({
   stickySidebar = true,
   sidebar,
   children,
+  aboveGrid,
   extraModals,
   toolbarHelp,
 }: CreatorPageShellProps) {
   const [showLoginPrompt, setShowLoginPrompt] = useState(false);
   const [loginReason, setLoginReason] = useState<LoginPromptReason>('save');
+  const [discardAction, setDiscardAction] = useState<'load' | 'reset' | null>(null);
+  const leaveBlocker = useCreatorLeaveBlocker(unsavedDirty);
   const requireAuthToLoad = auth.requireAuthToLoad !== false;
 
   const handleSave = useCallback(() => {
@@ -140,13 +157,42 @@ export function CreatorPageShell({
   }, [user, onSave]);
 
   const handleLoad = useCallback(() => {
-    if (requireAuthToLoad && !user) {
+    const loadAction = creatorToolbarLoadAction({
+      unsavedDirty,
+      needsLogin: requireAuthToLoad && !user,
+    });
+    if (loadAction === 'login') {
       setLoginReason('load');
       setShowLoginPrompt(true);
       return;
     }
+    if (loadAction === 'confirm-discard') {
+      setDiscardAction('load');
+      return;
+    }
     onLoad();
-  }, [requireAuthToLoad, user, onLoad]);
+  }, [requireAuthToLoad, user, onLoad, unsavedDirty]);
+
+  const handleReset = useCallback(() => {
+    if (unsavedDirty && !resetConfirm) {
+      setDiscardAction('reset');
+      return;
+    }
+    onReset();
+  }, [onReset, resetConfirm, unsavedDirty]);
+
+  const confirmDiscard = useCallback(() => {
+    const action = discardAction;
+    const leaving = leaveBlocker.request !== null;
+    setDiscardAction(null);
+    if (leaving) {
+      onDiscardLocalDraft?.();
+      leaveBlocker.confirm();
+      return;
+    }
+    if (action === 'load') onLoad();
+    if (action === 'reset') onReset();
+  }, [discardAction, leaveBlocker, onDiscardLocalDraft, onLoad, onReset]);
 
   // Keep title / Load / Reset / Save chrome visible during load & error so
   // chrome audits and signed-out UX do not depend on codex data being present
@@ -182,16 +228,18 @@ export function CreatorPageShell({
       description={description}
       size={size}
       headerClassName={headerClassName}
+      aboveGrid={loading?.isLoading ? undefined : aboveGrid}
       actions={
         <CreatorSaveToolbar
           saveTarget={saveTarget}
           onSaveTargetChange={onSaveTargetChange}
           onSave={handleSave}
           onLoad={handleLoad}
-          onReset={onReset}
+          onReset={handleReset}
           saving={saving}
           saveDisabled={saveDisabled || !!loading?.isLoading}
-          showPublicPrivate={showPublicPrivate}
+          saveDisabledReason={saveDisabledReason}
+          showSaveTarget={showSaveTarget}
           user={user}
           requireAuthToLoad={requireAuthToLoad}
           loadHelp={toolbarHelp?.load}
@@ -217,6 +265,20 @@ export function CreatorPageShell({
             description={publish.description}
             confirmLabel={publish.confirmLabel ?? 'Publish'}
             icon="publish"
+          />
+          <ConfirmActionModal
+            isOpen={unsavedDirty && (discardAction !== null || leaveBlocker.request !== null)}
+            onClose={() => {
+              setDiscardAction(null);
+              leaveBlocker.dismiss();
+            }}
+            onConfirm={confirmDiscard}
+            title="Discard unsaved changes?"
+            description="This creator has edits that are not saved. Continuing will discard them."
+            confirmLabel="Discard"
+            cancelLabel="Keep editing"
+            confirmVariant="danger"
+            icon="warning"
           />
           {resetConfirm ? (
             <ConfirmActionModal

@@ -8,12 +8,14 @@
 'use client';
 
 import { useCallback } from 'react';
+import { characterSupportsInnatePowers } from '@/lib/character/innate-power-capacity';
+import { energyAfterPowerUse } from '@/lib/character/power-energy-spend';
 import { toggleSheetArmorEquipped } from '@/lib/game/equipment-equipped';
 import { mergeEquipmentIntoInventory } from '@/lib/game/skill-allocation';
 import type { Character, CharacterPower, CharacterTechnique, Item } from '@/types';
 import type { CharacterSheetStats } from './use-character-sheet-derived';
 import type { AddModalType } from './character-sheet-context';
-import { matchesSheetEquipmentItem } from './sheet-item-match';
+import { applySheetEquipmentQuantityDelta, matchesSheetEquipmentItem } from './sheet-item-match';
 import {
   deferProficiencyOverLimitToast,
   type ApplyAutoProficienciesResult,
@@ -39,6 +41,7 @@ export function useSheetLibraryActions({
   const handleAddPowers = useCallback(
     (powers: CharacterPower[], asInnate = false) => {
       if (!character) return;
+      if (asInnate && !characterSupportsInnatePowers(character)) return;
       const toAdd = asInnate ? powers.map((p) => ({ ...p, innate: true })) : powers;
       const candidate: Character = {
         ...character,
@@ -71,6 +74,7 @@ export function useSheetLibraryActions({
   const handleTogglePowerInnate = useCallback(
     (powerId: string | number, isInnate: boolean) => {
       if (!character) return;
+      if (isInnate && !characterSupportsInnatePowers(character)) return;
       setCharacter((prev) =>
         prev
           ? {
@@ -87,14 +91,34 @@ export function useSheetLibraryActions({
     [character, setCharacter],
   );
 
+  const handleSelectPowerVariant = useCallback(
+    (powerId: string | number, variantId: string) => {
+      if (!character) return;
+      setCharacter((prev) =>
+        prev
+          ? {
+              ...prev,
+              powers: (prev.powers || []).map((p) =>
+                p.id === powerId || String(p.id) === String(powerId)
+                  ? { ...p, selectedVariantId: variantId }
+                  : p,
+              ),
+            }
+          : null,
+      );
+    },
+    [character, setCharacter],
+  );
+
   const handleUsePower = useCallback(
-    (_powerId: string | number, energyCost: number) => {
+    (powerId: string | number, energyCost: number) => {
       if (!calculatedStats) return;
       setCharacter((prev) => {
         if (!prev) return null;
         const curEnergy = prev.currentEnergy ?? prev.energy?.current ?? calculatedStats.maxEnergy;
-        if (curEnergy < energyCost) return prev;
-        return { ...prev, currentEnergy: curEnergy - energyCost };
+        const next = energyAfterPowerUse(prev.powers, powerId, energyCost, curEnergy);
+        if (!next.spent) return prev;
+        return { ...prev, currentEnergy: next.currentEnergy };
       });
     },
     [calculatedStats, setCharacter],
@@ -361,12 +385,7 @@ export function useSheetLibraryActions({
       setCharacter((prev) => {
         if (!prev) return null;
         const currentItems = (prev.equipment?.items as Item[]) || [];
-        const items = currentItems.flatMap((item, idx) => {
-          if (!matchesSheetEquipmentItem(item, itemId, idx)) return [item];
-          const newQty = (item.quantity ?? 1) + delta;
-          if (newQty < 1) return [];
-          return [{ ...item, quantity: newQty }];
-        });
+        const items = applySheetEquipmentQuantityDelta(currentItems, itemId, delta);
         return {
           ...prev,
           equipment: { ...prev.equipment, items },
@@ -433,6 +452,7 @@ export function useSheetLibraryActions({
   return {
     handleRemovePower,
     handleTogglePowerInnate,
+    handleSelectPowerVariant,
     handleUsePower,
     handleRemoveTechnique,
     handleUseTechnique,

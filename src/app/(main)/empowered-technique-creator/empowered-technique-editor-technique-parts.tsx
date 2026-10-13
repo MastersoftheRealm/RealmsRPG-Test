@@ -5,6 +5,7 @@ import { ValueStepper, SectionCostBadge } from '@/components/patterns';
 import { CollapsibleSection, PowerPartCard } from '@/components/creator';
 import { Button } from '@/components/ui';
 import { DIE_SIZES } from '@/lib/game/creator-constants';
+import { formatAttackModeCanTargetHint } from '@/lib/game/targeted-defenses';
 import type { SelectedTechniquePart } from './empowered-technique-bootstrap';
 import type { EmpoweredTechniqueCreatorEditorProps } from './empowered-technique-editor-config';
 
@@ -19,6 +20,7 @@ export type EmpoweredTechniqueEditorTechniquePartsProps = Pick<
   | 'onTechniqueDamageChange'
   | 'techniqueDamageSummary'
   | 'sectionCosts'
+  | 'attackMode'
 >;
 
 export function EmpoweredTechniqueEditorTechniqueParts({
@@ -31,7 +33,9 @@ export function EmpoweredTechniqueEditorTechniqueParts({
   onTechniqueDamageChange,
   techniqueDamageSummary,
   sectionCosts,
+  attackMode,
 }: EmpoweredTechniqueEditorTechniquePartsProps) {
+  const extraDamageTargetHint = formatAttackModeCanTargetHint(attackMode);
   const techniquePartsSummary =
     selectedTechniqueParts.length > 0
       ? `${selectedTechniqueParts
@@ -53,13 +57,7 @@ export function EmpoweredTechniqueEditorTechniqueParts({
               en={sectionCosts.techniqueParts.energyRaw}
               tp={sectionCosts.techniqueParts.totalTP}
             />
-            <Button
-              type="button"
-              variant="primary"
-              size="sm"
-              className="flex min-h-[44px] items-center gap-1"
-              onClick={onAddTechniquePart}
-            >
+            <Button type="button" variant="primary" size="sm" onClick={onAddTechniquePart}>
               <Plus className="h-4 w-4" />
               Add Part
             </Button>
@@ -123,7 +121,7 @@ export function EmpoweredTechniqueEditorTechniqueParts({
                   size: Number(event.target.value),
                 }))
               }
-              className="min-h-[44px] rounded-lg border border-border-light bg-surface px-3 py-2 text-text-primary"
+              className="touch-tier-standard rounded-lg border border-border-light bg-surface px-3 py-2 text-text-primary"
               aria-label="Technique additional damage die size"
             >
               {DIE_SIZES.map((size) => (
@@ -134,6 +132,9 @@ export function EmpoweredTechniqueEditorTechniqueParts({
             </select>
           </div>
         </div>
+        {extraDamageTargetHint ? (
+          <p className="mt-2 text-sm text-text-muted">{extraDamageTargetHint}</p>
+        ) : null}
       </CollapsibleSection>
     </>
   );

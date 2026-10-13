@@ -30,6 +30,7 @@ import {
 } from '@/lib/library/armament-filters';
 import type { ArmamentCharacterContext } from '@/lib/library/armament-character-context';
 import { resolveListRowThumbnail } from '@/lib/list-row-image';
+import type { CatalogListing } from '@/lib/library/catalog-listing';
 import {
   libraryRowPathIds,
   pathChipLabelsForEntity,
@@ -63,6 +64,7 @@ export interface OfficialItemListProps {
   onAddRequest?: ((row: OfficialItemRow) => void) | undefined;
   onEdit?: ((id: string) => void) | undefined;
   onDelete?: ((id: string, name: string) => void) | undefined;
+  onCatalogListingChange?: ((id: string, listing: CatalogListing) => void) | undefined;
 }
 
 export function OfficialItemList({
@@ -84,6 +86,7 @@ export function OfficialItemList({
   onAddRequest,
   onEdit,
   onDelete,
+  onCatalogListingChange,
 }: OfficialItemListProps) {
   const labels = ARMAMENT_LABELS_BY_KIND[armamentKind];
   const { grid, headers } = ARMAMENT_LIBRARY_CONFIG[armamentKind];
@@ -187,6 +190,7 @@ export function OfficialItemList({
         }
         onEdit={onEdit}
         onDelete={onDelete}
+        onCatalogListingChange={onCatalogListingChange}
       />
       {addToCharacter.confirmModal}
     </>

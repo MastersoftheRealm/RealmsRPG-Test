@@ -4,17 +4,21 @@
 
 'use client';
 
-import { useMemo } from 'react';
+import { useId, useMemo } from 'react';
 import { Plus } from 'lucide-react';
 import type { Trait } from '@/hooks';
-import { CREATURE_TYPES } from '@/lib/game/creator-constants';
+import { SPECIES_TYPES } from '@/lib/game/creator-constants';
 import { CollapsibleSection } from '@/components/creator';
+import {
+  CreatorDescriptionField,
+  CreatorNameField,
+} from '@/components/creator/creator-text-fields';
 import {
   UnifiedSelectionModal,
   type SelectableItem,
 } from '@/components/patterns/select/unified-selection-modal';
 import { RealmsImageField } from '@/components/patterns';
-import { Button, Input, Textarea } from '@/components/ui';
+import { Button, Input } from '@/components/ui';
 import { ChipList } from '../creature-creator/CreatureCreatorHelpers';
 import { formatListCellLabel } from '@/lib/utils';
 import {
@@ -25,6 +29,10 @@ import {
   MAX_SIZES,
   MAX_LANGUAGES,
   SIZE_OPTIONS,
+  commitSpeciesTraitBatch,
+  openTraitSlots,
+  speciesMeasureFieldErrors,
+  traitSelectionLimitMessage,
   type SpeciesFormState,
   type TraitCategory,
 } from './species-creator-bootstrap';
@@ -78,17 +86,19 @@ export function SpeciesCreatorEditor({
   traitsSummary,
   heightWeightLifespanSummary,
 }: SpeciesCreatorEditorProps) {
+  const measureErrors = speciesMeasureFieldErrors(form);
   return (
     <div className="space-y-6">
       <CollapsibleSection title="Basics" collapsedSummary={basicsSummary}>
         <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
           <div>
-            <Input
+            <CreatorNameField
+              id="species-creator-name"
               label="Name *"
-              value={form.name}
-              onChange={(e) => onFormChange((p) => ({ ...p, name: e.target.value }))}
-              placeholder="Species name"
               aria-label="Species name"
+              value={form.name}
+              onChange={(value) => onFormChange((p) => ({ ...p, name: value }))}
+              placeholder="Species name"
             />
           </div>
           <div>
@@ -106,7 +116,7 @@ export function SpeciesCreatorEditor({
               aria-label="Creature type"
             >
               <option value="">Select type</option>
-              {CREATURE_TYPES.map((t) => (
+              {[...new Set([...SPECIES_TYPES, form.type].filter(Boolean))].sort().map((t) => (
                 <option key={t} value={t}>
                   {t}
                 </option>
@@ -115,14 +125,15 @@ export function SpeciesCreatorEditor({
           </div>
         </div>
         <div className="mt-4">
-          <Textarea
+          <CreatorDescriptionField
+            id="species-creator-description"
             label="Description"
+            aria-label="Species description"
             value={form.description}
-            onChange={(e) => onFormChange((p) => ({ ...p, description: e.target.value }))}
+            onChange={(value) => onFormChange((p) => ({ ...p, description: value }))}
             placeholder="Species description"
             rows={3}
             className="w-full"
-            aria-label="Species description"
           />
         </div>
         {isAdmin && (
@@ -238,8 +249,9 @@ export function SpeciesCreatorEditor({
       <CollapsibleSection
         title="Traits"
         collapsedSummary={traitsSummary}
+        actionsOnOwnRow
         rightSlot={
-          <div className="flex flex-wrap gap-2">
+          <div className="flex flex-wrap gap-3">
             <Button
               size="sm"
               onClick={onOpenSpeciesAncestryModal}
@@ -322,7 +334,9 @@ export function SpeciesCreatorEditor({
               label="Average height (cm) *"
               type="number"
               min={0}
+              step={1}
               value={form.ave_height}
+              error={measureErrors.height}
               onChange={(e) =>
                 onFormChange((p) => ({
                   ...p,
@@ -337,7 +351,9 @@ export function SpeciesCreatorEditor({
               label="Average weight (kg) *"
               type="number"
               min={0}
+              step={1}
               value={form.ave_weight}
+              error={measureErrors.weight}
               onChange={(e) =>
                 onFormChange((p) => ({
                   ...p,
@@ -353,6 +369,7 @@ export function SpeciesCreatorEditor({
               type="number"
               min={0}
               value={form.adulthood_lifespan[0]}
+              error={measureErrors.adulthood}
               onChange={(e) =>
                 onFormChange((p) => ({
                   ...p,
@@ -371,6 +388,7 @@ export function SpeciesCreatorEditor({
               type="number"
               min={0}
               value={form.adulthood_lifespan[1]}
+              error={measureErrors.lifespan}
               onChange={(e) =>
                 onFormChange((p) => ({
                   ...p,
@@ -495,26 +513,44 @@ export function TraitListModal({
       }));
   }, [traits, filter, alreadyUsed]);
 
-  const canAddSpecies = form.species_traits.length < traitLimits.species_traits;
-  const canAddAncestry = form.ancestry_traits.length < traitLimits.ancestry_traits;
-  const canAddFlaw = form.flaws.length < traitLimits.flaws;
-  const canAddCharacteristic = form.characteristics.length < traitLimits.characteristics;
+  const speciesRemaining = openTraitSlots(form.species_traits.length, traitLimits.species_traits);
+  const ancestryRemaining = openTraitSlots(
+    form.ancestry_traits.length,
+    traitLimits.ancestry_traits,
+  );
+  const flawRemaining = openTraitSlots(form.flaws.length, traitLimits.flaws);
+  const characteristicRemaining = openTraitSlots(
+    form.characteristics.length,
+    traitLimits.characteristics,
+  );
+
+  const canAddFlaw = flawRemaining > 0;
+  const canAddCharacteristic = characteristicRemaining > 0;
+  const speciesLimitId = useId();
+  const ancestryLimitId = useId();
+  const flawLimitId = useId();
+
+  const flawNextSelectedIds = useMemo(() => {
+    if (mode !== 'flaw') return undefined;
+    return (currentIds: string[], id: string) => {
+      if (currentIds.length >= flawRemaining) return currentIds;
+      return [...currentIds, id];
+    };
+  }, [mode, flawRemaining]);
 
   const description =
     mode === 'species_ancestry' ? 'Add as species traits or ancestry traits.' : undefined;
 
   const addIds = (selected: SelectableItem[], category: TraitCategory) => {
-    const ids = selected.map((s) => String(s.id));
-    if (!ids.length) return;
-    if (category === 'species_traits' && ids.length === 1 && form.species_traits.length === 2) {
-      const firstId = ids[0];
-      if (!firstId) return;
-      onThirdSpeciesTrait?.(firstId);
-      onClose();
-      return;
-    }
-    onAddBatch(ids, category);
-    onClose();
+    commitSpeciesTraitBatch({
+      ids: selected.map((item) => String(item.id)),
+      category,
+      currentCount: form[category].length,
+      limit: traitLimits[category],
+      onAddBatch,
+      onClose,
+      ...(onThirdSpeciesTrait ? { onThirdSpeciesTrait } : {}),
+    });
   };
 
   return (
@@ -528,6 +564,7 @@ export function TraitListModal({
         if (mode === 'flaw') addIds(selected, 'flaws');
         else if (mode === 'characteristic') addIds(selected, 'characteristics');
       }}
+      nextSelectedIds={flawNextSelectedIds}
       columns={TRAIT_LIST_COLUMNS}
       gridColumns={TRAIT_GRID_COLUMNS}
       itemLabel={mode === 'flaw' ? 'flaw' : mode === 'characteristic' ? 'characteristic' : 'trait'}
@@ -543,9 +580,49 @@ export function TraitListModal({
       }
       confirmDisabled={
         mode === 'flaw'
-          ? () => !canAddFlaw
+          ? (selected) => !canAddFlaw || selected.length > flawRemaining
           : mode === 'characteristic'
             ? () => !canAddCharacteristic
+            : undefined
+      }
+      maxSelections={
+        mode === 'flaw'
+          ? flawRemaining
+          : mode === 'characteristic'
+            ? characteristicRemaining
+            : undefined
+      }
+      footerExtra={
+        mode === 'flaw'
+          ? (selected) => {
+              const note = traitSelectionLimitMessage('flaws', selected.length, flawRemaining);
+              if (!note) return null;
+              return (
+                <p id={flawLimitId} role="status" className="text-sm text-warning-fg">
+                  {note}
+                </p>
+              );
+            }
+          : mode === 'species_ancestry'
+            ? (selected) => {
+                const speciesNote = traitSelectionLimitMessage(
+                  'species traits',
+                  selected.length,
+                  speciesRemaining,
+                );
+                const ancestryNote = traitSelectionLimitMessage(
+                  'ancestry traits',
+                  selected.length,
+                  ancestryRemaining,
+                );
+                if (!speciesNote && !ancestryNote) return null;
+                return (
+                  <div role="status" className="space-y-1 text-sm text-warning-fg">
+                    {speciesNote ? <p id={speciesLimitId}>{speciesNote}</p> : null}
+                    {ancestryNote ? <p id={ancestryLimitId}>{ancestryNote}</p> : null}
+                  </div>
+                );
+              }
             : undefined
       }
       primaryActions={
@@ -555,14 +632,18 @@ export function TraitListModal({
                 <Button
                   size="lg"
                   onClick={() => addIds(selected, 'species_traits')}
-                  disabled={selected.length === 0 || !canAddSpecies}
+                  disabled={selected.length === 0 || selected.length > speciesRemaining}
+                  aria-describedby={selected.length > speciesRemaining ? speciesLimitId : undefined}
                 >
                   Add selected as species trait{selected.length !== 1 ? 's' : ''}
                 </Button>
                 <Button
                   size="lg"
                   onClick={() => addIds(selected, 'ancestry_traits')}
-                  disabled={selected.length === 0 || !canAddAncestry}
+                  disabled={selected.length === 0 || selected.length > ancestryRemaining}
+                  aria-describedby={
+                    selected.length > ancestryRemaining ? ancestryLimitId : undefined
+                  }
                 >
                   Add selected as ancestry trait{selected.length !== 1 ? 's' : ''}
                 </Button>
@@ -570,8 +651,11 @@ export function TraitListModal({
             )
           : undefined
       }
-      size="lg"
-      className="max-h-[60vh]"
+      wrapFooterActions={mode === 'species_ancestry'}
+      size={mode === 'species_ancestry' ? '2xl' : 'lg'}
+      className={
+        mode === 'species_ancestry' ? 'md:max-h-[min(60vh,calc(90vh-16rem))]' : 'max-h-[60vh]'
+      }
     />
   );
 }

@@ -63,7 +63,7 @@ Several rules use **½** or "half":
 | Unit | Value |
 |------|-------|
 | 1 round/turn | 10 seconds |
-| 1 minute | 10 rounds |
+| 1 minute | 6 rounds |
 | 1 space | ~1.5 m or 5 ft |
 | Falling speed | 30 spaces (45 m) per round |
 
@@ -92,6 +92,19 @@ Several rules use **½** or "half":
 |-----------|---------|
 | Target within 1 space | -5 to Attack Roll |
 | Long range (4× normal distance) | -5 to Attack Roll |
+
+### Weapon Range
+
+Weapons have one range type. Distance is chosen from a closed ladder (no freeform stepper).
+
+| Type | Spaces | Notes |
+|------|--------|-------|
+| **Melee** | Adjacent (no spaces picker) | Default; Strength unless Finesse |
+| **Reach** | 2, 3, 4, 5, or 6 | Base Reach is 2 spaces, then +1 per increment. Still a melee attack. Strength unless Finesse. |
+| **Ranged** | 8, 16, 24, … 64 | 8 spaces per increment, capped at 64. Acuity unless Heavy or Finesse. |
+| **Thrown** | 3, 5, 7, … 35 | 3 spaces + 2 per increment, through the mid-30s. Strength unless Finesse. |
+
+Range, Thrown, Reach, Finesse, and Heavy are mechanic properties on the Weapon Configuration UI. They do not appear on Add property.
 
 ### Conditions Don't Stack
 
@@ -230,7 +243,7 @@ Shared formatters live in `src/lib/detail-option/compact-facts.ts`. Feature UI m
 
 **Round up** whenever you get a fraction or decimal from division. Complete all calculations first, then round up only at the end.
 
-**Exception — Training Points:** Floor each part or property’s TP contribution **before** adding it to the sum. A part that contributes 2.5 TP costs **2** TP. Do not ceil the combined total. Energy still ceils at the end. This is the only rounding-down exception.
+**Exception — Training Points:** Proficiency is per part and per option (Kadin, Oct 6, 2026). Across all of a character's powers, the base part is paid once. Each option is taken at its highest level used, then rounded up to the lowest option level whose Training Points are a whole number. An option at 0.5 TP per level used up to level 3 needs level 4 (2 TP). An option at 0.25 TP per level used up to level 3 needs level 4 (1 TP). That rounded-up level covers that level everywhere. A fractional base is rounded up with the total so the proficiency cost is a whole number. Never floor an option. Technique Additional Damage option 1 uses this same round-up; it is not floored per full 1d4. Energy rounds up once, at the end of the whole power, never per part or per tab. A power’s TP total is informational: it is the proficiency cost of what the power can do, not a cost you spend when you use the power.
 
 ---
 
@@ -301,6 +314,13 @@ Each Ability has a corresponding Defense used to withstand harmful effects or br
 | **Evasion (EV)** | 10 + Agility (passive only; not a "Defense"; cannot be increased with Skill Points) |
 
 **Evasion** is the default target for attacks. Feats/Powers that reference "Defenses" do **not** include Evasion.
+
+### Power & technique targeting
+
+- **Part can-target:** Codex power/technique parts may list defenses they *can* target (`codex_parts.defense`). Part chips and creator suggestions surface these options.
+- **Actual target:** When saving a power or technique, the author may specify `targetedDefenses` (zero or more of the six Defenses plus Evasion). Empty means no defense is specified in data.
+- **Weapon / unarmed attacks** target **Evasion** by default; creators highlight Evasion when Attack is Weapon or Unarmed.
+- **Damage types:** Inferred from the linked damage part (e.g. Elemental/Magic/Physical → Evasion; Light/Poison-Necrotic/Sonic → Fortitude; Psychic → Mental Fortitude; Spiritual → Resolve).
 
 ---
 
@@ -462,7 +482,7 @@ Any Bonus can be converted to a Score by adding 10.
 
 ### Health & Energy Allocation
 
-- **Base health:** 8 + Vitality (or Strength if Vitality is archetype ability)
+- **Base health:** 12 + Vitality (or Strength if Vitality is archetype ability). Live value is `core_rules.PROGRESSION_PLAYER.baseHealth`.
 - **Base energy:** Archetype ability score
 - **Pool at level 1:** 18 points to divide between HP and EN
 - **Per level:** +12 to pool; add Vitality to Health, highest Archetype Ability to Energy
@@ -475,7 +495,7 @@ Any Bonus can be converted to a Score by adding 10.
 |----------|---------|-----------|
 | Ability points | 7 | +1 every 3 levels |
 | Skill points | 5 | +3 |
-| HP/EN pool | 26 | +12 |
+| HP/EN pool | 30 | +12 |
 | Proficiency | 2 | +1 every 5 levels |
 | Training points | 22 + ability + (2 + ability) × (level − 1) | Same formula as characters |
 | Currency | 200 × 1.45^(level−1) | `calculateCreatureCurrency` |
@@ -541,10 +561,28 @@ A power qualifies as **Innate** only when **all** of the following are true:
 
 1. **Action type:** Basic Action or Basic Reaction only (not Quick, Free, or Long).
 2. **Energy:** At or below your **Innate Threshold** for your level.
-3. **Duration:** Instant, or at most **1 minute** (10 rounds = 1 minute). Longer durations (hours, days, permanent, or >1 minute) do not qualify. Powers with unknown/unresolved duration do not qualify.
+3. **Duration:** Instant, or at most **1 minute** (1 minute = 6 rounds). Longer durations (hours, days, permanent, or >1 minute) do not qualify. Powers with unknown/unresolved duration do not qualify.
 4. **Parts:** No **Healing** or **energy-gain** parts (e.g. Heal, Siphon). No parts whose codex **category** is **Adaptation** (distinct from the “No Harm or Adaptation for Duration” mechanic part).
 
 Combined innate Energy across all innate powers must stay within **Innate Energy** (Pools × Threshold).
+
+**Powers with variants** (ADR-0029): Choice, Modify, and a power with Reverse Effects are one power — every part and every duration the cast can apply is checked, and Energy is the cast cost after the Reverse discount. **Randomize** checks every face the die can roll (Shared defaults are not part of the cast, and a face that is not on any die result is not either). **Alternate** checks each variant on its own; a variant that passes can be innate even if a sibling fails. Proficiency is required in every Alternate version. That part’s base is paid once, and each option is taken at its highest level.
+
+#### Power variants (Choice / Alternate / Modify / Randomize / Reverse Effects)
+
+Built into the Power Creator (replaces the Choice, Split Power Parts into Groups, Randomize, and Reverse Effects mechanic parts on new powers). The things you switch between are **variants** (not "options", which are part option levels).
+
+A power or technique's final Energy is rounded up once, at the end of the whole power, never per part or per tab. 1 round and Instant are no duration and cost the same. A duration modifier does not add Energy when the duration is 1 round. The **1 EN** floor applies only when positive energy is reduced below 1. No parts, only 0 EN parts, a quick-only or duration-only multiplier, No Attack alone, and a Randomize power whose rolled faces are all drawbacks publish no Energy (a dash). Drawback parts do not turn the floor on by themselves. The floor is on the finished cost, not a base cost. Official published energies are that math applied to the Codex part rows. They are results, not targets. Breakdowns show the action-type multiplier at its Codex value (0.875 stays 0.875). Other energy intermediates show at most 2 decimals.
+
+| Structure | What the variants are | Energy |
+|-----------|----------------------|--------|
+| **Choice** | Portions of one power; pick one on use. Action type is locked to Shared. Range, area, and duration start as Shared and can be overridden, including none or Instant. Each chip shows Shared plus that option. | Shared once, plus the **most expensive** portion. Each portion’s parts are priced at that portion’s own range, area, and duration. Range bought on Shared is paid once and any tab may use it for free. A tab that adds its own range has a separate range and pays its full range cost at that tab’s footprint. There is no refund for a shorter range. A larger area or longer duration raises only that tab's parts; a smaller area or shorter duration lowers them. |
+| **Alternate** | Complete powers on one library entry. Each variant keeps its own action type. | The variant you use (may be less, equal, or more) |
+| **Modify** (Split Power Parts into Groups) | Pieces with their own stipulations, all on one cast. Action type is locked to Shared. Range, area, and duration start as Shared and can be overridden, including none or Instant. Parts and damage are not copied onto the piece. | **Shared once**, including its range, area, and action. Each piece adds only its own parts and damage, priced at that piece’s range, area, and duration. Range bought on Shared is paid once and any tab may use it for free. A tab that adds its own range has a separate range and pays its full range cost at that tab’s footprint. There is no refund for a shorter range. A larger area or longer duration raises only that tab's parts; a smaller area or shorter duration lowers them. A piece with no parts, no damage, and no range of its own adds nothing. A piece whose only content is its own range still pays for that range |
+| **Randomize** | Outcomes on an even-sided die (1d2–1d100); a variant may fill many faces. On a weighted die, a face counts once per side it occupies. Each face has its own range, area, duration, parts, and damage. Every face’s action type is locked to Shared. Shared holds the action type plus range, area, and duration defaults that pre-fill a new face. Parts and damage are added on each face. Those defaults add no energy, are not rolled, and do not change a face that already exists. A face that is not on any die result is not rolled. | Each face weighted by its chance. A good face costs its full energy, including the shared action. A bad face subtracts half its own basic-action energy divided by the action-type multiplier, including Reaction (basic stays half; slower removes more; quicker removes less). Round up once. Dash if nothing positive is rolled; otherwise at least 1 EN. A bad face does not pay for a good face’s range or area. A face that is not on any die result adds no Energy and no Training Points |
+| **Reverse Effects** (add-on) | Drawback for you or an ally on a beneficial power. Action type stays on the benefit. The Reverse tab’s range, area, and duration start as the benefit’s and can be overridden. | Subtract half the drawback’s energy at that footprint, divided by the benefit’s action-type multiplier, including Reaction. Basic stays half. Range bought on Shared is paid once and any tab may use it for free. On a Reverse tab, its own range is part of the drawback and is priced with it like the tab's other parts, so a farther-reaching drawback deepens the discount (Kadin, Oct 6, 4:44 PM ET). A larger area or longer duration raises only that tab's parts; a smaller area or shorter duration lowers them. A slower action refunds more; a quicker action refunds less. Cannot be nullified or reduced by you or an ally |
+
+**Training Points:** proficiency is per part and per option, not per power (Kadin, Oct 6, 2026). Every part the power can use (Shared, every tab, face that is on a die result, or version, and Reverse) is included. Randomize counts a face only when that face is on a die result. Shared defaults are not a cast, and a face left off the die adds no Training Points and no Energy. Damage parts still split by damage type (Elemental Damage fire and ice are two proficiencies, so fire on several tabs counts once and ice still counts on its own). Across all of a character's powers, the base of a part is paid once. Each option is taken at the highest level used, then rounded up to the lowest option level whose Training Points are a whole number. An option at 0.5 TP per level used up to level 3 needs level 4 (2 TP). An option at 0.25 TP per level used up to level 3 needs level 4 (1 TP). That rounded-up level covers that level everywhere, including a lower use of the same part and damage type. The same part is a matching part id, or, when a saved row has no part id, a matching part name of the same kind (power, technique, or item). For a damage part the used level is the die size, and the damage type must match (fire does not cover ice). A different part that shares the damage type is compared by the rounded Training Points total, so Additional Damage fire is not compared by option level to Elemental Damage fire. Technique Additional Damage option 1 rounds up like every other option; the per-full-1d4 floor is not used. The total is informational, not a cost paid when the power is used.
 
 ### Martial Character Progression
 
@@ -660,7 +698,9 @@ When healed, regain HP up to maximum. **Healing from a Power** adds the healer's
 
 - Applies to total damage in one instance, not per damage type
 - Minimum damage after reduction: 1 (unless Immunity)
-- Armor effectiveness decreases by 1 per hit in a turn until next turn
+- The first time armor reduces damage in a turn, use its full Damage Reduction. Each later reduction in that turn is half the previous amount, rounded up, until the beginning of the next turn. Damage Reduction 5 reduces by 5, then 3, then 2, then 1. Half of 1, rounded up, stays 1.
+- A hit the armor does not reduce does not count. Standard armor does not reduce Psychic, Spiritual, or Sonic damage (see Armor Exceptions).
+- Damage over time is reduced the first time it is applied, not on later turns.
 
 ---
 
@@ -711,7 +751,9 @@ When healed, regain HP up to maximum. **Healing from a Power** adds the healer's
 
 ### Multiple Action Penalty
 
-Using the same Action/Reaction more than once in a turn: -5 per subsequent use (stacks: -5, -10, -15...).
+If you take the same Action or Reaction more than once in a turn, and it involves a D20 roll, you incur a -5 penalty to all related D20 rolls each subsequent time you perform that Action. This penalty stacks with each subsequent repetition (-5, -10, -15, ...).
+
+For the purpose of the Multiple Action Penalty, Basic, Quick, and Free Actions or Reactions are all considered the same Action type.
 
 ### Attack Formulas
 
@@ -729,10 +771,12 @@ Using the same Action/Reaction more than once in a turn: -5 per subsequent use (
 | Attack Type | Ability |
 |-------------|---------|
 | Melee Weapon | Strength |
+| Reach Weapon | Strength |
 | Ranged Weapon | Acuity |
 | Unarmed Prowess | Strength or Agility (if proficient) |
 | Finesse Weapon | Agility |
 | Thrown Weapon | Strength |
+| Heavy Ranged Weapon | Strength |
 
 ### Unarmed Prowess Damage (Proficient)
 

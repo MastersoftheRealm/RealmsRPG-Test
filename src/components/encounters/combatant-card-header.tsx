@@ -132,6 +132,8 @@ export function CombatantCardHeader({
             max={10}
             size={variant === 'compact' ? 'sm' : 'xs'}
             enableHoldRepeat
+            decrementTitle={`Decrease ${combatant.name} action points`}
+            incrementTitle={`Increase ${combatant.name} action points`}
           />
         )}
       </div>

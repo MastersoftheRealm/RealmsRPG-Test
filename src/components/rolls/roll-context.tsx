@@ -11,6 +11,15 @@ import React, { createContext, useContext, useCallback, useState, useEffect } fr
 import { useQueryClient } from '@tanstack/react-query';
 import { rollDie, generateRollId, DIE_MAX, type DieType } from '@/lib/rolls/die';
 import { resolveRollModifierLabel } from '@/lib/rolls/modifier-label';
+import { parseDamageRollGroups } from '@/lib/rolls/parse-damage-string';
+import {
+  LEGACY_PERSONAL_ROLL_LOG_KEY,
+  mergeRollLogsById,
+  personalRollLogStorageKey,
+  readPersonalRollLog,
+  writePersonalRollLog,
+  MAX_PERSISTED_PERSONAL_ROLLS,
+} from '@/lib/rolls/personal-roll-log-storage';
 
 // Types
 export interface DieResult {
@@ -85,14 +94,13 @@ interface RollContextValue {
 
 const RollContext = createContext<RollContextValue | null>(null);
 
-const STORAGE_KEY = 'realms-roll-log';
-const MAX_PERSISTED_ROLLS = 20;
-
 export function RollProvider({
   children,
   maxHistory = 50,
   campaignContext,
   canRoll = true,
+  /** When set, personal roll history is stored per character (86e3jvcgv). */
+  personalLogCharacterId,
 }: {
   children: React.ReactNode;
   maxHistory?: number | undefined;
@@ -100,33 +108,39 @@ export function RollProvider({
   campaignContext?: CampaignRollContext | undefined;
   /** When false, roll functions are no-ops and roll UI should be hidden (e.g. viewing another user's character) */
   canRoll?: boolean | undefined;
+  personalLogCharacterId?: string | undefined;
 }) {
   const queryClient = useQueryClient();
+  const personalStorageKey = personalLogCharacterId
+    ? personalRollLogStorageKey(personalLogCharacterId)
+    : LEGACY_PERSONAL_ROLL_LOG_KEY;
+
   const [rolls, setRolls] = useState<RollEntry[]>(() => {
-    // Hydrate from localStorage on mount
     if (typeof window === 'undefined') return [];
-    try {
-      const stored = localStorage.getItem(STORAGE_KEY);
-      if (stored) {
-        const parsed = JSON.parse(stored) as RollEntry[];
-        // Restore Date objects from ISO strings
-        return parsed.map((r) => ({ ...r, timestamp: new Date(r.timestamp) }));
-      }
-    } catch {
-      /* ignore parse errors */
-    }
-    return [];
+    return readPersonalRollLog(personalStorageKey) as RollEntry[];
   });
+
+  // Merge rolls opened in another tab for the same character.
+  useEffect(() => {
+    const onStorage = (event: StorageEvent) => {
+      if (event.key !== personalStorageKey || event.newValue == null) return;
+      try {
+        const remote = readPersonalRollLog(personalStorageKey);
+        setRolls((prev) =>
+          mergeRollLogsById<RollEntry>(prev, remote as RollEntry[]).slice(-maxHistory),
+        );
+      } catch {
+        /* ignore parse errors */
+      }
+    };
+    window.addEventListener('storage', onStorage);
+    return () => window.removeEventListener('storage', onStorage);
+  }, [personalStorageKey, maxHistory]);
 
   // Persist to localStorage whenever rolls change (keep last N, oldest-first)
   useEffect(() => {
-    try {
-      const toStore = rolls.slice(-MAX_PERSISTED_ROLLS);
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(toStore));
-    } catch {
-      /* ignore storage errors */
-    }
-  }, [rolls]);
+    writePersonalRollLog(personalStorageKey, rolls.slice(-MAX_PERSISTED_PERSONAL_ROLLS));
+  }, [rolls, personalStorageKey]);
 
   // Subscribers to be notified when a new roll is added
   const subscribersRef = React.useRef<Set<(roll: RollEntry) => void>>(new Set());
@@ -251,44 +265,43 @@ export function RollProvider({
     [makeD20Roll],
   );
 
-  // Roll damage (parses damage strings like "2d6", "1d8+2", "1d6 Slashing")
+  // Roll damage (parses "2d6", "1d8+2", "1d6 Slashing", and joined Modify labels)
   const rollDamage = useCallback(
     (damageStr: string, bonus: number = 0, titleOverride?: string, modifierLabel?: string) => {
       if (!canRoll) return;
-      // Validate input is a string
       if (typeof damageStr !== 'string') {
         return;
       }
 
-      const match = damageStr.match(/(\d+)d(\d+)([+-]\d+)?(?:\s+([a-zA-Z]+))?/);
-      if (!match) return;
-
-      const [, numDice, dieSize, modifier, dmgType] = match;
-      if (numDice === undefined || dieSize === undefined) return;
-      const num = parseInt(numDice);
-      const size = parseInt(dieSize);
-      const mod = modifier ? parseInt(modifier) : 0;
-      const totalBonus = mod + bonus;
+      const groups = parseDamageRollGroups(damageStr);
+      if (groups.length === 0) return;
 
       const diceResults: DieResult[] = [];
-      let total = totalBonus;
+      let embeddedMod = 0;
 
-      for (let i = 0; i < num; i++) {
-        const dieType = `d${size}` as DieResult['type'];
-        const value = rollDie(dieType);
-        diceResults.push({
-          type: dieType,
-          value,
-          isMax: value === size,
-          isMin: value === 1,
-        });
-        total += value;
+      for (const group of groups) {
+        embeddedMod += group.modifier;
+        const dieType = `d${group.size}` as DieResult['type'];
+        if (!(dieType in DIE_MAX)) continue;
+        for (let i = 0; i < group.count; i++) {
+          const value = rollDie(dieType);
+          diceResults.push({
+            type: dieType,
+            value,
+            isMax: value === group.size,
+            isMin: value === 1,
+          });
+        }
       }
+      if (diceResults.length === 0) return;
 
+      const totalBonus = embeddedMod + bonus;
+      const total = diceResults.reduce((sum, die) => sum + die.value, 0) + totalBonus;
+      const types = [...new Set(groups.map((g) => g.type).filter((t): t is string => !!t))];
       const title =
         titleOverride ??
-        (dmgType
-          ? `${dmgType.charAt(0).toUpperCase() + dmgType.slice(1).toLowerCase()} Damage`
+        (types.length > 0
+          ? `${types.map((t) => t.charAt(0).toUpperCase() + t.slice(1).toLowerCase()).join(', ')} Damage`
           : 'Damage');
 
       const newRoll: RollEntry = {

@@ -15,16 +15,19 @@
 
 'use client';
 
-import { useState, Suspense } from 'react';
+import { useState, Suspense, useMemo } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { Wand2, Zap, Target } from 'lucide-react';
 import {
   usePowerParts,
   useAdmin,
   useLoadModalLibrary,
+  useUserLibraryCounts,
   type PowerPart,
   type UseLoadModalLibraryReturn,
 } from '@/hooks';
+import { useAccountProfile } from '@/hooks/use-profile';
+import { formatRoleQuotaExceededMessage, isAtRoleQuota } from '@/lib/role-quota-messages';
 import { useAuthStore } from '@/stores';
 import { SourceFilter, sourceFilterSummary } from '@/components/patterns/filters/source-filter';
 import {
@@ -32,7 +35,37 @@ import {
   AdvancedCalculationsPanel,
   CreatorSummaryPanel,
 } from '@/components/creator';
-import { LoadingState } from '@/components/ui';
+import { LoadingState, TabContentPanel, useTabGroup } from '@/components/ui';
+import {
+  formatEnergyStat,
+  formatPowerCompositionSummary,
+  powerCompositionEnergyLines,
+  powerCreatorSaveBlockReason,
+} from '@/lib/calculators';
+import { PowerCreatorCompositionBand } from './power-creator-composition-band';
+import {
+  emptyTabForm,
+  showsFieldOverride,
+  REVERSE_TAB_ID,
+  SHARED_TAB_ID,
+  type PowerTabForm,
+} from './power-creator-composition';
+import type { PowerCreatorInheritance } from './power-creator-editor-config';
+import {
+  actionIsOverride,
+  areaIsOverride,
+  attackIsOverride,
+  damageIsOverride,
+  durationIsOverride,
+  rangeIsOverride,
+  sharedActionLabel,
+  sharedAreaLabel,
+  sharedAttackLabel,
+  sharedDamageLabel,
+  sharedDurationLabel,
+  sharedRangeLabel,
+  type InheritedField,
+} from './power-creator-from-shared';
 import {
   bootstrapPowerCreatorFormState,
   type PowerCreatorFormState,
@@ -41,6 +74,26 @@ import {
 import { PowerCreatorEditor } from './power-creator-editor';
 import { usePowerCreatorWorkspace } from './use-power-creator-workspace';
 import { PowerCreatorHelp } from './power-creator-help';
+import {
+  innatePowerCreatorSummaryHelpLabel,
+  innatePowerCreatorSummaryLabel,
+  snapshotPowerCreatorForInnate,
+} from './power-creator-innate-label';
+import type { PowerDocument } from '@/lib/calculators';
+import {
+  creatorEditReplacesDraft,
+  findLoadedLibraryItem,
+  resolveCreatorSaveTargetFromItem,
+} from '@/lib/library/catalog-listing';
+
+function inheritField(
+  overridden: boolean,
+  label: string,
+  onOverride: () => void,
+  onUseShared: () => void,
+): InheritedField {
+  return { overridden, label, onOverride, onUseShared };
+}
 
 function PowerCreatorContent() {
   const { user } = useAuthStore();
@@ -87,6 +140,7 @@ function PowerCreatorContent() {
       key={sessionKey}
       initialFormState={initialFormState}
       editPowerId={editPowerId}
+      editReplacesDraft={creatorEditReplacesDraft(editPowerId, load.rawItems)}
       user={user}
       isAdmin={isAdmin}
       powerParts={powerParts}
@@ -101,6 +155,7 @@ function PowerCreatorContent() {
 interface PowerCreatorWorkspaceProps {
   initialFormState: PowerCreatorFormState;
   editPowerId: string | null;
+  editReplacesDraft: boolean;
   user: ReturnType<typeof useAuthStore.getState>['user'];
   isAdmin: boolean;
   powerParts: PowerPart[];
@@ -113,6 +168,7 @@ interface PowerCreatorWorkspaceProps {
 function PowerCreatorWorkspace({
   initialFormState,
   editPowerId,
+  editReplacesDraft,
   user,
   isAdmin,
   powerParts,
@@ -121,11 +177,240 @@ function PowerCreatorWorkspace({
   error,
   refetch,
 }: PowerCreatorWorkspaceProps) {
+  const { profile } = useAccountProfile(user);
+  const { data: libraryCounts } = useUserLibraryCounts({ enabled: !!user && !editPowerId });
+  const maxPowers = profile?.rolePolicy?.maxPowers;
+  const powerCount = libraryCounts?.powers ?? 0;
+  const powerQuotaMessage =
+    !editPowerId && isAtRoleQuota(powerCount, maxPowers) && maxPowers != null
+      ? formatRoleQuotaExceededMessage({
+          role: profile?.role ?? 'new_player',
+          resource: 'custom_powers',
+          currentCount: powerCount,
+          maxAllowed: maxPowers,
+        })
+      : null;
+
   const ws = usePowerCreatorWorkspace({
     initialFormState,
     editPowerId,
+    editReplacesDraft,
     powerParts,
+    initialSaveTarget: resolveCreatorSaveTargetFromItem(
+      findLoadedLibraryItem(load.rawItems, editPowerId),
+      { canSaveToOfficial: isAdmin },
+    ),
   });
+
+  const variantTabGroup = useTabGroup('power-variants');
+  const composed = ws.composedSummary;
+  const tabDisplay = composed?.tabDisplay ?? null;
+  const randomizeSharedUnpriced =
+    ws.variants.structure === 'randomize' && ws.variants.activeTabId === SHARED_TAB_ID;
+  const showVariantTabs = ws.variants.structure !== 'none' || ws.variants.reverseEnabled;
+
+  const innateSummaryLabel = useMemo(() => {
+    const snapshot = snapshotPowerCreatorForInnate(ws.powerData as PowerDocument, powerParts);
+    return innatePowerCreatorSummaryLabel(snapshot);
+  }, [ws.powerData, powerParts]);
+  const onRandomizeFace =
+    ws.variants.structure === 'randomize' &&
+    ws.variants.activeTabId !== SHARED_TAB_ID &&
+    ws.variants.activeTabId !== REVERSE_TAB_ID;
+  const onOverlayTab =
+    ws.variants.activeTabId === REVERSE_TAB_ID ||
+    (ws.variants.activeTabId !== SHARED_TAB_ID &&
+      ws.variants.structure !== 'alternate' &&
+      ws.variants.structure !== 'randomize' &&
+      ws.variants.structure !== 'none');
+
+  const shared = ws.variants.collected.shared;
+  const live: PowerTabForm = {
+    ...emptyTabForm(),
+    actionType: ws.actionType,
+    isReaction: ws.isReaction,
+    attackMode: ws.attackMode,
+    range: ws.range,
+    area: ws.area,
+    duration: ws.duration,
+    damages: ws.damages,
+    selectedParts: ws.selectedParts,
+    selectedAdvancedParts: ws.selectedAdvancedParts,
+  };
+  const overlayTabId = ws.variants.activeTabId;
+  const actionLocked =
+    onRandomizeFace ||
+    (onOverlayTab &&
+      (overlayTabId === REVERSE_TAB_ID ||
+        ws.variants.structure === 'modify' ||
+        ws.variants.structure === 'choice'));
+  const inheritance: PowerCreatorInheritance | null = onRandomizeFace
+    ? {
+        action: {
+          label: sharedActionLabel(shared),
+          overridden: false,
+          locked: true,
+          onOverride: () => {},
+          onUseShared: () => {},
+        },
+      }
+    : onOverlayTab
+      ? {
+          action: {
+            ...inheritField(
+              showsFieldOverride(
+                actionIsOverride(live),
+                ws.variants.isFieldForcedOverride(overlayTabId, 'action'),
+              ),
+              sharedActionLabel(shared),
+              () => {
+                ws.variants.markFieldOverridden(overlayTabId, 'action');
+                ws.setActionType(shared.actionType);
+                ws.setIsReaction(shared.isReaction);
+              },
+              () => {
+                ws.variants.clearFieldOverridden(overlayTabId, 'action');
+                const blank = emptyTabForm();
+                ws.setActionType(blank.actionType);
+                ws.setIsReaction(blank.isReaction);
+              },
+            ),
+            ...(actionLocked ? { locked: true, overridden: false } : {}),
+          },
+          attack: inheritField(
+            showsFieldOverride(
+              attackIsOverride(live),
+              ws.variants.isFieldForcedOverride(overlayTabId, 'attack'),
+            ),
+            sharedAttackLabel(shared),
+            () => {
+              ws.variants.markFieldOverridden(overlayTabId, 'attack');
+              ws.setAttackMode(shared.attackMode);
+            },
+            () => {
+              ws.variants.clearFieldOverridden(overlayTabId, 'attack');
+              ws.setAttackMode(emptyTabForm().attackMode);
+            },
+          ),
+          range: inheritField(
+            showsFieldOverride(
+              rangeIsOverride(live),
+              ws.variants.isFieldForcedOverride(overlayTabId, 'range'),
+            ),
+            sharedRangeLabel(shared),
+            () => {
+              ws.variants.markFieldOverridden(overlayTabId, 'range');
+              ws.setRange(shared.range);
+            },
+            () => {
+              ws.variants.clearFieldOverridden(overlayTabId, 'range');
+              ws.setRange(emptyTabForm().range);
+            },
+          ),
+          area: inheritField(
+            showsFieldOverride(
+              areaIsOverride(live),
+              ws.variants.isFieldForcedOverride(overlayTabId, 'area'),
+            ),
+            sharedAreaLabel(shared),
+            () => {
+              ws.variants.markFieldOverridden(overlayTabId, 'area');
+              ws.setArea(shared.area);
+            },
+            () => {
+              ws.variants.clearFieldOverridden(overlayTabId, 'area');
+              ws.setArea(emptyTabForm().area);
+            },
+          ),
+          duration: inheritField(
+            showsFieldOverride(
+              durationIsOverride(live),
+              ws.variants.isFieldForcedOverride(overlayTabId, 'duration'),
+            ),
+            sharedDurationLabel(shared),
+            () => {
+              ws.variants.markFieldOverridden(overlayTabId, 'duration');
+              ws.setDuration(shared.duration);
+            },
+            () => {
+              ws.variants.clearFieldOverridden(overlayTabId, 'duration');
+              ws.setDuration(emptyTabForm().duration);
+            },
+          ),
+          damage: inheritField(
+            showsFieldOverride(
+              damageIsOverride(live.damages),
+              ws.variants.isFieldForcedOverride(overlayTabId, 'damage'),
+            ),
+            sharedDamageLabel(shared),
+            () => {
+              ws.variants.markFieldOverridden(overlayTabId, 'damage');
+              ws.setDamages(shared.damages);
+            },
+            () => {
+              ws.variants.clearFieldOverridden(overlayTabId, 'damage');
+              ws.setDamages(emptyTabForm().damages);
+            },
+          ),
+          sharedPartNames: shared.selectedParts.map((p) => p.part.name),
+          sharedMechanicNames: shared.selectedAdvancedParts.map((p) => p.part.name),
+        }
+      : null;
+
+  const editor = (
+    <PowerCreatorEditor
+      isAdmin={isAdmin}
+      name={ws.name}
+      onNameChange={ws.setName}
+      description={ws.description}
+      onDescriptionChange={ws.setDescription}
+      imageId={ws.imageId}
+      imageUrl={ws.imageUrl}
+      onImageChange={(selection) => {
+        ws.setImageId(selection.imageId);
+        ws.setImageUrl(selection.imageUrl);
+      }}
+      actionType={ws.actionType}
+      onActionTypeChange={ws.setActionType}
+      isReaction={ws.isReaction}
+      onIsReactionChange={ws.setIsReaction}
+      actionTypeDisplay={ws.actionTypeDisplay}
+      attackMode={ws.attackMode}
+      onAttackModeChange={ws.setAttackMode}
+      targetedDefenses={ws.targetedDefenses}
+      onTargetedDefensesChange={ws.setTargetedDefenses}
+      suggestionPartsDb={ws.powerParts}
+      suggestionSelectedParts={ws.suggestionSelectedParts}
+      range={ws.range}
+      onRangeChange={ws.setRange}
+      rangeSummary={ws.rangeSummary}
+      area={ws.area}
+      onAreaChange={ws.setArea}
+      areaPartInfo={ws.areaPartInfo}
+      duration={ws.duration}
+      onDurationChange={ws.setDuration}
+      durationSummary={ws.durationSummary}
+      selectedParts={ws.selectedParts}
+      nonMechanicParts={ws.nonMechanicParts}
+      powerPartsSummary={ws.powerPartsSummary}
+      onAddPart={ws.addPart}
+      onRemovePart={ws.removePart}
+      onUpdatePart={ws.updatePart}
+      selectedAdvancedParts={ws.selectedAdvancedParts}
+      mechanicPartsForList={ws.mechanicPartsForList}
+      powerMechanicsSummary={ws.powerMechanicsSummary}
+      onAddMechanicPart={ws.addMechanicPart}
+      onRemoveAdvancedPart={ws.removeAdvancedPart}
+      onUpdateAdvancedPart={ws.updateAdvancedPart}
+      damages={ws.damages}
+      onDamagesChange={ws.setDamages}
+      damageSummary={ws.damageSummary}
+      sectionCosts={ws.sectionCosts}
+      sectionsUnpriced={randomizeSharedUnpriced}
+      hidePartsAndDamage={randomizeSharedUnpriced}
+      inheritance={inheritance}
+    />
+  );
 
   return (
     <CreatorPageShell
@@ -134,18 +419,37 @@ function PowerCreatorWorkspace({
       description="Design custom powers by combining power parts. Each part contributes to the total energy cost and training point requirements."
       user={user}
       auth={{ returnPath: '/power-creator', contentType: 'power' }}
-      showPublicPrivate={isAdmin}
+      showSaveTarget={isAdmin}
       saveTarget={ws.save.saveTarget}
       onSaveTargetChange={ws.save.setSaveTarget}
       onSave={ws.save.handleSave}
       onLoad={load.openLoadModal}
       onReset={ws.handleReset}
+      unsavedDirty={ws.unsavedDirty}
+      onDiscardLocalDraft={ws.discardLocalDraft}
       toolbarHelp={{
         load: <PowerCreatorHelp topic="load" />,
         reset: <PowerCreatorHelp topic="reset" />,
       }}
       saving={ws.save.saving}
-      saveDisabled={!ws.name.trim()}
+      saveDisabled={
+        !ws.name.trim() || ws.dieIncomplete || ws.reverseIncomplete || !!powerQuotaMessage
+      }
+      saveDisabledReason={
+        powerQuotaMessage ??
+        powerCreatorSaveBlockReason({
+          composition: ws.variants.composition,
+          reverseIncomplete: ws.reverseIncomplete,
+        }) ??
+        undefined
+      }
+      aboveGrid={
+        <PowerCreatorCompositionBand
+          state={ws.variants}
+          tabGroupId={variantTabGroup.tabGroupId}
+          sharedPanelId={variantTabGroup.sharedPanelId}
+        />
+      }
       loading={{
         isLoading,
         loadingMessage: 'Loading power parts...',
@@ -160,6 +464,7 @@ function PowerCreatorWorkspace({
         onClose: () => ws.save.setShowPublishConfirm(false),
         onConfirm: () => ws.save.confirmPublish(),
         title: ws.save.publishConfirmTitle,
+        confirmLabel: ws.save.publishConfirmLabel,
         description:
           ws.save.publishConfirmDescription?.(ws.name.trim(), {
             existingInPublic: ws.save.publishExistingInPublic,
@@ -188,14 +493,14 @@ function PowerCreatorWorkspace({
           costStats={[
             {
               label: 'Energy Cost',
-              value: ws.costs.totalEnergy,
+              value: formatEnergyStat(composed ? composed.res.energy : ws.costs.totalEnergy),
               icon: <Zap className="h-6 w-6" />,
               color: 'energy',
               help: <PowerCreatorHelp topic="energy" tone="current" />,
             },
             {
               label: 'Training Points',
-              value: ws.costs.totalTP,
+              value: composed ? composed.res.tp : ws.costs.totalTP,
               icon: <Target className="h-6 w-6" />,
               color: 'tp',
               help: <PowerCreatorHelp topic="tp" tone="current" />,
@@ -203,75 +508,69 @@ function PowerCreatorWorkspace({
           ]}
           costHelp={
             <div className="flex items-center gap-1.5 text-sm text-text-secondary">
-              <span>Innate Power</span>
-              <PowerCreatorHelp topic="innate" />
+              <span>{innateSummaryLabel}</span>
+              <PowerCreatorHelp
+                topic="innate"
+                label={innatePowerCreatorSummaryHelpLabel(innateSummaryLabel)}
+              />
             </div>
           }
           statRows={[
-            { label: 'Action', value: ws.actionTypeDisplay },
+            ...(composed
+              ? [{ label: 'Structure', value: formatPowerCompositionSummary(composed.res) }]
+              : []),
+            { label: 'Action', value: tabDisplay?.actionType ?? ws.actionTypeDisplay },
             { label: 'Attack', value: ws.attackModeLabel },
-            { label: 'Range', value: ws.rangeDisplay },
-            { label: 'Area', value: ws.areaDisplay },
-            { label: 'Duration', value: ws.durationDisplay },
+            { label: 'Range', value: tabDisplay?.range ?? ws.rangeDisplay },
+            { label: 'Area', value: tabDisplay?.area ?? ws.areaDisplay },
+            { label: 'Duration', value: tabDisplay?.duration ?? ws.durationDisplay },
+            {
+              label: 'Targets',
+              value:
+                ws.targetedDefenses.length > 0 ? ws.targetedDefenses.join(', ') : 'None specified',
+            },
           ]}
-          breakdowns={
-            ws.costs.tpSources.length > 0
-              ? [{ title: 'TP Breakdown', items: ws.costs.tpSources }]
-              : undefined
-          }
+          breakdowns={[
+            ...(composed
+              ? [{ title: 'Variant Energy', items: powerCompositionEnergyLines(composed.res) }]
+              : []),
+            ...((composed ? composed.res.tpSources : ws.costs.tpSources).length > 0
+              ? [
+                  {
+                    title: 'TP Breakdown',
+                    items: composed ? composed.res.tpSources : ws.costs.tpSources,
+                  },
+                ]
+              : []),
+          ]}
         >
           <AdvancedCalculationsPanel
-            rows={ws.advancedCalcRows}
-            ruleText="Rule: Final energy is the ceiling of raw energy; TP sums part contributions."
+            groups={
+              randomizeSharedUnpriced
+                ? [{ title: 'Energy', rows: [{ label: 'Shared tab', value: 'Not priced' }] }]
+                : ws.advancedCalcGroups
+            }
+            ruleText={
+              randomizeSharedUnpriced
+                ? 'Shared holds the action type plus range, area, and duration defaults. Those defaults pre-fill a new face and add no energy. Parts and damage are added on each face. Changing Shared later does not change a face that already exists.'
+                : 'Energy is rounded up at the end. Training Points are listed separately above when a part has them.'
+            }
           />
         </CreatorSummaryPanel>
       }
     >
-      <PowerCreatorEditor
-        isAdmin={isAdmin}
-        name={ws.name}
-        onNameChange={ws.setName}
-        description={ws.description}
-        onDescriptionChange={ws.setDescription}
-        imageId={ws.imageId}
-        imageUrl={ws.imageUrl}
-        onImageChange={(selection) => {
-          ws.setImageId(selection.imageId);
-          ws.setImageUrl(selection.imageUrl);
-        }}
-        actionType={ws.actionType}
-        onActionTypeChange={ws.setActionType}
-        isReaction={ws.isReaction}
-        onIsReactionChange={ws.setIsReaction}
-        actionTypeDisplay={ws.actionTypeDisplay}
-        attackMode={ws.attackMode}
-        onAttackModeChange={ws.setAttackMode}
-        range={ws.range}
-        onRangeChange={ws.setRange}
-        rangeSummary={ws.rangeSummary}
-        area={ws.area}
-        onAreaChange={ws.setArea}
-        areaPartInfo={ws.areaPartInfo}
-        duration={ws.duration}
-        onDurationChange={ws.setDuration}
-        durationSummary={ws.durationSummary}
-        selectedParts={ws.selectedParts}
-        nonMechanicParts={ws.nonMechanicParts}
-        powerPartsSummary={ws.powerPartsSummary}
-        onAddPart={ws.addPart}
-        onRemovePart={ws.removePart}
-        onUpdatePart={ws.updatePart}
-        selectedAdvancedParts={ws.selectedAdvancedParts}
-        mechanicPartsForList={ws.mechanicPartsForList}
-        powerMechanicsSummary={ws.powerMechanicsSummary}
-        onAddMechanicPart={ws.addMechanicPart}
-        onRemoveAdvancedPart={ws.removeAdvancedPart}
-        onUpdateAdvancedPart={ws.updateAdvancedPart}
-        damages={ws.damages}
-        onDamagesChange={ws.setDamages}
-        damageSummary={ws.damageSummary}
-        sectionCosts={ws.sectionCosts}
-      />
+      {showVariantTabs ? (
+        <TabContentPanel
+          tabGroupId={variantTabGroup.tabGroupId}
+          activeTab={ws.variants.activeTabId}
+          id={variantTabGroup.sharedPanelId}
+          className="space-y-6"
+        >
+          {editor}
+        </TabContentPanel>
+      ) : (
+        editor
+      )}
     </CreatorPageShell>
   );
 }

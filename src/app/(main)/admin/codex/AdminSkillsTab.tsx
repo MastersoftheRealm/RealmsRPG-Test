@@ -20,9 +20,10 @@ import {
   pathChipLabelsForEntity,
   pathFilterEmptyTitle,
 } from '@/lib/game/path-recommendation-index';
+import { collectCodexSources, codexSourceForSave } from './admin-codex-source';
 import { COPY_NAME_SUFFIX } from './admin-codex-copy-suffix';
 import { useAdminCodexEntity } from './use-admin-codex-entity';
-import { AdminCodexRowActions } from './admin-codex-row-actions';
+import { AdminCodexRowActions, ADMIN_CODEX_ROW_ACTIONS_WIDTH } from './admin-codex-row-actions';
 import {
   AdminSkillEditModal,
   EMPTY_SKILL_FORM,
@@ -123,6 +124,7 @@ export function AdminSkillsTab() {
       ds_calc: s.ds_calc ?? '',
       craft_success_desc: s.craft_success_desc ?? '',
       craft_failure_desc: s.craft_failure_desc ?? '',
+      source: s.source ?? '',
     };
   };
 
@@ -167,6 +169,7 @@ export function AdminSkillsTab() {
         ds_calc: form.ds_calc.trim() || undefined,
         craft_success_desc: form.craft_success_desc.trim() || undefined,
         craft_failure_desc: form.craft_failure_desc.trim() || undefined,
+        source: codexSourceForSave(form.source),
       },
       expectedUpdatedAt: editing?.updated_at,
     });
@@ -239,6 +242,7 @@ export function AdminSkillsTab() {
         headerColumns={SKILL_HEADER_COLUMNS}
         gridColumns={SKILL_GRID_COLUMNS}
         rowChrome={{ rightSlot: true }}
+        rightSlotWidth={ADMIN_CODEX_ROW_ACTIONS_WIDTH}
         sortState={sortState}
         onSort={handleSort}
         isLoading={isLoading}
@@ -258,6 +262,7 @@ export function AdminSkillsTab() {
                 ? pathChipLabelsForEntity(pathIndex, s.id, selectedPathIds)
                 : undefined
             }
+            rightSlotWidth={ADMIN_CODEX_ROW_ACTIONS_WIDTH}
             rightSlot={
               <AdminCodexRowActions
                 entity={s}
@@ -280,6 +285,7 @@ export function AdminSkillsTab() {
         setForm={setForm}
         abilityOptions={ABILITY_OPTIONS}
         baseSkillOptions={baseSkillOptions}
+        sourceOptions={collectCodexSources(skills)}
         saving={saving}
         onDelete={editing ? () => askDelete(editing) : undefined}
         onSave={handleSave}

@@ -50,8 +50,8 @@ export interface HealthEnergyAllocatorProps {
 function ResourceName({ full, abbrev }: { full: string; abbrev: string }) {
   return (
     <>
-      <span className="md:hidden">{abbrev}</span>
-      <span className="hidden md:inline">{full}</span>
+      <span className="lg:hidden">{abbrev}</span>
+      <span className="hidden lg:inline">{full}</span>
     </>
   );
 }
@@ -190,9 +190,9 @@ export function HealthEnergyAllocator({
         {poolStatus}
       </div>
 
-      <div className="grid grid-cols-1 gap-4 p-4 sm:grid-cols-2">
-        <div className="flex min-w-0 items-center gap-3">
-          <span className="min-w-[4.5rem] shrink-0 text-xl font-bold text-success-fg md:min-w-[7.5rem]">
+      <div className="grid grid-cols-1 gap-4 p-4 lg:grid-cols-2">
+        <div className="flex min-w-0 flex-wrap items-center gap-x-3 gap-y-2">
+          <span className="min-w-[4.5rem] shrink-0 text-xl font-bold text-success-fg lg:min-w-[7.5rem]">
             {maxHp} <ResourceName full="Health" abbrev="HP" />
           </span>
           <ValueStepper
@@ -207,11 +207,11 @@ export function HealthEnergyAllocator({
             decrementTitle="Remove Health points"
             incrementTitle="Add Health points"
           />
-          <span className="text-sm whitespace-nowrap text-text-muted">pts</span>
+          <span className="shrink-0 text-sm whitespace-nowrap text-text-muted">pts</span>
         </div>
 
-        <div className="flex min-w-0 items-center gap-3">
-          <span className="min-w-[4.5rem] shrink-0 text-xl font-bold text-info-fg md:min-w-[7.5rem]">
+        <div className="flex min-w-0 flex-wrap items-center gap-x-3 gap-y-2">
+          <span className="min-w-[4.5rem] shrink-0 text-xl font-bold text-info-fg lg:min-w-[7.5rem]">
             {maxEnergy} <ResourceName full="Energy" abbrev="EN" />
           </span>
           <ValueStepper
@@ -226,7 +226,7 @@ export function HealthEnergyAllocator({
             decrementTitle="Remove Energy points"
             incrementTitle="Add Energy points"
           />
-          <span className="text-sm whitespace-nowrap text-text-muted">pts</span>
+          <span className="shrink-0 text-sm whitespace-nowrap text-text-muted">pts</span>
         </div>
       </div>
     </div>

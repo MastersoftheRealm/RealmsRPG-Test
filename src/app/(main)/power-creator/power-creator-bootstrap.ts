@@ -4,9 +4,15 @@
  */
 
 import type { PowerPart } from '@/hooks';
-import type { AreaConfig, DurationConfig } from '@/lib/calculators';
+import {
+  normalizePowerComposition,
+  type AreaConfig,
+  type DurationConfig,
+  type PowerComposition,
+} from '@/lib/calculators';
 import { derivePowerAttackMode, normalizeAttackMode, type AttackMode } from '@/lib/attack-mode';
-import { readCreatorCache } from '@/lib/game/creator-cache';
+import { readNewCreatorDraftCache } from '@/lib/game/creator-cache';
+import { normalizeTargetedDefenses } from '@/lib/game/targeted-defenses';
 import {
   ADVANCED_CATEGORIES,
   EXCLUDED_PARTS,
@@ -43,6 +49,8 @@ export type PowerLibraryRecord = {
   image_id?: string | null | undefined;
   imageUrl?: string | null | undefined;
   image_url?: string | null | undefined;
+  targetedDefenses?: string[] | undefined;
+  composition?: unknown;
 };
 
 export interface PowerCreatorCache {
@@ -72,6 +80,9 @@ export interface PowerCreatorCache {
   attackMode: AttackMode;
   imageId?: string | null | undefined;
   imageUrl?: string | null | undefined;
+  targetedDefenses?: string[] | undefined;
+  /** Built-in variants draft (ADR-0029); top-level fields are the shared / first variant. */
+  composition?: PowerComposition | undefined;
   timestamp: number;
 }
 
@@ -89,6 +100,8 @@ export interface PowerCreatorFormState {
   attackMode: AttackMode;
   imageId: string | null;
   imageUrl: string | null;
+  targetedDefenses: string[];
+  composition: PowerComposition | null;
 }
 
 const DEFAULT_DURATION: DurationConfig = {
@@ -116,6 +129,8 @@ export function emptyPowerCreatorFormState(): PowerCreatorFormState {
     attackMode: 'none',
     imageId: null,
     imageUrl: null,
+    targetedDefenses: [],
+    composition: null,
   };
 }
 
@@ -164,7 +179,7 @@ function restoreAdvancedFromCache(
 export function restorePowerCreatorFromCache(
   powerParts: PowerPart[],
 ): PowerCreatorFormState | null {
-  const parsed = readCreatorCache<PowerCreatorCache>(POWER_CREATOR_CACHE_KEY);
+  const parsed = readNewCreatorDraftCache<PowerCreatorCache>(POWER_CREATOR_CACHE_KEY);
   if (!parsed) return null;
 
   const base = emptyPowerCreatorFormState();
@@ -202,6 +217,8 @@ export function restorePowerCreatorFromCache(
     attackMode: normalizeAttackMode(parsed.attackMode) ?? 'none',
     imageId: parsed.imageId ?? null,
     imageUrl: parsed.imageUrl ?? null,
+    targetedDefenses: normalizeTargetedDefenses(parsed.targetedDefenses),
+    composition: normalizePowerComposition(parsed.composition),
   };
 }
 
@@ -331,12 +348,17 @@ export function powerLibraryRecordToFormState(
     attackMode,
     imageId: power.imageId ?? power.image_id ?? null,
     imageUrl: power.imageUrl ?? power.image_url ?? null,
+    targetedDefenses: normalizeTargetedDefenses(
+      (power as { targetedDefenses?: string[] | undefined }).targetedDefenses,
+    ),
+    composition: normalizePowerComposition(power.composition),
   };
 }
 
 /**
- * Pure — safe to call during render. The ?edit= draft-cache clear happens in a
- * workspace mount effect, not here.
+ * Pure — safe to call during render. The draft cache is cleared only after this
+ * returns a library row (see useCreatorEditDraftDecision). An unknown id falls
+ * through to the local draft.
  */
 export function bootstrapPowerCreatorFormState(options: {
   editPowerId: string | null;
@@ -350,10 +372,9 @@ export function bootstrapPowerCreatorFormState(options: {
       const row = p as { docId?: string | undefined; id?: string | undefined };
       return String(row.docId) === editPowerId || String(row.id) === editPowerId;
     });
-    if (!powerToEdit) {
-      return emptyPowerCreatorFormState();
+    if (powerToEdit) {
+      return powerLibraryRecordToFormState(powerToEdit as PowerLibraryRecord, powerParts);
     }
-    return powerLibraryRecordToFormState(powerToEdit as PowerLibraryRecord, powerParts);
   }
 
   return restorePowerCreatorFromCache(powerParts) ?? emptyPowerCreatorFormState();

@@ -49,13 +49,20 @@ function stripCharacterPatchMeta(patch: Record<string, unknown>): Record<string,
   return next;
 }
 
-/** Merge a dirty subset onto stored JSONB. Omitted keys stay as stored. Client meta is stripped. */
+/**
+ * Merge a dirty subset onto stored JSONB. Omitted keys stay as stored.
+ * A `null` value removes that key. Client meta is stripped.
+ */
 export function applyCharacterDirtyPatch(
   currentData: Record<string, unknown>,
   patch: Record<string, unknown>,
   options?: { blobUpdatedAt?: string | undefined },
 ): Record<string, unknown> {
-  const merged = { ...currentData, ...stripCharacterPatchMeta(patch) };
+  const merged: Record<string, unknown> = { ...currentData };
+  for (const [key, value] of Object.entries(stripCharacterPatchMeta(patch))) {
+    if (value === null) delete merged[key];
+    else merged[key] = value;
+  }
   if (options?.blobUpdatedAt) merged.updatedAt = options.blobUpdatedAt;
   return merged;
 }
@@ -73,6 +80,8 @@ function stableEqual(a: unknown, b: unknown): boolean {
 /**
  * Keys in `current` that differ from `baseline`. Meta keys are never dirty.
  * When `baseline` is null (first save / no snapshot), every non-meta defined key is dirty.
+ * A baseline key missing from `current` is a clear: the dirty value is `null` so the
+ * merge can delete the stored key (86e3juw04). Omitting it would leave the old value.
  */
 export function pickDirtyCharacterFields(
   current: Record<string, unknown>,
@@ -83,15 +92,36 @@ export function pickDirtyCharacterFields(
   for (const key of keys) {
     if (isCharacterPatchMetaKey(key)) continue;
     const value = current[key];
-    if (value === undefined) continue;
-    if (!baseline || !stableEqual(value, baseline[key])) {
+    const baselineValue = baseline?.[key];
+    if (value === undefined) {
+      if (baseline && baselineValue !== undefined) dirty[key] = null;
+      continue;
+    }
+    if (!baseline || !stableEqual(value, baselineValue)) {
       dirty[key] = value;
     }
   }
   return dirty;
 }
 
-/** Remote document wins for keys we did not edit; local dirty keys kept. */
+/** Copy `null` clears onto `document` so a merge can drop those keys. */
+export function withDirtyClears<T extends Record<string, unknown>>(
+  document: T,
+  dirty: Record<string, unknown>,
+): T {
+  let next: Record<string, unknown> | undefined;
+  for (const [key, value] of Object.entries(dirty)) {
+    if (value !== null || isCharacterPatchMetaKey(key)) continue;
+    if (!next) next = { ...document };
+    next[key] = null;
+  }
+  return (next ?? document) as T;
+}
+
+/**
+ * Remote document wins for keys we did not edit; local dirty keys kept.
+ * A local `null` removes that key (a cleared sheet value).
+ */
 export function mergeRemotePreservingDirty<T extends Record<string, unknown>>(
   remote: T,
   local: T,
@@ -100,7 +130,9 @@ export function mergeRemotePreservingDirty<T extends Record<string, unknown>>(
   const next: Record<string, unknown> = { ...remote };
   for (const key of dirtyKeys) {
     if (isCharacterPatchMetaKey(key)) continue;
-    if (key in local) next[key] = local[key];
+    if (!(key in local)) continue;
+    if (local[key] === null) delete next[key];
+    else next[key] = local[key];
   }
   return next as T;
 }

@@ -8,5 +8,8 @@ export {
   SHEET_STAT_TIP_CLASS,
   SHEET_SCORE_TIP_CLASS,
   canDecreaseAbility,
+  SHEET_ABILITY_MAX,
+  sheetAbilityBudgetHint,
+  sheetAbilityIncreaseTitle,
 } from './ability-defense-stat-model';
 export { DefenseStatTile } from './defense-stat-tile';

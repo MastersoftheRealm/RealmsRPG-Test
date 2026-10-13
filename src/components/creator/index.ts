@@ -31,5 +31,10 @@ export {
 export {
   AdvancedCalculationsPanel,
   type AdvancedCalculationRow,
+  type AdvancedCalculationGroup,
 } from './advanced-calculations-panel';
 export { PowerPartCard, type PowerPartCardProps } from './power-part-card';
+export {
+  TargetedDefensesSection,
+  type TargetedDefensesSectionProps,
+} from './targeted-defenses-section';

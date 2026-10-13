@@ -3,23 +3,26 @@
 /**
  * CreatorSaveToolbar — Unified save/load/reset actions for standalone creators
  * ==========================================================================
- * Private/Public toggle (admin), Load, Reset, Save. Used by CreatorPageShell.
+ * My / Public / Admin library save target (admin), Load, Reset, Save. Used by CreatorPageShell.
  */
 
-import type { ReactNode } from 'react';
+import { useId, type ReactNode } from 'react';
 import { FolderOpen } from 'lucide-react';
 import { Button } from '@/components/ui';
 import { SegmentedControl } from '@/components/patterns';
+import { CREATOR_SAVE_TARGET_OPTIONS, type CreatorSaveTarget } from '@/lib/library/catalog-listing';
 
 export interface CreatorSaveToolbarProps {
-  saveTarget: 'private' | 'public';
-  onSaveTargetChange: (target: 'private' | 'public') => void;
+  saveTarget: CreatorSaveTarget;
+  onSaveTargetChange: (target: CreatorSaveTarget) => void;
   onSave: () => void | Promise<void>;
   onLoad: () => void;
   onReset: () => void;
   saving: boolean;
   saveDisabled?: boolean | undefined;
-  showPublicPrivate?: boolean | undefined;
+  /** Shown beside Save and linked with aria-describedby while Save is disabled. */
+  saveDisabledReason?: string | undefined;
+  showSaveTarget?: boolean | undefined;
   user: unknown;
   /**
    * When false, Load is usable while logged out (species creator).
@@ -41,7 +44,8 @@ export function CreatorSaveToolbar({
   onReset,
   saving,
   saveDisabled = false,
-  showPublicPrivate = false,
+  saveDisabledReason,
+  showSaveTarget = false,
   user,
   requireAuthToLoad = true,
   loadHelp,
@@ -49,18 +53,17 @@ export function CreatorSaveToolbar({
 }: CreatorSaveToolbarProps) {
   const loadNeedsLogin = requireAuthToLoad && !user;
   const loadLabel = loadNeedsLogin ? 'Log in to load from library' : 'Load from library';
+  const reasonId = useId();
+  const showReason = saveDisabled && !!saveDisabledReason;
 
   return (
     <div className="flex flex-wrap items-center gap-2">
-      {showPublicPrivate && (
+      {showSaveTarget && (
         <SegmentedControl
           value={saveTarget}
           onChange={onSaveTargetChange}
-          options={[
-            { value: 'private', label: 'My library' },
-            { value: 'public', label: 'Public library' },
-          ]}
-          aria-label="Save to my library or Realms Library"
+          options={CREATOR_SAVE_TARGET_OPTIONS}
+          aria-label="Save to my library, public library, or admin library"
         />
       )}
       <span className="inline-flex items-center gap-1">
@@ -81,9 +84,16 @@ export function CreatorSaveToolbar({
         disabled={saving || saveDisabled}
         isLoading={saving}
         aria-label={saving ? 'Saving' : 'Save'}
+        aria-describedby={showReason ? reasonId : undefined}
+        title={showReason ? saveDisabledReason : undefined}
       >
         {saving ? 'Saving...' : 'Save'}
       </Button>
+      {showReason ? (
+        <p id={reasonId} className="basis-full text-sm text-warning-fg" role="status">
+          {saveDisabledReason}
+        </p>
+      ) : null}
     </div>
   );
 }

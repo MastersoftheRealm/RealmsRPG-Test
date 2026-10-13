@@ -113,6 +113,8 @@ export interface LibrarySectionData {
   onAddPower?: (() => void) | undefined;
   onRemovePower?: ((id: string | number) => void) | undefined;
   onTogglePowerInnate?: ((id: string | number, isInnate: boolean) => void) | undefined;
+  /** Built-in variant pick (ADR-0029); play state like innate. */
+  onSelectPowerVariant?: ((id: string | number, variantId: string) => void) | undefined;
   onUsePower?: ((id: string | number, energyCost: number) => void) | undefined;
   onAddTechnique?: (() => void) | undefined;
   onRemoveTechnique?: ((id: string | number) => void) | undefined;
@@ -213,6 +215,9 @@ export interface LibrarySectionData {
     | ((featId: string, targetLevel: number, listType: 'archetype' | 'character') => void)
     | undefined;
   featRequirementCharacter?:
+    | import('@/lib/game/feat-requirements').CharacterForFeatRequirement
+    | undefined;
+  featRequirementEffectiveCharacter?:
     | import('@/lib/game/feat-requirements').CharacterForFeatRequirement
     | undefined;
   onTraitUsesChange?: ((traitName: string, delta: number) => void) | undefined;

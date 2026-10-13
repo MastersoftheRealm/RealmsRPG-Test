@@ -121,7 +121,7 @@ export function CreatureStatBlock({
   })();
 
   const agility = getAbilityValue(creature.abilities ?? {}, 'agility');
-  const speed = calculateCreatureSpeed(agility, rules);
+  const speed = calculateCreatureSpeed(agility, rules, creature.movementTypes);
   const evasion = calculateEvasion(agility, undefined, rules);
 
   const inventory = useMemo(() => resolveCreatureInventoryBuckets(creature), [creature]);

@@ -12,24 +12,30 @@ vi.mock('@/lib/supabase/session', () => ({
 
 vi.mock('@/lib/supabase/server', () => ({
   createClient: vi.fn(),
-}));
-
-vi.mock('@supabase/supabase-js', () => ({
-  createClient: vi.fn(),
+  createServiceRoleClient: vi.fn(),
 }));
 
 vi.mock('@/lib/admin', () => ({ isAdmin: vi.fn(async () => false) }));
 vi.mock('@/lib/role-policy', () => ({ getRolePolicyForUser: vi.fn() }));
 
-import { changeUsernameAction, createUserProfileAction, deleteAccountAction } from './actions';
+import {
+  changeUsernameAction,
+  createUserProfileAction,
+  deleteAccountAction,
+  setProfilePhotoFromLibraryAction,
+} from './actions';
 import { requireAuth, getSession } from '@/lib/supabase/session';
-import { createClient as createServerClient } from '@/lib/supabase/server';
-import { createClient as createServiceClient } from '@supabase/supabase-js';
+import { createClient as createServerClient, createServiceRoleClient } from '@/lib/supabase/server';
 
 const mockRequireAuth = vi.mocked(requireAuth);
 const mockGetSession = vi.mocked(getSession);
 const mockCreateServerClient = vi.mocked(createServerClient);
-const mockCreateServiceClient = vi.mocked(createServiceClient);
+const mockCreateServiceRoleClient = vi.mocked(createServiceRoleClient);
+
+function useStub(client: unknown) {
+  mockCreateServerClient.mockResolvedValue(client as never);
+  mockCreateServiceRoleClient.mockReturnValue(client as never);
+}
 
 const USER = { uid: 'user-1', email: 'hero@example.com' };
 const UNIQUE_VIOLATION = { code: '23505', message: 'duplicate key value' };
@@ -109,7 +115,7 @@ describe('changeUsernameAction', () => {
       if (op.table === 'usernames' && op.action === 'select') return ok(null);
       return ok();
     });
-    mockCreateServerClient.mockResolvedValue(client as never);
+    useStub(client);
 
     const result = await changeUsernameAction('TakenName');
 
@@ -126,7 +132,7 @@ describe('changeUsernameAction', () => {
       }
       return ok();
     });
-    mockCreateServerClient.mockResolvedValue(client as never);
+    useStub(client);
 
     const result = await changeUsernameAction('NewName');
 
@@ -151,7 +157,7 @@ describe('changeUsernameAction', () => {
       }
       return ok();
     });
-    mockCreateServerClient.mockResolvedValue(client as never);
+    useStub(client);
 
     const result = await changeUsernameAction('NewName');
 
@@ -170,11 +176,94 @@ describe('changeUsernameAction', () => {
         ? ok({ username: 'samename', last_username_change: null })
         : ok(),
     );
-    mockCreateServerClient.mockResolvedValue(client as never);
+    useStub(client);
 
     const result = await changeUsernameAction('SameName');
 
     expect(result.success).toBe(false);
+  });
+
+  it('does not write when the 7-day cooldown has not elapsed', async () => {
+    const { client, ops } = createSupabaseStub((op) =>
+      op.table === 'user_profiles' && op.action === 'select'
+        ? ok({ username: 'oldname', last_username_change: new Date().toISOString() })
+        : ok(),
+    );
+    useStub(client);
+
+    const result = await changeUsernameAction('NewName');
+
+    expect(result.success).toBe(false);
+    expect(opLabels(ops)).toEqual(['select:user_profiles']);
+  });
+
+  it('does not write a username that fails the rules', async () => {
+    const { client, ops } = createSupabaseStub(() => ok());
+    useStub(client);
+
+    const result = await changeUsernameAction('no spaces');
+
+    expect(result.success).toBe(false);
+    expect(ops).toEqual([]);
+  });
+});
+
+describe('setProfilePhotoFromLibraryAction', () => {
+  const portrait = 'https://example.test/storage/v1/object/public/codex-art/library/portrait.png';
+
+  it('rejects a URL that is not a library portrait', async () => {
+    const { client, ops } = createSupabaseStub((op) => {
+      if (op.table === 'realms_images') return ok(null);
+      return ok();
+    });
+    useStub(client);
+
+    const result = await setProfilePhotoFromLibraryAction('https://evil.example/photo.png');
+
+    expect(result).toEqual({
+      success: false,
+      error: 'Choose a picture from the Realms library.',
+    });
+    expect(opLabels(ops)).not.toContain('update:user_profiles');
+  });
+
+  it('rejects a library image that is not a portrait', async () => {
+    const weapon = 'https://example.test/storage/v1/object/public/codex-art/library/sword.png';
+    const { client, ops } = createSupabaseStub((op) => {
+      if (op.table === 'realms_images' && op.action === 'select') {
+        return ok({
+          public_url: weapon,
+          realms_image_categories: [{ category: 'weapon' }],
+        });
+      }
+      return ok();
+    });
+    useStub(client);
+
+    const result = await setProfilePhotoFromLibraryAction(weapon);
+
+    expect(result.success).toBe(false);
+    expect(opLabels(ops)).not.toContain('update:user_profiles');
+  });
+
+  it('stores the library portrait URL, not the caller string', async () => {
+    const { client, ops } = createSupabaseStub((op) => {
+      if (op.table === 'realms_images' && op.action === 'select') {
+        return ok({
+          public_url: portrait,
+          realms_image_categories: [{ category: 'creature' }],
+        });
+      }
+      return ok();
+    });
+    useStub(client);
+
+    const result = await setProfilePhotoFromLibraryAction(`${portrait}?t=1`);
+
+    expect(result).toEqual({ success: true, photoUrl: portrait });
+    const update = ops.find((op) => op.table === 'user_profiles' && op.action === 'update');
+    expect(update?.payload).toMatchObject({ photo_url: portrait });
+    expect(update?.filters).toEqual({ id: USER.uid });
   });
 });
 
@@ -189,7 +278,7 @@ describe('createUserProfileAction', () => {
       }
       return ok();
     });
-    mockCreateServerClient.mockResolvedValue(client as never);
+    useStub(client);
 
     const result = await createUserProfileAction({});
 
@@ -211,7 +300,7 @@ describe('createUserProfileAction', () => {
       }
       return ok();
     });
-    mockCreateServerClient.mockResolvedValue(client as never);
+    useStub(client);
 
     const result = await createUserProfileAction({ username: 'TakenName' });
 
@@ -225,7 +314,7 @@ describe('createUserProfileAction', () => {
       }
       return ok();
     });
-    mockCreateServerClient.mockResolvedValue(client as never);
+    useStub(client);
 
     const result = await createUserProfileAction({ username: 'SomethingElse' });
 
@@ -244,7 +333,7 @@ describe('deleteAccountAction', () => {
       if (op.table === 'campaign_members' && op.action === 'select') return ok([]);
       return ok();
     });
-    mockCreateServiceClient.mockReturnValue(client as never);
+    useStub(client);
 
     const result = await deleteAccountAction();
 
@@ -268,7 +357,7 @@ describe('deleteAccountAction', () => {
       }
       return ok();
     });
-    mockCreateServiceClient.mockReturnValue(client as never);
+    useStub(client);
 
     const result = await deleteAccountAction();
 
@@ -292,7 +381,7 @@ describe('deleteAccountAction', () => {
       }
       return ok();
     });
-    mockCreateServiceClient.mockReturnValue(client as never);
+    useStub(client);
 
     const result = await deleteAccountAction();
 

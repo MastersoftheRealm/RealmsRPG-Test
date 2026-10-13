@@ -7,6 +7,12 @@
 import type { ReactNode } from 'react';
 import { formatDurationCompact, formatSavedActionTypeForDisplay } from '@/lib/utils';
 import { calculateCriticalRange, calculateEvasion } from '@/lib/game/calculations';
+import {
+  applyTempModifier,
+  getEffectiveAbilities,
+  getScalarTempModifier,
+  tempModifierValueClass,
+} from '@/lib/character/temp-modifiers';
 import { resolveWeaponRangeDisplay, type ItemPropertyPayload } from '@/lib/calculators';
 import {
   InnateToggle,
@@ -32,7 +38,13 @@ import {
 } from '@/components/patterns/list/entity-library-sections';
 import { buildCreatureEquipmentColumns } from '@/components/patterns/list/entity-library-sections-columns';
 import type { useRollsOptional } from '@/components/rolls';
-import type { Abilities, CharacterPower, CharacterTechnique, Item } from '@/types';
+import type {
+  Abilities,
+  CharacterPower,
+  CharacterTechnique,
+  CharacterTempModifiers,
+  Item,
+} from '@/types';
 import { resolveListRowThumbnail } from '@/lib/list-row-image';
 import {
   type CodexPart,
@@ -55,8 +67,22 @@ import {
   partsProficienciesSection,
   propertiesProficienciesSection,
 } from '@/lib/chip/list-row-metadata';
-import { rangeFactChip } from '@/lib/detail-option/compact-facts';
+import type { ChipData } from '@/components/patterns';
+import { rangeFactChip, targetsFactChip } from '@/lib/detail-option/compact-facts';
 import { derivePowerDisplay, formatPowerDamage } from '@/lib/calculators/power-calc';
+import {
+  composedPowerCategoryDamage,
+  composedPowerSavedParts,
+  selectedResolvedVariant,
+} from '@/lib/calculators/power-composition';
+import {
+  composedPowerDamageLabel,
+  powerVariantsDetailSection,
+  withPowerReverseNote,
+} from '@/lib/power-variant-chips';
+import { partChipsFromDisplay } from '@/lib/chip/part-chips-from-display';
+import { DIE_MAX, generateRollId, type DieType } from '@/lib/rolls/die';
+import type { LibraryPower } from '@/types/library';
 import { deriveTechniqueDisplay } from '@/lib/calculators/technique-calc';
 import {
   resolveItemMarketPricing,
@@ -65,7 +91,6 @@ import {
 } from '@/lib/calculators/item-calc';
 import { buildEquipmentCatalogFactColumns, equipmentCurrency } from '@/lib/codex/equipment-list';
 import type { GlrSurfaceId } from '@/lib/glr';
-import { truncateText } from '@/lib/utils';
 import type { PowerPart, TechniquePart } from '@/hooks/codex-types';
 import {
   libraryItemToPowerDocument,
@@ -77,6 +102,11 @@ import {
   powerHasDamageCategory,
   withDamageCategory,
 } from '@/lib/library/power-technique-categories';
+import {
+  INNATE_THRESHOLD_WARNING,
+  SHEET_INNATE_NOT_ALLOWED_WARNING,
+  isInnatePowerOverThreshold,
+} from '@/lib/character/innate-power-capacity';
 type RollContext = ReturnType<typeof useRollsOptional>;
 
 export type LibraryEntityRowContext = {
@@ -99,6 +129,10 @@ export type LibraryEntityRowContext = {
   onUsePower?: ((id: string | number, energyCost: number) => void) | undefined;
   onRemovePower?: ((id: string | number) => void) | undefined;
   onTogglePowerInnate?: ((id: string | number, isInnate: boolean) => void) | undefined;
+  /** False for Pure-Martial (and any path with Innate Energy 0). */
+  canMarkPowersInnate?: boolean | undefined;
+  innateThreshold?: number | undefined;
+  onSelectPowerVariant?: ((id: string | number, variantId: string) => void) | undefined;
   onUseTechnique?: ((id: string | number, energyCost: number) => void) | undefined;
   onRemoveTechnique?: ((id: string | number) => void) | undefined;
   onRemoveWeapon?: ((id: string | number) => void) | undefined;
@@ -109,6 +143,8 @@ export type LibraryEntityRowContext = {
   onToggleEquipArmor?: ((id: string | number) => void) | undefined;
   onRemoveEquipment?: ((id: string | number) => void) | undefined;
   onEquipmentQuantityChange?: ((id: string | number, delta: number) => void) | undefined;
+  /** Sheet temp deltas. Critical Range stacks on the armor-row threshold (ADR-0006). */
+  tempModifiers?: CharacterTempModifiers | undefined;
 };
 
 function categoryFactValue(categories: string[]): string | undefined {
@@ -174,6 +210,22 @@ function needsProfBadge(
 }
 
 /**
+ * Innate powers require no Energy to use. The number stays visible because it
+ * still counts against Innate Energy, but it is not a spend control.
+ */
+function buildInnateEnergyMark(energyCost: number): ReactNode {
+  return (
+    <span
+      className="text-sm font-medium text-text-secondary"
+      title="Innate — no Energy spent"
+      aria-label={`Innate, ${energyCost} Energy, no Energy spent`}
+    >
+      {energyCost}
+    </span>
+  );
+}
+
+/**
  * Energy cost control for play-sheet powers/techniques.
  * Cost appears ONLY here (rightSlot) — never also as a static Energy column.
  * View-only (no onUse): same chrome, disabled — do not pass noop handlers.
@@ -185,7 +237,13 @@ function buildEnergyButton(
   id: string | number,
   variant: 'primary' | 'success',
 ): ReactNode {
-  if (energyCost <= 0) return null;
+  if (energyCost < 1) {
+    return (
+      <span className="text-sm text-text-secondary" aria-label="No energy cost">
+        —
+      </span>
+    );
+  }
 
   if (onUse) {
     return (
@@ -213,6 +271,21 @@ function buildEnergyButton(
   );
 }
 
+/** Roll-log entry for a Randomize die roll (face picks the outcome). */
+function buildRandomizeRollEntry(powerName: string, face: number, sides: number, label: string) {
+  const dieType = `d${sides}` as DieType;
+  const known = dieType in DIE_MAX;
+  return {
+    id: generateRollId(),
+    type: 'custom' as const,
+    title: `${powerName}: 1d${sides} → ${label}`,
+    dice: known ? [{ type: dieType, value: face, isMax: face === sides, isMin: face === 1 }] : [],
+    modifier: 0,
+    total: face,
+    timestamp: new Date(),
+  };
+}
+
 export function mapPowerRows(
   powers: CharacterPower[],
   ctx: LibraryEntityRowContext,
@@ -222,37 +295,83 @@ export function mapPowerRows(
     const isInnate = power.innate === true;
     const powerIsReaction = (power as CharacterPower & { isReaction?: boolean | undefined })
       .isReaction;
+    const libraryItem = (power as CharacterPower & { libraryItem?: LibraryPower | undefined })
+      .libraryItem;
     const display = derivePowerDisplay(
-      libraryItemToPowerDocument({
-        name: power.name,
-        description: power.description,
-        parts: power.parts,
-        damage: Array.isArray(power.damage) ? power.damage : undefined,
-        actionType: power.actionType,
-        isReaction: powerIsReaction,
-      }),
+      libraryItem
+        ? libraryItemToPowerDocument({
+            ...libraryItem,
+            ...(power.composition ? { composition: power.composition } : {}),
+          })
+        : libraryItemToPowerDocument({
+            name: power.name,
+            description: power.description,
+            parts: power.parts,
+            damage: Array.isArray(power.damage) ? power.damage : undefined,
+            // A sheet row stores the display label ("Quick Action"), not `quick`.
+            // Passing that label makes the resolver print Basic action.
+            isReaction: powerIsReaction,
+          }),
       ctx.powerPartsDb as PowerPart[],
+      { selectedVariantId: power.selectedVariantId },
     );
-    const energyCost =
-      typeof display.energy === 'number' && display.energy > 0 ? display.energy : (power.cost ?? 0);
+    const composition = display.composition;
+    const pickedVariant = composition ? selectedResolvedVariant(composition) : null;
+    const energyCost = display.energy > 0 ? display.energy : 0;
     const canUse = ctx.currentEnergy !== undefined && ctx.currentEnergy >= energyCost;
-    const partChips = partDataToChips(partsToPartData(power.parts, ctx.powerPartsDb));
+    const partChips = composition
+      ? partChipsFromDisplay(display.partChips)
+      : partDataToChips(partsToPartData(power.parts, ctx.powerPartsDb));
     const partsSection = partsProficienciesSection(partChips, 'power');
+    const categoryParts = composition
+      ? composedPowerSavedParts(composition)
+      : partsForCategories(power.parts);
     const categories = withDamageCategory(
-      derivePartCategories(partsForCategories(power.parts), ctx.powerPartsDb),
-      powerHasDamageCategory(Array.isArray(power.damage) ? power.damage : undefined),
+      derivePartCategories(categoryParts, ctx.powerPartsDb),
+      powerHasDamageCategory(
+        composition
+          ? composedPowerCategoryDamage(composition)
+          : Array.isArray(power.damage)
+            ? power.damage
+            : undefined,
+      ),
     );
-    const damageStr =
-      formatPowerDamage(Array.isArray(power.damage) ? power.damage : undefined) ||
-      formatDamageType(typeof power.damage === 'string' ? power.damage : undefined);
+    const damageStr = composition
+      ? composedPowerDamageLabel(composition)
+      : formatPowerDamage(Array.isArray(power.damage) ? power.damage : undefined) ||
+        formatDamageType(typeof power.damage === 'string' ? power.damage : undefined);
+    const variantsSection = composition
+      ? powerVariantsDetailSection(composition, {
+          select: ctx.onSelectPowerVariant
+            ? {
+                powerName: power.name,
+                onSelectVariant: (variantId) => ctx.onSelectPowerVariant!(id, variantId),
+              }
+            : undefined,
+          roll:
+            ctx.onSelectPowerVariant && ctx.rollContext?.canRoll !== false
+              ? {
+                  powerName: power.name,
+                  onRolled: (variantId, face, sides, label) => {
+                    ctx.onSelectPowerVariant!(id, variantId);
+                    ctx.rollContext?.addRoll(
+                      buildRandomizeRollEntry(power.name, face, sides, label),
+                    );
+                  },
+                }
+              : undefined,
+        })
+      : undefined;
     const rangeValue =
-      typeof power.range === 'string' && power.range.trim()
-        ? power.range
-        : typeof power.range === 'number'
+      composition && display.range && display.range !== '-'
+        ? display.range
+        : typeof power.range === 'string' && power.range.trim()
           ? power.range
-          : display.range && display.range !== '-'
-            ? display.range
-            : undefined;
+          : typeof power.range === 'number'
+            ? power.range
+            : display.range && display.range !== '-'
+              ? display.range
+              : undefined;
 
     const damageCell =
       damageStr && damageStr !== '-' && ctx.rollContext?.rollDamage ? (
@@ -268,8 +387,11 @@ export function mapPowerRows(
         damageStr
       );
 
-    const actionDisplay =
-      display.actionType || formatSavedActionTypeForDisplay(power.actionType, powerIsReaction);
+    const actionDisplay = libraryItem
+      ? display.actionType
+      : power.actionType
+        ? formatSavedActionTypeForDisplay(power.actionType, powerIsReaction)
+        : display.actionType;
 
     const columns: ColumnValue[] = [
       { key: 'action', value: actionDisplay, align: 'center' },
@@ -281,37 +403,53 @@ export function mapPowerRows(
       },
       {
         key: 'duration',
-        value:
-          display.duration && display.duration !== '-'
-            ? display.duration
-            : formatDurationCompact(power.duration),
+        value: libraryItem
+          ? display.duration
+          : power.duration
+            ? formatDurationCompact(power.duration)
+            : display.duration,
         align: 'center',
       },
     ];
 
-    const innateToggle =
-      ctx.showLibraryEditControls && ctx.onTogglePowerInnate ? (
-        <InnateToggle
-          isInnate={isInnate}
-          onToggle={() => ctx.onTogglePowerInnate!(id, !isInnate)}
-          size="md"
-        />
-      ) : undefined;
+    const canMarkInnate = ctx.canMarkPowersInnate !== false;
+    const innateNotAllowed = isInnate && !canMarkInnate;
+    const innateOverThreshold =
+      isInnate && canMarkInnate && isInnatePowerOverThreshold(energyCost, ctx.innateThreshold ?? 0);
+    const showInnateToggle =
+      ctx.showLibraryEditControls && ctx.onTogglePowerInnate && (canMarkInnate || isInnate);
+    const innateToggle = showInnateToggle ? (
+      <InnateToggle
+        isInnate={isInnate}
+        onToggle={() => ctx.onTogglePowerInnate!(id, !isInnate)}
+        disabled={!canMarkInnate && !isInnate}
+        size="md"
+      />
+    ) : undefined;
 
-    const detailSections = glrSurfaceDetailSections(
-      'character-sheet-power-play',
-      {
-        category: categoryFactValue(categories),
-        range: rangeValue,
-        trainingPoints: display.tp > 0 ? display.tp : undefined,
-      },
-      partsSection ? [partsSection] : undefined,
+    const detailSections = mergeDetailSections(
+      glrSurfaceDetailSections(
+        'character-sheet-power-play',
+        {
+          category: categoryFactValue(categories),
+          range: rangeValue,
+          trainingPoints: display.tp > 0 ? display.tp : undefined,
+        },
+        partsSection ? [partsSection] : undefined,
+      ),
+      metadataDetailSection(
+        [targetsFactChip(power.targetedDefenses)].filter(Boolean) as ChipData[],
+      ),
+      variantsSection,
     );
 
     return {
       id,
       name: power.name,
-      description: power.description,
+      description: withPowerReverseNote(
+        pickedVariant?.description ?? power.description,
+        composition,
+      ),
       thumbnail: resolveListRowThumbnail('power', power, power.name),
       columns,
       gridColumns: POWER_GRID,
@@ -319,8 +457,16 @@ export function mapPowerRows(
       badges: needsProfBadge(ctx, { powers: [power] }),
       innate: isInnate,
       hideInnateBadge: isInnate,
+      warningMessage: innateNotAllowed
+        ? SHEET_INNATE_NOT_ALLOWED_WARNING
+        : innateOverThreshold
+          ? INNATE_THRESHOLD_WARNING
+          : undefined,
       leftSlot: innateToggle,
-      rightSlot: buildEnergyButton(energyCost, canUse, ctx.onUsePower, id, 'primary'),
+      rightSlot:
+        isInnate && energyCost > 0
+          ? buildInnateEnergyMark(energyCost)
+          : buildEnergyButton(energyCost, canUse, ctx.onUsePower, id, 'primary'),
       onDelete:
         ctx.showLibraryEditControls && ctx.onRemovePower ? () => ctx.onRemovePower!(id) : undefined,
     };
@@ -347,8 +493,7 @@ export function mapTechniqueRows(
       }),
       ctx.techniquePartsDb as TechniquePart[],
     );
-    const energyCost =
-      typeof display.energy === 'number' && display.energy > 0 ? display.energy : (tech.cost ?? 0);
+    const energyCost = display.energy > 0 ? display.energy : 0;
     const canUse = ctx.currentEnergy !== undefined && ctx.currentEnergy >= energyCost;
     const partChips = partDataToChips(
       partsToPartData(tech.parts, ctx.techniquePartsDb, 'technique'),
@@ -370,6 +515,7 @@ export function mapTechniqueRows(
     const rangeChip = rangeFactChip(tech.range);
     const extraSections = mergeDetailSections(
       rangeChip ? metadataDetailSection([rangeChip]) : undefined,
+      metadataDetailSection([targetsFactChip(tech.targetedDefenses)].filter(Boolean) as ChipData[]),
       partsSection ? [partsSection] : undefined,
     );
     const detailSections = glrSurfaceDetailSections(
@@ -409,12 +555,18 @@ export function mapTechniqueRows(
   });
 }
 
+function abilitiesForAttackRolls(ctx: LibraryEntityRowContext) {
+  if (!ctx.abilities) return undefined;
+  return getEffectiveAbilities(ctx.abilities, ctx.tempModifiers);
+}
+
 export function mapWeaponRows(weapons: Item[], ctx: LibraryEntityRowContext): EntityWeaponRow[] {
+  const rollAbilities = abilitiesForAttackRolls(ctx);
   return weapons.map((item, i) => {
     const id = item.id ?? item.name ?? i;
     const { bonus: attackBonus, abilityName } = getWeaponAttackBonus(
       item,
-      ctx.abilities,
+      rollAbilities,
       ctx.martialProficiency,
     );
     const propertyChips = partDataToChips(
@@ -455,7 +607,9 @@ export function mapWeaponRows(weapons: Item[], ctx: LibraryEntityRowContext): En
             value={0}
             displayValue={damageDice}
             variant="danger"
-            onClick={() => ctx.rollContext!.rollDamage(String(damageRollStr))}
+            onClick={() =>
+              ctx.rollContext!.rollDamage(String(damageRollStr), attackBonus, `${item.name} damage`)
+            }
             size="sm"
             title="Roll damage"
           />
@@ -509,6 +663,7 @@ export function mapWeaponRows(weapons: Item[], ctx: LibraryEntityRowContext): En
 }
 
 export function mapShieldRows(shields: Item[], ctx: LibraryEntityRowContext): EntityShieldRow[] {
+  const rollAbilities = abilitiesForAttackRolls(ctx);
   return shields.map((item, i) => {
     const id = item.id ?? item.name ?? i;
     const enriched = item as Item & {
@@ -519,7 +674,7 @@ export function mapShieldRows(shields: Item[], ctx: LibraryEntityRowContext): En
     const shieldDamageStr = enriched.shieldDamage ?? (item.damage ? String(item.damage) : '-');
     const { bonus: attackBonus } = getWeaponAttackBonus(
       item,
-      ctx.abilities,
+      rollAbilities,
       ctx.martialProficiency,
     );
     const rangeValue = resolveWeaponRangeDisplay(
@@ -568,7 +723,13 @@ export function mapShieldRows(shields: Item[], ctx: LibraryEntityRowContext): En
             value={0}
             displayValue={shieldDamageDice}
             variant="danger"
-            onClick={() => ctx.rollContext!.rollDamage(String(shieldDamageRollStr))}
+            onClick={() =>
+              ctx.rollContext!.rollDamage(
+                String(shieldDamageRollStr),
+                attackBonus,
+                `${item.name} damage`,
+              )
+            }
             size="sm"
             title="Roll damage"
           />
@@ -660,10 +821,13 @@ export function mapArmorRows(armor: Item[], ctx: LibraryEntityRowContext): Entit
       item as ItemWithLibrarySource,
     );
     const evasion = calculateEvasion(ctx.abilities?.agility ?? 0);
-    const critThreshold =
+    const baseCrit =
       criticalRangeIncrease > 0
         ? calculateCriticalRange(evasion, criticalRangeIncrease)
         : undefined;
+    const critTemp = getScalarTempModifier(ctx.tempModifiers, 'criticalRange');
+    const critThreshold = baseCrit != null ? applyTempModifier(baseCrit, critTemp) : undefined;
+    const critTint = baseCrit != null ? tempModifierValueClass(critTemp) : '';
 
     const propertySection = propertiesProficienciesSection(propertyChips, 'armor');
     const detailSections = glrSurfaceDetailSections(
@@ -691,7 +855,12 @@ export function mapArmorRows(armor: Item[], ctx: LibraryEntityRowContext): Entit
           className: 'text-primary-link-fg font-medium',
           align: 'center',
         },
-        { key: 'crit', value: critThreshold ?? '-', align: 'center' },
+        {
+          key: 'crit',
+          value: critThreshold ?? '-',
+          align: 'center',
+          ...(critTint ? { className: critTint } : {}),
+        },
       ],
       detailSections: detailSections.length > 0 ? detailSections : undefined,
       badges: needsProfBadge(ctx, { armor: [item] }),
@@ -709,8 +878,6 @@ export function mapArmorRows(armor: Item[], ctx: LibraryEntityRowContext): Entit
   });
 }
 
-const SHEET_EQUIPMENT_DESCRIPTION_TRUNCATE = 120;
-
 function buildSheetEquipmentColumns(
   item: Item,
   ctx: LibraryEntityRowContext,
@@ -718,11 +885,6 @@ function buildSheetEquipmentColumns(
 ): ColumnValue[] {
   const costFacts = sheetItemCostFacts(item, ctx, 'equipment');
   return [
-    {
-      key: 'description',
-      value: truncateText(item.description, SHEET_EQUIPMENT_DESCRIPTION_TRUNCATE),
-      hideOnMobile: true,
-    },
     ...buildEquipmentCatalogFactColumns({
       category: (item as Item & { category?: string | undefined }).category,
       rarity: item.rarity,
@@ -752,7 +914,7 @@ export function mapEquipmentRows(
     const propertySection = propertiesProficienciesSection(propertyChips, 'item');
     const qty = item.quantity ?? 1;
     const quantityStepper = ctx.onEquipmentQuantityChange ? (
-      <div className="flex items-center justify-center" onClick={(e) => e.stopPropagation()}>
+      <div className="inline-flex items-center" onClick={(e) => e.stopPropagation()}>
         <QuantitySelector
           quantity={qty}
           min={0}

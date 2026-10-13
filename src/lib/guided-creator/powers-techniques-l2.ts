@@ -1,7 +1,7 @@
 /**
  * Guided powers/techniques Layer 2 — UnifiedSelectionModal items + confirm apply.
  * Regular catalog: Energy ≤ theoretical L1 max (TASK-463).
- * Innate catalog: Energy ≤ Innate Threshold (TASK-471 soft / TASK-472).
+ * Innate catalog: lists Appendix-G-eligible powers at any Energy; threshold warns on pick (86e3pbwf7 / 86e3pgfth).
  *
  * Row columns/expand match Official Library GLR (`buildOfficialPowerRows` /
  * `buildOfficialTechniqueRows`) — TASK-709. Guided-only: innate / max-EN
@@ -27,6 +27,7 @@ import {
 } from '@/lib/library/official-technique-list';
 import { partsProficienciesSection, glrSurfaceDetailSections } from '@/lib/chip/list-row-metadata';
 import { resolveListRowThumbnail } from '@/lib/list-row-image';
+import { powerVariantsDetailSection } from '@/lib/power-variant-chips';
 import {
   applyPowerTechniqueFilters,
   toInnateSnapshot,
@@ -107,13 +108,11 @@ function energyAllowed(
   energy: number | undefined,
   mode: PowersTechniquesL2Mode,
   maxEnergy: number | null,
-  innateThreshold: number,
 ): boolean {
   if (mode === 'regular') {
     return isGuidedL2EnergyAllowed(energy, maxEnergy);
   }
-  if (energy == null) return false;
-  return energy <= innateThreshold;
+  return energy != null;
 }
 
 export function buildPowersTechniquesL2Items(opts: {
@@ -126,15 +125,7 @@ export function buildPowersTechniquesL2Items(opts: {
   /** Innate mode: max Energy per pick (Innate Threshold). */
   innateThreshold?: number | undefined;
 }): SelectableItem[] {
-  const {
-    kind,
-    mode,
-    items,
-    powerPartsDb,
-    techniquePartsDb,
-    energyInput,
-    innateThreshold = 0,
-  } = opts;
+  const { kind, mode, items, powerPartsDb, techniquePartsDb, energyInput } = opts;
 
   const maxEnergy = mode === 'regular' ? calculateGuidedL1TheoreticalMaxEnergy(energyInput) : null;
   const budgetKind = toBudgetKind(kind);
@@ -147,7 +138,7 @@ export function buildPowersTechniquesL2Items(opts: {
       const id = row.id || itemId(row.raw);
       if (!id) continue;
       const energy = numericEnergy(row.energy);
-      if (!energyAllowed(energy, mode, maxEnergy, innateThreshold)) continue;
+      if (!energyAllowed(energy, mode, maxEnergy)) continue;
 
       const section = partsProficienciesSection(row.parts, 'technique');
       const detailSections = glrSurfaceDetailSections(
@@ -184,7 +175,7 @@ export function buildPowersTechniquesL2Items(opts: {
       const id = row.id || itemId(row.raw);
       if (!id) continue;
       const energy = numericEnergy(row.energy);
-      if (!energyAllowed(energy, mode, maxEnergy, innateThreshold)) continue;
+      if (!energyAllowed(energy, mode, maxEnergy)) continue;
 
       const filterRow = buildPowerTechniqueFilterableRow(
         budgetKind,
@@ -192,14 +183,12 @@ export function buildPowersTechniquesL2Items(opts: {
         powerPartsDb,
         techniquePartsDb,
       );
-      if (
-        mode === 'innate' &&
-        !isPowerInnateEligible(toInnateSnapshot(filterRow), innateThreshold)
-      ) {
+      if (mode === 'innate' && !isPowerInnateEligible(toInnateSnapshot(filterRow), null)) {
         continue;
       }
 
       const section = partsProficienciesSection(row.parts, 'power');
+      const variantsSection = powerVariantsDetailSection(row.composition);
       const detailSections = glrSurfaceDetailSections(
         'guided-powers-l3',
         {
@@ -207,7 +196,7 @@ export function buildPowersTechniquesL2Items(opts: {
           range: row.range,
           trainingPoints: row.tp > 0 ? row.tp : undefined,
         },
-        section ? [section] : undefined,
+        [...(section ? [section] : []), ...(variantsSection ? [variantsSection] : [])],
       );
 
       rows.push({

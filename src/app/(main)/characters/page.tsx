@@ -1,8 +1,7 @@
 /**
  * Characters List Page
  * ======================
- * Displays user's characters with create/delete functionality.
- * Guests can view the page with an empty state and create a character (unsaved) to try the creator.
+ * Displays account characters, plus browser-local guest sheets (ADR-0026).
  */
 
 'use client';
@@ -10,11 +9,19 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { CharacterCard, AddCharacterCard } from '@/components/character';
-import { PageContainer, PageHeader, EmptyState, useToast } from '@/components/ui';
+import {
+  PageContainer,
+  PAGE_FILLS_VIEWPORT_CLASSNAME,
+  PageHeader,
+  EmptyState,
+  useToast,
+} from '@/components/ui';
 import { Alert } from '@/components/ui/alert';
 import { DeleteConfirmModal, ErrorDisplay } from '@/components/patterns';
 import { useCharacters, useDeleteCharacter, useDuplicateCharacter, useAuth } from '@/hooks';
+import { isGuestCharacterId } from '@/lib/guest-character-storage';
 import { UserPlus } from 'lucide-react';
+import { useCharacterQuota } from './use-character-quota';
 
 export default function CharactersPage() {
   return <CharactersContent />;
@@ -24,15 +31,24 @@ function CharactersContent() {
   const router = useRouter();
   const { showToast } = useToast();
   const { user, initialized: authInitialized } = useAuth();
-  const { data: characters = [], isLoading, error, refetch } = useCharacters({ enabled: !!user });
+  const {
+    data: characters = [],
+    isLoading,
+    error,
+    refetch,
+  } = useCharacters({
+    enabled: authInitialized,
+  });
   const deleteCharacter = useDeleteCharacter();
   const duplicateCharacter = useDuplicateCharacter();
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [duplicatingId, setDuplicatingId] = useState<string | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<{ id: string; name: string } | null>(null);
   const [deleteError, setDeleteError] = useState<string | null>(null);
+  const { atQuota, message: quotaMessage } = useCharacterQuota();
 
   const handleCreateCharacter = () => {
+    if (atQuota) return;
     router.push('/characters/new');
   };
 
@@ -79,7 +95,7 @@ function CharactersContent() {
   // see the guest empty state before their characters query is enabled.
   if (!authInitialized || isLoading) {
     return (
-      <PageContainer size="xl">
+      <PageContainer size="xl" className={PAGE_FILLS_VIEWPORT_CLASSNAME}>
         <PageHeader title="Characters" />
         <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
           {[1, 2, 3].map((i) => (
@@ -98,7 +114,7 @@ function CharactersContent() {
 
   if (error && user) {
     return (
-      <PageContainer size="xl">
+      <PageContainer size="xl" className={PAGE_FILLS_VIEWPORT_CLASSNAME}>
         <PageHeader title="Characters" />
         <ErrorDisplay
           message="Error loading characters"
@@ -114,8 +130,16 @@ function CharactersContent() {
   const hasCharacters = characters.length > 0;
 
   return (
-    <PageContainer size="xl">
+    <PageContainer size="xl" className={PAGE_FILLS_VIEWPORT_CLASSNAME}>
       <PageHeader title="Characters" />
+
+      {quotaMessage && (
+        <div className="mb-4">
+          <Alert variant="warning" title="Character limit reached">
+            {quotaMessage}
+          </Alert>
+        </div>
+      )}
 
       {deleteError && (
         <div className="mb-4">
@@ -138,7 +162,11 @@ function CharactersContent() {
             />
           ))}
 
-          <AddCharacterCard onClick={handleCreateCharacter} />
+          <AddCharacterCard
+            onClick={handleCreateCharacter}
+            disabled={atQuota}
+            disabledReason={quotaMessage ?? undefined}
+          />
         </div>
       ) : (
         <EmptyState
@@ -147,12 +175,16 @@ function CharactersContent() {
           description={
             user
               ? 'Create your first character to begin your adventure in Realms RPG.'
-              : 'Create a character to try the creator. Sign in to save characters to your account.'
+              : 'Create a character to try the sheet in this browser. Sign in to keep characters on your account.'
           }
-          action={{
-            label: 'Create Character',
-            onClick: handleCreateCharacter,
-          }}
+          action={
+            atQuota
+              ? undefined
+              : {
+                  label: 'Create Character',
+                  onClick: handleCreateCharacter,
+                }
+          }
           secondaryAction={
             !user
               ? {
@@ -169,7 +201,7 @@ function CharactersContent() {
           isOpen={true}
           itemName={deleteTarget.name}
           itemType="character"
-          deleteContext="account"
+          deleteContext={isGuestCharacterId(deleteTarget.id) ? 'browser' : 'account'}
           isDeleting={deletingId === deleteTarget.id}
           onConfirm={handleConfirmDelete}
           onClose={() => setDeleteTarget(null)}

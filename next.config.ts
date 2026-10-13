@@ -1,7 +1,9 @@
 import type { NextConfig } from 'next';
 import createMDX from '@next/mdx';
+import { buildContentSecurityPolicy } from './src/lib/security/content-security-policy';
 
 const nextConfig: NextConfig = {
+  poweredByHeader: false,
   pageExtensions: ['ts', 'tsx', 'js', 'jsx', 'mdx'],
   // Allow character portraits (and profile pictures) from Supabase Storage public URLs
   images: {
@@ -17,6 +19,7 @@ const nextConfig: NextConfig = {
   // - /browse was a redundant duplicate of the Library page's public (Realms) mode.
   // - /encounter-tracker was the old name for the Encounters hub.
   // - /crafting/new now opens directly from the crafting hub into /crafting/[id].
+  // - /characters/new/advanced was the retired 9-step Legacy character creator (TASK-912).
   async redirects() {
     return [
       {
@@ -34,29 +37,16 @@ const nextConfig: NextConfig = {
         destination: '/crafting',
         permanent: true,
       },
+      {
+        source: '/characters/new/advanced',
+        destination: '/characters/new',
+        permanent: true,
+      },
     ];
   },
   // Security headers for all responses; long cache for static images to cut edge requests (e.g. placeholder-portrait.png)
   async headers() {
-    const csp = [
-      "default-src 'self'",
-      "base-uri 'self'",
-      "form-action 'self'",
-      "frame-ancestors 'self'",
-      "object-src 'none'",
-      // Vercel Toolbar / Live feedback (preview & production) loads from vercel.live.
-      // Web Analytics: production script is same-origin (/_vercel/insights/*); local/dev
-      // debug script loads from va.vercel-scripts.com (see DEPLOYMENT_AND_SECRETS_SUPABASE).
-      "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://vercel.live https://va.vercel-scripts.com",
-      "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
-      "img-src 'self' data: blob: https:",
-      "font-src 'self' data: https://fonts.gstatic.com",
-      // Sentry browser SDK posts envelopes to regional ingest hosts
-      // (e.g. o<id>.ingest.us.sentry.io). CSP `*` matches one label only.
-      "connect-src 'self' https://*.supabase.co wss://*.supabase.co https://vercel.live wss://*.vercel.live https://va.vercel-scripts.com https://*.sentry.io https://*.ingest.sentry.io https://*.ingest.us.sentry.io",
-      // Vercel Live feedback iframe (preview toolbar)
-      "frame-src 'self' https://vercel.live",
-    ].join('; ');
+    const csp = buildContentSecurityPolicy(process.env.NODE_ENV ?? 'production');
 
     return [
       {

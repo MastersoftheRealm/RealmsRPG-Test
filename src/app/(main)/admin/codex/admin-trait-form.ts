@@ -3,6 +3,7 @@
  */
 
 import type { Trait } from '@/hooks';
+import { codexSourceForSave } from './admin-codex-source';
 
 export type TraitFormState = {
   name: string;
@@ -12,6 +13,7 @@ export type TraitFormState = {
   flaw: boolean;
   characteristic: boolean;
   option_trait_ids: string[];
+  source: string;
 };
 
 export const EMPTY_TRAIT_FORM: TraitFormState = {
@@ -22,6 +24,7 @@ export const EMPTY_TRAIT_FORM: TraitFormState = {
   flaw: false,
   characteristic: false,
   option_trait_ids: [],
+  source: '',
 };
 
 export function traitToFormState(t: Trait, copyName?: string): TraitFormState {
@@ -33,6 +36,7 @@ export function traitToFormState(t: Trait, copyName?: string): TraitFormState {
     flaw: t.flaw === true,
     characteristic: t.characteristic === true,
     option_trait_ids: Array.isArray(t.option_trait_ids) ? [...t.option_trait_ids] : [],
+    source: t.source || '',
   };
 }
 
@@ -47,5 +51,6 @@ export function traitFormToSavePayload(form: TraitFormState): Record<string, unk
     flaw: form.flaw,
     characteristic: form.characteristic,
     option_trait_ids: form.option_trait_ids.length > 0 ? form.option_trait_ids : undefined,
+    source: codexSourceForSave(form.source),
   };
 }

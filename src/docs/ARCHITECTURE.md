@@ -139,7 +139,7 @@ Codex reference data comes from Supabase via `/api/codex`. Hooks like `useCodexP
 ### Reference migrations (TASK-479)
 
 - Account: `my-account/page.tsx` — profile load and auth updates surface errors (no silent catch).
-- Library: `findLibraryItemByName` in `library-service.ts` — lookup miss → `null`; API failure → throw (callers toast).
+- Library: `findLibraryItemsByName` in `library-service.ts` — lookup miss → empty list; API failure → throw (callers toast). Official name lookup still returns `null` on a miss.
 
 ### Server error responses (Route Handlers)
 

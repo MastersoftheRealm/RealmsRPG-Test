@@ -1,0 +1,35 @@
+import { readFileSync } from 'node:fs';
+import { describe, expect, it } from 'vitest';
+import { creatorPartOptionLabel } from './power-part-card';
+
+const source = readFileSync(new URL('./power-part-card.tsx', import.meta.url), 'utf8');
+
+describe('creator part option labels (86e3jpq36)', () => {
+  const vitality = { id: '40', name: 'Brace', category: 'Vitality' };
+  const actions = { id: '211', name: 'Brace', category: 'Actions' };
+  const potency = { id: '4', name: 'Potency Increase', category: 'Attack' };
+
+  it('adds the category when All Categories lists the same name twice', () => {
+    const list = [vitality, actions, potency];
+    expect(creatorPartOptionLabel(vitality, list)).toBe('Brace (Vitality)');
+    expect(creatorPartOptionLabel(actions, list)).toBe('Brace (Actions)');
+    expect(creatorPartOptionLabel(potency, list)).toBe('Potency Increase');
+  });
+
+  it('keeps the name when the open category has one copy', () => {
+    expect(creatorPartOptionLabel(actions, [actions])).toBe('Brace');
+  });
+});
+
+describe('creator part card phone layout (86e3jx9gg)', () => {
+  it('keeps the remove control beside the costs and lets the name wrap', () => {
+    expect(source).toContain('flex shrink-0 items-center justify-end gap-2');
+    expect(source).toContain('break-words whitespace-normal');
+    expect(source).not.toContain('min-w-0 truncate font-medium');
+  });
+
+  it('wraps option headers as whole words', () => {
+    expect(source).toContain('flex flex-wrap items-center justify-between gap-2');
+    expect(source).toContain('whitespace-nowrap text-energy-text');
+  });
+});

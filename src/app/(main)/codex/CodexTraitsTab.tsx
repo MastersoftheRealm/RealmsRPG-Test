@@ -61,6 +61,7 @@ export function CodexTraitsTab({
       search={search}
       onSearchChange={setSearch}
       searchPlaceholder="Search traits..."
+      searchAriaLabel="Search traits"
       headerColumns={TRAIT_COLUMNS}
       gridColumns={TRAIT_GRID_COLUMNS}
       sortState={sortState}

@@ -47,6 +47,20 @@ export function resolvePowProf(data: Record<string, unknown>): number | undefine
   return typeof pow === 'number' ? pow : undefined;
 }
 
+/** JSONB stores milestone level keys as strings; coerce to numeric levels. */
+export function normalizeArchetypeChoices(
+  raw: Record<string | number, unknown> | undefined | null,
+): Record<number, 'innate' | 'feat'> {
+  if (!raw || typeof raw !== 'object') return {};
+  const out: Record<number, 'innate' | 'feat'> = {};
+  for (const [key, value] of Object.entries(raw)) {
+    const level = Number(key);
+    if (!Number.isFinite(level) || level < 1) continue;
+    if (value === 'innate' || value === 'feat') out[level] = value;
+  }
+  return out;
+}
+
 /**
  * Merge legacy aliases into canonical fields on load and strip legacy keys.
  */
@@ -66,6 +80,12 @@ export function normalizeCharacterOnLoad<T extends Record<string, unknown>>(data
   const powProf = resolvePowProf(next);
   if (powProf !== undefined) {
     next.pow_prof = powProf;
+  }
+
+  if (next.archetypeChoices !== undefined) {
+    next.archetypeChoices = normalizeArchetypeChoices(
+      next.archetypeChoices as Record<string | number, unknown>,
+    );
   }
 
   const archetype = next.archetype;

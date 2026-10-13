@@ -1,11 +1,16 @@
 import { describe, expect, it } from 'vitest';
 import {
+  GRID_LIST_ROW_ICON_COLUMN_WIDTH,
+  GRID_LIST_ROW_RIGHT_SLOT_FLEX_WIDTH,
   GRID_LIST_ROW_THUMBNAIL_COLUMN_WIDTH,
   GRID_LIST_ROW_EXPANDED_BAND_CLASS,
   buildMobileCollapsedGridColumns,
   countGridTemplateTracks,
   expandGridTemplateTokens,
+  collapsedNameTrackWidthPx,
+  externalChromeFootprintWidth,
   gridTemplateColumnsWithThumbnail,
+  mobileCollapsedNameInlineEndReserve,
 } from './grid-list-row-chrome';
 
 describe('grid-list-row-chrome mobile collapse', () => {
@@ -71,6 +76,51 @@ describe('grid-list-row-chrome mobile collapse', () => {
         mobileVisibleDataTracks: 1,
       }),
     ).toBe('minmax(0, 1fr) auto 40px');
+  });
+});
+
+describe('external chrome footprint (86e3jxbrc)', () => {
+  it('sums rightSlot + edit + delete for Library My Powers rows', () => {
+    expect(
+      externalChromeFootprintWidth({
+        showRightSlot: true,
+        onEdit: true,
+        onDelete: true,
+      }),
+    ).toBe(
+      `calc(${GRID_LIST_ROW_RIGHT_SLOT_FLEX_WIDTH} + ${GRID_LIST_ROW_ICON_COLUMN_WIDTH} + ${GRID_LIST_ROW_ICON_COLUMN_WIDTH})`,
+    );
+  });
+
+  it('drops a blank right-slot reserve from the collapsed name padding', () => {
+    expect(
+      mobileCollapsedNameInlineEndReserve({
+        showRightSlot: true,
+        rightSlotOccupied: false,
+        onEdit: true,
+        onDelete: true,
+      }),
+    ).toBe(`calc(${GRID_LIST_ROW_ICON_COLUMN_WIDTH} + ${GRID_LIST_ROW_ICON_COLUMN_WIDTH})`);
+    // 375px card content 341, px-4 32, gap-2 8, thumb 44, edit+delete 72 → name 185.
+    const nameBox = collapsedNameTrackWidthPx({
+      cardContentPx: 341,
+      paddingInlineEndPx: 72,
+      rowPaddingInlinePx: 32,
+      columnGapPx: 8,
+      leadingTrackPx: 44,
+    });
+    expect(nameBox).toBe(185);
+    expect(nameBox).toBeGreaterThan(124);
+    // The old 144px reserve left a 113px name, one ellipsis for 1 and 10.
+    expect(
+      collapsedNameTrackWidthPx({
+        cardContentPx: 341,
+        paddingInlineEndPx: 144,
+        rowPaddingInlinePx: 32,
+        columnGapPx: 8,
+        leadingTrackPx: 44,
+      }),
+    ).toBe(113);
   });
 });
 

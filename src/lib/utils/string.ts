@@ -50,6 +50,7 @@ const COLUMN_KEY_LABELS: Record<string, string> = {
   damage: 'Damage',
   range: 'Range',
   type: 'Type',
+  typelabel: 'Type',
   rarity: 'Rarity',
   pow_abil_req: 'Power Ability',
   mart_abil_req: 'Martial Ability',

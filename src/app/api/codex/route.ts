@@ -23,9 +23,11 @@ import {
   mapCodexSkill,
   mapCodexSpecies,
   mapCodexTrait,
+  mapSource,
   toNum,
   toStrArray,
 } from '@/lib/codex/row-map';
+import { parseCatalogListing, wantsIncludeUnlisted } from '@/lib/library/catalog-listing';
 import {
   CODEX_PAYLOAD_KEYS,
   isCodexPayloadKey,
@@ -104,6 +106,7 @@ function selectTable(
 async function fetchCodexFromClient(
   supabase: TypedSupabaseClient,
   keys: ReadonlySet<CodexPayloadKey>,
+  includeUnlisted = false,
 ): Promise<Partial<CodexPayload>> {
   const needed = new Set<CodexTable>();
   for (const key of keys) {
@@ -285,6 +288,7 @@ async function fetchCodexFromClient(
       name: r.name ?? '',
       type: toArchetypeCategory(r.type),
       description: r.description ?? '',
+      source: mapSource(r.source),
       archetype_ability: (r.archetype_ability as string | undefined) ?? undefined,
       secondary_ability: (r.secondary_ability as string | undefined) ?? undefined,
       power_prof_start: toNum(r.power_prof_start),
@@ -319,10 +323,17 @@ async function fetchCodexFromClient(
 
   const codexCreatureFeats = creatureRows.map((r) => withRowVersion(mapCodexCreatureFeat(r), r));
 
+  const catalogSpecies = includeUnlisted
+    ? codexSpecies
+    : codexSpecies.filter(
+        (s) =>
+          parseCatalogListing((s as { catalog_listing?: unknown }).catalog_listing) === 'listed',
+      );
+
   const full = {
     feats: codexFeats,
     skills: codexSkills,
-    species: codexSpecies,
+    species: catalogSpecies,
     traits: codexTraits,
     powerParts: codexPowerParts,
     techniqueParts: codexTechniqueParts,
@@ -369,7 +380,13 @@ export async function GET(request: Request) {
     // "Anyone can read codex*/core_rules" RLS policies apply. The service-role
     // key (RLS bypass) is reserved for authorized admin writes only (SEC-01).
     const supabase = await createClient();
-    const body = await fetchCodexFromClient(supabase, keys);
+    const includeUnlistedRequested = wantsIncludeUnlisted(url.searchParams);
+    let includeUnlisted = false;
+    if (includeUnlistedRequested) {
+      const { user } = await getSession();
+      includeUnlisted = !!user?.uid && (await isAdmin(user.uid));
+    }
+    const body = await fetchCodexFromClient(supabase, keys, includeUnlisted);
     return NextResponse.json(body, { headers: { 'Cache-Control': cacheControl } });
   } catch (err) {
     const message = err instanceof Error ? err.message : 'Unknown database error';

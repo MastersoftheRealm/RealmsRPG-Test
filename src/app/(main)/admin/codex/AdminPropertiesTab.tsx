@@ -11,6 +11,7 @@ import { SelectFilter } from '@/components/patterns/filters';
 import { useItemProperties, type ItemProperty } from '@/hooks';
 import { useSort } from '@/hooks/use-sort';
 import { formatListCellLabel } from '@/lib/utils';
+import { collectCodexSources } from './admin-codex-source';
 import { COPY_NAME_SUFFIX } from './admin-codex-copy-suffix';
 import {
   EMPTY_PROPERTY_FORM,
@@ -22,7 +23,7 @@ import {
 } from './admin-property-form';
 import { AdminPropertyEditModal } from './admin-property-edit-modal';
 import { useAdminCodexEntity } from './use-admin-codex-entity';
-import { AdminCodexRowActions } from './admin-codex-row-actions';
+import { AdminCodexRowActions, ADMIN_CODEX_ROW_ACTIONS_WIDTH } from './admin-codex-row-actions';
 
 const PROPERTY_GRID_COLUMNS = '1.5fr 1fr 0.8fr 0.8fr 0.8fr';
 
@@ -199,6 +200,7 @@ export function AdminPropertiesTab() {
         sortState={sortState}
         onSort={handleSort}
         rowChrome={{ rightSlot: true }}
+        rightSlotWidth={ADMIN_CODEX_ROW_ACTIONS_WIDTH}
         isLoading={isLoading}
         isEmpty={filteredProperties.length === 0}
         emptyTitle="No properties found"
@@ -260,6 +262,7 @@ export function AdminPropertiesTab() {
                 },
               ]}
               detailSections={detailSections}
+              rightSlotWidth={ADMIN_CODEX_ROW_ACTIONS_WIDTH}
               rightSlot={
                 <AdminCodexRowActions
                   entity={p}
@@ -281,6 +284,7 @@ export function AdminPropertiesTab() {
         editingId={editing?.id ?? null}
         form={form}
         setForm={setForm}
+        sourceOptions={collectCodexSources(properties)}
         optionSlotCount={optionSlotCount}
         setOptionSlotCount={setOptionSlotCount}
         clearOption={clearOption}

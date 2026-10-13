@@ -140,6 +140,19 @@ export const DURATION_VALUES: Record<string, { value: number; label: string }[]>
 };
 
 // =============================================================================
+// Weapon range (item creator — duration-style type + closed space ladders)
+// =============================================================================
+
+export const WEAPON_RANGE_TYPES = [
+  { value: 'melee', label: 'Melee' },
+  { value: 'reach', label: 'Reach' },
+  { value: 'ranged', label: 'Ranged' },
+  { value: 'thrown', label: 'Thrown' },
+] as const;
+
+export type WeaponRangeType = (typeof WEAPON_RANGE_TYPES)[number]['value'];
+
+// =============================================================================
 // Creature Types & Sizes
 // =============================================================================
 
@@ -160,6 +173,19 @@ export const CREATURE_TYPES = [
 ] as const;
 
 export type CreatureType = (typeof CREATURE_TYPES)[number];
+
+/** Species codex `type` values (not creature stat-block types). */
+export const SPECIES_TYPES = [
+  'Construct',
+  'Dragonoid',
+  'Fey',
+  'Humanoid',
+  'Mammalian',
+  'Plant',
+  'Undead',
+] as const;
+
+export type SpeciesType = (typeof SPECIES_TYPES)[number];
 
 export const CREATURE_SIZES = [
   {

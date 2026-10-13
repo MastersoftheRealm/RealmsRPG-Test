@@ -65,13 +65,7 @@ export function EmpoweredTechniqueEditorPowerParts({
               en={sectionCosts.powerParts.energyRaw}
               tp={sectionCosts.powerParts.totalTP}
             />
-            <Button
-              type="button"
-              variant="primary"
-              size="sm"
-              className="flex min-h-[44px] items-center gap-1"
-              onClick={onAddPowerPart}
-            >
+            <Button type="button" variant="primary" size="sm" onClick={onAddPowerPart}>
               <Plus className="h-4 w-4" />
               Add Part
             </Button>
@@ -110,13 +104,7 @@ export function EmpoweredTechniqueEditorPowerParts({
               en={sectionCosts.powerMechanics.energyRaw}
               tp={sectionCosts.powerMechanics.totalTP}
             />
-            <Button
-              type="button"
-              variant="primary"
-              size="sm"
-              className="flex min-h-[44px] items-center gap-1"
-              onClick={onAddPowerMechanicPart}
-            >
+            <Button type="button" variant="primary" size="sm" onClick={onAddPowerMechanicPart}>
               <Plus className="h-4 w-4" />
               Add Part
             </Button>

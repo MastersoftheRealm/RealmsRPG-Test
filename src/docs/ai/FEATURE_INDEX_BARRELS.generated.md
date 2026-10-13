@@ -3,7 +3,7 @@
 > **Do not edit by hand.** Run `npm run tasks:generate-index` after changing barrel exports.
 > Curated narrative map: [`FEATURE_INDEX.md`](FEATURE_INDEX.md).
 
-Generated: 2026-08-22
+Generated: 2026-10-13
 
 ## `src/components/patterns/index.ts`
 
@@ -21,6 +21,7 @@ Generated: 2026-08-22
 - CHARACTER_SHEET_ENERGY_SPEND_ROW_CHROME
 - CharacterFilter
 - ChipSelect
+- CloudSyncOfflineBanner
 - CodexBrowseListShell
 - ConfirmActionModal
 - CreatorPortraitUpload
@@ -49,7 +50,6 @@ Generated: 2026-08-22
 - GridListChip
 - GridListRow
 - gridTemplateColumnsWithThumbnail
-- GuidedChoiceShell
 - GuidedInlineCatalogList
 - GuidedLayerNav
 - HubListRow
@@ -95,10 +95,13 @@ Generated: 2026-08-22
 - SegmentedControl
 - SelectFilter
 - SelectionToggle
+- SHEET_ABILITY_MAX
 - SHEET_SCORE_TIP_CLASS
 - SHEET_STAT_GRID_CLASS
 - SHEET_STAT_TILE_CLASS
 - SHEET_STAT_TIP_CLASS
+- sheetAbilityBudgetHint
+- sheetAbilityIncreaseTitle
 - ShieldsListSection
 - SkillRow
 - SkillsAllocationPage
@@ -146,6 +149,7 @@ Generated: 2026-08-22
 - Input
 - LoadingState
 - Modal
+- PAGE_FILLS_VIEWPORT_CLASSNAME
 - PageContainer
 - PageHeader
 - SearchInput
@@ -173,6 +177,7 @@ Generated: 2026-08-22
 
 ## `src/hooks/index.ts`
 
+- AUTOSAVE_RETRY_DELAYS_MS
 - buildGuidedEquipmentEligibilityContext
 - campaignKeys
 - characterKeys
@@ -181,6 +186,8 @@ Generated: 2026-08-22
 - fetchCampaignCharacterForEncounter
 - findTraitByIdOrName
 - getGameRulesFallback
+- invalidateCharacterLists
+- nextAutosaveRetryDelayMs
 - officialLibraryKeys
 - patchCharacterDetailQuery
 - resolveSkillIdsToNames
@@ -220,6 +227,7 @@ Generated: 2026-08-22
 - useAuthCaptcha
 - useAuthStore
 - useAutoSave
+- useBrowserOffline
 - useCampaign
 - useCampaignCharacterEncounters
 - useCampaignCharacterView
@@ -239,7 +247,6 @@ Generated: 2026-08-22
 - useCreateEncounter
 - useCreateEnhancedItem
 - useCreateOfficialEnhancedItem
-- useCreatorPathData
 - useCreatorSave
 - useCreatureFeats
 - useDeleteCharacter
@@ -276,6 +283,7 @@ Generated: 2026-08-22
 - useOfficialLibrary
 - useOfficialLibraryCounts
 - useParts
+- usePatchOfficialCatalogListing
 - usePathListFilter
 - usePathRecommendationIndex
 - usePlaceholderTheme

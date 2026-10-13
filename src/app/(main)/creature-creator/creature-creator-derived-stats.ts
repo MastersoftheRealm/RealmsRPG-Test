@@ -9,10 +9,14 @@ import {
   calculateHealthEnergyPool,
   calculateProficiency,
   calculateAbilityPoints,
+  calculateAbilityScoreCost,
   calculateSkillPointsForEntity,
 } from '@/lib/game/formulas';
 import { calculateCreatureSpeed, calculateEvasion } from '@/lib/game/calculations';
-import { DEFENSE_INCREASE_COST } from '@/lib/game/skill-allocation';
+import {
+  calculateSimpleSkillPointsSpent,
+  resolveSkillAllocationRules,
+} from '@/lib/game/skill-allocation';
 import { calculateCreatureMaxHealth, calculateCreatureMaxEnergy } from '@/lib/game/encounter-utils';
 import { CREATURE_FEAT_IDS } from '@/lib/id-constants';
 import { CREATURE_MECHANICAL_FEAT_POINTS } from '@/lib/game/creator-constants';
@@ -23,6 +27,11 @@ import {
 import type { CoreRulesMap } from '@/types/core-rules';
 import { SENSE_TO_FEAT_ID, MOVEMENT_TO_FEAT_ID } from './creature-creator-constants';
 import type { CreatureState } from './creature-creator-types';
+import {
+  computeCreatureTrainingSpent,
+  creatureLoadoutForBudget,
+  type CreatureProficiencyDbContext,
+} from './creature-creator-training-spent';
 
 export type CreatureCreatorDerivedStats = {
   trainingPoints: number;
@@ -61,6 +70,7 @@ export function calculateCreatureCreatorStats(
   featPointsMap: Map<string, number>,
   subSkillNames: Set<string>,
   rules: Partial<CoreRulesMap> | undefined,
+  proficiencyCtx?: CreatureProficiencyDbContext,
 ): CreatureCreatorDerivedStats {
   const level = creature.level;
   const abilities = creature.abilities;
@@ -128,23 +138,8 @@ export function calculateCreatureCreatorStats(
 
   const manualFeatSpent = creature.feats.reduce((sum, f) => sum + (f.points ?? 1), 0);
   const featSpent = manualFeatSpent + mechanicalFeatPoints;
-  const inventory = collectCreatureInventoryItems(creature);
-  const trainingSpent =
-    creature.powers.reduce(
-      (sum, power) =>
-        sum + (typeof power.tp === 'number' && Number.isFinite(power.tp) ? power.tp : 0),
-      0,
-    ) +
-    creature.techniques.reduce(
-      (sum, technique) =>
-        sum +
-        (typeof technique.tp === 'number' && Number.isFinite(technique.tp) ? technique.tp : 0),
-      0,
-    ) +
-    inventory.reduce((sum, armament) => {
-      const tp = typeof armament.tp === 'number' && Number.isFinite(armament.tp) ? armament.tp : 0;
-      return sum + tp * creatureInventoryQuantityMultiplier(armament.quantity);
-    }, 0);
+  const inventory = collectCreatureInventoryItems(creatureLoadoutForBudget(creature));
+  const trainingSpent = computeCreatureTrainingSpent(creature, proficiencyCtx);
   const currencySpent = inventory.reduce((sum, armament) => {
     const currency =
       typeof armament.currency === 'number' && Number.isFinite(armament.currency)
@@ -157,24 +152,46 @@ export function calculateCreatureCreatorStats(
   const minEnergy = highestNonVitality * Math.max(1, level);
   const maxEnergy = calculateCreatureMaxEnergy(level, abilities, creature.energyPoints);
 
-  const speed = calculateCreatureSpeed(abilities.agility, rules);
+  const speed = calculateCreatureSpeed(abilities.agility, rules, creature.movementTypes);
   const evasion = calculateEvasion(abilities.agility, undefined, rules);
 
-  const abilitySpent = Object.values(abilities).reduce((sum, val) => sum + val, 0);
+  const abilitySpent = Object.values(abilities).reduce(
+    (sum, val) => sum + calculateAbilityScoreCost(val, rules),
+    0,
+  );
   const heSpent = creature.hitPoints + creature.energyPoints;
-  const skillSpent = creature.skills.reduce((sum, s) => {
+  const skillRules = resolveSkillAllocationRules(rules);
+  const skillAllocations: Record<string, number> = {};
+  const skillMeta = new Map<string, { isSubSkill: boolean }>();
+  const presentSkillIds = new Set(creature.skills.map((s) => String(s.id ?? s.name)));
+  for (const s of creature.skills) {
+    const skillId = String(s.id ?? s.name);
     const isSubSkill =
       s.isSubSkill === true ||
       (s.baseSkillId != null && s.baseSkillId !== '') ||
       subSkillNames.has(String(s.name ?? '').toLowerCase());
-    if (isSubSkill) {
-      return sum + Math.max(1, s.value);
+    if (
+      isSubSkill &&
+      s.baseSkillId != null &&
+      s.baseSkillId !== '' &&
+      Number(s.baseSkillId) !== 0 &&
+      !presentSkillIds.has(String(s.baseSkillId))
+    ) {
+      continue;
     }
-    return sum + s.value + (s.proficient ? 1 : 0);
-  }, 0);
-  const defenseSpent = Object.values(creature.defenses).reduce(
-    (sum, val) => sum + val * DEFENSE_INCREASE_COST,
-    0,
+    skillMeta.set(skillId, { isSubSkill });
+    if (isSubSkill) {
+      skillAllocations[skillId] = Math.max(1, s.value);
+    } else if (s.proficient !== false) {
+      skillAllocations[skillId] = s.value;
+    }
+  }
+  const skillSpent = calculateSimpleSkillPointsSpent(
+    skillAllocations,
+    new Set<string>(),
+    skillMeta,
+    creature.defenses,
+    skillRules,
   );
 
   return {
@@ -199,7 +216,7 @@ export function calculateCreatureCreatorStats(
     abilitySpent,
     abilityRemaining: abilityPoints - abilitySpent,
     heRemaining: hePool - heSpent,
-    skillRemaining: skillPoints - skillSpent - defenseSpent,
+    skillRemaining: skillPoints - skillSpent,
     maxProficiencyPoints,
     proficiencySpent,
     proficiencyRemaining,

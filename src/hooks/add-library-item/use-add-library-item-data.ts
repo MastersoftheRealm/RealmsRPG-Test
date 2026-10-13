@@ -17,6 +17,7 @@ import { useOfficialLibrary } from '../use-official-library';
 import type { SourceFilterValue } from '@/components/patterns/filters/source-filter';
 import type { SelectableItem } from '@/components/patterns/select/unified-selection-modal';
 import type { UserItem, UserPower, UserTechnique } from '../use-user-library';
+import { addModalRowIsExcluded } from '@/lib/character-sheet/add-modal-existing-ids';
 import { buildSelectableItem } from './build-selectable-item';
 import { loadEmpoweredRawItems, loadRawItemsForType } from './load-raw-items';
 import type {
@@ -130,7 +131,11 @@ export function useAddLibraryItemData({
     // Equipment gets an empty set so stackable Equipment stays selectable.
     return list
       .filter(
-        (item) => !existingIds.has(String((item as { id?: string | number | undefined }).id ?? '')),
+        (item) =>
+          !addModalRowIsExcluded(
+            item as { id?: string | number | undefined; docId?: string | number | undefined },
+            existingIds,
+          ),
       )
       .map((item) =>
         buildSelectableItem(

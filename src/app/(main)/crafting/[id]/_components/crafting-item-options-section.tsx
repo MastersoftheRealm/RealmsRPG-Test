@@ -255,7 +255,7 @@ export function CraftingItemOptionsSection({
 
         {!isCompleted && (
           <div className="flex flex-wrap items-start gap-6">
-            <label className="flex min-h-[44px] cursor-pointer items-center gap-2">
+            <label className="touch-tier-standard flex cursor-pointer items-center gap-2">
               <input
                 type="checkbox"
                 checked={isConsumable}
@@ -290,7 +290,7 @@ export function CraftingItemOptionsSection({
             </div>
 
             <div className="space-y-3">
-              <label className="flex min-h-[44px] cursor-pointer items-center gap-2">
+              <label className="touch-tier-standard flex cursor-pointer items-center gap-2">
                 <input
                   type="checkbox"
                   checked={isEnhanced}
@@ -328,7 +328,7 @@ export function CraftingItemOptionsSection({
 
               {isEnhanced && (
                 <div className="space-y-3 border-t border-border-light pt-4">
-                  <label className="flex min-h-[44px] cursor-pointer items-center gap-2">
+                  <label className="touch-tier-standard flex cursor-pointer items-center gap-2">
                     <input
                       type="checkbox"
                       checked={!!session.data.craftBaseItemAlso}
@@ -366,7 +366,7 @@ export function CraftingItemOptionsSection({
                           updateData({ powerRef: null });
                         }
                       }}
-                      className="min-h-[44px] w-full max-w-md rounded-lg border border-border bg-background px-3 py-2 text-text-primary"
+                      className="touch-tier-standard h-10 w-full max-w-md rounded-lg border border-border bg-background px-3 py-2 text-text-primary"
                     >
                       <option value="">Select a power</option>
                       {powerOptions.map((p) => (
@@ -417,7 +417,7 @@ export function CraftingItemOptionsSection({
                                 ),
                               });
                             }}
-                            className="min-h-[44px] w-full max-w-xs rounded-lg border border-border bg-background px-3 py-2 text-text-primary"
+                            className="touch-tier-standard h-10 w-full max-w-xs rounded-lg border border-border bg-background px-3 py-2 text-text-primary"
                           >
                             <option value="full">Full Recovery</option>
                             <option value="partial">Partial Recovery</option>
@@ -447,7 +447,7 @@ export function CraftingItemOptionsSection({
                                   ),
                                 });
                               }}
-                              className="min-h-[44px] w-full max-w-[120px] rounded-lg border border-border bg-background px-3 py-2 text-text-primary"
+                              className="touch-tier-standard h-10 w-full max-w-[120px] rounded-lg border border-border bg-background px-3 py-2 text-text-primary"
                             >
                               {getUsesCountOptions(rulesData, usesType).map((count) => (
                                 <option key={count} value={count}>

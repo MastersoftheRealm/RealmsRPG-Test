@@ -218,6 +218,7 @@ export function AbilityScoreEditor({
                         onClick={() => onAbilityChange(ability, value - 1)}
                         disabled={!canDec}
                         size={compact ? 'sm' : 'md'}
+                        title={`Decrease ${info.name} ability score`}
                       />
                     )}
 
@@ -241,7 +242,9 @@ export function AbilityScoreEditor({
                         disabled={!canInc}
                         size={compact ? 'sm' : 'md'}
                         title={
-                          canInc && increaseCost > 1 ? `Cost: ${increaseCost} points` : undefined
+                          canInc && increaseCost > 1
+                            ? `Increase ${info.name} ability score (cost: ${increaseCost} points)`
+                            : `Increase ${info.name} ability score`
                         }
                       />
                     )}

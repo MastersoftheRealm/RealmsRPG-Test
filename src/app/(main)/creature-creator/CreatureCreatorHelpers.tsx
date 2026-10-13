@@ -165,17 +165,17 @@ export function AddItemDropdown({
   };
 
   return (
-    <div className="mt-2 flex flex-col gap-1">
+    <div className="mt-2 flex min-w-0 flex-col gap-1">
       {sectionCostLabel && (
         <span className="text-xs font-medium text-primary-link-fg" title="Feat point cost">
           {sectionCostLabel}
         </span>
       )}
-      <div className="flex items-center gap-2">
+      <div className="flex min-w-0 items-center gap-2">
         <select
           value={selectedValue}
           onChange={(e) => setSelectedValue(e.target.value)}
-          className="touch-tier-standard min-w-0 flex-1 rounded-lg border border-border-light bg-surface px-3 py-2 text-sm text-text-primary"
+          className="touch-tier-standard w-0 min-w-0 flex-1 rounded-lg border border-border-light bg-surface px-3 py-2 text-sm text-text-primary"
           aria-label={placeholder || 'Selection'}
         >
           <option value="">{placeholder}</option>
@@ -227,9 +227,14 @@ export function DefenseBlock({
           onClick={() => onChange(Math.max(0, bonusValue - 1))}
           disabled={bonusValue <= 0}
           size="sm"
+          title={`Decrease ${name} bonus`}
         />
         <span className="w-8 text-xs text-text-muted">+{bonusValue}</span>
-        <IncrementButton onClick={() => onChange(bonusValue + 1)} size="sm" />
+        <IncrementButton
+          onClick={() => onChange(bonusValue + 1)}
+          size="sm"
+          title={`Increase ${name} bonus`}
+        />
       </div>
     </div>
   );

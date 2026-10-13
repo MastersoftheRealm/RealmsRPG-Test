@@ -109,6 +109,32 @@ describe('combat-builder path More details chips (TASK-818)', () => {
     expect(labels.some((label) => /^energy\s+\d+/i.test(label))).toBe(true);
   });
 
+  it('reads damage and categories from Choice variants when top-level damage/parts are empty', () => {
+    const option = powerToDetailOption(
+      {
+        ...boltPower,
+        parts: [],
+        damage: [],
+        composition: {
+          structure: 'choice',
+          variants: [
+            {
+              id: 'fire',
+              label: 'Fire',
+              parts: [{ id: 1, name: 'Spark', op_1_lvl: 0 }],
+              damage: [{ amount: 1, size: 10, type: 'fire' }],
+            },
+            { id: 'ice', label: 'Ice', damage: [{ amount: 1, size: 10, type: 'ice' }] },
+          ],
+        },
+      },
+      powerPartsDb,
+    );
+    const labels = chipNames(option.chips);
+    expect(labels.some((label) => /1d10 fire/i.test(label))).toBe(true);
+    expect(labels.some((label) => /^offense, damage$/i.test(label))).toBe(true);
+  });
+
   it('technique chips follow detail-option-technique chipFacts', () => {
     const option = techniqueToDetailOption(slashTechnique, techniquePartsDb);
     const labels = chipNames(option.chips);

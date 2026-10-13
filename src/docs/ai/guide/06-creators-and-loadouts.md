@@ -2,29 +2,24 @@
 
 # Creators, Load Logic & Allocation
 
-## Character Creator — two models (DECIDED 2026-06-30)
+## Character Creator — one cohesive model (DECIDED 2026-08-01; Legacy deleted TASK-912)
 
-See **`REALMS_PRODUCT_OVERVIEW.md` §5.0** for product intent. Two creators coexist; do not merge stores or routes.
+See **`REALMS_PRODUCT_OVERVIEW.md` §5.0** for product intent. Guided and Custom share one store and route.
 
 | Creator | Route | Store | Steps |
 |---------|-------|-------|-------|
-| **Simple (Guided)** | `/characters/new/guided` | `guided-creator-store.ts` | 6 chapters, 10 sub-steps — `src/components/guided-creator/steps/` |
-| **Advanced (Classic)** | `/characters/new/advanced` | `character-creator-store.ts` | 9 steps — `src/components/character-creator/steps/` |
-| **Entry chooser** | `/characters/new` | — | Guided / Custom / Legacy cards; home CTAs land here |
+| **Guided / Custom** | `/characters/new/guided` | `guided-creator-store.ts` | 6 chapters, 10 sub-steps — `src/components/guided-creator/steps/` |
+| **Entry chooser** | `/characters/new` | — | Guided / Custom cards; home CTAs land here. Retired `/characters/new/advanced` 308s here. |
 
-**Guided shell:** `GuidedCreatorShell` — chapter rail, `CharacterPreviewPanel`, `GuidedStepFooter`, landing-cohesive `CreatorFunnelHero`. Path data via `useGuidedPathData`. Save via `buildGuidedCharacterPayload` → `cleanForSave` → `createCharacter` (same lean schema as custom finalize). Payload builds required `proficiencies` from official library parts/properties via `buildRequiredProficiencies` before lean strip — custom `getCharacter` parity. Both save paths set `libraryTabVisibility` via `defaultLibraryTabVisibilityForArchetype` (power/martial-only hides the opposite sheet Library tab; eye toggle can unhide). Guest save uses shared `LoginPromptModal` (same as Advanced). `?returnTo=` forwarded by chooser and honored on finish (`sanitizeRedirectPath`); skips play-together when set. **Ancestry:** `selectedTraits` = ancestry picks only — species traits stay on the species codex and are assembled on the sheet via `collectSheetTraits` (TASK-546). Power/technique/feat id lists are deduped on save.
+**Guided shell:** `GuidedCreatorShell` — chapter rail, `CharacterPreviewPanel`, `GuidedStepFooter`, landing-cohesive `CreatorFunnelHero`. Path data via `useGuidedPathData`. Save via `buildGuidedCharacterPayload` → `cleanForSave` → `createCharacter`. Payload builds required `proficiencies` from official library parts/properties via `buildRequiredProficiencies` before lean strip. Both save paths set `libraryTabVisibility` via `defaultLibraryTabVisibilityForArchetype` (power/martial-only hides the opposite sheet Library tab; eye toggle can unhide). Guest save uses shared `LoginPromptModal`. `?returnTo=` forwarded by chooser and honored on finish (`sanitizeRedirectPath`); skips play-together when set. **Ancestry:** `selectedTraits` = ancestry picks only — species traits stay on the species codex and are assembled on the sheet via `collectSheetTraits` (TASK-546). Power/technique/feat id lists are deduped on save.
 
-**Save → sheet handoff (TASK-489):** Do **not** call `resetCreator()` before create succeeds or before navigation is scheduled. Use `navigateThenResetCreator` from `@/lib/creator-save-handoff` (guided `reveal-step`, advanced `finalize-step`). Keep Finish/Create disabled after success (including while the play-together modal is open) so a second create cannot fire. On failure, leave the draft and step intact.
+**Save → sheet handoff (TASK-489):** Do **not** call `resetCreator()` before create succeeds or before navigation is scheduled. Use `navigateThenResetCreator` from `@/lib/creator-save-handoff` (guided `reveal-step`). Keep Finish/Create disabled after success (including while the play-together modal is open) so a second create cannot fire. On failure, leave the draft and step intact.
 
 **User-facing copy:** Edit static prose in `src/lib/constants/copy/guided-creator-copy.ts` (chooser labels, step titles/descriptions, chapter rail, modals). Codex names (paths, species, feats) still come from the database.
 
 **Guided DB fields** (see `SUPABASE_SCHEMA.md`): `codex_species.is_starter`, `codex_archetypes.level1_recommended_abilities`, `level1_loadouts` (metadata: `armorStep` / `sharedEquipment` only — no kits). Seed: `sql/guided-creator-schema-seed.sql` (applied as migration `guided_creator_schema_seed`; kit payload later cleared TASK-442).
 
-**Advanced step order** (`STEP_ORDER` in `character-creator-store.ts`):
-
-1. Archetype → 2. Species → 3. Ancestry → 4. Abilities → 5. Skills → 6. Feats → 7. Equipment → 8. Powers → 9. Finalize
-
-Steps live in `src/components/character-creator/steps/` (e.g., `archetype-step.tsx`, `species-step.tsx`). Matches BUILD_VALIDATION DEV-V-001 at `/characters/new/advanced` (chooser `/characters/new` is Guided / Custom / Legacy — not step 1 Archetype).
+The retired 9-step Legacy wizard (`STEP_ORDER` in deleted `character-creator-store.ts`) is gone (TASK-912). BUILD_VALIDATION DEV-V-001 is superseded; use DEV-V-013.
 
 ## Creator load logic (avoid duplication)
 

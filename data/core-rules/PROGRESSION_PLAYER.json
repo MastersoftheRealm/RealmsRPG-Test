@@ -10,7 +10,7 @@
   "proficiencyPerIncrease": 1,
   "baseTrainingPoints": 22,
   "tpPerLevelMultiplier": 2,
-  "baseHealth": 8,
+  "baseHealth": 12,
   "xpToLevelFormula": "level * 4",
   "startingCurrency": 200,
   "characterFeatsPerLevel": 1

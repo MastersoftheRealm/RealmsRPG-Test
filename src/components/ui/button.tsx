@@ -18,6 +18,10 @@ import { cva, type VariantProps } from 'class-variance-authority';
 import { cn } from '@/lib/utils/cn';
 import { Loader2 } from 'lucide-react';
 
+/** Filled variants lose bg under forced-colors; a transparent border becomes ButtonBorder. */
+const FORCED_COLORS_FILLED_BOUNDARY =
+  'border border-transparent [@media(forced-colors:active)]:border-[ButtonBorder]';
+
 const buttonVariants = cva(
   // ADR-0023: height under coarse pointer only — never a global min-w (that
   // turned link/footer text into 167×44 slabs). Tiers live on size / variant.
@@ -26,12 +30,16 @@ const buttonVariants = cva(
     variants: {
       variant: {
         // RECOMMENDED VARIANTS - clean solid/outline preferred over gradients
-        primary:
+        primary: [
+          FORCED_COLORS_FILLED_BOUNDARY,
           'bg-primary-button text-text-on-dark hover:bg-primary-button-hover focus-visible:ring-primary-outline-border',
+        ].join(' '),
         secondary:
           'bg-surface text-text-secondary border border-border-light hover:bg-surface-alt focus-visible:ring-primary-outline-border dark:bg-surface-alt dark:border-border dark:hover:bg-surface',
-        danger:
+        danger: [
+          FORCED_COLORS_FILLED_BOUNDARY,
           'bg-danger-button text-text-on-dark hover:bg-danger-700 focus-visible:ring-danger-border',
+        ].join(' '),
         ghost:
           'text-text-secondary hover:bg-surface-alt hover:text-text-primary focus-visible:ring-primary-outline-border',
         link: 'text-primary-link-fg underline-offset-4 hover:underline focus-visible:ring-primary-outline-border',

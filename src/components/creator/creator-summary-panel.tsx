@@ -175,7 +175,7 @@ export function CreatorSummaryPanel({
                   {typeof box.value === 'number' ? box.value.toLocaleString() : box.value}
                 </div>
               </div>
-              <div className="text-[10px] tracking-wide break-words whitespace-normal text-inherit uppercase opacity-80">
+              <div className="text-[10px] font-semibold tracking-wide break-words whitespace-normal text-inherit uppercase">
                 {box.label}
               </div>
             </div>

@@ -15,7 +15,6 @@ export type {
   UseCreatorSaveOptions,
   UseCreatorSaveReturn,
 } from './use-creator-save';
-export { useCreatorPathData } from './use-creator-path-data';
 export {
   buildGuidedEquipmentEligibilityContext,
   useGuidedEquipmentCatalog,
@@ -39,6 +38,7 @@ export type {
 } from './use-add-library-item-data';
 export { useProfile, useAccountProfile, type AccountProfile } from './use-profile';
 export { useIsClient } from './use-is-client';
+export { useBrowserOffline } from './use-browser-offline';
 export { usePlaceholderTheme } from './use-placeholder-theme';
 export { useEffectivePortrait } from './use-effective-portrait';
 export { usePortraitFallbackUrl } from './use-portrait-fallback-url';
@@ -108,6 +108,7 @@ export {
   characterKeys,
   characterViewerId,
   patchCharacterDetailQuery,
+  invalidateCharacterLists,
 } from './use-characters';
 
 // Codex Data (Supabase via API) — per-collection fetches under the ['codex'] key prefix (TASK-775)
@@ -152,6 +153,7 @@ export {
   useOfficialLibrary,
   useOfficialLibraryCounts,
   useAddOfficialToLibrary,
+  usePatchOfficialCatalogListing,
   officialLibraryKeys,
 } from './use-official-library';
 
@@ -187,7 +189,8 @@ export {
 } from './use-user-library';
 
 // Auto-save
-export { useAutoSave } from './use-auto-save';
+export { useAutoSave, AUTOSAVE_RETRY_DELAYS_MS, nextAutosaveRetryDelayMs } from './use-auto-save';
+export type { AutoSaveFlush } from './use-auto-save';
 export { useCharacterResourceSync } from './use-character-resource-sync';
 
 // Sort (shared list sorting logic)

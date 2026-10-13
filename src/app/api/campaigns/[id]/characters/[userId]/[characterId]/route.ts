@@ -2,7 +2,7 @@
  * Campaign Character View API
  * ===========================
  * - Full view: RM only, returns full character for read-only sheet viewing.
- * - ?scope=encounter: Any campaign member can fetch minimal data for adding to encounters.
+ * - ?scope=encounter: Campaign members can fetch minimal vitals, except a private character, which only the owner and Realm Master can read.
  */
 
 import { NextRequest, NextResponse } from 'next/server';
@@ -10,6 +10,7 @@ import { createClient, createServiceRoleClient } from '@/lib/supabase/server';
 import { getSession } from '@/lib/supabase/session';
 import { isCharacterOnCampaignRoster } from '@/lib/campaign-roster';
 import { computeMaxHealthEnergy } from '@/lib/game/calculations';
+import { fetchCoreRules } from '@/lib/core-rules-server';
 import { getOwnerLibraryAndEnrichmentForView } from '@/lib/character-view-enrichment-server';
 import type { CharacterVisibility } from '@/types';
 
@@ -98,14 +99,15 @@ export async function GET(
 
     const charData = (charRow.data as Record<string, unknown>) ?? {};
 
-    if (!forEncounter) {
-      const visibility = (charData?.visibility as CharacterVisibility) || 'private';
-      if (visibility === 'private') {
-        return NextResponse.json(
-          { error: 'This character is set to private and cannot be viewed' },
-          { status: 403 },
-        );
-      }
+    const visibility = (charData?.visibility as CharacterVisibility) || 'private';
+    const isOwner = user.uid === userId;
+    // Full sheet stays closed for private rows. Encounter lookup may return
+    // vitals to the owner and the Realm Master only (86e3jryyv).
+    if (visibility === 'private' && !(forEncounter && (isOwner || isRM))) {
+      return NextResponse.json(
+        { error: 'This character is set to private and cannot be viewed' },
+        { status: 403 },
+      );
     }
 
     if (forEncounter) {
@@ -115,7 +117,11 @@ export async function GET(
         acuity: rawAbilities?.acuity ?? rawAbilities?.acu ?? 0,
         agility: rawAbilities?.agility ?? rawAbilities?.agi ?? 0,
       };
-      const { maxHealth, maxEnergy } = computeMaxHealthEnergy(charData as Record<string, unknown>);
+      const rules = await fetchCoreRules(supabase);
+      const { maxHealth, maxEnergy } = computeMaxHealthEnergy(
+        charData as Record<string, unknown>,
+        rules,
+      );
       const health = charData?.health as
         | { max?: number | undefined; current?: number | undefined }
         | undefined;

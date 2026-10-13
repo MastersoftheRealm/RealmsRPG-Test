@@ -2,7 +2,10 @@
  * Shared types/labels for My Library entity tabs (ADR-0001).
  */
 
-import { ARMAMENT_LABELS_BY_KIND } from '@/lib/library/armament-library-labels';
+import {
+  ARMAMENT_LABELS_BY_KIND,
+  itemCreatorTypeHref,
+} from '@/lib/library/armament-library-labels';
 
 /** Labels for search/sort/list chrome only (`enableSync={false}`). */
 export interface LibraryEntityTabBasicLabels {
@@ -33,7 +36,7 @@ function armamentTabLabels(
   const base = ARMAMENT_LABELS_BY_KIND[kind];
   return {
     ...base,
-    createHref: '/item-creator',
+    createHref: itemCreatorTypeHref(kind),
     createLabel,
     duplicateTitle,
     syncAllRemovedRefsHint: ARMAMENT_SYNC_HINT,

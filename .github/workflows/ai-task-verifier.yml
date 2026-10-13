@@ -9,7 +9,8 @@ name: AI Task Verifier
 # `verify` (this workflow) plus `Lint, contrast & static gates` and
 # `Visual regression & accessibility` from ui-verify.yml). That cannot be configured from
 # the repository, so until an owner clicks it, a red run here cannot stop a bad deploy.
-# Local backstop: `.husky/pre-push` runs `npm run typecheck` + `npm test`.
+# Local agents run the regression test for the repro. This workflow runs
+# typecheck and the unit suite. `.husky/pre-push` does not repeat them.
 #
 # `next build` deliberately does NOT run here — ui-verify.yml builds the same commit with
 # the Supabase env vars production uses, so a build here would validate a different
@@ -45,10 +46,15 @@ jobs:
       - name: Unit tests (lib/glr contracts)
         run: npm test
 
-      - name: Dependency audit (high severity and above)
-        run: npm audit --audit-level=high
+      - name: Dependency audit — production deps (high+, blocking)
+        run: npm audit --audit-level=high --omit=dev
 
-      - name: Reconcile tasks (strict)
+      - name: Dependency audit — full tree incl. dev (report-only)
+        if: always()
+        run: |
+          npm audit --audit-level=high || echo "::warning title=npm audit (dev deps)::High-severity findings in dev dependencies; see log. Known dev-only chain: eslint-config-next -> fast-glob -> micromatch -> braces (no upstream fix yet; re-check when eslint-config-next updates)."
+
+      - name: Reconcile tasks (identity only; commit-subject gate retired)
         run: node scripts/reconcile_tasks.js --strict --strict-since=2026-07-15
 
       - name: Validate agent doc links

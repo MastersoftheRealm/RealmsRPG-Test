@@ -1,6 +1,7 @@
 ---
 description: Responsive UI — six-width contracts, tiered touch targets, modals. Apply when creating or editing pages, modals, or layouts.
-alwaysApply: true
+globs: src/**/*.tsx,src/**/*.css
+alwaysApply: false
 ---
 
 # Responsive UX

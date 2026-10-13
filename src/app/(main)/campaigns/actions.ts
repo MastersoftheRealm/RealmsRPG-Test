@@ -110,11 +110,14 @@ export async function createCampaignAction(data: {
     });
     if (error) throw error;
 
+    // 86e3jryyr: the user client may insert only the owner's own membership.
+    // ignoreDuplicates avoids ON CONFLICT DO UPDATE, which the dropped UPDATE
+    // policy would reject when that row already exists.
     const { error: memberErr } = await supabase
       .from('campaign_members')
       .upsert(
         { campaign_id: campaignId, user_id: user.uid },
-        { onConflict: 'campaign_id,user_id' },
+        { onConflict: 'campaign_id,user_id', ignoreDuplicates: true },
       );
     if (memberErr) {
       reportError(memberErr, {
@@ -269,6 +272,8 @@ export async function joinCampaignAction(data: {
     const characters = [...(campaignData || []), newChar];
 
     // BE-02/06: campaign_members is the single source of truth for membership.
+    // 86e3jryyr: service role bypasses RLS. A valid invite code is the only
+    // authorization for joining a campaign the caller does not own.
     const { error: memErr } = await dbService
       .from('campaign_members')
       .upsert(
@@ -378,11 +383,12 @@ export async function addCharacterToCampaignAction(data: {
     const characters = [...campaignData, newChar];
 
     // BE-02/06: campaign_members is the single source of truth for membership.
+    // 86e3jryyr: same owner-and-self insert as create. Do not rewrite the row.
     await supabase
       .from('campaign_members')
       .upsert(
         { campaign_id: data.campaignId, user_id: user.uid },
-        { onConflict: 'campaign_id,user_id' },
+        { onConflict: 'campaign_id,user_id', ignoreDuplicates: true },
       );
     await supabase.from('campaigns').update({ characters }).eq('id', data.campaignId);
 

@@ -3,7 +3,7 @@
 export const RULES_COPY = {
   pageTitle: 'Core Rulebook Alpha',
   pageDescription:
-    'Pick a chapter below, then use in-page nav or your browser find to jump to a rule. Enjoy playing!',
+    'Use the chapter outline or search the rulebook to jump to a rule. Enjoy playing!',
   seoDescription:
     'Learn the core rules, combat mechanics, and character progression for RealmsRPG.',
   viewSourcePrefix: 'Original Google Doc manuscript:',

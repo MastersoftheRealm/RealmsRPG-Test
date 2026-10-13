@@ -6,12 +6,70 @@
 
 import type { ItemProperty } from '@/hooks';
 import { CREATOR_CACHE_KEYS } from '@/lib/game/creator-constants';
-import { readCreatorCache } from '@/lib/game/creator-cache';
-import { filterSavedItemPropertiesForList } from '@/lib/calculators';
+import { readNewCreatorDraftCache } from '@/lib/game/creator-cache';
+import {
+  itemCreatorTypeHref,
+  type ArmamentLibraryKind,
+} from '@/lib/library/armament-library-labels';
+import {
+  deriveWeaponRangeConfig,
+  filterSavedItemPropertiesForList,
+  isMechanicProperty,
+  snapWeaponRangeSpaces,
+  type ItemPropertyPayload,
+  type WeaponRangeType,
+} from '@/lib/calculators';
+import {
+  clampWeaponAbilityUtilized,
+  deriveWeaponAbilityUtilized,
+  type WeaponAttackAbility,
+} from '@/lib/game/weapon-attack-ability';
 
 export const ITEM_CREATOR_CACHE_KEY = CREATOR_CACHE_KEYS.ITEM;
 
 export type ArmamentType = 'Weapon' | 'Armor' | 'Shield';
+
+const ARMAMENT_TYPE_BY_QUERY: Record<string, ArmamentType> = {
+  weapon: 'Weapon',
+  armor: 'Armor',
+  shield: 'Shield',
+};
+
+/** `?type=armor` / `shield` / `weapon`. Unknown values are ignored. */
+export function parseItemCreatorTypeParam(value: string | null | undefined): ArmamentType | null {
+  if (!value) return null;
+  return ARMAMENT_TYPE_BY_QUERY[value.trim().toLowerCase()] ?? null;
+}
+
+/** In-form type changes publish this href so reload does not keep a stale `?type=`. */
+export function itemCreatorHrefForArmamentType(armamentType: ArmamentType): string {
+  return itemCreatorTypeHref(armamentType.toLowerCase() as ArmamentLibraryKind);
+}
+
+/**
+ * Skip the draft cache write while editing, and while `?type=` still names a
+ * different armament than the draft on screen. Writing in that window replaces
+ * the stored draft with an empty form.
+ */
+export function shouldWriteItemCreatorDraft(editing: boolean, typeQueryConflict: boolean): boolean {
+  return !editing && !typeQueryConflict;
+}
+
+/**
+ * `?type=` blocks on a different stored draft until the user discards it.
+ * `ignoredRequestedType` is the query this session just replaced (in-form type
+ * change or Keep draft) and must not raise a second warning while the URL catches up.
+ */
+export function itemCreatorTypeQueryConflict(
+  draftType: ArmamentType,
+  requestedType: ArmamentType | null,
+  ignoredRequestedType: ArmamentType | null,
+): ArmamentType | null {
+  if (!requestedType || requestedType === draftType || requestedType === ignoredRequestedType) {
+    return null;
+  }
+  return requestedType;
+}
 
 export interface ItemSelectedProperty {
   property: ItemProperty;
@@ -40,7 +98,10 @@ export interface ItemCreatorCache {
   }>;
   damage: ItemDamageConfig;
   isTwoHanded: boolean;
-  rangeLevel: number;
+  rangeType?: WeaponRangeType | undefined;
+  rangeSpaces?: number | undefined;
+  rangeLevel?: number | undefined;
+  attackAbility?: WeaponAttackAbility | undefined;
   damageReduction: number;
   agilityReduction: number;
   criticalRangeIncrease: number;
@@ -60,7 +121,9 @@ export interface ItemCreatorFormState {
   selectedProperties: ItemSelectedProperty[];
   damage: ItemDamageConfig;
   isTwoHanded: boolean;
-  rangeLevel: number;
+  rangeType: WeaponRangeType;
+  rangeSpaces: number;
+  attackAbility: WeaponAttackAbility;
   damageReduction: number;
   agilityReduction: number;
   criticalRangeIncrease: number;
@@ -70,6 +133,34 @@ export interface ItemCreatorFormState {
   abilityRequirement: ItemAbilityRequirement | null;
   imageId: string | null;
   imageUrl: string | null;
+}
+
+function parseWeaponRangeType(value: unknown): WeaponRangeType | null {
+  if (value === 'melee' || value === 'reach' || value === 'ranged' || value === 'thrown') {
+    return value;
+  }
+  return null;
+}
+
+function parseWeaponAttackAbility(value: unknown): WeaponAttackAbility | null {
+  if (value === 'strength' || value === 'agility' || value === 'acuity') {
+    return value;
+  }
+  return null;
+}
+
+function rangeFormFromCache(
+  parsed: ItemCreatorCache,
+): Pick<ItemCreatorFormState, 'rangeType' | 'rangeSpaces'> {
+  const cachedType = parseWeaponRangeType(parsed.rangeType);
+  if (cachedType) {
+    return {
+      rangeType: cachedType,
+      rangeSpaces: snapWeaponRangeSpaces(cachedType, Number(parsed.rangeSpaces) || 0),
+    };
+  }
+  const derived = deriveWeaponRangeConfig([], parsed.rangeLevel);
+  return { rangeType: derived.type, rangeSpaces: derived.spaces };
 }
 
 export type ItemLibraryRecord = {
@@ -91,6 +182,8 @@ export type ItemLibraryRecord = {
   shieldDR?: { amount?: number | undefined; size?: number | undefined } | undefined;
   hasShieldDamage?: boolean | undefined;
   shieldDamage?: { amount?: number | undefined; size?: number | undefined } | undefined;
+  /** Library read marker. Reopen ignores it; official and user shields use the stored die. */
+  _source?: string | undefined;
   abilityRequirement?:
     | { id?: number | string | undefined; name?: string | undefined; level?: number | undefined }
     | null
@@ -105,7 +198,9 @@ export function emptyItemCreatorFormState(): ItemCreatorFormState {
     selectedProperties: [],
     damage: { amount: 1, size: 4, type: 'slashing' },
     isTwoHanded: false,
-    rangeLevel: 0,
+    rangeType: 'melee',
+    rangeSpaces: 0,
+    attackAbility: 'strength',
     damageReduction: 0,
     agilityReduction: 0,
     criticalRangeIncrease: 0,
@@ -121,18 +216,27 @@ export function emptyItemCreatorFormState(): ItemCreatorFormState {
 export function restoreItemCreatorFromCache(
   itemProperties: ItemProperty[],
 ): ItemCreatorFormState | null {
-  const parsed = readCreatorCache<ItemCreatorCache>(ITEM_CREATOR_CACHE_KEY);
+  const parsed = readNewCreatorDraftCache<ItemCreatorCache>(ITEM_CREATOR_CACHE_KEY);
   if (!parsed) return null;
 
   const base = emptyItemCreatorFormState();
 
-  const selectedProperties: ItemSelectedProperty[] = [];
+  const range = rangeFormFromCache(parsed);
+  const rawSelected: ItemSelectedProperty[] = [];
   for (const savedProp of parsed.selectedProperties ?? []) {
     const foundProp = itemProperties.find((p) => String(p.id) === String(savedProp.propertyId));
     if (foundProp) {
-      selectedProperties.push({ property: foundProp, op_1_lvl: savedProp.op_1_lvl });
+      rawSelected.push({ property: foundProp, op_1_lvl: savedProp.op_1_lvl });
     }
   }
+  const cachedAbility = parseWeaponAttackAbility(parsed.attackAbility);
+  const attackAbility = cachedAbility
+    ? clampWeaponAbilityUtilized(cachedAbility, range.rangeType)
+    : deriveWeaponAbilityUtilized(
+        rawSelected.map((sp) => ({ id: Number(sp.property.id), name: sp.property.name })),
+        range.rangeType,
+      );
+  const selectedProperties = rawSelected.filter((sp) => !isMechanicProperty(sp.property));
 
   return {
     ...base,
@@ -142,7 +246,8 @@ export function restoreItemCreatorFromCache(
     selectedProperties,
     damage: parsed.damage || base.damage,
     isTwoHanded: parsed.isTwoHanded || false,
-    rangeLevel: parsed.rangeLevel || 0,
+    ...range,
+    attackAbility,
     damageReduction: parsed.damageReduction || 0,
     agilityReduction: parsed.agilityReduction || 0,
     criticalRangeIncrease: parsed.criticalRangeIncrease || 0,
@@ -160,6 +265,53 @@ export function restoreItemCreatorFromCache(
  * Load modal). Restores shield block/damage config on the edit path too, which
  * the old per-path edit effect missed.
  */
+function abilityRequirementFromField(item: ItemLibraryRecord): ItemAbilityRequirement | null {
+  const saved = item.abilityRequirement;
+  if (!saved?.name) return null;
+  return {
+    id: typeof saved.id === 'number' ? saved.id : Number(saved.id) || 0,
+    name: saved.name,
+    level: saved.level || 0,
+  };
+}
+
+/** Older shields stored the requirement as a property and left the field empty. */
+function abilityRequirementFromProperties(item: ItemLibraryRecord): ItemAbilityRequirement | null {
+  if (!Array.isArray(item.properties)) return null;
+  for (const prop of item.properties as Array<{
+    id?: number | string | undefined;
+    name?: string | undefined;
+    op_1_lvl?: number | undefined;
+  }>) {
+    const name = String(prop.name ?? '');
+    if (!name.includes('Requirement')) continue;
+    const id = typeof prop.id === 'number' ? prop.id : Number(prop.id);
+    if (!id) continue;
+    return { id, name, level: 1 + (Number(prop.op_1_lvl) || 0) };
+  }
+  return null;
+}
+
+/** Saved block die. Reopen never derives dice from Shield Amount or from `_source`. */
+function storedShieldBlock(item: ItemLibraryRecord): { amount: number; size: number } | null {
+  const amount = Number(item.shieldDR?.amount);
+  const size = Number(item.shieldDR?.size);
+  if (!Number.isInteger(amount) || !Number.isInteger(size) || amount < 1 || size < 1) return null;
+  return { amount, size };
+}
+
+function readItemAbilityRequirement(
+  item: ItemLibraryRecord,
+  armamentType: ArmamentType,
+): ItemAbilityRequirement | null {
+  if (armamentType !== 'Weapon' && armamentType !== 'Armor' && armamentType !== 'Shield') {
+    return null;
+  }
+  // Explicit None. A leftover requirement property must not put it back.
+  if (item.abilityRequirement === null) return null;
+  return abilityRequirementFromField(item) ?? abilityRequirementFromProperties(item);
+}
+
 export function itemLibraryRecordToFormState(
   item: ItemLibraryRecord,
   itemProperties: ItemProperty[],
@@ -176,7 +328,7 @@ export function itemLibraryRecordToFormState(
   let selectedProperties: ItemSelectedProperty[] = [];
   if (item.properties && Array.isArray(item.properties) && itemProperties.length > 0) {
     // Only non-mechanic properties belong in the selectable list; mechanic properties
-    // are driven by dedicated UI fields (damage, rangeLevel, DR, etc.).
+    // are driven by dedicated UI fields (damage, range type/spaces, DR, etc.).
     selectedProperties = filterSavedItemPropertiesForList(
       item.properties as Array<{
         id?: number | string | undefined;
@@ -201,17 +353,19 @@ export function itemLibraryRecordToFormState(
     };
   }
 
-  const abilityRequirement: ItemAbilityRequirement | null =
-    (armamentType === 'Weapon' || armamentType === 'Armor') && item.abilityRequirement
-      ? {
-          id:
-            typeof item.abilityRequirement.id === 'number'
-              ? item.abilityRequirement.id
-              : Number(item.abilityRequirement.id) || 0,
-          name: item.abilityRequirement.name || '',
-          level: item.abilityRequirement.level || 0,
-        }
-      : null;
+  const abilityRequirement = readItemAbilityRequirement(item, armamentType);
+
+  const propertyPayloads = Array.isArray(item.properties)
+    ? (item.properties as ItemPropertyPayload[])
+    : [];
+  const range =
+    armamentType === 'Weapon'
+      ? deriveWeaponRangeConfig(propertyPayloads, item.rangeLevel)
+      : { type: 'melee' as const, spaces: 0 };
+  const attackAbility =
+    armamentType === 'Weapon'
+      ? deriveWeaponAbilityUtilized(propertyPayloads, range.type)
+      : 'strength';
 
   return {
     ...base,
@@ -228,15 +382,15 @@ export function itemLibraryRecordToFormState(
         : null,
     isTwoHanded:
       armamentType === 'Weapon' || armamentType === 'Shield' ? item.isTwoHanded || false : false,
-    rangeLevel: armamentType === 'Weapon' ? item.rangeLevel || 0 : 0,
+    rangeType: range.type,
+    rangeSpaces: range.spaces,
+    attackAbility,
     abilityRequirement,
     damageReduction: armamentType === 'Armor' ? (item.damageReduction ?? item.armorValue ?? 0) : 0,
     agilityReduction: armamentType === 'Armor' ? item.agilityReduction || 0 : 0,
     criticalRangeIncrease: armamentType === 'Armor' ? item.criticalRangeIncrease || 0 : 0,
     shieldDR:
-      armamentType === 'Shield' && item.shieldDR
-        ? { amount: item.shieldDR.amount || 1, size: item.shieldDR.size || 4 }
-        : base.shieldDR,
+      armamentType === 'Shield' ? (storedShieldBlock(item) ?? base.shieldDR) : base.shieldDR,
     hasShieldDamage: armamentType === 'Shield' ? item.hasShieldDamage || false : false,
     shieldDamage:
       armamentType === 'Shield' && item.shieldDamage
@@ -249,19 +403,30 @@ export function bootstrapItemCreatorFormState(options: {
   editItemId: string | null;
   itemProperties: ItemProperty[];
   rawItems: unknown[];
+  /**
+   * From `?type=`. Edit load wins. A stored draft of a different type is kept;
+   * the caller warns before discarding it. Never substitute an empty form.
+   */
+  requestedType?: ArmamentType | null;
 }): ItemCreatorFormState {
-  const { editItemId, itemProperties, rawItems } = options;
+  const { editItemId, itemProperties, rawItems, requestedType = null } = options;
 
   if (editItemId) {
     const itemToEdit = rawItems.find((it) => {
       const row = it as { docId?: string | undefined; id?: string | undefined };
       return String(row.docId) === editItemId || String(row.id) === editItemId;
     });
-    if (!itemToEdit) {
-      return emptyItemCreatorFormState();
+    if (itemToEdit) {
+      return itemLibraryRecordToFormState(itemToEdit as ItemLibraryRecord, itemProperties);
     }
-    return itemLibraryRecordToFormState(itemToEdit as ItemLibraryRecord, itemProperties);
   }
 
-  return restoreItemCreatorFromCache(itemProperties) ?? emptyItemCreatorFormState();
+  const cached = restoreItemCreatorFromCache(itemProperties);
+  if (!cached) {
+    return requestedType
+      ? { ...emptyItemCreatorFormState(), armamentType: requestedType }
+      : emptyItemCreatorFormState();
+  }
+  // Matching type, no type query, or a different-type draft: keep the draft.
+  return cached;
 }

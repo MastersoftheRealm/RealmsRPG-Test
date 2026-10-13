@@ -27,6 +27,7 @@ import {
 } from '@/hooks';
 import { useAuthStore } from '@/stores';
 import { LoadingState } from '@/components/ui';
+import { formatEnergyStat } from '@/lib/calculators';
 import {
   CreatorPageShell,
   AdvancedCalculationsPanel,
@@ -40,6 +41,11 @@ import {
 } from './technique-creator-bootstrap';
 import { TechniqueCreatorEditor } from './technique-creator-editor';
 import { useTechniqueCreatorWorkspace } from './use-technique-creator-workspace';
+import {
+  creatorEditReplacesDraft,
+  findLoadedLibraryItem,
+  resolveCreatorSaveTargetFromItem,
+} from '@/lib/library/catalog-listing';
 
 function TechniqueCreatorContent() {
   const { user } = useAuthStore();
@@ -86,6 +92,7 @@ function TechniqueCreatorContent() {
       key={sessionKey}
       initialFormState={initialFormState}
       editTechniqueId={editTechniqueId}
+      editReplacesDraft={creatorEditReplacesDraft(editTechniqueId, load.rawItems)}
       user={user}
       isAdmin={isAdmin}
       techniqueParts={techniqueParts}
@@ -100,6 +107,7 @@ function TechniqueCreatorContent() {
 interface TechniqueCreatorWorkspaceProps {
   initialFormState: TechniqueCreatorFormState;
   editTechniqueId: string | null;
+  editReplacesDraft: boolean;
   user: ReturnType<typeof useAuthStore.getState>['user'];
   isAdmin: boolean;
   techniqueParts: TechniquePart[];
@@ -112,6 +120,7 @@ interface TechniqueCreatorWorkspaceProps {
 function TechniqueCreatorWorkspace({
   initialFormState,
   editTechniqueId,
+  editReplacesDraft,
   user,
   isAdmin,
   techniqueParts,
@@ -123,7 +132,12 @@ function TechniqueCreatorWorkspace({
   const ws = useTechniqueCreatorWorkspace({
     initialFormState,
     editTechniqueId,
+    editReplacesDraft,
     techniqueParts,
+    initialSaveTarget: resolveCreatorSaveTargetFromItem(
+      findLoadedLibraryItem(load.rawItems, editTechniqueId),
+      { canSaveToOfficial: isAdmin },
+    ),
   });
 
   return (
@@ -133,12 +147,14 @@ function TechniqueCreatorWorkspace({
       description="Design custom martial techniques by combining technique parts. Each part contributes to the total energy cost and training point requirements."
       user={user}
       auth={{ returnPath: '/technique-creator', contentType: 'technique' }}
-      showPublicPrivate={isAdmin}
+      showSaveTarget={isAdmin}
       saveTarget={ws.save.saveTarget}
       onSaveTargetChange={ws.save.setSaveTarget}
       onSave={ws.save.handleSave}
       onLoad={load.openLoadModal}
       onReset={ws.handleReset}
+      unsavedDirty={ws.unsavedDirty}
+      onDiscardLocalDraft={ws.discardLocalDraft}
       saving={ws.save.saving}
       saveDisabled={!ws.name.trim()}
       loading={{
@@ -155,10 +171,20 @@ function TechniqueCreatorWorkspace({
         onClose: () => ws.save.setShowPublishConfirm(false),
         onConfirm: () => ws.save.confirmPublish(),
         title: ws.save.publishConfirmTitle,
+        confirmLabel: ws.save.publishConfirmLabel,
         description:
           ws.save.publishConfirmDescription?.(ws.name.trim(), {
             existingInPublic: ws.save.publishExistingInPublic,
           }) ?? '',
+      }}
+      resetConfirm={{
+        isOpen: ws.showResetConfirm,
+        onClose: () => ws.setShowResetConfirm(false),
+        onConfirm: ws.confirmReset,
+        title: 'Reset technique?',
+        description:
+          'This clears the loaded technique and all fields. You cannot undo this action.',
+        confirmLabel: 'Reset',
       }}
       loadModal={{
         isOpen: load.showLoadModal,
@@ -183,7 +209,7 @@ function TechniqueCreatorWorkspace({
           costStats={[
             {
               label: 'Energy Cost',
-              value: ws.costs.totalEnergy,
+              value: formatEnergyStat(ws.costs.totalEnergy),
               icon: <Zap className="h-6 w-6" />,
               color: 'energy',
             },
@@ -198,6 +224,11 @@ function TechniqueCreatorWorkspace({
             { label: 'Action', value: ws.actionTypeDisplay },
             { label: 'Attack', value: ws.attackModeLabel },
             ...(ws.damageDisplay ? [{ label: 'Damage', value: ws.damageDisplay }] : []),
+            {
+              label: 'Targets',
+              value:
+                ws.targetedDefenses.length > 0 ? ws.targetedDefenses.join(', ') : 'None specified',
+            },
           ]}
           breakdowns={
             ws.costs.tpSources.length > 0
@@ -206,8 +237,8 @@ function TechniqueCreatorWorkspace({
           }
         >
           <AdvancedCalculationsPanel
-            rows={ws.advancedCalcRows}
-            ruleText="Rule: Mechanic parts are auto-generated from action, reaction, damage, and attack mode; costs match standalone technique math."
+            groups={ws.advancedCalcGroups}
+            ruleText="Energy is rounded up at the end. Training Points are listed separately above when a part has them. Mechanic parts are auto-generated from action, reaction, damage, and attack mode."
           />
         </CreatorSummaryPanel>
       }
@@ -245,6 +276,9 @@ function TechniqueCreatorWorkspace({
         onDamageChange={ws.setDamage}
         damageSummary={ws.damageSummary}
         damageSectionCost={ws.damageSectionCost}
+        targetedDefenses={ws.targetedDefenses}
+        onTargetedDefensesChange={ws.setTargetedDefenses}
+        suggestionSelectedParts={ws.suggestionSelectedParts}
       />
     </CreatorPageShell>
   );

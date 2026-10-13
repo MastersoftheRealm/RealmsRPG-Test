@@ -357,14 +357,6 @@ export function canIncreaseAbility(
   return availablePoints >= cost;
 }
 
-/**
- * Check if an ability decrease is valid.
- */
-export function canDecreaseAbility(currentValue: number, rules?: Rules): boolean {
-  const min = rules?.ABILITY_RULES?.min ?? ABILITY_LIMITS.MIN;
-  return currentValue > min;
-}
-
 // =============================================================================
 // Archetype Helpers
 // =============================================================================

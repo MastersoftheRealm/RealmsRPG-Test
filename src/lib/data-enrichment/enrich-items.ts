@@ -35,6 +35,7 @@ export function enrichItems(
     const name =
       typeof charItem === 'string' ? charItem : charItem.name || String(charItem.id || '');
     const equipped = typeof charItem === 'object' ? !!charItem.equipped : false;
+    // Nullish only: an explicit 0 stays 0. A missing quantity is the default 1.
     const quantity = typeof charItem === 'object' ? (charItem.quantity ?? 1) : 1;
 
     // First try user's library, then public library

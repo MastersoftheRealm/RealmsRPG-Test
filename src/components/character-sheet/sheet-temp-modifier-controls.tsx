@@ -24,6 +24,8 @@ export function TempModifierStepperRow({
   tempDelta,
   onTempDeltaChange,
   deltaFormat = 'temp-label',
+  formatTempDelta,
+  tempStep = 1,
   className,
 }: {
   label: string;
@@ -31,10 +33,15 @@ export function TempModifierStepperRow({
   onTempDeltaChange: (delta: number) => void;
   /** LargeStatBlock uses "Temp: +N"; inline health header uses signed only. */
   deltaFormat?: 'temp-label' | 'signed' | undefined;
+  /** Override delta text (e.g. speed temps always show `sp`). */
+  formatTempDelta?: ((delta: number, deltaFormat: 'temp-label' | 'signed') => string) | undefined;
+  /** Step size in stored units (speed uses 1 space). */
+  tempStep?: number | undefined;
   className?: string | undefined;
 }) {
-  const deltaText =
-    deltaFormat === 'signed'
+  const deltaText = formatTempDelta
+    ? formatTempDelta(tempDelta, deltaFormat)
+    : deltaFormat === 'signed'
       ? tempDelta >= 0
         ? `+${tempDelta}`
         : String(tempDelta)
@@ -44,7 +51,7 @@ export function TempModifierStepperRow({
     <div className={cn('flex items-center gap-1', className)}>
       <DecrementButton
         size="sm"
-        onClick={() => onTempDeltaChange(tempDelta - 1)}
+        onClick={() => onTempDeltaChange(tempDelta - tempStep)}
         title={`Decrease ${label} Temp Modifier`}
       />
       <span
@@ -57,7 +64,7 @@ export function TempModifierStepperRow({
       </span>
       <IncrementButton
         size="sm"
-        onClick={() => onTempDeltaChange(tempDelta + 1)}
+        onClick={() => onTempDeltaChange(tempDelta + tempStep)}
         title={`Increase ${label} Temp Modifier`}
       />
     </div>

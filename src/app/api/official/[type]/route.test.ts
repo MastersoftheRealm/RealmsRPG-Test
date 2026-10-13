@@ -18,7 +18,7 @@ vi.mock('@/lib/entity-image-enrich-server', () => ({
   enrichRowsWithBankImageUrls: vi.fn(() => Promise.resolve()),
 }));
 
-import { GET, POST, DELETE } from './route';
+import { GET, POST, PATCH, DELETE } from './route';
 import { getSession } from '@/lib/supabase/session';
 import { isAdmin } from '@/lib/admin';
 import { createClient, createServiceRoleClient } from '@/lib/supabase/server';
@@ -31,15 +31,27 @@ const mockCreateServiceRoleClient = vi.mocked(createServiceRoleClient);
 const USER = { uid: 'user-123', email: 'hero@example.com' };
 
 function createListSupabase() {
+  const query = {
+    eq: vi.fn(function eq() {
+      return query;
+    }),
+    then(
+      onFulfilled?: (value: { data: unknown[]; error: null }) => unknown,
+      onRejected?: (reason: unknown) => unknown,
+    ) {
+      return Promise.resolve({ data: [], error: null }).then(onFulfilled, onRejected);
+    },
+  };
   return {
     from: vi.fn(() => ({
-      select: vi.fn().mockResolvedValue({ data: [], error: null }),
+      select: vi.fn(() => query),
     })),
+    query,
   };
 }
 
-function makeGetRequest(type: string) {
-  return new NextRequest(`http://localhost/api/official/${type}`);
+function makeGetRequest(type: string, search = '') {
+  return new NextRequest(`http://localhost/api/official/${type}${search}`);
 }
 
 function makePostRequest(type: string) {
@@ -78,6 +90,38 @@ describe('GET /api/official/[type]', () => {
     expect(mockGetSession).not.toHaveBeenCalled();
     expect(response.headers.get('Cache-Control')).toBe('private, max-age=0, must-revalidate');
   });
+
+  it('filters catalog_listing listed by default', async () => {
+    const supabase = createListSupabase();
+    mockCreateClient.mockResolvedValue(supabase as never);
+
+    await GET(makeGetRequest('powers'), params('powers'));
+
+    expect(supabase.query.eq).toHaveBeenCalledWith('catalog_listing', 'listed');
+  });
+
+  it('keeps the listed filter when includeUnlisted=1 without an admin session', async () => {
+    const supabase = createListSupabase();
+    mockCreateClient.mockResolvedValue(supabase as never);
+    mockGetSession.mockResolvedValue({ user: null, error: 'No session' });
+
+    await GET(makeGetRequest('powers', '?includeUnlisted=1'), params('powers'));
+
+    expect(mockGetSession).toHaveBeenCalled();
+    expect(supabase.query.eq).toHaveBeenCalledWith('catalog_listing', 'listed');
+  });
+
+  it('omits the listed filter for an admin with includeUnlisted=1', async () => {
+    const supabase = createListSupabase();
+    mockCreateClient.mockResolvedValue(supabase as never);
+    mockGetSession.mockResolvedValue({ user: USER, error: null });
+    mockIsAdmin.mockResolvedValue(true);
+
+    await GET(makeGetRequest('powers', '?includeUnlisted=1'), params('powers'));
+
+    expect(mockIsAdmin).toHaveBeenCalledWith(USER.uid);
+    expect(supabase.query.eq).not.toHaveBeenCalled();
+  });
 });
 
 describe('POST /api/official/[type]', () => {
@@ -100,6 +144,44 @@ describe('POST /api/official/[type]', () => {
     mockIsAdmin.mockResolvedValue(false);
 
     const response = await POST(makePostRequest('powers'), params('powers'));
+
+    expect(response.status).toBe(403);
+    await expect(readJson(response)).resolves.toEqual({ error: 'Admin only' });
+    expect(mockCreateServiceRoleClient).not.toHaveBeenCalled();
+  });
+});
+
+describe('PATCH /api/official/[type]', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  function makePatchRequest(type: string) {
+    return new NextRequest(`http://localhost/api/official/${type}`, {
+      method: 'PATCH',
+      headers: { 'content-type': 'application/json', origin: 'http://localhost' },
+      body: JSON.stringify({
+        id: '11111111-1111-1111-1111-111111111111',
+        catalogListing: 'unlisted',
+      }),
+    });
+  }
+
+  it('returns 401 when session is missing', async () => {
+    mockGetSession.mockResolvedValue({ user: null, error: 'No session' });
+
+    const response = await PATCH(makePatchRequest('powers'), params('powers'));
+
+    expect(response.status).toBe(401);
+    await expect(readJson(response)).resolves.toEqual({ error: 'Unauthorized' });
+    expect(mockCreateServiceRoleClient).not.toHaveBeenCalled();
+  });
+
+  it('returns 403 when the user is authenticated but not admin', async () => {
+    mockGetSession.mockResolvedValue({ user: USER, error: null });
+    mockIsAdmin.mockResolvedValue(false);
+
+    const response = await PATCH(makePatchRequest('powers'), params('powers'));
 
     expect(response.status).toBe(403);
     await expect(readJson(response)).resolves.toEqual({ error: 'Admin only' });

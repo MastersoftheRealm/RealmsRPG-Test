@@ -44,6 +44,14 @@ describe('prepareCharacterForSave (ADR-0006 tempModifiers)', () => {
     expect(cleaned.tempModifiers).toBeUndefined();
   });
 
+  it('keeps a null tempModifiers clear for the dirty-key merge (86e3juw04)', () => {
+    const cleaned = prepareCharacterForSave({
+      tempModifiers: null,
+    } as unknown as Parameters<typeof prepareCharacterForSave>[0]);
+
+    expect(cleaned.tempModifiers).toBeNull();
+  });
+
   it('promotes legacy proficiency/defense fields and strips aliases (TASK-663)', () => {
     const cleaned = prepareCharacterForSave({
       name: 'Test',

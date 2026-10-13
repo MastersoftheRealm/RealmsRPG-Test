@@ -18,14 +18,22 @@ import {
   TabContentPanel,
   useTabGroup,
 } from '@/components/ui';
-import { Wand2, Swords, Shield, Sparkles, Users } from 'lucide-react';
+import { Wand2, Swords, Shield, Sparkles, Users, User } from 'lucide-react';
 import { AdminPublicPowersTab } from './AdminPublicPowersTab';
 import { AdminPublicTechniquesTab } from './AdminPublicTechniquesTab';
 import { AdminPublicItemsTab } from './AdminPublicItemsTab';
 import { AdminPublicCreaturesTab } from './AdminPublicCreaturesTab';
+import { AdminPublicSpeciesTab } from './AdminPublicSpeciesTab';
 import { AdminPublicEnhancedItemsTab } from './AdminPublicEnhancedItemsTab';
 
-type TabId = 'powers' | 'techniques' | 'empowered-techniques' | 'items' | 'creatures' | 'enhanced';
+type TabId =
+  | 'powers'
+  | 'techniques'
+  | 'empowered-techniques'
+  | 'items'
+  | 'creatures'
+  | 'species'
+  | 'enhanced';
 
 const TABS: { id: TabId; label: string; icon: React.ReactNode }[] = [
   { id: 'powers', label: 'Powers', icon: <Wand2 className="h-4 w-4" /> },
@@ -33,6 +41,7 @@ const TABS: { id: TabId; label: string; icon: React.ReactNode }[] = [
   { id: 'empowered-techniques', label: 'Empowered', icon: <Swords className="h-4 w-4" /> },
   { id: 'items', label: 'Armaments', icon: <Shield className="h-4 w-4" /> },
   { id: 'creatures', label: 'Creatures', icon: <Users className="h-4 w-4" /> },
+  { id: 'species', label: 'Species', icon: <User className="h-4 w-4" /> },
   { id: 'enhanced', label: 'Enhanced Items', icon: <Sparkles className="h-4 w-4" /> },
 ];
 
@@ -44,7 +53,7 @@ export default function AdminPublicLibraryPage() {
     <PageContainer size="xl">
       <PageHeader
         title="Official Library Editor"
-        description="Edit published official items via the creators (Edit opens Power/Technique/Item/Creature Creator with the item loaded). Save with the same name to overwrite. Data is stored in official_* tables in public; if empty, run sql/supabase-official-library-public-schema.sql in Supabase."
+        description="Edit published official items via the creators (Edit opens Power/Technique/Item/Creature/Species Creator with the item loaded). Save with the same name to overwrite. Data is stored in official_* tables in public; if empty, run sql/supabase-official-library-public-schema.sql in Supabase."
       />
 
       <TabNavigation
@@ -63,6 +72,7 @@ export default function AdminPublicLibraryPage() {
         {activeTab === 'empowered-techniques' && <AdminPublicTechniquesTab mode="empowered" />}
         {activeTab === 'items' && <AdminPublicItemsTab />}
         {activeTab === 'creatures' && <AdminPublicCreaturesTab />}
+        {activeTab === 'species' && <AdminPublicSpeciesTab />}
         {activeTab === 'enhanced' && <AdminPublicEnhancedItemsTab />}
       </TabContentPanel>
     </PageContainer>

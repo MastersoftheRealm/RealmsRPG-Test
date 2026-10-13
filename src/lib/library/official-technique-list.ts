@@ -6,6 +6,8 @@ import type { ChipData } from '@/components/patterns';
 import type { ColumnValue } from '@/components/patterns/list/grid-list-row';
 import type { TechniquePart } from '@/hooks/codex-types';
 import type { LibraryTechnique } from '@/types/library';
+import { parseCatalogListing } from '@/lib/library/catalog-listing';
+import { formatEnergyStat } from '@/lib/calculators/power-calc';
 import { deriveTechniqueDisplay, formatTechniqueDamage } from '@/lib/calculators/technique-calc';
 import { libraryItemToTechniqueDocument } from '@/lib/library-selectable-builders';
 import { partChipsFromDisplay } from '@/lib/chip/part-chips-from-display';
@@ -23,7 +25,13 @@ import {
   rowMatchesPathRecommendedIds,
 } from '@/lib/game/path-recommendation-index';
 import { glrColumnKeyFor, glrListChrome } from '@/lib/glr';
-import { glrSurfaceDetailSections, partsProficienciesSection } from '@/lib/chip/list-row-metadata';
+import {
+  glrSurfaceDetailSections,
+  mergeDetailSections,
+  metadataDetailSection,
+  partsProficienciesSection,
+} from '@/lib/chip/list-row-metadata';
+import { targetsFactChip } from '@/lib/detail-option/compact-facts';
 
 const officialTechniqueChrome = glrListChrome({ entityType: 'technique', mode: 'browse' });
 
@@ -55,6 +63,7 @@ export interface OfficialTechniqueRow {
   parts: ChipData[];
   partIds: string[];
   partNames: string[];
+  catalogListing?: LibraryTechnique['catalogListing'];
 }
 
 export function getEmpoweredTechniqueTotals(
@@ -103,20 +112,27 @@ export function buildOfficialTechniqueRows(
       partNames: savedParts
         .map((part) => (part.name != null ? String(part.name) : ''))
         .filter(Boolean),
+      catalogListing: parseCatalogListing(t.catalogListing),
     };
   });
 }
 
 export function officialTechniqueDetailSections(row: OfficialTechniqueRow) {
   const parts = partsProficienciesSection(row.parts, 'technique');
-  return glrSurfaceDetailSections(
-    'library-official-technique',
-    {
-      category: row.category && row.category !== '—' ? row.category : undefined,
-      damage: row.damage && row.damage !== '-' ? row.damage : undefined,
-      trainingPoints: row.tp > 0 ? row.tp : undefined,
-    },
-    parts ? [parts] : undefined,
+  const targets = metadataDetailSection(
+    [targetsFactChip(row.raw.targetedDefenses)].filter(Boolean) as ChipData[],
+  );
+  return mergeDetailSections(
+    glrSurfaceDetailSections(
+      'library-official-technique',
+      {
+        category: row.category && row.category !== '—' ? row.category : undefined,
+        damage: row.damage && row.damage !== '-' ? row.damage : undefined,
+        trainingPoints: row.tp > 0 ? row.tp : undefined,
+      },
+      parts ? [parts] : undefined,
+    ),
+    targets,
   );
 }
 
@@ -124,7 +140,7 @@ export function officialTechniqueDetailSections(row: OfficialTechniqueRow) {
 export function officialTechniqueRowColumns(row: OfficialTechniqueRow): ColumnValue[] {
   const values: Record<string, string | number> = {
     category: row.category || '-',
-    energy: row.energy ?? '-',
+    energy: formatEnergyStat(typeof row.energy === 'number' ? row.energy : 0),
     tp: row.tp,
     action: row.action || '-',
     weapon: row.weapon || '-',

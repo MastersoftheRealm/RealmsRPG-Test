@@ -292,12 +292,6 @@ export function CreatureStatBlockExpandedContent({
                         id={`${creature.id}-sense-${sense}`}
                         name={sense}
                         description={SENSE_DESCRIPTIONS[sense] ?? 'No description available.'}
-                        columns={[
-                          {
-                            key: 'description',
-                            value: SENSE_DESCRIPTIONS[sense] ?? 'No description available.',
-                          },
-                        ]}
                         gridColumns={SIMPLE_LIST_GRID}
                         compact
                       />
@@ -316,12 +310,6 @@ export function CreatureStatBlockExpandedContent({
                         id={`${creature.id}-move-${m}`}
                         name={m}
                         description={MOVEMENT_DESCRIPTIONS[m] ?? 'See movement rules for details.'}
-                        columns={[
-                          {
-                            key: 'description',
-                            value: MOVEMENT_DESCRIPTIONS[m] ?? 'See movement rules for details.',
-                          },
-                        ]}
                         gridColumns={SIMPLE_LIST_GRID}
                         compact
                       />

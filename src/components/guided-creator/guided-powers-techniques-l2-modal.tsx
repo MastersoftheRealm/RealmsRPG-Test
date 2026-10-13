@@ -1,6 +1,6 @@
 /**
  * Guided powers/techniques L2 — UnifiedSelectionModal (TASK-463 / TASK-471 / TASK-573).
- * Innate mode: add-path uses applyInnateSelection (last-in energy swap, TASK-727).
+ * Innate mode: add-path uses applyInnateSelection (warn on threshold/energy, 86e3pbwf7).
  */
 
 'use client';
@@ -38,6 +38,7 @@ import type { PowersTechniquesKind } from '@/lib/guided-creator/power-technique-
 import {
   applyInnateSelection,
   innateSelectionBlockMessage,
+  innateSelectionWarnMessage,
 } from '@/lib/guided-creator/powers-techniques-step-helpers';
 import { GUIDED_CREATOR_COPY } from '@/lib/constants/site-copy';
 
@@ -57,6 +58,8 @@ export interface GuidedPowersTechniquesL2ModalProps {
    * (loadout + the other powers track: innate vs regular).
    */
   loadoutTpSpent: number;
+  /** When set, replaces per-row TP sum (character-level dedupe). */
+  resolveTotalTpSpent?: ((selected: SelectableItem[]) => number) | undefined;
   tpLimit: number;
   archetypeAbility?: AbilityName | string | null | undefined;
   abilities?: Partial<Abilities> | null | undefined;
@@ -118,6 +121,7 @@ export function GuidedPowersTechniquesL2Modal({
   techniquePartsDb,
   initialSelectedIds,
   loadoutTpSpent,
+  resolveTotalTpSpent,
   tpLimit,
   archetypeAbility,
   abilities,
@@ -189,23 +193,23 @@ export function GuidedPowersTechniquesL2Modal({
   // Innate: no header help (budget lives in footer). USM closes after onConfirm — do not double-close.
   const description = mode === 'innate' ? undefined : l2Copy.description(kind);
 
+  const totalTpSpent = useCallback(
+    (selected: SelectableItem[]) =>
+      resolveTotalTpSpent?.(selected) ?? computeL2PowersTechniquesTpSpent(selected, loadoutTpSpent),
+    [loadoutTpSpent, resolveTotalTpSpent],
+  );
+
   const handleConfirm = useCallback(
     (selected: SelectableItem[]) => {
-      const tpSpent = computeL2PowersTechniquesTpSpent(selected, loadoutTpSpent);
+      const tpSpent = totalTpSpent(selected);
       if (tpSpent > tpLimit) {
         setError(ptCopy.tpBlocked);
         return;
       }
-      if (mode === 'innate') {
-        if (energySpentOf(selected) > innateEnergyMax) {
-          setError(ptCopy.innateEnergyBlocked);
-          return;
-        }
-      }
       setError(null);
       onConfirm(selectedIdsFromL2Items(selected));
     },
-    [mode, loadoutTpSpent, tpLimit, innateEnergyMax, onConfirm],
+    [totalTpSpent, tpLimit, onConfirm],
   );
 
   const nextInnateSelectedIds = useCallback(
@@ -224,7 +228,7 @@ export function GuidedPowersTechniquesL2Modal({
         setError(innateSelectionBlockMessage(applied.reason));
         return currentIds;
       }
-      setError(null);
+      setError(applied.warn ? innateSelectionWarnMessage(applied.warn) : null);
       return applied.nextIds;
     },
     [selectable, innateThreshold, innateEnergyMax, loadoutTpSpent, tpLimit],
@@ -232,7 +236,7 @@ export function GuidedPowersTechniquesL2Modal({
 
   const footerExtra = useCallback(
     (selected: SelectableItem[]) => {
-      const tpSpent = computeL2PowersTechniquesTpSpent(selected, loadoutTpSpent);
+      const tpSpent = totalTpSpent(selected);
       const errorEl = error ? (
         <p className="text-center font-nunito text-sm text-warning-fg" role="alert">
           {error}
@@ -259,20 +263,17 @@ export function GuidedPowersTechniquesL2Modal({
         </LoadoutBudgetBar>
       );
     },
-    [mode, innateEnergyMax, loadoutTpSpent, tpLimit, error],
+    [mode, innateEnergyMax, totalTpSpent, tpLimit, error],
   );
 
   const confirmDisabled = useCallback(
     (selected: SelectableItem[]) => {
-      if (computeL2PowersTechniquesTpSpent(selected, loadoutTpSpent) > tpLimit) {
+      if (totalTpSpent(selected) > tpLimit) {
         return true;
-      }
-      if (mode === 'innate') {
-        return energySpentOf(selected) > innateEnergyMax;
       }
       return false;
     },
-    [mode, loadoutTpSpent, tpLimit, innateEnergyMax],
+    [totalTpSpent, tpLimit],
   );
 
   return (

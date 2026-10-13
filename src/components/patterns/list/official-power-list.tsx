@@ -17,13 +17,13 @@ import type { LibraryPower } from '@/types/library';
 import {
   buildOfficialPowerRows,
   filterOfficialPowerRows,
+  officialPowerCategoryOptions,
   officialPowerDetailSections,
   officialPowerRowColumns,
   OFFICIAL_POWER_GRID,
   OFFICIAL_POWER_HEADER_COLUMNS,
   type OfficialPowerRow,
 } from '@/lib/library/official-power-list';
-import { collectCategoryOptionsFromItems } from '@/lib/library/power-technique-categories';
 import {
   EMPTY_POWER_TECHNIQUE_FILTERS,
   countActivePowerTechniqueFilters,
@@ -38,6 +38,7 @@ import {
   pathFilterEmptyTitle,
 } from '@/lib/game/path-recommendation-index';
 import { resolveListRowThumbnail } from '@/lib/list-row-image';
+import type { CatalogListing } from '@/lib/library/catalog-listing';
 
 export type { OfficialPowerRow };
 
@@ -59,6 +60,7 @@ export interface OfficialPowerListProps {
   onAddRequest?: ((row: OfficialPowerRow) => void) | undefined;
   onEdit?: ((id: string) => void) | undefined;
   onDelete?: ((id: string, name: string) => void) | undefined;
+  onCatalogListingChange?: ((id: string, listing: CatalogListing) => void) | undefined;
 }
 
 export function OfficialPowerList({
@@ -79,6 +81,7 @@ export function OfficialPowerList({
   onAddRequest,
   onEdit,
   onDelete,
+  onCatalogListingChange,
 }: OfficialPowerListProps) {
   const { rules } = useGameRules();
   const [advancedFilters, setAdvancedFilters] = useState<PowerTechniqueFilterState>(
@@ -93,7 +96,7 @@ export function OfficialPowerList({
     usePathListFilter({ entities: items, kind: POWER_LIST_PATH_KINDS });
 
   const categoryOptions = useMemo(
-    () => collectCategoryOptionsFromItems(items, partsDb, { includeDamageCategory: true }),
+    () => officialPowerCategoryOptions(items, partsDb),
     [items, partsDb],
   );
 
@@ -180,6 +183,7 @@ export function OfficialPowerList({
         }
         onEdit={onEdit}
         onDelete={onDelete}
+        onCatalogListingChange={onCatalogListingChange}
       />
       {addToCharacter.confirmModal}
     </>

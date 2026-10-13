@@ -3,7 +3,7 @@
   "abilityPointsEveryNLevels": 3,
   "skillPointsAtLevel1": 5,
   "skillPointsPerLevel": 3,
-  "baseHitEnergyPool": 26,
+  "baseHitEnergyPool": 30,
   "hitEnergyPerLevel": 12,
   "baseProficiency": 2,
   "proficiencyEveryNLevels": 5,

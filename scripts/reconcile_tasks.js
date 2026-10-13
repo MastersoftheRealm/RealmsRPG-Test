@@ -1,32 +1,29 @@
 #!/usr/bin/env node
 /**
- * Reconcile AI tasks against git history.
- * Sources: ACTIVE_TASKS.md + archive/TASK_QUEUE_DONE*.md
- * --strict fails when a done task has no matching commits (after baseline allowlist).
- * One commit may list many TASK-### IDs in the subject (owner batch workflow).
- * --strict-since=YYYY-MM-DD only enforces done tasks with completed_at on/after that date.
- * --allow-uncommitted-done skips done tasks whose archive/ACTIVE block is not in HEAD yet
- * (local validate during a session). CI must omit this flag so a pushed archive without
- * TASK-### in the commit subject still fails.
- * Duplicate `- id: TASK-###` in ACTIVE, WAITING, or live TASK_QUEUE_DONE.md always fails
- * (dated snapshot copies are excluded — they reuse IDs by design).
+ * Historical TASK-### identity checks.
+ * Duplicate `- id: TASK-###` in ACTIVE, WAITING, or live TASK_QUEUE_DONE.md fails.
+ * Non-canonical ids (not TASK- plus digits) fail.
+ * Dated snapshot copies are excluded — they reuse IDs by design.
+ *
+ * The commit-subject gate is retired (2026-10-11). A done task does not need
+ * TASK-### in a commit subject. ClickUp id on the branch and the PR is the
+ * record for new work. --strict, --strict-since, and --allow-uncommitted-done
+ * are accepted and do not fail the process. --apply does not append a changelog.
  */
 const fs = require('fs');
 const path = require('path');
-const { execSync } = require('child_process');
 const { parseRelatedFilesFromBlock } = require('./parse-related-files');
 
 const repoRoot = path.resolve(__dirname, '..');
 const aiDir = path.join(repoRoot, 'src', 'docs', 'ai');
 const archiveDir = path.join(aiDir, 'archive');
-const changelogPath = path.join(aiDir, 'AI_CHANGELOG.md');
+const changelogPath = path.join(archiveDir, 'AI_CHANGELOG.md');
 const reportsDir = path.join(repoRoot, 'reports');
-const baselinePath = path.join(repoRoot, 'scripts', 'task-reconcile-baseline.json');
 
 if (!fs.existsSync(reportsDir)) fs.mkdirSync(reportsDir);
 
 function collectTaskFiles() {
-  const files = [path.join(aiDir, 'ACTIVE_TASKS.md')];
+  const files = [path.join(archiveDir, 'ACTIVE_TASKS.md')];
   if (fs.existsSync(archiveDir)) {
     for (const name of fs.readdirSync(archiveDir)) {
       if (/^TASK_QUEUE_DONE/i.test(name) && name.endsWith('.md')) {
@@ -34,8 +31,7 @@ function collectTaskFiles() {
       }
     }
   }
-  // Legacy fallback if someone still has tasks in the process file
-  const queuePath = path.join(aiDir, 'AI_TASK_QUEUE.md');
+  const queuePath = path.join(archiveDir, 'AI_TASK_QUEUE.md');
   if (fs.existsSync(queuePath)) files.push(queuePath);
   return files.filter((f) => fs.existsSync(f));
 }
@@ -68,8 +64,8 @@ function parseTasksFromFile(filePath) {
 /** Live queues where a repeated `- id:` is a collision, not a July-15 snapshot copy. */
 function liveIdentityFiles() {
   return [
-    path.join(aiDir, 'ACTIVE_TASKS.md'),
-    path.join(aiDir, 'WAITING_TASKS.md'),
+    path.join(archiveDir, 'ACTIVE_TASKS.md'),
+    path.join(archiveDir, 'WAITING_TASKS.md'),
     path.join(archiveDir, 'TASK_QUEUE_DONE.md'),
   ].filter((f) => fs.existsSync(f));
 }
@@ -105,55 +101,6 @@ function nonCanonicalIdTokens(filePath) {
   return bad;
 }
 
-const headFileCache = new Map();
-
-/** True when HEAD already has this `- id:` in the task's source file. */
-function headFileContainsId(sourceRel, id) {
-  const gitPath = String(sourceRel || '').replace(/\\/g, '/');
-  if (!gitPath) return false;
-  if (!headFileCache.has(gitPath)) {
-    try {
-      const content = execSync(`git show HEAD:${gitPath}`, {
-        encoding: 'utf8',
-        cwd: repoRoot,
-        stdio: ['pipe', 'pipe', 'pipe'],
-      });
-      headFileCache.set(gitPath, content);
-    } catch {
-      headFileCache.set(gitPath, '');
-    }
-  }
-  return new RegExp(`^- id:\\s*${id}\\s*$`, 'm').test(headFileCache.get(gitPath) || '');
-}
-
-function gitGrepTask(taskId) {
-  try {
-    const out = execSync(`git log --all --pretty=format:%H::%s --grep=${taskId}`, {
-      encoding: 'utf8',
-    });
-    if (!out.trim()) return [];
-    return out
-      .trim()
-      .split('\n')
-      .map((l) => {
-        const [hash, subject] = l.split('::');
-        let files = [];
-        try {
-          const f = execSync(`git show --pretty= --name-only ${hash}`, { encoding: 'utf8' });
-          files = f
-            .split('\n')
-            .map((s) => s.trim())
-            .filter(Boolean);
-        } catch {
-          files = [];
-        }
-        return { hash, subject, files };
-      });
-  } catch {
-    return [];
-  }
-}
-
 const identityFiles = liveIdentityFiles();
 const invalidIds = identityFiles.flatMap((file) => nonCanonicalIdTokens(file));
 if (invalidIds.length) {
@@ -168,7 +115,7 @@ const identityTasks = identityFiles.flatMap((file) => parseTasksFromFile(file));
 const identityDupes = duplicateIdGroups(identityTasks);
 if (identityDupes.length) {
   console.error(
-    'Duplicate TASK-### in ACTIVE_TASKS.md, WAITING_TASKS.md, and/or archive/TASK_QUEUE_DONE.md (not the dated snapshot):',
+    'Duplicate TASK-### in archive/ACTIVE_TASKS.md, archive/WAITING_TASKS.md, and/or archive/TASK_QUEUE_DONE.md (not the dated snapshot):',
   );
   for (const [id, list] of identityDupes) {
     console.error(`  ${id}:`);
@@ -183,7 +130,6 @@ const byId = new Map();
 for (const file of collectTaskFiles()) {
   for (const t of parseTasksFromFile(file)) {
     if (!t.id) continue;
-    // Snapshot copies may reuse IDs; live ACTIVE/WAITING/TASK_QUEUE_DONE.md uniqueness is gated above.
     if (!byId.has(t.id) || String(t.source).includes('ACTIVE_TASKS')) {
       byId.set(t.id, t);
     }
@@ -191,80 +137,21 @@ for (const file of collectTaskFiles()) {
 }
 const tasks = Array.from(byId.values());
 
-const report = { generated_at: new Date().toISOString(), tasks: [] };
-for (const t of tasks) {
-  const matches = gitGrepTask(t.id);
-  const matchedFiles = new Set();
-  matches.forEach((m) => m.files.forEach((f) => matchedFiles.add(f)));
-  const relatedOverlap = t.related_files.length
-    ? t.related_files.filter((r) =>
-        Array.from(matchedFiles).some((mf) => mf.endsWith(r) || mf.includes(r.replace('src/', ''))),
-      )
-    : [];
-  report.tasks.push({
-    id: t.id,
-    title: t.title,
-    status: t.status,
-    completed_at: t.completed_at,
-    source: t.source,
-    matches,
-    related_files: t.related_files,
-    related_overlap: relatedOverlap,
-  });
-}
-
+const report = {
+  generated_at: new Date().toISOString(),
+  commit_subject_gate: 'retired',
+  note: 'TASK-### in a commit subject is not required. ClickUp id on the branch and the PR is the record for new work. Duplicate and non-canonical id checks still run.',
+  task_count: tasks.length,
+};
 const outPath = path.join(reportsDir, 'task-reconcile-report.json');
 fs.writeFileSync(outPath, JSON.stringify(report, null, 2), 'utf8');
 console.log('Wrote reconcile report to', outPath);
 
 if (process.argv.includes('--apply')) {
-  const summaryLines = report.tasks
-    .map((t) => {
-      const ok = t.matches.length ? `matched ${t.matches.length} commit(s)` : 'no matching commits';
-      return `- ${t.id} | ${t.title} | status=${t.status} | ${ok}`;
-    })
-    .join('\n');
-  fs.appendFileSync(
-    changelogPath,
-    `${new Date().toISOString().slice(0, 10)} | reconcile-script | Reconcile run\n${summaryLines}\n\n`,
-    'utf8',
-  );
-  console.log('Appended summary to', changelogPath);
+  console.log('Changelog append retired. Nothing written to', changelogPath);
 }
 
-const strict = process.argv.includes('--strict');
-const allowUncommittedDone = process.argv.includes('--allow-uncommitted-done');
-const sinceArg = process.argv.find((a) => a.startsWith('--strict-since='));
-const sinceDate = sinceArg ? sinceArg.split('=')[1] : null;
-
-let baselineIds = new Set();
-if (fs.existsSync(baselinePath)) {
-  try {
-    const baseline = JSON.parse(fs.readFileSync(baselinePath, 'utf8'));
-    baselineIds = new Set(baseline.done_without_commits || []);
-  } catch {
-    baselineIds = new Set();
-  }
-}
-
-const problematic = report.tasks.filter((t) => {
-  if (t.status !== 'done' || t.matches.length > 0) return false;
-  if (baselineIds.has(t.id)) return false;
-  if (sinceDate && t.completed_at && t.completed_at < sinceDate) return false;
-  if (sinceDate && !t.completed_at) return false; // legacy done without date: skip under --strict-since
-  if (allowUncommittedDone && !headFileContainsId(t.source, t.id)) return false;
-  return true;
+console.log('Reconciliation complete.', {
+  tasks: tasks.length,
+  commit_subject_gate: 'retired',
 });
-
-if (problematic.length) {
-  console.error(
-    'Found tasks marked done with no matching commits:',
-    problematic.map((p) => p.id).join(', '),
-  );
-  console.error(
-    'List every TASK-### in the landing commit subject (one commit may cover many tasks; en-dash ranges do not count).',
-  );
-  if (strict) process.exit(2);
-}
-
-console.log('Reconciliation complete.', { tasks: tasks.length, problematic: problematic.length });

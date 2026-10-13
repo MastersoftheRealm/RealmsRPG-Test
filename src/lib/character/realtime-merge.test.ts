@@ -117,6 +117,32 @@ describe('mergeSheetRealtimePayload (TASK-747)', () => {
     expect(stillDirty).not.toHaveProperty('feats');
   });
 
+  it('does not restore a temp modifier the local sheet already cleared (86e3juw04)', () => {
+    const saved = sheetCharacter({
+      tempModifiers: { abilities: { strength: 1 } },
+    });
+    const baseline = cleanForSave(saved) as Record<string, unknown>;
+    const local = sheetCharacter();
+    const remote = {
+      ...(cleanForSave(saved) as Record<string, unknown>),
+      notes: 'from-other-tab',
+    };
+
+    const { character: next, nextBaseline } = mergeSheetRealtimePayload(local, remote, baseline, {
+      suppressResources: true,
+      updatedAt: 'T1',
+    });
+    expect(next.tempModifiers).toBeUndefined();
+    expect(next.notes).toBe('from-other-tab');
+    expect(nextBaseline?.tempModifiers).toEqual({ abilities: { strength: 1 } });
+
+    const stillDirty = pickDirtyCharacterFields(
+      cleanForSave(next) as Record<string, unknown>,
+      nextBaseline,
+    );
+    expect(stillDirty.tempModifiers).toBeNull();
+  });
+
   it('returns the same character object when nothing non-resource changed', () => {
     const saved = sheetCharacter();
     const baseline = cleanForSave(saved) as Record<string, unknown>;

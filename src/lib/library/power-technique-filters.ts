@@ -66,6 +66,8 @@ export interface PowerTechniqueFilterableRow {
   partCategories?: string[] | undefined;
   durationType?: string | null | undefined;
   durationValue?: number | null | undefined;
+  /** Precomputed Appendix G snapshot (composed powers, ADR-0029). Wins over the row fields. */
+  innateSnapshot?: InnatePowerSnapshot | undefined;
 }
 
 /** Normalize display/persisted action labels to ACTION_OPTIONS values. */
@@ -179,6 +181,7 @@ function rowMatchesTp(
 }
 
 export function toInnateSnapshot(row: PowerTechniqueFilterableRow): InnatePowerSnapshot {
+  if (row.innateSnapshot) return row.innateSnapshot;
   const durationType = row.durationType?.trim();
   return {
     id: 'filter',

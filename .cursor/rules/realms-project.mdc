@@ -1,5 +1,5 @@
 ---
-description: RealmsRPG stack pointers — details in constitution / AGENTS.md
+description: RealmsRPG stack pointers — details on demand, not a second read of AGENTS.md
 alwaysApply: true
 ---
 
@@ -9,6 +9,8 @@ alwaysApply: true
 
 **Dirs:** `src/app/`, `src/components/{ui,patterns,...}/`, `src/hooks/`, `src/stores/`, `src/lib/`, `src/services/`.
 
-**Agent OS:** `ARCHITECTURE_CONSTITUTION.md` · tasks `ACTIVE_TASKS.md` · SoT map in root `AGENTS.md`.
+**Git:** Never push `master`. Never squash. Do not merge unless Kadin said bypass. Merge commit only. Branch `bug|feat/<clickUpId>-short-slug` from current `origin/master`. One task, one PR. The status order is `realms-tasks.mdc`.
 
-**Before PR / push to master:** `npm run build` + `npm run tasks:validate`. Strict reconcile: the landing commit subject lists every newly done `TASK-###` (one commit may cover many tasks — not one commit per task). `related_files` paths must exist. UI gates: lint/contrast/build + visual/a11y.
+**Check locally:** the regression test for the repro. CI runs typecheck, the unit suite, and the build.
+
+**Terms:** RM (Realm Master), never GM. Do not invent formulas, names, lore, or flavor.

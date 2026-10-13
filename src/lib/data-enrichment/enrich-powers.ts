@@ -1,8 +1,14 @@
 import type { CharacterPower } from '@/types';
 import type { UserPower } from '@/hooks/use-user-library';
 import type { PowerPart } from '@/hooks/codex-types';
-import { derivePowerDisplay, formatPowerDamage } from '@/lib/calculators';
-import { dedupeEntityRefs, dedupeSavedParts } from '@/lib/game/dedupe-saved-parts';
+import {
+  composedPowerDamage,
+  composedPowerProficiencyParts,
+  derivePowerDisplay,
+  formatPowerDamage,
+  plainPowerProficiencyParts,
+} from '@/lib/calculators';
+import { dedupeEntityRefs } from '@/lib/game/dedupe-saved-parts';
 import type { EnrichedPower } from './types';
 import { findInLibrary } from './find-in-library';
 
@@ -22,6 +28,10 @@ export function enrichPowers(
   return uniquePowers.map((charPower) => {
     const name = typeof charPower === 'string' ? charPower : charPower.name;
     const innate = typeof charPower === 'object' ? !!charPower.innate : false;
+    const selectedVariantId =
+      typeof charPower === 'object' && charPower.selectedVariantId
+        ? charPower.selectedVariantId
+        : undefined;
 
     let libraryItem = findInLibrary(userPowerLibrary, charPower);
     if (!libraryItem && publicPowerLibrary?.length) {
@@ -29,21 +39,22 @@ export function enrichPowers(
     }
 
     if (libraryItem) {
+      const powerDoc = {
+        name: libraryItem.name,
+        description: libraryItem.description,
+        parts: libraryItem.parts || [],
+        actionType: libraryItem.actionType,
+        isReaction: libraryItem.isReaction,
+        range: libraryItem.range,
+        area: libraryItem.area,
+        duration: libraryItem.duration,
+        damage: libraryItem.damage,
+        attackMode: libraryItem.attackMode,
+        composition: libraryItem.composition,
+      };
       // Use derivePowerDisplay to calculate all display values including cost
-      const displayData = derivePowerDisplay(
-        {
-          name: libraryItem.name,
-          description: libraryItem.description,
-          parts: libraryItem.parts || [],
-          actionType: libraryItem.actionType,
-          isReaction: libraryItem.isReaction,
-          range: libraryItem.range,
-          area: libraryItem.area,
-          duration: libraryItem.duration,
-          damage: libraryItem.damage,
-        },
-        powerPartsDb,
-      );
+      const displayData = derivePowerDisplay(powerDoc, powerPartsDb, { selectedVariantId });
+      const composition = displayData.composition;
       // Preserve character's power id so toggles/remove match character.powers (library id can differ when matched by name)
       const identityId =
         typeof charPower === 'object' && (charPower as CharacterPower).id != null
@@ -53,13 +64,18 @@ export function enrichPowers(
         id: identityId,
         name: libraryItem.name,
         description: libraryItem.description || '',
-        parts: dedupeSavedParts(libraryItem.parts || []).map((part) => ({
-          id: String(part.id || ''),
+        // Proficiency rows. Plain powers rebuild Range and damage from the document
+        // because those mechanic parts are not stored on `parts`.
+        parts: (composition
+          ? composedPowerProficiencyParts(composition, powerPartsDb)
+          : plainPowerProficiencyParts(powerDoc, powerPartsDb)
+        ).map((part) => ({
+          id: part.id != null ? String(part.id) : '',
           name: part.name || '',
           op_1_lvl: part.op_1_lvl,
           op_2_lvl: part.op_2_lvl,
           op_3_lvl: part.op_3_lvl,
-          ...(part.applyDuration ? { applyDuration: true } : {}),
+          ...(part.damageType !== undefined ? { damageType: part.damageType } : {}),
         })),
         innate,
         libraryItem,
@@ -69,7 +85,13 @@ export function enrichPowers(
         area: displayData.area,
         duration: displayData.duration,
         range: displayData.range,
-        damage: formatPowerDamage(libraryItem.damage),
+        damage: formatPowerDamage(
+          composition ? composedPowerDamage(composition) : libraryItem.damage,
+        ),
+        ...(libraryItem.composition ? { composition: libraryItem.composition } : {}),
+        ...(composition?.selectedVariantId
+          ? { selectedVariantId: composition.selectedVariantId }
+          : {}),
       };
     }
 

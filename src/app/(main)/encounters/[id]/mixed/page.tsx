@@ -7,13 +7,13 @@
 
 'use client';
 
-import { useState, use } from 'react';
+import { useState, use, useCallback } from 'react';
 import Link from 'next/link';
 import { cn } from '@/lib/utils';
 import { Swords, Brain } from 'lucide-react';
 import { PageContainer, LoadingState, Alert, useToast } from '@/components/ui';
-import { SegmentedControl } from '@/components/patterns';
-import { useEncounter, useSaveEncounter, useAutoSave, useCampaignsFull } from '@/hooks';
+import { CloudSyncOfflineBanner, SegmentedControl } from '@/components/patterns';
+import { useAuth, useEncounter, useSaveEncounter, useAutoSave, useCampaignsFull } from '@/hooks';
 import { RollProvider, RollLog } from '@/components/rolls';
 import type { Encounter } from '@/types/encounter';
 import { defaultSkillEncounterState } from '@/types/encounter';
@@ -21,7 +21,13 @@ import CombatEncounterView from '../_components/CombatEncounterView';
 import SkillEncounterView from '../_components/SkillEncounterView';
 import { EncounterPageHeader } from '../_components/EncounterPageHeader';
 import { OpenTabletopButton } from '../_components/OpenTabletopButton';
-type ViewTab = 'combat' | 'skill';
+import {
+  readMixedEncounterViewTab,
+  writeMixedEncounterViewTab,
+  type MixedEncounterViewTab,
+} from '@/lib/game/mixed-encounter-view-tab';
+
+type ViewTab = MixedEncounterViewTab;
 
 interface PageParams {
   params: Promise<{ id: string }>;
@@ -62,8 +68,26 @@ function MixedEncounterContent({ params }: { params: Promise<{ id: string }> }) 
   const saveMutation = useSaveEncounter();
   const [encounter, setEncounter] = useState<Encounter | null>(null);
   const [initializedEncounterId, setInitializedEncounterId] = useState<string | null>(null);
-  const [activeView, setActiveView] = useState<ViewTab>('combat');
+  const [viewForEncounter, setViewForEncounter] = useState(() => ({
+    encounterId,
+    tab: readMixedEncounterViewTab(encounterId),
+  }));
+  if (viewForEncounter.encounterId !== encounterId) {
+    setViewForEncounter({
+      encounterId,
+      tab: readMixedEncounterViewTab(encounterId),
+    });
+  }
+  const activeView = viewForEncounter.tab;
   const [isEditingName, setIsEditingName] = useState(false);
+
+  const handleActiveViewChange = useCallback(
+    (tab: ViewTab) => {
+      setViewForEncounter((prev) => ({ ...prev, tab }));
+      writeMixedEncounterViewTab(encounterId, tab);
+    },
+    [encounterId],
+  );
   const [nameInput, setNameInput] = useState('');
   const { data: campaignsFull = [] } = useCampaignsFull();
 
@@ -73,8 +97,9 @@ function MixedEncounterContent({ params }: { params: Promise<{ id: string }> }) 
   }
   const isInitialized = initializedEncounterId === encounterId;
 
+  const { user } = useAuth();
   const { showToast } = useToast();
-  const { isSaving, hasUnsavedChanges, saveNow } = useAutoSave({
+  const { isSaving, hasUnsavedChanges, syncBlockedByNetwork, saveNow } = useAutoSave({
     data: encounter,
     onSave: async (data) => {
       if (!data || !encounterId) return;
@@ -161,9 +186,15 @@ function MixedEncounterContent({ params }: { params: Promise<{ id: string }> }) 
           }
         />
 
+        <CloudSyncOfflineBanner
+          enabled={!!user}
+          syncBlocked={syncBlockedByNetwork}
+          onRetry={() => void saveNow()}
+        />
+
         <SegmentedControl
           value={activeView}
-          onChange={setActiveView}
+          onChange={handleActiveViewChange}
           equalWidth
           options={[
             {

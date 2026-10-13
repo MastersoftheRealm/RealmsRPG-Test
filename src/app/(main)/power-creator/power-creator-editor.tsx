@@ -13,6 +13,7 @@ import { PowerCreatorEditorMeta } from './power-creator-editor-meta';
 import { PowerCreatorEditorPowerConfig } from './power-creator-editor-power-config';
 import { PowerCreatorEditorPowerDamage } from './power-creator-editor-power-damage';
 import { PowerCreatorEditorPowerParts } from './power-creator-editor-power-parts';
+import { TargetedDefensesSection } from '@/components/creator';
 
 export type { PowerCreatorEditorProps };
 
@@ -28,7 +29,16 @@ export function PowerCreatorEditor(props: PowerCreatorEditorProps) {
         imageId={props.imageId}
         imageUrl={props.imageUrl}
         onImageChange={props.onImageChange}
-      />
+      >
+        <TargetedDefensesSection
+          selected={props.targetedDefenses}
+          onChange={props.onTargetedDefensesChange}
+          parts={props.suggestionSelectedParts}
+          partsDb={props.suggestionPartsDb}
+          damageTypes={props.damages.map((d) => d.type).filter(Boolean)}
+          attackMode={props.attackMode}
+        />
+      </PowerCreatorEditorMeta>
 
       <PowerCreatorEditorActionProfile
         actionType={props.actionType}
@@ -39,6 +49,9 @@ export function PowerCreatorEditor(props: PowerCreatorEditorProps) {
         attackMode={props.attackMode}
         onAttackModeChange={props.onAttackModeChange}
         sectionCosts={props.sectionCosts}
+        sectionsUnpriced={props.sectionsUnpriced}
+        actionInheritance={props.inheritance?.action ?? null}
+        attackInheritance={props.inheritance?.attack ?? null}
       />
 
       <PowerCreatorEditorPowerConfig
@@ -52,30 +65,44 @@ export function PowerCreatorEditor(props: PowerCreatorEditorProps) {
         onDurationChange={props.onDurationChange}
         durationSummary={props.durationSummary}
         sectionCosts={props.sectionCosts}
+        sectionsUnpriced={props.sectionsUnpriced}
+        rangeInheritance={props.inheritance?.range ?? null}
+        areaInheritance={props.inheritance?.area ?? null}
+        durationInheritance={props.inheritance?.duration ?? null}
       />
 
-      <PowerCreatorEditorPowerParts
-        selectedParts={props.selectedParts}
-        nonMechanicParts={props.nonMechanicParts}
-        powerPartsSummary={props.powerPartsSummary}
-        onAddPart={props.onAddPart}
-        onRemovePart={props.onRemovePart}
-        onUpdatePart={props.onUpdatePart}
-        selectedAdvancedParts={props.selectedAdvancedParts}
-        mechanicPartsForList={props.mechanicPartsForList}
-        powerMechanicsSummary={props.powerMechanicsSummary}
-        onAddMechanicPart={props.onAddMechanicPart}
-        onRemoveAdvancedPart={props.onRemoveAdvancedPart}
-        onUpdateAdvancedPart={props.onUpdateAdvancedPart}
-        sectionCosts={props.sectionCosts}
-      />
+      {props.hidePartsAndDamage ? null : (
+        <>
+          <PowerCreatorEditorPowerParts
+            selectedParts={props.selectedParts}
+            nonMechanicParts={props.nonMechanicParts}
+            powerPartsSummary={props.powerPartsSummary}
+            onAddPart={props.onAddPart}
+            onRemovePart={props.onRemovePart}
+            onUpdatePart={props.onUpdatePart}
+            selectedAdvancedParts={props.selectedAdvancedParts}
+            mechanicPartsForList={props.mechanicPartsForList}
+            powerMechanicsSummary={props.powerMechanicsSummary}
+            onAddMechanicPart={props.onAddMechanicPart}
+            onRemoveAdvancedPart={props.onRemoveAdvancedPart}
+            onUpdateAdvancedPart={props.onUpdateAdvancedPart}
+            sectionCosts={props.sectionCosts}
+            sectionsUnpriced={props.sectionsUnpriced}
+            sharedPartNames={props.inheritance?.sharedPartNames}
+            sharedMechanicNames={props.inheritance?.sharedMechanicNames}
+          />
 
-      <PowerCreatorEditorPowerDamage
-        damages={props.damages}
-        onDamagesChange={props.onDamagesChange}
-        damageSummary={props.damageSummary}
-        sectionCosts={props.sectionCosts}
-      />
+          <PowerCreatorEditorPowerDamage
+            damages={props.damages}
+            onDamagesChange={props.onDamagesChange}
+            damageSummary={props.damageSummary}
+            sectionCosts={props.sectionCosts}
+            sectionsUnpriced={props.sectionsUnpriced}
+            partsDb={props.suggestionPartsDb}
+            damageInheritance={props.inheritance?.damage ?? null}
+          />
+        </>
+      )}
     </>
   );
 }

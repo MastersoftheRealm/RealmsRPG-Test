@@ -33,6 +33,11 @@ export type EmpoweredTechniqueCreatorEditorProps = {
   attackMode: AttackMode;
   onAttackModeChange: (mode: AttackMode) => void;
 
+  targetedDefenses: string[];
+  onTargetedDefensesChange: (next: string[]) => void;
+  suggestionSelectedParts: Array<PowerPart | TechniquePart>;
+  suggestionPartsDb: Array<PowerPart | TechniquePart>;
+
   rangeDisplay: string;
   range: RangeConfig;
   onRangeStepsChange: (steps: number) => void;

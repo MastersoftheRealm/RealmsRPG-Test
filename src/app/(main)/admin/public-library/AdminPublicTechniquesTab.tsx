@@ -9,7 +9,13 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { DeleteConfirmModal, OfficialTechniqueList } from '@/components/patterns';
 import { useToast } from '@/components/ui';
-import { officialLibraryKeys, useOfficialLibrary, useTechniqueParts, usePowerParts } from '@/hooks';
+import {
+  officialLibraryKeys,
+  useOfficialLibrary,
+  usePatchOfficialCatalogListing,
+  useTechniqueParts,
+  usePowerParts,
+} from '@/hooks';
 import { useQueryClient } from '@tanstack/react-query';
 import { apiFetch } from '@/lib/api-client';
 import { Swords } from 'lucide-react';
@@ -21,13 +27,20 @@ export function AdminPublicTechniquesTab({
 }) {
   const { showToast } = useToast();
   const libraryType = mode === 'empowered' ? 'empowered-techniques' : 'techniques';
-  const queryKey = ['official-library', libraryType] as const;
   const creatorPath = mode === 'empowered' ? '/empowered-technique-creator' : '/technique-creator';
   const router = useRouter();
   const queryClient = useQueryClient();
-  const { data: items = [], isLoading, error, refetch } = useOfficialLibrary(libraryType);
+  const {
+    data: items = [],
+    isLoading,
+    error,
+    refetch,
+  } = useOfficialLibrary(libraryType, {
+    includeUnlisted: true,
+  });
   const { data: partsDb = [] } = useTechniqueParts();
   const { data: powerPartsDb = [] } = usePowerParts({ enabled: mode === 'empowered' });
+  const patchListing = usePatchOfficialCatalogListing(libraryType);
   const [deleteConfirm, setDeleteConfirm] = useState<{ id: string; name: string } | null>(null);
   const empowered = mode === 'empowered';
 
@@ -37,9 +50,9 @@ export function AdminPublicTechniquesTab({
       await apiFetch(`/api/official/${libraryType}?id=${encodeURIComponent(deleteConfirm.id)}`, {
         method: 'DELETE',
       });
-      queryClient.invalidateQueries({ queryKey });
-      queryClient.invalidateQueries({ queryKey: officialLibraryKeys.counts });
-      await queryClient.refetchQueries({ queryKey });
+      queryClient.invalidateQueries({ queryKey: officialLibraryKeys.all, refetchType: 'all' });
+      queryClient.invalidateQueries({ queryKey: officialLibraryKeys.counts, refetchType: 'all' });
+      await queryClient.refetchQueries({ queryKey: officialLibraryKeys.all });
       setDeleteConfirm(null);
     } catch (e) {
       showToast(e instanceof Error ? e.message : 'Failed to delete', 'error');
@@ -70,6 +83,7 @@ export function AdminPublicTechniquesTab({
         variant="admin"
         onEdit={(id) => router.push(`${creatorPath}?edit=${encodeURIComponent(id)}`)}
         onDelete={(id, name) => setDeleteConfirm({ id, name })}
+        onCatalogListingChange={patchListing}
       />
 
       {deleteConfirm && (

@@ -21,8 +21,7 @@ Then, as needed:
 |-------|-----|
 | Component locations, patterns | [`ai/AGENT_GUIDE.md`](./ai/AGENT_GUIDE.md) |
 | Does this feature exist? | [`ai/FEATURE_INDEX.md`](./ai/FEATURE_INDEX.md) |
-| Current remediation status / open gaps | [`ai/REMEDIATION_STATUS_2026-08.md`](./ai/REMEDIATION_STATUS_2026-08.md) |
-| Open tasks (active only) | [`ai/ACTIVE_TASKS.md`](./ai/ACTIVE_TASKS.md) (process: [`ai/AI_TASK_QUEUE.md`](./ai/AI_TASK_QUEUE.md)) |
+| Task / changelog history (not the work queue) | [`ai/archive/HISTORY_INDEX.md`](./ai/archive/HISTORY_INDEX.md) — `ACTIVE_TASKS`, `AI_TASK_QUEUE`, and related files live under `ai/archive/` |
 | DB tables / columns | [`SUPABASE_SCHEMA.md`](./SUPABASE_SCHEMA.md) |
 | Game rules, formulas, caps | [`GAME_RULES.md`](./GAME_RULES.md) |
 | Data flow, enrichment | [`ARCHITECTURE.md`](./ARCHITECTURE.md) |

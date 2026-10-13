@@ -43,6 +43,27 @@ export function buildCharacterSkillsForSubModal(
     }));
 }
 
+/**
+ * Drop a skill from allocations. Removing a base skill also drops sub-skills
+ * whose codex parent is that base, so they do not stay listed under another skill.
+ */
+export function removeAllocatedSkill(
+  allocations: Record<string, number>,
+  skillId: string,
+  codexSkills: Array<Pick<Skill, 'id' | 'base_skill_id'>>,
+): Record<string, number> {
+  if (!(skillId in allocations)) return allocations;
+  const next = { ...allocations };
+  delete next[skillId];
+  const removed = codexSkills.find((skill) => String(skill.id) === skillId);
+  if (removed == null || removed.base_skill_id != null) return next;
+  for (const skill of codexSkills) {
+    if (skill.base_skill_id == null || Number(skill.base_skill_id) === 0) continue;
+    if (String(skill.base_skill_id) === skillId) delete next[String(skill.id)];
+  }
+  return next;
+}
+
 export function applyAddedBaseSkills(
   allocations: Record<string, number>,
   skills: Skill[],

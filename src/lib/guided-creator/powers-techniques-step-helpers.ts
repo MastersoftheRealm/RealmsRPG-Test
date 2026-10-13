@@ -92,16 +92,24 @@ export function pickInnateFillIds(
   return picked;
 }
 
-type InnateSelectionBlockReason = 'threshold' | 'energy' | 'tp';
+export type InnateSelectionWarnReason = 'threshold' | 'energy';
+
+type InnateSelectionBlockReason = 'tp';
 
 type ApplyInnateSelectionResult =
-  | { ok: true; nextIds: string[] }
+  | { ok: true; nextIds: string[]; warn?: InnateSelectionWarnReason }
   | { ok: false; reason: InnateSelectionBlockReason };
 
-export function innateSelectionBlockMessage(reason: InnateSelectionBlockReason): string {
+export function innateSelectionWarnMessage(reason: InnateSelectionWarnReason): string {
   if (reason === 'threshold') return ptCopy.innateThresholdBlocked;
-  if (reason === 'energy') return ptCopy.innateEnergyBlocked;
-  return ptCopy.tpBlocked;
+  return ptCopy.innateEnergyBlocked;
+}
+
+export function innateSelectionBlockMessage(reason: InnateSelectionBlockReason): string {
+  switch (reason) {
+    case 'tp':
+      return ptCopy.tpBlocked;
+  }
 }
 
 function sumResolvedEnergy(ids: string[], energyOf: (id: string) => number | undefined): number {
@@ -116,9 +124,8 @@ function sumTp(ids: string[], tpOf: (id: string) => number): number {
 }
 
 /**
- * Add an innate pick, dropping last-selected innates until Innate Energy fits
- * (TASK-727). Threshold-ineligible or over-max-alone stays blocked. TP is
- * checked against the remaining innates after those drops — not swapped for TP.
+ * Append an innate pick. Over-threshold or over-Innate-Energy totals warn (86e3pbwf7);
+ * Training Points still block when the shared budget would be exceeded.
  */
 export function applyInnateSelection(opts: {
   selectedIds: string[];
@@ -132,27 +139,11 @@ export function applyInnateSelection(opts: {
 }): ApplyInnateSelectionResult {
   const key = String(opts.id);
   const energy = opts.energyOf(key);
-  if (energy == null || energy < 0 || energy > opts.threshold) {
-    return { ok: false, reason: 'threshold' };
-  }
-  if (energy > opts.energyMax) {
-    return { ok: false, reason: 'energy' };
-  }
-
-  let remaining = [...opts.selectedIds];
-  while (
-    remaining.length > 0 &&
-    sumResolvedEnergy(remaining, opts.energyOf) + energy > opts.energyMax
-  ) {
-    remaining = remaining.slice(0, -1);
-  }
-  if (sumResolvedEnergy(remaining, opts.energyOf) + energy > opts.energyMax) {
-    return { ok: false, reason: 'energy' };
-  }
+  const nextIds = [...opts.selectedIds, key];
 
   if (
     wouldExceedSharedTp(
-      opts.otherTpSpent + sumTp(remaining, opts.tpOf),
+      opts.otherTpSpent + sumTp(opts.selectedIds, opts.tpOf),
       opts.tpLimit,
       opts.tpOf(key),
     )
@@ -160,5 +151,12 @@ export function applyInnateSelection(opts: {
     return { ok: false, reason: 'tp' };
   }
 
-  return { ok: true, nextIds: [...remaining, key] };
+  let warn: InnateSelectionWarnReason | undefined;
+  if (energy == null || energy < 0 || energy > opts.threshold) {
+    warn = 'threshold';
+  } else if (sumResolvedEnergy(nextIds, opts.energyOf) > opts.energyMax) {
+    warn = 'energy';
+  }
+
+  return warn ? { ok: true, nextIds, warn } : { ok: true, nextIds };
 }

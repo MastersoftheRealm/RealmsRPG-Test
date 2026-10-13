@@ -1,3 +1,1023 @@
+- id: TASK-928
+  title: Codex entry rules source (expansions)
+  created_at: 2026-09-28
+  completed_at: 2026-09-28
+  created_by: owner
+  implemented_by: agent
+  priority: high
+  status: done
+  verification_status: pending-qa
+  clickup_task_id: 86e3ffgab
+  clickup_url: https://app.clickup.com/t/86e3ffgab
+  github_branch: task/TASK-928-codex-entry-source
+  clickup_sync: pending
+  build_validation: |
+    suite: DEV-V-028
+    tests:
+      - DEV-V-028-T008
+  developer_test_plan: |
+    Suite DEV-V-028 T008 — see BUILD_VALIDATION.md. Vitest: admin-codex-source, row-map, codex read/write parity.
+  related_files:
+    - sql/codex-entry-source.sql
+    - sql/README.md
+    - src/types/database.types.ts
+    - src/types/codex.ts
+    - src/types/archetype.ts
+    - src/lib/codex/row-map.ts
+    - src/lib/codex/row-map.test.ts
+    - src/app/api/codex/route.ts
+    - src/app/(main)/admin/codex/codex-column-map.ts
+    - src/app/(main)/admin/codex/codex-archetype-write.ts
+    - src/app/(main)/admin/codex/codex-spreadsheet-config.ts
+    - src/app/(main)/admin/codex/admin-codex-source.ts
+    - src/app/(main)/admin/codex/admin-codex-source.test.ts
+    - src/app/(main)/admin/codex/admin-codex-source-field.tsx
+    - src/app/(main)/admin/codex/admin-feat-form.ts
+    - src/app/(main)/admin/codex/admin-feat-edit-modal.tsx
+    - src/app/(main)/admin/codex/admin-feat-edit-modal-fields.tsx
+    - src/app/(main)/admin/codex/admin-skill-edit-modal.tsx
+    - src/app/(main)/admin/codex/AdminSkillsTab.tsx
+    - src/app/(main)/admin/codex/admin-part-form.ts
+    - src/app/(main)/admin/codex/admin-part-edit-modal.tsx
+    - src/app/(main)/admin/codex/AdminPartsTab.tsx
+    - src/app/(main)/admin/codex/admin-property-form.ts
+    - src/app/(main)/admin/codex/admin-property-edit-modal.tsx
+    - src/app/(main)/admin/codex/AdminPropertiesTab.tsx
+    - src/app/(main)/admin/codex/admin-species-form.ts
+    - src/app/(main)/admin/codex/admin-species-edit-modal.tsx
+    - src/app/(main)/admin/codex/AdminSpeciesTab.tsx
+    - src/app/(main)/admin/codex/admin-trait-form.ts
+    - src/app/(main)/admin/codex/admin-trait-edit-modal.tsx
+    - src/app/(main)/admin/codex/AdminTraitsTab.tsx
+    - src/app/(main)/admin/codex/admin-equipment-edit-modal.tsx
+    - src/app/(main)/admin/codex/AdminEquipmentTab.tsx
+    - src/app/(main)/admin/codex/admin-creature-feat-edit-modal.tsx
+    - src/app/(main)/admin/codex/AdminCreatureFeatsTab.tsx
+    - src/app/(main)/admin/codex/admin-archetype-path-form.ts
+    - src/app/(main)/admin/codex/admin-archetype-workspace-open.ts
+    - src/app/(main)/admin/codex/admin-archetype-workspace-save.ts
+    - src/app/(main)/admin/codex/admin-archetype-editor-config.ts
+    - src/app/(main)/admin/codex/admin-archetype-editor.tsx
+    - src/app/(main)/admin/codex/admin-archetype-editor-meta.tsx
+    - src/app/(main)/admin/codex/use-admin-archetype-workspace.ts
+    - src/app/(main)/admin/codex/AdminArchetypesTab.tsx
+    - src/docs/SUPABASE_SCHEMA.md
+    - src/docs/ai/FEATURE_INDEX.md
+    - src/docs/ai/BUILD_VALIDATION.md
+    - src/docs/ai/DEVELOPER_TASK_QUEUE.md
+    - src/docs/ai/AI_CHANGELOG.md
+  description: |
+    Each codex entry (feat, skill, part, property, species, trait, equipment, archetype, creature feat) stores a rules source such as Core Rules or Crafting Expansion. Admins set it in the edit modal the same way as category. Species keeps is_starter for the guided starter flag and uses source for the rules product. No permission gating yet. Existing rows stay null.
+  acceptance_criteria:
+    - Nullable source text on every columnar codex entry table. No backfill.
+    - Admin edit modals can pick an existing source or add a new one, and the value saves and reloads.
+    - Species starter checkbox is unchanged and independent of source.
+  notes: |
+    clickup_sync pending — ClickUp MCP daily limit; card already in development (86e3ffgab). Flush to in review with Collin + PR URL when a PR opens. Live migration codex_entry_source applied 2026-09-28.
+
+- id: TASK-934
+  title: Composed powers — character proficiency requirements follow every variant, not the sheet pick
+  created_at: 2026-09-24
+  completed_at: 2026-09-24
+  created_by: agent
+  implemented_by: agent
+  priority: medium
+  status: done
+  verification_status: pending-qa
+  build_validation: |
+    suite: DEV-V-061
+    tests:
+      - DEV-V-061-T004
+  developer_test_plan: |
+    DEV-V-061-T004 (sheet Proficiencies tab + badge + add-from-library with Elemental Burst; Alternate follows the pick).
+  clickup_sync: pending
+  github_branch: task/TASK-934-choice-proficiency
+  related_files:
+    - src/lib/calculators/power-composition.ts
+    - src/lib/proficiencies.ts
+    - src/lib/data-enrichment/enrich-powers.ts
+    - src/lib/data-enrichment/enrich-powers.test.ts
+    - src/components/character-sheet/add-library-item/map-selection.ts
+    - src/components/character-sheet/add-library-item/map-selection.test.ts
+    - src/lib/guided-creator/build-character.ts
+    - src/types/character.ts
+  description: |
+    Follow-up from /cleanup of TASK-929–933 (ADR-0029). The sheet required only the picked Choice variant's damage type, so switching the Fire / Ice / Lightning chip changed required proficiencies while the power's TP counted all three.
+  acceptance_criteria:
+    - Required proficiencies for a composed power come from the same proficiency set the resolver prices (every variant + Reverse; damage split by type), independent of `selectedVariantId`. Owner override: Alternate follows the picked variant only.
+    - Sheet auto-proficiencies (add), badge, Proficiencies tab, add-from-library, and Guided save agree for Elemental Burst (three damage types) and do not change when the chip changes.
+    - The row's damage button keeps following the pick.
+    - Vitest covering a Choice fixture through enrichment → `buildRequiredProficiencies`; BUILD_VALIDATION step under DEV-V-061.
+  completed_work: |
+    `composedPowerProficiencyParts(res, partsDb)` in power-composition.ts returns the resolver's payload rows with each damage row tagged by its own `damageType` (Choice / Modify / Randomize: shared + every variant + Reverse; Alternate: picked variant + Reverse). `buildRequiredProficiencies` honours a per-part `damageType` (`null` = untyped) over the power's damage. The resolver's TP uses the same rows. Enrichment, the add-to-character mapper (sheet Add Power + Library add-to-character), and the Guided save payload use the helper. Modify still dedupes shared Power Range.
+  notes: |
+    Open for owner: resolver TP for Alternate still counts every variant (unchanged), while the character's required proficiencies follow the pick. Background sync on sheet load only sees powers added in-session (saved powers are lean refs) — unchanged; switching an Alternate pick to an unowned variant shows the needs-proficiency badge instead of auto-adding.
+- id: TASK-929
+  title: Power variants — ADR-0029, composition resolver, cost tests, Reverse Effects codex fix
+  created_at: 2026-09-24
+  completed_at: 2026-09-24
+  created_by: owner
+  implemented_by: agent
+  priority: high
+  status: done
+  verification_status: pending-qa
+  build_validation: |
+    suite: DEV-V-061
+    tests:
+      - DEV-V-061-T001
+      - DEV-V-061-T002
+      - DEV-V-061-T003
+  developer_test_plan: |
+    Suite DEV-V-061 — see BUILD_VALIDATION.md. Vitest: power-composition, innate-eligibility, power-variant-chips.
+  clickup_sync: pending
+  github_branch: task/TASK-929-power-variants
+  related_files:
+    - src/docs/ai/ADR/0029-power-composition-variants.md
+    - src/lib/calculators/power-composition.ts
+    - src/lib/calculators/power-composition.test.ts
+    - src/lib/calculators/power-calc.ts
+    - src/lib/game/innate-eligibility.ts
+    - src/lib/game/innate-eligibility.test.ts
+    - src/types/library.ts
+    - sql/codex-parts-reverse-effects-op1-en.sql
+  description: |
+    Epic TASK-929–TASK-933 (plan "Power composition model"). Payload `composition` (choice | alternate | modify | randomize, variants[], reverse, die) replaces the Choice / Split / Randomize / Reverse Effects part hacks.
+  acceptance_criteria:
+    - ADR-0029 + README index.
+    - Resolver in lib/calculators (Choice max, Modify sum, Alternate selected, Randomize signed faces floor 1, Reverse −50%); legacy 371/388/401/402 ignored on composed powers.
+    - TP = deduped proficiency set (damage parts split by type); innate = Appendix G on all parts / durations, Alternate per variant.
+    - codex_parts 388 op_1_en −1.5 → −0.5 applied; seed CSVs aligned.
+  notes: |
+    Live apply 2026-09-24 via Supabase MCP (1 row). Preview: no saved power referenced part 388. ClickUp daily MCP limit hit at start → one Website batch card still owed (TASK-929–933, in review + Collin + PR URL).
+
+- id: TASK-930
+  title: Power creator — Structure select, Reverse checkbox, variant tabs, Randomize die faces
+  created_at: 2026-09-24
+  completed_at: 2026-09-24
+  created_by: owner
+  implemented_by: agent
+  priority: high
+  status: done
+  verification_status: pending-qa
+  build_validation: |
+    suite: DEV-V-061
+    tests:
+      - DEV-V-061-T001
+  developer_test_plan: |
+    DEV-V-061-T001 — /power-creator at 360 / 390 / 768 / 1024 / 1280 / 1440.
+  clickup_sync: pending
+  github_branch: task/TASK-929-power-variants
+  related_files:
+    - src/app/(main)/power-creator/page.tsx
+    - src/app/(main)/power-creator/power-creator-composition-band.tsx
+    - src/app/(main)/power-creator/power-creator-composition.ts
+    - src/app/(main)/power-creator/use-power-creator-composition.ts
+    - src/app/(main)/power-creator/use-power-creator-workspace.ts
+    - src/app/(main)/power-creator/power-creator-bootstrap.ts
+    - src/components/creator/CreatorLayout.tsx
+    - src/components/creator/CreatorPageShell.tsx
+  description: |
+    Band above the creator grid (CreatorLayout `aboveGrid`): labeled Structure Select + Reverse effects Checkbox + mechanic description text + InfoTippy; TabNavigation for Shared / variants / Reverse; die select + per-face selects (save gated until complete). Four legacy mechanic parts hidden from the picker. Saves `payload.composition`.
+  acceptance_criteria:
+    - Each tab edits its own fields; summary shows composed Energy / TP + Variant Energy breakdown.
+    - Alternate add copies the open tab; Choice/Modify/Randomize variants are overlays on Shared.
+    - Draft cache + Load round-trip composition.
+  notes: |
+    Limit (ADR-0029): an empty variant field means use Shared, so a Choice / Modify / Randomize variant cannot reset range, area, or duration to none / Instant when Shared sets one. Set that field per variant instead. Alternate variants are full powers and are not affected.
+
+- id: TASK-931
+  title: Sheet play — selectedVariantId + feat-style variant chips
+  created_at: 2026-09-24
+  completed_at: 2026-09-24
+  created_by: owner
+  implemented_by: agent
+  priority: high
+  status: done
+  verification_status: pending-qa
+  build_validation: |
+    suite: DEV-V-061
+    tests:
+      - DEV-V-061-T002
+  developer_test_plan: |
+    DEV-V-061-T002 — sheet Powers at 360 and 1280.
+  clickup_sync: pending
+  github_branch: task/TASK-929-power-variants
+  related_files:
+    - src/lib/power-variant-chips.ts
+    - src/lib/power-variant-chips.test.ts
+    - src/lib/data-enrichment/enrich-powers.ts
+    - src/lib/data-enrichment/clean-for-save.ts
+    - src/components/character-sheet/library-entity-rows.tsx
+    - src/components/character-sheet/use-sheet-library-actions.ts
+    - src/types/character.ts
+  description: |
+    `CharacterPower.selectedVariantId` persisted like `innate`. `buildPowerVariantChips` (sibling of `buildFeatLevelChips`) returns ChipData labelled with variant names; Choice/Alternate/Randomize chips select, Modify chips are browse-only. Randomize roll chip logs to the roll log.
+  acceptance_criteria:
+    - Damage / duration / area / energy follow the pick per structure rules; Modify joins durations and sums energy.
+    - Enrichment includes every variant's parts for proficiency checks.
+
+- id: TASK-932
+  title: Browse surfaces — composed energy + variant section without a play control
+  created_at: 2026-09-24
+  completed_at: 2026-09-24
+  created_by: owner
+  implemented_by: agent
+  priority: medium
+  status: done
+  verification_status: pending-qa
+  build_validation: |
+    suite: DEV-V-061
+    tests:
+      - DEV-V-061-T003
+  developer_test_plan: |
+    DEV-V-061-T003.
+  clickup_sync: pending
+  github_branch: task/TASK-929-power-variants
+  related_files:
+    - src/lib/library/official-power-list.ts
+    - src/lib/library-selectable-builders.ts
+    - src/lib/library/power-technique-filters.ts
+    - src/lib/guided-creator/powers-techniques-l2.ts
+    - src/components/patterns/list/creature-stat-block-display-data.ts
+    - src/app/(main)/creature-creator/transformers.ts
+    - src/app/(main)/crafting/[id]/_components/crafting-tool-derived.ts
+  description: |
+    Library / add-modal / Guided L3 / creature stat block / crafting read `composition` through `derivePowerDisplay` (browse energy) and show the variants section; innate filter uses the composed Appendix G snapshot.
+  acceptance_criteria:
+    - No spend control on browse surfaces; categories and damage come from resolved variants.
+  notes: |
+    Empowered-technique creator has no "load a library power" path, so no composed power can be loaded into it; empowered display tolerates powers without composition (unchanged).
+
+- id: TASK-933
+  title: Official examples — Elemental Burst, Elemental Bolt, Judgement onto Choice variants
+  created_at: 2026-09-24
+  completed_at: 2026-09-24
+  created_by: owner
+  implemented_by: agent
+  priority: medium
+  status: done
+  verification_status: pending-qa
+  build_validation: |
+    suite: DEV-V-061
+    tests:
+      - DEV-V-061-T003
+  developer_test_plan: |
+    DEV-V-061-T003 step 1.
+  clickup_sync: pending
+  github_branch: task/TASK-929-power-variants
+  related_files:
+    - sql/official-powers-composition-examples.sql
+  description: |
+    Three official_powers rows rewritten: shared chassis + one Choice variant per damage type; legacy Choice part and multi-type `damage` column removed. Rollback SQL in the file.
+  acceptance_criteria:
+    - Energy preview: Burst 8 → 8, Bolt 6 → 6, Judgement 5 → 6 (pricier Necrotic portion); TP drops the Choice part's 2 TP.
+    - No user powers edited.
+  notes: |
+    Elemental Burst description says 1d6 while stored damage is 1d10 — kept as stored; owner may want to align copy.
+- id: TASK-927
+  title: Official catalog listing (Public vs Admin library)
+  created_at: 2026-09-14
+  completed_at: 2026-09-14
+  created_by: owner
+  implemented_by: agent
+  priority: high
+  status: done
+  verification_status: pending-qa
+  build_validation: |
+    suite: DEV-V-060
+    tests:
+      - DEV-V-060-T001
+      - DEV-V-060-T002
+      - DEV-V-060-T003
+      - DEV-V-060-T004
+  developer_test_plan: |
+    Suite DEV-V-060 T001-T004 - see BUILD_VALIDATION.md. Vitest: catalog-listing, official/[type], official counts helper, library-columnar, GET /api/codex, row-map.
+  related_files:
+    - src/docs/ai/ADR/0027-official-catalog-listing.md
+    - src/docs/ai/ADR/README.md
+    - sql/official-catalog-listing.sql
+    - sql/README.md
+    - src/lib/library/catalog-listing.ts
+    - src/lib/library/catalog-listing.test.ts
+    - src/lib/library-columnar.ts
+    - src/lib/library-columnar.test.ts
+    - src/lib/library/fetch-library-tab-counts.ts
+    - src/lib/codex/row-map.ts
+    - src/lib/codex/row-map.test.ts
+    - src/lib/api-validation.ts
+    - src/lib/api-client.ts
+    - src/app/api/official/[type]/route.ts
+    - src/app/api/official/[type]/route.test.ts
+    - src/app/api/official/counts/route.ts
+    - src/app/api/official/enhanced-items/route.ts
+    - src/app/api/codex/route.ts
+    - src/app/api/codex/route.test.ts
+    - src/hooks/use-official-library.ts
+    - src/hooks/use-library-counts.keys.test.ts
+    - src/app/(main)/admin/public-library/AdminPublicTechniquesTab.tsx
+    - src/app/(main)/admin/public-library/AdminPublicItemsTab.tsx
+    - src/app/(main)/admin/public-library/AdminPublicCreaturesTab.tsx
+    - src/app/(main)/power-creator/page.tsx
+    - src/app/(main)/technique-creator/page.tsx
+    - src/app/(main)/item-creator/page.tsx
+    - src/app/(main)/empowered-technique-creator/page.tsx
+    - src/app/(main)/creature-creator/page.tsx
+    - src/app/(main)/species-creator/page.tsx
+    - src/hooks/use-creator-save.ts
+    - src/hooks/use-load-modal-library.ts
+    - src/hooks/use-codex.ts
+    - src/hooks/index.ts
+    - src/services/library-service.ts
+    - src/components/creator/CreatorSaveToolbar.tsx
+    - src/components/creator/CreatorPageShell.tsx
+    - src/components/creator/index.ts
+    - src/components/patterns/list/official-entity-list.tsx
+    - src/app/(main)/admin/public-library/AdminPublicPowersTab.tsx
+    - src/app/(main)/admin/codex/AdminSpeciesTab.tsx
+    - src/app/(main)/admin/codex/admin-species-form.ts
+    - src/app/(main)/admin/codex/admin-species-edit-modal.tsx
+    - src/app/(main)/admin/codex/codex-column-map.ts
+    - src/types/library.ts
+    - src/types/codex.ts
+    - src/types/database.types.ts
+    - src/types/crafting.ts
+    - src/docs/SUPABASE_SCHEMA.md
+    - src/docs/ai/FEATURE_INDEX.md
+    - src/docs/ai/FEATURE_INDEX_BARRELS.generated.md
+    - src/docs/ai/BUILD_VALIDATION.md
+    - src/docs/ai/DEVELOPER_TASK_QUEUE.md
+    - src/docs/ai/AI_CHANGELOG.md
+    - src/docs/ALL_FEEDBACK_CLEAN.md
+  description: |
+    Unified listed/unlisted catalog class on official created items and Codex species so creature-specific rows stay off player Libraries/pickers while still resolving on published parents. Codex piece packs deferred.
+  acceptance_criteria:
+    - Same official/codex tables plus catalog_listing; no third table; no content_pack_id on created items.
+    - Player /library and /codex lists and official counts are listed-only; includeUnlisted=1 is admin-only.
+    - Admin creator save is My library | Public library | Admin library; Official Library Editor and Codex Species can toggle listing.
+    - Unlisted remains publicly readable by id (RLS unchanged); attached rows still display on published creatures/characters.
+  notes: |
+    Live migration official_catalog_listing already applied. RLS stays public SELECT. Do not auto-include unlisted because the viewer is admin.
+    Cleanup 2026-09-14: deleted CatalogListingToggle + unused isListedInPlayerCatalog; listing/save options live in catalog-listing.ts; admin delete invalidates officialLibraryKeys.all; showSaveTarget rename; query-key test matches listed/all.
+
+- id: TASK-923
+  title: Apply power-style Advanced Calculations to other creators
+  created_at: 2026-09-03
+  completed_at: 2026-09-03
+  created_by: agent
+  implemented_by: agent
+  priority: medium
+  status: done
+  verification_status: pending-qa
+  build_validation: |
+    suite: DEV-V-059
+    tests:
+      - DEV-V-059-T001
+      - DEV-V-059-T002
+      - DEV-V-059-T003
+  developer_test_plan: |
+    Suite DEV-V-059 T001-T003 - see BUILD_VALIDATION.md. Vitest: technique-energy-breakdown, empowered-energy-breakdown, item-cost-breakdown.
+  related_files:
+    - src/lib/calculators/technique-energy-breakdown.ts
+    - src/lib/calculators/technique-energy-breakdown.test.ts
+    - src/lib/calculators/empowered-energy-breakdown.ts
+    - src/lib/calculators/empowered-energy-breakdown.test.ts
+    - src/lib/calculators/item-cost-breakdown.ts
+    - src/lib/calculators/item-cost-breakdown.test.ts
+    - src/lib/calculators/power-energy-breakdown.ts
+    - src/lib/calculators/technique-calc.ts
+    - src/lib/calculators/item-calc.ts
+    - src/lib/calculators/index.ts
+    - src/app/(main)/technique-creator/use-technique-creator-workspace.ts
+    - src/app/(main)/technique-creator/page.tsx
+    - src/app/(main)/empowered-technique-creator/empowered-technique-cost-derivation.ts
+    - src/app/(main)/empowered-technique-creator/use-empowered-technique-creator-workspace.ts
+    - src/app/(main)/empowered-technique-creator/page.tsx
+    - src/app/(main)/item-creator/item-creator-cost-derivation.ts
+    - src/app/(main)/item-creator/use-item-creator-workspace.ts
+    - src/app/(main)/item-creator/page.tsx
+    - src/components/creator/advanced-calculations-panel.tsx
+    - src/docs/ai/FEATURE_INDEX.md
+    - src/docs/ai/BUILD_VALIDATION.md
+    - src/docs/ai/DEVELOPER_TASK_QUEUE.md
+  description: |
+    After TASK-922 power creator style is proven, reuse grouped Advanced Calculations on technique, empowered technique, and item creators. Do not change cost formulas.
+  acceptance_criteria:
+    - Technique, empowered, and item Advanced Calculations use section groups (not the old four-line raw/ceil dump) and omit empty sections.
+    - Display-only; calculateTechniqueCosts / calculateEmpoweredTechniqueCosts / calculateItemCosts totals unchanged.
+    - User-facing copy (Rounded Up / Rounded Down); vitest for each display builder; BUILD_VALIDATION smoke on each creator.
+  notes: |
+    Reused AdvancedCalculationsPanel groups. Power duration extra stays on empowered power side only. Item Combined Pricing uses Rounded Down. Wired buildTechniqueAdvancedCalculationGroups, buildEmpoweredAdvancedCalculationGroups, buildItemAdvancedCalculationGroups; dropped flat ceil/toFixed rows on the three creators.
+
+- id: TASK-922
+  title: Power creator Advanced Calculations sectioned energy breakdown
+  created_at: 2026-09-03
+  completed_at: 2026-09-03
+  created_by: owner
+  implemented_by: agent
+  follow_up_tasks:
+    - TASK-923
+  priority: high
+  status: done
+  verification_status: pending-qa
+  build_validation: |
+    suite: DEV-V-058
+    tests:
+      - DEV-V-058-T001
+      - DEV-V-058-T002
+  developer_test_plan: |
+    Suite DEV-V-058 T001-T002 - see BUILD_VALIDATION.md. Vitest: power-energy-breakdown.test.ts + power-calc.test.ts.
+  related_files:
+    - src/lib/calculators/power-calc.ts
+    - src/lib/calculators/power-energy-breakdown.ts
+    - src/lib/calculators/power-energy-breakdown.test.ts
+    - src/lib/calculators/power-mechanic-constants.ts
+    - src/lib/calculators/index.ts
+    - src/components/creator/advanced-calculations-panel.tsx
+    - src/components/creator/index.ts
+    - src/app/(main)/power-creator/power-creator-cost-derivation.ts
+    - src/app/(main)/power-creator/use-power-creator-workspace.ts
+    - src/app/(main)/power-creator/page.tsx
+    - src/docs/ai/FEATURE_INDEX.md
+    - src/docs/ai/BUILD_VALIDATION.md
+    - src/docs/ai/DEVELOPER_TASK_QUEUE.md
+  description: |
+    Advanced Calculations should show raw Energy (no Training Points) per part/property, grouped by creator section, plus how percentages, duration extra, and rounding combine. Display-only; do not change calculatePowerCosts. Start with power creator.
+  acceptance_criteria:
+    - Power creator Advanced Calculations lists contributing sections (Action Type, Attack, Range, Area of Effect, Duration, Damage, Power Parts, Mechanics) and omits sections with no Energy contribution.
+    - Per-part Energy is the same raw contribution used by calculatePowerCosts; percentages show as +X% / -X%; duration extra is visible; final line is Rounded Up / Energy Cost (no ceil/floor jargon; no extra decimals on whole numbers).
+    - Sidebar Energy total is unchanged vs pre-change math (vitest + smoke). Technique/item/empowered keep the old flat rows until TASK-923.
+    - npm run build; power-energy-breakdown + power-calc tests; DEV-V-058.
+  notes: |
+    Shared panel gained optional groups (other creators still pass rows). analyzePowerEnergy is the single energy equation; display lives in power-energy-breakdown.ts.
+
+---
+- id: TASK-920
+  title: Weapon Ability utilized (Finesse/Heavy mechanic)
+  created_at: 2026-09-03
+  completed_at: 2026-09-03
+  created_by: owner
+  implemented_by: agent
+  priority: high
+  status: done
+  verification_status: pending-qa
+  build_validation: |
+    suite: DEV-V-018
+    tests:
+      - DEV-V-018-T021
+  developer_test_plan: |
+    Suite DEV-V-018 T021 — see BUILD_VALIDATION.md. Optional sheet smoke in the same test; creature parity DEV-V-025-T004 mentions Heavy ranged.
+  related_files:
+    - src/app/(main)/item-creator/item-creator-editor-weapon-shield.tsx
+    - src/app/(main)/item-creator/item-creator-editor-config.ts
+    - src/app/(main)/item-creator/item-creator-editor.tsx
+    - src/app/(main)/item-creator/item-creator-bootstrap.ts
+    - src/app/(main)/item-creator/item-creator-cost-derivation.ts
+    - src/app/(main)/item-creator/use-item-creator-workspace.ts
+    - src/app/(main)/item-creator/page.tsx
+    - src/lib/game/weapon-attack-ability.ts
+    - src/lib/game/weapon-attack-ability.test.ts
+    - src/lib/calculators/item-calc.ts
+    - src/lib/calculators/item-calc-range.test.ts
+    - src/lib/detail-option/compact-facts.ts
+    - src/lib/detail-option/compact-facts.test.ts
+    - src/lib/id-constants.ts
+    - src/docs/GAME_RULES.md
+    - src/docs/ai/FEATURE_INDEX.md
+    - scripts/seed-data/properties.csv
+    - sql/codex-properties-finesse-heavy-mechanic-proposed.sql
+    - src/docs/ai/BUILD_VALIDATION.md
+    - src/docs/ai/DEVELOPER_TASK_QUEUE.md
+  description: |
+    Add Ability utilized to Weapon Configuration so the creator matches sheet Martial Bonus. Defaults: melee / reach / thrown → Strength; ranged → Acuity. Author may switch to Agility (Finesse, mechanic) or, for ranged, Strength (Heavy, mechanic). Dropdown shows the current ability; changing it writes the matching mechanic property and drops the other. Update getWeaponAttackAbility so Heavy ranged weapons use Strength. Finesse and Heavy leave the add-property list.
+  acceptance_criteria:
+    - Weapon Configuration has a labeled Ability utilized control; default follows TASK-919 range type; options are the legal pair (STR↔AGI for melee/reach/thrown; ACU↔STR and AGI/Finesse for ranged as specified).
+    - getWeaponAttackAbility (+ tests) honors Finesse → Agility, Heavy ranged → Strength, Thrown/melee/reach Strength unless Finesse, ranged Acuity unless Heavy/Finesse. Sheet attack bonus uses this helper (no parallel local formula).
+    - Finesse (PROPERTY_IDS.FINESSE 26) and Heavy are mechanic (list filter + compact-fact names). Seed CSV has no Heavy row — audit live codex_properties; propose INSERT/PROPERTY_IDS.HEAVY if missing. Live mechanic updates only after owner apply (sql/ preview).
+    - GAME_RULES Relevant Abilities table includes Heavy ranged → Strength (keep Finesse → Agility, Thrown → Strength).
+    - npm run build + weapon-attack-ability tests. DEV-V-018 + a sheet attack-bonus smoke when marking done.
+  notes: |
+    Live audit 2026-09-03: Finesse id 26 and Heavy id 50 already mechanic=true. PROPERTY_IDS.HEAVY = 50. No Codex INSERT/UPDATE applied. Persist via Finesse/Heavy properties only (no stored ability string). Seed CSV now includes Heavy id 50. Proposed SQL is audit-only: sql/codex-properties-finesse-heavy-mechanic-proposed.sql.
+
+---
+- id: TASK-919
+  title: Weapon range type + preset spaces (Thrown/Reach mechanic)
+  created_at: 2026-09-03
+  completed_at: 2026-09-03
+  created_by: owner
+  implemented_by: agent
+  follow_up_tasks:
+    - TASK-920
+  priority: high
+  status: done
+  verification_status: pending-qa
+  build_validation: |
+    suite: DEV-V-018
+    tests:
+      - DEV-V-018-T020
+  developer_test_plan: |
+    Suite DEV-V-018 T020 - see BUILD_VALIDATION.md
+  related_files:
+    - src/app/(main)/item-creator/item-creator-editor-weapon-shield.tsx
+    - src/app/(main)/item-creator/item-creator-helpers.tsx
+    - src/app/(main)/item-creator/item-creator-bootstrap.ts
+    - src/app/(main)/item-creator/item-creator-cost-derivation.ts
+    - src/app/(main)/item-creator/item-creator-editor-config.ts
+    - src/app/(main)/item-creator/item-creator-editor.tsx
+    - src/app/(main)/item-creator/use-item-creator-workspace.ts
+    - src/app/(main)/item-creator/page.tsx
+    - src/lib/calculators/item-calc.ts
+    - src/lib/calculators/item-calc-range.test.ts
+    - src/lib/calculators/index.ts
+    - src/lib/game/constants.ts
+    - src/lib/game/creator-constants.ts
+    - src/lib/game/weapon-attack-ability.ts
+    - src/lib/game/weapon-attack-ability.test.ts
+    - src/lib/detail-option/compact-facts.ts
+    - src/lib/detail-option/compact-facts.test.ts
+    - src/docs/GAME_RULES.md
+    - src/docs/ai/FEATURE_INDEX.md
+    - sql/codex-properties-thrown-reach-mechanic-proposed.sql
+    - src/docs/ai/BUILD_VALIDATION.md
+    - src/docs/ai/DEVELOPER_TASK_QUEUE.md
+    - src/docs/ai/AI_CHANGELOG.md
+  description: |
+    Replace the Weapon Configuration Range ValueStepper (8 spaces/level only) with a duration-style pair: range type dropdown (Melee / Reach / Ranged / Thrown) then a spaces dropdown when applicable. Thrown and Reach become mechanic properties (built-in UI, not the add-property list). Preset ladders: Thrown 3 + 2 per increase (3, 5, 7, … through mid-30s); Ranged 8 per level capped ~64; Reach 2–6 spaces. Melee has no distance picker. Persist via existing property IDs (RANGE 13, THROWN 25, REACH 41) + display helpers; load must restore type+spaces and keep those rows out of the selectable list.
+  acceptance_criteria:
+    - Creator UI matches power Duration: type select, then value select from a closed list (no freeform stepper for these ladders).
+    - ITEM_PROPERTY_CONSTANTS / formatRange / resolveWeaponRangeDisplay emit the new ladders; unit tests cover melee, reach 2–6, thrown 3/5/…, ranged 8…64, and legacy Range-only saves.
+    - Thrown and Reach are mechanic (codex mechanic: true after owner apply + MECHANIC_PROPERTY_IDS / filterSavedItemPropertiesForList). They do not appear on Add property. Compact facts / GLR still show range honestly (do not chip Thrown/Reach as named list props).
+    - GAME_RULES documents the four types and space ladders. Codex-data: audit live flags → proposed SQL in sql/ → owner apply before mutating codex_properties.
+    - npm run build + item-calc range tests. User-facing: DEV-V-018 tests when marking done.
+  notes: |
+    Live audit 2026-09-03: Range mechanic=true; Thrown/Reach mechanic=false. App MECHANIC_PROPERTY_IDS + PropertyCard filter hide Thrown/Reach from Add property even before the live UPDATE. Proposed SQL: sql/codex-properties-thrown-reach-mechanic-proposed.sql (not applied). Reach display is spaces (2–6); getWeaponAttackAbility treats Reach as Strength. TASK-920 Ability utilized is next.
+
+---
+- id: TASK-913
+  title: Retag leftover always-on 44px slabs onto pointer tiers
+  created_at: 2026-09-03
+  completed_at: 2026-09-03
+  created_by: agent
+  implemented_by: agent
+  parent_task: TASK-901
+  priority: medium
+  status: done
+  verification_status: pending-qa
+  build_validation: |
+    suite: DEV-V-055
+    tests:
+      - DEV-V-055-T009
+  developer_test_plan: |
+    Suite DEV-V-055 T009 � see BUILD_VALIDATION.md
+  related_files:
+    - src/app/(main)/power-creator/power-creator-editor-power-damage.tsx
+    - src/app/(main)/power-creator/power-creator-editor-meta.tsx
+    - src/app/(main)/technique-creator/technique-creator-editor.tsx
+    - src/app/(main)/empowered-technique-creator/empowered-technique-editor-power-damage.tsx
+    - src/app/(main)/empowered-technique-creator/empowered-technique-editor-power-config.tsx
+    - src/app/(main)/empowered-technique-creator/empowered-technique-editor-action-profile.tsx
+    - src/app/(main)/empowered-technique-creator/empowered-technique-editor-technique-parts.tsx
+    - src/app/(main)/empowered-technique-creator/empowered-technique-editor-power-parts.tsx
+    - src/app/(main)/item-creator/item-creator-editor-meta.tsx
+    - src/app/(main)/admin/codex/admin-archetype-path-rows.tsx
+    - src/app/(main)/admin/codex/admin-archetype-editor-level1.tsx
+    - src/app/(main)/admin/roles/page.tsx
+    - src/app/(main)/campaigns/[id]/_components/character-chip.tsx
+    - src/app/(main)/campaigns/[id]/_components/campaign-detail-header.tsx
+    - src/app/(main)/creature-creator/AddCreatureFeatModal.tsx
+    - src/components/creator/collapsible-section.tsx
+    - src/components/character-sheet/edit-species-ancestry-step.tsx
+    - src/components/patterns/select/choice-trait-option-select.tsx
+    - src/components/ui/button-tiers.test.ts
+    - src/docs/MOBILE_UX.md
+    - src/docs/ai/BUILD_VALIDATION.md
+    - src/docs/ai/DEVELOPER_TASK_QUEUE.md
+    - src/docs/ai/AI_CHANGELOG.md
+  description: |
+    After TASK-901, always-on `min-h-[44px]` / `min-w-[44px]` slabs remain on standalone creator native selects/buttons, admin roles, campaign chips, creature-feat modal checkboxes, and similar. Wire those hits onto `touch-tier-standard` / shared Button/IconButton sizes (ADR-0023). Do not retag InnateToggle, list thumbs, image mattes, GLR row chrome, Next `error.tsx` / `global-error.tsx`, or the auth shell.
+  acceptance_criteria:
+    - Named leftover files no longer use always-on 44px min-h/min-w on interactive controls (coarse uses pointer tiers; fine stays compact).
+    - InnateToggle, ListRowThumbnail, image mattes, GLR row chrome, Next error boundaries, and `(auth)/` hits unchanged.
+    - `npm run build`; extend DEV-V-055 (T009) + button-tiers source ratchet if one exists.
+    - `npm run verify:responsive` if layout classes change.
+  notes: |
+    Filed from /global-audit ? /debt 2026-09-03. Implementer. Do not blanket 44�44. DEV-V-055-T009 added in BUILD_VALIDATION.
+
+---
+- id: TASK-912
+  title: Delete the Legacy 9-step character creator
+  created_at: 2026-09-02
+  completed_at: 2026-09-02
+  created_by: owner
+  implemented_by: agent
+  priority: high
+  status: done
+  verification_status: pending-qa
+  related_files:
+    - src/app/(main)/characters/new/page.tsx
+    - src/app/(main)/characters/new/guided/page.tsx
+    - next.config.ts
+    - src/stores/guided-creator-store.ts
+    - src/lib/game/unarmed-prowess.ts
+    - src/lib/character/build-creator-skills.ts
+    - src/docs/ai/FEATURE_INDEX.md
+    - src/docs/ai/BUILD_VALIDATION.md
+    - src/docs/ai/DEVELOPER_TASK_QUEUE.md
+    - src/docs/REALMS_PRODUCT_OVERVIEW.md
+  description: |
+    Fully remove the retired 9-step tabbed character creator at /characters/new/advanced without damaging Guided/Custom (/characters/new/guided) or standalone entity creators (src/components/creator/). Audit report 02 ordered deletion after shared extracts (TASK-798/820/791/790).
+  acceptance_criteria:
+    - No live 9-step wizard; /characters/new/advanced redirects to the chooser.
+    - Chooser is Guided + Custom only.
+    - Guided funnel and standalone /power-creator (and peers) still load.
+    - Shared extracts remain (AbilityPickButton, MixedSpeciesModal, PathHelpCard, TraitSection, CreatorPortraitUpload, MixedSpeciesSkillPicker, unarmed prowess, build-creator-skills).
+    - BUILD_VALIDATION DEV-V-001 superseded; DEV-V-013 T075/T094 added.
+    - npm run typecheck / lint / targeted tests / build.
+  notes: |
+    Do not touch src/components/guided-creator/ except comments. Do not delete src/components/creator/.
+  build_validation: |
+    suite: DEV-V-013
+    tests:
+      - DEV-V-013-T075
+      - DEV-V-013-T094
+  developer_test_plan: |
+    Suite DEV-V-013 T075/T094 plus Guided Path L1 + Custom Path L3 smoke and /power-creator. DEV-V-001 T001-T021 superseded.
+
+---
+
+- id: TASK-911
+  title: Your Hero Create leftover review (click to jump)
+  created_at: 2026-09-02
+  completed_at: 2026-09-02
+  created_by: owner
+  implemented_by: agent
+  priority: high
+  status: done
+  verification_status: pending-qa
+  related_files:
+    - src/lib/guided-creator/reveal-blockers.ts
+    - src/lib/guided-creator/reveal-blockers.test.ts
+    - src/components/guided-creator/guided-reveal-review-modal.tsx
+    - src/components/guided-creator/steps/reveal-step.tsx
+    - src/components/guided-creator/steps/skills-step.tsx
+    - src/components/guided-creator/guided-health-energy-section.tsx
+    - src/lib/constants/copy/guided-creator-copy.ts
+    - src/lib/guided-creator/skill-reconcile.ts
+    - src/lib/guided-creator/skill-reconcile.test.ts
+    - src/docs/ai/FEATURE_INDEX.md
+    - src/docs/MOBILE_UX.md
+    - src/docs/ai/BUILD_VALIDATION.md
+    - src/docs/ALL_FEEDBACK_CLEAN.md
+    - src/docs/ai/DEVELOPER_TASK_QUEUE.md
+    - src/docs/ai/AI_CHANGELOG.md
+  build_validation: |
+    suite: DEV-V-013
+    tests:
+      - DEV-V-013-T093
+  developer_test_plan: |
+    Suite DEV-V-013 T093 � see BUILD_VALIDATION.md
+  description: |
+    Your Hero greying Create with "earlier chapters still need choices" hid the usual
+    leftovers (name, HP/EN, unspent Skill points). Owner wanted Create clickable and
+    a review of what is still needed, with rows that jump back � Legacy Finalize but better.
+  acceptance_criteria:
+    - Create character stays clickable when leftovers remain (not greyed with no explanation).
+    - Pressing Create opens a leftover review: name, Health/Energy, Skill/Ability points, unfinished chapters.
+    - Each row jumps to that field or chapter. Identity fields stay labeled optional.
+    - Save does not run until the leftover list is empty.
+    - No new shared/ui file. npm test for reveal-blockers. BUILD_VALIDATION T093.
+  notes: |
+    Rail satisfaction is a structural floor; Skills/Abilities footers still require spending
+    the pool. Chapter-rail onto Reveal could skip that. Review is the last-step catch.
+
+---
+- id: TASK-910
+  title: ValueStepper + visible in light/dark, including disabled
+  created_at: 2026-09-02
+  completed_at: 2026-09-02
+  created_by: owner
+  implemented_by: agent
+  priority: high
+  status: done
+  verification_status: pending-qa
+  related_files:
+    - src/app/globals.css
+    - src/components/patterns/select/selection-toggle.tsx
+    - src/components/patterns/list/grid-list-row.tsx
+    - src/components/patterns/list/grid-list-row-collapsed.tsx
+    - src/lib/detail-option/builders.ts
+    - src/docs/DESIGN_SYSTEM.md
+    - src/docs/ai/ADR/0002-unified-value-stepper.md
+    - src/docs/ai/BUILD_VALIDATION.md
+    - src/docs/ai/DEVELOPER_TASK_QUEUE.md
+    - src/docs/ALL_FEEDBACK_CLEAN.md
+  build_validation: |
+    suite: DEV-V-016
+    tests:
+      - DEV-V-016-T036
+  developer_test_plan: |
+    Suite DEV-V-016 T036 - see BUILD_VALIDATION.md
+  description: |
+    The stepper + glyph is hard to see in light and dark, especially when greyed out
+    (at max / unclickable). .btn-stepper disabled used 	ext-border-light on
+    transparent; GLR rows also drop the surface-alt fill.
+  acceptance_criteria:
+    - Enabled +/- glyphs use 	ext-text-primary (still .btn-stepper, no domain tints).
+    - Disabled +/- uses 	ext-text-muted (not 	ext-border-light); the + stays readable.
+    - Light and dark; GLR Uses/Qty and non-GLR steppers (sheet HP/EN).
+    - BUILD_VALIDATION DEV-V-016-T036.
+  notes: |
+    ADR-0002 still forbids colored stepper pills. SelectionToggle disabled + dropped
+    opacity-40 so greyed-out add is not invisible. Follow-up: disabled .btn-stepper keeps the surface-alt plate; GLR disabled rows do not stack opacity-50 on the +.
+
+---
+- id: TASK-909
+  title: GLR keep column facts in the header; description only when expanded
+  created_at: 2026-09-02
+  completed_at: 2026-09-02
+  created_by: owner
+  implemented_by: agent
+  priority: high
+  status: done
+  verification_status: pending-qa
+  related_files:
+    - src/components/patterns/list/grid-list-row.tsx
+    - src/components/patterns/list/grid-list-row-collapsed.tsx
+    - src/components/patterns/list/grid-list-row-expanded.tsx
+    - src/components/patterns/list/grid-list-row-columns.ts
+    - src/components/patterns/list/grid-list-row-columns.test.ts
+    - src/components/patterns/list/entity-library-sections-columns.ts
+    - src/components/patterns/list/entity-library-feats.tsx
+    - src/components/patterns/list/detail-option-list.tsx
+    - src/components/patterns/list/creature-stat-block-helpers.ts
+    - src/components/patterns/list/creature-stat-block-panels.tsx
+    - src/components/character-sheet/library-feat-rows.tsx
+    - src/components/character-sheet/library-feat-rows.test.ts
+    - src/components/character-sheet/library-entity-rows.tsx
+    - src/docs/MOBILE_UX.md
+    - src/docs/ai/FEATURE_INDEX.md
+    - src/docs/ai/ADR/0016-glr-fact-catalog.md
+    - src/docs/ai/BUILD_VALIDATION.md
+    - src/docs/ai/DEVELOPER_TASK_QUEUE.md
+    - src/docs/ALL_FEEDBACK_CLEAN.md
+  build_validation: |
+    suite: DEV-V-016
+    tests:
+      - DEV-V-016-T035
+      - DEV-V-016-T029
+      - DEV-V-016-T033
+      - DEV-V-016-T034
+  developer_test_plan: |
+    Suite DEV-V-016 T035 (+ T029 / T033 / T034) - see BUILD_VALIDATION.md
+  description: |
+    TASK-868/898 moved GLR column facts into the expanded body. Owner: glance facts
+    (Action, damage, area, duration, energy, Uses, Recovery, Qty) should stay under
+    ListHeader even while expanded. Truncated Description columns are useless --
+    full description already belongs in the expanded panel.
+  acceptance_criteria:
+    - Expanded GLR rows keep Action/Damage/Uses/etc. in the header (and mobile summary);
+      those facts are not repeated as labeled stats in the expanded body.
+    - Description is not a truncated collapsed column; expand to read the full description.
+    - Blank / dash / none columns stay omitted.
+    - BUILD_VALIDATION DEV-V-016-T035 (T029/T033/T034 updated so they do not contradict).
+  notes: |
+    Interactive Uses/Qty steppers stay in their header tracks (skip truncate on ReactNode
+    cells). Mobile summary stays visible while expanded so phone layouts still have the
+    facts without ListHeader.
+
+---
+- id: TASK-908
+  title: Sheet header identity width + compact quick-ref tiles
+  created_at: 2026-09-02
+  completed_at: 2026-09-02
+  created_by: owner
+  implemented_by: agent
+  priority: high
+  status: done
+  verification_status: pending-qa
+  related_files:
+    - src/components/character-sheet/sheet-header.tsx
+    - src/components/character-sheet/sheet-large-stat-block.tsx
+    - src/components/character-sheet/sheet-header-identity.tsx
+    - src/docs/MOBILE_UX.md
+    - src/docs/ai/FEATURE_INDEX.md
+    - src/docs/ai/ADR/0023-responsive-layout-contracts.md
+    - src/docs/ai/BUILD_VALIDATION.md
+    - src/docs/ALL_FEEDBACK_CLEAN.md
+    - src/docs/ai/DEVELOPER_TASK_QUEUE.md
+  build_validation: |
+    suite: DEV-V-009
+    tests:
+      - DEV-V-009-T079
+      - DEV-V-009-T060
+      - DEV-V-009-T069
+  developer_test_plan: |
+    Suite DEV-V-009 T079 (+ T060 / T069) - see BUILD_VALIDATION.md
+  description: |
+    Owner: sheet header identity (name/race/archetype/level/XP) is too thin -- name
+    truncated, details wrap. The four quick-ref tiles are too big, wrap as a 2x2, and
+    steal header space. They should stay in a row unless compact enough to wrap.
+  acceptance_criteria:
+    - Identity column is not capped at 20rem; a typical name is visible on desktop.
+    - Speed/Evasion/DR/Crit tiles are compact (not aspect-square giants).
+    - Four tiles in one row from xl; 2x2 only on phone and the 1024 3-col band.
+    - Resources (AP/Health/Energy) still work. No new shared/ui file.
+  notes: |
+    Root cause was TASK-839/885: xl identity max 20rem + lg:grid-cols-2 + aspect-square.
+    TASK-908 uses identity-weighted tracks, auto middle cluster, line-clamp-2 name.
+
+---
+- id: TASK-907
+  title: Mobile sheet column scroll and drop carousel fade
+  created_at: 2026-09-02
+  completed_at: 2026-09-02
+  created_by: owner
+  implemented_by: agent
+  priority: high
+  status: done
+  verification_status: pending-qa
+  related_files:
+    - src/components/character-sheet/character-sheet-body.tsx
+    - src/components/character-sheet/sheet-mobile-carousel.ts
+    - src/components/character-sheet/sheet-mobile-carousel.test.ts
+    - src/app/globals.css
+    - src/components/ui/tab-navigation.test.ts
+    - scripts/mobile-audit-auth.mjs
+    - src/docs/MOBILE_UX.md
+    - src/docs/ai/FEATURE_INDEX.md
+    - src/docs/ai/ADR/0023-responsive-layout-contracts.md
+    - src/docs/ai/BUILD_VALIDATION.md
+    - src/docs/ai/DEVELOPER_TASK_QUEUE.md
+    - src/docs/ALL_FEEDBACK_CLEAN.md
+    - src/docs/ai/AI_CHANGELOG.md
+    - src/docs/ai/ACTIVE_TASKS.md
+    - src/docs/ai/archive/TASK_QUEUE_DONE.md
+  build_validation: |
+    suite: DEV-V-009
+    tests:
+      - DEV-V-009-T078
+      - DEV-V-009-T064
+      - DEV-V-009-T075
+  developer_test_plan: |
+    Suite DEV-V-009 T078 (+ T064 / T075) - see BUILD_VALIDATION.md
+  description: |
+    Owner: scrolling the mobile sheet jump-clips at the header/panel boundary, and
+    the C1 left/right fade greys out the main panel content.
+  acceptance_criteria:
+    - Vertical scroll is one column scroller; header stays in flow (no max-h-0 jump).
+    - Inactive snap panels do not stretch the page to the tallest sibling.
+    - No grey fade mask on the carousel; C1 affordance is a sticky compact SegmentedControl.
+    - Horizontal snap and PageContainer gutter alignment still hold.
+    - npm run build; unit tests for snap math; DEV-V-009 T078.
+  completed_work: |
+    **Deleted** sheet-mobile-header-collapse (+test) and the carousel tab-strip fade mask.
+    **Wired** data-sheet-mobile-column overflow-y-auto; inactive panels height 0 while
+    panning locks height; vertical pan on the carousel forwards to the column.
+    **Added** sticky compact SegmentedControl (Abilities / Skills / Archetype / Library).
+  notes: |
+    Follow-up to TASK-868 / TASK-902. Tab-strip fade/chevrons on TabNavigation unchanged.
+- id: TASK-906
+  title: GLR expanded Uses (and similar controls) sit beside their labels
+  created_at: 2026-09-02
+  completed_at: 2026-09-02
+  created_by: owner
+  implemented_by: agent
+  priority: high
+  status: done
+  verification_status: pending-qa
+  related_files:
+    - src/components/patterns/list/grid-list-row-expanded.tsx
+    - src/components/patterns/list/grid-list-row-columns.ts
+    - src/components/patterns/list/grid-list-row-columns.test.ts
+    - src/components/character-sheet/library-feat-rows.tsx
+    - src/components/character-sheet/library-entity-rows.tsx
+    - src/docs/MOBILE_UX.md
+    - src/docs/ai/FEATURE_INDEX.md
+    - src/docs/ai/BUILD_VALIDATION.md
+  build_validation: |
+    suite: DEV-V-016
+    tests:
+      - DEV-V-016-T034
+      - DEV-V-016-T033
+  developer_test_plan: |
+    Suite DEV-V-016 T034 (+ T033 regression) — see BUILD_VALIDATION.md
+  description: |
+    Owner: mobile expanded GLR feats/traits with uses show the uses control way off
+    center, not adjacent to the Uses: title. Same shared expanded-body path as other
+    GLR ReactNode columns (equipment Qty). Fix globally in GridListRow, not a local
+    feat-row bandaid.
+  acceptance_criteria:
+    - Expanded GLR column facts keep label + value on one row (items-center), including
+      interactive steppers.
+    - Uses steppers are adjacent to Uses: (not stacked and centered in leftover width).
+    - Interactive stats still span a full two-column row so they cannot overlap Recovery.
+    - Same layout for other ReactNode columns (sheet equipment Qty).
+    - npm test grid-list-row-columns; no new shared/ui file.
+  notes: |
+    TASK-898 stacked interactive values (flex-col) to avoid header-track overlap.
+    Expanded body already uses its own 2-col grid; stacking plus justify-center was
+    the centering bug. No new patterns/ui.
+
+---
+
+- id: TASK-905
+  title: Realms rulebook outline, search, and formatting
+  created_at: 2026-09-02
+  completed_at: 2026-09-02
+  created_by: owner
+  implemented_by: agent
+  priority: high
+  status: done
+  verification_status: pending-qa
+  related_files:
+    - src/content/rules/chapters.json
+    - src/lib/rules/rulebook.ts
+    - src/lib/rules/rulebook-search.ts
+    - src/lib/rules/rulebook-search-load.ts
+    - src/lib/rules/rulebook-callout.ts
+    - src/components/rules/rulebook-nav.tsx
+    - src/components/rules/rulebook-search.tsx
+    - src/components/rules/rulebook-shell.tsx
+    - src/components/rules/rulebook-pager.tsx
+    - src/components/rules/rulebook-article.tsx
+    - src/app/(main)/rules/page.tsx
+    - src/app/(main)/rules/[slug]/page.tsx
+    - src/mdx-components.tsx
+    - src/lib/constants/copy/rules-copy.ts
+  build_validation: |
+    suite: DEV-V-053
+    tests:
+      - DEV-V-053-T007
+  developer_test_plan: |
+    Suite DEV-V-053 T007 — see BUILD_VALIDATION.md
+  description: |
+    Owner: `/rules` should match the Google Doc outline (Encounters → Combat/Skill;
+    Character Creation & Leveling → Roll-Tables; Equipment, Crafting & Downtime →
+    Crafting & Harvesting + Downtime), restore lost box/list separation, provide
+    global rulebook search (Ctrl+F cannot span chapter routes), and stop duplicating
+    the chapter list on first open (left nav + middle index).
+  acceptance_criteria:
+    - Left nav is nested like the manuscript (subchapters indented under parents; top-level numbering only).
+    - `/rules` opens Welcome content with that nav — no second chapter index in the main column.
+    - SearchInput in rulebook chrome finds text across all MDX chapters and links to `/rules/[slug]#heading`.
+    - 1-column “boxed text” markdown tables render as callouts, not wide TableScroll grids.
+    - Combat/Skill pages do not repeat the chapter title as the first MDX heading; section headings remain sequential (h1 → h2).
+    - Google Doc stays view-source / new-tab only (no iframe).
+    - `npm run build`; unit tests for nav tree + search; DEV-V-053 T007.
+  notes: |
+    Extends ADR-0021 chrome in `components/rules/` (no new shared/ui). Keep `/rules/[slug]` chapter URLs.
+    Nested outline + Welcome landing + rulebook search + callout asides verified in browser.
+
+---
+
+- id: TASK-901
+  title: Pointer-tier remaining always-on min-h-[44px] slabs (TASK-865 leftovers)
+  created_at: 2026-08-22
+  completed_at: 2026-09-02
+  created_by: agent
+  implemented_by: agent
+  priority: medium
+  status: done
+  verification_status: pending-qa
+  related_files:
+    - src/components/character-sheet/edit-archetype-modal.tsx
+    - src/app/(main)/crafting/[id]/_components/crafting-item-options-section.tsx
+    - src/app/(main)/crafting/[id]/_components/crafting-optional-rules-section.tsx
+    - src/app/(main)/crafting/[id]/_components/crafting-rolls-section.tsx
+    - src/app/(main)/encounters/page.tsx
+    - src/app/(main)/encounters/[id]/_components/skill/skill-participant-card.tsx
+    - src/docs/MOBILE_UX.md
+    - src/docs/ai/ADR/0023-responsive-layout-contracts.md
+    - src/components/ui/button-tiers.test.ts
+    - src/docs/ai/BUILD_VALIDATION.md
+    - src/docs/ai/DEVELOPER_TASK_QUEUE.md
+    - src/docs/ai/AI_CHANGELOG.md
+    - src/docs/ai/ACTIVE_TASKS.md
+  build_validation: |
+    suite: DEV-V-055
+    tests:
+      - DEV-V-055-T008
+  developer_test_plan: |
+    Suite DEV-V-055 T008 � see BUILD_VALIDATION.md
+  description: |
+    `/global-audit` 2026-08-22: TASK-865 cleared viewport `md:min-h-*` shrinks, but left
+    always-on `min-h-[44px]` (no `@media (pointer: coarse)`) on crafting options/rules/rolls,
+    edit-archetype modal cards, encounters hub icons, and skill-participant-card. Owner ack
+    was required before retagging those surfaces onto pointer tiers / Button sizes / `.hit-area-*`.
+  acceptance_criteria:
+    - Named surfaces use pointer tiers (coarse Standard/Primary as appropriate; fine compact) � no always-on 44 layout slab on fine pointer unless product-intentional and documented.
+    - Do not retag list thumbs, image mattes, or InnateToggle.
+    - Extend `button-tiers.test.ts` ratchet; add DEV-V-055 T008; `/characters/new/advanced` still loads.
+    - Owner ack recorded in notes or chat before implement (gated from /debt).
+  completed_work: |
+    - Retagged Edit Archetype outline buttons onto shared `Button` (no min-h slab); SelectionCard + type cards use `touch-tier-standard`.
+    - Crafting checkbox labels + raw selects use `touch-tier-standard` (+ `h-10`); rolls `Input` dropped redundant min-h (shared Input already Standard).
+    - Encounters hub Mark complete / Delete: Dense `IconButton size="sm"` without always-on 44 square.
+    - Skill participant: initiative coarse square; RM/roll `touch-tier-standard`; Clear/Remove `IconButton`; Submit/Helping rely on `Button size="sm"` Dense hit; status badges no min-h slab.
+    - Extended `button-tiers.test.ts`; added DEV-V-055 T008; updated MOBILE_UX + ADR-0023 note.
+  notes: |
+    Filed from /debt after /global-audit. Do not fold USM migrations or AdminArchetypes shell.
+    Keep `/characters/new/advanced`. Live codex/schema out of scope.
+    **Owner ack 2026-09-02 (chat):** proceed with pointer-tier retags on named surfaces.
 - id: TASK-903
   title: Stop tab-focus session recovery from wiping React Query / UI state
   created_at: 2026-08-24
@@ -26227,3 +27247,194 @@ Firebase/RTDB - the project is Supabase-only.
   notes: |
     Owner remainder: DEV-015 / DEV-Q08 Dashboard CAPTCHA + rate limits + HIBP. Deploy frontend before enabling Supabase CAPTCHA.
   developer_test_plan: DEV-V-007 T006âT007 after DEV-015
+
+- id: TASK-904
+  title: Guest local character — view/play a created sheet without signing in
+  created_at: 2026-09-02
+  created_by: owner
+  priority: high
+  status: done
+  verification_status: pending-qa
+  completed_at: 2026-09-02
+  related_files:
+    - src/lib/guest-character-storage.ts
+    - src/lib/guest-character-storage.test.ts
+    - src/lib/guest-character-migration.ts
+    - src/lib/character/persist-finished-character.ts
+    - src/lib/character/persist-finished-character.test.ts
+    - src/services/character-service.ts
+    - src/services/character-service.guest.test.ts
+    - src/hooks/use-characters.ts
+    - src/hooks/use-auth.ts
+    - src/hooks/index.ts
+    - src/components/patterns/chrome/login-prompt-modal.tsx
+    - src/components/guided-creator/steps/reveal-step.tsx
+    - src/components/character-creator/steps/finalize-step.tsx
+    - src/components/character-sheet/use-sheet-resource-actions.ts
+    - src/components/character-sheet/character-sheet-settings-modal.tsx
+    - src/app/(main)/characters/page.tsx
+    - src/app/(main)/characters/[id]/page.tsx
+    - src/app/(main)/characters/[id]/use-character-sheet-page-data.ts
+    - src/app/(main)/characters/[id]/use-character-sheet-page.ts
+    - src/app/(auth)/login/page.tsx
+    - src/app/(main)/campaigns/page.tsx
+    - src/app/(main)/campaigns/[id]/_components/use-campaign-detail-page.ts
+    - src/lib/portrait.ts
+    - src/lib/crop-image.ts
+    - src/docs/ai/ADR/0026-guest-local-characters.md
+    - src/docs/REALMS_PRODUCT_OVERVIEW.md
+    - src/docs/ai/FEATURE_INDEX.md
+    - src/docs/human/USER_EXPERIENCE_GOALS.md
+    - src/docs/ai/BUILD_VALIDATION.md
+    - src/docs/ai/DEVELOPER_TASK_QUEUE.md
+  build_validation: |
+    suite: DEV-V-051 / DEV-V-001 / DEV-V-009
+    tests:
+      - DEV-V-051-T002
+      - DEV-V-051-T011
+      - DEV-V-001-T019
+      - DEV-V-009-T077
+  description: |
+    Guests can finish Guided/Legacy create but cannot open a playable sheet without an account.
+    Continue Without Saving only dismissed LoginPromptModal. Owner wanted try-the-game:
+    continue without signing in, persist the finished character locally, open the real sheet.
+  acceptance_criteria:
+    - Owner ack on DEV-Q09 (cap, sheet depth, migrate-on-sign-in, copy) recorded in notes or chat before code.
+    - After ack: guest finalize tertiary writes a finished character to localStorage (`local-` id), navigates to `/characters/local-…`, and the existing sheet shell loads it without hitting create/PATCH APIs.
+    - `/characters` lists those local cards for signed-out users (same CharacterCard grid, not a parallel dashboard).
+    - Sign-in migrates local characters onto the account (same best-effort pattern as guest encounters) and local copies are cleared on success.
+    - `local-` ids never call `/api/characters/[id]` (IDOR/404 hygiene). Campaigns, My Library add, and share-to-another-device stay account-gated.
+    - Library / creator Load LoginPromptModal keep dismiss-only tertiary copy (Continue Without Loading / Saving). Only character finalize/reveal gets the local-save path.
+    - Banner or equivalent: this character lives in this browser; sign in to keep it.
+    - ADR in `src/docs/ai/ADR/` after owner picks the option (or explicit owner ack that notes are enough).
+    - `npm run build`; targeted tests for storage + `isGuestCharacterId` routing; BUILD_VALIDATION guest finalize + list + sheet.
+  completed_work: |
+    Owner ack DEV-Q09 2026-09-02. ADR-0026. Guest storage (`local-` ids, cap 3, portrait clip), service IDOR branch, persistFinishedCharacter, migrate on SIGNED_IN, LoginPromptModal local continue, sheet banner + locked visibility, campaign join filter.
+  notes: |
+    Clone of guest encounters. Rejected: dismiss-only rename, anonymous DB rows, second guest sheet UI.
+  developer_test_plan: DEV-V-051 T002/T011, DEV-V-001 T019, DEV-V-009 T077
+
+
+---
+
+- id: TASK-918
+  title: Armament creator Item Type selector contrast
+  created_at: 2026-09-03
+  created_by: owner
+  priority: high
+  status: done
+  completed_at: 2026-09-03
+  verification_status: pending-qa
+  build_validation: |
+    suite: DEV-V-018
+    tests:
+      - DEV-V-018-T019
+  developer_test_plan: |
+    Suite DEV-V-018 T019 - see BUILD_VALIDATION.md
+  related_files:
+    - src/app/(main)/item-creator/item-creator-editor-meta.tsx
+    - src/app/(main)/item-creator/item-creator-helpers.tsx
+    - src/components/patterns/chrome/segmented-control.tsx
+    - src/docs/ai/FEATURE_INDEX.md
+    - src/docs/DESIGN_SYSTEM.md
+    - src/docs/ACCESSIBILITY.md
+  description: |
+    /item-creator Item Type (Weapon / Armor / Shield) custom four-column button grid blended into the Card. Replaced with shared SegmentedControl (same as handedness TASK-866). Three options only.
+  acceptance_criteria:
+    - Item Type uses SegmentedControl with visible border/plate vs Card in light and dark.
+    - Weapon / Armor / Shield only; Accessory not reintroduced.
+    - Switching type still swaps editor sections.
+    - npm run build; DEV-V-018-T019 added.
+  notes: |
+    Owner 2026-09-03. Implemented: shared SegmentedControl (icons kept). DEV-V-018-T019 pending-qa.
+
+---
+
+- id: TASK-921
+  title: Power & technique targeted defenses (parts + creator + display)
+  created_at: 2026-09-03
+  created_by: owner
+  priority: high
+  status: done
+  completed_at: 2026-09-03
+  verification_status: pending-qa
+  build_validation: |
+    suite: DEV-V-057
+    tests:
+      - DEV-V-057-T001
+      - DEV-V-057-T002
+      - DEV-V-057-T003
+  developer_test_plan: |
+    Suite DEV-V-057 T001-T003 - see BUILD_VALIDATION.md
+  related_files:
+    - src/lib/game/targeted-defenses.ts
+    - src/lib/game/targeted-defenses.test.ts
+    - src/types/library.ts
+    - src/types/codex.ts
+    - src/types/character.ts
+    - src/lib/calculators/power-calc.ts
+    - src/lib/calculators/technique-calc.ts
+    - src/lib/detail-option/compact-facts.ts
+    - src/lib/chip/list-row-metadata.ts
+    - src/lib/library/official-power-list.ts
+    - src/lib/library/official-technique-list.ts
+    - src/lib/library/part-display.ts
+    - src/components/creator/targeted-defenses-section.tsx
+    - src/components/creator/power-part-card.tsx
+    - src/components/character-sheet/library-entity-rows.tsx
+    - src/components/character-sheet/add-library-item/map-selection.ts
+    - src/app/(main)/power-creator/use-power-creator-workspace.ts
+    - src/app/(main)/technique-creator/use-technique-creator-workspace.ts
+    - src/app/(main)/empowered-technique-creator/use-empowered-technique-creator-workspace.ts
+    - src/docs/GAME_RULES.md
+    - src/docs/ai/BUILD_VALIDATION.md
+    - src/docs/ai/FEATURE_INDEX.md
+  description: |
+    Parts store can-target defenses (codex_parts.defense). Powers/techniques persist payload targetedDefenses (multi-select) in creators; part chips show can-target; list/sheet rows show actual targets. Suggestions from parts, damage types (via damage parts), weapon/unarmed to Evasion.
+  acceptance_criteria:
+    - Payload targetedDefenses round-trips power/technique/empowered save/load.
+    - Creators have ChipSelect Targeted defenses (if any) with * on suggested options (part name / damage / attack source).
+    - Part chips and PowerPartCard show can-target; expanded rows show Targets descriptor chip when set.
+    - Unit tests for suggestion helpers; npm run build.
+  notes: |
+    Implemented targeted-defenses.ts helpers, TargetedDefensesSection in all three creators, chip/fact display, columnar round-trip test. DEV-V-057 pending-qa.
+
+- id: TASK-925
+  title: Creator targeted-defenses identity picker + this-entry asterisks
+  created_at: 2026-09-03
+  created_by: owner
+  priority: high
+  status: done
+  completed_at: 2026-09-03
+  verification_status: pending-qa
+  build_validation: |
+    suite: DEV-V-057
+    tests:
+      - DEV-V-057-T001
+      - DEV-V-057-T002
+      - DEV-V-057-T003
+  developer_test_plan: |
+    Suite DEV-V-057 T001-T003 - see BUILD_VALIDATION.md
+  related_files:
+    - src/components/creator/targeted-defenses-section.tsx
+    - src/lib/game/targeted-defenses.ts
+    - src/lib/game/targeted-defenses.test.ts
+    - src/components/patterns/filters/chip-select.tsx
+    - src/components/creator/power-part-card.tsx
+    - src/app/(main)/power-creator/power-creator-editor.tsx
+    - src/app/(main)/power-creator/power-creator-editor-meta.tsx
+    - src/app/(main)/power-creator/power-creator-editor-power-damage.tsx
+    - src/app/(main)/technique-creator/technique-creator-editor.tsx
+    - src/app/(main)/empowered-technique-creator/empowered-technique-editor-meta.tsx
+    - src/app/(main)/empowered-technique-creator/empowered-technique-editor-power-damage.tsx
+    - src/app/(main)/empowered-technique-creator/empowered-technique-editor-technique-parts.tsx
+    - src/docs/ai/BUILD_VALIDATION.md
+  description: |
+    Move Targeted Defenses out of its own collapsible into identity chrome. Asterisks name this entry's selected parts / damage types / attack mode only. Damage rows and added-part cards surface can-target.
+  acceptance_criteria:
+    - No standalone Targeted Defenses collapsible on power/technique/empowered creators.
+    - ChipSelect in identity card; empty creator has no asterisks; selected parts/damage/attack mark 1-3 options with part name or damage type.
+    - Damage section shows Can target; added parts show Targets descriptor chip.
+    - Unit tests; npm run build for in-scope files.
+  notes: |
+    Owner 2026-09-03. ChipSelect chipLabel keeps selected chips as defense names. TASK-924 is the Codex fill follow-up.

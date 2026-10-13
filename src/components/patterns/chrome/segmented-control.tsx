@@ -22,8 +22,10 @@ export interface SegmentedControlProps<T extends string> {
   value: T;
   onChange: (value: T) => void;
   options: SegmentedOption<T>[];
-  /** Accessible name for the control group */
-  'aria-label': string;
+  /** Accessible name for the control group (omit when `aria-labelledby` is set) */
+  'aria-label'?: string | undefined;
+  /** Visible label id; preferred over `aria-label` when both could apply */
+  'aria-labelledby'?: string | undefined;
   className?: string | undefined;
   /** When true, uses tablist/tab roles (e.g. feat source tabs in a modal) */
   tabs?: boolean | undefined;
@@ -43,6 +45,7 @@ export function SegmentedControl<T extends string>({
   onChange,
   options,
   'aria-label': ariaLabel,
+  'aria-labelledby': ariaLabelledBy,
   className,
   tabs = false,
   tabPanelId,
@@ -50,9 +53,12 @@ export function SegmentedControl<T extends string>({
   size = 'default',
 }: SegmentedControlProps<T>) {
   const compact = size === 'compact';
+  const nameProps = ariaLabelledBy
+    ? { 'aria-labelledby': ariaLabelledBy }
+    : { 'aria-label': ariaLabel };
   const wrapperProps = tabs
-    ? { role: 'tablist' as const, 'aria-label': ariaLabel }
-    : { role: 'group' as const, 'aria-label': ariaLabel };
+    ? { role: 'tablist' as const, ...nameProps }
+    : { role: 'group' as const, ...nameProps };
 
   return (
     <div
@@ -62,7 +68,7 @@ export function SegmentedControl<T extends string>({
         // Hug the pills unless equalWidth stretches the group (TASK-720 size pickers).
         'flex-wrap items-center border border-border-light bg-surface-alt',
         compact ? 'gap-0.5 rounded-md p-0.5' : 'gap-1 rounded-lg p-1',
-        equalWidth ? 'flex w-full' : 'inline-flex w-fit max-w-full',
+        equalWidth ? 'flex w-full flex-nowrap' : 'inline-flex w-fit max-w-full',
         className,
       )}
     >
@@ -103,7 +109,9 @@ export function SegmentedControl<T extends string>({
             className={classNameBtn}
           >
             {opt.icon ? <span className="shrink-0 [&_svg]:shrink-0">{opt.icon}</span> : null}
-            <span className={cn(opt.icon && 'min-w-0 truncate')}>{opt.label}</span>
+            <span className={cn((opt.icon || equalWidth) && 'min-w-0 truncate')} title={opt.label}>
+              {opt.label}
+            </span>
           </button>
         );
       })}

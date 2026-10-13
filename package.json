@@ -5,10 +5,13 @@
   "engines": {
     "node": "24.x"
   },
-  "//overrides": "Transitive pins added by `chore: apply npm audit fixes` (133aa520). postcss 8.5.25 hoists one copy across @tailwindcss/postcss, next and vitest's vite; sharp 0.35.3 pins next's optional image-optimization dep. `npm audit` is clean WITH these pins in place, so neither advisory can be re-confirmed from here: to retire them, delete this block, run `npm install`, then `npm audit` — if it stays at 0 vulnerabilities the pins were leftovers and should stay deleted.",
+  "//overrides": "Transitive pins for the CI production-deps audit gate (`npm audit --audit-level=high --omit=dev`). postcss 8.5.25 hoists one copy across @tailwindcss/postcss, next and vitest's vite; sharp 0.35.5 (high-severity sharp advisory patch; next 16.3.8 still ranges ^0.35.4); js-yaml 4.3.2 (security patch); fast-uri 3.1.8 (security patch under ajv-formats); source-map-js 1.2.2 (security patch under postcss). Known dev-only exception (full-tree report-only step): eslint-config-next → @next/eslint-plugin-next → fast-glob 3.3.1 → micromatch → braces (all braces versions affected, no upstream fix); drop once @next/eslint-plugin-next stops pinning fast-glob 3.3.1. To retire a pin: delete it, npm install, npm audit — keep only if the advisory returns.",
   "overrides": {
     "postcss": "8.5.25",
-    "sharp": "0.35.3"
+    "sharp": "0.35.5",
+    "js-yaml": "4.3.2",
+    "fast-uri": "3.1.8",
+    "source-map-js": "1.2.2"
   },
   "scripts": {
     "dev": "next dev",
@@ -31,7 +34,6 @@
     "verify:auth-visual:update": "npm run build && playwright test -c playwright.auth.config.ts tests/visual/auth-screenshots.pw.ts --update-snapshots",
     "verify:auth-a11y": "npm run build && playwright test -c playwright.auth.config.ts tests/visual/auth-a11y.pw.ts",
     "verify:auth-a11y:update": "npm run build && cross-env UPDATE_AUTH_A11Y_BASELINE=1 playwright test -c playwright.auth.config.ts tests/visual/auth-a11y.pw.ts --workers=1",
-    "verify:creator-audit": "npm run build && playwright test -c playwright.creator-audit.config.ts",
     "verify:shell-creators-audit": "npm run build && playwright test -c playwright.shell-creators-audit.config.ts",
     "verify:responsive": "npm run build && playwright test -c playwright.responsive.config.ts",
     "verify:responsive:update": "npm run build && cross-env UPDATE_RESPONSIVE_BASELINE=1 playwright test -c playwright.responsive.config.ts --workers=1",
@@ -67,7 +69,7 @@
     "@marsidev/react-turnstile": "^1.6.0",
     "@mdx-js/loader": "^3.1.1",
     "@mdx-js/react": "^3.1.1",
-    "@next/mdx": "16.2.12",
+    "@next/mdx": "16.3.8",
     "@radix-ui/react-slot": "^1.2.4",
     "@sentry/nextjs": "^10.70.0",
     "@supabase/ssr": "^0.8.0",
@@ -81,7 +83,7 @@
     "clsx": "^2.1.1",
     "konva": "^10.3.0",
     "lucide-react": "^0.562.0",
-    "next": "16.2.12",
+    "next": "16.3.8",
     "next-themes": "^0.4.6",
     "react": "19.2.3",
     "react-dom": "19.2.3",
@@ -104,7 +106,7 @@
     "cross-env": "^10.1.0",
     "dotenv": "^17.2.4",
     "eslint": "^9",
-    "eslint-config-next": "16.2.12",
+    "eslint-config-next": "16.3.8",
     "eslint-plugin-jsx-a11y": "^6.10.2",
     "husky": "^9.1.7",
     "lint-staged": "^16.4.0",
@@ -112,7 +114,7 @@
     "prettier-plugin-tailwindcss": "^0.7.2",
     "tailwindcss": "^4",
     "typescript": "^5",
-    "vitest": "^4.1.6"
+    "vitest": "^4.1.11"
   },
   "lint-staged": {
     "*.{js,jsx,mjs,cjs,ts,tsx}": [

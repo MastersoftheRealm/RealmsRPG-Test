@@ -6,10 +6,16 @@
 
 'use client';
 
-import { useState, useRef, useEffect, type KeyboardEvent as ReactKeyboardEvent } from 'react';
+import {
+  useState,
+  useRef,
+  useEffect,
+  useCallback,
+  type KeyboardEvent as ReactKeyboardEvent,
+} from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
-import { usePathname, useRouter } from 'next/navigation';
+import { usePathname } from 'next/navigation';
 import { cn } from '@/lib/utils';
 import { useAuth, useAdmin, useProfile } from '@/hooks';
 import { ThemeToggle, InfoTippy } from '@/components/patterns';
@@ -23,9 +29,147 @@ const MOBILE_NAV_ID = 'mobile-nav-panel';
 const FOCUSABLE_SELECTOR =
   'a[href], button:not([disabled]), textarea:not([disabled]), input:not([disabled]), select:not([disabled]), [tabindex]:not([tabindex="-1"])';
 
+/** ClickUp 86e3jw5n1 — close desktop disclosure when focus tabs outside the menu root. */
+export function shouldCloseDisclosureOnFocusLeave(
+  root: HTMLElement,
+  relatedTarget: EventTarget | null,
+): boolean {
+  if (relatedTarget === null) return true;
+  return !root.contains(relatedTarget as Node);
+}
+
+/** ClickUp 86e3jywd8 — pointer down outside the menu root dismisses the menu. */
+export function shouldCloseDisclosureOnOutsidePointer(
+  root: HTMLElement | null,
+  target: EventTarget | null,
+): boolean {
+  if (!root || target === null) return false;
+  return !root.contains(target as Node);
+}
+
+/**
+ * ClickUp 86e3jywd8 — `preventDefault` on pointerdown does not cancel the click
+ * that follows, so the same gesture still activates a character card underneath.
+ * After an outside pointer dismiss, swallow that next outside click in capture.
+ * One-shot, and cleared on timeout if the click never arrives.
+ */
+export const DISMISS_CLICK_SWALLOW_MS = 500;
+
+export function armDismissClickSwallow(options: {
+  documentTarget: EventTarget;
+  isOutside: (target: EventTarget | null) => boolean;
+  timeoutMs?: number;
+  scheduleTimeout?: (callback: () => void, ms: number) => ReturnType<typeof setTimeout>;
+  cancelTimeout?: (id: ReturnType<typeof setTimeout>) => void;
+}): () => void {
+  let armed = true;
+  const timeoutMs = options.timeoutMs ?? DISMISS_CLICK_SWALLOW_MS;
+  const scheduleTimeout = options.scheduleTimeout ?? setTimeout;
+  const cancelTimeout = options.cancelTimeout ?? clearTimeout;
+  const pending: { id?: ReturnType<typeof setTimeout> } = {};
+
+  const onClick = (event: Event) => {
+    if (!armed) return;
+    const swallow = options.isOutside(event.target);
+    disarm();
+    if (!swallow) return;
+    event.preventDefault();
+    event.stopPropagation();
+  };
+
+  function disarm() {
+    if (!armed) return;
+    armed = false;
+    options.documentTarget.removeEventListener('click', onClick, true);
+    if (pending.id !== undefined) cancelTimeout(pending.id);
+  }
+
+  options.documentTarget.addEventListener('click', onClick, true);
+  pending.id = scheduleTimeout(disarm, timeoutMs);
+  return disarm;
+}
+
+function useDisclosureMenu({ closeOnScroll = false }: { closeOnScroll?: boolean } = {}) {
+  const [open, setOpen] = useState(false);
+  const rootRef = useRef<HTMLDivElement>(null);
+  const triggerRef = useRef<HTMLButtonElement>(null);
+  const panelRef = useRef<HTMLDivElement>(null);
+  const openedByKeyboardRef = useRef(false);
+  const dismissSwallowDisarmRef = useRef<(() => void) | null>(null);
+
+  useEffect(() => {
+    return () => {
+      dismissSwallowDisarmRef.current?.();
+      dismissSwallowDisarmRef.current = null;
+    };
+  }, []);
+
+  useEffect(() => {
+    if (!open) return;
+    const onPointerDown = (event: PointerEvent) => {
+      if (!shouldCloseDisclosureOnOutsidePointer(rootRef.current, event.target)) return;
+      setOpen(false);
+      dismissSwallowDisarmRef.current?.();
+      dismissSwallowDisarmRef.current = armDismissClickSwallow({
+        documentTarget: document,
+        isOutside: (target) => shouldCloseDisclosureOnOutsidePointer(rootRef.current, target),
+      });
+    };
+    document.addEventListener('pointerdown', onPointerDown, true);
+    return () => document.removeEventListener('pointerdown', onPointerDown, true);
+  }, [open]);
+
+  useEffect(() => {
+    if (!open) return;
+    const handleEscape = (e: globalThis.KeyboardEvent) => {
+      if (e.key !== 'Escape') return;
+      setOpen(false);
+      triggerRef.current?.focus();
+    };
+    document.addEventListener('keydown', handleEscape);
+    return () => document.removeEventListener('keydown', handleEscape);
+  }, [open]);
+
+  useEffect(() => {
+    if (!open) return;
+    const root = rootRef.current;
+    if (!root) return;
+    const handleFocusOut = (e: FocusEvent) => {
+      if (!shouldCloseDisclosureOnFocusLeave(root, e.relatedTarget)) return;
+      setOpen(false);
+    };
+    root.addEventListener('focusout', handleFocusOut);
+    return () => root.removeEventListener('focusout', handleFocusOut);
+  }, [open]);
+
+  useEffect(() => {
+    if (!open || !openedByKeyboardRef.current) return;
+    openedByKeyboardRef.current = false;
+    const node = panelRef.current;
+    if (node) {
+      const firstFocusable = node.querySelector<HTMLElement>(FOCUSABLE_SELECTOR);
+      (firstFocusable ?? node).focus();
+    }
+  }, [open]);
+
+  useEffect(() => {
+    if (!open || !closeOnScroll) return;
+    const handleScroll = () => setOpen(false);
+    window.addEventListener('scroll', handleScroll, true);
+    return () => window.removeEventListener('scroll', handleScroll, true);
+  }, [open, closeOnScroll]);
+
+  const onTriggerKeyDown = useCallback((e: ReactKeyboardEvent<HTMLButtonElement>) => {
+    if (e.key === 'Enter' || e.key === ' ') {
+      openedByKeyboardRef.current = true;
+    }
+  }, []);
+
+  return { open, setOpen, rootRef, triggerRef, panelRef, onTriggerKeyDown };
+}
+
 export function Header() {
   const pathname = usePathname();
-  const router = useRouter();
   const { user, signOut } = useAuth();
   const { isAdmin } = useAdmin();
   const { profile } = useProfile();
@@ -83,14 +227,18 @@ export function Header() {
     }
   };
 
-  // Handle login click - store current path for redirect after login
-  const handleLoginClick = () => {
-    // Store current path in sessionStorage for redirect after login
-    if (typeof window !== 'undefined') {
-      sessionStorage.setItem('loginRedirect', pathname);
-    }
-    router.push('/login');
-  };
+  // Store the return path before the creator leave guard can cancel the click.
+  useEffect(() => {
+    const rememberLoginRedirect = (event: MouseEvent) => {
+      const target = event.target;
+      if (!(target instanceof Element)) return;
+      const anchor = target.closest('a');
+      if (!anchor || anchor.getAttribute('data-login-link') !== 'header') return;
+      sessionStorage.setItem('loginRedirect', pathname ?? window.location.pathname);
+    };
+    window.addEventListener('click', rememberLoginRedirect, true);
+    return () => window.removeEventListener('click', rememberLoginRedirect, true);
+  }, [pathname]);
 
   return (
     <header className="sticky top-0 z-header h-20 w-full border-b border-divider bg-surface-secondary">
@@ -181,13 +329,13 @@ export function Header() {
             {user ? (
               <AccountDropdown profile={profile} signOut={signOut} />
             ) : (
-              <button
-                type="button"
-                onClick={handleLoginClick}
+              <Link
+                href="/login"
+                data-login-link="header"
                 className="flex min-h-[44px] items-center px-2 text-base font-semibold whitespace-nowrap text-primary-fg transition-colors hover:text-primary-fg-hover 2xl:text-lg"
               >
                 Login
-              </button>
+              </Link>
             )}
 
             {/* Compact / tablet menu (below xl) */}
@@ -278,6 +426,17 @@ interface DropdownItem {
   dropdown?: { href: string; label: string }[] | undefined;
 }
 
+/** ClickUp 86e3jvjj2: hover opens before click; a toggle would immediately close the menu. */
+export function accountMenuPointerClickState(
+  openedByHover: boolean,
+  isOpen: boolean,
+): { open: boolean; consumeHoverFlag: boolean } {
+  if (openedByHover) {
+    return { open: true, consumeHoverFlag: true };
+  }
+  return { open: !isOpen, consumeHoverFlag: false };
+}
+
 function AccountDropdown({
   profile,
   signOut,
@@ -285,30 +444,38 @@ function AccountDropdown({
   profile: { username?: string | null | undefined } | null;
   signOut: () => void;
 }) {
-  const [open, setOpen] = useState(false);
-  const ref = useRef<HTMLDivElement>(null);
-  useEffect(() => {
-    const handleClick = (e: MouseEvent) => {
-      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false);
-    };
-    document.addEventListener('click', handleClick);
-    return () => document.removeEventListener('click', handleClick);
-  }, []);
+  const { open, setOpen, rootRef, triggerRef, panelRef, onTriggerKeyDown } = useDisclosureMenu({
+    closeOnScroll: true,
+  });
+  const openedByHoverRef = useRef(false);
   return (
     <div
-      ref={ref}
+      ref={rootRef}
       className="relative"
-      onMouseEnter={() => setOpen(true)}
-      onMouseLeave={() => setOpen(false)}
+      onMouseEnter={() => {
+        setOpen(true);
+        openedByHoverRef.current = true;
+      }}
+      onMouseLeave={() => {
+        setOpen(false);
+        openedByHoverRef.current = false;
+      }}
     >
       <button
+        ref={triggerRef}
         type="button"
         aria-label="Account menu"
         aria-expanded={open}
         className="flex min-h-11 min-w-11 items-center gap-2"
+        onKeyDown={onTriggerKeyDown}
         onClick={(e) => {
           e.stopPropagation();
-          setOpen((o) => !o);
+          const { open: nextOpen, consumeHoverFlag } = accountMenuPointerClickState(
+            openedByHoverRef.current,
+            open,
+          );
+          if (consumeHoverFlag) openedByHoverRef.current = false;
+          setOpen(nextOpen);
         }}
       >
         <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary-button font-bold text-text-on-dark">
@@ -317,7 +484,10 @@ function AccountDropdown({
       </button>
       {open && (
         <div className="absolute top-full right-0 z-popover pt-2">
-          <div className="w-56 rounded-lg border border-border-light bg-surface py-2 shadow-lg">
+          <div
+            ref={panelRef}
+            className="w-56 rounded-lg border border-border-light bg-surface py-2 shadow-lg"
+          >
             <Link
               href="/my-account"
               className="flex min-h-11 items-center px-4 py-2.5 text-text-secondary hover:bg-surface-alt"
@@ -345,31 +515,38 @@ function AccountDropdown({
   );
 }
 
+/** Creators and the other nav dropdowns share Account's hover-then-click guard. */
 function NavDropdown({ item, pathname }: { item: DropdownItem; pathname: string }) {
-  const [open, setOpen] = useState(false);
-  const ref = useRef<HTMLDivElement>(null);
-  useEffect(() => {
-    const handleClick = (e: MouseEvent) => {
-      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false);
-    };
-    document.addEventListener('click', handleClick);
-    return () => document.removeEventListener('click', handleClick);
-  }, []);
+  const { open, setOpen, rootRef, triggerRef, panelRef, onTriggerKeyDown } = useDisclosureMenu();
+  const openedByHoverRef = useRef(false);
   return (
     <div
-      ref={ref}
+      ref={rootRef}
       className="relative"
-      onMouseEnter={() => setOpen(true)}
-      onMouseLeave={() => setOpen(false)}
+      onMouseEnter={() => {
+        setOpen(true);
+        openedByHoverRef.current = true;
+      }}
+      onMouseLeave={() => {
+        setOpen(false);
+        openedByHoverRef.current = false;
+      }}
     >
       <button
+        ref={triggerRef}
         type="button"
         aria-label={`${item.label} menu`}
         aria-expanded={open}
         className="flex min-h-11 shrink-0 items-center gap-1 text-base font-semibold whitespace-nowrap text-primary-fg transition-colors hover:text-primary-fg-hover 2xl:text-lg"
+        onKeyDown={onTriggerKeyDown}
         onClick={(e) => {
           e.stopPropagation();
-          setOpen((o) => !o);
+          const { open: nextOpen, consumeHoverFlag } = accountMenuPointerClickState(
+            openedByHoverRef.current,
+            open,
+          );
+          if (consumeHoverFlag) openedByHoverRef.current = false;
+          setOpen(nextOpen);
         }}
       >
         {item.label}
@@ -377,7 +554,10 @@ function NavDropdown({ item, pathname }: { item: DropdownItem; pathname: string 
       </button>
       {open && (
         <div className="absolute top-full left-1/2 z-popover -translate-x-1/2 pt-2 before:absolute before:top-0 before:right-0 before:left-0 before:h-2 before:content-['']">
-          <div className="w-48 rounded-lg border border-divider bg-surface-secondary py-2 shadow-lg">
+          <div
+            ref={panelRef}
+            className="w-48 rounded-lg border border-divider bg-surface-secondary py-2 shadow-lg"
+          >
             {item.dropdown?.map((subItem) => (
               <Link
                 key={subItem.href}

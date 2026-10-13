@@ -1,8 +1,12 @@
 import type { PowerPart, TechniquePart } from '@/hooks/codex-types';
-import { calculatePowerCosts, type PowerPartPayload } from './power-calc';
+import {
+  calculatePowerCosts,
+  energyFloorApplies,
+  finalizePowerEnergy,
+  type PowerPartPayload,
+} from './power-calc';
 import { calculateTechniqueCosts, type TechniquePartPayload } from './technique-calc';
 import { findByIdOrName } from '@/lib/id-constants';
-import { dedupeSavedParts } from '@/lib/game/dedupe-saved-parts';
 
 export interface EmpoweredTechniqueCostResult {
   totalEnergy: number;
@@ -31,8 +35,7 @@ export function getTechniquePercentageMultiplier(
   techniquePartsDb: TechniquePart[],
 ): number {
   let multiplier = 1;
-  const uniqueParts = dedupeSavedParts(techniquePartsPayload);
-  uniqueParts.forEach((payload) => {
+  techniquePartsPayload.forEach((payload) => {
     const part = findByIdOrName(techniquePartsDb, {
       id: payload.id ?? payload.part?.id,
       name: payload.name ?? payload.part?.name,
@@ -65,9 +68,15 @@ export function calculateEmpoweredTechniqueCosts(
   // Empowered rule: technique percentage mechanics also scale the power side.
   const adjustedPowerEnergyRaw = powerCosts.energyRaw * techniquePercentageMultiplier;
   const energyRaw = adjustedPowerEnergyRaw + techniqueCosts.energyRaw;
+  // Same floor as powers and techniques: only a positive flat (or a raw total
+  // still above 0) publishes a number. No Attack alone stays a dash.
+  const hasPositiveEnergy = energyFloorApplies(
+    powerCosts.hasPositiveEnergy || techniqueCosts.hasPositiveEnergy,
+    energyRaw,
+  );
 
   return {
-    totalEnergy: Math.ceil(energyRaw),
+    totalEnergy: finalizePowerEnergy(energyRaw, hasPositiveEnergy),
     totalTP: powerCosts.totalTP + techniqueCosts.totalTP,
     tpSources: [
       ...powerCosts.tpSources.map((src) => `[Power] ${src}`),

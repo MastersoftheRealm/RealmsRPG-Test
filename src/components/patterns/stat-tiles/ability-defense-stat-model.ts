@@ -1,4 +1,4 @@
-import { DEFENSE_DISPLAY_NAMES } from '@/lib/game/constants';
+import { ABILITY_LIMITS, DEFENSE_DISPLAY_NAMES } from '@/lib/game/constants';
 import { cn } from '@/lib/utils';
 import type { Abilities, AbilityName, DefenseSkills } from '@/types';
 
@@ -59,11 +59,14 @@ export const DEFENSE_INFO: Record<keyof DefenseSkills, { name: string; shortName
 };
 
 export const ABILITY_CONSTRAINTS = {
-  /** Level-1 creation minimum; sheet editing can go lower for effects. */
+  /** Ability scores never go below −2. Temp modifiers are a separate control. */
   MIN_ABILITY: -2,
-  /** Floor when editing on character sheet (effects may reduce below -2). */
-  MIN_ABILITY_SHEET_EDIT: -10,
+  /** Total of negative ability scores cannot go below −3. */
   MAX_NEGATIVE_SUM: -3,
+  /**
+   * Creator / admin level-1 mirror only (`getMaxAbility(1) === 3`).
+   * The player sheet does not use this ladder (86e3k01q7).
+   */
   getMaxAbility: (level: number): number => {
     if (level <= 1) return 3;
     if (level <= 3) return 4;
@@ -76,12 +79,35 @@ export const ABILITY_CONSTRAINTS = {
   getMaxDefenseSkill: (level: number): number => level,
 };
 
+/** Player sheet increase ceiling. No level ladder — hard cap is +10. */
+export const SHEET_ABILITY_MAX = ABILITY_LIMITS.MAX_ABSOLUTE;
+
+/**
+ * Spend hint. Doubling after +4 stays. Written hard caps stay −5 and +10.
+ * Does not present +5 as a maximum.
+ */
+export function sheetAbilityBudgetHint(
+  defenseIncreaseCost: number,
+  maxDefenseSkill: number,
+): string {
+  return `Above +4 costs 2 ability points (hard caps −5 / +10). Defense: ${defenseIncreaseCost}sp per +1 (max +${maxDefenseSkill})`;
+}
+
+export function sheetAbilityIncreaseTitle(
+  canIncrease: boolean,
+  baseValue: number,
+  cost: number,
+): string {
+  if (canIncrease) return `Cost: ${cost} point${cost > 1 ? 's' : ''}`;
+  if (baseValue >= SHEET_ABILITY_MAX) return 'Hard cap +10';
+  return 'Not enough ability points';
+}
+
 export function canDecreaseAbility(abilities: Abilities, abilityName: AbilityName): boolean {
   const currentValue = abilities[abilityName] ?? 0;
   const newValue = currentValue - 1;
 
-  if (newValue < ABILITY_CONSTRAINTS.MIN_ABILITY_SHEET_EDIT) return false;
-  if (newValue < ABILITY_CONSTRAINTS.MIN_ABILITY) return true;
+  if (newValue < ABILITY_CONSTRAINTS.MIN_ABILITY) return false;
 
   if (newValue < 0) {
     const currentNegSum = Object.values(abilities)

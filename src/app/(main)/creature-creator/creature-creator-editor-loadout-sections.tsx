@@ -4,6 +4,17 @@
 
 'use client';
 
+import { useMemo } from 'react';
+import { formatEnergyStat } from '@/lib/calculators';
+import { publishedTechniqueTrainingPoints } from '@/lib/library/published-training-points';
+import { useTechniqueParts } from '@/hooks';
+import { calculateArchetypeProgression } from '@/lib/game/formulas';
+import {
+  INNATE_ENERGY_TOTAL_WARNING,
+  INNATE_THRESHOLD_WARNING,
+  isInnateEnergyTotalOverBudget,
+  isInnatePowerOverThreshold,
+} from '@/lib/character/innate-power-capacity';
 import { formatListCellLabel } from '@/lib/utils';
 import { GridListRow, ListHeader, InnateToggle, ValueStepper } from '@/components/patterns';
 import { resolveListRowThumbnail } from '@/lib/list-row-image';
@@ -13,6 +24,7 @@ import { CollapsibleSection } from '@/components/creator';
 import { buildFeatLevelChips } from '@/lib/leveled-feats';
 import type { CreatureCreatorEditorProps } from './creature-creator-editor';
 import { CreatureCreatorEditorInventorySection } from './creature-creator-editor-inventory-section';
+import { creaturePowerRowKey } from '@/lib/game/creature-power-instances';
 
 const CREATURE_FEAT_LIST_GRID = '1.15fr 0.58fr 0.52fr 0.4fr';
 const CREATURE_REMOVE_ROW_CHROME = { rightSlot: true } as const;
@@ -70,6 +82,26 @@ export function CreatureCreatorEditorLoadoutSections({
   onOpenTechniqueModal,
   onOpenArmamentModal,
 }: LoadoutSectionsProps) {
+  const { data: techniquePartsDb = [] } = useTechniqueParts();
+  const innateBudget = useMemo(() => {
+    const progression = calculateArchetypeProgression(
+      creature.level,
+      creature.martialProficiency,
+      creature.powerProficiency,
+    );
+    const innateEnergies = creature.powers
+      .filter((p) => p.innate === true)
+      .map((p) => p.energy ?? 0);
+    return {
+      innateEnergyMax: progression.innateEnergy,
+      innateThreshold: progression.innateThreshold,
+      overEnergy: isInnateEnergyTotalOverBudget(progression.innateEnergy, innateEnergies),
+      overThreshold: innateEnergies.some((energy) =>
+        isInnatePowerOverThreshold(energy, progression.innateThreshold),
+      ),
+    };
+  }, [creature.level, creature.martialProficiency, creature.powerProficiency, creature.powers]);
+
   return (
     <>
       <CollapsibleSection
@@ -176,6 +208,26 @@ export function CreatureCreatorEditorLoadoutSections({
         onEnabledChange={(enabled) => updateCreature({ enablePowers: enabled })}
         itemCount={creature.powers.length}
       >
+        {innateBudget.innateEnergyMax > 0 ? (
+          <p className="mb-3 text-sm text-text-secondary">
+            Innate Energy:{' '}
+            {innateBudget.innateEnergyMax -
+              creature.powers
+                .filter((p) => p.innate === true)
+                .reduce((sum, p) => sum + (p.energy ?? 0), 0)}{' '}
+            / {innateBudget.innateEnergyMax} · Threshold {innateBudget.innateThreshold}
+          </p>
+        ) : null}
+        {innateBudget.overEnergy ? (
+          <p className="mb-3 font-nunito text-sm text-warning-fg" role="status">
+            {INNATE_ENERGY_TOTAL_WARNING}
+          </p>
+        ) : null}
+        {innateBudget.overThreshold ? (
+          <p className="mb-3 font-nunito text-sm text-warning-fg" role="status">
+            {INNATE_THRESHOLD_WARNING}
+          </p>
+        ) : null}
         {creature.powers.length === 0 ? (
           <p className="mb-4 text-sm text-text-muted italic">No powers added</p>
         ) : (
@@ -194,54 +246,67 @@ export function CreatureCreatorEditorLoadoutSections({
               rowChrome={CREATURE_POWER_ROW_CHROME}
             />
             <div className="flex flex-col gap-1">
-              {creature.powers.map(
-                (power: {
-                  id: string;
-                  name: string;
-                  energy?: number | undefined;
-                  action?: string | undefined;
-                  damage?: string | undefined;
-                  area?: string | undefined;
-                  duration?: string | undefined;
-                  innate?: boolean | undefined;
-                  image_id?: string | null | undefined;
-                  image_url?: string | null | undefined;
-                }) => (
-                  <GridListRow
-                    key={power.id}
-                    id={power.id}
-                    name={power.name}
-                    thumbnail={resolveListRowThumbnail('power', power, power.name)}
-                    columns={[
-                      { key: 'Energy', value: power.energy ?? '-', align: 'center' as const },
-                      { key: 'Action', value: power.action ?? '-', align: 'center' as const },
-                      { key: 'Damage', value: power.damage ?? '-', align: 'center' as const },
-                      { key: 'Area', value: power.area ?? '-', align: 'center' as const },
-                      { key: 'Duration', value: power.duration ?? '-', align: 'center' as const },
-                    ]}
-                    gridColumns="1.4fr 0.6fr 0.8fr 0.8fr 0.7fr 0.8fr"
-                    innate={power.innate === true}
-                    leftSlot={
-                      <InnateToggle
-                        isInnate={power.innate === true}
-                        onToggle={() => onTogglePowerInnate(power.id)}
-                        size="md"
-                      />
-                    }
-                    rightSlot={
-                      <IconButton
-                        variant="danger"
-                        size="sm"
-                        onClick={() => onRemovePower(power.id)}
-                        label="Remove power"
-                      >
-                        <X className="h-4 w-4" />
-                      </IconButton>
-                    }
-                    compact
-                  />
-                ),
-              )}
+              {creature.powers.map((power, powerIndex) => (
+                <GridListRow
+                  key={creaturePowerRowKey(power, powerIndex)}
+                  id={creaturePowerRowKey(power, powerIndex)}
+                  name={power.name}
+                  description={power.description}
+                  thumbnail={resolveListRowThumbnail('power', power, power.name)}
+                  columns={[
+                    {
+                      key: 'Energy',
+                      value: formatEnergyStat(power.energy ?? 0),
+                      align: 'center' as const,
+                    },
+                    { key: 'Action', value: power.action ?? '-', align: 'center' as const },
+                    { key: 'Damage', value: power.damage ?? '-', align: 'center' as const },
+                    { key: 'Area', value: power.area ?? '-', align: 'center' as const },
+                    { key: 'Duration', value: power.duration ?? '-', align: 'center' as const },
+                  ]}
+                  gridColumns="1.4fr 0.6fr 0.8fr 0.8fr 0.7fr 0.8fr"
+                  detailSections={
+                    power.variantChips && power.variantChips.length > 0
+                      ? [
+                          {
+                            label: power.variantLabel ?? 'Variants',
+                            chips: power.variantChips.map((chip) => ({
+                              name: chip.name,
+                              ...(chip.description ? { description: chip.description } : {}),
+                              kind: 'descriptor' as const,
+                            })),
+                            ...(power.variantHelp ? { labelHelp: power.variantHelp } : {}),
+                          },
+                        ]
+                      : undefined
+                  }
+                  innate={power.innate === true}
+                  warningMessage={
+                    power.innate === true &&
+                    isInnatePowerOverThreshold(power.energy, innateBudget.innateThreshold)
+                      ? INNATE_THRESHOLD_WARNING
+                      : undefined
+                  }
+                  leftSlot={
+                    <InnateToggle
+                      isInnate={power.innate === true}
+                      onToggle={() => onTogglePowerInnate(creaturePowerRowKey(power, powerIndex))}
+                      size="md"
+                    />
+                  }
+                  rightSlot={
+                    <IconButton
+                      variant="danger"
+                      size="sm"
+                      onClick={() => onRemovePower(creaturePowerRowKey(power, powerIndex))}
+                      label="Remove power"
+                    >
+                      <X className="h-4 w-4" />
+                    </IconButton>
+                  }
+                  compact
+                />
+              ))}
             </div>
           </div>
         )}
@@ -274,25 +339,23 @@ export function CreatureCreatorEditorLoadoutSections({
               rowChrome={CREATURE_REMOVE_ROW_CHROME}
             />
             <div className="flex flex-col gap-1">
-              {creature.techniques.map(
-                (tech: {
-                  id: string;
-                  name: string;
-                  energy?: number | undefined;
-                  weapon?: string | undefined;
-                  tp?: number | undefined;
-                  image_id?: string | null | undefined;
-                  image_url?: string | null | undefined;
-                }) => (
+              {creature.techniques.map((tech) => {
+                const published = publishedTechniqueTrainingPoints(tech, techniquePartsDb);
+                const trainingPoints = published.priced ? published.tp : (tech.tp ?? '-');
+                return (
                   <GridListRow
                     key={tech.id}
                     id={tech.id}
                     name={tech.name}
                     thumbnail={resolveListRowThumbnail('technique', tech, tech.name)}
                     columns={[
-                      { key: 'Energy', value: tech.energy ?? '-', align: 'center' as const },
+                      {
+                        key: 'Energy',
+                        value: formatEnergyStat(tech.energy ?? 0),
+                        align: 'center' as const,
+                      },
                       { key: 'Weapon', value: tech.weapon ?? '-', align: 'center' as const },
-                      { key: 'Training Pts', value: tech.tp ?? '-', align: 'center' as const },
+                      { key: 'Training Pts', value: trainingPoints, align: 'center' as const },
                     ]}
                     gridColumns="1.4fr 0.7fr 1fr 0.8fr"
                     rightSlot={
@@ -307,8 +370,8 @@ export function CreatureCreatorEditorLoadoutSections({
                     }
                     compact
                   />
-                ),
-              )}
+                );
+              })}
             </div>
           </div>
         )}

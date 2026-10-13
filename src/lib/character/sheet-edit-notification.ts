@@ -148,6 +148,30 @@ function buildPoolMessage(parts: string[]): string {
   return parts.join('; ');
 }
 
+/** Overspend warning when previewing a lower level (ClickUp 86e3jv2hz). Does not block level-down. */
+export function buildLevelDownOverspendWarning({
+  character,
+  targetLevel,
+  characterSpeciesSkills,
+  featsDb,
+  rules,
+}: ComputeSheetPointPoolsArgs & { targetLevel: number }): SheetEditNotification | null {
+  const currentLevel = character.level || 1;
+  if (targetLevel >= currentLevel) return null;
+
+  const pools = computeSheetPointPools({
+    character: { ...character, level: targetLevel },
+    characterSpeciesSkills,
+    featsDb,
+    rules,
+  });
+  const notification = buildSheetEditNotification(pools);
+  if (notification.severity === 'overspent' || notification.severity === 'mixed') {
+    return notification;
+  }
+  return null;
+}
+
 export function buildSheetEditNotification(pools: SheetPointPools): SheetEditNotification {
   const overspent: string[] = [];
   const unspent: string[] = [];

@@ -10,16 +10,29 @@
 import { useState, useMemo, useCallback, useEffect } from 'react';
 import { useCreatorSave, type TechniquePart } from '@/hooks';
 import {
+  useCreatorDraftDirty,
+  useDiscardableCreatorDraft,
+} from '@/hooks/use-creator-unsaved-guard';
+import type { CreatorSaveTarget } from '@/lib/library/catalog-listing';
+import {
+  useCreatorEditDraftDecision,
+  useCreatorEditMissNotice,
+} from '@/lib/library/use-creator-edit-draft';
+import {
   calculateTechniqueCosts,
   computeTechniqueActionTypeFromSelection,
   buildMechanicParts,
   formatTechniqueDamage,
+  analyzeTechniqueEnergy,
+  buildTechniqueAdvancedCalculationGroups,
+  TECHNIQUE_CALC_SECTION_BY_NAME,
   type TechniquePartPayload,
 } from '@/lib/calculators';
 import { attackModeColumnLabel, type AttackMode } from '@/lib/attack-mode';
-import { dedupeSavedParts } from '@/lib/game/dedupe-saved-parts';
 import {
+  isManualTechniquePart,
   techniqueLibraryRecordToFormState,
+  techniquePartsForSave,
   TECHNIQUE_CREATOR_CACHE_KEY,
   type TechniqueCreatorCache,
   type TechniqueCreatorFormState,
@@ -27,7 +40,12 @@ import {
   type TechniqueSelectedPart as SelectedPart,
   type TechniqueDamageConfig as DamageConfig,
 } from './technique-creator-bootstrap';
-import { writeCreatorCache, clearCreatorCache } from '@/lib/game/creator-cache';
+import { applyTechniqueCreatorReset } from './technique-creator-reset';
+import {
+  creatorSessionCacheKey,
+  persistCreatorSessionDraft,
+  clearCreatorSessionDraft,
+} from '@/lib/game/creator-cache';
 
 function toTechniquePartPayload(part: {
   id: string | number;
@@ -48,13 +66,18 @@ function toTechniquePartPayload(part: {
 type UseTechniqueCreatorWorkspaceArgs = {
   initialFormState: TechniqueCreatorFormState;
   editTechniqueId: string | null;
+  /** True only when editTechniqueId matched a loaded library row. */
+  editReplacesDraft: boolean;
   techniqueParts: TechniquePart[];
+  initialSaveTarget?: CreatorSaveTarget | undefined;
 };
 
 export function useTechniqueCreatorWorkspace({
   initialFormState,
   editTechniqueId,
+  editReplacesDraft,
   techniqueParts,
+  initialSaveTarget,
 }: UseTechniqueCreatorWorkspaceArgs) {
   const [name, setName] = useState(initialFormState.name);
   const [description, setDescription] = useState(initialFormState.description);
@@ -67,17 +90,24 @@ export function useTechniqueCreatorWorkspace({
   const [attackMode, setAttackMode] = useState<AttackMode>(initialFormState.attackMode);
   const [imageId, setImageId] = useState<string | null>(initialFormState.imageId);
   const [imageUrl, setImageUrl] = useState<string | null>(initialFormState.imageUrl);
+  const [targetedDefenses, setTargetedDefenses] = useState<string[]>(
+    initialFormState.targetedDefenses,
+  );
+  const sessionCacheKey = useMemo(
+    () => creatorSessionCacheKey(TECHNIQUE_CREATOR_CACHE_KEY, editTechniqueId, editReplacesDraft),
+    [editTechniqueId, editReplacesDraft],
+  );
 
-  // ?edit= mode: clear any stale draft once on mount (parity with the old hydrate
-  // effect, which removed the cache after loading the edit target).
+  const { discardLocalDraft, isLocalDraftDiscarded } = useDiscardableCreatorDraft(sessionCacheKey);
+
+  const { discardDraft } = useCreatorEditDraftDecision(
+    true,
+    editReplacesDraft,
+    TECHNIQUE_CREATOR_CACHE_KEY,
+  );
+
+  // Auto-save draft. Confirmed ?edit= rows use a per-id cache bucket (86e3juw0a).
   useEffect(() => {
-    if (editTechniqueId) clearCreatorCache(TECHNIQUE_CREATOR_CACHE_KEY);
-  }, [editTechniqueId]);
-
-  // Auto-save draft to localStorage (skip when editing an existing library row via ?edit=)
-  useEffect(() => {
-    if (editTechniqueId) return;
-
     const cache: TechniqueCreatorCache = {
       name,
       description,
@@ -94,11 +124,19 @@ export function useTechniqueCreatorWorkspace({
       attackMode,
       imageId,
       imageUrl,
+      targetedDefenses,
       timestamp: Date.now(),
     };
-    writeCreatorCache(TECHNIQUE_CREATOR_CACHE_KEY, cache);
+    persistCreatorSessionDraft(
+      TECHNIQUE_CREATOR_CACHE_KEY,
+      editTechniqueId,
+      editReplacesDraft,
+      cache,
+      isLocalDraftDiscarded(),
+    );
   }, [
     editTechniqueId,
+    editReplacesDraft,
     name,
     description,
     selectedParts,
@@ -108,6 +146,8 @@ export function useTechniqueCreatorWorkspace({
     attackMode,
     imageId,
     imageUrl,
+    targetedDefenses,
+    isLocalDraftDiscarded,
   ]);
 
   // Build mechanic parts from action type, damage, and attack mode.
@@ -124,36 +164,62 @@ export function useTechniqueCreatorWorkspace({
   );
 
   // Convert selected parts to payload format for calculator
-  const partsPayload: TechniquePartPayload[] = useMemo(
-    () => [
-      ...selectedParts.map((sp) => ({
+  const partsPayload: TechniquePartPayload[] = useMemo(() => {
+    const selected: TechniquePartPayload[] = selectedParts
+      .filter((sp) => isManualTechniquePart(sp.part))
+      .map((sp) => ({
         id: Number(sp.part.id),
         name: sp.part.name,
         part: sp.part,
         op_1_lvl: sp.op_1_lvl,
         op_2_lvl: sp.op_2_lvl,
         op_3_lvl: sp.op_3_lvl,
-      })),
-      ...mechanicParts.map(toTechniquePartPayload),
-    ],
-    [selectedParts, mechanicParts],
-  );
+        calcSection: 'parts' as const,
+      }));
+
+    const mechanics: TechniquePartPayload[] = mechanicParts.map((mp) => {
+      const section = TECHNIQUE_CALC_SECTION_BY_NAME[mp.name];
+      let displayLabel: string | undefined;
+      if (mp.name === 'Quick or Free Action') {
+        displayLabel = actionType === 'free' ? 'Free Action' : 'Quick Action';
+      } else if (mp.name === 'Long Action') {
+        displayLabel = actionType === 'long4' ? 'Long Action (4 AP)' : 'Long Action (3 AP)';
+      } else if (mp.name === 'Reaction') {
+        displayLabel = 'Reaction';
+      } else if (mp.name === 'Additional Damage' && damage.amount > 0) {
+        displayLabel =
+          formatTechniqueDamage({ amount: damage.amount, size: damage.size }) ||
+          'Additional Damage';
+      } else if (mp.name === 'Add Weapon to Technique' || mp.name === 'Add Weapon Attack') {
+        displayLabel = 'Weapon Attack';
+      } else if (mp.name === 'No Attack') {
+        displayLabel = 'No Attack';
+      } else if (mp.name === 'Split Damage Dice') {
+        displayLabel = 'Split damage dice';
+      }
+      return {
+        id: Number(mp.id),
+        name: mp.name,
+        op_1_lvl: mp.op_1_lvl,
+        op_2_lvl: mp.op_2_lvl,
+        op_3_lvl: mp.op_3_lvl,
+        calcSection: section,
+        displayLabel,
+      };
+    });
+
+    return [...selected, ...mechanics];
+  }, [selectedParts, mechanicParts, actionType, damage.amount, damage.size]);
 
   // Calculate costs - using technique parts as the database
   const costs = useMemo(
     () => calculateTechniqueCosts(partsPayload, techniqueParts),
     [partsPayload, techniqueParts],
   );
-  const advancedCalcRows = useMemo(
-    () => [
-      { label: 'Energy (raw)', value: costs.energyRaw.toFixed(2) },
-      {
-        label: 'Energy (final)',
-        value: `ceil(${costs.energyRaw.toFixed(2)}) = ${costs.totalEnergy}`,
-      },
-      { label: 'Training points (final)', value: String(costs.totalTP) },
-    ],
-    [costs.energyRaw, costs.totalEnergy, costs.totalTP],
+  const advancedCalcGroups = useMemo(
+    () =>
+      buildTechniqueAdvancedCalculationGroups(analyzeTechniqueEnergy(partsPayload, techniqueParts)),
+    [partsPayload, techniqueParts],
   );
 
   // Derived display values
@@ -226,7 +292,7 @@ export function useTechniqueCreatorWorkspace({
   const addPart = useCallback(() => {
     // Seed from the first selectable (non-mechanic) part; mechanic parts are
     // auto-generated from action/damage/weapon and must not appear as editable rows.
-    const firstSelectable = techniqueParts.find((p) => !p.mechanic);
+    const firstSelectable = techniqueParts.find((p) => isManualTechniquePart(p));
     if (!firstSelectable) return;
     setSelectedParts((prev) => [
       ...prev,
@@ -249,22 +315,7 @@ export function useTechniqueCreatorWorkspace({
   }, []);
 
   const getPayload = useCallback(() => {
-    const partsToSave = dedupeSavedParts([
-      ...selectedParts.map((sp) => ({
-        id: Number(sp.part.id),
-        name: sp.part.name,
-        op_1_lvl: sp.op_1_lvl,
-        op_2_lvl: sp.op_2_lvl,
-        op_3_lvl: sp.op_3_lvl,
-      })),
-      ...mechanicParts.map((mp) => ({
-        id: mp.id,
-        name: mp.name,
-        op_1_lvl: mp.op_1_lvl,
-        op_2_lvl: mp.op_2_lvl,
-        op_3_lvl: mp.op_3_lvl,
-      })),
-    ]);
+    const partsToSave = techniquePartsForSave(selectedParts, mechanicParts);
     const damageToSave = damage.amount > 0 ? [{ amount: damage.amount, size: damage.size }] : [];
     return {
       name: name.trim(),
@@ -276,6 +327,7 @@ export function useTechniqueCreatorWorkspace({
         attackMode,
         actionType,
         isReaction,
+        ...(targetedDefenses.length > 0 ? { targetedDefenses } : {}),
         ...(imageId ? { imageId } : {}),
         ...(imageUrl ? { imageUrl } : {}),
       },
@@ -289,9 +341,12 @@ export function useTechniqueCreatorWorkspace({
     attackMode,
     actionType,
     isReaction,
+    targetedDefenses,
     imageId,
     imageUrl,
   ]);
+  const draftSnapshot = JSON.stringify(getPayload());
+  const { isDirty: unsavedDirty, acceptDraft } = useCreatorDraftDirty(draftSnapshot);
 
   const save = useCreatorSave({
     type: 'techniques',
@@ -304,6 +359,9 @@ export function useTechniqueCreatorWorkspace({
         : `Are you sure you wish to publish this technique "${n}" to the Realms Library? All users will be able to see and use it.`,
     successMessage: 'Technique saved successfully!',
     publicSuccessMessage: 'Technique saved to Realms Library!',
+    initialSaveTarget,
+    editingId: editTechniqueId,
+    onSaveCommitted: acceptDraft,
     onSaveSuccess: () => {
       setName('');
       setDescription('');
@@ -314,10 +372,20 @@ export function useTechniqueCreatorWorkspace({
       setAttackMode('unarmed');
       setImageId(null);
       setImageUrl(null);
+      setTargetedDefenses([]);
+      acceptDraft();
     },
   });
 
-  const handleReset = useCallback(() => {
+  useCreatorEditMissNotice(
+    Boolean(editTechniqueId) && !discardDraft,
+    'technique',
+    save.setSaveMessage,
+  );
+
+  const [showResetConfirm, setShowResetConfirm] = useState(false);
+
+  const resetFormFields = useCallback(() => {
     setName('');
     setDescription('');
     setSelectedParts([]);
@@ -327,9 +395,24 @@ export function useTechniqueCreatorWorkspace({
     setAttackMode('unarmed');
     setImageId(null);
     setImageUrl(null);
-    save.setSaveMessage(null);
-    clearCreatorCache(TECHNIQUE_CREATOR_CACHE_KEY);
-  }, [save]);
+    setTargetedDefenses([]);
+  }, []);
+
+  const handleReset = useCallback(() => {
+    setShowResetConfirm(true);
+  }, []);
+
+  const confirmReset = useCallback(() => {
+    applyTechniqueCreatorReset({
+      resetForm: resetFormFields,
+      forgetLoadedLibraryItem: () => save.forgetLoadedLibraryItem(),
+      clearSaveMessage: () => save.setSaveMessage(null),
+      clearDraftCache: () =>
+        clearCreatorSessionDraft(TECHNIQUE_CREATOR_CACHE_KEY, editTechniqueId, editReplacesDraft),
+      acceptDraft,
+    });
+    setShowResetConfirm(false);
+  }, [acceptDraft, editReplacesDraft, editTechniqueId, resetFormFields, save]);
 
   const applyFormState = useCallback((next: TechniqueCreatorFormState) => {
     setName(next.name);
@@ -341,15 +424,23 @@ export function useTechniqueCreatorWorkspace({
     setAttackMode(next.attackMode);
     setImageId(next.imageId);
     setImageUrl(next.imageUrl);
+    setTargetedDefenses(next.targetedDefenses);
   }, []);
+
+  const suggestionSelectedParts = useMemo(
+    () => selectedParts.map((sp) => sp.part),
+    [selectedParts],
+  );
 
   const handleLoadTechnique = useCallback(
     (technique: TechniqueLibraryRecord) => {
       applyFormState(techniqueLibraryRecordToFormState(technique, techniqueParts));
+      save.applyLoadedLibraryItem(technique);
+      acceptDraft();
       save.setSaveMessage({ type: 'success', text: 'Technique loaded successfully!' });
       setTimeout(() => save.setSaveMessage(null), 2000);
     },
-    [techniqueParts, applyFormState, save],
+    [techniqueParts, applyFormState, save, acceptDraft],
   );
 
   return {
@@ -370,8 +461,11 @@ export function useTechniqueCreatorWorkspace({
     imageUrl,
     setImageId,
     setImageUrl,
+    targetedDefenses,
+    setTargetedDefenses,
+    suggestionSelectedParts,
     costs,
-    advancedCalcRows,
+    advancedCalcGroups,
     actionTypeDisplay,
     damageDisplay,
     attackModeLabel,
@@ -387,7 +481,12 @@ export function useTechniqueCreatorWorkspace({
     removePart,
     updatePart,
     save,
+    unsavedDirty,
+    discardLocalDraft,
     handleReset,
+    confirmReset,
+    showResetConfirm,
+    setShowResetConfirm,
     handleLoadTechnique,
   };
 }

@@ -51,7 +51,7 @@ export function Alert({
     <div role="alert" className={cn(alertVariants({ variant }), className)} {...props}>
       <Icon className="mt-0.5 h-5 w-5 flex-shrink-0" />
       <div className="min-w-0 flex-1">
-        {title && <h4 className="mb-1 font-semibold">{title}</h4>}
+        {title && <p className="mb-1 font-semibold">{title}</p>}
         <div className="text-sm">{children}</div>
       </div>
       {onDismiss && (

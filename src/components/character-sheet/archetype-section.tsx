@@ -6,7 +6,7 @@
 
 'use client';
 
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { cn, defined } from '@/lib/utils';
 import {
   calculateProficiency,
@@ -35,6 +35,8 @@ import {
 } from '@/components/patterns';
 import { Card, DescriptorChip } from '@/components/ui';
 import { profPointsDescriptorVariant } from '@/lib/chip/descriptor-chip-variants';
+import { getEffectiveAbilities } from '@/lib/character/temp-modifiers';
+import { normalizeArchetypeChoices } from '@/lib/character/schema-normalize';
 
 function toQuickArmamentItems(items: Array<EnrichedItem | Item>): QuickArmamentItem[] {
   return items.map((item) => {
@@ -116,20 +118,29 @@ function AttackBonusesTable({
     <div className="mb-4 rounded-lg bg-surface-alt p-3">
       <SectionHeader title="Attack Bonuses" className="mb-2" />
       <TableScroll>
-        <table className="w-full text-sm">
+        <table className="w-full min-w-[17.25rem] table-fixed text-sm">
+          <colgroup>
+            <col />
+            <col className="w-[4.5rem]" />
+            <col className="w-[4.75rem]" />
+          </colgroup>
           <thead>
             <tr className="text-xs text-text-muted">
-              <th className="py-1 text-left"></th>
-              <th className="py-1 text-center">Prof.</th>
-              <th className="py-1 text-center">Unprof.</th>
+              <th className="py-1 text-left">
+                <span className="sr-only">Ability</span>
+              </th>
+              <th className="overflow-hidden py-1 text-center whitespace-nowrap">Prof.</th>
+              <th className="overflow-hidden py-1 text-center whitespace-nowrap">Unprof.</th>
             </tr>
           </thead>
           <tbody>
             {/* Martial rows - always show for unproficient attacks */}
             {(['strength', 'agility', 'acuity'] as const).map((key) => (
               <tr key={key}>
-                <td className="py-1 font-medium text-text-secondary capitalize">⚔️ {key}</td>
-                <td className="py-1 text-center">
+                <td className="min-w-0 overflow-hidden py-1 font-medium text-text-secondary capitalize">
+                  <span className="block min-w-0 truncate">⚔️ {key}</span>
+                </td>
+                <td className="overflow-hidden py-1 text-center">
                   {onRollBonus ? (
                     <RollButton
                       value={martialBonuses[key].prof}
@@ -149,7 +160,7 @@ function AttackBonusesTable({
                     </span>
                   )}
                 </td>
-                <td className="py-1 text-center">
+                <td className="overflow-hidden py-1 text-center">
                   {onRollBonus ? (
                     <RollButton
                       value={martialBonuses[key].unprof}
@@ -219,6 +230,7 @@ const UNARMED_PROWESS_DAMAGE: { level: number; damage: string | null }[] = [
 // Weapons Section - displays equipped weapons with attack/damage rolls
 function WeaponsSection({
   character,
+  abilities,
   martialProf,
   unarmedProwess = 0,
   onRollAttack,
@@ -226,14 +238,13 @@ function WeaponsSection({
   enrichedWeapons,
 }: {
   character: Character;
+  abilities: Abilities;
   martialProf: number;
   unarmedProwess?: number | undefined;
   onRollAttack?: ((name: string, bonus: number) => void) | undefined;
   onRollDamage?: ((damageStr: string, bonus: number) => void) | undefined;
   enrichedWeapons?: EnrichedItem[] | undefined;
 }) {
-  const abilities = character.abilities || {};
-
   // Use enriched weapons if available, fallback to raw character equipment
   const weapons = enrichedWeapons || ((character.equipment?.weapons || []) as Item[]);
   const equippedWeapons = weapons.filter((w) => w.equipped);
@@ -262,7 +273,7 @@ function WeaponsSection({
   const unarmedRow = (
     <tr className="border-t border-border-light align-top">
       <td className={QUICK_WEAPON_COL.nameTd}>
-        <div>Unarmed Prowess</div>
+        <div className="min-w-0 break-normal">Unarmed Prowess</div>
       </td>
       <td className={QUICK_WEAPON_COL.rangeTd}>Melee</td>
       <td className={QUICK_WEAPON_COL.attackTd}>
@@ -325,16 +336,17 @@ function WeaponsSection({
 // Shields Section - displays equipped shields: Name, Block, Damage, Attack (same horizontal layout as weapons)
 function ShieldsSection({
   character,
+  abilities,
   martialProf,
   enrichedShields,
 }: {
   character: Character;
+  abilities: Abilities;
   martialProf: number;
   onRollAttack?: ((name: string, bonus: number) => void) | undefined;
   onRollDamage?: ((damageStr: string, bonus: number) => void) | undefined;
   enrichedShields?: EnrichedItem[] | undefined;
 }) {
-  const abilities = character.abilities || {};
   const shields = enrichedShields || ((character.equipment?.shields || []) as Item[]);
   const equippedShields = shields.filter((s) => s.equipped);
 
@@ -351,13 +363,13 @@ function ShieldsSection({
 // Armor Section - displays equipped armor with stats
 function ArmorSection({
   character,
+  abilities,
   enrichedArmor,
 }: {
   character: Character;
+  abilities: Abilities;
   enrichedArmor?: EnrichedItem[] | undefined;
 }) {
-  const abilities = character.abilities || {};
-
   // Use enriched armor if available, fallback to raw character equipment
   const armor = enrichedArmor || ((character.equipment?.armor || character.armor || []) as Item[]);
   const armorArray = Array.isArray(armor) ? armor : [armor].filter(Boolean);
@@ -390,6 +402,10 @@ export function ArchetypeSection({
   const powerProf = character.pow_prof ?? character.powerProficiency ?? 0;
   const rollContext = useRollsOptional();
   const { rules } = useGameRules();
+  const rollAbilities = useMemo(
+    () => getEffectiveAbilities(character.abilities ?? ({} as Abilities), character.tempModifiers),
+    [character.abilities, character.tempModifiers],
+  );
 
   // Local state for whether this section is actively being edited
   const [isSectionEditing, setIsSectionEditing] = useState(false);
@@ -405,7 +421,9 @@ export function ArchetypeSection({
   // Determine archetype type for milestone UI
   const archetypeType = getArchetypeType(martialProf, powerProf);
   const milestoneLevels = getArchetypeMilestoneLevels(level, rules);
-  const archetypeChoices = character.archetypeChoices || {};
+  const archetypeChoices = normalizeArchetypeChoices(character.archetypeChoices);
+  const showMilestoneChoices = archetypeType === 'powered-martial' && milestoneLevels.length > 0;
+  const canEditMilestoneChoices = showEditControls && !!onMilestoneChoiceChange;
 
   // Three-state color for proficiency points
   const profPointsVariant = profPointsDescriptorVariant(remainingProfPoints);
@@ -524,21 +542,27 @@ export function ArchetypeSection({
         </div>
       )}
 
-      {/* Mixed Archetype Milestone Choices — edit mode only */}
-      {archetypeType === 'powered-martial' && milestoneLevels.length > 0 && showEditControls && (
+      {/* Mixed Archetype Milestone Choices — visible after save/reload; editable in section edit */}
+      {showMilestoneChoices ? (
         <div className="mb-4 rounded-lg border border-warning-border bg-gradient-to-r from-warning-light to-power-light p-3">
           <SectionHeader title="Milestone Choices" className="mb-2" />
           <div className="flex flex-wrap gap-2">
             {milestoneLevels.map((milestoneLevel) => {
               const currentChoice = archetypeChoices[milestoneLevel];
+              const choiceLabel =
+                currentChoice === 'innate'
+                  ? 'Innate'
+                  : currentChoice === 'feat'
+                    ? 'Feat'
+                    : 'Not chosen';
               return (
                 <div key={milestoneLevel} className="flex items-center gap-1">
                   <span className="min-w-[32px] text-xs text-text-muted">Lv.{milestoneLevel}:</span>
-                  {onMilestoneChoiceChange ? (
+                  {canEditMilestoneChoices ? (
                     <div className="flex gap-1">
                       <button
                         type="button"
-                        onClick={() => onMilestoneChoiceChange(milestoneLevel, 'innate')}
+                        onClick={() => onMilestoneChoiceChange!(milestoneLevel, 'innate')}
                         className={cn(
                           'rounded px-2 py-0.5 text-xs transition-colors',
                           currentChoice === 'innate'
@@ -551,7 +575,7 @@ export function ArchetypeSection({
                       </button>
                       <button
                         type="button"
-                        onClick={() => onMilestoneChoiceChange(milestoneLevel, 'feat')}
+                        onClick={() => onMilestoneChoiceChange!(milestoneLevel, 'feat')}
                         className={cn(
                           'rounded px-2 py-0.5 text-xs transition-colors',
                           currentChoice === 'feat'
@@ -563,23 +587,39 @@ export function ArchetypeSection({
                         🎯 Feat
                       </button>
                     </div>
-                  ) : null}
+                  ) : (
+                    <span
+                      className={cn(
+                        'rounded px-2 py-0.5 text-xs font-medium',
+                        currentChoice === 'innate'
+                          ? 'bg-power-light text-power-fg'
+                          : currentChoice === 'feat'
+                            ? 'bg-martial-light text-martial-fg'
+                            : 'bg-surface-alt text-text-muted',
+                      )}
+                    >
+                      {choiceLabel}
+                    </span>
+                  )}
                 </div>
               );
             })}
           </div>
           <p className="mt-2 text-[10px] text-text-muted">
-            Mixed archetypes choose at levels 4, 7, 10, etc.: Increase Innate Power (6→8, then +1;
-            +1 Pool) OR Additional Feat
+            {canEditMilestoneChoices
+              ? 'Mixed archetypes choose at levels 4, 7, 10, etc.: Increase Innate Power (6→8, then +1; +1 Pool) OR Additional Feat'
+              : isEditMode
+                ? 'Open archetype editing (pencil) to change milestone choices.'
+                : 'Mixed archetypes choose at levels 4, 7, 10, etc.: Increase Innate Power (6→8, then +1; +1 Pool) OR Additional Feat'}
           </p>
         </div>
-      )}
+      ) : null}
 
       {/* Unarmed Prowess Display - show if character has unarmed prowess */}
       {/* Attack Bonuses Table */}
       {character.abilities && (
         <AttackBonusesTable
-          abilities={character.abilities}
+          abilities={rollAbilities}
           martialProf={martialProf}
           powerProf={powerProf}
           powerAbility={character.pow_abil}
@@ -590,6 +630,7 @@ export function ArchetypeSection({
       {/* Weapons Section */}
       <WeaponsSection
         character={character}
+        abilities={rollAbilities}
         martialProf={martialProf}
         unarmedProwess={unarmedProwess}
         onRollAttack={rollContext?.canRoll !== false ? handleRollBonus : undefined}
@@ -600,6 +641,7 @@ export function ArchetypeSection({
       {/* Shields Section */}
       <ShieldsSection
         character={character}
+        abilities={rollAbilities}
         martialProf={martialProf}
         onRollAttack={rollContext?.canRoll !== false ? handleRollBonus : undefined}
         onRollDamage={rollContext?.canRoll !== false ? handleRollDamage : undefined}
@@ -607,7 +649,7 @@ export function ArchetypeSection({
       />
 
       {/* Armor Section */}
-      <ArmorSection character={character} enrichedArmor={enrichedArmor} />
+      <ArmorSection character={character} abilities={rollAbilities} enrichedArmor={enrichedArmor} />
     </Card>
   );
 }

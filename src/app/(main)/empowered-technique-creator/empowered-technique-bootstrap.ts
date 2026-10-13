@@ -7,8 +7,10 @@
 import type { PowerPart, TechniquePart } from '@/hooks';
 import type { AreaConfig, DurationConfig } from '@/lib/calculators';
 import { CREATOR_CACHE_KEYS } from '@/lib/game/creator-constants';
-import { readCreatorCache } from '@/lib/game/creator-cache';
+import { readNewCreatorDraftCache } from '@/lib/game/creator-cache';
 import { deriveEmpoweredAttackMode, normalizeAttackMode, type AttackMode } from '@/lib/attack-mode';
+import { normalizeTargetedDefenses } from '@/lib/game/targeted-defenses';
+import { findByIdOrName } from '@/lib/id-constants';
 
 export const EMPOWERED_TECHNIQUE_CREATOR_CACHE_KEY = CREATOR_CACHE_KEYS.EMPOWERED_TECHNIQUE;
 
@@ -76,6 +78,7 @@ export interface EmpoweredTechniqueCache {
   }>;
   imageId?: string | null | undefined;
   imageUrl?: string | null | undefined;
+  targetedDefenses?: string[] | undefined;
   timestamp: number;
 }
 
@@ -95,6 +98,7 @@ export interface EmpoweredTechniqueFormState {
   selectedTechniqueParts: SelectedTechniquePart[];
   imageId: string | null;
   imageUrl: string | null;
+  targetedDefenses: string[];
 }
 
 export type EmpoweredLibraryRecord = {
@@ -108,6 +112,7 @@ export type EmpoweredLibraryRecord = {
   image_id?: string | null | undefined;
   imageUrl?: string | null | undefined;
   image_url?: string | null | undefined;
+  targetedDefenses?: string[] | undefined;
   power?: {
     parts?: Array<{
       id?: string | number | undefined;
@@ -193,6 +198,7 @@ export function emptyEmpoweredTechniqueFormState(): EmpoweredTechniqueFormState 
     selectedTechniqueParts: [],
     imageId: null,
     imageUrl: null,
+    targetedDefenses: [],
   };
 }
 
@@ -245,8 +251,10 @@ function mapTechniqueRows(
   return rows
     .map((row) => {
       const key = row.partId ?? row.id;
-      const part = techniqueParts.find(
-        (dbPart) => String(dbPart.id) === String(key) || (matchByName && dbPart.name === row.name),
+      // Id first. A repeated technique-part name must not replace the saved id (86e3jpq36).
+      const part = findByIdOrName(
+        techniqueParts,
+        matchByName ? { id: key, name: row.name } : { id: key },
       );
       if (!part) return null;
       return {
@@ -264,7 +272,9 @@ export function restoreEmpoweredTechniqueFromCache(
   powerParts: PowerPart[],
   techniqueParts: TechniquePart[],
 ): EmpoweredTechniqueFormState | null {
-  const parsed = readCreatorCache<EmpoweredTechniqueCache>(EMPOWERED_TECHNIQUE_CREATOR_CACHE_KEY);
+  const parsed = readNewCreatorDraftCache<EmpoweredTechniqueCache>(
+    EMPOWERED_TECHNIQUE_CREATOR_CACHE_KEY,
+  );
   if (!parsed) return null;
 
   const base = emptyEmpoweredTechniqueFormState();
@@ -293,6 +303,7 @@ export function restoreEmpoweredTechniqueFromCache(
     ),
     imageId: parsed.imageId ?? null,
     imageUrl: parsed.imageUrl ?? null,
+    targetedDefenses: normalizeTargetedDefenses(parsed.targetedDefenses),
   };
 }
 
@@ -343,6 +354,7 @@ export function empoweredLibraryRecordToFormState(
     selectedTechniqueParts: mapTechniqueRows(data.technique?.parts || [], techniqueParts, true),
     imageId: data.imageId ?? data.image_id ?? null,
     imageUrl: data.imageUrl ?? data.image_url ?? null,
+    targetedDefenses: normalizeTargetedDefenses(data.targetedDefenses),
   };
 }
 
@@ -361,13 +373,12 @@ export function bootstrapEmpoweredTechniqueFormState(options: {
           editId ||
         String((item as { docId?: string | undefined; id?: string | undefined }).id) === editId,
     );
-    if (!match) {
-      return emptyEmpoweredTechniqueFormState();
+    if (match) {
+      return (
+        empoweredLibraryRecordToFormState(match, powerParts, techniqueParts) ??
+        emptyEmpoweredTechniqueFormState()
+      );
     }
-    return (
-      empoweredLibraryRecordToFormState(match, powerParts, techniqueParts) ??
-      emptyEmpoweredTechniqueFormState()
-    );
   }
 
   return (

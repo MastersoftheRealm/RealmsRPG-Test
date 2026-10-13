@@ -7,12 +7,24 @@
 import { useCallback } from 'react';
 import { saveCharacterWithConflictRetry } from '@/services/character-service';
 import { apiUpload } from '@/lib/api-client';
+import { isGuestCharacterId } from '@/lib/guest-character-storage';
+import { MAX_PORTRAIT_DATA_URL_LENGTH, PORTRAIT_DRAFT_TOO_LARGE } from '@/lib/portrait';
+import { readFileAsDataUrl } from '@/lib/crop-image';
 import {
   getArchetypeCodexLookupId,
+  applyLevelDownProficiencyUpdates,
   applyLevelUpProficiencyUpdates,
 } from '@/lib/game/archetype-display';
 import { calculateProficiency } from '@/lib/game/formulas';
-import { computeMaxHealthEnergy } from '@/lib/game/calculations';
+import {
+  applySheetAbilityChange,
+  applySheetEnergyPointsChange,
+  applySheetHealthPointsChange,
+} from '@/lib/character/current-follows-max';
+import {
+  resourceAfterFullRecovery,
+  resourceAfterPartialRecovery,
+} from '@/lib/character/recovery-over-max';
 import { ACTION_POINT_DEFAULTS } from '@/lib/game/constants';
 import { DEFAULT_DEFENSE_SKILLS } from '@/types/skills';
 import {
@@ -29,6 +41,10 @@ import type {
 import type { CoreRulesMap } from '@/types/core-rules';
 import type { CodexFeat, Trait } from '@/hooks/codex-types';
 import { patchTempModifiers } from '@/lib/character/temp-modifiers';
+import {
+  CHARACTER_NAME_TOO_LONG_MESSAGE,
+  isCharacterNameOverLimit,
+} from '@/lib/character/character-name-limit';
 import type { CharacterSheetStats } from './use-character-sheet-derived';
 
 type UseSheetResourceActionsArgs = {
@@ -107,14 +123,22 @@ export function useSheetResourceActions({
   const handleNameChange = useCallback(
     (name: string) => {
       if (!character) return;
-      setCharacter((prev) => (prev ? { ...prev, name } : null));
+      const next = name.trim();
+      if (isCharacterNameOverLimit(next)) {
+        showToast(CHARACTER_NAME_TOO_LONG_MESSAGE, 'error');
+        return;
+      }
+      if (!next) return;
+      setCharacter((prev) => (prev ? { ...prev, name: next } : null));
     },
-    [character, setCharacter],
+    [character, setCharacter, showToast],
   );
 
   const handlePortraitChange = useCallback(
     async (file: File) => {
-      if (!character || !user) return;
+      if (!character) return;
+      const guestSheet = isGuestCharacterId(character.id);
+      if (!user && !guestSheet) return;
 
       if (!file.type.startsWith('image/')) {
         setError('Please select an image file');
@@ -129,6 +153,33 @@ export function useSheetResourceActions({
       try {
         setUploadingPortrait(true);
         setError(null);
+
+        if (guestSheet) {
+          const dataUrl = await readFileAsDataUrl(file);
+          if (dataUrl.length > MAX_PORTRAIT_DATA_URL_LENGTH) {
+            setError(PORTRAIT_DRAFT_TOO_LARGE);
+            return;
+          }
+          setCharacter((prev) => (prev ? { ...prev, portrait: dataUrl } : null));
+          setPortraitRefreshKey(Date.now());
+          const result = await saveCharacterWithConflictRetry(
+            character.id,
+            { portrait: dataUrl },
+            {
+              updatedAt: character.updatedAt,
+              mergeOnConflict: (remote) => ({
+                dirty: { portrait: dataUrl },
+                updatedAt: remote.updatedAt,
+              }),
+            },
+          );
+          if (result.updatedAt) {
+            setCharacter((prev) =>
+              prev ? { ...prev, portrait: dataUrl, updatedAt: result.updatedAt } : null,
+            );
+          }
+          return;
+        }
 
         const formData = new FormData();
         formData.append('file', file);
@@ -200,16 +251,9 @@ export function useSheetResourceActions({
   const handleAbilityChange = useCallback(
     (ability: AbilityName, value: number) => {
       if (!character) return;
-      setCharacter((prev) =>
-        prev
-          ? {
-              ...prev,
-              abilities: { ...prev.abilities, [ability]: value },
-            }
-          : null,
-      );
+      setCharacter((prev) => (prev ? applySheetAbilityChange(prev, ability, value, rules) : null));
     },
-    [character, setCharacter],
+    [character, setCharacter, rules],
   );
 
   const handleDefenseChange = useCallback(
@@ -248,23 +292,7 @@ export function useSheetResourceActions({
   const handleHealthPointsChange = useCallback(
     (value: number) => {
       if (!character) return;
-      setCharacter((prev) => {
-        if (!prev) return null;
-        const oldPoints = prev.healthPoints ?? 0;
-        const delta = value - oldPoints;
-        const newPoints = Math.max(0, value);
-        if (delta <= 0) {
-          return { ...prev, healthPoints: newPoints };
-        }
-        const { maxHealth: oldMax } = computeMaxHealthEnergy(prev, rules);
-        const currentHP = prev.currentHealth ?? prev.health?.current ?? oldMax;
-        const shouldBump = currentHP >= oldMax;
-        const newCurrent = shouldBump ? currentHP + delta : currentHP;
-        return withSyncedResourceFields(
-          { ...prev, healthPoints: newPoints },
-          { currentHealth: newCurrent },
-        );
-      });
+      setCharacter((prev) => (prev ? applySheetHealthPointsChange(prev, value, rules) : null));
     },
     [character, setCharacter, rules],
   );
@@ -272,23 +300,7 @@ export function useSheetResourceActions({
   const handleEnergyPointsChange = useCallback(
     (value: number) => {
       if (!character) return;
-      setCharacter((prev) => {
-        if (!prev) return null;
-        const oldPoints = prev.energyPoints ?? 0;
-        const delta = value - oldPoints;
-        const newPoints = Math.max(0, value);
-        if (delta <= 0) {
-          return { ...prev, energyPoints: newPoints };
-        }
-        const { maxEnergy: oldMax } = computeMaxHealthEnergy(prev, rules);
-        const currentEN = prev.currentEnergy ?? prev.energy?.current ?? oldMax;
-        const shouldBump = currentEN >= oldMax;
-        const newCurrent = shouldBump ? currentEN + delta : currentEN;
-        return withSyncedResourceFields(
-          { ...prev, energyPoints: newPoints },
-          { currentEnergy: newCurrent },
-        );
-      });
+      setCharacter((prev) => (prev ? applySheetEnergyPointsChange(prev, value, rules) : null));
     },
     [character, setCharacter, rules],
   );
@@ -345,6 +357,10 @@ export function useSheetResourceActions({
     }
 
     const stateUsesMaxRec = calculateProficiency(character.level || 1, false, rules);
+    const currentHP =
+      character.currentHealth ?? character.health?.current ?? calculatedStats.maxHealth;
+    const currentEN =
+      character.currentEnergy ?? character.energy?.current ?? calculatedStats.maxEnergy;
     setCharacter((prev) =>
       prev
         ? withSyncedResourceFields(
@@ -357,8 +373,8 @@ export function useSheetResourceActions({
               stateUsesCurrent: stateUsesMaxRec,
             },
             {
-              currentHealth: calculatedStats.maxHealth,
-              currentEnergy: calculatedStats.maxEnergy,
+              currentHealth: resourceAfterFullRecovery(currentHP, calculatedStats.maxHealth),
+              currentEnergy: resourceAfterFullRecovery(currentEN, calculatedStats.maxEnergy),
             },
           )
         : null,
@@ -433,14 +449,25 @@ export function useSheetResourceActions({
                 traitUses: { ...(prev.traitUses || {}), ...resetTraitUses },
               },
               {
-                currentHealth: Math.min(currentHP + hpRestored, calculatedStats.maxHealth),
-                currentEnergy: Math.min(currentEN + enRestored, calculatedStats.maxEnergy),
+                currentHealth: resourceAfterPartialRecovery(
+                  currentHP,
+                  hpRestored,
+                  calculatedStats.maxHealth,
+                ),
+                currentEnergy: resourceAfterPartialRecovery(
+                  currentEN,
+                  enRestored,
+                  calculatedStats.maxEnergy,
+                ),
               },
             )
           : null,
       );
 
-      showToast(`Recovered ${hpRestored} HP and ${enRestored} EN`, 'success');
+      showToast(
+        `Recovered ${Math.max(0, hpRestored)} HP and ${Math.max(0, enRestored)} EN`,
+        'success',
+      );
     },
     [character, calculatedStats, traitsDb, featsDb, showToast, setCharacter],
   );
@@ -453,13 +480,24 @@ export function useSheetResourceActions({
       const pathArch = lookupId
         ? (codexArchetypes.find((a) => a.id === lookupId) as Character['archetype'] | undefined)
         : undefined;
-      const profUpdate = applyLevelUpProficiencyUpdates(
-        character,
-        oldLevel,
-        newLevel,
-        pathArch ?? character.archetype,
-        rules,
-      );
+      const profUpdate =
+        newLevel > oldLevel
+          ? applyLevelUpProficiencyUpdates(
+              character,
+              oldLevel,
+              newLevel,
+              pathArch ?? character.archetype,
+              rules,
+            )
+          : newLevel < oldLevel
+            ? applyLevelDownProficiencyUpdates(
+                character,
+                oldLevel,
+                newLevel,
+                pathArch ?? character.archetype,
+                rules,
+              )
+            : null;
 
       setCharacter((prev) => {
         if (!prev) return null;

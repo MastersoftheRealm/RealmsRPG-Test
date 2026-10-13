@@ -6,8 +6,11 @@
  */
 
 import { PART_IDS, findByIdOrName } from '@/lib/id-constants';
-import { computePartTrainingPoints } from '@/lib/calculators/part-training-points';
-import { dedupeSavedParts } from '@/lib/game/dedupe-saved-parts';
+import {
+  computePartTrainingPoints,
+  publishedTrainingPointLevels,
+} from '@/lib/calculators/part-training-points';
+import { appendCanTargetToDescription, defensesFromPart } from '@/lib/game/targeted-defenses';
 import type { TechniquePart } from '@/hooks/codex-types';
 import { formatActionTypeForDisplay } from '@/lib/utils/action-type';
 import type { AllowUndefinedOptionals } from '@/lib/utils/exact-optional';
@@ -17,6 +20,7 @@ import {
   type AttackMode,
 } from '@/lib/attack-mode';
 import { deriveActionType, actionTypeFromSelection } from './action-type';
+import { finalizePowerEnergy } from './power-calc';
 
 // Re-export for convenience
 export type { TechniquePart };
@@ -24,6 +28,9 @@ export type { TechniquePart };
 // =============================================================================
 // Types
 // =============================================================================
+
+/** Creator Advanced Calculations section ids (display-only). */
+export type TechniqueCalcSectionId = 'action' | 'attack' | 'damage' | 'parts';
 
 export interface TechniquePartPayload {
   id?: number | undefined;
@@ -33,6 +40,10 @@ export interface TechniquePartPayload {
   op_2_lvl?: number | undefined;
   op_3_lvl?: number | undefined;
   applyDuration?: boolean | undefined;
+  /** Display-only. Advanced Calculations grouping; ignored by cost math. */
+  calcSection?: TechniqueCalcSectionId | undefined;
+  /** Display-only label override; ignored by cost math. */
+  displayLabel?: string | undefined;
 }
 
 export interface TechniqueCostResult {
@@ -40,6 +51,8 @@ export interface TechniqueCostResult {
   totalTP: number;
   tpSources: string[];
   energyRaw: number;
+  /** True when a flat contribution is above 0. The 1 EN floor reads this. */
+  hasPositiveEnergy: boolean;
 }
 
 export interface TechniqueDisplayData {
@@ -84,6 +97,7 @@ interface TechniqueDocumentFields {
   actionType?: string | undefined;
   /** Whether the technique can be used as a reaction */
   isReaction?: boolean | undefined;
+  targetedDefenses?: string[] | undefined;
 }
 
 export type TechniqueDocument = AllowUndefinedOptionals<TechniqueDocumentFields>;
@@ -172,10 +186,10 @@ export function calculateTechniqueCosts(
   let sumNonPercentage = 0;
   let productPercentage = 1;
   let totalTP = 0;
+  let positiveEnergy = 0;
   const tpSources: string[] = [];
 
-  const uniqueParts = dedupeSavedParts(partsPayload);
-  uniqueParts.forEach((pl) => {
+  partsPayload.forEach((pl) => {
     // Find part by ID or name for backwards compatibility
     const def = findByIdOrName(partsDb, {
       id: pl.id ?? pl.part?.id,
@@ -198,28 +212,26 @@ export function calculateTechniqueCosts(
       productPercentage *= energyContribution;
     } else {
       sumNonPercentage += energyContribution;
+      if (energyContribution > 1e-9) positiveEnergy += energyContribution;
     }
 
-    const partTP = computePartTrainingPoints(
-      def,
-      { op_1_lvl: l1, op_2_lvl: l2, op_3_lvl: l3 },
-      'technique',
-    );
+    const tpLevels = { op_1_lvl: l1, op_2_lvl: l2, op_3_lvl: l3 };
+    const partTP = computePartTrainingPoints(def, tpLevels, 'technique');
     if (partTP > 0) {
+      const shown = publishedTrainingPointLevels(def, tpLevels);
       let src = `${partTP} TP: ${def.name}`;
-      if (l1 > 0) src += ` (Opt1 ${l1})`;
-      if (l2 > 0) src += ` (Opt2 ${l2})`;
-      if (l3 > 0) src += ` (Opt3 ${l3})`;
+      if (shown.op1 > 0) src += ` (Opt1 ${shown.op1})`;
+      if (shown.op2 > 0) src += ` (Opt2 ${shown.op2})`;
+      if (shown.op3 > 0) src += ` (Opt3 ${shown.op3})`;
       tpSources.push(src);
     }
     totalTP += partTP;
   });
 
   const energyRaw = sumNonPercentage * productPercentage;
-  // Reduction parts (e.g. No Attack) can drive the sum below zero; Energy cannot be
-  // negative (GAME_RULES "Energy Below Zero").
-  const totalEnergy = Math.max(0, Math.ceil(energyRaw));
-  return { totalEnergy, totalTP, tpSources, energyRaw };
+  const hasPositiveEnergy = positiveEnergy > 1e-9;
+  const totalEnergy = finalizePowerEnergy(energyRaw, hasPositiveEnergy);
+  return { totalEnergy, totalTP, tpSources, energyRaw, hasPositiveEnergy };
 }
 
 // =============================================================================
@@ -247,7 +259,7 @@ export function formatTechniquePartChip(
 
   return {
     text,
-    description: def.description || '',
+    description: appendCanTargetToDescription(def.description || '', defensesFromPart(def)) ?? '',
     finalTP,
     hasTP: finalTP > 0,
     optionLevel: optionLevel > 0 ? optionLevel : undefined,
@@ -265,17 +277,15 @@ export function deriveTechniqueDisplay(
   techniqueDoc: TechniqueDocument,
   partsDb: TechniquePart[],
 ): TechniqueDisplayData {
-  const partsPayload: TechniquePartPayload[] = dedupeSavedParts(
-    Array.isArray(techniqueDoc.parts)
-      ? techniqueDoc.parts.map((p) => ({
-          id: p.id,
-          name: p.name,
-          op_1_lvl: p.op_1_lvl || 0,
-          op_2_lvl: p.op_2_lvl || 0,
-          op_3_lvl: p.op_3_lvl || 0,
-        }))
-      : [],
-  );
+  const partsPayload: TechniquePartPayload[] = Array.isArray(techniqueDoc.parts)
+    ? techniqueDoc.parts.map((p) => ({
+        id: p.id,
+        name: p.name,
+        op_1_lvl: p.op_1_lvl || 0,
+        op_2_lvl: p.op_2_lvl || 0,
+        op_3_lvl: p.op_3_lvl || 0,
+      }))
+    : [];
 
   const calc = calculateTechniqueCosts(partsPayload, partsDb);
   // Use saved actionType/isReaction if available; fall back to derivation from parts

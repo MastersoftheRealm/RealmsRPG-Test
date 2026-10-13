@@ -124,6 +124,7 @@ export function CodexSkillsTab({
       search={filters.search}
       onSearchChange={(v) => setFilters((f) => ({ ...f, search: v }))}
       searchPlaceholder="Search names, descriptions..."
+      searchAriaLabel="Search names, descriptions"
       filters={
         <>
           <CharacterFilter

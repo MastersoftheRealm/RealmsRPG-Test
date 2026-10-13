@@ -9,6 +9,7 @@ import { Card, CardContent, EmptyState } from '@/components/ui';
 import { CombatantCard } from '@/components/encounters/CombatantCard';
 import { isOwnedLinkedCombatant } from '@/lib/encounter/character-resource-sync';
 import type { Combatant, TrackedCombatant, Encounter } from '@/types/encounter';
+import { moveCombatantInTurnOrder } from './combat-encounter-helpers';
 
 export interface CombatCombatantListProps {
   encounter: Encounter;
@@ -28,6 +29,7 @@ export interface CombatCombatantListProps {
   onDragOver: (e: DragEvent<HTMLDivElement>, id: string) => void;
   onDragLeave: () => void;
   onDrop: (e: DragEvent<HTMLDivElement>, id: string) => void;
+  onMove: (id: string, direction: -1 | 1) => void;
 }
 
 export function CombatCombatantList({
@@ -48,19 +50,20 @@ export function CombatCombatantList({
   onDragOver,
   onDragLeave,
   onDrop,
+  onMove,
 }: CombatCombatantListProps) {
   return (
     <>
       {!encounter.isActive && sortedCombatants.length > 0 && (
         <div className="flex flex-shrink-0 items-center gap-4 px-2 text-xs text-text-muted">
           <span>
-            Drag the grip handle to reorder. Surprised creatures go last in round 1. Companions
-            always go last.
+            Drag the grip handle to reorder, or use Move up and Move down. Surprised creatures go
+            last in round 1. Companions always go last.
           </span>
         </div>
       )}
 
-      <div className="min-h-[300px] flex-1 space-y-3 overflow-y-auto scroll-smooth pr-2">
+      <div className="min-h-[300px] min-w-0 flex-1 space-y-3 overflow-y-auto scroll-smooth pr-2">
         {sortedCombatants.length === 0 ? (
           <Card>
             <CardContent>
@@ -96,6 +99,20 @@ export function CombatCombatantList({
               onDragOver={(e) => onDragOver(e, combatant.id)}
               onDragLeave={onDragLeave}
               onDrop={(e) => onDrop(e, combatant.id)}
+              onMoveUp={() => onMove(combatant.id, -1)}
+              onMoveDown={() => onMove(combatant.id, 1)}
+              canMoveUp={
+                moveCombatantInTurnOrder(
+                  encounter.combatants,
+                  encounter.round,
+                  combatant.id,
+                  -1,
+                ) !== null
+              }
+              canMoveDown={
+                moveCombatantInTurnOrder(encounter.combatants, encounter.round, combatant.id, 1) !==
+                null
+              }
               variant="compact"
             />
           ))

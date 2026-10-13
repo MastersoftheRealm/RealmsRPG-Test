@@ -3,10 +3,19 @@
 import { useCallback, useState, type Dispatch, type SetStateAction } from 'react';
 import type { SelectableItem } from '@/components/patterns';
 import { useCreatorSave } from '@/hooks';
+import { useCreatorDraftDirty } from '@/hooks/use-creator-unsaved-guard';
+import {
+  findLoadedLibraryItem,
+  resolveCreatorSaveTargetFromItem,
+} from '@/lib/library/catalog-listing';
 import {
   appendCreatureInventoryItems,
   removeCreatureInventoryItem,
 } from '@/lib/game/creature-inventory';
+import {
+  removeCreaturePowerByRowKey,
+  toggleCreaturePowerInnateByRowKey,
+} from '@/lib/game/creature-power-instances';
 import type { CreatureState } from './creature-creator-types';
 import { rawRecordToCreatureState } from './creature-skill-utils';
 import type { CreatureArmament } from './transformers';
@@ -21,7 +30,10 @@ type UseCreatureCreatorWorkspacePersistenceArgs = {
   stats: CreatureSaveStats;
   load: {
     closeLoadModal: () => void;
+    rawItems: unknown[];
   };
+  editCreatureId: string | null;
+  isAdmin: boolean;
 };
 
 export function useCreatureCreatorWorkspacePersistence({
@@ -29,6 +41,8 @@ export function useCreatureCreatorWorkspacePersistence({
   setCreature,
   stats,
   load,
+  editCreatureId,
+  isAdmin,
 }: UseCreatureCreatorWorkspacePersistenceArgs) {
   const getPayload = useCallback(() => {
     return {
@@ -36,6 +50,8 @@ export function useCreatureCreatorWorkspacePersistence({
       data: { ...creature },
     };
   }, [creature]);
+  const draftSnapshot = JSON.stringify(getPayload());
+  const { isDirty: unsavedDirty, acceptDraft } = useCreatorDraftDirty(draftSnapshot);
 
   const save = useCreatorSave({
     type: 'creatures',
@@ -48,6 +64,12 @@ export function useCreatureCreatorWorkspacePersistence({
         : `Are you sure you wish to publish this creature "${n}" to the Realms Library? All users will be able to see and use it.`,
     successMessage: 'Creature saved!',
     publicSuccessMessage: 'Creature saved to Realms Library!',
+    initialSaveTarget: resolveCreatorSaveTargetFromItem(
+      findLoadedLibraryItem(load.rawItems, editCreatureId),
+      { canSaveToOfficial: isAdmin },
+    ),
+    editingId: editCreatureId,
+    onSaveCommitted: acceptDraft,
   });
 
   const [showResetConfirm, setShowResetConfirm] = useState(false);
@@ -55,11 +77,13 @@ export function useCreatureCreatorWorkspacePersistence({
   const handleLoadCreature = useCallback(
     (item: SelectableItem) => {
       setCreature(rawRecordToCreatureState(item.data as Record<string, unknown>));
+      save.applyLoadedLibraryItem(item.data);
+      acceptDraft();
       load.closeLoadModal();
       save.setSaveMessage({ type: 'success', text: 'Creature loaded successfully!' });
       setTimeout(() => save.setSaveMessage(null), 2000);
     },
-    [load, save, setCreature],
+    [acceptDraft, load, save, setCreature],
   );
 
   const handleSave = useCallback(async () => {
@@ -89,22 +113,20 @@ export function useCreatureCreatorWorkspacePersistence({
   );
 
   const onTogglePowerInnate = useCallback(
-    (powerId: string) => {
+    (powerRowKey: string) => {
       setCreature((prev) => ({
         ...prev,
-        powers: prev.powers.map((p) =>
-          p.id === powerId ? { ...p, innate: !(p.innate === true) } : p,
-        ),
+        powers: toggleCreaturePowerInnateByRowKey(prev.powers, powerRowKey),
       }));
     },
     [setCreature],
   );
 
   const onRemovePower = useCallback(
-    (powerId: string) => {
+    (powerRowKey: string) => {
       setCreature((prev) => ({
         ...prev,
-        powers: prev.powers.filter((p) => p.id !== powerId),
+        powers: removeCreaturePowerByRowKey(prev.powers, powerRowKey),
       }));
     },
     [setCreature],
@@ -142,6 +164,8 @@ export function useCreatureCreatorWorkspacePersistence({
 
   return {
     save,
+    unsavedDirty,
+    acceptDraft,
     handleSave,
     handleReset,
     handleLoadCreature,

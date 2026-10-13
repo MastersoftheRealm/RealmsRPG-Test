@@ -9,8 +9,15 @@
 
 import { useState, use } from 'react';
 import Link from 'next/link';
-import { LoadingState, PageContainer, Alert, useToast } from '@/components/ui';
-import { useEncounter, useSaveEncounter, useAutoSave, useCampaignsFull } from '@/hooks';
+import {
+  LoadingState,
+  PageContainer,
+  PAGE_FILLS_VIEWPORT_CLASSNAME,
+  Alert,
+  useToast,
+} from '@/components/ui';
+import { CloudSyncOfflineBanner } from '@/components/patterns';
+import { useAuth, useEncounter, useSaveEncounter, useAutoSave, useCampaignsFull } from '@/hooks';
 import { RollProvider } from '@/components/rolls';
 import type { Encounter } from '@/types/encounter';
 import CombatEncounterView from '../_components/CombatEncounterView';
@@ -41,8 +48,9 @@ function CombatEncounterContent({ params }: { params: Promise<{ id: string }> })
   }
   const isInitialized = initializedEncounterId === encounterId;
 
+  const { user } = useAuth();
   const { showToast } = useToast();
-  const { isSaving, hasUnsavedChanges, saveNow } = useAutoSave({
+  const { isSaving, hasUnsavedChanges, syncBlockedByNetwork, saveNow } = useAutoSave({
     data: encounter,
     onSave: async (data) => {
       if (!data || !encounterId) return;
@@ -60,7 +68,7 @@ function CombatEncounterContent({ params }: { params: Promise<{ id: string }> })
 
   if (isLoading) {
     return (
-      <PageContainer size="full">
+      <PageContainer size="full" className={PAGE_FILLS_VIEWPORT_CLASSNAME}>
         <LoadingState message="Loading encounter..." size="lg" padding="lg" />
       </PageContainer>
     );
@@ -68,7 +76,7 @@ function CombatEncounterContent({ params }: { params: Promise<{ id: string }> })
 
   if (error || (!isLoading && !encounterData)) {
     return (
-      <PageContainer size="full">
+      <PageContainer size="full" className={PAGE_FILLS_VIEWPORT_CLASSNAME}>
         <Alert variant="danger" title="Encounter not found">
           This encounter may have been deleted or you may not have access.
         </Alert>
@@ -81,7 +89,7 @@ function CombatEncounterContent({ params }: { params: Promise<{ id: string }> })
 
   if (!encounter) {
     return (
-      <PageContainer size="full">
+      <PageContainer size="full" className={PAGE_FILLS_VIEWPORT_CLASSNAME}>
         <LoadingState message="Initializing..." />
       </PageContainer>
     );
@@ -104,7 +112,7 @@ function CombatEncounterContent({ params }: { params: Promise<{ id: string }> })
 
   return (
     <RollProvider>
-      <PageContainer size="full">
+      <PageContainer size="full" className={PAGE_FILLS_VIEWPORT_CLASSNAME}>
         <EncounterPageHeader
           encounterType="Combat"
           name={encounter.name}
@@ -127,6 +135,12 @@ function CombatEncounterContent({ params }: { params: Promise<{ id: string }> })
               onBeforeOpen={saveNow}
             />
           }
+        />
+
+        <CloudSyncOfflineBanner
+          enabled={!!user}
+          syncBlocked={syncBlockedByNetwork}
+          onRetry={() => void saveNow()}
         />
 
         <CombatEncounterView

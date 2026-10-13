@@ -6,6 +6,7 @@
  */
 
 import { apiFetch } from '@/lib/api-client';
+import { officialLibraryQueryPath } from '@/lib/library/catalog-listing';
 import type { LibraryTabCounts } from '@/lib/library/library-tab-counts';
 import type {
   LibraryItemByType,
@@ -39,28 +40,35 @@ export async function saveToLibrary(
 }
 
 /**
- * Find a user-library row by exact name.
- * Returns `null` when no row matches. API/network failures **throw** (do not
- * treat transport errors as "not found" — see ARCHITECTURE.md client errors).
+ * Every user-library row whose name matches (trim + case-insensitive on the server).
+ * Lookup miss → empty list. API/network failures throw (callers toast).
+ * See ARCHITECTURE.md client errors.
  */
-export async function findLibraryItemByName(
+export async function findLibraryItemsByName(
   type: LibraryType,
   name: string,
-): Promise<{ id: string } | null> {
+): Promise<Array<{ id: string }>> {
   // PERF-01: server-side name lookup returns only matching `{ id, name }`
   // rows instead of the whole library.
   const matches = await apiFetch<Array<{ id: string; name?: string | undefined }>>(
     `${API_BASE}/${type}?name=${encodeURIComponent(name.trim())}`,
   );
-  const found = matches[0];
-  return found ? { id: found.id } : null;
+  return matches
+    .map((row) => ({ id: String(row.id ?? '').trim() }))
+    .filter((row) => row.id.length > 0);
 }
 
-/** Fetch official library items (no auth). Uses columnar official_* tables; species reads codex_species. */
+/** Fetch official library items. Defaults to listed (player catalogs). */
 export async function fetchOfficialLibrary<T extends LibraryItemType>(
   type: T,
+  options?: { includeUnlisted?: boolean | undefined },
 ): Promise<LibraryRow<T>[]> {
-  return apiFetch<LibraryRow<T>[]>(`/api/official/${type}`, { cache: 'no-store' });
+  return apiFetch<LibraryRow<T>[]>(
+    officialLibraryQueryPath(type, options?.includeUnlisted === true),
+    {
+      cache: 'no-store',
+    },
+  );
 }
 
 /** Auth My Library tab badges (ADR-0015). */
@@ -77,8 +85,9 @@ export async function fetchOfficialLibraryCounts(): Promise<LibraryTabCounts> {
 export async function findOfficialLibraryItemByName<T extends LibraryItemType>(
   type: T,
   name: string,
+  options?: { includeUnlisted?: boolean | undefined },
 ): Promise<{ id: string } | null> {
-  const items = await fetchOfficialLibrary(type);
+  const items = await fetchOfficialLibrary(type, options);
   const normalized = (name || '').trim().toLowerCase();
   const found = items.find(
     (i) =>
@@ -98,9 +107,10 @@ export async function addOfficialItemToLibrary<T extends LibraryItemType>(
   officialItem: LibraryRow<T>,
 ): Promise<string> {
   /* eslint-disable @typescript-eslint/no-unused-vars -- strip official-library metadata before copy */
-  const { id, docId, _source, ...data } = officialItem as LibraryRow<T> & {
+  const { id, docId, _source, catalogListing, ...data } = officialItem as LibraryRow<T> & {
     docId?: unknown | undefined;
     _source?: unknown | undefined;
+    catalogListing?: unknown | undefined;
   };
   /* eslint-enable @typescript-eslint/no-unused-vars */
   return saveToLibrary(type, { ...data, createdAt: new Date().toISOString() });
@@ -110,9 +120,12 @@ export async function addOfficialItemToLibrary<T extends LibraryItemType>(
 export async function saveToOfficialLibrary(
   type: LibraryItemType,
   data: LibrarySaveBody,
-  options?: { existingId?: string | undefined },
+  options?: { existingId?: string | undefined; catalogListing?: 'listed' | 'unlisted' | undefined },
 ): Promise<string> {
-  const body = options?.existingId ? { ...data, id: options.existingId } : data;
+  const body = {
+    ...(options?.existingId ? { ...data, id: options.existingId } : data),
+    ...(options?.catalogListing ? { catalogListing: options.catalogListing } : {}),
+  };
   const result = await apiFetch<{ id: string }>(`/api/official/${type}`, {
     method: 'POST',
     body: JSON.stringify(body),

@@ -3,6 +3,7 @@ import {
   applyInnateSelection,
   buildLookup,
   innateSelectionBlockMessage,
+  innateSelectionWarnMessage,
   pickAffordableIds,
   pickInnateFillIds,
   resolveLibraryItem,
@@ -121,49 +122,44 @@ describe('applyInnateSelection', () => {
     });
   });
 
-  it('swaps the last-selected pick when at energy cap (1-for-1)', () => {
+  it('keeps earlier picks when the new pick exceeds Innate Energy (warn)', () => {
     expect(applyInnateSelection({ ...base, selectedIds: ['a4', 'b2'], id: 'f2' })).toEqual({
       ok: true,
-      nextIds: ['a4', 'f2'],
+      nextIds: ['a4', 'b2', 'f2'],
+      warn: 'energy',
     });
   });
 
-  it('keeps dropping last-in until the new pick fits', () => {
+  it('appends over-cap picks without dropping prior selections', () => {
     expect(applyInnateSelection({ ...base, selectedIds: ['a4', 'b2'], id: 'd5' })).toEqual({
       ok: true,
-      nextIds: ['d5'],
+      nextIds: ['a4', 'b2', 'd5'],
+      warn: 'energy',
     });
   });
 
-  it('does not drop an earlier pick when dropping last-in is enough', () => {
-    expect(
-      applyInnateSelection({
-        ...base,
-        selectedIds: ['e1', 'a4'],
-        id: 'c3',
-      }),
-    ).toEqual({ ok: true, nextIds: ['e1', 'c3'] });
-  });
-
-  it('blocks over-threshold picks without changing the selection', () => {
+  it('warns on over-threshold picks but still appends', () => {
     expect(applyInnateSelection({ ...base, selectedIds: ['b2'], id: 'over' })).toEqual({
-      ok: false,
-      reason: 'threshold',
+      ok: true,
+      nextIds: ['b2', 'over'],
+      warn: 'threshold',
     });
   });
 
-  it('blocks unknown or negative energy as threshold-ineligible', () => {
+  it('warns on unknown or negative energy as threshold-ineligible', () => {
     expect(applyInnateSelection({ ...base, selectedIds: [], id: 'unknown' })).toEqual({
-      ok: false,
-      reason: 'threshold',
+      ok: true,
+      nextIds: ['unknown'],
+      warn: 'threshold',
     });
     expect(applyInnateSelection({ ...base, selectedIds: [], id: 'negative' })).toEqual({
-      ok: false,
-      reason: 'threshold',
+      ok: true,
+      nextIds: ['negative'],
+      warn: 'threshold',
     });
   });
 
-  it('blocks a pick that cannot fit Innate Energy alone', () => {
+  it('warns when a pick alone exceeds Innate Energy max', () => {
     expect(
       applyInnateSelection({
         ...base,
@@ -172,10 +168,10 @@ describe('applyInnateSelection', () => {
         selectedIds: [],
         id: 'd5',
       }),
-    ).toEqual({ ok: false, reason: 'energy' });
+    ).toEqual({ ok: true, nextIds: ['d5'], warn: 'energy' });
   });
 
-  it('does not drop extra innates just to free Training Points', () => {
+  it('blocks when Training Points would be exceeded', () => {
     expect(
       applyInnateSelection({
         ...base,
@@ -185,18 +181,6 @@ describe('applyInnateSelection', () => {
         tpLimit: 10,
       }),
     ).toEqual({ ok: false, reason: 'tp' });
-  });
-
-  it('allows a swap when dropping last-in frees enough Training Points', () => {
-    expect(
-      applyInnateSelection({
-        ...base,
-        selectedIds: ['d5'],
-        id: 'c3',
-        otherTpSpent: 9,
-        tpLimit: 10,
-      }),
-    ).toEqual({ ok: true, nextIds: ['c3'] });
   });
 });
 
@@ -217,14 +201,19 @@ describe('buildLookup / resolveLibraryItem', () => {
   });
 });
 
-describe('innateSelectionBlockMessage', () => {
-  it('maps block reasons onto powersTechniques copy', () => {
-    expect(innateSelectionBlockMessage('threshold')).toBe(
+describe('innateSelectionWarnMessage', () => {
+  it('maps warn reasons onto powersTechniques copy', () => {
+    expect(innateSelectionWarnMessage('threshold')).toBe(
       'That power exceeds your Innate Threshold.',
     );
-    expect(innateSelectionBlockMessage('energy')).toBe(
+    expect(innateSelectionWarnMessage('energy')).toBe(
       'Not enough Innate Energy remaining for that choice.',
     );
+  });
+});
+
+describe('innateSelectionBlockMessage', () => {
+  it('maps TP blocks onto powersTechniques copy', () => {
     expect(innateSelectionBlockMessage('tp')).toBe(
       'Not enough Training Points remaining for that choice.',
     );

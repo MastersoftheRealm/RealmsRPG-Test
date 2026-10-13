@@ -1,12 +1,17 @@
-import { defined } from '@/lib/utils';
+import { isValidElement, type ReactElement } from 'react';
+import type { PowerPart } from '@/hooks/codex-types';
 import { chipLabelsFromDetailSections } from '@/lib/glr';
-import { describe, expect, it } from 'vitest';
+import { defined } from '@/lib/utils';
+import { describe, expect, it, vi } from 'vitest';
 import {
+  mapArmorRows,
   mapPowerRows,
   mapTechniqueRows,
+  mapWeaponRows,
   type LibraryEntityRowContext,
 } from './library-entity-rows';
-import type { CharacterPower, CharacterTechnique } from '@/types';
+import type { Abilities, CharacterPower, CharacterTechnique, Item } from '@/types';
+import type { LibraryPower } from '@/types/library';
 
 const baseCtx: LibraryEntityRowContext = {
   powerPartsDb: [],
@@ -61,12 +66,130 @@ describe('mapPowerRows / mapTechniqueRows — Energy is rightSlot only (TASK-502
     expect(row.rightSlot).toBeTruthy();
   });
 
-  it('zero-cost rows omit the energy rightSlot control', () => {
+  it('a power with no energy shows a dash instead of a 1 EN spend control', () => {
     const powers: CharacterPower[] = [
       { id: 'innate', name: 'Innate', cost: 0, innate: true } as CharacterPower,
     ];
     const row = defined(mapPowerRows(powers, baseCtx)[0]);
-    expect(row.rightSlot).toBeNull();
+    const slot = row.rightSlot as { props?: { 'aria-label'?: string; children?: string } } | null;
+    expect(slot?.props?.['aria-label']).toBe('No energy cost');
+    expect(slot?.props?.children).toBe('—');
+  });
+
+  it('shows a partless power as its saved quick action and 2 rounds', () => {
+    const libraryItem = {
+      id: 'glance',
+      docId: 'glance',
+      name: 'Glance',
+      parts: [],
+      actionType: 'quick',
+      duration: { type: 'rounds', value: 2 },
+    } as LibraryPower;
+    const powers: CharacterPower[] = [
+      {
+        id: 'glance',
+        name: 'Glance',
+        parts: [],
+        actionType: 'Basic action',
+        duration: 'Instant',
+        libraryItem,
+      } as CharacterPower,
+    ];
+    const row = defined(mapPowerRows(powers, baseCtx)[0]);
+    expect(row.columns?.find((c) => c.key === 'action')?.value).toBe('Quick action');
+    expect(row.columns?.find((c) => c.key === 'duration')?.value).toBe('2 Rounds');
+  });
+
+  it('keeps a saved action and duration when the library row is missing', () => {
+    const powers: CharacterPower[] = [
+      {
+        id: 'glance',
+        name: 'Glance',
+        parts: [],
+        actionType: 'Quick Action',
+        duration: '2 Rounds',
+      } as CharacterPower,
+    ];
+    const row = defined(mapPowerRows(powers, baseCtx)[0]);
+    expect(row.columns?.find((c) => c.key === 'action')?.value).toBe('Quick action');
+    expect(row.columns?.find((c) => c.key === 'duration')?.value).toBe('2 RNDS');
+  });
+
+  it('hides innate toggle when the path has no Innate Energy (86e3jvfm2)', () => {
+    const powers: CharacterPower[] = [
+      { id: 'charm', name: 'Charm Beast', innate: false, parts: [] } as CharacterPower,
+    ];
+    const row = defined(
+      mapPowerRows(powers, {
+        ...baseCtx,
+        showLibraryEditControls: true,
+        onTogglePowerInnate: () => {},
+        canMarkPowersInnate: false,
+      })[0],
+    );
+    expect(row.leftSlot).toBeUndefined();
+  });
+
+  it('warns on innate powers when the path has no Innate Energy (86e3jvfm2)', () => {
+    const powers: CharacterPower[] = [
+      { id: 'beast', name: 'Beast Armor', innate: true, parts: [] } as CharacterPower,
+    ];
+    const row = defined(
+      mapPowerRows(powers, {
+        ...baseCtx,
+        showLibraryEditControls: true,
+        onTogglePowerInnate: () => {},
+        canMarkPowersInnate: false,
+      })[0],
+    );
+    expect(row.warningMessage).toContain('Innate Energy is 0');
+    expect(row.leftSlot).toBeTruthy();
+  });
+
+  it('an innate power shows its Energy without a Spend control (86e3jvfmf)', () => {
+    const charmPart: PowerPart = {
+      id: 'charm',
+      name: 'Charm',
+      description: 'Charm',
+      category: 'Effect',
+      base_en: 7,
+      base_tp: 1,
+    };
+    const charm: CharacterPower = {
+      id: 'charm-beast',
+      name: 'Charm Beast',
+      innate: true,
+      parts: [{ id: 'charm', name: 'Charm' }],
+    } as CharacterPower;
+    const ctx: LibraryEntityRowContext = {
+      ...baseCtx,
+      powerPartsDb: [charmPart],
+      currentEnergy: 18,
+    };
+    const innate = defined(mapPowerRows([charm], ctx)[0]);
+    const mark = innate.rightSlot as {
+      type?: unknown;
+      props?: { 'aria-label'?: string; title?: string; onClick?: () => void; children?: number };
+    };
+    expect(mark.type).toBe('span');
+    expect(mark.props?.onClick).toBeUndefined();
+    expect(mark.props?.children).toBe(7);
+    expect(mark.props?.['aria-label']).toBe('Innate, 7 Energy, no Energy spent');
+    expect(mark.props?.title).toBe('Innate — no Energy spent');
+
+    const spent: Array<number> = [];
+    const regular = defined(
+      mapPowerRows([{ ...charm, innate: false }], {
+        ...ctx,
+        onUsePower: (_id, cost) => spent.push(cost),
+      })[0],
+    );
+    const button = regular.rightSlot as {
+      props?: { title?: string; onClick?: () => void };
+    };
+    expect(button.props?.title).toBe('Spend 7 Energy');
+    button.props?.onClick?.();
+    expect(spent).toEqual([7]);
   });
 
   it('view-only (no onUse): still renders disabled spend chrome, not a static column', () => {
@@ -76,5 +199,96 @@ describe('mapPowerRows / mapTechniqueRows — Energy is rightSlot only (TASK-502
     const row = defined(mapPowerRows(powers, { ...baseCtx, onUsePower: undefined })[0]);
     expect(columnKeys(row)).not.toContain('energy');
     expect(row.rightSlot).toBeTruthy();
+  });
+});
+
+describe('mapWeaponRows — inventory damage rolls (86e3jwaw0)', () => {
+  it('passes proficient attack bonus into rollDamage like the archetype quick table', () => {
+    const rollDamage = vi.fn();
+    const abilities: Abilities = {
+      strength: 1,
+      vitality: 0,
+      agility: 0,
+      acuity: 0,
+      intelligence: 0,
+      charisma: 0,
+    };
+    const battleaxe = {
+      id: 'battleaxe',
+      name: 'Battleaxe',
+      damage: '1d8 Slashing',
+      properties: [],
+    } as Item;
+    const row = defined(
+      mapWeaponRows([battleaxe], {
+        ...baseCtx,
+        abilities,
+        martialProficiency: 9,
+        rollContext: {
+          canRoll: true,
+          rollAttack: vi.fn(),
+          rollDamage,
+        } as unknown as LibraryEntityRowContext['rollContext'],
+      })[0],
+    );
+    const damageCol = row.columns?.find((c) => c.key === 'damage');
+    const damageRoot = damageCol?.value;
+    let rollOnClick: (() => void) | undefined;
+    if (isValidElement(damageRoot)) {
+      const children = (damageRoot as ReactElement<{ children?: unknown }>).props.children;
+      const rollButton = Array.isArray(children) ? children[0] : children;
+      if (isValidElement(rollButton)) {
+        rollOnClick = (rollButton as ReactElement<{ onClick?: () => void }>).props.onClick;
+      }
+    }
+    rollOnClick?.();
+    expect(rollDamage).toHaveBeenCalledWith('1d8 Slashing', 10, 'Battleaxe damage');
+  });
+});
+
+describe('mapArmorRows Critical Range temp (86e3jv5vx)', () => {
+  it('shows 23 when a Critical Range temp of +1 is added to a 22 threshold', () => {
+    const abilities: Abilities = {
+      strength: 0,
+      vitality: 0,
+      agility: 1,
+      acuity: 0,
+      intelligence: 0,
+      charisma: 0,
+    };
+    const chainmail = {
+      id: 'chain',
+      name: 'Chainmail Shirt',
+      equipped: true,
+      properties: [{ id: 22, name: 'Critical Range +1', op_1_lvl: 0 }],
+    } as unknown as Item;
+    const plain = defined(mapArmorRows([chainmail], { ...baseCtx, abilities })[0]);
+    expect(plain.columns?.find((c) => c.key === 'crit')?.value).toBe(22);
+
+    const withTemp = defined(
+      mapArmorRows([chainmail], {
+        ...baseCtx,
+        abilities,
+        tempModifiers: { criticalRange: 1 },
+      })[0],
+    );
+    const crit = withTemp.columns?.find((c) => c.key === 'crit');
+    expect(crit?.value).toBe(23);
+    expect(crit?.className).toBe('text-warning-fg');
+
+    const noIncrease = {
+      id: 'cloth',
+      name: 'Cloth',
+      equipped: true,
+      armorValue: 0,
+    } as Item;
+    const dash = defined(
+      mapArmorRows([noIncrease], {
+        ...baseCtx,
+        abilities,
+        tempModifiers: { criticalRange: 1 },
+      })[0],
+    );
+    expect(dash.columns?.find((c) => c.key === 'crit')?.value).toBe('-');
   });
 });

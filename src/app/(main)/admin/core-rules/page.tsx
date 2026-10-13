@@ -7,10 +7,9 @@
 
 'use client';
 
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect, useRef } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import Link from 'next/link';
-import { ChevronLeft } from 'lucide-react';
 import {
   PageContainer,
   PageHeader,
@@ -23,12 +22,19 @@ import {
   Spinner,
 } from '@/components/ui';
 import { ConfirmActionModal } from '@/components/patterns';
+import { useCreatorLeaveBlocker } from '@/hooks/use-creator-unsaved-guard';
 import { useGameRules } from '@/hooks/use-game-rules';
 import { updateCodexDoc, createCodexDoc } from '../codex/actions';
 import type { CoreRulesMap } from '@/types/core-rules';
 import { defined } from '@/lib/utils';
 import { TABS, type CategoryId } from './core-rules-tabs';
 import { CategoryEditor } from './core-rules-category-editor';
+import {
+  CORE_RULES_EDITOR_DISCARD_CANCEL,
+  CORE_RULES_EDITOR_DISCARD_TITLE,
+  coreRulesEscapeShouldAsk,
+  coreRulesUnsavedPrompt,
+} from './core-rules-unsaved-leave';
 
 /**
  * Only a missing row justifies falling back to create. Treating every failure as "not there
@@ -62,6 +68,12 @@ export default function AdminCoreRulesPage() {
   const [success, setSuccess] = useState<string | null>(null);
   const [dirty, setDirty] = useState(false);
   const [pendingTab, setPendingTab] = useState<string | null>(null);
+  const {
+    request: leaveRequest,
+    dismiss: dismissLeave,
+    confirm: confirmLeave,
+  } = useCreatorLeaveBlocker(dirty);
+  const backLinkRef = useRef<HTMLAnchorElement>(null);
 
   const activeTabDef = TABS.find((t) => t.id === activeTab)!;
   const categoryId = activeTabDef.category;
@@ -123,6 +135,51 @@ export default function AdminCoreRulesPage() {
     setPendingTab(null);
   }, [pendingTab]);
 
+  const unsavedPrompt = coreRulesUnsavedPrompt({
+    navigationPending: leaveRequest !== null,
+    tabPending: pendingTab !== null,
+    activeTabLabel: activeTabDef.label,
+    pendingTabLabel,
+  });
+
+  const keepEditing = useCallback(() => {
+    setPendingTab(null);
+    dismissLeave();
+  }, [dismissLeave]);
+
+  const confirmUnsaved = useCallback(() => {
+    if (unsavedPrompt.action === 'leave') {
+      confirmLeave();
+      return;
+    }
+    discardAndSwitchTab();
+  }, [confirmLeave, discardAndSwitchTab, unsavedPrompt.action]);
+
+  useEffect(() => {
+    if (!dirty && leaveRequest) dismissLeave();
+  }, [dirty, dismissLeave, leaveRequest]);
+
+  useEffect(() => {
+    if (!dirty) return;
+    const onEscape = (event: KeyboardEvent) => {
+      if (event.key !== 'Escape' || event.defaultPrevented) return;
+      if (
+        !coreRulesEscapeShouldAsk({
+          dirty,
+          dialogOpen: unsavedPrompt.open,
+          menuOpen: document.getElementById('mobile-nav-panel') !== null,
+          targetIsSelect: event.target instanceof HTMLSelectElement,
+        })
+      ) {
+        return;
+      }
+      event.preventDefault();
+      backLinkRef.current?.click();
+    };
+    document.addEventListener('keydown', onEscape);
+    return () => document.removeEventListener('keydown', onEscape);
+  }, [dirty, unsavedPrompt.open]);
+
   const handleSave = useCallback(async () => {
     try {
       setSaving(true);
@@ -141,7 +198,6 @@ export default function AdminCoreRulesPage() {
         );
       }
 
-      queryClient.invalidateQueries({ queryKey: ['core-rules'] });
       queryClient.invalidateQueries({ queryKey: ['codex'] });
 
       setDirty(false);
@@ -163,17 +219,20 @@ export default function AdminCoreRulesPage() {
 
   return (
     <PageContainer size="xl">
-      <div className="mb-4 flex items-center gap-3">
-        <Link href="/admin" className="text-text-muted transition-colors hover:text-text-primary">
-          <ChevronLeft className="h-5 w-5" />
-        </Link>
-        <PageHeader
-          title="Core Rules Editor"
-          description="Edit game rules. Changes take effect for all users after you save."
-        />
+      <PageHeader
+        title="Core Rules Editor"
+        description="Edit game rules. Changes take effect for all users after you save."
+      />
+      <div className="mb-4">
+        <Button variant="secondary" asChild>
+          <Link ref={backLinkRef} href="/admin">
+            ← Back to Admin
+          </Link>
+        </Button>
       </div>
 
       <TabNavigation
+        className="admin-core-rules-tabs"
         variant="underline"
         tabs={TABS.map((t) => ({ id: t.id, label: t.label }))}
         activeTab={activeTab}
@@ -183,14 +242,14 @@ export default function AdminCoreRulesPage() {
       />
 
       <ConfirmActionModal
-        isOpen={pendingTab !== null}
-        title="Discard unsaved changes?"
-        description={`${activeTabDef.label} has unsaved edits. Opening ${pendingTabLabel} will discard them.`}
-        confirmLabel="Discard changes"
-        cancelLabel="Keep editing"
+        isOpen={unsavedPrompt.open}
+        title={CORE_RULES_EDITOR_DISCARD_TITLE}
+        description={unsavedPrompt.description}
+        confirmLabel={unsavedPrompt.confirmLabel}
+        cancelLabel={CORE_RULES_EDITOR_DISCARD_CANCEL}
         confirmVariant="danger"
-        onConfirm={discardAndSwitchTab}
-        onClose={() => setPendingTab(null)}
+        onConfirm={confirmUnsaved}
+        onClose={keepEditing}
       />
 
       <TabContentPanel

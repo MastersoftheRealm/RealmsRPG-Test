@@ -86,6 +86,8 @@ type MockSupabaseConfig = {
     hint?: string | undefined;
     code?: string | undefined;
   } | null;
+  /** Row returned for `select('id, data')` — the duplicate source lookup. */
+  duplicateSource?: { id: string; data: Record<string, unknown> } | null | undefined;
 };
 
 function createMockSupabase(config: MockSupabaseConfig = {}) {
@@ -101,6 +103,7 @@ function createMockSupabase(config: MockSupabaseConfig = {}) {
     codexFeats = [],
     codexSkills = [],
     codexSkillsError = null,
+    duplicateSource = null,
   } = config;
 
   let insertAttempted = false;
@@ -142,6 +145,9 @@ function createMockSupabase(config: MockSupabaseConfig = {}) {
               const query: Record<string, unknown> = {
                 order: vi.fn().mockResolvedValue({ data: characters, error: charactersError }),
                 maybeSingle: vi.fn(async () => {
+                  if (cols === 'id, data') {
+                    return { data: duplicateSource, error: null };
+                  }
                   const id = cols === 'id' ? replayedId() : null;
                   return { data: id ? { id } : null, error: null };
                 }),
@@ -355,6 +361,50 @@ describe('POST /api/characters', () => {
     mockGetSession.mockResolvedValue({ user: TEST_USER, error: null });
 
     const response = await POST(makePostRequest({ name: '' }));
+
+    expect(response.status).toBe(400);
+    const body = await readJson<{ error: string; details?: string[] | undefined }>(response);
+    expect(body.error).toBe('Validation failed');
+    expect(body.details?.some((d) => d.includes('name'))).toBe(true);
+  });
+
+  it('copies a character when the body sends only duplicateOf (86e3jmcn3)', async () => {
+    const sourceId = '11111111-1111-4111-8111-111111111111';
+    mockGetSession.mockResolvedValue({ user: TEST_USER, error: null });
+    const supabase = createMockSupabase({
+      insertId: 'copied-char-id',
+      duplicateSource: {
+        id: sourceId,
+        data: {
+          name: 'Aria',
+          level: 4,
+          notes: 'kept',
+          createdAt: '2026-01-01T00:00:00.000Z',
+        },
+      },
+    });
+    mockCreateClient.mockResolvedValue(supabase as never);
+
+    const response = await POST(makePostRequest({ duplicateOf: sourceId }));
+
+    expect(response.status).toBe(200);
+    await expect(readJson(response)).resolves.toEqual({ id: 'copied-char-id' });
+    const saved = defined(supabase.insertedRows[0]);
+    expect(saved.id).not.toBe(sourceId);
+    expect(saved.user_id).toBe(TEST_USER.uid);
+    expect(saved.name).toBe('Aria (Copy)');
+    expect(saved.level).toBe(4);
+    const savedData = saved.data as Record<string, unknown>;
+    expect(savedData.name).toBe('Aria (Copy)');
+    expect(savedData.level).toBe(4);
+    expect(savedData.notes).toBe('kept');
+    expect(savedData.createdAt).not.toBe('2026-01-01T00:00:00.000Z');
+  });
+
+  it('still requires a name when the body is not a duplicate', async () => {
+    mockGetSession.mockResolvedValue({ user: TEST_USER, error: null });
+
+    const response = await POST(makePostRequest({}));
 
     expect(response.status).toBe(400);
     const body = await readJson<{ error: string; details?: string[] | undefined }>(response);

@@ -12,6 +12,7 @@
 import { useState, useCallback } from 'react';
 import {
   PageContainer,
+  PAGE_FILLS_VIEWPORT_CLASSNAME,
   PageHeader,
   TabNavigation,
   TabContentPanel,
@@ -88,7 +89,7 @@ export default function CodexPage() {
   const isPublic = codexMode === 'public';
 
   return (
-    <PageContainer size="xl">
+    <PageContainer size="xl" className={PAGE_FILLS_VIEWPORT_CLASSNAME}>
       <div className="mb-4 flex flex-wrap items-start justify-between gap-4">
         <PageHeader
           title={isPublic ? 'Realms Codex' : 'My Codex'}

@@ -1,3 +1,141 @@
+## DEV-V-001 — Advanced character creator step guards
+
+**Superseded 2026-09-02 (TASK-912).** The 9-step Legacy wizard at `/characters/new/advanced` was deleted. That URL **308s** to `/characters/new`. Do **not** run T001–T021 against a live tabbed wizard. Currency/save CI is Guided: `src/lib/guided-creator/equipment-currency.test.ts` + `character-save.test.ts` (`clampSavedCurrency`). Replacement QA: **DEV-V-013-T075** / **T094**.
+
+**Related tasks:** TASK-356, TASK-717, TASK-804, **TASK-856**, **TASK-912**  
+**Chooser:** `/characters/new` is Guided / Custom only (DEV-V-013-T001 / T075). Retired `/characters/new/advanced` redirects to the chooser.  
+**Start URL (historical):** `/characters/new/advanced` (now a redirect)  
+
+Historical T001–T021 assumed **Characters** → **Add Character** → **Legacy**. **All SKIP.** Use DEV-V-013-T075 / T094.
+
+#### DEV-V-001-T001 — Choose a Path can be selected
+
+**Report** — [x] SKIP — Notes: TASK-912 deleted Legacy creator.
+
+---
+
+#### DEV-V-001-T002 — Forge Your Own can be selected
+
+**Report** — [x] SKIP — Notes: TASK-912 deleted Legacy creator.
+
+---
+
+#### DEV-V-001-T003 — Choose a Path is deselected when Forge Your Own is selected
+
+**Report** — [x] SKIP — Notes: TASK-912 deleted Legacy creator.
+
+---
+
+#### DEV-V-001-T004 — Forge Your Own is deselected when Choose a Path is selected
+
+**Report** — [x] SKIP — Notes: TASK-912 deleted Legacy creator.
+
+---
+
+#### DEV-V-001-T005 — Forge flow: confirm archetype advances to Species
+
+**Report** — [x] SKIP — Notes: TASK-912 deleted Legacy creator.
+
+---
+
+#### DEV-V-001-T006 — Choose a different archetype returns to selection
+
+**Report** — [x] SKIP — Notes: TASK-912 deleted Legacy creator.
+
+---
+
+#### DEV-V-001-T007 — Skills tab disabled before Ancestry is complete
+
+**Report** — [x] SKIP — Notes: TASK-912 deleted Legacy creator.
+
+---
+
+#### DEV-V-001-T008 — Skills tab unlocks after Species and Ancestry are complete
+
+**Report** — [x] SKIP — Notes: TASK-912 deleted Legacy creator.
+
+---
+
+#### DEV-V-001-T009 — Continue disabled while ability points remain unspent
+
+**Report** — [x] SKIP — Notes: TASK-912 deleted Legacy creator.
+
+---
+
+#### DEV-V-001-T010 — Continue enabled when all ability points are spent
+
+**Report** — [x] SKIP — Notes: TASK-912 deleted Legacy creator.
+
+---
+
+#### DEV-V-001-T011 — Continue disabled without required feats
+
+**Report** — [x] SKIP — Notes: TASK-912 deleted Legacy creator.
+
+---
+
+#### DEV-V-001-T012 — Continue enabled after required feats are added
+
+**Report** — [x] SKIP — Notes: TASK-912 deleted Legacy creator.
+
+---
+
+#### DEV-V-001-T013 — Changing archetype clears later-step selections
+
+**Report** — [x] SKIP — Notes: TASK-912 deleted Legacy creator.
+
+---
+
+#### DEV-V-001-T014 — Equipment step shows 200c starting budget
+
+**Report** — [x] SKIP — Notes: TASK-912 deleted Legacy creator.
+
+---
+
+#### DEV-V-001-T015 — Saved character currency matches purchases
+
+**Report** — [x] SKIP — Notes: TASK-912 deleted Legacy creator.
+
+---
+
+#### DEV-V-001-T016 — Advanced equipment / powers / finalize use LoadoutBudgetBar PointStatus
+
+**Report** — [x] SKIP — Notes: TASK-912 deleted Legacy creator.
+
+---
+
+#### DEV-V-001-T017 — Legacy label on the tabbed creator (TASK-748)
+
+**Report** — [x] SKIP — Notes: TASK-912 deleted Legacy creator.
+
+---
+
+#### DEV-V-001-T018 — Overspent Advanced kit saves at 0 Currency (TASK-739)
+
+**Report** — [x] SKIP — Notes: TASK-912 deleted Legacy creator.
+
+---
+
+#### DEV-V-001-T019 — Continue without signing in opens a local sheet (TASK-904)
+
+**Report** — [x] SKIP — Notes: TASK-912 deleted Legacy creator.
+
+---
+
+#### DEV-V-001-T020 — Legacy step rail shows a C1 overflow affordance (TASK-848)
+
+**Report** — [x] SKIP — Notes: TASK-912 deleted Legacy creator.
+
+---
+
+#### DEV-V-001-T021 — Legacy feat and equipment Search + Filters share one row (TASK-856)
+
+**Report** — [x] SKIP — Notes: TASK-912 deleted Legacy creator.
+
+---
+
+---
+
 # Build Validation archive
 
 Suites moved out of [`BUILD_VALIDATION.md`](../BUILD_VALIDATION.md) (TASK-718). **Do not delete** — this is still the step-by-step record.

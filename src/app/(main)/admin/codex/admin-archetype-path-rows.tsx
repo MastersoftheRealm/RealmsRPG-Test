@@ -53,7 +53,7 @@ export function PathQuantityRow({
   removeLabel: string;
 }) {
   return (
-    <div className="flex min-h-[44px] items-center gap-2 rounded-md border border-border-light bg-surface px-3 py-2">
+    <div className="flex items-center gap-2 rounded-md border border-border-light bg-surface px-3 py-2">
       <span className="min-w-0 flex-1 truncate text-sm text-text-primary" title={label}>
         {label}
       </span>
@@ -68,7 +68,7 @@ export function PathQuantityRow({
       <IconButton
         variant="ghost"
         size="sm"
-        className="min-h-[44px] min-w-[44px] shrink-0"
+        className="shrink-0"
         onClick={onRemove}
         label={removeLabel}
       >

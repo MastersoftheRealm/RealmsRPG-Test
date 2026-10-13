@@ -26,6 +26,7 @@ import {
   useCodexSkills,
   useCodexFeats,
   useTraits,
+  useEquipment,
   useAdmin,
   useLoadModalLibrary,
   useOfficialLibrary,
@@ -42,6 +43,7 @@ import {
   displayItemToCreatureArmament,
 } from './transformers';
 import { useSort } from '@/hooks/use-sort';
+import { useDiscardableCreatorDraft } from '@/hooks/use-creator-unsaved-guard';
 import type { AbilityName } from '@/types';
 import type { CreatureSkill, CreatureState } from './creature-creator-types';
 import {
@@ -54,13 +56,25 @@ import {
 } from './creature-creator-constants';
 import { allocationsToCreatureSkills, creatureSkillsToAllocations } from './creature-skill-utils';
 import { bootstrapCreatureState } from './creature-creator-bootstrap';
-import { writeCreatorCache, clearCreatorCache } from '@/lib/game/creator-cache';
+import {
+  creatorSessionCacheKey,
+  persistCreatorSessionDraft,
+  clearCreatorSessionDraft,
+} from '@/lib/game/creator-cache';
+import { creatorEditReplacesDraft } from '@/lib/library/catalog-listing';
+import {
+  useCreatorEditDraftDecision,
+  useCreatorEditMissNotice,
+} from '@/lib/library/use-creator-edit-draft';
 import { normalizeCreatureInventoryType } from '@/lib/game/creature-inventory';
 import { mergeLibraryBySource } from '@/lib/library/source-scope';
 import { mergeCreatureFeatsOnAdd } from './creature-feat-utils';
+import { replaceTieredCreatureTrait } from './creature-trait-tiers';
+import { canAddDamageModifier } from './creature-damage-modifiers';
 import {
   buildArmamentLibraryList,
   buildArmamentSelectableItems,
+  buildCreatureEquipmentLibraryList,
   buildEmpoweredTechniqueLibraryList,
   buildEmpoweredTechniqueSelectableItems,
   buildPowerSelectableItems,
@@ -154,16 +168,21 @@ export function useCreatureCreatorWorkspace() {
   const { data: itemPropertiesDb = [] } = useItemProperties();
   const { data: publicPowers = [] } = useOfficialLibrary('powers', {
     enabled: libraryQueriesEnabled,
+    includeUnlisted: isAdmin,
   });
   const { data: publicTechniques = [] } = useOfficialLibrary('techniques', {
     enabled: libraryQueriesEnabled,
+    includeUnlisted: isAdmin,
   });
   const { data: publicEmpoweredTechniques = [] } = useOfficialLibrary('empowered-techniques', {
     enabled: libraryQueriesEnabled,
+    includeUnlisted: isAdmin,
   });
   const { data: publicItems = [] } = useOfficialLibrary('items', {
     enabled: libraryQueriesEnabled,
+    includeUnlisted: isAdmin,
   });
+  const { data: codexEquipment = [] } = useEquipment({ enabled: showArmamentModal });
 
   const powerList = useMemo(
     () => mergeLibraryBySource(librarySource, publicPowers, userPowers) as UserPower[],
@@ -182,16 +201,21 @@ export function useCreatureCreatorWorkspace() {
       ),
     [librarySource, userEmpoweredTechniques, publicEmpoweredTechniques],
   );
-  const armamentList = useMemo(
-    () =>
-      buildArmamentLibraryList(
+  const armamentList = useMemo(() => {
+    const selectedIds = selectedArmamentIdsFromCreature(creature);
+    if (inventoryTab === 'equipment') {
+      return buildCreatureEquipmentLibraryList(
         librarySource,
         userItems,
         publicItems,
-        selectedArmamentIdsFromCreature(creature),
-      ).filter((item) => normalizeCreatureInventoryType(item.type) === inventoryTab),
-    [userItems, publicItems, librarySource, creature, inventoryTab],
-  );
+        codexEquipment,
+        selectedIds,
+      );
+    }
+    return buildArmamentLibraryList(librarySource, userItems, publicItems, selectedIds).filter(
+      (item) => normalizeCreatureInventoryType(item.type) === inventoryTab,
+    );
+  }, [userItems, publicItems, codexEquipment, librarySource, creature, inventoryTab]);
 
   const powerSelectableItems = useMemo(
     () => buildPowerSelectableItems(powerList, powerPartsDb),
@@ -228,18 +252,36 @@ export function useCreatureCreatorWorkspace() {
     setCreature(bootstrapCreatureState({ editCreatureId, rawItems: load.rawItems }));
   }
   const bootstrapApplied = bootstrapKey === sessionKey;
+  const editReplacesDraft = creatorEditReplacesDraft(editCreatureId, load.rawItems);
+  const sessionCacheKey = useMemo(
+    () => creatorSessionCacheKey(CREATURE_CREATOR_CACHE_KEY, editCreatureId, editReplacesDraft),
+    [editCreatureId, editReplacesDraft],
+  );
+  const { discardLocalDraft, isLocalDraftDiscarded } = useDiscardableCreatorDraft(sessionCacheKey);
+
+  const { discardDraft } = useCreatorEditDraftDecision(
+    bootstrapApplied,
+    editReplacesDraft,
+    CREATURE_CREATOR_CACHE_KEY,
+  );
+
+  const clearSessionDraftCache = useCallback(() => {
+    clearCreatorSessionDraft(CREATURE_CREATOR_CACHE_KEY, editCreatureId, editReplacesDraft);
+  }, [editCreatureId, editReplacesDraft]);
 
   useEffect(() => {
-    if (editCreatureId) clearCreatorCache(CREATURE_CREATOR_CACHE_KEY);
-  }, [editCreatureId]);
-
-  useEffect(() => {
-    if (editCreatureId || !bootstrapApplied) return;
-    writeCreatorCache(CREATURE_CREATOR_CACHE_KEY, {
-      creature,
-      timestamp: Date.now(),
-    });
-  }, [editCreatureId, bootstrapApplied, creature]);
+    if (!bootstrapApplied) return;
+    persistCreatorSessionDraft(
+      CREATURE_CREATOR_CACHE_KEY,
+      editCreatureId,
+      editReplacesDraft,
+      {
+        creature,
+        timestamp: Date.now(),
+      },
+      isLocalDraftDiscarded(),
+    );
+  }, [bootstrapApplied, creature, editCreatureId, editReplacesDraft, isLocalDraftDiscarded]);
 
   const featPointsMap = useMemo(() => {
     const map = new Map<string, number>();
@@ -376,10 +418,20 @@ export function useCreatureCreatorWorkspace() {
   }, []);
 
   const addToArray = useCallback((field: keyof CreatureState, item: string) => {
-    setCreature((prev) => ({
-      ...prev,
-      [field]: [...(prev[field] as string[]), item],
-    }));
+    setCreature((prev) => {
+      if (
+        (field === 'resistances' || field === 'weaknesses' || field === 'immunities') &&
+        !canAddDamageModifier(prev, item)
+      ) {
+        return prev;
+      }
+      const current = prev[field] as string[];
+      const next =
+        field === 'senses' || field === 'movementTypes'
+          ? replaceTieredCreatureTrait(current, item)
+          : [...current, item];
+      return { ...prev, [field]: next };
+    });
   }, []);
 
   const removeFromArray = useCallback((field: keyof CreatureState, item: string) => {
@@ -389,15 +441,27 @@ export function useCreatureCreatorWorkspace() {
     }));
   }, []);
 
+  const proficiencyCtx = useMemo(
+    () => ({
+      powerPartsDb,
+      techniquePartsDb,
+      itemPropertiesDb,
+    }),
+    [powerPartsDb, techniquePartsDb, itemPropertiesDb],
+  );
+
   const stats = useMemo(
-    () => calculateCreatureCreatorStats(creature, featPointsMap, subSkillNames, rules),
-    [creature, featPointsMap, subSkillNames, rules],
+    () =>
+      calculateCreatureCreatorStats(creature, featPointsMap, subSkillNames, rules, proficiencyCtx),
+    [creature, featPointsMap, subSkillNames, rules, proficiencyCtx],
   );
 
   const isOverBudget = useMemo(() => isCreatureOverBudget(stats), [stats]);
 
   const {
     save,
+    unsavedDirty,
+    acceptDraft,
     handleSave,
     handleReset,
     handleLoadCreature,
@@ -414,7 +478,15 @@ export function useCreatureCreatorWorkspace() {
     setCreature,
     stats: { isOverBudget },
     load,
+    editCreatureId,
+    isAdmin,
   });
+
+  useCreatorEditMissNotice(
+    bootstrapApplied && !discardDraft && Boolean(editCreatureId),
+    'creature',
+    save.setSaveMessage,
+  );
 
   const featsSummary = useMemo(() => buildCreatureFeatsSummary(creature), [creature]);
   const powersSummary = useMemo(() => buildCreaturePowersSummary(creature), [creature]);
@@ -452,6 +524,9 @@ export function useCreatureCreatorWorkspace() {
     bootstrapApplied,
     load,
     save,
+    unsavedDirty,
+    discardLocalDraft,
+    acceptDraft,
     handleSave,
     handleReset,
     handleLoadCreature,
@@ -510,7 +585,6 @@ export function useCreatureCreatorWorkspace() {
     displayItemToCreatureArmament,
     mergeCreatureFeatsOnAdd,
     initialState,
-    clearCreatorCache,
-    CREATURE_CREATOR_CACHE_KEY,
+    clearSessionDraftCache,
   };
 }

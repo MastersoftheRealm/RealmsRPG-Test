@@ -28,6 +28,7 @@ import {
   AdvancedCalculationsPanel,
 } from '@/components/creator';
 import { LoadingState } from '@/components/ui';
+import { formatEnergyStat } from '@/lib/calculators';
 import { SourceFilter, sourceFilterSummary } from '@/components/patterns/filters/source-filter';
 import { EmpoweredTechniqueCreatorEditor } from './empowered-technique-creator-editor';
 import {
@@ -35,6 +36,11 @@ import {
   type EmpoweredTechniqueFormState,
 } from './empowered-technique-bootstrap';
 import { useEmpoweredTechniqueCreatorWorkspace } from './use-empowered-technique-creator-workspace';
+import {
+  creatorEditReplacesDraft,
+  findLoadedLibraryItem,
+  resolveCreatorSaveTargetFromItem,
+} from '@/lib/library/catalog-listing';
 
 function EmpoweredTechniqueCreatorContent() {
   const { user } = useAuthStore();
@@ -94,6 +100,7 @@ function EmpoweredTechniqueCreatorContent() {
       key={sessionKey}
       initialFormState={initialFormState}
       editId={editId}
+      editReplacesDraft={creatorEditReplacesDraft(editId, load.rawItems)}
       user={user}
       isAdmin={isAdmin}
       powerParts={powerParts}
@@ -112,6 +119,7 @@ function EmpoweredTechniqueCreatorContent() {
 interface EmpoweredTechniqueWorkspaceProps {
   initialFormState: EmpoweredTechniqueFormState;
   editId: string | null;
+  editReplacesDraft: boolean;
   user: ReturnType<typeof useAuthStore.getState>['user'];
   isAdmin: boolean;
   powerParts: PowerPart[];
@@ -128,6 +136,7 @@ interface EmpoweredTechniqueWorkspaceProps {
 function EmpoweredTechniqueWorkspace({
   initialFormState,
   editId,
+  editReplacesDraft,
   user,
   isAdmin,
   powerParts,
@@ -143,10 +152,15 @@ function EmpoweredTechniqueWorkspace({
   const ws = useEmpoweredTechniqueCreatorWorkspace({
     initialFormState,
     editId,
+    editReplacesDraft,
     powerParts,
     techniqueParts,
     powerPartsError,
     techniquePartsError,
+    initialSaveTarget: resolveCreatorSaveTargetFromItem(
+      findLoadedLibraryItem(load.rawItems, editId),
+      { canSaveToOfficial: isAdmin },
+    ),
   });
 
   return (
@@ -156,12 +170,14 @@ function EmpoweredTechniqueWorkspace({
       description="Build an empowered technique by combining power and technique parts in one shared action profile."
       user={user}
       auth={{ returnPath: '/empowered-technique-creator', contentType: 'empowered technique' }}
-      showPublicPrivate={isAdmin}
+      showSaveTarget={isAdmin}
       saveTarget={ws.save.saveTarget}
       onSaveTargetChange={ws.save.setSaveTarget}
       onSave={ws.save.handleSave}
       onLoad={load.openLoadModal}
       onReset={ws.resetState}
+      unsavedDirty={ws.unsavedDirty}
+      onDiscardLocalDraft={ws.discardLocalDraft}
       saving={ws.save.saving}
       saveDisabled={!ws.name.trim()}
       loading={{
@@ -179,6 +195,7 @@ function EmpoweredTechniqueWorkspace({
         onClose: () => ws.save.setShowPublishConfirm(false),
         onConfirm: () => ws.save.confirmPublish(),
         title: ws.save.publishConfirmTitle,
+        confirmLabel: ws.save.publishConfirmLabel,
         description:
           ws.save.publishConfirmDescription?.(ws.name.trim(), {
             existingInPublic: ws.save.publishExistingInPublic,
@@ -207,7 +224,7 @@ function EmpoweredTechniqueWorkspace({
           costStats={[
             {
               label: 'Energy Cost',
-              value: ws.costs.totalEnergy,
+              value: formatEnergyStat(ws.costs.totalEnergy),
               icon: <Zap className="h-6 w-6" />,
               color: 'energy',
             },
@@ -224,6 +241,11 @@ function EmpoweredTechniqueWorkspace({
             { label: 'Range', value: ws.rangeDisplay },
             { label: 'Area', value: ws.areaDisplay },
             { label: 'Duration', value: ws.durationDisplay },
+            {
+              label: 'Targets',
+              value:
+                ws.targetedDefenses.length > 0 ? ws.targetedDefenses.join(', ') : 'None specified',
+            },
           ]}
           breakdowns={
             ws.costs.tpSources.length > 0
@@ -232,8 +254,8 @@ function EmpoweredTechniqueWorkspace({
           }
         >
           <AdvancedCalculationsPanel
-            rows={ws.advancedCalcRows}
-            ruleText="Rule: Technique percentage parts multiply the power side before adding technique energy; TP is the sum of both sides."
+            groups={ws.advancedCalcGroups}
+            ruleText="Energy is rounded up at the end. Technique percentage parts multiply the power side before adding technique Energy. Training Points are listed separately above."
           />
         </CreatorSummaryPanel>
       }
@@ -257,6 +279,10 @@ function EmpoweredTechniqueWorkspace({
         onIsReactionChange={ws.setIsReaction}
         attackMode={ws.attackMode}
         onAttackModeChange={ws.setAttackMode}
+        targetedDefenses={ws.targetedDefenses}
+        onTargetedDefensesChange={ws.setTargetedDefenses}
+        suggestionSelectedParts={ws.suggestionSelectedParts}
+        suggestionPartsDb={[...ws.powerParts, ...ws.techniqueParts]}
         rangeDisplay={ws.rangeDisplay}
         range={ws.range}
         onRangeStepsChange={(steps) => ws.setRange({ steps })}

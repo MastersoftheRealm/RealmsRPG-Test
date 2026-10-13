@@ -28,6 +28,7 @@ interface CodexPowerPartFields extends CodexRowVersion {
   name: string;
   description: string;
   category: string;
+  source?: string | undefined;
   base_en: number;
   base_tp: number;
   op_1_desc?: string | undefined;
@@ -54,6 +55,7 @@ interface CodexTechniquePartFields extends CodexRowVersion {
   name: string;
   description: string;
   category: string;
+  source?: string | undefined;
   base_tp: number;
   base_en?: number | undefined;
   op_1_desc?: string | undefined;
@@ -67,6 +69,8 @@ interface CodexTechniquePartFields extends CodexRowVersion {
   op_3_tp?: number | undefined;
   percentage?: boolean | undefined;
   mechanic?: boolean | undefined;
+  /** Targeted defenses (subset of the 6 canonical defenses + Evasion). */
+  defense?: string[] | undefined;
   type?: string | undefined;
 }
 
@@ -78,6 +82,7 @@ interface CodexItemPropertyFields extends CodexRowVersion {
   id: string;
   name: string;
   description: string;
+  source?: string | undefined;
   type?: 'weapon' | 'armor' | 'shield' | 'general' | undefined;
   tp_cost?: number | undefined;
   gold_cost?: number | undefined;
@@ -98,6 +103,7 @@ interface CodexFeatFields extends CodexRowVersion {
   name: string;
   description: string;
   category: string;
+  source?: string | undefined;
   ability?: string[] | undefined;
   ability_req: string[];
   abil_req_val: number[];
@@ -126,6 +132,7 @@ interface CodexSkillFields extends CodexRowVersion {
   id: string;
   name: string;
   description: string;
+  source?: string | undefined;
   ability: string;
   base_skill_id?: number | undefined;
   success_desc?: string | undefined;
@@ -157,8 +164,11 @@ interface CodexSpeciesFields extends CodexRowVersion {
   ave_weight?: number | undefined;
   adulthood_lifespan?: number[] | undefined;
   is_starter?: boolean | undefined;
+  /** Rules product (Core Rules, an expansion). Distinct from `is_starter`. */
+  source?: string | undefined;
   image_id?: string | null | undefined;
   image_url?: string | null | undefined;
+  catalog_listing?: 'listed' | 'unlisted' | undefined;
 }
 
 export type CodexSpecies = AllowUndefinedOptionals<CodexSpeciesFields>;
@@ -167,6 +177,7 @@ interface CodexTraitFields extends CodexRowVersion {
   id: string;
   name: string;
   description: string;
+  source?: string | undefined;
   species?: string[] | undefined;
   uses_per_rec?: number | undefined;
   rec_period?: string | undefined;
@@ -183,6 +194,7 @@ interface CodexEquipmentItemFields extends CodexRowVersion {
   type: 'weapon' | 'armor' | 'equipment';
   subtype?: string | undefined;
   category?: string | undefined;
+  source?: string | undefined;
   description: string;
   damage?: string | undefined;
   armor_value?: number | undefined;
@@ -201,6 +213,7 @@ interface CodexCreatureFeatFields extends CodexRowVersion {
   id: string;
   name: string;
   description: string;
+  source?: string | undefined;
   points: number;
   feat_points?: number | undefined;
   feat_lvl?: number | undefined;

@@ -21,7 +21,7 @@ import {
   CHARACTER_SHEET_ENERGY_SPEND_ROW_CHROME,
 } from '@/components/patterns';
 import { Card } from '@/components/ui';
-import { TabNavigation } from '@/components/ui/tab-navigation';
+import { TabContentPanel, TabNavigation, useTabGroup } from '@/components/ui/tab-navigation';
 import { useGameRules } from '@/hooks';
 import { useCharacterSheet } from './character-sheet-context';
 import type { TabType } from './library-tab-config';
@@ -30,6 +30,7 @@ import { useLibraryTabNavigation } from './use-library-tab-navigation';
 import { LibraryPowersPanel } from './library-powers-panel';
 import { LibraryInventoryPanel } from './library-inventory-panel';
 import { buildLibrarySectionData } from './build-library-section-data';
+import { sheetLibraryAddActions } from './sheet-viewer-edits';
 import type { LibrarySectionProps } from './library-section-props';
 import {
   computeSheetPointPools,
@@ -48,6 +49,7 @@ export function LibrarySection({
     character,
     enrichedData,
     isEditMode,
+    isOwner,
     libraryModel,
     libraryHandlers,
     characterSpeciesSkills,
@@ -63,16 +65,19 @@ export function LibrarySection({
       enrichedData,
       libraryModel,
       handlers: libraryHandlers,
+      isOwner,
     });
-  }, [character, enrichedData, libraryModel, libraryHandlers]);
+  }, [character, enrichedData, libraryModel, libraryHandlers, isOwner]);
 
-  const onAddPower = setAddModalType ? () => setAddModalType('power') : undefined;
-  const onAddInnatePower = setAddModalType ? () => setAddModalType('innate-power') : undefined;
-  const onAddTechnique = setAddModalType ? () => setAddModalType('technique') : undefined;
-  const onAddWeapon = setAddModalType ? () => setAddModalType('weapon') : undefined;
-  const onAddShield = setAddModalType ? () => setAddModalType('shield') : undefined;
-  const onAddArmor = setAddModalType ? () => setAddModalType('armor') : undefined;
-  const onAddEquipment = setAddModalType ? () => setAddModalType('equipment') : undefined;
+  const {
+    onAddPower,
+    onAddInnatePower,
+    onAddTechnique,
+    onAddWeapon,
+    onAddShield,
+    onAddArmor,
+    onAddEquipment,
+  } = sheetLibraryAddActions(isOwner, setAddModalType);
   const onAddArchetypeFeat = setFeatModalType ? () => setFeatModalType('archetype') : undefined;
   const onAddCharacterFeat = setFeatModalType ? () => setFeatModalType('character') : undefined;
   const onAddStateFeat = setFeatModalType ? () => setFeatModalType('state') : undefined;
@@ -131,6 +136,7 @@ export function LibrarySection({
     equipmentRows,
     displayedCurrentInnateEnergy,
     innateEnergyOverBudget,
+    innateThresholdOverBudget,
   } = useLibrarySectionRows({
     powers: data?.powers ?? [],
     techniques: data?.techniques ?? [],
@@ -139,6 +145,8 @@ export function LibrarySection({
     armor: data?.armor ?? [],
     equipment: data?.equipment ?? [],
     innateEnergy: data?.innateEnergy ?? 0,
+    innateThreshold: data?.innateThreshold ?? 0,
+    canMarkPowersInnate: (data?.innateEnergy ?? 0) > 0,
     currentInnateEnergy: data?.currentInnateEnergy,
     currentEnergy: data?.currentEnergy ?? 0,
     abilities: data?.abilities,
@@ -152,6 +160,7 @@ export function LibrarySection({
     onUsePower: data?.onUsePower,
     onRemovePower: data?.onRemovePower,
     onTogglePowerInnate: data?.onTogglePowerInnate,
+    onSelectPowerVariant: data?.onSelectPowerVariant,
     onUseTechnique: data?.onUseTechnique,
     onRemoveTechnique: data?.onRemoveTechnique,
     onRemoveWeapon: data?.onRemoveWeapon,
@@ -162,7 +171,10 @@ export function LibrarySection({
     onToggleEquipArmor: data?.onToggleEquipArmor,
     onRemoveEquipment: data?.onRemoveEquipment,
     onEquipmentQuantityChange: data?.onEquipmentQuantityChange,
+    tempModifiers: character?.tempModifiers,
   });
+
+  const { tabGroupId, sharedPanelId } = useTabGroup('character-sheet-library');
 
   if (!data) return null;
 
@@ -224,6 +236,7 @@ export function LibrarySection({
     onFeatUsesChange,
     onFeatLevelChange,
     featRequirementCharacter,
+    featRequirementEffectiveCharacter,
     onTraitUsesChange,
     onRemoveFeat,
     traitCustomizations = {},
@@ -239,7 +252,12 @@ export function LibrarySection({
   } = data;
 
   return (
-    <Card className={cn('relative flex flex-col p-4 shadow-md md:p-6', className)}>
+    <Card
+      className={cn(
+        'relative flex w-full max-w-full min-w-0 flex-col p-4 shadow-md md:p-6',
+        className,
+      )}
+    >
       {isEditMode && (
         <div className="absolute top-3 right-3 z-10">
           <EditSectionToggle
@@ -270,9 +288,16 @@ export function LibrarySection({
         variant="underline"
         size="md"
         className="mb-4"
+        tabGroupId={tabGroupId}
+        sharedTabPanelId={sharedPanelId}
       />
 
-      <div className="min-h-0 flex-1 space-y-2 max-md:overflow-visible md:overflow-y-auto">
+      <TabContentPanel
+        tabGroupId={tabGroupId}
+        id={sharedPanelId}
+        activeTab={resolvedActiveTab}
+        className="min-h-0 flex-1 space-y-2 max-md:overflow-visible md:overflow-y-auto"
+      >
         {resolvedActiveTab === 'powers' && (
           <LibraryPowersPanel
             innateEnergy={innateEnergy}
@@ -280,12 +305,13 @@ export function LibrarySection({
             innatePools={innatePools}
             displayedCurrentInnateEnergy={displayedCurrentInnateEnergy}
             innateEnergyOverBudget={innateEnergyOverBudget}
+            innateThresholdOverBudget={innateThresholdOverBudget}
             innatePowerRows={innatePowerRows}
             regularPowerRows={regularPowerRows}
             powerSort={powerSort}
             onPowerSort={handlePowerSort}
             powerRowChrome={powerRowChrome}
-            onAddInnatePower={onAddInnatePower}
+            onAddInnatePower={innateEnergy > 0 ? onAddInnatePower : undefined}
             onAddPower={onAddPower}
           />
         )}
@@ -357,6 +383,7 @@ export function LibrarySection({
             onFeatUsesChange={onFeatUsesChange}
             onFeatLevelChange={onFeatLevelChange}
             featRequirementCharacter={featRequirementCharacter}
+            featRequirementEffectiveCharacter={featRequirementEffectiveCharacter}
             onTraitUsesChange={onTraitUsesChange}
             onAddArchetypeFeat={onAddArchetypeFeat}
             onAddCharacterFeat={onAddCharacterFeat}
@@ -421,7 +448,7 @@ export function LibrarySection({
             Character abilities not loaded
           </p>
         )}
-      </div>
+      </TabContentPanel>
     </Card>
   );
 }

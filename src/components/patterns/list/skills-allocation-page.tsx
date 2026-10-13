@@ -36,6 +36,7 @@ import {
   buildCharacterSkillsForSubModal,
   buildExistingSkillIdSet,
   buildExistingSkillNames,
+  removeAllocatedSkill,
 } from '@/lib/game/skill-allocation-add';
 import { useGameRules } from '@/hooks';
 import { SkillRow } from './skill-row';
@@ -237,8 +238,8 @@ export function SkillsAllocationPage({
       const subs = subsByBase[baseKey] || [];
       const subsInList = subs.filter((sub: Skill) => inList(sub.id));
       const baseInList = inList(base.id);
-      if (!baseInList && subsInList.length === 0) return;
-      if (baseInList) result.push(base);
+      if (!baseInList) return;
+      result.push(base);
       subsInList.sort((a: Skill, b: Skill) =>
         String(a.name ?? '').localeCompare(String(b.name ?? '')),
       );
@@ -265,11 +266,9 @@ export function SkillsAllocationPage({
   const handleRemoveSkill = useCallback(
     (skillId: string) => {
       if (speciesSkillIds.has(skillId)) return;
-      const next = { ...allocations };
-      delete next[skillId];
-      onAllocationsChange(next);
+      onAllocationsChange(removeAllocatedSkill(allocations, skillId, allSkills));
     },
-    [allocations, speciesSkillIds, onAllocationsChange],
+    [allocations, allSkills, speciesSkillIds, onAllocationsChange],
   );
 
   const handleAllocate = useCallback(

@@ -18,7 +18,10 @@ separate `version int` column.
 ## Decision
 
 1. **Dirty-key body.** Clients send only keys that changed (plus optional `updatedAt`). The route
-   merges those keys into the stored `data` JSONB. Omitted keys stay as stored. Meta keys
+   merges those keys into the stored `data` JSONB. Omitted keys stay as stored. A JSON `null`
+   removes that key. Sheet autosave sends `null` when a saved key was cleared (the last temp
+   modifier, an emptied trait customization) so the old value does not return on reload
+   (86e3juw04). Meta keys
    (`id`, `userId`, `createdAt`, `updatedAt`) are never copied from the client into the blob
    (`prepareCharacterForSave` already strips them from the client body; the route stamps blob
    `updatedAt` via `applyCharacterDirtyPatch(..., { blobUpdatedAt })` to match the column).

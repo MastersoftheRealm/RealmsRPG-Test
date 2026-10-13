@@ -4,7 +4,7 @@
 
 ## Pages / Routes
 
-- `(main)/characters`, `(main)/characters/[id]`
+- `(main)/characters`, `(detail)/characters/[id]`
 - `(main)/characters/new` — Guided / Custom / Legacy chooser
 - `(main)/characters/new/guided` — Guided ("Simple") creator
 - `(main)/characters/new/advanced` — Classic 9-step creator
@@ -16,15 +16,17 @@
 
 ## Recording Progress
 
+The record is the ClickUp task and the PR. Status moves are in `.cursor/rules/realms-tasks.mdc`. Do not write the files in this table. They are history.
+
 | What | Where |
 |------|-------|
-| Open tasks | `src/docs/ai/ACTIVE_TASKS.md` |
-| Task process | `src/docs/ai/AI_TASK_QUEUE.md` |
-| Done archive | `src/docs/ai/archive/TASK_QUEUE_DONE.md` |
-| Changelog | `src/docs/ai/AI_CHANGELOG.md` |
-| Raw feedback | `src/docs/ALL_FEEDBACK_CLEAN.md` |
+| Open tasks (history) | `src/docs/ai/archive/ACTIVE_TASKS.md` |
+| Task process (retired) | `src/docs/ai/archive/AI_TASK_QUEUE.md` |
+| Done archive (history) | `src/docs/ai/archive/TASK_QUEUE_DONE.md` |
+| Changelog (history) | `src/docs/ai/archive/AI_CHANGELOG.md` |
+| Raw feedback (history) | `src/docs/ALL_FEEDBACK_CLEAN.md` |
 | Game rules | `src/docs/GAME_RULES.md` — terminology, formulas, display conventions |
-| **Current remediation status** | `src/docs/ai/REMEDIATION_STATUS_2026-08.md` — Aug 2026 audit completion/open-gap truth (TASK-642–669). June snapshot: `REMEDIATION_STATUS_2026-06.md`. |
+| **Remediation status (history)** | `src/docs/ai/archive/REMEDIATION_STATUS_2026-08.md` — Aug 2026 snapshot (TASK-642–669). June: `archive/REMEDIATION_STATUS_2026-06.md`. |
 | Historical audits & task backup | `src/docs/ai/archive/HISTORY_INDEX.md` — Aug/July/June 2026 audits, full queue backup, older plans |
 | Codebase audit (historical) | `src/docs/ai/archive/CODEBASE_AUDIT_2026-08-01.md` (current remediations above); older: `CODEBASE_AUDIT_2026-02-13.md` |
 | Unification audit (historical) | `src/docs/ai/archive/UNIFICATION_AUDIT_2026-02-20.md` — shared logic, creators, libraries, allocation, centralized sources of truth |
@@ -41,7 +43,7 @@
 
 ## Creating New Tasks
 
-Use `src/docs/ai/AI_REQUEST_TEMPLATE.md` format. Add to `ACTIVE_TASKS.md` with next TASK-### ID.
+File new tasks in **ClickUp** via Clickup Manager (or directly on Kadin's orders). Do not append `ACTIVE_TASKS.md` or `AI_TASK_QUEUE.md` (archived under `src/docs/ai/archive/`).
 Create tasks when: audits reveal issues; implementation uncovers follow-up work; complex work needs phase breakdown.
 Set `priority`, `status: not-started`, `related_files`, and clear `acceptance_criteria`.
 
@@ -51,4 +53,4 @@ Set `priority`, `status: not-started`, `related_files`, and clear `acceptance_cr
 - `node scripts/triage_tasks.js` — Infer related_files for tasks (--apply to update)
 - (removed 2026-08) `scripts/session_submit.js` — deleted as dead tooling; run `extract_feedback.js` then `triage_tasks.js` directly
 - `npm run tasks:validate` — Doc/path/related_files checks + local strict reconcile (`--allow-uncommitted-done`; CI omits that flag)
-- `node scripts/reconcile_tasks.js --strict --strict-since=2026-07-15` — TASK-### in commit subjects (one subject may list many IDs); also fails on duplicate `- id:` in ACTIVE / WAITING / live `TASK_QUEUE_DONE.md` (not the dated snapshot)
+- `node scripts/reconcile_tasks.js` — fails on duplicate `- id:` in `archive/ACTIVE_TASKS.md`, `archive/WAITING_TASKS.md`, and live `archive/TASK_QUEUE_DONE.md` (not dated snapshots). Commit-subject gate is retired.

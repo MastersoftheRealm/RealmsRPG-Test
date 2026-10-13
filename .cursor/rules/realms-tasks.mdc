@@ -1,40 +1,23 @@
 ---
-description: Agent task workflow - ACTIVE_TASKS, WAITING, DoD
+description: ClickUp task order — status moves, audit, and what not to write
 alwaysApply: true
 ---
 
-# Task Workflow
+# Task order
 
-**Session start:** `ARCHITECTURE_CONSTITUTION.md` + `ACTIVE_TASKS.md` (not `WAITING_TASKS.md`, not done archive, not full `AGENT_GUIDE.md`).
+ClickUp is the only queue. In prose say Bob (`95261690`). Collin Morrison is `44381886`. Write to ClickUp only when Kadin has said to, with `CLICKUP_API_TOKEN` from `.env.local`. Never print the token.
 
-**Before implementing:**
-1. Pick highest-priority open task in `src/docs/ai/ACTIVE_TASKS.md`.
-2. Search `FEATURE_INDEX.md` + barrels (+ generated barrel inventory) — confirm it doesn't already exist.
-3. Game copy / caps / formulas → `GAME_RULES.md`. UI → `MOBILE_UX.md` + a11y rule.
-4. **Model escalation (pause once):** If the task matches a trigger below, **stop before coding** and tell the owner in 2–4 sentences: why a stronger model is safer, which TASK-###, and wait for “proceed” / model switch / narrower instructions. Do **not** pause again in the same chat after the owner says proceed.
+1. A person or a bot files the task. A vague task is split by the filer, or it stays **to do** with a comment. Do not invent the split.
+2. Start: **to do → in progress**. One comment: agent, time, model, one line. Stop with no PR → back to **to do**. Nothing stays **in progress**.
+3. Branch from current `origin/master`: `bug|feat/<clickUpId>-short-slug`. Read the task, then search. Do not load the whole codebase or the constitution.
+4. Open the draft PR when the fix is ready so CI starts. Locally, the repro test only.
+5. A different model audits while CI runs. Four checks: one task, no new pattern, no overwritten fix, no invented rule. CI checks regressions. The audit is not a second QA pass.
+6. `/cleanup` only when the audit names an in-scope gap. Then CI again. The re-audit checks only that gap. A layout or cross-system miss steps up one model.
+7. Audit clean and CI green → **in review**, Collin assigned. PR review and preview QA bots finish first when they are on. When they are off, CI is the gate. **In review** means a human can merge.
+8. Collin merges, or Kadin says bypass. Merge commit only. Never push `master`. Never squash. Do not merge unless Kadin said bypass.
+9. **Testing**. Assign Bob, keep Collin, QA steps in the comment. Post-merge bot smoke only when that bot is on.
+10. Human QA moves it to **complete**. Agents do not.
 
-   **Pause triggers (only these):** Architect work (new shared/ui, new store, new API contract, migration *strategy*); live DB/schema migrations or cascade delete/replace; multi-system refactors with irreversible data risk; task notes explicitly say “Architect” / “stronger model” / “owner ack before implement.”
+Already fixed on master: no branch, **testing**, Bob and Collin. Covered or superseded: stay **to do** with a comment. A missing written rule is a hold. Urgent, then high, then normal, then low. Skip unfinished dependencies.
 
-   **Do not pause for:** routine UI wiring, copy, BUILD_VALIDATION, extending an existing pattern, continuing a `partial` with clear remaining_work, or work the owner already scoped to this agent/model.
-
-**While implementing:**
-- `in-progress` → `done` when implementable AC met (build/tests/docs); else `partial` + `completed_work` / `remaining_work` / `follow_up_tasks`.
-- On archive: set `verification_status` (`pending-qa` if user-facing manual QA not run; see constitution Verification gate).
-- Move `done` blocks from `ACTIVE_TASKS.md` → `archive/TASK_QUEUE_DONE.md`; list `pending-qa` in `DEVELOPER_TASK_QUEUE.md`.
-- Do **not** create a commit per task. Mark `done` in the archive without committing. Before push: one batch commit whose subject lists every newly done `TASK-###` (space-separated; ranges like `TASK-530–534` do not count), then `npm run tasks:validate`. `related_files` paths must exist.
-- Blocked / human-owned → `WAITING_TASKS.md`. Human-only steps → `DEVELOPER_TASK_QUEUE.md`.
-- User-facing: `BUILD_VALIDATION.md` + changelog.
-- New shared/ui file → ADR + update `scripts/shared-ui-allowlist.json` (`npm run tasks:validate-shared-ui`).
-- Barrel export changes → `npm run tasks:generate-index`.
-
-**New tasks:** `AI_REQUEST_TEMPLATE.md` → `ACTIVE_TASKS.md` (next TASK-###). Process: `AI_TASK_QUEUE.md`.
-
-**Migrations:** Prefer Supabase MCP `apply_migration`; else Dashboard SQL. SQL in `sql/`. Codex: `realms-codex-data.mdc`.
-
-**Owner commands (on demand):** `/audit` → `/cleanup` (session / one TASK-###; pillars: remove clutter, meet feedback/AC, constitutional shared-first additions); `/global-audit` → `/debt` (repo inventory then apply). Authority: `PR_CHECKLIST.md` § Owner commands; `.cursor/commands/`.
-
-# Feedback Processing
-
-1. Log raw feedback in `ALL_FEEDBACK_CLEAN.md`.
-2. Extract discrete items; cross-ref `ACTIVE_TASKS.md` / `WAITING_TASKS.md`.
-3. Add tasks or implement; summarize dispositions.
+Do not write `ACTIVE_TASKS.md`, `AI_TASK_QUEUE.md`, `AI_CHANGELOG.md`, or `TASK-###` in the commit subject. A hold that exists only in `WAITING_TASKS.md` stays. `/global-audit` and `/debt` are unused on a task.

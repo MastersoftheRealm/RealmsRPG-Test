@@ -5,6 +5,7 @@ import { ChipSelect } from '@/components/patterns/filters';
 import {
   GridListRow,
   RealmsImageField,
+  SegmentedControl,
   UnifiedSelectionModal,
   type SelectableItem,
   type SelectionColumnHeader,
@@ -20,6 +21,12 @@ import {
 } from './admin-species-form';
 import { AdminCodexCopySourceBanner } from './admin-codex-copy-source-banner';
 import { AdminCodexEditModalFooter } from './admin-codex-edit-modal-footer';
+import { AdminCodexSourceField } from './admin-codex-source-field';
+import {
+  useCodexEditorDraftDirty,
+  useCodexEditorLeaveGuard,
+} from './admin-codex-unsaved-leave-guard';
+import { catalogListingClassOptions } from '@/lib/library/catalog-listing';
 
 const TRAIT_PICKER_GRID = '1.5fr 0.6fr 0.6fr';
 const TRAIT_PICKER_COLUMNS: SelectionColumnHeader[] = [
@@ -38,6 +45,7 @@ export type AdminSpeciesEditModalProps = {
   setForm: React.Dispatch<React.SetStateAction<SpeciesFormState>>;
   skills: Skill[];
   traits: Trait[];
+  sourceOptions: string[];
   saving: boolean;
   onDelete?: (() => void) | undefined;
   onSave: () => void;
@@ -53,11 +61,17 @@ export function AdminSpeciesEditModal({
   setForm,
   skills,
   traits,
+  sourceOptions,
   saving,
   onDelete,
   onSave,
 }: AdminSpeciesEditModalProps) {
   const [traitPickerFor, setTraitPickerFor] = useState<TraitPickerField | null>(null);
+  const dirty = useCodexEditorDraftDirty(form, isOpen);
+  const leave = useCodexEditorLeaveGuard(dirty, () => {
+    setTraitPickerFor(null);
+    onClose();
+  });
 
   const skillOptions = useMemo(
     () => skills.map((s) => ({ value: String(s.id), label: s.name })),
@@ -106,23 +120,18 @@ export function AdminSpeciesEditModal({
     setTraitPickerFor(null);
   };
 
-  const handleClose = () => {
-    setTraitPickerFor(null);
-    onClose();
-  };
-
   return (
     <>
       <Modal
         isOpen={isOpen}
-        onClose={handleClose}
+        onClose={leave.requestClose}
         title={title}
         size="full"
         fullScreenOnMobile
         footer={
           <AdminCodexEditModalFooter
             onDelete={editingId ? onDelete : undefined}
-            onClose={handleClose}
+            onClose={leave.requestClose}
             onSave={onSave}
             saveDisabled={saving || !form.name.trim()}
             saving={saving}
@@ -203,6 +212,23 @@ export function AdminSpeciesEditModal({
                   Starter species (guided creator)
                 </span>
               </label>
+            </div>
+            <div className="col-span-2 min-w-0">
+              <AdminCodexSourceField
+                value={form.source}
+                options={sourceOptions}
+                onChange={(source) => setForm((f) => ({ ...f, source }))}
+                hint="Which rules source this species comes from, such as Core Rules. Starter species stays a separate checkbox."
+              />
+            </div>
+            <div>
+              <p className="mb-1 text-sm font-medium text-text-secondary">Library</p>
+              <SegmentedControl
+                value={form.catalogListing}
+                onChange={(catalogListing) => setForm((f) => ({ ...f, catalogListing }))}
+                options={catalogListingClassOptions(false)}
+                aria-label="Library classification"
+              />
             </div>
           </div>
           <div className="grid grid-cols-2 gap-4">
@@ -349,6 +375,7 @@ export function AdminSpeciesEditModal({
         confirmLabel="Add Selected"
         size="lg"
       />
+      {leave.prompt}
     </>
   );
 }

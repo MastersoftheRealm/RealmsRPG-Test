@@ -50,7 +50,7 @@ export function EmpoweredTechniqueEditorActionProfile({
           <select
             value={actionType}
             onChange={(event) => onActionTypeChange(event.target.value)}
-            className="min-h-[44px] w-full rounded-lg border border-border-light bg-surface px-4 py-2 text-text-primary"
+            className="touch-tier-standard w-full rounded-lg border border-border-light bg-surface px-4 py-2 text-text-primary"
             aria-label="Empowered technique action type"
           >
             {ACTION_OPTIONS.map((option) => (
@@ -71,7 +71,7 @@ export function EmpoweredTechniqueEditorActionProfile({
             id="empowered-attack-mode"
             value={attackMode}
             onChange={(event) => onAttackModeChange(event.target.value as AttackMode)}
-            className="min-h-[44px] w-full rounded-lg border border-border-light bg-surface px-4 py-2 text-text-primary"
+            className="touch-tier-standard w-full rounded-lg border border-border-light bg-surface px-4 py-2 text-text-primary"
             aria-label="Empowered technique attack mode"
           >
             {ATTACK_MODE_SELECT_OPTIONS.map((option) => (

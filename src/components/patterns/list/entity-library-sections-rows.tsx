@@ -67,6 +67,8 @@ export function renderInteractiveGridRows(
       uses={item.uses}
       hideUsesInName={item.hideUsesInName}
       compact={compactRows}
+      className={item.className}
+      warningMessage={item.warningMessage}
     />
   ));
 }

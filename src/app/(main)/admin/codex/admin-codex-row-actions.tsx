@@ -6,6 +6,12 @@ import { Pencil, Copy, X } from 'lucide-react';
 
 type NamedEntity = { id: string; name?: string | undefined };
 
+/** Four w-7 icon buttons, gap-1, and the row actions' end padding. */
+export const ADMIN_CODEX_ROW_ACTIONS_WIDTH = '8.5rem';
+
+/** Species listing control plus the three row actions. */
+export const ADMIN_CODEX_SPECIES_ACTIONS_WIDTH = '15rem';
+
 /**
  * Admin Codex list row Edit / Duplicate / Delete (TASK-842).
  * Delete opens DeleteConfirmModal via the entity hook — no inline Yes/No.

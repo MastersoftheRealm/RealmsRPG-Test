@@ -111,8 +111,8 @@ function CreatureCreatorContent() {
     displayItemToCreatureArmament,
     mergeCreatureFeatsOnAdd,
     initialState,
-    clearCreatorCache,
-    CREATURE_CREATOR_CACHE_KEY,
+    clearSessionDraftCache,
+    acceptDraft,
   } = ws;
 
   return (
@@ -122,12 +122,14 @@ function CreatureCreatorContent() {
       description="Design custom creatures, monsters, and NPCs. Configure abilities, defenses, skills, and combat options."
       user={user}
       auth={{ returnPath: '/creature-creator', contentType: 'creature' }}
-      showPublicPrivate={isAdmin}
+      showSaveTarget={isAdmin}
       saveTarget={save.saveTarget}
       onSaveTargetChange={save.setSaveTarget}
       onSave={handleSave}
       onLoad={load.openLoadModal}
       onReset={handleReset}
+      unsavedDirty={ws.unsavedDirty}
+      onDiscardLocalDraft={ws.discardLocalDraft}
       saving={save.saving}
       saveDisabled={!creature.name.trim() || isOverBudget}
       loading={{
@@ -139,6 +141,7 @@ function CreatureCreatorContent() {
         onClose: () => save.setShowPublishConfirm(false),
         onConfirm: () => save.confirmPublish(),
         title: save.publishConfirmTitle,
+        confirmLabel: save.publishConfirmLabel,
         description:
           save.publishConfirmDescription?.(creature.name.trim(), {
             existingInPublic: save.publishExistingInPublic,
@@ -149,7 +152,9 @@ function CreatureCreatorContent() {
         onClose: () => setShowResetConfirm(false),
         onConfirm: () => {
           setCreature(initialState);
-          clearCreatorCache(CREATURE_CREATOR_CACHE_KEY);
+          save.forgetLoadedLibraryItem();
+          acceptDraft();
+          clearSessionDraftCache();
           setShowResetConfirm(false);
         },
         title: 'Restart Creature',
@@ -305,6 +310,7 @@ function CreatureCreatorContent() {
                 onChange={setPowerModalTab}
                 aria-label="Power modal type"
                 tabs
+                equalWidth
                 options={[
                   { value: 'powers', label: 'Powers' },
                   { value: 'empowered', label: 'Empowered Techniques' },

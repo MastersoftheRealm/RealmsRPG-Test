@@ -27,9 +27,10 @@ function createMockClient(config: {
                 error,
                 count: config.counts[table] ?? 0,
               });
-        return Object.assign(result, {
-          eq: () => result,
+        const query = Object.assign(result, {
+          eq: () => query,
         });
+        return query;
       },
     }),
   };
@@ -94,5 +95,31 @@ describe('fetchLibraryTabCounts', () => {
       OFFICIAL_LIBRARY_COUNT_TABLES,
     );
     expect(counts.powers).toBe(0);
+  });
+
+  it('filters official counts with catalog_listing listed when listedOnly is true', async () => {
+    const eqCalls: Array<[string, string]> = [];
+    const client: LibraryCountsClient = {
+      from: () => ({
+        select: () => {
+          const result = Promise.resolve({
+            data: null,
+            error: null,
+            count: 1,
+          });
+          const withEq = Object.assign(result, {
+            eq: (column: string, value: string) => {
+              eqCalls.push([column, value]);
+              return withEq;
+            },
+          });
+          return withEq;
+        },
+      }),
+    };
+
+    await fetchLibraryTabCounts(client, OFFICIAL_LIBRARY_COUNT_TABLES, undefined, true);
+
+    expect(eqCalls).toContainEqual(['catalog_listing', 'listed']);
   });
 });

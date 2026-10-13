@@ -3,6 +3,7 @@
 import { useState, useRef, KeyboardEvent, ChangeEvent, type ReactNode } from 'react';
 import { cn } from '@/lib/utils';
 import { ValueStepper } from '@/components/patterns';
+import { resourceCurrentValueClass } from '@/lib/character/resource-value-color';
 
 /**
  * Get health color based on current health percentage
@@ -26,18 +27,9 @@ export function getHealthColor(current: number, max: number): 'green' | 'orange'
  * - Type a number (including negative for Health) and press Enter to set that value
  * - Type +N and press Enter to add N to the current value
  * - Use stepper buttons with typed value (if not pressed Enter yet)
+ * - No onChange (a viewer): the number is text. Typing cannot change it.
  */
-export function ResourceInput({
-  label,
-  current,
-  max,
-  onChange,
-  colorVariant = 'default',
-  subLabel,
-  headerRight,
-  showBar = false,
-  min = 0,
-}: {
+export type ResourceInputProps = {
   label: string;
   current: number;
   max: number;
@@ -49,7 +41,140 @@ export function ResourceInput({
   showBar?: boolean | undefined;
   /** Lower bound for current value (default 0). Health may use `-Infinity` for Dying negative HP. */
   min?: number | undefined;
-}) {
+};
+
+export function ResourceInput(props: ResourceInputProps) {
+  if (!props.onChange) {
+    return resourceReadout(props);
+  }
+  return <ResourceInputEditor {...props} onChange={props.onChange} />;
+}
+
+function resourceChrome(
+  colorVariant: 'health' | 'energy' | 'default',
+  current: number,
+  max: number,
+) {
+  const bgColor =
+    colorVariant === 'health'
+      ? 'bg-success-50 dark:bg-surface border-success-200 dark:border-success-800/50'
+      : colorVariant === 'energy'
+        ? 'bg-info-50 dark:bg-surface border-info-200 dark:border-info-800/50'
+        : 'bg-surface-alt dark:bg-surface border-border-light dark:border-border';
+
+  const labelColor =
+    colorVariant === 'health'
+      ? 'text-success-fg'
+      : colorVariant === 'energy'
+        ? 'text-info-fg'
+        : 'text-text-secondary dark:text-text-primary';
+
+  const inputBorderText =
+    colorVariant === 'health'
+      ? 'border-success-300 dark:border-success-700/60 text-success-fg'
+      : colorVariant === 'energy'
+        ? 'border-info-300 dark:border-info-700/60 text-info-fg'
+        : 'border-border-light dark:border-border text-text-primary';
+
+  const isAboveMax = current > max;
+  const valueClass =
+    colorVariant === 'health' || colorVariant === 'energy'
+      ? resourceCurrentValueClass(colorVariant, current, max)
+      : null;
+  const percentage = max > 0 ? Math.max(0, Math.min(100, (current / max) * 100)) : 0;
+  const barColorClass = isAboveMax
+    ? 'bg-warning-400 dark:bg-warning-500'
+    : colorVariant === 'health'
+      ? percentage > 50
+        ? 'bg-success-500 dark:bg-success-400'
+        : percentage > 25
+          ? 'bg-warning-500 dark:bg-warning-400'
+          : 'bg-danger-600 dark:bg-danger-500'
+      : colorVariant === 'energy'
+        ? 'bg-info-500 dark:bg-info-400'
+        : 'bg-primary-button';
+
+  return { bgColor, labelColor, inputBorderText, valueClass, percentage, barColorClass };
+}
+
+function ResourceBar({ percentage, barColorClass }: { percentage: number; barColorClass: string }) {
+  return (
+    <div className="relative mt-2 h-2 overflow-hidden rounded-full bg-surface dark:bg-text-primary/30">
+      <div
+        className={cn(
+          'duration-slow absolute inset-y-0 left-0 rounded-full transition-all ease-standard',
+          barColorClass,
+        )}
+        style={{ width: `${percentage}%` }}
+      />
+    </div>
+  );
+}
+
+function resourceReadout({
+  label,
+  current,
+  max,
+  colorVariant = 'default',
+  subLabel,
+  headerRight,
+  showBar = false,
+}: ResourceInputProps) {
+  const chrome = resourceChrome(colorVariant, current, max);
+  return (
+    <div className={cn('flex flex-col rounded-lg border p-3', chrome.bgColor)}>
+      <div className="mb-1 flex min-w-0 items-center justify-between gap-2">
+        <span
+          className={cn(
+            'shrink-0 text-xs font-semibold tracking-wide uppercase',
+            chrome.labelColor,
+          )}
+        >
+          {label}
+        </span>
+        {headerRight ??
+          (subLabel ? (
+            <span className="min-w-0 truncate text-xs text-text-muted">{subLabel}</span>
+          ) : null)}
+      </div>
+      <div className="flex min-w-0 flex-nowrap items-center gap-2">
+        <span
+          className={cn(
+            'w-12 shrink-0 text-center text-lg font-bold tabular-nums',
+            chrome.inputBorderText,
+            chrome.valueClass,
+          )}
+          aria-label={`Current ${label}`}
+        >
+          {current}
+        </span>
+        <span
+          className={cn(
+            'shrink-0 text-base font-medium whitespace-nowrap tabular-nums',
+            chrome.labelColor,
+          )}
+        >
+          / {max}
+        </span>
+      </div>
+      {showBar ? (
+        <ResourceBar percentage={chrome.percentage} barColorClass={chrome.barColorClass} />
+      ) : null}
+    </div>
+  );
+}
+
+function ResourceInputEditor({
+  label,
+  current,
+  max,
+  onChange,
+  colorVariant = 'default',
+  subLabel,
+  headerRight,
+  showBar = false,
+  min = 0,
+}: ResourceInputProps & { onChange: (value: number) => void }) {
   const [inputValue, setInputValue] = useState(String(current));
   const [isEditing, setIsEditing] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -109,8 +234,6 @@ export function ResourceInput({
 
   // Stepper: apply +/- one step to current, or to a typed draft value if the field is focused
   const handleStepperChange = (newValue: number) => {
-    if (!onChange) return;
-
     const stepperDelta = newValue - current;
     let result = newValue;
 
@@ -131,57 +254,25 @@ export function ResourceInput({
     setIsEditing(false);
   };
 
-  // Color classes: light = tinted panel; dark = same surface as UI, subtle colored border (no bright green/blue background)
-  const bgColor =
-    colorVariant === 'health'
-      ? 'bg-success-50 dark:bg-surface border-success-200 dark:border-success-800/50'
-      : colorVariant === 'energy'
-        ? 'bg-info-50 dark:bg-surface border-info-200 dark:border-info-800/50'
-        : 'bg-surface-alt dark:bg-surface border-border-light dark:border-border';
-
-  const labelColor =
-    colorVariant === 'health'
-      ? 'text-success-fg'
-      : colorVariant === 'energy'
-        ? 'text-info-fg'
-        : 'text-text-secondary dark:text-text-primary';
-
-  // Calculate bar percentage - cap at 100% for display but allow tracking above max
-  const isAboveMax = current > max;
-  const percentage = max > 0 ? Math.max(0, Math.min(100, (current / max) * 100)) : 0;
-
-  // Bar color: gold when above max, otherwise normal colors; dark mode alternatives
-  // Half health = amber/yellow-orange (distinguishable from terminal red)
-  // Terminal = deep crimson red
-  const barColorClass = isAboveMax
-    ? 'bg-warning-400 dark:bg-warning-500'
-    : colorVariant === 'health'
-      ? percentage > 50
-        ? 'bg-success-500 dark:bg-success-400'
-        : percentage > 25
-          ? 'bg-warning-500 dark:bg-warning-400'
-          : 'bg-danger-600 dark:bg-danger-500'
-      : colorVariant === 'energy'
-        ? 'bg-info-500 dark:bg-info-400'
-        : 'bg-primary-button';
-
-  const inputBorderText =
-    colorVariant === 'health'
-      ? 'border-success-300 dark:border-success-700/60 text-success-fg'
-      : colorVariant === 'energy'
-        ? 'border-info-300 dark:border-info-700/60 text-info-fg'
-        : 'border-border-light dark:border-border text-text-primary';
+  const chrome = resourceChrome(colorVariant, current, max);
 
   return (
-    <div className={cn('flex flex-col rounded-lg border p-3', bgColor)}>
-      <div className="mb-1 flex items-center justify-between gap-2">
-        <span className={cn('text-xs font-semibold tracking-wide uppercase', labelColor)}>
+    <div className={cn('flex flex-col rounded-lg border p-3', chrome.bgColor)}>
+      <div className="mb-1 flex min-w-0 items-center justify-between gap-2">
+        <span
+          className={cn(
+            'shrink-0 text-xs font-semibold tracking-wide uppercase',
+            chrome.labelColor,
+          )}
+        >
           {label}
         </span>
         {headerRight ??
-          (subLabel ? <span className="text-xs text-text-muted">{subLabel}</span> : null)}
+          (subLabel ? (
+            <span className="min-w-0 truncate text-xs text-text-muted">{subLabel}</span>
+          ) : null)}
       </div>
-      <div className="flex items-center gap-2">
+      <div className="flex min-w-0 flex-nowrap items-center gap-2">
         <input
           ref={inputRef}
           type="text"
@@ -194,45 +285,38 @@ export function ResourceInput({
           className={cn(
             'touch-tier-standard w-12 rounded border bg-surface px-1 py-0.5 text-center text-lg font-bold dark:bg-surface-alt',
             'focus:ring-2 focus:ring-primary-outline-border focus:outline-none dark:focus:ring-primary-outline-border',
-            inputBorderText,
+            chrome.inputBorderText,
+            chrome.valueClass,
           )}
           aria-label={`Current ${label}`}
         />
-        <span className={cn('text-base font-medium', labelColor)}>/ {max}</span>
-        {onChange && (
-          <ValueStepper
-            value={current}
-            onChange={handleStepperChange}
-            min={min}
-            // No max - allow incrementing above max (gold bar shows when above)
-            colorVariant={
-              colorVariant === 'health'
-                ? 'health'
-                : colorVariant === 'energy'
-                  ? 'energy'
-                  : 'default'
-            }
-            enableHoldRepeat
-            size="sm"
-            variant="compact"
-            hideValue
-            decrementTitle={`Decrease ${label.toLowerCase()}`}
-            incrementTitle={`Increase ${label.toLowerCase()}`}
-          />
-        )}
+        <span
+          className={cn(
+            'shrink-0 text-base font-medium whitespace-nowrap tabular-nums',
+            chrome.labelColor,
+          )}
+        >
+          / {max}
+        </span>
+        <ValueStepper
+          value={current}
+          onChange={handleStepperChange}
+          min={min}
+          // No max - allow incrementing above max (gold bar shows when above)
+          colorVariant={
+            colorVariant === 'health' ? 'health' : colorVariant === 'energy' ? 'energy' : 'default'
+          }
+          enableHoldRepeat
+          size="sm"
+          variant="compact"
+          hideValue
+          decrementTitle={`Decrease ${label.toLowerCase()}`}
+          incrementTitle={`Increase ${label.toLowerCase()}`}
+        />
       </div>
-      {/* Inline bar - dark mode track */}
-      {showBar && (
-        <div className="relative mt-2 h-2 overflow-hidden rounded-full bg-surface dark:bg-text-primary/30">
-          <div
-            className={cn(
-              'duration-slow absolute inset-y-0 left-0 rounded-full transition-all ease-standard',
-              barColorClass,
-            )}
-            style={{ width: `${percentage}%` }}
-          />
-        </div>
-      )}
+      {showBar ? (
+        <ResourceBar percentage={chrome.percentage} barColorClass={chrome.barColorClass} />
+      ) : null}
     </div>
   );
 }

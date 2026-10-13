@@ -1,7 +1,7 @@
 'use client';
 
 import { Edit, AlertCircle, X } from 'lucide-react';
-import type { CSSProperties, MouseEvent, ReactNode } from 'react';
+import type { CSSProperties, ReactNode } from 'react';
 import { cn } from '@/lib/utils';
 import { IconButton, DescriptorChip } from '@/components/ui';
 import { descriptorChipVariantForBadgeColor } from '@/lib/chip/grid-list-chip-utils';
@@ -14,7 +14,11 @@ import {
   GRID_LIST_ROW_RIGHT_SLOT_FLEX_WIDTH,
   GRID_LIST_ROW_SELECTION_COLUMN_WIDTH,
 } from './grid-list-row-chrome';
-import { columnDisplayLabel, columnHasDisplayValue } from './grid-list-row-columns';
+import {
+  columnDisplayLabel,
+  columnHasDisplayValue,
+  collapsedColumnOverflowClass,
+} from './grid-list-row-columns';
 import type { ColumnValue } from './grid-list-row-types';
 import { ListRowThumbnail, type ListRowThumbnailProps } from './list-row-thumbnail';
 
@@ -30,7 +34,7 @@ function GridListRowChromeIconButton({
   const isDelete = kind === 'delete';
   return (
     <div
-      className="flex min-w-0 flex-shrink-0 items-center justify-center"
+      className="relative z-10 flex min-w-0 flex-shrink-0 items-center justify-center"
       style={columnWidth ? { width: columnWidth } : undefined}
       onClick={(e) => e.stopPropagation()}
     >
@@ -58,9 +62,22 @@ function GridListRowChromeIconButton({
   );
 }
 
+/**
+ * Controls inside the collapsed row sit above the name button's stretched hit
+ * area. The name button is excluded so that hit area still covers the row.
+ */
+const ABOVE_ROW_HIT_CLASS =
+  "[&_:is(a[href],button,input,select,textarea,summary,[role='button'],[role='link'],[role='checkbox'],[role='switch'],[data-expand-ignore]):not([data-grid-row-trigger])]:relative [&_:is(a[href],button,input,select,textarea,summary,[role='button'],[role='link'],[role='checkbox'],[role='switch'],[data-expand-ignore]):not([data-grid-row-trigger])]:z-10";
+
+const ROW_NAME_BUTTON_CLASS =
+  "w-full min-w-0 max-w-full cursor-pointer overflow-visible border-0 bg-transparent p-0 text-left font-[inherit] text-text-primary focus-visible:ring-2 focus-visible:ring-primary-outline-border focus-visible:outline-none focus-visible:ring-inset after:absolute after:inset-0 after:z-0 after:cursor-pointer after:content-['']";
+
+function gridListRowSelectionLabel(itemName: string, isSelected: boolean): string {
+  return isSelected ? `Deselect ${itemName}` : `Select ${itemName}`;
+}
+
 interface GridListRowCollapsedProps {
   isRowClickable: boolean;
-  handleRowClickWithGuard: (e: MouseEvent) => void;
   handleRowClick: () => void;
   /**
    * Expansion state of the panel this row toggles. Leave undefined when the row
@@ -99,8 +116,6 @@ interface GridListRowCollapsedProps {
   columns: ColumnValue[];
   columnSpans?: (number | undefined)[] | undefined;
   suppressDescriptionPreview: boolean;
-  /** When expanded, column facts render in the body — omit from header tracks (TASK-898). */
-  suppressColumnFactsWhenExpanded: boolean;
   allDataColumnsAreDescription: boolean;
   headerColumns: ColumnValue[];
   inlineWarning: boolean;
@@ -118,7 +133,6 @@ interface GridListRowCollapsedProps {
 
 export function GridListRowCollapsed({
   isRowClickable,
-  handleRowClickWithGuard,
   handleRowClick,
   isExpanded,
   expandedPanelId,
@@ -147,7 +161,6 @@ export function GridListRowCollapsed({
   columns,
   columnSpans,
   suppressDescriptionPreview,
-  suppressColumnFactsWhenExpanded,
   allDataColumnsAreDescription,
   headerColumns,
   inlineWarning,
@@ -164,41 +177,17 @@ export function GridListRowCollapsed({
 }: GridListRowCollapsedProps) {
   return (
     <>
-      {/* Clickable Row Content - div not button to allow RollButton/other buttons inside without nesting.
-          Hover highlight lives on the outer row chrome wrapper (TASK-702) so quantity/selection
-          tracks share the same band — do not re-add hover here. */}
+      {/* The name is the row button. Its ::after covers this row. Thumbs, quantity,
+          column controls, and inline actions stay outside that button (nested-interactive).
+          Hover stays on the outer chrome wrapper (TASK-702) — do not re-add it here. */}
       <div
-        data-grid-row-trigger
-        role={isRowClickable ? 'button' : undefined}
-        tabIndex={isRowClickable ? 0 : undefined}
-        aria-expanded={isRowClickable && isExpanded !== undefined ? isExpanded : undefined}
-        // Only reference the panel while it exists — a dangling idref is worse
-        // than none for screen readers.
-        aria-controls={
-          isRowClickable && isExpanded && expandedPanelId ? expandedPanelId : undefined
-        }
-        onClick={isRowClickable ? handleRowClickWithGuard : undefined}
-        onKeyDown={
-          isRowClickable
-            ? (e) => {
-                if (e.key !== 'Enter' && e.key !== ' ') return;
-                const target = e.target as HTMLElement;
-                const interactive = target.closest?.(
-                  'button, [role="button"], a, input, select, textarea, [data-expand-ignore]',
-                );
-                if (interactive && interactive !== e.currentTarget) return;
-                e.preventDefault();
-                handleRowClick();
-              }
-            : undefined
-        }
         className={cn(
-          'min-h-[44px] min-w-0 flex-1 text-left transition-colors',
+          'relative isolate min-h-[44px] min-w-0 flex-1 text-left transition-colors',
+          ABOVE_ROW_HIT_CLASS,
           // Compact rows are used heavily in add/load modals; keep 44px minimum touch target,
           // but avoid exceeding it via extra vertical padding.
           compact ? 'px-3 py-1.5' : 'px-4 py-2',
           disabled && 'cursor-default',
-          isRowClickable && 'cursor-pointer',
           // DESIGN_INTENT: set template via CSS variables + classes, never inline
           // `gridTemplateColumns` — inline styles beat max-lg media queries and blocked
           // the mobile collapse (names squeezed; X landed mid-row before empty fr tracks).
@@ -215,7 +204,10 @@ export function GridListRowCollapsed({
         }
       >
         {useThumbnailColumn && thumbnail && (
-          <div className="flex items-center justify-center" onClick={(e) => e.stopPropagation()}>
+          <div
+            className="relative z-10 flex items-center justify-center"
+            onClick={(e) => e.stopPropagation()}
+          >
             <ListRowThumbnail {...thumbnail} />
           </div>
         )}
@@ -235,9 +227,28 @@ export function GridListRowCollapsed({
           )}
         >
           {!useThumbnailColumn && thumbnail && <ListRowThumbnail {...thumbnail} />}
-          <span className="min-w-0 truncate" title={name}>
-            {nameContent ?? name}
-          </span>
+          {isRowClickable && isExpanded !== undefined ? (
+            <button
+              type="button"
+              data-grid-row-trigger
+              title={name}
+              aria-expanded={isExpanded}
+              // Only reference the panel while it exists — a dangling idref is worse
+              // than none for screen readers.
+              aria-controls={isExpanded && expandedPanelId ? expandedPanelId : undefined}
+              onClick={(e) => {
+                e.stopPropagation();
+                handleRowClick();
+              }}
+              className={ROW_NAME_BUTTON_CLASS}
+            >
+              <span className="block min-w-0 truncate">{nameContent ?? name}</span>
+            </button>
+          ) : (
+            <span className="min-w-0 truncate" title={name}>
+              {nameContent ?? name}
+            </span>
+          )}
           {/* Innate indicator (hidden when already in innate section) */}
           {innate && !hideInnateBadge && (
             <span className="flex-shrink-0 rounded border border-power-border bg-power-light px-1 py-0.5 text-[10px] text-power-fg">
@@ -261,6 +272,7 @@ export function GridListRowCollapsed({
                 min={quantityMin}
                 decrementLabel={quantityDecrementLabel}
                 incrementLabel={quantityIncrementLabel}
+                className="relative z-10"
               />
             ) : (
               <QuantityBadge quantity={quantity} className="flex-shrink-0" />
@@ -284,11 +296,8 @@ export function GridListRowCollapsed({
           )}
         </div>
 
-        {/* Data columns (non-name). Description teaser clears while expanded when body has the full text. */}
+        {/* Data columns (non-name). Description teasers omit when the expanded body has full text. */}
         {columns.map((col, colIndex) => {
-          if (suppressColumnFactsWhenExpanded && columnHasDisplayValue(col)) {
-            return null;
-          }
           if (suppressDescriptionPreview && col.key === 'description') {
             // Description-only layouts: name spans those tracks (no empty hole).
             if (allDataColumnsAreDescription) return null;
@@ -315,7 +324,7 @@ export function GridListRowCollapsed({
                   : undefined
               }
               className={cn(
-                'min-w-0 truncate text-sm',
+                collapsedColumnOverflowClass(col),
                 col.hideOnMobile !== false && 'hidden lg:block',
                 col.className,
                 col.highlight ? 'font-medium text-primary-link-fg' : 'text-text-primary',
@@ -361,7 +370,7 @@ export function GridListRowCollapsed({
         {/* Inline controls: used when gridColumns already includes trailing action tracks */}
         {inlineRightSlot && (
           <div
-            className="flex min-w-0 items-center justify-center"
+            className="relative z-10 flex min-w-0 items-center justify-center"
             onClick={(e) => e.stopPropagation()}
           >
             {rightSlot}
@@ -374,8 +383,8 @@ export function GridListRowCollapsed({
         {inlineSelectable && (
           <div
             className={cn(
-              'flex items-center justify-center',
-              disabled && 'cursor-not-allowed opacity-50',
+              'relative z-10 flex items-center justify-center',
+              disabled && 'cursor-not-allowed',
             )}
             onClick={(e) => e.stopPropagation()}
             role="presentation"
@@ -386,7 +395,7 @@ export function GridListRowCollapsed({
               onToggle={() => !disabled && onSelect?.()}
               disabled={disabled}
               size="md"
-              label={isSelected ? 'Remove from selection' : 'Add to selection'}
+              label={gridListRowSelectionLabel(name, !!isSelected)}
             />
           </div>
         )}
@@ -413,6 +422,8 @@ export interface GridListRowExternalChromeProps {
   selectable?: boolean | undefined;
   isSelected?: boolean | undefined;
   onSelect?: (() => void) | undefined;
+  /** Row label for selection toggle accessible names (load / add modals). */
+  itemName?: string | undefined;
 }
 
 export function GridListRowExternalChrome({
@@ -426,6 +437,7 @@ export function GridListRowExternalChrome({
   selectable = false,
   isSelected = false,
   onSelect,
+  itemName = 'item',
 }: GridListRowExternalChromeProps) {
   const showRightSlot = !!(rightSlot || reserveRightSlotChrome);
   if (!showRightSlot && !onEdit && !onDelete && !selectable) return null;
@@ -465,7 +477,7 @@ export function GridListRowExternalChrome({
         <div
           className={cn(
             'flex flex-shrink-0 items-center justify-center',
-            disabled && 'cursor-not-allowed opacity-50',
+            disabled && 'cursor-not-allowed',
           )}
           style={{ width: GRID_LIST_ROW_SELECTION_COLUMN_WIDTH }}
           onClick={(e) => e.stopPropagation()}
@@ -477,7 +489,7 @@ export function GridListRowExternalChrome({
             onToggle={() => !disabled && onSelect?.()}
             disabled={disabled}
             size="md"
-            label={isSelected ? 'Remove from selection' : 'Add to selection'}
+            label={gridListRowSelectionLabel(itemName, !!isSelected)}
           />
         </div>
       )}
