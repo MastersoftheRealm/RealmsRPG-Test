@@ -88,6 +88,52 @@ describe('migrateSkillsAfterSpeciesChange', () => {
     ]);
   });
 
+  it('removes uninvested Craft and Stealth when leaving Halfling (86e3jv9ra)', () => {
+    const species = [
+      { id: 'human', name: 'Human', skills: ['skill-ath'] },
+      { id: 'halfling', name: 'Halfling', skills: ['13', '42'] },
+    ];
+    const catalog = [
+      ...allSkills,
+      { id: '13', name: 'Craft', ability: 'intelligence' },
+      { id: '42', name: 'Stealth', ability: 'agility' },
+    ];
+    const human: CharacterAncestry = { id: 'human', name: 'Human' };
+    const halfling: CharacterAncestry = { id: 'halfling', name: 'Halfling' };
+
+    const onHalfling = migrateSkillsAfterSpeciesChange(
+      characterWithSkills(
+        [{ id: 'skill-ath', name: 'Athletics', skill_val: 0, prof: true }],
+        human,
+      ),
+      halfling,
+      species,
+      catalog,
+    );
+    expect(onHalfling.map((s) => s.name).sort()).toEqual(['Craft', 'Stealth']);
+
+    const backToHuman = migrateSkillsAfterSpeciesChange(
+      characterWithSkills(onHalfling, halfling),
+      human,
+      species,
+      catalog,
+    );
+    expect(backToHuman.map((s) => s.name)).toEqual(['Athletics']);
+    expect(backToHuman.some((s) => s.name === 'Craft' || s.name === 'Stealth')).toBe(false);
+  });
+
+  it('keeps a species skill the player put points into', () => {
+    const result = migrateSkillsAfterSpeciesChange(
+      characterWithSkills([{ id: 'skill-old', name: 'Survival', skill_val: 2, prof: true }]),
+      newAncestry,
+      allSpecies,
+      allSkills,
+    );
+    expect(result.find((s) => s.name === 'Survival')).toEqual(
+      expect.objectContaining({ skill_val: 1, prof: true }),
+    );
+  });
+
   it('skips the Any species skill id 0', () => {
     const result = migrateSkillsAfterSpeciesChange(
       characterWithSkills([]),
