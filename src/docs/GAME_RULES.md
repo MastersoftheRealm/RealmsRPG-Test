@@ -751,7 +751,9 @@ When healed, regain HP up to maximum. **Healing from a Power** adds the healer's
 
 ### Multiple Action Penalty
 
-Using the same Action/Reaction more than once in a turn: -5 per subsequent use (stacks: -5, -10, -15...).
+If you take the same Action or Reaction more than once in a turn, and it involves a D20 roll, you incur a -5 penalty to all related D20 rolls each subsequent time you perform that Action. This penalty stacks with each subsequent repetition (-5, -10, -15, ...).
+
+For the purpose of the Multiple Action Penalty, Basic, Quick, and Free Actions or Reactions are all considered the same Action type.
 
 ### Attack Formulas
 
