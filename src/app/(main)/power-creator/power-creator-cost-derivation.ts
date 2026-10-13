@@ -48,7 +48,11 @@ function enrichMechanicPayloads(
   return mechanicParts.map((mp) => {
     let displayLabel: string | undefined;
     const section = POWER_CALC_SECTION_BY_NAME[mp.name];
-    if (section === 'damage' && mp.name !== 'Power Split Damage Dice') {
+    if (
+      section === 'damage' &&
+      mp.name !== 'Power Split Damage Dice' &&
+      mp.name !== 'Split Damage Dice'
+    ) {
       const dmg = validDamages[damageCursor];
       damageCursor += 1;
       if (dmg) displayLabel = formatDamageEnergyLabel(dmg.type, dmg.amount, dmg.size);
@@ -312,6 +316,7 @@ export function usePowerCreatorCostDerivation({
       'Psychic Damage',
       'Physical Damage',
       'Power Split Damage Dice',
+      'Split Damage Dice',
     ];
     const damageParts = mechanicParts.filter((mp) => damageNames.includes(mp.name)).map(toPayload);
     const actionNames = ['Power Reaction', 'Power Quick or Free Action', 'Power Long Action'];
