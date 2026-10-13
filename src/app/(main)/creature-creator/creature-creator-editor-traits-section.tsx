@@ -8,6 +8,7 @@ import { useState } from 'react';
 import { Button, Input, Card } from '@/components/ui';
 import { CONDITIONS } from '@/lib/game/creator-constants';
 import { DAMAGE_TYPES, SENSES, MOVEMENT_TYPES } from './creature-creator-constants';
+import { takenDamageModifiers } from './creature-damage-modifiers';
 import { ChipList, ExpandableChipList, AddItemDropdown } from './CreatureCreatorHelpers';
 import type { CreatureCreatorEditorProps } from './creature-creator-editor';
 
@@ -34,6 +35,7 @@ export function CreatureCreatorEditorTraitsSection({
   removeFromArray,
 }: TraitsSectionProps) {
   const [newLanguage, setNewLanguage] = useState('');
+  const takenDamageTypes = takenDamageModifiers(creature);
 
   const addLanguage = () => {
     if (newLanguage.trim() && !creature.languages.includes(newLanguage.trim())) {
@@ -68,7 +70,7 @@ export function CreatureCreatorEditorTraitsSection({
             />
             <AddItemDropdown
               options={DAMAGE_TYPES}
-              selectedItems={[...creature.resistances, ...creature.immunities]}
+              selectedItems={takenDamageTypes}
               onAdd={(item) => addToArray('resistances', item)}
               placeholder="Add resistance..."
               sectionCostLabel={`+${stats.resistanceFeatCost} pt each`}
@@ -90,7 +92,7 @@ export function CreatureCreatorEditorTraitsSection({
             />
             <AddItemDropdown
               options={DAMAGE_TYPES}
-              selectedItems={creature.weaknesses}
+              selectedItems={takenDamageTypes}
               onAdd={(item) => addToArray('weaknesses', item)}
               placeholder="Add weakness..."
               sectionCostLabel={`${stats.weaknessFeatCost} pt each`}
@@ -112,7 +114,7 @@ export function CreatureCreatorEditorTraitsSection({
             />
             <AddItemDropdown
               options={DAMAGE_TYPES}
-              selectedItems={[...creature.resistances, ...creature.immunities]}
+              selectedItems={takenDamageTypes}
               onAdd={(item) => addToArray('immunities', item)}
               placeholder="Add immunity..."
               sectionCostLabel={`+${stats.immunityFeatCost} pt each`}

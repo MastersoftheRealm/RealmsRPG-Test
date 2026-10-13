@@ -70,6 +70,7 @@ import { normalizeCreatureInventoryType } from '@/lib/game/creature-inventory';
 import { mergeLibraryBySource } from '@/lib/library/source-scope';
 import { mergeCreatureFeatsOnAdd } from './creature-feat-utils';
 import { replaceTieredCreatureTrait } from './creature-trait-tiers';
+import { canAddDamageModifier } from './creature-damage-modifiers';
 import {
   buildArmamentLibraryList,
   buildArmamentSelectableItems,
@@ -418,6 +419,12 @@ export function useCreatureCreatorWorkspace() {
 
   const addToArray = useCallback((field: keyof CreatureState, item: string) => {
     setCreature((prev) => {
+      if (
+        (field === 'resistances' || field === 'weaknesses' || field === 'immunities') &&
+        !canAddDamageModifier(prev, item)
+      ) {
+        return prev;
+      }
       const current = prev[field] as string[];
       const next =
         field === 'senses' || field === 'movementTypes'
