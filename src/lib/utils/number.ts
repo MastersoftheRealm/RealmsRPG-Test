@@ -29,12 +29,11 @@ export function formatSpeedForDisplay(
     case 'meters':
       return { value: spaces * 1.5, suffix: 'm' };
     default:
-      // No suffix for spaces — it's the default unit and implied
-      return { value: spaces, suffix: '' };
+      return { value: spaces, suffix: 'sp' };
   }
 }
 
-/** Format speed as a single string (e.g. "60 ft", "9 m", or "6" for spaces). */
+/** Format speed as a single string (e.g. "6 sp", "60 ft", "9 m"). */
 export function formatSpeedString(spaces: number, unit: SpeedDisplayUnit = 'spaces'): string {
   const { value, suffix } = formatSpeedForDisplay(spaces, unit);
   const displayValue =
