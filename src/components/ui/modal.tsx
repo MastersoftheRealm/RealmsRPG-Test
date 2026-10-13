@@ -17,7 +17,7 @@ import { X } from 'lucide-react';
 import { cn } from '@/lib/utils/cn';
 import { useIsClient } from '@/hooks/use-is-client';
 import { IconButton } from './icon-button';
-import { bindModalCloseClickSink, MODAL_CLOSE_CLICK_CAPTURE_MS } from './modal-close-click';
+import { bindModalCloseClickSink, MODAL_CLOSE_CLICK_CAPTURE_MS } from '@/lib/modal-close-click';
 
 interface ModalProps {
   isOpen: boolean;

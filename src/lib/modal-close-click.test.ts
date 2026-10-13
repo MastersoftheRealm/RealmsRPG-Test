@@ -2,7 +2,7 @@ import { readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
 import { bindModalCloseClickSink, MODAL_CLOSE_CLICK_CAPTURE_MS } from './modal-close-click';
 
-const modal = readFileSync(new URL('./modal.tsx', import.meta.url), 'utf8');
+const modal = readFileSync(new URL('../components/ui/modal.tsx', import.meta.url), 'utf8');
 
 describe('modal confirm double-click (86e3jw5g6)', () => {
   it('stops one following click, then lets the next click through', () => {
