@@ -30,6 +30,7 @@ import {
 } from '@/lib/calculators';
 import { attackModeColumnLabel, type AttackMode } from '@/lib/attack-mode';
 import {
+  isManualTechniquePart,
   techniqueLibraryRecordToFormState,
   techniquePartsForSave,
   TECHNIQUE_CREATOR_CACHE_KEY,
@@ -164,15 +165,17 @@ export function useTechniqueCreatorWorkspace({
 
   // Convert selected parts to payload format for calculator
   const partsPayload: TechniquePartPayload[] = useMemo(() => {
-    const selected: TechniquePartPayload[] = selectedParts.map((sp) => ({
-      id: Number(sp.part.id),
-      name: sp.part.name,
-      part: sp.part,
-      op_1_lvl: sp.op_1_lvl,
-      op_2_lvl: sp.op_2_lvl,
-      op_3_lvl: sp.op_3_lvl,
-      calcSection: 'parts' as const,
-    }));
+    const selected: TechniquePartPayload[] = selectedParts
+      .filter((sp) => isManualTechniquePart(sp.part))
+      .map((sp) => ({
+        id: Number(sp.part.id),
+        name: sp.part.name,
+        part: sp.part,
+        op_1_lvl: sp.op_1_lvl,
+        op_2_lvl: sp.op_2_lvl,
+        op_3_lvl: sp.op_3_lvl,
+        calcSection: 'parts' as const,
+      }));
 
     const mechanics: TechniquePartPayload[] = mechanicParts.map((mp) => {
       const section = TECHNIQUE_CALC_SECTION_BY_NAME[mp.name];
@@ -289,7 +292,7 @@ export function useTechniqueCreatorWorkspace({
   const addPart = useCallback(() => {
     // Seed from the first selectable (non-mechanic) part; mechanic parts are
     // auto-generated from action/damage/weapon and must not appear as editable rows.
-    const firstSelectable = techniqueParts.find((p) => !p.mechanic);
+    const firstSelectable = techniqueParts.find((p) => isManualTechniquePart(p));
     if (!firstSelectable) return;
     setSelectedParts((prev) => [
       ...prev,
