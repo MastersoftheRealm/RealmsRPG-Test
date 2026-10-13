@@ -6,6 +6,7 @@ import {
   formatCodexChangelogHeadline,
   parseChangedFields,
   parseChangedFieldsForOperation,
+  readCodexChangelogEntityName,
   summarizeChangedFieldNames,
 } from './codex-changelog-display';
 
@@ -120,5 +121,28 @@ describe('codex-changelog-display (TASK-874)', () => {
         },
       ),
     ).toEqual([{ field: 'name', before: 'Find the Chink', after: 'Find the Gap' }]);
+  });
+
+  it('names archetype creates and lists changed archetype fields (86e3jtgzp)', () => {
+    const before = {
+      archetype: { name: 'Fighter', description: 'Old', updated_at: 't1' },
+      levels: [{ level: 1, note: 'a' }],
+    };
+    const after = {
+      archetype: { name: 'Fighter', description: 'New', updated_at: 't2' },
+      levels: [{ level: 1, note: 'b' }],
+    };
+
+    const created = buildCodexChangelogPersistPayload('create', null, after);
+    expect(created.after_data).toEqual({ name: 'Fighter' });
+    expect(readCodexChangelogEntityName(null, created.after_data)).toBe('Fighter');
+
+    const updated = buildCodexChangelogPersistPayload('update', before, after);
+    expect(updated.changed_fields.map((row) => row.field).sort()).toEqual([
+      'description',
+      'levels',
+    ]);
+    expect(updated.changed_fields.some((row) => row.field === 'archetype')).toBe(false);
+    expect(readCodexChangelogEntityName(updated.before_data, updated.after_data)).toBe('Fighter');
   });
 });
