@@ -196,6 +196,7 @@ export function buildLibrarySectionData(input: {
     featRequirementEffectiveCharacter: characterToEffectiveFeatRequirementCharacter(character),
     onRemoveFeat: handleRequestRemoveFeat,
     traitsDb: m.traitsDb,
+    traitsCatalogLoading: m.traitsCatalogLoading,
     featsDb: m.featsDb,
     traitUses: character.traitUses,
     onTraitUsesChange: whenSheetOwner(isOwner, handleTraitUsesChange),

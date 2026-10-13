@@ -73,6 +73,8 @@ export interface SheetLibraryModel {
         rec_period?: string | undefined;
       }>
     | undefined;
+  /** Owner sheet: trait catalog request has not returned yet. */
+  traitsCatalogLoading?: boolean | undefined;
   featsDb?:
     | Array<{
         id: string;
@@ -184,6 +186,7 @@ export interface LibrarySectionData {
     | undefined;
   speciesTraitsFromCodex?: string[] | undefined;
   traitsDb?: SheetLibraryModel['traitsDb'] | undefined;
+  traitsCatalogLoading?: boolean | undefined;
   traitUses?: Record<string, number> | undefined;
   archetypeFeats?:
     | Array<{

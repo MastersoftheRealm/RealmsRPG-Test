@@ -34,6 +34,7 @@ import {
   type FeatRowContext,
 } from './library-feat-rows';
 import { collectSheetTraits } from '@/lib/character/collect-sheet-traits';
+import { traitIdPendingCatalogName } from '@/lib/character/sheet-trait-display';
 import { dedupeEntityRefs } from '@/lib/game/dedupe-saved-parts';
 import type { FeatTraitCustomization } from '@/types/feats';
 
@@ -98,6 +99,8 @@ interface FeatsTabProps {
   speciesTraitsFromCodex?: string[] | undefined;
   traits?: TraitData[] | undefined;
   traitsDb?: CodexTrait[] | undefined;
+  /** True while the trait catalog request has not returned rows yet. */
+  traitsCatalogLoading?: boolean | undefined;
   featsDb?: CodexFeat[] | undefined;
   traitUses?: Record<string, number> | undefined;
   archetypeFeats?: FeatData[] | undefined;
@@ -141,6 +144,7 @@ export function FeatsTab({
   speciesTraitsFromCodex = [],
   traits = [],
   traitsDb = [],
+  traitsCatalogLoading = false,
   featsDb = [],
   traitUses = {},
   archetypeFeats = [],
@@ -256,14 +260,16 @@ export function FeatsTab({
       if (!dbTrait) {
         dbTrait = traitsDb.find((t) => t.id === traitNameOrId);
       }
+      const resolvedName = dbTrait?.name?.trim() ? dbTrait.name : undefined;
       return {
-        name: dbTrait?.name || traitNameOrId,
+        name: resolvedName || traitNameOrId,
         description: dbTrait?.description,
         maxUses: dbTrait?.uses_per_rec ?? 0,
         recoveryPeriod: dbTrait?.rec_period,
+        pending: traitIdPendingCatalogName(traitNameOrId, resolvedName, traitsCatalogLoading),
       };
     },
-    [traitsDb],
+    [traitsDb, traitsCatalogLoading],
   );
 
   const enrichFeat = useCallback(
@@ -323,22 +329,39 @@ export function FeatsTab({
   );
 
   const processedTraits = useMemo(() => {
-    const enriched = allTraitsWithCategories.map((t) => {
+    const enriched = allTraitsWithCategories.flatMap((t) => {
       const base = enrichTrait(t.name);
       const traitKey = resolveTraitCustomizationKey(t.name, traitsDb);
       const custom = traitCustomizations[traitKey];
-      return {
-        ...base,
-        traitKey,
-        codexName: base.name,
-        customName: custom?.customName,
-        note: custom?.note,
-        name: custom?.customName?.trim() || base.name,
-        category: t.category,
-      };
+      const customName = custom?.customName?.trim();
+      if (base.pending && !customName) return [];
+      const name = customName || base.name;
+      if (!name.trim()) return [];
+      return [
+        {
+          ...base,
+          traitKey,
+          codexName: base.pending ? name : base.name,
+          customName: custom?.customName,
+          note: custom?.note,
+          name,
+          category: t.category,
+        },
+      ];
     });
     return sortByColumn(enriched, traitSort);
   }, [allTraitsWithCategories, enrichTrait, traitSort, traitsDb, traitCustomizations]);
+
+  const traitsAwaitingNames = useMemo(
+    () =>
+      allTraitsWithCategories.some((t) => {
+        const base = enrichTrait(t.name);
+        if (!base.pending) return false;
+        const traitKey = resolveTraitCustomizationKey(t.name, traitsDb);
+        return !traitCustomizations[traitKey]?.customName?.trim();
+      }),
+    [allTraitsWithCategories, enrichTrait, traitsDb, traitCustomizations],
+  );
 
   const processedArchetypeFeats = useMemo(
     () => sortByColumn(dedupeEntityRefs(archetypeFeats).map(enrichFeat), archetypeFeatSort),
@@ -488,7 +511,7 @@ export function FeatsTab({
         items={traitRows}
         sortState={traitSort}
         onSort={(col) => setTraitSort(toggleSort(traitSort, col))}
-        emptyMessage="No traits"
+        emptyMessage={traitsAwaitingNames ? 'Loading...' : 'No traits'}
         collapsible
       />
 
