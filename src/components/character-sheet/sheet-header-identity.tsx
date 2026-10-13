@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useRef, useState, type ClipboardEvent } from 'react';
+import { useEffect, useLayoutEffect, useRef, useState, type ClipboardEvent } from 'react';
 import Image from 'next/image';
 import { Camera, Pencil } from 'lucide-react';
 import { cn } from '@/lib/utils';
@@ -26,6 +26,7 @@ import {
   insertCharacterNameText,
 } from '@/lib/character/character-name-limit';
 import { sheetHeaderNameClamped } from './sheet-header-name';
+import { sheetFieldDismissReturnsFocus } from './sheet-field-focus';
 
 export function SheetHeaderIdentity({
   character,
@@ -54,6 +55,8 @@ export function SheetHeaderIdentity({
 }) {
   // State for editing character name
   const [isEditingName, setIsEditingName] = useState(false);
+  const nameEditButtonRef = useRef<HTMLButtonElement>(null);
+  const restoreNameFocusRef = useRef(false);
   const [nameInput, setNameInput] = useState(character.name || '');
   const [nameTruncated, setNameTruncated] = useState(false);
   const [nameExpanded, setNameExpanded] = useState(false);
@@ -68,6 +71,8 @@ export function SheetHeaderIdentity({
 
   // State for editing XP
   const [isEditingXP, setIsEditingXP] = useState(false);
+  const xpEditButtonRef = useRef<HTMLButtonElement>(null);
+  const restoreXpFocusRef = useRef(false);
   const [xpInput, setXpInput] = useState(String(character.experience ?? 0));
 
   const xp = character.experience ?? 0;
@@ -160,6 +165,18 @@ export function SheetHeaderIdentity({
     };
   }, [character.name, nameExpanded, nameClamped, isEditingName]);
 
+  useLayoutEffect(() => {
+    if (isEditingName || !restoreNameFocusRef.current) return;
+    restoreNameFocusRef.current = false;
+    nameEditButtonRef.current?.focus();
+  }, [isEditingName]);
+
+  useLayoutEffect(() => {
+    if (isEditingXP || !restoreXpFocusRef.current) return;
+    restoreXpFocusRef.current = false;
+    xpEditButtonRef.current?.focus();
+  }, [isEditingXP]);
+
   const handleNameSubmit = () => {
     const trimmed = nameInput.trim();
     if (trimmed && trimmed !== character.name && onNameChange) {
@@ -247,6 +264,9 @@ export function SheetHeaderIdentity({
                 onPaste={handleNamePaste}
                 onBlur={handleNameSubmit}
                 onKeyDown={(e) => {
+                  if (!sheetFieldDismissReturnsFocus(e.key)) return;
+                  e.preventDefault();
+                  restoreNameFocusRef.current = true;
                   if (e.key === 'Enter') handleNameSubmit();
                   if (e.key === 'Escape') {
                     setNameInput(character.name || '');
@@ -307,6 +327,8 @@ export function SheetHeaderIdentity({
               )}
               {onNameChange && isEditMode && (
                 <button
+                  ref={nameEditButtonRef}
+                  type="button"
                   onClick={() => {
                     setNameInput(character.name || '');
                     setNameTruncated(false);
@@ -389,6 +411,9 @@ export function SheetHeaderIdentity({
                   onChange={(e) => setXpInput(e.target.value)}
                   onBlur={handleXPSubmit}
                   onKeyDown={(e) => {
+                    if (!sheetFieldDismissReturnsFocus(e.key)) return;
+                    e.preventDefault();
+                    restoreXpFocusRef.current = true;
                     if (e.key === 'Enter') handleXPSubmit();
                     if (e.key === 'Escape') {
                       setXpInput(String(character.experience ?? 0));
@@ -406,6 +431,8 @@ export function SheetHeaderIdentity({
                 <span>XP: {character.experience ?? 0}</span>
                 {onExperienceChange && (
                   <button
+                    ref={xpEditButtonRef}
+                    type="button"
                     onClick={() => {
                       setXpInput(String(character.experience ?? 0));
                       setIsEditingXP(true);
