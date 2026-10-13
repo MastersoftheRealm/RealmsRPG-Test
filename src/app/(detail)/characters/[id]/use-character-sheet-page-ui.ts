@@ -6,7 +6,18 @@
 
 'use client';
 
-import { useState, useEffect, useCallback, type Dispatch, type SetStateAction } from 'react';
+import {
+  useState,
+  useEffect,
+  useCallback,
+  useRef,
+  type Dispatch,
+  type SetStateAction,
+} from 'react';
+import {
+  nextSheetInteractionMode,
+  type SheetInteractionMode,
+} from '@/lib/character/sheet-interaction-mode';
 import { useSearchParams, useRouter, usePathname } from 'next/navigation';
 import { saveCharacterWithConflictRetry } from '@/services/character-service';
 import { type LevelUpGuideContent } from '@/lib/level-up-guide';
@@ -40,6 +51,13 @@ export function useCharacterSheetPageUi({
 
   const [isEditMode, setIsEditMode] = useState(false);
   const [isTempModifierMode, setIsTempModifierMode] = useState(false);
+  const modeRef = useRef<SheetInteractionMode>(null);
+
+  const applyMode = useCallback((next: SheetInteractionMode) => {
+    modeRef.current = next;
+    setIsEditMode(next === 'edit');
+    setIsTempModifierMode(next === 'temp');
+  }, []);
   const [showLevelUpModal, setShowLevelUpModal] = useState(false);
   const [showRecoveryModal, setShowRecoveryModal] = useState(false);
   const [showSettingsModal, setShowSettingsModal] = useState(false);
@@ -62,33 +80,22 @@ export function useCharacterSheetPageUi({
   }, []);
   const [showEditSpeciesModal, setShowEditSpeciesModal] = useState(false);
 
-  const handleToggleEditMode = useCallback(async () => {
-    if (isEditMode) {
-      if (hasUnsavedChanges) await saveNow();
-      setIsEditMode(false);
-      return;
-    }
-    if (isTempModifierMode && hasUnsavedChanges) await saveNow();
-    setIsTempModifierMode(false);
-    setIsEditMode(true);
-  }, [isEditMode, isTempModifierMode, hasUnsavedChanges, saveNow]);
+  const handleToggleEditMode = useCallback(() => {
+    const current = modeRef.current;
+    if (current && hasUnsavedChanges) void saveNow();
+    applyMode(nextSheetInteractionMode(current, 'edit'));
+  }, [applyMode, hasUnsavedChanges, saveNow]);
 
-  const handleToggleTempModifierMode = useCallback(async () => {
-    if (isTempModifierMode) {
-      if (hasUnsavedChanges) await saveNow();
-      setIsTempModifierMode(false);
-      return;
-    }
-    if (isEditMode && hasUnsavedChanges) await saveNow();
-    setIsEditMode(false);
-    setIsTempModifierMode(true);
-  }, [isEditMode, isTempModifierMode, hasUnsavedChanges, saveNow]);
+  const handleToggleTempModifierMode = useCallback(() => {
+    const current = modeRef.current;
+    if (current && hasUnsavedChanges) void saveNow();
+    applyMode(nextSheetInteractionMode(current, 'temp'));
+  }, [applyMode, hasUnsavedChanges, saveNow]);
 
   /** Level-up spend path — always Edit, never Temp (TASK-782). */
   const enterEditMode = useCallback(() => {
-    setIsTempModifierMode(false);
-    setIsEditMode(true);
-  }, []);
+    applyMode('edit');
+  }, [applyMode]);
 
   const urlWantsTourOffer = searchParams.get('offerTour') === '1';
   if (urlWantsTourOffer && shouldOfferSheetTour() && !sheetTourOfferLatched) {
