@@ -18,6 +18,7 @@ import { Modal, Button } from '@/components/ui';
 import { SegmentedControl } from '@/components/patterns';
 import {
   autoRecoveryQuarters,
+  formatPartialRecoveryDuration,
   formatRecoveredAmount,
   partialAmountRestored,
   quarterRestoreAmount,
@@ -131,6 +132,12 @@ export function RecoveryModal({
     recoveryUseNames(feats, traits, 'partial'),
     'partial',
   );
+  const durationCopy = formatPartialRecoveryDuration({
+    hours: Number(hours),
+    quarters: totalQuarters,
+    hpPerQuarter,
+    enPerQuarter,
+  });
 
   const handleConfirm = useCallback(() => {
     if (mode === 'full') {
@@ -262,11 +269,7 @@ export function RecoveryModal({
                   { value: '6', label: '6 hours' },
                 ]}
               />
-              <p className="mt-2 text-xs text-text-muted">
-                Each 2 hours = 2 quarters (¼ HP + ¼ EN, or allocate freely).
-                {hours}h = {totalQuarters} quarter{totalQuarters > 1 ? 's' : ''} ({hpPerQuarter} HP
-                or {enPerQuarter} EN per quarter). Full recovery (8h) restores all.
-              </p>
+              <p className="mt-2 text-xs text-text-muted">{durationCopy}</p>
             </div>
 
             {/* Allocation Mode */}
