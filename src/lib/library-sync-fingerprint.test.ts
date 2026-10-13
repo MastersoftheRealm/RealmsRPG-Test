@@ -13,21 +13,13 @@ describe('power sync fingerprint (86e3jrgjt)', () => {
   };
 
   it('flags definitions_changed when only base_en changes in the codex', () => {
-    const power: UserPower = {
+    const basePower: UserPower = {
       id: 'p1',
+      docId: 'p1',
       name: 'Test Power',
       parts: [{ id: 12, name: 'Potency Increase', op_1_lvl: 1 }],
-      syncMeta: {
-        dependencyFingerprint: sanitizePowerForSync(
-          {
-            id: 'p1',
-            name: 'Test Power',
-            parts: [{ id: 12, name: 'Potency Increase', op_1_lvl: 1 }],
-          },
-          [partDef],
-        ).value.syncMeta?.dependencyFingerprint,
-      },
     };
+    const power = sanitizePowerForSync(basePower, [partDef]).value;
 
     const syncedAtOldBase = getPowerSyncResult(power, [partDef]);
     expect(syncedAtOldBase.issues.some((issue) => issue.code === 'definitions_changed')).toBe(
