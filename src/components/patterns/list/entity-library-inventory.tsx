@@ -67,7 +67,7 @@ export function WeaponsListSection({
     isContentVisible,
     onAdd: onAddWrapped,
     headerCollapseProps,
-  } = useEntityListSectionCollapse(collapsible, items.length, onAdd);
+  } = useEntityListSectionCollapse(collapsible, items.length, onAdd, `${layout}:${title}`);
   const cols = layout === 'characterSheet' ? CHARACTER_SHEET_WEAPON_COLUMNS : WEAPON_COLUMNS;
   const grid = layout === 'characterSheet' ? CHARACTER_SHEET_WEAPON_GRID : WEAPON_GRID;
 
@@ -206,7 +206,7 @@ export function ShieldsListSection({
     isContentVisible,
     onAdd: onAddWrapped,
     headerCollapseProps,
-  } = useEntityListSectionCollapse(collapsible, items.length, onAdd);
+  } = useEntityListSectionCollapse(collapsible, items.length, onAdd, `${layout}:${title}`);
   const cols = layout === 'characterSheet' ? CHARACTER_SHEET_SHIELD_COLUMNS : SHIELD_COLUMNS;
   const grid = layout === 'characterSheet' ? CHARACTER_SHEET_SHIELD_GRID : SHIELD_GRID;
 
@@ -304,7 +304,7 @@ export function ArmorListSection({
     isContentVisible,
     onAdd: onAddWrapped,
     headerCollapseProps,
-  } = useEntityListSectionCollapse(collapsible, items.length, onAdd);
+  } = useEntityListSectionCollapse(collapsible, items.length, onAdd, `${layout}:${title}`);
   const grid = ARMOR_GRID;
 
   const listBody = (
@@ -396,7 +396,7 @@ export function EquipmentListSection({
     isContentVisible,
     onAdd: onAddWrapped,
     headerCollapseProps,
-  } = useEntityListSectionCollapse(collapsible, items.length, onAdd);
+  } = useEntityListSectionCollapse(collapsible, items.length, onAdd, `${layout}:${title}`);
   const isSheetLayout = layout === 'characterSheet';
   const grid = isSheetLayout ? CHARACTER_SHEET_EQUIPMENT_GRID : EQUIPMENT_GRID;
   const headerColumns = isSheetLayout ? CHARACTER_SHEET_EQUIPMENT_COLUMNS : EQUIPMENT_COLUMNS;

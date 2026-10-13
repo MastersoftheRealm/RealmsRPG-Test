@@ -90,7 +90,7 @@ export function PowersListSection({
     isContentVisible,
     onAdd: onAddWrapped,
     headerCollapseProps,
-  } = useEntityListSectionCollapse(collapsible, items.length, onAdd);
+  } = useEntityListSectionCollapse(collapsible, items.length, onAdd, title);
   const cols = includeEnergyColumn ? POWER_COLUMNS_WITH_ENERGY : POWER_COLUMNS;
   const grid = includeEnergyColumn ? POWER_GRID_WITH_ENERGY : POWER_GRID;
   return (
@@ -170,7 +170,7 @@ export function TechniquesListSection({
     isContentVisible,
     onAdd: onAddWrapped,
     headerCollapseProps,
-  } = useEntityListSectionCollapse(collapsible, items.length, onAdd);
+  } = useEntityListSectionCollapse(collapsible, items.length, onAdd, title);
   const cols = includeActionColumn ? CHARACTER_SHEET_TECHNIQUE_COLUMNS : TECHNIQUE_COLUMNS;
   const grid = includeActionColumn ? CHARACTER_SHEET_TECHNIQUE_GRID : TECHNIQUE_GRID;
   return (

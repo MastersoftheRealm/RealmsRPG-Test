@@ -37,7 +37,7 @@ export function LibraryCollapsibleSection({
     isContentVisible,
     onAdd: onAddWrapped,
     headerCollapseProps,
-  } = useLibrarySectionCollapse(true, itemCount, onAdd);
+  } = useLibrarySectionCollapse(true, itemCount, onAdd, title);
   return (
     <div className={className}>
       <SectionHeader
@@ -85,7 +85,7 @@ export function FeatsTraitsListSection({
     isContentVisible,
     onAdd: onAddWrapped,
     headerCollapseProps,
-  } = useEntityListSectionCollapse(collapsible, items.length, onAdd);
+  } = useEntityListSectionCollapse(collapsible, items.length, onAdd, title);
 
   const listBody = (
     <>
