@@ -24,7 +24,7 @@ describe('creator part option labels (86e3jpq36)', () => {
 describe('creator part card phone layout (86e3jx9gg)', () => {
   it('keeps the remove control beside the costs and lets the name wrap', () => {
     expect(source).toContain('flex shrink-0 items-center justify-end gap-2');
-    expect(source).toContain('whitespace-normal break-words');
+    expect(source).toContain('break-words whitespace-normal');
     expect(source).not.toContain('min-w-0 truncate font-medium');
   });
 
