@@ -3,6 +3,7 @@
 import { useState, useRef, KeyboardEvent, ChangeEvent, type ReactNode } from 'react';
 import { cn } from '@/lib/utils';
 import { ValueStepper } from '@/components/patterns';
+import { resourceCurrentValueClass } from '@/lib/character/resource-value-color';
 
 /**
  * Get health color based on current health percentage
@@ -76,6 +77,10 @@ function resourceChrome(
         : 'border-border-light dark:border-border text-text-primary';
 
   const isAboveMax = current > max;
+  const valueClass =
+    colorVariant === 'health' || colorVariant === 'energy'
+      ? resourceCurrentValueClass(colorVariant, current, max)
+      : null;
   const percentage = max > 0 ? Math.max(0, Math.min(100, (current / max) * 100)) : 0;
   const barColorClass = isAboveMax
     ? 'bg-warning-400 dark:bg-warning-500'
@@ -89,7 +94,7 @@ function resourceChrome(
         ? 'bg-info-500 dark:bg-info-400'
         : 'bg-primary-button';
 
-  return { bgColor, labelColor, inputBorderText, percentage, barColorClass };
+  return { bgColor, labelColor, inputBorderText, valueClass, percentage, barColorClass };
 }
 
 function ResourceBar({ percentage, barColorClass }: { percentage: number; barColorClass: string }) {
@@ -137,6 +142,7 @@ function resourceReadout({
           className={cn(
             'w-12 shrink-0 text-center text-lg font-bold tabular-nums',
             chrome.inputBorderText,
+            chrome.valueClass,
           )}
           aria-label={`Current ${label}`}
         >
@@ -280,6 +286,7 @@ function ResourceInputEditor({
             'touch-tier-standard w-12 rounded border bg-surface px-1 py-0.5 text-center text-lg font-bold dark:bg-surface-alt',
             'focus:ring-2 focus:ring-primary-outline-border focus:outline-none dark:focus:ring-primary-outline-border',
             chrome.inputBorderText,
+            chrome.valueClass,
           )}
           aria-label={`Current ${label}`}
         />

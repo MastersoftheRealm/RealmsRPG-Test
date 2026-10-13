@@ -2,6 +2,7 @@
 
 import { cn } from '@/lib/utils';
 import { ValueStepper } from '@/components/patterns';
+import { resourceCurrentValueClass } from '@/lib/character/resource-value-color';
 import type { Combatant } from '@/types/encounter';
 import { getHealthBarColor } from './combatant-card-helpers';
 
@@ -45,8 +46,20 @@ export function CombatantCardResources({
           </span>
           <div className="flex min-w-0 flex-wrap items-center gap-1">
             {linkedResourcesReadOnly ? (
-              <span className="text-sm font-bold text-health-text" title={linkedResourcesTitle}>
-                {combatant.currentHealth} / {combatant.maxHealth}
+              <span className="text-sm font-bold" title={linkedResourcesTitle}>
+                <span
+                  className={cn(
+                    'text-health-text',
+                    resourceCurrentValueClass(
+                      'health',
+                      combatant.currentHealth,
+                      combatant.maxHealth,
+                    ),
+                  )}
+                >
+                  {combatant.currentHealth}
+                </span>
+                <span className="text-health-text"> / {combatant.maxHealth}</span>
               </span>
             ) : (
               <>
@@ -60,6 +73,11 @@ export function CombatantCardResources({
                   className={cn(
                     'touch-tier-standard w-10 min-w-0 rounded border px-0.5 py-0 text-center text-sm font-bold',
                     'border-health-border text-health-text',
+                    resourceCurrentValueClass(
+                      'health',
+                      combatant.currentHealth,
+                      combatant.maxHealth,
+                    ),
                   )}
                 />
                 <span className="text-xs text-health-text">/ {combatant.maxHealth}</span>
@@ -99,8 +117,20 @@ export function CombatantCardResources({
           </span>
           <div className="flex min-w-0 flex-wrap items-center gap-1">
             {linkedResourcesReadOnly ? (
-              <span className="text-sm font-bold text-energy-text" title={linkedResourcesTitle}>
-                {combatant.currentEnergy} / {combatant.maxEnergy}
+              <span className="text-sm font-bold" title={linkedResourcesTitle}>
+                <span
+                  className={cn(
+                    'text-energy-text',
+                    resourceCurrentValueClass(
+                      'energy',
+                      combatant.currentEnergy,
+                      combatant.maxEnergy,
+                    ),
+                  )}
+                >
+                  {combatant.currentEnergy}
+                </span>
+                <span className="text-energy-text"> / {combatant.maxEnergy}</span>
               </span>
             ) : (
               <>
@@ -109,7 +139,14 @@ export function CombatantCardResources({
                   value={combatant.currentEnergy}
                   onChange={(e) => onUpdate({ currentEnergy: parseInt(e.target.value) || 0 })}
                   aria-label={`Current energy for ${name}`}
-                  className="touch-tier-standard w-10 min-w-0 rounded border border-energy-border px-0.5 py-0 text-center text-sm font-bold text-energy-text"
+                  className={cn(
+                    'touch-tier-standard w-10 min-w-0 rounded border border-energy-border px-0.5 py-0 text-center text-sm font-bold text-energy-text',
+                    resourceCurrentValueClass(
+                      'energy',
+                      combatant.currentEnergy,
+                      combatant.maxEnergy,
+                    ),
+                  )}
                 />
                 <span className="text-xs text-energy-text">/ {combatant.maxEnergy}</span>
                 <ValueStepper
@@ -144,7 +181,15 @@ export function CombatantCardResources({
         <span className="shrink-0 text-xs font-medium text-health-text">Health</span>
         {linkedResourcesReadOnly ? (
           <span className="text-xs font-medium" title={linkedResourcesTitle}>
-            {combatant.currentHealth} / {combatant.maxHealth}
+            <span
+              className={cn(
+                'text-health-text',
+                resourceCurrentValueClass('health', combatant.currentHealth, combatant.maxHealth),
+              )}
+            >
+              {combatant.currentHealth}
+            </span>
+            {` / ${combatant.maxHealth}`}
           </span>
         ) : (
           <>
@@ -159,7 +204,8 @@ export function CombatantCardResources({
                 'touch-tier-standard w-12 rounded border px-1 py-0.5 text-center text-xs font-medium',
                 combatant.currentHealth <= 0
                   ? 'border-danger-300 bg-danger-light text-danger-fg'
-                  : 'border-border-light',
+                  : 'border-border-light text-health-text',
+                resourceCurrentValueClass('health', combatant.currentHealth, combatant.maxHealth),
               )}
             />
             <span className="text-xs text-text-muted">/</span>
@@ -199,7 +245,15 @@ export function CombatantCardResources({
         <span className="shrink-0 text-xs font-medium text-energy-text">Energy</span>
         {linkedResourcesReadOnly ? (
           <span className="text-xs font-medium" title={linkedResourcesTitle}>
-            {combatant.currentEnergy} / {combatant.maxEnergy}
+            <span
+              className={cn(
+                'text-energy-text',
+                resourceCurrentValueClass('energy', combatant.currentEnergy, combatant.maxEnergy),
+              )}
+            >
+              {combatant.currentEnergy}
+            </span>
+            {` / ${combatant.maxEnergy}`}
           </span>
         ) : (
           <>
@@ -208,7 +262,10 @@ export function CombatantCardResources({
               value={combatant.currentEnergy}
               onChange={(e) => onUpdate({ currentEnergy: parseInt(e.target.value) || 0 })}
               aria-label={`Current energy for ${name}`}
-              className="touch-tier-standard w-12 rounded border border-border-light px-1 py-0.5 text-center text-xs font-medium"
+              className={cn(
+                'touch-tier-standard w-12 rounded border border-border-light px-1 py-0.5 text-center text-xs font-medium text-energy-text',
+                resourceCurrentValueClass('energy', combatant.currentEnergy, combatant.maxEnergy),
+              )}
             />
             <span className="text-xs text-text-muted">/</span>
             <input
