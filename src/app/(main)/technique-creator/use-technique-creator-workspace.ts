@@ -40,7 +40,11 @@ import {
   type TechniqueDamageConfig as DamageConfig,
 } from './technique-creator-bootstrap';
 import { applyTechniqueCreatorReset } from './technique-creator-reset';
-import { persistCreatorDraft, clearCreatorCache } from '@/lib/game/creator-cache';
+import {
+  creatorSessionCacheKey,
+  persistCreatorSessionDraft,
+  clearCreatorSessionDraft,
+} from '@/lib/game/creator-cache';
 
 function toTechniquePartPayload(part: {
   id: string | number;
@@ -88,9 +92,12 @@ export function useTechniqueCreatorWorkspace({
   const [targetedDefenses, setTargetedDefenses] = useState<string[]>(
     initialFormState.targetedDefenses,
   );
-  const { discardLocalDraft, isLocalDraftDiscarded } = useDiscardableCreatorDraft(
-    TECHNIQUE_CREATOR_CACHE_KEY,
+  const sessionCacheKey = useMemo(
+    () => creatorSessionCacheKey(TECHNIQUE_CREATOR_CACHE_KEY, editTechniqueId, editReplacesDraft),
+    [editTechniqueId, editReplacesDraft],
   );
+
+  const { discardLocalDraft, isLocalDraftDiscarded } = useDiscardableCreatorDraft(sessionCacheKey);
 
   const { discardDraft } = useCreatorEditDraftDecision(
     true,
@@ -98,10 +105,8 @@ export function useTechniqueCreatorWorkspace({
     TECHNIQUE_CREATOR_CACHE_KEY,
   );
 
-  // Auto-save draft. A confirmed ?edit= load does not write the library row over the draft.
+  // Auto-save draft. Confirmed ?edit= rows use a per-id cache bucket (86e3juw0a).
   useEffect(() => {
-    if (discardDraft) return;
-
     const cache: TechniqueCreatorCache = {
       name,
       description,
@@ -121,9 +126,16 @@ export function useTechniqueCreatorWorkspace({
       targetedDefenses,
       timestamp: Date.now(),
     };
-    persistCreatorDraft(TECHNIQUE_CREATOR_CACHE_KEY, cache, isLocalDraftDiscarded());
+    persistCreatorSessionDraft(
+      TECHNIQUE_CREATOR_CACHE_KEY,
+      editTechniqueId,
+      editReplacesDraft,
+      cache,
+      isLocalDraftDiscarded(),
+    );
   }, [
-    discardDraft,
+    editTechniqueId,
+    editReplacesDraft,
     name,
     description,
     selectedParts,
@@ -392,11 +404,12 @@ export function useTechniqueCreatorWorkspace({
       resetForm: resetFormFields,
       forgetLoadedLibraryItem: () => save.forgetLoadedLibraryItem(),
       clearSaveMessage: () => save.setSaveMessage(null),
-      clearDraftCache: () => clearCreatorCache(TECHNIQUE_CREATOR_CACHE_KEY),
+      clearDraftCache: () =>
+        clearCreatorSessionDraft(TECHNIQUE_CREATOR_CACHE_KEY, editTechniqueId, editReplacesDraft),
       acceptDraft,
     });
     setShowResetConfirm(false);
-  }, [acceptDraft, resetFormFields, save]);
+  }, [acceptDraft, editReplacesDraft, editTechniqueId, resetFormFields, save]);
 
   const applyFormState = useCallback((next: TechniqueCreatorFormState) => {
     setName(next.name);

@@ -7,7 +7,7 @@
 
 'use client';
 
-import { useState, useCallback, useEffect } from 'react';
+import { useState, useCallback, useEffect, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import { useCreatorSave, type ItemProperty } from '@/hooks';
 import {
@@ -45,9 +45,10 @@ import {
   type ItemDamageConfig as DamageConfig,
 } from './item-creator-bootstrap';
 import {
-  persistCreatorDraft,
+  creatorSessionCacheKey,
+  persistCreatorSessionDraft,
   writeCreatorCache,
-  clearCreatorCache,
+  clearCreatorSessionDraft,
 } from '@/lib/game/creator-cache';
 import { useItemCreatorCostDerivation } from './item-creator-cost-derivation';
 import { useItemCreatorPropertyActions } from './item-creator-property-actions';
@@ -150,8 +151,11 @@ export function useItemCreatorWorkspace({
   const [imageUrl, setImageUrl] = useState<string | null>(initialFormState.imageUrl);
 
   const imageCategory = armamentType.toLowerCase() as 'weapon' | 'armor' | 'shield';
-  const { discardLocalDraft, isLocalDraftDiscarded } =
-    useDiscardableCreatorDraft(ITEM_CREATOR_CACHE_KEY);
+  const sessionCacheKey = useMemo(
+    () => creatorSessionCacheKey(ITEM_CREATOR_CACHE_KEY, editItemId, editReplacesDraft),
+    [editItemId, editReplacesDraft],
+  );
+  const { discardLocalDraft, isLocalDraftDiscarded } = useDiscardableCreatorDraft(sessionCacheKey);
   if (
     ignoredRequestedType &&
     (requestedType !== ignoredRequestedType || requestedType === armamentType)
@@ -232,8 +236,10 @@ export function useItemCreatorWorkspace({
   useEffect(() => {
     if (!shouldWriteItemCreatorDraft(replaceDraftWithEdit, typeQueryConflict != null)) return;
 
-    persistCreatorDraft(
+    persistCreatorSessionDraft(
       ITEM_CREATOR_CACHE_KEY,
+      editItemId,
+      editReplacesDraft,
       toItemCreatorCache(
         formSnapshot(),
         weaponRangeLegacyLevel({ type: rangeType, spaces: rangeSpaces }),
@@ -241,6 +247,8 @@ export function useItemCreatorWorkspace({
       isLocalDraftDiscarded(),
     );
   }, [
+    editItemId,
+    editReplacesDraft,
     formSnapshot,
     isLocalDraftDiscarded,
     rangeSpaces,
@@ -281,7 +289,7 @@ export function useItemCreatorWorkspace({
         abilityRequirement: null,
       });
       writeCreatorCache(
-        ITEM_CREATOR_CACHE_KEY,
+        sessionCacheKey,
         toItemCreatorCache(
           nextForm,
           weaponRangeLegacyLevel({ type: rangeType, spaces: rangeSpaces }),
@@ -289,7 +297,15 @@ export function useItemCreatorWorkspace({
       );
       alignTypeQuery(next);
     },
-    [alignTypeQuery, editItemId, formSnapshot, rangeSpaces, rangeType, selectedProperties],
+    [
+      alignTypeQuery,
+      editItemId,
+      formSnapshot,
+      rangeSpaces,
+      rangeType,
+      selectedProperties,
+      sessionCacheKey,
+    ],
   );
 
   const {
@@ -458,10 +474,10 @@ export function useItemCreatorWorkspace({
     setImageUrl(null);
     save.forgetLoadedLibraryItem();
     save.setSaveMessage(null);
-    clearCreatorCache(ITEM_CREATOR_CACHE_KEY);
+    clearCreatorSessionDraft(ITEM_CREATOR_CACHE_KEY, editItemId, editReplacesDraft);
     acceptDraft();
     alignTypeQuery('Weapon');
-  }, [acceptDraft, alignTypeQuery, save]);
+  }, [acceptDraft, alignTypeQuery, editItemId, editReplacesDraft, save]);
 
   const applyFormState = useCallback((next: ItemCreatorFormState) => {
     setName(next.name);
@@ -499,7 +515,7 @@ export function useItemCreatorWorkspace({
       applyFormState(next);
       if (!editItemId) {
         writeCreatorCache(
-          ITEM_CREATOR_CACHE_KEY,
+          sessionCacheKey,
           toItemCreatorCache(
             next,
             weaponRangeLegacyLevel({ type: next.rangeType, spaces: next.rangeSpaces }),
@@ -513,7 +529,16 @@ export function useItemCreatorWorkspace({
       save.setSaveMessage({ type: 'success', text: 'Armament loaded successfully!' });
       setTimeout(() => save.setSaveMessage(null), 2000);
     },
-    [acceptDraft, alignTypeQuery, applyFormState, closeLoadModal, editItemId, itemProperties, save],
+    [
+      acceptDraft,
+      alignTypeQuery,
+      applyFormState,
+      closeLoadModal,
+      editItemId,
+      itemProperties,
+      save,
+      sessionCacheKey,
+    ],
   );
 
   return {

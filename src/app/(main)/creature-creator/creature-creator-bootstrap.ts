@@ -3,7 +3,7 @@
  * Render-safe (no localStorage writes); used by the page's one-time render adjust.
  */
 
-import { readCreatorCache } from '@/lib/game/creator-cache';
+import { readNewCreatorDraftCache } from '@/lib/game/creator-cache';
 import { initialState, CREATURE_CREATOR_CACHE_KEY } from './creature-creator-constants';
 import type { CreatureState } from './creature-creator-types';
 import { rawRecordToCreatureState } from './creature-skill-utils';
@@ -30,7 +30,7 @@ export function bootstrapCreatureState(options: {
     if (match) return rawRecordToCreatureState(match as Record<string, unknown>);
   }
 
-  const parsed = readCreatorCache<CreatureCreatorCache>(CREATURE_CREATOR_CACHE_KEY);
+  const parsed = readNewCreatorDraftCache<CreatureCreatorCache>(CREATURE_CREATOR_CACHE_KEY);
   if (!parsed?.creature) return initialState;
   return rawRecordToCreatureState(parsed.creature as unknown as Record<string, unknown>);
 }

@@ -32,7 +32,11 @@ import {
   type SelectedPowerPart,
   type SelectedTechniquePart,
 } from './empowered-technique-bootstrap';
-import { persistCreatorDraft, clearCreatorCache } from '@/lib/game/creator-cache';
+import {
+  creatorSessionCacheKey,
+  persistCreatorSessionDraft,
+  clearCreatorSessionDraft,
+} from '@/lib/game/creator-cache';
 import { useEmpoweredTechniqueCostDerivation } from './empowered-technique-cost-derivation';
 import { useEmpoweredTechniquePartActions } from './empowered-technique-part-actions';
 
@@ -84,7 +88,12 @@ export function useEmpoweredTechniqueCreatorWorkspace({
   const [targetedDefenses, setTargetedDefenses] = useState<string[]>(
     initialFormState.targetedDefenses,
   );
-  const { discardLocalDraft, isLocalDraftDiscarded } = useDiscardableCreatorDraft(CACHE_KEY);
+  const sessionCacheKey = useMemo(
+    () => creatorSessionCacheKey(CACHE_KEY, editId, editReplacesDraft),
+    [editId, editReplacesDraft],
+  );
+
+  const { discardLocalDraft, isLocalDraftDiscarded } = useDiscardableCreatorDraft(sessionCacheKey);
 
   const { discardDraft } = useCreatorEditDraftDecision(true, editReplacesDraft, CACHE_KEY);
 
@@ -174,8 +183,8 @@ export function useEmpoweredTechniqueCreatorWorkspace({
     setImageId(null);
     setImageUrl(null);
     setTargetedDefenses([]);
-    clearCreatorCache(CACHE_KEY);
-  }, []);
+    clearCreatorSessionDraft(CACHE_KEY, editId, editReplacesDraft);
+  }, [editId, editReplacesDraft]);
 
   const applyFormState = useCallback((next: EmpoweredTechniqueFormState) => {
     setName(next.name);
@@ -336,9 +345,8 @@ export function useEmpoweredTechniqueCreatorWorkspace({
     [powerParts, techniqueParts, applyFormState, save, acceptDraft],
   );
 
-  // Auto-save draft to localStorage (skip when editing an existing library row via ?edit=)
+  // Auto-save draft (per-tab new drafts; per-id when ?edit= is confirmed).
   useEffect(() => {
-    if (discardDraft) return;
     const cache: EmpoweredTechniqueCache = {
       name,
       description,
@@ -378,13 +386,20 @@ export function useEmpoweredTechniqueCreatorWorkspace({
       targetedDefenses,
       timestamp: Date.now(),
     };
-    persistCreatorDraft(CACHE_KEY, cache, isLocalDraftDiscarded());
+    persistCreatorSessionDraft(
+      CACHE_KEY,
+      editId,
+      editReplacesDraft,
+      cache,
+      isLocalDraftDiscarded(),
+    );
   }, [
     actionType,
     area,
     description,
     duration,
-    discardDraft,
+    editId,
+    editReplacesDraft,
     isReaction,
     imageId,
     imageUrl,

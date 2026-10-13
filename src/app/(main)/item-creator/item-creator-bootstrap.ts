@@ -6,7 +6,7 @@
 
 import type { ItemProperty } from '@/hooks';
 import { CREATOR_CACHE_KEYS } from '@/lib/game/creator-constants';
-import { readCreatorCache } from '@/lib/game/creator-cache';
+import { readNewCreatorDraftCache } from '@/lib/game/creator-cache';
 import {
   itemCreatorTypeHref,
   type ArmamentLibraryKind,
@@ -216,7 +216,7 @@ export function emptyItemCreatorFormState(): ItemCreatorFormState {
 export function restoreItemCreatorFromCache(
   itemProperties: ItemProperty[],
 ): ItemCreatorFormState | null {
-  const parsed = readCreatorCache<ItemCreatorCache>(ITEM_CREATOR_CACHE_KEY);
+  const parsed = readNewCreatorDraftCache<ItemCreatorCache>(ITEM_CREATOR_CACHE_KEY);
   if (!parsed) return null;
 
   const base = emptyItemCreatorFormState();

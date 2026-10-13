@@ -55,7 +55,11 @@ import {
 } from './creature-creator-constants';
 import { allocationsToCreatureSkills, creatureSkillsToAllocations } from './creature-skill-utils';
 import { bootstrapCreatureState } from './creature-creator-bootstrap';
-import { persistCreatorDraft, clearCreatorCache } from '@/lib/game/creator-cache';
+import {
+  creatorSessionCacheKey,
+  persistCreatorSessionDraft,
+  clearCreatorSessionDraft,
+} from '@/lib/game/creator-cache';
 import { creatorEditReplacesDraft } from '@/lib/library/catalog-listing';
 import {
   useCreatorEditDraftDecision,
@@ -238,27 +242,36 @@ export function useCreatureCreatorWorkspace() {
     setCreature(bootstrapCreatureState({ editCreatureId, rawItems: load.rawItems }));
   }
   const bootstrapApplied = bootstrapKey === sessionKey;
-  const { discardLocalDraft, isLocalDraftDiscarded } = useDiscardableCreatorDraft(
-    CREATURE_CREATOR_CACHE_KEY,
+  const editReplacesDraft = creatorEditReplacesDraft(editCreatureId, load.rawItems);
+  const sessionCacheKey = useMemo(
+    () => creatorSessionCacheKey(CREATURE_CREATOR_CACHE_KEY, editCreatureId, editReplacesDraft),
+    [editCreatureId, editReplacesDraft],
   );
+  const { discardLocalDraft, isLocalDraftDiscarded } = useDiscardableCreatorDraft(sessionCacheKey);
 
   const { discardDraft } = useCreatorEditDraftDecision(
     bootstrapApplied,
-    creatorEditReplacesDraft(editCreatureId, load.rawItems),
+    editReplacesDraft,
     CREATURE_CREATOR_CACHE_KEY,
   );
 
+  const clearSessionDraftCache = useCallback(() => {
+    clearCreatorSessionDraft(CREATURE_CREATOR_CACHE_KEY, editCreatureId, editReplacesDraft);
+  }, [editCreatureId, editReplacesDraft]);
+
   useEffect(() => {
-    if (!bootstrapApplied || discardDraft) return;
-    persistCreatorDraft(
+    if (!bootstrapApplied) return;
+    persistCreatorSessionDraft(
       CREATURE_CREATOR_CACHE_KEY,
+      editCreatureId,
+      editReplacesDraft,
       {
         creature,
         timestamp: Date.now(),
       },
       isLocalDraftDiscarded(),
     );
-  }, [bootstrapApplied, creature, discardDraft, isLocalDraftDiscarded]);
+  }, [bootstrapApplied, creature, editCreatureId, editReplacesDraft, isLocalDraftDiscarded]);
 
   const featPointsMap = useMemo(() => {
     const map = new Map<string, number>();
@@ -552,7 +565,6 @@ export function useCreatureCreatorWorkspace() {
     displayItemToCreatureArmament,
     mergeCreatureFeatsOnAdd,
     initialState,
-    clearCreatorCache,
-    CREATURE_CREATOR_CACHE_KEY,
+    clearSessionDraftCache,
   };
 }

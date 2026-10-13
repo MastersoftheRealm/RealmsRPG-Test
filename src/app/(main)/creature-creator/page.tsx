@@ -111,8 +111,7 @@ function CreatureCreatorContent() {
     displayItemToCreatureArmament,
     mergeCreatureFeatsOnAdd,
     initialState,
-    clearCreatorCache,
-    CREATURE_CREATOR_CACHE_KEY,
+    clearSessionDraftCache,
     acceptDraft,
   } = ws;
 
@@ -155,7 +154,7 @@ function CreatureCreatorContent() {
           setCreature(initialState);
           save.forgetLoadedLibraryItem();
           acceptDraft();
-          clearCreatorCache(CREATURE_CREATOR_CACHE_KEY);
+          clearSessionDraftCache();
           setShowResetConfirm(false);
         },
         title: 'Restart Creature',

@@ -289,7 +289,7 @@ describe('creator unsaved guard', () => {
       );
       expect(creatorPage).toContain('onDiscardLocalDraft=');
       expect(workspace).toContain('useDiscardableCreatorDraft');
-      expect(workspace).toContain('persistCreatorDraft');
+      expect(workspace).toMatch(/persistCreator(?:Session)?Draft/);
       expect(workspace).toContain('isLocalDraftDiscarded');
     }
   });

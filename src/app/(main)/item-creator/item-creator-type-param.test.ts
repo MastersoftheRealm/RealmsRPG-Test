@@ -10,10 +10,10 @@ import {
 import type { ItemCreatorCache } from './item-creator-bootstrap';
 
 vi.mock('@/lib/game/creator-cache', () => ({
-  readCreatorCache: vi.fn(() => null),
+  readNewCreatorDraftCache: vi.fn(() => null),
 }));
 
-import { readCreatorCache } from '@/lib/game/creator-cache';
+import { readNewCreatorDraftCache } from '@/lib/game/creator-cache';
 import {
   bootstrapItemCreatorFormState,
   itemCreatorHrefForArmamentType,
@@ -22,7 +22,7 @@ import {
   shouldWriteItemCreatorDraft,
 } from './item-creator-bootstrap';
 
-const readCache = vi.mocked(readCreatorCache);
+const readCache = vi.mocked(readNewCreatorDraftCache);
 
 function cachedDraft(
   armamentType: ItemCreatorCache['armamentType'],
