@@ -259,7 +259,7 @@ export function PowerPartCard({
                     <ValueStepper
                       value={selectedPart.op_1_lvl}
                       onChange={(v) => onUpdate({ op_1_lvl: v })}
-                      label="Level:"
+                      label="Option 1 level"
                       min={0}
                     />
                   </div>
@@ -284,7 +284,7 @@ export function PowerPartCard({
                     <ValueStepper
                       value={selectedPart.op_2_lvl}
                       onChange={(v) => onUpdate({ op_2_lvl: v })}
-                      label="Level:"
+                      label="Option 2 level"
                       min={0}
                     />
                   </div>
@@ -309,7 +309,7 @@ export function PowerPartCard({
                     <ValueStepper
                       value={selectedPart.op_3_lvl}
                       onChange={(v) => onUpdate({ op_3_lvl: v })}
-                      label="Level:"
+                      label="Option 3 level"
                       min={0}
                     />
                   </div>

@@ -227,9 +227,14 @@ export function DefenseBlock({
           onClick={() => onChange(Math.max(0, bonusValue - 1))}
           disabled={bonusValue <= 0}
           size="sm"
+          title={`Decrease ${name} bonus`}
         />
         <span className="w-8 text-xs text-text-muted">+{bonusValue}</span>
-        <IncrementButton onClick={() => onChange(bonusValue + 1)} size="sm" />
+        <IncrementButton
+          onClick={() => onChange(bonusValue + 1)}
+          size="sm"
+          title={`Increase ${name} bonus`}
+        />
       </div>
     </div>
   );

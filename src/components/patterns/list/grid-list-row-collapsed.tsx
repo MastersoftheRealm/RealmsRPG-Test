@@ -72,6 +72,10 @@ const ABOVE_ROW_HIT_CLASS =
 const ROW_NAME_BUTTON_CLASS =
   "w-full min-w-0 max-w-full cursor-pointer overflow-visible border-0 bg-transparent p-0 text-left font-[inherit] text-text-primary focus-visible:ring-2 focus-visible:ring-primary-outline-border focus-visible:outline-none focus-visible:ring-inset after:absolute after:inset-0 after:z-0 after:cursor-pointer after:content-['']";
 
+function gridListRowSelectionLabel(itemName: string, isSelected: boolean): string {
+  return isSelected ? `Deselect ${itemName}` : `Select ${itemName}`;
+}
+
 interface GridListRowCollapsedProps {
   isRowClickable: boolean;
   handleRowClick: () => void;
@@ -391,7 +395,7 @@ export function GridListRowCollapsed({
               onToggle={() => !disabled && onSelect?.()}
               disabled={disabled}
               size="md"
-              label={isSelected ? 'Remove from selection' : 'Add to selection'}
+              label={gridListRowSelectionLabel(name, !!isSelected)}
             />
           </div>
         )}
@@ -418,6 +422,8 @@ export interface GridListRowExternalChromeProps {
   selectable?: boolean | undefined;
   isSelected?: boolean | undefined;
   onSelect?: (() => void) | undefined;
+  /** Row label for selection toggle accessible names (load / add modals). */
+  itemName?: string | undefined;
 }
 
 export function GridListRowExternalChrome({
@@ -431,6 +437,7 @@ export function GridListRowExternalChrome({
   selectable = false,
   isSelected = false,
   onSelect,
+  itemName = 'item',
 }: GridListRowExternalChromeProps) {
   const showRightSlot = !!(rightSlot || reserveRightSlotChrome);
   if (!showRightSlot && !onEdit && !onDelete && !selectable) return null;
@@ -482,7 +489,7 @@ export function GridListRowExternalChrome({
             onToggle={() => !disabled && onSelect?.()}
             disabled={disabled}
             size="md"
-            label={isSelected ? 'Remove from selection' : 'Add to selection'}
+            label={gridListRowSelectionLabel(itemName, !!isSelected)}
           />
         </div>
       )}
