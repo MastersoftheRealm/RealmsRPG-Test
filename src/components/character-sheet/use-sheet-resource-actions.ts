@@ -15,7 +15,7 @@ import {
   applyLevelDownProficiencyUpdates,
   applyLevelUpProficiencyUpdates,
 } from '@/lib/game/archetype-display';
-import { calculateProficiency } from '@/lib/game/formulas';
+import { archetypeChoicesAtOrBelowLevel, calculateProficiency } from '@/lib/game/formulas';
 import {
   applySheetAbilityChange,
   applySheetEnergyPointsChange,
@@ -458,10 +458,15 @@ export function useSheetResourceActions({
 
       setCharacter((prev) => {
         if (!prev) return null;
+        const clearedChoices =
+          newLevel < (prev.level || 1)
+            ? archetypeChoicesAtOrBelowLevel(prev.archetypeChoices, newLevel)
+            : undefined;
         return {
           ...prev,
           level: newLevel,
           ...(profUpdate ?? {}),
+          ...(clearedChoices !== undefined ? { archetypeChoices: clearedChoices } : {}),
         };
       });
 
