@@ -13,6 +13,7 @@
 'use client';
 
 import { useState, useCallback } from 'react';
+import { useModalUnmountClickGuard } from '@/lib/modal-unmount-click-guard';
 import { X, Pencil } from 'lucide-react';
 import { Button, IconButton, Textarea } from '@/components/ui';
 import { useRollsOptional } from '@/components/rolls';
@@ -269,6 +270,7 @@ export function NotesTab({
   const [heightInput, setHeightInput] = useState(height.toString());
   const [ageInput, setAgeInput] = useState(age);
   const [notePendingDelete, setNotePendingDelete] = useState<CharacterNote | null>(null);
+  useModalUnmountClickGuard(notePendingDelete != null);
 
   const confirmDeleteNote = useCallback(() => {
     if (notePendingDelete) onDeleteNote?.(notePendingDelete.id);

@@ -19,6 +19,7 @@ import type { AddLibraryItemType } from '@/hooks/use-add-library-item-data';
 import { useCharacterSheet } from '@/components/character-sheet/character-sheet-context';
 import { existingIdsForAddModal } from '@/lib/character-sheet/add-modal-existing-ids';
 import { findCodexFeatRecovery, resolvedFeatUses } from '@/lib/character/recovery-uses';
+import { useModalUnmountClickGuard } from '@/lib/modal-unmount-click-guard';
 
 interface TraitForModal {
   name: string;
@@ -66,6 +67,14 @@ export function CharacterSheetModals() {
 
   const traitsDb = libraryModel?.traitsDb ?? [];
   const featsDb = libraryModel?.featsDb ?? [];
+
+  // These modals unmount when their flag clears, so their own shield never paints.
+  useModalUnmountClickGuard(showLevelUpModal);
+  useModalUnmountClickGuard(showEditArchetypeModal);
+  useModalUnmountClickGuard(addModalType != null);
+  useModalUnmountClickGuard(featToRemove != null);
+  useModalUnmountClickGuard(featModalType != null);
+  useModalUnmountClickGuard(skillModalType === 'subskill');
   const scopedExistingIds = useMemo(
     () => existingIdsForAddModal(character, addModalType, enrichedData),
     [character, addModalType, enrichedData],
