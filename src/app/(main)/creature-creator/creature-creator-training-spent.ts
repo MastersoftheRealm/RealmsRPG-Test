@@ -131,21 +131,35 @@ function storedTpWithoutParts(
   return powerTp + techniqueTp;
 }
 
+/** Hidden Powers, Techniques, and Inventory stay saved but do not spend TP or Currency. */
+export function creatureLoadoutForBudget(creature: CreatureState): CreatureState {
+  return {
+    ...creature,
+    powers: creature.enablePowers ? creature.powers : [],
+    techniques: creature.enableTechniques ? creature.techniques : [],
+    weapons: creature.enableArmaments ? creature.weapons : [],
+    armor: creature.enableArmaments ? creature.armor : [],
+    shields: creature.enableArmaments ? creature.shields : [],
+    equipment: creature.enableArmaments ? creature.equipment : [],
+  };
+}
+
 export function computeCreatureTrainingSpent(
   creature: CreatureState,
   ctx?: CreatureProficiencyDbContext,
 ): number {
+  const active = creatureLoadoutForBudget(creature);
   if (
     !ctx?.powerPartsDb?.length &&
     !ctx?.techniquePartsDb?.length &&
     !ctx?.itemPropertiesDb?.length
   ) {
-    return sumLegacyCreatureTrainingSpent(creature);
+    return sumLegacyCreatureTrainingSpent(active);
   }
 
-  const buckets = resolveCreatureInventoryBuckets(creature);
+  const buckets = resolveCreatureInventoryBuckets(active);
   const powerPartsDb = (ctx.powerPartsDb ?? []) as PowerPart[];
-  const powers = creature.powers.map((power) => creaturePowerForProficiency(power, powerPartsDb));
+  const powers = active.powers.map((power) => creaturePowerForProficiency(power, powerPartsDb));
   const coveredPowerIds = new Set(
     powers
       .filter((power) => Array.isArray(power.parts) && power.parts.length > 0)
@@ -153,7 +167,7 @@ export function computeCreatureTrainingSpent(
   );
   const deduped = sumRequiredProficiencyTrainingPoints({
     powers,
-    techniques: creature.techniques as CharacterTechnique[],
+    techniques: active.techniques as CharacterTechnique[],
     weapons: buckets.weapons.map(armamentToItem),
     shields: buckets.shields.map(armamentToItem),
     armor: buckets.armor.map(armamentToItem),
@@ -164,7 +178,7 @@ export function computeCreatureTrainingSpent(
 
   return (
     deduped +
-    storedTpWithoutParts(creature.powers, creature.techniques, coveredPowerIds) +
+    storedTpWithoutParts(active.powers, active.techniques, coveredPowerIds) +
     sumStoredArmamentTp(buckets.equipment) +
     storedTpWithoutResolvableParts([...buckets.weapons, ...buckets.armor, ...buckets.shields])
   );
