@@ -173,8 +173,9 @@ function EditableNoteCard({
           />
         ) : (
           <div className="flex min-w-0 flex-1 items-center">
-            <span
-              className="flex max-w-full min-w-0 cursor-pointer items-center gap-1 text-sm font-medium text-text-primary hover:text-primary-fg-hover"
+            <button
+              type="button"
+              className="flex max-w-full min-w-0 cursor-pointer items-center gap-1 border-0 bg-transparent p-0 text-left font-[inherit] text-sm font-medium text-text-primary hover:text-primary-fg-hover focus-visible:ring-2 focus-visible:ring-primary-outline-border focus-visible:outline-none"
               onClick={(e) => {
                 e.stopPropagation();
                 setIsEditingName(true);
@@ -182,8 +183,8 @@ function EditableNoteCard({
               title={note.name}
             >
               <span className="truncate">{note.name}</span>
-              <Pencil className="h-3 w-3 shrink-0 text-text-muted" />
-            </span>
+              <Pencil className="h-3 w-3 shrink-0 text-text-muted" aria-hidden="true" />
+            </button>
           </div>
         )}
 
