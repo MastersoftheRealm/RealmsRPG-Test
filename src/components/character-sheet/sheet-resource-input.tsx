@@ -123,7 +123,7 @@ function resourceReadout({
   const chrome = resourceChrome(colorVariant, current, max);
   return (
     <div className={cn('flex flex-col rounded-lg border p-3', chrome.bgColor)}>
-      <div className="mb-1 flex min-w-0 items-center justify-between gap-2">
+      <div className="mb-1 flex min-w-0 flex-wrap items-center justify-between gap-x-2 gap-y-1">
         <span
           className={cn(
             'shrink-0 text-xs font-semibold tracking-wide uppercase',
@@ -258,7 +258,7 @@ function ResourceInputEditor({
 
   return (
     <div className={cn('flex flex-col rounded-lg border p-3', chrome.bgColor)}>
-      <div className="mb-1 flex min-w-0 items-center justify-between gap-2">
+      <div className="mb-1 flex min-w-0 flex-wrap items-center justify-between gap-x-2 gap-y-1">
         <span
           className={cn(
             'shrink-0 text-xs font-semibold tracking-wide uppercase',
@@ -272,7 +272,7 @@ function ResourceInputEditor({
             <span className="min-w-0 truncate text-xs text-text-muted">{subLabel}</span>
           ) : null)}
       </div>
-      <div className="flex min-w-0 flex-nowrap items-center gap-2">
+      <div className="flex min-w-0 flex-wrap items-center gap-2">
         <input
           ref={inputRef}
           type="text"

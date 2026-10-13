@@ -101,7 +101,7 @@ export function TempModifierInlineLabel({
       <div className="flex items-center gap-1">
         <span
           className={cn(
-            'text-xs text-text-muted tabular-nums',
+            'text-xs whitespace-nowrap text-text-muted tabular-nums',
             valueClassName,
             tempModifierValueClass(tempDelta),
           )}

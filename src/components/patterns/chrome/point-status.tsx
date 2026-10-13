@@ -154,6 +154,7 @@ export function PointStatus({
     return (
       <span className={cn(pointStatusVariants({ variant, status }), className)}>
         {displayValue} / {total}
+        {label ? <span className="font-normal"> {label}</span> : null}
       </span>
     );
   }
