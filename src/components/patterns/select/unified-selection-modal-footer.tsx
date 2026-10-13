@@ -42,7 +42,12 @@ export function UnifiedSelectionModalFooter({
   return (
     <div className="flex flex-col gap-2 border-t border-border-light bg-surface">
       {footerExtra?.(selectedItems)}
-      <div className="flex items-center justify-between gap-2">
+      <div
+        className={cn(
+          'flex gap-2',
+          wrapFooterActions ? 'flex-col' : 'items-center justify-between',
+        )}
+      >
         <span
           className="min-w-0 truncate text-sm text-text-muted max-sm:sr-only"
           title={countLabel}
@@ -53,7 +58,7 @@ export function UnifiedSelectionModalFooter({
           className={cn(
             'flex min-w-0 gap-2',
             wrapFooterActions
-              ? 'w-full max-w-full flex-1 flex-wrap sm:justify-end [&_button]:max-w-full [&_button]:whitespace-normal'
+              ? 'w-full max-w-full flex-wrap justify-end [&_button]:h-auto [&_button]:min-h-12 [&_button]:max-w-full [&_button]:whitespace-normal'
               : 'w-full sm:w-auto [&_button]:flex-1 sm:[&_button]:flex-initial',
           )}
         >

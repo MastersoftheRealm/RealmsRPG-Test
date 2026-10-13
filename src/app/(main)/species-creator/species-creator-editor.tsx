@@ -644,8 +644,10 @@ export function TraitListModal({
           : undefined
       }
       wrapFooterActions={mode === 'species_ancestry'}
-      size="lg"
-      className="max-h-[60vh]"
+      size={mode === 'species_ancestry' ? '2xl' : 'lg'}
+      className={
+        mode === 'species_ancestry' ? 'md:max-h-[min(60vh,calc(90vh-16rem))]' : 'max-h-[60vh]'
+      }
     />
   );
 }

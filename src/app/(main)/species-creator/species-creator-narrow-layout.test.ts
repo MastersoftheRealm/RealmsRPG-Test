@@ -31,3 +31,13 @@ describe('species creator narrow layout (86e3jxbr8)', () => {
     expect(footer).toContain('sm:w-auto [&_button]:flex-1');
   });
 });
+
+describe('species ancestry add modal (86e3jzdtb)', () => {
+  it('is wider than the 32rem dialog on desktop and keeps the ancestry Add in the footer', () => {
+    expect(editor).toContain("size={mode === 'species_ancestry' ? '2xl' : 'lg'}");
+    expect(editor).toContain('md:max-h-[min(60vh,calc(90vh-16rem))]');
+    expect(editor).not.toContain('className="max-h-[60vh]"');
+    expect(footer).toContain("wrapFooterActions ? 'flex-col'");
+    expect(footer).toContain('[&_button]:min-h-12');
+  });
+});
