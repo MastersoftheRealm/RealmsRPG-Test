@@ -6,10 +6,12 @@
 import type { SelectableItem } from '@/components/patterns';
 import { buildEmpoweredPowerSelectableItem } from '@/hooks/add-library-item/build-empowered-selectable-item';
 import type { ItemProperty, UserPower, UserTechnique, UserItem } from '@/hooks';
+import { equipmentCurrency } from '@/lib/codex/equipment-list';
 import { buildSelectableItem } from '@/lib/library-selectable-builders';
 import { mergeLibraryBySource, type LibrarySourceScope } from '@/lib/library/source-scope';
 import {
   collectCreatureInventoryItems,
+  normalizeCreatureInventoryType,
   type CreatureInventoryKind,
 } from '@/lib/game/creature-inventory';
 import {
@@ -50,6 +52,105 @@ export function buildArmamentLibraryList(
   return mergeLibraryBySource(librarySource, publicItems, userItems).filter(
     (item) => !selectedIds.has(item.docId),
   );
+}
+
+/** Codex equipment row the creature Equipment tab can turn into a library item. */
+export type CreatureCodexEquipmentRow = {
+  id: string;
+  name?: string | undefined;
+  description?: string | undefined;
+  type?: string | undefined;
+  category?: string | undefined;
+  rarity?: string | undefined;
+  currency?: number | undefined;
+  gold_cost?: number | undefined;
+  properties?: string[] | undefined;
+  image_id?: string | null | undefined;
+  image_url?: string | null | undefined;
+};
+
+/** Library item plus catalog price fields the equipment columns already read. */
+export type CreatureEquipmentLibraryItem = UserItem & {
+  currency?: number | undefined;
+  gold_cost?: number | undefined;
+  category?: string | undefined;
+};
+
+function isCreatureEquipmentType(type: string | undefined): boolean {
+  return normalizeCreatureInventoryType(type) === 'equipment';
+}
+
+/** Catalog Currency stays on the row so add-to-creature does not reprice from properties. */
+export function codexEquipmentAsLibraryItem(
+  row: CreatureCodexEquipmentRow,
+): CreatureEquipmentLibraryItem {
+  const currency = equipmentCurrency(row);
+  return {
+    id: row.id,
+    docId: row.id,
+    name: String(row.name ?? ''),
+    description: row.description,
+    type: 'equipment',
+    category: row.category,
+    properties: (row.properties ?? []).map((name) => ({ name })),
+    rarity: row.rarity,
+    image_id: row.image_id ?? null,
+    image_url: row.image_url ?? null,
+    currency,
+    gold_cost: row.gold_cost ?? currency,
+  };
+}
+
+/**
+ * Equipment tab: user items, public library items, and codex gear.
+ * Codex is the Realms catalog (public side). Weapon, armor, and shield rows stay out.
+ */
+export function buildCreatureEquipmentLibraryList(
+  librarySource: LibrarySourceScope,
+  userItems: UserItem[],
+  publicItems: UserItem[],
+  codexEquipment: CreatureCodexEquipmentRow[],
+  selectedArmamentIds: string[],
+): UserItem[] {
+  const mine = userItems.filter((item) => isCreatureEquipmentType(item.type));
+  const officialLibrary = publicItems.filter((item) => isCreatureEquipmentType(item.type));
+  const catalog = codexEquipment
+    .filter((row) => isCreatureEquipmentType(row.type ?? 'equipment'))
+    .map(codexEquipmentAsLibraryItem);
+  return buildArmamentLibraryList(
+    librarySource,
+    mine,
+    [...officialLibrary, ...catalog],
+    selectedArmamentIds,
+  );
+}
+
+function catalogEquipmentPrice(item: UserItem): number | undefined {
+  const row = item as CreatureEquipmentLibraryItem;
+  if (typeof row.currency === 'number' && !Number.isNaN(row.currency)) return row.currency;
+  if (typeof row.gold_cost === 'number' && !Number.isNaN(row.gold_cost)) return row.gold_cost;
+  return undefined;
+}
+
+function withCatalogEquipmentPrice(
+  displayItem: ReturnType<typeof transformUserItemToDisplayItem>,
+  item: UserItem,
+): ReturnType<typeof transformUserItemToDisplayItem> {
+  const catalog = catalogEquipmentPrice(item);
+  if (catalog == null) return displayItem;
+  const source = (displayItem.sourceData ?? {}) as Record<string, unknown>;
+  const rarity = item.rarity?.trim() ? item.rarity : source.rarity;
+  return {
+    ...displayItem,
+    stats: (displayItem.stats ?? []).map((stat) =>
+      stat.label === 'Cost' ? { ...stat, value: `${catalog}c` } : stat,
+    ),
+    sourceData: {
+      ...source,
+      currency: catalog,
+      ...(rarity != null && rarity !== '' ? { rarity } : {}),
+    },
+  };
 }
 
 export function buildPowerSelectableItems(
@@ -153,7 +254,9 @@ export function buildArmamentSelectableItems(
     itemPropertiesDb,
   };
   return armamentList.map((item) => {
-    const displayItem = transformUserItemToDisplayItem(item, itemPropertiesDb);
+    const transformed = transformUserItemToDisplayItem(item, itemPropertiesDb);
+    const displayItem =
+      kind === 'equipment' ? withCatalogEquipmentPrice(transformed, item) : transformed;
     const selectable = buildSelectableItem(item, kind, codex);
     return { ...selectable, data: displayItem };
   });

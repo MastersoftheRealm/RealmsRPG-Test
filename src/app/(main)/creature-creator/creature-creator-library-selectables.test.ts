@@ -1,9 +1,11 @@
 import { describe, expect, it } from 'vitest';
-import type { UserItem, UserTechnique } from '@/hooks';
+import type { ItemProperty, UserItem, UserTechnique } from '@/hooks';
 import {
   buildArmamentLibraryList,
   buildArmamentSelectableItems,
+  buildCreatureEquipmentLibraryList,
   buildEmpoweredTechniqueLibraryList,
+  codexEquipmentAsLibraryItem,
 } from './creature-creator-library-selectables';
 
 function item(partial: Pick<UserItem, 'id' | 'docId' | 'name'>): UserItem {
@@ -75,5 +77,80 @@ describe('creature library source merge (TASK-712)', () => {
     const rows = buildArmamentSelectableItems([weapon], [], 'weapon');
     expect(rows[0]?.columns?.map((c) => c.key)).toEqual(['Damage']);
     expect(rows[0]?.columns?.some((c) => c.key === 'Type' || c.key === 'type')).toBe(false);
+  });
+
+  it('equipment sources include codex gear and hide weapons (86e3jx63b)', () => {
+    const myGear = {
+      ...item({ id: 'u1', docId: 'doc-u1', name: 'My Rope' }),
+      type: 'equipment' as const,
+    };
+    const myWeapon = item({ id: 'w1', docId: 'doc-w1', name: 'Sword' });
+    const publicGear = {
+      ...item({ id: 'p1', docId: 'doc-p1', name: 'Public Kit' }),
+      type: 'equipment' as const,
+    };
+    const codex = [
+      {
+        id: 'rope',
+        name: 'Rope',
+        type: 'equipment' as const,
+        currency: 1,
+        gold_cost: 1,
+        rarity: 'Common',
+      },
+      { id: 'axe', name: 'Codex Axe', type: 'weapon' as const, currency: 10, gold_cost: 10 },
+    ];
+
+    const all = buildCreatureEquipmentLibraryList(
+      'all',
+      [myGear, myWeapon],
+      [publicGear],
+      codex,
+      [],
+    );
+    expect(all.map((row) => row.name).sort()).toEqual(['My Rope', 'Public Kit', 'Rope']);
+
+    expect(
+      buildCreatureEquipmentLibraryList('public', [myGear, myWeapon], [publicGear], codex, [])
+        .map((row) => row.name)
+        .sort(),
+    ).toEqual(['Public Kit', 'Rope']);
+
+    expect(
+      buildCreatureEquipmentLibraryList('my', [myGear, myWeapon], [publicGear], codex, []).map(
+        (row) => row.name,
+      ),
+    ).toEqual(['My Rope']);
+
+    expect(
+      buildCreatureEquipmentLibraryList('all', [myGear], [publicGear], codex, ['rope']).map(
+        (row) => row.name,
+      ),
+    ).not.toContain('Rope');
+  });
+
+  it('equipment add keeps catalog currency instead of the property floor (86e3jx63b)', () => {
+    const rope = codexEquipmentAsLibraryItem({
+      id: 'rope',
+      name: 'Rope',
+      type: 'equipment',
+      currency: 1,
+      gold_cost: 1,
+      rarity: 'Common',
+      properties: [],
+    });
+    const rows = buildArmamentSelectableItems(
+      [rope],
+      [{ id: 1, name: 'Unused', description: '' } as unknown as ItemProperty],
+      'equipment',
+    );
+    const data = rows[0]?.data as {
+      sourceData?: { currency?: number; rarity?: string };
+      stats?: Array<{ label: string; value: string | number }>;
+    };
+    expect(data.sourceData?.currency).toBe(1);
+    expect(data.sourceData?.rarity).toBe('Common');
+    expect(data.stats?.find((stat) => stat.label === 'Cost')?.value).toBe('1c');
+    expect(rows[0]?.columns?.find((column) => column.key === 'currency')?.value).toBe('1');
   });
 });
