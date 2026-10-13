@@ -6,7 +6,6 @@
 
 import type { TechniquePart } from '@/hooks/codex-types';
 import { findByIdOrName } from '@/lib/id-constants';
-import { dedupeSavedParts } from '@/lib/game/dedupe-saved-parts';
 import { formatEnergyNumber, formatPercentagePartModifier } from './power-energy-breakdown';
 import { energyFloorApplies, finalizePowerEnergy, formatEnergyStat } from './power-calc';
 import { type TechniqueCalcSectionId, type TechniquePartPayload } from './technique-calc';
@@ -125,7 +124,7 @@ function partEnergyContribution(def: TechniquePart, l1: number, l2: number, l3: 
 }
 
 /**
- * Per-part energy classification matching `calculateTechniqueCosts` (including dedupe).
+ * Per-part energy classification matching `calculateTechniqueCosts`.
  * Display-only fields (`calcSection`, `displayLabel`) are ignored for math.
  */
 export function analyzeTechniqueEnergy(
@@ -137,8 +136,7 @@ export function analyzeTechniqueEnergy(
   let positiveEnergy = 0;
   const lines: TechniqueEnergyLine[] = [];
 
-  const uniqueParts = dedupeSavedParts(partsPayload);
-  uniqueParts.forEach((pl) => {
+  partsPayload.forEach((pl) => {
     const def = findByIdOrName(partsDb, {
       id: pl.id ?? pl.part?.id,
       name: pl.name ?? pl.part?.name,

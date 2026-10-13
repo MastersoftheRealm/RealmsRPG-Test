@@ -13,7 +13,6 @@ import {
   computePartTrainingPointsRaw,
   publishedTrainingPointLevels,
 } from '@/lib/calculators/part-training-points';
-import { dedupeSavedParts } from '@/lib/game/dedupe-saved-parts';
 import { appendCanTargetToDescription, defensesFromPart } from '@/lib/game/targeted-defenses';
 import type { AllowUndefinedOptionals } from '@/lib/utils/exact-optional';
 import { capitalize } from '@/lib/utils/string';
@@ -708,16 +707,14 @@ export function buildPowerPartsPayloadForCost(
 
   if (!powerDocHasCreatorStyleFields(powerDoc)) {
     return withWeaponAttackPart(
-      dedupeSavedParts(
-        savedParts.map((p) => ({
-          id: p.id,
-          name: p.name,
-          op_1_lvl: p.op_1_lvl || 0,
-          op_2_lvl: p.op_2_lvl || 0,
-          op_3_lvl: p.op_3_lvl || 0,
-          applyDuration: p.applyDuration || false,
-        })),
-      ),
+      savedParts.map((p) => ({
+        id: p.id,
+        name: p.name,
+        op_1_lvl: p.op_1_lvl || 0,
+        op_2_lvl: p.op_2_lvl || 0,
+        op_3_lvl: p.op_3_lvl || 0,
+        applyDuration: p.applyDuration || false,
+      })),
       powerDoc,
       partsDb,
     );
@@ -796,10 +793,10 @@ export function buildPowerPartsPayloadForCost(
       applyDuration: p.applyDuration || false,
     }));
 
-  // Dedupe saved-side rows only — mechanicPayload may intentionally repeat the same
-  // part id per damage row (e.g. three Elemental Damage lines for fire/ice/lightning).
+  // Each saved row is an independent cost contribution (86e3jpq2k). mechanicPayload may
+  // also repeat the same part id per damage row (fire / ice / lightning).
   return withWeaponAttackPart(
-    [...dedupeSavedParts([...userParts, ...legacyAutoMechanics]), ...mechanicPayload],
+    [...userParts, ...legacyAutoMechanics, ...mechanicPayload],
     powerDoc,
     partsDb,
   );
