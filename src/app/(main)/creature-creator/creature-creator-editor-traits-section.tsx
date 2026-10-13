@@ -129,8 +129,8 @@ export function CreatureCreatorEditorTraitsSection({
         <p className="mb-3 text-sm text-text-muted">
           Each sense and movement type has a feat point cost shown when adding and on each row.
         </p>
-        <div className="grid gap-4 md:grid-cols-2">
-          <div>
+        <div className="grid min-w-0 gap-4 md:grid-cols-2">
+          <div className="min-w-0">
             <label className="mb-2 block text-sm font-medium text-text-secondary">Senses</label>
             <ExpandableChipList
               items={creature.senses}
@@ -148,7 +148,7 @@ export function CreatureCreatorEditorTraitsSection({
               costForOption={(value) => getSenseCostLabel(value)?.replace(' pt', '')}
             />
           </div>
-          <div>
+          <div className="min-w-0">
             <label className="mb-2 block text-sm font-medium text-text-secondary">
               Movement Types
             </label>
