@@ -87,12 +87,14 @@ export function ConfirmActionModal({
         </div>
       }
     >
-      <div className="flex flex-col items-center text-center">
+      <div className="flex w-full min-w-0 flex-col items-center text-center">
         <div className={cn('mb-4 flex h-12 w-12 items-center justify-center rounded-full', iconBg)}>
           <IconComponent className={cn('h-6 w-6', iconColor)} />
         </div>
-        <h2 className="mb-2 text-lg font-semibold text-text-primary">{title}</h2>
-        <p className="text-text-muted">{description}</p>
+        <h2 className="mb-2 w-full min-w-0 text-lg font-semibold break-words text-text-primary">
+          {title}
+        </h2>
+        <p className="w-full min-w-0 break-words text-text-muted">{description}</p>
       </div>
     </Modal>
   );
