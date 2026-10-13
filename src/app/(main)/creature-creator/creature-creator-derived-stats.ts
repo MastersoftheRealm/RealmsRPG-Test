@@ -163,12 +163,22 @@ export function calculateCreatureCreatorStats(
   const skillRules = resolveSkillAllocationRules(rules);
   const skillAllocations: Record<string, number> = {};
   const skillMeta = new Map<string, { isSubSkill: boolean }>();
+  const presentSkillIds = new Set(creature.skills.map((s) => String(s.id ?? s.name)));
   for (const s of creature.skills) {
     const skillId = String(s.id ?? s.name);
     const isSubSkill =
       s.isSubSkill === true ||
       (s.baseSkillId != null && s.baseSkillId !== '') ||
       subSkillNames.has(String(s.name ?? '').toLowerCase());
+    if (
+      isSubSkill &&
+      s.baseSkillId != null &&
+      s.baseSkillId !== '' &&
+      Number(s.baseSkillId) !== 0 &&
+      !presentSkillIds.has(String(s.baseSkillId))
+    ) {
+      continue;
+    }
     skillMeta.set(skillId, { isSubSkill });
     if (isSubSkill) {
       skillAllocations[skillId] = Math.max(1, s.value);
