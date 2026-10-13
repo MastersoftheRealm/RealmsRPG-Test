@@ -6,7 +6,7 @@
  */
 
 import { useEffect, useRef, useState } from 'react';
-import { clearCreatorCache } from '@/lib/game/creator-cache';
+import { clearNewCreatorDraftCaches } from '@/lib/game/creator-cache';
 import { creatorEditMissMessage } from '@/lib/library/catalog-listing';
 
 /**
@@ -28,7 +28,7 @@ export function useCreatorEditDraftDecision(
 
   useEffect(() => {
     if (!discardDraft) return;
-    clearCreatorCache(cacheKey);
+    clearNewCreatorDraftCaches(cacheKey);
   }, [discardDraft, cacheKey]);
 
   return { discardDraft };

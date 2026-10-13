@@ -22,8 +22,19 @@ function installStorage() {
       store.delete(key);
     },
   };
-  vi.stubGlobal('window', { localStorage });
+  const sessionStore = new Map<string, string>();
+  const sessionStorage = {
+    getItem: (key: string) => sessionStore.get(key) ?? null,
+    setItem: (key: string, value: string) => {
+      sessionStore.set(key, value);
+    },
+    removeItem: (key: string) => {
+      sessionStore.delete(key);
+    },
+  };
+  vi.stubGlobal('window', { localStorage, sessionStorage });
   vi.stubGlobal('localStorage', localStorage);
+  vi.stubGlobal('sessionStorage', sessionStorage);
   return store;
 }
 

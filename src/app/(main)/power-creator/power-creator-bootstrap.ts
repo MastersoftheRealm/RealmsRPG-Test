@@ -11,7 +11,7 @@ import {
   type PowerComposition,
 } from '@/lib/calculators';
 import { derivePowerAttackMode, normalizeAttackMode, type AttackMode } from '@/lib/attack-mode';
-import { readCreatorCache } from '@/lib/game/creator-cache';
+import { readNewCreatorDraftCache } from '@/lib/game/creator-cache';
 import { normalizeTargetedDefenses } from '@/lib/game/targeted-defenses';
 import {
   ADVANCED_CATEGORIES,
@@ -179,7 +179,7 @@ function restoreAdvancedFromCache(
 export function restorePowerCreatorFromCache(
   powerParts: PowerPart[],
 ): PowerCreatorFormState | null {
-  const parsed = readCreatorCache<PowerCreatorCache>(POWER_CREATOR_CACHE_KEY);
+  const parsed = readNewCreatorDraftCache<PowerCreatorCache>(POWER_CREATOR_CACHE_KEY);
   if (!parsed) return null;
 
   const base = emptyPowerCreatorFormState();

@@ -39,7 +39,11 @@ import {
   type PowerCreatorFormState,
   type PowerLibraryRecord,
 } from './power-creator-bootstrap';
-import { persistCreatorDraft, clearCreatorCache } from '@/lib/game/creator-cache';
+import {
+  creatorSessionCacheKey,
+  persistCreatorSessionDraft,
+  clearCreatorSessionDraft,
+} from '@/lib/game/creator-cache';
 import { usePowerCreatorCostDerivation } from './power-creator-cost-derivation';
 import { usePowerCreatorPartActions } from './power-creator-part-actions';
 import {
@@ -144,8 +148,12 @@ export function usePowerCreatorWorkspace({
   });
   const composition = variants.composition;
   const topForm = composition ? topLevelForm(variants.collected) : liveForm;
-  const { discardLocalDraft, isLocalDraftDiscarded } =
-    useDiscardableCreatorDraft(POWER_CREATOR_CACHE_KEY);
+  const sessionCacheKey = useMemo(
+    () => creatorSessionCacheKey(POWER_CREATOR_CACHE_KEY, editPowerId, editReplacesDraft),
+    [editPowerId, editReplacesDraft],
+  );
+
+  const { discardLocalDraft, isLocalDraftDiscarded } = useDiscardableCreatorDraft(sessionCacheKey);
 
   const { discardDraft } = useCreatorEditDraftDecision(
     true,
@@ -154,8 +162,6 @@ export function usePowerCreatorWorkspace({
   );
 
   useEffect(() => {
-    if (discardDraft) return;
-
     const cache: PowerCreatorCache = {
       name,
       description,
@@ -187,9 +193,16 @@ export function usePowerCreatorWorkspace({
       ...(composition ? { composition } : {}),
       timestamp: Date.now(),
     };
-    persistCreatorDraft(POWER_CREATOR_CACHE_KEY, cache, isLocalDraftDiscarded());
+    persistCreatorSessionDraft(
+      POWER_CREATOR_CACHE_KEY,
+      editPowerId,
+      editReplacesDraft,
+      cache,
+      isLocalDraftDiscarded(),
+    );
   }, [
-    discardDraft,
+    editPowerId,
+    editReplacesDraft,
     name,
     description,
     topForm,
@@ -336,8 +349,8 @@ export function usePowerCreatorWorkspace({
     resetFields();
     save.forgetLoadedLibraryItem();
     save.setSaveMessage(null);
-    clearCreatorCache(POWER_CREATOR_CACHE_KEY);
-  }, [resetFields, save]);
+    clearCreatorSessionDraft(POWER_CREATOR_CACHE_KEY, editPowerId, editReplacesDraft);
+  }, [editPowerId, editReplacesDraft, resetFields, save]);
 
   const applyFormState = useCallback(
     (next: PowerCreatorFormState) => {

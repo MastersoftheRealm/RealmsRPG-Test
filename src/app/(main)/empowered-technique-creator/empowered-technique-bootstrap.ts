@@ -7,7 +7,7 @@
 import type { PowerPart, TechniquePart } from '@/hooks';
 import type { AreaConfig, DurationConfig } from '@/lib/calculators';
 import { CREATOR_CACHE_KEYS } from '@/lib/game/creator-constants';
-import { readCreatorCache } from '@/lib/game/creator-cache';
+import { readNewCreatorDraftCache } from '@/lib/game/creator-cache';
 import { deriveEmpoweredAttackMode, normalizeAttackMode, type AttackMode } from '@/lib/attack-mode';
 import { normalizeTargetedDefenses } from '@/lib/game/targeted-defenses';
 import { findByIdOrName } from '@/lib/id-constants';
@@ -272,7 +272,9 @@ export function restoreEmpoweredTechniqueFromCache(
   powerParts: PowerPart[],
   techniqueParts: TechniquePart[],
 ): EmpoweredTechniqueFormState | null {
-  const parsed = readCreatorCache<EmpoweredTechniqueCache>(EMPOWERED_TECHNIQUE_CREATOR_CACHE_KEY);
+  const parsed = readNewCreatorDraftCache<EmpoweredTechniqueCache>(
+    EMPOWERED_TECHNIQUE_CREATOR_CACHE_KEY,
+  );
   if (!parsed) return null;
 
   const base = emptyEmpoweredTechniqueFormState();
