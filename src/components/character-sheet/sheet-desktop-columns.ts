@@ -63,6 +63,21 @@ export function sheetColumnTracks(
   };
 }
 
+const WEAPON_TABLE_FLOOR_PX = 18 * REM_PX;
+
+/**
+ * Name cell on the stacked Archetype card. The weapons table floors at 18rem
+ * inside TableScroll, so a 320px phone keeps 6.25rem (100px) instead of the
+ * ~44px leftover that showed about two letters.
+ */
+export function archetypeStackedWeaponNamePx(viewportPx: number): number {
+  const pagePad = viewportPx >= 1024 ? SHEET_LG_PAD_PX * 2 : viewportPx >= 640 ? 48 : 32;
+  const cardPad = viewportPx >= 768 ? 24 * 2 : 16 * 2;
+  const weaponsPad = 12 * 2;
+  const inner = viewportPx - pagePad - cardPad - weaponsPad;
+  return Math.max(inner, WEAPON_TABLE_FLOOR_PX) - WEAPON_METRIC_PX;
+}
+
 /** Weapons name cell after metric columns. Null when the three-column grid is off. */
 export function sheetWeaponNameCellPx(viewportPx: number): number | null {
   const tracks = sheetColumnTracks(viewportPx);
