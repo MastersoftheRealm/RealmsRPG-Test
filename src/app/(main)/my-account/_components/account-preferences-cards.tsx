@@ -8,7 +8,12 @@ import { AtSign } from 'lucide-react';
 import type { AccountProfile } from '@/hooks';
 import { Alert, Button, Card, Checkbox, Input } from '@/components/ui';
 import { ONBOARDING_COPY } from '@/lib/constants/copy/onboarding-copy';
-import type { AccountMessage } from './account-helpers';
+import {
+  USERNAME_CHARSET_ERROR,
+  USERNAME_PATTERN,
+  usernameCharsetError,
+  type AccountMessage,
+} from './account-helpers';
 
 type TutorialsProps = {
   tutorialsEnabled: boolean;
@@ -80,8 +85,9 @@ export function AccountUsernameCard({
             {...(!isAdmin && {
               minLength: 3,
               maxLength: 24,
-              pattern: '[a-zA-Z0-9_-]+',
-              title: 'Letters, numbers, underscores, and hyphens only',
+              pattern: USERNAME_PATTERN,
+              title: USERNAME_CHARSET_ERROR,
+              error: usernameCharsetError(newUsername) ?? undefined,
             })}
           />
         </div>
@@ -95,7 +101,10 @@ export function AccountUsernameCard({
         <Button
           type="submit"
           disabled={
-            usernameChanging || !newUsername.trim() || (!isAdmin && newUsername.trim().length < 3)
+            usernameChanging ||
+            !newUsername.trim() ||
+            (!isAdmin &&
+              (newUsername.trim().length < 3 || usernameCharsetError(newUsername) != null))
           }
           isLoading={usernameChanging}
         >
