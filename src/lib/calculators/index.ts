@@ -134,6 +134,13 @@ export {
   type TechniqueEnergyLine,
 } from './technique-energy-breakdown';
 
+export {
+  combineTechniqueCostSlices,
+  techniqueDamageSectionCostFromAnalysis,
+  techniqueManualPartsSectionCost,
+  isTechniqueAttackMechanicName,
+} from './technique-creator-section-costs';
+
 // Empowered Technique Calculator
 export {
   calculateEmpoweredTechniqueCosts,
