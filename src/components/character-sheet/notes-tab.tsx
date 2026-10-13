@@ -172,17 +172,19 @@ function EditableNoteCard({
             autoFocus
           />
         ) : (
-          <span
-            className="flex min-w-0 flex-1 cursor-pointer items-center gap-1 text-sm font-medium text-text-primary hover:text-primary-fg-hover"
-            onClick={(e) => {
-              e.stopPropagation();
-              setIsEditingName(true);
-            }}
-            title={note.name}
-          >
-            <span className="truncate">{note.name}</span>
-            <Pencil className="h-3 w-3 shrink-0 text-text-muted" />
-          </span>
+          <div className="flex min-w-0 flex-1 items-center">
+            <span
+              className="flex max-w-full min-w-0 cursor-pointer items-center gap-1 text-sm font-medium text-text-primary hover:text-primary-fg-hover"
+              onClick={(e) => {
+                e.stopPropagation();
+                setIsEditingName(true);
+              }}
+              title={note.name}
+            >
+              <span className="truncate">{note.name}</span>
+              <Pencil className="h-3 w-3 shrink-0 text-text-muted" />
+            </span>
+          </div>
         )}
 
         {isEditMode && onDelete && (
