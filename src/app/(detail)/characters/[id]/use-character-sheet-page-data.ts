@@ -118,7 +118,9 @@ export function useCharacterSheetPageData(id: string) {
     enabled: loadCatalog,
   });
   const { data: userItems = [] } = useUserItems({ enabled: loadCatalog });
-  const { data: traitsDb = [] } = useTraits({ enabled: loadCatalog });
+  const { data: traitsFromHook = [], isPending: traitsCatalogPending } = useTraits({
+    enabled: loadCatalog,
+  });
   const { data: featsDb = [] } = useCodexFeats({ enabled: loadCatalog });
 
   const { data: powerPartsDb = [] } = usePowerParts({ enabled: loadCatalog });
@@ -161,7 +163,7 @@ export function useCharacterSheetPageData(id: string) {
         techniquePartsDb,
         itemPropertiesDb,
         allSpecies,
-        traitsDb,
+        traitsDb: traitsFromHook,
         codexSkills,
         codexArchetypes,
         featsDb,
@@ -406,6 +408,7 @@ export function useCharacterSheetPageData(id: string) {
     saveNow,
     syncBlockedByNetwork,
     traitsDb: catalog.traitsDb,
+    traitsCatalogLoading: loadCatalog && catalog.traitsDb.length === 0 && traitsCatalogPending,
     featsDb: catalog.featsDb,
     powerPartsDb: catalog.powerPartsDb,
     techniquePartsDb: catalog.techniquePartsDb,

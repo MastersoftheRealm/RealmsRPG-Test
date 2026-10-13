@@ -229,6 +229,7 @@ export function LibrarySection({
     vanillaTraits,
     speciesTraitsFromCodex = [],
     traitsDb = [],
+    traitsCatalogLoading = false,
     featsDb = [],
     traitUses = {},
     archetypeFeats = [],
@@ -367,6 +368,7 @@ export function LibrarySection({
             vanillaTraits={vanillaTraits}
             speciesTraitsFromCodex={speciesTraitsFromCodex}
             traitsDb={traitsDb}
+            traitsCatalogLoading={traitsCatalogLoading}
             featsDb={featsDb}
             traitUses={traitUses}
             archetypeFeats={archetypeFeats}
