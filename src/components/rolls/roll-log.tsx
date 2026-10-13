@@ -257,7 +257,7 @@ export function RollLog({ className, viewOnlyCampaignId }: RollLogProps) {
           {/* Header */}
           <div className="flex items-center justify-between bg-primary-button px-4 py-3 text-text-on-dark">
             <div className="flex items-center gap-2">
-              <h3 className="text-base font-bold tracking-wide">🎲 Roll Log</h3>
+              <h3 className="text-base font-bold tracking-wide text-text-on-dark">🎲 Roll Log</h3>
               {campaignId && (
                 <div className="flex overflow-hidden rounded-lg border border-text-on-dark/30">
                   <button
