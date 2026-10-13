@@ -83,10 +83,10 @@ export function CollapsibleSection({
           className,
         )}
       >
-        <div className="flex items-center justify-between gap-3">
-          <div className="flex min-w-0 items-center gap-3">
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+          <div className="flex min-w-0 items-start gap-3 sm:items-center">
             {icon && (
-              <span className="text-2xl text-text-muted" aria-hidden>
+              <span className="shrink-0 text-2xl text-text-muted" aria-hidden>
                 {icon}
               </span>
             )}
@@ -94,10 +94,19 @@ export function CollapsibleSection({
               <HeadingTag className="font-bold text-text-secondary dark:text-text-primary">
                 {title}
               </HeadingTag>
-              {subtitleText ? <p className="text-sm text-text-muted">{subtitleText}</p> : null}
+              {subtitleText ? (
+                <p className="line-clamp-2 text-sm text-text-muted sm:line-clamp-none">
+                  {subtitleText}
+                </p>
+              ) : null}
             </div>
           </div>
-          <Button variant="secondary" size="sm" onClick={() => onEnabledChange?.(true)}>
+          <Button
+            variant="secondary"
+            size="sm"
+            className="w-full shrink-0 sm:w-auto"
+            onClick={() => onEnabledChange?.(true)}
+          >
             + Enable {title}
           </Button>
         </div>
