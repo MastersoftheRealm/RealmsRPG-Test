@@ -31,6 +31,12 @@ describe('RollLog truncated titles (86e3kfkc1)', () => {
   });
 });
 
+describe('Roll Log dock title contrast (86e3jvv3v)', () => {
+  it('puts text-text-on-dark on the heading so the global h3 title color does not win', () => {
+    expect(source).toMatch(/<h3 className="[^"]*\btext-text-on-dark\b[^"]*">🎲 Roll Log<\/h3>/);
+  });
+});
+
 describe('RollLog outside click (TASK-895)', () => {
   it('closes on pointerdown outside and ignores roll triggers', () => {
     expect(source).toContain('pointerdown');
