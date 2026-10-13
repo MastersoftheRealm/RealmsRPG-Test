@@ -22,9 +22,10 @@
 'use client';
 
 import * as React from 'react';
-import { useRef, useCallback, useEffect } from 'react';
+import { useCallback, useEffect, useMemo } from 'react';
 import { cva, type VariantProps } from 'class-variance-authority';
 import { cn } from '@/lib/utils/cn';
+import { createStepperHold, stepperPointerIsOutside } from '@/lib/stepper-hold';
 import {
   createStepperValueMemory,
   rememberStepperValue,
@@ -38,6 +39,7 @@ import {
 /**
  * Hold-to-repeat with exponential acceleration.
  * Single tap = one step (initial delay before repeat). Hold = repeat after delay, then accelerating intervals.
+ * The repeat stops when the pointer leaves the button.
  */
 function useHoldRepeat(
   callback: () => void,
@@ -48,59 +50,36 @@ function useHoldRepeat(
   /** Delay (ms) before first repeat so a quick tap only fires once. Default 450ms. */
   initialDelay = 450,
 ) {
-  const intervalRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const initialTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const delayRef = useRef(maxDelay);
-  const isHoldingRef = useRef(false);
-  const hasRepeatedRef = useRef(false);
-  const callbackRef = useRef(callback);
+  const hold = useMemo(
+    () =>
+      createStepperHold(() => {}, {
+        minDelay,
+        maxDelay,
+        initialDelay,
+      }),
+    [minDelay, maxDelay, initialDelay],
+  );
 
   useEffect(() => {
-    callbackRef.current = callback;
-  }, [callback]);
+    hold.setStep(callback);
+  }, [hold, callback]);
 
   const start = useCallback(() => {
-    if (!enabled || isHoldingRef.current) return;
-    isHoldingRef.current = true;
-    hasRepeatedRef.current = false;
-    delayRef.current = maxDelay;
-
-    initialTimeoutRef.current = setTimeout(() => {
-      initialTimeoutRef.current = null;
-      hasRepeatedRef.current = true;
-      callbackRef.current();
-      const repeat = () => {
-        if (!isHoldingRef.current) return;
-        callbackRef.current();
-        delayRef.current = Math.max(minDelay, delayRef.current * 0.88);
-        intervalRef.current = setTimeout(repeat, delayRef.current);
-      };
-      intervalRef.current = setTimeout(repeat, maxDelay);
-    }, initialDelay);
-  }, [enabled, minDelay, maxDelay, initialDelay]);
+    if (!enabled) return;
+    hold.start();
+  }, [enabled, hold]);
 
   const stop = useCallback(() => {
-    if (initialTimeoutRef.current) {
-      clearTimeout(initialTimeoutRef.current);
-      initialTimeoutRef.current = null;
-      if (!hasRepeatedRef.current) callbackRef.current();
-    }
-    isHoldingRef.current = false;
-    hasRepeatedRef.current = false;
-    if (intervalRef.current) {
-      clearTimeout(intervalRef.current);
-      intervalRef.current = null;
-    }
-  }, []);
+    hold.stop();
+  }, [hold]);
 
-  useEffect(() => {
-    return () => {
-      if (initialTimeoutRef.current) clearTimeout(initialTimeoutRef.current);
-      if (intervalRef.current) clearTimeout(intervalRef.current);
-    };
-  }, []);
+  const stopRepeat = useCallback(() => {
+    hold.stopRepeat();
+  }, [hold]);
 
-  return { start, stop };
+  useEffect(() => hold.dispose, [hold]);
+
+  return { start, stop, stopRepeat };
 }
 
 // =============================================================================
@@ -151,7 +130,7 @@ const valueDisplayVariants = cva('text-center font-semibold tabular-nums', {
   },
 });
 
-type StepperHold = { start: () => void; stop: () => void };
+type StepperHold = { start: () => void; stop: () => void; stopRepeat: () => void };
 
 function stepperTitlesFromLabel(
   label: string | undefined,
@@ -230,6 +209,15 @@ function StepperGlyphButton({
             }
           : undefined
       }
+      onPointerMove={
+        enableHoldRepeat
+          ? (e) => {
+              const bounds = e.currentTarget.getBoundingClientRect();
+              if (stepperPointerIsOutside(bounds, e.clientX, e.clientY)) hold.stopRepeat();
+            }
+          : undefined
+      }
+      onPointerLeave={enableHoldRepeat ? () => hold.stopRepeat() : undefined}
       onLostPointerCapture={enableHoldRepeat ? () => hold.stop() : undefined}
       disabled={disabled}
       title={title}
