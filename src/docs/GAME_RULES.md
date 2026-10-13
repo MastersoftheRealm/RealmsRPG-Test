@@ -482,7 +482,7 @@ Any Bonus can be converted to a Score by adding 10.
 
 ### Health & Energy Allocation
 
-- **Base health:** 8 + Vitality (or Strength if Vitality is archetype ability)
+- **Base health:** 12 + Vitality (or Strength if Vitality is archetype ability). Live value is `core_rules.PROGRESSION_PLAYER.baseHealth`.
 - **Base energy:** Archetype ability score
 - **Pool at level 1:** 18 points to divide between HP and EN
 - **Per level:** +12 to pool; add Vitality to Health, highest Archetype Ability to Energy
@@ -495,7 +495,7 @@ Any Bonus can be converted to a Score by adding 10.
 |----------|---------|-----------|
 | Ability points | 7 | +1 every 3 levels |
 | Skill points | 5 | +3 |
-| HP/EN pool | 26 | +12 |
+| HP/EN pool | 30 | +12 |
 | Proficiency | 2 | +1 every 5 levels |
 | Training points | 22 + ability + (2 + ability) × (level − 1) | Same formula as characters |
 | Currency | 200 × 1.45^(level−1) | `calculateCreatureCurrency` |

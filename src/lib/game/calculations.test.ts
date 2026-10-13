@@ -195,9 +195,9 @@ describe('calculateAllStats golden characters (T9)', () => {
         intelligence: 2,
       },
     });
-    expect(stats.maxHealth).toBe(9);
+    expect(stats.maxHealth).toBe(13);
     expect(stats.maxEnergy).toBe(2);
-    expect(stats.terminal).toBe(3);
+    expect(stats.terminal).toBe(4);
     expect(stats.speed).toBe(7);
     expect(stats.evasion).toBe(12);
     expect(stats.defenseBonuses.fortitude).toBe(1);
@@ -223,9 +223,9 @@ describe('calculateAllStats golden characters (T9)', () => {
       },
       defenseVals: { ...DEFAULT_DEFENSE_SKILLS, might: 2 },
     });
-    expect(stats.maxHealth).toBe(22);
+    expect(stats.maxHealth).toBe(26);
     expect(stats.maxEnergy).toBe(32);
-    expect(stats.terminal).toBe(6);
+    expect(stats.terminal).toBe(7);
     expect(stats.speed).toBe(7);
     expect(stats.evasion).toBe(12);
     expect(stats.defenseBonuses.might).toBe(5);
@@ -251,9 +251,9 @@ describe('calculateAllStats golden characters (T9)', () => {
         charisma: 1,
       },
     });
-    expect(stats.maxHealth).toBe(58);
+    expect(stats.maxHealth).toBe(62);
     expect(stats.maxEnergy).toBe(88);
-    expect(stats.terminal).toBe(15);
+    expect(stats.terminal).toBe(16);
     expect(stats.speed).toBe(8);
     expect(stats.evasion).toBe(13);
     expect(stats.defenseBonuses.might).toBe(4);

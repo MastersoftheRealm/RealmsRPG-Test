@@ -6,7 +6,7 @@
  *
  * Usage:
  *   const { rules, isLoading } = useGameRules();
- *   const baseHealth = rules.PROGRESSION_PLAYER.baseHealth; // 8
+ *   const baseHealth = rules.PROGRESSION_PLAYER.baseHealth; // 12
  *   const conditions = rules.CONDITIONS.standard; // ConditionDef[]
  */
 
