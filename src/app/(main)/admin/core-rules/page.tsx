@@ -35,6 +35,7 @@ import {
   coreRulesEscapeShouldAsk,
   coreRulesUnsavedPrompt,
 } from './core-rules-unsaved-leave';
+import { CORE_RULES_NUMBER_ERROR_ATTR, CORE_RULES_NUMBER_SAVE_BLOCKED } from './core-rules-number';
 
 /**
  * Only a missing row justifies falling back to create. Treating every failure as "not there
@@ -181,6 +182,12 @@ export default function AdminCoreRulesPage() {
   }, [dirty, unsavedPrompt.open]);
 
   const handleSave = useCallback(async () => {
+    if (document.querySelector(`[${CORE_RULES_NUMBER_ERROR_ATTR}]`)) {
+      setError(CORE_RULES_NUMBER_SAVE_BLOCKED);
+      setSuccess(null);
+      return;
+    }
+
     try {
       setSaving(true);
       setError(null);

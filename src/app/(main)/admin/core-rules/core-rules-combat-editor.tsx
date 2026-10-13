@@ -35,6 +35,7 @@ export function CombatEditor({
       <FieldRow label="Multiple Action Penalty">
         <NumInput
           value={(data.multipleActionPenalty as number) ?? -5}
+          allowNegative
           onChange={(v) => set('multipleActionPenalty', v)}
         />
       </FieldRow>
@@ -55,6 +56,7 @@ export function CombatEditor({
       <FieldRow label="Natural 1 Penalty">
         <NumInput
           value={(data.natural1Penalty as number) ?? -2}
+          allowNegative
           onChange={(v) => set('natural1Penalty', v)}
         />
       </FieldRow>
@@ -63,12 +65,14 @@ export function CombatEditor({
       <FieldRow label="Ranged in Melee Penalty">
         <NumInput
           value={(data.rangedMeleePenalty as number) ?? -5}
+          allowNegative
           onChange={(v) => set('rangedMeleePenalty', v)}
         />
       </FieldRow>
       <FieldRow label="Long Range Penalty">
         <NumInput
           value={(data.longRangePenalty as number) ?? -5}
+          allowNegative
           onChange={(v) => set('longRangePenalty', v)}
         />
       </FieldRow>

@@ -20,6 +20,7 @@ import {
   restorableLevelRows,
   type SaveArchetypeWithPathInput,
 } from './codex-archetype-write';
+import { coreRulesDocumentNumberError } from '../core-rules/core-rules-number';
 
 const MAX_REPORTED_REFERENCES = 20;
 
@@ -137,6 +138,9 @@ export async function createCodexDoc(
   try {
     const changedByUserId = await requireAdmin();
     const safeCollection = assertCodexCollection(collection);
+    const numberError =
+      safeCollection === 'core_rules' ? coreRulesDocumentNumberError(id ?? '', data) : null;
+    if (numberError) return { success: false, error: numberError };
     const supabase = createServiceRoleClient();
     const table = getTableName(safeCollection);
 
@@ -218,6 +222,9 @@ export async function updateCodexDoc(
   try {
     const changedByUserId = await requireAdmin();
     const safeCollection = assertCodexCollection(collection);
+    const numberError =
+      safeCollection === 'core_rules' ? coreRulesDocumentNumberError(id, data) : null;
+    if (numberError) return { success: false, error: numberError };
     const supabase = createServiceRoleClient();
     const table = getTableName(safeCollection);
 
