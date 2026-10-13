@@ -138,6 +138,7 @@ export {
   combineTechniqueCostSlices,
   techniqueDamageSectionCostFromAnalysis,
   techniqueManualPartsSectionCost,
+  techniqueNamedBadgeCost,
   isTechniqueAttackMechanicName,
 } from './technique-creator-section-costs';
 
