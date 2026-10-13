@@ -6,6 +6,9 @@ import {
   isTechniqueAttackMechanicName,
   sectionAttributedEnergyRaw,
   techniqueDamageSectionCostFromAnalysis,
+  techniqueManualPartsSectionCost,
+  techniqueNamedBadgeCost,
+  techniqueNamesEnergyRaw,
 } from './technique-creator-section-costs';
 import { analyzeTechniqueEnergy } from './technique-energy-breakdown';
 import { calculateTechniqueCosts } from './technique-calc';
@@ -54,7 +57,7 @@ describe('technique creator section costs (86e3jp7e9)', () => {
     expect(combined.energyRaw).toBe(weaponSlice.energyRaw + actionSlice.energyRaw);
   });
 
-  it('applies percentage parts inside the damage section to the damage badge', () => {
+  it('gives the damage badge its share of global percentage modifiers', () => {
     const additionalDamage = part({
       id: String(PART_IDS.ADDITIONAL_DAMAGE),
       name: 'Additional Damage',
@@ -86,7 +89,76 @@ describe('technique creator section costs (86e3jp7e9)', () => {
     const analysis = analyzeTechniqueEnergy(payload, db);
     const damagePayload = payload.filter((p) => p.calcSection === 'damage');
     const damageBadge = techniqueDamageSectionCostFromAnalysis(analysis, damagePayload, db);
-    expect(sectionAttributedEnergyRaw(analysis, 'damage')).toBe(5);
-    expect(damageBadge.energyRaw).toBe(5);
+    expect(sectionAttributedEnergyRaw(analysis, 'damage')).toBeCloseTo(5 * 0.75);
+    expect(damageBadge.energyRaw).toBeCloseTo(5 * 0.75);
+    expect(damageBadge.energyRaw + sectionAttributedEnergyRaw(analysis, 'parts')).toBeCloseTo(
+      analysis.energyRaw,
+    );
+  });
+
+  it('splits Quick or Free Action and other percentages so badges sum to energyRaw', () => {
+    const additionalDamage = part({
+      id: String(PART_IDS.ADDITIONAL_DAMAGE),
+      name: 'Additional Damage',
+      category: 'Damage',
+      base_en: 4,
+      op_1_en: 1,
+    });
+    const exploit = part({
+      id: '22',
+      name: 'Situational Exploit',
+      category: 'Decrease',
+      base_en: 0.75,
+      percentage: true,
+    });
+    const payload = [
+      {
+        id: Number(weapon.id),
+        name: weapon.name,
+        calcSection: 'attack' as const,
+      },
+      {
+        id: Number(quickFree.id),
+        name: quickFree.name,
+        calcSection: 'action' as const,
+      },
+      {
+        id: Number(additionalDamage.id),
+        name: additionalDamage.name,
+        op_1_lvl: 1,
+        calcSection: 'damage' as const,
+      },
+      {
+        id: Number(exploit.id),
+        name: exploit.name,
+        calcSection: 'parts' as const,
+      },
+    ];
+    const db = [weapon, quickFree, additionalDamage, exploit];
+    const analysis = analyzeTechniqueEnergy(payload, db);
+    const product = 1.25 * 0.75;
+    const attack = techniqueNamesEnergyRaw(analysis, new Set([weapon.name]));
+    const action = techniqueNamedBadgeCost(
+      analysis,
+      new Set([quickFree.name]),
+      payload.filter((row) => row.name === quickFree.name),
+      db,
+    );
+    const damage = techniqueDamageSectionCostFromAnalysis(
+      analysis,
+      payload.filter((row) => row.calcSection === 'damage'),
+      db,
+    );
+    const parts = techniqueManualPartsSectionCost(payload, db);
+    const full = calculateTechniqueCosts(payload, db);
+
+    expect(attack).toBeCloseTo(2.5 * product);
+    expect(action.energyRaw).toBe(0);
+    expect(damage.energyRaw).toBeCloseTo(5 * product);
+    expect(parts.energyRaw).toBe(0);
+    expect(attack + action.energyRaw + damage.energyRaw + parts.energyRaw).toBeCloseTo(
+      full.energyRaw,
+    );
+    expect(full.energyRaw).toBeCloseTo(analysis.energyRaw);
   });
 });

@@ -28,6 +28,7 @@ import {
   combineTechniqueCostSlices,
   techniqueDamageSectionCostFromAnalysis,
   techniqueManualPartsSectionCost,
+  techniqueNamedBadgeCost,
   TECHNIQUE_CALC_SECTION_BY_NAME,
   type TechniquePartPayload,
 } from '@/lib/calculators';
@@ -273,26 +274,37 @@ export function useTechniqueCreatorWorkspace({
   );
 
   const weaponCost = useMemo(() => {
-    const weaponParts = mechanicParts.filter(
-      (mp) =>
-        mp.name === 'Add Weapon to Technique' ||
-        mp.name === 'Add Weapon Attack' ||
-        mp.name === 'No Attack',
+    const names = new Set(['Add Weapon to Technique', 'Add Weapon Attack', 'No Attack']);
+    const weaponParts = mechanicParts.filter((mp) => names.has(mp.name));
+    return techniqueNamedBadgeCost(
+      energyAnalysis,
+      names,
+      weaponParts.map(toTechniquePartPayload),
+      techniqueParts,
     );
-    return calculateTechniqueCosts(weaponParts.map(toTechniquePartPayload), techniqueParts);
-  }, [mechanicParts, techniqueParts]);
+  }, [energyAnalysis, mechanicParts, techniqueParts]);
 
   const actionTypeCost = useMemo(() => {
-    const actionParts = mechanicParts.filter(
-      (mp) => mp.name === 'Quick or Free Action' || mp.name === 'Long Action',
+    const names = new Set(['Quick or Free Action', 'Long Action']);
+    const actionParts = mechanicParts.filter((mp) => names.has(mp.name));
+    return techniqueNamedBadgeCost(
+      energyAnalysis,
+      names,
+      actionParts.map(toTechniquePartPayload),
+      techniqueParts,
     );
-    return calculateTechniqueCosts(actionParts.map(toTechniquePartPayload), techniqueParts);
-  }, [mechanicParts, techniqueParts]);
+  }, [energyAnalysis, mechanicParts, techniqueParts]);
 
   const reactionCost = useMemo(() => {
-    const reactionParts = mechanicParts.filter((mp) => mp.name === 'Reaction');
-    return calculateTechniqueCosts(reactionParts.map(toTechniquePartPayload), techniqueParts);
-  }, [mechanicParts, techniqueParts]);
+    const names = new Set(['Reaction']);
+    const reactionParts = mechanicParts.filter((mp) => names.has(mp.name));
+    return techniqueNamedBadgeCost(
+      energyAnalysis,
+      names,
+      reactionParts.map(toTechniquePartPayload),
+      techniqueParts,
+    );
+  }, [energyAnalysis, mechanicParts, techniqueParts]);
 
   // Combat header badge matches Attack + Action Type + Reaction row badges (86e3jp7e9)
   const combatConfigCost = useMemo(
