@@ -21,6 +21,7 @@ import {
   SummaryItem,
   SummaryRow,
   LibraryCollapsibleSection,
+  DeleteConfirmModal,
 } from '@/components/patterns';
 import { formatSpeedString, type SpeedDisplayUnit } from '@/lib/utils/number';
 import type { Abilities } from '@/types';
@@ -186,7 +187,15 @@ function EditableNoteCard({
 
         {isEditMode && onDelete && (
           <span className="shrink-0">
-            <IconButton variant="danger" size="sm" onClick={onDelete} label="Delete note">
+            <IconButton
+              variant="danger"
+              size="sm"
+              onClick={(event) => {
+                event.stopPropagation();
+                onDelete();
+              }}
+              label="Delete note"
+            >
               <X className="h-4 w-4" />
             </IconButton>
           </span>
@@ -257,6 +266,12 @@ export function NotesTab({
   const [weightInput, setWeightInput] = useState(weight.toString());
   const [heightInput, setHeightInput] = useState(height.toString());
   const [ageInput, setAgeInput] = useState(age);
+  const [notePendingDelete, setNotePendingDelete] = useState<CharacterNote | null>(null);
+
+  const confirmDeleteNote = useCallback(() => {
+    if (notePendingDelete) onDeleteNote?.(notePendingDelete.id);
+    setNotePendingDelete(null);
+  }, [notePendingDelete, onDeleteNote]);
 
   // Get abilities for movement calculations
   const strength = abilities.strength || 0;
@@ -467,7 +482,7 @@ export function NotesTab({
                 key={note.id}
                 note={note}
                 onUpdate={onUpdateNote ? (updates) => onUpdateNote(note.id, updates) : undefined}
-                onDelete={onDeleteNote ? () => onDeleteNote(note.id) : undefined}
+                onDelete={onDeleteNote ? () => setNotePendingDelete(note) : undefined}
                 isEditMode={isEditMode}
               />
             ))}
@@ -478,6 +493,17 @@ export function NotesTab({
           </p>
         )}
       </LibraryCollapsibleSection>
+
+      {notePendingDelete ? (
+        <DeleteConfirmModal
+          isOpen
+          itemName={notePendingDelete.name}
+          itemType="note"
+          deleteContext="character"
+          onConfirm={confirmDeleteNote}
+          onClose={() => setNotePendingDelete(null)}
+        />
+      ) : null}
     </div>
   );
 }
