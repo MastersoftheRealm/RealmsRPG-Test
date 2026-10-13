@@ -34,6 +34,16 @@ describe('sheet mobile carousel snap math (TASK-907)', () => {
   });
 });
 
+describe('sheet carousel keyboard focus (86e3k0cjw)', () => {
+  it('makes the horizontal scroll region focusable with a region label', () => {
+    expect(sheetBody).toContain('data-sheet-mobile-carousel');
+    expect(sheetBody).toContain('tabIndex={0}');
+    expect(sheetBody).toContain('role="region"');
+    expect(sheetBody).toContain('aria-label="Character sheet panels"');
+    expect(sheetBody).toContain('onKeyDown={onCarouselKeyDown}');
+  });
+});
+
 describe('sheet carousel C1 chrome (TASK-907)', () => {
   it('uses a section switcher, not the tab-strip fade mask', () => {
     expect(sheetBody).toContain('data-sheet-mobile-carousel');

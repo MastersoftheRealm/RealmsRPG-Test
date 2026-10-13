@@ -8,7 +8,15 @@
 
 'use client';
 
-import { Children, useEffect, useRef, useState, type ReactNode, type RefObject } from 'react';
+import {
+  Children,
+  useEffect,
+  useRef,
+  useState,
+  type KeyboardEvent,
+  type ReactNode,
+  type RefObject,
+} from 'react';
 import type { AbilityName } from '@/types';
 import { SegmentedControl } from '@/components/patterns';
 import { cn } from '@/lib/utils';
@@ -306,6 +314,25 @@ export function CharacterSheetBody() {
   const carouselRef = useRef<HTMLDivElement>(null);
   const { activeId, selectPanel } = useSheetMobileCarousel(carouselRef);
 
+  const onCarouselKeyDown = (event: KeyboardEvent<HTMLDivElement>) => {
+    if (!isMobileSheetViewport()) return;
+    const index = SHEET_CAROUSEL_PANEL_OPTIONS.findIndex((option) => option.value === activeId);
+    if (index < 0) return;
+    if (event.key === 'ArrowRight') {
+      const next = SHEET_CAROUSEL_PANEL_OPTIONS[index + 1];
+      if (next) {
+        event.preventDefault();
+        selectPanel(next.value);
+      }
+    } else if (event.key === 'ArrowLeft') {
+      const prev = SHEET_CAROUSEL_PANEL_OPTIONS[index - 1];
+      if (prev) {
+        event.preventDefault();
+        selectPanel(prev.value);
+      }
+    }
+  };
+
   return (
     <>
       {/* Desktop: Abilities full width */}
@@ -342,6 +369,10 @@ export function CharacterSheetBody() {
           SHEET_DESKTOP_GRID_CLASSNAME,
         )}
         style={{ WebkitOverflowScrolling: 'touch' }}
+        role="region"
+        aria-label="Character sheet panels"
+        tabIndex={0}
+        onKeyDown={onCarouselKeyDown}
       >
         <section
           aria-label="Abilities & Defenses"
