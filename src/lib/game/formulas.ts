@@ -489,6 +489,22 @@ export function getArchetypeMilestoneLevels(currentLevel: number, rules?: Rules)
   return milestones;
 }
 
+/** Drop milestone picks above the character's level so a later level-up asks again. */
+export function archetypeChoicesAtOrBelowLevel(
+  choices: Record<number, 'innate' | 'feat'> | undefined,
+  level: number,
+): Record<number, 'innate' | 'feat'> {
+  const next: Record<number, 'innate' | 'feat'> = {};
+  if (!choices) return next;
+  for (const [key, value] of Object.entries(choices)) {
+    const milestone = Number(key);
+    if (!Number.isInteger(milestone) || milestone > level) continue;
+    if (value !== 'innate' && value !== 'feat') continue;
+    next[milestone] = value;
+  }
+  return next;
+}
+
 export interface ArchetypeProgression {
   archetype: ProficiencyDerivedArchetype;
   armamentProficiency: number;
