@@ -39,6 +39,7 @@ export function CraftingRulesEditor({
           step={0.01}
           min={0}
           max={2}
+          integer={false}
         />
       </FieldRow>
       <FieldRow label="Consumable time multiplier" hint="e.g. 0.25 = ¼">
@@ -48,6 +49,7 @@ export function CraftingRulesEditor({
           step={0.01}
           min={0}
           max={1}
+          integer={false}
         />
       </FieldRow>
       <FieldRow label="Crafting day (hours)">
@@ -63,6 +65,7 @@ export function CraftingRulesEditor({
           onChange={(v) => set('enhancedSellPriceMultiplier', v)}
           step={0.01}
           min={0}
+          integer={false}
         />
       </FieldRow>
       <FieldRow label="Upgrade material cost multiplier">
@@ -71,6 +74,7 @@ export function CraftingRulesEditor({
           onChange={(v) => set('upgradeMaterialCostMultiplier', v)}
           step={0.01}
           min={0}
+          integer={false}
         />
       </FieldRow>
       <FieldRow label="NPC upgrade cost multiplier">
@@ -79,6 +83,7 @@ export function CraftingRulesEditor({
           onChange={(v) => set('npcUpgradeCostMultiplier', v)}
           step={0.01}
           min={0}
+          integer={false}
         />
       </FieldRow>
       <FieldRow label="NPC service fee (with materials)">
@@ -87,6 +92,7 @@ export function CraftingRulesEditor({
           onChange={(v) => set('npcServiceFeeWithMaterials', v)}
           step={0.01}
           min={0}
+          integer={false}
         />
       </FieldRow>
       <FieldRow label="Bulk craft count (items produced)">
@@ -284,6 +290,7 @@ export function CraftingRulesEditor({
                     onChange={(v) => setSuccessesRow(i, 'failureItemWorthPercent', v)}
                     min={0}
                     max={100}
+                    integer={false}
                   />
                 </td>
                 <td className="px-1 py-1">
@@ -293,6 +300,7 @@ export function CraftingRulesEditor({
                     onChange={(v) => setSuccessesRow(i, 'successItemWorthPercent', v)}
                     min={0}
                     max={200}
+                    integer={false}
                   />
                 </td>
                 <td className="px-1 py-1">
@@ -302,6 +310,7 @@ export function CraftingRulesEditor({
                     onChange={(v) => setSuccessesRow(i, 'materialsRetainedPercent', v)}
                     min={0}
                     max={100}
+                    integer={false}
                   />
                 </td>
                 <td className="px-1 py-1">

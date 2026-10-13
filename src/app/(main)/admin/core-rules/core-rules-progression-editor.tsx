@@ -81,6 +81,7 @@ export function ProgressionEditor({
         <NumInput
           value={(data.tpPerLevelMultiplier as number) ?? 2}
           onChange={(v) => set('tpPerLevelMultiplier', v)}
+          integer={false}
         />
       </FieldRow>
       <FieldRow label="Base Health">
@@ -171,6 +172,7 @@ export function ProgressionEditor({
             <NumInput
               value={(creatureData.tpPerLevelMultiplier as number) ?? 2}
               onChange={(v) => setCreature('tpPerLevelMultiplier', v)}
+              integer={false}
             />
           </FieldRow>
           <FieldRow label="Base Feat Points">
@@ -178,12 +180,15 @@ export function ProgressionEditor({
               value={(creatureData.baseFeatPoints as number) ?? 4}
               onChange={(v) => setCreature('baseFeatPoints', v)}
               step={0.5}
+              integer={false}
             />
           </FieldRow>
           <FieldRow label="Feat Points / Level">
             <NumInput
               value={(creatureData.featPointsPerLevel as number) ?? 1}
               onChange={(v) => setCreature('featPointsPerLevel', v)}
+              step={0.5}
+              integer={false}
             />
           </FieldRow>
           <FieldRow label="Base Currency">
@@ -197,6 +202,7 @@ export function ProgressionEditor({
               value={(creatureData.currencyGrowthRate as number) ?? 1.45}
               onChange={(v) => setCreature('currencyGrowthRate', v)}
               step={0.01}
+              integer={false}
             />
           </FieldRow>
         </>
