@@ -4,6 +4,7 @@ import { useState, useRef, KeyboardEvent, ChangeEvent, type ReactNode } from 're
 import { cn } from '@/lib/utils';
 import { ValueStepper } from '@/components/patterns';
 import { resourceCurrentValueClass } from '@/lib/character/resource-value-color';
+import { sheetFieldDismissReturnsFocus } from './sheet-field-focus';
 
 /**
  * Get health color based on current health percentage
@@ -215,17 +216,17 @@ function ResourceInputEditor({
     }
 
     setIsEditing(false);
-    inputRef.current?.blur();
   };
 
   const handleKeyDown = (e: KeyboardEvent<HTMLInputElement>) => {
+    if (!sheetFieldDismissReturnsFocus(e.key)) return;
+    e.preventDefault();
     if (e.key === 'Enter') {
       applyValue();
-    } else if (e.key === 'Escape') {
-      setInputValue(String(current));
-      setIsEditing(false);
-      inputRef.current?.blur();
+      return;
     }
+    setInputValue(String(current));
+    setIsEditing(false);
   };
 
   const handleChange = (e: ChangeEvent<HTMLInputElement>) => {
