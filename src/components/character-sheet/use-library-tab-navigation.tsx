@@ -7,7 +7,12 @@
 import { useState, useMemo, useCallback, type ReactNode } from 'react';
 import { Eye, EyeOff } from 'lucide-react';
 import { IconButton } from '@/components/ui';
-import { DEFAULT_TAB_VISIBILITY, LIBRARY_TAB_DEFS, type TabType } from './library-tab-config';
+import {
+  DEFAULT_TAB_VISIBILITY,
+  LIBRARY_TAB_DEFS,
+  libraryTabHideBlocked,
+  type TabType,
+} from './library-tab-config';
 import type { AddModalType } from './character-sheet-context';
 
 type LibraryTabDef = { id: TabType; label: string; onAdd?: (() => void) | undefined };
@@ -92,12 +97,7 @@ export function useLibraryTabNavigation(options: {
     (tabId: TabType) => {
       if (!onTabVisibilityChange) return;
       const current = resolvedTabVisibility[tabId] !== false;
-      if (current) {
-        const currentlyVisibleCount = Object.values(resolvedTabVisibility).filter(
-          (v) => v !== false,
-        ).length;
-        if (currentlyVisibleCount <= 1) return;
-      }
+      if (libraryTabHideBlocked(resolvedTabVisibility, tabId)) return;
       onTabVisibilityChange({
         ...resolvedTabVisibility,
         [tabId]: !current,
@@ -124,6 +124,7 @@ export function useLibraryTabNavigation(options: {
                 e.stopPropagation();
                 handleToggleTabVisibility(tab.id);
               }}
+              disabled={libraryTabHideBlocked(resolvedTabVisibility, tab.id)}
               label={`${visibleOutsideEdit ? 'Hide' : 'Show'} ${tab.label} tab when not editing`}
               className="-mr-0.5 shrink-0"
             >
