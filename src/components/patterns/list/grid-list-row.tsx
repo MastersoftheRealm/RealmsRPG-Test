@@ -464,6 +464,7 @@ export const GridListRow = memo(function GridListRow({
               selectable={externalSelectable}
               isSelected={isSelected}
               onSelect={onSelect}
+              itemName={name}
             />
           </div>
         )}

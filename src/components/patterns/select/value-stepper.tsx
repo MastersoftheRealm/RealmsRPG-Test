@@ -153,6 +153,18 @@ const valueDisplayVariants = cva('text-center font-semibold tabular-nums', {
 
 type StepperHold = { start: () => void; stop: () => void };
 
+function stepperTitlesFromLabel(
+  label: string | undefined,
+  decrementTitle?: string,
+  incrementTitle?: string,
+): { decrementTitle: string; incrementTitle: string } {
+  const subject = label?.replace(/:\s*$/, '').trim();
+  return {
+    decrementTitle: decrementTitle ?? (subject ? `Decrease ${subject}` : 'Decrease'),
+    incrementTitle: incrementTitle ?? (subject ? `Increase ${subject}` : 'Increase'),
+  };
+}
+
 function StepperGlyphButton({
   glyph,
   onActivate,
@@ -286,9 +298,11 @@ export function ValueStepper({
   enableHoldRepeat = false,
   variant = 'default',
   className,
-  decrementTitle = 'Decrease',
-  incrementTitle = 'Increase',
+  decrementTitle,
+  incrementTitle,
 }: ValueStepperProps) {
+  const { decrementTitle: resolvedDecrementTitle, incrementTitle: resolvedIncrementTitle } =
+    stepperTitlesFromLabel(label, decrementTitle, incrementTitle);
   const canDecrement = !disabled && value > min;
   const canIncrement = !disabled && value < max;
 
@@ -363,7 +377,7 @@ export function ValueStepper({
         onActivate={handleDecrement}
         disabled={!canDecrement}
         size={size}
-        title={decrementTitle}
+        title={resolvedDecrementTitle}
         enableHoldRepeat={enableHoldRepeat}
         hold={decrementHold}
       />
@@ -379,7 +393,7 @@ export function ValueStepper({
         onActivate={handleIncrement}
         disabled={!canIncrement}
         size={size}
-        title={incrementTitle}
+        title={resolvedIncrementTitle}
         enableHoldRepeat={enableHoldRepeat}
         hold={incrementHold}
       />

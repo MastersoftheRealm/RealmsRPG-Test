@@ -126,6 +126,7 @@ export function ItemCreatorEditorAbilityProperties({
                 }
                 min={1}
                 max={6}
+                label="Ability requirement level"
               />
             </div>
           )}
