@@ -27,9 +27,9 @@ type AddableProperty = {
 /** Shown when Add Property is disabled. Not a title tooltip — disabled buttons swallow those. */
 export const ADD_PROPERTY_DISABLED_REASON = 'All properties are already on this item';
 
-/** Shields use Shield Configuration for amount/damage; codex shield properties are mechanic-only. */
+/** Shields: handedness, block, and damage use dedicated sections above Properties. */
 export const ADD_PROPERTY_SHIELD_DISABLED_REASON =
-  'Shield properties are set in the Shield Configuration section below.';
+  'Shield handedness, block, and damage are set in Shield Configuration, Shield Block, and Shield Damage above.';
 
 /** Next property Add Property can attach, or null when every selectable property is used. */
 export function findAddableItemProperty<T extends AddableProperty>(

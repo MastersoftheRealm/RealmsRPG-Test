@@ -84,7 +84,7 @@ describe('Add Property disabled reason (86e3jww88)', () => {
     expect(html).not.toContain('aria-describedby');
   });
 
-  it('explains shield properties live in Shield Configuration (86e3jpr0m)', () => {
+  it('points shield Add Property to handedness, block, and damage sections above (86e3jpr0m)', () => {
     expect(addPropertyDisabledReason(catalog, 'Shield', [])).toBe(
       ADD_PROPERTY_SHIELD_DISABLED_REASON,
     );
