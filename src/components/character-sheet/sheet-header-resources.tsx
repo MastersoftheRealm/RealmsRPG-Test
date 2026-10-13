@@ -111,6 +111,7 @@ export function SheetHeaderResources({
             max={maxEnergy}
             onChange={onEnergyChange}
             colorVariant="energy"
+            min={Number.NEGATIVE_INFINITY}
             subLabel={
               innateThreshold > 0
                 ? `Innate: ${innateThreshold}${innatePools > 1 ? ` (${innatePools}×)` : ''}`
