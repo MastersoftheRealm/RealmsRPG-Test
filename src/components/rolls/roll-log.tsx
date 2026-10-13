@@ -20,7 +20,14 @@ import { DecrementButton, IncrementButton } from '@/components/patterns';
 import { Button, LoadingState, EmptyState, Card } from '@/components/ui';
 import type { CampaignRollEntry } from '@/types/campaign-roll';
 import { formatRollTimestamp } from '@/lib/roll-timestamp';
-import { DIE_IMAGES, DIE_MAX, generateRollId, rollDie, type DieType } from '@/lib/rolls/die';
+import {
+  DIE_IMAGES,
+  DIE_MAX,
+  d20CritAdjustment,
+  generateRollId,
+  rollDie,
+  type DieType,
+} from '@/lib/rolls/die';
 import { campaignRollCharacterLabel } from '@/lib/rolls/campaign-roll-attribution';
 import { resolveRollModifierLabel } from '@/lib/rolls/modifier-label';
 
@@ -170,8 +177,6 @@ export function RollLog({ className, viewOnlyCampaignId }: RollLogProps) {
   const executeRoll = () => {
     const diceResults: DieResult[] = [];
     let total = 0;
-    let hasD20 = false;
-    let d20Value = 0;
 
     // Roll each die in pool
     Object.entries(dicePool).forEach(([type, count]) => {
@@ -186,11 +191,6 @@ export function RollLog({ className, viewOnlyCampaignId }: RollLogProps) {
           isMin: value === 1,
         });
         total += value;
-
-        if (dieType === 'd20') {
-          hasD20 = true;
-          d20Value = value;
-        }
       }
     });
 
@@ -198,19 +198,15 @@ export function RollLog({ className, viewOnlyCampaignId }: RollLogProps) {
 
     total += modifier;
 
-    // Check for critical (only when rolling exactly 1d20)
-    const isCrit = hasD20 && d20Value === 20;
-    const isCritFail = hasD20 && d20Value === 1;
-
-    // Apply crit bonuses matching game rules
-    let critMessage: string | undefined;
-    if (isCrit) {
-      total += 2;
-      critMessage = 'Natural 20! +2 to the total!';
-    } else if (isCritFail) {
-      total -= 2;
-      critMessage = 'Natural 1! -2 from the total!';
-    }
+    // Nat 20 / nat 1 ±2 only for a single d20, not a mixed or multi-die pool.
+    const crit = d20CritAdjustment(diceResults);
+    total += crit.adjustment;
+    const { isCrit, isCritFail } = crit;
+    const critMessage = isCrit
+      ? 'Natural 20! +2 to the total!'
+      : isCritFail
+        ? 'Natural 1! -2 from the total!'
+        : undefined;
 
     const newRoll: RollEntry = {
       id: generateRollId(),
