@@ -43,7 +43,9 @@ const OTHER = { uid: 'other-user', email: 'other@example.com' };
 const CHAR_ID = '11111111-1111-1111-1111-111111111111';
 
 function createPortraitSupabase(owned: boolean) {
+  const remove = vi.fn().mockResolvedValue({ error: null });
   return {
+    remove,
     from: vi.fn((table: string) => {
       if (table !== 'characters') throw new Error(`Unexpected table: ${table}`);
       return {
@@ -62,7 +64,7 @@ function createPortraitSupabase(owned: boolean) {
     storage: {
       from: vi.fn(() => ({
         list: vi.fn().mockResolvedValue({ data: [], error: null }),
-        remove: vi.fn().mockResolvedValue({ error: null }),
+        remove,
         upload: vi.fn().mockResolvedValue({ error: null }),
         getPublicUrl: vi.fn((path: string) => ({
           data: { publicUrl: `https://cdn.test/${path}` },
@@ -128,5 +130,20 @@ describe('POST /api/upload/portrait', () => {
     const body = await readJson<{ url: string }>(response);
     expect(body.url).toContain(OWNER.uid);
     expect(body.url).toContain(CHAR_ID);
+  });
+
+  it('removes other portrait extensions before writing the new png', async () => {
+    mockGetSession.mockResolvedValue({ user: OWNER, error: null });
+    const supabase = createPortraitSupabase(true);
+    mockCreateClient.mockResolvedValue(supabase as never);
+
+    const response = await POST(makePostRequest(CHAR_ID));
+
+    expect(response.status).toBe(200);
+    expect(supabase.remove).toHaveBeenCalledWith(
+      expect.arrayContaining([`${OWNER.uid}/${CHAR_ID}.jpg`, `${OWNER.uid}/${CHAR_ID}.webp`]),
+    );
+    const removed = supabase.remove.mock.calls[0]?.[0] as string[];
+    expect(removed).not.toContain(`${OWNER.uid}/${CHAR_ID}.png`);
   });
 });

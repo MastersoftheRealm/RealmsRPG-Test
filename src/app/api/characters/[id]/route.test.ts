@@ -153,10 +153,12 @@ function createMockSupabase(characterRow: CharacterRow | null) {
   };
 
   const update = vi.fn((payload: Record<string, unknown>) => buildUpdateChain(payload));
+  const removePortrait = vi.fn().mockResolvedValue({ error: null });
 
   return {
     lastUpdate,
     update,
+    removePortrait,
     from: vi.fn((table: string) => {
       if (table === 'characters') {
         return {
@@ -182,7 +184,7 @@ function createMockSupabase(characterRow: CharacterRow | null) {
     storage: {
       from: vi.fn(() => ({
         list: vi.fn().mockResolvedValue({ data: [], error: null }),
-        remove: vi.fn().mockResolvedValue({ error: null }),
+        remove: removePortrait,
       })),
     },
   };
@@ -473,6 +475,52 @@ describe('PATCH /api/characters/[id]', () => {
     expect(body.ok).toBe(true);
     expect(body.updatedAt).not.toBe(row.updated_at);
     expect(supabase.lastUpdate.payload?.updated_at).toBeTruthy();
+  });
+
+  it('deletes the stored portrait when the sheet stops referencing it', async () => {
+    const row = makeCharacterRow('char-owned', OWNER.uid, {
+      portrait: `https://cdn.test/storage/v1/object/public/portraits/${OWNER.uid}/char-owned.png`,
+    });
+    mockGetSession.mockResolvedValue({ user: OWNER, error: null });
+    const supabase = createMockSupabase(row);
+    mockCreateClient.mockResolvedValue(supabase as never);
+    mockValidateJson.mockResolvedValue({
+      success: true,
+      data: {
+        portrait: 'https://cdn.test/storage/v1/object/public/realms-images/library.png',
+      },
+    } as never);
+
+    const response = await PATCH(
+      makePatchRequest('char-owned', {
+        portrait: 'https://cdn.test/storage/v1/object/public/realms-images/library.png',
+      }),
+      { params: Promise.resolve({ id: 'char-owned' }) },
+    );
+
+    expect(response.status).toBe(200);
+    expect(supabase.removePortrait).toHaveBeenCalledWith(
+      expect.arrayContaining([`${OWNER.uid}/char-owned.png`]),
+    );
+  });
+
+  it('keeps the stored portrait when the saved URL still points at it', async () => {
+    const stored = `https://cdn.test/storage/v1/object/public/portraits/${OWNER.uid}/char-owned.png`;
+    const row = makeCharacterRow('char-owned', OWNER.uid, { portrait: stored });
+    mockGetSession.mockResolvedValue({ user: OWNER, error: null });
+    const supabase = createMockSupabase(row);
+    mockCreateClient.mockResolvedValue(supabase as never);
+    mockValidateJson.mockResolvedValue({
+      success: true,
+      data: { portrait: stored },
+    } as never);
+
+    const response = await PATCH(makePatchRequest('char-owned', { portrait: stored }), {
+      params: Promise.resolve({ id: 'char-owned' }),
+    });
+
+    expect(response.status).toBe(200);
+    expect(supabase.removePortrait).not.toHaveBeenCalled();
   });
 });
 

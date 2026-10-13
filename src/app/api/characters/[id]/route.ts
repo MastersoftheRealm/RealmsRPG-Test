@@ -20,6 +20,10 @@ import { buildRateLimitKey, resolveClientIp, standardLimiter } from '@/lib/rate-
 import { getOwnerLibraryAndEnrichmentForView } from '@/lib/character-view-enrichment-server';
 import { getCharacterListColumns, resolveCharacterVisibility } from '@/lib/character-list-columns';
 import { fetchArchetypeNameMap } from '@/lib/game/archetype-display';
+import {
+  characterPortraitStoragePaths,
+  portraitUrlUsesCharacterStorage,
+} from '@/lib/portrait-storage';
 import type { Character } from '@/types';
 
 type CharRow = {
@@ -214,6 +218,24 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
       typeof (updated as { updated_at?: string | null | undefined }).updated_at === 'string'
         ? (updated as { updated_at: string }).updated_at
         : now;
+
+    if ('portrait' in cleanedData) {
+      const nextPortrait = cleanedData.portrait;
+      const nextUrl = typeof nextPortrait === 'string' ? nextPortrait : '';
+      if (!portraitUrlUsesCharacterStorage(nextUrl, user.uid, id.trim())) {
+        try {
+          const { error: removeErr } = await supabase.storage
+            .from('portraits')
+            .remove(characterPortraitStoragePaths(user.uid, id.trim()));
+          if (removeErr) {
+            console.warn('[API] Could not delete portrait from storage:', removeErr);
+          }
+        } catch (storageErr) {
+          console.warn('[API] Could not delete portrait from storage:', storageErr);
+        }
+      }
+    }
+
     return NextResponse.json({ ok: true, updatedAt: savedUpdatedAt });
   } catch (err) {
     console.error('[API Error] PATCH /api/characters/[id]:', err);
