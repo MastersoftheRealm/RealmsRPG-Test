@@ -19,6 +19,7 @@ import {
 import { GuidedCreatorPageShell } from './guided-creator-page-shell';
 import { CharacterPreviewPanel } from './character-preview-panel';
 import { GUIDED_CREATOR_COPY } from '@/lib/constants/site-copy';
+import { guidedChapterProgressTitle } from '@/lib/guided-creator/chapter-progress-label';
 import {
   PathStep,
   SpeciesStep,
@@ -108,7 +109,11 @@ function ChapterRail({ className }: { className?: string | undefined }) {
                 >
                   {isComplete && !isActive ? '✓' : index + 1}
                 </span>
-                <span className="font-nunito whitespace-nowrap">{chapter.title}</span>
+                <span className="font-nunito whitespace-nowrap">
+                  {isActive
+                    ? (guidedChapterProgressTitle(currentSubStep, chapter) ?? chapter.title)
+                    : chapter.title}
+                </span>
               </button>
             </li>
           );
@@ -130,8 +135,9 @@ export function GuidedCreatorShell() {
 
   const progressLabel = useMemo(() => {
     if (!activeChapter) return shellCopy.stepProgressFallback;
-    return `Chapter ${chapterNumber} of ${GUIDED_CHAPTERS.length} · ${activeChapter.title}`;
-  }, [activeChapter, chapterNumber]);
+    const title = guidedChapterProgressTitle(currentSubStep, activeChapter) ?? activeChapter.title;
+    return `Chapter ${chapterNumber} of ${GUIDED_CHAPTERS.length} · ${title}`;
+  }, [activeChapter, chapterNumber, currentSubStep]);
 
   const isRevealStep = currentSubStep === 'reveal';
 
