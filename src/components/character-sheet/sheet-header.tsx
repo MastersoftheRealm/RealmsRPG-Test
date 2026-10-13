@@ -27,7 +27,11 @@ import {
   type TempModifierScalarKey,
 } from '@/lib/character/temp-modifiers';
 import type { AllowUndefinedOptionals } from '@/lib/utils/exact-optional';
-import { formatSpeedForDisplay } from '@/lib/utils/number';
+import {
+  formatSpeedForDisplay,
+  formatSpeedTempModifierDelta,
+  SPEED_TEMP_MODIFIER_STEP_SPACES,
+} from '@/lib/utils/number';
 import { useCharacterSheetOptional } from './character-sheet-context';
 import { getEquippedArmorQuickRef } from './library-list-helpers';
 import type { Character, CharacterTempModifiers, Item } from '@/types';
@@ -233,6 +237,8 @@ export function SheetHeader({
               valueSuffix={speedDisplay.suffix}
               isTempModifierMode={isTempModifierMode}
               tempDelta={speedTemp}
+              formatTempDelta={formatSpeedTempModifierDelta}
+              tempStep={SPEED_TEMP_MODIFIER_STEP_SPACES}
               onTempDeltaChange={
                 onTempModifiersChange ? (d) => setScalarTemp('speed', d) : undefined
               }
