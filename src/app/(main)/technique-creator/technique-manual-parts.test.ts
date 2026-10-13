@@ -14,8 +14,9 @@ const editorSource = readFileSync(
 );
 
 const addWeapon = {
-  id: 7,
+  id: '7',
   name: 'Add Weapon to Technique',
+  description: 'Add a weapon attack to this technique.',
   mechanic: true,
   base_en: 2,
   base_tp: 0,
@@ -23,8 +24,9 @@ const addWeapon = {
 } as TechniquePart;
 
 const potency = {
-  id: 4,
+  id: '4',
   name: 'Potency Increase',
+  description: 'Increase potency.',
   mechanic: false,
   base_en: 1,
   base_tp: 0,
