@@ -20,10 +20,7 @@ import {
   PropertyCard,
 } from './item-creator-helpers';
 import type { ItemSectionCosts } from './item-creator-cost-derivation';
-import {
-  ADD_PROPERTY_DISABLED_REASON,
-  findAddableItemProperty,
-} from './item-creator-property-options';
+import { addPropertyDisabledReason } from './item-creator-property-options';
 
 type ItemCreatorEditorAbilityPropertiesProps = {
   armamentType: ArmamentType;
@@ -60,12 +57,13 @@ export function ItemCreatorEditorAbilityProperties({
   itemSectionCosts,
 }: ItemCreatorEditorAbilityPropertiesProps) {
   const addPropertyReasonId = useId();
-  const canAddProperty =
-    findAddableItemProperty(
-      itemProperties,
-      armamentType,
-      selectedProperties.map((selected) => selected.property.id),
-    ) != null;
+  const selectedPropertyIds = selectedProperties.map((selected) => selected.property.id);
+  const addPropertyDisabledMessage = addPropertyDisabledReason(
+    itemProperties,
+    armamentType,
+    selectedPropertyIds,
+  );
+  const canAddProperty = addPropertyDisabledMessage == null;
 
   return (
     <>
@@ -142,7 +140,7 @@ export function ItemCreatorEditorAbilityProperties({
               id={addPropertyReasonId}
               className="max-w-full min-w-0 text-sm font-medium whitespace-normal text-text-secondary"
             >
-              {ADD_PROPERTY_DISABLED_REASON}
+              {addPropertyDisabledMessage}
             </span>
           )
         }

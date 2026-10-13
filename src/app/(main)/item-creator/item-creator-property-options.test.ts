@@ -1,5 +1,10 @@
 import { describe, expect, it } from 'vitest';
-import { findAddableItemProperty, propertyOptionsForCard } from './item-creator-property-options';
+import {
+  ADD_PROPERTY_SHIELD_DISABLED_REASON,
+  addPropertyDisabledReason,
+  findAddableItemProperty,
+  propertyOptionsForCard,
+} from './item-creator-property-options';
 
 const properties = [
   { id: 1, name: 'Critical Range' },
@@ -37,5 +42,14 @@ describe('Add Property stops when every property is used (86e3jww88)', () => {
   it('returns null instead of repeating Critical Range once all properties are used', () => {
     expect(findAddableItemProperty(catalog, 'Weapon', [9001, '9002'])).toBeNull();
     expect(findAddableItemProperty(catalog, 'Weapon', ['9001', 9002])).toBeNull();
+  });
+});
+
+describe('Add Property on shields (86e3jpr0m)', () => {
+  it('always disables with shield-specific copy', () => {
+    const catalog = [{ id: 39, name: 'Shield Amount', type: 'shield' }];
+    expect(addPropertyDisabledReason(catalog, 'Shield', [])).toBe(
+      ADD_PROPERTY_SHIELD_DISABLED_REASON,
+    );
   });
 });

@@ -5,6 +5,8 @@ import { ItemCreatorEditorAbilityProperties } from './item-creator-editor-abilit
 import type { ItemSectionCosts } from './item-creator-cost-derivation';
 import {
   ADD_PROPERTY_DISABLED_REASON,
+  ADD_PROPERTY_SHIELD_DISABLED_REASON,
+  addPropertyDisabledReason,
   findAddableItemProperty,
 } from './item-creator-property-options';
 
@@ -27,14 +29,17 @@ const itemSectionCosts: ItemSectionCosts = {
   abilityReq: zero,
 };
 
-function renderProperties(selectedIds: Array<string | number>) {
+function renderProperties(
+  selectedIds: Array<string | number>,
+  armamentType: 'Weapon' | 'Shield' = 'Weapon',
+) {
   const selectedProperties = catalog
     .filter((property) => selectedIds.map(String).includes(String(property.id)))
     .map((property) => ({ property, op_1_lvl: 0 }));
 
   return renderToStaticMarkup(
     <ItemCreatorEditorAbilityProperties
-      armamentType="Weapon"
+      armamentType={armamentType}
       abilityRequirement={null}
       onAbilityRequirementChange={() => {}}
       abilityReqSummary=""
@@ -77,5 +82,16 @@ describe('Add Property disabled reason (86e3jww88)', () => {
     expect(html).toContain('Add Property');
     expect(html).not.toContain(ADD_PROPERTY_DISABLED_REASON);
     expect(html).not.toContain('aria-describedby');
+  });
+
+  it('explains shield properties live in Shield Configuration (86e3jpr0m)', () => {
+    expect(addPropertyDisabledReason(catalog, 'Shield', [])).toBe(
+      ADD_PROPERTY_SHIELD_DISABLED_REASON,
+    );
+
+    const html = renderProperties([], 'Shield');
+    const addButton = buttonHtml(html, 'Add Property');
+    expect(addButton).toContain('disabled');
+    expect(html).toContain(ADD_PROPERTY_SHIELD_DISABLED_REASON);
   });
 });
