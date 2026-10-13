@@ -6,7 +6,7 @@
 
 'use client';
 
-import { useState, Suspense } from 'react';
+import { useId, useState, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { useForm } from 'react-hook-form';
@@ -31,6 +31,8 @@ function RegisterContent() {
   const [needsEmailConfirm, setNeedsEmailConfirm] = useState(false);
   const [signupEmail, setSignupEmail] = useState<string>('');
   const [resendStatus, setResendStatus] = useState<'idle' | 'sending' | 'sent'>('idle');
+  const acceptTermsErrorId = `${useId()}-accept-terms-error`;
+
   const {
     captchaReady,
     captchaBlockMessage,
@@ -250,6 +252,8 @@ function RegisterContent() {
             type="checkbox"
             id="acceptTerms"
             className="h-4 w-4 rounded border-border-light bg-surface text-primary-fg focus:ring-primary-outline-border dark:border-border"
+            aria-invalid={errors.acceptTerms ? 'true' : undefined}
+            aria-describedby={errors.acceptTerms ? acceptTermsErrorId : undefined}
             {...register('acceptTerms')}
           />
           <label htmlFor="acceptTerms" className="text-sm text-text-secondary">
@@ -264,7 +268,9 @@ function RegisterContent() {
           </label>
         </div>
         {errors.acceptTerms ? (
-          <p className="-mt-3 text-sm text-red-400">{errors.acceptTerms.message}</p>
+          <p id={acceptTermsErrorId} role="alert" className="-mt-3 text-sm text-danger-fg">
+            {errors.acceptTerms.message}
+          </p>
         ) : null}
 
         <AuthTurnstile resetKey={captchaResetKey} onToken={setCaptchaToken} />
