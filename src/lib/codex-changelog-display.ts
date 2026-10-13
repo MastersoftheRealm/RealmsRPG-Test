@@ -76,8 +76,8 @@ export function diffCodexChangedFields(
   beforeData: Record<string, unknown> | null,
   afterData: Record<string, unknown> | null,
 ): CodexFieldChange[] {
-  const before = beforeData ?? {};
-  const after = afterData ?? {};
+  const before = unwrapArchetypeChangelogData(beforeData) ?? {};
+  const after = unwrapArchetypeChangelogData(afterData) ?? {};
   const keys = new Set<string>([...Object.keys(before), ...Object.keys(after)]);
   const changed: CodexFieldChange[] = [];
 
@@ -121,6 +121,26 @@ export function summarizeChangedFieldNames(changes: CodexFieldChange[]): string 
   return `${names.slice(0, 3).join(', ')} +${names.length - 3} more`;
 }
 
+/**
+ * Archetype saves log `{ archetype, levels }`. Changelog identity and diffs
+ * use the archetype row plus `levels`, not one nested blob.
+ */
+function unwrapArchetypeChangelogData(
+  data: Record<string, unknown> | null | undefined,
+): Record<string, unknown> | null {
+  if (!data) return null;
+  const archetype = data.archetype;
+  if (
+    archetype &&
+    typeof archetype === 'object' &&
+    !Array.isArray(archetype) &&
+    Array.isArray(data.levels)
+  ) {
+    return { ...(archetype as Record<string, unknown>), levels: data.levels };
+  }
+  return data;
+}
+
 function firstString(data: Record<string, unknown>, keys: readonly string[]): string | null {
   for (const key of keys) {
     const value = data[key];
@@ -133,9 +153,10 @@ function firstString(data: Record<string, unknown>, keys: readonly string[]): st
 export function pickCodexChangelogIdentity(
   data: Record<string, unknown> | null | undefined,
 ): Record<string, unknown> | null {
-  if (!data) return null;
-  const name = firstString(data, IDENTITY_NAME_KEYS);
-  const type = firstString(data, IDENTITY_TYPE_KEYS);
+  const flat = unwrapArchetypeChangelogData(data);
+  if (!flat) return null;
+  const name = firstString(flat, IDENTITY_NAME_KEYS);
+  const type = firstString(flat, IDENTITY_TYPE_KEYS);
   const identity: Record<string, unknown> = {};
   if (name) identity.name = name;
   if (type) identity.type = type;
@@ -146,10 +167,10 @@ export function readCodexChangelogEntityName(
   beforeData: Record<string, unknown> | null | undefined,
   afterData: Record<string, unknown> | null | undefined,
 ): string {
+  const after = unwrapArchetypeChangelogData(afterData) ?? {};
+  const before = unwrapArchetypeChangelogData(beforeData) ?? {};
   return (
-    firstString(afterData ?? {}, IDENTITY_NAME_KEYS) ??
-    firstString(beforeData ?? {}, IDENTITY_NAME_KEYS) ??
-    '(unnamed)'
+    firstString(after, IDENTITY_NAME_KEYS) ?? firstString(before, IDENTITY_NAME_KEYS) ?? '(unnamed)'
   );
 }
 
@@ -191,23 +212,25 @@ export function buildCodexChangelogPersistPayload(
   after_data: Record<string, unknown> | null;
   changed_fields: CodexFieldChange[];
 } {
+  const before = unwrapArchetypeChangelogData(beforeData);
+  const after = unwrapArchetypeChangelogData(afterData);
   if (operation === 'create') {
     return {
       before_data: null,
-      after_data: pickCodexChangelogIdentity(afterData),
+      after_data: pickCodexChangelogIdentity(after),
       changed_fields: [],
     };
   }
   if (operation === 'delete') {
     return {
-      before_data: beforeData,
+      before_data: before,
       after_data: null,
-      changed_fields: diffCodexChangedFields(beforeData, null),
+      changed_fields: diffCodexChangedFields(before, null),
     };
   }
   return {
-    before_data: beforeData,
-    after_data: afterData,
-    changed_fields: diffCodexChangedFields(beforeData, afterData),
+    before_data: before,
+    after_data: after,
+    changed_fields: diffCodexChangedFields(before, after),
   };
 }
