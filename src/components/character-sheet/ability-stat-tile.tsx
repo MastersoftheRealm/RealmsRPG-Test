@@ -8,6 +8,8 @@ import { getAbilityHelp } from '../../../public/tooltip-text';
 import {
   applyTempModifier,
   getAbilityTempModifier,
+  TEMP_MODIFIER_MAX,
+  TEMP_MODIFIER_MIN,
   tempModifierValueClass,
 } from '@/lib/character/temp-modifiers';
 import type { Abilities, AbilityName, CharacterTempModifiers } from '@/types';
@@ -123,6 +125,7 @@ export function AbilityStatTile({
                 abilities: { [ability]: abilityTemp - 1 },
               })
             }
+            disabled={abilityTemp <= TEMP_MODIFIER_MIN}
             size="sm"
             title={`Decrease ${info.name} Temp Modifier`}
           />
@@ -140,6 +143,7 @@ export function AbilityStatTile({
                 abilities: { [ability]: abilityTemp + 1 },
               })
             }
+            disabled={abilityTemp >= TEMP_MODIFIER_MAX}
             size="sm"
             title={`Increase ${info.name} Temp Modifier`}
           />

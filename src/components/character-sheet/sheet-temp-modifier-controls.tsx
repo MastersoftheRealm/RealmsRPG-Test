@@ -3,7 +3,12 @@
 import { useState } from 'react';
 import { cn } from '@/lib/utils';
 import { DecrementButton, IncrementButton, TempModifierToggle } from '@/components/patterns';
-import { tempModifierTintFromDelta, tempModifierValueClass } from '@/lib/character/temp-modifiers';
+import {
+  TEMP_MODIFIER_MAX,
+  TEMP_MODIFIER_MIN,
+  tempModifierTintFromDelta,
+  tempModifierValueClass,
+} from '@/lib/character/temp-modifiers';
 
 /** Local open/close for a header Temp control. Resets when sheet Temp mode ends. */
 export function useTempModifierActive(
@@ -51,6 +56,7 @@ export function TempModifierStepperRow({
     <div className={cn('flex items-center gap-1', className)}>
       <DecrementButton
         size="sm"
+        disabled={tempDelta <= TEMP_MODIFIER_MIN}
         onClick={() => onTempDeltaChange(tempDelta - tempStep)}
         title={`Decrease ${label} Temp Modifier`}
       />
@@ -64,6 +70,7 @@ export function TempModifierStepperRow({
       </span>
       <IncrementButton
         size="sm"
+        disabled={tempDelta >= TEMP_MODIFIER_MAX}
         onClick={() => onTempDeltaChange(tempDelta + tempStep)}
         title={`Increase ${label} Temp Modifier`}
       />

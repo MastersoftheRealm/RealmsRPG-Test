@@ -82,8 +82,10 @@ export interface SkillRowProps {
   editControlsPlacement?: 'column' | 'inline' | undefined;
   /** Callback when skill value changes */
   onValueChange?: ((delta: number) => void) | undefined;
-  /** Minimum value (usually 0) */
+  /** Minimum value (usually 0). Temp mode passes the temp floor. */
   minValue?: number | undefined;
+  /** When set, the stepper uses minValue and this max instead of spend-mode floors. */
+  maxValue?: number | undefined;
   /** Can the value be increased? (check for available points) */
   canIncrease?: boolean | undefined;
 
@@ -164,6 +166,7 @@ export const SkillRow = memo(function SkillRow({
   editControlsPlacement = 'column',
   onValueChange,
   minValue = 0,
+  maxValue,
   canIncrease = true,
   onRemove,
   showRollButton = false,
@@ -195,8 +198,8 @@ export const SkillRow = memo(function SkillRow({
       <ValueStepper
         value={value}
         onChange={(newValue) => onValueChange(newValue - value)}
-        min={proficient ? -Infinity : minValue}
-        max={canIncrease ? undefined : value}
+        min={maxValue !== undefined ? minValue : proficient ? -Infinity : minValue}
+        max={maxValue !== undefined ? maxValue : canIncrease ? undefined : value}
         size="sm"
         variant="compact"
         decrementTitle={`Decrease ${name}`}
@@ -440,8 +443,8 @@ export const SkillRow = memo(function SkillRow({
                   <ValueStepper
                     value={value}
                     onChange={(newValue) => onValueChange(newValue - value)}
-                    min={isSpeciesSkill ? 1 : minValue}
-                    max={canIncrease ? undefined : value}
+                    min={maxValue !== undefined ? minValue : isSpeciesSkill ? 1 : minValue}
+                    max={maxValue !== undefined ? maxValue : canIncrease ? undefined : value}
                     size="sm"
                   />
                 )}
@@ -516,8 +519,8 @@ export const SkillRow = memo(function SkillRow({
                   onChange={(newValue) =>
                     onValueChange(newValue - (isSpeciesSkill ? Math.max(1, value) : value))
                   }
-                  min={isSpeciesSkill ? 1 : minValue}
-                  max={canIncrease ? undefined : value}
+                  min={maxValue !== undefined ? minValue : isSpeciesSkill ? 1 : minValue}
+                  max={maxValue !== undefined ? maxValue : canIncrease ? undefined : value}
                   size="xs"
                 />
               )}
