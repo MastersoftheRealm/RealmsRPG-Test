@@ -440,7 +440,7 @@ export function useItemCreatorWorkspace({
       setName('');
       setDescription('');
       setSelectedProperties([]);
-      setDamage({ amount: 1, size: 6, type: 'slashing' });
+      setDamage({ amount: 1, size: 4, type: 'slashing' });
       setImageId(null);
       setImageUrl(null);
       acceptDraft();
@@ -458,7 +458,7 @@ export function useItemCreatorWorkspace({
     setDescription('');
     setArmamentType('Weapon');
     setSelectedProperties([]);
-    setDamage({ amount: 1, size: 6, type: 'slashing' });
+    setDamage({ amount: 1, size: 4, type: 'slashing' });
     setIsTwoHanded(false);
     setRangeTypeState('melee');
     setRangeSpaces(0);
