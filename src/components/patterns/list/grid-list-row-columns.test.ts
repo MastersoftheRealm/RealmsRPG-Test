@@ -2,6 +2,7 @@ import { createElement } from 'react';
 import { describe, expect, it } from 'vitest';
 import {
   collapsedColumnOverflowClass,
+  columnDisplayLabel,
   columnHasDisplayValue,
   columnHasInteractiveValue,
   columnsAlreadyShowTrainingPoints,
@@ -9,6 +10,12 @@ import {
   columnsWithoutDescriptionPreview,
   dataColumnTrackCount,
 } from './grid-list-row-columns';
+
+describe('columnDisplayLabel (86e3jyh53)', () => {
+  it('maps creature feat typeLabel key to Type on mobile summary', () => {
+    expect(columnDisplayLabel({ key: 'typeLabel', value: 'Creature' })).toBe('Type');
+  });
+});
 
 describe('columnsAlreadyShowTrainingPoints', () => {
   it('detects TP / Training Points column keys and labels', () => {
