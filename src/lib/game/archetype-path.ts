@@ -433,6 +433,22 @@ export function pathHiddenFromPlayerPicker(pathData: ArchetypePathData | undefin
   return pathLevel1HasNonPickerContent(pathData?.level1) && !pathHasPlayerVisibleLevel1(pathData);
 }
 
+const PUBLIC_LISTING_NOTES_WARNING =
+  'Level 1 has notes, remove lists, or Unarmed Prowess only; no add recommendations. ' +
+  'This path will not appear in the character creator picker or public codex path list until you add level 1 feats, skills, powers, innate powers, techniques, armaments, or equipment.';
+
+const PUBLIC_LISTING_EMPTY_WARNING =
+  'This archetype will not be listed in the public Codex until it has Level 1 recommendations.';
+
+/** Warning when a save will stay off the public Codex archetype list. Null when Level 1 adds are present. */
+export function publicArchetypeListingWarning(
+  pathData: ArchetypePathData | undefined,
+): string | null {
+  if (pathHasPlayerVisibleLevel1(pathData)) return null;
+  if (pathHiddenFromPlayerPicker(pathData)) return PUBLIC_LISTING_NOTES_WARNING;
+  return PUBLIC_LISTING_EMPTY_WARNING;
+}
+
 /** Entity families a path can recommend (ADR-0014). */
 export type PathRecommendationKind =
   | 'feats'
