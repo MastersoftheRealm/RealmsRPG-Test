@@ -16,6 +16,30 @@ export function librarySectionExpandedForCount(
   return expanded;
 }
 
+export type LibrarySectionSession = { expanded: boolean; userToggled: boolean };
+
+const librarySectionSessions = new Map<string, LibrarySectionSession>();
+
+export function readLibrarySectionSession(sessionKey: string): LibrarySectionSession | undefined {
+  return librarySectionSessions.get(sessionKey);
+}
+
+export function rememberLibrarySectionSession(
+  sessionKey: string,
+  session: LibrarySectionSession,
+): void {
+  librarySectionSessions.set(sessionKey, session);
+}
+
+/** Remount keeps a collapse from earlier in this page session. Otherwise open when there are rows. */
+export function librarySectionStateForMount(
+  itemCount: number,
+  stored: LibrarySectionSession | undefined,
+): LibrarySectionSession {
+  if (stored) return stored;
+  return { expanded: itemCount > 0, userToggled: false };
+}
+
 /**
  * Session UI collapse for character sheet library sections.
  * Default expanded when itemCount > 0; expand after add when collapsible.
@@ -24,27 +48,52 @@ export function useLibrarySectionCollapse(
   collapsible: boolean,
   itemCount: number,
   onAdd?: () => void,
+  sessionKey?: string,
 ) {
-  const [expanded, setExpanded] = useState(() => itemCount > 0);
-  const userToggledRef = useRef(false);
+  const [expanded, setExpanded] = useState(() => {
+    const stored = sessionKey ? readLibrarySectionSession(sessionKey) : undefined;
+    return librarySectionStateForMount(itemCount, stored).expanded;
+  });
+  const userToggledRef = useRef(
+    sessionKey ? (readLibrarySectionSession(sessionKey)?.userToggled ?? false) : false,
+  );
 
   useEffect(() => {
-    setExpanded((current) =>
-      librarySectionExpandedForCount(current, userToggledRef.current, itemCount),
-    );
-  }, [itemCount]);
+    setExpanded((current) => {
+      const next = librarySectionExpandedForCount(current, userToggledRef.current, itemCount);
+      if (sessionKey) {
+        rememberLibrarySectionSession(sessionKey, {
+          expanded: next,
+          userToggled: userToggledRef.current,
+        });
+      }
+      return next;
+    });
+  }, [itemCount, sessionKey]);
 
-  const onExpandedChange = useCallback((next: boolean) => {
-    userToggledRef.current = true;
-    setExpanded(next);
-  }, []);
+  const onExpandedChange = useCallback(
+    (next: boolean) => {
+      userToggledRef.current = true;
+      setExpanded(next);
+      if (sessionKey) {
+        rememberLibrarySectionSession(sessionKey, { expanded: next, userToggled: true });
+      }
+    },
+    [sessionKey],
+  );
 
   const onAddWithExpand = useCallback(() => {
     onAdd?.();
     if (collapsible) {
       setExpanded(true);
+      if (sessionKey) {
+        rememberLibrarySectionSession(sessionKey, {
+          expanded: true,
+          userToggled: userToggledRef.current,
+        });
+      }
     }
-  }, [onAdd, collapsible]);
+  }, [onAdd, collapsible, sessionKey]);
 
   const isContentVisible = !collapsible || expanded;
 

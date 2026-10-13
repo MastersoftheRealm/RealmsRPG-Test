@@ -9,8 +9,9 @@ export function useEntityListSectionCollapse(
   collapsible: boolean | undefined,
   itemCount: number,
   onAdd?: () => void,
+  sessionKey?: string,
 ) {
-  return useLibrarySectionCollapse(collapsible ?? false, itemCount, onAdd);
+  return useLibrarySectionCollapse(collapsible ?? false, itemCount, onAdd, sessionKey);
 }
 
 export function formatRecoveryAbbrev(recovery: string | undefined): string {
