@@ -26,6 +26,7 @@ import {
   useCodexSkills,
   useCodexFeats,
   useTraits,
+  useEquipment,
   useAdmin,
   useLoadModalLibrary,
   useOfficialLibrary,
@@ -71,6 +72,7 @@ import { mergeCreatureFeatsOnAdd } from './creature-feat-utils';
 import {
   buildArmamentLibraryList,
   buildArmamentSelectableItems,
+  buildCreatureEquipmentLibraryList,
   buildEmpoweredTechniqueLibraryList,
   buildEmpoweredTechniqueSelectableItems,
   buildPowerSelectableItems,
@@ -178,6 +180,7 @@ export function useCreatureCreatorWorkspace() {
     enabled: libraryQueriesEnabled,
     includeUnlisted: isAdmin,
   });
+  const { data: codexEquipment = [] } = useEquipment({ enabled: showArmamentModal });
 
   const powerList = useMemo(
     () => mergeLibraryBySource(librarySource, publicPowers, userPowers) as UserPower[],
@@ -196,16 +199,21 @@ export function useCreatureCreatorWorkspace() {
       ),
     [librarySource, userEmpoweredTechniques, publicEmpoweredTechniques],
   );
-  const armamentList = useMemo(
-    () =>
-      buildArmamentLibraryList(
+  const armamentList = useMemo(() => {
+    const selectedIds = selectedArmamentIdsFromCreature(creature);
+    if (inventoryTab === 'equipment') {
+      return buildCreatureEquipmentLibraryList(
         librarySource,
         userItems,
         publicItems,
-        selectedArmamentIdsFromCreature(creature),
-      ).filter((item) => normalizeCreatureInventoryType(item.type) === inventoryTab),
-    [userItems, publicItems, librarySource, creature, inventoryTab],
-  );
+        codexEquipment,
+        selectedIds,
+      );
+    }
+    return buildArmamentLibraryList(librarySource, userItems, publicItems, selectedIds).filter(
+      (item) => normalizeCreatureInventoryType(item.type) === inventoryTab,
+    );
+  }, [userItems, publicItems, codexEquipment, librarySource, creature, inventoryTab]);
 
   const powerSelectableItems = useMemo(
     () => buildPowerSelectableItems(powerList, powerPartsDb),
