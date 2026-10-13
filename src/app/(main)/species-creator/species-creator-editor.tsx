@@ -520,6 +520,15 @@ export function TraitListModal({
   const canAddCharacteristic = characteristicRemaining > 0;
   const speciesLimitId = useId();
   const ancestryLimitId = useId();
+  const flawLimitId = useId();
+
+  const flawNextSelectedIds = useMemo(() => {
+    if (mode !== 'flaw') return undefined;
+    return (currentIds: string[], id: string) => {
+      if (currentIds.length >= flawRemaining) return currentIds;
+      return [...currentIds, id];
+    };
+  }, [mode, flawRemaining]);
 
   const description =
     mode === 'species_ancestry' ? 'Add as species traits or ancestry traits.' : undefined;
@@ -547,6 +556,7 @@ export function TraitListModal({
         if (mode === 'flaw') addIds(selected, 'flaws');
         else if (mode === 'characteristic') addIds(selected, 'characteristics');
       }}
+      nextSelectedIds={flawNextSelectedIds}
       columns={TRAIT_LIST_COLUMNS}
       gridColumns={TRAIT_GRID_COLUMNS}
       itemLabel={mode === 'flaw' ? 'flaw' : mode === 'characteristic' ? 'characteristic' : 'trait'}
@@ -562,7 +572,7 @@ export function TraitListModal({
       }
       confirmDisabled={
         mode === 'flaw'
-          ? () => !canAddFlaw
+          ? (selected) => !canAddFlaw || selected.length > flawRemaining
           : mode === 'characteristic'
             ? () => !canAddCharacteristic
             : undefined
@@ -575,27 +585,37 @@ export function TraitListModal({
             : undefined
       }
       footerExtra={
-        mode === 'species_ancestry'
+        mode === 'flaw'
           ? (selected) => {
-              const speciesNote = traitSelectionLimitMessage(
-                'species traits',
-                selected.length,
-                speciesRemaining,
-              );
-              const ancestryNote = traitSelectionLimitMessage(
-                'ancestry traits',
-                selected.length,
-                ancestryRemaining,
-              );
-              if (!speciesNote && !ancestryNote) return null;
+              const note = traitSelectionLimitMessage('flaws', selected.length, flawRemaining);
+              if (!note) return null;
               return (
-                <div role="status" className="space-y-1 text-sm text-warning-fg">
-                  {speciesNote ? <p id={speciesLimitId}>{speciesNote}</p> : null}
-                  {ancestryNote ? <p id={ancestryLimitId}>{ancestryNote}</p> : null}
-                </div>
+                <p id={flawLimitId} role="status" className="text-sm text-warning-fg">
+                  {note}
+                </p>
               );
             }
-          : undefined
+          : mode === 'species_ancestry'
+            ? (selected) => {
+                const speciesNote = traitSelectionLimitMessage(
+                  'species traits',
+                  selected.length,
+                  speciesRemaining,
+                );
+                const ancestryNote = traitSelectionLimitMessage(
+                  'ancestry traits',
+                  selected.length,
+                  ancestryRemaining,
+                );
+                if (!speciesNote && !ancestryNote) return null;
+                return (
+                  <div role="status" className="space-y-1 text-sm text-warning-fg">
+                    {speciesNote ? <p id={speciesLimitId}>{speciesNote}</p> : null}
+                    {ancestryNote ? <p id={ancestryLimitId}>{ancestryNote}</p> : null}
+                  </div>
+                );
+              }
+            : undefined
       }
       primaryActions={
         mode === 'species_ancestry'
