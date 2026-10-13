@@ -8,6 +8,7 @@
 import { useState, useMemo, useId } from 'react';
 import { ChevronDown, ChevronUp, X } from 'lucide-react';
 import { computePartTrainingPoints } from '@/lib/calculators/part-training-points';
+import { formatPercentagePartModifier } from '@/lib/calculators/power-energy-breakdown';
 import { formatCost } from '@/lib/game/creator-constants';
 import { partChipVariant } from '@/lib/chip/part-chip-variant';
 import { defensesFromPart, formatTargetsFact } from '@/lib/game/targeted-defenses';
@@ -99,6 +100,10 @@ export function PowerPartCard({
     (part.op_2_en || 0) * selectedPart.op_2_lvl +
     (part.op_3_en || 0) * selectedPart.op_3_lvl;
 
+  const partEnergyLabel = part.percentage
+    ? formatPercentagePartModifier(partEnergy)
+    : formatCost(partEnergy);
+
   const partTP = computePartTrainingPoints(
     part,
     {
@@ -142,7 +147,7 @@ export function PowerPartCard({
         </button>
         <div className="flex shrink-0 items-center justify-end gap-2">
           <span className="flex items-center gap-2 text-sm font-semibold whitespace-nowrap">
-            <span className="text-energy-text">EN: {formatCost(partEnergy)}</span>
+            <span className="text-energy-text">EN: {partEnergyLabel}</span>
             <span className="text-tp-text">TP: {formatCost(partTP)}</span>
           </span>
           <IconButton onClick={onRemove} label="Remove part" variant="danger" size="sm">

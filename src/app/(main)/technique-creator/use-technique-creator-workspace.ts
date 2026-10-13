@@ -25,6 +25,9 @@ import {
   formatTechniqueDamage,
   analyzeTechniqueEnergy,
   buildTechniqueAdvancedCalculationGroups,
+  combineTechniqueCostSlices,
+  techniqueDamageSectionCostFromAnalysis,
+  techniqueManualPartsSectionCost,
   TECHNIQUE_CALC_SECTION_BY_NAME,
   type TechniquePartPayload,
 } from '@/lib/calculators';
@@ -250,21 +253,24 @@ export function useTechniqueCreatorWorkspace({
     [damage.amount, damage.size],
   );
 
-  // Section cost for Additional Damage
+  const energyAnalysis = useMemo(
+    () => analyzeTechniqueEnergy(partsPayload, techniqueParts),
+    [partsPayload, techniqueParts],
+  );
+
+  // Section cost for Additional Damage (includes section-local percentage modifiers)
   const damageSectionCost = useMemo(() => {
     const damageParts = mechanicParts.filter(
       (mp) => mp.name === 'Additional Damage' || mp.name === 'Split Damage Dice',
     );
-    return calculateTechniqueCosts(damageParts.map(toTechniquePartPayload), techniqueParts);
-  }, [mechanicParts, techniqueParts]);
+    const damagePayload = damageParts.map(toTechniquePartPayload);
+    return techniqueDamageSectionCostFromAnalysis(energyAnalysis, damagePayload, techniqueParts);
+  }, [energyAnalysis, mechanicParts, techniqueParts]);
 
-  // Section cost for Combat Configuration (weapon + action type + reaction)
-  const combatConfigCost = useMemo(() => {
-    const combatParts = mechanicParts.filter(
-      (mp) => mp.name !== 'Additional Damage' && mp.name !== 'Split Damage Dice',
-    );
-    return calculateTechniqueCosts(combatParts.map(toTechniquePartPayload), techniqueParts);
-  }, [mechanicParts, techniqueParts]);
+  const techniquePartsSectionCost = useMemo(
+    () => techniqueManualPartsSectionCost(partsPayload, techniqueParts),
+    [partsPayload, techniqueParts],
+  );
 
   const weaponCost = useMemo(() => {
     const weaponParts = mechanicParts.filter(
@@ -287,6 +293,12 @@ export function useTechniqueCreatorWorkspace({
     const reactionParts = mechanicParts.filter((mp) => mp.name === 'Reaction');
     return calculateTechniqueCosts(reactionParts.map(toTechniquePartPayload), techniqueParts);
   }, [mechanicParts, techniqueParts]);
+
+  // Combat header badge matches Attack + Action Type + Reaction row badges (86e3jp7e9)
+  const combatConfigCost = useMemo(
+    () => combineTechniqueCostSlices(weaponCost, actionTypeCost, reactionCost),
+    [weaponCost, actionTypeCost, reactionCost],
+  );
 
   // Actions
   const addPart = useCallback(() => {
@@ -473,6 +485,7 @@ export function useTechniqueCreatorWorkspace({
     techniquePartsSummary,
     damageSummary,
     damageSectionCost,
+    techniquePartsSectionCost,
     combatConfigCost,
     weaponCost,
     actionTypeCost,

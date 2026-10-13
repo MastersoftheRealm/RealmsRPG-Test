@@ -56,6 +56,7 @@ type TechniqueCreatorEditorProps = {
   selectedParts: SelectedPart[];
   techniqueParts: TechniquePart[];
   techniquePartsSummary: string;
+  techniquePartsSectionCost: SectionCostSlice;
   onAddPart: () => void;
   onRemovePart: (index: number) => void;
   onUpdatePart: (index: number, updates: Partial<SelectedPart>) => void;
@@ -96,6 +97,7 @@ export function TechniqueCreatorEditor({
   selectedParts,
   techniqueParts,
   techniquePartsSummary,
+  techniquePartsSectionCost,
   onAddPart,
   onRemovePart,
   onUpdatePart,
@@ -239,10 +241,18 @@ export function TechniqueCreatorEditor({
         title={`Technique Parts (${selectedParts.length})`}
         collapsedSummary={techniquePartsSummary}
         rightSlot={
-          <Button type="button" variant="primary" size="sm" onClick={onAddPart}>
-            <Plus className="h-4 w-4" />
-            Add Part
-          </Button>
+          <div className="flex flex-wrap items-center justify-end gap-2">
+            {selectedParts.length > 0 ? (
+              <SectionCostBadge
+                en={techniquePartsSectionCost.energyRaw}
+                tp={techniquePartsSectionCost.totalTP}
+              />
+            ) : null}
+            <Button type="button" variant="primary" size="sm" onClick={onAddPart}>
+              <Plus className="h-4 w-4" />
+              Add Part
+            </Button>
+          </div>
         }
       >
         {selectedParts.length === 0 ? (

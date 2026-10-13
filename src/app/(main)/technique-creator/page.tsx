@@ -269,6 +269,7 @@ function TechniqueCreatorWorkspace({
         selectedParts={ws.selectedParts}
         techniqueParts={techniqueParts}
         techniquePartsSummary={ws.techniquePartsSummary}
+        techniquePartsSectionCost={ws.techniquePartsSectionCost}
         onAddPart={ws.addPart}
         onRemovePart={ws.removePart}
         onUpdatePart={ws.updatePart}
