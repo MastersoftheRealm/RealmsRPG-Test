@@ -59,18 +59,14 @@ export function CampaignRosterSection({
               </button>
             )}
           </div>
-        ) : (
+        ) : canAddOwnCharacters ? (
           <div className="flex items-center gap-4">
-            {canAddOwnCharacters ? (
-              <Button variant="outline" onClick={onAddClick}>
-                <UserPlus className="h-4 w-4" />
-                Add Your Characters
-              </Button>
-            ) : (
-              <p className="text-sm text-text-muted">No characters added yet.</p>
-            )}
+            <Button variant="outline" onClick={onAddClick}>
+              <UserPlus className="h-4 w-4" />
+              Add Your Characters
+            </Button>
           </div>
-        )}
+        ) : null}
       </div>
 
       {otherCharacters.length > 0 && (
