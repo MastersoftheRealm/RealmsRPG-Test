@@ -90,6 +90,17 @@ export const GUIDED_CREATOR_COPY = {
     optionsRegionLabel: 'What you can choose later',
   },
 
+  /** Hero + chapter rail when a chapter has multiple sub-steps (e.g. Foundation path → species). */
+  subStepProgress: {
+    path: 'Archetype Path',
+    species: 'Species',
+    skills: 'Skills',
+    'archetype-feats': 'Archetype Feats',
+    'character-feat': 'Character Feat',
+    loadout: 'Loadout',
+    'powers-techniques': 'Powers & Techniques',
+  },
+
   chapters: {
     foundation: { title: 'Foundation', subtitle: 'Choose your Archetype Path and species' },
     ancestry: { title: 'Ancestry', subtitle: 'Make your species your own' },
