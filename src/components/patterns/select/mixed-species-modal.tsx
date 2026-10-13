@@ -10,7 +10,7 @@
 'use client';
 
 import { useState, useMemo, useEffect, useRef } from 'react';
-import { Modal, Button } from '@/components/ui';
+import { Modal, Button, EmptyState } from '@/components/ui';
 import { SegmentedControl } from '../chrome/segmented-control';
 import { type SourceFilterValue } from '../filters';
 import type { Species } from '@/hooks';
@@ -76,7 +76,16 @@ export function MixedSpeciesModal({
     [filteredSpecies, speciesBId],
   );
 
+  const mySourceEmpty = source === 'my' && filteredSpecies.length === 0;
   const canConfirm = speciesA && speciesB && speciesA.id !== speciesB.id;
+
+  const handleSourceChange = (next: SourceFilterValue) => {
+    setSource(next);
+    if (next === 'my' && !allSpecies.some((s) => userSpeciesIds.has(s.id))) {
+      setSpeciesAId('');
+      setSpeciesBId('');
+    }
+  };
 
   const handleConfirm = () => {
     if (!speciesA || !speciesB) return;
@@ -117,7 +126,7 @@ export function MixedSpeciesModal({
           <span className="text-sm font-medium text-text-secondary">Source:</span>
           <SegmentedControl
             value={source}
-            onChange={setSource}
+            onChange={handleSourceChange}
             options={[
               { value: 'all', label: 'All sources' },
               { value: 'public', label: 'Public species' },
@@ -128,44 +137,60 @@ export function MixedSpeciesModal({
           />
         </div>
 
-        <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-          <div>
-            <label className="mb-1 block text-sm font-medium text-text-secondary">
-              First species
-            </label>
-            <select
-              className="w-full rounded-md border border-border bg-background px-3 py-2 text-text-primary"
-              value={speciesAId}
-              onChange={(e) => setSpeciesAId(e.target.value)}
-              aria-label="First species"
-            >
-              <option value="">Select a species</option>
-              {optionsForA.map((s) => (
-                <option key={s.id} value={s.id}>
-                  {s.name}
-                </option>
-              ))}
-            </select>
+        {mySourceEmpty ? (
+          <EmptyState
+            title="No custom species yet"
+            description="Create one in the Species Creator, then return here to build a mixed species."
+            size="sm"
+            action={{
+              label: 'Open Species Creator',
+              onClick: () => {
+                if (typeof window !== 'undefined') {
+                  window.open('/species-creator', '_blank', 'noopener,noreferrer');
+                }
+              },
+            }}
+          />
+        ) : (
+          <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+            <div>
+              <label className="mb-1 block text-sm font-medium text-text-secondary">
+                First species
+              </label>
+              <select
+                className="w-full rounded-md border border-border bg-background px-3 py-2 text-text-primary"
+                value={speciesAId}
+                onChange={(e) => setSpeciesAId(e.target.value)}
+                aria-label="First species"
+              >
+                <option value="">Select a species</option>
+                {optionsForA.map((s) => (
+                  <option key={s.id} value={s.id}>
+                    {s.name}
+                  </option>
+                ))}
+              </select>
+            </div>
+            <div>
+              <label className="mb-1 block text-sm font-medium text-text-secondary">
+                Second species
+              </label>
+              <select
+                className="w-full rounded-md border border-border bg-background px-3 py-2 text-text-primary"
+                value={speciesBId}
+                onChange={(e) => setSpeciesBId(e.target.value)}
+                aria-label="Second species"
+              >
+                <option value="">Select a species</option>
+                {optionsForB.map((s) => (
+                  <option key={s.id} value={s.id}>
+                    {s.name}
+                  </option>
+                ))}
+              </select>
+            </div>
           </div>
-          <div>
-            <label className="mb-1 block text-sm font-medium text-text-secondary">
-              Second species
-            </label>
-            <select
-              className="w-full rounded-md border border-border bg-background px-3 py-2 text-text-primary"
-              value={speciesBId}
-              onChange={(e) => setSpeciesBId(e.target.value)}
-              aria-label="Second species"
-            >
-              <option value="">Select a species</option>
-              {optionsForB.map((s) => (
-                <option key={s.id} value={s.id}>
-                  {s.name}
-                </option>
-              ))}
-            </select>
-          </div>
-        </div>
+        )}
 
         {speciesA && speciesB && (
           <p className="text-sm font-medium text-primary-link-fg">
