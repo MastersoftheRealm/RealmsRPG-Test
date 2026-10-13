@@ -24,8 +24,11 @@ function isExpectedAnonymousAuthError(message: string): boolean {
  * `ProtectedRoute`. Guest-soft routes (characters, creators, library, codex, the
  * `/campaigns` list, …) are intentionally NOT listed and stay open to guests.
  */
-function isHardProtectedPath(pathname: string): boolean {
+export function isHardProtectedPath(pathname: string): boolean {
   if (pathname === '/my-account' || pathname.startsWith('/my-account/')) return true;
+  // `/account` is the short alias. A signed-out visit must reach sign-in instead of a 404.
+  // A signed-in request is rewritten to `/my-account` after this gate.
+  if (pathname === '/account') return true;
   // Campaign detail/view routes require auth; the bare `/campaigns` list is guest-soft.
   if (pathname.startsWith('/campaigns/')) return true;
   return false;

@@ -44,6 +44,19 @@ const nextConfig: NextConfig = {
       },
     ];
   },
+  // `/account` is the short alias for My Account. A redirect would run before the
+  // session gate and drop `/account` from the sign-in return path. This rewrite runs
+  // after that gate, so a signed-out visit can come back to `/account`.
+  async rewrites() {
+    return {
+      beforeFiles: [
+        {
+          source: '/account',
+          destination: '/my-account',
+        },
+      ],
+    };
+  },
   // Security headers for all responses; long cache for static images to cut edge requests (e.g. placeholder-portrait.png)
   async headers() {
     const csp = buildContentSecurityPolicy(process.env.NODE_ENV ?? 'production');
