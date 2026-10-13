@@ -69,6 +69,7 @@ import {
 import { normalizeCreatureInventoryType } from '@/lib/game/creature-inventory';
 import { mergeLibraryBySource } from '@/lib/library/source-scope';
 import { mergeCreatureFeatsOnAdd } from './creature-feat-utils';
+import { replaceTieredCreatureTrait } from './creature-trait-tiers';
 import {
   buildArmamentLibraryList,
   buildArmamentSelectableItems,
@@ -416,10 +417,14 @@ export function useCreatureCreatorWorkspace() {
   }, []);
 
   const addToArray = useCallback((field: keyof CreatureState, item: string) => {
-    setCreature((prev) => ({
-      ...prev,
-      [field]: [...(prev[field] as string[]), item],
-    }));
+    setCreature((prev) => {
+      const current = prev[field] as string[];
+      const next =
+        field === 'senses' || field === 'movementTypes'
+          ? replaceTieredCreatureTrait(current, item)
+          : [...current, item];
+      return { ...prev, [field]: next };
+    });
   }, []);
 
   const removeFromArray = useCallback((field: keyof CreatureState, item: string) => {

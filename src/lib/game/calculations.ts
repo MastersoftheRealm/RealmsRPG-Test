@@ -89,12 +89,36 @@ export function calculateSpeed(agility: number, speedBase?: number, rules?: Rule
   return base + Math.ceil(agility / 2);
 }
 
+/** Walking-speed spaces from the Speedy and Slow movement traits. A higher Speedy tier replaces a lower one. */
+const SPEEDY_WALK_SPACES: Record<string, number> = {
+  Speedy: 2,
+  'Speedy II': 4,
+  'Speedy III': 6,
+};
+
+export function creatureWalkingSpeedAdjustment(
+  movementTypes: readonly string[] | null | undefined,
+): number {
+  let speedy = 0;
+  let slow = 0;
+  for (const name of movementTypes ?? []) {
+    const bonus = SPEEDY_WALK_SPACES[name];
+    if (bonus != null && bonus > speedy) speedy = bonus;
+    if (name === 'Slow') slow = 2;
+  }
+  return speedy - slow;
+}
+
 /**
  * Creature Speed uses the player Speed formula. Size does not add a modifier
- * (GAME_RULES "Size & Carrying Capacity").
+ * (GAME_RULES "Size & Carrying Capacity"). Speedy and Slow then change that Speed.
  */
-export function calculateCreatureSpeed(agility: number, rules?: Rules): number {
-  return calculateSpeed(agility, undefined, rules);
+export function calculateCreatureSpeed(
+  agility: number,
+  rules?: Rules,
+  movementTypes?: readonly string[] | null,
+): number {
+  return calculateSpeed(agility, undefined, rules) + creatureWalkingSpeedAdjustment(movementTypes);
 }
 
 /** Score = 10 + Bonus (GAME_RULES "The Score Pattern") — Defense Score, Martial/Power Potency. */
