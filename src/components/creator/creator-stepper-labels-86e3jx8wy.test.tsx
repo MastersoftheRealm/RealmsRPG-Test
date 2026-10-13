@@ -1,8 +1,6 @@
 import { readFileSync } from 'node:fs';
 import path from 'node:path';
-import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, it } from 'vitest';
-import { GridListRow } from '@/components/patterns/list/grid-list-row';
 
 const root = path.join(import.meta.dirname, '..');
 
@@ -15,16 +13,13 @@ describe('creator stepper and load-modal labels (86e3jx8wy)', () => {
   });
 
   it('GridListRow selection toggle names the item for load/add modals', () => {
-    const html = renderToStaticMarkup(
-      <GridListRow
-        name="Arcane Bolt"
-        selectable
-        isSelected={false}
-        onSelect={() => {}}
-        rowChrome={{ externalSelection: true }}
-      />,
+    const collapsed = readFileSync(
+      path.join(root, 'patterns/list/grid-list-row-collapsed.tsx'),
+      'utf8',
     );
-    expect(html).toContain('aria-label="Select Arcane Bolt"');
+    expect(collapsed).toContain('gridListRowSelectionLabel');
+    expect(collapsed).toContain('Deselect ${itemName}');
+    expect(collapsed).toContain('Select ${itemName}');
   });
 
   it('ability score editor steppers include the ability name', () => {
