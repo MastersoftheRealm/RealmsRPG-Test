@@ -18,6 +18,10 @@ vi.mock('@/lib/codex-changelog', () => ({ recordCodexChange: vi.fn(async () => u
 vi.mock('@/lib/supabase/server', () => ({ createServiceRoleClient: vi.fn(() => currentDb) }));
 
 import { createCodexDoc, deleteCodexDoc, saveArchetypeWithPath, updateCodexDoc } from './actions';
+import {
+  CORE_RULES_NUMBER_SERVER_NEGATIVE,
+  CORE_RULES_NUMBER_TOO_LARGE,
+} from '../core-rules/core-rules-number';
 import { recordCodexChange } from '@/lib/codex-changelog';
 import { defined } from '@/lib/utils';
 
@@ -43,6 +47,18 @@ function seed(options: { failInsertOnce?: Set<string> | undefined } = {}): FakeS
       ],
       codex_retired_ids: [],
       user_profiles: [{ id: 'victim', role: 'admin' }],
+      core_rules: [
+        {
+          id: 'PROGRESSION_PLAYER',
+          data: { baseHealth: 12, startingCurrency: 200 },
+          updated_at: '2026-08-13T10:00:00Z',
+        },
+        {
+          id: 'COMBAT',
+          data: { multipleActionPenalty: -5 },
+          updated_at: '2026-08-13T10:00:00Z',
+        },
+      ],
     },
     options,
   );
@@ -250,5 +266,51 @@ describe('archetype progression replace', () => {
     expect(defined(currentDb.tables.codex_archetype_levels).map((row) => row.level)).toEqual([
       2, 5,
     ]);
+  });
+});
+
+describe('core rules numbers (86e3jtuge)', () => {
+  it('refuses a negative or unsafe progression save and leaves the row unchanged', async () => {
+    const before = structuredClone(currentDb.tables.core_rules);
+
+    const negative = await updateCodexDoc('core_rules', 'PROGRESSION_PLAYER', {
+      baseHealth: -4,
+      startingCurrency: 200,
+    });
+    const huge = await updateCodexDoc('core_rules', 'PROGRESSION_PLAYER', {
+      baseHealth: Number.MAX_SAFE_INTEGER + 2,
+    });
+
+    expect(negative).toEqual({ success: false, error: CORE_RULES_NUMBER_SERVER_NEGATIVE });
+    expect(huge).toEqual({ success: false, error: CORE_RULES_NUMBER_TOO_LARGE });
+    expect(currentDb.tables.core_rules).toEqual(before);
+  });
+
+  it('still saves combat penalties and a non-negative base health', async () => {
+    const penalty = await updateCodexDoc('core_rules', 'COMBAT', { multipleActionPenalty: -5 });
+    const health = await updateCodexDoc('core_rules', 'PROGRESSION_PLAYER', {
+      baseHealth: 14,
+      startingCurrency: 200,
+    });
+
+    expect(penalty.success).toBe(true);
+    expect(health.success).toBe(true);
+    expect(defined(currentDb.tables.core_rules).find((row) => row.id === 'COMBAT')?.data).toEqual({
+      multipleActionPenalty: -5,
+    });
+    expect(
+      defined(currentDb.tables.core_rules).find((row) => row.id === 'PROGRESSION_PLAYER')?.data,
+    ).toEqual({ baseHealth: 14, startingCurrency: 200 });
+  });
+
+  it('refuses to create a core rules document with an unsafe number', async () => {
+    const result = await createCodexDoc('core_rules', 'PROGRESSION_CREATURE', {
+      currencyGrowthRate: Number.POSITIVE_INFINITY,
+    });
+
+    expect(result).toEqual({ success: false, error: CORE_RULES_NUMBER_TOO_LARGE });
+    expect(defined(currentDb.tables.core_rules).map((row) => row.id)).not.toContain(
+      'PROGRESSION_CREATURE',
+    );
   });
 });

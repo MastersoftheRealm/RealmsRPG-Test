@@ -1,4 +1,10 @@
 import * as React from 'react';
+import { cn } from '@/lib/utils';
+import {
+  CORE_RULES_NUMBER_ERROR_ATTR,
+  parseCoreRulesNumber,
+  type CoreRulesNumberOptions,
+} from './core-rules-number';
 
 /** Standard-tier add-row text control — coarse 44, fine compact. Do not shrink with `md:min-h-*`. */
 export const CORE_RULES_ADD_ROW_CLASS =
@@ -34,31 +40,99 @@ export function NumInput({
   label,
   value,
   onChange,
+  onEmpty,
   min,
   max,
   step,
+  allowNegative,
+  allowEmpty,
+  integer,
+  className,
+  placeholder,
 }: {
   id?: string | undefined;
   /** Accessible name when this input is not inside FieldRow. */
   label?: string | undefined;
-  value: number;
+  value: number | null;
   onChange: (v: number) => void;
+  /** Blank commits null instead of an error. Used for optional caps such as currency max. */
+  onEmpty?: (() => void) | undefined;
   min?: number | undefined;
   max?: number | undefined;
   step?: number | undefined;
+  allowNegative?: boolean | undefined;
+  allowEmpty?: boolean | undefined;
+  integer?: boolean | undefined;
+  className?: string | undefined;
+  placeholder?: string | undefined;
 }) {
+  const errorId = React.useId();
+  const options: CoreRulesNumberOptions = { min, max, allowNegative, integer };
+  const [draft, setDraft] = React.useState<string | null>(null);
+  const [error, setError] = React.useState<string | null>(null);
+  const [trackedValue, setTrackedValue] = React.useState(value);
+
+  if (trackedValue !== value) {
+    setTrackedValue(value);
+    if (draft !== null) {
+      const parsed = parseCoreRulesNumber(draft, options);
+      if (!parsed.ok || parsed.value !== value) {
+        setDraft(null);
+        setError(null);
+      }
+    }
+  }
+
+  const shown = draft ?? (value == null ? '' : String(value));
+  const floor = min !== undefined ? min : allowNegative ? undefined : 0;
+
   return (
-    <input
-      id={id}
-      type="number"
-      aria-label={label}
-      value={value}
-      min={min}
-      max={max}
-      step={step}
-      onChange={(e) => onChange(parseFloat(e.target.value) || 0)}
-      className="w-28 rounded-lg border border-border-light bg-surface px-3 py-1.5 text-sm focus:border-primary-outline-border focus:ring-1 focus:ring-primary-outline-border"
-    />
+    <span className="inline-flex flex-col gap-1">
+      <input
+        id={id}
+        type="number"
+        aria-label={label}
+        aria-invalid={error ? true : undefined}
+        aria-describedby={error ? errorId : undefined}
+        value={shown}
+        min={floor}
+        max={max}
+        step={step}
+        placeholder={placeholder}
+        {...(error ? { [CORE_RULES_NUMBER_ERROR_ATTR]: error } : {})}
+        onChange={(e) => {
+          const raw = e.target.value;
+          if (raw.trim() === '' && allowEmpty) {
+            setDraft(null);
+            setError(null);
+            onEmpty?.();
+            return;
+          }
+          const parsed = parseCoreRulesNumber(raw, options);
+          if (!parsed.ok) {
+            setDraft(raw);
+            setError(parsed.message);
+            return;
+          }
+          setDraft(raw === String(parsed.value) ? null : raw);
+          setError(null);
+          if (parsed.value !== value) onChange(parsed.value);
+        }}
+        onBlur={() => {
+          if (!error) setDraft(null);
+        }}
+        className={cn(
+          className ??
+            'w-28 rounded-lg border border-border-light bg-surface px-3 py-1.5 text-sm focus:border-primary-outline-border focus:ring-1 focus:ring-primary-outline-border',
+          error && 'border-danger-border focus:ring-danger-border',
+        )}
+      />
+      {error ? (
+        <span id={errorId} role="alert" className="text-xs text-danger-fg">
+          {error}
+        </span>
+      ) : null}
+    </span>
   );
 }
 

@@ -21,7 +21,11 @@ export function AbilityRulesEditor({
     <>
       <SectionTitle>Ability Limits</SectionTitle>
       <FieldRow label="Minimum">
-        <NumInput value={(data.min as number) ?? -2} onChange={(v) => set('min', v)} />
+        <NumInput
+          value={(data.min as number) ?? -2}
+          allowNegative
+          onChange={(v) => set('min', v)}
+        />
       </FieldRow>
       <FieldRow label="Max at Creation">
         <NumInput
@@ -59,6 +63,7 @@ export function AbilityRulesEditor({
       <FieldRow label="Max Total Negative">
         <NumInput
           value={(data.maxTotalNegative as number) ?? -3}
+          allowNegative
           onChange={(v) => set('maxTotalNegative', v)}
         />
       </FieldRow>
@@ -69,17 +74,18 @@ export function AbilityRulesEditor({
           <span className="w-24 text-sm font-medium text-text-secondary capitalize">{name}</span>
           <div className="flex gap-1">
             {values.map((v, i) => (
-              <input
+              <NumInput
                 key={i}
-                type="number"
+                label={`${name} array value ${i + 1}`}
                 value={v}
-                aria-label={`${name} array value ${i + 1}`}
-                onChange={(e) => {
+                allowNegative
+                integer
+                className="w-14 rounded border border-border-light bg-surface px-2 py-1 text-center text-sm"
+                onChange={(next) => {
                   const updated = [...values];
-                  updated[i] = parseInt(e.target.value) || 0;
+                  updated[i] = next;
                   set('standardArrays', { ...arrays, [name]: updated });
                 }}
-                className="w-14 rounded border border-border-light bg-surface px-2 py-1 text-center text-sm"
               />
             ))}
           </div>

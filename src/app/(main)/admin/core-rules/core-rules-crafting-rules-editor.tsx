@@ -136,17 +136,15 @@ export function CraftingRulesEditor({
                   />
                 </td>
                 <td className="px-1 py-1">
-                  <input
-                    type="number"
-                    value={row.currencyMax != null ? (row.currencyMax as number) : ''}
+                  <NumInput
+                    label={`General crafting row ${i + 1} currency max`}
+                    value={row.currencyMax != null ? (row.currencyMax as number) : null}
+                    allowEmpty
                     min={0}
-                    onChange={(e) => {
-                      const v = e.target.value;
-                      setGeneralRow(i, 'currencyMax', v === '' ? null : parseFloat(v));
-                    }}
-                    className="w-20 rounded border border-border-light bg-surface px-2 py-1 text-sm"
                     placeholder="-"
-                    aria-label={`General crafting row ${i + 1} currency max`}
+                    className="w-20 rounded border border-border-light bg-surface px-2 py-1 text-sm"
+                    onChange={(v) => setGeneralRow(i, 'currencyMax', v)}
+                    onEmpty={() => setGeneralRow(i, 'currencyMax', null)}
                   />
                 </td>
                 <td className="px-1 py-1">
