@@ -150,6 +150,20 @@ describe('rate-limit', () => {
     consoleSpy.mockRestore();
   });
 
+  it('buildAuthCredentialRateLimitKey binds IP and normalized email', async () => {
+    const { buildAuthCredentialRateLimitKey } = await import('./rate-limit');
+
+    expect(
+      buildAuthCredentialRateLimitKey('auth-login', {
+        ip: '203.0.113.1',
+        email: 'Player@Example.com',
+      }),
+    ).toBe('auth-login:ip:203.0.113.1:em:player@example.com');
+    expect(buildAuthCredentialRateLimitKey('auth-login', { ip: null, email: null })).toBe(
+      'auth-login:ip:unknown:em:unknown',
+    );
+  });
+
   it('buildRateLimitKey prefers the authenticated user over the IP', async () => {
     const { buildRateLimitKey } = await import('./rate-limit');
 

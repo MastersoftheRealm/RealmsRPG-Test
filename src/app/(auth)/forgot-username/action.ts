@@ -7,15 +7,21 @@
 'use server';
 
 import { headers } from 'next/headers';
-import { authActionLimiter, buildRateLimitKey, resolveClientIp } from '@/lib/rate-limit';
+import {
+  authActionLimiter,
+  buildAuthCredentialRateLimitKey,
+  resolveClientIp,
+} from '@/lib/rate-limit';
 
 export async function submitForgotUsernameAction(_email: string): Promise<{ supported: false }> {
   const headerList = await headers();
   const ip = resolveClientIp(headerList);
   const normalized = _email.trim().toLowerCase();
-  const keyUser = normalized.includes('@') ? normalized : ip;
   const { success } = await authActionLimiter.check(
-    buildRateLimitKey('auth-forgot-username', { ip, userId: keyUser }),
+    buildAuthCredentialRateLimitKey('auth-forgot-username', {
+      ip,
+      email: normalized.includes('@') ? normalized : undefined,
+    }),
   );
   if (!success) {
     throw new Error('Too many requests. Please try again later.');
