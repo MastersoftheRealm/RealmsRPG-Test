@@ -61,6 +61,11 @@ interface RateLimitKeyInput {
   ip?: string | null | undefined;
 }
 
+interface AuthCredentialRateLimitKeyInput {
+  ip?: string | null | undefined;
+  email?: string | null | undefined;
+}
+
 let sharedRedis: Redis | null | undefined;
 
 function getSharedRedis(): Redis | null {
@@ -232,6 +237,19 @@ export function buildRateLimitKey(prefix: string, input: RateLimitKeyInput): str
   }
   const ip = input.ip?.trim() || 'unknown';
   return `${prefix}:ip:${ip}`;
+}
+
+/**
+ * Limiter key for unauthenticated auth flows (login, signup, password reset).
+ * Binds both client IP and normalized email so one actor cannot exhaust another's quota.
+ */
+export function buildAuthCredentialRateLimitKey(
+  prefix: string,
+  input: AuthCredentialRateLimitKeyInput,
+): string {
+  const ip = (input.ip?.trim() || 'unknown').slice(0, 64);
+  const email = (input.email?.trim().toLowerCase() || 'unknown').slice(0, 200);
+  return `${prefix}:ip:${ip}:em:${email}`;
 }
 
 // =============================================================================

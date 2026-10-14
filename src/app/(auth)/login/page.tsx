@@ -12,6 +12,7 @@ import Link from 'next/link';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { createClient } from '@/lib/supabase/client';
+import { loginWithPasswordAction } from '@/app/(auth)/auth-actions';
 import {
   hasGuestEncountersToMigrate,
   migrateGuestEncountersOnSignIn,
@@ -95,13 +96,14 @@ function LoginContent() {
     }
 
     try {
-      const supabase = createClient();
-      const { error: err } = await supabase.auth.signInWithPassword({
-        email: data.email,
-        password: data.password,
-        options: captchaOptions,
-      });
-      if (err) throw err;
+      const result = await loginWithPasswordAction(
+        data.email,
+        data.password,
+        captchaOptions.captchaToken ?? null,
+      );
+      if (!result.success) {
+        throw new Error(result.error);
+      }
       if (hasGuestEncountersToMigrate()) {
         await migrateGuestEncountersOnSignIn();
       }

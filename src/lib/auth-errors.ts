@@ -7,6 +7,12 @@
  * as an invalid address — SMTP / confirmation-send failures also mention email.
  */
 
+/** App-layer auth rate limit (HTTP 429 equivalent) — login form. */
+export const AUTH_LOGIN_RATE_LIMIT_MESSAGE = 'Too many failed attempts. Please try again later.';
+
+/** App-layer auth rate limit — signup, password reset, resend, etc. */
+export const AUTH_RATE_LIMIT_MESSAGE = 'Too many requests. Please try again later.';
+
 export type AuthErrorContext =
   | 'login'
   | 'register'
@@ -162,9 +168,7 @@ export function getAuthErrorMessage(error: unknown, context: AuthErrorContext = 
   }
 
   if (isRateLimitError(message, code)) {
-    return context === 'login'
-      ? 'Too many failed attempts. Please try again later.'
-      : 'Too many requests. Please try again later.';
+    return context === 'login' ? AUTH_LOGIN_RATE_LIMIT_MESSAGE : AUTH_RATE_LIMIT_MESSAGE;
   }
 
   if (isNetworkError(message)) {

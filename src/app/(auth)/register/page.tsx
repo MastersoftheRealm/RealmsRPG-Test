@@ -17,7 +17,7 @@ import { registerSchema, type RegisterFormData } from '@/lib/validation';
 import { getAuthErrorMessage } from '@/lib/auth-errors';
 import { sanitizeRedirectPath } from '@/lib/safe-redirect';
 import { createUserProfileAction } from '@/app/(auth)/actions';
-import { resendConfirmationAction } from '@/app/(auth)/auth-actions';
+import { resendConfirmationAction, signUpAction } from '@/app/(auth)/auth-actions';
 import { AuthCard, AuthTurnstile, FormInput, PasswordInput, SocialButton } from '@/components/auth';
 import { Spinner } from '@/components/ui';
 import { Button, Alert } from '@/components/ui';
@@ -71,35 +71,27 @@ function RegisterContent() {
     }
 
     try {
-      const supabase = createClient();
       const redirectPath = getRedirectPath();
       const chosenUsername = data.username?.trim();
-      const { data: authData, error: err } = await supabase.auth.signUp({
-        email: data.email,
-        password: data.password,
-        options: {
-          ...captchaOptions,
-          emailRedirectTo: `${window.location.origin}/auth/confirm?next=${encodeURIComponent(redirectPath)}`,
-          ...(chosenUsername ? { data: { username_display: chosenUsername } } : {}),
-        },
+      const signUpResult = await signUpAction(data.email, data.password, {
+        redirectPath,
+        usernameDisplay: chosenUsername || undefined,
+        captchaToken: captchaOptions.captchaToken ?? null,
       });
-      if (err) throw err;
+      if (!signUpResult.success) {
+        throw new Error(signUpResult.error);
+      }
 
-      // If email confirmation is enabled, Supabase may return a user but no session.
-      // In that case, show a "Check your email" state instead of redirecting into the app.
-      if (!authData.session) {
+      if (signUpResult.needsEmailConfirmation) {
         setNeedsEmailConfirm(true);
         return;
       }
 
-      if (authData.user) {
-        await createUserProfileAction({
-          uid: authData.user.id,
-          email: data.email,
-          username: chosenUsername || undefined,
-          displayName: undefined,
-        });
-      }
+      await createUserProfileAction({
+        email: data.email,
+        username: chosenUsername || undefined,
+        displayName: undefined,
+      });
 
       sessionStorage.removeItem('loginRedirect');
       router.push(redirectPath);

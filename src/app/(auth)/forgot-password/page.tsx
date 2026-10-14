@@ -10,7 +10,7 @@ import { useState } from 'react';
 import Link from 'next/link';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { createClient } from '@/lib/supabase/client';
+import { requestPasswordResetAction } from '@/app/(auth)/auth-actions';
 import { forgotPasswordSchema, type ForgotPasswordFormData } from '@/lib/validation';
 import { getAuthErrorMessage } from '@/lib/auth-errors';
 import { AuthCard, AuthTurnstile, FormInput } from '@/components/auth';
@@ -49,12 +49,13 @@ export default function ForgotPasswordPage() {
     }
 
     try {
-      const supabase = createClient();
-      const { error: err } = await supabase.auth.resetPasswordForEmail(data.email, {
-        redirectTo: `${typeof window !== 'undefined' ? window.location.origin : ''}/auth/confirm?next=${encodeURIComponent('/reset-password')}`,
-        ...captchaOptions,
-      });
-      if (err) throw err;
+      const result = await requestPasswordResetAction(
+        data.email,
+        captchaOptions.captchaToken ?? null,
+      );
+      if (!result.success) {
+        throw new Error(result.error);
+      }
       setIsSuccess(true);
     } catch (err) {
       resetCaptcha();
