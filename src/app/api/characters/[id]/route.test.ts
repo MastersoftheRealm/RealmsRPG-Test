@@ -333,6 +333,25 @@ describe('GET /api/characters/[id]', () => {
     );
   });
 
+  it('returns 404 for campaign visibility when the viewer is not in a shared campaign roster (86e39knu2)', async () => {
+    const row = makeCharacterRow(
+      'char-campaign-only',
+      OWNER.uid,
+      { visibility: 'campaign' },
+      { visibility: 'campaign' },
+    );
+    mockGetSession.mockResolvedValue({ user: OTHER, error: null });
+    mockCreateClient.mockResolvedValue(createMockSupabase(row) as never);
+
+    const response = await GET(makeGetRequest('char-campaign-only'), {
+      params: Promise.resolve({ id: 'char-campaign-only' }),
+    });
+
+    expect(response.status).toBe(404);
+    await expect(readJson(response)).resolves.toBeNull();
+    expect(mockGetOwnerLibraryAndEnrichmentForView).not.toHaveBeenCalled();
+  });
+
   it('returns 404 when the visibility column is private even if the blob says public', async () => {
     const row = makeCharacterRow(
       'char-desync',
