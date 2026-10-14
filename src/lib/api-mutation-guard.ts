@@ -1,8 +1,9 @@
 /**
  * Central CSRF / same-origin guard for App Router API mutations.
  *
- * - `rejectCrossOriginApiMutation` — call from proxy.ts so every `/api/*` mutation
- *   is checked before route handlers run.
+ * - `rejectCrossOriginApiMutation` — call from proxy.ts for `/api` paths the matcher
+ *   still runs. `/api/codex` and `/api/official` stay excluded (edge budget). Codex is
+ *   GET-only; official mutations use handler-level `validateJson` / `verifyMutationRequest`.
  * - `withApiMutationHandler` — optional wrapper for new route exports.
  *
  * Handlers that use `validateJson` already invoke `verifyMutationRequest`; the static

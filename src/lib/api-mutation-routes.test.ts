@@ -43,4 +43,12 @@ describe('API mutation routes CSRF coverage', () => {
 
     expect(unprotected).toEqual([]);
   });
+
+  it('keeps api/codex and api/official off the proxy matcher', () => {
+    const proxy = readFileSync(path.join(import.meta.dirname, '../proxy.ts'), 'utf8');
+    expect(proxy).not.toContain('isHighVolumePublicApiRead');
+    const matcher = proxy.slice(proxy.indexOf('matcher:'));
+    expect(matcher).toContain('api/codex(?:/|$)');
+    expect(matcher).toContain('api/official(?:/|$)');
+  });
 });
