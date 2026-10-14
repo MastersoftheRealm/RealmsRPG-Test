@@ -10,6 +10,7 @@
  */
 
 import { NextResponse, type NextRequest } from 'next/server';
+import { rejectCrossOriginApiMutation } from '@/lib/api-mutation-guard';
 import { sanitizeRedirectPath } from '@/lib/safe-redirect';
 import { updateSession } from '@/lib/supabase/middleware';
 
@@ -37,6 +38,9 @@ export async function proxy(request: Request) {
   const oauthRedirect = redirectOAuthCodeToCallback(nextRequest);
   if (oauthRedirect) return oauthRedirect;
 
+  const csrfDenied = rejectCrossOriginApiMutation(nextRequest);
+  if (csrfDenied) return csrfDenied;
+
   return await updateSession(nextRequest);
 }
 
@@ -44,6 +48,8 @@ export const config = {
   matcher: [
     // Exclude: static assets, auth callbacks, images (incl. /images/ e.g. placeholder-portrait.png), high-volume APIs, bot paths.
     // /images/ is requested heavily (placeholder on every character card/sheet); exclude so proxy never runs for it.
+    // api/codex and api/official stay off the matcher (free-tier edge). Codex is GET-only;
+    // official mutations use handler-level validateJson / verifyMutationRequest.
     '/((?!_next/static|_next/image|images/|favicon\\.ico|manifest\\.json(?:/|$)|robots\\.txt(?:/|$)|sitemap\\.xml(?:/|$)|auth/callback|auth/confirm|api/codex(?:/|$)|api/official(?:/|$)|.*\\.(?:svg|png|jpg|jpeg|gif|webp|ico|woff2?|ttf|eot)$).*)',
   ],
 };
