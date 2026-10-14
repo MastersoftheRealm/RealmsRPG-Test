@@ -1,8 +1,9 @@
 /**
  * Campaign Character View API
  * ===========================
- * - Full view: RM only, returns full character for read-only sheet viewing.
- * - ?scope=encounter: Campaign members can fetch minimal vitals, except a private character, which only the owner and Realm Master can read.
+ * - Full view: RM always; campaign members when visibility is campaign or public (column is SoT).
+ * - ?scope=encounter: Same visibility rules; returns minimal vitals only.
+ * - Private: owner and RM only. Campaign visibility requires campaign membership (this route).
  */
 
 import { NextRequest, NextResponse } from 'next/server';
@@ -12,7 +13,7 @@ import { isCharacterOnCampaignRoster } from '@/lib/campaign-roster';
 import { computeMaxHealthEnergy } from '@/lib/game/calculations';
 import { fetchCoreRules } from '@/lib/core-rules-server';
 import { getOwnerLibraryAndEnrichmentForView } from '@/lib/character-view-enrichment-server';
-import type { CharacterVisibility } from '@/types';
+import { resolveCharacterVisibility } from '@/lib/character-list-columns';
 
 export async function GET(
   request: NextRequest,
@@ -59,16 +60,11 @@ export async function GET(
     }
 
     const forEncounter = scope === 'encounter';
-    if (!forEncounter && !isRM) {
-      return NextResponse.json(
-        { error: 'Only the Realm Master can view player character sheets' },
-        { status: 403 },
-      );
-    }
+    const isOwner = user.uid === userId;
 
     const { data: charRowUser, error: charErr } = await supabase
       .from('characters')
-      .select('id, user_id, data, created_at, updated_at')
+      .select('id, user_id, data, created_at, updated_at, visibility')
       .eq('id', characterId)
       .eq('user_id', userId)
       .maybeSingle();
@@ -85,7 +81,7 @@ export async function GET(
       const admin = createServiceRoleClient();
       const { data: charRowAdmin, error: adminErr } = await admin
         .from('characters')
-        .select('id, user_id, data, created_at, updated_at')
+        .select('id, user_id, data, created_at, updated_at, visibility')
         .eq('id', characterId)
         .eq('user_id', userId)
         .maybeSingle();
@@ -99,13 +95,19 @@ export async function GET(
 
     const charData = (charRow.data as Record<string, unknown>) ?? {};
 
-    const visibility = (charData?.visibility as CharacterVisibility) || 'private';
-    const isOwner = user.uid === userId;
-    // Full sheet stays closed for private rows. Encounter lookup may return
-    // vitals to the owner and the Realm Master only (86e3jryyv).
-    if (visibility === 'private' && !(forEncounter && (isOwner || isRM))) {
+    const visibility = resolveCharacterVisibility(charRow);
+    const canViewPrivate = isOwner || isRM;
+    const canViewAsCampaignMember =
+      isMember && (visibility === 'campaign' || visibility === 'public');
+    if (visibility === 'private' && !canViewPrivate) {
       return NextResponse.json(
         { error: 'This character is set to private and cannot be viewed' },
+        { status: 403 },
+      );
+    }
+    if (!forEncounter && !canViewPrivate && !canViewAsCampaignMember) {
+      return NextResponse.json(
+        { error: 'You do not have permission to view this character sheet' },
         { status: 403 },
       );
     }
@@ -155,6 +157,7 @@ export async function GET(
     const character = {
       id: charRow.id,
       ...charData,
+      visibility,
       createdAt: charData?.createdAt ?? charRow.created_at,
       updatedAt: charData?.updatedAt ?? charRow.updated_at,
     };

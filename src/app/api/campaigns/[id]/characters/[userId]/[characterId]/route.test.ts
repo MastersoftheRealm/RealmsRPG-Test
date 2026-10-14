@@ -46,6 +46,7 @@ type CharacterRow = {
   data: Record<string, unknown>;
   created_at: string;
   updated_at: string;
+  visibility?: string | null | undefined;
 };
 
 type CampaignRow = {
@@ -54,20 +55,26 @@ type CampaignRow = {
   characters: unknown;
 };
 
-function makeCharacterRow(overrides: Partial<CharacterRow['data']> = {}): CharacterRow {
+function makeCharacterRow(
+  overrides: Partial<CharacterRow['data']> = {},
+  columnVisibility: CharacterRow['visibility'] = 'campaign',
+): CharacterRow {
+  const dataVisibility =
+    typeof overrides.visibility === 'string' ? overrides.visibility : columnVisibility;
   return {
     id: CHARACTER_ID,
     user_id: PLAYER.uid,
     data: {
       name: 'Roster Hero',
       level: 2,
-      visibility: 'campaign',
+      visibility: dataVisibility,
       abilities: { agility: 2, vitality: 1, acuity: 0 },
       health: { max: 20, current: 15 },
       energy: { max: 10, current: 8 },
       actionPoints: 3,
       ...overrides,
     },
+    visibility: columnVisibility,
     created_at: '2026-07-01T12:00:00.000Z',
     updated_at: '2026-07-01T12:00:00.000Z',
   };
@@ -211,16 +218,41 @@ describe('GET /api/campaigns/[id]/characters/[userId]/[characterId]', () => {
     expect(mockGetOwnerLibraryAndEnrichmentForView).not.toHaveBeenCalled();
   });
 
-  it('returns 403 when a non-RM member requests the full sheet', async () => {
+  it('returns the full sheet to a campaign member when visibility is campaign (86e39knu2)', async () => {
     stubAuthedClient({ user: MEMBER });
+
+    const response = await GET(makeGetRequest(), routeParams());
+
+    expect(response.status).toBe(200);
+    const body = await readJson<{ visibility: string }>(response);
+    expect(body.visibility).toBe('campaign');
+    expect(mockGetOwnerLibraryAndEnrichmentForView).toHaveBeenCalled();
+  });
+
+  it('uses the visibility column over stale JSON on full sheet (86e39knu2)', async () => {
+    stubAuthedClient({
+      user: MEMBER,
+      characterRow: makeCharacterRow({ visibility: 'campaign' }, 'private'),
+    });
 
     const response = await GET(makeGetRequest(), routeParams());
 
     expect(response.status).toBe(403);
     await expect(readJson(response)).resolves.toEqual({
-      error: 'Only the Realm Master can view player character sheets',
+      error: 'This character is set to private and cannot be viewed',
     });
-    expect(mockGetOwnerLibraryAndEnrichmentForView).not.toHaveBeenCalled();
+  });
+
+  it('returns the full private sheet to the Realm Master (86e39knu2)', async () => {
+    stubAuthedClient({
+      user: RM,
+      characterRow: makeCharacterRow({ visibility: 'private' }, 'private'),
+    });
+
+    const response = await GET(makeGetRequest(), routeParams());
+
+    expect(response.status).toBe(200);
+    expect(mockGetOwnerLibraryAndEnrichmentForView).toHaveBeenCalled();
   });
 
   it('returns 403 when a non-member requests the full sheet', async () => {
@@ -275,10 +307,21 @@ describe('GET /api/campaigns/[id]/characters/[userId]/[characterId]', () => {
     expect(mockGetOwnerLibraryAndEnrichmentForView).not.toHaveBeenCalled();
   });
 
+  it('uses the visibility column over stale JSON on encounter scope (86e39knu2)', async () => {
+    stubAuthedClient({
+      user: MEMBER,
+      characterRow: makeCharacterRow({ visibility: 'campaign' }, 'private'),
+    });
+
+    const response = await GET(makeGetRequest('encounter'), routeParams());
+
+    expect(response.status).toBe(403);
+  });
+
   it('does not return private character stats to another campaign member (86e3jryyv)', async () => {
     stubAuthedClient({
       user: MEMBER,
-      characterRow: makeCharacterRow({ visibility: 'private' }),
+      characterRow: makeCharacterRow({ visibility: 'private' }, 'private'),
     });
 
     const response = await GET(makeGetRequest('encounter'), routeParams());
