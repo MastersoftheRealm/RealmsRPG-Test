@@ -11,7 +11,7 @@ import { getSession } from '@/lib/supabase/session';
 import { ensureUserProfile } from '@/lib/ensure-user-profile';
 import { getRolePolicyForUser } from '@/lib/role-policy';
 import { buildRoleQuotaExceededResponse } from '@/lib/role-quota-messages';
-import { validateJson, characterCreateSchema } from '@/lib/api-validation';
+import { validateJson, verifyMutationRequest, characterCreateSchema } from '@/lib/api-validation';
 import { prepareCharacterForCreate } from '@/lib/character-save';
 import {
   normalizeCharacterForSave,
@@ -174,6 +174,9 @@ export async function GET() {
 }
 
 export async function POST(request: NextRequest) {
+  const originDenied = verifyMutationRequest(request, { requireJsonBody: true });
+  if (originDenied) return originDenied;
+
   try {
     const { user, error } = await getSession();
     if (error || !user?.uid) {
