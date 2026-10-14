@@ -115,6 +115,18 @@ Kadin adopted composed-power pricing Oct 5 (10:21 PM ET) and revised it Oct 6 (7
 
 ---
 
+## Character sheet visibility (Oct 14, 2026)
+
+Owner ruling (Kadin, Oct 14, 2026). Supersedes the campaign-member visibility semantics fixed in [86e3jryyv](https://app.clickup.com/t/86e3jryyv) for **Realm Master** access; other members stay on the 86e3jryyv rule (no private sheet).
+
+- **Realm Master:** May always view the **full** character sheet (and encounter vitals on the campaign character route) for any player **actively on the roster** of a campaign they run, including **private** visibility.
+- **Other campaign members:** Cannot view a **private** sheet (full or encounter vitals) even when rostered in the same campaign.
+- **Campaign visibility:** A sheet set to **campaign** is hidden from anyone who is not a member of that campaign (including unauthenticated and non-rostered users). **Public** sheets follow the existing public rules.
+
+Repo mirror: [86e39knu2](https://app.clickup.com/t/86e39knu2).
+
+---
+
 ## QA / accounts (Oct 5, 2026)
 
 - QA accounts only for testing; prefix records `QA` / `QA Test`; clean up; never save/publish official library/Codex from QA (esp. qa-admin).
@@ -132,6 +144,7 @@ Kadin adopted composed-power pricing Oct 5 (10:21 PM ET) and revised it Oct 6 (7
 
 ## Changelog
 
+- **2026-10-14:** Character sheet visibility (Oct 14, 2026 owner ruling): RM full access to rostered private sheets; members cannot see private; campaign visibility off-roster blocked. Supersedes 86e3jryyv for RM semantics; implements [86e39knu2](https://app.clickup.com/t/86e39knu2).
 - **2026-10-08:** Bypass merge moves the ClickUp task to testing with QA instructions for what changed, adds James Owenby, and keeps Collin assigned. Collin can move it back to in review.
 - **2026-10-05 (~4:54 PM ET):** Appended standing QA triggers (post-dep smoke, S25 page-speed budgets, security-header/RLS retests, testing-status bot limits, Website QA check delegated to QA Tester, CI npm audit policy, no CVE IDs in public repo).
 - **2026-10-05:** Initial seed from `/workspace/qa/intent.md` settled rulings + Oct 5 Dev Team / Kadin corrections (ability hard caps −5/+10; Drive vs GAME_RULES ask-first; Realm Master spelling).
