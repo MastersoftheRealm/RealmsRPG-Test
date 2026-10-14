@@ -6,6 +6,10 @@
  */
 
 import { SENTRY_TRACES_SAMPLE_RATE, getSentryDsn, getSentryEnvironment } from '@/lib/observability';
+import {
+  SENTRY_CLIENT_IGNORE_ERRORS,
+  sentryClientBeforeSend,
+} from '@/lib/observability/sentry-client-filter';
 
 const dsn = getSentryDsn();
 
@@ -16,6 +20,8 @@ if (dsn) {
       environment: getSentryEnvironment(),
       tracesSampleRate: SENTRY_TRACES_SAMPLE_RATE,
       sendDefaultPii: false,
+      ignoreErrors: SENTRY_CLIENT_IGNORE_ERRORS,
+      beforeSend: sentryClientBeforeSend,
     });
   });
 }

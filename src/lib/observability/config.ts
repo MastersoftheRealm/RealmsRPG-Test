@@ -23,9 +23,13 @@ export function isErrorReportingEnabled(): boolean {
   return getSentryDsn() !== undefined;
 }
 
-/** Keeps preview and production issues apart without requiring a new env var on Vercel. */
+/**
+ * Keeps preview and production issues apart. The browser only sees `NEXT_PUBLIC_*` vars;
+ * Vercel injects `NEXT_PUBLIC_VERCEL_ENV` automatically alongside server-side `VERCEL_ENV`.
+ */
 export function getSentryEnvironment(): string {
   return (
+    process.env.NEXT_PUBLIC_VERCEL_ENV ??
     process.env.NEXT_PUBLIC_SENTRY_ENVIRONMENT ??
     process.env.VERCEL_ENV ??
     process.env.NODE_ENV ??
