@@ -21,6 +21,8 @@ import { createClient } from '@/lib/supabase/server';
 import { getSession } from '@/lib/supabase/session';
 import { isAdmin } from '@/lib/admin';
 import { fetchCoreRules } from '@/lib/core-rules-server';
+import { CODEX_SKILLS_PUBLIC_SELECT } from '@/lib/codex/public-table-select';
+import { resetMemoizedPublicReadsForTests } from '@/lib/supabase/memoized-public-reads';
 import { CODEX_PAYLOAD_KEYS, type CodexPayload } from '@/types/codex';
 
 const mockCreateClient = vi.mocked(createClient);
@@ -49,12 +51,14 @@ const ROWS: Record<string, Record<string, unknown>[]> = {
 
 /** Records which tables the request actually queried. */
 let queriedTables: string[] = [];
+let lastSelectByTable: Record<string, string> = {};
 
 function mockSupabase() {
   return {
     from: (table: string) => ({
-      select: async () => {
+      select: async (columns: string) => {
         queriedTables.push(table);
+        lastSelectByTable[table] = columns;
         return { data: ROWS[table] ?? [], error: null };
       },
       in: async () => ({ data: [], error: null }),
@@ -70,7 +74,9 @@ async function getJson(url: string): Promise<Partial<CodexPayload>> {
 describe('GET /api/codex', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    resetMemoizedPublicReadsForTests();
     queriedTables = [];
+    lastSelectByTable = {};
     mockFetchCoreRules.mockResolvedValue({
       PROGRESSION_PLAYER: { baseHealth: 8 },
     } as never);
@@ -94,6 +100,11 @@ describe('GET /api/codex', () => {
     expect(queriedTables).toEqual(['codex_feats']);
     expect(mockFetchCoreRules).not.toHaveBeenCalled();
     expect(mockGetSession).not.toHaveBeenCalled();
+  });
+
+  it('projects codex_skills columns instead of select(*)', async () => {
+    await getJson('http://localhost/api/codex?collection=skills');
+    expect(lastSelectByTable.codex_skills).toBe(CODEX_SKILLS_PUBLIC_SELECT);
   });
 
   it('reads both archetype tables for the archetypes slice', async () => {
