@@ -12,9 +12,9 @@ name: AI Task Verifier
 # Local agents run the regression test for the repro. This workflow runs
 # typecheck and the unit suite. `.husky/pre-push` does not repeat them.
 #
-# `next build` deliberately does NOT run here — ui-verify.yml builds the same commit with
-# the Supabase env vars production uses, so a build here would validate a different
-# configuration and cost a third full build per PR.
+# `next build` deliberately does NOT run here — ui-verify.yml runs one production build per
+# PR with REALMS_DISABLE_PUBLIC_SUPABASE during ui-verify build (no prod egress). A second build here would cost a
+# third full build per PR without adding coverage.
 
 on:
   pull_request:
