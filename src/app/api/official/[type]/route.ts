@@ -27,6 +27,7 @@ import {
   type ColumnarLibraryType,
 } from '@/lib/library-columnar';
 import { enrichRowsWithBankImageUrls } from '@/lib/entity-image-enrich-server';
+import { fetchOfficialColumnarRows, fetchOfficialSpeciesRows } from '@/lib/official-library-server';
 import { allocateCodexNumericId, retireCodexId } from '@/lib/codex/id-allocation';
 import {
   parseCatalogListing,
@@ -124,18 +125,17 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
     const includeUnlisted = await adminMayIncludeUnlisted(request);
 
     if (type === 'species') {
-      const speciesQuery = includeUnlisted
-        ? supabase.from(SPECIES_TABLE).select('*')
-        : supabase.from(SPECIES_TABLE).select('*').eq('catalog_listing', 'listed');
-      const { data: rows, error } = await speciesQuery;
-      if (error) {
-        if (error.code === '42P01' || error.message?.includes('does not exist')) {
-          console.warn('[API] Official library table not found for type:', type, error.message);
+      let speciesRows: Record<string, unknown>[];
+      try {
+        speciesRows = await fetchOfficialSpeciesRows(supabase, includeUnlisted);
+      } catch (error) {
+        const err = error as { code?: string; message?: string };
+        if (err.code === '42P01' || err.message?.includes('does not exist')) {
+          console.warn('[API] Official library table not found for type:', type, err.message);
           return NextResponse.json([]);
         }
         throw error;
       }
-      const speciesRows = (rows ?? []) as Record<string, unknown>[];
       await enrichRowsWithBankImageUrls(supabase, speciesRows);
       const items = speciesRows.map((r) => {
         const item = rowToItemSpecies(r as Record<string, unknown>);
@@ -152,21 +152,21 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
       return NextResponse.json(items, { headers: { 'Cache-Control': cacheControl } });
     }
 
-    const table = TABLE_MAP[type as ColumnarLibraryType];
-    const officialQuery = includeUnlisted
-      ? supabase.from(table).select('*')
-      : supabase.from(table).select('*').eq('catalog_listing', 'listed');
-    const { data: rows, error } = await officialQuery;
-
-    if (error) {
-      if (error.code === '42P01' || error.message?.includes('does not exist')) {
-        console.warn('[API] Official library table not found for type:', type, error.message);
+    let officialRows: Record<string, unknown>[];
+    try {
+      officialRows = await fetchOfficialColumnarRows(
+        supabase,
+        type as ColumnarLibraryType,
+        includeUnlisted,
+      );
+    } catch (error) {
+      const err = error as { code?: string; message?: string };
+      if (err.code === '42P01' || err.message?.includes('does not exist')) {
+        console.warn('[API] Official library table not found for type:', type, err.message);
         return NextResponse.json([]);
       }
       throw error;
     }
-
-    const officialRows = (rows ?? []) as Record<string, unknown>[];
     await enrichRowsWithBankImageUrls(supabase, officialRows);
     const items = officialRows.map((r) => rowToItem(type as ColumnarLibraryType, r, 'official'));
     items.sort((a, b) => {

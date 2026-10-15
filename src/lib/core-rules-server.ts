@@ -13,8 +13,18 @@
 
 import type { CoreRulesMap } from '@/types/core-rules';
 import type { TypedSupabaseClient } from '@/lib/supabase/database';
+import {
+  memoizedPublicRead,
+  resetMemoizedPublicReadsForTests,
+} from '@/lib/supabase/memoized-public-reads';
 
-export async function fetchCoreRules(
+const CORE_RULES_CACHE_KEY = 'core_rules:id,data';
+
+export function resetCoreRulesCacheForTests(): void {
+  resetMemoizedPublicReadsForTests();
+}
+
+async function loadCoreRulesFromSupabase(
   supabase: Pick<TypedSupabaseClient, 'from'>,
 ): Promise<Partial<CoreRulesMap>> {
   const { data, error } = await supabase.from('core_rules').select('id, data');
@@ -25,4 +35,10 @@ export async function fetchCoreRules(
     rules[row.id] = row.data;
   }
   return rules as Partial<CoreRulesMap>;
+}
+
+export async function fetchCoreRules(
+  supabase: Pick<TypedSupabaseClient, 'from'>,
+): Promise<Partial<CoreRulesMap>> {
+  return memoizedPublicRead(CORE_RULES_CACHE_KEY, () => loadCoreRulesFromSupabase(supabase));
 }
