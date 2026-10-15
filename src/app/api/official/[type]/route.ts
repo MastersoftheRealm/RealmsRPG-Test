@@ -7,6 +7,8 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
+import { updateTag } from 'next/cache';
+import { codexTableWriteCacheTags, officialLibraryWriteCacheTags } from '@/lib/codex/cache-tags';
 import { createClient, createServiceRoleClient } from '@/lib/supabase/server';
 import { getSession } from '@/lib/supabase/session';
 import { isAdmin } from '@/lib/admin';
@@ -110,6 +112,17 @@ async function adminMayIncludeUnlisted(request: NextRequest): Promise<boolean> {
   const { user } = await getSession();
   if (!user?.uid) return false;
   return isAdmin(user.uid);
+}
+
+function revalidateOfficialLibraryAfterWrite(table: string): void {
+  for (const tag of officialLibraryWriteCacheTags(table)) {
+    updateTag(tag);
+  }
+  if (table === SPECIES_TABLE) {
+    for (const tag of codexTableWriteCacheTags(table)) {
+      updateTag(tag);
+    }
+  }
 }
 
 export async function GET(request: NextRequest, { params }: { params: Promise<{ type: string }> }) {
@@ -234,6 +247,7 @@ export async function POST(
           );
         }
         if (updatedRows && updatedRows.length > 0) {
+          revalidateOfficialLibraryAfterWrite(SPECIES_TABLE);
           return NextResponse.json({ id: existingId });
         }
       }
@@ -246,6 +260,7 @@ export async function POST(
           .select('id')
           .single();
         if (!insertError) {
+          revalidateOfficialLibraryAfterWrite(SPECIES_TABLE);
           return NextResponse.json({ id });
         }
         if (insertError.code !== '23505') {
@@ -283,6 +298,7 @@ export async function POST(
         );
       }
       if (updatedRows && updatedRows.length > 0) {
+        revalidateOfficialLibraryAfterWrite(table);
         return NextResponse.json({ id: existingId });
       }
     }
@@ -307,6 +323,7 @@ export async function POST(
         insertError,
       );
     }
+    revalidateOfficialLibraryAfterWrite(table);
     return NextResponse.json({ id });
   } catch (err) {
     logApiError('POST /api/official/[type]', err);
@@ -359,6 +376,7 @@ export async function PATCH(
     if (!updatedRows || updatedRows.length === 0) {
       return NextResponse.json({ error: 'Item not found' }, { status: 404 });
     }
+    revalidateOfficialLibraryAfterWrite(table);
     return NextResponse.json({
       id: validation.data.id,
       catalogListing: validation.data.catalogListing,
@@ -417,6 +435,7 @@ export async function DELETE(
     // Tombstone so the id is never handed to a different entity, which would silently
     // repoint every saved character that referenced the deleted one.
     await retireCodexId(supabase, table, id);
+    revalidateOfficialLibraryAfterWrite(table);
     return NextResponse.json({ ok: true });
   } catch (err) {
     logApiError('DELETE /api/official/[type]', err);

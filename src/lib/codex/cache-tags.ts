@@ -22,6 +22,15 @@ export function officialLibraryCacheTag(table: string, listedOnly: boolean): str
   return `${OFFICIAL_LIBRARY_CACHE_TAG}:${table}:listedOnly=${listedOnly}`;
 }
 
+/** Invalidate memoized official-library reads after admin writes (listed + unlisted). */
+export function officialLibraryWriteCacheTags(table: string): string[] {
+  return [
+    OFFICIAL_LIBRARY_CACHE_TAG,
+    officialLibraryCacheTag(table, true),
+    officialLibraryCacheTag(table, false),
+  ];
+}
+
 const CODEX_TABLE_TO_DETAIL_COLLECTION = Object.fromEntries(
   Object.entries(CODEX_DETAIL_TABLE).map(([collection, table]) => [table, collection]),
 ) as Record<string, CodexDetailCollection>;
