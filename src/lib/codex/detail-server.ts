@@ -23,6 +23,14 @@ export type CodexDetailRow = {
 
 const DETAIL_SELECT = 'id, name, description';
 
+/** Supabase `.select()` calls issued while loading codex detail collections (tests / build logs). */
+export let codexDetailSupabaseSelectCount = 0;
+
+export function resetCodexDetailSupabaseSelectCountForTests(): void {
+  codexDetailSupabaseSelectCount = 0;
+  collectionRowsByCollection.clear();
+}
+
 function detailSelectFor(collection: CodexDetailCollection): string {
   if (collection === 'feats' || collection === 'creature-feats') {
     return `${DETAIL_SELECT}, feat_lvl`;
@@ -45,10 +53,13 @@ function toDetailRow(row: Record<string, unknown>, includeFeatLvl: boolean): Cod
   return detail;
 }
 
-async function fetchCollectionRows(collection: CodexDetailCollection): Promise<CodexDetailRow[]> {
+async function fetchCollectionRowsFromSupabase(
+  collection: CodexDetailCollection,
+): Promise<CodexDetailRow[]> {
   const supabase = createPublicClient();
   if (!supabase) return [];
   const table = CODEX_DETAIL_TABLE[collection] as PublicTableName;
+  codexDetailSupabaseSelectCount += 1;
   const { data, error } = await fromPublicTable(supabase, table).select(
     detailSelectFor(collection),
   );
@@ -59,7 +70,21 @@ async function fetchCollectionRows(collection: CodexDetailCollection): Promise<C
     .filter((row): row is CodexDetailRow => row !== null);
 }
 
-const loadCodexDetailCollection = cache(fetchCollectionRows);
+/** Process-wide dedupe: React `cache()` does not span static page workers / requests during build. */
+const collectionRowsByCollection = new Map<CodexDetailCollection, Promise<CodexDetailRow[]>>();
+
+function loadCollectionRowsModuleCached(
+  collection: CodexDetailCollection,
+): Promise<CodexDetailRow[]> {
+  let pending = collectionRowsByCollection.get(collection);
+  if (!pending) {
+    pending = fetchCollectionRowsFromSupabase(collection);
+    collectionRowsByCollection.set(collection, pending);
+  }
+  return pending;
+}
+
+const loadCodexDetailCollection = cache(loadCollectionRowsModuleCached);
 
 async function fetchCodexDetailEntry(
   collection: CodexDetailCollection,
@@ -67,16 +92,8 @@ async function fetchCodexDetailEntry(
 ): Promise<CodexDetailRow | null> {
   const parsed = parseCodexEntrySlug(slug);
   if (!parsed) return null;
-  const supabase = createPublicClient();
-  if (!supabase) return null;
-  const table = CODEX_DETAIL_TABLE[collection] as PublicTableName;
-  const { data, error } = await fromPublicTable(supabase, table)
-    .select(detailSelectFor(collection))
-    .eq('id', parsed.id)
-    .maybeSingle();
-  if (error || !data) return null;
-  const includeFeatLvl = collection === 'feats' || collection === 'creature-feats';
-  return toDetailRow(data as Record<string, unknown>, includeFeatLvl);
+  const rows = await loadCodexDetailCollection(collection);
+  return rows.find((row) => row.id === parsed.id) ?? null;
 }
 
 export const loadCodexDetailEntry = cache(fetchCodexDetailEntry);
