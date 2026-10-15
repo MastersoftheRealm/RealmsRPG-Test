@@ -4,6 +4,8 @@
  */
 
 import { cache } from 'react';
+import { codexDetailCollectionCacheTag, CODEX_DETAIL_CACHE_TAG } from '@/lib/codex/cache-tags';
+import { CODEX_PUBLIC_ISR_SECONDS, readCachedPublicData } from '@/lib/supabase/cached-public-read';
 import { createPublicClient } from '@/lib/supabase/public-client';
 import { fromPublicTable, type PublicTableName } from '@/lib/supabase/database';
 import {
@@ -28,7 +30,6 @@ export let codexDetailSupabaseSelectCount = 0;
 
 export function resetCodexDetailSupabaseSelectCountForTests(): void {
   codexDetailSupabaseSelectCount = 0;
-  collectionRowsByCollection.clear();
 }
 
 function detailSelectFor(collection: CodexDetailCollection): string {
@@ -70,21 +71,19 @@ async function fetchCollectionRowsFromSupabase(
     .filter((row): row is CodexDetailRow => row !== null);
 }
 
-/** Process-wide dedupe: React `cache()` does not span static page workers / requests during build. */
-const collectionRowsByCollection = new Map<CodexDetailCollection, Promise<CodexDetailRow[]>>();
-
-function loadCollectionRowsModuleCached(
-  collection: CodexDetailCollection,
-): Promise<CodexDetailRow[]> {
-  let pending = collectionRowsByCollection.get(collection);
-  if (!pending) {
-    pending = fetchCollectionRowsFromSupabase(collection);
-    collectionRowsByCollection.set(collection, pending);
-  }
-  return pending;
+function loadCollectionRowsCached(collection: CodexDetailCollection): Promise<CodexDetailRow[]> {
+  const columns = detailSelectFor(collection);
+  const table = CODEX_DETAIL_TABLE[collection];
+  return readCachedPublicData(
+    ['codex-detail', collection, table, columns],
+    [CODEX_DETAIL_CACHE_TAG, codexDetailCollectionCacheTag(collection)],
+    CODEX_PUBLIC_ISR_SECONDS,
+    () => fetchCollectionRowsFromSupabase(collection),
+  );
 }
 
-const loadCodexDetailCollection = cache(loadCollectionRowsModuleCached);
+/** React `cache()` per request; `unstable_cache` dedupes across static generations (ISR). */
+const loadCodexDetailCollection = cache(loadCollectionRowsCached);
 
 async function fetchCodexDetailEntry(
   collection: CodexDetailCollection,
