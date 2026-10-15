@@ -52,7 +52,7 @@ jobs:
     env:
       # CI scans only data-free routes so the gate never depends on Supabase data.
       A11Y_DETERMINISTIC_ONLY: '1'
-      # Playwright serves `next start` with public anon creds (RLS). Build step overrides these with dummy env.
+      # Real anon creds for `next start` / Playwright (inlined at build). Build step sets REALMS_DISABLE_PUBLIC_SUPABASE only.
       NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
       NEXT_PUBLIC_SUPABASE_PUBLISHABLE_DEFAULT_KEY: ${{ secrets.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_DEFAULT_KEY }}
     steps:
@@ -66,10 +66,9 @@ jobs:
         run: npx playwright install --with-deps chromium
       - name: Build
         env:
-          # Dummy URL/key — `next build` must not query production (see public-client.ts).
+          # Skip public Supabase reads during SSG (see public-client.ts). Do not override NEXT_PUBLIC_* here —
+          # Next inlines them into the bundle; Playwright reuses this build under `next start`.
           REALMS_DISABLE_PUBLIC_SUPABASE: '1'
-          NEXT_PUBLIC_SUPABASE_URL: https://build-ci.invalid
-          NEXT_PUBLIC_SUPABASE_PUBLISHABLE_DEFAULT_KEY: ci-build-not-a-real-key
         run: npm run build
       - name: Visual + accessibility (Playwright)
         # Core gate only: screenshots.pw.ts + a11y.pw.ts (audit suites use dedicated configs).
