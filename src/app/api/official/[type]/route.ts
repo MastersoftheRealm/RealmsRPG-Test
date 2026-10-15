@@ -7,6 +7,8 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
+import { revalidateTag } from 'next/cache';
+import { codexTableWriteCacheTags, officialLibraryWriteCacheTags } from '@/lib/codex/cache-tags';
 import { createClient, createServiceRoleClient } from '@/lib/supabase/server';
 import { getSession } from '@/lib/supabase/session';
 import { isAdmin } from '@/lib/admin';
@@ -27,6 +29,7 @@ import {
   type ColumnarLibraryType,
 } from '@/lib/library-columnar';
 import { enrichRowsWithBankImageUrls } from '@/lib/entity-image-enrich-server';
+import { fetchOfficialColumnarRows, fetchOfficialSpeciesRows } from '@/lib/official-library-server';
 import { allocateCodexNumericId, retireCodexId } from '@/lib/codex/id-allocation';
 import {
   parseCatalogListing,
@@ -111,6 +114,17 @@ async function adminMayIncludeUnlisted(request: NextRequest): Promise<boolean> {
   return isAdmin(user.uid);
 }
 
+function revalidateOfficialLibraryAfterWrite(table: string): void {
+  for (const tag of officialLibraryWriteCacheTags(table)) {
+    revalidateTag(tag, 'max');
+  }
+  if (table === SPECIES_TABLE) {
+    for (const tag of codexTableWriteCacheTags(table)) {
+      revalidateTag(tag, 'max');
+    }
+  }
+}
+
 export async function GET(request: NextRequest, { params }: { params: Promise<{ type: string }> }) {
   try {
     const { type } = await params;
@@ -124,18 +138,17 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
     const includeUnlisted = await adminMayIncludeUnlisted(request);
 
     if (type === 'species') {
-      const speciesQuery = includeUnlisted
-        ? supabase.from(SPECIES_TABLE).select('*')
-        : supabase.from(SPECIES_TABLE).select('*').eq('catalog_listing', 'listed');
-      const { data: rows, error } = await speciesQuery;
-      if (error) {
-        if (error.code === '42P01' || error.message?.includes('does not exist')) {
-          console.warn('[API] Official library table not found for type:', type, error.message);
+      let speciesRows: Record<string, unknown>[];
+      try {
+        speciesRows = await fetchOfficialSpeciesRows(supabase, includeUnlisted);
+      } catch (error) {
+        const err = error as { code?: string; message?: string };
+        if (err.code === '42P01' || err.message?.includes('does not exist')) {
+          console.warn('[API] Official library table not found for type:', type, err.message);
           return NextResponse.json([]);
         }
         throw error;
       }
-      const speciesRows = (rows ?? []) as Record<string, unknown>[];
       await enrichRowsWithBankImageUrls(supabase, speciesRows);
       const items = speciesRows.map((r) => {
         const item = rowToItemSpecies(r as Record<string, unknown>);
@@ -152,21 +165,21 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
       return NextResponse.json(items, { headers: { 'Cache-Control': cacheControl } });
     }
 
-    const table = TABLE_MAP[type as ColumnarLibraryType];
-    const officialQuery = includeUnlisted
-      ? supabase.from(table).select('*')
-      : supabase.from(table).select('*').eq('catalog_listing', 'listed');
-    const { data: rows, error } = await officialQuery;
-
-    if (error) {
-      if (error.code === '42P01' || error.message?.includes('does not exist')) {
-        console.warn('[API] Official library table not found for type:', type, error.message);
+    let officialRows: Record<string, unknown>[];
+    try {
+      officialRows = await fetchOfficialColumnarRows(
+        supabase,
+        type as ColumnarLibraryType,
+        includeUnlisted,
+      );
+    } catch (error) {
+      const err = error as { code?: string; message?: string };
+      if (err.code === '42P01' || err.message?.includes('does not exist')) {
+        console.warn('[API] Official library table not found for type:', type, err.message);
         return NextResponse.json([]);
       }
       throw error;
     }
-
-    const officialRows = (rows ?? []) as Record<string, unknown>[];
     await enrichRowsWithBankImageUrls(supabase, officialRows);
     const items = officialRows.map((r) => rowToItem(type as ColumnarLibraryType, r, 'official'));
     items.sort((a, b) => {
@@ -234,6 +247,7 @@ export async function POST(
           );
         }
         if (updatedRows && updatedRows.length > 0) {
+          revalidateOfficialLibraryAfterWrite(SPECIES_TABLE);
           return NextResponse.json({ id: existingId });
         }
       }
@@ -246,6 +260,7 @@ export async function POST(
           .select('id')
           .single();
         if (!insertError) {
+          revalidateOfficialLibraryAfterWrite(SPECIES_TABLE);
           return NextResponse.json({ id });
         }
         if (insertError.code !== '23505') {
@@ -283,6 +298,7 @@ export async function POST(
         );
       }
       if (updatedRows && updatedRows.length > 0) {
+        revalidateOfficialLibraryAfterWrite(table);
         return NextResponse.json({ id: existingId });
       }
     }
@@ -307,6 +323,7 @@ export async function POST(
         insertError,
       );
     }
+    revalidateOfficialLibraryAfterWrite(table);
     return NextResponse.json({ id });
   } catch (err) {
     logApiError('POST /api/official/[type]', err);
@@ -359,6 +376,7 @@ export async function PATCH(
     if (!updatedRows || updatedRows.length === 0) {
       return NextResponse.json({ error: 'Item not found' }, { status: 404 });
     }
+    revalidateOfficialLibraryAfterWrite(table);
     return NextResponse.json({
       id: validation.data.id,
       catalogListing: validation.data.catalogListing,
@@ -417,6 +435,7 @@ export async function DELETE(
     // Tombstone so the id is never handed to a different entity, which would silently
     // repoint every saved character that referenced the deleted one.
     await retireCodexId(supabase, table, id);
+    revalidateOfficialLibraryAfterWrite(table);
     return NextResponse.json({ ok: true });
   } catch (err) {
     logApiError('DELETE /api/official/[type]', err);

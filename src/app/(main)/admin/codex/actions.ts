@@ -5,7 +5,8 @@ import { isAdmin } from '@/lib/admin';
 import { recordCodexChange, type RecordCodexChangeInput } from '@/lib/codex-changelog';
 import { featTagsToNormalizeInput, parseFeatTagsFromDb } from '@/lib/codex/feat-tags';
 import { createServiceRoleClient } from '@/lib/supabase/server';
-import { revalidatePath } from 'next/cache';
+import { revalidatePath, updateTag } from 'next/cache';
+import { codexTableWriteCacheTags, CORE_RULES_CACHE_TAG } from '@/lib/codex/cache-tags';
 import {
   assertCodexCollection,
   isColumnarCollection,
@@ -23,6 +24,18 @@ import {
 import { coreRulesDocumentNumberError } from '../core-rules/core-rules-number';
 
 const MAX_REPORTED_REFERENCES = 20;
+
+function revalidatePublicCodexCaches(collection: CodexCollection, table: string): void {
+  revalidatePath('/admin/codex');
+  revalidatePath('/codex');
+  if (collection === 'core_rules') {
+    updateTag(CORE_RULES_CACHE_TAG);
+    return;
+  }
+  for (const tag of codexTableWriteCacheTags(table)) {
+    updateTag(tag);
+  }
+}
 
 const CONFLICT_MESSAGE =
   'This entity changed since you opened it. Reload the page and reapply your edit.';
@@ -205,8 +218,7 @@ export async function createCodexDoc(
       });
     }
 
-    revalidatePath('/admin/codex');
-    revalidatePath('/codex');
+    revalidatePublicCodexCaches(safeCollection, table);
     return { success: true, id: docId };
   } catch (e) {
     return { success: false, error: e instanceof Error ? e.message : 'Failed to create' };
@@ -279,8 +291,7 @@ export async function updateCodexDoc(
       });
     }
 
-    revalidatePath('/admin/codex');
-    revalidatePath('/codex');
+    revalidatePublicCodexCaches(safeCollection, table);
     return { success: true };
   } catch (e) {
     return { success: false, error: e instanceof Error ? e.message : 'Failed to update' };
@@ -329,8 +340,7 @@ export async function deleteCodexDoc(
       });
     }
 
-    revalidatePath('/admin/codex');
-    revalidatePath('/codex');
+    revalidatePublicCodexCaches(safeCollection, table);
     return { success: true };
   } catch (e) {
     return { success: false, error: e instanceof Error ? e.message : 'Failed to delete' };
@@ -387,8 +397,10 @@ export async function saveArchetypeWithPath(
       afterData: afterSnapshot as Record<string, unknown> | null,
     });
 
-    revalidatePath('/admin/codex');
-    revalidatePath('/codex');
+    revalidatePublicCodexCaches('codex_archetypes', 'codex_archetypes');
+    for (const tag of codexTableWriteCacheTags('codex_archetype_levels')) {
+      updateTag(tag);
+    }
     return { success: true, id };
   } catch (e) {
     return {

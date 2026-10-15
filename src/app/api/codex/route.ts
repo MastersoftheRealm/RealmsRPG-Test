@@ -34,23 +34,15 @@ import {
   type CodexPayload,
   type CodexPayloadKey,
 } from '@/types/codex';
+import { CODEX_DATA_TABLES, type CodexDataTable } from '@/lib/codex/codex-tables';
+import { CODEX_API_TABLE_SELECT } from '@/lib/codex/public-table-select';
+import { codexApiTableCacheTag, CODEX_API_CACHE_TAG } from '@/lib/codex/cache-tags';
+import { CODEX_PUBLIC_ISR_SECONDS, readCachedPublicData } from '@/lib/supabase/cached-public-read';
 import type { ArchetypeCategory } from '@/types/archetype';
 
 /** Codex tables behind the payload keys — `?collection=` only queries what it returns. */
-const CODEX_TABLES = [
-  'codex_feats',
-  'codex_skills',
-  'codex_species',
-  'codex_traits',
-  'codex_parts',
-  'codex_properties',
-  'codex_equipment',
-  'codex_archetypes',
-  'codex_archetype_levels',
-  'codex_creature_feats',
-] as const;
-
-type CodexTable = (typeof CODEX_TABLES)[number];
+const CODEX_TABLES = CODEX_DATA_TABLES;
+type CodexTable = CodexDataTable;
 
 const COLLECTION_TABLES: Record<CodexPayloadKey, readonly CodexTable[]> = {
   feats: ['codex_feats'],
@@ -100,7 +92,15 @@ function selectTable(
   needed: ReadonlySet<CodexTable>,
 ): PromiseLike<TableResult> {
   if (!needed.has(table)) return Promise.resolve({ data: [], error: null });
-  return fromPublicTable(supabase, table).select('*') as PromiseLike<TableResult>;
+  const columns = CODEX_API_TABLE_SELECT[table];
+  const tableTag = codexApiTableCacheTag(table);
+  return readCachedPublicData(
+    ['codex-api', table, columns],
+    [CODEX_API_CACHE_TAG, tableTag],
+    CODEX_PUBLIC_ISR_SECONDS,
+    () =>
+      Promise.resolve(fromPublicTable(supabase, table).select(columns) as PromiseLike<TableResult>),
+  );
 }
 
 async function fetchCodexFromClient(
