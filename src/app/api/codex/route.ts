@@ -36,7 +36,8 @@ import {
 } from '@/types/codex';
 import { CODEX_DATA_TABLES, type CodexDataTable } from '@/lib/codex/codex-tables';
 import { CODEX_API_TABLE_SELECT } from '@/lib/codex/public-table-select';
-import { memoizedPublicRead } from '@/lib/supabase/memoized-public-reads';
+import { codexApiTableCacheTag, CODEX_API_CACHE_TAG } from '@/lib/codex/cache-tags';
+import { CODEX_PUBLIC_ISR_SECONDS, readCachedPublicData } from '@/lib/supabase/cached-public-read';
 import type { ArchetypeCategory } from '@/types/archetype';
 
 /** Codex tables behind the payload keys — `?collection=` only queries what it returns. */
@@ -92,9 +93,13 @@ function selectTable(
 ): PromiseLike<TableResult> {
   if (!needed.has(table)) return Promise.resolve({ data: [], error: null });
   const columns = CODEX_API_TABLE_SELECT[table];
-  const cacheKey = `codex-api:${table}:${columns}`;
-  return memoizedPublicRead(cacheKey, () =>
-    Promise.resolve(fromPublicTable(supabase, table).select(columns) as PromiseLike<TableResult>),
+  const tableTag = codexApiTableCacheTag(table);
+  return readCachedPublicData(
+    ['codex-api', table, columns],
+    [CODEX_API_CACHE_TAG, tableTag],
+    CODEX_PUBLIC_ISR_SECONDS,
+    () =>
+      Promise.resolve(fromPublicTable(supabase, table).select(columns) as PromiseLike<TableResult>),
   );
 }
 

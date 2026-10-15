@@ -6,7 +6,8 @@
 
 import { createClient } from '@/lib/supabase/server';
 import type { Json, Tables, TypedSupabaseClient } from '@/lib/supabase/database';
-import { memoizedPublicRead } from '@/lib/supabase/memoized-public-reads';
+import { ROLE_POLICIES_CACHE_TAG } from '@/lib/codex/cache-tags';
+import { CODEX_PUBLIC_ISR_SECONDS, readCachedPublicData } from '@/lib/supabase/cached-public-read';
 import { ROLE_LIMITS, type RoleLimits, type UserRole } from './role-limits';
 
 export interface RolePolicy extends RoleLimits {
@@ -64,8 +65,6 @@ export function getDefaultRolePolicy(role: UserRole | string | null): RolePolicy
 const ROLE_POLICY_SELECT =
   'role, max_campaigns, max_players_per_campaign, max_characters, max_custom_powers, max_custom_techniques, max_custom_armaments, max_custom_creatures, permissions';
 
-const ROLE_POLICIES_CACHE_KEY = `role_policies:${ROLE_POLICY_SELECT}`;
-
 async function fetchAllRolePolicyRows(supabase: TypedSupabaseClient): Promise<RolePolicyRow[]> {
   const { data } = await supabase.from('role_policies').select(ROLE_POLICY_SELECT);
   return (data ?? []) as RolePolicyRow[];
@@ -100,8 +99,11 @@ export async function getRolePolicyForRole(
   const safeRole = isUserRole(role) ? role : DEFAULT_ROLE;
   const fallback = getDefaultRolePolicy(safeRole);
   const supabase = supabaseClient ?? (await createClient());
-  const rows = await memoizedPublicRead(ROLE_POLICIES_CACHE_KEY, () =>
-    fetchAllRolePolicyRows(supabase),
+  const rows = await readCachedPublicData(
+    ['role-policies', ROLE_POLICY_SELECT],
+    [ROLE_POLICIES_CACHE_TAG],
+    CODEX_PUBLIC_ISR_SECONDS,
+    () => fetchAllRolePolicyRows(supabase),
   );
   const data = rows.find((row) => row.role === safeRole);
 

@@ -3,7 +3,8 @@
  */
 
 import { columnarViewSelect, type ColumnarLibraryType } from '@/lib/library-columnar';
-import { memoizedPublicRead } from '@/lib/supabase/memoized-public-reads';
+import { officialLibraryCacheTag } from '@/lib/codex/cache-tags';
+import { CODEX_PUBLIC_ISR_SECONDS, readCachedPublicData } from '@/lib/supabase/cached-public-read';
 import type { TypedSupabaseClient } from '@/lib/supabase/database';
 
 const OFFICIAL_TABLE_BY_TYPE = {
@@ -26,28 +27,40 @@ export async function fetchOfficialColumnarRows(
 ): Promise<Record<string, unknown>[]> {
   const table: OfficialLibraryTable = OFFICIAL_TABLE_BY_TYPE[type];
   const columns = columnarViewSelect(type);
-  const cacheKey = `official:${table}:${columns}:listedOnly=${!includeUnlisted}`;
-  return memoizedPublicRead(cacheKey, async () => {
-    const base = supabase.from(table).select(columns);
-    const { data, error } = includeUnlisted
-      ? await base
-      : await base.eq('catalog_listing', 'listed');
-    if (error) throw error;
-    return (data ?? []) as unknown as Record<string, unknown>[];
-  });
+  const listedOnly = !includeUnlisted;
+  const tag = officialLibraryCacheTag(table, listedOnly);
+  return readCachedPublicData(
+    ['official-library', table, columns, `listedOnly=${listedOnly}`],
+    [tag, 'official-library'],
+    CODEX_PUBLIC_ISR_SECONDS,
+    async () => {
+      const base = supabase.from(table).select(columns);
+      const { data, error } = includeUnlisted
+        ? await base
+        : await base.eq('catalog_listing', 'listed');
+      if (error) throw error;
+      return (data ?? []) as unknown as Record<string, unknown>[];
+    },
+  );
 }
 
 export async function fetchOfficialSpeciesRows(
   supabase: TypedSupabaseClient,
   includeUnlisted: boolean,
 ): Promise<Record<string, unknown>[]> {
-  const cacheKey = `official:codex_species:${SPECIES_PUBLIC_SELECT}:listedOnly=${!includeUnlisted}`;
-  return memoizedPublicRead(cacheKey, async () => {
-    const base = supabase.from('codex_species').select(SPECIES_PUBLIC_SELECT);
-    const { data, error } = includeUnlisted
-      ? await base
-      : await base.eq('catalog_listing', 'listed');
-    if (error) throw error;
-    return (data ?? []) as unknown as Record<string, unknown>[];
-  });
+  const listedOnly = !includeUnlisted;
+  const tag = officialLibraryCacheTag('codex_species', listedOnly);
+  return readCachedPublicData(
+    ['official-library', 'codex_species', SPECIES_PUBLIC_SELECT, `listedOnly=${listedOnly}`],
+    [tag, 'official-library'],
+    CODEX_PUBLIC_ISR_SECONDS,
+    async () => {
+      const base = supabase.from('codex_species').select(SPECIES_PUBLIC_SELECT);
+      const { data, error } = includeUnlisted
+        ? await base
+        : await base.eq('catalog_listing', 'listed');
+      if (error) throw error;
+      return (data ?? []) as unknown as Record<string, unknown>[];
+    },
+  );
 }
