@@ -22,7 +22,6 @@ import { getSession } from '@/lib/supabase/session';
 import { isAdmin } from '@/lib/admin';
 import { fetchCoreRules } from '@/lib/core-rules-server';
 import { CODEX_SKILLS_PUBLIC_SELECT } from '@/lib/codex/public-table-select';
-import { resetMemoizedPublicReadsForTests } from '@/lib/supabase/memoized-public-reads';
 import { CODEX_PAYLOAD_KEYS, type CodexPayload } from '@/types/codex';
 
 const mockCreateClient = vi.mocked(createClient);
@@ -74,7 +73,6 @@ async function getJson(url: string): Promise<Partial<CodexPayload>> {
 describe('GET /api/codex', () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    resetMemoizedPublicReadsForTests();
     queriedTables = [];
     lastSelectByTable = {};
     mockFetchCoreRules.mockResolvedValue({

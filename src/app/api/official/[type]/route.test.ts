@@ -22,7 +22,6 @@ import { GET, POST, PATCH, DELETE } from './route';
 import { getSession } from '@/lib/supabase/session';
 import { isAdmin } from '@/lib/admin';
 import { createClient, createServiceRoleClient } from '@/lib/supabase/server';
-import { resetMemoizedPublicReadsForTests } from '@/lib/supabase/memoized-public-reads';
 
 const mockGetSession = vi.mocked(getSession);
 const mockIsAdmin = vi.mocked(isAdmin);
@@ -79,7 +78,6 @@ const params = (type: string) => ({ params: Promise.resolve({ type }) });
 describe('GET /api/official/[type]', () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    resetMemoizedPublicReadsForTests();
   });
 
   it('returns official items without a session (public read)', async () => {

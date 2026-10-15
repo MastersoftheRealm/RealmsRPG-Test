@@ -13,15 +13,11 @@
 
 import type { CoreRulesMap } from '@/types/core-rules';
 import type { TypedSupabaseClient } from '@/lib/supabase/database';
-import {
-  memoizedPublicRead,
-  resetMemoizedPublicReadsForTests,
-} from '@/lib/supabase/memoized-public-reads';
-
-const CORE_RULES_CACHE_KEY = 'core_rules:id,data';
+import { CORE_RULES_CACHE_TAG } from '@/lib/codex/cache-tags';
+import { CODEX_PUBLIC_ISR_SECONDS, readCachedPublicData } from '@/lib/supabase/cached-public-read';
 
 export function resetCoreRulesCacheForTests(): void {
-  resetMemoizedPublicReadsForTests();
+  // Tests mock `unstable_cache` as a passthrough; nothing to reset.
 }
 
 async function loadCoreRulesFromSupabase(
@@ -40,5 +36,10 @@ async function loadCoreRulesFromSupabase(
 export async function fetchCoreRules(
   supabase: Pick<TypedSupabaseClient, 'from'>,
 ): Promise<Partial<CoreRulesMap>> {
-  return memoizedPublicRead(CORE_RULES_CACHE_KEY, () => loadCoreRulesFromSupabase(supabase));
+  return readCachedPublicData(
+    ['core-rules', 'id,data'],
+    [CORE_RULES_CACHE_TAG],
+    CODEX_PUBLIC_ISR_SECONDS,
+    () => loadCoreRulesFromSupabase(supabase),
+  );
 }
