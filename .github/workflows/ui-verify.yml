@@ -52,8 +52,10 @@ jobs:
     env:
       # CI scans only data-free routes so the gate never depends on Supabase data.
       A11Y_DETERMINISTIC_ONLY: '1'
-      NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
-      NEXT_PUBLIC_SUPABASE_PUBLISHABLE_DEFAULT_KEY: ${{ secrets.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_DEFAULT_KEY }}
+      # Dummy URL/key — public SSG skips Supabase (see public-client.ts). Do not use prod secrets here.
+      REALMS_DISABLE_PUBLIC_SUPABASE: '1'
+      NEXT_PUBLIC_SUPABASE_URL: https://build-ci.invalid
+      NEXT_PUBLIC_SUPABASE_PUBLISHABLE_DEFAULT_KEY: ci-build-not-a-real-key
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
