@@ -13,6 +13,9 @@ import {
   type SelectableItem,
 } from '@/components/patterns/select/unified-selection-modal';
 
+/** Desktop modal width for creator load flows (86e3jzdu3). */
+export const LOAD_FROM_LIBRARY_MODAL_SIZE = 'xl' as const;
+
 export interface LoadFromLibraryModalProps {
   selectableItems: SelectableItem[];
   columns: Array<{ key: string; label: string; sortable?: boolean | undefined }>;
@@ -75,7 +78,7 @@ export function LoadFromLibraryModal({
       searchPlaceholder={searchPlaceholder}
       confirmLabel="Load"
       itemLabel="item"
-      size="lg"
+      size={LOAD_FROM_LIBRARY_MODAL_SIZE}
       className="md:max-h-[60vh]"
     />
   );

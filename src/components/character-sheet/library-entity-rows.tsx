@@ -13,7 +13,12 @@ import {
   getScalarTempModifier,
   tempModifierValueClass,
 } from '@/lib/character/temp-modifiers';
-import { resolveWeaponRangeDisplay, type ItemPropertyPayload } from '@/lib/calculators';
+import {
+  resolveShieldBlockDisplay,
+  resolveShieldDamageDisplay,
+  resolveWeaponRangeDisplay,
+  type ItemPropertyPayload,
+} from '@/lib/calculators';
 import {
   InnateToggle,
   RollButton,
@@ -670,8 +675,30 @@ export function mapShieldRows(shields: Item[], ctx: LibraryEntityRowContext): En
       shieldAmount?: string | undefined;
       shieldDamage?: string | null | undefined;
     };
-    const shieldBlock = enriched.shieldAmount ?? '-';
-    const shieldDamageStr = enriched.shieldDamage ?? (item.damage ? String(item.damage) : '-');
+    const lib = (item as ItemWithLibrarySource).libraryItem as
+      | {
+          shieldDR?: { amount?: number; size?: number } | undefined;
+          shieldDamage?: unknown;
+          hasShieldDamage?: boolean | undefined;
+        }
+      | undefined;
+    const itemProps = (resolveItemProperties(item as ItemWithLibrarySource) ??
+      []) as ItemPropertyPayload[];
+    const shieldBlock =
+      enriched.shieldAmount ??
+      resolveShieldBlockDisplay({
+        shieldDR: lib?.shieldDR,
+        properties: itemProps,
+      });
+    const shieldDamageResolved = resolveShieldDamageDisplay({
+      shieldDamage: lib?.shieldDamage,
+      hasShieldDamage: lib?.hasShieldDamage,
+      properties: itemProps,
+      damage: item.damage,
+    });
+    const shieldDamageStr =
+      shieldDamageResolved ?? enriched.shieldDamage ?? (item.damage ? String(item.damage) : '-');
+    const hasShieldDamage = Boolean(shieldDamageResolved);
     const { bonus: attackBonus } = getWeaponAttackBonus(
       item,
       rollAbilities,
@@ -701,7 +728,7 @@ export function mapShieldRows(shields: Item[], ctx: LibraryEntityRowContext): En
     );
 
     const attackCell =
-      shieldDamageStr !== '-' && ctx.rollContext?.canRoll !== false && ctx.rollContext ? (
+      hasShieldDamage && ctx.rollContext?.canRoll !== false && ctx.rollContext ? (
         <div className="flex justify-center">
           <RollButton
             value={attackBonus}
@@ -710,14 +737,17 @@ export function mapShieldRows(shields: Item[], ctx: LibraryEntityRowContext): En
             title="Roll attack"
           />
         </div>
-      ) : shieldDamageStr !== '-' ? (
+      ) : hasShieldDamage ? (
         (attackBonus >= 0 ? '+' : '') + attackBonus
       ) : (
         '-'
       );
 
     const damageCell =
-      shieldDamageRollStr !== '-' && ctx.rollContext?.canRoll !== false && ctx.rollContext ? (
+      hasShieldDamage &&
+      shieldDamageRollStr !== '-' &&
+      ctx.rollContext?.canRoll !== false &&
+      ctx.rollContext ? (
         <div className="flex flex-col items-center gap-0.5">
           <RollButton
             value={0}
@@ -737,13 +767,15 @@ export function mapShieldRows(shields: Item[], ctx: LibraryEntityRowContext): En
             <span className="text-[10px] leading-none text-text-muted">{shieldDamageType}</span>
           )}
         </div>
-      ) : (
+      ) : hasShieldDamage ? (
         <div className="flex flex-col items-center gap-0.5">
           <span className="text-sm font-medium text-text-muted">{shieldDamageDice}</span>
           {shieldDamageType && (
             <span className="text-[10px] leading-none text-text-muted">{shieldDamageType}</span>
           )}
         </div>
+      ) : (
+        '-'
       );
 
     return {

@@ -189,6 +189,27 @@ describe('library-selectable-builders (DEV-V-016 parity)', () => {
     expect(damageOn.columns?.find((c) => c.key === 'Damage')?.value).toBe('2d4 Bludgeoning');
   });
 
+  it('armor picker shows damage reduction from properties when armorValue is missing (86e3jzdu3)', () => {
+    const cols = getItemColumns(
+      {
+        id: 'a1',
+        name: 'Plate',
+        type: 'armor',
+        properties: [{ id: 1, name: 'Damage Reduction', op_1_lvl: 1 }],
+      },
+      'armor',
+    );
+    expect(cols.find((c) => c.key === 'armor')?.value).toBe('2');
+  });
+
+  it('armor picker shows dash when nothing defines damage reduction (86e3jzdu3)', () => {
+    const cols = getItemColumns(
+      { id: 'a0', name: 'Cloth', type: 'armor', properties: [] },
+      'armor',
+    );
+    expect(cols.find((c) => c.key === 'armor')?.value).toBe('-');
+  });
+
   it('buildSelectableItem preserves data for sheet add mapping (DEV-V-016-T006)', () => {
     const weapon = {
       id: 'w1',

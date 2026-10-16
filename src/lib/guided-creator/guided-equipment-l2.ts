@@ -9,7 +9,7 @@ import type { LibraryItem } from '@/types/library';
 import type { CodexEquipmentItem } from '@/types/codex';
 import type { ItemPropertyTpRow } from '@/lib/calculators/item-calc';
 import type { ItemPropertyPayload } from '@/lib/calculators/item-calc';
-import { deriveShieldDamageFromProperties, resolveWeaponRangeDisplay } from '@/lib/calculators';
+import { resolveShieldDamageDisplay, resolveWeaponRangeDisplay } from '@/lib/calculators';
 import {
   libraryRowForRef,
   rowsForEquipmentPhase,
@@ -145,11 +145,15 @@ function toOfficialItemRowForGuided(
   const lib = libraryRowForRef(row.id, officialItems, codexEquipment);
   const description =
     lib && 'description' in lib ? String(lib.description ?? '').trim() : (built?.description ?? '');
-  const shieldDamage =
-    deriveShieldDamageFromProperties((row.properties ?? []) as ItemPropertyPayload[]) ??
-    (typeof (lib as CodexEquipmentItem | undefined)?.damage === 'string'
-      ? String((lib as CodexEquipmentItem).damage)
-      : null);
+  const shieldDamage = resolveShieldDamageDisplay({
+    shieldDamage:
+      official?.shieldDamage ?? (lib as { shieldDamage?: unknown } | undefined)?.shieldDamage,
+    hasShieldDamage:
+      official?.hasShieldDamage ??
+      (lib as { hasShieldDamage?: boolean } | undefined)?.hasShieldDamage,
+    properties: (row.properties ?? []) as ItemPropertyPayload[],
+    damage: official?.damage ?? (lib as CodexEquipmentItem | undefined)?.damage,
+  });
   const weaponDamage = weaponDamageLineForRef(row.id, officialItems, codexEquipment) ?? '-';
 
   return {

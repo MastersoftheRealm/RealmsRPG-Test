@@ -184,6 +184,7 @@ export {
   deriveShieldAmountFromProperties,
   deriveShieldDamageFromProperties,
   shieldDiceFromOptionLevel,
+  resolveShieldBlockDisplay,
   resolveShieldDamageDisplay,
   deriveItemDisplay,
   isGeneralProperty,

@@ -696,6 +696,25 @@ export function deriveShieldDamageFromProperties(properties: ItemPropertyPayload
 }
 
 /**
+ * Shield block amount for display (sheet, library, archetype quick table).
+ * Saved `shieldDR` wins; otherwise derive from Shield Amount property.
+ */
+export function resolveShieldBlockDisplay(input: {
+  shieldDR?:
+    | { amount?: number | null | undefined; size?: number | null | undefined }
+    | null
+    | undefined;
+  properties?: ItemPropertyPayload[] | null | undefined;
+}): string {
+  const amount = Number(input.shieldDR?.amount);
+  const size = Number(input.shieldDR?.size);
+  if (Number.isInteger(amount) && Number.isInteger(size) && amount >= 1 && size >= 1) {
+    return `${amount}d${size}`;
+  }
+  return deriveShieldAmountFromProperties(input.properties ?? []);
+}
+
+/**
  * Library and Load damage cells.
  * While shield damage is on, and when the on/off flag was never saved, a stored
  * shieldDamage die wins over the property ladder.
@@ -708,7 +727,10 @@ export function resolveShieldDamageDisplay(input: {
   properties?: ItemPropertyPayload[] | null | undefined;
   damage?: unknown;
 }): string | null {
-  if (input.hasShieldDamage !== false && input.shieldDamage != null) {
+  if (input.hasShieldDamage === false) {
+    return null;
+  }
+  if (input.shieldDamage != null) {
     const raw = input.shieldDamage;
     const stored = formatDamageDisplay(
       typeof raw === 'object' && !Array.isArray(raw)

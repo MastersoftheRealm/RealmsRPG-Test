@@ -259,7 +259,7 @@ export function AddLibraryItemModal({
       emptySubMessage={emptyDesc}
       searchPlaceholder={getSearchPlaceholder(itemType, powerSelectionMode)}
       showQuantity={itemType === 'equipment'}
-      size="lg"
+      size="xl"
       className="md:max-h-[60vh]"
     />
   );

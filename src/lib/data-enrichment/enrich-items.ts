@@ -1,8 +1,9 @@
 import type { UserItem } from '@/hooks/use-user-library';
 import {
   resolveWeaponRangeDisplay,
-  deriveShieldAmountFromProperties,
-  deriveShieldDamageFromProperties,
+  resolveShieldBlockDisplay,
+  resolveShieldDamageDisplay,
+  type ItemPropertyPayload,
 } from '@/lib/calculators';
 import { resolveArmorDamageReduction } from '@/lib/game/resolve-armor-damage-reduction';
 import type { CodexEquipmentItem, EnrichedItem } from './types';
@@ -60,11 +61,23 @@ export function enrichItems(
       // Use saved abilityRequirement, or derive from properties (e.g. old items that only stored requirement as property)
       const abilityRequirement =
         libraryItem.abilityRequirement ?? deriveAbilityRequirementFromProperties(props);
-      // Shield-specific: block amount and optional damage from properties
+      // Shield-specific: saved dice + property ladder (display only)
       const shieldAmount =
-        itemType === 'shield' ? deriveShieldAmountFromProperties(props) : undefined;
+        itemType === 'shield'
+          ? resolveShieldBlockDisplay({
+              shieldDR: libraryItem.shieldDR,
+              properties: props as ItemPropertyPayload[],
+            })
+          : undefined;
       const shieldDamage =
-        itemType === 'shield' ? deriveShieldDamageFromProperties(props) : undefined;
+        itemType === 'shield'
+          ? resolveShieldDamageDisplay({
+              shieldDamage: libraryItem.shieldDamage,
+              hasShieldDamage: libraryItem.hasShieldDamage,
+              properties: props as ItemPropertyPayload[],
+              damage: libraryItem.damage,
+            })
+          : undefined;
       const armorValue =
         itemType === 'armor'
           ? resolveArmorDamageReduction({ ...libraryItem, properties: props })
