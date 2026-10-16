@@ -9,13 +9,15 @@
 import { useMemo, useState } from 'react';
 import { cn } from '@/lib/utils';
 import { Button, TabNavOverflowScroller } from '@/components/ui';
-import { ConfirmActionModal } from '@/components/patterns';
+import { ConfirmActionModal, InfoTippy } from '@/components/patterns';
 import { ChevronDown, RotateCcw } from 'lucide-react';
 import {
   useGuidedCreatorStore,
   GUIDED_CHAPTERS,
+  GUIDED_SUBSTEP_ORDER,
   type GuidedSubStep,
 } from '@/stores/guided-creator-store';
+import { findGuidedChapterRailBlockerChapter } from '@/lib/guided-creator/chapter-rail-lock';
 import { GuidedCreatorPageShell } from './guided-creator-page-shell';
 import { CharacterPreviewPanel } from './character-preview-panel';
 import { GUIDED_CREATOR_COPY } from '@/lib/constants/site-copy';
@@ -49,7 +51,7 @@ const STEP_COMPONENTS: Record<GuidedSubStep, React.ComponentType> = {
 };
 
 function ChapterRail({ className }: { className?: string | undefined }) {
-  const { currentSubStep, isSubStepSatisfied, canNavigateToSubStep, setSubStep } =
+  const { currentSubStep, draft, isSubStepSatisfied, canNavigateToSubStep, setSubStep } =
     useGuidedCreatorStore();
   const activeChapterIndex = GUIDED_CHAPTERS.findIndex((c) => c.subSteps.includes(currentSubStep));
 
@@ -71,50 +73,86 @@ function ChapterRail({ className }: { className?: string | undefined }) {
           const firstSub = chapter.subSteps[0];
           if (firstSub === undefined) return null;
           const canOpen = canNavigateToSubStep(firstSub);
+          const blockingChapter = canOpen
+            ? null
+            : findGuidedChapterRailBlockerChapter(
+                firstSub,
+                GUIDED_CHAPTERS,
+                GUIDED_SUBSTEP_ORDER,
+                draft,
+              );
+          const lockedTooltip =
+            blockingChapter !== null
+              ? shellCopy.chapterRail.lockedTooltip(blockingChapter.title)
+              : null;
+
+          const chapterButton = (
+            <button
+              type="button"
+              onClick={() => {
+                if (!canOpen) return;
+                setSubStep(firstSub);
+              }}
+              onKeyDown={(event) => {
+                if (!canOpen && (event.key === 'Enter' || event.key === ' ')) {
+                  event.preventDefault();
+                }
+              }}
+              aria-disabled={!canOpen || undefined}
+              aria-current={isActive ? 'step' : undefined}
+              aria-label={
+                !canOpen ? shellCopy.chapterRail.lockedAriaLabel(chapter.title) : undefined
+              }
+              className={cn(
+                'flex min-h-11 items-center gap-2 rounded-pill border px-3 py-2 text-sm font-medium transition-colors',
+                isActive && 'border-primary-button bg-primary-button text-text-on-dark shadow-card',
+                !isActive &&
+                  isComplete &&
+                  'border-success-200/60 bg-success-light text-success-fg dark:border-success-800/40',
+                !isActive &&
+                  !isComplete &&
+                  canOpen &&
+                  'border-border-light bg-surface text-text-secondary hover:bg-surface-alt',
+                !isActive &&
+                  !isComplete &&
+                  !canOpen &&
+                  'cursor-not-allowed border-border-light bg-surface text-text-muted',
+              )}
+            >
+              <span
+                className={cn(
+                  'flex h-6 w-6 items-center justify-center rounded-pill font-display text-xs font-bold',
+                  isActive
+                    ? 'bg-text-on-dark/20 text-text-on-dark'
+                    : isComplete
+                      ? 'bg-success-fg/15 text-success-fg'
+                      : 'bg-surface-alt text-text-secondary',
+                )}
+                aria-hidden="true"
+              >
+                {isComplete && !isActive ? '✓' : index + 1}
+              </span>
+              <span className="font-nunito whitespace-nowrap">
+                {isActive
+                  ? (guidedChapterProgressTitle(currentSubStep, chapter) ?? chapter.title)
+                  : chapter.title}
+              </span>
+            </button>
+          );
 
           return (
             <li key={chapter.id} className="shrink-0">
-              <button
-                type="button"
-                onClick={() => canOpen && setSubStep(firstSub)}
-                disabled={!canOpen}
-                aria-current={isActive ? 'step' : undefined}
-                className={cn(
-                  'flex min-h-11 items-center gap-2 rounded-pill border px-3 py-2 text-sm font-medium transition-colors',
-                  isActive &&
-                    'border-primary-button bg-primary-button text-text-on-dark shadow-card',
-                  !isActive &&
-                    isComplete &&
-                    'border-success-200/60 bg-success-light text-success-fg dark:border-success-800/40',
-                  !isActive &&
-                    !isComplete &&
-                    canOpen &&
-                    'border-border-light bg-surface text-text-secondary hover:bg-surface-alt',
-                  !isActive &&
-                    !isComplete &&
-                    !canOpen &&
-                    'cursor-not-allowed border-border-light bg-surface text-text-muted',
-                )}
-              >
-                <span
-                  className={cn(
-                    'flex h-6 w-6 items-center justify-center rounded-pill font-display text-xs font-bold',
-                    isActive
-                      ? 'bg-text-on-dark/20 text-text-on-dark'
-                      : isComplete
-                        ? 'bg-success-fg/15 text-success-fg'
-                        : 'bg-surface-alt text-text-secondary',
-                  )}
-                  aria-hidden="true"
+              {lockedTooltip ? (
+                <InfoTippy
+                  content={lockedTooltip}
+                  label={shellCopy.chapterRail.lockedAriaLabel(chapter.title)}
+                  placement="bottom"
                 >
-                  {isComplete && !isActive ? '✓' : index + 1}
-                </span>
-                <span className="font-nunito whitespace-nowrap">
-                  {isActive
-                    ? (guidedChapterProgressTitle(currentSubStep, chapter) ?? chapter.title)
-                    : chapter.title}
-                </span>
-              </button>
+                  {chapterButton}
+                </InfoTippy>
+              ) : (
+                chapterButton
+              )}
             </li>
           );
         })}
