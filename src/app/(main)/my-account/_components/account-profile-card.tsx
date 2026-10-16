@@ -21,6 +21,7 @@ type Props = {
   pictureMessage: AccountMessage | null;
   canUploadProfilePicture: boolean;
   onOpenPictureModal: () => void;
+  onRemovePicture: () => void;
 };
 
 export function AccountProfileCard({
@@ -30,6 +31,7 @@ export function AccountProfileCard({
   pictureMessage,
   canUploadProfilePicture,
   onOpenPictureModal,
+  onRemovePicture,
 }: Props) {
   return (
     <Card className="p-6 shadow-md">
@@ -60,16 +62,29 @@ export function AccountProfileCard({
             )}
           </div>
         )}
-        <div>
-          <Button
-            variant="secondary"
-            size="sm"
-            onClick={onOpenPictureModal}
-            disabled={uploadingPicture}
-          >
-            <Camera className="h-4 w-4" aria-hidden />
-            {profile?.photoURL ? 'Change Picture' : 'Add Picture'}
-          </Button>
+        <div className="min-w-0">
+          <div className="flex flex-wrap items-center gap-2">
+            <Button
+              variant="secondary"
+              size="sm"
+              onClick={onOpenPictureModal}
+              disabled={uploadingPicture}
+            >
+              <Camera className="h-4 w-4" aria-hidden />
+              {profile?.photoURL ? 'Change Picture' : 'Add Picture'}
+            </Button>
+            {profile?.photoURL ? (
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={onRemovePicture}
+                disabled={uploadingPicture}
+                className="text-danger-fg"
+              >
+                Remove Picture
+              </Button>
+            ) : null}
+          </div>
           <p className="mt-1 text-xs text-text-secondary">
             {canUploadProfilePicture
               ? 'JPG, PNG, GIF, or WebP. Max 5MB.'

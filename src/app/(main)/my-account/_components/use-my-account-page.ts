@@ -9,7 +9,7 @@
 import { useState, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
-import { apiUpload, getErrorMessage } from '@/lib/api-client';
+import { apiFetch, apiUpload, getErrorMessage } from '@/lib/api-client';
 import { getAuthErrorMessage } from '@/lib/auth-errors';
 import {
   changeUsernameAction,
@@ -95,6 +95,35 @@ export function useMyAccountPage() {
       setPictureMessage({
         type: 'error',
         text: getErrorMessage(err, 'Failed to upload profile picture'),
+      });
+    } finally {
+      setUploadingPicture(false);
+    }
+  };
+
+  const handleProfilePictureRemove = async () => {
+    if (!user || !profile?.photoURL) return;
+    setUploadingPicture(true);
+    setPictureMessage(null);
+    try {
+      await apiFetch<void>('/api/upload/profile-picture', { method: 'DELETE' });
+      const supabase = createClient();
+      const { error: authSyncError } = await supabase.auth.updateUser({
+        data: { avatar_url: null },
+      });
+      if (authSyncError) {
+        setPictureMessage({
+          type: 'error',
+          text: 'Picture removed, but account avatar sync failed. Refresh or try again.',
+        });
+        return;
+      }
+      patchProfile({ photoURL: '' });
+      setPictureMessage({ type: 'success', text: 'Profile picture removed.' });
+    } catch (err: unknown) {
+      setPictureMessage({
+        type: 'error',
+        text: getErrorMessage(err, 'Failed to remove profile picture'),
       });
     } finally {
       setUploadingPicture(false);
@@ -318,6 +347,7 @@ export function useMyAccountPage() {
     uploadingPicture,
     pictureMessage,
     handleProfilePictureUpload,
+    handleProfilePictureRemove,
     handleBankProfilePicture,
 
     newUsername,
