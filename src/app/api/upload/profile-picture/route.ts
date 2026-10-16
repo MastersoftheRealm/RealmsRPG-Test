@@ -13,28 +13,13 @@ import { detectImageMime, extensionForImageMime } from '@/lib/validate-image';
 import { buildRateLimitKey, resolveClientIp, uploadLimiter } from '@/lib/rate-limit';
 import { apiErrorResponse, logApiError } from '@/lib/api-error';
 import { verifyMutationRequest } from '@/lib/api-validation';
+import {
+  PROFILE_PICTURES_BUCKET,
+  profilePictureStorageObjectName,
+} from './profile-picture-storage';
 
-const BUCKET = 'profile-pictures';
+const BUCKET = PROFILE_PICTURES_BUCKET;
 const MAX_SIZE = 5 * 1024 * 1024; // 5MB
-
-/** Object name in `profile-pictures` when `photoUrl` is an uploaded file for `userId`. */
-export function profilePictureStorageObjectName(
-  photoUrl: string | null | undefined,
-  userId: string,
-): string | null {
-  if (!photoUrl?.trim() || !userId) return null;
-  try {
-    const url = new URL(photoUrl.split('?')[0] ?? photoUrl);
-    const marker = `/${BUCKET}/`;
-    const idx = url.pathname.indexOf(marker);
-    if (idx === -1) return null;
-    const name = decodeURIComponent(url.pathname.slice(idx + marker.length));
-    if (!name.startsWith(`${userId}.`)) return null;
-    return name;
-  } catch {
-    return null;
-  }
-}
 
 async function removeUploadedProfilePictureObjects(
   supabase: Awaited<ReturnType<typeof createClient>>,

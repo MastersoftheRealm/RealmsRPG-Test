@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { profilePictureStorageObjectName } from '../profile-picture/route';
+import { profilePictureStorageObjectName } from './profile-picture-storage';
 
 describe('profilePictureStorageObjectName', () => {
   const uid = 'abc-123';
