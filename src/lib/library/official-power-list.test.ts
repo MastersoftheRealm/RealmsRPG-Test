@@ -28,6 +28,7 @@ describe('officialPowerDetailSections', () => {
           name: 'Elemental Burst',
           description: 'Pick an element.',
           actionType: 'basic',
+          parts: [],
           composition: {
             structure: 'choice',
             variants: [
