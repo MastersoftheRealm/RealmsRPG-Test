@@ -69,6 +69,7 @@ export function FeatsTraitsListSection({
   addButtonClassName,
   emptyMessage = 'No feats',
   collapsible,
+  expandedWhenEmpty,
   headingLevel,
 }: {
   title?: string | undefined;
@@ -85,7 +86,7 @@ export function FeatsTraitsListSection({
     isContentVisible,
     onAdd: onAddWrapped,
     headerCollapseProps,
-  } = useEntityListSectionCollapse(collapsible, items.length, onAdd, title);
+  } = useEntityListSectionCollapse(collapsible, items.length, onAdd, title, expandedWhenEmpty);
 
   const listBody = (
     <>

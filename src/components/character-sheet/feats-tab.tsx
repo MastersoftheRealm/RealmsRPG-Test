@@ -37,6 +37,9 @@ import { collectSheetTraits } from '@/lib/character/collect-sheet-traits';
 import { traitIdPendingCatalogName } from '@/lib/character/sheet-trait-display';
 import { dedupeEntityRefs } from '@/lib/game/dedupe-saved-parts';
 import type { FeatTraitCustomization } from '@/types/feats';
+import type { CharacterLibrarySectionId } from '@/types';
+import { librarySectionVisibleOutsideEdit } from '@/lib/character-library-section-visibility';
+import { LibrarySectionVisibilityToggle } from './library-section-visibility-toggle';
 
 interface TraitData {
   name: string;
@@ -136,6 +139,10 @@ interface FeatsTabProps {
   onTraitCustomizationChange?:
     | ((traitKey: string, updates: Partial<FeatTraitCustomization>) => void)
     | undefined;
+  sectionVisibility?: Partial<Record<CharacterLibrarySectionId, boolean>> | undefined;
+  onSectionVisibilityChange?:
+    | ((next: Partial<Record<CharacterLibrarySectionId, boolean>>) => void)
+    | undefined;
 }
 
 export function FeatsTab({
@@ -169,6 +176,9 @@ export function FeatsTab({
   traitCustomizations = {},
   onFeatCustomizationChange,
   onTraitCustomizationChange,
+  isEditMode = false,
+  sectionVisibility,
+  onSectionVisibilityChange,
 }: FeatsTabProps) {
   const { data: codexSkills = [] } = useCodexSkills();
 
@@ -459,6 +469,10 @@ export function FeatsTab({
   const hasArchetypeFeats = archetypeFeatRows.length > 0;
   const hasCharacterFeats = characterFeatRows.length > 0;
   const hasStateFeats = stateFeatRows.length > 0;
+  const showStateFeatsSection =
+    isEditMode || librarySectionVisibleOutsideEdit('stateFeats', sectionVisibility);
+  const stateFeatsDimmed =
+    isEditMode && !librarySectionVisibleOutsideEdit('stateFeats', sectionVisibility);
 
   const stateHeaderRight: ReactNode =
     stateUsesMax > 0 ? (
@@ -567,25 +581,44 @@ export function FeatsTab({
         collapsible
       />
 
-      {hasStateFeats && (
-        <FeatsTraitsListSection
-          title="State Feats"
-          items={stateFeatRows}
-          onAdd={showEditControls ? onAddStateFeat : undefined}
-          addLabel="Add state feat"
-          headerRightContent={stateHeaderRight}
-          sortState={stateFeatSort}
-          onSort={(col) => setStateFeatSort(toggleSort(stateFeatSort, col))}
-          rowChrome={{ delete: !!(showEditControls && onRemoveFeat) }}
-          collapsible
-        />
-      )}
-
-      {!hasTraits && !hasArchetypeFeats && !hasCharacterFeats && !hasStateFeats && (
-        <div className="py-8 text-center text-text-muted">
-          <p className="text-sm italic">No traits or feats to display</p>
+      {showStateFeatsSection && (
+        <div className={cn(stateFeatsDimmed && 'opacity-60')} data-library-section="stateFeats">
+          <FeatsTraitsListSection
+            title="State Feats"
+            items={stateFeatRows}
+            onAdd={showEditControls ? onAddStateFeat : undefined}
+            addLabel="Add state feat"
+            headerRightContent={
+              <>
+                {stateHeaderRight}
+                {isEditMode ? (
+                  <LibrarySectionVisibilityToggle
+                    sectionId="stateFeats"
+                    sectionVisibility={sectionVisibility}
+                    onSectionVisibilityChange={onSectionVisibilityChange}
+                  />
+                ) : null}
+              </>
+            }
+            sortState={stateFeatSort}
+            onSort={(col) => setStateFeatSort(toggleSort(stateFeatSort, col))}
+            rowChrome={{ delete: !!(showEditControls && onRemoveFeat) }}
+            emptyMessage="No state feats selected"
+            collapsible
+            expandedWhenEmpty
+          />
         </div>
       )}
+
+      {!hasTraits &&
+        !hasArchetypeFeats &&
+        !hasCharacterFeats &&
+        !hasStateFeats &&
+        !showStateFeatsSection && (
+          <div className="py-8 text-center text-text-muted">
+            <p className="text-sm italic">No traits or feats to display</p>
+          </div>
+        )}
     </div>
   );
 }

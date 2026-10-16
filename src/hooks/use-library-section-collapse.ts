@@ -10,9 +10,11 @@ export function librarySectionExpandedForCount(
   expanded: boolean,
   userToggled: boolean,
   itemCount: number,
+  expandedWhenEmpty = false,
 ): boolean {
   if (userToggled) return expanded;
   if (itemCount > 0) return true;
+  if (expandedWhenEmpty) return true;
   return expanded;
 }
 
@@ -35,9 +37,10 @@ export function rememberLibrarySectionSession(
 export function librarySectionStateForMount(
   itemCount: number,
   stored: LibrarySectionSession | undefined,
+  expandedWhenEmpty = false,
 ): LibrarySectionSession {
   if (stored) return stored;
-  return { expanded: itemCount > 0, userToggled: false };
+  return { expanded: itemCount > 0 || expandedWhenEmpty, userToggled: false };
 }
 
 /**
@@ -49,10 +52,11 @@ export function useLibrarySectionCollapse(
   itemCount: number,
   onAdd?: () => void,
   sessionKey?: string,
+  expandedWhenEmpty = false,
 ) {
   const [expanded, setExpanded] = useState(() => {
     const stored = sessionKey ? readLibrarySectionSession(sessionKey) : undefined;
-    return librarySectionStateForMount(itemCount, stored).expanded;
+    return librarySectionStateForMount(itemCount, stored, expandedWhenEmpty).expanded;
   });
   const userToggledRef = useRef(
     sessionKey ? (readLibrarySectionSession(sessionKey)?.userToggled ?? false) : false,
@@ -60,7 +64,12 @@ export function useLibrarySectionCollapse(
 
   useEffect(() => {
     setExpanded((current) => {
-      const next = librarySectionExpandedForCount(current, userToggledRef.current, itemCount);
+      const next = librarySectionExpandedForCount(
+        current,
+        userToggledRef.current,
+        itemCount,
+        expandedWhenEmpty,
+      );
       if (sessionKey) {
         rememberLibrarySectionSession(sessionKey, {
           expanded: next,
@@ -69,7 +78,7 @@ export function useLibrarySectionCollapse(
       }
       return next;
     });
-  }, [itemCount, sessionKey]);
+  }, [itemCount, sessionKey, expandedWhenEmpty]);
 
   const onExpandedChange = useCallback(
     (next: boolean) => {

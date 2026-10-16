@@ -11,6 +11,7 @@ import type {
   Abilities,
   CharacterProficiency,
   CharacterFeat,
+  CharacterLibrarySectionId,
 } from '@/types';
 import type { TabType } from './library-tab-config';
 
@@ -169,6 +170,10 @@ export interface LibrarySectionData {
   onUnarmedProwessChange?: ((level: number) => void) | undefined;
   tabVisibility?: Partial<Record<TabType, boolean>> | undefined;
   onTabVisibilityChange?: ((next: Partial<Record<TabType, boolean>>) => void) | undefined;
+  sectionVisibility?: Partial<Record<CharacterLibrarySectionId, boolean>> | undefined;
+  onSectionVisibilityChange?:
+    | ((next: Partial<Record<CharacterLibrarySectionId, boolean>>) => void)
+    | undefined;
   ancestry?:
     | {
         selectedTraits?: string[] | undefined;
