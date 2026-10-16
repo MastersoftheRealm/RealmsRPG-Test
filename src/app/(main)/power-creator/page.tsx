@@ -27,6 +27,7 @@ import {
   type UseLoadModalLibraryReturn,
 } from '@/hooks';
 import { useAccountProfile } from '@/hooks/use-profile';
+import { creatorMissingNameSaveDisabledReason } from '@/lib/creator/creator-missing-name-message';
 import { formatRoleQuotaExceededMessage, isAtRoleQuota } from '@/lib/role-quota-messages';
 import { useAuthStore } from '@/stores';
 import { SourceFilter, sourceFilterSummary } from '@/components/patterns/filters/source-filter';
@@ -436,6 +437,7 @@ function PowerCreatorWorkspace({
         !ws.name.trim() || ws.dieIncomplete || ws.reverseIncomplete || !!powerQuotaMessage
       }
       saveDisabledReason={
+        creatorMissingNameSaveDisabledReason(ws.name, 'powers') ??
         powerQuotaMessage ??
         powerCreatorSaveBlockReason({
           composition: ws.variants.composition,

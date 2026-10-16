@@ -18,6 +18,7 @@ import {
   CREATOR_NAME_TOO_LONG_MESSAGE,
 } from '@/lib/creator/creator-text-limits';
 import { creatorLibrarySaveErrorMessage } from '@/lib/creator/creator-save-error';
+import { creatorMissingNameMessage } from '@/lib/creator/creator-missing-name-message';
 import {
   decidePrivateLibraryNameSave,
   libraryItemId,
@@ -276,7 +277,7 @@ export function useCreatorSave(options: UseCreatorSaveOptions): UseCreatorSaveRe
     if (!name?.trim()) {
       setSaveMessage({
         type: 'error',
-        text: `Please enter a ${type === 'species' ? 'species' : type.slice(0, -1)} name`,
+        text: creatorMissingNameMessage(type),
       });
       return;
     }
