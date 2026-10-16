@@ -28,6 +28,10 @@ import {
 import { useAuthStore } from '@/stores';
 import { LoadingState } from '@/components/ui';
 import { formatEnergyStat } from '@/lib/calculators';
+import {
+  creatorPublishSaveAsCopyActions,
+  creatorToolbarSaveAsCopyHandler,
+} from '@/lib/creator/creator-save-as-copy';
 import { creatorMissingNameSaveDisabledReason } from '@/lib/creator/creator-missing-name-message';
 import {
   CreatorPageShell,
@@ -152,6 +156,7 @@ function TechniqueCreatorWorkspace({
       saveTarget={ws.save.saveTarget}
       onSaveTargetChange={ws.save.setSaveTarget}
       onSave={ws.save.handleSave}
+      onSaveAsCopy={creatorToolbarSaveAsCopyHandler(ws.save)}
       onLoad={load.openLoadModal}
       onReset={ws.handleReset}
       unsavedDirty={ws.unsavedDirty}
@@ -178,6 +183,7 @@ function TechniqueCreatorWorkspace({
           ws.save.publishConfirmDescription?.(ws.name.trim(), {
             existingInPublic: ws.save.publishExistingInPublic,
           }) ?? '',
+        ...creatorPublishSaveAsCopyActions(ws.save),
       }}
       resetConfirm={{
         isOpen: ws.showResetConfirm,

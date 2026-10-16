@@ -35,6 +35,10 @@ import {
 } from '@/components/creator';
 import { SourceFilter, sourceFilterSummary } from '@/components/patterns/filters/source-filter';
 import { ConfirmActionModal, SegmentedControl } from '@/components/patterns';
+import {
+  creatorPublishSaveAsCopyActions,
+  creatorToolbarSaveAsCopyHandler,
+} from '@/lib/creator/creator-save-as-copy';
 import { useAuthStore } from '@/stores';
 import {
   bootstrapItemCreatorFormState,
@@ -176,6 +180,7 @@ function ItemCreatorWorkspace({
       saveTarget={ws.save.saveTarget}
       onSaveTargetChange={ws.save.setSaveTarget}
       onSave={ws.save.handleSave}
+      onSaveAsCopy={creatorToolbarSaveAsCopyHandler(ws.save)}
       onLoad={load.openLoadModal}
       onReset={ws.handleReset}
       unsavedDirty={ws.unsavedDirty}
@@ -201,6 +206,7 @@ function ItemCreatorWorkspace({
           ws.save.publishConfirmDescription?.(ws.name.trim(), {
             existingInPublic: ws.save.publishExistingInPublic,
           }) ?? '',
+        ...creatorPublishSaveAsCopyActions(ws.save),
       }}
       loadModal={{
         isOpen: load.showLoadModal,

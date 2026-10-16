@@ -37,6 +37,9 @@ interface ConfirmActionModalProps {
   loadingLabel?: string | undefined;
   /** Icon to display: 'warning' | 'publish' | 'copy' (default: 'warning') */
   icon?: 'warning' | 'publish' | 'copy' | undefined;
+  /** Optional second confirm action (e.g. Save as copy beside Replace). */
+  secondaryConfirmLabel?: string | undefined;
+  onSecondaryConfirm?: (() => void) | undefined;
 }
 
 export function ConfirmActionModal({
@@ -51,6 +54,8 @@ export function ConfirmActionModal({
   isLoading = false,
   loadingLabel,
   icon = 'warning',
+  secondaryConfirmLabel,
+  onSecondaryConfirm,
 }: ConfirmActionModalProps) {
   if (!isOpen) return null;
 
@@ -70,17 +75,32 @@ export function ConfirmActionModal({
       showCloseButton={false}
       titleA11y={title}
       footer={
-        <div className="flex w-full items-center justify-center gap-3">
-          <Button variant="secondary" onClick={onClose} disabled={isLoading} className="flex-1">
+        <div className="flex w-full flex-wrap items-center justify-center gap-3">
+          <Button
+            variant="secondary"
+            onClick={onClose}
+            disabled={isLoading}
+            className="min-w-0 flex-1"
+          >
             {cancelLabel}
           </Button>
+          {secondaryConfirmLabel && onSecondaryConfirm ? (
+            <Button
+              variant="secondary"
+              onClick={onSecondaryConfirm}
+              disabled={isLoading}
+              className="min-w-0 flex-1"
+            >
+              {secondaryConfirmLabel}
+            </Button>
+          ) : null}
           <Button
             size="lg"
             variant={confirmVariant}
             onClick={onConfirm}
             disabled={isLoading}
             isLoading={isLoading}
-            className="flex-1"
+            className="min-w-0 flex-1"
           >
             {confirmButtonLabel}
           </Button>

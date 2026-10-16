@@ -27,6 +27,10 @@ import {
   type UseLoadModalLibraryReturn,
 } from '@/hooks';
 import { useAccountProfile } from '@/hooks/use-profile';
+import {
+  creatorPublishSaveAsCopyActions,
+  creatorToolbarSaveAsCopyHandler,
+} from '@/lib/creator/creator-save-as-copy';
 import { creatorMissingNameSaveDisabledReason } from '@/lib/creator/creator-missing-name-message';
 import { formatRoleQuotaExceededMessage, isAtRoleQuota } from '@/lib/role-quota-messages';
 import { useAuthStore } from '@/stores';
@@ -424,6 +428,7 @@ function PowerCreatorWorkspace({
       saveTarget={ws.save.saveTarget}
       onSaveTargetChange={ws.save.setSaveTarget}
       onSave={ws.save.handleSave}
+      onSaveAsCopy={creatorToolbarSaveAsCopyHandler(ws.save)}
       onLoad={load.openLoadModal}
       onReset={ws.handleReset}
       unsavedDirty={ws.unsavedDirty}
@@ -471,6 +476,7 @@ function PowerCreatorWorkspace({
           ws.save.publishConfirmDescription?.(ws.name.trim(), {
             existingInPublic: ws.save.publishExistingInPublic,
           }) ?? '',
+        ...creatorPublishSaveAsCopyActions(ws.save),
       }}
       loadModal={{
         isOpen: load.showLoadModal,

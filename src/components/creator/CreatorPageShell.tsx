@@ -53,6 +53,8 @@ export type CreatorPagePublishConfig = {
   title: string;
   description: string;
   confirmLabel?: string | undefined;
+  secondaryConfirmLabel?: string | undefined;
+  onSecondaryConfirm?: () => void | Promise<void> | undefined;
 };
 
 export type CreatorPageResetConfirmConfig = {
@@ -83,6 +85,7 @@ export type CreatorPageShellProps = {
   saveDisabledReason?: string | undefined;
   /** Unauthenticated save handler — shell gates login */
   onSave: () => void | Promise<void>;
+  onSaveAsCopy?: (() => void | Promise<void>) | undefined;
   onReset: () => void;
   /** Opens the load modal (or custom load flow) — shell may gate auth */
   onLoad: () => void;
@@ -126,6 +129,7 @@ export function CreatorPageShell({
   saveDisabled = false,
   saveDisabledReason,
   onSave,
+  onSaveAsCopy,
   onReset,
   onLoad,
   unsavedDirty = false,
@@ -155,6 +159,16 @@ export function CreatorPageShell({
     }
     void onSave();
   }, [user, onSave]);
+
+  const handleSaveAsCopy = useCallback(() => {
+    if (!onSaveAsCopy) return;
+    if (!user) {
+      setLoginReason('save');
+      setShowLoginPrompt(true);
+      return;
+    }
+    void onSaveAsCopy();
+  }, [user, onSaveAsCopy]);
 
   const handleLoad = useCallback(() => {
     const loadAction = creatorToolbarLoadAction({
@@ -234,6 +248,7 @@ export function CreatorPageShell({
           saveTarget={saveTarget}
           onSaveTargetChange={onSaveTargetChange}
           onSave={handleSave}
+          onSaveAsCopy={onSaveAsCopy ? handleSaveAsCopy : undefined}
           onLoad={handleLoad}
           onReset={handleReset}
           saving={saving}
@@ -265,6 +280,10 @@ export function CreatorPageShell({
             description={publish.description}
             confirmLabel={publish.confirmLabel ?? 'Publish'}
             icon="publish"
+            secondaryConfirmLabel={publish.secondaryConfirmLabel}
+            onSecondaryConfirm={
+              publish.onSecondaryConfirm ? () => void publish.onSecondaryConfirm?.() : undefined
+            }
           />
           <ConfirmActionModal
             isOpen={unsavedDirty && (discardAction !== null || leaveBlocker.request !== null)}
