@@ -12,7 +12,7 @@
 
 'use client';
 
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useMemo, type ReactNode } from 'react';
 import { CHARACTER_AGE_MAX_LENGTH, clampCharacterAgeInput } from '@/lib/character/appearance-age';
 import { useModalUnmountClickGuard } from '@/lib/modal-unmount-click-guard';
 import { X, Pencil } from 'lucide-react';
@@ -24,15 +24,27 @@ import {
   SummaryRow,
   LibraryCollapsibleSection,
   DeleteConfirmModal,
+  SectionHeader,
 } from '@/components/patterns';
 import { formatSpeedString, type SpeedDisplayUnit } from '@/lib/utils/number';
-import type { Abilities } from '@/types';
-import type { CharacterVisibility } from '@/types';
+import {
+  NOTES_TAB_SECTION_DEFS,
+  isNotesSectionVisible,
+  moveInOrder,
+  namedNoteHideBlocked,
+  notesSectionHideBlocked,
+  resolveNotesSectionOrder,
+  resolveNotesSectionVisibility,
+  type NotesTabSectionId,
+} from '@/lib/character/notes-tab-sections';
+import type { Abilities, CharacterVisibility } from '@/types';
+import { NotesTabEditControls } from './notes-tab-edit-controls';
 
 export interface CharacterNote {
   id: string;
   name: string;
   content: string;
+  hidden?: boolean | undefined;
 }
 
 interface NotesTabProps {
@@ -63,6 +75,13 @@ interface NotesTabProps {
   onAddNote?: (() => void) | undefined;
   onUpdateNote?: ((id: string, updates: Partial<CharacterNote>) => void) | undefined;
   onDeleteNote?: ((id: string) => void) | undefined;
+  notesSectionOrder?: NotesTabSectionId[] | undefined;
+  notesSectionVisibility?: Partial<Record<NotesTabSectionId, boolean>> | undefined;
+  onNotesSectionOrderChange?: ((next: NotesTabSectionId[]) => void) | undefined;
+  onNotesSectionVisibilityChange?:
+    | ((next: Partial<Record<NotesTabSectionId, boolean>>) => void)
+    | undefined;
+  onReorderNamedNote?: ((id: string, direction: 'up' | 'down') => void) | undefined;
 }
 
 /** Appearance, backstory, and notes. A viewer (no onChange) sees the text, not a field. */
@@ -132,11 +151,13 @@ function EditableNoteCard({
   onUpdate,
   onDelete,
   isEditMode,
+  sectionEditControls,
 }: {
   note: CharacterNote;
   onUpdate: (updates: Partial<CharacterNote>) => void;
   onDelete?: (() => void) | undefined;
   isEditMode?: boolean | undefined;
+  sectionEditControls?: ReactNode | undefined;
 }) {
   const [isExpanded, setIsExpanded] = useState(true);
   const [isEditingName, setIsEditingName] = useState(false);
@@ -150,7 +171,9 @@ function EditableNoteCard({
   };
 
   return (
-    <div className="overflow-hidden rounded-lg border border-border-light">
+    <div
+      className={`overflow-hidden rounded-lg border border-border-light${note.hidden && isEditMode ? 'opacity-60' : ''}`}
+    >
       {/* Header */}
       <div
         className="flex cursor-pointer items-center gap-2 bg-surface-alt px-3 py-2"
@@ -189,6 +212,8 @@ function EditableNoteCard({
           </div>
         )}
 
+        {sectionEditControls ? <span className="shrink-0">{sectionEditControls}</span> : null}
+
         {isEditMode && onDelete && (
           <span className="shrink-0">
             <IconButton
@@ -226,17 +251,25 @@ function NoteCard({
   onUpdate,
   onDelete,
   isEditMode,
+  sectionEditControls,
 }: {
   note: CharacterNote;
   onUpdate?: ((updates: Partial<CharacterNote>) => void) | undefined;
   onDelete?: (() => void) | undefined;
   isEditMode?: boolean | undefined;
+  sectionEditControls?: ReactNode | undefined;
 }) {
   if (!onUpdate) {
     return <ReadOnlyNoteCard note={note} />;
   }
   return (
-    <EditableNoteCard note={note} onUpdate={onUpdate} onDelete={onDelete} isEditMode={isEditMode} />
+    <EditableNoteCard
+      note={note}
+      onUpdate={onUpdate}
+      onDelete={onDelete}
+      isEditMode={isEditMode}
+      sectionEditControls={sectionEditControls}
+    />
   );
 }
 
@@ -262,6 +295,11 @@ export function NotesTab({
   onAddNote,
   onUpdateNote,
   onDeleteNote,
+  notesSectionOrder,
+  notesSectionVisibility,
+  onNotesSectionOrderChange,
+  onNotesSectionVisibilityChange,
+  onReorderNamedNote,
 }: NotesTabProps) {
   const rollContext = useRollsOptional();
   const speedUnit = speedDisplayUnit;
@@ -326,11 +364,101 @@ export function NotesTab({
     }
   };
 
-  return (
-    <div className="space-y-2">
-      {/* Character visibility is in Character settings (gear icon in toolbar). */}
+  const resolvedSectionOrder = useMemo(
+    () => resolveNotesSectionOrder(notesSectionOrder),
+    [notesSectionOrder],
+  );
+  const resolvedSectionVisibility = useMemo(
+    () => resolveNotesSectionVisibility(notesSectionVisibility),
+    [notesSectionVisibility],
+  );
+  const canLayoutEdit =
+    isEditMode && Boolean(onNotesSectionOrderChange && onNotesSectionVisibilityChange);
 
-      {/* Physical Attributes Summary */}
+  const sectionTitle = useCallback(
+    (sectionId: NotesTabSectionId) =>
+      NOTES_TAB_SECTION_DEFS.find((section) => section.id === sectionId)?.title ?? sectionId,
+    [],
+  );
+
+  const sectionEditControls = useCallback(
+    (sectionId: NotesTabSectionId) => {
+      if (!canLayoutEdit) return undefined;
+      const orderIndex = resolvedSectionOrder.indexOf(sectionId);
+      const visibleOutsideEdit = resolvedSectionVisibility[sectionId] !== false;
+      return (
+        <NotesTabEditControls
+          title={sectionTitle(sectionId)}
+          visibleOutsideEdit={visibleOutsideEdit}
+          hideBlocked={notesSectionHideBlocked(resolvedSectionVisibility, sectionId)}
+          canMoveUp={orderIndex > 0}
+          canMoveDown={orderIndex >= 0 && orderIndex < resolvedSectionOrder.length - 1}
+          onMoveUp={() =>
+            onNotesSectionOrderChange?.(moveInOrder(resolvedSectionOrder, sectionId, 'up'))
+          }
+          onMoveDown={() =>
+            onNotesSectionOrderChange?.(moveInOrder(resolvedSectionOrder, sectionId, 'down'))
+          }
+          onToggleVisibility={() => {
+            if (notesSectionHideBlocked(resolvedSectionVisibility, sectionId)) return;
+            onNotesSectionVisibilityChange?.({
+              ...resolvedSectionVisibility,
+              [sectionId]: !visibleOutsideEdit,
+            });
+          }}
+        />
+      );
+    },
+    [
+      canLayoutEdit,
+      resolvedSectionOrder,
+      resolvedSectionVisibility,
+      sectionTitle,
+      onNotesSectionOrderChange,
+      onNotesSectionVisibilityChange,
+    ],
+  );
+
+  const visibleNamedNotes = useMemo(() => {
+    if (isEditMode) return namedNotes;
+    return namedNotes.filter((note) => !note.hidden);
+  }, [isEditMode, namedNotes]);
+
+  const namedNoteEditControls = useCallback(
+    (note: CharacterNote, index: number) => {
+      if (!isEditMode || !onUpdateNote) return undefined;
+      const visibleOutsideEdit = !note.hidden;
+      return (
+        <NotesTabEditControls
+          title={note.name}
+          visibleOutsideEdit={visibleOutsideEdit}
+          hideBlocked={namedNoteHideBlocked(namedNotes, note.id)}
+          canMoveUp={Boolean(onReorderNamedNote) && index > 0}
+          canMoveDown={Boolean(onReorderNamedNote) && index < namedNotes.length - 1}
+          onMoveUp={onReorderNamedNote ? () => onReorderNamedNote(note.id, 'up') : undefined}
+          onMoveDown={onReorderNamedNote ? () => onReorderNamedNote(note.id, 'down') : undefined}
+          onToggleVisibility={() => {
+            if (namedNoteHideBlocked(namedNotes, note.id)) return;
+            onUpdateNote(note.id, { hidden: visibleOutsideEdit });
+          }}
+        />
+      );
+    },
+    [isEditMode, namedNotes, onReorderNamedNote, onUpdateNote],
+  );
+
+  const sectionWrapperClass = (sectionId: NotesTabSectionId) =>
+    isEditMode && resolvedSectionVisibility[sectionId] === false ? 'opacity-60' : undefined;
+
+  const physicalSection = (
+    <div className={sectionWrapperClass('physical')}>
+      {canLayoutEdit ? (
+        <SectionHeader
+          title={sectionTitle('physical')}
+          size="lg"
+          rightContent={sectionEditControls('physical')}
+        />
+      ) : null}
       <TabSummarySection variant="physical">
         <div className="space-y-3">
           <SummaryRow>
@@ -430,74 +558,129 @@ export function NotesTab({
           </div>
         </div>
       </TabSummarySection>
+    </div>
+  );
 
-      <LibraryCollapsibleSection title="Appearance" itemCount={appearance.trim() ? 1 : 0}>
-        <SheetNoteField
-          value={appearance}
-          onChange={onAppearanceChange}
-          placeholder="Describe your character's appearance..."
-          label="Appearance"
-          className="min-h-[80px]"
-        />
-      </LibraryCollapsibleSection>
+  const appearanceSection = (
+    <LibraryCollapsibleSection
+      title={sectionTitle('appearance')}
+      itemCount={appearance.trim() ? 1 : 0}
+      rightContent={sectionEditControls('appearance')}
+      className={sectionWrapperClass('appearance')}
+    >
+      <SheetNoteField
+        value={appearance}
+        onChange={onAppearanceChange}
+        placeholder="Describe your character's appearance..."
+        label="Appearance"
+        className="min-h-[80px]"
+      />
+    </LibraryCollapsibleSection>
+  );
 
-      <LibraryCollapsibleSection title="Backstory" itemCount={backstory.trim() ? 1 : 0}>
-        <SheetNoteField
-          value={backstory}
-          onChange={onBackstoryChange}
-          placeholder="Background, personality, bonds, and history..."
-          label="Backstory"
-          className="min-h-[80px]"
-        />
-      </LibraryCollapsibleSection>
+  const backstorySection = (
+    <LibraryCollapsibleSection
+      title={sectionTitle('backstory')}
+      itemCount={backstory.trim() ? 1 : 0}
+      rightContent={sectionEditControls('backstory')}
+      className={sectionWrapperClass('backstory')}
+    >
+      <SheetNoteField
+        value={backstory}
+        onChange={onBackstoryChange}
+        placeholder="Background, personality, bonds, and history..."
+        label="Backstory"
+        className="min-h-[80px]"
+      />
+    </LibraryCollapsibleSection>
+  );
 
-      <LibraryCollapsibleSection
-        title="Archetype Description"
-        itemCount={archetypeDesc.trim() ? 1 : 0}
-      >
-        <SheetNoteField
-          value={archetypeDesc}
-          onChange={onArchetypeDescChange}
-          placeholder="Describe your character's archetype background..."
-          label="Archetype Description"
-          className="min-h-[80px]"
-        />
-      </LibraryCollapsibleSection>
+  const archetypeSection = (
+    <LibraryCollapsibleSection
+      title={sectionTitle('archetypeDesc')}
+      itemCount={archetypeDesc.trim() ? 1 : 0}
+      rightContent={sectionEditControls('archetypeDesc')}
+      className={sectionWrapperClass('archetypeDesc')}
+    >
+      <SheetNoteField
+        value={archetypeDesc}
+        onChange={onArchetypeDescChange}
+        placeholder="Describe your character's archetype background..."
+        label="Archetype Description"
+        className="min-h-[80px]"
+      />
+    </LibraryCollapsibleSection>
+  );
 
-      <LibraryCollapsibleSection title="General Notes" itemCount={notes.trim() ? 1 : 0}>
-        <SheetNoteField
-          value={notes}
-          onChange={onNotesChange}
-          placeholder="Additional notes, goals, and reminders..."
-          label="General Notes"
-          className="min-h-[120px]"
-        />
-      </LibraryCollapsibleSection>
+  const generalNotesSection = (
+    <LibraryCollapsibleSection
+      title={sectionTitle('generalNotes')}
+      itemCount={notes.trim() ? 1 : 0}
+      rightContent={sectionEditControls('generalNotes')}
+      className={sectionWrapperClass('generalNotes')}
+    >
+      <SheetNoteField
+        value={notes}
+        onChange={onNotesChange}
+        placeholder="Additional notes, goals, and reminders..."
+        label="General Notes"
+        className="min-h-[120px]"
+      />
+    </LibraryCollapsibleSection>
+  );
 
-      <LibraryCollapsibleSection
-        title="Custom Notes"
-        itemCount={namedNotes.length}
-        onAdd={onAddNote}
-        addLabel="Add new note"
-      >
-        {namedNotes.length > 0 ? (
-          <div className="space-y-3">
-            {namedNotes.map((note) => (
-              <NoteCard
-                key={note.id}
-                note={note}
-                onUpdate={onUpdateNote ? (updates) => onUpdateNote(note.id, updates) : undefined}
-                onDelete={onDeleteNote ? () => setNotePendingDelete(note) : undefined}
-                isEditMode={isEditMode}
-              />
-            ))}
-          </div>
-        ) : (
-          <p className="py-4 text-center text-sm text-text-muted italic">
-            {onAddNote ? 'No custom notes yet. Click + to add one.' : 'No custom notes yet.'}
-          </p>
-        )}
-      </LibraryCollapsibleSection>
+  const customNotesSection = (
+    <LibraryCollapsibleSection
+      title={sectionTitle('customNotes')}
+      itemCount={visibleNamedNotes.length}
+      onAdd={onAddNote}
+      addLabel="Add new note"
+      rightContent={sectionEditControls('customNotes')}
+      className={sectionWrapperClass('customNotes')}
+    >
+      {namedNotes.length > 0 ? (
+        <div className="space-y-3">
+          {(isEditMode ? namedNotes : visibleNamedNotes).map((note, index) => (
+            <NoteCard
+              key={note.id}
+              note={note}
+              onUpdate={onUpdateNote ? (updates) => onUpdateNote(note.id, updates) : undefined}
+              onDelete={onDeleteNote ? () => setNotePendingDelete(note) : undefined}
+              isEditMode={isEditMode}
+              sectionEditControls={namedNoteEditControls(note, index)}
+            />
+          ))}
+        </div>
+      ) : (
+        <p className="py-4 text-center text-sm text-text-muted italic">
+          {onAddNote ? 'No custom notes yet. Click + to add one.' : 'No custom notes yet.'}
+        </p>
+      )}
+    </LibraryCollapsibleSection>
+  );
+
+  const sectionById: Record<NotesTabSectionId, ReactNode> = {
+    physical: physicalSection,
+    appearance: appearanceSection,
+    backstory: backstorySection,
+    archetypeDesc: archetypeSection,
+    generalNotes: generalNotesSection,
+    customNotes: customNotesSection,
+  };
+
+  return (
+    <div className="space-y-2">
+      {resolvedSectionOrder.map((sectionId) => {
+        if (
+          !isNotesSectionVisible(sectionId, {
+            isEditMode,
+            visibility: notesSectionVisibility,
+          })
+        ) {
+          return null;
+        }
+        return <div key={sectionId}>{sectionById[sectionId]}</div>;
+      })}
 
       {notePendingDelete ? (
         <DeleteConfirmModal

@@ -80,6 +80,8 @@ const SAVEABLE_FIELDS = [
   // Character-sheet library tab visibility preferences
   'libraryTabVisibility',
   'librarySectionVisibility',
+  'notesSectionOrder',
+  'notesSectionVisibility',
   // Temp Modifier deltas (ADR-0006 / TASK-585) — persist across refresh / campaign view
   'tempModifiers',
   // Ancestry/Species data (lean: { id, name, selectedTraits, selectedFlaw, selectedCharacteristic })

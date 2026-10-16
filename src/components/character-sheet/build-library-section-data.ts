@@ -152,6 +152,30 @@ export function buildLibrarySectionData(input: {
           : null,
       );
     }),
+    notesSectionOrder: character.notesSectionOrder,
+    notesSectionVisibility: character.notesSectionVisibility,
+    onNotesSectionOrderChange: whenSheetOwner(isOwner, (next) =>
+      setCharacter((prev) => (prev ? { ...prev, notesSectionOrder: next } : null)),
+    ),
+    onNotesSectionVisibilityChange: whenSheetOwner(isOwner, (next) =>
+      setCharacter((prev) => (prev ? { ...prev, notesSectionVisibility: next } : null)),
+    ),
+    onReorderNamedNote: whenSheetOwner(isOwner, (id: string, direction: 'up' | 'down') => {
+      setCharacter((prev) => {
+        if (!prev) return null;
+        const notes = [...(prev.namedNotes || [])];
+        const index = notes.findIndex((note) => note.id === id);
+        if (index === -1) return prev;
+        const target = direction === 'up' ? index - 1 : index + 1;
+        if (target < 0 || target >= notes.length) return prev;
+        const current = notes[index];
+        const swap = notes[target];
+        if (!current || !swap) return prev;
+        notes[index] = swap;
+        notes[target] = current;
+        return { ...prev, namedNotes: notes };
+      });
+    }),
     level: character.level,
     // TP limit respects ability temps only when applyAbilityToResourceMaxima is on (ADR-0006)
     archetypeAbility: getArchetypeAbilityScore(withAbilitiesForResourceMaxima(character)),

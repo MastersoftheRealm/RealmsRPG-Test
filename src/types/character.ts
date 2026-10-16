@@ -70,6 +70,15 @@ export type CharacterLibraryTabId =
 /** Subsections within Library Feats / Inventory tabs (hideable in edit mode). */
 export type CharacterLibrarySectionId = 'stateFeats' | 'weapons' | 'shields' | 'armor';
 
+/** Notes tab collapsible section ids (order + visibility on the character JSON blob). */
+export type NotesTabSectionId =
+  | 'physical'
+  | 'appearance'
+  | 'backstory'
+  | 'archetypeDesc'
+  | 'generalNotes'
+  | 'customNotes';
+
 /** Character creation status */
 export type CharacterStatus = 'draft' | 'complete' | 'playing';
 
@@ -208,6 +217,8 @@ interface CharacterFields {
         id: string;
         name: string;
         content: string;
+        /** When true, hidden outside sheet edit mode. */
+        hidden?: boolean | undefined;
       }>
     | undefined;
 
@@ -331,6 +342,11 @@ interface CharacterFields {
 
   /** Library subsection visibility (State Feats; inventory Weapons / Shields / Armor). */
   librarySectionVisibility?: Partial<Record<CharacterLibrarySectionId, boolean>> | undefined;
+
+  /** Notes tab section order (appearance, backstory, custom notes block, etc.). */
+  notesSectionOrder?: NotesTabSectionId[] | undefined;
+  /** Notes tab section visibility outside edit mode. */
+  notesSectionVisibility?: Partial<Record<NotesTabSectionId, boolean>> | undefined;
 
   /**
    * Temp Modifier deltas (ADR-0006). Persist across refresh and campaign view.

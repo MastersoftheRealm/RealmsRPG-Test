@@ -12,6 +12,7 @@ import type {
   CharacterProficiency,
   CharacterFeat,
   CharacterLibrarySectionId,
+  NotesTabSectionId,
 } from '@/types';
 import type { TabType } from './library-tab-config';
 
@@ -158,6 +159,13 @@ export interface LibrarySectionData {
   onAddNote?: (() => void) | undefined;
   onUpdateNote?: ((id: string, updates: Partial<CharacterNote>) => void) | undefined;
   onDeleteNote?: ((id: string) => void) | undefined;
+  notesSectionOrder?: NotesTabSectionId[] | undefined;
+  notesSectionVisibility?: Partial<Record<NotesTabSectionId, boolean>> | undefined;
+  onNotesSectionOrderChange?: ((next: NotesTabSectionId[]) => void) | undefined;
+  onNotesSectionVisibilityChange?:
+    | ((next: Partial<Record<NotesTabSectionId, boolean>>) => void)
+    | undefined;
+  onReorderNamedNote?: ((id: string, direction: 'up' | 'down') => void) | undefined;
   level?: number | undefined;
   archetypeAbility?: number | undefined;
   martialProficiency?: number | undefined;

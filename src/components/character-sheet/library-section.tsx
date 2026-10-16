@@ -216,6 +216,11 @@ export function LibrarySection({
     onAddNote,
     onUpdateNote,
     onDeleteNote,
+    notesSectionOrder,
+    notesSectionVisibility,
+    onNotesSectionOrderChange,
+    onNotesSectionVisibilityChange,
+    onReorderNamedNote,
     level = 1,
     archetypeAbility = 0,
     powerPartsDb = [],
@@ -449,6 +454,11 @@ export function LibrarySection({
             onAddNote={onAddNote}
             onUpdateNote={onUpdateNote}
             onDeleteNote={onDeleteNote}
+            notesSectionOrder={notesSectionOrder}
+            notesSectionVisibility={notesSectionVisibility}
+            onNotesSectionOrderChange={onNotesSectionOrderChange}
+            onNotesSectionVisibilityChange={onNotesSectionVisibilityChange}
+            onReorderNamedNote={onReorderNamedNote}
           />
         )}
 
