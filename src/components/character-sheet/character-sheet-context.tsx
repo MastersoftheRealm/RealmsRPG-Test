@@ -117,6 +117,7 @@ export interface CharacterSheetContextValue {
   /** Abilities & defenses */
   onAbilityChange: (ability: AbilityName, value: number) => void;
   onDefenseChange: (defense: string, value: number) => void;
+  onResetAbilityAllocations: () => void;
   /** Sparse Temp Modifier patch (ADR-0006 / TASK-586) */
   onTempModifiersChange: (patch: CharacterTempModifiers) => void;
 
@@ -134,6 +135,7 @@ export interface CharacterSheetContextValue {
     }>,
   ) => void;
   onRemoveSkill: (skillId: string) => void;
+  onResetSkillAllocations: () => void;
   onAddSubSkill: () => void;
 
   /** Archetype */

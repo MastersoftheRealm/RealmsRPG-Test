@@ -21,6 +21,7 @@ import {
   applySheetEnergyPointsChange,
   applySheetHealthPointsChange,
 } from '@/lib/character/current-follows-max';
+import { applySheetAbilityAllocationReset } from '@/lib/character/sheet-allocation-reset';
 import {
   resourceAfterFullRecovery,
   resourceAfterPartialRecovery,
@@ -282,6 +283,11 @@ export function useSheetResourceActions({
     [character, setCharacter],
   );
 
+  const handleResetAbilityAllocations = useCallback(() => {
+    if (!character) return;
+    setCharacter((prev) => (prev ? applySheetAbilityAllocationReset(prev, rules) : null));
+  }, [character, setCharacter, rules]);
+
   const handleTempModifiersChange = useCallback(
     (patch: CharacterTempModifiers) => {
       setCharacter((prev) => {
@@ -490,6 +496,7 @@ export function useSheetResourceActions({
     handlePortraitUrlChange,
     handleAbilityChange,
     handleDefenseChange,
+    handleResetAbilityAllocations,
     handleTempModifiersChange,
     handleHealthPointsChange,
     handleEnergyPointsChange,

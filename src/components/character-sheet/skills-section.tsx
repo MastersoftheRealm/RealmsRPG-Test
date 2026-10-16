@@ -51,6 +51,7 @@ import {
 import { useCodexSkills, useGameRules } from '@/hooks';
 import type { Abilities, CharacterTempModifiers } from '@/types';
 import { skillsHeaderPinOffset } from './skills-header-pin';
+import { SheetAllocationResetButton } from './sheet-allocation-reset-button';
 
 type Skill = SheetDisplaySkill;
 
@@ -68,6 +69,7 @@ interface SkillsSectionProps {
   onTempModifiersChange?: ((patch: CharacterTempModifiers) => void) | undefined;
   onSkillChange?: ((skillId: string, updates: Partial<Skill>) => void) | undefined;
   onRemoveSkill?: ((skillId: string) => void) | undefined;
+  onResetSkillAllocations?: (() => void) | undefined;
   onAddSubSkill?: (() => void) | undefined;
   className?: string | undefined;
 }
@@ -84,6 +86,7 @@ export function SkillsSection({
   onTempModifiersChange,
   onSkillChange,
   onRemoveSkill,
+  onResetSkillAllocations,
   onAddSubSkill,
   className,
 }: SkillsSectionProps) {
@@ -316,6 +319,7 @@ export function SkillsSection({
 
   const totalSpent = spentSkillPointsProp ?? totalSpentFromSkills;
   const remaining = totalSkillPoints !== undefined ? totalSkillPoints - totalSpent : undefined;
+  const canResetSkillAllocations = Boolean(onResetSkillAllocations) && totalSpentFromSkills > 0;
 
   const canIncreaseSkill = (skill: Skill): boolean => {
     if (remaining === undefined || remaining <= 0) return false;
@@ -468,17 +472,24 @@ export function SkillsSection({
 
       {showSpendControls && (
         <div className="mb-4 flex flex-wrap items-center justify-between gap-2 rounded-lg bg-surface-secondary p-3">
-          {totalSkillPoints !== undefined ? (
-            <PointStatus
-              label="Skill Points"
-              total={totalSkillPoints}
-              spent={totalSpent}
-              variant="inline"
-              className="shrink-0 whitespace-nowrap"
-            />
-          ) : (
-            <span />
-          )}
+          <div className="flex min-w-0 flex-wrap items-center gap-2">
+            {totalSkillPoints !== undefined ? (
+              <PointStatus
+                label="Skill Points"
+                total={totalSkillPoints}
+                spent={totalSpent}
+                variant="inline"
+                className="shrink-0 whitespace-nowrap"
+              />
+            ) : null}
+            {onResetSkillAllocations && (
+              <SheetAllocationResetButton
+                kind="skills"
+                disabled={!canResetSkillAllocations}
+                onConfirm={onResetSkillAllocations}
+              />
+            )}
+          </div>
           {onAddSubSkill && (
             <Button size="sm" onClick={onAddSubSkill} className="shrink-0">
               <Plus size={14} />
