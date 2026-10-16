@@ -7,7 +7,7 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { updateTag } from 'next/cache';
+import { revalidateTag } from 'next/cache';
 import { codexTableWriteCacheTags, officialLibraryWriteCacheTags } from '@/lib/codex/cache-tags';
 import { createClient, createServiceRoleClient } from '@/lib/supabase/server';
 import { getSession } from '@/lib/supabase/session';
@@ -116,11 +116,11 @@ async function adminMayIncludeUnlisted(request: NextRequest): Promise<boolean> {
 
 function revalidateOfficialLibraryAfterWrite(table: string): void {
   for (const tag of officialLibraryWriteCacheTags(table)) {
-    updateTag(tag);
+    revalidateTag(tag, 'max');
   }
   if (table === SPECIES_TABLE) {
     for (const tag of codexTableWriteCacheTags(table)) {
-      updateTag(tag);
+      revalidateTag(tag, 'max');
     }
   }
 }
