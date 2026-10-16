@@ -67,6 +67,7 @@ export type {
   CharacterTechnique,
   CharacterLibraryTabId,
   CharacterLibrarySectionId,
+  NotesTabSectionId,
   ProficiencyKind,
   CharacterProficiency,
   CharacterCondition,
