@@ -44,6 +44,7 @@ export {
   namedPropertyDescriptorChips,
   TRAINING_POINTS_COST_LABEL,
   TP_COST_LABEL,
+  isArmamentShorthandColumnMechanic,
   isMechanicPropertyName,
   MECHANIC_PROPERTY_NAMES,
   type AbilityRequirementFact,

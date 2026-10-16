@@ -1,13 +1,26 @@
-import { readFileSync } from 'node:fs';
-import path from 'node:path';
 import { describe, expect, it } from 'vitest';
+import { PROPERTY_IDS } from '@/lib/id-constants';
+import { quickShieldTableHasDamage } from './quick-shield-table-display';
 
-const source = readFileSync(path.join(import.meta.dirname, 'quick-armaments-sections.tsx'), 'utf8');
+describe('quickShieldTableHasDamage (86e1vtdht / 86e3mmnz5)', () => {
+  it('hides damage when hasShieldDamage is false even if legacy item.damage is set', () => {
+    expect(
+      quickShieldTableHasDamage({
+        hasShieldDamage: false,
+        shieldDamage: { amount: 1, size: 6 },
+        properties: [],
+        legacyItemDamage: '1d6 Bludgeoning',
+      }),
+    ).toBe(false);
+  });
 
-describe('QuickShieldsTable display (86e1vtdht / 86e3jwaw3)', () => {
-  it('resolves block and damage from saved shield fields', () => {
-    expect(source).toContain('resolveShieldBlockDisplay');
-    expect(source).toContain('resolveShieldDamageDisplay');
-    expect(source).toContain('getAttackBonus(shield, abilities, martialProf)');
+  it('shows damage for legacy rows when hasShieldDamage is undefined', () => {
+    expect(
+      quickShieldTableHasDamage({
+        hasShieldDamage: undefined,
+        properties: [{ id: PROPERTY_IDS.SHIELD_DAMAGE, name: 'Shield Damage', op_1_lvl: 2 }],
+        legacyItemDamage: undefined,
+      }),
+    ).toBe(true);
   });
 });

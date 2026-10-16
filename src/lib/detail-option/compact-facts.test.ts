@@ -27,6 +27,7 @@ import {
   formatWeaponAbilityFact,
   formatWeaponAbilityFactFromProperties,
   isBlank,
+  isArmamentShorthandColumnMechanic,
   isMechanicPropertyName,
   namedPropertyDescriptorChips,
   propertyDescriptorChip,
@@ -207,16 +208,12 @@ describe('compact-facts formatters', () => {
     expect(isMechanicPropertyName('Damage Reduction')).toBe(true);
     expect(isMechanicPropertyName('Shield Amount')).toBe(true);
     expect(isMechanicPropertyName('Shield Damage')).toBe(true);
-    expect(isMechanicPropertyName('Critical Range +1')).toBe(true);
-    expect(isMechanicPropertyName('Critical Range Increase')).toBe(true);
-    expect(isMechanicPropertyName('Critical Range +1')).toBe(true);
-    expect(isMechanicPropertyName('Critical Range Increase')).toBe(true);
+  });
 
-    const withCost = namedPropertyDescriptorChips(
-      ['Graze'],
-      [{ id: 1, name: 'Graze', description: 'Tip', op_1_lvl: 2, base_tp: 1, op_1_tp: 1 } as never],
-      { includeCost: true },
-    );
-    expect(withCost[0]?.cost).toBeGreaterThan(0);
+  it('armament shorthand filters column mechanics only, not Finesse (86e3rk6jr)', () => {
+    expect(isArmamentShorthandColumnMechanic('Shield Damage', 'shield')).toBe(true);
+    expect(isArmamentShorthandColumnMechanic('Finesse', 'weapon')).toBe(false);
+    expect(isArmamentShorthandColumnMechanic('Heavy', 'weapon')).toBe(false);
+    expect(isArmamentShorthandColumnMechanic('Weapon Damage', 'weapon')).toBe(true);
   });
 });

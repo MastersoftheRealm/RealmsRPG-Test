@@ -26,6 +26,7 @@ import {
   energyFactChip,
   formatActionTypeFact,
   isBlank,
+  isArmamentShorthandColumnMechanic,
   isMechanicPropertyName,
   rangeFactChip,
   trainingPointsFactChip,
@@ -115,9 +116,11 @@ export function propertiesProficienciesSection(
   family: 'weapon' | 'armor' | 'shield' | 'item' | 'properties' = 'properties',
 ): MetadataDetailSection | undefined {
   const ranked =
-    family === 'armor' || family === 'shield' || family === 'weapon'
+    family === 'armor'
       ? chips.filter((chip) => !isMechanicPropertyName(chip.name))
-      : chips;
+      : family === 'shield' || family === 'weapon'
+        ? chips.filter((chip) => !isArmamentShorthandColumnMechanic(chip.name, family))
+        : chips;
   if (ranked.length === 0) return undefined;
   const labelHelpKey: PartsPropertiesHelpKey =
     family === 'weapon'

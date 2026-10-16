@@ -552,7 +552,8 @@ export function getItemColumns(
   if (itemType === 'armor') {
     const armor = item as UserItem | EqItem;
     const props = (armor.properties || []) as ItemPropertyPayload[];
-    const val = String(resolveArmorDamageReduction({ ...armor, properties: props }));
+    const dr = resolveArmorDamageReduction({ ...armor, properties: props });
+    const val = dr > 0 ? String(dr) : '-';
     const values: Record<string, string> = { armor: val };
     return selectArmorChrome.layout.columnFacts.map((id) => {
       const key = glrColumnKeyFor(id, 'armor', 'select', 'usm');

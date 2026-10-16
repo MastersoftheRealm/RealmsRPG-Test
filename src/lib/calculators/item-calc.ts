@@ -696,13 +696,6 @@ export function deriveShieldDamageFromProperties(properties: ItemPropertyPayload
 }
 
 /**
- * Library and Load damage cells.
- * While shield damage is on, and when the on/off flag was never saved, a stored
- * shieldDamage die wins over the property ladder.
- * hasShieldDamage false means damage is off. The save writes null for the die,
- * and a null update leaves the old die in the column, so that stored die is ignored.
- */
-/**
  * Shield block amount for display (sheet, library, archetype quick table).
  * Saved `shieldDR` wins; otherwise derive from Shield Amount property.
  */
@@ -721,6 +714,13 @@ export function resolveShieldBlockDisplay(input: {
   return deriveShieldAmountFromProperties(input.properties ?? []);
 }
 
+/**
+ * Library and Load damage cells.
+ * While shield damage is on, and when the on/off flag was never saved, a stored
+ * shieldDamage die wins over the property ladder.
+ * hasShieldDamage false means damage is off. The save writes null for the die,
+ * and a null update leaves the old die in the column, so that stored die is ignored.
+ */
 export function resolveShieldDamageDisplay(input: {
   shieldDamage?: unknown;
   hasShieldDamage?: boolean | null | undefined;

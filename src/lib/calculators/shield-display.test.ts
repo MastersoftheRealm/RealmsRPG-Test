@@ -22,6 +22,15 @@ describe('shield display helpers (86e1vtdht / 86e3mmnz5)', () => {
     ).toBe('1d6 Bludgeoning');
   });
 
+  it('still derives damage from properties when hasShieldDamage was never saved (legacy)', () => {
+    expect(
+      resolveShieldDamageDisplay({
+        hasShieldDamage: undefined,
+        properties: [{ id: PROPERTY_IDS.SHIELD_DAMAGE, name: 'Shield Damage', op_1_lvl: 2 }],
+      }),
+    ).toBe('1d8 Bludgeoning');
+  });
+
   it('hides leftover stored dice when shield damage is off (86e3mmnz5)', () => {
     expect(
       resolveShieldDamageDisplay({

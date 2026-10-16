@@ -202,6 +202,14 @@ describe('library-selectable-builders (DEV-V-016 parity)', () => {
     expect(cols.find((c) => c.key === 'armor')?.value).toBe('2');
   });
 
+  it('armor picker shows dash when nothing defines damage reduction (86e3jzdu3)', () => {
+    const cols = getItemColumns(
+      { id: 'a0', name: 'Cloth', type: 'armor', properties: [] },
+      'armor',
+    );
+    expect(cols.find((c) => c.key === 'armor')?.value).toBe('-');
+  });
+
   it('buildSelectableItem preserves data for sheet add mapping (DEV-V-016-T006)', () => {
     const weapon = {
       id: 'w1',

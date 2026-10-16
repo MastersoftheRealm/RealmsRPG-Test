@@ -17,6 +17,7 @@ import {
 import { calculateCriticalRange, calculateEvasion } from '@/lib/game/calculations';
 import { getWeaponAttackBonusFromProperties } from '@/lib/game/weapon-attack-ability';
 import { useRollsOptional } from '@/components/rolls';
+import { quickShieldTableHasDamage } from '@/components/patterns/list/quick-shield-table-display';
 
 /**
  * QuickWeaponsTable column classes — content-sized metric cols (not large %) so the table
@@ -311,15 +312,21 @@ export function QuickShieldsTable({
                 shieldDR: lib?.shieldDR,
                 properties: props,
               });
-              const damageDisplay =
-                resolveShieldDamageDisplay({
-                  shieldDamage: lib?.shieldDamage,
-                  hasShieldDamage: lib?.hasShieldDamage,
-                  properties: props,
-                  damage: shield.damage,
-                }) ?? undefined;
-              const { dice, rollStr } = splitDamageDiceAndType(damageDisplay ?? shield.damage);
-              const hasDamage = rollStr !== '-';
+              const hasDamage = quickShieldTableHasDamage({
+                shieldDamage: lib?.shieldDamage,
+                hasShieldDamage: lib?.hasShieldDamage,
+                properties: props,
+                legacyItemDamage: shield.damage,
+              });
+              const damageDisplay = hasDamage
+                ? resolveShieldDamageDisplay({
+                    shieldDamage: lib?.shieldDamage,
+                    hasShieldDamage: lib?.hasShieldDamage,
+                    properties: props,
+                    damage: shield.damage,
+                  })
+                : null;
+              const { dice, rollStr } = splitDamageDiceAndType(damageDisplay ?? '-');
               const attackBonus = getAttackBonus(shield, abilities, martialProf);
               const damageRollStr = hasDamage
                 ? String(rollStr).includes('Bludgeoning')

@@ -37,6 +37,7 @@ import { Card, DescriptorChip } from '@/components/ui';
 import { profPointsDescriptorVariant } from '@/lib/chip/descriptor-chip-variants';
 import { getEffectiveAbilities } from '@/lib/character/temp-modifiers';
 import { normalizeArchetypeChoices } from '@/lib/character/schema-normalize';
+import { resolveShieldDamageDisplay, type ItemPropertyPayload } from '@/lib/calculators';
 
 function toQuickArmamentItems(items: Array<EnrichedItem | Item>): QuickArmamentItem[] {
   return items.map((item) => {
@@ -54,14 +55,26 @@ function toQuickArmamentItems(items: Array<EnrichedItem | Item>): QuickArmamentI
       },
     );
 
-    const shieldDamageDisplay =
-      'shieldDamage' in item && item.shieldDamage ? String(item.shieldDamage) : undefined;
+    const lib = 'libraryItem' in item ? item.libraryItem : undefined;
+    const libProps = (lib?.properties ?? properties ?? []) as ItemPropertyPayload[];
+    const shieldDamageForQuick =
+      item.type === 'shield'
+        ? (resolveShieldDamageDisplay({
+            shieldDamage: lib && 'shieldDamage' in lib ? lib.shieldDamage : undefined,
+            hasShieldDamage: lib && 'hasShieldDamage' in lib ? lib.hasShieldDamage : undefined,
+            properties: libProps,
+            damage: item.damage,
+          }) ??
+          ('shieldDamage' in item && typeof item.shieldDamage === 'string'
+            ? item.shieldDamage
+            : null))
+        : null;
 
     return {
       id: item.id,
       name: item.name,
       description: item.description,
-      damage: shieldDamageDisplay ?? item.damage,
+      damage: shieldDamageForQuick ?? item.damage,
       range: typeof item.range === 'number' ? String(item.range) : item.range,
       properties,
       equipped: item.equipped,

@@ -66,6 +66,21 @@ export const MECHANIC_PROPERTY_NAMES = new Set([
   'shield damage',
 ]);
 
+/** Mechanics that already have dedicated columns on sheet shorthand tables — not Graze/Finesse/etc. */
+const WEAPON_SHORTHAND_COLUMN_MECHANICS = new Set(['weapon damage', 'range', 'split damage dice']);
+const SHIELD_SHORTHAND_COLUMN_MECHANICS = new Set(['shield amount', 'shield damage']);
+
+export function isArmamentShorthandColumnMechanic(
+  name: string,
+  family: 'weapon' | 'shield',
+): boolean {
+  const n = name.trim().toLowerCase();
+  if (!n) return true;
+  const set =
+    family === 'weapon' ? WEAPON_SHORTHAND_COLUMN_MECHANICS : SHIELD_SHORTHAND_COLUMN_MECHANICS;
+  return set.has(n);
+}
+
 /** True when a compact-fact value should not become a chip (empty, dash, none). */
 export function isBlank(value: string | number | null | undefined): boolean {
   if (value == null) return true;
