@@ -16,6 +16,10 @@ describe('robots / sitemap (TASK-771)', () => {
   it('lists public marketing routes and omits /dev and /login', () => {
     expect(SITEMAP_PATHS).toContain('/');
     expect(SITEMAP_PATHS).toContain('/rules');
+    expect(SITEMAP_PATHS).toContain('/rules/playing-the-game');
+    expect(SITEMAP_PATHS).not.toContain('/rules/welcome-to-realms');
+    expect(SITEMAP_PATHS).toContain('/library');
+    expect(SITEMAP_PATHS).toContain('/characters/new');
     expect(SITEMAP_PATHS).not.toContain('/dev/styleguide');
     expect(SITEMAP_PATHS).not.toContain('/login');
     const entries = sitemap();
