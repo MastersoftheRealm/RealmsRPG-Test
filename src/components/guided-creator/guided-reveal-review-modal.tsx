@@ -24,7 +24,6 @@ function leftoverDetail(remaining: number, unit: string): string {
 }
 
 function blockerTitle(blocker: GuidedRevealBlocker): string {
-  if (blocker.kind === 'name') return copy.nameItem;
   if (blocker.kind === 'healthEnergy') return copy.healthEnergyItem;
   if (blocker.kind === 'abilityPoints') return copy.abilityPointsItem;
   if (blocker.kind === 'skillPoints') return copy.skillPointsItem;
@@ -32,7 +31,6 @@ function blockerTitle(blocker: GuidedRevealBlocker): string {
 }
 
 function blockerDetail(blocker: GuidedRevealBlocker): string {
-  if (blocker.kind === 'name') return copy.nameDetail;
   if (blocker.kind === 'healthEnergy') return heCopy.allocateHint(blocker.remaining);
   if (blocker.kind === 'abilityPoints') {
     return leftoverDetail(blocker.remaining, copy.abilityPointsUnit);

@@ -19,6 +19,7 @@ import type { GuidedDraft } from '@/stores/guided-creator-store';
 import type { Archetype, ArchetypePathData } from '@/types/archetype';
 import type { Species } from '@/hooks';
 import { averageMixedPhysical } from '@/lib/ancestry/ancestry-selection';
+import { resolveCharacterSaveName } from '@/lib/character/character-name-limit';
 import { clampSavedCurrency } from '@/lib/character-save';
 import { computeStartingCurrency } from '@/lib/guided-creator/equipment-currency';
 import { resolveArchetypeProficiencyStart } from '@/lib/game/formulas';
@@ -409,7 +410,7 @@ export function buildGuidedCharacterPayload(
     : { id: type, type };
 
   return {
-    name: draft.name.trim() || 'Unnamed Character',
+    name: resolveCharacterSaveName(draft.name),
     level,
     status: 'complete',
     abilities,

@@ -12,6 +12,14 @@ import { pickDirtyCharacterFields } from '@/lib/character/dirty-patch';
 
 export const CHARACTER_NAME_MAX_LENGTH = 100;
 
+/** Placeholder when a character is saved with no name (guided create, API fallbacks). */
+export const CHARACTER_DEFAULT_NAME = 'Unnamed';
+
+export function resolveCharacterSaveName(name: unknown): string {
+  const trimmed = typeof name === 'string' ? name.trim() : '';
+  return trimmed || CHARACTER_DEFAULT_NAME;
+}
+
 /** Show the live counter once the name is this long. */
 export const CHARACTER_NAME_COUNTER_FROM = 80;
 

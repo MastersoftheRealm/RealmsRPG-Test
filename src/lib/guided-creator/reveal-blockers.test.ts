@@ -68,13 +68,23 @@ describe('guided reveal blockers', () => {
     ).toEqual([]);
   });
 
-  it('lists name and Health/Energy on this page, not earlier chapters', () => {
+  it('lists Health/Energy on this page when unallocated, not earlier chapters', () => {
     const blockers = listGuidedRevealBlockers({
       chapters: GUIDED_CHAPTERS,
       draft: saveableDraft({ name: '  ', hpAllocated: null, energyAllocated: null }),
       healthEnergyRemaining: 18,
     });
-    expect(blockers.map((b) => b.kind)).toEqual(['name', 'healthEnergy']);
+    expect(blockers.map((b) => b.kind)).toEqual(['healthEnergy']);
+  });
+
+  it('does not block create for a blank name when Health/Energy are allocated', () => {
+    expect(
+      listGuidedRevealBlockers({
+        chapters: GUIDED_CHAPTERS,
+        draft: saveableDraft({ name: '  ' }),
+        healthEnergyRemaining: 0,
+      }),
+    ).toEqual([]);
   });
 
   it('treats leftover Health/Energy points as a this-page issue even when allocated', () => {

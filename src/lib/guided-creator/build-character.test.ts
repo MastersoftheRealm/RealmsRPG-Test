@@ -9,6 +9,7 @@ import {
 } from '@/lib/guided-creator/build-character';
 import { PART_IDS } from '@/lib/id-constants';
 import { snapshotParts } from '@/lib/calculators/power-composition.fixture';
+import { CHARACTER_DEFAULT_NAME } from '@/lib/character/character-name-limit';
 import { cleanForSave } from '@/lib/data-enrichment';
 import { calculateAllStats } from '@/lib/game/calculations';
 import { calculateProficiencyTP } from '@/lib/proficiencies';
@@ -632,5 +633,10 @@ describe('computeGuidedRequiredTrainingSpent (86e3krpzp)', () => {
     const lean = cleanForSave(payload as Character, rules);
     expect(lean.health?.max).toBe(stats.maxHealth);
     expect(lean.health?.max).toBe(14);
+  });
+
+  it('defaults a blank draft name to Unnamed on save', () => {
+    const payload = buildGuidedCharacterPayload(minimalDraft({ name: '   ' }), {});
+    expect(payload.name).toBe(CHARACTER_DEFAULT_NAME);
   });
 });
