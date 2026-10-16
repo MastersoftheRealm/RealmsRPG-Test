@@ -428,6 +428,7 @@ export function mapPowerRows(
     ) : undefined;
 
     const detailSections = mergeDetailSections(
+      variantsSection,
       glrSurfaceDetailSections(
         'character-sheet-power-play',
         {
@@ -440,7 +441,6 @@ export function mapPowerRows(
       metadataDetailSection(
         [targetsFactChip(power.targetedDefenses)].filter(Boolean) as ChipData[],
       ),
-      variantsSection,
     );
 
     return {

@@ -50,6 +50,7 @@ import {
 import { partChipsFromDisplay } from '@/lib/chip/part-chips-from-display';
 import {
   buildGlrFactDetailSections,
+  mergeDetailSections,
   partsProficienciesSection,
   propertiesProficienciesSection,
 } from '@/lib/chip/list-row-metadata';
@@ -708,16 +709,19 @@ export function buildSelectableItem(
       powerHasDamageCategory(composition ? composedPowerCategoryDamage(composition) : damage),
     );
     const categoryText = formatPartCategoriesColumn(categories);
-    const sections = buildGlrFactDetailSections({
-      chipFacts: selectPowerChrome.layout.chipFacts,
-      entityType: 'power',
-      facts: {
-        range: display.range,
-        category: categoryText && categoryText !== '—' ? categoryText : undefined,
-        trainingPoints: display.tp > 0 ? display.tp : undefined,
-      },
-      extraSections: [...(parts ? [parts] : []), ...(variantsSection ? [variantsSection] : [])],
-    });
+    const sections = mergeDetailSections(
+      variantsSection,
+      buildGlrFactDetailSections({
+        chipFacts: selectPowerChrome.layout.chipFacts,
+        entityType: 'power',
+        facts: {
+          range: display.range,
+          category: categoryText && categoryText !== '—' ? categoryText : undefined,
+          trainingPoints: display.tp > 0 ? display.tp : undefined,
+        },
+        extraSections: parts ? [parts] : undefined,
+      }),
+    );
     detailSections = sections.length > 0 ? sections : undefined;
     powerDisplay = {
       energy: display.energy,
