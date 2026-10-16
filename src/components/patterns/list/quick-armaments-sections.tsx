@@ -17,7 +17,7 @@ import {
 import { calculateCriticalRange, calculateEvasion } from '@/lib/game/calculations';
 import { getWeaponAttackBonusFromProperties } from '@/lib/game/weapon-attack-ability';
 import { useRollsOptional } from '@/components/rolls';
-import { quickShieldTableHasDamage } from '@/components/patterns/list/quick-shield-table-display';
+import { quickShieldTableHasDamage } from '@/lib/character/quick-shield-table-display';
 
 /**
  * QuickWeaponsTable column classes — content-sized metric cols (not large %) so the table
