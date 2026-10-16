@@ -39,6 +39,12 @@ describe('schema-normalize (TASK-663)', () => {
     expect(normalizeArchetypeChoices({ bad: 'innate', 4: 'other' })).toEqual({});
   });
 
+  it('normalizeCharacterOnLoad coerces numeric age to string (86e3jw2mg)', () => {
+    const loaded = normalizeCharacterOnLoad({ age: 42 }) as Record<string, unknown>;
+    expect(loaded.age).toBe('42');
+    expect(normalizeCharacterOnLoad({ age: '' }).age).toBeUndefined();
+  });
+
   it('normalizeCharacterOnLoad promotes legacy fields to canonical keys', () => {
     const loaded = normalizeCharacterOnLoad({
       defenseSkills: { might: 1 },

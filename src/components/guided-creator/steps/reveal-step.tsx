@@ -8,6 +8,7 @@ import { useMemo, useRef, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { Sparkles } from 'lucide-react';
 import { useQueryClient } from '@tanstack/react-query';
+import { CHARACTER_AGE_MAX_LENGTH, clampCharacterAgeInput } from '@/lib/character/appearance-age';
 import { Button, Input, Textarea, useToast } from '@/components/ui';
 import {
   useAuth,
@@ -397,10 +398,10 @@ export function RevealStep() {
                 </label>
                 <Input
                   id="guided-char-age"
-                  type="number"
-                  min={1}
+                  type="text"
+                  maxLength={CHARACTER_AGE_MAX_LENGTH}
                   value={draft.age}
-                  onChange={(e) => updateDraft({ age: e.target.value })}
+                  onChange={(e) => updateDraft({ age: clampCharacterAgeInput(e.target.value) })}
                   placeholder={agePlaceholder}
                   className="font-nunito"
                 />

@@ -482,6 +482,14 @@ describe('buildGuidedCharacterPayload', () => {
     });
   });
 
+  it('persists free-text age from reveal draft (86e3jw2mg)', () => {
+    const payload = buildGuidedCharacterPayload(
+      minimalDraft({ age: "Doesn't age, timeless body" }),
+      {},
+    );
+    expect(payload.age).toBe("Doesn't age, timeless body");
+  });
+
   it('maps reveal identity fields to age, appearance, and backstory (not merged appearance)', () => {
     const payload = buildGuidedCharacterPayload(
       minimalDraft({

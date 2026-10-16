@@ -13,6 +13,7 @@
 'use client';
 
 import { useState, useCallback } from 'react';
+import { CHARACTER_AGE_MAX_LENGTH, clampCharacterAgeInput } from '@/lib/character/appearance-age';
 import { useModalUnmountClickGuard } from '@/lib/modal-unmount-click-guard';
 import { X, Pencil } from 'lucide-react';
 import { Button, IconButton, Textarea } from '@/components/ui';
@@ -318,7 +319,7 @@ export function NotesTab({
   };
 
   const handleAgeBlur = () => {
-    const trimmed = ageInput.trim();
+    const trimmed = clampCharacterAgeInput(ageInput.trim());
     setAgeInput(trimmed);
     if (trimmed !== age && onAgeChange) {
       onAgeChange(trimmed);
@@ -380,13 +381,13 @@ export function NotesTab({
               <span className="text-sm font-medium text-text-secondary">Age:</span>
               {isEditMode && onAgeChange ? (
                 <input
-                  type="number"
-                  min="1"
+                  type="text"
                   value={ageInput}
-                  onChange={(e) => setAgeInput(e.target.value)}
+                  maxLength={CHARACTER_AGE_MAX_LENGTH}
+                  onChange={(e) => setAgeInput(clampCharacterAgeInput(e.target.value))}
                   onBlur={handleAgeBlur}
                   placeholder="—"
-                  className="w-16 rounded border border-border-light bg-surface px-2 py-0.5 text-sm focus:ring-2 focus:ring-primary-outline-border"
+                  className="max-w-[14rem] min-w-[5rem] flex-1 rounded border border-border-light bg-surface px-2 py-0.5 text-sm focus:ring-2 focus:ring-primary-outline-border"
                   aria-label="Character age"
                 />
               ) : age ? (
