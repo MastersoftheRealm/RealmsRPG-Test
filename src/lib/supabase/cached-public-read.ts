@@ -6,7 +6,7 @@
 
 import { unstable_cache } from 'next/cache';
 
-/** Matches `/codex/[collection]/[slug]` `export const revalidate`. */
+/** Shared ISR window for public codex / rules Data Cache reads. */
 export const CODEX_PUBLIC_ISR_SECONDS = 3600;
 
 export function readCachedPublicData<T>(

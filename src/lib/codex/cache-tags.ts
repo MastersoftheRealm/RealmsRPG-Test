@@ -1,6 +1,31 @@
 /** Data Cache tags for public codex / rules reads (pair with `revalidateTag` on admin saves). */
 
-import { CODEX_DETAIL_TABLE, type CodexDetailCollection } from '@/lib/codex/detail-href';
+/** Browse collection URL segments that map to codex tables (cache invalidation only). */
+export const CODEX_DETAIL_COLLECTIONS = [
+  'feats',
+  'skills',
+  'species',
+  'archetypes',
+  'equipment',
+  'properties',
+  'parts',
+  'traits',
+  'creature-feats',
+] as const;
+
+export type CodexDetailCollection = (typeof CODEX_DETAIL_COLLECTIONS)[number];
+
+export const CODEX_DETAIL_TABLE: Record<CodexDetailCollection, string> = {
+  feats: 'codex_feats',
+  skills: 'codex_skills',
+  species: 'codex_species',
+  archetypes: 'codex_archetypes',
+  equipment: 'codex_equipment',
+  properties: 'codex_properties',
+  parts: 'codex_parts',
+  traits: 'codex_traits',
+  'creature-feats': 'codex_creature_feats',
+};
 
 export const CODEX_DETAIL_CACHE_TAG = 'codex-detail';
 
