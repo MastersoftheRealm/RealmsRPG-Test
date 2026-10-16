@@ -10,6 +10,28 @@ import { orderCombatantsByInitiative } from './combat-encounter-helpers';
 
 type SetEncounter = React.Dispatch<React.SetStateAction<Encounter | null>>;
 
+/** Pure transitions for tests and round persistence (86e3p800n). */
+export function encounterStateAfterStart(prev: Encounter): Encounter {
+  const round = prev.round > 0 ? prev.round : 1;
+  const currentTurnIndex = prev.currentTurnIndex >= 0 ? prev.currentTurnIndex : 0;
+  return {
+    ...prev,
+    round,
+    currentTurnIndex,
+    isActive: true,
+    status: 'active',
+  };
+}
+
+export function encounterStateAfterEnd(prev: Encounter): Encounter {
+  return {
+    ...prev,
+    currentTurnIndex: -1,
+    isActive: false,
+    status: 'paused',
+  };
+}
+
 export function useCombatRoundActions({
   setEncounter,
   sortedCombatants,
@@ -19,17 +41,7 @@ export function useCombatRoundActions({
 }) {
   const startCombat = () => {
     if (sortedCombatants.length === 0) return;
-    setEncounter((prev) =>
-      prev
-        ? {
-            ...prev,
-            round: 1,
-            currentTurnIndex: 0,
-            isActive: true,
-            status: 'active',
-          }
-        : prev,
-    );
+    setEncounter((prev) => (prev ? encounterStateAfterStart(prev) : prev));
   };
 
   const nextTurn = () => {
@@ -68,17 +80,7 @@ export function useCombatRoundActions({
   };
 
   const endCombat = () => {
-    setEncounter((prev) =>
-      prev
-        ? {
-            ...prev,
-            round: 0,
-            currentTurnIndex: -1,
-            isActive: false,
-            status: 'paused',
-          }
-        : prev,
-    );
+    setEncounter((prev) => (prev ? encounterStateAfterEnd(prev) : prev));
   };
 
   const markCompleted = () => {

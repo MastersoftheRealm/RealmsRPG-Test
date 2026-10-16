@@ -30,10 +30,21 @@ export function CombatRoundControls({
   onMarkCompleted,
   onResetEncounter,
 }: CombatRoundControlsProps) {
+  const roundLabel =
+    encounter.round > 0 ? (
+      <p
+        className="min-w-[5.5rem] text-sm font-semibold text-text-primary tabular-nums"
+        aria-live="polite"
+      >
+        Round {encounter.round}
+      </p>
+    ) : null;
+
   return (
     <Card className="flex flex-shrink-0 flex-wrap items-center gap-4 p-4 shadow-md">
       {!encounter.isActive ? (
         <>
+          {roundLabel}
           <Button onClick={onStartCombat} disabled={encounter.combatants.length === 0}>
             Start Encounter
           </Button>
@@ -43,6 +54,7 @@ export function CombatRoundControls({
         </>
       ) : (
         <>
+          {roundLabel}
           <Button variant="secondary" onClick={onPreviousTurn}>
             Previous
           </Button>
@@ -51,7 +63,7 @@ export function CombatRoundControls({
             Sort Initiative
           </Button>
           <Button variant="danger" onClick={onEndCombat}>
-            End Combat
+            End Encounter
           </Button>
           <Button variant="secondary" onClick={onMarkCompleted}>
             Mark Complete
@@ -76,12 +88,18 @@ export function CombatRoundControls({
         />
         Auto Sort Initiative
       </label>
-      <Button variant="ghost" onClick={onResetEncounter} className="ml-auto">
+      <Button
+        variant="ghost"
+        onClick={onResetEncounter}
+        className="ml-auto"
+        title="Restore full HP, energy, and AP; clear conditions and surprise; stop the encounter and return to preparing."
+      >
         Reset All
       </Button>
       <Button
         variant="danger"
         onClick={() => setEncounter((prev) => (prev ? { ...prev, combatants: [] } : prev))}
+        title="Remove every combatant from this encounter. Turn order and round are unchanged until you reset or start again."
       >
         Clear All
       </Button>
