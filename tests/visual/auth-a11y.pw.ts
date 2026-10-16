@@ -35,7 +35,7 @@ test.describe('authenticated surfaces · accessibility', () => {
         await waitForAuthPageReady(page, pageDef.name);
 
         const results = await new AxeBuilder({ page })
-          .withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa'])
+          .withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa', 'wcag22a', 'wcag22aa'])
           .analyze();
 
         const ruleIds = [...new Set(results.violations.map((v) => v.id))].sort();

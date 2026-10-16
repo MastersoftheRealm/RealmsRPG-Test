@@ -17,7 +17,7 @@ test.describe('accessibility', () => {
         await page.evaluate(() => (document as Document).fonts?.ready);
 
         const results = await new AxeBuilder({ page })
-          .withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa'])
+          .withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa', 'wcag22a', 'wcag22aa'])
           .analyze();
 
         const ruleIds = [...new Set(results.violations.map((v) => v.id))].sort();
