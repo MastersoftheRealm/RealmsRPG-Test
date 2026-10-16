@@ -21,4 +21,11 @@ describe('GuidedStepFooter opacity (TASK-829)', () => {
     expect(shell).toContain('bg-background md:bg-background/95 md:backdrop-blur-md');
     expect(shell).not.toMatch(/'bg-background\/95 backdrop-blur-md'/);
   });
+
+  it('explains locked chapter pills with focusable aria-disabled + tooltip (86e3jmr0g)', () => {
+    expect(shell).toContain('aria-disabled={!canOpen || undefined}');
+    expect(shell).not.toContain('disabled={!canOpen}');
+    expect(shell).toContain('InfoTippy');
+    expect(shell).toContain('chapterRail.lockedTooltip');
+  });
 });
