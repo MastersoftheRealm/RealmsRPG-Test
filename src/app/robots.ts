@@ -9,7 +9,6 @@ export const ROBOTS_DISALLOW = [
   '/register',
   '/forgot-password',
   '/reset-password',
-  '/forgot-username',
   '/api/',
   '/admin',
 ] as const;

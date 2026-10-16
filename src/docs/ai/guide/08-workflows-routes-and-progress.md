@@ -12,7 +12,7 @@
 - `(main)/codex` — browse all content
 - `(main)/power-creator`, `(main)/technique-creator`, `(main)/item-creator`, `(main)/creature-creator`
 - `(main)/encounters`, `(main)/crafting`, `(main)/my-account`, `(main)/rules`, `(main)/privacy`, `(main)/terms`, `(main)/resources`
-- `(auth)/login`, `(auth)/register`, `(auth)/forgot-password`, `(auth)/forgot-username`
+- `(auth)/login`, `(auth)/register`, `(auth)/forgot-password`
 
 ## Recording Progress
 

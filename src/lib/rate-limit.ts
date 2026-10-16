@@ -279,7 +279,7 @@ export const inviteCodeLimiter = rateLimit({
   failClosed: true,
 });
 
-/** Auth-adjacent actions (resend, forgot-username stub): 5 per minute. Fails closed. */
+/** Auth-adjacent actions (e.g. resend): 5 per minute. Fails closed. */
 export const authActionLimiter = rateLimit({
   interval: 60_000,
   limit: 5,
