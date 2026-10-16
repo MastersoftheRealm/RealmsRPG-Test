@@ -14,10 +14,12 @@ describe('profile picture upload gate (86e3jt56w)', () => {
         pictureMessage={null}
         canUploadProfilePicture={false}
         onOpenPictureModal={() => {}}
+        onRemovePicture={() => {}}
       />,
     );
     expect(html).toContain(PROFILE_PICTURE_UPLOAD_DENIED);
     expect(html).toContain('Change Picture');
+    expect(html).toContain('Remove Picture');
     expect(html).not.toContain('Max 5MB');
   });
 

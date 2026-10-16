@@ -17,6 +17,116 @@ import { verifyMutationRequest } from '@/lib/api-validation';
 const BUCKET = 'profile-pictures';
 const MAX_SIZE = 5 * 1024 * 1024; // 5MB
 
+/** Object name in `profile-pictures` when `photoUrl` is an uploaded file for `userId`. */
+export function profilePictureStorageObjectName(
+  photoUrl: string | null | undefined,
+  userId: string,
+): string | null {
+  if (!photoUrl?.trim() || !userId) return null;
+  try {
+    const url = new URL(photoUrl.split('?')[0] ?? photoUrl);
+    const marker = `/${BUCKET}/`;
+    const idx = url.pathname.indexOf(marker);
+    if (idx === -1) return null;
+    const name = decodeURIComponent(url.pathname.slice(idx + marker.length));
+    if (!name.startsWith(`${userId}.`)) return null;
+    return name;
+  } catch {
+    return null;
+  }
+}
+
+async function removeUploadedProfilePictureObjects(
+  supabase: Awaited<ReturnType<typeof createClient>>,
+  userId: string,
+  photoUrl: string | null | undefined,
+) {
+  const explicitName = profilePictureStorageObjectName(photoUrl, userId);
+  const toRemove: string[] = explicitName ? [explicitName] : [];
+
+  const { data: existing, error: listError } = await supabase.storage
+    .from(BUCKET)
+    .list('', { limit: 100 });
+  if (listError) {
+    logApiError('profile-picture storage list', listError);
+  } else if (existing?.length) {
+    for (const file of existing) {
+      if (file.name?.startsWith(`${userId}.`) && !toRemove.includes(file.name)) {
+        toRemove.push(file.name);
+      }
+    }
+  }
+
+  if (!toRemove.length) return;
+
+  const { error: removeError } = await supabase.storage.from(BUCKET).remove(toRemove);
+  if (removeError) {
+    logApiError('profile-picture storage remove', removeError);
+  }
+}
+
+export async function DELETE(request: NextRequest) {
+  const { user, error } = await getSession();
+  if (error || !user?.uid) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  }
+
+  const denied = verifyMutationRequest(request);
+  if (denied) return denied;
+
+  const key = buildRateLimitKey('delete-profile-picture', {
+    userId: user.uid,
+    ip: resolveClientIp(request.headers),
+  });
+  const { success } = await uploadLimiter.check(key);
+  if (!success) {
+    return NextResponse.json(
+      { error: 'Too many requests' },
+      { status: 429, headers: { 'Retry-After': '60' } },
+    );
+  }
+
+  const admin = createServiceRoleClient();
+
+  try {
+    const { data: profileRow, error: readError } = await admin
+      .from('user_profiles')
+      .select('photo_url')
+      .eq('id', user.uid)
+      .maybeSingle();
+    if (readError) {
+      return apiErrorResponse(
+        'Failed to remove profile picture',
+        500,
+        'DELETE /api/upload/profile-picture (profile read)',
+        readError,
+      );
+    }
+
+    const currentPhoto = typeof profileRow?.photo_url === 'string' ? profileRow.photo_url : null;
+
+    await removeUploadedProfilePictureObjects(admin, user.uid, currentPhoto);
+
+    const { error: profileError } = await admin
+      .from('user_profiles')
+      .update({ photo_url: null, updated_at: new Date().toISOString() })
+      .eq('id', user.uid);
+    if (profileError) {
+      return apiErrorResponse(
+        'Failed to remove profile picture',
+        500,
+        'DELETE /api/upload/profile-picture (profile update)',
+        profileError,
+      );
+    }
+
+    return new NextResponse(null, { status: 204 });
+  } catch (err) {
+    logApiError('DELETE /api/upload/profile-picture', err);
+    return apiErrorResponse('Failed to remove profile picture', 500);
+  }
+}
+
 export async function POST(request: NextRequest) {
   const { user, error } = await getSession();
   if (error || !user?.uid) {

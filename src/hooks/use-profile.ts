@@ -144,7 +144,12 @@ export function useAccountProfile(authUser: AuthUser | null): {
 
   const patchProfile = (patch: Partial<AccountProfile>) => {
     if (!userId) return;
-    const nextPhoto = patch.photoURL?.split('?')[0];
+    const nextPhoto =
+      patch.photoURL !== undefined
+        ? patch.photoURL
+          ? patch.photoURL.split('?')[0]
+          : null
+        : undefined;
     queryClient.setQueryData(
       userProfileQueryKey(userId),
       (prev: UserProfileActionResult | undefined) => {
@@ -157,7 +162,10 @@ export function useAccountProfile(authUser: AuthUser | null): {
             displayName: existing?.displayName ?? null,
             username: patch.username ?? existing?.username ?? null,
             usernameDisplay: patch.username ?? existing?.usernameDisplay ?? null,
-            photoUrl: nextPhoto ?? existing?.photoUrl ?? authUser?.photoURL ?? null,
+            photoUrl:
+              nextPhoto !== undefined
+                ? nextPhoto
+                : (existing?.photoUrl ?? authUser?.photoURL ?? null),
             role: patch.role ?? existing?.role ?? null,
             rolePolicy: (patch.rolePolicy ?? existing?.rolePolicy ?? null) as NonNullable<
               UserProfileActionResult['profile']

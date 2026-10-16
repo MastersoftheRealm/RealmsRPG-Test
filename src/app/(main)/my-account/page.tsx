@@ -75,6 +75,7 @@ function AccountContent() {
             model.setShowPictureBank(true);
           }
         }}
+        onRemovePicture={() => void model.handleProfilePictureRemove()}
       />
 
       <AccountTutorialsCard
