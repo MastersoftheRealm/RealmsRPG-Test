@@ -11,9 +11,9 @@ function read(rel: string): string {
 
 describe('sheet allocation reset UI (86e3jvcge)', () => {
   it('wires reset controls in abilities and skills spend panels', () => {
-    expect(read('components/character-sheet/abilities-section.tsx')).toContain(
-      'SheetAllocationResetButton',
-    );
+    const abilitiesSection = read('components/character-sheet/abilities-section.tsx');
+    expect(abilitiesSection).toContain('SheetAllocationResetButton');
+    expect(abilitiesSection).toContain('hasNonDefaultAbilityScores');
     expect(read('components/character-sheet/skills-section.tsx')).toContain(
       'SheetAllocationResetButton',
     );

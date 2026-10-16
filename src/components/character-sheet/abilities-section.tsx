@@ -144,8 +144,12 @@ export function AbilitiesSection({
     (sum, ability) => sum + getDefenseValue(ABILITY_INFO[ability].defenseKey),
     0,
   );
+  /** Net spent can be 0 with offsetting positives/negatives; reset still clears allocations. */
+  const hasNonDefaultAbilityScores = ABILITY_ORDER.some(
+    (ability) => (abilities[ability] ?? 0) !== 0,
+  );
   const canResetAbilityAllocations =
-    Boolean(onResetAbilityAllocations) && (abilityPointsSpent > 0 || defensePointsSpent > 0);
+    Boolean(onResetAbilityAllocations) && (hasNonDefaultAbilityScores || defensePointsSpent > 0);
 
   const abilityRemaining =
     totalAbilityPoints !== undefined ? totalAbilityPoints - abilityPointsSpent : 0;
