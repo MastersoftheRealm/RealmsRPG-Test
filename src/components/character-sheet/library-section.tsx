@@ -250,6 +250,8 @@ export function LibrarySection({
     onEnterState,
     maxArchetypeFeats,
     maxCharacterFeats,
+    sectionVisibility,
+    onSectionVisibilityChange,
   } = data;
 
   return (
@@ -339,6 +341,9 @@ export function LibrarySection({
             onCurrencyChange={onCurrencyChange}
             martialProficiency={data.martialProficiency}
             showLibraryEditControls={showLibraryEditControls}
+            isEditMode={isEditMode}
+            sectionVisibility={sectionVisibility}
+            onSectionVisibilityChange={onSectionVisibilityChange}
             weaponRows={weaponRows}
             shieldRows={shieldRows}
             armorRows={armorRows}
@@ -380,6 +385,8 @@ export function LibrarySection({
             onEnterState={onEnterState}
             isEditMode={isEditMode}
             showEditControls={showLibraryEditControls}
+            sectionVisibility={sectionVisibility}
+            onSectionVisibilityChange={onSectionVisibilityChange}
             maxArchetypeFeats={maxArchetypeFeats}
             maxCharacterFeats={maxCharacterFeats}
             onFeatUsesChange={onFeatUsesChange}

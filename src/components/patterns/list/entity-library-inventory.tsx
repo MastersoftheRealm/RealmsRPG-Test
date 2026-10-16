@@ -51,6 +51,8 @@ export function WeaponsListSection({
   addLabel,
   emptyMessage = 'No weapons',
   collapsible,
+  expandedWhenEmpty,
+  headerRightContent,
   headingLevel,
 }: {
   title?: string | undefined;
@@ -67,7 +69,13 @@ export function WeaponsListSection({
     isContentVisible,
     onAdd: onAddWrapped,
     headerCollapseProps,
-  } = useEntityListSectionCollapse(collapsible, items.length, onAdd, `${layout}:${title}`);
+  } = useEntityListSectionCollapse(
+    collapsible,
+    items.length,
+    onAdd,
+    `${layout}:${title}`,
+    expandedWhenEmpty,
+  );
   const cols = layout === 'characterSheet' ? CHARACTER_SHEET_WEAPON_COLUMNS : WEAPON_COLUMNS;
   const grid = layout === 'characterSheet' ? CHARACTER_SHEET_WEAPON_GRID : WEAPON_GRID;
 
@@ -170,6 +178,7 @@ export function WeaponsListSection({
           headingLevel={headingLevel}
           onAdd={onAddWrapped}
           addLabel={addLabel}
+          rightContent={headerRightContent}
           {...headerCollapseProps}
         />
       )}
@@ -192,6 +201,8 @@ export function ShieldsListSection({
   addLabel,
   emptyMessage = 'No shields',
   collapsible,
+  expandedWhenEmpty,
+  headerRightContent,
   headingLevel,
 }: {
   title?: string | undefined;
@@ -206,7 +217,13 @@ export function ShieldsListSection({
     isContentVisible,
     onAdd: onAddWrapped,
     headerCollapseProps,
-  } = useEntityListSectionCollapse(collapsible, items.length, onAdd, `${layout}:${title}`);
+  } = useEntityListSectionCollapse(
+    collapsible,
+    items.length,
+    onAdd,
+    `${layout}:${title}`,
+    expandedWhenEmpty,
+  );
   const cols = layout === 'characterSheet' ? CHARACTER_SHEET_SHIELD_COLUMNS : SHIELD_COLUMNS;
   const grid = layout === 'characterSheet' ? CHARACTER_SHEET_SHIELD_GRID : SHIELD_GRID;
 
@@ -268,6 +285,7 @@ export function ShieldsListSection({
           headingLevel={headingLevel}
           onAdd={onAddWrapped}
           addLabel={addLabel}
+          rightContent={headerRightContent}
           {...headerCollapseProps}
         />
       )}
@@ -290,6 +308,8 @@ export function ArmorListSection({
   addLabel,
   emptyMessage = 'No armor',
   collapsible,
+  expandedWhenEmpty,
+  headerRightContent,
   headingLevel,
 }: {
   title?: string | undefined;
@@ -304,7 +324,13 @@ export function ArmorListSection({
     isContentVisible,
     onAdd: onAddWrapped,
     headerCollapseProps,
-  } = useEntityListSectionCollapse(collapsible, items.length, onAdd, `${layout}:${title}`);
+  } = useEntityListSectionCollapse(
+    collapsible,
+    items.length,
+    onAdd,
+    `${layout}:${title}`,
+    expandedWhenEmpty,
+  );
   const grid = ARMOR_GRID;
 
   const listBody = (
@@ -360,6 +386,7 @@ export function ArmorListSection({
           headingLevel={headingLevel}
           onAdd={onAddWrapped}
           addLabel={addLabel}
+          rightContent={headerRightContent}
           {...headerCollapseProps}
         />
       )}

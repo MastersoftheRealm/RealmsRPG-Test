@@ -52,6 +52,9 @@ type EntityListControlsFields = {
   emptyMessage?: string | undefined;
   /** Multi-section character sheet library tabs: session collapse (empty → closed). */
   collapsible?: boolean | undefined;
+  /** When true, empty sections start expanded (character sheet default-visible subsections). */
+  expandedWhenEmpty?: boolean | undefined;
+  headerRightContent?: ReactNode | undefined;
   /**
    * Heading level for the internal SectionHeader. Default `2`.
    * Nested creator lists (e.g. creature Inventory) pass `3`.

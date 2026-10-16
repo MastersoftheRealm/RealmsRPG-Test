@@ -4,7 +4,7 @@
 
 'use client';
 
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState, type ReactNode } from 'react';
 import {
   TabSummarySection,
   SummaryItem,
@@ -24,12 +24,21 @@ import type {
   EntityArmorRow,
   EntityEquipmentRow,
 } from '@/components/patterns/list/entity-library-sections';
+import type { CharacterLibrarySectionId } from '@/types';
+import { librarySectionVisibleOutsideEdit } from '@/lib/character-library-section-visibility';
+import { LibrarySectionVisibilityToggle } from './library-section-visibility-toggle';
+import { cn } from '@/lib/utils';
 
 export type LibraryInventoryPanelProps = {
   currency: number;
   onCurrencyChange?: ((value: number) => void) | undefined;
   martialProficiency?: number | undefined;
   showLibraryEditControls: boolean;
+  isEditMode?: boolean | undefined;
+  sectionVisibility?: Partial<Record<CharacterLibrarySectionId, boolean>> | undefined;
+  onSectionVisibilityChange?:
+    | ((next: Partial<Record<CharacterLibrarySectionId, boolean>>) => void)
+    | undefined;
   weaponRows: EntityWeaponRow[];
   shieldRows: EntityShieldRow[];
   armorRows: EntityArmorRow[];
@@ -57,6 +66,9 @@ export function LibraryInventoryPanel({
   onCurrencyChange,
   martialProficiency,
   showLibraryEditControls,
+  isEditMode = false,
+  sectionVisibility,
+  onSectionVisibilityChange,
   weaponRows,
   shieldRows,
   armorRows,
@@ -91,6 +103,28 @@ export function LibraryInventoryPanel({
     editedRef.current = false;
     setCurrencyInput(String(currency));
     setIsEditing(true);
+  };
+
+  const sectionToggle = (sectionId: CharacterLibrarySectionId) =>
+    isEditMode ? (
+      <LibrarySectionVisibilityToggle
+        sectionId={sectionId}
+        sectionVisibility={sectionVisibility}
+        onSectionVisibilityChange={onSectionVisibilityChange}
+      />
+    ) : undefined;
+
+  const wrapSection = (sectionId: 'weapons' | 'shields' | 'armor', content: ReactNode) => {
+    const visibleOutsideEdit = librarySectionVisibleOutsideEdit(sectionId, sectionVisibility);
+    if (!isEditMode && !visibleOutsideEdit) return null;
+    return (
+      <div
+        className={cn(isEditMode && !visibleOutsideEdit && 'opacity-60')}
+        data-library-section={sectionId}
+      >
+        {content}
+      </div>
+    );
   };
 
   const handleCurrencyBlur = () => {
@@ -166,48 +200,63 @@ export function LibraryInventoryPanel({
         </div>
       </TabSummarySection>
 
-      <WeaponsListSection
-        layout="characterSheet"
-        items={weaponRows}
-        onAdd={onAddWeapon}
-        addLabel="Add weapon"
-        sortState={weaponSort}
-        onSort={onWeaponSort}
-        rowChrome={{
-          leftSlot: true,
-          delete: !!(showLibraryEditControls && onRemoveWeapon),
-        }}
-        emptyMessage="No weapons (see Unarmed Prowess in Archetype section)"
-        collapsible
-      />
+      {wrapSection(
+        'weapons',
+        <WeaponsListSection
+          layout="characterSheet"
+          items={weaponRows}
+          onAdd={onAddWeapon}
+          addLabel="Add weapon"
+          sortState={weaponSort}
+          onSort={onWeaponSort}
+          rowChrome={{
+            leftSlot: true,
+            delete: !!(showLibraryEditControls && onRemoveWeapon),
+          }}
+          emptyMessage="No weapons (see Unarmed Prowess in Archetype section)"
+          collapsible
+          expandedWhenEmpty
+          headerRightContent={sectionToggle('weapons')}
+        />,
+      )}
 
-      <ShieldsListSection
-        layout="characterSheet"
-        items={shieldRows}
-        onAdd={onAddShield}
-        addLabel="Add shield"
-        sortState={shieldSort}
-        onSort={onShieldSort}
-        rowChrome={{
-          leftSlot: true,
-          delete: !!(showLibraryEditControls && onRemoveShield),
-        }}
-        collapsible
-      />
+      {wrapSection(
+        'shields',
+        <ShieldsListSection
+          layout="characterSheet"
+          items={shieldRows}
+          onAdd={onAddShield}
+          addLabel="Add shield"
+          sortState={shieldSort}
+          onSort={onShieldSort}
+          rowChrome={{
+            leftSlot: true,
+            delete: !!(showLibraryEditControls && onRemoveShield),
+          }}
+          collapsible
+          expandedWhenEmpty
+          headerRightContent={sectionToggle('shields')}
+        />,
+      )}
 
-      <ArmorListSection
-        layout="characterSheet"
-        items={armorRows}
-        onAdd={onAddArmor}
-        addLabel="Add armor"
-        sortState={armorSort}
-        onSort={onArmorSort}
-        rowChrome={{
-          leftSlot: true,
-          delete: !!(showLibraryEditControls && onRemoveArmor),
-        }}
-        collapsible
-      />
+      {wrapSection(
+        'armor',
+        <ArmorListSection
+          layout="characterSheet"
+          items={armorRows}
+          onAdd={onAddArmor}
+          addLabel="Add armor"
+          sortState={armorSort}
+          onSort={onArmorSort}
+          rowChrome={{
+            leftSlot: true,
+            delete: !!(showLibraryEditControls && onRemoveArmor),
+          }}
+          collapsible
+          expandedWhenEmpty
+          headerRightContent={sectionToggle('armor')}
+        />,
+      )}
 
       <EquipmentListSection
         layout="characterSheet"

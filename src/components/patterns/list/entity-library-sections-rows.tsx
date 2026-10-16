@@ -10,8 +10,15 @@ export function useEntityListSectionCollapse(
   itemCount: number,
   onAdd?: () => void,
   sessionKey?: string,
+  expandedWhenEmpty?: boolean | undefined,
 ) {
-  return useLibrarySectionCollapse(collapsible ?? false, itemCount, onAdd, sessionKey);
+  return useLibrarySectionCollapse(
+    collapsible ?? false,
+    itemCount,
+    onAdd,
+    sessionKey,
+    expandedWhenEmpty ?? false,
+  );
 }
 
 export function formatRecoveryAbbrev(recovery: string | undefined): string {

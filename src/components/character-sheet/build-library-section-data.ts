@@ -168,6 +168,9 @@ export function buildLibrarySectionData(input: {
     tabVisibility: character.libraryTabVisibility,
     onTabVisibilityChange: (next) =>
       setCharacter((prev) => (prev ? { ...prev, libraryTabVisibility: next } : null)),
+    sectionVisibility: character.librarySectionVisibility,
+    onSectionVisibilityChange: (next) =>
+      setCharacter((prev) => (prev ? { ...prev, librarySectionVisibility: next } : null)),
     ancestry: character.ancestry as CharacterAncestry,
     vanillaTraits: {
       ancestryTraits: character.ancestryTraits,

@@ -67,6 +67,9 @@ export type CharacterLibraryTabId =
   | 'proficiencies'
   | 'notes';
 
+/** Subsections within Library Feats / Inventory tabs (hideable in edit mode). */
+export type CharacterLibrarySectionId = 'stateFeats' | 'weapons' | 'shields' | 'armor';
+
 /** Character creation status */
 export type CharacterStatus = 'draft' | 'complete' | 'playing';
 
@@ -325,6 +328,9 @@ interface CharacterFields {
 
   /** Character-sheet library tab visibility preferences (applied outside edit mode). */
   libraryTabVisibility?: Partial<Record<CharacterLibraryTabId, boolean>> | undefined;
+
+  /** Library subsection visibility (State Feats; inventory Weapons / Shields / Armor). */
+  librarySectionVisibility?: Partial<Record<CharacterLibrarySectionId, boolean>> | undefined;
 
   /**
    * Temp Modifier deltas (ADR-0006). Persist across refresh and campaign view.
