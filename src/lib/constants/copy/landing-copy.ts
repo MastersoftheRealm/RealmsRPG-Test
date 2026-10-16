@@ -22,7 +22,7 @@ export const LANDING_COPY = {
     items: [
       {
         title: 'Limitless Character Creation',
-        body: 'Bring any dream characters to life. Follow a guided path or forge your own from species, Feats, Powers, and Loadout.',
+        body: 'Bring any dream characters to life. Follow a guided path or build a Custom Archetype from species, Feats, Powers, and Loadout.',
         href: '/characters/new',
         linkLabel: 'Start character creation',
       },

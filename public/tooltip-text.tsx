@@ -16,10 +16,10 @@ Use it while creating Characters or custom content.`;
 // Character Creator
 
 export const createNewCharacter = `Create your character step-by-step: Archetype, Species, Ancestry, Abilities, Skills,
- Feats, Equipment, Powers, then Finalize. Use Choose a Path for guided picks, or Forge Your Own for full manual control.`;
+ Feats, Equipment, Powers, then Finalize. Use Choose a Path for guided picks, or Custom Archetype for full manual control.`;
 
 export const chooseCharacterCreationStyle = `Choose a Path gives curated level 1 recommendations.
-Forge Your Own gives full manual customization from the start. Both follow the same core progression rules.`;
+Custom Archetype gives full manual customization from the start. Both follow the same core progression rules.`;
 
 export function getTooltipTextByPowerAbility(ability: AbilityName) {
   switch (ability) {

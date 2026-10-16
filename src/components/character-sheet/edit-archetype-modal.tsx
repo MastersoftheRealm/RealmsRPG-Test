@@ -35,7 +35,7 @@ const PATH_SWITCH_WARNING =
   'Changing your archetype path updates your identity and abilities. Existing feats, powers, techniques, armaments, and equipment may no longer match the new path. Nothing is removed automatically. Review your sheet afterward.';
 
 const FORGE_SWITCH_WARNING =
-  'Switching to Forge Your Own removes archetype path guidance. Your existing selections are kept, but they may no longer match path recommendations. Path progression notes will no longer appear on your sheet or at level-up.';
+  'Switching to Custom Archetype removes archetype path guidance. Your existing selections are kept, but they may no longer match path recommendations. Path progression notes will no longer appear on your sheet or at level-up.';
 
 type UiMode = 'path-view' | 'path-picker' | 'forge-edit';
 
@@ -162,7 +162,7 @@ export function EditArchetypeModal({
 
   const confirmTitle =
     pendingConfirm?.type === 'switch-forge'
-      ? 'Switch to Forge Your Own?'
+      ? 'Switch to Custom Archetype?'
       : 'Change archetype path?';
   const confirmDescription =
     pendingConfirm?.type === 'switch-forge'
@@ -252,7 +252,7 @@ export function EditArchetypeModal({
                   className="flex-1"
                   onClick={() => setPendingConfirm({ type: 'switch-forge' })}
                 >
-                  Switch to Forge Your Own
+                  Switch to Custom Archetype
                 </Button>
                 <Button
                   variant="outline"
@@ -447,7 +447,9 @@ export function EditArchetypeModal({
         title={confirmTitle}
         description={confirmDescription}
         confirmLabel={
-          pendingConfirm?.type === 'switch-forge' ? 'Continue to forge editor' : 'Change path'
+          pendingConfirm?.type === 'switch-forge'
+            ? 'Continue to custom archetype editor'
+            : 'Change path'
         }
         confirmVariant="danger"
       />
