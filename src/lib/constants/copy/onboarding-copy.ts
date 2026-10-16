@@ -94,4 +94,21 @@ export const ONBOARDING_COPY = {
     tourRetake: 'Take the tour again',
     tourDisabledHint: 'Turn on Show tutorials under My Account to retake the tour.',
   },
+  /** Sheet edit — reset ability / skill allocations (86e3jvcge). */
+  allocationReset: {
+    abilities: {
+      button: 'Reset abilities',
+      confirmTitle: 'Reset ability points?',
+      confirmDescription:
+        'Set all ability scores and defense bonuses to zero. Skills, Health/Energy pool bonuses, and your loadout are not changed.',
+      confirmLabel: 'Reset',
+    },
+    skills: {
+      button: 'Reset skills',
+      confirmTitle: 'Reset skill points?',
+      confirmDescription:
+        'Clear skill training and proficiency you spent points on. Species-granted skills stay proficient. Defense bonuses are not changed.',
+      confirmLabel: 'Reset',
+    },
+  },
 } as const;

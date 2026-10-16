@@ -44,6 +44,7 @@ import type {
   DefenseSkills,
 } from '@/types';
 import { AbilityStatTile } from './ability-stat-tile';
+import { SheetAllocationResetButton } from './sheet-allocation-reset-button';
 
 // =============================================================================
 // Types
@@ -66,6 +67,7 @@ interface AbilitiesSectionProps {
   onTempModifiersChange?: ((patch: CharacterTempModifiers) => void) | undefined;
   onAbilityChange?: ((ability: AbilityName, value: number) => void) | undefined;
   onDefenseChange?: ((defense: keyof DefenseSkills, value: number) => void) | undefined;
+  onResetAbilityAllocations?: (() => void) | undefined;
 }
 
 // =============================================================================
@@ -88,6 +90,7 @@ export function AbilitiesSection({
   onTempModifiersChange,
   onAbilityChange,
   onDefenseChange,
+  onResetAbilityAllocations,
 }: AbilitiesSectionProps) {
   const [sectionAdjustOpen, setSectionAdjustOpen] = useState(false);
   const sheetModeKey = `${isEditMode}:${isTempModifierMode}`;
@@ -136,10 +139,20 @@ export function AbilitiesSection({
   const maxAbility = SHEET_ABILITY_MAX;
   const maxDefenseSkill = ABILITY_CONSTRAINTS.getMaxDefenseSkill(level);
 
+  const abilityPointsSpent = spentAbilityPoints ?? calculatedSpentAbilityPoints;
+  const defensePointsSpent = ABILITY_ORDER.reduce(
+    (sum, ability) => sum + getDefenseValue(ABILITY_INFO[ability].defenseKey),
+    0,
+  );
+  /** Net spent can be 0 with offsetting positives/negatives; reset still clears allocations. */
+  const hasNonDefaultAbilityScores = ABILITY_ORDER.some(
+    (ability) => (abilities[ability] ?? 0) !== 0,
+  );
+  const canResetAbilityAllocations =
+    Boolean(onResetAbilityAllocations) && (hasNonDefaultAbilityScores || defensePointsSpent > 0);
+
   const abilityRemaining =
-    totalAbilityPoints !== undefined
-      ? totalAbilityPoints - (spentAbilityPoints ?? calculatedSpentAbilityPoints)
-      : 0;
+    totalAbilityPoints !== undefined ? totalAbilityPoints - abilityPointsSpent : 0;
   const skillPointsRemaining =
     totalSkillPoints !== undefined ? totalSkillPoints - (spentSkillPoints ?? 0) : 0;
 
@@ -192,21 +205,30 @@ export function AbilitiesSection({
 
       {showSpendControls && (
         <div className="mb-4 flex flex-col items-center gap-2 rounded-lg bg-surface-secondary p-3">
-          <div className="flex flex-wrap justify-center gap-4">
-            {totalAbilityPoints !== undefined && (
-              <PointStatus
-                label="Ability Points"
-                spent={spentAbilityPoints ?? calculatedSpentAbilityPoints}
-                total={totalAbilityPoints}
-                variant="inline"
-              />
-            )}
-            {totalSkillPoints !== undefined && (
-              <PointStatus
-                label="Skill Points (Defenses)"
-                spent={spentSkillPoints ?? 0}
-                total={totalSkillPoints}
-                variant="inline"
+          <div className="flex w-full flex-wrap items-center justify-center gap-3">
+            <div className="flex flex-wrap justify-center gap-4">
+              {totalAbilityPoints !== undefined && (
+                <PointStatus
+                  label="Ability Points"
+                  spent={abilityPointsSpent}
+                  total={totalAbilityPoints}
+                  variant="inline"
+                />
+              )}
+              {totalSkillPoints !== undefined && (
+                <PointStatus
+                  label="Skill Points (Defenses)"
+                  spent={spentSkillPoints ?? 0}
+                  total={totalSkillPoints}
+                  variant="inline"
+                />
+              )}
+            </div>
+            {onResetAbilityAllocations && (
+              <SheetAllocationResetButton
+                kind="abilities"
+                disabled={!canResetAbilityAllocations}
+                onConfirm={onResetAbilityAllocations}
               />
             )}
           </div>

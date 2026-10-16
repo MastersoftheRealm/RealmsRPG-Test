@@ -205,6 +205,7 @@ function AbilitiesPanel({ className }: { className?: string | undefined }) {
     pointBudgets,
     onAbilityChange,
     onDefenseChange,
+    onResetAbilityAllocations,
     onTempModifiersChange,
   } = useCharacterSheet();
 
@@ -227,6 +228,7 @@ function AbilitiesPanel({ className }: { className?: string | undefined }) {
         onTempModifiersChange={onTempModifiersChange}
         onAbilityChange={onAbilityChange}
         onDefenseChange={onDefenseChange}
+        onResetAbilityAllocations={onResetAbilityAllocations}
       />
     </div>
   );
@@ -242,6 +244,7 @@ function SkillsPanel({ className }: { className?: string | undefined }) {
     characterSpeciesSkills,
     onSkillChange,
     onRemoveSkill,
+    onResetSkillAllocations,
     onAddSubSkill,
     onTempModifiersChange,
   } = useCharacterSheet();
@@ -262,6 +265,7 @@ function SkillsPanel({ className }: { className?: string | undefined }) {
       onTempModifiersChange={onTempModifiersChange}
       onSkillChange={onSkillChange}
       onRemoveSkill={onRemoveSkill}
+      onResetSkillAllocations={onResetSkillAllocations}
       onAddSubSkill={onAddSubSkill}
       className={className}
     />

@@ -8,6 +8,7 @@ import { useCallback } from 'react';
 import type { Character, CharacterSkillRow } from '@/types';
 import type { Species, Trait } from '@/hooks/codex-types';
 import { pruneTraitSheetStateAfterAncestryChange } from '@/lib/character/prune-trait-sheet-state';
+import { applySheetSkillAllocationReset } from '@/lib/character/sheet-allocation-reset';
 import type { EditArchetypeResult } from './edit-archetype-modal';
 import type { SkillModalType } from './character-sheet-context';
 
@@ -19,6 +20,7 @@ type UseSheetSkillIdentityActionsArgs = {
   setShowEditSpeciesModal: (value: boolean) => void;
   allSpecies: Species[];
   traitsDb: Trait[];
+  characterSpeciesSkills: string[];
 };
 
 function getSkillRows(skills: Character['skills'] | undefined): CharacterSkillRow[] {
@@ -38,6 +40,7 @@ export function useSheetSkillIdentityActions({
   setShowEditSpeciesModal,
   allSpecies,
   traitsDb,
+  characterSpeciesSkills,
 }: UseSheetSkillIdentityActionsArgs) {
   const handleAddSkills = useCallback(
     (
@@ -100,6 +103,13 @@ export function useSheetSkillIdentityActions({
     },
     [character, setCharacter],
   );
+
+  const handleResetSkillAllocations = useCallback(() => {
+    if (!character) return;
+    setCharacter((prev) =>
+      prev ? applySheetSkillAllocationReset(prev, characterSpeciesSkills) : null,
+    );
+  }, [character, characterSpeciesSkills, setCharacter]);
 
   const handleSkillChange = useCallback(
     (
@@ -259,6 +269,7 @@ export function useSheetSkillIdentityActions({
   return {
     handleAddSkills,
     handleRemoveSkill,
+    handleResetSkillAllocations,
     handleSkillChange,
     handleMartialProfChange,
     handlePowerProfChange,

@@ -57,6 +57,7 @@ export interface UseCharacterSheetActionsArgs {
   stateFeatsList: Array<CharacterFeat & { type: 'archetype' | 'character' }>;
   stateUsesMax: number;
   allSpecies: Species[];
+  characterSpeciesSkills: string[];
 }
 
 export function useCharacterSheetActions(args: UseCharacterSheetActionsArgs) {
@@ -87,6 +88,7 @@ export function useCharacterSheetActions(args: UseCharacterSheetActionsArgs) {
     stateFeatsList,
     stateUsesMax,
     allSpecies,
+    characterSpeciesSkills,
   } = args;
 
   const resource = useSheetResourceActions({
@@ -143,6 +145,7 @@ export function useCharacterSheetActions(args: UseCharacterSheetActionsArgs) {
     setShowEditSpeciesModal,
     allSpecies,
     traitsDb,
+    characterSpeciesSkills,
   });
 
   const libraryHandlers: CharacterSheetDerivedHandlers = useMemo(
