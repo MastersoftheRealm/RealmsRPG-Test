@@ -166,7 +166,7 @@ VALUES
   (
     'characters.new.step.archetype.pathHelp',
     'page:/characters/new',
-    'Choose a Path vs Forge',
+    'Choose a Path vs Custom Archetype',
     '**Choose a Path** gives curated level 1 recommendations.\n**Custom Archetype** gives full manual customization from the start.\nBoth follow the same core progression rules.',
     'top',
     'auto',

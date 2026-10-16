@@ -18,9 +18,8 @@ rulebook source. Codex rows have no `slug` column.
    `/rules/[slug]` renders one chapter as an RSC with `generateStaticParams` + `generateMetadata`.
    Keep the Google Doc as a view-source link. Do **not** store the manuscript in `core_rules`
    (that table is formula overrides, not prose).
-2. **Codex detail URLs** are `/codex/{collection}/{slug}` where `slug` is
-   `{slugified-name}--{id}` so lookup is by id without a new DB column. Pages are RSC with
-   `generateMetadata` + `notFound()`. Browse rows link the name (expand click still ignores `<a>`).
+2. **Codex** stays a client browse list at `/codex` (expandable rows, no per-entry URLs).
+   Do not add `/codex/{collection}/{slug}` detail routes or a new `/api/codex/[id]` tree.
 3. **Public reads** for SSG/sitemap use a cookie-less anon `createPublicClient` in
    `lib/supabase/public-client.ts` (publishable key + existing read-all RLS). Do not use the
    service role. Do not add a new `/api/codex/[id]` tree.
@@ -32,8 +31,7 @@ rulebook source. Codex rows have no `slug` column.
   Nested outline matches the Google Doc (Encounters → Combat/Skill; Character Creation →
   Roll-Tables; Equipment, Crafting & Downtime → Crafting & Harvesting / Downtime). Rulebook search
   covers all MDX chapters without a mega-page.
-- Negative / follow-ups: glossary / The Realms chapters are unfinished in the source manuscript;
-  Codex detail pages are name+description articles (browse still owns GLR chips). Sitemap Codex
-  URLs need the public Supabase env at generate time. TASK-799 is done (confirm/toggle/admin delete).
-- Rejected: keep the iframe; one mega `/rules` page; `/codex/[id]` without collection; putting
+- Negative / follow-ups: glossary / The Realms chapters are unfinished in the source manuscript.
+  TASK-799 is done (confirm/toggle/admin delete).
+- Rejected: keep the iframe; one mega `/rules` page; Codex per-entry detail URLs; putting
   rulebook prose in `core_rules`.
