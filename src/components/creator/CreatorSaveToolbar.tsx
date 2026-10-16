@@ -10,12 +10,15 @@ import { useId, type ReactNode } from 'react';
 import { FolderOpen } from 'lucide-react';
 import { Button } from '@/components/ui';
 import { SegmentedControl } from '@/components/patterns';
+import { CREATOR_SAVE_AS_COPY_LABEL } from '@/lib/creator/creator-save-as-copy';
 import { CREATOR_SAVE_TARGET_OPTIONS, type CreatorSaveTarget } from '@/lib/library/catalog-listing';
 
 export interface CreatorSaveToolbarProps {
   saveTarget: CreatorSaveTarget;
   onSaveTargetChange: (target: CreatorSaveTarget) => void;
   onSave: () => void | Promise<void>;
+  /** My library copy of the open row (86e3mm3ax). Omit when not available. */
+  onSaveAsCopy?: (() => void | Promise<void>) | undefined;
   onLoad: () => void;
   onReset: () => void;
   saving: boolean;
@@ -40,6 +43,7 @@ export function CreatorSaveToolbar({
   saveTarget,
   onSaveTargetChange,
   onSave,
+  onSaveAsCopy,
   onLoad,
   onReset,
   saving,
@@ -79,6 +83,16 @@ export function CreatorSaveToolbar({
         </Button>
         {resetHelp}
       </span>
+      {onSaveAsCopy ? (
+        <Button
+          variant="secondary"
+          onClick={() => void onSaveAsCopy()}
+          disabled={saving || saveDisabled}
+          aria-label={CREATOR_SAVE_AS_COPY_LABEL}
+        >
+          {CREATOR_SAVE_AS_COPY_LABEL}
+        </Button>
+      ) : null}
       <Button
         onClick={onSave}
         disabled={saving || saveDisabled}

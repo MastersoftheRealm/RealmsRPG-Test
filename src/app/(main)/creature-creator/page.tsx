@@ -32,6 +32,10 @@ const CREATURE_ABILITY_ABBRS = {
   charisma: 'CHA',
 } as const;
 import { formatCreatureLevel } from '@/lib/game';
+import {
+  creatorPublishSaveAsCopyActions,
+  creatorToolbarSaveAsCopyHandler,
+} from '@/lib/creator/creator-save-as-copy';
 import { CreatorSummaryPanel, CreatorPageShell } from '@/components/creator';
 import type { DisplayItem } from '@/types/items';
 import type { CreatureSkill } from './creature-creator-types';
@@ -126,6 +130,7 @@ function CreatureCreatorContent() {
       saveTarget={save.saveTarget}
       onSaveTargetChange={save.setSaveTarget}
       onSave={handleSave}
+      onSaveAsCopy={creatorToolbarSaveAsCopyHandler(save)}
       onLoad={load.openLoadModal}
       onReset={handleReset}
       unsavedDirty={ws.unsavedDirty}
@@ -146,6 +151,7 @@ function CreatureCreatorContent() {
           save.publishConfirmDescription?.(creature.name.trim(), {
             existingInPublic: save.publishExistingInPublic,
           }) ?? '',
+        ...creatorPublishSaveAsCopyActions(save),
       }}
       resetConfirm={{
         isOpen: showResetConfirm,

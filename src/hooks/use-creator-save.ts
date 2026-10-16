@@ -20,6 +20,10 @@ import {
 import { creatorLibrarySaveErrorMessage } from '@/lib/creator/creator-save-error';
 import { creatorMissingNameMessage } from '@/lib/creator/creator-missing-name-message';
 import {
+  creatorCanSaveMyLibraryCopy,
+  creatorPrivateReplaceOffersSaveAsCopy,
+} from '@/lib/creator/creator-save-as-copy';
+import {
   decidePrivateLibraryNameSave,
   libraryItemId,
   readPrivateLibraryNameMatches,
@@ -105,6 +109,11 @@ export interface UseCreatorSaveReturn {
   saving: boolean;
   publishConfirmLabel: string;
   handleSave: () => Promise<void>;
+  /** Inserts a new My library row; only when a user-library row is open. */
+  handleSaveAsCopy: () => Promise<void>;
+  confirmSaveAsCopy: () => Promise<void>;
+  canSaveAsCopy: boolean;
+  offerSaveAsCopyOnConfirm: boolean;
   showPublishConfirm: boolean;
   setShowPublishConfirm: (show: boolean) => void;
   /** Call when user confirms publish in modal */
@@ -189,7 +198,8 @@ export function useCreatorSave(options: UseCreatorSaveOptions): UseCreatorSaveRe
   }, []);
 
   const executeSave = useCallback(
-    async (target: CreatorSaveTarget, existingId?: string) => {
+    async (target: CreatorSaveTarget, existingId?: string, options?: { asCopy?: boolean }) => {
+      const asCopy = options?.asCopy === true;
       const { name, data } = getPayload();
       const trimmedName = name.trim();
       if (trimmedName.length > CREATOR_NAME_MAX_LENGTH) {
@@ -245,8 +255,10 @@ export function useCreatorSave(options: UseCreatorSaveOptions): UseCreatorSaveRe
         }
         setTimeout(() => {
           setSaveMessage(null);
-          if (onSaveSuccess) setLoadedLibraryId(null);
-          onSaveSuccess?.();
+          if (!asCopy) {
+            if (onSaveSuccess) setLoadedLibraryId(null);
+            onSaveSuccess?.();
+          }
         }, 2000);
         onSaveCommitted?.();
       } catch (err) {
@@ -318,6 +330,25 @@ export function useCreatorSave(options: UseCreatorSaveOptions): UseCreatorSaveRe
     await executeSave(target, existingId ?? undefined);
   }, [executeSave, publishExistingId, saveTarget, setShowPublishConfirm]);
 
+  const confirmSaveAsCopy = useCallback(async () => {
+    const target = saveTarget;
+    setShowPublishConfirm(false);
+    await executeSave(target, undefined, { asCopy: true });
+  }, [executeSave, saveTarget, setShowPublishConfirm]);
+
+  const handleSaveAsCopy = useCallback(async () => {
+    const { name } = getPayload();
+    if (!name?.trim()) {
+      setSaveMessage({
+        type: 'error',
+        text: creatorMissingNameMessage(type),
+      });
+      return;
+    }
+    if (!creatorCanSaveMyLibraryCopy(saveTarget, loadedLibraryId)) return;
+    await executeSave(saveTarget, undefined, { asCopy: true });
+  }, [getPayload, type, saveTarget, loadedLibraryId, executeSave]);
+
   const wrappedPublishDescription = useCallback(
     (itemName: string, opts: { existingInPublic: boolean }) => {
       if (saveTarget === 'private') {
@@ -337,6 +368,11 @@ export function useCreatorSave(options: UseCreatorSaveOptions): UseCreatorSaveRe
     [publishConfirmDescription, replaceMatchCount, saveTarget],
   );
 
+  const offerSaveAsCopyOnConfirm = creatorPrivateReplaceOffersSaveAsCopy(
+    saveTarget,
+    Boolean(publishExistingId),
+  );
+
   return {
     saveMessage,
     setSaveMessage,
@@ -346,6 +382,10 @@ export function useCreatorSave(options: UseCreatorSaveOptions): UseCreatorSaveRe
     forgetLoadedLibraryItem,
     saving,
     handleSave,
+    handleSaveAsCopy,
+    confirmSaveAsCopy,
+    canSaveAsCopy: creatorCanSaveMyLibraryCopy(saveTarget, loadedLibraryId),
+    offerSaveAsCopyOnConfirm,
     showPublishConfirm,
     setShowPublishConfirm,
     confirmPublish,
