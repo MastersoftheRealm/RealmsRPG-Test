@@ -62,6 +62,8 @@ export const MECHANIC_PROPERTY_NAMES = new Set([
   // Calculation-only — never user-facing on cards/chips
   'armor base',
   'shield base',
+  'shield amount',
+  'shield damage',
 ]);
 
 /** True when a compact-fact value should not become a chip (empty, dash, none). */

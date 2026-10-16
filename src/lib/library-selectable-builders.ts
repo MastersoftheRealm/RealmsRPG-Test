@@ -17,7 +17,7 @@ import type { ChoiceCardImageKind } from '@/components/guided-creator/guided-cho
 import {
   deriveAgilityReductionFromProperties,
   deriveCriticalRangeIncreaseFromProperties,
-  deriveShieldAmountFromProperties,
+  resolveShieldBlockDisplay,
   resolveShieldDamageDisplay,
   resolveWeaponRangeDisplay,
   resolveItemMarketPricing,
@@ -63,6 +63,7 @@ import {
 } from '@/lib/detail-option/compact-facts';
 import { glrColumnKeyFor, glrListChrome } from '@/lib/glr';
 import { equipmentCurrency } from '@/lib/codex/equipment-list';
+import { resolveArmorDamageReduction } from '@/lib/game/resolve-armor-damage-reduction';
 import {
   derivePartCategories,
   formatPartCategoriesColumn,
@@ -550,7 +551,8 @@ export function getItemColumns(
   }
   if (itemType === 'armor') {
     const armor = item as UserItem | EqItem;
-    const val = armor.armorValue != null ? String(armor.armorValue) : '-';
+    const props = (armor.properties || []) as ItemPropertyPayload[];
+    const val = String(resolveArmorDamageReduction({ ...armor, properties: props }));
     const values: Record<string, string> = { armor: val };
     return selectArmorChrome.layout.columnFacts.map((id) => {
       const key = glrColumnKeyFor(id, 'armor', 'select', 'usm');
@@ -564,7 +566,10 @@ export function getItemColumns(
       name?: string | undefined;
       op_1_lvl?: number | undefined;
     }>;
-    const block = deriveShieldAmountFromProperties(props);
+    const block = resolveShieldBlockDisplay({
+      shieldDR: 'shieldDR' in shield ? shield.shieldDR : undefined,
+      properties: props,
+    });
     const dmg = resolveShieldDamageDisplay({
       shieldDamage: 'shieldDamage' in shield ? shield.shieldDamage : null,
       hasShieldDamage: 'hasShieldDamage' in shield ? shield.hasShieldDamage : undefined,

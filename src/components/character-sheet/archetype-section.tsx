@@ -54,11 +54,14 @@ function toQuickArmamentItems(items: Array<EnrichedItem | Item>): QuickArmamentI
       },
     );
 
+    const shieldDamageDisplay =
+      'shieldDamage' in item && item.shieldDamage ? String(item.shieldDamage) : undefined;
+
     return {
       id: item.id,
       name: item.name,
       description: item.description,
-      damage: item.damage,
+      damage: shieldDamageDisplay ?? item.damage,
       range: typeof item.range === 'number' ? String(item.range) : item.range,
       properties,
       equipped: item.equipped,

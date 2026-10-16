@@ -702,13 +702,35 @@ export function deriveShieldDamageFromProperties(properties: ItemPropertyPayload
  * hasShieldDamage false means damage is off. The save writes null for the die,
  * and a null update leaves the old die in the column, so that stored die is ignored.
  */
+/**
+ * Shield block amount for display (sheet, library, archetype quick table).
+ * Saved `shieldDR` wins; otherwise derive from Shield Amount property.
+ */
+export function resolveShieldBlockDisplay(input: {
+  shieldDR?:
+    | { amount?: number | null | undefined; size?: number | null | undefined }
+    | null
+    | undefined;
+  properties?: ItemPropertyPayload[] | null | undefined;
+}): string {
+  const amount = Number(input.shieldDR?.amount);
+  const size = Number(input.shieldDR?.size);
+  if (Number.isInteger(amount) && Number.isInteger(size) && amount >= 1 && size >= 1) {
+    return `${amount}d${size}`;
+  }
+  return deriveShieldAmountFromProperties(input.properties ?? []);
+}
+
 export function resolveShieldDamageDisplay(input: {
   shieldDamage?: unknown;
   hasShieldDamage?: boolean | null | undefined;
   properties?: ItemPropertyPayload[] | null | undefined;
   damage?: unknown;
 }): string | null {
-  if (input.hasShieldDamage !== false && input.shieldDamage != null) {
+  if (input.hasShieldDamage === false) {
+    return null;
+  }
+  if (input.shieldDamage != null) {
     const raw = input.shieldDamage;
     const stored = formatDamageDisplay(
       typeof raw === 'object' && !Array.isArray(raw)

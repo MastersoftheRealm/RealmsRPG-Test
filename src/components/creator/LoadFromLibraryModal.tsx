@@ -75,7 +75,7 @@ export function LoadFromLibraryModal({
       searchPlaceholder={searchPlaceholder}
       confirmLabel="Load"
       itemLabel="item"
-      size="lg"
+      size="xl"
       className="md:max-h-[60vh]"
     />
   );

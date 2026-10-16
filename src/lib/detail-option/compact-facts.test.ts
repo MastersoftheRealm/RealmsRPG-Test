@@ -205,6 +205,8 @@ describe('compact-facts formatters', () => {
     expect(isMechanicPropertyName('Weapon Damage')).toBe(true);
     expect(isMechanicPropertyName('Armor Base')).toBe(true);
     expect(isMechanicPropertyName('Damage Reduction')).toBe(true);
+    expect(isMechanicPropertyName('Shield Amount')).toBe(true);
+    expect(isMechanicPropertyName('Shield Damage')).toBe(true);
     expect(isMechanicPropertyName('Critical Range +1')).toBe(true);
     expect(isMechanicPropertyName('Critical Range Increase')).toBe(true);
     expect(isMechanicPropertyName('Critical Range +1')).toBe(true);

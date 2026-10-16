@@ -115,7 +115,9 @@ export function propertiesProficienciesSection(
   family: 'weapon' | 'armor' | 'shield' | 'item' | 'properties' = 'properties',
 ): MetadataDetailSection | undefined {
   const ranked =
-    family === 'armor' ? chips.filter((chip) => !isMechanicPropertyName(chip.name)) : chips;
+    family === 'armor' || family === 'shield' || family === 'weapon'
+      ? chips.filter((chip) => !isMechanicPropertyName(chip.name))
+      : chips;
   if (ranked.length === 0) return undefined;
   const labelHelpKey: PartsPropertiesHelpKey =
     family === 'weapon'

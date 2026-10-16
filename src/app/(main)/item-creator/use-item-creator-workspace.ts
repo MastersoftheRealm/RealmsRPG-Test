@@ -7,7 +7,7 @@
 
 'use client';
 
-import { useState, useCallback, useEffect, useMemo } from 'react';
+import { useState, useCallback, useEffect, useMemo, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { useCreatorSave, type ItemProperty } from '@/hooks';
 import {
@@ -30,6 +30,7 @@ import {
   defaultWeaponAbilityUtilized,
   type WeaponAttackAbility,
 } from '@/lib/game/weapon-attack-ability';
+import { itemCreatorFormAfterSave } from './item-creator-save-reset';
 import {
   emptyItemCreatorFormState,
   itemCreatorHrefForArmamentType,
@@ -422,6 +423,37 @@ export function useItemCreatorWorkspace({
   const draftSnapshot = JSON.stringify(getPayload());
   const { isDirty: unsavedDirty, acceptDraft } = useCreatorDraftDirty(draftSnapshot);
 
+  const applyFormState = useCallback((next: ItemCreatorFormState) => {
+    setName(next.name);
+    setDescription(next.description);
+    setArmamentType(next.armamentType);
+    setSelectedProperties(next.selectedProperties);
+    setDamage(next.damage);
+    setIsTwoHanded(next.isTwoHanded);
+    setRangeTypeState(next.rangeType);
+    setRangeSpaces(next.rangeSpaces);
+    setAttackAbility(next.attackAbility);
+    setDamageReduction(next.damageReduction);
+    setAgilityReduction(next.agilityReduction);
+    setCriticalRangeIncrease(next.criticalRangeIncrease);
+    setShieldDR(next.shieldDR);
+    setHasShieldDamage(next.hasShieldDamage);
+    setShieldDamage(next.shieldDamage);
+    setAbilityRequirement(next.abilityRequirement);
+    setImageId(next.imageId);
+    setImageUrl(next.imageUrl);
+  }, []);
+
+  const forgetLoadedLibraryItemRef = useRef<(() => void) | null>(null);
+
+  const resetFormAfterSave = useCallback(() => {
+    applyFormState(itemCreatorFormAfterSave(armamentType));
+    forgetLoadedLibraryItemRef.current?.();
+    clearCreatorSessionDraft(ITEM_CREATOR_CACHE_KEY, editItemId, editReplacesDraft);
+    alignTypeQuery(armamentType);
+    acceptDraft();
+  }, [acceptDraft, alignTypeQuery, applyFormState, armamentType, editItemId, editReplacesDraft]);
+
   const save = useCreatorSave({
     type: 'items',
     getPayload,
@@ -436,16 +468,12 @@ export function useItemCreatorWorkspace({
     initialSaveTarget,
     editingId: editItemId,
     onSaveCommitted: acceptDraft,
-    onSaveSuccess: () => {
-      setName('');
-      setDescription('');
-      setSelectedProperties([]);
-      setDamage({ amount: 1, size: 4, type: 'slashing' });
-      setImageId(null);
-      setImageUrl(null);
-      acceptDraft();
-    },
+    onSaveSuccess: resetFormAfterSave,
   });
+
+  useEffect(() => {
+    forgetLoadedLibraryItemRef.current = save.forgetLoadedLibraryItem;
+  }, [save.forgetLoadedLibraryItem]);
 
   useCreatorEditMissNotice(
     Boolean(editItemId) && !replaceDraftWithEdit,
@@ -478,27 +506,6 @@ export function useItemCreatorWorkspace({
     acceptDraft();
     alignTypeQuery('Weapon');
   }, [acceptDraft, alignTypeQuery, editItemId, editReplacesDraft, save]);
-
-  const applyFormState = useCallback((next: ItemCreatorFormState) => {
-    setName(next.name);
-    setDescription(next.description);
-    setArmamentType(next.armamentType);
-    setSelectedProperties(next.selectedProperties);
-    setDamage(next.damage);
-    setIsTwoHanded(next.isTwoHanded);
-    setRangeTypeState(next.rangeType);
-    setRangeSpaces(next.rangeSpaces);
-    setAttackAbility(next.attackAbility);
-    setDamageReduction(next.damageReduction);
-    setAgilityReduction(next.agilityReduction);
-    setCriticalRangeIncrease(next.criticalRangeIncrease);
-    setShieldDR(next.shieldDR);
-    setHasShieldDamage(next.hasShieldDamage);
-    setShieldDamage(next.shieldDamage);
-    setAbilityRequirement(next.abilityRequirement);
-    setImageId(next.imageId);
-    setImageUrl(next.imageUrl);
-  }, []);
 
   const keepDraft = useCallback(() => {
     alignTypeQuery(armamentType);

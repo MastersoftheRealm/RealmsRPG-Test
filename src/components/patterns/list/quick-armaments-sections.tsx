@@ -9,7 +9,8 @@ import { isMechanicPropertyName } from '@/lib/detail-option/compact-facts';
 import {
   deriveCriticalRangeIncreaseFromProperties,
   deriveDamageReductionFromProperties,
-  deriveShieldAmountFromProperties,
+  resolveShieldBlockDisplay,
+  resolveShieldDamageDisplay,
   formatWeaponRangeDisplayCompact,
   type ItemPropertyPayload,
 } from '@/lib/calculators/item-calc';
@@ -277,8 +278,6 @@ export function QuickShieldsTable({
 
   if (rows.length === 0) return null;
 
-  const strBonus = (abilities.strength ?? 0) + martialProf;
-
   return (
     <div className={cn('mb-4 rounded-lg bg-surface-alt p-3', className)}>
       {showHeader && <SectionHeader title={title} className="mb-2" />}
@@ -300,17 +299,28 @@ export function QuickShieldsTable({
           </thead>
           <tbody>
             {rows.map((shield, idx) => {
-              const blockStr = String(
-                deriveShieldAmountFromProperties(
-                  resolveQuickArmamentProperties(shield) as {
-                    id?: number | undefined;
-                    name?: string | undefined;
-                    op_1_lvl?: number | undefined;
-                  }[],
-                ) ?? '-',
-              );
-              const { dice, rollStr } = splitDamageDiceAndType(shield.damage);
+              const props = resolveQuickArmamentProperties(shield) as ItemPropertyPayload[];
+              const lib = shield.libraryItem as
+                | {
+                    shieldDR?: { amount?: number; size?: number } | undefined;
+                    shieldDamage?: unknown;
+                    hasShieldDamage?: boolean | undefined;
+                  }
+                | undefined;
+              const blockStr = resolveShieldBlockDisplay({
+                shieldDR: lib?.shieldDR,
+                properties: props,
+              });
+              const damageDisplay =
+                resolveShieldDamageDisplay({
+                  shieldDamage: lib?.shieldDamage,
+                  hasShieldDamage: lib?.hasShieldDamage,
+                  properties: props,
+                  damage: shield.damage,
+                }) ?? undefined;
+              const { dice, rollStr } = splitDamageDiceAndType(damageDisplay ?? shield.damage);
               const hasDamage = rollStr !== '-';
+              const attackBonus = getAttackBonus(shield, abilities, martialProf);
               const damageRollStr = hasDamage
                 ? String(rollStr).includes('Bludgeoning')
                   ? String(rollStr)
@@ -360,7 +370,7 @@ export function QuickShieldsTable({
                         onClick={() =>
                           rollContext.rollDamage(
                             damageRollStr,
-                            strBonus,
+                            attackBonus,
                             rollTitlePrefix
                               ? `${rollTitlePrefix}: ${shield.name} damage`
                               : `${shield.name} damage`,
@@ -377,13 +387,13 @@ export function QuickShieldsTable({
                   <td className="overflow-hidden py-2 text-center">
                     {hasDamage && rollContext?.canRoll !== false && rollContext ? (
                       <RollButton
-                        value={strBonus}
+                        value={attackBonus}
                         onClick={() =>
                           rollContext.rollAttack(
                             rollTitlePrefix
                               ? `${rollTitlePrefix}: ${shield.name || 'Shield bash'}`
                               : shield.name || 'Shield bash',
-                            strBonus,
+                            attackBonus,
                           )
                         }
                         size="sm"
@@ -391,7 +401,7 @@ export function QuickShieldsTable({
                       />
                     ) : (
                       <span className="text-text-muted">
-                        {hasDamage ? (strBonus >= 0 ? '+' : '') + strBonus : '-'}
+                        {hasDamage ? (attackBonus >= 0 ? '+' : '') + attackBonus : '-'}
                       </span>
                     )}
                   </td>
