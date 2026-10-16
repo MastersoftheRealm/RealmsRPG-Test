@@ -223,10 +223,6 @@ export function RevealStep() {
 
   const handleBlockerSelect = (blocker: GuidedRevealBlocker) => {
     setShowReview(false);
-    if (blocker.kind === 'name') {
-      requestAnimationFrame(() => focusRevealTarget('guided-char-name'));
-      return;
-    }
     if (blocker.kind === 'healthEnergy') {
       requestAnimationFrame(() => focusRevealTarget('guided-health-energy'));
       return;

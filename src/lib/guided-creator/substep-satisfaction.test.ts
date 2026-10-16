@@ -106,6 +106,12 @@ describe('guided sub-step satisfaction', () => {
     expect(isGuidedDraftSaveable(GUIDED_SUBSTEP_ORDER, after)).toBe(false);
   });
 
+  it('treats Reveal as satisfied with a blank name when Health/Energy are allocated', () => {
+    const draft = saveableDraft({ name: '  ' });
+    expect(isGuidedSubStepSatisfied('reveal', draft)).toBe(true);
+    expect(isGuidedDraftSaveable(GUIDED_SUBSTEP_ORDER, draft)).toBe(true);
+  });
+
   it('negative remaining Currency fails loadout and blocks Reveal', () => {
     const draft = saveableDraft({ currency: -25 });
     expect(isGuidedSubStepSatisfied('loadout', draft)).toBe(false);

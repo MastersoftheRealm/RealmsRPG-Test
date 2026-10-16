@@ -1,5 +1,5 @@
 /**
- * Your Hero leftovers — name, Health/Energy, unspent pools, unfinished chapters.
+ * Your Hero leftovers — Health/Energy, unspent pools, unfinished chapters.
  *
  * Rail satisfaction is a structural floor (any skill pick, any ability points). The
  * step footers still require spending the pools. Players can chapter-rail onto Reveal
@@ -10,7 +10,6 @@ import type { GuidedDraft, GuidedSubStep } from '@/stores/guided-creator-store';
 import { isGuidedSubStepSatisfied } from '@/lib/guided-creator/substep-satisfaction';
 
 export type GuidedRevealBlocker =
-  | { kind: 'name' }
   | { kind: 'healthEnergy'; remaining: number }
   | { kind: 'abilityPoints'; remaining: number; subStep: 'abilities' }
   | { kind: 'skillPoints'; remaining: number; subStep: 'skills' }
@@ -37,10 +36,6 @@ export function listGuidedRevealBlockers(args: {
     skillPointsRemaining = 0,
   } = args;
   const blockers: GuidedRevealBlocker[] = [];
-
-  if (draft.name.trim().length === 0) {
-    blockers.push({ kind: 'name' });
-  }
 
   if (healthEnergyRemaining !== 0) {
     blockers.push({ kind: 'healthEnergy', remaining: healthEnergyRemaining });

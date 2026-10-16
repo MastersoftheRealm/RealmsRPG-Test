@@ -55,8 +55,7 @@ const SATISFACTION: Record<GuidedSubStep, (draft: GuidedDraft) => boolean> = {
   /** Powers and techniques are optional picks at level 1. */
   'powers-techniques': () => true,
 
-  reveal: (draft) =>
-    draft.name.trim().length > 0 && draft.hpAllocated !== null && draft.energyAllocated !== null,
+  reveal: (draft) => draft.hpAllocated !== null && draft.energyAllocated !== null,
 };
 
 export function isGuidedSubStepSatisfied(subStep: GuidedSubStep, draft: GuidedDraft): boolean {
@@ -78,8 +77,9 @@ export function canOpenGuidedSubStep(
 }
 
 /**
- * Save gate for "Create character" — every sub-step, including Reveal's own name and
- * Health/Energy allocation. Callers add the rules-dependent `remaining === 0` check.
+ * Save gate for "Create character" — every sub-step, including Reveal's Health/Energy
+ * allocation. Blank names are allowed; `buildGuidedCharacterPayload` applies the default.
+ * Callers add the rules-dependent `remaining === 0` check.
  */
 export function isGuidedDraftSaveable(
   order: readonly GuidedSubStep[],

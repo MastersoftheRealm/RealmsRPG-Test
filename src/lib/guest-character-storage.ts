@@ -7,6 +7,7 @@
 
 import { DEFAULT_ABILITIES } from '@/types/abilities';
 import type { Character, CharacterSummary } from '@/types';
+import { resolveCharacterSaveName } from '@/lib/character/character-name-limit';
 import { MAX_PORTRAIT_DATA_URL_LENGTH } from '@/lib/portrait';
 
 const GUEST_LIST_KEY = 'realms_guest_characters';
@@ -89,7 +90,7 @@ export function createGuestCharacter(data: Partial<Character>): string {
   const character: Character = {
     ...data,
     id,
-    name: data.name?.trim() || 'Unnamed Hero',
+    name: resolveCharacterSaveName(data.name),
     level: data.level || 1,
     abilities: data.abilities ?? DEFAULT_ABILITIES,
     visibility: 'private',

@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { characterCreateSchema, characterUpdateSchema } from '@/lib/api-validation';
 import {
+  CHARACTER_DEFAULT_NAME,
   CHARACTER_NAME_MAX_LENGTH,
   CHARACTER_NAME_TOO_LONG_MESSAGE,
   characterSaveWithoutOverlongName,
@@ -8,12 +9,21 @@ import {
   clampTextToLength,
   insertCharacterNameText,
   insertTextToLength,
+  resolveCharacterSaveName,
 } from './character-name-limit';
 
 const OVER = 'a'.repeat(CHARACTER_NAME_MAX_LENGTH + 1);
 const EXACT = 'b'.repeat(CHARACTER_NAME_MAX_LENGTH);
 
 describe('character name limit', () => {
+  it('uses the default name for blank or whitespace-only input', () => {
+    expect(resolveCharacterSaveName('')).toBe(CHARACTER_DEFAULT_NAME);
+    expect(resolveCharacterSaveName('   ')).toBe(CHARACTER_DEFAULT_NAME);
+    expect(resolveCharacterSaveName(undefined)).toBe(CHARACTER_DEFAULT_NAME);
+    expect(resolveCharacterSaveName('Ada')).toBe('Ada');
+    expect(resolveCharacterSaveName('  Ada  ')).toBe('Ada');
+  });
+
   it('stops a pasted name at 100 characters', () => {
     const pasted = insertCharacterNameText('', OVER, 0, 0);
     expect(pasted.truncated).toBe(true);
