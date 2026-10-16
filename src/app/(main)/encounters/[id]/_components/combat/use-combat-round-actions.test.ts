@@ -21,7 +21,7 @@ const combatant: TrackedCombatant = {
   isSurprised: false,
 };
 
-function baseEncounter(overrides: Partial<Encounter>): Encounter {
+function baseEncounter(overrides: Partial<Encounter> = {}): Encounter {
   return {
     id: 'e1',
     name: 'Test',
