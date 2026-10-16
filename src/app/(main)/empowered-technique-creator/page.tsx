@@ -29,6 +29,7 @@ import {
 } from '@/components/creator';
 import { LoadingState } from '@/components/ui';
 import { formatEnergyStat } from '@/lib/calculators';
+import { creatorMissingNameSaveDisabledReason } from '@/lib/creator/creator-missing-name-message';
 import { SourceFilter, sourceFilterSummary } from '@/components/patterns/filters/source-filter';
 import { EmpoweredTechniqueCreatorEditor } from './empowered-technique-creator-editor';
 import {
@@ -180,6 +181,9 @@ function EmpoweredTechniqueWorkspace({
       onDiscardLocalDraft={ws.discardLocalDraft}
       saving={ws.save.saving}
       saveDisabled={!ws.name.trim()}
+      saveDisabledReason={
+        creatorMissingNameSaveDisabledReason(ws.name, 'empowered-techniques') ?? undefined
+      }
       loading={{
         isLoading: powerPartsLoading || techniquePartsLoading,
         loadingMessage: 'Loading empowered technique creator...',

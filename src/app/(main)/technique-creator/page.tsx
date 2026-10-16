@@ -28,6 +28,7 @@ import {
 import { useAuthStore } from '@/stores';
 import { LoadingState } from '@/components/ui';
 import { formatEnergyStat } from '@/lib/calculators';
+import { creatorMissingNameSaveDisabledReason } from '@/lib/creator/creator-missing-name-message';
 import {
   CreatorPageShell,
   AdvancedCalculationsPanel,
@@ -157,6 +158,7 @@ function TechniqueCreatorWorkspace({
       onDiscardLocalDraft={ws.discardLocalDraft}
       saving={ws.save.saving}
       saveDisabled={!ws.name.trim()}
+      saveDisabledReason={creatorMissingNameSaveDisabledReason(ws.name, 'techniques') ?? undefined}
       loading={{
         isLoading,
         loadingMessage: 'Loading technique parts...',
