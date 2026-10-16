@@ -90,7 +90,7 @@ describe('resolveLeanArchetypeIdForForgeSave', () => {
     ).toBe('8');
   });
 
-  it('uses type slug after confirming switch to forge your own', () => {
+  it('uses type slug after confirming switch to custom archetype', () => {
     const warrior = {
       archetypePathId: '8',
       archetype: { id: '8', type: 'martial' },

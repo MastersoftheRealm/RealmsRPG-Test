@@ -21,7 +21,7 @@ export type PathCategoryGroup = 'power' | 'powered-martial' | 'martial';
 
 export const PATH_CATEGORY_GROUPS: PathCategoryGroup[] = ['power', 'powered-martial', 'martial'];
 
-/** Lean-save ids that mean "forge your own" (not a codex path row). */
+/** Lean-save ids that mean custom archetype (type slug, not a codex path row). */
 export const FORGE_ARCHETYPE_TYPE_IDS = new Set<ArchetypeCategory>([
   'power',
   'martial',
@@ -35,7 +35,7 @@ export function isForgeArchetypeTypeId(id: string | null | undefined): boolean {
 
 /**
  * Lean `{ id, type }` id for sheet forge saves. Preserves codex path ids when the player
- * changes type without confirming "Switch to Forge Your Own" (legacy saves may only have
+ * changes type without confirming switch to Custom Archetype (legacy saves may only have
  * `archetype.id`, not `archetypePathId`).
  */
 export function resolveLeanArchetypeIdForForgeSave(
