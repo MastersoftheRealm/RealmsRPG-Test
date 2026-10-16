@@ -1,4 +1,4 @@
-const AUTH_ONLY_PATHS = ['/login', '/register', '/forgot-password', '/forgot-username'];
+const AUTH_ONLY_PATHS = ['/login', '/register', '/forgot-password'];
 
 /**
  * Sanitize a post-auth redirect path. Allows same-origin relative paths only.
