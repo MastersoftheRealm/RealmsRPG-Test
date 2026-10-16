@@ -1,4 +1,21 @@
+import { clampTextToLength } from '@/lib/character/character-name-limit';
+
+/** Free-text character age (JSONB `data.age`, TASK-886 / 86e3jw2mg). */
+export const CHARACTER_AGE_MAX_LENGTH = 150;
+
 const AGE_IN_APPEARANCE = /^Age:\s*(\d+)\s*(?:\n|$)/;
+
+/** Coerce persisted JSON age (string or legacy number) for display and save. */
+export function coerceCharacterAgeValue(age: unknown): string {
+  if (age === null || age === undefined) return '';
+  if (typeof age === 'number' && Number.isFinite(age)) return String(age).trim();
+  if (typeof age === 'string') return age.trim();
+  return '';
+}
+
+export function clampCharacterAgeInput(value: string): string {
+  return clampTextToLength(value, CHARACTER_AGE_MAX_LENGTH).value;
+}
 
 export function parseAgeFromAppearance(appearance?: string): string {
   const match = appearance?.match(AGE_IN_APPEARANCE);
@@ -15,8 +32,8 @@ export function stripAgeFromAppearance(appearance?: string): string {
   return appearanceBody(appearance).trim();
 }
 
-export function resolveCharacterAge(age?: string, appearance?: string): string {
-  const trimmed = age?.trim();
+export function resolveCharacterAge(age?: unknown, appearance?: string): string {
+  const trimmed = coerceCharacterAgeValue(age);
   if (trimmed) return trimmed;
   return parseAgeFromAppearance(appearance);
 }
@@ -52,11 +69,13 @@ export function backstoryDraftFromEdit(value: string): string | undefined {
  */
 export function normalizeAgeAppearanceForSave(data: Record<string, unknown>): void {
   const appearance = typeof data.appearance === 'string' ? data.appearance : undefined;
-  const existingAge = typeof data.age === 'string' ? data.age.trim() : '';
-  const resolvedAge = existingAge || parseAgeFromAppearance(appearance);
+  const existingAge = coerceCharacterAgeValue(data.age);
+  const resolvedAge = clampCharacterAgeInput(existingAge || parseAgeFromAppearance(appearance));
 
   if (resolvedAge) {
     data.age = resolvedAge;
+  } else {
+    delete data.age;
   }
 
   if (!appearance || !AGE_IN_APPEARANCE.test(appearance)) return;

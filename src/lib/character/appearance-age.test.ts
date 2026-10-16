@@ -2,12 +2,15 @@ import { describe, expect, it } from 'vitest';
 import {
   appearanceDraftFromEdit,
   backstoryDraftFromEdit,
+  clampCharacterAgeInput,
+  coerceCharacterAgeValue,
   parseAgeFromAppearance,
   stripAgeFromAppearance,
   resolveCharacterAge,
   resolveCharacterAppearance,
   resolveCharacterBackstory,
   normalizeAgeAppearanceForSave,
+  CHARACTER_AGE_MAX_LENGTH,
 } from '@/lib/character/appearance-age';
 import { cleanForSave } from '@/lib/data-enrichment/clean-for-save';
 import type { Character } from '@/types';
@@ -23,6 +26,20 @@ describe('appearance-age', () => {
   it('prefers dedicated age field over legacy appearance prefix', () => {
     expect(resolveCharacterAge('30', 'Age: 42\nTall.')).toBe('30');
     expect(resolveCharacterAge(undefined, 'Age: 42\nTall.')).toBe('42');
+  });
+
+  it('coerces legacy numeric age from JSONB (86e3jw2mg)', () => {
+    expect(coerceCharacterAgeValue(25)).toBe('25');
+    expect(coerceCharacterAgeValue(1.5)).toBe('1.5');
+    expect(resolveCharacterAge(42, undefined)).toBe('42');
+  });
+
+  it('clamps free-text age on save', () => {
+    const long = 'x'.repeat(CHARACTER_AGE_MAX_LENGTH + 20);
+    const data: Record<string, unknown> = { age: long };
+    normalizeAgeAppearanceForSave(data);
+    expect(data.age).toHaveLength(CHARACTER_AGE_MAX_LENGTH);
+    expect(clampCharacterAgeInput(long)).toHaveLength(CHARACTER_AGE_MAX_LENGTH);
   });
 
   it('resolves appearance without legacy age line', () => {

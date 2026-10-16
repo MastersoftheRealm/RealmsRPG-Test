@@ -10,6 +10,7 @@
  * fallbacks in deriveArmorItemCombatStats — not persisted on lean equipment rows.
  */
 
+import { coerceCharacterAgeValue } from '@/lib/character/appearance-age';
 import type { ArchetypeCategory, Character, DefenseSkills } from '@/types';
 
 const LEGACY_ARCHETYPE_TYPE_ALIASES: Record<string, ArchetypeCategory> = {
@@ -86,6 +87,12 @@ export function normalizeCharacterOnLoad<T extends Record<string, unknown>>(data
     next.archetypeChoices = normalizeArchetypeChoices(
       next.archetypeChoices as Record<string | number, unknown>,
     );
+  }
+
+  if ('age' in next) {
+    const age = coerceCharacterAgeValue(next.age);
+    if (age) next.age = age;
+    else delete next.age;
   }
 
   const archetype = next.archetype;
