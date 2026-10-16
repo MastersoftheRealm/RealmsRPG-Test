@@ -7,7 +7,7 @@
 import { createClient as createSupabaseClient } from '@supabase/supabase-js';
 import type { Database } from '@/types/database.types';
 
-/** CI / local builds: set in ui-verify.yml so `next build` never hits production. */
+/** CI builds: ui-verify sets REALMS_DISABLE_PUBLIC_SUPABASE=1 so `next build` does not query prod. */
 export const CI_BUILD_SUPABASE_URL = 'https://build-ci.invalid';
 
 export function isPublicSupabaseConfigured(): boolean {

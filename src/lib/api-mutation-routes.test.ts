@@ -5,7 +5,9 @@ import { describe, expect, it } from 'vitest';
 import { API_MUTATION_GUARD_MARKERS } from './api-mutation-guard';
 
 const API_ROOT = path.join(import.meta.dirname, '../app/api');
-const MUTATION_EXPORT = /export\s+async\s+function\s+(POST|PUT|PATCH|DELETE)\s*\(/g;
+const MUTATION_HANDLER_HEAD = /^export\s+async\s+function\s+(POST|PUT|PATCH|DELETE)\s*\(/;
+const HANDLER_SPLIT =
+  /(?=export\s+async\s+function\s+(?:GET|HEAD|OPTIONS|POST|PUT|PATCH|DELETE)\s*\()/g;
 
 function listRouteFiles(dir: string): string[] {
   const entries = readdirSync(dir);
@@ -27,17 +29,20 @@ function relativeApiPath(file: string): string {
 }
 
 describe('API mutation routes CSRF coverage', () => {
-  it('every mutating route module declares a mutation guard', () => {
+  it('every mutating route handler declares a mutation guard', () => {
     const unprotected: string[] = [];
 
     for (const file of listRouteFiles(API_ROOT)) {
       const source = readFileSync(file, 'utf8');
-      MUTATION_EXPORT.lastIndex = 0;
-      if (!MUTATION_EXPORT.test(source)) continue;
+      const chunks = source.split(HANDLER_SPLIT).filter(Boolean);
+      for (const chunk of chunks) {
+        const method = chunk.match(MUTATION_HANDLER_HEAD)?.[1];
+        if (!method) continue;
 
-      const hasGuard = API_MUTATION_GUARD_MARKERS.some((marker) => source.includes(marker));
-      if (!hasGuard) {
-        unprotected.push(relativeApiPath(file));
+        const hasGuard = API_MUTATION_GUARD_MARKERS.some((marker) => chunk.includes(marker));
+        if (!hasGuard) {
+          unprotected.push(`${relativeApiPath(file)} (${method})`);
+        }
       }
     }
 

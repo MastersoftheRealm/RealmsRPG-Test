@@ -560,6 +560,31 @@ const SPECIES_ARRAY_KEYS = [
   'languages',
 ] as const;
 
+/** Scalar columns `rowToItemSpecies` maps (JSONB `payload` is optional and omitted on public reads). */
+const SPECIES_ROW_SCALAR_COLUMNS = [
+  'name',
+  'description',
+  'type',
+  ...SPECIES_ARRAY_KEYS,
+  'ave_hgt_cm',
+  'ave_wgt_kg',
+  'adulthood_lifespan',
+] as const;
+
+/** Supabase select for public codex_species / official species lists (no `payload` column). */
+export function speciesPublicSelect(): string {
+  return [
+    'id',
+    ...SPECIES_ROW_SCALAR_COLUMNS,
+    'source',
+    'image_id',
+    'image_url',
+    'catalog_listing',
+    'updated_at',
+    'is_starter',
+  ].join(', ');
+}
+
 function toStrArray(val: unknown): string[] {
   if (!val) return [];
   if (Array.isArray(val)) return val.map(String);
@@ -589,7 +614,11 @@ export function mergeLegacySpeciesRowWithImageColumns(
 
 /** Build client-shaped species from columnar row (user_species). */
 export function rowToItemSpecies(row: Record<string, unknown>): Record<string, unknown> {
-  const payload = (row.payload as Record<string, unknown>) ?? {};
+  const rawPayload = row.payload;
+  const payload =
+    rawPayload != null && typeof rawPayload === 'object' && !Array.isArray(rawPayload)
+      ? (rawPayload as Record<string, unknown>)
+      : {};
   const base: Record<string, unknown> = {
     id: row.id,
     docId: row.id,
@@ -620,7 +649,7 @@ export function rowToItemSpecies(row: Record<string, unknown>): Record<string, u
   if (typeof imageId === 'string' && imageId.trim()) base.image_id = imageId.trim();
   const imageUrl = v(row, 'imageUrl', 'image_url');
   if (typeof imageUrl === 'string' && imageUrl.trim()) base.image_url = imageUrl.trim();
-  return { ...base, ...payload };
+  return Object.keys(payload).length > 0 ? { ...base, ...payload } : base;
 }
 
 /** Split species body into scalars (for columns; arrays → comma-sep) and payload. */

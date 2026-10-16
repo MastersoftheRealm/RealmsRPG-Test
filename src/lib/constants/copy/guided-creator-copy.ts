@@ -12,6 +12,10 @@ import {
   formatPathSecondaryAbilityLabel,
 } from './path-ability-copy';
 
+function guidedLockedChapterDetail(title: string): string {
+  return `Finish the remaining choices in ${title}.`;
+}
+
 export const GUIDED_CREATOR_COPY = {
   chooser: {
     title: 'Create a New Character',
@@ -53,13 +57,8 @@ export const GUIDED_CREATOR_COPY = {
       description: 'Start over? All progress for this guided character will be lost.',
       confirmLabel: 'Restart',
     },
-    /**
-     * Locked chapter-rail pill tooltip (86e3jmr0g).
-     * Interim copy mirrors reveal review `chapterDetail` until owners approve PR wording.
-     */
     chapterRail: {
-      lockedTooltip: (blockingChapterTitle: string) =>
-        `Finish the remaining choices in ${blockingChapterTitle}.`,
+      lockedTooltip: guidedLockedChapterDetail,
       lockedAriaLabel: (chapterTitle: string) => `${chapterTitle} (locked)`,
     },
   },
@@ -590,7 +589,7 @@ export const GUIDED_CREATOR_COPY = {
           `Spend ${remaining} more ${unit}${remaining === 1 ? '' : 's'}.`,
         removeExtra: (extra: number, unit: string) =>
           `Remove ${extra} extra ${unit}${extra === 1 ? '' : 's'}.`,
-        chapterDetail: (title: string) => `Finish the remaining choices in ${title}.`,
+        chapterDetail: guidedLockedChapterDetail,
       },
       summary: {
         title: 'Your build',

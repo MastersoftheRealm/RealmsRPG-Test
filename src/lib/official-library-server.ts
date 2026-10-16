@@ -2,7 +2,11 @@
  * Memoized whole-table reads for official_* library GET routes.
  */
 
-import { columnarViewSelect, type ColumnarLibraryType } from '@/lib/library-columnar';
+import {
+  columnarViewSelect,
+  speciesPublicSelect,
+  type ColumnarLibraryType,
+} from '@/lib/library-columnar';
 import { officialLibraryCacheTag } from '@/lib/codex/cache-tags';
 import { CODEX_PUBLIC_ISR_SECONDS, readCachedPublicData } from '@/lib/supabase/cached-public-read';
 import type { TypedSupabaseClient } from '@/lib/supabase/database';
@@ -16,9 +20,6 @@ const OFFICIAL_TABLE_BY_TYPE = {
 } as const;
 
 type OfficialLibraryTable = (typeof OFFICIAL_TABLE_BY_TYPE)[ColumnarLibraryType];
-
-const SPECIES_PUBLIC_SELECT =
-  'id, name, description, type, sizes, skills, species_traits, ancestry_traits, flaws, characteristics, ave_hgt_cm, ave_wgt_kg, adulthood_lifespan, languages, source, image_id, image_url, catalog_listing, updated_at, is_starter';
 
 export async function fetchOfficialColumnarRows(
   supabase: TypedSupabaseClient,
@@ -49,13 +50,14 @@ export async function fetchOfficialSpeciesRows(
   includeUnlisted: boolean,
 ): Promise<Record<string, unknown>[]> {
   const listedOnly = !includeUnlisted;
+  const columns = speciesPublicSelect();
   const tag = officialLibraryCacheTag('codex_species', listedOnly);
   return readCachedPublicData(
-    ['official-library', 'codex_species', SPECIES_PUBLIC_SELECT, `listedOnly=${listedOnly}`],
+    ['official-library', 'codex_species', columns, `listedOnly=${listedOnly}`],
     [tag, 'official-library'],
     CODEX_PUBLIC_ISR_SECONDS,
     async () => {
-      const base = supabase.from('codex_species').select(SPECIES_PUBLIC_SELECT);
+      const base = supabase.from('codex_species').select(columns);
       const { data, error } = includeUnlisted
         ? await base
         : await base.eq('catalog_listing', 'listed');

@@ -9,8 +9,9 @@ describe('creatorMissingNameMessage (86e3jp7eb)', () => {
     expect(creatorMissingNameMessage('powers')).toBe('Please enter a power name');
     expect(creatorMissingNameMessage('techniques')).toBe('Please enter a technique name');
     expect(creatorMissingNameMessage('empowered-techniques')).toBe(
-      'Please enter a empowered-technique name',
+      'Please enter an empowered-technique name',
     );
+    expect(creatorMissingNameMessage('items')).toBe('Please enter an item name');
     expect(creatorMissingNameMessage('species')).toBe('Please enter a species name');
   });
 

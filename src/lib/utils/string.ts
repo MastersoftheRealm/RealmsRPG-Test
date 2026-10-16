@@ -23,6 +23,13 @@ export function capitalize(str: string | null | undefined): string {
   return String(str).charAt(0).toUpperCase() + String(str).slice(1).toLowerCase();
 }
 
+/** English indefinite article for short UI phrases (vowel-letter heuristic). */
+export function indefiniteArticle(nounPhrase: string): 'a' | 'an' {
+  const trimmed = nounPhrase.trim().toLowerCase();
+  if (!trimmed) return 'a';
+  return /^[aeiou]/.test(trimmed) ? 'an' : 'a';
+}
+
 /**
  * Capitalize each word (e.g. "slashing" → "Slashing", "fire" → "Fire").
  */

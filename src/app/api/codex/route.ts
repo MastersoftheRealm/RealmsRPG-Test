@@ -85,6 +85,23 @@ function withRowVersion<T extends object>(
 type TableError = { message?: string | undefined; code?: string | undefined } | null;
 type TableResult = { data: Row[] | null; error: TableError };
 
+/** If table is missing (e.g. codex_* still in codex schema), treat as empty instead of 500. */
+function isCodexTableMissing(
+  e: { message?: string | undefined; code?: string | undefined } | null,
+): boolean {
+  if (!e) return false;
+  return e.code === '42P01' || /does not exist|relation.*not found/i.test(e.message ?? '');
+}
+
+function throwUnlessCodexTableMissing(error: TableError): void {
+  if (!error || isCodexTableMissing(error)) return;
+  const err = new Error(error.message ?? 'Codex fetch failed') as Error & {
+    code?: string | undefined;
+  };
+  err.code = error.code;
+  throw err;
+}
+
 /** Skipped tables resolve empty so the mapping below stays one code path. */
 function selectTable(
   supabase: TypedSupabaseClient,
@@ -98,8 +115,11 @@ function selectTable(
     ['codex-api', table, columns],
     [CODEX_API_CACHE_TAG, tableTag],
     CODEX_PUBLIC_ISR_SECONDS,
-    () =>
-      Promise.resolve(fromPublicTable(supabase, table).select(columns) as PromiseLike<TableResult>),
+    async () => {
+      const result = (await fromPublicTable(supabase, table).select(columns)) as TableResult;
+      throwUnlessCodexTableMissing(result.error);
+      return result;
+    },
   );
 }
 
@@ -141,14 +161,6 @@ async function fetchCodexFromClient(
       : Promise.resolve({} as Awaited<ReturnType<typeof fetchCoreRules>>),
   ]);
 
-  /** If table is missing (e.g. codex_* still in codex schema), treat as empty instead of 500. Run sql/path-c-phase0-consolidate-to-public-part1c.sql to move codex_* to public. */
-  function isTableMissing(
-    e: { message?: string | undefined; code?: string | undefined } | null,
-  ): boolean {
-    if (!e) return false;
-    return e.code === '42P01' || /does not exist|relation.*not found/i.test(e.message ?? '');
-  }
-
   const tableNames = CODEX_TABLES;
   const errors = [
     eFeats,
@@ -163,11 +175,11 @@ async function fetchCodexFromClient(
     eCreature,
   ];
   errors.forEach((e, i) => {
-    if (e && isTableMissing(e)) {
+    if (e && isCodexTableMissing(e)) {
       console.warn('[Codex API] Table missing (use empty):', tableNames[i], e.message);
     }
   });
-  const firstRealError = errors.find((e) => e && !isTableMissing(e)) as
+  const firstRealError = errors.find((e) => e && !isCodexTableMissing(e)) as
     | { message?: string | undefined; code?: string | undefined }
     | undefined;
   if (firstRealError) {
@@ -178,19 +190,19 @@ async function fetchCodexFromClient(
     throw err;
   }
 
-  const featRows = ((isTableMissing(eFeats) ? [] : feats) ?? []) as Row[];
-  const skillRows = ((isTableMissing(eSkills) ? [] : skills) ?? []) as Row[];
-  const speciesRows = ((isTableMissing(eSpecies) ? [] : species) ?? []) as Row[];
-  const equipRowsRaw = ((isTableMissing(eEquip) ? [] : equipment) ?? []) as Row[];
+  const featRows = ((isCodexTableMissing(eFeats) ? [] : feats) ?? []) as Row[];
+  const skillRows = ((isCodexTableMissing(eSkills) ? [] : skills) ?? []) as Row[];
+  const speciesRows = ((isCodexTableMissing(eSpecies) ? [] : species) ?? []) as Row[];
+  const equipRowsRaw = ((isCodexTableMissing(eEquip) ? [] : equipment) ?? []) as Row[];
   await enrichRowsWithBankImageUrls(supabase, speciesRows);
   await enrichRowsWithBankImageUrls(supabase, equipRowsRaw);
-  const traitRows = ((isTableMissing(eTraits) ? [] : traits) ?? []) as Row[];
-  const partRows = ((isTableMissing(eParts) ? [] : parts) ?? []) as Row[];
-  const propRows = ((isTableMissing(eProps) ? [] : properties) ?? []) as Row[];
+  const traitRows = ((isCodexTableMissing(eTraits) ? [] : traits) ?? []) as Row[];
+  const partRows = ((isCodexTableMissing(eParts) ? [] : parts) ?? []) as Row[];
+  const propRows = ((isCodexTableMissing(eProps) ? [] : properties) ?? []) as Row[];
   const equipRows = equipRowsRaw;
-  const archRows = ((isTableMissing(eArch) ? [] : archetypes) ?? []) as Row[];
-  const archLevelRows = ((isTableMissing(eArchLevels) ? [] : archetypeLevels) ?? []) as Row[];
-  const creatureRows = ((isTableMissing(eCreature) ? [] : creatureFeats) ?? []) as Row[];
+  const archRows = ((isCodexTableMissing(eArch) ? [] : archetypes) ?? []) as Row[];
+  const archLevelRows = ((isCodexTableMissing(eArchLevels) ? [] : archetypeLevels) ?? []) as Row[];
+  const creatureRows = ((isCodexTableMissing(eCreature) ? [] : creatureFeats) ?? []) as Row[];
 
   const codexFeats = featRows.map((r) => withRowVersion(mapCodexFeat(r), r));
   const codexSkills = skillRows.map((r) => withRowVersion(mapCodexSkill(r), r));

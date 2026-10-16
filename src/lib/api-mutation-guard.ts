@@ -7,7 +7,7 @@
  * - `withApiMutationHandler` — optional wrapper for new route exports.
  *
  * Handlers that use `validateJson` already invoke `verifyMutationRequest`; the static
- * test in `api-mutation-routes.test.ts` fails if a mutating route lacks any guard.
+ * test in `api-mutation-routes.test.ts` fails if a mutating handler lacks any guard.
  */
 
 import { NextRequest, NextResponse } from 'next/server';
