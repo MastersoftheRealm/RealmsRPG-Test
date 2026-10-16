@@ -153,13 +153,13 @@ export function officialPowerDetailSections(row: OfficialPowerRow) {
     [targetsFactChip(row.raw.targetedDefenses)].filter(Boolean) as ChipData[],
   );
   return mergeDetailSections(
+    powerVariantsDetailSection(row.composition),
     glrSurfaceDetailSections(
       'library-official-power',
       { trainingPoints: row.tp > 0 ? row.tp : undefined },
       parts ? [parts] : undefined,
     ),
     targets,
-    powerVariantsDetailSection(row.composition),
   );
 }
 
