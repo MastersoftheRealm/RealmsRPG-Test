@@ -67,6 +67,12 @@ describe('mapCodexFeat', () => {
       'Harvesting Expansion',
     ]);
     expect(
+      mapCodexSkill({ id: '1', name: 'S', sources: ['core'], source: 'Crafting Expansion' }).sources,
+    ).toEqual(['core']);
+    expect(mapCodexSkill({ id: '1', name: 'S', source: 'Companions' }).sources).toEqual([
+      'Companions',
+    ]);
+    expect(
       mapCodexFeat({ id: '1', name: 'A', sources: ['Homebrew', 'homebrew', 'Core'] }).sources,
     ).toEqual(['Core', 'Homebrew']);
   });

@@ -10,6 +10,18 @@ export const CODEX_SKILLS_PUBLIC_SELECT =
 export const CODEX_PROPERTIES_PUBLIC_SELECT =
   'id, name, description, source, sources, type, base_ip, base_tp, base_c, op_1_desc, op_1_ip, op_1_tp, op_1_c, mechanic, updated_at';
 
+/**
+ * Named selects include `sources`. Drop that one column and keep `source`
+ * when the column is not on the database yet, so the read can use the legacy label.
+ */
+export function omitCodexSourcesColumn(select: string): string {
+  return select
+    .split(',')
+    .map((part) => part.trim())
+    .filter((part) => part.length > 0 && part !== 'sources')
+    .join(', ');
+}
+
 /** Per-table select for GET /api/codex whole-table reads. */
 export const CODEX_API_TABLE_SELECT: Record<CodexDataTable, string> = {
   codex_feats: '*',
