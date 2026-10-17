@@ -3,7 +3,11 @@
 import { useEffect, useState } from 'react';
 import { ChipSelect } from '@/components/patterns/filters';
 import { Input } from '@/components/ui';
-import { collapseCodexSourceName, codexSourcesOrCore } from '@/lib/codex/sources';
+import {
+  codexSourceNameError,
+  collapseCodexSourceName,
+  codexSourcesOrCore,
+} from '@/lib/codex/sources';
 import { listCodexSourceCatalog } from './source-catalog-action';
 
 export function AdminCodexSourceField({
@@ -15,6 +19,7 @@ export function AdminCodexSourceField({
 }) {
   const [catalog, setCatalog] = useState<string[]>([]);
   const [draft, setDraft] = useState('');
+  const [draftError, setDraftError] = useState<string | null>(null);
 
   useEffect(() => {
     let cancelled = false;
@@ -35,9 +40,18 @@ export function AdminCodexSourceField({
 
   function commit(raw: string) {
     const collapsed = collapseCodexSourceName(raw);
-    if (!collapsed) return;
+    if (!collapsed) {
+      setDraftError(null);
+      return;
+    }
+    const error = codexSourceNameError(collapsed);
+    if (error) {
+      setDraftError(error);
+      return;
+    }
     onChange(codexSourcesOrCore([...selected, collapsed], catalog));
     setDraft('');
+    setDraftError(null);
   }
 
   return (
@@ -47,7 +61,15 @@ export function AdminCodexSourceField({
         placeholder="Add a source"
         options={options}
         selectedValues={[...selected]}
-        onSelect={(name) => onChange(codexSourcesOrCore([...selected, name], catalog))}
+        onSelect={(name) => {
+          const error = codexSourceNameError(collapseCodexSourceName(name));
+          if (error) {
+            setDraftError(error);
+            return;
+          }
+          setDraftError(null);
+          onChange(codexSourcesOrCore([...selected, name], catalog));
+        }}
         onRemove={
           selected.length > 1
             ? (name) =>
@@ -63,7 +85,10 @@ export function AdminCodexSourceField({
       <div className="mt-2">
         <Input
           value={draft}
-          onChange={(e) => setDraft(e.target.value)}
+          onChange={(e) => {
+            setDraft(e.target.value);
+            if (draftError) setDraftError(null);
+          }}
           onKeyDown={(e) => {
             if (e.key !== 'Enter') return;
             e.preventDefault();
@@ -72,6 +97,7 @@ export function AdminCodexSourceField({
           }}
           placeholder="Add a source"
           aria-label="Add a source"
+          error={draftError ?? undefined}
         />
       </div>
     </div>

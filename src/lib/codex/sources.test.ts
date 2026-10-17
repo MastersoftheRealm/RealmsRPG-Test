@@ -7,7 +7,15 @@ import {
   CODEX_SKILLS_PUBLIC_SELECT,
   omitCodexSourcesColumn,
 } from '@/lib/codex/public-table-select';
-import { codexSourcesOrCore, itemMatchesSources, normalizeCodexSources } from './sources';
+import {
+  CODEX_SOURCE_WHITESPACE_CODE_POINTS,
+  codexSourceNameError,
+  codexSourcesForWrite,
+  codexSourcesOrCore,
+  collapseCodexSourceName,
+  itemMatchesSources,
+  normalizeCodexSources,
+} from './sources';
 
 describe('codex sources', () => {
   it('collapses whitespace and dedupes case-insensitively', () => {
@@ -26,6 +34,42 @@ describe('codex sources', () => {
     expect(codexSourcesOrCore(['  companions  ', 'Core', 'COMPANIONS'])).toEqual([
       'COMPANIONS',
       'Core',
+    ]);
+    expect(normalizeCodexSources("Assassin's Accoutrements")).toEqual(["Assassin's Accoutrements"]);
+    expect(normalizeCodexSources('Wonderous Workshop, Diviners Delights')).toEqual([
+      'Wonderous Workshop, Diviners Delights',
+    ]);
+    const whitespace = CODEX_SOURCE_WHITESPACE_CODE_POINTS.map((code) =>
+      String.fromCharCode(code),
+    ).join('');
+    expect(
+      collapseCodexSourceName(`${whitespace}Companion${whitespace}Expansion${whitespace}`),
+    ).toBe('Companion Expansion');
+    expect(collapseCodexSourceName(whitespace)).toBe('');
+    const whitespaceMatches: number[] = [];
+    for (let code = 0; code <= 0xffff; code += 1) {
+      if (/\s/.test(String.fromCharCode(code))) whitespaceMatches.push(code);
+    }
+    expect(whitespaceMatches).toEqual([...CODEX_SOURCE_WHITESPACE_CODE_POINTS]);
+  });
+
+  it('rejects All, HTML, control characters, and over-long names on the write path', () => {
+    expect(codexSourceNameError('All')).toMatch(/reserved/);
+    expect(codexSourceNameError(' ALL ')).toMatch(/reserved/);
+    expect(() => codexSourcesForWrite(['Core', 'All'])).toThrow(/reserved/);
+    expect(() => codexSourcesForWrite('<b>Core</b>')).toThrow(/HTML/);
+    expect(() => codexSourcesForWrite(`Core${String.fromCharCode(0)}`)).toThrow(/control/);
+    expect(() => codexSourcesForWrite('x'.repeat(101))).toThrow(/100/);
+    expect(() => codexSourcesForWrite([1])).toThrow(/text/);
+    expect(codexSourcesForWrite("  Assassin's Accoutrements  ")).toEqual([
+      "Assassin's Accoutrements",
+    ]);
+    expect(codexSourcesForWrite(['homebrew', 'Core', 'Homebrew'])).toEqual(['Core', 'Homebrew']);
+    expect(codexSourcesForWrite([])).toEqual(['Core']);
+    expect(codexSourcesForWrite(null)).toEqual(['Core']);
+    expect(() => toColumnarPayload('codex_feats', { sources: ['<img>'] })).toThrow(/HTML/);
+    expect(toColumnarPayload('codex_feats', { sources: ['Powers Expansion'] }).sources).toEqual([
+      'Powers Expansion',
     ]);
   });
 
@@ -59,9 +103,9 @@ describe('codex sources', () => {
       'Homebrew',
     ]);
     expect(toColumnarPayload('codex_parts', { sources: [] }).sources).toEqual(['Core']);
-    expect(toColumnarPayload('codex_equipment', { sources: 'Companion Expansion' }).sources).toEqual(
-      ['Companion Expansion'],
-    );
+    expect(
+      toColumnarPayload('codex_equipment', { sources: 'Companion Expansion' }).sources,
+    ).toEqual(['Companion Expansion']);
   });
 
   it('drops only the sources column from the named public selects', () => {
@@ -94,10 +138,16 @@ describe('codex sources', () => {
     expect(sql).toContain("ARRAY['Crafting']");
     expect(sql).toContain("ARRAY['Unreleased']");
     expect(sql).toContain('DROP CONSTRAINT IF EXISTS');
+    expect(sql).toContain('IF rewrite THEN');
+    expect(sql).toContain('collapse_codex_source_name');
+    expect(sql).toContain('check_present');
     expect(sql).not.toContain('DROP INDEX');
     expect(sql.includes('SET source =')).toBe(false);
-    expect(sql).toContain("regexp_replace(btrim(source), '\\s+', ' ', 'g')");
-    expect(sql).toContain('Companion Expansion');
+    expect(sql).not.toContain('regexp_replace(btrim(source)');
+    expect(sql).toContain("Assassin''s Accoutrements");
+    for (const code of CODEX_SOURCE_WHITESPACE_CODE_POINTS) {
+      expect(sql).toContain(`chr(${code})`);
+    }
   });
 
   it('does not build a per-table source list in admin codex', () => {

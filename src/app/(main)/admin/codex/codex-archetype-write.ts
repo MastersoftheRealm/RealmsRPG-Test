@@ -4,7 +4,7 @@
  * columns the save path writes can never drift from the columns `/api/codex` reads.
  */
 
-import { codexSourcesOrCore } from '@/lib/codex/sources';
+import { codexSourcesForWrite } from '@/lib/codex/sources';
 
 export type ArchetypeLevelPayload = {
   level: number;
@@ -64,7 +64,7 @@ export function buildArchetypeRow(
     name: payload.name,
     type: payload.type,
     description: payload.description ?? null,
-    sources: codexSourcesOrCore(payload.sources),
+    sources: codexSourcesForWrite(payload.sources),
     archetype_ability: payload.archetype_ability ?? null,
     secondary_ability: payload.secondary_ability ?? null,
     power_prof_start: payload.power_prof_start ?? null,

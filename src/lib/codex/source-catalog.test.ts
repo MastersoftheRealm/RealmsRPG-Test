@@ -10,11 +10,7 @@ describe('codex source catalog', () => {
       codex_parts: undefined,
     });
 
-    expect(catalog.map((entry) => entry.name)).toEqual([
-      'Companion Expansion',
-      'Core',
-      'Homebrew',
-    ]);
+    expect(catalog.map((entry) => entry.name)).toEqual(['Companion Expansion', 'Core', 'Homebrew']);
     const core = catalog.find((entry) => entry.name === 'Core');
     expect(core?.counts.codex_feats).toBe(2);
     expect(core?.counts.codex_skills).toBe(1);
@@ -32,7 +28,14 @@ describe('codex source catalog', () => {
       true,
     );
     expect(sourcesColumnMissing({ message: 'column "sources" does not exist' })).toBe(true);
-    expect(sourcesColumnMissing({ code: '42P01', message: 'relation does not exist' })).toBe(
+    expect(
+      sourcesColumnMissing({
+        code: 'PGRST204',
+        message: "Could not find the 'sources' column of 'codex_feats' in the schema cache",
+      }),
+    ).toBe(true);
+    expect(sourcesColumnMissing({ code: '42P01', message: 'relation does not exist' })).toBe(false);
+    expect(sourcesColumnMissing({ code: 'PGRST204', message: 'column name does not exist' })).toBe(
       false,
     );
   });

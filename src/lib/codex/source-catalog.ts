@@ -5,11 +5,7 @@
 
 import { CODEX_API_CACHE_TAG } from '@/lib/codex/cache-tags';
 import { COLUMNAR_COLLECTIONS, type CodexCollection } from '@/lib/codex/collections';
-import {
-  CORE_CODEX_SOURCE,
-  codexSourcesOrCore,
-  normalizeCodexSources,
-} from '@/lib/codex/sources';
+import { CORE_CODEX_SOURCE, codexSourcesOrCore, normalizeCodexSources } from '@/lib/codex/sources';
 import { CODEX_PUBLIC_ISR_SECONDS, readCachedPublicData } from '@/lib/supabase/cached-public-read';
 import { createPublicClient } from '@/lib/supabase/public-client';
 
@@ -27,14 +23,23 @@ export interface CodexSourceCatalogEntry {
 
 type SourceRow = { sources?: unknown };
 
-/** Postgres undefined_column. A missing `sources` column is an empty read, not a hard failure. */
+/**
+ * A missing `sources` column is an empty read, not a hard failure.
+ * This select is only `sources`, so Postgres 42703 is that column.
+ * PostgREST reports the same gap as PGRST204 before it reaches Postgres.
+ */
 export function sourcesColumnMissing(error: {
   code?: string | null;
   message?: string | null;
 }): boolean {
   if (error.code === '42703') return true;
   const message = error.message ?? '';
-  return /\bsources\b/i.test(message) && /does not exist/i.test(message);
+  if (!/\bsources\b/i.test(message)) return false;
+  return (
+    error.code === 'PGRST204' ||
+    /does not exist/i.test(message) ||
+    /could not find the 'sources' column/i.test(message)
+  );
 }
 
 /**

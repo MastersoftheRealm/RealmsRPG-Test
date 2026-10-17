@@ -6,7 +6,7 @@
  */
 
 import type { CodexCollection } from '@/lib/codex/collections';
-import { codexSourcesOrCore } from '@/lib/codex/sources';
+import { codexSourcesForWrite } from '@/lib/codex/sources';
 
 function snakeToCamel(s: string): string {
   // Handle common codex column patterns like op_1_desc -> op1Desc
@@ -81,7 +81,7 @@ const POSTGRES_TEXT_ARRAY_FIELDS = new Set(['sources']);
 
 /** Serialize value for columnar TEXT columns: arrays become comma-separated */
 function toColumnValue(camel: string, val: unknown): unknown {
-  if (POSTGRES_TEXT_ARRAY_FIELDS.has(camel)) return codexSourcesOrCore(val);
+  if (POSTGRES_TEXT_ARRAY_FIELDS.has(camel)) return codexSourcesForWrite(val);
   if (val == null) return null;
   if (JSON_CAMEL_FIELDS.has(camel)) {
     if (val === '') return null;
