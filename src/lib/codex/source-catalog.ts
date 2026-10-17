@@ -8,10 +8,11 @@ import { COLUMNAR_COLLECTIONS, type CodexCollection } from '@/lib/codex/collecti
 import { CORE_CODEX_SOURCE, codexSourcesOrCore, normalizeCodexSources } from '@/lib/codex/sources';
 import { CODEX_PUBLIC_ISR_SECONDS, readCachedPublicData } from '@/lib/supabase/cached-public-read';
 import { createPublicClient } from '@/lib/supabase/public-client';
+import { fetchAllPostgrestPages } from '@/lib/codex/postgrest-pager';
 
 export type CodexSourceTable = Exclude<CodexCollection, 'core_rules'>;
 
-const CODEX_SOURCE_TABLES: readonly CodexSourceTable[] = COLUMNAR_COLLECTIONS.filter(
+export const CODEX_SOURCE_TABLES: readonly CodexSourceTable[] = COLUMNAR_COLLECTIONS.filter(
   (table): table is CodexSourceTable => table !== 'core_rules',
 );
 
@@ -82,8 +83,14 @@ async function loadCodexSourceCatalog(): Promise<CodexSourceCatalogEntry[]> {
 
   const reads = await Promise.all(
     CODEX_SOURCE_TABLES.map(async (table) => {
-      const { data, error } = await client.from(table).select('sources');
-      return { table, data, error };
+      try {
+        const data = await fetchAllPostgrestPages<SourceRow>(async (from, to) =>
+          client.from(table).select('sources').range(from, to),
+        );
+        return { table, data, error: null as { code?: string; message?: string } | null };
+      } catch (error) {
+        return { table, data: null, error: error as { code?: string; message?: string } };
+      }
     }),
   );
   const rowsByTable: Partial<Record<CodexSourceTable, SourceRow[]>> = {};
