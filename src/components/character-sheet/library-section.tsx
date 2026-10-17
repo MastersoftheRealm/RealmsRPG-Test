@@ -22,7 +22,7 @@ import {
 } from '@/components/patterns';
 import { Card } from '@/components/ui';
 import { TabContentPanel, TabNavigation, useTabGroup } from '@/components/ui/tab-navigation';
-import { useGameRules } from '@/hooks';
+import { useGameRules, useMergedSpecies } from '@/hooks';
 import { useCharacterSheet } from './character-sheet-context';
 import type { TabType } from './library-tab-config';
 import { useLibrarySectionRows } from './use-library-section-rows';
@@ -57,6 +57,7 @@ export function LibrarySection({
     setFeatModalType,
   } = ctx;
   const { rules } = useGameRules();
+  const { data: allSpecies = [] } = useMergedSpecies();
 
   const data = useMemo(() => {
     if (!libraryModel) return null;
@@ -65,9 +66,10 @@ export function LibrarySection({
       enrichedData,
       libraryModel,
       handlers: libraryHandlers,
+      allSpecies,
       isOwner,
     });
-  }, [character, enrichedData, libraryModel, libraryHandlers, isOwner]);
+  }, [character, enrichedData, libraryModel, libraryHandlers, allSpecies, isOwner]);
 
   const {
     onAddPower,
@@ -446,6 +448,11 @@ export function LibrarySection({
             isEditMode={isEditMode}
             onWeightChange={onWeightChange}
             onHeightChange={onHeightChange}
+            characterSizeOptions={data.characterSizeOptions}
+            characterSize={data.characterSize}
+            characterSizeLabel={data.characterSizeLabel}
+            characterSizeHeightHint={data.characterSizeHeightHint}
+            onCharacterSizeChange={data.onCharacterSizeChange}
             onAgeChange={onAgeChange}
             onAppearanceChange={onAppearanceChange}
             onBackstoryChange={onBackstoryChange}

@@ -4,6 +4,13 @@
  */
 
 import type { CharacterProficiency, Item, Character, CharacterAncestry } from '@/types';
+import type { Species } from '@/hooks';
+import {
+  characterSizeDisplayLabel,
+  characterSizeHeightHint,
+  getCharacterAllowedSizes,
+  resolveEffectiveCharacterSize,
+} from '@/lib/character/character-size';
 import type { EnrichedCharacterData } from '@/lib/data-enrichment';
 import {
   appearanceDraftFromEdit,
@@ -29,10 +36,11 @@ export function buildLibrarySectionData(input: {
   enrichedData: EnrichedCharacterData | null | undefined;
   libraryModel: SheetLibraryModel;
   handlers: CharacterSheetDerivedHandlers;
+  allSpecies?: readonly Species[] | undefined;
   /** False for a public, campaign, or Realm Master viewer. Owner and guest sheet stay true. */
   isOwner: boolean;
 }): LibrarySectionData {
-  const { character, enrichedData, libraryModel: m, handlers, isOwner } = input;
+  const { character, enrichedData, libraryModel: m, handlers, isOwner, allSpecies = [] } = input;
   const {
     setCharacter,
     handleRemovePower,
@@ -61,6 +69,11 @@ export function buildLibrarySectionData(input: {
   } = handlers;
 
   const archetypeProgression = m.archetypeProgression;
+  const ancestry = character.ancestry as CharacterAncestry | undefined;
+  const characterSizeOptions = getCharacterAllowedSizes(ancestry, allSpecies);
+  const characterSize = resolveEffectiveCharacterSize(ancestry, characterSizeOptions);
+  const characterSizeLabel = characterSizeDisplayLabel(characterSize);
+  const characterSizeHeightHintText = characterSizeHeightHint(characterSize);
 
   return {
     powers: enrichedData?.powers || character.powers || [],
@@ -101,6 +114,23 @@ export function buildLibrarySectionData(input: {
     abilities: character.abilities,
     onWeightChange: (v) => setCharacter((prev) => (prev ? { ...prev, weight: v } : null)),
     onHeightChange: (v) => setCharacter((prev) => (prev ? { ...prev, height: v } : null)),
+    characterSizeOptions,
+    characterSize,
+    characterSizeLabel,
+    characterSizeHeightHint: characterSizeHeightHintText,
+    onCharacterSizeChange: whenSheetOwner(isOwner, (size: string) =>
+      setCharacter((prev) => {
+        if (!prev) return null;
+        const prevAncestry = (prev.ancestry ?? { id: '', name: '' }) as CharacterAncestry;
+        return {
+          ...prev,
+          ancestry: {
+            ...prevAncestry,
+            selectedSize: size,
+          },
+        };
+      }),
+    ),
     onAgeChange: (v) =>
       setCharacter((prev) =>
         prev

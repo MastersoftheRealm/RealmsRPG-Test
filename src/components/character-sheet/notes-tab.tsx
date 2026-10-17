@@ -38,6 +38,10 @@ import {
   type NotesTabSectionId,
 } from '@/lib/character/notes-tab-sections';
 import type { Abilities, CharacterVisibility } from '@/types';
+import {
+  CARRYING_CAPACITY_HALF_LOAD_RULE,
+  calculateCarryingCapacityKg,
+} from '@/lib/game/size-table';
 import { NotesTabEditControls } from './notes-tab-edit-controls';
 
 export interface CharacterNote {
@@ -66,6 +70,13 @@ interface NotesTabProps {
   speedDisplayUnit?: SpeedDisplayUnit | undefined;
   onWeightChange?: ((value: number) => void) | undefined;
   onHeightChange?: ((value: number) => void) | undefined;
+  /** Allowed size strings from the character's species; empty when unknown. */
+  characterSizeOptions?: string[] | undefined;
+  /** Resolved size category key/label, if any. */
+  characterSize?: string | undefined;
+  characterSizeLabel?: string | undefined;
+  characterSizeHeightHint?: string | undefined;
+  onCharacterSizeChange?: ((size: string) => void) | undefined;
   onAgeChange?: ((value: string) => void) | undefined;
   onAppearanceChange?: ((value: string) => void) | undefined;
   onBackstoryChange?: ((value: string) => void) | undefined;
@@ -287,6 +298,11 @@ export function NotesTab({
   speedDisplayUnit = 'spaces',
   onWeightChange,
   onHeightChange,
+  characterSizeOptions = [],
+  characterSize,
+  characterSizeLabel,
+  characterSizeHeightHint,
+  onCharacterSizeChange,
   onAgeChange,
   onAppearanceChange,
   onBackstoryChange,
@@ -328,6 +344,11 @@ export function NotesTab({
   const jumpVertical = upMin1(Math.max(strength, agility) / 2);
   const climbSpeed = upMin1(strength / 2);
   const swimSpeed = upMin1(Math.max(strength, vitality) / 2);
+
+  const carrying =
+    characterSize != null ? calculateCarryingCapacityKg(characterSize, strength) : null;
+  const sizeOptions = characterSizeOptions;
+  const showSizePicker = isEditMode && onCharacterSizeChange && sizeOptions.length > 1;
 
   // Calculate fall damage
   const weightCategory = Math.max(200, Math.ceil(weight / 200) * 200);
@@ -524,7 +545,43 @@ export function NotesTab({
                 <span className="text-sm text-text-muted">—</span>
               )}
             </div>
+
+            {/* Size */}
+            <div className="flex min-w-0 flex-wrap items-center gap-2">
+              <span className="text-sm font-medium text-text-secondary">Size:</span>
+              {showSizePicker ? (
+                <select
+                  value={characterSize ?? ''}
+                  onChange={(e) => onCharacterSizeChange(e.target.value)}
+                  className="touch-tier-standard max-w-full rounded border border-border-light bg-surface px-2 py-0.5 text-sm focus:ring-2 focus:ring-primary-outline-border"
+                  aria-label="Size category"
+                >
+                  <option value="">Select size</option>
+                  {sizeOptions.map((size) => (
+                    <option key={size} value={size}>
+                      {size}
+                    </option>
+                  ))}
+                </select>
+              ) : characterSizeLabel ? (
+                <span className="text-sm font-bold text-text-primary">{characterSizeLabel}</span>
+              ) : (
+                <span className="text-sm text-text-muted">—</span>
+              )}
+              {characterSizeHeightHint ? (
+                <span className="text-xs text-text-muted">({characterSizeHeightHint})</span>
+              ) : null}
+            </div>
           </SummaryRow>
+
+          {carrying ? (
+            <div className="flex flex-wrap items-baseline gap-x-2 gap-y-1 text-xs">
+              <span className="text-text-secondary">Carrying Capacity:</span>
+              <span className="font-bold text-text-primary">{carrying.capacityKg} kg</span>
+              <span className="text-text-muted">(min {carrying.minCarryKg} kg)</span>
+              <span className="text-text-muted">{CARRYING_CAPACITY_HALF_LOAD_RULE}</span>
+            </div>
+          ) : null}
 
           <SummaryRow className="text-xs">
             <SummaryItem label="Jump (H)" value={formatSpeedString(jumpHorizontal, speedUnit)} />
