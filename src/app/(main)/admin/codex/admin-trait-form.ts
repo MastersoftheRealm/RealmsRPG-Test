@@ -6,7 +6,6 @@ import type { Trait } from '@/hooks';
 import {
   codexSourcesOrCore,
   DEFAULT_CODEX_SOURCES,
-  type CodexSourceId,
 } from '@/lib/codex/sources';
 
 export type TraitFormState = {
@@ -17,7 +16,7 @@ export type TraitFormState = {
   flaw: boolean;
   characteristic: boolean;
   option_trait_ids: string[];
-  sources: CodexSourceId[];
+  sources: string[];
 };
 
 export const EMPTY_TRAIT_FORM: TraitFormState = {

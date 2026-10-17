@@ -6,14 +6,13 @@ import type { ItemProperty } from '@/hooks';
 import {
   codexSourcesOrCore,
   DEFAULT_CODEX_SOURCES,
-  type CodexSourceId,
 } from '@/lib/codex/sources';
 
 export type PropertyFormState = {
   name: string;
   description: string;
   type: string;
-  sources: CodexSourceId[];
+  sources: string[];
   base_ip: number | undefined;
   base_tp: number | undefined;
   base_c: number | undefined;

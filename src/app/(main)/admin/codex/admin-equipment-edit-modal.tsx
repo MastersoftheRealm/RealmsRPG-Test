@@ -1,7 +1,7 @@
 'use client';
 
 import type { Dispatch, SetStateAction } from 'react';
-import { DEFAULT_CODEX_SOURCES, type CodexSourceId } from '@/lib/codex/sources';
+import { DEFAULT_CODEX_SOURCES } from '@/lib/codex/sources';
 import { RealmsImageField } from '@/components/patterns';
 import { Modal, Input, Textarea } from '@/components/ui';
 import { AdminCodexCopySourceBanner } from './admin-codex-copy-source-banner';
@@ -18,7 +18,7 @@ export type EquipmentFormState = {
   category: string;
   currency: number;
   rarity: string;
-  sources: CodexSourceId[];
+  sources: string[];
   imageId: string | null;
   imageUrl: string | null;
 };

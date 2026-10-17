@@ -215,7 +215,6 @@ export function AdminSpeciesEditModal({
               <AdminCodexSourceField
                 value={form.sources}
                 onChange={(sources) => setForm((f) => ({ ...f, sources }))}
-                hint="Which rules sources this species comes from. Starter species stays a separate checkbox."
               />
             </div>
             <div>

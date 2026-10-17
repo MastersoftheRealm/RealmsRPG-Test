@@ -1,5 +1,9 @@
 -- Codex entry sources (many per row).
--- Not applied. Do not run this against production from an agent.
+-- APPLIED to production. Do not run this file again.
+-- Re-running it puts the closed *_sources_check constraints back and
+-- remaps recognized singular labels onto lowercase ids.
+-- The follow-up that drops those checks is sql/codex-entry-sources-open.sql.
+-- That follow-up is not applied. Do not run either file from an agent.
 --
 -- Adds public.<codex table>.sources text[] on the same tables as sql/codex-entry-source.sql.
 -- Requires that singular source column. This file reads it and does not create it.

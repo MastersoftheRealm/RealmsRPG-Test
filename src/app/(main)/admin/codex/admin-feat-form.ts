@@ -7,7 +7,6 @@ import { normalizeFeatAbilities } from '@/lib/codex/feat-ability';
 import {
   codexSourcesOrCore,
   DEFAULT_CODEX_SOURCES,
-  type CodexSourceId,
 } from '@/lib/codex/sources';
 
 export type FeatFormState = {
@@ -15,7 +14,7 @@ export type FeatFormState = {
   description: string;
   req_desc: string;
   category: string;
-  sources: CodexSourceId[];
+  sources: string[];
   ability: string[];
   ability_req: string[];
   abil_req_val: number[];

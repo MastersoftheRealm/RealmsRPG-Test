@@ -4,7 +4,6 @@
  * Character archetype definitions
  */
 
-import type { CodexSourceId } from '@/lib/codex/sources';
 import type { AllowUndefinedOptionals } from '@/lib/utils/exact-optional';
 import type { AbilityName } from './abilities';
 
@@ -152,8 +151,8 @@ interface ArchetypeFields {
   name: string;
   type: ArchetypeCategory;
   description?: string | undefined;
-  /** Rules sources (Core, an expansion, Unreleased). */
-  sources?: CodexSourceId[] | undefined;
+  /** Content packs this archetype belongs to. */
+  sources?: string[] | undefined;
   archetype_ability?: AbilityName | undefined;
   secondary_ability?: AbilityName | undefined;
   power_prof_start?: number | undefined;

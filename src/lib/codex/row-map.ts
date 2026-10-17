@@ -7,7 +7,7 @@
  */
 
 import { normalizeFeatAbilities } from '@/lib/codex/feat-ability';
-import { codexSourcesOrCore, type CodexSourceId } from '@/lib/codex/sources';
+import { codexSourcesOrCore } from '@/lib/codex/sources';
 import { mapCodexBaseSkillToId } from '@/lib/game/character-legality';
 import { parseCatalogListing } from '@/lib/library/catalog-listing';
 import type {
@@ -67,7 +67,7 @@ function optionalString(val: unknown): string | undefined {
 }
 
 /** Prefer `sources`. Fall back to the singular `source` column until it is unused. */
-export function mapCodexSources(sources: unknown, legacySource: unknown): CodexSourceId[] {
+export function mapCodexSources(sources: unknown, legacySource: unknown): string[] {
   if (sources != null) return codexSourcesOrCore(sources);
   if (legacySource != null && !(typeof legacySource === 'string' && legacySource.trim() === '')) {
     return codexSourcesOrCore(legacySource);

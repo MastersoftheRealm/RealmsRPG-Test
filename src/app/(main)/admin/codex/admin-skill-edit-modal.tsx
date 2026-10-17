@@ -1,7 +1,7 @@
 'use client';
 
 import type { Dispatch, SetStateAction } from 'react';
-import { DEFAULT_CODEX_SOURCES, type CodexSourceId } from '@/lib/codex/sources';
+import { DEFAULT_CODEX_SOURCES } from '@/lib/codex/sources';
 import { ChipSelect } from '@/components/patterns/filters';
 import { Modal, Input, Textarea } from '@/components/ui';
 import { AdminCodexCopySourceBanner } from './admin-codex-copy-source-banner';
@@ -22,7 +22,7 @@ export type SkillFormState = {
   ds_calc: string;
   craft_success_desc: string;
   craft_failure_desc: string;
-  sources: CodexSourceId[];
+  sources: string[];
 };
 
 export const EMPTY_SKILL_FORM: SkillFormState = {

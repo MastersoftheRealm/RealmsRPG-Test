@@ -1,7 +1,7 @@
 'use client';
 
 import type { Dispatch, SetStateAction } from 'react';
-import { DEFAULT_CODEX_SOURCES, type CodexSourceId } from '@/lib/codex/sources';
+import { DEFAULT_CODEX_SOURCES } from '@/lib/codex/sources';
 import { Modal, Input, Textarea } from '@/components/ui';
 import { AdminCodexCopySourceBanner } from './admin-codex-copy-source-banner';
 import { AdminCodexEditModalFooter } from './admin-codex-edit-modal-footer';
@@ -18,7 +18,7 @@ export type CreatureFeatFormState = {
   feat_lvl: number | undefined;
   lvl_req: number | undefined;
   mechanic: boolean;
-  sources: CodexSourceId[];
+  sources: string[];
 };
 
 export const EMPTY_CREATURE_FEAT_FORM: CreatureFeatFormState = {

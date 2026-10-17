@@ -7,7 +7,6 @@ import { parseCatalogListing } from '@/lib/library/catalog-listing';
 import {
   codexSourcesOrCore,
   DEFAULT_CODEX_SOURCES,
-  type CodexSourceId,
 } from '@/lib/codex/sources';
 
 export type TraitPickerField =
@@ -40,7 +39,7 @@ export type SpeciesFormState = {
   maxAge: string;
   languages: string;
   isStarter: boolean;
-  sources: CodexSourceId[];
+  sources: string[];
   catalogListing: 'listed' | 'unlisted';
   imageId: string | null;
   imageUrl: string | null;

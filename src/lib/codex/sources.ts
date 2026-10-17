@@ -1,111 +1,87 @@
 /**
- * Shared rules-source list for every codex subrule (feats, skills, species,
- * traits, parts, properties, equipment, archetypes, creature feats).
+ * Rules sources on codex subrule rows.
  *
- * One item can belong to several sources. Stored as `sources text[]` of these ids.
- * Missing or empty values are Core, the same default the migration backfills.
+ * A source is a content-pack name stored on `sources text[]`.
+ * The display name is the value: trimmed, with internal whitespace collapsed.
+ * Names that differ only by case are the same source.
+ * An empty list is Core.
  */
 
-export const CODEX_SOURCES = [
-  { id: 'core', label: 'Core' },
-  { id: 'crafting', label: 'Crafting' },
-  { id: 'downtime', label: 'Downtime' },
-  { id: 'harvesting', label: 'Harvesting' },
-  { id: 'companions', label: 'Companions' },
-  { id: 'homebrew', label: 'Homebrew' },
-  { id: 'unreleased', label: 'Unreleased' },
-] as const;
+export const CORE_CODEX_SOURCE = 'Core';
 
-export type CodexSourceId = (typeof CODEX_SOURCES)[number]['id'];
+export const DEFAULT_CODEX_SOURCES: readonly string[] = [CORE_CODEX_SOURCE];
 
-export const CODEX_SOURCE_IDS: readonly CodexSourceId[] = CODEX_SOURCES.map((source) => source.id);
-
-export const DEFAULT_CODEX_SOURCES: readonly CodexSourceId[] = ['core'];
-
-const SOURCE_ID_SET = new Set<string>(CODEX_SOURCE_IDS);
-
-/** Singular free-text values from the earlier source column. */
-const LEGACY_SOURCE_LABELS: Record<string, CodexSourceId> = {
-  core: 'core',
-  'core rules': 'core',
-  crafting: 'crafting',
-  'crafting expansion': 'crafting',
-  downtime: 'downtime',
-  'downtime expansion': 'downtime',
-  harvesting: 'harvesting',
-  'harvesting expansion': 'harvesting',
-  companions: 'companions',
-  'companions expansion': 'companions',
-  homebrew: 'homebrew',
-  unreleased: 'unreleased',
-  'unreleased/test': 'unreleased',
-  test: 'unreleased',
-};
-
-export function isCodexSourceId(value: string): value is CodexSourceId {
-  return SOURCE_ID_SET.has(value);
+export function collapseCodexSourceName(raw: string): string {
+  return raw.trim().replace(/\s+/g, ' ');
 }
 
-export function codexSourceLabel(id: CodexSourceId): string {
-  const match = CODEX_SOURCES.find((source) => source.id === id);
-  return match?.label ?? id;
+export function codexSourceKey(name: string): string {
+  return collapseCodexSourceName(name).toLowerCase();
 }
 
-function tokenToSourceId(raw: string): CodexSourceId | null {
-  const key = raw.trim().toLowerCase();
-  if (!key) return null;
-  if (isCodexSourceId(key)) return key;
-  return LEGACY_SOURCE_LABELS[key] ?? null;
+function preferCodexSourceSpelling(current: string | undefined, next: string): string {
+  if (!current) return next;
+  const currentIsLower = current === current.toLowerCase();
+  const nextIsLower = next === next.toLowerCase();
+  if (currentIsLower !== nextIsLower) return currentIsLower ? next : current;
+  return current.localeCompare(next) <= 0 ? current : next;
 }
 
-function collectSourceIds(value: unknown): CodexSourceId[] {
-  const tokens: string[] = [];
-  if (Array.isArray(value)) {
-    for (const item of value) tokens.push(String(item));
-  } else if (typeof value === 'string') {
-    for (const part of value.split(',')) tokens.push(part);
-  } else if (value == null) {
-    return [];
-  } else {
-    tokens.push(String(value));
-  }
-
-  const seen = new Set<CodexSourceId>();
-  for (const token of tokens) {
-    const id = tokenToSourceId(token);
-    if (id) seen.add(id);
-  }
-  return CODEX_SOURCE_IDS.filter((id) => seen.has(id));
+function sourceTokens(value: unknown): string[] {
+  if (Array.isArray(value)) return value.map((item) => String(item));
+  if (typeof value === 'string') return [value];
+  if (value == null) return [];
+  return [String(value)];
 }
 
 /**
- * Canonical ids in list order. Unknown tokens are dropped.
+ * Distinct display names. A string is one source and is not split on commas.
+ * `known` supplies the spelling already in use for that name.
  * Empty input stays empty; use `codexSourcesOrCore` when a row must have a source.
  */
-export function normalizeCodexSources(value: unknown): CodexSourceId[] {
-  return collectSourceIds(value);
+export function normalizeCodexSources(value: unknown, known?: readonly string[]): string[] {
+  const preferred = new Map<string, string>();
+  for (const name of known ?? []) {
+    const collapsed = collapseCodexSourceName(name);
+    if (!collapsed) continue;
+    const key = collapsed.toLowerCase();
+    preferred.set(key, preferCodexSourceSpelling(preferred.get(key), collapsed));
+  }
+
+  const chosen = new Map<string, string>();
+  for (const token of sourceTokens(value)) {
+    const collapsed = collapseCodexSourceName(token);
+    if (!collapsed) continue;
+    const key = collapsed.toLowerCase();
+    const knownSpelling = preferred.get(key);
+    chosen.set(
+      key,
+      knownSpelling ?? preferCodexSourceSpelling(chosen.get(key), collapsed),
+    );
+  }
+  return [...chosen.values()].sort((a, b) => a.localeCompare(b));
 }
 
-/** At least Core. This is the value admin saves and the migration default. */
-export function codexSourcesOrCore(value: unknown): CodexSourceId[] {
-  const normalized = collectSourceIds(value);
-  return normalized.length > 0 ? normalized : ['core'];
+/** At least Core. This is the value admin saves. */
+export function codexSourcesOrCore(value: unknown, known?: readonly string[]): string[] {
+  const normalized = normalizeCodexSources(value, known);
+  return normalized.length > 0 ? normalized : [CORE_CODEX_SOURCE];
 }
 
 /**
  * List filter for a later Library/Codex source chip control.
  * No selection, or only the "all" token, matches every item.
  * Otherwise the item matches when it shares any selected source (same "any" mode as feat tags).
- * A missing sources list is Core, matching the backfill.
+ * Comparison is case-insensitive. A missing sources list is Core.
  */
 export function itemMatchesSources(
   itemSources: unknown,
   selected: readonly string[] | null | undefined,
 ): boolean {
   const picked = (selected ?? [])
-    .map((value) => value.trim().toLowerCase())
+    .map((value) => codexSourceKey(value))
     .filter((value) => value !== '' && value !== 'all');
   if (picked.length === 0) return true;
-  const have = new Set<string>(codexSourcesOrCore(itemSources));
-  return picked.some((id) => have.has(id));
+  const have = new Set(codexSourcesOrCore(itemSources).map((name) => name.toLowerCase()));
+  return picked.some((key) => have.has(key));
 }

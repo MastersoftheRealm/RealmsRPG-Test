@@ -49,7 +49,7 @@ describe('mapCodexFeat', () => {
     expect(feat.lvl_req).toBeUndefined();
     expect(feat.uses_per_rec).toBeUndefined();
     expect(feat.char_feat).toBe(true);
-    expect(feat.sources).toEqual(['core']);
+    expect(feat.sources).toEqual(['Core']);
     expect(feat.state_feat).toBe(false);
   });
 
@@ -58,11 +58,17 @@ describe('mapCodexFeat', () => {
       'core',
       'crafting',
     ]);
-    expect(mapCodexFeat({ id: '1', name: 'A', source: ' Core Rules ' }).sources).toEqual(['core']);
-    expect(mapCodexSkill({ id: '1', name: 'S', source: '   ' }).sources).toEqual(['core']);
-    expect(mapCodexSkill({ id: '1', name: 'S', source: 'Harvesting Expansion' }).sources).toEqual([
-      'harvesting',
+    expect(mapCodexFeat({ id: '1', name: 'A' }).sources).toEqual(['Core']);
+    expect(mapCodexFeat({ id: '1', name: 'A', source: ' Core Rules ' }).sources).toEqual([
+      'Core Rules',
     ]);
+    expect(mapCodexSkill({ id: '1', name: 'S', source: '   ' }).sources).toEqual(['Core']);
+    expect(mapCodexSkill({ id: '1', name: 'S', source: 'Harvesting Expansion' }).sources).toEqual([
+      'Harvesting Expansion',
+    ]);
+    expect(
+      mapCodexFeat({ id: '1', name: 'A', sources: ['Homebrew', 'homebrew', 'Core'] }).sources,
+    ).toEqual(['Core', 'Homebrew']);
   });
 
   it('keeps a hard lvl_req of 0 distinct from missing', () => {
@@ -112,7 +118,7 @@ describe('mapCodexSpecies', () => {
     expect(species.image_url).toBe('https://img/h.png');
     expect(species.speed).toBe(6);
     expect(species.catalog_listing).toBe('listed');
-    expect(species.sources).toEqual(['core']);
+    expect(species.sources).toEqual(['Core']);
   });
 });
 

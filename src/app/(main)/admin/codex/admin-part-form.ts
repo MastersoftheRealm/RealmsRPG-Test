@@ -7,14 +7,13 @@ import { normalizeTargetedDefenses } from '@/lib/game/targeted-defenses';
 import {
   codexSourcesOrCore,
   DEFAULT_CODEX_SOURCES,
-  type CodexSourceId,
 } from '@/lib/codex/sources';
 
 export type PartFormState = {
   name: string;
   description: string;
   category: string;
-  sources: CodexSourceId[];
+  sources: string[];
   type: 'power' | 'technique';
   base_en: number | undefined;
   base_tp: number | undefined;

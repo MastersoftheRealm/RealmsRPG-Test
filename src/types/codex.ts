@@ -6,7 +6,6 @@
  * Archetype path join stays in the route.
  */
 
-import type { CodexSourceId } from '@/lib/codex/sources';
 import type { AllowUndefinedOptionals } from '@/lib/utils/exact-optional';
 import type { Archetype, PathGuidanceGroup } from './archetype';
 
@@ -29,7 +28,7 @@ interface CodexPowerPartFields extends CodexRowVersion {
   name: string;
   description: string;
   category: string;
-  sources?: CodexSourceId[] | undefined;
+  sources?: string[] | undefined;
   base_en: number;
   base_tp: number;
   op_1_desc?: string | undefined;
@@ -56,7 +55,7 @@ interface CodexTechniquePartFields extends CodexRowVersion {
   name: string;
   description: string;
   category: string;
-  sources?: CodexSourceId[] | undefined;
+  sources?: string[] | undefined;
   base_tp: number;
   base_en?: number | undefined;
   op_1_desc?: string | undefined;
@@ -83,7 +82,7 @@ interface CodexItemPropertyFields extends CodexRowVersion {
   id: string;
   name: string;
   description: string;
-  sources?: CodexSourceId[] | undefined;
+  sources?: string[] | undefined;
   type?: 'weapon' | 'armor' | 'shield' | 'general' | undefined;
   tp_cost?: number | undefined;
   gold_cost?: number | undefined;
@@ -104,7 +103,7 @@ interface CodexFeatFields extends CodexRowVersion {
   name: string;
   description: string;
   category: string;
-  sources?: CodexSourceId[] | undefined;
+  sources?: string[] | undefined;
   ability?: string[] | undefined;
   ability_req: string[];
   abil_req_val: number[];
@@ -133,7 +132,7 @@ interface CodexSkillFields extends CodexRowVersion {
   id: string;
   name: string;
   description: string;
-  sources?: CodexSourceId[] | undefined;
+  sources?: string[] | undefined;
   ability: string;
   base_skill_id?: number | undefined;
   success_desc?: string | undefined;
@@ -165,8 +164,8 @@ interface CodexSpeciesFields extends CodexRowVersion {
   ave_weight?: number | undefined;
   adulthood_lifespan?: number[] | undefined;
   is_starter?: boolean | undefined;
-  /** Rules sources (Core, an expansion, Unreleased). Distinct from `is_starter`. */
-  sources?: CodexSourceId[] | undefined;
+  /** Content packs this entry belongs to. Distinct from `is_starter`. */
+  sources?: string[] | undefined;
   image_id?: string | null | undefined;
   image_url?: string | null | undefined;
   catalog_listing?: 'listed' | 'unlisted' | undefined;
@@ -178,7 +177,7 @@ interface CodexTraitFields extends CodexRowVersion {
   id: string;
   name: string;
   description: string;
-  sources?: CodexSourceId[] | undefined;
+  sources?: string[] | undefined;
   species?: string[] | undefined;
   uses_per_rec?: number | undefined;
   rec_period?: string | undefined;
@@ -195,7 +194,7 @@ interface CodexEquipmentItemFields extends CodexRowVersion {
   type: 'weapon' | 'armor' | 'equipment';
   subtype?: string | undefined;
   category?: string | undefined;
-  sources?: CodexSourceId[] | undefined;
+  sources?: string[] | undefined;
   description: string;
   damage?: string | undefined;
   armor_value?: number | undefined;
@@ -214,7 +213,7 @@ interface CodexCreatureFeatFields extends CodexRowVersion {
   id: string;
   name: string;
   description: string;
-  sources?: CodexSourceId[] | undefined;
+  sources?: string[] | undefined;
   points: number;
   feat_points?: number | undefined;
   feat_lvl?: number | undefined;

@@ -1,41 +1,79 @@
 'use client';
 
+import { useEffect, useState } from 'react';
 import { ChipSelect } from '@/components/patterns/filters';
-import { CODEX_SOURCES, codexSourcesOrCore, type CodexSourceId } from '@/lib/codex/sources';
-
-const DEFAULT_HINT = 'An item can belong to more than one source. At least one is required.';
-
-const SOURCE_OPTIONS = CODEX_SOURCES.map((source) => ({
-  value: source.id,
-  label: source.label,
-}));
+import { Input } from '@/components/ui';
+import { collapseCodexSourceName, codexSourcesOrCore } from '@/lib/codex/sources';
+import { listCodexSourceCatalog } from './source-catalog-action';
 
 export function AdminCodexSourceField({
   value,
   onChange,
-  hint = DEFAULT_HINT,
 }: {
   value: readonly string[];
-  onChange: (next: CodexSourceId[]) => void;
-  hint?: string;
+  onChange: (next: string[]) => void;
 }) {
-  const selected = codexSourcesOrCore(value);
+  const [catalog, setCatalog] = useState<string[]>([]);
+  const [draft, setDraft] = useState('');
+
+  useEffect(() => {
+    let cancelled = false;
+    listCodexSourceCatalog()
+      .then((entries) => {
+        if (!cancelled) setCatalog(entries.map((entry) => entry.name));
+      })
+      .catch(() => {
+        if (!cancelled) setCatalog([]);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  const selected = codexSourcesOrCore(value, catalog);
+  const options = catalog.map((name) => ({ value: name, label: name }));
+
+  function commit(raw: string) {
+    const collapsed = collapseCodexSourceName(raw);
+    if (!collapsed) return;
+    onChange(codexSourcesOrCore([...selected, collapsed], catalog));
+    setDraft('');
+  }
 
   return (
     <div className="min-w-0">
       <ChipSelect
         label="Sources"
         placeholder="Add a source"
-        options={SOURCE_OPTIONS}
+        options={options}
         selectedValues={[...selected]}
-        onSelect={(id) => onChange(codexSourcesOrCore([...selected, id]))}
+        onSelect={(name) => onChange(codexSourcesOrCore([...selected, name], catalog))}
         onRemove={
           selected.length > 1
-            ? (id) => onChange(selected.filter((source) => source !== id))
+            ? (name) =>
+                onChange(
+                  codexSourcesOrCore(
+                    selected.filter((source) => source !== name),
+                    catalog,
+                  ),
+                )
             : undefined
         }
       />
-      <p className="mt-1 text-xs text-text-muted">{hint}</p>
+      <div className="mt-2">
+        <Input
+          value={draft}
+          onChange={(e) => setDraft(e.target.value)}
+          onKeyDown={(e) => {
+            if (e.key !== 'Enter') return;
+            e.preventDefault();
+            e.stopPropagation();
+            commit(draft);
+          }}
+          placeholder="Add a source"
+          aria-label="Add a source"
+        />
+      </div>
     </div>
   );
 }

@@ -65,7 +65,7 @@ These are recorded in `supabase_migrations.schema_migrations` on RealmsRPG-Test.
 | `official_catalog_listing` | 20260914 (MCP) | [official-catalog-listing.sql](official-catalog-listing.sql) |
 | `codex_entry_source` | 20260928 (MCP) | [codex-entry-source.sql](codex-entry-source.sql) |
 
-Not applied: [codex-entry-sources.sql](codex-entry-sources.sql) adds `sources text[]` (default `{core}`) on those codex tables. Owner applies it. Rollback is in the file. It does not change the singular `source` column.
+Applied on production outside this table: [codex-entry-sources.sql](codex-entry-sources.sql) added `sources text[] NOT NULL DEFAULT '{core}'`, the `*_sources_check` constraints, and the `*_sources_gin` indexes. Do not re-run it. Not applied: [codex-entry-sources-open.sql](codex-entry-sources-open.sql) drops those checks, rewrites exact id arrays to display names, and copies a non-Core singular `source` onto rows still exactly `{Core}`. That file is a production data write and needs Kadin's approval plus a backup. It does not change the singular `source` column. Rollback is in the file.
 
 ---
 
