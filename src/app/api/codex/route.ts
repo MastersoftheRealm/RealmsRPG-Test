@@ -23,7 +23,7 @@ import {
   mapCodexSkill,
   mapCodexSpecies,
   mapCodexTrait,
-  mapSource,
+  mapCodexSources,
   toNum,
   toStrArray,
 } from '@/lib/codex/row-map';
@@ -300,7 +300,7 @@ async function fetchCodexFromClient(
       name: r.name ?? '',
       type: toArchetypeCategory(r.type),
       description: r.description ?? '',
-      source: mapSource(r.source),
+      sources: mapCodexSources(r.sources, r.source),
       archetype_ability: (r.archetype_ability as string | undefined) ?? undefined,
       secondary_ability: (r.secondary_ability as string | undefined) ?? undefined,
       power_prof_start: toNum(r.power_prof_start),

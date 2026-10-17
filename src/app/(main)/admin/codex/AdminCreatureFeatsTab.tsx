@@ -8,7 +8,7 @@ import {
 } from '@/components/patterns';
 import { useCreatureFeats, type CreatureFeat } from '@/hooks';
 import { useSort } from '@/hooks/use-sort';
-import { collectCodexSources, codexSourceForSave } from './admin-codex-source';
+import { codexSourcesOrCore } from '@/lib/codex/sources';
 import { COPY_NAME_SUFFIX } from './admin-codex-copy-suffix';
 import { useAdminCodexEntity } from './use-admin-codex-entity';
 import { AdminCodexRowActions, ADMIN_CODEX_ROW_ACTIONS_WIDTH } from './admin-codex-row-actions';
@@ -68,7 +68,7 @@ export function AdminCreatureFeatsTab() {
         feat_lvl: toOptNum(f.feat_lvl),
         lvl_req: toOptNum(f.lvl_req),
         mechanic: f.mechanic === true,
-        source: f.source || '',
+        sources: codexSourcesOrCore(f.sources),
       }),
     );
 
@@ -81,7 +81,7 @@ export function AdminCreatureFeatsTab() {
         feat_lvl: toOptNum(f.feat_lvl),
         lvl_req: toOptNum(f.lvl_req),
         mechanic: f.mechanic === true,
-        source: f.source || '',
+        sources: codexSourcesOrCore(f.sources),
       }),
     );
 
@@ -95,7 +95,7 @@ export function AdminCreatureFeatsTab() {
         feat_lvl: form.feat_lvl ?? undefined,
         lvl_req: form.lvl_req ?? undefined,
         mechanic: form.mechanic,
-        source: codexSourceForSave(form.source),
+        sources: codexSourcesOrCore(form.sources),
       },
       expectedUpdatedAt: editing?.updated_at,
     });
@@ -169,7 +169,6 @@ export function AdminCreatureFeatsTab() {
         editingId={editing?.id ?? null}
         form={form}
         setForm={setForm}
-        sourceOptions={collectCodexSources(creatureFeats)}
         saving={saving}
         onDelete={editing ? () => askDelete(editing) : undefined}
         onSave={handleSave}

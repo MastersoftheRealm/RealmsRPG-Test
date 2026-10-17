@@ -12,6 +12,7 @@ import {
   type Level1ArmorStep,
 } from '@/lib/game/archetype-path';
 import { validateLevel1Skills } from '@/lib/game/path-validation';
+import type { CodexSourceId } from '@/lib/codex/sources';
 import { LAYER1_GOVERNANCE } from '@/lib/constants/creator-layer-governance';
 import type { AbilityName } from '@/types/abilities';
 import type { CodexSkill, CodexArchetype } from '@/types/codex';
@@ -54,7 +55,7 @@ export type AdminArchetypeFormState = {
   name: string;
   type: 'power' | 'powered-martial' | 'martial';
   description: string;
-  source: string;
+  sources: CodexSourceId[];
   archetypeAbility: string;
   secondaryAbility: string;
   powerProfStart: number;

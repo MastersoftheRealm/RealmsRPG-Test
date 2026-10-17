@@ -20,7 +20,6 @@ import {
 } from '@/hooks/use-codex';
 import { useOfficialLibrary } from '@/hooks/use-official-library';
 import { useQueryClient } from '@tanstack/react-query';
-import { collectCodexSources } from './admin-codex-source';
 import { type ArchetypeItem, type CodexFeatLike } from './admin-archetype-path-form';
 import { useAdminArchetypeSelectionOptions } from './use-admin-archetype-selection-options';
 import {
@@ -82,8 +81,6 @@ export function useAdminArchetypeWorkspace() {
       (a.name || '').toLowerCase().includes(search.toLowerCase()) ||
       (a.description || '').toLowerCase().includes(search.toLowerCase()),
   );
-
-  const sourceOptions = useMemo(() => collectCodexSources(archetypes), [archetypes]);
 
   const selection = useAdminArchetypeSelectionOptions({
     codexFeats: codexFeats as CodexFeatLike[],
@@ -182,7 +179,6 @@ export function useAdminArchetypeWorkspace() {
     saving,
     copySourceName,
     form,
-    sourceOptions,
     setForm,
     filtered,
     featById,

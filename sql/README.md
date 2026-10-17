@@ -65,6 +65,8 @@ These are recorded in `supabase_migrations.schema_migrations` on RealmsRPG-Test.
 | `official_catalog_listing` | 20260914 (MCP) | [official-catalog-listing.sql](official-catalog-listing.sql) |
 | `codex_entry_source` | 20260928 (MCP) | [codex-entry-source.sql](codex-entry-source.sql) |
 
+Not applied: [codex-entry-sources.sql](codex-entry-sources.sql) adds `sources text[]` (default `{core}`) on those codex tables. Owner applies it. Rollback is in the file. It does not change the singular `source` column.
+
 ---
 
 ## Applied ad-hoc (live DB, not in schema_migrations)

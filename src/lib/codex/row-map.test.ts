@@ -49,13 +49,20 @@ describe('mapCodexFeat', () => {
     expect(feat.lvl_req).toBeUndefined();
     expect(feat.uses_per_rec).toBeUndefined();
     expect(feat.char_feat).toBe(true);
-    expect(feat.source).toBeUndefined();
+    expect(feat.sources).toEqual(['core']);
     expect(feat.state_feat).toBe(false);
   });
 
-  it('trims a rules source and drops blanks', () => {
-    expect(mapCodexFeat({ id: '1', name: 'A', source: ' Core Rules ' }).source).toBe('Core Rules');
-    expect(mapCodexSkill({ id: '1', name: 'S', source: '   ' }).source).toBeUndefined();
+  it('maps rules sources from the shared list and the legacy column', () => {
+    expect(mapCodexFeat({ id: '1', name: 'A', sources: ['crafting', 'core'] }).sources).toEqual([
+      'core',
+      'crafting',
+    ]);
+    expect(mapCodexFeat({ id: '1', name: 'A', source: ' Core Rules ' }).sources).toEqual(['core']);
+    expect(mapCodexSkill({ id: '1', name: 'S', source: '   ' }).sources).toEqual(['core']);
+    expect(mapCodexSkill({ id: '1', name: 'S', source: 'Harvesting Expansion' }).sources).toEqual([
+      'harvesting',
+    ]);
   });
 
   it('keeps a hard lvl_req of 0 distinct from missing', () => {
@@ -105,7 +112,7 @@ describe('mapCodexSpecies', () => {
     expect(species.image_url).toBe('https://img/h.png');
     expect(species.speed).toBe(6);
     expect(species.catalog_listing).toBe('listed');
-    expect(species.source).toBeUndefined();
+    expect(species.sources).toEqual(['core']);
   });
 });
 

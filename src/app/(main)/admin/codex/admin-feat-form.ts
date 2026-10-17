@@ -4,14 +4,18 @@
 
 import type { Feat } from '@/hooks';
 import { normalizeFeatAbilities } from '@/lib/codex/feat-ability';
-import { codexSourceForSave } from './admin-codex-source';
+import {
+  codexSourcesOrCore,
+  DEFAULT_CODEX_SOURCES,
+  type CodexSourceId,
+} from '@/lib/codex/sources';
 
 export type FeatFormState = {
   name: string;
   description: string;
   req_desc: string;
   category: string;
-  source: string;
+  sources: CodexSourceId[];
   ability: string[];
   ability_req: string[];
   abil_req_val: number[];
@@ -38,7 +42,7 @@ export const EMPTY_FEAT_FORM: FeatFormState = {
   description: '',
   req_desc: '',
   category: '',
-  source: '',
+  sources: [...DEFAULT_CODEX_SOURCES],
   ability: [],
   ability_req: [],
   abil_req_val: [],
@@ -74,7 +78,7 @@ export function featToFormState(feat: Feat): FeatFormState {
     description: feat.description || '',
     req_desc: String(ext.req_desc || ''),
     category: feat.category || '',
-    source: feat.source || '',
+    sources: codexSourcesOrCore(feat.sources),
     ability: abilityArr,
     ability_req: feat.ability_req || [],
     abil_req_val: feat.abil_req_val || [],
@@ -125,7 +129,7 @@ export function featFormToSavePayload(form: FeatFormState): Record<string, unkno
     description: form.description.trim(),
     req_desc: form.req_desc.trim() || undefined,
     category: form.category.trim() || undefined,
-    source: codexSourceForSave(form.source),
+    sources: codexSourcesOrCore(form.sources),
     ability: form.ability.length > 0 ? form.ability : undefined,
     ability_req: form.ability_req,
     abil_req_val: form.abil_req_val,

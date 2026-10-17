@@ -2,6 +2,7 @@
  * Admin Archetypes — modal open/close helpers (TASK-617)
  */
 
+import { DEFAULT_CODEX_SOURCES, codexSourcesOrCore } from '@/lib/codex/sources';
 import type { CodexSkill } from '@/types/codex';
 import { coerceJsonRecord } from '@/lib/game/archetype-path';
 import { COPY_NAME_SUFFIX } from './admin-codex-copy-suffix';
@@ -22,7 +23,7 @@ export const EMPTY_ARCHETYPE_FORM: AdminArchetypeFormState = {
   name: '',
   type: 'power',
   description: '',
-  source: '',
+  sources: [...DEFAULT_CODEX_SOURCES],
   archetypeAbility: '',
   secondaryAbility: '',
   powerProfStart: 0,
@@ -74,7 +75,7 @@ export function buildArchetypeFormFromItem(
     name: a.name || '',
     type: (a.type || 'power') as 'power' | 'powered-martial' | 'martial',
     description: a.description || '',
-    source: a.source || '',
+    sources: codexSourcesOrCore(a.sources),
     archetypeAbility: a.archetype_ability || '',
     secondaryAbility: a.secondary_ability || '',
     powerProfStart: a.power_prof_start ?? 0,

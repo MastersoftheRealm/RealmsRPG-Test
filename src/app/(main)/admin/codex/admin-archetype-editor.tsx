@@ -18,7 +18,6 @@ export function AdminArchetypeEditor({
   form,
   setForm,
   copySourceName,
-  sourceOptions,
   isSelectionDataLoading,
   showToast,
   optionsByField,
@@ -52,7 +51,6 @@ export function AdminArchetypeEditor({
         form={form}
         setForm={setForm}
         copySourceName={copySourceName}
-        sourceOptions={sourceOptions}
       />
       <div className="space-y-3 rounded-lg border border-border-light p-4">
         <div>

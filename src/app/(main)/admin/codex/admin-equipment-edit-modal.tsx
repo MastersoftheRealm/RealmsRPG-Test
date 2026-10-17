@@ -1,6 +1,7 @@
 'use client';
 
 import type { Dispatch, SetStateAction } from 'react';
+import { DEFAULT_CODEX_SOURCES, type CodexSourceId } from '@/lib/codex/sources';
 import { RealmsImageField } from '@/components/patterns';
 import { Modal, Input, Textarea } from '@/components/ui';
 import { AdminCodexCopySourceBanner } from './admin-codex-copy-source-banner';
@@ -17,7 +18,7 @@ export type EquipmentFormState = {
   category: string;
   currency: number;
   rarity: string;
-  source: string;
+  sources: CodexSourceId[];
   imageId: string | null;
   imageUrl: string | null;
 };
@@ -28,7 +29,7 @@ export const EMPTY_EQUIPMENT_FORM: EquipmentFormState = {
   category: '',
   currency: 0,
   rarity: 'Common',
-  source: '',
+  sources: [...DEFAULT_CODEX_SOURCES],
   imageId: null,
   imageUrl: null,
 };
@@ -44,7 +45,6 @@ type AdminEquipmentEditModalProps = {
   categoryIsNew: boolean;
   setCategoryIsNew: Dispatch<SetStateAction<boolean>>;
   categories: string[];
-  sourceOptions: string[];
   saving: boolean;
   onDelete?: (() => void) | undefined;
   onSave: () => void;
@@ -61,7 +61,6 @@ export function AdminEquipmentEditModal({
   categoryIsNew,
   setCategoryIsNew,
   categories,
-  sourceOptions,
   saving,
   onDelete,
   onSave,
@@ -106,9 +105,8 @@ export function AdminEquipmentEditModal({
           />
         </div>
         <AdminCodexSourceField
-          value={form.source}
-          options={sourceOptions}
-          onChange={(source) => setForm((f) => ({ ...f, source }))}
+          value={form.sources}
+          onChange={(sources) => setForm((f) => ({ ...f, sources }))}
         />
         <RealmsImageField
           categories="equipment"

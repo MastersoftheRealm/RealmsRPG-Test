@@ -11,7 +11,6 @@ import { SelectFilter } from '@/components/patterns/filters';
 import { useItemProperties, type ItemProperty } from '@/hooks';
 import { useSort } from '@/hooks/use-sort';
 import { formatListCellLabel } from '@/lib/utils';
-import { collectCodexSources } from './admin-codex-source';
 import { COPY_NAME_SUFFIX } from './admin-codex-copy-suffix';
 import {
   EMPTY_PROPERTY_FORM,
@@ -284,7 +283,6 @@ export function AdminPropertiesTab() {
         editingId={editing?.id ?? null}
         form={form}
         setForm={setForm}
-        sourceOptions={collectCodexSources(properties)}
         optionSlotCount={optionSlotCount}
         setOptionSlotCount={setOptionSlotCount}
         clearOption={clearOption}

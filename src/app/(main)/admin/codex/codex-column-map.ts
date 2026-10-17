@@ -6,6 +6,7 @@
  */
 
 import type { CodexCollection } from '@/lib/codex/collections';
+import { codexSourcesOrCore } from '@/lib/codex/sources';
 
 function snakeToCamel(s: string): string {
   // Handle common codex column patterns like op_1_desc -> op1Desc
@@ -75,8 +76,12 @@ function parseJsonColumn(camel: string, raw: string): unknown {
   }
 }
 
+/** Postgres text[] columns. Other arrays are still comma-separated TEXT. */
+const POSTGRES_TEXT_ARRAY_FIELDS = new Set(['sources']);
+
 /** Serialize value for columnar TEXT columns: arrays become comma-separated */
 function toColumnValue(camel: string, val: unknown): unknown {
+  if (POSTGRES_TEXT_ARRAY_FIELDS.has(camel)) return codexSourcesOrCore(val);
   if (val == null) return null;
   if (JSON_CAMEL_FIELDS.has(camel)) {
     if (val === '') return null;
@@ -113,7 +118,7 @@ export const COLUMNAR_FIELDS: Record<CodexCollection, string[]> = {
     'charFeat',
     'stateFeat',
     'baseFeatId',
-    'source',
+    'sources',
   ],
   codex_skills: [
     'name',
@@ -126,7 +131,7 @@ export const COLUMNAR_FIELDS: Record<CodexCollection, string[]> = {
     'dsCalc',
     'craftFailureDesc',
     'craftSuccessDesc',
-    'source',
+    'sources',
   ],
   codex_species: [
     'name',
@@ -148,7 +153,7 @@ export const COLUMNAR_FIELDS: Record<CodexCollection, string[]> = {
     'catalogListing',
     'imageId',
     'imageUrl',
-    'source',
+    'sources',
   ],
   codex_traits: [
     'name',
@@ -158,7 +163,7 @@ export const COLUMNAR_FIELDS: Record<CodexCollection, string[]> = {
     'flaw',
     'characteristic',
     'optionTraitIds',
-    'source',
+    'sources',
   ],
   codex_parts: [
     'name',
@@ -180,7 +185,7 @@ export const COLUMNAR_FIELDS: Record<CodexCollection, string[]> = {
     'percentage',
     'duration',
     'defense',
-    'source',
+    'sources',
   ],
   codex_properties: [
     'name',
@@ -194,7 +199,7 @@ export const COLUMNAR_FIELDS: Record<CodexCollection, string[]> = {
     'op1C',
     'type',
     'mechanic',
-    'source',
+    'sources',
   ],
   codex_equipment: [
     'name',
@@ -204,7 +209,7 @@ export const COLUMNAR_FIELDS: Record<CodexCollection, string[]> = {
     'rarity',
     'imageId',
     'imageUrl',
-    'source',
+    'sources',
   ],
   codex_archetypes: [
     'name',
@@ -232,7 +237,7 @@ export const COLUMNAR_FIELDS: Record<CodexCollection, string[]> = {
     'level1GuidanceGroups',
     'level1RecommendedAbilities',
     'level1Loadouts',
-    'source',
+    'sources',
   ],
   codex_creature_feats: [
     'name',
@@ -241,7 +246,7 @@ export const COLUMNAR_FIELDS: Record<CodexCollection, string[]> = {
     'featLvl',
     'lvlReq',
     'mechanic',
-    'source',
+    'sources',
   ],
   core_rules: [],
 };

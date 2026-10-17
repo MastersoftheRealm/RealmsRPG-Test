@@ -35,7 +35,7 @@ import {
   type SelectionOption,
 } from './admin-archetype-path-form';
 import { saveArchetypeWithPath } from './actions';
-import { codexSourceForSave } from './admin-codex-source';
+import { codexSourcesOrCore } from '@/lib/codex/sources';
 import { getUnknownSelectionsForLevel } from './admin-archetype-workspace-unknown-selections';
 
 type OptionsByField = Partial<
@@ -245,7 +245,7 @@ export async function saveAdminArchetype({
     name: form.name.trim(),
     type: form.type,
     description: form.description.trim() || undefined,
-    source: codexSourceForSave(form.source),
+    sources: codexSourcesOrCore(form.sources),
     archetype_ability: form.archetypeAbility || undefined,
     secondary_ability: form.secondaryAbility || undefined,
     power_prof_start: form.powerProfStart,
