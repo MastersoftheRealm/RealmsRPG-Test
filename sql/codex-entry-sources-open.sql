@@ -1,10 +1,6 @@
 -- Open codex sources (display names on sources text[]).
--- NOT APPLIED. Do not run this against any database from an agent.
---
--- Applying this file is a production data write. It needs Kadin's approval
--- and a backup first. The function below does not change rows. Run it, then
--- run the dry-run SELECT by itself and read the counts. Run the DO block
--- only after that approval.
+-- Applied on production 2026-10-17. Do not run this against any database from an agent.
+-- A second run does not UPDATE rows. It still sets the column default and comment.
 --
 -- sql/codex-entry-sources.sql is already applied. Do not run it again.
 -- Re-running that file puts the closed *_sources_check constraints back

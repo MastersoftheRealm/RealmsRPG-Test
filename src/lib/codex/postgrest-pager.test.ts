@@ -21,6 +21,14 @@ describe('fetchAllPostgrestPages', () => {
     expect(fetchPage.mock.calls[1]).toEqual([3, 5]);
   });
 
+  it('stops when the first page is short', async () => {
+    const fetchPage = vi.fn(async () => ({ data: [1], error: null }));
+    const rows = await fetchAllPostgrestPages(fetchPage, 3);
+    expect(rows).toEqual([1]);
+    expect(fetchPage).toHaveBeenCalledTimes(1);
+    expect(fetchPage.mock.calls[0]).toEqual([0, 2]);
+  });
+
   it('throws when a page returns an error', async () => {
     const fetchPage = vi.fn(async () => ({
       data: null,
