@@ -36,7 +36,6 @@ import {
   filterRowsByCodexRulesSources,
   readRowRulesSources,
 } from '@/lib/codex/list-rules-source-filter';
-import type { CodexSourceId } from '@/lib/codex/sources';
 import type { ArmamentCharacterContext } from '@/lib/library/armament-character-context';
 import {
   libraryRowPathIds,
@@ -301,7 +300,7 @@ export function filterOfficialItemRows<
   filters?: ArmamentFilterState,
   characterContext?: ArmamentCharacterContext | null,
   pathRecommendedIds?: ReadonlySet<string> | null,
-  rulesSources?: readonly CodexSourceId[],
+  rulesSources?: readonly string[],
 ): T[] {
   let result = rows;
   if (pathRecommendedIds) {

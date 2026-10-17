@@ -10,7 +10,6 @@ import { useState, useMemo } from 'react';
 import { formatListCellLabel } from '@/lib/utils';
 import { SelectFilter, CodexRulesSourceFilter } from '@/components/patterns/filters';
 import { rowMatchesCodexRulesSourceFilter } from '@/lib/codex/list-rules-source-filter';
-import type { CodexSourceId } from '@/lib/codex/sources';
 import {
   CodexBrowseListShell,
   ErrorDisplay as ErrorState,
@@ -134,7 +133,7 @@ interface PartFilters {
   categoryFilter: string;
   typeFilter: 'all' | 'power' | 'technique';
   mechanicMode: 'all' | 'only' | 'hide';
-  rulesSources: CodexSourceId[];
+  rulesSources: string[];
 }
 
 export function CodexPartsTab({
@@ -249,20 +248,7 @@ export function CodexPartsTab({
 
           <CodexRulesSourceFilter
             selectedValues={filters.rulesSources}
-            onSelect={(id) =>
-              setFilters((f) => ({
-                ...f,
-                rulesSources: f.rulesSources.includes(id)
-                  ? f.rulesSources
-                  : [...f.rulesSources, id],
-              }))
-            }
-            onRemove={(id) =>
-              setFilters((f) => ({
-                ...f,
-                rulesSources: f.rulesSources.filter((s) => s !== id),
-              }))
-            }
+            onChange={(next) => setFilters((f) => ({ ...f, rulesSources: next }))}
           />
         </div>
       }

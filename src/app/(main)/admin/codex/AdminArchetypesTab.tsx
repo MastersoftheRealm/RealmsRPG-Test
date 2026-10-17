@@ -7,6 +7,7 @@
 
 'use client';
 
+import { CodexRulesSourceFilter } from '@/components/patterns/filters';
 import { SectionHeader, ErrorDisplay as ErrorState, GridListRow } from '@/components/patterns';
 import { Modal, SearchInput, LoadingState, EmptyState } from '@/components/ui';
 import { AdminArchetypeEditor } from './admin-archetype-editor';
@@ -27,6 +28,8 @@ export function AdminArchetypesTab() {
     refetch,
     search,
     setSearch,
+    rulesSources,
+    setRulesSources,
     modalOpen,
     editing,
     saving,
@@ -84,8 +87,11 @@ export function AdminArchetypesTab() {
   return (
     <div>
       <SectionHeader title="Archetypes" onAdd={openAdd} size="md" />
-      <div className="mt-2 mb-4">
+      <div className="mt-2 mb-4 space-y-4">
         <SearchInput value={search} onChange={setSearch} placeholder="Search archetypes..." />
+        <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
+          <CodexRulesSourceFilter selectedValues={rulesSources} onChange={setRulesSources} />
+        </div>
       </div>
 
       {isLoading ? (

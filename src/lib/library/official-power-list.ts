@@ -40,7 +40,6 @@ import {
   filterRowsByCodexRulesSources,
   readRowRulesSources,
 } from '@/lib/codex/list-rules-source-filter';
-import type { CodexSourceId } from '@/lib/codex/sources';
 import {
   libraryRowPathIds,
   rowMatchesPathRecommendedIds,
@@ -215,7 +214,7 @@ export function filterOfficialPowerRows<
   advanced?: PowerTechniqueFilterState,
   character?: PowerTechniqueCharacterContext | null,
   pathRecommendedIds?: ReadonlySet<string> | null,
-  rulesSources?: readonly CodexSourceId[],
+  rulesSources?: readonly string[],
 ): T[] {
   let result = rows;
   if (pathRecommendedIds) {

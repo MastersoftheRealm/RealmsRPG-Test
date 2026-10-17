@@ -12,7 +12,6 @@ import { formatListCellLabel } from '@/lib/utils';
 import { speciesCreatorEditHref } from '../species-creator/species-creator-bootstrap';
 import { ChipSelect, CodexRulesSourceFilter } from '@/components/patterns/filters';
 import { rowMatchesCodexRulesSourceFilter } from '@/lib/codex/list-rules-source-filter';
-import type { CodexSourceId } from '@/lib/codex/sources';
 import {
   CodexBrowseListShell,
   ErrorDisplay as ErrorState,
@@ -47,7 +46,7 @@ interface SpeciesFilters {
   search: string;
   types: string[];
   sizes: string[];
-  rulesSources: CodexSourceId[];
+  rulesSources: string[];
 }
 
 function SpeciesCard({
@@ -379,18 +378,7 @@ export function CodexSpeciesTab({
 
       <CodexRulesSourceFilter
         selectedValues={filters.rulesSources}
-        onSelect={(id) =>
-          setFilters((f) => ({
-            ...f,
-            rulesSources: f.rulesSources.includes(id) ? f.rulesSources : [...f.rulesSources, id],
-          }))
-        }
-        onRemove={(id) =>
-          setFilters((f) => ({
-            ...f,
-            rulesSources: f.rulesSources.filter((s) => s !== id),
-          }))
-        }
+        onChange={(next) => setFilters((f) => ({ ...f, rulesSources: next }))}
       />
     </div>
   );

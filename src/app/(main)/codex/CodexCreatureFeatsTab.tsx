@@ -14,8 +14,10 @@ import {
   ErrorDisplay as ErrorState,
   GridListRow,
 } from '@/components/patterns';
-import { rowMatchesCodexRulesSourceFilter } from '@/lib/codex/list-rules-source-filter';
-import type { CodexSourceId } from '@/lib/codex/sources';
+import {
+  countActiveCodexRulesSourceFilters,
+  rowMatchesCodexRulesSourceFilter,
+} from '@/lib/codex/list-rules-source-filter';
 import { formatCreatureLevel } from '@/lib/game';
 import { useCreatureFeats, type CreatureFeat } from '@/hooks';
 import { useSort } from '@/hooks/use-sort';
@@ -42,7 +44,7 @@ export function CodexCreatureFeatsTab({
     refetch,
   } = useCreatureFeats({ enabled: loadPublicCodex });
   const [search, setSearch] = useState('');
-  const [rulesSources, setRulesSources] = useState<CodexSourceId[]>([]);
+  const [rulesSources, setRulesSources] = useState<string[]>([]);
   const { sortState, handleSort, sortItems } = useSort('name');
 
   const filtered = useMemo(
@@ -75,13 +77,10 @@ export function CodexCreatureFeatsTab({
       onSearchChange={setSearch}
       searchPlaceholder="Search creature feats..."
       searchAriaLabel="Search creature feats"
+      filterActiveCount={countActiveCodexRulesSourceFilters(rulesSources)}
       filters={
         <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
-          <CodexRulesSourceFilter
-            selectedValues={rulesSources}
-            onSelect={(id) => setRulesSources((prev) => (prev.includes(id) ? prev : [...prev, id]))}
-            onRemove={(id) => setRulesSources((prev) => prev.filter((s) => s !== id))}
-          />
+          <CodexRulesSourceFilter selectedValues={rulesSources} onChange={setRulesSources} />
         </div>
       }
       headerColumns={CREATURE_FEAT_COLUMNS}

@@ -22,7 +22,6 @@ import { FilterInput } from './filter-native-select';
 import { FILTER_CONTROL_ROW_CLASS, FILTER_LABEL_ROW_CLASS } from './filter-utils';
 import { ArchetypePathFilter, type ArchetypePathFilterProps } from './archetype-path-filter';
 import { CodexRulesSourceFilter } from './codex-rules-source-filter';
-import type { CodexSourceId } from '@/lib/codex/sources';
 import { cn } from '@/lib/utils';
 
 const ARMAMENT_CHARACTER_FILTER_HELP =
@@ -68,8 +67,8 @@ export interface ArmamentFiltersProps {
     | Pick<ArchetypePathFilterProps, 'options' | 'selectedPathIds' | 'onChange'>
     | null
     | undefined;
-  rulesSources?: CodexSourceId[] | undefined;
-  onRulesSourcesChange?: ((next: CodexSourceId[]) => void) | undefined;
+  rulesSources?: string[] | undefined;
+  onRulesSourcesChange?: ((next: string[]) => void) | undefined;
 }
 
 export function ArmamentFilters({
@@ -198,15 +197,7 @@ export function ArmamentFilters({
         <div className="grid grid-cols-1 items-start gap-4 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
           {children}
           {onRulesSourcesChange ? (
-            <CodexRulesSourceFilter
-              selectedValues={rulesSources}
-              onSelect={(id) => {
-                if (!rulesSources.includes(id)) {
-                  onRulesSourcesChange([...rulesSources, id]);
-                }
-              }}
-              onRemove={(id) => onRulesSourcesChange(rulesSources.filter((s) => s !== id))}
-            />
+            <CodexRulesSourceFilter selectedValues={rulesSources} onChange={onRulesSourcesChange} />
           ) : null}
           <div className="filter-group min-w-0">
             <div className={FILTER_LABEL_ROW_CLASS}>
@@ -263,12 +254,7 @@ export function ArmamentFilters({
             <div className="grid grid-cols-1 items-start gap-4 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
               <CodexRulesSourceFilter
                 selectedValues={rulesSources}
-                onSelect={(id) => {
-                  if (!rulesSources.includes(id)) {
-                    onRulesSourcesChange([...rulesSources, id]);
-                  }
-                }}
-                onRemove={(id) => onRulesSourcesChange(rulesSources.filter((s) => s !== id))}
+                onChange={onRulesSourcesChange}
               />
             </div>
           ) : null}

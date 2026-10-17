@@ -33,7 +33,6 @@ import {
   type PowerTechniqueFilterState,
 } from '@/lib/library/power-technique-filters';
 import { countActiveCodexRulesSourceFilters } from '@/lib/codex/list-rules-source-filter';
-import type { CodexSourceId } from '@/lib/codex/sources';
 import type { PowerTechniqueCharacterContext } from '@/lib/library/power-technique-character-context';
 import {
   useUserTechniques,
@@ -95,7 +94,7 @@ export function LibraryTechniquesTab({ onDelete, mode = 'standard' }: LibraryTec
     null,
   );
   const [characterFilterId, setCharacterFilterId] = useState('');
-  const [rulesSources, setRulesSources] = useState<CodexSourceId[]>([]);
+  const [rulesSources, setRulesSources] = useState<string[]>([]);
   const addToCharacter = useAddToCharacterFromLibrary('technique', characterFilterId);
   const { sortState, handleSort, sortItems } = useSort('name');
 

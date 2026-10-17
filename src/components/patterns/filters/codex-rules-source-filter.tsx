@@ -1,31 +1,33 @@
 'use client';
 
 import { ChipSelect } from './chip-select';
-import { CODEX_RULES_SOURCE_FILTER_OPTIONS } from '@/lib/codex/list-rules-source-filter';
-import type { CodexSourceId } from '@/lib/codex/sources';
+import { useCodexSourceCatalogOptions } from '@/hooks/use-codex-source-catalog';
+import { CODEX_SOURCE_PICKER_LABEL, CODEX_SOURCE_PICKER_PLACEHOLDER } from '@/lib/codex/sources';
 
 export interface CodexRulesSourceFilterProps {
-  selectedValues: CodexSourceId[];
-  onSelect: (id: CodexSourceId) => void;
-  onRemove: (id: CodexSourceId) => void;
+  selectedValues: string[];
+  onChange: (next: string[]) => void;
   className?: string | undefined;
 }
 
-/** Multi-select rules-source filter (Core + expansions). Empty selection = All. */
+/** Multi-select rules-source filter from the codex catalog. Empty selection = All. */
 export function CodexRulesSourceFilter({
   selectedValues,
-  onSelect,
-  onRemove,
+  onChange,
   className,
 }: CodexRulesSourceFilterProps) {
+  const options = useCodexSourceCatalogOptions();
+
   return (
     <ChipSelect
-      label="Sources"
-      placeholder="Add source"
-      options={CODEX_RULES_SOURCE_FILTER_OPTIONS}
+      label={CODEX_SOURCE_PICKER_LABEL}
+      placeholder={CODEX_SOURCE_PICKER_PLACEHOLDER}
+      options={options}
       selectedValues={[...selectedValues]}
-      onSelect={(value) => onSelect(value as CodexSourceId)}
-      onRemove={(value) => onRemove(value as CodexSourceId)}
+      onSelect={(name) => {
+        if (!selectedValues.includes(name)) onChange([...selectedValues, name]);
+      }}
+      onRemove={(name) => onChange(selectedValues.filter((value) => value !== name))}
       className={className}
     />
   );

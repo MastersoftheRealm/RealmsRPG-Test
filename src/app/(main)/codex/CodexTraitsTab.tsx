@@ -14,8 +14,10 @@ import {
   ErrorDisplay as ErrorState,
   GridListRow,
 } from '@/components/patterns';
-import { rowMatchesCodexRulesSourceFilter } from '@/lib/codex/list-rules-source-filter';
-import type { CodexSourceId } from '@/lib/codex/sources';
+import {
+  countActiveCodexRulesSourceFilters,
+  rowMatchesCodexRulesSourceFilter,
+} from '@/lib/codex/list-rules-source-filter';
 import { useTraits, type Trait } from '@/hooks';
 import { useSort } from '@/hooks/use-sort';
 import { CodexMyCodexEmpty } from './CodexMyCodexEmpty';
@@ -36,7 +38,7 @@ export function CodexTraitsTab({
   const loadPublicCodex = codexMode === 'public';
   const { data: traits, isLoading, error, refetch } = useTraits({ enabled: loadPublicCodex });
   const [search, setSearch] = useState('');
-  const [rulesSources, setRulesSources] = useState<CodexSourceId[]>([]);
+  const [rulesSources, setRulesSources] = useState<string[]>([]);
   const { sortState, handleSort, sortItems } = useSort('name');
 
   const filtered = useMemo(
@@ -70,13 +72,10 @@ export function CodexTraitsTab({
       onSearchChange={setSearch}
       searchPlaceholder="Search traits..."
       searchAriaLabel="Search traits"
+      filterActiveCount={countActiveCodexRulesSourceFilters(rulesSources)}
       filters={
         <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
-          <CodexRulesSourceFilter
-            selectedValues={rulesSources}
-            onSelect={(id) => setRulesSources((prev) => (prev.includes(id) ? prev : [...prev, id]))}
-            onRemove={(id) => setRulesSources((prev) => prev.filter((s) => s !== id))}
-          />
+          <CodexRulesSourceFilter selectedValues={rulesSources} onChange={setRulesSources} />
         </div>
       }
       headerColumns={TRAIT_COLUMNS}

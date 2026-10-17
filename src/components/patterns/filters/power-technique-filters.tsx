@@ -31,7 +31,6 @@ import {
 } from '@/lib/library/character-filter-persistence';
 import { FILTER_CONTROL_ROW_CLASS, FILTER_LABEL_ROW_CLASS } from './filter-utils';
 import { CodexRulesSourceFilter } from './codex-rules-source-filter';
-import type { CodexSourceId } from '@/lib/codex/sources';
 import { cn } from '@/lib/utils';
 
 const INNATE_THRESHOLD_HELP =
@@ -64,8 +63,8 @@ export interface PowerTechniqueFiltersProps {
     | null
     | undefined;
   /** Rules sources (Core / expansions). Omit on modals that should not scope by expansion. */
-  rulesSources?: CodexSourceId[] | undefined;
-  onRulesSourcesChange?: ((next: CodexSourceId[]) => void) | undefined;
+  rulesSources?: string[] | undefined;
+  onRulesSourcesChange?: ((next: string[]) => void) | undefined;
 }
 
 export function PowerTechniqueFilters({
@@ -324,15 +323,7 @@ export function PowerTechniqueFilters({
         ) : null}
 
         {onRulesSourcesChange ? (
-          <CodexRulesSourceFilter
-            selectedValues={rulesSources}
-            onSelect={(id) => {
-              if (!rulesSources.includes(id)) {
-                onRulesSourcesChange([...rulesSources, id]);
-              }
-            }}
-            onRemove={(id) => onRulesSourcesChange(rulesSources.filter((s) => s !== id))}
-          />
+          <CodexRulesSourceFilter selectedValues={rulesSources} onChange={onRulesSourcesChange} />
         ) : null}
 
         {pathFilter ? (

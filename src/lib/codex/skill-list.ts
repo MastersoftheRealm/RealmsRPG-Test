@@ -8,7 +8,6 @@ import { normalizeId } from '@/lib/utils';
 import { formatAbilityLabel } from '@/lib/constants/ability-effect-blurbs';
 import { rowMatchesPathRecommendedIds } from '@/lib/game/path-recommendation-index';
 import { rowMatchesCodexRulesSourceFilter } from '@/lib/codex/list-rules-source-filter';
-import type { CodexSourceId } from '@/lib/codex/sources';
 
 /** Data columns only — admin action chrome uses CodexBrowseListShell `rowChrome`. */
 export const SKILL_GRID_COLUMNS = '1.5fr 1fr 1fr';
@@ -46,7 +45,7 @@ export interface SkillListFilters {
   baseSkill: string;
   subSkillMode: 'all' | 'only' | 'hide' | '';
   /** Rules sources (Core / expansions). Empty = All. */
-  rulesSources: CodexSourceId[];
+  rulesSources: string[];
   /** Codex character filter: known vs not known. Ignored without characterKnownIds. */
   knownMode?: SkillKnownMode | undefined;
   /** Codex character filter: keep sub-skills whose base the character has. */

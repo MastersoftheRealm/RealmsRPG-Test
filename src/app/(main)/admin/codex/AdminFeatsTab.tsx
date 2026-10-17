@@ -338,20 +338,7 @@ export function AdminFeatsTab() {
             />
             <CodexRulesSourceFilter
               selectedValues={filters.rulesSources}
-              onSelect={(id) =>
-                setFilters((f) => ({
-                  ...f,
-                  rulesSources: f.rulesSources.includes(id)
-                    ? f.rulesSources
-                    : [...f.rulesSources, id],
-                }))
-              }
-              onRemove={(id) =>
-                setFilters((f) => ({
-                  ...f,
-                  rulesSources: f.rulesSources.filter((s) => s !== id),
-                }))
-              }
+              onChange={(next) => setFilters((f) => ({ ...f, rulesSources: next }))}
             />
             <ArchetypePathFilter
               options={pathIndex.options}

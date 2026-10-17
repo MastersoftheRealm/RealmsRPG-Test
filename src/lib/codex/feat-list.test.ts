@@ -214,14 +214,14 @@ describe('filterFeats — rules sources', () => {
     tagMode: 'all',
     featTypeMode: 'all',
     stateFeatMode: 'all',
-    rulesSources: ['crafting'],
+    rulesSources: ['Crafting'],
   };
 
   it('matches any selected source on the feat', () => {
     const feats = [
-      minimalFeat({ id: '1', sources: ['core'] }),
-      minimalFeat({ id: '2', sources: ['crafting', 'core'] }),
-      minimalFeat({ id: '3', sources: ['harvesting'] }),
+      minimalFeat({ id: '1', sources: ['Core'] }),
+      minimalFeat({ id: '2', sources: ['Crafting', 'Core'] }),
+      minimalFeat({ id: '3', sources: ['Harvesting'] }),
     ];
     expect(filterFeats(feats, filters).map((f) => f.id)).toEqual(['2']);
   });

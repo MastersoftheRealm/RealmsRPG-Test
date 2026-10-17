@@ -9,7 +9,6 @@ import {
 import { useToast } from '@/components/ui';
 import { SelectFilter, CodexRulesSourceFilter } from '@/components/patterns/filters';
 import { rowMatchesCodexRulesSourceFilter } from '@/lib/codex/list-rules-source-filter';
-import type { CodexSourceId } from '@/lib/codex/sources';
 import { useParts, type Part } from '@/hooks';
 import { ABILITIES_AND_DEFENSES } from '@/lib/game/constants';
 import { formatPercentageOptionEnergy } from '@/lib/calculators/power-energy-breakdown';
@@ -45,7 +44,7 @@ interface PartFilters {
   categoryFilter: string;
   typeFilter: 'all' | 'power' | 'technique';
   mechanicMode: '' | 'only' | 'hide';
-  rulesSources: CodexSourceId[];
+  rulesSources: string[];
 }
 
 export function AdminPartsTab() {
@@ -258,20 +257,7 @@ export function AdminPartsTab() {
             />
             <CodexRulesSourceFilter
               selectedValues={filters.rulesSources}
-              onSelect={(id) =>
-                setFilters((f) => ({
-                  ...f,
-                  rulesSources: f.rulesSources.includes(id)
-                    ? f.rulesSources
-                    : [...f.rulesSources, id],
-                }))
-              }
-              onRemove={(id) =>
-                setFilters((f) => ({
-                  ...f,
-                  rulesSources: f.rulesSources.filter((s) => s !== id),
-                }))
-              }
+              onChange={(next) => setFilters((f) => ({ ...f, rulesSources: next }))}
             />
           </div>
         }

@@ -18,7 +18,6 @@ import { formatListCellLabel } from '@/lib/utils';
 import { rowMatchesPathRecommendedIds } from '@/lib/game/path-recommendation-index';
 import { glrListChrome } from '@/lib/glr';
 import { rowMatchesCodexRulesSourceFilter } from '@/lib/codex/list-rules-source-filter';
-import type { CodexSourceId } from '@/lib/codex/sources';
 
 const gearBrowseChrome = glrListChrome({ entityType: 'gear', mode: 'browse' });
 
@@ -35,7 +34,7 @@ export interface CodexEquipmentListFilters {
   categoryFilter: string;
   rarityFilter: string;
   /** Rules sources (Core / expansions). Empty = All. */
-  rulesSources: CodexSourceId[];
+  rulesSources: string[];
 }
 
 export function equipmentCurrency(item: {

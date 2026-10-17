@@ -9,7 +9,6 @@
 import { useState, useMemo } from 'react';
 import { SelectFilter, CodexRulesSourceFilter } from '@/components/patterns/filters';
 import { rowMatchesCodexRulesSourceFilter } from '@/lib/codex/list-rules-source-filter';
-import type { CodexSourceId } from '@/lib/codex/sources';
 import {
   CodexBrowseListShell,
   ErrorDisplay as ErrorState,
@@ -32,7 +31,7 @@ const PROPERTY_COLUMNS = [
 interface PropertyFilters {
   search: string;
   typeFilter: string;
-  rulesSources: CodexSourceId[];
+  rulesSources: string[];
 }
 
 function PropertyCard({ property }: { property: ItemProperty }) {
@@ -169,20 +168,7 @@ export function CodexPropertiesTab({
           />
           <CodexRulesSourceFilter
             selectedValues={filters.rulesSources}
-            onSelect={(id) =>
-              setFilters((f) => ({
-                ...f,
-                rulesSources: f.rulesSources.includes(id)
-                  ? f.rulesSources
-                  : [...f.rulesSources, id],
-              }))
-            }
-            onRemove={(id) =>
-              setFilters((f) => ({
-                ...f,
-                rulesSources: f.rulesSources.filter((s) => s !== id),
-              }))
-            }
+            onChange={(next) => setFilters((f) => ({ ...f, rulesSources: next }))}
           />
         </div>
       }

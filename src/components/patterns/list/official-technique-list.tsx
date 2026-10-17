@@ -29,7 +29,6 @@ import {
   type PowerTechniqueFilterState,
 } from '@/lib/library/power-technique-filters';
 import { countActiveCodexRulesSourceFilters } from '@/lib/codex/list-rules-source-filter';
-import type { CodexSourceId } from '@/lib/codex/sources';
 import type { PowerTechniqueCharacterContext } from '@/lib/library/power-technique-character-context';
 import { empoweredTechniquePartsSection } from '@/lib/library/empowered-technique-display';
 import { resolveListRowThumbnail } from '@/lib/list-row-image';
@@ -96,7 +95,7 @@ export function OfficialTechniqueList({
     null,
   );
   const [characterFilterId, setCharacterFilterId] = useState('');
-  const [rulesSources, setRulesSources] = useState<CodexSourceId[]>([]);
+  const [rulesSources, setRulesSources] = useState<string[]>([]);
   const addToCharacter = useAddToCharacterFromLibrary('technique', characterFilterId);
   const { selectedPathIds, setSelectedPathIds, pathIndex, pathRecommendedIds, pathFilterActive } =
     usePathListFilter({

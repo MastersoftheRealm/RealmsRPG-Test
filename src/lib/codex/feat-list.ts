@@ -20,7 +20,6 @@ import { glrSurfaceDetailSections } from '@/lib/chip/list-row-metadata';
 import type { Character } from '@/types';
 import { glrColumnKeyFor, glrListChrome } from '@/lib/glr';
 import { rowMatchesCodexRulesSourceFilter } from '@/lib/codex/list-rules-source-filter';
-import type { CodexSourceId } from '@/lib/codex/sources';
 
 const codexFeatChrome = glrListChrome({ entityType: 'feat', mode: 'browse' });
 const creatorFeatChrome = glrListChrome({
@@ -173,7 +172,7 @@ export interface FeatListFilters {
   featTypeMode: 'all' | 'archetype' | 'character' | '';
   stateFeatMode: 'all' | 'only' | 'hide' | '';
   /** Rules sources (Core / expansions). Empty = All. */
-  rulesSources: CodexSourceId[];
+  rulesSources: string[];
 }
 
 export interface FilterFeatsOptions {

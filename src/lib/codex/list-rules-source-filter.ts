@@ -1,13 +1,8 @@
 /**
- * Rules-source (Core / expansion) list filter helpers for Codex and Library GLR lists.
+ * Rules-source list filter helpers for Codex and Library GLR lists.
  */
 
-import { CODEX_SOURCES, itemMatchesSources, type CodexSourceId } from '@/lib/codex/sources';
-
-export const CODEX_RULES_SOURCE_FILTER_OPTIONS = CODEX_SOURCES.map((source) => ({
-  value: source.id,
-  label: source.label,
-}));
+import { itemMatchesSources } from '@/lib/codex/sources';
 
 /** Active when at least one expansion chip is selected (empty = All). */
 export function countActiveCodexRulesSourceFilters(selected: readonly string[]): number {
@@ -36,4 +31,4 @@ export function readRowRulesSources(row: unknown): unknown {
   return record.sources ?? record.raw?.sources;
 }
 
-export type CodexRulesSourceFilterSelection = CodexSourceId[];
+export type CodexRulesSourceFilterSelection = string[];

@@ -35,7 +35,6 @@ import {
   type ArmamentFilterState,
 } from '@/lib/library/armament-filters';
 import { countActiveCodexRulesSourceFilters } from '@/lib/codex/list-rules-source-filter';
-import type { CodexSourceId } from '@/lib/codex/sources';
 import type { ArmamentCharacterContext } from '@/lib/library/armament-character-context';
 import {
   LibrarySyncRowAction,
@@ -91,7 +90,7 @@ export function LibraryItemsTab({ armamentKind, onDelete }: LibraryItemsTabProps
     useState<ArmamentFilterState>(EMPTY_ARMAMENT_FILTERS);
   const [characterContext, setCharacterContext] = useState<ArmamentCharacterContext | null>(null);
   const [characterFilterId, setCharacterFilterId] = useState('');
-  const [rulesSources, setRulesSources] = useState<CodexSourceId[]>([]);
+  const [rulesSources, setRulesSources] = useState<string[]>([]);
   const addToCharacter = useAddToCharacterFromLibrary(armamentKind, characterFilterId);
   const { sortState, handleSort, sortItems } = useSort('name');
   const { selectedPathIds, setSelectedPathIds, pathIndex, pathRecommendedIds, pathFilterActive } =

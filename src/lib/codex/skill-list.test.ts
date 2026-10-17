@@ -157,12 +157,12 @@ describe('filterSkills character scope', () => {
 describe('filterSkills — rules sources', () => {
   it('filters by any selected expansion', () => {
     const skills = [
-      { id: '1', name: 'A', ability: 'strength', base_skill_id: undefined, sources: ['core'] },
-      { id: '2', name: 'B', ability: 'strength', base_skill_id: undefined, sources: ['crafting'] },
+      { id: '1', name: 'A', ability: 'strength', base_skill_id: undefined, sources: ['Core'] },
+      { id: '2', name: 'B', ability: 'strength', base_skill_id: undefined, sources: ['Crafting'] },
     ] as typeof allSkills;
     const filtered = filterSkills(
       skills,
-      { ...emptyFilters, rulesSources: ['crafting'] },
+      { ...emptyFilters, rulesSources: ['Crafting'] },
       buildSkillIdToName(skills),
     );
     expect(filtered.map((s) => s.id)).toEqual(['2']);

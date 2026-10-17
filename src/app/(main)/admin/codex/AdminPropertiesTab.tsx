@@ -9,7 +9,6 @@ import {
 import { useToast } from '@/components/ui';
 import { SelectFilter, CodexRulesSourceFilter } from '@/components/patterns/filters';
 import { rowMatchesCodexRulesSourceFilter } from '@/lib/codex/list-rules-source-filter';
-import type { CodexSourceId } from '@/lib/codex/sources';
 import { useItemProperties, type ItemProperty } from '@/hooks';
 import { useSort } from '@/hooks/use-sort';
 import { formatListCellLabel } from '@/lib/utils';
@@ -31,7 +30,7 @@ const PROPERTY_GRID_COLUMNS = '1.5fr 1fr 0.8fr 0.8fr 0.8fr';
 interface PropertyFilters {
   search: string;
   typeFilter: string;
-  rulesSources: CodexSourceId[];
+  rulesSources: string[];
 }
 
 export function AdminPropertiesTab() {
@@ -196,20 +195,7 @@ export function AdminPropertiesTab() {
             />
             <CodexRulesSourceFilter
               selectedValues={filters.rulesSources}
-              onSelect={(id) =>
-                setFilters((f) => ({
-                  ...f,
-                  rulesSources: f.rulesSources.includes(id)
-                    ? f.rulesSources
-                    : [...f.rulesSources, id],
-                }))
-              }
-              onRemove={(id) =>
-                setFilters((f) => ({
-                  ...f,
-                  rulesSources: f.rulesSources.filter((s) => s !== id),
-                }))
-              }
+              onChange={(next) => setFilters((f) => ({ ...f, rulesSources: next }))}
             />
           </div>
         }

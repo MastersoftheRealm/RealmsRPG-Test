@@ -35,7 +35,6 @@ import {
   type PowerTechniqueFilterState,
 } from '@/lib/library/power-technique-filters';
 import { countActiveCodexRulesSourceFilters } from '@/lib/codex/list-rules-source-filter';
-import type { CodexSourceId } from '@/lib/codex/sources';
 import type { PowerTechniqueCharacterContext } from '@/lib/library/power-technique-character-context';
 import { listInnateThresholdFilterOptions } from '@/lib/game/innate-eligibility';
 import {
@@ -73,7 +72,7 @@ export function LibraryPowersTab({ onDelete }: LibraryPowersTabProps) {
     null,
   );
   const [characterFilterId, setCharacterFilterId] = useState('');
-  const [rulesSources, setRulesSources] = useState<CodexSourceId[]>([]);
+  const [rulesSources, setRulesSources] = useState<string[]>([]);
   const addToCharacter = useAddToCharacterFromLibrary('power', characterFilterId);
   const { sortState, handleSort, sortItems } = useSort('name');
   const { selectedPathIds, setSelectedPathIds, pathIndex, pathRecommendedIds, pathFilterActive } =

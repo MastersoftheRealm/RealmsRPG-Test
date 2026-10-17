@@ -3,7 +3,6 @@
 import { useState, useMemo } from 'react';
 import { ChipSelect, CodexRulesSourceFilter } from '@/components/patterns/filters';
 import { rowMatchesCodexRulesSourceFilter } from '@/lib/codex/list-rules-source-filter';
-import type { CodexSourceId } from '@/lib/codex/sources';
 import {
   CodexBrowseListShell,
   ErrorDisplay as ErrorState,
@@ -68,7 +67,7 @@ export function AdminSpeciesTab() {
   const [form, setForm] = useState<SpeciesFormState>(EMPTY_SPECIES_FORM);
   const [typeFilters, setTypeFilters] = useState<string[]>([]);
   const [sizeFilters, setSizeFilters] = useState<string[]>([]);
-  const [rulesSources, setRulesSources] = useState<CodexSourceId[]>([]);
+  const [rulesSources, setRulesSources] = useState<string[]>([]);
 
   const skillsArr = skills as Skill[];
   const traitsArr = traits as Trait[];
@@ -171,13 +170,7 @@ export function AdminSpeciesTab() {
                 onSelect={(v) => setSizeFilters((prev) => [...prev, v])}
                 onRemove={(v) => setSizeFilters((prev) => prev.filter((s) => s !== v))}
               />
-              <CodexRulesSourceFilter
-                selectedValues={rulesSources}
-                onSelect={(id) =>
-                  setRulesSources((prev) => (prev.includes(id) ? prev : [...prev, id]))
-                }
-                onRemove={(id) => setRulesSources((prev) => prev.filter((s) => s !== id))}
-              />
+              <CodexRulesSourceFilter selectedValues={rulesSources} onChange={setRulesSources} />
             </div>
           </div>
         }

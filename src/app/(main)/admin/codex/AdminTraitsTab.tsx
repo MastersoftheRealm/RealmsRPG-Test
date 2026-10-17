@@ -7,8 +7,10 @@ import {
   ErrorDisplay as ErrorState,
   GridListRow,
 } from '@/components/patterns';
-import { rowMatchesCodexRulesSourceFilter } from '@/lib/codex/list-rules-source-filter';
-import type { CodexSourceId } from '@/lib/codex/sources';
+import {
+  countActiveCodexRulesSourceFilters,
+  rowMatchesCodexRulesSourceFilter,
+} from '@/lib/codex/list-rules-source-filter';
 import { traitsByIdMap, choiceTraitOptionIdsToChipData } from '@/lib/choice-trait';
 import { useToast } from '@/components/ui';
 import { useTraits, type Trait } from '@/hooks';
@@ -55,7 +57,7 @@ export function AdminTraitsTab() {
     entityLabel: 'trait',
   });
   const [search, setSearch] = useState('');
-  const [rulesSources, setRulesSources] = useState<CodexSourceId[]>([]);
+  const [rulesSources, setRulesSources] = useState<string[]>([]);
   const { sortState, handleSort, sortItems } = useSort('name');
   const [form, setForm] = useState<TraitFormState>(EMPTY_TRAIT_FORM);
   const [createTraitOpen, setCreateTraitOpen] = useState(false);
@@ -154,15 +156,10 @@ export function AdminTraitsTab() {
         search={search}
         onSearchChange={setSearch}
         searchPlaceholder="Search traits..."
+        filterActiveCount={countActiveCodexRulesSourceFilters(rulesSources)}
         filters={
           <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
-            <CodexRulesSourceFilter
-              selectedValues={rulesSources}
-              onSelect={(id) =>
-                setRulesSources((prev) => (prev.includes(id) ? prev : [...prev, id]))
-              }
-              onRemove={(id) => setRulesSources((prev) => prev.filter((s) => s !== id))}
-            />
+            <CodexRulesSourceFilter selectedValues={rulesSources} onChange={setRulesSources} />
           </div>
         }
         headerColumns={ADMIN_TRAIT_COLUMNS}
