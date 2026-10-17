@@ -1,17 +1,18 @@
 /**
- * Whole-table codex reads for Admin > Sources (membership list by selected source).
+ * Pure helpers for the Admin > Sources list. The server read lives in
+ * `admin-source-rows.ts` so this module stays out of the client bundle's
+ * Supabase and Data Cache graph.
  */
 
 import type { CodexSourceTable } from '@/lib/codex/source-catalog';
-import { CODEX_SOURCE_TABLES, sourcesColumnMissing } from '@/lib/codex/source-catalog';
-import { fetchAllPostgrestPages } from '@/lib/codex/postgrest-pager';
 import {
   codexSourceKey,
   codexSourcesOrCore,
   itemMatchesSources,
   normalizeCodexSources,
 } from '@/lib/codex/sources';
-import { createPublicClient } from '@/lib/supabase/public-client';
+
+export type { CodexSourceTable };
 
 export const ADMIN_CODEX_SOURCE_SECTIONS: readonly {
   table: CodexSourceTable;
@@ -29,8 +30,6 @@ export const ADMIN_CODEX_SOURCE_SECTIONS: readonly {
   { table: 'codex_creature_feats', label: 'Creature Feats' },
 ];
 
-const ADMIN_SOURCE_ROW_SELECT = 'id, name, sources';
-
 export type AdminCodexSourceRow = {
   id: string | number;
   name: string | null;
@@ -38,34 +37,6 @@ export type AdminCodexSourceRow = {
 };
 
 export type AdminCodexSourceRowsByTable = Partial<Record<CodexSourceTable, AdminCodexSourceRow[]>>;
-
-export async function loadAdminCodexSourceRows(): Promise<AdminCodexSourceRowsByTable> {
-  const client = createPublicClient();
-  if (!client) throw new Error('Database client unavailable');
-
-  const rowsByTable: AdminCodexSourceRowsByTable = {};
-  const reads = await Promise.all(
-    CODEX_SOURCE_TABLES.map(async (table) => {
-      try {
-        const data = await fetchAllPostgrestPages<AdminCodexSourceRow>(async (from, to) =>
-          client.from(table).select(ADMIN_SOURCE_ROW_SELECT).range(from, to),
-        );
-        return { table, data, error: null as { code?: string; message?: string } | null };
-      } catch (error) {
-        return { table, data: null, error: error as { code?: string; message?: string } };
-      }
-    }),
-  );
-
-  for (const { table, data, error } of reads) {
-    if (error) {
-      if (sourcesColumnMissing(error)) continue;
-      throw error;
-    }
-    rowsByTable[table] = data ?? [];
-  }
-  return rowsByTable;
-}
 
 export function rowsMatchingSource(
   rows: readonly AdminCodexSourceRow[] | undefined,
@@ -92,8 +63,8 @@ export function catalogNameList(
   rowsByTable: AdminCodexSourceRowsByTable,
 ): string[] {
   const fromRows: string[] = [];
-  for (const table of CODEX_SOURCE_TABLES) {
-    for (const row of rowsByTable[table] ?? []) {
+  for (const section of ADMIN_CODEX_SOURCE_SECTIONS) {
+    for (const row of rowsByTable[section.table] ?? []) {
       fromRows.push(...normalizeCodexSources(row.sources));
     }
   }

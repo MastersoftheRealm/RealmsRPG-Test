@@ -85,7 +85,7 @@ async function loadCodexSourceCatalog(): Promise<CodexSourceCatalogEntry[]> {
     CODEX_SOURCE_TABLES.map(async (table) => {
       try {
         const data = await fetchAllPostgrestPages<SourceRow>(async (from, to) =>
-          client.from(table).select('sources').range(from, to),
+          client.from(table).select('id, sources').order('id', { ascending: true }).range(from, to),
         );
         return { table, data, error: null as { code?: string; message?: string } | null };
       } catch (error) {
@@ -106,7 +106,8 @@ async function loadCodexSourceCatalog(): Promise<CodexSourceCatalogEntry[]> {
 
 export function getCodexSourceCatalog(): Promise<CodexSourceCatalogEntry[]> {
   return readCachedPublicData(
-    ['codex-source-catalog'],
+    // `paged-by-id` drops a catalog cached before the range read, which could stop at 1000 rows.
+    ['codex-source-catalog', 'paged-by-id'],
     [CODEX_API_CACHE_TAG],
     CODEX_PUBLIC_ISR_SECONDS,
     loadCodexSourceCatalog,

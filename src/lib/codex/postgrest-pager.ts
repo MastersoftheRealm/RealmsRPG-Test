@@ -1,6 +1,7 @@
 /**
  * Range-based reads for whole-table PostgREST selects.
  * Keeps requesting while a page is full so the default 1000-row cap cannot truncate.
+ * Callers must order by a unique column. Offset pages skip or repeat rows without it.
  */
 
 export const POSTGREST_DEFAULT_PAGE_SIZE = 1000;

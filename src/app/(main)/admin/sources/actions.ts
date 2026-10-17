@@ -4,14 +4,14 @@ import { isAdmin } from '@/lib/admin';
 import { logApiError } from '@/lib/api-error';
 import {
   loadAdminCodexSourceRows,
-  type AdminCodexSourceRowsByTable,
-} from '@/lib/codex/admin-source-list';
+  type AdminCodexSourceRowsPayload,
+} from '@/lib/codex/admin-source-rows';
 import { getCodexSourceCatalog, type CodexSourceCatalogEntry } from '@/lib/codex/source-catalog';
 import { getSession } from '@/lib/supabase/session';
+import { ADMIN_SOURCES_LOAD_ERROR } from './admin-sources-copy';
 
 const AUTH_ERROR = 'Authentication required';
 const ADMIN_ERROR = 'Admin access required';
-export const ADMIN_SOURCES_LOAD_ERROR = 'Could not load sources.';
 
 async function requireAdmin(): Promise<string> {
   const { user } = await getSession();
@@ -33,7 +33,7 @@ export async function fetchAdminCodexSourceCatalog(): Promise<CodexSourceCatalog
   }
 }
 
-export async function fetchAdminCodexSourceRows(): Promise<AdminCodexSourceRowsByTable> {
+export async function fetchAdminCodexSourceRows(): Promise<AdminCodexSourceRowsPayload> {
   try {
     await requireAdmin();
     return await loadAdminCodexSourceRows();

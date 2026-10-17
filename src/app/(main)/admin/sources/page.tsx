@@ -1,10 +1,18 @@
 'use client';
 
-import { useMemo, useState } from 'react';
+import { useMemo, useState, type ReactNode } from 'react';
 import Link from 'next/link';
 import { useQuery } from '@tanstack/react-query';
 import { CodexBrowseListShell, ErrorDisplay, GridListRow } from '@/components/patterns';
-import { EmptyState, PageContainer, PageHeader, Select } from '@/components/ui';
+import {
+  Button,
+  EmptyState,
+  LoadingState,
+  PageContainer,
+  PageHeader,
+  Select,
+} from '@/components/ui';
+import { codexKeys } from '@/hooks/use-codex';
 import { useSort } from '@/hooks/use-sort';
 import {
   ADMIN_CODEX_SOURCE_SECTIONS,
@@ -13,7 +21,6 @@ import {
   rowsMatchingSource,
   type AdminCodexSourceRow,
 } from '@/lib/codex/admin-source-list';
-import type { CodexSourceCatalogEntry, CodexSourceTable } from '@/lib/codex/source-catalog';
 import { fetchAdminCodexSourceCatalog, fetchAdminCodexSourceRows } from './actions';
 import {
   ADMIN_SOURCES_BACK_LINK,
@@ -26,12 +33,22 @@ import {
   ADMIN_SOURCES_LOADING,
   ADMIN_SOURCES_PAGE_DESCRIPTION,
   ADMIN_SOURCES_PAGE_TITLE,
+  ADMIN_SOURCES_SEARCH_PLACEHOLDER,
   ADMIN_SOURCES_SELECT_LABEL,
   ADMIN_SOURCES_SELECT_PLACEHOLDER,
+  adminSourcesSectionSearchLabel,
 } from './admin-sources-copy';
 
-const CATALOG_QUERY_KEY = ['admin', 'sources', 'catalog'] as const;
-const ROWS_QUERY_KEY = ['admin', 'sources', 'rows'] as const;
+/** Same prefix as `useCodexSourceCatalog` so an admin save refreshes this page. */
+const CATALOG_QUERY_KEY = [...codexKeys.all, 'admin-sources', 'catalog'] as const;
+const ROWS_QUERY_KEY = [...codexKeys.all, 'admin-sources', 'rows'] as const;
+
+const QUERY_OPTIONS = {
+  staleTime: 5 * 60 * 1000,
+  gcTime: 30 * 60 * 1000,
+  retry: 2,
+  refetchOnWindowFocus: false,
+} as const;
 
 const LIST_GRID = '1.5fr 1fr';
 
@@ -44,18 +61,30 @@ function sectionTitle(label: string, count: number): string {
   return `${label} (${count})`;
 }
 
+function AdminSourcesFrame({ children }: { children: ReactNode }) {
+  return (
+    <PageContainer size="xl">
+      <div className="mb-4">
+        <Button variant="secondary" asChild>
+          <Link href="/admin">{ADMIN_SOURCES_BACK_LINK}</Link>
+        </Button>
+      </div>
+      <PageHeader title={ADMIN_SOURCES_PAGE_TITLE} description={ADMIN_SOURCES_PAGE_DESCRIPTION} />
+      {children}
+    </PageContainer>
+  );
+}
+
 function AdminSourceTypeSection({
   sectionLabel,
   rows,
   catalogNames,
   selectedSource,
-  isLoading,
 }: {
   sectionLabel: string;
   rows: AdminCodexSourceRow[];
   catalogNames: readonly string[];
   selectedSource: string;
-  isLoading: boolean;
 }) {
   const [search, setSearch] = useState('');
   const { sortState, handleSort } = useSort('name');
@@ -85,21 +114,19 @@ function AdminSourceTypeSection({
 
   return (
     <section className="min-w-0">
-      <h2 className="mb-3 text-lg font-semibold text-text-primary">{sectionLabel}</h2>
+      <h2 className="mb-3 min-w-0 text-lg font-semibold break-words text-text-primary">
+        {sectionLabel}
+      </h2>
       <CodexBrowseListShell
         search={search}
         onSearchChange={setSearch}
-        searchPlaceholder="Search names and sources…"
-        searchAriaLabel={`Search ${sectionLabel}`}
+        searchPlaceholder={ADMIN_SOURCES_SEARCH_PLACEHOLDER}
+        searchAriaLabel={adminSourcesSectionSearchLabel(sectionLabel)}
         headerColumns={HEADER_COLUMNS}
         gridColumns={LIST_GRID}
         sortState={sortState}
         onSort={handleSort}
-        isLoading={isLoading}
-        loadingMessage={ADMIN_SOURCES_LOADING}
-        isEmpty={!isLoading && filtered.length === 0}
-        emptyTitle={ADMIN_SOURCES_EMPTY_SOURCE_TITLE}
-        emptyMessage=""
+        isEmpty={filtered.length === 0}
       >
         {filtered.map((row) => (
           <GridListRow
@@ -110,6 +137,7 @@ function AdminSourceTypeSection({
             columns={[
               {
                 key: 'sources',
+                label: ADMIN_SOURCES_LIST_COLUMN_SOURCES,
                 value: otherSourcesLabel(row.sources, selectedSource, catalogNames),
               },
             ]}
@@ -126,22 +154,24 @@ export default function AdminSourcesPage() {
   const catalogQuery = useQuery({
     queryKey: CATALOG_QUERY_KEY,
     queryFn: () => fetchAdminCodexSourceCatalog(),
-    staleTime: 5 * 60 * 1000,
-    refetchOnWindowFocus: false,
+    ...QUERY_OPTIONS,
   });
 
+  // Rows stay off until the catalog read succeeds, so an auth or catalog failure
+  // does not also scan every codex table. Membership on the page comes from this
+  // live read; the cached catalog is the failure signal and the editor's chip list.
   const rowsQuery = useQuery({
     queryKey: ROWS_QUERY_KEY,
     queryFn: () => fetchAdminCodexSourceRows(),
-    staleTime: 5 * 60 * 1000,
-    refetchOnWindowFocus: false,
+    ...QUERY_OPTIONS,
     enabled: catalogQuery.isSuccess,
   });
 
-  const catalog = useMemo(() => catalogQuery.data ?? [], [catalogQuery.data]);
+  const catalog = useMemo(() => rowsQuery.data?.catalog ?? [], [rowsQuery.data]);
+  const rowsByTable = rowsQuery.data?.rowsByTable;
   const catalogNames = useMemo(
-    () => catalogNameList(catalog, rowsQuery.data ?? {}),
-    [catalog, rowsQuery.data],
+    () => catalogNameList(catalog, rowsByTable ?? {}),
+    [catalog, rowsByTable],
   );
 
   const selectedSource = useMemo(() => {
@@ -151,13 +181,8 @@ export default function AdminSourcesPage() {
     return catalog[0]?.name ?? '';
   }, [pickedSource, catalog]);
 
-  const selectedEntry = useMemo(
-    () => catalog.find((entry) => entry.name === selectedSource),
-    [catalog, selectedSource],
-  );
-
   const loadError = catalogQuery.error ?? rowsQuery.error;
-  const isLoading = catalogQuery.isPending || rowsQuery.isPending;
+  const ready = catalogQuery.isSuccess && rowsQuery.isSuccess;
 
   const retry = () => {
     void catalogQuery.refetch();
@@ -166,41 +191,31 @@ export default function AdminSourcesPage() {
 
   if (loadError) {
     return (
-      <PageContainer size="xl">
-        <div className="mb-4">
-          <Link
-            href="/admin"
-            className="text-sm text-text-secondary hover:text-text-primary focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary-outline-border"
-          >
-            {ADMIN_SOURCES_BACK_LINK}
-          </Link>
-        </div>
-        <PageHeader title={ADMIN_SOURCES_PAGE_TITLE} description={ADMIN_SOURCES_PAGE_DESCRIPTION} />
+      <AdminSourcesFrame>
         <ErrorDisplay
           message={loadError instanceof Error ? loadError.message : ADMIN_SOURCES_LOAD_ERROR}
           onRetry={retry}
         />
-      </PageContainer>
+      </AdminSourcesFrame>
     );
   }
 
-  if (!isLoading && catalog.length === 0) {
+  if (!ready) {
     return (
-      <PageContainer size="xl">
-        <div className="mb-4">
-          <Link
-            href="/admin"
-            className="text-sm text-text-secondary hover:text-text-primary focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary-outline-border"
-          >
-            {ADMIN_SOURCES_BACK_LINK}
-          </Link>
-        </div>
-        <PageHeader title={ADMIN_SOURCES_PAGE_TITLE} description={ADMIN_SOURCES_PAGE_DESCRIPTION} />
+      <AdminSourcesFrame>
+        <LoadingState message={ADMIN_SOURCES_LOADING} />
+      </AdminSourcesFrame>
+    );
+  }
+
+  if (catalog.length === 0) {
+    return (
+      <AdminSourcesFrame>
         <EmptyState
           title={ADMIN_SOURCES_EMPTY_CATALOG_TITLE}
           message={ADMIN_SOURCES_EMPTY_CATALOG_MESSAGE}
         />
-      </PageContainer>
+      </AdminSourcesFrame>
     );
   }
 
@@ -209,22 +224,13 @@ export default function AdminSourcesPage() {
     label: `${entry.name} (${entry.total})`,
   }));
 
-  const countForTable = (table: CodexSourceTable, entry: CodexSourceCatalogEntry | undefined) =>
-    entry?.counts[table] ?? 0;
+  const sections = ADMIN_CODEX_SOURCE_SECTIONS.map((section) => {
+    const tableRows = rowsMatchingSource(rowsByTable?.[section.table], selectedSource);
+    return { section, tableRows };
+  }).filter((entry) => entry.tableRows.length > 0);
 
   return (
-    <PageContainer size="xl">
-      <div className="mb-4">
-        <Link
-          href="/admin"
-          className="text-sm text-text-secondary hover:text-text-primary focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary-outline-border"
-        >
-          {ADMIN_SOURCES_BACK_LINK}
-        </Link>
-      </div>
-
-      <PageHeader title={ADMIN_SOURCES_PAGE_TITLE} description={ADMIN_SOURCES_PAGE_DESCRIPTION} />
-
+    <AdminSourcesFrame>
       <div className="mb-6 w-full min-w-0 sm:max-w-md">
         <Select
           label={ADMIN_SOURCES_SELECT_LABEL}
@@ -232,38 +238,24 @@ export default function AdminSourcesPage() {
           options={sourceOptions}
           value={selectedSource}
           onChange={(event) => setPickedSource(event.target.value)}
-          disabled={isLoading || sourceOptions.length === 0}
         />
       </div>
 
-      {selectedSource ? (
+      {sections.length > 0 ? (
         <div className="flex min-w-0 flex-col gap-10">
-          {ADMIN_CODEX_SOURCE_SECTIONS.map((section) => {
-            const tableRows = rowsMatchingSource(rowsQuery.data?.[section.table], selectedSource);
-            const headingCount = selectedEntry
-              ? countForTable(section.table, selectedEntry)
-              : tableRows.length;
-            if (!isLoading && headingCount === 0) return null;
-
-            return (
-              <AdminSourceTypeSection
-                key={section.table}
-                sectionLabel={sectionTitle(section.label, headingCount)}
-                rows={tableRows}
-                catalogNames={catalogNames}
-                selectedSource={selectedSource}
-                isLoading={isLoading}
-              />
-            );
-          })}
-          {!isLoading &&
-            ADMIN_CODEX_SOURCE_SECTIONS.every(
-              (section) =>
-                countForTable(section.table, selectedEntry) === 0 &&
-                rowsMatchingSource(rowsQuery.data?.[section.table], selectedSource).length === 0,
-            ) && <EmptyState title={ADMIN_SOURCES_EMPTY_SOURCE_TITLE} message="" />}
+          {sections.map(({ section, tableRows }) => (
+            <AdminSourceTypeSection
+              key={section.table}
+              sectionLabel={sectionTitle(section.label, tableRows.length)}
+              rows={tableRows}
+              catalogNames={catalogNames}
+              selectedSource={selectedSource}
+            />
+          ))}
         </div>
-      ) : null}
-    </PageContainer>
+      ) : (
+        <EmptyState title={ADMIN_SOURCES_EMPTY_SOURCE_TITLE} />
+      )}
+    </AdminSourcesFrame>
   );
 }
