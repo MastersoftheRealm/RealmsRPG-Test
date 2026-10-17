@@ -105,6 +105,65 @@ describe('GET /api/codex', () => {
     expect(lastSelectByTable.codex_skills).toBe(CODEX_SKILLS_PUBLIC_SELECT);
   });
 
+  it('loads skills from the legacy source column when sources is not migrated yet', async () => {
+    mockCreateClient.mockResolvedValue({
+      from: (table: string) => ({
+        select: async (columns: string) => {
+          queriedTables.push(table);
+          lastSelectByTable[table] = columns;
+          if (
+            table === 'codex_skills' &&
+            columns.split(',').some((part) => part.trim() === 'sources')
+          ) {
+            return {
+              data: null,
+              error: { code: '42703', message: 'column codex_skills.sources does not exist' },
+            };
+          }
+          const rows = ROWS[table] ?? [];
+          if (table === 'codex_skills') {
+            return {
+              data: rows.map((row) => ({ ...row, source: 'Crafting Expansion' })),
+              error: null,
+            };
+          }
+          return { data: rows, error: null };
+        },
+      }),
+    } as never);
+
+    const response = await GET(new Request('http://localhost/api/codex?collection=skills'));
+    expect(response.status).toBe(200);
+    const body = (await response.json()) as Partial<CodexPayload>;
+    expect(body.skills).toHaveLength(1);
+    expect(body.skills?.[0]?.name).toBe('Athletics');
+    expect(body.skills?.[0]?.sources).toEqual(['crafting']);
+    expect(queriedTables.filter((table) => table === 'codex_skills')).toHaveLength(2);
+  });
+
+  it('returns an empty skills list when the table itself is missing', async () => {
+    mockCreateClient.mockResolvedValue({
+      from: (table: string) => ({
+        select: async (columns: string) => {
+          queriedTables.push(table);
+          lastSelectByTable[table] = columns;
+          if (table === 'codex_skills') {
+            return {
+              data: null,
+              error: { code: '42P01', message: 'relation "public.codex_skills" does not exist' },
+            };
+          }
+          return { data: ROWS[table] ?? [], error: null };
+        },
+      }),
+    } as never);
+
+    const response = await GET(new Request('http://localhost/api/codex?collection=skills'));
+    expect(response.status).toBe(200);
+    const body = (await response.json()) as Partial<CodexPayload>;
+    expect(body.skills).toEqual([]);
+  });
+
   it('reads both archetype tables for the archetypes slice', async () => {
     const body = await getJson('http://localhost/api/codex?collection=archetypes');
 

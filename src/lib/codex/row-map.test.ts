@@ -63,6 +63,13 @@ describe('mapCodexFeat', () => {
     expect(mapCodexSkill({ id: '1', name: 'S', source: 'Harvesting Expansion' }).sources).toEqual([
       'harvesting',
     ]);
+    expect(
+      mapCodexSkill({ id: '1', name: 'S', sources: ['core'], source: 'Crafting Expansion' })
+        .sources,
+    ).toEqual(['core']);
+    expect(mapCodexSkill({ id: '1', name: 'S', source: 'Companions' }).sources).toEqual([
+      'companions',
+    ]);
   });
 
   it('keeps a hard lvl_req of 0 distinct from missing', () => {

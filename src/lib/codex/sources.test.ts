@@ -3,6 +3,11 @@ import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
 import { toColumnarPayload, toDbPayload } from '@/app/(main)/admin/codex/codex-column-map';
 import {
+  CODEX_PROPERTIES_PUBLIC_SELECT,
+  CODEX_SKILLS_PUBLIC_SELECT,
+  omitCodexSourcesColumn,
+} from '@/lib/codex/public-table-select';
+import {
   CODEX_SOURCE_IDS,
   CODEX_SOURCES,
   codexSourcesOrCore,
@@ -27,10 +32,15 @@ describe('codex sources', () => {
   it('normalizes ids, legacy labels, and duplicates into canonical order', () => {
     expect(normalizeCodexSources(['homebrew', 'core', 'core'])).toEqual(['core', 'homebrew']);
     expect(normalizeCodexSources(' Crafting Expansion ')).toEqual(['crafting']);
+    expect(normalizeCodexSources('Core Rules, Crafting Expansion')).toEqual(['core', 'crafting']);
     expect(normalizeCodexSources('unreleased/test')).toEqual(['unreleased']);
+    expect(normalizeCodexSources(['', 'NOPE', 'Downtime'])).toEqual(['downtime']);
     expect(normalizeCodexSources('not a source')).toEqual([]);
     expect(normalizeCodexSources(null)).toEqual([]);
+    expect(normalizeCodexSources([])).toEqual([]);
     expect(codexSourcesOrCore('')).toEqual(['core']);
+    expect(codexSourcesOrCore([])).toEqual(['core']);
+    expect(codexSourcesOrCore(undefined)).toEqual(['core']);
     expect(codexSourcesOrCore(['companions', 'nope', 'core'])).toEqual(['core', 'companions']);
   });
 
@@ -38,11 +48,16 @@ describe('codex sources', () => {
     expect(itemMatchesSources(['crafting'], [])).toBe(true);
     expect(itemMatchesSources(['crafting'], null)).toBe(true);
     expect(itemMatchesSources(['crafting'], ['all'])).toBe(true);
+    expect(itemMatchesSources(['crafting'], [' ALL '])).toBe(true);
     expect(itemMatchesSources(['core', 'crafting'], ['crafting'])).toBe(true);
     expect(itemMatchesSources(['core'], ['crafting', 'companions'])).toBe(false);
     expect(itemMatchesSources(['companions'], ['crafting', 'companions'])).toBe(true);
     expect(itemMatchesSources(undefined, ['core'])).toBe(true);
     expect(itemMatchesSources(undefined, ['unreleased'])).toBe(false);
+    expect(itemMatchesSources([], ['core'])).toBe(true);
+    expect(itemMatchesSources([], ['harvesting'])).toBe(false);
+    expect(itemMatchesSources(['core'], ['not-a-source'])).toBe(false);
+    expect(itemMatchesSources('Harvesting Expansion, Core', ['harvesting'])).toBe(true);
     expect(itemMatchesSources(['unreleased', 'core'], ['unreleased'])).toBe(true);
   });
 
@@ -56,6 +71,15 @@ describe('codex sources', () => {
       'core',
       'homebrew',
     ]);
+  });
+
+  it('drops only the sources column from the named public selects', () => {
+    expect(omitCodexSourcesColumn(CODEX_SKILLS_PUBLIC_SELECT)).not.toContain('sources');
+    expect(omitCodexSourcesColumn(CODEX_SKILLS_PUBLIC_SELECT)).toContain('source');
+    expect(omitCodexSourcesColumn(CODEX_PROPERTIES_PUBLIC_SELECT)).toBe(
+      'id, name, description, source, type, base_ip, base_tp, base_c, op_1_desc, op_1_ip, op_1_tp, op_1_c, mechanic, updated_at',
+    );
+    expect(omitCodexSourcesColumn('*')).toBe('*');
   });
 
   it('puts every source id in the migration check', () => {
