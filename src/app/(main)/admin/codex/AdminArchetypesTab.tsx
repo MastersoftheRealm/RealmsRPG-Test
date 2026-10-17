@@ -31,7 +31,6 @@ export function AdminArchetypesTab() {
     editing,
     saving,
     copySourceName,
-    sourceOptions,
     form,
     setForm,
     filtered,
@@ -147,7 +146,6 @@ export function AdminArchetypesTab() {
           form={form}
           setForm={setForm}
           copySourceName={copySourceName}
-          sourceOptions={sourceOptions}
           isSelectionDataLoading={isSelectionDataLoading}
           showToast={showToast}
           optionsByField={optionsByField}

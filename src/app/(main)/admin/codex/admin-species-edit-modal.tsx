@@ -45,7 +45,6 @@ export type AdminSpeciesEditModalProps = {
   setForm: React.Dispatch<React.SetStateAction<SpeciesFormState>>;
   skills: Skill[];
   traits: Trait[];
-  sourceOptions: string[];
   saving: boolean;
   onDelete?: (() => void) | undefined;
   onSave: () => void;
@@ -61,7 +60,6 @@ export function AdminSpeciesEditModal({
   setForm,
   skills,
   traits,
-  sourceOptions,
   saving,
   onDelete,
   onSave,
@@ -215,10 +213,8 @@ export function AdminSpeciesEditModal({
             </div>
             <div className="col-span-2 min-w-0">
               <AdminCodexSourceField
-                value={form.source}
-                options={sourceOptions}
-                onChange={(source) => setForm((f) => ({ ...f, source }))}
-                hint="Which rules source this species comes from, such as Core Rules. Starter species stays a separate checkbox."
+                value={form.sources}
+                onChange={(sources) => setForm((f) => ({ ...f, sources }))}
               />
             </div>
             <div>

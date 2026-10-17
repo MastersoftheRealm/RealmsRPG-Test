@@ -20,7 +20,6 @@ export type AdminPropertyEditModalProps = {
   editingId: string | null;
   form: PropertyFormState;
   setForm: Dispatch<SetStateAction<PropertyFormState>>;
-  sourceOptions: string[];
   optionSlotCount: number;
   setOptionSlotCount: Dispatch<SetStateAction<number>>;
   clearOption: () => void;
@@ -37,7 +36,6 @@ export function AdminPropertyEditModal({
   editingId,
   form,
   setForm,
-  sourceOptions,
   optionSlotCount,
   setOptionSlotCount,
   clearOption,
@@ -85,9 +83,8 @@ export function AdminPropertyEditModal({
           />
         </div>
         <AdminCodexSourceField
-          value={form.source}
-          options={sourceOptions}
-          onChange={(source) => setForm((f) => ({ ...f, source }))}
+          value={form.sources}
+          onChange={(sources) => setForm((f) => ({ ...f, sources }))}
         />
         <div className="grid grid-cols-2 gap-4">
           <div>

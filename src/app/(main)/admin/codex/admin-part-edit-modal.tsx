@@ -22,7 +22,6 @@ export type AdminPartEditModalProps = {
   form: PartFormState;
   setForm: Dispatch<SetStateAction<PartFormState>>;
   filterCategories: string[];
-  sourceOptions: string[];
   targetedDefenseOptions: string[];
   optionSlotCount: number;
   setOptionSlotCount: Dispatch<SetStateAction<number>>;
@@ -41,7 +40,6 @@ export function AdminPartEditModal({
   form,
   setForm,
   filterCategories,
-  sourceOptions,
   targetedDefenseOptions,
   optionSlotCount,
   setOptionSlotCount,
@@ -90,9 +88,8 @@ export function AdminPartEditModal({
           />
         </div>
         <AdminCodexSourceField
-          value={form.source}
-          options={sourceOptions}
-          onChange={(source) => setForm((f) => ({ ...f, source }))}
+          value={form.sources}
+          onChange={(sources) => setForm((f) => ({ ...f, sources }))}
         />
         <div className="grid grid-cols-2 gap-4">
           <div>

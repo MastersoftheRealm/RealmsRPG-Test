@@ -23,7 +23,7 @@ import {
   mapCodexSkill,
   mapCodexSpecies,
   mapCodexTrait,
-  mapSource,
+  mapCodexSources,
   toNum,
   toStrArray,
 } from '@/lib/codex/row-map';
@@ -35,7 +35,7 @@ import {
   type CodexPayloadKey,
 } from '@/types/codex';
 import { CODEX_DATA_TABLES, type CodexDataTable } from '@/lib/codex/codex-tables';
-import { CODEX_API_TABLE_SELECT } from '@/lib/codex/public-table-select';
+import { CODEX_API_TABLE_SELECT, omitCodexSourcesColumn } from '@/lib/codex/public-table-select';
 import { codexApiTableCacheTag, CODEX_API_CACHE_TAG } from '@/lib/codex/cache-tags';
 import { CODEX_PUBLIC_ISR_SECONDS, readCachedPublicData } from '@/lib/supabase/cached-public-read';
 import type { ArchetypeCategory } from '@/types/archetype';
@@ -85,12 +85,27 @@ function withRowVersion<T extends object>(
 type TableError = { message?: string | undefined; code?: string | undefined } | null;
 type TableResult = { data: Row[] | null; error: TableError };
 
-/** If table is missing (e.g. codex_* still in codex schema), treat as empty instead of 500. */
+/** If the table is missing (e.g. codex_* still in codex schema), treat as empty instead of 500. */
 function isCodexTableMissing(
   e: { message?: string | undefined; code?: string | undefined } | null,
 ): boolean {
   if (!e) return false;
+  // A missing column is not a missing table. "column sources does not exist" (42703)
+  // used to match the broad message check and wipe skills and properties.
+  if (e.code === '42703' || e.code === 'PGRST204') return false;
   return e.code === '42P01' || /does not exist|relation.*not found/i.test(e.message ?? '');
+}
+
+/** True when this select names `sources` and Postgres or PostgREST says that column is absent. */
+function isMissingSourcesColumn(error: TableError): boolean {
+  if (!error) return false;
+  const message = error.message ?? '';
+  if (!/\bsources\b/i.test(message)) return false;
+  return (
+    error.code === '42703' ||
+    error.code === 'PGRST204' ||
+    /could not find the 'sources' column/i.test(message)
+  );
 }
 
 function throwUnlessCodexTableMissing(error: TableError): void {
@@ -116,7 +131,14 @@ function selectTable(
     [CODEX_API_CACHE_TAG, tableTag],
     CODEX_PUBLIC_ISR_SECONDS,
     async () => {
-      const result = (await fromPublicTable(supabase, table).select(columns)) as TableResult;
+      let result = (await fromPublicTable(supabase, table).select(columns)) as TableResult;
+      // Skills and properties name `sources`. If that column is missing, retry once
+      // without it so mapCodexSources can still read the singular `source` label.
+      // A missing column must not cache as an empty catalog.
+      if (isMissingSourcesColumn(result.error) && columns.includes('sources')) {
+        const fallbackColumns = omitCodexSourcesColumn(columns);
+        result = (await fromPublicTable(supabase, table).select(fallbackColumns)) as TableResult;
+      }
       throwUnlessCodexTableMissing(result.error);
       return result;
     },
@@ -300,7 +322,7 @@ async function fetchCodexFromClient(
       name: r.name ?? '',
       type: toArchetypeCategory(r.type),
       description: r.description ?? '',
-      source: mapSource(r.source),
+      sources: mapCodexSources(r.sources, r.source),
       archetype_ability: (r.archetype_ability as string | undefined) ?? undefined,
       secondary_ability: (r.secondary_ability as string | undefined) ?? undefined,
       power_prof_start: toNum(r.power_prof_start),

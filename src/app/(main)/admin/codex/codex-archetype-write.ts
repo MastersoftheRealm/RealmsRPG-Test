@@ -4,6 +4,8 @@
  * columns the save path writes can never drift from the columns `/api/codex` reads.
  */
 
+import { codexSourcesForWrite } from '@/lib/codex/sources';
+
 export type ArchetypeLevelPayload = {
   level: number;
   feats?: string | undefined;
@@ -24,7 +26,7 @@ export type SaveArchetypeWithPathInput = {
   name: string;
   type: 'power' | 'martial' | 'powered-martial';
   description?: string | undefined;
-  source?: string | null | undefined;
+  sources?: readonly string[] | null | undefined;
   archetype_ability?: string | undefined;
   secondary_ability?: string | undefined;
   power_prof_start?: number | undefined;
@@ -62,7 +64,7 @@ export function buildArchetypeRow(
     name: payload.name,
     type: payload.type,
     description: payload.description ?? null,
-    source: payload.source ?? null,
+    sources: codexSourcesForWrite(payload.sources),
     archetype_ability: payload.archetype_ability ?? null,
     secondary_ability: payload.secondary_ability ?? null,
     power_prof_start: payload.power_prof_start ?? null,

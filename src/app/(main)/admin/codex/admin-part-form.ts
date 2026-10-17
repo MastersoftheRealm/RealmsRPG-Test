@@ -4,13 +4,16 @@
 
 import type { Part } from '@/hooks';
 import { normalizeTargetedDefenses } from '@/lib/game/targeted-defenses';
-import { codexSourceForSave } from './admin-codex-source';
+import {
+  codexSourcesOrCore,
+  DEFAULT_CODEX_SOURCES,
+} from '@/lib/codex/sources';
 
 export type PartFormState = {
   name: string;
   description: string;
   category: string;
-  source: string;
+  sources: string[];
   type: 'power' | 'technique';
   base_en: number | undefined;
   base_tp: number | undefined;
@@ -33,7 +36,7 @@ export const EMPTY_PART_FORM: PartFormState = {
   name: '',
   description: '',
   category: '',
-  source: '',
+  sources: [...DEFAULT_CODEX_SOURCES],
   type: 'power',
   base_en: undefined,
   base_tp: undefined,
@@ -117,7 +120,7 @@ export function partToFormState(p: Part & { defense?: string[] | undefined }): P
     name: p.name,
     description: p.description || '',
     category: p.category || '',
-    source: p.source || '',
+    sources: codexSourcesOrCore(p.sources),
     type: ((p.type || 'power').toLowerCase() === 'technique' ? 'technique' : 'power') as
       | 'power'
       | 'technique',
@@ -152,7 +155,7 @@ export function partFormToSavePayload(form: PartFormState): Record<string, unkno
     name: form.name.trim(),
     description: form.description.trim(),
     category: form.category.trim(),
-    source: codexSourceForSave(form.source),
+    sources: codexSourcesOrCore(form.sources),
     type: form.type,
     base_en: form.base_en ?? undefined,
     base_tp: form.base_tp ?? undefined,
@@ -178,7 +181,7 @@ export function savedPartFromPayload(id: string, data: Record<string, unknown>):
     name: String(data.name ?? ''),
     description: String(data.description ?? ''),
     category: String(data.category ?? ''),
-    source: codexSourceForSave(data.source) ?? undefined,
+    sources: codexSourcesOrCore(data.sources),
     type: (data.type === 'technique' ? 'technique' : 'power') as 'power' | 'technique',
     base_en: (data.base_en as number | undefined) ?? 0,
     base_tp: (data.base_tp as number | undefined) ?? 0,

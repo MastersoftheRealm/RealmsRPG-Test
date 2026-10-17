@@ -1,6 +1,7 @@
 'use client';
 
 import type { Dispatch, SetStateAction } from 'react';
+import { DEFAULT_CODEX_SOURCES } from '@/lib/codex/sources';
 import { ChipSelect } from '@/components/patterns/filters';
 import { Modal, Input, Textarea } from '@/components/ui';
 import { AdminCodexCopySourceBanner } from './admin-codex-copy-source-banner';
@@ -21,7 +22,7 @@ export type SkillFormState = {
   ds_calc: string;
   craft_success_desc: string;
   craft_failure_desc: string;
-  source: string;
+  sources: string[];
 };
 
 export const EMPTY_SKILL_FORM: SkillFormState = {
@@ -34,7 +35,7 @@ export const EMPTY_SKILL_FORM: SkillFormState = {
   ds_calc: '',
   craft_success_desc: '',
   craft_failure_desc: '',
-  source: '',
+  sources: [...DEFAULT_CODEX_SOURCES],
 };
 
 type AdminSkillEditModalProps = {
@@ -47,7 +48,6 @@ type AdminSkillEditModalProps = {
   setForm: Dispatch<SetStateAction<SkillFormState>>;
   abilityOptions: { value: string; label: string }[];
   baseSkillOptions: { id: string; name: string }[];
-  sourceOptions: string[];
   saving: boolean;
   onDelete?: (() => void) | undefined;
   onSave: () => void;
@@ -63,7 +63,6 @@ export function AdminSkillEditModal({
   setForm,
   abilityOptions,
   baseSkillOptions,
-  sourceOptions,
   saving,
   onDelete,
   onSave,
@@ -108,9 +107,8 @@ export function AdminSkillEditModal({
           />
         </div>
         <AdminCodexSourceField
-          value={form.source}
-          options={sourceOptions}
-          onChange={(source) => setForm((f) => ({ ...f, source }))}
+          value={form.sources}
+          onChange={(sources) => setForm((f) => ({ ...f, sources }))}
         />
         <div>
           <label className="mb-1 block text-sm font-medium text-text-secondary">

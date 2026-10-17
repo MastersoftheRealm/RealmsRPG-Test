@@ -8,14 +8,13 @@ import type { AdminArchetypeEditorProps } from './admin-archetype-editor-config'
 
 export type AdminArchetypeEditorMetaProps = Pick<
   AdminArchetypeEditorProps,
-  'form' | 'setForm' | 'copySourceName' | 'sourceOptions'
+  'form' | 'setForm' | 'copySourceName'
 >;
 
 export function AdminArchetypeEditorMeta({
   form,
   setForm,
   copySourceName,
-  sourceOptions,
 }: AdminArchetypeEditorMetaProps) {
   return (
     <>
@@ -148,9 +147,8 @@ export function AdminArchetypeEditorMeta({
         />
       </div>
       <AdminCodexSourceField
-        value={form.source}
-        options={sourceOptions}
-        onChange={(source) => setForm((f) => ({ ...f, source }))}
+        value={form.sources}
+        onChange={(sources) => setForm((f) => ({ ...f, sources }))}
       />
     </>
   );

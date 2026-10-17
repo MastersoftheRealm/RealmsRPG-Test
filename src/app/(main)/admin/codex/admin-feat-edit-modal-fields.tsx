@@ -6,7 +6,6 @@ import type { Feat, Skill } from '@/hooks';
 import { Plus, X } from 'lucide-react';
 import { ABILITIES_AND_DEFENSES } from '@/lib/game/constants';
 import type { FeatFormState } from './admin-feat-form';
-import { collectCodexSources } from './admin-codex-source';
 import { AdminCodexSourceField } from './admin-codex-source-field';
 
 export type AdminFeatEditModalFieldsProps = {
@@ -23,7 +22,6 @@ export type AdminFeatEditModalFieldsProps = {
     abilReqAbilities: string[];
   };
   abilityOptions: { value: string; label: string }[];
-  sourceResetKey: string;
 };
 
 export function AdminFeatEditModalFields({
@@ -34,9 +32,7 @@ export function AdminFeatEditModalFields({
   skills,
   filterOptions,
   abilityOptions,
-  sourceResetKey,
 }: AdminFeatEditModalFieldsProps) {
-  const sourceOptions = collectCodexSources(feats);
   return (
     <>
       <div>
@@ -58,10 +54,8 @@ export function AdminFeatEditModalFields({
         />
       </div>
       <AdminCodexSourceField
-        key={sourceResetKey}
-        value={form.source}
-        options={sourceOptions}
-        onChange={(source) => setFormField('source', source)}
+        value={form.sources}
+        onChange={(sources) => setFormField('sources', sources)}
       />
       <div>
         <label className="mb-1 block text-sm font-medium text-text-secondary">

@@ -54,7 +54,7 @@ export type AdminArchetypeFormState = {
   name: string;
   type: 'power' | 'powered-martial' | 'martial';
   description: string;
-  source: string;
+  sources: string[];
   archetypeAbility: string;
   secondaryAbility: string;
   powerProfStart: number;

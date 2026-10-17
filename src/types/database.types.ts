@@ -295,6 +295,7 @@ export type Database = {
           secondary_ability: string | null
           type: string | null
           source: string | null
+          sources: string[]
           updated_at: string
         }
         Insert: {
@@ -326,6 +327,7 @@ export type Database = {
           secondary_ability?: string | null
           type?: string | null
           source?: string | null
+          sources?: string[]
           updated_at?: string
         }
         Update: {
@@ -357,6 +359,7 @@ export type Database = {
           secondary_ability?: string | null
           type?: string | null
           source?: string | null
+          sources?: string[]
           updated_at?: string
         }
         Relationships: []
@@ -407,6 +410,7 @@ export type Database = {
           mechanic: boolean | null
           name: string | null
           source: string | null
+          sources: string[]
           updated_at: string
         }
         Insert: {
@@ -418,6 +422,7 @@ export type Database = {
           mechanic?: boolean | null
           name?: string | null
           source?: string | null
+          sources?: string[]
           updated_at?: string
         }
         Update: {
@@ -429,6 +434,7 @@ export type Database = {
           mechanic?: boolean | null
           name?: string | null
           source?: string | null
+          sources?: string[]
           updated_at?: string
         }
         Relationships: []
@@ -444,6 +450,7 @@ export type Database = {
           name: string | null
           rarity: string | null
           source: string | null
+          sources: string[]
           updated_at: string
         }
         Insert: {
@@ -456,6 +463,7 @@ export type Database = {
           name?: string | null
           rarity?: string | null
           source?: string | null
+          sources?: string[]
           updated_at?: string
         }
         Update: {
@@ -468,6 +476,7 @@ export type Database = {
           name?: string | null
           rarity?: string | null
           source?: string | null
+          sources?: string[]
           updated_at?: string
         }
         Relationships: [
@@ -506,6 +515,7 @@ export type Database = {
           state_feat: boolean | null
           tags: string | null
           source: string | null
+          sources: string[]
           updated_at: string
           uses_per_rec: number | null
         }
@@ -534,6 +544,7 @@ export type Database = {
           state_feat?: boolean | null
           tags?: string | null
           source?: string | null
+          sources?: string[]
           updated_at?: string
           uses_per_rec?: number | null
         }
@@ -562,6 +573,7 @@ export type Database = {
           state_feat?: boolean | null
           tags?: string | null
           source?: string | null
+          sources?: string[]
           updated_at?: string
           uses_per_rec?: number | null
         }
@@ -590,6 +602,7 @@ export type Database = {
           percentage: boolean | null
           type: string | null
           source: string | null
+          sources: string[]
           updated_at: string
         }
         Insert: {
@@ -614,6 +627,7 @@ export type Database = {
           percentage?: boolean | null
           type?: string | null
           source?: string | null
+          sources?: string[]
           updated_at?: string
         }
         Update: {
@@ -638,6 +652,7 @@ export type Database = {
           percentage?: boolean | null
           type?: string | null
           source?: string | null
+          sources?: string[]
           updated_at?: string
         }
         Relationships: []
@@ -657,6 +672,7 @@ export type Database = {
           op_1_tp: number | null
           type: string | null
           source: string | null
+          sources: string[]
           updated_at: string
         }
         Insert: {
@@ -673,6 +689,7 @@ export type Database = {
           op_1_tp?: number | null
           type?: string | null
           source?: string | null
+          sources?: string[]
           updated_at?: string
         }
         Update: {
@@ -689,6 +706,7 @@ export type Database = {
           op_1_tp?: number | null
           type?: string | null
           source?: string | null
+          sources?: string[]
           updated_at?: string
         }
         Relationships: []
@@ -727,6 +745,7 @@ export type Database = {
           name: string | null
           success_desc: string | null
           source: string | null
+          sources: string[]
           updated_at: string
         }
         Insert: {
@@ -741,6 +760,7 @@ export type Database = {
           name?: string | null
           success_desc?: string | null
           source?: string | null
+          sources?: string[]
           updated_at?: string
         }
         Update: {
@@ -755,6 +775,7 @@ export type Database = {
           name?: string | null
           success_desc?: string | null
           source?: string | null
+          sources?: string[]
           updated_at?: string
         }
         Relationships: []
@@ -780,6 +801,7 @@ export type Database = {
           species_traits: string | null
           type: string | null
           source: string | null
+          sources: string[]
           updated_at: string
         }
         Insert: {
@@ -802,6 +824,7 @@ export type Database = {
           species_traits?: string | null
           type?: string | null
           source?: string | null
+          sources?: string[]
           updated_at?: string
         }
         Update: {
@@ -824,6 +847,7 @@ export type Database = {
           species_traits?: string | null
           type?: string | null
           source?: string | null
+          sources?: string[]
           updated_at?: string
         }
         Relationships: [
@@ -846,6 +870,7 @@ export type Database = {
           option_trait_ids: string | null
           rec_period: string | null
           source: string | null
+          sources: string[]
           updated_at: string
           uses_per_rec: number | null
         }
@@ -858,6 +883,7 @@ export type Database = {
           option_trait_ids?: string | null
           rec_period?: string | null
           source?: string | null
+          sources?: string[]
           updated_at?: string
           uses_per_rec?: number | null
         }
@@ -870,6 +896,7 @@ export type Database = {
           option_trait_ids?: string | null
           rec_period?: string | null
           source?: string | null
+          sources?: string[]
           updated_at?: string
           uses_per_rec?: number | null
         }

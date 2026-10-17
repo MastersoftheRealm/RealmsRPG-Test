@@ -67,7 +67,6 @@ export type AdminArchetypeEditorProps = {
   form: AdminArchetypeFormState;
   setForm: Dispatch<SetStateAction<AdminArchetypeFormState>>;
   copySourceName: string | null;
-  sourceOptions: string[];
   isSelectionDataLoading: boolean;
   showToast: ShowToast;
   optionsByField: Partial<Record<PathSelectionKey, SelectionOption[]>>;

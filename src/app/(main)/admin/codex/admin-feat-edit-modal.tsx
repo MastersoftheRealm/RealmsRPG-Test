@@ -275,7 +275,6 @@ export function AdminFeatEditModal({
           skills={skills}
           filterOptions={filterOptions}
           abilityOptions={abilityOptions}
-          sourceResetKey={selectedEditId ?? 'new'}
         />
       </div>
       {leave.prompt}

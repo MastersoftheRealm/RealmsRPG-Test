@@ -4,7 +4,10 @@
 
 import type { Species, Skill, Trait } from '@/hooks';
 import { parseCatalogListing } from '@/lib/library/catalog-listing';
-import { codexSourceForSave } from './admin-codex-source';
+import {
+  codexSourcesOrCore,
+  DEFAULT_CODEX_SOURCES,
+} from '@/lib/codex/sources';
 
 export type TraitPickerField =
   | 'speciesTraitIds'
@@ -36,7 +39,7 @@ export type SpeciesFormState = {
   maxAge: string;
   languages: string;
   isStarter: boolean;
-  source: string;
+  sources: string[];
   catalogListing: 'listed' | 'unlisted';
   imageId: string | null;
   imageUrl: string | null;
@@ -59,7 +62,7 @@ export const EMPTY_SPECIES_FORM: SpeciesFormState = {
   maxAge: '',
   languages: '',
   isStarter: false,
-  source: '',
+  sources: [...DEFAULT_CODEX_SOURCES],
   catalogListing: 'listed',
   imageId: null,
   imageUrl: null,
@@ -110,7 +113,7 @@ export function speciesToFormState(
     maxAge: max,
     languages: (s.languages || []).join(', '),
     isStarter: Boolean((s as Species & { is_starter?: boolean | undefined }).is_starter),
-    source: s.source || '',
+    sources: codexSourcesOrCore(s.sources),
     catalogListing: parseCatalogListing(
       (s as Species & { catalog_listing?: unknown; catalogListing?: unknown }).catalog_listing ??
         (s as Species & { catalogListing?: unknown }).catalogListing,
@@ -150,7 +153,7 @@ export function speciesFormToSavePayload(form: SpeciesFormState): Record<string,
     adulthood_lifespan,
     languages,
     isStarter: form.isStarter,
-    source: codexSourceForSave(form.source),
+    sources: codexSourcesOrCore(form.sources),
     catalogListing: form.catalogListing,
     imageId: form.imageId,
     imageUrl: form.imageUrl,

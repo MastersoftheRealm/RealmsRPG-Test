@@ -9,7 +9,7 @@ import {
 import { SelectFilter, ArchetypePathFilter } from '@/components/patterns/filters';
 import { useEquipment, useItemProperties, usePathListFilter } from '@/hooks';
 import { useSort } from '@/hooks/use-sort';
-import { collectCodexSources, codexSourceForSave } from './admin-codex-source';
+import { codexSourcesOrCore } from '@/lib/codex/sources';
 import { COPY_NAME_SUFFIX } from './admin-codex-copy-suffix';
 import { useAdminCodexEntity } from './use-admin-codex-entity';
 import { AdminCodexRowActions, ADMIN_CODEX_ROW_ACTIONS_WIDTH } from './admin-codex-row-actions';
@@ -91,7 +91,7 @@ export function AdminEquipmentTab() {
         category: cat,
         currency: e.currency ?? e.gold_cost ?? 0,
         rarity: e.rarity || 'Common',
-        source: e.source || '',
+        sources: codexSourcesOrCore(e.sources),
         imageId: e.image_id ?? null,
         imageUrl: e.image_url ?? null,
       });
@@ -108,7 +108,7 @@ export function AdminEquipmentTab() {
         category: cat,
         currency: e.currency ?? e.gold_cost ?? 0,
         rarity: e.rarity || 'Common',
-        source: e.source || '',
+        sources: codexSourcesOrCore(e.sources),
         imageId: e.image_id ?? null,
         imageUrl: e.image_url ?? null,
       });
@@ -125,7 +125,7 @@ export function AdminEquipmentTab() {
         category: form.category.trim() || undefined,
         currency: form.currency,
         rarity: form.rarity.trim() || undefined,
-        source: codexSourceForSave(form.source),
+        sources: codexSourcesOrCore(form.sources),
         imageId: form.imageId,
         imageUrl: form.imageUrl,
       },
@@ -231,7 +231,6 @@ export function AdminEquipmentTab() {
         categoryIsNew={categoryIsNew}
         setCategoryIsNew={setCategoryIsNew}
         categories={filterOptions.categories}
-        sourceOptions={collectCodexSources(equipment)}
         saving={saving}
         onDelete={editing ? () => askDelete(editing) : undefined}
         onSave={handleSave}
