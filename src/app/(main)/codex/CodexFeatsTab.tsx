@@ -14,6 +14,7 @@ import {
   TagFilter,
   SelectFilter,
   CharacterFilter,
+  CodexRulesSourceFilter,
   FilterInput,
   FILTER_LABEL_ROW_CLASS,
 } from '@/components/patterns/filters';
@@ -82,6 +83,7 @@ export function CodexFeatsTab({
     tagMode: 'all',
     featTypeMode: 'all',
     stateFeatMode: 'all',
+    rulesSources: [],
   });
 
   const handleCharacterFilterChange = useCallback((id: string) => {
@@ -298,6 +300,11 @@ export function CodexFeatsTab({
                   setFilters((f) => ({ ...f, stateFeatMode: v as 'all' | 'only' | 'hide' }))
                 }
                 placeholder={null}
+              />
+
+              <CodexRulesSourceFilter
+                selectedValues={filters.rulesSources}
+                onChange={(next) => setFilters((f) => ({ ...f, rulesSources: next }))}
               />
 
               <ArchetypePathFilter

@@ -21,6 +21,7 @@ import { CharacterFilter } from './character-filter';
 import { FilterInput } from './filter-native-select';
 import { FILTER_CONTROL_ROW_CLASS, FILTER_LABEL_ROW_CLASS } from './filter-utils';
 import { ArchetypePathFilter, type ArchetypePathFilterProps } from './archetype-path-filter';
+import { CodexRulesSourceFilter } from './codex-rules-source-filter';
 import { cn } from '@/lib/utils';
 
 const ARMAMENT_CHARACTER_FILTER_HELP =
@@ -66,6 +67,8 @@ export interface ArmamentFiltersProps {
     | Pick<ArchetypePathFilterProps, 'options' | 'selectedPathIds' | 'onChange'>
     | null
     | undefined;
+  rulesSources?: string[] | undefined;
+  onRulesSourcesChange?: ((next: string[]) => void) | undefined;
 }
 
 export function ArmamentFilters({
@@ -78,6 +81,8 @@ export function ArmamentFilters({
   showEquipmentExtras = false,
   children,
   pathFilter,
+  rulesSources = [],
+  onRulesSourcesChange,
 }: ArmamentFiltersProps) {
   const affordableId = useId();
   const rarityId = useId();
@@ -191,6 +196,9 @@ export function ArmamentFilters({
       {showEquipmentExtras ? (
         <div className="grid grid-cols-1 items-start gap-4 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
           {children}
+          {onRulesSourcesChange ? (
+            <CodexRulesSourceFilter selectedValues={rulesSources} onChange={onRulesSourcesChange} />
+          ) : null}
           <div className="filter-group min-w-0">
             <div className={FILTER_LABEL_ROW_CLASS}>
               <label
@@ -242,6 +250,14 @@ export function ArmamentFilters({
       ) : (
         <>
           {children}
+          {onRulesSourcesChange ? (
+            <div className="grid grid-cols-1 items-start gap-4 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+              <CodexRulesSourceFilter
+                selectedValues={rulesSources}
+                onChange={onRulesSourcesChange}
+              />
+            </div>
+          ) : null}
           {pathFilter ? (
             <div className="grid grid-cols-1 items-start gap-4 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
               <PathFilterLast {...pathFilter} />

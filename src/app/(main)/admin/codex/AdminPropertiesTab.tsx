@@ -7,7 +7,8 @@ import {
   GridListRow,
 } from '@/components/patterns';
 import { useToast } from '@/components/ui';
-import { SelectFilter } from '@/components/patterns/filters';
+import { SelectFilter, CodexRulesSourceFilter } from '@/components/patterns/filters';
+import { rowMatchesCodexRulesSourceFilter } from '@/lib/codex/list-rules-source-filter';
 import { useItemProperties, type ItemProperty } from '@/hooks';
 import { useSort } from '@/hooks/use-sort';
 import { formatListCellLabel } from '@/lib/utils';
@@ -29,6 +30,7 @@ const PROPERTY_GRID_COLUMNS = '1.5fr 1fr 0.8fr 0.8fr 0.8fr';
 interface PropertyFilters {
   search: string;
   typeFilter: string;
+  rulesSources: string[];
 }
 
 export function AdminPropertiesTab() {
@@ -52,7 +54,11 @@ export function AdminPropertiesTab() {
     entityLabel: 'property',
   });
   const { sortState, handleSort } = useSort('name');
-  const [filters, setFilters] = useState<PropertyFilters>({ search: '', typeFilter: '' });
+  const [filters, setFilters] = useState<PropertyFilters>({
+    search: '',
+    typeFilter: '',
+    rulesSources: [],
+  });
   const [optionSlotCount, setOptionSlotCount] = useState(0);
   const [form, setForm] = useState<PropertyFormState>(EMPTY_PROPERTY_FORM);
 
@@ -86,6 +92,7 @@ export function AdminPropertiesTab() {
         return false;
       }
       if (filters.typeFilter && p.type !== filters.typeFilter) return false;
+      if (!rowMatchesCodexRulesSourceFilter(p.sources, filters.rulesSources)) return false;
       return true;
     });
 
@@ -185,6 +192,10 @@ export function AdminPropertiesTab() {
               })}
               onChange={(v) => setFilters((f) => ({ ...f, typeFilter: v }))}
               placeholder="All Types"
+            />
+            <CodexRulesSourceFilter
+              selectedValues={filters.rulesSources}
+              onChange={(next) => setFilters((f) => ({ ...f, rulesSources: next }))}
             />
           </div>
         }

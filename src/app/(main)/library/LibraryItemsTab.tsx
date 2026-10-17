@@ -34,6 +34,7 @@ import {
   countActiveArmamentFilters,
   type ArmamentFilterState,
 } from '@/lib/library/armament-filters';
+import { countActiveCodexRulesSourceFilters } from '@/lib/codex/list-rules-source-filter';
 import type { ArmamentCharacterContext } from '@/lib/library/armament-character-context';
 import {
   LibrarySyncRowAction,
@@ -89,6 +90,7 @@ export function LibraryItemsTab({ armamentKind, onDelete }: LibraryItemsTabProps
     useState<ArmamentFilterState>(EMPTY_ARMAMENT_FILTERS);
   const [characterContext, setCharacterContext] = useState<ArmamentCharacterContext | null>(null);
   const [characterFilterId, setCharacterFilterId] = useState('');
+  const [rulesSources, setRulesSources] = useState<string[]>([]);
   const addToCharacter = useAddToCharacterFromLibrary(armamentKind, characterFilterId);
   const { sortState, handleSort, sortItems } = useSort('name');
   const { selectedPathIds, setSelectedPathIds, pathIndex, pathRecommendedIds, pathFilterActive } =
@@ -134,8 +136,17 @@ export function LibraryItemsTab({ armamentKind, onDelete }: LibraryItemsTabProps
         advancedFilters,
         characterContext,
         pathRecommendedIds,
+        rulesSources,
       ),
-    [cardData, search, sortItems, advancedFilters, characterContext, pathRecommendedIds],
+    [
+      cardData,
+      search,
+      sortItems,
+      advancedFilters,
+      characterContext,
+      pathRecommendedIds,
+      rulesSources,
+    ],
   );
 
   return (
@@ -180,10 +191,13 @@ export function LibraryItemsTab({ armamentKind, onDelete }: LibraryItemsTabProps
               selectedPathIds,
               onChange: setSelectedPathIds,
             }}
+            rulesSources={rulesSources}
+            onRulesSourcesChange={setRulesSources}
           />
         }
         filterActiveCount={
           countActiveArmamentFilters(advancedFilters, Boolean(characterContext)) +
+          countActiveCodexRulesSourceFilters(rulesSources) +
           (pathFilterActive ? 1 : 0)
         }
         filterEmptyTitle={pathFilterActive ? pathFilterEmptyTitle(labels.entityPlural) : undefined}

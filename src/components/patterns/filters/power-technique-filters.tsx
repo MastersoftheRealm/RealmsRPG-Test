@@ -30,6 +30,7 @@ import {
   writePersistedLibraryCharacterFilterId,
 } from '@/lib/library/character-filter-persistence';
 import { FILTER_CONTROL_ROW_CLASS, FILTER_LABEL_ROW_CLASS } from './filter-utils';
+import { CodexRulesSourceFilter } from './codex-rules-source-filter';
 import { cn } from '@/lib/utils';
 
 const INNATE_THRESHOLD_HELP =
@@ -61,6 +62,9 @@ export interface PowerTechniqueFiltersProps {
     | Pick<ArchetypePathFilterProps, 'options' | 'selectedPathIds' | 'onChange'>
     | null
     | undefined;
+  /** Rules sources (Core / expansions). Omit on modals that should not scope by expansion. */
+  rulesSources?: string[] | undefined;
+  onRulesSourcesChange?: ((next: string[]) => void) | undefined;
 }
 
 export function PowerTechniqueFilters({
@@ -75,6 +79,8 @@ export function PowerTechniqueFilters({
   persistCharacter = true,
   showCharacterFilter = true,
   pathFilter,
+  rulesSources = [],
+  onRulesSourcesChange,
 }: PowerTechniqueFiltersProps) {
   const energyMaxId = useId();
   const tpMaxId = useId();
@@ -314,6 +320,10 @@ export function PowerTechniqueFilters({
               </span>
             </div>
           </div>
+        ) : null}
+
+        {onRulesSourcesChange ? (
+          <CodexRulesSourceFilter selectedValues={rulesSources} onChange={onRulesSourcesChange} />
         ) : null}
 
         {pathFilter ? (

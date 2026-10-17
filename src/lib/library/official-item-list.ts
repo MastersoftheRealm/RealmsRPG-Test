@@ -32,6 +32,10 @@ import { resolveArmorDamageReduction } from '@/lib/game/resolve-armor-damage-red
 import { formatDamageDisplay, formatListCellLabel } from '@/lib/utils';
 import type { ArmamentLibraryKind } from '@/lib/library/armament-library-labels';
 import { applyArmamentFilters, type ArmamentFilterState } from '@/lib/library/armament-filters';
+import {
+  filterRowsByCodexRulesSources,
+  readRowRulesSources,
+} from '@/lib/codex/list-rules-source-filter';
 import type { ArmamentCharacterContext } from '@/lib/library/armament-character-context';
 import {
   libraryRowPathIds,
@@ -296,6 +300,7 @@ export function filterOfficialItemRows<
   filters?: ArmamentFilterState,
   characterContext?: ArmamentCharacterContext | null,
   pathRecommendedIds?: ReadonlySet<string> | null,
+  rulesSources?: readonly string[],
 ): T[] {
   let result = rows;
   if (pathRecommendedIds) {
@@ -317,6 +322,9 @@ export function filterOfficialItemRows<
   }
   if (filters) {
     result = applyArmamentFilters(result, filters, characterContext ?? null);
+  }
+  if (rulesSources && rulesSources.length > 0) {
+    result = filterRowsByCodexRulesSources(result, rulesSources, readRowRulesSources);
   }
   return sortItems(result);
 }

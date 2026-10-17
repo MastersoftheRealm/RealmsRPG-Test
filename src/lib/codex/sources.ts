@@ -15,6 +15,12 @@
 
 export const CORE_CODEX_SOURCE = 'Core';
 
+/** Shared label for admin source picker and GLR rules-source filter. */
+export const CODEX_SOURCE_PICKER_LABEL = 'Sources';
+
+/** Shared ChipSelect placeholder (filter + admin picker). */
+export const CODEX_SOURCE_PICKER_PLACEHOLDER = 'Add a source';
+
 export const DEFAULT_CODEX_SOURCES: readonly string[] = [CORE_CODEX_SOURCE];
 
 /** Same cap as character names. A content-pack label is one short string. */

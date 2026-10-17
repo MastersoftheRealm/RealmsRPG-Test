@@ -29,6 +29,7 @@ import {
   countActivePowerTechniqueFilters,
   type PowerTechniqueFilterState,
 } from '@/lib/library/power-technique-filters';
+import { countActiveCodexRulesSourceFilters } from '@/lib/codex/list-rules-source-filter';
 import type { PowerTechniqueCharacterContext } from '@/lib/library/power-technique-character-context';
 import { listInnateThresholdFilterOptions } from '@/lib/game/innate-eligibility';
 import {
@@ -91,6 +92,7 @@ export function OfficialPowerList({
     null,
   );
   const [characterFilterId, setCharacterFilterId] = useState('');
+  const [rulesSources, setRulesSources] = useState<string[]>([]);
   const addToCharacter = useAddToCharacterFromLibrary('power', characterFilterId);
   const { selectedPathIds, setSelectedPathIds, pathIndex, pathRecommendedIds, pathFilterActive } =
     usePathListFilter({ entities: items, kind: POWER_LIST_PATH_KINDS });
@@ -115,8 +117,9 @@ export function OfficialPowerList({
         advancedFilters,
         characterContext,
         pathRecommendedIds,
+        rulesSources,
       ),
-    [advancedFilters, characterContext, pathRecommendedIds],
+    [advancedFilters, characterContext, pathRecommendedIds, rulesSources],
   );
 
   return (
@@ -144,10 +147,13 @@ export function OfficialPowerList({
               selectedPathIds,
               onChange: setSelectedPathIds,
             }}
+            rulesSources={rulesSources}
+            onRulesSourcesChange={setRulesSources}
           />
         }
         filterActiveCount={
           countActivePowerTechniqueFilters(advancedFilters, 'power', Boolean(characterContext)) +
+          countActiveCodexRulesSourceFilters(rulesSources) +
           (characterFilterId ? 1 : 0) +
           (pathFilterActive ? 1 : 0)
         }

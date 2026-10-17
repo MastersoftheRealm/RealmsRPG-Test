@@ -7,6 +7,7 @@ import type { Character, AbilityName } from '@/types';
 import { normalizeId } from '@/lib/utils';
 import { formatAbilityLabel } from '@/lib/constants/ability-effect-blurbs';
 import { rowMatchesPathRecommendedIds } from '@/lib/game/path-recommendation-index';
+import { rowMatchesCodexRulesSourceFilter } from '@/lib/codex/list-rules-source-filter';
 
 /** Data columns only — admin action chrome uses CodexBrowseListShell `rowChrome`. */
 export const SKILL_GRID_COLUMNS = '1.5fr 1fr 1fr';
@@ -43,6 +44,8 @@ export interface SkillListFilters {
   abilities: string[];
   baseSkill: string;
   subSkillMode: 'all' | 'only' | 'hide' | '';
+  /** Rules sources (Core / expansions). Empty = All. */
+  rulesSources: string[];
   /** Codex character filter: known vs not known. Ignored without characterKnownIds. */
   knownMode?: SkillKnownMode | undefined;
   /** Codex character filter: keep sub-skills whose base the character has. */
@@ -168,6 +171,7 @@ export function filterSkills(
 
   return skills.filter((s) => {
     if (!rowMatchesPathRecommendedIds(s.id, pathRecommendedIds)) return false;
+    if (!rowMatchesCodexRulesSourceFilter(s.sources, filters.rulesSources)) return false;
     if (filters.search) {
       const searchLower = filters.search.toLowerCase();
       if (

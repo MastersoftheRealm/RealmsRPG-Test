@@ -28,6 +28,7 @@ import {
   countActiveArmamentFilters,
   type ArmamentFilterState,
 } from '@/lib/library/armament-filters';
+import { countActiveCodexRulesSourceFilters } from '@/lib/codex/list-rules-source-filter';
 import type { ArmamentCharacterContext } from '@/lib/library/armament-character-context';
 import { resolveListRowThumbnail } from '@/lib/list-row-image';
 import type { CatalogListing } from '@/lib/library/catalog-listing';
@@ -94,6 +95,7 @@ export function OfficialItemList({
     useState<ArmamentFilterState>(EMPTY_ARMAMENT_FILTERS);
   const [characterContext, setCharacterContext] = useState<ArmamentCharacterContext | null>(null);
   const [characterFilterId, setCharacterFilterId] = useState('');
+  const [rulesSources, setRulesSources] = useState<string[]>([]);
   const addToCharacter = useAddToCharacterFromLibrary(armamentKind, characterFilterId);
   const { selectedPathIds, setSelectedPathIds, pathIndex, pathRecommendedIds, pathFilterActive } =
     usePathListFilter({
@@ -115,8 +117,9 @@ export function OfficialItemList({
         advancedFilters,
         characterContext,
         variant === 'library' ? pathRecommendedIds : null,
+        rulesSources,
       ),
-    [advancedFilters, characterContext, pathRecommendedIds, variant],
+    [advancedFilters, characterContext, pathRecommendedIds, variant, rulesSources],
   );
 
   return (
@@ -142,12 +145,15 @@ export function OfficialItemList({
                 selectedPathIds,
                 onChange: setSelectedPathIds,
               }}
+              rulesSources={rulesSources}
+              onRulesSourcesChange={setRulesSources}
             />
           ) : undefined
         }
         filterActiveCount={
           variant === 'library'
             ? countActiveArmamentFilters(advancedFilters, Boolean(characterContext)) +
+              countActiveCodexRulesSourceFilters(rulesSources) +
               (pathFilterActive ? 1 : 0)
             : undefined
         }

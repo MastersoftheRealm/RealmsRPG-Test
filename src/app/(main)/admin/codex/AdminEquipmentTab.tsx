@@ -6,7 +6,11 @@ import {
   ErrorDisplay as ErrorState,
   GridListRow,
 } from '@/components/patterns';
-import { SelectFilter, ArchetypePathFilter } from '@/components/patterns/filters';
+import {
+  SelectFilter,
+  ArchetypePathFilter,
+  CodexRulesSourceFilter,
+} from '@/components/patterns/filters';
 import { useEquipment, useItemProperties, usePathListFilter } from '@/hooks';
 import { useSort } from '@/hooks/use-sort';
 import { codexSourcesOrCore } from '@/lib/codex/sources';
@@ -60,6 +64,7 @@ export function AdminEquipmentTab() {
     search: '',
     categoryFilter: '',
     rarityFilter: '',
+    rulesSources: [],
   });
 
   const [form, setForm] = useState<EquipmentFormState>(EMPTY_EQUIPMENT_FORM);
@@ -166,6 +171,10 @@ export function AdminEquipmentTab() {
               options={filterOptions.rarities.map((r) => ({ value: r, label: r }))}
               onChange={(v) => setFilters((f) => ({ ...f, rarityFilter: v }))}
               placeholder="All Rarities"
+            />
+            <CodexRulesSourceFilter
+              selectedValues={filters.rulesSources}
+              onChange={(next) => setFilters((f) => ({ ...f, rulesSources: next }))}
             />
             <ArchetypePathFilter
               options={pathIndex.options}

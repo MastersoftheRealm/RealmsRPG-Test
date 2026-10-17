@@ -1,6 +1,11 @@
 'use client';
 
 import { useState } from 'react';
+import { CodexRulesSourceFilter } from '@/components/patterns/filters';
+import {
+  countActiveCodexRulesSourceFilters,
+  rowMatchesCodexRulesSourceFilter,
+} from '@/lib/codex/list-rules-source-filter';
 import {
   CodexBrowseListShell,
   ErrorDisplay as ErrorState,
@@ -38,17 +43,22 @@ export function AdminCreatureFeatsTab() {
     entityLabel: 'creature feat',
   });
   const [search, setSearch] = useState('');
+  const [rulesSources, setRulesSources] = useState<string[]>([]);
   const { sortState, handleSort, sortItems } = useSort('name');
 
   const [form, setForm] = useState<CreatureFeatFormState>(EMPTY_CREATURE_FEAT_FORM);
 
   const filtered = sortItems<CreatureFeat>(
-    (creatureFeats || []).filter(
-      (f: CreatureFeat) =>
-        !search ||
-        f.name.toLowerCase().includes(search.toLowerCase()) ||
-        f.description?.toLowerCase().includes(search.toLowerCase()),
-    ),
+    (creatureFeats || []).filter((f: CreatureFeat) => {
+      if (
+        search &&
+        !f.name.toLowerCase().includes(search.toLowerCase()) &&
+        !f.description?.toLowerCase().includes(search.toLowerCase())
+      ) {
+        return false;
+      }
+      return rowMatchesCodexRulesSourceFilter(f.sources, rulesSources);
+    }),
   );
 
   const toOptNum = (v: unknown): number | undefined => {
@@ -119,6 +129,12 @@ export function AdminCreatureFeatsTab() {
         search={search}
         onSearchChange={setSearch}
         searchPlaceholder="Search creature feats..."
+        filterActiveCount={countActiveCodexRulesSourceFilters(rulesSources)}
+        filters={
+          <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
+            <CodexRulesSourceFilter selectedValues={rulesSources} onChange={setRulesSources} />
+          </div>
+        }
         headerColumns={[
           { key: 'name', label: 'NAME' },
           { key: 'points', label: 'PTS' },

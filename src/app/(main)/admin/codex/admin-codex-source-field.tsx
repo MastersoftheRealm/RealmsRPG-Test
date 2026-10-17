@@ -1,14 +1,16 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useMemo, useState } from 'react';
 import { ChipSelect } from '@/components/patterns/filters';
 import { Input } from '@/components/ui';
 import {
+  CODEX_SOURCE_PICKER_LABEL,
+  CODEX_SOURCE_PICKER_PLACEHOLDER,
   codexSourceNameError,
   collapseCodexSourceName,
   codexSourcesOrCore,
 } from '@/lib/codex/sources';
-import { listCodexSourceCatalog } from './source-catalog-action';
+import { useCodexSourceCatalog } from '@/hooks/use-codex-source-catalog';
 
 export function AdminCodexSourceField({
   value,
@@ -17,26 +19,12 @@ export function AdminCodexSourceField({
   value: readonly string[];
   onChange: (next: string[]) => void;
 }) {
-  const [catalog, setCatalog] = useState<string[]>([]);
+  const { options: catalogOptions } = useCodexSourceCatalog();
+  const catalog = useMemo(() => catalogOptions.map((option) => option.value), [catalogOptions]);
   const [draft, setDraft] = useState('');
   const [draftError, setDraftError] = useState<string | null>(null);
 
-  useEffect(() => {
-    let cancelled = false;
-    listCodexSourceCatalog()
-      .then((entries) => {
-        if (!cancelled) setCatalog(entries.map((entry) => entry.name));
-      })
-      .catch(() => {
-        if (!cancelled) setCatalog([]);
-      });
-    return () => {
-      cancelled = true;
-    };
-  }, []);
-
   const selected = codexSourcesOrCore(value, catalog);
-  const options = catalog.map((name) => ({ value: name, label: name }));
 
   function commit(raw: string) {
     const collapsed = collapseCodexSourceName(raw);
@@ -57,9 +45,9 @@ export function AdminCodexSourceField({
   return (
     <div className="min-w-0">
       <ChipSelect
-        label="Sources"
-        placeholder="Add a source"
-        options={options}
+        label={CODEX_SOURCE_PICKER_LABEL}
+        placeholder={CODEX_SOURCE_PICKER_PLACEHOLDER}
+        options={catalogOptions}
         selectedValues={[...selected]}
         onSelect={(name) => {
           const error = codexSourceNameError(collapseCodexSourceName(name));
@@ -95,8 +83,8 @@ export function AdminCodexSourceField({
             e.stopPropagation();
             commit(draft);
           }}
-          placeholder="Add a source"
-          aria-label="Add a source"
+          placeholder={CODEX_SOURCE_PICKER_PLACEHOLDER}
+          aria-label={CODEX_SOURCE_PICKER_PLACEHOLDER}
           error={draftError ?? undefined}
         />
       </div>

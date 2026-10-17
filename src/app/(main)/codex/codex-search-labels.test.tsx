@@ -21,6 +21,10 @@ vi.mock('next/navigation', () => ({
   useRouter: () => ({ push: () => undefined }),
 }));
 
+vi.mock('@/hooks/use-codex-source-catalog', () => ({
+  useCodexSourceCatalog: () => ({ options: [], isLoading: false, isError: false }),
+}));
+
 vi.mock('@/hooks/use-game-rules', async (importOriginal) => {
   const actual = await importOriginal<typeof import('@/hooks/use-game-rules')>();
   return {

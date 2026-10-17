@@ -8,11 +8,16 @@
 'use client';
 
 import { useState, useMemo } from 'react';
+import { CodexRulesSourceFilter } from '@/components/patterns/filters';
 import {
   CodexBrowseListShell,
   ErrorDisplay as ErrorState,
   GridListRow,
 } from '@/components/patterns';
+import {
+  countActiveCodexRulesSourceFilters,
+  rowMatchesCodexRulesSourceFilter,
+} from '@/lib/codex/list-rules-source-filter';
 import { formatCreatureLevel } from '@/lib/game';
 import { useCreatureFeats, type CreatureFeat } from '@/hooks';
 import { useSort } from '@/hooks/use-sort';
@@ -39,19 +44,24 @@ export function CodexCreatureFeatsTab({
     refetch,
   } = useCreatureFeats({ enabled: loadPublicCodex });
   const [search, setSearch] = useState('');
+  const [rulesSources, setRulesSources] = useState<string[]>([]);
   const { sortState, handleSort, sortItems } = useSort('name');
 
   const filtered = useMemo(
     () =>
       sortItems<CreatureFeat>(
-        (creatureFeats || []).filter(
-          (f: CreatureFeat) =>
-            !search ||
-            f.name.toLowerCase().includes(search.toLowerCase()) ||
-            f.description?.toLowerCase().includes(search.toLowerCase()),
-        ),
+        (creatureFeats || []).filter((f: CreatureFeat) => {
+          if (
+            search &&
+            !f.name.toLowerCase().includes(search.toLowerCase()) &&
+            !f.description?.toLowerCase().includes(search.toLowerCase())
+          ) {
+            return false;
+          }
+          return rowMatchesCodexRulesSourceFilter(f.sources, rulesSources);
+        }),
       ),
-    [creatureFeats, search, sortItems],
+    [creatureFeats, search, rulesSources, sortItems],
   );
 
   if (codexMode === 'my') {
@@ -67,6 +77,12 @@ export function CodexCreatureFeatsTab({
       onSearchChange={setSearch}
       searchPlaceholder="Search creature feats..."
       searchAriaLabel="Search creature feats"
+      filterActiveCount={countActiveCodexRulesSourceFilters(rulesSources)}
+      filters={
+        <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
+          <CodexRulesSourceFilter selectedValues={rulesSources} onChange={setRulesSources} />
+        </div>
+      }
       headerColumns={CREATURE_FEAT_COLUMNS}
       gridColumns={CREATURE_FEAT_GRID_COLUMNS}
       sortState={sortState}

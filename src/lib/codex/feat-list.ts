@@ -19,6 +19,7 @@ import { descriptorChipData, tagDescriptorChip } from '@/lib/chip/chip-data-help
 import { glrSurfaceDetailSections } from '@/lib/chip/list-row-metadata';
 import type { Character } from '@/types';
 import { glrColumnKeyFor, glrListChrome } from '@/lib/glr';
+import { rowMatchesCodexRulesSourceFilter } from '@/lib/codex/list-rules-source-filter';
 
 const codexFeatChrome = glrListChrome({ entityType: 'feat', mode: 'browse' });
 const creatorFeatChrome = glrListChrome({
@@ -170,6 +171,8 @@ export interface FeatListFilters {
   tagMode: 'any' | 'all';
   featTypeMode: 'all' | 'archetype' | 'character' | '';
   stateFeatMode: 'all' | 'only' | 'hide' | '';
+  /** Rules sources (Core / expansions). Empty = All. */
+  rulesSources: string[];
 }
 
 export interface FilterFeatsOptions {
@@ -266,6 +269,7 @@ export function filterFeats(
 
   return feats.filter((f) => {
     if (!featMatchesPathRecommendedIds(f, pathRecommendedIds)) return false;
+    if (!rowMatchesCodexRulesSourceFilter(f.sources, filters.rulesSources)) return false;
 
     if (filters.search) {
       const searchLower = filters.search.toLowerCase();

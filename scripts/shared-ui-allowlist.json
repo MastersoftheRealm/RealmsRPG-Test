@@ -25,6 +25,7 @@
     "src/components/patterns/filters/armament-filters.tsx",
     "src/components/patterns/filters/character-filter.tsx",
     "src/components/patterns/filters/chip-select.tsx",
+    "src/components/patterns/filters/codex-rules-source-filter.tsx",
     "src/components/patterns/filters/filter-native-select.tsx",
     "src/components/patterns/filters/filter-section.tsx",
     "src/components/patterns/filters/filter-utils.ts",

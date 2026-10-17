@@ -9,6 +9,7 @@
 'use client';
 
 import { useMemo, useState } from 'react';
+import { rowMatchesCodexRulesSourceFilter } from '@/lib/codex/list-rules-source-filter';
 import { useToast } from '@/components/ui';
 import {
   useCodexArchetypes,
@@ -73,14 +74,19 @@ export function useAdminArchetypeWorkspace() {
     entityLabel: 'archetype',
   });
   const [search, setSearch] = useState('');
+  const [rulesSources, setRulesSources] = useState<string[]>([]);
   const [form, setForm] = useState(EMPTY_ARCHETYPE_FORM);
 
-  const filtered = (archetypes || []).filter(
-    (a: ArchetypeItem) =>
-      !search ||
-      (a.name || '').toLowerCase().includes(search.toLowerCase()) ||
-      (a.description || '').toLowerCase().includes(search.toLowerCase()),
-  );
+  const filtered = (archetypes || []).filter((a: ArchetypeItem) => {
+    if (
+      search &&
+      !(a.name || '').toLowerCase().includes(search.toLowerCase()) &&
+      !(a.description || '').toLowerCase().includes(search.toLowerCase())
+    ) {
+      return false;
+    }
+    return rowMatchesCodexRulesSourceFilter(a.sources, rulesSources);
+  });
 
   const selection = useAdminArchetypeSelectionOptions({
     codexFeats: codexFeats as CodexFeatLike[],
@@ -174,6 +180,8 @@ export function useAdminArchetypeWorkspace() {
     refetch,
     search,
     setSearch,
+    rulesSources,
+    setRulesSources,
     modalOpen,
     editing,
     saving,

@@ -2,7 +2,12 @@
 
 import { useMemo, useState } from 'react';
 import { CodexBrowseListShell, ErrorDisplay as ErrorState } from '@/components/patterns';
-import { ChipSelect, SelectFilter, ArchetypePathFilter } from '@/components/patterns/filters';
+import {
+  ChipSelect,
+  SelectFilter,
+  ArchetypePathFilter,
+  CodexRulesSourceFilter,
+} from '@/components/patterns/filters';
 import { CodexSkillRow } from '@/components/codex';
 import { useCodexSkills, usePathListFilter, type Skill } from '@/hooks';
 import { useSort } from '@/hooks/use-sort';
@@ -61,6 +66,7 @@ export function AdminSkillsTab() {
     abilities: [],
     baseSkill: '',
     subSkillMode: '',
+    rulesSources: [],
   });
 
   const [form, setForm] = useState<SkillFormState>(EMPTY_SKILL_FORM);
@@ -231,6 +237,10 @@ export function AdminSkillsTab() {
                 setFilters((f) => ({ ...f, subSkillMode: (v || '') as '' | 'only' | 'hide' }))
               }
               placeholder="All skills"
+            />
+            <CodexRulesSourceFilter
+              selectedValues={filters.rulesSources}
+              onChange={(next) => setFilters((f) => ({ ...f, rulesSources: next }))}
             />
             <ArchetypePathFilter
               options={pathIndex.options}
