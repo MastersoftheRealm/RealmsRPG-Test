@@ -1,5 +1,9 @@
 import { describe, expect, it } from 'vitest';
-import { getCharacterAllowedSizes, resolveEffectiveCharacterSize } from './character-size';
+import {
+  getCharacterAllowedSizes,
+  patchAncestrySizeChoice,
+  resolveEffectiveCharacterSize,
+} from './character-size';
 import type { CharacterAncestry } from '@/types';
 
 const speciesCatalog = [
@@ -41,5 +45,39 @@ describe('character size resolution', () => {
     const ancestry: CharacterAncestry = { id: 'giant', name: 'Giant' };
     const allowed = getCharacterAllowedSizes(ancestry, speciesCatalog);
     expect(resolveEffectiveCharacterSize(ancestry, allowed)).toBe('Huge');
+  });
+
+  it('resolves legacy ancestry.size when species is not in the catalog', () => {
+    const ancestry = {
+      id: 'vanished',
+      name: 'Vanished',
+      size: 'miniscule',
+    } as unknown as CharacterAncestry;
+    expect(resolveEffectiveCharacterSize(ancestry, [])).toBe('miniscule');
+  });
+});
+
+describe('patchAncestrySizeChoice', () => {
+  it('drops legacy size when clearing the picker', () => {
+    const ancestry = {
+      id: 'x',
+      name: 'X',
+      size: 'miniscule',
+      selectedSize: 'medium',
+    } as unknown as CharacterAncestry;
+    const next = patchAncestrySizeChoice(ancestry, '');
+    expect((next as { size?: string }).size).toBeUndefined();
+    expect(next.selectedSize).toBeUndefined();
+  });
+
+  it('drops legacy size when setting a new selectedSize', () => {
+    const ancestry = {
+      id: 'x',
+      name: 'X',
+      size: 'miniscule',
+    } as unknown as CharacterAncestry;
+    const next = patchAncestrySizeChoice(ancestry, 'Large');
+    expect((next as { size?: string }).size).toBeUndefined();
+    expect(next.selectedSize).toBe('Large');
   });
 });

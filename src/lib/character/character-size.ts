@@ -87,3 +87,20 @@ export function characterSizeHeightHint(sizeKey: string | undefined): string | u
   const row = findSizeTableRow(sizeKey);
   return row?.height;
 }
+
+/** Persist size on ancestry; drops legacy `size` so it cannot override `selectedSize` after clear. */
+export function patchAncestrySizeChoice(
+  ancestry: CharacterAncestry,
+  selectedSize: string | undefined,
+): CharacterAncestry {
+  const trimmed = selectedSize?.trim();
+  const next: CharacterAncestry = { ...ancestry };
+  const legacy = next as CharacterAncestry & { size?: string | undefined };
+  delete legacy.size;
+  if (trimmed) {
+    next.selectedSize = trimmed;
+  } else {
+    delete next.selectedSize;
+  }
+  return next;
+}

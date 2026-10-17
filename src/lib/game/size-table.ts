@@ -6,8 +6,18 @@
 export const CARRYING_CAPACITY_HALF_LOAD_RULE =
   'If you carry more than half your maximum capacity, your movement speed is halved.';
 
+export type CreatureSize =
+  | 'miniscule'
+  | 'tiny'
+  | 'small'
+  | 'medium'
+  | 'large'
+  | 'huge'
+  | 'humongous'
+  | 'gargantuan';
+
 export type SizeTableRow = {
-  value: string;
+  value: CreatureSize;
   label: string;
   /** Inclusive lower height bound in cm, or null when there is no lower bound (e.g. under 30 cm). */
   heightMinCm: number | null;
@@ -123,8 +133,6 @@ export const CREATURE_SIZES: readonly SizeTableRow[] = SIZE_TABLE_BASE.map((row)
   height: formatSizeHeightRangeCm(row),
 }));
 
-export type CreatureSize = (typeof CREATURE_SIZES)[number]['value'];
-
 export function formatSizeHeightRange(
   row: Pick<SizeTableRow, 'heightMinCm' | 'heightMaxCm'>,
 ): string {
@@ -186,7 +194,7 @@ export function reconcileSizeWithAllowedOptions(
   current: string | undefined,
   allowedSizes: readonly string[],
 ): string | undefined {
-  if (allowedSizes.length === 0) return undefined;
+  if (allowedSizes.length === 0) return current;
   if (allowedSizes.length === 1) return allowedSizes[0];
   if (current && sizeChoiceAllowed(current, allowedSizes)) {
     const row = findSizeTableRow(current)!;

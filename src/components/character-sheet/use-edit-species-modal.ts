@@ -18,7 +18,7 @@ import {
 import { migrateSkillsAfterSpeciesChange } from '@/lib/species-skill-migration';
 import { getChoiceOptionIds } from '@/lib/choice-trait';
 import { getSpeciesSizeOptions } from '@/lib/ancestry/species-size-options';
-import { getCharacterAllowedSizes } from '@/lib/character/character-size';
+import { getCharacterAllowedSizes, patchAncestrySizeChoice } from '@/lib/character/character-size';
 import { reconcileSizeWithAllowedOptions } from '@/lib/game/size-table';
 import {
   averageMixedPhysical,
@@ -332,10 +332,7 @@ export function useEditSpeciesModal({
       ancestryToSave.selectedSize ?? ancestryToSave.size,
       allowedSizes,
     );
-    ancestryToSave = {
-      ...ancestryToSave,
-      selectedSize: reconciledSize,
-    };
+    ancestryToSave = patchAncestrySizeChoice(ancestryToSave, reconciledSize);
     const migratedSkills = migrateSkillsAfterSpeciesChange(
       character,
       ancestryToSave,

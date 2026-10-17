@@ -10,6 +10,7 @@ import {
   characterSizeHeightHint,
   getCharacterAllowedSizes,
   resolveEffectiveCharacterSize,
+  patchAncestrySizeChoice,
 } from '@/lib/character/character-size';
 import type { EnrichedCharacterData } from '@/lib/data-enrichment';
 import {
@@ -124,10 +125,7 @@ export function buildLibrarySectionData(input: {
         const prevAncestry = (prev.ancestry ?? { id: '', name: '' }) as CharacterAncestry;
         return {
           ...prev,
-          ancestry: {
-            ...prevAncestry,
-            selectedSize: size,
-          },
+          ancestry: patchAncestrySizeChoice(prevAncestry, size),
         };
       }),
     ),
