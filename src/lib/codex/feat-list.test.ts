@@ -97,6 +97,7 @@ describe('filterFeats — Archetype Path filter (TASK-751)', () => {
     tagMode: 'all',
     featTypeMode: 'all',
     stateFeatMode: 'all',
+    rulesSources: [],
   };
 
   const index = buildPathRecommendationIndex({
@@ -196,7 +197,32 @@ describe('normalizeFeatCategory (TASK-876)', () => {
       tagMode: 'all',
       featTypeMode: 'all',
       stateFeatMode: 'all',
+      rulesSources: [],
     };
     expect(filterFeats(mixed, filters).map((f) => f.id)).toEqual(['a', 'b']);
+  });
+});
+
+describe('filterFeats — rules sources', () => {
+  const filters: FeatListFilters = {
+    search: '',
+    maxLevel: null,
+    abilityRequirements: [],
+    categories: [],
+    abilities: [],
+    tags: [],
+    tagMode: 'all',
+    featTypeMode: 'all',
+    stateFeatMode: 'all',
+    rulesSources: ['crafting'],
+  };
+
+  it('matches any selected source on the feat', () => {
+    const feats = [
+      minimalFeat({ id: '1', sources: ['core'] }),
+      minimalFeat({ id: '2', sources: ['crafting', 'core'] }),
+      minimalFeat({ id: '3', sources: ['harvesting'] }),
+    ];
+    expect(filterFeats(feats, filters).map((f) => f.id)).toEqual(['2']);
   });
 });

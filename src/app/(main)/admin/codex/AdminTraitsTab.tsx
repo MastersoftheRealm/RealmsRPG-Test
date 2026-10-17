@@ -1,11 +1,14 @@
 'use client';
 
 import { useState, useMemo } from 'react';
+import { CodexRulesSourceFilter } from '@/components/patterns/filters';
 import {
   CodexBrowseListShell,
   ErrorDisplay as ErrorState,
   GridListRow,
 } from '@/components/patterns';
+import { rowMatchesCodexRulesSourceFilter } from '@/lib/codex/list-rules-source-filter';
+import type { CodexSourceId } from '@/lib/codex/sources';
 import { traitsByIdMap, choiceTraitOptionIdsToChipData } from '@/lib/choice-trait';
 import { useToast } from '@/components/ui';
 import { useTraits, type Trait } from '@/hooks';
@@ -52,6 +55,7 @@ export function AdminTraitsTab() {
     entityLabel: 'trait',
   });
   const [search, setSearch] = useState('');
+  const [rulesSources, setRulesSources] = useState<CodexSourceId[]>([]);
   const { sortState, handleSort, sortItems } = useSort('name');
   const [form, setForm] = useState<TraitFormState>(EMPTY_TRAIT_FORM);
   const [createTraitOpen, setCreateTraitOpen] = useState(false);
@@ -75,12 +79,16 @@ export function AdminTraitsTab() {
   });
 
   const filtered = sortItems<Trait>(
-    (traits || []).filter(
-      (t: Trait) =>
-        !search ||
-        t.name.toLowerCase().includes(search.toLowerCase()) ||
-        t.description?.toLowerCase().includes(search.toLowerCase()),
-    ),
+    (traits || []).filter((t: Trait) => {
+      if (
+        search &&
+        !t.name.toLowerCase().includes(search.toLowerCase()) &&
+        !t.description?.toLowerCase().includes(search.toLowerCase())
+      ) {
+        return false;
+      }
+      return rowMatchesCodexRulesSourceFilter(t.sources, rulesSources);
+    }),
   );
 
   const traitById = useMemo(() => traitsByIdMap(traits || []), [traits]);
@@ -146,6 +154,17 @@ export function AdminTraitsTab() {
         search={search}
         onSearchChange={setSearch}
         searchPlaceholder="Search traits..."
+        filters={
+          <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
+            <CodexRulesSourceFilter
+              selectedValues={rulesSources}
+              onSelect={(id) =>
+                setRulesSources((prev) => (prev.includes(id) ? prev : [...prev, id]))
+              }
+              onRemove={(id) => setRulesSources((prev) => prev.filter((s) => s !== id))}
+            />
+          </div>
+        }
         headerColumns={ADMIN_TRAIT_COLUMNS}
         gridColumns={ADMIN_TRAIT_GRID}
         rowChrome={{ rightSlot: true }}

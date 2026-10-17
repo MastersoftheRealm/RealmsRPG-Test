@@ -32,6 +32,8 @@ import {
   countActivePowerTechniqueFilters,
   type PowerTechniqueFilterState,
 } from '@/lib/library/power-technique-filters';
+import { countActiveCodexRulesSourceFilters } from '@/lib/codex/list-rules-source-filter';
+import type { CodexSourceId } from '@/lib/codex/sources';
 import type { PowerTechniqueCharacterContext } from '@/lib/library/power-technique-character-context';
 import {
   useUserTechniques,
@@ -93,6 +95,7 @@ export function LibraryTechniquesTab({ onDelete, mode = 'standard' }: LibraryTec
     null,
   );
   const [characterFilterId, setCharacterFilterId] = useState('');
+  const [rulesSources, setRulesSources] = useState<CodexSourceId[]>([]);
   const addToCharacter = useAddToCharacterFromLibrary('technique', characterFilterId);
   const { sortState, handleSort, sortItems } = useSort('name');
 
@@ -160,8 +163,18 @@ export function LibraryTechniquesTab({ onDelete, mode = 'standard' }: LibraryTec
       advanced,
       mode === 'empowered' ? null : characterContext,
       mode === 'empowered' ? null : pathRecommendedIds,
+      mode === 'empowered' ? undefined : rulesSources,
     );
-  }, [cardData, search, sortItems, mode, advancedFilters, characterContext, pathRecommendedIds]);
+  }, [
+    cardData,
+    search,
+    sortItems,
+    mode,
+    advancedFilters,
+    characterContext,
+    pathRecommendedIds,
+    rulesSources,
+  ]);
 
   return (
     <>
@@ -211,6 +224,8 @@ export function LibraryTechniquesTab({ onDelete, mode = 'standard' }: LibraryTec
                 selectedPathIds,
                 onChange: setSelectedPathIds,
               }}
+              rulesSources={rulesSources}
+              onRulesSourcesChange={setRulesSources}
             />
           )
         }
@@ -222,6 +237,7 @@ export function LibraryTechniquesTab({ onDelete, mode = 'standard' }: LibraryTec
                 'technique',
                 Boolean(characterContext),
               ) +
+              countActiveCodexRulesSourceFilters(rulesSources) +
               (characterFilterId ? 1 : 0) +
               (pathFilterActive ? 1 : 0)
         }

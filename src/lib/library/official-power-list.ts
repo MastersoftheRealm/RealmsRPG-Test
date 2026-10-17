@@ -37,6 +37,11 @@ import {
 } from '@/lib/library/power-technique-filters';
 import type { PowerTechniqueCharacterContext } from '@/lib/library/power-technique-character-context';
 import {
+  filterRowsByCodexRulesSources,
+  readRowRulesSources,
+} from '@/lib/codex/list-rules-source-filter';
+import type { CodexSourceId } from '@/lib/codex/sources';
+import {
   libraryRowPathIds,
   rowMatchesPathRecommendedIds,
 } from '@/lib/game/path-recommendation-index';
@@ -210,6 +215,7 @@ export function filterOfficialPowerRows<
   advanced?: PowerTechniqueFilterState,
   character?: PowerTechniqueCharacterContext | null,
   pathRecommendedIds?: ReadonlySet<string> | null,
+  rulesSources?: readonly CodexSourceId[],
 ): T[] {
   let result = rows;
   if (pathRecommendedIds) {
@@ -234,6 +240,9 @@ export function filterOfficialPowerRows<
   }
   if (advanced) {
     result = applyPowerTechniqueFilters(result, advanced, 'power', character);
+  }
+  if (rulesSources && rulesSources.length > 0) {
+    result = filterRowsByCodexRulesSources(result, rulesSources, readRowRulesSources);
   }
   return sortItems(result);
 }

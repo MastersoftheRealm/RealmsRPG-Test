@@ -7,7 +7,9 @@
 'use client';
 
 import { useState, useMemo } from 'react';
-import { SelectFilter } from '@/components/patterns/filters';
+import { SelectFilter, CodexRulesSourceFilter } from '@/components/patterns/filters';
+import { rowMatchesCodexRulesSourceFilter } from '@/lib/codex/list-rules-source-filter';
+import type { CodexSourceId } from '@/lib/codex/sources';
 import {
   CodexBrowseListShell,
   ErrorDisplay as ErrorState,
@@ -30,6 +32,7 @@ const PROPERTY_COLUMNS = [
 interface PropertyFilters {
   search: string;
   typeFilter: string;
+  rulesSources: CodexSourceId[];
 }
 
 function PropertyCard({ property }: { property: ItemProperty }) {
@@ -105,6 +108,7 @@ export function CodexPropertiesTab({
   const [filters, setFilters] = useState<PropertyFilters>({
     search: '',
     typeFilter: '',
+    rulesSources: [],
   });
 
   const typeOptions = useMemo(() => {
@@ -126,6 +130,7 @@ export function CodexPropertiesTab({
         return false;
       }
       if (filters.typeFilter && p.type !== filters.typeFilter) return false;
+      if (!rowMatchesCodexRulesSourceFilter(p.sources, filters.rulesSources)) return false;
       return true;
     });
     return filtered.sort((a: ItemProperty, b: ItemProperty) => {
@@ -161,6 +166,23 @@ export function CodexPropertiesTab({
             options={typeOptions.map((t) => ({ value: t, label: formatListCellLabel(t) }))}
             onChange={(v) => setFilters((f) => ({ ...f, typeFilter: v }))}
             placeholder="All Types"
+          />
+          <CodexRulesSourceFilter
+            selectedValues={filters.rulesSources}
+            onSelect={(id) =>
+              setFilters((f) => ({
+                ...f,
+                rulesSources: f.rulesSources.includes(id)
+                  ? f.rulesSources
+                  : [...f.rulesSources, id],
+              }))
+            }
+            onRemove={(id) =>
+              setFilters((f) => ({
+                ...f,
+                rulesSources: f.rulesSources.filter((s) => s !== id),
+              }))
+            }
           />
         </div>
       }

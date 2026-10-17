@@ -8,11 +8,14 @@
 'use client';
 
 import { useState, useMemo } from 'react';
+import { CodexRulesSourceFilter } from '@/components/patterns/filters';
 import {
   CodexBrowseListShell,
   ErrorDisplay as ErrorState,
   GridListRow,
 } from '@/components/patterns';
+import { rowMatchesCodexRulesSourceFilter } from '@/lib/codex/list-rules-source-filter';
+import type { CodexSourceId } from '@/lib/codex/sources';
 import { useTraits, type Trait } from '@/hooks';
 import { useSort } from '@/hooks/use-sort';
 import { CodexMyCodexEmpty } from './CodexMyCodexEmpty';
@@ -33,19 +36,24 @@ export function CodexTraitsTab({
   const loadPublicCodex = codexMode === 'public';
   const { data: traits, isLoading, error, refetch } = useTraits({ enabled: loadPublicCodex });
   const [search, setSearch] = useState('');
+  const [rulesSources, setRulesSources] = useState<CodexSourceId[]>([]);
   const { sortState, handleSort, sortItems } = useSort('name');
 
   const filtered = useMemo(
     () =>
       sortItems<Trait>(
-        (traits || []).filter(
-          (t: Trait) =>
-            !search ||
-            t.name.toLowerCase().includes(search.toLowerCase()) ||
-            t.description?.toLowerCase().includes(search.toLowerCase()),
-        ),
+        (traits || []).filter((t: Trait) => {
+          if (
+            search &&
+            !t.name.toLowerCase().includes(search.toLowerCase()) &&
+            !t.description?.toLowerCase().includes(search.toLowerCase())
+          ) {
+            return false;
+          }
+          return rowMatchesCodexRulesSourceFilter(t.sources, rulesSources);
+        }),
       ),
-    [traits, search, sortItems],
+    [traits, search, rulesSources, sortItems],
   );
 
   const traitById = useMemo(() => traitsByIdMap(traits || []), [traits]);
@@ -62,6 +70,15 @@ export function CodexTraitsTab({
       onSearchChange={setSearch}
       searchPlaceholder="Search traits..."
       searchAriaLabel="Search traits"
+      filters={
+        <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
+          <CodexRulesSourceFilter
+            selectedValues={rulesSources}
+            onSelect={(id) => setRulesSources((prev) => (prev.includes(id) ? prev : [...prev, id]))}
+            onRemove={(id) => setRulesSources((prev) => prev.filter((s) => s !== id))}
+          />
+        </div>
+      }
       headerColumns={TRAIT_COLUMNS}
       gridColumns={TRAIT_GRID_COLUMNS}
       sortState={sortState}

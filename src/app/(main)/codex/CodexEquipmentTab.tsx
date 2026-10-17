@@ -32,6 +32,7 @@ import {
   countActiveArmamentFilters,
   type ArmamentFilterState,
 } from '@/lib/library/armament-filters';
+import { countActiveCodexRulesSourceFilters } from '@/lib/codex/list-rules-source-filter';
 import type { ArmamentCharacterContext } from '@/lib/library/armament-character-context';
 import {
   EQUIPMENT_LIST_PATH_KINDS,
@@ -82,6 +83,7 @@ export function CodexEquipmentTab({
     search: '',
     categoryFilter: '',
     rarityFilter: '',
+    rulesSources: [],
   });
   const [armamentFilters, setArmamentFilters] =
     useState<ArmamentFilterState>(EMPTY_ARMAMENT_FILTERS);
@@ -132,6 +134,8 @@ export function CodexEquipmentTab({
           onChange={setArmamentFilters}
           onCharacterContextChange={setCharacterContext}
           showEquipmentExtras
+          rulesSources={listFilters.rulesSources}
+          onRulesSourcesChange={(next) => setListFilters((f) => ({ ...f, rulesSources: next }))}
           pathFilter={{
             options: pathIndex.options,
             selectedPathIds,
@@ -156,6 +160,7 @@ export function CodexEquipmentTab({
       }
       filterActiveCount={
         countActiveArmamentFilters(armamentFilters, Boolean(characterContext)) +
+        countActiveCodexRulesSourceFilters(listFilters.rulesSources) +
         (pathFilterActive ? 1 : 0)
       }
       headerColumns={CODEX_EQUIPMENT_HEADER_COLUMNS}

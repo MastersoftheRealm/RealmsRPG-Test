@@ -10,7 +10,9 @@ import { useState, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import { formatListCellLabel } from '@/lib/utils';
 import { speciesCreatorEditHref } from '../species-creator/species-creator-bootstrap';
-import { ChipSelect } from '@/components/patterns/filters';
+import { ChipSelect, CodexRulesSourceFilter } from '@/components/patterns/filters';
+import { rowMatchesCodexRulesSourceFilter } from '@/lib/codex/list-rules-source-filter';
+import type { CodexSourceId } from '@/lib/codex/sources';
 import {
   CodexBrowseListShell,
   ErrorDisplay as ErrorState,
@@ -45,6 +47,7 @@ interface SpeciesFilters {
   search: string;
   types: string[];
   sizes: string[];
+  rulesSources: CodexSourceId[];
 }
 
 function SpeciesCard({
@@ -263,6 +266,7 @@ export function CodexSpeciesTab({
     search: '',
     types: [],
     sizes: [],
+    rulesSources: [],
   });
 
   const filterOptions = useMemo(() => {
@@ -305,6 +309,8 @@ export function CodexSpeciesTab({
       if (filters.sizes.length > 0 && !s.sizes?.some((sz: string) => filters.sizes.includes(sz))) {
         return false;
       }
+
+      if (!rowMatchesCodexRulesSourceFilter(s.sources, filters.rulesSources)) return false;
 
       return true;
     });
@@ -369,6 +375,22 @@ export function CodexSpeciesTab({
         selectedValues={filters.sizes}
         onSelect={(v) => setFilters((f) => ({ ...f, sizes: [...f.sizes, v] }))}
         onRemove={(v) => setFilters((f) => ({ ...f, sizes: f.sizes.filter((s) => s !== v) }))}
+      />
+
+      <CodexRulesSourceFilter
+        selectedValues={filters.rulesSources}
+        onSelect={(id) =>
+          setFilters((f) => ({
+            ...f,
+            rulesSources: f.rulesSources.includes(id) ? f.rulesSources : [...f.rulesSources, id],
+          }))
+        }
+        onRemove={(id) =>
+          setFilters((f) => ({
+            ...f,
+            rulesSources: f.rulesSources.filter((s) => s !== id),
+          }))
+        }
       />
     </div>
   );

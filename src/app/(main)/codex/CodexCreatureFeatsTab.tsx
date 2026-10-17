@@ -8,11 +8,14 @@
 'use client';
 
 import { useState, useMemo } from 'react';
+import { CodexRulesSourceFilter } from '@/components/patterns/filters';
 import {
   CodexBrowseListShell,
   ErrorDisplay as ErrorState,
   GridListRow,
 } from '@/components/patterns';
+import { rowMatchesCodexRulesSourceFilter } from '@/lib/codex/list-rules-source-filter';
+import type { CodexSourceId } from '@/lib/codex/sources';
 import { formatCreatureLevel } from '@/lib/game';
 import { useCreatureFeats, type CreatureFeat } from '@/hooks';
 import { useSort } from '@/hooks/use-sort';
@@ -39,19 +42,24 @@ export function CodexCreatureFeatsTab({
     refetch,
   } = useCreatureFeats({ enabled: loadPublicCodex });
   const [search, setSearch] = useState('');
+  const [rulesSources, setRulesSources] = useState<CodexSourceId[]>([]);
   const { sortState, handleSort, sortItems } = useSort('name');
 
   const filtered = useMemo(
     () =>
       sortItems<CreatureFeat>(
-        (creatureFeats || []).filter(
-          (f: CreatureFeat) =>
-            !search ||
-            f.name.toLowerCase().includes(search.toLowerCase()) ||
-            f.description?.toLowerCase().includes(search.toLowerCase()),
-        ),
+        (creatureFeats || []).filter((f: CreatureFeat) => {
+          if (
+            search &&
+            !f.name.toLowerCase().includes(search.toLowerCase()) &&
+            !f.description?.toLowerCase().includes(search.toLowerCase())
+          ) {
+            return false;
+          }
+          return rowMatchesCodexRulesSourceFilter(f.sources, rulesSources);
+        }),
       ),
-    [creatureFeats, search, sortItems],
+    [creatureFeats, search, rulesSources, sortItems],
   );
 
   if (codexMode === 'my') {
@@ -67,6 +75,15 @@ export function CodexCreatureFeatsTab({
       onSearchChange={setSearch}
       searchPlaceholder="Search creature feats..."
       searchAriaLabel="Search creature feats"
+      filters={
+        <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
+          <CodexRulesSourceFilter
+            selectedValues={rulesSources}
+            onSelect={(id) => setRulesSources((prev) => (prev.includes(id) ? prev : [...prev, id]))}
+            onRemove={(id) => setRulesSources((prev) => prev.filter((s) => s !== id))}
+          />
+        </div>
+      }
       headerColumns={CREATURE_FEAT_COLUMNS}
       gridColumns={CREATURE_FEAT_GRID_COLUMNS}
       sortState={sortState}

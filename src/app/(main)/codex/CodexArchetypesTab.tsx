@@ -7,11 +7,14 @@
 'use client';
 
 import { useMemo, useState } from 'react';
+import { CodexRulesSourceFilter } from '@/components/patterns/filters';
 import {
   CodexBrowseListShell,
   ErrorDisplay as ErrorState,
   GridListRow,
 } from '@/components/patterns';
+import { rowMatchesCodexRulesSourceFilter } from '@/lib/codex/list-rules-source-filter';
+import type { CodexSourceId } from '@/lib/codex/sources';
 import type { ColumnValue } from '@/components/patterns/list/grid-list-row';
 import { useSort, sortByColumn } from '@/hooks/use-sort';
 import {
@@ -231,6 +234,7 @@ interface CodexArchetypesTabProps {
 export function CodexArchetypesTab({ codexMode }: CodexArchetypesTabProps) {
   const loadPublicCodex = codexMode === 'public';
   const [search, setSearch] = useState('');
+  const [rulesSources, setRulesSources] = useState<CodexSourceId[]>([]);
   const {
     data: archetypes = [],
     isLoading,
@@ -269,14 +273,17 @@ export function CodexArchetypesTab({ codexMode }: CodexArchetypesTabProps) {
 
   const filtered = useMemo(() => {
     const query = search.trim().toLowerCase();
-    if (!query) return pathArchetypes;
-    return pathArchetypes.filter(
-      (archetype) =>
-        archetype.name.toLowerCase().includes(query) ||
-        (archetype.description ?? '').toLowerCase().includes(query) ||
-        archetype.type.toLowerCase().includes(query),
-    );
-  }, [pathArchetypes, search]);
+    return pathArchetypes.filter((archetype) => {
+      if (query) {
+        const matchesSearch =
+          archetype.name.toLowerCase().includes(query) ||
+          (archetype.description ?? '').toLowerCase().includes(query) ||
+          archetype.type.toLowerCase().includes(query);
+        if (!matchesSearch) return false;
+      }
+      return rowMatchesCodexRulesSourceFilter(archetype.sources, rulesSources);
+    });
+  }, [pathArchetypes, search, rulesSources]);
 
   const { sortState, handleSort } = useSort('name');
   const sorted = useMemo(() => {
@@ -309,6 +316,15 @@ export function CodexArchetypesTab({ codexMode }: CodexArchetypesTabProps) {
       onSearchChange={setSearch}
       searchPlaceholder="Search archetype paths…"
       searchAriaLabel="Search archetype paths"
+      filters={
+        <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
+          <CodexRulesSourceFilter
+            selectedValues={rulesSources}
+            onSelect={(id) => setRulesSources((prev) => (prev.includes(id) ? prev : [...prev, id]))}
+            onRemove={(id) => setRulesSources((prev) => prev.filter((s) => s !== id))}
+          />
+        </div>
+      }
       headerColumns={ARCHETYPE_COLUMNS}
       gridColumns={ARCHETYPE_GRID_COLUMNS}
       sortState={sortState}

@@ -28,6 +28,8 @@ import {
   countActivePowerTechniqueFilters,
   type PowerTechniqueFilterState,
 } from '@/lib/library/power-technique-filters';
+import { countActiveCodexRulesSourceFilters } from '@/lib/codex/list-rules-source-filter';
+import type { CodexSourceId } from '@/lib/codex/sources';
 import type { PowerTechniqueCharacterContext } from '@/lib/library/power-technique-character-context';
 import { empoweredTechniquePartsSection } from '@/lib/library/empowered-technique-display';
 import { resolveListRowThumbnail } from '@/lib/list-row-image';
@@ -94,6 +96,7 @@ export function OfficialTechniqueList({
     null,
   );
   const [characterFilterId, setCharacterFilterId] = useState('');
+  const [rulesSources, setRulesSources] = useState<CodexSourceId[]>([]);
   const addToCharacter = useAddToCharacterFromLibrary('technique', characterFilterId);
   const { selectedPathIds, setSelectedPathIds, pathIndex, pathRecommendedIds, pathFilterActive } =
     usePathListFilter({
@@ -120,8 +123,9 @@ export function OfficialTechniqueList({
         advancedFilters,
         characterContext,
         empowered ? null : pathRecommendedIds,
+        rulesSources,
       ),
-    [advancedFilters, characterContext, empowered, pathRecommendedIds],
+    [advancedFilters, characterContext, empowered, pathRecommendedIds, rulesSources],
   );
 
   return (
@@ -149,6 +153,8 @@ export function OfficialTechniqueList({
                 selectedPathIds,
                 onChange: setSelectedPathIds,
               }}
+              rulesSources={rulesSources}
+              onRulesSourcesChange={setRulesSources}
             />
           )
         }
@@ -160,6 +166,7 @@ export function OfficialTechniqueList({
                 'technique',
                 Boolean(characterContext),
               ) +
+              countActiveCodexRulesSourceFilters(rulesSources) +
               (characterFilterId ? 1 : 0) +
               (pathFilterActive ? 1 : 0)
         }

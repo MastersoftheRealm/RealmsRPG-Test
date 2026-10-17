@@ -13,6 +13,7 @@ import {
   ChipSelect,
   SelectFilter,
   CharacterFilter,
+  CodexRulesSourceFilter,
   FILTER_CONTROL_ROW_CLASS,
 } from '@/components/patterns/filters';
 import { CodexSkillRow } from '@/components/codex';
@@ -63,6 +64,7 @@ export function CodexSkillsTab({
     abilities: [],
     baseSkill: '',
     subSkillMode: 'all',
+    rulesSources: [],
     knownMode: 'all',
     baseSkillOwnedOnly: false,
   });
@@ -210,6 +212,24 @@ export function CodexSkillsTab({
                 </div>
               </>
             ) : null}
+
+            <CodexRulesSourceFilter
+              selectedValues={filters.rulesSources}
+              onSelect={(id) =>
+                setFilters((f) => ({
+                  ...f,
+                  rulesSources: f.rulesSources.includes(id)
+                    ? f.rulesSources
+                    : [...f.rulesSources, id],
+                }))
+              }
+              onRemove={(id) =>
+                setFilters((f) => ({
+                  ...f,
+                  rulesSources: f.rulesSources.filter((s) => s !== id),
+                }))
+              }
+            />
 
             <ArchetypePathFilter
               options={pathIndex.options}

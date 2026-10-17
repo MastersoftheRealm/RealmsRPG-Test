@@ -108,7 +108,7 @@ describe('codex equipment-list', () => {
     ];
     const filtered = filterCodexEquipment(
       items,
-      { search: 'kit', categoryFilter: 'Tools', rarityFilter: '' },
+      { search: 'kit', categoryFilter: 'Tools', rarityFilter: '', rulesSources: [] },
       { ...EMPTY_ARMAMENT_FILTERS, affordableCurrencyOnly: true },
       ctx,
     );
@@ -137,7 +137,7 @@ describe('codex equipment-list', () => {
     });
     const filtered = filterCodexEquipment(
       items,
-      { search: '', categoryFilter: '', rarityFilter: '' },
+      { search: '', categoryFilter: '', rarityFilter: '', rulesSources: [] },
       EMPTY_ARMAMENT_FILTERS,
       null,
       pathRecommendedEntityIds(index, ['p-gear']),

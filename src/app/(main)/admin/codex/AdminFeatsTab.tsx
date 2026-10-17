@@ -7,6 +7,7 @@ import {
   AbilityRequirementFilter,
   TagFilter,
   SelectFilter,
+  CodexRulesSourceFilter,
   FilterInput,
   FILTER_LABEL_ROW_CLASS,
 } from '@/components/patterns/filters';
@@ -86,6 +87,7 @@ export function AdminFeatsTab() {
     tagMode: 'all',
     featTypeMode: '',
     stateFeatMode: '',
+    rulesSources: [],
   });
 
   const filterOptions = useMemo(() => buildFeatFilterOptions(feats), [feats]);
@@ -333,6 +335,23 @@ export function AdminFeatsTab() {
                 setFilters((f) => ({ ...f, stateFeatMode: (v || '') as '' | 'only' | 'hide' }))
               }
               placeholder="All states"
+            />
+            <CodexRulesSourceFilter
+              selectedValues={filters.rulesSources}
+              onSelect={(id) =>
+                setFilters((f) => ({
+                  ...f,
+                  rulesSources: f.rulesSources.includes(id)
+                    ? f.rulesSources
+                    : [...f.rulesSources, id],
+                }))
+              }
+              onRemove={(id) =>
+                setFilters((f) => ({
+                  ...f,
+                  rulesSources: f.rulesSources.filter((s) => s !== id),
+                }))
+              }
             />
             <ArchetypePathFilter
               options={pathIndex.options}

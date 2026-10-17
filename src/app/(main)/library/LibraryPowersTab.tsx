@@ -34,6 +34,8 @@ import {
   countActivePowerTechniqueFilters,
   type PowerTechniqueFilterState,
 } from '@/lib/library/power-technique-filters';
+import { countActiveCodexRulesSourceFilters } from '@/lib/codex/list-rules-source-filter';
+import type { CodexSourceId } from '@/lib/codex/sources';
 import type { PowerTechniqueCharacterContext } from '@/lib/library/power-technique-character-context';
 import { listInnateThresholdFilterOptions } from '@/lib/game/innate-eligibility';
 import {
@@ -71,6 +73,7 @@ export function LibraryPowersTab({ onDelete }: LibraryPowersTabProps) {
     null,
   );
   const [characterFilterId, setCharacterFilterId] = useState('');
+  const [rulesSources, setRulesSources] = useState<CodexSourceId[]>([]);
   const addToCharacter = useAddToCharacterFromLibrary('power', characterFilterId);
   const { sortState, handleSort, sortItems } = useSort('name');
   const { selectedPathIds, setSelectedPathIds, pathIndex, pathRecommendedIds, pathFilterActive } =
@@ -127,8 +130,17 @@ export function LibraryPowersTab({ onDelete }: LibraryPowersTabProps) {
         advancedFilters,
         characterContext,
         pathRecommendedIds,
+        rulesSources,
       ),
-    [cardData, search, advancedFilters, characterContext, sortItems, pathRecommendedIds],
+    [
+      cardData,
+      search,
+      advancedFilters,
+      characterContext,
+      sortItems,
+      pathRecommendedIds,
+      rulesSources,
+    ],
   );
 
   return (
@@ -176,10 +188,13 @@ export function LibraryPowersTab({ onDelete }: LibraryPowersTabProps) {
               selectedPathIds,
               onChange: setSelectedPathIds,
             }}
+            rulesSources={rulesSources}
+            onRulesSourcesChange={setRulesSources}
           />
         }
         filterActiveCount={
           countActivePowerTechniqueFilters(advancedFilters, 'power', Boolean(characterContext)) +
+          countActiveCodexRulesSourceFilters(rulesSources) +
           (characterFilterId ? 1 : 0) +
           (pathFilterActive ? 1 : 0)
         }

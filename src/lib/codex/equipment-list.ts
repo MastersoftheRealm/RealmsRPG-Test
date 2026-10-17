@@ -17,6 +17,8 @@ import type { CodexEquipmentItem } from '@/types/codex';
 import { formatListCellLabel } from '@/lib/utils';
 import { rowMatchesPathRecommendedIds } from '@/lib/game/path-recommendation-index';
 import { glrListChrome } from '@/lib/glr';
+import { rowMatchesCodexRulesSourceFilter } from '@/lib/codex/list-rules-source-filter';
+import type { CodexSourceId } from '@/lib/codex/sources';
 
 const gearBrowseChrome = glrListChrome({ entityType: 'gear', mode: 'browse' });
 
@@ -32,6 +34,8 @@ export interface CodexEquipmentListFilters {
   search: string;
   categoryFilter: string;
   rarityFilter: string;
+  /** Rules sources (Core / expansions). Empty = All. */
+  rulesSources: CodexSourceId[];
 }
 
 export function equipmentCurrency(item: {
@@ -122,6 +126,7 @@ export function filterCodexEquipment<T extends CodexEquipmentItem>(
   const q = listFilters.search.trim().toLowerCase();
   const narrowed = items.filter((item) => {
     if (!rowMatchesPathRecommendedIds(item.id, pathRecommendedIds)) return false;
+    if (!rowMatchesCodexRulesSourceFilter(item.sources, listFilters.rulesSources)) return false;
     if (q && !item.name.toLowerCase().includes(q) && !item.description?.toLowerCase().includes(q)) {
       return false;
     }

@@ -7,7 +7,9 @@ import {
   GridListRow,
 } from '@/components/patterns';
 import { useToast } from '@/components/ui';
-import { SelectFilter } from '@/components/patterns/filters';
+import { SelectFilter, CodexRulesSourceFilter } from '@/components/patterns/filters';
+import { rowMatchesCodexRulesSourceFilter } from '@/lib/codex/list-rules-source-filter';
+import type { CodexSourceId } from '@/lib/codex/sources';
 import { useParts, type Part } from '@/hooks';
 import { ABILITIES_AND_DEFENSES } from '@/lib/game/constants';
 import { formatPercentageOptionEnergy } from '@/lib/calculators/power-energy-breakdown';
@@ -43,6 +45,7 @@ interface PartFilters {
   categoryFilter: string;
   typeFilter: 'all' | 'power' | 'technique';
   mechanicMode: '' | 'only' | 'hide';
+  rulesSources: CodexSourceId[];
 }
 
 export function AdminPartsTab() {
@@ -71,6 +74,7 @@ export function AdminPartsTab() {
     categoryFilter: '',
     typeFilter: 'all',
     mechanicMode: '',
+    rulesSources: [],
   });
   const [optionSlotCount, setOptionSlotCount] = useState(0);
   const [form, setForm] = useState<PartFormState>(EMPTY_PART_FORM);
@@ -138,6 +142,7 @@ export function AdminPartsTab() {
       if (filters.typeFilter !== 'all' && (p.type || 'power') !== filters.typeFilter) return false;
       if (filters.mechanicMode === 'only' && !p.mechanic) return false;
       if (filters.mechanicMode === 'hide' && p.mechanic) return false;
+      if (!rowMatchesCodexRulesSourceFilter(p.sources, filters.rulesSources)) return false;
       return true;
     });
 
@@ -250,6 +255,23 @@ export function AdminPartsTab() {
                 setFilters((f) => ({ ...f, mechanicMode: (v || '') as '' | 'only' | 'hide' }))
               }
               placeholder="All parts"
+            />
+            <CodexRulesSourceFilter
+              selectedValues={filters.rulesSources}
+              onSelect={(id) =>
+                setFilters((f) => ({
+                  ...f,
+                  rulesSources: f.rulesSources.includes(id)
+                    ? f.rulesSources
+                    : [...f.rulesSources, id],
+                }))
+              }
+              onRemove={(id) =>
+                setFilters((f) => ({
+                  ...f,
+                  rulesSources: f.rulesSources.filter((s) => s !== id),
+                }))
+              }
             />
           </div>
         }
