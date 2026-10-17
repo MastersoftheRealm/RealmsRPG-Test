@@ -17,6 +17,9 @@ import {
 } from '@/hooks';
 import { migrateSkillsAfterSpeciesChange } from '@/lib/species-skill-migration';
 import { getChoiceOptionIds } from '@/lib/choice-trait';
+import { getSpeciesSizeOptions } from '@/lib/ancestry/species-size-options';
+import { getCharacterAllowedSizes, patchAncestrySizeChoice } from '@/lib/character/character-size';
+import { reconcileSizeWithAllowedOptions } from '@/lib/game/size-table';
 import {
   averageMixedPhysical,
   buildMixedSpeciesAncestryDraft,
@@ -169,7 +172,12 @@ export function useEditSpeciesModal({
   }, []);
 
   const handleSingleSpeciesSelect = useCallback((s: Species) => {
-    setDraftAncestry(buildSingleSpeciesAncestryDraft(s));
+    const draft = buildSingleSpeciesAncestryDraft(s);
+    const sizes = getSpeciesSizeOptions(s);
+    if (sizes.length === 1 && sizes[0]) {
+      draft.selectedSize = sizes[0];
+    }
+    setDraftAncestry(draft);
   }, []);
 
   const handleMixedConfirm = useCallback(
@@ -319,6 +327,12 @@ export function useEditSpeciesModal({
         mixedPhysical: mixedAveragedPhysical ?? draftAncestry.mixedPhysical,
       };
     }
+    const allowedSizes = getCharacterAllowedSizes(ancestryToSave, allSpecies);
+    const reconciledSize = reconcileSizeWithAllowedOptions(
+      ancestryToSave.selectedSize ?? ancestryToSave.size,
+      allowedSizes,
+    );
+    ancestryToSave = patchAncestrySizeChoice(ancestryToSave, reconciledSize);
     const migratedSkills = migrateSkillsAfterSpeciesChange(
       character,
       ancestryToSave,

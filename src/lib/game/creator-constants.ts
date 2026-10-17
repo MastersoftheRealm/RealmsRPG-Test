@@ -187,82 +187,12 @@ export const SPECIES_TYPES = [
 
 export type SpeciesType = (typeof SPECIES_TYPES)[number];
 
-export const CREATURE_SIZES = [
-  {
-    value: 'miniscule',
-    label: 'Miniscule',
-    spaces: 0.125,
-    baseCarry: 10,
-    perStrCarry: 5,
-    minCarry: 5,
-    height: 'Under 30 cm',
-  },
-  {
-    value: 'tiny',
-    label: 'Tiny',
-    spaces: 0.25,
-    baseCarry: 25,
-    perStrCarry: 10,
-    minCarry: 10,
-    height: '30–60 cm',
-  },
-  {
-    value: 'small',
-    label: 'Small',
-    spaces: 1,
-    baseCarry: 50,
-    perStrCarry: 25,
-    minCarry: 25,
-    height: '60–120 cm',
-  },
-  {
-    value: 'medium',
-    label: 'Medium',
-    spaces: 1,
-    baseCarry: 100,
-    perStrCarry: 50,
-    minCarry: 50,
-    height: '150–200 cm',
-  },
-  {
-    value: 'large',
-    label: 'Large',
-    spaces: 2,
-    baseCarry: 200,
-    perStrCarry: 100,
-    minCarry: 100,
-    height: '200–300 cm',
-  },
-  {
-    value: 'huge',
-    label: 'Huge',
-    spaces: 4,
-    baseCarry: 400,
-    perStrCarry: 200,
-    minCarry: 200,
-    height: '300–450 cm',
-  },
-  {
-    value: 'humongous',
-    label: 'Humongous',
-    spaces: 9,
-    baseCarry: 800,
-    perStrCarry: 400,
-    minCarry: 400,
-    height: '450–750 cm',
-  },
-  {
-    value: 'gargantuan',
-    label: 'Gargantuan',
-    spaces: 16,
-    baseCarry: 1600,
-    perStrCarry: 800,
-    minCarry: 800,
-    height: '750+ cm',
-  },
-] as const;
-
-export type CreatureSize = (typeof CREATURE_SIZES)[number]['value'];
+export {
+  CREATURE_SIZES,
+  CARRYING_CAPACITY_HALF_LOAD_RULE,
+  type CreatureSize,
+  type SizeTableRow,
+} from './size-table';
 
 /**
  * Feat-point cost fallbacks for creature mechanical traits when the codex row is

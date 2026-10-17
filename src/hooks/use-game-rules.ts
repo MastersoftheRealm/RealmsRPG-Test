@@ -31,6 +31,7 @@ import {
 import {
   CONDITIONS,
   CREATURE_SIZES,
+  CARRYING_CAPACITY_HALF_LOAD_RULE,
   ARMOR_EXCEPTION_TYPES,
   ALL_DAMAGE_TYPES,
   LEVELS_BY_RARITY,
@@ -203,8 +204,7 @@ const FALLBACK_RULES: CoreRulesMap = {
     halfCapacitySpeedPenalty: 'Movement speed halved',
     spaceAndShape:
       'Creatures are classified into size categories based on their height and, in some cases, width. Generally, larger creatures take up more space on a battle map.',
-    carryingNotes:
-      'If you carry more than half your maximum capacity, your movement speed is halved. Minimum carry still applies when Strength is negative.',
+    carryingNotes: CARRYING_CAPACITY_HALF_LOAD_RULE,
     movementThroughEnemySpaces:
       'Moving through an enemy your size or smaller is difficult terrain. You cannot end your turn in another creature’s space unless it occupies more than double your spaces.',
   },

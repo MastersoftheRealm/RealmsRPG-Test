@@ -150,6 +150,11 @@ export interface LibrarySectionData {
   powerAttackBonus?: number | undefined;
   onWeightChange?: ((value: number) => void) | undefined;
   onHeightChange?: ((value: number) => void) | undefined;
+  characterSizeOptions?: string[] | undefined;
+  characterSize?: string | undefined;
+  characterSizeLabel?: string | undefined;
+  characterSizeHeightHint?: string | undefined;
+  onCharacterSizeChange?: ((size: string) => void) | undefined;
   onAgeChange?: ((value: string) => void) | undefined;
   onAppearanceChange?: ((value: string) => void) | undefined;
   onBackstoryChange?: ((value: string) => void) | undefined;
