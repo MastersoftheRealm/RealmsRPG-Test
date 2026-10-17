@@ -16,7 +16,7 @@
  * - ArmamentFilters: Character + currency affordability; Codex mixed extras — panel body only
  * - FilterSection: Collapsible container (toolbarStart for USM/L3 and ListSearchToolbar browse lists)
  * - SourceFilter: All / Realms Library / My Library scope
- * - CodexRulesSourceFilter: Core + expansion multi-select (empty = All)
+ * - CodexRulesSourceFilter: catalog multi-select (empty selection = All)
  */
 
 export { ChipSelect } from './chip-select';

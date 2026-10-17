@@ -26,6 +26,16 @@ describe('list-rules-source-filter', () => {
     expect(
       filterRowsByCodexRulesSources(rows, ['Core'], (r) => r.sources).map((r) => r.id),
     ).toEqual(['a', 'c']);
+    expect(
+      filterRowsByCodexRulesSources(rows, ['core'], (r) => r.sources).map((r) => r.id),
+    ).toEqual(['a', 'c']);
+    expect(
+      filterRowsByCodexRulesSources(
+        [{ id: 'gone', sources: ['Retired'] }],
+        ['Retired'],
+        (r) => r.sources,
+      ).map((r) => r.id),
+    ).toEqual(['gone']);
   });
 
   it('reads sources from row or nested raw', () => {

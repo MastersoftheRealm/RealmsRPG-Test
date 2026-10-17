@@ -1,7 +1,7 @@
 'use client';
 
 import { ChipSelect } from './chip-select';
-import { useCodexSourceCatalogOptions } from '@/hooks/use-codex-source-catalog';
+import { useCodexSourceCatalog } from '@/hooks/use-codex-source-catalog';
 import { CODEX_SOURCE_PICKER_LABEL, CODEX_SOURCE_PICKER_PLACEHOLDER } from '@/lib/codex/sources';
 
 export interface CodexRulesSourceFilterProps {
@@ -16,19 +16,30 @@ export function CodexRulesSourceFilter({
   onChange,
   className,
 }: CodexRulesSourceFilterProps) {
-  const options = useCodexSourceCatalogOptions();
+  const { options, isLoading, isError } = useCodexSourceCatalog();
+  const placeholder = isLoading
+    ? 'Loading sources…'
+    : isError
+      ? 'Sources unavailable'
+      : CODEX_SOURCE_PICKER_PLACEHOLDER;
 
   return (
-    <ChipSelect
-      label={CODEX_SOURCE_PICKER_LABEL}
-      placeholder={CODEX_SOURCE_PICKER_PLACEHOLDER}
-      options={options}
-      selectedValues={[...selectedValues]}
-      onSelect={(name) => {
-        if (!selectedValues.includes(name)) onChange([...selectedValues, name]);
-      }}
-      onRemove={(name) => onChange(selectedValues.filter((value) => value !== name))}
-      className={className}
-    />
+    <div className={className ? `min-w-0 ${className}` : 'min-w-0'}>
+      <ChipSelect
+        label={CODEX_SOURCE_PICKER_LABEL}
+        placeholder={placeholder}
+        options={options}
+        selectedValues={[...selectedValues]}
+        onSelect={(name) => {
+          if (!selectedValues.includes(name)) onChange([...selectedValues, name]);
+        }}
+        onRemove={(name) => onChange(selectedValues.filter((value) => value !== name))}
+      />
+      {isError ? (
+        <p className="mt-1 text-sm text-danger-fg" role="alert">
+          Sources could not be loaded.
+        </p>
+      ) : null}
+    </div>
   );
 }

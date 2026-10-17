@@ -10,7 +10,7 @@ import {
   collapseCodexSourceName,
   codexSourcesOrCore,
 } from '@/lib/codex/sources';
-import { useCodexSourceCatalogOptions } from '@/hooks/use-codex-source-catalog';
+import { useCodexSourceCatalog } from '@/hooks/use-codex-source-catalog';
 
 export function AdminCodexSourceField({
   value,
@@ -19,7 +19,7 @@ export function AdminCodexSourceField({
   value: readonly string[];
   onChange: (next: string[]) => void;
 }) {
-  const catalogOptions = useCodexSourceCatalogOptions();
+  const { options: catalogOptions } = useCodexSourceCatalog();
   const catalog = useMemo(() => catalogOptions.map((option) => option.value), [catalogOptions]);
   const [draft, setDraft] = useState('');
   const [draftError, setDraftError] = useState<string | null>(null);
