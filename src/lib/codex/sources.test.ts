@@ -10,11 +10,15 @@ import {
 import {
   CODEX_SOURCE_WHITESPACE_CODE_POINTS,
   codexSourceNameError,
+  codexSourcesAfterAdd,
+  codexSourcesAfterRemove,
+  codexSourceMembershipRemoveOffered,
   codexSourcesForWrite,
   codexSourcesOrCore,
   collapseCodexSourceName,
   itemMatchesSources,
   normalizeCodexSources,
+  resolveCodexSourceName,
 } from './sources';
 
 describe('codex sources', () => {
@@ -150,6 +154,25 @@ describe('codex sources', () => {
     for (const code of CODEX_SOURCE_WHITESPACE_CODE_POINTS) {
       expect(sql).toContain(`chr(${code})`);
     }
+  });
+
+  it('adds and removes membership with case-insensitive dedupe and Core fallback', () => {
+    expect(codexSourcesAfterAdd(['Core', 'Homebrew'], 'homebrew')).toEqual(['Core', 'Homebrew']);
+    expect(codexSourcesAfterAdd(['Core'], 'Crafting')).toEqual(['Core', 'Crafting']);
+    expect(() => codexSourcesAfterAdd(['Core'], 'All')).toThrow(/reserved/);
+
+    expect(codexSourcesAfterRemove(['Core', 'Homebrew'], 'Core')).toEqual(['Homebrew']);
+    expect(codexSourcesAfterRemove(['Core'], 'Core')).toEqual(['Core']);
+    expect(codexSourcesAfterRemove(['Homebrew'], 'Homebrew')).toEqual(['Core']);
+    expect(codexSourcesAfterRemove(['CORE', 'core', 'Homebrew'], 'core')).toEqual(['Homebrew']);
+
+    expect(codexSourceMembershipRemoveOffered(['Core'], 'Core')).toBe(false);
+    expect(codexSourceMembershipRemoveOffered([], 'Core')).toBe(false);
+    expect(codexSourceMembershipRemoveOffered(['Core', 'Homebrew'], 'Core')).toBe(true);
+    expect(codexSourceMembershipRemoveOffered(['Homebrew'], 'Homebrew')).toBe(true);
+
+    expect(resolveCodexSourceName('homebrew', ['Core', 'Homebrew'])).toBe('Homebrew');
+    expect(resolveCodexSourceName('New Pack', ['Core'])).toBe('New Pack');
   });
 
   it('does not build a per-table source list in admin codex', () => {

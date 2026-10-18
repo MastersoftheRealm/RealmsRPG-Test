@@ -34,6 +34,7 @@ export type AdminCodexSourceRow = {
   id: string | number;
   name: string | null;
   sources?: unknown;
+  updated_at?: string | null;
 };
 
 export type AdminCodexSourceRowsByTable = Partial<Record<CodexSourceTable, AdminCodexSourceRow[]>>;
