@@ -27,6 +27,7 @@ const MAX_REPORTED_REFERENCES = 20;
 
 function revalidatePublicCodexCaches(collection: CodexCollection, table: string): void {
   revalidatePath('/admin/codex');
+  revalidatePath('/admin/sources');
   revalidatePath('/codex');
   if (collection === 'core_rules') {
     updateTag(CORE_RULES_CACHE_TAG);

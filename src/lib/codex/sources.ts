@@ -141,6 +141,52 @@ export function codexSourcesForWrite(value: unknown, known?: readonly string[]):
   return codexSourcesOrCore(value, known);
 }
 
+/** Catalog spelling when the draft matches an existing source key; otherwise the collapsed draft. */
+export function resolveCodexSourceName(draft: string, catalogNames: readonly string[]): string {
+  const collapsed = collapseCodexSourceName(draft);
+  if (!collapsed) return collapsed;
+  const key = codexSourceKey(collapsed);
+  const match = catalogNames.find((name) => codexSourceKey(name) === key);
+  return match ?? collapsed;
+}
+
+/** Sources array after adding a pack name (deduped case-insensitively, validated for write). */
+export function codexSourcesAfterAdd(
+  current: unknown,
+  sourceName: string,
+  catalogNames?: readonly string[],
+): string[] {
+  const currentList = codexSourcesOrCore(current, catalogNames);
+  return codexSourcesForWrite([...currentList, sourceName], catalogNames);
+}
+
+/** Sources array after removing a pack name (empty becomes Core). */
+export function codexSourcesAfterRemove(
+  current: unknown,
+  sourceName: string,
+  catalogNames?: readonly string[],
+): string[] {
+  const key = codexSourceKey(sourceName);
+  const currentList = codexSourcesOrCore(current, catalogNames);
+  const filtered = currentList.filter((name) => codexSourceKey(name) !== key);
+  return codexSourcesForWrite(filtered.length > 0 ? filtered : [], catalogNames);
+}
+
+/** False when remove would not change stored sources (for example Core-only rows). */
+export function codexSourceMembershipRemoveOffered(
+  itemSources: unknown,
+  sourceName: string,
+  catalogNames?: readonly string[],
+): boolean {
+  const before = codexSourcesOrCore(itemSources, catalogNames);
+  const key = codexSourceKey(sourceName);
+  if (!before.some((name) => codexSourceKey(name) === key)) return false;
+  const after = codexSourcesAfterRemove(itemSources, sourceName, catalogNames);
+  const beforeKeys = [...new Set(before.map((name) => codexSourceKey(name)))].sort();
+  const afterKeys = [...new Set(after.map((name) => codexSourceKey(name)))].sort();
+  return beforeKeys.join('\0') !== afterKeys.join('\0');
+}
+
 /**
  * List filter for a later Library/Codex source chip control.
  * No selection, or only the "all" token, matches every item.

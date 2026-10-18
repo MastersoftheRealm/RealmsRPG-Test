@@ -16,7 +16,7 @@ import type {
 } from '@/lib/codex/admin-source-list';
 import { createPublicClient } from '@/lib/supabase/public-client';
 
-const ADMIN_SOURCE_ROW_SELECT = 'id, name, sources';
+const ADMIN_SOURCE_ROW_SELECT = 'id, name, sources, updated_at';
 
 export type AdminCodexSourceRowsPayload = {
   rowsByTable: AdminCodexSourceRowsByTable;
