@@ -36,8 +36,8 @@ describe('codex sources', () => {
       'Core',
     ]);
     expect(normalizeCodexSources("Assassin's Accoutrements")).toEqual(["Assassin's Accoutrements"]);
-    expect(normalizeCodexSources('Wonderous Workshop, Diviners Delights')).toEqual([
-      'Wonderous Workshop, Diviners Delights',
+    expect(normalizeCodexSources("Wondrous Workshop, Diviner's Delights")).toEqual([
+      "Wondrous Workshop, Diviner's Delights",
     ]);
     const whitespace = CODEX_SOURCE_WHITESPACE_CODE_POINTS.map((code) =>
       String.fromCharCode(code),
@@ -117,9 +117,11 @@ describe('codex sources', () => {
     expect(omitCodexSourcesColumn('*')).toBe('*');
   });
 
-  it('describes the unapplied open-sources rewrite without touching the singular column', () => {
+  it('describes the applied open-sources rewrite without touching the singular column', () => {
     const sql = readFileSync(join(process.cwd(), 'sql/codex-entry-sources-open.sql'), 'utf8');
-    expect(sql).toContain('NOT APPLIED');
+    expect(sql).toContain('Applied on production 2026-10-17');
+    expect(sql).toContain('Do not run this against any database');
+    expect(sql).not.toContain('NOT APPLIED');
     for (const table of [
       'codex_feats',
       'codex_skills',

@@ -6,6 +6,11 @@
 
 import Link from 'next/link';
 import { PageContainer, PageHeader, Button } from '@/components/ui';
+import {
+  ADMIN_SOURCES_CARD_BODY,
+  ADMIN_SOURCES_CARD_BUTTON,
+  ADMIN_SOURCES_CARD_TITLE,
+} from './sources/admin-sources-copy';
 
 export default function AdminPage() {
   return (
@@ -21,6 +26,16 @@ export default function AdminPage() {
           </p>
           <Button asChild>
             <Link href="/admin/codex">Open Codex Editor</Link>
+          </Button>
+        </section>
+
+        <section className="rounded-lg border border-border bg-surface p-6">
+          <h2 className="mb-2 text-lg font-semibold text-text-primary">
+            {ADMIN_SOURCES_CARD_TITLE}
+          </h2>
+          <p className="mb-4 text-text-secondary">{ADMIN_SOURCES_CARD_BODY}</p>
+          <Button asChild>
+            <Link href="/admin/sources">{ADMIN_SOURCES_CARD_BUTTON}</Link>
           </Button>
         </section>
 
