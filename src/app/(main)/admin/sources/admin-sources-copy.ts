@@ -52,7 +52,6 @@ export function adminSourcesSectionSearchLabel(sectionLabel: string): string {
 }
 
 export const ADMIN_SOURCES_EMPTY_SOURCE_TITLE = 'This source has no items.';
-export const ADMIN_SOURCES_EMPTY_SOURCE_ADD_BUTTON = 'Add';
 
 export const ADMIN_SOURCES_LOADING = 'Loading sources…';
 export const ADMIN_SOURCES_LOAD_ERROR = 'Could not load sources.';
@@ -63,3 +62,31 @@ export const ADMIN_SOURCES_EMPTY_CATALOG_MESSAGE =
 export const ADMIN_SOURCES_LIST_COLUMN_NAME = 'Name';
 export const ADMIN_SOURCES_LIST_COLUMN_SOURCES = 'Sources';
 export const ADMIN_SOURCES_SAVED_TOAST = 'Saved';
+
+export const ADMIN_SOURCES_NAME_REQUIRED = 'Source name is required.';
+export const ADMIN_SOURCES_UNNAMED_ITEM = 'Unnamed item';
+export const ADMIN_SOURCES_ADD_MODAL_ALL_TYPES = 'All types';
+export const ADMIN_SOURCES_ADD_ITEMS_BUTTON = 'Add items';
+export const ADMIN_SOURCES_UPDATE_FAILED = 'Update failed.';
+export const ADMIN_SOURCES_ADD_FAILED = 'Failed to add item to source.';
+export const ADMIN_SOURCES_REMOVE_FAILED = 'Failed to remove item from source.';
+export const ADMIN_SOURCES_REMOVE_LOADING = 'Removing…';
+export const ADMIN_SOURCES_UNKNOWN_COLLECTION = 'Unknown collection';
+export const ADMIN_SOURCES_NOT_FOUND = 'Document not found';
+
+export function adminSourcesSectionAddLabel(sectionLabel: string): string {
+  return `Add ${sectionLabel}`;
+}
+
+export function adminSourcesAddItemsLabel(source: string): string {
+  return `Add items to ${source}`;
+}
+
+export function adminSourcesBatchStoppedMessage(succeeded: number, error: string): string {
+  const added = succeeded === 1 ? '1 item was added' : `${succeeded} items were added`;
+  return `${error} (${added} before the error.)`;
+}
+
+export function adminSourcesRemoveWithError(body: string, error: string): string {
+  return `${body} ${error}`;
+}

@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback, useMemo, useState, type ReactNode } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import Link from 'next/link';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import {
@@ -12,7 +12,6 @@ import {
   type SelectableItem,
 } from '@/components/patterns';
 import {
-  Alert,
   Button,
   EmptyState,
   IconButton,
@@ -24,7 +23,6 @@ import {
   Select,
   useToast,
 } from '@/components/ui';
-import { ADMIN_CODEX_ROW_ACTIONS_WIDTH } from '@/app/(main)/admin/codex/admin-codex-row-actions';
 import { codexKeys } from '@/hooks/use-codex';
 import { useSort } from '@/hooks/use-sort';
 import {
@@ -52,6 +50,9 @@ import {
   type AdminCodexSourceMembershipTarget,
 } from './actions';
 import {
+  ADMIN_SOURCES_ADD_FAILED,
+  ADMIN_SOURCES_ADD_ITEMS_BUTTON,
+  ADMIN_SOURCES_ADD_MODAL_ALL_TYPES,
   ADMIN_SOURCES_ADD_MODAL_CONFIRM,
   ADMIN_SOURCES_ADD_MODAL_SEARCH,
   ADMIN_SOURCES_ADD_MODAL_TYPE_COLUMN,
@@ -59,12 +60,12 @@ import {
   ADMIN_SOURCES_CANCEL,
   ADMIN_SOURCES_EMPTY_CATALOG_MESSAGE,
   ADMIN_SOURCES_EMPTY_CATALOG_TITLE,
-  ADMIN_SOURCES_EMPTY_SOURCE_ADD_BUTTON,
   ADMIN_SOURCES_EMPTY_SOURCE_TITLE,
   ADMIN_SOURCES_LIST_COLUMN_NAME,
   ADMIN_SOURCES_LIST_COLUMN_SOURCES,
   ADMIN_SOURCES_LOAD_ERROR,
   ADMIN_SOURCES_LOADING,
+  ADMIN_SOURCES_NAME_REQUIRED,
   ADMIN_SOURCES_NEW_SOURCE_BUTTON,
   ADMIN_SOURCES_NEW_SOURCE_DRAFT_HELPER,
   ADMIN_SOURCES_NEW_SOURCE_FIELD_LABEL,
@@ -73,16 +74,23 @@ import {
   ADMIN_SOURCES_PAGE_DESCRIPTION,
   ADMIN_SOURCES_PAGE_TITLE,
   ADMIN_SOURCES_REMOVE_CONFIRM_BUTTON,
+  ADMIN_SOURCES_REMOVE_LOADING,
   ADMIN_SOURCES_SAVED_TOAST,
+  ADMIN_SOURCES_UNNAMED_ITEM,
+  ADMIN_SOURCES_UPDATE_FAILED,
   ADMIN_SOURCES_SEARCH_PLACEHOLDER,
   ADMIN_SOURCES_SECTION_ADD_BUTTON,
   ADMIN_SOURCES_SELECT_LABEL,
   ADMIN_SOURCES_SELECT_PLACEHOLDER,
+  adminSourcesAddItemsLabel,
   adminSourcesAddModalTitle,
+  adminSourcesBatchStoppedMessage,
   adminSourcesRemoveButtonLabel,
   adminSourcesRemoveConfirmBody,
   adminSourcesRemoveConfirmTitle,
   adminSourcesRemoveLastSourceBody,
+  adminSourcesRemoveWithError,
+  adminSourcesSectionAddLabel,
   adminSourcesSectionSearchLabel,
 } from './admin-sources-copy';
 
@@ -97,7 +105,12 @@ const QUERY_OPTIONS = {
   refetchOnWindowFocus: false,
 } as const;
 
-const LIST_GRID = '1.5fr 1fr 8.5rem';
+const LIST_GRID = '1.5fr 1fr';
+const REMOVE_SLOT_WIDTH = '2.75rem';
+const HEADER_COLUMNS = [
+  { key: 'name', label: ADMIN_SOURCES_LIST_COLUMN_NAME },
+  { key: 'sources', label: ADMIN_SOURCES_LIST_COLUMN_SOURCES },
+];
 const ADD_MODAL_GRID = '1.2fr 1fr';
 const ADD_MODAL_COLUMNS = [
   { key: 'name', label: ADMIN_SOURCES_LIST_COLUMN_NAME },
@@ -119,7 +132,6 @@ function membershipTarget(
     table,
     id: row.id,
     expectedUpdatedAt: row.updated_at ?? undefined,
-    currentSources: row.sources,
   };
 }
 
@@ -199,12 +211,6 @@ function AdminSourceTypeSection({
     });
   }, [rows, search, selectedSource, catalogNames, sortState]);
 
-  const headerColumns = [
-    { key: 'name', label: ADMIN_SOURCES_LIST_COLUMN_NAME },
-    { key: 'sources', label: ADMIN_SOURCES_LIST_COLUMN_SOURCES },
-    { key: '_actions', label: '', sortable: false },
-  ];
-
   return (
     <section className="min-w-0">
       <div className="mb-3 flex min-w-0 flex-wrap items-center justify-between gap-3">
@@ -218,6 +224,7 @@ function AdminSourceTypeSection({
           onClick={onAdd}
           disabled={isSaving}
           className="shrink-0"
+          aria-label={adminSourcesSectionAddLabel(sectionLabel)}
         >
           {ADMIN_SOURCES_SECTION_ADD_BUTTON}
         </Button>
@@ -227,16 +234,16 @@ function AdminSourceTypeSection({
         onSearchChange={setSearch}
         searchPlaceholder={ADMIN_SOURCES_SEARCH_PLACEHOLDER}
         searchAriaLabel={adminSourcesSectionSearchLabel(sectionLabel)}
-        headerColumns={headerColumns}
+        headerColumns={HEADER_COLUMNS}
         gridColumns={LIST_GRID}
         sortState={sortState}
         onSort={handleSort}
         isEmpty={filtered.length === 0}
         rowChrome={{ rightSlot: true }}
-        rightSlotWidth={ADMIN_CODEX_ROW_ACTIONS_WIDTH}
+        rightSlotWidth={REMOVE_SLOT_WIDTH}
       >
         {filtered.map((row) => {
-          const itemName = row.name ?? 'Unnamed item';
+          const itemName = row.name ?? ADMIN_SOURCES_UNNAMED_ITEM;
           const canRemove = codexSourceMembershipRemoveOffered(
             row.sources,
             selectedSource,
@@ -248,6 +255,7 @@ function AdminSourceTypeSection({
               id={String(row.id)}
               name={itemName}
               gridColumns={LIST_GRID}
+              rowChrome={{ rightSlot: true }}
               columns={[
                 {
                   key: 'sources',
@@ -255,10 +263,11 @@ function AdminSourceTypeSection({
                   value: otherSourcesLabel(row.sources, selectedSource, catalogNames),
                 },
               ]}
-              rightSlotWidth={ADMIN_CODEX_ROW_ACTIONS_WIDTH}
+              rightSlotWidth={REMOVE_SLOT_WIDTH}
               rightSlot={
                 canRemove ? (
                   <IconButton
+                    type="button"
                     variant="ghost"
                     size="sm"
                     label={adminSourcesRemoveButtonLabel(itemName, selectedSource)}
@@ -277,6 +286,57 @@ function AdminSourceTypeSection({
   );
 }
 
+function closeNewSourceDraft(
+  setOpen: (open: boolean) => void,
+  setError: (error: string | null) => void,
+) {
+  setOpen(false);
+  setError(null);
+}
+
+function NewSourceDraftModal({
+  isOpen,
+  name,
+  error,
+  onNameChange,
+  onClose,
+  onSubmit,
+}: {
+  isOpen: boolean;
+  name: string;
+  error: string | null;
+  onNameChange: (value: string) => void;
+  onClose: () => void;
+  onSubmit: () => void;
+}) {
+  return (
+    <Modal
+      isOpen={isOpen}
+      onClose={onClose}
+      title={ADMIN_SOURCES_NEW_SOURCE_MODAL_TITLE}
+      fullScreenOnMobile
+      footer={
+        <div className="flex w-full flex-wrap justify-end gap-3">
+          <Button type="button" variant="secondary" onClick={onClose}>
+            {ADMIN_SOURCES_CANCEL}
+          </Button>
+          <Button type="button" onClick={onSubmit}>
+            {ADMIN_SOURCES_NEW_SOURCE_SUBMIT}
+          </Button>
+        </div>
+      }
+    >
+      <Input
+        label={ADMIN_SOURCES_NEW_SOURCE_FIELD_LABEL}
+        value={name}
+        onChange={(event) => onNameChange(event.target.value)}
+        error={error ?? undefined}
+        helperText={ADMIN_SOURCES_NEW_SOURCE_DRAFT_HELPER}
+      />
+    </Modal>
+  );
+}
+
 export default function AdminSourcesPage() {
   const { showToast } = useToast();
   const queryClient = useQueryClient();
@@ -291,6 +351,9 @@ export default function AdminSourcesPage() {
   const [removeError, setRemoveError] = useState<string | null>(null);
   const [isSaving, setIsSaving] = useState(false);
   const [typeFilter, setTypeFilter] = useState<string>('all');
+  const savingRef = useRef(false);
+  const sourceSelectRef = useRef<HTMLSelectElement>(null);
+  const returnFocusToSource = useRef(false);
 
   const catalogQuery = useQuery({
     queryKey: CATALOG_QUERY_KEY,
@@ -326,11 +389,17 @@ export default function AdminSourcesPage() {
   }, [pickedSource, catalog, catalogNames, sessionDraftSources]);
 
   const invalidateData = useCallback(async () => {
-    await Promise.all([
-      queryClient.invalidateQueries({ queryKey: CATALOG_QUERY_KEY }),
-      queryClient.invalidateQueries({ queryKey: ROWS_QUERY_KEY }),
-    ]);
+    await queryClient.invalidateQueries({ queryKey: codexKeys.all });
   }, [queryClient]);
+
+  useEffect(() => {
+    if (removeTarget !== null || !returnFocusToSource.current) return;
+    returnFocusToSource.current = false;
+    const timer = window.setTimeout(() => {
+      sourceSelectRef.current?.focus();
+    }, 0);
+    return () => window.clearTimeout(timer);
+  }, [removeTarget]);
 
   const loadError = catalogQuery.error ?? rowsQuery.error;
   const ready = catalogQuery.isSuccess && rowsQuery.isSuccess;
@@ -361,7 +430,7 @@ export default function AdminSourcesPage() {
         if (itemMatchesSources(row.sources, [selectedSource])) continue;
         items.push({
           id: rowPickerId(section.table, row.id),
-          name: row.name ?? 'Unnamed item',
+          name: row.name ?? ADMIN_SOURCES_UNNAMED_ITEM,
           columns: [
             { key: 'type', label: ADMIN_SOURCES_ADD_MODAL_TYPE_COLUMN, value: section.label },
           ],
@@ -387,7 +456,7 @@ export default function AdminSourcesPage() {
       if (typeCol?.value) labels.add(String(typeCol.value));
     }
     return [
-      { value: 'all', label: 'All types' },
+      { value: 'all', label: ADMIN_SOURCES_ADD_MODAL_ALL_TYPES },
       ...[...labels].sort((a, b) => a.localeCompare(b)).map((label) => ({ value: label, label })),
     ];
   }, [addModalItems]);
@@ -404,9 +473,14 @@ export default function AdminSourcesPage() {
     setTypeFilter('all');
   };
 
+  const handleAddModalClose = () => {
+    if (savingRef.current) return;
+    closeAddModal();
+  };
+
   const handleCreateSource = () => {
     const collapsed = resolveCodexSourceName(newSourceName, catalogNames);
-    const error = collapsed ? codexSourceNameError(collapsed) : 'Source name is required.';
+    const error = collapsed ? codexSourceNameError(collapsed) : ADMIN_SOURCES_NAME_REQUIRED;
     if (error) {
       setNewSourceError(error);
       return;
@@ -425,59 +499,79 @@ export default function AdminSourcesPage() {
   };
 
   const handleAddConfirm = async (selectedItems: SelectableItem[]) => {
+    if (savingRef.current) return;
     if (!selectedSource || selectedItems.length === 0) return;
+    savingRef.current = true;
     setIsSaving(true);
     setAddError(null);
-    const targets: AdminCodexSourceMembershipTarget[] = [];
-    for (const item of selectedItems) {
-      const pickerId = item.id;
-      const parsed = parseRowPickerId(pickerId);
-      if (!parsed) continue;
-      const row = rowsByTable?.[parsed.table]?.find((entry) => String(entry.id) === parsed.id);
-      if (!row) continue;
-      targets.push(membershipTarget(parsed.table, row));
-    }
-    const result = await batchAddAdminCodexSourceMembership(targets, selectedSource);
-    setIsSaving(false);
-    if (!result.success) {
-      setAddError(
-        result.updatedCount > 0
-          ? `${result.error ?? 'Update failed.'} (${result.updatedCount} item${
-              result.updatedCount === 1 ? '' : 's'
-            } were added before the error.)`
-          : (result.error ?? 'Update failed.'),
-      );
-      if (result.updatedCount > 0) {
-        await invalidateData();
+    try {
+      const targets: AdminCodexSourceMembershipTarget[] = [];
+      for (const item of selectedItems) {
+        const parsed = parseRowPickerId(String(item.id));
+        if (!parsed) continue;
+        const row = rowsByTable?.[parsed.table]?.find((entry) => String(entry.id) === parsed.id);
+        if (!row) continue;
+        targets.push(membershipTarget(parsed.table, row));
       }
-      return;
+      if (targets.length === 0) {
+        const message = ADMIN_SOURCES_ADD_FAILED;
+        setAddError(message);
+        showToast(message, 'error');
+        return;
+      }
+      const result = await batchAddAdminCodexSourceMembership(targets, selectedSource);
+      if (!result.success) {
+        const message =
+          result.updatedCount > 0
+            ? adminSourcesBatchStoppedMessage(
+                result.updatedCount,
+                result.error ?? ADMIN_SOURCES_UPDATE_FAILED,
+              )
+            : (result.error ?? ADMIN_SOURCES_UPDATE_FAILED);
+        if (result.updatedCount > 0) await invalidateData();
+        setAddError(message);
+        showToast(message, 'error');
+        return;
+      }
+      await invalidateData();
+      showToast(ADMIN_SOURCES_SAVED_TOAST, 'success');
+      closeAddModal();
+    } finally {
+      savingRef.current = false;
+      setIsSaving(false);
     }
-    await invalidateData();
-    showToast(ADMIN_SOURCES_SAVED_TOAST, 'success');
-    closeAddModal();
   };
 
   const handleRemoveConfirm = async () => {
+    if (savingRef.current) return;
     if (!removeTarget || !selectedSource) return;
+    savingRef.current = true;
     setIsSaving(true);
     setRemoveError(null);
-    const result = await removeAdminCodexSourceMembership(
-      membershipTarget(removeTarget.table, removeTarget.row),
-      selectedSource,
-    );
-    setIsSaving(false);
-    if (!result.success) {
-      setRemoveError(result.error ?? 'Update failed.');
-      return;
+    try {
+      const result = await removeAdminCodexSourceMembership(
+        membershipTarget(removeTarget.table, removeTarget.row),
+        selectedSource,
+      );
+      if (!result.success) {
+        const message = result.error ?? ADMIN_SOURCES_UPDATE_FAILED;
+        setRemoveError(message);
+        showToast(message, 'error');
+        return;
+      }
+      await invalidateData();
+      showToast(ADMIN_SOURCES_SAVED_TOAST, 'success');
+      returnFocusToSource.current = true;
+      setRemoveTarget(null);
+    } finally {
+      savingRef.current = false;
+      setIsSaving(false);
     }
-    await invalidateData();
-    showToast(ADMIN_SOURCES_SAVED_TOAST, 'success');
-    setRemoveTarget(null);
   };
 
   const removeConfirmBody = useMemo(() => {
     if (!removeTarget || !selectedSource) return '';
-    const itemName = removeTarget.row.name ?? 'Unnamed item';
+    const itemName = removeTarget.row.name ?? ADMIN_SOURCES_UNNAMED_ITEM;
     const others = codexSourcesOrCore(removeTarget.row.sources, catalogNames).filter(
       (name) => codexSourceKey(name) !== codexSourceKey(selectedSource),
     );
@@ -506,8 +600,8 @@ export default function AdminSourcesPage() {
     );
   }
 
-  const hasSelectableSource = Boolean(selectedSource);
   const showEmptyCatalog = catalog.length === 0 && sessionDraftSources.length === 0;
+  const closeDraft = () => closeNewSourceDraft(setNewSourceOpen, setNewSourceError);
 
   if (showEmptyCatalog) {
     return (
@@ -521,39 +615,14 @@ export default function AdminSourcesPage() {
           title={ADMIN_SOURCES_EMPTY_CATALOG_TITLE}
           message={ADMIN_SOURCES_EMPTY_CATALOG_MESSAGE}
         />
-        <Modal
+        <NewSourceDraftModal
           isOpen={newSourceOpen}
-          onClose={() => {
-            setNewSourceOpen(false);
-            setNewSourceError(null);
-          }}
-          title={ADMIN_SOURCES_NEW_SOURCE_MODAL_TITLE}
-          fullScreenOnMobile
-          footer={
-            <div className="flex w-full flex-wrap justify-end gap-3">
-              <Button
-                variant="secondary"
-                onClick={() => {
-                  setNewSourceOpen(false);
-                  setNewSourceError(null);
-                }}
-              >
-                {ADMIN_SOURCES_CANCEL}
-              </Button>
-              <Button onClick={handleCreateSource}>{ADMIN_SOURCES_NEW_SOURCE_SUBMIT}</Button>
-            </div>
-          }
-        >
-          <div className="flex min-w-0 flex-col gap-3">
-            <Input
-              label={ADMIN_SOURCES_NEW_SOURCE_FIELD_LABEL}
-              value={newSourceName}
-              onChange={(event) => setNewSourceName(event.target.value)}
-            />
-            <p className="text-sm text-text-secondary">{ADMIN_SOURCES_NEW_SOURCE_DRAFT_HELPER}</p>
-            {newSourceError ? <Alert variant="danger">{newSourceError}</Alert> : null}
-          </div>
-        </Modal>
+          name={newSourceName}
+          error={newSourceError}
+          onNameChange={setNewSourceName}
+          onClose={closeDraft}
+          onSubmit={handleCreateSource}
+        />
       </AdminSourcesFrame>
     );
   }
@@ -568,6 +637,7 @@ export default function AdminSourcesPage() {
       <div className="mb-6 flex min-w-0 flex-col gap-4 sm:flex-row sm:flex-wrap sm:items-end">
         <div className="w-full min-w-0 sm:max-w-md sm:flex-1">
           <Select
+            ref={sourceSelectRef}
             label={ADMIN_SOURCES_SELECT_LABEL}
             placeholder={ADMIN_SOURCES_SELECT_PLACEHOLDER}
             options={sourceOptions}
@@ -583,6 +653,17 @@ export default function AdminSourcesPage() {
         >
           {ADMIN_SOURCES_NEW_SOURCE_BUTTON}
         </Button>
+        {selectedSource ? (
+          <Button
+            type="button"
+            className="w-full sm:w-auto"
+            onClick={() => openAddModal('all')}
+            disabled={isSaving}
+            aria-label={adminSourcesAddItemsLabel(selectedSource)}
+          >
+            {ADMIN_SOURCES_ADD_ITEMS_BUTTON}
+          </Button>
+        ) : null}
       </div>
 
       {sections.length > 0 ? (
@@ -605,27 +686,22 @@ export default function AdminSourcesPage() {
           ))}
         </div>
       ) : (
-        <div className="flex min-w-0 flex-col items-start gap-4">
-          <EmptyState title={ADMIN_SOURCES_EMPTY_SOURCE_TITLE} />
-          {hasSelectableSource ? (
-            <Button type="button" onClick={() => openAddModal('all')} disabled={isSaving}>
-              {ADMIN_SOURCES_EMPTY_SOURCE_ADD_BUTTON}
-            </Button>
-          ) : null}
-        </div>
+        <EmptyState title={ADMIN_SOURCES_EMPTY_SOURCE_TITLE} />
       )}
 
       <UnifiedSelectionModal
         isOpen={addScope !== null}
-        onClose={closeAddModal}
+        onClose={handleAddModalClose}
         title={adminSourcesAddModalTitle(selectedSource)}
+        description={addError ?? undefined}
         items={filteredAddModalItems}
-        onConfirm={handleAddConfirm}
+        onConfirm={(items) => void handleAddConfirm(items)}
         columns={ADD_MODAL_COLUMNS}
         gridColumns={ADD_MODAL_GRID}
         searchPlaceholder={ADMIN_SOURCES_ADD_MODAL_SEARCH}
         searchFields={['name', 'keywords']}
         confirmLabel={ADMIN_SOURCES_ADD_MODAL_CONFIRM}
+        confirmDisabled={() => savingRef.current}
         size="lg"
         showFilters={typeFilterOptions.length > 2}
         filterContent={
@@ -637,58 +713,37 @@ export default function AdminSourcesPage() {
           />
         }
         optionsDefaultExpanded={addScope !== 'all'}
-        error={addError ? new Error(addError) : null}
       />
 
       <ConfirmActionModal
         isOpen={removeTarget !== null}
         onClose={() => {
+          if (savingRef.current) return;
           setRemoveTarget(null);
           setRemoveError(null);
         }}
         onConfirm={() => void handleRemoveConfirm()}
         title={adminSourcesRemoveConfirmTitle(selectedSource)}
-        description={removeError ?? removeConfirmBody}
+        description={
+          removeError
+            ? adminSourcesRemoveWithError(removeConfirmBody, removeError)
+            : removeConfirmBody
+        }
         confirmLabel={ADMIN_SOURCES_REMOVE_CONFIRM_BUTTON}
         cancelLabel={ADMIN_SOURCES_CANCEL}
         confirmVariant="danger"
         isLoading={isSaving}
-        loadingLabel="Removing…"
+        loadingLabel={ADMIN_SOURCES_REMOVE_LOADING}
       />
 
-      <Modal
+      <NewSourceDraftModal
         isOpen={newSourceOpen}
-        onClose={() => {
-          setNewSourceOpen(false);
-          setNewSourceError(null);
-        }}
-        title={ADMIN_SOURCES_NEW_SOURCE_MODAL_TITLE}
-        fullScreenOnMobile
-        footer={
-          <div className="flex w-full flex-wrap justify-end gap-3">
-            <Button
-              variant="secondary"
-              onClick={() => {
-                setNewSourceOpen(false);
-                setNewSourceError(null);
-              }}
-            >
-              {ADMIN_SOURCES_CANCEL}
-            </Button>
-            <Button onClick={handleCreateSource}>{ADMIN_SOURCES_NEW_SOURCE_SUBMIT}</Button>
-          </div>
-        }
-      >
-        <div className="flex min-w-0 flex-col gap-3">
-          <Input
-            label={ADMIN_SOURCES_NEW_SOURCE_FIELD_LABEL}
-            value={newSourceName}
-            onChange={(event) => setNewSourceName(event.target.value)}
-          />
-          <p className="text-sm text-text-secondary">{ADMIN_SOURCES_NEW_SOURCE_DRAFT_HELPER}</p>
-          {newSourceError ? <Alert variant="danger">{newSourceError}</Alert> : null}
-        </div>
-      </Modal>
+        name={newSourceName}
+        error={newSourceError}
+        onNameChange={setNewSourceName}
+        onClose={closeDraft}
+        onSubmit={handleCreateSource}
+      />
     </AdminSourcesFrame>
   );
 }
