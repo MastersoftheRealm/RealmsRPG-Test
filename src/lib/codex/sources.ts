@@ -141,12 +141,6 @@ export function codexSourcesForWrite(value: unknown, known?: readonly string[]):
   return codexSourcesOrCore(value, known);
 }
 
-/**
- * List filter for a later Library/Codex source chip control.
- * No selection, or only the "all" token, matches every item.
- * Otherwise the item matches when it shares any selected source (same "any" mode as feat tags).
- * Comparison is case-insensitive. A missing sources list is Core.
- */
 /** Catalog spelling when the draft matches an existing source key; otherwise the collapsed draft. */
 export function resolveCodexSourceName(draft: string, catalogNames: readonly string[]): string {
   const collapsed = collapseCodexSourceName(draft);
@@ -193,6 +187,12 @@ export function codexSourceMembershipRemoveOffered(
   return beforeKeys.join('\0') !== afterKeys.join('\0');
 }
 
+/**
+ * List filter for a later Library/Codex source chip control.
+ * No selection, or only the "all" token, matches every item.
+ * Otherwise the item matches when it shares any selected source (same "any" mode as feat tags).
+ * Comparison is case-insensitive. A missing sources list is Core.
+ */
 export function itemMatchesSources(
   itemSources: unknown,
   selected: readonly string[] | null | undefined,

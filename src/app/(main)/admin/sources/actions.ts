@@ -7,6 +7,7 @@ import {
   loadAdminCodexSourceRows,
   type AdminCodexSourceRowsPayload,
 } from '@/lib/codex/admin-source-rows';
+import { assertCodexCollection } from '@/lib/codex/collections';
 import { getCodexSourceCatalog, type CodexSourceCatalogEntry } from '@/lib/codex/source-catalog';
 import type { CodexSourceTable } from '@/lib/codex/source-catalog';
 import {
@@ -16,7 +17,15 @@ import {
   collapseCodexSourceName,
 } from '@/lib/codex/sources';
 import { getSession } from '@/lib/supabase/session';
-import { ADMIN_SOURCES_LOAD_ERROR } from './admin-sources-copy';
+import { createServiceRoleClient } from '@/lib/supabase/server';
+import {
+  ADMIN_SOURCES_ADD_FAILED,
+  ADMIN_SOURCES_LOAD_ERROR,
+  ADMIN_SOURCES_NAME_REQUIRED,
+  ADMIN_SOURCES_NOT_FOUND,
+  ADMIN_SOURCES_REMOVE_FAILED,
+  ADMIN_SOURCES_UNKNOWN_COLLECTION,
+} from './admin-sources-copy';
 
 const AUTH_ERROR = 'Authentication required';
 const ADMIN_ERROR = 'Admin access required';
@@ -25,7 +34,6 @@ export type AdminCodexSourceMembershipTarget = {
   table: CodexSourceTable;
   id: string | number;
   expectedUpdatedAt?: string | null | undefined;
-  currentSources: unknown;
 };
 
 export type AdminCodexSourceMembershipResult = {
@@ -44,8 +52,34 @@ async function requireAdmin(): Promise<string> {
 
 function validateSourceName(sourceName: string): string | null {
   const collapsed = collapseCodexSourceName(sourceName);
-  if (!collapsed) return 'Source name is required.';
+  if (!collapsed) return ADMIN_SOURCES_NAME_REQUIRED;
   return codexSourceNameError(collapsed);
+}
+
+function sourceTableOrError(table: string): CodexSourceTable | { error: string } {
+  try {
+    const collection = assertCodexCollection(table);
+    if (collection === 'core_rules') return { error: ADMIN_SOURCES_UNKNOWN_COLLECTION };
+    return collection;
+  } catch {
+    return { error: ADMIN_SOURCES_UNKNOWN_COLLECTION };
+  }
+}
+
+/** Stored `sources` only. The next array is computed from this row, not from the client. */
+async function readStoredSources(
+  table: CodexSourceTable,
+  id: string,
+  failedMessage: string,
+): Promise<{ ok: true; sources: unknown } | { ok: false; error: string }> {
+  const supabase = createServiceRoleClient();
+  const { data, error } = await supabase.from(table).select('sources').eq('id', id).maybeSingle();
+  if (error) {
+    logApiError('admin-sources-read', error);
+    return { ok: false, error: failedMessage };
+  }
+  if (!data) return { ok: false, error: ADMIN_SOURCES_NOT_FOUND };
+  return { ok: true, sources: (data as { sources?: unknown }).sources };
 }
 
 async function applyMembershipWrite(
@@ -53,22 +87,29 @@ async function applyMembershipWrite(
   target: AdminCodexSourceMembershipTarget,
   sourceName: string,
 ): Promise<{ success: boolean; error?: string | undefined; conflict?: boolean | undefined }> {
+  const failedMessage = op === 'add' ? ADMIN_SOURCES_ADD_FAILED : ADMIN_SOURCES_REMOVE_FAILED;
   const nameError = validateSourceName(sourceName);
   if (nameError) return { success: false, error: nameError };
+
+  const table = sourceTableOrError(target.table);
+  if (typeof table !== 'string') return { success: false, error: table.error };
+
+  const id = String(target.id);
+  const stored = await readStoredSources(table, id, failedMessage);
+  if (!stored.ok) return { success: false, error: stored.error };
 
   const collapsed = collapseCodexSourceName(sourceName);
   const nextSources =
     op === 'add'
-      ? codexSourcesAfterAdd(target.currentSources, collapsed)
-      : codexSourcesAfterRemove(target.currentSources, collapsed);
+      ? codexSourcesAfterAdd(stored.sources, collapsed)
+      : codexSourcesAfterRemove(stored.sources, collapsed);
 
-  const id = String(target.id);
   const options =
     target.expectedUpdatedAt != null && target.expectedUpdatedAt !== ''
       ? { expectedUpdatedAt: target.expectedUpdatedAt }
       : undefined;
 
-  return updateCodexDoc(target.table, id, { sources: nextSources }, options);
+  return updateCodexDoc(table, id, { sources: nextSources }, options);
 }
 
 export async function addAdminCodexSourceMembership(
@@ -92,7 +133,7 @@ export async function addAdminCodexSourceMembership(
     if (err instanceof Error && (err.message === AUTH_ERROR || err.message === ADMIN_ERROR)) {
       return { success: false, updatedCount: 0, error: err.message };
     }
-    return { success: false, updatedCount: 0, error: 'Failed to add item to source.' };
+    return { success: false, updatedCount: 0, error: ADMIN_SOURCES_ADD_FAILED };
   }
 }
 
@@ -117,7 +158,7 @@ export async function removeAdminCodexSourceMembership(
     if (err instanceof Error && (err.message === AUTH_ERROR || err.message === ADMIN_ERROR)) {
       return { success: false, updatedCount: 0, error: err.message };
     }
-    return { success: false, updatedCount: 0, error: 'Failed to remove item from source.' };
+    return { success: false, updatedCount: 0, error: ADMIN_SOURCES_REMOVE_FAILED };
   }
 }
 
