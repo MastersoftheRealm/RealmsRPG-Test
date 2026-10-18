@@ -127,6 +127,18 @@ Repo mirror: [86e39knu2](https://app.clickup.com/t/86e39knu2).
 
 ---
 
+## Codex sources (Oct 17, 2026)
+
+Owner decisions for [Admin > Sources page](https://app.clickup.com/t/86e3ru888).
+
+- Core may be renamed. A source is the values stored on item rows.
+- This change does not change the column default `{Core}` or the code constant `CORE_CODEX_SOURCE`. Items with no source are still saved as Core until a developer changes that default. That default is a follow-up task.
+- Merging any source into Core, or Core into another source, is allowed. The merge confirm is required. The two sources become one and cannot be split later.
+- Rename changelog rows commit in the same transaction as the rename. A log failure rolls back the whole rename.
+- There is no control that removes one source from every item.
+
+---
+
 ## QA / accounts (Oct 5, 2026)
 
 - QA accounts only for testing; prefix records `QA` / `QA Test`; clean up; never save/publish official library/Codex from QA (esp. qa-admin).
@@ -144,6 +156,7 @@ Repo mirror: [86e39knu2](https://app.clickup.com/t/86e39knu2).
 
 ## Changelog
 
+- **2026-10-17:** Codex sources ([86e3ru888](https://app.clickup.com/t/86e3ru888)): Core may be renamed; merging into or out of Core is allowed with the merge confirm; rename changelogs commit in the same transaction; no remove-from-all-items control. The column default `{Core}` and `CORE_CODEX_SOURCE` stay. Items with no source are still saved as Core until a developer changes that default.
 - **2026-10-14:** Character sheet visibility (Oct 14, 2026 owner ruling): RM full access to rostered private sheets; members cannot see private; campaign visibility off-roster blocked. Supersedes 86e3jryyv for RM semantics; implements [86e39knu2](https://app.clickup.com/t/86e39knu2).
 - **2026-10-08:** Bypass merge moves the ClickUp task to testing with QA instructions for what changed, adds James Owenby, and keeps Collin assigned. Collin can move it back to in review.
 - **2026-10-05 (~4:54 PM ET):** Appended standing QA triggers (post-dep smoke, S25 page-speed budgets, security-header/RLS retests, testing-status bot limits, Website QA check delegated to QA Tester, CI npm audit policy, no CVE IDs in public repo).
