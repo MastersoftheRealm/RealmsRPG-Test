@@ -9,7 +9,7 @@
 
 'use client';
 
-import { Suspense } from 'react';
+import { Suspense, useMemo } from 'react';
 import {
   UnifiedSelectionModal,
   SourceFilter,
@@ -18,7 +18,7 @@ import {
   type SelectableItem,
 } from '@/components/patterns';
 import { getListHeaderColumns, getModalGridColumns } from '@/lib/library-selectable-builders';
-import { LoadingState } from '@/components/ui';
+import { Alert, LoadingState } from '@/components/ui';
 import { Skull } from 'lucide-react';
 import { RollLog, RollProvider } from '@/components/rolls';
 import { formatListCellLabel } from '@/lib/utils';
@@ -44,6 +44,7 @@ import type { CreatureSkill } from './creature-creator-types';
 import { AddCreatureFeatModal } from './AddCreatureFeatModal';
 import { CreatureCreatorEditor } from './creature-creator-editor';
 import { useCreatureCreatorWorkspace } from './use-creature-creator-workspace';
+import { buildCreatureOverBudgetNotification } from './creature-over-budget-notification';
 
 function CreatureCreatorContent() {
   const ws = useCreatureCreatorWorkspace();
@@ -121,6 +122,8 @@ function CreatureCreatorContent() {
     acceptDraft,
   } = ws;
 
+  const overBudgetNotification = useMemo(() => buildCreatureOverBudgetNotification(stats), [stats]);
+
   return (
     <CreatorPageShell
       icon={<Skull className="h-8 w-8 text-primary-link-fg" />}
@@ -139,6 +142,18 @@ function CreatureCreatorContent() {
       onDiscardLocalDraft={ws.discardLocalDraft}
       saving={save.saving}
       saveDisabled={!creature.name.trim() || isOverBudget}
+      saveDisabledReason={
+        isOverBudget
+          ? overBudgetNotification.title
+          : !creature.name.trim()
+            ? 'Enter a creature name to save.'
+            : undefined
+      }
+      aboveGrid={
+        overBudgetNotification.show ? (
+          <Alert variant="danger">{overBudgetNotification.title}</Alert>
+        ) : undefined
+      }
       loading={{
         isLoading: !bootstrapApplied,
         loadingMessage: 'Loading creature creator...',
