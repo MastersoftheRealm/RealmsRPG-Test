@@ -7,6 +7,10 @@
 
 import { createServerClient } from '@supabase/ssr';
 import { NextResponse, type NextRequest } from 'next/server';
+import {
+  hasSupabaseAuthSessionCookie,
+  isNextLinkPrefetchRequest,
+} from '@/lib/supabase/auth-cookies';
 
 function isOAuthCallbackInProgress(request: NextRequest): boolean {
   return request.nextUrl.searchParams.has('code');
@@ -34,6 +38,14 @@ export function isHardProtectedPath(pathname: string): boolean {
   return false;
 }
 
+function redirectSignedOutFromProtectedPage(request: NextRequest): NextResponse {
+  const loginUrl = request.nextUrl.clone();
+  loginUrl.pathname = '/login';
+  loginUrl.search = '';
+  loginUrl.searchParams.set('returnTo', request.nextUrl.pathname + request.nextUrl.search);
+  return NextResponse.redirect(loginUrl);
+}
+
 export async function updateSession(request: NextRequest) {
   // Never refresh session during OAuth PKCE exchange — stale refresh attempts can
   // clear PKCE cookies and cause flow_state_not_found on /auth/callback.
@@ -49,6 +61,21 @@ export async function updateSession(request: NextRequest) {
     console.warn(
       '[Supabase] Missing NEXT_PUBLIC_SUPABASE_URL or NEXT_PUBLIC_SUPABASE_PUBLISHABLE_DEFAULT_KEY. Auth will not work. Check .env.local.',
     );
+    return NextResponse.next({ request });
+  }
+
+  const pathname = request.nextUrl.pathname;
+  const hardProtected = isHardProtectedPath(pathname);
+  const hasAuthCookie = hasSupabaseAuthSessionCookie(request);
+
+  if (!hasAuthCookie) {
+    if (hardProtected) {
+      return redirectSignedOutFromProtectedPage(request);
+    }
+    return NextResponse.next({ request });
+  }
+
+  if (isNextLinkPrefetchRequest(request) && !hardProtected) {
     return NextResponse.next({ request });
   }
 
@@ -91,12 +118,8 @@ export async function updateSession(request: NextRequest) {
   // AUTH-01: centralized hard gate. Unauthenticated requests to protected pages are
   // redirected to login (preserving the destination) at the edge — no protected
   // content is ever sent to the client. `ProtectedRoute` remains as defense-in-depth.
-  if (!user && isHardProtectedPath(request.nextUrl.pathname)) {
-    const loginUrl = request.nextUrl.clone();
-    loginUrl.pathname = '/login';
-    loginUrl.search = '';
-    loginUrl.searchParams.set('returnTo', request.nextUrl.pathname + request.nextUrl.search);
-    return NextResponse.redirect(loginUrl);
+  if (!user && hardProtected) {
+    return redirectSignedOutFromProtectedPage(request);
   }
 
   return supabaseResponse;
