@@ -7,8 +7,9 @@
  *
  * Read through the caller's (cookie-aware anon) client: the "Anyone can read core_rules"
  * RLS policy applies, and service-role stays reserved for authorized admin writes.
- * A missing table or denied read resolves to `{}` — callers fall back to code defaults
- * rather than failing the request.
+ * A missing table, an empty read, or a denied read resolves to `{}` — callers fall back
+ * to code defaults for that request rather than failing it. Those results are not stored
+ * in the Data Cache (86e3rb7ca).
  */
 
 import type { CoreRulesMap } from '@/types/core-rules';
@@ -27,12 +28,9 @@ async function loadCoreRulesFromSupabase(
   supabase: Pick<TypedSupabaseClient, 'from'>,
 ): Promise<Partial<CoreRulesMap>> {
   const { data, error } = await supabase.from('core_rules').select('id, data');
-  if (error) {
-    throw error;
-  }
-  if (!data?.length) {
-    throw new Error('core_rules returned no rows');
-  }
+  // Return {} for this request only. readCachedPublicDataWhenValid skips the Data Cache
+  // when the map is empty, so a transient failure is not reused for the revalidate window.
+  if (error || !data?.length) return {};
 
   const rules: Record<string, unknown> = {};
   for (const row of data) {

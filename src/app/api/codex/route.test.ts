@@ -245,6 +245,24 @@ describe('GET /api/codex', () => {
     expect(mockEnrichRows.mock.calls.length).toBe(enrichCallsAfterFirst);
   });
 
+  it('does not memoize an empty feats collection', async () => {
+    mockCreateClient.mockResolvedValue({
+      from: (table: string) => ({
+        select: async (columns: string) => {
+          queriedTables.push(table);
+          lastSelectByTable[table] = columns;
+          return { data: [], error: null };
+        },
+        in: async () => ({ data: [], error: null }),
+      }),
+    } as never);
+
+    await GET(new Request('http://localhost/api/codex?collection=feats'));
+    await GET(new Request('http://localhost/api/codex?collection=feats'));
+
+    expect(queriedTables.filter((table) => table === 'codex_feats')).toHaveLength(2);
+  });
+
   it('does not leak debug details to anonymous callers in production', async () => {
     vi.stubEnv('NODE_ENV', 'production');
     mockGetSession.mockResolvedValue({ user: null, error: 'No session' });

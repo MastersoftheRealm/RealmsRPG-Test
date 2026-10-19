@@ -43,7 +43,6 @@ import {
 } from '@/lib/codex/cache-tags';
 import {
   CODEX_PUBLIC_ISR_SECONDS,
-  readCachedPublicData,
   readCachedPublicDataWhenValid,
 } from '@/lib/supabase/cached-public-read';
 import type { ArchetypeCategory } from '@/types/archetype';
@@ -134,7 +133,7 @@ function selectTable(
   if (!needed.has(table)) return Promise.resolve({ data: [], error: null });
   const columns = CODEX_API_TABLE_SELECT[table];
   const tableTag = codexApiTableCacheTag(table);
-  return readCachedPublicData(
+  return readCachedPublicDataWhenValid(
     ['codex-api', table, columns],
     [CODEX_API_CACHE_TAG, tableTag],
     CODEX_PUBLIC_ISR_SECONDS,
@@ -150,6 +149,7 @@ function selectTable(
       throwUnlessCodexTableMissing(result.error);
       return result;
     },
+    (result) => !result.error && (result.data?.length ?? 0) > 0,
   );
 }
 
@@ -170,9 +170,17 @@ function isCacheableCodexApiPayload(
   keys: ReadonlySet<CodexPayloadKey>,
   payload: Partial<CodexPayload>,
 ): boolean {
-  if (!keys.has('coreRules')) return true;
-  const core = payload.coreRules;
-  return !!core && Object.keys(core).length > 0;
+  if (keys.size === 0) return false;
+  for (const key of keys) {
+    const value = payload[key];
+    if (key === 'coreRules') {
+      if (!value || typeof value !== 'object' || Array.isArray(value)) return false;
+      if (Object.keys(value).length === 0) return false;
+      continue;
+    }
+    if (!Array.isArray(value) || value.length === 0) return false;
+  }
+  return true;
 }
 
 async function fetchCodexFromClient(
