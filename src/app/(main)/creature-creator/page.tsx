@@ -9,7 +9,7 @@
 
 'use client';
 
-import { Suspense, useMemo } from 'react';
+import { Suspense } from 'react';
 import {
   UnifiedSelectionModal,
   SourceFilter,
@@ -38,16 +38,15 @@ import {
 } from '@/lib/creator/creator-save-as-copy';
 import { CreatorSummaryPanel, CreatorPageShell } from '@/components/creator';
 import { getCreatureAbilityBounds } from '@/lib/game/creature-ability-bounds';
+import { formatCreatureAbilityPointsValue } from './creature-ability-points-display';
 import type { DisplayItem } from '@/types/items';
 import type { CreatureSkill } from './creature-creator-types';
 import { AddCreatureFeatModal } from './AddCreatureFeatModal';
 import { CreatureCreatorEditor } from './creature-creator-editor';
 import { useCreatureCreatorWorkspace } from './use-creature-creator-workspace';
-import { formatCreatureAbilityPointsValue } from './creature-ability-points-display';
 
 function CreatureCreatorContent() {
   const ws = useCreatureCreatorWorkspace();
-  const creatureAbilityBounds = useMemo(() => getCreatureAbilityBounds(ws.rules), [ws.rules]);
   const {
     user,
     isAdmin,
@@ -444,8 +443,8 @@ function CreatureCreatorContent() {
         isAdmin={isAdmin}
         creature={creature}
         creatureLevel={creatureLevel}
-        creatureAbilityMin={creatureAbilityBounds.min}
-        creatureAbilityMax={creatureAbilityBounds.max}
+        creatureAbilityMin={getCreatureAbilityBounds(ws.rules).min}
+        creatureAbilityMax={getCreatureAbilityBounds(ws.rules).max}
         stats={stats}
         skillPointsHelp={skillPointsHelp}
         skillAllocations={skillAllocations}
