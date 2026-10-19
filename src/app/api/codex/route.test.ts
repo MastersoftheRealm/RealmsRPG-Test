@@ -4,6 +4,10 @@ vi.mock('@/lib/supabase/server', () => ({
   createClient: vi.fn(),
 }));
 
+vi.mock('@/lib/supabase/public-client', () => ({
+  createPublicClient: vi.fn(() => null),
+}));
+
 vi.mock('@/lib/supabase/session', () => ({
   getSession: vi.fn(),
 }));
@@ -27,9 +31,16 @@ import { isAdmin } from '@/lib/admin';
 import { fetchCoreRules } from '@/lib/core-rules-server';
 import { enrichRowsWithBankImageUrls } from '@/lib/entity-image-enrich-server';
 import { CODEX_SKILLS_PUBLIC_SELECT } from '@/lib/codex/public-table-select';
+import {
+  PRIVATE_MUST_REVALIDATE_CACHE_CONTROL,
+  PRIVATE_NO_STORE_CACHE_CONTROL,
+  PUBLIC_CDN_CACHE_CONTROL,
+} from '@/lib/api/public-cdn-cache';
+import { createPublicClient } from '@/lib/supabase/public-client';
 import { CODEX_PAYLOAD_KEYS, type CodexPayload } from '@/types/codex';
 
 const mockCreateClient = vi.mocked(createClient);
+const mockCreatePublicClient = vi.mocked(createPublicClient);
 const mockGetSession = vi.mocked(getSession);
 const mockIsAdmin = vi.mocked(isAdmin);
 const mockFetchCoreRules = vi.mocked(fetchCoreRules);
@@ -85,15 +96,38 @@ describe('GET /api/codex', () => {
       PROGRESSION_PLAYER: { baseHealth: 8 },
     } as never);
     mockCreateClient.mockResolvedValue(mockSupabase());
+    mockCreatePublicClient.mockReturnValue(null);
     mockIsAdmin.mockResolvedValue(false);
   });
 
   it('returns every collection when ?collection= is omitted', async () => {
-    const body = await getJson('http://localhost/api/codex');
+    mockCreatePublicClient.mockReturnValue(mockSupabase() as never);
+    const response = await GET(new Request('http://localhost/api/codex'));
+    const body = (await response.json()) as Partial<CodexPayload>;
 
+    expect(response.headers.get('Cache-Control')).toBe(PUBLIC_CDN_CACHE_CONTROL);
     expect(Object.keys(body).sort()).toEqual([...CODEX_PAYLOAD_KEYS].sort());
     expect(body.feats).toHaveLength(1);
+    expect(body.species?.map((species) => species.id)).toEqual(['species-1']);
     expect(body.coreRules).toEqual({ PROGRESSION_PLAYER: { baseHealth: 8 } });
+  });
+
+  it('does not CDN-cache when the cookie-less client is unavailable', async () => {
+    mockCreatePublicClient.mockReturnValue(null);
+    const response = await GET(new Request('http://localhost/api/codex'));
+    expect(response.status).toBe(200);
+    expect(response.headers.get('Cache-Control')).toBe(PRIVATE_NO_STORE_CACHE_CONTROL);
+  });
+
+  it('does not CDN-cache an empty collection', async () => {
+    mockCreatePublicClient.mockReturnValue({
+      from: () => ({
+        select: async () => ({ data: [], error: null }),
+        in: async () => ({ data: [], error: null }),
+      }),
+    } as never);
+    const response = await GET(new Request('http://localhost/api/codex?collection=feats'));
+    expect(response.headers.get('Cache-Control')).toBe(PRIVATE_MUST_REVALIDATE_CACHE_CONTROL);
   });
 
   it('returns only the requested slice and only queries its table', async () => {
@@ -184,6 +218,14 @@ describe('GET /api/codex', () => {
     expect(pathData?.levels?.[0]?.level).toBe(2);
   });
 
+  it('does not set public CDN cache when coreRules is empty (86e3rb7ca)', async () => {
+    mockCreatePublicClient.mockReturnValue(mockSupabase() as never);
+    mockFetchCoreRules.mockResolvedValue({} as never);
+    const response = await GET(new Request('http://localhost/api/codex?collection=coreRules'));
+    expect(response.status).toBe(200);
+    expect(response.headers.get('Cache-Control')).toBe('private, max-age=0, must-revalidate');
+  });
+
   it('serves coreRules without touching codex tables', async () => {
     const body = await getJson('http://localhost/api/codex?collection=coreRules');
 
@@ -222,8 +264,12 @@ describe('GET /api/codex', () => {
       error: null,
     });
     mockIsAdmin.mockResolvedValue(true);
-    const body = await getJson('http://localhost/api/codex?collection=species&includeUnlisted=1');
+    const response = await GET(
+      new Request('http://localhost/api/codex?collection=species&includeUnlisted=1'),
+    );
+    const body = (await response.json()) as Partial<CodexPayload>;
     expect(body.species?.map((s) => s.id)).toEqual(['species-1', 'species-hidden']);
+    expect(response.headers.get('Cache-Control')).toBe('private, no-store');
   });
 
   it('rejects an unknown collection without echoing the value', async () => {
@@ -271,6 +317,7 @@ describe('GET /api/codex', () => {
     try {
       const response = await GET(new Request('http://localhost/api/codex?debug=1'));
       expect(response.status).toBe(500);
+      expect(response.headers.get('Cache-Control')).toBe(PRIVATE_NO_STORE_CACHE_CONTROL);
       await expect(response.json()).resolves.toEqual({ error: 'Failed to load codex' });
     } finally {
       vi.unstubAllEnvs();

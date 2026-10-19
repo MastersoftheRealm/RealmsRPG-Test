@@ -9,6 +9,13 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { revalidateTag } from 'next/cache';
 import { codexTableWriteCacheTags, officialLibraryWriteCacheTags } from '@/lib/codex/cache-tags';
+import {
+  officialListMayUsePublicCdn,
+  PRIVATE_MUST_REVALIDATE_CACHE_CONTROL,
+  PRIVATE_NO_STORE_CACHE_CONTROL,
+  PUBLIC_CDN_CACHE_CONTROL,
+} from '@/lib/api/public-cdn-cache';
+import { createPublicClient } from '@/lib/supabase/public-client';
 import { createClient, createServiceRoleClient } from '@/lib/supabase/server';
 import { getSession } from '@/lib/supabase/session';
 import { isAdmin } from '@/lib/admin';
@@ -114,6 +121,34 @@ async function adminMayIncludeUnlisted(request: NextRequest): Promise<boolean> {
   return isAdmin(user.uid);
 }
 
+async function createOfficialReadClient(cookieLess: boolean): Promise<{
+  supabase: Awaited<ReturnType<typeof createClient>>;
+  usedPublicClient: boolean;
+}> {
+  if (cookieLess) {
+    const publicClient = createPublicClient();
+    if (publicClient) return { supabase: publicClient, usedPublicClient: true };
+  }
+  return { supabase: await createClient(), usedPublicClient: false };
+}
+
+function officialCacheControlHeader(
+  items: unknown[],
+  options: {
+    includeUnlisted: boolean;
+    includeUnlistedRequested: boolean;
+    usedPublicClient: boolean;
+  },
+): string {
+  if (options.includeUnlisted || options.includeUnlistedRequested || !options.usedPublicClient) {
+    return PRIVATE_NO_STORE_CACHE_CONTROL;
+  }
+  if (officialListMayUsePublicCdn(items)) {
+    return PUBLIC_CDN_CACHE_CONTROL;
+  }
+  return PRIVATE_MUST_REVALIDATE_CACHE_CONTROL;
+}
+
 function revalidateOfficialLibraryAfterWrite(table: string): void {
   for (const tag of officialLibraryWriteCacheTags(table)) {
     revalidateTag(tag, 'max');
@@ -129,24 +164,35 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
   try {
     const { type } = await params;
     if (!VALID_TYPES.includes(type as OfficialType)) {
-      return NextResponse.json({ error: 'Invalid type' }, { status: 400 });
+      return NextResponse.json(
+        { error: 'Invalid type' },
+        { status: 400, headers: { 'Cache-Control': PRIVATE_NO_STORE_CACHE_CONTROL } },
+      );
     }
 
     // Public read via the anon (RLS-backed) client; "Anyone can read official_*"
     // / codex_species policies apply. Service role is reserved for admin writes (SEC-01).
-    const supabase = await createClient();
+    const includeUnlistedRequested = wantsIncludeUnlisted(request.nextUrl.searchParams);
     const includeUnlisted = await adminMayIncludeUnlisted(request);
+    const { supabase, usedPublicClient } =
+      await createOfficialReadClient(!includeUnlistedRequested);
 
     if (type === 'species') {
       try {
         const items = await fetchCachedOfficialSpeciesItems(supabase, includeUnlisted);
-        const cacheControl = 'private, max-age=0, must-revalidate';
+        const cacheControl = officialCacheControlHeader(items, {
+          includeUnlisted,
+          includeUnlistedRequested,
+          usedPublicClient,
+        });
         return NextResponse.json(items, { headers: { 'Cache-Control': cacheControl } });
       } catch (error) {
         const err = error as { code?: string; message?: string };
         if (err.code === '42P01' || err.message?.includes('does not exist')) {
           console.warn('[API] Official library table not found for type:', type, err.message);
-          return NextResponse.json([]);
+          return NextResponse.json([], {
+            headers: { 'Cache-Control': PRIVATE_NO_STORE_CACHE_CONTROL },
+          });
         }
         throw error;
       }
@@ -163,16 +209,24 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
       const err = error as { code?: string; message?: string };
       if (err.code === '42P01' || err.message?.includes('does not exist')) {
         console.warn('[API] Official library table not found for type:', type, err.message);
-        return NextResponse.json([]);
+        return NextResponse.json([], {
+          headers: { 'Cache-Control': PRIVATE_NO_STORE_CACHE_CONTROL },
+        });
       }
       throw error;
     }
 
-    const cacheControl = 'private, max-age=0, must-revalidate';
+    const cacheControl = officialCacheControlHeader(items, {
+      includeUnlisted,
+      includeUnlistedRequested,
+      usedPublicClient,
+    });
     return NextResponse.json(items, { headers: { 'Cache-Control': cacheControl } });
   } catch (err) {
     logApiError('GET /api/official/[type]', err);
-    return apiErrorResponse('Failed to load items', 500);
+    const response = apiErrorResponse('Failed to load items', 500);
+    response.headers.set('Cache-Control', PRIVATE_NO_STORE_CACHE_CONTROL);
+    return response;
   }
 }
 
