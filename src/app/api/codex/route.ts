@@ -7,6 +7,13 @@
 import { NextResponse } from 'next/server';
 import { isAdmin } from '@/lib/admin';
 import { fromPublicTable, type TypedSupabaseClient } from '@/lib/supabase/database';
+import {
+  codexResponseMayUsePublicCdn,
+  PRIVATE_MUST_REVALIDATE_CACHE_CONTROL,
+  PRIVATE_NO_STORE_CACHE_CONTROL,
+  PUBLIC_CDN_CACHE_CONTROL,
+} from '@/lib/api/public-cdn-cache';
+import { createPublicClient } from '@/lib/supabase/public-client';
 import { createClient } from '@/lib/supabase/server';
 import { logApiError } from '@/lib/api-error';
 import { getSession } from '@/lib/supabase/session';
@@ -441,8 +448,40 @@ async function buildCodexPayloadUncached(
   return slice;
 }
 
-/** Codex is admin-editable; long public cache caused stale archetypes/feats after saves. */
-const cacheControl = 'private, max-age=0, must-revalidate';
+async function createCodexReadClient(cookieLess: boolean): Promise<{
+  supabase: TypedSupabaseClient;
+  usedPublicClient: boolean;
+}> {
+  if (cookieLess) {
+    const publicClient = createPublicClient();
+    if (publicClient) return { supabase: publicClient, usedPublicClient: true };
+  }
+  return { supabase: await createClient(), usedPublicClient: false };
+}
+
+function codexCacheControlHeader(
+  keys: ReadonlySet<CodexPayloadKey>,
+  body: Partial<CodexPayload>,
+  options: {
+    debug: boolean;
+    includeUnlisted: boolean;
+    includeUnlistedRequested: boolean;
+    usedPublicClient: boolean;
+  },
+): string {
+  if (
+    options.debug ||
+    options.includeUnlisted ||
+    options.includeUnlistedRequested ||
+    !options.usedPublicClient
+  ) {
+    return PRIVATE_NO_STORE_CACHE_CONTROL;
+  }
+  if (codexResponseMayUsePublicCdn(keys, body)) {
+    return PUBLIC_CDN_CACHE_CONTROL;
+  }
+  return PRIVATE_MUST_REVALIDATE_CACHE_CONTROL;
+}
 
 /** ?debug=1 is allowed in non-production or for authenticated admins only (SEC audit M1). */
 async function canExposeCodexDebug(requested: boolean): Promise<boolean> {
@@ -457,23 +496,30 @@ export async function GET(request: Request) {
   const debug = url.searchParams.get('debug') === '1';
   const collection = url.searchParams.get('collection');
   if (collection !== null && !isCodexPayloadKey(collection)) {
-    return NextResponse.json({ error: 'Unknown codex collection' }, { status: 400 });
+    return NextResponse.json(
+      { error: 'Unknown codex collection' },
+      { status: 400, headers: { 'Cache-Control': PRIVATE_NO_STORE_CACHE_CONTROL } },
+    );
   }
   const keys: ReadonlySet<CodexPayloadKey> = collection
     ? new Set([collection])
     : new Set(CODEX_PAYLOAD_KEYS);
   try {
-    // Public reference data: read through the cookie-aware anon client so the
-    // "Anyone can read codex*/core_rules" RLS policies apply. The service-role
-    // key (RLS bypass) is reserved for authorized admin writes only (SEC-01).
-    const supabase = await createClient();
     const includeUnlistedRequested = wantsIncludeUnlisted(url.searchParams);
     let includeUnlisted = false;
     if (includeUnlistedRequested) {
       const { user } = await getSession();
       includeUnlisted = !!user?.uid && (await isAdmin(user.uid));
     }
+    const cookieLessRead = !debug && !includeUnlistedRequested;
+    const { supabase, usedPublicClient } = await createCodexReadClient(cookieLessRead);
     const body = await fetchCodexFromClient(supabase, keys, includeUnlisted);
+    const cacheControl = codexCacheControlHeader(keys, body, {
+      debug,
+      includeUnlisted,
+      includeUnlistedRequested,
+      usedPublicClient,
+    });
     return NextResponse.json(body, { headers: { 'Cache-Control': cacheControl } });
   } catch (err) {
     const message = err instanceof Error ? err.message : 'Unknown database error';
@@ -503,7 +549,7 @@ export async function GET(request: Request) {
         ...(hint && { hint }),
         ...(showDebug && { debug: { message, code } }),
       },
-      { status: 500 },
+      { status: 500, headers: { 'Cache-Control': PRIVATE_NO_STORE_CACHE_CONTROL } },
     );
   }
 }

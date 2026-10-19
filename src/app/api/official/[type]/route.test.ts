@@ -14,18 +14,29 @@ vi.mock('@/lib/supabase/server', () => ({
   createServiceRoleClient: vi.fn(),
 }));
 
+vi.mock('@/lib/supabase/public-client', () => ({
+  createPublicClient: vi.fn(() => null),
+}));
+
 vi.mock('@/lib/entity-image-enrich-server', () => ({
   enrichRowsWithBankImageUrls: vi.fn(() => Promise.resolve()),
 }));
 
+import {
+  PRIVATE_MUST_REVALIDATE_CACHE_CONTROL,
+  PRIVATE_NO_STORE_CACHE_CONTROL,
+  PUBLIC_CDN_CACHE_CONTROL,
+} from '@/lib/api/public-cdn-cache';
 import { GET, POST, PATCH, DELETE } from './route';
 import { getSession } from '@/lib/supabase/session';
 import { isAdmin } from '@/lib/admin';
+import { createPublicClient } from '@/lib/supabase/public-client';
 import { createClient, createServiceRoleClient } from '@/lib/supabase/server';
 
 const mockGetSession = vi.mocked(getSession);
 const mockIsAdmin = vi.mocked(isAdmin);
 const mockCreateClient = vi.mocked(createClient);
+const mockCreatePublicClient = vi.mocked(createPublicClient);
 const mockCreateServiceRoleClient = vi.mocked(createServiceRoleClient);
 
 const USER = { uid: 'user-123', email: 'hero@example.com' };
@@ -78,17 +89,110 @@ const params = (type: string) => ({ params: Promise.resolve({ type }) });
 describe('GET /api/official/[type]', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    mockCreatePublicClient.mockReturnValue(null);
   });
 
   it('returns official items without a session (public read)', async () => {
-    mockCreateClient.mockResolvedValue(createListSupabase() as never);
+    const supabase = createListSupabase();
+    mockCreatePublicClient.mockReturnValue(supabase as never);
 
     const response = await GET(makeGetRequest('powers'), params('powers'));
 
     expect(response.status).toBe(200);
     await expect(readJson(response)).resolves.toEqual([]);
     expect(mockGetSession).not.toHaveBeenCalled();
-    expect(response.headers.get('Cache-Control')).toBe('private, max-age=0, must-revalidate');
+    expect(mockCreateClient).not.toHaveBeenCalled();
+    expect(response.headers.get('Cache-Control')).toBe(PRIVATE_MUST_REVALIDATE_CACHE_CONTROL);
+  });
+
+  it('sets public CDN cache headers when listed powers exist', async () => {
+    const query = {
+      eq: vi.fn(function eq() {
+        return query;
+      }),
+      then(
+        onFulfilled?: (value: { data: unknown[]; error: null }) => unknown,
+        onRejected?: (reason: unknown) => unknown,
+      ) {
+        return Promise.resolve({
+          data: [
+            {
+              id: 'p1',
+              name: 'Bolt',
+              catalog_listing: 'listed',
+              payload: {},
+              created_at: '2026-01-01T00:00:00Z',
+              updated_at: '2026-01-01T00:00:00Z',
+            },
+          ],
+          error: null,
+        }).then(onFulfilled, onRejected);
+      },
+    };
+    const supabase = {
+      from: vi.fn(() => ({
+        select: vi.fn(() => query),
+      })),
+    };
+    mockCreatePublicClient.mockReturnValue(supabase as never);
+
+    const response = await GET(makeGetRequest('powers'), params('powers'));
+    expect(response.status).toBe(200);
+    expect(response.headers.get('Cache-Control')).toBe(PUBLIC_CDN_CACHE_CONTROL);
+    expect(mockCreateClient).not.toHaveBeenCalled();
+  });
+
+  it('does not CDN-cache listed powers when the cookie-less client is unavailable', async () => {
+    mockCreatePublicClient.mockReturnValue(null);
+    const query = {
+      eq: vi.fn(function eq() {
+        return query;
+      }),
+      then(
+        onFulfilled?: (value: { data: unknown[]; error: null }) => unknown,
+        onRejected?: (reason: unknown) => unknown,
+      ) {
+        return Promise.resolve({
+          data: [{ id: 'p1', name: 'Bolt', catalog_listing: 'listed', payload: {} }],
+          error: null,
+        }).then(onFulfilled, onRejected);
+      },
+    };
+    mockCreateClient.mockResolvedValue({
+      from: vi.fn(() => ({
+        select: vi.fn(() => query),
+      })),
+    } as never);
+
+    const response = await GET(makeGetRequest('powers'), params('powers'));
+    expect(response.status).toBe(200);
+    expect(response.headers.get('Cache-Control')).toBe(PRIVATE_NO_STORE_CACHE_CONTROL);
+  });
+
+  it('does not CDN-cache a list that still contains an unlisted item', async () => {
+    const query = {
+      eq: vi.fn(function eq() {
+        return query;
+      }),
+      then(
+        onFulfilled?: (value: { data: unknown[]; error: null }) => unknown,
+        onRejected?: (reason: unknown) => unknown,
+      ) {
+        return Promise.resolve({
+          data: [{ id: 'hidden', name: 'Hidden', catalog_listing: 'unlisted', payload: {} }],
+          error: null,
+        }).then(onFulfilled, onRejected);
+      },
+    };
+    mockCreatePublicClient.mockReturnValue({
+      from: vi.fn(() => ({
+        select: vi.fn(() => query),
+      })),
+    } as never);
+
+    const response = await GET(makeGetRequest('powers'), params('powers'));
+    expect(response.status).toBe(200);
+    expect(response.headers.get('Cache-Control')).toBe(PRIVATE_MUST_REVALIDATE_CACHE_CONTROL);
   });
 
   it('filters catalog_listing listed by default', async () => {
