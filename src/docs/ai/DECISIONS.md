@@ -136,7 +136,7 @@ Owner decisions for [Admin > Sources page](https://app.clickup.com/t/86e3ru888).
 - Merging any source into Core, or Core into another source, is allowed. The merge confirm is required. The two sources become one and cannot be split later.
 - Rename changelog rows commit in the same transaction as the rename. A log failure rolls back the whole rename.
 - There is no control that removes one source from every item.
-- `rename_codex_source` was applied on production on 2026-10-18. The function only; no rows changed. The first real rename has not run. Re-running `sql/codex-rename-source.sql` is safe because it only replaces the function. The first real rename is a live update and needs a backup first.
+- `rename_codex_source` was applied on production on 2026-10-18 (re-applied same day after fixing control-character validation in the SQL file). The function only; no rows changed. The first real rename has not run. Re-running `sql/codex-rename-source.sql` is safe because it only replaces the function. The first real rename is a live update and needs a backup first.
 
 ---
 
@@ -157,7 +157,7 @@ Owner decisions for [Admin > Sources page](https://app.clickup.com/t/86e3ru888).
 
 ## Changelog
 
-- **2026-10-18:** `sql/codex-rename-source.sql` applied on production (function only; no rows changed). The first real rename has not run. Re-running the file is safe because it only replaces the function. The first real rename is a live update and needs a backup first.
+- **2026-10-18:** `sql/codex-rename-source.sql` applied on production (function only; no rows changed); re-applied same day after fixing control-character validation (`chr(0)` in SQL text). The first real rename has not run. Re-running the file is safe because it only replaces the function. The first real rename is a live update and needs a backup first.
 - **2026-10-17:** Codex sources ([86e3ru888](https://app.clickup.com/t/86e3ru888)): Core may be renamed; merging into or out of Core is allowed with the merge confirm; rename changelogs commit in the same transaction; no remove-from-all-items control. The column default `{Core}` and `CORE_CODEX_SOURCE` stay. Items with no source are still saved as Core until a developer changes that default.
 - **2026-10-14:** Character sheet visibility (Oct 14, 2026 owner ruling): RM full access to rostered private sheets; members cannot see private; campaign visibility off-roster blocked. Supersedes 86e3jryyv for RM semantics; implements [86e39knu2](https://app.clickup.com/t/86e39knu2).
 - **2026-10-08:** Bypass merge moves the ClickUp task to testing with QA instructions for what changed, adds James Owenby, and keeps Collin assigned. Collin can move it back to in review.

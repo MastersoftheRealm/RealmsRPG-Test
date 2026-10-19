@@ -1,5 +1,6 @@
 -- Rename or merge one codex source across the nine sources text[] columns.
--- Applied on production 2026-10-18. The function only; no rows changed.
+-- Applied on production 2026-10-18; re-applied same day after fixing control-character
+-- validation (chr(0) in SQL text is illegal in Postgres). The function only; no rows changed.
 -- The first real rename has not run.
 --
 -- This file is safe to re-run because it only replaces the function, its
@@ -90,8 +91,8 @@ BEGIN
     IF position('<' IN candidate) > 0 OR position('>' IN candidate) > 0 THEN
       RAISE EXCEPTION 'Source name cannot include HTML.';
     END IF;
-    IF position(chr(0) IN candidate) > 0
-       OR candidate ~ ('[' || chr(1) || '-' || chr(31) || chr(127) || ']') THEN
+    -- Do not use chr(0) here: Postgres rejects a null byte in SQL text (54000).
+    IF candidate ~ ('[' || chr(1) || '-' || chr(31) || chr(127) || ']') THEN
       RAISE EXCEPTION 'Source name cannot include control characters.';
     END IF;
     IF lower(candidate COLLATE "C") = 'all' THEN

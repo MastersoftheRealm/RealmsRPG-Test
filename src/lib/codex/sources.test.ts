@@ -205,6 +205,11 @@ describe('codex sources', () => {
 
   it('describes the applied rename function and the unchanged Core default', () => {
     const sql = readFileSync(join(process.cwd(), 'sql/codex-rename-source.sql'), 'utf8');
+    const sqlWithoutLineComments = sql
+      .split('\n')
+      .map((line) => line.replace(/--.*$/, ''))
+      .join('\n');
+    expect(sqlWithoutLineComments).not.toMatch(/chr\s*\(\s*0\s*\)/);
     expect(sql).toContain('Applied on production 2026-10-18');
     expect(sql).toContain('safe to re-run because it only replaces the function');
     expect(sql).toContain('The first real rename is a live update');
