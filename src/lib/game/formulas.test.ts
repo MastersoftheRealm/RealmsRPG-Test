@@ -210,8 +210,10 @@ describe('calculateMaxArchetypeFeats (M9)', () => {
 describe('calculateCreatureCurrency (round up at end)', () => {
   it('uses ceil on the final product (Core rule)', () => {
     expect(calculateCreatureCurrency(5)).toBe(885);
+    expect(calculateCreatureCurrency(0.75)).toBe(183);
     expect(calculateCreatureCurrency(0.5)).toBe(167);
     expect(calculateCreatureCurrency(0.25)).toBe(152);
+    expect(calculateCreatureCurrency(30)).toBe(9565377);
   });
 
   it('level 1 stays at base currency', () => {
