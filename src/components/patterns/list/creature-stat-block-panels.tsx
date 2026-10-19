@@ -22,6 +22,7 @@ import { ListHeader } from './list-header';
 import { RollButton } from '../chrome/roll-button';
 import type { useRollsOptional } from '@/components/rolls';
 import { getWeaponAttackBonusFromProperties } from '@/lib/game/weapon-attack-ability';
+import { resolveArmorDamageReduction } from '@/lib/game/resolve-armor-damage-reduction';
 import { normalizeRangeDisplay } from '@/lib/utils';
 import type { Abilities } from '@/types';
 import type { CreatureData, CreatureStatBlockArmament } from './creature-stat-block-types';
@@ -450,16 +451,19 @@ export function CreatureStatBlockExpandedContent({
             <StatBlockSection title="Armor" defaultExpanded>
               <ArmorListSection
                 showTitle={false}
-                items={armor.map((a, idx) => ({
-                  id: `${creature.id}-a-${idx}`,
-                  name: a.name,
-                  description: a.description,
-                  thumbnail: resolveListRowThumbnail('equipment', a, a.name),
-                  damageReduction: a.damageReduction,
-                  armorValue: a.armorValue,
-                  properties: resolveArmamentProperties(a),
-                  chips: propertiesToChips(resolveArmamentProperties(a), itemPropertiesDb),
-                }))}
+                items={armor.map((a, idx) => {
+                  const properties = resolveArmamentProperties(a);
+                  return {
+                    id: `${creature.id}-a-${idx}`,
+                    name: a.name,
+                    description: a.description,
+                    thumbnail: resolveListRowThumbnail('equipment', a, a.name),
+                    damageReduction: resolveArmorDamageReduction({ ...a, properties }),
+                    armorValue: a.armorValue,
+                    properties,
+                    chips: propertiesToChips(properties, itemPropertiesDb),
+                  };
+                })}
                 showListHeader
                 compactRows
               />

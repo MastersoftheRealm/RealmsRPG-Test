@@ -22,10 +22,8 @@ import { CREATURE_STAT_BLOCK_GRID } from '@/lib/library/official-creature-list';
 import { formatCreatureLevel, formatCreatureLevelLabel } from '@/lib/game';
 import { formatListCellLabel } from '@/lib/utils';
 import type { Abilities } from '@/types';
-import {
-  collectCreatureInventoryItems,
-  resolveCreatureInventoryBuckets,
-} from '@/lib/game/creature-inventory';
+import { resolveCreatureInventoryBuckets } from '@/lib/game/creature-inventory';
+import { creatureArmorDamageReduction } from '@/lib/game/resolve-armor-damage-reduction';
 
 export type {
   CreatureAbilities,
@@ -116,8 +114,6 @@ export function CreatureStatBlock({
   const shields = inventory.shields;
   const armor = inventory.armor;
   const equipment = inventory.equipment;
-  const armaments = collectCreatureInventoryItems(inventory);
-
   const senses = creature.senses ?? [];
   const movement = creature.movementTypes ?? [];
   const hasSensesOrMovement = senses.length > 0 || movement.length > 0;
@@ -161,17 +157,7 @@ export function CreatureStatBlock({
     [creature, officialTechniques, techniquePartsDb, userTechniques],
   );
 
-  const damageReduction = useMemo(() => {
-    return armaments.reduce((sum, item) => {
-      if (typeof item.damageReduction === 'number') return sum + item.damageReduction;
-      if (typeof item.armorValue === 'number') return sum + item.armorValue;
-      const props = item.properties || [];
-      const dr = props.find(
-        (p) => p.id === 17 || String(p.name ?? '').toLowerCase() === 'damage reduction',
-      );
-      return sum + (dr ? 1 + (dr.op_1_lvl ?? 0) : 0);
-    }, 0);
-  }, [armaments]);
+  const damageReduction = useMemo(() => creatureArmorDamageReduction(armor), [armor]);
 
   const summaryLines = [
     compactLine('Resistances', creature.resistances),

@@ -284,6 +284,11 @@ function CreatureCreatorContent() {
               color: 'bg-surface-alt border border-border-light',
             },
             {
+              label: 'Damage Reduction',
+              value: stats.damageReduction,
+              color: 'bg-surface-alt border border-border-light',
+            },
+            {
               label: 'PROF',
               value: `+${stats.proficiency}`,
               color: 'bg-surface-alt border border-border-light',

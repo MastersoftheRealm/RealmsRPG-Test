@@ -1,6 +1,8 @@
 import { describe, expect, it } from 'vitest';
 import {
+  armorCurrencyCost,
   armorDamageReductionForHit,
+  creatureArmorDamageReduction,
   damageAfterArmorReduction,
   resolveArmorDamageReduction,
 } from './resolve-armor-damage-reduction';
@@ -38,6 +40,90 @@ describe('resolveArmorDamageReduction', () => {
     expect(
       resolveArmorDamageReduction({ properties: [{ name: 'Agility Reduction', op_1_lvl: 1 }] }),
     ).toBe(0);
+  });
+});
+
+describe('creatureArmorDamageReduction (86e3t17av)', () => {
+  it('is 0 when a creature has no armor (Goblin, Squirrel, weapons do not count)', () => {
+    expect(creatureArmorDamageReduction([])).toBe(0);
+    expect(
+      creatureArmorDamageReduction([
+        {
+          name: 'Knife',
+          type: 'weapon',
+          damageReduction: 1,
+          properties: [{ id: 17, name: 'Weapon Damage', op_1_lvl: 0 }],
+        },
+        { name: 'Buckler', type: 'shield', damageReduction: 5, currency: 80 },
+        { name: 'Rope', type: 'equipment', armorValue: 9, currency: 80 },
+      ]),
+    ).toBe(0);
+  });
+
+  it('reads a property-only armor as 1 + option level (Brown Bear Thick Hide)', () => {
+    expect(
+      creatureArmorDamageReduction([
+        {
+          name: 'Thick Hide',
+          type: 'armor',
+          properties: [{ id: 1, name: 'Damage Reduction', op_1_lvl: 3 }],
+        },
+      ]),
+    ).toBe(4);
+  });
+
+  it('uses a stored armor number (Human 3, Dragon 4, Animated Armor 6)', () => {
+    expect(creatureArmorDamageReduction([{ type: 'armor', damageReduction: 3 }])).toBe(3);
+    expect(creatureArmorDamageReduction([{ type: 'armor', armorValue: 4 }])).toBe(4);
+    expect(creatureArmorDamageReduction([{ type: 'armor', damageReduction: 6 }])).toBe(6);
+  });
+
+  it('applies only the highest currency cost, not a sum (the DR 49 case)', () => {
+    expect(
+      creatureArmorDamageReduction([
+        { name: 'Hide', type: 'armor', currency: 10, damageReduction: 4 },
+        { name: 'Plate', type: 'armor', currency: 40, damageReduction: 6 },
+        { name: 'Mail', type: 'armor', currency: 20, damageReduction: 39 },
+      ]),
+    ).toBe(6);
+  });
+
+  it('treats natural armor and armament armor as the same kind of piece', () => {
+    const natural = {
+      name: 'Thick Hide',
+      type: 'armor',
+      currency: 30,
+      properties: [{ id: 1, name: 'Damage Reduction', op_1_lvl: 3 }],
+    };
+    const forged = { name: 'Chain', type: 'armor', currency: 12, damageReduction: 2 };
+    expect(creatureArmorDamageReduction([natural, forged])).toBe(4);
+    expect(creatureArmorDamageReduction([{ ...natural, currency: 5 }, forged])).toBe(2);
+  });
+
+  it('on a currency-cost tie, keeps the earlier armor in the stored list', () => {
+    expect(
+      creatureArmorDamageReduction([
+        { name: 'First', type: 'armor', currency: 20, damageReduction: 3 },
+        { name: 'Second', type: 'armor', currency: 20, damageReduction: 8 },
+      ]),
+    ).toBe(3);
+  });
+
+  it('counts a missing currency as 0 and prefers a priced armor', () => {
+    expect(
+      creatureArmorDamageReduction([
+        { name: 'Unpriced', type: 'armor', damageReduction: 9 },
+        { name: 'Priced', type: 'armor', gold_cost: 1, damageReduction: 2 },
+      ]),
+    ).toBe(2);
+  });
+
+  it('reads currency before currencyCost, gold_cost, and cost', () => {
+    expect(armorCurrencyCost({ currency: 4, currencyCost: 9, gold_cost: 8, cost: 7 })).toBe(4);
+    expect(armorCurrencyCost({ currencyCost: 9, gold_cost: 8 })).toBe(9);
+    expect(armorCurrencyCost({ gold_cost: 8, cost: 7 })).toBe(8);
+    expect(armorCurrencyCost({ cost: 7 })).toBe(7);
+    expect(armorCurrencyCost({})).toBe(0);
   });
 });
 
