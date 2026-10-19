@@ -9,7 +9,7 @@
 
 'use client';
 
-import { Suspense } from 'react';
+import { Suspense, useMemo } from 'react';
 import {
   UnifiedSelectionModal,
   SourceFilter,
@@ -42,6 +42,7 @@ import type { CreatureSkill } from './creature-creator-types';
 import { AddCreatureFeatModal } from './AddCreatureFeatModal';
 import { CreatureCreatorEditor } from './creature-creator-editor';
 import { useCreatureCreatorWorkspace } from './use-creature-creator-workspace';
+import { buildCreatureOverBudgetNotification } from './creature-over-budget-notification';
 
 function CreatureCreatorContent() {
   const ws = useCreatureCreatorWorkspace();
@@ -119,6 +120,8 @@ function CreatureCreatorContent() {
     acceptDraft,
   } = ws;
 
+  const overBudgetNotification = useMemo(() => buildCreatureOverBudgetNotification(stats), [stats]);
+
   return (
     <CreatorPageShell
       icon={<Skull className="h-8 w-8 text-primary-link-fg" />}
@@ -137,6 +140,23 @@ function CreatureCreatorContent() {
       onDiscardLocalDraft={ws.discardLocalDraft}
       saving={save.saving}
       saveDisabled={!creature.name.trim() || isOverBudget}
+      saveDisabledReason={
+        isOverBudget
+          ? overBudgetNotification.title
+          : !creature.name.trim()
+            ? 'Enter a creature name to save.'
+            : undefined
+      }
+      aboveGrid={
+        overBudgetNotification.show ? (
+          <div
+            className="rounded-lg border border-danger-200 bg-danger-light px-4 py-3 text-sm text-danger-fg"
+            role="alert"
+          >
+            {overBudgetNotification.title}
+          </div>
+        ) : undefined
+      }
       loading={{
         isLoading: !bootstrapApplied,
         loadingMessage: 'Loading creature creator...',
