@@ -14,7 +14,10 @@
 import type { CoreRulesMap } from '@/types/core-rules';
 import type { TypedSupabaseClient } from '@/lib/supabase/database';
 import { CORE_RULES_CACHE_TAG } from '@/lib/codex/cache-tags';
-import { CODEX_PUBLIC_ISR_SECONDS, readCachedPublicData } from '@/lib/supabase/cached-public-read';
+import {
+  CODEX_PUBLIC_ISR_SECONDS,
+  readCachedPublicDataWhenValid,
+} from '@/lib/supabase/cached-public-read';
 
 export function resetCoreRulesCacheForTests(): void {
   // Tests mock `unstable_cache` as a passthrough; nothing to reset.
@@ -24,7 +27,12 @@ async function loadCoreRulesFromSupabase(
   supabase: Pick<TypedSupabaseClient, 'from'>,
 ): Promise<Partial<CoreRulesMap>> {
   const { data, error } = await supabase.from('core_rules').select('id, data');
-  if (error || !data) return {};
+  if (error) {
+    throw error;
+  }
+  if (!data?.length) {
+    throw new Error('core_rules returned no rows');
+  }
 
   const rules: Record<string, unknown> = {};
   for (const row of data) {
@@ -36,10 +44,11 @@ async function loadCoreRulesFromSupabase(
 export async function fetchCoreRules(
   supabase: Pick<TypedSupabaseClient, 'from'>,
 ): Promise<Partial<CoreRulesMap>> {
-  return readCachedPublicData(
+  return readCachedPublicDataWhenValid(
     ['core-rules', 'id,data'],
     [CORE_RULES_CACHE_TAG],
     CODEX_PUBLIC_ISR_SECONDS,
     () => loadCoreRulesFromSupabase(supabase),
+    (rules) => Object.keys(rules).length > 0,
   );
 }

@@ -49,9 +49,27 @@ describe('fetchCoreRules', () => {
     expect(rules).toEqual({ PROGRESSION_PLAYER: { baseHealth: 8 } });
   });
 
-  it('returns empty when the read fails', async () => {
+  it('throws when the read fails so empty results are not cached (86e3rb7ca)', async () => {
     await expect(
       fetchCoreRules(mockCoreRulesClient(null, { message: 'permission denied' }) as never),
-    ).resolves.toEqual({});
+    ).rejects.toThrow('permission denied');
+  });
+
+  it('does not memoize an empty core_rules payload', async () => {
+    let selectCalls = 0;
+    const client = {
+      from: (table: string) => {
+        expect(table).toBe('core_rules');
+        return {
+          select: async () => {
+            selectCalls += 1;
+            return { data: [], error: null };
+          },
+        };
+      },
+    };
+    await expect(fetchCoreRules(client as never)).rejects.toThrow(/no rows/);
+    await expect(fetchCoreRules(client as never)).rejects.toThrow(/no rows/);
+    expect(selectCalls).toBe(2);
   });
 });

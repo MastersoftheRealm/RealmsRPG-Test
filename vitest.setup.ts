@@ -8,9 +8,10 @@ vi.mock('next/cache', () => ({
     return () => {
       const existing = unstableCacheStore.get(key);
       if (existing) return existing;
-      const pending = loader();
-      unstableCacheStore.set(key, pending);
-      return pending;
+      return loader().then((value) => {
+        unstableCacheStore.set(key, Promise.resolve(value));
+        return value;
+      });
     };
   },
   revalidatePath: vi.fn(),

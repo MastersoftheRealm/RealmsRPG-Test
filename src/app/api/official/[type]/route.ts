@@ -20,16 +20,16 @@ import {
 } from '@/lib/api-validation';
 import { apiErrorResponse, logApiError } from '@/lib/api-error';
 import {
-  rowToItem,
   bodyToColumnar,
   toDbRow,
-  rowToItemSpecies,
   bodyToColumnarSpecies,
   toDbRowSpecies,
   type ColumnarLibraryType,
 } from '@/lib/library-columnar';
-import { enrichRowsWithBankImageUrls } from '@/lib/entity-image-enrich-server';
-import { fetchOfficialColumnarRows, fetchOfficialSpeciesRows } from '@/lib/official-library-server';
+import {
+  fetchCachedOfficialColumnarItems,
+  fetchCachedOfficialSpeciesItems,
+} from '@/lib/official-library-get-payload';
 import { allocateCodexNumericId, retireCodexId } from '@/lib/codex/id-allocation';
 import {
   parseCatalogListing,
@@ -138,9 +138,10 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
     const includeUnlisted = await adminMayIncludeUnlisted(request);
 
     if (type === 'species') {
-      let speciesRows: Record<string, unknown>[];
       try {
-        speciesRows = await fetchOfficialSpeciesRows(supabase, includeUnlisted);
+        const items = await fetchCachedOfficialSpeciesItems(supabase, includeUnlisted);
+        const cacheControl = 'private, max-age=0, must-revalidate';
+        return NextResponse.json(items, { headers: { 'Cache-Control': cacheControl } });
       } catch (error) {
         const err = error as { code?: string; message?: string };
         if (err.code === '42P01' || err.message?.includes('does not exist')) {
@@ -149,25 +150,11 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
         }
         throw error;
       }
-      await enrichRowsWithBankImageUrls(supabase, speciesRows);
-      const items = speciesRows.map((r) => {
-        const item = rowToItemSpecies(r as Record<string, unknown>);
-        (item as Record<string, unknown>)._source = 'official';
-        (item as Record<string, unknown>).catalogListing = parseCatalogListing(r.catalog_listing);
-        return item;
-      });
-      items.sort((a, b) => {
-        const na = String((a as Record<string, unknown>).name ?? '');
-        const nb = String((b as Record<string, unknown>).name ?? '');
-        return na.localeCompare(nb);
-      });
-      const cacheControl = 'private, max-age=0, must-revalidate';
-      return NextResponse.json(items, { headers: { 'Cache-Control': cacheControl } });
     }
 
-    let officialRows: Record<string, unknown>[];
+    let items: Record<string, unknown>[];
     try {
-      officialRows = await fetchOfficialColumnarRows(
+      items = await fetchCachedOfficialColumnarItems(
         supabase,
         type as ColumnarLibraryType,
         includeUnlisted,
@@ -180,13 +167,6 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
       }
       throw error;
     }
-    await enrichRowsWithBankImageUrls(supabase, officialRows);
-    const items = officialRows.map((r) => rowToItem(type as ColumnarLibraryType, r, 'official'));
-    items.sort((a, b) => {
-      const na = String((a as Record<string, unknown>).name ?? '');
-      const nb = String((b as Record<string, unknown>).name ?? '');
-      return na.localeCompare(nb);
-    });
 
     const cacheControl = 'private, max-age=0, must-revalidate';
     return NextResponse.json(items, { headers: { 'Cache-Control': cacheControl } });

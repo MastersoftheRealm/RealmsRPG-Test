@@ -36,8 +36,16 @@ import {
 } from '@/types/codex';
 import { CODEX_DATA_TABLES, type CodexDataTable } from '@/lib/codex/codex-tables';
 import { CODEX_API_TABLE_SELECT, omitCodexSourcesColumn } from '@/lib/codex/public-table-select';
-import { codexApiTableCacheTag, CODEX_API_CACHE_TAG } from '@/lib/codex/cache-tags';
-import { CODEX_PUBLIC_ISR_SECONDS, readCachedPublicData } from '@/lib/supabase/cached-public-read';
+import {
+  codexApiTableCacheTag,
+  CODEX_API_CACHE_TAG,
+  CORE_RULES_CACHE_TAG,
+} from '@/lib/codex/cache-tags';
+import {
+  CODEX_PUBLIC_ISR_SECONDS,
+  readCachedPublicData,
+  readCachedPublicDataWhenValid,
+} from '@/lib/supabase/cached-public-read';
 import type { ArchetypeCategory } from '@/types/archetype';
 
 /** Codex tables behind the payload keys — `?collection=` only queries what it returns. */
@@ -145,7 +153,44 @@ function selectTable(
   );
 }
 
+function codexPayloadCacheTags(keys: ReadonlySet<CodexPayloadKey>): string[] {
+  const tags = new Set<string>([CODEX_API_CACHE_TAG]);
+  for (const key of keys) {
+    for (const table of COLLECTION_TABLES[key]) {
+      tags.add(codexApiTableCacheTag(table));
+    }
+    if (key === 'coreRules') {
+      tags.add(CORE_RULES_CACHE_TAG);
+    }
+  }
+  return [...tags];
+}
+
+function isCacheableCodexApiPayload(
+  keys: ReadonlySet<CodexPayloadKey>,
+  payload: Partial<CodexPayload>,
+): boolean {
+  if (!keys.has('coreRules')) return true;
+  const core = payload.coreRules;
+  return !!core && Object.keys(core).length > 0;
+}
+
 async function fetchCodexFromClient(
+  supabase: TypedSupabaseClient,
+  keys: ReadonlySet<CodexPayloadKey>,
+  includeUnlisted = false,
+): Promise<Partial<CodexPayload>> {
+  const collectionKey = [...keys].sort().join(',');
+  return readCachedPublicDataWhenValid(
+    ['codex-api-payload', collectionKey, `unlisted=${includeUnlisted}`],
+    codexPayloadCacheTags(keys),
+    CODEX_PUBLIC_ISR_SECONDS,
+    () => buildCodexPayloadUncached(supabase, keys, includeUnlisted),
+    (payload) => isCacheableCodexApiPayload(keys, payload),
+  );
+}
+
+async function buildCodexPayloadUncached(
   supabase: TypedSupabaseClient,
   keys: ReadonlySet<CodexPayloadKey>,
   includeUnlisted = false,
