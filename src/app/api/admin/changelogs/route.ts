@@ -1,6 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { requireAdminSession } from '@/lib/admin';
-import { pickCodexChangelogIdentity } from '@/lib/codex-changelog-display';
+import {
+  codexChangelogIdentityWithLiveName,
+  pickCodexChangelogIdentity,
+  readStoredCodexChangelogEntityName,
+} from '@/lib/codex-changelog-display';
 import { createServiceRoleClient } from '@/lib/supabase/server';
 import {
   buildRateLimitKey,
@@ -50,6 +54,43 @@ function toValidLimit(raw: string | null): number {
   return Math.max(1, Math.min(200, Math.floor(parsed)));
 }
 
+/**
+ * One batched name read for rows whose snapshot has no identity name.
+ * `core_rules` has no name column. A lookup failure leaves those titles unnamed.
+ */
+async function loadLiveEntityNames(
+  supabase: ReturnType<typeof createServiceRoleClient>,
+  entityType: string,
+  rows: readonly ChangeLogRow[],
+): Promise<Map<string, string>> {
+  const names = new Map<string, string>();
+  if (entityType === 'core_rules') return names;
+  const ids = [
+    ...new Set(
+      rows
+        .filter((row) => !readStoredCodexChangelogEntityName(row.before_data, row.after_data))
+        .map((row) => String(row.entity_id))
+        .filter(Boolean),
+    ),
+  ];
+  if (ids.length === 0) return names;
+
+  const { data, error } = await supabase.from(entityType).select('id, name').in('id', ids);
+  if (error) {
+    console.error('[API Error] GET /api/admin/changelogs entity names:', error);
+    return names;
+  }
+  for (const row of data ?? []) {
+    if (!row || typeof row !== 'object') continue;
+    const record = row as { id?: unknown; name?: unknown };
+    const id = String(record.id ?? '');
+    if (!id || typeof record.name !== 'string') continue;
+    const name = record.name.trim();
+    if (name) names.set(id, name);
+  }
+  return names;
+}
+
 export async function GET(request: NextRequest) {
   try {
     const auth = await requireAdminSession();
@@ -90,6 +131,7 @@ export async function GET(request: NextRequest) {
     if (error) throw error;
 
     const rows = (data ?? []) as ChangeLogRow[];
+    const liveNames = await loadLiveEntityNames(supabase, entityType, rows);
     const userIds = Array.from(
       new Set(rows.map((row) => String(row.changed_by_user_id)).filter(Boolean)),
     );
@@ -112,11 +154,16 @@ export async function GET(request: NextRequest) {
 
     const payload = rows.map((row) => {
       const actor = profilesById.get(String(row.changed_by_user_id));
+      const identity = codexChangelogIdentityWithLiveName(
+        pickCodexChangelogIdentity(row.before_data),
+        pickCodexChangelogIdentity(row.after_data),
+        liveNames.get(String(row.entity_id)),
+      );
       return {
         ...row,
         // TASK-874: list UI only needs identity — do not ship full snapshots.
-        before_data: pickCodexChangelogIdentity(row.before_data),
-        after_data: pickCodexChangelogIdentity(row.after_data),
+        before_data: identity.before_data,
+        after_data: identity.after_data,
         actor: actor
           ? {
               id: actor.id,

@@ -1,12 +1,14 @@
 import { describe, expect, it } from 'vitest';
 import {
   buildCodexChangelogPersistPayload,
+  codexChangelogIdentityWithLiveName,
   diffCodexChangedFields,
   formatCodexChangeValue,
   formatCodexChangelogHeadline,
   parseChangedFields,
   parseChangedFieldsForOperation,
   readCodexChangelogEntityName,
+  readStoredCodexChangelogEntityName,
   summarizeChangedFieldNames,
 } from './codex-changelog-display';
 
@@ -144,5 +146,52 @@ describe('codex-changelog-display (TASK-874)', () => {
     ]);
     expect(updated.changed_fields.some((row) => row.field === 'archetype')).toBe(false);
     expect(readCodexChangelogEntityName(updated.before_data, updated.after_data)).toBe('Fighter');
+  });
+
+  it('uses the live entity name when a sources-only row stored none', () => {
+    const sourcesOnly = {
+      before_data: { sources: ['QA Rename Pack One'] },
+      after_data: { sources: ['qa rename pack two'] },
+    };
+    expect(
+      readStoredCodexChangelogEntityName(sourcesOnly.before_data, sourcesOnly.after_data),
+    ).toBeNull();
+    expect(readCodexChangelogEntityName(sourcesOnly.before_data, sourcesOnly.after_data)).toBe(
+      '(unnamed)',
+    );
+
+    const titled = codexChangelogIdentityWithLiveName(
+      sourcesOnly.before_data,
+      sourcesOnly.after_data,
+      '  Shield Bash  ',
+    );
+    expect(titled.before_data).toEqual(sourcesOnly.before_data);
+    expect(titled.after_data).toEqual({ ...sourcesOnly.after_data, name: 'Shield Bash' });
+    expect(readCodexChangelogEntityName(titled.before_data, titled.after_data)).toBe('Shield Bash');
+
+    expect(
+      codexChangelogIdentityWithLiveName(
+        { name: 'Stored Name' },
+        { name: 'Stored Name', sources: ['Core'] },
+        'Live Name',
+      ),
+    ).toEqual({
+      before_data: { name: 'Stored Name' },
+      after_data: { name: 'Stored Name', sources: ['Core'] },
+    });
+
+    expect(
+      codexChangelogIdentityWithLiveName(sourcesOnly.before_data, sourcesOnly.after_data, '  '),
+    ).toEqual(sourcesOnly);
+    expect(codexChangelogIdentityWithLiveName(null, null, null)).toEqual({
+      before_data: null,
+      after_data: null,
+    });
+    expect(
+      readCodexChangelogEntityName(
+        null,
+        codexChangelogIdentityWithLiveName(null, {}, 'Shield Bash').after_data,
+      ),
+    ).toBe('Shield Bash');
   });
 });
