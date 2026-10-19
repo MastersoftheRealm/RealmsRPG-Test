@@ -3,8 +3,10 @@ import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
 import {
   ADMIN_CODEX_SOURCE_SECTIONS,
+  adminSourceRowDetail,
   catalogNameList,
   otherSourcesLabel,
+  resolveAdminSelectedSource,
   rowsMatchingSource,
   type AdminCodexSourceRow,
 } from './admin-source-list';
@@ -80,5 +82,70 @@ describe('admin source list', () => {
     const catalog = readFileSync(join(process.cwd(), 'src/lib/codex/source-catalog.ts'), 'utf8');
     expect(rows).toContain(".order('id'");
     expect(catalog).toContain(".order('id'");
+    expect(rows).toContain('feat_lvl');
+    expect(rows).toContain('category');
+  });
+
+  it('defaults the selected source to Core when nothing is picked', () => {
+    const catalog = compileCodexSourceCatalog({
+      codex_feats: [
+        { id: '1', name: 'Alpha feat', sources: ['Alpha'] },
+        { id: '2', name: 'Core feat', sources: ['Core'] },
+      ] as AdminCodexSourceRow[],
+    });
+    expect(catalog.map((entry) => entry.name)).toEqual(['Alpha', 'Core']);
+    expect(
+      resolveAdminSelectedSource({
+        pickedSource: '',
+        catalog,
+        sessionDraftSources: [],
+        catalogNames: catalogNameList(catalog, {}),
+      }),
+    ).toBe('Core');
+  });
+
+  it('falls back to the first catalog source when Core is absent', () => {
+    const catalog = compileCodexSourceCatalog({
+      codex_feats: [{ id: '1', name: 'Only', sources: ['Workshop'] }] as AdminCodexSourceRow[],
+    });
+    expect(
+      resolveAdminSelectedSource({
+        pickedSource: '',
+        catalog,
+        sessionDraftSources: [],
+        catalogNames: catalogNameList(catalog, {}),
+      }),
+    ).toBe('Workshop');
+  });
+
+  it('keeps an explicit pick after the source has no rows in the catalog', () => {
+    expect(
+      resolveAdminSelectedSource({
+        pickedSource: 'Session Pack',
+        catalog: compileCodexSourceCatalog({
+          codex_feats: [{ id: '1', name: 'Other', sources: ['Core'] }] as AdminCodexSourceRow[],
+        }),
+        sessionDraftSources: [],
+        catalogNames: ['Core'],
+      }),
+    ).toBe('Session Pack');
+  });
+
+  it('exposes read-only row detail fields for disambiguation', () => {
+    expect(
+      adminSourceRowDetail('codex_feats', {
+        id: '1',
+        name: 'Flurry',
+        feat_lvl: 2,
+      }),
+    ).toEqual({ field: 'feat_lvl', value: '2' });
+    expect(
+      adminSourceRowDetail('codex_equipment', {
+        id: '2',
+        name: 'Rope',
+        category: 'Gear',
+      }),
+    ).toEqual({ field: 'category', value: 'Gear' });
+    expect(adminSourceRowDetail('codex_skills', { id: '3', name: 'Athletics' })).toBeNull();
   });
 });

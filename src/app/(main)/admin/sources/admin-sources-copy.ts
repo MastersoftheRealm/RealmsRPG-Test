@@ -123,3 +123,8 @@ export function adminSourcesBatchStoppedMessage(succeeded: number, error: string
 export function adminSourcesRemoveWithError(body: string, error: string): string {
   return `${body} ${error}`;
 }
+
+/** Secondary list line: field name as stored on the row, then the value. */
+export function adminSourcesRowDetailLine(field: string, value: string): string {
+  return `${field} ${value}`;
+}

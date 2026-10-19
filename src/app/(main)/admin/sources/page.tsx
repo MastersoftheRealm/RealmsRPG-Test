@@ -27,8 +27,10 @@ import { codexKeys } from '@/hooks/use-codex';
 import { useSort } from '@/hooks/use-sort';
 import {
   ADMIN_CODEX_SOURCE_SECTIONS,
+  adminSourceRowDetail,
   catalogNameList,
   otherSourcesLabel,
+  resolveAdminSelectedSource,
   rowsMatchingSource,
   type AdminCodexSourceRow,
   type CodexSourceTable,
@@ -105,6 +107,7 @@ import {
   adminSourcesRenameConfirmBody,
   adminSourcesSectionAddLabel,
   adminSourcesSectionSearchLabel,
+  adminSourcesRowDetailLine,
 } from './admin-sources-copy';
 
 /** Same prefix as `useCodexSourceCatalog` so an admin save refreshes this page. */
@@ -257,6 +260,10 @@ function AdminSourceTypeSection({
       >
         {filtered.map((row) => {
           const itemName = row.name ?? ADMIN_SOURCES_UNNAMED_ITEM;
+          const rowDetail = adminSourceRowDetail(sectionTable, row);
+          const detailLine = rowDetail
+            ? adminSourcesRowDetailLine(rowDetail.field, rowDetail.value)
+            : null;
           const canRemove = codexSourceMembershipRemoveOffered(
             row.sources,
             selectedSource,
@@ -267,6 +274,16 @@ function AdminSourceTypeSection({
               key={String(row.id)}
               id={String(row.id)}
               name={itemName}
+              nameContent={
+                detailLine ? (
+                  <span className="flex min-w-0 flex-col gap-0.5">
+                    <span className="block min-w-0 truncate">{itemName}</span>
+                    <span className="block min-w-0 truncate text-sm font-normal text-text-secondary">
+                      {detailLine}
+                    </span>
+                  </span>
+                ) : undefined
+              }
               gridColumns={LIST_GRID}
               rowChrome={{ rightSlot: true }}
               columns={[
@@ -283,6 +300,7 @@ function AdminSourceTypeSection({
                     type="button"
                     variant="ghost"
                     size="sm"
+                    className="max-sm:h-11 max-sm:w-11"
                     label={adminSourcesRemoveButtonLabel(itemName, selectedSource)}
                     disabled={isSaving}
                     onClick={() => onRemove({ table: sectionTable, row })}
@@ -436,18 +454,16 @@ export default function AdminSourcesPage() {
     [catalog, rowsByTable, sessionDraftSources],
   );
 
-  const selectedSource = useMemo(() => {
-    if (pickedSource) {
-      const resolved = resolveCodexSourceName(pickedSource, catalogNames);
-      const inCatalog = catalog.some((entry) => entry.name === resolved);
-      const inDrafts = sessionDraftSources.some(
-        (name) => codexSourceKey(name) === codexSourceKey(resolved),
-      );
-      if (inCatalog || inDrafts) return resolved;
-    }
-    if (catalog[0]?.name) return catalog[0].name;
-    return sessionDraftSources[0] ?? '';
-  }, [pickedSource, catalog, catalogNames, sessionDraftSources]);
+  const selectedSource = useMemo(
+    () =>
+      resolveAdminSelectedSource({
+        pickedSource,
+        catalog,
+        sessionDraftSources,
+        catalogNames,
+      }),
+    [pickedSource, catalog, catalogNames, sessionDraftSources],
+  );
 
   const invalidateData = useCallback(async () => {
     await queryClient.invalidateQueries({ queryKey: codexKeys.all });
@@ -481,8 +497,14 @@ export default function AdminSourcesPage() {
       if (catalog.some((entry) => codexSourceKey(entry.name) === codexSourceKey(draft))) continue;
       options.push({ value: draft, label: `${draft} (0)` });
     }
+    if (
+      selectedSource &&
+      !options.some((option) => codexSourceKey(option.value) === codexSourceKey(selectedSource))
+    ) {
+      options.push({ value: selectedSource, label: `${selectedSource} (0)` });
+    }
     return options;
-  }, [catalog, sessionDraftSources]);
+  }, [catalog, sessionDraftSources, selectedSource]);
 
   const addModalItems = useMemo((): SelectableItem[] => {
     if (!addScope || !selectedSource || !rowsByTable) return [];
