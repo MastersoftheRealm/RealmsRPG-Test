@@ -51,6 +51,8 @@ export type CreatureCreatorEditorProps = {
   isAdmin: boolean;
   creature: CreatureState;
   creatureLevel: number;
+  creatureAbilityMin: number;
+  creatureAbilityMax: number;
   stats: CreatureCreatorStatsSlice;
   skillPointsHelp: ReactNode;
   skillAllocations: Record<string, number>;
@@ -118,6 +120,8 @@ export function CreatureCreatorEditor(props: CreatureCreatorEditorProps) {
     isAdmin,
     creature,
     creatureLevel,
+    creatureAbilityMin,
+    creatureAbilityMax,
     stats,
     skillPointsHelp,
     skillAllocations,
@@ -236,8 +240,8 @@ export function CreatureCreatorEditor(props: CreatureCreatorEditorProps) {
           abilities={creature.abilities}
           totalPoints={stats.abilityPoints}
           onAbilityChange={updateAbility}
-          maxAbility={7}
-          minAbility={-4}
+          maxAbility={creatureAbilityMax}
+          minAbility={creatureAbilityMin}
           maxNegativeSum={null}
           isEditMode={true}
           compact={true}

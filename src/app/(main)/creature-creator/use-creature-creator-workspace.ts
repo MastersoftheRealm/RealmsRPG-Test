@@ -520,6 +520,7 @@ export function useCreatureCreatorWorkspace() {
     creatureLevel,
     skillPointsHelp,
     stats,
+    rules,
     isOverBudget,
     bootstrapApplied,
     load,

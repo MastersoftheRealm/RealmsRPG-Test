@@ -12,7 +12,7 @@
  * Constraints vary by context:
  * - Character Creator: max +3, min -2, max negative sum -3
  * - Character Sheet: higher max based on level, no negative sum constraint
- * - Creature Creator: max +7, min -4, no negative sum constraint
+ * - Creature Creator: max from core_rules (default +10), min -4, no negative sum constraint
  */
 
 'use client';
