@@ -9,14 +9,27 @@ import {
   sourcesColumnMissing,
   type CodexSourceCatalogEntry,
 } from '@/lib/codex/source-catalog';
-import { fetchAllPostgrestPages } from '@/lib/codex/postgrest-pager';
+import { fetchAllPostgrestPages, type PostgrestRangePageResult } from '@/lib/codex/postgrest-pager';
 import type {
   AdminCodexSourceRow,
   AdminCodexSourceRowsByTable,
 } from '@/lib/codex/admin-source-list';
+import type { CodexSourceTable } from '@/lib/codex/source-catalog';
 import { createPublicClient } from '@/lib/supabase/public-client';
 
-const ADMIN_SOURCE_ROW_SELECT = 'id, name, sources, updated_at';
+const ADMIN_SOURCE_ROW_SELECT_BASE = 'id, name, sources, updated_at';
+
+const ADMIN_SOURCE_ROW_SELECT_BY_TABLE: Record<CodexSourceTable, string> = {
+  codex_feats: `${ADMIN_SOURCE_ROW_SELECT_BASE}, feat_lvl`,
+  codex_skills: ADMIN_SOURCE_ROW_SELECT_BASE,
+  codex_species: `${ADMIN_SOURCE_ROW_SELECT_BASE}, type`,
+  codex_traits: ADMIN_SOURCE_ROW_SELECT_BASE,
+  codex_parts: `${ADMIN_SOURCE_ROW_SELECT_BASE}, type`,
+  codex_properties: `${ADMIN_SOURCE_ROW_SELECT_BASE}, type`,
+  codex_equipment: `${ADMIN_SOURCE_ROW_SELECT_BASE}, category`,
+  codex_archetypes: `${ADMIN_SOURCE_ROW_SELECT_BASE}, type`,
+  codex_creature_feats: `${ADMIN_SOURCE_ROW_SELECT_BASE}, feat_lvl`,
+};
 
 export type AdminCodexSourceRowsPayload = {
   rowsByTable: AdminCodexSourceRowsByTable;
@@ -32,13 +45,14 @@ export async function loadAdminCodexSourceRows(): Promise<AdminCodexSourceRowsPa
   const reads = await Promise.all(
     CODEX_SOURCE_TABLES.map(async (table) => {
       try {
-        const data = await fetchAllPostgrestPages<AdminCodexSourceRow>(async (from, to) =>
-          client
+        const data = await fetchAllPostgrestPages<AdminCodexSourceRow>(async (from, to) => {
+          const page = await client
             .from(table)
-            .select(ADMIN_SOURCE_ROW_SELECT)
+            .select(ADMIN_SOURCE_ROW_SELECT_BY_TABLE[table])
             .order('id', { ascending: true })
-            .range(from, to),
-        );
+            .range(from, to);
+          return page as PostgrestRangePageResult<AdminCodexSourceRow>;
+        });
         return { table, data, error: null as { code?: string; message?: string } | null };
       } catch (error) {
         return { table, data: null, error: error as { code?: string; message?: string } };

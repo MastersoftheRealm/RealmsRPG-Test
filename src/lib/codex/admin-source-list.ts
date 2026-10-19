@@ -6,10 +6,12 @@
 
 import type { CodexSourceTable } from '@/lib/codex/source-catalog';
 import {
+  CORE_CODEX_SOURCE,
   codexSourceKey,
   codexSourcesOrCore,
   itemMatchesSources,
   normalizeCodexSources,
+  resolveCodexSourceName,
 } from '@/lib/codex/sources';
 
 export type { CodexSourceTable };
@@ -35,7 +37,65 @@ export type AdminCodexSourceRow = {
   name: string | null;
   sources?: unknown;
   updated_at?: string | null;
+  feat_lvl?: number | null;
+  type?: string | null;
+  category?: string | null;
 };
+
+/** Optional row fields loaded for disambiguation in the admin list (read-only). */
+const ADMIN_SOURCE_ROW_DETAIL_FIELD: Partial<
+  Record<CodexSourceTable, 'feat_lvl' | 'type' | 'category'>
+> = {
+  codex_feats: 'feat_lvl',
+  codex_creature_feats: 'feat_lvl',
+  codex_species: 'type',
+  codex_parts: 'type',
+  codex_properties: 'type',
+  codex_archetypes: 'type',
+  codex_equipment: 'category',
+};
+
+export type AdminSourceRowDetail = {
+  field: string;
+  value: string;
+};
+
+export function adminSourceRowDetail(
+  table: CodexSourceTable,
+  row: AdminCodexSourceRow,
+): AdminSourceRowDetail | null {
+  const field = ADMIN_SOURCE_ROW_DETAIL_FIELD[table];
+  if (!field) return null;
+  const raw = row[field];
+  if (raw == null || raw === '') return null;
+  const value = typeof raw === 'number' ? String(raw) : String(raw).trim();
+  if (!value) return null;
+  return { field, value };
+}
+
+export function resolveAdminSelectedSource(input: {
+  pickedSource: string;
+  catalog: readonly { name: string }[];
+  sessionDraftSources: readonly string[];
+  catalogNames: readonly string[];
+}): string {
+  const { pickedSource, catalog, sessionDraftSources, catalogNames } = input;
+  const draft = pickedSource.trim();
+  if (draft) return resolveCodexSourceName(pickedSource, catalogNames);
+
+  const coreFromCatalog = catalog.find(
+    (entry) => codexSourceKey(entry.name) === codexSourceKey(CORE_CODEX_SOURCE),
+  );
+  if (coreFromCatalog) return coreFromCatalog.name;
+
+  const coreFromNames = catalogNames.find(
+    (name) => codexSourceKey(name) === codexSourceKey(CORE_CODEX_SOURCE),
+  );
+  if (coreFromNames) return coreFromNames;
+
+  if (catalog[0]?.name) return catalog[0].name;
+  return sessionDraftSources[0] ?? '';
+}
 
 export type AdminCodexSourceRowsByTable = Partial<Record<CodexSourceTable, AdminCodexSourceRow[]>>;
 
