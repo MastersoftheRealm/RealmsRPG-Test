@@ -41,7 +41,7 @@ export function AbilityRulesEditor({
       </FieldRow>
       <FieldRow label="Max (Creatures)">
         <NumInput
-          value={(data.maxAbsoluteCreature as number) ?? 20}
+          value={(data.maxAbsoluteCreature as number) ?? 10}
           onChange={(v) => set('maxAbsoluteCreature', v)}
         />
       </FieldRow>

@@ -2,7 +2,7 @@
   "categories": [
     {
       "value": "miniscule",
-      "label": "Miniscule",
+      "label": "Minuscule",
       "height": "Under 30 cm",
       "spaces": 0.125,
       "baseCarry": 10,

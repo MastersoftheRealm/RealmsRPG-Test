@@ -9,7 +9,7 @@ UPDATE public.core_rules
 SET
   data = '{
     "categories": [
-      {"value":"miniscule","label":"Miniscule","height":"Under 30 cm","spaces":0.125,"baseCarry":10,"perStrCarry":5,"minCarry":5},
+      {"value":"miniscule","label":"Minuscule","height":"Under 30 cm","spaces":0.125,"baseCarry":10,"perStrCarry":5,"minCarry":5},
       {"value":"tiny","label":"Tiny","height":"30–60 cm","spaces":0.25,"baseCarry":25,"perStrCarry":10,"minCarry":10},
       {"value":"small","label":"Small","height":"60–120 cm","spaces":1,"baseCarry":50,"perStrCarry":25,"minCarry":25},
       {"value":"medium","label":"Medium","height":"150–200 cm","spaces":1,"baseCarry":100,"perStrCarry":50,"minCarry":50},
