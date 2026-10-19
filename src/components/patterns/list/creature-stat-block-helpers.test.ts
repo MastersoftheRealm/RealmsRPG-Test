@@ -12,4 +12,13 @@ describe('buildCreatureDefensesSummaryLine', () => {
     expect(line.match(/Defenses/)?.[0]).toBe('Defenses');
     expect(line.split(',').length).toBe(6);
   });
+
+  it('includes a negative ability in the score', () => {
+    const line = buildCreatureDefensesSummaryLine(
+      { strength: -4, vitality: 0, agility: 0, acuity: 0, intelligence: 0, charisma: 0 },
+      { might: 1, fortitude: 0, reflex: 0, discernment: 0, mentalFortitude: 0, resolve: 0 },
+    );
+    expect(line).toContain('Might 7');
+    expect(line).toContain('Fortitude 10');
+  });
 });
