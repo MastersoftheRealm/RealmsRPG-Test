@@ -37,6 +37,11 @@ export type CreatureStatBlockArmament = {
   range?: string | undefined;
   armorValue?: number | undefined;
   damageReduction?: number | undefined;
+  /** Market currency cost. Used to pick the one armor whose Damage Reduction applies. */
+  currency?: number | undefined;
+  currencyCost?: number | undefined;
+  gold_cost?: number | undefined;
+  cost?: number | undefined;
   properties?: Array<{
     id?: number | undefined;
     name?: string | undefined;

@@ -157,6 +157,66 @@ describe('calculateCreatureCreatorStats', () => {
     expect(stats.currencySpent).toBe(16);
   });
 
+  it('uses one armor Damage Reduction: the highest currency cost (86e3t17av)', () => {
+    const creature = {
+      ...initialState,
+      enableArmaments: true,
+      weapons: [
+        {
+          id: 'w1',
+          name: 'Mace',
+          type: 'weapon',
+          tp: 1,
+          currency: 5,
+          rarity: 'Common',
+          damageReduction: 2,
+        },
+      ],
+      shields: [
+        {
+          id: 's1',
+          name: 'Buckler',
+          type: 'shield',
+          tp: 1,
+          currency: 80,
+          rarity: 'Common',
+          damageReduction: 5,
+        },
+      ],
+      armor: [
+        {
+          id: 'a1',
+          name: 'Thick Hide',
+          type: 'armor',
+          tp: 2,
+          currency: 8,
+          rarity: 'Common',
+          properties: [{ id: 1, name: 'Damage Reduction', op_1_lvl: 3 }],
+        },
+        {
+          id: 'a2',
+          name: 'Plate',
+          type: 'armor',
+          tp: 3,
+          currency: 40,
+          rarity: 'Common',
+          damageReduction: 6,
+        },
+        {
+          id: 'a3',
+          name: 'Mail',
+          type: 'armor',
+          tp: 2,
+          currency: 40,
+          rarity: 'Common',
+          damageReduction: 9,
+        },
+      ],
+    };
+    const stats = calculateCreatureCreatorStats(creature, featPointsMap, new Set(), undefined);
+    expect(stats.damageReduction).toBe(6);
+  });
+
   it('hidden Inventory does not spend Currency or TP (86e3jx639)', () => {
     const creature = {
       ...initialState,
@@ -171,9 +231,21 @@ describe('calculateCreatureCreatorStats', () => {
           rarity: 'Common',
         },
       ],
+      armor: [
+        {
+          id: 'a1',
+          name: 'Plate',
+          type: 'armor',
+          tp: 3,
+          currency: 40,
+          rarity: 'Common',
+          damageReduction: 6,
+        },
+      ],
     };
     const stats = calculateCreatureCreatorStats(creature, featPointsMap, new Set(), undefined);
     expect(stats.trainingSpent).toBe(0);
     expect(stats.currencySpent).toBe(0);
+    expect(stats.damageReduction).toBe(0);
   });
 });

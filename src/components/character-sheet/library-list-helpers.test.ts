@@ -104,6 +104,13 @@ describe('deriveArmorItemCombatStats / getEquippedArmorQuickRef', () => {
     });
   });
 
+  it('buildPlayArmorRowColumns shows Damage Reduction from the property when no number is stored', () => {
+    const cols = buildPlayArmorRowColumns({
+      properties: [{ id: 1, name: 'Damage Reduction', op_1_lvl: 3 }],
+    });
+    expect(cols.find((c) => c.key === 'dr')?.value).toBe('4');
+  });
+
   it('buildPlayArmorRowColumns shows Crit + from armor properties (creature stat block)', () => {
     const cols = buildPlayArmorRowColumns({
       armorValue: 4,
@@ -121,6 +128,14 @@ describe('deriveArmorItemCombatStats / getEquippedArmorQuickRef', () => {
       properties: [{ name: 'Critical Range Increase', op_1_lvl: 0 }],
     } as unknown as Item;
     expect(deriveArmorItemCombatStats(item).criticalRangeIncrease).toBe(1);
+  });
+
+  it('sums every equipped character armor', () => {
+    const armor = [
+      { id: 'a', name: 'Hide', equipped: true, armorValue: 2 } as Item,
+      { id: 'b', name: 'Plate', equipped: true, armorValue: 4 } as Item,
+    ];
+    expect(getEquippedArmorQuickRef(armor, 10)?.damageReduction).toBe(6);
   });
 
   it('returns null when no armor is equipped', () => {

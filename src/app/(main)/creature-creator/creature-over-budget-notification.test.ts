@@ -22,6 +22,7 @@ function baseStats(overrides: Partial<CreatureCreatorDerivedStats>): CreatureCre
     maxEnergy: 0,
     speed: 0,
     evasion: 0,
+    damageReduction: 0,
     abilitySpent: 0,
     abilityRemaining: 0,
     heRemaining: 0,

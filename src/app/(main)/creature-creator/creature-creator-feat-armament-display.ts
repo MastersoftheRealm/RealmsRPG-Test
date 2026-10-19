@@ -12,6 +12,7 @@ import {
   type ItemPropertyPayload,
 } from '@/lib/calculators';
 import { collectCreatureInventoryItems } from '@/lib/game/creature-inventory';
+import { resolveArmorDamageReduction } from '@/lib/game/resolve-armor-damage-reduction';
 import { codexFeatToCreatureFeat, creatureToFeatRequirementCharacter } from './creature-feat-utils';
 import {
   inferCreatureFeatSource,
@@ -166,8 +167,7 @@ export function enrichArmamentsWithSortKeys(creature: CreatureState): CreatureAr
     const payload = (armament.properties || []) as ItemPropertyPayload[];
     const isArmor = String(armament.type ?? '').toLowerCase() === 'armor';
     const block = isShield ? deriveShieldAmountFromProperties(payload) || '-' : '-';
-    const drValue = armament.damageReduction ?? armament.armorValue;
-    const damageReduction = isArmor && drValue != null ? String(drValue) : '-';
+    const damageReduction = isArmor ? String(resolveArmorDamageReduction(armament)) : '-';
     const crit = isArmor ? deriveCriticalRangeIncreaseFromProperties(payload) : 0;
     const criticalRangeIncrease = isArmor && crit > 0 ? String(crit) : '-';
     return {

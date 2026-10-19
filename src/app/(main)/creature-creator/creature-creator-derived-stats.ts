@@ -24,6 +24,7 @@ import {
   collectCreatureInventoryItems,
   creatureInventoryQuantityMultiplier,
 } from '@/lib/game/creature-inventory';
+import { creatureArmorDamageReduction } from '@/lib/game/resolve-armor-damage-reduction';
 import type { CoreRulesMap } from '@/types/core-rules';
 import { SENSE_TO_FEAT_ID, MOVEMENT_TO_FEAT_ID } from './creature-creator-constants';
 import type { CreatureState } from './creature-creator-types';
@@ -52,6 +53,8 @@ export type CreatureCreatorDerivedStats = {
   maxEnergy: number;
   speed: number;
   evasion: number;
+  /** One armor: highest currency cost. Shields and weapons are not included. */
+  damageReduction: number;
   abilitySpent: number;
   abilityRemaining: number;
   heRemaining: number;
@@ -154,6 +157,7 @@ export function calculateCreatureCreatorStats(
 
   const speed = calculateCreatureSpeed(abilities.agility, rules, creature.movementTypes);
   const evasion = calculateEvasion(abilities.agility, undefined, rules);
+  const damageReduction = creatureArmorDamageReduction(creatureLoadoutForBudget(creature).armor);
 
   const abilitySpent = Object.values(abilities).reduce(
     (sum, val) => sum + calculateAbilityScoreCost(val, rules),
@@ -213,6 +217,7 @@ export function calculateCreatureCreatorStats(
     maxEnergy,
     speed,
     evasion,
+    damageReduction,
     abilitySpent,
     abilityRemaining: abilityPoints - abilitySpent,
     heRemaining: hePool - heSpent,
