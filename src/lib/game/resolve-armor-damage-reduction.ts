@@ -7,6 +7,7 @@ import {
   deriveDamageReductionFromProperties,
   type ItemPropertyPayload,
 } from '@/lib/calculators/item-calc';
+import { ARMOR_EXCEPTION_TYPES } from '@/lib/game/creator-constants';
 import { normalizeCreatureInventoryType } from '@/lib/game/creature-inventory';
 
 export type ArmorDrSource = {
@@ -146,4 +147,49 @@ export function damageAfterArmorReduction(incomingDamage: number, effectiveDr: n
   if (!Number.isFinite(incomingDamage) || incomingDamage <= 0) return 0;
   const dr = Number.isFinite(effectiveDr) ? Math.max(0, effectiveDr) : 0;
   return Math.max(1, incomingDamage - dr);
+}
+
+/** Standard armor does not reduce these types. Other Damage Reduction sources are not on this list. */
+export const STANDARD_ARMOR_DR_EXCEPTIONS = ARMOR_EXCEPTION_TYPES;
+
+/**
+ * Standard armor reduces every damage type except Psychic, Spiritual, and Sonic.
+ * The check is the damage type name. It does not depend on Evasion, Reflexes, Might,
+ * or any other defense the attack targets. A blank type is not one of the three exceptions.
+ * Comparison ignores case and surrounding spaces.
+ */
+export function standardArmorReducesDamageType(
+  damageType: string | null | undefined,
+  exceptions: readonly string[] = STANDARD_ARMOR_DR_EXCEPTIONS,
+): boolean {
+  const key = String(damageType ?? '')
+    .trim()
+    .toLowerCase();
+  if (!key) return true;
+  return !exceptions.some((exception) => exception.trim().toLowerCase() === key);
+}
+
+export type DamageReductionSource = 'armor' | 'other';
+
+/**
+ * Damage Reduction for one instance.
+ * Armor skips Psychic, Spiritual, and Sonic and does not count that instance
+ * toward later halving. Any other source keeps its full amount for every type.
+ */
+export function effectiveDamageReduction(input: {
+  source: DamageReductionSource;
+  damageType?: string | null | undefined;
+  baseDamageReduction: number;
+  priorReductionsThisTurn?: number | undefined;
+  armorExceptions?: readonly string[] | undefined;
+}): { reduction: number; countsAsArmorReduction: boolean } {
+  const base = Number.isFinite(input.baseDamageReduction) ? input.baseDamageReduction : 0;
+  if (input.source !== 'armor') {
+    return { reduction: Math.max(0, base), countsAsArmorReduction: false };
+  }
+  if (!standardArmorReducesDamageType(input.damageType, input.armorExceptions)) {
+    return { reduction: 0, countsAsArmorReduction: false };
+  }
+  const reduction = armorDamageReductionForHit(base, input.priorReductionsThisTurn ?? 0);
+  return { reduction, countsAsArmorReduction: reduction > 0 };
 }
