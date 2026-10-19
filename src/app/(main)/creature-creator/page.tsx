@@ -37,16 +37,17 @@ import {
   creatorToolbarSaveAsCopyHandler,
 } from '@/lib/creator/creator-save-as-copy';
 import { CreatorSummaryPanel, CreatorPageShell } from '@/components/creator';
+import { getCreatureAbilityBounds } from '@/lib/game/creature-ability-bounds';
 import type { DisplayItem } from '@/types/items';
 import type { CreatureSkill } from './creature-creator-types';
 import { AddCreatureFeatModal } from './AddCreatureFeatModal';
 import { CreatureCreatorEditor } from './creature-creator-editor';
 import { useCreatureCreatorWorkspace } from './use-creature-creator-workspace';
 import { formatCreatureAbilityPointsValue } from './creature-ability-points-display';
-import { getCreatureAbilityBounds } from '@/lib/game/creature-ability-bounds';
 
 function CreatureCreatorContent() {
   const ws = useCreatureCreatorWorkspace();
+  const creatureAbilityBounds = useMemo(() => getCreatureAbilityBounds(ws.rules), [ws.rules]);
   const {
     user,
     isAdmin,
@@ -55,7 +56,6 @@ function CreatureCreatorContent() {
     creatureLevel,
     skillPointsHelp,
     stats,
-    rules,
     isOverBudget,
     bootstrapApplied,
     load,
@@ -121,8 +121,6 @@ function CreatureCreatorContent() {
     clearSessionDraftCache,
     acceptDraft,
   } = ws;
-
-  const creatureAbilityBounds = useMemo(() => getCreatureAbilityBounds(rules), [rules]);
 
   return (
     <CreatorPageShell
