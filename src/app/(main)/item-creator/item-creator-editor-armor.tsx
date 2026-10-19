@@ -49,7 +49,6 @@ export function ItemCreatorEditorArmor({
             size="lg"
             label="Damage reduction"
           />
-          <p className="mt-1 text-xs text-text-muted">Reduces physical damage taken</p>
         </div>
 
         <div>

@@ -1,10 +1,13 @@
 import { describe, expect, it } from 'vitest';
+import { ALL_DAMAGE_TYPES } from '@/lib/game/creator-constants';
 import {
   armorCurrencyCost,
   armorDamageReductionForHit,
   creatureArmorDamageReduction,
   damageAfterArmorReduction,
+  effectiveDamageReduction,
   resolveArmorDamageReduction,
+  standardArmorReducesDamageType,
 } from './resolve-armor-damage-reduction';
 
 describe('resolveArmorDamageReduction', () => {
@@ -153,6 +156,92 @@ describe('armorDamageReductionForHit', () => {
     expect(armorDamageReductionForHit(5, -1)).toBe(5);
     expect(armorDamageReductionForHit(5, Number.NaN)).toBe(5);
     expect(armorDamageReductionForHit(Number.NaN, 1)).toBe(0);
+  });
+});
+
+describe('standard armor damage types (86e3tcaf9)', () => {
+  const reduced = ALL_DAMAGE_TYPES.filter(
+    (type) => type !== 'psychic' && type !== 'spiritual' && type !== 'sonic',
+  );
+
+  it('skips only Psychic, Spiritual, and Sonic', () => {
+    for (const type of ['psychic', 'Psychic', ' spiritual ', 'SONIC'] as const) {
+      expect(standardArmorReducesDamageType(type)).toBe(false);
+    }
+    for (const type of reduced) {
+      expect(standardArmorReducesDamageType(type)).toBe(true);
+    }
+    expect(standardArmorReducesDamageType('')).toBe(true);
+    expect(standardArmorReducesDamageType(undefined)).toBe(true);
+  });
+
+  it('applies armor Damage Reduction to every type except those three', () => {
+    for (const type of ['psychic', 'spiritual', 'sonic']) {
+      expect(
+        effectiveDamageReduction({
+          source: 'armor',
+          damageType: type,
+          baseDamageReduction: 5,
+        }),
+      ).toEqual({ reduction: 0, countsAsArmorReduction: false });
+    }
+    for (const type of [
+      'magic',
+      'fire',
+      'poison',
+      'light',
+      'bludgeoning',
+      'piercing',
+      'slashing',
+    ]) {
+      expect(
+        effectiveDamageReduction({
+          source: 'armor',
+          damageType: type,
+          baseDamageReduction: 5,
+          priorReductionsThisTurn: 0,
+        }).reduction,
+      ).toBe(5);
+    }
+  });
+
+  it('does not count a skipped type toward later armor halving', () => {
+    const skipped = effectiveDamageReduction({
+      source: 'armor',
+      damageType: 'psychic',
+      baseDamageReduction: 5,
+      priorReductionsThisTurn: 0,
+    });
+    expect(skipped.countsAsArmorReduction).toBe(false);
+    expect(
+      effectiveDamageReduction({
+        source: 'armor',
+        damageType: 'slashing',
+        baseDamageReduction: 5,
+        priorReductionsThisTurn: 0,
+      }).reduction,
+    ).toBe(5);
+    expect(
+      effectiveDamageReduction({
+        source: 'armor',
+        damageType: 'fire',
+        baseDamageReduction: 5,
+        priorReductionsThisTurn: 1,
+      }).reduction,
+    ).toBe(3);
+  });
+
+  it('leaves non-armor Damage Reduction unchanged for the exception types', () => {
+    for (const type of ['psychic', 'spiritual', 'sonic', 'slashing', 'fire']) {
+      expect(
+        effectiveDamageReduction({
+          source: 'other',
+          damageType: type,
+          baseDamageReduction: 5,
+          priorReductionsThisTurn: 2,
+        }),
+      ).toEqual({ reduction: 5, countsAsArmorReduction: false });
+    }
   });
 });
 
