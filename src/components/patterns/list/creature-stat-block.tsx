@@ -38,11 +38,10 @@ export type {
 import type { CreatureStatBlockProps } from './creature-stat-block-types';
 import {
   REALMS_ABILITY_ORDER,
-  DEFENSES_BY_ABILITY,
   formatArchetype,
-  formatModifier,
   getAbilityValue,
   compactLine,
+  buildCreatureDefensesSummaryLine,
 } from './creature-stat-block-helpers';
 import {
   buildPowersForDisplay,
@@ -106,19 +105,7 @@ export function CreatureStatBlock({
     return { key: keyName, value: top.val, displayName };
   }, [creature.abilities]);
 
-  const defensesSentence = (() => {
-    const defs = creature.defenses ?? {};
-    const parts = DEFENSES_BY_ABILITY.map((d) => ({
-      ...d,
-      bonus: typeof defs[d.defenseKey] === 'number' ? (defs[d.defenseKey] as number) : 0,
-    }))
-      .filter((d) => d.bonus !== 0)
-      .map(
-        (d) =>
-          `${d.label} ${formatModifier(getAbilityValue(creature.abilities ?? {}, d.ability) + d.bonus)}`,
-      );
-    return parts.length ? `Defenses ${parts.join(', ')}` : null;
-  })();
+  const defensesSentence = buildCreatureDefensesSummaryLine(creature.abilities, creature.defenses);
 
   const agility = getAbilityValue(creature.abilities ?? {}, 'agility');
   const speed = calculateCreatureSpeed(agility, rules, creature.movementTypes);
