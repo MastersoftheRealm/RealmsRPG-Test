@@ -299,7 +299,8 @@ function AdminSourceTypeSection({
                   <IconButton
                     type="button"
                     variant="ghost"
-                    size="md"
+                    size="sm"
+                    className="max-sm:h-11 max-sm:w-11"
                     label={adminSourcesRemoveButtonLabel(itemName, selectedSource)}
                     disabled={isSaving}
                     onClick={() => onRemove({ table: sectionTable, row })}
