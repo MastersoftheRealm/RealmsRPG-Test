@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { defined } from '@/lib/utils';
 import {
+  buildPlayArmorRowColumns,
   deriveArmorItemCombatStats,
   getEquippedArmorQuickRef,
   partDataToChips,
@@ -101,6 +102,15 @@ describe('deriveArmorItemCombatStats / getEquippedArmorQuickRef', () => {
       criticalRangeIncrease: 2,
       criticalRange: 26, // 14 + 10 + (1 + 1)
     });
+  });
+
+  it('buildPlayArmorRowColumns shows Crit + from armor properties (creature stat block)', () => {
+    const cols = buildPlayArmorRowColumns({
+      armorValue: 4,
+      properties: [{ id: 22, name: 'Critical Range +1', op_1_lvl: 0 }],
+    });
+    expect(cols.find((c) => c.key === 'crit')?.value).toBe('+1');
+    expect(cols.find((c) => c.key === 'dr')?.value).toBe('4');
   });
 
   it('treats Critical Range Increase as the same property as Critical Range +1', () => {

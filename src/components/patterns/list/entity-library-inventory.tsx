@@ -5,6 +5,7 @@ import { ListHeader } from '@/components/patterns/list/list-header';
 import { SectionHeader } from '@/components/patterns/chrome/section-header';
 import { RollButton } from '@/components/patterns/chrome/roll-button';
 import { deriveShieldAmountFromProperties } from '@/lib/calculators/item-calc';
+import { buildPlayArmorRowColumns } from '@/components/character-sheet/library-list-helpers';
 import { splitDamageDiceAndType } from '@/lib/utils';
 import { useRollsOptional } from '@/components/rolls';
 import {
@@ -359,10 +360,7 @@ export function ArmorListSection({
                 name={a.name}
                 description={a.description}
                 thumbnail={a.thumbnail}
-                columns={[
-                  { key: 'dr', value: a.damageReduction ?? a.armorValue ?? '-', align: 'center' },
-                  { key: 'crit', value: '-', align: 'center' },
-                ]}
+                columns={buildPlayArmorRowColumns(a)}
                 gridColumns={grid}
                 chips={a.chips}
                 chipsLabel={a.chips?.length ? 'Properties & Proficiencies' : undefined}
