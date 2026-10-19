@@ -40,7 +40,7 @@ export function buildCreatureOverBudgetNotification(
     overspent.push(formatCount(stats.trainingRemaining, 'training point'));
   }
   if (stats.currencyRemaining < 0) {
-    overspent.push(formatCount(stats.currencyRemaining, 'currency'));
+    overspent.push(formatCount(stats.currencyRemaining, 'currency', 'currency'));
   }
 
   if (overspent.length === 0) {

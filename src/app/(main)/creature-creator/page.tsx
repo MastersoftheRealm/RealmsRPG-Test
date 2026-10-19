@@ -18,7 +18,7 @@ import {
   type SelectableItem,
 } from '@/components/patterns';
 import { getListHeaderColumns, getModalGridColumns } from '@/lib/library-selectable-builders';
-import { LoadingState } from '@/components/ui';
+import { Alert, LoadingState } from '@/components/ui';
 import { Skull } from 'lucide-react';
 import { RollLog, RollProvider } from '@/components/rolls';
 import { formatListCellLabel } from '@/lib/utils';
@@ -149,12 +149,7 @@ function CreatureCreatorContent() {
       }
       aboveGrid={
         overBudgetNotification.show ? (
-          <div
-            className="rounded-lg border border-danger-200 bg-danger-light px-4 py-3 text-sm text-danger-fg"
-            role="alert"
-          >
-            {overBudgetNotification.title}
-          </div>
+          <Alert variant="danger">{overBudgetNotification.title}</Alert>
         ) : undefined
       }
       loading={{

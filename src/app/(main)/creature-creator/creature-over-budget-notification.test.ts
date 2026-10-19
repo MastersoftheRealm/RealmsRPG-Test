@@ -51,4 +51,9 @@ describe('buildCreatureOverBudgetNotification', () => {
   it('is hidden when all pools are non-negative', () => {
     expect(buildCreatureOverBudgetNotification(baseStats({})).show).toBe(false);
   });
+
+  it('keeps currency uninflected when more than one is overspent', () => {
+    const note = buildCreatureOverBudgetNotification(baseStats({ currencyRemaining: -2 }));
+    expect(note.title).toBe('Over budget: 2 currency');
+  });
 });
