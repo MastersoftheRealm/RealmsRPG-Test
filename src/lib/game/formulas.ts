@@ -263,7 +263,7 @@ export function calculateCreatureCurrency(level: number, rules?: Rules): number 
     rules?.PROGRESSION_CREATURE?.baseCurrency ?? CREATURE_CONSTANTS.BASE_CURRENCY;
   const growth =
     rules?.PROGRESSION_CREATURE?.currencyGrowthRate ?? CREATURE_CONSTANTS.CURRENCY_GROWTH;
-  return Math.round(baseCurrency * Math.pow(growth, parsedLevel - 1));
+  return Math.ceil(baseCurrency * Math.pow(growth, parsedLevel - 1));
 }
 
 /**

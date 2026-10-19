@@ -51,7 +51,7 @@ export function resolveCatalogRowUnitCost(row: CatalogRowCostFields | null | und
 /** Starting currency by level (matches equipment-step). */
 export function computeStartingCurrency(level = 1): number {
   if (level <= 1) return CHARACTER_STARTING_CURRENCY;
-  return Math.round(CHARACTER_STARTING_CURRENCY * Math.pow(CURRENCY_GROWTH, level - 1));
+  return Math.ceil(CHARACTER_STARTING_CURRENCY * Math.pow(CURRENCY_GROWTH, level - 1));
 }
 
 /**

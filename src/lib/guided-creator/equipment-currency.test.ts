@@ -13,7 +13,7 @@ describe('equipment-currency', () => {
   it('computeStartingCurrency matches level-1 budget and grows at 1.45', () => {
     expect(computeStartingCurrency(1)).toBe(CHARACTER_STARTING_CURRENCY);
     expect(computeStartingCurrency(1)).toBe(200);
-    expect(computeStartingCurrency(2)).toBe(Math.round(200 * 1.45));
+    expect(computeStartingCurrency(2)).toBe(Math.ceil(200 * 1.45));
   });
 
   it('spent / remaining currency use quantity × unit cost', () => {
