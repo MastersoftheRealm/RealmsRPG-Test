@@ -2,7 +2,7 @@
   "min": -2,
   "maxStarting": 3,
   "maxAbsoluteCharacter": 10,
-  "maxAbsoluteCreature": 20,
+  "maxAbsoluteCreature": 10,
   "costIncreaseThreshold": 4,
   "normalCost": 1,
   "increasedCost": 2,

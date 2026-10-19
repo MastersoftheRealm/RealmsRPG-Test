@@ -48,7 +48,7 @@ export const ABILITY_LIMITS = {
   /** Hard cap for player characters (no level-based cap; cost doubling at 4+ is the soft cap) */
   MAX_ABSOLUTE: 10,
   /** Hard cap for creatures/NPCs */
-  MAX_ABSOLUTE_CREATURE: 20,
+  MAX_ABSOLUTE_CREATURE: 10,
   /** Abilities cost 2 per point at this value and above (4→5 costs 2, 3→4 costs 1) */
   COST_INCREASE_THRESHOLD: 4,
 } as const;

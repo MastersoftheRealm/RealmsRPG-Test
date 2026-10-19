@@ -831,7 +831,7 @@ Creatures are classified into size categories based on their height and, in some
 
 | Size | Height | Spaces | Carrying Capacity | Min Carry |
 |------|--------|--------|-------------------|-----------|
-| Miniscule | Under 30 cm | 1/8 | 10 + 5×STR kg | 5 kg |
+| Minuscule | Under 30 cm | 1/8 | 10 + 5×STR kg | 5 kg |
 | Tiny | 30–60 cm | 1/4 | 25 + 10×STR kg | 10 kg |
 | Small | 60–120 cm | 1 | 50 + 25×STR kg | 25 kg |
 | Medium | 150–200 cm | 1 | 100 + 50×STR kg | 50 kg |

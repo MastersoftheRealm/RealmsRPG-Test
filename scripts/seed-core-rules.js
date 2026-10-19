@@ -73,7 +73,7 @@ const CORE_RULES = {
     min: -2,
     maxStarting: 3,
     maxAbsoluteCharacter: 10, // Hard cap for player characters
-    maxAbsoluteCreature: 20, // Hard cap for creatures
+    maxAbsoluteCreature: 10, // Hard cap for creatures
     costIncreaseThreshold: 4, // Cost doubles at 4+ (4→5 costs 2)
     normalCost: 1,
     increasedCost: 2,
@@ -151,7 +151,7 @@ const CORE_RULES = {
     categories: [
       {
         value: 'miniscule',
-        label: 'Miniscule',
+        label: 'Minuscule',
         height: 'Under 30 cm',
         spaces: 0.125,
         baseCarry: 10,
