@@ -19,6 +19,8 @@ import {
 import { TP_COST_LABEL } from '@/lib/detail-option/compact-facts';
 import { capitalizeWords } from '@/lib/utils';
 import type { PartData } from '@/components/patterns';
+import type { ColumnValue } from '@/components/patterns/list/grid-list-row-types';
+import type { EntityArmorRow } from '@/components/patterns/list/entity-library-sections-types';
 import type { Abilities, CharacterPower, CharacterTechnique, Item } from '@/types';
 
 export type CodexPart = CodexPartRow;
@@ -114,6 +116,28 @@ export function deriveArmorItemCombatStats(item: ItemWithLibrarySource): ArmorIt
   }
 
   return { damageReduction, criticalRangeIncrease };
+}
+
+/** Creature stat block / play armor list — DR and Crit + columns (matches library browse). */
+export function buildPlayArmorRowColumns(
+  row: Pick<EntityArmorRow, 'damageReduction' | 'armorValue' | 'properties' | 'columns'>,
+): ColumnValue[] {
+  if (row.columns && row.columns.length > 0) {
+    return row.columns;
+  }
+  const payload = (row.properties ?? []) as ItemPropertyPayload[];
+  let damageReduction = row.damageReduction ?? row.armorValue ?? 0;
+  if (damageReduction === 0) {
+    damageReduction = deriveDamageReductionFromProperties(payload);
+  }
+  const criticalRangeIncrease = deriveCriticalRangeIncreaseFromProperties(payload);
+  const dr =
+    damageReduction > 0 ? String(damageReduction) : (row.damageReduction ?? row.armorValue ?? '-');
+  const crit = criticalRangeIncrease > 0 ? `+${criticalRangeIncrease}` : '-';
+  return [
+    { key: 'dr', value: dr, align: 'center' },
+    { key: 'crit', value: crit, align: 'center' },
+  ];
 }
 
 export interface EquippedArmorQuickRef {

@@ -130,6 +130,13 @@ type EntityArmorRowFields = {
   description?: string | undefined;
   damageReduction?: number | undefined;
   armorValue?: number | undefined;
+  properties?:
+    | Array<{
+        id?: number | undefined;
+        name?: string | undefined;
+        op_1_lvl?: number | undefined;
+      }>
+    | undefined;
   chips?: ChipData[] | undefined;
 } & EntityRowExtras;
 

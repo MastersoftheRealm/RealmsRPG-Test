@@ -457,6 +457,7 @@ export function CreatureStatBlockExpandedContent({
                   thumbnail: resolveListRowThumbnail('equipment', a, a.name),
                   damageReduction: a.damageReduction,
                   armorValue: a.armorValue,
+                  properties: resolveArmamentProperties(a),
                   chips: propertiesToChips(resolveArmamentProperties(a), itemPropertiesDb),
                 }))}
                 showListHeader
