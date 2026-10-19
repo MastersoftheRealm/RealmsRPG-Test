@@ -163,15 +163,45 @@ export function pickCodexChangelogIdentity(
   return Object.keys(identity).length > 0 ? identity : {};
 }
 
+/** Name stored on the log snapshot. Null when the row recorded no identity name. */
+export function readStoredCodexChangelogEntityName(
+  beforeData: Record<string, unknown> | null | undefined,
+  afterData: Record<string, unknown> | null | undefined,
+): string | null {
+  const after = unwrapArchetypeChangelogData(afterData) ?? {};
+  const before = unwrapArchetypeChangelogData(beforeData) ?? {};
+  return firstString(after, IDENTITY_NAME_KEYS) ?? firstString(before, IDENTITY_NAME_KEYS);
+}
+
 export function readCodexChangelogEntityName(
   beforeData: Record<string, unknown> | null | undefined,
   afterData: Record<string, unknown> | null | undefined,
 ): string {
-  const after = unwrapArchetypeChangelogData(afterData) ?? {};
-  const before = unwrapArchetypeChangelogData(beforeData) ?? {};
-  return (
-    firstString(after, IDENTITY_NAME_KEYS) ?? firstString(before, IDENTITY_NAME_KEYS) ?? '(unnamed)'
-  );
+  return readStoredCodexChangelogEntityName(beforeData, afterData) ?? '(unnamed)';
+}
+
+/**
+ * List-title identity. A source rename stores only `sources`, so the snapshot
+ * has no name. Attach the live entity name in that case. A stored name wins,
+ * and a blank or missing live name leaves the identity unchanged.
+ */
+export function codexChangelogIdentityWithLiveName(
+  beforeData: Record<string, unknown> | null,
+  afterData: Record<string, unknown> | null,
+  liveName: string | null | undefined,
+): {
+  before_data: Record<string, unknown> | null;
+  after_data: Record<string, unknown> | null;
+} {
+  if (readStoredCodexChangelogEntityName(beforeData, afterData)) {
+    return { before_data: beforeData, after_data: afterData };
+  }
+  const trimmed = typeof liveName === 'string' ? liveName.trim() : '';
+  if (!trimmed) return { before_data: beforeData, after_data: afterData };
+  return {
+    before_data: beforeData,
+    after_data: { ...(afterData ?? {}), name: trimmed },
+  };
 }
 
 function formatCodexChangelogKind(entityType: string): string {
