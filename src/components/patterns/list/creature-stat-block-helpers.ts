@@ -111,6 +111,21 @@ export function getAbilityValue(
     : 0;
 }
 
+/** Defense scores (10 + ability + allocated defense) for stat-block summary line. */
+export function buildCreatureDefensesSummaryLine(
+  abilities: CreatureAbilities | undefined,
+  defenses: CreatureDefenses | undefined,
+): string {
+  const defs = defenses ?? {};
+  const parts = DEFENSES_BY_ABILITY.map((d) => {
+    const defenseBonus =
+      typeof defs[d.defenseKey] === 'number' ? (defs[d.defenseKey] as number) : 0;
+    const ability = getAbilityValue(abilities ?? {}, d.ability);
+    return `${d.label} ${10 + ability + defenseBonus}`;
+  });
+  return `Defenses ${parts.join(', ')}`;
+}
+
 export function compactLine(label: string, items?: string[]): string | null {
   if (!items || items.length === 0) return null;
   return `${label} ${items.join(', ')}`;
