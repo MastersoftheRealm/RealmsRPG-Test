@@ -51,6 +51,8 @@ export const ABILITY_LIMITS = {
   MAX_ABSOLUTE_CREATURE: 20,
   /** Abilities cost 2 per point at this value and above (4→5 costs 2, 3→4 costs 1) */
   COST_INCREASE_THRESHOLD: 4,
+  /** Creature ability floor (no core_rules field yet; independent of character MIN -2) */
+  MIN_ABSOLUTE_CREATURE: -4,
 } as const;
 
 /** Archetype configurations (level 1 starting values) */

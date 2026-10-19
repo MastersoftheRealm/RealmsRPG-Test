@@ -37,6 +37,8 @@ import {
   creatorToolbarSaveAsCopyHandler,
 } from '@/lib/creator/creator-save-as-copy';
 import { CreatorSummaryPanel, CreatorPageShell } from '@/components/creator';
+import { getCreatureAbilityBounds } from '@/lib/game/creature-ability-bounds';
+import { formatCreatureAbilityPointsValue } from './creature-ability-points-display';
 import type { DisplayItem } from '@/types/items';
 import type { CreatureSkill } from './creature-creator-types';
 import { AddCreatureFeatModal } from './AddCreatureFeatModal';
@@ -196,7 +198,7 @@ function CreatureCreatorContent() {
           resourceBoxes={[
             {
               label: 'Ability Pts',
-              value: `${stats.abilityRemaining}/${stats.abilityPoints}`,
+              value: formatCreatureAbilityPointsValue(stats.abilityPoints, creature.abilities),
               variant:
                 stats.abilityRemaining < 0
                   ? 'danger'
@@ -441,6 +443,8 @@ function CreatureCreatorContent() {
         isAdmin={isAdmin}
         creature={creature}
         creatureLevel={creatureLevel}
+        creatureAbilityMin={getCreatureAbilityBounds(ws.rules).min}
+        creatureAbilityMax={getCreatureAbilityBounds(ws.rules).max}
         stats={stats}
         skillPointsHelp={skillPointsHelp}
         skillAllocations={skillAllocations}
