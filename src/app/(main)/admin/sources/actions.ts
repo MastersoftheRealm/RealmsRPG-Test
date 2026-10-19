@@ -7,9 +7,14 @@ import {
   loadAdminCodexSourceRows,
   type AdminCodexSourceRowsPayload,
 } from '@/lib/codex/admin-source-rows';
+import { CODEX_API_CACHE_TAG, codexApiTableCacheTag } from '@/lib/codex/cache-tags';
 import { assertCodexCollection } from '@/lib/codex/collections';
-import { getCodexSourceCatalog, type CodexSourceCatalogEntry } from '@/lib/codex/source-catalog';
-import type { CodexSourceTable } from '@/lib/codex/source-catalog';
+import {
+  CODEX_SOURCE_TABLES,
+  getCodexSourceCatalog,
+  type CodexSourceCatalogEntry,
+  type CodexSourceTable,
+} from '@/lib/codex/source-catalog';
 import {
   codexSourcesAfterAdd,
   codexSourcesAfterRemove,
@@ -18,12 +23,14 @@ import {
 } from '@/lib/codex/sources';
 import { getSession } from '@/lib/supabase/session';
 import { createServiceRoleClient } from '@/lib/supabase/server';
+import { revalidatePath, updateTag } from 'next/cache';
 import {
   ADMIN_SOURCES_ADD_FAILED,
   ADMIN_SOURCES_LOAD_ERROR,
   ADMIN_SOURCES_NAME_REQUIRED,
   ADMIN_SOURCES_NOT_FOUND,
   ADMIN_SOURCES_REMOVE_FAILED,
+  ADMIN_SOURCES_RENAME_FAILED,
   ADMIN_SOURCES_UNKNOWN_COLLECTION,
 } from './admin-sources-copy';
 
@@ -180,6 +187,55 @@ export async function batchAddAdminCodexSourceMembership(
     updatedCount += result.updatedCount;
   }
   return { success: true, updatedCount };
+}
+
+function renameTotal(data: unknown): number {
+  if (!data || typeof data !== 'object' || !('total' in data)) return 0;
+  const total = (data as { total?: unknown }).total;
+  return typeof total === 'number' && Number.isFinite(total) ? total : 0;
+}
+
+/** One cache bust per tag. This does not write a table. */
+function revalidateAfterSourceRename(): void {
+  updateTag(CODEX_API_CACHE_TAG);
+  for (const table of CODEX_SOURCE_TABLES) {
+    updateTag(codexApiTableCacheTag(table));
+  }
+  revalidatePath('/codex');
+  revalidatePath('/admin/codex');
+  revalidatePath('/admin/sources');
+}
+
+export async function renameAdminCodexSource(
+  fromName: string,
+  toName: string,
+): Promise<AdminCodexSourceMembershipResult> {
+  try {
+    const actor = await requireAdmin();
+    const fromError = validateSourceName(fromName);
+    if (fromError) return { success: false, updatedCount: 0, error: fromError };
+    const toError = validateSourceName(toName);
+    if (toError) return { success: false, updatedCount: 0, error: toError };
+
+    const supabase = createServiceRoleClient();
+    const { data, error } = await supabase.rpc('rename_codex_source', {
+      from_name: collapseCodexSourceName(fromName),
+      to_name: collapseCodexSourceName(toName),
+      actor,
+    });
+    if (error) {
+      logApiError('admin-sources-rename', error);
+      return { success: false, updatedCount: 0, error: ADMIN_SOURCES_RENAME_FAILED };
+    }
+    revalidateAfterSourceRename();
+    return { success: true, updatedCount: renameTotal(data) };
+  } catch (err) {
+    logApiError('admin-sources-rename', err);
+    if (err instanceof Error && (err.message === AUTH_ERROR || err.message === ADMIN_ERROR)) {
+      return { success: false, updatedCount: 0, error: err.message };
+    }
+    return { success: false, updatedCount: 0, error: ADMIN_SOURCES_RENAME_FAILED };
+  }
 }
 
 export async function fetchAdminCodexSourceCatalog(): Promise<CodexSourceCatalogEntry[]> {

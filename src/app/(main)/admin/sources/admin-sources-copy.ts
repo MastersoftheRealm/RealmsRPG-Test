@@ -1,6 +1,6 @@
 export const ADMIN_SOURCES_CARD_TITLE = 'Sources';
 export const ADMIN_SOURCES_CARD_BODY =
-  'View one source and add or remove codex items from that pack. Create a new source name when you add the first item.';
+  'View one source, add or remove codex items, or rename that pack. Create a new source name when you add the first item.';
 export const ADMIN_SOURCES_CARD_BUTTON = 'Open Sources';
 
 export const ADMIN_SOURCES_PAGE_TITLE = 'Sources';
@@ -16,6 +16,39 @@ export const ADMIN_SOURCES_NEW_SOURCE_FIELD_LABEL = 'Name';
 export const ADMIN_SOURCES_NEW_SOURCE_SUBMIT = 'Create';
 export const ADMIN_SOURCES_NEW_SOURCE_DRAFT_HELPER = 'This name is kept when you add an item.';
 export const ADMIN_SOURCES_NEW_SOURCE_MODAL_TITLE = 'New source';
+
+export const ADMIN_SOURCES_RENAME_BUTTON = 'Rename';
+export const ADMIN_SOURCES_RENAME_FIELD_LABEL = 'New name';
+export const ADMIN_SOURCES_RENAME_MODAL_TITLE = 'Rename source';
+export const ADMIN_SOURCES_RENAME_CONFIRM_BUTTON = 'Rename';
+export const ADMIN_SOURCES_RENAME_LOADING = 'Renaming…';
+export const ADMIN_SOURCES_RENAMED_TOAST = 'Renamed';
+export const ADMIN_SOURCES_RENAME_FAILED = 'Could not rename this source.';
+export const ADMIN_SOURCES_RENAME_CORE_DEFAULT_NOTE =
+  'Items with no source will still be saved as Core until a developer changes the default.';
+
+export function adminSourcesRenameButtonLabel(source: string): string {
+  return `Rename ${source}`;
+}
+
+function adminSourcesItemCount(count: number): string {
+  return count === 1 ? '1 item' : `${count} items`;
+}
+
+export function adminSourcesRenameConfirmBody(count: number): string {
+  return `${adminSourcesItemCount(count)} will use this name.`;
+}
+
+export function adminSourcesMergeConfirmBody(
+  oldName: string,
+  oldCount: number,
+  newName: string,
+  newCount: number,
+): string {
+  const newItems = adminSourcesItemCount(newCount);
+  const oldItems = adminSourcesItemCount(oldCount);
+  return `${newName} is already a source (${newItems}). ${oldName} (${oldItems}) will be merged into it. The two sources become one and cannot be split apart later.`;
+}
 
 export const ADMIN_SOURCES_SECTION_ADD_BUTTON = 'Add';
 export const ADMIN_SOURCES_ADD_MODAL_SEARCH = 'Search';

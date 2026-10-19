@@ -38,6 +38,7 @@ import {
   codexSourceMembershipRemoveOffered,
   codexSourceNameError,
   codexSourcesOrCore,
+  collapseCodexSourceName,
   itemMatchesSources,
   resolveCodexSourceName,
 } from '@/lib/codex/sources';
@@ -47,6 +48,7 @@ import {
   fetchAdminCodexSourceCatalog,
   fetchAdminCodexSourceRows,
   removeAdminCodexSourceMembership,
+  renameAdminCodexSource,
   type AdminCodexSourceMembershipTarget,
 } from './actions';
 import {
@@ -72,6 +74,14 @@ import {
   ADMIN_SOURCES_NEW_SOURCE_MODAL_TITLE,
   ADMIN_SOURCES_NEW_SOURCE_SUBMIT,
   ADMIN_SOURCES_PAGE_DESCRIPTION,
+  ADMIN_SOURCES_RENAME_BUTTON,
+  ADMIN_SOURCES_RENAME_CONFIRM_BUTTON,
+  ADMIN_SOURCES_RENAME_CORE_DEFAULT_NOTE,
+  ADMIN_SOURCES_RENAME_FAILED,
+  ADMIN_SOURCES_RENAME_FIELD_LABEL,
+  ADMIN_SOURCES_RENAME_LOADING,
+  ADMIN_SOURCES_RENAME_MODAL_TITLE,
+  ADMIN_SOURCES_RENAMED_TOAST,
   ADMIN_SOURCES_PAGE_TITLE,
   ADMIN_SOURCES_REMOVE_CONFIRM_BUTTON,
   ADMIN_SOURCES_REMOVE_LOADING,
@@ -89,7 +99,10 @@ import {
   adminSourcesRemoveConfirmBody,
   adminSourcesRemoveConfirmTitle,
   adminSourcesRemoveLastSourceBody,
+  adminSourcesMergeConfirmBody,
   adminSourcesRemoveWithError,
+  adminSourcesRenameButtonLabel,
+  adminSourcesRenameConfirmBody,
   adminSourcesSectionAddLabel,
   adminSourcesSectionSearchLabel,
 } from './admin-sources-copy';
@@ -294,6 +307,48 @@ function closeNewSourceDraft(
   setError(null);
 }
 
+function RenameSourceModal({
+  isOpen,
+  name,
+  error,
+  onNameChange,
+  onClose,
+  onSubmit,
+}: {
+  isOpen: boolean;
+  name: string;
+  error: string | null;
+  onNameChange: (value: string) => void;
+  onClose: () => void;
+  onSubmit: () => void;
+}) {
+  return (
+    <Modal
+      isOpen={isOpen}
+      onClose={onClose}
+      title={ADMIN_SOURCES_RENAME_MODAL_TITLE}
+      fullScreenOnMobile
+      footer={
+        <div className="flex w-full flex-wrap justify-end gap-3">
+          <Button type="button" variant="secondary" onClick={onClose}>
+            {ADMIN_SOURCES_CANCEL}
+          </Button>
+          <Button type="button" onClick={onSubmit}>
+            {ADMIN_SOURCES_RENAME_CONFIRM_BUTTON}
+          </Button>
+        </div>
+      }
+    >
+      <Input
+        label={ADMIN_SOURCES_RENAME_FIELD_LABEL}
+        value={name}
+        onChange={(event) => onNameChange(event.target.value)}
+        error={error ?? undefined}
+      />
+    </Modal>
+  );
+}
+
 function NewSourceDraftModal({
   isOpen,
   name,
@@ -345,6 +400,12 @@ export default function AdminSourcesPage() {
   const [newSourceOpen, setNewSourceOpen] = useState(false);
   const [newSourceName, setNewSourceName] = useState('');
   const [newSourceError, setNewSourceError] = useState<string | null>(null);
+  const [renameOpen, setRenameOpen] = useState(false);
+  const [renameName, setRenameName] = useState('');
+  const [renameFieldError, setRenameFieldError] = useState<string | null>(null);
+  const [renameConfirm, setRenameConfirm] = useState(false);
+  const [renameConfirmBody, setRenameConfirmBody] = useState('');
+  const [renameError, setRenameError] = useState<string | null>(null);
   const [addScope, setAddScope] = useState<AddModalScope | null>(null);
   const [addError, setAddError] = useState<string | null>(null);
   const [removeTarget, setRemoveTarget] = useState<RemoveTarget | null>(null);
@@ -393,13 +454,15 @@ export default function AdminSourcesPage() {
   }, [queryClient]);
 
   useEffect(() => {
-    if (removeTarget !== null || !returnFocusToSource.current) return;
+    if (removeTarget !== null || renameOpen || renameConfirm || !returnFocusToSource.current) {
+      return;
+    }
     returnFocusToSource.current = false;
     const timer = window.setTimeout(() => {
       sourceSelectRef.current?.focus();
     }, 0);
     return () => window.clearTimeout(timer);
-  }, [removeTarget]);
+  }, [removeTarget, renameOpen, renameConfirm]);
 
   const loadError = catalogQuery.error ?? rowsQuery.error;
   const ready = catalogQuery.isSuccess && rowsQuery.isSuccess;
@@ -569,6 +632,94 @@ export default function AdminSourcesPage() {
     }
   };
 
+  const openRename = () => {
+    setRenameError(null);
+    setRenameFieldError(null);
+    setRenameName('');
+    setRenameConfirm(false);
+    setRenameOpen(true);
+  };
+
+  const closeRenameName = () => {
+    if (savingRef.current) return;
+    setRenameOpen(false);
+    setRenameFieldError(null);
+  };
+
+  const handleRenameNameSubmit = () => {
+    if (!selectedSource) return;
+    const collapsed = collapseCodexSourceName(renameName);
+    const error = collapsed ? codexSourceNameError(collapsed) : ADMIN_SOURCES_NAME_REQUIRED;
+    if (error) {
+      setRenameFieldError(error);
+      return;
+    }
+    setRenameFieldError(null);
+    const fromKey = codexSourceKey(selectedSource);
+    const toKey = codexSourceKey(collapsed);
+    const oldCount = catalog.find((entry) => codexSourceKey(entry.name) === fromKey)?.total ?? 0;
+    const otherCatalog = catalog.find(
+      (entry) => codexSourceKey(entry.name) === toKey && toKey !== fromKey,
+    );
+    const otherDraft = sessionDraftSources.find(
+      (name) => codexSourceKey(name) === toKey && toKey !== fromKey,
+    );
+    let body: string;
+    if (otherCatalog || otherDraft) {
+      const newName = otherCatalog?.name ?? otherDraft ?? collapsed;
+      const newCount = otherCatalog?.total ?? 0;
+      body = adminSourcesMergeConfirmBody(selectedSource, oldCount, newName, newCount);
+    } else {
+      body = adminSourcesRenameConfirmBody(oldCount);
+    }
+    if (fromKey === codexSourceKey('Core')) {
+      body = `${body} ${ADMIN_SOURCES_RENAME_CORE_DEFAULT_NOTE}`;
+    }
+    setRenameConfirmBody(body);
+    setRenameOpen(false);
+    setRenameConfirm(true);
+  };
+
+  const handleRenameConfirm = async () => {
+    if (savingRef.current) return;
+    if (!selectedSource) return;
+    const collapsed = collapseCodexSourceName(renameName);
+    savingRef.current = true;
+    setIsSaving(true);
+    setRenameError(null);
+    try {
+      const result = await renameAdminCodexSource(selectedSource, collapsed);
+      if (!result.success) {
+        const message = result.error ?? ADMIN_SOURCES_RENAME_FAILED;
+        setRenameOpen(false);
+        setRenameConfirm(false);
+        setRenameError(message);
+        showToast(message, 'error');
+        return;
+      }
+      const toKey = codexSourceKey(collapsed);
+      const existing = catalog.find((entry) => codexSourceKey(entry.name) === toKey);
+      setSessionDraftSources((prev) => {
+        const without = prev.filter((name) => {
+          const key = codexSourceKey(name);
+          return key !== codexSourceKey(selectedSource) && key !== toKey;
+        });
+        if (existing) return without;
+        return [...without, collapsed];
+      });
+      setPickedSource(existing?.name ?? collapsed);
+      await invalidateData();
+      showToast(ADMIN_SOURCES_RENAMED_TOAST, 'success');
+      setRenameOpen(false);
+      setRenameConfirm(false);
+      setRenameName('');
+      returnFocusToSource.current = true;
+    } finally {
+      savingRef.current = false;
+      setIsSaving(false);
+    }
+  };
+
   const removeConfirmBody = useMemo(() => {
     if (!removeTarget || !selectedSource) return '';
     const itemName = removeTarget.row.name ?? ADMIN_SOURCES_UNNAMED_ITEM;
@@ -642,9 +793,26 @@ export default function AdminSourcesPage() {
             placeholder={ADMIN_SOURCES_SELECT_PLACEHOLDER}
             options={sourceOptions}
             value={selectedSource}
-            onChange={(event) => setPickedSource(event.target.value)}
+            onChange={(event) => {
+              setPickedSource(event.target.value);
+              setRenameError(null);
+            }}
           />
         </div>
+        <Button
+          type="button"
+          variant="secondary"
+          className="w-full sm:w-auto"
+          onClick={openRename}
+          disabled={isSaving || !selectedSource}
+          aria-label={
+            selectedSource
+              ? adminSourcesRenameButtonLabel(selectedSource)
+              : ADMIN_SOURCES_RENAME_BUTTON
+          }
+        >
+          {ADMIN_SOURCES_RENAME_BUTTON}
+        </Button>
         <Button
           type="button"
           variant="secondary"
@@ -663,6 +831,11 @@ export default function AdminSourcesPage() {
           >
             {ADMIN_SOURCES_ADD_ITEMS_BUTTON}
           </Button>
+        ) : null}
+        {renameError ? (
+          <p role="alert" className="basis-full text-sm text-danger-fg">
+            {renameError}
+          </p>
         ) : null}
       </div>
 
@@ -743,6 +916,32 @@ export default function AdminSourcesPage() {
         onNameChange={setNewSourceName}
         onClose={closeDraft}
         onSubmit={handleCreateSource}
+      />
+
+      <RenameSourceModal
+        isOpen={renameOpen}
+        name={renameName}
+        error={renameFieldError}
+        onNameChange={setRenameName}
+        onClose={closeRenameName}
+        onSubmit={handleRenameNameSubmit}
+      />
+
+      <ConfirmActionModal
+        isOpen={renameConfirm}
+        onClose={() => {
+          if (savingRef.current) return;
+          setRenameConfirm(false);
+          setRenameOpen(true);
+        }}
+        onConfirm={() => void handleRenameConfirm()}
+        title={ADMIN_SOURCES_RENAME_MODAL_TITLE}
+        description={renameConfirmBody}
+        confirmLabel={ADMIN_SOURCES_RENAME_CONFIRM_BUTTON}
+        cancelLabel={ADMIN_SOURCES_CANCEL}
+        confirmVariant="primary"
+        isLoading={isSaving}
+        loadingLabel={ADMIN_SOURCES_RENAME_LOADING}
       />
     </AdminSourcesFrame>
   );

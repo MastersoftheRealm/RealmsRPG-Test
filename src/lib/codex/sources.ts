@@ -106,6 +106,54 @@ export function normalizeCodexSources(value: unknown, known?: readonly string[])
   return [...chosen.values()].sort((a, b) => a.localeCompare(b));
 }
 
+/**
+ * Code-unit order, matching `lower(spelling) COLLATE "C", spelling COLLATE "C"`.
+ * `localeCompare` is not used: it can place letters outside ASCII differently.
+ */
+function compareCodexSourceCodeUnit(a: string, b: string): number {
+  const aKey = a.toLowerCase();
+  const bKey = b.toLowerCase();
+  if (aKey < bKey) return -1;
+  if (aKey > bKey) return 1;
+  if (a < b) return -1;
+  if (a > b) return 1;
+  return 0;
+}
+
+/**
+ * Sources array after a rename or merge.
+ * `sql/codex-rename-source.sql` `rename_codex_source` must produce this array
+ * for a row it rewrites. The SQL updates a row only when the row already
+ * contains `fromName` or `toName`. This function still returns the rewrite
+ * for any input, including a list that contains neither, so tests can state
+ * the array result.
+ * Matching is case-insensitive. The submitted `toName` spelling replaces every
+ * match of either name. Other names keep their collapsed spelling, and the
+ * first token wins. The result is sorted by code unit. An empty result is Core.
+ * `String.toLowerCase` folds more than SQL `lower(x COLLATE "C")` (A-Z only).
+ */
+export function previewCodexSourceRename(
+  current: unknown,
+  fromName: string,
+  toName: string,
+): string[] {
+  const fromKey = codexSourceKey(fromName);
+  const toSpelling = collapseCodexSourceName(toName);
+  const toKey = toSpelling.toLowerCase();
+  const chosen = new Map<string, string>();
+  for (const token of sourceTokens(current)) {
+    const collapsed = collapseCodexSourceName(token);
+    if (!collapsed) continue;
+    const key = collapsed.toLowerCase();
+    const spelling = key === fromKey || key === toKey ? toSpelling : collapsed;
+    if (!spelling) continue;
+    const spellingKey = spelling.toLowerCase();
+    if (!chosen.has(spellingKey)) chosen.set(spellingKey, spelling);
+  }
+  const values = [...chosen.values()].sort(compareCodexSourceCodeUnit);
+  return values.length > 0 ? values : [CORE_CODEX_SOURCE];
+}
+
 /** At least Core. Reads and the admin field use this. It does not reject names. */
 export function codexSourcesOrCore(value: unknown, known?: readonly string[]): string[] {
   const normalized = normalizeCodexSources(value, known);

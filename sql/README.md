@@ -65,7 +65,7 @@ These are recorded in `supabase_migrations.schema_migrations` on RealmsRPG-Test.
 | `official_catalog_listing` | 20260914 (MCP) | [official-catalog-listing.sql](official-catalog-listing.sql) |
 | `codex_entry_source` | 20260928 (MCP) | [codex-entry-source.sql](codex-entry-source.sql) |
 
-Applied on production outside this table: [codex-entry-sources.sql](codex-entry-sources.sql) added `sources text[] NOT NULL DEFAULT '{core}'`, the `*_sources_check` constraints, and the `*_sources_gin` indexes. Do not re-run it. [codex-entry-sources-open.sql](codex-entry-sources-open.sql) was applied on production 2026-10-17: it dropped those checks, rewrote id arrays to display names, and set the column default to `{Core}`. A second run does not update rows. It does not change the singular `source` column. Rollback is in the file.
+Applied on production outside this table: [codex-entry-sources.sql](codex-entry-sources.sql) added `sources text[] NOT NULL DEFAULT '{core}'`, the `*_sources_check` constraints, and the `*_sources_gin` indexes. Do not re-run it. [codex-entry-sources-open.sql](codex-entry-sources-open.sql) was applied on production 2026-10-17: it dropped those checks, rewrote id arrays to display names, and set the column default to `{Core}`. A second run does not update rows. It does not change the singular `source` column. Rollback is in the file. [codex-rename-source.sql](codex-rename-source.sql) was applied on production 2026-10-18. The function only; no rows changed. The first real rename has not run. Re-running the file is safe because it only replaces the function. The first real rename is a live update and needs a backup first. It does not change the column default `{Core}`.
 
 ---
 
@@ -127,6 +127,7 @@ Applied on production outside this table: [codex-entry-sources.sql](codex-entry-
 | supabase-codex-species-payload.sql | Species payload column work — verify before re-run |
 | feat-tags-unification-phase1.sql | Applied ad-hoc (functions + data) |
 | feat-tags-unification-phase2.sql | Applied ad-hoc — **canonical** `normalize_feat_tags` |
+| codex-rename-source.sql | Applied 2026-10-18 — function only; no rows changed. Safe to re-run because it only replaces the function. The first real rename has not run; it is a live update and needs a backup first. Does not change the `{Core}` column default. |
 | normalize-codex-feat-ability-delimiters.sql | Migration `normalize_codex_feat_ability_delimiters` |
 | leveled-feats-add-base-feat-id.sql | Applied ad-hoc |
 | leveled-feats-migrate-roman-to-base-id.sql | Applied ad-hoc |

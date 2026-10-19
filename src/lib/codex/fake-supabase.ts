@@ -1,8 +1,10 @@
 /**
  * Minimal in-memory Supabase double for the codex action tests.
  * Supports only the query shapes the admin write layer uses: select/insert/upsert/update/delete
- * with `eq` filters, `single`/`maybeSingle`, and a stubbed `rpc`.
+ * with `eq` filters, `single`/`maybeSingle`, and a recorded `rpc`.
  */
+
+export type FakeRpcCall = { name: string; args: unknown };
 
 type Row = Record<string, unknown>;
 type QueryResult = { data: unknown; error: { message: string; code?: string | undefined } | null };
@@ -14,6 +16,9 @@ export type FakeSupabaseOptions = {
 
 export class FakeSupabase {
   readonly tables: Record<string, Row[]>;
+  readonly rpcCalls: FakeRpcCall[] = [];
+  readonly updateCalls: string[] = [];
+  rpcResult: QueryResult = { data: null, error: null };
   private readonly options: FakeSupabaseOptions;
 
   constructor(tables: Record<string, Row[]>, options: FakeSupabaseOptions = {}) {
@@ -25,8 +30,9 @@ export class FakeSupabase {
     return new FakeQuery(this, table, this.options);
   }
 
-  async rpc(): Promise<QueryResult> {
-    return { data: null, error: null };
+  async rpc(name = 'rpc', args?: unknown): Promise<QueryResult> {
+    this.rpcCalls.push({ name: String(name), args });
+    return this.rpcResult;
   }
 }
 
@@ -137,6 +143,7 @@ class FakeQuery implements PromiseLike<QueryResult> {
     }
 
     if (this.op === 'update') {
+      this.db.updateCalls.push(this.table);
       const updated: Row[] = [];
       rows.forEach((row, index) => {
         if (!this.matches(row)) return;

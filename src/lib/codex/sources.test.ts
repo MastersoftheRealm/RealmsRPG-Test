@@ -18,6 +18,7 @@ import {
   collapseCodexSourceName,
   itemMatchesSources,
   normalizeCodexSources,
+  previewCodexSourceRename,
   resolveCodexSourceName,
 } from './sources';
 
@@ -173,6 +174,76 @@ describe('codex sources', () => {
 
     expect(resolveCodexSourceName('homebrew', ['Core', 'Homebrew'])).toBe('Homebrew');
     expect(resolveCodexSourceName('New Pack', ['Core'])).toBe('New Pack');
+  });
+
+  it('previews the array a rename writes: replace, dedupe, empty Core, and merge', () => {
+    expect(previewCodexSourceRename(['Homebrew', 'Core'], 'homebrew', 'Powers Expansion')).toEqual([
+      'Core',
+      'Powers Expansion',
+    ]);
+    expect(
+      previewCodexSourceRename(['Homebrew', 'homebrew', 'HOMEBREW'], 'Homebrew', 'Official'),
+    ).toEqual(['Official']);
+    expect(previewCodexSourceRename([], 'Homebrew', 'Official')).toEqual(['Core']);
+    expect(previewCodexSourceRename(null, 'Homebrew', 'Official')).toEqual(['Core']);
+    expect(previewCodexSourceRename(['   ', ''], 'Homebrew', 'Official')).toEqual(['Core']);
+    expect(previewCodexSourceRename(['Homebrew', 'Crafting'], 'homebrew', 'CRAFTING')).toEqual([
+      'CRAFTING',
+    ]);
+    expect(
+      previewCodexSourceRename(['Homebrew', 'Crafting', 'Core'], 'Homebrew', 'crafting'),
+    ).toEqual(['Core', 'crafting']);
+    expect(previewCodexSourceRename(['CORE', 'Core', 'Homebrew'], 'Homebrew', 'Official')).toEqual([
+      'CORE',
+      'Official',
+    ]);
+    expect(previewCodexSourceRename(['  Homebrew  ', 'CORE'], 'homebrew', 'Official Pack')).toEqual(
+      ['CORE', 'Official Pack'],
+    );
+    expect(previewCodexSourceRename(['z', 'é'], 'Homebrew', 'Official')).toEqual(['z', 'é']);
+  });
+
+  it('describes the applied rename function and the unchanged Core default', () => {
+    const sql = readFileSync(join(process.cwd(), 'sql/codex-rename-source.sql'), 'utf8');
+    expect(sql).toContain('Applied on production 2026-10-18');
+    expect(sql).toContain('safe to re-run because it only replaces the function');
+    expect(sql).toContain('The first real rename is a live update');
+    expect(sql).toContain('needs a backup first');
+    expect(sql).not.toContain('NOT APPLIED');
+    expect(sql).toContain('backup');
+    expect(sql).toContain('previewCodexSourceRename');
+    expect(sql).toContain('collapse_codex_source_name');
+    expect(sql).toContain("ARRAY['Core']");
+    expect(sql).toContain('codex_change_logs');
+    expect(sql).toContain('updated_at = now()');
+    expect(sql).toContain(
+      'REVOKE ALL ON FUNCTION public.rename_codex_source(text, text, uuid) FROM PUBLIC',
+    );
+    expect(sql).toContain('FROM anon, authenticated');
+    expect(sql).toContain(
+      'GRANT EXECUTE ON FUNCTION public.rename_codex_source(text, text, uuid) TO service_role',
+    );
+    expect(sql).toContain('SECURITY DEFINER');
+    expect(sql).toContain('COLLATE "C"');
+    expect(sql).toContain('column default');
+    expect(sql).toContain('Items with no source are still');
+    expect(sql).not.toContain('ALTER TABLE');
+    expect(sql.includes('SET source =')).toBe(false);
+    expect(sql).not.toContain('EXCEPTION WHEN');
+    expect(sql).not.toMatch(/SELECT\s+public\.rename_codex_source/i);
+    for (const table of [
+      'codex_feats',
+      'codex_skills',
+      'codex_species',
+      'codex_traits',
+      'codex_parts',
+      'codex_properties',
+      'codex_equipment',
+      'codex_archetypes',
+      'codex_creature_feats',
+    ]) {
+      expect(sql).toContain(`'${table}'`);
+    }
   });
 
   it('does not build a per-table source list in admin codex', () => {
