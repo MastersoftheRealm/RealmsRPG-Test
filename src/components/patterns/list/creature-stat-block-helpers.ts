@@ -84,7 +84,7 @@ export const MOVEMENT_DESCRIPTIONS: Record<string, string> = {
   Swim: 'Can move through water without penalties using movement speed.',
   Fly: 'Can move through the air using movement speed (see Flight rules for altitude and fall).',
   Burrow:
-    'Can move through loose earth using movement speed (may leave a tunnel at GM discretion).',
+    'Can move through loose earth using movement speed (may leave a tunnel at RM discretion).',
 };
 
 export const SIMPLE_LIST_COLUMNS: ListColumn[] = [
