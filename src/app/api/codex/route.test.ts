@@ -16,11 +16,16 @@ vi.mock('@/lib/core-rules-server', () => ({
   fetchCoreRules: vi.fn(async () => ({ PROGRESSION_PLAYER: { baseHealth: 8 } })),
 }));
 
+vi.mock('@/lib/entity-image-enrich-server', () => ({
+  enrichRowsWithBankImageUrls: vi.fn(async () => undefined),
+}));
+
 import { GET } from './route';
 import { createClient } from '@/lib/supabase/server';
 import { getSession } from '@/lib/supabase/session';
 import { isAdmin } from '@/lib/admin';
 import { fetchCoreRules } from '@/lib/core-rules-server';
+import { enrichRowsWithBankImageUrls } from '@/lib/entity-image-enrich-server';
 import { CODEX_SKILLS_PUBLIC_SELECT } from '@/lib/codex/public-table-select';
 import { CODEX_PAYLOAD_KEYS, type CodexPayload } from '@/types/codex';
 
@@ -28,6 +33,7 @@ const mockCreateClient = vi.mocked(createClient);
 const mockGetSession = vi.mocked(getSession);
 const mockIsAdmin = vi.mocked(isAdmin);
 const mockFetchCoreRules = vi.mocked(fetchCoreRules);
+const mockEnrichRows = vi.mocked(enrichRowsWithBankImageUrls);
 
 const ROWS: Record<string, Record<string, unknown>[]> = {
   codex_feats: [{ id: 'feat-1', name: 'Cleave' }],
@@ -226,6 +232,35 @@ describe('GET /api/codex', () => {
     expect(response.status).toBe(400);
     await expect(response.json()).resolves.toEqual({ error: 'Unknown codex collection' });
     expect(queriedTables).toEqual([]);
+  });
+
+  it('returns byte-identical JSON for repeated full payload reads', async () => {
+    const first = await GET(new Request('http://localhost/api/codex'));
+    const enrichCallsAfterFirst = mockEnrichRows.mock.calls.length;
+    expect(enrichCallsAfterFirst).toBeGreaterThan(0);
+    const second = await GET(new Request('http://localhost/api/codex'));
+    const body1 = await first.text();
+    const body2 = await second.text();
+    expect(body1).toBe(body2);
+    expect(mockEnrichRows.mock.calls.length).toBe(enrichCallsAfterFirst);
+  });
+
+  it('does not memoize an empty feats collection', async () => {
+    mockCreateClient.mockResolvedValue({
+      from: (table: string) => ({
+        select: async (columns: string) => {
+          queriedTables.push(table);
+          lastSelectByTable[table] = columns;
+          return { data: [], error: null };
+        },
+        in: async () => ({ data: [], error: null }),
+      }),
+    } as never);
+
+    await GET(new Request('http://localhost/api/codex?collection=feats'));
+    await GET(new Request('http://localhost/api/codex?collection=feats'));
+
+    expect(queriedTables.filter((table) => table === 'codex_feats')).toHaveLength(2);
   });
 
   it('does not leak debug details to anonymous callers in production', async () => {

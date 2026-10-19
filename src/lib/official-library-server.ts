@@ -8,7 +8,10 @@ import {
   type ColumnarLibraryType,
 } from '@/lib/library-columnar';
 import { officialLibraryCacheTag } from '@/lib/codex/cache-tags';
-import { CODEX_PUBLIC_ISR_SECONDS, readCachedPublicData } from '@/lib/supabase/cached-public-read';
+import {
+  CODEX_PUBLIC_ISR_SECONDS,
+  readCachedPublicDataWhenValid,
+} from '@/lib/supabase/cached-public-read';
 import type { TypedSupabaseClient } from '@/lib/supabase/database';
 
 const OFFICIAL_TABLE_BY_TYPE = {
@@ -30,7 +33,7 @@ export async function fetchOfficialColumnarRows(
   const columns = columnarViewSelect(type);
   const listedOnly = !includeUnlisted;
   const tag = officialLibraryCacheTag(table, listedOnly);
-  return readCachedPublicData(
+  return readCachedPublicDataWhenValid(
     ['official-library', table, columns, `listedOnly=${listedOnly}`],
     [tag, 'official-library'],
     CODEX_PUBLIC_ISR_SECONDS,
@@ -42,6 +45,7 @@ export async function fetchOfficialColumnarRows(
       if (error) throw error;
       return (data ?? []) as unknown as Record<string, unknown>[];
     },
+    (rows) => rows.length > 0,
   );
 }
 
@@ -52,7 +56,7 @@ export async function fetchOfficialSpeciesRows(
   const listedOnly = !includeUnlisted;
   const columns = speciesPublicSelect();
   const tag = officialLibraryCacheTag('codex_species', listedOnly);
-  return readCachedPublicData(
+  return readCachedPublicDataWhenValid(
     ['official-library', 'codex_species', columns, `listedOnly=${listedOnly}`],
     [tag, 'official-library'],
     CODEX_PUBLIC_ISR_SECONDS,
@@ -64,5 +68,6 @@ export async function fetchOfficialSpeciesRows(
       if (error) throw error;
       return (data ?? []) as unknown as Record<string, unknown>[];
     },
+    (rows) => rows.length > 0,
   );
 }

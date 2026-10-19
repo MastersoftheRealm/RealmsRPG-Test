@@ -49,9 +49,60 @@ describe('fetchCoreRules', () => {
     expect(rules).toEqual({ PROGRESSION_PLAYER: { baseHealth: 8 } });
   });
 
-  it('returns empty when the read fails', async () => {
-    await expect(
-      fetchCoreRules(mockCoreRulesClient(null, { message: 'permission denied' }) as never),
-    ).resolves.toEqual({});
+  it('returns empty and does not memoize a failed read (86e3rb7ca)', async () => {
+    let selectCalls = 0;
+    const client = {
+      from: (table: string) => {
+        expect(table).toBe('core_rules');
+        return {
+          select: async () => {
+            selectCalls += 1;
+            return { data: null, error: { message: 'permission denied', code: '42501' } };
+          },
+        };
+      },
+    };
+    await expect(fetchCoreRules(client as never)).resolves.toEqual({});
+    await expect(fetchCoreRules(client as never)).resolves.toEqual({});
+    expect(selectCalls).toBe(2);
+  });
+
+  it('returns empty and does not memoize a confirmed missing table (86e3rb7ca)', async () => {
+    let selectCalls = 0;
+    const client = {
+      from: (table: string) => {
+        expect(table).toBe('core_rules');
+        return {
+          select: async () => {
+            selectCalls += 1;
+            return {
+              data: null,
+              error: { message: 'relation "core_rules" does not exist', code: '42P01' },
+            };
+          },
+        };
+      },
+    };
+    await expect(fetchCoreRules(client as never)).resolves.toEqual({});
+    await expect(fetchCoreRules(client as never)).resolves.toEqual({});
+    expect(selectCalls).toBe(2);
+  });
+
+  it('does not memoize an empty core_rules payload', async () => {
+    let selectCalls = 0;
+    const client = {
+      from: (table: string) => {
+        expect(table).toBe('core_rules');
+        return {
+          select: async () => {
+            selectCalls += 1;
+            return { data: [], error: null };
+          },
+        };
+      },
+    };
+    await expect(fetchCoreRules(client as never)).resolves.toEqual({});
+    await expect(fetchCoreRules(client as never)).resolves.toEqual({});
+    expect(selectCalls).toBe(2);
   });
 });

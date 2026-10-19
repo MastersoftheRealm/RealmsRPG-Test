@@ -36,8 +36,15 @@ import {
 } from '@/types/codex';
 import { CODEX_DATA_TABLES, type CodexDataTable } from '@/lib/codex/codex-tables';
 import { CODEX_API_TABLE_SELECT, omitCodexSourcesColumn } from '@/lib/codex/public-table-select';
-import { codexApiTableCacheTag, CODEX_API_CACHE_TAG } from '@/lib/codex/cache-tags';
-import { CODEX_PUBLIC_ISR_SECONDS, readCachedPublicData } from '@/lib/supabase/cached-public-read';
+import {
+  codexApiTableCacheTag,
+  CODEX_API_CACHE_TAG,
+  CORE_RULES_CACHE_TAG,
+} from '@/lib/codex/cache-tags';
+import {
+  CODEX_PUBLIC_ISR_SECONDS,
+  readCachedPublicDataWhenValid,
+} from '@/lib/supabase/cached-public-read';
 import type { ArchetypeCategory } from '@/types/archetype';
 
 /** Codex tables behind the payload keys — `?collection=` only queries what it returns. */
@@ -126,7 +133,7 @@ function selectTable(
   if (!needed.has(table)) return Promise.resolve({ data: [], error: null });
   const columns = CODEX_API_TABLE_SELECT[table];
   const tableTag = codexApiTableCacheTag(table);
-  return readCachedPublicData(
+  return readCachedPublicDataWhenValid(
     ['codex-api', table, columns],
     [CODEX_API_CACHE_TAG, tableTag],
     CODEX_PUBLIC_ISR_SECONDS,
@@ -142,10 +149,56 @@ function selectTable(
       throwUnlessCodexTableMissing(result.error);
       return result;
     },
+    (result) => !result.error && (result.data?.length ?? 0) > 0,
   );
 }
 
+function codexPayloadCacheTags(keys: ReadonlySet<CodexPayloadKey>): string[] {
+  const tags = new Set<string>([CODEX_API_CACHE_TAG]);
+  for (const key of keys) {
+    for (const table of COLLECTION_TABLES[key]) {
+      tags.add(codexApiTableCacheTag(table));
+    }
+    if (key === 'coreRules') {
+      tags.add(CORE_RULES_CACHE_TAG);
+    }
+  }
+  return [...tags];
+}
+
+function isCacheableCodexApiPayload(
+  keys: ReadonlySet<CodexPayloadKey>,
+  payload: Partial<CodexPayload>,
+): boolean {
+  if (keys.size === 0) return false;
+  for (const key of keys) {
+    const value = payload[key];
+    if (key === 'coreRules') {
+      if (!value || typeof value !== 'object' || Array.isArray(value)) return false;
+      if (Object.keys(value).length === 0) return false;
+      continue;
+    }
+    if (!Array.isArray(value) || value.length === 0) return false;
+  }
+  return true;
+}
+
 async function fetchCodexFromClient(
+  supabase: TypedSupabaseClient,
+  keys: ReadonlySet<CodexPayloadKey>,
+  includeUnlisted = false,
+): Promise<Partial<CodexPayload>> {
+  const collectionKey = [...keys].sort().join(',');
+  return readCachedPublicDataWhenValid(
+    ['codex-api-payload', collectionKey, `unlisted=${includeUnlisted}`],
+    codexPayloadCacheTags(keys),
+    CODEX_PUBLIC_ISR_SECONDS,
+    () => buildCodexPayloadUncached(supabase, keys, includeUnlisted),
+    (payload) => isCacheableCodexApiPayload(keys, payload),
+  );
+}
+
+async function buildCodexPayloadUncached(
   supabase: TypedSupabaseClient,
   keys: ReadonlySet<CodexPayloadKey>,
   includeUnlisted = false,
