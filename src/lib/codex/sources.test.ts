@@ -203,10 +203,13 @@ describe('codex sources', () => {
     expect(previewCodexSourceRename(['z', 'é'], 'Homebrew', 'Official')).toEqual(['z', 'é']);
   });
 
-  it('describes the unapplied rename function and the unchanged Core default', () => {
+  it('describes the applied rename function and the unchanged Core default', () => {
     const sql = readFileSync(join(process.cwd(), 'sql/codex-rename-source.sql'), 'utf8');
-    expect(sql).toContain('NOT APPLIED');
-    expect(sql).toContain('Do not run');
+    expect(sql).toContain('Applied on production 2026-10-18');
+    expect(sql).toContain('safe to re-run because it only replaces the function');
+    expect(sql).toContain('The first real rename is a live update');
+    expect(sql).toContain('needs a backup first');
+    expect(sql).not.toContain('NOT APPLIED');
     expect(sql).toContain('backup');
     expect(sql).toContain('previewCodexSourceRename');
     expect(sql).toContain('collapse_codex_source_name');

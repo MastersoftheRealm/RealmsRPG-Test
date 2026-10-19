@@ -1,13 +1,13 @@
 -- Rename or merge one codex source across the nine sources text[] columns.
--- NOT APPLIED. Do not run this file until Kadin approves and a backup is taken.
+-- Applied on production 2026-10-18. The function only; no rows changed.
+-- The first real rename has not run.
 --
--- Applying this file only replaces the function, its grants, and this comment.
--- It does not UPDATE any row. The first confirmed rename is a live UPDATE
--- across the nine tables. Take a backup before that call as well.
--- A second run of this file is safe: it replaces the function and does not
--- update rows. A second call of the function with the old name changes zero
--- rows, because those rows no longer contain that name and rows already stored
--- with the submitted spelling are left as they are.
+-- This file is safe to re-run because it only replaces the function, its
+-- grants, and this comment. It does not UPDATE any row.
+-- The first real rename is a live update and needs a backup first.
+-- A second call of the function with the old name changes zero rows, because
+-- those rows no longer contain that name and rows already stored with the
+-- submitted spelling are left as they are.
 --
 -- Depends on public.collapse_codex_source_name from
 -- sql/codex-entry-sources-open.sql (applied on production 2026-10-17).
