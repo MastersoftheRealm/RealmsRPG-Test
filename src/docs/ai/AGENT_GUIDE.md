@@ -21,6 +21,7 @@ Verified against codebase (Jun 2026+). Use this hub when you need component loca
 | 05 | Key files, hooks & services | [`guide/05-key-files-and-hooks.md`](guide/05-key-files-and-hooks.md) |
 | 06 | Character creators, load rules, layout, allocation UI | [`guide/06-creators-and-loadouts.md`](guide/06-creators-and-loadouts.md) |
 | 07 | Database operations (MCP / Dashboard policy) | [`guide/07-database-operations.md`](guide/07-database-operations.md) |
+| 08 | Routes, progress recording, mobile, tasks, scripts | [`guide/08-workflows-routes-and-progress.md`](guide/08-workflows-routes-and-progress.md) |
 
 ## New `public` tables (SQL)
 
@@ -31,7 +32,6 @@ Supabase stops auto-granting Data API access on new `public` tables (see [discus
 3. Explicit `GRANT` — `SELECT, INSERT, UPDATE, DELETE` to `authenticated` and `service_role`; `SELECT` to `anon` only when the table is public-read
 
 Template: [`sql/_TEMPLATE_new_table.sql`](../../../sql/_TEMPLATE_new_table.sql). PRs: `npm run tasks:check-sql-grants` (CI runs this on changed `sql/` files only).
-| 08 | Routes, progress recording, mobile, tasks, scripts | [`guide/08-workflows-routes-and-progress.md`](guide/08-workflows-routes-and-progress.md) |
 
 ## Common File Path Corrections
 
