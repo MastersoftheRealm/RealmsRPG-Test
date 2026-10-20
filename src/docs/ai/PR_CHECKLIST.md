@@ -13,7 +13,7 @@ Use before opening the draft PR. Keep answers short. Agents do not mark the Clic
 9. **A11y** — Labels, headings, modal title/`titleA11y`? **WCAG 2.2 AA** (including target size SC 2.5.8, focus not obscured SC 2.4.11)?
 10. **Uploads** — Went through `apiUpload`?
 11. **Domain parsers** — Used `src/lib/game/*` not a local fork?
-12. **Schema/codex** — SQL in `sql/`; owner approve for live codex mutate? High-risk items flagged per [Workflow §4](https://docs.google.com/document/d/1F6iZUKP9nN0YTFzOkZ6Y82sySaw0iW101f_a-7ZeQdI/edit)?
+12. **Schema/codex** — SQL in `sql/`; owner approve for live codex mutate? High-risk items flagged per [Workflow §4](https://docs.google.com/document/d/1F6iZUKP9nN0YTFzOkZ6Y82sySaw0iW101f_a-7ZeQdI/edit)? **New `CREATE TABLE` in `public`:** same file has RLS, policies, and explicit `GRANT` (see `sql/_TEMPLATE_new_table.sql`; CI `tasks:check-sql-grants`)?
 13. **ClickUp status** — **In progress** only while you are on it? Stopped with no PR → **to do**? **In review** and Collin (`44381886`) only after the audit is clean and CI is green? After merge, **testing** with Bob (`95261690`), Collin kept, QA steps in the comment? Agents do not mark **complete**.
 14. **Owner QA** — User-facing? QA steps on the ClickUp comment? `BUILD_VALIDATION.md` only when that suite does not already cover the check?
 15. **Notes** — PR and ClickUp comment only? No new `AI_CHANGELOG.md` entry?

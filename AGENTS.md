@@ -20,7 +20,7 @@ Read a doc when the diff touches that topic. Search, do not load the whole file.
 | Layout | `src/docs/MOBILE_UX.md` (mobile and accessibility rules attach when a `.tsx` file is in context) |
 | Game math or a missing written rule | `src/docs/GAME_RULES.md`. Hold if the rule is not written. Do not invent a formula. |
 | Settled product ruling | Search `src/docs/ai/DECISIONS.md` for the topic |
-| Schema or SQL | `src/docs/SUPABASE_SCHEMA.md`. Codex writes: `realms-codex-data` rule |
+| Schema or SQL | `src/docs/SUPABASE_SCHEMA.md`. Codex writes: `realms-codex-data` rule. **New `public` tables:** every `CREATE TABLE` in `sql/` must, in the **same file**, enable RLS, add policies, and `GRANT` explicitly — `SELECT, INSERT, UPDATE, DELETE` to `authenticated` and `service_role`; `SELECT` to `anon` only if the table is public-read. Template: `sql/_TEMPLATE_new_table.sql`. |
 | New shared UI, store, API contract, or migration strategy | `src/docs/ai/ARCHITECTURE_CONSTITUTION.md` |
 | What already exists | `FEATURE_INDEX.md` and the barrels |
 

@@ -55,6 +55,7 @@
     "tasks:validate-index": "node scripts/validate-feature-index.js",
     "tasks:validate-related": "node scripts/validate-related-files.js",
     "tasks:validate-shared-ui": "node scripts/validate-shared-ui-allowlist.js",
+    "tasks:check-sql-grants": "node scripts/check-sql-table-grants.mjs",
     "tasks:validate": "npm run tasks:reconcile:strict && npm run tasks:validate-docs && npm run tasks:validate-index && npm run tasks:validate-related && npm run tasks:validate-shared-ui",
     "tasks:triage": "node scripts/triage_tasks.js",
     "feedback:extract": "node scripts/extract_feedback.js",
