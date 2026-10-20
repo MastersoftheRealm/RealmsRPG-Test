@@ -23,6 +23,16 @@ Verified against codebase (Jun 2026+). Use this hub when you need component loca
 | 07 | Database operations (MCP / Dashboard policy) | [`guide/07-database-operations.md`](guide/07-database-operations.md) |
 | 08 | Routes, progress recording, mobile, tasks, scripts | [`guide/08-workflows-routes-and-progress.md`](guide/08-workflows-routes-and-progress.md) |
 
+## New `public` tables (SQL)
+
+Supabase stops auto-granting Data API access on new `public` tables (see [discussion #45329](https://github.com/orgs/supabase/discussions/45329)). Every `CREATE TABLE` in `public` added under `sql/` must, in the **same file**:
+
+1. `ALTER TABLE … ENABLE ROW LEVEL SECURITY`
+2. `CREATE POLICY` (least privilege for the table’s access model)
+3. Explicit `GRANT` — `SELECT, INSERT, UPDATE, DELETE` to `authenticated` and `service_role`; `SELECT` to `anon` only when the table is public-read
+
+Template: [`sql/_TEMPLATE_new_table.sql`](../../../sql/_TEMPLATE_new_table.sql). PRs: `npm run tasks:check-sql-grants` (CI runs this on changed `sql/` files only).
+
 ## Common File Path Corrections
 
 Task `related_files` may reference outdated paths. When implementing, prefer these verified paths:

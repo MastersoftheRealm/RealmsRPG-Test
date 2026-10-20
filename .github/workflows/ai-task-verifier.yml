@@ -69,6 +69,9 @@ jobs:
       - name: Validate shared/ui allowlist
         run: node scripts/validate-shared-ui-allowlist.js
 
+      - name: SQL CREATE TABLE requires explicit GRANT (changed files)
+        run: node scripts/check-sql-table-grants.mjs
+
       - name: Upload reconcile report
         if: always()
         uses: actions/upload-artifact@v4

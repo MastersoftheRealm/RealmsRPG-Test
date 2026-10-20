@@ -224,5 +224,5 @@ Applied on production outside this table: [codex-entry-sources.sql](codex-entry-
 2. **Match local files to live DB** after MCP applies — add status header + row in this README.
 3. **Do not** re-run path-c-phase0-* if DB already has only `public`.
 4. **Codex data** (`codex_*` content): draft SQL here; owner reviews before `UPDATE`/`apply_migration` (see `realms-codex-data.mdc`).
-5. **GRANT + RLS:** Tables created via raw SQL need both grants and policies (`supabase-codex-rls-public.sql` pattern).
+5. **GRANT + RLS (required on every new `public` table):** In the **same SQL file** as `CREATE TABLE`, enable RLS, add policies, and `GRANT` explicitly. Grant `SELECT, INSERT, UPDATE, DELETE` to `authenticated` and `service_role`. Grant `SELECT` to `anon` **only** if the table is meant to be public-read. Copy [`_TEMPLATE_new_table.sql`](_TEMPLATE_new_table.sql). CI fails changed `sql/` files that contain `CREATE TABLE` without `GRANT` (template and `schema/` baselines excluded).
 6. **Drop legacy:** `DROP TABLE IF EXISTS public._prisma_migrations;` — safe if Prisma removed.

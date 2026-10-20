@@ -19,6 +19,7 @@
 - [ ] Unit/targeted
 - [ ] Preview smoke / QA Tester
 - [ ] Regression for bug repro (if bugfix)
+- [ ] New/changed `sql/` with `CREATE TABLE`: RLS, policies, and `GRANT` in the same file (`sql/_TEMPLATE_new_table.sql`)
 
 ## AI policy
 - [ ] No creative naming/lore/art introduced by AI
