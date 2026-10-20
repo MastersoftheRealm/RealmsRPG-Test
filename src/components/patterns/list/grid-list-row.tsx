@@ -30,7 +30,6 @@ import {
   countGridTemplateTracks,
   gridTemplateColumnsWithThumbnail,
   mobileCollapsedNameInlineEndReserve,
-  GRID_LIST_ROW_EXPANDED_BAND_CLASS,
   GRID_LIST_ROW_LEFT_SLOT_WIDTH,
 } from './grid-list-row-chrome';
 import { GridListRowCollapsed, GridListRowExternalChrome } from './grid-list-row-collapsed';
@@ -380,7 +379,7 @@ export const GridListRow = memo(function GridListRow({
             'flex min-h-[44px] min-w-0 items-center',
             // Row 1 only: span both tracks below `lg` via a class. Inline `gridColumn`
             // beats that class and, with the reserve, zeroed the name (86e3jxbrc).
-            // Expanded/summary rows keep inline gridColumn on contentCol.
+            // Expanded body spans all chrome-grid tracks; summary stays on contentCol.
             mobileExternalChromeOverlay &&
               'max-lg:[grid-column:1/-1] max-lg:w-full max-lg:[padding-inline-end:var(--glr-mobile-chrome-reserve)] lg:col-start-1',
           )}
@@ -486,18 +485,11 @@ export const GridListRow = memo(function GridListRow({
 
         {showExpanded && (
           <>
-            {showLeftChrome && (
-              <div
-                className={GRID_LIST_ROW_EXPANDED_BAND_CLASS}
-                style={{ gridColumn: 1, gridRow: expandedRow }}
-                aria-hidden
-              />
-            )}
             <div
               id={expandedPanelId}
               data-glr-expanded-body
               className="min-w-0"
-              style={{ gridColumn: contentCol, gridRow: expandedRow }}
+              style={{ gridColumn: '1 / -1', gridRow: expandedRow }}
             >
               <GridListRowExpandedBody
                 compact={compact}
@@ -529,13 +521,6 @@ export const GridListRow = memo(function GridListRow({
                 onDuplicate={onDuplicate}
               />
             </div>
-            {hasExternalChrome && (
-              <div
-                className={GRID_LIST_ROW_EXPANDED_BAND_CLASS}
-                style={{ gridColumn: chromeCol, gridRow: expandedRow }}
-                aria-hidden
-              />
-            )}
           </>
         )}
       </div>
