@@ -122,6 +122,32 @@ describe('mapCreatureSelectedInventoryRows (TASK-817)', () => {
     expect(shieldChips.some((l) => /^currency\s+5$/i.test(l))).toBe(true);
   });
 
+  it('armor Crit Range shows the signed increase, not the evasion threshold (1dfe8wf1wwk)', () => {
+    const { armor } = mapCreatureSelectedInventoryRows({
+      sortedArmaments: [
+        baseRow({
+          id: 'studded',
+          type: 'armor',
+          name: 'Studded Leather',
+          damageReduction: '2',
+          properties: [{ id: 22, name: 'Critical Range +1', op_1_lvl: 0 }],
+        }),
+        baseRow({
+          id: 'plain',
+          type: 'armor',
+          name: 'Plain Armor',
+          damageReduction: '1',
+          properties: [{ id: 1, name: 'Damage Reduction', op_1_lvl: 0 }],
+        }),
+      ],
+      creature: { abilities, martialProficiency: 0 },
+      onRemoveArmament: vi.fn(),
+    });
+    // Agility 1 would make the sheet threshold 22 (evasion 11 + 10 + 1).
+    expect(armor[0]?.columns?.find((c) => c.key === 'crit')?.value).toBe('+1');
+    expect(armor[1]?.columns?.find((c) => c.key === 'crit')?.value).toBe('-');
+  });
+
   it('equipment Qty uses stored quantity or "-" and omits totalTp', () => {
     const { equipment } = mapCreatureSelectedInventoryRows({
       sortedArmaments: [

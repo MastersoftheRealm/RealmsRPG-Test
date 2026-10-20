@@ -196,12 +196,12 @@ describe('GLR chrome + spacing norms (TASK-631, TASK-637)', () => {
     expect(errors.some((e) => e.includes('items-start') || e.includes('items-stretch'))).toBe(true);
   });
 
-  it('accepts stretch-grid GridListRow layout with shared expanded band', () => {
+  it('accepts stretch-grid GridListRow layout with full-width expanded body', () => {
     expect(
       validateGlrRowLayoutSource(
         'grid-list-row.tsx',
         `<div data-glr-row className={cn('grid items-stretch', hoverClass)}>
-           <div className={GRID_LIST_ROW_EXPANDED_BAND_CLASS} />`,
+           <div data-glr-expanded-body style={{ gridColumn: '1 / -1' }} />`,
       ),
     ).toEqual([]);
   });

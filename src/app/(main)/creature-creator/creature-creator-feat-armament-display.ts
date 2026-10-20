@@ -169,7 +169,7 @@ export function enrichArmamentsWithSortKeys(creature: CreatureState): CreatureAr
     const block = isShield ? deriveShieldAmountFromProperties(payload) || '-' : '-';
     const damageReduction = isArmor ? String(resolveArmorDamageReduction(armament)) : '-';
     const crit = isArmor ? deriveCriticalRangeIncreaseFromProperties(payload) : 0;
-    const criticalRangeIncrease = isArmor && crit > 0 ? String(crit) : '-';
+    const criticalRangeIncrease = isArmor && crit > 0 ? `+${crit}` : '-';
     return {
       ...armament,
       range,

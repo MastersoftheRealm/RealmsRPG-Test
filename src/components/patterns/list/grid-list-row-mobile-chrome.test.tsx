@@ -119,8 +119,7 @@ describe('GridListRow mobile external chrome overlay', () => {
     }
 
     const expanded = openTag(widths[0]!.html, 'data-glr-expanded-body');
-    expect(expanded).toMatch(/grid-column:\s*1\b/);
-    expect(expanded).not.toContain('1/-1');
+    expect(expanded).toMatch(/grid-column:\s*1\s*\/\s*-1/);
   });
 
   it('still reserves an occupied right slot so the name does not run under that control', () => {

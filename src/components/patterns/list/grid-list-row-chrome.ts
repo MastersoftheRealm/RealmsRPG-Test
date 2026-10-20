@@ -44,8 +44,8 @@ export const GRID_LIST_ROW_ACTION_ICON_BUTTON_SIZE = 'md' as const;
 export const GRID_LIST_ROW_ACTION_ICON_CLASS = 'w-5 h-5';
 
 /**
- * Expanded-panel surface. GridListRow paints this on the description body **and** the
- * left/action chrome columns so the band is one full-width strip (TASK-710).
+ * Expanded-panel surface. GridListRowExpandedBody paints this on the description body;
+ * the chrome grid row spans `1 / -1` so the band is one full-width strip (TASK-710 / 1dfe8wf1wwg).
  */
 export const GRID_LIST_ROW_EXPANDED_BAND_CLASS = 'border-t border-border-light bg-surface-alt';
 

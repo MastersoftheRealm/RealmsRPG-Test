@@ -428,9 +428,9 @@ export function validateGlrRowLayoutSource(relativePath: string, source: string)
         `${relativePath}: chrome wrapper must be grid items-stretch so hover/expand fill the action column`,
       );
     }
-    if (!source.includes('GRID_LIST_ROW_EXPANDED_BAND_CLASS')) {
+    if (!source.includes("gridColumn: '1 / -1'") || !source.includes('data-glr-expanded-body')) {
       errors.push(
-        `${relativePath}: expanded action-column fill must use GRID_LIST_ROW_EXPANDED_BAND_CLASS`,
+        `${relativePath}: expanded body must span all chrome-grid tracks (gridColumn: '1 / -1' on data-glr-expanded-body)`,
       );
     }
     if (!source.includes('data-glr-row')) {
