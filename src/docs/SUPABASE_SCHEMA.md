@@ -134,9 +134,16 @@ If Supabase logs show **`permission denied for table user_species`**, the `authe
 
 | Table | Shape | Key columns |
 |-------|--------|-------------|
-| `characters` | Hybrid | id (PK), user_id (FK → user_profiles), data (JSONB), created_at, updated_at, client_request_id (uuid, nullable); list columns: name, level, archetype_name, ancestry_name, status, visibility |
+| `characters` | Relational + compatibility mirror | id (PK), user_id (FK → user_profiles), scalar identity/resources/abilities/defenses/preferences, created_at, updated_at, client_request_id; `data` retained temporarily |
+| `character_*` (14 tables) | Relational children | ordered species, feats, skills, traits, powers, techniques, inventory, conditions, named notes, archetype choices, proficiencies, temp modifiers, affiliations, ability components |
 
-Single document in `data`; list columns for list/filter. Realtime: `public.characters`.
+**ADR-0030:** The relational expansion is applied to the owner's local database,
+not live. The compatibility cutover SQL is prepared but awaits explicit
+high-risk approval. It adds `innate_energy`, `training_points_spent`, relational
+read/create/patch/provision RPCs, and maintains `data` as an exact rollback
+mirror. Application reads and writes use the relational boundary. The final
+`data` drop remains a separate contract phase after parity QA. Realtime remains
+on `public.characters`; child writes touch the parent lock timestamp.
 
 **Dirty-key PATCH + `updated_at` lock (TASK-741 / ADR-0013 / TASK-786):** `PATCH /api/characters/[id]` merges only keys present in the body (not a full-document smash). A present `null` removes that key, which is how a cleared sheet value is saved (86e3juw04). When the client sends `updatedAt` matching `characters.updated_at`, the UPDATE also `.eq('updated_at', <just read>)`; mismatch or a lost race → **409** `{ error: string }`. Success returns `{ ok: true, updatedAt }`. The route stamps `updated_at` on every PATCH; create/duplicate stamp it on insert so the first sheet save can lock. The client keeps the newest token in memory and queues same-id PATCHes so sheet autosave and encounter resource sync do not 409 each other.
 
@@ -148,7 +155,7 @@ Single document in `data`; list columns for list/filter. Realtime: `public.chara
 
 **Temp Modifier (`tempModifiers`, ADR-0006 / TASK-585 / TASK-782):** Optional sparse object of integer Bonus/Penalty deltas layered on display/computed values (not allocation bases). Keys include `speed`, `evasion`, `damageReduction`, `criticalRange`, `terminal`, `abilities` (partial ability map), `defenses` (partial defense-name map), `skills` (skill id → delta), and optional `applyAbilityToResourceMaxima` (boolean; default omit/false — ability temps do not change max Health/Energy/TP maxima unless true). Persist via `cleanForSave` / `SAVEABLE_FIELDS`; normalize zeros out with `normalizeTempModifiers`. UI chrome: sheet-level Edit vs Temp toolbar (TASK-782). Surface wiring: TASK-586.
 
-**Cross-user read (campaign / public):** `/api/characters/[id]` applies visibility in app code, but Supabase RLS runs first. If the only SELECT policy is “own rows,” other users get no row → “Character not found.” Run **`sql/supabase-characters-rls-cross-read.sql`** to add SELECT policies for `data.visibility = 'public'` and for `campaign` when the reader is the campaign owner or in `campaign_members` and the character appears on that campaign’s `characters` JSON roster (`userId`/`characterId` or snake_case).
+**Cross-user read (campaign / public):** `/api/characters/[id]` applies visibility in app code, but Supabase RLS runs first. Current character policies use the scalar `visibility` column. Public rows allow anonymous/authenticated reads; campaign rows require a shared roster with current membership. Other private rows resolve as “Character not found.”
 
 **Campaign roster read (86e3jryyt) — applied 2026-10-09 on RealmsRPG-Test:** `characters_select_authenticated` still matches those roster keys, and also requires `private.campaign_roster_user_joined`: the roster user is that campaign’s owner or a current `campaign_members` row. A leftover JSON entry does not grant the read after the membership row is gone. Replay: `sql/86e3jryyt-campaign-roster-members-only.sql`.
 

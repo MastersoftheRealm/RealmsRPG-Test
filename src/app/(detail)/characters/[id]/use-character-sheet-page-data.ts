@@ -10,7 +10,7 @@
 
 import { useState, useEffect, useMemo, useRef, useCallback, type SetStateAction } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
-import { saveCharacterWithConflictRetry } from '@/services/character-service';
+import { getCharacter, saveCharacterWithConflictRetry } from '@/services/character-service';
 import {
   characterViewerId,
   patchCharacterDetailQuery,
@@ -244,20 +244,31 @@ export function useCharacterSheetPageData(id: string) {
         (payload: {
           new: {
             id: string;
-            data?: Record<string, unknown> | undefined;
+            current_health?: number | null | undefined;
+            current_energy?: number | null | undefined;
+            action_points?: number | null | undefined;
             updated_at?: string | null | undefined;
           };
         }) => {
-          const data = payload.new?.data;
-          if (!data) return;
           const charId = payload.new.id;
           rememberCharacterLockToken(charId, payload.new.updated_at);
           const suppressResources = shouldSuppressRemoteResourceMerge(charId);
+          const scalarResources: Record<string, unknown> = {
+            ...(typeof payload.new.current_health === 'number' && {
+              currentHealth: payload.new.current_health,
+            }),
+            ...(typeof payload.new.current_energy === 'number' && {
+              currentEnergy: payload.new.current_energy,
+            }),
+            ...(typeof payload.new.action_points === 'number' && {
+              actionPoints: payload.new.action_points,
+            }),
+          };
           setCharacter((prev) => {
             if (!prev || prev.id !== charId) return prev;
             const { character: next, nextBaseline } = mergeSheetRealtimePayload(
               prev,
-              data,
+              scalarResources,
               savedCleanRef.current,
               {
                 suppressResources,
@@ -273,6 +284,28 @@ export function useCharacterSheetPageData(id: string) {
             }
             return next;
           });
+
+          // Child-table writes surface as a parent timestamp update. Fetch the
+          // assembled relational document, then preserve any locally dirty keys.
+          void getCharacter(charId)
+            .then((result) => {
+              const remote = result.character;
+              if (!remote) return;
+              setCharacter((prev) => {
+                if (!prev || prev.id !== charId) return prev;
+                const { character: next, nextBaseline } = mergeSheetRealtimePayload(
+                  prev,
+                  remote as unknown as Record<string, unknown>,
+                  savedCleanRef.current,
+                  { suppressResources, updatedAt: remote.updatedAt },
+                );
+                if (nextBaseline) savedCleanRef.current = nextBaseline;
+                return next;
+              });
+            })
+            .catch((error: unknown) => {
+              console.warn('[character realtime] relational refetch failed', error);
+            });
         },
       )
       .subscribe();

@@ -4,6 +4,21 @@
 
 **Codex / reference data edits:** Audit → draft SQL here → **owner reviews** → then apply. See [.cursor/rules/realms-codex-data.mdc](../.cursor/rules/realms-codex-data.mdc).
 
+**Relational characters (ADR-0030 compatibility cutover):** Run
+[`characters-relational-audit.sql`](characters-relational-audit.sql) read-only
+against the target database first. The additive expansion is applied to the
+owner's local database only. After explicit high-risk approval, apply the
+remaining compatibility phase in this order:
+
+1. [`characters-relational-cutover.sql`](characters-relational-cutover.sql)
+2. [`characters-relational-read-rpc.sql`](characters-relational-read-rpc.sql)
+3. [`characters-relational-write-rpc.sql`](characters-relational-write-rpc.sql)
+4. [`characters-relational-cutover-test.sql`](characters-relational-cutover-test.sql)
+
+The smoke test rolls back its fixtures. The compatibility phase intentionally
+keeps and mirrors `characters.data`; no contract drop is approved. Use the
+expand verifier plus the cutover smoke test before application testing.
+
 **Last parity audit:** 2026-07-03 against **RealmsRPG-Test** (`lbqhiwudvifmkjtkccdg`). Local files updated to match live DB state; no DB writes during audit.
 
 ---

@@ -6,7 +6,7 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
-import { asDbInsert, type TypedSupabaseClient } from '@/lib/supabase/database';
+import type { TypedSupabaseClient } from '@/lib/supabase/database';
 import { getSession } from '@/lib/supabase/session';
 import { ensureUserProfile } from '@/lib/ensure-user-profile';
 import { getRolePolicyForUser } from '@/lib/role-policy';
@@ -18,9 +18,12 @@ import {
   normalizeCharacterOnLoad,
 } from '@/lib/character/schema-normalize';
 import { buildRateLimitKey, resolveClientIp, standardLimiter } from '@/lib/rate-limit';
-import { getCharacterListColumns, resolveCharacterVisibility } from '@/lib/character-list-columns';
-import { fetchArchetypeNameMap } from '@/lib/game/archetype-display';
+import { resolveCharacterVisibility } from '@/lib/character-list-columns';
 import { fetchCoreRules } from '@/lib/core-rules-server';
+import {
+  createRelationalCharacter,
+  getRelationalCharacterDocument,
+} from '@/lib/character-persistence-server';
 import { apiErrorResponse } from '@/lib/api-error';
 import {
   catalogFromCodexRows,
@@ -29,9 +32,6 @@ import {
 } from '@/lib/game/character-legality';
 import { GUIDED_CREATOR_COPY } from '@/lib/constants/site-copy';
 import type { Character, CharacterSummary } from '@/types';
-
-/** Postgres unique-violation — the idempotency index rejecting a concurrent retry. */
-const UNIQUE_VIOLATION = '23505';
 
 const FEAT_REQUIREMENT_COLUMNS =
   'id, name, lvl_req, ability_req, abil_req_val, skill_req, skill_req_val, mart_abil_req, speed_req, feat_lvl, base_feat_id';
@@ -51,53 +51,6 @@ async function findCharacterByRequestId(
     .eq('client_request_id', clientRequestId)
     .maybeSingle();
   return (data?.id as string | undefined) ?? null;
-}
-
-type CharacterInsertRow = {
-  id: string;
-  user_id: string;
-  data: Record<string, unknown>;
-  client_request_id: string | null;
-} & Record<string, unknown>;
-
-/**
- * One insert path for create and duplicate. Concurrent retries of the same
- * `client_request_id` recover the winner instead of 500ing.
- */
-async function insertCharacterRow(
-  supabase: TypedSupabaseClient,
-  row: CharacterInsertRow,
-): Promise<{ id: string } | { uniqueViolation: true }> {
-  const now = new Date().toISOString();
-  const { data: created, error: insertErr } = await supabase
-    .from('characters')
-    .insert(asDbInsert<'characters'>({ created_at: now, updated_at: now, ...row }))
-    .select('id')
-    .single();
-  if (insertErr) {
-    if (
-      row.client_request_id &&
-      (insertErr as { code?: string | undefined }).code === UNIQUE_VIOLATION
-    ) {
-      return { uniqueViolation: true };
-    }
-    throw insertErr;
-  }
-  return { id: created.id as string };
-}
-
-async function jsonForInsertResult(
-  supabase: TypedSupabaseClient,
-  userId: string,
-  clientRequestId: string | undefined,
-  result: { id: string } | { uniqueViolation: true },
-): Promise<NextResponse> {
-  if ('id' in result) return NextResponse.json({ id: result.id });
-  if (clientRequestId) {
-    const replayed = await findCharacterByRequestId(supabase, userId, clientRequestId);
-    if (replayed) return NextResponse.json({ id: replayed });
-  }
-  throw new Error('Character insert unique violation without a replay row');
 }
 
 async function fetchFeatRequirementCatalog(supabase: TypedSupabaseClient) {
@@ -121,7 +74,7 @@ export async function GET() {
     const { data: rows, error: dbError } = await supabase
       .from('characters')
       .select(
-        'id, user_id, data, name, level, archetype_name, ancestry_name, status, visibility, updated_at',
+        'id, name, level, portrait, archetype_name, ancestry_name, status, visibility, updated_at',
       )
       .eq('user_id', user.uid)
       .order('updated_at', { ascending: false });
@@ -133,35 +86,26 @@ export async function GET() {
 
     const list = (rows ?? []) as {
       id: string;
-      data: unknown;
       updated_at: string | null;
       name?: string | null | undefined;
       level?: number | null | undefined;
+      portrait?: string | null | undefined;
       archetype_name?: string | null | undefined;
       ancestry_name?: string | null | undefined;
       status?: string | null | undefined;
       visibility?: string | null | undefined;
     }[];
 
-    const archetypeNameById = await fetchArchetypeNameMap(supabase);
-
     const characters: CharacterSummary[] = list.map((r) => {
-      const d = (r.data as Record<string, unknown>) ?? {};
-      const listCols = getCharacterListColumns(d, { archetypeNameById });
-      const archName = listCols.archetype_name ?? r.archetype_name ?? undefined;
       return {
         id: r.id,
-        name: r.name ?? (d.name as string) ?? 'Unnamed',
-        level: r.level ?? (d.level as number) ?? 1,
-        portrait: d.portrait as string | undefined,
-        archetypeName: archName ?? undefined,
-        ancestryName:
-          r.ancestry_name ??
-          (d.ancestry as { name?: string | undefined })?.name ??
-          (d.species as string),
-        status:
-          (r.status as CharacterSummary['status']) ?? (d.status as CharacterSummary['status']),
-        visibility: resolveCharacterVisibility({ visibility: r.visibility, data: d }),
+        name: r.name ?? 'Unnamed',
+        level: r.level ?? 1,
+        portrait: r.portrait ?? undefined,
+        archetypeName: r.archetype_name ?? undefined,
+        ancestryName: r.ancestry_name ?? undefined,
+        status: r.status as CharacterSummary['status'],
+        visibility: resolveCharacterVisibility({ visibility: r.visibility }),
         updatedAt: r.updated_at ?? undefined,
       };
     });
@@ -225,7 +169,7 @@ export async function POST(request: NextRequest) {
     if (duplicateOf) {
       const { data: existing, error: existingErr } = await supabase
         .from('characters')
-        .select('id, data')
+        .select('id')
         .eq('id', duplicateOf)
         .eq('user_id', user.uid)
         .maybeSingle();
@@ -233,8 +177,11 @@ export async function POST(request: NextRequest) {
       if (!existing) {
         return NextResponse.json({ error: 'Character not found' }, { status: 404 });
       }
-      const d = (existing.data as Record<string, unknown>) ?? {};
-      const baseData = normalizeCharacterOnLoad({ ...d });
+      const relational = await getRelationalCharacterDocument(supabase, duplicateOf);
+      if (!relational) {
+        return NextResponse.json({ error: 'Character not found' }, { status: 404 });
+      }
+      const baseData = normalizeCharacterOnLoad({ ...relational });
       delete baseData.createdAt;
       delete baseData.updatedAt;
       const newData = {
@@ -244,22 +191,16 @@ export async function POST(request: NextRequest) {
         updatedAt: new Date().toISOString(),
       };
       normalizeCharacterForSave(newData);
-      const archetypeNameById = await fetchArchetypeNameMap(supabase);
-      const listCols = getCharacterListColumns(newData as Record<string, unknown>, {
-        archetypeNameById,
-      });
       const newId = crypto.randomUUID();
 
       await ensureUserProfile(supabase, user.uid);
 
-      const inserted = await insertCharacterRow(supabase, {
-        id: newId,
-        user_id: user.uid,
-        data: newData,
-        ...listCols,
-        client_request_id: clientRequestId ?? null,
+      const inserted = await createRelationalCharacter(supabase, {
+        characterId: newId,
+        document: newData,
+        clientRequestId,
       });
-      return jsonForInsertResult(supabase, user.uid, clientRequestId, inserted);
+      return NextResponse.json({ id: inserted.id });
     }
 
     const cleanedData = prepareCharacterForCreate(data);
@@ -281,22 +222,16 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    const archetypeNameById = await fetchArchetypeNameMap(supabase);
-    const listCols = getCharacterListColumns(cleanedData as Record<string, unknown>, {
-      archetypeNameById,
-    });
     const newId = crypto.randomUUID();
 
     await ensureUserProfile(supabase, user.uid);
 
-    const inserted = await insertCharacterRow(supabase, {
-      id: newId,
-      user_id: user.uid,
-      data: cleanedData,
-      ...listCols,
-      client_request_id: clientRequestId ?? null,
+    const inserted = await createRelationalCharacter(supabase, {
+      characterId: newId,
+      document: cleanedData as Record<string, unknown>,
+      clientRequestId,
     });
-    return jsonForInsertResult(supabase, user.uid, clientRequestId, inserted);
+    return NextResponse.json({ id: inserted.id });
   } catch (err) {
     return apiErrorResponse(
       GUIDED_CREATOR_COPY.steps.reveal.saveFailed,

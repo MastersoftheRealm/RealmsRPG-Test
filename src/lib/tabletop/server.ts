@@ -256,7 +256,7 @@ async function enrichCampaignCharacterImages(campaign: Campaign): Promise<Campai
     const service = createServiceRoleClient();
     const { data, error } = await service
       .from('characters')
-      .select('id, user_id, data')
+      .select('id, user_id, portrait')
       .in('id', characterIds);
     if (error) {
       console.warn('[VTT] Could not load character images for token defaults:', error.message);

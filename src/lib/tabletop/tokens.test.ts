@@ -83,7 +83,7 @@ describe('tabletop token seeding', () => {
       {
         id: 'char-1',
         user_id: 'player-1',
-        data: { portrait: 'https://example.test/current-mara.jpg' },
+        portrait: 'https://example.test/current-mara.jpg',
       },
     ]);
 
@@ -103,7 +103,7 @@ describe('tabletop token seeding', () => {
       {
         id: 'char-1',
         user_id: 'player-1',
-        data: { portrait: '' },
+        portrait: '',
       },
     ]);
 

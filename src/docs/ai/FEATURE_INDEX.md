@@ -215,7 +215,7 @@
 
 | Need | Service |
 |------|---------|
-| Character persistence | `character-service` |
+| Character persistence | Client HTTP contract: `character-service`; server relational DB boundary: `lib/character-persistence-server.ts` (`getRelationalCharacterDocument`, transactional create/patch, service-role provisioning, opt-in key-only shadow comparison) |
 | Library entity types (official + user) | `src/types/library.ts` (`LibraryPower`, `LibraryTechnique`, `LibraryItem`, …); hooks re-export |
 | Official / user enhanced items | `src/types/crafting.ts` (`OfficialEnhancedItem`, `OfficialEnhancedItemPayload`, `CreateOfficialEnhancedItemInput`); `useEnhancedItems` |
 | Library fetch/save (official + user) | `library-service` (use `fetchOfficialLibrary`, not removed `fetch*Public*` aliases). Official GET is listed-only unless `{ includeUnlisted: true }` (admin editor / creator Load) |

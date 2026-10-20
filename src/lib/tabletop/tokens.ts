@@ -18,7 +18,6 @@ const TOKEN_COLORS: Record<TrackedCombatant['combatantType'], string> = {
 export type CampaignCharacterTokenImageRow = {
   id: string;
   user_id: string;
-  data?: unknown;
   portrait?: string | null | undefined;
 };
 
@@ -36,14 +35,7 @@ function imageUrlFrom(value: unknown): string | undefined {
 }
 
 function readCharacterImageUrl(row: CampaignCharacterTokenImageRow): string | undefined {
-  const data =
-    typeof row.data === 'object' && row.data !== null ? (row.data as Record<string, unknown>) : {};
-  return (
-    imageUrlFrom(data.portrait) ??
-    imageUrlFrom(data.portraitUrl) ??
-    imageUrlFrom(data.portrait_url) ??
-    imageUrlFrom(row.portrait)
-  );
+  return imageUrlFrom(row.portrait);
 }
 
 function campaignCharacterRefKey(

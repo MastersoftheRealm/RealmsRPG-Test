@@ -46,6 +46,7 @@ type CharacterRow = {
   data: Record<string, unknown>;
   created_at: string;
   updated_at: string;
+  visibility: string;
 };
 
 type CampaignRow = {
@@ -70,6 +71,7 @@ function makeCharacterRow(overrides: Partial<CharacterRow['data']> = {}): Charac
     },
     created_at: '2026-07-01T12:00:00.000Z',
     updated_at: '2026-07-01T12:00:00.000Z',
+    visibility: (overrides.visibility as string | undefined) ?? 'campaign',
   };
 }
 
@@ -91,6 +93,12 @@ function createMockSupabase({
   characterRow?: CharacterRow | null | undefined;
 }) {
   return {
+    rpc: vi.fn(async (name: string) => {
+      if (name === 'get_character_relational_document') {
+        return { data: characterRow?.data ?? null, error: null };
+      }
+      throw new Error(`Unexpected RPC: ${name}`);
+    }),
     from: vi.fn((table: string) => {
       if (table === 'campaigns') {
         return {

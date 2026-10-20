@@ -124,21 +124,11 @@ async function ensureCharacter(userId) {
     updatedAt: createdAt,
   };
 
-  const row = {
-    id: manifest.characterId,
-    user_id: userId,
-    data,
-    name: manifest.characterName,
-    level: 1,
-    archetype_name: null,
-    ancestry_name: null,
-    status: null,
-    visibility: 'private',
-    created_at: createdAt,
-    updated_at: createdAt,
-  };
-
-  const { error } = await admin.from('characters').upsert(row, { onConflict: 'id' });
+  const { error } = await admin.rpc('provision_character_relational', {
+    p_character_id: manifest.characterId,
+    p_owner_id: userId,
+    p_document: data,
+  });
   if (error) throw error;
 }
 

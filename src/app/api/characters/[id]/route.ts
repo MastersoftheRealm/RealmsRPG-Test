@@ -11,28 +11,26 @@ import { createClient } from '@/lib/supabase/server';
 import { getSession } from '@/lib/supabase/session';
 import { validateJson, verifyMutationRequest, characterUpdateSchema } from '@/lib/api-validation';
 import { prepareCharacterForSave } from '@/lib/character-save';
-import { applyCharacterDirtyPatch, isStaleCharacterWrite } from '@/lib/character/dirty-patch';
-import {
-  normalizeCharacterForSave,
-  normalizeCharacterOnLoad,
-} from '@/lib/character/schema-normalize';
+import { normalizeCharacterOnLoad } from '@/lib/character/schema-normalize';
 import { buildRateLimitKey, resolveClientIp, standardLimiter } from '@/lib/rate-limit';
 import { getOwnerLibraryAndEnrichmentForView } from '@/lib/character-view-enrichment-server';
-import { getCharacterListColumns, resolveCharacterVisibility } from '@/lib/character-list-columns';
-import { fetchArchetypeNameMap } from '@/lib/game/archetype-display';
+import { resolveCharacterVisibility } from '@/lib/character-list-columns';
+import {
+  getRelationalCharacterDocument,
+  patchRelationalCharacter,
+} from '@/lib/character-persistence-server';
 import type { Character } from '@/types';
 
 type CharRow = {
   id: string;
   user_id: string;
-  data: unknown;
   created_at: string | null;
   updated_at: string | null;
   visibility?: string | null | undefined;
 };
 
-function rowToCharacter(row: CharRow): Character {
-  const d = normalizeCharacterOnLoad((row.data as Record<string, unknown>) ?? {});
+function rowToCharacter(row: CharRow, document: Record<string, unknown>): Character {
+  const d = normalizeCharacterOnLoad(document);
   return {
     id: row.id,
     userId: row.user_id,
@@ -55,7 +53,7 @@ export async function GET(_request: NextRequest, { params }: { params: Promise<{
     const supabase = await createClient();
     const { data: row, error: rowErr } = await supabase
       .from('characters')
-      .select('id, user_id, data, created_at, updated_at, visibility')
+      .select('id, user_id, created_at, updated_at, visibility')
       .eq('id', id.trim())
       .maybeSingle();
     if (rowErr) throw rowErr;
@@ -65,9 +63,11 @@ export async function GET(_request: NextRequest, { params }: { params: Promise<{
     }
 
     const charRow = row as CharRow;
+    const document = await getRelationalCharacterDocument(supabase, charRow.id);
+    if (!document) return NextResponse.json(null, { status: 404 });
     const isOwner = user?.uid === charRow.user_id;
     if (isOwner) {
-      return NextResponse.json({ character: rowToCharacter(charRow) });
+      return NextResponse.json({ character: rowToCharacter(charRow, document) });
     }
 
     const visibility = resolveCharacterVisibility(charRow);
@@ -75,9 +75,13 @@ export async function GET(_request: NextRequest, { params }: { params: Promise<{
       const { libraryForView, enrichment } = await getOwnerLibraryAndEnrichmentForView(
         supabase,
         charRow.user_id,
-        charRow.data,
+        document,
       );
-      return NextResponse.json({ character: rowToCharacter(charRow), libraryForView, enrichment });
+      return NextResponse.json({
+        character: rowToCharacter(charRow, document),
+        libraryForView,
+        enrichment,
+      });
     }
 
     if (visibility === 'campaign' && user?.uid) {
@@ -121,10 +125,10 @@ export async function GET(_request: NextRequest, { params }: { params: Promise<{
           const { libraryForView, enrichment } = await getOwnerLibraryAndEnrichmentForView(
             supabase,
             charRow.user_id,
-            charRow.data,
+            document,
           );
           return NextResponse.json({
-            character: rowToCharacter(charRow),
+            character: rowToCharacter(charRow, document),
             libraryForView,
             enrichment,
           });
@@ -168,53 +172,18 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
     const cleanedData = prepareCharacterForSave(data);
 
     const supabase = await createClient();
-    const { data: existing, error: existingErr } = await supabase
-      .from('characters')
-      .select('id, data, updated_at')
-      .eq('id', id.trim())
-      .eq('user_id', user.uid)
-      .maybeSingle();
-    if (existingErr) throw existingErr;
-
-    if (!existing) {
+    const result = await patchRelationalCharacter(supabase, {
+      characterId: id.trim(),
+      patch: cleanedData as Record<string, unknown>,
+      expectedUpdatedAt,
+    });
+    if (result.status === 'not_found') {
       return NextResponse.json({ error: 'Character not found' }, { status: 404 });
     }
-
-    const existingRow = existing as CharRow;
-    const currentUpdatedAt = existingRow.updated_at;
-    if (isStaleCharacterWrite(expectedUpdatedAt, currentUpdatedAt)) {
+    if (result.status === 'conflict') {
       return NextResponse.json({ error: 'Character was updated elsewhere' }, { status: 409 });
     }
-
-    const currentData = (existingRow.data as Record<string, unknown>) ?? {};
-    const now = new Date().toISOString();
-    const mergedData = applyCharacterDirtyPatch(currentData, cleanedData, { blobUpdatedAt: now });
-    normalizeCharacterForSave(mergedData);
-    const archetypeNameById = await fetchArchetypeNameMap(supabase);
-    const listCols = getCharacterListColumns(mergedData, { archetypeNameById });
-
-    let updateQuery = supabase
-      .from('characters')
-      .update({ data: mergedData, updated_at: now, ...listCols })
-      .eq('id', id.trim())
-      .eq('user_id', user.uid);
-    if (expectedUpdatedAt && currentUpdatedAt) {
-      updateQuery = updateQuery.eq('updated_at', currentUpdatedAt);
-    }
-
-    const { data: updated, error: updateErr } = await updateQuery
-      .select('updated_at')
-      .maybeSingle();
-    if (updateErr) throw updateErr;
-    if (!updated) {
-      return NextResponse.json({ error: 'Character was updated elsewhere' }, { status: 409 });
-    }
-
-    const savedUpdatedAt =
-      typeof (updated as { updated_at?: string | null | undefined }).updated_at === 'string'
-        ? (updated as { updated_at: string }).updated_at
-        : now;
-    return NextResponse.json({ ok: true, updatedAt: savedUpdatedAt });
+    return NextResponse.json({ ok: true, updatedAt: result.updatedAt });
   } catch (err) {
     console.error('[API Error] PATCH /api/characters/[id]:', err);
     return NextResponse.json({ error: 'Failed to update character' }, { status: 500 });
