@@ -4,6 +4,7 @@ export const metadata: Metadata = {
   title: 'Codex',
   description:
     'Browse the complete game reference: feats, skills, species, equipment, properties, parts, and traits.',
+  alternates: { canonical: '/codex' },
 };
 
 export default function CodexLayout({ children }: { children: React.ReactNode }) {

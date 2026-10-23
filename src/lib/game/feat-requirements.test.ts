@@ -116,6 +116,105 @@ describe('checkFeatRequirements leveled-feat prerequisite (TASK-889)', () => {
   });
 });
 
+describe('checkFeatRequirements upgraded feat satisfies the replaced rank (86e3rjh2u)', () => {
+  const speedy = [
+    { id: '1', name: 'Speedy', feat_lvl: 1 },
+    {
+      id: '2',
+      name: 'Speedy',
+      feat_lvl: 2,
+      base_feat_id: '1',
+      ability_req: ['might'],
+      abil_req_val: [3],
+    },
+    { id: '3', name: 'Speedy', feat_lvl: 3, base_feat_id: '1' },
+    { id: '8', name: 'Tough', feat_lvl: 1 },
+    { id: '9', name: 'Tough', feat_lvl: 2, base_feat_id: '8' },
+  ];
+
+  it('treats owning rank II as satisfying the replaced rank I requirement', () => {
+    const result = checkFeatRequirements(
+      { id: '2', name: 'Speedy', feat_lvl: 2, base_feat_id: '1' },
+      { level: 10, abilities: DEFAULT_ABILITIES, defenseVals: { might: 3 }, feats: [{ id: '2' }] },
+      emptyCatalog.skills,
+      speedy,
+    );
+    expect(result.met).toBe(true);
+    expect(result.reason).toBeUndefined();
+  });
+
+  it('treats owning rank III as satisfying the replaced rank II requirement', () => {
+    const result = checkFeatRequirements(
+      speedy[2]!,
+      { level: 10, abilities: DEFAULT_ABILITIES, feats: [{ id: '3', name: 'Speedy III' }] },
+      emptyCatalog.skills,
+      speedy,
+    );
+    expect(result.met).toBe(true);
+  });
+
+  it('counts an upgrade stored on archetype feats', () => {
+    const result = checkFeatRequirements(
+      { id: '2', name: 'Speedy', feat_lvl: 2, base_feat_id: '1' },
+      {
+        level: 10,
+        abilities: DEFAULT_ABILITIES,
+        defenseVals: { might: 3 },
+        archetypeFeats: [{ id: '2' }],
+      },
+      emptyCatalog.skills,
+      speedy,
+    );
+    expect(result.met).toBe(true);
+  });
+
+  it('still flags a real ability miss after the replaced rank is satisfied', () => {
+    const result = checkFeatRequirements(
+      speedy[1]!,
+      { level: 10, abilities: DEFAULT_ABILITIES, defenseVals: { might: 0 }, feats: [{ id: '2' }] },
+      emptyCatalog.skills,
+      speedy,
+    );
+    expect(result.met).toBe(false);
+    expect(result.reason).toMatch(/might 3/i);
+    expect(result.reason).not.toMatch(/Speedy/);
+  });
+
+  it('still flags a real level miss after the replaced rank is satisfied', () => {
+    const result = checkFeatRequirements(
+      { id: '2', name: 'Speedy', feat_lvl: 2, base_feat_id: '1' },
+      { level: 2, abilities: DEFAULT_ABILITIES, feats: [{ id: '2' }] },
+      emptyCatalog.skills,
+      speedy,
+    );
+    expect(result.met).toBe(false);
+    expect(result.reason).toMatch(/character level 4/i);
+    expect(result.reason).not.toMatch(/Speedy/);
+  });
+
+  it('does not treat a different family as an upgrade', () => {
+    const result = checkFeatRequirements(
+      speedy[1]!,
+      { level: 10, abilities: DEFAULT_ABILITIES, defenseVals: { might: 3 }, feats: [{ id: '9' }] },
+      emptyCatalog.skills,
+      speedy,
+    );
+    expect(result.met).toBe(false);
+    expect(result.reason).toBe('Requires Speedy');
+  });
+
+  it('does not warn on the sheet when the only miss was the replaced lower rank', () => {
+    const owned = {
+      level: 10,
+      abilities: DEFAULT_ABILITIES,
+      defenseVals: { might: 3 },
+      feats: [{ id: '2' }],
+    };
+    const feat = { id: '2', name: 'Speedy', feat_lvl: 2, base_feat_id: '1' };
+    expect(getSheetFeatRequirementWarning(feat, owned, [], speedy)).toBeUndefined();
+  });
+});
+
 describe('getSheetFeatRequirementWarning (86e3jv9gz)', () => {
   const unwaveringMight = {
     id: 'um',
