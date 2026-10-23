@@ -4,6 +4,7 @@ import {
   encounterAfterAddingCombatants,
   encounterAfterAutoSortToggle,
   encounterAfterInitiativeEdit,
+  encounterWithCombatantRoster,
   orderCombatantsByInitiative,
   sortCombatantsForTurnOrder,
 } from './combat-encounter-helpers';
@@ -65,6 +66,18 @@ describe('auto sort initiative (86e3t5a7m)', () => {
       [roll18, roll12],
     );
     expect(added.combatants.map((c) => c.id)).toEqual(['r5', 'r18', 'r12']);
+  });
+
+  it('keeps the current turn on the same combatant when Sort Initiative is used mid-encounter', () => {
+    const running = encounter([roll5, roll18, roll12], {
+      round: 1,
+      currentTurnIndex: 1,
+      isActive: true,
+      status: 'active',
+    });
+    const sorted = encounterWithCombatantRoster(running, running.combatants, true);
+    expect(sorted.combatants.map((c) => c.initiative)).toEqual([18, 12, 5]);
+    expect(sorted.currentTurnIndex).toBe(0);
   });
 
   it('re-sorts when an initiative changes and keeps the current turn on that combatant', () => {

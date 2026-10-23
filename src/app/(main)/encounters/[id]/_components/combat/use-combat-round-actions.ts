@@ -8,6 +8,7 @@
 import type { Combatant, Encounter } from '@/types/encounter';
 import {
   autoSortInitiativeEnabled,
+  encounterWithCombatantRoster,
   orderCombatantsByInitiative,
   remapTurnIndexAfterReorder,
   sortCombatantsForTurnOrder,
@@ -141,10 +142,7 @@ export function useCombatRoundActions({
   const sortInitiative = () => {
     setEncounter((prev) => {
       if (!prev) return prev;
-      return {
-        ...prev,
-        combatants: orderCombatantsByInitiative(prev.combatants),
-      };
+      return encounterWithCombatantRoster(prev, prev.combatants, true);
     });
   };
 
