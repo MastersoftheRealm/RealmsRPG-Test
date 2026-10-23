@@ -61,7 +61,12 @@ import {
   pathFilterEmptyTitle,
 } from '@/lib/game/path-recommendation-index';
 
-const TECHNIQUE_ROW_CHROME = { edit: true, delete: true, rightSlot: true } as const;
+const TECHNIQUE_ROW_CHROME = {
+  edit: true,
+  delete: true,
+  rightSlot: true,
+  mobileRightSlotFitsContent: true,
+} as const;
 
 interface LibraryTechniquesTabProps {
   onDelete: (item: DisplayItem) => void;

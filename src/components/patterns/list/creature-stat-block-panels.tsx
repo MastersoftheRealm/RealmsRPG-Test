@@ -122,7 +122,7 @@ export function CreatureStatBlockExpandedContent({
     <div className="space-y-4">
       {/* Header (character-sheet style, simplified) */}
       <Card className="p-4 shadow-md md:p-6">
-        <div className="flex flex-col items-start gap-4 md:flex-row md:items-stretch">
+        <div className="flex min-w-0 flex-col gap-4 min-[1100px]:flex-row">
           {creature.imageUrl ? (
             <ExpandableImage
               src={creature.imageUrl}
@@ -136,10 +136,10 @@ export function CreatureStatBlockExpandedContent({
             <div className="h-20 w-20 flex-shrink-0 rounded-lg border border-border-light bg-image-matte" />
           )}
 
-          <div className="min-w-0 flex-1">
-            <h3 className="truncate text-xl font-bold text-text-primary">{creature.name}</h3>
-            <p className="text-sm text-text-secondary">{subline}</p>
-            <p className="text-sm font-semibold text-text-primary">
+          <div className="w-full min-w-0 flex-1 min-[1100px]:w-auto">
+            <h3 className="text-xl font-bold break-normal text-text-primary">{creature.name}</h3>
+            <p className="text-sm break-normal text-text-secondary">{subline}</p>
+            <p className="text-sm font-semibold break-normal text-text-primary">
               <span
                 className={
                   archetype === 'Power'
@@ -158,27 +158,27 @@ export function CreatureStatBlockExpandedContent({
           </div>
 
           {/* Speed/Evasion/HP/EN to the right - single evenly spaced row on desktop */}
-          <div className="w-full md:ml-4 md:max-w-xl md:flex-1">
-            <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-              <div className="flex min-w-[92px] flex-col rounded-lg border border-border-light bg-surface-alt p-3 dark:border-border dark:bg-surface">
+          <div className="w-full min-w-0 min-[1100px]:ml-4 min-[1100px]:max-w-xl min-[1100px]:flex-1">
+            <div className="grid w-full grid-cols-[repeat(auto-fit,minmax(92px,1fr))] gap-3">
+              <div className="flex min-w-0 flex-col rounded-lg border border-border-light bg-surface-alt p-3 dark:border-border dark:bg-surface">
                 <span className="text-xs font-semibold tracking-wide text-text-secondary uppercase dark:text-text-primary">
                   Speed
                 </span>
                 <span className="text-lg font-bold text-text-primary">{speed}</span>
               </div>
-              <div className="flex min-w-[92px] flex-col rounded-lg border border-border-light bg-surface-alt p-3 dark:border-border dark:bg-surface">
+              <div className="flex min-w-0 flex-col rounded-lg border border-border-light bg-surface-alt p-3 dark:border-border dark:bg-surface">
                 <span className="text-xs font-semibold tracking-wide text-text-secondary uppercase dark:text-text-primary">
                   Evasion
                 </span>
                 <span className="text-lg font-bold text-text-primary">{evasion}</span>
               </div>
-              <div className="flex min-w-[92px] flex-col rounded-lg border border-success-200 bg-success-50 p-3 dark:border-success-800/50 dark:bg-surface">
+              <div className="flex min-w-0 flex-col rounded-lg border border-success-200 bg-success-50 p-3 dark:border-success-800/50 dark:bg-surface">
                 <span className="text-xs font-semibold tracking-wide text-success-fg uppercase">
                   Health
                 </span>
                 <span className="text-lg font-bold text-success-fg">{maxHpDisplay}</span>
               </div>
-              <div className="flex min-w-[92px] flex-col rounded-lg border border-info-200 bg-info-50 p-3 dark:border-info-800/50 dark:bg-surface">
+              <div className="flex min-w-0 flex-col rounded-lg border border-info-200 bg-info-50 p-3 dark:border-info-800/50 dark:bg-surface">
                 <span className="text-xs font-semibold tracking-wide text-info-fg uppercase">
                   Energy
                 </span>
@@ -190,7 +190,7 @@ export function CreatureStatBlockExpandedContent({
 
         {/* Abilities row (mini boxes with roll buttons) */}
         {creature.abilities && (
-          <div className="mt-4 grid grid-cols-3 gap-2 sm:grid-cols-6">
+          <div className="mt-4 grid min-w-0 grid-cols-[repeat(auto-fill,minmax(7.5rem,1fr))] gap-2">
             {REALMS_ABILITY_ORDER.map((k) => {
               const abbr = REALMS_ABILITY_ABBR[k];
               const val = getAbilityValue(creature.abilities!, k);

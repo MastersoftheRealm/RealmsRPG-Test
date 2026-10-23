@@ -42,7 +42,12 @@ type CreatureListRow = LibraryCreature & {
 };
 
 /** Match Powers/Techniques — ListHeader must reserve edit/delete/sync tracks. */
-const CREATURE_ROW_CHROME = { edit: true, delete: true, rightSlot: true } as const;
+const CREATURE_ROW_CHROME = {
+  edit: true,
+  delete: true,
+  rightSlot: true,
+  mobileRightSlotFitsContent: true,
+} as const;
 
 interface LibraryCreaturesTabProps {
   onDelete: (item: DisplayItem) => void;

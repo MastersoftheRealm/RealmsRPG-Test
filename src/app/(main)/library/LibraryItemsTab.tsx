@@ -67,7 +67,12 @@ const ICONS_BY_KIND = {
   shield: <Shield className="h-8 w-8" />,
 };
 
-const ARMAMENT_ROW_CHROME = { edit: true, delete: true, rightSlot: true } as const;
+const ARMAMENT_ROW_CHROME = {
+  edit: true,
+  delete: true,
+  rightSlot: true,
+  mobileRightSlotFitsContent: true,
+} as const;
 
 interface LibraryItemsTabProps {
   armamentKind: ArmamentLibraryKind;

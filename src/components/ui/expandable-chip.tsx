@@ -363,8 +363,8 @@ function ChipHeaderContent({
   const hasEnergy = (energyCost ?? 0) > 0;
 
   return (
-    <span className="inline-flex min-w-0 flex-1 flex-nowrap items-center gap-1.5 overflow-hidden">
-      <span className={cn('truncate', labelClassName)}>{label}</span>
+    <span className="flex min-w-0 flex-1 flex-wrap items-baseline gap-x-1.5 gap-y-0.5">
+      <span className={cn('max-w-full min-w-0 break-normal', labelClassName)}>{label}</span>
       {level != null && level > 0 && (
         <span className="shrink-0 text-xs text-text-secondary">(Lv.{level})</span>
       )}
