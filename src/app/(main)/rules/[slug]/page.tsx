@@ -11,6 +11,7 @@ import { RulebookPager } from '@/components/rules/rulebook-pager';
 import { RulebookShell } from '@/components/rules/rulebook-shell';
 import { RULES_COPY } from '@/lib/constants/site-copy';
 import { getCanonicalSiteUrl } from '@/lib/site-url';
+import { rulebookChapterMetadata } from '@/lib/rules/rulebook-metadata';
 import {
   getAdjacentRulebookChapters,
   getRulebookChapter,
@@ -32,20 +33,7 @@ export async function generateMetadata({
   params: Promise<ChapterParams>;
 }): Promise<Metadata> {
   const { slug } = await params;
-  const chapter = getRulebookChapter(slug);
-  if (!chapter) return { title: RULES_COPY.pageTitle };
-  const url = `${getCanonicalSiteUrl()}${getRulebookChapterHref(chapter.slug)}`;
-  return {
-    title: chapter.title,
-    description: chapter.description,
-    alternates: { canonical: url },
-    openGraph: {
-      title: `${chapter.title} | ${RULES_COPY.pageTitle}`,
-      description: chapter.description,
-      url,
-      type: 'article',
-    },
-  };
+  return rulebookChapterMetadata(slug);
 }
 
 export default async function RulebookChapterPage({ params }: { params: Promise<ChapterParams> }) {

@@ -12,6 +12,7 @@ import type { LegalListItem } from '@/lib/constants/copy/privacy-copy';
 export const metadata: Metadata = {
   title: PRIVACY_COPY.pageTitle,
   description: PRIVACY_COPY.seoDescription,
+  alternates: { canonical: '/privacy' },
 };
 
 function LegalList({ items }: { items?: readonly LegalListItem[] | undefined }) {

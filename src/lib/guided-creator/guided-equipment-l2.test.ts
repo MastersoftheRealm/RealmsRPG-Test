@@ -1,9 +1,11 @@
 import { describe, expect, it } from 'vitest';
 import type { SelectableItem } from '@/components/patterns/select/unified-selection-modal';
+import { itemsWithSelectionQuantity } from '@/components/patterns/select/unified-selection-modal-helpers';
 import {
   applyGuidedEquipmentL2Selection,
   buildGuidedEquipmentL2Items,
   changeGuidedEquipmentL2Quantity,
+  computeL2CurrencySpent,
   computeL2GearSpend,
   computeL2TpSpent,
   toggleGuidedEquipmentL2Ref,
@@ -416,6 +418,34 @@ describe('guided-equipment-l2', () => {
     const result = applyGuidedEquipmentL2Selection('gear', baseDraft, selected, catalog, 30, 200);
     expect(result.ok).toBe(true);
     expect(result.partial?.equipment).toEqual([{ id: 'g1', quantity: 4 }]);
+  });
+
+  it('live Browse Equipment total counts extra copies (1dfe8wf1wz7)', () => {
+    const draft = {
+      ...baseDraft,
+      loadoutWeapons: [{ id: 'w1', quantity: 1 }],
+    };
+    const bare: SelectableItem[] = [
+      {
+        id: 'g1',
+        name: 'Rope',
+        data: {
+          ref: { id: 'g1', quantity: 1 },
+          category: 'equipment' as const,
+          row: catalog.get('g1')!,
+        },
+      },
+    ];
+    // Weapon already costs 25. One rope is 5. Three ropes are 15.
+    expect(computeL2CurrencySpent('gear', draft, bare, catalog)).toBe(30);
+
+    const live = itemsWithSelectionQuantity(bare, { g1: 3 });
+    expect(live[0]?.quantity).toBe(3);
+    expect(computeL2GearSpend(live)).toBe(15);
+    expect(computeL2CurrencySpent('gear', draft, live, catalog)).toBe(40);
+
+    const over = itemsWithSelectionQuantity(bare, { g1: 50 });
+    expect(computeL2CurrencySpent('gear', draft, over, catalog) > 200).toBe(true);
   });
 
   it('gear Confirm rejects over-budget quantity; empty selection clears gear (DEV-V-013-T052)', () => {
