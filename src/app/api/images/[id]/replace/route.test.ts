@@ -2,7 +2,7 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { NextRequest } from 'next/server';
 
 vi.mock('@/lib/supabase/session', () => ({
-  getSession: vi.fn(),
+  requireLiveUser: vi.fn(),
 }));
 
 vi.mock('@/lib/admin', () => ({
@@ -14,11 +14,11 @@ vi.mock('@/lib/supabase/server', () => ({
 }));
 
 import { POST } from './route';
-import { getSession } from '@/lib/supabase/session';
+import { requireLiveUser } from '@/lib/supabase/session';
 import { isAdmin } from '@/lib/admin';
 import { createServiceRoleClient } from '@/lib/supabase/server';
 
-const mockGetSession = vi.mocked(getSession);
+const mockRequireLiveUser = vi.mocked(requireLiveUser);
 const mockIsAdmin = vi.mocked(isAdmin);
 const mockCreateServiceRoleClient = vi.mocked(createServiceRoleClient);
 
@@ -41,7 +41,7 @@ describe('POST /api/images/[id]/replace', () => {
   });
 
   it('returns 401 when session is missing', async () => {
-    mockGetSession.mockResolvedValue({ user: null, error: 'No session' });
+    mockRequireLiveUser.mockRejectedValue(new Error('Authentication required'));
 
     const response = await POST(makePostRequest('img-1'), {
       params: Promise.resolve({ id: 'img-1' }),
@@ -53,7 +53,7 @@ describe('POST /api/images/[id]/replace', () => {
   });
 
   it('returns 403 when the user is authenticated but not admin', async () => {
-    mockGetSession.mockResolvedValue({ user: USER, error: null });
+    mockRequireLiveUser.mockResolvedValue(USER);
     mockIsAdmin.mockResolvedValue(false);
 
     const response = await POST(makePostRequest('img-1'), {

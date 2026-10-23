@@ -6,7 +6,7 @@
 
 import { randomUUID } from 'crypto';
 import { NextRequest, NextResponse } from 'next/server';
-import { getSession } from '@/lib/supabase/session';
+import { requireLiveUser } from '@/lib/supabase/session';
 import { isAdmin } from '@/lib/admin';
 import { createClient, createServiceRoleClient } from '@/lib/supabase/server';
 import {
@@ -112,8 +112,10 @@ export async function GET(request: NextRequest) {
 }
 
 export async function POST(request: NextRequest) {
-  const { user, error: sessionError } = await getSession();
-  if (sessionError || !user?.uid) {
+  let user;
+  try {
+    user = await requireLiveUser();
+  } catch {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
   if (!(await isAdmin(user.uid))) {

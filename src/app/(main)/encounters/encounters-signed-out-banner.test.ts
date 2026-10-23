@@ -20,6 +20,10 @@ describe('encounters signed-out banner (86e3q9vhq)', () => {
   });
 
   it('does not load the guest encounter list before auth resolves', () => {
-    expect(listHookSource).toMatch(/enabled:\s*initialized/);
+    expect(listHookSource).toMatch(/enabled:\s*initialized,/);
+  });
+
+  it('does not load a single encounter before auth resolves', () => {
+    expect(listHookSource).toMatch(/enabled:\s*initialized && !!encounterId/);
   });
 });

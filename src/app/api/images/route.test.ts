@@ -2,7 +2,7 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { NextRequest } from 'next/server';
 
 vi.mock('@/lib/supabase/session', () => ({
-  getSession: vi.fn(),
+  requireLiveUser: vi.fn(),
 }));
 
 vi.mock('@/lib/admin', () => ({
@@ -15,11 +15,11 @@ vi.mock('@/lib/supabase/server', () => ({
 }));
 
 import { GET, POST } from './route';
-import { getSession } from '@/lib/supabase/session';
+import { requireLiveUser } from '@/lib/supabase/session';
 import { isAdmin } from '@/lib/admin';
 import { createClient, createServiceRoleClient } from '@/lib/supabase/server';
 
-const mockGetSession = vi.mocked(getSession);
+const mockRequireLiveUser = vi.mocked(requireLiveUser);
 const mockIsAdmin = vi.mocked(isAdmin);
 const mockCreateClient = vi.mocked(createClient);
 const mockCreateServiceRoleClient = vi.mocked(createServiceRoleClient);
@@ -66,7 +66,7 @@ describe('GET /api/images', () => {
 
     expect(response.status).toBe(200);
     await expect(readJson(response)).resolves.toEqual({ images: [] });
-    expect(mockGetSession).not.toHaveBeenCalled();
+    expect(mockRequireLiveUser).not.toHaveBeenCalled();
   });
 });
 
@@ -76,7 +76,7 @@ describe('POST /api/images', () => {
   });
 
   it('returns 401 when session is missing', async () => {
-    mockGetSession.mockResolvedValue({ user: null, error: 'No session' });
+    mockRequireLiveUser.mockRejectedValue(new Error('Authentication required'));
 
     const response = await POST(makePostRequest());
 
@@ -86,7 +86,7 @@ describe('POST /api/images', () => {
   });
 
   it('returns 403 when the user is authenticated but not admin', async () => {
-    mockGetSession.mockResolvedValue({ user: USER, error: null });
+    mockRequireLiveUser.mockResolvedValue(USER);
     mockIsAdmin.mockResolvedValue(false);
 
     const response = await POST(makePostRequest());

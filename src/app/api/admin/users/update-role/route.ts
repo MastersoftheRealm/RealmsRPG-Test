@@ -6,7 +6,7 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient as createSupabaseAdminClient } from '@supabase/supabase-js';
-import { requireAdminSession } from '@/lib/admin';
+import { requireLiveAdminSession } from '@/lib/admin';
 import { adminUpdateRoleSchema, validateJson } from '@/lib/api-validation';
 import {
   strictLimiter,
@@ -28,7 +28,7 @@ function getSupabaseAdmin() {
 
 export async function PATCH(request: NextRequest) {
   try {
-    const auth = await requireAdminSession();
+    const auth = await requireLiveAdminSession();
     if (!auth.ok) {
       return NextResponse.json(auth.body, { status: auth.status });
     }

@@ -1,5 +1,5 @@
 import type { JwtPayload } from '@supabase/supabase-js';
-import { describe, expect, it, vi } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 vi.mock('./server', () => ({
   createClient: vi.fn(),
@@ -9,8 +9,9 @@ vi.mock('./verified-claims', () => ({
   getVerifiedClaims: vi.fn(),
 }));
 
+import type { User } from '@supabase/supabase-js';
 import { createClient } from './server';
-import { getSession, sessionUserFromClaims } from './session';
+import { getSession, requireLiveUser, sessionUserFromClaims } from './session';
 import { getVerifiedClaims } from './verified-claims';
 
 const mockCreateClient = vi.mocked(createClient);
@@ -75,5 +76,67 @@ describe('getSession', () => {
       user: null,
       error: 'Invalid session',
     });
+  });
+});
+
+describe('requireLiveUser', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  function authClient(result: { user: User | null; error: { message: string } | null }) {
+    return {
+      auth: {
+        getUser: vi.fn(async () => ({ data: { user: result.user }, error: result.error })),
+      },
+    };
+  }
+
+  it('maps the Auth user and does not verify claims locally', async () => {
+    const getUser = vi.fn(async () => ({
+      data: {
+        user: {
+          id: 'user-1',
+          email: 'player@example.com',
+          email_confirmed_at: '2026-01-01T00:00:00Z',
+          user_metadata: { full_name: 'Player One', avatar_url: 'https://example.com/a.png' },
+        } as unknown as User,
+      },
+      error: null,
+    }));
+    mockCreateClient.mockResolvedValue({ auth: { getUser } } as unknown as Awaited<
+      ReturnType<typeof createClient>
+    >);
+
+    await expect(requireLiveUser()).resolves.toEqual({
+      uid: 'user-1',
+      email: 'player@example.com',
+      name: 'Player One',
+      picture: 'https://example.com/a.png',
+      emailVerified: true,
+    });
+    expect(getUser).toHaveBeenCalledTimes(1);
+    expect(mockGetVerifiedClaims).not.toHaveBeenCalled();
+  });
+
+  it('throws when Auth reports no user, including a revoked or banned session', async () => {
+    mockCreateClient.mockResolvedValue(
+      authClient({ user: null, error: { message: 'User banned' } }) as unknown as Awaited<
+        ReturnType<typeof createClient>
+      >,
+    );
+
+    await expect(requireLiveUser()).rejects.toThrow('Authentication required');
+    expect(mockGetVerifiedClaims).not.toHaveBeenCalled();
+  });
+
+  it('throws when Auth returns a user with no id', async () => {
+    mockCreateClient.mockResolvedValue(
+      authClient({ user: { id: '' } as unknown as User, error: null }) as unknown as Awaited<
+        ReturnType<typeof createClient>
+      >,
+    );
+
+    await expect(requireLiveUser()).rejects.toThrow('Authentication required');
   });
 });

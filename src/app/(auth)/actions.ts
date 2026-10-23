@@ -9,7 +9,7 @@
 import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
 import { headers } from 'next/headers';
-import { requireAuth, getSession } from '@/lib/supabase/session';
+import { requireAuth, requireLiveUser, getSession } from '@/lib/supabase/session';
 import { createClient as createServerClient, createServiceRoleClient } from '@/lib/supabase/server';
 import { isAdmin } from '@/lib/admin';
 import { getRolePolicyForUser } from '@/lib/role-policy';
@@ -458,15 +458,16 @@ type DeleteAccountResult = { success: true } | { success: false; error: string }
  * Runs with the service role: the session client has no DELETE policy on
  * `user_profiles`, so the row it must remove — the one whose cascade takes the
  * rest of the user's content with it — would be silently filtered out and leave
- * an orphaned profile behind. Authorization is the verified session below and
- * every statement is scoped to that uid.
+ * an orphaned profile behind. Authorization is a live Auth user check below
+ * (a revoked or banned session must not delete an account) and every
+ * statement is scoped to that uid.
  *
  * Every step is checked and the auth identity is destroyed last: a half-finished
  * cascade with no matching auth user is unrecoverable, so a failure must abort.
  */
 export async function deleteAccountAction(): Promise<DeleteAccountResult> {
   try {
-    const user = await requireAuth();
+    const user = await requireLiveUser();
     const supabaseAdmin = createServiceRoleClient();
 
     const failed = (step: string, error: unknown): DeleteAccountResult => {

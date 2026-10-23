@@ -3,6 +3,7 @@ import { NextRequest } from 'next/server';
 
 vi.mock('@/lib/supabase/session', () => ({
   getSession: vi.fn(),
+  requireLiveUser: vi.fn(),
 }));
 
 vi.mock('@/lib/admin', () => ({
@@ -28,12 +29,13 @@ import {
   PUBLIC_CDN_CACHE_CONTROL,
 } from '@/lib/api/public-cdn-cache';
 import { GET, POST, PATCH, DELETE } from './route';
-import { getSession } from '@/lib/supabase/session';
+import { getSession, requireLiveUser } from '@/lib/supabase/session';
 import { isAdmin } from '@/lib/admin';
 import { createPublicClient } from '@/lib/supabase/public-client';
 import { createClient, createServiceRoleClient } from '@/lib/supabase/server';
 
 const mockGetSession = vi.mocked(getSession);
+const mockRequireLiveUser = vi.mocked(requireLiveUser);
 const mockIsAdmin = vi.mocked(isAdmin);
 const mockCreateClient = vi.mocked(createClient);
 const mockCreatePublicClient = vi.mocked(createPublicClient);
@@ -234,7 +236,7 @@ describe('POST /api/official/[type]', () => {
   });
 
   it('returns 401 when session is missing', async () => {
-    mockGetSession.mockResolvedValue({ user: null, error: 'No session' });
+    mockRequireLiveUser.mockRejectedValue(new Error('Authentication required'));
 
     const response = await POST(makePostRequest('powers'), params('powers'));
 
@@ -244,7 +246,7 @@ describe('POST /api/official/[type]', () => {
   });
 
   it('returns 403 when the user is authenticated but not admin', async () => {
-    mockGetSession.mockResolvedValue({ user: USER, error: null });
+    mockRequireLiveUser.mockResolvedValue(USER);
     mockIsAdmin.mockResolvedValue(false);
 
     const response = await POST(makePostRequest('powers'), params('powers'));
@@ -272,7 +274,7 @@ describe('PATCH /api/official/[type]', () => {
   }
 
   it('returns 401 when session is missing', async () => {
-    mockGetSession.mockResolvedValue({ user: null, error: 'No session' });
+    mockRequireLiveUser.mockRejectedValue(new Error('Authentication required'));
 
     const response = await PATCH(makePatchRequest('powers'), params('powers'));
 
@@ -282,7 +284,7 @@ describe('PATCH /api/official/[type]', () => {
   });
 
   it('returns 403 when the user is authenticated but not admin', async () => {
-    mockGetSession.mockResolvedValue({ user: USER, error: null });
+    mockRequireLiveUser.mockResolvedValue(USER);
     mockIsAdmin.mockResolvedValue(false);
 
     const response = await PATCH(makePatchRequest('powers'), params('powers'));
@@ -299,7 +301,7 @@ describe('DELETE /api/official/[type]', () => {
   });
 
   it('returns 401 when session is missing', async () => {
-    mockGetSession.mockResolvedValue({ user: null, error: 'No session' });
+    mockRequireLiveUser.mockRejectedValue(new Error('Authentication required'));
 
     const response = await DELETE(makeDeleteRequest('powers'), params('powers'));
 
@@ -309,7 +311,7 @@ describe('DELETE /api/official/[type]', () => {
   });
 
   it('returns 403 when the user is authenticated but not admin', async () => {
-    mockGetSession.mockResolvedValue({ user: USER, error: null });
+    mockRequireLiveUser.mockResolvedValue(USER);
     mockIsAdmin.mockResolvedValue(false);
 
     const response = await DELETE(makeDeleteRequest('powers'), params('powers'));

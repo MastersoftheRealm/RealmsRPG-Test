@@ -21,7 +21,7 @@ import {
   codexSourceNameError,
   collapseCodexSourceName,
 } from '@/lib/codex/sources';
-import { getSession } from '@/lib/supabase/session';
+import { getSession, requireLiveUser } from '@/lib/supabase/session';
 import { createServiceRoleClient } from '@/lib/supabase/server';
 import { revalidatePath, updateTag } from 'next/cache';
 import {
@@ -53,6 +53,13 @@ export type AdminCodexSourceMembershipResult = {
 async function requireAdmin(): Promise<string> {
   const { user } = await getSession();
   if (!user?.uid) throw new Error(AUTH_ERROR);
+  if (!(await isAdmin(user.uid))) throw new Error(ADMIN_ERROR);
+  return user.uid;
+}
+
+/** Live Auth check for source mutations. Catalog and row reads stay on `requireAdmin`. */
+async function requireLiveAdmin(): Promise<string> {
+  const user = await requireLiveUser();
   if (!(await isAdmin(user.uid))) throw new Error(ADMIN_ERROR);
   return user.uid;
 }
@@ -124,7 +131,7 @@ export async function addAdminCodexSourceMembership(
   sourceName: string,
 ): Promise<AdminCodexSourceMembershipResult> {
   try {
-    await requireAdmin();
+    await requireLiveAdmin();
     const result = await applyMembershipWrite('add', target, sourceName);
     if (!result.success) {
       return {
@@ -149,7 +156,7 @@ export async function removeAdminCodexSourceMembership(
   sourceName: string,
 ): Promise<AdminCodexSourceMembershipResult> {
   try {
-    await requireAdmin();
+    await requireLiveAdmin();
     const result = await applyMembershipWrite('remove', target, sourceName);
     if (!result.success) {
       return {
@@ -211,7 +218,7 @@ export async function renameAdminCodexSource(
   toName: string,
 ): Promise<AdminCodexSourceMembershipResult> {
   try {
-    const actor = await requireAdmin();
+    const actor = await requireLiveAdmin();
     const fromError = validateSourceName(fromName);
     if (fromError) return { success: false, updatedCount: 0, error: fromError };
     const toError = validateSourceName(toName);
