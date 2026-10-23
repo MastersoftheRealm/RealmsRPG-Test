@@ -57,7 +57,11 @@ describe('encounter tracker Roll Log dock clearance (86e3k915w)', () => {
     expect(compactResources).toContain('mb-2 grid min-w-0 grid-cols-1 gap-3 sm:grid-cols-2');
     expect(compactResources).not.toContain('mb-2 flex items-center gap-3');
     expect(compactResources).toMatch(/flex min-w-0 flex-wrap items-center gap-1/);
-    expect(compactResources).toMatch(/w-10 min-w-0/);
+    expect(compactResources).toContain('COMBATANT_RESOURCE_NUMBER_INPUT_CLASS');
+    expect(resources).toContain(
+      "export const COMBATANT_RESOURCE_NUMBER_INPUT_CLASS = 'w-[calc(4ch+2rem)] shrink-0'",
+    );
+    expect(compactResources).not.toMatch(/w-10 min-w-0/);
     expect(compactResources).toContain('relative mt-1 h-1.5 min-w-0 overflow-hidden rounded-full');
   });
 });

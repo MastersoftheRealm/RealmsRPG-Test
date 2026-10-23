@@ -6,7 +6,12 @@
 'use client';
 
 import type { Combatant, Encounter } from '@/types/encounter';
-import { orderCombatantsByInitiative } from './combat-encounter-helpers';
+import {
+  autoSortInitiativeEnabled,
+  orderCombatantsByInitiative,
+  remapTurnIndexAfterReorder,
+  sortCombatantsForTurnOrder,
+} from './combat-encounter-helpers';
 
 type SetEncounter = React.Dispatch<React.SetStateAction<Encounter | null>>;
 
@@ -14,12 +19,26 @@ type SetEncounter = React.Dispatch<React.SetStateAction<Encounter | null>>;
 export function encounterStateAfterStart(prev: Encounter): Encounter {
   const round = prev.round > 0 ? prev.round : 1;
   const currentTurnIndex = prev.currentTurnIndex >= 0 ? prev.currentTurnIndex : 0;
-  return {
+  const started: Encounter = {
     ...prev,
     round,
     currentTurnIndex,
     isActive: true,
     status: 'active',
+  };
+  if (!autoSortInitiativeEnabled(prev)) return started;
+  const ordered = orderCombatantsByInitiative(prev.combatants);
+  if (prev.currentTurnIndex < 0) {
+    return { ...started, combatants: ordered, currentTurnIndex: 0 };
+  }
+  return {
+    ...started,
+    combatants: ordered,
+    currentTurnIndex: remapTurnIndexAfterReorder(
+      prev.currentTurnIndex,
+      sortCombatantsForTurnOrder(prev.combatants, round),
+      sortCombatantsForTurnOrder(ordered, round),
+    ),
   };
 }
 
@@ -49,7 +68,7 @@ export function useCombatRoundActions({
       if (!prev) return prev;
       const nextIndex = prev.currentTurnIndex + 1;
       if (nextIndex >= sortedCombatants.length) {
-        const autoSort = prev.autoSortInitiative !== false;
+        const autoSort = autoSortInitiativeEnabled(prev);
         if (autoSort) {
           return {
             ...prev,

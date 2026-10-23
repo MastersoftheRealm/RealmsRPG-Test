@@ -136,7 +136,11 @@ export interface Encounter {
   currentTurnIndex: number;
   isActive: boolean;
   applySurprise: boolean;
-  /** When true, initiative is re-sorted at the start of each new round (e.g. after deaths). */
+  /**
+   * When not false, the roster stays in initiative order as combatants are added
+   * or their initiative changes, when the encounter starts, and at each new round.
+   * Omitted means on.
+   */
   autoSortInitiative?: boolean | undefined;
 
   // Skill state (skill + mixed)
