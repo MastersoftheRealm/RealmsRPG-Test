@@ -6,6 +6,7 @@
  * Server page: `returnTo` comes from `searchParams` (no client `useSearchParams`).
  */
 
+import type { Metadata } from 'next';
 import { Sparkles, SlidersHorizontal, Check } from 'lucide-react';
 import { CharacterQuotaAlert, CharacterQuotaLink } from '../use-character-quota';
 import { cn } from '@/lib/utils';
@@ -15,6 +16,10 @@ import { CreatorFunnelHero, MarketingLinkButton } from '@/components/landing';
 import { GUIDED_CREATOR_COPY } from '@/lib/constants/site-copy';
 
 const { chooser: copy } = GUIDED_CREATOR_COPY;
+
+export const metadata: Metadata = {
+  alternates: { canonical: '/characters/new' },
+};
 
 const MODES = [
   {

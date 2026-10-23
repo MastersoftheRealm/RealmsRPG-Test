@@ -12,6 +12,7 @@ import type { LegalListItem } from '@/lib/constants/copy/terms-copy';
 export const metadata: Metadata = {
   title: TERMS_COPY.pageTitle,
   description: TERMS_COPY.seoDescription,
+  alternates: { canonical: '/terms' },
 };
 
 function LegalList({ items }: { items?: readonly LegalListItem[] | undefined }) {

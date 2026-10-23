@@ -1,3 +1,17 @@
+import type { SelectableItem } from './unified-selection-modal-types';
+
+/** Stamp the stepper counts onto selected rows so spend math sees every copy. */
+export function itemsWithSelectionQuantity(
+  items: SelectableItem[],
+  quantities: Record<string, number>,
+): SelectableItem[] {
+  return items.map((item) => {
+    const raw = quantities[String(item.id)];
+    const quantity = Math.max(1, Math.floor(Number(raw)) || 1);
+    return { ...item, quantity };
+  });
+}
+
 /** True when current selection/quantities differ from the modal’s open seed (TASK-574). */
 export function selectionDiffersFromInitial(
   selectedIds: Set<string>,

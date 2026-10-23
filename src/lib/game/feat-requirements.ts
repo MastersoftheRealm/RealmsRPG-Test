@@ -174,6 +174,44 @@ function normalizeSkills(
   >;
 }
 
+function ownedFeatEntries(character: CharacterForFeatRequirement) {
+  return [...(character.feats || []), ...(character.archetypeFeats || [])];
+}
+
+function ownsFeatId(character: CharacterForFeatRequirement, featId: string): boolean {
+  return ownedFeatEntries(character).some(
+    (entry) => String(entry.id ?? entry.name ?? '') === featId,
+  );
+}
+
+/** Same family and a strictly higher rank. A level N feat replaces the ranks below it. */
+function isUpgradeOf(candidate: FeatForRequirement, required: FeatForRequirement): boolean {
+  return (
+    getFeatFamilyId(candidate) === getFeatFamilyId(required) &&
+    getFeatLevel(candidate) > getFeatLevel(required)
+  );
+}
+
+/**
+ * True when the character owns `required`, or owns a higher rank in its family.
+ * Owning X+1 satisfies a requirement for X after X was replaced by the upgrade.
+ */
+function ownsFeatOrUpgrade(
+  character: CharacterForFeatRequirement,
+  required: FeatForRequirement,
+  allFeats: FeatForRequirement[],
+): boolean {
+  const requiredId = String(required.id);
+  return ownedFeatEntries(character).some((entry) => {
+    const key = String(entry.id ?? entry.name ?? '');
+    if (key !== '' && key === requiredId) return true;
+    const ownedId = entry.id != null ? String(entry.id) : '';
+    if (ownedId === '') return false;
+    const catalog = allFeats.find((feat) => String(feat.id) === ownedId);
+    return catalog != null && isUpgradeOf(catalog, required);
+  });
+}
+
 /**
  * Check whether a character (or creator draft) meets a feat's requirements.
  *
@@ -262,16 +300,15 @@ export function checkFeatRequirements(
     if (speed < feat.speed_req) reasons.push(`Requires Speed ${feat.speed_req}+`);
   }
 
-  // Leveled-feat prerequisite: requires the previous level by id.
+  // Leveled-feat prerequisite: the previous rank, or any higher rank in that family.
+  // Upgrading replaces the lower rank, so owning X+1 satisfies a requirement for X.
   const prevLevelId = getPreviousLevelFeatId(feat, allFeats);
   if (prevLevelId) {
-    const ownedFeatIds = new Set(
-      [...(character.feats || []), ...(character.archetypeFeats || [])].map((f) =>
-        String(f.id ?? (f as { name?: string | undefined }).name),
-      ),
-    );
-    if (!ownedFeatIds.has(prevLevelId)) {
-      const prevFeat = allFeats.find((f) => String(f.id) === prevLevelId);
+    const prevFeat = allFeats.find((f) => String(f.id) === prevLevelId);
+    const satisfied = prevFeat
+      ? ownsFeatOrUpgrade(character, prevFeat, allFeats)
+      : ownsFeatId(character, prevLevelId);
+    if (!satisfied) {
       const requiredName = prevFeat ? formatFeatName(prevFeat) : 'previous level';
       reasons.push(`Requires ${requiredName}`);
     }

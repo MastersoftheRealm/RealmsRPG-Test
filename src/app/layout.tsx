@@ -76,9 +76,6 @@ export const metadata: Metadata = {
     title: 'RealmsRPG',
     description: ROOT_META_DESCRIPTION,
   },
-  alternates: {
-    canonical: '/',
-  },
   robots: isProductionIndexingEnabled()
     ? { index: true, follow: true }
     : { index: false, follow: false },

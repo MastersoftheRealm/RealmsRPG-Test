@@ -300,7 +300,7 @@ export function initialSelectedIdsForPhase(phase: EquipmentPhase, draft: GuidedD
 function selectedToRefs(selected: SelectableItem[]): PathItemRecommendation[] {
   return selected.map((item) => {
     const data = item.data as GuidedEquipmentL2ItemData;
-    const qty = (item as SelectableItem & { quantity?: number | undefined }).quantity ?? 1;
+    const qty = item.quantity ?? 1;
     return { id: data.ref.id, quantity: qty };
   });
 }
@@ -379,7 +379,7 @@ export function computeL2TpSpent(
 export function computeL2GearSpend(selected: SelectableItem[]): number {
   return selected.reduce((sum, item) => {
     const data = item.data as GuidedEquipmentL2ItemData | undefined;
-    const qty = (item as SelectableItem & { quantity?: number | undefined }).quantity ?? 1;
+    const qty = item.quantity ?? 1;
     return sum + resolveCatalogRowUnitCost(data?.row) * Math.max(1, qty);
   }, 0);
 }
