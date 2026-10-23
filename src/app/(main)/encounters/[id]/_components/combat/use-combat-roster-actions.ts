@@ -23,6 +23,8 @@ import {
   buildManualCombatantsFromForm,
   buildDuplicateCombatant,
   buildCampaignCharacterCombatant,
+  encounterAfterAddingCombatants,
+  encounterAfterInitiativeEdit,
   type NewCombatantForm,
 } from './combat-encounter-helpers';
 
@@ -115,16 +117,12 @@ export function useCombatRosterActions({
   const addCombatant = () => {
     if (!newCombatant.name.trim()) return;
     const newCombatants = buildManualCombatantsFromForm(newCombatant);
-    setEncounter((prev) =>
-      prev ? { ...prev, combatants: [...prev.combatants, ...newCombatants] } : prev,
-    );
+    setEncounter((prev) => (prev ? encounterAfterAddingCombatants(prev, newCombatants) : prev));
     setNewCombatant(createEmptyNewCombatantForm());
   };
 
   const addCombatantsFromModal = (combatants: TrackedCombatant[]) => {
-    setEncounter((prev) =>
-      prev ? { ...prev, combatants: [...prev.combatants, ...combatants] } : prev,
-    );
+    setEncounter((prev) => (prev ? encounterAfterAddingCombatants(prev, combatants) : prev));
     setShowAddModal(false);
   };
 
@@ -152,9 +150,7 @@ export function useCombatRosterActions({
       const combatants = results
         .filter((r): r is NonNullable<typeof r> => r !== null)
         .map((r) => buildCampaignCharacterCombatant(r.charMeta, r.data));
-      setEncounter((prev) =>
-        prev ? { ...prev, combatants: [...prev.combatants, ...combatants] } : prev,
-      );
+      setEncounter((prev) => (prev ? encounterAfterAddingCombatants(prev, combatants) : prev));
     } catch {
       // Pre-split parity: silent outer catch (TASK-666 cleanup).
     } finally {
@@ -168,9 +164,7 @@ export function useCombatRosterActions({
       combatant,
       existing.map((c) => c.name),
     );
-    setEncounter((prev) =>
-      prev ? { ...prev, combatants: [...prev.combatants, duplicate] } : prev,
-    );
+    setEncounter((prev) => (prev ? encounterAfterAddingCombatants(prev, [duplicate]) : prev));
   };
 
   const removeCombatant = (id: string) => {
@@ -221,7 +215,9 @@ export function useCombatRosterActions({
       if (owned && updated && resourceKeys.some((k) => k in updates)) {
         scheduleCharacterResourceSyncFromCombatant(updated);
       }
-      return { ...prev, combatants: next };
+      const initiativeChanged =
+        updates.initiative !== undefined && updates.initiative !== combatant?.initiative;
+      return encounterAfterInitiativeEdit(prev, next, initiativeChanged);
     });
   };
 

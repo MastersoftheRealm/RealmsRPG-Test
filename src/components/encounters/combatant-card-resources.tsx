@@ -6,6 +6,13 @@ import { resourceCurrentValueClass } from '@/lib/character/resource-value-color'
 import type { Combatant } from '@/types/encounter';
 import { getHealthBarColor } from './combatant-card-helpers';
 
+/**
+ * Four digits (`4ch`) plus the native spinner and horizontal padding (`2rem`).
+ * A fixed 40px box clips 3-digit values once the desktop spinner is drawn.
+ * `shrink-0` keeps a narrow card from squeezing the digits back out of view.
+ */
+export const COMBATANT_RESOURCE_NUMBER_INPUT_CLASS = 'w-[calc(4ch+2rem)] shrink-0';
+
 export interface CombatantCardResourcesProps {
   combatant: Combatant;
   variant: 'full' | 'compact';
@@ -71,7 +78,8 @@ export function CombatantCardResources({
                   }
                   aria-label={`Current health for ${name}`}
                   className={cn(
-                    'touch-tier-standard w-10 min-w-0 rounded border px-0.5 py-0 text-center text-sm font-bold',
+                    'touch-tier-standard rounded border px-0.5 py-0 text-center text-sm font-bold',
+                    COMBATANT_RESOURCE_NUMBER_INPUT_CLASS,
                     'border-health-border text-health-text',
                     resourceCurrentValueClass(
                       'health',
@@ -140,7 +148,8 @@ export function CombatantCardResources({
                   onChange={(e) => onUpdate({ currentEnergy: parseInt(e.target.value) || 0 })}
                   aria-label={`Current energy for ${name}`}
                   className={cn(
-                    'touch-tier-standard w-10 min-w-0 rounded border border-energy-border px-0.5 py-0 text-center text-sm font-bold text-energy-text',
+                    'touch-tier-standard rounded border border-energy-border px-0.5 py-0 text-center text-sm font-bold text-energy-text',
+                    COMBATANT_RESOURCE_NUMBER_INPUT_CLASS,
                     resourceCurrentValueClass(
                       'energy',
                       combatant.currentEnergy,
@@ -176,8 +185,8 @@ export function CombatantCardResources({
   }
 
   return (
-    <div className="mb-2 flex items-center gap-3">
-      <div className="flex min-w-0 flex-1 items-center gap-1">
+    <div className="mb-2 flex flex-wrap items-center gap-3">
+      <div className="flex min-w-0 flex-1 flex-wrap items-center gap-1">
         <span className="shrink-0 text-xs font-medium text-health-text">Health</span>
         {linkedResourcesReadOnly ? (
           <span className="text-xs font-medium" title={linkedResourcesTitle}>
@@ -201,7 +210,8 @@ export function CombatantCardResources({
               }
               aria-label={`Current health for ${name}`}
               className={cn(
-                'touch-tier-standard w-12 rounded border px-1 py-0.5 text-center text-xs font-medium',
+                'touch-tier-standard rounded border px-1 py-0.5 text-center text-xs font-medium',
+                COMBATANT_RESOURCE_NUMBER_INPUT_CLASS,
                 combatant.currentHealth <= 0
                   ? 'border-danger-300 bg-danger-light text-danger-fg'
                   : 'border-border-light text-health-text',
@@ -214,7 +224,10 @@ export function CombatantCardResources({
               value={combatant.maxHealth}
               onChange={(e) => onUpdate({ maxHealth: parseInt(e.target.value) || 1 })}
               aria-label={`Maximum health for ${name}`}
-              className="touch-tier-standard w-12 rounded border border-border-light px-1 py-0.5 text-center text-xs"
+              className={cn(
+                'touch-tier-standard rounded border border-border-light px-1 py-0.5 text-center text-xs',
+                COMBATANT_RESOURCE_NUMBER_INPUT_CLASS,
+              )}
             />
             <ValueStepper
               value={combatant.currentHealth}
@@ -241,7 +254,7 @@ export function CombatantCardResources({
         </div>
       </div>
 
-      <div className="flex min-w-0 flex-1 items-center gap-1">
+      <div className="flex min-w-0 flex-1 flex-wrap items-center gap-1">
         <span className="shrink-0 text-xs font-medium text-energy-text">Energy</span>
         {linkedResourcesReadOnly ? (
           <span className="text-xs font-medium" title={linkedResourcesTitle}>
@@ -263,7 +276,8 @@ export function CombatantCardResources({
               onChange={(e) => onUpdate({ currentEnergy: parseInt(e.target.value) || 0 })}
               aria-label={`Current energy for ${name}`}
               className={cn(
-                'touch-tier-standard w-12 rounded border border-border-light px-1 py-0.5 text-center text-xs font-medium text-energy-text',
+                'touch-tier-standard rounded border border-border-light px-1 py-0.5 text-center text-xs font-medium text-energy-text',
+                COMBATANT_RESOURCE_NUMBER_INPUT_CLASS,
                 resourceCurrentValueClass('energy', combatant.currentEnergy, combatant.maxEnergy),
               )}
             />
@@ -273,7 +287,10 @@ export function CombatantCardResources({
               value={combatant.maxEnergy}
               onChange={(e) => onUpdate({ maxEnergy: parseInt(e.target.value) || 0 })}
               aria-label={`Maximum energy for ${name}`}
-              className="touch-tier-standard w-12 rounded border border-border-light px-1 py-0.5 text-center text-xs"
+              className={cn(
+                'touch-tier-standard rounded border border-border-light px-1 py-0.5 text-center text-xs',
+                COMBATANT_RESOURCE_NUMBER_INPUT_CLASS,
+              )}
             />
             <ValueStepper
               value={combatant.currentEnergy}

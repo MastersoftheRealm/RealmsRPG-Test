@@ -6,6 +6,7 @@
 
 import { Button, Card } from '@/components/ui';
 import type { Encounter } from '@/types/encounter';
+import { encounterAfterAutoSortToggle } from './combat-encounter-helpers';
 
 export interface CombatRoundControlsProps {
   encounter: Encounter;
@@ -79,11 +80,10 @@ export function CombatRoundControls({
         <input
           type="checkbox"
           checked={encounter.autoSortInitiative !== false}
-          onChange={(e) =>
-            setEncounter((prev) =>
-              prev ? { ...prev, autoSortInitiative: e.target.checked } : prev,
-            )
-          }
+          onChange={(e) => {
+            const enabled = e.target.checked;
+            setEncounter((prev) => (prev ? encounterAfterAutoSortToggle(prev, enabled) : prev));
+          }}
           className="rounded border-border-light"
         />
         Auto Sort Initiative
