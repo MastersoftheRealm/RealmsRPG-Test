@@ -19,7 +19,10 @@ import { useState, useMemo, useCallback, useId } from 'react';
 import { cn } from '@/lib/utils';
 import { Alert, Modal } from '@/components/ui';
 import { useSort } from '@/hooks/use-sort';
-import { selectionDiffersFromInitial } from './unified-selection-modal-helpers';
+import {
+  itemsWithSelectionQuantity,
+  selectionDiffersFromInitial,
+} from './unified-selection-modal-helpers';
 import { UnifiedSelectionModalFooter } from './unified-selection-modal-footer';
 import { UnifiedSelectionModalLeavePrompt } from './unified-selection-modal-leave-prompt';
 import {
@@ -27,7 +30,7 @@ import {
   UnifiedSelectionModalList,
 } from './unified-selection-modal-list';
 import { UnifiedSelectionModalToolbar } from './unified-selection-modal-toolbar';
-import type { SelectableItem, UnifiedSelectionModalProps } from './unified-selection-modal-types';
+import type { UnifiedSelectionModalProps } from './unified-selection-modal-types';
 
 export type {
   SelectableItem,
@@ -182,6 +185,11 @@ export function UnifiedSelectionModal({
     [items, selectedIds],
   );
 
+  const selectedForActions = useMemo(
+    () => (showQuantity ? itemsWithSelectionQuantity(selectedItems, quantities) : selectedItems),
+    [showQuantity, selectedItems, quantities],
+  );
+
   const overSelectionLimit = maxSelections !== undefined && selectedIds.size > maxSelections;
   const showSelectionLimitWarning =
     maxSelections !== undefined && (maxSelections === 0 || overSelectionLimit);
@@ -194,29 +202,16 @@ export function UnifiedSelectionModal({
 
   const handleConfirm = useCallback(() => {
     if (overSelectionLimit) return;
-    if (confirmDisabled?.(selectedItems)) return;
-    const selected = selectedItems;
-    if (showQuantity) {
-      selected.forEach((item) => {
-        (item as SelectableItem & { quantity?: number | undefined }).quantity =
-          quantities[String(item.id)] || 1;
-      });
-    }
+    if (confirmDisabled?.(selectedForActions)) return;
     setLeaveConfirmOpen(false);
-    onConfirm(selected);
+    onConfirm(selectedForActions);
     onClose();
-  }, [
-    overSelectionLimit,
-    confirmDisabled,
-    selectedItems,
-    showQuantity,
-    quantities,
-    onConfirm,
-    onClose,
-  ]);
+  }, [overSelectionLimit, confirmDisabled, selectedForActions, onConfirm, onClose]);
 
   const isConfirmDisabled =
-    selectedIds.size === 0 || overSelectionLimit || (confirmDisabled?.(selectedItems) ?? false);
+    selectedIds.size === 0 ||
+    overSelectionLimit ||
+    (confirmDisabled?.(selectedForActions) ?? false);
 
   const handleRequestClose = useCallback(() => {
     const hasUnconfirmedSelection = selectionDiffersFromInitial(
@@ -301,7 +296,7 @@ export function UnifiedSelectionModal({
         )}
         footer={
           <UnifiedSelectionModalFooter
-            selectedItems={selectedItems}
+            selectedItems={selectedForActions}
             selectedCount={selectedIds.size}
             itemLabel={itemLabel}
             maxSelections={maxSelections}

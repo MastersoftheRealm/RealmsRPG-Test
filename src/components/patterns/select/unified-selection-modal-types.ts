@@ -37,6 +37,8 @@ interface SelectableItemFields {
   thumbnail?: ListRowThumbnailProps | undefined;
   /** Any extra data attached to the item (e.g. raw Feat, Skill for onConfirm) */
   data?: unknown | undefined;
+  /** Copy count while a quantity stepper is open. Absent means one copy. */
+  quantity?: number | undefined;
   /**
    * Power/technique advanced-filter row for `applyPowerTechniqueFilters` (USM).
    * Does not replace `data` — confirm mappers still read the raw library item from `data`.

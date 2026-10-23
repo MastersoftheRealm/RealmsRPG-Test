@@ -5,6 +5,7 @@
  * OAuth `?code=` is redirected in `src/proxy.ts` before this page renders.
  */
 
+import type { Metadata } from 'next';
 import {
   HeroSection,
   UniquenessSection,
@@ -12,6 +13,10 @@ import {
   SecondaryDiscoverySection,
   CommunitySection,
 } from '@/components/landing';
+
+export const metadata: Metadata = {
+  alternates: { canonical: '/' },
+};
 
 export default function HomePage() {
   return (
