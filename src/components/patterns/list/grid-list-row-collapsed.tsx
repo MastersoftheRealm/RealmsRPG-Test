@@ -242,10 +242,12 @@ export function GridListRowCollapsed({
               }}
               className={ROW_NAME_BUTTON_CLASS}
             >
-              <span className="block min-w-0 truncate">{nameContent ?? name}</span>
+              <span className="block min-w-0 max-lg:line-clamp-2 lg:truncate">
+                {nameContent ?? name}
+              </span>
             </button>
           ) : (
-            <span className="min-w-0 truncate" title={name}>
+            <span className="block min-w-0 max-lg:line-clamp-2 lg:truncate" title={name}>
               {nameContent ?? name}
             </span>
           )}
@@ -417,6 +419,8 @@ export interface GridListRowExternalChromeProps {
   reserveRightSlotChrome?: boolean | undefined;
   /** Overrides default energy/use rightSlot width (e.g. USM quantity 7.5rem). */
   rightSlotWidth?: string | undefined;
+  /** Below `lg`, let the slot shrink to its controls instead of the desktop track. */
+  fitRightSlotToContent?: boolean | undefined;
   onEdit?: (() => void) | undefined;
   onDelete?: (() => void) | undefined;
   selectable?: boolean | undefined;
@@ -432,6 +436,7 @@ export function GridListRowExternalChrome({
   rightSlot,
   reserveRightSlotChrome = false,
   rightSlotWidth,
+  fitRightSlotToContent = false,
   onEdit,
   onDelete,
   selectable = false,
@@ -448,7 +453,10 @@ export function GridListRowExternalChrome({
     <div className="flex min-h-[44px] flex-shrink-0 items-center pr-1">
       {showRightSlot && (
         <div
-          className="flex flex-shrink-0 items-center justify-center"
+          className={cn(
+            'flex flex-shrink-0 items-center justify-center',
+            fitRightSlotToContent && 'max-lg:!w-max',
+          )}
           style={{ width: resolvedRightSlotWidth }}
           onClick={(e) => e.stopPropagation()}
           aria-hidden={reserveRightSlotChrome && !rightSlot ? true : undefined}

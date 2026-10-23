@@ -106,6 +106,12 @@ interface ListHeaderRowChromeFields {
   /** GridListRow `onDelete` X */
   delete?: boolean | undefined;
   /**
+   * Phone widths: size an occupied right slot to the controls in it (one sync
+   * icon, or two) instead of the desktop energy-button track. Desktop alignment
+   * keeps the standard slot width.
+   */
+  mobileRightSlotFitsContent?: boolean | undefined;
+  /**
    * Selection toggle rendered outside the row grid (rare).
    * Do not combine with `hasSelectionColumn` (that reserves space inside the grid).
    */

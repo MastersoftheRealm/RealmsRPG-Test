@@ -334,6 +334,28 @@ export function buildTechniquesForDisplay(
       image_url:
         enriched?.image_url ?? (ref as { image_url?: string | null | undefined }).image_url,
     };
+    const hasObjectParts = parts.some((part) => typeof part !== 'string');
+    // A library match or saved parts can be priced. A creature-only snapshot
+    // (no parts) keeps the stored Energy, Attack, and Training Pts.
+    const canRecompute = !!enriched || hasObjectParts;
+
+    if (!canRecompute) {
+      const storedDamage = typeof ref.damage === 'string' ? ref.damage : undefined;
+      const storedSections = glrSurfaceDetailSections('creature-stat-block-technique', {
+        damage: storedDamage,
+      });
+      return {
+        id: `${creature.id}-tech-${refId ?? idx}`,
+        name: baseName,
+        description: baseDescription,
+        thumbnail: resolveListRowThumbnail('technique', imageRecord, baseName),
+        actionType: ref.action,
+        energyCost: ref.energy,
+        weaponName: ref.weapon,
+        tp: ref.tp,
+        detailSections: storedSections.length > 0 ? storedSections : undefined,
+      };
+    }
 
     const derived = deriveTechniqueDisplay(
       {

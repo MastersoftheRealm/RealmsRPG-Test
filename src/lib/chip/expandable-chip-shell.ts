@@ -20,7 +20,7 @@ export function expandableChipShellClass({
   className?: string | undefined;
 }) {
   return cn(
-    'inline-flex flex-col items-start font-medium transition-[box-shadow,background-color,border-color,padding,ring] duration-base ease-standard',
+    'inline-flex max-w-full min-w-0 flex-col items-start font-medium transition-[box-shadow,background-color,border-color,padding,ring] duration-base ease-standard',
     chipVariants({ variant, shape: 'expandable', size: expandableShellChipSize(size) }),
     // ExpandableChip's shared layout promotes this shell (or its local action wrapper)
     // to a full-width flex row while preserving the collapsed row's vertical origin.

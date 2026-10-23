@@ -480,6 +480,9 @@ export function useCreatureCreatorWorkspace() {
     load,
     editCreatureId,
     isAdmin,
+    powerPartsDb,
+    techniquePartsDb,
+    itemPropertiesDb,
   });
 
   useCreatorEditMissNotice(

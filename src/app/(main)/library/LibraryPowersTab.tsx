@@ -52,7 +52,12 @@ import { useLibraryEntitySync } from './hooks/use-library-entity-sync';
 import { useLibraryDuplicateConfirm } from './hooks/use-library-duplicate-confirm';
 import { resolveListRowThumbnail } from '@/lib/list-row-image';
 
-const POWER_ROW_CHROME = { edit: true, delete: true, rightSlot: true } as const;
+const POWER_ROW_CHROME = {
+  edit: true,
+  delete: true,
+  rightSlot: true,
+  mobileRightSlotFitsContent: true,
+} as const;
 
 interface LibraryPowersTabProps {
   onDelete: (item: DisplayItem) => void;

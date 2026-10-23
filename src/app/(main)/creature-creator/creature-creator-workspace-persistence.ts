@@ -3,6 +3,7 @@
 import { useCallback, useState, type Dispatch, type SetStateAction } from 'react';
 import type { SelectableItem } from '@/components/patterns';
 import { useCreatorSave } from '@/hooks';
+import { stampCreatureSyncMeta } from '@/lib/library-sync';
 import { useCreatorDraftDirty } from '@/hooks/use-creator-unsaved-guard';
 import {
   findLoadedLibraryItem,
@@ -24,6 +25,9 @@ type CreatureSaveStats = {
   isOverBudget: boolean;
 };
 
+type SyncPartDb = Parameters<typeof stampCreatureSyncMeta>[1];
+type SyncPropertyDb = Parameters<typeof stampCreatureSyncMeta>[3];
+
 type UseCreatureCreatorWorkspacePersistenceArgs = {
   creature: CreatureState;
   setCreature: Dispatch<SetStateAction<CreatureState>>;
@@ -34,6 +38,9 @@ type UseCreatureCreatorWorkspacePersistenceArgs = {
   };
   editCreatureId: string | null;
   isAdmin: boolean;
+  powerPartsDb: SyncPartDb;
+  techniquePartsDb: SyncPartDb;
+  itemPropertiesDb: SyncPropertyDb;
 };
 
 export function useCreatureCreatorWorkspacePersistence({
@@ -43,14 +50,25 @@ export function useCreatureCreatorWorkspacePersistence({
   load,
   editCreatureId,
   isAdmin,
+  powerPartsDb,
+  techniquePartsDb,
+  itemPropertiesDb,
 }: UseCreatureCreatorWorkspacePersistenceArgs) {
+  const draftSnapshot = JSON.stringify({
+    name: creature.name.trim(),
+    data: creature,
+  });
   const getPayload = useCallback(() => {
     return {
       name: creature.name.trim(),
-      data: { ...creature },
+      data: stampCreatureSyncMeta(
+        { ...creature },
+        powerPartsDb,
+        techniquePartsDb,
+        itemPropertiesDb,
+      ),
     };
-  }, [creature]);
-  const draftSnapshot = JSON.stringify(getPayload());
+  }, [creature, itemPropertiesDb, powerPartsDb, techniquePartsDb]);
   const { isDirty: unsavedDirty, acceptDraft } = useCreatorDraftDirty(draftSnapshot);
 
   const save = useCreatorSave({

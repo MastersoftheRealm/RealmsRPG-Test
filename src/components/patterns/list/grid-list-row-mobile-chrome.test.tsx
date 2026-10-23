@@ -114,12 +114,40 @@ describe('GridListRow mobile external chrome overlay', () => {
         `calc(${GRID_LIST_ROW_ICON_COLUMN_WIDTH} + ${GRID_LIST_ROW_ICON_COLUMN_WIDTH})`,
       );
       expect(row.reserve).not.toContain('4rem');
-      expect(row.html).toContain('class="block min-w-0 truncate"');
+      expect(row.html).toContain('class="block min-w-0 max-lg:line-clamp-2 lg:truncate"');
       expect(row.html).toContain(`title="${row.name}"`);
     }
 
     const expanded = openTag(widths[0]!.html, 'data-glr-expanded-body');
     expect(expanded).toMatch(/grid-column:\s*1\s*\/\s*-1/);
+  });
+
+  it('sizes an occupied library sync slot to its icon below lg', () => {
+    const html = renderToStaticMarkup(
+      <GridListRow
+        id="qa-creature"
+        name="QA Sweep Creature 01 Extra"
+        description="Test creature."
+        gridColumns="1.4fr 1fr"
+        columns={[{ key: 'level', value: '1' }]}
+        rowChrome={{
+          edit: true,
+          delete: true,
+          rightSlot: true,
+          mobileRightSlotFitsContent: true,
+        }}
+        rightSlot={<button type="button">Sync</button>}
+        onEdit={() => {}}
+        onDelete={() => {}}
+        thumbnail={{ src: '/placeholder.png', alt: '' }}
+      />,
+    );
+    const header = openTag(html, 'data-glr-collapsed-header');
+    expect(header).not.toContain('max-lg:[grid-column:1/-1]');
+    expect(header).not.toContain('--glr-mobile-chrome-reserve');
+    expect(html).toContain('max-lg:!w-max');
+    expect(html).toContain('class="block min-w-0 max-lg:line-clamp-2 lg:truncate"');
+    expect(html).toContain('title="QA Sweep Creature 01 Extra"');
   });
 
   it('still reserves an occupied right slot so the name does not run under that control', () => {

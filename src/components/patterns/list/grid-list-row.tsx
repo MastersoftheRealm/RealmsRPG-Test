@@ -336,7 +336,10 @@ export const GridListRow = memo(function GridListRow({
   // body to the full card (86e3jxbrc). Row 1 still spans both tracks. Padding
   // clears real controls only — a blank right-slot reserve stays in column 2
   // for the body width, and the name uses that blank space.
-  const mobileExternalChromeOverlay = hasExternalChrome && !showLeftChrome;
+  const fitMobileRightSlot = rowChrome?.mobileRightSlotFitsContent === true && Boolean(rightSlot);
+  // An occupied sync icon is only as wide as that icon. Spanning the name under
+  // the desktop energy track left a blank gap and cut the name short.
+  const mobileExternalChromeOverlay = hasExternalChrome && !showLeftChrome && !fitMobileRightSlot;
   const mobileChromeReserve = mobileExternalChromeOverlay
     ? mobileCollapsedNameInlineEndReserve({
         showRightSlot: showRightSlotChrome,
@@ -458,6 +461,7 @@ export const GridListRow = memo(function GridListRow({
               rightSlot={externalRightSlot ? rightSlot : undefined}
               reserveRightSlotChrome={externalRightSlot && reserveRightSlotChrome}
               rightSlotWidth={rightSlotWidth}
+              fitRightSlotToContent={fitMobileRightSlot && externalRightSlot}
               onEdit={externalEdit ? onEdit : undefined}
               onDelete={externalDelete ? onDelete : undefined}
               selectable={externalSelectable}

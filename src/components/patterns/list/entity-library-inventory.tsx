@@ -37,6 +37,9 @@ import type {
   EntityEquipmentRow,
 } from './entity-library-sections-types';
 
+/** Attack roll + damage roll (sm) plus the gap between them. */
+const CREATURE_WEAPON_ROLL_SLOT_WIDTH = '7rem';
+
 export function WeaponsListSection({
   title = 'Weapons',
   items,
@@ -79,6 +82,8 @@ export function WeaponsListSection({
   );
   const cols = layout === 'characterSheet' ? CHARACTER_SHEET_WEAPON_COLUMNS : WEAPON_COLUMNS;
   const grid = layout === 'characterSheet' ? CHARACTER_SHEET_WEAPON_GRID : WEAPON_GRID;
+  const showRollSlot = layout === 'creature' && rollContext?.canRoll !== false && !!rollContext;
+  const rollSlotWidth = showRollSlot ? CREATURE_WEAPON_ROLL_SLOT_WIDTH : undefined;
 
   const listBody = (
     <>
@@ -89,6 +94,7 @@ export function WeaponsListSection({
           sortState={sortState}
           onSort={onSort}
           rowChrome={rowChrome}
+          rightSlotWidth={rowChrome ? undefined : rollSlotWidth}
           hasThumbnailColumn
         />
       )}
@@ -154,6 +160,7 @@ export function WeaponsListSection({
                   chips={w.chips}
                   chipsLabel={w.chips?.length ? 'Properties & Proficiencies' : undefined}
                   rightSlot={w.rightSlot ?? rightSlot}
+                  rightSlotWidth={w.rightSlot ? undefined : rollSlotWidth}
                   leftSlot={w.leftSlot}
                   onDelete={w.onDelete}
                   badges={w.badges}
