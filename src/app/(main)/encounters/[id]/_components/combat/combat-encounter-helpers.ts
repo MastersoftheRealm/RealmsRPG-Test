@@ -88,7 +88,7 @@ function sortByRollAndAcuity(a: Combatant, b: Combatant): number {
 }
 
 /** Ally/enemy alternate order with companions last (Sort Initiative / auto-sort). */
-export function orderCombatantsByInitiative(combatants: Combatant[]): Combatant[] {
+export function orderCombatantsByInitiative<T extends Combatant>(combatants: readonly T[]): T[] {
   const companions = combatants
     .filter((c) => c.combatantType === 'companion')
     .sort(sortByRollAndAcuity);
@@ -100,7 +100,7 @@ export function orderCombatantsByInitiative(combatants: Combatant[]): Combatant[
   } else if (!allies[0]) {
     startWithAlly = false;
   }
-  const sorted: Combatant[] = [];
+  const sorted: T[] = [];
   const alliesCopy = [...allies];
   const enemiesCopy = [...enemies];
   let useAlly = startWithAlly;
@@ -112,6 +112,66 @@ export function orderCombatantsByInitiative(combatants: Combatant[]): Combatant[
     useAlly = !useAlly;
   }
   return [...sorted, ...companions];
+}
+
+/** Omitted `autoSortInitiative` means on, matching the checkbox. */
+export function autoSortInitiativeEnabled(
+  encounter: Pick<Encounter, 'autoSortInitiative'>,
+): boolean {
+  return encounter.autoSortInitiative !== false;
+}
+
+/**
+ * Replace the roster. When `sortByInitiative` is set, store initiative order and
+ * keep the current turn on the same combatant.
+ */
+export function encounterWithCombatantRoster(
+  encounter: Encounter,
+  combatants: TrackedCombatant[],
+  sortByInitiative: boolean,
+): Encounter {
+  if (!sortByInitiative) return { ...encounter, combatants };
+  const oldSorted = sortCombatantsForTurnOrder(encounter.combatants, encounter.round);
+  const ordered = orderCombatantsByInitiative(combatants);
+  const newSorted = sortCombatantsForTurnOrder(ordered, encounter.round);
+  return {
+    ...encounter,
+    combatants: ordered,
+    currentTurnIndex: remapTurnIndexAfterReorder(encounter.currentTurnIndex, oldSorted, newSorted),
+  };
+}
+
+/** Append combatants, sorting when Auto Sort Initiative is on. */
+export function encounterAfterAddingCombatants(
+  encounter: Encounter,
+  added: readonly TrackedCombatant[],
+): Encounter {
+  if (added.length === 0) return encounter;
+  return encounterWithCombatantRoster(
+    encounter,
+    [...encounter.combatants, ...added],
+    autoSortInitiativeEnabled(encounter),
+  );
+}
+
+/** Apply an edited roster. Re-sort only when an initiative value actually changed. */
+export function encounterAfterInitiativeEdit(
+  encounter: Encounter,
+  combatants: TrackedCombatant[],
+  initiativeChanged: boolean,
+): Encounter {
+  return encounterWithCombatantRoster(
+    encounter,
+    combatants,
+    initiativeChanged && autoSortInitiativeEnabled(encounter),
+  );
+}
+
+/** Turning Auto Sort Initiative on orders the current roster. Turning it off leaves order as-is. */
+export function encounterAfterAutoSortToggle(encounter: Encounter, enabled: boolean): Encounter {
+  const next = { ...encounter, autoSortInitiative: enabled };
+  if (!enabled) return next;
+  return encounterWithCombatantRoster(next, next.combatants, true);
 }
 
 export type NewCombatantForm = {
