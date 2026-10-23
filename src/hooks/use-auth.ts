@@ -11,6 +11,7 @@ import { useQueryClient } from '@tanstack/react-query';
 import { createClient } from '@/lib/supabase/client';
 import { buildAuthCaptchaOptions } from '@/lib/auth/captcha';
 import { shouldClearQueryCacheOnAuthEvent } from '@/lib/auth/should-clear-query-cache-on-auth-event';
+import { shouldIgnoreNullAuthSession } from '@/lib/auth/should-ignore-null-auth-session';
 import { useAuthStore } from '@/stores/auth-store';
 import type { AuthUser } from '@/types/auth';
 import {
@@ -111,50 +112,44 @@ export function useAuth() {
     }
 
     const supabase = createClient();
-    let listenerFired = false;
 
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange((event, session) => {
-      listenerFired = true;
-      if (mountedRef.current) {
-        const previousUserId = useAuthStore.getState().user?.uid ?? null;
-        const nextUser = toAuthUser(session?.user ?? null);
-        setUser(nextUser);
+      if (!mountedRef.current) return;
+      const previousUserId = useAuthStore.getState().user?.uid ?? null;
+      const nextUser = toAuthUser(session?.user ?? null);
+      // Do not call getUser() here. It always hits the Auth server, holds the
+      // auth lock ahead of INITIAL_SESSION, and a null result used to stick
+      // the store on signed-out while the cookie session was still valid.
+      if (
+        shouldIgnoreNullAuthSession({
+          event,
+          previousUserId,
+          nextUserId: nextUser?.uid ?? null,
+        })
+      ) {
         setInitialized(true);
-        // Clear only on identity change / sign-out — not tab-focus recovery SIGNED_IN (TASK-903).
-        if (
-          shouldClearQueryCacheOnAuthEvent({
-            event,
-            previousUserId,
-            nextUserId: nextUser?.uid ?? null,
-          })
-        ) {
-          queryClient.clear();
-        }
-        if (event === 'SIGNED_IN' && session?.user) {
-          // Every mounted useAuth listener fires this. Migration claims one
-          // in-flight promise before its first request (86e3jmw1m).
-          migrateGuestDataOnSignIn();
-        }
+        return;
+      }
+      setUser(nextUser);
+      setInitialized(true);
+      // Clear only on identity change / sign-out — not tab-focus recovery SIGNED_IN (TASK-903).
+      if (
+        shouldClearQueryCacheOnAuthEvent({
+          event,
+          previousUserId,
+          nextUserId: nextUser?.uid ?? null,
+        })
+      ) {
+        queryClient.clear();
+      }
+      if (event === 'SIGNED_IN' && session?.user) {
+        // Every mounted useAuth listener fires this. Migration claims one
+        // in-flight promise before its first request (86e3jmw1m).
+        migrateGuestDataOnSignIn();
       }
     });
-
-    // Ignore getUser if onAuthStateChange already delivered the live session.
-    supabase.auth
-      .getUser()
-      .then(({ data: { user: u } }) => {
-        if (mountedRef.current && !listenerFired) {
-          setUser(toAuthUser(u));
-          setInitialized(true);
-        }
-      })
-      .catch(() => {
-        if (mountedRef.current && !listenerFired) {
-          setError('Failed to initialize auth');
-          setInitialized(true);
-        }
-      });
 
     return () => {
       mountedRef.current = false;
