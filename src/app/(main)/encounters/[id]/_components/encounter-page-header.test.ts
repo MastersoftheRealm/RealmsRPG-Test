@@ -14,9 +14,10 @@ const headerSource = readFileSync(
 describe('EncounterPageHeader guest save status (86e3jrra6)', () => {
   it('shows Saved locally when persistence is guest localStorage', () => {
     expect(headerSource).toContain('useAuth');
+    expect(headerSource).toContain('initialized');
     expect(headerSource).toContain('usesLocalPersistence');
     expect(headerSource).toContain('Saved locally');
     expect(headerSource).toContain('Saved to cloud');
-    expect(headerSource).toMatch(/usesLocalPersistence\s*\?/);
+    expect(headerSource).toMatch(/!initialized \? null : usesLocalPersistence\s*\?/);
   });
 });

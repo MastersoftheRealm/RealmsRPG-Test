@@ -5,7 +5,7 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { getSession } from '@/lib/supabase/session';
+import { requireLiveUser } from '@/lib/supabase/session';
 import { isAdmin } from '@/lib/admin';
 import { createServiceRoleClient } from '@/lib/supabase/server';
 import {
@@ -27,8 +27,10 @@ const MAX_SIZE = 5 * 1024 * 1024;
 type RouteContext = { params: Promise<{ id: string }> };
 
 export async function POST(request: NextRequest, context: RouteContext) {
-  const { user, error: sessionError } = await getSession();
-  if (sessionError || !user?.uid) {
+  let user;
+  try {
+    user = await requireLiveUser();
+  } catch {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
   if (!(await isAdmin(user.uid))) {

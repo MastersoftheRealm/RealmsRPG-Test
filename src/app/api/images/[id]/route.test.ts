@@ -2,7 +2,7 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { NextRequest } from 'next/server';
 
 vi.mock('@/lib/supabase/session', () => ({
-  getSession: vi.fn(),
+  requireLiveUser: vi.fn(),
 }));
 
 vi.mock('@/lib/admin', () => ({
@@ -19,12 +19,12 @@ vi.mock('@/lib/realms-images-server', () => ({
 }));
 
 import { GET, PATCH, DELETE } from './route';
-import { getSession } from '@/lib/supabase/session';
+import { requireLiveUser } from '@/lib/supabase/session';
 import { isAdmin } from '@/lib/admin';
 import { createClient, createServiceRoleClient } from '@/lib/supabase/server';
 import { fetchRealmsImageById } from '@/lib/realms-images-server';
 
-const mockGetSession = vi.mocked(getSession);
+const mockRequireLiveUser = vi.mocked(requireLiveUser);
 const mockIsAdmin = vi.mocked(isAdmin);
 const mockCreateClient = vi.mocked(createClient);
 const mockCreateServiceRoleClient = vi.mocked(createServiceRoleClient);
@@ -84,7 +84,7 @@ describe('GET /api/images/[id]', () => {
     const body = await readJson<{ id: string; name: string }>(response);
     expect(body.id).toBe(IMAGE_ID);
     expect(body.name).toBe('Dagger');
-    expect(mockGetSession).not.toHaveBeenCalled();
+    expect(mockRequireLiveUser).not.toHaveBeenCalled();
   });
 });
 
@@ -94,7 +94,7 @@ describe('PATCH /api/images/[id]', () => {
   });
 
   it('returns 401 when session is missing', async () => {
-    mockGetSession.mockResolvedValue({ user: null, error: 'No session' });
+    mockRequireLiveUser.mockRejectedValue(new Error('Authentication required'));
 
     const response = await PATCH(makePatchRequest(IMAGE_ID), params(IMAGE_ID));
 
@@ -104,7 +104,7 @@ describe('PATCH /api/images/[id]', () => {
   });
 
   it('returns 403 when the user is authenticated but not admin', async () => {
-    mockGetSession.mockResolvedValue({ user: USER, error: null });
+    mockRequireLiveUser.mockResolvedValue(USER);
     mockIsAdmin.mockResolvedValue(false);
 
     const response = await PATCH(makePatchRequest(IMAGE_ID), params(IMAGE_ID));
@@ -121,7 +121,7 @@ describe('DELETE /api/images/[id]', () => {
   });
 
   it('returns 401 when session is missing', async () => {
-    mockGetSession.mockResolvedValue({ user: null, error: 'No session' });
+    mockRequireLiveUser.mockRejectedValue(new Error('Authentication required'));
 
     const response = await DELETE(makeDeleteRequest(IMAGE_ID), params(IMAGE_ID));
 
@@ -130,7 +130,7 @@ describe('DELETE /api/images/[id]', () => {
   });
 
   it('returns 403 when the user is authenticated but not admin', async () => {
-    mockGetSession.mockResolvedValue({ user: USER, error: null });
+    mockRequireLiveUser.mockResolvedValue(USER);
     mockIsAdmin.mockResolvedValue(false);
 
     const response = await DELETE(makeDeleteRequest(IMAGE_ID), params(IMAGE_ID));

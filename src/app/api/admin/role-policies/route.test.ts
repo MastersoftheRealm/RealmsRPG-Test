@@ -3,6 +3,7 @@ import { NextRequest } from 'next/server';
 
 vi.mock('@/lib/admin', () => ({
   requireAdminSession: vi.fn(),
+  requireLiveAdminSession: vi.fn(),
 }));
 
 vi.mock('@/lib/supabase/server', () => ({
@@ -10,10 +11,11 @@ vi.mock('@/lib/supabase/server', () => ({
 }));
 
 import { GET, PATCH } from './route';
-import { requireAdminSession } from '@/lib/admin';
+import { requireAdminSession, requireLiveAdminSession } from '@/lib/admin';
 import { createClient } from '@/lib/supabase/server';
 
 const mockRequireAdminSession = vi.mocked(requireAdminSession);
+const mockRequireLiveAdminSession = vi.mocked(requireLiveAdminSession);
 const mockCreateClient = vi.mocked(createClient);
 
 function createMockSupabase() {
@@ -91,7 +93,7 @@ describe('PATCH /api/admin/role-policies', () => {
   });
 
   it('returns 401 when session is missing', async () => {
-    mockRequireAdminSession.mockResolvedValue({
+    mockRequireLiveAdminSession.mockResolvedValue({
       ok: false,
       status: 401,
       body: { error: 'Unauthorized' },
@@ -105,7 +107,7 @@ describe('PATCH /api/admin/role-policies', () => {
   });
 
   it('returns 403 when the user is authenticated but not admin', async () => {
-    mockRequireAdminSession.mockResolvedValue({
+    mockRequireLiveAdminSession.mockResolvedValue({
       ok: false,
       status: 403,
       body: { error: 'Forbidden' },

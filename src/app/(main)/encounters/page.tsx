@@ -88,7 +88,7 @@ export default function EncountersPage() {
 function EncountersContent() {
   const { tabGroupId, sharedPanelId } = useTabGroup();
   const router = useRouter();
-  const { user } = useAuth();
+  const { user, initialized } = useAuth();
   const { showToast } = useToast();
   const { data: encounters = [], isLoading, error, refetch } = useEncounters();
   const createEncounter = useCreateEncounter();
@@ -181,7 +181,7 @@ function EncountersContent() {
 
   return (
     <PageContainer size="xl">
-      {!user && (
+      {initialized && !user && (
         <div className="mb-4 rounded-lg border border-primary-subtle-border bg-primary-subtle-bg px-4 py-3 text-sm text-text-primary">
           You&apos;re using encounters locally. Sign in to save encounters to your account.
           <Link
@@ -247,7 +247,7 @@ function EncountersContent() {
         </div>
 
         {/* Content */}
-        {isLoading ? (
+        {!initialized || isLoading ? (
           <LoadingState message="Loading encounters..." />
         ) : error ? (
           <ErrorDisplay

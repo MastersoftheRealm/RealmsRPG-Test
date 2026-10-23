@@ -35,16 +35,18 @@ export const encounterKeys = {
 
 /** List all encounters for current user (or guest list from localStorage) */
 export function useEncounters() {
-  const { user } = useAuth();
+  const { user, initialized } = useAuth();
   return useQuery<EncounterSummary[], Error>({
     queryKey: [...encounterKeys.list(), user?.id ?? 'guest'],
     queryFn: () => (user ? getEncounters() : Promise.resolve(getGuestEncountersList())),
+    // Wait until auth resolves so a signed-in visit does not load the guest list first.
+    enabled: initialized,
   });
 }
 
 /** Get a single encounter by ID (API or guest localStorage) */
 export function useEncounter(encounterId: string | undefined) {
-  const { user } = useAuth();
+  const { user, initialized } = useAuth();
   return useQuery<Encounter | null, Error>({
     queryKey: encounterKeys.detail(encounterId || ''),
     queryFn: () => {
@@ -53,7 +55,8 @@ export function useEncounter(encounterId: string | undefined) {
       if (isGuestEncounterId(encounterId)) return Promise.resolve(getGuestEncounter(encounterId));
       return getEncounter(encounterId);
     },
-    enabled: !!encounterId,
+    // Same gate as the list: do not fetch the guest copy before auth resolves.
+    enabled: initialized && !!encounterId,
   });
 }
 

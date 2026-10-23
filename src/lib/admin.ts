@@ -6,7 +6,7 @@
  */
 
 import { createClient } from '@/lib/supabase/server';
-import { getSession } from '@/lib/supabase/session';
+import { getSession, requireLiveUser } from '@/lib/supabase/session';
 import { logApiError } from '@/lib/api-error';
 
 export type AdminSessionResult =
@@ -38,6 +38,7 @@ export async function isAdmin(uid: string | null | undefined): Promise<boolean> 
 /**
  * Require an authenticated admin session for API routes and server actions.
  * Returns the admin user id on success; otherwise a status + error body.
+ * Verifies the access token locally. Admin mutations use `requireLiveAdminSession`.
  */
 export async function requireAdminSession(): Promise<AdminSessionResult> {
   const { user, error } = await getSession();
@@ -48,4 +49,21 @@ export async function requireAdminSession(): Promise<AdminSessionResult> {
     return { ok: false, status: 403, body: { error: 'Forbidden' } };
   }
   return { ok: true, userId: user.uid };
+}
+
+/**
+ * Same contract as `requireAdminSession`, but confirms the user with Auth's
+ * `/user` endpoint first. Use this for admin mutations and privilege changes.
+ * Reads stay on `requireAdminSession`.
+ */
+export async function requireLiveAdminSession(): Promise<AdminSessionResult> {
+  try {
+    const user = await requireLiveUser();
+    if (!(await isAdmin(user.uid))) {
+      return { ok: false, status: 403, body: { error: 'Forbidden' } };
+    }
+    return { ok: true, userId: user.uid };
+  } catch {
+    return { ok: false, status: 401, body: { error: 'Unauthorized' } };
+  }
 }

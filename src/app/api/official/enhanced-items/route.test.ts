@@ -3,6 +3,7 @@ import { NextRequest } from 'next/server';
 
 vi.mock('@/lib/admin', () => ({
   requireAdminSession: vi.fn(),
+  requireLiveAdminSession: vi.fn(),
 }));
 
 vi.mock('@/lib/supabase/server', () => ({
@@ -10,10 +11,11 @@ vi.mock('@/lib/supabase/server', () => ({
 }));
 
 import { GET, POST, PATCH, DELETE } from './route';
-import { requireAdminSession } from '@/lib/admin';
+import { requireAdminSession, requireLiveAdminSession } from '@/lib/admin';
 import { createClient } from '@/lib/supabase/server';
 
 const mockRequireAdminSession = vi.mocked(requireAdminSession);
+const mockRequireLiveAdminSession = vi.mocked(requireLiveAdminSession);
 const mockCreateClient = vi.mocked(createClient);
 
 function createListSupabase() {
@@ -96,7 +98,7 @@ describe('/api/official/enhanced-items (admin-only)', () => {
   });
 
   it('POST returns 401 when session is missing', async () => {
-    mockRequireAdminSession.mockResolvedValue({
+    mockRequireLiveAdminSession.mockResolvedValue({
       ok: false,
       status: 401,
       body: { error: 'Unauthorized' },
@@ -109,7 +111,7 @@ describe('/api/official/enhanced-items (admin-only)', () => {
   });
 
   it('POST returns 403 when the user is authenticated but not admin', async () => {
-    mockRequireAdminSession.mockResolvedValue({
+    mockRequireLiveAdminSession.mockResolvedValue({
       ok: false,
       status: 403,
       body: { error: 'Forbidden' },
@@ -122,7 +124,7 @@ describe('/api/official/enhanced-items (admin-only)', () => {
   });
 
   it('PATCH returns 401 when session is missing', async () => {
-    mockRequireAdminSession.mockResolvedValue({
+    mockRequireLiveAdminSession.mockResolvedValue({
       ok: false,
       status: 401,
       body: { error: 'Unauthorized' },
@@ -135,7 +137,7 @@ describe('/api/official/enhanced-items (admin-only)', () => {
   });
 
   it('PATCH returns 403 when the user is authenticated but not admin', async () => {
-    mockRequireAdminSession.mockResolvedValue({
+    mockRequireLiveAdminSession.mockResolvedValue({
       ok: false,
       status: 403,
       body: { error: 'Forbidden' },
@@ -148,7 +150,7 @@ describe('/api/official/enhanced-items (admin-only)', () => {
   });
 
   it('DELETE returns 401 when session is missing', async () => {
-    mockRequireAdminSession.mockResolvedValue({
+    mockRequireLiveAdminSession.mockResolvedValue({
       ok: false,
       status: 401,
       body: { error: 'Unauthorized' },
@@ -161,7 +163,7 @@ describe('/api/official/enhanced-items (admin-only)', () => {
   });
 
   it('DELETE returns 403 when the user is authenticated but not admin', async () => {
-    mockRequireAdminSession.mockResolvedValue({
+    mockRequireLiveAdminSession.mockResolvedValue({
       ok: false,
       status: 403,
       body: { error: 'Forbidden' },

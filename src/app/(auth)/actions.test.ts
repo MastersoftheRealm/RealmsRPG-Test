@@ -7,6 +7,7 @@ vi.mock('next/headers', () => ({ headers: vi.fn(async () => new Headers()) }));
 
 vi.mock('@/lib/supabase/session', () => ({
   requireAuth: vi.fn(),
+  requireLiveUser: vi.fn(),
   getSession: vi.fn(),
 }));
 
@@ -24,10 +25,11 @@ import {
   deleteAccountAction,
   setProfilePhotoFromLibraryAction,
 } from './actions';
-import { requireAuth, getSession } from '@/lib/supabase/session';
+import { requireAuth, requireLiveUser, getSession } from '@/lib/supabase/session';
 import { createClient as createServerClient, createServiceRoleClient } from '@/lib/supabase/server';
 
 const mockRequireAuth = vi.mocked(requireAuth);
+const mockRequireLiveUser = vi.mocked(requireLiveUser);
 const mockGetSession = vi.mocked(getSession);
 const mockCreateServerClient = vi.mocked(createServerClient);
 const mockCreateServiceRoleClient = vi.mocked(createServiceRoleClient);
@@ -99,6 +101,7 @@ function opLabels(ops: Op[]): string[] {
 beforeEach(() => {
   vi.clearAllMocks();
   mockRequireAuth.mockResolvedValue(USER as never);
+  mockRequireLiveUser.mockResolvedValue(USER as never);
   mockGetSession.mockResolvedValue({ user: USER, error: null } as never);
 });
 
@@ -328,6 +331,18 @@ describe('createUserProfileAction', () => {
 });
 
 describe('deleteAccountAction', () => {
+  it('does not delete anything when the live user check fails', async () => {
+    mockRequireLiveUser.mockRejectedValueOnce(new Error('Authentication required'));
+    const { client } = createSupabaseStub(() => ok());
+    useStub(client);
+
+    const result = await deleteAccountAction();
+
+    expect(result).toEqual({ success: false, error: 'Failed to delete account' });
+    expect(mockCreateServiceRoleClient).not.toHaveBeenCalled();
+    expect(client.auth.admin.deleteUser).not.toHaveBeenCalled();
+  });
+
   it('deletes the profile last so its cascade runs, then the auth user', async () => {
     const { client, ops } = createSupabaseStub((op) => {
       if (op.table === 'campaign_members' && op.action === 'select') return ok([]);

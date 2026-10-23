@@ -17,7 +17,7 @@ import {
 } from '@/lib/api/public-cdn-cache';
 import { createPublicClient } from '@/lib/supabase/public-client';
 import { createClient, createServiceRoleClient } from '@/lib/supabase/server';
-import { getSession } from '@/lib/supabase/session';
+import { getSession, requireLiveUser } from '@/lib/supabase/session';
 import { isAdmin } from '@/lib/admin';
 import {
   validateJson,
@@ -235,8 +235,10 @@ export async function POST(
   { params }: { params: Promise<{ type: string }> },
 ) {
   try {
-    const { user, error } = await getSession();
-    if (error || !user?.uid) {
+    let user;
+    try {
+      user = await requireLiveUser();
+    } catch {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
     if (!(await isAdmin(user.uid))) {
@@ -370,8 +372,10 @@ export async function PATCH(
   { params }: { params: Promise<{ type: string }> },
 ) {
   try {
-    const { user, error } = await getSession();
-    if (error || !user?.uid) {
+    let user;
+    try {
+      user = await requireLiveUser();
+    } catch {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
     if (!(await isAdmin(user.uid))) {
@@ -426,8 +430,10 @@ export async function DELETE(
   { params }: { params: Promise<{ type: string }> },
 ) {
   try {
-    const { user, error } = await getSession();
-    if (error || !user?.uid) {
+    let user;
+    try {
+      user = await requireLiveUser();
+    } catch {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
     if (!(await isAdmin(user.uid))) {

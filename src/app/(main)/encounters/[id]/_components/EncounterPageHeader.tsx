@@ -42,7 +42,7 @@ export function EncounterPageHeader({
   isSaving,
   hasUnsavedChanges,
 }: EncounterPageHeaderProps) {
-  const { user } = useAuth();
+  const { user, initialized } = useAuth();
   const usesLocalPersistence = !user;
   const typeLine = `${encounterType} Encounter${description ? ` \u2014 ${description}` : ''}`;
 
@@ -91,7 +91,7 @@ export function EncounterPageHeader({
                 <CloudOff className="h-3 w-3" aria-hidden />
                 Unsaved changes
               </span>
-            ) : usesLocalPersistence ? (
+            ) : !initialized ? null : usesLocalPersistence ? (
               <span className="flex items-center gap-1 text-success-fg">
                 <HardDrive className="h-3 w-3" aria-hidden />
                 Saved locally

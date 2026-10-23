@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 import { createClient } from '@/lib/supabase/server';
-import { requireAdminSession } from '@/lib/admin';
+import { requireAdminSession, requireLiveAdminSession } from '@/lib/admin';
 import { getGameRulesFallback } from '@/hooks/use-game-rules';
 import { apiErrorResponse } from '@/lib/api-error';
 import { validateJson, verifyMutationRequest } from '@/lib/api-validation';
@@ -133,7 +133,7 @@ export async function GET() {
 
 export async function POST(req: NextRequest) {
   try {
-    const auth = await requireAdminSession();
+    const auth = await requireLiveAdminSession();
     if (!auth.ok) {
       return NextResponse.json(auth.body, { status: auth.status });
     }
@@ -192,7 +192,7 @@ export async function POST(req: NextRequest) {
 
 export async function PATCH(req: NextRequest) {
   try {
-    const auth = await requireAdminSession();
+    const auth = await requireLiveAdminSession();
     if (!auth.ok) {
       return NextResponse.json(auth.body, { status: auth.status });
     }
@@ -290,7 +290,7 @@ export async function PATCH(req: NextRequest) {
 
 export async function DELETE(req: NextRequest) {
   try {
-    const auth = await requireAdminSession();
+    const auth = await requireLiveAdminSession();
     if (!auth.ok) {
       return NextResponse.json(auth.body, { status: auth.status });
     }

@@ -1,6 +1,6 @@
 'use server';
 
-import { getSession } from '@/lib/supabase/session';
+import { requireLiveUser } from '@/lib/supabase/session';
 import { isAdmin } from '@/lib/admin';
 import { recordCodexChange, type RecordCodexChangeInput } from '@/lib/codex-changelog';
 import { featTagsToNormalizeInput, parseFeatTagsFromDb } from '@/lib/codex/feat-tags';
@@ -42,8 +42,7 @@ const CONFLICT_MESSAGE =
   'This entity changed since you opened it. Reload the page and reapply your edit.';
 
 async function requireAdmin() {
-  const { user } = await getSession();
-  if (!user?.uid) throw new Error('Authentication required');
+  const user = await requireLiveUser();
   if (!(await isAdmin(user.uid))) throw new Error('Admin access required');
   return user.uid;
 }

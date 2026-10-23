@@ -10,6 +10,7 @@ import { FakeSupabase } from '@/lib/codex/fake-supabase';
 vi.mock('next/cache', () => ({ revalidatePath: vi.fn(), updateTag: vi.fn() }));
 vi.mock('@/lib/supabase/session', () => ({
   getSession: vi.fn(async () => ({ user: { uid: 'admin-1' } })),
+  requireLiveUser: vi.fn(async () => ({ uid: 'admin-1' })),
 }));
 vi.mock('@/lib/admin', () => ({ isAdmin: vi.fn(async () => true) }));
 vi.mock('@/lib/codex-changelog', () => ({ recordCodexChange: vi.fn(async () => undefined) }));

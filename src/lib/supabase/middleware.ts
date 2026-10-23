@@ -11,6 +11,7 @@ import {
   hasSupabaseAuthSessionCookie,
   isNextLinkPrefetchRequest,
 } from '@/lib/supabase/auth-cookies';
+import { getVerifiedClaims } from '@/lib/supabase/verified-claims';
 
 function isOAuthCallbackInProgress(request: NextRequest): boolean {
   return request.nextUrl.searchParams.has('code');
@@ -96,11 +97,14 @@ export async function updateSession(request: NextRequest) {
     },
   });
 
-  let user = null;
+  let userId: string | null = null;
   try {
-    // Must call getUser() to refresh token — prevents random logouts
-    const { data, error } = await supabase.auth.getUser();
-    user = data?.user ?? null;
+    // getClaims() still refreshes an access token that is near expiry (same
+    // cookie write as getUser) and then verifies the JWT locally. A valid
+    // token does not call /auth/v1/user, which was holding signed-in navigations
+    // on the route Loading state (86e3q9vhe / 86e3qpeat).
+    const { claims, error } = await getVerifiedClaims(supabase);
+    userId = typeof claims?.sub === 'string' && claims.sub.length > 0 ? claims.sub : null;
     if (error?.code === 'refresh_token_not_found') {
       // Clear stale session cookies so we stop retrying invalid refresh tokens.
       await supabase.auth.signOut();
@@ -118,7 +122,7 @@ export async function updateSession(request: NextRequest) {
   // AUTH-01: centralized hard gate. Unauthenticated requests to protected pages are
   // redirected to login (preserving the destination) at the edge — no protected
   // content is ever sent to the client. `ProtectedRoute` remains as defense-in-depth.
-  if (!user && hardProtected) {
+  if (!userId && hardProtected) {
     return redirectSignedOutFromProtectedPage(request);
   }
 

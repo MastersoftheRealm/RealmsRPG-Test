@@ -6,7 +6,7 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { getSession } from '@/lib/supabase/session';
+import { requireLiveUser } from '@/lib/supabase/session';
 import { isAdmin } from '@/lib/admin';
 import { createClient, createServiceRoleClient } from '@/lib/supabase/server';
 import { REALMS_IMAGES_BUCKET, parseRealmsImageCategories } from '@/lib/realms-images';
@@ -43,8 +43,10 @@ export async function GET(_request: NextRequest, context: RouteContext) {
 }
 
 export async function PATCH(request: NextRequest, context: RouteContext) {
-  const { user, error: sessionError } = await getSession();
-  if (sessionError || !user?.uid) {
+  let user;
+  try {
+    user = await requireLiveUser();
+  } catch {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
   if (!(await isAdmin(user.uid))) {
@@ -127,8 +129,10 @@ export async function PATCH(request: NextRequest, context: RouteContext) {
 }
 
 export async function DELETE(_request: NextRequest, context: RouteContext) {
-  const { user, error: sessionError } = await getSession();
-  if (sessionError || !user?.uid) {
+  let user;
+  try {
+    user = await requireLiveUser();
+  } catch {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
   if (!(await isAdmin(user.uid))) {

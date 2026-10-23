@@ -198,6 +198,8 @@ export function useMyAccountPage() {
         password: emailPassword,
       });
       if (reauthError) throw new Error('Current password is incorrect');
+      const { data: liveUser, error: liveUserError } = await supabase.auth.getUser();
+      if (liveUserError || !liveUser.user) throw new Error('Authentication required');
       const { error } = await supabase.auth.updateUser({ email: newEmail });
       if (error) throw error;
       patchProfile({ email: newEmail });
