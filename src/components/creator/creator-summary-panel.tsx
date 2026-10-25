@@ -155,7 +155,7 @@ export function CreatorSummaryPanel({
   className,
 }: CreatorSummaryPanelProps) {
   return (
-    <Card className={cn('p-6 shadow-md', className)}>
+    <Card className={cn('w-full p-6 shadow-md', className)}>
       <h2 className="mb-4 text-lg font-bold text-text-primary">{title}</h2>
 
       {/* Resource boxes (compact, for creature creator - ability/skill/feat/training/currency) */}

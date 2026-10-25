@@ -228,11 +228,9 @@ export function CreatorPageShell({
   }
 
   const sidebarNode = stickySidebar ? (
-    <div className="space-y-6 self-start lg:sticky lg:top-24 lg:max-h-[calc(100vh-7rem)] lg:overflow-y-auto">
-      {sidebar}
-    </div>
+    <div className="sticky top-20 z-10 w-full space-y-6 self-start md:top-24">{sidebar}</div>
   ) : (
-    sidebar
+    <div className="w-full space-y-6">{sidebar}</div>
   );
 
   return (

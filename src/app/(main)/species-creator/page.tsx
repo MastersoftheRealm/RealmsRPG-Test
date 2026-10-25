@@ -76,7 +76,6 @@ function SpeciesCreatorPage() {
       onDiscardLocalDraft={ws.discardLocalDraft}
       saving={ws.save.saving}
       saveDisabled={!ws.isSaveReady}
-      stickySidebar={false}
       loading={{
         isLoading:
           skillsLoading ||
