@@ -80,7 +80,11 @@ const openDialogIds: string[] = [];
 function lockBodyScroll() {
   bodyScrollLockCount += 1;
   if (bodyScrollLockCount === 1) {
+    const scrollbarWidth = window.innerWidth - document.documentElement.clientWidth;
     document.body.style.overflow = 'hidden';
+    if (scrollbarWidth > 0) {
+      document.body.style.paddingRight = `${scrollbarWidth}px`;
+    }
   }
 }
 
@@ -88,6 +92,7 @@ function releaseBodyScroll() {
   bodyScrollLockCount = Math.max(0, bodyScrollLockCount - 1);
   if (bodyScrollLockCount === 0) {
     document.body.style.overflow = '';
+    document.body.style.paddingRight = '';
   }
 }
 
