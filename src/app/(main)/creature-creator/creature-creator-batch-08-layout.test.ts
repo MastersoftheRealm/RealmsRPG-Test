@@ -44,7 +44,30 @@ describe('creature creator batch 8 layout (86e3jzdvr / 86e3jzdvd / 86e3jzdv0 / 8
     expect(header.indexOf('basis-full')).toBeGreaterThan(chevronIdx);
   });
 
-  it('summary resource boxes use a 2-column grid on narrow viewports (86e3jxgx8)', () => {
-    expect(summary).toContain('grid grid-cols-2 gap-2 lg:grid-cols-5');
+  it('summary resource tiles follow the panel width, not five viewport columns (86e3jxgx8)', () => {
+    const boxes = summary.slice(
+      summary.indexOf('resourceBoxes &&'),
+      summary.indexOf('Badge (Rarity'),
+    );
+    expect(boxes).toContain('repeat(auto-fit,minmax(8rem,1fr))');
+    expect(boxes).toContain('break-normal');
+    expect(boxes).not.toContain('lg:grid-cols-5');
+    expect(boxes).not.toContain('break-words');
+    expect(boxes).not.toContain('overflow-x-auto');
+  });
+
+  it('optional Remove is spaced clear of the collapse chevron (86e3jywdc)', () => {
+    const header = section.slice(section.indexOf('<Card'));
+    const gapIdx = header.indexOf('gap-6');
+    const removeIdx = header.indexOf('Remove');
+    const chevronIdx = header.indexOf('ChevronUp');
+    expect(gapIdx).toBeGreaterThan(-1);
+    expect(removeIdx).toBeGreaterThan(gapIdx);
+    expect(chevronIdx).toBeGreaterThan(removeIdx);
+  });
+
+  it('feat badge danger colour treats negative remaining as over budget', () => {
+    expect(section).toContain('points.spent < 0 || points.spent > points.total');
+    expect(loadout).toContain('spent: stats.featRemaining, total: stats.featPoints');
   });
 });
