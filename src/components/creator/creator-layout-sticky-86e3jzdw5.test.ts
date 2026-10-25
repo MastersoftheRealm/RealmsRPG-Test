@@ -13,7 +13,7 @@ const modal = readFileSync(new URL('../ui/modal.tsx', import.meta.url), 'utf8');
 describe('creator page width & sticky summary (batch 7)', () => {
   it('uses page scroll for sticky sidebar (no nested summary scroll)', () => {
     expect(pageShell).toContain('sticky top-20');
-    expect(pageShell).toContain('lg:top-24');
+    expect(pageShell).toContain('md:top-24');
     expect(pageShell).not.toContain('overflow-y-auto');
     expect(pageShell).not.toContain('max-h-[calc(100vh');
   });
@@ -24,8 +24,9 @@ describe('creator page width & sticky summary (batch 7)', () => {
   });
 
   it('fills the sidebar grid track at desktop', () => {
+    expect(creatorLayout).toContain('md:grid-cols-3');
     expect(creatorLayout).toContain('grid w-full');
-    const sidebarCol = creatorLayout.match(/order-1[^"]*lg:order-2/)?.[0] ?? '';
+    const sidebarCol = creatorLayout.match(/order-1[^"]*md:order-2/)?.[0] ?? '';
     expect(sidebarCol).toContain('w-full');
     expect(sidebarCol).toContain('min-w-0');
   });
