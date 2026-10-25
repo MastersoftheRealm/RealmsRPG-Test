@@ -18,6 +18,7 @@ import Image from 'next/image';
 import { usePathname } from 'next/navigation';
 import { cn } from '@/lib/utils';
 import { useAuth, useAdmin, useProfile } from '@/hooks';
+import type { AuthUser } from '@/types/auth';
 import { ThemeToggle, InfoTippy } from '@/components/patterns';
 import { IconButton } from '@/components/ui';
 import { navbarCodex, navbarLibrary } from '../../../public/tooltip-text';
@@ -327,7 +328,7 @@ export function Header() {
               </div>
             )}
             {user ? (
-              <AccountDropdown profile={profile} signOut={signOut} />
+              <AccountDropdown user={user} profile={profile} signOut={signOut} />
             ) : (
               <Link
                 href="/login"
@@ -427,6 +428,20 @@ interface DropdownItem {
 }
 
 /** ClickUp 86e3jvjj2: hover opens before click; a toggle would immediately close the menu. */
+/** Avatar initial when profile username is still loading (e.g. 404 shell). */
+export function accountAvatarInitial(
+  profile: { username?: string | null | undefined } | null,
+  user: AuthUser | null,
+): string {
+  const fromProfile = profile?.username?.trim();
+  if (fromProfile) return fromProfile.charAt(0).toUpperCase();
+  const fromDisplay = user?.displayName?.trim();
+  if (fromDisplay) return fromDisplay.charAt(0).toUpperCase();
+  const fromEmail = user?.email?.trim();
+  if (fromEmail) return fromEmail.charAt(0).toUpperCase();
+  return '?';
+}
+
 export function accountMenuPointerClickState(
   openedByHover: boolean,
   isOpen: boolean,
@@ -438,9 +453,11 @@ export function accountMenuPointerClickState(
 }
 
 function AccountDropdown({
+  user,
   profile,
   signOut,
 }: {
+  user: AuthUser;
   profile: { username?: string | null | undefined } | null;
   signOut: () => void;
 }) {
@@ -479,7 +496,7 @@ function AccountDropdown({
         }}
       >
         <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary-button font-bold text-text-on-dark">
-          {profile?.username?.charAt(0).toUpperCase() ?? '?'}
+          {accountAvatarInitial(profile, user)}
         </div>
       </button>
       {open && (

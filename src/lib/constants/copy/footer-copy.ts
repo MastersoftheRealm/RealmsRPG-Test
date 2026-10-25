@@ -29,6 +29,8 @@ export const FOOTER_COPY = {
         { href: '/power-creator', label: 'Power Creator' },
         { href: '/item-creator', label: 'Armament Creator' },
         { href: '/technique-creator', label: 'Technique Creator' },
+        { href: '/creature-creator', label: 'Creature Creator' },
+        { href: '/species-creator', label: 'Species Creator' },
       ],
     },
     legal: {

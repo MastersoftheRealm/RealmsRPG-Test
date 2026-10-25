@@ -13,7 +13,10 @@ export default function NotFound() {
       <Header />
       <main id="main-content" className="flex flex-1 items-center justify-center px-4 py-16">
         <div className="w-full max-w-md text-center">
-          <p className="text-9xl font-bold text-surface select-none" aria-hidden="true">
+          <p
+            className="text-9xl font-bold text-text-muted opacity-30 select-none dark:opacity-40"
+            aria-hidden="true"
+          >
             404
           </p>
           <PageHeader
