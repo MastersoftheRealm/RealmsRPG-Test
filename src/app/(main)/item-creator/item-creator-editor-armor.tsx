@@ -6,7 +6,14 @@
 
 import { ValueStepper, SectionCostBadge } from '@/components/patterns';
 import { CollapsibleSection } from '@/components/creator';
-import type { ItemSectionCosts } from './item-creator-cost-derivation';
+import {
+  combineItemSectionCosts,
+  type ItemSectionCosts,
+} from './item-creator-cost-derivation';
+
+/** One track per field once the column can hold the label and its cost badge. */
+export const ARMOR_FIELD_GRID_CLASS =
+  'grid grid-cols-[repeat(auto-fit,minmax(min(100%,20rem),1fr))] gap-6';
 
 type ItemCreatorEditorArmorProps = {
   damageReduction: number;
@@ -29,13 +36,32 @@ export function ItemCreatorEditorArmor({
   armorConfigSummary,
   itemSectionCosts,
 }: ItemCreatorEditorArmorProps) {
+  const sectionCost = combineItemSectionCosts(
+    itemSectionCosts.damageReduction,
+    itemSectionCosts.agilityReduction,
+    itemSectionCosts.criticalRange,
+  );
   return (
-    <CollapsibleSection title="Armor Configuration" collapsedSummary={armorConfigSummary}>
-      <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
+    <CollapsibleSection
+      title="Armor Configuration"
+      collapsedSummary={armorConfigSummary}
+      rightSlot={
+        <SectionCostBadge
+          className="whitespace-nowrap"
+          ip={sectionCost.totalIP}
+          tp={sectionCost.totalTP}
+          currency={sectionCost.totalCurrency}
+        />
+      }
+    >
+      <div className={ARMOR_FIELD_GRID_CLASS}>
         <div>
-          <div className="mb-2 flex items-center justify-between gap-2">
-            <label className="text-sm font-medium text-text-secondary">Damage Reduction</label>
+          <div className="mb-2 flex flex-wrap items-center justify-between gap-x-3 gap-y-1">
+            <label className="text-sm font-medium whitespace-nowrap text-text-secondary">
+              Damage Reduction
+            </label>
             <SectionCostBadge
+              className="whitespace-nowrap"
               ip={itemSectionCosts.damageReduction.totalIP}
               tp={itemSectionCosts.damageReduction.totalTP}
               currency={itemSectionCosts.damageReduction.totalCurrency}
@@ -52,9 +78,12 @@ export function ItemCreatorEditorArmor({
         </div>
 
         <div>
-          <div className="mb-2 flex items-center justify-between gap-2">
-            <label className="text-sm font-medium text-text-secondary">Agility Reduction</label>
+          <div className="mb-2 flex flex-wrap items-center justify-between gap-x-3 gap-y-1">
+            <label className="text-sm font-medium whitespace-nowrap text-text-secondary">
+              Agility Reduction
+            </label>
             <SectionCostBadge
+              className="whitespace-nowrap"
               ip={itemSectionCosts.agilityReduction.totalIP}
               tp={itemSectionCosts.agilityReduction.totalTP}
               currency={itemSectionCosts.agilityReduction.totalCurrency}
@@ -72,11 +101,12 @@ export function ItemCreatorEditorArmor({
         </div>
 
         <div>
-          <div className="mb-2 flex items-center justify-between gap-2">
-            <label className="text-sm font-medium text-text-secondary">
+          <div className="mb-2 flex flex-wrap items-center justify-between gap-x-3 gap-y-1">
+            <label className="text-sm font-medium whitespace-nowrap text-text-secondary">
               Critical Range Increase
             </label>
             <SectionCostBadge
+              className="whitespace-nowrap"
               ip={itemSectionCosts.criticalRange.totalIP}
               tp={itemSectionCosts.criticalRange.totalTP}
               currency={itemSectionCosts.criticalRange.totalCurrency}

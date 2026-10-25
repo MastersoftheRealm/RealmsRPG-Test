@@ -16,7 +16,10 @@ import {
   type CodexPartRow,
   type CodexPropertyRow,
 } from '@/lib/library/part-display';
-import { TP_COST_LABEL } from '@/lib/detail-option/compact-facts';
+import {
+  formatArmorCriticalRangeListValue,
+  TP_COST_LABEL,
+} from '@/lib/detail-option/compact-facts';
 import { capitalizeWords } from '@/lib/utils';
 import type { PartData } from '@/components/patterns';
 import type { ColumnValue } from '@/components/patterns/list/grid-list-row-types';
@@ -133,7 +136,7 @@ export function buildPlayArmorRowColumns(
   const criticalRangeIncrease = deriveCriticalRangeIncreaseFromProperties(payload);
   const dr =
     damageReduction > 0 ? String(damageReduction) : (row.damageReduction ?? row.armorValue ?? '-');
-  const crit = criticalRangeIncrease > 0 ? `+${criticalRangeIncrease}` : '-';
+  const crit = formatArmorCriticalRangeListValue(criticalRangeIncrease);
   return [
     { key: 'dr', value: dr, align: 'center' },
     { key: 'crit', value: crit, align: 'center' },

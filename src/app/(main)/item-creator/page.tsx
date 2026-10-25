@@ -47,6 +47,7 @@ import {
   type ItemCreatorFormState,
   type ItemLibraryRecord,
 } from './item-creator-bootstrap';
+import { armorCreatorSummaryStatRows } from './item-creator-cost-derivation';
 import { ItemCreatorEditor } from './item-creator-editor';
 import { RarityReferenceTable } from './item-creator-helpers';
 import { useItemCreatorWorkspace } from './use-item-creator-workspace';
@@ -283,6 +284,10 @@ function ItemCreatorWorkspace({
                           },
                         ]
                       : []),
+                    ...armorCreatorSummaryStatRows({
+                      criticalRangeIncrease: ws.criticalRangeIncrease,
+                      abilityRequirement: ws.abilityRequirement,
+                    }),
                   ]
                 : []),
               ...(ws.armamentType === 'Shield'
