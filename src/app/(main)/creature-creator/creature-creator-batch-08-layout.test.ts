@@ -32,10 +32,16 @@ describe('creature creator batch 8 layout (86e3jzdvr / 86e3jzdvd / 86e3jzdv0 / 8
   });
 
   it('optional section Remove sits before the collapse chevron (86e3jywdc)', () => {
-    const removeIdx = section.indexOf('Remove');
-    const chevronIdx = section.indexOf('<ChevronUp className="h-5 w-5" />');
+    const header = section.slice(section.indexOf('<Card'));
+    const removeIdx = header.indexOf('Remove');
+    const chevronIdx = header.indexOf('ChevronUp');
+    const rightSlotIdx = header.indexOf('{rightSlot}');
     expect(removeIdx).toBeGreaterThan(-1);
     expect(chevronIdx).toBeGreaterThan(removeIdx);
+    expect(rightSlotIdx).toBeGreaterThan(chevronIdx);
+    expect(header).toContain('basis-full');
+    expect(header).toContain('max-lg:w-full');
+    expect(header.indexOf('basis-full')).toBeGreaterThan(chevronIdx);
   });
 
   it('summary resource boxes use a 2-column grid on narrow viewports (86e3jxgx8)', () => {
