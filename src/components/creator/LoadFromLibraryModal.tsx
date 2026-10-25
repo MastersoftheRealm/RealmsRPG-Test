@@ -79,7 +79,8 @@ export function LoadFromLibraryModal({
       confirmLabel="Load"
       itemLabel="item"
       size={LOAD_FROM_LIBRARY_MODAL_SIZE}
-      className="md:max-h-[60vh] md:min-h-[60vh]"
+      className="max-sm:px-2 md:max-h-[60vh] md:min-h-[60vh]"
+      placeholderInputClassName="max-sm:pl-8 max-sm:pr-2"
       wrapFooterActions
     />
   );

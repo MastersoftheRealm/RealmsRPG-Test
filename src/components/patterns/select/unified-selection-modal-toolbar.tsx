@@ -8,6 +8,8 @@ export interface UnifiedSelectionModalToolbarProps {
   searchQuery: string;
   onSearchChange: (value: string) => void;
   searchPlaceholder: string;
+  /** Applied only while the field is empty so clear-button padding can take over. */
+  placeholderInputClassName?: string | undefined;
   hasOptions: boolean;
   optionsLabel: string;
   optionsExpanded: boolean;
@@ -24,6 +26,7 @@ export function UnifiedSelectionModalToolbar({
   searchQuery,
   onSearchChange,
   searchPlaceholder,
+  placeholderInputClassName,
   hasOptions,
   optionsLabel,
   optionsExpanded,
@@ -41,6 +44,7 @@ export function UnifiedSelectionModalToolbar({
       onChange={onSearchChange}
       placeholder={searchPlaceholder}
       aria-label={searchPlaceholder}
+      className={!searchQuery ? placeholderInputClassName : undefined}
     />
   );
 

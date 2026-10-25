@@ -60,6 +60,7 @@ export function UnifiedSelectionModal({
   emptyMessage,
   emptySubMessage,
   searchPlaceholder,
+  placeholderInputClassName,
   searchFields = ['name', 'description'],
   scopeExtra,
   headerExtra,
@@ -314,6 +315,7 @@ export function UnifiedSelectionModal({
           searchQuery={searchQuery}
           onSearchChange={setSearchQuery}
           searchPlaceholder={resolvedSearchPlaceholder}
+          placeholderInputClassName={placeholderInputClassName}
           hasOptions={hasOptions}
           optionsLabel={optionsLabel}
           optionsExpanded={optionsExpanded}

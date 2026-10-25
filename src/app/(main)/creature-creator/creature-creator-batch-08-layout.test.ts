@@ -38,10 +38,12 @@ describe('creature creator batch 8 layout (86e3jzdvr / 86e3jzdvd / 86e3jzdv0 / 8
     const rightSlotIdx = header.indexOf('{rightSlot}');
     expect(removeIdx).toBeGreaterThan(-1);
     expect(chevronIdx).toBeGreaterThan(removeIdx);
-    expect(rightSlotIdx).toBeGreaterThan(chevronIdx);
+    expect(rightSlotIdx).toBeGreaterThan(-1);
+    expect(chevronIdx).toBeGreaterThan(rightSlotIdx);
     expect(header).toContain('basis-full');
     expect(header).toContain('max-lg:w-full');
-    expect(header.indexOf('basis-full')).toBeGreaterThan(chevronIdx);
+    expect(header).toContain('max-lg:order-last');
+    expect(header.indexOf('max-lg:order-last')).toBeLessThan(chevronIdx);
   });
 
   it('summary resource tiles follow the panel width, not five viewport columns (86e3jxgx8)', () => {
