@@ -1094,6 +1094,12 @@
     display: none;
   }
 
+  .library-page-tabs .tab-nav-list[data-overflow-end='true'],
+  .library-page-tabs .tab-nav-list[data-overflow-start='true'],
+  .library-page-tabs .tab-nav-list[data-overflow-start='true'][data-overflow-end='true'] {
+    mask-image: none;
+  }
+
   .tab-nav-list[data-overflow-end='true'] {
     mask-image: linear-gradient(
       to right,
