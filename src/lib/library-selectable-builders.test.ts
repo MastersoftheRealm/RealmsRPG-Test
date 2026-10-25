@@ -35,7 +35,7 @@ describe('library-selectable-builders (DEV-V-016 parity)', () => {
       area: 'Single',
     });
     expect(cols.map((c) => c.key)).toEqual(['Energy', 'Action', 'Duration', 'Area']);
-    expect(getModalGridColumns('power')).toMatch(/minmax\(16ch, 1\.45fr\)/);
+    expect(getModalGridColumns('power')).toMatch(/minmax\(7\.75rem, 1\.3fr\)/);
     expect(getModalGridColumns('power')).not.toContain('minmax(0,');
     expect(cols.find((c) => c.key === 'Duration')?.allowMultiline).toBe(true);
     expect(cols.find((c) => c.key === 'Action')?.allowMultiline).toBe(true);
@@ -56,7 +56,7 @@ describe('library-selectable-builders (DEV-V-016 parity)', () => {
     expect(cols.find((c) => c.key === 'Energy')?.value).toBe('3');
     expect(cols.find((c) => c.key === 'Attack')?.value).toBe('Weapon');
     expect(cols.find((c) => c.key === 'Training Pts')?.value).toBe('4');
-    expect(getModalGridColumns('technique')).toMatch(/minmax\(16ch, 1\.35fr\)/);
+    expect(getModalGridColumns('technique')).toMatch(/minmax\(7\.75rem, 1\.2fr\)/);
     expect(cols.find((c) => c.key === 'Action')?.allowMultiline).toBe(true);
 
     const selectable = buildSelectableItem(
@@ -623,5 +623,66 @@ describe('weapon power library cost (86e3jpq1x)', () => {
     expect(facts.tp).toBe(3);
     expect(row?.energy).toBe(6);
     expect(row?.tp).toBe(3);
+  });
+});
+
+/**
+ * xl load dialog at 1280 (86e3jwurj follow-up).
+ * max-w-2xl is 42rem. Content is that box minus the dialog border and md:px-6.
+ * The list scrollbar is 6px. The row border and the external Select column
+ * (2.25rem + pr-1) sit outside the data grid. Compact rows use px-3 and gap-2,
+ * and power/technique rows prepend a 2.75rem thumbnail track.
+ */
+const LOAD_DIALOG_DATA_BUDGET_PX = (() => {
+  const contentPx = 42 * 16 - 2 - 24 * 2;
+  const rowClientPx = contentPx - 6 - 2;
+  const gridPx = rowClientPx - (2.25 * 16 + 4);
+  const thumbTracks = 6;
+  return gridPx - 12 * 2 - 2.75 * 16 - (thumbTracks - 1) * 8;
+})();
+
+function splitGridTracks(grid: string): string[] {
+  return grid.match(/minmax\([^)]+\)|\S+/g) ?? [];
+}
+
+function trackMinPx(track: string): number {
+  const min = /^minmax\(([\d.]+)rem,/.exec(track);
+  if (!min?.[1]) throw new Error(`expected a rem minimum, got ${track}`);
+  return Number(min[1]) * 16;
+}
+
+describe('load modal column alignment (86e3jwurj)', () => {
+  it('gives the header and the row the same rem tracks that fit the dialog', () => {
+    for (const itemType of ['power', 'technique'] as const) {
+      const headers = getListHeaderColumns(itemType);
+      const rowKeys = getItemColumns(
+        { id: '1', name: 'Bolt' },
+        itemType,
+        itemType === 'technique'
+          ? { energy: 1, weaponName: 'Weapon', tp: 1, actionType: 'Basic action' }
+          : undefined,
+        itemType === 'power'
+          ? {
+              energy: 1,
+              actionType: 'Long (3 AP) Action',
+              duration: 'Instant',
+              damage: '1d8 Acid',
+              area: '1 target',
+            }
+          : undefined,
+      ).map((col) => col.key);
+      expect(headers.map((col) => col.key)).toEqual(['name', ...rowKeys]);
+
+      const tracks = splitGridTracks(getModalGridColumns(itemType));
+      expect(tracks).toHaveLength(headers.length);
+      expect(tracks.join(' ')).not.toMatch(/\d(?:ch|em)\b/);
+      const mins = tracks.map(trackMinPx);
+      expect(mins.reduce((sum, px) => sum + px, 0)).toBeLessThanOrEqual(LOAD_DIALOG_DATA_BUDGET_PX);
+    }
+
+    const power = splitGridTracks(getModalGridColumns('power'));
+    expect(trackMinPx(power[0] ?? '')).toBeGreaterThanOrEqual(7.75 * 16);
+    expect(trackMinPx(power[2] ?? '')).toBeGreaterThanOrEqual(8 * 16);
+    expect(trackMinPx(power[4] ?? '')).toBeGreaterThanOrEqual(3.5 * 16);
   });
 });
