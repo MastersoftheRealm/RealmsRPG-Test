@@ -105,6 +105,8 @@ interface ColumnValueFields {
   keepOnMobileSummary?: boolean | undefined;
   /** Text alignment */
   align?: 'left' | 'center' | 'right' | undefined;
+  /** Allow wrapped lines in collapsed row (e.g. long Duration labels). */
+  allowMultiline?: boolean | undefined;
 }
 
 export type ColumnValue = AllowUndefinedOptionals<ColumnValueFields>;

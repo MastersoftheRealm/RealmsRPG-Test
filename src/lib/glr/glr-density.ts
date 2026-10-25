@@ -56,6 +56,9 @@ export const GLR_DENSITY: Record<GlrDensityMode, GlrModeSpec> = {
     demoteFacts: {
       gear: ['trainingPoints'],
     },
+    headerTrackOverrides: {
+      power: { duration: 'minmax(8.5rem, 1.15fr)' },
+    },
     nameTrack: {
       power: '1.4fr',
       technique: '1.4fr',

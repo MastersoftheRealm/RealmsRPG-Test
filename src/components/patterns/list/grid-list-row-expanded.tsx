@@ -102,12 +102,12 @@ export function GridListRowExpandedBody({
       ) : (
         <>
           {descTrimmed && !descriptionAfter && (
-            <p className="mb-3 rounded-lg bg-surface p-3 text-sm text-text-secondary">
+            <p className="mb-3 rounded-lg bg-surface p-3 text-sm [overflow-wrap:anywhere] break-words text-text-secondary">
               {description}
             </p>
           )}
           {descriptionAfter ? (
-            <div className="mb-3 rounded-lg bg-surface p-3 text-sm text-text-secondary">
+            <div className="mb-3 rounded-lg bg-surface p-3 text-sm [overflow-wrap:anywhere] break-words text-text-secondary">
               {descTrimmed ? <p>{description}</p> : null}
               <div
                 className={cn(

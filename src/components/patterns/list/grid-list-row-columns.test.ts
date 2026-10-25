@@ -118,6 +118,23 @@ describe('interactive header cells (TASK-909)', () => {
     ).not.toContain('truncate');
   });
 
+  it('allows multiline wrap for long duration labels (86e3jzdwj)', () => {
+    expect(
+      collapsedColumnOverflowClass({
+        key: 'duration',
+        value: '30 Minutes (Focus)',
+        allowMultiline: true,
+      }),
+    ).toContain('line-clamp-2');
+    expect(
+      collapsedColumnOverflowClass({
+        key: 'duration',
+        value: '30 Minutes (Focus)',
+        allowMultiline: true,
+      }),
+    ).not.toContain('truncate');
+  });
+
   it('sums data column spans for description-only name grid-column span', () => {
     expect(
       dataColumnTrackCount(

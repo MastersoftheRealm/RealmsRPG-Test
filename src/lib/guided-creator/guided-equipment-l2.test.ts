@@ -255,7 +255,7 @@ describe('guided-equipment-l2', () => {
     const rowKeys = (axe!.columns ?? []).map((c) => c.key);
     const headerKeys = WEAPON_L2_HEADER_COLUMNS.filter((c) => c.key !== 'name').map((c) => c.key);
     expect(rowKeys).toEqual(headerKeys);
-    expect(axe!.columns?.find((c) => c.key === 'currency')?.value).toBe(25);
+    expect(axe!.columns?.find((c) => c.key === 'currency')?.value).toBe('25');
   });
 
   it('weapon expand uses Official Properties & Proficiencies, not card-stat Details (TASK-709)', () => {

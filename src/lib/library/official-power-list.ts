@@ -185,6 +185,7 @@ export function officialPowerRowColumns(row: OfficialPowerRow): ColumnValue[] {
       value: values[key] ?? '-',
       highlight: id === 'energy' ? true : undefined,
       align: 'center' as const,
+      ...(key === 'duration' ? { allowMultiline: true as const } : {}),
     };
   });
 }
