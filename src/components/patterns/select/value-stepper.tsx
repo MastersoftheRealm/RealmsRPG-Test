@@ -26,8 +26,8 @@ import { useRef, useCallback, useEffect } from 'react';
 import { cva, type VariantProps } from 'class-variance-authority';
 import { cn } from '@/lib/utils/cn';
 import {
+  adoptStepperMemory,
   createStepperValueMemory,
-  rememberStepperValue,
   stepStepperValue,
 } from '@/lib/stepper-value-memory';
 
@@ -309,13 +309,16 @@ export function ValueStepper({
   const memoryRef = useRef(createStepperValueMemory(value));
   const onChangeRef = useRef(onChange);
   const boundsRef = useRef({ min, max, step, disabled });
+  const minMaxRef = useRef({ min, max });
 
   useEffect(() => {
     onChangeRef.current = onChange;
     boundsRef.current = { min, max, step, disabled };
+    const boundsChanged = minMaxRef.current.min !== min || minMaxRef.current.max !== max;
+    minMaxRef.current = { min, max };
     // A committed prop inside the current burst must not rewind clicks that
-    // already moved past it. An outside value replaces the burst.
-    memoryRef.current = rememberStepperValue(memoryRef.current, value);
+    // already moved past it. An outside value, or a new min/max, replaces the burst.
+    memoryRef.current = adoptStepperMemory(memoryRef.current, value, boundsChanged);
   }, [onChange, min, max, step, disabled, value]);
 
   const applyStep = useCallback((direction: -1 | 1) => {

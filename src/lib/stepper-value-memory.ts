@@ -35,6 +35,19 @@ export function rememberStepperValue(
   return { local: committed, pending: false, burstFrom: committed };
 }
 
+/**
+ * Adopt a committed value. A min/max change ends the burst so the next click
+ * starts at the value on screen. The minus button stays mounted.
+ */
+export function adoptStepperMemory(
+  memory: StepperValueMemory,
+  committed: number,
+  boundsChanged: boolean,
+): StepperValueMemory {
+  if (boundsChanged) return createStepperValueMemory(committed);
+  return rememberStepperValue(memory, committed);
+}
+
 export function stepStepperValue(
   memory: StepperValueMemory,
   delta: number,

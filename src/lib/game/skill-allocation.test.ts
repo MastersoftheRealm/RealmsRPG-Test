@@ -94,6 +94,26 @@ describe('skill allocation refunds', () => {
     expect(spent(before) - spent(after)).toBe(subSpend + baseSpend);
   });
 
+  it('keeps a species sub-skill proficient when its base skill becomes unproficient', () => {
+    const before = { '10': 0, '11': 4, '12': 2 };
+    const after = applySkillAllocationDecrease(before, '10', {
+      isSubSkill: false,
+      isSpecies: false,
+      codexSkills: codex,
+      speciesSkillIds: new Set(['12']),
+    });
+    expect(after['10']).toBe(UNPROFICIENT_SKILL_ALLOCATION);
+    expect(after['11']).toBe(UNPROFICIENT_SKILL_ALLOCATION);
+    expect(after['12']).toBe(2);
+    expect(isSkillAllocationProficient(after['12'], true, true)).toBe(true);
+    const species = new Set(['12']);
+    const spentWithSpecies = (allocations: Record<string, number>) =>
+      calculateSimpleSkillPointsSpent(allocations, species, meta);
+    expect(spentWithSpecies(before) - spentWithSpecies(after)).toBe(
+      spentWithSpecies({ '10': 0, '11': 4 }),
+    );
+  });
+
   it('does not clear sub-skills when a base skill only loses value', () => {
     const before = { '10': 2, '11': 1 };
     const after = decrease(before, '10', false);

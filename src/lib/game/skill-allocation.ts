@@ -246,7 +246,7 @@ type SkillAllocationParent = {
  *
  * Lowering a base skill from proficient value 0 to unproficient also clears
  * proficiency on its sub-skills, which refunds their proficiency and value points.
- * Species skills stay proficient.
+ * Species skills stay proficient, including species sub-skills of that base.
  */
 export function applySkillAllocationDecrease(
   allocations: Record<string, number>,
@@ -255,6 +255,8 @@ export function applySkillAllocationDecrease(
     isSubSkill: boolean;
     isSpecies: boolean;
     codexSkills: readonly SkillAllocationParent[];
+    /** Species skills stay proficient. Omitted means none of the rows are species skills. */
+    speciesSkillIds?: ReadonlySet<string> | undefined;
   },
 ): Record<string, number> {
   const current = allocations[skillId];
@@ -283,6 +285,7 @@ export function applySkillAllocationDecrease(
     if (skill.base_skill_id == null || Number(skill.base_skill_id) === 0) continue;
     if (String(skill.base_skill_id) !== skillId) continue;
     const subId = String(skill.id);
+    if (options.speciesSkillIds?.has(subId)) continue;
     const subValue = next[subId];
     if (subValue == null || subValue < 0) continue;
     next[subId] = UNPROFICIENT_SKILL_ALLOCATION;

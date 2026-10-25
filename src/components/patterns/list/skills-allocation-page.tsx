@@ -313,6 +313,7 @@ export function SkillsAllocationPage({
           isSubSkill,
           isSpecies,
           codexSkills: allSkills,
+          speciesSkillIds,
         }),
       );
     },

@@ -209,7 +209,6 @@ export const SkillRow = memo(function SkillRow({
       (bonus > 0 ? 'text-success-fg' : bonus < 0 ? 'text-danger-fg' : 'text-text-secondary');
     const valueStepper = onValueChange ? (
       <ValueStepper
-        key={proficient ? 'proficient' : 'unproficient'}
         value={value}
         onChange={(newValue) => onValueChange(newValue - value)}
         min={maxValue !== undefined ? minValue : proficient ? -Infinity : minValue}
