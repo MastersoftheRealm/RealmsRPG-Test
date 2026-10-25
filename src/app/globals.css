@@ -1194,6 +1194,16 @@
     transition-duration: var(--duration-fast);
   }
 
+  /* Native select menus follow theme (creator + filter dropdowns, 86dzw3vkx). */
+  .dark select {
+    color-scheme: dark;
+  }
+
+  .dark [data-creator-page] .btn-stepper:disabled {
+    @apply border border-border-light text-text-secondary;
+    opacity: 1;
+  }
+
   /* GridListRow: inherit the row surface so hover:bg-surface-alt is one band
      (TASK-710). Disabled keeps the plate so greyed ± stay a visible control
      (TASK-910) — `bg-transparent` would otherwise win over :disabled. */

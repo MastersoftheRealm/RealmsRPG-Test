@@ -51,6 +51,15 @@ export function partChipVariant(category: string): ChipVariant {
   if (fuzzy) return fuzzy;
 
   switch (category) {
+    case 'Offense':
+    case 'Offensive':
+      return 'technique';
+    case 'Defensive':
+    case 'Defense':
+      return 'restriction';
+    case 'Utility':
+    case 'Creation Utility':
+      return 'special';
     case 'cost':
     case 'proficiency':
       return 'listCost';

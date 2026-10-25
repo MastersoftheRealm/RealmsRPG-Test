@@ -47,8 +47,15 @@ export function SelectFilter({
   className = '',
 }: SelectFilterProps) {
   const id = useId();
-  const uniqueOptions = useMemo(() => dedupeSelectOptions(options), [options]);
-  const showPlaceholder = shouldShowSelectPlaceholder(placeholder, uniqueOptions);
+  const { uniqueOptions, showPlaceholder } = useMemo(() => {
+    const deduped = dedupeSelectOptions(options);
+    const showSyntheticPlaceholder = shouldShowSelectPlaceholder(placeholder, deduped);
+    const resolved = showSyntheticPlaceholder ? deduped.filter((opt) => opt.value !== '') : deduped;
+    return {
+      uniqueOptions: resolved,
+      showPlaceholder: shouldShowSelectPlaceholder(placeholder, resolved),
+    };
+  }, [options, placeholder]);
 
   return (
     <div className={cn('filter-group', disabled && 'opacity-60', className)}>

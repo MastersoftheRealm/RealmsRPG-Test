@@ -25,6 +25,7 @@ import {
 } from '@/lib/game/path-recommendation-index';
 import { cn } from '@/lib/utils';
 import { ChipSelect, type ChipSelectOption } from './chip-select';
+import { dedupeSelectOptions } from './filter-utils';
 
 const ARCHETYPE_PATH_FILTER_HELP =
   'Show only entries an archetype path recommends. Quick select: Any (all paths), Any Power, Any Martial, or Any Powered-Martial — a type alias replaces individual paths of that type; Any replaces your whole selection. You can also pick specific paths; several selections union together. Other filters still apply.';
@@ -66,7 +67,7 @@ export function ArchetypePathFilter({
     const rest = options
       .filter((option) => !grouped.has(option.id))
       .map((option) => ({ value: option.id, label: option.name }));
-    return [...aliasOptions, ...rest, ...byType];
+    return dedupeSelectOptions([...aliasOptions, ...rest, ...byType]);
   }, [options]);
 
   return (
