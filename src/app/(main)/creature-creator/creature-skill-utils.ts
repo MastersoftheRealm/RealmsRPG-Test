@@ -5,6 +5,11 @@
 
 import type { Skill } from '@/hooks';
 import {
+  allocationValueFromPersistedSkill,
+  isSkillAllocationProficient,
+  skillAllocationShownValue,
+} from '@/lib/game/skill-allocation';
+import {
   collectCreatureInventoryItems,
   resolveCreatureInventoryBuckets,
 } from '@/lib/game/creature-inventory';
@@ -53,11 +58,11 @@ export function creatureSkillsToAllocations(
           ? String(skill.baseSkillId)
           : undefined;
     if (isSub && parentId && !presentIds.has(parentId)) continue;
-    if (isSub) {
-      allocations[key] = Math.max(1, skill.value);
-    } else if (skill.proficient !== false) {
-      allocations[key] = skill.value;
-    }
+    allocations[key] = allocationValueFromPersistedSkill(
+      skill.proficient !== false,
+      skill.value,
+      isSub,
+    );
   }
   return allocations;
 }
@@ -74,11 +79,12 @@ export function allocationsToCreatureSkills(
       codexSkills.find((s) => String(s.name ?? '').toLowerCase() === key.toLowerCase());
     if (!codex) continue;
     const isSub = codex.base_skill_id != null && Number(codex.base_skill_id) !== 0;
+    const proficient = isSkillAllocationProficient(value, isSub);
     result.push({
       id: String(codex.id),
       name: String(codex.name ?? key),
-      value: isSub ? Math.max(1, value) : value,
-      proficient: true,
+      value: skillAllocationShownValue(value),
+      proficient,
       isSubSkill: isSub,
       baseSkillId: isSub ? String(codex.base_skill_id) : undefined,
     });

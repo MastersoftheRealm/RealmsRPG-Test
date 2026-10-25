@@ -14,6 +14,7 @@ import {
 } from '@/lib/game/formulas';
 import { calculateCreatureSpeed, calculateEvasion } from '@/lib/game/calculations';
 import {
+  allocationValueFromPersistedSkill,
   calculateSimpleSkillPointsSpent,
   resolveSkillAllocationRules,
 } from '@/lib/game/skill-allocation';
@@ -184,11 +185,11 @@ export function calculateCreatureCreatorStats(
       continue;
     }
     skillMeta.set(skillId, { isSubSkill });
-    if (isSubSkill) {
-      skillAllocations[skillId] = Math.max(1, s.value);
-    } else if (s.proficient !== false) {
-      skillAllocations[skillId] = s.value;
-    }
+    skillAllocations[skillId] = allocationValueFromPersistedSkill(
+      s.proficient !== false,
+      s.value,
+      isSubSkill,
+    );
   }
   const skillSpent = calculateSimpleSkillPointsSpent(
     skillAllocations,

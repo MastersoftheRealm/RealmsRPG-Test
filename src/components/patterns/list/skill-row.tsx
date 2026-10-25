@@ -68,6 +68,11 @@ export interface SkillRowProps {
   ability?: string | undefined;
   /** Available abilities to choose from (for multi-ability skills) */
   availableAbilities?: string[] | undefined;
+  /**
+   * Show every entry in `availableAbilities` instead of one abbreviation.
+   * Used when a sub-skill row lists several Codex abilities.
+   */
+  showAbilitySet?: boolean | undefined;
   /** Callback when ability selection changes */
   onAbilityChange?: ((ability: string) => void) | undefined;
 
@@ -161,6 +166,7 @@ export const SkillRow = memo(function SkillRow({
   bonusClassName,
   ability,
   availableAbilities,
+  showAbilitySet = false,
   onAbilityChange,
   isEditing = false,
   editControlsPlacement = 'column',
@@ -180,6 +186,13 @@ export const SkillRow = memo(function SkillRow({
   className,
 }: SkillRowProps) {
   const abilityAbbr = ABILITY_ABBR[(ability || 'strength').toLowerCase()] || 'STR';
+  const abilitySetLabel = showAbilitySet
+    ? (availableAbilities ?? [])
+        .map((key) => ABILITY_ABBR[key.toLowerCase()])
+        .filter((abbr): abbr is string => Boolean(abbr))
+        .join(', ')
+    : '';
+  const abilityReadout = abilitySetLabel || abilityAbbr;
 
   // Filter available abilities for dropdown
   const abilityOptions =
@@ -305,7 +318,9 @@ export const SkillRow = memo(function SkillRow({
               ))}
             </select>
           ) : (
-            <span className="text-xs font-semibold text-text-muted">{abilityAbbr}</span>
+            <span className="text-xs font-semibold whitespace-nowrap text-text-muted">
+              {abilityReadout}
+            </span>
           )}
         </td>
 

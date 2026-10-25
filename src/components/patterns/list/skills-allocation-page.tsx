@@ -23,12 +23,17 @@ import {
   calculateSubSkillBonusWithProficiency,
   getLinkedAbilityKeys,
   getHighestLinkedAbilityKey,
+  subSkillAllocationAbility,
 } from '@/lib/game/formulas';
 import {
   getTotalSkillPoints,
-  getSkillValueIncreaseCost,
+  skillAllocationIncreaseCost,
+  applySkillAllocationIncrease,
+  applySkillAllocationDecrease,
   calculateSimpleSkillPointsSpent,
   resolveSkillAllocationRules,
+  isSkillAllocationProficient,
+  skillAllocationShownValue,
 } from '@/lib/game/skill-allocation';
 import {
   applyAddedBaseSkills,
@@ -276,35 +281,43 @@ export function SkillsAllocationPage({
       const skill = allSkills.find((s: Skill) => String(s.id) === skillId);
       if (!skill) return;
 
-      const current = allocations[skillId] ?? 0;
+      const current = allocations[skillId];
       const isSubSkill = skill.base_skill_id !== undefined;
       const isSpecies = speciesSkillIds.has(skillId);
 
       if (delta > 0) {
-        const cost = getSkillValueIncreaseCost(current, isSubSkill, skillRules);
-        if (remainingPoints < cost) return;
-        onAllocationsChange({ ...allocations, [skillId]: current + 1 });
-      } else {
-        if (isSpecies && current <= 0) return;
-        if (current <= 0) return;
-        const newVal = current - 1;
-        if (isSubSkill && newVal === 0) {
-          // Sub-skill at 0 = unproficient; remove it
-          handleRemoveSkill(skillId);
-        } else {
-          onAllocationsChange({ ...allocations, [skillId]: newVal });
+        if (isSubSkill) {
+          const parent = allSkills.find(
+            (s: Skill) => String(s.id) === String(skill.base_skill_id),
+          );
+          const parentProficient = Boolean(
+            parent &&
+            isSkillAllocationProficient(
+              allocations[String(parent.id)],
+              false,
+              speciesSkillIds.has(String(parent.id)),
+            ),
+          );
+          if (!parentProficient) return;
         }
+        const cost = skillAllocationIncreaseCost(current, isSubSkill, isSpecies, skillRules);
+        if (remainingPoints < cost) return;
+        onAllocationsChange(
+          applySkillAllocationIncrease(allocations, skillId, isSubSkill, isSpecies),
+        );
+        return;
       }
+
+      onAllocationsChange(
+        applySkillAllocationDecrease(allocations, skillId, {
+          isSubSkill,
+          isSpecies,
+          codexSkills: allSkills,
+          speciesSkillIds,
+        }),
+      );
     },
-    [
-      allocations,
-      allSkills,
-      speciesSkillIds,
-      remainingPoints,
-      onAllocationsChange,
-      handleRemoveSkill,
-      skillRules,
-    ],
+    [allocations, allSkills, speciesSkillIds, remainingPoints, onAllocationsChange, skillRules],
   );
 
   const handleAddSkills = useCallback(
@@ -434,7 +447,7 @@ export function SkillsAllocationPage({
               <tr className="border-b-2 border-border-light text-xs tracking-wider text-text-muted uppercase">
                 <th className="w-10 min-w-10 py-2 text-center">Prof</th>
                 <th className="py-2 pl-2 text-left">Skill</th>
-                <th className="w-16 min-w-16 py-2 text-center">Ability</th>
+                <th className="min-w-16 px-1 py-2 text-center whitespace-nowrap">Ability</th>
                 <th className="w-20 min-w-20 py-2 text-center">Bonus</th>
                 <th className="w-28 min-w-[7rem] py-2 text-center whitespace-nowrap">Value</th>
                 <th className="w-10 min-w-10 py-2">
@@ -448,26 +461,35 @@ export function SkillsAllocationPage({
                 const baseSkill = isSubSkill
                   ? allSkills.find((s: Skill) => String(s.id) === String(skill.base_skill_id))
                   : null;
-                const baseValue = baseSkill ? (allocations[String(baseSkill.id)] ?? 0) : 0;
+                const baseRaw = baseSkill ? allocations[String(baseSkill.id)] : undefined;
+                const baseValue = skillAllocationShownValue(baseRaw);
                 const baseProficient = Boolean(
                   baseSkill &&
-                  (speciesSkillIds.has(String(baseSkill.id)) ||
-                    (allocations[String(baseSkill.id)] ?? -1) >= 0),
+                  isSkillAllocationProficient(
+                    baseRaw,
+                    false,
+                    speciesSkillIds.has(String(baseSkill.id)),
+                  ),
                 );
-                const value = Math.max(0, allocations[String(skill.id)] ?? 0);
+                const rawValue = allocations[String(skill.id)];
                 const isSpeciesSkill = speciesSkillIds.has(String(skill.id));
                 const isPathSkill =
                   !isSpeciesSkill && (pathSkillIds?.has(String(skill.id)) ?? false);
-                const effectiveValue = value; // Species can have value 0 (proficient, 0 value)
-                // Base skills: value >= 0 means proficient. Sub-skills: value >= 1 = proficient
-                const proficient = isSubSkill ? value >= 1 : value >= 0;
-                // Chosen ability: for sub-skills use base skill's choice (same ability for base + sub)
-                const skillForAbility = baseSkill ?? skill;
-                const linkedKeys = getLinkedAbilityKeys(skillForAbility.ability);
-                const chosenAbilityKey =
-                  skillAbilities[skillForAbility.id] ??
-                  getHighestLinkedAbilityKey(skillForAbility.ability, abilities) ??
-                  linkedKeys[0];
+                const effectiveValue = skillAllocationShownValue(rawValue);
+                const proficient = isSkillAllocationProficient(
+                  rawValue,
+                  isSubSkill,
+                  isSpeciesSkill,
+                );
+                const subAbility = isSubSkill ? subSkillAllocationAbility(skill.ability) : null;
+                const linkedKeys = isSubSkill
+                  ? (subAbility?.keys ?? [])
+                  : getLinkedAbilityKeys(skill.ability);
+                const chosenAbilityKey = isSubSkill
+                  ? subAbility?.bonusAbilityKey
+                  : (skillAbilities[String(skill.id)] ??
+                    getHighestLinkedAbilityKey(skill.ability, abilities) ??
+                    linkedKeys[0]);
                 const bonus = isSubSkill
                   ? getSubSkillBonus(
                       skill,
@@ -478,17 +500,11 @@ export function SkillsAllocationPage({
                       chosenAbilityKey,
                     )
                   : getSkillBonus(skill, effectiveValue, proficient, chosenAbilityKey);
-                const canInc = isSubSkill
-                  ? baseProficient &&
-                    remainingPoints >=
-                      (effectiveValue === 0
-                        ? skillRules.gainProficiencyCost
-                        : getSkillValueIncreaseCost(effectiveValue, true, skillRules))
-                  : remainingPoints >=
-                    (effectiveValue === 0
-                      ? skillRules.gainProficiencyCost
-                      : getSkillValueIncreaseCost(effectiveValue, false, skillRules));
-                const hasMultipleAbilities = linkedKeys.length > 1;
+                const canInc =
+                  (!isSubSkill || baseProficient) &&
+                  remainingPoints >=
+                    skillAllocationIncreaseCost(rawValue, isSubSkill, isSpeciesSkill, skillRules);
+                const hasMultipleAbilities = !isSubSkill && linkedKeys.length > 1;
                 return (
                   <SkillRow
                     key={String(skill.id)}
@@ -501,10 +517,17 @@ export function SkillsAllocationPage({
                     value={effectiveValue}
                     bonus={bonus}
                     ability={chosenAbilityKey}
-                    availableAbilities={hasMultipleAbilities ? (linkedKeys as string[]) : undefined}
+                    showAbilitySet={isSubSkill}
+                    availableAbilities={
+                      isSubSkill
+                        ? linkedKeys.map(String)
+                        : hasMultipleAbilities
+                          ? linkedKeys.map(String)
+                          : undefined
+                    }
                     onAbilityChange={
                       hasMultipleAbilities && onSkillAbilityChange
-                        ? (key) => onSkillAbilityChange(skillForAbility.id, key)
+                        ? (key) => onSkillAbilityChange(String(skill.id), key)
                         : undefined
                     }
                     isEditing={true}

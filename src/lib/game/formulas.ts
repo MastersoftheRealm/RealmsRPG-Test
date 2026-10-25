@@ -644,6 +644,23 @@ export function getHighestLinkedAbility(
 }
 
 /**
+ * Ability column for a sub-skill row.
+ * Uses that sub-skill's Codex list. Several abilities stay a set — no single key is chosen
+ * for the column. One ability is also the key passed into the bonus helper.
+ */
+export function subSkillAllocationAbility(linkedAbilities: string | string[] | undefined): {
+  keys: (keyof Abilities)[];
+  bonusAbilityKey?: keyof Abilities | undefined;
+} {
+  const keys = getLinkedAbilityKeys(linkedAbilities);
+  if (keys.length === 1) {
+    const only = keys[0];
+    return only ? { keys, bonusAbilityKey: only } : { keys };
+  }
+  return { keys };
+}
+
+/**
  * Get the ability key with the highest value for linked abilities (for default ability selection).
  */
 export function getHighestLinkedAbilityKey(

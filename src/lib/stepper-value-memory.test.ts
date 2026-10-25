@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import {
+  adoptStepperMemory,
   createStepperValueMemory,
   rememberStepperValue,
   stepStepperValue,
@@ -130,6 +131,42 @@ describe('rapid HP and AP stepper clicks keep every step (86e3juy89)', () => {
   it('stops at the existing minimum and maximum', () => {
     expect(rapidClicks(1, [-1, -1], { min: 0, max: 10 })).toEqual([0]);
     expect(rapidClicks(9, [1, 1], { min: 0, max: 10 })).toEqual([10]);
+  });
+
+  it('starts the next step at the shown value when min changes after a clamped minus', () => {
+    const stepped = stepStepperValue(
+      createStepperValueMemory(0),
+      -1,
+      Number.NEGATIVE_INFINITY,
+      Number.POSITIVE_INFINITY,
+    );
+    expect(stepped.value).toBe(-1);
+    const settled = adoptStepperMemory(stepped.memory, 0, true);
+    expect(settled).toEqual({ local: 0, pending: false, burstFrom: 0 });
+    const plus = stepStepperValue(
+      settled,
+      1,
+      Number.NEGATIVE_INFINITY,
+      Number.POSITIVE_INFINITY,
+    );
+    expect(plus.value).toBe(1);
+  });
+
+  it('does not rewind a burst when the range is unchanged', () => {
+    let memory = createStepperValueMemory(20);
+    memory = stepStepperValue(
+      memory,
+      -1,
+      Number.NEGATIVE_INFINITY,
+      Number.POSITIVE_INFINITY,
+    ).memory;
+    memory = stepStepperValue(
+      memory,
+      -1,
+      Number.NEGATIVE_INFINITY,
+      Number.POSITIVE_INFINITY,
+    ).memory;
+    expect(adoptStepperMemory(memory, 20, false).local).toBe(18);
   });
 
   it('hold-repeat keeps stepping while the prop is unchanged', () => {

@@ -31,6 +31,7 @@ import {
   REALMS_ABILITY_ORDER,
   REALMS_ABILITY_ABBR,
   getAbilityValue,
+  isListedSavedCreatureSkill,
   partsToChips,
   type CodexPart,
 } from './creature-stat-block-helpers';
@@ -423,7 +424,8 @@ export function buildSkillRows(
   abilityAbbr: string;
   bonus: number;
 }> {
-  return creatureSkills.map((s, idx) => {
+  const listed = creatureSkills.filter(isListedSavedCreatureSkill);
+  return listed.map((s, idx) => {
     const def = skillsDb.find(
       (d) =>
         (s.id != null && String(d.id) === String(s.id)) ||

@@ -11,6 +11,11 @@ export function formatModifier(value: number): string {
   return value >= 0 ? `+${value}` : `${value}`;
 }
 
+/** Saved skills with `proficient: false` stay on the creature. Lists omit them. */
+export function isListedSavedCreatureSkill(skill: { proficient?: boolean | undefined }): boolean {
+  return skill.proficient !== false;
+}
+
 export const REALMS_ABILITY_ORDER = [
   'strength',
   'vitality',
