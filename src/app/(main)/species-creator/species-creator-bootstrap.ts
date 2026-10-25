@@ -66,10 +66,7 @@ export const TRAIT_LIMITS: Record<TraitCategory, number> = {
   flaws: MAX_FLAWS,
 };
 
-/**
- * One row per trait id and per name in a species picker.
- * The lower numeric id wins so a later duplicate name is hidden without a data write.
- */
+/** One row per trait id in a species picker (duplicate names are allowed). */
 export function dedupeSpeciesPickerTraits<
   T extends { id: string | number; name?: string | null | undefined },
 >(traits: readonly T[]): T[] {
@@ -86,17 +83,11 @@ export function dedupeSpeciesPickerTraits<
     return a.index - b.index;
   });
   const seenIds = new Set<string>();
-  const seenNames = new Set<string>();
   const kept: T[] = [];
   for (const { trait } of ranked) {
     const id = String(trait.id);
     if (seenIds.has(id)) continue;
-    const name = String(trait.name ?? '')
-      .trim()
-      .toLowerCase();
-    if (name && seenNames.has(name)) continue;
     seenIds.add(id);
-    if (name) seenNames.add(name);
     kept.push(trait);
   }
   return kept;
