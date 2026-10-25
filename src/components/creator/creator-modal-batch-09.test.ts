@@ -12,8 +12,16 @@ const globals = readFileSync(new URL('../../app/globals.css', import.meta.url), 
 const infoTippy = readFileSync(new URL('../patterns/help/info-tippy.tsx', import.meta.url), 'utf8');
 
 describe('creator modal batch 9 (86e3jym93 / 86e3jyh5p)', () => {
-  it('places the mobile full-screen close control below the site header', () => {
-    expect(modal).toContain("useFullScreenMobile ? 'top-[calc(5rem+0.25rem)]'");
+  it('keeps the full-screen close control in the title row under the site header', () => {
+    expect(modal).toContain(
+      "useFullScreenMobile\n          ? 'top-20 right-0 bottom-0 left-0 items-stretch'",
+    );
+    expect(modal).toContain("useFullScreenMobile ? 'top-20 right-0 bottom-0 left-0'");
+    expect(modal).toContain("useFullScreenMobile ? 'bg-background'");
+    expect(modal).toContain("useFullScreenMobile ? 'mx-4 mt-2 mb-0 px-4 py-1.5'");
+    expect(modal).toContain("showCloseButton && 'pr-12'");
+    expect(modal).toContain("useFullScreenMobile ? 'top-2' : 'top-4'");
+    expect(modal).not.toContain('top-[calc(5rem+0.25rem)]');
   });
 
   it('wraps creator load modal footer actions and shows the selection count on narrow viewports', () => {
