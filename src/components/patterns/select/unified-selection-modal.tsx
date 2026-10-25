@@ -34,6 +34,14 @@ import {
 import { UnifiedSelectionModalToolbar } from './unified-selection-modal-toolbar';
 import type { UnifiedSelectionModalProps } from './unified-selection-modal-types';
 
+/** True when another selected row would pass maxSelections, including max 0. */
+export function selectionAddBlocked(
+  currentCount: number,
+  maxSelections: number | undefined,
+): boolean {
+  return maxSelections !== undefined && currentCount >= maxSelections;
+}
+
 export type {
   SelectableItem,
   ColumnHeader,
@@ -171,6 +179,8 @@ export function UnifiedSelectionModal({
         } else if (maxSelections === 1) {
           setQuantities(showQuantity ? { [key]: 1 } : {});
           return new Set([key]);
+        } else if (selectionAddBlocked(prev.size, maxSelections)) {
+          return prev;
         } else {
           newSet.add(key);
           if (showQuantity) {

@@ -36,6 +36,10 @@ export interface PoweredMartialSliderProps {
   className?: string | undefined;
 }
 
+export function formatProficiencyPointTotal(maxPoints: number): string {
+  return `Total: ${maxPoints} ${maxPoints === 1 ? 'point' : 'points'}`;
+}
+
 export function PoweredMartialSlider({
   powerValue,
   martialValue,
@@ -72,7 +76,7 @@ export function PoweredMartialSlider({
       {!compact && (
         <div className="mb-3 flex items-center justify-between">
           <span className="text-sm font-medium text-text-secondary">Proficiency Allocation</span>
-          <span className="text-sm text-text-muted">Total: {maxPoints} points</span>
+          <span className="text-sm text-text-muted">{formatProficiencyPointTotal(maxPoints)}</span>
         </div>
       )}
 

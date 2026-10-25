@@ -17,7 +17,7 @@ import {
   type CreatureFeat as CodexCreatureFeatRow,
 } from '@/hooks';
 import { checkFeatRequirements } from '@/lib/game/feat-requirements';
-import { buildFeatDetailSections } from '@/lib/codex/feat-list';
+import { buildFeatDetailSections, normalizeFeatCategory } from '@/lib/codex/feat-list';
 import { buildSkillIdToName } from '@/lib/codex/skill-list';
 import { normalizeFeatAbilities } from '@/lib/codex/feat-ability';
 import { descriptorChipData } from '@/lib/chip/chip-data-helpers';
@@ -85,7 +85,7 @@ function featToSelectableItem(
   const detailSections = glrSurfaceDetailSections(
     'creature-feat-picker',
     {
-      category: feat.category,
+      category: normalizeFeatCategory(feat.category),
       ability: formatAbilityList(feat.ability),
       uses: usesVal != null && usesVal > 0 ? usesVal : undefined,
       recovery: formatListCellLabel(feat.rec_period),
@@ -115,6 +115,8 @@ export interface AddCreatureFeatModalProps {
   onClose: () => void;
   creature: CreatureState;
   onAdd: (feats: CreatureFeat[]) => void;
+  /** Rows this confirm can add. 0 when feat points are already spent out. */
+  maxSelections?: number | undefined;
 }
 
 export function AddCreatureFeatModal({
@@ -122,6 +124,7 @@ export function AddCreatureFeatModal({
   onClose,
   creature,
   onAdd,
+  maxSelections = 10,
 }: AddCreatureFeatModalProps) {
   const categorySelectId = useId();
   const abilitySelectId = useId();
@@ -187,8 +190,11 @@ export function AddCreatureFeatModal({
     const abils = new Set<string>();
     feats.forEach((f) => {
       if (f.state_feat) return;
-      cats.add(f.category);
-      normalizeFeatAbilities(f.ability).forEach((a) => abils.add(a));
+      const category = normalizeFeatCategory(f.category);
+      if (category && category.toLowerCase() !== 'all') cats.add(category);
+      normalizeFeatAbilities(f.ability).forEach((ability) => {
+        if (ability.trim().toLowerCase() !== 'all') abils.add(ability);
+      });
     });
     return {
       categories: Array.from(cats).filter(Boolean).sort(),
@@ -235,7 +241,8 @@ export function AddCreatureFeatModal({
       if (!showStateFeats && feat.state_feat) return false;
       const { meets } = checkPlayerFeatRequirements(feat);
       if (!meets && !showBlocked) return false;
-      if (selectedCategory && feat.category !== selectedCategory) return false;
+      if (selectedCategory && normalizeFeatCategory(feat.category) !== selectedCategory)
+        return false;
       if (selectedAbility && !normalizeFeatAbilities(feat.ability).includes(selectedAbility))
         return false;
       return true;
@@ -476,7 +483,7 @@ export function AddCreatureFeatModal({
         items={allItems}
         isLoading={isLoading}
         onConfirm={handleConfirm}
-        maxSelections={10}
+        maxSelections={maxSelections}
         displayFilter={displayFilter}
         columns={[
           { key: 'name', label: 'Name', sortable: true },

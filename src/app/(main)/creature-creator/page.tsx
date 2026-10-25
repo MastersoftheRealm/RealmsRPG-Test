@@ -39,6 +39,14 @@ import {
 import { CreatorSummaryPanel, CreatorPageShell } from '@/components/creator';
 import { getCreatureAbilityBounds } from '@/lib/game/creature-ability-bounds';
 import { formatCreatureAbilityPointsValue } from './creature-ability-points-display';
+import {
+  creatureMovementLabel,
+  creaturePickerMaxSelections,
+  creatureSenseLabel,
+  creatureSizeDisplayLabel,
+  formatCreatureGroupedNumber,
+  uniqueCreatureLanguages,
+} from './creature-trait-labels';
 import type { DisplayItem } from '@/types/items';
 import type { CreatureSkill } from './creature-creator-types';
 import { AddCreatureFeatModal } from './AddCreatureFeatModal';
@@ -183,7 +191,7 @@ function CreatureCreatorContent() {
         title: 'Restart Creature',
         description:
           'Are you sure you want to reset all creature data? This will clear all fields and cannot be undone.',
-        confirmLabel: 'Reset',
+        confirmLabel: 'Restart',
       }}
       loadModal={{
         isOpen: load.showLoadModal,
@@ -254,7 +262,7 @@ function CreatureCreatorContent() {
             },
             {
               label: 'Currency',
-              value: `${stats.currencyRemaining}/${stats.currency}`,
+              value: `${formatCreatureGroupedNumber(stats.currencyRemaining)}/${formatCreatureGroupedNumber(stats.currency)}`,
               variant:
                 stats.currencyRemaining < 0
                   ? 'danger'
@@ -305,7 +313,7 @@ function CreatureCreatorContent() {
             { label: 'Archetype', value: formatListCellLabel(creature.archetypeType) },
             { label: 'Level', value: formatCreatureLevel(creature.level) },
             { label: 'Type', value: formatListCellLabel(creature.type) },
-            { label: 'Size', value: formatListCellLabel(creature.size) },
+            { label: 'Size', value: creatureSizeDisplayLabel(creature.size) },
           ]}
           lineItems={[
             {
@@ -317,13 +325,16 @@ function CreatureCreatorContent() {
             },
             { label: 'Resistances', items: creature.resistances },
             { label: 'Immunities', items: creature.immunities },
+            { label: 'Condition Immunities', items: creature.conditionImmunities },
             { label: 'Weaknesses', items: creature.weaknesses },
-            { label: 'Senses', items: creature.senses },
-            { label: 'Movement', items: creature.movementTypes },
-            { label: 'Languages', items: creature.languages },
+            { label: 'Senses', items: creature.senses.map(creatureSenseLabel) },
+            { label: 'Movement', items: creature.movementTypes.map(creatureMovementLabel) },
+            { label: 'Languages', items: uniqueCreatureLanguages(creature.languages) },
             {
               label: 'Inventory Cost',
-              items: [`${stats.currencySpent}c spent / ${stats.currency}c max`],
+              items: [
+                `${formatCreatureGroupedNumber(stats.currencySpent)}c spent / ${formatCreatureGroupedNumber(stats.currency)}c max`,
+              ],
             },
           ]}
         />
@@ -360,7 +371,7 @@ function CreatureCreatorContent() {
                 : powerSelectableItems
             }
             title={powerModalTab === 'empowered' ? 'Select Empowered Techniques' : 'Select Powers'}
-            maxSelections={10}
+            maxSelections={creaturePickerMaxSelections(stats.trainingRemaining)}
             itemLabel={powerModalTab === 'empowered' ? 'empowered technique' : 'power'}
             searchPlaceholder={
               powerModalTab === 'empowered' ? 'Search empowered techniques...' : 'Search powers...'
@@ -382,7 +393,7 @@ function CreatureCreatorContent() {
             }}
             items={techniqueSelectableItems}
             title="Select Techniques"
-            maxSelections={10}
+            maxSelections={creaturePickerMaxSelections(stats.trainingRemaining)}
             itemLabel="technique"
             searchPlaceholder="Search techniques..."
             columns={[
@@ -406,6 +417,7 @@ function CreatureCreatorContent() {
                   feats: mergeCreatureFeatsOnAdd(prev.feats, feats, codexFeatsById),
                 }))
               }
+              maxSelections={creaturePickerMaxSelections(stats.featRemaining)}
             />
           ) : null}
           <UnifiedSelectionModal
@@ -435,7 +447,7 @@ function CreatureCreatorContent() {
             items={armamentSelectableItems}
             key={inventoryTab}
             title="Select Inventory"
-            maxSelections={10}
+            maxSelections={creaturePickerMaxSelections(stats.currencyRemaining)}
             itemLabel={
               inventoryTab === 'armor'
                 ? 'armor'

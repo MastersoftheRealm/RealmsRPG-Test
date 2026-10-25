@@ -28,11 +28,15 @@ import type { Abilities } from '@/types';
 import type { CreatureData, CreatureStatBlockArmament } from './creature-stat-block-types';
 import { StatBlockSection } from './creature-stat-block-section';
 import {
+  creatureMovementDescription,
+  creatureMovementLabel,
+  creatureSenseDescription,
+  creatureSenseLabel,
+} from '@/app/(main)/creature-creator/creature-trait-labels';
+import {
   REALMS_ABILITY_ORDER,
   REALMS_ABILITY_ABBR,
   DEFENSES_BY_ABILITY,
-  SENSE_DESCRIPTIONS,
-  MOVEMENT_DESCRIPTIONS,
   SIMPLE_LIST_COLUMNS,
   SIMPLE_LIST_GRID,
   formatModifier,
@@ -291,8 +295,8 @@ export function CreatureStatBlockExpandedContent({
                       <GridListRow
                         key={`${creature.id}-sense-${sense}`}
                         id={`${creature.id}-sense-${sense}`}
-                        name={sense}
-                        description={SENSE_DESCRIPTIONS[sense] ?? 'No description available.'}
+                        name={creatureSenseLabel(sense)}
+                        description={creatureSenseDescription(sense)}
                         gridColumns={SIMPLE_LIST_GRID}
                         compact
                       />
@@ -309,8 +313,8 @@ export function CreatureStatBlockExpandedContent({
                       <GridListRow
                         key={`${creature.id}-move-${m}`}
                         id={`${creature.id}-move-${m}`}
-                        name={m}
-                        description={MOVEMENT_DESCRIPTIONS[m] ?? 'See movement rules for details.'}
+                        name={creatureMovementLabel(m)}
+                        description={creatureMovementDescription(m)}
                         gridColumns={SIMPLE_LIST_GRID}
                         compact
                       />

@@ -110,7 +110,10 @@ export function CollapsibleSection({
             variant="secondary"
             size="sm"
             className="w-full shrink-0 sm:w-auto"
-            onClick={() => onEnabledChange?.(true)}
+            onClick={() => {
+              setIsExpanded(true);
+              onEnabledChange?.(true);
+            }}
           >
             + Enable {title}
           </Button>

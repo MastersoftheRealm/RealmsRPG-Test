@@ -26,12 +26,15 @@ export function ChipList({
   onRemove,
   color = 'bg-surface-alt text-text-secondary',
   costLabel,
+  removeLabel,
 }: {
   items: string[];
   onRemove: (item: string) => void;
   color?: string | undefined;
   /** Optional: return feat point cost label per item (e.g. "+1 pt"). Shown as small chip. */
   costLabel?: ((item: string) => string | undefined) | undefined;
+  /** Accessible name for the remove control. Default "Remove {item}". */
+  removeLabel?: ((item: string) => string) | undefined;
 }) {
   if (items.length === 0) return <p className="text-sm text-text-muted italic">None</p>;
 
@@ -62,7 +65,7 @@ export function ChipList({
               type="button"
               onClick={() => onRemove(item)}
               className="hit-area-dense-square inline-flex shrink-0 items-center justify-center text-text-muted hover:text-danger-fg"
-              aria-label={`Remove ${item}`}
+              aria-label={removeLabel?.(item) ?? `Remove ${item}`}
             >
               ×
             </button>
@@ -84,6 +87,8 @@ export function ExpandableChipList({
   rowHoverClass,
   descriptions,
   costLabel,
+  labelFor,
+  removeLabel,
 }: {
   items: string[];
   onRemove: (item: string) => void;
@@ -92,6 +97,10 @@ export function ExpandableChipList({
   descriptions: Record<string, string>;
   /** Optional: return feat point cost label per item (e.g. "+1 pt"). Shown in rightSlot as chip. */
   costLabel?: ((item: string) => string | undefined) | undefined;
+  /** Display label for a stored key. Removal still uses the stored value. */
+  labelFor?: ((item: string) => string) | undefined;
+  /** Accessible name for the remove control. Default "Remove {label}". */
+  removeLabel?: ((item: string) => string) | undefined;
 }) {
   if (items.length === 0) return <p className="text-sm text-text-muted italic">None</p>;
 
@@ -105,9 +114,10 @@ export function ExpandableChipList({
           <GridListRow
             key={item}
             id={item}
-            name={item}
+            name={labelFor?.(item) ?? item}
             description={description}
             onDelete={() => onRemove(item)}
+            deleteLabel={removeLabel?.(item) ?? `Remove ${labelFor?.(item) ?? item}`}
             compact
             className={color}
             rowHoverClass={rowHoverClass}

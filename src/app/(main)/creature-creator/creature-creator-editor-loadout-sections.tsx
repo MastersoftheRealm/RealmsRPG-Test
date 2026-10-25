@@ -25,8 +25,10 @@ import { buildFeatLevelChips } from '@/lib/leveled-feats';
 import type { CreatureCreatorEditorProps } from './creature-creator-editor';
 import { CreatureCreatorEditorInventorySection } from './creature-creator-editor-inventory-section';
 import { creaturePowerRowKey } from '@/lib/game/creature-power-instances';
+import { creatureFeatRowsShowLevel } from './creature-trait-labels';
 
 const CREATURE_FEAT_LIST_GRID = '1.15fr 0.58fr 0.52fr 0.4fr';
+const CREATURE_FEAT_LIST_GRID_NO_LEVEL = '1.15fr 0.58fr 0.4fr';
 const CREATURE_POWER_LIST_GRID =
   '1.4fr 0.6fr minmax(5.5rem, 0.95fr) 0.85fr 0.7fr minmax(6rem, 0.85fr)';
 const CREATURE_REMOVE_ROW_CHROME = { rightSlot: true } as const;
@@ -104,6 +106,9 @@ export function CreatureCreatorEditorLoadoutSections({
     };
   }, [creature.level, creature.martialProficiency, creature.powerProficiency, creature.powers]);
 
+  const showFeatLevel = creatureFeatRowsShowLevel(sortedFeats);
+  const featListGrid = showFeatLevel ? CREATURE_FEAT_LIST_GRID : CREATURE_FEAT_LIST_GRID_NO_LEVEL;
+
   return (
     <>
       <CollapsibleSection
@@ -122,10 +127,12 @@ export function CreatureCreatorEditorLoadoutSections({
               columns={[
                 { key: 'name', label: 'NAME' },
                 { key: 'typeLabel', label: 'TYPE', width: '0.58fr', align: 'center' },
-                { key: 'level', label: 'LVL', width: '0.52fr', align: 'center' },
+                ...(showFeatLevel
+                  ? [{ key: 'level', label: 'LVL', width: '0.52fr', align: 'center' as const }]
+                  : []),
                 { key: 'points', label: 'PTS', width: '0.4fr', align: 'center' },
               ]}
-              gridColumns={CREATURE_FEAT_LIST_GRID}
+              gridColumns={featListGrid}
               sortState={featSort}
               onSort={onFeatSort}
               rowChrome={CREATURE_REMOVE_ROW_CHROME}
@@ -142,7 +149,7 @@ export function CreatureCreatorEditorLoadoutSections({
                     id={feat.id}
                     name={feat.name}
                     description={feat.description}
-                    gridColumns={CREATURE_FEAT_LIST_GRID}
+                    gridColumns={featListGrid}
                     detailSections={
                       levelChips.length > 0
                         ? [{ label: 'Other feat levels', chips: levelChips }]
@@ -154,24 +161,28 @@ export function CreatureCreatorEditorLoadoutSections({
                         value: formatListCellLabel(feat.typeLabel),
                         align: 'center',
                       },
-                      {
-                        key: 'level',
-                        value: feat.levelMeta ? (
-                          <ValueStepper
-                            value={feat.levelMeta.currentLevel}
-                            onChange={(level) => onCreatureFeatLevelChange(feat.id, level)}
-                            min={feat.levelMeta.minLevel}
-                            max={feat.levelMeta.maxQualified}
-                            size="sm"
-                            variant="inline"
-                            decrementTitle={`Decrease ${feat.name} level`}
-                            incrementTitle={`Increase ${feat.name} level`}
-                          />
-                        ) : (
-                          '-'
-                        ),
-                        align: 'center',
-                      },
+                      ...(showFeatLevel
+                        ? [
+                            {
+                              key: 'level',
+                              value: feat.levelMeta ? (
+                                <ValueStepper
+                                  value={feat.levelMeta.currentLevel}
+                                  onChange={(level) => onCreatureFeatLevelChange(feat.id, level)}
+                                  min={feat.levelMeta.minLevel}
+                                  max={feat.levelMeta.maxQualified}
+                                  size="sm"
+                                  variant="inline"
+                                  decrementTitle={`Decrease ${feat.name} level`}
+                                  incrementTitle={`Increase ${feat.name} level`}
+                                />
+                              ) : (
+                                '-'
+                              ),
+                              align: 'center' as const,
+                            },
+                          ]
+                        : []),
                       {
                         key: 'points',
                         value: feat.points != null ? feat.points : '-',

@@ -72,6 +72,8 @@ export function InfoTippy({
   const tooltipId = useId();
   const touchHoldTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const referenceElRef = useRef<HTMLElement | null>(null);
+  const suppressClickToggleRef = useRef(false);
+  const [blockHover, setBlockHover] = useState(false);
   const isInteractive = typeof content !== 'string';
 
   const clearTouchHold = useCallback(() => {
@@ -109,12 +111,14 @@ export function InfoTippy({
   );
 
   const hover = useHover(context, {
+    enabled: !blockHover,
     mouseOnly: true,
     move: false,
     delay: { open: 100, close: 0 },
     ...(isInteractive ? { handleClose: safePolygon() } : {}),
   });
-  const focus = useFocus(context, { visibleOnly: false });
+  // Mouse click focuses the trigger. visibleOnly keeps that from reopening a click-closed tip.
+  const focus = useFocus(context, { visibleOnly: true });
   const dismiss = useDismiss(context, { escapeKey: true, outsidePress: true });
   const role = useRole(context, { role: 'tooltip' });
 
@@ -125,12 +129,31 @@ export function InfoTippy({
     onPointerDown(event: PointerEvent) {
       if (event.pointerType === 'touch') {
         clearTouchHold();
-        touchHoldTimerRef.current = setTimeout(() => setOpen(true), TOUCH_HOLD_MS);
+        touchHoldTimerRef.current = setTimeout(() => {
+          suppressClickToggleRef.current = true;
+          setOpen(true);
+        }, TOUCH_HOLD_MS);
       }
     },
     onPointerUp: clearTouchHold,
     onPointerCancel: clearTouchHold,
-    onPointerLeave: clearTouchHold,
+    onPointerLeave() {
+      setBlockHover(false);
+      clearTouchHold();
+    },
+    onClick() {
+      if (suppressClickToggleRef.current) {
+        suppressClickToggleRef.current = false;
+        return;
+      }
+      setOpen((current) => {
+        if (current) {
+          setBlockHover(true);
+          return false;
+        }
+        return true;
+      });
+    },
   };
 
   if (disabled || content == null || content === '') {

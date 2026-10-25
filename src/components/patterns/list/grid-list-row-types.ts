@@ -184,6 +184,8 @@ interface GridListRowPropsFields {
   // ===== Action Buttons (for editable content) =====
   onEdit?: (() => void) | undefined;
   onDelete?: (() => void) | undefined;
+  /** Accessible name for the delete control. Default "Remove". */
+  deleteLabel?: string | undefined;
   onDuplicate?: (() => void) | undefined;
   /** Add to my library (for Realms Library items) */
   onAddToLibrary?: (() => void) | undefined;

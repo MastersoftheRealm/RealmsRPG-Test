@@ -42,14 +42,34 @@ export interface IconButtonProps
 }
 
 const IconButton = React.forwardRef<HTMLButtonElement, IconButtonProps>(
-  ({ className, variant, size, label, children, ...props }, ref) => {
+  (
+    { className, variant, size, label, children, onClick, onPointerDown, onPointerLeave, ...props },
+    ref,
+  ) => {
+    const titleText = typeof props.title === 'string' ? props.title : label;
     return (
       <button
         ref={ref}
         className={cn(iconButtonVariants({ variant, size, className }))}
         aria-label={label}
-        title={label}
         {...props}
+        title={titleText}
+        onPointerDown={(event) => {
+          // Native title tooltips stay on screen after the control unmounts.
+          event.currentTarget.removeAttribute('title');
+          onPointerDown?.(event);
+        }}
+        onPointerLeave={(event) => {
+          if (!event.currentTarget.getAttribute('title')) {
+            event.currentTarget.setAttribute('title', titleText);
+          }
+          onPointerLeave?.(event);
+        }}
+        onClick={(event) => {
+          event.currentTarget.removeAttribute('title');
+          event.currentTarget.blur();
+          onClick?.(event);
+        }}
       >
         {children}
       </button>
