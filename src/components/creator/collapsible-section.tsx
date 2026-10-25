@@ -130,8 +130,8 @@ export function CollapsibleSection({
         />
         <div
           className={cn(
-            'pointer-events-none relative z-10 flex gap-2',
-            actionsOnOwnRow ? 'flex-wrap items-start' : 'items-start',
+            'pointer-events-none relative z-10 flex items-start gap-2',
+            actionsOnOwnRow && 'flex-wrap',
           )}
         >
           {icon && <span className="flex-shrink-0 text-xl">{icon}</span>}
