@@ -123,6 +123,8 @@ export function Modal({
   const onCloseRef = React.useRef(onClose);
   /** Escape skips the post-close click sink; every other close path arms it (86e3jzduq / 86e3jw5g6). */
   const skipClickSinkOnCloseRef = React.useRef(false);
+  /** Closed dialogs stay mounted. Only a real open→close arms the shield. */
+  const wasOpenForClickSinkRef = React.useRef(false);
   const dialogId = React.useId();
   const titleId = `${dialogId}-title`;
   const descriptionId = `${dialogId}-description`;
@@ -161,7 +163,12 @@ export function Modal({
   }, [onClose]);
 
   React.useEffect(() => {
-    if (isOpen) return;
+    if (isOpen) {
+      wasOpenForClickSinkRef.current = true;
+      return;
+    }
+    if (!wasOpenForClickSinkRef.current) return;
+    wasOpenForClickSinkRef.current = false;
     if (skipClickSinkOnCloseRef.current) {
       skipClickSinkOnCloseRef.current = false;
       return;
