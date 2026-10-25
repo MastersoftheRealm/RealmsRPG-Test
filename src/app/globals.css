@@ -827,6 +827,37 @@
     }
   }
 
+  /* Creature summary stays inside the full-width creator grid (86e3jzdw5).
+     The Roll Log button is 3.5rem, inset by --dock-gap, so it crosses a
+     1rem / 1.5rem / 2rem page gutter (px-4 / sm:px-6 / lg:px-8). Cap the
+     card so its border box ends 1px before that button. Do not pad #main-content
+     or this frame with --dock-reserved-end — that shrinks the grid.
+     Above the centered 1440px container the button sits outside the grid
+     and the cap drops to zero. */
+  .creature-creator-summary-fab-clear {
+    --creator-inline-pad: 1rem;
+    --creator-fab-overlap: max(
+      0px,
+      calc(
+        var(--dock-fab-size) + var(--dock-gap) - var(--creator-inline-pad) -
+          max(0px, (100vw - min(100vw, var(--container-wide))) / 2) + 1px
+      )
+    );
+    max-width: calc(100% - var(--creator-fab-overlap));
+  }
+
+  @media (min-width: 640px) {
+    .creature-creator-summary-fab-clear {
+      --creator-inline-pad: 1.5rem;
+    }
+  }
+
+  @media (min-width: 1024px) {
+    .creature-creator-summary-fab-clear {
+      --creator-inline-pad: 2rem;
+    }
+  }
+
   body:has([aria-modal='true']) .floating-dock-bottom-right,
   body:has([aria-modal='true']) .sheet-mobile-action-dock {
     visibility: hidden;
