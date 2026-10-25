@@ -57,6 +57,7 @@ import {
 } from '@/lib/library/catalog-listing';
 import { formatCost } from '@/lib/game/creator-constants';
 import { rarityChipVariant } from '@/lib/chip/rarity-chip-variant';
+import { creatorMissingNameSaveDisabledReason } from '@/lib/creator/creator-missing-name-message';
 
 function ItemCreatorContent() {
   const { user } = useAuthStore();
@@ -187,6 +188,7 @@ function ItemCreatorWorkspace({
       onDiscardLocalDraft={ws.discardLocalDraft}
       saving={ws.save.saving}
       saveDisabled={!ws.name.trim()}
+      saveDisabledReason={creatorMissingNameSaveDisabledReason(ws.name, 'items') ?? undefined}
       loading={{
         isLoading,
         loadingMessage: 'Loading item properties...',

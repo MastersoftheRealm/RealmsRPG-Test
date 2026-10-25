@@ -2,6 +2,7 @@
  * Why a guided chapter-rail pill is locked (86e3jmr0g).
  */
 
+import { guidedChapterProgressTitle } from '@/lib/guided-creator/chapter-progress-label';
 import {
   canOpenGuidedSubStep,
   isGuidedSubStepSatisfied,
@@ -35,4 +36,18 @@ export function findGuidedChapterRailBlockerChapter(
   const blocker = findGuidedChapterRailBlockerSubStep(targetSubStep, order, draft);
   if (!blocker) return null;
   return chapters.find((chapter) => chapter.subSteps.includes(blocker)) ?? null;
+}
+
+/** Rail tooltip label for the blocking step (matches on-screen sub-step title when set). */
+export function guidedChapterRailBlockerDisplayTitle(
+  targetSubStep: GuidedSubStep,
+  chapters: readonly GuidedChapterRailRef[],
+  order: readonly GuidedSubStep[],
+  draft: GuidedDraft,
+): string | null {
+  const blockerSubStep = findGuidedChapterRailBlockerSubStep(targetSubStep, order, draft);
+  if (!blockerSubStep) return null;
+  const chapter = findGuidedChapterRailBlockerChapter(targetSubStep, chapters, order, draft);
+  if (!chapter) return null;
+  return guidedChapterProgressTitle(blockerSubStep, chapter) ?? chapter.title;
 }
