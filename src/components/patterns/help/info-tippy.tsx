@@ -71,6 +71,7 @@ export function InfoTippy({
   const [open, setOpen] = useState(false);
   const tooltipId = useId();
   const touchHoldTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const referenceElRef = useRef<HTMLElement | null>(null);
   const isInteractive = typeof content !== 'string';
 
   const clearTouchHold = useCallback(() => {
@@ -82,7 +83,11 @@ export function InfoTippy({
 
   const handleOpenChange = useCallback(
     (nextOpen: boolean) => {
-      if (!nextOpen) clearTouchHold();
+      if (!nextOpen) {
+        clearTouchHold();
+        // Escape dismiss leaves hover/focus state that blocks the next open (86e3jwt6b).
+        referenceElRef.current?.blur();
+      }
       setOpen(nextOpen);
     },
     [clearTouchHold],
@@ -94,6 +99,14 @@ export function InfoTippy({
       onOpenChange: handleOpenChange,
       placement,
     });
+
+  const setReference = useCallback(
+    (node: HTMLElement | null) => {
+      referenceElRef.current = node;
+      refs.setReference(node);
+    },
+    [refs],
+  );
 
   const hover = useHover(context, {
     mouseOnly: true,
@@ -140,13 +153,13 @@ export function InfoTippy({
       children,
       // eslint-disable-next-line react-hooks/refs -- Floating UI reference prop merge during render
       getReferenceProps({
-        ref: refs.setReference,
+        ref: setReference,
         ...touchHoldProps,
       }),
     )
   ) : (
     <button
-      ref={refs.setReference}
+      ref={setReference}
       type="button"
       aria-label={label}
       className={triggerClassName}

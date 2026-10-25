@@ -85,7 +85,7 @@ function ToastItem({ toast, onDismiss }: { toast: Toast; onDismiss: () => void }
     <div
       className={cn(
         'duration-slow flex items-center gap-3 rounded-lg px-4 py-3 shadow-lg transition-all ease-standard',
-        'max-w-[400px] min-w-[300px]',
+        'max-w-[min(400px,calc(100vw-2.5rem))] min-w-0 sm:min-w-[300px]',
         toastStyles[toast.type],
         isVisible && !isLeaving ? 'translate-x-0 opacity-100' : 'translate-x-full opacity-0',
       )}
@@ -132,7 +132,7 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
       {mounted &&
         createPortal(
           <div
-            className="fixed top-20 right-5 z-toast-stack flex flex-col gap-3"
+            className="fixed right-5 bottom-[max(1rem,env(safe-area-inset-bottom,0px))] left-5 z-toast-stack flex flex-col gap-3 sm:top-20 sm:right-5 sm:bottom-auto sm:left-auto"
             role="region"
             aria-live="polite"
             aria-label="Notifications"

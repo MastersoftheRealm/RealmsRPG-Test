@@ -121,6 +121,8 @@ export function Modal({
   const previouslyFocusedRef = React.useRef<HTMLElement | null>(null);
   const restoreFocusTimerRef = React.useRef<number | null>(null);
   const onCloseRef = React.useRef(onClose);
+  /** Only pointer dismiss (backdrop / ×) arms the post-close click sink — not Escape (86e3jzduq). */
+  const armClickSinkOnCloseRef = React.useRef(false);
   const dialogId = React.useId();
   const titleId = `${dialogId}-title`;
   const descriptionId = `${dialogId}-description`;
@@ -139,7 +141,6 @@ export function Modal({
     if (captureCloseClicks) setCaptureCloseClicks(false);
   } else if (wasOpen && !captureCloseClicks) {
     setWasOpen(false);
-    setCaptureCloseClicks(true);
   }
 
   React.useEffect(() => {
@@ -155,6 +156,18 @@ export function Modal({
     onCloseRef.current = onClose;
   }, [onClose]);
 
+  const handlePointerClose = React.useCallback(() => {
+    armClickSinkOnCloseRef.current = true;
+    onClose();
+  }, [onClose]);
+
+  React.useEffect(() => {
+    if (isOpen) return;
+    if (!armClickSinkOnCloseRef.current) return;
+    armClickSinkOnCloseRef.current = false;
+    setCaptureCloseClicks(true);
+  }, [isOpen]);
+
   React.useEffect(() => {
     if (!isOpen) return;
     lockBodyScroll();
@@ -169,6 +182,7 @@ export function Modal({
     const handleEscape = (e: KeyboardEvent) => {
       if (e.key !== 'Escape') return;
       if (openDialogIds[openDialogIds.length - 1] !== dialogId) return;
+      armClickSinkOnCloseRef.current = false;
       onCloseRef.current();
     };
     document.addEventListener('keydown', handleEscape);
@@ -282,7 +296,7 @@ export function Modal({
           useFullScreenMobile ? 'bg-background' : 'bg-black/60 backdrop-blur-sm',
           animating ? 'opacity-100' : 'opacity-0',
         )}
-        onClick={onClose}
+        onClick={handlePointerClose}
         aria-hidden="true"
       />
 
@@ -352,9 +366,12 @@ export function Modal({
         {showCloseButton && !hasCustomHeader && (
           <IconButton
             variant="ghost"
-            onClick={onClose}
+            onClick={handlePointerClose}
             label="Close modal"
-            className={cn('absolute right-4 z-10', useFullScreenMobile ? 'top-2' : 'top-4')}
+            className={cn(
+              'absolute right-4 z-10',
+              useFullScreenMobile ? 'top-[calc(5rem+0.25rem)]' : 'top-4',
+            )}
           >
             <X className="h-5 w-5" />
           </IconButton>

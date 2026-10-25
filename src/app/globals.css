@@ -834,6 +834,12 @@
     z-index: 0;
   }
 
+  /* Creator load/save toasts must not cover modal chrome (86e3jyh5p). */
+  body:has([aria-modal='true']) [aria-label='Notifications'] {
+    visibility: hidden;
+    pointer-events: none;
+  }
+
   /* C1: the sheet frame is viewport-bounded. Hide the site footer below md so
      the document does not grow a marketing strip under the play surface. */
   @media (max-width: 767px) {

@@ -29,4 +29,10 @@ describe('modal confirm double-click (86e3jw5g6)', () => {
     expect(modal).toContain('MODAL_CLOSE_CLICK_CAPTURE_MS');
     expect(modal).toContain('data-testid="modal-close-click-capture"');
   });
+
+  it('does not arm the click sink when the dialog closes via Escape (86e3jzduq)', () => {
+    expect(modal).toContain('armClickSinkOnCloseRef.current = false');
+    expect(modal).toContain('handlePointerClose');
+    expect(modal).toContain('armClickSinkOnCloseRef.current = true');
+  });
 });
