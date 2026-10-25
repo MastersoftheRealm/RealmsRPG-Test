@@ -8,10 +8,6 @@
 import * as React from 'react';
 import { cn } from '@/lib/utils/cn';
 import { ChevronDown } from 'lucide-react';
-import {
-  dedupeSelectOptions,
-  shouldShowSelectPlaceholder,
-} from '@/components/patterns/filters/filter-utils';
 
 export interface SelectOption {
   value: string;
@@ -36,17 +32,6 @@ const Select = React.forwardRef<HTMLSelectElement, SelectProps>(
     const selectId = id || generatedId;
     const errorId = `${selectId}-error`;
     const helperId = `${selectId}-helper`;
-    const { uniqueOptions, showPlaceholder } = React.useMemo(() => {
-      const deduped = dedupeSelectOptions(options);
-      const showSyntheticPlaceholder = shouldShowSelectPlaceholder(placeholder, deduped);
-      const resolved = showSyntheticPlaceholder
-        ? deduped.filter((opt) => opt.value !== '')
-        : deduped;
-      return {
-        uniqueOptions: resolved,
-        showPlaceholder: shouldShowSelectPlaceholder(placeholder, resolved),
-      };
-    }, [options, placeholder]);
 
     return (
       <div className="w-full min-w-0">
@@ -71,12 +56,12 @@ const Select = React.forwardRef<HTMLSelectElement, SelectProps>(
             aria-describedby={error ? errorId : helperText ? helperId : undefined}
             {...props}
           >
-            {showPlaceholder && (
+            {placeholder && (
               <option value="" disabled>
                 {placeholder}
               </option>
             )}
-            {uniqueOptions.map((option) => (
+            {options.map((option) => (
               <option key={option.value} value={option.value} disabled={option.disabled}>
                 {option.label}
               </option>
