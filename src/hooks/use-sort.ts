@@ -11,6 +11,7 @@
 import { useState, useCallback } from 'react';
 import type { SortState } from '@/components/patterns/list/list-header';
 import { parseCreatureLevelSortValue } from '@/lib/game/creature-level-display';
+import { compareDurationDisplayLabels } from '@/lib/utils/duration';
 
 /**
  * Pure function: compute next SortState when user clicks a column.
@@ -65,6 +66,9 @@ function compareSortValues(aVal: unknown, bVal: unknown, columnKey: string): num
 
   const aStr = aVal == null || aVal === '' ? '' : String(aVal);
   const bStr = bVal == null || bVal === '' ? '' : String(bVal);
+  if (keyLower === 'duration') {
+    return compareDurationDisplayLabels(aStr, bStr);
+  }
   return aStr.localeCompare(bStr, undefined, { numeric: true });
 }
 

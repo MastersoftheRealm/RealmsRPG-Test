@@ -36,7 +36,8 @@ describe('library-selectable-builders (DEV-V-016 parity)', () => {
     });
     expect(cols.map((c) => c.key)).toEqual(['Energy', 'Action', 'Duration', 'Area', 'Damage']);
     expect(cols.find((c) => c.key === 'Damage')?.value).toContain('2d6');
-    expect(getModalGridColumns('power')).toMatch(/1\.2fr/);
+    expect(getModalGridColumns('power')).toMatch(/minmax\(0, 1\.2fr\)/);
+    expect(cols.find((c) => c.key === 'Duration')?.allowMultiline).toBe(true);
   });
 
   it('technique headers/columns are Action, Energy, Attack, Training Pts (DEV-V-016-T002)', () => {

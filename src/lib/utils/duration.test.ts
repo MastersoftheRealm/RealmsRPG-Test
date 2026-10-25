@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import {
+  compareDurationDisplayLabels,
   formatDurationCompact,
   formatDurationDisplay,
   formatDurationFromTypeAndValue,
@@ -13,6 +14,13 @@ describe('formatDurationFromTypeAndValue', () => {
     expect(formatDurationFromTypeAndValue('rounds', 2)).toBe('2 Rounds');
     expect(formatDurationFromTypeAndValue('instant', 0)).toBe('Instant');
     expect(formatDurationFromTypeAndValue('permanent', 0)).toBe('Permanent');
+  });
+});
+
+describe('compareDurationDisplayLabels', () => {
+  it('orders labels by DURATION_TYPES, not alphabetically', () => {
+    expect(compareDurationDisplayLabels('Instant', '1 Day')).toBeLessThan(0);
+    expect(compareDurationDisplayLabels('2 Rounds', '1 Minute')).toBeLessThan(0);
   });
 });
 

@@ -511,7 +511,12 @@ export function getItemColumns(
         })();
     return selectPowerChrome.layout.columnFacts.map((id) => {
       const key = glrColumnKeyFor(id, 'power', 'select', 'usm');
-      return { key, value: values[key] ?? '-', align: 'center' as const };
+      return {
+        key,
+        value: values[key] ?? '-',
+        align: 'center' as const,
+        ...(key.toLowerCase() === 'duration' ? { allowMultiline: true as const } : {}),
+      };
     });
   }
   if (itemType === 'technique') {
@@ -603,20 +608,27 @@ export function getItemColumns(
   });
 }
 
+function modalGridMinmaxTracks(template: string): string {
+  return template
+    .split(' ')
+    .map((track) => (track.endsWith('fr') ? `minmax(0, ${track})` : track))
+    .join(' ');
+}
+
 export function getModalGridColumns(itemType: LibraryItemType): string {
   switch (itemType) {
     case 'power':
-      return selectPowerChrome.grid;
+      return modalGridMinmaxTracks(selectPowerChrome.grid);
     case 'technique':
-      return selectTechniqueChrome.grid;
+      return modalGridMinmaxTracks(selectTechniqueChrome.grid);
     case 'weapon':
-      return selectWeaponChrome.grid;
+      return modalGridMinmaxTracks(selectWeaponChrome.grid);
     case 'shield':
-      return selectShieldChrome.grid;
+      return modalGridMinmaxTracks(selectShieldChrome.grid);
     case 'armor':
-      return selectArmorChrome.grid;
+      return modalGridMinmaxTracks(selectArmorChrome.grid);
     case 'equipment':
-      return selectEquipmentChrome.grid;
+      return modalGridMinmaxTracks(selectEquipmentChrome.grid);
     default:
       return '1.5fr';
   }

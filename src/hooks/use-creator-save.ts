@@ -164,12 +164,8 @@ export function useCreatorSave(options: UseCreatorSaveOptions): UseCreatorSaveRe
   } | null>(null);
 
   useEffect(() => {
-    if (!saveMessage) return;
-    showToast(
-      saveMessage.text,
-      saveMessage.type === 'success' ? 'success' : 'error',
-      saveMessage.type === 'error' ? 6000 : undefined,
-    );
+    if (!saveMessage || saveMessage.type !== 'success') return;
+    showToast(saveMessage.text, 'success');
   }, [saveMessage, showToast]);
   const [saveTarget, setSaveTarget] = useState<CreatorSaveTarget>(initialSaveTarget);
   const [saving, setSaving] = useState(false);

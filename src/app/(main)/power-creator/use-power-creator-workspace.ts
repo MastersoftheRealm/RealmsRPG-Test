@@ -67,6 +67,8 @@ type UsePowerCreatorWorkspaceArgs = {
   editReplacesDraft: boolean;
   powerParts: PowerPart[];
   initialSaveTarget?: CreatorSaveTarget | undefined;
+  /** Clears `?edit=` after a successful save (86e3jwurq). */
+  onEditSaveCommitted?: (() => void) | undefined;
 };
 
 export function usePowerCreatorWorkspace({
@@ -75,6 +77,7 @@ export function usePowerCreatorWorkspace({
   editReplacesDraft,
   powerParts,
   initialSaveTarget,
+  onEditSaveCommitted,
 }: UsePowerCreatorWorkspaceArgs) {
   const [name, setName] = useState(initialFormState.name);
   const [description, setDescription] = useState(initialFormState.description);
@@ -340,7 +343,10 @@ export function usePowerCreatorWorkspace({
     initialSaveTarget,
     editingId: editPowerId,
     onSaveSuccess: resetFields,
-    onSaveCommitted: acceptDraft,
+    onSaveCommitted: () => {
+      acceptDraft();
+      if (editPowerId) onEditSaveCommitted?.();
+    },
   });
 
   useCreatorEditMissNotice(Boolean(editPowerId) && !discardDraft, 'power', save.setSaveMessage);

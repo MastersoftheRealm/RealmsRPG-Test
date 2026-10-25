@@ -16,7 +16,7 @@
 'use client';
 
 import { useState, Suspense, useMemo } from 'react';
-import { useSearchParams } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { Wand2, Zap, Target } from 'lucide-react';
 import {
   usePowerParts,
@@ -35,6 +35,7 @@ import { creatorMissingNameSaveDisabledReason } from '@/lib/creator/creator-miss
 import { formatRoleQuotaExceededMessage, isAtRoleQuota } from '@/lib/role-quota-messages';
 import { useAuthStore } from '@/stores';
 import { SourceFilter, sourceFilterSummary } from '@/components/patterns/filters/source-filter';
+import { ErrorDisplay } from '@/components/patterns';
 import {
   CreatorPageShell,
   AdvancedCalculationsPanel,
@@ -183,6 +184,7 @@ function PowerCreatorWorkspace({
   error,
   refetch,
 }: PowerCreatorWorkspaceProps) {
+  const router = useRouter();
   const { profile } = useAccountProfile(user);
   const { data: libraryCounts } = useUserLibraryCounts({ enabled: !!user && !editPowerId });
   const maxPowers = profile?.rolePolicy?.maxPowers;
@@ -206,6 +208,7 @@ function PowerCreatorWorkspace({
       findLoadedLibraryItem(load.rawItems, editPowerId),
       { canSaveToOfficial: isAdmin },
     ),
+    onEditSaveCommitted: () => router.replace('/power-creator', { scroll: false }),
   });
 
   const variantTabGroup = useTabGroup('power-variants');
@@ -452,11 +455,21 @@ function PowerCreatorWorkspace({
         undefined
       }
       aboveGrid={
-        <PowerCreatorCompositionBand
-          state={ws.variants}
-          tabGroupId={variantTabGroup.tabGroupId}
-          sharedPanelId={variantTabGroup.sharedPanelId}
-        />
+        <>
+          {ws.save.saveMessage?.type === 'error' ? (
+            <div className="mb-4">
+              <ErrorDisplay
+                message={ws.save.saveMessage.text}
+                onRetry={() => void ws.save.handleSave()}
+              />
+            </div>
+          ) : null}
+          <PowerCreatorCompositionBand
+            state={ws.variants}
+            tabGroupId={variantTabGroup.tabGroupId}
+            sharedPanelId={variantTabGroup.sharedPanelId}
+          />
+        </>
       }
       loading={{
         isLoading,
