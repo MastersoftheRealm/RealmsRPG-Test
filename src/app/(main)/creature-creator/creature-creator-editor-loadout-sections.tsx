@@ -26,6 +26,7 @@ import type { CreatureCreatorEditorProps } from './creature-creator-editor';
 import { CreatureCreatorEditorInventorySection } from './creature-creator-editor-inventory-section';
 import { creaturePowerRowKey } from '@/lib/game/creature-power-instances';
 import { creatureFeatRowsShowLevel } from './creature-trait-labels';
+import { creatureCreatorOptionalSectionRemoveConfirm } from './creature-creator-remove-section-confirm-placeholder';
 
 const CREATURE_FEAT_LIST_GRID = '1.15fr 0.58fr 0.52fr 0.4fr';
 const CREATURE_FEAT_LIST_GRID_NO_LEVEL = '1.15fr 0.58fr 0.4fr';
@@ -219,6 +220,7 @@ export function CreatureCreatorEditorLoadoutSections({
         optional
         enabled={creature.enablePowers}
         onEnabledChange={(enabled) => updateCreature({ enablePowers: enabled })}
+        removeConfirm={creatureCreatorOptionalSectionRemoveConfirm}
         itemCount={creature.powers.length}
       >
         {innateBudget.innateEnergyMax > 0 ? (
@@ -347,6 +349,7 @@ export function CreatureCreatorEditorLoadoutSections({
         optional
         enabled={creature.enableTechniques}
         onEnabledChange={(enabled) => updateCreature({ enableTechniques: enabled })}
+        removeConfirm={creatureCreatorOptionalSectionRemoveConfirm}
         itemCount={creature.techniques.length}
       >
         {creature.techniques.length === 0 ? (
