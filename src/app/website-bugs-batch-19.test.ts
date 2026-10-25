@@ -81,8 +81,9 @@ describe('website bugs batch 19 — power creator save/load', () => {
     expect(cols.find((c) => c.key === 'Action')?.allowMultiline).toBe(true);
     expect(cols.map((c) => c.key)).not.toContain('Damage');
     const grid = getModalGridColumns('power');
-    expect(grid).toContain('minmax(16ch, 1.45fr)');
-    expect(grid).toContain('minmax(20ch, 1.2fr)');
+    expect(grid).toContain('minmax(7.75rem, 1.3fr)');
+    expect(grid).toContain('minmax(8rem, 1.1fr)');
+    expect(grid).not.toMatch(/\d(?:ch|em)\b/);
     expect(grid).not.toContain('minmax(0,');
   });
 });

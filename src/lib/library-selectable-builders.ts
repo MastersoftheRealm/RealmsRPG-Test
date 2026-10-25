@@ -80,6 +80,30 @@ const selectPowerChrome = glrListChrome(
   { entityType: 'power', mode: 'select' },
   { labelStyle: 'title', keyStyle: 'usm' },
 );
+/**
+ * Shared by ListHeader and GridListRow. Lengths are `rem`, not `ch`: the header
+ * is `text-xs` (12px) and the row grid inherits 16px, so `ch` minimums diverge.
+ * The row then overflows the xl dialog and Area slides under Select (86e3jwurj).
+ * Floors keep "Elemental Burst", "Long (3 AP) Action" / "Basic action", and
+ * "1 target" intact; longer names may ellipsis.
+ */
+const LOAD_MODAL_TRACKS: Record<'power' | 'technique', Record<string, string>> = {
+  power: {
+    name: 'minmax(7.75rem, 1.3fr)',
+    Energy: 'minmax(3.25rem, 0.4fr)',
+    Action: 'minmax(8rem, 1.1fr)',
+    Duration: 'minmax(4.5rem, 0.75fr)',
+    Area: 'minmax(3.5rem, 0.5fr)',
+  },
+  technique: {
+    name: 'minmax(7.75rem, 1.2fr)',
+    Action: 'minmax(8rem, 1.05fr)',
+    Energy: 'minmax(3.25rem, 0.45fr)',
+    Attack: 'minmax(3.25rem, 0.7fr)',
+    'Training Pts': 'minmax(5.75rem, 0.75fr)',
+  },
+};
+
 const loadPowerChrome = glrListChrome(
   {
     entityType: 'power',
@@ -89,13 +113,7 @@ const loadPowerChrome = glrListChrome(
   {
     labelStyle: 'title',
     keyStyle: 'usm',
-    trackOverrides: {
-      name: 'minmax(16ch, 1.45fr)',
-      Energy: 'minmax(3.25rem, 0.4fr)',
-      Action: 'minmax(20ch, 1.2fr)',
-      Duration: 'minmax(10ch, 0.85fr)',
-      Area: 'minmax(8ch, 0.65fr)',
-    },
+    trackOverrides: LOAD_MODAL_TRACKS.power,
   },
 );
 const selectTechniqueChrome = glrListChrome(
@@ -103,13 +121,7 @@ const selectTechniqueChrome = glrListChrome(
   {
     labelStyle: 'title',
     keyStyle: 'usm',
-    trackOverrides: {
-      name: 'minmax(16ch, 1.35fr)',
-      Action: 'minmax(20ch, 1.15fr)',
-      Energy: 'minmax(3.25rem, 0.55fr)',
-      Attack: 'minmax(8ch, 1fr)',
-      'Training Pts': 'minmax(7ch, 0.7fr)',
-    },
+    trackOverrides: LOAD_MODAL_TRACKS.technique,
   },
 );
 const selectWeaponChrome = glrListChrome(
