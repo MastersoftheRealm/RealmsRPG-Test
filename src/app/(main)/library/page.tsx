@@ -220,7 +220,6 @@ function LibraryContent() {
           await deleteEnhancedItem.mutateAsync(deleteConfirm.item.id);
           break;
       }
-      showToast(`Deleted "${deleteConfirm.item.name}"`, 'success');
       setDeleteConfirm(null);
     } catch (error) {
       showToast(getErrorMessage(error, 'Failed to delete item'), 'error');

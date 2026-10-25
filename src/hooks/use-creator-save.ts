@@ -11,6 +11,7 @@
 import { useState, useCallback, useEffect } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import { useToast } from '@/components/ui';
+import { isLikelyNetworkFailure } from '@/lib/network-error';
 import {
   CREATOR_DESCRIPTION_MAX_LENGTH,
   CREATOR_DESCRIPTION_TOO_LONG_MESSAGE,
@@ -99,6 +100,8 @@ export interface UseCreatorSaveOptions {
 }
 
 export interface UseCreatorSaveReturn {
+  /** Network/server unreachable during save; show CloudSyncOfflineBanner. */
+  saveSyncBlocked: boolean;
   saveMessage: { type: 'success' | 'error'; text: string } | null;
   setSaveMessage: (msg: { type: 'success' | 'error'; text: string } | null) => void;
   saveTarget: CreatorSaveTarget;
@@ -158,6 +161,7 @@ export function useCreatorSave(options: UseCreatorSaveOptions): UseCreatorSaveRe
 
   const queryClient = useQueryClient();
   const { showToast } = useToast();
+  const [saveSyncBlocked, setSaveSyncBlocked] = useState(false);
   const [saveMessage, setSaveMessage] = useState<{
     type: 'success' | 'error';
     text: string;
@@ -210,6 +214,7 @@ export function useCreatorSave(options: UseCreatorSaveOptions): UseCreatorSaveRe
       const payload = { ...data, createdAt: new Date().toISOString(), updatedAt: new Date() };
       setSaving(true);
       setSaveMessage(null);
+      setSaveSyncBlocked(false);
       try {
         if (isOfficialSaveTarget(target)) {
           const listing = saveTargetToCatalogListing(target);
@@ -257,13 +262,20 @@ export function useCreatorSave(options: UseCreatorSaveOptions): UseCreatorSaveRe
           }
         }, 2000);
         onSaveCommitted?.();
+        setSaveSyncBlocked(false);
       } catch (err) {
-        setSaveMessage({
-          type: 'error',
-          text: creatorLibrarySaveErrorMessage(err, {
-            updatingExisting: !isOfficialSaveTarget(target) && Boolean(existingId),
-          }),
-        });
+        if (isLikelyNetworkFailure(err)) {
+          setSaveSyncBlocked(true);
+          setSaveMessage(null);
+        } else {
+          setSaveSyncBlocked(false);
+          setSaveMessage({
+            type: 'error',
+            text: creatorLibrarySaveErrorMessage(err, {
+              updatingExisting: !isOfficialSaveTarget(target) && Boolean(existingId),
+            }),
+          });
+        }
       } finally {
         setSaving(false);
       }
@@ -302,7 +314,13 @@ export function useCreatorSave(options: UseCreatorSaveOptions): UseCreatorSaveRe
       const lookup = await readPrivateLibraryNameMatches(() =>
         findLibraryItemsByName(type, trimmedName),
       );
+      if ('networkFailure' in lookup) {
+        setSaveSyncBlocked(true);
+        setSaveMessage(null);
+        return;
+      }
       if ('errorText' in lookup) {
+        setSaveSyncBlocked(false);
         setSaveMessage({ type: 'error', text: lookup.errorText });
         return;
       }
@@ -370,6 +388,7 @@ export function useCreatorSave(options: UseCreatorSaveOptions): UseCreatorSaveRe
   );
 
   return {
+    saveSyncBlocked,
     saveMessage,
     setSaveMessage,
     saveTarget,

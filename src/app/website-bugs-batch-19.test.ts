@@ -2,8 +2,11 @@ import { readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
 import { compareDurationDisplayLabels } from '@/lib/utils/duration';
 import { sortByColumn } from '@/hooks/use-sort';
-import { creatorSaveFailureText } from '@/lib/creator/private-library-name-save';
 import { getItemColumns, getModalGridColumns } from '@/lib/library-selectable-builders';
+import {
+  CLOUD_SYNC_SERVER_UNREACHABLE_BODY,
+  CLOUD_SYNC_SERVER_UNREACHABLE_TITLE,
+} from '@/components/patterns/chrome/cloud-sync-offline-banner';
 
 const loginPrompt = readFileSync(
   new URL('../components/patterns/chrome/login-prompt-modal.tsx', import.meta.url),
@@ -16,22 +19,28 @@ const powerWorkspace = readFileSync(
 );
 const libraryPage = readFileSync(new URL('./(main)/library/page.tsx', import.meta.url), 'utf8');
 const creatorSave = readFileSync(new URL('../hooks/use-creator-save.ts', import.meta.url), 'utf8');
+const offlineBanner = readFileSync(
+  new URL('../components/patterns/chrome/cloud-sync-offline-banner.tsx', import.meta.url),
+  'utf8',
+);
 
 describe('website bugs batch 19 — power creator save/load', () => {
-  it('maps offline save failures to friendly copy and shows them inline (86e3jwurv)', () => {
-    expect(creatorSaveFailureText(new TypeError('Failed to fetch'))).toBe(
-      'Could not reach the server. Check your connection and try again.',
+  it('uses CloudSyncOfflineBanner copy for offline save (86e3jwurv)', () => {
+    expect(CLOUD_SYNC_SERVER_UNREACHABLE_TITLE).toBe('Could not reach the server');
+    expect(CLOUD_SYNC_SERVER_UNREACHABLE_BODY).toBe(
+      'Your latest changes are not saved to the cloud. Check your connection and try again.',
     );
-    expect(creatorSaveFailureText(new TypeError('Failed to fetch'))).not.toContain(
-      'Failed to save',
-    );
+    expect(offlineBanner).toContain('CLOUD_SYNC_SERVER_UNREACHABLE_TITLE');
+    expect(powerPage).toContain('CloudSyncOfflineBanner');
+    expect(powerPage).toContain('saveSyncBlocked');
+    expect(creatorSave).toContain('isLikelyNetworkFailure');
+    expect(creatorSave).toContain('setSaveSyncBlocked(true)');
     expect(creatorSave).toContain("saveMessage.type !== 'success'");
-    expect(powerPage).toContain('ErrorDisplay');
-    expect(powerPage).toContain("ws.save.saveMessage?.type === 'error'");
   });
 
-  it('toasts library delete success (86e3jwuru)', () => {
-    expect(libraryPage).toContain('showToast(`Deleted "${deleteConfirm.item.name}"`, \'success\')');
+  it('does not add a new library delete success sentence (86e3jwuru)', () => {
+    expect(libraryPage).not.toContain('Deleted "');
+    expect(libraryPage).not.toMatch(/showToast\([^)]*Deleted/);
   });
 
   it('guest load prompt says load a power (86e3jwurr)', () => {

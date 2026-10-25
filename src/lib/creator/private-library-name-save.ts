@@ -48,14 +48,8 @@ export function decidePrivateLibraryNameSave(
   return { kind: 'confirm-replace', id: other, matchCount: ids.length };
 }
 
-const CREATOR_SAVE_NETWORK_MESSAGE =
-  'Could not reach the server. Check your connection and try again.';
-
 /** Same text as a failed creator save toast. */
 export function creatorSaveFailureText(err: unknown): string {
-  if (isLikelyNetworkFailure(err)) {
-    return CREATOR_SAVE_NETWORK_MESSAGE;
-  }
   const message = getErrorMessage(err, 'Failed to save');
   if (message.includes(CREATOR_NAME_TOO_LONG_MESSAGE)) return CREATOR_NAME_TOO_LONG_MESSAGE;
   if (message.includes(CREATOR_DESCRIPTION_TOO_LONG_MESSAGE))
@@ -69,11 +63,12 @@ export function creatorSaveFailureText(err: unknown): string {
  */
 export async function readPrivateLibraryNameMatches(
   findMatches: () => Promise<ReadonlyArray<{ id: string }>>,
-): Promise<{ ids: string[] } | { errorText: string }> {
+): Promise<{ ids: string[] } | { errorText: string } | { networkFailure: true }> {
   try {
     const rows = await findMatches();
     return { ids: rows.map((row) => row.id) };
   } catch (err) {
+    if (isLikelyNetworkFailure(err)) return { networkFailure: true };
     return { errorText: creatorSaveFailureText(err) };
   }
 }

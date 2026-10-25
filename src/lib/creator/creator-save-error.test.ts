@@ -14,14 +14,6 @@ describe('creator library save errors', () => {
     expect(text).not.toMatch(/saved successfully/i);
   });
 
-  it('maps network failures to connection copy', () => {
-    expect(
-      creatorLibrarySaveErrorMessage(new TypeError('Failed to fetch'), {
-        updatingExisting: true,
-      }),
-    ).toBe('Could not reach the server. Check your connection and try again.');
-  });
-
   it('keeps other save failures, including a missing row on create', () => {
     expect(
       creatorLibrarySaveErrorMessage(new ApiError('Item not found', 404), {

@@ -35,7 +35,7 @@ import { creatorMissingNameSaveDisabledReason } from '@/lib/creator/creator-miss
 import { formatRoleQuotaExceededMessage, isAtRoleQuota } from '@/lib/role-quota-messages';
 import { useAuthStore } from '@/stores';
 import { SourceFilter, sourceFilterSummary } from '@/components/patterns/filters/source-filter';
-import { ErrorDisplay } from '@/components/patterns';
+import { CloudSyncOfflineBanner, ErrorDisplay } from '@/components/patterns';
 import {
   CreatorPageShell,
   AdvancedCalculationsPanel,
@@ -456,6 +456,11 @@ function PowerCreatorWorkspace({
       }
       aboveGrid={
         <>
+          <CloudSyncOfflineBanner
+            enabled={Boolean(user)}
+            syncBlocked={ws.save.saveSyncBlocked}
+            onRetry={() => void ws.save.handleSave()}
+          />
           {ws.save.saveMessage?.type === 'error' ? (
             <div className="mb-4">
               <ErrorDisplay
