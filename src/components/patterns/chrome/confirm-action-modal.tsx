@@ -71,7 +71,7 @@ export function ConfirmActionModal({
       isOpen={isOpen}
       onClose={onClose}
       size="sm"
-      titleA11y={title}
+      titleA11y={title || undefined}
       footer={
         <div className="flex w-full flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center sm:justify-center">
           <Button
@@ -109,10 +109,14 @@ export function ConfirmActionModal({
         <div className={cn('mb-4 flex h-12 w-12 items-center justify-center rounded-full', iconBg)}>
           <IconComponent className={cn('h-6 w-6', iconColor)} />
         </div>
-        <h2 className="mb-2 w-full min-w-0 text-lg font-semibold break-words text-text-primary">
-          {title}
-        </h2>
-        <p className="w-full min-w-0 break-words text-text-muted">{description}</p>
+        {title ? (
+          <h2 className="mb-2 w-full min-w-0 text-lg font-semibold break-words text-text-primary">
+            {title}
+          </h2>
+        ) : null}
+        {description ? (
+          <p className="w-full min-w-0 break-words text-text-muted">{description}</p>
+        ) : null}
       </div>
     </Modal>
   );

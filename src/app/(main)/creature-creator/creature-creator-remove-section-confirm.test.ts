@@ -8,23 +8,45 @@ import {
   creatureCreatorOptionalSectionRemoveConfirm,
 } from './creature-creator-remove-section-confirm-placeholder';
 
+const placeholderPrefix = '[' + 'Placeholder';
+
 describe('creature creator optional section remove confirm (1dfe8wf28e6)', () => {
-  it('exposes placeholder copy constants in one module', () => {
-    expect(REMOVE_SECTION_CONFIRM_PLACEHOLDER_TITLE).toContain('[Placeholder:');
-    expect(REMOVE_SECTION_CONFIRM_PLACEHOLDER_DESCRIPTION).toBe('[Placeholder: confirm remove]');
-    expect(REMOVE_SECTION_CONFIRM_PLACEHOLDER_CONFIRM_LABEL).toContain('[Placeholder:');
-    expect(creatureCreatorOptionalSectionRemoveConfirm.title).toBe(
-      REMOVE_SECTION_CONFIRM_PLACEHOLDER_TITLE,
+  it('reuses ConfirmActionModal labels and hides slots with no existing sentence', () => {
+    const copy = readFileSync(
+      path.join(import.meta.dirname, 'creature-creator-remove-section-confirm-placeholder.ts'),
+      'utf8',
     );
-    expect(creatureCreatorOptionalSectionRemoveConfirm.description).toBe(
-      REMOVE_SECTION_CONFIRM_PLACEHOLDER_DESCRIPTION,
+    const modal = readFileSync(
+      path.join(
+        import.meta.dirname,
+        '../../../components/patterns/chrome/confirm-action-modal.tsx',
+      ),
+      'utf8',
     );
-    expect(creatureCreatorOptionalSectionRemoveConfirm.confirmLabel).toBe(
-      REMOVE_SECTION_CONFIRM_PLACEHOLDER_CONFIRM_LABEL,
-    );
+    const restart = readFileSync(path.join(import.meta.dirname, 'page.tsx'), 'utf8');
+
+    expect(copy).toContain("// TODO: needs Kadin's wording");
+    expect(restart).toContain("title: 'Restart Creature'");
+    expect(restart).toContain("confirmLabel: 'Restart'");
+    expect(modal).toContain("confirmLabel = 'Confirm'");
+    expect(modal).toContain("cancelLabel = 'Cancel'");
+    expect(modal).toContain('title ?');
+    expect(modal).toContain('description ?');
+
+    expect(REMOVE_SECTION_CONFIRM_PLACEHOLDER_CONFIRM_LABEL).toBe('Confirm');
+    expect(REMOVE_SECTION_CONFIRM_PLACEHOLDER_TITLE).toBe('');
+    expect(REMOVE_SECTION_CONFIRM_PLACEHOLDER_DESCRIPTION).toBe('');
+    expect(creatureCreatorOptionalSectionRemoveConfirm).toEqual({
+      title: '',
+      description: '',
+      confirmLabel: 'Confirm',
+    });
+    for (const value of Object.values(creatureCreatorOptionalSectionRemoveConfirm)) {
+      expect(value.startsWith(placeholderPrefix)).toBe(false);
+    }
   });
 
-  it('wires placeholder remove confirm through CollapsibleSection and ConfirmActionModal', () => {
+  it('wires remove confirm through CollapsibleSection and ConfirmActionModal', () => {
     const collapsible = readFileSync(
       path.join(import.meta.dirname, '../../../components/creator/collapsible-section.tsx'),
       'utf8',
@@ -32,6 +54,9 @@ describe('creature creator optional section remove confirm (1dfe8wf28e6)', () =>
     expect(collapsible).toContain('ConfirmActionModal');
     expect(collapsible).toContain('confirmVariant="danger"');
     expect(collapsible).toContain('removeConfirm');
+    expect(collapsible).toContain('title={removeConfirm.title}');
+    expect(collapsible).toContain('description={removeConfirm.description}');
+    expect(collapsible).toContain('confirmLabel={removeConfirm.confirmLabel}');
 
     const loadout = readFileSync(
       path.join(import.meta.dirname, 'creature-creator-editor-loadout-sections.tsx'),
