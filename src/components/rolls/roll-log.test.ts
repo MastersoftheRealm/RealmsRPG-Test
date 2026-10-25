@@ -28,7 +28,8 @@ describe('RollLog bonus source hover (TASK-893)', () => {
 describe('RollLog roll entry titles (86e3kfkc1 / 86e3t17b1)', () => {
   it('wraps long titles instead of a one-line ellipsis and keeps title for hover', () => {
     expect(source).toContain('title={roll.title}');
-    expect(source).toContain('line-clamp-2 break-words');
+    expect(source).toContain('line-clamp-2');
+    expect(source).toContain('break-words');
     expect(source).not.toMatch(/roll\.title[\s\S]{0,120}className="[^"]*\btruncate\b/);
   });
 });
