@@ -57,15 +57,16 @@ describe('trait search ignores surrounding spaces (86e3jx1n1)', () => {
   });
 });
 
-describe('species trait picker hides a duplicate name (86e3jx1mv)', () => {
-  it('keeps the lower id when two rows share a name', () => {
+describe('species trait picker keeps same-name traits with different ids (86e3jx1mv)', () => {
+  it('keeps every id and only collapses duplicate ids', () => {
     const kept = dedupeSpeciesPickerTraits([
-      { id: '40', name: 'Vampiric' },
+      { id: '209', name: 'Vampiric' },
+      { id: '193', name: 'Vampiric' },
       { id: '12', name: ' vampiric ' },
       { id: '12', name: 'Vampiric' },
       { id: '3', name: 'Aquatic' },
     ]);
-    expect(kept.map((trait) => trait.id)).toEqual(['3', '12']);
+    expect(kept.map((trait) => trait.id)).toEqual(['3', '12', '193', '209']);
   });
 
   it('dedupes inside each trait picker after that picker filter', () => {
