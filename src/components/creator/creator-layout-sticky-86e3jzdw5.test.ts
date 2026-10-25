@@ -25,7 +25,9 @@ describe('creator page width & sticky summary (batch 7)', () => {
 
   it('fills the sidebar grid track at desktop', () => {
     expect(creatorLayout).toContain('grid w-full');
-    expect(creatorLayout).toMatch(/order-1 min-w-0 w-full lg:order-2/);
+    const sidebarCol = creatorLayout.match(/order-1[^"]*lg:order-2/)?.[0] ?? '';
+    expect(sidebarCol).toContain('w-full');
+    expect(sidebarCol).toContain('min-w-0');
   });
 
   it('enables species summary sticky chrome like other creators', () => {
