@@ -1,7 +1,7 @@
 'use client';
 
 import { useMemo } from 'react';
-import { PathHelpCard } from '@/components/patterns';
+import { PathHelpCard, stripRedundantPathHelpLead } from '@/components/patterns';
 import { getPathRecommendationsForLevel } from '@/lib/game/archetype-path';
 import { PathRemoveGuidance } from '@/components/character-sheet/path-level-guidance';
 import { resolveArchetypeDisplayName } from '@/lib/game/archetype-display';
@@ -54,7 +54,9 @@ export function ArchetypePathGuidance({ character }: { character: Character }) {
 
       {showLevel1Notes && level <= 1 ? (
         <PathHelpCard pathName={pathName}>
-          <span className="block font-normal whitespace-pre-wrap">{level1Notes}</span>
+          <span className="block font-normal whitespace-pre-wrap">
+            {stripRedundantPathHelpLead(level1Notes!, pathName)}
+          </span>
         </PathHelpCard>
       ) : null}
 

@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import {
   characterSupportsInnatePowers,
+  formatInnateThresholdWarningForPower,
   isInnateEnergyTotalOverBudget,
   isInnatePowerOverThreshold,
   resolveCharacterInnateEnergy,
@@ -39,5 +40,13 @@ describe('innate budget warnings (86e3pbwf2)', () => {
     expect(isInnatePowerOverThreshold(8, 8)).toBe(false);
     expect(isInnateEnergyTotalOverBudget(8, [4, 5])).toBe(true);
     expect(isInnateEnergyTotalOverBudget(8, [4, 4])).toBe(false);
+  });
+});
+
+describe('formatInnateThresholdWarningForPower (86e3rkvau)', () => {
+  it('substitutes the power name into the human-written warning copy', () => {
+    expect(formatInnateThresholdWarningForPower('QA PC126 Modify', 16, 8)).toBe(
+      'QA PC126 Modify exceeds your Innate Threshold.',
+    );
   });
 });

@@ -10,6 +10,14 @@
 
 import { ReactNode } from 'react';
 
+/** Strip a leading "As a {pathName}," when notes already include it (codex level1.notes). */
+export function stripRedundantPathHelpLead(notes: string, pathName: string): string {
+  const trimmed = notes.trim();
+  if (!trimmed || !pathName.trim()) return trimmed;
+  const escaped = pathName.trim().replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  return trimmed.replace(new RegExp(`^As a\\s+${escaped}\\s*,\\s*`, 'i'), '');
+}
+
 export interface PathHelpCardProps {
   /** Archetype path name (e.g. from draft.archetype?.name) */
   pathName: string;

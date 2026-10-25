@@ -75,12 +75,12 @@ export function ConfirmActionModal({
       showCloseButton={false}
       titleA11y={title}
       footer={
-        <div className="flex w-full flex-wrap items-center justify-center gap-3">
+        <div className="flex w-full flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center sm:justify-center">
           <Button
             variant="secondary"
             onClick={onClose}
             disabled={isLoading}
-            className="min-w-0 flex-1"
+            className="w-full min-w-0 text-center whitespace-normal sm:flex-1"
           >
             {cancelLabel}
           </Button>
@@ -89,7 +89,7 @@ export function ConfirmActionModal({
               variant="secondary"
               onClick={onSecondaryConfirm}
               disabled={isLoading}
-              className="min-w-0 flex-1"
+              className="w-full min-w-0 text-center whitespace-normal sm:flex-1"
             >
               {secondaryConfirmLabel}
             </Button>
@@ -100,7 +100,7 @@ export function ConfirmActionModal({
             onClick={onConfirm}
             disabled={isLoading}
             isLoading={isLoading}
-            className="min-w-0 flex-1"
+            className="w-full min-w-0 text-center whitespace-normal sm:flex-1"
           >
             {confirmButtonLabel}
           </Button>

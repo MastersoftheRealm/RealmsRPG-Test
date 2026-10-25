@@ -108,8 +108,9 @@ import {
   withDamageCategory,
 } from '@/lib/library/power-technique-categories';
 import {
-  INNATE_THRESHOLD_WARNING,
+  formatInnateThresholdWarningForPower,
   SHEET_INNATE_NOT_ALLOWED_WARNING,
+  SHEET_INNATE_THRESHOLD_WARNING_ROW_CLASS,
   isInnatePowerOverThreshold,
 } from '@/lib/character/innate-power-capacity';
 type RollContext = ReturnType<typeof useRollsOptional>;
@@ -462,10 +463,11 @@ export function mapPowerRows(
       badges: needsProfBadge(ctx, { powers: [power] }),
       innate: isInnate,
       hideInnateBadge: isInnate,
+      className: innateOverThreshold ? SHEET_INNATE_THRESHOLD_WARNING_ROW_CLASS : undefined,
       warningMessage: innateNotAllowed
         ? SHEET_INNATE_NOT_ALLOWED_WARNING
         : innateOverThreshold
-          ? INNATE_THRESHOLD_WARNING
+          ? formatInnateThresholdWarningForPower(power.name, energyCost, ctx.innateThreshold ?? 0)
           : undefined,
       leftSlot: innateToggle,
       rightSlot:
