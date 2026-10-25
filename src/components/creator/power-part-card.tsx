@@ -8,10 +8,13 @@
 import { useState, useMemo, useId } from 'react';
 import { ChevronDown, ChevronUp, X } from 'lucide-react';
 import { computePartTrainingPoints } from '@/lib/calculators/part-training-points';
-import { formatPercentagePartModifier } from '@/lib/calculators/power-energy-breakdown';
+import {
+  formatPercentageOptionEnergy,
+  formatPercentagePartModifier,
+} from '@/lib/calculators/power-energy-breakdown';
 import { formatCost } from '@/lib/game/creator-constants';
 import { partChipVariant } from '@/lib/chip/part-chip-variant';
-import { defensesFromPart, formatTargetsFact } from '@/lib/game/targeted-defenses';
+import { defensesFromPart, formatCanTargetLine } from '@/lib/game/targeted-defenses';
 import { IconButton, Checkbox, DescriptorChip } from '@/components/ui';
 import { ValueStepper } from '@/components/patterns';
 import type { PowerPart, TechniquePart } from '@/hooks';
@@ -29,6 +32,23 @@ export function creatorPartOptionLabel(
   if (!duplicated) return part.name;
   const category = part.category?.trim();
   return category ? `${part.name} (${category})` : part.name;
+}
+
+/**
+ * Percentage parts are multipliers (Codex base 1.25 → +25%). Option energy on
+ * those parts is an added delta (0.125 → +12.5%). Flat parts stay Energy numbers.
+ */
+export function formatCreatorPartEnergy(
+  value: number | undefined,
+  isPercentage: boolean | undefined,
+  role: 'multiplier' | 'option',
+): string {
+  const n = value ?? 0;
+  if (isPercentage) {
+    return role === 'option' ? formatPercentageOptionEnergy(n) : formatPercentagePartModifier(n);
+  }
+  if (role === 'option') return `${n >= 0 ? '+' : ''}${formatCost(n)}`;
+  return formatCost(n);
 }
 
 interface SelectedPartLike {
@@ -100,9 +120,7 @@ export function PowerPartCard({
     (part.op_2_en || 0) * selectedPart.op_2_lvl +
     (part.op_3_en || 0) * selectedPart.op_3_lvl;
 
-  const partEnergyLabel = part.percentage
-    ? formatPercentagePartModifier(partEnergy)
-    : formatCost(partEnergy);
+  const partEnergyLabel = formatCreatorPartEnergy(partEnergy, part.percentage, 'multiplier');
 
   const partTP = computePartTrainingPoints(
     part,
@@ -113,7 +131,7 @@ export function PowerPartCard({
     },
     showApplyDuration ? 'power' : 'technique',
   );
-  const targetsFact = formatTargetsFact(defensesFromPart(part));
+  const targetsFact = formatCanTargetLine(defensesFromPart(part));
 
   return (
     <div className="overflow-hidden rounded-lg border border-border-light bg-surface shadow-sm">
@@ -238,7 +256,9 @@ export function PowerPartCard({
           <div className="flex gap-4 text-sm">
             <span className="text-text-secondary">
               Base Energy:{' '}
-              <strong className="text-energy-text">{formatCost(part.base_en || 0)}</strong>
+              <strong className="text-energy-text">
+                {formatCreatorPartEnergy(part.base_en, part.percentage, 'multiplier')}
+              </strong>
             </span>
             <span className="text-text-secondary">
               Base TP: <strong className="text-tp-text">{formatCost(part.base_tp || 0)}</strong>
@@ -255,8 +275,7 @@ export function PowerPartCard({
                         Option 1
                       </span>
                       <span className="text-sm font-medium whitespace-nowrap text-energy-text">
-                        EN {(part.op_1_en || 0) >= 0 ? '+' : ''}
-                        {formatCost(part.op_1_en || 0)}
+                        EN {formatCreatorPartEnergy(part.op_1_en, part.percentage, 'option')}
                       </span>
                       <span className="text-sm font-medium whitespace-nowrap text-tp-text">
                         TP {(part.op_1_tp || 0) >= 0 ? '+' : ''}
@@ -282,8 +301,7 @@ export function PowerPartCard({
                         Option 2
                       </span>
                       <span className="text-sm font-medium whitespace-nowrap text-energy-text">
-                        EN {(part.op_2_en || 0) >= 0 ? '+' : ''}
-                        {formatCost(part.op_2_en || 0)}
+                        EN {formatCreatorPartEnergy(part.op_2_en, part.percentage, 'option')}
                       </span>
                       <span className="text-sm font-medium whitespace-nowrap text-tp-text">
                         TP {(part.op_2_tp || 0) >= 0 ? '+' : ''}
@@ -309,8 +327,7 @@ export function PowerPartCard({
                         Option 3
                       </span>
                       <span className="text-sm font-medium whitespace-nowrap text-energy-text">
-                        EN {(part.op_3_en || 0) >= 0 ? '+' : ''}
-                        {formatCost(part.op_3_en || 0)}
+                        EN {formatCreatorPartEnergy(part.op_3_en, part.percentage, 'option')}
                       </span>
                       <span className="text-sm font-medium whitespace-nowrap text-tp-text">
                         TP {(part.op_3_tp || 0) >= 0 ? '+' : ''}

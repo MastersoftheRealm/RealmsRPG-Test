@@ -221,6 +221,10 @@ describe('buildPowerAdvancedCalculationGroups', () => {
     expect(duration?.rows.some((r) => r.label === 'Focus' && r.value === '-50%')).toBe(true);
 
     const combined = groups.find((g) => g.title === 'Combined Energy');
+    const durationExtra = combined?.rows.find((r) => r.label === 'Duration extra');
+    expect(durationExtra?.value).toBe('+37.5%');
+    expect(durationExtra?.note).toBe('of duration-affected Energy');
+    expect(durationExtra?.value).not.toContain('duration-affected');
     expect(combined?.rows.some((r) => r.label === 'Extra Energy from duration')).toBe(true);
     const energyCost = combined?.rows.find((r) => r.label === 'Energy Cost');
     expect(energyCost?.value).toBe(String(costs.totalEnergy));

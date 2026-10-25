@@ -444,25 +444,24 @@ export function formatAreaForDisplay(areaType: string, areaLevel: number): strin
  * Derive area string from parts
  */
 export function deriveArea(partsPayload: PowerPartPayload[] = []): string {
-  const areaPartIds = [
-    PART_IDS.SPHERE_OF_EFFECT,
-    PART_IDS.CYLINDER_OF_EFFECT,
-    PART_IDS.CONE_OF_EFFECT,
-    PART_IDS.LINE_OF_EFFECT,
-    PART_IDS.TRAIL_OF_EFFECT,
+  const areaParts: Array<{ id: number; name: string; type: string }> = [
+    { id: PART_IDS.SPHERE_OF_EFFECT, name: 'Sphere of Effect', type: 'sphere' },
+    { id: PART_IDS.CYLINDER_OF_EFFECT, name: 'Cylinder of Effect', type: 'cylinder' },
+    { id: PART_IDS.CONE_OF_EFFECT, name: 'Cone of Effect', type: 'cone' },
+    { id: PART_IDS.LINE_OF_EFFECT, name: 'Line of Effect', type: 'line' },
+    { id: PART_IDS.TRAIL_OF_EFFECT, name: 'Trail of Effect', type: 'trail' },
   ];
-  const areaNames = ['Sphere', 'Cylinder', 'Cone', 'Line', 'Trail'];
 
-  for (let i = 0; i < areaPartIds.length; i++) {
+  for (const area of areaParts) {
     const found = partsPayload.find((p) => {
       const partId = p.part?.id ?? p.id;
-      if (Number(partId) === areaPartIds[i]) return true;
+      if (Number(partId) === area.id) return true;
       const name = p.part?.name || p.name;
-      return name === `${areaNames[i]} of Effect`;
+      return name === area.name;
     });
     if (found) {
-      const areaName = areaNames[i];
-      if (areaName !== undefined) return areaName;
+      // Area level is 1-based; the part stores it as 0-based op_1_lvl.
+      return formatAreaForDisplay(area.type, getOptionLevel(found, 1) + 1);
     }
   }
   return '1 target';

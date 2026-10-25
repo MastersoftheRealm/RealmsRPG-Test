@@ -53,6 +53,22 @@ export function sharedAreaLabel(form: PowerTabForm): string {
     ? 'Single target'
     : formatAreaForDisplay(form.area.type, form.area.level);
 }
+
+/**
+ * Power creator summary Area line.
+ * The open tab's selected level wins. An inherited Shared area uses that same
+ * level label. Otherwise the resolved fallback (no area chosen) is shown.
+ */
+export function powerCreatorSummaryArea(args: {
+  area: { type: string; level: number };
+  inheritedLabel?: string | null | undefined;
+  inheritedOverridden?: boolean | undefined;
+  fallback: string;
+}): string {
+  if (args.area.type !== 'none') return formatAreaForDisplay(args.area.type, args.area.level);
+  if (args.inheritedLabel && !args.inheritedOverridden) return args.inheritedLabel;
+  return args.fallback;
+}
 export function sharedDurationLabel(form: PowerTabForm): string {
   return formatDurationFromTypeAndValue(form.duration.type, form.duration.value);
 }

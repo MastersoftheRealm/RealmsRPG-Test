@@ -18,9 +18,11 @@ interface AdvancedCalculationsPanelProps {
 function CalculationRow({ row }: { row: AdvancedCalculationRow }) {
   return (
     <div className="min-w-0">
-      <div className="flex items-start justify-between gap-3">
-        <span className="min-w-0 text-text-secondary">{row.label}</span>
-        <span className="shrink-0 text-right text-text-primary tabular-nums">{row.value}</span>
+      <div className="flex flex-wrap items-baseline justify-between gap-x-3 gap-y-0.5">
+        <span className="text-text-secondary">{row.label}</span>
+        <span className="ml-auto max-w-full min-w-0 text-right text-text-primary tabular-nums">
+          {row.value}
+        </span>
       </div>
       {row.note ? <p className="pr-1 text-text-muted">{row.note}</p> : null}
     </div>
