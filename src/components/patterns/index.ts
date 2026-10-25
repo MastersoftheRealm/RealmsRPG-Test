@@ -316,5 +316,5 @@ export { MixedSpeciesSkillPicker } from './select/mixed-species-skill-picker';
 export { CreatorPortraitUpload } from './chrome/creator-portrait-upload';
 export { TraitSection } from './chrome/trait-section';
 export { ErrorBoundary } from './chrome/error-boundary';
-export { PathHelpCard, PathNotes } from './help/path-help-card';
+export { PathHelpCard, PathNotes, stripRedundantPathHelpLead } from './help/path-help-card';
 export type { PathHelpCardProps, PathNotesProps } from './help/path-help-card';

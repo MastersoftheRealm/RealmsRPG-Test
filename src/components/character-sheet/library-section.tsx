@@ -138,7 +138,6 @@ export function LibrarySection({
     equipmentRows,
     displayedCurrentInnateEnergy,
     innateEnergyOverBudget,
-    innateThresholdOverBudget,
   } = useLibrarySectionRows({
     powers: data?.powers ?? [],
     techniques: data?.techniques ?? [],
@@ -315,7 +314,6 @@ export function LibrarySection({
             innatePools={innatePools}
             displayedCurrentInnateEnergy={displayedCurrentInnateEnergy}
             innateEnergyOverBudget={innateEnergyOverBudget}
-            innateThresholdOverBudget={innateThresholdOverBudget}
             innatePowerRows={innatePowerRows}
             regularPowerRows={regularPowerRows}
             powerSort={powerSort}

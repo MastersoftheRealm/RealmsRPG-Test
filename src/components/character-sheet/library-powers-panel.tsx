@@ -15,10 +15,7 @@ import {
 } from '@/components/patterns';
 import type { EntityPowerRow } from '@/components/patterns/list/entity-library-sections';
 import { innateEnergyHelp, innatePowersHelp } from '../../../public/tooltip-text';
-import {
-  INNATE_ENERGY_TOTAL_WARNING,
-  INNATE_THRESHOLD_WARNING,
-} from '@/lib/character/innate-power-capacity';
+import { INNATE_ENERGY_TOTAL_WARNING } from '@/lib/character/innate-power-capacity';
 
 export type LibraryPowersPanelProps = {
   innateEnergy: number;
@@ -26,7 +23,6 @@ export type LibraryPowersPanelProps = {
   innatePools: number;
   displayedCurrentInnateEnergy: number;
   innateEnergyOverBudget: boolean;
-  innateThresholdOverBudget: boolean;
   innatePowerRows: EntityPowerRow[];
   regularPowerRows: EntityPowerRow[];
   powerSort: SortState;
@@ -42,7 +38,6 @@ export function LibraryPowersPanel({
   innatePools,
   displayedCurrentInnateEnergy,
   innateEnergyOverBudget,
-  innateThresholdOverBudget,
   innatePowerRows,
   regularPowerRows,
   powerSort,
@@ -75,12 +70,6 @@ export function LibraryPowersPanel({
           {INNATE_ENERGY_TOTAL_WARNING}
         </p>
       ) : null}
-      {innateThresholdOverBudget ? (
-        <p className="font-nunito text-sm text-warning-fg" role="status">
-          {INNATE_THRESHOLD_WARNING}
-        </p>
-      ) : null}
-
       <div className="space-y-2">
         <PowersListSection
           title="Innate Powers"
