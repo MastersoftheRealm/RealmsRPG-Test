@@ -211,13 +211,16 @@ export function CreatureCreatorEditorLoadoutSections({
         itemCount={creature.powers.length}
       >
         {innateBudget.innateEnergyMax > 0 ? (
-          <p className="mb-3 text-sm text-text-secondary">
-            Innate Energy:{' '}
-            {innateBudget.innateEnergyMax -
-              creature.powers
-                .filter((p) => p.innate === true)
-                .reduce((sum, p) => sum + (p.energy ?? 0), 0)}{' '}
-            / {innateBudget.innateEnergyMax} · Threshold {innateBudget.innateThreshold}
+          <p className="mb-3 flex flex-wrap items-baseline gap-x-2 gap-y-1 text-sm text-text-secondary">
+            <span className="whitespace-nowrap">
+              Innate Energy:{' '}
+              {innateBudget.innateEnergyMax -
+                creature.powers
+                  .filter((p) => p.innate === true)
+                  .reduce((sum, p) => sum + (p.energy ?? 0), 0)}{' '}
+              / {innateBudget.innateEnergyMax}
+            </span>
+            <span className="whitespace-nowrap">· Threshold {innateBudget.innateThreshold}</span>
           </p>
         ) : null}
         {innateBudget.overEnergy ? (

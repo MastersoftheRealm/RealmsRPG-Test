@@ -66,7 +66,7 @@ export function SegmentedControl<T extends string>({
       className={cn(
         // Track + bordered idle segments so options read as distinct choices before selection.
         // Hug the pills unless equalWidth stretches the group (TASK-720 size pickers).
-        'flex-wrap items-center border border-border-light bg-surface-alt',
+        'flex-wrap items-center border border-border-light bg-surface-alt dark:border-border',
         compact ? 'gap-0.5 rounded-md p-0.5' : 'gap-1 rounded-lg p-1',
         equalWidth ? 'flex w-full flex-nowrap' : 'inline-flex w-fit max-w-full',
         className,
@@ -85,7 +85,7 @@ export function SegmentedControl<T extends string>({
             ? 'cursor-not-allowed border-border-light bg-surface-alt text-text-muted opacity-60 hover:border-border-light hover:text-text-muted'
             : selected
               ? 'border-primary-button bg-primary-button text-text-on-dark hover:bg-primary-button-hover'
-              : 'border-border-light bg-surface text-text-secondary hover:border-border hover:text-text-primary',
+              : 'border-border-light bg-surface text-text-secondary hover:border-border hover:text-text-primary dark:border-border dark:bg-surface dark:text-text-primary dark:hover:bg-surface-alt',
         );
 
         return (

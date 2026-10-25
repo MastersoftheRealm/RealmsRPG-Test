@@ -31,7 +31,7 @@ export function ItemCreatorEditorArmor({
 }: ItemCreatorEditorArmorProps) {
   return (
     <CollapsibleSection title="Armor Configuration" collapsedSummary={armorConfigSummary}>
-      <div className="grid gap-6 md:grid-cols-3">
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
         <div>
           <div className="mb-2 flex items-center justify-between gap-2">
             <label className="text-sm font-medium text-text-secondary">Damage Reduction</label>

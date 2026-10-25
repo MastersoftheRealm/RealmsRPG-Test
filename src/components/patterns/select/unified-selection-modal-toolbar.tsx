@@ -54,6 +54,8 @@ export function UnifiedSelectionModalToolbar({
           activeCount={optionsActiveCount}
           summary={optionsSummary}
           toolbarStart={searchField}
+          toolbarClassName="flex-wrap gap-y-2"
+          toolbarStartClassName="min-w-0 basis-full sm:basis-0 sm:flex-1"
           belowToolbar={scopeExtra}
         >
           {headerExtra}

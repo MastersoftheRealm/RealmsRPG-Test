@@ -137,7 +137,7 @@ export function PoweredMartialSlider({
                 key={i}
                 className={cn(
                   'h-1 w-1 rounded-full',
-                  tickValue === sliderValue ? 'bg-primary-button' : 'bg-border-light',
+                  tickValue === sliderValue ? 'opacity-0' : 'bg-border-light',
                 )}
               />
             );
