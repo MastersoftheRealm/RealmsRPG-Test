@@ -18,6 +18,13 @@ import { useState, type ElementType, type ReactNode } from 'react';
 import { ChevronDown, ChevronUp } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button, Card } from '@/components/ui';
+import { ConfirmActionModal } from '@/components/patterns';
+
+export type CollapsibleSectionRemoveConfirmCopy = {
+  title: string;
+  description: string;
+  confirmLabel: string;
+};
 
 export interface CollapsibleSectionProps {
   title: string;
@@ -38,6 +45,11 @@ export interface CollapsibleSectionProps {
   titleAddon?: ReactNode | undefined;
   /** Actions next to the expand control (not nested inside it) */
   rightSlot?: ReactNode | undefined;
+  /**
+   * When set on an optional section, Remove opens ConfirmActionModal (danger confirm)
+   * before calling `onEnabledChange(false)`.
+   */
+  removeConfirm?: CollapsibleSectionRemoveConfirmCopy | undefined;
   /**
    * Place header actions on their own full-width row below `lg`.
    * Narrow creator headers (several text buttons) otherwise overflow the title row.
@@ -65,12 +77,14 @@ export function CollapsibleSection({
   icon,
   titleAddon,
   rightSlot,
+  removeConfirm,
   actionsOnOwnRow = false,
   children,
   className,
   headingLevel = 2,
 }: CollapsibleSectionProps) {
   const [isExpanded, setIsExpanded] = useState(defaultExpanded);
+  const [showRemoveConfirm, setShowRemoveConfirm] = useState(false);
   const HeadingTag = `h${headingLevel}` as ElementType;
   const subtitleText = subtitle?.trim() ?? '';
   const collapsedText = collapsedSummary?.trim() ?? '';
@@ -190,7 +204,13 @@ export function CollapsibleSection({
                 <Button
                   variant="ghost"
                   size="sm"
-                  onClick={() => onEnabledChange?.(false)}
+                  onClick={() => {
+                    if (removeConfirm) {
+                      setShowRemoveConfirm(true);
+                      return;
+                    }
+                    onEnabledChange?.(false);
+                  }}
                   className="shrink-0 whitespace-nowrap text-danger-fg hover:bg-danger-light"
                 >
                   Remove
@@ -205,6 +225,21 @@ export function CollapsibleSection({
       </div>
 
       {isExpanded && <div className="p-4 pt-0">{children}</div>}
+      {optional && removeConfirm ? (
+        <ConfirmActionModal
+          isOpen={showRemoveConfirm}
+          onClose={() => setShowRemoveConfirm(false)}
+          onConfirm={() => {
+            setShowRemoveConfirm(false);
+            setIsExpanded(false);
+            onEnabledChange?.(false);
+          }}
+          title={removeConfirm.title}
+          description={removeConfirm.description}
+          confirmLabel={removeConfirm.confirmLabel}
+          confirmVariant="danger"
+        />
+      ) : null}
     </Card>
   );
 }

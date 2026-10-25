@@ -17,6 +17,7 @@ import type { CreatureCreatorEditorProps } from './creature-creator-editor';
 import { collectCreatureInventoryItems } from '@/lib/game/creature-inventory';
 import { mapCreatureSelectedInventoryRows } from './map-creature-inventory-rows';
 import { formatCreatureGroupedNumber } from './creature-trait-labels';
+import { creatureCreatorOptionalSectionRemoveConfirm } from './creature-creator-remove-section-confirm-placeholder';
 
 const CREATURE_INVENTORY_ROW_CHROME = { delete: true } as const;
 
@@ -59,6 +60,7 @@ export function CreatureCreatorEditorInventorySection({
       optional
       enabled={creature.enableArmaments}
       onEnabledChange={(enabled) => updateCreature({ enableArmaments: enabled })}
+      removeConfirm={creatureCreatorOptionalSectionRemoveConfirm}
       itemCount={collectCreatureInventoryItems(creature).length}
     >
       <div className="mb-4 flex flex-col gap-3">
