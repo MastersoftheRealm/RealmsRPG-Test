@@ -181,8 +181,7 @@ export function SpeciesCreatorEditor({
 
       <CollapsibleSection title="Base skills (2)" collapsedSummary={baseSkillsSummary}>
         <p className="mb-4 text-sm text-text-muted">
-          Select two base skills; one may be &quot;Any&quot; (id 0). You cannot pick the same skill
-          twice.
+          Select two base skills; one may be &quot;Any&quot;. You cannot pick the same skill twice.
         </p>
         <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
           {([0, 1] as const).map((i) => (
@@ -226,20 +225,21 @@ export function SpeciesCreatorEditor({
           onRemove={onRemoveLanguage}
           color="bg-info-100 dark:bg-info-900/30 text-info-fg"
         />
-        <div className="mt-2 flex gap-2">
+        <div className="mt-2 flex flex-col items-stretch gap-2 sm:flex-row sm:items-end">
           <Input
             label="New language"
             value={newLanguage}
             onChange={(e) => onNewLanguageChange(e.target.value)}
             onKeyDown={(e) => e.key === 'Enter' && onAddLanguage()}
             placeholder="Enter language..."
-            className="flex-1"
+            className="min-w-0 flex-1"
             aria-label="New language to add"
           />
           <Button
             onClick={onAddLanguage}
             disabled={!newLanguage.trim() || form.languages.length >= MAX_LANGUAGES}
             size="sm"
+            className="w-full shrink-0 sm:w-auto"
           >
             Add
           </Button>
@@ -421,7 +421,7 @@ function TraitBlock({
   onRemove: (id: string) => void;
 }) {
   return (
-    <div>
+    <div className="min-w-0">
       <h3 className="mb-2 text-sm font-semibold text-text-secondary">
         {title} ({ids.length} / {limit})
       </h3>
@@ -429,18 +429,22 @@ function TraitBlock({
         <p className="text-sm text-text-muted italic">None</p>
       ) : (
         <ul className="space-y-1">
-          {ids.map((id) => (
-            <li key={id} className="flex items-center justify-between gap-2 py-1">
-              <span className="text-text-primary">{traitIdToName.get(id) ?? id}</span>
-              <button
-                type="button"
-                onClick={() => onRemove(id)}
-                className="text-text-muted hover:text-danger-fg"
-              >
-                ×
-              </button>
-            </li>
-          ))}
+          {ids.map((id) => {
+            const traitName = traitIdToName.get(id) ?? id;
+            return (
+              <li key={id} className="flex items-start gap-2 py-1">
+                <span className="min-w-0 flex-1 break-words text-text-primary">{traitName}</span>
+                <button
+                  type="button"
+                  onClick={() => onRemove(id)}
+                  className="hit-area-dense-square inline-flex shrink-0 items-center justify-center text-text-muted hover:text-danger-fg"
+                  aria-label={`Remove ${traitName}`}
+                >
+                  ×
+                </button>
+              </li>
+            );
+          })}
         </ul>
       )}
     </div>
@@ -449,7 +453,7 @@ function TraitBlock({
 
 const TRAIT_GRID_COLUMNS = '1.5fr 0.6fr 0.6fr';
 const TRAIT_LIST_COLUMNS = [
-  { key: 'name', label: 'NAME' },
+  { key: 'name', label: 'Name' },
   { key: 'uses_per_rec', label: 'USES' },
   { key: 'rec_period', label: 'RECOVERY' },
 ];

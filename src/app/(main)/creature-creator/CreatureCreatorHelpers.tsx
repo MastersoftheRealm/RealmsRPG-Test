@@ -42,9 +42,12 @@ export function ChipList({
         return (
           <span
             key={item}
-            className={cn('flex items-center gap-1.5 rounded px-2 py-1 text-sm', color)}
+            className={cn(
+              'flex max-w-full min-w-0 items-center gap-1.5 rounded px-2 py-1 text-sm',
+              color,
+            )}
           >
-            {item}
+            <span className="min-w-0 break-words">{item}</span>
             {cost != null && cost !== '' && (
               <DescriptorChip
                 variant="primary"
@@ -56,8 +59,9 @@ export function ChipList({
               </DescriptorChip>
             )}
             <button
+              type="button"
               onClick={() => onRemove(item)}
-              className="text-text-muted hover:text-danger-fg"
+              className="hit-area-dense-square inline-flex shrink-0 items-center justify-center text-text-muted hover:text-danger-fg"
               aria-label={`Remove ${item}`}
             >
               ×
