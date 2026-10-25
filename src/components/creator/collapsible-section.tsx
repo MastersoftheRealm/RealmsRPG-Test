@@ -75,6 +75,9 @@ export function CollapsibleSection({
   const collapsedText = collapsedSummary?.trim() ?? '';
   const metaText = isExpanded ? subtitleText : collapsedText || subtitleText;
   const showMetaLine = Boolean(metaText);
+  // Creature feats pass remaining points in `spent` (shown as remaining/total).
+  // Over budget is a negative remainder, or a real spent value above total.
+  const pointsOverBudget = Boolean(points && (points.spent < 0 || points.spent > points.total));
 
   if (optional && !enabled) {
     return (
@@ -142,7 +145,7 @@ export function CollapsibleSection({
                 <span
                   className={cn(
                     'flex-shrink-0 rounded-full px-2 py-0.5 text-xs font-medium',
-                    points.spent > points.total
+                    pointsOverBudget
                       ? 'bg-danger-light text-danger-fg'
                       : 'bg-warning-light text-warning-fg',
                   )}
@@ -158,21 +161,23 @@ export function CollapsibleSection({
               <p className="mt-0.5 truncate text-sm text-text-muted">{metaText}</p>
             ) : null}
           </div>
-          {optional ? (
-            <div className="pointer-events-auto flex flex-shrink-0 items-center">
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => onEnabledChange?.(false)}
-                className="text-danger-fg hover:bg-danger-light"
-              >
-                Remove
-              </Button>
-            </div>
-          ) : null}
-          <span className="flex-shrink-0 text-text-muted" aria-hidden>
-            {isExpanded ? <ChevronUp className="h-5 w-5" /> : <ChevronDown className="h-5 w-5" />}
-          </span>
+          <div className={cn('flex flex-shrink-0 items-center', optional && 'gap-6')}>
+            {optional ? (
+              <div className="pointer-events-auto flex items-center">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => onEnabledChange?.(false)}
+                  className="text-danger-fg hover:bg-danger-light"
+                >
+                  Remove
+                </Button>
+              </div>
+            ) : null}
+            <span className="flex-shrink-0 text-text-muted" aria-hidden>
+              {isExpanded ? <ChevronUp className="h-5 w-5" /> : <ChevronDown className="h-5 w-5" />}
+            </span>
+          </div>
           {rightSlot ? (
             <div
               className={cn(

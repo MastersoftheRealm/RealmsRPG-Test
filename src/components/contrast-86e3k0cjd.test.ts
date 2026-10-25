@@ -16,12 +16,12 @@ describe('contrast fixes (86e3k0cjd)', () => {
       path.join(root, 'components/creator/creator-summary-panel.tsx'),
       'utf8',
     );
-    expect(panel).toContain(
-      'text-[10px] font-semibold tracking-wide break-words whitespace-normal text-inherit uppercase',
-    );
-    expect(panel).not.toContain(
-      'text-[10px] tracking-wide break-words whitespace-normal text-inherit uppercase opacity-80',
-    );
+    const boxes = panel.slice(panel.indexOf('resourceBoxes &&'), panel.indexOf('Badge (Rarity'));
+    expect(boxes).toContain('text-[10px]');
+    expect(boxes).toContain('font-semibold');
+    expect(boxes).toContain('text-inherit');
+    expect(boxes).toContain('uppercase');
+    expect(boxes).not.toContain('opacity-80');
   });
 
   it('Add Property disabled reason uses readable secondary text', () => {

@@ -158,23 +158,22 @@ export function CreatorSummaryPanel({
     <Card className={cn('w-full p-6 shadow-md', className)}>
       <h2 className="mb-4 text-lg font-bold text-text-primary">{title}</h2>
 
-      {/* Resource boxes (compact, for creature creator - ability/skill/feat/training/currency) */}
+      {/* Resource boxes (creature summary). Tracks follow the panel, not the viewport:
+          five columns in the desktop sidebar squeeze values and split labels (86e3jxgx8). */}
       {resourceBoxes && resourceBoxes.length > 0 && (
-        <div className="mb-4 grid grid-cols-2 gap-2 lg:grid-cols-5">
+        <div className="mb-4 grid grid-cols-[repeat(auto-fit,minmax(8rem,1fr))] gap-2">
           {resourceBoxes.map((box, i) => (
             <div
               key={i}
               className={cn(
-                'min-w-0 rounded-lg px-3 py-2 text-center text-sm',
+                'rounded-lg px-3 py-2 text-center text-sm',
                 getVariantClasses(box.variant, box.value),
               )}
             >
-              <div className="max-w-full [scrollbar-width:thin] overflow-x-auto">
-                <div className="mx-auto w-max max-w-none text-base font-bold whitespace-nowrap text-inherit tabular-nums">
-                  {typeof box.value === 'number' ? box.value.toLocaleString() : box.value}
-                </div>
+              <div className="text-base font-bold break-normal text-inherit tabular-nums">
+                {typeof box.value === 'number' ? box.value.toLocaleString() : box.value}
               </div>
-              <div className="text-[10px] font-semibold tracking-wide break-words whitespace-normal text-inherit uppercase">
+              <div className="text-[10px] font-semibold tracking-wide break-normal text-inherit uppercase">
                 {box.label}
               </div>
             </div>
