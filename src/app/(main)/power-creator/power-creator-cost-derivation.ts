@@ -226,7 +226,10 @@ export function usePowerCreatorCostDerivation({
   const attackModeLabel = useMemo(() => attackModeColumnLabel(attackMode), [attackMode]);
 
   const rangeDisplay = useMemo(() => deriveRange(partsPayload), [partsPayload]);
-  const areaDisplay = useMemo(() => deriveArea(partsPayload), [partsPayload]);
+  const areaDisplay = useMemo(() => {
+    if (area.type !== 'none') return formatAreaForDisplay(area.type, area.level);
+    return deriveArea(partsPayload);
+  }, [area.level, area.type, partsPayload]);
   const durationDisplay = useMemo(() => deriveDuration(partsPayload), [partsPayload]);
 
   const rangeSummary = useMemo(() => {

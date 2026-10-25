@@ -245,7 +245,8 @@ function buildTotalsGroup(analysis: PowerEnergyAnalysis): PowerAdvancedCalcGroup
     });
     rows.push({
       label: 'Duration extra',
-      value: `${formatSignedPercent(durAll * 100)} of duration-affected Energy`,
+      value: formatSignedPercent(durAll * 100),
+      note: 'of duration-affected Energy',
     });
     if (!nearlyEqual(percDur, 1)) {
       rows.push({

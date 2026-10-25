@@ -63,6 +63,7 @@ import {
   damageIsOverride,
   durationIsOverride,
   rangeIsOverride,
+  powerCreatorSummaryArea,
   sharedActionLabel,
   sharedAreaLabel,
   sharedAttackLabel,
@@ -530,7 +531,15 @@ function PowerCreatorWorkspace({
             { label: 'Action', value: tabDisplay?.actionType ?? ws.actionTypeDisplay },
             { label: 'Attack', value: ws.attackModeLabel },
             { label: 'Range', value: tabDisplay?.range ?? ws.rangeDisplay },
-            { label: 'Area', value: tabDisplay?.area ?? ws.areaDisplay },
+            {
+              label: 'Area',
+              value: powerCreatorSummaryArea({
+                area: ws.area,
+                inheritedLabel: inheritance?.area?.label,
+                inheritedOverridden: inheritance?.area?.overridden,
+                fallback: tabDisplay?.area ?? ws.areaDisplay,
+              }),
+            },
             { label: 'Duration', value: tabDisplay?.duration ?? ws.durationDisplay },
             {
               label: 'Targets',
