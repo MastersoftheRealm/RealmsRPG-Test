@@ -121,8 +121,8 @@ export function Modal({
   const previouslyFocusedRef = React.useRef<HTMLElement | null>(null);
   const restoreFocusTimerRef = React.useRef<number | null>(null);
   const onCloseRef = React.useRef(onClose);
-  /** Only pointer dismiss (backdrop / ×) arms the post-close click sink — not Escape (86e3jzduq). */
-  const armClickSinkOnCloseRef = React.useRef(false);
+  /** Escape skips the post-close click sink; every other close path arms it (86e3jzduq / 86e3jw5g6). */
+  const skipClickSinkOnCloseRef = React.useRef(false);
   const dialogId = React.useId();
   const titleId = `${dialogId}-title`;
   const descriptionId = `${dialogId}-description`;
@@ -157,14 +157,15 @@ export function Modal({
   }, [onClose]);
 
   const handlePointerClose = React.useCallback(() => {
-    armClickSinkOnCloseRef.current = true;
     onClose();
   }, [onClose]);
 
   React.useEffect(() => {
     if (isOpen) return;
-    if (!armClickSinkOnCloseRef.current) return;
-    armClickSinkOnCloseRef.current = false;
+    if (skipClickSinkOnCloseRef.current) {
+      skipClickSinkOnCloseRef.current = false;
+      return;
+    }
     setCaptureCloseClicks(true);
   }, [isOpen]);
 
@@ -182,7 +183,7 @@ export function Modal({
     const handleEscape = (e: KeyboardEvent) => {
       if (e.key !== 'Escape') return;
       if (openDialogIds[openDialogIds.length - 1] !== dialogId) return;
-      armClickSinkOnCloseRef.current = false;
+      skipClickSinkOnCloseRef.current = true;
       onCloseRef.current();
     };
     document.addEventListener('keydown', handleEscape);
