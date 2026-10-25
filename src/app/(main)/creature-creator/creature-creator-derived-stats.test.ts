@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest';
+import { DEFAULT_SKILL_ALLOCATION_RULES } from '@/lib/game/skill-allocation';
 import {
   calculateCreatureCreatorStats,
   isCreatureOverBudget,
@@ -102,6 +103,50 @@ describe('calculateCreatureCreatorStats', () => {
       undefined,
     );
     expect(orphan.skillRemaining).toBeGreaterThan(withParent.skillRemaining);
+  });
+
+  it('does not spend points on skills that are unproficient', () => {
+    const proficient = calculateCreatureCreatorStats(
+      {
+        ...initialState,
+        skills: [
+          { id: 'athletics', name: 'Athletics', value: 0, proficient: true },
+          {
+            id: 'climb',
+            name: 'Climb',
+            value: 1,
+            proficient: true,
+            isSubSkill: true,
+            baseSkillId: 'athletics',
+          },
+        ],
+      },
+      featPointsMap,
+      new Set(),
+      undefined,
+    );
+    const cleared = calculateCreatureCreatorStats(
+      {
+        ...initialState,
+        skills: [
+          { id: 'athletics', name: 'Athletics', value: 0, proficient: false },
+          {
+            id: 'climb',
+            name: 'Climb',
+            value: 0,
+            proficient: false,
+            isSubSkill: true,
+            baseSkillId: 'athletics',
+          },
+        ],
+      },
+      featPointsMap,
+      new Set(),
+      undefined,
+    );
+    expect(cleared.skillRemaining - proficient.skillRemaining).toBe(
+      DEFAULT_SKILL_ALLOCATION_RULES.gainProficiencyCost * 2,
+    );
   });
 
   it('uses past-cap skill costs in summary remaining (86e3jx4dm)', () => {

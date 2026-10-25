@@ -23,6 +23,13 @@ export const BASE_SKILL_PAST_CAP_COST = 3;
 export const SUB_SKILL_PAST_CAP_COST = 2;
 export const DEFENSE_INCREASE_COST = 2;
 
+/**
+ * Listed skill with value 0 and no proficiency.
+ * A base skill stored at 0 is still proficient. This sentinel is not.
+ * `calculateSimpleSkillPointsSpent` ignores values below 0, so the row costs nothing.
+ */
+export const UNPROFICIENT_SKILL_ALLOCATION = -1;
+
 /** Skill points per level for characters (simple: 3 * level) */
 export const CHARACTER_SKILL_POINTS_PER_LEVEL = 3;
 
@@ -154,6 +161,133 @@ export function getSkillValueIncreaseCost(
   const r = skillRules ?? DEFAULT_SKILL_ALLOCATION_RULES;
   if (currentValue < r.maxSkillValue) return 1;
   return isSubSkill ? r.subSkillPastCapCost : r.baseSkillPastCapCost;
+}
+
+/** True when this allocation value is proficient. Species skills always are. */
+export function isSkillAllocationProficient(
+  value: number | undefined,
+  isSubSkill: boolean,
+  isSpecies = false,
+): boolean {
+  if (isSpecies) return true;
+  if (value == null || value < 0) return false;
+  return isSubSkill ? value >= 1 : true;
+}
+
+/** Value shown on a stepper. Unproficient allocations display as 0. */
+export function skillAllocationShownValue(value: number | undefined): number {
+  if (value == null || value < 0) return 0;
+  return value;
+}
+
+/**
+ * Map a saved skill onto an allocation value.
+ * Proficient sub-skills stay at least 1 (proficiency grants that value).
+ * Unproficient skills stay listed at {@link UNPROFICIENT_SKILL_ALLOCATION}.
+ */
+export function allocationValueFromPersistedSkill(
+  proficient: boolean,
+  value: number,
+  isSubSkill: boolean,
+): number {
+  if (!proficient) return UNPROFICIENT_SKILL_ALLOCATION;
+  if (isSubSkill) return Math.max(1, value);
+  return value;
+}
+
+/** Points charged by the next plus. Proficiency and value steps use the shared cost helpers. */
+export function skillAllocationIncreaseCost(
+  current: number | undefined,
+  isSubSkill: boolean,
+  isSpecies: boolean,
+  skillRules?: SkillAllocationRules,
+): number {
+  const r = skillRules ?? DEFAULT_SKILL_ALLOCATION_RULES;
+  if (isSpecies) {
+    return getSkillValueIncreaseCost(Math.max(0, current ?? 0), isSubSkill, r);
+  }
+  const value = current ?? UNPROFICIENT_SKILL_ALLOCATION;
+  if (isSubSkill) {
+    if (value < 1) return r.gainProficiencyCost;
+    return getSkillValueIncreaseCost(value, true, r);
+  }
+  if (value < 0) return r.gainProficiencyCost;
+  return getSkillValueIncreaseCost(value, false, r);
+}
+
+/** One plus step. Sub-skill proficiency lands on value 1. Base proficiency lands on value 0. */
+export function applySkillAllocationIncrease(
+  allocations: Record<string, number>,
+  skillId: string,
+  isSubSkill: boolean,
+  isSpecies: boolean,
+): Record<string, number> {
+  const current = allocations[skillId];
+  if (isSubSkill && !isSpecies) {
+    const value = current ?? UNPROFICIENT_SKILL_ALLOCATION;
+    return { ...allocations, [skillId]: value < 1 ? 1 : value + 1 };
+  }
+  if (!isSpecies && (current == null || current < 0)) {
+    return { ...allocations, [skillId]: 0 };
+  }
+  const value = current == null || current < 0 ? 0 : current;
+  return { ...allocations, [skillId]: value + 1 };
+}
+
+type SkillAllocationParent = {
+  id: string | number;
+  base_skill_id?: number | string | null | undefined;
+};
+
+/**
+ * One minus step. The exact reverse of plus: value steps refund
+ * {@link getSkillValueIncreaseCost} of the step being undone, and leaving
+ * proficiency refunds `gainProficiencyCost` (via the spent total).
+ *
+ * Lowering a base skill from proficient value 0 to unproficient also clears
+ * proficiency on its sub-skills, which refunds their proficiency and value points.
+ * Species skills stay proficient.
+ */
+export function applySkillAllocationDecrease(
+  allocations: Record<string, number>,
+  skillId: string,
+  options: {
+    isSubSkill: boolean;
+    isSpecies: boolean;
+    codexSkills: readonly SkillAllocationParent[];
+  },
+): Record<string, number> {
+  const current = allocations[skillId];
+  if (options.isSpecies) {
+    if (current == null || current <= 0) return allocations;
+    return { ...allocations, [skillId]: current - 1 };
+  }
+  if (current == null || current < 0) return allocations;
+
+  if (options.isSubSkill) {
+    if (current <= 1) {
+      return { ...allocations, [skillId]: UNPROFICIENT_SKILL_ALLOCATION };
+    }
+    return { ...allocations, [skillId]: current - 1 };
+  }
+
+  if (current > 0) {
+    return { ...allocations, [skillId]: current - 1 };
+  }
+
+  const next: Record<string, number> = {
+    ...allocations,
+    [skillId]: UNPROFICIENT_SKILL_ALLOCATION,
+  };
+  for (const skill of options.codexSkills) {
+    if (skill.base_skill_id == null || Number(skill.base_skill_id) === 0) continue;
+    if (String(skill.base_skill_id) !== skillId) continue;
+    const subId = String(skill.id);
+    const subValue = next[subId];
+    if (subValue == null || subValue < 0) continue;
+    next[subId] = UNPROFICIENT_SKILL_ALLOCATION;
+  }
+  return next;
 }
 
 /**

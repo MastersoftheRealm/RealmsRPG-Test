@@ -1,6 +1,11 @@
 import { describe, expect, it } from 'vitest';
 import type { Skill } from '@/hooks';
-import { creatureSkillsToAllocations, rawRecordToCreatureState } from './creature-skill-utils';
+import { UNPROFICIENT_SKILL_ALLOCATION } from '@/lib/game/skill-allocation';
+import {
+  allocationsToCreatureSkills,
+  creatureSkillsToAllocations,
+  rawRecordToCreatureState,
+} from './creature-skill-utils';
 
 describe('rawRecordToCreatureState inventory (TASK-812)', () => {
   it('migrates a mixed armaments bag into kind buckets', () => {
@@ -54,5 +59,37 @@ describe('rawRecordToCreatureState inventory (TASK-812)', () => {
     );
     expect(allocations['10']).toBe(1);
     expect(allocations['21']).toBeUndefined();
+  });
+
+  it('round-trips an unproficient base skill and its sub-skills', () => {
+    const codex = [
+      { id: '10', name: 'Athletics' },
+      { id: '11', name: 'Climbing', base_skill_id: 10 },
+    ] as Skill[];
+    const saved = allocationsToCreatureSkills(
+      {
+        '10': UNPROFICIENT_SKILL_ALLOCATION,
+        '11': UNPROFICIENT_SKILL_ALLOCATION,
+      },
+      codex,
+    );
+    expect(saved).toEqual([
+      expect.objectContaining({
+        id: '10',
+        value: 0,
+        proficient: false,
+        isSubSkill: false,
+      }),
+      expect.objectContaining({
+        id: '11',
+        value: 0,
+        proficient: false,
+        isSubSkill: true,
+        baseSkillId: '10',
+      }),
+    ]);
+    const loaded = creatureSkillsToAllocations(saved, codex);
+    expect(loaded['10']).toBe(UNPROFICIENT_SKILL_ALLOCATION);
+    expect(loaded['11']).toBe(UNPROFICIENT_SKILL_ALLOCATION);
   });
 });
