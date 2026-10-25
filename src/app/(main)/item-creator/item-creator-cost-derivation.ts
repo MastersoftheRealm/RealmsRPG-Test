@@ -9,7 +9,6 @@ import { useMemo } from 'react';
 import type { ItemProperty } from '@/hooks';
 import {
   calculateItemCosts,
-  formatWeaponRangeConfig,
   resolveItemMarketPricing,
   weaponRangeOpLevelFromSpaces,
   buildItemAdvancedCalculationGroups,
@@ -30,7 +29,12 @@ import type {
   ItemSelectedProperty as SelectedProperty,
   ItemDamageConfig as DamageConfig,
 } from './item-creator-bootstrap';
-import { WEAPON_ABILITY_REQUIREMENTS, ARMOR_ABILITY_REQUIREMENTS } from './item-creator-helpers';
+import {
+  ARMOR_ABILITY_REQUIREMENTS,
+  formatArmorConfigCollapsedSummary,
+  formatItemCreatorRangeDisplay,
+  WEAPON_ABILITY_REQUIREMENTS,
+} from './item-creator-helpers';
 
 export type ItemSectionCostSlice = {
   totalIP: number;
@@ -51,9 +55,7 @@ export type ItemSectionCosts = {
   abilityReq: ItemSectionCostSlice;
 };
 
-export function combineItemSectionCosts(
-  ...slices: ItemSectionCostSlice[]
-): ItemSectionCostSlice {
+export function combineItemSectionCosts(...slices: ItemSectionCostSlice[]): ItemSectionCostSlice {
   return slices.reduce(
     (total, slice) => ({
       totalIP: total.totalIP + slice.totalIP,
@@ -121,7 +123,7 @@ export function useItemCreatorCostDerivation({
   abilityRequirement,
 }: UseItemCreatorCostDerivationArgs) {
   const rangeDisplay = useMemo(
-    () => formatWeaponRangeConfig({ type: rangeType, spaces: rangeSpaces }),
+    () => formatItemCreatorRangeDisplay(rangeType, rangeSpaces),
     [rangeType, rangeSpaces],
   );
 
@@ -139,7 +141,8 @@ export function useItemCreatorCostDerivation({
   );
 
   const armorConfigSummary = useMemo(
-    () => `DR ${damageReduction}, AGI -${agilityReduction}, Crit +${criticalRangeIncrease}`,
+    () =>
+      formatArmorConfigCollapsedSummary(damageReduction, agilityReduction, criticalRangeIncrease),
     [damageReduction, agilityReduction, criticalRangeIncrease],
   );
 

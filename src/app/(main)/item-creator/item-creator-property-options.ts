@@ -31,20 +31,39 @@ export const ADD_PROPERTY_DISABLED_REASON = 'All properties are already on this 
 export const ADD_PROPERTY_SHIELD_DISABLED_REASON =
   'Shield handedness, block, and damage are set in Shield Configuration, Shield Block, and Shield Damage above.';
 
+/**
+ * A blank or general property stays with every armament type.
+ * A typed property stays only with its own type.
+ */
+export function propertyMatchesArmamentType(
+  propertyType: string | null | undefined,
+  armamentType: string,
+): boolean {
+  const propType = (propertyType || '').toLowerCase();
+  if (!propType || propType === 'general') return true;
+  return propType === armamentType.toLowerCase();
+}
+
+/** Properties to show and price for the current type. Does not remove the others. */
+export function selectedPropertiesForArmament<
+  T extends { property: { type?: string | null | undefined } },
+>(properties: readonly T[], armamentType: string): T[] {
+  return properties.filter((selected) =>
+    propertyMatchesArmamentType(selected.property.type, armamentType),
+  );
+}
+
 /** Next property Add Property can attach, or null when every selectable property is used. */
 export function findAddableItemProperty<T extends AddableProperty>(
   itemProperties: readonly T[],
   armamentType: string,
   selectedIds: readonly (string | number)[],
 ): T | null {
-  const armamentTypeLower = armamentType.toLowerCase();
   const selectable = itemProperties.filter((property) => {
     // id may be a string or a number; the check only reads id and name.
     if (isGeneralProperty(property as ItemPropertyPayload)) return false;
     if (isMechanicProperty(property)) return false;
-    const propType = (property.type || '').toLowerCase();
-    if (!propType || propType === 'general') return true;
-    return propType === armamentTypeLower;
+    return propertyMatchesArmamentType(property.type, armamentType);
   });
   const taken = new Set(selectedIds.map((id) => String(id)));
   return selectable.find((property) => !taken.has(String(property.id))) ?? null;
