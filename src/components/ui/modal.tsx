@@ -293,14 +293,19 @@ export function Modal({
   const modalContent = (
     <div
       className={cn(
-        'fixed inset-0 z-modal flex',
-        useFullScreenMobile ? 'items-stretch' : 'items-center justify-center p-4',
+        'fixed z-modal flex',
+        // Site header is h-20. Full-screen starts under it so the × in the title
+        // row is not on the menu or account controls (86e3jym93).
+        useFullScreenMobile
+          ? 'top-20 right-0 bottom-0 left-0 items-stretch'
+          : 'inset-0 items-center justify-center p-4',
       )}
     >
       {/* Backdrop */}
       <div
         className={cn(
-          'duration-base fixed inset-0 transition-opacity ease-standard',
+          'duration-base fixed transition-opacity ease-standard',
+          useFullScreenMobile ? 'top-20 right-0 bottom-0 left-0' : 'inset-0',
           useFullScreenMobile ? 'bg-background' : 'bg-black/60 backdrop-blur-sm',
           animating ? 'opacity-100' : 'opacity-0',
         )}
@@ -378,7 +383,8 @@ export function Modal({
             label="Close modal"
             className={cn(
               'absolute right-4 z-10',
-              useFullScreenMobile ? 'top-[calc(5rem+0.25rem)]' : 'top-4',
+              // Title row (`mt-2` / `pr-12`). A second header offset lands on Sort by.
+              useFullScreenMobile ? 'top-2' : 'top-4',
             )}
           >
             <X className="h-5 w-5" />
