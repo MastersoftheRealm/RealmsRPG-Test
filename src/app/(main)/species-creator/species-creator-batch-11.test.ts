@@ -13,9 +13,17 @@ const section = readFileSync(
 
 describe('species creator batch 11 layout & a11y', () => {
   it('keeps trait remove controls beside the name, not column edge (86e3jywdg)', () => {
-    expect(editor).not.toMatch(/TraitBlock[\s\S]*justify-between/);
-    expect(editor).toContain('min-w-0 flex-1 break-words text-text-primary');
-    expect(editor).toMatch(/function TraitBlock[\s\S]*className="min-w-0"/);
+    const traitBlock = editor.slice(
+      editor.indexOf('function TraitBlock'),
+      editor.indexOf('const TRAIT_GRID_COLUMNS'),
+    );
+    expect(traitBlock).not.toContain('justify-between');
+    expect(traitBlock).not.toContain('flex-1');
+    expect(traitBlock).toContain('className="flex w-fit max-w-full items-start gap-2 py-1"');
+    expect(traitBlock).toContain('min-w-0 break-words text-text-primary');
+    expect(traitBlock).toContain('className="min-w-0"');
+    expect(traitBlock).toContain('hit-area-dense-square');
+    expect(traitBlock).toContain('aria-label={`Remove ${traitName}`}');
   });
 
   it('fixes 375px cosmetics: languages Add row, Name sort label, larger remove hits (86e3jym9a)', () => {
