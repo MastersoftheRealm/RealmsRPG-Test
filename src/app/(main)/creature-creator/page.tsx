@@ -37,6 +37,7 @@ import {
   creatorToolbarSaveAsCopyHandler,
 } from '@/lib/creator/creator-save-as-copy';
 import { CreatorSummaryPanel, CreatorPageShell } from '@/components/creator';
+import { isListedSavedCreatureSkill } from '@/components/patterns/list/creature-stat-block-helpers';
 import { getCreatureAbilityBounds } from '@/lib/game/creature-ability-bounds';
 import { formatCreatureAbilityPointsValue } from './creature-ability-points-display';
 import {
@@ -318,7 +319,7 @@ function CreatureCreatorContent() {
           lineItems={[
             {
               label: 'Skills',
-              items: creature.skills.map((s: CreatureSkill) => {
+              items: creature.skills.filter(isListedSavedCreatureSkill).map((s: CreatureSkill) => {
                 const b = getCreatureSkillBonus(s);
                 return `${s.name} ${b >= 0 ? '+' : ''}${b}`;
               }),

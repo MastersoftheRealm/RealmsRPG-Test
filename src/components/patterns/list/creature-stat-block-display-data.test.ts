@@ -4,7 +4,8 @@ import { derivePowerDisplay } from '@/lib/calculators/power-calc';
 import { loadRepoCodexParts } from '@/lib/calculators/power-composition.fixture';
 import { libraryItemToPowerDocument } from '@/lib/library-selectable-builders';
 import type { CreatureData } from './creature-stat-block-types';
-import { buildPowersForDisplay } from './creature-stat-block-display-data';
+import { isListedSavedCreatureSkill } from './creature-stat-block-helpers';
+import { buildPowersForDisplay, buildSkillRows } from './creature-stat-block-display-data';
 
 describe('buildPowersForDisplay energy', () => {
   it('prices Shared apply-to-duration through the same document as the library', () => {
@@ -175,5 +176,21 @@ describe('buildPowersForDisplay energy', () => {
     expect(row?.energyCost).toBe(9);
     expect(row?.actionType).toBe('Quick');
     expect(row?.duration).toBe('2 Rounds');
+  });
+});
+
+describe('buildSkillRows saved proficiency', () => {
+  it('omits a saved skill with proficient false from the stat block and summary lists', () => {
+    const skills = [
+      { name: 'Athletics', value: 2, proficient: true },
+      { name: 'Stealth', value: 0, proficient: false },
+      { id: 'smith', name: 'Smithing', value: 0, proficient: false, isSubSkill: true },
+    ];
+    const rows = buildSkillRows({ id: 'c-skills', name: 'Wolf', abilities: {} }, skills, []);
+    expect(rows.map((row) => row.name)).toEqual(['Athletics']);
+
+    const summary = skills.filter(isListedSavedCreatureSkill).map((skill) => skill.name);
+    expect(summary).toEqual(['Athletics']);
+    expect(isListedSavedCreatureSkill({})).toBe(true);
   });
 });

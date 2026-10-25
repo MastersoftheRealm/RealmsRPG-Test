@@ -142,7 +142,6 @@ export function CreatureStatBlock({
       proficient: true,
     }));
   }, [creature.skills]);
-  const hasSkills = creatureSkills.length > 0;
   const hasFeats = (creature.feats ?? []).length > 0;
   const hasWeapons = weapons.length > 0;
   const hasShields = shields.length > 0;
@@ -197,6 +196,7 @@ export function CreatureStatBlock({
     () => buildSkillRows(creature, creatureSkills, skillsDb),
     [creature, creatureSkills, skillsDb],
   );
+  const hasSkills = skillRows.length > 0;
 
   const listThumbnail = resolveListRowThumbnail(
     'creature',
