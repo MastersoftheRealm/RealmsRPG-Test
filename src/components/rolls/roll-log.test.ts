@@ -25,9 +25,11 @@ describe('RollLog bonus source hover (TASK-893)', () => {
   });
 });
 
-describe('RollLog truncated titles (86e3kfkc1)', () => {
-  it('exposes the full roll title on hover when the line truncates', () => {
+describe('RollLog roll entry titles (86e3kfkc1 / 86e3t17b1)', () => {
+  it('wraps long titles instead of a one-line ellipsis and keeps title for hover', () => {
     expect(source).toContain('title={roll.title}');
+    expect(source).toContain('line-clamp-2 break-words');
+    expect(source).not.toMatch(/roll\.title[\s\S]{0,120}className="[^"]*\btruncate\b/);
   });
 });
 
