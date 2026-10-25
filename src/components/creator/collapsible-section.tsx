@@ -157,9 +157,6 @@ export function CollapsibleSection({
               <p className="mt-0.5 truncate text-sm text-text-muted">{metaText}</p>
             ) : null}
           </div>
-          <span className="flex-shrink-0 text-text-muted" aria-hidden>
-            {isExpanded ? <ChevronUp className="h-5 w-5" /> : <ChevronDown className="h-5 w-5" />}
-          </span>
           {hasTrailingActions ? (
             <div
               className={cn(
@@ -183,6 +180,9 @@ export function CollapsibleSection({
               )}
             </div>
           ) : null}
+          <span className="flex-shrink-0 text-text-muted" aria-hidden>
+            {isExpanded ? <ChevronUp className="h-5 w-5" /> : <ChevronDown className="h-5 w-5" />}
+          </span>
         </div>
       </div>
 

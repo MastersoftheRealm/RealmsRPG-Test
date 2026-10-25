@@ -42,6 +42,7 @@ export type CreatureCreatorStatsSlice = {
   conditionImmunityFeatCost: number;
   featSpent: number;
   featPoints: number;
+  featRemaining: number;
   currencyRemaining: number;
   currency: number;
   currencySpent: number;
