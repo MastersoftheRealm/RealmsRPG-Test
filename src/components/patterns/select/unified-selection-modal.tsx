@@ -19,6 +19,7 @@ import { useState, useMemo, useCallback, useId } from 'react';
 import { cn } from '@/lib/utils';
 import { Alert, Modal } from '@/components/ui';
 import { useSort } from '@/hooks/use-sort';
+import { selectionAddBlocked } from './selection-limit';
 import {
   itemsWithSelectionQuantity,
   selectionDiffersFromInitial,
@@ -171,6 +172,8 @@ export function UnifiedSelectionModal({
         } else if (maxSelections === 1) {
           setQuantities(showQuantity ? { [key]: 1 } : {});
           return new Set([key]);
+        } else if (selectionAddBlocked(prev.size, maxSelections)) {
+          return prev;
         } else {
           newSet.add(key);
           if (showQuantity) {

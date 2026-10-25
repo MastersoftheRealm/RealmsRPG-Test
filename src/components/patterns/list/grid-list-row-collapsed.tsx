@@ -26,10 +26,12 @@ function GridListRowChromeIconButton({
   kind,
   onClick,
   columnWidth,
+  deleteLabel,
 }: {
   kind: 'edit' | 'delete';
   onClick: () => void;
   columnWidth?: string | undefined;
+  deleteLabel?: string | undefined;
 }) {
   const isDelete = kind === 'delete';
   return (
@@ -45,7 +47,7 @@ function GridListRowChromeIconButton({
           e.stopPropagation();
           onClick();
         }}
-        label={isDelete ? 'Remove' : 'Edit'}
+        label={isDelete ? (deleteLabel ?? 'Remove') : 'Edit'}
         className={
           isDelete
             ? 'text-danger-fg hover:bg-transparent hover:opacity-80'
@@ -126,6 +128,7 @@ interface GridListRowCollapsedProps {
   onEdit?: (() => void) | undefined;
   inlineDelete: boolean;
   onDelete?: (() => void) | undefined;
+  deleteLabel?: string | undefined;
   inlineSelectable: boolean;
   isSelected: boolean;
   onSelect?: (() => void) | undefined;
@@ -171,6 +174,7 @@ export function GridListRowCollapsed({
   onEdit,
   inlineDelete,
   onDelete,
+  deleteLabel,
   inlineSelectable,
   isSelected,
   onSelect,
@@ -380,7 +384,7 @@ export function GridListRowCollapsed({
         )}
         {inlineEdit && onEdit && <GridListRowChromeIconButton kind="edit" onClick={onEdit} />}
         {inlineDelete && onDelete && (
-          <GridListRowChromeIconButton kind="delete" onClick={onDelete} />
+          <GridListRowChromeIconButton kind="delete" onClick={onDelete} deleteLabel={deleteLabel} />
         )}
         {inlineSelectable && (
           <div
@@ -423,6 +427,7 @@ export interface GridListRowExternalChromeProps {
   fitRightSlotToContent?: boolean | undefined;
   onEdit?: (() => void) | undefined;
   onDelete?: (() => void) | undefined;
+  deleteLabel?: string | undefined;
   selectable?: boolean | undefined;
   isSelected?: boolean | undefined;
   onSelect?: (() => void) | undefined;
@@ -439,6 +444,7 @@ export function GridListRowExternalChrome({
   fitRightSlotToContent = false,
   onEdit,
   onDelete,
+  deleteLabel,
   selectable = false,
   isSelected = false,
   onSelect,
@@ -478,6 +484,7 @@ export function GridListRowExternalChrome({
           kind="delete"
           onClick={onDelete}
           columnWidth={GRID_LIST_ROW_ICON_COLUMN_WIDTH}
+          deleteLabel={deleteLabel}
         />
       )}
 

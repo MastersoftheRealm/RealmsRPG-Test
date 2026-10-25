@@ -9,6 +9,7 @@ import {
   resolveCreatureInventoryBuckets,
 } from '@/lib/game/creature-inventory';
 import { initialState } from './creature-creator-constants';
+import { uniqueCreatureLanguages } from './creature-trait-labels';
 import type { CreatureSkill, CreatureState } from './creature-creator-types';
 import type { CreatureArmament } from './transformers';
 
@@ -122,7 +123,7 @@ export function rawRecordToCreatureState(c: Record<string, unknown>): CreatureSt
     conditionImmunities: (c.conditionImmunities as string[]) ?? [],
     senses: (c.senses as string[]) ?? [],
     movementTypes: (c.movementTypes as string[]) ?? [],
-    languages: (c.languages as string[]) ?? [],
+    languages: uniqueCreatureLanguages((c.languages as string[]) ?? []),
     skills: (c.skills as CreatureSkill[]) ?? [],
     powers: (c.powers as CreatureState['powers']) ?? [],
     techniques: (c.techniques as CreatureState['techniques']) ?? [],

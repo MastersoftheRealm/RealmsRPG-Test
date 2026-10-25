@@ -16,6 +16,7 @@ import { CollapsibleSection } from '@/components/creator';
 import type { CreatureCreatorEditorProps } from './creature-creator-editor';
 import { collectCreatureInventoryItems } from '@/lib/game/creature-inventory';
 import { mapCreatureSelectedInventoryRows } from './map-creature-inventory-rows';
+import { formatCreatureGroupedNumber } from './creature-trait-labels';
 
 const CREATURE_INVENTORY_ROW_CHROME = { delete: true } as const;
 
@@ -70,11 +71,12 @@ export function CreatureCreatorEditorInventorySection({
                 stats.currencyRemaining < 0 ? 'text-danger-fg' : 'text-text-primary',
               )}
             >
-              {stats.currencyRemaining}c / {stats.currency}c
+              {formatCreatureGroupedNumber(stats.currencyRemaining)}c /{' '}
+              {formatCreatureGroupedNumber(stats.currency)}c
             </span>
           </div>
           <p className="mt-1 text-xs text-text-muted">
-            Spent {stats.currencySpent}c from selected inventory items.
+            Spent {formatCreatureGroupedNumber(stats.currencySpent)}c from selected inventory items.
           </p>
         </div>
         <WeaponsListSection

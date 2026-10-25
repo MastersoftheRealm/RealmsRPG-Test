@@ -109,6 +109,7 @@ export const GridListRow = memo(function GridListRow({
   warningMessage,
   onEdit,
   onDelete,
+  deleteLabel,
   onDuplicate,
   onAddToLibrary,
   leftSlot,
@@ -434,6 +435,7 @@ export const GridListRow = memo(function GridListRow({
             onEdit={onEdit}
             inlineDelete={inlineDelete}
             onDelete={onDelete}
+            deleteLabel={deleteLabel}
             inlineSelectable={inlineSelectable}
             isSelected={isSelected}
             onSelect={onSelect}
@@ -464,6 +466,7 @@ export const GridListRow = memo(function GridListRow({
               fitRightSlotToContent={fitMobileRightSlot && externalRightSlot}
               onEdit={externalEdit ? onEdit : undefined}
               onDelete={externalDelete ? onDelete : undefined}
+              deleteLabel={deleteLabel}
               selectable={externalSelectable}
               isSelected={isSelected}
               onSelect={onSelect}

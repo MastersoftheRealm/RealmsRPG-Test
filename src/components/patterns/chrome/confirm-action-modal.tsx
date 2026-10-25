@@ -71,7 +71,6 @@ export function ConfirmActionModal({
       isOpen={isOpen}
       onClose={onClose}
       size="sm"
-      showCloseButton={false}
       titleA11y={title}
       footer={
         <div className="flex w-full flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center sm:justify-center">

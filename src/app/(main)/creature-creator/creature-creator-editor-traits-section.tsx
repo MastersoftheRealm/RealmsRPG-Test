@@ -10,6 +10,11 @@ import { CONDITIONS } from '@/lib/game/creator-constants';
 import { DAMAGE_TYPES, SENSES, MOVEMENT_TYPES } from './creature-creator-constants';
 import { takenDamageModifiers } from './creature-damage-modifiers';
 import { ChipList, ExpandableChipList, AddItemDropdown } from './CreatureCreatorHelpers';
+import {
+  appendCreatureLanguage,
+  creatureMovementLabel,
+  creatureSenseLabel,
+} from './creature-trait-labels';
 import type { CreatureCreatorEditorProps } from './creature-creator-editor';
 
 type TraitsSectionProps = Pick<
@@ -38,10 +43,11 @@ export function CreatureCreatorEditorTraitsSection({
   const takenDamageTypes = takenDamageModifiers(creature);
 
   const addLanguage = () => {
-    if (newLanguage.trim() && !creature.languages.includes(newLanguage.trim())) {
-      addToArray('languages', newLanguage.trim());
-      setNewLanguage('');
-    }
+    const next = appendCreatureLanguage(creature.languages, newLanguage);
+    if (!next) return;
+    const added = next[next.length - 1];
+    if (added) addToArray('languages', added);
+    setNewLanguage('');
   };
 
   return (
@@ -67,13 +73,13 @@ export function CreatureCreatorEditorTraitsSection({
               onRemove={(item) => removeFromArray('resistances', item)}
               color="bg-success-light text-success-fg"
               costLabel={() => `+${stats.resistanceFeatCost} pt`}
+              removeLabel={(item) => `Remove ${item} resistance`}
             />
             <AddItemDropdown
               options={DAMAGE_TYPES}
               selectedItems={takenDamageTypes}
               onAdd={(item) => addToArray('resistances', item)}
               placeholder="Add resistance..."
-              sectionCostLabel={`+${stats.resistanceFeatCost} pt each`}
               costForOption={() => stats.resistanceFeatCost}
             />
           </div>
@@ -89,13 +95,13 @@ export function CreatureCreatorEditorTraitsSection({
               onRemove={(item) => removeFromArray('weaknesses', item)}
               color="bg-danger-light text-danger-fg"
               costLabel={() => `${stats.weaknessFeatCost} pt`}
+              removeLabel={(item) => `Remove ${item} weakness`}
             />
             <AddItemDropdown
               options={DAMAGE_TYPES}
               selectedItems={takenDamageTypes}
               onAdd={(item) => addToArray('weaknesses', item)}
               placeholder="Add weakness..."
-              sectionCostLabel={`${stats.weaknessFeatCost} pt each`}
               costForOption={() => stats.weaknessFeatCost}
             />
           </div>
@@ -109,15 +115,15 @@ export function CreatureCreatorEditorTraitsSection({
             <ChipList
               items={creature.immunities}
               onRemove={(item) => removeFromArray('immunities', item)}
-              color="bg-power-light text-power-fg"
+              color="bg-info-light text-info-fg"
               costLabel={() => `+${stats.immunityFeatCost} pt`}
+              removeLabel={(item) => `Remove ${item} immunity`}
             />
             <AddItemDropdown
               options={DAMAGE_TYPES}
               selectedItems={takenDamageTypes}
               onAdd={(item) => addToArray('immunities', item)}
               placeholder="Add immunity..."
-              sectionCostLabel={`+${stats.immunityFeatCost} pt each`}
               costForOption={() => stats.immunityFeatCost}
             />
           </div>
@@ -139,6 +145,8 @@ export function CreatureCreatorEditorTraitsSection({
               rowHoverClass="hover:bg-info-200 dark:hover:bg-info-900/40"
               descriptions={senseDescriptions}
               costLabel={getSenseCostLabel}
+              labelFor={creatureSenseLabel}
+              removeLabel={(item) => `Remove ${creatureSenseLabel(item)} sense`}
             />
             <AddItemDropdown
               options={SENSES}
@@ -159,6 +167,8 @@ export function CreatureCreatorEditorTraitsSection({
               rowHoverClass="hover:bg-warning-200 dark:hover:bg-warning-800/40"
               descriptions={movementDescriptions}
               costLabel={getMovementCostLabel}
+              labelFor={creatureMovementLabel}
+              removeLabel={(item) => `Remove ${creatureMovementLabel(item)} movement`}
             />
             <AddItemDropdown
               options={MOVEMENT_TYPES}
@@ -177,8 +187,9 @@ export function CreatureCreatorEditorTraitsSection({
         <ChipList
           items={creature.conditionImmunities}
           onRemove={(item) => removeFromArray('conditionImmunities', item)}
-          color="bg-surface-alt text-text-primary"
+          color="bg-info-light text-info-fg"
           costLabel={() => `+${stats.conditionImmunityFeatCost} pt`}
+          removeLabel={(item) => `Remove ${item} condition immunity`}
         />
         <AddItemDropdown
           options={CONDITIONS}
@@ -196,6 +207,7 @@ export function CreatureCreatorEditorTraitsSection({
           items={creature.languages}
           onRemove={(item) => removeFromArray('languages', item)}
           color="bg-info-light text-info-fg"
+          removeLabel={(item) => `Remove ${item} language`}
         />
         <div className="mt-2 flex gap-2">
           <Input

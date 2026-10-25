@@ -305,6 +305,7 @@ export function CreatorPageShell({
               title={resetConfirm.title}
               description={resetConfirm.description}
               confirmLabel={resetConfirm.confirmLabel ?? 'Reset'}
+              confirmVariant="danger"
             />
           ) : null}
           {extraModals}

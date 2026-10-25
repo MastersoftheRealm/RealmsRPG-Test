@@ -63,6 +63,15 @@ export interface AbilityScoreEditorProps {
   variant?: 'default' | 'sheet' | undefined;
 }
 
+/** Show the next-increase cost while a further step exists, including when points block +. */
+export function abilityNextCostVisible(
+  increaseCost: number,
+  value: number,
+  maxAbility: number,
+): boolean {
+  return increaseCost > 1 && value < maxAbility;
+}
+
 const ABILITY_ORDER: AbilityName[] = [
   'strength',
   'vitality',
@@ -242,7 +251,7 @@ export function AbilityScoreEditor({
                         disabled={!canInc}
                         size={compact ? 'sm' : 'md'}
                         title={
-                          canInc && increaseCost > 1
+                          abilityNextCostVisible(increaseCost, value, maxAbility)
                             ? `Increase ${info.name} ability score (cost: ${increaseCost} points)`
                             : `Increase ${info.name} ability score`
                         }
@@ -254,7 +263,9 @@ export function AbilityScoreEditor({
                     <p
                       className={cn(
                         'mt-1 text-center text-[10px] font-medium',
-                        increaseCost > 1 && canInc ? 'text-warning-fg' : 'invisible',
+                        abilityNextCostVisible(increaseCost, value, maxAbility)
+                          ? 'text-warning-fg'
+                          : 'invisible',
                       )}
                     >
                       Next: {increaseCost} Points

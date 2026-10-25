@@ -15,12 +15,15 @@ export const ABILITY_ORDER: AbilityName[] = [
 const SHEET_TIP_TOUCH_CLASS =
   'min-h-0 min-w-0 [@media(pointer:coarse)]:min-h-[var(--touch-target-min,44px)]';
 
-/** Sheet tip: defense/ability name labels. Full GAME_RULES words; wrap inside the tile (C2). */
+/** Sheet tip: defense/ability name labels. Full GAME_RULES words; wrap inside the tile (C2).
+ * Two-line min height keeps Mental Fortitude's score on the same row as the other defenses.
+ * It follows the touch min-h so fine-pointer `min-h-0` does not cancel it. */
 export const SHEET_STAT_TIP_CLASS = cn(
-  'flex w-full min-w-0 self-stretch flex-col items-center justify-center',
-  'min-h-[2.5em] px-0.5 text-center text-sm font-semibold uppercase leading-tight tracking-wide',
+  'flex w-full min-w-0 self-stretch flex-col items-center justify-start',
+  'px-0.5 text-center text-sm font-semibold uppercase leading-tight tracking-wide',
   'text-text-secondary whitespace-normal',
   SHEET_TIP_TOUCH_CLASS,
+  'min-h-[2.75rem]',
 );
 
 /** Defense Score value tip — keep large glance number. */

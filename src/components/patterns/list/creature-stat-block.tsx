@@ -21,6 +21,10 @@ import { calculateCreatureSpeed, calculateEvasion } from '@/lib/game/calculation
 import { CREATURE_STAT_BLOCK_GRID } from '@/lib/library/official-creature-list';
 import { formatCreatureLevel, formatCreatureLevelLabel } from '@/lib/game';
 import { formatListCellLabel } from '@/lib/utils';
+import {
+  creatureSizeDisplayLabel,
+  uniqueCreatureLanguages,
+} from '@/app/(main)/creature-creator/creature-trait-labels';
 import type { Abilities } from '@/types';
 import { resolveCreatureInventoryBuckets } from '@/lib/game/creature-inventory';
 import { creatureArmorDamageReduction } from '@/lib/game/resolve-armor-damage-reduction';
@@ -88,7 +92,7 @@ export function CreatureStatBlock({
   const maxHpDisplay = calculateCreatureMaxHealth(level, abilitiesRecord, hpAlloc);
   const maxEnDisplay = calculateCreatureMaxEnergy(level, abilitiesRecord, enAlloc);
   const archetype = formatArchetype(creature.powerProficiency, creature.martialProficiency);
-  const subline = `${formatCreatureLevelLabel(creature.level ?? 1)} ${creature.size ? formatListCellLabel(creature.size) : 'Medium'} ${formatListCellLabel(creature.type ?? 'creature')}`;
+  const subline = `${formatCreatureLevelLabel(creature.level ?? 1)} ${creature.size ? creatureSizeDisplayLabel(creature.size) : 'Medium'} ${formatListCellLabel(creature.type ?? 'creature')}`;
 
   const highestAbility = useMemo(() => {
     const abilities = creature.abilities ?? {};
@@ -163,13 +167,14 @@ export function CreatureStatBlock({
     compactLine('Resistances', creature.resistances),
     compactLine('Weaknesses', creature.weaknesses),
     compactLine('Immunities', creature.immunities),
-    compactLine('Languages', creature.languages),
+    compactLine('Condition Immunities', creature.conditionImmunities),
+    compactLine('Languages', uniqueCreatureLanguages(creature.languages ?? [])),
     defensesSentence,
   ].filter((line): line is string => Boolean(line));
 
   const headerColumns: ColumnValue[] = [
     { key: 'level', value: formatCreatureLevel(creature.level ?? 1), align: 'center' },
-    { key: 'size', value: formatListCellLabel(creature.size), align: 'center' },
+    { key: 'size', value: creatureSizeDisplayLabel(creature.size), align: 'center' },
     { key: 'type', value: formatListCellLabel(creature.type), align: 'center' },
     {
       key: 'archetype',
