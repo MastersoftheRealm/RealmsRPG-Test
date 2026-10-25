@@ -9,7 +9,7 @@
 
 'use client';
 
-import { useState, useMemo, useCallback, useEffect } from 'react';
+import { useState, useMemo, useCallback, useEffect, useRef } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { getSkillPointsHelp } from '../../../../public/tooltip-text';
 import type { SourceFilterValue } from '@/components/patterns/filters/source-filter';
@@ -490,6 +490,14 @@ export function useCreatureCreatorWorkspace() {
     'creature',
     save.setSaveMessage,
   );
+
+  const acceptedBootstrapRef = useRef<string | null>(null);
+  useEffect(() => {
+    if (!bootstrapApplied) return;
+    if (acceptedBootstrapRef.current === sessionKey) return;
+    acceptedBootstrapRef.current = sessionKey;
+    acceptDraft();
+  }, [acceptDraft, bootstrapApplied, sessionKey]);
 
   const featsSummary = useMemo(() => buildCreatureFeatsSummary(creature), [creature]);
   const powersSummary = useMemo(() => buildCreaturePowersSummary(creature), [creature]);

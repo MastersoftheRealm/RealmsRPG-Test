@@ -256,6 +256,19 @@ describe('creator unsaved guard', () => {
     expect(header).not.toContain("router.push('/login')");
   });
 
+  it('marks creature creator clean after bootstrap loads ?edit= or draft cache', () => {
+    const workspace = readFileSync(
+      path.join(
+        import.meta.dirname,
+        '../../app/(main)/creature-creator/use-creature-creator-workspace.ts',
+      ),
+      'utf8',
+    );
+    expect(workspace).toContain('acceptDraft()');
+    expect(workspace).toMatch(/acceptedBootstrapRef/);
+    expect(workspace).toContain('bootstrapApplied');
+  });
+
   it('clears the stored draft when Discard confirms leaving, on every creator', () => {
     const shell = readFileSync(
       path.join(import.meta.dirname, '../../components/creator/CreatorPageShell.tsx'),

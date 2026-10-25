@@ -234,8 +234,7 @@ export function RollProvider({
   // Roll an ability roll (Realms uses "Roll" not "Check" or "Save")
   const rollAbility = useCallback(
     (abilityName: string, bonus: number, modifierLabel?: string) => {
-      const title = abilityName.charAt(0).toUpperCase() + abilityName.slice(1).toLowerCase();
-      makeD20Roll('ability', title, bonus, modifierLabel);
+      makeD20Roll('ability', abilityName, bonus, modifierLabel);
     },
     [makeD20Roll],
   );

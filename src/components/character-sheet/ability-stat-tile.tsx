@@ -152,7 +152,7 @@ export function AbilityStatTile({
         <>
           <RollButton
             value={displayValue}
-            onClick={() => rollContext?.rollAbility?.(ability, displayValue)}
+            onClick={() => rollContext?.rollAbility?.(info.name, displayValue)}
             size="md"
             title={`Roll ${info.name}`}
           />

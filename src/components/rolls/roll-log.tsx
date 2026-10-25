@@ -512,7 +512,7 @@ export function RollEntryCard({
               </span>
             )}
             <span
-              className="block truncate text-sm font-semibold text-primary-fg"
+              className="line-clamp-2 text-sm font-semibold break-words text-primary-fg"
               title={roll.title}
             >
               {roll.title}

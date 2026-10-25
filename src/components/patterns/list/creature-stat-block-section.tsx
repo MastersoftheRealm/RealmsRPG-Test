@@ -28,6 +28,7 @@ export function StatBlockSection({
             onClick={() => setOpen(!open)}
             className="flex h-7 w-7 items-center justify-center rounded-full border border-border-light text-text-muted transition-colors hover:bg-surface-alt hover:text-text-primary"
             aria-label={open ? `Collapse ${title}` : `Expand ${title}`}
+            aria-expanded={open}
           >
             <ChevronDown
               className={cn('h-4 w-4 transition-transform', open ? 'rotate-180' : 'rotate-0')}
