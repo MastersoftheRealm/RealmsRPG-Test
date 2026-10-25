@@ -433,8 +433,8 @@ function TraitBlock({
           {ids.map((id) => {
             const traitName = traitIdToName.get(id) ?? id;
             return (
-              <li key={id} className="flex items-start gap-2 py-1">
-                <span className="min-w-0 flex-1 break-words text-text-primary">{traitName}</span>
+              <li key={id} className="flex w-fit max-w-full items-start gap-2 py-1">
+                <span className="min-w-0 break-words text-text-primary">{traitName}</span>
                 <button
                   type="button"
                   onClick={() => onRemove(id)}
