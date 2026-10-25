@@ -61,10 +61,11 @@ import {
   namedPropertyDescriptorChips,
   trainingPointsFactChip,
 } from '@/lib/detail-option/compact-facts';
-import { glrColumnKeyFor, glrListChrome } from '@/lib/glr';
+import { glrColumnKeyFor, glrListChrome, LOAD_POWER_MODAL_LAYOUT_OVERRIDES } from '@/lib/glr';
 import { equipmentCurrency } from '@/lib/codex/equipment-list';
 import { resolveArmorDamageReduction } from '@/lib/game/resolve-armor-damage-reduction';
 import {
+  DAMAGE_CATEGORY,
   derivePartCategories,
   formatPartCategoriesColumn,
   powerHasDamageCategory,
@@ -74,13 +75,42 @@ import type { PowerTechniqueFilterableRow } from '@/lib/library/power-technique-
 import type { PowerPart, TechniquePart, ItemProperty } from '@/hooks/codex-types';
 import type { UserPower, UserTechnique, UserItem } from '@/hooks/use-user-library';
 
+/** Empowered rows keep Damage as a column. The power load modal uses `loadPowerChrome`. */
 const selectPowerChrome = glrListChrome(
   { entityType: 'power', mode: 'select' },
   { labelStyle: 'title', keyStyle: 'usm' },
 );
+const loadPowerChrome = glrListChrome(
+  {
+    entityType: 'power',
+    mode: 'select',
+    layoutOverrides: LOAD_POWER_MODAL_LAYOUT_OVERRIDES,
+  },
+  {
+    labelStyle: 'title',
+    keyStyle: 'usm',
+    trackOverrides: {
+      name: 'minmax(16ch, 1.45fr)',
+      Energy: 'minmax(3.25rem, 0.4fr)',
+      Action: 'minmax(20ch, 1.2fr)',
+      Duration: 'minmax(10ch, 0.85fr)',
+      Area: 'minmax(8ch, 0.65fr)',
+    },
+  },
+);
 const selectTechniqueChrome = glrListChrome(
   { entityType: 'technique', mode: 'select' },
-  { labelStyle: 'title', keyStyle: 'usm' },
+  {
+    labelStyle: 'title',
+    keyStyle: 'usm',
+    trackOverrides: {
+      name: 'minmax(16ch, 1.35fr)',
+      Action: 'minmax(20ch, 1.15fr)',
+      Energy: 'minmax(3.25rem, 0.55fr)',
+      Attack: 'minmax(8ch, 1fr)',
+      'Training Pts': 'minmax(7ch, 0.7fr)',
+    },
+  },
 );
 const selectWeaponChrome = glrListChrome(
   { entityType: 'weapon', mode: 'select' },
@@ -105,7 +135,7 @@ function selectChromeFor(
 ) {
   switch (type) {
     case 'power':
-      return selectPowerChrome;
+      return loadPowerChrome;
     case 'technique':
       return selectTechniqueChrome;
     case 'weapon':
@@ -509,13 +539,14 @@ export function getItemColumns(
             Damage: formatPowerDamage(power.damage) || '-',
           };
         })();
-    return selectPowerChrome.layout.columnFacts.map((id) => {
+    return loadPowerChrome.layout.columnFacts.map((id) => {
       const key = glrColumnKeyFor(id, 'power', 'select', 'usm');
+      const wrap = key === 'Duration' || key === 'Action';
       return {
         key,
         value: values[key] ?? '-',
         align: 'center' as const,
-        ...(key.toLowerCase() === 'duration' ? { allowMultiline: true as const } : {}),
+        ...(wrap ? { allowMultiline: true as const } : {}),
       };
     });
   }
@@ -542,7 +573,12 @@ export function getItemColumns(
         };
     return selectTechniqueChrome.layout.columnFacts.map((id) => {
       const key = glrColumnKeyFor(id, 'technique', 'select', 'usm');
-      return { key, value: values[key] ?? '-', align: 'center' as const };
+      return {
+        key,
+        value: values[key] ?? '-',
+        align: 'center' as const,
+        ...(key === 'Action' ? { allowMultiline: true as const } : {}),
+      };
     });
   }
   if (itemType === 'weapon') {
@@ -618,9 +654,9 @@ function modalGridMinmaxTracks(template: string): string {
 export function getModalGridColumns(itemType: LibraryItemType): string {
   switch (itemType) {
     case 'power':
-      return modalGridMinmaxTracks(selectPowerChrome.grid);
+      return loadPowerChrome.grid;
     case 'technique':
-      return modalGridMinmaxTracks(selectTechniqueChrome.grid);
+      return selectTechniqueChrome.grid;
     case 'weapon':
       return modalGridMinmaxTracks(selectWeaponChrome.grid);
     case 'shield':
@@ -643,7 +679,7 @@ export function getListHeaderColumns(itemType: LibraryItemType): {
   const base = [{ key: 'name', label: 'Name', align: 'left' as const }];
   switch (itemType) {
     case 'power':
-      return selectPowerChrome.headers.map(({ key, label, align }) => ({
+      return loadPowerChrome.headers.map(({ key, label, align }) => ({
         key,
         label,
         align,
@@ -683,11 +719,14 @@ export function getListHeaderColumns(itemType: LibraryItemType): {
   }
 }
 
-/** Columns for empowered technique rows (sheet add + creator load). */
+/** Columns for empowered technique rows (sheet add + creator load). Damage stays a column. */
 export const EMPOWERED_POWER_COLUMNS = selectPowerChrome.headers.map(({ key, label }) => ({
   key,
   label,
 }));
+
+/** Grid paired with `EMPOWERED_POWER_COLUMNS` (not the power load-modal grid). */
+export const EMPOWERED_POWER_GRID = selectPowerChrome.grid;
 
 export interface BuildSelectableItemCodex {
   powerPartsDb: PowerPart[];
@@ -726,16 +765,21 @@ export function buildSelectableItem(
       ),
       powerHasDamageCategory(composition ? composedPowerCategoryDamage(composition) : damage),
     );
-    const categoryText = formatPartCategoriesColumn(categories);
+    const damageLine = formatPowerDamage(damage);
+    const categoryLabels = damageLine
+      ? categories.filter((c) => c.toLowerCase() !== DAMAGE_CATEGORY.toLowerCase())
+      : categories;
+    const categoryText = formatPartCategoriesColumn(categoryLabels);
     const sections = mergeDetailSections(
       variantsSection,
       buildGlrFactDetailSections({
-        chipFacts: selectPowerChrome.layout.chipFacts,
+        chipFacts: loadPowerChrome.layout.chipFacts,
         entityType: 'power',
         facts: {
           range: display.range,
           category: categoryText && categoryText !== '—' ? categoryText : undefined,
           trainingPoints: display.tp > 0 ? display.tp : undefined,
+          damage: damageLine || undefined,
         },
         extraSections: parts ? [parts] : undefined,
       }),

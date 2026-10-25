@@ -30,6 +30,7 @@ import {
   getListHeaderColumns,
   getModalGridColumns,
   EMPOWERED_POWER_COLUMNS,
+  EMPOWERED_POWER_GRID,
   type LibraryItemType,
   type EqItem,
 } from '@/lib/library-selectable-builders';
@@ -415,7 +416,7 @@ export function useLoadModalLibrary(
 
   const gridColumns =
     type === 'empowered-technique'
-      ? getModalGridColumns('power')
+      ? EMPOWERED_POWER_GRID
       : type === 'species'
         ? '1.4fr 0.8fr'
         : type === 'creature'

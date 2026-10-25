@@ -38,7 +38,7 @@ describe('website bugs batch 19 — power creator save/load', () => {
     expect(creatorSave).toContain("saveMessage.type !== 'success'");
   });
 
-  it('does not add a new library delete success sentence (86e3jwuru)', () => {
+  it('holds the library delete success sentence pending confirmation of Deleted "${name}" (86e3jwuru)', () => {
     expect(libraryPage).not.toContain('Deleted "');
     expect(libraryPage).not.toMatch(/showToast\([^)]*Deleted/);
   });
@@ -48,9 +48,12 @@ describe('website bugs batch 19 — power creator save/load', () => {
     expect(loginPrompt).toContain('load ${loadContentLabel} from your library');
   });
 
-  it('clears ?edit= after a successful save (86e3jwurq)', () => {
-    expect(powerWorkspace).toContain('onEditSaveCommitted');
-    expect(powerPage).toContain("router.replace('/power-creator', { scroll: false })");
+  it('clears ?edit= after the unsaved-guard sentinel pop, not before it (86e3jwurq)', () => {
+    expect(powerWorkspace).toContain('creatorEditClearPlan');
+    expect(powerWorkspace).toContain('bindCreatorEditClear');
+    expect(powerWorkspace).toContain('acceptDraft()');
+    expect(powerPage).toContain('router.replace(href, { scroll: false })');
+    expect(powerPage).not.toContain("router.replace('/power-creator'");
   });
 
   it('sorts duration by game order, not alphabetically (86e3jwurm)', () => {
@@ -66,15 +69,20 @@ describe('website bugs batch 19 — power creator save/load', () => {
     expect(sorted.map((r) => r.name)).toEqual(['a', 'c', 'b']);
   });
 
-  it('load modal power rows allow duration wrap and minmax grid tracks (86e3jwurj)', () => {
+  it('load modal power rows keep action and name readable and chip damage (86e3jwurj)', () => {
     const cols = getItemColumns({ id: 'p1', name: 'Bolt' }, 'power', undefined, {
       energy: 2,
-      actionType: 'Action',
+      actionType: 'Long (4 AP) Reaction',
       duration: '30 Minutes (Focus)',
       damage: '2d6 Fire',
       area: 'Single',
     });
     expect(cols.find((c) => c.key === 'Duration')?.allowMultiline).toBe(true);
-    expect(getModalGridColumns('power')).toContain('minmax(0,');
+    expect(cols.find((c) => c.key === 'Action')?.allowMultiline).toBe(true);
+    expect(cols.map((c) => c.key)).not.toContain('Damage');
+    const grid = getModalGridColumns('power');
+    expect(grid).toContain('minmax(16ch, 1.45fr)');
+    expect(grid).toContain('minmax(20ch, 1.2fr)');
+    expect(grid).not.toContain('minmax(0,');
   });
 });

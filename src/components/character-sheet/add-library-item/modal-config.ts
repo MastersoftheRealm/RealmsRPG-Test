@@ -1,6 +1,7 @@
 import type { AddLibraryItemType, PowerSelectionMode } from '@/hooks/add-library-item/types';
 import {
   EMPOWERED_POWER_COLUMNS as SHARED_EMPOWERED_POWER_COLUMNS,
+  EMPOWERED_POWER_GRID as SHARED_EMPOWERED_POWER_GRID,
   getListHeaderColumns as getSharedListHeaderColumns,
   getModalGridColumns as getSharedModalGridColumns,
   type LibraryItemType,
@@ -52,3 +53,4 @@ export function getSearchPlaceholder(
 }
 
 export const EMPOWERED_POWER_COLUMNS = SHARED_EMPOWERED_POWER_COLUMNS;
+export const EMPOWERED_POWER_GRID = SHARED_EMPOWERED_POWER_GRID;

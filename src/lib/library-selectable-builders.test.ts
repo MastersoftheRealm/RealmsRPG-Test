@@ -23,9 +23,9 @@ const emptyCodex = {
 };
 
 describe('library-selectable-builders (DEV-V-016 parity)', () => {
-  it('power headers/columns are Energy, Action, Duration, Area, Damage (DEV-V-016-T001)', () => {
+  it('power headers/columns are Energy, Action, Duration, Area (86e3jwurj)', () => {
     const headers = getListHeaderColumns('power').map((c) => c.key);
-    expect(headers).toEqual(['name', 'Energy', 'Action', 'Duration', 'Area', 'Damage']);
+    expect(headers).toEqual(['name', 'Energy', 'Action', 'Duration', 'Area']);
 
     const cols = getItemColumns({ id: 'p1', name: 'Bolt' }, 'power', undefined, {
       energy: 2,
@@ -34,10 +34,11 @@ describe('library-selectable-builders (DEV-V-016 parity)', () => {
       damage: '2d6 Fire',
       area: 'Single',
     });
-    expect(cols.map((c) => c.key)).toEqual(['Energy', 'Action', 'Duration', 'Area', 'Damage']);
-    expect(cols.find((c) => c.key === 'Damage')?.value).toContain('2d6');
-    expect(getModalGridColumns('power')).toMatch(/minmax\(0, 1\.2fr\)/);
+    expect(cols.map((c) => c.key)).toEqual(['Energy', 'Action', 'Duration', 'Area']);
+    expect(getModalGridColumns('power')).toMatch(/minmax\(16ch, 1\.45fr\)/);
+    expect(getModalGridColumns('power')).not.toContain('minmax(0,');
     expect(cols.find((c) => c.key === 'Duration')?.allowMultiline).toBe(true);
+    expect(cols.find((c) => c.key === 'Action')?.allowMultiline).toBe(true);
   });
 
   it('technique headers/columns are Action, Energy, Attack, Training Pts (DEV-V-016-T002)', () => {
@@ -55,7 +56,8 @@ describe('library-selectable-builders (DEV-V-016 parity)', () => {
     expect(cols.find((c) => c.key === 'Energy')?.value).toBe('3');
     expect(cols.find((c) => c.key === 'Attack')?.value).toBe('Weapon');
     expect(cols.find((c) => c.key === 'Training Pts')?.value).toBe('4');
-    expect(getModalGridColumns('technique')).toMatch(/1\.4fr/);
+    expect(getModalGridColumns('technique')).toMatch(/minmax\(16ch, 1\.35fr\)/);
+    expect(cols.find((c) => c.key === 'Action')?.allowMultiline).toBe(true);
 
     const selectable = buildSelectableItem(
       {
@@ -475,6 +477,26 @@ describe('library-selectable-builders (DEV-V-016 parity)', () => {
     expect(selectable.columns?.map((c) => c.key)).not.toContain('Range');
     const chips = (selectable.detailSections ?? []).flatMap((s) => s.chips.map((c) => c.name));
     expect(chips.some((l) => /^range\b/i.test(l))).toBe(true);
+  });
+
+  it('load modal power chip shows the damage dice, not a bare Damage category (86e3jwurj)', () => {
+    const selectable = buildSelectableItem(
+      {
+        id: 'p1',
+        docId: 'p1',
+        name: 'Elemental Burst',
+        description: 'A burst.',
+        actionType: 'basic',
+        damage: [{ amount: 1, size: 10, type: 'fire' }],
+        parts: [],
+      },
+      'power',
+      emptyCodex,
+    );
+    expect(selectable.columns?.map((c) => c.key)).not.toContain('Damage');
+    const chips = (selectable.detailSections ?? []).flatMap((s) => s.chips.map((c) => c.name));
+    expect(chips.some((l) => /1d10 fire damage/i.test(l))).toBe(true);
+    expect(chips.some((l) => l === 'Damage')).toBe(false);
   });
 
   it('emits add-weapon Range chip from chipFacts when Range is not a column (TASK-809)', () => {

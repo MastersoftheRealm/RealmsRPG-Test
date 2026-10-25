@@ -208,7 +208,7 @@ function PowerCreatorWorkspace({
       findLoadedLibraryItem(load.rawItems, editPowerId),
       { canSaveToOfficial: isAdmin },
     ),
-    onEditSaveCommitted: () => router.replace('/power-creator', { scroll: false }),
+    onEditSaveCommitted: (href) => router.replace(href, { scroll: false }),
   });
 
   const variantTabGroup = useTabGroup('power-variants');

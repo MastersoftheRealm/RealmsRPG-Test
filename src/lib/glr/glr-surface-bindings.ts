@@ -21,6 +21,14 @@ export const SHEET_GEAR_PLAY_LAYOUT_OVERRIDES = {
   demoteFacts: ['trainingPoints'],
 } as const satisfies GlrLayoutOverrides;
 
+/**
+ * Load / add power modal (672px). Damage stays a chip so the dice line is visible
+ * when the row expands, and Range stays a chip so it does not take the freed column.
+ */
+export const LOAD_POWER_MODAL_LAYOUT_OVERRIDES = {
+  demoteFacts: ['category', 'trainingPoints', 'range', 'damage'],
+} as const satisfies GlrLayoutOverrides;
+
 export interface GlrSurfaceBinding {
   entityType: GlrEntityType;
   mode: GlrDensityMode;
@@ -47,7 +55,11 @@ export const GLR_SURFACE_BINDINGS = {
   },
   /** Creature selected inventory: play chip-all; Type/Qty are row extras (TASK-817). */
   'creature-inventory-equipment': { entityType: 'gear', mode: 'play' },
-  'add-modal-power': { entityType: 'power', mode: 'select' },
+  'add-modal-power': {
+    entityType: 'power',
+    mode: 'select',
+    layoutOverrides: LOAD_POWER_MODAL_LAYOUT_OVERRIDES,
+  },
   'add-modal-technique': { entityType: 'technique', mode: 'select' },
   'add-modal-weapon': { entityType: 'weapon', mode: 'select' },
   'add-modal-armor': { entityType: 'armor', mode: 'select' },

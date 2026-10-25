@@ -15,6 +15,7 @@ import {
   useCreatorDraftDirty,
   useDiscardableCreatorDraft,
 } from '@/hooks/use-creator-unsaved-guard';
+import { bindCreatorEditClear, creatorEditClearPlan } from '@/lib/creator/creator-edit-query';
 import type { CreatorSaveTarget } from '@/lib/library/catalog-listing';
 import {
   useCreatorEditDraftDecision,
@@ -68,7 +69,7 @@ type UsePowerCreatorWorkspaceArgs = {
   powerParts: PowerPart[];
   initialSaveTarget?: CreatorSaveTarget | undefined;
   /** Clears `?edit=` after a successful save (86e3jwurq). */
-  onEditSaveCommitted?: (() => void) | undefined;
+  onEditSaveCommitted?: ((href: string) => void) | undefined;
 };
 
 export function usePowerCreatorWorkspace({
@@ -344,8 +345,16 @@ export function usePowerCreatorWorkspace({
     editingId: editPowerId,
     onSaveSuccess: resetFields,
     onSaveCommitted: () => {
+      const plan =
+        editPowerId && onEditSaveCommitted && typeof window !== 'undefined'
+          ? creatorEditClearPlan(window.location.href, window.history.state)
+          : null;
       acceptDraft();
-      if (editPowerId) onEditSaveCommitted?.();
+      if (!plan || !onEditSaveCommitted) return;
+      bindCreatorEditClear(plan, onEditSaveCommitted, (listener) => {
+        window.addEventListener('popstate', listener);
+        return () => window.removeEventListener('popstate', listener);
+      });
     },
   });
 
