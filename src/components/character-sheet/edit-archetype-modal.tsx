@@ -27,6 +27,7 @@ import {
   listPlayerVisiblePaths,
   pathCategoryGroupLabel,
   redistributeProficiency,
+  resolveLeanArchetypeIdForForgeSave,
 } from '@/lib/game/archetype-edit';
 import { isPathCharacter } from '@/components/character-sheet/archetype-path-identity';
 import type { Character, ArchetypeCategory, AbilityName, Archetype } from '@/types';
@@ -90,6 +91,7 @@ export function EditArchetypeModal({
 
   const [uiMode, setUiMode] = useState<UiMode>(() => (isPath ? 'path-view' : 'forge-edit'));
   const [pendingConfirm, setPendingConfirm] = useState<PendingConfirm | null>(null);
+  const [leftOfficialPath, setLeftOfficialPath] = useState(false);
   const [selectedType, setSelectedType] = useState<ArchetypeCategory>(() =>
     inferArchetypeCategoryFromCharacter(character),
   );
@@ -130,7 +132,10 @@ export function EditArchetypeModal({
   const handleForgeSave = () => {
     if (!canSaveForge) return;
     onSave({
-      archetype: { id: selectedType, type: selectedType },
+      archetype: {
+        id: resolveLeanArchetypeIdForForgeSave(character, selectedType, { leftOfficialPath }),
+        type: selectedType,
+      },
       pow_abil: selectedType !== 'martial' ? (selectedPowerAbility ?? undefined) : undefined,
       mart_abil:
         selectedType !== 'power'
@@ -138,7 +143,7 @@ export function EditArchetypeModal({
           : undefined,
       mart_prof: martProf,
       pow_prof: powProf,
-      archetypePathId: null,
+      archetypePathId: leftOfficialPath ? null : undefined,
     });
     onClose();
   };
@@ -148,6 +153,7 @@ export function EditArchetypeModal({
     if (pendingConfirm.type === 'switch-forge') {
       setUiMode('forge-edit');
       setSelectedType(inferArchetypeCategoryFromCharacter(character));
+      setLeftOfficialPath(true);
       setPendingConfirm(null);
       return;
     }
