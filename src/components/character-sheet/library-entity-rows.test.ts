@@ -246,8 +246,8 @@ describe('mapWeaponRows — inventory damage rolls (86e3jwaw0)', () => {
   });
 });
 
-describe('mapArmorRows Critical Range temp (86e3jv5vx)', () => {
-  it('shows 23 when a Critical Range temp of +1 is added to a 22 threshold', () => {
+describe('mapArmorRows Critical Range list cell (1dfe8wf25rt)', () => {
+  it('shows the armor bonus as +X, not Evasion + 10 + bonus', () => {
     const abilities: Abilities = {
       strength: 0,
       vitality: 0,
@@ -263,7 +263,8 @@ describe('mapArmorRows Critical Range temp (86e3jv5vx)', () => {
       properties: [{ id: 22, name: 'Critical Range +1', op_1_lvl: 0 }],
     } as unknown as Item;
     const plain = defined(mapArmorRows([chainmail], { ...baseCtx, abilities })[0]);
-    expect(plain.columns?.find((c) => c.key === 'crit')?.value).toBe(22);
+    // Agility 1 would make the quick-reference threshold 22 (evasion 11 + 10 + 1).
+    expect(plain.columns?.find((c) => c.key === 'crit')?.value).toBe('+1');
 
     const withTemp = defined(
       mapArmorRows([chainmail], {
@@ -273,8 +274,8 @@ describe('mapArmorRows Critical Range temp (86e3jv5vx)', () => {
       })[0],
     );
     const crit = withTemp.columns?.find((c) => c.key === 'crit');
-    expect(crit?.value).toBe(23);
-    expect(crit?.className).toBe('text-warning-fg');
+    expect(crit?.value).toBe('+1');
+    expect(crit?.className).toBeUndefined();
 
     const noIncrease = {
       id: 'cloth',

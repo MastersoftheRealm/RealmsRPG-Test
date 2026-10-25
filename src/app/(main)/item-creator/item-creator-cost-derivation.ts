@@ -16,6 +16,10 @@ import {
   type ItemPropertyPayload,
   type WeaponRangeType,
 } from '@/lib/calculators';
+import {
+  formatAbilityRequirementFact,
+  formatArmorCriticalRangeListValue,
+} from '@/lib/detail-option/compact-facts';
 import { PROPERTY_IDS } from '@/lib/id-constants';
 import {
   weaponAttackAbilityLabel,
@@ -46,6 +50,40 @@ export type ItemSectionCosts = {
   shieldDamage: ItemSectionCostSlice;
   abilityReq: ItemSectionCostSlice;
 };
+
+export function combineItemSectionCosts(
+  ...slices: ItemSectionCostSlice[]
+): ItemSectionCostSlice {
+  return slices.reduce(
+    (total, slice) => ({
+      totalIP: total.totalIP + slice.totalIP,
+      totalTP: total.totalTP + slice.totalTP,
+      totalCurrency: total.totalCurrency + slice.totalCurrency,
+    }),
+    { totalIP: 0, totalTP: 0, totalCurrency: 0 },
+  );
+}
+
+/** Armor summary rows for Critical Range and Ability Requirement (86e3jwwru). */
+export function armorCreatorSummaryStatRows(input: {
+  criticalRangeIncrease: number;
+  abilityRequirement: { name: string; level: number } | null;
+}): Array<{ label: string; value: string }> {
+  const rows: Array<{ label: string; value: string }> = [];
+  if (input.criticalRangeIncrease > 0) {
+    rows.push({
+      label: 'Critical Range',
+      value: formatArmorCriticalRangeListValue(input.criticalRangeIncrease),
+    });
+  }
+  const fact = formatAbilityRequirementFact(input.abilityRequirement);
+  if (fact) {
+    const level = fact.match(/(\d+\+)$/)?.[1];
+    const label = fact.replace(/ \d+\+$/, '');
+    rows.push(level ? { label, value: level } : { label: 'Ability Requirement', value: fact });
+  }
+  return rows;
+}
 
 type UseItemCreatorCostDerivationArgs = {
   armamentType: ArmamentType;

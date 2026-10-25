@@ -6,13 +6,8 @@
 
 import type { ReactNode } from 'react';
 import { formatDurationCompact, formatSavedActionTypeForDisplay } from '@/lib/utils';
-import { calculateCriticalRange, calculateEvasion } from '@/lib/game/calculations';
-import {
-  applyTempModifier,
-  getEffectiveAbilities,
-  getScalarTempModifier,
-  tempModifierValueClass,
-} from '@/lib/character/temp-modifiers';
+import { getEffectiveAbilities } from '@/lib/character/temp-modifiers';
+import { formatArmorCriticalRangeListValue } from '@/lib/detail-option/compact-facts';
 import {
   resolveShieldBlockDisplay,
   resolveShieldDamageDisplay,
@@ -149,7 +144,7 @@ export type LibraryEntityRowContext = {
   onToggleEquipArmor?: ((id: string | number) => void) | undefined;
   onRemoveEquipment?: ((id: string | number) => void) | undefined;
   onEquipmentQuantityChange?: ((id: string | number, delta: number) => void) | undefined;
-  /** Sheet temp deltas. Critical Range stacks on the armor-row threshold (ADR-0006). */
+  /** Sheet temp deltas. Ability temps feed attack bonuses. */
   tempModifiers?: CharacterTempModifiers | undefined;
 };
 
@@ -854,14 +849,6 @@ export function mapArmorRows(armor: Item[], ctx: LibraryEntityRowContext): Entit
     const { damageReduction, criticalRangeIncrease } = deriveArmorItemCombatStats(
       item as ItemWithLibrarySource,
     );
-    const evasion = calculateEvasion(ctx.abilities?.agility ?? 0);
-    const baseCrit =
-      criticalRangeIncrease > 0
-        ? calculateCriticalRange(evasion, criticalRangeIncrease)
-        : undefined;
-    const critTemp = getScalarTempModifier(ctx.tempModifiers, 'criticalRange');
-    const critThreshold = baseCrit != null ? applyTempModifier(baseCrit, critTemp) : undefined;
-    const critTint = baseCrit != null ? tempModifierValueClass(critTemp) : '';
 
     const propertySection = propertiesProficienciesSection(propertyChips, 'armor');
     const detailSections = glrSurfaceDetailSections(
@@ -891,9 +878,8 @@ export function mapArmorRows(armor: Item[], ctx: LibraryEntityRowContext): Entit
         },
         {
           key: 'crit',
-          value: critThreshold ?? '-',
+          value: formatArmorCriticalRangeListValue(criticalRangeIncrease),
           align: 'center',
-          ...(critTint ? { className: critTint } : {}),
         },
       ],
       detailSections: detailSections.length > 0 ? detailSections : undefined,

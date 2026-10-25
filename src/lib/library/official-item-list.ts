@@ -26,6 +26,7 @@ import {
 } from '@/lib/game/weapon-attack-ability';
 import {
   formatAbilityRequirementFact,
+  formatArmorCriticalRangeListValue,
   namedPropertyDescriptorChips,
 } from '@/lib/detail-option/compact-facts';
 import { resolveArmorDamageReduction } from '@/lib/game/resolve-armor-damage-reduction';
@@ -239,7 +240,7 @@ export function armamentRowColumns(row: OfficialItemRow, kind: ArmamentLibraryKi
     damageReduction: row.damageReduction > 0 ? row.damageReduction : '-',
     agilityReduction: row.agilityReduction > 0 ? row.agilityReduction : '-',
     abilityRequirement: row.abilityRequirement,
-    criticalRangeIncrease: row.criticalRangeIncrease > 0 ? `+${row.criticalRangeIncrease}` : '-',
+    criticalRangeIncrease: formatArmorCriticalRangeListValue(row.criticalRangeIncrease),
     block: row.block,
   };
 

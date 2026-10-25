@@ -16,6 +16,7 @@ import {
   formatActionTypeFact,
   formatActionTypeValue,
   formatCurrencyFact,
+  formatArmorCriticalRangeListValue,
   formatCriticalRangeIncreaseFact,
   formatDamageFact,
   formatEnergyFact,
@@ -163,6 +164,13 @@ describe('compact-facts formatters', () => {
     expect(formatCriticalRangeIncreaseFact(3)).toBe('Critical Range +3');
     expect(formatCriticalRangeIncreaseFact(0)).toBeUndefined();
     expect(criticalRangeIncreaseFactChip(1)?.name).toBe('Critical Range +1');
+  });
+
+  it('formats an item-list Critical Range cell as a signed bonus (1dfe8wf25rt)', () => {
+    expect(formatArmorCriticalRangeListValue(1)).toBe('+1');
+    expect(formatArmorCriticalRangeListValue(6)).toBe('+6');
+    expect(formatArmorCriticalRangeListValue(0)).toBe('-');
+    expect(formatArmorCriticalRangeListValue(null)).toBe('-');
   });
 
   it('formats Critical Range increase as a compact fact', () => {

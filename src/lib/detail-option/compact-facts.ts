@@ -289,6 +289,20 @@ export function formatCriticalRangeIncreaseFact(
   return `Critical Range +${n}`;
 }
 
+/**
+ * Item-list Critical Range cell.
+ * The armor's bonus (1 + Option 1 level), not Evasion + 10 + that bonus.
+ * None stays "-", the same empty cell the library column already uses.
+ */
+export function formatArmorCriticalRangeListValue(
+  increase: number | null | undefined,
+): string {
+  if (increase == null || !Number.isFinite(Number(increase))) return '-';
+  const n = Math.floor(Number(increase));
+  if (n <= 0) return '-';
+  return `+${n}`;
+}
+
 export function criticalRangeIncreaseFactChip(value: number | null | undefined): ChipData | null {
   return compactFactChip(formatCriticalRangeIncreaseFact(value));
 }

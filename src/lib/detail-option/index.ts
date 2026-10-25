@@ -23,6 +23,7 @@ export {
   formatAgilityReductionFact,
   formatDamageReductionFact,
   formatCriticalRangeIncreaseFact,
+  formatArmorCriticalRangeListValue,
   capitalizeSpacesTerm,
   compactFactChip,
   abilityRequirementChip,

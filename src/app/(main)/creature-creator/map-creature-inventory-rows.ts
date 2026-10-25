@@ -10,10 +10,6 @@ import {
   mapWeaponRows,
   type LibraryEntityRowContext,
 } from '@/components/character-sheet/library-entity-rows';
-import {
-  deriveCriticalRangeIncreaseFromProperties,
-  type ItemPropertyPayload,
-} from '@/lib/calculators';
 import type {
   EntityArmorRow,
   EntityEquipmentRow,
@@ -79,14 +75,6 @@ export function creatureArmamentToSheetItem(
   };
 }
 
-/** Creature Creator armor list shows the signed bonus (+1), not Evasion + 10 + increase. */
-function creatureArmorCritColumnValue(item: CreatureSheetInventoryItem): string {
-  const increase = deriveCriticalRangeIncreaseFromProperties(
-    (item.properties ?? []) as ItemPropertyPayload[],
-  );
-  return increase > 0 ? `+${increase}` : '-';
-}
-
 function creatureInventoryRowContext(
   creature: Pick<CreatureState, 'abilities' | 'martialProficiency'>,
   onRemoveArmament: (id: string) => void,
@@ -136,15 +124,7 @@ export function mapCreatureSelectedInventoryRows(opts: {
   return {
     weapons: mapWeaponRows(weapons as Item[], ctx),
     shields: mapShieldRows(shields as Item[], ctx),
-    armor: mapArmorRows(armor as Item[], ctx).map((row, index) => {
-      const item = armor[index];
-      if (!item || !row.columns) return row;
-      const crit = creatureArmorCritColumnValue(item);
-      return {
-        ...row,
-        columns: row.columns.map((col) => (col.key === 'crit' ? { ...col, value: crit } : col)),
-      };
-    }),
+    armor: mapArmorRows(armor as Item[], ctx),
     equipment: mapEquipmentRows(equipment as Item[], ctx, {
       surfaceId: 'creature-inventory-equipment',
     }).map((row, index) => {
