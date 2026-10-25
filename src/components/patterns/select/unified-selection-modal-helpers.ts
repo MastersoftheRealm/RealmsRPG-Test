@@ -1,5 +1,27 @@
 import type { SelectableItem } from './unified-selection-modal-types';
 
+/** Search ignores leading and trailing spaces. A whitespace-only query matches everything. */
+export function selectionSearchText(raw: string): string {
+  return raw.trim().toLowerCase();
+}
+
+/** Same leave-with-selection copy for every add picker, including ones with more than one add action. */
+export function selectionLeavePromptCopy(args: {
+  confirmLabel: string;
+  selectedCount: number;
+  itemLabel: string;
+}): { title: string; description: string; discardLabel: string } {
+  const isLoadConfirm = /load/i.test(args.confirmLabel);
+  const noun = `${args.itemLabel}${args.selectedCount !== 1 ? 's' : ''}`;
+  return {
+    title: isLoadConfirm ? 'Load selected?' : 'Add selected?',
+    discardLabel: isLoadConfirm ? "Don't load" : "Don't add",
+    description: `You have ${args.selectedCount} ${noun} selected. ${
+      isLoadConfirm ? 'Load them before leaving?' : 'Add them before leaving?'
+    }`,
+  };
+}
+
 /** Stamp the stepper counts onto selected rows so spend math sees every copy. */
 export function itemsWithSelectionQuantity(
   items: SelectableItem[],

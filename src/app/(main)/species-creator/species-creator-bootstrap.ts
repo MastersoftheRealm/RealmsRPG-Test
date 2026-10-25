@@ -18,6 +18,40 @@ export const MAX_LANGUAGES = 2;
 const DEFAULT_LANGUAGES = ['Universal'];
 export const SIZE_OPTIONS = ['Tiny', 'Small', 'Medium', 'Large', 'Huge'];
 
+/** Display and save sizes in the written size order, not the order they were clicked. */
+export function orderSpeciesSizes(sizes: readonly string[]): string[] {
+  const rank = new Map(SIZE_OPTIONS.map((size, index) => [size, index]));
+  return sizes
+    .map((size) => size.trim())
+    .filter(Boolean)
+    .sort((a, b) => (rank.get(a) ?? SIZE_OPTIONS.length) - (rank.get(b) ?? SIZE_OPTIONS.length));
+}
+
+/** Trim, drop blanks, and keep the first spelling when another entry differs only by case. */
+export function uniqueSpeciesLanguages(languages: readonly string[]): string[] {
+  const seen = new Set<string>();
+  const out: string[] = [];
+  for (const raw of languages) {
+    const trimmed = String(raw).trim();
+    if (!trimmed) continue;
+    const key = trimmed.toLowerCase();
+    if (seen.has(key)) continue;
+    seen.add(key);
+    out.push(trimmed);
+    if (out.length >= MAX_LANGUAGES) break;
+  }
+  return out;
+}
+
+/** Null when the name is blank, already listed in any case, or the list is full. */
+export function appendSpeciesLanguage(languages: readonly string[], raw: string): string[] | null {
+  const trimmed = raw.trim();
+  if (!trimmed || languages.length >= MAX_LANGUAGES) return null;
+  const next = uniqueSpeciesLanguages([...languages, trimmed]);
+  if (next.length === uniqueSpeciesLanguages(languages).length) return null;
+  return next;
+}
+
 export const SPECIES_CREATOR_CACHE_KEY = CREATOR_CACHE_KEYS.SPECIES;
 
 export const SPECIES_TRAIT_WARNING =
@@ -31,6 +65,42 @@ export const TRAIT_LIMITS: Record<TraitCategory, number> = {
   characteristics: MAX_CHARACTERISTICS,
   flaws: MAX_FLAWS,
 };
+
+/**
+ * One row per trait id and per name in a species picker.
+ * The lower numeric id wins so a later duplicate name is hidden without a data write.
+ */
+export function dedupeSpeciesPickerTraits<
+  T extends { id: string | number; name?: string | null | undefined },
+>(traits: readonly T[]): T[] {
+  const ranked = traits.map((trait, index) => ({ trait, index }));
+  ranked.sort((a, b) => {
+    const ai = Number(a.trait.id);
+    const bi = Number(b.trait.id);
+    const aOk = Number.isFinite(ai);
+    const bOk = Number.isFinite(bi);
+    if (aOk && bOk && ai !== bi) return ai - bi;
+    if (aOk !== bOk) return aOk ? -1 : 1;
+    const byId = String(a.trait.id).localeCompare(String(b.trait.id));
+    if (byId !== 0) return byId;
+    return a.index - b.index;
+  });
+  const seenIds = new Set<string>();
+  const seenNames = new Set<string>();
+  const kept: T[] = [];
+  for (const { trait } of ranked) {
+    const id = String(trait.id);
+    if (seenIds.has(id)) continue;
+    const name = String(trait.name ?? '')
+      .trim()
+      .toLowerCase();
+    if (name && seenNames.has(name)) continue;
+    seenIds.add(id);
+    if (name) seenNames.add(name);
+    kept.push(trait);
+  }
+  return kept;
+}
 
 export function openTraitSlots(currentCount: number, limit: number): number {
   return Math.max(0, limit - currentCount);
@@ -220,11 +290,11 @@ export function mergeCachedSpeciesForm(
   let sizes = Array.isArray(sizesRaw) ? sizesRaw.map(String).filter(Boolean) : [];
   if (!sizes.length && typeof f.size === 'string' && f.size.trim()) sizes = [f.size.trim()];
   if (!sizes.length) sizes = [...initialSpeciesFormState.sizes];
-  sizes = sizes.slice(0, MAX_SIZES);
+  sizes = orderSpeciesSizes(sizes.slice(0, MAX_SIZES));
 
   const languagesRaw = f.languages;
   const languages = Array.isArray(languagesRaw)
-    ? languagesRaw.map(String).filter(Boolean).slice(0, MAX_LANGUAGES)
+    ? uniqueSpeciesLanguages(languagesRaw.map(String))
     : [...DEFAULT_LANGUAGES];
 
   const al = f.adulthood_lifespan;
@@ -299,7 +369,10 @@ export function speciesLibraryRecordToFormState(
       .filter(Boolean);
   if (!sizes.length && d.size) sizes = [d.size as string];
   if (!sizes.length) sizes = ['Medium'];
-  const languages = Array.isArray(d.languages) ? (d.languages as string[]) : [];
+  sizes = orderSpeciesSizes(sizes.slice(0, MAX_SIZES));
+  const languages = Array.isArray(d.languages)
+    ? uniqueSpeciesLanguages(d.languages as string[])
+    : [];
   const lifespan = d.adulthood_lifespan as number[] | undefined;
   // Official rows store centimetres/kilograms as ave_hgt_cm / ave_wgt_kg.
   // Creator saves use ave_height / ave_weight.
@@ -309,13 +382,13 @@ export function speciesLibraryRecordToFormState(
     name: String(d.name ?? ''),
     description: String(d.description ?? ''),
     type: String(d.type ?? ''),
-    sizes: sizes.slice(0, MAX_SIZES),
+    sizes,
     skillIds: skillIds.slice(0, MAX_SKILLS),
     species_traits: species_traits.slice(0, MAX_SPECIES_TRAITS),
     ancestry_traits: ancestry_traits.slice(0, MAX_ANCESTRY_TRAITS),
     characteristics: characteristics.slice(0, MAX_CHARACTERISTICS),
     flaws: flaws.slice(0, MAX_FLAWS),
-    languages: languages.length ? languages.slice(0, MAX_LANGUAGES) : [...DEFAULT_LANGUAGES],
+    languages: languages.length ? languages : [...DEFAULT_LANGUAGES],
     ave_height: coerceNumberOrEmpty(aveHeight),
     ave_weight: coerceNumberOrEmpty(aveWeight),
     adulthood_lifespan:

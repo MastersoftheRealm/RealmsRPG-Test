@@ -19,6 +19,8 @@ import { findByNormalizedId } from '@/lib/utils';
 import {
   SPECIES_CREATOR_CACHE_KEY,
   DEFAULT_SPECIES_SPEED,
+  appendSpeciesLanguage,
+  orderSpeciesSizes,
   MAX_SPECIES_TRAITS,
   MAX_ANCESTRY_TRAITS,
   MAX_CHARACTERISTICS,
@@ -325,10 +327,9 @@ export function useSpeciesCreatorWorkspace({
   }, []);
 
   const addLanguage = useCallback(() => {
-    const trimmed = newLanguage.trim();
-    if (!trimmed || form.languages.includes(trimmed)) return;
-    if (form.languages.length >= MAX_LANGUAGES) return;
-    setForm((prev) => ({ ...prev, languages: [...prev.languages, trimmed] }));
+    const next = appendSpeciesLanguage(form.languages, newLanguage);
+    if (!next) return;
+    setForm((prev) => ({ ...prev, languages: next }));
     setNewLanguage('');
   }, [newLanguage, form.languages]);
 
@@ -347,13 +348,12 @@ export function useSpeciesCreatorWorkspace({
     });
   }, []);
 
-  const addSize = useCallback(
-    (size: string) => {
-      if (form.sizes.includes(size) || form.sizes.length >= MAX_SIZES) return;
-      setForm((prev) => ({ ...prev, sizes: [...prev.sizes, size] }));
-    },
-    [form.sizes],
-  );
+  const addSize = useCallback((size: string) => {
+    setForm((prev) => {
+      if (prev.sizes.includes(size) || prev.sizes.length >= MAX_SIZES) return prev;
+      return { ...prev, sizes: orderSpeciesSizes([...prev.sizes, size]) };
+    });
+  }, []);
 
   const removeSize = useCallback((size: string) => {
     setForm((prev) => {
@@ -392,7 +392,10 @@ export function useSpeciesCreatorWorkspace({
       return form.type ? `${form.name.trim()} · ${form.type}` : form.name.trim();
     return form.type ? form.type : 'Name, type, description';
   }, [form.name, form.type]);
-  const sizesSummary = useMemo(() => form.sizes.join(', ') || 'Medium', [form.sizes]);
+  const sizesSummary = useMemo(
+    () => orderSpeciesSizes(form.sizes).join(', ') || 'Medium',
+    [form.sizes],
+  );
   const baseSkillsSummary = useMemo(() => {
     const names = form.skillIds.map((id) => resolveSpeciesSkillLabel(skills, id)).filter(Boolean);
     return names.length ? names.join(', ') : 'Select base skills';
