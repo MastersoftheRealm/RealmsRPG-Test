@@ -23,6 +23,7 @@ import {
 } from '@/components/ui';
 import { ConfirmActionModal, ErrorDisplay } from '@/components/patterns';
 import { apiFetch } from '@/lib/api-client';
+import { formatRolePolicyLimit } from '@/lib/role-limits';
 
 type UserRole = 'new_player' | 'playtester' | 'developer' | 'admin';
 
@@ -205,7 +206,12 @@ export default function AdminUsersPage() {
                     >
                       {u.email || '(none)'}
                     </p>
-                    <p className="text-sm text-text-secondary">Role: {ROLE_LABELS[u.role]}</p>
+                    <p className="text-sm text-text-secondary">
+                      Role:{' '}
+                      <span className="text-text-primary">
+                        {ROLE_LABELS[u.role].replace(/ /g, '\u00a0')}
+                      </span>
+                    </p>
                   </div>
                   <div className="min-w-0">
                     <p className="mb-1 text-sm font-medium text-text-primary">Effective limits</p>
@@ -292,13 +298,13 @@ function RoleLimits({
 
   const canUpload = Boolean(p.permissions?.can_upload_profile_picture);
   const items = [
-    ['Campaigns', String(p.max_campaigns)],
-    ['Players/campaign', String(p.max_players_per_campaign)],
-    ['Characters', String(p.max_characters)],
-    ['Powers', String(p.max_custom_powers)],
-    ['Techniques', String(p.max_custom_techniques)],
-    ['Armaments', String(p.max_custom_armaments)],
-    ['Creatures', String(p.max_custom_creatures)],
+    ['Campaigns', formatRolePolicyLimit(p.max_campaigns)],
+    ['Players/campaign', formatRolePolicyLimit(p.max_players_per_campaign)],
+    ['Characters', formatRolePolicyLimit(p.max_characters)],
+    ['Powers', formatRolePolicyLimit(p.max_custom_powers)],
+    ['Techniques', formatRolePolicyLimit(p.max_custom_techniques)],
+    ['Armaments', formatRolePolicyLimit(p.max_custom_armaments)],
+    ['Creatures', formatRolePolicyLimit(p.max_custom_creatures)],
     ['Profile pic', canUpload ? 'Yes' : 'No'],
   ] as const;
 

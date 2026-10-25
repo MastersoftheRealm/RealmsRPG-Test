@@ -6,7 +6,11 @@ import type { Feat, Skill } from '@/hooks';
 import { Layers } from 'lucide-react';
 import { getFeatLevel } from '@/lib/leveled-feats';
 import { featToFormState, type FeatFormState } from './admin-feat-form';
-import { AdminFeatEditModalFields } from './admin-feat-edit-modal-fields';
+import { cn } from '@/lib/utils';
+import {
+  ADMIN_FEAT_MODAL_SELECT_CLASS,
+  AdminFeatEditModalFields,
+} from './admin-feat-edit-modal-fields';
 import { AdminCodexCopySourceBanner } from './admin-codex-copy-source-banner';
 import { AdminCodexEditModalFooter } from './admin-codex-edit-modal-footer';
 import { codexFeatEditorIsDirty } from './admin-codex-unsaved-leave';
@@ -203,7 +207,7 @@ export function AdminFeatEditModal({
               <select
                 value={selectedEditId ?? ''}
                 onChange={(e) => handleSelectLevel(e.target.value)}
-                className="w-full rounded-md border border-border bg-background px-3 py-2 text-text-primary sm:w-auto"
+                className={cn(ADMIN_FEAT_MODAL_SELECT_CLASS, 'sm:w-auto')}
                 aria-label="Select feat level to edit"
               >
                 {levelOptions.map((opt) => (

@@ -105,7 +105,12 @@ function ChangedFieldsTable({ changes }: { changes: CodexFieldChange[] }) {
 
   return (
     <div className="overflow-x-auto rounded-lg border border-border">
-      <table className="min-w-full text-sm">
+      <table className="min-w-full table-fixed text-sm">
+        <colgroup>
+          <col className="w-[28%]" />
+          <col className="w-[36%]" />
+          <col className="w-[36%]" />
+        </colgroup>
         <thead className="bg-surface-alt text-left text-xs text-text-muted uppercase">
           <tr>
             <th className="px-3 py-2 font-semibold">Field</th>
@@ -116,11 +121,13 @@ function ChangedFieldsTable({ changes }: { changes: CodexFieldChange[] }) {
         <tbody>
           {changes.map((change) => (
             <tr key={change.field} className="border-t border-border-light align-top">
-              <td className="px-3 py-2 font-medium text-text-primary">{change.field}</td>
-              <td className="max-w-[16rem] px-3 py-2 break-words text-text-secondary">
+              <td className="px-3 py-2 font-medium break-words text-text-primary">
+                {change.field}
+              </td>
+              <td className="px-3 py-2 break-words text-text-secondary">
                 {formatCodexChangeValue(change.before)}
               </td>
-              <td className="max-w-[16rem] px-3 py-2 break-words text-text-primary">
+              <td className="px-3 py-2 break-words text-text-primary">
                 {formatCodexChangeValue(change.after)}
               </td>
             </tr>
@@ -278,7 +285,15 @@ export default function AdminChangelogsPage() {
               </p>
               <p className="mt-1 text-sm text-text-secondary">
                 Entity:{' '}
-                <span className="font-medium text-text-primary">{selectedEntry.entity_id}</span>
+                <span className="font-medium text-text-primary">
+                  {readCodexChangelogEntityName(
+                    selectedEntry.before_data,
+                    selectedEntry.after_data,
+                  )}{' '}
+                  <span className="font-normal text-text-secondary">
+                    ({selectedEntry.entity_id})
+                  </span>
+                </span>
               </p>
             </div>
 

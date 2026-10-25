@@ -351,7 +351,7 @@ export function ListHeader({
           )}
         >
           <div
-            className={cn('grid min-w-0 flex-1 gap-2 py-2', 'min-w-0 px-3')}
+            className={cn('grid min-w-0 flex-1 gap-2 py-2', rowPaddingX)}
             style={{ gridTemplateColumns: gridTemplate }}
           >
             {headerContent}
