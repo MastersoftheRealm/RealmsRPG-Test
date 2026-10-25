@@ -28,7 +28,7 @@ const sizeClasses: Record<ContainerSize, string> = {
   md: 'max-w-5xl',
   content: 'max-w-6xl', // For medium content pages like rules, creators
   lg: 'max-w-[var(--container-standard)]',
-  xl: 'max-w-[var(--container-wide)]',
+  xl: 'max-w-[var(--container-wide)] lg:px-24',
   tool: 'max-w-[var(--container-full-tool)]',
   full: 'max-w-none',
 };
@@ -54,7 +54,7 @@ export function PageContainer({
     <div
       className={cn(
         sizeClasses[size],
-        size === 'xl' ? 'min-w-0 px-4 sm:px-6 lg:px-24' : 'min-w-0 px-4 sm:px-6 lg:px-8',
+        'min-w-0 px-4 sm:px-6 lg:px-8',
         padded && 'py-8',
         centered && 'mx-auto',
         className,

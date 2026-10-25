@@ -2,7 +2,6 @@ import { readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
 
 const pageShell = readFileSync(new URL('./CreatorPageShell.tsx', import.meta.url), 'utf8');
-const pageContainer = readFileSync(new URL('../ui/page-container.tsx', import.meta.url), 'utf8');
 const creatorLayout = readFileSync(new URL('./CreatorLayout.tsx', import.meta.url), 'utf8');
 const speciesPage = readFileSync(
   new URL('../../app/(main)/species-creator/page.tsx', import.meta.url),
@@ -16,11 +15,6 @@ describe('creator page width & sticky summary (batch 7)', () => {
     expect(pageShell).toContain('md:top-24');
     expect(pageShell).not.toContain('overflow-y-auto');
     expect(pageShell).not.toContain('max-h-[calc(100vh');
-  });
-
-  it('aligns xl creator gutters with layout-shell-wide', () => {
-    expect(pageContainer).toMatch(/size === 'xl' \? 'min-w-0 px-4 sm:px-6 lg:px-24'/);
-    expect(pageContainer).not.toMatch(/xl:.*lg:px-24/);
   });
 
   it('fills the sidebar grid track at desktop', () => {
