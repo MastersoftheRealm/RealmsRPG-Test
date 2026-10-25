@@ -17,7 +17,12 @@ import {
   SegmentedControl,
   type SelectableItem,
 } from '@/components/patterns';
-import { getListHeaderColumns, getModalGridColumns } from '@/lib/library-selectable-builders';
+import {
+  EMPOWERED_POWER_COLUMNS,
+  EMPOWERED_POWER_GRID,
+  getListHeaderColumns,
+  getModalGridColumns,
+} from '@/lib/library-selectable-builders';
 import { Alert, LoadingState } from '@/components/ui';
 import { Skull } from 'lucide-react';
 import { RollLog, RollProvider } from '@/components/rolls';
@@ -376,8 +381,14 @@ function CreatureCreatorContent() {
             searchPlaceholder={
               powerModalTab === 'empowered' ? 'Search empowered techniques...' : 'Search powers...'
             }
-            columns={getListHeaderColumns('power')}
-            gridColumns={getModalGridColumns('power')}
+            columns={
+              powerModalTab === 'empowered'
+                ? EMPOWERED_POWER_COLUMNS
+                : getListHeaderColumns('power')
+            }
+            gridColumns={
+              powerModalTab === 'empowered' ? EMPOWERED_POWER_GRID : getModalGridColumns('power')
+            }
             size="xl"
           />
           <UnifiedSelectionModal

@@ -2,6 +2,7 @@ export {
   GLR_SURFACE_BINDINGS,
   getGlrSurfaceBinding,
   resolveSurfaceLayout,
+  LOAD_POWER_MODAL_LAYOUT_OVERRIDES,
   SHEET_GEAR_PLAY_LAYOUT_OVERRIDES,
   type GlrLayoutOverrides,
   type GlrSurfaceBinding,

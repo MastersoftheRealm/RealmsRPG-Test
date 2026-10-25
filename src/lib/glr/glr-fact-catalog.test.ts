@@ -270,6 +270,7 @@ describe('GLR fact catalog — row coverage (ADR-0016)', () => {
         actionType: 'Action',
         range: { steps: 16 },
         parts: [{ id: 1, name: 'Spark', op_1_lvl: 0 }],
+        damage: [{ amount: 1, size: 8, type: 'fire' }],
       },
       'power',
       {
@@ -289,6 +290,9 @@ describe('GLR fact catalog — row coverage (ADR-0016)', () => {
     expect(chipLabels.some((l) => /^range\b/i.test(l))).toBe(true);
     expect(chipLabels.some((l) => /^offense\b/i.test(l) || /^category\b/i.test(l))).toBe(true);
     expect(chipLabels.some((l) => /training points\s+\d+/i.test(l))).toBe(true);
+    expect(chipLabels.some((l) => /\d+d\d+.*damage/i.test(l))).toBe(true);
+    expect(chipLabels.some((l) => l === 'Damage')).toBe(false);
+    expect(columnKeys).not.toContain('Damage');
   });
 
   it('add-modal weapon row covers Damage column and Range chip (TASK-808 / TASK-809)', () => {
@@ -382,8 +386,8 @@ describe('GLR fact catalog — row coverage (ADR-0016)', () => {
 
   it('allows a chip-only fact without a matching column (TASK-808)', () => {
     const errors = validateRowFactCoverage('add-modal-power', {
-      columnKeys: ['Energy', 'Action', 'Duration', 'Area', 'Damage'],
-      chipLabels: ['Offense', 'Range 16 Spaces', 'Training Points 2'],
+      columnKeys: ['Energy', 'Action', 'Duration', 'Area'],
+      chipLabels: ['Offense', 'Range 16 Spaces', '1d8 Fire Damage', 'Training Points 2'],
       hasRightSlot: false,
     });
     expect(errors).toEqual([]);

@@ -45,6 +45,7 @@ import { AddCustomEquipmentForm } from './add-library-item/add-custom-equipment-
 import { mapSelectedToCharacterItems } from './add-library-item/map-selection';
 import {
   EMPOWERED_POWER_COLUMNS,
+  EMPOWERED_POWER_GRID,
   getAddLibraryItemTitle,
   getListHeaderColumns,
   getModalGridColumns,
@@ -253,7 +254,11 @@ export function AddLibraryItemModal({
       onConfirm={handleConfirm}
       displayFilter={combinedDisplayFilter}
       columns={columns}
-      gridColumns={getModalGridColumns(itemType)}
+      gridColumns={
+        itemType === 'power' && powerSelectionMode === 'empowered'
+          ? EMPOWERED_POWER_GRID
+          : getModalGridColumns(itemType)
+      }
       itemLabel={itemType}
       emptyMessage={pathFilterActive ? pathFilterEmptyTitle(pathEmptyPlural(itemType)) : emptyTitle}
       emptySubMessage={emptyDesc}
