@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import {
   findGuidedChapterRailBlockerChapter,
   findGuidedChapterRailBlockerSubStep,
+  guidedChapterRailBlockerDisplayTitle,
 } from './chapter-rail-lock';
 import {
   GUIDED_CHAPTERS,
@@ -33,6 +34,13 @@ describe('guided chapter rail lock (86e3jmr0g)', () => {
       draft,
     );
     expect(chapter?.title).toBe(GUIDED_CHAPTERS[0]!.title);
+  });
+
+  it('uses Archetype Path in the rail tooltip when path is the blocker (86e3rhwy1)', () => {
+    const draft = minimalDraft();
+    expect(
+      guidedChapterRailBlockerDisplayTitle('species', GUIDED_CHAPTERS, GUIDED_SUBSTEP_ORDER, draft),
+    ).toBe('Archetype Path');
   });
 
   it('points at ancestry when abilities is locked', () => {

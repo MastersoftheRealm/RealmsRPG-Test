@@ -17,7 +17,7 @@ import {
   GUIDED_SUBSTEP_ORDER,
   type GuidedSubStep,
 } from '@/stores/guided-creator-store';
-import { findGuidedChapterRailBlockerChapter } from '@/lib/guided-creator/chapter-rail-lock';
+import { guidedChapterRailBlockerDisplayTitle } from '@/lib/guided-creator/chapter-rail-lock';
 import { GuidedCreatorPageShell } from './guided-creator-page-shell';
 import { CharacterPreviewPanel } from './character-preview-panel';
 import { GUIDED_CREATOR_COPY } from '@/lib/constants/site-copy';
@@ -73,17 +73,17 @@ function ChapterRail({ className }: { className?: string | undefined }) {
           const firstSub = chapter.subSteps[0];
           if (firstSub === undefined) return null;
           const canOpen = canNavigateToSubStep(firstSub);
-          const blockingChapter = canOpen
+          const blockerDisplayTitle = canOpen
             ? null
-            : findGuidedChapterRailBlockerChapter(
+            : guidedChapterRailBlockerDisplayTitle(
                 firstSub,
                 GUIDED_CHAPTERS,
                 GUIDED_SUBSTEP_ORDER,
                 draft,
               );
           const lockedTooltip =
-            blockingChapter !== null
-              ? shellCopy.chapterRail.lockedTooltip(blockingChapter.title)
+            blockerDisplayTitle !== null
+              ? shellCopy.chapterRail.lockedTooltip(blockerDisplayTitle)
               : null;
 
           const chapterButton = (
