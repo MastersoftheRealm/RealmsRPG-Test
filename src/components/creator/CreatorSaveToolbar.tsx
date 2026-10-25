@@ -13,6 +13,10 @@ import { SegmentedControl } from '@/components/patterns';
 import { CREATOR_SAVE_AS_COPY_LABEL } from '@/lib/creator/creator-save-as-copy';
 import { CREATOR_SAVE_TARGET_OPTIONS, type CreatorSaveTarget } from '@/lib/library/catalog-listing';
 
+/** Muted field treatment so a disabled Save is distinct from the solid primary button. */
+export const CREATOR_SAVE_DISABLED_CLASS =
+  'disabled:pointer-events-auto disabled:cursor-not-allowed disabled:border-border-light disabled:bg-surface-alt disabled:text-text-muted disabled:opacity-60 disabled:hover:border-border-light disabled:hover:bg-surface-alt disabled:hover:text-text-muted';
+
 export interface CreatorSaveToolbarProps {
   saveTarget: CreatorSaveTarget;
   onSaveTargetChange: (target: CreatorSaveTarget) => void;
@@ -59,6 +63,7 @@ export function CreatorSaveToolbar({
   const loadLabel = loadNeedsLogin ? 'Log in to load from library' : 'Load from library';
   const reasonId = useId();
   const showReason = saveDisabled && !!saveDisabledReason;
+  const saveDisabledClass = !saving && saveDisabled ? CREATOR_SAVE_DISABLED_CLASS : undefined;
 
   return (
     <div className="flex flex-wrap items-center gap-2">
@@ -88,6 +93,7 @@ export function CreatorSaveToolbar({
           variant="secondary"
           onClick={() => void onSaveAsCopy()}
           disabled={saving || saveDisabled}
+          className={saveDisabledClass}
           aria-label={CREATOR_SAVE_AS_COPY_LABEL}
         >
           {CREATOR_SAVE_AS_COPY_LABEL}
@@ -96,6 +102,7 @@ export function CreatorSaveToolbar({
       <Button
         onClick={onSave}
         disabled={saving || saveDisabled}
+        className={saveDisabledClass}
         isLoading={saving}
         aria-label={saving ? 'Saving' : 'Save'}
         aria-describedby={showReason ? reasonId : undefined}

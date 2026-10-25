@@ -30,6 +30,7 @@ import {
   MAX_LANGUAGES,
   SIZE_OPTIONS,
   commitSpeciesTraitBatch,
+  dedupeSpeciesPickerTraits,
   openTraitSlots,
   speciesMeasureFieldErrors,
   traitSelectionLimitMessage,
@@ -495,8 +496,8 @@ export function TraitListModal({
   );
 
   const items: SelectableItem[] = useMemo(() => {
-    return traits
-      .filter((t) => filter(t) && !alreadyUsed.has(String(t.id)))
+    return dedupeSpeciesPickerTraits(traits.filter((t) => filter(t)))
+      .filter((t) => !alreadyUsed.has(String(t.id)))
       .map((t) => ({
         id: String(t.id),
         name: t.name,

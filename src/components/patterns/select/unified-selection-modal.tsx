@@ -22,6 +22,8 @@ import { useSort } from '@/hooks/use-sort';
 import {
   itemsWithSelectionQuantity,
   selectionDiffersFromInitial,
+  selectionLeavePromptCopy,
+  selectionSearchText,
 } from './unified-selection-modal-helpers';
 import { UnifiedSelectionModalFooter } from './unified-selection-modal-footer';
 import { UnifiedSelectionModalLeavePrompt } from './unified-selection-modal-leave-prompt';
@@ -125,8 +127,8 @@ export function UnifiedSelectionModal({
       result = result.filter((item) => !item.disabled);
     }
 
-    if (searchQuery) {
-      const query = searchQuery.toLowerCase();
+    const query = selectionSearchText(searchQuery);
+    if (query) {
       result = result.filter((item) => {
         for (const field of searchFields) {
           const value = item[field];
@@ -266,14 +268,11 @@ export function UnifiedSelectionModal({
     [quantities, maxSelections],
   );
 
-  const isLoadConfirm = /load/i.test(confirmLabel);
-  const leavePromptTitle = isLoadConfirm ? 'Load selected?' : 'Add selected?';
-  const discardLabel = isLoadConfirm ? "Don't load" : "Don't add";
-  const leavePromptDescription = primaryActions
-    ? `You have ${selectedIds.size} ${itemLabel}${selectedIds.size !== 1 ? 's' : ''} selected. Leave without adding them?`
-    : `You have ${selectedIds.size} ${itemLabel}${selectedIds.size !== 1 ? 's' : ''} selected. ${
-        isLoadConfirm ? 'Load them before leaving?' : 'Add them before leaving?'
-      }`;
+  const leavePrompt = selectionLeavePromptCopy({
+    confirmLabel,
+    selectedCount: selectedIds.size,
+    itemLabel,
+  });
 
   const resolvedSearchPlaceholder = searchPlaceholder || `Search ${itemLabel}s...`;
   const resolvedEmptyMessage = emptyMessage || `No ${itemLabel}s found`;
@@ -361,10 +360,12 @@ export function UnifiedSelectionModal({
       <UnifiedSelectionModalLeavePrompt
         isOpen={isOpen && leaveConfirmOpen}
         onClose={() => setLeaveConfirmOpen(false)}
-        title={primaryActions ? 'Leave without adding?' : leavePromptTitle}
-        description={leavePromptDescription}
-        discardLabel={discardLabel}
+        title={leavePrompt.title}
+        description={leavePrompt.description}
+        discardLabel={leavePrompt.discardLabel}
         showConfirm={!primaryActions}
+        primaryActions={primaryActions}
+        selectedItems={selectedForActions}
         onConfirm={handleConfirm}
         isConfirmDisabled={isConfirmDisabled}
         confirmDescribedBy={confirmDescribedBy}
