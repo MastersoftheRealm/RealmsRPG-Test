@@ -775,6 +775,20 @@
       padding-bottom: var(--dock-reserved-end);
     }
 
+    /* Creature creator is the creator page that mounts Roll Log, so the rule
+       above was an 88px (--dock-reserved-end) right pad on the whole column
+       (86e3jzdw5 / 86e3jywe6). Other creators stay full width without that pad.
+       Drop it here. The button keeps the corner gap itself. Bottom reserve
+       stays so the end of the form can scroll clear of the FAB. */
+    #main-content:has(.floating-dock-bottom-right):has([data-creator-roll-dock]) {
+      padding-right: 0;
+    }
+
+    [data-creator-roll-dock].floating-dock-bottom-right {
+      right: var(--dock-gap);
+      bottom: var(--dock-bottom);
+    }
+
     /* The site footer is outside #main-content. Reserve the FAB so the
        copyright line can scroll clear (86e3jt15m). */
     body:has(.floating-dock-bottom-right) footer {
