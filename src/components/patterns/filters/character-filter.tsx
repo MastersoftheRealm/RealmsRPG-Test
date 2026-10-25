@@ -19,6 +19,7 @@ import { ChevronDown, UserRound } from 'lucide-react';
 import { InfoTippy } from '@/components/patterns/help/info-tippy';
 import { cn } from '@/lib/utils';
 import { FilterNativeSelect } from './filter-native-select';
+import { dedupeSelectOptions } from './filter-utils';
 
 const CHARACTER_FILTER_NONE_LABEL = 'No character (show all)';
 
@@ -50,7 +51,7 @@ export function CharacterFilter({
 
   if (!isLoading && characters.length === 0) return null;
 
-  const options = [
+  const options = dedupeSelectOptions([
     { value: '', label: CHARACTER_FILTER_NONE_LABEL },
     ...[...characters]
       .sort((a, b) => a.name.localeCompare(b.name))
@@ -58,7 +59,7 @@ export function CharacterFilter({
         value: c.id,
         label: c.level ? `${c.name} · Lv ${c.level}` : c.name,
       })),
-  ];
+  ]);
 
   const selectedLabel = value ? (options.find((o) => o.value === value)?.label ?? null) : null;
 
