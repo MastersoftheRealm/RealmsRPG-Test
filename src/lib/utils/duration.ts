@@ -20,6 +20,11 @@
  */
 
 import { capitalizeWords } from './string';
+import { DURATION_TYPES } from '@/lib/game/creator-constants';
+
+const DURATION_TYPE_RANK: Record<string, number> = Object.fromEntries(
+  DURATION_TYPES.map((t, index) => [t.value, index]),
+);
 
 export type DurationDisplayInput =
   | string
@@ -150,6 +155,32 @@ export function formatDurationDisplay(raw: unknown): string {
  * Compact duration label for dense list columns (e.g. character-sheet library rows).
  * Input is a preformatted duration string (CharacterPower.duration), not structured type/value.
  */
+function durationDisplaySortTuple(label: string): [number, number] {
+  const trimmed = label.trim();
+  if (!trimmed || trimmed === '-') return [999, 0];
+  const base = trimmed.replace(/\s*\([^)]*\)/g, '').trim();
+  if (base === 'Instant') return [DURATION_TYPE_RANK.instant ?? 0, 0];
+  if (base === 'Permanent') return [DURATION_TYPE_RANK.permanent ?? 5, 0];
+  const match = base.match(/^(\d+)\s+(.+)$/i);
+  if (!match) return [998, 0];
+  const value = Number(match[1]);
+  const unit = (match[2] ?? '').toLowerCase();
+  let type = 'rounds';
+  if (unit.startsWith('round')) type = 'rounds';
+  else if (unit.startsWith('minute')) type = 'minutes';
+  else if (unit.startsWith('hour')) type = 'hours';
+  else if (unit.startsWith('day')) type = 'days';
+  return [DURATION_TYPE_RANK[type] ?? 998, Number.isFinite(value) ? value : 0];
+}
+
+/** Sort duration labels using creator `DURATION_TYPES` order (not alphabetical). */
+export function compareDurationDisplayLabels(a: string, b: string): number {
+  const [aRank, aVal] = durationDisplaySortTuple(a);
+  const [bRank, bVal] = durationDisplaySortTuple(b);
+  if (aRank !== bRank) return aRank - bRank;
+  return aVal - bVal;
+}
+
 export function formatDurationCompact(duration: string | undefined): string {
   if (!duration) return '-';
   const lower = duration.toLowerCase().trim();

@@ -4,6 +4,10 @@ import { Alert, Button } from '@/components/ui';
 import { useBrowserOffline } from '@/hooks/use-browser-offline';
 import { cn } from '@/lib/utils/cn';
 
+export const CLOUD_SYNC_SERVER_UNREACHABLE_TITLE = 'Could not reach the server';
+export const CLOUD_SYNC_SERVER_UNREACHABLE_BODY =
+  'Your latest changes are not saved to the cloud. Check your connection and try again.';
+
 export interface CloudSyncOfflineBannerProps {
   /** When false, the banner never renders (e.g. guest / local-only persistence). */
   enabled: boolean;
@@ -29,10 +33,10 @@ export function CloudSyncOfflineBanner({
     return null;
   }
 
-  const title = isOffline ? 'You are offline' : 'Could not reach the server';
+  const title = isOffline ? 'You are offline' : CLOUD_SYNC_SERVER_UNREACHABLE_TITLE;
   const body = isOffline
     ? 'Changes stay on this device until you are back online. They are not saved to the cloud yet.'
-    : 'Your latest changes are not saved to the cloud. Check your connection and try again.';
+    : CLOUD_SYNC_SERVER_UNREACHABLE_BODY;
 
   return (
     <Alert variant="warning" title={title} className={cn('mb-4', className)}>

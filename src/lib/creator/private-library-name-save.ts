@@ -5,6 +5,7 @@
  */
 
 import { getErrorMessage } from '@/lib/api-client';
+import { isLikelyNetworkFailure } from '@/lib/network-error';
 import {
   CREATOR_DESCRIPTION_TOO_LONG_MESSAGE,
   CREATOR_NAME_TOO_LONG_MESSAGE,
@@ -62,11 +63,12 @@ export function creatorSaveFailureText(err: unknown): string {
  */
 export async function readPrivateLibraryNameMatches(
   findMatches: () => Promise<ReadonlyArray<{ id: string }>>,
-): Promise<{ ids: string[] } | { errorText: string }> {
+): Promise<{ ids: string[] } | { errorText: string } | { networkFailure: true }> {
   try {
     const rows = await findMatches();
     return { ids: rows.map((row) => row.id) };
   } catch (err) {
+    if (isLikelyNetworkFailure(err)) return { networkFailure: true };
     return { errorText: creatorSaveFailureText(err) };
   }
 }

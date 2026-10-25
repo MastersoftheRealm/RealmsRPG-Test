@@ -78,9 +78,10 @@ export function LoginPromptModal({
       : allowLocalSheet
         ? 'Save to your account'
         : 'Login Required to Save';
+  const loadContentLabel = contentType === 'power' ? 'a power' : contentType;
   const defaultMessage =
     reason === 'load'
-      ? `Log in or create an account to load ${contentType} from your library. Guest progress on this page stays in your browser.`
+      ? `Log in or create an account to load ${loadContentLabel} from your library. Guest progress on this page stays in your browser.`
       : allowLocalSheet
         ? `Log in or create an account to keep this ${contentType} on every device and use it in campaigns. You can also continue without signing in — it stays in this browser.`
         : `Your ${contentType} progress is saved locally. Log in or create an account to save your ${contentType} permanently to your library.`;
