@@ -7,6 +7,11 @@ import { Plus, X } from 'lucide-react';
 import { ABILITIES_AND_DEFENSES } from '@/lib/game/constants';
 import type { FeatFormState } from './admin-feat-form';
 import { AdminCodexSourceField } from './admin-codex-source-field';
+import { cn } from '@/lib/utils';
+
+/** Match `Input` surface chrome in the feat edit modal (86e3jzu5u). */
+export const ADMIN_FEAT_MODAL_SELECT_CLASS =
+  'flex h-10 w-full rounded-lg border border-border-light bg-surface px-4 py-2.5 text-sm text-text-primary focus:border-primary-outline-border focus:ring-2 focus:ring-primary-outline-border focus:outline-none disabled:cursor-not-allowed disabled:bg-surface-alt disabled:opacity-50';
 
 export type AdminFeatEditModalFieldsProps = {
   form: FeatFormState;
@@ -83,7 +88,7 @@ export function AdminFeatEditModalFields({
               if (v === '__new__') setFormUpdater((f) => ({ ...f, category: f.category || '' }));
               else setFormField('category', v);
             }}
-            className="w-full rounded-md border border-border bg-background px-3 py-2 text-text-primary"
+            className={ADMIN_FEAT_MODAL_SELECT_CLASS}
             aria-label="Feat category"
           >
             <option value="">None</option>
@@ -121,7 +126,7 @@ export function AdminFeatEditModalFields({
                 setFormUpdater((f) => ({ ...f, feat_cat_req: f.feat_cat_req || '' }));
               else setFormField('feat_cat_req', v);
             }}
-            className="w-full rounded-md border border-border bg-background px-3 py-2 text-text-primary"
+            className={ADMIN_FEAT_MODAL_SELECT_CLASS}
             aria-label="Feat category required"
           >
             <option value="">None</option>
@@ -186,7 +191,7 @@ export function AdminFeatEditModalFields({
             id="admin-feat-base-feat-id"
             value={form.base_feat_id}
             onChange={(e) => setFormField('base_feat_id', e.target.value)}
-            className="w-full rounded-md border border-border bg-background px-3 py-2 text-text-primary"
+            className={ADMIN_FEAT_MODAL_SELECT_CLASS}
             aria-label="Base feat (level 1) (leave empty for level 1 feats)"
           >
             <option value="">None (this is level 1)</option>
@@ -236,7 +241,7 @@ export function AdminFeatEditModalFields({
                     return { ...f, ability_req: next };
                   });
                 }}
-                className="flex-1 rounded-md border border-border bg-background px-3 py-2 text-sm text-text-primary"
+                className={cn(ADMIN_FEAT_MODAL_SELECT_CLASS, 'flex-1')}
                 aria-label={`Ability requirement ${i + 1}`}
               >
                 {abil && !(ABILITIES_AND_DEFENSES as readonly string[]).includes(abil) && (
@@ -311,7 +316,7 @@ export function AdminFeatEditModalFields({
                     return { ...f, skill_req: next };
                   });
                 }}
-                className="flex-1 rounded-md border border-border bg-background px-3 py-2 text-sm text-text-primary"
+                className={cn(ADMIN_FEAT_MODAL_SELECT_CLASS, 'flex-1')}
                 aria-label={`Skill requirement ${i + 1}`}
               >
                 {skillId && !(skills as Skill[]).some((s) => String(s.id) === String(skillId)) && (
@@ -395,7 +400,7 @@ export function AdminFeatEditModalFields({
           <select
             value={form.rec_period}
             onChange={(e) => setFormField('rec_period', e.target.value)}
-            className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm text-text-primary"
+            className={ADMIN_FEAT_MODAL_SELECT_CLASS}
             aria-label="Recovery period"
           >
             <option value="">None</option>
@@ -520,7 +525,7 @@ export function AdminFeatEditModalFields({
               if (v && !form.tags.includes(v))
                 setFormUpdater((f) => ({ ...f, tags: [...f.tags, v] }));
             }}
-            className="rounded-md border border-border bg-background px-3 py-2 text-sm text-text-primary"
+            className={cn(ADMIN_FEAT_MODAL_SELECT_CLASS, 'w-auto')}
             aria-label="Add tag from existing"
           >
             <option value="">Add tag from list...</option>

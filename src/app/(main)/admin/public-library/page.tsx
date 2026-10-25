@@ -53,7 +53,7 @@ export default function AdminPublicLibraryPage() {
     <PageContainer size="xl">
       <PageHeader
         title="Official Library Editor"
-        description="Edit published official items via the creators (Edit opens Power/Technique/Item/Creature/Species Creator with the item loaded). Save with the same name to overwrite. Data is stored in official_* tables in public; if empty, run sql/supabase-official-library-public-schema.sql in Supabase."
+        description="Edit published official items via the creators (Edit opens Power/Technique/Item/Creature/Species Creator with the item loaded). Save with the same name to overwrite. Data is stored in official_* tables in public."
       />
 
       <TabNavigation

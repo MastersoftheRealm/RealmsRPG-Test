@@ -95,6 +95,7 @@ export function WeaponsListSection({
           onSort={onSort}
           rowChrome={rowChrome}
           rightSlotWidth={rowChrome ? undefined : rollSlotWidth}
+          compact={Boolean(rollSlotWidth) && compactRows}
           hasThumbnailColumn
         />
       )}
