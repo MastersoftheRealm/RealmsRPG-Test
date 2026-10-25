@@ -19,7 +19,6 @@ import { useState, useMemo, useCallback, useId } from 'react';
 import { cn } from '@/lib/utils';
 import { Alert, Modal } from '@/components/ui';
 import { useSort } from '@/hooks/use-sort';
-import { selectionAddBlocked } from './selection-limit';
 import {
   itemsWithSelectionQuantity,
   selectionDiffersFromInitial,
@@ -34,6 +33,14 @@ import {
 } from './unified-selection-modal-list';
 import { UnifiedSelectionModalToolbar } from './unified-selection-modal-toolbar';
 import type { UnifiedSelectionModalProps } from './unified-selection-modal-types';
+
+/** True when another selected row would pass maxSelections, including max 0. */
+export function selectionAddBlocked(
+  currentCount: number,
+  maxSelections: number | undefined,
+): boolean {
+  return maxSelections !== undefined && currentCount >= maxSelections;
+}
 
 export type {
   SelectableItem,

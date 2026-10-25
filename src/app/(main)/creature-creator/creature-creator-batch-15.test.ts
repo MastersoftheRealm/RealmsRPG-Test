@@ -3,7 +3,7 @@ import { describe, expect, it } from 'vitest';
 import { compactLine } from '@/components/patterns/list/creature-stat-block-helpers';
 import { abilityNextCostVisible } from '@/components/creator/ability-score-editor';
 import { formatProficiencyPointTotal } from '@/components/patterns/select/powered-martial-slider';
-import { selectionAddBlocked } from '@/components/patterns/select/selection-limit';
+import { selectionAddBlocked } from '@/components/patterns/select/unified-selection-modal';
 import { rawRecordToCreatureState } from './creature-skill-utils';
 import {
   appendCreatureLanguage,
