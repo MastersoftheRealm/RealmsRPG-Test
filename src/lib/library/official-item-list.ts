@@ -232,7 +232,7 @@ export function armamentRowColumns(row: OfficialItemRow, kind: ArmamentLibraryKi
   const headers = ARMAMENT_LIBRARY_CONFIG[kind].headers.filter((h) => h.key !== 'name');
   const byKey: Record<string, string | number> = {
     rarity: row.rarity,
-    currency: row.currency,
+    currency: row.currency.toLocaleString('en-US'),
     tp: row.tp,
     range: row.range,
     damage: row.damage,

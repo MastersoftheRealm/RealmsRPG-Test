@@ -11,7 +11,10 @@ export function columnHasInteractiveValue(col: ColumnValue): boolean {
 
 /** Overflow class for a collapsed header cell (TASK-909: keep steppers unclipped). */
 export function collapsedColumnOverflowClass(col: ColumnValue): string {
-  return columnHasInteractiveValue(col) ? 'min-w-0 text-sm' : 'min-w-0 truncate text-sm';
+  if (columnHasInteractiveValue(col) || col.allowMultiline) {
+    return col.allowMultiline ? 'min-w-0 text-sm leading-tight line-clamp-2' : 'min-w-0 text-sm';
+  }
+  return 'min-w-0 truncate text-sm';
 }
 
 /** Humanize column key for display when label is not set. */

@@ -316,6 +316,8 @@ function LibraryContent() {
           activeTab={displayTab}
           onTabChange={(tabId) => setActiveTab(tabId as TabId)}
           variant="underline"
+          size="sm"
+          className="library-page-tabs"
           tabGroupId={tabGroupId}
           sharedTabPanelId={sharedPanelId}
         />

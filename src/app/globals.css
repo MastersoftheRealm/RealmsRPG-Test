@@ -1083,6 +1083,17 @@
     scrollbar-width: none;
   }
 
+  /* Library has eight category tabs; wrap at ~1265px instead of clipping Creatures (86e3jzdwb). */
+  .library-page-tabs .tab-nav-list {
+    flex-wrap: wrap;
+    overflow: visible;
+    scrollbar-width: none;
+  }
+
+  .library-page-tabs .tab-nav-scroll-btn {
+    display: none;
+  }
+
   .tab-nav-list[data-overflow-end='true'] {
     mask-image: linear-gradient(
       to right,

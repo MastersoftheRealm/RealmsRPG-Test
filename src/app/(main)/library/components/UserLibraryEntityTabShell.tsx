@@ -240,7 +240,7 @@ export function LibrarySyncRowAction({
         onSync();
       }}
       label="Sync with current patch"
-      className="text-warning-fg hover:opacity-80"
+      className="text-text-secondary hover:text-text-primary"
     >
       <RefreshCw
         className={`${GRID_LIST_ROW_ACTION_ICON_CLASS} ${syncing ? 'animate-spin' : ''}`}

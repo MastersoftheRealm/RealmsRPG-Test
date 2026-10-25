@@ -226,5 +226,14 @@ describe('official-item-list armament kinds', () => {
     expect(rows[0]?.currency).toBe(31);
     expect(rows[0]?.currency).not.toBe(2);
     expect(rows[0]?.rarity).toBe('Common');
+    const currencyCol = armamentRowColumns(rows[0]!, 'weapon').find((c) => c.key === 'currency');
+    expect(currencyCol?.value).toBe('31');
+  });
+
+  it('formats weapon currency with thousands separators in list columns (86e3jww8d)', () => {
+    const rows = buildOfficialItemRows(catalog, propertiesDb, 'weapon');
+    const row = { ...rows[0]!, currency: 481_250 };
+    const currencyCol = armamentRowColumns(row, 'weapon').find((c) => c.key === 'currency');
+    expect(currencyCol?.value).toBe('481,250');
   });
 });
