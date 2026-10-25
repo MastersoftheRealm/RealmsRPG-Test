@@ -160,13 +160,12 @@ export function CreatorSummaryPanel({
 
       {/* Resource boxes (compact, for creature creator - ability/skill/feat/training/currency) */}
       {resourceBoxes && resourceBoxes.length > 0 && (
-        <div className="mb-4 flex flex-wrap gap-2">
+        <div className="mb-4 grid grid-cols-2 gap-2 lg:grid-cols-5">
           {resourceBoxes.map((box, i) => (
             <div
               key={i}
               className={cn(
-                // w-fit lets each box grow with long current/max values; max-w-full avoids overflow on narrow sidebars
-                'w-fit max-w-full min-w-[5rem] shrink-0 rounded-lg px-3 py-2 text-center text-sm',
+                'min-w-0 rounded-lg px-3 py-2 text-center text-sm',
                 getVariantClasses(box.variant, box.value),
               )}
             >

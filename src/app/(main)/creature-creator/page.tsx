@@ -364,14 +364,8 @@ function CreatureCreatorContent() {
             searchPlaceholder={
               powerModalTab === 'empowered' ? 'Search empowered techniques...' : 'Search powers...'
             }
-            columns={[
-              { key: 'name', label: 'Name', sortable: true },
-              { key: 'Energy', label: 'Energy', sortable: true },
-              { key: 'Action', label: 'Action', sortable: true },
-              { key: 'Damage', label: 'Damage', sortable: true },
-              { key: 'Area', label: 'Area', sortable: true },
-            ]}
-            gridColumns="1.15fr 0.42fr 0.62fr 0.62fr 0.55fr"
+            columns={getListHeaderColumns('power')}
+            gridColumns={getModalGridColumns('power')}
             size="xl"
           />
           <UnifiedSelectionModal

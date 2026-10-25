@@ -3,7 +3,9 @@
  * ===================
  * Expandable card section for creator optional/primary blocks.
  * Expand control is a dedicated <button> (full-header hit target via overlay).
- * titleAddon / rightSlot / Remove sit above it with pointer-events (no nested interactives).
+ * titleAddon, optional Remove, and rightSlot sit above it with pointer-events (no nested interactives).
+ * Optional Remove is immediately before the chevron. rightSlot (cost badges, trait actions)
+ * stays after the chevron so actionsOnOwnRow wraps below the title row.
  * Header stays put on expand (stable expand toggle — content opens below).
  * When expanded, do not reserve an empty summary line (TASK-764) — title size/padding
  * stay the same as collapsed.
@@ -73,7 +75,6 @@ export function CollapsibleSection({
   const collapsedText = collapsedSummary?.trim() ?? '';
   const metaText = isExpanded ? subtitleText : collapsedText || subtitleText;
   const showMetaLine = Boolean(metaText);
-  const hasTrailingActions = Boolean(rightSlot || optional);
 
   if (optional && !enabled) {
     return (
@@ -157,30 +158,31 @@ export function CollapsibleSection({
               <p className="mt-0.5 truncate text-sm text-text-muted">{metaText}</p>
             ) : null}
           </div>
+          {optional ? (
+            <div className="pointer-events-auto flex flex-shrink-0 items-center">
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => onEnabledChange?.(false)}
+                className="text-danger-fg hover:bg-danger-light"
+              >
+                Remove
+              </Button>
+            </div>
+          ) : null}
           <span className="flex-shrink-0 text-text-muted" aria-hidden>
             {isExpanded ? <ChevronUp className="h-5 w-5" /> : <ChevronDown className="h-5 w-5" />}
           </span>
-          {hasTrailingActions ? (
+          {rightSlot ? (
             <div
               className={cn(
                 'pointer-events-auto flex items-center gap-2',
                 actionsOnOwnRow
                   ? 'min-w-0 basis-full flex-wrap max-lg:w-full lg:flex-shrink-0 lg:basis-auto'
-                  : 'flex-shrink-0',
-                !actionsOnOwnRow && (optional ? 'self-stretch' : 'self-center'),
+                  : 'flex-shrink-0 self-center',
               )}
             >
               {rightSlot}
-              {optional && (
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => onEnabledChange?.(false)}
-                  className="text-danger-fg hover:bg-danger-light"
-                >
-                  Remove
-                </Button>
-              )}
             </div>
           ) : null}
         </div>

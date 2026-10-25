@@ -27,6 +27,8 @@ import { CreatureCreatorEditorInventorySection } from './creature-creator-editor
 import { creaturePowerRowKey } from '@/lib/game/creature-power-instances';
 
 const CREATURE_FEAT_LIST_GRID = '1.15fr 0.58fr 0.52fr 0.4fr';
+const CREATURE_POWER_LIST_GRID =
+  '1.4fr 0.6fr minmax(5.5rem, 0.95fr) 0.85fr 0.7fr minmax(6rem, 0.85fr)';
 const CREATURE_REMOVE_ROW_CHROME = { rightSlot: true } as const;
 const CREATURE_POWER_ROW_CHROME = { leftSlot: true, rightSlot: true } as const;
 
@@ -110,7 +112,7 @@ export function CreatureCreatorEditorLoadoutSections({
         collapsedSummary={featsSummary}
         icon="⭐"
         itemCount={creature.feats.length}
-        points={{ spent: stats.featSpent, total: stats.featPoints }}
+        points={{ spent: stats.featRemaining, total: stats.featPoints }}
       >
         {creature.feats.length === 0 ? (
           <p className="mb-4 text-sm text-text-muted italic">No feats added</p>
@@ -234,14 +236,14 @@ export function CreatureCreatorEditorLoadoutSections({
           <div className="mb-4 overflow-hidden rounded-lg border border-border-light">
             <ListHeader
               columns={[
-                { key: 'name', label: 'NAME', width: '1.4fr' },
+                { key: 'name', label: 'NAME', width: '1.4fr', align: 'left' },
                 { key: 'Energy', label: 'ENERGY', width: '0.6fr', align: 'center' },
-                { key: 'Action', label: 'ACTION', width: '0.8fr', align: 'center' },
-                { key: 'Damage', label: 'DAMAGE', width: '0.8fr', align: 'center' },
+                { key: 'Action', label: 'ACTION', width: '0.95fr', align: 'center' },
+                { key: 'Damage', label: 'DAMAGE', width: '0.85fr', align: 'center' },
                 { key: 'Area', label: 'AREA', width: '0.7fr', align: 'center' },
-                { key: 'Duration', label: 'DURATION', width: '0.8fr', align: 'center' },
+                { key: 'Duration', label: 'DURATION', width: '0.85fr', align: 'center' },
               ]}
-              gridColumns="1.4fr 0.6fr 0.8fr 0.8fr 0.7fr 0.8fr"
+              gridColumns={CREATURE_POWER_LIST_GRID}
               hasThumbnailColumn
               rowChrome={CREATURE_POWER_ROW_CHROME}
             />
@@ -259,12 +261,22 @@ export function CreatureCreatorEditorLoadoutSections({
                       value: formatEnergyStat(power.energy ?? 0),
                       align: 'center' as const,
                     },
-                    { key: 'Action', value: power.action ?? '-', align: 'center' as const },
-                    { key: 'Damage', value: power.damage ?? '-', align: 'center' as const },
+                    {
+                      key: 'Action',
+                      value: power.action ?? '-',
+                      align: 'center' as const,
+                      allowMultiline: true,
+                    },
+                    {
+                      key: 'Damage',
+                      value: power.damage ?? '-',
+                      align: 'center' as const,
+                      allowMultiline: true,
+                    },
                     { key: 'Area', value: power.area ?? '-', align: 'center' as const },
                     { key: 'Duration', value: power.duration ?? '-', align: 'center' as const },
                   ]}
-                  gridColumns="1.4fr 0.6fr 0.8fr 0.8fr 0.7fr 0.8fr"
+                  gridColumns={CREATURE_POWER_LIST_GRID}
                   detailSections={
                     power.variantChips && power.variantChips.length > 0
                       ? [
