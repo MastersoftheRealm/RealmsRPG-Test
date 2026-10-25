@@ -146,8 +146,10 @@ describe('Codex editor unsaved edits (86e3jthxr)', () => {
   it('wires X and Escape through the same close, and refresh through the existing beforeunload', () => {
     const modal = readFileSync(path.join(dir, '../../../../components/ui/modal.tsx'), 'utf8');
     expect(modal).toContain("if (e.key !== 'Escape') return;");
+    expect(modal).toContain('skipClickSinkOnCloseRef.current = true');
     expect(modal).toContain('onCloseRef.current()');
-    expect(modal).toContain('onClick={onClose}');
+    expect(modal).toContain('onClick={handlePointerClose}');
+    expect(modal).toContain('if (!wasOpenForClickSinkRef.current) return');
 
     const copy = readFileSync(path.join(dir, 'admin-codex-unsaved-leave.ts'), 'utf8');
     expect(copy).toContain(CODEX_EDITOR_DISCARD_TITLE);

@@ -29,4 +29,10 @@ describe('modal confirm double-click (86e3jw5g6)', () => {
     expect(modal).toContain('MODAL_CLOSE_CLICK_CAPTURE_MS');
     expect(modal).toContain('data-testid="modal-close-click-capture"');
   });
+
+  it('arms the click sink only after an open dialog closes, not on a closed mount (86e3jzduq / 86e3jw5g6)', () => {
+    expect(modal).toContain('skipClickSinkOnCloseRef.current = true');
+    expect(modal).toContain('if (!wasOpenForClickSinkRef.current) return');
+    expect(modal).toContain('setCaptureCloseClicks(true)');
+  });
 });

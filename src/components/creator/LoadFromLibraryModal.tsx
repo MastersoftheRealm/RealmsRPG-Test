@@ -80,6 +80,7 @@ export function LoadFromLibraryModal({
       itemLabel="item"
       size={LOAD_FROM_LIBRARY_MODAL_SIZE}
       className="md:max-h-[60vh]"
+      wrapFooterActions
     />
   );
 }

@@ -49,7 +49,10 @@ export function UnifiedSelectionModalFooter({
         )}
       >
         <span
-          className="min-w-0 truncate text-sm text-text-muted max-sm:sr-only"
+          className={cn(
+            'min-w-0 truncate text-sm text-text-muted',
+            !wrapFooterActions && 'max-sm:sr-only',
+          )}
           title={countLabel}
         >
           {countLabel}
