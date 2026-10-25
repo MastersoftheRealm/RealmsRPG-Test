@@ -79,7 +79,7 @@ export function LoadFromLibraryModal({
       confirmLabel="Load"
       itemLabel="item"
       size={LOAD_FROM_LIBRARY_MODAL_SIZE}
-      className="md:max-h-[60vh]"
+      className="md:max-h-[60vh] md:min-h-[60vh]"
       wrapFooterActions
     />
   );

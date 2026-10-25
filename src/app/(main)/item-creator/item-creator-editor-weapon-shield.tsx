@@ -57,8 +57,8 @@ export function ItemCreatorEditorWeaponShield({
           title={armamentType === 'Weapon' ? 'Weapon Configuration' : 'Shield Configuration'}
           collapsedSummary={weaponShieldConfigSummary}
         >
-          <div className="flex min-w-0 flex-wrap items-center gap-6">
-            <div className="flex min-w-0 flex-wrap items-center gap-3">
+          <div className="flex min-w-0 flex-col gap-6 lg:flex-row lg:flex-wrap lg:items-center">
+            <div className="flex min-w-0 flex-wrap items-center gap-3 lg:max-w-full">
               <span className="text-sm font-medium text-text-secondary">Handedness:</span>
               <SectionCostBadge
                 ip={itemSectionCosts.handedness.totalIP}

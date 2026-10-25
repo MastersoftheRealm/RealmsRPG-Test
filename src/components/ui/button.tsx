@@ -35,7 +35,7 @@ const buttonVariants = cva(
           'bg-primary-button text-text-on-dark hover:bg-primary-button-hover focus-visible:ring-primary-outline-border',
         ].join(' '),
         secondary:
-          'bg-surface text-text-secondary border border-border-light hover:bg-surface-alt focus-visible:ring-primary-outline-border dark:bg-surface-alt dark:border-border dark:hover:bg-surface',
+          'bg-surface text-text-secondary border border-border-light hover:bg-surface-alt focus-visible:ring-primary-outline-border dark:bg-surface-alt dark:text-text-primary dark:border-border dark:hover:bg-surface',
         danger: [
           FORCED_COLORS_FILLED_BOUNDARY,
           'bg-danger-button text-text-on-dark hover:bg-danger-700 focus-visible:ring-danger-border',

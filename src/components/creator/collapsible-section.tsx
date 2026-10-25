@@ -130,7 +130,7 @@ export function CollapsibleSection({
         />
         <div
           className={cn(
-            'pointer-events-none relative z-10 flex items-center gap-2',
+            'pointer-events-none relative z-10 flex items-start gap-2',
             actionsOnOwnRow && 'flex-wrap',
           )}
         >
@@ -161,14 +161,19 @@ export function CollapsibleSection({
               <p className="mt-0.5 truncate text-sm text-text-muted">{metaText}</p>
             ) : null}
           </div>
-          <div className={cn('flex flex-shrink-0 items-center', optional && 'gap-6')}>
+          <div
+            className={cn(
+              'ml-auto flex flex-shrink-0 items-center self-start pt-0.5',
+              optional ? 'gap-6' : 'min-w-[5.75rem] justify-end',
+            )}
+          >
             {optional ? (
               <div className="pointer-events-auto flex items-center">
                 <Button
                   variant="ghost"
                   size="sm"
                   onClick={() => onEnabledChange?.(false)}
-                  className="text-danger-fg hover:bg-danger-light"
+                  className="shrink-0 whitespace-nowrap text-danger-fg hover:bg-danger-light"
                 >
                   Remove
                 </Button>
