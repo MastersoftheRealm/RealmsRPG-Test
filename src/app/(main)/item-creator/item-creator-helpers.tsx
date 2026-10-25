@@ -14,14 +14,18 @@ import { ValueStepper } from '@/components/patterns';
 import { IconButton, Card, TableScroll, DescriptorChip } from '@/components/ui';
 import { isGeneralProperty, isMechanicProperty } from '@/lib/calculators';
 import { PROPERTY_IDS } from '@/lib/id-constants';
-import { formatCost } from '@/lib/game/creator-constants';
+import { formatCost, WEAPON_RANGE_TYPES } from '@/lib/game/creator-constants';
+import { formatWeaponRangeConfig, type WeaponRangeType } from '@/lib/calculators';
 import { rarityChipVariant } from '@/lib/chip/rarity-chip-variant';
 import { statusPanel } from '@/lib/ui/status-surface-classes';
 import type {
   ArmamentType,
   ItemSelectedProperty as SelectedProperty,
 } from './item-creator-bootstrap';
-import { propertyOptionsForCard } from './item-creator-property-options';
+import {
+  propertyMatchesArmamentType,
+  propertyOptionsForCard,
+} from './item-creator-property-options';
 
 export const ARMAMENT_TYPES: { value: ArmamentType; label: string; icon: typeof Sword }[] = [
   { value: 'Weapon', label: 'Weapon', icon: Sword },
@@ -60,15 +64,88 @@ export const ARMOR_ABILITY_REQUIREMENTS = [
   { id: PROPERTY_IDS.ARMOR_VITALITY_REQUIREMENT, name: 'Armor Vitality Requirement', label: 'VIT' },
 ];
 
-const RARITY_REFERENCE = [
-  { name: 'Common', ipRange: '0 – 4', baseCost: 25 },
-  { name: 'Uncommon', ipRange: '4 – 6', baseCost: 100 },
-  { name: 'Rare', ipRange: '6 – 8', baseCost: 500 },
-  { name: 'Epic', ipRange: '8 – 11', baseCost: 1500 },
-  { name: 'Legendary', ipRange: '11 – 14', baseCost: 10000 },
-  { name: 'Mythic', ipRange: '14 – 16', baseCost: 50000 },
-  { name: 'Ascended', ipRange: '16+', baseCost: 100000 },
+/**
+ * Currency Range is the written band from GAME_RULES (Rarity & Currency).
+ * IP Range stays the creator's existing display; those bands are not written there.
+ */
+export const RARITY_REFERENCE = [
+  { name: 'Common', ipRange: '0 – 4', baseCost: 25, currencyRange: '0–99' },
+  { name: 'Uncommon', ipRange: '4 – 6', baseCost: 100, currencyRange: '100–499' },
+  { name: 'Rare', ipRange: '6 – 8', baseCost: 500, currencyRange: '500–1,499' },
+  { name: 'Epic', ipRange: '8 – 11', baseCost: 1500, currencyRange: '1,500–9,999' },
+  { name: 'Legendary', ipRange: '11 – 14', baseCost: 10000, currencyRange: '10,000–49,999' },
+  { name: 'Mythic', ipRange: '14 – 16', baseCost: 50000, currencyRange: '50,000–99,999' },
+  { name: 'Ascended', ipRange: '16+', baseCost: 100000, currencyRange: '100,000+' },
 ];
+
+export type PropertyCostKind = 'IP' | 'TP' | 'C';
+
+/** Missing values are 0. A real 0 stays 0. A negative stays negative. */
+export function finitePropertyCost(value: unknown): number {
+  const n = typeof value === 'number' ? value : Number(value);
+  return Number.isFinite(n) ? n : 0;
+}
+
+export function propertyPointTotal(base: unknown, perLevel: unknown, level: number): number {
+  return finitePropertyCost(base) + finitePropertyCost(perLevel) * level;
+}
+
+/** base_tp of 0 falls through to legacy tp_cost, matching the previous card total. */
+export function propertyTrainingPointTotal(
+  property: {
+    base_tp?: number | null | undefined;
+    tp_cost?: number | null | undefined;
+    op_1_tp?: number | null | undefined;
+  },
+  level: number,
+): number {
+  const baseTp = finitePropertyCost(property.base_tp);
+  const base = baseTp !== 0 ? baseTp : finitePropertyCost(property.tp_cost);
+  return base + finitePropertyCost(property.op_1_tp) * level;
+}
+
+/** Header total. Zero is omitted so a negative-IP property does not show "TP: 0" or "C: 0". */
+export function formatPropertyHeaderCost(kind: PropertyCostKind, value: number): string | null {
+  if (value === 0) return null;
+  return `${kind}: ${formatCost(value)}`;
+}
+
+/** Per-level cost. Zero is omitted. Positive keeps the existing "+" prefix. */
+export function formatPropertyPerLevelCost(
+  kind: PropertyCostKind,
+  perLevel: unknown,
+): string | null {
+  const n = finitePropertyCost(perLevel);
+  if (n === 0) return null;
+  if (n > 0) return `${kind} +${formatCost(n)}/level`;
+  return `${kind} ${formatCost(n)}/level`;
+}
+
+export function propertyHeaderCostClass(kind: PropertyCostKind): string {
+  if (kind === 'IP') return 'text-ip-text';
+  if (kind === 'TP') return 'text-tp-text';
+  return 'text-currency-text';
+}
+
+/** Melee already names its type. Reach, Ranged, and Thrown need the type beside the distance. */
+export function formatItemCreatorRangeDisplay(type: WeaponRangeType, spaces: number): string {
+  const distance = formatWeaponRangeConfig({ type, spaces });
+  if (type === 'melee') return distance;
+  const label = WEAPON_RANGE_TYPES.find((entry) => entry.value === type)?.label;
+  return label ? `${label}, ${distance}` : distance;
+}
+
+/** Collapsed armor header. A zero Agility Reduction is omitted ("AGI -0"). */
+export function formatArmorConfigCollapsedSummary(
+  damageReduction: number,
+  agilityReduction: number,
+  criticalRangeIncrease: number,
+): string {
+  const parts = [`DR ${damageReduction}`];
+  if (agilityReduction > 0) parts.push(`AGI -${agilityReduction}`);
+  parts.push(`Crit +${criticalRangeIncrease}`);
+  return parts.join(', ');
+}
 
 /** Route-local property row for the armament creator (not CodexPropertiesTab). */
 export function PropertyCard({
@@ -90,25 +167,44 @@ export function PropertyCard({
   const { property } = selectedProperty;
 
   const selectableProperties = useMemo(() => {
-    const armamentTypeLower = armamentType.toLowerCase();
     const forType = allProperties
       .filter((p) => {
         if (isGeneralProperty(p)) return false;
         if (isMechanicProperty(p)) return false;
-        const propType = (p.type || '').toLowerCase();
-        if (!propType || propType === 'general') return true;
-        return propType === armamentTypeLower;
+        return propertyMatchesArmamentType(p.type, armamentType);
       })
       .sort((a, b) => a.name.localeCompare(b.name));
     return propertyOptionsForCard(forType, property.id, otherSelectedIds);
   }, [allProperties, armamentType, property.id, otherSelectedIds]);
 
-  const propIP =
-    ((property.base_ip as number | undefined) || 0) +
-    ((property.op_1_ip as number | undefined) || 0) * selectedProperty.op_1_lvl;
-  const propTP =
-    (property.base_tp || property.tp_cost || 0) +
-    (property.op_1_tp || 0) * selectedProperty.op_1_lvl;
+  const level = selectedProperty.op_1_lvl;
+  const propIP = propertyPointTotal(property.base_ip, property.op_1_ip, level);
+  const propTP = propertyTrainingPointTotal(property, level);
+  const propC = propertyPointTotal(property.base_c, property.op_1_c, level);
+  const headerCosts = (
+    [
+      ['IP', propIP],
+      ['TP', propTP],
+      ['C', propC],
+    ] as const
+  )
+    .map(([kind, value]) => {
+      const label = formatPropertyHeaderCost(kind, value);
+      return label ? { kind, label } : null;
+    })
+    .filter((entry) => entry != null);
+  const perLevelCosts = (
+    [
+      ['IP', property.op_1_ip],
+      ['TP', property.op_1_tp],
+      ['C', property.op_1_c],
+    ] as const
+  )
+    .map(([kind, value]) => {
+      const label = formatPropertyPerLevelCost(kind, value);
+      return label ? { kind, label } : null;
+    })
+    .filter((entry) => entry != null);
 
   const hasOption = property.op_1_desc && property.op_1_desc.trim() !== '';
 
@@ -124,18 +220,15 @@ export function PropertyCard({
             {expanded ? <ChevronUp className="h-5 w-5" /> : <ChevronDown className="h-5 w-5" />}
           </span>
           <span className="truncate font-medium text-text-primary">{property.name}</span>
-          <span className="flex flex-shrink-0 items-center gap-2 text-sm font-semibold">
-            {propIP > 0 && <span className="text-ip-text">IP: {formatCost(propIP)}</span>}
-            {propTP > 0 && <span className="text-tp-text">TP: {formatCost(propTP)}</span>}
-            {(property.base_c || (property.op_1_c && selectedProperty.op_1_lvl > 0)) && (
-              <span className="text-currency-text">
-                C:{' '}
-                {formatCost(
-                  (property.base_c || 0) + (property.op_1_c || 0) * selectedProperty.op_1_lvl,
-                )}
-              </span>
-            )}
-          </span>
+          {headerCosts.length > 0 && (
+            <span className="flex flex-shrink-0 items-center gap-2 text-sm font-semibold">
+              {headerCosts.map((cost) => (
+                <span key={cost.kind} className={propertyHeaderCostClass(cost.kind)}>
+                  {cost.label}
+                </span>
+              ))}
+            </span>
+          )}
         </button>
         <IconButton onClick={onRemove} label="Remove property" variant="danger" size="sm">
           <X className="h-5 w-5" />
@@ -175,16 +268,17 @@ export function PropertyCard({
                   <span className="text-sm font-semibold whitespace-nowrap text-tp-text">
                     Option
                   </span>
-                  {property.op_1_tp && (
-                    <span className="text-sm font-medium whitespace-nowrap text-tp-text">
-                      TP +{formatCost(property.op_1_tp)}/level
+                  {perLevelCosts.map((cost) => (
+                    <span
+                      key={cost.kind}
+                      className={cn(
+                        'text-sm font-medium whitespace-nowrap',
+                        propertyHeaderCostClass(cost.kind),
+                      )}
+                    >
+                      {cost.label}
                     </span>
-                  )}
-                  {property.op_1_c && (
-                    <span className="text-sm font-medium whitespace-nowrap text-currency-text">
-                      C +{formatCost(property.op_1_c)}/level
-                    </span>
-                  )}
+                  ))}
                 </div>
                 <ValueStepper
                   className="shrink-0"
@@ -234,7 +328,7 @@ export function RarityReferenceTable({ currentIP }: { currentIP: number }) {
       {expanded && (
         <div className="p-4">
           <p className="mb-3 text-xs text-text-muted">
-            IP (Item Power) determines rarity. Currency cost = Base Cost × (1 + 0.125 × C
+            Item Point (IP) determines rarity. Currency cost = Base Cost × (1 + 0.125 × C
             multiplier)
           </p>
           <TableScroll>
@@ -243,6 +337,9 @@ export function RarityReferenceTable({ currentIP }: { currentIP: number }) {
                 <tr className="border-b border-border-light">
                   <th className="py-1 text-left font-medium text-text-secondary">Rarity</th>
                   <th className="py-1 text-right font-medium text-text-secondary">IP Range</th>
+                  <th className="py-1 text-right font-medium text-text-secondary">
+                    Currency Range
+                  </th>
                   <th className="py-1 text-right font-medium text-text-secondary">Base Currency</th>
                 </tr>
               </thead>
@@ -263,8 +360,13 @@ export function RarityReferenceTable({ currentIP }: { currentIP: number }) {
                         <span className="ml-1 text-xs text-ip-text">← Current</span>
                       )}
                     </td>
-                    <td className="py-1.5 text-right text-text-secondary">{r.ipRange}</td>
-                    <td className="py-1.5 text-right text-currency-text">
+                    <td className="py-1.5 text-right whitespace-nowrap text-text-secondary">
+                      {r.ipRange}
+                    </td>
+                    <td className="py-1.5 text-right whitespace-nowrap text-text-secondary">
+                      {r.currencyRange}
+                    </td>
+                    <td className="py-1.5 text-right whitespace-nowrap text-currency-text">
                       {r.baseCost.toLocaleString()}
                     </td>
                   </tr>

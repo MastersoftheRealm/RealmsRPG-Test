@@ -30,6 +30,7 @@ import {
   defaultWeaponAbilityUtilized,
   type WeaponAttackAbility,
 } from '@/lib/game/weapon-attack-ability';
+import { selectedPropertiesForArmament } from './item-creator-property-options';
 import { itemCreatorFormAfterSave } from './item-creator-save-reset';
 import {
   emptyItemCreatorFormState,
@@ -92,18 +93,6 @@ function toItemCreatorCache(form: ItemCreatorFormState, rangeLevel: number): Ite
     imageUrl: form.imageUrl,
     timestamp: Date.now(),
   };
-}
-
-function propertiesForArmament(
-  properties: SelectedProperty[],
-  armamentType: ArmamentType,
-): SelectedProperty[] {
-  const armamentTypeLower = armamentType.toLowerCase();
-  return properties.filter((sp) => {
-    const propType = (sp.property.type || '').toLowerCase();
-    if (!propType || propType === 'general') return true;
-    return propType === armamentTypeLower;
-  });
 }
 
 export function useItemCreatorWorkspace({
@@ -279,14 +268,11 @@ export function useItemCreatorWorkspace({
 
   const changeArmamentType = useCallback(
     (next: ArmamentType) => {
-      const nextProperties = propertiesForArmament(selectedProperties, next);
       setArmamentType(next);
-      setSelectedProperties(nextProperties);
       setAbilityRequirement(null);
       if (editItemId) return;
       const nextForm = formSnapshot({
         armamentType: next,
-        selectedProperties: nextProperties,
         abilityRequirement: null,
       });
       writeCreatorCache(
@@ -298,15 +284,12 @@ export function useItemCreatorWorkspace({
       );
       alignTypeQuery(next);
     },
-    [
-      alignTypeQuery,
-      editItemId,
-      formSnapshot,
-      rangeSpaces,
-      rangeType,
-      selectedProperties,
-      sessionCacheKey,
-    ],
+    [alignTypeQuery, editItemId, formSnapshot, rangeSpaces, rangeType, sessionCacheKey],
+  );
+
+  const visibleProperties = useMemo(
+    () => selectedPropertiesForArmament(selectedProperties, armamentType),
+    [selectedProperties, armamentType],
   );
 
   const {
@@ -327,7 +310,7 @@ export function useItemCreatorWorkspace({
     damageDisplay,
   } = useItemCreatorCostDerivation({
     armamentType,
-    selectedProperties,
+    selectedProperties: visibleProperties,
     itemProperties,
     damage,
     isTwoHanded,
@@ -343,12 +326,32 @@ export function useItemCreatorWorkspace({
     abilityRequirement,
   });
 
-  const { addProperty, removeProperty, updateProperty } = useItemCreatorPropertyActions({
+  const { addProperty } = useItemCreatorPropertyActions({
     itemProperties,
     armamentType,
     selectedProperties,
     setSelectedProperties,
   });
+
+  const removeProperty = useCallback(
+    (visibleIndex: number) => {
+      const target = visibleProperties[visibleIndex];
+      if (!target) return;
+      setSelectedProperties((prev) => prev.filter((selected) => selected !== target));
+    },
+    [visibleProperties],
+  );
+
+  const updateProperty = useCallback(
+    (visibleIndex: number, updates: Partial<SelectedProperty>) => {
+      const target = visibleProperties[visibleIndex];
+      if (!target) return;
+      setSelectedProperties((prev) =>
+        prev.map((selected) => (selected === target ? { ...selected, ...updates } : selected)),
+      );
+    },
+    [visibleProperties],
+  );
 
   const getPayload = useCallback(() => {
     const savedAbilityRequirement = abilityRequirement
@@ -555,7 +558,7 @@ export function useItemCreatorWorkspace({
     setDescription,
     armamentType,
     changeArmamentType,
-    selectedProperties,
+    selectedProperties: visibleProperties,
     damage,
     setDamage,
     isTwoHanded,
