@@ -204,6 +204,7 @@ function CreatureCreatorContent() {
       }}
       sidebar={
         <CreatorSummaryPanel
+          className="creature-creator-summary-fab-clear"
           title="Creature Summary"
           badge={
             creature.name

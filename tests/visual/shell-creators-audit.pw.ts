@@ -98,6 +98,103 @@ async function assertNoNestedButtonsInExpand(page: Page, collapseTitle: string) 
   await expect(nestedButtons).toHaveCount(0);
 }
 
+test.describe('creature roll log vs summary (86e3jzdw5)', () => {
+  test('button clears the summary card and the creator grid stays full width', async ({
+    page,
+    context,
+  }) => {
+    await context.addInitScript(themeInit('light'), 'light');
+
+    async function gridBox(path: string, width: number, height: number) {
+      await page.setViewportSize({ width, height });
+      await page.goto(path, { waitUntil: 'domcontentloaded' });
+      await waitForCreatorReady(
+        page,
+        path === '/species-creator' ? 'Species Creator' : 'Creature Creator',
+      );
+      return page.evaluate(() => {
+        const grid = [...document.querySelectorAll('[data-creator-page] .grid')].find((el) =>
+          el.classList.contains('md:grid-cols-3'),
+        );
+        if (!grid) return null;
+        const rect = grid.getBoundingClientRect();
+        const main = document.getElementById('main-content');
+        return {
+          left: rect.left,
+          right: rect.right,
+          clientWidth: document.documentElement.clientWidth,
+          mainPaddingRight: main ? getComputedStyle(main).paddingRight : '',
+        };
+      });
+    }
+
+    const creature1280 = await gridBox('/creature-creator', 1280, 900);
+    expect(creature1280).not.toBeNull();
+    expect(creature1280!.clientWidth).toBe(1280);
+    expect(creature1280!.left).toBeGreaterThanOrEqual(31);
+    expect(creature1280!.left).toBeLessThanOrEqual(33);
+    expect(creature1280!.right).toBeGreaterThanOrEqual(1247);
+    expect(creature1280!.right).toBeLessThanOrEqual(1249);
+    expect(creature1280!.mainPaddingRight).toBe('0px');
+
+    const species768 = await gridBox('/species-creator', 768, 1024);
+    const creature768 = await gridBox('/creature-creator', 768, 1024);
+    expect(species768).not.toBeNull();
+    expect(creature768).not.toBeNull();
+    expect(Math.abs(creature768!.left - species768!.left)).toBeLessThanOrEqual(1);
+    expect(Math.abs(creature768!.right - species768!.right)).toBeLessThanOrEqual(1);
+    expect(creature768!.mainPaddingRight).toBe('0px');
+
+    for (const width of [768, 1280]) {
+      await page.setViewportSize({ width, height: width === 768 ? 1024 : 900 });
+      const overlap = await page.evaluate(() => {
+        const card = document.querySelector('.creature-creator-summary-fab-clear');
+        const fab = document.querySelector('[data-creator-roll-dock]');
+        if (!(card instanceof HTMLElement) || !(fab instanceof HTMLElement)) return null;
+        const cardBox = card.getBoundingClientRect();
+        const fabBox = fab.getBoundingClientRect();
+        const overlapX =
+          Math.min(cardBox.right, fabBox.right) - Math.max(cardBox.left, fabBox.left);
+        const overlapY =
+          Math.min(cardBox.bottom, fabBox.bottom) - Math.max(cardBox.top, fabBox.top);
+        const sizeValue = [...card.querySelectorAll('span')].find(
+          (el) => el.textContent?.trim() === 'Medium',
+        );
+        const sizeBox = sizeValue?.getBoundingClientRect();
+        const hitsFab = (box: DOMRect) => {
+          const ox = Math.min(box.right, fabBox.right) - Math.max(box.left, fabBox.left);
+          const oy = Math.min(box.bottom, fabBox.bottom) - Math.max(box.top, fabBox.top);
+          return ox > 1 && oy > 1;
+        };
+        const coveredText = [
+          ...document.body.querySelectorAll(
+            'button, a, input, select, textarea, h1, h2, h3, p, span, label',
+          ),
+        ].filter((el) => {
+          if (!(el instanceof HTMLElement) || fab.contains(el)) return false;
+          const box = el.getBoundingClientRect();
+          if (box.width < 1 || box.height < 1) return false;
+          return hitsFab(box);
+        }).length;
+        return {
+          overlapX,
+          overlapY,
+          cardRight: cardBox.right,
+          fabLeft: fabBox.left,
+          sizeRight: sizeBox?.right ?? null,
+          coveredText,
+        };
+      });
+      expect(overlap).not.toBeNull();
+      expect(overlap!.cardRight).toBeLessThanOrEqual(overlap!.fabLeft + 1);
+      expect(overlap!.overlapX <= 1 || overlap!.overlapY <= 1).toBe(true);
+      expect(overlap!.sizeRight).not.toBeNull();
+      expect(overlap!.sizeRight!).toBeLessThanOrEqual(overlap!.fabLeft + 1);
+      expect(overlap!.coveredText).toBe(0);
+    }
+  });
+});
+
 test.describe('CreatorPageShell audit (TASK-380/431)', () => {
   for (const creator of CREATORS) {
     test(`${creator.slug} — desktop chrome, collapse, modals`, async ({ page, context }) => {
