@@ -4,8 +4,9 @@
  * Expandable card section for creator optional/primary blocks.
  * Expand control is a dedicated <button> (full-header hit target via overlay).
  * titleAddon, optional Remove, and rightSlot sit above it with pointer-events (no nested interactives).
- * Optional Remove is immediately before the chevron. rightSlot (cost badges, trait actions)
- * stays after the chevron so actionsOnOwnRow wraps below the title row.
+ * The chevron is always the last column. Optional Remove sits immediately before it.
+ * rightSlot (cost badges, trait actions) sits before that column. actionsOnOwnRow still
+ * wraps those actions under the title below lg (order-last) without moving the chevron.
  * Header stays put on expand (stable expand toggle — content opens below).
  * When expanded, do not reserve an empty summary line (TASK-764) — title size/padding
  * stay the same as collapsed.
@@ -161,9 +162,23 @@ export function CollapsibleSection({
               <p className="mt-0.5 truncate text-sm text-text-muted">{metaText}</p>
             ) : null}
           </div>
+          {rightSlot ? (
+            <div
+              className={cn(
+                'pointer-events-auto flex items-center gap-2',
+                actionsOnOwnRow
+                  ? 'min-w-0 basis-full flex-wrap max-lg:order-last max-lg:w-full lg:flex-shrink-0 lg:basis-auto'
+                  : 'flex-shrink-0 self-center',
+              )}
+            >
+              {rightSlot}
+            </div>
+          ) : null}
           <div
             className={cn(
-              'ml-auto flex flex-shrink-0 items-center self-start pt-0.5',
+              'flex flex-shrink-0 items-center self-start pt-0.5',
+              !rightSlot && 'ml-auto',
+              actionsOnOwnRow && 'max-lg:ml-auto',
               optional ? 'gap-6' : 'min-w-[5.75rem] justify-end',
             )}
           >
@@ -183,18 +198,6 @@ export function CollapsibleSection({
               {isExpanded ? <ChevronUp className="h-5 w-5" /> : <ChevronDown className="h-5 w-5" />}
             </span>
           </div>
-          {rightSlot ? (
-            <div
-              className={cn(
-                'pointer-events-auto flex items-center gap-2',
-                actionsOnOwnRow
-                  ? 'min-w-0 basis-full flex-wrap max-lg:w-full lg:flex-shrink-0 lg:basis-auto'
-                  : 'flex-shrink-0 self-center',
-              )}
-            >
-              {rightSlot}
-            </div>
-          ) : null}
         </div>
       </div>
 

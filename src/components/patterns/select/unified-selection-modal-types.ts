@@ -115,6 +115,11 @@ interface UnifiedSelectionModalPropsFields {
 
   // Search
   searchPlaceholder?: string | undefined;
+  /**
+   * Input classes while the query is empty (placeholder visible).
+   * Dropped once the user types so the clear control keeps its own padding.
+   */
+  placeholderInputClassName?: string | undefined;
   searchFields?: (keyof SelectableItem)[] | undefined;
 
   /**
