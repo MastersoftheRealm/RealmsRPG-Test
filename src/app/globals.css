@@ -788,23 +788,6 @@
     filter: brightness(1.12) contrast(1.08);
   }
 
-  /* Technique EN / weapon damage RollButtons on the play sheet (86e3jwkem). */
-  .dark [data-character-sheet-page] button[data-roll-trigger].bg-success-600 {
-    background-color: var(--color-success-dark);
-  }
-
-  .dark [data-character-sheet-page] button[data-roll-trigger].bg-success-600:hover {
-    background-color: var(--color-success-hover);
-  }
-
-  .dark [data-character-sheet-page] button[data-roll-trigger].bg-danger-600 {
-    background-color: var(--color-danger-button);
-  }
-
-  .dark [data-character-sheet-page] button[data-roll-trigger].bg-danger-600:hover {
-    background-color: var(--color-danger-700);
-  }
-
   @media (min-width: 768px) {
     .sheet-mobile-action-dock {
       inset: auto;
@@ -1436,5 +1419,22 @@
       min-height: 2.5rem !important;
       min-width: 2.5rem !important;
     }
+  }
+
+  /* Technique EN / weapon damage RollButtons on the play sheet (86e3jwkem). */
+  .dark [data-character-sheet-page] button[data-roll-trigger].bg-success-600 {
+    background-color: var(--color-success-dark);
+  }
+
+  .dark [data-character-sheet-page] button[data-roll-trigger].bg-success-600:hover {
+    background-color: var(--color-success-hover);
+  }
+
+  .dark [data-character-sheet-page] button[data-roll-trigger].bg-danger-600 {
+    background-color: var(--color-danger-button);
+  }
+
+  .dark [data-character-sheet-page] button[data-roll-trigger].bg-danger-600:hover {
+    background-color: var(--color-danger-700);
   }
 }

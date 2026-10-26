@@ -25,13 +25,24 @@ export const SHEET_TOUR_NARROW_BOTTOM_PLACEMENT_CLASS =
 
 export type SheetTourNarrowAnchor = 'top' | 'bottom';
 
+/** Reserve space for bottom-docked tour card + mobile dock strip on narrow viewports. */
+export const SHEET_TOUR_NARROW_CHROME_RESERVE_PX = 220;
+
+/** Section taller than the visible column — bottom-dock and scroll to section top (86e3jwkep). */
+export function isTallSheetTourTarget(targetHeight: number, viewportHeight: number): boolean {
+  return targetHeight > viewportHeight - SHEET_TOUR_NARROW_CHROME_RESERVE_PX;
+}
+
 /** Pure placement math for unit tests and runtime. */
 export function sheetTourCardAnchorForViewport(
-  targetMidY: number,
+  targetTop: number,
+  targetHeight: number,
   viewportHeight: number,
   viewportWidth: number,
 ): SheetTourNarrowAnchor {
   if (viewportWidth > SHEET_TOUR_NARROW_MAX_WIDTH_PX) return 'bottom';
+  if (isTallSheetTourTarget(targetHeight, viewportHeight)) return 'bottom';
+  const targetMidY = targetTop + targetHeight / 2;
   return targetMidY < viewportHeight / 2 ? 'bottom' : 'top';
 }
 
@@ -40,7 +51,8 @@ export function sheetTourCardAnchor(target: HTMLElement | null): SheetTourNarrow
   if (!target || typeof window === 'undefined') return 'bottom';
   const rect = target.getBoundingClientRect();
   return sheetTourCardAnchorForViewport(
-    rect.top + rect.height / 2,
+    rect.top,
+    rect.height,
     window.innerHeight,
     window.innerWidth,
   );
@@ -59,21 +71,34 @@ export function onboardingHighlightScrollBlock(): ScrollLogicalPosition {
 }
 
 export function sheetTourStepScrollBlockForViewport(
-  targetMidY: number,
+  targetTop: number,
+  targetHeight: number,
   viewportHeight: number,
   viewportWidth: number,
 ): ScrollLogicalPosition {
   if (viewportWidth > SHEET_TOUR_NARROW_MAX_WIDTH_PX) return 'center';
-  const anchor = sheetTourCardAnchorForViewport(targetMidY, viewportHeight, viewportWidth);
+  if (isTallSheetTourTarget(targetHeight, viewportHeight)) return 'start';
+  const anchor = sheetTourCardAnchorForViewport(
+    targetTop,
+    targetHeight,
+    viewportHeight,
+    viewportWidth,
+  );
   return anchor === 'bottom' ? 'start' : 'end';
 }
 
 export function sheetTourStepScrollBlock(target?: HTMLElement | null): ScrollLogicalPosition {
   if (typeof window === 'undefined') return 'center';
-  const mid = target
-    ? target.getBoundingClientRect().top + target.getBoundingClientRect().height / 2
-    : window.innerHeight / 2;
-  return sheetTourStepScrollBlockForViewport(mid, window.innerHeight, window.innerWidth);
+  if (!target) {
+    return sheetTourStepScrollBlockForViewport(0, 0, window.innerHeight, window.innerWidth);
+  }
+  const rect = target.getBoundingClientRect();
+  return sheetTourStepScrollBlockForViewport(
+    rect.top,
+    rect.height,
+    window.innerHeight,
+    window.innerWidth,
+  );
 }
 
 const HIGHLIGHT_CLASSES = [
@@ -113,13 +138,34 @@ export function applyTourHighlight(tourId: string): () => void {
   };
 }
 
+function scheduleSheetTourRescroll(el: HTMLElement): () => void {
+  if (typeof window === 'undefined') return () => {};
+  const rect = el.getBoundingClientRect();
+  if (!isTallSheetTourTarget(rect.height, window.innerHeight)) return () => {};
+  if (window.innerWidth > SHEET_TOUR_NARROW_MAX_WIDTH_PX) return () => {};
+
+  let raf1 = 0;
+  let raf2 = 0;
+  raf1 = window.requestAnimationFrame(() => {
+    raf2 = window.requestAnimationFrame(() => {
+      scrollHighlightIntoView(el, 'start');
+    });
+  });
+  return () => {
+    window.cancelAnimationFrame(raf1);
+    window.cancelAnimationFrame(raf2);
+  };
+}
+
 /** Sheet tour step highlight — flips scroll when the card bottom-docks (86e3jwkep). */
 export function applySheetTourStepHighlight(tourId: string): () => void {
   const el = findVisibleTourTarget(tourId);
   if (!el) return () => {};
   scrollHighlightIntoView(el, sheetTourStepScrollBlock(el));
+  const cancelRescroll = scheduleSheetTourRescroll(el);
   el.classList.add(...HIGHLIGHT_CLASSES);
   return () => {
+    cancelRescroll();
     el.classList.remove(...HIGHLIGHT_CLASSES);
   };
 }
