@@ -377,7 +377,7 @@ export function RollLog({ className, viewOnlyCampaignId }: RollLogProps) {
                       'cursor-pointer bg-text-on-dark/10 transition-all hover:bg-text-on-dark/25 dark:bg-text-on-dark/20 dark:hover:bg-text-on-dark/35',
                       dicePool[die] > 0 && 'bg-text-on-dark/20 ring-2 ring-warning-400',
                     )}
-                    title={`Left-click: add ${die} · Right-click or Delete: remove`}
+                    title={`Left-click: add ${die} · Right-click: remove`}
                   >
                     <Image
                       src={DIE_IMAGES[die]}

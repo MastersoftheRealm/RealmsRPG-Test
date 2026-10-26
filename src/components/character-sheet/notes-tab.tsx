@@ -252,7 +252,7 @@ function EditableNoteCard({
           <div className="flex min-w-0 flex-1 items-center">
             <button
               type="button"
-              className="flex max-w-full min-w-0 items-center gap-1 text-left text-sm font-medium text-text-primary hover:text-primary-fg-hover"
+              className="flex max-w-full min-w-0 cursor-pointer items-center gap-1 text-sm font-medium text-text-primary hover:text-primary-fg-hover"
               onClick={(e) => {
                 e.stopPropagation();
                 setIsEditingName(true);

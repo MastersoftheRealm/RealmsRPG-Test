@@ -19,7 +19,7 @@ describe('website bugs batch 24 — sheet keyboard & interaction', () => {
   it('removes dice from the builder with Delete/Backspace (86e3jw5qb)', () => {
     expect(rollLog).toContain("e.key !== 'Backspace' && e.key !== 'Delete'");
     expect(rollLog).toContain('removeDie(die)');
-    expect(rollLog).toContain('Delete: remove');
+    expect(rollLog).toContain('Right-click: remove');
   });
 
   it('clears autosave dirty after save without a false leave prompt (86e3jw5pw)', () => {
