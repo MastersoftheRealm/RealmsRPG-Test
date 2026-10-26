@@ -11,7 +11,7 @@ describe('creature creator optional section remove confirm (1dfe8wf28e6)', () =>
   it('uses section display name in dialog accessible name via ConfirmActionModal titleA11y', () => {
     const powersCopy = creatureCreatorOptionalSectionRemoveConfirm('Powers');
     expect(powersCopy.title).toBe('Remove Powers?');
-    expect(powersCopy.description).toBe('');
+    expect(powersCopy.description).toBe('This section will be hidden. Your items in it are kept.');
     expect(powersCopy.confirmLabel).toBe('Confirm');
 
     const modal = readFileSync(
@@ -32,10 +32,11 @@ describe('creature creator optional section remove confirm (1dfe8wf28e6)', () =>
     expect(collapsible).toContain('confirmLabel={removeConfirm.confirmLabel}');
   });
 
-  it('keeps description empty (Remove hides section; items stay on creature)', () => {
-    expect(REMOVE_SECTION_CONFIRM_DESCRIPTION).toBe('');
+  it('uses the hidden-section description for every optional remove confirm', () => {
+    const description = 'This section will be hidden. Your items in it are kept.';
+    expect(REMOVE_SECTION_CONFIRM_DESCRIPTION).toBe(description);
     for (const section of ['Powers', 'Techniques', 'Inventory'] as const) {
-      expect(creatureCreatorOptionalSectionRemoveConfirm(section).description).toBe('');
+      expect(creatureCreatorOptionalSectionRemoveConfirm(section).description).toBe(description);
     }
 
     const modal = readFileSync(
@@ -71,7 +72,7 @@ describe('creature creator optional section remove confirm (1dfe8wf28e6)', () =>
     expect(REMOVE_SECTION_CONFIRM_CONFIRM_LABEL).toBe('Confirm');
     expect(creatureCreatorOptionalSectionRemoveConfirm('Powers')).toEqual({
       title: 'Remove Powers?',
-      description: '',
+      description: 'This section will be hidden. Your items in it are kept.',
       confirmLabel: 'Confirm',
     });
 
@@ -86,6 +87,29 @@ describe('creature creator optional section remove confirm (1dfe8wf28e6)', () =>
     expect(loadout).toContain("creatureCreatorOptionalSectionRemoveConfirm('Powers')");
     expect(loadout).toContain("creatureCreatorOptionalSectionRemoveConfirm('Techniques')");
     expect(inventory).toContain("creatureCreatorOptionalSectionRemoveConfirm('Inventory')");
+  });
+
+  it('re-enabling only flips enable flags; loadout UI still reads stored arrays', () => {
+    const collapsible = readFileSync(
+      path.join(import.meta.dirname, '../../../components/creator/collapsible-section.tsx'),
+      'utf8',
+    );
+    expect(collapsible).toContain('onEnabledChange?.(true)');
+    expect(collapsible).toMatch(/onConfirm=\{\(\) => \{[\s\S]*onEnabledChange\?\.\(false\)/);
+
+    const loadout = readFileSync(
+      path.join(import.meta.dirname, 'creature-creator-editor-loadout-sections.tsx'),
+      'utf8',
+    );
+    const inventory = readFileSync(
+      path.join(import.meta.dirname, 'creature-creator-editor-inventory-section.tsx'),
+      'utf8',
+    );
+    expect(loadout).toContain('updateCreature({ enablePowers: enabled })');
+    expect(loadout).toContain('updateCreature({ enableTechniques: enabled })');
+    expect(loadout).toContain('creature.powers.map');
+    expect(loadout).toContain('creature.techniques.map');
+    expect(inventory).toContain('updateCreature({ enableArmaments: enabled })');
   });
 
   it('wires remove confirm through CollapsibleSection and ConfirmActionModal', () => {
