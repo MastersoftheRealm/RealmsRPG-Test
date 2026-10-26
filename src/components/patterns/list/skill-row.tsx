@@ -121,6 +121,8 @@ export interface SkillRowProps {
   variant?: 'table' | 'card' | 'compact' | undefined;
   /** Additional className */
   className?: string | undefined;
+  /** Optional row suffix (e.g. creature creator multi-ability sub-skills). */
+  multiAbilitySubSkillHint?: string | undefined;
 }
 
 // Constants imported from @/lib/constants/skills
@@ -184,6 +186,7 @@ export const SkillRow = memo(function SkillRow({
   lockMessage,
   variant = 'table',
   className,
+  multiAbilitySubSkillHint,
 }: SkillRowProps) {
   const abilityAbbr = ABILITY_ABBR[(ability || 'strength').toLowerCase()] || 'STR';
   const abilitySetLabel = showAbilitySet
@@ -297,6 +300,11 @@ export const SkillRow = memo(function SkillRow({
             )}
             {isEditing && sourceLabel && !isSpeciesSkill && (
               <span className="ml-1 shrink-0 text-xs text-text-muted">({sourceLabel})</span>
+            )}
+            {multiAbilitySubSkillHint && (
+              <span className="ml-1 shrink-0 text-xs text-text-muted">
+                {multiAbilitySubSkillHint}
+              </span>
             )}
           </div>
         </td>
