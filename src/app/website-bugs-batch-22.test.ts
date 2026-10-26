@@ -58,13 +58,17 @@ describe('website bugs batch 22 — sheet zoom, tour, dark contrast, taps', () =
 
   it('flips the sheet tour card away from top-half targets on 320px (86e3jwkep)', () => {
     expect(SHEET_TOUR_NARROW_MAX_WIDTH_PX).toBe(480);
-    expect(ONBOARDING_FLOATING_CARD_CLASS).not.toContain('max-[480px]:top-');
+    expect(ONBOARDING_FLOATING_CARD_CLASS).toContain('max-[480px]:bottom-auto');
+    expect(ONBOARDING_FLOATING_CARD_CLASS).toContain('max-[480px]:top-');
     expect(sheetTourNarrowPlacementClasses('bottom')).toBe(
       SHEET_TOUR_NARROW_BOTTOM_PLACEMENT_CLASS,
     );
     expect(tourHighlight).toContain('sheetTourCardAnchor');
     expect(tourHighlight).toContain('sheetTourNarrowPlacementClasses');
-    expect(tourHighlight).toContain('sheetTourScrollBlock(el)');
+    expect(tourHighlight).toContain('applySheetTourStepHighlight');
+    expect(tourHighlight).toContain('onboardingHighlightScrollBlock');
+    expect(tourHighlight).toContain('onboardingHighlightScrollBlock()');
+    expect(tourHighlight).toContain('sheetTourStepScrollBlock(el)');
   });
 
   it('raises dark contrast for library tabs, section pills, and logo on sheet (86e3jwkem)', () => {

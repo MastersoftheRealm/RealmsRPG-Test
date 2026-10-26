@@ -9,9 +9,9 @@ import { Button } from '@/components/ui';
 import { ONBOARDING_COPY } from '@/lib/constants/copy/onboarding-copy';
 import { setSheetTourStatus } from '@/lib/onboarding-preferences';
 import {
-  applyTourHighlight,
+  applySheetTourStepHighlight,
   findVisibleTourTarget,
-  ONBOARDING_FLOATING_CARD_CLASS,
+  ONBOARDING_FLOATING_CARD_BASE_CLASS,
   sheetTourCardAnchor,
   sheetTourNarrowPlacementClasses,
   type SheetTourNarrowAnchor,
@@ -47,7 +47,7 @@ export function SheetTour({ active, onComplete }: SheetTourProps) {
       setNarrowAnchor(sheetTourCardAnchor(el));
     };
     syncAnchor();
-    const cleanup = applyTourHighlight(step.target);
+    const cleanup = applySheetTourStepHighlight(step.target);
     window.addEventListener('resize', syncAnchor);
     return () => {
       window.removeEventListener('resize', syncAnchor);
@@ -65,7 +65,7 @@ export function SheetTour({ active, onComplete }: SheetTourProps) {
   return (
     <div
       className={cn(
-        ONBOARDING_FLOATING_CARD_CLASS,
+        ONBOARDING_FLOATING_CARD_BASE_CLASS,
         sheetTourNarrowPlacementClasses(narrowAnchor),
         'rounded-xl border border-border-light bg-surface p-4 shadow-lg',
       )}

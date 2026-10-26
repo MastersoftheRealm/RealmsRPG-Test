@@ -6,8 +6,14 @@
 export const SHEET_TOUR_NARROW_MAX_WIDTH_PX = 480;
 
 /** Above roll-log FAB (`z-floating`); bottom-left on desktop; room for dice on mobile. */
-export const ONBOARDING_FLOATING_CARD_CLASS =
+export const ONBOARDING_FLOATING_CARD_BASE_CLASS =
   'fixed z-tour left-4 right-4 max-w-[calc(100vw-2rem)] bottom-20 sm:right-20 md:left-4 md:right-auto md:bottom-8 md:w-96';
+
+/** Narrow pin for shared onboarding cards (LevelUpGuideCard — TASK-388 / #453). */
+export const ONBOARDING_FLOATING_CARD_NARROW_TOP_PIN_CLASS =
+  'max-[480px]:top-[max(0.75rem,env(safe-area-inset-top))] max-[480px]:bottom-auto';
+
+export const ONBOARDING_FLOATING_CARD_CLASS = `${ONBOARDING_FLOATING_CARD_BASE_CLASS} ${ONBOARDING_FLOATING_CARD_NARROW_TOP_PIN_CLASS}`;
 
 /** Narrow viewport: card above the dock strip (target in lower half). */
 export const SHEET_TOUR_NARROW_TOP_PLACEMENT_CLASS =
@@ -46,7 +52,13 @@ export function sheetTourNarrowPlacementClasses(anchor: SheetTourNarrowAnchor): 
     : SHEET_TOUR_NARROW_BOTTOM_PLACEMENT_CLASS;
 }
 
-export function sheetTourScrollBlockForViewport(
+/** Shared highlight scroll (LevelUpGuideCard and other non–SheetTour callers — #453). */
+export function onboardingHighlightScrollBlock(): ScrollLogicalPosition {
+  if (typeof window === 'undefined') return 'center';
+  return window.innerWidth <= SHEET_TOUR_NARROW_MAX_WIDTH_PX ? 'start' : 'center';
+}
+
+export function sheetTourStepScrollBlockForViewport(
   targetMidY: number,
   viewportHeight: number,
   viewportWidth: number,
@@ -56,12 +68,12 @@ export function sheetTourScrollBlockForViewport(
   return anchor === 'bottom' ? 'start' : 'end';
 }
 
-export function sheetTourScrollBlock(target?: HTMLElement | null): ScrollLogicalPosition {
+export function sheetTourStepScrollBlock(target?: HTMLElement | null): ScrollLogicalPosition {
   if (typeof window === 'undefined') return 'center';
   const mid = target
     ? target.getBoundingClientRect().top + target.getBoundingClientRect().height / 2
     : window.innerHeight / 2;
-  return sheetTourScrollBlockForViewport(mid, window.innerHeight, window.innerWidth);
+  return sheetTourStepScrollBlockForViewport(mid, window.innerHeight, window.innerWidth);
 }
 
 const HIGHLIGHT_CLASSES = [
@@ -86,11 +98,26 @@ export function findVisibleTourTarget(tourId: string): HTMLElement | null {
   return el ?? null;
 }
 
+function scrollHighlightIntoView(el: HTMLElement, block: ScrollLogicalPosition): void {
+  el.scrollIntoView({ behavior: 'smooth', block, inline: 'nearest' });
+}
+
 /** Scroll into view and apply ring; returns cleanup. */
 export function applyTourHighlight(tourId: string): () => void {
   const el = findVisibleTourTarget(tourId);
   if (!el) return () => {};
-  el.scrollIntoView({ behavior: 'smooth', block: sheetTourScrollBlock(el), inline: 'nearest' });
+  scrollHighlightIntoView(el, onboardingHighlightScrollBlock());
+  el.classList.add(...HIGHLIGHT_CLASSES);
+  return () => {
+    el.classList.remove(...HIGHLIGHT_CLASSES);
+  };
+}
+
+/** Sheet tour step highlight — flips scroll when the card bottom-docks (86e3jwkep). */
+export function applySheetTourStepHighlight(tourId: string): () => void {
+  const el = findVisibleTourTarget(tourId);
+  if (!el) return () => {};
+  scrollHighlightIntoView(el, sheetTourStepScrollBlock(el));
   el.classList.add(...HIGHLIGHT_CLASSES);
   return () => {
     el.classList.remove(...HIGHLIGHT_CLASSES);
