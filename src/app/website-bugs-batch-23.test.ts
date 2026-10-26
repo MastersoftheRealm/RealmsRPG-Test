@@ -28,9 +28,10 @@ describe('website bugs batch 23 — roll log & unarmed damage', () => {
   });
 
   it('rolls unarmed damage without a dangling dice row (86e3jwaw8 / 86e3jwaw5)', () => {
-    expect(rollContext).toMatch(/diceResults\.length === 0 && totalBonus === 0/);
+    expect(rollContext).toContain('rollParsedDamage');
     expect(rollLog).toContain('const hasDice = roll.dice.length > 0');
     expect(rollLog).toMatch(/\{hasDice &&/);
+    expect(rollLog).toMatch(/!hasDice && !showModifier && roll\.total === 0/);
     expect(archetypeSection).not.toContain('0d4 Bludgeoning');
     expect(archetypeSection).toContain("'Bludgeoning'");
     expect(archetypeSection).toContain("'Unarmed Prowess damage'");

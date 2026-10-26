@@ -385,6 +385,8 @@
   /* FAB overlap below md when the sheet has no action-dock strip (RM / view-only). */
   --sheet-mobile-fab-gutter: calc(var(--dock-fab-size) + var(--dock-gap));
   --dock-reserved-end: calc(var(--dock-fab-size) + var(--dock-gap) * 2);
+  /* Roll log open panel — list min-height is in roll-log-layout.ts (86e3jwawd). */
+  --roll-log-panel-max-height: min(70vh, 37.5rem);
 }
 
 /* =============================================================================
@@ -686,6 +688,37 @@
     flex-direction: column;
     align-items: flex-end;
     contain: layout;
+  }
+
+  /* Roll log flex: 5rem history floor; dice builder max shrinks on short viewports (86e3jwawd). */
+  .roll-log-panel {
+    --roll-log-history-min: 5rem;
+    --roll-log-dice-builder-max: 14rem;
+  }
+
+  /* Short viewports / zoom: keep the roll button inside the card (86e3jwawd). */
+  @media (max-height: 28rem) {
+    :root {
+      --roll-log-panel-max-height: min(
+        70vh,
+        calc(100svh - var(--dock-fab-size) - var(--dock-gap) * 2 - 0.5rem)
+      );
+    }
+
+    .roll-log-panel {
+      --roll-log-dice-builder-max: 4rem;
+    }
+
+    .roll-log-panel .roll-log-roll-footer {
+      padding-bottom: 0.5rem;
+    }
+  }
+
+  /* Character sheet ~1024×768: cap panel height so ability roll buttons stay uncovered. */
+  @media (max-height: 48rem) and (min-width: 48rem) {
+    body:has([data-character-sheet-page]) {
+      --roll-log-panel-max-height: min(22rem, calc(100svh - 14rem));
+    }
   }
 
   .sheet-mobile-action-dock {

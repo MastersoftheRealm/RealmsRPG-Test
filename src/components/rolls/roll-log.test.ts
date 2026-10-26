@@ -1,8 +1,18 @@
 import { readFileSync } from 'node:fs';
 import path from 'node:path';
 import { describe, expect, it } from 'vitest';
+import {
+  ROLL_LOG_DICE_BUILDER_CLASS,
+  ROLL_LOG_DICE_BUILDER_SCROLL_CLASS,
+  ROLL_LOG_HEADER_MIN_CLASS,
+  ROLL_LOG_HISTORY_LIST_CLASS,
+  ROLL_LOG_HISTORY_LIST_MIN_CLASS,
+  ROLL_LOG_PANEL_HEIGHT_CLASS,
+  ROLL_LOG_ROLL_BUTTON_FOOTER_CLASS,
+} from '@/lib/rolls/roll-log-layout';
 
 const source = readFileSync(path.join(import.meta.dirname, 'roll-log.tsx'), 'utf8');
+const globalsCss = readFileSync(path.join(import.meta.dirname, '../../app/globals.css'), 'utf8');
 
 const rollButton = readFileSync(
   path.join(import.meta.dirname, '../patterns/chrome/roll-button.tsx'),
@@ -15,6 +25,49 @@ describe('RollLog layout (TASK-826 / C6)', () => {
     expect(source).toMatch(/w-\[min\(22\.5rem,calc\(100svw-2\*var\(--dock-gap\)\)\)\]/);
     expect(source).not.toMatch(/w-\[360px\]/);
     expect(source).not.toMatch(/pointer-events-none h-0 w-0 max-w-0/);
+  });
+});
+
+describe('RollLog layout (86e3jwawd follow-up)', () => {
+  it('caps panel height with CSS vars and gives the history list a minimum height', () => {
+    expect(source).toContain('roll-log-panel');
+    expect(source).toContain('ROLL_LOG_PANEL_HEIGHT_CLASS');
+    expect(ROLL_LOG_PANEL_HEIGHT_CLASS).toContain('--roll-log-panel-max-height');
+    expect(source).toContain('ROLL_LOG_HISTORY_LIST_CLASS');
+    expect(ROLL_LOG_HISTORY_LIST_CLASS).toContain('roll-log-history');
+    expect(ROLL_LOG_HISTORY_LIST_CLASS).toContain('--roll-log-history-min');
+    expect(ROLL_LOG_HISTORY_LIST_CLASS).not.toContain('min-h-0');
+    expect(source).toContain('ROLL_LOG_DICE_BUILDER_CLASS');
+    expect(ROLL_LOG_HISTORY_LIST_MIN_CLASS).toBe('min-h-20');
+    expect(globalsCss).toContain('--roll-log-history-min: 5rem');
+    expect(globalsCss).not.toMatch(/max-height: 28rem\)[\s\S]*--roll-log-history-min: 3rem/);
+    expect(ROLL_LOG_DICE_BUILDER_CLASS).toContain('--roll-log-dice-builder-max');
+    expect(globalsCss).toMatch(/max-height: 28rem\)[\s\S]*--roll-log-dice-builder-max: 4rem/);
+    expect(globalsCss).toContain('.roll-log-roll-footer');
+    expect(globalsCss).toContain('--roll-log-panel-max-height');
+    expect(globalsCss).toMatch(
+      /body:has\(\[data-character-sheet-page\]\)[\s\S]*--roll-log-panel-max-height/,
+    );
+  });
+
+  it('keeps the roll button inside the card via a shrinkable builder and pinned footer', () => {
+    expect(source).toContain('ROLL_LOG_DICE_BUILDER_CLASS');
+    expect(source).toContain('ROLL_LOG_DICE_BUILDER_SCROLL_CLASS');
+    expect(source).toContain('ROLL_LOG_ROLL_BUTTON_FOOTER_CLASS');
+    expect(ROLL_LOG_DICE_BUILDER_CLASS).toContain('shrink');
+    expect(ROLL_LOG_DICE_BUILDER_CLASS).not.toContain('shrink-0');
+    expect(ROLL_LOG_DICE_BUILDER_SCROLL_CLASS).toContain('overflow-y-auto');
+    expect(ROLL_LOG_ROLL_BUTTON_FOOTER_CLASS).toContain('shrink-0');
+    expect(source).toMatch(
+      /ROLL_LOG_ROLL_BUTTON_FOOTER_CLASS[\s\S]{0,400}<Button[\s\S]*?executeRoll/,
+    );
+    expect(source).not.toMatch(/ROLL_LOG_DICE_BUILDER_SCROLL_CLASS[\s\S]{0,1200}executeRoll/);
+  });
+
+  it('keeps Personal and Campaign tab headers the same height', () => {
+    expect(source).toContain('ROLL_LOG_HEADER_MIN_CLASS');
+    expect(ROLL_LOG_HEADER_MIN_CLASS).toBe('min-h-14');
+    expect(source).toMatch(/isCampaignMode \? \([\s\S]*invisible[\s\S]*Clear/);
   });
 });
 
