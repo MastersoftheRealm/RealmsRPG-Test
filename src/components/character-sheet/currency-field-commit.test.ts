@@ -109,10 +109,11 @@ describe('Currency formatting (86e3jwn5g)', () => {
   });
 
   it('does not pin the Currency summary to a fixed half-width row (86e3jwn5g follow-up)', () => {
-    expect(panel).toContain('max-w-full flex-wrap items-center gap-2');
-    expect(panel).toContain('max-w-full');
+    expect(panel).toMatch(/flex max-w-full min-w-0 flex-wrap items-center gap-2/);
+    expect(panel).toMatch(/sm:flex-wrap sm:items-center sm:justify-between/);
+    expect(panel).toMatch(/sm:ml-auto sm:shrink-0/);
+    expect(panel).toMatch(/min-w-0 shrink text-sm font-medium text-text-muted/);
     expect(panel).not.toMatch(/sm:flex-1/);
-    expect(panel).toMatch(/sm:justify-between/);
   });
 
   it('still has no currency upper cap in commit logic', () => {
