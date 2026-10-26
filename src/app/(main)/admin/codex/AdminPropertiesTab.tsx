@@ -23,7 +23,6 @@ import {
 } from './admin-property-form';
 import { AdminPropertyEditModal } from './admin-property-edit-modal';
 import { useAdminCodexEntity } from './use-admin-codex-entity';
-import { useAdminCodexFormState } from './use-admin-codex-form-state';
 import { AdminCodexRowActions, ADMIN_CODEX_ROW_ACTIONS_WIDTH } from './admin-codex-row-actions';
 
 const PROPERTY_GRID_COLUMNS = '1.5fr 1fr 0.8fr 0.8fr 0.8fr';
@@ -61,7 +60,7 @@ export function AdminPropertiesTab() {
     rulesSources: [],
   });
   const [optionSlotCount, setOptionSlotCount] = useState(0);
-  const { form, setForm, getForm } = useAdminCodexFormState<PropertyFormState>(EMPTY_PROPERTY_FORM);
+  const [form, setForm] = useState<PropertyFormState>(EMPTY_PROPERTY_FORM);
 
   const clearOption = () => {
     setForm((f) => ({
@@ -131,9 +130,8 @@ export function AdminPropertiesTab() {
     });
 
   const handleSave = async () => {
-    const current = getForm();
-    if (!current.name.trim()) return;
-    const data = propertyFormToSavePayload(current);
+    if (!form.name.trim()) return;
+    const data = propertyFormToSavePayload(form);
     await save({
       payload: data,
       expectedUpdatedAt: editing?.updated_at,

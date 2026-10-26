@@ -114,7 +114,7 @@ function catalogListingFromBody(body: Record<string, unknown>): CatalogListing |
   return parseCatalogListing(raw);
 }
 
-/** Reject rename onto another row's name; pre-existing duplicate names are unchanged rows. */
+/** Reject rename onto another row's name (case-insensitive). Same-name saves skip the check. */
 async function officialNameConflictForUpdate(
   supabase: ReturnType<typeof createServiceRoleClient>,
   table: string,
@@ -123,10 +123,29 @@ async function officialNameConflictForUpdate(
 ): Promise<NextResponse | null> {
   const name = typeof rawName === 'string' ? rawName.trim() : '';
   if (!name) return null;
+
+  const { data: current, error: currentError } = await supabase
+    .from(table)
+    .select('name')
+    .eq('id', existingId)
+    .maybeSingle();
+  if (currentError) {
+    return apiErrorResponse(
+      'Failed to validate name',
+      500,
+      'POST /api/official/[type] (name load)',
+      currentError,
+    );
+  }
+  const currentName = current && typeof current.name === 'string' ? current.name.trim() : '';
+  if (currentName && currentName.toLowerCase() === name.toLowerCase()) {
+    return null;
+  }
+
   const { data: other, error } = await supabase
     .from(table)
     .select('id')
-    .eq('name', name)
+    .ilike('name', name)
     .neq('id', existingId)
     .limit(1)
     .maybeSingle();

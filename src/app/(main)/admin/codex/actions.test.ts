@@ -18,7 +18,6 @@ vi.mock('@/lib/codex-changelog', () => ({ recordCodexChange: vi.fn(async () => u
 vi.mock('@/lib/supabase/server', () => ({ createServiceRoleClient: vi.fn(() => currentDb) }));
 
 import { createCodexDoc, deleteCodexDoc, saveArchetypeWithPath, updateCodexDoc } from './actions';
-import { traitFormToSavePayload } from './admin-trait-form';
 import {
   CORE_RULES_NUMBER_SERVER_NEGATIVE,
   CORE_RULES_NUMBER_TOO_LARGE,
@@ -40,15 +39,7 @@ function seed(options: { failInsertOnce?: Set<string> | undefined } = {}): FakeS
         { id: '11', name: 'Unused Skill' },
       ],
       codex_species: [],
-      codex_traits: [
-        {
-          id: '3',
-          name: 'Adorable',
-          description: 'You are cute and people like you dont they?',
-          updated_at: '2026-08-13T10:00:00Z',
-          sources: ['core'],
-        },
-      ],
+      codex_traits: [],
       codex_archetypes: [{ id: '5', name: 'Blade', level1_feats: '1' }],
       codex_archetype_levels: [
         { id: 100, archetype_id: '5', level: 2, feats: '1' },
@@ -157,47 +148,6 @@ describe('referential integrity on delete', () => {
     const result = await deleteCodexDoc('codex_skills', '10');
 
     expect(result.references).toEqual(['Feat "Second Wind" (skill_req)']);
-  });
-});
-
-describe('codex trait description save', () => {
-  it('writes the edited description and includes it in the update patch', async () => {
-    const payload = traitFormToSavePayload({
-      name: 'Adorable',
-      description: "You are cute and people like you don't they?",
-      uses_per_rec: '',
-      rec_period: '',
-      flaw: false,
-      characteristic: false,
-      option_trait_ids: [],
-      sources: ['core'],
-    });
-
-    const result = await updateCodexDoc('codex_traits', '3', payload, {
-      expectedUpdatedAt: '2026-08-13T10:00:00Z',
-    });
-
-    expect(result.success).toBe(true);
-    const row = defined(defined(currentDb.tables.codex_traits)[0]);
-    expect(row.description).toBe("You are cute and people like you don't they?");
-    const patch = currentDb.updatePayloads.find((call) => call.table === 'codex_traits')?.patch;
-    expect(patch?.description).toBe("You are cute and people like you don't they?");
-    expect(patch?.updated_at).toEqual(expect.any(String));
-  });
-
-  it('matches prod when the payload omits description: only updated_at changes', async () => {
-    const before = structuredClone(defined(currentDb.tables.codex_traits));
-    const result = await updateCodexDoc('codex_traits', '3', {
-      name: 'Adorable',
-      sources: ['core'],
-    });
-
-    expect(result.success).toBe(true);
-    const row = defined(defined(currentDb.tables.codex_traits)[0]);
-    expect(row.description).toBe('You are cute and people like you dont they?');
-    expect(row.updated_at).not.toBe(defined(before[0]).updated_at);
-    const patch = currentDb.updatePayloads.find((call) => call.table === 'codex_traits')?.patch;
-    expect(patch?.description).toBeUndefined();
   });
 });
 

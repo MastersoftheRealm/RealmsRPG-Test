@@ -16,7 +16,6 @@ import { useSort } from '@/hooks/use-sort';
 import { codexSourcesOrCore } from '@/lib/codex/sources';
 import { COPY_NAME_SUFFIX } from './admin-codex-copy-suffix';
 import { useAdminCodexEntity } from './use-admin-codex-entity';
-import { useAdminCodexFormState } from './use-admin-codex-form-state';
 import { AdminCodexRowActions, ADMIN_CODEX_ROW_ACTIONS_WIDTH } from './admin-codex-row-actions';
 import {
   AdminEquipmentEditModal,
@@ -68,8 +67,7 @@ export function AdminEquipmentTab() {
     rulesSources: [],
   });
 
-  const { form, setForm, getForm } =
-    useAdminCodexFormState<EquipmentFormState>(EMPTY_EQUIPMENT_FORM);
+  const [form, setForm] = useState<EquipmentFormState>(EMPTY_EQUIPMENT_FORM);
   const [categoryIsNew, setCategoryIsNew] = useState(false);
 
   const filterOptions = useMemo(() => collectCodexEquipmentFilterOptions(equipment), [equipment]);
@@ -124,18 +122,17 @@ export function AdminEquipmentTab() {
     });
 
   const handleSave = async () => {
-    const current = getForm();
-    if (!current.name.trim()) return;
+    if (!form.name.trim()) return;
     await save({
       payload: {
-        name: current.name.trim(),
-        description: current.description.trim(),
-        category: current.category.trim() || undefined,
-        currency: current.currency,
-        rarity: current.rarity.trim() || undefined,
-        sources: codexSourcesOrCore(current.sources),
-        imageId: current.imageId,
-        imageUrl: current.imageUrl,
+        name: form.name.trim(),
+        description: form.description.trim(),
+        category: form.category.trim() || undefined,
+        currency: form.currency,
+        rarity: form.rarity.trim() || undefined,
+        sources: codexSourcesOrCore(form.sources),
+        imageId: form.imageId,
+        imageUrl: form.imageUrl,
       },
       expectedUpdatedAt: editing?.updated_at,
     });

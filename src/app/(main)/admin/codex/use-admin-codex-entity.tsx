@@ -112,39 +112,21 @@ export function useAdminCodexEntity<TEntity extends AdminCodexNamedEntity>(optio
     }): Promise<boolean> => {
       const targetId = resolveAdminCodexSaveTargetId(args.editId, editing?.id);
       setSaving(true);
-      try {
-        const result = targetId
-          ? await updateCodexDoc(collection, targetId, args.payload, {
-              expectedUpdatedAt: args.expectedUpdatedAt,
-            })
-          : await createCodexDoc(collection, undefined, args.payload);
-        if (!result.success) {
-          showToast(result.error ?? 'Operation failed', 'error');
-          return false;
-        }
-        const createdId = 'id' in result ? result.id : undefined;
-        try {
-          await args.onSuccess?.({ success: true, id: createdId ?? targetId ?? undefined });
-        } catch (err) {
-          showToast(err instanceof Error ? err.message : 'Post-save step failed', 'error');
-          return false;
-        }
-        try {
-          await refreshCodex();
-        } catch {
-          showToast('Saved, but the list failed to refresh. Reload the page.', 'warning');
-          if (args.closeOnSuccess !== false) closeModal();
-          return true;
-        }
-        showToast('Saved.', 'success');
-        if (args.closeOnSuccess !== false) closeModal();
-        return true;
-      } catch (err) {
-        showToast(err instanceof Error ? err.message : 'Operation failed', 'error');
+      const result = targetId
+        ? await updateCodexDoc(collection, targetId, args.payload, {
+            expectedUpdatedAt: args.expectedUpdatedAt,
+          })
+        : await createCodexDoc(collection, undefined, args.payload);
+      setSaving(false);
+      if (!result.success) {
+        showToast(result.error ?? 'Operation failed', 'error');
         return false;
-      } finally {
-        setSaving(false);
       }
+      const createdId = 'id' in result ? result.id : undefined;
+      await args.onSuccess?.({ success: true, id: createdId ?? targetId ?? undefined });
+      await refreshCodex();
+      if (args.closeOnSuccess !== false) closeModal();
+      return true;
     },
     [collection, editing, closeModal, refreshCodex, showToast],
   );

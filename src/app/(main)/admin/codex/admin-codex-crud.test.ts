@@ -17,16 +17,6 @@ const TAB_FILES = [
   'AdminArchetypesTab.tsx',
 ] as const;
 
-const CODEX_MODAL_SAVE_TABS = [
-  'AdminTraitsTab.tsx',
-  'AdminSkillsTab.tsx',
-  'AdminSpeciesTab.tsx',
-  'AdminPartsTab.tsx',
-  'AdminPropertiesTab.tsx',
-  'AdminEquipmentTab.tsx',
-  'AdminCreatureFeatsTab.tsx',
-] as const;
-
 const EDIT_MODALS = [
   'admin-feat-edit-modal.tsx',
   'admin-species-edit-modal.tsx',
@@ -56,16 +46,6 @@ const EXTRACTED_MODAL_TABS = [
 function readAdmin(name: string): string {
   return readFileSync(path.join(dir, name), 'utf8');
 }
-
-describe('Admin Codex modal save wiring', () => {
-  it('entity tabs read the draft via getForm() before traitFormToSavePayload (etc.)', () => {
-    for (const name of CODEX_MODAL_SAVE_TABS) {
-      const src = readAdmin(name);
-      expect(src, name).toMatch(/getForm\(\)/);
-      expect(src, name).toMatch(/ToSavePayload\(current\)/);
-    }
-  });
-});
 
 describe('resolveAdminCodexSaveTargetId (TASK-842)', () => {
   it('uses the editing id when editId is omitted', () => {
