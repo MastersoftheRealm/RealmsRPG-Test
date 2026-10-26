@@ -19,6 +19,7 @@ import { armamentProficiencyHelp } from '../../../public/tooltip-text';
 import { calculateArmamentProficiency } from '@/lib/game/formulas';
 import { formatGroupedInteger } from '@/lib/utils/number';
 import { currencyDraftOnBlur, currencyDraftOnEnter } from './currency-field-commit';
+import { sheetCurrencyInputMaxWidthClass } from './sheet-currency-input-layout';
 import type {
   EntityWeaponRow,
   EntityShieldRow,
@@ -95,6 +96,7 @@ export function LibraryInventoryPanel({
   const [isEditing, setIsEditing] = useState(false);
   const editedRef = useRef(false);
   const shownCurrency = isEditing ? currencyInput : formatGroupedInteger(currency);
+  const currencyValueCh = Math.max(3, shownCurrency.replace(/^-/, '').length);
 
   useEffect(() => {
     if (!editedRef.current) setCurrencyInput(String(currency));
@@ -151,6 +153,7 @@ export function LibraryInventoryPanel({
             </span>
             <input
               type="text"
+              size={currencyValueCh}
               value={shownCurrency}
               onChange={(e) => {
                 editedRef.current = true;
@@ -169,7 +172,10 @@ export function LibraryInventoryPanel({
                 setCurrencyInput(result.display);
                 if (result.save != null) onCurrencyChange?.(result.save);
               }}
-              className="max-w-full min-w-20 rounded border border-currency-border bg-surface px-2 py-1 text-sm font-bold text-warning-fg tabular-nums focus:ring-2 focus:ring-currency-border"
+              className={cn(
+                sheetCurrencyInputMaxWidthClass,
+                'min-w-[3ch] shrink-0 rounded border border-currency-border bg-surface px-2 py-1 text-sm font-bold text-warning-fg tabular-nums focus:ring-2 focus:ring-currency-border',
+              )}
               title="Use +5, -10, or a number"
               aria-label="Currency"
             />
