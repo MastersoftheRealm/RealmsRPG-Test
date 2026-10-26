@@ -219,7 +219,7 @@ describe('sheet viewers cannot use edit controls (86e3jryyp)', () => {
       label: 'General Notes',
     });
     expect((editable as Node).type).not.toBe('p');
-    expect((editable as Node).props?.['aria-label']).toBe('General Notes');
+    expect((editable as { props?: { label?: string } }).props?.label).toBe('General Notes');
   });
 
   it('hides equip, quantity, feat uses, and Use for a viewer', () => {
