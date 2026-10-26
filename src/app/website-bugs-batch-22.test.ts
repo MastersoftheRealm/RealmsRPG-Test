@@ -46,8 +46,8 @@ describe('website bugs batch 22 — sheet zoom, tour, dark contrast, taps', () =
 
   it('raises dark contrast for library tabs, section pills, and logo on sheet (86e3jwkem)', () => {
     expect(librarySection).toContain('character-sheet-library-tabs');
-    expect(globalsCss).toContain(
-      '.dark [data-character-sheet-page] .character-sheet-library-tabs .tab-nav-trigger:not(.tab-nav-trigger-active)',
+    expect(globalsCss).toMatch(
+      /\.dark[\s\S]*\[data-character-sheet-page\][\s\S]*\.character-sheet-library-tabs[\s\S]*\.tab-nav-trigger:not\(\.tab-nav-trigger-active\)/,
     );
     expect(globalsCss).toContain(
       ".dark [data-character-sheet-page] [data-sheet-section-tabs] button[aria-selected='false']",
