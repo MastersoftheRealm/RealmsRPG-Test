@@ -57,6 +57,7 @@ import {
 } from '../stat-tiles';
 import { Button, Spinner, Alert, Card, PageHeader, TableScroll } from '@/components/ui';
 import type { Abilities, DefenseSkills } from '@/types';
+import { CREATURE_SUB_SKILL_HIGHEST_ABILITY_LABEL } from '@/app/(main)/creature-creator/creature-sub-skill-highest-ability-label';
 
 export interface DefenseBonusesCardProps {
   defenseSkills: DefenseSkills;
@@ -287,9 +288,7 @@ export function SkillsAllocationPage({
 
       if (delta > 0) {
         if (isSubSkill) {
-          const parent = allSkills.find(
-            (s: Skill) => String(s.id) === String(skill.base_skill_id),
-          );
+          const parent = allSkills.find((s: Skill) => String(s.id) === String(skill.base_skill_id));
           const parentProficient = Boolean(
             parent &&
             isSkillAllocationProficient(
@@ -505,6 +504,8 @@ export function SkillsAllocationPage({
                   remainingPoints >=
                     skillAllocationIncreaseCost(rawValue, isSubSkill, isSpeciesSkill, skillRules);
                 const hasMultipleAbilities = !isSubSkill && linkedKeys.length > 1;
+                const showCreatureHighestAbilityHint =
+                  entityType === 'creature' && isSubSkill && linkedKeys.length > 1;
                 return (
                   <SkillRow
                     key={String(skill.id)}
@@ -538,6 +539,11 @@ export function SkillsAllocationPage({
                     sourceLabel={isPathSkill ? pathSourceLabel : undefined}
                     onRemove={
                       isSpeciesSkill ? undefined : () => handleRemoveSkill(String(skill.id))
+                    }
+                    multiAbilitySubSkillHint={
+                      showCreatureHighestAbilityHint
+                        ? CREATURE_SUB_SKILL_HIGHEST_ABILITY_LABEL
+                        : undefined
                     }
                     variant="table"
                   />
