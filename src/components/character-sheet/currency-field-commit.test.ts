@@ -108,6 +108,14 @@ describe('Currency formatting (86e3jwn5g)', () => {
     expect(panel).not.toMatch(/max-w-\[\d+ch\]/);
   });
 
+  it('does not pin the Currency summary to a fixed half-width row (86e3jwn5g follow-up)', () => {
+    expect(panel).toMatch(/flex max-w-full min-w-0 flex-wrap items-center gap-2/);
+    expect(panel).toMatch(/sm:flex-wrap sm:items-center sm:justify-between/);
+    expect(panel).toMatch(/sm:ml-auto sm:shrink-0/);
+    expect(panel).toMatch(/min-w-0 shrink text-sm font-medium text-text-muted/);
+    expect(panel).not.toMatch(/sm:flex-1/);
+  });
+
   it('still has no currency upper cap in commit logic', () => {
     expect(
       readFileSync(path.join(import.meta.dirname, 'currency-field-commit.ts'), 'utf8'),

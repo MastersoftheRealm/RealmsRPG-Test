@@ -146,9 +146,9 @@ export function LibraryInventoryPanel({
     <div className="space-y-2">
       {/* Inventory Summary: Currency + Armament Proficiency (stack on mobile to avoid overlap) */}
       <TabSummarySection variant="currency">
-        <div className="flex w-full flex-col gap-2 sm:flex-row sm:flex-wrap sm:items-center">
-          <div className="flex min-w-0 items-center gap-2 sm:flex-1 sm:justify-start">
-            <span aria-hidden="true" className="text-sm">
+        <div className="flex w-full min-w-0 flex-col gap-2 sm:flex-row sm:flex-wrap sm:items-center sm:justify-between sm:gap-x-2 sm:gap-y-2">
+          <div className="flex max-w-full min-w-0 flex-wrap items-center gap-2">
+            <span aria-hidden="true" className="shrink-0 text-sm">
               💰
             </span>
             <input
@@ -174,35 +174,30 @@ export function LibraryInventoryPanel({
               }}
               className={cn(
                 sheetCurrencyInputMaxWidthClass,
-                'min-w-[3ch] shrink-0 rounded border border-currency-border bg-surface px-2 py-1 text-sm font-bold text-warning-fg tabular-nums focus:ring-2 focus:ring-currency-border',
+                'max-w-full min-w-[3ch] shrink-0 rounded border border-currency-border bg-surface px-2 py-1 text-sm font-bold text-warning-fg tabular-nums focus:ring-2 focus:ring-currency-border',
               )}
               title="Use +5, -10, or a number"
               aria-label="Currency"
             />
-            <span className="text-sm font-medium text-text-muted">Currency</span>
+            <span className="min-w-0 shrink text-sm font-medium text-text-muted">Currency</span>
           </div>
           {martialProficiency !== undefined && (
-            <>
+            <div className="flex max-w-full min-w-0 items-center gap-2 sm:ml-auto sm:shrink-0">
               <div
                 aria-hidden="true"
-                className="mx-2 hidden h-6 w-px shrink-0 self-center bg-border-light sm:block"
+                className="hidden h-6 w-px shrink-0 self-center bg-border-light sm:block"
               />
-              <div className="flex min-w-0 items-center sm:flex-1 sm:justify-end">
-                <SummaryItem
-                  icon="⚔️"
-                  label="Armament Proficiency"
-                  labelAccessory={
-                    <InfoTippy
-                      content={armamentProficiencyHelp}
-                      label="About Armament Proficiency"
-                    />
-                  }
-                  value={`${calculateArmamentProficiency(martialProficiency)} TP`}
-                  highlight
-                  highlightColor="warning"
-                />
-              </div>
-            </>
+              <SummaryItem
+                icon="⚔️"
+                label="Armament Proficiency"
+                labelAccessory={
+                  <InfoTippy content={armamentProficiencyHelp} label="About Armament Proficiency" />
+                }
+                value={`${calculateArmamentProficiency(martialProficiency)} TP`}
+                highlight
+                highlightColor="warning"
+              />
+            </div>
           )}
         </div>
       </TabSummarySection>
