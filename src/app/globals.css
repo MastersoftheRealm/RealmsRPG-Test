@@ -690,9 +690,10 @@
     contain: layout;
   }
 
-  /* Roll log flex: history min height (5rem; 3rem when the panel is height-constrained). */
+  /* Roll log flex: 5rem history floor; dice builder max shrinks on short viewports (86e3jwawd). */
   .roll-log-panel {
     --roll-log-history-min: 5rem;
+    --roll-log-dice-builder-max: 14rem;
   }
 
   /* Short viewports / zoom: keep the roll button inside the card (86e3jwawd). */
@@ -705,7 +706,7 @@
     }
 
     .roll-log-panel {
-      --roll-log-history-min: 3rem;
+      --roll-log-dice-builder-max: 6.5rem;
     }
   }
 
