@@ -2,26 +2,43 @@
  * Shared die helpers for RollProvider / RollLog (single rollDie + image map).
  */
 
-export type DieType = 'd4' | 'd6' | 'd8' | 'd10' | 'd12' | 'd20';
+export type DieType = 'd2' | 'd4' | 'd6' | 'd8' | 'd10' | 'd12' | 'd20' | 'd100';
 
 export const DIE_MAX: Record<DieType, number> = {
+  d2: 2,
   d4: 4,
   d6: 6,
   d8: 8,
   d10: 10,
   d12: 12,
   d20: 20,
+  d100: 100,
 };
 
 /** Dice image paths (matching vanilla site assets). */
 export const DIE_IMAGES: Record<DieType, string> = {
+  // No D2 asset on site; smallest die image is used in the roll log chip row.
+  d2: '/images/D4.png',
   d4: '/images/D4.png',
   d6: '/images/D6.png',
   d8: '/images/D8.png',
   d10: '/images/D10.png',
   d12: '/images/D12.png',
   d20: '/images/D20_1.png',
+  d100: '/images/D20_1.png',
 };
+
+/** Dice shown in the Roll Log manual pool builder (not every rollable damage die). */
+export const ROLL_LOG_BUILDER_DICE = [
+  'd4',
+  'd6',
+  'd8',
+  'd10',
+  'd12',
+  'd20',
+] as const satisfies readonly DieType[];
+
+export type RollLogBuilderDieType = (typeof ROLL_LOG_BUILDER_DICE)[number];
 
 export function rollDie(type: DieType): number {
   const max = DIE_MAX[type];

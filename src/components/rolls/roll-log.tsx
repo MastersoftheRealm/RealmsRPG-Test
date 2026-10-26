@@ -26,10 +26,18 @@ import {
   d20CritAdjustment,
   generateRollId,
   rollDie,
+  ROLL_LOG_BUILDER_DICE,
   type DieType,
+  type RollLogBuilderDieType,
 } from '@/lib/rolls/die';
 import { campaignRollCharacterLabel } from '@/lib/rolls/campaign-roll-attribution';
 import { resolveRollModifierLabel } from '@/lib/rolls/modifier-label';
+import {
+  ROLL_LOG_DICE_BUILDER_CLASS,
+  ROLL_LOG_HEADER_MIN_CLASS,
+  ROLL_LOG_HISTORY_LIST_MIN_CLASS,
+  ROLL_LOG_PANEL_HEIGHT_CLASS,
+} from '@/lib/rolls/roll-log-layout';
 
 // Re-export types for convenience
 export type { RollEntry, RollType, DieResult };
@@ -147,7 +155,7 @@ export function RollLog({ className, viewOnlyCampaignId }: RollLogProps) {
   }, [isOpen]);
 
   // Dice pool state (local to the manual dice builder)
-  const [dicePool, setDicePool] = React.useState<Record<DieType, number>>({
+  const emptyDicePool = (): Record<RollLogBuilderDieType, number> => ({
     d4: 0,
     d6: 0,
     d8: 0,
@@ -155,21 +163,23 @@ export function RollLog({ className, viewOnlyCampaignId }: RollLogProps) {
     d12: 0,
     d20: 0,
   });
+  const [dicePool, setDicePool] =
+    React.useState<Record<RollLogBuilderDieType, number>>(emptyDicePool);
   const [modifier, setModifier] = React.useState(0);
 
   // Add a die to pool (left click)
-  const addDie = (type: DieType) => {
+  const addDie = (type: RollLogBuilderDieType) => {
     setDicePool((prev) => ({ ...prev, [type]: Math.min(prev[type] + 1, 20) }));
   };
 
   // Remove a die from pool (right click)
-  const removeDie = (type: DieType) => {
+  const removeDie = (type: RollLogBuilderDieType) => {
     setDicePool((prev) => ({ ...prev, [type]: Math.max(prev[type] - 1, 0) }));
   };
 
   // Clear dice pool
   const clearPool = () => {
-    setDicePool({ d4: 0, d6: 0, d8: 0, d10: 0, d12: 0, d20: 0 });
+    setDicePool(emptyDicePool());
     setModifier(0);
   };
 
@@ -249,13 +259,19 @@ export function RollLog({ className, viewOnlyCampaignId }: RollLogProps) {
       {isOpen ? (
         <Card
           className={cn(
-            'absolute right-0 bottom-[calc(var(--dock-fab-size)+0.75rem)]',
-            'flex h-[70vh] max-h-[600px] w-[min(22.5rem,calc(100svw-2*var(--dock-gap)))] min-w-0 flex-col',
+            'roll-log-panel absolute right-0 bottom-[calc(var(--dock-fab-size)+0.75rem)]',
+            'flex w-[min(22.5rem,calc(100svw-2*var(--dock-gap)))] min-w-0 flex-col',
+            ROLL_LOG_PANEL_HEIGHT_CLASS,
             'overflow-hidden p-0 shadow-2xl',
           )}
         >
           {/* Header */}
-          <div className="flex min-w-0 flex-wrap items-center justify-between gap-2 bg-primary-button px-3 py-3 text-text-on-dark sm:px-4">
+          <div
+            className={cn(
+              'flex min-w-0 flex-wrap items-center justify-between gap-2 bg-primary-button px-3 py-3 text-text-on-dark sm:px-4',
+              ROLL_LOG_HEADER_MIN_CLASS,
+            )}
+          >
             <div className="flex min-w-0 flex-1 items-center gap-2">
               <h3 className="shrink-0 text-base font-bold tracking-wide text-text-on-dark">
                 🎲 Roll Log
@@ -289,7 +305,15 @@ export function RollLog({ className, viewOnlyCampaignId }: RollLogProps) {
                 </div>
               )}
             </div>
-            {!isCampaignMode && (
+            {isCampaignMode ? (
+              <span
+                className="invisible flex shrink-0 items-center gap-1 rounded-lg border-2 border-transparent px-3 py-1.5 text-xs font-semibold"
+                aria-hidden
+              >
+                <Trash2 className="h-3 w-3" />
+                Clear
+              </span>
+            ) : (
               <button
                 onClick={clearHistory}
                 className="flex shrink-0 items-center gap-1 rounded-lg border-2 border-text-on-dark/30 bg-text-on-dark/15 px-3 py-1.5 text-xs font-semibold text-text-on-dark transition-colors hover:bg-text-on-dark/25"
@@ -301,7 +325,13 @@ export function RollLog({ className, viewOnlyCampaignId }: RollLogProps) {
           </div>
 
           {/* Roll History */}
-          <div ref={listRef} className="flex-1 overflow-y-auto bg-surface-alt p-2">
+          <div
+            ref={listRef}
+            className={cn(
+              'min-h-0 flex-1 basis-0 overflow-y-auto bg-surface-alt p-2',
+              ROLL_LOG_HISTORY_LIST_MIN_CLASS,
+            )}
+          >
             {isCampaignMode &&
             campaignRollsLoading &&
             campaignRolls.length === 0 &&
@@ -353,10 +383,15 @@ export function RollLog({ className, viewOnlyCampaignId }: RollLogProps) {
 
           {/* Dice Builder - hidden for a viewer. Owners can send custom rolls from either tab. */}
           {rollLogShowsDiceBuilder(canRoll) ? (
-            <div className="border-t-2 border-border-light bg-primary-button p-3">
+            <div
+              className={cn(
+                'border-t-2 border-border-light bg-primary-button p-3',
+                ROLL_LOG_DICE_BUILDER_CLASS,
+              )}
+            >
               {/* Dice Grid - clickable images with labels and counts */}
               <div className="mb-3 grid grid-cols-6 gap-1.5">
-                {(['d4', 'd6', 'd8', 'd10', 'd12', 'd20'] as DieType[]).map((die) => (
+                {ROLL_LOG_BUILDER_DICE.map((die) => (
                   <button
                     key={die}
                     type="button"
@@ -605,7 +640,9 @@ export function RollEntryCard({
         )}
 
         {/* = Total (blue) */}
-        {(showSubtotal || roll.dice.length === 1) && (
+        {(showSubtotal ||
+          roll.dice.length === 1 ||
+          (!hasDice && !showModifier && roll.total === 0)) && (
           <>
             <span className="text-xs text-text-muted">=</span>
             <span
