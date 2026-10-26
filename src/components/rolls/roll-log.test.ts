@@ -26,17 +26,21 @@ describe('RollLog bonus source hover (TASK-893)', () => {
 });
 
 describe('RollLog roll entry titles (86e3kfkc1 / 86e3t17b1)', () => {
-  it('wraps long titles instead of a one-line ellipsis and keeps title for hover', () => {
-    expect(source).toContain('title={roll.title}');
+  it('clamps long titles to two lines, expands on tap, and keeps hover title', () => {
+    expect(source).toContain('function RollLogEntryTitle');
+    expect(source).toContain('title={title}');
     expect(source).toContain('line-clamp-2');
     expect(source).toContain('break-words');
+    expect(source).toContain('aria-expanded={expanded}');
     expect(source).not.toMatch(/roll\.title[\s\S]{0,120}className="[^"]*\btruncate\b/);
   });
 });
 
 describe('Roll Log dock title contrast (86e3jvv3v)', () => {
   it('puts text-text-on-dark on the heading so the global h3 title color does not win', () => {
-    expect(source).toMatch(/<h3 className="[^"]*\btext-text-on-dark\b[^"]*">🎲 Roll Log<\/h3>/);
+    expect(source).toMatch(
+      /<h3 className="[^"]*\btext-text-on-dark\b[^"]*">[\s\S]*?🎲 Roll Log[\s\S]*?<\/h3>/,
+    );
   });
 });
 
