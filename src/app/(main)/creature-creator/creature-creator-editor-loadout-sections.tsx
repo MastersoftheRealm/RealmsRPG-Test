@@ -220,7 +220,7 @@ export function CreatureCreatorEditorLoadoutSections({
         optional
         enabled={creature.enablePowers}
         onEnabledChange={(enabled) => updateCreature({ enablePowers: enabled })}
-        removeConfirm={creatureCreatorOptionalSectionRemoveConfirm}
+        removeConfirm={creatureCreatorOptionalSectionRemoveConfirm('Powers')}
         itemCount={creature.powers.length}
       >
         {innateBudget.innateEnergyMax > 0 ? (
@@ -349,7 +349,7 @@ export function CreatureCreatorEditorLoadoutSections({
         optional
         enabled={creature.enableTechniques}
         onEnabledChange={(enabled) => updateCreature({ enableTechniques: enabled })}
-        removeConfirm={creatureCreatorOptionalSectionRemoveConfirm}
+        removeConfirm={creatureCreatorOptionalSectionRemoveConfirm('Techniques')}
         itemCount={creature.techniques.length}
       >
         {creature.techniques.length === 0 ? (
