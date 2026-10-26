@@ -26,12 +26,12 @@ const nextConfig: NextConfig = {
       {
         source: '/browse',
         destination: '/library',
-        permanent: false,
+        permanent: true,
       },
       {
         source: '/signup',
         destination: '/register',
-        permanent: false,
+        permanent: true,
       },
       {
         source: '/encounter-tracker',
