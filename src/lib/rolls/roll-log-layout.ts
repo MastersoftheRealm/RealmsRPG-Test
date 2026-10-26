@@ -25,4 +25,4 @@ export const ROLL_LOG_DICE_BUILDER_CLASS =
 export const ROLL_LOG_DICE_BUILDER_SCROLL_CLASS = 'min-h-0 flex-1 overflow-y-auto p-3 pb-2';
 
 /** Roll button row — always visible at the bottom of the card. */
-export const ROLL_LOG_ROLL_BUTTON_FOOTER_CLASS = 'shrink-0 px-3 pb-3';
+export const ROLL_LOG_ROLL_BUTTON_FOOTER_CLASS = 'roll-log-roll-footer shrink-0 px-3 pb-3';

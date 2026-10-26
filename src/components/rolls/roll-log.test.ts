@@ -42,7 +42,8 @@ describe('RollLog layout (86e3jwawd follow-up)', () => {
     expect(globalsCss).toContain('--roll-log-history-min: 5rem');
     expect(globalsCss).not.toMatch(/max-height: 28rem\)[\s\S]*--roll-log-history-min: 3rem/);
     expect(ROLL_LOG_DICE_BUILDER_CLASS).toContain('--roll-log-dice-builder-max');
-    expect(globalsCss).toMatch(/max-height: 28rem\)[\s\S]*--roll-log-dice-builder-max: 6\.5rem/);
+    expect(globalsCss).toMatch(/max-height: 28rem\)[\s\S]*--roll-log-dice-builder-max: 4rem/);
+    expect(globalsCss).toContain('.roll-log-roll-footer');
     expect(globalsCss).toContain('--roll-log-panel-max-height');
     expect(globalsCss).toMatch(
       /body:has\(\[data-character-sheet-page\]\)[\s\S]*--roll-log-panel-max-height/,

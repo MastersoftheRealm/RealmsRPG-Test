@@ -701,12 +701,16 @@
     :root {
       --roll-log-panel-max-height: min(
         70vh,
-        calc(100svh - var(--dock-fab-size) - var(--dock-gap) * 3 - 0.75rem)
+        calc(100svh - var(--dock-fab-size) - var(--dock-gap) * 2 - 0.5rem)
       );
     }
 
     .roll-log-panel {
-      --roll-log-dice-builder-max: 6.5rem;
+      --roll-log-dice-builder-max: 4rem;
+    }
+
+    .roll-log-panel .roll-log-roll-footer {
+      padding-bottom: 0.5rem;
     }
   }
 
