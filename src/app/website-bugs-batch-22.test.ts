@@ -55,11 +55,18 @@ describe('website bugs batch 22 — sheet zoom, tour, dark contrast, taps', () =
     expect(globalsCss).toContain("header a[href='/'] img");
   });
 
-  it('expands sheet mobile tap targets to 44px (86e3jwkeh)', () => {
+  it('expands sheet tap targets to 44px on coarse pointer only (86e3jwkeh)', () => {
+    const sheetStepperHit = '[data-character-sheet-page] .btn-stepper.hit-area-dense::after';
     expect(globalsCss).toMatch(
-      /@media \(max-width: 767px\)[\s\S]*\[data-character-sheet-page\] \.btn-stepper\.hit-area-dense::after/,
+      /@media \(pointer: coarse\)[\s\S]*\[data-character-sheet-page\] \.btn-stepper\.hit-area-dense::after/,
     );
-    expect(globalsCss).toContain('[data-character-sheet-page] .hit-area-layout-neutral::after');
-    expect(globalsCss).toContain('[data-sheet-section-tabs] .hit-area-dense::after');
+    expect(globalsCss).toContain(
+      '[data-character-sheet-page] [data-sheet-section-tabs] .hit-area-dense::after',
+    );
+    const stepperIdx = globalsCss.indexOf(sheetStepperHit);
+    expect(stepperIdx).toBeGreaterThan(-1);
+    const mediaStart = globalsCss.lastIndexOf('@media', stepperIdx);
+    expect(globalsCss.slice(mediaStart, mediaStart + 40)).toContain('pointer: coarse');
+    expect(globalsCss.slice(mediaStart, mediaStart + 40)).not.toContain('max-width: 767px');
   });
 });
