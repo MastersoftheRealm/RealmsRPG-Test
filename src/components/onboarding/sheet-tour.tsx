@@ -8,7 +8,14 @@ import { useEffect, useState } from 'react';
 import { Button } from '@/components/ui';
 import { ONBOARDING_COPY } from '@/lib/constants/copy/onboarding-copy';
 import { setSheetTourStatus } from '@/lib/onboarding-preferences';
-import { applyTourHighlight, ONBOARDING_FLOATING_CARD_CLASS } from '@/lib/sheet-tour-highlight';
+import {
+  applyTourHighlight,
+  findVisibleTourTarget,
+  ONBOARDING_FLOATING_CARD_CLASS,
+  sheetTourCardAnchor,
+  sheetTourNarrowPlacementClasses,
+  type SheetTourNarrowAnchor,
+} from '@/lib/sheet-tour-highlight';
 import { cn } from '@/lib/utils';
 
 const copy = ONBOARDING_COPY.sheetTour;
@@ -21,6 +28,7 @@ export interface SheetTourProps {
 export function SheetTour({ active, onComplete }: SheetTourProps) {
   const [stepIndex, setStepIndex] = useState(0);
   const [wasActive, setWasActive] = useState(false);
+  const [narrowAnchor, setNarrowAnchor] = useState<SheetTourNarrowAnchor>('bottom');
   const steps = copy.steps;
   const step = steps[stepIndex];
   const isLast = stepIndex >= steps.length - 1;
@@ -34,7 +42,17 @@ export function SheetTour({ active, onComplete }: SheetTourProps) {
 
   useEffect(() => {
     if (!active || !step) return;
-    return applyTourHighlight(step.target);
+    const syncAnchor = () => {
+      const el = findVisibleTourTarget(step.target);
+      setNarrowAnchor(sheetTourCardAnchor(el));
+    };
+    syncAnchor();
+    const cleanup = applyTourHighlight(step.target);
+    window.addEventListener('resize', syncAnchor);
+    return () => {
+      window.removeEventListener('resize', syncAnchor);
+      cleanup();
+    };
   }, [active, step, stepIndex]);
 
   if (!active || !step) return null;
@@ -48,6 +66,7 @@ export function SheetTour({ active, onComplete }: SheetTourProps) {
     <div
       className={cn(
         ONBOARDING_FLOATING_CARD_CLASS,
+        sheetTourNarrowPlacementClasses(narrowAnchor),
         'rounded-xl border border-border-light bg-surface p-4 shadow-lg',
       )}
       role="dialog"
