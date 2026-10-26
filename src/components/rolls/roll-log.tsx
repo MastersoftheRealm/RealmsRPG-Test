@@ -366,6 +366,12 @@ export function RollLog({ className, viewOnlyCampaignId }: RollLogProps) {
                       e.preventDefault();
                       removeDie(die);
                     }}
+                    onKeyDown={(e) => {
+                      if (e.key !== 'Backspace' && e.key !== 'Delete') return;
+                      if (dicePool[die] <= 0) return;
+                      e.preventDefault();
+                      removeDie(die);
+                    }}
                     className={cn(
                       'relative flex flex-col items-center justify-center rounded-lg px-1 py-1.5',
                       'cursor-pointer bg-text-on-dark/10 transition-all hover:bg-text-on-dark/25 dark:bg-text-on-dark/20 dark:hover:bg-text-on-dark/35',

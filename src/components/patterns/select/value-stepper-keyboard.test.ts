@@ -10,4 +10,9 @@ describe('ValueStepper keyboard (86e3jw5dw)', () => {
     expect(source).toContain('event.preventDefault();');
     expect(source).toContain('onActivate();');
   });
+
+  it('ends hold-repeat when the pointer releases outside the button (86e3jw5p7)', () => {
+    expect(source).toContain("addEventListener('pointerup', onGlobalPointerEnd, true)");
+    expect(source).toContain("removeEventListener('pointerup', onGlobalPointerEnd, true)");
+  });
 });

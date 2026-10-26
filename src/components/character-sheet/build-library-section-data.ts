@@ -26,6 +26,7 @@ import {
 } from '@/lib/game/feat-requirements';
 import { calculateMaxArchetypeFeats, calculateMaxCharacterFeats } from '@/lib/game/formulas';
 import { getArchetypeAbilityScore, calculatePowerAttackBonus } from '@/lib/game/calculations';
+import { compactLibrarySectionVisibility } from '@/lib/character-library-section-visibility';
 import { withAbilitiesForResourceMaxima } from '@/lib/character/temp-modifiers';
 import type { CharacterNote } from './notes-tab';
 import type { LibrarySectionData, SheetLibraryModel } from './library-section-props';
@@ -222,7 +223,9 @@ export function buildLibrarySectionData(input: {
       setCharacter((prev) => (prev ? { ...prev, libraryTabVisibility: next } : null)),
     sectionVisibility: character.librarySectionVisibility,
     onSectionVisibilityChange: (next) =>
-      setCharacter((prev) => (prev ? { ...prev, librarySectionVisibility: next } : null)),
+      setCharacter((prev) =>
+        prev ? { ...prev, librarySectionVisibility: compactLibrarySectionVisibility(next) } : null,
+      ),
     ancestry: character.ancestry as CharacterAncestry,
     vanillaTraits: {
       ancestryTraits: character.ancestryTraits,
