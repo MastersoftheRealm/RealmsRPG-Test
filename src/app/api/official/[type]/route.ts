@@ -114,6 +114,39 @@ function catalogListingFromBody(body: Record<string, unknown>): CatalogListing |
   return parseCatalogListing(raw);
 }
 
+/** Reject rename onto another row's name; pre-existing duplicate names are unchanged rows. */
+async function officialNameConflictForUpdate(
+  supabase: ReturnType<typeof createServiceRoleClient>,
+  table: string,
+  existingId: string,
+  rawName: unknown,
+): Promise<NextResponse | null> {
+  const name = typeof rawName === 'string' ? rawName.trim() : '';
+  if (!name) return null;
+  const { data: other, error } = await supabase
+    .from(table)
+    .select('id')
+    .eq('name', name)
+    .neq('id', existingId)
+    .limit(1)
+    .maybeSingle();
+  if (error) {
+    return apiErrorResponse(
+      'Failed to validate name',
+      500,
+      'POST /api/official/[type] (name check)',
+      error,
+    );
+  }
+  if (other) {
+    return NextResponse.json(
+      { error: 'Another official item already uses this name' },
+      { status: 409 },
+    );
+  }
+  return null;
+}
+
 async function adminMayIncludeUnlisted(request: NextRequest): Promise<boolean> {
   if (!wantsIncludeUnlisted(request.nextUrl.searchParams)) return false;
   const { user } = await getSession();
@@ -269,6 +302,13 @@ export async function POST(
       const existingId = body.id as string | undefined;
 
       if (existingId) {
+        const nameConflict = await officialNameConflictForUpdate(
+          supabase,
+          SPECIES_TABLE,
+          existingId,
+          normalized.name,
+        );
+        if (nameConflict) return nameConflict;
         const { data: updatedRows, error: updateError } = await supabase
           .from(SPECIES_TABLE)
           .update(dbRow)
@@ -286,6 +326,7 @@ export async function POST(
           revalidateOfficialLibraryAfterWrite(SPECIES_TABLE);
           return NextResponse.json({ id: existingId });
         }
+        return NextResponse.json({ error: 'Official item not found' }, { status: 404 });
       }
 
       for (let attempt = 0; attempt < 3; attempt++) {
@@ -320,6 +361,13 @@ export async function POST(
     const table = TABLE_MAP[type as ColumnarLibraryType];
 
     if (existingId) {
+      const nameConflict = await officialNameConflictForUpdate(
+        supabase,
+        table,
+        existingId,
+        body.name,
+      );
+      if (nameConflict) return nameConflict;
       const { data: updatedRows, error: updateError } = await supabase
         .from(table)
         .update(dbRow)
@@ -337,6 +385,7 @@ export async function POST(
         revalidateOfficialLibraryAfterWrite(table);
         return NextResponse.json({ id: existingId });
       }
+      return NextResponse.json({ error: 'Official item not found' }, { status: 404 });
     }
 
     const id = crypto.randomUUID();

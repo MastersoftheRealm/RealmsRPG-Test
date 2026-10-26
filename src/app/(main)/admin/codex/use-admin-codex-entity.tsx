@@ -123,7 +123,12 @@ export function useAdminCodexEntity<TEntity extends AdminCodexNamedEntity>(optio
           return false;
         }
         const createdId = 'id' in result ? result.id : undefined;
-        await args.onSuccess?.({ success: true, id: createdId ?? targetId ?? undefined });
+        try {
+          await args.onSuccess?.({ success: true, id: createdId ?? targetId ?? undefined });
+        } catch (err) {
+          showToast(err instanceof Error ? err.message : 'Post-save step failed', 'error');
+          return false;
+        }
         try {
           await refreshCodex();
         } catch {

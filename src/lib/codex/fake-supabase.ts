@@ -14,10 +14,13 @@ export type FakeSupabaseOptions = {
   failInsertOnce?: Set<string> | undefined;
 };
 
+export type FakeUpdateCall = { table: string; patch: Row; filters: Array<[string, unknown]> };
+
 export class FakeSupabase {
   readonly tables: Record<string, Row[]>;
   readonly rpcCalls: FakeRpcCall[] = [];
   readonly updateCalls: string[] = [];
+  readonly updatePayloads: FakeUpdateCall[] = [];
   rpcResult: QueryResult = { data: null, error: null };
   private readonly options: FakeSupabaseOptions;
 
@@ -144,6 +147,11 @@ class FakeQuery implements PromiseLike<QueryResult> {
 
     if (this.op === 'update') {
       this.db.updateCalls.push(this.table);
+      this.db.updatePayloads.push({
+        table: this.table,
+        patch: this.payload as Row,
+        filters: [...this.filters],
+      });
       const updated: Row[] = [];
       rows.forEach((row, index) => {
         if (!this.matches(row)) return;

@@ -255,6 +255,117 @@ describe('POST /api/official/[type]', () => {
     await expect(readJson(response)).resolves.toEqual({ error: 'Admin only' });
     expect(mockCreateServiceRoleClient).not.toHaveBeenCalled();
   });
+
+  it('returns 404 when update id does not match any row (no silent insert)', async () => {
+    mockRequireLiveUser.mockResolvedValue(USER);
+    mockIsAdmin.mockResolvedValue(true);
+
+    const missingId = '11111111-1111-1111-1111-111111111111';
+    const updateChain = {
+      eq: vi.fn(function eq() {
+        return updateChain;
+      }),
+      select: vi.fn(function select() {
+        return updateChain;
+      }),
+      then(
+        onFulfilled?: (value: { data: unknown[]; error: null }) => unknown,
+        onRejected?: (reason: unknown) => unknown,
+      ) {
+        return Promise.resolve({ data: [], error: null }).then(onFulfilled, onRejected);
+      },
+    };
+    const nameCheckChain = {
+      eq: vi.fn(function eq() {
+        return nameCheckChain;
+      }),
+      neq: vi.fn(function neq() {
+        return nameCheckChain;
+      }),
+      limit: vi.fn(function limit() {
+        return nameCheckChain;
+      }),
+      maybeSingle: vi.fn(async () => ({ data: null, error: null })),
+    };
+    const insertSingle = vi.fn(async () => ({ data: { id: 'new' }, error: null }));
+    const supabase = {
+      from: vi.fn((table: string) => {
+        if (table === 'official_powers') {
+          return {
+            select: vi.fn(() => nameCheckChain),
+            update: vi.fn(() => updateChain),
+            insert: vi.fn(() => ({
+              select: vi.fn(() => ({
+                single: insertSingle,
+              })),
+            })),
+          };
+        }
+        return { select: vi.fn(() => nameCheckChain) };
+      }),
+    };
+    mockCreateServiceRoleClient.mockReturnValue(supabase as never);
+
+    const request = new NextRequest('http://localhost/api/official/powers', {
+      method: 'POST',
+      headers: { 'content-type': 'application/json', origin: 'http://localhost' },
+      body: JSON.stringify({ id: missingId, name: 'Renamed Bolt', description: 'x' }),
+    });
+
+    const response = await POST(request, params('powers'));
+
+    expect(response.status).toBe(404);
+    await expect(readJson(response)).resolves.toEqual({ error: 'Official item not found' });
+    expect(insertSingle).not.toHaveBeenCalled();
+  });
+
+  it('returns 409 when rename would collide with another official row name', async () => {
+    mockRequireLiveUser.mockResolvedValue(USER);
+    mockIsAdmin.mockResolvedValue(true);
+
+    const existingId = '22222222-2222-2222-2222-222222222222';
+    const nameCheckChain = {
+      eq: vi.fn(function eq() {
+        return nameCheckChain;
+      }),
+      neq: vi.fn(function neq() {
+        return nameCheckChain;
+      }),
+      limit: vi.fn(function limit() {
+        return nameCheckChain;
+      }),
+      maybeSingle: vi.fn(async () => ({ data: { id: 'other-row' }, error: null })),
+    };
+    const update = vi.fn(() => ({
+      eq: vi.fn(() => ({
+        select: vi.fn(() => ({
+          then: (onFulfilled?: (v: { data: unknown[]; error: null }) => unknown) =>
+            Promise.resolve({ data: [{ id: existingId }], error: null }).then(onFulfilled),
+        })),
+      })),
+    }));
+    const supabase = {
+      from: vi.fn(() => ({
+        select: vi.fn(() => nameCheckChain),
+        update,
+      })),
+    };
+    mockCreateServiceRoleClient.mockReturnValue(supabase as never);
+
+    const request = new NextRequest('http://localhost/api/official/powers', {
+      method: 'POST',
+      headers: { 'content-type': 'application/json', origin: 'http://localhost' },
+      body: JSON.stringify({ id: existingId, name: 'Taken Name', description: 'x' }),
+    });
+
+    const response = await POST(request, params('powers'));
+
+    expect(response.status).toBe(409);
+    await expect(readJson(response)).resolves.toEqual({
+      error: 'Another official item already uses this name',
+    });
+    expect(update).not.toHaveBeenCalled();
+  });
 });
 
 describe('PATCH /api/official/[type]', () => {

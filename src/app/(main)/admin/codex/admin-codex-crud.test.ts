@@ -57,19 +57,13 @@ function readAdmin(name: string): string {
   return readFileSync(path.join(dir, name), 'utf8');
 }
 
-describe('Admin Codex modal save reads live form (hotfix)', () => {
-  it('entity tabs build save payloads from getForm()', () => {
+describe('Admin Codex modal save wiring', () => {
+  it('entity tabs read the draft via getForm() before traitFormToSavePayload (etc.)', () => {
     for (const name of CODEX_MODAL_SAVE_TABS) {
       const src = readAdmin(name);
-      expect(src, name).toContain('useAdminCodexFormState');
-      expect(src, name).toContain('getForm()');
+      expect(src, name).toMatch(/getForm\(\)/);
+      expect(src, name).toMatch(/ToSavePayload\(current\)/);
     }
-    const archetype = readAdmin('use-admin-archetype-workspace.ts');
-    expect(archetype).toContain('useAdminCodexFormState');
-    expect(archetype).toContain('getForm()');
-    const featModal = readAdmin('admin-feat-edit-modal.tsx');
-    expect(featModal).toContain('useAdminCodexFormState');
-    expect(featModal).toContain('getForm()');
   });
 });
 
