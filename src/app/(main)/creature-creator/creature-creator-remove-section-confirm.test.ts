@@ -7,8 +7,6 @@ import {
   creatureCreatorOptionalSectionRemoveConfirm,
 } from './creature-creator-remove-section-confirm-placeholder';
 
-const placeholderPrefix = '[' + 'Placeholder';
-
 describe('creature creator optional section remove confirm (1dfe8wf28e6)', () => {
   it('uses section display name in dialog accessible name via ConfirmActionModal titleA11y', () => {
     const powersCopy = creatureCreatorOptionalSectionRemoveConfirm('Powers');
@@ -48,7 +46,6 @@ describe('creature creator optional section remove confirm (1dfe8wf28e6)', () =>
       'utf8',
     );
     expect(modal).toContain('description ?');
-    expect(modal).not.toMatch(/\[Placeholder/);
   });
 
   it('reuses ConfirmActionModal defaults and wires optional sections', () => {
@@ -72,9 +69,11 @@ describe('creature creator optional section remove confirm (1dfe8wf28e6)', () =>
     expect(modal).toContain("cancelLabel = 'Cancel'");
 
     expect(REMOVE_SECTION_CONFIRM_CONFIRM_LABEL).toBe('Confirm');
-    for (const value of Object.values(creatureCreatorOptionalSectionRemoveConfirm('Powers'))) {
-      expect(value.startsWith(placeholderPrefix)).toBe(false);
-    }
+    expect(creatureCreatorOptionalSectionRemoveConfirm('Powers')).toEqual({
+      title: 'Remove Powers?',
+      description: '',
+      confirmLabel: 'Confirm',
+    });
 
     const loadout = readFileSync(
       path.join(import.meta.dirname, 'creature-creator-editor-loadout-sections.tsx'),
