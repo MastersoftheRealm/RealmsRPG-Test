@@ -48,6 +48,7 @@ import {
   pickDirtyCharacterFields,
   withDirtyClears,
 } from '@/lib/character/dirty-patch';
+import { characterAutosaveDocumentsEqual } from '@/lib/character/character-autosave-equal';
 import { rememberCharacterLockToken } from '@/lib/character/save-lock';
 import { mergeSheetRealtimePayload } from '@/lib/character/realtime-merge';
 import {
@@ -318,6 +319,7 @@ export function useCharacterSheetPageData(id: string) {
 
   const { hasUnsavedChanges, saveNow, syncBlockedByNetwork } = useAutoSave({
     data: character,
+    areEqual: (a, b) => characterAutosaveDocumentsEqual(a, b),
     onSave: async (data) => {
       if (!data) return;
       const rawCleaned = cleanForSave(data, rules) as Record<string, unknown>;

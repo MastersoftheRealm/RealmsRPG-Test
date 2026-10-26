@@ -54,30 +54,30 @@ function useHoldRepeat(
   const isHoldingRef = useRef(false);
   const hasRepeatedRef = useRef(false);
   const callbackRef = useRef(callback);
+  const windowListenersAttachedRef = useRef(false);
+  const stopImplRef = useRef<() => void>(() => {});
 
   useEffect(() => {
     callbackRef.current = callback;
   }, [callback]);
 
-  const start = useCallback(() => {
-    if (!enabled || isHoldingRef.current) return;
-    isHoldingRef.current = true;
-    hasRepeatedRef.current = false;
-    delayRef.current = maxDelay;
+  const onGlobalPointerEnd = useCallback(() => {
+    stopImplRef.current();
+  }, []);
 
-    initialTimeoutRef.current = setTimeout(() => {
-      initialTimeoutRef.current = null;
-      hasRepeatedRef.current = true;
-      callbackRef.current();
-      const repeat = () => {
-        if (!isHoldingRef.current) return;
-        callbackRef.current();
-        delayRef.current = Math.max(minDelay, delayRef.current * 0.88);
-        intervalRef.current = setTimeout(repeat, delayRef.current);
-      };
-      intervalRef.current = setTimeout(repeat, maxDelay);
-    }, initialDelay);
-  }, [enabled, minDelay, maxDelay, initialDelay]);
+  const detachWindowListeners = useCallback(() => {
+    if (!windowListenersAttachedRef.current) return;
+    windowListenersAttachedRef.current = false;
+    window.removeEventListener('pointerup', onGlobalPointerEnd, true);
+    window.removeEventListener('pointercancel', onGlobalPointerEnd, true);
+  }, [onGlobalPointerEnd]);
+
+  const attachWindowListeners = useCallback(() => {
+    if (windowListenersAttachedRef.current) return;
+    windowListenersAttachedRef.current = true;
+    window.addEventListener('pointerup', onGlobalPointerEnd, true);
+    window.addEventListener('pointercancel', onGlobalPointerEnd, true);
+  }, [onGlobalPointerEnd]);
 
   const stop = useCallback(() => {
     if (initialTimeoutRef.current) {
@@ -91,14 +91,41 @@ function useHoldRepeat(
       clearTimeout(intervalRef.current);
       intervalRef.current = null;
     }
-  }, []);
+    detachWindowListeners();
+  }, [detachWindowListeners]);
+
+  useEffect(() => {
+    stopImplRef.current = stop;
+  }, [stop]);
+
+  const start = useCallback(() => {
+    if (!enabled || isHoldingRef.current) return;
+    isHoldingRef.current = true;
+    hasRepeatedRef.current = false;
+    delayRef.current = maxDelay;
+    attachWindowListeners();
+
+    initialTimeoutRef.current = setTimeout(() => {
+      initialTimeoutRef.current = null;
+      hasRepeatedRef.current = true;
+      callbackRef.current();
+      const repeat = () => {
+        if (!isHoldingRef.current) return;
+        callbackRef.current();
+        delayRef.current = Math.max(minDelay, delayRef.current * 0.88);
+        intervalRef.current = setTimeout(repeat, delayRef.current);
+      };
+      intervalRef.current = setTimeout(repeat, maxDelay);
+    }, initialDelay);
+  }, [enabled, minDelay, maxDelay, initialDelay, attachWindowListeners]);
 
   useEffect(() => {
     return () => {
       if (initialTimeoutRef.current) clearTimeout(initialTimeoutRef.current);
       if (intervalRef.current) clearTimeout(intervalRef.current);
+      detachWindowListeners();
     };
-  }, []);
+  }, [detachWindowListeners]);
 
   return { start, stop };
 }

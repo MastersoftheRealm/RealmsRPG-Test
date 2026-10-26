@@ -52,6 +52,8 @@ interface AutoSaveOptions<T> {
   onSaveComplete?: (() => void) | undefined;
   /** Callback when save fails */
   onSaveError?: ((error: Error) => void) | undefined;
+  /** Custom equality for dirty detection (default: JSON.stringify) */
+  areEqual?: ((a: T, b: T) => boolean) | undefined;
 }
 
 interface AutoSaveResult {
@@ -79,6 +81,7 @@ export function useAutoSave<T>({
   onSaveStart,
   onSaveComplete,
   onSaveError,
+  areEqual,
 }: AutoSaveOptions<T>): AutoSaveResult {
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
@@ -103,13 +106,20 @@ export function useAutoSave<T>({
   const onSaveStartRef = useRef(onSaveStart);
   const onSaveCompleteRef = useRef(onSaveComplete);
   const onSaveErrorRef = useRef(onSaveError);
+  const areEqualRef = useRef(areEqual);
+
+  const documentsEqual = useCallback((a: T, b: T) => {
+    if (areEqualRef.current) return areEqualRef.current(a, b);
+    return JSON.stringify(a) === JSON.stringify(b);
+  }, []);
 
   useEffect(() => {
     onSaveRef.current = onSave;
     onSaveStartRef.current = onSaveStart;
     onSaveCompleteRef.current = onSaveComplete;
     onSaveErrorRef.current = onSaveError;
-  }, [onSave, onSaveStart, onSaveComplete, onSaveError]);
+    areEqualRef.current = areEqual;
+  }, [onSave, onSaveStart, onSaveComplete, onSaveError, areEqual]);
 
   useEffect(() => {
     currentDataRef.current = data;
@@ -130,62 +140,65 @@ export function useAutoSave<T>({
     }
   };
 
-  const performSave = useCallback(async (dataToSave: T, flush?: AutoSaveFlush) => {
-    if (saveInProgressRef.current) {
-      if (flush?.unload) {
-        // The in-flight debounce request is cancelled when the page goes away.
-        // Send the latest document on this flush instead of waiting to resave.
-        try {
-          await onSaveRef.current(dataToSave, flush);
-        } catch (err) {
-          onSaveErrorRef.current?.(err instanceof Error ? err : new Error('Save failed'));
+  const performSave = useCallback(
+    async (dataToSave: T, flush?: AutoSaveFlush) => {
+      if (saveInProgressRef.current) {
+        if (flush?.unload) {
+          // The in-flight debounce request is cancelled when the page goes away.
+          // Send the latest document on this flush instead of waiting to resave.
+          try {
+            await onSaveRef.current(dataToSave, flush);
+          } catch (err) {
+            onSaveErrorRef.current?.(err instanceof Error ? err : new Error('Save failed'));
+          }
+          return;
         }
+        pendingResaveRef.current = true;
         return;
       }
-      pendingResaveRef.current = true;
-      return;
-    }
 
-    saveInProgressRef.current = true;
-    setIsSaving(true);
-    onSaveStartRef.current?.();
+      saveInProgressRef.current = true;
+      setIsSaving(true);
+      onSaveStartRef.current?.();
 
-    try {
-      await onSaveRef.current(dataToSave, flush);
-      retryAttemptRef.current = 0;
-      clearRetry();
-      setSyncBlockedByNetwork(false);
-      setLastSaved(new Date());
-      initialDataRef.current = dataToSave;
-      if (JSON.stringify(currentDataRef.current) === JSON.stringify(dataToSave)) {
-        setHasUnsavedChanges(false);
-      }
-      onSaveCompleteRef.current?.();
-    } catch (err) {
-      pendingResaveRef.current = false;
-      if (isLikelyNetworkFailure(err)) {
-        setSyncBlockedByNetwork(true);
-      }
-      onSaveErrorRef.current?.(err instanceof Error ? err : new Error('Save failed'));
-      const wait = nextAutosaveRetryDelayMs(retryAttemptRef.current);
-      retryAttemptRef.current += 1;
-      clearRetry();
-      retryTimeoutRef.current = setTimeout(() => {
-        retryTimeoutRef.current = null;
-        void performSaveRef.current(currentDataRef.current);
-      }, wait);
-    } finally {
-      setIsSaving(false);
-      saveInProgressRef.current = false;
-      if (pendingResaveRef.current) {
+      try {
+        await onSaveRef.current(dataToSave, flush);
+        retryAttemptRef.current = 0;
+        clearRetry();
+        setSyncBlockedByNetwork(false);
+        setLastSaved(new Date());
+        initialDataRef.current = dataToSave;
+        if (documentsEqual(currentDataRef.current, dataToSave)) {
+          setHasUnsavedChanges(false);
+        }
+        onSaveCompleteRef.current?.();
+      } catch (err) {
         pendingResaveRef.current = false;
-        const latest = currentDataRef.current;
-        if (JSON.stringify(latest) !== JSON.stringify(initialDataRef.current)) {
-          void performSaveRef.current(latest);
+        if (isLikelyNetworkFailure(err)) {
+          setSyncBlockedByNetwork(true);
+        }
+        onSaveErrorRef.current?.(err instanceof Error ? err : new Error('Save failed'));
+        const wait = nextAutosaveRetryDelayMs(retryAttemptRef.current);
+        retryAttemptRef.current += 1;
+        clearRetry();
+        retryTimeoutRef.current = setTimeout(() => {
+          retryTimeoutRef.current = null;
+          void performSaveRef.current(currentDataRef.current);
+        }, wait);
+      } finally {
+        setIsSaving(false);
+        saveInProgressRef.current = false;
+        if (pendingResaveRef.current) {
+          pendingResaveRef.current = false;
+          const latest = currentDataRef.current;
+          if (!documentsEqual(latest, initialDataRef.current)) {
+            void performSaveRef.current(latest);
+          }
         }
       }
-    }
-  }, []);
+    },
+    [documentsEqual],
+  );
 
   useEffect(() => {
     performSaveRef.current = performSave;
@@ -208,7 +221,7 @@ export function useAutoSave<T>({
       return;
     }
 
-    const hasChanges = JSON.stringify(data) !== JSON.stringify(initialDataRef.current);
+    const hasChanges = !documentsEqual(data, initialDataRef.current);
 
     if (!hasChanges) {
       if (timeoutRef.current) {
@@ -237,7 +250,7 @@ export function useAutoSave<T>({
         clearTimeout(timeoutRef.current);
       }
     };
-  }, [data, delay, enabled, performSave]);
+  }, [data, delay, enabled, performSave, documentsEqual]);
 
   const saveNow = useCallback(async () => {
     if (timeoutRef.current) {

@@ -3,6 +3,7 @@
 import { Eye, EyeOff } from 'lucide-react';
 import { IconButton } from '@/components/ui';
 import {
+  compactLibrarySectionVisibility,
   LIBRARY_SECTION_LABELS,
   resolveLibrarySectionVisibility,
 } from '@/lib/character-library-section-visibility';
@@ -35,10 +36,11 @@ export function LibrarySectionVisibilityToggle({
       type="button"
       onClick={(e) => {
         e.stopPropagation();
-        onSectionVisibilityChange({
+        const next = compactLibrarySectionVisibility({
           ...resolved,
           [sectionId]: !visibleOutsideEdit,
         });
+        onSectionVisibilityChange(next ?? {});
       }}
       label={`${visibleOutsideEdit ? 'Hide' : 'Show'} ${label} section when not editing`}
       className="-mr-0.5 shrink-0"

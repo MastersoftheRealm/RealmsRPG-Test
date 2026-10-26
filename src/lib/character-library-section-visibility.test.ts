@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import {
+  compactLibrarySectionVisibility,
   DEFAULT_LIBRARY_SECTION_VISIBILITY,
   librarySectionVisibleOutsideEdit,
   resolveLibrarySectionVisibility,
@@ -21,5 +22,17 @@ describe('library section visibility (86e3jvcgh)', () => {
       ...DEFAULT_LIBRARY_SECTION_VISIBILITY,
       shields: false,
     });
+  });
+
+  it('stores only hidden sections in compact form (86e3jw5pw)', () => {
+    expect(
+      compactLibrarySectionVisibility({
+        stateFeats: true,
+        weapons: true,
+        shields: false,
+        armor: true,
+      }),
+    ).toEqual({ shields: false });
+    expect(compactLibrarySectionVisibility(DEFAULT_LIBRARY_SECTION_VISIBILITY)).toBeUndefined();
   });
 });
