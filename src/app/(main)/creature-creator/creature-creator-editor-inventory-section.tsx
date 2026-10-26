@@ -60,7 +60,7 @@ export function CreatureCreatorEditorInventorySection({
       optional
       enabled={creature.enableArmaments}
       onEnabledChange={(enabled) => updateCreature({ enableArmaments: enabled })}
-      removeConfirm={creatureCreatorOptionalSectionRemoveConfirm}
+      removeConfirm={creatureCreatorOptionalSectionRemoveConfirm('Inventory')}
       itemCount={collectCreatureInventoryItems(creature).length}
     >
       <div className="mb-4 flex flex-col gap-3">
