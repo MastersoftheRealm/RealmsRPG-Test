@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest';
+import { CHARACTER_CURRENCY_MAX } from '@/lib/game/constants';
 import {
   clampSavedCurrency,
   formatCharacterCreateFailureMessage,
@@ -13,6 +14,11 @@ describe('clampSavedCurrency (TASK-739)', () => {
     expect(clampSavedCurrency(40)).toBe(40);
     expect(clampSavedCurrency(0)).toBe(0);
     expect(clampSavedCurrency(-25)).toBe(0);
+  });
+
+  it('caps at CHARACTER_CURRENCY_MAX (86e3jwn5g)', () => {
+    expect(clampSavedCurrency(CHARACTER_CURRENCY_MAX + 1)).toBe(CHARACTER_CURRENCY_MAX);
+    expect(clampSavedCurrency(Number.POSITIVE_INFINITY)).toBe(0);
   });
 });
 

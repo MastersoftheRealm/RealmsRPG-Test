@@ -28,6 +28,9 @@ export const PLAYER_CONSTANTS = {
 /** Level-1 starting Currency (GAME_RULES). Shared by character create. */
 export const CHARACTER_STARTING_CURRENCY = 200;
 
+/** Sheet persist ceiling for character Currency (keeps display and JSON numeric). */
+export const CHARACTER_CURRENCY_MAX = 999_999_999;
+
 /** Creature/NPC specific constants */
 export const CREATURE_CONSTANTS = {
   BASE_HIT_ENERGY: 30,

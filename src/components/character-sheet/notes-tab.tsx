@@ -12,7 +12,8 @@
 
 'use client';
 
-import { useState, useCallback, useMemo, type ReactNode } from 'react';
+import { useState, useCallback, useMemo, useRef, useLayoutEffect, type ReactNode } from 'react';
+import { cn } from '@/lib/utils';
 import { CHARACTER_AGE_MAX_LENGTH, clampCharacterAgeInput } from '@/lib/character/appearance-age';
 import { useModalUnmountClickGuard } from '@/lib/modal-unmount-click-guard';
 import { X, Pencil } from 'lucide-react';
@@ -95,6 +96,46 @@ interface NotesTabProps {
   onReorderNamedNote?: ((id: string, direction: 'up' | 'down') => void) | undefined;
 }
 
+function SheetNoteFieldEditor({
+  value,
+  onChange,
+  placeholder,
+  label,
+  className,
+}: {
+  value: string;
+  onChange: (value: string) => void;
+  placeholder: string;
+  label: string;
+  className?: string | undefined;
+}) {
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const syncTextareaHeight = useCallback(() => {
+    const el = textareaRef.current;
+    if (!el) return;
+    el.style.height = 'auto';
+    el.style.height = `${el.scrollHeight}px`;
+  }, []);
+
+  useLayoutEffect(() => {
+    syncTextareaHeight();
+  }, [value, syncTextareaHeight]);
+
+  return (
+    <Textarea
+      ref={textareaRef}
+      value={value}
+      onChange={(e) => {
+        onChange(e.target.value);
+        syncTextareaHeight();
+      }}
+      placeholder={placeholder}
+      aria-label={label}
+      className={cn(className, 'resize-none overflow-hidden')}
+    />
+  );
+}
+
 /** Appearance, backstory, and notes. A viewer (no onChange) sees the text, not a field. */
 export function SheetNoteField({
   value,
@@ -117,11 +158,11 @@ export function SheetNoteField({
     );
   }
   return (
-    <Textarea
+    <SheetNoteFieldEditor
       value={value}
-      onChange={(e) => onChange(e.target.value)}
+      onChange={onChange}
       placeholder={placeholder}
-      aria-label={label}
+      label={label}
       className={className}
     />
   );

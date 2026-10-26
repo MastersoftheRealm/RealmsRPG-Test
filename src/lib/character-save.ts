@@ -6,6 +6,7 @@
 import { normalizeTempModifiers } from '@/lib/character/temp-modifiers';
 import { normalizeCharacterForSave } from '@/lib/character/schema-normalize';
 import { getErrorMessage, isApiError } from '@/lib/api-client';
+import { CHARACTER_CURRENCY_MAX } from '@/lib/game/constants';
 import { removeUndefined } from '@/lib/utils/object';
 import type { Character, CharacterTempModifiers } from '@/types';
 
@@ -25,7 +26,8 @@ export function isClientRequestId(value: unknown): value is string {
  * floor here (TASK-739 / TASK-749).
  */
 export function clampSavedCurrency(remaining: number): number {
-  return Math.max(0, remaining);
+  if (!Number.isFinite(remaining)) return 0;
+  return Math.min(CHARACTER_CURRENCY_MAX, Math.max(0, remaining));
 }
 
 /**

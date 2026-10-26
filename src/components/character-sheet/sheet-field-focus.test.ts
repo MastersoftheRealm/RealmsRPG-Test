@@ -24,4 +24,8 @@ describe('inline field focus after Enter or Escape (86e3jw5kc)', () => {
     expect(resource).toContain('sheetFieldDismissReturnsFocus(e.key)');
     expect(resource).not.toContain('.blur()');
   });
+
+  it('commits typed HP/EN on blur (86e3jwn5f)', () => {
+    expect(resource).toMatch(/handleBlur[\s\S]*applyValue\(\)/);
+  });
 });

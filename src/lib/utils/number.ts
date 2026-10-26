@@ -4,6 +4,11 @@
  * Centralized number formatting and manipulation functions
  */
 
+/** Grouped integer for sheet Currency and similar readouts (`en-US`). */
+export function formatGroupedInteger(value: number): string {
+  return value.toLocaleString('en-US');
+}
+
 /**
  * Format a number as a bonus string with + or - prefix.
  */

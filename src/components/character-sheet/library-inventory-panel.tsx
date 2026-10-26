@@ -17,6 +17,7 @@ import {
 } from '@/components/patterns';
 import { armamentProficiencyHelp } from '../../../public/tooltip-text';
 import { calculateArmamentProficiency } from '@/lib/game/formulas';
+import { formatGroupedInteger } from '@/lib/utils/number';
 import { currencyDraftOnBlur, currencyDraftOnEnter } from './currency-field-commit';
 import type {
   EntityWeaponRow,
@@ -93,7 +94,7 @@ export function LibraryInventoryPanel({
   const [currencyInput, setCurrencyInput] = useState(String(currency));
   const [isEditing, setIsEditing] = useState(false);
   const editedRef = useRef(false);
-  const shownCurrency = isEditing ? currencyInput : String(currency);
+  const shownCurrency = isEditing ? currencyInput : formatGroupedInteger(currency);
 
   useEffect(() => {
     if (!editedRef.current) setCurrencyInput(String(currency));
@@ -168,7 +169,7 @@ export function LibraryInventoryPanel({
                 setCurrencyInput(result.display);
                 if (result.save != null) onCurrencyChange?.(result.save);
               }}
-              className="w-20 rounded border border-currency-border bg-surface px-2 py-1 text-sm font-bold text-warning-fg focus:ring-2 focus:ring-currency-border"
+              className="max-w-full min-w-20 rounded border border-currency-border bg-surface px-2 py-1 text-sm font-bold text-warning-fg tabular-nums focus:ring-2 focus:ring-currency-border"
               title="Use +5, -10, or a number"
               aria-label="Currency"
             />

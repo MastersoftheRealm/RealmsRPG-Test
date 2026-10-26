@@ -141,7 +141,7 @@ function resourceReadout({
       <div className="flex min-w-0 flex-nowrap items-center gap-2">
         <span
           className={cn(
-            'w-12 shrink-0 text-center text-lg font-bold tabular-nums',
+            'inline-block min-w-[3ch] shrink-0 text-center text-lg font-bold tabular-nums',
             chrome.inputBorderText,
             chrome.valueClass,
           )}
@@ -189,8 +189,10 @@ function ResourceInputEditor({
   };
 
   const handleBlur = () => {
-    setIsEditing(false);
-    // Reset to current value if not committed
+    if (isEditing) {
+      applyValue();
+      return;
+    }
     setInputValue(String(current));
   };
 
@@ -198,23 +200,24 @@ function ResourceInputEditor({
     if (!onChange) return;
 
     const trimmed = inputValue.trim();
+    let committed = current;
 
     if (trimmed.startsWith('+')) {
       const delta = parseInt(trimmed.slice(1), 10);
       if (!isNaN(delta)) {
-        const newValue = Math.max(min, current + delta);
-        onChange(newValue);
-        setInputValue(String(newValue));
+        committed = Math.max(min, current + delta);
       }
     } else if (/^-?\d+$/.test(trimmed)) {
       const newValue = parseInt(trimmed, 10);
       if (!isNaN(newValue)) {
-        const value = Math.max(min, newValue);
-        onChange(value);
-        setInputValue(String(value));
+        committed = Math.max(min, newValue);
       }
     }
 
+    if (committed !== current) {
+      onChange(committed);
+    }
+    setInputValue(String(committed));
     setIsEditing(false);
   };
 
@@ -256,6 +259,7 @@ function ResourceInputEditor({
   };
 
   const chrome = resourceChrome(colorVariant, current, max);
+  const valueCh = Math.max(3, displayValue.replace(/^-/, '').length);
 
   return (
     <div className={cn('flex flex-col rounded-lg border p-3', chrome.bgColor)}>
@@ -278,13 +282,14 @@ function ResourceInputEditor({
           ref={inputRef}
           type="text"
           inputMode="numeric"
+          size={valueCh}
           value={displayValue}
           onChange={handleChange}
           onFocus={handleFocus}
           onBlur={handleBlur}
           onKeyDown={handleKeyDown}
           className={cn(
-            'touch-tier-standard w-12 rounded border bg-surface px-1 py-0.5 text-center text-lg font-bold dark:bg-surface-alt',
+            'touch-tier-standard max-w-[8ch] min-w-[3ch] rounded border bg-surface px-1 py-0.5 text-center text-lg font-bold tabular-nums dark:bg-surface-alt',
             'focus:ring-2 focus:ring-primary-outline-border focus:outline-none dark:focus:ring-primary-outline-border',
             chrome.inputBorderText,
             chrome.valueClass,
