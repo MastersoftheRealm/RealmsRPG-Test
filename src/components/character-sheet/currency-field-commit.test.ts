@@ -2,6 +2,12 @@ import { readFileSync } from 'node:fs';
 import path from 'node:path';
 import { describe, expect, it } from 'vitest';
 import { currencyDraftOnBlur, currencyDraftOnEnter } from './currency-field-commit';
+import {
+  SHEET_CURRENCY_INPUT_MAX_CH,
+  SHEET_CURRENCY_INPUT_MAX_CHROME_CH,
+  SHEET_CURRENCY_REPRO_FORMATTED,
+  sheetCurrencyInputMaxWidthClass,
+} from './sheet-currency-input-layout';
 
 const panel = readFileSync(path.join(import.meta.dirname, 'library-inventory-panel.tsx'), 'utf8');
 
@@ -87,9 +93,19 @@ describe('Currency formatting (86e3jwn5g)', () => {
   it('auto-sizes the sheet Currency input (no fixed 80px / w-20)', () => {
     expect(panel).toContain('size={currencyValueCh}');
     expect(panel).toContain('min-w-[3ch]');
-    expect(panel).toContain('max-w-[14ch]');
+    expect(panel).toContain('sheetCurrencyInputMaxWidthClass');
     expect(panel).not.toMatch(/\bmin-w-20\b/);
     expect(panel).not.toMatch(/\bw-20\b/);
+  });
+
+  it('max-width fits the QA repro formatted value inside the border box (86e3jwn5g)', () => {
+    expect(SHEET_CURRENCY_REPRO_FORMATTED).toBe('99,999,999,999');
+    expect(SHEET_CURRENCY_INPUT_MAX_CH).toBeGreaterThanOrEqual(
+      SHEET_CURRENCY_REPRO_FORMATTED.length + SHEET_CURRENCY_INPUT_MAX_CHROME_CH,
+    );
+    expect(sheetCurrencyInputMaxWidthClass).toBe(`max-w-[${SHEET_CURRENCY_INPUT_MAX_CH}ch]`);
+    expect(panel).toContain('sheetCurrencyInputMaxWidthClass');
+    expect(panel).not.toMatch(/max-w-\[\d+ch\]/);
   });
 
   it('still has no currency upper cap in commit logic', () => {
