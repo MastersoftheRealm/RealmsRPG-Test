@@ -258,7 +258,7 @@ function WeaponsSection({
   martialProf: number;
   unarmedProwess?: number | undefined;
   onRollAttack?: ((name: string, bonus: number) => void) | undefined;
-  onRollDamage?: ((damageStr: string, bonus: number) => void) | undefined;
+  onRollDamage?: ((damageStr: string, bonus: number, titleOverride?: string) => void) | undefined;
   enrichedWeapons?: EnrichedItem[] | undefined;
 }) {
   // Use enriched weapons if available, fallback to raw character equipment
@@ -316,12 +316,10 @@ function WeaponsSection({
               displayValue={unarmedDamageDisplay}
               variant={hasProwess ? 'danger' : 'unproficient'}
               onClick={() => {
-                // Roll expects dice pattern; at prowess 1 damage is Attack Bonus only (no dice)
-                const rollStr =
-                  hasProwess && !prowessData.damage
-                    ? `0d4 Bludgeoning`
-                    : `${unarmedDamageDisplay} Bludgeoning`;
-                onRollDamage(rollStr, unarmedAttackBonus);
+                const rollStr = prowessData.damage
+                  ? `${unarmedDamageDisplay} Bludgeoning`
+                  : 'Bludgeoning';
+                onRollDamage(rollStr, unarmedAttackBonus, 'Unarmed Prowess damage');
               }}
               size="sm"
               title="Roll unarmed damage"
@@ -360,7 +358,7 @@ function ShieldsSection({
   abilities: Abilities;
   martialProf: number;
   onRollAttack?: ((name: string, bonus: number) => void) | undefined;
-  onRollDamage?: ((damageStr: string, bonus: number) => void) | undefined;
+  onRollDamage?: ((damageStr: string, bonus: number, titleOverride?: string) => void) | undefined;
   enrichedShields?: EnrichedItem[] | undefined;
 }) {
   const shields = enrichedShields || ((character.equipment?.shields || []) as Item[]);
@@ -458,8 +456,8 @@ export function ArchetypeSection({
   };
 
   // Handle damage roll
-  const handleRollDamage = (damageStr: string, bonus: number) => {
-    rollContext?.rollDamage?.(damageStr, bonus);
+  const handleRollDamage = (damageStr: string, bonus: number, titleOverride?: string) => {
+    rollContext?.rollDamage?.(damageStr, bonus, titleOverride);
   };
 
   // Calculate edit state for pencil icon color

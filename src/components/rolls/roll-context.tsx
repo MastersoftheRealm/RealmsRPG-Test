@@ -9,6 +9,9 @@
 
 import React, { createContext, useContext, useCallback, useState, useEffect } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
+import { useToast } from '@/components/ui';
+import { isApiError } from '@/lib/api-client';
+import { AUTH_RATE_LIMIT_MESSAGE } from '@/lib/auth-errors';
 import { rollDie, generateRollId, DIE_MAX, type DieType } from '@/lib/rolls/die';
 import { resolveRollModifierLabel } from '@/lib/rolls/modifier-label';
 import { parseDamageRollGroups } from '@/lib/rolls/parse-damage-string';
@@ -111,6 +114,7 @@ export function RollProvider({
   personalLogCharacterId?: string | undefined;
 }) {
   const queryClient = useQueryClient();
+  const { showToast } = useToast();
   const personalStorageKey = personalLogCharacterId
     ? personalRollLogStorageKey(personalLogCharacterId)
     : LEGACY_PERSONAL_ROLL_LOG_KEY;
@@ -165,11 +169,15 @@ export function RollProvider({
               // Own roll: Realtime can lag or not fire for the writer; refetch so Campaign tab updates immediately.
               void queryClient.invalidateQueries({ queryKey: ['campaign-rolls', cid] });
             })
-            .catch(() => {});
+            .catch((err) => {
+              if (isApiError(err) && err.status === 429) {
+                showToast(AUTH_RATE_LIMIT_MESSAGE, 'warning');
+              }
+            });
         });
       }
     },
-    [maxHistory, campaignContext, canRoll, queryClient],
+    [maxHistory, campaignContext, canRoll, queryClient, showToast],
   );
 
   const clearHistory = useCallback(() => {
@@ -273,8 +281,6 @@ export function RollProvider({
       }
 
       const groups = parseDamageRollGroups(damageStr);
-      if (groups.length === 0) return;
-
       const diceResults: DieResult[] = [];
       let embeddedMod = 0;
 
@@ -292,9 +298,9 @@ export function RollProvider({
           });
         }
       }
-      if (diceResults.length === 0) return;
 
       const totalBonus = embeddedMod + bonus;
+      if (diceResults.length === 0 && totalBonus === 0) return;
       const total = diceResults.reduce((sum, die) => sum + die.value, 0) + totalBonus;
       const types = [...new Set(groups.map((g) => g.type).filter((t): t is string => !!t))];
       const title =

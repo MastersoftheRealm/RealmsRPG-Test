@@ -250,14 +250,16 @@ export function RollLog({ className, viewOnlyCampaignId }: RollLogProps) {
         <Card
           className={cn(
             'absolute right-0 bottom-[calc(var(--dock-fab-size)+0.75rem)]',
-            'flex h-[70vh] max-h-[600px] w-[min(22.5rem,calc(100svw-2*var(--dock-gap)))] flex-col',
+            'flex h-[70vh] max-h-[600px] w-[min(22.5rem,calc(100svw-2*var(--dock-gap)))] min-w-0 flex-col',
             'overflow-hidden p-0 shadow-2xl',
           )}
         >
           {/* Header */}
-          <div className="flex items-center justify-between bg-primary-button px-4 py-3 text-text-on-dark">
-            <div className="flex items-center gap-2">
-              <h3 className="text-base font-bold tracking-wide text-text-on-dark">🎲 Roll Log</h3>
+          <div className="flex min-w-0 flex-wrap items-center justify-between gap-2 bg-primary-button px-3 py-3 text-text-on-dark sm:px-4">
+            <div className="flex min-w-0 flex-1 items-center gap-2">
+              <h3 className="shrink-0 text-base font-bold tracking-wide text-text-on-dark">
+                🎲 Roll Log
+              </h3>
               {campaignId && (
                 <div className="flex overflow-hidden rounded-lg border border-text-on-dark/30">
                   <button
@@ -290,7 +292,7 @@ export function RollLog({ className, viewOnlyCampaignId }: RollLogProps) {
             {!isCampaignMode && (
               <button
                 onClick={clearHistory}
-                className="flex items-center gap-1 rounded-lg border-2 border-text-on-dark/30 bg-text-on-dark/15 px-3 py-1.5 text-xs font-semibold text-text-on-dark transition-colors hover:bg-text-on-dark/25"
+                className="flex shrink-0 items-center gap-1 rounded-lg border-2 border-text-on-dark/30 bg-text-on-dark/15 px-3 py-1.5 text-xs font-semibold text-text-on-dark transition-colors hover:bg-text-on-dark/25"
               >
                 <Trash2 className="h-3 w-3" />
                 Clear
@@ -459,8 +461,29 @@ export function RollLog({ className, viewOnlyCampaignId }: RollLogProps) {
 }
 
 /**
- * Group dice results by type for display
+ * Kadin Oct 25 2026 (86e3t17b1): keep the 2-line cutoff; tap expands the full title.
+ * Hover `title` remains a bonus; roll result row stays visible below.
  */
+function RollLogEntryTitle({ title }: { title: string }) {
+  const [expanded, setExpanded] = React.useState(false);
+
+  return (
+    <button
+      type="button"
+      onClick={() => setExpanded((open) => !open)}
+      className={cn(
+        'w-full min-w-0 text-left text-sm font-semibold break-words text-primary-fg',
+        !expanded && 'line-clamp-2',
+      )}
+      title={title}
+      aria-expanded={expanded}
+    >
+      {title}
+    </button>
+  );
+}
+
+/** Group dice results by type for display */
 function groupDiceByType(dice: DieResult[]): { type: DieType; results: DieResult[] }[] {
   const groups = new Map<DieType, DieResult[]>();
   for (const die of dice) {
@@ -480,6 +503,7 @@ export function RollEntryCard({
 }) {
   const diceGroups = groupDiceByType(roll.dice);
   const showModifier = roll.modifier !== 0;
+  const hasDice = roll.dice.length > 0;
   const bonusLabel = resolveRollModifierLabel({
     type: roll.type,
     title: roll.title,
@@ -499,10 +523,10 @@ export function RollEntryCard({
       )}
     >
       {/* Header: icon + title + character name (campaign) + date/time */}
-      <div className="mb-2 flex items-center justify-between">
-        <div className="flex min-w-0 items-center gap-2">
+      <div className="mb-2 flex min-w-0 flex-col gap-1 sm:flex-row sm:items-start sm:justify-between">
+        <div className="flex min-w-0 items-start gap-2">
           <span className="flex-shrink-0 text-sm">{ROLL_TYPE_ICONS[roll.type as RollType]}</span>
-          <div className="min-w-0">
+          <div className="min-w-0 flex-1">
             {characterName && (
               <span
                 className="block truncate text-xs font-medium text-primary-link-fg"
@@ -511,21 +535,19 @@ export function RollEntryCard({
                 {characterName}
               </span>
             )}
-            <span
-              className="line-clamp-2 text-sm font-semibold break-words text-primary-fg"
-              title={roll.title}
-            >
-              {roll.title}
-            </span>
+            <RollLogEntryTitle title={roll.title} />
           </div>
         </div>
-        <span className="ml-1 flex-shrink-0 text-[10px] text-text-secondary" title={timestampStr}>
+        <span
+          className="shrink-0 self-end text-[10px] text-text-secondary sm:self-start"
+          title={timestampStr}
+        >
           {timestampStr}
         </span>
       </div>
 
       {/* Single-row: dice notation + roll value + bonus + total in boxes */}
-      <div className="flex flex-wrap items-center gap-1.5">
+      <div className="flex min-w-0 flex-wrap items-center gap-1.5">
         {/* Dice notation + roll value (light grey) */}
         {diceGroups.map((group, gi) => (
           <div key={gi} className="flex items-center gap-1">
@@ -565,7 +587,9 @@ export function RollEntryCard({
         {/* Bonus when modifier present - avoid duplicate +/- (e.g. d20 + +5 → d20 + 5); red for negative */}
         {showModifier && (
           <>
-            <span className="text-xs text-text-muted">{roll.modifier >= 0 ? '+' : '−'}</span>
+            {hasDice && (
+              <span className="text-xs text-text-muted">{roll.modifier >= 0 ? '+' : '−'}</span>
+            )}
             <span
               title={bonusLabel}
               className={cn(
