@@ -2,9 +2,17 @@
  * Shared sheet tour / milestone highlight helpers (TASK-388).
  */
 
+/** Narrow phones (320px): pin the card to the top so it does not cover the highlight (86e3jwkep). */
+export const SHEET_TOUR_NARROW_MAX_WIDTH_PX = 480;
+
 /** Above roll-log FAB (`z-floating`); bottom-left on desktop; room for dice on mobile. */
 export const ONBOARDING_FLOATING_CARD_CLASS =
-  'fixed z-tour left-4 right-20 bottom-20 md:left-4 md:right-auto md:bottom-8 md:w-96 max-w-[calc(100vw-2rem)]';
+  'fixed z-tour left-4 right-4 max-w-[calc(100vw-2rem)] max-[480px]:top-[max(0.75rem,env(safe-area-inset-top))] max-[480px]:bottom-auto bottom-20 sm:right-20 md:left-4 md:right-auto md:bottom-8 md:w-96';
+
+export function sheetTourScrollBlock(): ScrollLogicalPosition {
+  if (typeof window === 'undefined') return 'center';
+  return window.innerWidth <= SHEET_TOUR_NARROW_MAX_WIDTH_PX ? 'start' : 'center';
+}
 
 const HIGHLIGHT_CLASSES = [
   'ring-2',
@@ -32,7 +40,7 @@ export function findVisibleTourTarget(tourId: string): HTMLElement | null {
 export function applyTourHighlight(tourId: string): () => void {
   const el = findVisibleTourTarget(tourId);
   if (!el) return () => {};
-  el.scrollIntoView({ behavior: 'smooth', block: 'center', inline: 'nearest' });
+  el.scrollIntoView({ behavior: 'smooth', block: sheetTourScrollBlock(), inline: 'nearest' });
   el.classList.add(...HIGHLIGHT_CLASSES);
   return () => {
     el.classList.remove(...HIGHLIGHT_CLASSES);
