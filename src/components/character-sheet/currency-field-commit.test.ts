@@ -83,4 +83,18 @@ describe('Currency formatting (86e3jwn5g)', () => {
       '1,200,000',
     );
   });
+
+  it('auto-sizes the sheet Currency input (no fixed 80px / w-20)', () => {
+    expect(panel).toContain('size={currencyValueCh}');
+    expect(panel).toContain('min-w-[3ch]');
+    expect(panel).toContain('max-w-[14ch]');
+    expect(panel).not.toMatch(/\bmin-w-20\b/);
+    expect(panel).not.toMatch(/\bw-20\b/);
+  });
+
+  it('still has no currency upper cap in commit logic', () => {
+    expect(
+      readFileSync(path.join(import.meta.dirname, 'currency-field-commit.ts'), 'utf8'),
+    ).not.toContain('CHARACTER_CURRENCY_MAX');
+  });
 });
