@@ -121,6 +121,15 @@ describe('reloading a technique keeps the saved part when names repeat (86e3jpq3
     expect(costs.totalTP).toBe(1);
   });
 
+  it('stores mechanic part ids as numbers when the codex id is a numeric string', () => {
+    const saved = techniquePartsForSave(
+      [],
+      [{ id: '6', name: 'Basic Attack', op_1_lvl: 0, op_2_lvl: 0, op_3_lvl: 0 }],
+    );
+    expect(saved).toHaveLength(1);
+    expect(saved[0]?.id).toBe(6);
+  });
+
   it('reloads Actions Evade and Defend instead of the earlier same-name copy', () => {
     for (const id of ['407', '351']) {
       const savedPart = catalog.find((entry) => entry.id === id);

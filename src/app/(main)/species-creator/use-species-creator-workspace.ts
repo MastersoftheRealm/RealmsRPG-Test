@@ -145,6 +145,7 @@ export function useSpeciesCreatorWorkspace({
   const save = useCreatorSave({
     type: 'species',
     getPayload,
+    editingId: editSession,
     requirePublishConfirm: true,
     publishConfirmTitle: 'Publish to Realms Library',
     publishConfirmDescription: (n, { existingInPublic }) =>

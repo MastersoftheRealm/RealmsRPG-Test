@@ -9,6 +9,7 @@ import { CREATOR_CACHE_KEYS } from '@/lib/game/creator-constants';
 import { readNewCreatorDraftCache } from '@/lib/game/creator-cache';
 import { deriveTechniqueAttackMode, normalizeAttackMode, type AttackMode } from '@/lib/attack-mode';
 import { normalizeTargetedDefenses } from '@/lib/game/targeted-defenses';
+import { coerceSavedPartId } from '@/lib/game/saved-part-id';
 import { findByIdOrName } from '@/lib/id-constants';
 
 export const TECHNIQUE_CREATOR_CACHE_KEY = CREATOR_CACHE_KEYS.TECHNIQUE;
@@ -111,14 +112,14 @@ export function techniquePartsForSave(
     ...selectedParts
       .filter((sp) => isManualTechniquePart(sp.part))
       .map((sp) => ({
-        id: Number(sp.part.id),
+        id: coerceSavedPartId(sp.part.id),
         name: sp.part.name,
         op_1_lvl: sp.op_1_lvl,
         op_2_lvl: sp.op_2_lvl,
         op_3_lvl: sp.op_3_lvl,
       })),
     ...mechanicParts.map((mp) => ({
-      id: mp.id,
+      id: coerceSavedPartId(mp.id),
       name: mp.name,
       op_1_lvl: mp.op_1_lvl,
       op_2_lvl: mp.op_2_lvl,

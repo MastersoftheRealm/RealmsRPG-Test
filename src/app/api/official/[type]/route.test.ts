@@ -255,6 +255,143 @@ describe('POST /api/official/[type]', () => {
     await expect(readJson(response)).resolves.toEqual({ error: 'Admin only' });
     expect(mockCreateServiceRoleClient).not.toHaveBeenCalled();
   });
+
+  function mockOfficialPostSupabase(options: {
+    currentRow: { name: string } | null;
+    nameCollision: { id: string } | null;
+    updateRows: { id: string }[];
+  }) {
+    const insertSingle = vi.fn(async () => ({ data: { id: 'new' }, error: null }));
+    let selectCall = 0;
+    const selectChain = {
+      eq: vi.fn(function eq() {
+        return selectChain;
+      }),
+      neq: vi.fn(function neq() {
+        return selectChain;
+      }),
+      ilike: vi.fn(function ilike() {
+        return selectChain;
+      }),
+      limit: vi.fn(function limit() {
+        return selectChain;
+      }),
+      maybeSingle: vi.fn(async () => {
+        selectCall += 1;
+        if (selectCall === 1) {
+          return { data: options.currentRow, error: null };
+        }
+        return { data: options.nameCollision, error: null };
+      }),
+    };
+    const updateChain = {
+      eq: vi.fn(function eq() {
+        return updateChain;
+      }),
+      select: vi.fn(function select() {
+        return updateChain;
+      }),
+      then(
+        onFulfilled?: (value: { data: unknown[]; error: null }) => unknown,
+        onRejected?: (reason: unknown) => unknown,
+      ) {
+        return Promise.resolve({ data: options.updateRows, error: null }).then(
+          onFulfilled,
+          onRejected,
+        );
+      },
+    };
+    const update = vi.fn(() => updateChain);
+    const supabase = {
+      from: vi.fn(() => ({
+        select: vi.fn(() => selectChain),
+        update,
+        insert: vi.fn(() => ({
+          select: vi.fn(() => ({ single: insertSingle })),
+        })),
+      })),
+    };
+    return { supabase, update, insertSingle, selectChain };
+  }
+
+  it('returns 404 when update id does not match any row (no silent insert)', async () => {
+    mockRequireLiveUser.mockResolvedValue(USER);
+    mockIsAdmin.mockResolvedValue(true);
+
+    const missingId = '11111111-1111-1111-1111-111111111111';
+    const { supabase, insertSingle } = mockOfficialPostSupabase({
+      currentRow: null,
+      nameCollision: null,
+      updateRows: [],
+    });
+    mockCreateServiceRoleClient.mockReturnValue(supabase as never);
+
+    const request = new NextRequest('http://localhost/api/official/powers', {
+      method: 'POST',
+      headers: { 'content-type': 'application/json', origin: 'http://localhost' },
+      body: JSON.stringify({ id: missingId, name: 'Renamed Bolt', description: 'x' }),
+    });
+
+    const response = await POST(request, params('powers'));
+
+    expect(response.status).toBe(404);
+    await expect(readJson(response)).resolves.toEqual({ error: 'Official item not found' });
+    expect(insertSingle).not.toHaveBeenCalled();
+  });
+
+  it('returns 409 when rename would collide with another official row name (case-insensitive)', async () => {
+    mockRequireLiveUser.mockResolvedValue(USER);
+    mockIsAdmin.mockResolvedValue(true);
+
+    const existingId = '22222222-2222-2222-2222-222222222222';
+    const { supabase, update, selectChain } = mockOfficialPostSupabase({
+      currentRow: { name: 'Original Bolt' },
+      nameCollision: { id: 'other-row' },
+      updateRows: [{ id: existingId }],
+    });
+    mockCreateServiceRoleClient.mockReturnValue(supabase as never);
+
+    const request = new NextRequest('http://localhost/api/official/powers', {
+      method: 'POST',
+      headers: { 'content-type': 'application/json', origin: 'http://localhost' },
+      body: JSON.stringify({ id: existingId, name: 'taken name', description: 'x' }),
+    });
+
+    const response = await POST(request, params('powers'));
+
+    expect(response.status).toBe(409);
+    await expect(readJson(response)).resolves.toEqual({
+      error: 'Another official item already uses this name',
+    });
+    expect(selectChain.ilike).toHaveBeenCalledWith('name', 'taken name');
+    expect(update).not.toHaveBeenCalled();
+  });
+
+  it('allows update when the name is unchanged even if another row shares that name', async () => {
+    mockRequireLiveUser.mockResolvedValue(USER);
+    mockIsAdmin.mockResolvedValue(true);
+
+    const existingId = '33333333-3333-3333-3333-333333333333';
+    const { supabase, update, selectChain } = mockOfficialPostSupabase({
+      currentRow: { name: 'Vampiric' },
+      nameCollision: { id: 'duplicate-row' },
+      updateRows: [{ id: existingId }],
+    });
+    mockCreateServiceRoleClient.mockReturnValue(supabase as never);
+
+    const request = new NextRequest('http://localhost/api/official/powers', {
+      method: 'POST',
+      headers: { 'content-type': 'application/json', origin: 'http://localhost' },
+      body: JSON.stringify({ id: existingId, name: 'Vampiric', description: 'updated text' }),
+    });
+
+    const response = await POST(request, params('powers'));
+
+    expect(response.status).toBe(200);
+    await expect(readJson(response)).resolves.toEqual({ id: existingId });
+    expect(selectChain.ilike).not.toHaveBeenCalled();
+    expect(update).toHaveBeenCalled();
+  });
 });
 
 describe('PATCH /api/official/[type]', () => {

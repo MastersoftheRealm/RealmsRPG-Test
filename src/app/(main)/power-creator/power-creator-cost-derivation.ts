@@ -29,6 +29,7 @@ import {
   type DurationConfig,
   type MechanicPartResult,
 } from '@/lib/calculators';
+import { coerceSavedPartId } from '@/lib/game/saved-part-id';
 import { formatDurationFromTypeAndValue } from '@/lib/utils/duration';
 import { attackModeColumnLabel, type AttackMode } from '@/lib/attack-mode';
 import type { SelectedPart, AdvancedPart, DamageConfig, RangeConfig } from './power-creator-types';
@@ -279,7 +280,7 @@ export function usePowerCreatorCostDerivation({
       op_3_lvl: number;
       applyDuration?: boolean | undefined;
     }) => ({
-      id: mp.id,
+      id: coerceSavedPartId(mp.id),
       name: mp.name,
       op_1_lvl: mp.op_1_lvl,
       op_2_lvl: mp.op_2_lvl,

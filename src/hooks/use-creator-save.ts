@@ -27,6 +27,7 @@ import {
 import {
   decidePrivateLibraryNameSave,
   libraryItemId,
+  officialLibraryItemId,
   readPrivateLibraryNameMatches,
 } from '@/lib/creator/private-library-name-save';
 import {
@@ -179,6 +180,12 @@ export function useCreatorSave(options: UseCreatorSaveOptions): UseCreatorSaveRe
   const [loadedLibraryId, setLoadedLibraryId] = useState<string | null>(
     isOfficialSaveTarget(initialSaveTarget) ? null : editingId?.trim() || null,
   );
+  const [loadedOfficialId, setLoadedOfficialId] = useState<string | null>(() => {
+    if (isOfficialSaveTarget(initialSaveTarget) && editingId?.trim()) {
+      return editingId.trim();
+    }
+    return null;
+  });
 
   const setShowPublishConfirm = useCallback((show: boolean) => {
     setShowPublishConfirmState(show);
@@ -189,12 +196,14 @@ export function useCreatorSave(options: UseCreatorSaveOptions): UseCreatorSaveRe
     (item: unknown) => {
       setSaveTarget(resolveCreatorSaveTargetFromItem(item, { canSaveToOfficial }));
       setLoadedLibraryId(libraryItemId(item));
+      setLoadedOfficialId(officialLibraryItemId(item));
     },
     [canSaveToOfficial],
   );
 
   const forgetLoadedLibraryItem = useCallback(() => {
     setLoadedLibraryId(null);
+    setLoadedOfficialId(null);
   }, []);
 
   const executeSave = useCallback(
@@ -303,6 +312,12 @@ export function useCreatorSave(options: UseCreatorSaveOptions): UseCreatorSaveRe
     }
     const trimmedName = name.trim();
     if (isOfficialSaveTarget(saveTarget) && requirePublishConfirm) {
+      const openOfficialId = loadedOfficialId?.trim() || null;
+      if (openOfficialId) {
+        setPublishExistingId(openOfficialId);
+        setShowPublishConfirmState(true);
+        return;
+      }
       const existing = await findOfficialLibraryItemByName(type, trimmedName, {
         includeUnlisted: true,
       });
@@ -334,8 +349,16 @@ export function useCreatorSave(options: UseCreatorSaveOptions): UseCreatorSaveRe
       await executeSave(saveTarget, decision.kind === 'update' ? decision.id : undefined);
       return;
     }
-    await executeSave(saveTarget);
-  }, [getPayload, type, saveTarget, requirePublishConfirm, executeSave, loadedLibraryId]);
+    await executeSave(saveTarget, loadedOfficialId ?? undefined);
+  }, [
+    getPayload,
+    type,
+    saveTarget,
+    requirePublishConfirm,
+    executeSave,
+    loadedLibraryId,
+    loadedOfficialId,
+  ]);
 
   const confirmPublish = useCallback(async () => {
     const existingId = publishExistingId;
