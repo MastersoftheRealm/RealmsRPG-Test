@@ -38,14 +38,8 @@ describe('website bugs batch 19 — power creator save/load', () => {
     expect(creatorSave).toContain("saveMessage.type !== 'success'");
   });
 
-<<<<<<< HEAD
-  it('holds the library delete success sentence pending confirmation of Deleted "${name}" (86e3jwuru)', () => {
-    expect(libraryPage).not.toContain('Deleted "');
-    expect(libraryPage).not.toMatch(/showToast\([^)]*Deleted/);
-=======
   it('shows library delete success toast with the approved sentence (86e3jwuru)', () => {
     expect(libraryPage).toContain('showToast(`Deleted "${deleteConfirm.item.name}"`, \'success\')');
->>>>>>> c35cef08 (fix: show approved My Library delete success toast (86e3jwuru))
   });
 
   it('guest load prompt says load a power (86e3jwurr)', () => {
