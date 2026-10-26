@@ -26,9 +26,9 @@ describe('website bugs batch 21 — sheet notes, currency, HP/EN inputs', () => 
     expect(notesTab).toContain('el.style.height = `${el.scrollHeight}px`');
   });
 
-  it('formats and caps sheet Currency (86e3jwn5g)', () => {
+  it('formats sheet Currency with grouped thousands (86e3jwn5g)', () => {
     expect(currencyCommit).toContain('formatGroupedInteger');
-    expect(currencyCommit).toContain('clampSavedCurrency');
+    expect(currencyCommit).not.toContain('CHARACTER_CURRENCY_MAX');
     expect(inventoryPanel).toContain('formatGroupedInteger(currency)');
   });
 

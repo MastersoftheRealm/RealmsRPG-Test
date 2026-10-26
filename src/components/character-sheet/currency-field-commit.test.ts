@@ -61,7 +61,7 @@ describe('unedited Currency does not overwrite a newer value (86e3juw07)', () =>
   });
 });
 
-describe('Currency formatting and ceiling (86e3jwn5g)', () => {
+describe('Currency formatting (86e3jwn5g)', () => {
   it('groups thousands in the display string after commit', () => {
     expect(currencyDraftOnBlur({ draft: '12500', currency: 0, edited: true })).toEqual({
       save: 12500,
@@ -73,11 +73,9 @@ describe('Currency formatting and ceiling (86e3jwn5g)', () => {
     });
   });
 
-  it('clamps typed Currency above the sheet maximum', () => {
+  it('saves large Currency values without an upper clamp', () => {
     const over = 1_000_000_000;
-    expect(currencyDraftOnBlur({ draft: String(over), currency: 0, edited: true }).save).toBe(
-      999_999_999,
-    );
+    expect(currencyDraftOnBlur({ draft: String(over), currency: 0, edited: true }).save).toBe(over);
   });
 
   it('shows grouped Currency when the field was not edited', () => {
