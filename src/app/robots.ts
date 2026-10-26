@@ -7,16 +7,10 @@ export const ROBOTS_DISALLOW = [
   '/my-account',
   '/login',
   '/register',
-  '/signup',
   '/forgot-password',
   '/reset-password',
   '/api/',
   '/admin',
-  // Legacy aliases in `next.config.ts` `redirects()` — crawl the destination URLs instead.
-  '/browse',
-  '/encounter-tracker',
-  '/crafting/new',
-  '/characters/new/advanced',
 ] as const;
 
 export default function robots(): MetadataRoute.Robots {
