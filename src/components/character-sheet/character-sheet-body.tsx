@@ -46,7 +46,7 @@ import {
  * gutter on every frame, or the owner dock height when `.has-sheet-mobile-dock` wraps it.
  */
 export const CHARACTER_SHEET_MOBILE_FRAME_CLASSNAME =
-  'character-sheet-mobile-frame max-md:box-border max-md:flex max-md:h-[calc(100svh-5rem)] max-md:min-w-0 max-md:w-full max-md:flex-col max-md:overflow-hidden max-md:pb-[var(--sheet-mobile-bottom-reserve)]';
+  'character-sheet-mobile-frame max-md:box-border max-md:flex max-md:h-[calc(100svh-var(--sheet-site-header-offset,5rem))] max-md:min-w-0 max-md:w-full max-md:flex-col max-md:overflow-hidden max-md:pb-[var(--sheet-mobile-bottom-reserve)]';
 
 /** Marks the owner sheet so the RollLog FAB shares the mobile action-dock strip. */
 export const CHARACTER_SHEET_MOBILE_DOCK_SCOPE_CLASSNAME = 'has-sheet-mobile-dock';

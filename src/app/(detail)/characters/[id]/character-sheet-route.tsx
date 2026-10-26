@@ -111,7 +111,8 @@ export default function CharacterSheetRoute({ id }: { id: string }) {
     >
       <CharacterSheetProvider value={sheetContextValue!}>
         <div
-          className={`bg-background md:min-h-screen ${isOwner ? CHARACTER_SHEET_MOBILE_DOCK_SCOPE_CLASSNAME : ''}`}
+          data-character-sheet-page
+          className={`bg-background [--sheet-site-header-offset:5rem] md:min-h-screen ${isOwner ? CHARACTER_SHEET_MOBILE_DOCK_SCOPE_CLASSNAME : ''}`}
         >
           {isOwner ? (
             <SheetActionToolbar

@@ -296,7 +296,7 @@ export function LibrarySection({
         onTabChange={(tabId) => setActiveTab(tabId as TabType)}
         variant="underline"
         size="md"
-        className="mb-4"
+        className="character-sheet-library-tabs mb-4"
         tabGroupId={tabGroupId}
         sharedTabPanelId={sharedPanelId}
       />
