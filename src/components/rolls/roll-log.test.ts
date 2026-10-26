@@ -35,10 +35,12 @@ describe('RollLog layout (86e3jwawd follow-up)', () => {
     expect(ROLL_LOG_PANEL_HEIGHT_CLASS).toContain('--roll-log-panel-max-height');
     expect(source).toContain('ROLL_LOG_HISTORY_LIST_CLASS');
     expect(ROLL_LOG_HISTORY_LIST_CLASS).toContain('roll-log-history');
+    expect(ROLL_LOG_HISTORY_LIST_CLASS).toContain('--roll-log-history-min');
+    expect(ROLL_LOG_HISTORY_LIST_CLASS).not.toContain('min-h-0');
     expect(source).toContain('ROLL_LOG_DICE_BUILDER_CLASS');
     expect(ROLL_LOG_HISTORY_LIST_MIN_CLASS).toBe('min-h-20');
-    expect(globalsCss).toContain('.roll-log-panel .roll-log-history');
-    expect(globalsCss).toMatch(/min-height: 5rem/);
+    expect(globalsCss).toContain('--roll-log-history-min: 5rem');
+    expect(globalsCss).toMatch(/max-height: 28rem\)[\s\S]*--roll-log-history-min: 3rem/);
     expect(globalsCss).toContain('--roll-log-panel-max-height');
     expect(globalsCss).toMatch(
       /body:has\(\[data-character-sheet-page\]\)[\s\S]*--roll-log-panel-max-height/,

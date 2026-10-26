@@ -3,9 +3,9 @@
  * Tests assert these strings stay in roll-log.tsx / globals.css.
  */
 
-/** Roll history list (min height via `.roll-log-history` in globals.css). */
+/** Roll history list — min height from `--roll-log-history-min` (no `min-h-0`; that zeroed the CSS floor). */
 export const ROLL_LOG_HISTORY_LIST_CLASS =
-  'roll-log-history min-h-0 flex-1 basis-0 overflow-y-auto bg-surface-alt p-2';
+  'roll-log-history min-h-[var(--roll-log-history-min)] flex-1 basis-0 overflow-y-auto bg-surface-alt p-2';
 
 /** @deprecated Asserted in tests as the default history min (5rem); short viewports use 3rem in CSS. */
 export const ROLL_LOG_HISTORY_LIST_MIN_CLASS = 'min-h-20';
