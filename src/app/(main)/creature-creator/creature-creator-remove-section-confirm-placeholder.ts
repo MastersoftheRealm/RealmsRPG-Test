@@ -6,8 +6,9 @@
 /** ConfirmActionModal confirm button label (#446). */
 export const REMOVE_SECTION_CONFIRM_CONFIRM_LABEL = 'Confirm';
 
-// Description held because Remove does not clear section items; Kadin's copy rewrite is task 86e3rw7af.
-export const REMOVE_SECTION_CONFIRM_DESCRIPTION = '';
+/** Temporary stopgap until Kadin's copy rewrite (task 86e3rw7af) replaces this description. */
+export const REMOVE_SECTION_CONFIRM_DESCRIPTION =
+  'This section will be hidden. Your items in it are kept.';
 
 /** Section titles already used on CollapsibleSection (do not invent new names). */
 export type CreatureCreatorOptionalSectionDisplayName = 'Powers' | 'Techniques' | 'Inventory';
