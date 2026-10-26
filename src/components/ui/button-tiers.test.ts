@@ -84,7 +84,9 @@ describe('ADR-0023 sheet skill Dense/Standard (TASK-836)', () => {
       'utf8',
     );
     expect(resourceInput).toContain('touch-tier-standard');
-    expect(resourceInput).toContain('w-12');
+    expect(resourceInput).toContain('min-w-[3ch]');
+    expect(resourceInput).toContain('size={valueCh}');
+    expect(resourceInput).not.toContain('w-12');
     expect(resourceInput).not.toMatch(/min-w-\[44px\]/);
   });
 
