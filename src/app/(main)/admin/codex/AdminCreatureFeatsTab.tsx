@@ -16,6 +16,7 @@ import { useSort } from '@/hooks/use-sort';
 import { codexSourcesOrCore } from '@/lib/codex/sources';
 import { COPY_NAME_SUFFIX } from './admin-codex-copy-suffix';
 import { useAdminCodexEntity } from './use-admin-codex-entity';
+import { useAdminCodexFormState } from './use-admin-codex-form-state';
 import { AdminCodexRowActions, ADMIN_CODEX_ROW_ACTIONS_WIDTH } from './admin-codex-row-actions';
 import {
   AdminCreatureFeatEditModal,
@@ -46,7 +47,8 @@ export function AdminCreatureFeatsTab() {
   const [rulesSources, setRulesSources] = useState<string[]>([]);
   const { sortState, handleSort, sortItems } = useSort('name');
 
-  const [form, setForm] = useState<CreatureFeatFormState>(EMPTY_CREATURE_FEAT_FORM);
+  const { form, setForm, getForm } =
+    useAdminCodexFormState<CreatureFeatFormState>(EMPTY_CREATURE_FEAT_FORM);
 
   const filtered = sortItems<CreatureFeat>(
     (creatureFeats || []).filter((f: CreatureFeat) => {
@@ -96,16 +98,17 @@ export function AdminCreatureFeatsTab() {
     );
 
   const handleSave = async () => {
-    if (!form.name.trim()) return;
+    const current = getForm();
+    if (!current.name.trim()) return;
     await save({
       payload: {
-        name: form.name.trim(),
-        description: form.description.trim(),
-        feat_points: form.points ?? undefined,
-        feat_lvl: form.feat_lvl ?? undefined,
-        lvl_req: form.lvl_req ?? undefined,
-        mechanic: form.mechanic,
-        sources: codexSourcesOrCore(form.sources),
+        name: current.name.trim(),
+        description: current.description.trim(),
+        feat_points: current.points ?? undefined,
+        feat_lvl: current.feat_lvl ?? undefined,
+        lvl_req: current.lvl_req ?? undefined,
+        mechanic: current.mechanic,
+        sources: codexSourcesOrCore(current.sources),
       },
       expectedUpdatedAt: editing?.updated_at,
     });

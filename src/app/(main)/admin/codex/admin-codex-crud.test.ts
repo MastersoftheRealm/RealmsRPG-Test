@@ -17,6 +17,16 @@ const TAB_FILES = [
   'AdminArchetypesTab.tsx',
 ] as const;
 
+const CODEX_MODAL_SAVE_TABS = [
+  'AdminTraitsTab.tsx',
+  'AdminSkillsTab.tsx',
+  'AdminSpeciesTab.tsx',
+  'AdminPartsTab.tsx',
+  'AdminPropertiesTab.tsx',
+  'AdminEquipmentTab.tsx',
+  'AdminCreatureFeatsTab.tsx',
+] as const;
+
 const EDIT_MODALS = [
   'admin-feat-edit-modal.tsx',
   'admin-species-edit-modal.tsx',
@@ -46,6 +56,22 @@ const EXTRACTED_MODAL_TABS = [
 function readAdmin(name: string): string {
   return readFileSync(path.join(dir, name), 'utf8');
 }
+
+describe('Admin Codex modal save reads live form (hotfix)', () => {
+  it('entity tabs build save payloads from getForm()', () => {
+    for (const name of CODEX_MODAL_SAVE_TABS) {
+      const src = readAdmin(name);
+      expect(src, name).toContain('useAdminCodexFormState');
+      expect(src, name).toContain('getForm()');
+    }
+    const archetype = readAdmin('use-admin-archetype-workspace.ts');
+    expect(archetype).toContain('useAdminCodexFormState');
+    expect(archetype).toContain('getForm()');
+    const featModal = readAdmin('admin-feat-edit-modal.tsx');
+    expect(featModal).toContain('useAdminCodexFormState');
+    expect(featModal).toContain('getForm()');
+  });
+});
 
 describe('resolveAdminCodexSaveTargetId (TASK-842)', () => {
   it('uses the editing id when editId is omitted', () => {

@@ -15,6 +15,7 @@ import { AdminCodexCopySourceBanner } from './admin-codex-copy-source-banner';
 import { AdminCodexEditModalFooter } from './admin-codex-edit-modal-footer';
 import { codexFeatEditorIsDirty } from './admin-codex-unsaved-leave';
 import { useCodexEditorLeaveGuard } from './admin-codex-unsaved-leave-guard';
+import { useAdminCodexFormState } from './use-admin-codex-form-state';
 
 export function AdminFeatEditModal({
   isOpen,
@@ -63,7 +64,7 @@ export function AdminFeatEditModal({
   onAddLevel?: ((form: FeatFormState, sourceDbFeatId: string) => void) | undefined;
 }) {
   // Fresh state per open: parent remounts with key={modalSessionKey}.
-  const [form, setForm] = useState<FeatFormState>(initialForm);
+  const { form, setForm, getForm } = useAdminCodexFormState<FeatFormState>(initialForm);
   const [selectedEditId, setSelectedEditId] = useState<string | null>(initialEditId);
   const [draftsById, setDraftsById] = useState<Record<string, FeatFormState>>(() =>
     initialEditId ? { [initialEditId]: initialForm } : {},
@@ -113,7 +114,7 @@ export function AdminFeatEditModal({
         return next;
       });
     },
-    [hasLevels, selectedEditId, markDirty],
+    [hasLevels, selectedEditId, markDirty, setForm],
   );
 
   const setFormUpdater = useCallback(
@@ -128,7 +129,7 @@ export function AdminFeatEditModal({
         return next;
       });
     },
-    [hasLevels, selectedEditId, markDirty],
+    [hasLevels, selectedEditId, markDirty, setForm],
   );
 
   const leave = useCodexEditorLeaveGuard(
@@ -178,8 +179,9 @@ export function AdminFeatEditModal({
             if (hasLevels) {
               // Ensure current form is captured before bulk-save.
               const currentId = selectedEditId;
+              const latestForm = getForm();
               const nextDrafts: Record<string, FeatFormState> = { ...draftsById };
-              if (currentId) nextDrafts[currentId] = form;
+              if (currentId) nextDrafts[currentId] = latestForm;
               const payload: Record<string, FeatFormState> = {};
               dirtyIds.forEach((id) => {
                 const draft = nextDrafts[id];
@@ -190,7 +192,7 @@ export function AdminFeatEditModal({
               onSaveAll(payload);
               return;
             }
-            onSave(selectedEditId, form);
+            onSave(selectedEditId, getForm());
           }}
           saveDisabled={saving || !form.name.trim() || (hasLevels && dirtyIds.size === 0)}
           saving={saving}

@@ -27,6 +27,7 @@ import {
   type TraitFormState,
 } from './admin-trait-form';
 import { AdminTraitCreateModal, AdminTraitEditModal } from './admin-trait-edit-modal';
+import { useAdminCodexFormState } from './use-admin-codex-form-state';
 
 const ADMIN_TRAIT_GRID = '1.5fr 0.6fr 0.6fr 0.6fr';
 const ADMIN_TRAIT_COLUMNS = [
@@ -59,7 +60,7 @@ export function AdminTraitsTab() {
   const [search, setSearch] = useState('');
   const [rulesSources, setRulesSources] = useState<string[]>([]);
   const { sortState, handleSort, sortItems } = useSort('name');
-  const [form, setForm] = useState<TraitFormState>(EMPTY_TRAIT_FORM);
+  const { form, setForm, getForm } = useAdminCodexFormState<TraitFormState>(EMPTY_TRAIT_FORM);
   const [createTraitOpen, setCreateTraitOpen] = useState(false);
   const [createTraitForm, setCreateTraitForm] = useState({ name: '', description: '' });
   const [creatingTrait, setCreatingTrait] = useState(false);
@@ -131,9 +132,10 @@ export function AdminTraitsTab() {
   };
 
   const handleSave = async () => {
-    if (!form.name.trim()) return;
+    const current = getForm();
+    if (!current.name.trim()) return;
     await save({
-      payload: traitFormToSavePayload(form),
+      payload: traitFormToSavePayload(current),
       expectedUpdatedAt: editing?.updated_at,
     });
   };

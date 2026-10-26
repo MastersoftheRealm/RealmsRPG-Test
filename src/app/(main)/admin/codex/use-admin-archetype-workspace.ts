@@ -35,6 +35,7 @@ import {
 } from './admin-archetype-workspace-open';
 import { saveAdminArchetype } from './admin-archetype-workspace-save';
 import { useAdminCodexEntity } from './use-admin-codex-entity';
+import { useAdminCodexFormState } from './use-admin-codex-form-state';
 import type { PowerPart } from '@/hooks/codex-types';
 import type { LibraryItem, LibraryPower } from '@/types/library';
 import type { CodexSkill, CodexEquipmentItem } from '@/types/codex';
@@ -75,7 +76,7 @@ export function useAdminArchetypeWorkspace() {
   });
   const [search, setSearch] = useState('');
   const [rulesSources, setRulesSources] = useState<string[]>([]);
-  const [form, setForm] = useState(EMPTY_ARCHETYPE_FORM);
+  const { form, setForm, getForm } = useAdminCodexFormState(EMPTY_ARCHETYPE_FORM);
 
   const filtered = (archetypes || []).filter((a: ArchetypeItem) => {
     if (
@@ -157,7 +158,7 @@ export function useAdminArchetypeWorkspace() {
 
   const handleSave = async () => {
     await saveAdminArchetype({
-      form,
+      form: getForm(),
       editing,
       optionsByField,
       skillById,

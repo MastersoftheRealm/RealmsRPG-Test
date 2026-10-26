@@ -34,6 +34,7 @@ import {
   EMPTY_SKILL_FORM,
   type SkillFormState,
 } from './admin-skill-edit-modal';
+import { useAdminCodexFormState } from './use-admin-codex-form-state';
 
 /** Skills are governed by abilities only (not defenses). */
 const ABILITY_OPTIONS_SKILLS = ABILITIES_AND_DEFENSES.slice(0, 6);
@@ -69,7 +70,7 @@ export function AdminSkillsTab() {
     rulesSources: [],
   });
 
-  const [form, setForm] = useState<SkillFormState>(EMPTY_SKILL_FORM);
+  const { form, setForm, getForm } = useAdminCodexFormState<SkillFormState>(EMPTY_SKILL_FORM);
 
   const ABILITY_OPTIONS = useMemo(
     () => ABILITY_OPTIONS_SKILLS.map((a) => ({ value: a, label: a })),
@@ -144,10 +145,11 @@ export function AdminSkillsTab() {
   const openEdit = (s: Skill) => beginEdit(s, () => setForm(skillFormFromSkill(s, s.name)));
 
   const handleSave = async () => {
-    if (!form.name.trim()) return;
+    const current = getForm();
+    if (!current.name.trim()) return;
 
     let base_skill_id: number | undefined;
-    const trimmedBase = form.baseSkillName.trim();
+    const trimmedBase = current.baseSkillName.trim();
     if (trimmedBase) {
       if (trimmedBase === 'Any') {
         base_skill_id = 0;
@@ -161,21 +163,21 @@ export function AdminSkillsTab() {
 
     await save({
       payload: {
-        name: form.name.trim(),
-        description: form.description.trim(),
+        name: current.name.trim(),
+        description: current.description.trim(),
         ability:
-          form.abilities.length === 0
+          current.abilities.length === 0
             ? undefined
-            : form.abilities.length === 1
-              ? form.abilities[0]
-              : form.abilities,
+            : current.abilities.length === 1
+              ? current.abilities[0]
+              : current.abilities,
         base_skill_id,
-        success_desc: form.success_desc.trim() || undefined,
-        failure_desc: form.failure_desc.trim() || undefined,
-        ds_calc: form.ds_calc.trim() || undefined,
-        craft_success_desc: form.craft_success_desc.trim() || undefined,
-        craft_failure_desc: form.craft_failure_desc.trim() || undefined,
-        sources: codexSourcesOrCore(form.sources),
+        success_desc: current.success_desc.trim() || undefined,
+        failure_desc: current.failure_desc.trim() || undefined,
+        ds_calc: current.ds_calc.trim() || undefined,
+        craft_success_desc: current.craft_success_desc.trim() || undefined,
+        craft_failure_desc: current.craft_failure_desc.trim() || undefined,
+        sources: codexSourcesOrCore(current.sources),
       },
       expectedUpdatedAt: editing?.updated_at,
     });

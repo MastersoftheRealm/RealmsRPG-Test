@@ -28,6 +28,7 @@ import {
 } from './admin-part-form';
 import { AdminPartEditModal } from './admin-part-edit-modal';
 import { useAdminCodexEntity } from './use-admin-codex-entity';
+import { useAdminCodexFormState } from './use-admin-codex-form-state';
 import { AdminCodexRowActions, ADMIN_CODEX_ROW_ACTIONS_WIDTH } from './admin-codex-row-actions';
 
 const ADMIN_PART_COLUMNS = [
@@ -76,7 +77,7 @@ export function AdminPartsTab() {
     rulesSources: [],
   });
   const [optionSlotCount, setOptionSlotCount] = useState(0);
-  const [form, setForm] = useState<PartFormState>(EMPTY_PART_FORM);
+  const { form, setForm, getForm } = useAdminCodexFormState<PartFormState>(EMPTY_PART_FORM);
 
   const readOptionsFromForm = (): PartOption[] => {
     const opts: PartOption[] = [];
@@ -178,8 +179,9 @@ export function AdminPartsTab() {
     });
 
   const handleSave = async () => {
-    if (!form.name.trim()) return;
-    const data = partFormToSavePayload(form);
+    const current = getForm();
+    if (!current.name.trim()) return;
+    const data = partFormToSavePayload(current);
     await save({
       payload: data,
       expectedUpdatedAt: editing?.updated_at,

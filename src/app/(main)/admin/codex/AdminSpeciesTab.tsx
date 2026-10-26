@@ -38,6 +38,7 @@ import {
 } from './admin-species-form';
 import { AdminSpeciesEditModal } from './admin-species-edit-modal';
 import { useAdminCodexEntity } from './use-admin-codex-entity';
+import { useAdminCodexFormState } from './use-admin-codex-form-state';
 import { AdminCodexRowActions, ADMIN_CODEX_SPECIES_ACTIONS_WIDTH } from './admin-codex-row-actions';
 
 export function AdminSpeciesTab() {
@@ -64,7 +65,7 @@ export function AdminSpeciesTab() {
   });
   const [search, setSearch] = useState('');
   const { sortState, handleSort, sortItems } = useSort('name');
-  const [form, setForm] = useState<SpeciesFormState>(EMPTY_SPECIES_FORM);
+  const { form, setForm, getForm } = useAdminCodexFormState<SpeciesFormState>(EMPTY_SPECIES_FORM);
   const [typeFilters, setTypeFilters] = useState<string[]>([]);
   const [sizeFilters, setSizeFilters] = useState<string[]>([]);
   const [rulesSources, setRulesSources] = useState<string[]>([]);
@@ -119,9 +120,10 @@ export function AdminSpeciesTab() {
     beginEdit(s, () => setForm(speciesToFormState(s, skillsArr, traitsArr)));
 
   const handleSave = async () => {
-    if (!form.name.trim()) return;
+    const current = getForm();
+    if (!current.name.trim()) return;
     await save({
-      payload: speciesFormToSavePayload(form),
+      payload: speciesFormToSavePayload(current),
       expectedUpdatedAt: editing?.updated_at,
     });
   };
