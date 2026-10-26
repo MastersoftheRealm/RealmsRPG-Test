@@ -31,6 +31,14 @@ export function libraryItemId(item: unknown): string | null {
   return readLibraryId(row.id) ?? readLibraryId(row.docId);
 }
 
+/** Official-library id from a loaded creator row (for admin publish updates). */
+export function officialLibraryItemId(item: unknown): string | null {
+  if (!item || typeof item !== 'object') return null;
+  const row = item as { id?: unknown; docId?: unknown; _source?: unknown };
+  if (row._source !== 'official') return null;
+  return readLibraryId(row.id) ?? readLibraryId(row.docId);
+}
+
 /**
  * `matchIds` are user-library rows whose name matches the save (case-insensitive).
  * `loadedId` is the row open in the creator, if any.

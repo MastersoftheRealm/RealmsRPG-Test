@@ -4,6 +4,7 @@ import { describe, expect, it } from 'vitest';
 import {
   decidePrivateLibraryNameSave,
   libraryItemId,
+  officialLibraryItemId,
   readPrivateLibraryNameMatches,
 } from '@/lib/creator/private-library-name-save';
 
@@ -57,6 +58,13 @@ describe('private library name save', () => {
     expect(libraryItemId({ id: 'official-1', _source: 'official' })).toBeNull();
   });
 
+  it('reads the library id from a loaded official row', () => {
+    expect(
+      officialLibraryItemId({ id: '5cd97532-0396-4bef-904d-b022df2434e4', _source: 'official' }),
+    ).toBe('5cd97532-0396-4bef-904d-b022df2434e4');
+    expect(officialLibraryItemId({ id: 'row-1' })).toBeNull();
+  });
+
   it('turns a thrown My library name lookup into the save error toast', async () => {
     const result = await readPrivateLibraryNameMatches(async () => {
       throw new Error('library unavailable');
@@ -81,6 +89,8 @@ describe('private library name save', () => {
     expect(body.indexOf('readPrivateLibraryNameMatches')).toBeGreaterThan(
       body.indexOf('findOfficialLibraryItemByName'),
     );
+    expect(body).toContain('loadedOfficialId');
+    expect(body).toContain('openOfficialId');
   });
 
   it('passes publishConfirmLabel and does not infer Replace from the title', () => {

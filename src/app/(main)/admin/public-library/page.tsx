@@ -2,7 +2,7 @@
  * Admin Official Library Editor
  * =============================
  * Browse and manage published official library items. Edit opens the corresponding
- * creator with the item loaded; save with the same name overwrites the official item.
+ * creator with the item loaded; saving updates that official row (including renames).
  * Admin only. Data comes from public.official_powers, official_techniques, official_items,
  * official_creatures (see SUPABASE_SCHEMA.md). If lists are empty, run
  * sql/supabase-official-library-public-schema.sql in Supabase to create and backfill.
@@ -53,7 +53,7 @@ export default function AdminPublicLibraryPage() {
     <PageContainer size="xl">
       <PageHeader
         title="Official Library Editor"
-        description="Edit published official items via the creators (Edit opens Power/Technique/Item/Creature/Species Creator with the item loaded). Save with the same name to overwrite. Data is stored in official_* tables in public."
+        description="Edit published official items via the creators (Edit opens Power/Technique/Item/Creature/Species Creator with the item loaded). Save updates the open official row. Data is stored in official_* tables in public."
       />
 
       <TabNavigation
