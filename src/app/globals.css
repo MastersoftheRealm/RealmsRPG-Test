@@ -690,6 +690,11 @@
     contain: layout;
   }
 
+  /* Roll log flex: history min height (5rem; 3rem when the panel is height-constrained). */
+  .roll-log-panel .roll-log-history {
+    min-height: 5rem;
+  }
+
   /* Short viewports / zoom: keep the roll button inside the card (86e3jwawd). */
   @media (max-height: 28rem) {
     :root {
@@ -697,6 +702,10 @@
         70vh,
         calc(100svh - var(--dock-fab-size) - var(--dock-gap) * 3 - 0.75rem)
       );
+    }
+
+    .roll-log-panel .roll-log-history {
+      min-height: 3rem;
     }
   }
 
