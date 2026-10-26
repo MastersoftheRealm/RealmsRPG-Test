@@ -139,6 +139,7 @@ export function PowerCreatorEditorPowerConfig({
                   checked={area.applyDuration ?? false}
                   onChange={(e) => onAreaChange((a) => ({ ...a, applyDuration: e.target.checked }))}
                   label="Apply duration"
+                  aria-label="Apply duration"
                 />
               </div>
             )}

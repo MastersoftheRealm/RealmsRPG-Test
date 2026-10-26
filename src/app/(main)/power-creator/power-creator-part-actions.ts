@@ -8,6 +8,15 @@ import { useCallback, type Dispatch, type SetStateAction } from 'react';
 import type { PowerPart } from '@/hooks';
 import type { SelectedPart, AdvancedPart } from './power-creator-types';
 
+/** First mechanic list entry not already in Power Mechanics (86e3jwt68). */
+export function nextMechanicPartToAdd(
+  mechanicPartsForList: PowerPart[],
+  selectedAdvancedParts: AdvancedPart[],
+): PowerPart | undefined {
+  const selectedIds = new Set(selectedAdvancedParts.map((ap) => String(ap.part.id)));
+  return mechanicPartsForList.find((p) => !selectedIds.has(String(p.id)));
+}
+
 type UsePowerCreatorPartActionsArgs = {
   nonMechanicParts: PowerPart[];
   mechanicPartsForList: PowerPart[];
@@ -55,14 +64,12 @@ export function usePowerCreatorPartActions({
   );
 
   const addMechanicPart = useCallback(() => {
-    if (mechanicPartsForList.length === 0) return;
-    const first = mechanicPartsForList[0];
-    if (!first) return;
-    if (selectedAdvancedParts.some((ap) => ap.part.id === first.id)) return;
+    const next = nextMechanicPartToAdd(mechanicPartsForList, selectedAdvancedParts);
+    if (!next) return;
     setSelectedAdvancedParts((prev) => [
       ...prev,
       {
-        part: first,
+        part: next,
         op_1_lvl: 0,
         op_2_lvl: 0,
         op_3_lvl: 0,
