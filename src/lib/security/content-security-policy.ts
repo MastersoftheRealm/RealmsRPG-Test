@@ -5,10 +5,12 @@
  * Hosted Supabase realtime (createBrowserClient) uses wss://*.supabase.co.
  * The Vercel toolbar websocket is wss://ws-us3.pusher.com.
  * next dev, and a local http Supabase URL, use ws://localhost or ws://127.0.0.1.
- * Cloudflare Turnstile (auth CAPTCHA): https://developers.cloudflare.com/turnstile/reference/content-security-policy/
+ * Cloudflare Turnstile (auth CAPTCHA when enabled): allowlisted site-wide on every
+ * response (`next.config.ts` `/:path*`), not only auth routes.
+ * https://developers.cloudflare.com/turnstile/reference/content-security-policy/
  */
 
-/** Origin for Turnstile api.js, challenge iframe, and widget network calls. */
+/** Single Turnstile origin (no broader Cloudflare wildcards). */
 export const TURNSTILE_CSP_ORIGIN = 'https://challenges.cloudflare.com' as const;
 
 const CONNECT_SRC = [

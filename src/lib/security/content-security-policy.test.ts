@@ -28,10 +28,10 @@ describe('buildContentSecurityPolicy', () => {
     const frameSrc = directives.find((part) => part.startsWith('frame-src '));
     expect(frameSrc).toBe(`frame-src 'self' https://vercel.live ${TURNSTILE_CSP_ORIGIN}`);
 
-    const connect = connectSrc(production);
-    expect(connect).toContain(TURNSTILE_CSP_ORIGIN);
+    expect(connectSrc(production)).toBe(
+      "connect-src 'self' https://*.supabase.co wss://*.supabase.co https://vercel.live wss://*.vercel.live wss://ws-us3.pusher.com https://va.vercel-scripts.com https://*.sentry.io https://*.ingest.sentry.io https://*.ingest.us.sentry.io https://challenges.cloudflare.com",
+    );
     expect(production).toContain("object-src 'none'");
-    expect(production).not.toMatch(/frame-src[^;]*https:\s/);
   });
 
   it('omits unsafe-eval outside development', () => {
