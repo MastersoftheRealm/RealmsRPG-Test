@@ -2,7 +2,7 @@
 
 **Schema reference:** [src/docs/SUPABASE_SCHEMA.md](../src/docs/SUPABASE_SCHEMA.md). All app tables live in **`public`**. **Owner checklist:** [src/docs/DATABASE_CONSISTENCY_CHECKLIST.md](../src/docs/DATABASE_CONSISTENCY_CHECKLIST.md).
 
-**Codex / reference data edits:** Audit → draft SQL here → **owner reviews** → then apply. See [.cursor/rules/realms-codex-data.mdc](../.cursor/rules/realms-codex-data.mdc).
+**Codex / reference data edits:** Audit → draft SQL here → **Kadin explicit OK** → then apply. See [.cursor/rules/realms-codex-data.mdc](../.cursor/rules/realms-codex-data.mdc).
 
 **Last parity audit:** 2026-07-03 against the RealmsRPG-Test project. Local files updated to match that snapshot; no DB writes during audit.
 
@@ -223,6 +223,6 @@ Applied on production outside this table: [codex-entry-sources.sql](codex-entry-
 1. **Back up** before any migration.
 2. **Match local files to live DB** after MCP applies — add status header + row in this README.
 3. **Do not** re-run path-c-phase0-* if DB already has only `public`.
-4. **Codex data** (`codex_*` content): draft SQL here; owner reviews before `UPDATE`/`apply_migration` (see `realms-codex-data.mdc`).
+4. **Codex data** (`codex_*` content): draft SQL here; Kadin explicit OK before `UPDATE`/`apply_migration` (see `realms-codex-data.mdc`).
 5. **GRANT + RLS (required on every new `public` table):** In the **same SQL file** as `CREATE TABLE`, enable RLS, add policies, and `GRANT` explicitly. Grant `SELECT, INSERT, UPDATE, DELETE` to `authenticated` and `service_role`. Grant `SELECT` to `anon` **only** if the table is meant to be public-read. Copy [`_TEMPLATE_new_table.sql`](_TEMPLATE_new_table.sql). CI fails changed `sql/` files that contain `CREATE TABLE` without `GRANT` (template and `schema/` baselines excluded).
 6. **Drop legacy:** `DROP TABLE IF EXISTS public._prisma_migrations;` — safe if Prisma removed.
