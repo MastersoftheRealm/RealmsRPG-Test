@@ -5,8 +5,8 @@
 -- codex.core_rules table is gone). Creates a fresh core_rules table in public.
 --
 -- Then seed from JSON: run
---   node scripts/seed-core-rules.js --export-json   (generates data/core-rules/*.json from embedded CORE_RULES)
---   Loading core_rules on a database requires owner approval — see src/docs/ai/guide/07-database-operations.md
+--   node scripts/seed-core-rules.js --export-json   (if you need to generate data/core-rules/*.json)
+--   node scripts/seed-core-rules.js                  (seeds from embedded CORE_RULES into public.core_rules)
 -- =============================================================================
 
 CREATE TABLE IF NOT EXISTS public.core_rules (
