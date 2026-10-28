@@ -9,7 +9,7 @@ Lightweight process for **Architect**-role changes. Keep each ADR short.
 - Breaking or cross-client API contract change
 - Choosing between two durable patterns (not a one-file bugfix)
 
-**Skip ADR** when extending an existing pattern with a prop/variant, or when the owner explicitly acks in chat (note that ack in `DEVELOPER_TASK_QUEUE.md` or the task notes).
+**Skip ADR** when extending an existing pattern with a prop/variant, or when the owner explicitly acks in chat (note that ack on the ClickUp task).
 
 ## How
 

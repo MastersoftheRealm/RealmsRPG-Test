@@ -32,7 +32,7 @@ Then, as needed:
 | Deploy / secrets | [`DEPLOYMENT_AND_SECRETS_SUPABASE.md`](./DEPLOYMENT_AND_SECRETS_SUPABASE.md) |
 | DB ops runbook | [`DATABASE_CONSISTENCY_CHECKLIST.md`](./DATABASE_CONSISTENCY_CHECKLIST.md) |
 | Edge / CDN performance | [`PERFORMANCE_AND_EDGE.md`](./PERFORMANCE_AND_EDGE.md) |
-| Owner feedback | [`ALL_FEEDBACK_CLEAN.md`](./ALL_FEEDBACK_CLEAN.md) |
+| Owner feedback | ClickUp (historical `ALL_FEEDBACK_CLEAN.md` removed from repo) |
 
 **Historical context (do not treat as current):** [`ai/archive/HISTORY_INDEX.md`](./ai/archive/HISTORY_INDEX.md) — June audits, full task backup, older plans. Archived paths are listed in `.cursorignore`.
 

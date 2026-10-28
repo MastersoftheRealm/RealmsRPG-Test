@@ -124,7 +124,7 @@ Helpers: `src/lib/realms-images.ts` (client + types), `src/lib/realms-images-ser
 
 **Legacy migration (TASK-498, applied 2026-07-17):** `sql/realms-image-catalog-legacy-entity-art.sql` registered existing entity-tied Storage objects into `realms_images` (same path) and set consumer `image_id`. Entity-tied upload route `/api/upload/codex-art` and `CodexArtUploadField` removed. Do not delete cataloged Storage objects while `image_id` refs remain.
 
-If Supabase logs show **`permission denied for table user_species`**, the `authenticated` role is missing table `GRANT`s (common after creating/moving the table without grants). Run **`sql/supabase-user-species-grants-rls.sql`** in the SQL Editor. This does not fix campaign invite lookup by itself (that is separate RLS on `campaigns`); it fixes species library / hooks that query `user_species`.
+If Supabase logs show **`permission denied for table user_species`**, the `authenticated` role is missing table `GRANT`s (common after creating/moving the table without grants). Run **`sql/supabase-user-species-grants-rls.sql`** with owner approval (see guide/07-database-operations.md). This does not fix campaign invite lookup by itself (that is separate RLS on `campaigns`); it fixes species library / hooks that query `user_species`.
 
 **API:** `GET/POST/PATCH/DELETE /api/user/library/[type]`; types: powers, techniques, empowered-techniques, items, creatures, species. Tab badges: `GET /api/user/library/counts` (auth) and `GET /api/official/counts` (public). Tab badges: `GET /api/user/library/counts` (auth) and `GET /api/official/counts` (public).
 
@@ -192,7 +192,7 @@ If logs show **`permission denied for table campaign_members`**, run **`sql/supa
 |-------|--------|-------------|
 | `crafting_sessions` | Hybrid | id (PK), user_id (**UUID** → auth.users), data (JSONB), created_at, updated_at; list columns: status, item_name, currency_cost |
 
-**Migration (run in Supabase SQL Editor):**
+**Migration (run in owner-approved database apply (see 07-database-operations.md)):**
 
 ```sql
 CREATE TABLE IF NOT EXISTS public.crafting_sessions (
@@ -227,7 +227,7 @@ CREATE POLICY crafting_sessions_delete ON public.crafting_sessions FOR DELETE US
 
 Stores enhanced equipment (base item + imbued power) saved from crafting. List columns: name for list display.
 
-**Migration (run in Supabase SQL Editor):**
+**Migration (run in owner-approved database apply (see 07-database-operations.md)):**
 
 ```sql
 CREATE TABLE IF NOT EXISTS public.user_enhanced_items (
@@ -258,7 +258,7 @@ CREATE POLICY user_enhanced_items_delete ON public.user_enhanced_items FOR DELET
 
 Stores **official** enhanced equipment for the Realms library (base item + imbued power). Unlike `user_enhanced_items`, `currency_cost` and `rarity` are derived from the **ideal enhanced crafting rules** (assuming proper successes) rather than a specific crafting outcome.
 
-**Migration (run in Supabase SQL Editor):**
+**Migration (run in owner-approved database apply (see 07-database-operations.md)):**
 
 ```sql
 CREATE TABLE IF NOT EXISTS public.official_enhanced_items (
@@ -393,14 +393,14 @@ All other `public` tables: **no** `anon` table grants (RLS + `authenticated` / `
 
 **Storage art (no sign-in):** `codex-art`, `portraits`, and `profile-pictures` buckets remain **public** in `storage.buckets`. TASK-649 removed bucket-wide Storage **listing** policies on `codex-art` (same pattern as portraits); **direct object URLs / CDN GETs still work** without a SELECT policy.
 
-Replay / verify: `node scripts/run-task-649-phase2.mjs` (idempotent) · `node scripts/verify-task-649.mjs` (advisor-parity SQL checks). See `sql/README.md` § Applied ad-hoc.
+TASK-649 changes are applied on RealmsRPG-Test; replay SQL lives under `sql/task-649-*-applied.sql`. Do not re-apply on production without owner approval. See `sql/README.md` § Applied ad-hoc and `guide/07-database-operations.md`.
 
 ---
 
 ## 5. What to change elsewhere
 
 - **Do not** duplicate this table list in other docs. Point to **this file** for “how is the DB organized?”
-- **Path C / DB rationale docs** (in `src/docs/ai/archive/`): PATH_C_MIGRATION_PLAN, PATH_C_AUDIT_FULFILLMENT, DATABASE_CODEX_AUDIT, DATABASE_SCALABILITY_AUDIT — historical only; for current schema use this doc.
+- **Path C / DB rationale docs** (in `src/docs/ai/archive/`): PATH_C_AUDIT_FULFILLMENT, DATABASE_CODEX_AUDIT, DATABASE_SCALABILITY_AUDIT — historical only; for current schema use this doc.
 - **Codex field reference** (`src/docs/human/CODEX_SCHEMA_REFERENCE.md`): Defines **fields** (meaning, types, use) for codex entities; this doc defines **tables and columns** in Supabase.
 
 ---

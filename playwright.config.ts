@@ -18,7 +18,7 @@ dotenv.config({ path: path.resolve(__dirname, '.env.local'), override: true });
  *
  * NOTE on baselines: Playwright stores OS-specific baselines. Baselines
  * generated on this (Windows) machine power the local/agent self-review loop;
- * CI (Linux) generates its own set on first run. See DEVELOPER_TASK_QUEUE.
+ * CI (Linux) generates its own set on first run (see BUILD_VALIDATION.md / ui-verify workflow).
  */
 export default defineConfig({
   testDir: './tests/visual',

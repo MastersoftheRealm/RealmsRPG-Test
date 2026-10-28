@@ -27,9 +27,7 @@ const targets = [
   { id: 'realms-library', url: 'http://localhost:3100/library', rowSel: '[data-glr-row]' },
 ];
 
-const OUT = path.resolve(
-  'C:/Users/kadin/OneDrive/Desktop/Code/RealmsRPG-Test/reports/mobile-audit-2026-08-18',
-);
+const OUT = path.resolve(path.join(process.cwd(), 'reports', 'mobile-audit-output'));
 
 const METRICS = (rowSel) => {
   const vw = document.documentElement.clientWidth;

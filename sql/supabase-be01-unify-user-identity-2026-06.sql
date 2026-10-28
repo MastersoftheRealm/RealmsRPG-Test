@@ -5,7 +5,7 @@
 -- every other user_* table: `user_id text REFERENCES public.user_profiles(id)` with
 -- `auth.uid()::text = user_id` RLS.
 --
--- Pre-checks performed before applying (live, RealmsRPG-Test / lbqhiwudvifmkjtkccdg):
+-- Pre-checks performed before applying (live, RealmsRPG-Test / RealmsRPG-Test):
 --   * crafting_sessions: 3 rows, user_enhanced_items: 2 rows.
 --   * 0 orphaned user_id values vs public.user_profiles(id).
 -- App code already passes the text uid (`user.uid`) for both insert and filter, so no

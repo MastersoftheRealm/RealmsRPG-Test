@@ -25,7 +25,7 @@ We target **WCAG 2.2 Level AA** for contrast, focus, labels, headings, images, t
 
 - [WCAG 2.2 Quick Reference](https://www.w3.org/WAI/WCAG22/quickref/)
 - [eslint-plugin-jsx-a11y](https://github.com/jsx-eslint/eslint-plugin-jsx-a11y)
-- Vercel accessibility audit (2026-02-23): fixes tracked in TASK-267 and `ALL_FEEDBACK_CLEAN.md` §6b.
+- Vercel accessibility audit (2026-02-23): fixes tracked in TASK-267 and ClickUp / TASK-267 notes.
 
 ## Dark mode contrast (site-wide patterns)
 

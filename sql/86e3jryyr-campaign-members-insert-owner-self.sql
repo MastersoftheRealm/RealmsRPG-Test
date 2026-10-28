@@ -1,6 +1,6 @@
 -- 86e3jryyr — campaign_members INSERT is owner-and-self only
 -- =============================================================================
--- Status: APPLIED 2026-10-09 on RealmsRPG-Test (lbqhiwudvifmkjtkccdg)
+-- Status: APPLIED 2026-10-09 on RealmsRPG-Test (RealmsRPG-Test project)
 -- Replay: this file (idempotent DROP + CREATE). Does not change SELECT or DELETE.
 --
 -- Product rule (Kadin, 2026-10-09): anyone with a valid invite code can join.

@@ -1,6 +1,6 @@
 -- 0002 — Audit remediation, wave 1b: codex optimistic locking + atomic archetype level replace
 -- Applied: 2026-08-13 via Supabase apply_migration (name: audit_remediation_codex_locking)
--- Source: reports/audit-2026-08-13/08-admin-surface.md (F-07 optimistic locking, F-04 archetype replace)
+-- Source: Aug 2026 codebase audit, admin surface findings (report removed from repo; see git history)
 -- Replay-safe: yes (add column if not exists, create or replace, guarded trigger drops)
 -- Destructive: no
 -- Prereqs: 0001. Verified before applying: only codex_archetype_levels had updated_at;

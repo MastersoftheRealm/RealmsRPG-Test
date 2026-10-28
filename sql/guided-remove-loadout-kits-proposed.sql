@@ -1,4 +1,4 @@
--- APPLIED 2026-07-15 on RealmsRPG-Test (lbqhiwudvifmkjtkccdg) — owner approved.
+-- APPLIED 2026-07-15 on RealmsRPG-Test (RealmsRPG-Test project) — owner approved.
 -- Purpose: Remove guided quick-kit payloads from codex_archetypes.level1_loadouts.
 -- Kit item ids for Berserker were already present in level1_armaments / level1_equipment.
 --

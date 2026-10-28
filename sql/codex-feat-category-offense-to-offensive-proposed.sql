@@ -1,7 +1,7 @@
 -- TASK-876 — Unify feat categories Offense → Offensive (preview only; owner approve before apply)
 -- Codex-data policy: audit → propose → owner "apply" → run once (DEV-Q06).
 --
--- Live audit 2026-08-22 (project lbqhiwudvifmkjtkccdg):
+-- Live audit 2026-08-22 (RealmsRPG-Test project):
 --   Offensive=187, Offense=8, Utility=304, Defensive=87, Support=54, Movement=39, …
 -- Seed CSV (scripts/seed-data/feats.csv): Offense=0, Offensive=183 — seed already unified.
 -- Power/technique *part* categories still use "Offense" — do NOT touch codex_parts.

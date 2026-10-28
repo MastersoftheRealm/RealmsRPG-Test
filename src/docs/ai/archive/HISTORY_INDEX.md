@@ -1,12 +1,10 @@
 # Historical Docs Index
 
-**Do not use these as current truth.** For active agent workflow, read root [`AGENTS.md`](../../../../AGENTS.md), open tasks in [`ACTIVE_TASKS.md`](../ACTIVE_TASKS.md), and current remediation in [`REMEDIATION_STATUS_2026-08.md`](../REMEDIATION_STATUS_2026-08.md). June snapshot: [`REMEDIATION_STATUS_2026-06.md`](../REMEDIATION_STATUS_2026-06.md).
+**Do not use these as current truth.** For active agent workflow, read root [`AGENTS.md`](../../../../AGENTS.md) and open work in **ClickUp**. Optional engineering notes may remain in [`ACTIVE_TASKS.md`](ACTIVE_TASKS.md) when present.
 
 ## August 2026 full codebase audit
 
-| Doc | Purpose |
-|-----|---------|
-| [`CODEBASE_AUDIT_2026-08-01.md`](CODEBASE_AUDIT_2026-08-01.md) | Independent full-codebase audit run without docs access (build/lint/tsc/npm audit/vitest + Supabase advisors + git author analysis) — filed TASK-642–668 (security, correctness, quality gates, duplication, hygiene); TASK-669 (Redis provisioning) in WAITING_TASKS. Character-creator consolidation intentionally deferred — see CHARACTER_CREATOR_AUDIT_2026-06-26.md. **Post-fix status:** [`../REMEDIATION_STATUS_2026-08.md`](../REMEDIATION_STATUS_2026-08.md). |
+The standalone audit report and remediation tracker were removed from the repo (git history). Use ClickUp and `sql/schema/0001_*` / `0002_*` migration headers for what shipped.
 
 ## July 2026 quality / global audits
 
@@ -19,21 +17,16 @@
 | Doc | Purpose |
 |-----|---------|
 | [`CODEBASE_AUDIT_2026-06.md`](CODEBASE_AUDIT_2026-06.md) | Root audit register (346 findings) |
-| [`FULL_AUDIT_2026-06.md`](FULL_AUDIT_2026-06.md) | Whole-site + AI-workflow audit snapshot |
 | [`SYSTEMATIC_AUDIT_2026-06.md`](SYSTEMATIC_AUDIT_2026-06.md) | Page-by-page 20-area walkthrough |
 | [`CHARACTER_CREATOR_AUDIT_2026-06-26.md`](CHARACTER_CREATOR_AUDIT_2026-06-26.md) | Character creator localized audit |
 
 ## Task history
 
-| Doc | Purpose |
-|-----|---------|
-| [`AI_TASK_QUEUE_FULL_BACKUP_2026-06-26.md`](AI_TASK_QUEUE_FULL_BACKUP_2026-06-26.md) | Full queue before TASK-382 slim |
-| [`TASK_QUEUE_DONE.md`](TASK_QUEUE_DONE.md) | Completed/cancelled tasks (append-only) |
-| [`AI_CHANGELOG_ARCHIVE.md`](AI_CHANGELOG_ARCHIVE.md) | Changelog entries before 2026-04-01 |
+Completed-task markdown archives (`TASK_QUEUE_DONE`, full queue backup, changelog archive) were removed from the repo. Use ClickUp status history and git log.
 
 ## Older audits & plans
 
-See [`README.md`](README.md) in this folder for the full list (2026-02 audits, Path C migration, completed designs, templates).
+See [`README.md`](README.md) in this folder for remaining docs (2026-02 audits, completed designs, templates).
 
 ## Human-only reference (not in agent source map)
 

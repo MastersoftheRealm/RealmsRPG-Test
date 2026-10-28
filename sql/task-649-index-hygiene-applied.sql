@@ -1,8 +1,8 @@
 -- TASK-649 Phase 2 — Index hygiene: FK covers + unused-index review (D7/D8)
 -- =============================================================================
 -- Status: APPLIED 2026-08-03 on RealmsRPG-Test (VTT tables excluded per owner)
--- Project: RealmsRPG-Test (lbqhiwudvifmkjtkccdg)
--- Audit ref: archive/CODEBASE_AUDIT_2026-08-01.md §5.2 D7/D8
+-- Project: RealmsRPG-Test (RealmsRPG-Test project)
+-- Audit ref: Aug 2026 codebase audit (removed from repo; git history) §5.2 D7/D8
 --
 -- Part A (apply): add covering index for realms_images.created_by FK only.
 -- vtt_actions.token_id index SKIPPED — owner: do not touch VTT tables (Collins branch).

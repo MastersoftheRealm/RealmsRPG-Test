@@ -10,24 +10,7 @@ How to configure admin access for the RealmsRPG admin tools (Codex Editor, etc.)
 
 Admin access is controlled by `user_profiles.role = 'admin'` in Supabase.
 
-To grant admin:
-
-1. Find the user's UID in Supabase Dashboard → Authentication → Users.
-2. In Supabase SQL Editor, run:
-
-```sql
-update public.user_profiles
-set role = 'admin'
-where id = '<user-uid>';
-```
-
-To remove admin:
-
-```sql
-update public.user_profiles
-set role = 'developer' -- or new_player / playtester
-where id = '<user-uid>';
-```
+Grant or revoke admin only with **owner approval** on the target database (Dashboard user management or an approved migration). Agents do not run role-change SQL. See [07-database-operations.md](../ai/guide/07-database-operations.md).
 
 ---
 
@@ -44,18 +27,18 @@ where id = '<user-uid>';
 
 | Step | Command / Action |
 |------|-------------------|
-| Run schema/RLS | Run SQL files in Supabase Dashboard → SQL Editor (see `DEPLOYMENT_AND_SECRETS_SUPABASE.md`) |
-| Seed Codex data | `npm run db:seed` (node script using Supabase client; requires `.env` with `NEXT_PUBLIC_SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY`) |
-| Seed core rules | `node scripts/seed-core-rules.js` |
-| Deploy to Vercel | Push to `main` (auto-deploy) or `vercel --prod` from CLI |
+| Run schema/RLS | Owner-approved SQL on the target environment only — see `DEPLOYMENT_AND_SECRETS_SUPABASE.md` and [07-database-operations.md](../ai/guide/07-database-operations.md) |
+| Seed Codex data | `npm run db:seed` only when env points at an approved non-production database |
+| Core rules JSON | `node scripts/seed-core-rules.js --export-json` (repo files only) |
+| Deploy to Vercel | Push to the default branch; production promotion is owner-controlled in Vercel |
 
-See `DEPLOYMENT_AND_SECRETS_SUPABASE.md` for full deployment steps and env vars.
+See `DEPLOYMENT_AND_SECRETS_SUPABASE.md` for env vars and deployment overview.
 
 ---
 
 ## Public Library (planned)
 
-The app has a **Codex** (reference data) and **user Library** (private items). A **public library** feature (admin-curated items users can "Add to my library") is planned but not yet implemented. When available, admins will save items to the public library from the creators; users will browse and copy them. See `AI_TASK_QUEUE.md` (TASK-136, TASK-141) for implementation status.
+The app has a **Codex** (reference data) and **user Library** (private items). A **public library** feature (admin-curated items users can "Add to my library") is planned but not yet implemented. When available, admins will save items to the public library from the creators; users will browse and copy them. Track status in ClickUp.
 
 ---
 
