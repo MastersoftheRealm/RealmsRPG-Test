@@ -1,6 +1,6 @@
 # Architecture Constitution
 
-On demand. Do not load this file up front. An audit checks four points from it: one task, no new pattern, no overwritten fix, no invented rule. It does not re-read this file, and it is not a second QA pass.
+On demand. Do not load this file up front. PR Reviewer grades using `src/docs/ai/PR_REVIEWER_BRIEF.md`; it is not a second QA pass.
 
 ## Roles
 
@@ -40,7 +40,7 @@ Do not read `ACTIVE_TASKS.md`, `AI_TASK_QUEUE.md`, `WAITING_TASKS.md`, `AI_CHANG
 - **Search before build** — never fork a parallel `Library*Tab` / load hook / upload path / parser.
 - **Stack** — Next.js App Router, Supabase (no Prisma), Vercel. SQL in `sql/`; schema docs in `SUPABASE_SCHEMA.md`.
 - **Lib layers** — `lib/game` + `lib/calculators` are neutral domain math (no imports from `lib/library` or `lib/guided-creator`). UI/creator layers import downward. See ADR-0010.
-- **Migrations (one policy):** Prefer Supabase MCP `apply_migration` when available; else Dashboard SQL Editor. Always keep idempotent SQL in `sql/`. **Codex data** (`codex_*` / `core_rules`): audit → propose SQL → **owner approve** → apply (MCP or Dashboard). See `realms-codex-data.mdc`.
+- **Migrations (one policy):** Prefer Supabase MCP `apply_migration` when available; else Dashboard SQL Editor. Always keep idempotent SQL in `sql/`. **Codex data** (`codex_*` / `core_rules`): audit → propose SQL → **Kadin explicit OK** → apply (MCP or Dashboard). See `realms-codex-data.mdc`.
 - **Uploads** — client multipart via `apiUpload` from `@/lib/api-client` (not raw `fetch` to `/api/upload/*`).
 - **Client errors** — API/Supabase boundary convention in `ARCHITECTURE.md` § Client error handling: `apiFetch` throws; check Supabase `{ error }`; no silent `catch` on user actions.
 - **API error responses** — Route Handlers return `{ error: string }` on failure (4xx/5xx). Log raw Supabase/Postgres/storage errors server-side via `logApiError` / `apiErrorResponse` (`@/lib/api-error`); never expose `.message`, `.details`, or stack traces to clients in production. Optional `hint` / `debug` fields only when `?debug=1` (admin/non-prod) or `NODE_ENV=development`. Success payloads vary by route; errors do not.
@@ -48,7 +48,7 @@ Do not read `ACTIVE_TASKS.md`, `AI_TASK_QUEUE.md`, `WAITING_TASKS.md`, `AI_CHANG
 - **UI gates** — keep `realms/no-raw-color`, contrast, visual/a11y Playwright. Prefer `text-success-fg` / `text-danger-fg` / `text-warning-fg` / `text-power-fg` / `text-martial-fg` over numbered ramp + ad-hoc `dark:`.
 - **Mobile** — `fullScreenOnMobile` on large modals; ≥44px touch targets.
 - **Accessibility** — **WCAG 2.2 AA** everywhere. Labels, contrast, modals, touch tiers per `MOBILE_UX.md`.
-- **Git** — Never push `master`. Never squash. Collin merges, or Kadin says bypass. Merge commit only. The agent does not merge unless Kadin said bypass. **In review** means a human can merge. **Testing** assigns Bob (`95261690`) and keeps Collin (`44381886`). Human QA marks **complete**. Agents do not.
+- **Git** — Status order, PR Reviewer, Human OK, merge, and testing: `.cursor/rules/realms-tasks.mdc`. Never push `master`. Never squash. Agents do not merge.
 
 ## Definition of Done
 
@@ -71,23 +71,16 @@ User-facing work moves to ClickUp **testing** with the QA comment. That comment 
 
 ## Human review gates (stop and ask / DEV queue)
 
-Require owner review before merging:
+After a passing PR Reviewer verdict, require **Human OK** (Kadin or Collin, usually Kadin) before merging:
 
 - New files under `src/components/patterns/` or `src/components/ui/` (**CI:** `npm run tasks:validate-shared-ui` — update `scripts/shared-ui-allowlist.json` + ADR)
 - New zustand stores or new state-management approach
 - API contract changes (request/response shapes clients depend on)
 - Live codex `UPDATE`/`INSERT`/`DELETE`
 
-**High-risk sign-off (Kadin explicit OK before merge/apply):**
+**High-risk PRs** (classification, Web Manager second pass, and Kadin plain-language summary): `src/docs/ai/PR_REVIEWER_BRIEF.md` **Risk classification**. Live database apply still needs **Kadin explicit OK** and a fresh backup.
 
-1. Schema / migrations (`sql/`, Supabase migrations).
-2. Auth / RLS / permissions / role limits.
-3. Rules math (EN/TP/HP formulas, proficiency, soft caps) — PR Reviewer also routes these to Production Manager for a Drive/Codex check before Kadin signs off.
-4. Deletes of user or official data; destructive admin tools.
-5. Live Codex / `core_rules` / official library `UPDATE`/`INSERT`/`DELETE`.
-6. Secrets, domain/DNS, billing, anything sent outside the team.
-
-See [Realms Dev Workflow §4](https://docs.google.com/document/d/1F6iZUKP9nN0YTFzOkZ6Y82sySaw0iW101f_a-7ZeQdI/edit).
+See [Realms Dev Workflow §4](https://docs.google.com/document/d/1F6iZUKP9nN0YTFzOkZ6Y82sySaw0iW101f_a-7ZeQdI/edit) (Drive may lag; repo brief wins for PR Reviewer checks until Drive is updated).
 
 **Model escalation:** Before implementing Architect-class or irreversible-data work, pause once and flag that a stronger model may be safer — see `.cursor/rules/realms-tasks.mdc` (narrow triggers; do not stall routine Implementer tasks).
 
@@ -98,12 +91,12 @@ See [Realms Dev Workflow §4](https://docs.google.com/document/d/1F6iZUKP9nN0YTF
 - Cleanup must **remove** clutter and prove feedback/AC in code — not grow docs theater. Prefer **net remove** on cleanup/debt diffs.
 - When consolidating, ship a first slice + precise follow-ups — not aspirational prose only.
 - A hold that exists only in `WAITING_TASKS.md` stays there until it is on the ClickUp task. Do not load that file to start work.
-- **Before merge:** `/audit` on a different model. `/cleanup` only for an in-scope gap from that audit. `/global-audit` and `/debt` are unused on a task.
+- **Before merge:** PR Reviewer verdict per `src/docs/ai/PR_REVIEWER_BRIEF.md`. `/cleanup` only for an in-scope gap from REQUEST CHANGES. `/global-audit` and `/debt` are unused on a task.
 
 ## On-demand deep refs
 
 - Patterns / components / gotchas → `AGENT_GUIDE.md` hub → `guide/` appendices
 - Feature map → `FEATURE_INDEX.md` + generated `FEATURE_INDEX_BARRELS.generated.md`
-- PR failure-mode checklist → `PR_CHECKLIST.md` (includes owner commands)
-- Slash commands → `.cursor/commands/` (`audit`, `cleanup`). Retired stubs: `archive/global-audit.md`, `archive/debt.md` (not live commands).
+- PR failure-mode checklist → `PR_CHECKLIST.md` (includes PR Reviewer pointer)
+- Slash commands → `.cursor/commands/cleanup.md`. Retired: `/audit` (superseded by PR Reviewer), stubs `src/docs/ai/archive/global-audit.md`, `archive/debt.md` (not live commands).
 - Task record → the ClickUp task, the branch, and the PR. Not `AI_TASK_QUEUE.md`.

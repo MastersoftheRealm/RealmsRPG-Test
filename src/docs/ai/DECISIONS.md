@@ -13,10 +13,10 @@ Game runner = **RM (Realm Master)** — never GM.
 
 ---
 
-## Process / workflow (Oct 5, 2026)
+## Process / workflow (Oct 5, 2026; PR review updated Oct 28, 2026)
 
 - ClickUp is the **only work queue**. Repo `ACTIVE_TASKS` / TASK-### are optional engineering notes.
-- Collin merges, or Kadin says bypass. Merge commit only. Never squash. Never push `master`. **In review** means a human can merge. **Testing** assigns Bob (`95261690`; legally James Owenby) and keeps Collin (`44381886`), with QA steps in the comment. Human QA moves the task to **complete**. Agents do not. In prose say Bob.
+- Task status order, PR Reviewer, Human OK, merge, bypass, and testing: **`.cursor/rules/realms-tasks.mdc`** (repo SoT). PR Reviewer checklist: **`src/docs/ai/PR_REVIEWER_BRIEF.md`**.
 - QA Tester checks the Vercel preview before merge or shortly after. Post-merge QA: QA Tester + Bob, or Bob alone.
 - WCAG **2.2 AA** everywhere.
 - Keep branch name **`master`**; ban direct pushes.
@@ -157,9 +157,10 @@ Owner decisions for [Admin > Sources page](https://app.clickup.com/t/86e3ru888).
 
 ## Changelog
 
+- **2026-10-28:** Kadin approved **PR Reviewer** as the primary PR checker (`src/docs/ai/PR_REVIEWER_BRIEF.md`). The coding bot and PR Reviewer must be different bots with different prompts. Web Manager second pass on high-risk PRs only, plus spot-checks. CI, lint, and ratchets are the final gate. **Human OK** = Kadin or Collin (usually Kadin); Collin is not a required reviewer. Bypass skips human review only, not required checks unless Kadin says otherwise. When Kadin is the approver, the PR must include a plain-language summary (what it does, why, what could go wrong, how to undo, what is needed from him). Retired `/audit` and `.cursor/commands/audit.md`. Supersedes the Oct 8 bypass assignee wording below for review/merge rules.
 - **2026-10-18:** `sql/codex-rename-source.sql` applied on production (function only; no rows changed); re-applied same day after fixing control-character validation (`chr(0)` in SQL text). The first real rename has not run. Re-running the file is safe because it only replaces the function. The first real rename is a live update and needs a backup first.
 - **2026-10-17:** Codex sources ([86e3ru888](https://app.clickup.com/t/86e3ru888)): Core may be renamed; merging into or out of Core is allowed with the merge confirm; rename changelogs commit in the same transaction; no remove-from-all-items control. The column default `{Core}` and `CORE_CODEX_SOURCE` stay. Items with no source are still saved as Core until a developer changes that default.
 - **2026-10-14:** Character sheet visibility (Oct 14, 2026 owner ruling): RM full access to rostered private sheets; members cannot see private; campaign visibility off-roster blocked. Supersedes 86e3jryyv for RM semantics; implements [86e39knu2](https://app.clickup.com/t/86e39knu2).
-- **2026-10-08:** Bypass merge moves the ClickUp task to testing with QA instructions for what changed, adds James Owenby, and keeps Collin assigned. Collin can move it back to in review.
+- **2026-10-08:** Bypass merge moves the ClickUp task to **testing** with QA instructions for what changed and adds James Owenby. *(Assignee/review details superseded 2026-10-28 — Human OK and testing assign Bob only; see changelog entry.)*
 - **2026-10-05 (~4:54 PM ET):** Appended standing QA triggers (post-dep smoke, S25 page-speed budgets, security-header/RLS retests, testing-status bot limits, Website QA check delegated to QA Tester, CI npm audit policy, no CVE IDs in public repo).
 - **2026-10-05:** Initial seed from `/workspace/qa/intent.md` settled rulings + Oct 5 Dev Team / Kadin corrections (ability hard caps −5/+10; Drive vs GAME_RULES ask-first; Realm Master spelling).

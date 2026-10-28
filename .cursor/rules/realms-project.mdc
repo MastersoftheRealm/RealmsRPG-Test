@@ -9,7 +9,7 @@ alwaysApply: true
 
 **Dirs:** `src/app/`, `src/components/{ui,patterns,...}/`, `src/hooks/`, `src/stores/`, `src/lib/`, `src/services/`.
 
-**Git:** Never push `master`. Never squash. Do not merge unless Kadin said bypass. Merge commit only. Branch `bug|feat/<clickUpId>-short-slug` from current `origin/master`. One task, one PR. The status order is `realms-tasks.mdc`.
+**Git:** Never push `master`. Never squash. Merge after Human OK (Kadin or Collin, usually Kadin). Bypass skips human review only, never required checks unless Kadin says otherwise. Merge commit only. Agents do not merge. Branch `bug|feat/<clickUpId>-short-slug` from current `origin/master`. One task, one PR. The status order is `realms-tasks.mdc`.
 
 **Check locally:** the regression test for the repro. CI runs typecheck, the unit suite, and the build.
 

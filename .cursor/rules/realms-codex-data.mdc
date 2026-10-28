@@ -1,5 +1,5 @@
 ---
-description: Codex / reference-data edits — owner review before database writes. Apply when editing codex_*, core_rules, sql/, or official library reference data.
+description: Codex / reference-data edits — Kadin explicit OK before database writes. Apply when editing codex_*, core_rules, sql/, or official library reference data.
 alwaysApply: false
 ---
 
@@ -9,31 +9,24 @@ Applies to **`codex_*`**, **`core_rules`**, and any bulk edits to official libra
 
 ## Read freely; write only after review
 
-| Allowed without prior approval | Requires owner review first |
-|-------------------------------|----------------------------|
+| Allowed without prior approval | Requires Kadin explicit OK before apply |
+|-------------------------------|----------------------------------------|
 | `SELECT` / audits / counts / previews | `UPDATE`, `INSERT`, `DELETE` on codex tables |
 | Draft SQL in `sql/*.sql` | `execute_sql` / `apply_migration` that mutates codex data |
 | Repo-only seed/CSV edits (not live DB) | Supabase MCP writes that change live reference data |
 
-## High-risk sign-off list
+## High-risk sign-off
 
-These categories require **Kadin explicit OK before merge/apply** (see [Realms Dev Workflow §4](https://docs.google.com/document/d/1F6iZUKP9nN0YTFzOkZ6Y82sySaw0iW101f_a-7ZeQdI/edit)):
-
-1. **Schema / migrations** (`sql/`, Supabase migrations).
-2. **Auth / RLS / permissions / role limits.**
-3. **Rules math** (EN/TP/HP formulas, proficiency, soft caps) — PR Reviewer also routes these to Production Manager for a Drive/Codex check before Kadin signs off.
-4. **Deletes of user or official data; destructive admin tools.**
-5. **Live Codex / `core_rules` / official library** `UPDATE`/`INSERT`/`DELETE`.
-6. **Secrets, domain/DNS, billing, anything sent outside the team.**
+Categories that need **Kadin explicit OK before merge/apply** (plus a fresh backup before any production write) are listed under **Risk classification** in `src/docs/ai/PR_REVIEWER_BRIEF.md`. Rules-math changes: PR Reviewer also routes to Production Manager for a Drive/Codex check before Kadin signs off.
 
 ## Workflow for bulk or policy changes (tags, categories, merges, migrations)
 
 1. **Audit** — query or export current state; cite counts and examples.
 2. **Propose** — mapping plan, sample before/after rows, SQL file in `sql/` (no trailing `UPDATE` until approved).
-3. **Wait** — owner reviews and approves, corrects mappings, or says "apply".
+3. **Wait** — Kadin reviews and approves, corrects mappings, or says "apply".
 4. **Apply** — run approved SQL once; report rows affected and post-migration counts.
 
-Do **not** chain Phase 1 → Phase 2 → live DB in one turn without an explicit apply step from the owner.
+Do **not** chain Phase 1 → Phase 2 → live DB in one turn without an explicit apply step from Kadin.
 
 ## Explicit owner direction
 

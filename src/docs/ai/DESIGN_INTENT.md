@@ -21,7 +21,7 @@ Use when the “why” is non-obvious (browser bugs, intentional asymmetry, prod
 | ListHeader in modals | Keep Codex/Library chrome — do not flatten with transparent overrides | `realms-unification.mdc` |
 | Quantity selection | Quantity-first in-row stepper — not a side column that shoves the row | `guide/02-components-and-lists.md` |
 | ± steppers | One chrome sitewide (guided skills bonus style via `ValueStepper` / Dec/Inc; `QuantitySelector` wraps it) | ADR-0002 · `DESIGN_SYSTEM.md` |
-| Codex writes | Audit → SQL propose → owner approve before live mutate | `realms-codex-data.mdc` |
+| Codex writes | Audit → SQL propose → Kadin explicit OK + fresh backup before live mutate | `realms-codex-data.mdc` |
 | ExpandableImage | Default for meaningful inline art; skip when nested in Link/button, edit-upload click, or decorative chrome | `guide/03-entity-card-art.md` § Adoption inventory |
 | Site header nav | Inline links at `xl+` only; tighter gutters than `.layout-shell-wide`; no `overflow-x-clip` on `<header>` (clips menus) — page clip on `MainAppChrome` | `header.tsx` · `main-app-chrome.tsx` · `MOBILE_UX.md` |
 | Sheet header DR / Critical Range | Prefer library-enriched armor (same as armor rows); play/edit hide either vital when armor does not modify it. Temp mode always shows both cards so a temp can be added. Formula is Evasion + 10 + (1 + op_1_lvl) | `sheet-header.tsx` · `calculateCriticalRange` · `getEquippedArmorQuickRef` · `QuickArmorTable` |
