@@ -26,7 +26,7 @@ The record is the ClickUp task and the PR. Status moves are in `.cursor/rules/re
 | Changelog (history) | Git history / ClickUp (repo changelog archive removed) |
 | Raw feedback (history) | ClickUp comments / Drive (repo archive removed) |
 | Game rules | `src/docs/GAME_RULES.md` — terminology, formulas, display conventions |
-| **Remediation status (history)** | Aug 2026 TASK-642–669 tracking removed from repo; use ClickUp. June snapshot: `archive/REMEDIATION_STATUS_2026-06.md` when present. |
+| **Remediation status (history)** | `src/docs/ai/archive/REMEDIATION_STATUS_2026-08.md` (Aug 2026 snapshot). June: `archive/REMEDIATION_STATUS_2026-06.md`. Current status: ClickUp. |
 | Historical audits & task backup | `src/docs/ai/archive/HISTORY_INDEX.md` — Aug/July/June 2026 audits, full queue backup, older plans |
 | Codebase audit (historical) | Aug 2026 audit report removed from repo; older: `CODEBASE_AUDIT_2026-02-13.md` |
 | Unification audit (historical) | `src/docs/ai/archive/UNIFICATION_AUDIT_2026-02-20.md` — shared logic, creators, libraries, allocation, centralized sources of truth |

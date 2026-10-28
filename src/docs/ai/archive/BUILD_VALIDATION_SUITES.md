@@ -7676,7 +7676,7 @@ Post-apply smoke for D6 `multiple_permissive_policies` on `public.campaigns`. Au
 1. Run `npm test -- campaign-members-rls campaign-roster-rls`.
 
 **Expected**
-- Vitest passes (policy shape + roster rules covered in repo tests).
+- Vitest passes. `campaign-members-rls.test.ts` and `campaign-roster-rls.test.ts` only assert the applied migration SQL **files** contain expected policy text (readFileSync); they do not connect to Postgres or prove live permissions.
 - Do not run removed repo verify scripts or live probe SQL on production without owner approval.
 
 **Report** — `[x] PASS` (agent 2026-08-03) · `[ ] FAIL` · `[ ] SKIP` — Notes:
@@ -7740,7 +7740,7 @@ Post-apply smoke for D6 `multiple_permissive_policies` on `public.campaigns`. Au
 
 **Expected**
 - Create still adds the Realm Master. A valid invite code still joins. A bad code still does not.
-- RLS behavior is covered by `campaign-members-rls.test.ts`; live verify SQL was removed from the repo.
+- Browser steps above are the live check. `campaign-members-rls.test.ts` only text-matches the migration SQL on disk; live verify SQL was removed from the repo.
 
 **Report** — `[ ] PASS` · `[ ] FAIL` · `[ ] SKIP` — Notes:
 
@@ -7751,7 +7751,7 @@ Post-apply smoke for D6 `multiple_permissive_policies` on `public.campaigns`. Au
 | **Suite** | DEV-V-042 |
 | **Related task** | 86e3jryyt |
 | **Where** | Campaign sheet of a character you do not own |
-| **Needs** | Two signed-in accounts, each with a character. Database probe needs RealmsRPG-Test. |
+| **Needs** | Two signed-in accounts, each with a character (preview or test project). |
 
 **Steps**
 1. Sign in, create a campaign, and join it from a second account with that account's character and the invite code.
@@ -7762,7 +7762,7 @@ Post-apply smoke for D6 `multiple_permissive_policies` on `public.campaigns`. Au
 **Expected**
 - Join still adds the player's own character. The Realm Master still cannot put someone else's character id on the roster.
 - After removal, that campaign no longer grants a read of the removed character. The owner of the character still opens their own sheet.
-- RLS behavior is covered by `campaign-roster-rls.test.ts`; live verify SQL was removed from the repo.
+- Browser steps above are the live check. `campaign-roster-rls.test.ts` only text-matches the migration SQL on disk; live verify SQL was removed from the repo.
 
 **Report** — `[ ] PASS` · `[ ] FAIL` · `[ ] SKIP` — Notes:
 

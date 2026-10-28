@@ -1,6 +1,6 @@
 # Remediation Status — 2026-06 (Historical Snapshot)
 
-**Not current truth.** For post–Aug 2026 audit status, use Aug 2026 remediation (removed).
+**Not current truth.** For post–Aug 2026 audit status, use [`REMEDIATION_STATUS_2026-08.md`](REMEDIATION_STATUS_2026-08.md).
 Open work: [`ACTIVE_TASKS.md`](ACTIVE_TASKS.md) · waiting [`WAITING_TASKS.md`](WAITING_TASKS.md) · human ClickUp.
 
 Kept as a June 2026 remediation snapshot only.
@@ -37,5 +37,5 @@ Kept as a June 2026 remediation snapshot only.
 
 ## Documentation cleanup policy
 
-- Treat Aug 2026 remediation (removed) + `ACTIVE_TASKS.md` + `WAITING_TASKS.md` + ClickUp as active status.
+- Treat [`REMEDIATION_STATUS_2026-08.md`](REMEDIATION_STATUS_2026-08.md) + `ACTIVE_TASKS.md` + `WAITING_TASKS.md` + ClickUp as active status.
 - Treat this file and `ai/archive/HISTORY_INDEX.md` entries as historical snapshots only.
