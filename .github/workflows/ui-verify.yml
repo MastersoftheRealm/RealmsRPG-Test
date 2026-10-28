@@ -52,9 +52,6 @@ jobs:
   visual-a11y:
     name: Visual regression & accessibility
     runs-on: ubuntu-latest
-    permissions:
-      contents: read
-      actions: write # upload-artifact (Playwright report)
     env:
       # CI scans only data-free routes so the gate never depends on Supabase data.
       A11Y_DETERMINISTIC_ONLY: '1'
