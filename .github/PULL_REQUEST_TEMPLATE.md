@@ -6,16 +6,20 @@
 -
 
 ## Risk flags
-Check all that apply (see `src/docs/ai/PR_REVIEWER_BRIEF.md` **Risk classification**):
-- [ ] Schema/migration/SQL/seeds
-- [ ] Auth/RLS/permissions/roles
-- [ ] Rules math / formulas / legality checks
+Check all that apply (must match `src/docs/ai/PR_REVIEWER_BRIEF.md` **Risk classification** one-to-one):
+- [ ] Auth
+- [ ] Roles
+- [ ] RLS/permissions
+- [ ] Database schema/SQL/migrations/seeds
 - [ ] ID allocation
-- [ ] Destructive/delete (user or official data)
-- [ ] Codex/core_rules data
-- [ ] Secrets / env vars
-- [ ] CI/workflows or deploy/Vercel/DNS settings
-- [ ] New API route or endpoint (triggers §9 endpoint security pass)
+- [ ] Rules values or formulas
+- [ ] Legality checks
+- [ ] Secrets/env vars
+- [ ] CI/workflows
+- [ ] Deploy/Vercel/DNS settings
+- [ ] Deletes user/official data
+- [ ] Admin tools that can delete or bulk-change data
+- [ ] Billing or anything sent outside the team (email, messages, posts)
 - [ ] None of the above
 
 ## For Kadin (plain language)
