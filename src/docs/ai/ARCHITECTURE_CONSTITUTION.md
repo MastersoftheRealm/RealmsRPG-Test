@@ -13,7 +13,7 @@ On demand. Do not load this file up front. PR Reviewer grades using `src/docs/ai
 
 Read the ClickUp task. Search `FEATURE_INDEX.md` if you might add a pattern. That is the list. Root `AGENTS.md` is already in the prompt.
 
-This file, the Drive playbook, and `DECISIONS.md` are on demand. Open this file for Architect-class work or a constraint the short rules do not name. Drive §6 still says to read the playbook, the decisions file, and this file first. Kadin changed that on 2026-10-11. The Google Doc was not edited.
+This file, the Drive playbook, and `DECISIONS.md` are on demand. Open this file for Architect-class work or a constraint the short rules do not name. Lighter session start: `AGENTS.md` (Kadin, 2026-10-11).
 
 Do not read `ACTIVE_TASKS.md`, `AI_TASK_QUEUE.md`, `WAITING_TASKS.md`, `AI_CHANGELOG.md`, `AGENT_GUIDE.md`, or archives before coding.
 
@@ -21,8 +21,8 @@ Do not read `ACTIVE_TASKS.md`, `AI_TASK_QUEUE.md`, `WAITING_TASKS.md`, `AI_CHANG
 
 | Topic | Authority |
 |-------|-----------|
-| Process / workflow | [Realms Dev Workflow](https://docs.google.com/document/d/1F6iZUKP9nN0YTFzOkZ6Y82sySaw0iW101f_a-7ZeQdI/edit) (Drive SoT) |
-| Settled decisions | [Realms Web Decisions](https://docs.google.com/document/d/1tGebelYXZPegt4iZiycOjI3RBHD6N_QKZW6CI0ckxkg/edit) → repo `DECISIONS.md` |
+| Process / workflow | ClickUp status order: `.cursor/rules/realms-tasks.mdc`. PR review checklist: `src/docs/ai/PR_REVIEWER_BRIEF.md` (single written process in repo). [Realms Dev Workflow](https://docs.google.com/document/d/1F6iZUKP9nN0YTFzOkZ6Y82sySaw0iW101f_a-7ZeQdI/edit) points to the brief (Drive updated **2026-10-28**, Editor bot). **Drive wins** on conflict; fix the repo copy. |
+| Settled decisions | [Realms Web Decisions](https://docs.google.com/document/d/1tGebelYXZPegt4iZiycOjI3RBHD6N_QKZW6CI0ckxkg/edit) → repo `DECISIONS.md` (**Drive wins**; fix repo on conflict) |
 | Work queue | **ClickUp only**. Writes use `CLICKUP_API_TOKEN` in `.env.local` (API v2), not the ClickUp plugin. |
 | Product / UX intent | `REALMS_PRODUCT_OVERVIEW.md` + `human/USER_EXPERIENCE_GOALS.md` |
 | Exists already? | `FEATURE_INDEX.md` → barrels |
@@ -80,7 +80,7 @@ After a passing PR Reviewer verdict, require **Human OK** (Kadin or Collin, usua
 
 **High-risk PRs** (classification, Web Manager second pass, and Kadin plain-language summary): `src/docs/ai/PR_REVIEWER_BRIEF.md` **Risk classification** (single list). Live database apply still needs **Kadin explicit OK** and a fresh backup.
 
-**PR review process:** `src/docs/ai/PR_REVIEWER_BRIEF.md` is the single source. [Realms Dev Workflow §4](https://docs.google.com/document/d/1F6iZUKP9nN0YTFzOkZ6Y82sySaw0iW101f_a-7ZeQdI/edit) points to it and does not duplicate it. Drive **core rulebook text** still wins over `GAME_RULES.md` when they conflict (ask Kadin).
+**PR review process:** The review process is written once in `src/docs/ai/PR_REVIEWER_BRIEF.md`; [Realms Dev Workflow §4](https://docs.google.com/document/d/1F6iZUKP9nN0YTFzOkZ6Y82sySaw0iW101f_a-7ZeQdI/edit) and [Realms Web Decisions](https://docs.google.com/document/d/1tGebelYXZPegt4iZiycOjI3RBHD6N_QKZW6CI0ckxkg/edit) point to it and do not duplicate it (Drive updated **2026-10-28**, Editor bot). **Drive vs repo (Oct 5, 2026):** when a Drive doc and its repo copy conflict, **Drive wins** and the repo copy is corrected—including Dev Workflow or Decisions vs the brief. Drive **core rulebook text** wins over `GAME_RULES.md` when they conflict (ask Kadin).
 
 **Model escalation:** Before implementing Architect-class or irreversible-data work, pause once and flag that a stronger model may be safer — see `.cursor/rules/realms-tasks.mdc` (narrow triggers; do not stall routine Implementer tasks).
 

@@ -14,7 +14,7 @@ Use before opening the draft PR. Keep answers short. Agents do not mark the Clic
 6. **A11y** — Labels, headings, modal title/`titleA11y`? **WCAG 2.2 AA** (including target size SC 2.5.8, focus not obscured SC 2.4.11)?
 7. **Uploads (brief item 3)** — Client uploads through `apiUpload`; no raw `fetch('/api/upload…')` (eslint `realms/no-raw-upload-fetch`).
 8. **Schema/codex (brief item 10)** — SQL in `sql/`; Kadin explicit OK for live codex mutate? High-risk per brief **Risk classification**. **New `CREATE TABLE` in `public`:** same file has RLS, policies, and explicit `GRANT` (`sql/_TEMPLATE_new_table.sql`; CI `tasks:check-sql-grants`).
-9. **ClickUp status** — Per `.cursor/rules/realms-tasks.mdc`: **in progress** only while active; **in review** after PR Reviewer + green CI with human approver assigned (usually Kadin); **testing** after merge with QA steps; agents do not mark **complete**.
+9. **ClickUp status** — Per `.cursor/rules/realms-tasks.mdc`: **in progress** only while active; **in review** after PR Reviewer + green CI with human approver assigned (usually Kadin); **testing** after merge with QA steps when needed (Bob only for high-importance or obvious visual-issue QA); agents do not mark **complete**.
 10. **Owner QA** — User-facing? QA steps on the ClickUp comment? `BUILD_VALIDATION.md` only when that suite does not already cover the check.
 11. **Notes** — PR and ClickUp comment only; no new `AI_CHANGELOG.md` entry.
 12. **Design intent** — Non-obvious constraint documented (`DESIGN_INTENT` / comment); stale docs updated (brief item **11**).

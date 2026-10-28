@@ -5,7 +5,7 @@ alwaysApply: true
 
 # Task order
 
-ClickUp is the only queue. In prose say Bob (`95261690`). Collin Morrison is `44381886`. Write to ClickUp only when Kadin has said to, with `CLICKUP_API_TOKEN` from `.env.local`. Never print the token.
+ClickUp is the only queue. In prose say Bob (`95261690`; legally James Owenby — same person). Collin Morrison is `44381886`. Write to ClickUp only when Kadin has said to, with `CLICKUP_API_TOKEN` from `.env.local`. Never print the token.
 
 1. A person or a bot files the task. A vague task is split by the filer, or it stays **to do** with a comment. Do not invent the split.
 2. Start: **to do → in progress**. One comment: agent, time, model, one line. Stop with no PR → back to **to do**. Nothing stays **in progress**.
@@ -15,9 +15,9 @@ ClickUp is the only queue. In prose say Bob (`95261690`). Collin Morrison is `44
 6. `/cleanup` only when PR Reviewer named an in-scope gap in a REQUEST CHANGES verdict. Then CI again. A follow-up PR Reviewer pass checks only that gap. A layout or cross-system miss steps up one model.
 7. PR Reviewer verdict passes (APPROVE, or HOLD FOR HUMAN after checks pass on high-risk) and CI green → **in review**. Assign the human approver (usually Kadin). Web Manager adds a second pass on high-risk PRs and spot-checks. Automated checks (CI, lint, ratchets) are the final gate. **In review** means a human with Human OK can merge.
 8. Merge after **Human OK** (Kadin or Collin, usually Kadin). Bypass skips human review only, never required checks unless Kadin says otherwise. Merge commit only. Never push `master`. Never squash. Agents do not merge.
-9. **Testing**. Assign Bob, QA steps in the comment. Post-merge bot smoke only when that bot is on.
+9. **Testing** after merge when human QA is needed: move to **testing** with QA steps in the comment. Assign Bob only for high-importance or obvious visual-issue QA (Kadin, Oct 13, 2026). Post-merge bot smoke only when that bot is on.
 10. Human QA moves it to **complete**. Agents do not.
 
-Already fixed on master: no branch, **testing**, Bob. Covered or superseded: stay **to do** with a comment. A missing written rule is a hold. Urgent, then high, then normal, then low. Skip unfinished dependencies.
+Already fixed on master: no branch, **testing**. Covered or superseded: stay **to do** with a comment. A missing written rule is a hold. Urgent, then high, then normal, then low. Skip unfinished dependencies.
 
 Do not write `ACTIVE_TASKS.md`, `AI_TASK_QUEUE.md`, `AI_CHANGELOG.md`, or `TASK-###` in the commit subject. A hold that exists only in `WAITING_TASKS.md` stays. `/global-audit` and `/debt` are unused on a task.
