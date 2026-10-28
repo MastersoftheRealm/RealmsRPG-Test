@@ -1,6 +1,6 @@
 -- 86e3jt562 — a signed-in user cannot write protected profile columns
 -- =============================================================================
--- Status: APPLIED 2026-10-11 on RealmsRPG-Test (lbqhiwudvifmkjtkccdg)
+-- Status: APPLIED 2026-10-11 on RealmsRPG-Test (RealmsRPG-Test project)
 -- Replay: idempotent (revoke + grant, create-or-replace, drop + create policies)
 -- Destructive: no (no row deletes)
 --

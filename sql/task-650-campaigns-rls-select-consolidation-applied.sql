@@ -1,8 +1,6 @@
 -- TASK-650 — Drop redundant campaigns SELECT policy (D6 multiple_permissive_policies)
 -- =============================================================================
--- Status: APPLIED 2026-08-03 on RealmsRPG-Test — replay: node scripts/run-task-650.mjs
--- Project: RealmsRPG-Test (lbqhiwudvifmkjtkccdg)
--- Audit ref: archive/CODEBASE_AUDIT_2026-08-01.md §5.2 D6
+-- Status: APPLIED 2026-08-03 on RealmsRPG-Test — replay: run this file on a new environment only with owner approval
 --
 -- Finding: `public.campaigns` had two permissive SELECT policies for `authenticated`:
 --   campaigns_owner_select        — owner_id = auth.uid()

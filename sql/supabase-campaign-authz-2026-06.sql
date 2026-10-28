@@ -1,6 +1,6 @@
 -- TASK-329 — Campaign & roll authorization hardening
 -- =============================================================================
--- Verified live on project lbqhiwudvifmkjtkccdg (pg_policies):
+-- Verified live on RealmsRPG-Test project (pg_policies):
 --
 --   1) campaigns UPDATE policy "Members can update campaigns they belong to"
 --      allows ANY member (owner OR memberIds OR campaign_members) to UPDATE the

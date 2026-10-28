@@ -1,6 +1,6 @@
 -- TASK-328 — CRITICAL: prevent user_profiles.role self-escalation
 -- =============================================================================
--- Problem (verified live on project lbqhiwudvifmkjtkccdg):
+-- Problem (verified live on RealmsRPG-Test project):
 --   The "Users can update own profile" RLS policy only checks id = auth.uid()
 --   with NO column guard on `role`, and there is NO trigger protecting it.
 --   Any authenticated user can run, from the browser:

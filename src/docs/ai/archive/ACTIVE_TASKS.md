@@ -113,7 +113,7 @@ Do **not** read the done archive at session start.
     - **Filters:** `normalizeFeatCategory` maps leftover `Offense` → Offensive so Codex/Library expose one option and still match the 8 live rows.
     - Power/technique part categories unchanged (`Offense` in part tests).
   remaining_work: |
-    - Owner approve + apply live `codex_feats` UPDATE (**DEV-Q06**).
+    - Owner approve + apply on approved DB `codex_feats` UPDATE (**DEV-Q06**).
     - Post-apply: verify zero `category = 'Offense'` on feats; note in AI_CHANGELOG for reference data.
   related_files:
     - scripts/seed-data/feats.csv

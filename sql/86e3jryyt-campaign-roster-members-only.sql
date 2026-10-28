@@ -1,6 +1,6 @@
 -- 86e3jryyt — a campaign roster can list only joined members' characters
 -- =============================================================================
--- Status: APPLIED 2026-10-09 on RealmsRPG-Test (lbqhiwudvifmkjtkccdg)
+-- Status: APPLIED 2026-10-09 on RealmsRPG-Test (RealmsRPG-Test project)
 -- Migration: campaign_roster_members_only (20261009202856)
 -- Replay: this file. Does not change campaign_members policies.
 --

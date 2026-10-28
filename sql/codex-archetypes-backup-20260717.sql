@@ -1,6 +1,6 @@
 -- Pre-enrichment snapshot of archetype path tables (guided-creator content pass).
 -- APPLIED via Supabase MCP apply_migration `codex_archetypes_backup_20260717`
--- on RealmsRPG-Test (lbqhiwudvifmkjtkccdg) 2026-07-17.
+-- on RealmsRPG-Test (RealmsRPG-Test project) 2026-07-17.
 --
 -- Restore example (owner-only, after review):
 --   TRUNCATE public.codex_archetypes;

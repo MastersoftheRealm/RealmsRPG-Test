@@ -2442,7 +2442,7 @@ Verifies the rebuilt marketing landing page at `/` (REALMS_PRODUCT_OVERVIEW Sect
 ## DEV-V-013 — Guided Simple character creator (TASK-394–403)
 
 **Category:** End-to-end guided creator funnel — entry chooser, chapters, save.  
-**Prerequisite:** Run **DEV-004** (`sql/guided-creator-schema-seed.sql`) so starter species and Berserker loadouts/abilities exist.  
+**Prerequisite:** Guided starter species and Berserker loadouts/abilities must exist in the QA environment (owner-approved seed or migration — agents do not run SQL on live).  
 **Related (steppers):** TASK-487 / ADR-0002 — sitewide ± chrome; verify via **T053** (and Skills ± on T014).
 
 #### DEV-V-013-T001 — Entry chooser routes

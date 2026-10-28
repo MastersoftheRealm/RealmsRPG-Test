@@ -23,8 +23,8 @@ The record is the ClickUp task and the PR. Status moves are in `.cursor/rules/re
 | Open tasks (history) | `src/docs/ai/archive/ACTIVE_TASKS.md` |
 | Task process (retired) | `src/docs/ai/archive/AI_TASK_QUEUE.md` |
 | Done archive (history) | `src/docs/ai/archive/TASK_QUEUE_DONE.md` |
-| Changelog (history) | `src/docs/ai/archive/AI_CHANGELOG.md` |
-| Raw feedback (history) | `src/docs/ALL_FEEDBACK_CLEAN.md` |
+| Changelog (history) | Git history / ClickUp (repo changelog archive removed) |
+| Raw feedback (history) | ClickUp comments / Drive (repo archive removed) |
 | Game rules | `src/docs/GAME_RULES.md` — terminology, formulas, display conventions |
 | **Remediation status (history)** | `src/docs/ai/archive/REMEDIATION_STATUS_2026-08.md` — Aug 2026 snapshot (TASK-642–669). June: `archive/REMEDIATION_STATUS_2026-06.md`. |
 | Historical audits & task backup | `src/docs/ai/archive/HISTORY_INDEX.md` — Aug/July/June 2026 audits, full queue backup, older plans |

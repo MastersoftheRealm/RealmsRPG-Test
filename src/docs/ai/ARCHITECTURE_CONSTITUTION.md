@@ -40,7 +40,7 @@ Do not read `ACTIVE_TASKS.md`, `AI_TASK_QUEUE.md`, `WAITING_TASKS.md`, `AI_CHANG
 - **Search before build** — never fork a parallel `Library*Tab` / load hook / upload path / parser.
 - **Stack** — Next.js App Router, Supabase (no Prisma), Vercel. SQL in `sql/`; schema docs in `SUPABASE_SCHEMA.md`.
 - **Lib layers** — `lib/game` + `lib/calculators` are neutral domain math (no imports from `lib/library` or `lib/guided-creator`). UI/creator layers import downward. See ADR-0010.
-- **Migrations (one policy):** Prefer Supabase MCP `apply_migration` when available; else Dashboard SQL Editor. Always keep idempotent SQL in `sql/`. **Codex data** (`codex_*` / `core_rules`): audit → propose SQL → **owner approve** → apply (MCP or Dashboard). See `realms-codex-data.mdc`.
+- **Migrations (one policy):** No production writes without owner approval and a fresh backup. Prefer Supabase MCP `apply_migration` on non-production when available. Always keep idempotent SQL in `sql/`. **Codex data** (`codex_*` / `core_rules`): audit → propose SQL → **owner approve** → apply on the approved environment. See `guide/07-database-operations.md` and `realms-codex-data.mdc`.
 - **Uploads** — client multipart via `apiUpload` from `@/lib/api-client` (not raw `fetch` to `/api/upload/*`).
 - **Client errors** — API/Supabase boundary convention in `ARCHITECTURE.md` § Client error handling: `apiFetch` throws; check Supabase `{ error }`; no silent `catch` on user actions.
 - **API error responses** — Route Handlers return `{ error: string }` on failure (4xx/5xx). Log raw Supabase/Postgres/storage errors server-side via `logApiError` / `apiErrorResponse` (`@/lib/api-error`); never expose `.message`, `.details`, or stack traces to clients in production. Optional `hint` / `debug` fields only when `?debug=1` (admin/non-prod) or `NODE_ENV=development`. Success payloads vary by route; errors do not.
@@ -48,7 +48,7 @@ Do not read `ACTIVE_TASKS.md`, `AI_TASK_QUEUE.md`, `WAITING_TASKS.md`, `AI_CHANG
 - **UI gates** — keep `realms/no-raw-color`, contrast, visual/a11y Playwright. Prefer `text-success-fg` / `text-danger-fg` / `text-warning-fg` / `text-power-fg` / `text-martial-fg` over numbered ramp + ad-hoc `dark:`.
 - **Mobile** — `fullScreenOnMobile` on large modals; ≥44px touch targets.
 - **Accessibility** — **WCAG 2.2 AA** everywhere. Labels, contrast, modals, touch tiers per `MOBILE_UX.md`.
-- **Git** — Never push `master`. Never squash. Collin merges, or Kadin says bypass. Merge commit only. The agent does not merge unless Kadin said bypass. **In review** means a human can merge. **Testing** assigns Bob (`95261690`) and keeps Collin (`44381886`). Human QA marks **complete**. Agents do not.
+- **Git** — Never push `master`. Never squash. Collin merges, or Kadin says bypass. Merge commit only. The agent does not merge unless Kadin said bypass. **In review** means a human can merge. **Testing** assigns Bob (QA) and keeps Collin (head engineer). Human QA marks **complete**. Agents do not.
 
 ## Definition of Done
 

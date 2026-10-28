@@ -16,7 +16,7 @@ Game runner = **RM (Realm Master)** — never GM.
 ## Process / workflow (Oct 5, 2026)
 
 - ClickUp is the **only work queue**. Repo `ACTIVE_TASKS` / TASK-### are optional engineering notes.
-- Collin merges, or Kadin says bypass. Merge commit only. Never squash. Never push `master`. **In review** means a human can merge. **Testing** assigns Bob (`95261690`; legally James Owenby) and keeps Collin (`44381886`), with QA steps in the comment. Human QA moves the task to **complete**. Agents do not. In prose say Bob.
+- Collin (head engineer) merges, or Kadin says bypass. Merge commit only. Never squash. Never push `master`. **In review** means a human can merge. **Testing** assigns Bob (QA) and keeps Collin assigned, with QA steps in the comment. Human QA moves the task to **complete**. Agents do not. In prose say Bob.
 - QA Tester checks the Vercel preview before merge or shortly after. Post-merge QA: QA Tester + Bob, or Bob alone.
 - WCAG **2.2 AA** everywhere.
 - Keep branch name **`master`**; ban direct pushes.
@@ -59,7 +59,7 @@ Kadin adopted composed-power pricing Oct 5 (10:21 PM ET) and revised it Oct 6 (7
   - Kadin's example: free action (×1.5), d10. 2 faces Stunned 3 on self: basic 15 EN, reduction ½ × 15 ÷ 1.5 = 5. 8 faces ranged sphere heal with a third target: 10.3125 EN at free action. 0.8 × 10.3125 − 0.2 × 5 = 7.25 → **8 EN**.
 - **Inverse action scaling on drawbacks.** Reverse Effects and Randomize bad faces: reduction = ½ × drawback energy priced as a Basic Action ÷ action-type multiplier. Slower action = bigger reduction, quicker action = smaller reduction, Basic stays ½. Reaction is part of the multiplier. Good faces and benefits pay the normal action-type increase or decrease.
 - **Dash vs. 1 EN floor.** A power, technique, or empowered technique with nothing contributing positive energy (only 0 EN parts, quick-only, duration-only, No Attack alone, or a Randomize power whose faces are all bad) shows a **dash** everywhere, not 1 EN. The 1 EN floor applies only when real positive costs are reduced below 1.
-- **TP and proficiency.** Proficiency is per part and per option (Kadin, Oct 6, 2026, 4:41 PM ET). Across all of a character's powers, the base part is paid once. Each option is taken at its highest level used, then rounded up to the lowest option level whose Training Points are a whole number: 0.5 TP per level used up to level 3 needs level 4 (2 TP); 0.25 TP per level used up to level 3 needs level 4 (1 TP). That rounded-up level covers that level everywhere. A fractional base is rounded up with the total so the cost is a whole number. This replaces rounding the base and every option up once as a single sum. Damage type still splits a damage part (fire and ice are two proficiencies; fire on several tabs counts once). A different part that shares a damage type is compared by that rounded total. A power's TP total is informational, not spent when the power is used. The guided bar, the creature creator, and the character sheet use this character-wide total ([86e3krpzp](https://app.clickup.com/t/86e3krpzp)). Matching a saved proficiency that has no part id, and a face left off the die, are pending below. Technique Additional Damage option 1 rounds up like every other option; the old per-full-1d4 floor is removed (Kadin, Oct 6, 9:19 PM ET).
+- **TP and proficiency.** Proficiency is per part and per option (Kadin, Oct 6, 2026, 4:41 PM ET). Across all of a character's powers, the base part is paid once. Each option is taken at its highest level used, then rounded up to the lowest option level whose Training Points are a whole number: 0.5 TP per level used up to level 3 needs level 4 (2 TP); 0.25 TP per level used up to level 3 needs level 4 (1 TP). That rounded-up level covers that level everywhere. A fractional base is rounded up with the total so the cost is a whole number. This replaces rounding the base and every option up once as a single sum. Damage type still splits a damage part (fire and ice are two proficiencies; fire on several tabs counts once). A different part that shares a damage type is compared by that rounded total. A power's TP total is informational, not spent when the power is used. The guided bar, the creature creator, and the character sheet use this character-wide total. Matching a saved proficiency that has no part id, and a face left off the die, are pending below. Technique Additional Damage option 1 rounds up like every other option; the old per-full-1d4 floor is removed (Kadin, Oct 6, 9:19 PM ET).
 - **Official powers** always compute from live Codex part data plus this math; their energy is never overridden. Published numbers are results of that math, not targets.
 
 ## Pending / implementation notes (not Kadin-confirmed)
@@ -117,19 +117,19 @@ Kadin adopted composed-power pricing Oct 5 (10:21 PM ET) and revised it Oct 6 (7
 
 ## Character sheet visibility (Oct 14, 2026)
 
-Owner ruling (Kadin, Oct 14, 2026). Supersedes the campaign-member visibility semantics fixed in [86e3jryyv](https://app.clickup.com/t/86e3jryyv) for **Realm Master** access; other members stay on the 86e3jryyv rule (no private sheet).
+Owner ruling (Kadin, Oct 14, 2026). Supersedes the earlier campaign-member visibility fix for **Realm Master** access; other members stay on the prior rule (no private sheet).
 
 - **Realm Master:** May always view the **full** character sheet (and encounter vitals on the campaign character route) for any player **actively on the roster** of a campaign they run, including **private** visibility.
 - **Other campaign members:** Cannot view a **private** sheet (full or encounter vitals) even when rostered in the same campaign.
 - **Campaign visibility:** A sheet set to **campaign** is hidden from anyone who is not a member of that campaign (including unauthenticated and non-rostered users). **Public** sheets follow the existing public rules.
 
-Repo mirror: [86e39knu2](https://app.clickup.com/t/86e39knu2).
+Implementation tracked in ClickUp (engineering queue).
 
 ---
 
 ## Codex sources (Oct 17, 2026)
 
-Owner decisions for [Admin > Sources page](https://app.clickup.com/t/86e3ru888).
+Owner decisions for Admin > Sources page.
 
 - Core may be renamed. A source is the values stored on item rows.
 - This change does not change the column default `{Core}` or the code constant `CORE_CODEX_SOURCE`. Items with no source are still saved as Core until a developer changes that default. That default is a follow-up task.
@@ -143,7 +143,7 @@ Owner decisions for [Admin > Sources page](https://app.clickup.com/t/86e3ru888).
 ## QA / accounts (Oct 5, 2026)
 
 - QA accounts only for testing; prefix records `QA` / `QA Test`; clean up; never save/publish official library/Codex from QA (esp. qa-admin).
-- Test accounts: `/workspace/qa/test-accounts.txt` + Realms Restricted. Authorized for bots; never paste passwords into chat.
+- Test accounts: credentials live in owner-controlled secure storage (not the public repo). Authorized for bots; never paste passwords into chat.
 - Never paste API keys in chat, ClickUp, ordinary Drive docs, or the repo.
 - After any dependency or framework bump merges, QA Tester repeats a short production smoke covering home, sign-in, characters and sheet, one creator (load-only), codex, rules, the /opengraph-image PNG and console/hydration.
 - Page-speed budgets come from the S25 medians. Re-run them after each perf fix, not on every small UI PR. TBT alone is not filed as a bug.
@@ -158,8 +158,8 @@ Owner decisions for [Admin > Sources page](https://app.clickup.com/t/86e3ru888).
 ## Changelog
 
 - **2026-10-18:** `sql/codex-rename-source.sql` applied on production (function only; no rows changed); re-applied same day after fixing control-character validation (`chr(0)` in SQL text). The first real rename has not run. Re-running the file is safe because it only replaces the function. The first real rename is a live update and needs a backup first.
-- **2026-10-17:** Codex sources ([86e3ru888](https://app.clickup.com/t/86e3ru888)): Core may be renamed; merging into or out of Core is allowed with the merge confirm; rename changelogs commit in the same transaction; no remove-from-all-items control. The column default `{Core}` and `CORE_CODEX_SOURCE` stay. Items with no source are still saved as Core until a developer changes that default.
-- **2026-10-14:** Character sheet visibility (Oct 14, 2026 owner ruling): RM full access to rostered private sheets; members cannot see private; campaign visibility off-roster blocked. Supersedes 86e3jryyv for RM semantics; implements [86e39knu2](https://app.clickup.com/t/86e39knu2).
-- **2026-10-08:** Bypass merge moves the ClickUp task to testing with QA instructions for what changed, adds James Owenby, and keeps Collin assigned. Collin can move it back to in review.
+- **2026-10-17:** Codex sources: Core may be renamed; merging into or out of Core is allowed with the merge confirm; rename changelogs commit in the same transaction; no remove-from-all-items control. The column default `{Core}` and `CORE_CODEX_SOURCE` stay. Items with no source are still saved as Core until a developer changes that default.
+- **2026-10-14:** Character sheet visibility (Oct 14, 2026 owner ruling): RM full access to rostered private sheets; members cannot see private; campaign visibility off-roster blocked. Supersedes the earlier member-visibility rule for RM semantics.
+- **2026-10-08:** Bypass merge moves the ClickUp task to testing with QA instructions for what changed, assigns Bob (QA), and keeps Collin assigned. Collin can move it back to in review.
 - **2026-10-05 (~4:54 PM ET):** Appended standing QA triggers (post-dep smoke, S25 page-speed budgets, security-header/RLS retests, testing-status bot limits, Website QA check delegated to QA Tester, CI npm audit policy, no CVE IDs in public repo).
 - **2026-10-05:** Initial seed from `/workspace/qa/intent.md` settled rulings + Oct 5 Dev Team / Kadin corrections (ability hard caps −5/+10; Drive vs GAME_RULES ask-first; Realm Master spelling).
