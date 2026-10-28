@@ -2442,7 +2442,7 @@ Verifies the rebuilt marketing landing page at `/` (REALMS_PRODUCT_OVERVIEW Sect
 ## DEV-V-013 — Guided Simple character creator (TASK-394–403)
 
 **Category:** End-to-end guided creator funnel — entry chooser, chapters, save.  
-**Prerequisite:** Run **DEV-004** (`sql/guided-creator-schema-seed.sql`) so starter species and Berserker loadouts/abilities exist.  
+**Prerequisite:** Guided starter species and Berserker loadouts/abilities must exist in the QA environment (owner-approved seed or migration — agents do not run SQL on live).  
 **Related (steppers):** TASK-487 / ADR-0002 — sitewide ± chrome; verify via **T053** (and Skills ± on T014).
 
 #### DEV-V-013-T001 — Entry chooser routes
@@ -7661,7 +7661,7 @@ Full Customize (L3, no archetype path) on archetype feats, character feat, loado
 
 ## DEV-V-042 — Campaigns RLS SELECT consolidation (TASK-650 / TASK-802)
 
-Post-apply smoke for D6 `multiple_permissive_policies` on `public.campaigns`. Automated SQL parity + RLS access: `node scripts/verify-task-650.mjs`. TASK-802 keeps a single SELECT policy and adds an `owner_id` short-circuit so create/`INSERT … RETURNING` works.
+Post-apply smoke for D6 `multiple_permissive_policies` on `public.campaigns`. Automated coverage: `npm test -- campaign-members-rls campaign-roster-rls` (and related vitest). Do not run live SQL verify scripts on production. TASK-802 keeps a single SELECT policy and adds an `owner_id` short-circuit so create/`INSERT … RETURNING` works.
 
 #### DEV-V-042-T001 — Automated advisor + RLS access (DB)
 
@@ -7673,11 +7673,11 @@ Post-apply smoke for D6 `multiple_permissive_policies` on `public.campaigns`. Au
 | **Needs** | `DATABASE_URL` in `.env.local`, `psql` on PATH |
 
 **Steps**
-1. Run `node scripts/verify-task-650.mjs`.
+1. Run `npm test -- campaign-members-rls campaign-roster-rls`.
 
 **Expected**
-- Exit 0; output ends with `TASK-650 verify PASS`.
-- Asserts: no duplicate permissive `(cmd, roles)` on `campaigns`; exactly one `authenticated` SELECT policy; `campaigns_owner_select` absent; owner/member/stranger RLS smoke on a sample campaign.
+- Vitest passes. `campaign-members-rls.test.ts` and `campaign-roster-rls.test.ts` only assert the applied migration SQL **files** contain expected policy text (readFileSync); they do not connect to Postgres or prove live permissions.
+- Do not run removed repo verify scripts or live probe SQL on production without owner approval.
 
 **Report** — `[x] PASS` (agent 2026-08-03) · `[ ] FAIL` · `[ ] SKIP` — Notes:
 
@@ -7730,17 +7730,17 @@ Post-apply smoke for D6 `multiple_permissive_policies` on `public.campaigns`. Au
 |-------|-------|
 | **Suite** | DEV-V-042 |
 | **Related task** | 86e3jryyr |
-| **Where** | `/campaigns` Create and Join; `sql/86e3jryyr-campaign-members-insert-verify.sql` |
-| **Needs** | Two signed-in accounts, one with a character. Database probe needs RealmsRPG-Test. |
+| **Where** | `/campaigns` Create and Join |
+| **Needs** | Two signed-in accounts, each with a character (preview or test project). |
 
 **Steps**
 1. Sign in and create a campaign. The success state shows an 8-character invite code.
 2. Sign in as someone else and join with that code and one of their characters.
-3. Re-run `sql/86e3jryyr-campaign-members-insert-verify.sql` on RealmsRPG-Test. It raises if a non-owner can insert their own membership, if an owner can insert someone else, or if an update moves a row.
+3. Confirm a non-owner cannot join with a forged membership row via the UI only (no live SQL probes).
 
 **Expected**
 - Create still adds the Realm Master. A valid invite code still joins. A bad code still does not.
-- The verify script exits without an exception. Agent run on 2026-10-09 passed and rolled the probe rows back. Browser steps 1–2 are still open.
+- Browser steps above are the live check. `campaign-members-rls.test.ts` only text-matches the migration SQL on disk; live verify SQL was removed from the repo.
 
 **Report** — `[ ] PASS` · `[ ] FAIL` · `[ ] SKIP` — Notes:
 
@@ -7750,19 +7750,19 @@ Post-apply smoke for D6 `multiple_permissive_policies` on `public.campaigns`. Au
 |-------|-------|
 | **Suite** | DEV-V-042 |
 | **Related task** | 86e3jryyt |
-| **Where** | `sql/86e3jryyt-campaign-roster-verify.sql`; campaign sheet of a character you do not own |
-| **Needs** | Two signed-in accounts, each with a character. Database probe needs RealmsRPG-Test. |
+| **Where** | Campaign sheet of a character you do not own |
+| **Needs** | Two signed-in accounts, each with a character (preview or test project). |
 
 **Steps**
 1. Sign in, create a campaign, and join it from a second account with that account's character and the invite code.
 2. Open the second character from the campaign. The Realm Master can read it when visibility is Campaign.
 3. Remove that character from the campaign and open the sheet again.
-4. Re-run `sql/86e3jryyt-campaign-roster-verify.sql` on RealmsRPG-Test.
+4. Confirm roster removal revokes campaign read access in the browser.
 
 **Expected**
 - Join still adds the player's own character. The Realm Master still cannot put someone else's character id on the roster.
 - After removal, that campaign no longer grants a read of the removed character. The owner of the character still opens their own sheet.
-- The verify script exits without an exception. Agent run on 2026-10-09 passed and rolled the probe rows back. It did not change `campaign_members` policies or the existing roster slot whose character row is gone. Browser steps 1–3 are still open.
+- Browser steps above are the live check. `campaign-roster-rls.test.ts` only text-matches the migration SQL on disk; live verify SQL was removed from the repo.
 
 **Report** — `[ ] PASS` · `[ ] FAIL` · `[ ] SKIP` — Notes:
 
@@ -7798,7 +7798,7 @@ Saving a power must persist Area **Apply duration** and Duration modifiers (Focu
 
 ## DEV-V-041 — Supabase least-privilege Phase 2 (TASK-649)
 
-Post-apply smoke for anon grant hardening, public read paths, and guest character sheets. Automated SQL parity: `node scripts/verify-task-649.mjs`.
+Post-apply smoke for anon grant hardening, public read paths, and guest character sheets. Automated coverage: vitest + CI; TASK-649 replay SQL is under `sql/task-649-*-applied.sql` for owner-approved new environments only.
 
 #### DEV-V-041-T001 — Public codex + official library (logged out)
 
@@ -10416,17 +10416,15 @@ A pick that would exceed open trait slots is refused. The disabled Add button de
 |-------|-------|
 | **Suite** | DEV-V-071 |
 | **Related task** | 86e3jt562 |
-| **Where** | `/my-account`; `sql/86e3jt562-profile-column-writes-verify.sql` |
-| **Needs** | A signed-in account that can change its username, and a new_player account. Database probe needs RealmsRPG-Test. |
+| **Where** | `/my-account` |
+| **Needs** | A signed-in account that can change its username, and a new_player account. |
 
 **Steps**
-1. Re-run `sql/86e3jt562-profile-column-writes-verify.sql` on RealmsRPG-Test.
-2. On My Account, change the display name and reload.
+1. On My Account, change the display name and reload.
 3. Change the username to a new allowed name. Try again immediately.
 4. As a role that can upload, choose a library portrait and upload a picture. As new_player, the upload API still returns 403.
 
 **Expected**
-- The verify script exits without an exception and rolls its probe back.
 - Display name saves. The first username change saves. The second says to wait.
 - A library portrait saves. An outside URL does not. new_player still cannot upload a file.
 
@@ -10474,8 +10472,8 @@ A pick that would exceed open trait slots is refused. The disabled Add button de
 | DEV-V-048 | Library search toolbar + Enhanced Items tab (session) | — | Manual — see suite above |
 | DEV-V-046 | Library power/technique categories + filters (TASK-673 / TASK-676 / TASK-731 / TASK-725 / TASK-746) | — | Automated (category/filter/innate/formulas tests) + manual DEV-V-046 T001–T008 |
 | DEV-V-044 | Power Creator AoE applyDuration persistence (TASK-672) | — | Automated (library-columnar + power-calc tests) + manual DEV-V-044-T001 |
-| DEV-V-041 | Supabase least-privilege Phase 2 (TASK-649 / TASK-735) | — | Manual DEV-V-041 T001–T004 + `node scripts/verify-task-649.mjs` |
-| DEV-V-042 | Campaigns RLS SELECT consolidation (TASK-650 / TASK-802 / 86e3jryyr / 86e3jryyt) | — | `node scripts/verify-task-650.mjs` + `campaign-members-rls.test.ts` + `campaign-roster-rls.test.ts` + DEV-V-042-T002/T003/T004/T005 |
+| DEV-V-041 | Supabase least-privilege Phase 2 (TASK-649 / TASK-735) | — | Manual DEV-V-041 T001–T004 + CI/vitest (no live verify script) |
+| DEV-V-042 | Campaigns RLS SELECT consolidation (TASK-650 / TASK-802 / 86e3jryyr / 86e3jryyt) | — | `campaign-members-rls.test.ts` + `campaign-roster-rls.test.ts` + DEV-V-042-T002/T003/T004/T005 (browser) |
 | DEV-V-043 | Wave 5 page facade splits (TASK-666 / TASK-762) | — | Manual — see suite above |
 | DEV-V-051 | Guided funnel entry, trusted create, feat choice (TASK-738 / TASK-754) | — | Automated (`character-legality`, characters route, `creator-entry-mode`, `feat-selection`, `character-save` create-error copy) + manual DEV-V-051 T001–T010 |
 | DEV-V-052 | Archetype Path list filter (TASK-751 / TASK-752 / TASK-753) | — | Automated (`path-recommendation-index`, `feat-list`, `skill-list`, `equipment-list`) + manual DEV-V-052 T001–T006 |

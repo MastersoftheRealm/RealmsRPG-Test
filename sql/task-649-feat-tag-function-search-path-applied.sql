@@ -1,8 +1,8 @@
 -- TASK-649 Phase 2 — Pin search_path on feat tag functions (D5)
 -- =============================================================================
 -- Status: APPLIED 2026-08-03 on RealmsRPG-Test
--- Project: RealmsRPG-Test (lbqhiwudvifmkjtkccdg)
--- Audit ref: archive/CODEBASE_AUDIT_2026-08-01.md §5.2 D5
+-- Project: RealmsRPG-Test (RealmsRPG-Test project)
+-- Audit ref: Aug 2026 codebase audit (removed from repo; git history) §5.2 D5
 --
 -- Finding: normalize_feat_tags + map_feat_tag_phase{1,2,3} lack explicit
 -- search_path (Supabase linter 0011_function_search_path_mutable).

@@ -43,7 +43,6 @@
     "db:types": "node scripts/generate-db-types.mjs",
     "db:seed": "node scripts/seed-to-supabase.js",
     "db:seed:dry-run": "node scripts/seed-to-supabase.js --dry-run",
-    "db:seed:reset": "node scripts/seed-to-supabase.js --reset",
     "db:migrate": "echo Run SQL in Supabase Dashboard. See sql/README.md and src/docs/SUPABASE_SCHEMA.md.",
     "db:diff": "node scripts/db-schema-diff.mjs",
     "db:baseline:update": "node scripts/db-schema-diff.mjs --update",

@@ -9,8 +9,9 @@ name: UI Verify (design system)
 #   - shell-creators chrome audit (8 Playwright tests, ~1–2 min on Linux after build — TASK-659)
 #
 # All steps are required (no continue-on-error). See src/docs/ai/BUILD_VALIDATION.md
-# and DEVELOPER_TASK_QUEUE for the one-time setup (CI secrets + seeding Linux
-# visual baselines).
+# for suite layout. Linux visual baselines: commit under tests/visual/ (see playwright.config.ts).
+# CI secrets (e.g. Supabase for a11y data routes): GitHub repo Settings → Secrets and variables → Actions.
+# Vercel preview/deploy env: src/docs/DEPLOYMENT_AND_SECRETS_SUPABASE.md (not root README).
 #
 # THESE CHECKS DO NOT BLOCK A DEPLOY ON THEIR OWN.
 # This workflow also triggers on `push: [master]`, i.e. in parallel with the Vercel

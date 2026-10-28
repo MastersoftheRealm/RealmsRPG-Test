@@ -50,7 +50,7 @@ The file **`sql/supabase-codex-tables-columnar.sql`** contains:
 ### Option A — Fresh start (recommended if you’re okay re-importing)
 
 1. **Back up** existing codex data if needed (export from Supabase or run a quick `SELECT * FROM codex.codex_feats` etc.).
-2. In Supabase SQL editor, run the section of `supabase-codex-tables-columnar.sql` that:
+2. In owner-approved database apply (see 07-database-operations.md), run the section of `supabase-codex-tables-columnar.sql` that:
    - Drops the existing codex tables (or renames them to `codex_feats_legacy`, etc.).
    - Creates the new columnar tables (same names: `codex_feats`, `codex_skills`, …).
 3. In Supabase Table Editor, use **Import data from CSV** for each table and map your CSV columns to the new columns (names should align).

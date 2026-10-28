@@ -11,6 +11,6 @@ Add or update a **DEV-V-###** test in the archive **only** when:
 
 Put new suites and tests in [`archive/BUILD_VALIDATION_SUITES.md`](archive/BUILD_VALIDATION_SUITES.md). Older or superseded material may also appear in [`archive/BUILD_VALIDATION_ARCHIVE.md`](archive/BUILD_VALIDATION_ARCHIVE.md). Do not delete tests — move them.
 
-Record pending QA on the **ClickUp task** (steps and expected results). The historical human index is [`archive/DEVELOPER_TASK_QUEUE.md`](archive/DEVELOPER_TASK_QUEUE.md).
+Record pending QA on the **ClickUp task** (steps and expected results). The old repo task-queue index was removed; use ClickUp and git history for historical DEV-* cross-references.
 
 **ID scheme:** `DEV-V-###` (suite) and `DEV-V-###-T###` (single test). Do not reuse IDs that already exist in the archive files.

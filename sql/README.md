@@ -4,7 +4,7 @@
 
 **Codex / reference data edits:** Audit → draft SQL here → **Kadin explicit OK** → then apply. See [.cursor/rules/realms-codex-data.mdc](../.cursor/rules/realms-codex-data.mdc).
 
-**Last parity audit:** 2026-07-03 against **RealmsRPG-Test** (`lbqhiwudvifmkjtkccdg`). Local files updated to match live DB state; no DB writes during audit.
+**Last parity audit:** 2026-07-03 against the RealmsRPG-Test project. Local files updated to match that snapshot; no DB writes during audit.
 
 ---
 
@@ -44,10 +44,10 @@ These are recorded in `supabase_migrations.schema_migrations` on RealmsRPG-Test.
 | `admin_role_audit_log` | 20260613123320 | [supabase-admin-role-audit-2026-06.sql](supabase-admin-role-audit-2026-06.sql) |
 | `storage_select_hardening_2026_06` | 20260613164156 | [supabase-storage-select-hardening-2026-06.sql](supabase-storage-select-hardening-2026-06.sql) |
 | `rls_initplan_fk_indexes_2026_06` | 20260613164211 | [supabase-rls-initplan-fk-indexes-2026-06.sql](supabase-rls-initplan-fk-indexes-2026-06.sql) |
-| `rls_initplan_batch2_2026_06` | 20260613165609 | [supabase-rls-initplan-batch2-2026-06.sql](supabase-rls-initplan-batch2-2026-06.sql) |
+| `rls_initplan_batch2_2026_06` | 20260613165609 | [supabase-rls-initplan-batch2-2026-06.sql](supabase-rls-initplan-batch2-2026-06.sql) — already applied on Test; do not re-run on production without owner approval |
 | `campaign_rolls_select_initplan_2026_06` | 20260613165648 | *(no standalone file — SELECT initplan wraps bundled in initplan-fk-indexes campaign_rolls section)* |
 | `usernames_select_restrict_2026_06` | 20260613170126 | [supabase-usernames-select-restrict-2026-06.sql](supabase-usernames-select-restrict-2026-06.sql) |
-| `rls_consolidate_permissive_policies_2026_06` | 20260619002057 | [supabase-rls-consolidate-permissive-2026-06.sql](supabase-rls-consolidate-permissive-2026-06.sql) |
+| `rls_consolidate_permissive_policies_2026_06` | 20260619002057 | [supabase-rls-consolidate-permissive-2026-06.sql](supabase-rls-consolidate-permissive-2026-06.sql) — already applied on Test; do not re-run on production without owner approval |
 | `rls_fix_campaign_members_recursion_2026_06` | 20260619030857 | [supabase-rls-fix-campaign-recursion-2026-06.sql](supabase-rls-fix-campaign-recursion-2026-06.sql) |
 | `storage_bucket_limits_2026_06` | 20260626210908 | [supabase-storage-bucket-limits-2026-06.sql](supabase-storage-bucket-limits-2026-06.sql) |
 | `campaign_rpc_revoke_anon_2026_06` | 20260626210951 | [supabase-campaign-rpc-revoke-anon-2026-06.sql](supabase-campaign-rpc-revoke-anon-2026-06.sql) |
@@ -80,16 +80,16 @@ Applied on production outside this table: [codex-entry-sources.sql](codex-entry-
 | TASK-530 path enrichment (all 12 + ability + backup) | [codex-archetypes-backup-20260717.sql](codex-archetypes-backup-20260717.sql), [codex-archetypes-ability-spread-20260717.sql](codex-archetypes-ability-spread-20260717.sql), [codex-archetypes-enrich-*-applied.sql](codex-archetypes-enrich-berserker-applied.sql), [codex-archetypes-emdash-scrub-20260717.sql](codex-archetypes-emdash-scrub-20260717.sql) | Applied RealmsRPG-Test 2026-07-17. Per-path `*-applied.sql` is the replay source; em-dash scrub is idempotent. |
 | Empowered technique tables | [empowered-techniques-separate-tables.sql](empowered-techniques-separate-tables.sql) | `user_empowered_techniques`, `official_empowered_techniques` exist. |
 | TASK-627 official powers payload dedupe | [official-powers-strip-redundant-auto-mechanic-parts-applied.sql](official-powers-strip-redundant-auto-mechanic-parts-applied.sql) | Applied 2026-08-01. Strips auto-mechanic parts from `payload.parts` when promoted columns exist; helper `_official_power_rebuilt_mechanic_part_names`. 41/44 rows cleaned; post-apply overlap audit 0; idempotent. |
-| TASK-649 Supabase least-privilege Phase 2 | [task-649-*-applied.sql](task-649-anon-least-privilege-applied.sql) (6 files) + [task-649-verify-applied.sql](task-649-verify-applied.sql) | Applied 2026-08-03. `node scripts/run-task-649-phase2.mjs` · `node scripts/verify-task-649.mjs`. VTT tables skipped. |
-| TASK-650 campaigns RLS SELECT consolidation | [task-650-campaigns-rls-select-consolidation-applied.sql](task-650-campaigns-rls-select-consolidation-applied.sql) + [task-650-verify-applied.sql](task-650-verify-applied.sql) | Applied 2026-08-03. Dropped redundant `campaigns_owner_select` (stacked with `campaigns_select_participants`). `node scripts/run-task-650.mjs` · `node scripts/verify-task-650.mjs`. |
-| TASK-802 campaigns SELECT owner short-circuit | [task-802-campaigns-select-owner-short-circuit.sql](task-802-campaigns-select-owner-short-circuit.sql) | Applied 2026-08-15. Single SELECT policy keeps `owner_id = auth.uid()` **or** the participant helper so `INSERT … RETURNING` works. Verify: `node scripts/verify-task-650.mjs` (includes INSERT RETURNING smoke). |
+| TASK-649 Supabase least-privilege Phase 2 | [task-649-*-applied.sql](task-649-anon-least-privilege-applied.sql) (6 files) | Applied 2026-08-03 on Test. Replay only on new environments with owner approval. VTT tables skipped. |
+| TASK-650 campaigns RLS SELECT consolidation | [task-650-campaigns-rls-select-consolidation-applied.sql](task-650-campaigns-rls-select-consolidation-applied.sql) | Applied 2026-08-03. Dropped redundant `campaigns_owner_select`. Replay only with owner approval. |
+| TASK-802 campaigns SELECT owner short-circuit | [task-802-campaigns-select-owner-short-circuit.sql](task-802-campaigns-select-owner-short-circuit.sql) | Applied 2026-08-15. Single SELECT policy keeps `owner_id = auth.uid()` **or** the participant helper so `INSERT … RETURNING` works. |
 | TASK-738 character create idempotency key | [task-738-characters-client-request-id.sql](task-738-characters-client-request-id.sql) | Applied 2026-08-13 (Supabase MCP `apply_migration`). Adds nullable `characters.client_request_id uuid` + partial unique index `characters_user_client_request_id_key (user_id, client_request_id) WHERE client_request_id IS NOT NULL`. Additive and idempotent; the index is what makes a concurrent retry replay instead of duplicating. |
 
 ---
 
 ## When to use
 
-- **New project / fresh DB:** Historical Path C consolidation: [ai/archive/SUPABASE_PATH_C_OPERATOR_GUIDE.md](../src/docs/ai/archive/SUPABASE_PATH_C_OPERATOR_GUIDE.md). Current schema is already in `public`.
+- **New project / fresh DB:** Use committed migrations in the table above. Path C operator guides were removed from the repo; current schema is already in `public`.
 - **Existing RealmsRPG-Test:** Everything in the migration tables above is already applied. Run only scripts marked **optional** or for **new environments**.
 
 ---
@@ -105,7 +105,7 @@ Applied on production outside this table: [codex-entry-sources.sql](codex-entry-
 | path-c-phase0-consolidate-to-public-part1c.sql | Part 1c: codex_* → public |
 | path-c-phase0-consolidate-to-public-part1c2.sql | Part 1c2a: public_powers, public_techniques → public |
 | path-c-phase0-consolidate-to-public-part1c2b.sql | Part 1c2b: public_items, public_creatures → public |
-| path-c-phase0-consolidate-to-public-part2.sql | Part 2: RLS, Realtime, drop empty schemas |
+| path-c-phase0-consolidate-to-public-part2.sql | Part 2: drop legacy schemas — **destructive**; already applied on Test; owner approval only |
 | create-public-core-rules.sql | Create `public.core_rules` if missing after Part 2 |
 
 ### Codex & guided creator
@@ -201,7 +201,7 @@ Applied on production outside this table: [codex-entry-sources.sql](codex-entry-
 
 ### Archive — do not run on current public-only DB
 
-[sql/archive/](archive/) — legacy codex-schema, multi-schema RLS, idempotent-full, force-drop-codex scripts.
+[sql/archive/](archive/) — legacy codex-schema, multi-schema RLS, idempotent-full (destructive one-shots removed).
 
 ---
 

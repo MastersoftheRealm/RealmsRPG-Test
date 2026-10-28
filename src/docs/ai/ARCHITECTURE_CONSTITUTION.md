@@ -7,7 +7,7 @@ On demand. Do not load this file up front. PR Reviewer grades using `src/docs/ai
 | Role | When | Constraint |
 |------|------|------------|
 | **Implementer** (default) | Almost all tasks | Extend existing patterns only. No new shared component/store/API contract without Architect path. |
-| **Architect** (rare) | New shared component, zustand store, API contract, migration strategy, or parallel pattern | Require ADR in `src/docs/ai/ADR/` **or** explicit owner ack in chat / `DEVELOPER_TASK_QUEUE.md`. Prefer deleting parallel systems over documenting them forever. |
+| **Architect** (rare) | New shared component, zustand store, API contract, migration strategy, or parallel pattern | Require ADR in `src/docs/ai/ADR/` **or** explicit owner ack in chat / ClickUp. Prefer deleting parallel systems over documenting them forever. |
 
 ## Session start
 
@@ -40,7 +40,7 @@ Do not read `ACTIVE_TASKS.md`, `AI_TASK_QUEUE.md`, `WAITING_TASKS.md`, `AI_CHANG
 - **Search before build** — never fork a parallel `Library*Tab` / load hook / upload path / parser.
 - **Stack** — Next.js App Router, Supabase (no Prisma), Vercel. SQL in `sql/`; schema docs in `SUPABASE_SCHEMA.md`.
 - **Lib layers** — `lib/game` + `lib/calculators` are neutral domain math (no imports from `lib/library` or `lib/guided-creator`). UI/creator layers import downward. See ADR-0010.
-- **Migrations (one policy):** Prefer Supabase MCP `apply_migration` when available; else Dashboard SQL Editor. Always keep idempotent SQL in `sql/`. **Codex data** (`codex_*` / `core_rules`): audit → propose SQL → **Kadin explicit OK** → apply (MCP or Dashboard). See `realms-codex-data.mdc`.
+- **Migrations (one policy):** No production writes without **Kadin explicit OK** and a fresh backup. Prefer Supabase MCP `apply_migration` on non-production when available; else Dashboard SQL Editor. Always keep idempotent SQL in `sql/`. **Codex data** (`codex_*` / `core_rules`): audit → propose SQL → **Kadin explicit OK** → apply on the approved environment. See `guide/07-database-operations.md` and `realms-codex-data.mdc`.
 - **Uploads** — client multipart via `apiUpload` from `@/lib/api-client` (not raw `fetch` to `/api/upload/*`).
 - **Client errors** — API/Supabase boundary convention in `ARCHITECTURE.md` § Client error handling: `apiFetch` throws; check Supabase `{ error }`; no silent `catch` on user actions.
 - **API error responses** — Route Handlers return `{ error: string }` on failure (4xx/5xx). Log raw Supabase/Postgres/storage errors server-side via `logApiError` / `apiErrorResponse` (`@/lib/api-error`); never expose `.message`, `.details`, or stack traces to clients in production. Optional `hint` / `debug` fields only when `?debug=1` (admin/non-prod) or `NODE_ENV=development`. Success payloads vary by route; errors do not.
@@ -67,7 +67,7 @@ If an acceptance criterion is still open, say so on the ClickUp task. Do not mar
 
 ### QA
 
-User-facing work moves to ClickUp **testing** with the QA comment. That comment is the pending-QA record. Do not also set `verification_status` or add a `DEVELOPER_TASK_QUEUE.md` row.
+User-facing work moves to ClickUp **testing** with the QA comment. That comment is the pending-QA record. Do not also set legacy `verification_status` fields in removed repo queue files.
 
 ## Human review gates (stop and ask / DEV queue)
 

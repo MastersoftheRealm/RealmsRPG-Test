@@ -7,4 +7,4 @@
 ALTER TABLE codex.public_items SET SCHEMA public;
 ALTER TABLE codex.public_creatures SET SCHEMA public;
 
--- PART 1c2b DONE. Run Part 2 next: path-c-phase0-consolidate-to-public-part2.sql
+-- PART 1c2b DONE. Part 2 drop scripts were removed; do not run legacy schema-removal SQL from this repo.

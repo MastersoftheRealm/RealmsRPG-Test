@@ -1,6 +1,6 @@
 -- 0001 — Audit remediation, wave 1: privilege escalation, access-control authority, id retirement
 -- Applied: 2026-08-13 via Supabase apply_migration (name: audit_remediation_wave1_security)
--- Source: reports/audit-2026-08-13/00-database-and-infrastructure.md
+-- Source: Aug 2026 codebase audit (report removed from repo; see git history)
 -- Replay-safe: yes (idempotent — guarded drops, create-or-replace, IF NOT EXISTS)
 -- Destructive: no (drops two policies and two column grants; no data is deleted)
 -- Prereqs: none. Baseline schema: sql/schema/0000_baseline_2026-08-13.sql

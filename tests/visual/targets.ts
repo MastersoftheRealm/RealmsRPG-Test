@@ -33,7 +33,7 @@ export const SCREENSHOT_PAGES = [
  * Broader set for a11y scans. Includes guest-soft, data-driven routes — axe does
  * not need determinism, so empty/error states are still worth scanning. Auth-only
  * routes (/my-account, /campaigns/[id], character sheet) are omitted until a test
- * session is available (see DEVELOPER_TASK_QUEUE).
+ * session is available (see playwright.auth.config.ts / e2e provision docs).
  *
  * Set `A11Y_DETERMINISTIC_ONLY=1` (CI) to scan only the data-free routes, so the
  * gate doesn't depend on Supabase data/secrets being present in the CI runner.
