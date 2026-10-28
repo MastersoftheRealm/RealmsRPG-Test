@@ -2,7 +2,7 @@
 -- =============================================================================
 -- Status: APPLIED 2026-08-03 on RealmsRPG-Test
 -- Project: RealmsRPG-Test (RealmsRPG-Test project)
--- Audit ref: archive/CODEBASE_AUDIT_2026-08-01.md §5.2 D2
+-- Audit ref: Aug 2026 codebase audit (removed from repo; git history) §5.2 D2
 --
 -- Finding: Four backup tables remain in production from 2026-06-29 and 2026-07-17
 -- enrichment passes. All have RLS enabled, zero policies, no primary key.

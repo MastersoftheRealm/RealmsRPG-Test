@@ -2,7 +2,7 @@
 -- =============================================================================
 -- Status: APPLIED 2026-08-03 on RealmsRPG-Test — replay: run this file on a new environment only with owner approval
 -- Project: RealmsRPG-Test (RealmsRPG-Test project)
--- Audit ref: archive/CODEBASE_AUDIT_2026-08-01.md §5.2 D1
+-- Audit ref: Aug 2026 codebase audit (removed from repo; git history) §5.2 D1
 --
 -- Finding: `anon` has INSERT/UPDATE/DELETE/TRUNCATE (and REFERENCES/TRIGGER) on
 -- ~38 public tables. RLS blocks misuse today, but grants violate least privilege

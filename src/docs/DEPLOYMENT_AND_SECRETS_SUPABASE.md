@@ -213,7 +213,7 @@ On the free tier, watch **Edge Requests**, **Fast Data Transfer** (CDN → users
 
 App code mounts Vercel Web Analytics in the root layout (`src/app/layout.tsx` → `<Analytics />` from `@vercel/analytics/next`). No env vars are required.
 
-1. In the Vercel project → **Analytics** → **Enable** Web Analytics (Dashboard-only; see **DEV-006** in `DEVELOPER_TASK_QUEUE.md`).
+1. In the Vercel project → **Analytics** → **Enable** Web Analytics (Dashboard-only; track as **DEV-006** in ClickUp).
 2. Deploy (or wait for the next production deploy) so `/_vercel/insights/*` routes are provisioned.
 3. Verify: open the live site, DevTools → Network → look for a same-origin `…/view` (or `/_vercel/insights/view`) request after navigation.
 4. **CSP:** `next.config.ts` allows `https://va.vercel-scripts.com` on `script-src` / `connect-src` for local/dev debug scripts. Production uses same-origin `/_vercel/insights/*` (`'self'`). Sentry browser envelopes need `https://*.sentry.io`, `https://*.ingest.sentry.io`, and `https://*.ingest.us.sentry.io` on `connect-src` (TASK-802; CSP `*` is one label). The toolbar websocket is `wss://ws-us3.pusher.com` on `connect-src` (86e1z8j9e). `wss://*.vercel.live` does not match that host. Local `next dev` also allows `ws://localhost:*` and `ws://127.0.0.1:*`. Do not remove those hosts without re-checking analytics, the toolbar console, and error reporting in both environments.

@@ -9,8 +9,8 @@ name: UI Verify (design system)
 #   - shell-creators chrome audit (8 Playwright tests, ~1–2 min on Linux after build — TASK-659)
 #
 # All steps are required (no continue-on-error). See src/docs/ai/BUILD_VALIDATION.md
-# and DEVELOPER_TASK_QUEUE for the one-time setup (CI secrets + seeding Linux
-# visual baselines).
+# for suite layout; one-time CI setup (secrets + Linux visual baselines) is documented
+# in the repo README / Vercel project settings.
 #
 # THESE CHECKS DO NOT BLOCK A DEPLOY ON THEIR OWN.
 # This workflow also triggers on `push: [master]`, i.e. in parallel with the Vercel

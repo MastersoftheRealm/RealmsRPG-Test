@@ -44,10 +44,10 @@ These are recorded in `supabase_migrations.schema_migrations` on RealmsRPG-Test.
 | `admin_role_audit_log` | 20260613123320 | [supabase-admin-role-audit-2026-06.sql](supabase-admin-role-audit-2026-06.sql) |
 | `storage_select_hardening_2026_06` | 20260613164156 | [supabase-storage-select-hardening-2026-06.sql](supabase-storage-select-hardening-2026-06.sql) |
 | `rls_initplan_fk_indexes_2026_06` | 20260613164211 | [supabase-rls-initplan-fk-indexes-2026-06.sql](supabase-rls-initplan-fk-indexes-2026-06.sql) |
-| `rls_initplan_batch2_2026_06` | 20260613165609 | *(file removed from repo — already applied on Test)* |
+| `rls_initplan_batch2_2026_06` | 20260613165609 | [supabase-rls-initplan-batch2-2026-06.sql](supabase-rls-initplan-batch2-2026-06.sql) — already applied on Test; do not re-run on production without owner approval |
 | `campaign_rolls_select_initplan_2026_06` | 20260613165648 | *(no standalone file — SELECT initplan wraps bundled in initplan-fk-indexes campaign_rolls section)* |
 | `usernames_select_restrict_2026_06` | 20260613170126 | [supabase-usernames-select-restrict-2026-06.sql](supabase-usernames-select-restrict-2026-06.sql) |
-| `rls_consolidate_permissive_policies_2026_06` | 20260619002057 | *(file removed from repo — already applied on Test)* |
+| `rls_consolidate_permissive_policies_2026_06` | 20260619002057 | [supabase-rls-consolidate-permissive-2026-06.sql](supabase-rls-consolidate-permissive-2026-06.sql) — already applied on Test; do not re-run on production without owner approval |
 | `rls_fix_campaign_members_recursion_2026_06` | 20260619030857 | [supabase-rls-fix-campaign-recursion-2026-06.sql](supabase-rls-fix-campaign-recursion-2026-06.sql) |
 | `storage_bucket_limits_2026_06` | 20260626210908 | [supabase-storage-bucket-limits-2026-06.sql](supabase-storage-bucket-limits-2026-06.sql) |
 | `campaign_rpc_revoke_anon_2026_06` | 20260626210951 | [supabase-campaign-rpc-revoke-anon-2026-06.sql](supabase-campaign-rpc-revoke-anon-2026-06.sql) |
@@ -105,7 +105,8 @@ Applied on production outside this table: [codex-entry-sources.sql](codex-entry-
 | path-c-phase0-consolidate-to-public-part1c.sql | Part 1c: codex_* → public |
 | path-c-phase0-consolidate-to-public-part1c2.sql | Part 1c2a: public_powers, public_techniques → public |
 | path-c-phase0-consolidate-to-public-part1c2b.sql | Part 1c2b: public_items, public_creatures → public |
-| | create-public-core-rules.sql | Create `public.core_rules` if missing after Part 2 |
+| path-c-phase0-consolidate-to-public-part2.sql | Part 2: drop legacy schemas — **destructive**; already applied on Test; owner approval only |
+| create-public-core-rules.sql | Create `public.core_rules` if missing after Part 2 |
 
 ### Codex & guided creator
 

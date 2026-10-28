@@ -7,7 +7,7 @@ On demand. Do not load this file up front. An audit checks four points from it: 
 | Role | When | Constraint |
 |------|------|------------|
 | **Implementer** (default) | Almost all tasks | Extend existing patterns only. No new shared component/store/API contract without Architect path. |
-| **Architect** (rare) | New shared component, zustand store, API contract, migration strategy, or parallel pattern | Require ADR in `src/docs/ai/ADR/` **or** explicit owner ack in chat / `DEVELOPER_TASK_QUEUE.md`. Prefer deleting parallel systems over documenting them forever. |
+| **Architect** (rare) | New shared component, zustand store, API contract, migration strategy, or parallel pattern | Require ADR in `src/docs/ai/ADR/` **or** explicit owner ack in chat / ClickUp. Prefer deleting parallel systems over documenting them forever. |
 
 ## Session start
 
@@ -67,7 +67,7 @@ If an acceptance criterion is still open, say so on the ClickUp task. Do not mar
 
 ### QA
 
-User-facing work moves to ClickUp **testing** with the QA comment. That comment is the pending-QA record. Do not also set `verification_status` or add a `DEVELOPER_TASK_QUEUE.md` row.
+User-facing work moves to ClickUp **testing** with the QA comment. That comment is the pending-QA record. Do not also set legacy `verification_status` fields in removed repo queue files.
 
 ## Human review gates (stop and ask / DEV queue)
 

@@ -8,15 +8,15 @@ Do **not** read the done archive at session start.
 
 **Next task ID:** TASK-935
 **Waiting / blocked / human:** [WAITING_TASKS.md](WAITING_TASKS.md)
-**Done archive:** [archive/TASK_QUEUE_DONE.md](archive/TASK_QUEUE_DONE.md) · snapshot [archive/TASK_QUEUE_DONE_2026-07-15.md](archive/TASK_QUEUE_DONE_2026-07-15.md)
+**Done archive:** ClickUp / git history (TASK_QUEUE_DONE removed) · snapshot [archive/TASK_QUEUE_DONE_2026-07-15.md](archive/TASK_QUEUE_DONE_2026-07-15.md)
 **Process:** [AI_TASK_QUEUE.md](AI_TASK_QUEUE.md) · Template: [AI_REQUEST_TEMPLATE.md](AI_REQUEST_TEMPLATE.md)
-**Pending owner QA:** [DEVELOPER_TASK_QUEUE.md](DEVELOPER_TASK_QUEUE.md) → Pending owner QA. Do not keep implementation-complete tasks in this file waiting for QA.
+**Pending owner QA:** ClickUp (DEVELOPER_TASK_QUEUE removed) → Pending owner QA. Do not keep implementation-complete tasks in this file waiting for QA.
 
 **Do not pick work from this file.** ClickUp is the queue. The blocks below are historical notes.
 
 **Counts:** 9 agent-eligible (3 partial owner-gated, 6 not-started) · waiting/blocked in WAITING_TASKS · done in archive.
 
-**Hot notes:** **Architect / owner ack before implement:** TASK-871 (DEV-Q05), TASK-876 (DEV-Q06), TASK-874 (DEV-Q07), TASK-914 (Admin Archetypes list shell), TASK-915 (power/empowered editor extract). **WAITING:** TASK-834 (OneDrive), TASK-823 (manuscript), TASK-917 (pending-QA snapshot — DEV-016). TASK-410–414 deferred. Mobile audit: `reports/mobile-audit-2026-08-18/MOBILE_AUDIT.md`.
+**Hot notes:** **Architect / owner ack before implement:** TASK-871 (DEV-Q05), TASK-876 (DEV-Q06), TASK-874 (DEV-Q07), TASK-914 (Admin Archetypes list shell), TASK-915 (power/empowered editor extract). **WAITING:** TASK-834 (OneDrive), TASK-823 (manuscript), TASK-917 (pending-QA snapshot — DEV-016). TASK-410–414 deferred. Mobile audit: 2026-08-18 mobile audit (report removed; see MOBILE_UX.md).
 
 ---
 
