@@ -4,7 +4,7 @@
 
 **Status:** Source of truth (Drive) · Seeded 2026-10-05 from settled Kadin rulings  
 **Owner:** Kadin Brooksby  
-**Maintainers:** Web Manager proposes appends when Kadin settles intent; Production Manager keeps the Drive SoT in sync. Repo holds this mirror (Drive wins on conflict).  
+**Maintainers:** Web Manager proposes appends when Kadin settles intent; Production Manager keeps the Drive **core rulebook text** catalog in sync. Repo holds this mirror of product/QA decisions (**Drive wins** if this file and the Drive doc conflict). **PR review process:** `src/docs/ai/PR_REVIEWER_BRIEF.md` is the single source; [Realms Dev Workflow](https://docs.google.com/document/d/1F6iZUKP9nN0YTFzOkZ6Y82sySaw0iW101f_a-7ZeQdI/edit) points to it and does not duplicate it.
 **Related:** [Realms Dev Workflow & Agent Rules](https://docs.google.com/document/d/1F6iZUKP9nN0YTFzOkZ6Y82sySaw0iW101f_a-7ZeQdI/edit) · ClickUp wiki pointer after publish
 
 Settled product and QA decisions for realmsrpg.com agents. Strip: open questions, secrets, Restricted material. Ask Kadin when Drive Alpha and `GAME_RULES.md` disagree (Drive wins by default; some repo entries may be test rules Drive will adopt).
@@ -23,8 +23,8 @@ Game runner = **RM (Realm Master)** — never GM.
 - Clickup Manager is the only Grok bot that writes to ClickUp (Kadin personal token). Cursor agents may write to ClickUp on Kadin's orders.
 - No bot starts sweeps/checks/runs without Kadin or a bot he delegated.
 - Duplicates go to Clickup Manager (dated section in existing task description), not a comment from the finder.
-- Rules-math PRs: Production Manager checks Drive/Codex before Kadin signs off.
-- Production Manager: Drive catalog + rules consistency; **flag/comment/ClickUp via Clickup Manager only** — no silent core/sub-rule text edits unless Kadin okays.
+- Rules-math / rules-value PRs: PR Reviewer routes to **Rules Balance Analyst** for a ruling check before Kadin signs off (Kadin, Oct 13, 2026).
+- Production Manager: Drive **core rulebook text** catalog consistency; **flag/comment/ClickUp via Clickup Manager only** — no silent core/sub-rule text edits unless Kadin okays.
 
 ---
 
@@ -157,10 +157,10 @@ Owner decisions for [Admin > Sources page](https://app.clickup.com/t/86e3ru888).
 
 ## Changelog
 
-- **2026-10-28:** Kadin approved **PR Reviewer** as the primary PR checker (`src/docs/ai/PR_REVIEWER_BRIEF.md`). The coding bot and PR Reviewer must be different bots with different prompts. Web Manager second pass on high-risk PRs only, plus spot-checks. CI, lint, and ratchets are the final gate. **Human OK** = Kadin or Collin (usually Kadin); Collin is not a required reviewer. Bypass skips human review only, not required checks unless Kadin says otherwise. When Kadin is the approver, the PR must include a plain-language summary (what it does, why, what could go wrong, how to undo, what is needed from him). Retired `/audit` and `.cursor/commands/audit.md`. Supersedes the Oct 8 bypass assignee wording below for review/merge rules.
+- **2026-10-28:** Kadin approved **PR Reviewer** as the primary PR checker (`src/docs/ai/PR_REVIEWER_BRIEF.md`). The coding bot and PR Reviewer must be different bots with different prompts. Web Manager second pass on high-risk PRs only, plus spot-checks. CI, lint, and ratchets are the final gate. **Human OK** = Kadin or Collin (usually Kadin); Collin is not a required reviewer. Bypass skips human review only, not required checks unless Kadin says otherwise. When Kadin is the approver, the PR must include a plain-language summary (what it does, why, what could go wrong, how to undo, what is needed from him). Retired `/audit` and `.cursor/commands/audit.md`. Supersedes the Oct 8 bypass assignee wording below for review/merge rules. **Same day (7:12 PM ET):** Kadin added **destructive admin tools** and **billing or anything sent outside the team** to the brief **Risk classification** (single high-risk list).
 - **2026-10-18:** `sql/codex-rename-source.sql` applied on production (function only; no rows changed); re-applied same day after fixing control-character validation (`chr(0)` in SQL text). The first real rename has not run. Re-running the file is safe because it only replaces the function. The first real rename is a live update and needs a backup first.
 - **2026-10-17:** Codex sources ([86e3ru888](https://app.clickup.com/t/86e3ru888)): Core may be renamed; merging into or out of Core is allowed with the merge confirm; rename changelogs commit in the same transaction; no remove-from-all-items control. The column default `{Core}` and `CORE_CODEX_SOURCE` stay. Items with no source are still saved as Core until a developer changes that default.
 - **2026-10-14:** Character sheet visibility (Oct 14, 2026 owner ruling): RM full access to rostered private sheets; members cannot see private; campaign visibility off-roster blocked. Supersedes 86e3jryyv for RM semantics; implements [86e39knu2](https://app.clickup.com/t/86e39knu2).
-- **2026-10-08:** Bypass merge moves the ClickUp task to **testing** with QA instructions for what changed and adds James Owenby. *(Assignee/review details superseded 2026-10-28 — Human OK and testing assign Bob only; see changelog entry.)*
+- **2026-10-08:** Bypass merge moves the ClickUp task to **testing** with QA instructions for what changed and adds James Owenby. *(Assignee/review details superseded 2026-10-28 — Human OK assigns the approver, Kadin or Collin, usually Kadin; bypass testing adds James Owenby; Bob is for high-importance or visual-issue QA only; see Oct 28 entry.)*
 - **2026-10-05 (~4:54 PM ET):** Appended standing QA triggers (post-dep smoke, S25 page-speed budgets, security-header/RLS retests, testing-status bot limits, Website QA check delegated to QA Tester, CI npm audit policy, no CVE IDs in public repo).
 - **2026-10-05:** Initial seed from `/workspace/qa/intent.md` settled rulings + Oct 5 Dev Team / Kadin corrections (ability hard caps −5/+10; Drive vs GAME_RULES ask-first; Realm Master spelling).

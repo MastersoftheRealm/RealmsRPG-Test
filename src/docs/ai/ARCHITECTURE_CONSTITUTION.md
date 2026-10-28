@@ -78,9 +78,9 @@ After a passing PR Reviewer verdict, require **Human OK** (Kadin or Collin, usua
 - API contract changes (request/response shapes clients depend on)
 - Live codex `UPDATE`/`INSERT`/`DELETE`
 
-**High-risk PRs** (classification, Web Manager second pass, and Kadin plain-language summary): `src/docs/ai/PR_REVIEWER_BRIEF.md` **Risk classification**. Live database apply still needs **Kadin explicit OK** and a fresh backup.
+**High-risk PRs** (classification, Web Manager second pass, and Kadin plain-language summary): `src/docs/ai/PR_REVIEWER_BRIEF.md` **Risk classification** (single list). Live database apply still needs **Kadin explicit OK** and a fresh backup.
 
-See [Realms Dev Workflow §4](https://docs.google.com/document/d/1F6iZUKP9nN0YTFzOkZ6Y82sySaw0iW101f_a-7ZeQdI/edit) (Drive may lag; repo brief wins for PR Reviewer checks until Drive is updated).
+**PR review process:** `src/docs/ai/PR_REVIEWER_BRIEF.md` is the single source. [Realms Dev Workflow §4](https://docs.google.com/document/d/1F6iZUKP9nN0YTFzOkZ6Y82sySaw0iW101f_a-7ZeQdI/edit) points to it and does not duplicate it. Drive **core rulebook text** still wins over `GAME_RULES.md` when they conflict (ask Kadin).
 
 **Model escalation:** Before implementing Architect-class or irreversible-data work, pause once and flag that a stronger model may be safer — see `.cursor/rules/realms-tasks.mdc` (narrow triggers; do not stall routine Implementer tasks).
 

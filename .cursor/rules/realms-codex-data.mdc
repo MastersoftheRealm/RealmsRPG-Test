@@ -17,7 +17,7 @@ Applies to **`codex_*`**, **`core_rules`**, and any bulk edits to official libra
 
 ## High-risk sign-off
 
-Categories that need **Kadin explicit OK before merge/apply** (plus a fresh backup before any production write) are listed under **Risk classification** in `src/docs/ai/PR_REVIEWER_BRIEF.md`. Rules-math changes: PR Reviewer also routes to Production Manager for a Drive/Codex check before Kadin signs off.
+Categories that need **Kadin explicit OK before merge/apply** (plus a fresh backup before any production write) are listed under **Risk classification** in `src/docs/ai/PR_REVIEWER_BRIEF.md` (single list). Rules-math / rules-value changes: PR Reviewer routes to **Rules Balance Analyst** before Kadin signs off (Kadin, Oct 13, 2026). Production Manager handles Drive **core rulebook text** only (not rules-math routing).
 
 ## Workflow for bulk or policy changes (tags, categories, merges, migrations)
 
