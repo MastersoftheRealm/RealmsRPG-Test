@@ -22,9 +22,15 @@ on:
   push:
     branches: [master]
 
+permissions:
+  contents: read
+
 jobs:
   verify:
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      actions: write # upload-artifact (reconcile report)
     steps:
       - name: Checkout
         uses: actions/checkout@v4
