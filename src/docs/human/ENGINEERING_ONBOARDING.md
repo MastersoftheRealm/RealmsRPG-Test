@@ -244,7 +244,7 @@ graph LR
    - DB operations
    - clear error responses
 5. Keep transformation logic in shared lib helpers when possible (`library-columnar`, enrichment, calculators).
-6. Run `npm run build` before PR.
+6. Before opening a PR, run the regression test for the repro locally; CI runs typecheck, the unit suite, and the production build (see root [`AGENTS.md`](../../../AGENTS.md) and [`src/docs/ai/ARCHITECTURE_CONSTITUTION.md`](../ai/ARCHITECTURE_CONSTITUTION.md) **Definition of Done**).
 
 ---
 

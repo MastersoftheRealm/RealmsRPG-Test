@@ -16,3 +16,5 @@ alwaysApply: true
 **SQL (`sql/`):** Every `CREATE TABLE` in `public` must, in the **same file**, enable RLS, add policies, and `GRANT` explicitly — `SELECT, INSERT, UPDATE, DELETE` to `authenticated` and `service_role`; `SELECT` to `anon` only if the table is public-read. Copy `sql/_TEMPLATE_new_table.sql`.
 
 **Terms:** RM (Realm Master), never GM. Do not invent formulas, names, lore, or flavor.
+
+**Deferred areas:** Do not copy patterns from paths in root `DEFERRED.md`; use them only for their own bug fixes. Remove an entry when the area is reworked.
