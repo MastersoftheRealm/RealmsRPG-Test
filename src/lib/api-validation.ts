@@ -571,6 +571,8 @@ export const libraryItemUpdateSchema = withSafeJsonBlob({
 
 const campaignRollPayloadSchema = z
   .object({
+    /** Client RollEntry may include id; the route assigns a new row id server-side. */
+    id: z.string().optional(),
     type: z.string().min(1),
     title: z.string().min(1),
     dice: z.array(z.unknown()).optional().default([]),
@@ -580,6 +582,8 @@ const campaignRollPayloadSchema = z
     isCrit: z.boolean().optional().default(false),
     isCritFail: z.boolean().optional().default(false),
     critMessage: z.string().nullable().optional(),
+    /** Ignored server-side; stored timestamp is always set on insert. */
+    timestamp: z.union([z.string(), z.number(), z.date()]).optional(),
   })
   .strict();
 
