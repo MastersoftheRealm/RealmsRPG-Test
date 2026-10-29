@@ -938,7 +938,7 @@ Only changes that the UX requires. Do not expand the data model beyond reducing 
 | Grouped feat / power recommendations with copy | A `guidance_groups` structure on the path, or extend `ArchetypePathRecommendations` | New |
 | Per-step path flavor text | A per-step `guidance` object, or surface the existing `level1_notes` | `level1_notes` exists but is **not shown in the creator** |
 | Species path hints | Removed — use `codex_species.is_starter` only (TASK-517) | Removed |
-| Recommended Innate Powers (distinct from Powers) | `level1_innate_powers` TEXT (CSV) → `path_data.level1.innatePowers`; admin Appendix G validation (TASK-473). Applied 2026-07-15 on RealmsRPG-Test (`sql/codex-archetypes-level1-innate-powers-proposed.sql`) | Applied |
+| Recommended Innate Powers (distinct from Powers) | `level1_innate_powers` TEXT (CSV) → `path_data.level1.innatePowers`; admin Appendix G validation (TASK-473). Applied 2026-07-15 on RealmsRPG-Test (live database (one-off SQL deleted 2026-10-29; see git history)) | Applied |
 | Admin Training Points / currency validation | Validate that path loadouts stay within budget before publish | Missing in admin |
 | Ability effect blurbs | A frontend constants map | New (no database change) |
 | Equipment sub-steps | UI only; `armaments` and `equipment` are already separate fields | Ready |

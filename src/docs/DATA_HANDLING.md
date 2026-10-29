@@ -90,7 +90,7 @@ Admin pages read/write the same tables as the app; schema reference: `src/docs/S
 | Admin page | Data source | Tables / API |
 |------------|-------------|--------------|
 | **Codex Editor** (list + spreadsheet) | GET /api/codex, server actions | public.codex_feats, codex_skills, codex_species, codex_traits, codex_parts, codex_properties, codex_equipment, codex_archetypes, codex_creature_feats, core_rules |
-| **Official Library Editor** | GET/POST/DELETE /api/official/[type] | public.official_powers, official_techniques, official_items, official_creatures (run sql/supabase-official-library-public-schema.sql if empty) |
+| **Official Library Editor** | GET/POST/DELETE /api/official/[type] | public.official_powers, official_techniques, official_items, official_creatures (run live database (one-off SQL deleted 2026-10-29; see git history) if empty) |
 | **Core Rules Editor** | useGameRules + codex actions | public.core_rules (id, data, updated_at) |
 | **User Management** | GET /api/admin/users, PATCH /api/admin/users/update-role | public.user_profiles (id, username, role) |
 

@@ -99,6 +99,6 @@ See `skills-step.tsx` (character) and `creature-creator/page.tsx` (creature).
 
 - `ContextHelpTooltip`, `HelpTooltip`, `useTooltipByKey`, `useTooltips`
 - Admin `/admin/tooltips` or `/api/tooltips`
-- `ui_tooltips` table (dropped — `sql/drop-legacy-ui-tooltips-2026-06.sql`)
+- `ui_tooltips` table (dropped — live database (one-off SQL deleted 2026-10-29; see git history))
 
 If you need editable copy without deploy, that is a **new product decision** — do not silently restore the old stack.

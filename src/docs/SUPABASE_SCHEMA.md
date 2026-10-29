@@ -29,7 +29,7 @@ Tables are listed in dependency-friendly order. **Columnar** = proper columns; *
 | `user_profiles` | Columnar | id (PK), email, display_name, username (canonical lowercase), username_display (preserved casing), photo_url, last_username_change, created_at, updated_at, role (UserRole enum) |
 | `usernames` | Columnar | username (PK), user_id (FK → user_profiles) |
 
-**Session writes (86e3jt562):** `authenticated` may INSERT `id`, `display_name`, `created_at`, `updated_at` and UPDATE `display_name`, `updated_at` on `user_profiles`. Username, email, `photo_url`, `last_username_change`, and `role` are written by the service role after the server checks the rules. `usernames` is SELECT-only for `authenticated`. Profile-picture storage INSERT/UPDATE also requires `role_policies.permissions.can_upload_profile_picture`. SQL: `sql/86e3jt562-profile-column-writes.sql`.
+**Session writes (86e3jt562):** `authenticated` may INSERT `id`, `display_name`, `created_at`, `updated_at` and UPDATE `display_name`, `updated_at` on `user_profiles`. Username, email, `photo_url`, `last_username_change`, and `role` are written by the service role after the server checks the rules. `usernames` is SELECT-only for `authenticated`. Profile-picture storage INSERT/UPDATE also requires `role_policies.permissions.can_upload_profile_picture`. SQL: live database (one-off SQL deleted 2026-10-29; see git history).
 
 ---
 
@@ -51,7 +51,7 @@ All codex tables are **columnar** and live in **public** (no `codex` schema). Ar
 | `codex_creature_feats` | Columnar | id (PK), name, description, feat_points, feat_lvl, lvl_req, mechanic, **sources (text[] NOT NULL, default `{Core}`)** |
 | `core_rules` | JSONB | id (PK), data (JSONB), updated_at |
 
-**Rules sources:** `codex_feats`, `codex_skills`, `codex_species`, `codex_traits`, `codex_parts`, `codex_properties`, `codex_equipment`, `codex_archetypes`, and `codex_creature_feats` each have `sources text[] NOT NULL`. Production (as of 2026-10-17) uses default `{Core}` with `*_sources_gin` and no `*_sources_check` (`sql/codex-entry-sources.sql` plus `sql/codex-entry-sources-open.sql`, both applied). There is no sources table. A source is the display name stored on that array. The open-sources migration rewrote legacy lowercase id arrays to display names while the checks were still present; a second run does not update rows. Whitespace collapse matches `collapseCodexSourceName`. The app treats an empty list as `Core`. The older nullable `source` text column remains and is not rewritten. `codex_species.is_starter` stays the guided-creator starter flag. Not an access-control gate. SQL: `sql/codex-entry-source.sql` (singular column, applied), `sql/codex-entry-sources.sql` (array column, applied), `sql/codex-entry-sources-open.sql` (applied 2026-10-17).
+**Rules sources:** `codex_feats`, `codex_skills`, `codex_species`, `codex_traits`, `codex_parts`, `codex_properties`, `codex_equipment`, `codex_archetypes`, and `codex_creature_feats` each have `sources text[] NOT NULL`. Production (as of 2026-10-17) uses default `{Core}` with `*_sources_gin` and no `*_sources_check` (live database (one-off SQL deleted 2026-10-29; see git history) plus live database (one-off SQL deleted 2026-10-29; see git history), both applied). There is no sources table. A source is the display name stored on that array. The open-sources migration rewrote legacy lowercase id arrays to display names while the checks were still present; a second run does not update rows. Whitespace collapse matches `collapseCodexSourceName`. The app treats an empty list as `Core`. The older nullable `source` text column remains and is not rewritten. `codex_species.is_starter` stays the guided-creator starter flag. Not an access-control gate. SQL: live database (one-off SQL deleted 2026-10-29; see git history) (singular column, applied), live database (one-off SQL deleted 2026-10-29; see git history) (array column, applied), live database (one-off SQL deleted 2026-10-29; see git history) (applied 2026-10-17).
 
 ---
 
@@ -69,7 +69,7 @@ All **columnar** (scalars + `payload` JSONB). Legacy `public_*` JSONB tables (`p
 
 **API:** `GET /api/official/[type]` defaults to `catalog_listing = listed` (player Public library). `?includeUnlisted=1` is honored only for an admin session (Admin library + editor). `POST`/`PATCH`/`DELETE` require admin and write to `official_*` / `codex_species`. Unlisted rows stay publicly **readable** by id (RLS `Anyone can read official_*`); they are omitted from list/count APIs. Legacy `public_*` JSONB tables were dropped; do not reference them in app code.
 
-**Migrations:** `sql/supabase-official-library-public-schema.sql` (create + RLS), `sql/supabase-official-library-columnar-expansion.sql` (powers columns), `sql/supabase-library-columnar-parity-expansion.sql` (promoted columns + `sync_library_promoted_columns` trigger on official_* and user_*), `sql/official-powers-strip-redundant-auto-mechanic-parts-applied.sql` (TASK-627 — strip auto-mechanic duplicates from `payload.parts` when promoted columns exist; helper `public._official_power_rebuilt_mechanic_part_names()` for idempotent re-runs), `sql/official-catalog-listing.sql` (TASK-927 / ADR-0027 — `catalog_listing` on official created-item tables + `codex_species`), `sql/codex-entry-source.sql` (nullable singular `source` on columnar codex entry tables), `sql/codex-entry-sources.sql` (applied — `sources text[]` default `{core}` plus closed checks), `sql/codex-entry-sources-open.sql` (applied 2026-10-17 — dropped those checks and stored display names).
+**Migrations:** live database (one-off SQL deleted 2026-10-29; see git history) (create + RLS), live database (one-off SQL deleted 2026-10-29; see git history) (powers columns), live database (one-off SQL deleted 2026-10-29; see git history) (promoted columns + `sync_library_promoted_columns` trigger on official_* and user_*), live database (one-off SQL deleted 2026-10-29; see git history) (TASK-627 — strip auto-mechanic duplicates from `payload.parts` when promoted columns exist; helper `public._official_power_rebuilt_mechanic_part_names()` for idempotent re-runs), live database (one-off SQL deleted 2026-10-29; see git history) (TASK-927 / ADR-0027 — `catalog_listing` on official created-item tables + `codex_species`), live database (one-off SQL deleted 2026-10-29; see git history) (nullable singular `source` on columnar codex entry tables), live database (one-off SQL deleted 2026-10-29; see git history) (applied — `sources text[]` default `{core}` plus closed checks), live database (one-off SQL deleted 2026-10-29; see git history) (applied 2026-10-17 — dropped those checks and stored display names).
 
 **`payload.parts` (powers):** User and advanced parts only after TASK-627 cleanup; auto-mechanic parts derivable from promoted columns (`range_steps`, `duration_*`, `area_*`, `damage`, `action_type`, `is_reaction`) are rebuilt on read in app (`mechanic-builder.ts`) and were removed from official rows in live codex data.
 
@@ -92,7 +92,7 @@ All **columnar** (scalars + `payload` JSONB). Species matches codex_species colu
 
 **Power variants (ADR-0029, TASK-929):** `official_powers.payload` / `user_powers.payload` may carry `composition` `{ structure: none|choice|alternate|modify|randomize, variants[], reverse?, die? }` — JSONB only, no new columns. Composed Choice rows keep the shared chassis in the columns and leave `damage` empty (variants own damage). Character `powers[]` entries persist `selectedVariantId` beside `innate`.
 
-**User-library image parity (TASK-497, ADR-0003, REALMS §5.0.3):** `user_powers`, `user_techniques`, `user_empowered_techniques`, `user_items`, `user_creatures`, and `user_species` have nullable `image_id` matching official/codex counterparts (`sql/realms-image-user-entity-columns.sql` — **applied** 2026-07-17). Copy official → user on add-to-library copies `image_id` (and cache URL). Creators pick bank images; non-admins do not upload into the bank. No separate `user_equipment` table (armament art on `user_items`). No art columns on feats/skills/archetypes/parts/properties/creature feats/traits.
+**User-library image parity (TASK-497, ADR-0003, REALMS §5.0.3):** `user_powers`, `user_techniques`, `user_empowered_techniques`, `user_items`, `user_creatures`, and `user_species` have nullable `image_id` matching official/codex counterparts (live database (one-off SQL deleted 2026-10-29; see git history) — **applied** 2026-07-17). Copy official → user on add-to-library copies `image_id` (and cache URL). Creators pick bank images; non-admins do not upload into the bank. No separate `user_equipment` table (armament art on `user_items`). No art columns on feats/skills/archetypes/parts/properties/creature feats/traits.
 
 ### 2.5a Realms Image Library (ADR-0003, TASK-492)
 
@@ -103,10 +103,10 @@ All **columnar** (scalars + `payload` JSONB). Species matches codex_species colu
 | `realms_image_categories` | Join | (image_id, category) PK — multi-select tags on master |
 | Storage | Bucket `codex-art` | Bank paths: `library/{id}.{ext}`. Cataloged legacy paths `{entityType}/{entityId}.jpg` remain valid until admin replace moves them (TASK-498 applied). Public read; admin writes via service role. |
 | Consumers | FK (TASK-494 official/codex; TASK-497 user_*) | Nullable `image_id` → `realms_images.id`; optional denormalized `image_url` synced on replace |
-| SQL (entity columns) | — | `sql/realms-image-entity-columns.sql` — **applied** on RealmsRPG-Test (`realms_image_entity_columns`, 2026-07-16, owner-approved) |
-| SQL (user entity columns) | — | `sql/realms-image-user-entity-columns.sql` — **applied** on RealmsRPG-Test (`realms_image_user_entity_columns`, 2026-07-17) |
+| SQL (entity columns) | — | live database (one-off SQL deleted 2026-10-29; see git history) — **applied** on RealmsRPG-Test (`realms_image_entity_columns`, 2026-07-16, owner-approved) |
+| SQL (user entity columns) | — | live database (one-off SQL deleted 2026-10-29; see git history) — **applied** on RealmsRPG-Test (`realms_image_user_entity_columns`, 2026-07-17) |
 | RLS | — | Guest + authenticated **SELECT**; **admin-only** write/replace/delete via `/api/images*` (service role after `isAdmin()`) |
-| SQL | — | `sql/realms-image-library.sql` — **applied** on RealmsRPG-Test (`realms_image_library`, 2026-07-16) |
+| SQL | — | live database (one-off SQL deleted 2026-10-29; see git history) — **applied** on RealmsRPG-Test (`realms_image_library`, 2026-07-16) |
 
 **API (TASK-492):**
 
@@ -122,9 +122,9 @@ All **columnar** (scalars + `payload` JSONB). Species matches codex_species colu
 
 Helpers: `src/lib/realms-images.ts` (client + types), `src/lib/realms-images-server.ts`, `src/lib/realms-image-consumers.ts`, `src/lib/entity-image-url.ts`, `src/lib/entity-image-enrich-server.ts`. Uploads via `apiUpload` only.
 
-**Legacy migration (TASK-498, applied 2026-07-17):** `sql/realms-image-catalog-legacy-entity-art.sql` registered existing entity-tied Storage objects into `realms_images` (same path) and set consumer `image_id`. Entity-tied upload route `/api/upload/codex-art` and `CodexArtUploadField` removed. Do not delete cataloged Storage objects while `image_id` refs remain.
+**Legacy migration (TASK-498, applied 2026-07-17):** live database (one-off SQL deleted 2026-10-29; see git history) registered existing entity-tied Storage objects into `realms_images` (same path) and set consumer `image_id`. Entity-tied upload route `/api/upload/codex-art` and `CodexArtUploadField` removed. Do not delete cataloged Storage objects while `image_id` refs remain.
 
-If Supabase logs show **`permission denied for table user_species`**, the `authenticated` role is missing table `GRANT`s (common after creating/moving the table without grants). Run **`sql/supabase-user-species-grants-rls.sql`** with owner approval (see guide/07-database-operations.md). This does not fix campaign invite lookup by itself (that is separate RLS on `campaigns`); it fixes species library / hooks that query `user_species`.
+If Supabase logs show **`permission denied for table user_species`**, the `authenticated` role is missing table `GRANT`s (common after creating/moving the table without grants). Run **live database (one-off SQL deleted 2026-10-29; see git history)** with owner approval (see guide/07-database-operations.md). This does not fix campaign invite lookup by itself (that is separate RLS on `campaigns`); it fixes species library / hooks that query `user_species`.
 
 **API:** `GET/POST/PATCH/DELETE /api/user/library/[type]`; types: powers, techniques, empowered-techniques, items, creatures, species. Tab badges: `GET /api/user/library/counts` (auth) and `GET /api/official/counts` (public). Tab badges: `GET /api/user/library/counts` (auth) and `GET /api/official/counts` (public).
 
@@ -140,7 +140,7 @@ Single document in `data`; list columns for list/filter. Realtime: `public.chara
 
 **Dirty-key PATCH + `updated_at` lock (TASK-741 / ADR-0013 / TASK-786):** `PATCH /api/characters/[id]` merges only keys present in the body (not a full-document smash). A present `null` removes that key, which is how a cleared sheet value is saved (86e3juw04). When the client sends `updatedAt` matching `characters.updated_at`, the UPDATE also `.eq('updated_at', <just read>)`; mismatch or a lost race → **409** `{ error: string }`. Success returns `{ ok: true, updatedAt }`. The route stamps `updated_at` on every PATCH; create/duplicate stamp it on insert so the first sheet save can lock. The client keeps the newest token in memory and queues same-id PATCHes so sheet autosave and encounter resource sync do not 409 each other.
 
-**Idempotent create (`client_request_id`, TASK-738):** Applied 2026-08-13 via **`sql/task-738-characters-client-request-id.sql`**. `POST /api/characters` accepts a client-generated `clientRequestId` and stores it in this column; a repeated key returns the first character instead of inserting a second one, so a create whose response was lost cannot duplicate the character. The partial unique index `characters_user_client_request_id_key (user_id, client_request_id) WHERE client_request_id IS NOT NULL` is what makes the replay race-safe — a losing concurrent insert gets `23505` and the route re-reads the winning row. Nullable: rows created before the key existed, and callers that omit it, are unaffected.
+**Idempotent create (`client_request_id`, TASK-738):** Applied 2026-08-13 via **live database (one-off SQL deleted 2026-10-29; see git history)**. `POST /api/characters` accepts a client-generated `clientRequestId` and stores it in this column; a repeated key returns the first character instead of inserting a second one, so a create whose response was lost cannot duplicate the character. The partial unique index `characters_user_client_request_id_key (user_id, client_request_id) WHERE client_request_id IS NOT NULL` is what makes the replay race-safe — a losing concurrent insert gets `23505` and the route re-reads the winning row. Nullable: rows created before the key existed, and callers that omit it, are unaffected.
 
 **Level-1 create legality (TASK-738):** `POST /api/characters` runs `findLevel1LegalityViolations` (`lib/game/character-legality.ts`) on level-1 creates and returns `400 { error, details }` for over-budget payloads. Bounds only (spend ≤ budget, counts ≤ max, `currency >= 0`) evaluated at the more permissive of `core_rules` override and code default, so it can never reject a build a creator allowed.
 
@@ -148,11 +148,11 @@ Single document in `data`; list columns for list/filter. Realtime: `public.chara
 
 **Temp Modifier (`tempModifiers`, ADR-0006 / TASK-585 / TASK-782):** Optional sparse object of integer Bonus/Penalty deltas layered on display/computed values (not allocation bases). Keys include `speed`, `evasion`, `damageReduction`, `criticalRange`, `terminal`, `abilities` (partial ability map), `defenses` (partial defense-name map), `skills` (skill id → delta), and optional `applyAbilityToResourceMaxima` (boolean; default omit/false — ability temps do not change max Health/Energy/TP maxima unless true). Persist via `cleanForSave` / `SAVEABLE_FIELDS`; normalize zeros out with `normalizeTempModifiers`. UI chrome: sheet-level Edit vs Temp toolbar (TASK-782). Surface wiring: TASK-586.
 
-**Cross-user read (campaign / public):** `/api/characters/[id]` applies visibility in app code, but Supabase RLS runs first. If the only SELECT policy is “own rows,” other users get no row → “Character not found.” Run **`sql/supabase-characters-rls-cross-read.sql`** to add SELECT policies for `data.visibility = 'public'` and for `campaign` when the reader is the campaign owner or in `campaign_members` and the character appears on that campaign’s `characters` JSON roster (`userId`/`characterId` or snake_case).
+**Cross-user read (campaign / public):** `/api/characters/[id]` applies visibility in app code, but Supabase RLS runs first. If the only SELECT policy is “own rows,” other users get no row → “Character not found.” Run **live database (one-off SQL deleted 2026-10-29; see git history)** to add SELECT policies for `data.visibility = 'public'` and for `campaign` when the reader is the campaign owner or in `campaign_members` and the character appears on that campaign’s `characters` JSON roster (`userId`/`characterId` or snake_case).
 
-**Campaign roster read (86e3jryyt) — applied 2026-10-09 on RealmsRPG-Test:** `characters_select_authenticated` still matches those roster keys, and also requires `private.campaign_roster_user_joined`: the roster user is that campaign’s owner or a current `campaign_members` row. A leftover JSON entry does not grant the read after the membership row is gone. Replay: `sql/86e3jryyt-campaign-roster-members-only.sql`.
+**Campaign roster read (86e3jryyt) — applied 2026-10-09 on RealmsRPG-Test:** `characters_select_authenticated` still matches those roster keys, and also requires `private.campaign_roster_user_joined`: the roster user is that campaign’s owner or a current `campaign_members` row. A leftover JSON entry does not grant the read after the membership row is gone. Replay: live database (one-off SQL deleted 2026-10-29; see git history).
 
-**Guest public sheets (TASK-649):** Applied 2026-08-03. `characters_select_authenticated` remains `TO authenticated`; **`sql/task-649-characters-anon-public-read-applied.sql`** adds `characters_select_public_anon` for guests (`visibility = 'public'`). Owner library on public views still uses service_role in `getOwnerLibraryForView`.
+**Guest public sheets (TASK-649):** Applied 2026-08-03. `characters_select_authenticated` remains `TO authenticated`; **live database (one-off SQL deleted 2026-10-29; see git history)** adds `characters_select_public_anon` for guests (`visibility = 'public'`). Owner library on public views still uses service_role in `getOwnerLibraryForView`.
 
 ---
 
@@ -166,15 +166,15 @@ Single document in `data`; list columns for list/filter. Realtime: `public.chara
 
 Membership source of truth: `campaign_members`. Realtime: `public.campaign_rolls`.
 
-**RLS (`campaigns`):** One permissive SELECT policy per role — `campaigns_select_participants` (`owner_id = auth.uid()` **or** `private.auth_is_campaign_participant(id)`). The `owner_id` short-circuit is required so `INSERT … RETURNING` can see the in-flight owner row (STABLE helper lookup cannot; TASK-802). Owner write policies: `campaigns_owner_insert`, `campaigns_owner_update`, `campaigns_owner_delete`. Do not restore a second `campaigns_owner_select` policy (TASK-650 / `multiple_permissive_policies`). Replay: `sql/task-802-campaigns-select-owner-short-circuit.sql`.
+**RLS (`campaigns`):** One permissive SELECT policy per role — `campaigns_select_participants` (`owner_id = auth.uid()` **or** `private.auth_is_campaign_participant(id)`). The `owner_id` short-circuit is required so `INSERT … RETURNING` can see the in-flight owner row (STABLE helper lookup cannot; TASK-802). Owner write policies: `campaigns_owner_insert`, `campaigns_owner_update`, `campaigns_owner_delete`. Do not restore a second `campaigns_owner_select` policy (TASK-650 / `multiple_permissive_policies`). Replay: live database (one-off SQL deleted 2026-10-29; see git history).
 
-**Roster JSON (86e3jryyt) — applied 2026-10-09 on RealmsRPG-Test:** Trigger `campaigns_roster_members_only` runs before insert or before update of `characters`. A signed-in owner can add a roster entry only for their own character. The service role can add another user’s character only when that user already has a `campaign_members` row and owns the character. Entries already stored stay, including a slot whose character row is gone. `campaign_members` policies are unchanged. Migration `campaign_roster_members_only` (`20261009202856`). Replay: `sql/86e3jryyt-campaign-roster-members-only.sql`.
+**Roster JSON (86e3jryyt) — applied 2026-10-09 on RealmsRPG-Test:** Trigger `campaigns_roster_members_only` runs before insert or before update of `characters`. A signed-in owner can add a roster entry only for their own character. The service role can add another user’s character only when that user already has a `campaign_members` row and owns the character. Entries already stored stay, including a slot whose character row is gone. `campaign_members` policies are unchanged. Migration `campaign_roster_members_only` (`20261009202856`). Replay: live database (one-off SQL deleted 2026-10-29; see git history).
 
 **Join-by-invite (app behavior):** RLS on `campaigns` allows SELECT only for the owner or existing members, so a new player cannot load a campaign row with the normal user-scoped Supabase client. The app uses **`SUPABASE_SERVICE_ROLE_KEY`** (server-only) in `joinCampaignAction` and in `GET /api/campaigns/invite/[code]` to look up by `invite_code` and update roster/members after the user is authenticated and character ownership is verified.
 
-**RLS (`campaign_members`) — applied 2026-10-09 on RealmsRPG-Test (86e3jryyr):** Authenticated INSERT is `campaign_members_insert_owner_self`: `private.auth_is_campaign_owner(campaign_id)` AND `user_id = auth.uid()`. A signed-in user cannot insert their own row on a campaign they do not own, and cannot insert another user's row. There is no UPDATE policy (`campaign_members_update_self` is dropped), so a membership row cannot be moved onto another campaign. SELECT remains `campaign_members_select_participants` (self or owner). DELETE remains `campaign_members_delete_owner_or_self` (self or owner). A valid invite code is the only way to join a campaign you do not own; that write uses the service role in `joinCampaignAction`. The owner still inserts their own membership with the user client in `createCampaignAction`. Replay: `sql/86e3jryyr-campaign-members-insert-owner-self.sql`.
+**RLS (`campaign_members`) — applied 2026-10-09 on RealmsRPG-Test (86e3jryyr):** Authenticated INSERT is `campaign_members_insert_owner_self`: `private.auth_is_campaign_owner(campaign_id)` AND `user_id = auth.uid()`. A signed-in user cannot insert their own row on a campaign they do not own, and cannot insert another user's row. There is no UPDATE policy (`campaign_members_update_self` is dropped), so a membership row cannot be moved onto another campaign. SELECT remains `campaign_members_select_participants` (self or owner). DELETE remains `campaign_members_delete_owner_or_self` (self or owner). A valid invite code is the only way to join a campaign you do not own; that write uses the service role in `joinCampaignAction`. The owner still inserts their own membership with the user client in `createCampaignAction`. Replay: live database (one-off SQL deleted 2026-10-29; see git history).
 
-If logs show **`permission denied for table campaign_members`**, run **`sql/supabase-campaign-members-grants.sql`** — the `authenticated` role needs explicit `GRANT` on the table (RLS does not replace table privileges).
+If logs show **`permission denied for table campaign_members`**, run **live database (one-off SQL deleted 2026-10-29; see git history)** — the `authenticated` role needs explicit `GRANT` on the table (RLS does not replace table privileges).
 
 ---
 
@@ -297,13 +297,13 @@ CREATE POLICY "Admin can delete official enhanced items" ON public.official_enha
   USING (EXISTS (SELECT 1 FROM public.user_profiles WHERE id = auth.uid()::text AND role = 'admin'));
 ```
 
-**RLS + grants:** Also in `sql/supabase-security-hardening-2026-06.sql` if the table was created without policies.
+**RLS + grants:** Also in live database (one-off SQL deleted 2026-10-29; see git history) if the table was created without policies.
 
 ---
 
 ### 2.12 UI Tooltips (removed)
 
-**Removed 2026-06-30 (DEV-376 / TASK-392):** Legacy `ui_tooltips` table and `user_profiles.show_tooltips` column were dropped. Contextual help uses `InfoTippy` + `public/tooltip-text.tsx`. See `sql/drop-legacy-ui-tooltips-2026-06.sql`. Original create script (historical): `sql/supabase-ui-tooltips.sql`.
+**Removed 2026-06-30 (DEV-376 / TASK-392):** Legacy `ui_tooltips` table and `user_profiles.show_tooltips` column were dropped. Contextual help uses `InfoTippy` + `public/tooltip-text.tsx`. See live database (one-off SQL deleted 2026-10-29; see git history). Original create script (historical): live database (one-off SQL deleted 2026-10-29; see git history).
 
 ---
 
@@ -315,7 +315,7 @@ CREATE POLICY "Admin can delete official enhanced items" ON public.official_enha
 
 Stores role-level quotas and permission flags used by campaign, character, library, and profile feature gating. This is the source for admin-editable role limits in the app.
 
-**Migration:** `sql/supabase-role-policies.sql`
+**Migration:** live database (one-off SQL deleted 2026-10-29; see git history)
 
 ---
 
@@ -331,7 +331,7 @@ Retention rule: DB trigger keeps only the latest 10 rows per `(entity_type, enti
 
 **Diffs (TASK-874):** `changed_fields` and the admin UI omit empty-equivalent pairs (`null` / `""` / `[]` / `{}`) and bookkeeping timestamps (`updated_at`, `created_at`). **Creates** persist and display identity only (name + kind); **deletes** keep the prior-state field dump. Full `before_data` / `after_data` snapshots still persist on update/delete until DEV-Q07.
 
-**Migration:** `sql/supabase-codex-change-logs.sql`
+**Migration:** live database (one-off SQL deleted 2026-10-29; see git history)
 
 ---
 
@@ -343,7 +343,7 @@ Retention rule: DB trigger keeps only the latest 10 rows per `(entity_type, enti
 
 Records admin role changes from `PATCH /api/admin/users/update-role`. RLS: admins read-only; writes via service role only.
 
-**Migration:** `sql/supabase-admin-role-audit-2026-06.sql`
+**Migration:** live database (one-off SQL deleted 2026-10-29; see git history)
 
 ---
 
@@ -365,22 +365,22 @@ Used by `user_profiles.role`.
 |------|--------|--------------|
 | Codex (codex_*) | Done | All columnar in public. |
 | User library (powers, techniques, items, creatures) | Done | user_* columnar (scalars + payload). |
-| Official/user column parity expansion | Done | **TASK-304:** promoted columns for powers/techniques/items on both official_* + user_*; trigger-based payload sync (`sql/supabase-library-columnar-parity-expansion.sql`). |
+| Official/user column parity expansion | Done | **TASK-304:** promoted columns for powers/techniques/items on both official_* + user_*; trigger-based payload sync (live database (one-off SQL deleted 2026-10-29; see git history)). |
 | User library (species) | Done | **TASK-280:** user_species columnar (codex_species + user_id + payload); SQL + API. |
 | Public/official library | Done | **TASK-279:** official_* in public; legacy `public_*` JSONB tables dropped; GET /api/public reads official_* only. |
-| Legacy `_prisma_migrations` | Done | Dropped via `sql/supabase-security-hardening-2026-06.sql`. |
+| Legacy `_prisma_migrations` | Done | Dropped via live database (one-off SQL deleted 2026-10-29; see git history). |
 | Campaign members | Done | campaign_members table; memberIds deprecated. |
 | Encounters list | Done | **TASK-281:** name, type, status columns; backfill + API. |
 | Characters list | Done | **TASK-282:** name, level, archetype_name, ancestry_name, status, visibility; backfill + API. |
 | Campaign rolls list | Done | **TASK-283:** character_id, user_id, type, title; backfill + API. |
 | Core rules | Keep JSONB | Category-specific shapes; no columnar migration planned. |
-| UI tooltips (legacy DB) | Removed | Dropped 2026-06-30 — `sql/drop-legacy-ui-tooltips-2026-06.sql`. Help copy in `public/tooltip-text.tsx` + `InfoTippy`. |
+| UI tooltips (legacy DB) | Removed | Dropped 2026-06-30 — live database (one-off SQL deleted 2026-10-29; see git history). Help copy in `public/tooltip-text.tsx` + `InfoTippy`. |
 
 See `AI_TASK_QUEUE.md` for TASK-279–TASK-283 and TASK-304. Historical rationale: `src/docs/ai/archive/DATABASE_SCALABILITY_AUDIT.md`.
 
 ### 4.1 `anon` role grant posture (TASK-649 — applied 2026-08-03)
 
-Live on RealmsRPG-Test after **`sql/task-649-anon-least-privilege-applied.sql`** + guest public character read. The `anon` role has **SELECT only** on intentional public-read tables:
+Live on RealmsRPG-Test after **live database (one-off SQL deleted 2026-10-29; see git history)** + guest public character read. The `anon` role has **SELECT only** on intentional public-read tables:
 
 | Table group | Tables | RLS |
 |-------------|--------|-----|
@@ -439,6 +439,6 @@ Supabase Dashboard → Logs shows **PostgREST** requests. Our app uses the **pub
 **Other schemas (reference only):**
 
 - **auth** — Supabase Auth (users, sessions, etc.). We don’t create or query these directly; we use Supabase Auth APIs and `user_profiles` / `usernames` in **public** for app profile data.
-- **storage** — Supabase Storage (buckets, objects). **Buckets:** `portraits`, `profile-pictures` (any user; may also **pick** Realms Image Library assets tagged species/creature — TASK-499), **`codex-art`** (Realms Image Library master objects under `library/{id}.{ext}` + cataloged legacy entity paths — ADR-0003 / TASK-492 / TASK-498). Public read; admin/service-role writes for bank. RLS: `sql/supabase-storage-policies.sql`, `sql/codex-art-species-image-url.sql`, `sql/realms-image-library.sql`. Consumers store **`image_id`** (+ optional `image_url` cache). See REALMS §5.0.3.
+- **storage** — Supabase Storage (buckets, objects). **Buckets:** `portraits`, `profile-pictures` (any user; may also **pick** Realms Image Library assets tagged species/creature — TASK-499), **`codex-art`** (Realms Image Library master objects under `library/{id}.{ext}` + cataloged legacy entity paths — ADR-0003 / TASK-492 / TASK-498). Public read; admin/service-role writes for bank. RLS: live database (one-off SQL deleted 2026-10-29; see git history), live database (one-off SQL deleted 2026-10-29; see git history), live database (one-off SQL deleted 2026-10-29; see git history). Consumers store **`image_id`** (+ optional `image_url` cache). See REALMS §5.0.3.
 
 If you see **404 or 500** on any `/rest/v1/codex_*` or `core_rules`, check that the table exists in **public** (Table Editor) and that RLS allows the anon/service role used by the API (see DEPLOYMENT_AND_SECRETS_SUPABASE.md).

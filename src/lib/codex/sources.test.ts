@@ -122,41 +122,6 @@ describe('codex sources', () => {
     expect(omitCodexSourcesColumn('*')).toBe('*');
   });
 
-  it('describes the applied open-sources rewrite without touching the singular column', () => {
-    const sql = readFileSync(join(process.cwd(), 'sql/codex-entry-sources-open.sql'), 'utf8');
-    expect(sql).toContain('Applied on production 2026-10-17');
-    expect(sql).toContain('Do not run this against any database');
-    expect(sql).not.toContain('NOT APPLIED');
-    for (const table of [
-      'codex_feats',
-      'codex_skills',
-      'codex_species',
-      'codex_traits',
-      'codex_parts',
-      'codex_properties',
-      'codex_equipment',
-      'codex_archetypes',
-      'codex_creature_feats',
-    ]) {
-      expect(sql).toContain(`'${table}'`);
-    }
-    expect(sql).toContain('_sources_check');
-    expect(sql).toContain("ARRAY['Core']");
-    expect(sql).toContain("ARRAY['Crafting']");
-    expect(sql).toContain("ARRAY['Unreleased']");
-    expect(sql).toContain('DROP CONSTRAINT IF EXISTS');
-    expect(sql).toContain('IF rewrite THEN');
-    expect(sql).toContain('collapse_codex_source_name');
-    expect(sql).toContain('check_present');
-    expect(sql).not.toContain('DROP INDEX');
-    expect(sql.includes('SET source =')).toBe(false);
-    expect(sql).not.toContain('regexp_replace(btrim(source)');
-    expect(sql).toContain("Assassin''s Accoutrements");
-    for (const code of CODEX_SOURCE_WHITESPACE_CODE_POINTS) {
-      expect(sql).toContain(`chr(${code})`);
-    }
-  });
-
   it('adds and removes membership with case-insensitive dedupe and Core fallback', () => {
     expect(codexSourcesAfterAdd(['Core', 'Homebrew'], 'homebrew')).toEqual(['Core', 'Homebrew']);
     expect(codexSourcesAfterAdd(['Core'], 'Crafting')).toEqual(['Core', 'Crafting']);
