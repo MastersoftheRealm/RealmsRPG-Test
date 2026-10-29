@@ -10,9 +10,7 @@
 -- those rows no longer contain that name and rows already stored with the
 -- submitted spelling are left as they are.
 --
--- Depends on public.collapse_codex_source_name (applied on production 2026-10-17).
--- The open-sources migration SQL file was removed from the repo 2026-10-29; see git history.
--- Do not re-run that migration against production.
+-- Depends on public.collapse_codex_source_name (must match app `collapseCodexSourceName`).
 --
 -- Does not change the column default {Core}. Does not change the app constant
 -- CORE_CODEX_SOURCE. A source is only the values stored on rows, so renaming

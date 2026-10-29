@@ -9,9 +9,8 @@
  * An empty list is Core.
  *
  * `CODEX_SOURCE_WHITESPACE_CODE_POINTS` is the ES `\s` set (no `u` flag), which
- * is the same set `String.trim` removes. The open-sources DB migration (2026-10-17) is live;
- * the one-off SQL file was removed from the repo (2026-10-29 — see git history).
- * `collapse_codex_source_name` must list these code points and no others.
+ * is the same set `String.trim` removes. Must stay aligned with
+ * `public.collapse_codex_source_name` in the database.
  */
 
 export const CORE_CODEX_SOURCE = 'Core';

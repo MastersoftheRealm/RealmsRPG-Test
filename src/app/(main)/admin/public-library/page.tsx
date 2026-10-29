@@ -4,8 +4,8 @@
  * Browse and manage published official library items. Edit opens the corresponding
  * creator with the item loaded; saving updates that official row (including renames).
  * Admin only. Data comes from public.official_powers, official_techniques, official_items,
- * official_creatures (see SUPABASE_SCHEMA.md). If lists are empty, run
- * official_* tables in Supabase (see SUPABASE_SCHEMA.md). One-off create SQL was removed from the repo (2026-10-29).
+ * official_creatures (see SUPABASE_SCHEMA.md). Empty lists usually mean missing or
+ * empty `official_*` tables on the connected database, not an app bug.
  */
 
 'use client';
