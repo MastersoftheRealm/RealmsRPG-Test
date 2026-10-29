@@ -21,7 +21,7 @@ Then, as needed:
 |-------|-----|
 | Component locations, patterns | [`ai/AGENT_GUIDE.md`](./ai/AGENT_GUIDE.md) |
 | Does this feature exist? | [`ai/FEATURE_INDEX.md`](./ai/FEATURE_INDEX.md) |
-| Task / changelog history (not the work queue) | [`ai/archive/HISTORY_INDEX.md`](./ai/archive/HISTORY_INDEX.md) — `ACTIVE_TASKS`, `AI_TASK_QUEUE`, and related files live under `ai/archive/` |
+| Work queue & task history | **ClickUp** (repo task-queue archives removed; see git history) |
 | DB tables / columns | [`SUPABASE_SCHEMA.md`](./SUPABASE_SCHEMA.md) |
 | Game rules, formulas, caps | [`GAME_RULES.md`](./GAME_RULES.md) |
 | Data flow, enrichment | [`ARCHITECTURE.md`](./ARCHITECTURE.md) |
@@ -33,8 +33,6 @@ Then, as needed:
 | DB ops runbook | [`DATABASE_CONSISTENCY_CHECKLIST.md`](./DATABASE_CONSISTENCY_CHECKLIST.md) |
 | Edge / CDN performance | [`PERFORMANCE_AND_EDGE.md`](./PERFORMANCE_AND_EDGE.md) |
 | Owner feedback | ClickUp (historical `ALL_FEEDBACK_CLEAN.md` removed from repo) |
-
-**Historical context (do not treat as current):** [`ai/archive/HISTORY_INDEX.md`](./ai/archive/HISTORY_INDEX.md) — June audits, full task backup, older plans. Archived paths are listed in `.cursorignore`.
 
 **Human deep-dives:** [`human/README.md`](./human/README.md) — onboarding, UI catalog, admin setup, codex fields, UX goals.
 

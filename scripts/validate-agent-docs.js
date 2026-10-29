@@ -7,8 +7,6 @@ const fs = require('fs');
 const path = require('path');
 
 const repoRoot = path.resolve(__dirname, '..');
-const AI_CHANGELOG_MAX_ENTRIES = 150;
-const aiChangelogPath = path.join(repoRoot, 'src/docs/ai/archive/AI_CHANGELOG.md');
 const targets = [
   'AGENTS.md',
   'src/docs/ai/ARCHITECTURE_CONSTITUTION.md',
@@ -189,18 +187,6 @@ for (const rel of targets) {
         }
       }
     }
-  }
-}
-
-if (fs.existsSync(aiChangelogPath)) {
-  const changelogText = fs.readFileSync(aiChangelogPath, 'utf8');
-  const entryCount = changelogText.split(/\n/).filter((line) => line.startsWith('- ')).length;
-  if (entryCount > AI_CHANGELOG_MAX_ENTRIES) {
-    broken.push({
-      file: path.relative(repoRoot, aiChangelogPath),
-      link: 'entry cap',
-      target: `${entryCount} entries (max ${AI_CHANGELOG_MAX_ENTRIES})`,
-    });
   }
 }
 

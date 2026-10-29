@@ -1,5 +1,4 @@
-﻿# Historical docs — out of default AI indexing (still in git for humans)
-src/docs/ai/archive/**
+# Human docs — Cursor indexing (see src/docs/README.md)
 
 # Human docs — keep large catalogs ignored; allow product-critical UX intent
 src/docs/human/**

@@ -5,10 +5,9 @@
 Verified against codebase (Jun 2026+). Use this hub when you need component locations, list/selection patterns, art pipeline, or creator load rules — then open the matching appendix under [`guide/`](guide/).
 
 > **First stop before building anything new:** [`FEATURE_INDEX.md`](FEATURE_INDEX.md) + barrels.  
-> **Remediation status (history):** [`archive/REMEDIATION_STATUS_2026-08.md`](archive/REMEDIATION_STATUS_2026-08.md) (June snapshot: [`archive/REMEDIATION_STATUS_2026-06.md`](archive/REMEDIATION_STATUS_2026-06.md)).  
-> **History:** [`archive/HISTORY_INDEX.md`](archive/HISTORY_INDEX.md) — not current open work.
+> **Task history:** ClickUp and git history (repo `src/docs/ai/archive/` removed 2026-10-29).
 
-**Note:** Path corrections below are historical. The task record is the ClickUp task, not `ACTIVE_TASKS.md`.
+**Note:** Path corrections below are historical. The task record is the ClickUp task.
 
 ## Table of contents (appendices)
 

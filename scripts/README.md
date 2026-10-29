@@ -17,7 +17,7 @@
 | **mobile-slices.mjs** | Capture one route as readable viewport-height slices with rule-breaking controls outlined (red = under 44px, orange = text overflowing its box). | `node scripts/mobile-slices.mjs /creature-creator 6 390`. |
 | **mobile-compare.mjs** | Measure control-height distribution, list-row height, and chrome-before-content on our pages against an external reference (D&D Beyond), so density claims are numbers not vibes. | `node scripts/mobile-compare.mjs`. Needs network + a running server. |
 | **verify:responsive** | Multi-width layout gate (ADR-0023): 8 guest routes × 360/390/768/1024/1280/1440. Fails when overflow, clip-without-ellipsis, or fixed-element collision counts *increase* vs `tests/visual/responsive-baseline.json`. | `npm run verify:responsive`. Update: `npm run verify:responsive:update` (`--workers=1`). Wired in `ui-verify.yml`. |
-| **reconcile_tasks.js** | Duplicate and non-canonical `TASK-###` ids in the historical task files. Writes `reports/task-reconcile-report.json`. The commit-subject gate is retired: `--strict` does not fail, and `--apply` does not append a changelog. | CI, or locally when those historical files change. |
+| **reconcile_tasks.js** | Writes `reports/task-reconcile-report.json`. Historical TASK-### duplicate checks retired when `src/docs/ai/archive/` was removed. Legacy `--strict` / `--apply` flags are no-ops. | CI (`ai-task-verifier.yml`). |
 | **extract_feedback.js** | Retired. Exits without writing. File new work in ClickUp. | Do not run to create tasks. |
 | **triage_tasks.js** | Retired. Exits without writing. File new work in ClickUp. | Do not run to update `AI_TASK_QUEUE.md`. |
 

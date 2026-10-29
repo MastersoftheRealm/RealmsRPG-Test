@@ -406,7 +406,7 @@ Used by `user_profiles.role`.
 | Core rules | Keep JSONB | Category-specific shapes; no columnar migration planned. |
 | UI tooltips (legacy DB) | Removed | Dropped 2026-06-30 — (was `sql/drop-legacy-ui-tooltips-2026-06.sql`, deleted 2026-10-29). Help copy in `public/tooltip-text.tsx` + `InfoTippy`. |
 
-See `AI_TASK_QUEUE.md` for TASK-279–TASK-283 and TASK-304. Historical rationale: `src/docs/ai/archive/DATABASE_SCALABILITY_AUDIT.md`.
+See ClickUp / git history for TASK-279–TASK-283 and TASK-304 rationale.
 
 ### 4.1 `anon` role grant posture (TASK-649 — applied 2026-08-03)
 
@@ -430,7 +430,7 @@ TASK-649 Phase 2 is applied on RealmsRPG-Test (anon least-privilege table grants
 ## 5. What to change elsewhere
 
 - **Do not** duplicate this table list in other docs. Point to **this file** for “how is the DB organized?”
-- **Path C / DB rationale docs** (in `src/docs/ai/archive/`): PATH_C_AUDIT_FULFILLMENT, DATABASE_CODEX_AUDIT, DATABASE_SCALABILITY_AUDIT — historical only; for current schema use this doc.
+- **Path C / DB rationale** — historical audit docs were removed with `src/docs/ai/archive/`; for current schema use this doc and git history.
 - **Codex field reference** (`src/docs/human/CODEX_SCHEMA_REFERENCE.md`): Defines **fields** (meaning, types, use) for codex entities; this doc defines **tables and columns** in Supabase.
 
 ---

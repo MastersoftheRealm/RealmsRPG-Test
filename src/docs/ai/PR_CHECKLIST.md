@@ -16,7 +16,7 @@ Use before opening the draft PR. Keep answers short. Agents do not mark the Clic
 8. **Schema/codex (brief item 10)** — SQL in `sql/`; Kadin explicit OK for live codex mutate? High-risk per brief **Risk classification**. **New `CREATE TABLE` in `public`:** same file has RLS, policies, and explicit `GRANT` (`sql/_TEMPLATE_new_table.sql`; CI `tasks:check-sql-grants`).
 9. **ClickUp status** — Per `.cursor/rules/realms-tasks.mdc`: **in progress** only while active; **in review** after PR Reviewer + green CI with human approver assigned (usually Kadin); **testing** after merge with QA steps when needed (Bob only for high-importance or obvious visual-issue QA); agents do not mark **complete**.
 10. **Owner QA** — User-facing? QA steps on the ClickUp comment? `BUILD_VALIDATION.md` only when that suite does not already cover the check.
-11. **Notes** — PR and ClickUp comment only; do not add removed queue/changelog files (see `src/docs/ai/archive/HISTORY_INDEX.md`).
+11. **Notes** — PR and ClickUp comment only; do not recreate removed queue/changelog markdown files.
 12. **Design intent** — Non-obvious constraint documented (`DESIGN_INTENT` / comment); stale docs updated (brief item **11**).
 13. **Human gates** — New shared/ui on allowlist + ADR; store/API contract; live codex mutate (constitution + brief items **3–4**, **10**).
 14. **Barrels** — Shared UI: `npm run tasks:validate-shared-ui`? Export changes: `npm run tasks:generate-index`?
@@ -36,4 +36,4 @@ Use before opening the draft PR. Keep answers short. Agents do not mark the Clic
 | `/global-audit` | Unused on a task | Do not run. |
 | `/debt` | Unused on a task | Do not run. |
 
-**Implementation:** `.cursor/commands/cleanup.md`. Retired stubs (not live commands): `src/docs/ai/archive/global-audit.md`, `archive/debt.md`.
+**Implementation:** `.cursor/commands/cleanup.md`. `/global-audit` and `/debt` are unused on a task (retired command stubs removed with `src/docs/ai/archive/`).
