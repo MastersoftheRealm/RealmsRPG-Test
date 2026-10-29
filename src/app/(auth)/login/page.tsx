@@ -26,7 +26,14 @@ import { loginSchema, type LoginFormData } from '@/lib/validation';
 import { getAuthErrorMessage } from '@/lib/auth-errors';
 import { sanitizeRedirectPath } from '@/lib/safe-redirect';
 import { resendConfirmationAction } from '@/app/(auth)/auth-actions';
-import { AuthCard, AuthTurnstile, FormInput, PasswordInput, SocialButton } from '@/components/auth';
+import {
+  AuthCard,
+  AuthGoogleTermsNotice,
+  AuthTurnstile,
+  FormInput,
+  PasswordInput,
+  SocialButton,
+} from '@/components/auth';
 import { Spinner } from '@/components/ui';
 import { Button, Alert } from '@/components/ui';
 import { useAuthCaptcha } from '@/hooks/use-auth-captcha';
@@ -244,6 +251,7 @@ function LoginContent() {
 
       <div className="space-y-3">
         <SocialButton provider="google" onClick={handleGoogleSignIn} disabled={isLoading} />
+        <AuthGoogleTermsNotice />
       </div>
 
       <p className="mt-6 text-center text-text-secondary">
