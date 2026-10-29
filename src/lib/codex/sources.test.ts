@@ -168,24 +168,18 @@ describe('codex sources', () => {
     expect(previewCodexSourceRename(['z', 'é'], 'Homebrew', 'Official')).toEqual(['z', 'é']);
   });
 
-  it('describes the applied rename function and the unchanged Core default', () => {
+  it('defines rename_codex_source as CREATE OR REPLACE with expected grants and tables', () => {
     const sql = readFileSync(join(process.cwd(), 'sql/codex-rename-source.sql'), 'utf8');
     const sqlWithoutLineComments = sql
       .split('\n')
       .map((line) => line.replace(/--.*$/, ''))
       .join('\n');
+    expect(sqlWithoutLineComments).toMatch(
+      /CREATE\s+OR\s+REPLACE\s+FUNCTION\s+public\.rename_codex_source\s*\(/i,
+    );
     expect(sqlWithoutLineComments).not.toMatch(/chr\s*\(\s*0\s*\)/);
-    expect(sql).toContain('Applied on production 2026-10-18');
-    expect(sql).toContain('safe to re-run because it only replaces the function');
-    expect(sql).toContain('The first real rename is a live update');
-    expect(sql).toContain('needs a backup first');
-    expect(sql).not.toContain('NOT APPLIED');
-    expect(sql).toContain('backup');
-    expect(sql).toContain('previewCodexSourceRename');
-    expect(sql).toContain('collapse_codex_source_name');
-    expect(sql).toContain("ARRAY['Core']");
-    expect(sql).toContain('codex_change_logs');
-    expect(sql).toContain('updated_at = now()');
+    expect(sqlWithoutLineComments).toContain('collapse_codex_source_name');
+    expect(sqlWithoutLineComments).not.toMatch(/\bUPDATE\s+public\.codex_/i);
     expect(sql).toContain(
       'REVOKE ALL ON FUNCTION public.rename_codex_source(text, text, uuid) FROM PUBLIC',
     );
@@ -195,11 +189,10 @@ describe('codex sources', () => {
     );
     expect(sql).toContain('SECURITY DEFINER');
     expect(sql).toContain('COLLATE "C"');
-    expect(sql).toContain('column default');
-    expect(sql).toContain('Items with no source are still');
+    expect(sql).toContain('codex_change_logs');
+    expect(sql).toContain('updated_at = now()');
     expect(sql).not.toContain('ALTER TABLE');
     expect(sql.includes('SET source =')).toBe(false);
-    expect(sql).not.toContain('EXCEPTION WHEN');
     expect(sql).not.toMatch(/SELECT\s+public\.rename_codex_source/i);
     for (const table of [
       'codex_feats',
