@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { buildContentSecurityPolicy } from './content-security-policy';
+import { buildContentSecurityPolicy, TURNSTILE_CSP_ORIGIN } from './content-security-policy';
 
 function connectSrc(policy: string): string {
   const directive = policy.split('; ').find((part) => part.startsWith('connect-src '));
@@ -16,12 +16,29 @@ describe('buildContentSecurityPolicy', () => {
     expect(connect).not.toContain('ws://127.0.0.1');
   });
 
+  it('allows Turnstile without widening unrelated directives', () => {
+    const production = buildContentSecurityPolicy('production');
+    const directives = production.split('; ');
+
+    const scriptSrc = directives.find((part) => part.startsWith('script-src '));
+    expect(scriptSrc).toBe(
+      `script-src 'self' 'unsafe-inline' https://vercel.live https://va.vercel-scripts.com ${TURNSTILE_CSP_ORIGIN}`,
+    );
+
+    const frameSrc = directives.find((part) => part.startsWith('frame-src '));
+    expect(frameSrc).toBe(`frame-src 'self' https://vercel.live ${TURNSTILE_CSP_ORIGIN}`);
+
+    expect(connectSrc(production)).toBe(
+      "connect-src 'self' https://*.supabase.co wss://*.supabase.co https://vercel.live wss://*.vercel.live wss://ws-us3.pusher.com https://va.vercel-scripts.com https://*.sentry.io https://*.ingest.sentry.io https://*.ingest.us.sentry.io https://challenges.cloudflare.com",
+    );
+    expect(production).toContain("object-src 'none'");
+  });
+
   it('omits unsafe-eval outside development', () => {
     const production = buildContentSecurityPolicy('production');
     const scriptSrc = production.split('; ').find((part) => part.startsWith('script-src '));
-    expect(scriptSrc).toBe(
-      "script-src 'self' 'unsafe-inline' https://vercel.live https://va.vercel-scripts.com",
-    );
+    expect(scriptSrc).toContain("'unsafe-inline'");
+    expect(scriptSrc).not.toContain("'unsafe-eval'");
     expect(buildContentSecurityPolicy('development')).toContain(
       "script-src 'self' 'unsafe-inline' 'unsafe-eval'",
     );
