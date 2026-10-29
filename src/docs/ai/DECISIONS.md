@@ -4,7 +4,7 @@
 
 **Status:** Source of truth (Drive) · Seeded 2026-10-05 from settled Kadin rulings  
 **Owner:** Kadin Brooksby  
-**Maintainers:** Web Manager proposes appends when Kadin settles intent; Production Manager keeps the Drive **core rulebook text** catalog in sync. Repo holds this mirror of product/QA decisions. **Drive vs repo (Oct 5, 2026):** when a Drive doc and its repo copy conflict, **Drive wins** and the repo copy is corrected. **PR review process:** written once in `src/docs/ai/PR_REVIEWER_BRIEF.md`; [Realms Dev Workflow](https://docs.google.com/document/d/1F6iZUKP9nN0YTFzOkZ6Y82sySaw0iW101f_a-7ZeQdI/edit) and [Realms Web Decisions](https://docs.google.com/document/d/1tGebelYXZPegt4iZiycOjI3RBHD6N_QKZW6CI0ckxkg/edit) point to it and do not duplicate it (updated in Drive **2026-10-28** by Editor bot; if Drive and the repo brief conflict, fix the repo to match Drive).
+**Maintainers:** Web Manager proposes appends when Kadin settles intent; Editor keeps the Drive **core rulebook text** catalog in sync. Repo holds this mirror of product/QA decisions. **Drive vs repo (Oct 5, 2026):** when a Drive doc and its repo copy conflict, **Drive wins** and the repo copy is corrected. **PR review process:** written once in `src/docs/ai/PR_REVIEWER_BRIEF.md`; [Realms Dev Workflow](https://docs.google.com/document/d/1F6iZUKP9nN0YTFzOkZ6Y82sySaw0iW101f_a-7ZeQdI/edit) and [Realms Web Decisions](https://docs.google.com/document/d/1tGebelYXZPegt4iZiycOjI3RBHD6N_QKZW6CI0ckxkg/edit) point to it and do not duplicate it (updated in Drive **2026-10-28** by Editor bot; if Drive and the repo brief conflict, fix the repo to match Drive).
 
 **Related:** [Realms Dev Workflow & Agent Rules](https://docs.google.com/document/d/1F6iZUKP9nN0YTFzOkZ6Y82sySaw0iW101f_a-7ZeQdI/edit) · ClickUp wiki pointer after publish
 
@@ -25,7 +25,7 @@ Game runner = **RM (Realm Master)** — never GM.
 - No bot starts sweeps/checks/runs without Kadin or a bot he delegated.
 - Duplicates go to Clickup Manager (dated section in existing task description), not a comment from the finder.
 - Rules-math / rules-value PRs: PR Reviewer routes to **Rules Balance Analyst** for a ruling check before Kadin signs off (Kadin, Oct 13, 2026).
-- Production Manager: Drive **core rulebook text** catalog consistency; **flag/comment/ClickUp via Clickup Manager only** — no silent core/sub-rule text edits unless Kadin okays.
+- Editor: Drive **core rulebook text** catalog consistency; **flag/comment/ClickUp via Clickup Manager only** — no silent core/sub-rule text edits unless Kadin okays.
 
 ---
 
