@@ -31,6 +31,9 @@ on:
   push:
     branches: [master]
 
+permissions:
+  contents: read
+
 jobs:
   static-gates:
     name: Lint, contrast & static gates
