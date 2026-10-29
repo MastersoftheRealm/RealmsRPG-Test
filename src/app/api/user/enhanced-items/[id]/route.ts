@@ -7,7 +7,13 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { getSession } from '@/lib/supabase/session';
-import { validateJson, verifyMutationRequest, enhancedItemPatchSchema } from '@/lib/api-validation';
+import {
+  validateJson,
+  verifyMutationRequest,
+  enhancedItemPatchSchema,
+  resourceIdParamSchema,
+  validateRouteParams,
+} from '@/lib/api-validation';
 import { apiErrorResponse } from '@/lib/api-error';
 import { buildRateLimitKey, resolveClientIp, standardLimiter } from '@/lib/rate-limit';
 
@@ -35,7 +41,9 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
     if (!validation.success) return validation.error;
     const body = validation.data as { potency?: number | undefined; name?: string | undefined };
 
-    const { id } = await params;
+    const paramResult = await validateRouteParams(params, resourceIdParamSchema);
+    if (!paramResult.success) return paramResult.error;
+    const { id } = paramResult.data;
     const supabase = await createClient();
     const { data: row, error: fetchErr } = await supabase
       .from('user_enhanced_items')
@@ -107,7 +115,9 @@ export async function DELETE(
       );
     }
 
-    const { id } = await params;
+    const paramResult = await validateRouteParams(params, resourceIdParamSchema);
+    if (!paramResult.success) return paramResult.error;
+    const { id } = paramResult.data;
     const supabase = await createClient();
     const { error: delErr } = await supabase
       .from('user_enhanced_items')

@@ -9,6 +9,7 @@ import { createServiceRoleClient } from '@/lib/supabase/server';
 import { getSession } from '@/lib/supabase/session';
 import { normalizeInviteCodeInput, isValidInviteCodeFormat } from '@/lib/campaign-invite';
 import { buildRateLimitKey, inviteCodeLimiter, resolveClientIp } from '@/lib/rate-limit';
+import { inviteCodeRouteParamsSchema, validateRouteParams } from '@/lib/api-validation';
 
 export async function GET(_request: Request, { params }: { params: Promise<{ code: string }> }) {
   try {
@@ -30,8 +31,9 @@ export async function GET(_request: Request, { params }: { params: Promise<{ cod
       );
     }
 
-    const { code } = await params;
-    const inviteCode = normalizeInviteCodeInput(code ?? '');
+    const paramResult = await validateRouteParams(params, inviteCodeRouteParamsSchema);
+    if (!paramResult.success) return paramResult.error;
+    const inviteCode = normalizeInviteCodeInput(paramResult.data.code);
     if (!isValidInviteCodeFormat(inviteCode)) {
       return NextResponse.json({ error: 'Invalid invite code' }, { status: 400 });
     }

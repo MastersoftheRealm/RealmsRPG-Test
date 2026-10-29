@@ -24,6 +24,8 @@ Use before opening the draft PR. Keep answers short. Agents do not mark the Clic
 16. **Decisions** — Checked `src/docs/ai/DECISIONS.md` for settled rulings (brief **Read first** #2).
 17. **Plain language** — If Kadin is the approver or the PR is high-risk, filled **For Kadin (plain language)** in the PR template (brief plain-language block).
 
+18. **API input validation** — New/changed route handlers that read query, route params, or JSON use `validateQuery` / `validateRouteParams` / `validateJson` (CI: `api-input-validation-routes.test.ts`).
+
 ## PR Reviewer and cleanup
 
 **Before Human OK:** PR Reviewer (different bot, different prompt than the writer) grades using **`src/docs/ai/PR_REVIEWER_BRIEF.md`** while CI runs. `/cleanup` only when PR Reviewer named an in-scope gap in REQUEST CHANGES. Doc nits are not a cleanup.

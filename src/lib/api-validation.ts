@@ -14,7 +14,8 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { z, ZodSchema } from 'zod';
+import { z, type ZodError, ZodSchema } from 'zod';
+import { isCodexPayloadKey } from '@/types/codex';
 import {
   CHARACTER_NAME_MAX_LENGTH,
   CHARACTER_NAME_TOO_LONG_MESSAGE,
@@ -188,13 +189,60 @@ export async function validateJson<T>(
   // Validate against schema
   const result = schema.safeParse(read.body);
   if (!result.success) {
-    const issues = result.error.issues.map((i) => `${i.path.join('.')}: ${i.message}`);
-    return {
-      success: false,
-      error: NextResponse.json({ error: 'Validation failed', details: issues }, { status: 400 }),
-    };
+    return { success: false, error: validationFailedResponse(result.error) };
   }
 
+  return { success: true, data: result.data };
+}
+
+function validationFailedResponse(
+  error: ZodError,
+): NextResponse<{ error: string; details: string[] }> {
+  const issues = error.issues.map((i) => `${i.path.join('.')}: ${i.message}`);
+  return NextResponse.json({ error: 'Validation failed', details: issues }, { status: 400 });
+}
+
+/**
+ * Parse an already-read JSON value with a strict Zod schema (handler already ran CSRF / size checks).
+ */
+export function parseValidatedJsonBody<T>(
+  body: unknown,
+  schema: ZodSchema<T>,
+): { success: true; data: T } | { success: false; error: NextResponse } {
+  const result = schema.safeParse(body);
+  if (!result.success) {
+    return { success: false, error: validationFailedResponse(result.error) };
+  }
+  return { success: true, data: result.data };
+}
+
+/**
+ * Validate URL search params with a strict object schema. Keys with no value are omitted
+ * from `Object.fromEntries`, so optional fields cover absent params.
+ */
+export function validateQuery<T>(
+  request: NextRequest | Request,
+  schema: ZodSchema<T>,
+): { success: true; data: T } | { success: false; error: NextResponse } {
+  const url = request instanceof NextRequest ? request.nextUrl : new URL(request.url);
+  const raw = Object.fromEntries(url.searchParams.entries());
+  const result = schema.safeParse(raw);
+  if (!result.success) {
+    return { success: false, error: validationFailedResponse(result.error) };
+  }
+  return { success: true, data: result.data };
+}
+
+/** Validate dynamic route `params` (App Router `Promise<{ ... }>`). */
+export async function validateRouteParams<T>(
+  params: Promise<unknown>,
+  schema: ZodSchema<T>,
+): Promise<{ success: true; data: T } | { success: false; error: NextResponse }> {
+  const raw = await params;
+  const result = schema.safeParse(raw);
+  if (!result.success) {
+    return { success: false, error: validationFailedResponse(result.error) };
+  }
   return { success: true, data: result.data };
 }
 
@@ -327,6 +375,8 @@ const craftingRollSessionSchema = z
   })
   .passthrough();
 
+// Crafting sessions persist the full workspace JSON blob; UI-only keys (e.g. isEditingCustomBaseItem)
+// are allowed via passthrough until a dedicated DTO split exists.
 export const craftingSessionCreateSchema = z
   .object({
     name: z.string().max(200).optional(),
@@ -519,10 +569,10 @@ export const libraryItemUpdateSchema = withSafeJsonBlob({
 // Campaign Roll Schemas
 // =============================================================================
 
-export const campaignRollCreateSchema = z.object({
-  characterId: z.string().min(1, 'characterId required'),
-  characterName: z.string().min(1, 'characterName required'),
-  roll: z.object({
+const campaignRollPayloadSchema = z
+  .object({
+    /** Client RollEntry may include id; the route assigns a new row id server-side. */
+    id: z.string().optional(),
     type: z.string().min(1),
     title: z.string().min(1),
     dice: z.array(z.unknown()).optional().default([]),
@@ -532,8 +582,18 @@ export const campaignRollCreateSchema = z.object({
     isCrit: z.boolean().optional().default(false),
     isCritFail: z.boolean().optional().default(false),
     critMessage: z.string().nullable().optional(),
-  }),
-});
+    /** Ignored server-side; stored timestamp is always set on insert. */
+    timestamp: z.union([z.string(), z.number(), z.date()]).optional(),
+  })
+  .strict();
+
+export const campaignRollCreateSchema = z
+  .object({
+    characterId: z.string().min(1, 'characterId required'),
+    characterName: z.string().min(1, 'characterName required'),
+    roll: campaignRollPayloadSchema,
+  })
+  .strict();
 
 // =============================================================================
 // Public Library Schemas (admin-only)
@@ -601,3 +661,178 @@ export const adminRolePolicyPatchSchema = z
     permissions: rolePolicyPermissionsSchema.optional(),
   })
   .strict();
+
+// =============================================================================
+// Query / route param schemas (shared across handlers)
+// =============================================================================
+
+export const resourceIdParamSchema = z
+  .object({
+    id: z.string().trim().min(1, 'Invalid ID'),
+  })
+  .strict();
+
+export const campaignsListQuerySchema = z
+  .object({
+    full: z.literal('true').optional(),
+  })
+  .strict();
+
+export const codexGetQuerySchema = z
+  .object({
+    debug: z.literal('1').optional(),
+    collection: z
+      .string()
+      .min(1)
+      .refine(isCodexPayloadKey, { message: 'Unknown codex collection' })
+      .optional(),
+    includeUnlisted: z.literal('1').optional(),
+  })
+  .strict();
+
+export const includeUnlistedQuerySchema = z
+  .object({
+    includeUnlisted: z.literal('1').optional(),
+  })
+  .strict();
+
+export const imagesListQuerySchema = z
+  .object({
+    category: z.string().optional(),
+    q: z.string().optional(),
+  })
+  .strict();
+
+export const libraryListQuerySchema = z
+  .object({
+    name: z.string().min(1).optional(),
+  })
+  .strict();
+
+export const campaignCharacterViewQuerySchema = z
+  .object({
+    scope: z.literal('encounter').optional(),
+  })
+  .strict();
+
+export const uuidQuerySchema = z
+  .object({
+    id: z.string().uuid(),
+  })
+  .strict();
+
+const ADMIN_CHANGELOG_ENTITY_TYPES = [
+  'codex_feats',
+  'codex_skills',
+  'codex_species',
+  'codex_traits',
+  'codex_parts',
+  'codex_properties',
+  'codex_equipment',
+  'codex_archetypes',
+  'codex_creature_feats',
+  'core_rules',
+] as const;
+
+export const adminChangelogsQuerySchema = z
+  .object({
+    entityType: z.enum(ADMIN_CHANGELOG_ENTITY_TYPES).optional(),
+    limit: z.string().regex(/^\d+$/, 'limit must be a positive integer').optional(),
+  })
+  .strict();
+
+export const realmsImagePatchSchema = z
+  .object({
+    name: z.string().min(1).max(200).optional(),
+    categories: z.array(z.string()).optional(),
+  })
+  .strict()
+  .refine((body) => body.name !== undefined || body.categories !== undefined, {
+    message: 'name and/or categories required',
+  });
+
+export const officialLibraryTypeParamSchema = z
+  .object({
+    type: z.enum(['powers', 'techniques', 'empowered-techniques', 'items', 'creatures', 'species']),
+  })
+  .strict();
+
+/** DELETE /api/official/[type]?id= — codex_species and columnar ids are not always UUIDs. */
+export const officialItemIdQuerySchema = z
+  .object({
+    id: z.string().trim().min(1, 'Missing id'),
+  })
+  .strict();
+
+export const userLibraryTypeParamSchema = z
+  .object({
+    type: z.enum(['powers', 'techniques', 'empowered-techniques', 'items', 'creatures', 'species']),
+  })
+  .strict();
+
+export const userLibraryItemRouteParamsSchema = z
+  .object({
+    type: userLibraryTypeParamSchema.shape.type,
+    id: z.string().trim().min(1, 'Invalid ID'),
+  })
+  .strict();
+
+export const campaignCharacterRouteParamsSchema = z
+  .object({
+    id: z.string().trim().min(1),
+    userId: z.string().trim().min(1),
+    characterId: z.string().trim().min(1),
+  })
+  .strict();
+
+export const campaignRollRouteParamsSchema = resourceIdParamSchema;
+
+export const inviteCodeRouteParamsSchema = z
+  .object({
+    code: z.string().min(1),
+  })
+  .strict();
+
+// =============================================================================
+// Official enhanced item schemas (admin)
+// =============================================================================
+
+export const officialEnhancedItemCreateSchema = z
+  .object({
+    id: z.string().uuid().optional(),
+    name: z.string().min(1).max(200),
+    description: z.string().max(5000).optional(),
+    baseItemSource: z.enum(['codex', 'public', 'custom']),
+    baseItemId: z.string().optional(),
+    baseItemName: z.string().min(1),
+    baseItemDescription: z.string().optional(),
+    powerSource: z.enum(['official', 'public', 'library']),
+    powerId: z.string().min(1),
+    powerName: z.string().min(1),
+    powerEnergy: z.number().min(0),
+    usesType: z.enum(['full', 'partial', 'permanent']),
+    usesCount: z.number().int().min(0).optional(),
+    payload: z.record(z.string(), z.unknown()).optional(),
+    catalogListing: z.enum(['listed', 'unlisted']).optional(),
+  })
+  .strict();
+
+export const officialEnhancedItemPatchSchema = z
+  .object({
+    name: z.string().min(1).max(200).optional(),
+    description: z.string().max(5000).nullable().optional(),
+    baseItemSource: z.enum(['codex', 'public', 'custom']).optional(),
+    baseItemId: z.string().nullable().optional(),
+    baseItemName: z.string().min(1).optional(),
+    baseItemDescription: z.string().nullable().optional(),
+    powerSource: z.enum(['official', 'public', 'library']).optional(),
+    powerId: z.string().min(1).optional(),
+    powerName: z.string().min(1).optional(),
+    powerEnergy: z.number().min(0).optional(),
+    usesType: z.enum(['full', 'partial', 'permanent']).optional(),
+    usesCount: z.number().int().min(0).nullable().optional(),
+    payload: z.record(z.string(), z.unknown()).optional(),
+    catalogListing: z.enum(['listed', 'unlisted']).optional(),
+  })
+  .strict()
+  .refine((v) => Object.keys(v).length > 0, { message: 'No fields to update' });

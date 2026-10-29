@@ -7,6 +7,7 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
+import type { z } from 'zod';
 import { revalidateTag } from 'next/cache';
 import { codexTableWriteCacheTags, officialLibraryWriteCacheTags } from '@/lib/codex/cache-tags';
 import {
@@ -24,6 +25,11 @@ import {
   verifyMutationRequest,
   publicItemSchema,
   officialCatalogListingPatchSchema,
+  officialItemIdQuerySchema,
+  officialLibraryTypeParamSchema,
+  includeUnlistedQuerySchema,
+  validateQuery,
+  validateRouteParams,
 } from '@/lib/api-validation';
 import { apiErrorResponse, logApiError } from '@/lib/api-error';
 import {
@@ -46,15 +52,7 @@ import {
 
 const SPECIES_TABLE = 'codex_species';
 
-const VALID_TYPES = [
-  'powers',
-  'techniques',
-  'empowered-techniques',
-  'items',
-  'creatures',
-  'species',
-] as const;
-type OfficialType = (typeof VALID_TYPES)[number];
+type OfficialType = z.infer<typeof officialLibraryTypeParamSchema>['type'];
 
 const TABLE_MAP: Record<Exclude<OfficialType, 'species'>, string> = {
   powers: 'official_powers',
@@ -214,17 +212,15 @@ function revalidateOfficialLibraryAfterWrite(table: string): void {
 
 export async function GET(request: NextRequest, { params }: { params: Promise<{ type: string }> }) {
   try {
-    const { type } = await params;
-    if (!VALID_TYPES.includes(type as OfficialType)) {
-      return NextResponse.json(
-        { error: 'Invalid type' },
-        { status: 400, headers: { 'Cache-Control': PRIVATE_NO_STORE_CACHE_CONTROL } },
-      );
-    }
+    const paramResult = await validateRouteParams(params, officialLibraryTypeParamSchema);
+    if (!paramResult.success) return paramResult.error;
+    const { type } = paramResult.data;
 
     // Public read via the anon (RLS-backed) client; "Anyone can read official_*"
     // / codex_species policies apply. Service role is reserved for admin writes (SEC-01).
-    const includeUnlistedRequested = wantsIncludeUnlisted(request.nextUrl.searchParams);
+    const queryResult = validateQuery(request, includeUnlistedQuerySchema);
+    if (!queryResult.success) return queryResult.error;
+    const includeUnlistedRequested = queryResult.data.includeUnlisted === '1';
     const includeUnlisted = await adminMayIncludeUnlisted(request);
     const { supabase, usedPublicClient } =
       await createOfficialReadClient(!includeUnlistedRequested);
@@ -297,10 +293,9 @@ export async function POST(
       return NextResponse.json({ error: 'Admin only' }, { status: 403 });
     }
 
-    const { type } = await params;
-    if (!VALID_TYPES.includes(type as OfficialType)) {
-      return NextResponse.json({ error: 'Invalid type' }, { status: 400 });
-    }
+    const paramResult = await validateRouteParams(params, officialLibraryTypeParamSchema);
+    if (!paramResult.success) return paramResult.error;
+    const { type } = paramResult.data;
 
     const validation = await validateJson(request, publicItemSchema);
     if (!validation.success) return validation.error;
@@ -377,7 +372,7 @@ export async function POST(
     const listing = catalogListingFromBody(body);
     if (listing) dbRow.catalog_listing = listing;
     const existingId = body.id as string | undefined;
-    const table = TABLE_MAP[type as ColumnarLibraryType];
+    const table = TABLE_MAP[type as Exclude<OfficialType, 'species'>];
 
     if (existingId) {
       const nameConflict = await officialNameConflictForUpdate(
@@ -453,16 +448,15 @@ export async function PATCH(
     const denied = verifyMutationRequest(request);
     if (denied) return denied;
 
-    const { type } = await params;
-    if (!VALID_TYPES.includes(type as OfficialType)) {
-      return NextResponse.json({ error: 'Invalid type' }, { status: 400 });
-    }
+    const paramResult = await validateRouteParams(params, officialLibraryTypeParamSchema);
+    if (!paramResult.success) return paramResult.error;
+    const { type } = paramResult.data;
 
     const validation = await validateJson(request, officialCatalogListingPatchSchema);
     if (!validation.success) return validation.error;
 
     const supabase = createServiceRoleClient();
-    const table = type === 'species' ? SPECIES_TABLE : TABLE_MAP[type as ColumnarLibraryType];
+    const table = type === 'species' ? SPECIES_TABLE : TABLE_MAP[type];
     const { data: updatedRows, error: updateError } = await supabase
       .from(table)
       .update({
@@ -511,19 +505,16 @@ export async function DELETE(
     const denied = verifyMutationRequest(_request);
     if (denied) return denied;
 
-    const { type } = await params;
-    if (!VALID_TYPES.includes(type as OfficialType)) {
-      return NextResponse.json({ error: 'Invalid type' }, { status: 400 });
-    }
+    const paramResult = await validateRouteParams(params, officialLibraryTypeParamSchema);
+    if (!paramResult.success) return paramResult.error;
+    const { type } = paramResult.data;
 
-    const url = new URL(_request.url);
-    const id = url.searchParams.get('id');
-    if (!id) {
-      return NextResponse.json({ error: 'Missing id' }, { status: 400 });
-    }
+    const queryResult = validateQuery(_request, officialItemIdQuerySchema);
+    if (!queryResult.success) return queryResult.error;
+    const { id } = queryResult.data;
 
     const supabase = createServiceRoleClient();
-    const table = type === 'species' ? SPECIES_TABLE : TABLE_MAP[type as ColumnarLibraryType];
+    const table = type === 'species' ? SPECIES_TABLE : TABLE_MAP[type];
     const { data: deleted, error: deleteError } = await supabase
       .from(table)
       .delete()

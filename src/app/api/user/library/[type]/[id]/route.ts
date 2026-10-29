@@ -8,7 +8,13 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { getSession } from '@/lib/supabase/session';
-import { validateJson, verifyMutationRequest, libraryItemUpdateSchema } from '@/lib/api-validation';
+import {
+  validateJson,
+  verifyMutationRequest,
+  libraryItemUpdateSchema,
+  userLibraryItemRouteParamsSchema,
+  validateRouteParams,
+} from '@/lib/api-validation';
 import { buildRateLimitKey, resolveClientIp, standardLimiter } from '@/lib/rate-limit';
 import {
   COLUMNAR_LIBRARY_TYPES,
@@ -22,16 +28,6 @@ import {
   type ColumnarLibraryType,
 } from '@/lib/library-columnar';
 import { enrichRowsWithBankImageUrls } from '@/lib/entity-image-enrich-server';
-
-const VALID_TYPES = [
-  'powers',
-  'techniques',
-  'empowered-techniques',
-  'items',
-  'creatures',
-  'species',
-] as const;
-type LibraryType = (typeof VALID_TYPES)[number];
 
 const isColumnar = (t: string): t is ColumnarLibraryType =>
   COLUMNAR_LIBRARY_TYPES.includes(t as ColumnarLibraryType);
@@ -54,10 +50,9 @@ export async function GET(
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const { type, id } = await params;
-    if (!VALID_TYPES.includes(type as LibraryType) || !id?.trim()) {
-      return NextResponse.json({ error: 'Invalid request' }, { status: 400 });
-    }
+    const paramResult = await validateRouteParams(params, userLibraryItemRouteParamsSchema);
+    if (!paramResult.success) return paramResult.error;
+    const { type, id } = paramResult.data;
 
     const supabase = await createClient();
 
@@ -65,7 +60,7 @@ export async function GET(
       const { data: row, error: dbError } = await supabase
         .from(TABLE[type])
         .select('*')
-        .eq('id', id.trim())
+        .eq('id', id)
         .eq('user_id', user.uid)
         .maybeSingle();
       if (dbError) throw dbError;
@@ -115,10 +110,9 @@ export async function PATCH(
       );
     }
 
-    const { type, id } = await params;
-    if (!VALID_TYPES.includes(type as LibraryType) || !id?.trim()) {
-      return NextResponse.json({ error: 'Invalid request' }, { status: 400 });
-    }
+    const paramResult = await validateRouteParams(params, userLibraryItemRouteParamsSchema);
+    if (!paramResult.success) return paramResult.error;
+    const { type, id } = paramResult.data;
 
     const supabase = await createClient();
 
@@ -126,7 +120,7 @@ export async function PATCH(
       const { data: existing, error: existingErr } = await supabase
         .from(TABLE[type])
         .select('*')
-        .eq('id', id.trim())
+        .eq('id', id)
         .eq('user_id', user.uid)
         .maybeSingle();
       if (existingErr) throw existingErr;
@@ -147,7 +141,7 @@ export async function PATCH(
       const { error: updateErr } = await supabase
         .from(TABLE[type])
         .update(updateRow)
-        .eq('id', id.trim())
+        .eq('id', id)
         .eq('user_id', user.uid);
       if (updateErr) throw updateErr;
       return NextResponse.json({ ok: true });
@@ -210,10 +204,9 @@ export async function DELETE(
       );
     }
 
-    const { type, id } = await params;
-    if (!VALID_TYPES.includes(type as LibraryType) || !id?.trim()) {
-      return NextResponse.json({ error: 'Invalid request' }, { status: 400 });
-    }
+    const paramResult = await validateRouteParams(params, userLibraryItemRouteParamsSchema);
+    if (!paramResult.success) return paramResult.error;
+    const { type, id } = paramResult.data;
 
     const supabase = await createClient();
 
@@ -221,7 +214,7 @@ export async function DELETE(
       const { data: existing, error: existingErr } = await supabase
         .from(TABLE[type])
         .select('id')
-        .eq('id', id.trim())
+        .eq('id', id)
         .eq('user_id', user.uid)
         .maybeSingle();
       if (existingErr) throw existingErr;
@@ -231,7 +224,7 @@ export async function DELETE(
       const { error: delErr } = await supabase
         .from(TABLE[type])
         .delete()
-        .eq('id', id.trim())
+        .eq('id', id)
         .eq('user_id', user.uid);
       if (delErr) throw delErr;
       return NextResponse.json({ ok: true });

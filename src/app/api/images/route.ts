@@ -23,7 +23,7 @@ import {
   type RealmsImageCategory,
 } from '@/lib/realms-images';
 import { apiErrorResponse, logApiError } from '@/lib/api-error';
-import { verifyMutationRequest } from '@/lib/api-validation';
+import { imagesListQuerySchema, validateQuery, verifyMutationRequest } from '@/lib/api-validation';
 import {
   REALMS_IMAGE_SELECT,
   fetchRealmsImageById,
@@ -52,12 +52,13 @@ function parseCategoryFilter(raw: string | null): RealmsImageCategory[] | null {
 
 export async function GET(request: NextRequest) {
   try {
-    const params = request.nextUrl.searchParams;
-    const categories = parseCategoryFilter(params.get('category'));
+    const queryResult = validateQuery(request, imagesListQuerySchema);
+    if (!queryResult.success) return queryResult.error;
+    const categories = parseCategoryFilter(queryResult.data.category ?? null);
     if (categories === null) {
       return NextResponse.json({ error: 'Invalid category filter' }, { status: 400 });
     }
-    const q = params.get('q')?.trim() ?? '';
+    const q = queryResult.data.q?.trim() ?? '';
 
     // Public reads: cookie-aware anon/authenticated client so RLS governs visibility (SEC audit M3).
     const supabase = await createClient();

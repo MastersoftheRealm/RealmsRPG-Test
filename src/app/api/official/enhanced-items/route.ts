@@ -1,56 +1,21 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { z } from 'zod';
 import { createClient } from '@/lib/supabase/server';
 import { requireAdminSession, requireLiveAdminSession } from '@/lib/admin';
 import { getGameRulesFallback } from '@/hooks/use-game-rules';
 import { apiErrorResponse } from '@/lib/api-error';
-import { validateJson, verifyMutationRequest } from '@/lib/api-validation';
+import {
+  officialEnhancedItemCreateSchema,
+  officialEnhancedItemPatchSchema,
+  uuidQuerySchema,
+  validateJson,
+  validateQuery,
+  verifyMutationRequest,
+} from '@/lib/api-validation';
 import {
   getEnhancedCraftingRequirements,
   getEnhancedMarketPrice,
   getMultipleUseAdjustedEnergy,
 } from '@/lib/game/crafting-utils';
-
-const enhancedBodySchema = z
-  .object({
-    id: z.string().uuid().optional(),
-    name: z.string().min(1).max(200),
-    description: z.string().max(5000).optional(),
-    baseItemSource: z.enum(['codex', 'public', 'custom']),
-    baseItemId: z.string().optional(),
-    baseItemName: z.string().min(1),
-    baseItemDescription: z.string().optional(),
-    powerSource: z.enum(['official', 'public', 'library']),
-    powerId: z.string().min(1),
-    powerName: z.string().min(1),
-    powerEnergy: z.number().min(0),
-    usesType: z.enum(['full', 'partial', 'permanent']),
-    usesCount: z.number().int().min(0).optional(),
-    payload: z.record(z.string(), z.unknown()).optional(),
-    catalogListing: z.enum(['listed', 'unlisted']).optional(),
-  })
-  .strict();
-
-// SEC-04: validate the PATCH body instead of writing raw client JSON to columns.
-const enhancedPatchBodySchema = z
-  .object({
-    name: z.string().min(1).max(200).optional(),
-    description: z.string().max(5000).nullable().optional(),
-    baseItemSource: z.enum(['codex', 'public', 'custom']).optional(),
-    baseItemId: z.string().nullable().optional(),
-    baseItemName: z.string().min(1).optional(),
-    baseItemDescription: z.string().nullable().optional(),
-    powerSource: z.enum(['official', 'public', 'library']).optional(),
-    powerId: z.string().min(1).optional(),
-    powerName: z.string().min(1).optional(),
-    powerEnergy: z.number().min(0).optional(),
-    usesType: z.enum(['full', 'partial', 'permanent']).optional(),
-    usesCount: z.number().int().min(0).nullable().optional(),
-    payload: z.record(z.string(), z.unknown()).optional(),
-    catalogListing: z.enum(['listed', 'unlisted']).optional(),
-  })
-  .strict()
-  .refine((v) => Object.keys(v).length > 0, { message: 'No fields to update' });
 
 /** Market price and rarity are derived from the power's energy after the uses adjustment. */
 function computeEnhancedPricing(
@@ -138,7 +103,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json(auth.body, { status: auth.status });
     }
 
-    const validation = await validateJson(req, enhancedBodySchema);
+    const validation = await validateJson(req, officialEnhancedItemCreateSchema);
     if (!validation.success) return validation.error;
     const parsed = validation.data;
 
@@ -197,13 +162,11 @@ export async function PATCH(req: NextRequest) {
       return NextResponse.json(auth.body, { status: auth.status });
     }
 
-    const { searchParams } = new URL(req.url);
-    const id = searchParams.get('id');
-    if (!id) {
-      return NextResponse.json({ error: 'Missing id' }, { status: 400 });
-    }
+    const queryResult = validateQuery(req, uuidQuerySchema);
+    if (!queryResult.success) return queryResult.error;
+    const { id } = queryResult.data;
 
-    const validation = await validateJson(req, enhancedPatchBodySchema);
+    const validation = await validateJson(req, officialEnhancedItemPatchSchema);
     if (!validation.success) return validation.error;
     const body = validation.data;
 
@@ -298,11 +261,9 @@ export async function DELETE(req: NextRequest) {
     const denied = verifyMutationRequest(req);
     if (denied) return denied;
 
-    const { searchParams } = new URL(req.url);
-    const id = searchParams.get('id');
-    if (!id) {
-      return NextResponse.json({ error: 'Missing id' }, { status: 400 });
-    }
+    const queryResult = validateQuery(req, uuidQuerySchema);
+    if (!queryResult.success) return queryResult.error;
+    const { id } = queryResult.data;
 
     const supabase = await createClient();
     const { error } = await supabase.from('official_enhanced_items').delete().eq('id', id);

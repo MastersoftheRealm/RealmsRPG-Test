@@ -11,7 +11,14 @@ import { getSession } from '@/lib/supabase/session';
 import { ensureUserProfile } from '@/lib/ensure-user-profile';
 import { getRolePolicyForUser } from '@/lib/role-policy';
 import { buildRoleQuotaExceededResponse } from '@/lib/role-quota-messages';
-import { validateJson, libraryItemCreateSchema } from '@/lib/api-validation';
+import {
+  validateJson,
+  libraryItemCreateSchema,
+  libraryListQuerySchema,
+  userLibraryTypeParamSchema,
+  validateQuery,
+  validateRouteParams,
+} from '@/lib/api-validation';
 import { standardLimiter, buildRateLimitKey, resolveClientIp } from '@/lib/rate-limit';
 import {
   COLUMNAR_LIBRARY_TYPES,
@@ -25,16 +32,6 @@ import {
   type ColumnarLibraryType,
 } from '@/lib/library-columnar';
 import { enrichRowsWithBankImageUrls } from '@/lib/entity-image-enrich-server';
-
-const VALID_TYPES = [
-  'powers',
-  'techniques',
-  'empowered-techniques',
-  'items',
-  'creatures',
-  'species',
-] as const;
-type LibraryType = (typeof VALID_TYPES)[number];
 
 const isColumnar = (t: string): t is ColumnarLibraryType =>
   COLUMNAR_LIBRARY_TYPES.includes(t as ColumnarLibraryType);
@@ -54,16 +51,17 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const { type } = await params;
-    if (!VALID_TYPES.includes(type as LibraryType)) {
-      return NextResponse.json({ error: 'Invalid library type' }, { status: 400 });
-    }
+    const paramResult = await validateRouteParams(params, userLibraryTypeParamSchema);
+    if (!paramResult.success) return paramResult.error;
+    const { type } = paramResult.data;
 
     const supabase = await createClient();
 
     // PERF-01: lightweight server-side name lookup for save-dedupe. Returns only
     // `{ id, name }` for matching rows instead of downloading the whole library.
-    const nameFilter = request.nextUrl.searchParams.get('name')?.trim();
+    const queryResult = validateQuery(request, libraryListQuerySchema);
+    if (!queryResult.success) return queryResult.error;
+    const nameFilter = queryResult.data.name?.trim();
     if (nameFilter) {
       const target = nameFilter.toLowerCase();
       if (isColumnar(type)) {
@@ -155,10 +153,9 @@ export async function POST(
       );
     }
 
-    const { type } = await params;
-    if (!VALID_TYPES.includes(type as LibraryType)) {
-      return NextResponse.json({ error: 'Invalid library type' }, { status: 400 });
-    }
+    const paramResult = await validateRouteParams(params, userLibraryTypeParamSchema);
+    if (!paramResult.success) return paramResult.error;
+    const { type } = paramResult.data;
 
     const validation = await validateJson(request, libraryItemCreateSchema);
     if (!validation.success) return validation.error;

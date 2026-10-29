@@ -15,7 +15,11 @@ import {
 } from '@/lib/validate-image';
 import { buildRateLimitKey, resolveClientIp, uploadLimiter } from '@/lib/rate-limit';
 import { apiErrorResponse, logApiError } from '@/lib/api-error';
-import { verifyMutationRequest } from '@/lib/api-validation';
+import {
+  resourceIdParamSchema,
+  validateRouteParams,
+  verifyMutationRequest,
+} from '@/lib/api-validation';
 import { REALMS_IMAGES_BUCKET, realmsImageStoragePath, withCacheBust } from '@/lib/realms-images';
 import { syncRealmsImageCacheUrls } from '@/lib/realms-image-consumers';
 import { fetchRealmsImageById } from '@/lib/realms-images-server';
@@ -53,10 +57,9 @@ export async function POST(request: NextRequest, context: RouteContext) {
   }
 
   try {
-    const { id } = await context.params;
-    if (!id?.trim()) {
-      return NextResponse.json({ error: 'id required' }, { status: 400 });
-    }
+    const paramResult = await validateRouteParams(context.params, resourceIdParamSchema);
+    if (!paramResult.success) return paramResult.error;
+    const { id } = paramResult.data;
 
     const formData = await request.formData();
     const file = formData.get('file') as File | null;

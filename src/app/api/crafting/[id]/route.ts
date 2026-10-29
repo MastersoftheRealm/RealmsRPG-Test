@@ -12,6 +12,8 @@ import {
   validateJson,
   verifyMutationRequest,
   craftingSessionUpdateSchema,
+  resourceIdParamSchema,
+  validateRouteParams,
 } from '@/lib/api-validation';
 import { apiErrorResponse, logApiError } from '@/lib/api-error';
 import { buildRateLimitKey, resolveClientIp, standardLimiter } from '@/lib/rate-limit';
@@ -39,7 +41,9 @@ export async function GET(_request: Request, { params }: { params: Promise<{ id:
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const { id } = await params;
+    const paramResult = await validateRouteParams(params, resourceIdParamSchema);
+    if (!paramResult.success) return paramResult.error;
+    const { id } = paramResult.data;
     const supabase = await createClient();
     const { data: row, error: dbError } = await supabase
       .from('crafting_sessions')
@@ -86,7 +90,9 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
       );
     }
 
-    const { id } = await params;
+    const paramResult = await validateRouteParams(params, resourceIdParamSchema);
+    if (!paramResult.success) return paramResult.error;
+    const { id } = paramResult.data;
     const supabase = await createClient();
     const { data: row, error: fetchError } = await supabase
       .from('crafting_sessions')
@@ -177,7 +183,9 @@ export async function DELETE(
       );
     }
 
-    const { id } = await params;
+    const paramResult = await validateRouteParams(params, resourceIdParamSchema);
+    if (!paramResult.success) return paramResult.error;
+    const { id } = paramResult.data;
     const supabase = await createClient();
     const { data: row, error: fetchError } = await supabase
       .from('crafting_sessions')

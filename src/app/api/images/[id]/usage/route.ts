@@ -8,6 +8,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getSession } from '@/lib/supabase/session';
 import { isAdmin } from '@/lib/admin';
 import { createServiceRoleClient } from '@/lib/supabase/server';
+import { resourceIdParamSchema, validateRouteParams } from '@/lib/api-validation';
 import { listRealmsImageUsages } from '@/lib/realms-image-consumers';
 import { fetchRealmsImageById } from '@/lib/realms-images-server';
 
@@ -25,10 +26,9 @@ export async function GET(_request: NextRequest, context: RouteContext) {
   }
 
   try {
-    const { id } = await context.params;
-    if (!id?.trim()) {
-      return NextResponse.json({ error: 'id required' }, { status: 400 });
-    }
+    const paramResult = await validateRouteParams(context.params, resourceIdParamSchema);
+    if (!paramResult.success) return paramResult.error;
+    const { id } = paramResult.data;
 
     const supabase = createServiceRoleClient();
     const image = await fetchRealmsImageById(supabase, id);

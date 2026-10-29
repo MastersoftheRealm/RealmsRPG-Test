@@ -9,6 +9,7 @@ import { createClient } from '@/lib/supabase/server';
 import { getSession } from '@/lib/supabase/session';
 import { apiErrorResponse } from '@/lib/api-error';
 import { buildRateLimitKey, resolveClientIp, standardLimiter } from '@/lib/rate-limit';
+import { resourceIdParamSchema, validateRouteParams } from '@/lib/api-validation';
 import type { Campaign } from '@/types/campaign';
 import { normalizeCampaignRosterCharacters } from '@/lib/campaign-roster';
 import type { Tables } from '@/lib/supabase/database';
@@ -39,6 +40,10 @@ export async function GET(request: Request, { params }: { params: Promise<{ id: 
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
+    const paramResult = await validateRouteParams(params, resourceIdParamSchema);
+    if (!paramResult.success) return paramResult.error;
+    const { id } = paramResult.data;
+
     const { success } = await standardLimiter.check(
       buildRateLimitKey('campaign-get', { userId: user.uid, ip: resolveClientIp(request.headers) }),
     );
@@ -49,18 +54,13 @@ export async function GET(request: Request, { params }: { params: Promise<{ id: 
       );
     }
 
-    const { id } = await params;
-    if (!id?.trim()) {
-      return NextResponse.json({ error: 'Invalid campaign ID' }, { status: 400 });
-    }
-
     const supabase = await createClient();
     const { data: row, error: rowErr } = await supabase
       .from('campaigns')
       .select(
         'id, name, description, owner_id, owner_username, invite_code, characters, created_at, updated_at',
       )
-      .eq('id', id.trim())
+      .eq('id', id)
       .maybeSingle();
     if (rowErr) throw rowErr;
 

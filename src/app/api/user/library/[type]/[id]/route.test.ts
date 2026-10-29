@@ -21,16 +21,6 @@ vi.mock('@/lib/rate-limit', async (importOriginal) => {
   };
 });
 
-// verifyMutationRequest stays real so the same-origin guard is exercised.
-vi.mock('@/lib/api-validation', async (importOriginal) => {
-  const actual = await importOriginal<typeof import('@/lib/api-validation')>();
-  return {
-    ...actual,
-    validateJson: vi.fn(),
-    libraryItemUpdateSchema: {},
-  };
-});
-
 vi.mock('@/lib/entity-image-enrich-server', () => ({
   enrichRowsWithBankImageUrls: vi.fn(() => Promise.resolve()),
 }));
@@ -52,12 +42,10 @@ vi.mock('@/lib/library-columnar', () => ({
 import { GET, PATCH, DELETE } from './route';
 import { getSession } from '@/lib/supabase/session';
 import { createClient } from '@/lib/supabase/server';
-import { validateJson } from '@/lib/api-validation';
 import { standardLimiter } from '@/lib/rate-limit';
 
 const mockGetSession = vi.mocked(getSession);
 const mockCreateClient = vi.mocked(createClient);
-const mockValidateJson = vi.mocked(validateJson);
 const mockStandardLimiterCheck = vi.mocked(standardLimiter.check);
 
 const OWNER = { uid: 'owner-user', email: 'owner@example.com' };
@@ -190,10 +178,6 @@ describe('PATCH /api/user/library/[type]/[id]', () => {
       remaining: 29,
       reset: Date.now() + 60_000,
     });
-    mockValidateJson.mockResolvedValue({
-      success: true,
-      data: { name: 'Updated bolt' },
-    } as never);
   });
 
   it('returns 401 when session is missing', async () => {
