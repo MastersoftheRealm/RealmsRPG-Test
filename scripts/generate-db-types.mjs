@@ -1,6 +1,6 @@
 /**
  * Regenerates src/types/database.types.ts from the live Supabase project.
- * Requires the Supabase CLI (npx) and access to project lbqhiwudvifmkjtkccdg.
+ * Requires the Supabase CLI (npx) and access to SUPABASE_PROJECT_ID.
  *
  *   npm run db:types
  *   SUPABASE_PROJECT_ID=... npm run db:types

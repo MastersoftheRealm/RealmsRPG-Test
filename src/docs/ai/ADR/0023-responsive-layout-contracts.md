@@ -8,7 +8,7 @@
 
 ## Context
 
-The mobile audit of 2026-08-18 (`reports/mobile-audit-2026-08-18/MOBILE_AUDIT.md`) measured the app at 360/390px against D&D Beyond, then re-measured the same structural checks at 768/1024/1280/1440. Two findings drive this ADR.
+The mobile audit of 2026-08-18 (2026-08-18 mobile/responsive audit) measured the app at 360/390px against D&D Beyond, then re-measured the same structural checks at 768/1024/1280/1440. Two findings drive this ADR.
 
 **1. The size scale is flat.** `Button` and `IconButton` apply `min-h-[44px] min-w-[44px]` under `@media(pointer:coarse)` for every variant and size, so 95% of Codex controls land in one 44–52px band (median control height 44px vs D&D Beyond's 36px; 5% of our controls under 44px vs their 64%). Nothing reads as primary, nothing recedes, and the page looks like a stack of equally heavy slabs. `min-w-[44px]` also inflates `variant="link"` and footer nav links into 167×44px boxes around 39–117px of text. Header bloat is *not* the cause — we beat D&D Beyond on chrome-before-first-row (546px vs 579px).
 

@@ -30,7 +30,9 @@ Place your exported Google Sheets CSV files here. The script also checks `Codex 
 npm run db:seed
 ```
 
-After live codex tag edits, sync `feats.csv` from Supabase:
+Use a non-production database unless the owner has approved a live seed. See [07-database-operations.md](../../src/docs/ai/guide/07-database-operations.md).
+
+After approved codex tag edits, sync `feats.csv` from the database:
 
 ```bash
 node scripts/sync-feat-tags-csv.js
@@ -38,8 +40,4 @@ node scripts/sync-feat-tags-csv.js
 
 ## Fixing Corrupted Data
 
-If descriptions were incorrectly split into arrays (e.g. from a previous bug), clear and re-seed:
-
-```bash
-npm run db:seed:reset
-```
+If descriptions were incorrectly split into arrays, fix the CSV sources and run `npm run db:seed` again (upsert only). Bulk deletes are not supported from repo scripts; ask the owner for an approved recovery plan on the target database.

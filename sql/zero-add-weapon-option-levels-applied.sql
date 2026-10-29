@@ -1,4 +1,4 @@
--- APPLIED 2026-07-20 on RealmsRPG-Test (lbqhiwudvifmkjtkccdg) — owner approved.
+-- APPLIED 2026-07-20 on RealmsRPG-Test (RealmsRPG-Test project) — owner approved.
 -- Purpose: Align saved techniques with attack-mode rework (TASK-507):
 --   1) Zero option levels on Add Weapon mechanic parts (flat base cost only)
 --   2) Strip tied payload.weapon objects / ids

@@ -1,6 +1,6 @@
 -- TASK-802 — campaigns SELECT must see the owner on INSERT … RETURNING
 -- =============================================================================
--- Status: APPLIED 2026-08-15 on RealmsRPG-Test (lbqhiwudvifmkjtkccdg)
+-- Status: APPLIED 2026-08-15 on RealmsRPG-Test (RealmsRPG-Test project)
 -- Replay: this file (idempotent DROP + CREATE)
 --
 -- Bug: After TASK-650 dropped `campaigns_owner_select`, the only SELECT policy

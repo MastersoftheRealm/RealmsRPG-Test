@@ -2,7 +2,7 @@
 
 Single reference for breakpoints, touch targets, and layout contracts.
 
-> **Scope note:** despite the filename this document covers **every viewport**, not just phones. The 2026-08-18 audit found the app's worst layout failures at **1024px**, not on a phone (`reports/mobile-audit-2026-08-18/MOBILE_AUDIT.md` §6). The file keeps its historical name because `AGENTS.md`, `.cursor/rules/`, and many task entries link to it.
+> **Scope note:** despite the filename this document covers **every viewport**, not just phones. The 2026-08-18 audit found the app's worst layout failures at **1024px**, not on a phone (2026-08-18 responsive audit — report removed from repo; findings captured in this doc and ADR-0023). The file keeps its historical name because `AGENTS.md`, `.cursor/rules/`, and many task entries link to it.
 
 **Authority:** [`ADR-0023`](ai/ADR/0023-responsive-layout-contracts.md) — responsive layout contracts and tiered touch targets.
 **See also:** `.cursor/rules/realms-mobile.mdc`, `DESIGN_SYSTEM.md`, `ACCESSIBILITY.md`.

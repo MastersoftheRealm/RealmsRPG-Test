@@ -1,4 +1,4 @@
--- APPLIED 2026-08-01 on RealmsRPG-Test (lbqhiwudvifmkjtkccdg) — owner approved (TASK-627).
+-- APPLIED 2026-08-01 on RealmsRPG-Test (RealmsRPG-Test project) — owner approved (TASK-627).
 -- Purpose: Remove auto-mechanic parts from official_powers.payload.parts that are already
 --          represented by promoted columns (range_steps, duration_*, area_*, damage, action_type,
 --          is_reaction) and optional payload.duration modifier flags.

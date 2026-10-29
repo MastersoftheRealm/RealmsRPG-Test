@@ -5,25 +5,14 @@
  * Populates the core_rules table with all configurable game rules.
  * Each row is a category (e.g., PROGRESSION_PLAYER, CONDITIONS, SIZES).
  *
- * Requires: NEXT_PUBLIC_SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY in .env
- * Run: node scripts/seed-core-rules.js
  * Export JSON (backup): node scripts/seed-core-rules.js --export-json
  *
- * This script is idempotent — it upserts all rows safely.
+ * Database writes are not supported from this script. Use owner-approved migrations
+ * or SQL on a non-production database. See src/docs/ai/guide/07-database-operations.md.
  */
 
-require('dotenv').config({ path: require('path').join(__dirname, '..', '.env') });
 const fs = require('fs');
 const path = require('path');
-const { createClient } = require('@supabase/supabase-js');
-
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
-if (!supabaseUrl || !supabaseServiceKey) {
-  console.error('Missing NEXT_PUBLIC_SUPABASE_URL or SUPABASE_SERVICE_ROLE_KEY in .env');
-  process.exit(1);
-}
-const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
 // =============================================================================
 // CORE RULES DATA — sourced from constants.ts, creator-constants.ts, formulas.ts,
@@ -769,35 +758,6 @@ const CORE_RULES = {
   // ─── ADDITIONAL (extend as needed) ─────────────────────────────────────────
 };
 
-// =============================================================================
-// SEED FUNCTION
-// =============================================================================
-
-async function seedCoreRules() {
-  console.log('Seeding core_rules table...\n');
-
-  let upserted = 0;
-  let errors = 0;
-
-  for (const [id, data] of Object.entries(CORE_RULES)) {
-    const row = {
-      id,
-      data,
-      updated_at: new Date().toISOString(),
-    };
-    const { error } = await supabase.from('core_rules').upsert(row, { onConflict: 'id' });
-    if (error) {
-      console.error(`  ✗ ${id}: ${error.message}`);
-      errors++;
-    } else {
-      console.log(`  ✓ ${id}`);
-      upserted++;
-    }
-  }
-
-  console.log(`\nDone. ${upserted} categories upserted, ${errors} errors.`);
-}
-
 // --export-json: write one JSON file per category to data/core-rules/ (backup / re-seed source)
 if (process.argv.includes('--export-json')) {
   const dir = path.join(__dirname, '..', 'data', 'core-rules');
@@ -810,7 +770,7 @@ if (process.argv.includes('--export-json')) {
   process.exit(0);
 }
 
-seedCoreRules().catch((e) => {
-  console.error('Fatal error:', e);
-  process.exit(1);
-});
+console.error(
+  'This script only exports JSON (`--export-json`). Loading core_rules into a database requires owner approval — see src/docs/ai/guide/07-database-operations.md.',
+);
+process.exit(1);

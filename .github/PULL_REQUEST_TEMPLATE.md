@@ -6,14 +6,29 @@
 -
 
 ## Risk flags
-- [ ] Schema/migration
-- [ ] Auth/RLS/permissions
-- [ ] Rules math
-- [ ] Destructive/delete
-- [ ] Codex/core_rules data
-- [ ] Secrets / env vars / domain (§4 item 6)
-- [ ] New API route or endpoint (triggers §9 endpoint security pass)
+Check all that apply (must match `src/docs/ai/PR_REVIEWER_BRIEF.md` **Risk classification** one-to-one):
+- [ ] Auth
+- [ ] Roles
+- [ ] RLS/permissions
+- [ ] Database schema/SQL/migrations/seeds
+- [ ] ID allocation
+- [ ] Rules values or formulas
+- [ ] Legality checks
+- [ ] Secrets/env vars
+- [ ] CI/workflows
+- [ ] Deploy/Vercel/DNS settings
+- [ ] Deletes user/official data
+- [ ] Admin tools that can delete or bulk-change data
+- [ ] Billing or anything sent outside the team (email, messages, posts)
 - [ ] None of the above
+
+## For Kadin (plain language)
+<!-- Required when Kadin is the approver, and on every high-risk PR. See PR_REVIEWER_BRIEF.md -->
+- **What it does:**
+- **Why:**
+- **What could go wrong:**
+- **How to undo it:**
+- **What I need from you:**
 
 ## Test plan
 - [ ] Unit/targeted
@@ -23,3 +38,7 @@
 
 ## AI policy
 - [ ] No creative naming/lore/art introduced by AI
+
+## Reviewer
+- [ ] Writer and PR Reviewer are different bots with different prompts (`src/docs/ai/PR_REVIEWER_BRIEF.md`)
+- [ ] Pre-merge checklist: `src/docs/ai/PR_CHECKLIST.md`

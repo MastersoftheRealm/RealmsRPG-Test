@@ -7,16 +7,14 @@
  *
  * Requires: NEXT_PUBLIC_SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY in .env
  * Run: npm run db:seed                          # upsert only, never deletes
- * Or:  npm run db:seed:reset                    # clear-then-seed, requires confirmation
+ * Or:  npm run db:seed:dry-run                  # plan only, no writes
  *
- * Flags: --reset --allow-partial-reset --dry-run --yes
- * Deletion rules live in scripts/seed-plan.mjs (unit-tested); nothing is deleted before
- * every CSV has been parsed, validated and reported.
+ * Flag: --dry-run
+ * Deletion is not supported. See scripts/seed-plan.mjs (unit-tested).
  */
 
 const fs = require('fs');
 const path = require('path');
-const readline = require('readline');
 
 for (const name of ['.env.local', '.env']) {
   require('dotenv').config({ path: path.join(__dirname, '..', name) });
@@ -37,8 +35,6 @@ const supabase = createClient(supabaseUrl, supabaseServiceKey);
 const SEED_DIR = path.join(__dirname, 'seed-data');
 const CODEX_CSV_DIR = path.join(__dirname, '..', 'codex_csv');
 const CODEX_CSV_DIR_LEGACY = path.join(__dirname, '..', 'Codex csv');
-
-const CONFIRMATION_PHRASE = 'reset codex';
 
 const FILE_TO_TABLE = {
   feats: 'codex_feats',
@@ -172,7 +168,7 @@ function resolveSeedDir() {
   return null;
 }
 
-/** Parse and validate every CSV up front, so no decision is made on unread input. */
+/** Parse and validate every CSV up front before any write. */
 function loadCsvTables(seedDir) {
   const loaded = {};
   const unmapped = [];
@@ -210,32 +206,6 @@ async function fetchLiveCounts(tables) {
     counts[table] = error ? null : (count ?? null);
   }
   return counts;
-}
-
-function confirm(phrase) {
-  if (!process.stdin.isTTY) return Promise.resolve(false);
-  const rl = readline.createInterface({ input: process.stdin, output: process.stdout });
-  return new Promise((resolve) => {
-    rl.question(`Type "${phrase}" to proceed: `, (answer) => {
-      rl.close();
-      resolve(answer.trim() === phrase);
-    });
-  });
-}
-
-async function clearTable(tableName) {
-  const { data: rows, error: selectError } = await supabase.from(tableName).select('id');
-  if (selectError)
-    throw new Error(`Cannot read ${tableName} before clearing: ${selectError.message}`);
-
-  const ids = (rows || []).map((r) => r.id);
-  const batch = 200;
-  for (let i = 0; i < ids.length; i += batch) {
-    const chunk = ids.slice(i, i + batch);
-    const { error } = await supabase.from(tableName).delete().in('id', chunk);
-    if (error) throw new Error(`Failed to clear ${tableName}: ${error.message}`);
-  }
-  return ids.length;
 }
 
 async function seedTable(tableName, rows) {
@@ -291,30 +261,8 @@ async function main() {
   }
 
   if (plan.dryRun) {
-    console.log('\nDry run — no rows were read into or deleted from the database.');
+    console.log('\nDry run — no rows were written to the database.');
     return;
-  }
-
-  if (plan.clearTables.length > 0) {
-    console.log(
-      `\nThis will DELETE every row from: ${plan.clearTables.map((row) => row.table).join(', ')}`,
-    );
-    if (plan.requiresConfirmation) {
-      const confirmed = await confirm(CONFIRMATION_PHRASE);
-      if (!confirmed) {
-        console.error(
-          process.stdin.isTTY
-            ? 'Confirmation did not match. Nothing was changed.'
-            : 'Confirmation required but stdin is not interactive. Re-run with --yes. Nothing was changed.',
-        );
-        process.exit(1);
-      }
-    }
-
-    for (const row of plan.clearTables) {
-      const deleted = await clearTable(row.table);
-      console.log(`  Cleared ${row.table} (${deleted} rows)`);
-    }
   }
 
   console.log('');
