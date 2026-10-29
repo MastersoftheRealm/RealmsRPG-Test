@@ -76,12 +76,13 @@ test.describe('TASK-390 site copy audit', () => {
 
     await page.goto('/privacy', { waitUntil: 'networkidle' });
     await expect(page.getByRole('heading', { name: 'Privacy Policy', level: 1 })).toBeVisible();
-    await expect(page.getByRole('link', { name: /RealmsRoleplayGame@gmail\.com/i })).toBeVisible();
+    await expect(page.getByRole('link', { name: /realmsroleplaygame@gmail\.com/i })).toBeVisible();
+    await expect(page.getByText(/within 14 days/i)).toBeVisible();
     await snap(page, '07-privacy-full');
 
     await page.goto('/terms', { waitUntil: 'networkidle' });
     await expect(page.getByRole('heading', { name: 'Terms of Service', level: 1 })).toBeVisible();
-    await expect(page.getByText(/You retain ownership of the characters/i)).toBeVisible();
+    await expect(page.getByText(/You keep ownership of your content/i)).toBeVisible();
     await snap(page, '08-terms-full');
   });
 });

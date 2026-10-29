@@ -18,7 +18,14 @@ import { getAuthErrorMessage } from '@/lib/auth-errors';
 import { sanitizeRedirectPath } from '@/lib/safe-redirect';
 import { createUserProfileAction } from '@/app/(auth)/actions';
 import { resendConfirmationAction, signUpAction } from '@/app/(auth)/auth-actions';
-import { AuthCard, AuthTurnstile, FormInput, PasswordInput, SocialButton } from '@/components/auth';
+import {
+  AuthCard,
+  AuthGoogleTermsNotice,
+  AuthTurnstile,
+  FormInput,
+  PasswordInput,
+  SocialButton,
+} from '@/components/auth';
 import { Spinner } from '@/components/ui';
 import { Button, Alert } from '@/components/ui';
 import { useAuthCaptcha } from '@/hooks/use-auth-captcha';
@@ -249,9 +256,9 @@ function RegisterContent() {
             {...register('acceptTerms')}
           />
           <label htmlFor="acceptTerms" className="text-sm text-text-secondary">
-            I agree to the{' '}
+            I am at least 13 years old and agree to the{' '}
             <Link href="/terms" className="text-primary-link-fg hover:text-primary-fg-hover">
-              Terms of Service
+              Terms
             </Link>{' '}
             and{' '}
             <Link href="/privacy" className="text-primary-link-fg hover:text-primary-fg-hover">
@@ -280,6 +287,7 @@ function RegisterContent() {
 
       <div className="space-y-3">
         <SocialButton provider="google" onClick={handleGoogleSignIn} disabled={isLoading} />
+        <AuthGoogleTermsNotice />
       </div>
 
       <p className="mt-6 text-center text-text-secondary">
