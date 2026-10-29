@@ -17,7 +17,7 @@ export const API_ROOT = path.join(import.meta.dirname, '../app/api');
 const HTTP_METHODS = 'GET|HEAD|OPTIONS|POST|PUT|PATCH|DELETE';
 
 export const HANDLER_FUNCTION_HEAD = new RegExp(
-  `^export\\s+async\\s+function\\s+(${HTTP_METHODS})\\s*\\(`,
+  `^export\\s+(?:async\\s+)?function\\s+(${HTTP_METHODS})\\s*\\(`,
 );
 
 /** `export const GET = async (` and `export const GET = (` */
@@ -25,8 +25,14 @@ export const HANDLER_ARROW_HEAD = new RegExp(
   `^export\\s+const\\s+(${HTTP_METHODS})\\s*=\\s*(?:async\\s*)?\\(`,
 );
 
+/** `export { handler as POST } from './x'` or same-file re-exports — not scannable. */
+export const HANDLER_REEXPORT = new RegExp(
+  `\\bexport\\s*\\{[^}]*\\bas\\s+(${HTTP_METHODS})\\b`,
+  'g',
+);
+
 export const HANDLER_SPLIT = new RegExp(
-  `(?=export\\s+(?:async\\s+function|const)\\s+(?:${HTTP_METHODS})\\s*(?:=\\s*(?:async\\s*)?\\(|\\())`,
+  `(?=export\\s+(?:(?:async\\s+)?function\\s+(?:${HTTP_METHODS})\\s*\\(|const\\s+(?:${HTTP_METHODS})\\s*=\\s*(?:async\\s*)?\\())`,
   'g',
 );
 
@@ -75,11 +81,22 @@ export function handlerReadsQuery(chunk: string): boolean {
   );
 }
 
+export function collectReExportedHandlerMethods(source: string): string[] {
+  const methods: string[] = [];
+  for (const match of source.matchAll(HANDLER_REEXPORT)) {
+    methods.push(match[1]!);
+  }
+  return methods;
+}
+
 export function handlerReadsJsonBody(chunk: string): boolean {
   if (/formData\s*\(\)|multipart\/form-data/.test(chunk)) return false;
   if (chunk.includes('parseValidatedJsonBody(')) return false;
   if (chunk.includes('validateJson(')) return false;
-  return /readJsonBodyWithLimit|request\.json\s*\(\)/.test(chunk);
+  if (/readJsonBodyWithLimit/.test(chunk)) return true;
+  if (/\w+\.json\s*\(\)/.test(chunk)) return true;
+  if (/\w+\.text\s*\(\)/.test(chunk) && /JSON\.parse\s*\(/.test(chunk)) return true;
+  return false;
 }
 
 export function handlerUsesRouteParams(chunk: string): boolean {
@@ -113,6 +130,11 @@ export function collectInputValidationGaps(
   for (const file of listApiRouteHandlerFiles(apiRoot)) {
     const relativePath = path.relative(apiRoot, file).replace(/\\/g, '/');
     const source = readFileSync(file, 'utf8');
+    for (const method of collectReExportedHandlerMethods(source)) {
+      missing.push(
+        `${relativePath} (${method}): re-exported route handler cannot be input-validated by scan`,
+      );
+    }
     const chunks = splitHandlerChunks(source);
 
     for (const chunk of chunks) {

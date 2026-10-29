@@ -5,7 +5,9 @@ import { describe, expect, it } from 'vitest';
 
 import {
   collectInputValidationGaps,
+  collectReExportedHandlerMethods,
   getHandlerMethod,
+  handlerReadsJsonBody,
   handlerReadsQuery,
   handlerUsesRouteParams,
   splitHandlerChunks,
@@ -76,5 +78,61 @@ export async function GET(request: NextRequest) {
     });
 
     expect(gaps.some((g) => g.includes('allowlisted as no-input but reads'))).toBe(true);
+  });
+
+  it('recognizes non-async export function handlers', () => {
+    const source = `
+export function GET() {
+  return NextResponse.json({});
+}
+`;
+    const chunks = splitHandlerChunks(source);
+    expect(getHandlerMethod(chunks[0]!)).toBe('GET');
+  });
+
+  it('detects req.json() and text()+JSON.parse as JSON body reads', () => {
+    const reqJson = `
+export async function POST(req: NextRequest) {
+  const body = await req.json();
+  return NextResponse.json(body);
+}
+`;
+    expect(handlerReadsJsonBody(reqJson)).toBe(true);
+
+    const textParse = `
+export async function POST(request: NextRequest) {
+  const raw = await request.text();
+  const body = JSON.parse(raw);
+  return NextResponse.json(body);
+}
+`;
+    expect(handlerReadsJsonBody(textParse)).toBe(true);
+
+    const validated = `
+export async function POST(req: NextRequest) {
+  const v = await validateJson(req, schema);
+  if (!v.success) return v.error;
+  return NextResponse.json({ ok: true });
+}
+`;
+    expect(handlerReadsJsonBody(validated)).toBe(false);
+  });
+
+  it('flags re-exported route handlers', () => {
+    const root = mkdtempSync(path.join(tmpdir(), 'api-scan-reexport-'));
+    const routeDir = path.join(root, 'app', 'api', 'demo');
+    mkdirSync(routeDir, { recursive: true });
+    writeFileSync(
+      path.join(routeDir, 'route.ts'),
+      `
+function handler() { return NextResponse.json({}); }
+export { handler as POST };
+`,
+    );
+
+    expect(collectReExportedHandlerMethods('export { handler as POST };')).toEqual(['POST']);
+
+    const gaps = collectInputValidationGaps({ apiRoot: path.join(root, 'app', 'api') });
+    expect(gaps.some((g) => g.includes('re-exported route handler'))).toBe(true);
   });
 });
