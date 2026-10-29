@@ -121,14 +121,22 @@ describe('findGrantViolations', () => {
     expect(findGrantViolations(['AGENTS.md', 'src/app/page.tsx'])).toEqual([]);
   });
 
-  it('flags a legacy migration only when that path is in the changed list', () => {
-    expect(findGrantViolations(['sql/create-public-core-rules.sql'])).toEqual([
-      {
-        file: 'sql/create-public-core-rules.sql',
-        reason:
-          'contains CREATE TABLE but no GRANT (add explicit grants in the same file; see sql/_TEMPLATE_new_table.sql)',
-      },
-    ]);
+  it('flags CREATE TABLE without GRANT only when that path is in the changed list', () => {
+    const fixtureRel = 'sql/.vitest-create-table-without-grant.sql';
+    const fixtureAbs = path.join(process.cwd(), fixtureRel);
+    const inlineSql = 'CREATE TABLE public.vitest_grant_fixture (id int);\n';
+    fs.writeFileSync(fixtureAbs, inlineSql);
+    try {
+      expect(findGrantViolations([fixtureRel])).toEqual([
+        {
+          file: fixtureRel,
+          reason:
+            'contains CREATE TABLE but no GRANT (add explicit grants in the same file; see sql/_TEMPLATE_new_table.sql)',
+        },
+      ]);
+    } finally {
+      fs.unlinkSync(fixtureAbs);
+    }
   });
 });
 

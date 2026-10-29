@@ -38,6 +38,6 @@ Match **`src/docs/GAME_RULES.md`** for game terms in codex fields (e.g. **Skill 
 
 ## After approved codex data changes
 
-- Keep `sql/` migration files in sync with what was applied.
+- The live Supabase database is the source of truth; one-off migration SQL is not kept in the repo after apply (see git history). Update `SUPABASE_SCHEMA.md` and, when Kadin runs it, regenerate `sql/schema/0000_baseline_*` via `npm run db:baseline:update`. Owner OK and a fresh backup are required before any database change.
 - Note the data change on the PR and the ClickUp task. Do not append `AI_CHANGELOG.md`.
 - Re-export or align `scripts/seed-data/` / `codex_csv/` if those remain parity sources (ask if unsure).

@@ -139,7 +139,7 @@ Implementation: `src/components/patterns/help/info-tippy.tsx` (`InfoTippy` + `Wo
 |-----------------|-------------|
 | `useTooltipByKey`, `useTooltips`, `ContextHelpTooltip`, `HelpTooltip` | `InfoTippy` + `tooltip-text.tsx` |
 | Admin `/admin/tooltips`, `/api/tooltips`, user show-tooltips toggle | Edit `tooltip-text.tsx`; deploy |
-| `ui_tooltips` table / `show_tooltips` column | Dropped 2026-06-30 (DEV-376) — `sql/drop-legacy-ui-tooltips-2026-06.sql` |
+| `ui_tooltips` table / `show_tooltips` column | Dropped 2026-06-30 (DEV-376) — (was `sql/drop-legacy-ui-tooltips-2026-06.sql`, deleted 2026-10-29) |
 | `@tippyjs/react`, `tippy.js` | Removed (TASK-392) |
 | `Tooltip` from `@/components/ui` for product help | `InfoTippy` only |
 

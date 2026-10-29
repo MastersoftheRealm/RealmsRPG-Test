@@ -100,17 +100,17 @@ The app uses two buckets for image uploads. **Create these in Supabase Dashboard
 
 ### RLS Policies
 
-Enable RLS on each bucket. The app needs **SELECT, INSERT, UPDATE, and DELETE** for portrait uploads (list existing, remove old file, then upload/upsert). The canonical policy set is in **`sql/supabase-storage-policies.sql`** — run that file in owner-approved database apply (see 07-database-operations.md).
+Enable RLS on each bucket. The app needs **SELECT, INSERT, UPDATE, and DELETE** for portrait uploads (list existing, remove old file, then upload/upsert). Confirm Storage RLS on buckets `portraits` and `profile-pictures` in the Supabase Dashboard (Storage → bucket → Policies). Historical canonical policies were in `sql/supabase-storage-policies.sql` (deleted 2026-10-29; see git history). New applies need owner approval (see [ai/guide/07-database-operations.md](ai/guide/07-database-operations.md)).
 
 - **Read (SELECT):** Authenticated users may list/read only their own path (not bucket-wide). Public **read-by-key** (images in the UI) uses **Public bucket** CDN URLs from `getPublicUrl`, not bucket-wide Storage SELECT.
 - **Insert/Update/Delete:** Only the user’s own path (`portraits`: first folder = `auth.uid()`; `profile-pictures`: filename prefix = `auth.uid()`)
 
-**Create buckets:** In Supabase Dashboard → Storage → New bucket, create `portraits` and `profile-pictures`. Enable public access if you want public URLs (the app uses `getPublicUrl`). Then run **`sql/supabase-storage-policies.sql`** with owner approval (see guide/07-database-operations.md).
+**Create buckets:** In Supabase Dashboard → Storage → New bucket, create `portraits` and `profile-pictures`. Enable public access if you want public URLs (the app uses `getPublicUrl`). Then confirm Storage policies on those buckets in the live database (definitions were in `sql/supabase-storage-policies.sql`, deleted 2026-10-29; see git history) with owner approval if changes are needed (see [ai/guide/07-database-operations.md](ai/guide/07-database-operations.md)).
 
-**Security hardening (TASK-326):** After the base storage policies, run **`sql/supabase-storage-select-hardening-2026-06.sql`** to remove bucket-wide public SELECT (prevents Storage API listing). Keep both buckets marked **Public bucket** so direct object URLs still load in the app.
+**Security hardening (TASK-326):** After base storage policies, confirm scoped Storage SELECT (no bucket-wide listing) on the live buckets; hardening steps were in `sql/supabase-storage-select-hardening-2026-06.sql` (deleted 2026-10-29; see git history). That change removes bucket-wide public SELECT (prevents Storage API listing). Keep both buckets marked **Public bucket** so direct object URLs still load in the app.
 
 **Portrait upload fails with "new row violates row-level security policy"?**  
-Run `sql/supabase-storage-policies.sql`. If you previously only added INSERT + SELECT (e.g. from an older snippet), add the UPDATE and DELETE policies for the `portraits` bucket from that file.
+If Storage uploads fail, compare live Storage policies on buckets `portraits` and `profile-pictures` to SUPABASE_SCHEMA.md (§ storage / session writes). If INSERT works but UPDATE or DELETE fails, add or fix those operations in the Dashboard for the user’s own path (definitions were in `sql/supabase-storage-policies.sql`, deleted 2026-10-29; see git history).
 
 **Portrait uploads to the bucket but won’t load (400 or 403, “Failed to load resource”)?**  
 1. **Make the bucket public** — The app uses **public** URLs for portraits. In Supabase Dashboard → **Storage** → select the **portraits** bucket → **Configuration** (or bucket settings) → turn **Public bucket** on. If it’s off, image requests often get **400** or **403** and the sheet shows no portrait. Do the same for **profile-pictures** if profile avatars don’t load.  
@@ -249,10 +249,10 @@ Speed Insights is **not** installed unless separately prioritized (different pac
 
 If you want to set (or fix) schemas, tables, RLS, and Realtime in one go without tracking what’s already applied:
 
-1. Open **owner-approved database apply (see 07-database-operations.md)**.
-2. Paste and run the schema/RLS SQL files as needed (e.g. committed migrations listed in `sql/README.md` (Path C one-offs are historical)).
+1. Get **Kadin explicit OK** and a fresh backup, then use the process in [ai/guide/07-database-operations.md](ai/guide/07-database-operations.md) (Supabase Dashboard or MCP on the approved project only).
+2. Restore from a Supabase backup or apply owner-approved DDL. The live database is the source of truth; deleted migration files exist only in git history (`sql/README.md` describes what remains in the repo).
 
-Schema and RLS are applied by running SQL in the Dashboard; the app does **not** use Prisma or `prisma migrate`. After schema setup, run **`sql/supabase-storage-policies.sql`** once if you need Storage RLS for the `portraits` and `profile-pictures` buckets.
+Schema and RLS are not applied from this repository’s deleted scripts. After a fresh environment has `public` tables, confirm Storage RLS on buckets `portraits` and `profile-pictures` in the Dashboard if the app uses uploads (policy names and rules are documented in SUPABASE_SCHEMA.md; historical script was `sql/supabase-storage-policies.sql`, deleted 2026-10-29).
 
 ---
 
@@ -270,7 +270,7 @@ Schema and RLS are applied by running SQL in the Dashboard; the app does **not**
 All **codex_*** tables live in **public**. If you get 500:
 
 1. **GRANTs + RLS (most common):** The API uses the anon key. You need **table-level GRANT SELECT** for anon/authenticated and **RLS policies**. Without GRANTs you get `42501: permission denied for table codex_feats`.  
-   **Fix:** Run **`sql/supabase-codex-rls-public.sql`** in owner-approved database apply (see 07-database-operations.md). It enables RLS and adds “Anyone can read” (SELECT TO public) on all codex_* and core_rules (and grants SELECT to anon/authenticated).
+   **Fix:** In the live database, confirm RLS and SELECT policies on each `codex_*` table and `core_rules` allow anon/authenticated reads (Table Editor → Policies). Historical policies were documented in `sql/supabase-codex-rls-public.sql` (deleted 2026-10-29; see git history). Owner-approved DDL only (see [ai/guide/07-database-operations.md](ai/guide/07-database-operations.md)).
 2. **Tables in public:** In Table Editor, confirm `public.codex_feats`, `codex_skills`, `codex_species`, `codex_traits`, `codex_parts`, `codex_properties`, `codex_equipment`, `codex_archetypes`, `codex_creature_feats`, and `core_rules` exist.
 3. **Connection / env:** Check `NEXT_PUBLIC_SUPABASE_URL` and `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_DEFAULT_KEY` (anon key) in Vercel.
 
@@ -283,7 +283,7 @@ The API returns a `hint` in the 500 body when it detects permission/RLS errors; 
 - **Supabase:** Dashboard → **Logs** → Postgres (or API). Look for failed queries or RLS violations around the time of the request.
 - **RLS check:** In owner-approved database apply (see 07-database-operations.md) run:  
   `SET ROLE anon; SELECT * FROM public.codex_feats LIMIT 1;`  
-  If that returns "permission denied" or 0 rows when the table has data, RLS is blocking anon. Re-run `sql/supabase-codex-rls-public.sql` and confirm each table has a policy (Table Editor → table → RLS policies).
+  If that returns "permission denied" or 0 rows when the table has data, RLS is blocking anon. Confirm each codex table and `core_rules` has a SELECT policy in the live database (see `sql/supabase-codex-rls-public.sql`, deleted 2026-10-29; git history) in Table Editor → Policies.
 - **Script errors:** If the RLS script failed partway (e.g. a table name typo or missing table), later policies may not have been created. Re-run the script and note any red error lines; fix missing tables first, then run the script again.
 
 ---
@@ -294,14 +294,14 @@ After adding user roles, the database must have the `role` column on `user_profi
 
 ---
 
-### Realtime: "permission denied for schema campaigns" / "permission denied for schema users" (PoolingReplicationError)
+### Realtime: "permission denied for schema" (PoolingReplicationError)
 
-If campaign roll log or character **HP/EN/AP** don’t update in real time and you see `PoolingReplicationError` or `permission denied for schema`, the Realtime publication and RLS may need to be applied for `public` (all tables are in `public` after Path C). The same fix enables:
+If campaign roll log or character **HP/EN/AP** don’t update in real time and you see `PoolingReplicationError` or `permission denied for schema`, the Realtime publication and RLS on **`public`** tables may be misconfigured. The same fix enables:
 
-- **Campaign roll log** (campaigns.campaign_rolls)
-- **HP, EN, and AP sync** between encounter combat and character sheets (users.characters)
+- **Campaign roll log** (`public.campaign_rolls`)
+- **HP, EN, and AP sync** between encounter combat and character sheets (`public.characters`)
 
-**Fix:** Run the Realtime/RLS block from your schema SQL (e.g. **`sql/supabase-rls-policies.sql`** or the Path C consolidation script) in owner-approved database apply (see 07-database-operations.md). After Path C, all tables are in `public`; ensure Realtime publication includes `public.campaign_rolls` and `public.characters` and that RLS allows SELECT for the roles that need live updates.
+**Fix:** In Supabase Dashboard → **Database → Publications**, confirm `supabase_realtime` (or your publication name) includes `public.campaign_rolls` and `public.characters`. In **Table Editor**, confirm RLS SELECT policies allow campaign participants (and owners) to read rows their clients subscribe to. Owner-approved DDL only (see [ai/guide/07-database-operations.md](ai/guide/07-database-operations.md)). Historical Realtime/RLS examples were in `sql/archive/supabase-rls-policies.sql` and Path C consolidation files (deleted 2026-10-29; see git history).
 
 ---
 

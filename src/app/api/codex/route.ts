@@ -540,7 +540,7 @@ export async function GET(request: Request) {
                 message.includes('policy') ||
                 message.includes('row-level') ||
                 message.includes('denied')
-              ? 'Permission denied: RLS may be blocking reads. Owner must apply sql/supabase-codex-rls-public.sql on the database (see guide/07-database-operations.md).'
+              ? 'Permission denied: RLS may be blocking reads. Owner must fix codex/core_rules SELECT policies on the database (see SUPABASE_SCHEMA.md and guide/07-database-operations.md).'
               : message
         : undefined;
     return NextResponse.json(

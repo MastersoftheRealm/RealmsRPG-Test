@@ -17,7 +17,7 @@ See **`REALMS_PRODUCT_OVERVIEW.md` §5.0** for product intent. Guided and Custom
 
 **User-facing copy:** Edit static prose in `src/lib/constants/copy/guided-creator-copy.ts` (chooser labels, step titles/descriptions, chapter rail, modals). Codex names (paths, species, feats) still come from the database.
 
-**Guided DB fields** (see `SUPABASE_SCHEMA.md`): `codex_species.is_starter`, `codex_archetypes.level1_recommended_abilities`, `level1_loadouts` (metadata: `armorStep` / `sharedEquipment` only — no kits). Seed: `sql/guided-creator-schema-seed.sql` (applied as migration `guided_creator_schema_seed`; kit payload later cleared TASK-442).
+**Guided DB fields** (see `SUPABASE_SCHEMA.md`): `codex_species.is_starter`, `codex_archetypes.level1_recommended_abilities`, `level1_loadouts` (metadata: `armorStep` / `sharedEquipment` only — no kits). Seed: (was `sql/guided-creator-schema-seed.sql`, deleted 2026-10-29) (applied as migration `guided_creator_schema_seed`; kit payload later cleared TASK-442).
 
 The retired 9-step Legacy wizard (`STEP_ORDER` in deleted `character-creator-store.ts`) is gone (TASK-912). BUILD_VALIDATION DEV-V-001 is superseded; use DEV-V-013.
 
