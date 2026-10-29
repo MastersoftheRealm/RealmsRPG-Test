@@ -118,7 +118,7 @@ export async function POST(req: NextRequest) {
     expect(handlerReadsJsonBody(validated)).toBe(false);
   });
 
-  it('flags re-exported route handlers', () => {
+  it('flags aliased re-exported route handlers', () => {
     const root = mkdtempSync(path.join(tmpdir(), 'api-scan-reexport-'));
     const routeDir = path.join(root, 'app', 'api', 'demo');
     mkdirSync(routeDir, { recursive: true });
@@ -134,5 +134,45 @@ export { handler as POST };
 
     const gaps = collectInputValidationGaps({ apiRoot: path.join(root, 'app', 'api') });
     expect(gaps.some((g) => g.includes('re-exported route handler'))).toBe(true);
+  });
+
+  it('flags bare export { GET } including local handlers that read JSON', () => {
+    expect(collectReExportedHandlerMethods('export { GET };')).toEqual(['GET']);
+    expect(collectReExportedHandlerMethods('export { GET } from "../codex/route";')).toEqual([
+      'GET',
+    ]);
+
+    const root = mkdtempSync(path.join(tmpdir(), 'api-scan-bare-export-'));
+    const routeDir = path.join(root, 'app', 'api', 'bare');
+    mkdirSync(routeDir, { recursive: true });
+    writeFileSync(
+      path.join(routeDir, 'route.ts'),
+      `
+async function GET(r: NextRequest) {
+  await r.json();
+  return NextResponse.json({});
+}
+export { GET };
+`,
+    );
+
+    const gaps = collectInputValidationGaps({ apiRoot: path.join(root, 'app', 'api') });
+    expect(gaps.some((g) => g.includes('bare/route.ts (GET): re-exported'))).toBe(true);
+  });
+
+  it('flags export * from in route files', () => {
+    const root = mkdtempSync(path.join(tmpdir(), 'api-scan-star-'));
+    const routeDir = path.join(root, 'app', 'api', 'star');
+    mkdirSync(routeDir, { recursive: true });
+    writeFileSync(path.join(routeDir, 'route.ts'), `export * from '../codex/route';\n`);
+
+    const gaps = collectInputValidationGaps({ apiRoot: path.join(root, 'app', 'api') });
+    expect(gaps.some((g) => g.includes('export * from cannot be input-validated'))).toBe(true);
+  });
+
+  it('does not treat export type { ... } as a handler re-export', () => {
+    expect(collectReExportedHandlerMethods('export type { GETResponse } from "./types";')).toEqual(
+      [],
+    );
   });
 });

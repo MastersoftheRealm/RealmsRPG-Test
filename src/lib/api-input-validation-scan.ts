@@ -25,11 +25,11 @@ export const HANDLER_ARROW_HEAD = new RegExp(
   `^export\\s+const\\s+(${HTTP_METHODS})\\s*=\\s*(?:async\\s*)?\\(`,
 );
 
-/** `export { handler as POST } from './x'` or same-file re-exports — not scannable. */
-export const HANDLER_REEXPORT = new RegExp(
-  `\\bexport\\s*\\{[^}]*\\bas\\s+(${HTTP_METHODS})\\b`,
-  'g',
-);
+/** `export { GET }`, `export { h as POST } from './x'`, etc. — not scannable as inline handlers. */
+export const HANDLER_REEXPORT = new RegExp(`\\bexport\\s+(?!type\\s*\\{)\\{([^}]*)\\}`, 'g');
+
+/** `export * from './x'` — re-exports entire module; not scannable. */
+export const HANDLER_STAR_REEXPORT = /\bexport\s+\*\s+from\b/;
 
 export const HANDLER_SPLIT = new RegExp(
   `(?=export\\s+(?:(?:async\\s+)?function\\s+(?:${HTTP_METHODS})\\s*\\(|const\\s+(?:${HTTP_METHODS})\\s*=\\s*(?:async\\s*)?\\())`,
@@ -81,12 +81,28 @@ export function handlerReadsQuery(chunk: string): boolean {
   );
 }
 
+const HANDLER_METHOD_ALIAS = new RegExp(`\\bas\\s+(${HTTP_METHODS})\\b`, 'g');
+const HANDLER_METHOD_BARE = new RegExp(`^(${HTTP_METHODS})$`);
+
 export function collectReExportedHandlerMethods(source: string): string[] {
   const methods: string[] = [];
   for (const match of source.matchAll(HANDLER_REEXPORT)) {
-    methods.push(match[1]!);
+    const brace = match[1]!;
+    for (const alias of brace.matchAll(HANDLER_METHOD_ALIAS)) {
+      methods.push(alias[1]!);
+    }
+    for (const part of brace.split(',')) {
+      const trimmed = part.trim();
+      if (!trimmed || /\bas\b/.test(trimmed)) continue;
+      const bare = trimmed.match(HANDLER_METHOD_BARE);
+      if (bare) methods.push(bare[1]!);
+    }
   }
-  return methods;
+  return [...new Set(methods)];
+}
+
+export function hasStarReExport(source: string): boolean {
+  return HANDLER_STAR_REEXPORT.test(source);
 }
 
 export function handlerReadsJsonBody(chunk: string): boolean {
@@ -130,6 +146,9 @@ export function collectInputValidationGaps(
   for (const file of listApiRouteHandlerFiles(apiRoot)) {
     const relativePath = path.relative(apiRoot, file).replace(/\\/g, '/');
     const source = readFileSync(file, 'utf8');
+    if (hasStarReExport(source)) {
+      missing.push(`${relativePath}: export * from cannot be input-validated by scan`);
+    }
     for (const method of collectReExportedHandlerMethods(source)) {
       missing.push(
         `${relativePath} (${method}): re-exported route handler cannot be input-validated by scan`,
