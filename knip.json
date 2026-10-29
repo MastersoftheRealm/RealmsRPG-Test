@@ -1,0 +1,35 @@
+{
+  "$schema": "https://unpkg.com/knip@5/schema.json",
+  "next": {
+    "entry": ["next.config.ts", "src/instrumentation.ts", "src/instrumentation-client.ts"]
+  },
+  "vitest": {
+    "config": ["vitest.config.ts"],
+    "entry": ["vitest.setup.ts", "src/**/*.{test,spec}.{ts,tsx}", "scripts/**/*.test.mjs"]
+  },
+  "playwright": {
+    "config": ["playwright.config.ts", "playwright.*.config.ts"],
+    "entry": ["tests/**/*.{ts,tsx}"]
+  },
+  "entry": ["scripts/**/*.{js,mjs,cjs}", "public/tooltip-text.tsx"],
+  "project": [
+    "src/**/*.{ts,tsx}",
+    "scripts/**/*.{js,mjs,cjs}",
+    "tests/**/*.{ts,tsx}",
+    "*.{config.ts,mjs,js}",
+    "public/**/*.{ts,tsx}"
+  ],
+  "ignoreFiles": ["src/services/index.ts"],
+  "ignoreBinaries": [
+    "powershell",
+    "playwright.shell-creators-audit.config.ts",
+    "playwright.responsive.config.ts",
+    "playwright.auth.config.ts"
+  ],
+  "ignoreDependencies": ["postcss", "playwright"],
+  "ignoreExportsUsedInFile": {
+    "interface": true,
+    "type": true
+  },
+  "tags": ["-lintignore"]
+}

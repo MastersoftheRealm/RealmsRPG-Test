@@ -43,7 +43,4 @@ Set `priority`, `status: not-started`, `related_files`, and clear `acceptance_cr
 
 ## Scripts
 
-- `node scripts/extract_feedback.js` — Convert raw feedback → tasks
-- `node scripts/triage_tasks.js` — Infer related_files for tasks (--apply to update)
-- (removed 2026-08) `scripts/session_submit.js` — deleted as dead tooling; run `extract_feedback.js` then `triage_tasks.js` directly
 - `npm run tasks:validate` — Doc/path checks (`tasks:validate-docs`, index, shared/ui allowlist)
