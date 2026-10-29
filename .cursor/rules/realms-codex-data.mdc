@@ -5,7 +5,7 @@ alwaysApply: false
 
 # Codex & Reference Data (Supabase)
 
-Applies to **`codex_*`**, **`core_rules`**, and any bulk edits to official library reference content.
+Applies to **`codex_*`**, **`core_rules`**, and any bulk edits to official library reference content. Broader agent workflow and Drive-vs-repo rules: `src/docs/ai/ARCHITECTURE_CONSTITUTION.md` (**Source of truth**).
 
 ## Read freely; write only after review
 

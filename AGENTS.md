@@ -11,6 +11,14 @@ This file is already in the prompt. Do not re-read it. Kickoffs point at the wor
 
 That is the list. Do not open the Drive playbook, `DECISIONS.md`, `ARCHITECTURE_CONSTITUTION.md`, `ACTIVE_TASKS.md`, `AI_TASK_QUEUE.md`, `WAITING_TASKS.md`, `AI_CHANGELOG.md`, or `AGENT_GUIDE.md` before you code.
 
+## One source per fact
+
+Every fact lives in exactly one authoritative file; other docs **link** to it instead of restating. Game-rule numbers and formulas are referenced by their `core_rules` key (see `src/docs/ai/ARCHITECTURE_CONSTITUTION.md` **Source of truth** for which doc owns which topic), never retyped in code or prose. Any PR that changes behavior must **update or delete** the old doc text in the same PR so nothing stale remains.
+
+## Deferred code areas
+
+Copy-from rule and folder list: root [`DEFERRED.md`](DEFERRED.md).
+
 ## On demand
 
 Read a doc when the diff touches that topic. Search, do not load the whole file.
@@ -21,6 +29,8 @@ Read a doc when the diff touches that topic. Search, do not load the whole file.
 | Game math or a missing written rule | `src/docs/GAME_RULES.md`. Hold if the rule is not written. Do not invent a formula. |
 | Settled product ruling | Search `src/docs/ai/DECISIONS.md` for the topic |
 | PR review (before Human OK) | `src/docs/ai/PR_REVIEWER_BRIEF.md` |
+| PR description template | `.github/PULL_REQUEST_TEMPLATE.md` |
+| Pre-merge writer checklist | `src/docs/ai/PR_CHECKLIST.md` (link only; do not duplicate) |
 | Schema or SQL | `src/docs/SUPABASE_SCHEMA.md`. Codex writes: `realms-codex-data` rule. **New `public` tables:** every `CREATE TABLE` in `sql/` must, in the **same file**, enable RLS, add policies, and `GRANT` explicitly — `SELECT, INSERT, UPDATE, DELETE` to `authenticated` and `service_role`; `SELECT` to `anon` only if the table is public-read. Template: `sql/_TEMPLATE_new_table.sql`. |
 | New shared UI, store, API contract, or migration strategy | `src/docs/ai/ARCHITECTURE_CONSTITUTION.md` |
 | What already exists | `FEATURE_INDEX.md` and the barrels |
@@ -31,4 +41,4 @@ The status order is `.cursor/rules/realms-tasks.mdc`. It is already in the promp
 
 Model slugs: `.cursor/rules/realms-model-routing.mdc`. Never a slug ending in `-fast`. Do not start Claude or GPT.
 
-**Drive vs repo:** [Realms Dev Workflow](https://docs.google.com/document/d/1F6iZUKP9nN0YTFzOkZ6Y82sySaw0iW101f_a-7ZeQdI/edit) and [Realms Web Decisions](https://docs.google.com/document/d/1tGebelYXZPegt4iZiycOjI3RBHD6N_QKZW6CI0ckxkg/edit) were updated **2026-10-28** (Editor bot) to point at `src/docs/ai/PR_REVIEWER_BRIEF.md` instead of duplicating review steps. The brief is the single written review process in the repo. When Drive and a repo copy conflict, **Drive wins** and the repo is corrected (Oct 5, 2026). Session start order follows this file and `realms-tasks.mdc` (Kadin, 2026-10-11), not “read the whole playbook first.”
+**Workflow (repo):** ClickUp status order — `.cursor/rules/realms-tasks.mdc`. PR review checklist — `src/docs/ai/PR_REVIEWER_BRIEF.md`. PR body — [`.github/PULL_REQUEST_TEMPLATE.md`](.github/PULL_REQUEST_TEMPLATE.md). Full authority map (including Drive vs repo): [`src/docs/ai/ARCHITECTURE_CONSTITUTION.md`](src/docs/ai/ARCHITECTURE_CONSTITUTION.md) (**Source of truth**). Session start follows this file and `realms-tasks.mdc` (Kadin, 2026-10-11), not the full playbook up front.
