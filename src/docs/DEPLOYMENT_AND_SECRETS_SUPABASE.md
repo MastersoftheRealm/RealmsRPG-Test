@@ -110,7 +110,7 @@ Enable RLS on each bucket. The app needs **SELECT, INSERT, UPDATE, and DELETE** 
 **Security hardening (TASK-326):** After base storage policies, confirm scoped Storage SELECT (no bucket-wide listing) on the live buckets; historical hardening script (was `sql/supabase-storage-select-hardening-2026-06.sql`, deleted 2026-10-29) in git history. That change removes bucket-wide public SELECT (prevents Storage API listing). Keep both buckets marked **Public bucket** so direct object URLs still load in the app.
 
 **Portrait upload fails with "new row violates row-level security policy"?**  
-If Storage uploads fail, compare live bucket policies to SUPABASE_SCHEMA.md (historical script (was `sql/supabase-storage-policies.sql`, deleted 2026-10-29) in git history). If you previously only added INSERT + SELECT (e.g. from an older snippet), add the UPDATE and DELETE policies for the `portraits` bucket from that file.
+If Storage uploads fail, compare live Storage policies on buckets `portraits` and `profile-pictures` to SUPABASE_SCHEMA.md (§ storage / session writes). If INSERT works but UPDATE or DELETE fails, add or fix those operations in the Dashboard for the user’s own path (historical definitions were in (was `sql/supabase-storage-policies.sql`, deleted 2026-10-29) in git history).
 
 **Portrait uploads to the bucket but won’t load (400 or 403, “Failed to load resource”)?**  
 1. **Make the bucket public** — The app uses **public** URLs for portraits. In Supabase Dashboard → **Storage** → select the **portraits** bucket → **Configuration** (or bucket settings) → turn **Public bucket** on. If it’s off, image requests often get **400** or **403** and the sheet shows no portrait. Do the same for **profile-pictures** if profile avatars don’t load.  
@@ -249,7 +249,7 @@ Speed Insights is **not** installed unless separately prioritized (different pac
 
 If you want to set (or fix) schemas, tables, RLS, and Realtime in one go without tracking what’s already applied:
 
-1. Open **owner-approved database apply (see 07-database-operations.md)**.
+1. Get **Kadin explicit OK** and a fresh backup, then use the process in [07-database-operations.md](src/docs/ai/guide/07-database-operations.md) (Supabase Dashboard or MCP on the approved project only).
 2. Restore from a Supabase backup or apply owner-approved DDL. The live database is the source of truth; deleted migration files exist only in git history (`sql/README.md` describes what remains in the repo).
 
 Schema and RLS are not applied from this repository’s deleted scripts. After a fresh environment has `public` tables, confirm Storage RLS on buckets `portraits` and `profile-pictures` in the Dashboard if the app uses uploads (policy names and rules are documented in SUPABASE_SCHEMA.md; historical script was `sql/supabase-storage-policies.sql`, deleted 2026-10-29).
@@ -294,12 +294,12 @@ After adding user roles, the database must have the `role` column on `user_profi
 
 ---
 
-### Realtime: "permission denied for schema campaigns" / "permission denied for schema users" (PoolingReplicationError)
+### Realtime: "permission denied for schema" (PoolingReplicationError)
 
-If campaign roll log or character **HP/EN/AP** don’t update in real time and you see `PoolingReplicationError` or `permission denied for schema`, the Realtime publication and RLS may need to be applied for `public` (all tables are in `public` after Path C). The same fix enables:
+If campaign roll log or character **HP/EN/AP** don’t update in real time and you see `PoolingReplicationError` or `permission denied for schema`, the Realtime publication and RLS on **`public`** tables may be misconfigured. The same fix enables:
 
-- **Campaign roll log** (campaigns.campaign_rolls)
-- **HP, EN, and AP sync** between encounter combat and character sheets (users.characters)
+- **Campaign roll log** (`public.campaign_rolls`)
+- **HP, EN, and AP sync** between encounter combat and character sheets (`public.characters`)
 
 **Fix:** In Supabase Dashboard → **Database → Publications**, confirm `supabase_realtime` (or your publication name) includes `public.campaign_rolls` and `public.characters`. In **Table Editor**, confirm RLS SELECT policies allow campaign participants (and owners) to read rows their clients subscribe to. Owner-approved DDL only (see 07-database-operations.md). Historical Realtime/RLS examples lived in deleted repo scripts (was `sql/archive/supabase-rls-policies.sql`, deleted 2026-10-29; Path C consolidation files, same).
 

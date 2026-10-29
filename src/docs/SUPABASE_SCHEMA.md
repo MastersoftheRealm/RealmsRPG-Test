@@ -47,6 +47,18 @@ using (
 
 My Account remove uses `DELETE /api/upload/profile-picture` (service role for `photo_url`; session client may delete storage objects). Tightening DELETE RLS blocks direct Storage API abuse without breaking that route when the service role is used.
 
+**Known pending database change (not applied) — `auth_can_upload_profile_picture()` EXECUTE for anon (ClickUp [1dfe8wf2hu7](https://app.clickup.com/t/1dfe8wf2hu7)):** Live Test grants `EXECUTE` on `public.auth_can_upload_profile_picture()` to `anon` as well as `authenticated`; the repo file intended authenticated-only. Low risk to tighten. **Requires Kadin explicit OK and a fresh backup before any production apply:**
+
+```sql
+REVOKE EXECUTE ON FUNCTION public.auth_can_upload_profile_picture() FROM anon;
+```
+
+**Known pending database change (not applied) — `codex_retired_ids` table grants (ClickUp [1dfe8wf2hu8](https://app.clickup.com/t/1dfe8wf2hu8)):** Live Test grants `ALL` on `public.codex_retired_ids` to `anon` and `authenticated`; intended posture is service-role writes only with scoped read if needed. Low risk to tighten. **Requires Kadin explicit OK and a fresh backup before any production apply:**
+
+```sql
+REVOKE ALL ON public.codex_retired_ids FROM anon, authenticated;
+```
+
 ---
 
 ### 2.3 Codex (reference data) — all in `public`
@@ -181,6 +193,8 @@ Single document in `data`; list columns for list/filter. Realtime: `public.chara
 | `campaign_rolls` | Hybrid | id (PK, required on insert unless DB default), campaign_id (FK), data (JSONB), **created_at** (app POST sets ISO `now`; optional DB `DEFAULT now()`); list columns: character_id, user_id, type, title |
 
 Membership source of truth: `campaign_members`. Realtime: `public.campaign_rolls`.
+
+**Known pending database change (not applied) — `campaign_rolls.created_at` backfill (ClickUp [1dfe8wf2hu6](https://app.clickup.com/t/1dfe8wf2hu6)):** On live Test, some `public.campaign_rolls` rows still have NULL `created_at` (the backfill in (was `sql/supabase-campaign-rolls-created-at-backfill.sql`, deleted 2026-10-29) was **never applied**). Owner-approved data fix only; requires backup first. Not part of this repo cleanup PR.
 
 **RLS (`campaigns`):** One permissive SELECT policy per role — `campaigns_select_participants` (`owner_id = auth.uid()` **or** `private.auth_is_campaign_participant(id)`). The `owner_id` short-circuit is required so `INSERT … RETURNING` can see the in-flight owner row (STABLE helper lookup cannot; TASK-802). Owner write policies: `campaigns_owner_insert`, `campaigns_owner_update`, `campaigns_owner_delete`. Do not restore a second `campaigns_owner_select` policy (TASK-650 / `multiple_permissive_policies`). Historical replay script (was `sql/task-802-campaigns-select-owner-short-circuit.sql`, deleted 2026-10-29) in git history (already applied on RealmsRPG-Test; verify policies in the live database rather than re-pasting).
 
