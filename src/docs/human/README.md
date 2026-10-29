@@ -1,6 +1,6 @@
 # Human Reference Docs
 
-These docs are for **developers and owners**, not the default AI agent workflow. Agents should use root [`AGENTS.md`](../../AGENTS.md) and [`src/docs/ai/AGENT_GUIDE.md`](../ai/AGENT_GUIDE.md) instead.
+These docs are for **developers and owners**, not the default AI agent workflow. Agents should use root [`AGENTS.md`](../../../AGENTS.md) and [`src/docs/ai/AGENT_GUIDE.md`](../ai/AGENT_GUIDE.md) instead.
 
 | Doc | Purpose |
 |-----|---------|

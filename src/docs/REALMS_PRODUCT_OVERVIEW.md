@@ -534,7 +534,7 @@ Loadout follows archetype guidance and is split into **one decision at a time**.
 | Equipment assist | Optional **Add all recommended Equipment** + per-item quantity - the only bulk shortcut; still toggleable |
 | Layer 2 | Full filtered Common catalog via `UnifiedSelectionModal` (GridListRow); Currency + Training Points in footer |
 
-**Shipped (guided):** Phased flow in [`loadout-step.tsx`](../components/guided-creator/steps/loadout-step.tsx) (TASK-424 / TASK-442 / TASK-443 / TASK-446 / TASK-447 / TASK-456 / TASK-459) - Next/Back phases (no progress strip); optional weapon/armor/Equipment picks; **PointStatus** Currency + Training Points; card-first path picks with Currency/Training Points chips; L2 browse via See more options; Equipment add-all / qty. Chapter rail **Loadout**. Quick kits removed. Spec: [`GUIDED_EQUIPMENT_PHASED_SPEC.md`](./ai/archive/GUIDED_EQUIPMENT_PHASED_SPEC.md). Path recommendation seeds for remaining archetypes: TASK-423 (owner). Legacy equipment step deleted (TASK-912).
+**Shipped (guided):** Phased flow in [`loadout-step.tsx`](../components/guided-creator/steps/loadout-step.tsx) (TASK-424 / TASK-442 / TASK-443 / TASK-446 / TASK-447 / TASK-456 / TASK-459) - Next/Back phases (no progress strip); optional weapon/armor/Equipment picks; **PointStatus** Currency + Training Points; card-first path picks with Currency/Training Points chips; L2 browse via See more options; Equipment add-all / qty. Chapter rail **Loadout**. Quick kits removed. Path recommendation seeds for remaining archetypes: TASK-423 (owner). Legacy equipment step deleted (TASK-912).
 
 ### 5.8 Powers / Techniques Selection
 
@@ -708,7 +708,7 @@ Consistency across **all surfaces** is **mandatory** — this is a **sitewide** 
 - The same progression logic (guided → semi-guided → full)
 - The same "recommended plus expand for more" pattern (**catalog** Ladder B in §3.1)
 - The same **selection grammar**: cards for curated few, GridListRow for browse many, one entity depth ladder (See more → More details) — §3.1
-- Familiar layouts and unified components ([`DESIGN_SYSTEM.md`](./DESIGN_SYSTEM.md), [`ai/archive/UI_UNIFICATION_PLAN.md`](./ai/archive/UI_UNIFICATION_PLAN.md)) even as each page is redesigned
+- Familiar layouts and unified components ([`DESIGN_SYSTEM.md`](./DESIGN_SYSTEM.md), `.cursor/rules/realms-unification.mdc`) even as each page is redesigned
 
 ### Implementation strategy: one page at a time
 
@@ -734,7 +734,7 @@ Each page refactor must still feel like one product: same step chrome, same laye
 
 **Explicitly deferred from beginner funnel:** species creator, creature creator, empowered technique creator (advanced-only link).
 
-Tie **visual** consistency to [`ai/archive/UI_UNIFICATION_PLAN.md`](./ai/archive/UI_UNIFICATION_PLAN.md); tie **interaction** consistency to this document.
+Tie **visual** consistency to [`DESIGN_SYSTEM.md`](./DESIGN_SYSTEM.md) and `.cursor/rules/realms-unification.mdc`; tie **interaction** consistency to this document.
 
 ---
 
@@ -1032,7 +1032,7 @@ Everything else stays on current UI until each phase validates the pattern.
 
 ## Appendix G — Links and glossary
 
-**Related docs:** [`GAME_RULES.md`](./GAME_RULES.md), [`ai/FEATURE_INDEX.md`](./ai/FEATURE_INDEX.md), [`ARCHITECTURE.md`](./ARCHITECTURE.md), [`ai/archive/UI_UNIFICATION_PLAN.md`](./ai/archive/UI_UNIFICATION_PLAN.md), [`human/USER_EXPERIENCE_GOALS.md`](./human/USER_EXPERIENCE_GOALS.md).
+**Related docs:** [`GAME_RULES.md`](./GAME_RULES.md), [`ai/FEATURE_INDEX.md`](./ai/FEATURE_INDEX.md), [`ARCHITECTURE.md`](./ARCHITECTURE.md), [`DESIGN_SYSTEM.md`](./DESIGN_SYSTEM.md), [`human/USER_EXPERIENCE_GOALS.md`](./human/USER_EXPERIENCE_GOALS.md).
 
 **Terminology:** see [`human/USER_EXPERIENCE_GOALS.md`](./human/USER_EXPERIENCE_GOALS.md) section 1.2 for the canonical content-naming table (Realms Codex, Realms Library, My Library). Not duplicated here.
 
@@ -1227,7 +1227,7 @@ After removing welcome banner: what about continue draft, return after 30 days, 
 
 ### H.6 Suggested additions to this document (before “build top to bottom”)
 
-Owner / agents: resolve these in order; promote accepted items out of this appendix into the main body or `AI_TASK_QUEUE.md`.
+Owner / agents: resolve these in order; promote accepted items out of this appendix into the main body or **ClickUp** tasks.
 
 1. **Section 12 (candidate) — Personas & entry routes** — Player, Customizer, RM, Researcher; one landing vs branching.
 2. **Section 13 (candidate) — Activation funnel & metrics** — Events, targets, phase success criteria.
@@ -1248,7 +1248,7 @@ Before executing TASK-387 / TASK-386 / TASK-388 and later phases:
 
 1. Read Appendix H end-to-end; mark accept / defer / reject per H.6 item.
 2. Promote accepted decisions into Sections 1–11 (or new sections 12–13).
-3. Update `AI_TASK_QUEUE.md` — split or add tasks for content ops, auth cliff, sheet IA, RM funnel as needed.
+3. File or split **ClickUp** tasks for content ops, auth cliff, sheet IA, RM funnel as needed.
 4. Only then treat Appendix E phases as committed sequence.
 
 **Do not** treat Appendix H as conflicting with Section 10 — when promoted, clarity and onboarding still win; H items are *gaps in the current doc*, not permission to add complexity without user benefit.

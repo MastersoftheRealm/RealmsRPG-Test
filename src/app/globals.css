@@ -328,7 +328,7 @@
   /* ---------------------------------------------------------------------------
      STANDARD LADDERS (Phase 0.3) — semantic scales encoding the DOMINANT
      existing values so components/pages can migrate to one consistent set.
-     Additive only (no visual change until adopted). See UI_UNIFICATION_PLAN.md.
+     Additive only (no visual change until adopted). See DESIGN_SYSTEM.md.
      --------------------------------------------------------------------------- */
 
   /* Radius — `rounded-control` (inputs/buttons), `rounded-card` (cards/panels),

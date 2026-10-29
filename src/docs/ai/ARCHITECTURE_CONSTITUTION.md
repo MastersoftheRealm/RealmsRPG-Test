@@ -90,7 +90,7 @@ After a passing PR Reviewer verdict, require **Human OK** (Kadin or Collin, usua
 - Prefer **extend** existing shared/ui/hook/lib (`FEATURE_INDEX` + barrels) over new parallel helpers/modals/parsers.
 - Cleanup must **remove** clutter and prove feedback/AC in code — not grow docs theater. Prefer **net remove** on cleanup/debt diffs.
 - When consolidating, ship a first slice + precise follow-ups — not aspirational prose only.
-- A hold that exists only in `WAITING_TASKS.md` stays there until it is on the ClickUp task. Do not load that file to start work.
+- A hold that exists only in a waiting/backlog record stays there until it is on the ClickUp task. Do not load removed repo queue files to start work.
 - **Before merge:** PR Reviewer verdict per `src/docs/ai/PR_REVIEWER_BRIEF.md`. `/cleanup` only for an in-scope gap from REQUEST CHANGES. `/global-audit` and `/debt` are unused on a task.
 
 ## On-demand deep refs
@@ -98,5 +98,5 @@ After a passing PR Reviewer verdict, require **Human OK** (Kadin or Collin, usua
 - Patterns / components / gotchas → `AGENT_GUIDE.md` hub → `guide/` appendices
 - Feature map → `FEATURE_INDEX.md` + generated `FEATURE_INDEX_BARRELS.generated.md`
 - PR failure-mode checklist → `PR_CHECKLIST.md` (includes PR Reviewer pointer)
-- Slash commands → `.cursor/commands/cleanup.md`. Retired: `/audit` (superseded by PR Reviewer), stubs `src/docs/ai/archive/global-audit.md`, `archive/debt.md` (not live commands).
+- Slash commands → `.cursor/commands/cleanup.md`. Retired: `/audit` (superseded by PR Reviewer), `/global-audit`, `/debt` (unused on a task).
 - Task record → the ClickUp task, the branch, and the PR. Not `AI_TASK_QUEUE.md`.

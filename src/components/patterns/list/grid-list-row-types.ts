@@ -19,7 +19,7 @@ import type { ListRowThumbnailProps } from './list-row-thumbnail';
  * ## Metadata visibility rule
  * Every meaningful field appears in **collapsed columns** OR **expanded descriptor chips**, not
  * neither and not both. See `lib/chip/list-row-metadata.ts`, `lib/detail-option/compact-facts.ts`,
- * and `CHIP_UNIFICATION_PLAN.md`. When compacting a column into a chip, use natural self-describing
+ * and `src/docs/DESIGN_SYSTEM.md` § Chips/Badges. When compacting a column into a chip, use natural self-describing
  * language (e.g. `2d6 Slashing Damage`), not `Damage: 2d6…`.
  *
  * ## `category` (styling only — not expandability)

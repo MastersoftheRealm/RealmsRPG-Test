@@ -3,7 +3,7 @@
  * ===============
  * Small tag/badge for displaying labels.
  *
- * **Two roles** (see `CHIP_UNIFICATION_PLAN.md`):
+ * **Two roles** (see `src/docs/DESIGN_SYSTEM.md` § Chips/Badges):
  * - **Descriptor** — metadata only (`variant="descriptor"`, `shape="rounded"`). Use `<DescriptorChip>`.
  * - **Expandable** — parts/properties with descriptions. Use `<ExpandableChip>` (shape `expandable` via chipVariants).
  *

@@ -20,4 +20,4 @@ ClickUp is the only queue. In prose say Bob (`95261690`; legally James Owenby â€
 
 Already fixed on master: no branch, **testing**. Covered or superseded: stay **to do** with a comment. A missing written rule is a hold. Urgent, then high, then normal, then low. Skip unfinished dependencies.
 
-Do not write `ACTIVE_TASKS.md`, `AI_TASK_QUEUE.md`, `AI_CHANGELOG.md`, or `TASK-###` in the commit subject. A hold that exists only in `WAITING_TASKS.md` stays. `/global-audit` and `/debt` are unused on a task.
+Do not write `ACTIVE_TASKS.md`, `AI_TASK_QUEUE.md`, `AI_CHANGELOG.md`, or `TASK-###` in the commit subject. A hold that exists only in the waiting backlog stays. `/global-audit` and `/debt` are unused on a task.
