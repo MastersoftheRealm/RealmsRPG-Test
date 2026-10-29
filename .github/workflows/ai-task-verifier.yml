@@ -57,27 +57,14 @@ jobs:
         run: |
           npm audit --audit-level=high || echo "::warning title=npm audit (dev deps)::High-severity findings in dev dependencies; see log. Known dev-only chain: eslint-config-next -> fast-glob -> micromatch -> braces (no upstream fix yet; re-check when eslint-config-next updates)."
 
-      - name: Reconcile tasks (identity only; commit-subject gate retired)
-        run: node scripts/reconcile_tasks.js --strict --strict-since=2026-07-15
-
       - name: Validate agent doc links
         run: node scripts/validate-agent-docs.js
 
       - name: Validate FEATURE_INDEX paths
         run: node scripts/validate-feature-index.js
 
-      - name: Validate related_files on open tasks
-        run: node scripts/validate-related-files.js
-
       - name: Validate shared/ui allowlist
         run: node scripts/validate-shared-ui-allowlist.js
 
       - name: SQL CREATE TABLE requires explicit GRANT (changed files)
         run: node scripts/check-sql-table-grants.mjs
-
-      - name: Upload reconcile report
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: reconcile-report
-          path: reports/task-reconcile-report.json

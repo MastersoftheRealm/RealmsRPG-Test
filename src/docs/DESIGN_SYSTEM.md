@@ -2,7 +2,7 @@
 
 This document outlines the unified design system for RealmsRPG, based on the Figma mockup specifications and best practices for consistency across the entire application.
 
-> **Unification status:** See `src/docs/ai/AGENT_GUIDE.md` (Unified patterns section) and `.cursor/rules/realms-unification.mdc`. Canonical import is `@/components/patterns` (ADR-0019). `src/docs/ai/UI_UNIFICATION_PLAN.md` is historical (complete), not an in-progress SoT.
+> **Unification status:** See `src/docs/ai/AGENT_GUIDE.md` (Unified patterns section) and `.cursor/rules/realms-unification.mdc`. Canonical import is `@/components/patterns` (ADR-0019).
 
 ## Token Architecture (Phase 0+)
 
@@ -280,7 +280,7 @@ The unused `interactive` variant was removed 2026-08-13; for a hoverable card, c
 
 ### Chips/Badges
 
-Two chip **roles** (see `src/docs/ai/CHIP_UNIFICATION_PLAN.md`):
+Two chip **roles**:
 
 | Role | Component | Shape | Use |
 |------|-----------|-------|-----|
