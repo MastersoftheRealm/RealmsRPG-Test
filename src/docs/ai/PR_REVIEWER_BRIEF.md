@@ -26,7 +26,7 @@ You are the primary PR checker. A different bot, with a different prompt, writes
 8. **No narrating comments.** Fail: new task-ID comments, "keep in sync", "TODO remove later", or comments claiming more than the code does. Prefer deleting dead code over commenting it.
 9. **Legality is advisory.** Fail: hard-blocking "illegal" or homebrew characters. Expected: warnings, visible overrides, temp mods. Rules authority is the core rulebooks in Drive; the site may allow more than the rules. A missing written rule = HOLD, not a guess. AI writes no rules values, names, copy or lore.
 10. **Database safety.** Fail: any production write, migration applied, or seed/reset run without Kadin's explicit OK and a fresh backup; SQL with `DROP`/force-delete/"verify" writes; new `public` table without RLS, policies and GRANT in the same file.
-11. **Docs strict.** Enforce root `AGENTS.md` (**One source per fact**).
+11. **Docs strict.** Enforce root `AGENTS.md` (**One source per fact**). Search docs for text the PR makes stale. Fail: outdated text left in place, or a doc claiming "done/fixed" without the PR proving it (test, link, screenshot). Update or delete in the same PR.
 12. **Scope.** One task; does not revert a fix on `master`; no unrelated edits.
 
 ## Risk classification
