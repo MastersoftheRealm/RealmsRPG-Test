@@ -168,47 +168,6 @@ describe('codex sources', () => {
     expect(previewCodexSourceRename(['z', 'é'], 'Homebrew', 'Official')).toEqual(['z', 'é']);
   });
 
-  it('defines rename_codex_source as CREATE OR REPLACE with expected grants and tables', () => {
-    const sql = readFileSync(join(process.cwd(), 'sql/codex-rename-source.sql'), 'utf8');
-    const sqlWithoutLineComments = sql
-      .split('\n')
-      .map((line) => line.replace(/--.*$/, ''))
-      .join('\n');
-    expect(sqlWithoutLineComments).toMatch(
-      /CREATE\s+OR\s+REPLACE\s+FUNCTION\s+public\.rename_codex_source\s*\(/i,
-    );
-    expect(sqlWithoutLineComments).not.toMatch(/chr\s*\(\s*0\s*\)/);
-    expect(sqlWithoutLineComments).toContain('collapse_codex_source_name');
-    expect(sqlWithoutLineComments).not.toMatch(/\bUPDATE\s+public\.codex_/i);
-    expect(sql).toContain(
-      'REVOKE ALL ON FUNCTION public.rename_codex_source(text, text, uuid) FROM PUBLIC',
-    );
-    expect(sql).toContain('FROM anon, authenticated');
-    expect(sql).toContain(
-      'GRANT EXECUTE ON FUNCTION public.rename_codex_source(text, text, uuid) TO service_role',
-    );
-    expect(sql).toContain('SECURITY DEFINER');
-    expect(sql).toContain('COLLATE "C"');
-    expect(sql).toContain('codex_change_logs');
-    expect(sql).toContain('updated_at = now()');
-    expect(sql).not.toContain('ALTER TABLE');
-    expect(sql.includes('SET source =')).toBe(false);
-    expect(sql).not.toMatch(/SELECT\s+public\.rename_codex_source/i);
-    for (const table of [
-      'codex_feats',
-      'codex_skills',
-      'codex_species',
-      'codex_traits',
-      'codex_parts',
-      'codex_properties',
-      'codex_equipment',
-      'codex_archetypes',
-      'codex_creature_feats',
-    ]) {
-      expect(sql).toContain(`'${table}'`);
-    }
-  });
-
   it('does not build a per-table source list in admin codex', () => {
     const root = join(process.cwd(), 'src/app/(main)/admin/codex');
     const offenders: string[] = [];

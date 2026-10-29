@@ -2,7 +2,7 @@
 
 Use this when setting up a **new** Supabase project or debugging “table missing / permission denied” on RealmsRPG-Test.
 
-**Reference:** [SUPABASE_SCHEMA.md](./SUPABASE_SCHEMA.md) (single source of truth for tables). **Repo SQL folder:** [sql/README.md](../sql/README.md) (template, rename utility, schema snapshots only — not a migration library).
+**Reference:** [SUPABASE_SCHEMA.md](./SUPABASE_SCHEMA.md) (single source of truth for tables). **Repo SQL folder:** [sql/README.md](../../sql/README.md) (template, rename utility, schema snapshots only — not a migration library).
 
 ---
 
