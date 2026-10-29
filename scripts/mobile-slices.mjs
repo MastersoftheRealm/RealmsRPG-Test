@@ -18,9 +18,7 @@ const route = process.argv[2] ?? '/';
 const slices = Number(process.argv[3] ?? 6);
 const width = Number(process.argv[4] ?? 390);
 const BASE = 'http://localhost:3100';
-const OUT = path.resolve(
-  'C:/Users/kadin/OneDrive/Desktop/Code/RealmsRPG-Test/reports/mobile-audit-2026-08-18/slices',
-);
+const OUT = path.resolve(path.join(process.cwd(), 'reports', 'mobile-audit-output', 'slices'));
 const slug = route.replace(/[^a-z0-9]+/gi, '-').replace(/^-|-$/g, '') || 'home';
 
 const browser = await chromium.launch();

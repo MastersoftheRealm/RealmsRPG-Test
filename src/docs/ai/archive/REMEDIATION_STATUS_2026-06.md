@@ -1,7 +1,7 @@
 # Remediation Status — 2026-06 (Historical Snapshot)
 
 **Not current truth.** For post–Aug 2026 audit status, use [`REMEDIATION_STATUS_2026-08.md`](REMEDIATION_STATUS_2026-08.md).
-Open work: [`ACTIVE_TASKS.md`](ACTIVE_TASKS.md) · waiting [`WAITING_TASKS.md`](WAITING_TASKS.md) · human [`DEVELOPER_TASK_QUEUE.md`](DEVELOPER_TASK_QUEUE.md).
+Open work: [`ACTIVE_TASKS.md`](ACTIVE_TASKS.md) · waiting [`WAITING_TASKS.md`](WAITING_TASKS.md) · human ClickUp.
 
 Kept as a June 2026 remediation snapshot only.
 
@@ -31,11 +31,11 @@ Kept as a June 2026 remediation snapshot only.
 
 ## Human-only (still accurate)
 
-- **DEV-001** (Dashboard): enable Supabase leaked-password protection — [`DEVELOPER_TASK_QUEUE.md`](DEVELOPER_TASK_QUEUE.md) / **TASK-353**.
+- **DEV-001** (Dashboard): enable Supabase leaked-password protection — ClickUp / **TASK-353**.
 
 ---
 
 ## Documentation cleanup policy
 
-- Treat [`REMEDIATION_STATUS_2026-08.md`](REMEDIATION_STATUS_2026-08.md) + `ACTIVE_TASKS.md` + `WAITING_TASKS.md` + `DEVELOPER_TASK_QUEUE.md` as active status.
+- Treat [`REMEDIATION_STATUS_2026-08.md`](REMEDIATION_STATUS_2026-08.md) + `ACTIVE_TASKS.md` + `WAITING_TASKS.md` + ClickUp as active status.
 - Treat this file and `ai/archive/HISTORY_INDEX.md` entries as historical snapshots only.

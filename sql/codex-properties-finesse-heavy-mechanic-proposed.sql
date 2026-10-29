@@ -1,7 +1,7 @@
 -- TASK-920 — Finesse + Heavy mechanic flags / Heavy row (preview only)
 -- Codex-data policy: audit → propose → owner "apply" → run once.
 --
--- Live audit 2026-09-03 (project lbqhiwudvifmkjtkccdg):
+-- Live audit 2026-09-03 (RealmsRPG-Test project):
 --   id 26 Finesse mechanic=true type=Weapon  base_ip=1 base_tp=1 base_c=1.5
 --   id 50 Heavy   mechanic=true type=Weapon  base_ip=1 base_tp=2 base_c=1.5
 --     description: "This Weapon uses Strength for attack and damage rolls instead of another ability."

@@ -10,7 +10,7 @@ Use this checklist to keep your Supabase database in sync with the app and fix c
 
 | Step | Action | When |
 |------|--------|------|
-| 1 | Run **sql/supabase-official-library-public-schema.sql** in Supabase Dashboard → SQL Editor | Creates `official_powers`, `official_techniques`, `official_items`, `official_creatures` in `public` and backfills from `public_*` if those tables exist. **Required** for admin “Save to Official Library” to work. |
+| 1 | Run **sql/supabase-official-library-public-schema.sql** in owner-approved database apply (see 07-database-operations.md) | Creates `official_powers`, `official_techniques`, `official_items`, `official_creatures` in `public` and backfills from `public_*` if those tables exist. **Required** for admin “Save to Official Library” to work. |
 | 2 | Run **sql/supabase-user-profiles-timestamps-default.sql** | If you see “null value in column updated_at of relation user_profiles” or “user_items_user_id_fkey” when saving to library. Sets `DEFAULT now()` on `user_profiles.created_at` and `updated_at`. |
 | 3 | Run **sql/supabase-storage-policies.sql** | If you use portrait or profile-picture uploads. RLS for Storage buckets. |
 | 4 | (Optional) **sql/supabase-official-library-columnar-expansion.sql** | Adds `range_steps`, `duration_*`, `area_*`, `damage` columns to `official_powers`. Not required; app stores these in `payload` if columns are missing. |
@@ -31,7 +31,7 @@ Use this checklist to keep your Supabase database in sync with the app and fix c
 
 ## 3. User library / profile errors after migration
 
-- **“null value in column updated_at”** or **“user_items_user_id_fkey”**: Run **sql/supabase-user-profiles-timestamps-default.sql** and ensure the app uses `ensureUserProfile` (or equivalent) before any insert into `user_items`, `user_powers`, etc. See [AI_CHANGELOG](ai/archive/AI_CHANGELOG.md) 2026-03-02.
+- **“null value in column updated_at”** or **“user_items_user_id_fkey”**: Run **sql/supabase-user-profiles-timestamps-default.sql** and ensure the app uses `ensureUserProfile` (or equivalent) before any insert into `user_items`, `user_powers`, etc. See git history for 2026-03-02 user_profiles timestamp fix.
 - **Profile not found:** Ensure a row exists in `user_profiles` for the user’s `id` (auth.uid()); the app creates it on first login or before library writes.
 
 ---

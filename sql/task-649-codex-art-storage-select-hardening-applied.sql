@@ -1,8 +1,8 @@
 -- TASK-649 Phase 2 — codex-art storage SELECT hardening (D4)
 -- =============================================================================
 -- Status: APPLIED 2026-08-03 on RealmsRPG-Test
--- Project: RealmsRPG-Test (lbqhiwudvifmkjtkccdg)
--- Audit ref: archive/CODEBASE_AUDIT_2026-08-01.md §5.2 D4
+-- Project: RealmsRPG-Test (RealmsRPG-Test project)
+-- Audit ref: Aug 2026 codebase audit (removed from repo; git history) §5.2 D4
 --
 -- Finding: Public bucket `codex-art` has broad SELECT policy
 -- "Codex art is publicly readable" (qual: bucket_id = 'codex-art'), which allows

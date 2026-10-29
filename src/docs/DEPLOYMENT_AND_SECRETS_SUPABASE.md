@@ -85,7 +85,7 @@ Downloads all objects from `portraits` and `profile-pictures` to `backups/storag
 npm run backup:all
 ```
 
-All app tables live in the **public** schema. **Schema reference:** [SUPABASE_SCHEMA.md](SUPABASE_SCHEMA.md). **Which SQL to run and in what order:** [sql/README.md](../../sql/README.md). Run SQL in Supabase Dashboard → SQL Editor.
+All app tables live in the **public** schema. **Schema reference:** [SUPABASE_SCHEMA.md](SUPABASE_SCHEMA.md). **Which SQL to run and in what order:** [sql/README.md](../../sql/README.md). Run SQL in owner-approved database apply (see 07-database-operations.md).
 
 ---
 
@@ -100,12 +100,12 @@ The app uses two buckets for image uploads. **Create these in Supabase Dashboard
 
 ### RLS Policies
 
-Enable RLS on each bucket. The app needs **SELECT, INSERT, UPDATE, and DELETE** for portrait uploads (list existing, remove old file, then upload/upsert). The canonical policy set is in **`sql/supabase-storage-policies.sql`** — run that file in Supabase Dashboard → SQL Editor.
+Enable RLS on each bucket. The app needs **SELECT, INSERT, UPDATE, and DELETE** for portrait uploads (list existing, remove old file, then upload/upsert). The canonical policy set is in **`sql/supabase-storage-policies.sql`** — run that file in owner-approved database apply (see 07-database-operations.md).
 
 - **Read (SELECT):** Authenticated users may list/read only their own path (not bucket-wide). Public **read-by-key** (images in the UI) uses **Public bucket** CDN URLs from `getPublicUrl`, not bucket-wide Storage SELECT.
 - **Insert/Update/Delete:** Only the user’s own path (`portraits`: first folder = `auth.uid()`; `profile-pictures`: filename prefix = `auth.uid()`)
 
-**Create buckets:** In Supabase Dashboard → Storage → New bucket, create `portraits` and `profile-pictures`. Enable public access if you want public URLs (the app uses `getPublicUrl`). Then run **`sql/supabase-storage-policies.sql`** in the SQL Editor.
+**Create buckets:** In Supabase Dashboard → Storage → New bucket, create `portraits` and `profile-pictures`. Enable public access if you want public URLs (the app uses `getPublicUrl`). Then run **`sql/supabase-storage-policies.sql`** with owner approval (see guide/07-database-operations.md).
 
 **Security hardening (TASK-326):** After the base storage policies, run **`sql/supabase-storage-select-hardening-2026-06.sql`** to remove bucket-wide public SELECT (prevents Storage API listing). Keep both buckets marked **Public bucket** so direct object URLs still load in the app.
 
@@ -165,7 +165,7 @@ Frontend: `/register`, `/login`, and `/forgot-password` render `AuthTurnstile` w
 Admins are configured in `public.user_profiles`:
 
 1. Find user ID in Supabase Authentication → Users.
-2. Set `user_profiles.role = 'admin'` for that user (SQL Editor or admin UI).
+2. Set `user_profiles.role = 'admin'` for that user (owner-approved admin UI or migration).
 
 See `ADMIN_SETUP.md` for current implementation.
 
@@ -215,7 +215,7 @@ On the free tier, watch **Edge Requests**, **Fast Data Transfer** (CDN → users
 
 App code mounts Vercel Web Analytics in the root layout (`src/app/layout.tsx` → `<Analytics />` from `@vercel/analytics/next`). No env vars are required.
 
-1. In the Vercel project → **Analytics** → **Enable** Web Analytics (Dashboard-only; see **DEV-006** in `DEVELOPER_TASK_QUEUE.md`).
+1. In the Vercel project → **Analytics** → **Enable** Web Analytics (Dashboard-only; track as **DEV-006** in ClickUp).
 2. Deploy (or wait for the next production deploy) so `/_vercel/insights/*` routes are provisioned.
 3. Verify: open the live site, DevTools → Network → look for a same-origin `…/view` (or `/_vercel/insights/view`) request after navigation.
 4. **CSP:** `next.config.ts` builds policy from `src/lib/security/content-security-policy.ts`. Besides `'self'`, notable allowlists: `https://va.vercel-scripts.com` on `script-src` / `connect-src` (local/dev analytics debug); production Web Analytics uses same-origin `/_vercel/insights/*`. Sentry browser envelopes need `https://*.sentry.io`, `https://*.ingest.sentry.io`, and `https://*.ingest.us.sentry.io` on `connect-src` (CSP `*` is one label). Auth CAPTCHA (when enabled) needs `https://challenges.cloudflare.com` on `script-src`, `frame-src`, and `connect-src`. The toolbar websocket is `wss://ws-us3.pusher.com` on `connect-src`. `wss://*.vercel.live` does not match that host. Local `next dev` also allows `ws://localhost:*` and `ws://127.0.0.1:*`. Do not remove those hosts without re-checking analytics, Turnstile (if keys are set), the toolbar console, and error reporting in both environments.
@@ -249,8 +249,8 @@ Speed Insights is **not** installed unless separately prioritized (different pac
 
 If you want to set (or fix) schemas, tables, RLS, and Realtime in one go without tracking what’s already applied:
 
-1. Open **Supabase Dashboard → SQL Editor**.
-2. Paste and run the schema/RLS SQL files as needed (e.g. **`sql/path-c-phase0-consolidate-to-public.sql`** for full Path C setup, or **`sql/supabase-idempotent-full.sql`** if that file exists and matches your target state).
+1. Open **owner-approved database apply (see 07-database-operations.md)**.
+2. Paste and run the schema/RLS SQL files as needed (e.g. committed migrations listed in `sql/README.md` (Path C one-offs are historical)).
 
 Schema and RLS are applied by running SQL in the Dashboard; the app does **not** use Prisma or `prisma migrate`. After schema setup, run **`sql/supabase-storage-policies.sql`** once if you need Storage RLS for the `portraits` and `profile-pictures` buckets.
 
@@ -270,7 +270,7 @@ Schema and RLS are applied by running SQL in the Dashboard; the app does **not**
 All **codex_*** tables live in **public**. If you get 500:
 
 1. **GRANTs + RLS (most common):** The API uses the anon key. You need **table-level GRANT SELECT** for anon/authenticated and **RLS policies**. Without GRANTs you get `42501: permission denied for table codex_feats`.  
-   **Fix:** Run **`sql/supabase-codex-rls-public.sql`** in Supabase Dashboard → SQL Editor. It enables RLS and adds “Anyone can read” (SELECT TO public) on all codex_* and core_rules (and grants SELECT to anon/authenticated).
+   **Fix:** Run **`sql/supabase-codex-rls-public.sql`** in owner-approved database apply (see 07-database-operations.md). It enables RLS and adds “Anyone can read” (SELECT TO public) on all codex_* and core_rules (and grants SELECT to anon/authenticated).
 2. **Tables in public:** In Table Editor, confirm `public.codex_feats`, `codex_skills`, `codex_species`, `codex_traits`, `codex_parts`, `codex_properties`, `codex_equipment`, `codex_archetypes`, `codex_creature_feats`, and `core_rules` exist.
 3. **Connection / env:** Check `NEXT_PUBLIC_SUPABASE_URL` and `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_DEFAULT_KEY` (anon key) in Vercel.
 
@@ -281,7 +281,7 @@ The API returns a `hint` in the 500 body when it detects permission/RLS errors; 
 - **Response body:** Call `GET https://realmsrpg.com/api/codex?debug=1`. The 500 JSON will include `debug: { message, code }` with the real Postgres/Supabase error (e.g. `"permission denied for table codex_feats"`, or `"42P01"` for relation not found). Paste that when asking for help.
 - **Vercel:** Project → Logs → filter by `/api/codex`. Look for `[Codex API] Database error:` and the message that follows.
 - **Supabase:** Dashboard → **Logs** → Postgres (or API). Look for failed queries or RLS violations around the time of the request.
-- **RLS check:** In Supabase SQL Editor run:  
+- **RLS check:** In owner-approved database apply (see 07-database-operations.md) run:  
   `SET ROLE anon; SELECT * FROM public.codex_feats LIMIT 1;`  
   If that returns "permission denied" or 0 rows when the table has data, RLS is blocking anon. Re-run `sql/supabase-codex-rls-public.sql` and confirm each table has a policy (Table Editor → table → RLS policies).
 - **Script errors:** If the RLS script failed partway (e.g. a table name typo or missing table), later policies may not have been created. Re-run the script and note any red error lines; fix missing tables first, then run the script again.
@@ -290,7 +290,7 @@ The API returns a `hint` in the 500 body when it detects permission/RLS errors; 
 
 ### "column user_profiles.role does not exist"
 
-After adding user roles, the database must have the `role` column on `user_profiles`. Run SQL in Supabase Dashboard → SQL Editor (e.g. add `role` to `public.user_profiles` with type matching your enum and default `'new_player'`). Until applied, profile and admin features that read/write role may fail.
+After adding user roles, the database must have the `role` column on `user_profiles`. Run SQL in owner-approved database apply (see 07-database-operations.md) (e.g. add `role` to `public.user_profiles` with type matching your enum and default `'new_player'`). Until applied, profile and admin features that read/write role may fail.
 
 ---
 
@@ -301,7 +301,7 @@ If campaign roll log or character **HP/EN/AP** don’t update in real time and y
 - **Campaign roll log** (campaigns.campaign_rolls)
 - **HP, EN, and AP sync** between encounter combat and character sheets (users.characters)
 
-**Fix:** Run the Realtime/RLS block from your schema SQL (e.g. **`sql/supabase-rls-policies.sql`** or the Path C consolidation script) in Supabase Dashboard → SQL Editor. After Path C, all tables are in `public`; ensure Realtime publication includes `public.campaign_rolls` and `public.characters` and that RLS allows SELECT for the roles that need live updates.
+**Fix:** Run the Realtime/RLS block from your schema SQL (e.g. **`sql/supabase-rls-policies.sql`** or the Path C consolidation script) in owner-approved database apply (see 07-database-operations.md). After Path C, all tables are in `public`; ensure Realtime publication includes `public.campaign_rolls` and `public.characters` and that RLS allows SELECT for the roles that need live updates.
 
 ---
 

@@ -133,7 +133,7 @@ async function main() {
   }
   console.error(
     '\nEach line is a field the admin UI wrote as null while believing it changed something else — ' +
-      'check that the API projection for that table reads the column (see reports/audit-2026-08-13/13-codex-data-loss-determination.md).',
+      'check that the API projection for that table reads the column (see src/docs/SUPABASE_SCHEMA.md).',
   );
   process.exit(1);
 }

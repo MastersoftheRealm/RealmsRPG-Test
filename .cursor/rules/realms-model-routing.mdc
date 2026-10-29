@@ -1,5 +1,5 @@
 ---
-description: Which Cursor model slug to use for implement vs audit (Kadin 2026-10-11)
+description: Which Cursor model slug to use for implement vs PR Reviewer follow-up (Kadin 2026-10-11; PR Reviewer 2026-10-28)
 alwaysApply: true
 ---
 
@@ -20,4 +20,4 @@ alwaysApply: true
 
 **After a miss:** A cross-system or layout interaction steps up once (Composer → `grok-4.7-medium`, Medium → `grok-4.7-high`). Do not redo that bug on the same model. `grok-4.7-xhigh` only after High has failed, noted on the task.
 
-**Audit:** a different model from the implementer — `.cursor/commands/audit.md` (read-only; never `-fast`). Read the diff and the rules that diff touches. A re-audit checks only the failed point.
+**PR Reviewer:** a different bot with a different prompt than the coding bot — `src/docs/ai/PR_REVIEWER_BRIEF.md`. A follow-up review checks only the gap named in REQUEST CHANGES.

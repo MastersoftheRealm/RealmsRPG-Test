@@ -1,7 +1,7 @@
 -- TASK-919 — Thrown + Reach mechanic flags (preview only; owner approve before apply)
 -- Codex-data policy: audit → propose → owner "apply" → run once.
 --
--- Live audit 2026-09-03 (project lbqhiwudvifmkjtkccdg):
+-- Live audit 2026-09-03 (RealmsRPG-Test project):
 --   id 13 Range  mechanic=true
 --   id 25 Thrown mechanic=false
 --   id 41 Reach  mechanic=false
