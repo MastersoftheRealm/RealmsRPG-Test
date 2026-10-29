@@ -23,7 +23,7 @@ export const PRIVACY_COPY = {
   intro: [
     ['This is a plain-language document. For legal questions, contact us at ', email(), '.'],
     [
-      'This Privacy Policy explains how Kadin Brooksby, who runs Realms RPG on behalf of Masters of the Realms LLC, a Georgia limited liability company whose formation is pending with the Georgia Secretary of State ("we", "us" or "Realms"), handles information when you use realmsrpg.com and its apps and tools (the "Service"). "Realms RPG™" and "Realms: The Roleplaying Game™" are claimed, unregistered trademarks of ours.',
+      'This Privacy Policy explains how Masters of the Realms LLC, a Georgia limited liability company ("we", "us" or "Realms"), handles information when you use realmsrpg.com and its apps and tools (the "Service"). "Realms RPG™" and "Realms: The Roleplaying Game™" are claimed, unregistered trademarks of ours.',
     ],
   ],
   sections: [
@@ -246,7 +246,7 @@ export const PRIVACY_COPY = {
       blocks: [
         {
           type: 'paragraph',
-          segments: ['Realms RPG (Kadin Brooksby, for Masters of the Realms LLC)'],
+          segments: ['Masters of the Realms LLC'],
         },
         {
           type: 'paragraph',

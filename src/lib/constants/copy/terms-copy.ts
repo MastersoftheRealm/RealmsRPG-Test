@@ -28,7 +28,7 @@ export const TERMS_COPY = {
         {
           type: 'paragraph',
           segments: [
-            'These Terms of Service ("Terms") are an agreement between you and Kadin Brooksby, who runs Realms RPG on behalf of Masters of the Realms LLC, a Georgia limited liability company whose formation is pending with the Georgia Secretary of State ("we", "us" or "Realms"). They cover your use of realmsrpg.com and its apps and tools (the "Service"). By creating an account or using the Service, you agree to these Terms and to our ',
+            'These Terms of Service ("Terms") are an agreement between you and Masters of the Realms LLC, a Georgia limited liability company ("we", "us" or "Realms"). They cover your use of realmsrpg.com and its apps and tools (the "Service"). By creating an account or using the Service, you agree to these Terms and to our ',
             { kind: 'link', href: '/privacy', label: 'Privacy Policy' },
             ". If you don't agree, please don't use the Service.",
           ],
@@ -316,7 +316,7 @@ export const TERMS_COPY = {
       blocks: [
         {
           type: 'paragraph',
-          segments: ['Realms RPG (Kadin Brooksby, for Masters of the Realms LLC)'],
+          segments: ['Masters of the Realms LLC'],
         },
         {
           type: 'paragraph',
