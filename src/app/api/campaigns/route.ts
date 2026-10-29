@@ -9,6 +9,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { getSession } from '@/lib/supabase/session';
 import { buildRateLimitKey, resolveClientIp, standardLimiter } from '@/lib/rate-limit';
+import { campaignsListQuerySchema, validateQuery } from '@/lib/api-validation';
 import type { Campaign, CampaignSummary } from '@/types/campaign';
 import { normalizeCampaignRosterCharacters } from '@/lib/campaign-roster';
 import type { Tables } from '@/lib/supabase/database';
@@ -51,8 +52,11 @@ export async function GET(request: NextRequest) {
       );
     }
 
+    const queryResult = validateQuery(request, campaignsListQuerySchema);
+    if (!queryResult.success) return queryResult.error;
+
     const userId = user.uid;
-    const full = request.nextUrl.searchParams.get('full') === 'true';
+    const full = queryResult.data.full === 'true';
     const supabase = await createClient();
 
     const { data: memberRows, error: memberErr } = await supabase

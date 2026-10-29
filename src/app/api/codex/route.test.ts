@@ -276,7 +276,10 @@ describe('GET /api/codex', () => {
     const response = await GET(new Request('http://localhost/api/codex?collection=secrets'));
 
     expect(response.status).toBe(400);
-    await expect(response.json()).resolves.toEqual({ error: 'Unknown codex collection' });
+    await expect(response.json()).resolves.toMatchObject({
+      error: 'Validation failed',
+      details: ['collection: Unknown codex collection'],
+    });
     expect(queriedTables).toEqual([]);
   });
 

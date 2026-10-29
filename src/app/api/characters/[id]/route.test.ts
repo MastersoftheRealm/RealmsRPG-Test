@@ -25,16 +25,6 @@ vi.mock('@/lib/rate-limit', async (importOriginal) => {
   };
 });
 
-// verifyMutationRequest stays real so the same-origin guard is exercised.
-vi.mock('@/lib/api-validation', async (importOriginal) => {
-  const actual = await importOriginal<typeof import('@/lib/api-validation')>();
-  return {
-    ...actual,
-    validateJson: vi.fn(),
-    characterUpdateSchema: {},
-  };
-});
-
 vi.mock('@/lib/character-save', () => ({
   prepareCharacterForSave: vi.fn((data: unknown) => data),
 }));
@@ -56,13 +46,11 @@ import { getSession } from '@/lib/supabase/session';
 import { createClient } from '@/lib/supabase/server';
 import { emptyCharacterViewEnrichment } from '@/lib/character-view-enrichment';
 import { getOwnerLibraryAndEnrichmentForView } from '@/lib/character-view-enrichment-server';
-import { validateJson } from '@/lib/api-validation';
 import { standardLimiter } from '@/lib/rate-limit';
 
 const mockGetSession = vi.mocked(getSession);
 const mockCreateClient = vi.mocked(createClient);
 const mockGetOwnerLibraryAndEnrichmentForView = vi.mocked(getOwnerLibraryAndEnrichmentForView);
-const mockValidateJson = vi.mocked(validateJson);
 const mockStandardLimiterCheck = vi.mocked(standardLimiter.check);
 
 const OWNER = { uid: 'owner-user', email: 'owner@example.com' };
@@ -380,10 +368,6 @@ describe('PATCH /api/characters/[id]', () => {
       remaining: 29,
       reset: Date.now() + 60_000,
     });
-    mockValidateJson.mockResolvedValue({
-      success: true,
-      data: { name: 'Updated Hero' },
-    } as never);
   });
 
   it('returns 401 when session is missing', async () => {
@@ -431,11 +415,6 @@ describe('PATCH /api/characters/[id]', () => {
     mockGetSession.mockResolvedValue({ user: OWNER, error: null });
     const supabase = createMockSupabase(row);
     mockCreateClient.mockResolvedValue(supabase as never);
-    mockValidateJson.mockResolvedValue({
-      success: true,
-      data: { name: 'Updated Hero' },
-    } as never);
-
     const response = await PATCH(makePatchRequest('char-owned', { name: 'Updated Hero' }), {
       params: Promise.resolve({ id: 'char-owned' }),
     });
@@ -456,11 +435,6 @@ describe('PATCH /api/characters/[id]', () => {
     mockGetSession.mockResolvedValue({ user: OWNER, error: null });
     const supabase = createMockSupabase(row);
     mockCreateClient.mockResolvedValue(supabase as never);
-    mockValidateJson.mockResolvedValue({
-      success: true,
-      data: { name: 'Stale write', updatedAt: '2026-01-01T00:00:00.000Z' },
-    } as never);
-
     const response = await PATCH(
       makePatchRequest('char-owned', {
         name: 'Stale write',
@@ -479,11 +453,6 @@ describe('PATCH /api/characters/[id]', () => {
     mockGetSession.mockResolvedValue({ user: OWNER, error: null });
     const supabase = createMockSupabase(row);
     mockCreateClient.mockResolvedValue(supabase as never);
-    mockValidateJson.mockResolvedValue({
-      success: true,
-      data: { notes: 'fresh', updatedAt: row.updated_at },
-    } as never);
-
     const response = await PATCH(
       makePatchRequest('char-owned', { notes: 'fresh', updatedAt: row.updated_at }),
       { params: Promise.resolve({ id: 'char-owned' }) },
@@ -503,13 +472,6 @@ describe('PATCH /api/characters/[id]', () => {
     mockGetSession.mockResolvedValue({ user: OWNER, error: null });
     const supabase = createMockSupabase(row);
     mockCreateClient.mockResolvedValue(supabase as never);
-    mockValidateJson.mockResolvedValue({
-      success: true,
-      data: {
-        portrait: 'https://cdn.test/storage/v1/object/public/realms-images/library.png',
-      },
-    } as never);
-
     const response = await PATCH(
       makePatchRequest('char-owned', {
         portrait: 'https://cdn.test/storage/v1/object/public/realms-images/library.png',
@@ -529,11 +491,6 @@ describe('PATCH /api/characters/[id]', () => {
     mockGetSession.mockResolvedValue({ user: OWNER, error: null });
     const supabase = createMockSupabase(row);
     mockCreateClient.mockResolvedValue(supabase as never);
-    mockValidateJson.mockResolvedValue({
-      success: true,
-      data: { portrait: stored },
-    } as never);
-
     const response = await PATCH(makePatchRequest('char-owned', { portrait: stored }), {
       params: Promise.resolve({ id: 'char-owned' }),
     });

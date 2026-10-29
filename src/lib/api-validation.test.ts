@@ -5,8 +5,10 @@ import { z } from 'zod';
 import {
   readBodyWithLimit,
   validateJson,
+  validateQuery,
   verifyMutationRequest,
   verifyRequestOrigin,
+  campaignsListQuerySchema,
 } from './api-validation';
 
 const schema = z.object({ name: z.string().min(1) });
@@ -204,5 +206,25 @@ describe('validateJson', () => {
 
     expect(result.success).toBe(false);
     if (!result.success) expect(result.error.status).toBe(400);
+  });
+});
+
+describe('validateQuery', () => {
+  it('rejects unknown query keys with strict schemas', () => {
+    const request = new NextRequest('http://localhost/api/campaigns?full=true&extra=1', {
+      headers: { host: 'localhost' },
+    });
+    const result = validateQuery(request, campaignsListQuerySchema);
+    expect(result.success).toBe(false);
+    if (!result.success) expect(result.error.status).toBe(400);
+  });
+
+  it('accepts allowed query keys', () => {
+    const request = new NextRequest('http://localhost/api/campaigns?full=true', {
+      headers: { host: 'localhost' },
+    });
+    const result = validateQuery(request, campaignsListQuerySchema);
+    expect(result.success).toBe(true);
+    if (result.success) expect(result.data.full).toBe('true');
   });
 });

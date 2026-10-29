@@ -8,7 +8,13 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { getSession } from '@/lib/supabase/session';
 import { removeUndefined } from '@/lib/utils/object';
-import { validateJson, verifyMutationRequest, encounterUpdateSchema } from '@/lib/api-validation';
+import {
+  validateJson,
+  verifyMutationRequest,
+  encounterUpdateSchema,
+  resourceIdParamSchema,
+  validateRouteParams,
+} from '@/lib/api-validation';
 import { apiErrorResponse, logApiError } from '@/lib/api-error';
 import { buildRateLimitKey, resolveClientIp, standardLimiter } from '@/lib/rate-limit';
 import type { Encounter } from '@/types/encounter';
@@ -20,7 +26,9 @@ export async function GET(_request: Request, { params }: { params: Promise<{ id:
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const { id } = await params;
+    const paramResult = await validateRouteParams(params, resourceIdParamSchema);
+    if (!paramResult.success) return paramResult.error;
+    const { id } = paramResult.data;
     const supabase = await createClient();
     const { data: row, error: dbError } = await supabase
       .from('encounters')
@@ -79,7 +87,9 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
       );
     }
 
-    const { id } = await params;
+    const paramResult = await validateRouteParams(params, resourceIdParamSchema);
+    if (!paramResult.success) return paramResult.error;
+    const { id } = paramResult.data;
     const supabase = await createClient();
     const { data: row, error: fetchError } = await supabase
       .from('encounters')
@@ -158,7 +168,9 @@ export async function DELETE(
       );
     }
 
-    const { id } = await params;
+    const paramResult = await validateRouteParams(params, resourceIdParamSchema);
+    if (!paramResult.success) return paramResult.error;
+    const { id } = paramResult.data;
     const supabase = await createClient();
     const { data: row, error: fetchError } = await supabase
       .from('encounters')

@@ -10,6 +10,12 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createClient, createServiceRoleClient } from '@/lib/supabase/server';
 import { getSession } from '@/lib/supabase/session';
 import { isCharacterOnCampaignRoster } from '@/lib/campaign-roster';
+import {
+  campaignCharacterRouteParamsSchema,
+  campaignCharacterViewQuerySchema,
+  validateQuery,
+  validateRouteParams,
+} from '@/lib/api-validation';
 import { computeMaxHealthEnergy } from '@/lib/game/calculations';
 import { fetchCoreRules } from '@/lib/core-rules-server';
 import { getOwnerLibraryAndEnrichmentForView } from '@/lib/character-view-enrichment-server';
@@ -20,13 +26,19 @@ export async function GET(
   { params }: { params: Promise<{ id: string; userId: string; characterId: string }> },
 ) {
   try {
-    const { id: campaignId, userId, characterId } = await params;
-    const { user } = await getSession();
-    const scope = request.nextUrl.searchParams.get('scope');
+    const paramResult = await validateRouteParams(params, campaignCharacterRouteParamsSchema);
+    if (!paramResult.success) return paramResult.error;
+    const { id: campaignId, userId, characterId } = paramResult.data;
 
+    const queryResult = validateQuery(request, campaignCharacterViewQuerySchema);
+    if (!queryResult.success) return queryResult.error;
+
+    const { user } = await getSession();
     if (!user?.uid) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
+
+    const forEncounter = queryResult.data.scope === 'encounter';
 
     const supabase = await createClient();
 
@@ -59,7 +71,6 @@ export async function GET(
       return NextResponse.json({ error: 'You are not in this campaign' }, { status: 403 });
     }
 
-    const forEncounter = scope === 'encounter';
     const isOwner = user.uid === userId;
 
     const { data: charRowUser, error: charErr } = await supabase

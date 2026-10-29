@@ -21,25 +21,13 @@ vi.mock('@/lib/rate-limit', async (importOriginal) => {
   };
 });
 
-// verifyMutationRequest stays real so the same-origin guard is exercised.
-vi.mock('@/lib/api-validation', async (importOriginal) => {
-  const actual = await importOriginal<typeof import('@/lib/api-validation')>();
-  return {
-    ...actual,
-    validateJson: vi.fn(),
-    craftingSessionUpdateSchema: {},
-  };
-});
-
 import { GET, PATCH, DELETE } from './route';
 import { getSession } from '@/lib/supabase/session';
 import { createClient } from '@/lib/supabase/server';
-import { validateJson } from '@/lib/api-validation';
 import { standardLimiter } from '@/lib/rate-limit';
 
 const mockGetSession = vi.mocked(getSession);
 const mockCreateClient = vi.mocked(createClient);
-const mockValidateJson = vi.mocked(validateJson);
 const mockStandardLimiterCheck = vi.mocked(standardLimiter.check);
 
 const OWNER = { uid: 'owner-user', email: 'owner@example.com' };
@@ -177,16 +165,12 @@ describe('PATCH /api/crafting/[id]', () => {
       remaining: 29,
       reset: Date.now() + 60_000,
     });
-    mockValidateJson.mockResolvedValue({
-      success: true,
-      data: { status: 'in-progress' },
-    } as never);
   });
 
   it('returns 401 when session is missing', async () => {
     mockGetSession.mockResolvedValue({ user: null, error: 'No session' });
 
-    const response = await PATCH(makePatchRequest('craft-1', { status: 'in-progress' }), {
+    const response = await PATCH(makePatchRequest('craft-1', { status: 'in_progress' }), {
       params: Promise.resolve({ id: 'craft-1' }),
     });
 
@@ -199,7 +183,7 @@ describe('PATCH /api/crafting/[id]', () => {
     mockGetSession.mockResolvedValue({ user: OTHER, error: null });
     mockCreateClient.mockResolvedValue(createMockSupabase(row) as never);
 
-    const response = await PATCH(makePatchRequest('craft-private', { status: 'in-progress' }), {
+    const response = await PATCH(makePatchRequest('craft-private', { status: 'in_progress' }), {
       params: Promise.resolve({ id: 'craft-private' }),
     });
 
@@ -212,11 +196,23 @@ describe('PATCH /api/crafting/[id]', () => {
     mockGetSession.mockResolvedValue({ user: OWNER, error: null });
     mockCreateClient.mockResolvedValue(createMockSupabase(row) as never);
 
-    const response = await PATCH(makePatchRequest('craft-owned', { status: 'in-progress' }), {
+    const response = await PATCH(makePatchRequest('craft-owned', { status: 'in_progress' }), {
       params: Promise.resolve({ id: 'craft-owned' }),
     });
 
     expect(response.status).toBe(204);
+  });
+
+  it('returns 400 when the JSON body fails schema validation', async () => {
+    const row = makeCraftingRow('craft-owned', OWNER.uid);
+    mockGetSession.mockResolvedValue({ user: OWNER, error: null });
+    mockCreateClient.mockResolvedValue(createMockSupabase(row) as never);
+
+    const response = await PATCH(makePatchRequest('craft-owned', { status: 'not-valid' }), {
+      params: Promise.resolve({ id: 'craft-owned' }),
+    });
+
+    expect(response.status).toBe(400);
   });
 });
 

@@ -9,7 +9,13 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { getSession } from '@/lib/supabase/session';
-import { validateJson, verifyMutationRequest, characterUpdateSchema } from '@/lib/api-validation';
+import {
+  validateJson,
+  verifyMutationRequest,
+  characterUpdateSchema,
+  resourceIdParamSchema,
+  validateRouteParams,
+} from '@/lib/api-validation';
 import { prepareCharacterForSave } from '@/lib/character-save';
 import { applyCharacterDirtyPatch, isStaleCharacterWrite } from '@/lib/character/dirty-patch';
 import {
@@ -51,16 +57,15 @@ function rowToCharacter(row: CharRow): Character {
 export async function GET(_request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
     const { user } = await getSession();
-    const { id } = await params;
-    if (!id?.trim()) {
-      return NextResponse.json({ error: 'Invalid character ID' }, { status: 400 });
-    }
+    const paramResult = await validateRouteParams(params, resourceIdParamSchema);
+    if (!paramResult.success) return paramResult.error;
+    const { id } = paramResult.data;
 
     const supabase = await createClient();
     const { data: row, error: rowErr } = await supabase
       .from('characters')
       .select('id, user_id, data, created_at, updated_at, visibility')
-      .eq('id', id.trim())
+      .eq('id', id)
       .maybeSingle();
     if (rowErr) throw rowErr;
 
@@ -160,10 +165,9 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
       );
     }
 
-    const { id } = await params;
-    if (!id?.trim()) {
-      return NextResponse.json({ error: 'Invalid character ID' }, { status: 400 });
-    }
+    const paramResult = await validateRouteParams(params, resourceIdParamSchema);
+    if (!paramResult.success) return paramResult.error;
+    const { id } = paramResult.data;
 
     const validation = await validateJson(request, characterUpdateSchema);
     if (!validation.success) return validation.error;
@@ -175,7 +179,7 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
     const { data: existing, error: existingErr } = await supabase
       .from('characters')
       .select('id, data, updated_at')
-      .eq('id', id.trim())
+      .eq('id', id)
       .eq('user_id', user.uid)
       .maybeSingle();
     if (existingErr) throw existingErr;
@@ -200,7 +204,7 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
     let updateQuery = supabase
       .from('characters')
       .update({ data: mergedData, updated_at: now, ...listCols })
-      .eq('id', id.trim())
+      .eq('id', id)
       .eq('user_id', user.uid);
     if (expectedUpdatedAt && currentUpdatedAt) {
       updateQuery = updateQuery.eq('updated_at', currentUpdatedAt);
@@ -266,16 +270,15 @@ export async function DELETE(
       );
     }
 
-    const { id } = await params;
-    if (!id?.trim()) {
-      return NextResponse.json({ error: 'Invalid character ID' }, { status: 400 });
-    }
+    const paramResult = await validateRouteParams(params, resourceIdParamSchema);
+    if (!paramResult.success) return paramResult.error;
+    const { id } = paramResult.data;
 
     const supabase = await createClient();
     const { data: existing, error: existingErr } = await supabase
       .from('characters')
       .select('id')
-      .eq('id', id.trim())
+      .eq('id', id)
       .eq('user_id', user.uid)
       .maybeSingle();
     if (existingErr) throw existingErr;
@@ -306,7 +309,7 @@ export async function DELETE(
     const { error: delErr } = await supabase
       .from('characters')
       .delete()
-      .eq('id', id.trim())
+      .eq('id', id)
       .eq('user_id', user.uid);
     if (delErr) throw delErr;
 

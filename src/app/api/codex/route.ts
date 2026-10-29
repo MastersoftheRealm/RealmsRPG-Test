@@ -4,7 +4,7 @@
  * columnar tables (see src/docs/SUPABASE_SCHEMA.md).
  */
 
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import { isAdmin } from '@/lib/admin';
 import { fromPublicTable, type TypedSupabaseClient } from '@/lib/supabase/database';
 import {
@@ -16,6 +16,7 @@ import {
 import { createPublicClient } from '@/lib/supabase/public-client';
 import { createClient } from '@/lib/supabase/server';
 import { logApiError } from '@/lib/api-error';
+import { codexGetQuerySchema, validateQuery } from '@/lib/api-validation';
 import { getSession } from '@/lib/supabase/session';
 import { coerceJsonRecord, parseArchetypePathData } from '@/lib/game/archetype-path';
 import { fetchCoreRules } from '@/lib/core-rules-server';
@@ -34,13 +35,8 @@ import {
   toNum,
   toStrArray,
 } from '@/lib/codex/row-map';
-import { parseCatalogListing, wantsIncludeUnlisted } from '@/lib/library/catalog-listing';
-import {
-  CODEX_PAYLOAD_KEYS,
-  isCodexPayloadKey,
-  type CodexPayload,
-  type CodexPayloadKey,
-} from '@/types/codex';
+import { parseCatalogListing } from '@/lib/library/catalog-listing';
+import { CODEX_PAYLOAD_KEYS, type CodexPayload, type CodexPayloadKey } from '@/types/codex';
 import { CODEX_DATA_TABLES, type CodexDataTable } from '@/lib/codex/codex-tables';
 import { CODEX_API_TABLE_SELECT, omitCodexSourcesColumn } from '@/lib/codex/public-table-select';
 import {
@@ -491,21 +487,19 @@ async function canExposeCodexDebug(requested: boolean): Promise<boolean> {
   return user?.uid ? isAdmin(user.uid) : false;
 }
 
-export async function GET(request: Request) {
-  const url = new URL(request.url);
-  const debug = url.searchParams.get('debug') === '1';
-  const collection = url.searchParams.get('collection');
-  if (collection !== null && !isCodexPayloadKey(collection)) {
-    return NextResponse.json(
-      { error: 'Unknown codex collection' },
-      { status: 400, headers: { 'Cache-Control': PRIVATE_NO_STORE_CACHE_CONTROL } },
-    );
+export async function GET(request: NextRequest | Request) {
+  const queryResult = validateQuery(request, codexGetQuerySchema);
+  if (!queryResult.success) {
+    return queryResult.error;
   }
+  const query = queryResult.data;
+  const debug = query.debug === '1';
+  const collection = query.collection;
   const keys: ReadonlySet<CodexPayloadKey> = collection
     ? new Set([collection])
     : new Set(CODEX_PAYLOAD_KEYS);
   try {
-    const includeUnlistedRequested = wantsIncludeUnlisted(url.searchParams);
+    const includeUnlistedRequested = query.includeUnlisted === '1';
     let includeUnlisted = false;
     if (includeUnlistedRequested) {
       const { user } = await getSession();

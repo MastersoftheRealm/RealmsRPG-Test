@@ -11,7 +11,14 @@ import { isAdmin } from '@/lib/admin';
 import { createClient, createServiceRoleClient } from '@/lib/supabase/server';
 import { REALMS_IMAGES_BUCKET, parseRealmsImageCategories } from '@/lib/realms-images';
 import { apiErrorResponse, logApiError } from '@/lib/api-error';
-import { readJsonBodyWithLimit, verifyMutationRequest } from '@/lib/api-validation';
+import {
+  parseValidatedJsonBody,
+  realmsImagePatchSchema,
+  resourceIdParamSchema,
+  readJsonBodyWithLimit,
+  validateRouteParams,
+  verifyMutationRequest,
+} from '@/lib/api-validation';
 import { clearRealmsImageRefs } from '@/lib/realms-image-consumers';
 import { fetchRealmsImageById, replaceImageCategories } from '@/lib/realms-images-server';
 
@@ -21,10 +28,9 @@ type RouteContext = { params: Promise<{ id: string }> };
 
 export async function GET(_request: NextRequest, context: RouteContext) {
   try {
-    const { id } = await context.params;
-    if (!id?.trim()) {
-      return NextResponse.json({ error: 'id required' }, { status: 400 });
-    }
+    const paramResult = await validateRouteParams(context.params, resourceIdParamSchema);
+    if (!paramResult.success) return paramResult.error;
+    const { id } = paramResult.data;
 
     // Public reads: cookie-aware anon/authenticated client so RLS governs visibility (SEC audit M3).
     const supabase = await createClient();
@@ -57,24 +63,15 @@ export async function PATCH(request: NextRequest, context: RouteContext) {
   if (denied) return denied;
 
   try {
-    const { id } = await context.params;
-    if (!id?.trim()) {
-      return NextResponse.json({ error: 'id required' }, { status: 400 });
-    }
+    const paramResult = await validateRouteParams(context.params, resourceIdParamSchema);
+    if (!paramResult.success) return paramResult.error;
+    const { id } = paramResult.data;
 
     const read = await readJsonBodyWithLimit(request);
     if (!read.success) return read.error;
-    const body = read.body as {
-      name?: unknown | undefined;
-      categories?: unknown | undefined;
-    } | null;
-    if (
-      !body ||
-      typeof body !== 'object' ||
-      (body.name === undefined && body.categories === undefined)
-    ) {
-      return NextResponse.json({ error: 'name and/or categories required' }, { status: 400 });
-    }
+    const parsed = parseValidatedJsonBody(read.body, realmsImagePatchSchema);
+    if (!parsed.success) return parsed.error;
+    const body = parsed.data;
 
     const supabase = createServiceRoleClient();
     const existing = await fetchRealmsImageById(supabase, id);
@@ -83,9 +80,6 @@ export async function PATCH(request: NextRequest, context: RouteContext) {
     }
 
     if (body.name !== undefined) {
-      if (typeof body.name !== 'string' || !body.name.trim()) {
-        return NextResponse.json({ error: 'name must be a non-empty string' }, { status: 400 });
-      }
       const { error } = await supabase
         .from('realms_images')
         .update({ name: body.name.trim(), updated_at: new Date().toISOString() })
@@ -143,10 +137,9 @@ export async function DELETE(_request: NextRequest, context: RouteContext) {
   if (denied) return denied;
 
   try {
-    const { id } = await context.params;
-    if (!id?.trim()) {
-      return NextResponse.json({ error: 'id required' }, { status: 400 });
-    }
+    const paramResult = await validateRouteParams(context.params, resourceIdParamSchema);
+    if (!paramResult.success) return paramResult.error;
+    const { id } = paramResult.data;
 
     const supabase = createServiceRoleClient();
     const existing = await fetchRealmsImageById(supabase, id);

@@ -6,6 +6,7 @@ import {
   readStoredCodexChangelogEntityName,
 } from '@/lib/codex-changelog-display';
 import { createServiceRoleClient } from '@/lib/supabase/server';
+import { adminChangelogsQuerySchema, validateQuery } from '@/lib/api-validation';
 import {
   buildRateLimitKey,
   resolveClientIp,
@@ -14,19 +15,6 @@ import {
 } from '@/lib/rate-limit';
 
 export const dynamic = 'force-dynamic';
-
-const ALLOWED_ENTITY_TYPES = new Set<string>([
-  'codex_feats',
-  'codex_skills',
-  'codex_species',
-  'codex_traits',
-  'codex_parts',
-  'codex_properties',
-  'codex_equipment',
-  'codex_archetypes',
-  'codex_creature_feats',
-  'core_rules',
-]);
 
 type ChangeLogRow = {
   id: string;
@@ -111,12 +99,11 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    const params = request.nextUrl.searchParams;
-    const entityType = params.get('entityType') ?? 'codex_feats';
-    if (!ALLOWED_ENTITY_TYPES.has(entityType)) {
-      return NextResponse.json({ error: 'Invalid entityType' }, { status: 400 });
-    }
-    const limit = toValidLimit(params.get('limit'));
+    const queryResult = validateQuery(request, adminChangelogsQuerySchema);
+    if (!queryResult.success) return queryResult.error;
+    const entityType = queryResult.data.entityType ?? 'codex_feats';
+    const limitRaw = queryResult.data.limit;
+    const limit = limitRaw ? toValidLimit(limitRaw) : toValidLimit(null);
 
     const supabase = createServiceRoleClient();
     const { data, error } = await supabase

@@ -7,7 +7,12 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient, createServiceRoleClient } from '@/lib/supabase/server';
 import { getSession } from '@/lib/supabase/session';
-import { validateJson, campaignRollCreateSchema } from '@/lib/api-validation';
+import {
+  validateJson,
+  campaignRollCreateSchema,
+  campaignRollRouteParamsSchema,
+  validateRouteParams,
+} from '@/lib/api-validation';
 import { standardLimiter, buildRateLimitKey, resolveClientIp } from '@/lib/rate-limit';
 import { MAX_CAMPAIGN_ROLLS } from '@/app/(main)/campaigns/constants';
 import { realmMasterRolledForCharacter } from '@/lib/rolls/campaign-roll-attribution';
@@ -59,7 +64,9 @@ export async function GET(_request: Request, { params }: { params: Promise<{ id:
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const { id: campaignId } = await params;
+    const paramResult = await validateRouteParams(params, campaignRollRouteParamsSchema);
+    if (!paramResult.success) return paramResult.error;
+    const { id: campaignId } = paramResult.data;
     const supabase = await createClient();
 
     const { data: campaign, error: campaignError } = await supabase
@@ -172,7 +179,9 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
       );
     }
 
-    const { id: campaignId } = await params;
+    const paramResult = await validateRouteParams(params, campaignRollRouteParamsSchema);
+    if (!paramResult.success) return paramResult.error;
+    const { id: campaignId } = paramResult.data;
     const supabase = await createClient();
 
     const { data: campaign, error: campaignError } = await supabase
