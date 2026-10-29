@@ -25,9 +25,9 @@ import {
   verifyMutationRequest,
   publicItemSchema,
   officialCatalogListingPatchSchema,
+  officialItemIdQuerySchema,
   officialLibraryTypeParamSchema,
   includeUnlistedQuerySchema,
-  uuidQuerySchema,
   validateQuery,
   validateRouteParams,
 } from '@/lib/api-validation';
@@ -57,6 +57,7 @@ type OfficialType = z.infer<typeof officialLibraryTypeParamSchema>['type'];
 const TABLE_MAP: Record<Exclude<OfficialType, 'species'>, string> = {
   powers: 'official_powers',
   techniques: 'official_techniques',
+  'empowered-techniques': 'official_empowered_techniques',
   items: 'official_items',
   creatures: 'official_creatures',
 };
@@ -508,7 +509,7 @@ export async function DELETE(
     if (!paramResult.success) return paramResult.error;
     const { type } = paramResult.data;
 
-    const queryResult = validateQuery(_request, uuidQuerySchema);
+    const queryResult = validateQuery(_request, officialItemIdQuerySchema);
     if (!queryResult.success) return queryResult.error;
     const { id } = queryResult.data;
 

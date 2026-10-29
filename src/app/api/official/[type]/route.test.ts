@@ -23,6 +23,11 @@ vi.mock('@/lib/entity-image-enrich-server', () => ({
   enrichRowsWithBankImageUrls: vi.fn(() => Promise.resolve()),
 }));
 
+vi.mock('@/lib/codex/id-allocation', () => ({
+  allocateCodexNumericId: vi.fn(),
+  retireCodexId: vi.fn(() => Promise.resolve()),
+}));
+
 import {
   PRIVATE_MUST_REVALIDATE_CACHE_CONTROL,
   PRIVATE_NO_STORE_CACHE_CONTROL,
@@ -105,6 +110,38 @@ describe('GET /api/official/[type]', () => {
     expect(mockGetSession).not.toHaveBeenCalled();
     expect(mockCreateClient).not.toHaveBeenCalled();
     expect(response.headers.get('Cache-Control')).toBe(PRIVATE_MUST_REVALIDATE_CACHE_CONTROL);
+  });
+
+  it('accepts empowered-techniques as an official library type (not 400 Invalid type)', async () => {
+    const supabase = createListSupabase();
+    mockCreatePublicClient.mockReturnValue(supabase as never);
+
+    const response = await GET(
+      makeGetRequest('empowered-techniques'),
+      params('empowered-techniques'),
+    );
+
+    expect(response.status).toBe(200);
+  });
+
+  it('rejects unknown query keys with 400', async () => {
+    const response = await GET(
+      makeGetRequest('powers', '?includeUnlisted=1&extra=1'),
+      params('powers'),
+    );
+
+    expect(response.status).toBe(400);
+  });
+
+  it('allows includeUnlisted=1 for admin session reads', async () => {
+    const supabase = createListSupabase();
+    mockCreateClient.mockResolvedValue(supabase as never);
+    mockGetSession.mockResolvedValue({ user: USER, error: null });
+    mockIsAdmin.mockResolvedValue(true);
+
+    const response = await GET(makeGetRequest('powers', '?includeUnlisted=1'), params('powers'));
+
+    expect(response.status).toBe(200);
   });
 
   it('sets public CDN cache headers when listed powers exist', async () => {
@@ -456,5 +493,29 @@ describe('DELETE /api/official/[type]', () => {
     expect(response.status).toBe(403);
     await expect(readJson(response)).resolves.toEqual({ error: 'Admin only' });
     expect(mockCreateServiceRoleClient).not.toHaveBeenCalled();
+  });
+
+  it('deletes species by non-UUID codex id', async () => {
+    mockRequireLiveUser.mockResolvedValue(USER);
+    mockIsAdmin.mockResolvedValue(true);
+
+    const deleteChain = {
+      eq: vi.fn(function eq() {
+        return deleteChain;
+      }),
+      select: vi.fn(() => Promise.resolve({ data: [{ id: '7' }], error: null })),
+    };
+    const supabase = {
+      from: vi.fn(() => ({
+        delete: vi.fn(() => deleteChain),
+      })),
+    };
+    mockCreateServiceRoleClient.mockReturnValue(supabase as never);
+
+    const response = await DELETE(makeDeleteRequest('species', '7'), params('species'));
+
+    expect(response.status).toBe(200);
+    expect(supabase.from).toHaveBeenCalledWith('codex_species');
+    expect(deleteChain.eq).toHaveBeenCalledWith('id', '7');
   });
 });

@@ -24,10 +24,9 @@ export const API_INPUT_VALIDATION_JSON_EXEMPT_HANDLERS = [
   'images/[id]/replace/route.ts (POST)',
   'upload/portrait/route.ts (POST)',
   'upload/profile-picture/route.ts (POST)',
-  'upload/profile-picture/route.ts (DELETE)',
 ] as const;
 
-/** GET handlers with no query or route-param reads (auth-only). */
+/** GET handlers with no query or route-param reads (auth-only). Bodyless mutations with no query/params too. */
 export const API_INPUT_VALIDATION_NO_INPUT_HANDLERS = [
   'admin/check/route.ts (GET)',
   'crafting/route.ts (GET)',
@@ -39,7 +38,7 @@ export const API_INPUT_VALIDATION_NO_INPUT_HANDLERS = [
   'user/enhanced-items/route.ts (GET)',
   'user/library/counts/route.ts (GET)',
   'admin/users/route.ts (GET)',
-  'images/[id]/usage/route.ts (GET)',
+  'upload/profile-picture/route.ts (DELETE)',
 ] as const;
 
 export type ApiInputValidationExemptHandler =

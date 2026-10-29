@@ -280,6 +280,7 @@ describe('GET /api/codex', () => {
       error: 'Validation failed',
       details: ['collection: Unknown codex collection'],
     });
+    expect(response.headers.get('Cache-Control')).toBe(PRIVATE_NO_STORE_CACHE_CONTROL);
     expect(queriedTables).toEqual([]);
   });
 

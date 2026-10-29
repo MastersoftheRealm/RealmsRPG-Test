@@ -26,17 +26,17 @@ export async function GET(
   { params }: { params: Promise<{ id: string; userId: string; characterId: string }> },
 ) {
   try {
+    const { user } = await getSession();
+    if (!user?.uid) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
     const paramResult = await validateRouteParams(params, campaignCharacterRouteParamsSchema);
     if (!paramResult.success) return paramResult.error;
     const { id: campaignId, userId, characterId } = paramResult.data;
 
     const queryResult = validateQuery(request, campaignCharacterViewQuerySchema);
     if (!queryResult.success) return queryResult.error;
-
-    const { user } = await getSession();
-    if (!user?.uid) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
 
     const forEncounter = queryResult.data.scope === 'encounter';
 

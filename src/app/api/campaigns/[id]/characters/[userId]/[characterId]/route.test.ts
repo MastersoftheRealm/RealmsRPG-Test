@@ -218,6 +218,18 @@ describe('GET /api/campaigns/[id]/characters/[userId]/[characterId]', () => {
     expect(mockGetOwnerLibraryAndEnrichmentForView).not.toHaveBeenCalled();
   });
 
+  it('returns 401 before query validation when session is missing', async () => {
+    mockGetSession.mockResolvedValue({ user: null, error: 'No session' });
+
+    const url = new URL(
+      `http://localhost/api/campaigns/${CAMPAIGN_ID}/characters/${PLAYER.uid}/${CHARACTER_ID}`,
+    );
+    url.searchParams.set('scope', 'not-a-valid-scope');
+    const response = await GET(new NextRequest(url), routeParams());
+
+    expect(response.status).toBe(401);
+  });
+
   it('returns the full sheet to a campaign member when visibility is campaign (86e39knu2)', async () => {
     stubAuthedClient({ user: MEMBER });
 

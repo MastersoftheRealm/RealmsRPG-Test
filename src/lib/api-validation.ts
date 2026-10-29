@@ -753,7 +753,14 @@ export const realmsImagePatchSchema = z
 
 export const officialLibraryTypeParamSchema = z
   .object({
-    type: z.enum(['powers', 'techniques', 'items', 'creatures', 'species']),
+    type: z.enum(['powers', 'techniques', 'empowered-techniques', 'items', 'creatures', 'species']),
+  })
+  .strict();
+
+/** DELETE /api/official/[type]?id= — codex_species and columnar ids are not always UUIDs. */
+export const officialItemIdQuerySchema = z
+  .object({
+    id: z.string().trim().min(1, 'Missing id'),
   })
   .strict();
 

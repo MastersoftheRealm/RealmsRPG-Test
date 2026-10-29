@@ -174,4 +174,14 @@ describe('GET /api/campaigns', () => {
     expect(body[0]?.id).toBe('camp-1');
     expect(body[0]?.isOwner).toBe(true);
   });
+
+  it('returns 400 for unknown query keys', async () => {
+    mockGetSession.mockResolvedValue({ user: OWNER, error: null });
+
+    const response = await GET(
+      new NextRequest('http://localhost/api/campaigns?full=true&unknown=1'),
+    );
+
+    expect(response.status).toBe(400);
+  });
 });

@@ -490,6 +490,7 @@ async function canExposeCodexDebug(requested: boolean): Promise<boolean> {
 export async function GET(request: NextRequest | Request) {
   const queryResult = validateQuery(request, codexGetQuerySchema);
   if (!queryResult.success) {
+    queryResult.error.headers.set('Cache-Control', PRIVATE_NO_STORE_CACHE_CONTROL);
     return queryResult.error;
   }
   const query = queryResult.data;
