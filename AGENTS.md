@@ -17,7 +17,7 @@ Every fact lives in exactly one authoritative file; other docs **link** to it in
 
 ## Deferred code areas
 
-Do not copy patterns from paths listed in root [`DEFERRED.md`](DEFERRED.md); use them only for bug fixes in those areas. Remove an entry from `DEFERRED.md` when the area is reworked.
+Copy-from rule and folder list: root [`DEFERRED.md`](DEFERRED.md).
 
 ## On demand
 

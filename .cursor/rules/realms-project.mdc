@@ -17,4 +17,4 @@ alwaysApply: true
 
 **Terms:** RM (Realm Master), never GM. Do not invent formulas, names, lore, or flavor.
 
-**Deferred areas:** Do not copy patterns from paths in root `DEFERRED.md`; use them only for their own bug fixes. Remove an entry when the area is reworked.
+**Deferred areas:** Root `DEFERRED.md`.

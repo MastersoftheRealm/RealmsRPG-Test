@@ -5,7 +5,7 @@ alwaysApply: true
 
 # AI Policy (RealmsRPG)
 
-AI agents (Cursor and Grok bots) must follow the ClickUp wiki **[Using AI at Realms](https://app.clickup.com/9017636492/docs/8cqwdmc-3357/8cqwdmc-517)** (creative constraints). **Workflow** (task order, PR process, models): root `AGENTS.md` and `.cursor/rules/realms-tasks.mdc` — authority map in `src/docs/ai/ARCHITECTURE_CONSTITUTION.md` (**Source of truth**). [Realms Dev Workflow](https://docs.google.com/document/d/1F6iZUKP9nN0YTFzOkZ6Y82sySaw0iW101f_a-7ZeQdI/edit) §6 item 2 aligns with the wiki; when Drive and a repo copy conflict, **Drive wins** (fix the repo).
+AI agents (Cursor and Grok bots) must follow the ClickUp wiki **[Using AI at Realms](https://app.clickup.com/9017636492/docs/8cqwdmc-3357/8cqwdmc-517)** (creative constraints). **Workflow** (task order, PR process, models, Drive vs repo): root `AGENTS.md`, `.cursor/rules/realms-tasks.mdc`, and `src/docs/ai/ARCHITECTURE_CONSTITUTION.md` (**Source of truth**). [Realms Dev Workflow](https://docs.google.com/document/d/1F6iZUKP9nN0YTFzOkZ6Y82sySaw0iW101f_a-7ZeQdI/edit) §6 item 2 aligns with the wiki.
 
 **Never generate:** art, images, creative names, item names, feat renames, plot, lore, or flavor text.
 
