@@ -79,7 +79,7 @@ function LegalBlockView({ block }: { block: LegalBlock }) {
         </p>
       );
     case 'subheading':
-      return <p className="mb-2 font-semibold text-text-primary">{block.text}</p>;
+      return <h3 className="mb-2 font-semibold text-text-primary">{block.text}</h3>;
     case 'ul':
       return (
         <div className="mb-3">
