@@ -47,6 +47,58 @@ export function argHasSourcePathString(arg) {
   return false;
 }
 
+/** @param {string} literal */
+export function isFixturePathLiteral(literal) {
+  if (/\.(?:json|csv|txt|snap)$/i.test(literal)) return true;
+  if (/fixtures?\//i.test(literal)) return true;
+  if (/tests\//i.test(literal) && /\.(?:json|csv|txt|snap)$/i.test(literal)) return true;
+  return false;
+}
+
+/** @param {string} text */
+export function fileHasSourceLikePathLiterals(text) {
+  const re = /(['"`])((?:\\.|(?!\1)[^\\])*)\1/g;
+  let m;
+  while ((m = re.exec(text))) {
+    if (isSourceLikePathLiteral(m[2])) return true;
+  }
+  return false;
+}
+
+/**
+ * Whether a local read-helper invocation plausibly reads repo source (not fixtures/json/csv).
+ *
+ * @param {string} arg first argument to the helper call
+ * @param {string} fileText entire test file
+ */
+export function helperInvocationArgCountsAsSource(arg, fileText) {
+  const literals = extractStringLiterals(arg);
+  if (literals.length > 0) {
+    if (literals.every((lit) => isFixturePathLiteral(lit))) return false;
+    if (argHasSourcePathString(arg)) return true;
+    if (literals.some((lit) => isFixturePathLiteral(lit))) return false;
+    return pathArgLooksLikeSourceRead(arg, '', fileText);
+  }
+  if (/^[a-zA-Z_$][\w$]*$/.test(arg.trim())) {
+    if (filePathLiteralsAreOnlyJsonFixtures(fileText)) return false;
+    return fileHasSourceLikePathLiterals(fileText);
+  }
+  return (
+    pathArgLooksLikeSourceRead(arg, '', fileText) ||
+    variableOnlyJoinReadCountsAsSource(arg, fileText)
+  );
+}
+
+/**
+ * Never-called local read helpers: count only when the file context is source-read oriented.
+ *
+ * @param {string} fileText
+ */
+export function neverCalledReadWrapperCountsAsSource(fileText) {
+  if (filePathLiteralsAreOnlyJsonFixtures(fileText)) return false;
+  return fileHasSourceLikePathLiterals(fileText);
+}
+
 /** @param {string} text entire test file */
 export function filePathLiteralsAreOnlyJsonFixtures(text) {
   const re = /(['"`])((?:\\.|(?!\1)[^\\])*)\1/g;
@@ -201,10 +253,16 @@ export function countSourceReadsInTestText(text, testRelPath = '') {
       const line = text.slice(lineStart, lineEnd === -1 ? text.length : lineEnd);
       if (/function\s+\w+\s*\(/.test(line)) continue;
       if (/(?:const|let)\s+\w+\s*=/.test(line) && /=>/.test(line)) continue;
+      const open = m.index + m[0].length - 1;
+      const close = indexOfMatchingParen(text, open);
+      if (close === -1) continue;
+      const inner = text.slice(open + 1, close);
+      const arg = firstCallArgument(inner);
+      if (!helperInvocationArgCountsAsSource(arg, text)) continue;
       invokeCount += 1;
       sites.add(`wrap:${name}:${m.index}`);
     }
-    if (invokeCount === 0) {
+    if (invokeCount === 0 && neverCalledReadWrapperCountsAsSource(text)) {
       sites.add(`wrapdef:${name}`);
     }
   }

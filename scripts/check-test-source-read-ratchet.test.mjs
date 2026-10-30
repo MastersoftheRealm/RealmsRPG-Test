@@ -127,6 +127,50 @@ read('components/ui/modal.tsx');
 read('components/ui/button.tsx');`;
     expect(countSourceReadsInTestText(text, 'src/sheet.test.ts')).toBe(2);
   });
+
+  it('does not count fixture helper calls (json/csv) through local readFileSync join helpers', () => {
+    const text = `import { readFileSync } from 'node:fs';
+import path from 'node:path';
+const dir = import.meta.dirname;
+function loadFixture(name) {
+  return readFileSync(path.join(dir, name));
+}
+loadFixture('sample.json');
+loadFixture('sample.csv');`;
+    expect(countSourceReadsInTestText(text, 'src/foo.test.ts')).toBe(0);
+  });
+
+  it('still counts source paths passed to local readFileSync join helpers', () => {
+    const text = `import { readFileSync } from 'node:fs';
+import path from 'node:path';
+const dir = import.meta.dirname;
+function loadFile(name) {
+  return readFileSync(path.join(dir, name));
+}
+loadFile('src/app/page.tsx');`;
+    expect(countSourceReadsInTestText(text, 'src/foo.test.ts')).toBe(1);
+  });
+
+  it('counts never-called source-oriented read helper (wrapdef)', () => {
+    const text = `import { readFileSync } from 'node:fs';
+import path from 'node:path';
+const root = import.meta.dirname;
+function readRepoFile(rel) {
+  return readFileSync(path.join(root, rel), 'utf8');
+}
+readFileSync(path.join(process.cwd(), 'src/app/layout.tsx'), 'utf8');`;
+    expect(countSourceReadsInTestText(text, 'src/glr.test.ts')).toBe(2);
+  });
+
+  it('does not emit wrapdef for fixture-only never-called helper', () => {
+    const text = `import { readFileSync } from 'node:fs';
+import path from 'node:path';
+const dir = import.meta.dirname;
+function loadFixture(name) {
+  return readFileSync(path.join(dir, name));
+}`;
+    expect(countSourceReadsInTestText(text, 'src/foo.test.ts')).toBe(0);
+  });
 });
 
 describe('diffTestSourceReadRatchet', () => {
