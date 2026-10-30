@@ -4,6 +4,11 @@ import { describe, expect, it } from 'vitest';
 import { rollButtonVariants } from '../patterns/chrome/roll-button';
 import { buttonVariants } from './button';
 import { iconButtonVariants } from './icon-button';
+import {
+  GRID_LIST_ROW_ICON_COLUMN_WIDTH,
+  GRID_LIST_ROW_SELECTION_COLUMN_WIDTH,
+  GRID_LIST_INLINE_SELECTION_COLUMN_TRACK,
+} from '../patterns/list/grid-list-row-chrome';
 
 const usmFooterSource = readFileSync(
   path.join(import.meta.dirname, '../patterns/select/unified-selection-modal-footer.tsx'),
@@ -201,19 +206,14 @@ describe('ADR-0023 header / grid selection / combatant compact (TASK-851)', () =
       path.join(import.meta.dirname, '../patterns/list/grid-list-row-collapsed.tsx'),
       'utf8',
     );
-    const chrome = readFileSync(
-      path.join(import.meta.dirname, '../patterns/list/grid-list-row-chrome.ts'),
-      'utf8',
-    );
     const toggle = readFileSync(
       path.join(import.meta.dirname, '../patterns/select/selection-toggle.tsx'),
       'utf8',
     );
     expect(collapsed).not.toMatch(/min-h-\[44px\] w-11 min-w-\[44px\]/);
     expect(collapsed).not.toMatch(/minWidth: GRID_LIST_ROW_SELECTION_COLUMN_WIDTH/);
-    expect(chrome).toMatch(
-      /GRID_LIST_ROW_SELECTION_COLUMN_WIDTH = GRID_LIST_ROW_ICON_COLUMN_WIDTH/,
-    );
+    expect(GRID_LIST_ROW_SELECTION_COLUMN_WIDTH).toBe(GRID_LIST_ROW_ICON_COLUMN_WIDTH);
+    expect(GRID_LIST_INLINE_SELECTION_COLUMN_TRACK).toBe(GRID_LIST_ROW_SELECTION_COLUMN_WIDTH);
     expect(toggle).toContain('touchFloor="coarse"');
   });
 

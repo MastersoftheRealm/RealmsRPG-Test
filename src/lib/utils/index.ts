@@ -13,7 +13,6 @@ export {
   indexDisplayNamesByNormalizedIds,
   normalizeId,
   resolveNormalizedRefList,
-  rowMatchesNormalizedId,
 } from './normalize-id';
 export type { NormalizedIdRow } from './normalize-id';
 export * from './string';

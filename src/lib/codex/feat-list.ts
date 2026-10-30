@@ -47,8 +47,6 @@ export const CODEX_FEAT_HEADER_COLUMNS = codexFeatChrome.headers.map(({ key, lab
   label,
 }));
 
-export const ADMIN_FEAT_HEADER_COLUMNS = CODEX_FEAT_HEADER_COLUMNS;
-
 /** Codex browse headers with USM/L3 sortable + align (TASK-709). */
 export const FEAT_SELECTABLE_HEADER_COLUMNS = CODEX_FEAT_HEADER_COLUMNS.map((h) => ({
   key: h.key,
