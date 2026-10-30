@@ -291,8 +291,6 @@ export function calculateCurrencyCostAndRarity(
 }
 
 // Legacy alias
-export const calculateGoldCostAndRarity = calculateCurrencyCostAndRarity;
-
 /** Normalize API / UI property refs (string name or object with optional id, name, op_1_lvl) for lookups. */
 function normalizeItemPropertyRef(ref: unknown): ItemPropertyPayload {
   if (typeof ref === 'string') return { name: ref };

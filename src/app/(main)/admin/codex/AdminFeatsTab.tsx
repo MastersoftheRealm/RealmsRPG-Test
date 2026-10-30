@@ -27,7 +27,7 @@ import {
   getFeatLevel,
 } from '@/lib/leveled-feats';
 import {
-  ADMIN_FEAT_HEADER_COLUMNS,
+  CODEX_FEAT_HEADER_COLUMNS,
   FEAT_GRID_COLUMNS,
   buildFeatFilterOptions,
   featPathChipNames,
@@ -347,7 +347,7 @@ export function AdminFeatsTab() {
             />
           </div>
         }
-        headerColumns={ADMIN_FEAT_HEADER_COLUMNS}
+        headerColumns={CODEX_FEAT_HEADER_COLUMNS}
         gridColumns={FEAT_GRID_COLUMNS}
         sortState={sortState}
         onSort={handleSort}

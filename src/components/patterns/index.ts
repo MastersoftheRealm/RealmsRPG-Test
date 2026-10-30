@@ -31,12 +31,10 @@ export {
   DefenseStatTile,
   ABILITY_ORDER,
   ABILITY_INFO,
-  DEFENSE_INFO,
   ABILITY_CONSTRAINTS,
   SHEET_STAT_GRID_CLASS,
   SHEET_STAT_TILE_CLASS,
   SHEET_STAT_TIP_CLASS,
-  SHEET_SCORE_TIP_CLASS,
   canDecreaseAbility,
   SHEET_ABILITY_MAX,
   sheetAbilityBudgetHint,
@@ -75,7 +73,6 @@ export { ExpandableImage } from './help/expandable-image';
 export type { ExpandableImageProps } from './help/expandable-image';
 
 // DetailOptionList — elongated deep-dive / trait catalog rows (GuidedEntityDetailModal, species modal)
-export { DetailOptionList } from './list/detail-option-list';
 export type { DetailOptionItem, DetailOptionListProps } from './list/detail-option-list';
 
 // SectionCostBadge - EN/TP/IP cost display next to section labels
@@ -105,13 +102,9 @@ export type {
 export { ListHeader } from './list/list-header';
 export type { ListHeaderProps, ListColumn, ListHeaderRowChrome } from './list/list-header';
 export {
-  gridTemplateColumnsWithThumbnail,
-  prependThumbnailHeaderColumn,
   gridColumnsWithInlineSelection,
-  GRID_LIST_INLINE_SELECTION_COLUMN_TRACK,
   GRID_LIST_ROW_ACTION_ICON_BUTTON_SIZE,
   GRID_LIST_ROW_ACTION_ICON_CLASS,
-  THUMBNAIL_HEADER_COLUMN_KEY,
   CHARACTER_SHEET_ENERGY_SPEND_ROW_CHROME,
 } from './list/grid-list-row-chrome';
 
@@ -153,7 +146,6 @@ export type { OfficialCreatureListProps, OfficialCreatureRow } from './list/offi
 export type { PartData } from '@/lib/chip/part-data';
 
 // GridListRow chip adapter
-export { GridListChip } from './list/grid-list-chip';
 export type { GridListChipProps } from './list/grid-list-chip';
 
 export { SummaryChipList } from './list/summary-chip-list';
@@ -188,16 +180,9 @@ export type { ErrorDisplayProps } from './list/list-components';
 export type { SortState } from './list/list-header';
 
 // Creature components
-export { CreatureStatBlock } from './list/creature-stat-block';
 export type { CreatureData, CreatureStatBlockProps } from './list/creature-stat-block';
-export {
-  CreatureLibraryStatBlockRow,
-  CreatureLibraryStatBlockRows,
-} from './list/creature-library-stat-block-rows';
-export {
-  LibraryAddToLibraryButton,
-  LibraryAddToCharacterButton,
-} from './list/library-add-to-library-button';
+export { CreatureLibraryStatBlockRows } from './list/creature-library-stat-block-rows';
+export { LibraryAddToCharacterButton } from './list/library-add-to-library-button';
 export { LibraryRowActionSlot } from './list/library-row-action-slot';
 
 // Entity library sections (shared list section renderers)
@@ -238,7 +223,6 @@ export type { QuickArmamentItem, QuickArmamentAbilities } from './list/quick-arm
 
 // SelectionToggle - The unified + → ✓ selection button
 // Use for ALL selection actions: add feats, select traits, pick equipment, etc.
-export { SelectionToggle } from './select/selection-toggle';
 export type { SelectionToggleProps } from './select/selection-toggle';
 
 // EquipToggle - Circle toggle for equipped state (armor, weapons)
@@ -256,7 +240,7 @@ export type {
 
 // QuantitySelector - Thin quantity wrapper over ValueStepper (ADR-0002)
 // Use for: equipment quantity, item counts, stacks
-export { QuantitySelector, QuantityBadge } from './select/quantity-selector';
+export { QuantitySelector } from './select/quantity-selector';
 export type { QuantitySelectorProps, QuantityBadgeProps } from './select/quantity-selector';
 
 // SegmentedControl — My Library / Realms / All toggles (library page, modals, SourceFilter)
@@ -270,13 +254,8 @@ export { SegmentedControl } from './chrome/segmented-control';
 
 export {
   ChipSelect,
-  AbilityRequirementFilter,
   type AbilityRequirement,
-  TagFilter,
-  SelectFilter,
-  CharacterFilter,
   type CharacterFilterProps,
-  PowerTechniqueFilters,
   type PowerTechniqueFiltersProps,
   SourceFilter,
   sourceFilterSummary,
@@ -315,6 +294,5 @@ export { MixedSpeciesModal } from './select/mixed-species-modal';
 export { MixedSpeciesSkillPicker } from './select/mixed-species-skill-picker';
 export { CreatorPortraitUpload } from './chrome/creator-portrait-upload';
 export { TraitSection } from './chrome/trait-section';
-export { ErrorBoundary } from './chrome/error-boundary';
-export { PathHelpCard, PathNotes, stripRedundantPathHelpLead } from './help/path-help-card';
+export { PathHelpCard, stripRedundantPathHelpLead } from './help/path-help-card';
 export type { PathHelpCardProps, PathNotesProps } from './help/path-help-card';

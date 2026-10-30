@@ -117,7 +117,6 @@ export type {
   CodexEquipmentItem,
   CodexCreatureFeat,
 } from './codex';
-export { CODEX_PAYLOAD_KEYS } from './codex';
 
 // Library (user + official GET /api/* library)
 export type {
@@ -131,7 +130,6 @@ export type {
   LibraryCreature,
   LibrarySaveBody,
 } from './library';
-export { LIBRARY_ITEM_TYPES } from './library';
 
 // Crafting + enhanced items
 export type {

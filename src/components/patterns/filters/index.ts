@@ -28,10 +28,6 @@ export { CharacterFilter, type CharacterFilterProps } from './character-filter';
 export { PowerTechniqueFilters, type PowerTechniqueFiltersProps } from './power-technique-filters';
 export { ArmamentFilters, type ArmamentFiltersProps } from './armament-filters';
 export {
-  dedupeSelectOptions,
-  dedupeStrings,
-  shouldShowSelectPlaceholder,
-  FILTER_CONTROL_CLASS,
   FILTER_CONTROL_ROW_CLASS,
   FILTER_LABEL_ROW_CLASS,
   type SelectOption,

@@ -6,7 +6,6 @@
 
 // Auth
 export { useAuth, useAuthStore } from './use-auth';
-export { useAuthCaptcha } from './use-auth-captcha';
 export { useAdmin } from './use-admin';
 export { useCreatorSave } from './use-creator-save';
 export type {
@@ -15,10 +14,7 @@ export type {
   UseCreatorSaveOptions,
   UseCreatorSaveReturn,
 } from './use-creator-save';
-export {
-  buildGuidedEquipmentEligibilityContext,
-  useGuidedEquipmentCatalog,
-} from './use-guided-equipment-catalog';
+export { useGuidedEquipmentCatalog } from './use-guided-equipment-catalog';
 export { useGuidedEquipmentL2Catalog } from './use-guided-equipment-l2-catalog';
 export { useLoadModalLibrary } from './use-load-modal-library';
 export type {
@@ -27,8 +23,6 @@ export type {
   UseLoadModalLibraryReturn,
   UseLoadModalLibraryOptions,
 } from './use-load-modal-library';
-export { useAddLibraryItemData } from './use-add-library-item-data';
-export { useAddToCharacterFromLibrary } from './use-add-to-character-from-library';
 export type {
   AddLibraryItemType,
   EqItem,
@@ -38,10 +32,6 @@ export type {
 } from './use-add-library-item-data';
 export { useProfile, useAccountProfile, type AccountProfile } from './use-profile';
 export { useIsClient } from './use-is-client';
-export { useBrowserOffline } from './use-browser-offline';
-export { usePlaceholderTheme } from './use-placeholder-theme';
-export { useEffectivePortrait } from './use-effective-portrait';
-export { usePortraitFallbackUrl } from './use-portrait-fallback-url';
 
 // Campaigns
 export {
@@ -93,10 +83,8 @@ export {
 export {
   useCharacters,
   useCharacter,
-  useSaveCharacter,
   useDeleteCharacter,
   useDuplicateCharacter,
-  characterKeys,
   characterViewerId,
   patchCharacterDetailQuery,
   invalidateCharacterLists,
@@ -104,8 +92,6 @@ export {
 
 // Codex Data (Supabase via API) — per-collection fetches under the ['codex'] key prefix (TASK-775)
 export {
-  codexKeys,
-  useCodexFull,
   useCodexFeats,
   useCodexSkills,
   useCodexSpecies as useSpecies,
@@ -120,13 +106,12 @@ export {
 } from './use-codex';
 export { useGameRules, getGameRulesFallback } from './use-game-rules';
 // Archetype Path recommendation index for list filters (ADR-0014)
-export { usePathRecommendationIndex, usePathListFilter } from './use-path-recommendation-index';
+export { usePathListFilter } from './use-path-recommendation-index';
 
 // Codex utilities (trait/skill resolution) — use use-codex types
 export {
   findTraitByIdOrName,
   resolveTraitIds,
-  resolveSkillIdsToNames,
   type Feat,
   type Skill,
   type Species,
@@ -157,7 +142,6 @@ export {
   useUserCreatures,
   useUserSpecies,
   useUserLibraryCounts,
-  userLibraryKeys,
   useMergedSpecies,
   userSpeciesToSpecies,
   useDeletePower,
@@ -180,17 +164,12 @@ export {
 } from './use-user-library';
 
 // Auto-save
-export { useAutoSave, AUTOSAVE_RETRY_DELAYS_MS, nextAutosaveRetryDelayMs } from './use-auto-save';
+export { useAutoSave } from './use-auto-save';
 export type { AutoSaveFlush } from './use-auto-save';
 export { useCharacterResourceSync } from './use-character-resource-sync';
 
 // Sort (shared list sorting logic)
-export { useSort, toggleSort, sortByColumn } from './use-sort';
-export { useModalListState } from './use-modal-list-state';
 export type { UseModalListStateOptions } from './use-modal-list-state';
 
 // Character sheet library UI
-export {
-  useLibrarySectionCollapse,
-  type LibrarySectionCollapseHeaderProps,
-} from './use-library-section-collapse';
+export { type LibrarySectionCollapseHeaderProps } from './use-library-section-collapse';

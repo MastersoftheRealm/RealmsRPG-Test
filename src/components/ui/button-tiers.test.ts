@@ -211,9 +211,7 @@ describe('ADR-0023 header / grid selection / combatant compact (TASK-851)', () =
     );
     expect(collapsed).not.toMatch(/min-h-\[44px\] w-11 min-w-\[44px\]/);
     expect(collapsed).not.toMatch(/minWidth: GRID_LIST_ROW_SELECTION_COLUMN_WIDTH/);
-    expect(chrome).toMatch(
-      /GRID_LIST_ROW_SELECTION_COLUMN_WIDTH = GRID_LIST_ROW_ICON_COLUMN_WIDTH/,
-    );
+    expect(chrome).toMatch(/GRID_LIST_ROW_SELECTION_COLUMN_WIDTH = '2\.25rem'/);
     expect(toggle).toContain('touchFloor="coarse"');
   });
 

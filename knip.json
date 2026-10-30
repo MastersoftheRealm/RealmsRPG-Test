@@ -27,6 +27,9 @@
     "playwright.auth.config.ts"
   ],
   "ignoreDependencies": ["postcss", "playwright"],
+  "ignoreIssues": {
+    "src/types/database.types.ts": ["exports", "types"]
+  },
   "ignoreExportsUsedInFile": {
     "interface": true,
     "type": true

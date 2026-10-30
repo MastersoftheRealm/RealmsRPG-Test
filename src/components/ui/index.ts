@@ -17,15 +17,7 @@ export { SearchInput } from './search-input';
 export { PageContainer, PAGE_FILLS_VIEWPORT_CLASSNAME, type ContainerSize } from './page-container';
 export { PageHeader } from './page-header';
 export { TableScroll } from './table-scroll';
-export {
-  Card,
-  CardHeader,
-  CardTitle,
-  CardDescription,
-  CardContent,
-  CardFooter,
-  cardVariants,
-} from './card';
+export { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from './card';
 export { SelectionCard, SelectionCardSurface } from './selection-card';
 
 // Chip/Badge components
