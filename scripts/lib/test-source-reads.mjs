@@ -12,7 +12,31 @@ const TEST_SOURCE_READ_RATCHET_IGNORED = new Set([
 /** Path roots that count as "source" when read from tests. */
 export const SOURCE_READ_ROOTS = ['src/', 'scripts/', 'sql/', '.github/'];
 
-const SOURCE_EXTENSIONS = /\.(tsx|ts|jsx|js|mjs|cjs|css|sql|mdx|yml|yaml)(['"`\)]|$)/i;
+const SOURCE_EXTENSIONS = /\.(tsx|ts|jsx|js|mjs|cjs|css|sql|mdx|mdc|yml|yaml)(['"`\)]|$)/i;
+
+/** @param {string} arg */
+function extractStringLiterals(arg) {
+  /** @type {string[]} */
+  const out = [];
+  const re = /(['"`])((?:\\.|(?!\1)[^\\])*)\1/g;
+  let m;
+  while ((m = re.exec(arg))) {
+    out.push(m[2]);
+  }
+  return out;
+}
+
+/** True when a quoted segment names a non-fixture source file (or require.resolve target). */
+export function argHasSourcePathString(arg) {
+  for (const literal of extractStringLiterals(arg)) {
+    if (/\.json$/i.test(literal)) continue;
+    if (/tests\//i.test(literal) || /fixtures?\//i.test(literal)) continue;
+    if (/\.(tsx|ts|jsx|js|mjs|cjs|css|sql|mdx|mdc|yaml|yml)$/i.test(literal)) return true;
+    if (/^\.\.?\/\S+/.test(literal) && !/\.json$/i.test(literal)) return true;
+    if (/^(src|scripts|sql|\.github)\//i.test(literal)) return true;
+  }
+  return false;
+}
 
 /** Call sites that may read source text (first argument is checked). */
 const SOURCE_READ_CALL_RES = [
@@ -20,7 +44,6 @@ const SOURCE_READ_CALL_RES = [
   /\bfs\.promises\.readFile\s*\(/g,
   /\bfs\.readFile\s*\(/g,
   /(?<![.\w])readFile\s*\(/g,
-  /\brequire\.resolve\s*\(/g,
 ];
 
 /**
@@ -84,6 +107,10 @@ function firstCallArgument(argsSlice) {
  * @param {string} fileText
  */
 export function pathArgLooksLikeSourceRead(arg, testRelPath, fileText) {
+  if (/require\.resolve\s*\(/i.test(arg)) {
+    return argHasSourcePathString(arg);
+  }
+
   if (/new URL\s*\(/i.test(arg)) {
     if (/\.json/i.test(arg)) return false;
     if (/tests\//i.test(arg)) return false;
@@ -99,9 +126,15 @@ export function pathArgLooksLikeSourceRead(arg, testRelPath, fileText) {
   if (/import\.meta\.(dirname|url)/i.test(arg)) return true;
   if (/process\.cwd\(\)/i.test(arg)) return true;
 
-  if (/^['"`][^'"`]*\/src\//i.test(arg) || /^['"`]\.\.\/.*\.(tsx|ts|jsx|js|css)/i.test(arg)) {
-    return true;
+  if (
+    /\.(?:join|resolve)\s*\(/i.test(arg) ||
+    /\bjoin\s*\(/i.test(arg) ||
+    /\bresolve\s*\(/i.test(arg)
+  ) {
+    if (argHasSourcePathString(arg)) return true;
   }
+
+  if (argHasSourcePathString(arg)) return true;
 
   if (/^['"`][^'"`]+['"`]$/.test(arg) && SOURCE_EXTENSIONS.test(arg)) {
     return !/\.json['"`]$/.test(arg);

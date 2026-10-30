@@ -67,9 +67,26 @@ fs.readFile(path.join(process.cwd(), 'src/app/page.tsx'), 'utf8', () => {});`;
     expect(countSourceReadsInTestText(text, 'src/app/page.test.ts')).toBe(1);
   });
 
-  it('counts require.resolve paths under src/', () => {
-    const text = `require.resolve('src/app/page.tsx');`;
+  it('counts require.resolve inside readFileSync', () => {
+    const text = `readFileSync(require.resolve('src/app/page.tsx'), 'utf8');`;
     expect(countSourceReadsInTestText(text, 'src/foo.test.ts')).toBe(1);
+  });
+
+  it('counts readFileSync(require.resolve relative path)', () => {
+    const text = `readFileSync(require.resolve('../app/page.tsx'), 'utf8');`;
+    expect(countSourceReadsInTestText(text, 'src/app/page.test.ts')).toBe(1);
+  });
+
+  it('counts path.join(variable, source.tsx)', () => {
+    const text = `const dir = import.meta.dirname;
+readFileSync(path.join(dir, 'codex-spreadsheet-table.tsx'), 'utf8');`;
+    expect(countSourceReadsInTestText(text, 'src/app/admin.test.ts')).toBe(1);
+  });
+
+  it('counts path.resolve(variable, source.tsx)', () => {
+    const text = `const root = import.meta.dirname;
+readFileSync(path.resolve(root, 'components/ui/modal.tsx'), 'utf8');`;
+    expect(countSourceReadsInTestText(text, 'src/components/modal.test.ts')).toBe(1);
   });
 
   it('skips committed *-baseline.json paths but not ordinary fixture json under tests/', () => {
