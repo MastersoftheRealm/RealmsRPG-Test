@@ -21,8 +21,6 @@ export { glrListChrome, type GlrExtraColumn, type GlrHeaderColumn } from './glr-
 
 export { chipLabelsFromDetailSections, type GlrRowFactSnapshot } from './validate-glr-facts';
 
-export {} from './glr-chrome-spacing-norms';
-
 export {
   type GlrChromeSpacingScanResult,
   type RowChromeFlags,

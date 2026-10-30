@@ -50,7 +50,7 @@ export const GRID_LIST_ROW_ACTION_ICON_CLASS = 'w-5 h-5';
 export const GRID_LIST_ROW_EXPANDED_BAND_CLASS = 'border-t border-border-light bg-surface-alt';
 
 /** Matches GridListRow selection column (IconButton md / 2.25rem). */
-export const GRID_LIST_ROW_SELECTION_COLUMN_WIDTH = '2.25rem';
+export const GRID_LIST_ROW_SELECTION_COLUMN_WIDTH = GRID_LIST_ROW_ICON_COLUMN_WIDTH;
 
 /**
  * Grid track appended for inline selection toggles — pair with `ListHeader hasSelectionColumn`
@@ -62,7 +62,7 @@ export const GRID_LIST_ROW_SELECTION_COLUMN_WIDTH = '2.25rem';
  * Encounter participant pick uses `AddCombatantModal` (non-USM; no GridListRow selection column).
  * Matches `GridListRow` inline selection wrapper.
  */
-export const GRID_LIST_INLINE_SELECTION_COLUMN_TRACK = '2.25rem';
+export const GRID_LIST_INLINE_SELECTION_COLUMN_TRACK = GRID_LIST_ROW_SELECTION_COLUMN_WIDTH;
 
 /** Append the standard inline selection column track (must match ListHeader `hasSelectionColumn`). */
 export function gridColumnsWithInlineSelection(gridColumns: string): string {

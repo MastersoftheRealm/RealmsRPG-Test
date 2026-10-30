@@ -28,7 +28,8 @@
   ],
   "ignoreDependencies": ["postcss", "playwright"],
   "ignoreIssues": {
-    "src/types/database.types.ts": ["exports", "types"]
+    "src/types/database.types.ts": ["exports", "types"],
+    "src/components/patterns/list/grid-list-row-chrome.ts": ["duplicates"]
   },
   "ignoreExportsUsedInFile": {
     "interface": true,
