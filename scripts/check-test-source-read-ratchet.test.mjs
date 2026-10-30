@@ -103,6 +103,30 @@ readFileSync(path.resolve(root, 'components/ui/modal.tsx'), 'utf8');`;
       ),
     ).toBe(0);
   });
+
+  it('does not count readFileSync(path.join(import.meta.dirname, "data.json"))', () => {
+    const text = `import { readFileSync } from 'node:fs';
+import path from 'node:path';
+readFileSync(path.join(import.meta.dirname, 'data.json'), 'utf8');`;
+    expect(countSourceReadsInTestText(text, 'src/foo.test.ts')).toBe(0);
+  });
+
+  it('does not count non-source relative paths like robots.txt', () => {
+    const text = `readFileSync(path.join(import.meta.dirname, '../public/robots.txt'), 'utf8');`;
+    expect(countSourceReadsInTestText(text, 'src/app/page.test.ts')).toBe(0);
+  });
+
+  it('counts local read(rel) helper invocations', () => {
+    const text = `import { readFileSync } from 'node:fs';
+import { join } from 'node:path';
+const root = import.meta.dirname;
+function read(rel: string) {
+  return readFileSync(join(root, rel), 'utf8');
+}
+read('components/ui/modal.tsx');
+read('components/ui/button.tsx');`;
+    expect(countSourceReadsInTestText(text, 'src/sheet.test.ts')).toBe(2);
+  });
 });
 
 describe('diffTestSourceReadRatchet', () => {
