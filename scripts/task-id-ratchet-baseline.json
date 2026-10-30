@@ -1,0 +1,1264 @@
+{
+  "files": {
+    "scripts/generate-db-types.mjs": {
+      "taskNumeric": 1
+    },
+    "scripts/provision-e2e-baseline.js": {
+      "taskNumeric": 1,
+      "devNumeric": 2
+    },
+    "scripts/validate-agent-docs.js": {
+      "taskNumeric": 1,
+      "devVerification": 2
+    },
+    "sql/schema/0000_baseline_2026-08-13.sql": {
+      "taskNumeric": 7
+    },
+    "src/app/(auth)/actions.ts": {
+      "clickupLegacy": 2
+    },
+    "src/app/(auth)/auth-actions.ts": {
+      "taskNumeric": 1
+    },
+    "src/app/(detail)/campaigns/[id]/_components/campaign-roll-log-scroll.ts": {
+      "clickupLegacy": 1
+    },
+    "src/app/(detail)/campaigns/[id]/view/[userId]/[characterId]/page.tsx": {
+      "taskNumeric": 2
+    },
+    "src/app/(detail)/characters/[id]/CharacterSheetModals.tsx": {
+      "taskNumeric": 1
+    },
+    "src/app/(detail)/characters/[id]/use-character-sheet-page-data.ts": {
+      "taskNumeric": 1
+    },
+    "src/app/(detail)/characters/[id]/use-character-sheet-page-ui.ts": {
+      "taskNumeric": 1
+    },
+    "src/app/(main)/admin/codex/AdminArchetypesTab.tsx": {
+      "taskNumeric": 1
+    },
+    "src/app/(main)/admin/codex/admin-archetype-editor-config.ts": {
+      "taskNumeric": 2
+    },
+    "src/app/(main)/admin/codex/admin-archetype-editor-level1.tsx": {
+      "taskNumeric": 2
+    },
+    "src/app/(main)/admin/codex/admin-archetype-editor.tsx": {
+      "taskNumeric": 2
+    },
+    "src/app/(main)/admin/codex/admin-archetype-path-form.ts": {
+      "taskNumeric": 2
+    },
+    "src/app/(main)/admin/codex/admin-archetype-workspace-mutators.ts": {
+      "taskNumeric": 1
+    },
+    "src/app/(main)/admin/codex/admin-archetype-workspace-open.ts": {
+      "taskNumeric": 1
+    },
+    "src/app/(main)/admin/codex/admin-archetype-workspace-save.ts": {
+      "taskNumeric": 1
+    },
+    "src/app/(main)/admin/codex/admin-archetype-workspace-unknown-selections.ts": {
+      "taskNumeric": 1
+    },
+    "src/app/(main)/admin/codex/admin-codex-copy-source-banner.tsx": {
+      "taskNumeric": 1
+    },
+    "src/app/(main)/admin/codex/admin-codex-copy-suffix.ts": {
+      "taskNumeric": 1
+    },
+    "src/app/(main)/admin/codex/admin-codex-edit-modal-footer.tsx": {
+      "taskNumeric": 1
+    },
+    "src/app/(main)/admin/codex/admin-codex-row-actions.tsx": {
+      "taskNumeric": 1
+    },
+    "src/app/(main)/admin/codex/admin-codex-unsaved-leave.ts": {
+      "clickupLegacy": 1
+    },
+    "src/app/(main)/admin/codex/admin-feat-edit-modal-fields.tsx": {
+      "clickupLegacy": 1
+    },
+    "src/app/(main)/admin/codex/admin-feat-form.ts": {
+      "taskNumeric": 1
+    },
+    "src/app/(main)/admin/codex/admin-part-form.ts": {
+      "taskNumeric": 1
+    },
+    "src/app/(main)/admin/codex/admin-property-form.ts": {
+      "taskNumeric": 1
+    },
+    "src/app/(main)/admin/codex/admin-species-form.ts": {
+      "taskNumeric": 1
+    },
+    "src/app/(main)/admin/codex/admin-trait-edit-modal.tsx": {
+      "taskNumeric": 1
+    },
+    "src/app/(main)/admin/codex/admin-trait-form.ts": {
+      "taskNumeric": 1
+    },
+    "src/app/(main)/admin/codex/codex-spreadsheet-config.ts": {
+      "taskNumeric": 1
+    },
+    "src/app/(main)/admin/codex/codex-spreadsheet-helpers.ts": {
+      "taskNumeric": 1
+    },
+    "src/app/(main)/admin/codex/codex-spreadsheet-table.tsx": {
+      "taskNumeric": 1
+    },
+    "src/app/(main)/admin/codex/codex-spreadsheet-toolbar.tsx": {
+      "taskNumeric": 2
+    },
+    "src/app/(main)/admin/codex/use-admin-archetype-selection-options.ts": {
+      "taskNumeric": 1
+    },
+    "src/app/(main)/admin/codex/use-admin-archetype-workspace.ts": {
+      "taskNumeric": 2
+    },
+    "src/app/(main)/admin/codex/use-admin-codex-entity.tsx": {
+      "taskNumeric": 1
+    },
+    "src/app/(main)/admin/codex/use-codex-spreadsheet.ts": {
+      "taskNumeric": 2
+    },
+    "src/app/(main)/admin/core-rules/core-rules-conditions.ts": {
+      "clickupLegacy": 1
+    },
+    "src/app/(main)/admin/core-rules/core-rules-number.ts": {
+      "clickupLegacy": 1
+    },
+    "src/app/(main)/admin/core-rules/core-rules-unsaved-leave.ts": {
+      "clickupLegacy": 1
+    },
+    "src/app/(main)/admin/core-rules/page.tsx": {
+      "taskNumeric": 1
+    },
+    "src/app/(main)/admin/images/admin-image-edit-modal.tsx": {
+      "taskNumeric": 1
+    },
+    "src/app/(main)/admin/images/page.tsx": {
+      "taskNumeric": 1
+    },
+    "src/app/(main)/admin/public-library/AdminPublicEnhancedItemsTab.tsx": {
+      "taskNumeric": 1
+    },
+    "src/app/(main)/admin/users/page.tsx": {
+      "clickupLegacy": 1
+    },
+    "src/app/(main)/campaigns/actions.ts": {
+      "taskNumeric": 1,
+      "clickupLegacy": 3
+    },
+    "src/app/(main)/characters/new/page.tsx": {
+      "taskNumeric": 1
+    },
+    "src/app/(main)/codex/CodexEquipmentTab.tsx": {
+      "taskNumeric": 1
+    },
+    "src/app/(main)/crafting/[id]/_components/crafting-adjustments-section.tsx": {
+      "taskNumeric": 1
+    },
+    "src/app/(main)/crafting/[id]/_components/crafting-item-options-section.tsx": {
+      "taskNumeric": 1
+    },
+    "src/app/(main)/crafting/[id]/_components/crafting-optional-rules-section.tsx": {
+      "taskNumeric": 1
+    },
+    "src/app/(main)/crafting/[id]/_components/crafting-outcome-card.tsx": {
+      "taskNumeric": 1
+    },
+    "src/app/(main)/crafting/[id]/_components/crafting-rolls-section.tsx": {
+      "taskNumeric": 1
+    },
+    "src/app/(main)/crafting/[id]/_components/crafting-summary-sidebar.tsx": {
+      "taskNumeric": 1
+    },
+    "src/app/(main)/crafting/[id]/_components/crafting-tool-helpers.ts": {
+      "taskNumeric": 1
+    },
+    "src/app/(main)/crafting/[id]/_components/use-crafting-tool-page.ts": {
+      "taskNumeric": 2
+    },
+    "src/app/(main)/crafting/[id]/page.tsx": {
+      "taskNumeric": 1
+    },
+    "src/app/(main)/crafting/crafting-bootstrap.ts": {
+      "taskNumeric": 1
+    },
+    "src/app/(main)/creature-creator/creature-creator-derived-stats.ts": {
+      "taskNumeric": 1
+    },
+    "src/app/(main)/creature-creator/creature-creator-editor-inventory-section.tsx": {
+      "taskNumeric": 3
+    },
+    "src/app/(main)/creature-creator/creature-creator-editor-loadout-sections.tsx": {
+      "taskNumeric": 1
+    },
+    "src/app/(main)/creature-creator/creature-creator-editor-traits-section.tsx": {
+      "taskNumeric": 1
+    },
+    "src/app/(main)/creature-creator/creature-creator-editor.tsx": {
+      "taskNumeric": 2
+    },
+    "src/app/(main)/creature-creator/creature-creator-feat-armament-display.ts": {
+      "taskNumeric": 1
+    },
+    "src/app/(main)/creature-creator/creature-creator-library-selectables.ts": {
+      "taskNumeric": 2
+    },
+    "src/app/(main)/creature-creator/creature-creator-remove-section-confirm-placeholder.ts": {
+      "clickupLegacy": 1,
+      "clickupCustom": 1
+    },
+    "src/app/(main)/creature-creator/creature-creator-skill-bonus.ts": {
+      "taskNumeric": 1
+    },
+    "src/app/(main)/creature-creator/creature-creator-summaries.ts": {
+      "taskNumeric": 1
+    },
+    "src/app/(main)/creature-creator/creature-skill-utils.ts": {
+      "taskNumeric": 1
+    },
+    "src/app/(main)/creature-creator/map-creature-inventory-rows.ts": {
+      "taskNumeric": 1
+    },
+    "src/app/(main)/creature-creator/page.tsx": {
+      "taskNumeric": 1
+    },
+    "src/app/(main)/creature-creator/transformers.ts": {
+      "taskNumeric": 1,
+      "clickupLegacy": 1
+    },
+    "src/app/(main)/creature-creator/use-creature-creator-workspace.ts": {
+      "taskNumeric": 3
+    },
+    "src/app/(main)/empowered-technique-creator/empowered-technique-bootstrap.ts": {
+      "clickupLegacy": 1
+    },
+    "src/app/(main)/empowered-technique-creator/empowered-technique-cost-derivation.ts": {
+      "taskNumeric": 2
+    },
+    "src/app/(main)/empowered-technique-creator/empowered-technique-creator-editor.tsx": {
+      "taskNumeric": 2
+    },
+    "src/app/(main)/empowered-technique-creator/empowered-technique-editor-config.ts": {
+      "taskNumeric": 1
+    },
+    "src/app/(main)/empowered-technique-creator/empowered-technique-part-actions.ts": {
+      "taskNumeric": 1
+    },
+    "src/app/(main)/empowered-technique-creator/page.tsx": {
+      "taskNumeric": 1
+    },
+    "src/app/(main)/empowered-technique-creator/use-empowered-technique-creator-workspace.ts": {
+      "taskNumeric": 2
+    },
+    "src/app/(main)/encounters/[id]/_components/CombatEncounterView.tsx": {
+      "taskNumeric": 1
+    },
+    "src/app/(main)/encounters/[id]/_components/SkillEncounterView.tsx": {
+      "taskNumeric": 1
+    },
+    "src/app/(main)/encounters/[id]/_components/combat/combat-add-sidebar.tsx": {
+      "taskNumeric": 1
+    },
+    "src/app/(main)/encounters/[id]/_components/combat/combat-combatant-list.tsx": {
+      "taskNumeric": 1
+    },
+    "src/app/(main)/encounters/[id]/_components/combat/combat-encounter-helpers.ts": {
+      "taskNumeric": 1
+    },
+    "src/app/(main)/encounters/[id]/_components/combat/combat-encounter-layout.ts": {
+      "clickupLegacy": 1
+    },
+    "src/app/(main)/encounters/[id]/_components/combat/combat-encounter-view-props.ts": {
+      "taskNumeric": 1
+    },
+    "src/app/(main)/encounters/[id]/_components/combat/combat-round-controls.tsx": {
+      "taskNumeric": 1
+    },
+    "src/app/(main)/encounters/[id]/_components/combat/use-combat-encounter-view.ts": {
+      "taskNumeric": 1
+    },
+    "src/app/(main)/encounters/[id]/_components/combat/use-combat-linked-character-sync.ts": {
+      "taskNumeric": 1
+    },
+    "src/app/(main)/encounters/[id]/_components/combat/use-combat-roster-actions.ts": {
+      "taskNumeric": 1
+    },
+    "src/app/(main)/encounters/[id]/_components/combat/use-combat-round-actions.ts": {
+      "clickupLegacy": 1
+    },
+    "src/app/(main)/encounters/[id]/_components/encounter-view-helpers.ts": {
+      "taskNumeric": 1
+    },
+    "src/app/(main)/encounters/[id]/_components/skill/skill-encounter-view-props.ts": {
+      "taskNumeric": 1
+    },
+    "src/app/(main)/encounters/[id]/_components/skill/skill-participant-card.tsx": {
+      "taskNumeric": 1
+    },
+    "src/app/(main)/encounters/[id]/_components/skill/skill-participant-list.tsx": {
+      "taskNumeric": 1
+    },
+    "src/app/(main)/encounters/[id]/_components/skill/skill-sidebar.tsx": {
+      "taskNumeric": 1
+    },
+    "src/app/(main)/encounters/[id]/_components/skill/skill-success-failure-tracker.tsx": {
+      "taskNumeric": 1
+    },
+    "src/app/(main)/encounters/[id]/_components/skill/skill-trackers-section.tsx": {
+      "taskNumeric": 1
+    },
+    "src/app/(main)/encounters/[id]/_components/skill/use-skill-encounter-view.ts": {
+      "taskNumeric": 1
+    },
+    "src/app/(main)/item-creator/item-creator-cost-derivation.ts": {
+      "taskNumeric": 1,
+      "clickupLegacy": 1
+    },
+    "src/app/(main)/item-creator/item-creator-editor-ability-properties.tsx": {
+      "taskNumeric": 1
+    },
+    "src/app/(main)/item-creator/item-creator-editor-armor.tsx": {
+      "taskNumeric": 1
+    },
+    "src/app/(main)/item-creator/item-creator-editor-config.ts": {
+      "taskNumeric": 1
+    },
+    "src/app/(main)/item-creator/item-creator-editor-meta.tsx": {
+      "taskNumeric": 2
+    },
+    "src/app/(main)/item-creator/item-creator-editor-shield-panels.tsx": {
+      "taskNumeric": 1
+    },
+    "src/app/(main)/item-creator/item-creator-editor-weapon-shield.tsx": {
+      "taskNumeric": 3
+    },
+    "src/app/(main)/item-creator/item-creator-editor.tsx": {
+      "taskNumeric": 2
+    },
+    "src/app/(main)/item-creator/item-creator-helpers.tsx": {
+      "taskNumeric": 1
+    },
+    "src/app/(main)/item-creator/item-creator-property-actions.ts": {
+      "taskNumeric": 1
+    },
+    "src/app/(main)/item-creator/item-creator-save-reset.ts": {
+      "clickupLegacy": 1
+    },
+    "src/app/(main)/item-creator/page.tsx": {
+      "taskNumeric": 1
+    },
+    "src/app/(main)/item-creator/use-item-creator-workspace.ts": {
+      "taskNumeric": 2
+    },
+    "src/app/(main)/library/LibraryEnhancedTab.tsx": {
+      "taskNumeric": 1
+    },
+    "src/app/(main)/library/components/UserLibraryEntityTabShell.tsx": {
+      "taskNumeric": 2
+    },
+    "src/app/(main)/library/library-guest-notice.tsx": {
+      "clickupLegacy": 1
+    },
+    "src/app/(main)/my-account/_components/account-danger-zone-card.tsx": {
+      "taskNumeric": 1
+    },
+    "src/app/(main)/my-account/_components/account-helpers.ts": {
+      "taskNumeric": 1
+    },
+    "src/app/(main)/my-account/_components/account-preferences-cards.tsx": {
+      "taskNumeric": 1
+    },
+    "src/app/(main)/my-account/_components/account-profile-card.tsx": {
+      "taskNumeric": 1
+    },
+    "src/app/(main)/my-account/_components/account-role-limits-card.tsx": {
+      "taskNumeric": 1
+    },
+    "src/app/(main)/my-account/_components/account-security-cards.tsx": {
+      "taskNumeric": 1
+    },
+    "src/app/(main)/my-account/_components/use-my-account-page.ts": {
+      "taskNumeric": 4
+    },
+    "src/app/(main)/my-account/page.tsx": {
+      "taskNumeric": 1
+    },
+    "src/app/(main)/power-creator/page.tsx": {
+      "taskNumeric": 1
+    },
+    "src/app/(main)/power-creator/power-creator-composition.ts": {
+      "clickupLegacy": 1,
+      "devVerification": 1
+    },
+    "src/app/(main)/power-creator/power-creator-cost-derivation.ts": {
+      "taskNumeric": 1
+    },
+    "src/app/(main)/power-creator/power-creator-editor-action-profile.tsx": {
+      "taskNumeric": 1
+    },
+    "src/app/(main)/power-creator/power-creator-editor-config.ts": {
+      "taskNumeric": 1
+    },
+    "src/app/(main)/power-creator/power-creator-editor-meta.tsx": {
+      "taskNumeric": 1
+    },
+    "src/app/(main)/power-creator/power-creator-editor-power-config.tsx": {
+      "taskNumeric": 1
+    },
+    "src/app/(main)/power-creator/power-creator-editor-power-damage.tsx": {
+      "taskNumeric": 1
+    },
+    "src/app/(main)/power-creator/power-creator-editor-power-parts.tsx": {
+      "taskNumeric": 1
+    },
+    "src/app/(main)/power-creator/power-creator-editor.tsx": {
+      "taskNumeric": 2
+    },
+    "src/app/(main)/power-creator/power-creator-help.tsx": {
+      "taskNumeric": 1
+    },
+    "src/app/(main)/power-creator/power-creator-innate-label.ts": {
+      "clickupLegacy": 1
+    },
+    "src/app/(main)/power-creator/power-creator-part-actions.ts": {
+      "taskNumeric": 1,
+      "clickupLegacy": 1
+    },
+    "src/app/(main)/power-creator/use-power-creator-workspace.ts": {
+      "taskNumeric": 2,
+      "clickupLegacy": 1
+    },
+    "src/app/(main)/rules/[slug]/page.tsx": {
+      "taskNumeric": 2
+    },
+    "src/app/(main)/rules/page.tsx": {
+      "taskNumeric": 1
+    },
+    "src/app/(main)/species-creator/page.tsx": {
+      "taskNumeric": 1
+    },
+    "src/app/(main)/species-creator/species-creator-bootstrap.ts": {
+      "taskNumeric": 1
+    },
+    "src/app/(main)/species-creator/species-creator-editor.tsx": {
+      "taskNumeric": 1
+    },
+    "src/app/(main)/species-creator/species-creator-reset.ts": {
+      "clickupLegacy": 1
+    },
+    "src/app/(main)/species-creator/use-species-creator-workspace.ts": {
+      "taskNumeric": 1
+    },
+    "src/app/(main)/technique-creator/page.tsx": {
+      "taskNumeric": 1
+    },
+    "src/app/(main)/technique-creator/technique-creator-bootstrap.ts": {
+      "clickupLegacy": 2
+    },
+    "src/app/(main)/technique-creator/technique-creator-editor.tsx": {
+      "taskNumeric": 1
+    },
+    "src/app/(main)/technique-creator/technique-creator-reset.ts": {
+      "clickupLegacy": 1
+    },
+    "src/app/(main)/technique-creator/use-technique-creator-workspace.ts": {
+      "taskNumeric": 1,
+      "clickupLegacy": 2
+    },
+    "src/app/api/admin/changelogs/route.ts": {
+      "taskNumeric": 1
+    },
+    "src/app/api/admin/role-policies/route.ts": {
+      "taskNumeric": 1
+    },
+    "src/app/api/admin/users/route.ts": {
+      "taskNumeric": 1
+    },
+    "src/app/api/campaigns/[id]/rolls/route.ts": {
+      "taskNumeric": 1
+    },
+    "src/app/api/campaigns/[id]/route.ts": {
+      "taskNumeric": 1
+    },
+    "src/app/api/campaigns/invite/[code]/route.ts": {
+      "taskNumeric": 1
+    },
+    "src/app/api/campaigns/route.ts": {
+      "taskNumeric": 1
+    },
+    "src/app/api/official/counts/route.ts": {
+      "taskNumeric": 1
+    },
+    "src/app/api/upload/profile-picture/route.ts": {
+      "taskNumeric": 2,
+      "clickupLegacy": 1
+    },
+    "src/app/api/user/library/counts/route.ts": {
+      "taskNumeric": 1
+    },
+    "src/app/dev/styleguide/page.tsx": {
+      "taskNumeric": 1
+    },
+    "src/components/character-sheet/abilities-section.tsx": {
+      "taskNumeric": 1
+    },
+    "src/components/character-sheet/add-proficiency-modal.tsx": {
+      "taskNumeric": 1
+    },
+    "src/components/character-sheet/build-library-section-data.ts": {
+      "taskNumeric": 2
+    },
+    "src/components/character-sheet/character-sheet-body.tsx": {
+      "taskNumeric": 11,
+      "clickupLegacy": 1
+    },
+    "src/components/character-sheet/character-sheet-context.tsx": {
+      "taskNumeric": 6
+    },
+    "src/components/character-sheet/currency-field-commit.ts": {
+      "clickupLegacy": 1
+    },
+    "src/components/character-sheet/library-section-props.ts": {
+      "taskNumeric": 2
+    },
+    "src/components/character-sheet/library-section.tsx": {
+      "taskNumeric": 1
+    },
+    "src/components/character-sheet/read-only-sheet.ts": {
+      "taskNumeric": 1
+    },
+    "src/components/character-sheet/sheet-action-toolbar.tsx": {
+      "taskNumeric": 2
+    },
+    "src/components/character-sheet/sheet-desktop-columns.ts": {
+      "clickupLegacy": 1
+    },
+    "src/components/character-sheet/sheet-header-layout.ts": {
+      "clickupLegacy": 3
+    },
+    "src/components/character-sheet/sheet-header.tsx": {
+      "taskNumeric": 1,
+      "clickupLegacy": 1
+    },
+    "src/components/character-sheet/sheet-large-stat-block.tsx": {
+      "taskNumeric": 2
+    },
+    "src/components/character-sheet/sheet-mobile-carousel.ts": {
+      "taskNumeric": 1
+    },
+    "src/components/character-sheet/skills-header-pin.ts": {
+      "clickupLegacy": 1
+    },
+    "src/components/character-sheet/skills-section.tsx": {
+      "taskNumeric": 5
+    },
+    "src/components/character-sheet/use-character-sheet-actions.ts": {
+      "taskNumeric": 1
+    },
+    "src/components/character-sheet/use-character-sheet-derived.ts": {
+      "taskNumeric": 1
+    },
+    "src/components/character-sheet/use-sheet-auto-proficiencies.ts": {
+      "taskNumeric": 1
+    },
+    "src/components/character-sheet/use-sheet-feat-actions.ts": {
+      "taskNumeric": 1
+    },
+    "src/components/character-sheet/use-sheet-library-actions.ts": {
+      "taskNumeric": 1
+    },
+    "src/components/character-sheet/use-sheet-resource-actions.ts": {
+      "taskNumeric": 1
+    },
+    "src/components/character-sheet/use-sheet-skill-identity-actions.ts": {
+      "taskNumeric": 2
+    },
+    "src/components/creator/CreatorSaveToolbar.tsx": {
+      "clickupLegacy": 1
+    },
+    "src/components/creator/LoadFromLibraryModal.tsx": {
+      "clickupLegacy": 1
+    },
+    "src/components/creator/collapsible-section.tsx": {
+      "taskNumeric": 1
+    },
+    "src/components/creator/creator-summary-panel.tsx": {
+      "clickupLegacy": 1
+    },
+    "src/components/creator/health-energy-allocator.tsx": {
+      "taskNumeric": 1
+    },
+    "src/components/creator/targeted-defenses-section.tsx": {
+      "taskNumeric": 2
+    },
+    "src/components/encounters/add-combatant-modal.tsx": {
+      "taskNumeric": 1
+    },
+    "src/components/encounters/encounter-constants.ts": {
+      "clickupLegacy": 1
+    },
+    "src/components/guided-creator/character-preview-panel.tsx": {
+      "taskNumeric": 2
+    },
+    "src/components/guided-creator/guided-equipment-l2-grid.ts": {
+      "taskNumeric": 1
+    },
+    "src/components/guided-creator/guided-feats-filter-fields.tsx": {
+      "taskNumeric": 2
+    },
+    "src/components/guided-creator/guided-feats-l2-modal.tsx": {
+      "taskNumeric": 2
+    },
+    "src/components/guided-creator/guided-path-detail-modal.tsx": {
+      "taskNumeric": 1
+    },
+    "src/components/guided-creator/guided-powers-techniques-l1-content.tsx": {
+      "taskNumeric": 1
+    },
+    "src/components/guided-creator/guided-powers-techniques-l2-modal.tsx": {
+      "taskNumeric": 6,
+      "clickupLegacy": 1
+    },
+    "src/components/guided-creator/guided-restriction-notice.tsx": {
+      "taskNumeric": 1
+    },
+    "src/components/guided-creator/guided-reveal-review-modal.tsx": {
+      "taskNumeric": 1
+    },
+    "src/components/guided-creator/guided-species-detail-modal.tsx": {
+      "taskNumeric": 1
+    },
+    "src/components/guided-creator/species-reveal-panel.tsx": {
+      "taskNumeric": 2
+    },
+    "src/components/guided-creator/steps/ancestry-step.tsx": {
+      "taskNumeric": 1
+    },
+    "src/components/guided-creator/steps/archetype-feats-step.tsx": {
+      "taskNumeric": 2
+    },
+    "src/components/guided-creator/steps/character-feat-step.tsx": {
+      "taskNumeric": 2
+    },
+    "src/components/guided-creator/steps/loadout-step.tsx": {
+      "taskNumeric": 6
+    },
+    "src/components/guided-creator/steps/powers-techniques-step.tsx": {
+      "taskNumeric": 2
+    },
+    "src/components/guided-creator/steps/use-powers-techniques-selection.ts": {
+      "taskNumeric": 1
+    },
+    "src/components/layout/header.tsx": {
+      "clickupLegacy": 4
+    },
+    "src/components/onboarding/level-up-guide-card.tsx": {
+      "taskNumeric": 1
+    },
+    "src/components/onboarding/play-together-modal.tsx": {
+      "taskNumeric": 1
+    },
+    "src/components/onboarding/sheet-tour-offer-modal.tsx": {
+      "taskNumeric": 1
+    },
+    "src/components/onboarding/sheet-tour.tsx": {
+      "taskNumeric": 1
+    },
+    "src/components/patterns/chrome/delete-confirm-modal.tsx": {
+      "taskNumeric": 2
+    },
+    "src/components/patterns/chrome/image-upload-modal.tsx": {
+      "clickupLegacy": 1
+    },
+    "src/components/patterns/chrome/loadout-budget-bar.tsx": {
+      "taskNumeric": 4
+    },
+    "src/components/patterns/chrome/point-status.tsx": {
+      "taskNumeric": 1
+    },
+    "src/components/patterns/chrome/realms-image-picker.tsx": {
+      "taskNumeric": 2
+    },
+    "src/components/patterns/chrome/segmented-control.tsx": {
+      "taskNumeric": 2
+    },
+    "src/components/patterns/chrome/temp-modifier-toggle.tsx": {
+      "taskNumeric": 1
+    },
+    "src/components/patterns/chrome/theme-toggle.tsx": {
+      "taskNumeric": 1
+    },
+    "src/components/patterns/filters/archetype-path-filter.tsx": {
+      "taskNumeric": 2
+    },
+    "src/components/patterns/filters/armament-filters.tsx": {
+      "taskNumeric": 4
+    },
+    "src/components/patterns/filters/character-filter.tsx": {
+      "taskNumeric": 2
+    },
+    "src/components/patterns/filters/filter-native-select.tsx": {
+      "taskNumeric": 1
+    },
+    "src/components/patterns/filters/filter-section.tsx": {
+      "taskNumeric": 2
+    },
+    "src/components/patterns/filters/filter-utils.ts": {
+      "taskNumeric": 1
+    },
+    "src/components/patterns/filters/power-technique-filters.tsx": {
+      "taskNumeric": 4
+    },
+    "src/components/patterns/filters/source-filter.tsx": {
+      "taskNumeric": 1
+    },
+    "src/components/patterns/guided-choice/guided-inline-catalog-list.tsx": {
+      "taskNumeric": 4
+    },
+    "src/components/patterns/guided-choice/guided-nav-button-styles.ts": {
+      "taskNumeric": 1
+    },
+    "src/components/patterns/help/descriptor-chip-with-tip.tsx": {
+      "taskNumeric": 2
+    },
+    "src/components/patterns/help/info-tippy.tsx": {
+      "taskNumeric": 2,
+      "clickupLegacy": 1
+    },
+    "src/components/patterns/index.ts": {
+      "taskNumeric": 2
+    },
+    "src/components/patterns/list/ability-score-grid.tsx": {
+      "taskNumeric": 2
+    },
+    "src/components/patterns/list/codex-browse-list-shell.tsx": {
+      "taskNumeric": 1
+    },
+    "src/components/patterns/list/detail-option-list.tsx": {
+      "taskNumeric": 1
+    },
+    "src/components/patterns/list/entity-library-sections-columns.ts": {
+      "taskNumeric": 3
+    },
+    "src/components/patterns/list/entity-library-sections-types.ts": {
+      "taskNumeric": 1
+    },
+    "src/components/patterns/list/grid-list-row-chrome.ts": {
+      "taskNumeric": 7,
+      "clickupLegacy": 2,
+      "clickupCustom": 1
+    },
+    "src/components/patterns/list/grid-list-row-collapsed.tsx": {
+      "taskNumeric": 3
+    },
+    "src/components/patterns/list/grid-list-row-columns.ts": {
+      "taskNumeric": 3,
+      "clickupLegacy": 1
+    },
+    "src/components/patterns/list/grid-list-row-detail.tsx": {
+      "taskNumeric": 1
+    },
+    "src/components/patterns/list/grid-list-row-expanded.tsx": {
+      "taskNumeric": 1
+    },
+    "src/components/patterns/list/grid-list-row-types.ts": {
+      "taskNumeric": 5
+    },
+    "src/components/patterns/list/grid-list-row.tsx": {
+      "taskNumeric": 6,
+      "clickupLegacy": 5
+    },
+    "src/components/patterns/list/hub-list-row.tsx": {
+      "clickupLegacy": 1
+    },
+    "src/components/patterns/list/library-add-to-library-button.tsx": {
+      "taskNumeric": 2
+    },
+    "src/components/patterns/list/list-components.tsx": {
+      "taskNumeric": 1
+    },
+    "src/components/patterns/list/list-header.tsx": {
+      "taskNumeric": 2,
+      "clickupLegacy": 1
+    },
+    "src/components/patterns/list/list-search-toolbar.tsx": {
+      "taskNumeric": 1
+    },
+    "src/components/patterns/list/official-enhanced-list.tsx": {
+      "taskNumeric": 1
+    },
+    "src/components/patterns/list/official-entity-list.tsx": {
+      "taskNumeric": 2
+    },
+    "src/components/patterns/list/skill-row.tsx": {
+      "taskNumeric": 4
+    },
+    "src/components/patterns/select/mixed-species-modal.tsx": {
+      "taskNumeric": 1
+    },
+    "src/components/patterns/select/quantity-selector.tsx": {
+      "taskNumeric": 1
+    },
+    "src/components/patterns/select/unified-selection-modal-helpers.ts": {
+      "taskNumeric": 1
+    },
+    "src/components/patterns/select/unified-selection-modal-list.tsx": {
+      "taskNumeric": 4
+    },
+    "src/components/patterns/select/unified-selection-modal-types.ts": {
+      "taskNumeric": 5
+    },
+    "src/components/patterns/stat-tiles/ability-defense-stat-model.ts": {
+      "clickupLegacy": 1
+    },
+    "src/components/rolls/roll-context.tsx": {
+      "clickupLegacy": 1
+    },
+    "src/components/rolls/roll-log.tsx": {
+      "taskNumeric": 2,
+      "clickupLegacy": 1
+    },
+    "src/components/ui/chip.tsx": {
+      "taskNumeric": 1
+    },
+    "src/components/ui/input.tsx": {
+      "taskNumeric": 1
+    },
+    "src/components/ui/modal.tsx": {
+      "taskNumeric": 1,
+      "clickupLegacy": 3
+    },
+    "src/components/ui/page-container.tsx": {
+      "clickupLegacy": 1
+    },
+    "src/components/ui/tab-navigation.tsx": {
+      "taskNumeric": 4
+    },
+    "src/hooks/add-library-item/map-library-to-character.ts": {
+      "taskNumeric": 1
+    },
+    "src/hooks/index.ts": {
+      "taskNumeric": 1
+    },
+    "src/hooks/use-add-to-character-from-library.tsx": {
+      "taskNumeric": 1
+    },
+    "src/hooks/use-auth.ts": {
+      "taskNumeric": 1,
+      "clickupLegacy": 1
+    },
+    "src/hooks/use-character-resource-sync.ts": {
+      "taskNumeric": 1
+    },
+    "src/hooks/use-characters.ts": {
+      "taskNumeric": 5
+    },
+    "src/hooks/use-codex-source-catalog.ts": {
+      "taskNumeric": 1
+    },
+    "src/hooks/use-codex.ts": {
+      "taskNumeric": 2
+    },
+    "src/hooks/use-game-rules.ts": {
+      "taskNumeric": 1
+    },
+    "src/hooks/use-guided-equipment-l2-catalog.ts": {
+      "taskNumeric": 1
+    },
+    "src/hooks/use-library-section-collapse.ts": {
+      "clickupLegacy": 1
+    },
+    "src/hooks/use-modal-list-state.ts": {
+      "taskNumeric": 1
+    },
+    "src/hooks/use-path-recommendation-index.ts": {
+      "taskNumeric": 4
+    },
+    "src/lib/api-client.ts": {
+      "taskNumeric": 1
+    },
+    "src/lib/api-validation.ts": {
+      "taskNumeric": 4
+    },
+    "src/lib/auth/captcha.ts": {
+      "taskNumeric": 1
+    },
+    "src/lib/auth/should-clear-query-cache-on-auth-event.ts": {
+      "taskNumeric": 1
+    },
+    "src/lib/auth/should-ignore-null-auth-session.ts": {
+      "clickupLegacy": 1
+    },
+    "src/lib/calculators/empowered-overlap-parts.ts": {
+      "taskNumeric": 1
+    },
+    "src/lib/calculators/item-calc.ts": {
+      "taskNumeric": 3
+    },
+    "src/lib/calculators/power-calc.ts": {
+      "clickupLegacy": 1
+    },
+    "src/lib/character-library-section-visibility.ts": {
+      "clickupLegacy": 1
+    },
+    "src/lib/character-save.ts": {
+      "taskNumeric": 8,
+      "clickupLegacy": 1
+    },
+    "src/lib/character-view-enrichment-server.ts": {
+      "taskNumeric": 1
+    },
+    "src/lib/character-view-enrichment.ts": {
+      "taskNumeric": 1
+    },
+    "src/lib/character/appearance-age.ts": {
+      "taskNumeric": 3,
+      "clickupLegacy": 1
+    },
+    "src/lib/character/current-follows-max.ts": {
+      "clickupLegacy": 1
+    },
+    "src/lib/character/dirty-patch.ts": {
+      "taskNumeric": 1,
+      "clickupLegacy": 1
+    },
+    "src/lib/character/innate-power-capacity.ts": {
+      "clickupLegacy": 4
+    },
+    "src/lib/character/realtime-merge.ts": {
+      "taskNumeric": 2
+    },
+    "src/lib/character/recovery-over-max.ts": {
+      "clickupLegacy": 1
+    },
+    "src/lib/character/save-lock.ts": {
+      "taskNumeric": 1
+    },
+    "src/lib/character/schema-normalize.ts": {
+      "taskNumeric": 1
+    },
+    "src/lib/character/sheet-allocation-reset.ts": {
+      "clickupLegacy": 1
+    },
+    "src/lib/character/sheet-edit-notification.ts": {
+      "taskNumeric": 1,
+      "clickupLegacy": 1
+    },
+    "src/lib/character/sheet-skills-display.ts": {
+      "taskNumeric": 1
+    },
+    "src/lib/character/temp-modifiers.ts": {
+      "taskNumeric": 1
+    },
+    "src/lib/chip/list-row-metadata.ts": {
+      "taskNumeric": 3,
+      "clickupLegacy": 1
+    },
+    "src/lib/codex-changelog-display.ts": {
+      "taskNumeric": 1
+    },
+    "src/lib/codex/equipment-list.ts": {
+      "taskNumeric": 4
+    },
+    "src/lib/codex/feat-list.ts": {
+      "taskNumeric": 4
+    },
+    "src/lib/codex/part-type.ts": {
+      "taskNumeric": 1
+    },
+    "src/lib/codex/row-map.ts": {
+      "taskNumeric": 1
+    },
+    "src/lib/codex/skill-list.ts": {
+      "taskNumeric": 1
+    },
+    "src/lib/constants/copy/archetype-category-copy.ts": {
+      "taskNumeric": 1
+    },
+    "src/lib/constants/copy/guided-creator-copy.ts": {
+      "taskNumeric": 11
+    },
+    "src/lib/constants/copy/onboarding-copy.ts": {
+      "taskNumeric": 1,
+      "clickupLegacy": 1
+    },
+    "src/lib/constants/creator-layer-governance.ts": {
+      "taskNumeric": 1
+    },
+    "src/lib/core-rules-server.ts": {
+      "clickupLegacy": 1
+    },
+    "src/lib/creator/creator-edit-query.ts": {
+      "clickupLegacy": 1
+    },
+    "src/lib/creator/creator-save-as-copy.ts": {
+      "clickupLegacy": 1
+    },
+    "src/lib/creator/creator-save-error.ts": {
+      "clickupLegacy": 1
+    },
+    "src/lib/creator/creator-text-limits.ts": {
+      "clickupLegacy": 1
+    },
+    "src/lib/creator/creator-unsaved-guard.ts": {
+      "clickupLegacy": 1
+    },
+    "src/lib/creator/private-library-name-save.ts": {
+      "clickupLegacy": 2
+    },
+    "src/lib/data-enrichment/clean-for-save.ts": {
+      "taskNumeric": 3
+    },
+    "src/lib/detail-option/builders.ts": {
+      "taskNumeric": 2
+    },
+    "src/lib/detail-option/combat-builder.ts": {
+      "taskNumeric": 1
+    },
+    "src/lib/detail-option/compact-facts.ts": {
+      "taskNumeric": 1
+    },
+    "src/lib/ensure-user-profile.ts": {
+      "clickupLegacy": 1
+    },
+    "src/lib/entity-image-url.ts": {
+      "taskNumeric": 1
+    },
+    "src/lib/game/archetype-path.ts": {
+      "taskNumeric": 4
+    },
+    "src/lib/game/character-legality.ts": {
+      "taskNumeric": 1
+    },
+    "src/lib/game/creator-cache.ts": {
+      "clickupLegacy": 1
+    },
+    "src/lib/game/creature-inventory.ts": {
+      "taskNumeric": 2
+    },
+    "src/lib/game/creature-power-instances.ts": {
+      "clickupLegacy": 1
+    },
+    "src/lib/game/dedupe-saved-parts.ts": {
+      "clickupLegacy": 1
+    },
+    "src/lib/game/feat-requirements.ts": {
+      "clickupLegacy": 1
+    },
+    "src/lib/game/formulas.ts": {
+      "taskNumeric": 1
+    },
+    "src/lib/game/innate-eligibility.ts": {
+      "taskNumeric": 2
+    },
+    "src/lib/game/mixed-encounter-view-tab.ts": {
+      "clickupLegacy": 1
+    },
+    "src/lib/game/path-recommendation-index.ts": {
+      "taskNumeric": 5
+    },
+    "src/lib/game/path-validation.ts": {
+      "taskNumeric": 3
+    },
+    "src/lib/game/resolve-armor-damage-reduction.ts": {
+      "taskNumeric": 1
+    },
+    "src/lib/glr/glr-chrome-spacing-norms.ts": {
+      "taskNumeric": 9
+    },
+    "src/lib/glr/glr-density.ts": {
+      "taskNumeric": 2
+    },
+    "src/lib/glr/glr-fact-catalog.ts": {
+      "taskNumeric": 2
+    },
+    "src/lib/glr/glr-list-chrome.ts": {
+      "taskNumeric": 1
+    },
+    "src/lib/glr/glr-surface-bindings.ts": {
+      "taskNumeric": 2
+    },
+    "src/lib/glr/resolve-glr-fact-layout.ts": {
+      "taskNumeric": 2
+    },
+    "src/lib/glr/validate-glr-chrome-spacing.ts": {
+      "taskNumeric": 5
+    },
+    "src/lib/glr/validate-glr-facts.ts": {
+      "taskNumeric": 1
+    },
+    "src/lib/guided-creator/ancestry-pick-tasks.ts": {
+      "devVerification": 1
+    },
+    "src/lib/guided-creator/build-character.ts": {
+      "taskNumeric": 1
+    },
+    "src/lib/guided-creator/chapter-rail-lock.ts": {
+      "clickupLegacy": 1
+    },
+    "src/lib/guided-creator/equipment-eligibility.ts": {
+      "taskNumeric": 1
+    },
+    "src/lib/guided-creator/equipment-phase-nav.ts": {
+      "taskNumeric": 2
+    },
+    "src/lib/guided-creator/equipment-phase-stats.ts": {
+      "taskNumeric": 2
+    },
+    "src/lib/guided-creator/feats-l2.ts": {
+      "taskNumeric": 5
+    },
+    "src/lib/guided-creator/guided-equipment-l2.ts": {
+      "taskNumeric": 5
+    },
+    "src/lib/guided-creator/guided-substep-nav.ts": {
+      "taskNumeric": 1,
+      "devVerification": 1
+    },
+    "src/lib/guided-creator/power-technique-display.ts": {
+      "taskNumeric": 3
+    },
+    "src/lib/guided-creator/powers-phase-nav.ts": {
+      "taskNumeric": 1
+    },
+    "src/lib/guided-creator/powers-techniques-energy-filter.ts": {
+      "taskNumeric": 3
+    },
+    "src/lib/guided-creator/powers-techniques-l1-candidates.ts": {
+      "taskNumeric": 1
+    },
+    "src/lib/guided-creator/powers-techniques-l2.ts": {
+      "taskNumeric": 2,
+      "clickupLegacy": 2
+    },
+    "src/lib/guided-creator/powers-techniques-step-helpers.ts": {
+      "clickupLegacy": 1
+    },
+    "src/lib/guided-creator/preview-ability-summary.ts": {
+      "taskNumeric": 2
+    },
+    "src/lib/guided-creator/substep-satisfaction.ts": {
+      "taskNumeric": 1
+    },
+    "src/lib/level-up-guide.ts": {
+      "taskNumeric": 1
+    },
+    "src/lib/leveled-feats.ts": {
+      "taskNumeric": 1
+    },
+    "src/lib/library-selectable-builders.ts": {
+      "taskNumeric": 5,
+      "clickupLegacy": 1
+    },
+    "src/lib/library/armament-character-context.ts": {
+      "taskNumeric": 1
+    },
+    "src/lib/library/armament-filters.ts": {
+      "taskNumeric": 2
+    },
+    "src/lib/library/catalog-listing.ts": {
+      "clickupLegacy": 1
+    },
+    "src/lib/library/character-filter-persistence.ts": {
+      "taskNumeric": 2
+    },
+    "src/lib/library/library-tab-counts.ts": {
+      "taskNumeric": 1
+    },
+    "src/lib/library/official-item-list.ts": {
+      "taskNumeric": 1
+    },
+    "src/lib/library/power-technique-categories.ts": {
+      "taskNumeric": 1
+    },
+    "src/lib/library/power-technique-character-context.ts": {
+      "taskNumeric": 1
+    },
+    "src/lib/library/power-technique-filters.ts": {
+      "taskNumeric": 2
+    },
+    "src/lib/library/source-scope.ts": {
+      "taskNumeric": 3
+    },
+    "src/lib/list-row-image.ts": {
+      "taskNumeric": 3
+    },
+    "src/lib/onboarding-preferences.ts": {
+      "taskNumeric": 1
+    },
+    "src/lib/rate-limit.ts": {
+      "taskNumeric": 1
+    },
+    "src/lib/realms-image-consumers.ts": {
+      "taskNumeric": 4
+    },
+    "src/lib/realms-images.ts": {
+      "taskNumeric": 2
+    },
+    "src/lib/roll-timestamp.ts": {
+      "taskNumeric": 1
+    },
+    "src/lib/rolls/campaign-roll-attribution.ts": {
+      "clickupLegacy": 1
+    },
+    "src/lib/rolls/modifier-label.ts": {
+      "taskNumeric": 1
+    },
+    "src/lib/rolls/personal-roll-log-storage.ts": {
+      "clickupLegacy": 1
+    },
+    "src/lib/rolls/roll-log-layout.ts": {
+      "clickupLegacy": 1
+    },
+    "src/lib/sheet-tour-highlight.ts": {
+      "taskNumeric": 2,
+      "clickupLegacy": 4
+    },
+    "src/lib/skill-extra-descriptions.ts": {
+      "taskNumeric": 1
+    },
+    "src/lib/supabase/cached-public-read.ts": {
+      "clickupLegacy": 2
+    },
+    "src/lib/supabase/middleware.ts": {
+      "clickupLegacy": 2
+    },
+    "src/lib/utils/exact-optional.ts": {
+      "taskNumeric": 1
+    },
+    "src/lib/utils/motion.ts": {
+      "keepInSync": 1
+    },
+    "src/lib/utils/stabilize-vertical-scroll.ts": {
+      "taskNumeric": 1
+    },
+    "src/lib/utils/string.ts": {
+      "taskNumeric": 1
+    },
+    "src/services/character-service.ts": {
+      "taskNumeric": 2
+    },
+    "src/stores/guided-creator-store.ts": {
+      "taskNumeric": 5
+    },
+    "src/types/archetype.ts": {
+      "taskNumeric": 8
+    },
+    "src/types/character.ts": {
+      "taskNumeric": 5
+    },
+    "src/types/codex.ts": {
+      "taskNumeric": 2
+    },
+    "src/types/database.types.ts": {
+      "taskNumeric": 1
+    },
+    "src/types/library.ts": {
+      "taskNumeric": 1
+    }
+  }
+}

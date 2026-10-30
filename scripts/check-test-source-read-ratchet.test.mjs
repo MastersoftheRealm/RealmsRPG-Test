@@ -1,0 +1,226 @@
+import fs from 'node:fs';
+import os from 'node:os';
+import path from 'node:path';
+import { describe, expect, it } from 'vitest';
+import {
+  countSourceReadsInTestText,
+  diffTestSourceReadRatchet,
+  formatTestSourceReadRatchetFailure,
+} from './lib/test-source-reads.mjs';
+import {
+  measureTestSourceReadRatchet,
+  runTestSourceReadRatchetCheck,
+} from './check-test-source-read-ratchet.mjs';
+
+describe('countSourceReadsInTestText', () => {
+  it('counts process.cwd src reads and skips json fixtures', () => {
+    const text = `
+      readFileSync(path.join(process.cwd(), 'src/app/page.tsx'), 'utf8');
+      readFileSync(path.join(process.cwd(), 'tests/fixtures/x.json'), 'utf8');
+    `;
+    expect(countSourceReadsInTestText(text, 'src/foo.test.ts')).toBe(1);
+  });
+
+  it('does not treat the import line as a call (describe body still scanned)', () => {
+    const text = `import { readFileSync } from 'node:fs';
+import { describe, it, expect } from 'vitest';
+import path from 'node:path';
+
+describe('layout', () => {
+  it('reads page source', () => {
+    readFileSync(path.join(process.cwd(), 'src/app/page.tsx'), 'utf8');
+  });
+});`;
+    expect(countSourceReadsInTestText(text, 'src/foo.test.ts')).toBe(1);
+  });
+
+  it('counts new URL reads from colocated tests', () => {
+    const text = `readFileSync(new URL('./page.tsx', import.meta.url), 'utf8');`;
+    expect(countSourceReadsInTestText(text, 'src/app/page.test.ts')).toBe(1);
+  });
+
+  it('counts readFile from fs/promises', () => {
+    const text = `import { readFile } from 'fs/promises';
+await readFile(path.join(process.cwd(), 'src/app/page.tsx'), 'utf8');`;
+    expect(countSourceReadsInTestText(text, 'src/foo.test.ts')).toBe(1);
+  });
+
+  it('counts fs.promises.readFile', () => {
+    const text = `import fs from 'node:fs';
+await fs.promises.readFile(path.join(process.cwd(), 'src/app/page.tsx'), 'utf8');`;
+    expect(countSourceReadsInTestText(text, 'src/foo.test.ts')).toBe(1);
+  });
+
+  it('counts fs.readFile', () => {
+    const text = `import fs from 'node:fs';
+fs.readFile(path.join(process.cwd(), 'src/app/page.tsx'), 'utf8', () => {});`;
+    expect(countSourceReadsInTestText(text, 'src/foo.test.ts')).toBe(1);
+  });
+
+  it('counts path.join(__dirname, …) reads', () => {
+    const text = `readFileSync(path.join(__dirname, '../app/page.tsx'), 'utf8');`;
+    expect(countSourceReadsInTestText(text, 'src/app/page.test.ts')).toBe(1);
+  });
+
+  it('counts path.resolve(__dirname, …) reads', () => {
+    const text = `readFileSync(path.resolve(__dirname, '../app/page.tsx'), 'utf8');`;
+    expect(countSourceReadsInTestText(text, 'src/app/page.test.ts')).toBe(1);
+  });
+
+  it('counts require.resolve inside readFileSync', () => {
+    const text = `readFileSync(require.resolve('src/app/page.tsx'), 'utf8');`;
+    expect(countSourceReadsInTestText(text, 'src/foo.test.ts')).toBe(1);
+  });
+
+  it('counts readFileSync(require.resolve relative path)', () => {
+    const text = `readFileSync(require.resolve('../app/page.tsx'), 'utf8');`;
+    expect(countSourceReadsInTestText(text, 'src/app/page.test.ts')).toBe(1);
+  });
+
+  it('counts path.join(variable, source.tsx)', () => {
+    const text = `const dir = import.meta.dirname;
+readFileSync(path.join(dir, 'codex-spreadsheet-table.tsx'), 'utf8');`;
+    expect(countSourceReadsInTestText(text, 'src/app/admin.test.ts')).toBe(1);
+  });
+
+  it('counts path.resolve(variable, source.tsx)', () => {
+    const text = `const root = import.meta.dirname;
+readFileSync(path.resolve(root, 'components/ui/modal.tsx'), 'utf8');`;
+    expect(countSourceReadsInTestText(text, 'src/components/modal.test.ts')).toBe(1);
+  });
+
+  it('skips committed *-baseline.json paths but not ordinary fixture json under tests/', () => {
+    expect(
+      countSourceReadsInTestText(
+        `readFileSync('tests/visual/a11y-baseline.json', 'utf8');`,
+        'src/foo.test.ts',
+      ),
+    ).toBe(0);
+    expect(
+      countSourceReadsInTestText(
+        `readFileSync(path.join(process.cwd(), 'tests/fixtures/data.json'), 'utf8');`,
+        'src/foo.test.ts',
+      ),
+    ).toBe(0);
+  });
+
+  it('does not count readFileSync(path.join(import.meta.dirname, "data.json"))', () => {
+    const text = `import { readFileSync } from 'node:fs';
+import path from 'node:path';
+readFileSync(path.join(import.meta.dirname, 'data.json'), 'utf8');`;
+    expect(countSourceReadsInTestText(text, 'src/foo.test.ts')).toBe(0);
+  });
+
+  it('does not count non-source relative paths like robots.txt', () => {
+    const text = `readFileSync(path.join(import.meta.dirname, '../public/robots.txt'), 'utf8');`;
+    expect(countSourceReadsInTestText(text, 'src/app/page.test.ts')).toBe(0);
+  });
+
+  it('counts local read(rel) helper invocations', () => {
+    const text = `import { readFileSync } from 'node:fs';
+import { join } from 'node:path';
+const root = import.meta.dirname;
+function read(rel: string) {
+  return readFileSync(join(root, rel), 'utf8');
+}
+read('components/ui/modal.tsx');
+read('components/ui/button.tsx');`;
+    expect(countSourceReadsInTestText(text, 'src/sheet.test.ts')).toBe(2);
+  });
+
+  it('does not count fixture helper calls (json/csv) through local readFileSync join helpers', () => {
+    const text = `import { readFileSync } from 'node:fs';
+import path from 'node:path';
+const dir = import.meta.dirname;
+function loadFixture(name) {
+  return readFileSync(path.join(dir, name));
+}
+loadFixture('sample.json');
+loadFixture('sample.csv');`;
+    expect(countSourceReadsInTestText(text, 'src/foo.test.ts')).toBe(0);
+  });
+
+  it('still counts source paths passed to local readFileSync join helpers', () => {
+    const text = `import { readFileSync } from 'node:fs';
+import path from 'node:path';
+const dir = import.meta.dirname;
+function loadFile(name) {
+  return readFileSync(path.join(dir, name));
+}
+loadFile('src/app/page.tsx');`;
+    expect(countSourceReadsInTestText(text, 'src/foo.test.ts')).toBe(1);
+  });
+
+  it('counts never-called source-oriented read helper (wrapdef)', () => {
+    const text = `import { readFileSync } from 'node:fs';
+import path from 'node:path';
+const root = import.meta.dirname;
+function readRepoFile(rel) {
+  return readFileSync(path.join(root, rel), 'utf8');
+}
+readFileSync(path.join(process.cwd(), 'src/app/layout.tsx'), 'utf8');`;
+    expect(countSourceReadsInTestText(text, 'src/glr.test.ts')).toBe(2);
+  });
+
+  it('does not emit wrapdef for fixture-only never-called helper', () => {
+    const text = `import { readFileSync } from 'node:fs';
+import path from 'node:path';
+const dir = import.meta.dirname;
+function loadFixture(name) {
+  return readFileSync(path.join(dir, name));
+}`;
+    expect(countSourceReadsInTestText(text, 'src/foo.test.ts')).toBe(0);
+  });
+});
+
+describe('diffTestSourceReadRatchet', () => {
+  it('blocks new test files with reads', () => {
+    expect(diffTestSourceReadRatchet({ 'src/a.test.ts': 1 }, {})).toHaveLength(1);
+  });
+
+  it('blocks increased reads in existing files', () => {
+    expect(diffTestSourceReadRatchet({ 'src/a.test.ts': 2 }, { 'src/a.test.ts': 1 })).toHaveLength(
+      1,
+    );
+  });
+});
+
+describe('runTestSourceReadRatchetCheck on fixture tree', () => {
+  it('fails before baseline update and passes after', () => {
+    const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'source-read-ratchet-'));
+    const baselinePath = path.join(dir, 'baseline.json');
+    fs.mkdirSync(path.join(dir, 'src'), { recursive: true });
+    fs.writeFileSync(
+      path.join(dir, 'src', 'layout.test.ts'),
+      `import { readFileSync } from 'node:fs';
+       readFileSync(new URL('../app/layout.tsx', import.meta.url), 'utf8');`,
+    );
+
+    expect(runTestSourceReadRatchetCheck({ baselinePath, update: false, root: dir }).ok).toBe(
+      false,
+    );
+    runTestSourceReadRatchetCheck({ baselinePath, update: true, root: dir });
+    expect(runTestSourceReadRatchetCheck({ baselinePath, update: false, root: dir }).ok).toBe(true);
+
+    fs.appendFileSync(
+      path.join(dir, 'src', 'layout.test.ts'),
+      `readFileSync(new URL('../app/page.tsx', import.meta.url), 'utf8');`,
+    );
+    const regressed = runTestSourceReadRatchetCheck({ baselinePath, update: false, root: dir });
+    expect(regressed.ok).toBe(false);
+    expect(formatTestSourceReadRatchetFailure(regressed.errors)).toMatch(
+      /tasks:test-source-read-ratchet:update/,
+    );
+  });
+
+  it('measureTestSourceReadRatchet returns zero for behavior-only tests', () => {
+    const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'source-read-clean-'));
+    fs.mkdirSync(path.join(dir, 'src'), { recursive: true });
+    fs.writeFileSync(
+      path.join(dir, 'src', 'math.test.ts'),
+      `import { describe, it, expect } from 'vitest';
+       describe('x', () => { it('works', () => expect(1).toBe(1)); });`,
+    );
+    expect(measureTestSourceReadRatchet(dir)).toEqual({});
+  });
+});
