@@ -3,7 +3,7 @@
 > **Do not edit by hand.** Run `npm run tasks:generate-index` after changing barrel exports.
 > Curated narrative map: [`FEATURE_INDEX.md`](FEATURE_INDEX.md).
 
-Generated: 2026-10-25
+Generated: 2026-10-30
 
 ## `src/components/patterns/index.ts`
 
@@ -12,44 +12,34 @@ Generated: 2026-10-25
 - ABILITY_INFO
 - ABILITY_ORDER
 - AbilityPickButton
-- AbilityRequirementFilter
 - AbilityScoreGrid
 - AddSkillModal
 - AddSubSkillModal
 - ArmorListSection
 - canDecreaseAbility
 - CHARACTER_SHEET_ENERGY_SPEND_ROW_CHROME
-- CharacterFilter
 - ChipSelect
 - CloudSyncOfflineBanner
 - CodexBrowseListShell
 - ConfirmActionModal
 - CreatorPortraitUpload
-- CreatureLibraryStatBlockRow
 - CreatureLibraryStatBlockRows
-- CreatureStatBlock
 - DecrementButton
-- DEFENSE_INFO
 - DefenseBonusesCard
 - DefenseStatTile
 - DeleteConfirmModal
 - DescriptorChipWithTip
-- DetailOptionList
 - EditSectionToggle
 - EquipmentListSection
 - EquipToggle
-- ErrorBoundary
 - ErrorDisplay
 - ExpandableImage
 - FeatsTraitsListSection
 - getEditState
-- GRID_LIST_INLINE_SELECTION_COLUMN_TRACK
 - GRID_LIST_ROW_ACTION_ICON_BUTTON_SIZE
 - GRID_LIST_ROW_ACTION_ICON_CLASS
 - gridColumnsWithInlineSelection
-- GridListChip
 - GridListRow
-- gridTemplateColumnsWithThumbnail
 - GuidedInlineCatalogList
 - GuidedLayerNav
 - HubListRow
@@ -58,7 +48,6 @@ Generated: 2026-10-25
 - InfoTippy
 - InnateToggle
 - LibraryAddToCharacterButton
-- LibraryAddToLibraryButton
 - LibraryCollapsibleSection
 - LibraryRowActionSlot
 - ListHeader
@@ -74,13 +63,9 @@ Generated: 2026-10-25
 - OfficialPowerList
 - OfficialTechniqueList
 - PathHelpCard
-- PathNotes
 - PointStatus
 - PoweredMartialSlider
 - PowersListSection
-- PowerTechniqueFilters
-- prependThumbnailHeaderColumn
-- QuantityBadge
 - QuantitySelector
 - QUICK_WEAPON_COL
 - QuickArmorTable
@@ -93,10 +78,7 @@ Generated: 2026-10-25
 - SectionCostBadge
 - SectionHeader
 - SegmentedControl
-- SelectFilter
-- SelectionToggle
 - SHEET_ABILITY_MAX
-- SHEET_SCORE_TIP_CLASS
 - SHEET_STAT_GRID_CLASS
 - SHEET_STAT_TILE_CLASS
 - SHEET_STAT_TIP_CLASS
@@ -112,11 +94,9 @@ Generated: 2026-10-25
 - SummaryItem
 - SummaryRow
 - TabSummarySection
-- TagFilter
 - TechniquesListSection
 - TempModifierToggle
 - ThemeToggle
-- THUMBNAIL_HEADER_COLUMN_KEY
 - TraitSection
 - type AbilityRequirement
 - type CharacterFilterProps
@@ -138,7 +118,6 @@ Generated: 2026-10-25
 - CardFooter
 - CardHeader
 - CardTitle
-- cardVariants
 - Checkbox
 - Chip
 - ChipGroup
@@ -178,23 +157,15 @@ Generated: 2026-10-25
 
 ## `src/hooks/index.ts`
 
-- AUTOSAVE_RETRY_DELAYS_MS
-- buildGuidedEquipmentEligibilityContext
 - campaignKeys
-- characterKeys
 - characterViewerId
-- codexKeys
 - fetchCampaignCharacterForEncounter
 - findTraitByIdOrName
 - getGameRulesFallback
 - invalidateCharacterLists
-- nextAutosaveRetryDelayMs
 - officialLibraryKeys
 - patchCharacterDetailQuery
-- resolveSkillIdsToNames
 - resolveTraitIds
-- sortByColumn
-- toggleSort
 - type AccountProfile
 - type CreateOfficialEnhancedItemInput
 - type CreatureFeat
@@ -220,15 +191,11 @@ Generated: 2026-10-25
 - type UserSpecies
 - type UserTechnique
 - useAccountProfile
-- useAddLibraryItemData
 - useAddOfficialToLibrary
-- useAddToCharacterFromLibrary
 - useAdmin
 - useAuth
-- useAuthCaptcha
 - useAuthStore
 - useAutoSave
-- useBrowserOffline
 - useCampaign
 - useCampaignCharacterEncounters
 - useCampaignCharacterView
@@ -240,7 +207,6 @@ Generated: 2026-10-25
 - useCharacters
 - useCodexArchetypes
 - useCodexFeats
-- useCodexFull
 - useCodexSkills
 - useCraftingSession
 - useCraftingSessions
@@ -266,7 +232,6 @@ Generated: 2026-10-25
 - useDuplicateItem
 - useDuplicatePower
 - useDuplicateTechnique
-- useEffectivePortrait
 - useEncounter
 - useEncounters
 - useEnhancedItems
@@ -277,26 +242,18 @@ Generated: 2026-10-25
 - useInvalidateCampaigns
 - useIsClient
 - useItemProperties
-- useLibrarySectionCollapse
 - useLoadModalLibrary
 - useMergedSpecies
-- useModalListState
 - useOfficialLibrary
 - useOfficialLibraryCounts
 - useParts
 - usePatchOfficialCatalogListing
 - usePathListFilter
-- usePathRecommendationIndex
-- usePlaceholderTheme
-- usePortraitFallbackUrl
 - usePowerParts
 - useProfile
-- userLibraryKeys
 - userSpeciesToSpecies
-- useSaveCharacter
 - useSaveCraftingSession
 - useSaveEncounter
-- useSort
 - useSpecies
 - useTechniqueParts
 - useTraits

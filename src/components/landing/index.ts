@@ -8,13 +8,6 @@ export { UniquenessSection } from './uniqueness-section';
 export { HowItWorksSection } from './how-it-works-section';
 export { SecondaryDiscoverySection } from './secondary-discovery-section';
 export { CommunitySection } from './community-section';
-export {
-  CharacterVarietyTriptych,
-  GearShowcasePanel,
-  RulesBookPanel,
-  LANDING_ART,
-  LANDING_MEDIA_ASPECT,
-} from './landing-art-frame';
-export { MarketingLinkButton, MarketingExternalButton } from './marketing-button';
+export { MarketingLinkButton } from './marketing-button';
 export { CreatorFunnelHero } from './creator-funnel-hero';
 export type { CreatorFunnelHeroProps } from './creator-funnel-hero';

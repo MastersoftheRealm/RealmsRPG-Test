@@ -785,8 +785,6 @@ export const campaignCharacterRouteParamsSchema = z
   })
   .strict();
 
-export const campaignRollRouteParamsSchema = resourceIdParamSchema;
-
 export const inviteCodeRouteParamsSchema = z
   .object({
     code: z.string().min(1),

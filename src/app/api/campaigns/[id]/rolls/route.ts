@@ -10,7 +10,7 @@ import { getSession } from '@/lib/supabase/session';
 import {
   validateJson,
   campaignRollCreateSchema,
-  campaignRollRouteParamsSchema,
+  resourceIdParamSchema,
   validateRouteParams,
 } from '@/lib/api-validation';
 import { standardLimiter, buildRateLimitKey, resolveClientIp } from '@/lib/rate-limit';
@@ -64,7 +64,7 @@ export async function GET(_request: Request, { params }: { params: Promise<{ id:
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const paramResult = await validateRouteParams(params, campaignRollRouteParamsSchema);
+    const paramResult = await validateRouteParams(params, resourceIdParamSchema);
     if (!paramResult.success) return paramResult.error;
     const { id: campaignId } = paramResult.data;
     const supabase = await createClient();
@@ -179,7 +179,7 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
       );
     }
 
-    const paramResult = await validateRouteParams(params, campaignRollRouteParamsSchema);
+    const paramResult = await validateRouteParams(params, resourceIdParamSchema);
     if (!paramResult.success) return paramResult.error;
     const { id: campaignId } = paramResult.data;
     const supabase = await createClient();

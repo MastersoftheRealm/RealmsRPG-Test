@@ -7,7 +7,6 @@
 // Unified Mechanic Builder (shared by Power, Technique, and future Empowered Technique creators)
 export {
   buildMechanicParts,
-  calculateDamageOptionLevel,
   type CreatorType,
   type MechanicPartResult,
   type MechanicBuilderContext,
@@ -22,13 +21,8 @@ export {
 } from './mechanic-builder';
 
 export {
-  POWER_ADVANCED_MECHANIC_CATEGORIES,
-  POWER_ADVANCED_MECHANIC_CATEGORY_SET,
-  POWER_AUTO_MECHANIC_PART_NAMES,
-  POWER_CALC_SECTION_TITLES,
   POWER_CALC_SECTION_BY_NAME,
   POWER_DURATION_TYPE_PART_NAMES,
-  POWER_DURATION_MODIFIER_PART_NAMES,
   type PowerAdvancedMechanicCategory,
   type PowerCalcSectionId,
 } from './power-mechanic-constants';
@@ -46,9 +40,7 @@ export {
   getAreaPartForDisplay,
   formatAreaForDisplay,
   derivePowerDisplay,
-  derivePlainPowerDisplay,
   formatPowerDamage,
-  finalizePowerEnergy,
   formatEnergyStat,
   type DerivePowerDisplayOptions,
   type PowerPartPayload,
@@ -66,7 +58,6 @@ export {
   POWER_COMPOSITION_STRUCTURE_LABELS,
   POWER_RANDOMIZE_DIE_SIDES,
   normalizePowerComposition,
-  isIndependentRandomizeFace,
   expandLegacyRandomizeFace,
   isRandomizeDieComplete,
   powerCreatorSaveBlockReason,
@@ -74,12 +65,9 @@ export {
   isPowerCompositionMechanicPart,
   powerCompositionHelpText,
   resolvePowerComposition,
-  selectedResolvedVariant,
   composedPowerDamage,
-  composedPowerCategoryDamage,
   reverseDiscountApplied,
   powerCompositionEnergyLines,
-  composedPowerSavedParts,
   composedPowerProficiencyParts,
   plainPowerProficiencyParts,
   formatPowerCompositionSummary,
@@ -90,7 +78,6 @@ export {
   type PowerCompositionStructure,
   type PowerCompositionResolution,
   type PowerVariantSpec,
-  POWER_VARIANT_OVERRIDE_FIELDS,
   type PowerVariantOverrideField,
   type PowerVariantPolarity,
   type ResolvedPowerVariant,
@@ -98,12 +85,7 @@ export {
 
 export {
   buildPowerAdvancedCalculationGroups,
-  formatEnergyNumber,
-  formatSignedPercent,
-  formatPercentagePartModifier,
-  formatDurationPartModifier,
   formatDamageEnergyLabel,
-  defaultPowerEnergyLineLabel,
   type PowerAdvancedCalcGroup,
   type PowerAdvancedCalcRow,
 } from './power-energy-breakdown';
@@ -139,7 +121,6 @@ export {
   techniqueDamageSectionCostFromAnalysis,
   techniqueManualPartsSectionCost,
   techniqueNamedBadgeCost,
-  isTechniqueAttackMechanicName,
 } from './technique-creator-section-costs';
 
 // Empowered Technique Calculator
@@ -165,11 +146,8 @@ export {
 // Item Calculator
 export {
   calculateItemCosts,
-  calculateCurrencyCostAndRarity,
-  analyzeItemMarketCurrency,
   resolveItemMarketPricing,
   resolveWeaponRangeDisplay,
-  formatWeaponRangeDisplayCompact,
   formatWeaponRangeConfig,
   deriveWeaponRangeConfig,
   weaponRangeSpaceLadder,
@@ -182,16 +160,11 @@ export {
   deriveAgilityReductionFromProperties,
   deriveCriticalRangeIncreaseFromProperties,
   deriveShieldAmountFromProperties,
-  deriveShieldDamageFromProperties,
-  shieldDiceFromOptionLevel,
   resolveShieldBlockDisplay,
   resolveShieldDamageDisplay,
-  deriveItemDisplay,
   isGeneralProperty,
   isMechanicProperty,
   filterSavedItemPropertiesForList,
-  resolveItemPropertyCodexRow,
-  trainingPointsForItemPropertyRef,
   type ItemPropertyTpRow,
   type ItemPropertyPayload,
   type ItemCalcSectionId,
