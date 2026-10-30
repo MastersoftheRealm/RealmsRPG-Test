@@ -1,8 +1,8 @@
 #!/usr/bin/env node
 /**
- * C3 ratchet — tests that readFileSync repo source under src/, scripts/, sql/, .github/.
+ * C3 ratchet — tests that read repo source under src/, scripts/, sql/, .github/.
  *
- * Per test file, counts qualifying readFileSync call sites. New test files must have zero;
+ * Per test file, counts qualifying fs read call sites. New test files must have zero;
  * existing files may not add more reads than the baseline.
  *
  *   node scripts/check-test-source-read-ratchet.mjs
@@ -54,7 +54,7 @@ export function runTestSourceReadRatchetCheck({
     writeJson(baselinePath, { files: pruneZeroFlat(measured) });
     const summary = summarizeTestSourceReadRatchet(measured);
     console.log(
-      `Updated test source-read ratchet baseline (${summary.fileCount} files, ${summary.readTotal} readFileSync call sites).`,
+      `Updated test source-read ratchet baseline (${summary.fileCount} files, ${summary.readTotal} source read call sites).`,
     );
     return { ok: true, measured, summary };
   }

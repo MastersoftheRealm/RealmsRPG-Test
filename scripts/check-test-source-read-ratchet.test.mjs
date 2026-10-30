@@ -6,7 +6,6 @@ import {
   countSourceReadsInTestText,
   diffTestSourceReadRatchet,
   formatTestSourceReadRatchetFailure,
-  pathArgLooksLikeSourceRead,
 } from './lib/test-source-reads.mjs';
 import {
   measureTestSourceReadRatchet,
@@ -22,13 +21,70 @@ describe('countSourceReadsInTestText', () => {
     expect(countSourceReadsInTestText(text, 'src/foo.test.ts')).toBe(1);
   });
 
+  it('does not treat the import line as a call (describe body still scanned)', () => {
+    const text = `import { readFileSync } from 'node:fs';
+import { describe, it, expect } from 'vitest';
+import path from 'node:path';
+
+describe('layout', () => {
+  it('reads page source', () => {
+    readFileSync(path.join(process.cwd(), 'src/app/page.tsx'), 'utf8');
+  });
+});`;
+    expect(countSourceReadsInTestText(text, 'src/foo.test.ts')).toBe(1);
+  });
+
   it('counts new URL reads from colocated tests', () => {
     const text = `readFileSync(new URL('./page.tsx', import.meta.url), 'utf8');`;
     expect(countSourceReadsInTestText(text, 'src/app/page.test.ts')).toBe(1);
   });
 
-  it('pathArgLooksLikeSourceRead rejects baselines', () => {
-    expect(pathArgLooksLikeSourceRead("'tests/visual/a11y-baseline.json'", '', '')).toBe(false);
+  it('counts readFile from fs/promises', () => {
+    const text = `import { readFile } from 'fs/promises';
+await readFile(path.join(process.cwd(), 'src/app/page.tsx'), 'utf8');`;
+    expect(countSourceReadsInTestText(text, 'src/foo.test.ts')).toBe(1);
+  });
+
+  it('counts fs.promises.readFile', () => {
+    const text = `import fs from 'node:fs';
+await fs.promises.readFile(path.join(process.cwd(), 'src/app/page.tsx'), 'utf8');`;
+    expect(countSourceReadsInTestText(text, 'src/foo.test.ts')).toBe(1);
+  });
+
+  it('counts fs.readFile', () => {
+    const text = `import fs from 'node:fs';
+fs.readFile(path.join(process.cwd(), 'src/app/page.tsx'), 'utf8', () => {});`;
+    expect(countSourceReadsInTestText(text, 'src/foo.test.ts')).toBe(1);
+  });
+
+  it('counts path.join(__dirname, …) reads', () => {
+    const text = `readFileSync(path.join(__dirname, '../app/page.tsx'), 'utf8');`;
+    expect(countSourceReadsInTestText(text, 'src/app/page.test.ts')).toBe(1);
+  });
+
+  it('counts path.resolve(__dirname, …) reads', () => {
+    const text = `readFileSync(path.resolve(__dirname, '../app/page.tsx'), 'utf8');`;
+    expect(countSourceReadsInTestText(text, 'src/app/page.test.ts')).toBe(1);
+  });
+
+  it('counts require.resolve paths under src/', () => {
+    const text = `require.resolve('src/app/page.tsx');`;
+    expect(countSourceReadsInTestText(text, 'src/foo.test.ts')).toBe(1);
+  });
+
+  it('skips committed *-baseline.json paths but not ordinary fixture json under tests/', () => {
+    expect(
+      countSourceReadsInTestText(
+        `readFileSync('tests/visual/a11y-baseline.json', 'utf8');`,
+        'src/foo.test.ts',
+      ),
+    ).toBe(0);
+    expect(
+      countSourceReadsInTestText(
+        `readFileSync(path.join(process.cwd(), 'tests/fixtures/data.json'), 'utf8');`,
+        'src/foo.test.ts',
+      ),
+    ).toBe(0);
   });
 });
 

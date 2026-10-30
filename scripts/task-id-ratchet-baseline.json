@@ -1,8 +1,7 @@
 {
   "files": {
     "scripts/generate-db-types.mjs": {
-      "taskNumeric": 1,
-      "adrReference": 1
+      "taskNumeric": 1
     },
     "scripts/provision-e2e-baseline.js": {
       "taskNumeric": 1,
@@ -13,8 +12,7 @@
       "devVerification": 2
     },
     "sql/schema/0000_baseline_2026-08-13.sql": {
-      "taskNumeric": 7,
-      "adrReference": 14
+      "taskNumeric": 7
     },
     "src/app/(auth)/actions.ts": {
       "clickupLegacy": 2
@@ -44,8 +42,7 @@
       "taskNumeric": 2
     },
     "src/app/(main)/admin/codex/admin-archetype-editor-level1.tsx": {
-      "taskNumeric": 2,
-      "adrReference": 1
+      "taskNumeric": 2
     },
     "src/app/(main)/admin/codex/admin-archetype-editor.tsx": {
       "taskNumeric": 2
@@ -66,8 +63,7 @@
       "taskNumeric": 1
     },
     "src/app/(main)/admin/codex/admin-codex-copy-source-banner.tsx": {
-      "taskNumeric": 1,
-      "adrReference": 1
+      "taskNumeric": 1
     },
     "src/app/(main)/admin/codex/admin-codex-copy-suffix.ts": {
       "taskNumeric": 1
@@ -112,8 +108,7 @@
       "taskNumeric": 1
     },
     "src/app/(main)/admin/codex/codex-spreadsheet-toolbar.tsx": {
-      "taskNumeric": 2,
-      "adrReference": 1
+      "taskNumeric": 2
     },
     "src/app/(main)/admin/codex/use-admin-archetype-selection-options.ts": {
       "taskNumeric": 1
@@ -122,8 +117,7 @@
       "taskNumeric": 2
     },
     "src/app/(main)/admin/codex/use-admin-codex-entity.tsx": {
-      "taskNumeric": 1,
-      "adrReference": 2
+      "taskNumeric": 1
     },
     "src/app/(main)/admin/codex/use-codex-spreadsheet.ts": {
       "taskNumeric": 2
@@ -158,9 +152,6 @@
     },
     "src/app/(main)/characters/new/page.tsx": {
       "taskNumeric": 1
-    },
-    "src/app/(main)/characters/page.tsx": {
-      "adrReference": 1
     },
     "src/app/(main)/codex/CodexEquipmentTab.tsx": {
       "taskNumeric": 1
@@ -363,28 +354,11 @@
     "src/app/(main)/item-creator/use-item-creator-workspace.ts": {
       "taskNumeric": 2
     },
-    "src/app/(main)/library/LibraryCreaturesTab.tsx": {
-      "adrReference": 1
-    },
     "src/app/(main)/library/LibraryEnhancedTab.tsx": {
-      "taskNumeric": 1,
-      "adrReference": 1
-    },
-    "src/app/(main)/library/LibraryItemsTab.tsx": {
-      "adrReference": 1
-    },
-    "src/app/(main)/library/LibraryPowersTab.tsx": {
-      "adrReference": 1
-    },
-    "src/app/(main)/library/LibraryTechniquesTab.tsx": {
-      "adrReference": 1
+      "taskNumeric": 1
     },
     "src/app/(main)/library/components/UserLibraryEntityTabShell.tsx": {
-      "taskNumeric": 2,
-      "adrReference": 1
-    },
-    "src/app/(main)/library/components/library-entity-tab.types.ts": {
-      "adrReference": 1
+      "taskNumeric": 2
     },
     "src/app/(main)/library/library-guest-notice.tsx": {
       "clickupLegacy": 1
@@ -416,16 +390,9 @@
     "src/app/(main)/power-creator/page.tsx": {
       "taskNumeric": 1
     },
-    "src/app/(main)/power-creator/power-creator-bootstrap.ts": {
-      "adrReference": 1
-    },
-    "src/app/(main)/power-creator/power-creator-composition-band.tsx": {
-      "adrReference": 1
-    },
     "src/app/(main)/power-creator/power-creator-composition.ts": {
       "clickupLegacy": 1,
-      "devVerification": 1,
-      "adrReference": 1
+      "devVerification": 1
     },
     "src/app/(main)/power-creator/power-creator-cost-derivation.ts": {
       "taskNumeric": 1
@@ -461,21 +428,15 @@
       "taskNumeric": 1,
       "clickupLegacy": 1
     },
-    "src/app/(main)/power-creator/use-power-creator-composition.ts": {
-      "adrReference": 1
-    },
     "src/app/(main)/power-creator/use-power-creator-workspace.ts": {
       "taskNumeric": 2,
-      "clickupLegacy": 1,
-      "adrReference": 2
+      "clickupLegacy": 1
     },
     "src/app/(main)/rules/[slug]/page.tsx": {
-      "taskNumeric": 2,
-      "adrReference": 1
+      "taskNumeric": 2
     },
     "src/app/(main)/rules/page.tsx": {
-      "taskNumeric": 1,
-      "adrReference": 1
+      "taskNumeric": 1
     },
     "src/app/(main)/species-creator/page.tsx": {
       "taskNumeric": 1
@@ -530,45 +491,39 @@
       "taskNumeric": 1
     },
     "src/app/api/official/counts/route.ts": {
-      "taskNumeric": 1,
-      "adrReference": 1
+      "taskNumeric": 1
     },
     "src/app/api/upload/profile-picture/route.ts": {
       "taskNumeric": 2,
       "clickupLegacy": 1
     },
     "src/app/api/user/library/counts/route.ts": {
-      "taskNumeric": 1,
-      "adrReference": 1
+      "taskNumeric": 1
     },
     "src/app/dev/styleguide/page.tsx": {
       "taskNumeric": 1
     },
     "src/components/character-sheet/abilities-section.tsx": {
-      "taskNumeric": 1,
-      "adrReference": 1
+      "taskNumeric": 1
     },
     "src/components/character-sheet/add-proficiency-modal.tsx": {
       "taskNumeric": 1
     },
     "src/components/character-sheet/build-library-section-data.ts": {
-      "taskNumeric": 2,
-      "adrReference": 1
+      "taskNumeric": 2
     },
     "src/components/character-sheet/character-sheet-body.tsx": {
       "taskNumeric": 11,
       "clickupLegacy": 1
     },
     "src/components/character-sheet/character-sheet-context.tsx": {
-      "taskNumeric": 6,
-      "adrReference": 2
+      "taskNumeric": 6
     },
     "src/components/character-sheet/currency-field-commit.ts": {
       "clickupLegacy": 1
     },
     "src/components/character-sheet/library-section-props.ts": {
-      "taskNumeric": 2,
-      "adrReference": 1
+      "taskNumeric": 2
     },
     "src/components/character-sheet/library-section.tsx": {
       "taskNumeric": 1
@@ -577,8 +532,7 @@
       "taskNumeric": 1
     },
     "src/components/character-sheet/sheet-action-toolbar.tsx": {
-      "taskNumeric": 2,
-      "adrReference": 2
+      "taskNumeric": 2
     },
     "src/components/character-sheet/sheet-desktop-columns.ts": {
       "clickupLegacy": 1
@@ -588,12 +542,10 @@
     },
     "src/components/character-sheet/sheet-header.tsx": {
       "taskNumeric": 1,
-      "clickupLegacy": 1,
-      "adrReference": 2
+      "clickupLegacy": 1
     },
     "src/components/character-sheet/sheet-large-stat-block.tsx": {
-      "taskNumeric": 2,
-      "adrReference": 1
+      "taskNumeric": 2
     },
     "src/components/character-sheet/sheet-mobile-carousel.ts": {
       "taskNumeric": 1
@@ -625,9 +577,6 @@
     "src/components/character-sheet/use-sheet-skill-identity-actions.ts": {
       "taskNumeric": 2
     },
-    "src/components/codex/codex-feat-row.tsx": {
-      "adrReference": 1
-    },
     "src/components/creator/CreatorSaveToolbar.tsx": {
       "clickupLegacy": 1
     },
@@ -641,8 +590,7 @@
       "clickupLegacy": 1
     },
     "src/components/creator/health-energy-allocator.tsx": {
-      "taskNumeric": 1,
-      "adrReference": 1
+      "taskNumeric": 1
     },
     "src/components/creator/targeted-defenses-section.tsx": {
       "taskNumeric": 2
@@ -729,32 +677,23 @@
     "src/components/patterns/chrome/loadout-budget-bar.tsx": {
       "taskNumeric": 4
     },
-    "src/components/patterns/chrome/login-prompt-modal.tsx": {
-      "adrReference": 1
-    },
     "src/components/patterns/chrome/point-status.tsx": {
       "taskNumeric": 1
     },
     "src/components/patterns/chrome/realms-image-picker.tsx": {
-      "taskNumeric": 2,
-      "adrReference": 1
-    },
-    "src/components/patterns/chrome/roll-button.tsx": {
-      "adrReference": 1
+      "taskNumeric": 2
     },
     "src/components/patterns/chrome/segmented-control.tsx": {
       "taskNumeric": 2
     },
     "src/components/patterns/chrome/temp-modifier-toggle.tsx": {
-      "taskNumeric": 1,
-      "adrReference": 1
+      "taskNumeric": 1
     },
     "src/components/patterns/chrome/theme-toggle.tsx": {
       "taskNumeric": 1
     },
     "src/components/patterns/filters/archetype-path-filter.tsx": {
-      "taskNumeric": 2,
-      "adrReference": 1
+      "taskNumeric": 2
     },
     "src/components/patterns/filters/armament-filters.tsx": {
       "taskNumeric": 4
@@ -770,9 +709,6 @@
     },
     "src/components/patterns/filters/filter-utils.ts": {
       "taskNumeric": 1
-    },
-    "src/components/patterns/filters/index.ts": {
-      "adrReference": 1
     },
     "src/components/patterns/filters/power-technique-filters.tsx": {
       "taskNumeric": 4
@@ -794,15 +730,13 @@
       "clickupLegacy": 1
     },
     "src/components/patterns/index.ts": {
-      "taskNumeric": 2,
-      "adrReference": 5
+      "taskNumeric": 2
     },
     "src/components/patterns/list/ability-score-grid.tsx": {
       "taskNumeric": 2
     },
     "src/components/patterns/list/codex-browse-list-shell.tsx": {
-      "taskNumeric": 1,
-      "adrReference": 1
+      "taskNumeric": 1
     },
     "src/components/patterns/list/detail-option-list.tsx": {
       "taskNumeric": 1
@@ -832,8 +766,7 @@
       "taskNumeric": 1
     },
     "src/components/patterns/list/grid-list-row-types.ts": {
-      "taskNumeric": 5,
-      "adrReference": 1
+      "taskNumeric": 5
     },
     "src/components/patterns/list/grid-list-row.tsx": {
       "taskNumeric": 6,
@@ -853,8 +786,7 @@
       "clickupLegacy": 1
     },
     "src/components/patterns/list/list-search-toolbar.tsx": {
-      "taskNumeric": 1,
-      "adrReference": 1
+      "taskNumeric": 1
     },
     "src/components/patterns/list/official-enhanced-list.tsx": {
       "taskNumeric": 1
@@ -863,15 +795,13 @@
       "taskNumeric": 2
     },
     "src/components/patterns/list/skill-row.tsx": {
-      "taskNumeric": 4,
-      "adrReference": 1
+      "taskNumeric": 4
     },
     "src/components/patterns/select/mixed-species-modal.tsx": {
       "taskNumeric": 1
     },
     "src/components/patterns/select/quantity-selector.tsx": {
-      "taskNumeric": 1,
-      "adrReference": 1
+      "taskNumeric": 1
     },
     "src/components/patterns/select/unified-selection-modal-helpers.ts": {
       "taskNumeric": 1
@@ -882,36 +812,21 @@
     "src/components/patterns/select/unified-selection-modal-types.ts": {
       "taskNumeric": 5
     },
-    "src/components/patterns/select/value-stepper.tsx": {
-      "adrReference": 4
-    },
     "src/components/patterns/stat-tiles/ability-defense-stat-model.ts": {
-      "clickupLegacy": 1,
-      "adrReference": 1
+      "clickupLegacy": 1
     },
     "src/components/rolls/roll-context.tsx": {
       "clickupLegacy": 1
     },
     "src/components/rolls/roll-log.tsx": {
       "taskNumeric": 2,
-      "clickupLegacy": 1,
-      "adrReference": 1
-    },
-    "src/components/rules/rulebook-article.tsx": {
-      "adrReference": 1
-    },
-    "src/components/ui/button.tsx": {
-      "adrReference": 1
+      "clickupLegacy": 1
     },
     "src/components/ui/chip.tsx": {
       "taskNumeric": 1
     },
-    "src/components/ui/icon-button.tsx": {
-      "adrReference": 1
-    },
     "src/components/ui/input.tsx": {
-      "taskNumeric": 1,
-      "adrReference": 1
+      "taskNumeric": 1
     },
     "src/components/ui/modal.tsx": {
       "taskNumeric": 1,
@@ -924,16 +839,13 @@
       "taskNumeric": 4
     },
     "src/hooks/add-library-item/map-library-to-character.ts": {
-      "taskNumeric": 1,
-      "adrReference": 1
+      "taskNumeric": 1
     },
     "src/hooks/index.ts": {
-      "taskNumeric": 1,
-      "adrReference": 1
+      "taskNumeric": 1
     },
     "src/hooks/use-add-to-character-from-library.tsx": {
-      "taskNumeric": 1,
-      "adrReference": 1
+      "taskNumeric": 1
     },
     "src/hooks/use-auth.ts": {
       "taskNumeric": 1,
@@ -943,15 +855,13 @@
       "taskNumeric": 1
     },
     "src/hooks/use-characters.ts": {
-      "taskNumeric": 5,
-      "adrReference": 3
+      "taskNumeric": 5
     },
     "src/hooks/use-codex-source-catalog.ts": {
       "taskNumeric": 1
     },
     "src/hooks/use-codex.ts": {
-      "taskNumeric": 2,
-      "adrReference": 1
+      "taskNumeric": 2
     },
     "src/hooks/use-game-rules.ts": {
       "taskNumeric": 1
@@ -965,19 +875,14 @@
     "src/hooks/use-modal-list-state.ts": {
       "taskNumeric": 1
     },
-    "src/hooks/use-official-library.ts": {
-      "adrReference": 1
-    },
     "src/hooks/use-path-recommendation-index.ts": {
-      "taskNumeric": 4,
-      "adrReference": 1
+      "taskNumeric": 4
     },
     "src/lib/api-client.ts": {
       "taskNumeric": 1
     },
     "src/lib/api-validation.ts": {
-      "taskNumeric": 4,
-      "adrReference": 2
+      "taskNumeric": 4
     },
     "src/lib/auth/captcha.ts": {
       "taskNumeric": 1
@@ -991,33 +896,24 @@
     "src/lib/calculators/empowered-overlap-parts.ts": {
       "taskNumeric": 1
     },
-    "src/lib/calculators/index.ts": {
-      "adrReference": 1
-    },
     "src/lib/calculators/item-calc.ts": {
       "taskNumeric": 3
     },
     "src/lib/calculators/power-calc.ts": {
-      "clickupLegacy": 1,
-      "adrReference": 3
-    },
-    "src/lib/calculators/power-composition.ts": {
-      "adrReference": 2
+      "clickupLegacy": 1
     },
     "src/lib/character-library-section-visibility.ts": {
       "clickupLegacy": 1
     },
     "src/lib/character-save.ts": {
       "taskNumeric": 8,
-      "clickupLegacy": 1,
-      "adrReference": 1
+      "clickupLegacy": 1
     },
     "src/lib/character-view-enrichment-server.ts": {
       "taskNumeric": 1
     },
     "src/lib/character-view-enrichment.ts": {
-      "taskNumeric": 1,
-      "adrReference": 2
+      "taskNumeric": 1
     },
     "src/lib/character/appearance-age.ts": {
       "taskNumeric": 3,
@@ -1028,25 +924,19 @@
     },
     "src/lib/character/dirty-patch.ts": {
       "taskNumeric": 1,
-      "clickupLegacy": 1,
-      "adrReference": 1
+      "clickupLegacy": 1
     },
     "src/lib/character/innate-power-capacity.ts": {
       "clickupLegacy": 4
     },
-    "src/lib/character/persist-finished-character.ts": {
-      "adrReference": 1
-    },
     "src/lib/character/realtime-merge.ts": {
-      "taskNumeric": 2,
-      "adrReference": 1
+      "taskNumeric": 2
     },
     "src/lib/character/recovery-over-max.ts": {
       "clickupLegacy": 1
     },
     "src/lib/character/save-lock.ts": {
-      "taskNumeric": 1,
-      "adrReference": 1
+      "taskNumeric": 1
     },
     "src/lib/character/schema-normalize.ts": {
       "taskNumeric": 1
@@ -1062,8 +952,7 @@
       "taskNumeric": 1
     },
     "src/lib/character/temp-modifiers.ts": {
-      "taskNumeric": 1,
-      "adrReference": 3
+      "taskNumeric": 1
     },
     "src/lib/chip/list-row-metadata.ts": {
       "taskNumeric": 3,
@@ -1076,8 +965,7 @@
       "taskNumeric": 4
     },
     "src/lib/codex/feat-list.ts": {
-      "taskNumeric": 4,
-      "adrReference": 1
+      "taskNumeric": 4
     },
     "src/lib/codex/part-type.ts": {
       "taskNumeric": 1
@@ -1123,15 +1011,13 @@
       "clickupLegacy": 2
     },
     "src/lib/data-enrichment/clean-for-save.ts": {
-      "taskNumeric": 3,
-      "adrReference": 2
+      "taskNumeric": 3
     },
     "src/lib/detail-option/builders.ts": {
       "taskNumeric": 2
     },
     "src/lib/detail-option/combat-builder.ts": {
-      "taskNumeric": 1,
-      "adrReference": 1
+      "taskNumeric": 1
     },
     "src/lib/detail-option/compact-facts.ts": {
       "taskNumeric": 1
@@ -1140,12 +1026,10 @@
       "clickupLegacy": 1
     },
     "src/lib/entity-image-url.ts": {
-      "taskNumeric": 1,
-      "adrReference": 1
+      "taskNumeric": 1
     },
     "src/lib/game/archetype-path.ts": {
-      "taskNumeric": 4,
-      "adrReference": 3
+      "taskNumeric": 4
     },
     "src/lib/game/character-legality.ts": {
       "taskNumeric": 1
@@ -1169,15 +1053,13 @@
       "taskNumeric": 1
     },
     "src/lib/game/innate-eligibility.ts": {
-      "taskNumeric": 2,
-      "adrReference": 2
+      "taskNumeric": 2
     },
     "src/lib/game/mixed-encounter-view-tab.ts": {
       "clickupLegacy": 1
     },
     "src/lib/game/path-recommendation-index.ts": {
-      "taskNumeric": 5,
-      "adrReference": 2
+      "taskNumeric": 5
     },
     "src/lib/game/path-validation.ts": {
       "taskNumeric": 3
@@ -1186,38 +1068,28 @@
       "taskNumeric": 1
     },
     "src/lib/glr/glr-chrome-spacing-norms.ts": {
-      "taskNumeric": 9,
-      "adrReference": 1
+      "taskNumeric": 9
     },
     "src/lib/glr/glr-density.ts": {
-      "taskNumeric": 2,
-      "adrReference": 2
+      "taskNumeric": 2
     },
     "src/lib/glr/glr-fact-catalog.ts": {
-      "taskNumeric": 2,
-      "adrReference": 1
+      "taskNumeric": 2
     },
     "src/lib/glr/glr-list-chrome.ts": {
-      "taskNumeric": 1,
-      "adrReference": 1
+      "taskNumeric": 1
     },
     "src/lib/glr/glr-surface-bindings.ts": {
-      "taskNumeric": 2,
-      "adrReference": 1
+      "taskNumeric": 2
     },
     "src/lib/glr/resolve-glr-fact-layout.ts": {
-      "taskNumeric": 2,
-      "adrReference": 1
+      "taskNumeric": 2
     },
     "src/lib/glr/validate-glr-chrome-spacing.ts": {
       "taskNumeric": 5
     },
     "src/lib/glr/validate-glr-facts.ts": {
-      "taskNumeric": 1,
-      "adrReference": 2
-    },
-    "src/lib/guest-character-storage.ts": {
-      "adrReference": 1
+      "taskNumeric": 1
     },
     "src/lib/guided-creator/ancestry-pick-tasks.ts": {
       "devVerification": 1
@@ -1238,8 +1110,7 @@
       "taskNumeric": 2
     },
     "src/lib/guided-creator/feats-l2.ts": {
-      "taskNumeric": 5,
-      "adrReference": 1
+      "taskNumeric": 5
     },
     "src/lib/guided-creator/guided-equipment-l2.ts": {
       "taskNumeric": 5
@@ -1273,17 +1144,11 @@
     "src/lib/guided-creator/substep-satisfaction.ts": {
       "taskNumeric": 1
     },
-    "src/lib/id-constants.ts": {
-      "adrReference": 1
-    },
     "src/lib/level-up-guide.ts": {
       "taskNumeric": 1
     },
     "src/lib/leveled-feats.ts": {
       "taskNumeric": 1
-    },
-    "src/lib/library-columnar.ts": {
-      "adrReference": 1
     },
     "src/lib/library-selectable-builders.ts": {
       "taskNumeric": 5,
@@ -1296,25 +1161,16 @@
       "taskNumeric": 2
     },
     "src/lib/library/catalog-listing.ts": {
-      "clickupLegacy": 1,
-      "adrReference": 1
+      "clickupLegacy": 1
     },
     "src/lib/library/character-filter-persistence.ts": {
       "taskNumeric": 2
     },
-    "src/lib/library/fetch-library-tab-counts.ts": {
-      "adrReference": 1
-    },
     "src/lib/library/library-tab-counts.ts": {
-      "taskNumeric": 1,
-      "adrReference": 2
+      "taskNumeric": 1
     },
     "src/lib/library/official-item-list.ts": {
-      "taskNumeric": 1,
-      "adrReference": 1
-    },
-    "src/lib/library/official-power-list.ts": {
-      "adrReference": 1
+      "taskNumeric": 1
     },
     "src/lib/library/power-technique-categories.ts": {
       "taskNumeric": 1
@@ -1323,8 +1179,7 @@
       "taskNumeric": 1
     },
     "src/lib/library/power-technique-filters.ts": {
-      "taskNumeric": 2,
-      "adrReference": 1
+      "taskNumeric": 2
     },
     "src/lib/library/source-scope.ts": {
       "taskNumeric": 3
@@ -1335,19 +1190,14 @@
     "src/lib/onboarding-preferences.ts": {
       "taskNumeric": 1
     },
-    "src/lib/power-variant-chips.ts": {
-      "adrReference": 1
-    },
     "src/lib/rate-limit.ts": {
       "taskNumeric": 1
     },
     "src/lib/realms-image-consumers.ts": {
-      "taskNumeric": 4,
-      "adrReference": 1
+      "taskNumeric": 4
     },
     "src/lib/realms-images.ts": {
-      "taskNumeric": 2,
-      "adrReference": 2
+      "taskNumeric": 2
     },
     "src/lib/roll-timestamp.ts": {
       "taskNumeric": 1
@@ -1372,21 +1222,13 @@
       "taskNumeric": 1
     },
     "src/lib/supabase/cached-public-read.ts": {
-      "clickupLegacy": 2,
-      "adrReference": 1
-    },
-    "src/lib/supabase/database.ts": {
-      "adrReference": 1
+      "clickupLegacy": 2
     },
     "src/lib/supabase/middleware.ts": {
       "clickupLegacy": 2
     },
-    "src/lib/supabase/public-client.ts": {
-      "adrReference": 1
-    },
     "src/lib/utils/exact-optional.ts": {
-      "taskNumeric": 1,
-      "adrReference": 1
+      "taskNumeric": 1
     },
     "src/lib/utils/motion.ts": {
       "keepInSync": 1
@@ -1398,11 +1240,7 @@
       "taskNumeric": 1
     },
     "src/services/character-service.ts": {
-      "taskNumeric": 2,
-      "adrReference": 1
-    },
-    "src/services/library-service.ts": {
-      "adrReference": 2
+      "taskNumeric": 2
     },
     "src/stores/guided-creator-store.ts": {
       "taskNumeric": 5
@@ -1411,19 +1249,16 @@
       "taskNumeric": 8
     },
     "src/types/character.ts": {
-      "taskNumeric": 5,
-      "adrReference": 5
+      "taskNumeric": 5
     },
     "src/types/codex.ts": {
       "taskNumeric": 2
     },
     "src/types/database.types.ts": {
-      "taskNumeric": 1,
-      "adrReference": 1
+      "taskNumeric": 1
     },
     "src/types/library.ts": {
-      "taskNumeric": 1,
-      "adrReference": 2
+      "taskNumeric": 1
     }
   }
 }

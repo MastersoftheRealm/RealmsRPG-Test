@@ -1,8 +1,8 @@
 /**
- * Detect tests that read production source text via readFileSync (C3 ratchet).
+ * Detect tests that read production source text via fs reads (C3 ratchet).
  */
 
-const TEST_FILE_RE = /\.(test|spec)\.(ts|tsx|js|jsx|mjs|cjs)$/;
+const TEST_FILE_RE = /\.(test|spec|pw)\.(ts|tsx|js|jsx|mjs|cjs)$/;
 
 const TEST_SOURCE_READ_RATCHET_IGNORED = new Set([
   'scripts/check-test-source-read-ratchet.test.mjs',
@@ -14,37 +14,40 @@ export const SOURCE_READ_ROOTS = ['src/', 'scripts/', 'sql/', '.github/'];
 
 const SOURCE_EXTENSIONS = /\.(tsx|ts|jsx|js|mjs|cjs|css|sql|mdx|yml|yaml)(['"`\)]|$)/i;
 
+/** Call sites that may read source text (first argument is checked). */
+const SOURCE_READ_CALL_RES = [
+  /\breadFileSync\s*\(/g,
+  /\bfs\.promises\.readFile\s*\(/g,
+  /\bfs\.readFile\s*\(/g,
+  /(?<![.\w])readFile\s*\(/g,
+  /\brequire\.resolve\s*\(/g,
+];
+
 /**
- * Count readFileSync call sites that plausibly read repo source under src/, scripts/, sql/, or .github/.
- *
- * Decision rules (from repo survey):
- * - String/path arguments mentioning src/, scripts/, sql/, .github/, or import.meta / process.cwd() joins.
- * - `new URL(..., import.meta.url)` reads resolved under src/ for tests colocated in src/.
- * - Bare identifiers (`file`, `metaPath`, `source`) count when the test lives under src/ (colocated source-text tests).
- * - Excluded: JSON/baseline fixtures, node_modules, package.json, paths under tests/ or __fixtures__.
+ * Count fs read call sites that plausibly read repo source under src/, scripts/, sql/, or .github/.
  *
  * @param {string} text test file contents
  * @param {string} [testRelPath] posix path for context (e.g. src/.../foo.test.ts)
  * @returns {number}
  */
 export function countSourceReadsInTestText(text, testRelPath = '') {
-  let count = 0;
-  let searchFrom = 0;
-  while (searchFrom < text.length) {
-    const idx = text.indexOf('readFileSync', searchFrom);
-    if (idx === -1) break;
-    const open = text.indexOf('(', idx);
-    if (open === -1) break;
-    const close = indexOfMatchingParen(text, open);
-    if (close === -1) break;
-    const inner = text.slice(open + 1, close);
-    const arg = firstCallArgument(inner);
-    if (!isExcludedReadTarget(arg) && pathArgLooksLikeSourceRead(arg, testRelPath, text)) {
-      count += 1;
+  /** @type {Set<number>} */
+  const openParenIndexes = new Set();
+  for (const callRe of SOURCE_READ_CALL_RES) {
+    callRe.lastIndex = 0;
+    let m;
+    while ((m = callRe.exec(text)) !== null) {
+      const open = m.index + m[0].lastIndexOf('(');
+      const close = indexOfMatchingParen(text, open);
+      if (close === -1) continue;
+      const inner = text.slice(open + 1, close);
+      const arg = firstCallArgument(inner);
+      if (!isExcludedReadTarget(arg) && pathArgLooksLikeSourceRead(arg, testRelPath, text)) {
+        openParenIndexes.add(open);
+      }
     }
-    searchFrom = close + 1;
   }
-  return count;
+  return openParenIndexes.size;
 }
 
 /** @param {string} text @param {number} openIdx index of `(` */
@@ -91,14 +94,19 @@ export function pathArgLooksLikeSourceRead(arg, testRelPath, fileText) {
     if (argIncludesRoot(arg, root)) return true;
   }
 
+  if (/__dirname/i.test(arg) && SOURCE_EXTENSIONS.test(arg)) return true;
+
   if (/import\.meta\.(dirname|url)/i.test(arg)) return true;
   if (/process\.cwd\(\)/i.test(arg)) return true;
+
+  if (/^['"`][^'"`]*\/src\//i.test(arg) || /^['"`]\.\.\/.*\.(tsx|ts|jsx|js|css)/i.test(arg)) {
+    return true;
+  }
 
   if (/^['"`][^'"`]+['"`]$/.test(arg) && SOURCE_EXTENSIONS.test(arg)) {
     return !/\.json['"`]$/.test(arg);
   }
 
-  // Colocated tests: readFileSync(metaPath) where metaPath joins a source file in the same folder.
   if (/^[a-zA-Z_$][\w$]*$/.test(arg)) {
     const decl = new RegExp(
       `(?:const|let)\\s+${arg}\\s*=\\s*[^;]*import\\.meta\\.dirname[^;]*\\.(tsx|ts|jsx|js|css)`,
@@ -112,11 +120,11 @@ export function pathArgLooksLikeSourceRead(arg, testRelPath, fileText) {
 }
 
 function isExcludedReadTarget(arg) {
-  if (/\.json['"`\)]/i.test(arg) || /baseline/i.test(arg)) return true;
-  if (/package\.json/i.test(arg)) return true;
   if (/node_modules/i.test(arg)) return true;
+  if (/package\.json/i.test(arg)) return true;
   if (/tests\//i.test(arg) || /fixtures?\//i.test(arg)) return true;
   if (/vitest\.setup/i.test(arg)) return true;
+  if (/baseline[^'"`]*\.json/i.test(arg) || /-baseline\.json/i.test(arg)) return true;
   return false;
 }
 
@@ -134,8 +142,19 @@ function argIncludesRoot(arg, root) {
     `path.join(process.cwd(), '${root}`,
     `path.join(process.cwd(), "${root}`,
     `path.join(process.cwd(), \`${root}`,
+    `join(__dirname, '${root}`,
+    `join(__dirname, "${root}`,
+    `join(__dirname, \`${root}`,
+    `path.join(__dirname, '`,
+    `path.join(__dirname, "`,
+    `path.resolve(__dirname, '`,
+    `path.resolve(__dirname, "`,
   ];
-  return patterns.some((p) => arg.includes(p));
+  if (patterns.some((p) => arg.includes(p))) return true;
+  if (root === 'src/' && /join\(__dirname,\s*['"`]\.\./.test(arg) && SOURCE_EXTENSIONS.test(arg)) {
+    return true;
+  }
+  return false;
 }
 
 /**
@@ -162,14 +181,14 @@ export function diffTestSourceReadRatchet(measured, baseline) {
     if (base === undefined) {
       if (count > 0) {
         errors.push(
-          `${relPath}: new test file with ${count} readFileSync source read(s). Assert behavior instead of pinning source text.`,
+          `${relPath}: new test file with ${count} source file read(s). Assert behavior instead of pinning source text.`,
         );
       }
       continue;
     }
     if (count > base) {
       errors.push(
-        `${relPath}: ${count} source readFileSync call(s) > baseline ${base}. Do not add new source-text assertions; test runtime behavior instead, then run npm run tasks:test-source-read-ratchet:update after intentional cleanup.`,
+        `${relPath}: ${count} source read call site(s) > baseline ${base}. Do not add new source-text assertions; test runtime behavior instead, then run npm run tasks:test-source-read-ratchet:update after intentional cleanup.`,
       );
     }
   }
@@ -179,7 +198,7 @@ export function diffTestSourceReadRatchet(measured, baseline) {
 
 export function formatTestSourceReadRatchetFailure(errors) {
   return [
-    'Test source-read ratchet failed — readFileSync of src/, scripts/, sql/, or .github/ must not increase (C3 / ClickUp 1dfe8wf2ga7).',
+    'Test source-read ratchet failed — reads of src/, scripts/, sql/, or .github/ must not increase (C3 / ClickUp 1dfe8wf2ga7).',
     'Replace source-text tests with behavior assertions. When a file drops reads in a cleanup PR, run: npm run tasks:test-source-read-ratchet:update',
     '',
     ...errors.map((e) => `  • ${e}`),

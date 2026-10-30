@@ -33,11 +33,6 @@ export const TASK_ID_PATTERNS = [
     re: /\bDEV-[A-Z0-9]+(?:-[A-Z0-9]+)+\b/g,
   },
   {
-    id: 'adrReference',
-    label: 'ADR-#### architecture doc references in code comments',
-    re: /\bADR-\d{4}\b/g,
-  },
-  {
     id: 'auditFinding',
     label: 'Audit finding codes (PREFIX-###, e.g. CROSS-001 / API-003)',
     re: /\b(?:CROSS|API|UI|AUTH|SQL|SEC|DOC|TEST|CI|VTT|PERM|RLS|DEPLOY|LINT|A11Y|MOBILE|COPY|ARCH|DATA|PERF|ROUTE|HOOK|STORE|COMP|TYPE|FEAT|BUG|ADMIN|CODEX|ENC|CHAR|CREATOR|GLR|WORKFLOW|AUDIT|COMMENT|NARR|DEAD)-\d{3}\b/g,
@@ -177,7 +172,7 @@ export function diffTaskIdRatchet(measured, baseline) {
 export function formatTaskIdRatchetFailure(errors) {
   return [
     'Task/audit tag ratchet failed — counts must not increase (C4 / ClickUp 1dfe8wf2ga8).',
-    'Do not add TASK-###, ClickUp IDs, DEV-###, ADR-#### in comments, or "keep in sync" notes to src/, scripts/, or sql/.',
+    'Do not add TASK-###, ClickUp IDs, DEV-###, or "keep in sync" notes to src/, scripts/, or sql/.',
     'When you remove tags in a cleanup PR, run: npm run tasks:task-id-ratchet:update',
     '',
     ...errors.map((e) => `  • ${e}`),
