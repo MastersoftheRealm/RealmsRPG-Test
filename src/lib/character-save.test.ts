@@ -113,13 +113,10 @@ describe('formatCharacterCreateFailureMessage (TASK-754)', () => {
     saveRetryHint: 'Check My Characters before trying again so you do not create a duplicate.',
   };
 
-  it('keeps the 400 legality message (violation list), without the duplicate hint', () => {
-    const err = new ApiError(
-      'Character is not a legal level 1 build: Ability points spent (9) exceed the level 1 budget (7).',
-      400,
-    );
+  it('keeps a 400 validation message without the duplicate hint', () => {
+    const err = new ApiError('Validation failed', 400);
     const message = formatCharacterCreateFailureMessage(err, copy);
-    expect(message).toContain('Ability points spent');
+    expect(message).toBe('Validation failed');
     expect(message).not.toMatch(/My Characters|duplicate/i);
   });
 

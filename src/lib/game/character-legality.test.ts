@@ -1,10 +1,20 @@
 import { describe, expect, it } from 'vitest';
 import {
   catalogFromCodexRows,
-  findLevel1LegalityViolations,
+  findCharacterLegalityViolations,
   mapCodexBaseSkillToId,
-  shouldCheckLevel1Legality,
+  type CharacterLegalityRulesStatus,
 } from './character-legality';
+
+const LOADED: CharacterLegalityRulesStatus = 'loaded';
+
+function warnings(
+  candidate: Parameters<typeof findCharacterLegalityViolations>[0],
+  rules?: Parameters<typeof findCharacterLegalityViolations>[2],
+  featCatalog?: Parameters<typeof findCharacterLegalityViolations>[3],
+) {
+  return findCharacterLegalityViolations(candidate, LOADED, rules, featCatalog).warnings;
+}
 
 /** A legal level-1 guided build: 7 ability points, 3 skill points, 1 of each feat kind. */
 function legalBuild() {
@@ -33,30 +43,43 @@ function legalBuild() {
   };
 }
 
-describe('shouldCheckLevel1Legality', () => {
-  it('checks level 1 and payloads with no level', () => {
-    expect(shouldCheckLevel1Legality({ level: 1 })).toBe(true);
-    expect(shouldCheckLevel1Legality({})).toBe(true);
+describe('findCharacterLegalityViolations (B5 all levels)', () => {
+  it('warns on level 20 over-budget ability spend (prevention gate 1dfe8wf2g9k)', () => {
+    const result = findCharacterLegalityViolations(
+      {
+        level: 20,
+        abilities: {
+          strength: 50,
+          vitality: 50,
+          agility: 50,
+          acuity: 0,
+          intelligence: 0,
+          charisma: 0,
+        },
+      },
+      LOADED,
+    );
+    expect(result.warnings.some((w) => /level 20 budget/.test(w))).toBe(true);
+    expect(result.uncomputable).toEqual([]);
   });
 
-  it('skips higher levels, whose level-up spend the document cannot show', () => {
-    expect(shouldCheckLevel1Legality({ level: 2 })).toBe(false);
-    expect(shouldCheckLevel1Legality({ level: 20 })).toBe(false);
+  it('returns uncomputable when core_rules was unavailable', () => {
+    const result = findCharacterLegalityViolations(legalBuild(), 'missing');
+    expect(result.warnings).toEqual([]);
+    expect(result.uncomputable[0]).toMatch(/Core rules data was unavailable/);
   });
-});
 
-describe('findLevel1LegalityViolations', () => {
   it('accepts a legal level-1 build', () => {
-    expect(findLevel1LegalityViolations(legalBuild())).toEqual([]);
+    expect(warnings(legalBuild())).toEqual([]);
   });
 
   it('accepts an empty payload — absent fields are not treated as violations', () => {
-    expect(findLevel1LegalityViolations({})).toEqual([]);
+    expect(warnings({})).toEqual([]);
   });
 
   it('accepts an under-filled build so a partial save is never refused', () => {
     expect(
-      findLevel1LegalityViolations({
+      warnings({
         ...legalBuild(),
         abilities: {
           strength: 1,
@@ -75,37 +98,37 @@ describe('findLevel1LegalityViolations', () => {
     ).toEqual([]);
   });
 
-  it('rejects ability spend over the level-1 budget', () => {
-    const violations = findLevel1LegalityViolations({
+  it('warns on ability spend over the level budget', () => {
+    const v = warnings({
       ...legalBuild(),
       abilities: { strength: 3, vitality: 3, agility: 3, acuity: 0, intelligence: 0, charisma: 0 },
     });
-    expect(violations).toHaveLength(1);
-    expect(violations[0]).toMatch(/Ability points spent \(9\).*budget \(7\)/);
+    expect(v).toHaveLength(1);
+    expect(v[0]).toMatch(/Ability points spent \(9\).*budget \(7\)/);
   });
 
-  it('rejects scores below the floor, closing the refund-farming hole', () => {
-    const violations = findLevel1LegalityViolations({
+  it('warns on scores below the floor, closing the refund-farming hole', () => {
+    const v = warnings({
       ...legalBuild(),
       abilities: { strength: 8, vitality: -5, agility: 0, acuity: 0, intelligence: 0, charisma: 0 },
     });
-    expect(violations.some((v) => /cannot go below -2/.test(v))).toBe(true);
+    expect(v.some((line) => /cannot go below -2/.test(line))).toBe(true);
   });
 
-  it('rejects skill allocation over the level-1 budget', () => {
-    const violations = findLevel1LegalityViolations({
+  it('warns on skill allocation over the level budget', () => {
+    const v = warnings({
       ...legalBuild(),
       skills: [
         { id: '1', skill_val: 3, prof: true },
         { id: '2', skill_val: 3, prof: true },
       ],
     });
-    expect(violations).toHaveLength(1);
-    expect(violations[0]).toMatch(/Skill points spent \(6\).*budget \(3\)/);
+    expect(v).toHaveLength(1);
+    expect(v[0]).toMatch(/Skill points spent \(6\).*budget \(3\)/);
   });
 
   it('counts defense bonuses against the skill budget', () => {
-    const violations = findLevel1LegalityViolations({
+    const v = warnings({
       ...legalBuild(),
       skills: [{ id: '1', skill_val: 1, prof: true }],
       defenseVals: {
@@ -117,29 +140,27 @@ describe('findLevel1LegalityViolations', () => {
         resolve: 0,
       },
     });
-    expect(violations[0]).toMatch(/Skill points spent \(5\)/);
+    expect(v[0]).toMatch(/Skill points spent \(5\)/);
   });
 
   it('reads a skills record as well as saved rows', () => {
-    expect(
-      findLevel1LegalityViolations({ ...legalBuild(), skills: { '1': 1, '2': 1, '3': 1 } }),
-    ).toEqual([]);
-    expect(
-      findLevel1LegalityViolations({ ...legalBuild(), skills: { '1': 3, '2': 3 } })[0],
-    ).toMatch(/Skill points spent \(6\)/);
+    expect(warnings({ ...legalBuild(), skills: { '1': 1, '2': 1, '3': 1 } })).toEqual([]);
+    expect(warnings({ ...legalBuild(), skills: { '1': 3, '2': 3 } })[0]).toMatch(
+      /Skill points spent \(6\)/,
+    );
   });
 
-  it('rejects more archetype feats than the archetype allows', () => {
-    const violations = findLevel1LegalityViolations({
+  it('warns on more archetype feats than the archetype allows', () => {
+    const v = warnings({
       ...legalBuild(),
       archetypeFeats: [{ id: 'f1' }, { id: 'f2' }],
     });
-    expect(violations[0]).toMatch(/Archetype feats \(2\).*maximum \(1\)/);
+    expect(v[0]).toMatch(/Archetype feats \(2\).*maximum \(1\)/);
   });
 
   it('allows a martial archetype its bonus feats', () => {
     expect(
-      findLevel1LegalityViolations({
+      warnings({
         ...legalBuild(),
         archetype: { id: 'a1', type: 'martial' },
         archetypeFeats: [{ id: 'f1' }, { id: 'f2' }, { id: 'f3' }],
@@ -147,42 +168,40 @@ describe('findLevel1LegalityViolations', () => {
     ).toEqual([]);
   });
 
-  it('rejects more than one character feat at level 1', () => {
-    const violations = findLevel1LegalityViolations({
+  it('warns on more than one character feat at level 1', () => {
+    const v = warnings({
       ...legalBuild(),
       feats: [{ id: 'c1' }, { id: 'c2' }],
     });
-    expect(violations[0]).toMatch(/Character feats \(2\).*maximum \(1\)/);
+    expect(v[0]).toMatch(/Character feats \(2\).*maximum \(1\)/);
   });
 
-  it('rejects negative currency', () => {
-    const violations = findLevel1LegalityViolations({ ...legalBuild(), currency: -30 });
-    expect(violations[0]).toMatch(/Currency cannot be negative/);
+  it('warns on negative currency', () => {
+    const v = warnings({ ...legalBuild(), currency: -30 });
+    expect(v[0]).toMatch(/Currency cannot be negative/);
   });
 
-  it('rejects Health + Energy over the level-1 pool', () => {
-    const violations = findLevel1LegalityViolations({
+  it('warns on Health + Energy over the level pool', () => {
+    const v = warnings({
       ...legalBuild(),
       healthPoints: 18,
       energyPoints: 18,
     });
-    expect(violations[0]).toMatch(/Health \+ Energy allocation \(36\).*pool \(18\)/);
+    expect(v[0]).toMatch(/Health \+ Energy allocation \(36\).*pool \(18\)/);
   });
 
-  it('rejects negative Health or Energy allocation', () => {
-    expect(findLevel1LegalityViolations({ ...legalBuild(), healthPoints: -4 })[0]).toMatch(
-      /cannot be negative/,
-    );
+  it('warns on negative Health or Energy allocation', () => {
+    expect(warnings({ ...legalBuild(), healthPoints: -4 })[0]).toMatch(/cannot be negative/);
   });
 
   it('reports every violation at once', () => {
-    const violations = findLevel1LegalityViolations({
+    const v = warnings({
       ...legalBuild(),
       abilities: { strength: 3, vitality: 3, agility: 3, acuity: 0, intelligence: 0, charisma: 0 },
       currency: -1,
       feats: [{ id: 'c1' }, { id: 'c2' }],
     });
-    expect(violations).toHaveLength(3);
+    expect(v).toHaveLength(3);
   });
 
   it('takes the more permissive of rules override and code default', () => {
@@ -190,23 +209,21 @@ describe('findLevel1LegalityViolations', () => {
       ...legalBuild(),
       abilities: { strength: 3, vitality: 3, agility: 2, acuity: 0, intelligence: 0, charisma: 0 },
     };
-    expect(findLevel1LegalityViolations(overBudgetByDefaults)).toHaveLength(1);
-    // A rules edit that raises the budget must not be overruled by the code default.
+    expect(warnings(overBudgetByDefaults)).toHaveLength(1);
     expect(
-      findLevel1LegalityViolations(overBudgetByDefaults, {
+      warnings(overBudgetByDefaults, {
         PROGRESSION_PLAYER: { baseAbilityPoints: 12 },
       } as never),
     ).toEqual([]);
-    // A rules edit that lowers it must not retroactively reject a legal build.
     expect(
-      findLevel1LegalityViolations(legalBuild(), {
+      warnings(legalBuild(), {
         PROGRESSION_PLAYER: { baseAbilityPoints: 1 },
       } as never),
     ).toEqual([]);
   });
 });
 
-describe('findLevel1LegalityViolations feat requirements', () => {
+describe('findCharacterLegalityViolations feat requirements', () => {
   const catalog = {
     feats: [
       { id: 'f1', name: 'Open Feat' },
@@ -217,18 +234,16 @@ describe('findLevel1LegalityViolations feat requirements', () => {
   };
 
   it('skips requirement checks when no catalog is passed (budget tests stay independent)', () => {
-    expect(findLevel1LegalityViolations(legalBuild())).toEqual([]);
+    expect(warnings(legalBuild())).toEqual([]);
   });
 
   it('skips requirement checks when the catalog is empty', () => {
-    expect(
-      findLevel1LegalityViolations(legalBuild(), undefined, { feats: [], skills: [] }),
-    ).toEqual([]);
+    expect(warnings(legalBuild(), undefined, { feats: [], skills: [] })).toEqual([]);
   });
 
   it('accepts catalog feats the build qualifies for', () => {
     expect(
-      findLevel1LegalityViolations(
+      warnings(
         { ...legalBuild(), feats: [{ id: 'f1' }], archetypeFeats: [{ id: 'f1' }] },
         undefined,
         catalog,
@@ -236,13 +251,13 @@ describe('findLevel1LegalityViolations feat requirements', () => {
     ).toEqual([]);
   });
 
-  it('refuses a catalog feat whose requirements the build does not meet', () => {
-    const violations = findLevel1LegalityViolations(legalBuild(), undefined, catalog);
-    expect(violations.some((v) => /Needs Level 4/.test(v) && /level 4/i.test(v))).toBe(true);
+  it('warns on a catalog feat whose requirements the build does not meet', () => {
+    const v = warnings(legalBuild(), undefined, catalog);
+    expect(v.some((line) => /Needs Level 4/.test(line) && /level 4/i.test(line))).toBe(true);
   });
 
   it('names the ability gate in the player-facing detail', () => {
-    const violations = findLevel1LegalityViolations(
+    const v = warnings(
       {
         ...legalBuild(),
         archetypeFeats: [{ id: 'gated' }],
@@ -251,12 +266,12 @@ describe('findLevel1LegalityViolations feat requirements', () => {
       undefined,
       catalog,
     );
-    expect(violations.some((v) => /Needs Strength 3/.test(v) && /strength 3/i.test(v))).toBe(true);
+    expect(v.some((line) => /Needs Strength 3/.test(line) && /strength 3/i.test(line))).toBe(true);
   });
 
-  it('does not 400 an id that is not in the catalog', () => {
+  it('does not warn on an id that is not in the catalog', () => {
     expect(
-      findLevel1LegalityViolations(
+      warnings(
         { ...legalBuild(), feats: [{ id: 'custom-1' }], archetypeFeats: [{ id: 'f1' }] },
         undefined,
         catalog,
@@ -269,12 +284,12 @@ describe('findLevel1LegalityViolations feat requirements', () => {
       [{ id: 'g', name: 'Gated', ability_req: 'strength', abil_req_val: '3' }],
       [],
     );
-    const violations = findLevel1LegalityViolations(
+    const v = warnings(
       { ...legalBuild(), archetypeFeats: [{ id: 'g' }], feats: [] },
       undefined,
       fromRows,
     );
-    expect(violations.some((v) => /Gated/.test(v) && /strength 3/i.test(v))).toBe(true);
+    expect(v.some((line) => /Gated/.test(line) && /strength 3/i.test(line))).toBe(true);
   });
 });
 

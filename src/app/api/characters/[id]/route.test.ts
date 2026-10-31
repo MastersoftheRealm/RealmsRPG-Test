@@ -167,6 +167,20 @@ function createMockSupabase(characterRow: CharacterRow | null) {
           }),
         };
       }
+      if (table === 'core_rules') {
+        return {
+          select: vi.fn().mockResolvedValue({
+            data: [{ id: 'PROGRESSION_PLAYER', data: {} }],
+            error: null,
+          }),
+        };
+      }
+      if (table === 'codex_feats') {
+        return { select: vi.fn().mockResolvedValue({ data: [], error: null }) };
+      }
+      if (table === 'codex_skills') {
+        return { select: vi.fn().mockResolvedValue({ data: [], error: null }) };
+      }
       throw new Error(`Unexpected table: ${table}`);
     }),
     storage: {

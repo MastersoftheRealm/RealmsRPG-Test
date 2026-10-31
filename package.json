@@ -19,7 +19,7 @@
     "start": "next start",
     "test": "vitest run",
     "test:api": "vitest run src/app/api",
-    "lint": "eslint . --max-warnings 0 && node scripts/check-task-id-ratchet.mjs && node scripts/check-test-source-read-ratchet.mjs",
+    "lint": "eslint . --max-warnings 0 && node scripts/check-task-id-ratchet.mjs && node scripts/check-test-source-read-ratchet.mjs && node scripts/check-character-legality-all-levels.mjs",
     "typecheck": "tsc --noEmit",
     "typecheck:strictest": "tsc --noEmit -p tsconfig.strictest.json",
     "format": "prettier --write .",

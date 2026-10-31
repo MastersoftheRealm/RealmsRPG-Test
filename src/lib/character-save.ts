@@ -58,7 +58,7 @@ function isUncertainCreateOutcome(err: unknown): boolean {
 }
 
 /**
- * Player-facing create failure. 400 legality keeps the violation list. 500s and other
+ * Player-facing create failure. Validation 400s keep the server message. 500s and other
  * confirmed server failures do not mention My Characters / duplicates. Network/abort
  * after the POST may already have a row — only then append the retry hint (TASK-754).
  */
