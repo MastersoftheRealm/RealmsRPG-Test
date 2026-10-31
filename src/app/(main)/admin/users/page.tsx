@@ -24,6 +24,7 @@ import {
 import { ConfirmActionModal, ErrorDisplay } from '@/components/patterns';
 import { apiFetch } from '@/lib/api-client';
 import { formatRolePolicyLimit } from '@/lib/role-limits';
+import { ROLE_LABELS } from '@/lib/role-quota-messages';
 
 type UserRole = 'new_player' | 'playtester' | 'developer' | 'admin';
 
@@ -47,13 +48,6 @@ interface RolePolicyRow {
   max_custom_creatures: number;
   permissions: Record<string, unknown> | null;
 }
-
-const ROLE_LABELS: Record<UserRole, string> = {
-  new_player: 'New Player',
-  playtester: 'Playtester',
-  developer: 'Developer',
-  admin: 'Admin',
-};
 
 const ROLE_OPTIONS = (Object.keys(ROLE_LABELS) as UserRole[]).map((role) => ({
   value: role,

@@ -4,8 +4,7 @@
  * Unified tab navigation for Codex, Library, and other tabbed pages.
  * Supports both underline-style and pill-style tabs.
  *
- * Pair with `useTabGroup()` + `TabContentPanel` (shared panel, conditional content)
- * or `TabPanel` (one panel per tab, all stay in DOM with `hidden`).
+ * Pair with `useTabGroup()` + `TabContentPanel` (shared panel, conditional content).
  */
 
 'use client';
