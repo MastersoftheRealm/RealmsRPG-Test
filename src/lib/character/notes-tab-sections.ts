@@ -22,7 +22,7 @@ export const DEFAULT_NOTES_SECTION_ORDER: NotesTabSectionId[] = NOTES_TAB_SECTIO
   (s) => s.id,
 );
 
-export const DEFAULT_NOTES_SECTION_VISIBILITY: Record<NotesTabSectionId, boolean> = {
+const DEFAULT_NOTES_SECTION_VISIBILITY: Record<NotesTabSectionId, boolean> = {
   physical: true,
   appearance: true,
   backstory: true,

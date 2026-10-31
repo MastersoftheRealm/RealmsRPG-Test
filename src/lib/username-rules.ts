@@ -2,7 +2,7 @@
  * Shared username validation — register, profile create, and change-username flows.
  */
 
-export const USERNAME_BLOCKLIST = [
+const USERNAME_BLOCKLIST = [
   'admin',
   'moderator',
   'support',
@@ -17,8 +17,8 @@ export const USERNAME_BLOCKLIST = [
   'root',
 ] as const;
 
-export const USERNAME_MIN_LEN = 3;
-export const USERNAME_MAX_LEN = 24;
+const USERNAME_MIN_LEN = 3;
+const USERNAME_MAX_LEN = 24;
 
 export type UsernameValidationResult = { ok: true } | { ok: false; error: string };
 

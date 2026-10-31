@@ -5,7 +5,7 @@
  * A recovered amount is never negative.
  */
 
-export function recoveryGap(current: number, max: number): number {
+function recoveryGap(current: number, max: number): number {
   return Math.max(0, max - current);
 }
 

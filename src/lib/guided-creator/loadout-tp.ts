@@ -13,16 +13,8 @@ import {
 } from '@/lib/calculators/item-calc';
 import { getTrainingPointLimit } from '@/lib/proficiencies';
 import type { CoreRulesMap } from '@/types/core-rules';
-import {
-  buildEquipmentLookup,
-  inventoryTypeForResolvedItem,
-  resolveEquipmentRef,
-  type LoadoutItemCategory,
-} from '@/lib/guided-creator/resolve-loadout-items';
 import { isItemSelectedInDraft } from '@/lib/guided-creator/loadout-pool';
 import { findByNormalizedId } from '@/lib/utils';
-
-export { isItemSelectedInDraft };
 
 function coercePropertyId(raw: unknown): number | undefined {
   if (typeof raw === 'number' && !Number.isNaN(raw)) return raw;
@@ -69,7 +61,7 @@ export function resolveItemTrainingPoints(
   return Math.round(calculateItemCosts(props, itemProperties).totalTP);
 }
 
-export function computeSelectedLoadoutTp(
+function computeSelectedLoadoutTp(
   selections: PathItemRecommendation[],
   officialItems: LibraryItem[],
   codexEquipment: CodexEquipmentItem[],
@@ -81,7 +73,7 @@ export function computeSelectedLoadoutTp(
   }, 0);
 }
 
-export function flattenGuidedDraftSelections(draft: {
+function flattenGuidedDraftSelections(draft: {
   armaments: PathItemRecommendation[];
   equipment: PathItemRecommendation[];
 }): PathItemRecommendation[] {
@@ -142,15 +134,6 @@ export function wouldExceedLoadoutTp(
     (resolveItemTrainingPoints(ref.id, officialItems, codexEquipment, itemProperties) ?? 0) *
     Math.max(1, ref.quantity);
   return summary.spent + addTp > summary.limit;
-}
-
-export function resolvePoolItemCategory(
-  ref: PathItemRecommendation,
-  officialItems: LibraryItem[],
-  codexEquipment: CodexEquipmentItem[],
-): LoadoutItemCategory {
-  const lookup = buildEquipmentLookup(officialItems, codexEquipment);
-  return inventoryTypeForResolvedItem(resolveEquipmentRef(ref, lookup));
 }
 
 /** Build admin/codex TP resolver from library rows. */

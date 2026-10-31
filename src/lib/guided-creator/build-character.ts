@@ -220,7 +220,7 @@ function drForGuidedInventoryRow(row: { id: string }, ctx: BuildGuidedCharacterC
 }
 
 /** Resolve draft loadout + powers/techniques for character-level TP dedupe. */
-export function buildGuidedProficiencyInput(
+function buildGuidedProficiencyInput(
   draft: GuidedDraft,
   ctx: BuildGuidedCharacterContext,
 ): BuildRequiredProficienciesInput {

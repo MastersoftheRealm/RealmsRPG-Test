@@ -9,7 +9,7 @@ export type CreaturePowerInstanceRow = {
   innate?: boolean | undefined;
 };
 
-export function creaturePowerLibraryId(power: CreaturePowerInstanceRow): string {
+function creaturePowerLibraryId(power: CreaturePowerInstanceRow): string {
   return power.sourceId ?? power.id;
 }
 

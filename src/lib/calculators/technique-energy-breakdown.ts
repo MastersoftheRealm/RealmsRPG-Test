@@ -12,14 +12,14 @@ import { type TechniqueCalcSectionId, type TechniquePartPayload } from './techni
 
 export type { TechniqueCalcSectionId };
 
-export const TECHNIQUE_CALC_SECTION_IDS: TechniqueCalcSectionId[] = [
+const TECHNIQUE_CALC_SECTION_IDS: TechniqueCalcSectionId[] = [
   'action',
   'attack',
   'damage',
   'parts',
 ];
 
-export const TECHNIQUE_CALC_SECTION_TITLES: Record<TechniqueCalcSectionId, string> = {
+const TECHNIQUE_CALC_SECTION_TITLES: Record<TechniqueCalcSectionId, string> = {
   action: 'Action Type',
   attack: 'Attack',
   damage: 'Damage',
@@ -83,7 +83,7 @@ function formatOptionSuffix(op1: number, op2: number, op3: number): string {
   return bits.length > 0 ? ` (${bits.join(', ')})` : '';
 }
 
-export function defaultTechniqueEnergyLineLabel(line: TechniqueEnergyLine): string {
+function defaultTechniqueEnergyLineLabel(line: TechniqueEnergyLine): string {
   if (line.displayLabel && line.displayLabel.trim()) return line.displayLabel;
 
   const { name, optionLevels } = line;

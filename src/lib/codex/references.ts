@@ -105,7 +105,7 @@ export const REFERENCE_PROBES: Partial<Record<CodexCollection, ReferenceProbe[]>
 };
 
 /** Codex id lists are comma-separated TEXT, so membership must be exact per entry. */
-export function csvIncludesId(value: unknown, id: string): boolean {
+function csvIncludesId(value: unknown, id: string): boolean {
   if (value == null) return false;
   if (Array.isArray(value)) return value.some((entry) => String(entry).trim() === id);
   return String(value)

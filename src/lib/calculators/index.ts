@@ -16,14 +16,11 @@ export {
   type RangeConfig,
   type AreaConfig,
   type DurationConfig,
-  type LegacyPowerMechanicContext,
-  type LegacyTechniqueMechanicContext,
 } from './mechanic-builder';
 
 export {
   POWER_CALC_SECTION_BY_NAME,
   POWER_DURATION_TYPE_PART_NAMES,
-  type PowerAdvancedMechanicCategory,
   type PowerCalcSectionId,
 } from './power-mechanic-constants';
 
@@ -103,7 +100,6 @@ export {
   type TechniqueDisplayData,
   type TechniqueChipData,
   type TechniqueDocument,
-  type MechanicContext,
 } from './technique-calc';
 
 export {

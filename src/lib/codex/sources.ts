@@ -24,13 +24,13 @@ export const CODEX_SOURCE_PICKER_PLACEHOLDER = 'Add a source';
 export const DEFAULT_CODEX_SOURCES: readonly string[] = [CORE_CODEX_SOURCE];
 
 /** Same cap as character names. A content-pack label is one short string. */
-export const CODEX_SOURCE_NAME_MAX_LENGTH = 100;
+const CODEX_SOURCE_NAME_MAX_LENGTH = 100;
 
 /**
  * List-filter token. `itemMatchesSources` treats this as "every item".
  * It cannot also be a content-pack name.
  */
-export const CODEX_SOURCE_FILTER_ALL = 'all';
+const CODEX_SOURCE_FILTER_ALL = 'all';
 
 /** ES WhiteSpace + LineTerminator. Keep in lockstep with the open-sources SQL function. */
 export const CODEX_SOURCE_WHITESPACE_CODE_POINTS: readonly number[] = [

@@ -1,7 +1,6 @@
 import { GUIDED_CREATOR_COPY } from '@/lib/constants/site-copy';
 import { wouldExceedSharedTp } from '@/lib/guided-creator/loadout-tp';
 import { indexByNormalizedIds, normalizeId } from '@/lib/utils/normalize-id';
-import type { ArchetypeCategory } from '@/types';
 import type { LibraryPower, LibraryTechnique } from '@/types/library';
 
 const ptCopy = GUIDED_CREATOR_COPY.steps.powersTechniques;
@@ -9,20 +8,6 @@ const ptCopy = GUIDED_CREATOR_COPY.steps.powersTechniques;
 export type PowersTechniquesItemKind = 'powers' | 'techniques';
 
 export type GuidedPathLibraryRow = LibraryPower | LibraryTechnique;
-
-export function stepCopy(type: ArchetypeCategory | null): {
-  title: string;
-  description: string;
-  kind: PowersTechniquesItemKind;
-} {
-  if (type === 'martial') {
-    return { ...ptCopy.martial, kind: 'techniques' as const };
-  }
-  if (type === 'powered-martial') {
-    return { ...ptCopy.poweredMartial, kind: 'powers' as const };
-  }
-  return { ...ptCopy.power, kind: 'powers' as const };
-}
 
 export function buildLookup(items: GuidedPathLibraryRow[]): Map<string, GuidedPathLibraryRow> {
   const map = indexByNormalizedIds(items);

@@ -6,7 +6,7 @@
 
 import type { UserRole } from './role-limits';
 
-export const ROLE_LABELS: Record<UserRole, string> = {
+const ROLE_LABELS: Record<UserRole, string> = {
   new_player: 'New Player',
   playtester: 'Playtester',
   developer: 'Developer',

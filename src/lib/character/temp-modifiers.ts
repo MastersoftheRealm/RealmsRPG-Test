@@ -19,7 +19,7 @@ export type TempModifierScalarKey =
 export const TEMP_MODIFIER_MIN = -99;
 export const TEMP_MODIFIER_MAX = 1000;
 
-export function clampTempModifier(value: number): number {
+function clampTempModifier(value: number): number {
   return Math.min(TEMP_MODIFIER_MAX, Math.max(TEMP_MODIFIER_MIN, value));
 }
 

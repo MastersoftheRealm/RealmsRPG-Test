@@ -12,7 +12,7 @@ import { withSyncedResourceFields } from '@/lib/encounter/character-resource-syn
 
 type Rules = Partial<CoreRulesMap> | undefined;
 
-export function currentWhenMaxDrops(current: number, oldMax: number, newMax: number): number {
+function currentWhenMaxDrops(current: number, oldMax: number, newMax: number): number {
   if (newMax < oldMax && current > newMax) return newMax;
   return current;
 }

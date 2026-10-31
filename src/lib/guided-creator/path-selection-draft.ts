@@ -20,7 +20,7 @@ import {
  * has to go with them — otherwise the Reveal save gate still reads "all points allocated"
  * for a build whose abilities and powers were just wiped.
  */
-export function clearArchetypeDependentDraftFields(): Partial<GuidedDraft> {
+function clearArchetypeDependentDraftFields(): Partial<GuidedDraft> {
   return {
     abilities: { ...DEFAULT_ABILITIES },
     abilitiesMode: null,

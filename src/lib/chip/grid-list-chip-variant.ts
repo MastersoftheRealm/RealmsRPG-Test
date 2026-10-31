@@ -1,14 +1,6 @@
 import type { VariantProps } from 'class-variance-authority';
 import type { chipVariants } from '@/components/ui/chip';
 
-export type GridListChipCategory =
-  | 'default'
-  | 'cost'
-  | 'warning'
-  | 'success'
-  | 'archetype'
-  | 'skill';
-
 type ChipVariant = NonNullable<VariantProps<typeof chipVariants>['variant']>;
 
 /** Maps GridListRow chip categories to canonical `<Chip>` / `chipVariants` tokens. */

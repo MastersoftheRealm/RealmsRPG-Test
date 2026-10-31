@@ -46,9 +46,7 @@ export function normalizeCampaignRosterCharacters(raw: unknown): CampaignCharact
 }
 
 /** Map a character archetype `type` to the roster display label. */
-export function archetypeDisplayNameFromType(
-  archetypeType?: string,
-): CampaignCharacter['archetype'] {
+function archetypeDisplayNameFromType(archetypeType?: string): CampaignCharacter['archetype'] {
   if (!archetypeType) return undefined;
   const lower = archetypeType.toLowerCase();
   if (lower === 'power') return 'Power';

@@ -52,7 +52,7 @@ function labelStyleForMode(mode: GlrDensityMode): 'header' | 'title' {
   return mode === 'browse' ? 'header' : 'title';
 }
 
-export function glrFactLabel(factId: GlrFactId, labelStyle: 'header' | 'title'): string {
+function glrFactLabel(factId: GlrFactId, labelStyle: 'header' | 'title'): string {
   const def = getGlrFactDef(factId);
   return labelStyle === 'header' ? def.headerLabel : def.titleLabel;
 }
@@ -101,7 +101,7 @@ function orderHeaderColumns(
   return name ? [name, ...rest] : rest;
 }
 
-export function glrHeaderColumns(
+function glrHeaderColumns(
   layout: GlrResolvedLayout,
   options: GlrChromeOptions = {},
 ): GlrHeaderColumn[] {
@@ -136,17 +136,8 @@ export function glrHeaderColumns(
   return orderHeaderColumns(withExtras, nameKey, options.columnOrder);
 }
 
-export function glrGridTemplateFromHeaders(headers: GlrHeaderColumn[]): string {
+function glrGridTemplateFromHeaders(headers: GlrHeaderColumn[]): string {
   return headers.map((h) => h.width ?? '1fr').join(' ');
-}
-
-export function glrGridTemplate(layout: GlrResolvedLayout, options?: GlrChromeOptions): string {
-  if (options) return glrGridTemplateFromHeaders(glrHeaderColumns(layout, options));
-  const name = glrNameTrackFor(layout.entityType, layout.mode);
-  const rest = layout.columnFacts.map((id) =>
-    glrHeaderTrackFor(id, layout.entityType, layout.mode),
-  );
-  return [name, ...rest].join(' ');
 }
 
 export function glrListChrome(input: GlrResolveInput, options?: GlrChromeOptions) {

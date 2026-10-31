@@ -13,8 +13,5 @@ export type {
   EnrichedCharacterData,
 } from './data-enrichment/types';
 
-export { enrichPowers } from './data-enrichment/enrich-powers';
-export { enrichTechniques } from './data-enrichment/enrich-techniques';
-export { enrichItems } from './data-enrichment/enrich-items';
 export { enrichCharacterData } from './data-enrichment/enrich-character';
 export { cleanForSave } from './data-enrichment/clean-for-save';

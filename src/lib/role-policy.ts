@@ -82,7 +82,7 @@ function rowToPolicy(row: RolePolicyRow): RolePolicy {
   };
 }
 
-export async function getRolePolicyForRole(
+async function getRolePolicyForRole(
   role: UserRole | string | null | undefined,
   supabaseClient?: TypedSupabaseClient,
 ): Promise<RolePolicy> {

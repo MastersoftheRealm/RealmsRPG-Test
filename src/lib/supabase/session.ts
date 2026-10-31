@@ -66,14 +66,6 @@ export async function getSession(): Promise<{
 }
 
 /**
- * Get the current user's ID or null.
- */
-export async function getSessionUserId(): Promise<string | null> {
-  const { user } = await getSession();
-  return user?.uid ?? null;
-}
-
-/**
  * Require auth — throws if not authenticated.
  * Uses the local token check. High-assurance writes use `requireLiveUser`.
  */

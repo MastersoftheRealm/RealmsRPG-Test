@@ -32,10 +32,10 @@ import { resolvePartCategoryList } from '@/lib/library/power-technique-categorie
 type Rules = Partial<CoreRulesMap>;
 
 /** GAME_RULES: 1 minute = 6 rounds (10 seconds per round). */
-export const INNATE_ROUNDS_PER_MINUTE = 6;
+const INNATE_ROUNDS_PER_MINUTE = 6;
 
 /** Max duration for an innate power (inclusive). */
-export const INNATE_MAX_DURATION_MINUTES = 1;
+const INNATE_MAX_DURATION_MINUTES = 1;
 
 export interface InnatePowerDuration {
   type: string;
@@ -142,7 +142,7 @@ export function isAdaptationCategoryPart(category?: string | null): boolean {
   return (category ?? '').trim().toLowerCase() === 'adaptation';
 }
 
-export function powerHasAdaptationCategoryPart(power: InnatePowerSnapshot): boolean {
+function powerHasAdaptationCategoryPart(power: InnatePowerSnapshot): boolean {
   const partCount = Math.max(power.partIds.length, power.partNames.length);
   for (let i = 0; i < partCount; i++) {
     const category = power.partCategories?.[i] ?? '';

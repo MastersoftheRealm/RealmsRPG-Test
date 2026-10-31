@@ -30,7 +30,7 @@ function getTechniquePartEnergyContribution(
   );
 }
 
-export function getTechniquePercentageMultiplier(
+function getTechniquePercentageMultiplier(
   techniquePartsPayload: TechniquePartPayload[],
   techniquePartsDb: TechniquePart[],
 ): number {

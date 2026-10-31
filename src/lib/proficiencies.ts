@@ -402,14 +402,6 @@ export function filterZeroCostProficiencies(list: CharacterProficiency[]): Chara
  * Keep only owned proficiencies that are either custom or required by the current loadout.
  * Used by "Sync proficiencies" to drop unused part/property proficiencies before re-merging with required.
  */
-export function filterToRequiredAndCustom(
-  owned: CharacterProficiency[] = [],
-  required: CharacterProficiency[] = [],
-): CharacterProficiency[] {
-  const requiredKeys = new Set(required.map((p) => proficiencyKey(p)));
-  return owned.filter((p) => isCustomProficiency(p) || requiredKeys.has(proficiencyKey(p)));
-}
-
 export function mergeOwnedWithRequired(
   owned: CharacterProficiency[] = [],
   required: CharacterProficiency[] = [],

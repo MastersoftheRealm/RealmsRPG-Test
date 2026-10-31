@@ -84,5 +84,3 @@ export function normalizeAgeAppearanceForSave(data: Record<string, unknown>): vo
   if (stripped) data.appearance = stripped;
   else delete data.appearance;
 }
-
-export { AGE_IN_APPEARANCE };

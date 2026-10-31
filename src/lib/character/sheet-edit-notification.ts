@@ -43,7 +43,7 @@ export interface SheetPointPools {
 type FeatRef = { id?: string | number | undefined };
 type CodexFeatLike = { id: string; feat_lvl?: number | undefined };
 
-export function buildFeatLevelById(featsDb: CodexFeatLike[]): Map<string, number> {
+function buildFeatLevelById(featsDb: CodexFeatLike[]): Map<string, number> {
   const featLevelById = new Map<string, number>();
   featsDb.forEach((feat) => {
     const lvl = feat.feat_lvl != null && feat.feat_lvl > 0 ? feat.feat_lvl : 1;
@@ -52,7 +52,7 @@ export function buildFeatLevelById(featsDb: CodexFeatLike[]): Map<string, number
   return featLevelById;
 }
 
-export function sumFeatSlotUsage(feats: FeatRef[], featLevelById: Map<string, number>): number {
+function sumFeatSlotUsage(feats: FeatRef[], featLevelById: Map<string, number>): number {
   return feats.reduce((sum, feat) => sum + (featLevelById.get(String(feat.id)) ?? 1), 0);
 }
 

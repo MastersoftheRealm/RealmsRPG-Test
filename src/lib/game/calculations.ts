@@ -96,7 +96,7 @@ const SPEEDY_WALK_SPACES: Record<string, number> = {
   'Speedy III': 6,
 };
 
-export function creatureWalkingSpeedAdjustment(
+function creatureWalkingSpeedAdjustment(
   movementTypes: readonly string[] | null | undefined,
 ): number {
   let speedy = 0;
@@ -335,7 +335,7 @@ export function calculatePowerAttackBonus(charData: Partial<Character>): number 
 /**
  * Calculate terminal threshold (1/4 max health, rounded up).
  */
-export function calculateTerminal(maxHealth: number): number {
+function calculateTerminal(maxHealth: number): number {
   return Math.ceil(maxHealth / 4);
 }
 

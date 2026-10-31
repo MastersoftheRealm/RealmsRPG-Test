@@ -8,7 +8,7 @@
  * `PublicTableName` union to `never` on insert/update.
  */
 import type { SupabaseClient } from '@supabase/supabase-js';
-import type { Database, Json, TablesInsert, TablesUpdate } from '@/types/database.types';
+import type { Database, Json, TablesInsert } from '@/types/database.types';
 
 export type {
   Database,
@@ -29,14 +29,6 @@ export function asDbJson(value: unknown): Json {
 
 export function asDbInsert<T extends PublicTableName>(row: object): TablesInsert<T> {
   return row as TablesInsert<T>;
-}
-
-export function asDbInsertRows<T extends PublicTableName>(rows: object[]): TablesInsert<T>[] {
-  return rows as TablesInsert<T>[];
-}
-
-export function asDbUpdate<T extends PublicTableName>(row: object): TablesUpdate<T> {
-  return row as TablesUpdate<T>;
 }
 
 type DynamicError = { message: string; code?: string | undefined } | null;

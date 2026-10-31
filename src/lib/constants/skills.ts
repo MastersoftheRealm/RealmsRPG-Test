@@ -34,6 +34,3 @@ export const ABILITY_FILTER_OPTIONS = [
   { value: 'intelligence', label: 'Intelligence' },
   { value: 'charisma', label: 'Charisma' },
 ] as const;
-
-/** Type for ability option values */
-export type AbilityValue = (typeof ABILITY_OPTIONS)[number]['value'];

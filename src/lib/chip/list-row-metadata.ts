@@ -66,8 +66,8 @@ export type MetadataDetailSection = {
   liveAnnouncement?: string | undefined;
 };
 
-export const PARTS_PROFICIENCIES_LABEL = 'Parts & Proficiencies';
-export const PROPERTIES_PROFICIENCIES_LABEL = 'Properties & Proficiencies';
+const PARTS_PROFICIENCIES_LABEL = 'Parts & Proficiencies';
+const PROPERTIES_PROFICIENCIES_LABEL = 'Properties & Proficiencies';
 
 /** Official browse lists sometimes use short labels. */
 const PARTS_OR_PROPERTIES_LABELS = new Set([
@@ -141,7 +141,7 @@ export function propertiesProficienciesSection(
 }
 
 /** Non-expandable descriptor chip for list-row metadata (range, requirements, etc.). */
-export function metadataDescriptorChip(label: string): ChipData {
+function metadataDescriptorChip(label: string): ChipData {
   return descriptorChipData(label, 'default');
 }
 
@@ -156,7 +156,7 @@ function pushLabeledFact(
   chips.push(metadataDescriptorChip(`${label} ${text}`));
 }
 
-export function buildRangeDamageMetadataChips(opts: {
+function buildRangeDamageMetadataChips(opts: {
   range?: string | number | null | undefined;
   damage?: string | null | undefined;
   /** When Energy is omitted from collapsed columns (e.g. slim modal layouts). */
@@ -202,7 +202,7 @@ export function mergeDetailSections(
 }
 
 /** Metadata fact chips + optional parts/properties sections for expanded rows. */
-export function buildEntityMetadataDetailSections(opts: {
+function buildEntityMetadataDetailSections(opts: {
   range?: string | number | null | undefined;
   damage?: string | null | undefined;
   energy?: string | number | null | undefined;

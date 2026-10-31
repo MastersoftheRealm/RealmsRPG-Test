@@ -22,7 +22,7 @@ export type PathCategoryGroup = 'power' | 'powered-martial' | 'martial';
 export const PATH_CATEGORY_GROUPS: PathCategoryGroup[] = ['power', 'powered-martial', 'martial'];
 
 /** Lean-save ids that mean custom archetype (type slug, not a codex path row). */
-export const FORGE_ARCHETYPE_TYPE_IDS = new Set<ArchetypeCategory>([
+const FORGE_ARCHETYPE_TYPE_IDS = new Set<ArchetypeCategory>([
   'power',
   'martial',
   'powered-martial',

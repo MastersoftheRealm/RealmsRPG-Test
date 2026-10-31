@@ -18,8 +18,6 @@ import {
   type GlrLayoutFlags,
 } from './glr-density';
 
-export type GlrFactChannel = 'column' | 'chip' | 'rightSlot';
-
 /** Per-surface override of play/select density (e.g. sheet Equipment catalog columns — TASK-873). */
 export interface GlrLayoutOverrides {
   columnBudget?: number | undefined;

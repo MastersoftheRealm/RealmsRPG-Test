@@ -61,11 +61,6 @@ export const ROLE_LIMITS: Record<UserRole, RoleLimits> = {
   },
 };
 
-export function getLimitsForRole(role: UserRole | string | null): RoleLimits {
-  const r = (role ?? 'new_player') as UserRole;
-  return ROLE_LIMITS[r] ?? ROLE_LIMITS.new_player;
-}
-
 /** Stored quota at or above this value is shown as Unlimited in admin UI. */
 export const ROLE_POLICY_LIMIT_UNLIMITED_SENTINEL = 9999;
 

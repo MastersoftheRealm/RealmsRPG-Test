@@ -10,7 +10,7 @@ import { unstable_cache } from 'next/cache';
 export const CODEX_PUBLIC_ISR_SECONDS = 3600;
 
 /** Thrown inside `unstable_cache` loaders so failed/empty reads are not persisted (86e3rb7ca). */
-export class TransientPublicReadError<T = unknown> extends Error {
+class TransientPublicReadError<T = unknown> extends Error {
   readonly value: T;
 
   constructor(value: T) {

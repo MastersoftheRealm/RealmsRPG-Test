@@ -17,24 +17,14 @@ export const ACTION_OPTIONS = [
   { value: 'long4', label: 'Long Action (4 AP)' },
 ] as const;
 
-export type ActionType = (typeof ACTION_OPTIONS)[number]['value'];
-
-// =============================================================================
-// Damage Configuration
-// =============================================================================
-
 /** Die sizes available for damage dice (d4, d6, d8, d10, d12) */
 export const DIE_SIZES = [4, 6, 8, 10, 12] as const;
-export type DieSize = (typeof DIE_SIZES)[number];
 
 /**
  * Damage types — NO "physical vs magic" split.
  * All damage types are equal categories. The only meaningful distinction
  * is which types are reduced by armor (all except ARMOR_EXCEPTION_TYPES).
  */
-
-/** Technique damage types (physical combat — includes 'none' for non-damaging techniques) */
-export const TECHNIQUE_DAMAGE_TYPES = ['none', 'bludgeoning', 'piercing', 'slashing'] as const;
 
 /** Weapon-only damage types (slashing, piercing, bludgeoning) */
 export const WEAPON_DAMAGE_TYPES = ['slashing', 'piercing', 'bludgeoning'] as const;
@@ -77,8 +67,6 @@ export const ALL_DAMAGE_TYPES = [
   'slashing',
 ] as const;
 
-export type DamageType = (typeof ALL_DAMAGE_TYPES)[number];
-
 /** Damage types NOT reduced by standard armor */
 export const ARMOR_EXCEPTION_TYPES = ['psychic', 'spiritual', 'sonic'] as const;
 
@@ -95,8 +83,6 @@ export const AREA_TYPES = [
   { value: 'trail', label: 'Trail' },
 ] as const;
 
-export type AreaType = (typeof AREA_TYPES)[number]['value'];
-
 // =============================================================================
 // Duration
 // =============================================================================
@@ -109,8 +95,6 @@ export const DURATION_TYPES = [
   { value: 'days', label: 'Days' },
   { value: 'permanent', label: 'Permanent' },
 ] as const;
-
-export type DurationType = (typeof DURATION_TYPES)[number]['value'];
 
 /** Duration value intervals per type (matching vanilla site) */
 export const DURATION_VALUES: Record<string, { value: number; label: string }[]> = {
@@ -172,8 +156,6 @@ export const CREATURE_TYPES = [
   'Other',
 ] as const;
 
-export type CreatureType = (typeof CREATURE_TYPES)[number];
-
 /** Species codex `type` values (not creature stat-block types). */
 export const SPECIES_TYPES = [
   'Construct',
@@ -184,8 +166,6 @@ export const SPECIES_TYPES = [
   'Plant',
   'Undead',
 ] as const;
-
-export type SpeciesType = (typeof SPECIES_TYPES)[number];
 
 export {
   CREATURE_SIZES,
@@ -279,35 +259,6 @@ export const CONDITIONS = [
   'Weakened',
 ] as const;
 
-export type Condition = (typeof CONDITIONS)[number];
-
-// =============================================================================
-// Skills
-// =============================================================================
-
-export const SKILLS = [
-  'Acrobatics',
-  'Animal Handling',
-  'Arcana',
-  'Athletics',
-  'Deception',
-  'History',
-  'Insight',
-  'Intimidation',
-  'Investigation',
-  'Medicine',
-  'Nature',
-  'Perception',
-  'Performance',
-  'Persuasion',
-  'Religion',
-  'Sleight of Hand',
-  'Stealth',
-  'Survival',
-] as const;
-
-export type Skill = (typeof SKILLS)[number];
-
 // =============================================================================
 // LocalStorage Cache Keys
 // =============================================================================
@@ -358,32 +309,3 @@ export function formatCostDisplay(value: number): string {
   }
   return n.toFixed(1);
 }
-
-// =============================================================================
-// Default Damage Configurations
-// =============================================================================
-
-export interface DamageConfig {
-  amount: number;
-  size: DieSize | number;
-  type: string;
-  applyDuration?: boolean | undefined;
-}
-
-export const DEFAULT_POWER_DAMAGE: DamageConfig = {
-  amount: 0,
-  size: 6,
-  type: 'none',
-};
-
-export const DEFAULT_TECHNIQUE_DAMAGE: DamageConfig = {
-  amount: 0,
-  size: 6,
-  type: 'none',
-};
-
-export const DEFAULT_WEAPON_DAMAGE: DamageConfig = {
-  amount: 1,
-  size: 4,
-  type: 'slashing',
-};

@@ -282,10 +282,7 @@ export function buildGuidedEquipmentL2Items(
 }
 
 /** Current draft refs for a phase — shared by modal Confirm and inline immediate apply (TASK-684). */
-export function currentRefsForPhase(
-  phase: EquipmentPhase,
-  draft: GuidedDraft,
-): PathItemRecommendation[] {
+function currentRefsForPhase(phase: EquipmentPhase, draft: GuidedDraft): PathItemRecommendation[] {
   return phase === 'weapon'
     ? draft.loadoutWeapons
     : phase === 'armor'
@@ -342,7 +339,7 @@ export function crossPhaseTpSpent(
  * Cross-phase Currency total (the two phases *not* being edited) — the edited phase's own
  * spend is reclaimable because apply replaces that phase's refs wholesale.
  */
-export function crossPhaseCurrencySpent(
+function crossPhaseCurrencySpent(
   phase: EquipmentPhase,
   draft: GuidedDraft,
   catalog: Map<string, EligibleEquipmentRow>,
@@ -434,7 +431,7 @@ const CURRENCY_BLOCKED_MESSAGE: Record<EquipmentPhase, string> = {
  * to be an Equipment-only ceiling, which let weapons and armor spend past the budget and write a
  * negative balance onto the saved character (audit P1-1).
  */
-export function applyGuidedEquipmentL2Refs(
+function applyGuidedEquipmentL2Refs(
   phase: EquipmentPhase,
   draft: GuidedDraft,
   refs: PathItemRecommendation[],

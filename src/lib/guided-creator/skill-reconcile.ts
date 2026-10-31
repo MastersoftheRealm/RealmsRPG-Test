@@ -57,13 +57,6 @@ export function pruneUnresolvedSkillAllocations(
 }
 
 /** Ids a step may add as defaults (species / path grants) that the codex cannot resolve. */
-export function filterResolvedSkillIds(
-  ids: readonly (string | number)[],
-  resolvedSkillIds: SkillIdIndex,
-): string[] {
-  return ids.map(String).filter((id) => resolvedSkillIds.has(id));
-}
-
 export interface GuidedSkillPointBudget {
   skillMeta: Map<string, { isSubSkill: boolean }>;
   speciesSkillIds: Set<string>;

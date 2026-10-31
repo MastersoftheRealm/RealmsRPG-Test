@@ -10,8 +10,6 @@ import {
   type ArmorStepMode,
 } from '@/lib/guided-creator/equipment-eligibility';
 
-export const EQUIPMENT_PHASE_ORDER: GuidedEquipmentPhase[] = ['weapon', 'armor', 'gear'];
-
 export interface EquipmentPhaseVisibility {
   /** Path has weapon/shield recommendations (or unarmed prowess). */
   includeWeapon: boolean;
@@ -101,14 +99,6 @@ export function prevEquipmentPhase(
   const idx = phases.indexOf(current);
   if (idx <= 0) return null;
   return phases[idx - 1] ?? null;
-}
-
-export function isFirstEquipmentPhase(
-  current: GuidedEquipmentPhase,
-  armorMode: ArmorStepMode,
-  visibility?: Partial<EquipmentPhaseVisibility>,
-): boolean {
-  return visibleEquipmentPhases(armorMode, visibility)[0] === current;
 }
 
 export function isLastEquipmentPhase(

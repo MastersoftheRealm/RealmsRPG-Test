@@ -7,15 +7,6 @@
 import { normalizeFeatAbilities } from '@/lib/codex/feat-ability';
 
 /**
- * Truncate text to maxLength with ellipsis (list row descriptions).
- */
-export function truncateText(text: string | undefined, maxLength: number): string {
-  if (!text) return '';
-  if (text.length <= maxLength) return text;
-  return text.substring(0, maxLength).trim() + '...';
-}
-
-/**
  * Capitalize the first letter of a string.
  */
 export function capitalize(str: string | null | undefined): string {

@@ -7,11 +7,11 @@
 export const CATALOG_LISTINGS = ['listed', 'unlisted'] as const;
 export type CatalogListing = (typeof CATALOG_LISTINGS)[number];
 
-export const DEFAULT_CATALOG_LISTING: CatalogListing = 'listed';
+const DEFAULT_CATALOG_LISTING: CatalogListing = 'listed';
 
 export type CreatorSaveTarget = 'private' | 'public' | 'admin';
 
-export const CATALOG_LISTING_LABELS: Record<CatalogListing, string> = {
+const CATALOG_LISTING_LABELS: Record<CatalogListing, string> = {
   listed: 'Public library',
   unlisted: 'Admin library',
 };

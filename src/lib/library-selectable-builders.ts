@@ -348,7 +348,7 @@ function asEnergyNumber(energy: number | string | null | undefined): number {
 }
 
 /** Guided L2/L3 budget columns: Action Type | Energy | Training Points. */
-export function getPowerTechniqueBudgetColumns(facts: PowerTechniqueBudgetFacts): ColumnValue[] {
+function getPowerTechniqueBudgetColumns(facts: PowerTechniqueBudgetFacts): ColumnValue[] {
   return [
     { key: 'action', value: facts.actionType || '—', align: 'center' },
     {

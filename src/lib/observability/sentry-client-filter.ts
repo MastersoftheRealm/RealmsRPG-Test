@@ -59,7 +59,7 @@ function getHttpStatusFromEvent(event: ErrorEvent): number | undefined {
   return undefined;
 }
 
-export function isReportableHttpServerError(status: number): boolean {
+function isReportableHttpServerError(status: number): boolean {
   return status >= 500 && status < 600;
 }
 

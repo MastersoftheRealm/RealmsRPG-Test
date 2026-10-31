@@ -100,7 +100,7 @@ export function writeCreatorCache<T>(key: string, value: T): void {
   writeStorageCache(localStorage, key, value);
 }
 
-export function clearCreatorCache(key: string): void {
+function clearCreatorCache(key: string): void {
   if (typeof window === 'undefined') return;
   removeStorageCache(localStorage, key);
 }

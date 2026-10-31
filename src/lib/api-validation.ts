@@ -623,8 +623,8 @@ export const officialCatalogListingPatchSchema = z
 // Admin API Schemas
 // =============================================================================
 
-export const USER_ROLES = ['new_player', 'playtester', 'developer', 'admin'] as const;
-export const userRoleSchema = z.enum(USER_ROLES);
+const USER_ROLES = ['new_player', 'playtester', 'developer', 'admin'] as const;
+const userRoleSchema = z.enum(USER_ROLES);
 
 const nonNegativeIntField = z.coerce.number().int().min(0);
 

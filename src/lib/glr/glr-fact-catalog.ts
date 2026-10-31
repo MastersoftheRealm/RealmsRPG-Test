@@ -77,7 +77,7 @@ function col(...keys: string[]): string[] {
   return keys.map(normalizeGlrColumnKey);
 }
 
-export const GLR_FACT_CATALOG: Record<GlrFactId, GlrFactDef> = {
+const GLR_FACT_CATALOG: Record<GlrFactId, GlrFactDef> = {
   actionType: {
     id: 'actionType',
     headerLabel: 'ACTION',
@@ -351,7 +351,7 @@ export const GLR_FACT_CATALOG: Record<GlrFactId, GlrFactDef> = {
   },
 };
 
-export const GLR_FACT_IDS = Object.keys(GLR_FACT_CATALOG) as GlrFactId[];
+const GLR_FACT_IDS = Object.keys(GLR_FACT_CATALOG) as GlrFactId[];
 
 const GLR_IDENTITY_COLUMN_KEYS = col('name', 'type', 'quantity', 'qty', 'stat', 'description');
 
@@ -381,10 +381,6 @@ export function entityFactMeta(
 export function preferredColumnKeyFor(id: GlrFactId, entityType: GlrEntityType): string {
   const def = GLR_FACT_CATALOG[id];
   return def.entities[entityType]?.columnKey ?? def.preferredColumnKey;
-}
-
-export function factAliases(id: GlrFactId): string[] {
-  return GLR_FACT_CATALOG[id].columnKeys;
 }
 
 export function factIdMatchingColumnKey(

@@ -3,7 +3,7 @@
  * Reload, in-app links, Back, and Load should ask before a dirty draft is discarded.
  */
 
-export const CREATOR_BACK_SENTINEL_KEY = 'creatorUnsavedGuard';
+const CREATOR_BACK_SENTINEL_KEY = 'creatorUnsavedGuard';
 
 export function creatorDraftIsDirty(current: string, clean: string): boolean {
   return current !== clean;

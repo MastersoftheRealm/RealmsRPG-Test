@@ -3,13 +3,7 @@
  * Import from here or from `@/lib/constants/site-copy` (backward-compatible barrel).
  */
 
-export {
-  REALMS_MOTTO,
-  DISCORD_URL,
-  SITE_CONTACT_EMAIL,
-  ROOT_META_DESCRIPTION,
-  SITE_URL,
-} from './shared-copy';
+export { DISCORD_URL, ROOT_META_DESCRIPTION } from './shared-copy';
 export { LANDING_COPY } from './landing-copy';
 export { AUTH_COPY } from './auth-copy';
 export {
@@ -35,10 +29,5 @@ export { RULES_COPY } from './rules-copy';
 export { RESOURCES_COPY } from './resources-copy';
 export { PRIVACY_COPY } from './privacy-copy';
 export { TERMS_COPY } from './terms-copy';
-export { ONBOARDING_COPY } from './onboarding-copy';
 export { ARCHETYPE_CATEGORY_INFO } from './archetype-category-copy';
 export type { ArchetypeCategoryInfo } from './archetype-category-copy';
-export {
-  formatPathPrimaryAbilityLabel,
-  formatPathSecondaryAbilityLabel,
-} from './path-ability-copy';
