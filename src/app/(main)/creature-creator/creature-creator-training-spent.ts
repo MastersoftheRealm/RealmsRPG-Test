@@ -58,7 +58,7 @@ function sumStoredArmamentTp(armaments: CreatureArmament[]): number {
 }
 
 /** Sum per-row TP when parts/properties are not available (legacy saves / custom rows). */
-export function sumLegacyCreatureTrainingSpent(creature: CreatureState): number {
+function sumLegacyCreatureTrainingSpent(creature: CreatureState): number {
   const inventory = collectCreatureInventoryArmaments(creature);
   const powerTp = creature.powers.reduce(
     (sum, power) =>

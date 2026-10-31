@@ -81,7 +81,7 @@ export const RARITY_REFERENCE = [
 export type PropertyCostKind = 'IP' | 'TP' | 'C';
 
 /** Missing values are 0. A real 0 stays 0. A negative stays negative. */
-export function finitePropertyCost(value: unknown): number {
+function finitePropertyCost(value: unknown): number {
   const n = typeof value === 'number' ? value : Number(value);
   return Number.isFinite(n) ? n : 0;
 }
@@ -91,7 +91,7 @@ export function propertyPointTotal(base: unknown, perLevel: unknown, level: numb
 }
 
 /** base_tp of 0 falls through to legacy tp_cost, matching the previous card total. */
-export function propertyTrainingPointTotal(
+function propertyTrainingPointTotal(
   property: {
     base_tp?: number | null | undefined;
     tp_cost?: number | null | undefined;
@@ -121,7 +121,7 @@ export function formatPropertyPerLevelCost(
   return `${kind} ${formatCost(n)}/level`;
 }
 
-export function propertyHeaderCostClass(kind: PropertyCostKind): string {
+function propertyHeaderCostClass(kind: PropertyCostKind): string {
   if (kind === 'IP') return 'text-ip-text';
   if (kind === 'TP') return 'text-tp-text';
   return 'text-currency-text';

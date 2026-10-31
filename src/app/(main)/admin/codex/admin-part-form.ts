@@ -4,10 +4,7 @@
 
 import type { Part } from '@/hooks';
 import { normalizeTargetedDefenses } from '@/lib/game/targeted-defenses';
-import {
-  codexSourcesOrCore,
-  DEFAULT_CODEX_SOURCES,
-} from '@/lib/codex/sources';
+import { codexSourcesOrCore, DEFAULT_CODEX_SOURCES } from '@/lib/codex/sources';
 
 export type PartFormState = {
   name: string;
@@ -104,7 +101,7 @@ export function percentToOptionEn(percentStr: string): number | undefined {
 }
 
 /** Normalize stored defense tags for editor chips (canonical shared helper). */
-export function normalizePartTargetedDefenses(defenses: string[] | undefined): string[] {
+function normalizePartTargetedDefenses(defenses: string[] | undefined): string[] {
   return normalizeTargetedDefenses(defenses);
 }
 

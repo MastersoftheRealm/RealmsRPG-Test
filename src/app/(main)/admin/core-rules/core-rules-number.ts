@@ -43,11 +43,11 @@ export interface CoreRulesNumberOptions {
 
 export type CoreRulesNumberResult = { ok: true; value: number } | { ok: false; message: string };
 
-export function coreRulesNumberFloorMessage(min: number): string {
+function coreRulesNumberFloorMessage(min: number): string {
   return `Enter ${min} or greater.`;
 }
 
-export function coreRulesNumberCeilingMessage(max: number): string {
+function coreRulesNumberCeilingMessage(max: number): string {
   return `Enter ${max} or less.`;
 }
 

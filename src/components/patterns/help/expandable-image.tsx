@@ -21,7 +21,7 @@ export interface ExpandableImageModalProps {
 }
 
 /** Shared preview modal — use via ExpandableImage or standalone when state is external. */
-export function ExpandableImageModal({
+function ExpandableImageModal({
   src,
   alt,
   isPlaceholder = false,

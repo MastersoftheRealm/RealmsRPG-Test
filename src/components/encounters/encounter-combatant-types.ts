@@ -11,15 +11,6 @@ import type { Combatant, CombatantCondition, CombatantType, ConditionDef } from 
 
 export type { Combatant, CombatantCondition, CombatantType, ConditionDef };
 
-export interface EncounterState {
-  name: string;
-  combatants: Combatant[];
-  round: number;
-  currentTurnIndex: number;
-  isActive: boolean;
-  applySurprise: boolean;
-}
-
 export interface CombatantCardProps {
   combatant: Combatant;
   isCurrentTurn: boolean;

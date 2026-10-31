@@ -22,7 +22,7 @@ import type { ArchetypeCategory, ArchetypePathData } from '@/types/archetype';
  * cached copy, so an admin path save (which invalidates the `['codex']` prefix) applies immediately.
  * Filtering a list of feats therefore downloads archetypes, not the whole codex (TASK-775).
  */
-export function usePathRecommendationIndex({
+function usePathRecommendationIndex({
   entities,
   kind,
   enabled = true,

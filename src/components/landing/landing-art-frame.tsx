@@ -10,9 +10,9 @@ import { BookOpen } from 'lucide-react';
 import { cn } from '@/lib/utils/cn';
 
 /** Shared visual proof aspect ratio across uniqueness cards. */
-export const LANDING_MEDIA_ASPECT = 'aspect-[16/10]';
+const LANDING_MEDIA_ASPECT = 'aspect-[16/10]';
 
-export const LANDING_ART = {
+const LANDING_ART = {
   faust: {
     src: '/images/Faust.png',
     alt: 'Faust, a masked warrior with glowing tattoos',
@@ -142,15 +142,6 @@ export function RulesBookPanel() {
           aria-hidden="true"
         />
       </div>
-    </FrameShell>
-  );
-}
-
-/** Placeholder panel for cards without licensed art yet. */
-export function PlaceholderMediaPanel({ label = 'Preview' }: { label?: string | undefined }) {
-  return (
-    <FrameShell className="flex items-center justify-center bg-gradient-to-br from-primary-100 to-primary-50 dark:from-primary-800 dark:to-primary-900">
-      <span className="text-[10px] tracking-wide text-text-muted uppercase">{label}</span>
     </FrameShell>
   );
 }

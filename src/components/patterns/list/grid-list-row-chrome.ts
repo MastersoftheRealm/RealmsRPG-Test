@@ -145,7 +145,7 @@ export function hasListHeaderRowChrome(rowChrome?: ListHeaderRowChrome): boolean
  * Tokenize a `grid-template-columns` string into track tokens.
  * Supports minmax(), fit-content(), and nested parentheses / brackets.
  */
-export function tokenizeGridTemplateColumns(template?: string): string[] {
+function tokenizeGridTemplateColumns(template?: string): string[] {
   if (!template) return [];
 
   const tokens: string[] = [];

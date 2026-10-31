@@ -19,9 +19,9 @@ const SHEET_LG_PAD_PX = 32;
 const SHEET_COLUMN_GAP_PX = 16;
 
 /** `minmax(22.5rem, 1fr)` — card padding plus a 100px name and the weapon metric columns. */
-export const SHEET_SIDE_TRACK_MIN_REM = 22.5;
+const SHEET_SIDE_TRACK_MIN_REM = 22.5;
 /** `minmax(26rem, 2fr)` — Library stays the wide track. */
-export const SHEET_LIBRARY_TRACK_MIN_REM = 26;
+const SHEET_LIBRARY_TRACK_MIN_REM = 26;
 
 const SIDE_MIN_PX = SHEET_SIDE_TRACK_MIN_REM * REM_PX;
 const LIBRARY_MIN_PX = SHEET_LIBRARY_TRACK_MIN_REM * REM_PX;
@@ -49,7 +49,7 @@ export function sheetThreeColumnFits(viewportPx: number): boolean {
   return sheetDesktopContentWidth(viewportPx) >= need;
 }
 
-export function sheetColumnTracks(
+function sheetColumnTracks(
   viewportPx: number,
 ): { skills: number; archetype: number; library: number } | null {
   if (!sheetThreeColumnFits(viewportPx) || viewportPx < 1280) return null;

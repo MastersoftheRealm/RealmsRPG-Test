@@ -128,7 +128,7 @@ export function techniquePartsForSave(
   ];
 }
 
-export function emptyTechniqueCreatorFormState(): TechniqueCreatorFormState {
+function emptyTechniqueCreatorFormState(): TechniqueCreatorFormState {
   return {
     name: '',
     description: '',
@@ -143,7 +143,7 @@ export function emptyTechniqueCreatorFormState(): TechniqueCreatorFormState {
   };
 }
 
-export function restoreTechniqueCreatorFromCache(
+function restoreTechniqueCreatorFromCache(
   techniqueParts: TechniquePart[],
 ): TechniqueCreatorFormState | null {
   const parsed = readNewCreatorDraftCache<TechniqueCreatorCache>(TECHNIQUE_CREATOR_CACHE_KEY);

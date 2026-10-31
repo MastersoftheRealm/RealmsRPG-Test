@@ -38,7 +38,7 @@ export function encounterAutosaveBody(
 }
 
 /** Save (update) an existing encounter. `keepalive` lets the unload flush finish after refresh. */
-export const saveEncounter = (
+const saveEncounter = (
   encounterId: string,
   data: Partial<Omit<Encounter, 'id' | 'createdAt'>>,
   options?: { keepalive?: boolean },

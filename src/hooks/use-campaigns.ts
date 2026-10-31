@@ -11,12 +11,10 @@ import {
   getMyCampaigns,
   getMyCampaignsFull,
   getCampaign,
-  getCampaignByInviteCode,
   getCampaignCharacterForView,
   getCampaignCharacterForEncounter,
 } from '@/services/campaign-service';
 import { logClientError } from '@/lib/api-client';
-import { normalizeInviteCodeInput, isValidInviteCodeFormat } from '@/lib/campaign-invite';
 import { useAuthStore } from '@/stores/auth-store';
 import type { CampaignCharacterEncounterData } from '@/types/campaign';
 import { characterViewerId } from './use-characters';
@@ -175,15 +173,6 @@ export function useCampaignCharacterView(
     ),
     queryFn: () => getCampaignCharacterForView(campaignId!, ownerId!, characterId!),
     enabled: !!campaignId && !!ownerId && !!characterId && !authLoading,
-  });
-}
-
-export function useCampaignByInviteCode(inviteCode: string | undefined) {
-  const normalized = inviteCode ? normalizeInviteCodeInput(inviteCode) : '';
-  return useQuery({
-    queryKey: campaignKeys.inviteCode(normalized),
-    queryFn: () => getCampaignByInviteCode(inviteCode!),
-    enabled: !!normalized && isValidInviteCodeFormat(normalized),
   });
 }
 

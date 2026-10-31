@@ -103,7 +103,7 @@ async function duplicateLibraryItem(type: string, docId: string): Promise<string
  * Generic user-library query hook. The six named hooks below are thin,
  * type-bound wrappers over this factory (previously six copy-paste hooks). (DUP-06)
  */
-export function useUserLibrary<T>(
+function useUserLibrary<T>(
   type: LibraryItemType,
   options?: { enabled?: boolean | undefined },
 ): UseQueryResult<T[], Error> {
@@ -285,11 +285,9 @@ export const useDeleteTechnique = () => useDeleteLibraryItem('techniques');
 export const useDeleteEmpoweredTechnique = () => useDeleteLibraryItem('empowered-techniques');
 export const useDeleteItem = () => useDeleteLibraryItem('items');
 export const useDeleteCreature = () => useDeleteLibraryItem('creatures');
-export const useDeleteSpecies = () => useDeleteLibraryItem('species');
 
 export const useDuplicatePower = () => useDuplicateLibraryItem('powers');
 export const useDuplicateTechnique = () => useDuplicateLibraryItem('techniques');
 export const useDuplicateEmpoweredTechnique = () => useDuplicateLibraryItem('empowered-techniques');
 export const useDuplicateItem = () => useDuplicateLibraryItem('items');
 export const useDuplicateCreature = () => useDuplicateLibraryItem('creatures');
-export const useDuplicateSpecies = () => useDuplicateLibraryItem('species');
