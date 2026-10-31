@@ -63,6 +63,8 @@ export function stripComments(source) {
   return out;
 }
 
+const CHARACTER_PERSISTENCE_METHODS = ['POST', 'PATCH', 'PUT'];
+
 /** @param {string} code @returns {string[]} */
 export function mutationHandlersInRoute(code) {
   const stripped = stripComments(code);
@@ -88,6 +90,7 @@ export function isCharacterPersistenceWriteRoute(relPath) {
  * @param {'POST'|'PATCH'|'PUT'|'DELETE'} method
  */
 export function handlerBody(code, method) {
+  if (!CHARACTER_PERSISTENCE_METHODS.includes(method)) return '';
   if (!mutationHandlersInRoute(code).includes(method)) return '';
   const stripped = stripComments(code);
   const startRe = new RegExp(`export\\s+async\\s+function\\s+${method}\\s*\\(`);
@@ -159,7 +162,9 @@ export function runCharacterLegalityAllLevelsGate(root) {
   for (const rel of listApiRouteFiles(root)) {
     if (!isCharacterPersistenceWriteRoute(rel)) continue;
     const raw = fs.readFileSync(path.join(root, rel), 'utf8');
-    const handlers = mutationHandlersInRoute(raw);
+    const handlers = mutationHandlersInRoute(raw).filter((m) =>
+      CHARACTER_PERSISTENCE_METHODS.includes(m),
+    );
     if (handlers.length === 0) continue;
     for (const method of handlers) {
       const body = handlerBody(raw, method);
