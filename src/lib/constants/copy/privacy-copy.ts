@@ -140,7 +140,7 @@ export const PRIVACY_COPY = {
             "We may add bot protection on sign-up and sign-in in the future. If we do, we'll update this policy.",
           ],
         },
-        { type: 'subheading', text: 'Other platforms.' },
+        { type: 'subheading', text: 'Other platforms' },
         {
           type: 'paragraph',
           segments: [
