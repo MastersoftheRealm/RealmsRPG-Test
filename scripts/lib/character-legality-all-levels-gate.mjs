@@ -6,31 +6,105 @@ import path from 'node:path';
 
 export const FORBIDDEN_IDENTIFIERS = ['shouldCheckLevel1Legality', 'findLevel1LegalityViolations'];
 
-const SAVE_ROUTE_GLOB = path.join('src', 'app', 'api', 'characters');
+const API_ROOT = path.join('src', 'app', 'api');
 
-/** Strip line and block comments so substring checks match real code only. */
+/**
+ * Strip comments without treating `//` inside string literals as comments.
+ * @param {string} source
+ */
 export function stripComments(source) {
   let out = '';
   let i = 0;
+  let mode = 'code';
+  let quote = '';
   while (i < source.length) {
-    if (source.startsWith('//', i)) {
-      while (i < source.length && source[i] !== '\n') i++;
+    const ch = source[i];
+    const next = source[i + 1];
+
+    if (mode === 'code') {
+      if (ch === '"' || ch === "'" || ch === '`') {
+        mode = 'string';
+        quote = ch;
+        out += ch;
+        i++;
+        continue;
+      }
+      if (ch === '/' && next === '/') {
+        i += 2;
+        while (i < source.length && source[i] !== '\n') i++;
+        continue;
+      }
+      if (ch === '/' && next === '*') {
+        i += 2;
+        while (i < source.length && !(source[i] === '*' && source[i + 1] === '/')) i++;
+        i += 2;
+        continue;
+      }
+      out += ch;
+      i++;
       continue;
     }
-    if (source.startsWith('/*', i)) {
-      const end = source.indexOf('*/', i + 2);
-      i = end === -1 ? source.length : end + 2;
+
+    if (mode === 'string') {
+      out += ch;
+      if (ch === '\\' && i + 1 < source.length) {
+        out += source[i + 1];
+        i += 2;
+        continue;
+      }
+      if (ch === quote) {
+        mode = 'code';
+        quote = '';
+      }
+      i++;
       continue;
     }
-    out += source[i];
-    i++;
   }
   return out;
 }
 
+/** @param {string} code @returns {string[]} */
+export function mutationHandlersInRoute(code) {
+  const stripped = stripComments(code);
+  const handlers = [];
+  const re = /export\s+async\s+function\s+(POST|PATCH|PUT|DELETE)\s*\(/g;
+  let match;
+  while ((match = re.exec(stripped)) !== null) {
+    handlers.push(match[1]);
+  }
+  return handlers;
+}
+
+/** Routes that persist character JSON and must call evaluateCharacterLegalityForSave in write handlers. */
+export function isCharacterPersistenceWriteRoute(relPath) {
+  return (
+    relPath === 'src/app/api/characters/route.ts' ||
+    relPath === 'src/app/api/characters/[id]/route.ts'
+  );
+}
+
+/**
+ * @param {string} code
+ * @param {'POST'|'PATCH'|'PUT'|'DELETE'} method
+ */
+export function handlerBody(code, method) {
+  if (!mutationHandlersInRoute(code).includes(method)) return '';
+  const stripped = stripComments(code);
+  const startRe = new RegExp(`export\\s+async\\s+function\\s+${method}\\s*\\(`);
+  const startMatch = stripped.match(startRe);
+  if (!startMatch || startMatch.index === undefined) return '';
+  const start = startMatch.index;
+  const afterOpen = start + startMatch[0].length;
+  const nextExport = stripped
+    .slice(afterOpen)
+    .search(/export\s+async\s+function\s+(GET|POST|PATCH|PUT|DELETE)\s*\(/);
+  const end = nextExport === -1 ? stripped.length : afterOpen + nextExport;
+  return stripped.slice(start, end);
+}
+
 /** @param {string} root @returns {string[]} */
-export function listCharacterSaveRouteFiles(root) {
-  const dir = path.join(root, SAVE_ROUTE_GLOB);
+export function listApiRouteFiles(root) {
+  const dir = path.join(root, API_ROOT);
   /** @type {string[]} */
   const relPaths = [];
   function walk(current) {
@@ -82,10 +156,18 @@ export function runCharacterLegalityAllLevelsGate(root) {
     }
   }
 
-  for (const rel of listCharacterSaveRouteFiles(root)) {
-    const code = stripComments(fs.readFileSync(path.join(root, rel), 'utf8'));
-    if (!/\bevaluateCharacterLegalityForSave\s*\(/.test(code)) {
-      errors.push(`${rel}: must call \`evaluateCharacterLegalityForSave(\` for save legality.`);
+  for (const rel of listApiRouteFiles(root)) {
+    if (!isCharacterPersistenceWriteRoute(rel)) continue;
+    const raw = fs.readFileSync(path.join(root, rel), 'utf8');
+    const handlers = mutationHandlersInRoute(raw);
+    if (handlers.length === 0) continue;
+    for (const method of handlers) {
+      const body = handlerBody(raw, method);
+      if (!/\bevaluateCharacterLegalityForSave\s*\(/.test(body)) {
+        errors.push(
+          `${rel}: ${method} must call \`evaluateCharacterLegalityForSave(\` (character write legality).`,
+        );
+      }
     }
   }
 

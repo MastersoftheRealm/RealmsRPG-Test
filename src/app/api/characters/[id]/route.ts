@@ -31,7 +31,7 @@ import {
   evaluateCharacterLegalityForSave,
   legalityLevelForSave,
   patchDirtyKeysNeedFeatCatalog,
-  shouldBlockCharacterSaveAtLevel,
+  resolveCharacterPatchLegality,
 } from '@/lib/game/character-legality';
 import {
   characterPortraitStoragePaths,
@@ -205,13 +205,25 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
     const now = new Date().toISOString();
     const mergedData = applyCharacterDirtyPatch(currentData, cleanedData, { blobUpdatedAt: now });
     normalizeCharacterForSave(mergedData);
-    const legality = await evaluateCharacterLegalityForSave(supabase, mergedData, {
+    const evalOpts = {
       loadFeatCatalog: patchDirtyKeysNeedFeatCatalog(cleanedData),
-    });
-    const level = legalityLevelForSave(mergedData);
-    if (shouldBlockCharacterSaveAtLevel(level, legality)) {
+    };
+    const [storedLegality, mergedLegality] = await Promise.all([
+      evaluateCharacterLegalityForSave(supabase, currentData, evalOpts),
+      evaluateCharacterLegalityForSave(supabase, mergedData, evalOpts),
+    ]);
+    const mergedLevel = legalityLevelForSave(mergedData);
+    const patchLegality = resolveCharacterPatchLegality(
+      storedLegality,
+      mergedLegality,
+      mergedLevel,
+    );
+    if (patchLegality.status400Details) {
       return NextResponse.json(
-        { error: 'Character is not a legal level 1 build', details: legality.blocking },
+        {
+          error: 'Character is not a legal level 1 build',
+          details: patchLegality.status400Details,
+        },
         { status: 400 },
       );
     }
@@ -258,7 +270,10 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
     }
 
     return NextResponse.json(
-      appendCharacterLegalityToResponse({ ok: true, updatedAt: savedUpdatedAt }, legality),
+      appendCharacterLegalityToResponse(
+        { ok: true, updatedAt: savedUpdatedAt },
+        patchLegality.legality,
+      ),
     );
   } catch (err) {
     console.error('[API Error] PATCH /api/characters/[id]:', err);

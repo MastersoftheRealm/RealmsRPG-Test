@@ -4,6 +4,7 @@ import {
   findCharacterLegalityViolations,
   legalityLevelForSave,
   mapCodexBaseSkillToId,
+  resolveCharacterPatchLegality,
   shouldBlockCharacterSaveAtLevel,
   type CharacterLegalityRulesStatus,
 } from './character-legality';
@@ -81,6 +82,25 @@ describe('level 1 blocking vs level 2+ structured warnings', () => {
     expect(result.blocking).toEqual([]);
     expect(result.warnings).toEqual([]);
     expect(result.uncomputable).toEqual(['core_rules_unavailable']);
+  });
+
+  it('still blocks level 1 against code defaults when core_rules is missing', () => {
+    const result = findCharacterLegalityViolations(
+      {
+        ...legalBuild(),
+        abilities: {
+          strength: 3,
+          vitality: 3,
+          agility: 3,
+          acuity: 0,
+          intelligence: 0,
+          charisma: 0,
+        },
+      },
+      'missing',
+    );
+    expect(result.uncomputable).toContain('core_rules_unavailable');
+    expect(result.blocking.some((d) => /Ability points/.test(d))).toBe(true);
   });
 });
 
@@ -196,5 +216,29 @@ describe('mapCodexBaseSkillToId / catalogFromCodexRows (TASK-754)', () => {
 describe('legalityLevelForSave', () => {
   it('defaults missing level to 1', () => {
     expect(legalityLevelForSave({})).toBe(1);
+  });
+});
+
+describe('resolveCharacterPatchLegality', () => {
+  it('returns 400 details only for newly introduced level-1 violations', () => {
+    const stored = evaluate(legalBuild());
+    const merged = evaluate({
+      ...legalBuild(),
+      abilities: { strength: 3, vitality: 3, agility: 3, acuity: 0, intelligence: 0, charisma: 0 },
+    });
+    const resolved = resolveCharacterPatchLegality(stored, merged, 1);
+    expect(resolved.status400Details?.length).toBeGreaterThan(0);
+  });
+
+  it('surfaces pre-existing level-1 violations as warnings on 200', () => {
+    const illegal = evaluate({
+      ...legalBuild(),
+      abilities: { strength: 3, vitality: 3, agility: 3, acuity: 0, intelligence: 0, charisma: 0 },
+    });
+    const resolved = resolveCharacterPatchLegality(illegal, illegal, 1);
+    expect(resolved.status400Details).toBeNull();
+    expect(resolved.legality.warnings.some((w) => w.code === 'level_1_preexisting_violation')).toBe(
+      true,
+    );
   });
 });

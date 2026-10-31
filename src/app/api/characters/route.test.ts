@@ -9,6 +9,25 @@ vi.mock('@/lib/supabase/server', () => ({
   createClient: vi.fn(),
 }));
 
+vi.mock('@/lib/supabase/public-client', () => ({
+  createPublicClient: vi.fn(),
+}));
+
+vi.mock('@/lib/supabase/cached-public-read', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('@/lib/supabase/cached-public-read')>();
+  return {
+    ...actual,
+    readCachedPublicDataWhenValid: vi.fn(
+      async (
+        _keyParts: string[],
+        _tags: string[],
+        _revalidate: number,
+        loader: () => Promise<unknown>,
+      ) => loader(),
+    ),
+  };
+});
+
 vi.mock('@/lib/role-policy', async (importOriginal) => {
   const actual = await importOriginal<typeof import('@/lib/role-policy')>();
   return {
@@ -45,6 +64,7 @@ import { GET, POST } from './route';
 import { GUIDED_CREATOR_COPY } from '@/lib/constants/site-copy';
 import { getSession } from '@/lib/supabase/session';
 import { createClient } from '@/lib/supabase/server';
+import { createPublicClient } from '@/lib/supabase/public-client';
 import { getRolePolicyForUser } from '@/lib/role-policy';
 import { ensureUserProfile } from '@/lib/ensure-user-profile';
 import { fetchArchetypeNameMap } from '@/lib/game/archetype-display';
@@ -54,6 +74,7 @@ import { defined } from '@/lib/utils';
 
 const mockGetSession = vi.mocked(getSession);
 const mockCreateClient = vi.mocked(createClient);
+const mockCreatePublicClient = vi.mocked(createPublicClient);
 const mockGetRolePolicyForUser = vi.mocked(getRolePolicyForUser);
 const mockEnsureUserProfile = vi.mocked(ensureUserProfile);
 const mockFetchArchetypeNameMap = vi.mocked(fetchArchetypeNameMap);
@@ -191,6 +212,7 @@ function createMockSupabase(config: MockSupabaseConfig = {}) {
     },
   };
 
+  mockCreatePublicClient.mockReturnValue(client as never);
   return client;
 }
 
@@ -544,7 +566,31 @@ describe('POST /api/characters', () => {
       expect(body.details?.some((d) => /Needs Level 4/.test(d))).toBe(true);
     });
 
-    it('returns legalityUncomputable codes when core_rules is empty and still saves', async () => {
+    it('returns 400 for over-budget level-1 create when core_rules is empty', async () => {
+      mockGetSession.mockResolvedValue({ user: TEST_USER, error: null });
+      mockCreateClient.mockResolvedValue(createMockSupabase({ coreRules: [] }) as never);
+
+      const response = await POST(
+        makePostRequest(
+          legalLevel1Payload({
+            abilities: {
+              strength: 3,
+              vitality: 3,
+              agility: 3,
+              acuity: 0,
+              intelligence: 0,
+              charisma: 0,
+            },
+          }),
+        ),
+      );
+
+      expect(response.status).toBe(400);
+      const body = await readJson<{ error: string; details?: string[] | undefined }>(response);
+      expect(body.error).toBe('Character is not a legal level 1 build');
+    });
+
+    it('returns legalityUncomputable codes when core_rules is empty on a legal level-1 create', async () => {
       mockGetSession.mockResolvedValue({ user: TEST_USER, error: null });
       mockCreateClient.mockResolvedValue(
         createMockSupabase({ insertId: 'no-rules-id', coreRules: [] }) as never,

@@ -1,9 +1,10 @@
 /**
  * Cached read of codex feat/skill rows for server legality feat-requirement checks.
- * Uses the same Data Cache path as GET /api/codex table reads.
+ * Uses createPublicClient + Data Cache (same tags as GET /api/codex), not the session client.
  */
 
-import { fromPublicTable, type TypedSupabaseClient } from '@/lib/supabase/database';
+import { fromPublicTable } from '@/lib/supabase/database';
+import { createPublicClient } from '@/lib/supabase/public-client';
 import { codexApiTableCacheTag, CODEX_API_CACHE_TAG } from '@/lib/codex/cache-tags';
 import {
   CODEX_PUBLIC_ISR_SECONDS,
@@ -15,7 +16,9 @@ const FEAT_REQUIREMENT_COLUMNS =
   'id, name, lvl_req, ability_req, abil_req_val, skill_req, skill_req_val, mart_abil_req, speed_req, feat_lvl, base_feat_id';
 const SKILL_REQUIREMENT_COLUMNS = 'id, name, base_skill, ability';
 
-async function loadFeatRows(supabase: TypedSupabaseClient): Promise<unknown[]> {
+async function loadFeatRows(): Promise<unknown[]> {
+  const supabase = createPublicClient();
+  if (!supabase) throw new Error('Public Supabase client unavailable');
   return readCachedPublicDataWhenValid(
     ['legality-feat-req', 'codex_feats', FEAT_REQUIREMENT_COLUMNS],
     [CODEX_API_CACHE_TAG, codexApiTableCacheTag('codex_feats')],
@@ -31,7 +34,9 @@ async function loadFeatRows(supabase: TypedSupabaseClient): Promise<unknown[]> {
   );
 }
 
-async function loadSkillRows(supabase: TypedSupabaseClient): Promise<unknown[]> {
+async function loadSkillRows(): Promise<unknown[]> {
+  const supabase = createPublicClient();
+  if (!supabase) throw new Error('Public Supabase client unavailable');
   return readCachedPublicDataWhenValid(
     ['legality-feat-req', 'codex_skills', SKILL_REQUIREMENT_COLUMNS],
     [CODEX_API_CACHE_TAG, codexApiTableCacheTag('codex_skills')],
@@ -48,12 +53,7 @@ async function loadSkillRows(supabase: TypedSupabaseClient): Promise<unknown[]> 
 }
 
 /** Throws when either catalog query fails — callers must catch and degrade to uncomputable. */
-export async function fetchFeatRequirementCatalogCached(
-  supabase: TypedSupabaseClient,
-): Promise<FeatRequirementCatalog> {
-  const [featRows, skillRows] = await Promise.all([
-    loadFeatRows(supabase),
-    loadSkillRows(supabase),
-  ]);
+export async function fetchFeatRequirementCatalogCached(): Promise<FeatRequirementCatalog> {
+  const [featRows, skillRows] = await Promise.all([loadFeatRows(), loadSkillRows()]);
   return catalogFromCodexRows(featRows, skillRows);
 }
