@@ -453,7 +453,7 @@ function fullVariantDoc(name: string | undefined, v: PowerVariantSpec): PowerDoc
  * including the empty values. An overlay face omits a field, or stores only the
  * empty default, for anything it inherited from Shared.
  */
-export function isIndependentRandomizeFace(v: PowerVariantSpec): boolean {
+function isIndependentRandomizeFace(v: PowerVariantSpec): boolean {
   return v.range != null && v.area != null && v.duration != null && v.damage != null;
 }
 

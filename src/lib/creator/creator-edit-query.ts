@@ -11,7 +11,7 @@
 import { isCreatorBackSentinel } from './creator-unsaved-guard';
 
 /** Path + search + hash with one query key removed. */
-export function hrefWithoutSearchParam(href: string, key: string): string {
+function hrefWithoutSearchParam(href: string, key: string): string {
   const url = new URL(href, 'https://realmsrpg.local');
   url.searchParams.delete(key);
   const qs = url.searchParams.toString();

@@ -295,4 +295,4 @@ export { MixedSpeciesSkillPicker } from './select/mixed-species-skill-picker';
 export { CreatorPortraitUpload } from './chrome/creator-portrait-upload';
 export { TraitSection } from './chrome/trait-section';
 export { PathHelpCard, stripRedundantPathHelpLead } from './help/path-help-card';
-export type { PathHelpCardProps, PathNotesProps } from './help/path-help-card';
+export type { PathHelpCardProps } from './help/path-help-card';

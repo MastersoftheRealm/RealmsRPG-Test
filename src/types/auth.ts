@@ -15,11 +15,3 @@ export interface AuthUser {
   /** Auth provider: 'email' | 'google' | 'apple' etc. (Supabase compat) */
   provider?: string | undefined;
 }
-
-export interface SessionUser {
-  uid: string;
-  email?: string | undefined;
-  name?: string | undefined;
-  picture?: string | undefined;
-  emailVerified?: boolean | undefined;
-}

@@ -176,9 +176,7 @@ function restoreAdvancedFromCache(
   return restored;
 }
 
-export function restorePowerCreatorFromCache(
-  powerParts: PowerPart[],
-): PowerCreatorFormState | null {
+function restorePowerCreatorFromCache(powerParts: PowerPart[]): PowerCreatorFormState | null {
   const parsed = readNewCreatorDraftCache<PowerCreatorCache>(POWER_CREATOR_CACHE_KEY);
   if (!parsed) return null;
 

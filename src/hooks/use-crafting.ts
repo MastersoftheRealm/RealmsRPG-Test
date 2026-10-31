@@ -20,7 +20,7 @@ import type {
   CraftingSessionData,
 } from '@/types/crafting';
 
-export const craftingKeys = {
+const craftingKeys = {
   all: ['crafting'] as const,
   lists: () => [...craftingKeys.all, 'list'] as const,
   list: () => [...craftingKeys.lists()] as const,

@@ -16,7 +16,7 @@ export const PREVIEW_ABILITY_ORDER: AbilityName[] = [
   'charisma',
 ];
 
-export const PREVIEW_ABILITY_ABBR: Record<AbilityName, string> = {
+const PREVIEW_ABILITY_ABBR: Record<AbilityName, string> = {
   strength: 'STR',
   vitality: 'VIT',
   agility: 'AGI',

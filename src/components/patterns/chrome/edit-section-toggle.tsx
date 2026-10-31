@@ -27,7 +27,7 @@ export type SheetModeToggleColors = {
   activeGlow?: string | undefined;
 };
 
-export function sheetModeToggleClassName({
+function sheetModeToggleClassName({
   colors,
   isActive,
   interactive,

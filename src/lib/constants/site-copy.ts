@@ -24,11 +24,8 @@
  */
 
 export {
-  REALMS_MOTTO,
   DISCORD_URL,
-  SITE_CONTACT_EMAIL,
   ROOT_META_DESCRIPTION,
-  SITE_URL,
   LANDING_COPY,
   AUTH_COPY,
   ABOUT_COPY,
@@ -42,7 +39,6 @@ export {
   RESOURCES_COPY,
   PRIVACY_COPY,
   TERMS_COPY,
-  ARCHETYPE_CATEGORY_INFO,
 } from './copy';
 
 export type { NavLink, ArchetypeCategoryInfo } from './copy';

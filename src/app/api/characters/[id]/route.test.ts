@@ -611,7 +611,7 @@ describe('PATCH /api/characters/[id]', () => {
       );
     });
 
-    it('returns 200 with pre-existing level-1 violations on a rename-only patch (master PATCH behavior)', async () => {
+    it('returns 200 with legalityWarnings on a rename-only patch for an over-budget level-1 sheet', async () => {
       const row = makeCharacterRow('char-l1-stored', OWNER.uid, {
         level: 1,
         abilities: {
@@ -637,14 +637,16 @@ describe('PATCH /api/characters/[id]', () => {
       expect(response.status).toBe(200);
       const body = await readJson<{
         ok: boolean;
-        legalityWarnings?: Array<{ code: string; detail?: string | undefined }> | undefined;
+        legalityWarnings?: Array<{ code: string; level: number }> | undefined;
       }>(response);
-      expect(body.legalityWarnings?.some((w) => w.code === 'level_1_preexisting_violation')).toBe(
-        true,
-      );
+      expect(
+        body.legalityWarnings?.some(
+          (w) => w.code === 'ability_points_over_budget' && w.level === 1,
+        ),
+      ).toBe(true);
     });
 
-    it('returns 400 when a level-1 patch introduces a new legality violation', async () => {
+    it('returns 200 with warnings when a level-1 patch introduces a new legality violation', async () => {
       const row = makeCharacterRow('char-l1-clean', OWNER.uid, {
         level: 1,
         abilities: {
@@ -681,9 +683,16 @@ describe('PATCH /api/characters/[id]', () => {
         { params: Promise.resolve({ id: 'char-l1-clean' }) },
       );
 
-      expect(response.status).toBe(400);
-      const body = await readJson<{ error: string; details?: string[] | undefined }>(response);
-      expect(body.error).toBe('Character is not a legal level 1 build');
+      expect(response.status).toBe(200);
+      const body = await readJson<{
+        ok: boolean;
+        legalityWarnings?: Array<{ code: string; level: number }> | undefined;
+      }>(response);
+      expect(
+        body.legalityWarnings?.some(
+          (w) => w.code === 'ability_points_over_budget' && w.level === 1,
+        ),
+      ).toBe(true);
     });
 
     it('warns when a level downgrade changes budgets without changing spend', async () => {

@@ -90,7 +90,7 @@ function formatOptionSuffix(op1: number, op2: number, op3: number): string {
   return bits.length > 0 ? ` (${bits.join(', ')})` : '';
 }
 
-export function defaultPowerEnergyLineLabel(line: PowerEnergyLine): string {
+function defaultPowerEnergyLineLabel(line: PowerEnergyLine): string {
   if (line.displayLabel && line.displayLabel.trim()) return line.displayLabel;
 
   const { name, optionLevels } = line;

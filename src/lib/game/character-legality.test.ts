@@ -4,8 +4,6 @@ import {
   findCharacterLegalityViolations,
   legalityLevelForSave,
   mapCodexBaseSkillToId,
-  resolveCharacterPatchLegality,
-  shouldBlockCharacterSaveAtLevel,
   type CharacterLegalityRulesStatus,
 } from './character-legality';
 
@@ -46,16 +44,17 @@ function legalBuild() {
   };
 }
 
-describe('level 1 blocking vs level 2+ structured warnings', () => {
-  it('blocks level 1 over-budget abilities in blocking details', () => {
+describe('structured legality warnings at all levels', () => {
+  it('warns on level 1 over-budget abilities with structured codes', () => {
     const result = evaluate({
       ...legalBuild(),
       abilities: { strength: 3, vitality: 3, agility: 3, acuity: 0, intelligence: 0, charisma: 0 },
     });
-    expect(result.warnings).toEqual([]);
-    expect(result.blocking).toHaveLength(1);
-    expect(result.blocking[0]).toMatch(/Ability points spent \(9\).*budget \(7\)/);
-    expect(shouldBlockCharacterSaveAtLevel(1, result)).toBe(true);
+    expect(
+      result.warnings.some(
+        (w) => w.code === 'ability_points_over_budget' && w.level === 1 && w.spent === 9,
+      ),
+    ).toBe(true);
   });
 
   it('warns with structured codes at level 20 (prevention gate)', () => {
@@ -70,21 +69,18 @@ describe('level 1 blocking vs level 2+ structured warnings', () => {
         charisma: 0,
       },
     });
-    expect(result.blocking).toEqual([]);
     expect(
       result.warnings.some((w) => w.code === 'ability_points_over_budget' && w.level === 20),
     ).toBe(true);
-    expect(shouldBlockCharacterSaveAtLevel(20, result)).toBe(false);
   });
 
-  it('returns core_rules_unavailable without inventing warnings', () => {
+  it('returns core_rules_unavailable without inventing warnings for a legal build', () => {
     const result = findCharacterLegalityViolations(legalBuild(), 'missing');
-    expect(result.blocking).toEqual([]);
     expect(result.warnings).toEqual([]);
     expect(result.uncomputable).toEqual(['core_rules_unavailable']);
   });
 
-  it('still blocks level 1 against code defaults when core_rules is missing', () => {
+  it('still warns level 1 against code defaults when core_rules is missing', () => {
     const result = findCharacterLegalityViolations(
       {
         ...legalBuild(),
@@ -100,13 +96,15 @@ describe('level 1 blocking vs level 2+ structured warnings', () => {
       'missing',
     );
     expect(result.uncomputable).toContain('core_rules_unavailable');
-    expect(result.blocking.some((d) => /Ability points/.test(d))).toBe(true);
+    expect(
+      result.warnings.some((w) => w.code === 'ability_points_over_budget' && w.level === 1),
+    ).toBe(true);
   });
 });
 
-describe('findCharacterLegalityViolations level-1 blocking', () => {
+describe('findCharacterLegalityViolations', () => {
   it('accepts a legal level-1 build', () => {
-    expect(evaluate(legalBuild()).blocking).toEqual([]);
+    expect(evaluate(legalBuild()).warnings).toEqual([]);
   });
 
   it('accepts an under-filled build', () => {
@@ -126,11 +124,11 @@ describe('findCharacterLegalityViolations level-1 blocking', () => {
         feats: [],
         healthPoints: 0,
         energyPoints: 0,
-      }).blocking,
+      }).warnings,
     ).toEqual([]);
   });
 
-  it('blocks skill allocation over the level-1 budget', () => {
+  it('warns on skill allocation over the level-1 budget', () => {
     const result = evaluate({
       ...legalBuild(),
       skills: [
@@ -138,17 +136,17 @@ describe('findCharacterLegalityViolations level-1 blocking', () => {
         { id: '2', skill_val: 3, prof: true },
       ],
     });
-    expect(result.blocking[0]).toMatch(/Skill points spent \(6\).*budget \(3\)/);
+    expect(result.warnings[0]?.code).toBe('skill_points_over_budget');
+    expect(result.warnings[0]?.level).toBe(1);
   });
 
-  it('blocks negative currency at level 1 with legacy copy', () => {
+  it('uses structured currency_negative at level 1', () => {
     const result = evaluate({ ...legalBuild(), currency: -30 });
-    expect(result.blocking[0]).toMatch(/Currency cannot be negative/);
+    expect(result.warnings).toEqual([{ code: 'currency_negative', level: 1 }]);
   });
 
-  it('uses structured currency_negative at level 2 without prose copy', () => {
+  it('uses structured currency_negative at level 2', () => {
     const result = evaluate({ ...legalBuild(), level: 2, currency: -30 });
-    expect(result.blocking).toEqual([]);
     expect(result.warnings).toEqual([{ code: 'currency_negative', level: 2 }]);
   });
 
@@ -157,11 +155,11 @@ describe('findCharacterLegalityViolations level-1 blocking', () => {
       ...legalBuild(),
       abilities: { strength: 3, vitality: 3, agility: 2, acuity: 0, intelligence: 0, charisma: 0 },
     };
-    expect(evaluate(overBudgetByDefaults).blocking).toHaveLength(1);
+    expect(evaluate(overBudgetByDefaults).warnings.length).toBeGreaterThan(0);
     expect(
       evaluate(overBudgetByDefaults, {
         PROGRESSION_PLAYER: { baseAbilityPoints: 12 },
-      } as never).blocking,
+      } as never).warnings,
     ).toEqual([]);
   });
 });
@@ -175,9 +173,13 @@ describe('findCharacterLegalityViolations feat requirements', () => {
     skills: [],
   };
 
-  it('blocks level 1 when a catalog feat fails requirements', () => {
+  it('warns at level 1 when a catalog feat fails requirements', () => {
     const result = evaluate(legalBuild(), undefined, catalog);
-    expect(result.blocking.some((d) => /Needs Level 4/.test(d))).toBe(true);
+    expect(result.warnings).toContainEqual({
+      code: 'feat_requirements_unmet',
+      level: 1,
+      featId: 'c1',
+    });
   });
 
   it('structured feat_requirements_unmet at level 5', () => {
@@ -216,29 +218,5 @@ describe('mapCodexBaseSkillToId / catalogFromCodexRows (TASK-754)', () => {
 describe('legalityLevelForSave', () => {
   it('defaults missing level to 1', () => {
     expect(legalityLevelForSave({})).toBe(1);
-  });
-});
-
-describe('resolveCharacterPatchLegality', () => {
-  it('returns 400 details only for newly introduced level-1 violations', () => {
-    const stored = evaluate(legalBuild());
-    const merged = evaluate({
-      ...legalBuild(),
-      abilities: { strength: 3, vitality: 3, agility: 3, acuity: 0, intelligence: 0, charisma: 0 },
-    });
-    const resolved = resolveCharacterPatchLegality(stored, merged, 1);
-    expect(resolved.status400Details?.length).toBeGreaterThan(0);
-  });
-
-  it('surfaces pre-existing level-1 violations as warnings on 200', () => {
-    const illegal = evaluate({
-      ...legalBuild(),
-      abilities: { strength: 3, vitality: 3, agility: 3, acuity: 0, intelligence: 0, charisma: 0 },
-    });
-    const resolved = resolveCharacterPatchLegality(illegal, illegal, 1);
-    expect(resolved.status400Details).toBeNull();
-    expect(resolved.legality.warnings.some((w) => w.code === 'level_1_preexisting_violation')).toBe(
-      true,
-    );
   });
 });

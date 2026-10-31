@@ -12,8 +12,6 @@ export const POWER_ADVANCED_MECHANIC_CATEGORIES = [
   'Restriction',
 ] as const;
 
-export type PowerAdvancedMechanicCategory = (typeof POWER_ADVANCED_MECHANIC_CATEGORIES)[number];
-
 export const POWER_ADVANCED_MECHANIC_CATEGORY_SET = new Set<string>(
   POWER_ADVANCED_MECHANIC_CATEGORIES,
 );

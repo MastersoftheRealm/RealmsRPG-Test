@@ -89,7 +89,7 @@ export function defensesFromPart(part: PartWithTargetedDefenses): CanonicalTarge
   return parseDefensesFromDescription(part.description);
 }
 
-export function defensesFromDamageType(
+function defensesFromDamageType(
   damageType: string,
   partsDb: PartWithTargetedDefenses[],
 ): CanonicalTargetedDefense[] {

@@ -8,7 +8,7 @@ import type { CharacterForFeatRequirement } from '@/lib/game/feat-requirements';
 import type { CreatureSkill, CreatureState } from './creature-creator-types';
 import type { CreatureFeat } from './transformers';
 
-export function creatureSkillsToFeatReqRecord(
+function creatureSkillsToFeatReqRecord(
   skills: CreatureSkill[],
 ): Record<string, { prof?: boolean | undefined; val?: number | undefined }> {
   const out: Record<string, { prof?: boolean | undefined; val?: number | undefined }> = {};
@@ -20,7 +20,7 @@ export function creatureSkillsToFeatReqRecord(
   return out;
 }
 
-export function effectiveCreatureLevelForFeatReq(level: number | undefined | null): number {
+function effectiveCreatureLevelForFeatReq(level: number | undefined | null): number {
   const n = Number(level);
   if (!Number.isFinite(n)) return 1;
   return Math.max(1, Math.floor(n));

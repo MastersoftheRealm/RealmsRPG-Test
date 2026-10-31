@@ -33,7 +33,7 @@ const ALLOWED_COLLECTIONS: ReadonlySet<string> = new Set<string>([
   'core_rules',
 ]);
 
-export function isCodexCollection(value: unknown): value is CodexCollection {
+function isCodexCollection(value: unknown): value is CodexCollection {
   return typeof value === 'string' && ALLOWED_COLLECTIONS.has(value);
 }
 

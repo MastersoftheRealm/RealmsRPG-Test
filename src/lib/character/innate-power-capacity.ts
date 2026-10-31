@@ -53,7 +53,7 @@ export function isInnatePowerOverThreshold(
   return energy > innateThreshold;
 }
 
-export function sumInnatePowerEnergies(energies: number[]): number {
+function sumInnatePowerEnergies(energies: number[]): number {
   return energies.reduce((sum, energy) => sum + (energy > 0 ? energy : 0), 0);
 }
 
@@ -77,14 +77,4 @@ export function resolveCharacterInnateEnergy(character: Character): number {
 
 export function characterSupportsInnatePowers(character: Character): boolean {
   return resolveCharacterInnateEnergy(character) > 0;
-}
-
-export function resolveCharacterInnateThreshold(character: Character): number {
-  const progression = calculateArchetypeProgression(
-    character.level || 1,
-    character.mart_prof || 0,
-    character.pow_prof || 0,
-    character.archetypeChoices || {},
-  );
-  return progression.innateThreshold;
 }

@@ -79,7 +79,7 @@ const PREFERRED_ORDER_AFTER_DESC = [
   'adulthood_lifespan',
 ];
 
-export function orderColumns(keys: string[]): string[] {
+function orderColumns(keys: string[]): string[] {
   const hasId = keys.includes('id');
   const hasName = keys.includes('name');
   const hasDesc = keys.includes('description');

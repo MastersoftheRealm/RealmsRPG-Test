@@ -142,21 +142,6 @@ export function buildPowerTechniqueCardFacts(
   }
 }
 
-/** Filter helper — capitalized Action Type value (no "Action Type" prefix). */
-export function resolvePowerTechniqueActionType(
-  kind: PowersTechniquesKind,
-  item: LibraryPower | LibraryTechnique,
-  powerPartsDb: PowerPart[],
-  techniquePartsDb: TechniquePart[],
-): string | undefined {
-  return buildPowerTechniqueCardFacts(kind, item, itemId(item), powerPartsDb, techniquePartsDb)
-    .actionType;
-}
-
-function itemId(item: LibraryPower | LibraryTechnique): string {
-  return String(item.id ?? item.docId ?? item.name ?? '');
-}
-
 function toEnergyCostPick(
   kind: 'power' | 'technique',
   item: LibraryPower | LibraryTechnique | undefined,

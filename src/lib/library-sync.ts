@@ -292,7 +292,7 @@ export function syncPowerParts(
   return { value: nextParts, issues, hasDrift: issues.length > 0, changed: before !== after };
 }
 
-export function syncTechniqueParts(
+function syncTechniqueParts(
   itemName: string,
   parts: SavedPart[] = [],
   partsDb: PartLike[] = [],

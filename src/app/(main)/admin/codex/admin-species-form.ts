@@ -4,10 +4,7 @@
 
 import type { Species, Skill, Trait } from '@/hooks';
 import { parseCatalogListing } from '@/lib/library/catalog-listing';
-import {
-  codexSourcesOrCore,
-  DEFAULT_CODEX_SOURCES,
-} from '@/lib/codex/sources';
+import { codexSourcesOrCore, DEFAULT_CODEX_SOURCES } from '@/lib/codex/sources';
 
 export type TraitPickerField =
   | 'speciesTraitIds'
@@ -68,10 +65,7 @@ export const EMPTY_SPECIES_FORM: SpeciesFormState = {
   imageUrl: null,
 };
 
-export function normalizeIds(
-  values: string[] = [],
-  all: Array<{ id: string; name: string }>,
-): string[] {
+function normalizeIds(values: string[] = [], all: Array<{ id: string; name: string }>): string[] {
   return values.map((val) => {
     const byId = all.find((it) => String(it.id) === String(val));
     if (byId) return String(byId.id);

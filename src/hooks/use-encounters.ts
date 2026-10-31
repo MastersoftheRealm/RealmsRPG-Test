@@ -25,7 +25,7 @@ import {
 import { useAuth } from './use-auth';
 import type { Encounter, EncounterSummary } from '@/types/encounter';
 
-export const encounterKeys = {
+const encounterKeys = {
   all: ['encounters'] as const,
   lists: () => [...encounterKeys.all, 'list'] as const,
   list: () => [...encounterKeys.lists()] as const,
@@ -107,12 +107,4 @@ export function useDeleteEncounter() {
       queryClient.invalidateQueries({ queryKey: encounterKeys.lists() });
     },
   });
-}
-
-/** Invalidate all encounter queries */
-export function useInvalidateEncounters() {
-  const queryClient = useQueryClient();
-  return () => {
-    queryClient.invalidateQueries({ queryKey: encounterKeys.all });
-  };
 }

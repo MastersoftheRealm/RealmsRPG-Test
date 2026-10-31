@@ -13,7 +13,7 @@ Quick location table: [`AGENT_GUIDE.md`](../AGENT_GUIDE.md) § Components. Unifi
 | Feat source / other modal sub-modes needing `role="tab"` | **SegmentedControl** with `tabs` + `tabPanelId` | A11y tablist when acting as tabs |
 | Powers / Techniques / … primary navigation | **TabNavigation** (`variant="underline"`) | Long tab sets; keep underline tabs, do not swap for SegmentedControl |
 
-**Tab a11y (TASK-355):** Call `useTabGroup()` in the page, pass `tabGroupId` + `sharedTabPanelId` to `TabNavigation`, wrap tab content in `<TabContentPanel tabGroupId={…} id={sharedPanelId} activeTab={…}>`. For per-tab panels in DOM, use `TabPanel` instead.
+**Tab a11y (TASK-355):** Call `useTabGroup()` in the page, pass `tabGroupId` + `sharedTabPanelId` to `TabNavigation`, wrap tab content in `<TabContentPanel tabGroupId={…} id={sharedPanelId} activeTab={…}>`.
 
 ## Component Decision Tree (List/Selection UI)
 

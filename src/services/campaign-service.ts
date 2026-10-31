@@ -7,7 +7,6 @@
 import type { Campaign, CampaignCharacterEncounterData, CampaignSummary } from '@/types/campaign';
 import type { Character } from '@/types';
 import { apiFetch, apiFetchOrNull } from '@/lib/api-client';
-import { normalizeInviteCodeInput, isValidInviteCodeFormat } from '@/lib/campaign-invite';
 import type { GetCharacterResult, LibraryForView } from '@/services/character-service';
 import type { CharacterViewEnrichment } from '@/lib/character-view-enrichment';
 
@@ -71,18 +70,5 @@ export async function getCampaignCharacterForEncounter(
   return apiFetchOrNull<CampaignCharacterEncounterData>(
     `${API_BASE}/${encodeURIComponent(campaignId)}/characters/${encodeURIComponent(userId)}/${encodeURIComponent(characterId)}?scope=encounter`,
     { ...init, cache: 'no-store' },
-  );
-}
-
-/**
- * Look up a campaign by invite code (for join flow).
- */
-export async function getCampaignByInviteCode(
-  inviteCode: string,
-): Promise<{ id: string; name: string } | null> {
-  const code = normalizeInviteCodeInput(inviteCode);
-  if (!isValidInviteCodeFormat(code)) return null;
-  return apiFetchOrNull<{ id: string; name: string }>(
-    `${API_BASE}/invite/${encodeURIComponent(code)}`,
   );
 }

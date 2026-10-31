@@ -71,7 +71,7 @@ function buildOptionEntries(
   return options.length > 0 ? options : undefined;
 }
 
-export function partPayloadToPartData(
+function partPayloadToPartData(
   payload: string | PartPayload,
   codexParts: CodexPartRow[],
   variant: PartTpVariant,

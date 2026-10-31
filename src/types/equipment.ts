@@ -4,19 +4,6 @@
  * Item and equipment definitions
  */
 
-/** Equipment slot types */
-export type EquipmentSlot =
-  | 'mainHand'
-  | 'offHand'
-  | 'armor'
-  | 'head'
-  | 'neck'
-  | 'ring'
-  | 'feet'
-  | 'hands'
-  | 'back'
-  | 'waist';
-
 /** Item rarity levels */
 export type ItemRarity = 'common' | 'uncommon' | 'rare' | 'epic' | 'legendary';
 

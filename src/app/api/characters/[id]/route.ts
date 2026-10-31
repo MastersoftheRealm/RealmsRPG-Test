@@ -29,9 +29,7 @@ import { fetchArchetypeNameMap } from '@/lib/game/archetype-display';
 import {
   appendCharacterLegalityToResponse,
   evaluateCharacterLegalityForSave,
-  legalityLevelForSave,
   patchDirtyKeysNeedFeatCatalog,
-  resolveCharacterPatchLegality,
 } from '@/lib/game/character-legality';
 import {
   characterPortraitStoragePaths,
@@ -208,25 +206,7 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
     const evalOpts = {
       loadFeatCatalog: patchDirtyKeysNeedFeatCatalog(cleanedData),
     };
-    const [storedLegality, mergedLegality] = await Promise.all([
-      evaluateCharacterLegalityForSave(supabase, currentData, evalOpts),
-      evaluateCharacterLegalityForSave(supabase, mergedData, evalOpts),
-    ]);
-    const mergedLevel = legalityLevelForSave(mergedData);
-    const patchLegality = resolveCharacterPatchLegality(
-      storedLegality,
-      mergedLegality,
-      mergedLevel,
-    );
-    if (patchLegality.status400Details) {
-      return NextResponse.json(
-        {
-          error: 'Character is not a legal level 1 build',
-          details: patchLegality.status400Details,
-        },
-        { status: 400 },
-      );
-    }
+    const legality = await evaluateCharacterLegalityForSave(supabase, mergedData, evalOpts);
     const archetypeNameById = await fetchArchetypeNameMap(supabase);
     const listCols = getCharacterListColumns(mergedData, { archetypeNameById });
 
@@ -270,10 +250,7 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
     }
 
     return NextResponse.json(
-      appendCharacterLegalityToResponse(
-        { ok: true, updatedAt: savedUpdatedAt },
-        patchLegality.legality,
-      ),
+      appendCharacterLegalityToResponse({ ok: true, updatedAt: savedUpdatedAt }, legality),
     );
   } catch (err) {
     console.error('[API Error] PATCH /api/characters/[id]:', err);

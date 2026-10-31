@@ -130,7 +130,7 @@ export function withSyncedResourceFields(
   return next;
 }
 
-export function buildResourcePatchFromCombatant(combatant: {
+function buildResourcePatchFromCombatant(combatant: {
   currentHealth: number;
   currentEnergy: number;
   ap: number;

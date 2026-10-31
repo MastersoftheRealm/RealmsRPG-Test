@@ -181,7 +181,7 @@ const DEFAULT_DURATION: DurationConfig = {
   sustain: 0,
 };
 
-export function emptyEmpoweredTechniqueFormState(): EmpoweredTechniqueFormState {
+function emptyEmpoweredTechniqueFormState(): EmpoweredTechniqueFormState {
   return {
     name: '',
     description: '',
@@ -268,7 +268,7 @@ function mapTechniqueRows(
     .filter((row): row is SelectedTechniquePart => row !== null);
 }
 
-export function restoreEmpoweredTechniqueFromCache(
+function restoreEmpoweredTechniqueFromCache(
   powerParts: PowerPart[],
   techniqueParts: TechniquePart[],
 ): EmpoweredTechniqueFormState | null {

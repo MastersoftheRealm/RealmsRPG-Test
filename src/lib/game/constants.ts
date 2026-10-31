@@ -149,21 +149,6 @@ export const ABILITIES_AND_DEFENSES = [
   'Resolve',
 ] as const;
 
-/** Map from draft ability key (lowercase) to full display name for character creator / finalize step. */
-export const ABILITY_DISPLAY_NAMES: Record<string, string> = Object.fromEntries(
-  ABILITIES_AND_DEFENSES.slice(0, 6).map((name) => [name.toLowerCase(), name]),
-);
-
-/** Defense keys in GAME_RULES / `ABILITIES_AND_DEFENSES` order. */
-export const DEFENSE_DISPLAY_ORDER: readonly DefenseName[] = [
-  'might',
-  'fortitude',
-  'reflex',
-  'discernment',
-  'mentalFortitude',
-  'resolve',
-] as const;
-
 /** Defense display names — SoT is `ABILITIES_AND_DEFENSES` (no "Mental Fort." / "Reflex"). */
 export const DEFENSE_DISPLAY_NAMES: Record<DefenseName, string> = {
   might: ABILITIES_AND_DEFENSES[6],

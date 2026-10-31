@@ -25,7 +25,7 @@ export function personalRollLogStorageKey(characterId: string): string {
   return `${LEGACY_PERSONAL_ROLL_LOG_KEY}:${characterId}`;
 }
 
-export function parseStoredRollLog(raw: string): StoredRollLogEntry[] {
+function parseStoredRollLog(raw: string): StoredRollLogEntry[] {
   const parsed = JSON.parse(raw) as StoredRollLogEntry[];
   if (!Array.isArray(parsed)) return [];
   return parsed.map((r) => ({ ...r, timestamp: new Date(r.timestamp) }));

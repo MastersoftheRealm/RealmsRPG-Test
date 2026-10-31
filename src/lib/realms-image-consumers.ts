@@ -13,7 +13,7 @@ import {
 import type { RealmsImageUsageRef } from '@/lib/realms-images';
 
 /** Art-capable entity tables that will (or do) reference realms_images via image_id. */
-export const REALMS_IMAGE_CONSUMER_TABLES = [
+const REALMS_IMAGE_CONSUMER_TABLES = [
   { table: 'codex_species', entityKind: 'species', hasImageUrl: true },
   { table: 'codex_equipment', entityKind: 'equipment', hasImageUrl: true },
   { table: 'official_creatures', entityKind: 'creature', hasImageUrl: true },

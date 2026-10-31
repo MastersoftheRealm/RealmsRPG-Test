@@ -41,7 +41,7 @@ export interface AbilityRequirementFact {
  * Also includes calculation-only bases and facts already represented by compact-fact formatters
  * (do not repeat if already represented).
  */
-export const MECHANIC_PROPERTY_NAMES = new Set([
+const MECHANIC_PROPERTY_NAMES = new Set([
   'one-handed',
   'two-handed',
   'thrown',
@@ -294,9 +294,7 @@ export function formatCriticalRangeIncreaseFact(
  * The armor's bonus (1 + Option 1 level), not Evasion + 10 + that bonus.
  * None stays "-", the same empty cell the library column already uses.
  */
-export function formatArmorCriticalRangeListValue(
-  increase: number | null | undefined,
-): string {
+export function formatArmorCriticalRangeListValue(increase: number | null | undefined): string {
   if (increase == null || !Number.isFinite(Number(increase))) return '-';
   const n = Math.floor(Number(increase));
   if (n <= 0) return '-';
@@ -342,10 +340,6 @@ export function weaponAbilityChip(
 
 export function rangeFactChip(range: string | number | null | undefined): ChipData | null {
   return compactFactChip(formatRangeFact(range));
-}
-
-export function spacesFactChip(spaces: string | number | null | undefined): ChipData | null {
-  return compactFactChip(formatSpacesFact(spaces));
 }
 
 /**

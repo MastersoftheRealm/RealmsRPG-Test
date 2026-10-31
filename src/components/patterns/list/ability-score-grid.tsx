@@ -22,7 +22,7 @@ export const ABILITY_DISPLAY_ORDER: AbilityName[] = [
 ];
 
 /** Display names for the six abilities. `shortName` kept on the exported shape for callers that want abbr; the grid always shows `name` (TASK-566). */
-export const ABILITY_DISPLAY_INFO: Record<AbilityName, { name: string; shortName: string }> = {
+const ABILITY_DISPLAY_INFO: Record<AbilityName, { name: string; shortName: string }> = {
   strength: { name: 'Strength', shortName: 'STR' },
   vitality: { name: 'Vitality', shortName: 'VIT' },
   agility: { name: 'Agility', shortName: 'AGI' },

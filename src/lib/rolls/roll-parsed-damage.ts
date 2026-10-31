@@ -8,7 +8,7 @@ export type DamageRollDieResult = {
   isMin: boolean;
 };
 
-export function dieTypeFromSides(sides: number): DieType | null {
+function dieTypeFromSides(sides: number): DieType | null {
   const dieType = `d${sides}` as DieType;
   return dieType in DIE_MAX ? dieType : null;
 }

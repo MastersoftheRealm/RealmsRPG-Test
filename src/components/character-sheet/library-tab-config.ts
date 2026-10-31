@@ -20,7 +20,7 @@ export const LIBRARY_TAB_DEFS: LibraryTabDef[] = [
 ];
 
 /** Tab order derived from LIBRARY_TAB_DEFS (sheet owns active-tab state). */
-export const LIBRARY_TAB_ORDER: TabType[] = LIBRARY_TAB_DEFS.map((t) => t.id);
+const LIBRARY_TAB_ORDER: TabType[] = LIBRARY_TAB_DEFS.map((t) => t.id);
 
 export const DEFAULT_TAB_VISIBILITY: Record<TabType, boolean> = {
   feats: true,

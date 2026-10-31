@@ -20,7 +20,7 @@ export interface ProfileDisplay {
 export type UserProfileActionResult = Awaited<ReturnType<typeof getUserProfileAction>>;
 
 /** Shared cache key for getUserProfileAction (Header + My Account). */
-export function userProfileQueryKey(userId: string | undefined) {
+function userProfileQueryKey(userId: string | undefined) {
   return ['user-profile', userId] as const;
 }
 

@@ -40,7 +40,7 @@ export function combineTechniqueCostSlices(...slices: TechniqueCostResult[]): Te
  * `analyzeTechniqueEnergy` (same chain as Advanced Calculations).
  * Percentage lines contribute through that product, not as their own flat EN.
  */
-export function attributedFlatEnergyRaw(
+function attributedFlatEnergyRaw(
   analysis: TechniqueEnergyAnalysis,
   match: (line: TechniqueEnergyLine) => boolean,
 ): number {

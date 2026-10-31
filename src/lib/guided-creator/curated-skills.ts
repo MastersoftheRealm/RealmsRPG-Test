@@ -11,7 +11,7 @@ import type { Abilities, AbilityName, Archetype, ArchetypeCategory } from '@/typ
 import { ABILITIES } from '@/types/abilities';
 
 /** Skills with more than this many governing abilities are too broad for card suggestions. */
-export const GUIDED_CURATED_MAX_GOVERNING_ABILITIES = 3;
+const GUIDED_CURATED_MAX_GOVERNING_ABILITIES = 3;
 
 /** Minimum ability-aligned suggestion cards when the player has skill points left. */
 export const GUIDED_CURATED_MIN_SUGGESTIONS = 4;
@@ -161,7 +161,7 @@ export function getGuidedAbilityRecommendationTiers(
 }
 
 /** Resolve which abilities to use when curating free picks (legacy single-pool fallback). */
-export function getGuidedPathAbilityKeys(
+function getGuidedPathAbilityKeys(
   archetypeType: ArchetypeCategory | null,
   powAbil?: AbilityName | null,
   martAbil?: AbilityName | null,

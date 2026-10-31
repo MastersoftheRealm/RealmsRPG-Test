@@ -17,7 +17,7 @@ import {
 
 export type { ItemCalcSectionId };
 
-export const ITEM_CALC_SECTION_IDS: ItemCalcSectionId[] = [
+const ITEM_CALC_SECTION_IDS: ItemCalcSectionId[] = [
   'handedness',
   'range',
   'abilityUtilized',
@@ -29,7 +29,7 @@ export const ITEM_CALC_SECTION_IDS: ItemCalcSectionId[] = [
   'properties',
 ];
 
-export const ITEM_CALC_SECTION_TITLES: Record<ItemCalcSectionId, string> = {
+const ITEM_CALC_SECTION_TITLES: Record<ItemCalcSectionId, string> = {
   handedness: 'Handedness',
   range: 'Range',
   abilityUtilized: 'Ability Utilized',
@@ -109,7 +109,7 @@ function formatIpCurrencyValue(ip: number, currency: number): string {
   return bits.length > 0 ? bits.join(' · ') : '0';
 }
 
-export function analyzeItemCosts(
+function analyzeItemCosts(
   properties: ItemPropertyPayload[] = [],
   propertiesData: readonly ItemPropertyTpRow[] = [],
 ): { lines: ItemCostLine[]; totalIP: number; totalCurrency: number } {

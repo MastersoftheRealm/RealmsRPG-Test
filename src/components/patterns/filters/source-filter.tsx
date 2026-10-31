@@ -26,7 +26,7 @@ const OPTIONS: { value: SourceFilterValue; label: string }[] = [
 ];
 
 /** Human label for collapsed Filters summaries (TASK-564). */
-export function sourceFilterLabel(value: SourceFilterValue): string {
+function sourceFilterLabel(value: SourceFilterValue): string {
   return OPTIONS.find((o) => o.value === value)?.label ?? 'All sources';
 }
 

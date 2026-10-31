@@ -53,7 +53,7 @@ export type SaveArchetypeWithPathInput = {
 };
 
 /** Lowest level stored in codex_archetype_levels (level 1 lives in columns on the archetype). */
-export const MIN_ARCHETYPE_LEVEL = 2;
+const MIN_ARCHETYPE_LEVEL = 2;
 
 export function buildArchetypeRow(
   id: string,

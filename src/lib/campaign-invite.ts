@@ -8,7 +8,7 @@
 import type { CharacterVisibility } from '@/types/character';
 
 /** Same charset as server generation + API validation */
-export const INVITE_CODE_CHARS = /^[ABCDEFGHJKLMNPQRSTUVWXYZ23456789]{8}$/;
+const INVITE_CODE_CHARS = /^[ABCDEFGHJKLMNPQRSTUVWXYZ23456789]{8}$/;
 
 /**
  * Normalize pasted codes: remove spaces/dashes, uppercase.

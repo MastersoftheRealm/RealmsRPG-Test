@@ -12,7 +12,7 @@ import {
   type TypedSupabaseClient,
 } from '@/lib/supabase/database';
 
-export const RETIRED_IDS_TABLE = 'codex_retired_ids' as const;
+const RETIRED_IDS_TABLE = 'codex_retired_ids' as const;
 
 export function parseNumericId(id: unknown): number | null {
   if (typeof id !== 'string' && typeof id !== 'number') return null;

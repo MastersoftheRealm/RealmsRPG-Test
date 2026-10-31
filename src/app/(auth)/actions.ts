@@ -7,14 +7,11 @@
 'use server';
 
 import { revalidatePath } from 'next/cache';
-import { redirect } from 'next/navigation';
-import { headers } from 'next/headers';
 import { requireAuth, requireLiveUser, getSession } from '@/lib/supabase/session';
 import { createClient as createServerClient, createServiceRoleClient } from '@/lib/supabase/server';
 import { isAdmin } from '@/lib/admin';
 import { getRolePolicyForUser } from '@/lib/role-policy';
 import { validateUsername } from '@/lib/username-rules';
-import { buildRateLimitKey, resolveClientIp, strictLimiter } from '@/lib/rate-limit';
 
 /** Postgres unique-violation; RLS/permission denial. */
 const UNIQUE_VIOLATION = '23505';
@@ -33,13 +30,6 @@ function isUniqueViolation(error: { code?: string | undefined } | null): boolean
  */
 function isUsernameConflict(error: { code?: string | undefined } | null): boolean {
   return isUniqueViolation(error) || error?.code === INSUFFICIENT_PRIVILEGE;
-}
-
-export async function signOutAction() {
-  const supabase = await createServerClient();
-  await supabase.auth.signOut();
-  revalidatePath('/', 'layout');
-  redirect('/login');
 }
 
 /**
@@ -170,34 +160,6 @@ export async function createUserProfileAction(data: {
   }
 }
 
-export async function updateUserProfileAction(data: {
-  displayName?: string | undefined;
-  username?: string | undefined;
-}) {
-  try {
-    const user = await requireAuth();
-    // SEC-03: never write a username without validation, uniqueness, and the
-    // rate-limit/usernames-table sync — delegate to the canonical path.
-    if (data.username !== undefined) {
-      const res = await changeUsernameAction(data.username);
-      if (!res.success) return res;
-    }
-    if (data.displayName !== undefined) {
-      const supabase = await createServerClient();
-      const { error } = await supabase
-        .from('user_profiles')
-        .update({ display_name: data.displayName })
-        .eq('id', user.uid);
-      if (error) throw error;
-    }
-    revalidatePath('/my-account');
-    return { success: true };
-  } catch (error) {
-    console.error('Error updating user profile:', error);
-    return { success: false, error: 'Failed to update profile' };
-  }
-}
-
 export async function getUserProfileAction() {
   try {
     const { user } = await getSession();
@@ -233,44 +195,6 @@ export async function getUserProfileAction() {
   } catch (error) {
     console.error('Error getting user profile:', error);
     return { profile: null, error: 'Failed to get profile' };
-  }
-}
-
-/**
- * Format-only username pre-check.
- *
- * `available` is intentionally `null` ("unknown") for a well-formed name: RLS
- * scopes every readable `user_profiles` / `usernames` row to `auth.uid()`, so a
- * session client cannot observe another user's name and any "available: true"
- * would be fabricated. The write path (`changeUsernameAction` /
- * `createUserProfileAction`) is the single source of truth — it maps the unique
- * violation to "already taken". This never blocks submission.
- */
-export async function checkUsernameAvailableAction(
-  username: string,
-): Promise<{ available: boolean | null; error?: string | undefined }> {
-  try {
-    // SEC-07: rate-limited and session-gated so it cannot be used to probe names.
-    const { user } = await getSession();
-    if (!user?.uid) {
-      return { available: null, error: 'Not authenticated' };
-    }
-    const ip = resolveClientIp(await headers());
-    const { success } = await strictLimiter.check(
-      buildRateLimitKey('username-check', { userId: user.uid, ip }),
-    );
-    if (!success) {
-      return { available: null, error: 'Too many requests' };
-    }
-
-    const usernameCheck = validateUsername(username.trim());
-    if (!usernameCheck.ok) {
-      return { available: false, error: usernameCheck.error };
-    }
-    return { available: null };
-  } catch (error) {
-    console.error('Error checking username:', error);
-    return { available: null, error: 'Failed to check username' };
   }
 }
 

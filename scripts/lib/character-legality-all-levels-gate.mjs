@@ -4,7 +4,12 @@
 import fs from 'node:fs';
 import path from 'node:path';
 
-export const FORBIDDEN_IDENTIFIERS = ['shouldCheckLevel1Legality', 'findLevel1LegalityViolations'];
+export const FORBIDDEN_IDENTIFIERS = [
+  'shouldCheckLevel1Legality',
+  'findLevel1LegalityViolations',
+  'shouldBlockCharacterSaveAtLevel',
+  'resolveCharacterPatchLegality',
+];
 
 const API_ROOT = path.join('src', 'app', 'api');
 

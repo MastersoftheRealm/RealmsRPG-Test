@@ -373,5 +373,3 @@ export function useMyAccountPage() {
     handleTutorialsChange,
   };
 }
-
-export type MyAccountPageModel = ReturnType<typeof useMyAccountPage>;

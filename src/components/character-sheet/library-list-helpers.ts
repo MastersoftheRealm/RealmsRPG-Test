@@ -43,7 +43,7 @@ export function partsToPartData(
 
 export const propertiesToPartData = itemPropertiesToPartData;
 
-export function chipDescriptionWithOptionLevels(
+function chipDescriptionWithOptionLevels(
   baseDescription: string | undefined,
   optionLevels: PartData['optionLevels'],
 ): string | undefined {

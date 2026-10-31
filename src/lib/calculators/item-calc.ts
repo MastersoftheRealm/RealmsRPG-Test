@@ -657,7 +657,7 @@ const SHIELD_DICE_SIZES = [4, 6, 8] as const;
  * Library display for Shield Amount / Shield Damage.
  * Level 0 = 1d4, 1 = 1d6, 2 = 1d8, 3 = 2d4.
  */
-export function shieldDiceFromOptionLevel(level: number): { amount: number; size: number } {
+function shieldDiceFromOptionLevel(level: number): { amount: number; size: number } {
   const safe = Math.max(0, Math.floor(level));
   return {
     amount: Math.floor(safe / 3) + 1,
@@ -749,7 +749,7 @@ export function resolveShieldDamageDisplay(input: {
 /**
  * Extract proficiencies (TP sources) from properties.
  */
-export function extractProficiencies(
+function extractProficiencies(
   properties: ItemPropertyPayload[],
   propertiesData: ItemProperty[],
 ): ProficiencyInfo[] {
@@ -810,17 +810,4 @@ export function deriveItemDisplay(
     damageReduction: dr,
     proficiencies: profs,
   };
-}
-
-/**
- * Format a proficiency chip for display.
- */
-export function formatProficiencyChip(p: ProficiencyInfo): string {
-  let txt = p.name;
-  if (p.level > 0) txt += ` (Level ${p.level})`;
-  if (p.totalTP > 0) {
-    txt += ` | TP: ${p.baseTP}`;
-    if (p.optionTP > 0) txt += ` + ${p.optionTP}`;
-  }
-  return txt;
 }

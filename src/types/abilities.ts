@@ -51,16 +51,6 @@ export type DefenseName =
   | 'mentalFortitude' // intelligence
   | 'resolve'; // charisma
 
-/** Defense scores object */
-export interface Defenses {
-  might: number;
-  fortitude: number;
-  reflex: number;
-  discernment: number;
-  mentalFortitude: number;
-  resolve: number;
-}
-
 /** Defense bonuses from skills/feats */
 export interface DefenseBonuses {
   might: number;

@@ -36,7 +36,7 @@ export function characterOwnsLibraryItem(
   return equipmentListForKind(character, kind).some((entry) => String(entry.id) === id);
 }
 
-export function mapLibraryPowerToCharacter(power: LibraryPower, dbs: CodexDbRefs): CharacterPower {
+function mapLibraryPowerToCharacter(power: LibraryPower, dbs: CodexDbRefs): CharacterPower {
   const items = mapSelectedToCharacterItems(
     'power',
     [{ id: libraryItemRowId(power), name: power.name, data: power }],
@@ -46,7 +46,7 @@ export function mapLibraryPowerToCharacter(power: LibraryPower, dbs: CodexDbRefs
   return items[0] as CharacterPower;
 }
 
-export function mapLibraryTechniqueToCharacter(
+function mapLibraryTechniqueToCharacter(
   technique: LibraryTechnique,
   dbs: CodexDbRefs,
 ): CharacterTechnique {
@@ -59,7 +59,7 @@ export function mapLibraryTechniqueToCharacter(
   return items[0] as CharacterTechnique;
 }
 
-export function mapLibraryArmamentToCharacter(
+function mapLibraryArmamentToCharacter(
   item: LibraryItem,
   kind: 'weapon' | 'armor' | 'shield',
   dbs: CodexDbRefs,
@@ -108,9 +108,7 @@ export function entityBucketLabel(kind: LibraryToCharacterKind, possessive = fal
   return possessive ? "character's shields" : 'shields';
 }
 
-export function isArmamentKind(
-  kind: LibraryToCharacterKind,
-): kind is 'weapon' | 'armor' | 'shield' {
+function isArmamentKind(kind: LibraryToCharacterKind): kind is 'weapon' | 'armor' | 'shield' {
   return kind === 'weapon' || kind === 'armor' || kind === 'shield';
 }
 

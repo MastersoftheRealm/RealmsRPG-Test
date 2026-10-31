@@ -133,12 +133,6 @@ export const CREATURE_SIZES: readonly SizeTableRow[] = SIZE_TABLE_BASE.map((row)
   height: formatSizeHeightRangeCm(row),
 }));
 
-export function formatSizeHeightRange(
-  row: Pick<SizeTableRow, 'heightMinCm' | 'heightMaxCm'>,
-): string {
-  return formatSizeHeightRangeCm(row);
-}
-
 function normalizeSizeLookupKey(input: string): string {
   return input.trim().toLowerCase().replace(/\s+/g, '');
 }
@@ -176,7 +170,7 @@ export function calculateCarryingCapacityKg(
 }
 
 /** Whether `choice` matches one of the species-allowed size strings (case-insensitive). */
-export function sizeChoiceAllowed(choice: string, allowedSizes: readonly string[]): boolean {
+function sizeChoiceAllowed(choice: string, allowedSizes: readonly string[]): boolean {
   const row = findSizeTableRow(choice);
   if (!row) return false;
   return allowedSizes.some((allowed) => {

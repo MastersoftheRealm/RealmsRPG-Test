@@ -5,9 +5,8 @@
  * and loaded `core_rules`. Rebuilding level-up spend history from the sheet is **B6**
  * (out of scope here).
  *
- * Level 1 **POST create:** blocking 400 with player-facing `details` (unchanged from master).
- * Level 1 **PATCH:** master never blocked; only **new** L1 violations vs stored → 400; pre-existing → 200 warnings.
- * Level 2+: advisory structured `legalityWarnings` on success; saves are not blocked.
+ * **All levels (Kadin Oct 31, 2026 for L1; Oct 29 for L2+):** warn and save — structured
+ * `legalityWarnings` on 200; no legality 400. Bad payloads still fail Zod validation.
  *
  * Skill spend is a deliberate lower bound (allocated values only). Feat requirements
  * use `checkFeatRequirements` when the feat catalog loaded; catalog load failure is
@@ -55,8 +54,7 @@ export type CharacterLegalityWarningCode =
   | 'currency_negative'
   | 'health_energy_negative'
   | 'health_energy_over_pool'
-  | 'feat_requirements_unmet'
-  | 'level_1_preexisting_violation';
+  | 'feat_requirements_unmet';
 
 export interface CharacterLegalityStructuredWarning {
   code: CharacterLegalityWarningCode;
@@ -70,14 +68,10 @@ export interface CharacterLegalityStructuredWarning {
   floor?: number | undefined;
   abilities?: string[] | undefined;
   featId?: string | undefined;
-  /** Existing level-1 blocking line (PATCH pre-existing violations only). */
-  detail?: string | undefined;
 }
 
 export interface CharacterLegalityResult {
-  /** Level 1 POST create — 400 `details`. Not used for PATCH blocking (see resolveCharacterPatchLegality). */
-  blocking: string[];
-  /** Level 2+ advisory — machine-readable; no player-facing sentences in B5. */
+  /** Structured advisory — all levels; no legality blocking 400. */
   warnings: CharacterLegalityStructuredWarning[];
   uncomputable: CharacterLegalityUncomputableCode[];
 }
@@ -178,44 +172,6 @@ function resolveLegalityLevel(candidate: CharacterLegalityCandidate): number | n
 
 export function legalityLevelForSave(candidate: CharacterLegalityCandidate): number {
   return resolveLegalityLevel(candidate) ?? 1;
-}
-
-export function shouldBlockCharacterSaveAtLevel(
-  level: number,
-  result: CharacterLegalityResult,
-): boolean {
-  return level === 1 && result.blocking.length > 0;
-}
-
-/**
- * PATCH level-1: block only violations newly introduced by the merge; surface pre-existing as warnings.
- */
-export function resolveCharacterPatchLegality(
-  stored: CharacterLegalityResult,
-  merged: CharacterLegalityResult,
-  mergedLevel: number,
-): { status400Details: string[] | null; legality: CharacterLegalityResult } {
-  if (mergedLevel !== 1) {
-    return { status400Details: null, legality: merged };
-  }
-  const storedSet = new Set(stored.blocking);
-  const newBlocking = merged.blocking.filter((line) => !storedSet.has(line));
-  if (newBlocking.length > 0) {
-    return { status400Details: newBlocking, legality: merged };
-  }
-  const preExisting = merged.blocking.filter((line) => storedSet.has(line));
-  const warnings: CharacterLegalityStructuredWarning[] = [
-    ...merged.warnings,
-    ...preExisting.map((detail) => ({
-      code: 'level_1_preexisting_violation' as const,
-      level: 1,
-      detail,
-    })),
-  ];
-  return {
-    status400Details: null,
-    legality: { blocking: [], warnings, uncomputable: merged.uncomputable },
-  };
 }
 
 export function patchDirtyKeysNeedFeatCatalog(dirty: Record<string, unknown>): boolean {
@@ -396,31 +352,21 @@ function candidateToFeatRequirementCharacter(
 
 function addAbilityOverBudget(
   level: number,
-  blocking: string[],
   warnings: CharacterLegalityStructuredWarning[],
   spent: number,
   budget: number,
 ) {
   if (spent <= budget) return;
-  if (level === 1) {
-    blocking.push(`Ability points spent (${spent}) exceed the level 1 budget (${budget}).`);
-    return;
-  }
   warnings.push({ code: 'ability_points_over_budget', level, spent, budget });
 }
 
 function addSkillOverBudget(
   level: number,
-  blocking: string[],
   warnings: CharacterLegalityStructuredWarning[],
   spent: number,
   budget: number,
 ) {
   if (spent <= budget) return;
-  if (level === 1) {
-    blocking.push(`Skill points spent (${spent}) exceed the level 1 budget (${budget}).`);
-    return;
-  }
   warnings.push({ code: 'skill_points_over_budget', level, spent, budget });
 }
 
@@ -428,7 +374,6 @@ function findUnmetFeatRequirementViolations(
   candidate: CharacterLegalityCandidate,
   level: number,
   catalog: FeatRequirementCatalog,
-  blocking: string[],
   warnings: CharacterLegalityStructuredWarning[],
 ) {
   if (catalog.feats.length === 0) return;
@@ -443,16 +388,7 @@ function findUnmetFeatRequirementViolations(
     if (!feat) continue;
     const result = checkFeatRequirements(feat, character, catalog.skills, catalog.feats);
     if (!result.met) {
-      if (level === 1) {
-        const label = feat.name ?? ref.name ?? ref.id;
-        blocking.push(
-          result.reason
-            ? `${label} does not meet its requirements: ${result.reason}.`
-            : `${label} does not meet its requirements.`,
-        );
-      } else {
-        warnings.push({ code: 'feat_requirements_unmet', level, featId: ref.id });
-      }
+      warnings.push({ code: 'feat_requirements_unmet', level, featId: ref.id });
     }
   }
 }
@@ -472,10 +408,9 @@ export function findCharacterLegalityViolations(
 
   const level = resolveLegalityLevel(candidate);
   if (level === null) {
-    return { blocking: [], warnings: [], uncomputable: ['invalid_level'] };
+    return { warnings: [], uncomputable: ['invalid_level'] };
   }
 
-  const blocking: string[] = [];
   const warnings: CharacterLegalityStructuredWarning[] = [];
   const archetypeChoices = archetypeChoicesFromCandidate(candidate);
 
@@ -489,7 +424,7 @@ export function findCharacterLegalityViolations(
       abilityPointsSpent(abilities, effectiveRules),
       abilityPointsSpent(abilities),
     );
-    addAbilityOverBudget(level, blocking, warnings, spent, budget);
+    addAbilityOverBudget(level, warnings, spent, budget);
 
     const floor = Math.min(
       effectiveRules?.ABILITY_RULES?.min ?? ABILITY_LIMITS.MIN,
@@ -497,16 +432,12 @@ export function findCharacterLegalityViolations(
     );
     const belowFloor = ABILITY_KEYS.filter((key) => (toFiniteNumber(abilities[key]) ?? 0) < floor);
     if (belowFloor.length > 0) {
-      if (level === 1) {
-        blocking.push(`Ability scores cannot go below ${floor} (${belowFloor.join(', ')}).`);
-      } else {
-        warnings.push({
-          code: 'ability_below_floor',
-          level,
-          floor,
-          abilities: [...belowFloor],
-        });
-      }
+      warnings.push({
+        code: 'ability_below_floor',
+        level,
+        floor,
+        abilities: [...belowFloor],
+      });
     }
   }
 
@@ -515,7 +446,7 @@ export function findCharacterLegalityViolations(
     getTotalSkillPoints(level, 'character'),
   );
   const skillSpent = skillPointsSpentFloor(candidate, effectiveRules);
-  addSkillOverBudget(level, blocking, warnings, skillSpent, skillBudget);
+  addSkillOverBudget(level, warnings, skillSpent, skillBudget);
 
   const archetypeType = asRecord(candidate.archetype)?.type;
   const maxArchetypeFeats = permissiveMax(
@@ -534,44 +465,28 @@ export function findCharacterLegalityViolations(
   );
   const archetypeFeatCount = countRefs(candidate.archetypeFeats);
   if (archetypeFeatCount !== null && archetypeFeatCount > maxArchetypeFeats) {
-    if (level === 1) {
-      blocking.push(
-        `Archetype feats (${archetypeFeatCount}) exceed the level 1 maximum (${maxArchetypeFeats}).`,
-      );
-    } else {
-      warnings.push({
-        code: 'archetype_feats_over_max',
-        level,
-        count: archetypeFeatCount,
-        max: maxArchetypeFeats,
-      });
-    }
+    warnings.push({
+      code: 'archetype_feats_over_max',
+      level,
+      count: archetypeFeatCount,
+      max: maxArchetypeFeats,
+    });
   }
 
   const maxCharacterFeats = calculateMaxCharacterFeats(level);
   const characterFeatCount = countRefs(candidate.feats);
   if (characterFeatCount !== null && characterFeatCount > maxCharacterFeats) {
-    if (level === 1) {
-      blocking.push(
-        `Character feats (${characterFeatCount}) exceed the level 1 maximum (${maxCharacterFeats}).`,
-      );
-    } else {
-      warnings.push({
-        code: 'character_feats_over_max',
-        level,
-        count: characterFeatCount,
-        max: maxCharacterFeats,
-      });
-    }
+    warnings.push({
+      code: 'character_feats_over_max',
+      level,
+      count: characterFeatCount,
+      max: maxCharacterFeats,
+    });
   }
 
   const currency = toFiniteNumber(candidate.currency);
   if (currency !== null && currency < 0) {
-    if (level === 1) {
-      blocking.push('Currency cannot be negative — a character cannot start play in debt.');
-    } else {
-      warnings.push({ code: 'currency_negative', level });
-    }
+    warnings.push({ code: 'currency_negative', level });
   }
 
   const pool = permissiveMax(
@@ -581,32 +496,22 @@ export function findCharacterLegalityViolations(
   const healthPoints = toFiniteNumber(candidate.healthPoints);
   const energyPoints = toFiniteNumber(candidate.energyPoints);
   if ((healthPoints ?? 0) < 0 || (energyPoints ?? 0) < 0) {
-    if (level === 1) {
-      blocking.push('Health and Energy allocations cannot be negative.');
-    } else {
-      warnings.push({ code: 'health_energy_negative', level });
-    }
+    warnings.push({ code: 'health_energy_negative', level });
   } else if (healthPoints !== null && energyPoints !== null && healthPoints + energyPoints > pool) {
     const allocation = healthPoints + energyPoints;
-    if (level === 1) {
-      blocking.push(
-        `Health + Energy allocation (${allocation}) exceeds the level 1 pool (${pool}).`,
-      );
-    } else {
-      warnings.push({
-        code: 'health_energy_over_pool',
-        level,
-        allocation,
-        pool,
-      });
-    }
+    warnings.push({
+      code: 'health_energy_over_pool',
+      level,
+      allocation,
+      pool,
+    });
   }
 
   if (featCatalog) {
-    findUnmetFeatRequirementViolations(candidate, level, featCatalog, blocking, warnings);
+    findUnmetFeatRequirementViolations(candidate, level, featCatalog, warnings);
   }
 
-  return { blocking, warnings, uncomputable };
+  return { warnings, uncomputable };
 }
 
 function rulesStatusFromFetch(rules: Partial<CoreRulesMap>): CharacterLegalityRulesStatus {

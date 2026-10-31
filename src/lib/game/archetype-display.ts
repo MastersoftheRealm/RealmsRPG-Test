@@ -18,7 +18,7 @@ export function getArchetypeCodexLookupId(
   return undefined;
 }
 
-export function formatArchetypeCategoryName(type?: string): string | null {
+function formatArchetypeCategoryName(type?: string): string | null {
   if (!type) return null;
   return type
     .split('-')

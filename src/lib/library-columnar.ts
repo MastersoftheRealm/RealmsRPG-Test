@@ -49,7 +49,7 @@ function collectPayloadParts(payload: Record<string, unknown>): PartLike[] {
   return dedupeSavedParts(parts);
 }
 
-export const SCALAR_KEYS: Record<ColumnarLibraryType, string[]> = {
+const SCALAR_KEYS: Record<ColumnarLibraryType, string[]> = {
   powers: [
     'name',
     'description',

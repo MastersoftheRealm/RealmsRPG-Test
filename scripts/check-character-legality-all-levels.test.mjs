@@ -78,4 +78,16 @@ describe('character-legality all-levels gate', () => {
     expect(isCharacterPersistenceWriteRoute('src/app/api/characters/[id]/route.ts')).toBe(true);
     expect(isCharacterPersistenceWriteRoute('src/app/api/upload/portrait/route.ts')).toBe(false);
   });
+
+  it('forbids level-1-only blocking helpers', () => {
+    const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'legality-gate-forbidden-'));
+    fs.mkdirSync(path.join(dir, 'src', 'lib', 'game'), { recursive: true });
+    fs.writeFileSync(
+      path.join(dir, 'src', 'lib', 'game', 'bad.ts'),
+      'export function shouldBlockCharacterSaveAtLevel() {}',
+    );
+    const result = runCharacterLegalityAllLevelsGate(dir);
+    expect(result.ok).toBe(false);
+    expect(result.errors.some((e) => e.includes('shouldBlockCharacterSaveAtLevel'))).toBe(true);
+  });
 });

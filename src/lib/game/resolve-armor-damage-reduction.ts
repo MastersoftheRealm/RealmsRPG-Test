@@ -150,7 +150,7 @@ export function damageAfterArmorReduction(incomingDamage: number, effectiveDr: n
 }
 
 /** Standard armor does not reduce these types. Other Damage Reduction sources are not on this list. */
-export const STANDARD_ARMOR_DR_EXCEPTIONS = ARMOR_EXCEPTION_TYPES;
+const STANDARD_ARMOR_DR_EXCEPTIONS = ARMOR_EXCEPTION_TYPES;
 
 /**
  * Standard armor reduces every damage type except Psychic, Spiritual, and Sonic.

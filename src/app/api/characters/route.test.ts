@@ -463,9 +463,9 @@ describe('POST /api/characters', () => {
   });
 
   describe('character legality (B5)', () => {
-    it('returns 400 for an over-budget level-1 build with blocking details', async () => {
+    it('returns 200 with legalityWarnings for an over-budget level-1 build', async () => {
       mockGetSession.mockResolvedValue({ user: TEST_USER, error: null });
-      mockCreateClient.mockResolvedValue(createMockSupabase() as never);
+      mockCreateClient.mockResolvedValue(createMockSupabase({ insertId: 'over-l1-id' }) as never);
 
       const response = await POST(
         makePostRequest(
@@ -482,10 +482,17 @@ describe('POST /api/characters', () => {
         ),
       );
 
-      expect(response.status).toBe(400);
-      const body = await readJson<{ error: string; details?: string[] | undefined }>(response);
-      expect(body.error).toBe('Character is not a legal level 1 build');
-      expect(body.details?.some((d) => /Ability points/.test(d))).toBe(true);
+      expect(response.status).toBe(200);
+      const body = await readJson<{
+        id: string;
+        legalityWarnings?: Array<{ code: string; level: number }> | undefined;
+      }>(response);
+      expect(body.id).toBe('over-l1-id');
+      expect(
+        body.legalityWarnings?.some(
+          (w) => w.code === 'ability_points_over_budget' && w.level === 1,
+        ),
+      ).toBe(true);
     });
 
     it('creates a legal level-1 build with overspent currency floored to 0', async () => {
@@ -549,26 +556,31 @@ describe('POST /api/characters', () => {
       ).toBe(true);
     });
 
-    it('blocks level-1 create when a catalog feat fails requirements', async () => {
+    it('saves level-1 create when a catalog feat fails requirements and returns warnings', async () => {
       mockGetSession.mockResolvedValue({ user: TEST_USER, error: null });
       mockCreateClient.mockResolvedValue(
         createMockSupabase({
-          insertId: 'should-not-insert',
+          insertId: 'feat-warn-id',
           codexFeats: [{ id: 'c1', name: 'Needs Level 4', lvl_req: 4 }],
         }) as never,
       );
 
       const response = await POST(makePostRequest(legalLevel1Payload()));
 
-      expect(response.status).toBe(400);
-      const body = await readJson<{ error: string; details?: string[] | undefined }>(response);
-      expect(body.error).toBe('Character is not a legal level 1 build');
-      expect(body.details?.some((d) => /Needs Level 4/.test(d))).toBe(true);
+      expect(response.status).toBe(200);
+      const body = await readJson<{
+        id: string;
+        legalityWarnings?: Array<{ code: string; featId?: string | undefined }> | undefined;
+      }>(response);
+      expect(body.id).toBe('feat-warn-id');
+      expect(body.legalityWarnings?.some((w) => w.code === 'feat_requirements_unmet')).toBe(true);
     });
 
-    it('returns 400 for over-budget level-1 create when core_rules is empty', async () => {
+    it('returns 200 with warnings for over-budget level-1 create when core_rules is empty', async () => {
       mockGetSession.mockResolvedValue({ user: TEST_USER, error: null });
-      mockCreateClient.mockResolvedValue(createMockSupabase({ coreRules: [] }) as never);
+      mockCreateClient.mockResolvedValue(
+        createMockSupabase({ insertId: 'no-rules-over-id', coreRules: [] }) as never,
+      );
 
       const response = await POST(
         makePostRequest(
@@ -585,9 +597,19 @@ describe('POST /api/characters', () => {
         ),
       );
 
-      expect(response.status).toBe(400);
-      const body = await readJson<{ error: string; details?: string[] | undefined }>(response);
-      expect(body.error).toBe('Character is not a legal level 1 build');
+      expect(response.status).toBe(200);
+      const body = await readJson<{
+        id: string;
+        legalityWarnings?: Array<{ code: string; level: number }> | undefined;
+        legalityUncomputable?: string[] | undefined;
+      }>(response);
+      expect(body.id).toBe('no-rules-over-id');
+      expect(body.legalityUncomputable).toContain('core_rules_unavailable');
+      expect(
+        body.legalityWarnings?.some(
+          (w) => w.code === 'ability_points_over_budget' && w.level === 1,
+        ),
+      ).toBe(true);
     });
 
     it('returns legalityUncomputable codes when core_rules is empty on a legal level-1 create', async () => {

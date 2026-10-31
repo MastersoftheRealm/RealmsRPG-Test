@@ -13,7 +13,6 @@ import {
   getCharacters,
   getCharacter,
   saveCharacterWithConflictRetry,
-  createCharacter,
   deleteCharacter,
   duplicateCharacter,
   type GetCharacterResult,
@@ -28,7 +27,7 @@ export function characterViewerId(userId?: string | null): string {
 }
 
 /** Query keys for character data — scoped by viewer (ADR-0013 / TASK-741). */
-export const characterKeys = {
+const characterKeys = {
   all: ['characters'] as const,
   lists: (userId: string) => [...characterKeys.all, 'list', characterViewerId(userId)] as const,
   list: (userId: string) => [...characterKeys.lists(userId)] as const,
@@ -171,22 +170,6 @@ export function useSaveCharacter() {
           ...(result.updatedAt ? { updatedAt: result.updatedAt } : {}),
         }),
       );
-      queryClient.invalidateQueries({ queryKey: characterKeys.lists(userId) });
-    },
-  });
-}
-
-/**
- * Create character mutation.
- */
-export function useCreateCharacter() {
-  const queryClient = useQueryClient();
-  const { user } = useAuthStore();
-  const userId = characterViewerId(user?.uid);
-
-  return useMutation({
-    mutationFn: (data: Partial<Character>) => createCharacter(data),
-    onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: characterKeys.lists(userId) });
     },
   });
