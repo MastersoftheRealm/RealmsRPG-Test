@@ -45,6 +45,7 @@ const KEEP_IN_SYNC_RE = /keep in sync/gi;
 const TASK_ID_RATCHET_IGNORED = new Set([
   'scripts/check-task-id-ratchet.mjs',
   'scripts/check-test-source-read-ratchet.mjs',
+  'scripts/check-knip-ratchet.mjs',
   'scripts/lib/task-id-tags.mjs',
   'scripts/lib/test-source-reads.mjs',
   'scripts/lib/count-ratchet.mjs',
