@@ -9,6 +9,25 @@ vi.mock('@/lib/supabase/server', () => ({
   createClient: vi.fn(),
 }));
 
+vi.mock('@/lib/supabase/public-client', () => ({
+  createPublicClient: vi.fn(),
+}));
+
+vi.mock('@/lib/supabase/cached-public-read', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('@/lib/supabase/cached-public-read')>();
+  return {
+    ...actual,
+    readCachedPublicDataWhenValid: vi.fn(
+      async (
+        _keyParts: string[],
+        _tags: string[],
+        _revalidate: number,
+        loader: () => Promise<unknown>,
+      ) => loader(),
+    ),
+  };
+});
+
 vi.mock('@/lib/character-view-enrichment-server', () => ({
   getOwnerLibraryAndEnrichmentForView: vi.fn(),
 }));
@@ -44,12 +63,14 @@ vi.mock('@/lib/game/archetype-display', () => ({
 import { GET, PATCH, DELETE } from './route';
 import { getSession } from '@/lib/supabase/session';
 import { createClient } from '@/lib/supabase/server';
+import { createPublicClient } from '@/lib/supabase/public-client';
 import { emptyCharacterViewEnrichment } from '@/lib/character-view-enrichment';
 import { getOwnerLibraryAndEnrichmentForView } from '@/lib/character-view-enrichment-server';
 import { standardLimiter } from '@/lib/rate-limit';
 
 const mockGetSession = vi.mocked(getSession);
 const mockCreateClient = vi.mocked(createClient);
+const mockCreatePublicClient = vi.mocked(createPublicClient);
 const mockGetOwnerLibraryAndEnrichmentForView = vi.mocked(getOwnerLibraryAndEnrichmentForView);
 const mockStandardLimiterCheck = vi.mocked(standardLimiter.check);
 
@@ -143,7 +164,7 @@ function createMockSupabase(characterRow: CharacterRow | null) {
   const update = vi.fn((payload: Record<string, unknown>) => buildUpdateChain(payload));
   const removePortrait = vi.fn().mockResolvedValue({ error: null });
 
-  return {
+  const client = {
     lastUpdate,
     update,
     removePortrait,
@@ -167,6 +188,20 @@ function createMockSupabase(characterRow: CharacterRow | null) {
           }),
         };
       }
+      if (table === 'core_rules') {
+        return {
+          select: vi.fn().mockResolvedValue({
+            data: [{ id: 'PROGRESSION_PLAYER', data: {} }],
+            error: null,
+          }),
+        };
+      }
+      if (table === 'codex_feats') {
+        return { select: vi.fn().mockResolvedValue({ data: [], error: null }) };
+      }
+      if (table === 'codex_skills') {
+        return { select: vi.fn().mockResolvedValue({ data: [], error: null }) };
+      }
       throw new Error(`Unexpected table: ${table}`);
     }),
     storage: {
@@ -176,6 +211,9 @@ function createMockSupabase(characterRow: CharacterRow | null) {
       })),
     },
   };
+
+  mockCreatePublicClient.mockReturnValue(client as never);
+  return client;
 }
 
 function makeGetRequest(id: string) {
@@ -497,6 +535,302 @@ describe('PATCH /api/characters/[id]', () => {
 
     expect(response.status).toBe(200);
     expect(supabase.removePortrait).not.toHaveBeenCalled();
+  });
+
+  describe('legality on merged save (B5)', () => {
+    it('returns structured warnings when a level-5 patch pushes abilities over budget', async () => {
+      const row = makeCharacterRow('char-l5', OWNER.uid, {
+        level: 5,
+        abilities: {
+          strength: 2,
+          vitality: 2,
+          agility: 2,
+          acuity: 2,
+          intelligence: 0,
+          charisma: 0,
+        },
+        archetype: { id: 'a1', type: 'power' },
+      });
+      mockGetSession.mockResolvedValue({ user: OWNER, error: null });
+      mockCreateClient.mockResolvedValue(createMockSupabase(row) as never);
+
+      const response = await PATCH(
+        makePatchRequest('char-l5', {
+          abilities: {
+            strength: 50,
+            vitality: 50,
+            agility: 50,
+            acuity: 50,
+            intelligence: 0,
+            charisma: 0,
+          },
+        }),
+        { params: Promise.resolve({ id: 'char-l5' }) },
+      );
+
+      expect(response.status).toBe(200);
+      const body = await readJson<{
+        ok: boolean;
+        legalityWarnings?: Array<{ code: string; level: number }> | undefined;
+      }>(response);
+      expect(body.ok).toBe(true);
+      expect(
+        body.legalityWarnings?.some(
+          (w) => w.code === 'ability_points_over_budget' && w.level === 5,
+        ),
+      ).toBe(true);
+    });
+
+    it('returns warnings when the patch is benign but merged stored data is still over budget', async () => {
+      const row = makeCharacterRow('char-stored-illegal', OWNER.uid, {
+        level: 5,
+        abilities: {
+          strength: 50,
+          vitality: 50,
+          agility: 50,
+          acuity: 50,
+          intelligence: 0,
+          charisma: 0,
+        },
+        archetype: { id: 'a1', type: 'power' },
+      });
+      mockGetSession.mockResolvedValue({ user: OWNER, error: null });
+      mockCreateClient.mockResolvedValue(createMockSupabase(row) as never);
+
+      const response = await PATCH(makePatchRequest('char-stored-illegal', { name: 'Renamed' }), {
+        params: Promise.resolve({ id: 'char-stored-illegal' }),
+      });
+
+      expect(response.status).toBe(200);
+      const body = await readJson<{
+        ok: boolean;
+        legalityWarnings?: Array<{ code: string }> | undefined;
+      }>(response);
+      expect(body.legalityWarnings?.some((w) => w.code === 'ability_points_over_budget')).toBe(
+        true,
+      );
+    });
+
+    it('returns 200 with legalityWarnings on a rename-only patch for an over-budget level-1 sheet', async () => {
+      const row = makeCharacterRow('char-l1-stored', OWNER.uid, {
+        level: 1,
+        abilities: {
+          strength: 3,
+          vitality: 3,
+          agility: 3,
+          acuity: 0,
+          intelligence: 0,
+          charisma: 0,
+        },
+        archetype: { id: 'a1', type: 'power' },
+        archetypeFeats: [{ id: 'f1' }],
+        feats: [{ id: 'c1' }],
+        skills: [{ id: '1', skill_val: 1 }],
+      });
+      mockGetSession.mockResolvedValue({ user: OWNER, error: null });
+      mockCreateClient.mockResolvedValue(createMockSupabase(row) as never);
+
+      const response = await PATCH(makePatchRequest('char-l1-stored', { name: 'Renamed' }), {
+        params: Promise.resolve({ id: 'char-l1-stored' }),
+      });
+
+      expect(response.status).toBe(200);
+      const body = await readJson<{
+        ok: boolean;
+        legalityWarnings?: Array<{ code: string; level: number }> | undefined;
+      }>(response);
+      expect(
+        body.legalityWarnings?.some(
+          (w) => w.code === 'ability_points_over_budget' && w.level === 1,
+        ),
+      ).toBe(true);
+    });
+
+    it('returns 200 with warnings when a level-1 patch introduces a new legality violation', async () => {
+      const row = makeCharacterRow('char-l1-clean', OWNER.uid, {
+        level: 1,
+        abilities: {
+          strength: 2,
+          vitality: 2,
+          agility: 1,
+          acuity: 1,
+          intelligence: 1,
+          charisma: 0,
+        },
+        archetype: { id: 'a1', type: 'power' },
+        archetypeFeats: [{ id: 'f1' }],
+        feats: [{ id: 'c1' }],
+        skills: [
+          { id: '1', skill_val: 1 },
+          { id: '2', skill_val: 1 },
+          { id: '3', skill_val: 1 },
+        ],
+      });
+      mockGetSession.mockResolvedValue({ user: OWNER, error: null });
+      mockCreateClient.mockResolvedValue(createMockSupabase(row) as never);
+
+      const response = await PATCH(
+        makePatchRequest('char-l1-clean', {
+          abilities: {
+            strength: 3,
+            vitality: 3,
+            agility: 3,
+            acuity: 0,
+            intelligence: 0,
+            charisma: 0,
+          },
+        }),
+        { params: Promise.resolve({ id: 'char-l1-clean' }) },
+      );
+
+      expect(response.status).toBe(200);
+      const body = await readJson<{
+        ok: boolean;
+        legalityWarnings?: Array<{ code: string; level: number }> | undefined;
+      }>(response);
+      expect(
+        body.legalityWarnings?.some(
+          (w) => w.code === 'ability_points_over_budget' && w.level === 1,
+        ),
+      ).toBe(true);
+    });
+
+    it('warns when a level downgrade changes budgets without changing spend', async () => {
+      const row = makeCharacterRow('char-l5-down', OWNER.uid, {
+        level: 5,
+        abilities: {
+          strength: 2,
+          vitality: 2,
+          agility: 2,
+          acuity: 2,
+          intelligence: 0,
+          charisma: 0,
+        },
+        archetype: { id: 'a1', type: 'power' },
+        skills: [
+          { id: '1', skill_val: 1 },
+          { id: '2', skill_val: 1 },
+          { id: '3', skill_val: 1 },
+        ],
+      });
+      mockGetSession.mockResolvedValue({ user: OWNER, error: null });
+      mockCreateClient.mockResolvedValue(createMockSupabase(row) as never);
+
+      const response = await PATCH(makePatchRequest('char-l5-down', { level: 2 }), {
+        params: Promise.resolve({ id: 'char-l5-down' }),
+      });
+
+      expect(response.status).toBe(200);
+      const body = await readJson<{
+        legalityWarnings?: Array<{ code: string; level: number }> | undefined;
+      }>(response);
+      expect(
+        body.legalityWarnings?.some(
+          (w) => w.code === 'ability_points_over_budget' && w.level === 2,
+        ),
+      ).toBe(true);
+    });
+
+    it('skips codex catalog reads when the patch only changes non-feat fields', async () => {
+      const row = makeCharacterRow('char-name-only', OWNER.uid, { level: 5 });
+      mockGetSession.mockResolvedValue({ user: OWNER, error: null });
+      let codexReads = 0;
+      const supabase = createMockSupabase(row);
+      const baseFrom = supabase.from;
+      const wrapped = {
+        ...supabase,
+        from: vi.fn((table: string) => {
+          if (table === 'codex_feats' || table === 'codex_skills') {
+            codexReads++;
+          }
+          return baseFrom(table);
+        }),
+      };
+      mockCreateClient.mockResolvedValue(wrapped as never);
+      mockCreatePublicClient.mockReturnValue(wrapped as never);
+
+      await PATCH(makePatchRequest('char-name-only', { name: 'Only Name' }), {
+        params: Promise.resolve({ id: 'char-name-only' }),
+      });
+
+      expect(codexReads).toBe(0);
+    });
+
+    it('loads codex catalog when mart_abil changes', async () => {
+      const row = makeCharacterRow('char-mart', OWNER.uid, { level: 5, mart_abil: 1 });
+      mockGetSession.mockResolvedValue({ user: OWNER, error: null });
+      let codexReads = 0;
+      const supabase = createMockSupabase(row);
+      const baseFrom = supabase.from;
+      const wrapped = {
+        ...supabase,
+        from: vi.fn((table: string) => {
+          if (table === 'codex_feats' || table === 'codex_skills') {
+            codexReads++;
+          }
+          return baseFrom(table);
+        }),
+      };
+      mockCreateClient.mockResolvedValue(wrapped as never);
+      mockCreatePublicClient.mockReturnValue(wrapped as never);
+
+      await PATCH(makePatchRequest('char-mart', { mart_abil: 2 }), {
+        params: Promise.resolve({ id: 'char-mart' }),
+      });
+
+      expect(codexReads).toBeGreaterThan(0);
+    });
+
+    it('still saves when the feat catalog fails and returns feat_catalog_unavailable', async () => {
+      const row = makeCharacterRow('char-catalog', OWNER.uid, {
+        level: 5,
+        abilities: {
+          strength: 2,
+          vitality: 2,
+          agility: 2,
+          acuity: 2,
+          intelligence: 0,
+          charisma: 0,
+        },
+      });
+      mockGetSession.mockResolvedValue({ user: OWNER, error: null });
+      const supabase = createMockSupabase(row);
+      const baseFrom = supabase.from;
+      const wrapped = {
+        ...supabase,
+        from: vi.fn((table: string) => {
+          if (table === 'codex_feats' || table === 'codex_skills') {
+            return {
+              select: vi.fn().mockResolvedValue({
+                data: null,
+                error: { message: 'db error', code: 'XX000' },
+              }),
+            };
+          }
+          return baseFrom(table);
+        }),
+      };
+      mockCreateClient.mockResolvedValue(wrapped as never);
+      mockCreatePublicClient.mockReturnValue(wrapped as never);
+
+      const response = await PATCH(
+        makePatchRequest('char-catalog', {
+          abilities: {
+            strength: 50,
+            vitality: 50,
+            agility: 50,
+            acuity: 50,
+            intelligence: 0,
+            charisma: 0,
+          },
+        }),
+        { params: Promise.resolve({ id: 'char-catalog' }) },
+      );
+
+      expect(response.status).toBe(200);
+      const body = await readJson<{ legalityUncomputable?: string[] | undefined }>(response);
+      expect(body.legalityUncomputable).toContain('feat_catalog_unavailable');
+    });
   });
 });
 

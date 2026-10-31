@@ -27,6 +27,11 @@ import { getOwnerLibraryAndEnrichmentForView } from '@/lib/character-view-enrich
 import { getCharacterListColumns, resolveCharacterVisibility } from '@/lib/character-list-columns';
 import { fetchArchetypeNameMap } from '@/lib/game/archetype-display';
 import {
+  appendCharacterLegalityToResponse,
+  evaluateCharacterLegalityForSave,
+  patchDirtyKeysNeedFeatCatalog,
+} from '@/lib/game/character-legality';
+import {
   characterPortraitStoragePaths,
   portraitUrlUsesCharacterStorage,
 } from '@/lib/portrait-storage';
@@ -198,6 +203,10 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
     const now = new Date().toISOString();
     const mergedData = applyCharacterDirtyPatch(currentData, cleanedData, { blobUpdatedAt: now });
     normalizeCharacterForSave(mergedData);
+    const evalOpts = {
+      loadFeatCatalog: patchDirtyKeysNeedFeatCatalog(cleanedData),
+    };
+    const legality = await evaluateCharacterLegalityForSave(supabase, mergedData, evalOpts);
     const archetypeNameById = await fetchArchetypeNameMap(supabase);
     const listCols = getCharacterListColumns(mergedData, { archetypeNameById });
 
@@ -240,7 +249,9 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
       }
     }
 
-    return NextResponse.json({ ok: true, updatedAt: savedUpdatedAt });
+    return NextResponse.json(
+      appendCharacterLegalityToResponse({ ok: true, updatedAt: savedUpdatedAt }, legality),
+    );
   } catch (err) {
     console.error('[API Error] PATCH /api/characters/[id]:', err);
     return NextResponse.json({ error: 'Failed to update character' }, { status: 500 });

@@ -9,6 +9,25 @@ vi.mock('@/lib/supabase/server', () => ({
   createClient: vi.fn(),
 }));
 
+vi.mock('@/lib/supabase/public-client', () => ({
+  createPublicClient: vi.fn(),
+}));
+
+vi.mock('@/lib/supabase/cached-public-read', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('@/lib/supabase/cached-public-read')>();
+  return {
+    ...actual,
+    readCachedPublicDataWhenValid: vi.fn(
+      async (
+        _keyParts: string[],
+        _tags: string[],
+        _revalidate: number,
+        loader: () => Promise<unknown>,
+      ) => loader(),
+    ),
+  };
+});
+
 vi.mock('@/lib/role-policy', async (importOriginal) => {
   const actual = await importOriginal<typeof import('@/lib/role-policy')>();
   return {
@@ -45,6 +64,7 @@ import { GET, POST } from './route';
 import { GUIDED_CREATOR_COPY } from '@/lib/constants/site-copy';
 import { getSession } from '@/lib/supabase/session';
 import { createClient } from '@/lib/supabase/server';
+import { createPublicClient } from '@/lib/supabase/public-client';
 import { getRolePolicyForUser } from '@/lib/role-policy';
 import { ensureUserProfile } from '@/lib/ensure-user-profile';
 import { fetchArchetypeNameMap } from '@/lib/game/archetype-display';
@@ -54,6 +74,7 @@ import { defined } from '@/lib/utils';
 
 const mockGetSession = vi.mocked(getSession);
 const mockCreateClient = vi.mocked(createClient);
+const mockCreatePublicClient = vi.mocked(createPublicClient);
 const mockGetRolePolicyForUser = vi.mocked(getRolePolicyForUser);
 const mockEnsureUserProfile = vi.mocked(ensureUserProfile);
 const mockFetchArchetypeNameMap = vi.mocked(fetchArchetypeNameMap);
@@ -99,7 +120,7 @@ function createMockSupabase(config: MockSupabaseConfig = {}) {
     replayCharacterId = null,
     replayCharacterIdAfterInsert = null,
     insertError = null,
-    coreRules = [],
+    coreRules = [{ id: 'PROGRESSION_PLAYER', data: {} }],
     codexFeats = [],
     codexSkills = [],
     codexSkillsError = null,
@@ -191,6 +212,7 @@ function createMockSupabase(config: MockSupabaseConfig = {}) {
     },
   };
 
+  mockCreatePublicClient.mockReturnValue(client as never);
   return client;
 }
 
@@ -440,10 +462,10 @@ describe('POST /api/characters', () => {
     expect(body.error).toMatch(/character/i);
   });
 
-  describe('level-1 legality (report 03 P1-7)', () => {
-    it('rejects an over-budget level-1 build with the failing rules', async () => {
+  describe('character legality (B5)', () => {
+    it('returns 200 with legalityWarnings for an over-budget level-1 build', async () => {
       mockGetSession.mockResolvedValue({ user: TEST_USER, error: null });
-      mockCreateClient.mockResolvedValue(createMockSupabase() as never);
+      mockCreateClient.mockResolvedValue(createMockSupabase({ insertId: 'over-l1-id' }) as never);
 
       const response = await POST(
         makePostRequest(
@@ -456,17 +478,21 @@ describe('POST /api/characters', () => {
               intelligence: 0,
               charisma: 0,
             },
-            currency: -25,
           }),
         ),
       );
 
-      expect(response.status).toBe(400);
-      const body = await readJson<{ error: string; details?: string[] | undefined }>(response);
-      expect(body.error).toBe('Character is not a legal level 1 build');
-      expect(body.details?.some((d) => /Ability points/.test(d))).toBe(true);
-      // Negative currency is floored by prepareCharacterForCreate (TASK-739), so it is
-      // not a legality detail on this path. The helper still rejects unclamped debt.
+      expect(response.status).toBe(200);
+      const body = await readJson<{
+        id: string;
+        legalityWarnings?: Array<{ code: string; level: number }> | undefined;
+      }>(response);
+      expect(body.id).toBe('over-l1-id');
+      expect(
+        body.legalityWarnings?.some(
+          (w) => w.code === 'ability_points_over_budget' && w.level === 1,
+        ),
+      ).toBe(true);
     });
 
     it('creates a legal level-1 build with overspent currency floored to 0', async () => {
@@ -484,7 +510,7 @@ describe('POST /api/characters', () => {
       expect(inserted?.currency).toBe(0);
     });
 
-    it('creates a legal level-1 build', async () => {
+    it('creates a legal level-1 build without legality fields', async () => {
       mockGetSession.mockResolvedValue({ user: TEST_USER, error: null });
       mockCreateClient.mockResolvedValue(
         createMockSupabase({ insertId: 'legal-char-id' }) as never,
@@ -493,10 +519,11 @@ describe('POST /api/characters', () => {
       const response = await POST(makePostRequest(legalLevel1Payload()));
 
       expect(response.status).toBe(200);
-      await expect(readJson(response)).resolves.toEqual({ id: 'legal-char-id' });
+      const body = await readJson<{ id: string; legalityWarnings?: unknown }>(response);
+      expect(body).toEqual({ id: 'legal-char-id' });
     });
 
-    it('does not gate levels above 1, whose level-up spend the document cannot show', async () => {
+    it('returns structured legalityWarnings for illegal high-level builds and still saves', async () => {
       mockGetSession.mockResolvedValue({ user: TEST_USER, error: null });
       mockCreateClient.mockResolvedValue(createMockSupabase({ insertId: 'lvl5-id' }) as never);
 
@@ -505,10 +532,10 @@ describe('POST /api/characters', () => {
           legalLevel1Payload({
             level: 5,
             abilities: {
-              strength: 3,
-              vitality: 3,
-              agility: 3,
-              acuity: 3,
+              strength: 50,
+              vitality: 50,
+              agility: 50,
+              acuity: 50,
               intelligence: 0,
               charisma: 0,
             },
@@ -517,23 +544,109 @@ describe('POST /api/characters', () => {
       );
 
       expect(response.status).toBe(200);
+      const body = await readJson<{
+        id: string;
+        legalityWarnings?: Array<{ code: string; level: number }> | undefined;
+      }>(response);
+      expect(body.id).toBe('lvl5-id');
+      expect(
+        body.legalityWarnings?.some(
+          (w) => w.code === 'ability_points_over_budget' && w.level === 5,
+        ),
+      ).toBe(true);
     });
 
-    it('refuses a catalog feat whose requirements the build does not meet', async () => {
+    it('saves level-1 create when a catalog feat fails requirements and returns warnings', async () => {
       mockGetSession.mockResolvedValue({ user: TEST_USER, error: null });
       mockCreateClient.mockResolvedValue(
         createMockSupabase({
-          insertId: 'should-not-insert',
+          insertId: 'feat-warn-id',
           codexFeats: [{ id: 'c1', name: 'Needs Level 4', lvl_req: 4 }],
         }) as never,
       );
 
       const response = await POST(makePostRequest(legalLevel1Payload()));
 
-      expect(response.status).toBe(400);
-      const body = await readJson<{ error: string; details?: string[] | undefined }>(response);
-      expect(body.error).toBe('Character is not a legal level 1 build');
-      expect(body.details?.some((d) => /Needs Level 4/.test(d))).toBe(true);
+      expect(response.status).toBe(200);
+      const body = await readJson<{
+        id: string;
+        legalityWarnings?: Array<{ code: string; featId?: string | undefined }> | undefined;
+      }>(response);
+      expect(body.id).toBe('feat-warn-id');
+      expect(body.legalityWarnings?.some((w) => w.code === 'feat_requirements_unmet')).toBe(true);
+    });
+
+    it('returns 200 with warnings for over-budget level-1 create when core_rules is empty', async () => {
+      mockGetSession.mockResolvedValue({ user: TEST_USER, error: null });
+      mockCreateClient.mockResolvedValue(
+        createMockSupabase({ insertId: 'no-rules-over-id', coreRules: [] }) as never,
+      );
+
+      const response = await POST(
+        makePostRequest(
+          legalLevel1Payload({
+            abilities: {
+              strength: 3,
+              vitality: 3,
+              agility: 3,
+              acuity: 0,
+              intelligence: 0,
+              charisma: 0,
+            },
+          }),
+        ),
+      );
+
+      expect(response.status).toBe(200);
+      const body = await readJson<{
+        id: string;
+        legalityWarnings?: Array<{ code: string; level: number }> | undefined;
+        legalityUncomputable?: string[] | undefined;
+      }>(response);
+      expect(body.id).toBe('no-rules-over-id');
+      expect(body.legalityUncomputable).toContain('core_rules_unavailable');
+      expect(
+        body.legalityWarnings?.some(
+          (w) => w.code === 'ability_points_over_budget' && w.level === 1,
+        ),
+      ).toBe(true);
+    });
+
+    it('returns legalityUncomputable codes when core_rules is empty on a legal level-1 create', async () => {
+      mockGetSession.mockResolvedValue({ user: TEST_USER, error: null });
+      mockCreateClient.mockResolvedValue(
+        createMockSupabase({ insertId: 'no-rules-id', coreRules: [] }) as never,
+      );
+
+      const response = await POST(makePostRequest(legalLevel1Payload()));
+
+      expect(response.status).toBe(200);
+      const body = await readJson<{
+        id: string;
+        legalityUncomputable?: string[] | undefined;
+      }>(response);
+      expect(body.id).toBe('no-rules-id');
+      expect(body.legalityUncomputable).toEqual(['core_rules_unavailable']);
+    });
+
+    it('returns legalityUncomputable when the feat catalog fails and still saves', async () => {
+      mockGetSession.mockResolvedValue({ user: TEST_USER, error: null });
+      mockCreateClient.mockResolvedValue(
+        createMockSupabase({
+          insertId: 'catalog-fail-id',
+          codexSkillsError: { message: 'column missing', code: '42703' },
+        }) as never,
+      );
+
+      const response = await POST(makePostRequest(legalLevel1Payload()));
+
+      expect(response.status).toBe(200);
+      const body = await readJson<{
+        id: string;
+        legalityUncomputable?: string[] | undefined;
+      }>(response);
+      expect(body.id).toBe('catalog-fail-id');
+      expect(body.legalityUncomputable).toContain('feat_catalog_unavailable');
     });
   });
 
@@ -642,11 +755,11 @@ describe('POST /api/characters', () => {
       expect(supabase.skillSelectColumns).not.toContain('base_skill_id');
     });
 
-    it('returns a generic 500 when the skill catalog query fails, without Postgres fields', async () => {
-      const spy = vi.spyOn(console, 'error').mockImplementation(() => {});
+    it('still saves when the skill catalog query fails and returns feat_catalog_unavailable', async () => {
       mockGetSession.mockResolvedValue({ user: TEST_USER, error: null });
       mockCreateClient.mockResolvedValue(
         createMockSupabase({
+          insertId: 'catalog-skill-fail-id',
           codexSkillsError: {
             code: '42703',
             message: 'column codex_skills.base_skill_id does not exist',
@@ -657,14 +770,13 @@ describe('POST /api/characters', () => {
 
       const response = await POST(makePostRequest(legalLevel1Payload()));
 
-      expect(response.status).toBe(500);
-      const body = await readJson<Record<string, unknown>>(response);
-      expect(body).toEqual({ error: CREATE_FAILED });
-      expect(JSON.stringify(body)).not.toMatch(
-        /42703|base_skill_id|does not exist|Perhaps you meant/,
-      );
-      expect(spy).toHaveBeenCalled();
-      spy.mockRestore();
+      expect(response.status).toBe(200);
+      const body = await readJson<{
+        id: string;
+        legalityUncomputable?: string[] | undefined;
+      }>(response);
+      expect(body.id).toBe('catalog-skill-fail-id');
+      expect(body.legalityUncomputable).toContain('feat_catalog_unavailable');
     });
   });
 });

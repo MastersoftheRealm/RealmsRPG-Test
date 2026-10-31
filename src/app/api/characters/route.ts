@@ -20,23 +20,16 @@ import {
 import { buildRateLimitKey, resolveClientIp, standardLimiter } from '@/lib/rate-limit';
 import { getCharacterListColumns, resolveCharacterVisibility } from '@/lib/character-list-columns';
 import { fetchArchetypeNameMap } from '@/lib/game/archetype-display';
-import { fetchCoreRules } from '@/lib/core-rules-server';
-import { apiErrorResponse } from '@/lib/api-error';
 import {
-  catalogFromCodexRows,
-  findLevel1LegalityViolations,
-  shouldCheckLevel1Legality,
+  appendCharacterLegalityToResponse,
+  evaluateCharacterLegalityForSave,
 } from '@/lib/game/character-legality';
+import { apiErrorResponse } from '@/lib/api-error';
 import { GUIDED_CREATOR_COPY } from '@/lib/constants/site-copy';
 import type { Character, CharacterSummary } from '@/types';
 
 /** Postgres unique-violation — the idempotency index rejecting a concurrent retry. */
 const UNIQUE_VIOLATION = '23505';
-
-const FEAT_REQUIREMENT_COLUMNS =
-  'id, name, lvl_req, ability_req, abil_req_val, skill_req, skill_req_val, mart_abil_req, speed_req, feat_lvl, base_feat_id';
-/** Live column is `base_skill` (TEXT). App types still use `base_skill_id` after mapping. */
-const SKILL_REQUIREMENT_COLUMNS = 'id, name, base_skill, ability';
 
 /** The character this user already created with this idempotency key, if any. */
 async function findCharacterByRequestId(
@@ -91,23 +84,19 @@ async function jsonForInsertResult(
   userId: string,
   clientRequestId: string | undefined,
   result: { id: string } | { uniqueViolation: true },
+  legality?: Awaited<ReturnType<typeof evaluateCharacterLegalityForSave>>,
 ): Promise<NextResponse> {
-  if ('id' in result) return NextResponse.json({ id: result.id });
+  if ('id' in result) {
+    const body = legality
+      ? appendCharacterLegalityToResponse({ id: result.id }, legality)
+      : { id: result.id };
+    return NextResponse.json(body);
+  }
   if (clientRequestId) {
     const replayed = await findCharacterByRequestId(supabase, userId, clientRequestId);
     if (replayed) return NextResponse.json({ id: replayed });
   }
   throw new Error('Character insert unique violation without a replay row');
-}
-
-async function fetchFeatRequirementCatalog(supabase: TypedSupabaseClient) {
-  const [featRes, skillRes] = await Promise.all([
-    supabase.from('codex_feats').select(FEAT_REQUIREMENT_COLUMNS),
-    supabase.from('codex_skills').select(SKILL_REQUIREMENT_COLUMNS),
-  ]);
-  if (featRes.error) throw featRes.error;
-  if (skillRes.error) throw skillRes.error;
-  return catalogFromCodexRows(featRes.data ?? [], skillRes.data ?? []);
 }
 
 export async function GET() {
@@ -267,22 +256,7 @@ export async function POST(request: NextRequest) {
 
     const cleanedData = prepareCharacterForCreate(data);
 
-    // Server-side legality floor (report 03 P1-7). Bounds only — an over-budget payload is
-    // refused, an under-filled one is not, so this can never 400 a build a creator allowed.
-    // Feat requirements are not a budget: unmet official-catalog feats are refused.
-    if (shouldCheckLevel1Legality(cleanedData)) {
-      const [rules, featCatalog] = await Promise.all([
-        fetchCoreRules(supabase),
-        fetchFeatRequirementCatalog(supabase),
-      ]);
-      const violations = findLevel1LegalityViolations(cleanedData, rules, featCatalog);
-      if (violations.length > 0) {
-        return NextResponse.json(
-          { error: 'Character is not a legal level 1 build', details: violations },
-          { status: 400 },
-        );
-      }
-    }
+    const legality = await evaluateCharacterLegalityForSave(supabase, cleanedData);
 
     const archetypeNameById = await fetchArchetypeNameMap(supabase);
     const listCols = getCharacterListColumns(cleanedData as Record<string, unknown>, {
@@ -299,7 +273,7 @@ export async function POST(request: NextRequest) {
       ...listCols,
       client_request_id: clientRequestId ?? null,
     });
-    return jsonForInsertResult(supabase, user.uid, clientRequestId, inserted);
+    return jsonForInsertResult(supabase, user.uid, clientRequestId, inserted, legality);
   } catch (err) {
     return apiErrorResponse(
       GUIDED_CREATOR_COPY.steps.reveal.saveFailed,
