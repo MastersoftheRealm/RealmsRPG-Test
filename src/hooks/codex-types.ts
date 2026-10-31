@@ -26,12 +26,10 @@ export type {
   Skill,
   Species,
   Trait,
-  EquipmentItem,
   CreatureFeat,
 } from '@/types/codex';
 
-import type { Trait, Skill } from '@/types/codex';
-import { buildSkillIdToName } from '@/lib/codex/skill-list';
+import type { Trait } from '@/types/codex';
 
 // =============================================================================
 // Trait Resolution Utilities
@@ -76,15 +74,3 @@ export function resolveTraitIds(traitIds: (string | number)[], allTraits: Trait[
 // =============================================================================
 // Skill ID Resolution Utilities
 // =============================================================================
-
-/** Species skill id "0" means "Any" (user picks any skill / extra skill point). */
-export function resolveSkillIdsToNames(
-  skillIds: (string | number)[],
-  allSkills: Skill[],
-): string[] {
-  const skillMap = buildSkillIdToName(allSkills);
-  return skillIds.map((id) => {
-    if (String(id) === '0') return 'Any';
-    return skillMap.get(String(id)) || String(id);
-  });
-}

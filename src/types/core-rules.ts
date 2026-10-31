@@ -331,5 +331,3 @@ export interface CoreRulesMap {
   EXPERIENCE: ExperienceRules;
   CRAFTING: CraftingRules;
 }
-
-export type CoreRulesCategory = keyof CoreRulesMap;

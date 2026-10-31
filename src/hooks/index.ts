@@ -120,7 +120,6 @@ export {
   type TechniquePart,
   type Part,
   type ItemProperty,
-  type EquipmentItem,
   type CreatureFeat,
 } from './codex-types';
 

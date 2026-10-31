@@ -4,27 +4,6 @@
  * Skill definitions and categories
  */
 
-/** Skill categories */
-export type SkillCategory = 'combat' | 'physical' | 'mental' | 'social' | 'knowledge' | 'craft';
-
-/** A skill from the database */
-export interface Skill {
-  id: number | string;
-  name: string;
-  category?: SkillCategory | undefined;
-  description?: string | undefined;
-  ability?: string | undefined; // Associated ability
-  untrained?: boolean | undefined; // Can be used untrained
-}
-
-/** Character's skill allocation */
-export interface CharacterSkill {
-  id: number | string;
-  name: string;
-  ranks: number;
-  bonus?: number | undefined; // Calculated bonus
-}
-
 /** Skills object on character */
 export interface CharacterSkills {
   [skillId: string]: number; // skillId -> ranks
