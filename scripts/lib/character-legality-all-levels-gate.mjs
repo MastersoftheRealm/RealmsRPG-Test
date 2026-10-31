@@ -113,6 +113,7 @@ export function handlerBody(code, method) {
 /** @param {string} root @returns {string[]} */
 export function listApiRouteFiles(root) {
   const dir = path.join(root, API_ROOT);
+  if (!fs.existsSync(dir)) return [];
   /** @type {string[]} */
   const relPaths = [];
   function walk(current) {
@@ -136,6 +137,9 @@ export function listApiRouteFiles(root) {
 export function runCharacterLegalityAllLevelsGate(root) {
   const errors = [];
   const srcRoot = path.join(root, 'src');
+  if (!fs.existsSync(srcRoot)) {
+    return { ok: true, errors };
+  }
   /** @type {string[]} */
   const files = [];
 
