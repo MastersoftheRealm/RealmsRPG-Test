@@ -9,7 +9,7 @@ import {
 import { useToast } from '@/components/ui';
 import { SelectFilter, CodexRulesSourceFilter } from '@/components/patterns/filters';
 import { rowMatchesCodexRulesSourceFilter } from '@/lib/codex/list-rules-source-filter';
-import { useItemProperties, type ItemProperty } from '@/hooks';
+import { ADMIN_CODEX_QUERY_OPTIONS, useItemProperties, type ItemProperty } from '@/hooks';
 import { useSort } from '@/hooks/use-sort';
 import { formatListCellLabel } from '@/lib/utils';
 import { COPY_NAME_SUFFIX } from './admin-codex-copy-suffix';
@@ -35,7 +35,12 @@ interface PropertyFilters {
 
 export function AdminPropertiesTab() {
   const { showToast } = useToast();
-  const { data: properties, isLoading, error, refetch } = useItemProperties();
+  const {
+    data: properties,
+    isLoading,
+    error,
+    refetch,
+  } = useItemProperties(ADMIN_CODEX_QUERY_OPTIONS);
   const {
     modalOpen,
     editing,

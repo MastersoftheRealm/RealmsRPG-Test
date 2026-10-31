@@ -10,8 +10,10 @@
 
 'use client';
 
-import { useQuery, UseQueryResult } from '@tanstack/react-query';
+import { useQuery, type QueryClient, type UseQueryResult } from '@tanstack/react-query';
 import { fetchCodex, fetchCodexCollection } from '@/lib/api-client';
+import { codexCollectionToPayloadKey } from '@/lib/codex/collection-to-payload-key';
+import type { CodexCollection } from '@/lib/codex/collections';
 import { selectPowerParts, selectTechniqueParts } from '@/lib/codex/part-type';
 import type { CodexCollectionKey, CodexPayload, CodexPayloadKey } from '@/types/codex';
 
@@ -26,15 +28,45 @@ const DEFAULT_OPTIONS = {
 
 export type CodexQueryOptions = {
   enabled?: boolean | undefined;
-  /** Species only: admin Official/Codex editors pass true (ADR-0027). */
+  /**
+   * Admin Codex Editor / spreadsheet: session GET with `includeUnlisted=1` (private, no-store).
+   * Species uses this for unlisted rows (ADR-0027); other tables use it to bypass the public CDN cache.
+   */
   includeUnlisted?: boolean | undefined;
 };
+
+/** Pass to every admin Codex tab hook so reads skip the public CDN cache. */
+export const ADMIN_CODEX_QUERY_OPTIONS: CodexQueryOptions = { includeUnlisted: true };
 
 /** Query keys for `/api/codex`. Collection keys sit under `['codex']` so prefix invalidation covers them. */
 export const codexKeys = {
   all: ['codex'] as const,
   collection: <K extends CodexPayloadKey>(collection: K) => ['codex', collection] as const,
 };
+
+export function adminCodexCollectionQueryKey<K extends CodexPayloadKey>(
+  collection: K,
+): readonly ['codex', K, 'all'] {
+  return [...codexKeys.collection(collection), 'all'] as const;
+}
+
+type CodexRowWithId = { id: string | number; updated_at?: string | undefined };
+
+/** After an admin save, merge fresh row version into the admin query cache (no CDN refetch required). */
+export function patchAdminCodexCollectionRow(
+  queryClient: QueryClient,
+  collection: CodexCollection,
+  id: string,
+  patch: Partial<CodexRowWithId>,
+): void {
+  const payloadKey = codexCollectionToPayloadKey(collection);
+  if (!payloadKey) return;
+  const queryKey = adminCodexCollectionQueryKey(payloadKey);
+  queryClient.setQueryData<readonly CodexRowWithId[] | undefined>(queryKey, (rows) => {
+    if (!Array.isArray(rows)) return rows;
+    return rows.map((row) => (String(row.id) === String(id) ? { ...row, ...patch } : row));
+  });
+}
 
 function withCodexEnabled(options?: CodexQueryOptions) {
   return {
@@ -52,10 +84,9 @@ function useCodexCollection<K extends CodexCollectionKey, TResult>(
   options?: CodexQueryOptions,
 ): UseQueryResult<TResult, Error> {
   const includeUnlisted = options?.includeUnlisted === true;
-  const queryKey =
-    collection === 'species'
-      ? ([...codexKeys.collection(collection), includeUnlisted ? 'all' : 'listed'] as const)
-      : codexKeys.collection(collection);
+  const queryKey = includeUnlisted
+    ? ([...codexKeys.collection(collection), 'all'] as const)
+    : codexKeys.collection(collection);
   return useQuery({
     queryKey,
     queryFn: () => fetchCodexCollection(collection, { includeUnlisted }),

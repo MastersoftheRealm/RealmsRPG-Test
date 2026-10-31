@@ -103,6 +103,7 @@ export {
   useCodexEquipment as useEquipment,
   useCodexCreatureFeats as useCreatureFeats,
   useCodexArchetypes,
+  ADMIN_CODEX_QUERY_OPTIONS,
 } from './use-codex';
 export { useGameRules, getGameRulesFallback } from './use-game-rules';
 // Archetype Path recommendation index for list filters (ADR-0014)

@@ -11,7 +11,7 @@ import { useQueryClient, type QueryClient } from '@tanstack/react-query';
 import { useToast } from '@/components/ui';
 import { createCodexDoc, updateCodexDoc } from './actions';
 import type { CodexCollection } from '@/lib/codex/collections';
-import { codexKeys } from '@/hooks/use-codex';
+import { codexKeys, patchAdminCodexCollectionRow } from '@/hooks/use-codex';
 import { AdminCodexDeleteModals, useAdminCodexDelete } from './use-admin-codex-delete';
 import { resolveAdminCodexSaveTargetId } from './admin-codex-save-target';
 
@@ -123,12 +123,18 @@ export function useAdminCodexEntity<TEntity extends AdminCodexNamedEntity>(optio
         return false;
       }
       const createdId = 'id' in result ? result.id : undefined;
-      await args.onSuccess?.({ success: true, id: createdId ?? targetId ?? undefined });
+      const savedId = createdId ?? targetId;
+      if (savedId && 'updatedAt' in result && result.updatedAt) {
+        patchAdminCodexCollectionRow(queryClient, collection, savedId, {
+          updated_at: result.updatedAt,
+        });
+      }
+      await args.onSuccess?.({ success: true, id: savedId ?? undefined });
       await refreshCodex();
       if (args.closeOnSuccess !== false) closeModal();
       return true;
     },
-    [collection, editing, closeModal, refreshCodex, showToast],
+    [collection, editing, closeModal, queryClient, refreshCodex, showToast],
   );
 
   const askDelete = useCallback(

@@ -9,7 +9,7 @@ import {
   CodexRulesSourceFilter,
 } from '@/components/patterns/filters';
 import { CodexSkillRow } from '@/components/codex';
-import { useCodexSkills, usePathListFilter, type Skill } from '@/hooks';
+import { ADMIN_CODEX_QUERY_OPTIONS, useCodexSkills, usePathListFilter, type Skill } from '@/hooks';
 import { useSort } from '@/hooks/use-sort';
 import { ABILITIES_AND_DEFENSES } from '@/lib/game/constants';
 import {
@@ -43,7 +43,7 @@ interface SkillFilters extends SkillListFilters {
 }
 
 export function AdminSkillsTab() {
-  const { data: skills, isLoading, error, refetch } = useCodexSkills();
+  const { data: skills, isLoading, error, refetch } = useCodexSkills(ADMIN_CODEX_QUERY_OPTIONS);
   const {
     modalOpen,
     editing,

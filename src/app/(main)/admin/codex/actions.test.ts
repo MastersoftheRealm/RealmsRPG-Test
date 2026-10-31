@@ -175,6 +175,26 @@ describe('optimistic locking', () => {
     expect(result.success).toBe(true);
     expect(defined(defined(currentDb.tables.codex_skills)[0]).name).toBe('Renamed');
   });
+
+  it('returns the new updated_at and accepts a second save using it', async () => {
+    const first = await updateCodexDoc(
+      'codex_skills',
+      '10',
+      { name: 'First save' },
+      { expectedUpdatedAt: '2026-08-13T10:00:00Z' },
+    );
+    expect(first.success).toBe(true);
+    expect(first.updatedAt).toMatch(/^\d{4}-\d{2}-\d{2}T/);
+
+    const second = await updateCodexDoc(
+      'codex_skills',
+      '10',
+      { name: 'Second save' },
+      { expectedUpdatedAt: first.updatedAt },
+    );
+    expect(second.success).toBe(true);
+    expect(defined(defined(currentDb.tables.codex_skills)[0]).name).toBe('Second save');
+  });
 });
 
 describe('archetype JSON columns', () => {

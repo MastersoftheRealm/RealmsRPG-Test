@@ -11,7 +11,7 @@
 import { useState, useMemo, useCallback } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import { useToast } from '@/components/ui';
-import { useCodexFull } from '@/hooks/use-codex';
+import { ADMIN_CODEX_QUERY_OPTIONS, useCodexFull } from '@/hooks/use-codex';
 import { createCodexDoc, updateCodexDoc } from './actions';
 import type { CodexCollection } from '@/lib/codex/collections';
 import {
@@ -69,7 +69,7 @@ function displayName(row: CodexSpreadsheetRow): string {
 
 export function useCodexSpreadsheet({ activeTab }: UseCodexSpreadsheetArgs) {
   const { showToast } = useToast();
-  const { data: codex, isLoading, error, refetch } = useCodexFull({ includeUnlisted: true });
+  const { data: codex, isLoading, error, refetch } = useCodexFull(ADMIN_CODEX_QUERY_OPTIONS);
   const queryClient = useQueryClient();
   const [rows, setRows] = useState<CodexSpreadsheetRow[]>([]);
   const [dirty, setDirty] = useState<Set<string>>(new Set());

@@ -9,7 +9,7 @@ import {
 import { useToast } from '@/components/ui';
 import { SelectFilter, CodexRulesSourceFilter } from '@/components/patterns/filters';
 import { rowMatchesCodexRulesSourceFilter } from '@/lib/codex/list-rules-source-filter';
-import { useParts, type Part } from '@/hooks';
+import { ADMIN_CODEX_QUERY_OPTIONS, useParts, type Part } from '@/hooks';
 import { ABILITIES_AND_DEFENSES } from '@/lib/game/constants';
 import { formatPercentageOptionEnergy } from '@/lib/calculators/power-energy-breakdown';
 import { formatListCellLabel } from '@/lib/utils';
@@ -49,7 +49,7 @@ interface PartFilters {
 
 export function AdminPartsTab() {
   const { showToast } = useToast();
-  const { data: parts, isLoading, error, refetch } = useParts();
+  const { data: parts, isLoading, error, refetch } = useParts(ADMIN_CODEX_QUERY_OPTIONS);
   const {
     modalOpen,
     editing,

@@ -13,7 +13,7 @@ import {
 } from '@/lib/codex/list-rules-source-filter';
 import { traitsByIdMap, choiceTraitOptionIdsToChipData } from '@/lib/choice-trait';
 import { useToast } from '@/components/ui';
-import { useTraits, type Trait } from '@/hooks';
+import { ADMIN_CODEX_QUERY_OPTIONS, useTraits, type Trait } from '@/hooks';
 import { useSort } from '@/hooks/use-sort';
 import { useModalListState } from '@/hooks/use-modal-list-state';
 import { createCodexDoc } from './actions';
@@ -38,7 +38,7 @@ const ADMIN_TRAIT_COLUMNS = [
 
 export function AdminTraitsTab() {
   const { showToast } = useToast();
-  const { data: traits, isLoading, error, refetch } = useTraits();
+  const { data: traits, isLoading, error, refetch } = useTraits(ADMIN_CODEX_QUERY_OPTIONS);
   const {
     modalOpen,
     editing,

@@ -230,7 +230,12 @@ export async function updateCodexDoc(
   id: string,
   data: Record<string, unknown>,
   options?: { expectedUpdatedAt?: string | undefined } | undefined,
-): Promise<{ success: boolean; error?: string | undefined; conflict?: boolean | undefined }> {
+): Promise<{
+  success: boolean;
+  error?: string | undefined;
+  conflict?: boolean | undefined;
+  updatedAt?: string | undefined;
+}> {
   try {
     const changedByUserId = await requireAdmin();
     const safeCollection = assertCodexCollection(collection);
@@ -254,6 +259,7 @@ export async function updateCodexDoc(
       return { success: false, conflict: true, error: CONFLICT_MESSAGE };
     }
 
+    let afterRow: Record<string, unknown> | null = null;
     if (isColumnarCollection(safeCollection)) {
       const normalizedData = await applyFeatTagNormalization(safeCollection, data);
       const payload = toColumnarPayload(safeCollection, normalizedData);
@@ -264,13 +270,14 @@ export async function updateCodexDoc(
       const { data: after, error } = await query.select('*').maybeSingle();
       if (error) throw new Error(error.message);
       if (!after) return { success: false, conflict: true, error: CONFLICT_MESSAGE };
+      afterRow = after as Record<string, unknown>;
       await recordCodexChangeBestEffort({
         entityType: safeCollection,
         entityId: id,
         operation: 'update',
         changedByUserId,
         beforeData: before,
-        afterData: after as Record<string, unknown>,
+        afterData: afterRow,
       });
     } else {
       let query = supabase
@@ -281,18 +288,21 @@ export async function updateCodexDoc(
       const { data: after, error } = await query.select('*').maybeSingle();
       if (error) throw new Error(error.message);
       if (!after) return { success: false, conflict: true, error: CONFLICT_MESSAGE };
+      afterRow = after as Record<string, unknown>;
       await recordCodexChangeBestEffort({
         entityType: safeCollection,
         entityId: id,
         operation: 'update',
         changedByUserId,
         beforeData: before,
-        afterData: after as Record<string, unknown>,
+        afterData: afterRow,
       });
     }
 
     revalidatePublicCodexCaches(safeCollection, table);
-    return { success: true };
+    const afterUpdatedAt =
+      typeof afterRow?.updated_at === 'string' ? afterRow.updated_at : undefined;
+    return { success: true, updatedAt: afterUpdatedAt };
   } catch (e) {
     return { success: false, error: e instanceof Error ? e.message : 'Failed to update' };
   }
