@@ -11,7 +11,7 @@ import {
   ErrorDisplay as ErrorState,
   GridListRow,
 } from '@/components/patterns';
-import { useCreatureFeats, type CreatureFeat } from '@/hooks';
+import { ADMIN_CODEX_QUERY_OPTIONS, useCreatureFeats, type CreatureFeat } from '@/hooks';
 import { useSort } from '@/hooks/use-sort';
 import { codexSourcesOrCore } from '@/lib/codex/sources';
 import { COPY_NAME_SUFFIX } from './admin-codex-copy-suffix';
@@ -25,7 +25,12 @@ import {
 import { formatCreatureLevel } from '@/lib/game';
 
 export function AdminCreatureFeatsTab() {
-  const { data: creatureFeats, isLoading, error, refetch } = useCreatureFeats();
+  const {
+    data: creatureFeats,
+    isLoading,
+    error,
+    refetch,
+  } = useCreatureFeats(ADMIN_CODEX_QUERY_OPTIONS);
   const {
     modalOpen,
     editing,

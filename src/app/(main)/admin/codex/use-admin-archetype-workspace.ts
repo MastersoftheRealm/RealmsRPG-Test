@@ -12,6 +12,7 @@ import { useMemo, useState } from 'react';
 import { rowMatchesCodexRulesSourceFilter } from '@/lib/codex/list-rules-source-filter';
 import { useToast } from '@/components/ui';
 import {
+  ADMIN_CODEX_QUERY_OPTIONS,
   useCodexArchetypes,
   useCodexEquipment,
   useCodexFeats,
@@ -44,18 +45,23 @@ export type { ArchetypeItem } from './admin-archetype-path-form';
 
 export function useAdminArchetypeWorkspace() {
   const { showToast } = useToast();
-  const { data: archetypes, isLoading, error, refetch } = useCodexArchetypes();
-  const { data: codexFeats = [] } = useCodexFeats();
-  const { data: codexSkills = [] } = useCodexSkills();
-  const { data: codexEquipment = [] } = useCodexEquipment();
-  const { data: powerPartsDb = [] } = useCodexPowerParts();
+  const {
+    data: archetypes,
+    isLoading,
+    error,
+    refetch,
+  } = useCodexArchetypes(ADMIN_CODEX_QUERY_OPTIONS);
+  const { data: codexFeats = [] } = useCodexFeats(ADMIN_CODEX_QUERY_OPTIONS);
+  const { data: codexSkills = [] } = useCodexSkills(ADMIN_CODEX_QUERY_OPTIONS);
+  const { data: codexEquipment = [] } = useCodexEquipment(ADMIN_CODEX_QUERY_OPTIONS);
+  const { data: powerPartsDb = [] } = useCodexPowerParts(ADMIN_CODEX_QUERY_OPTIONS);
   const { data: officialPowers = [], isLoading: isLoadingOfficialPowers } =
     useOfficialLibrary('powers');
   const { data: officialTechniques = [], isLoading: isLoadingOfficialTechniques } =
     useOfficialLibrary('techniques');
   const { data: officialItems = [], isLoading: isLoadingOfficialItems } =
     useOfficialLibrary('items');
-  const { data: itemProperties = [] } = useCodexItemProperties();
+  const { data: itemProperties = [] } = useCodexItemProperties(ADMIN_CODEX_QUERY_OPTIONS);
   const queryClient = useQueryClient();
   const {
     modalOpen,

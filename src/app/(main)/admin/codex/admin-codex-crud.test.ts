@@ -86,8 +86,13 @@ describe('Admin Codex CRUD chrome (TASK-842 / TASK-845)', () => {
       expect(src, name).toContain('AdminCodexRowActions');
       expect(src, name).toContain('askDelete');
       expect(src, name).toContain('deleteModals');
+      if (name !== 'AdminArchetypesTab.tsx') {
+        expect(src, name).toContain('ADMIN_CODEX_QUERY_OPTIONS');
+      }
     }
-    expect(readAdmin('use-admin-archetype-workspace.ts')).toContain('useAdminCodexEntity');
+    const archetypeWorkspace = readAdmin('use-admin-archetype-workspace.ts');
+    expect(archetypeWorkspace).toContain('useAdminCodexEntity');
+    expect(archetypeWorkspace).toContain('ADMIN_CODEX_QUERY_OPTIONS');
     expect(readAdmin('use-admin-codex-delete.tsx')).toContain('AdminCodexDeleteModals');
     expect(readAdmin('use-admin-codex-delete.tsx')).toContain('deleteContext="Codex"');
     expect(readAdmin('use-admin-codex-delete.tsx')).not.toContain(
@@ -141,6 +146,7 @@ describe('Admin Codex copy suffix + leftover edit modals (TASK-849)', () => {
 
     const spreadsheet = readAdmin('use-codex-spreadsheet.ts');
     expect(spreadsheet).toContain("const COPY_NAME_SUFFIX = ' copy'");
+    expect(spreadsheet).toContain('ADMIN_CODEX_QUERY_OPTIONS');
     expect(spreadsheet).not.toContain("from './admin-codex-copy-suffix'");
   });
 

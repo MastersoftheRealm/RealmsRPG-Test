@@ -14,8 +14,16 @@ import {
 import { CodexFeatRow } from '@/components/codex';
 import { CodexBrowseListShell, ErrorDisplay as ErrorState, InfoTippy } from '@/components/patterns';
 import { IconButton, useToast } from '@/components/ui';
-import { useCodexFeats, useCodexSkills, usePathListFilter, type Feat, type Skill } from '@/hooks';
+import {
+  ADMIN_CODEX_QUERY_OPTIONS,
+  useCodexFeats,
+  useCodexSkills,
+  usePathListFilter,
+  type Feat,
+  type Skill,
+} from '@/hooks';
 import { useSort } from '@/hooks/use-sort';
+import { patchAdminCodexCollectionRow } from '@/hooks/use-codex';
 import { useAdminCodexEntity } from './use-admin-codex-entity';
 import { AdminCodexRowActions, ADMIN_CODEX_ROW_ACTIONS_WIDTH } from './admin-codex-row-actions';
 import { updateCodexDoc } from './actions';
@@ -55,8 +63,8 @@ interface FeatFilters extends FeatListFilters {
 
 export function AdminFeatsTab() {
   const { showToast } = useToast();
-  const { data: feats, isLoading, error, refetch } = useCodexFeats();
-  const { data: skills = [] } = useCodexSkills();
+  const { data: feats, isLoading, error, refetch } = useCodexFeats(ADMIN_CODEX_QUERY_OPTIONS);
+  const { data: skills = [] } = useCodexSkills(ADMIN_CODEX_QUERY_OPTIONS);
   const { sortState, handleSort, sortItems } = useSort('name');
   const maxLevelFilterId = useId();
   const {
@@ -70,6 +78,7 @@ export function AdminFeatsTab() {
     closeModal,
     save,
     refreshCodex,
+    queryClient,
     setSaving,
     askDelete,
     deleteModals,
@@ -192,7 +201,15 @@ export function AdminFeatsTab() {
       const result = await updateCodexDoc('codex_feats', id, featFormToSavePayload(form), {
         expectedUpdatedAt: (feats ?? []).find((f) => String(f.id) === id)?.updated_at,
       });
-      if (!result.success) errors.push(`Update ${id}: ${result.error}`);
+      if (!result.success) {
+        errors.push(`Update ${id}: ${result.error}`);
+        continue;
+      }
+      if (result.updatedAt) {
+        patchAdminCodexCollectionRow(queryClient, 'codex_feats', id, {
+          updated_at: result.updatedAt,
+        });
+      }
     }
 
     setSaving(false);

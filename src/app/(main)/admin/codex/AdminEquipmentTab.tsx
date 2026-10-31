@@ -11,7 +11,12 @@ import {
   ArchetypePathFilter,
   CodexRulesSourceFilter,
 } from '@/components/patterns/filters';
-import { useEquipment, useItemProperties, usePathListFilter } from '@/hooks';
+import {
+  ADMIN_CODEX_QUERY_OPTIONS,
+  useEquipment,
+  useItemProperties,
+  usePathListFilter,
+} from '@/hooks';
 import { useSort } from '@/hooks/use-sort';
 import { codexSourcesOrCore } from '@/lib/codex/sources';
 import { COPY_NAME_SUFFIX } from './admin-codex-copy-suffix';
@@ -41,8 +46,8 @@ import {
 } from '@/lib/game/path-recommendation-index';
 
 export function AdminEquipmentTab() {
-  const { data: equipment, isLoading, error, refetch } = useEquipment();
-  const { data: propertiesDb = [] } = useItemProperties();
+  const { data: equipment, isLoading, error, refetch } = useEquipment(ADMIN_CODEX_QUERY_OPTIONS);
+  const { data: propertiesDb = [] } = useItemProperties(ADMIN_CODEX_QUERY_OPTIONS);
   const {
     modalOpen,
     editing,

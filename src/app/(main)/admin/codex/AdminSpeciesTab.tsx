@@ -11,6 +11,7 @@ import {
   type ChipData,
 } from '@/components/patterns';
 import {
+  ADMIN_CODEX_QUERY_OPTIONS,
   useSpecies,
   useCodexSkills,
   useTraits,
@@ -41,9 +42,9 @@ import { useAdminCodexEntity } from './use-admin-codex-entity';
 import { AdminCodexRowActions, ADMIN_CODEX_SPECIES_ACTIONS_WIDTH } from './admin-codex-row-actions';
 
 export function AdminSpeciesTab() {
-  const { data: species, isLoading, error, refetch } = useSpecies({ includeUnlisted: true });
-  const { data: skills = [] } = useCodexSkills();
-  const { data: traits = [] } = useTraits();
+  const { data: species, isLoading, error, refetch } = useSpecies(ADMIN_CODEX_QUERY_OPTIONS);
+  const { data: skills = [] } = useCodexSkills(ADMIN_CODEX_QUERY_OPTIONS);
+  const { data: traits = [] } = useTraits(ADMIN_CODEX_QUERY_OPTIONS);
   const patchListing = usePatchOfficialCatalogListing('species');
   const [listingScope, setListingScope] = useState<CatalogListingScope>('all');
   const {

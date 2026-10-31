@@ -157,6 +157,7 @@ Generated: 2026-10-31
 
 ## `src/hooks/index.ts`
 
+- ADMIN_CODEX_QUERY_OPTIONS
 - campaignKeys
 - characterViewerId
 - fetchCampaignCharacterForEncounter
