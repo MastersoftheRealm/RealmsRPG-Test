@@ -23,6 +23,8 @@ import { fetchArchetypeNameMap } from '@/lib/game/archetype-display';
 import {
   appendCharacterLegalityToResponse,
   evaluateCharacterLegalityForSave,
+  legalityLevelForSave,
+  shouldBlockCharacterSaveAtLevel,
 } from '@/lib/game/character-legality';
 import { apiErrorResponse } from '@/lib/api-error';
 import { GUIDED_CREATOR_COPY } from '@/lib/constants/site-copy';
@@ -257,6 +259,13 @@ export async function POST(request: NextRequest) {
     const cleanedData = prepareCharacterForCreate(data);
 
     const legality = await evaluateCharacterLegalityForSave(supabase, cleanedData);
+    const level = legalityLevelForSave(cleanedData);
+    if (shouldBlockCharacterSaveAtLevel(level, legality)) {
+      return NextResponse.json(
+        { error: 'Character is not a legal level 1 build', details: legality.blocking },
+        { status: 400 },
+      );
+    }
 
     const archetypeNameById = await fetchArchetypeNameMap(supabase);
     const listCols = getCharacterListColumns(cleanedData as Record<string, unknown>, {

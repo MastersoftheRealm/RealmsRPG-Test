@@ -1,25 +1,22 @@
 /**
- * Character create/save legality — server advisory backstop (report 03 P1-7, TASK-738, audit B5).
- * =====================================================================================================
- * `POST /api/characters` and `PATCH /api/characters/[id]` persist the document as sent. These
- * predicates compare spend/counts to level-aware bounds from `lib/game` formulas and `core_rules`.
- * Violations are returned as warnings; saves are not blocked (Kadin Oct 29, 2026).
+ * Character save legality — server backstop (report 03 P1-7, TASK-738, audit B5).
+ * =============================================================================
+ * B5 scope: compare **document totals** to **level budgets** from `lib/game` formulas
+ * and loaded `core_rules`. Rebuilding level-up spend history from the sheet is **B6**
+ * (out of scope here).
  *
- * Every rule is a **bound, never an equality**: an over-budget payload yields a warning, an
- * under-filled one does not. Each budget is evaluated at the more permissive of (`core_rules`
- * override, code default) when rules data was loaded.
+ * Level 1 create/save: blocking 400 with player-facing `details` (unchanged from master).
+ * Level 2+: advisory structured `legalityWarnings` on success; saves are not blocked.
  *
- * Skill spend is a deliberate lower bound (allocated values only, not per-skill proficiency cost):
- * species- and path-granted proficiencies are free, and the server has no draft context to tell
- * them apart.
- *
- * Feat *requirements* use the same `checkFeatRequirements` the creators run when the official
- * catalog is passed in. Ids not in the catalog are skipped (custom / unresolvable).
+ * Skill spend is a deliberate lower bound (allocated values only). Feat requirements
+ * use `checkFeatRequirements` when the feat catalog loaded; catalog load failure is
+ * `feat_catalog_unavailable` (save still succeeds).
  */
 
 import type { CoreRulesMap } from '@/types/core-rules';
 import type { ArchetypeCategory } from '@/types/archetype';
 import { normalizeArchetypeChoices } from '@/lib/character/schema-normalize';
+import { fetchFeatRequirementCatalogCached } from '@/lib/codex/feat-requirement-catalog-server';
 import { fetchCoreRules } from '@/lib/core-rules-server';
 import type { TypedSupabaseClient } from '@/lib/supabase/database';
 import { ABILITY_LIMITS } from './constants';
@@ -43,13 +40,70 @@ type Rules = Partial<CoreRulesMap>;
 /** Required on every legality call so missing `core_rules` cannot silently fall back (B5). */
 export type CharacterLegalityRulesStatus = 'loaded' | 'missing';
 
-export interface CharacterLegalityResult {
-  warnings: string[];
-  uncomputable: string[];
+export type CharacterLegalityUncomputableCode =
+  | 'core_rules_unavailable'
+  | 'invalid_level'
+  | 'feat_catalog_unavailable';
+
+export type CharacterLegalityWarningCode =
+  | 'ability_points_over_budget'
+  | 'ability_below_floor'
+  | 'skill_points_over_budget'
+  | 'archetype_feats_over_max'
+  | 'character_feats_over_max'
+  | 'currency_negative'
+  | 'health_energy_negative'
+  | 'health_energy_over_pool'
+  | 'feat_requirements_unmet';
+
+export interface CharacterLegalityStructuredWarning {
+  code: CharacterLegalityWarningCode;
+  level: number;
+  spent?: number | undefined;
+  budget?: number | undefined;
+  count?: number | undefined;
+  max?: number | undefined;
+  allocation?: number | undefined;
+  pool?: number | undefined;
+  floor?: number | undefined;
+  abilities?: string[] | undefined;
+  featId?: string | undefined;
 }
 
-const CORE_RULES_UNAVAILABLE_MESSAGE =
-  'Core rules data was unavailable, so legality bounds could not be computed for this save.';
+export interface CharacterLegalityResult {
+  /** Level 1 only — returned as 400 `details` on POST/PATCH when non-empty. */
+  blocking: string[];
+  /** Level 2+ advisory — machine-readable; no player-facing sentences in B5. */
+  warnings: CharacterLegalityStructuredWarning[];
+  uncomputable: CharacterLegalityUncomputableCode[];
+}
+
+const LEGALITY_PATCH_KEYS = new Set([
+  'level',
+  'abilities',
+  'skills',
+  'defenseVals',
+  'defenseSkills',
+  'archetype',
+  'archetypeFeats',
+  'archetypeChoices',
+  'feats',
+  'currency',
+  'healthPoints',
+  'energyPoints',
+  'mart_abil',
+  'speedBase',
+]);
+
+const FEAT_CATALOG_PATCH_KEYS = new Set([
+  'feats',
+  'archetypeFeats',
+  'abilities',
+  'skills',
+  'defenseVals',
+  'defenseSkills',
+  'level',
+]);
 
 const ABILITY_KEYS = [
   'strength',
@@ -96,6 +150,13 @@ export interface FeatRequirementCatalog {
   skills: CodexSkillForFeat[];
 }
 
+export interface EvaluateCharacterLegalityOptions {
+  /** PATCH: skip rules/catalog reads when dirty keys do not touch legality fields. */
+  skipEntireCheck?: boolean | undefined;
+  /** When false, skip codex catalog fetch (feat requirement checks omitted). */
+  loadFeatCatalog?: boolean | undefined;
+}
+
 function toFiniteNumber(value: unknown): number | null {
   if (typeof value === 'number') return Number.isFinite(value) ? value : null;
   if (typeof value === 'string' && value.trim()) {
@@ -111,21 +172,38 @@ function asRecord(value: unknown): Record<string, unknown> | null {
     : null;
 }
 
-/** The looser of the rules-driven and code-default budget, so neither can reject the other. */
 function permissiveMax(withRules: number, withDefaults: number): number {
   return Math.max(withRules, withDefaults);
 }
 
-/** The cheaper of the rules-driven and code-default spend, for the same reason. */
 function permissiveMin(withRules: number, withDefaults: number): number {
   return Math.min(withRules, withDefaults);
 }
 
-function resolveLegalityLevel(candidate: CharacterLegalityCandidate): number | null {
+export function resolveLegalityLevel(candidate: CharacterLegalityCandidate): number | null {
   const level = toFiniteNumber(candidate.level);
   if (level === null) return 1;
   if (!Number.isInteger(level) || level < 1) return null;
   return level;
+}
+
+export function legalityLevelForSave(candidate: CharacterLegalityCandidate): number {
+  return resolveLegalityLevel(candidate) ?? 1;
+}
+
+export function shouldBlockCharacterSaveAtLevel(
+  level: number,
+  result: CharacterLegalityResult,
+): boolean {
+  return level === 1 && result.blocking.length > 0;
+}
+
+export function patchDirtyKeysTouchLegality(dirty: Record<string, unknown>): boolean {
+  return Object.keys(dirty).some((key) => LEGALITY_PATCH_KEYS.has(key));
+}
+
+export function patchDirtyKeysNeedFeatCatalog(dirty: Record<string, unknown>): boolean {
+  return Object.keys(dirty).some((key) => FEAT_CATALOG_PATCH_KEYS.has(key));
 }
 
 function archetypeChoicesFromCandidate(
@@ -144,10 +222,6 @@ function abilityPointsSpent(abilities: Record<string, unknown>, rules?: Rules): 
   }, 0);
 }
 
-/**
- * Skill points demonstrably spent: allocated values plus defense bonuses. Proficiency gains are
- * excluded (see module docstring), so this is a floor, not the exact spend.
- */
 function skillPointsSpentFloor(candidate: CharacterLegalityCandidate, rules?: Rules): number {
   let spent = 0;
 
@@ -230,17 +304,12 @@ function featRefs(value: unknown): Array<{ id: string; name?: string | undefined
   return out;
 }
 
-/**
- * Live `codex_skills.base_skill` is TEXT (id of the parent skill, or empty). App types use
- * `base_skill_id`. Empty/null → undefined; numeric text → id. Same mapping as GET /api/codex.
- */
 export function mapCodexBaseSkillToId(baseSkill: unknown): number | undefined {
   if (baseSkill === undefined || baseSkill === null || baseSkill === '') return undefined;
   const parsed = parseInt(String(baseSkill), 10);
   return Number.isNaN(parsed) ? undefined : parsed;
 }
 
-/** Map columnar `codex_feats` / `codex_skills` rows into the shape `checkFeatRequirements` reads. */
 export function catalogFromCodexRows(
   featRows: unknown[] | null | undefined,
   skillRows: unknown[] | null | undefined,
@@ -309,16 +378,47 @@ function candidateToFeatRequirementCharacter(
   };
 }
 
-function findUnmetFeatRequirementWarnings(
+function addAbilityOverBudget(
+  level: number,
+  blocking: string[],
+  warnings: CharacterLegalityStructuredWarning[],
+  spent: number,
+  budget: number,
+) {
+  if (spent <= budget) return;
+  if (level === 1) {
+    blocking.push(`Ability points spent (${spent}) exceed the level 1 budget (${budget}).`);
+    return;
+  }
+  warnings.push({ code: 'ability_points_over_budget', level, spent, budget });
+}
+
+function addSkillOverBudget(
+  level: number,
+  blocking: string[],
+  warnings: CharacterLegalityStructuredWarning[],
+  spent: number,
+  budget: number,
+) {
+  if (spent <= budget) return;
+  if (level === 1) {
+    blocking.push(`Skill points spent (${spent}) exceed the level 1 budget (${budget}).`);
+    return;
+  }
+  warnings.push({ code: 'skill_points_over_budget', level, spent, budget });
+}
+
+function findUnmetFeatRequirementViolations(
   candidate: CharacterLegalityCandidate,
   level: number,
   catalog: FeatRequirementCatalog,
-): string[] {
-  if (catalog.feats.length === 0) return [];
+  blocking: string[],
+  warnings: CharacterLegalityStructuredWarning[],
+) {
+  if (catalog.feats.length === 0) return;
 
   const character = candidateToFeatRequirementCharacter(candidate, level);
   const seen = new Set<string>();
-  const warnings: string[] = [];
 
   for (const ref of [...featRefs(candidate.archetypeFeats), ...featRefs(candidate.feats)]) {
     if (seen.has(ref.id)) continue;
@@ -327,22 +427,20 @@ function findUnmetFeatRequirementWarnings(
     if (!feat) continue;
     const result = checkFeatRequirements(feat, character, catalog.skills, catalog.feats);
     if (!result.met) {
-      const label = feat.name ?? ref.name ?? ref.id;
-      warnings.push(
-        result.reason
-          ? `${label} does not meet its requirements: ${result.reason}.`
-          : `${label} does not meet its requirements.`,
-      );
+      if (level === 1) {
+        const label = feat.name ?? ref.name ?? ref.id;
+        blocking.push(
+          result.reason
+            ? `${label} does not meet its requirements: ${result.reason}.`
+            : `${label} does not meet its requirements.`,
+        );
+      } else {
+        warnings.push({ code: 'feat_requirements_unmet', level, featId: ref.id });
+      }
     }
   }
-
-  return warnings;
 }
 
-/**
- * Advisory legality warnings for a character save payload. Empty warnings = within computed
- * bounds (or nothing checkable). When `rulesStatus` is `missing`, bounds are not computed.
- */
 export function findCharacterLegalityViolations(
   candidate: CharacterLegalityCandidate,
   rulesStatus: CharacterLegalityRulesStatus,
@@ -350,20 +448,16 @@ export function findCharacterLegalityViolations(
   featCatalog?: FeatRequirementCatalog,
 ): CharacterLegalityResult {
   if (rulesStatus === 'missing') {
-    return { warnings: [], uncomputable: [CORE_RULES_UNAVAILABLE_MESSAGE] };
+    return { blocking: [], warnings: [], uncomputable: ['core_rules_unavailable'] };
   }
 
   const level = resolveLegalityLevel(candidate);
   if (level === null) {
-    return {
-      warnings: [],
-      uncomputable: [
-        'Character level is missing or invalid, so legality bounds could not be computed.',
-      ],
-    };
+    return { blocking: [], warnings: [], uncomputable: ['invalid_level'] };
   }
 
-  const warnings: string[] = [];
+  const blocking: string[] = [];
+  const warnings: CharacterLegalityStructuredWarning[] = [];
   const archetypeChoices = archetypeChoicesFromCandidate(candidate);
 
   const abilities = asRecord(candidate.abilities);
@@ -376,16 +470,21 @@ export function findCharacterLegalityViolations(
       abilityPointsSpent(abilities, rules),
       abilityPointsSpent(abilities),
     );
-    if (spent > budget) {
-      warnings.push(
-        `Ability points spent (${spent}) exceed the level ${level} budget (${budget}).`,
-      );
-    }
+    addAbilityOverBudget(level, blocking, warnings, spent, budget);
 
     const floor = Math.min(rules?.ABILITY_RULES?.min ?? ABILITY_LIMITS.MIN, ABILITY_LIMITS.MIN);
     const belowFloor = ABILITY_KEYS.filter((key) => (toFiniteNumber(abilities[key]) ?? 0) < floor);
     if (belowFloor.length > 0) {
-      warnings.push(`Ability scores cannot go below ${floor} (${belowFloor.join(', ')}).`);
+      if (level === 1) {
+        blocking.push(`Ability scores cannot go below ${floor} (${belowFloor.join(', ')}).`);
+      } else {
+        warnings.push({
+          code: 'ability_below_floor',
+          level,
+          floor,
+          abilities: [...belowFloor],
+        });
+      }
     }
   }
 
@@ -394,11 +493,7 @@ export function findCharacterLegalityViolations(
     getTotalSkillPoints(level, 'character'),
   );
   const skillSpent = skillPointsSpentFloor(candidate, rules);
-  if (skillSpent > skillBudget) {
-    warnings.push(
-      `Skill points spent (${skillSpent}) exceed the level ${level} budget (${skillBudget}).`,
-    );
-  }
+  addSkillOverBudget(level, blocking, warnings, skillSpent, skillBudget);
 
   const archetypeType = asRecord(candidate.archetype)?.type;
   const maxArchetypeFeats = permissiveMax(
@@ -417,22 +512,44 @@ export function findCharacterLegalityViolations(
   );
   const archetypeFeatCount = countRefs(candidate.archetypeFeats);
   if (archetypeFeatCount !== null && archetypeFeatCount > maxArchetypeFeats) {
-    warnings.push(
-      `Archetype feats (${archetypeFeatCount}) exceed the level ${level} maximum (${maxArchetypeFeats}).`,
-    );
+    if (level === 1) {
+      blocking.push(
+        `Archetype feats (${archetypeFeatCount}) exceed the level 1 maximum (${maxArchetypeFeats}).`,
+      );
+    } else {
+      warnings.push({
+        code: 'archetype_feats_over_max',
+        level,
+        count: archetypeFeatCount,
+        max: maxArchetypeFeats,
+      });
+    }
   }
 
   const maxCharacterFeats = calculateMaxCharacterFeats(level);
   const characterFeatCount = countRefs(candidate.feats);
   if (characterFeatCount !== null && characterFeatCount > maxCharacterFeats) {
-    warnings.push(
-      `Character feats (${characterFeatCount}) exceed the level ${level} maximum (${maxCharacterFeats}).`,
-    );
+    if (level === 1) {
+      blocking.push(
+        `Character feats (${characterFeatCount}) exceed the level 1 maximum (${maxCharacterFeats}).`,
+      );
+    } else {
+      warnings.push({
+        code: 'character_feats_over_max',
+        level,
+        count: characterFeatCount,
+        max: maxCharacterFeats,
+      });
+    }
   }
 
   const currency = toFiniteNumber(candidate.currency);
   if (currency !== null && currency < 0) {
-    warnings.push('Currency cannot be negative — a character cannot start play in debt.');
+    if (level === 1) {
+      blocking.push('Currency cannot be negative — a character cannot start play in debt.');
+    } else {
+      warnings.push({ code: 'currency_negative', level });
+    }
   }
 
   const pool = permissiveMax(
@@ -442,65 +559,85 @@ export function findCharacterLegalityViolations(
   const healthPoints = toFiniteNumber(candidate.healthPoints);
   const energyPoints = toFiniteNumber(candidate.energyPoints);
   if ((healthPoints ?? 0) < 0 || (energyPoints ?? 0) < 0) {
-    warnings.push('Health and Energy allocations cannot be negative.');
+    if (level === 1) {
+      blocking.push('Health and Energy allocations cannot be negative.');
+    } else {
+      warnings.push({ code: 'health_energy_negative', level });
+    }
   } else if (healthPoints !== null && energyPoints !== null && healthPoints + energyPoints > pool) {
-    warnings.push(
-      `Health + Energy allocation (${healthPoints + energyPoints}) exceeds the level ${level} pool (${pool}).`,
-    );
+    const allocation = healthPoints + energyPoints;
+    if (level === 1) {
+      blocking.push(
+        `Health + Energy allocation (${allocation}) exceeds the level 1 pool (${pool}).`,
+      );
+    } else {
+      warnings.push({
+        code: 'health_energy_over_pool',
+        level,
+        allocation,
+        pool,
+      });
+    }
   }
 
   if (featCatalog) {
-    warnings.push(...findUnmetFeatRequirementWarnings(candidate, level, featCatalog));
+    findUnmetFeatRequirementViolations(candidate, level, featCatalog, blocking, warnings);
   }
 
-  return { warnings, uncomputable: [] };
+  return { blocking, warnings, uncomputable: [] };
 }
 
-/** Merge advisory legality fields into a JSON response body when present. */
 export function appendCharacterLegalityToResponse<T extends Record<string, unknown>>(
   body: T,
   legality: CharacterLegalityResult,
-): T & { legalityWarnings?: string[]; legalityUncomputable?: string[] } {
-  const next = { ...body } as T & { legalityWarnings?: string[]; legalityUncomputable?: string[] };
+): T & {
+  legalityWarnings?: CharacterLegalityStructuredWarning[];
+  legalityUncomputable?: CharacterLegalityUncomputableCode[];
+} {
+  const next = { ...body } as T & {
+    legalityWarnings?: CharacterLegalityStructuredWarning[];
+    legalityUncomputable?: CharacterLegalityUncomputableCode[];
+  };
   if (legality.warnings.length > 0) next.legalityWarnings = legality.warnings;
   if (legality.uncomputable.length > 0) next.legalityUncomputable = legality.uncomputable;
   return next;
 }
 
-/** Derive rules status from a `fetchCoreRules` result (empty map = unavailable). */
 export function characterLegalityRulesStatus(
   rules: Partial<CoreRulesMap>,
 ): CharacterLegalityRulesStatus {
   return Object.keys(rules).length > 0 ? 'loaded' : 'missing';
 }
 
-const FEAT_REQUIREMENT_COLUMNS =
-  'id, name, lvl_req, ability_req, abil_req_val, skill_req, skill_req_val, mart_abil_req, speed_req, feat_lvl, base_feat_id';
-const SKILL_REQUIREMENT_COLUMNS = 'id, name, base_skill, ability';
-
-async function fetchFeatRequirementCatalog(supabase: TypedSupabaseClient) {
-  const [featRes, skillRes] = await Promise.all([
-    supabase.from('codex_feats').select(FEAT_REQUIREMENT_COLUMNS),
-    supabase.from('codex_skills').select(SKILL_REQUIREMENT_COLUMNS),
-  ]);
-  if (featRes.error) throw featRes.error;
-  if (skillRes.error) throw skillRes.error;
-  return catalogFromCodexRows(featRes.data ?? [], skillRes.data ?? []);
-}
-
-/** Load rules + feat catalog and evaluate legality for a save payload. */
 export async function evaluateCharacterLegalityForSave(
   supabase: TypedSupabaseClient,
   candidate: CharacterLegalityCandidate,
+  options: EvaluateCharacterLegalityOptions = {},
 ): Promise<CharacterLegalityResult> {
-  const [rules, featCatalog] = await Promise.all([
-    fetchCoreRules(supabase),
-    fetchFeatRequirementCatalog(supabase),
-  ]);
-  return findCharacterLegalityViolations(
+  if (options.skipEntireCheck) {
+    return { blocking: [], warnings: [], uncomputable: [] };
+  }
+
+  const rules = await fetchCoreRules(supabase);
+  let featCatalog: FeatRequirementCatalog | undefined;
+  const extraUncomputable: CharacterLegalityUncomputableCode[] = [];
+
+  if (options.loadFeatCatalog !== false) {
+    try {
+      featCatalog = await fetchFeatRequirementCatalogCached(supabase);
+    } catch {
+      extraUncomputable.push('feat_catalog_unavailable');
+    }
+  }
+
+  const result = findCharacterLegalityViolations(
     candidate,
     characterLegalityRulesStatus(rules),
     rules,
     featCatalog,
   );
+  if (extraUncomputable.length > 0) {
+    result.uncomputable.push(...extraUncomputable);
+  }
+  return result;
 }

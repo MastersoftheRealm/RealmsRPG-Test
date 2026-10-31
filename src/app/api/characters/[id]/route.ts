@@ -29,6 +29,9 @@ import { fetchArchetypeNameMap } from '@/lib/game/archetype-display';
 import {
   appendCharacterLegalityToResponse,
   evaluateCharacterLegalityForSave,
+  legalityLevelForSave,
+  patchDirtyKeysNeedFeatCatalog,
+  shouldBlockCharacterSaveAtLevel,
 } from '@/lib/game/character-legality';
 import {
   characterPortraitStoragePaths,
@@ -202,7 +205,16 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
     const now = new Date().toISOString();
     const mergedData = applyCharacterDirtyPatch(currentData, cleanedData, { blobUpdatedAt: now });
     normalizeCharacterForSave(mergedData);
-    const legality = await evaluateCharacterLegalityForSave(supabase, mergedData);
+    const legality = await evaluateCharacterLegalityForSave(supabase, mergedData, {
+      loadFeatCatalog: patchDirtyKeysNeedFeatCatalog(cleanedData),
+    });
+    const level = legalityLevelForSave(mergedData);
+    if (shouldBlockCharacterSaveAtLevel(level, legality)) {
+      return NextResponse.json(
+        { error: 'Character is not a legal level 1 build', details: legality.blocking },
+        { status: 400 },
+      );
+    }
     const archetypeNameById = await fetchArchetypeNameMap(supabase);
     const listCols = getCharacterListColumns(mergedData, { archetypeNameById });
 

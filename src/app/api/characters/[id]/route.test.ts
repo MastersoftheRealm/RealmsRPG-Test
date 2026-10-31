@@ -512,6 +512,130 @@ describe('PATCH /api/characters/[id]', () => {
     expect(response.status).toBe(200);
     expect(supabase.removePortrait).not.toHaveBeenCalled();
   });
+
+  describe('legality on merged save (B5)', () => {
+    it('returns structured warnings when a level-5 patch pushes abilities over budget', async () => {
+      const row = makeCharacterRow('char-l5', OWNER.uid, {
+        level: 5,
+        abilities: {
+          strength: 2,
+          vitality: 2,
+          agility: 2,
+          acuity: 2,
+          intelligence: 0,
+          charisma: 0,
+        },
+        archetype: { id: 'a1', type: 'power' },
+      });
+      mockGetSession.mockResolvedValue({ user: OWNER, error: null });
+      mockCreateClient.mockResolvedValue(createMockSupabase(row) as never);
+
+      const response = await PATCH(
+        makePatchRequest('char-l5', {
+          abilities: {
+            strength: 50,
+            vitality: 50,
+            agility: 50,
+            acuity: 50,
+            intelligence: 0,
+            charisma: 0,
+          },
+        }),
+        { params: Promise.resolve({ id: 'char-l5' }) },
+      );
+
+      expect(response.status).toBe(200);
+      const body = await readJson<{
+        ok: boolean;
+        legalityWarnings?: Array<{ code: string; level: number }> | undefined;
+      }>(response);
+      expect(body.ok).toBe(true);
+      expect(
+        body.legalityWarnings?.some(
+          (w) => w.code === 'ability_points_over_budget' && w.level === 5,
+        ),
+      ).toBe(true);
+    });
+
+    it('returns warnings when the patch is benign but merged stored data is still over budget', async () => {
+      const row = makeCharacterRow('char-stored-illegal', OWNER.uid, {
+        level: 5,
+        abilities: {
+          strength: 50,
+          vitality: 50,
+          agility: 50,
+          acuity: 50,
+          intelligence: 0,
+          charisma: 0,
+        },
+        archetype: { id: 'a1', type: 'power' },
+      });
+      mockGetSession.mockResolvedValue({ user: OWNER, error: null });
+      mockCreateClient.mockResolvedValue(createMockSupabase(row) as never);
+
+      const response = await PATCH(makePatchRequest('char-stored-illegal', { name: 'Renamed' }), {
+        params: Promise.resolve({ id: 'char-stored-illegal' }),
+      });
+
+      expect(response.status).toBe(200);
+      const body = await readJson<{
+        ok: boolean;
+        legalityWarnings?: Array<{ code: string }> | undefined;
+      }>(response);
+      expect(body.legalityWarnings?.some((w) => w.code === 'ability_points_over_budget')).toBe(
+        true,
+      );
+    });
+
+    it('still saves when the feat catalog fails and returns feat_catalog_unavailable', async () => {
+      const row = makeCharacterRow('char-catalog', OWNER.uid, {
+        level: 5,
+        abilities: {
+          strength: 2,
+          vitality: 2,
+          agility: 2,
+          acuity: 2,
+          intelligence: 0,
+          charisma: 0,
+        },
+      });
+      mockGetSession.mockResolvedValue({ user: OWNER, error: null });
+      const supabase = createMockSupabase(row);
+      const baseFrom = supabase.from;
+      mockCreateClient.mockResolvedValue({
+        ...supabase,
+        from: vi.fn((table: string) => {
+          if (table === 'codex_feats' || table === 'codex_skills') {
+            return {
+              select: vi.fn().mockResolvedValue({
+                data: null,
+                error: { message: 'db error', code: 'XX000' },
+              }),
+            };
+          }
+          return baseFrom(table);
+        }),
+      } as never);
+
+      const response = await PATCH(
+        makePatchRequest('char-catalog', {
+          abilities: {
+            strength: 50,
+            vitality: 50,
+            agility: 50,
+            acuity: 50,
+            intelligence: 0,
+            charisma: 0,
+          },
+        }),
+        { params: Promise.resolve({ id: 'char-catalog' }) },
+      );
+
+      expect(response.status).toBe(200);
+      const body = await readJson<{ legalityUncomputable?: string[] | undefined }>(response);
+      expect(body.legalityUncomputable).toContain('feat_catalog_unavailable');
+    });
+  });
 });
 
 describe('DELETE /api/characters/[id]', () => {
