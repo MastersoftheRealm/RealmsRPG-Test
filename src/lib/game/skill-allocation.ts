@@ -30,15 +30,6 @@ export const DEFENSE_INCREASE_COST = 2;
  */
 export const UNPROFICIENT_SKILL_ALLOCATION = -1;
 
-/** Skill points per level for characters (simple: 3 * level) */
-export const CHARACTER_SKILL_POINTS_PER_LEVEL = 3;
-
-/** Creature skill points: 5 at level 1, +3 per additional level */
-export const CREATURE_SKILL_POINTS = {
-  base: 5,
-  perLevel: 3,
-} as const;
-
 /** Species grants 2 permanent skills (don't cost points) */
 export const SPECIES_SKILL_COUNT = 2;
 
@@ -330,7 +321,7 @@ type CharacterSheetSkillRow = {
 /**
  * Map character sheet skill rows to creator-style allocations for spent calculation.
  */
-export function characterSkillsToAllocations(skills: CharacterSheetSkillRow[]): {
+function characterSkillsToAllocations(skills: CharacterSheetSkillRow[]): {
   allocations: Record<string, number>;
   skillMeta: Map<string, { isSubSkill: boolean }>;
 } {

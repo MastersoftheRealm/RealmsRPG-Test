@@ -11,7 +11,7 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { verifyMutationRequest, verifyRequestOrigin } from '@/lib/api-validation';
+import { verifyRequestOrigin } from '@/lib/api-validation';
 
 const MUTATION_METHODS = new Set(['POST', 'PUT', 'PATCH', 'DELETE']);
 
@@ -36,22 +36,4 @@ export function rejectCrossOriginApiMutation(
 ): NextResponse<{ error: string }> | null {
   if (!request.nextUrl.pathname.startsWith('/api/')) return null;
   return verifyRequestOrigin(request);
-}
-
-type MutationHandlerOptions = { requireJsonBody?: boolean | undefined };
-
-type AnyContext = unknown;
-
-/**
- * Wrap a route handler so cross-origin mutations are rejected before user code runs.
- */
-export function withApiMutationHandler<C extends AnyContext = AnyContext>(
-  handler: (request: NextRequest, context: C) => Promise<NextResponse> | NextResponse,
-  options: MutationHandlerOptions = {},
-): (request: NextRequest, context: C) => Promise<NextResponse> {
-  return async (request, context) => {
-    const denied = verifyMutationRequest(request, options);
-    if (denied) return denied;
-    return handler(request, context);
-  };
 }

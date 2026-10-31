@@ -3,7 +3,7 @@
 > **Do not edit by hand.** Run `npm run tasks:generate-index` after changing barrel exports.
 > Curated narrative map: [`FEATURE_INDEX.md`](FEATURE_INDEX.md).
 
-Generated: 2026-10-30
+Generated: 2026-10-31
 
 ## `src/components/patterns/index.ts`
 
@@ -170,7 +170,6 @@ Generated: 2026-10-30
 - type CreateOfficialEnhancedItemInput
 - type CreatureFeat
 - type EnhancedItemUsesType
-- type EquipmentItem
 - type Feat
 - type ItemProperty
 - type LibrarySectionCollapseHeaderProps

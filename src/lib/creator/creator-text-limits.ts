@@ -19,7 +19,7 @@ export const CREATOR_DESCRIPTION_MAX_LENGTH = 10_000;
 export const CREATOR_DESCRIPTION_COUNTER_FROM = 9_000;
 
 /** Same grouping as the paste notes ("10,000"), independent of the browser locale. */
-export function formatCreatorTextCount(value: number): string {
+function formatCreatorTextCount(value: number): string {
   return value.toLocaleString('en-US');
 }
 

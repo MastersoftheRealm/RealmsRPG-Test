@@ -30,5 +30,3 @@ export function readRowRulesSources(row: unknown): unknown {
   const record = row as { sources?: unknown; raw?: { sources?: unknown } | undefined };
   return record.sources ?? record.raw?.sources;
 }
-
-export type CodexRulesSourceFilterSelection = string[];

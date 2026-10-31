@@ -149,10 +149,6 @@ export async function listRealmsImages(opts?: {
   return data.images;
 }
 
-export async function getRealmsImage(id: string): Promise<RealmsImage> {
-  return apiFetch<RealmsImage>(`/api/images/${encodeURIComponent(id)}`);
-}
-
 export async function getRealmsImageUsage(id: string): Promise<RealmsImageUsageReport> {
   return apiFetch<RealmsImageUsageReport>(`/api/images/${encodeURIComponent(id)}/usage`);
 }

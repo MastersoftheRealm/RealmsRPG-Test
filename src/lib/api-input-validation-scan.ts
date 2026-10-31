@@ -12,31 +12,31 @@ import {
   API_INPUT_VALIDATION_NO_INPUT_HANDLERS,
 } from './api-input-validation-guard';
 
-export const API_ROOT = path.join(import.meta.dirname, '../app/api');
+const API_ROOT = path.join(import.meta.dirname, '../app/api');
 
 const HTTP_METHODS = 'GET|HEAD|OPTIONS|POST|PUT|PATCH|DELETE';
 
-export const HANDLER_FUNCTION_HEAD = new RegExp(
+const HANDLER_FUNCTION_HEAD = new RegExp(
   `^export\\s+(?:async\\s+)?function\\s+(${HTTP_METHODS})\\s*\\(`,
 );
 
 /** `export const GET = async (` and `export const GET = (` */
-export const HANDLER_ARROW_HEAD = new RegExp(
+const HANDLER_ARROW_HEAD = new RegExp(
   `^export\\s+const\\s+(${HTTP_METHODS})\\s*=\\s*(?:async\\s*)?\\(`,
 );
 
 /** `export { GET }`, `export { h as POST } from './x'`, etc. — not scannable as inline handlers. */
-export const HANDLER_REEXPORT = new RegExp(`\\bexport\\s+(?!type\\s*\\{)\\{([^}]*)\\}`, 'g');
+const HANDLER_REEXPORT = new RegExp(`\\bexport\\s+(?!type\\s*\\{)\\{([^}]*)\\}`, 'g');
 
 /** `export * from './x'` — re-exports entire module; not scannable. */
-export const HANDLER_STAR_REEXPORT = /\bexport\s+\*\s+from\b/;
+const HANDLER_STAR_REEXPORT = /\bexport\s+\*\s+from\b/;
 
-export const HANDLER_SPLIT = new RegExp(
+const HANDLER_SPLIT = new RegExp(
   `(?=export\\s+(?:(?:async\\s+)?function\\s+(?:${HTTP_METHODS})\\s*\\(|const\\s+(?:${HTTP_METHODS})\\s*=\\s*(?:async\\s*)?\\())`,
   'g',
 );
 
-export function listApiRouteHandlerFiles(dir: string = API_ROOT): string[] {
+function listApiRouteHandlerFiles(dir: string = API_ROOT): string[] {
   const entries = readdirSync(dir);
   const files: string[] = [];
   for (const name of entries) {
@@ -51,11 +51,7 @@ export function listApiRouteHandlerFiles(dir: string = API_ROOT): string[] {
   return files;
 }
 
-export function relativeApiPath(file: string): string {
-  return path.relative(API_ROOT, file).replace(/\\/g, '/');
-}
-
-export function handlerKey(relativePath: string, method: string): string {
+function handlerKey(relativePath: string, method: string): string {
   return `${relativePath} (${method})`;
 }
 
@@ -101,7 +97,7 @@ export function collectReExportedHandlerMethods(source: string): string[] {
   return [...new Set(methods)];
 }
 
-export function hasStarReExport(source: string): boolean {
+function hasStarReExport(source: string): boolean {
   return HANDLER_STAR_REEXPORT.test(source);
 }
 
@@ -120,11 +116,11 @@ export function handlerUsesRouteParams(chunk: string): boolean {
   return /await\s+(?:params|context\.params|ctx\.params|\w+\.params)\b/.test(chunk);
 }
 
-export function hasMarker(chunk: string, marker: string): boolean {
+function hasMarker(chunk: string, marker: string): boolean {
   return chunk.includes(marker);
 }
 
-export function hasAnyInputMarker(chunk: string): boolean {
+function hasAnyInputMarker(chunk: string): boolean {
   return API_INPUT_VALIDATION_MARKERS.some((marker) => hasMarker(chunk, marker));
 }
 

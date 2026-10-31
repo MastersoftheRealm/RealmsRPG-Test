@@ -124,7 +124,7 @@ function toDefenseReqKey(key: string): DefenseReqKey | null {
 }
 
 /** Id of the previous-level feat required to take this feat. Null if level 1 or no base. */
-export function getPreviousLevelFeatId(
+function getPreviousLevelFeatId(
   feat: FeatForRequirement,
   allFeats: FeatForRequirement[],
 ): string | null {

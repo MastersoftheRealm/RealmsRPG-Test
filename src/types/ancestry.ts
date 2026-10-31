@@ -9,29 +9,6 @@ import type { AllowUndefinedOptionals } from '@/lib/utils/exact-optional';
 /** Size categories */
 export type SizeCategory = 'tiny' | 'small' | 'medium' | 'large' | 'huge' | 'gargantuan';
 
-/** An ancestry/species from the database */
-interface AncestryFields {
-  id: number | string;
-  name: string;
-  description?: string | undefined;
-  size?: SizeCategory | undefined;
-  speed?: number | undefined;
-  traits?: AncestryTrait[] | undefined;
-  abilityBonuses?: Partial<Record<string, number>> | undefined;
-  languages?: string[] | undefined;
-}
-
-export type Ancestry = AllowUndefinedOptionals<AncestryFields>;
-
-/** Ancestry trait */
-interface AncestryTraitFields {
-  id: number | string;
-  name: string;
-  description?: string | undefined;
-}
-
-export type AncestryTrait = AllowUndefinedOptionals<AncestryTraitFields>;
-
 /** Character's selected ancestry data */
 interface CharacterAncestryFields {
   id: number | string;

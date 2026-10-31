@@ -606,5 +606,3 @@ export const GUIDED_CREATOR_COPY = {
     },
   },
 } as const;
-
-export type GuidedCreatorCopy = typeof GUIDED_CREATOR_COPY;

@@ -15,7 +15,7 @@ function segmentKey(segment: LegalSegment, index: number): string {
   return `email-${index}-${segment.address}`;
 }
 
-export function LegalSegments({ segments }: { segments: readonly LegalSegment[] }) {
+function LegalSegments({ segments }: { segments: readonly LegalSegment[] }) {
   return (
     <>
       {segments.map((segment, index) => {

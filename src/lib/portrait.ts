@@ -8,7 +8,7 @@ import { CROPPED_IMAGE_MIME, fileFromCroppedBlob } from '@/lib/crop-image';
 import { getFallbackPortraitDataUrl, type PlaceholderTheme } from '@/lib/placeholder-art';
 
 /** Legacy path that may be stored in DB; we treat it as no portrait and use inline fallback. */
-export const PLACEHOLDER_PORTRAIT_PATH = '/images/placeholder-portrait.png';
+const PLACEHOLDER_PORTRAIT_PATH = '/images/placeholder-portrait.png';
 
 /** True when `src` is the inline missing-portrait placeholder (either theme). */
 export function isPortraitFallbackSrc(src: string): boolean {
@@ -73,7 +73,7 @@ export function dataUrlToBlob(dataUrl: string): Blob {
 }
 
 /** Compress a cropped portrait blob to a data URL (max ~700KB). Preserves alpha — no baked matte. */
-export function blobToCompressedBase64(blob: Blob, maxSize = 700 * 1024): Promise<string> {
+function blobToCompressedBase64(blob: Blob, maxSize = 700 * 1024): Promise<string> {
   return new Promise((resolve, reject) => {
     const img = new Image();
     const url = URL.createObjectURL(blob);

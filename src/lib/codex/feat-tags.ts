@@ -20,15 +20,6 @@ export function parseFeatTagsFromDb(val: unknown): string[] {
   return [];
 }
 
-/** Format tag array for codex_feats.tags storage (sorted unique, trailing comma when non-empty). */
-export function formatFeatTagsForDb(tags: string[]): string | null {
-  const unique = [...new Set(tags.map((t) => t.trim()).filter(Boolean))].sort((a, b) =>
-    a.localeCompare(b),
-  );
-  if (unique.length === 0) return null;
-  return `${unique.join(',')},`;
-}
-
 /** Join raw tag parts before sending to `normalize_feat_tags` RPC. */
 export function featTagsToNormalizeInput(tags: string[]): string | null {
   const parts = tags.map((t) => t.trim()).filter(Boolean);

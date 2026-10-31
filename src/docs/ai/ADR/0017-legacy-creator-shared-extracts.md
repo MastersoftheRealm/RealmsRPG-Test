@@ -7,7 +7,7 @@
 
 ## Context
 
-Audit report 02 classified five `character-creator/` modules as **SHARED** because Guided and/or the character sheet already import them: `AbilityPickButton`, `MixedSpeciesModal`, `PathHelpCard` (+ `PathNotes`), `TraitSection`, `CreatorPortraitUpload`. Leaving them under Legacy misrepresents ownership and keeps sheet/Guided depending on a folder the constitution still treats as the classic wizard.
+Audit report 02 classified five `character-creator/` modules as **SHARED** because Guided and/or the character sheet already import them: `AbilityPickButton`, `MixedSpeciesModal`, `PathHelpCard`, `TraitSection`, `CreatorPortraitUpload`. Leaving them under Legacy misrepresents ownership and keeps sheet/Guided depending on a folder the constitution still treats as the classic wizard.
 
 TASK-791 already extracted currency + appearance-age into `lib/`. This ADR is the UI half: public shared chrome, not private co-located splits (ADR-0007).
 

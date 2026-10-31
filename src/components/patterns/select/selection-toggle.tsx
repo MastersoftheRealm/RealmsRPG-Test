@@ -49,7 +49,7 @@ const TOUCH_FLOOR: Record<IconPairToggleFloor, string> = {
   coarse: '[@media(pointer:coarse)]:min-h-[44px] [@media(pointer:coarse)]:min-w-[44px]',
 };
 
-export function IconPairToggle({
+function IconPairToggle({
   pressed,
   onToggle,
   disabled = false,

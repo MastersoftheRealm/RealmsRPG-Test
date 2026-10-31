@@ -70,7 +70,7 @@ export interface OfficialTechniqueRow {
   catalogListing?: LibraryTechnique['catalogListing'];
 }
 
-export function getEmpoweredTechniqueTotals(
+function getEmpoweredTechniqueTotals(
   item: LibraryTechnique & {
     totals?: { energy?: number | undefined; trainingPoints?: number | undefined } | undefined;
   },

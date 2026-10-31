@@ -154,18 +154,6 @@ export function armorStatsForRef(
   return {};
 }
 
-export function gearShortUseForRef(
-  refId: string,
-  officialItems: LibraryItem[],
-  codexEquipment: CodexEquipmentItem[],
-): string | undefined {
-  const row = libraryRowForRef(refId, officialItems, codexEquipment);
-  if (!row || !('description' in row)) return undefined;
-  const text = String(row.description ?? '').trim();
-  if (!text) return undefined;
-  return text.length > 120 ? `${text.slice(0, 117)}…` : text;
-}
-
 export function rowsForEquipmentPhase(
   catalog: Map<string, EligibleEquipmentRow>,
   phase: EquipmentPhase,

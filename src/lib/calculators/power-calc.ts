@@ -330,7 +330,7 @@ export function calculatePowerSectionContribution(
 /**
  * Compute action type from parts payload
  */
-export function computeActionType(
+function computeActionType(
   partsPayload: PowerPartPayload[] = [],
   partsDb: PowerPart[] = [],
 ): string {
@@ -597,7 +597,7 @@ export function deriveStructuredDuration(
 /**
  * Format a single power part as a chip
  */
-export function formatPowerPartChip(def: PowerPart, pl: PowerPartPayload): PartChipData {
+function formatPowerPartChip(def: PowerPart, pl: PowerPartPayload): PartChipData {
   const l1 = pl.op_1_lvl || 0;
   const l2 = pl.op_2_lvl || 0;
   const l3 = pl.op_3_lvl || 0;

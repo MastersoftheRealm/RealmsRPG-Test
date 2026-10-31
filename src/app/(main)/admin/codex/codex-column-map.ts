@@ -93,7 +93,7 @@ function toColumnValue(camel: string, val: unknown): unknown {
   return val;
 }
 
-export const COLUMNAR_FIELDS: Record<CodexCollection, string[]> = {
+const COLUMNAR_FIELDS: Record<CodexCollection, string[]> = {
   codex_feats: [
     'name',
     'description',

@@ -255,5 +255,3 @@ export function useCampaignDetailPage() {
     maxCampaignCharacters: MAX_CAMPAIGN_CHARACTERS,
   };
 }
-
-export type CampaignDetailPageModel = ReturnType<typeof useCampaignDetailPage>;

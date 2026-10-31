@@ -187,12 +187,3 @@ export function isFactOmitted(
 ): boolean {
   return Boolean(flags.characterCreate && factId === 'reqLevel');
 }
-
-export function isFactDemoted(
-  entityType: GlrEntityType,
-  mode: GlrDensityMode,
-  factId: GlrFactId,
-): boolean {
-  const demoted = GLR_DENSITY[mode].demoteFacts?.[entityType];
-  return demoted?.includes(factId) ?? false;
-}

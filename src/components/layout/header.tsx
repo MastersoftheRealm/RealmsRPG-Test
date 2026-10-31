@@ -54,7 +54,7 @@ export function shouldCloseDisclosureOnOutsidePointer(
  * After an outside pointer dismiss, swallow that next outside click in capture.
  * One-shot, and cleared on timeout if the click never arrives.
  */
-export const DISMISS_CLICK_SWALLOW_MS = 500;
+const DISMISS_CLICK_SWALLOW_MS = 500;
 
 export function armDismissClickSwallow(options: {
   documentTarget: EventTarget;

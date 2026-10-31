@@ -37,11 +37,11 @@ const armorCfg = fromArmamentConfig('armor');
 
 /** Weapons (+ shields in same phase) — Codex weapon browse columns. */
 export const WEAPON_L2_HEADER_COLUMNS: L2ColumnHeader[] = weaponCfg.headers;
-export const WEAPON_L2_GRID = weaponCfg.grid;
+const WEAPON_L2_GRID = weaponCfg.grid;
 
 /** Armor — Codex armor browse columns. */
 export const ARMOR_L2_HEADER_COLUMNS: L2ColumnHeader[] = armorCfg.headers;
-export const ARMOR_L2_GRID = armorCfg.grid;
+const ARMOR_L2_GRID = armorCfg.grid;
 
 const gearChrome = glrListChrome({ entityType: 'gear', mode: 'browse' }, { sortable: true });
 
@@ -52,7 +52,7 @@ export const GEAR_L2_HEADER_COLUMNS: L2ColumnHeader[] = gearChrome.headers.map((
   align: (h.align ?? 'center') as 'left' | 'center' | 'right',
   sortable: h.sortable !== false,
 }));
-export const GEAR_L2_GRID = gearChrome.grid;
+const GEAR_L2_GRID = gearChrome.grid;
 
 export function l2HeaderColumnsForPhase(phase: GuidedEquipmentPhase): L2ColumnHeader[] {
   if (phase === 'armor') return ARMOR_L2_HEADER_COLUMNS;

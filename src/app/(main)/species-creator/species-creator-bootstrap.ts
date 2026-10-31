@@ -28,7 +28,7 @@ export function orderSpeciesSizes(sizes: readonly string[]): string[] {
 }
 
 /** Trim, drop blanks, and keep the first spelling when another entry differs only by case. */
-export function uniqueSpeciesLanguages(languages: readonly string[]): string[] {
+function uniqueSpeciesLanguages(languages: readonly string[]): string[] {
   const seen = new Set<string>();
   const out: string[] = [];
   for (const raw of languages) {
@@ -266,7 +266,7 @@ function coerceNumberOrEmpty(v: unknown): number | '' {
 }
 
 /** Restore form from localStorage cache; normalizes trait/skill IDs to current codex IDs. */
-export function mergeCachedSpeciesForm(
+function mergeCachedSpeciesForm(
   cache: unknown,
   allTraits: Trait[],
   allSkills: Skill[],

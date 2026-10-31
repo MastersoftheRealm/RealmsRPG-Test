@@ -19,7 +19,7 @@ export type SpeciesSizeSource = {
   sizes?: string[] | null | undefined;
 };
 
-export function findSpeciesByAncestry(
+function findSpeciesByAncestry(
   ancestry: CharacterAncestry | undefined,
   allSpecies: readonly SpeciesSizeSource[],
 ): SpeciesSizeSource | null {
@@ -36,7 +36,7 @@ export function findSpeciesByAncestry(
   return species ?? null;
 }
 
-export function findMixedSpeciesPair(
+function findMixedSpeciesPair(
   ancestry: CharacterAncestry | undefined,
   allSpecies: readonly SpeciesSizeSource[],
 ): { speciesA: SpeciesSizeSource | null; speciesB: SpeciesSizeSource | null } {
@@ -62,9 +62,7 @@ export function getCharacterAllowedSizes(
   return getSpeciesSizeOptions(species);
 }
 
-export function readStoredCharacterSize(
-  ancestry: CharacterAncestry | undefined,
-): string | undefined {
+function readStoredCharacterSize(ancestry: CharacterAncestry | undefined): string | undefined {
   const raw = ancestry?.selectedSize ?? ancestry?.size;
   const trimmed = raw?.trim();
   return trimmed || undefined;

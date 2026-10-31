@@ -13,11 +13,11 @@
 import { sheetDesktopContentWidth } from './sheet-desktop-columns';
 
 /** `minmax(16rem, 1.1fr)` — Health/Energy row plus Action Points. */
-export const SHEET_HEADER_RESOURCES_MIN_REM = 16;
+const SHEET_HEADER_RESOURCES_MIN_REM = 16;
 /** Middle vitals cluster: 2×2 LargeStatBlock at 6.25rem (+ gap). */
-export const SHEET_HEADER_VITALS_CLUSTER_MIN_REM = 13.5;
+const SHEET_HEADER_VITALS_CLUSTER_MIN_REM = 13.5;
 /** Portrait + minimum identity text beside it. */
-export const SHEET_HEADER_IDENTITY_MIN_REM = 18;
+const SHEET_HEADER_IDENTITY_MIN_REM = 18;
 
 const RESOURCES_MIN_PX = SHEET_HEADER_RESOURCES_MIN_REM * 16;
 const VITALS_MIN_PX = SHEET_HEADER_VITALS_CLUSTER_MIN_REM * 16;

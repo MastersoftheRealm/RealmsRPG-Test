@@ -4,7 +4,7 @@
  * Callers must order by a unique column. Offset pages skip or repeat rows without it.
  */
 
-export const POSTGREST_DEFAULT_PAGE_SIZE = 1000;
+const POSTGREST_DEFAULT_PAGE_SIZE = 1000;
 
 export type PostgrestRangePageResult<T> = {
   data: T[] | null;

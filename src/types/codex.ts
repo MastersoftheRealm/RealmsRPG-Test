@@ -301,5 +301,4 @@ export type Feat = CodexFeat;
 export type Skill = CodexSkill;
 export type Species = CodexSpecies;
 export type Trait = CodexTrait;
-export type EquipmentItem = CodexEquipmentItem;
 export type CreatureFeat = CodexCreatureFeat;

@@ -102,15 +102,6 @@ interface TechniqueDocumentFields {
 
 export type TechniqueDocument = AllowUndefinedOptionals<TechniqueDocumentFields>;
 
-export interface MechanicContext {
-  actionTypeSelection?: string | undefined;
-  reaction?: boolean | undefined;
-  attackMode?: AttackMode | undefined;
-  diceAmt?: number | undefined;
-  dieSize?: number | undefined;
-  partsDb?: TechniquePart[] | undefined;
-}
-
 // =============================================================================
 // Damage Helpers
 // =============================================================================
@@ -133,7 +124,7 @@ export function formatTechniqueDamage(
 /**
  * Compute action type from parts payload.
  */
-export function computeActionType(
+function computeActionType(
   partsPayload: TechniquePartPayload[] = [],
   partsDb: TechniquePart[] = [],
 ): string {
@@ -241,10 +232,7 @@ export function calculateTechniqueCosts(
 /**
  * Format a part for display as a chip/badge.
  */
-export function formatTechniquePartChip(
-  def: TechniquePart,
-  pl: TechniquePartPayload,
-): TechniqueChipData {
+function formatTechniquePartChip(def: TechniquePart, pl: TechniquePartPayload): TechniqueChipData {
   const l1 = pl.op_1_lvl || 0;
   const l2 = pl.op_2_lvl || 0;
   const l3 = pl.op_3_lvl || 0;

@@ -94,10 +94,7 @@ export function resolvedRowChromeFlags(source: string): RowChromeFlags {
 }
 
 /** Parse `rowChrome` on a single ListHeader block (embedded creator lists). */
-export function resolvedRowChromeFlagsInBlock(
-  section: string,
-  fullSource?: string,
-): RowChromeFlags {
+function resolvedRowChromeFlagsInBlock(section: string, fullSource?: string): RowChromeFlags {
   const flags: RowChromeFlags = {
     edit: false,
     delete: false,
@@ -218,10 +215,7 @@ function validateEmbeddedListHeaderBlock(
 }
 
 /** GLR row containers wrapping GridListRow maps must use tight gap-1 (not space-y-3 / gap-3). */
-export function validateEmbeddedGlrListRowContainers(
-  relativePath: string,
-  source: string,
-): string[] {
+function validateEmbeddedGlrListRowContainers(relativePath: string, source: string): string[] {
   const errors: string[] = [];
   const containerPattern = /<div className="([^"]+)"[^>]*>\s*\{[^}]*\.map\([\s\S]*?<GridListRow/g;
 
@@ -235,7 +229,7 @@ export function validateEmbeddedGlrListRowContainers(
 }
 
 /** Shell sources must keep the canonical default list class (no drift to space-y-3). */
-export function validateGlrListShellSource(relativePath: string, source: string): string[] {
+function validateGlrListShellSource(relativePath: string, source: string): string[] {
   const errors: string[] = [];
 
   if (relativePath.endsWith('UserLibraryEntityTabShell.tsx')) {
@@ -274,7 +268,7 @@ export function validateGlrListShellSource(relativePath: string, source: string)
 }
 
 /** Scan `listClassName={` overrides on GLR shell callers. */
-export function validateGlrListClassNameCaller(relativePath: string, source: string): string[] {
+function validateGlrListClassNameCaller(relativePath: string, source: string): string[] {
   const errors: string[] = [];
   if (!source.includes('listClassName')) return errors;
 
@@ -327,7 +321,7 @@ export function validateGlrGridColumnSource(relativePath: string, source: string
 }
 
 /** When shell reserves rowChrome.rightSlot but row content is conditional, rows must pass matching GridListRow rowChrome. */
-export function validateMyLibraryRowChromeOnRows(relativePath: string, source: string): string[] {
+function validateMyLibraryRowChromeOnRows(relativePath: string, source: string): string[] {
   const errors: string[] = [];
   if (!source.includes('UserLibraryEntityTabShell')) return errors;
 

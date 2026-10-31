@@ -65,7 +65,7 @@ export type PathFilterAliasId = (typeof PATH_FILTER_ALIAS)[keyof typeof PATH_FIL
 
 const PATH_FILTER_ALIAS_VALUES = new Set<string>(Object.values(PATH_FILTER_ALIAS));
 
-export function isPathFilterAlias(id: string): id is PathFilterAliasId {
+function isPathFilterAlias(id: string): id is PathFilterAliasId {
   return PATH_FILTER_ALIAS_VALUES.has(id);
 }
 

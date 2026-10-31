@@ -193,7 +193,7 @@ function featPathFamilyId(feat: FeatPathRow): string {
 }
 
 /** Path filter match: the row itself or its feat-family base (higher ranks stay). */
-export function featMatchesPathRecommendedIds(
+function featMatchesPathRecommendedIds(
   feat: FeatPathRow,
   pathRecommendedIds: ReadonlySet<string> | null | undefined,
 ): boolean {

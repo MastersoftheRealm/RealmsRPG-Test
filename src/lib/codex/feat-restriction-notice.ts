@@ -7,7 +7,7 @@ import { calculateProficiency } from '@/lib/game/formulas';
 import { formatListCellLabel } from '@/lib/utils';
 
 /** Default state duration when not overridden by another feat (e.g. Long-Lasting State). */
-export const DEFAULT_STATE_DURATION_LABEL = '1 minute';
+const DEFAULT_STATE_DURATION_LABEL = '1 minute';
 
 /** Shared State feat teaching copy for feat notices and list-filter help. */
 export const STATE_FEAT_RESTRICTION_NOTICE = `This is a State feat. Activate it with a Quick Action from your character sheet (Enter State); its effects last ${DEFAULT_STATE_DURATION_LABEL}. If you have multiple state feats, you can activate any or all of them with the same action.`;

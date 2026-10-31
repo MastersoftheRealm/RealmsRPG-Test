@@ -69,11 +69,11 @@ function toSelectableHeaders(
 }
 
 export const GUIDED_POWERS_L2_HEADER_COLUMNS = toSelectableHeaders(OFFICIAL_POWER_HEADER_COLUMNS);
-export const GUIDED_POWERS_L2_GRID = OFFICIAL_POWER_GRID;
+const GUIDED_POWERS_L2_GRID = OFFICIAL_POWER_GRID;
 export const GUIDED_TECHNIQUES_L2_HEADER_COLUMNS = toSelectableHeaders(
   OFFICIAL_TECHNIQUE_HEADER_COLUMNS,
 );
-export const GUIDED_TECHNIQUES_L2_GRID = OFFICIAL_TECHNIQUE_GRID;
+const GUIDED_TECHNIQUES_L2_GRID = OFFICIAL_TECHNIQUE_GRID;
 
 export function powersTechniquesL2Headers(kind: PowersTechniquesKind) {
   return kind === 'techniques'

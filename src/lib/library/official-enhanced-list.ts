@@ -30,7 +30,7 @@ export interface OfficialEnhancedRow {
   catalogListing?: OfficialEnhancedItem['catalog_listing'];
 }
 
-export function formatEnhancedUsesLabel(item: OfficialEnhancedItem): string {
+function formatEnhancedUsesLabel(item: OfficialEnhancedItem): string {
   if (item.uses_type === 'permanent') return 'Permanent';
   return `${item.uses_count ?? 1} / ${item.uses_type === 'full' ? 'Full' : 'Partial'}`;
 }

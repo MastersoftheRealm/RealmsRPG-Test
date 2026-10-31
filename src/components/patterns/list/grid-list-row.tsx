@@ -44,7 +44,7 @@ import { GridListRowExpandedBody, GridListRowMobileSummary } from './grid-list-r
 import type { GridListRowProps } from './grid-list-row-types';
 
 /** Pointer jitter at or under this is still a plain click (86e3jrjfg). */
-export const GLR_EXPAND_CLICK_DRAG_SLOP_PX = 5;
+const GLR_EXPAND_CLICK_DRAG_SLOP_PX = 5;
 
 export function selectedTextInside(
   root: { contains: (node: Node | null) => boolean } | null,

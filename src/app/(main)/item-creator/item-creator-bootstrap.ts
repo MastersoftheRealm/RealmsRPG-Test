@@ -213,9 +213,7 @@ export function emptyItemCreatorFormState(): ItemCreatorFormState {
   };
 }
 
-export function restoreItemCreatorFromCache(
-  itemProperties: ItemProperty[],
-): ItemCreatorFormState | null {
+function restoreItemCreatorFromCache(itemProperties: ItemProperty[]): ItemCreatorFormState | null {
   const parsed = readNewCreatorDraftCache<ItemCreatorCache>(ITEM_CREATOR_CACHE_KEY);
   if (!parsed) return null;
 

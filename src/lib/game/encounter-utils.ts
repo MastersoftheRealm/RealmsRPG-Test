@@ -42,7 +42,7 @@ const PRIMARY_ABILITIES = [
 type PrimaryAbility = (typeof PRIMARY_ABILITIES)[number];
 
 /** Read one ability from saved creature JSON (canonical + legacy + common shorthands). */
-export function getCreatureAbilityScore(
+function getCreatureAbilityScore(
   abilities: Record<string, number | undefined>,
   key: PrimaryAbility,
 ): number {
@@ -82,14 +82,12 @@ export function getCreatureAbilityScore(
   return 0;
 }
 
-export function getCreatureVitality(abilities: Record<string, number | undefined>): number {
+function getCreatureVitality(abilities: Record<string, number | undefined>): number {
   return getCreatureAbilityScore(abilities, 'vitality');
 }
 
 /** Highest score among non-vitality primaries (matches creature creator TP baseline). */
-export function getCreatureHighestNonVitality(
-  abilities: Record<string, number | undefined>,
-): number {
+function getCreatureHighestNonVitality(abilities: Record<string, number | undefined>): number {
   let max = 0;
   for (const k of PRIMARY_ABILITIES) {
     if (k === 'vitality') continue;

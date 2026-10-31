@@ -15,7 +15,7 @@ const SENSE_BY_VALUE = new Map(SENSES.map((sense) => [sense.value, sense]));
 const MOVEMENT_BY_VALUE = new Map(MOVEMENT_TYPES.map((movement) => [movement.value, movement]));
 
 /** Hard cap on how many rows one creature picker confirm can add. */
-export const CREATURE_PICKER_SELECTION_CAP = 10;
+const CREATURE_PICKER_SELECTION_CAP = 10;
 
 export function creatureSenseLabel(value: string): string {
   return SENSE_BY_VALUE.get(value)?.label ?? value;

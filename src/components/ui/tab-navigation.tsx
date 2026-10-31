@@ -4,8 +4,7 @@
  * Unified tab navigation for Codex, Library, and other tabbed pages.
  * Supports both underline-style and pill-style tabs.
  *
- * Pair with `useTabGroup()` + `TabContentPanel` (shared panel, conditional content)
- * or `TabPanel` (one panel per tab, all stay in DOM with `hidden`).
+ * Pair with `useTabGroup()` + `TabContentPanel` (shared panel, conditional content).
  */
 
 'use client';
@@ -58,12 +57,12 @@ interface Tab {
 }
 
 /** Stable tab button id for `aria-labelledby` / focus management */
-export function tabButtonId(tabGroupId: string, tabId: string): string {
+function tabButtonId(tabGroupId: string, tabId: string): string {
   return `${tabGroupId}-tab-${tabId}`;
 }
 
 /** Per-tab panel id when each tab has its own panel element */
-export function tabPanelIdForTab(tabGroupId: string, tabId: string): string {
+function tabPanelIdForTab(tabGroupId: string, tabId: string): string {
   return `${tabGroupId}-panel-${tabId}`;
 }
 
@@ -102,30 +101,6 @@ export function TabContentPanel({
       id={id}
       role="tabpanel"
       aria-labelledby={tabButtonId(tabGroupId, activeTab)}
-      className={className}
-    >
-      {children}
-    </div>
-  );
-}
-
-export interface TabPanelProps {
-  tabGroupId: string;
-  tabId: string;
-  activeTab: string;
-  children: React.ReactNode;
-  className?: string | undefined;
-}
-
-/** One panel per tab; inactive panels stay mounted with `hidden` (WAI-ARIA tabs pattern) */
-export function TabPanel({ tabGroupId, tabId, activeTab, children, className }: TabPanelProps) {
-  const isSelected = activeTab === tabId;
-  return (
-    <div
-      id={tabPanelIdForTab(tabGroupId, tabId)}
-      role="tabpanel"
-      aria-labelledby={tabButtonId(tabGroupId, tabId)}
-      hidden={!isSelected}
       className={className}
     >
       {children}

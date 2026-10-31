@@ -455,7 +455,7 @@ export function calculateBaseInnateThreshold(level: number, rules?: Rules): numb
 /**
  * Calculate base innate pools for pure power archetype.
  */
-export function calculateBaseInnatePools(level: number, rules?: Rules): number {
+function calculateBaseInnatePools(level: number, rules?: Rules): number {
   const base = rules?.ARCHETYPES?.configs?.power?.innatePools ?? 2;
   const interval = rules?.ARCHETYPES?.poweredMartialMilestoneInterval ?? 3;
   const startLevel = rules?.ARCHETYPES?.poweredMartialMilestoneStartLevel ?? 4;
@@ -467,7 +467,7 @@ export function calculateBaseInnatePools(level: number, rules?: Rules): number {
 /**
  * Calculate bonus archetype feats for pure martial archetype.
  */
-export function calculateBonusArchetypeFeats(level: number, rules?: Rules): number {
+function calculateBonusArchetypeFeats(level: number, rules?: Rules): number {
   const base = rules?.ARCHETYPES?.martialBonusFeatsBase ?? 2;
   const interval = rules?.ARCHETYPES?.martialBonusFeatsInterval ?? 3;
   const startLevel = rules?.ARCHETYPES?.martialBonusFeatsStartLevel ?? 4;
@@ -583,7 +583,7 @@ export function calculateArchetypeProgression(
 }
 
 /** Sum energy costs of powers marked innate (innate energy budget spent). */
-export function sumInnatePowerEnergyCosts(
+function sumInnatePowerEnergyCosts(
   powers: Array<{ innate?: boolean | undefined; cost?: number | undefined }> = [],
 ): number {
   return powers.filter((p) => p.innate === true).reduce((sum, p) => sum + (p.cost ?? 0), 0);
@@ -629,7 +629,7 @@ export function getLinkedAbilityKeys(
 /**
  * Get the highest ability modifier from a list of linked abilities.
  */
-export function getHighestLinkedAbility(
+function getHighestLinkedAbility(
   linkedAbilities: string | string[] | undefined,
   abilities: Abilities,
 ): number {
@@ -684,7 +684,7 @@ export function getHighestLinkedAbilityKey(
 /**
  * Get ability modifier for a skill: use chosen key if provided and valid, else highest.
  */
-export function getLinkedAbilityMod(
+function getLinkedAbilityMod(
   linkedAbilities: string | string[] | undefined,
   abilities: Abilities,
   chosenAbilityKey?: string,

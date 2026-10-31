@@ -108,7 +108,7 @@ export function getCraftingSessionLabels(
  * Get the successes table row for a given delta (net successes - required).
  * Delta 8+ uses the row with delta 8 (or last row with delta >= 8).
  */
-export function getSuccessesTableEffect(
+function getSuccessesTableEffect(
   delta: number,
   table: SuccessesTableRow[],
 ): {

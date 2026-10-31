@@ -40,9 +40,3 @@ export const API_INPUT_VALIDATION_NO_INPUT_HANDLERS = [
   'admin/users/route.ts (GET)',
   'upload/profile-picture/route.ts (DELETE)',
 ] as const;
-
-export type ApiInputValidationExemptHandler =
-  (typeof API_INPUT_VALIDATION_JSON_EXEMPT_HANDLERS)[number];
-
-export type ApiInputValidationNoInputHandler =
-  (typeof API_INPUT_VALIDATION_NO_INPUT_HANDLERS)[number];

@@ -2,7 +2,7 @@ import type { SummaryChipItem } from '@/components/patterns/list/summary-chip-li
 
 export const ANY_SPECIES_SKILL_ID = '0';
 
-export const ANY_SPECIES_SKILL_DESCRIPTION =
+const ANY_SPECIES_SKILL_DESCRIPTION =
   'Your choice: pick any one skill as your second species skill, or treat this as an extra skill point.';
 
 type SkillLike = {

@@ -29,11 +29,11 @@ import { useRef, type CSSProperties, type HTMLAttributes, type ReactNode } from 
 import { cn } from '@/lib/utils';
 import type { TooltipPlacement } from '@/types/tooltips';
 
-export const FLOATING_HELP_MAX_WIDTH_PX = 320;
-export const FLOATING_HELP_MIN_WIDTH_PX = 220;
+const FLOATING_HELP_MAX_WIDTH_PX = 320;
+const FLOATING_HELP_MIN_WIDTH_PX = 220;
 
 /** Collin's fallback placement order — keeps tooltips on-screen near edges. */
-export function getTooltipFallbackPlacements(placement: TooltipPlacement): Placement[] {
+function getTooltipFallbackPlacements(placement: TooltipPlacement): Placement[] {
   switch (placement) {
     case 'left':
       return ['right', 'top', 'bottom'];

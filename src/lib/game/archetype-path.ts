@@ -11,7 +11,7 @@ import { normalizeId } from '@/lib/utils/normalize-id';
 
 export type { PathGuidanceAudience };
 
-export function isPathGuidanceAudience(value: unknown): value is PathGuidanceAudience {
+function isPathGuidanceAudience(value: unknown): value is PathGuidanceAudience {
   return value === 'character' || value === 'archetype';
 }
 
@@ -393,7 +393,7 @@ export function getPathRecommendationsForLevel(
 }
 
 /** Level 1 has at least one add recommendation (feat/skill/power/technique/armament/equipment). */
-export function pathLevel1HasAddRecommendations(
+function pathLevel1HasAddRecommendations(
   level1: ArchetypePathRecommendations | undefined,
 ): boolean {
   if (!level1) return false;
@@ -414,9 +414,7 @@ export function pathHasPlayerVisibleLevel1(pathData: ArchetypePathData | undefin
 }
 
 /** Level 1 has notes, remove lists, or unarmed prowess but no add recommendations. */
-export function pathLevel1HasNonPickerContent(
-  level1: ArchetypePathRecommendations | undefined,
-): boolean {
+function pathLevel1HasNonPickerContent(level1: ArchetypePathRecommendations | undefined): boolean {
   if (!level1) return false;
   return Boolean(
     level1.notes?.trim() ||
@@ -429,7 +427,7 @@ export function pathLevel1HasNonPickerContent(
 }
 
 /** Admin-only paths: saved in codex but hidden from player path pickers. */
-export function pathHiddenFromPlayerPicker(pathData: ArchetypePathData | undefined): boolean {
+function pathHiddenFromPlayerPicker(pathData: ArchetypePathData | undefined): boolean {
   return pathLevel1HasNonPickerContent(pathData?.level1) && !pathHasPlayerVisibleLevel1(pathData);
 }
 

@@ -61,7 +61,7 @@ export function shouldOfferSheetTour(): boolean {
   return status !== 'completed' && status !== 'dismissed_forever';
 }
 
-export function getTutorialMilestones(): TutorialMilestones {
+function getTutorialMilestones(): TutorialMilestones {
   if (!canUseStorage()) return {};
   try {
     const raw = localStorage.getItem(TUTORIAL_MILESTONES_KEY);
