@@ -4,13 +4,10 @@
 |--------|---------|-------------|
 | **supabase-backup.ps1** | Full Postgres dump (roles, schema, data) to `backups/supabase-<timestamp>/`. Database only — not Storage. Verifies every output file before printing SUCCESS; exits non-zero and renames the folder to `-FAILED` otherwise. Tool output goes to `backup.log`. | `npm run db:backup`. Requires `DATABASE_URL` in `.env.local` or `.env`; use `DIRECT_URL` (port 5432) when set. Needs `pg_dump` on PATH (or Supabase CLI + Docker). |
 | **supabase-storage-backup.js** | Download Storage objects to `backups/storage-<timestamp>/` (all four buckets: `portraits`, `profile-pictures`, `codex-art`, `vtt-maps`). A failing bucket does not abort the rest, but the run exits non-zero. | `npm run storage:backup`. Requires `NEXT_PUBLIC_SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY`. Optional `STORAGE_BACKUP_BUCKETS=b1,b2`. |
-| **seed-to-supabase.js** | Upsert codex tables from CSV (`scripts/seed-data/` or `codex_csv/`). **Never deletes.** | `npm run db:seed`, `npm run db:seed:dry-run`. Requires `NEXT_PUBLIC_SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY`. Do not point env at production without owner approval — see [07-database-operations.md](../src/docs/ai/guide/07-database-operations.md). |
-| **seed-plan.mjs** | Pure decision logic for what the seeder may upsert. Unit-tested in `seed-plan.test.mjs`. | Imported by `seed-to-supabase.js`; not run directly. |
 | **seed-core-rules.js** | Export embedded `CORE_RULES` to `data/core-rules/*.json`. | `node scripts/seed-core-rules.js --export-json` only. No database writes. |
 | **generate-db-types.mjs** | Regenerates `src/types/database.types.ts` from a Supabase project (`supabase gen types typescript --schema public`). Prepends a do-not-edit header. | `npm run db:types`. Requires `SUPABASE_PROJECT_ID` and network + Supabase CLI via npx. See ADR-0020. |
 | **db-schema-diff.mjs** | Diff the live schema against `sql/schema/0000_baseline_<date>.sql`; exits non-zero on drift. `--update` refreshes the baseline file (not the remote DB). | `npm run db:diff` / `npm run db:baseline:update`. Requires `DIRECT_URL` or `DATABASE_URL` + `pg_dump`. See [sql/README.md](../sql/README.md) § Drift detection. |
 | **check-codex-drift.mjs** | Scan `codex_change_logs` for fields that went value → null **without** the null being recorded in `changed_fields` (collateral loss, not a deliberate edit). | `npm run db:check-codex-drift`. Manual/scheduled — needs DB credentials, so it is deliberately not a PR gate. |
-| **sync-feat-tags-csv.js** | Refresh `scripts/seed-data/feats.csv` tag column from a database. | Owner-approved codex tag changes only; non-production preferred. |
 | **provision-e2e-baseline.js** | Create/update E2E test user + deterministic character/campaign for Playwright auth baselines (TASK-385). | `npm run e2e:provision`. Requires `SUPABASE_SERVICE_ROLE_KEY`, `E2E_TEST_EMAIL`, `E2E_TEST_PASSWORD`. Non-production test project only unless owner approves. |
 | **check-contrast.mjs** | WCAG-AA contrast check of every semantic fg/bg token pair in both themes. | `npm run verify:contrast`. |
 | **check-task-id-ratchet.mjs** | C4 count ratchet: per-file baselines for task/audit tags in `src/`, `scripts/`, `sql/` (non-test, non-markdown). Fails when any count rises or a new scoped file contains tags. | `npm run tasks:task-id-ratchet` (also runs at end of `npm run lint`). Lower baseline after tag cleanup: `npm run tasks:task-id-ratchet:update`. |
@@ -24,17 +21,6 @@
 ### Count ratchets (C3 / C4) — lowering baselines
 
 After a cleanup PR removes task tags or source-text reads, run the matching `:update` npm script and commit the baseline JSON diff. **Known limit:** a baseline entry can be raised by hand; only review of the baseline diff catches that (there is no automatic check against `master` totals).
-
-## Seeding
-
-`db:seed` upserts matching CSV rows only. Nothing is deleted.
-
-| Flag | Effect |
-|------|--------|
-| *(none)* | Upsert only. |
-| `--dry-run` | Print rows found per CSV, rows currently live per table, and planned upserts. No writes. |
-
-Every CSV is parsed and validated **before** any upsert is issued.
 
 ## Git hooks
 

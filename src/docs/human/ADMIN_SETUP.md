@@ -28,7 +28,7 @@ Grant or revoke admin only with **owner approval** on the target database (Dashb
 | Step | Command / Action |
 |------|-------------------|
 | Run schema/RLS | Owner-approved SQL on the target environment only — see `DEPLOYMENT_AND_SECRETS_SUPABASE.md` and [07-database-operations.md](../ai/guide/07-database-operations.md) |
-| Seed Codex data | `npm run db:seed` only when env points at an approved non-production database |
+| Codex reference data | Live in Supabase. Edit via **Admin → Codex** (`/admin/codex`) on the approved environment, or restore/export tables from a backup — see [07-database-operations.md](../ai/guide/07-database-operations.md) (owner OK + fresh backup before production writes) |
 | Core rules JSON | `node scripts/seed-core-rules.js --export-json` (repo files only) |
 | Deploy to Vercel | Push to the default branch; production promotion is owner-controlled in Vercel |
 

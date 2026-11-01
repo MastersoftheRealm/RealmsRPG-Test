@@ -8,7 +8,7 @@
 
 **Codex / `core_rules` data:** audit → propose SQL → **Kadin explicit OK** → apply on the approved environment only. See `realms-codex-data.mdc`.
 
-**Scripts that write:** `npm run db:seed` upserts codex CSVs to whichever database the env vars point at — treat it as production-capable and do not run it against production without Kadin explicit OK. `node scripts/seed-core-rules.js --export-json` writes repo JSON only (no database).
+**Scripts that write:** `node scripts/seed-core-rules.js --export-json` writes repo JSON only (no database). Codex reference data is maintained in live Supabase, not repo CSV seeds.
 
 | Operation | Preferred tool | Notes |
 |-----------|----------------|-------|

@@ -20,7 +20,7 @@ fi
 # Include tests/ + Playwright configs so snapshot/CI-only commits do not burn
 # Hobby deploy quota (audit 2026-08-13 P2). This script itself is skipped so
 # ignore-list edits can land with test-only changes without a production rebuild.
-skip_regex='^(src/docs/|\.cursor/|\.github/|sql/|scripts/seed-data/|scripts/vercel-ignore-build\.sh$|codex_csv/|tests/|playwright\..+\.config\.ts$|AGENTS\.md$|README\.md$|.*\.md$)'
+skip_regex='^(src/docs/|\.cursor/|\.github/|sql/|scripts/vercel-ignore-build\.sh$|tests/|playwright\..+\.config\.ts$|AGENTS\.md$|README\.md$|.*\.md$)'
 
 changed="$(git diff --name-only "$prev" "$curr" || true)"
 if [[ -z "${changed//[[:space:]]/}" ]]; then
