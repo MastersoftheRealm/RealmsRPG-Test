@@ -2,7 +2,7 @@
 
 > **Purpose:** Centralized reference for all codex entity schemas. Use when implementing validation, admin editors, display logic, or AI-assisted tasks. Each field includes name, type, description, valid values, and example.
 
-**Related:** `GAME_RULES.md` (terminology, formulas), `Codex csv/` or `codex_csv/` (CSV sources). **Database:** All codex tables live in the **public** schema; columnar layout in `SUPABASE_SCHEMA.md`. See `sql/README.md` for seed/migration scripts.
+**Related:** `GAME_RULES.md` (terminology, formulas). **Database:** Live Supabase is the source of truth for codex rows. All codex tables live in the **public** schema; columnar layout in `SUPABASE_SCHEMA.md`. Schema policy and approved writes: `sql/README.md` and [07-database-operations.md](../ai/guide/07-database-operations.md).
 
 ---
 

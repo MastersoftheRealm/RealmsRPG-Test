@@ -1,6 +1,6 @@
 {
   "exportedAt": "2026-10-18",
-  "source": "codex_csv/Realms Codex Test - Parts.csv (removed from repo 2026-11-01; live Supabase is source of truth)",
+  "source": "Codex parts CSV as of 2026-10-18 (repo CSV removed 2026-11-01; live Supabase is source of truth)",
   "parts": [
     {
       "id": "1",
