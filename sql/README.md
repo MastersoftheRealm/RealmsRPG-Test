@@ -2,7 +2,7 @@
 
 **Schema reference:** [src/docs/SUPABASE_SCHEMA.md](../src/docs/SUPABASE_SCHEMA.md). **Generated types:** `src/types/database.types.ts` (ADR-0020).
 
-**Source of truth:** The live Supabase database on RealmsRPG-Test. This folder no longer stores one-off migrations or replay scripts after they were applied. Historical SQL was removed **2026-10-29** (owner-approved cleanup); use **git history** if you need the old file text.
+**Source of truth:** The live Supabase database on RealmsRPG-Test. This folder no longer stores one-off migrations or replay scripts after they were applied. Historical SQL was removed **2026-10-29** (owner-approved cleanup) and wave-1 audit files `0001` / `0002` **2026-11-01** after a line-by-line match against live (backup taken); use **git history** if you need the old file text.
 
 **What remains here:**
 
@@ -11,8 +11,6 @@
 | [`_TEMPLATE_new_table.sql`](_TEMPLATE_new_table.sql) | Required pattern for any **new** `public` table: RLS, policies, and explicit `GRANT` in the same file. CI scans changed `sql/**/*.sql` (except this template and `schema/` baselines). |
 | [`codex-rename-source.sql`](codex-rename-source.sql) | Admin utility: replaces `public.rename_codex_source` only. Safe to re-run on non-prod when Kadin approves; first real rename is a live data change and needs a backup. |
 | [`schema/0000_baseline_2026-08-13.sql`](schema/0000_baseline_2026-08-13.sql) | Committed `pg_dump --schema-only` snapshot (**stale** vs live — regenerate before relying on it). |
-| [`schema/0001_audit_remediation_security_2026-08-13.sql`](schema/0001_audit_remediation_security_2026-08-13.sql) | Wave-1 audit remediation (objects already live; folded into a future baseline). |
-| [`schema/0002_codex_locking_and_atomic_levels_2026-08-13.sql`](schema/0002_codex_locking_and_atomic_levels_2026-08-13.sql) | Codex locking follow-up (live). |
 
 **`supabase_migrations.schema_migrations`:** After a reset around **2026-09-26**, the live table has **7 rows** only (`remote_schema`, three `86e3*` migrations, `codex_entry_sources`, `codex_entry_sources_open`). Do not treat this README or old docs as a full migration catalog.
 
