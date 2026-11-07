@@ -1,4 +1,4 @@
-import { OAUTH_DELETE_REAUTH_REQUIRED } from '@/lib/auth/oauth-delete-grant';
+import { OAUTH_DELETE_REAUTH_REQUIRED } from '@/lib/auth/oauth-delete-messages';
 
 /**
  * Auth error message mapping

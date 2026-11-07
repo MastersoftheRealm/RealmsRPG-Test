@@ -11,14 +11,19 @@ import { cookies } from 'next/headers';
 import { NextResponse } from 'next/server';
 import { createUserProfileAction } from '@/app/(auth)/actions';
 import { buildAuthRedirectUrl } from '@/lib/auth-redirect';
-import { authUserHasPasswordLogin } from '@/lib/auth/sensitive-account-auth';
+import {
+  authUserHasPasswordLogin,
+  userSignedInWithGoogle,
+} from '@/lib/auth/sensitive-account-auth';
 import {
   OAUTH_DELETE_GRANT_COOKIE,
+  OAUTH_DELETE_INTENT_COOKIE,
+  isMyAccountDeleteReauthDestination,
   mintOAuthDeleteGrant,
   oauthDeleteGrantCookieOptions,
-  redirectTargetsOAuthDeleteReauth,
   sessionIdFromAccessToken,
-} from '@/lib/auth/oauth-delete-grant';
+  verifyOAuthDeleteIntent,
+} from '@/lib/auth/oauth-delete-grant.server';
 import { sanitizeRedirectPath } from '@/lib/safe-redirect';
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
@@ -37,6 +42,7 @@ export async function GET(request: Request) {
   }
 
   const cookieStore = await cookies();
+  const intentToken = cookieStore.get(OAUTH_DELETE_INTENT_COOKIE)?.value;
   const response = NextResponse.redirect(buildAuthRedirectUrl(request, redirectTo));
 
   const supabase = createServerClient(supabaseUrl, supabaseKey, {
@@ -54,6 +60,7 @@ export async function GET(request: Request) {
   });
 
   const { data, error } = await supabase.auth.exchangeCodeForSession(code);
+  response.cookies.delete(OAUTH_DELETE_INTENT_COOKIE);
   if (error || !data.user) {
     console.error('Auth callback error:', error);
     return NextResponse.redirect(failureRedirect);
@@ -69,8 +76,10 @@ export async function GET(request: Request) {
   });
 
   if (
-    redirectTargetsOAuthDeleteReauth(redirectTo) &&
+    isMyAccountDeleteReauthDestination(redirectTo) &&
     !authUserHasPasswordLogin(u) &&
+    userSignedInWithGoogle(u) &&
+    verifyOAuthDeleteIntent(intentToken, u.id) &&
     data.session?.access_token
   ) {
     const sessionId = sessionIdFromAccessToken(data.session.access_token);

@@ -12,6 +12,7 @@ import { createClient } from '@/lib/supabase/client';
 import { apiFetch, apiUpload, getErrorMessage } from '@/lib/api-client';
 import { getAuthErrorMessage } from '@/lib/auth-errors';
 import {
+  beginGoogleDeleteReauthAction,
   changeAccountEmailAction,
   changeAccountPasswordAction,
   changeUsernameAction,
@@ -22,10 +23,11 @@ import { useAuthStore } from '@/stores';
 import { useAdmin, useAccountProfile } from '@/hooks';
 import { fileFromCroppedBlob } from '@/lib/crop-image';
 import { areTutorialsEnabled, setTutorialsEnabled } from '@/lib/onboarding-preferences';
-import { OAUTH_DELETE_REAUTH_REQUIRED } from '@/lib/auth/oauth-delete-grant';
+import {
+  MY_ACCOUNT_DELETE_REAUTH_PATH,
+  OAUTH_DELETE_REAUTH_REQUIRED,
+} from '@/lib/auth/oauth-delete-messages';
 import { hasPasswordProvider, getAuthProviderLabel, type AccountMessage } from './account-helpers';
-
-const MY_ACCOUNT_DELETE_REAUTH_PATH = '/my-account?deleteReauth=1';
 
 export function useMyAccountPage() {
   const router = useRouter();
@@ -292,6 +294,10 @@ export function useMyAccountPage() {
     setDeleting(true);
     setDeleteError(null);
     try {
+      const began = await beginGoogleDeleteReauthAction();
+      if (!began.success) {
+        throw new Error(began.error ?? 'Authentication required');
+      }
       const supabase = createClient();
       const { data, error } = await supabase.auth.signInWithOAuth({
         provider: 'google',

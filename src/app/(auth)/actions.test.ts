@@ -37,11 +37,9 @@ import {
   deleteAccountAction,
   setProfilePhotoFromLibraryAction,
 } from './actions';
-import {
-  OAUTH_DELETE_GRANT_COOKIE,
-  OAUTH_DELETE_REAUTH_REQUIRED,
-  mintOAuthDeleteGrant,
-} from '@/lib/auth/oauth-delete-grant';
+import { OAUTH_DELETE_GRANT_COOKIE } from '@/lib/auth/oauth-delete-grant-core';
+import { OAUTH_DELETE_REAUTH_REQUIRED } from '@/lib/auth/oauth-delete-messages';
+import { mintOAuthDeleteGrant } from '@/lib/auth/oauth-delete-grant-core';
 import { assertSensitiveAccountReauth } from '@/lib/auth/sensitive-account-auth';
 import { requireAuth, requireLiveUser, getSession } from '@/lib/supabase/session';
 import { createClient as createServerClient, createServiceRoleClient } from '@/lib/supabase/server';
@@ -593,6 +591,21 @@ describe('deleteAccountAction', () => {
 
     afterEach(() => {
       mockAssertSensitiveAccountReauth.mockResolvedValue({ ok: true });
+    });
+
+    it('clears the delete grant cookie before re-auth checks', async () => {
+      mockCookieGet.mockReturnValue({
+        name: OAUTH_DELETE_GRANT_COOKIE,
+        value: 'stale-grant',
+      });
+      mockAssertSensitiveAccountReauth.mockResolvedValue({ ok: false, error: 'fail' });
+
+      await deleteAccountAction({ deleteConfirm: 'DELETE' });
+
+      expect(mockCookieDelete).toHaveBeenCalledWith(OAUTH_DELETE_GRANT_COOKIE);
+      expect(mockAssertSensitiveAccountReauth).toHaveBeenCalledWith(
+        expect.objectContaining({ oauthDeleteGrantToken: 'stale-grant' }),
+      );
     });
 
     it('does not delete when the grant targets another session for the same user', async () => {

@@ -1,10 +1,8 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import {
-  OAUTH_DELETE_GRANT_COOKIE,
-  OAUTH_DELETE_REAUTH_REQUIRED,
-  assertOAuthDeleteSessionGrant,
-  mintOAuthDeleteGrant,
-} from '@/lib/auth/oauth-delete-grant';
+import { OAUTH_DELETE_GRANT_COOKIE } from '@/lib/auth/oauth-delete-grant-core';
+import { OAUTH_DELETE_REAUTH_REQUIRED } from '@/lib/auth/oauth-delete-messages';
+import { assertOAuthDeleteSessionGrant } from '@/lib/auth/oauth-delete-grant.server';
+import { mintOAuthDeleteGrant } from '@/lib/auth/oauth-delete-grant-core';
 
 const mockCookieGet = vi.fn();
 const mockAuthGetSession = vi.fn();
@@ -37,19 +35,17 @@ beforeEach(() => {
 describe('assertOAuthDeleteSessionGrant', () => {
   it('rejects when the grant targets a different session than the caller', async () => {
     const now = Math.floor(Date.now() / 1000);
-    mockCookieGet.mockReturnValue({
-      name: OAUTH_DELETE_GRANT_COOKIE,
-      value: mintOAuthDeleteGrant('user-1', 'sess-b', now),
-    });
+    const grant = mintOAuthDeleteGrant('user-1', 'sess-b', now)!;
     mockAuthGetSession.mockResolvedValue({
       data: { session: { access_token: accessToken('sess-a') } },
       error: null,
     });
 
-    await expect(assertOAuthDeleteSessionGrant('user-1')).resolves.toEqual({
+    await expect(assertOAuthDeleteSessionGrant('user-1', grant)).resolves.toEqual({
       ok: false,
       error: OAUTH_DELETE_REAUTH_REQUIRED,
     });
+    expect(mockCookieGet).not.toHaveBeenCalled();
   });
 
   it('rejects when there is no delete grant after an ordinary session refresh', async () => {
@@ -65,7 +61,18 @@ describe('assertOAuthDeleteSessionGrant', () => {
     });
   });
 
-  it('accepts a grant bound to the current session', async () => {
+  it('accepts a grant bound to the current session via explicit token', async () => {
+    const now = Math.floor(Date.now() / 1000);
+    const grant = mintOAuthDeleteGrant('user-1', 'sess-a', now)!;
+    mockAuthGetSession.mockResolvedValue({
+      data: { session: { access_token: accessToken('sess-a') } },
+      error: null,
+    });
+
+    await expect(assertOAuthDeleteSessionGrant('user-1', grant)).resolves.toEqual({ ok: true });
+  });
+
+  it('reads the grant from the cookie when no token is passed', async () => {
     const now = Math.floor(Date.now() / 1000);
     mockCookieGet.mockReturnValue({
       name: OAUTH_DELETE_GRANT_COOKIE,

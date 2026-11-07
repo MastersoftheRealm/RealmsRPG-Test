@@ -1,5 +1,5 @@
 import type { User } from '@supabase/supabase-js';
-import { assertOAuthDeleteSessionGrant } from '@/lib/auth/oauth-delete-grant';
+import { assertOAuthDeleteSessionGrant } from '@/lib/auth/oauth-delete-grant.server';
 import { createClient } from '@/lib/supabase/server';
 import { requireLiveUser } from '@/lib/supabase/session';
 
@@ -10,9 +10,14 @@ export function authUserHasPasswordLogin(user: User): boolean {
   return provider === 'email' || provider === 'password';
 }
 
+export function userSignedInWithGoogle(user: User): boolean {
+  return (user.identities ?? []).some((entry) => entry.provider === 'google');
+}
+
 export type SensitiveAccountReauthInput = {
   currentPassword?: string | undefined;
   deleteConfirm?: string | undefined;
+  oauthDeleteGrantToken?: string | undefined;
 };
 
 /** Server-side re-authentication before delete / email / password changes. */
@@ -47,7 +52,7 @@ export async function assertSensitiveAccountReauth(
       return { ok: false, error: 'Failed to delete account. Please try again.' };
     }
     if (!authUserHasPasswordLogin(data.user)) {
-      return assertOAuthDeleteSessionGrant(data.user.id);
+      return assertOAuthDeleteSessionGrant(data.user.id, input.oauthDeleteGrantToken);
     }
     return { ok: true };
   }

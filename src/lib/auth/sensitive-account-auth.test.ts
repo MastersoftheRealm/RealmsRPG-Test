@@ -1,9 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import {
-  OAUTH_DELETE_GRANT_COOKIE,
-  OAUTH_DELETE_REAUTH_REQUIRED,
-  mintOAuthDeleteGrant,
-} from '@/lib/auth/oauth-delete-grant';
+import { mintOAuthDeleteGrant } from '@/lib/auth/oauth-delete-grant-core';
+import { OAUTH_DELETE_REAUTH_REQUIRED } from '@/lib/auth/oauth-delete-messages';
 import {
   assertSensitiveAccountReauth,
   authUserHasPasswordLogin,
@@ -106,17 +103,17 @@ describe('assertSensitiveAccountReauth', () => {
 
   it('accepts typed DELETE for OAuth-only accounts with a session-bound delete grant', async () => {
     const now = Math.floor(Date.now() / 1000);
+    const grant = mintOAuthDeleteGrant('user-1', 'sess-a', now);
     mockGetUser.mockResolvedValue({ data: { user: oauthUser() }, error: null });
-    mockCookieGet.mockReturnValue({
-      name: OAUTH_DELETE_GRANT_COOKIE,
-      value: mintOAuthDeleteGrant('user-1', 'sess-a', now),
-    });
     mockGetSession.mockResolvedValue({
       data: { session: { access_token: accessToken('sess-a') } },
       error: null,
     });
 
-    const result = await assertSensitiveAccountReauth({ deleteConfirm: 'DELETE' });
+    const result = await assertSensitiveAccountReauth({
+      deleteConfirm: 'DELETE',
+      oauthDeleteGrantToken: grant ?? undefined,
+    });
 
     expect(result).toEqual({ ok: true });
     expect(mockSignInWithPassword).not.toHaveBeenCalled();
