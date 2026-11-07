@@ -58,8 +58,8 @@ function resolveFeat(id: string, featById: Map<string, Feat>) {
 export function ArchetypeFeatsStep() {
   const { draft, updateDraft, navigationIntent, entryNonce } = useGuidedCreatorStore();
   const { pathData, archetype } = useGuidedPathData();
-  const { rules, isLoading: rulesLoading } = useGameRules();
-  const rulesResolved = !rulesLoading;
+  const { rules, isLoading: rulesLoading, error: rulesError } = useGameRules();
+  const rulesResolved = !rulesLoading && rulesError == null;
   const { data: feats = [], isLoading } = useCodexFeats();
   const { data: codexSkills = [] } = useCodexSkills();
   const [browseOpen, setBrowseOpen] = useState(false);

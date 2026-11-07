@@ -1,12 +1,17 @@
 // @vitest-environment happy-dom
 
-import { render, waitFor } from '@testing-library/react';
+import type { ReactNode } from 'react';
+import { render, screen, waitFor } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 import { describe, expect, it, vi, beforeEach } from 'vitest';
 import type { CoreRulesMap } from '@/types/core-rules';
 import { getGameRulesFallback } from '@/hooks';
+import { GUIDED_CREATOR_COPY } from '@/lib/constants/site-copy';
 import { calculateMaxArchetypeFeats } from '@/lib/game/formulas';
 import type { GuidedDraft } from '@/stores/guided-creator-store';
 import { ArchetypeFeatsStep } from './archetype-feats-step';
+
+const stepCopy = GUIDED_CREATOR_COPY.steps.archetypeFeats;
 
 const updateDraft = vi.fn();
 
@@ -37,9 +42,16 @@ function resetDraft(overrides: Partial<GuidedDraft> = {}) {
   } as GuidedDraft;
 }
 
-let rulesState: { rules: CoreRulesMap; isLoading: boolean } = {
+type RulesHookState = {
+  rules: CoreRulesMap;
+  isLoading: boolean;
+  error: Error | null;
+};
+
+let rulesState: RulesHookState = {
   rules: getGameRulesFallback(),
   isLoading: false,
+  error: null,
 };
 
 vi.mock('@/stores/guided-creator-store', () => ({
@@ -63,6 +75,34 @@ vi.mock('../use-guided-path-data', () => ({
 vi.mock('@/lib/guided-creator/use-guided-deep-entry-on-arrival', () => ({
   useGuidedDeepEntryOnArrival: () => {},
 }));
+
+vi.mock('@/components/ui', async (importOriginal) => {
+  const mod = await importOriginal<typeof import('@/components/ui')>();
+  return {
+    ...mod,
+    Modal: ({
+      isOpen,
+      title,
+      description,
+      footer,
+      children,
+    }: {
+      isOpen: boolean;
+      title?: ReactNode;
+      description?: ReactNode;
+      footer?: ReactNode;
+      children?: ReactNode;
+    }) =>
+      isOpen ? (
+        <div data-testid="feats-l2-modal">
+          <div>{title}</div>
+          <div>{description}</div>
+          {children}
+          {footer}
+        </div>
+      ) : null,
+  };
+});
 
 vi.mock('@/hooks', async (importOriginal) => {
   const actual = await importOriginal<typeof import('@/hooks')>();
@@ -90,7 +130,7 @@ vi.mock('@/hooks', async (importOriginal) => {
 describe('ArchetypeFeatsStep rules loading reconciliation', () => {
   beforeEach(async () => {
     updateDraft.mockClear();
-    rulesState = { rules: getGameRulesFallback(), isLoading: false };
+    rulesState = { rules: getGameRulesFallback(), isLoading: false, error: null };
     const mod = await vi.importActual<typeof import('@/stores/guided-creator-store')>(
       '@/stores/guided-creator-store',
     );
@@ -102,7 +142,7 @@ describe('ArchetypeFeatsStep rules loading reconciliation', () => {
     const fallbackCap = calculateMaxArchetypeFeats(1, 'powered-martial', getGameRulesFallback());
     expect(fallbackCap).toBe(2);
 
-    rulesState = { rules: getGameRulesFallback(), isLoading: true };
+    rulesState = { rules: getGameRulesFallback(), isLoading: true, error: null };
     const { rerender } = render(<ArchetypeFeatsStep />);
     await waitFor(() => {
       expect(updateDraft).not.toHaveBeenCalled();
@@ -112,17 +152,40 @@ describe('ArchetypeFeatsStep rules loading reconciliation', () => {
     const liveCap = calculateMaxArchetypeFeats(1, 'powered-martial', liveRules);
     expect(liveCap).toBe(3);
 
-    rulesState = { rules: liveRules, isLoading: false };
+    rulesState = { rules: liveRules, isLoading: false, error: null };
     rerender(<ArchetypeFeatsStep />);
     await waitFor(() => {
       expect(updateDraft).not.toHaveBeenCalledWith({ archetypeFeatIds: ['1', '2'] });
     });
   });
 
+  it('does not trim on failed fetch (fallback + error), then keeps picks after a successful higher cap load', async () => {
+    draft.archetypeFeatIds = ['1', '2', '3'];
+    const fetchError = new Error('core rules request failed');
+
+    rulesState = { rules: getGameRulesFallback(), isLoading: true, error: null };
+    const { rerender } = render(<ArchetypeFeatsStep />);
+    expect(updateDraft).not.toHaveBeenCalled();
+
+    rulesState = { rules: getGameRulesFallback(), isLoading: false, error: fetchError };
+    rerender(<ArchetypeFeatsStep />);
+    await waitFor(() => {
+      expect(updateDraft).not.toHaveBeenCalled();
+    });
+
+    const liveRules = withPoweredMartialFeatLimit(getGameRulesFallback(), 2);
+    rulesState = { rules: liveRules, isLoading: false, error: null };
+    rerender(<ArchetypeFeatsStep />);
+    await waitFor(() => {
+      expect(updateDraft).not.toHaveBeenCalledWith({ archetypeFeatIds: ['1', '2'] });
+    });
+    expect(draft.archetypeFeatIds).toEqual(['1', '2', '3']);
+  });
+
   it('trims when resolved rules enforce a lower cap', async () => {
     draft.archetypeType = 'power';
     draft.archetypeFeatIds = ['1', '2'];
-    rulesState = { rules: getGameRulesFallback(), isLoading: false };
+    rulesState = { rules: getGameRulesFallback(), isLoading: false, error: null };
 
     render(<ArchetypeFeatsStep />);
     await waitFor(() => {
@@ -132,12 +195,12 @@ describe('ArchetypeFeatsStep rules loading reconciliation', () => {
 
   it('reconciles after a DB override tightens the cap post-load', async () => {
     draft.archetypeFeatIds = ['1', '2'];
-    rulesState = { rules: getGameRulesFallback(), isLoading: true };
+    rulesState = { rules: getGameRulesFallback(), isLoading: true, error: null };
     const { rerender } = render(<ArchetypeFeatsStep />);
     expect(updateDraft).not.toHaveBeenCalled();
 
     const tighter = withPoweredMartialFeatLimit(getGameRulesFallback(), 0);
-    rulesState = { rules: tighter, isLoading: false };
+    rulesState = { rules: tighter, isLoading: false, error: null };
     rerender(<ArchetypeFeatsStep />);
     await waitFor(() => {
       expect(updateDraft).toHaveBeenCalledWith({ archetypeFeatIds: ['1'] });
@@ -146,17 +209,55 @@ describe('ArchetypeFeatsStep rules loading reconciliation', () => {
 
   it('trims all picks when resolved cap transitions to zero', async () => {
     draft.archetypeFeatIds = ['1'];
-    rulesState = { rules: getGameRulesFallback(), isLoading: true };
+    rulesState = { rules: getGameRulesFallback(), isLoading: true, error: null };
     const { rerender } = render(<ArchetypeFeatsStep />);
     expect(updateDraft).not.toHaveBeenCalled();
 
     const zeroCapRules = withPoweredMartialFeatLimit(getGameRulesFallback(), -1);
     expect(calculateMaxArchetypeFeats(1, 'powered-martial', zeroCapRules)).toBe(0);
 
-    rulesState = { rules: zeroCapRules, isLoading: false };
+    rulesState = { rules: zeroCapRules, isLoading: false, error: null };
     rerender(<ArchetypeFeatsStep />);
     await waitFor(() => {
       expect(updateDraft).toHaveBeenCalledWith({ archetypeFeatIds: [] });
+    });
+  });
+});
+
+describe('ArchetypeFeatsStep L2 modal confirm capping', () => {
+  beforeEach(async () => {
+    updateDraft.mockClear();
+    rulesState = { rules: getGameRulesFallback(), isLoading: true, error: null };
+    const mod = await vi.importActual<typeof import('@/stores/guided-creator-store')>(
+      '@/stores/guided-creator-store',
+    );
+    draft = {
+      ...mod.useGuidedCreatorStore.getState().draft,
+      ...resetDraft({ archetypeFeatIds: ['1', '2', '3'] }),
+    };
+  });
+
+  it('caps feat ids via the step onConfirm after modal confirm', async () => {
+    const user = userEvent.setup();
+    const cap = calculateMaxArchetypeFeats(1, 'powered-martial', getGameRulesFallback());
+    expect(cap).toBe(2);
+
+    const { rerender } = render(<ArchetypeFeatsStep />);
+    const seeMore = screen.getAllByRole('button', { name: stepCopy.seeMore });
+    await user.click(seeMore[seeMore.length - 1]!);
+    expect(screen.getByTestId('feats-l2-modal')).toBeTruthy();
+
+    rulesState = { rules: getGameRulesFallback(), isLoading: false, error: null };
+    rerender(<ArchetypeFeatsStep />);
+
+    await user.click(screen.getByRole('button', { name: /Add Selected \(3\)/i }));
+
+    await waitFor(() => {
+      const confirmCap = updateDraft.mock.calls.find((call) => {
+        const ids = call[0]?.archetypeFeatIds;
+        return Array.isArray(ids) && ids.length === cap;
+      });
+      expect(confirmCap?.[0]?.archetypeFeatIds).toHaveLength(cap);
     });
   });
 });

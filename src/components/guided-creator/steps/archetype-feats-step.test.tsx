@@ -13,9 +13,10 @@ const updateDraft = vi.fn();
 
 let draft: GuidedDraft;
 
-let rulesState: { rules: CoreRulesMap; isLoading: boolean } = {
+let rulesState: { rules: CoreRulesMap; isLoading: boolean; error: Error | null } = {
   rules: getGameRulesFallback(),
   isLoading: false,
+  error: null,
 };
 
 vi.mock('@/stores/guided-creator-store', () => ({
@@ -93,7 +94,7 @@ function resetDraft(overrides: Partial<GuidedDraft> = {}) {
 describe('ArchetypeFeatsStep guided feat cap', () => {
   beforeEach(async () => {
     updateDraft.mockClear();
-    rulesState = { rules: getGameRulesFallback(), isLoading: false };
+    rulesState = { rules: getGameRulesFallback(), isLoading: false, error: null };
     const mod = await vi.importActual<typeof import('@/stores/guided-creator-store')>(
       '@/stores/guided-creator-store',
     );
@@ -135,7 +136,18 @@ describe('ArchetypeFeatsStep guided feat cap', () => {
   });
 
   it('blocks Continue while game rules are still loading', () => {
-    rulesState = { rules: getGameRulesFallback(), isLoading: true };
+    rulesState = { rules: getGameRulesFallback(), isLoading: true, error: null };
     expectContinueBlocked(renderStep());
+  });
+
+  it('blocks Continue when rules failed and only fallback values are available', () => {
+    rulesState = {
+      rules: getGameRulesFallback(),
+      isLoading: false,
+      error: new Error('core rules request failed'),
+    };
+    draft.archetypeFeatIds = ['1', '2', '3'];
+    expectContinueBlocked(renderStep());
+    expect(updateDraft).not.toHaveBeenCalled();
   });
 });
