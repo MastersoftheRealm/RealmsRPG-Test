@@ -1,5 +1,9 @@
 import { describe, expect, it } from 'vitest';
-import { applyCappedIdSelection, selectableCuratedFeatIds } from './feat-selection';
+import {
+  applyCappedIdSelection,
+  selectableCuratedFeatIds,
+  trimArchetypeFeatIdsToCap,
+} from './feat-selection';
 
 describe('applyCappedIdSelection', () => {
   it('adds under capacity', () => {
@@ -16,6 +20,24 @@ describe('applyCappedIdSelection', () => {
 
   it('replaces when max is 1', () => {
     expect(applyCappedIdSelection(['a'], 'b', 1)).toEqual(['b']);
+  });
+
+  it('reconciles an over-cap restore before toggling', () => {
+    expect(applyCappedIdSelection(['a', 'b', 'c'], 'd', 2)).toEqual(['a', 'd']);
+  });
+});
+
+describe('trimArchetypeFeatIdsToCap', () => {
+  it('returns null when within cap', () => {
+    expect(trimArchetypeFeatIdsToCap(['a', 'b'], 2)).toBeNull();
+  });
+
+  it('trims to cap when over (cap shrink or restored draft)', () => {
+    expect(trimArchetypeFeatIdsToCap(['a', 'b', 'c'], 2)).toEqual(['a', 'b']);
+  });
+
+  it('clears picks at zero cap', () => {
+    expect(trimArchetypeFeatIdsToCap(['a'], 0)).toEqual([]);
   });
 });
 

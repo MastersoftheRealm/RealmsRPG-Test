@@ -395,7 +395,9 @@ const selectCoreRules = (data: Pick<CodexPayload, 'coreRules'>): CoreRulesMap =>
 export function useGameRules(): {
   rules: CoreRulesMap;
   isLoading: boolean;
+  isFetching: boolean;
   error: Error | null;
+  refetch: () => Promise<unknown>;
 } {
   const query = useQuery<
     Pick<CodexPayload, 'coreRules'>,
@@ -415,7 +417,9 @@ export function useGameRules(): {
   return {
     rules: (query.data ?? FALLBACK_RULES) as CoreRulesMap,
     isLoading: query.isLoading,
+    isFetching: query.isFetching,
     error: query.error ?? null,
+    refetch: () => query.refetch(),
   };
 }
 

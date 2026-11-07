@@ -6,6 +6,8 @@ import {
   mapCodexBaseSkillToId,
   type CharacterLegalityRulesStatus,
 } from './character-legality';
+import { calculateHealthEnergyPool } from './formulas';
+import { CREATURE_CONSTANTS, PLAYER_CONSTANTS } from './constants';
 
 const LOADED: CharacterLegalityRulesStatus = 'loaded';
 
@@ -140,17 +142,12 @@ describe('findCharacterLegalityViolations', () => {
     expect(result.warnings[0]?.level).toBe(1);
   });
 
-  it('uses structured currency_negative at level 1', () => {
-    const result = evaluate({ ...legalBuild(), currency: -30 });
-    expect(result.warnings).toEqual([{ code: 'currency_negative', level: 1 }]);
+  it('does not warn on negative currency (1dfe8wf2rd0 ph9)', () => {
+    expect(evaluate({ ...legalBuild(), currency: -30 }).warnings).toEqual([]);
+    expect(evaluate({ ...legalBuild(), level: 2, currency: -30 }).warnings).toEqual([]);
   });
 
-  it('uses structured currency_negative at level 2', () => {
-    const result = evaluate({ ...legalBuild(), level: 2, currency: -30 });
-    expect(result.warnings).toEqual([{ code: 'currency_negative', level: 2 }]);
-  });
-
-  it('takes the more permissive of rules override and code default', () => {
+  it('uses core_rules budgets when loaded, not the higher code default', () => {
     const overBudgetByDefaults = {
       ...legalBuild(),
       abilities: { strength: 3, vitality: 3, agility: 2, acuity: 0, intelligence: 0, charisma: 0 },
@@ -161,6 +158,97 @@ describe('findCharacterLegalityViolations', () => {
         PROGRESSION_PLAYER: { baseAbilityPoints: 12 },
       } as never).warnings,
     ).toEqual([]);
+    expect(
+      evaluate(overBudgetByDefaults, {
+        PROGRESSION_PLAYER: { baseAbilityPoints: 5 },
+      } as never).warnings.some((w) => w.code === 'ability_points_over_budget'),
+    ).toBe(true);
+  });
+
+  it('derives L1 HP/EN allocation cap from player progression, not creature base 30 (1dfe8wf2rd0 ph6)', () => {
+    const l1Pool = calculateHealthEnergyPool(1, 'PLAYER');
+    expect(l1Pool).toBe(PLAYER_CONSTANTS.BASE_HIT_ENERGY);
+    expect(PLAYER_CONSTANTS.BASE_HEALTH + l1Pool).toBe(CREATURE_CONSTANTS.BASE_HIT_ENERGY);
+
+    const under = evaluate({ ...legalBuild(), healthPoints: 10, energyPoints: 8 }).warnings;
+    expect(under).toEqual([]);
+
+    const over = evaluate({ ...legalBuild(), healthPoints: 10, energyPoints: 9 });
+    expect(over.warnings).toContainEqual({
+      code: 'health_energy_over_pool',
+      level: 1,
+      allocation: 19,
+      pool: l1Pool,
+    });
+  });
+
+  it('honors martial archetype extra archetype feat slots (1dfe8wf2rd0 ph7)', () => {
+    const martial = {
+      ...legalBuild(),
+      archetype: { id: 'a1', type: 'martial' },
+      archetypeFeats: [{ id: 'f1' }, { id: 'f2' }, { id: 'f3' }],
+    };
+    expect(evaluate(martial).warnings).toEqual([]);
+
+    const over = evaluate({
+      ...martial,
+      archetypeFeats: [{ id: 'f1' }, { id: 'f2' }, { id: 'f3' }, { id: 'f4' }],
+    });
+    expect(over.warnings).toContainEqual({
+      code: 'archetype_feats_over_max',
+      level: 1,
+      count: 4,
+      max: 3,
+    });
+  });
+
+  it('advises when character feats exceed the level budget without blocking save semantics', () => {
+    const result = evaluate({
+      ...legalBuild(),
+      feats: [{ id: 'c1' }, { id: 'c2' }],
+    });
+    expect(result.warnings).toContainEqual({
+      code: 'character_feats_over_max',
+      level: 1,
+      count: 2,
+      max: 1,
+    });
+  });
+
+  it('honors powered-martial L1 archetype feat budget', () => {
+    const pm = {
+      ...legalBuild(),
+      archetype: { id: 'a1', type: 'powered-martial' },
+      archetypeFeats: [{ id: 'f1' }, { id: 'f2' }],
+    };
+    expect(evaluate(pm).warnings).toEqual([]);
+
+    const over = evaluate({
+      ...pm,
+      archetypeFeats: [{ id: 'f1' }, { id: 'f2' }, { id: 'f3' }],
+    });
+    expect(over.warnings).toContainEqual({
+      code: 'archetype_feats_over_max',
+      level: 1,
+      count: 3,
+      max: 2,
+    });
+  });
+
+  it('uses DB characterFeatsPerLevel for server feat max (not code default only)', () => {
+    const rules = { PROGRESSION_PLAYER: { characterFeatsPerLevel: 2 } } as never;
+    expect(
+      evaluate({ ...legalBuild(), feats: [{ id: 'c1' }, { id: 'c2' }] }, rules).warnings,
+    ).toEqual([]);
+    expect(
+      evaluate({ ...legalBuild(), feats: [{ id: 'c1' }, { id: 'c2' }, { id: 'c3' }] }, rules)
+        .warnings,
+    ).toContainEqual({
+      code: 'character_feats_over_max',
+      level: 1,
+      count: 3,
+      max: 2,
+    });
   });
 });
 

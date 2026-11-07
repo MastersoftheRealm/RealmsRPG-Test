@@ -319,6 +319,12 @@ export const GUIDED_CREATOR_COPY = {
       emptyFilteredTitle: 'No Feat recommendations qualify',
       emptyFilteredDescription:
         'None of this path’s suggested Archetype Feats qualify for this build. Use See more Feats to browse the full catalog.',
+      underLimit: (remaining: number) =>
+        `Pick ${remaining} more Archetype Feat${remaining === 1 ? '' : 's'} to fill your limit (you can still continue).`,
+      rulesLoadError: "We couldn't load game rules for this step.",
+      rulesLoadErrorHint:
+        'Your feat picks are saved on this device. Retry to check limits and continue.',
+      rulesLoadRetrying: 'Loading game rules…',
     },
     characterFeat: {
       title: 'Who you are beyond the fight',

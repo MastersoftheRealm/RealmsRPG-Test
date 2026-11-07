@@ -17,14 +17,23 @@ import type { CodexSkillForFeat } from '@/lib/game/formulas';
  */
 export function applyCappedIdSelection(current: string[], id: string, max: number): string[] {
   const key = String(id);
-  if (current.includes(key)) {
-    return current.filter((x) => x !== key);
+  const cap = Math.max(0, max);
+  const base = current.length > cap ? current.slice(0, cap) : current;
+  if (base.includes(key)) {
+    return base.filter((x) => x !== key);
   }
-  if (current.length < max) {
-    return [...current, key];
+  if (base.length < cap) {
+    return [...base, key];
   }
-  if (max <= 0) return current;
-  return [...current.slice(0, -1), key];
+  if (cap <= 0) return base;
+  return [...base.slice(0, -1), key];
+}
+
+/** When the cap shrinks or a draft is restored over budget, trim to the first `max` picks. */
+export function trimArchetypeFeatIdsToCap(ids: string[], maxFeats: number): string[] | null {
+  const cap = Math.max(0, maxFeats);
+  if (ids.length <= cap) return null;
+  return ids.slice(0, cap);
 }
 
 /**

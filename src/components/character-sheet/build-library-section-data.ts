@@ -25,6 +25,7 @@ import {
   characterToFeatRequirementCharacter,
 } from '@/lib/game/feat-requirements';
 import { calculateMaxArchetypeFeats, calculateMaxCharacterFeats } from '@/lib/game/formulas';
+import type { CoreRulesMap } from '@/types/core-rules';
 import { getArchetypeAbilityScore, calculatePowerAttackBonus } from '@/lib/game/calculations';
 import { compactLibrarySectionVisibility } from '@/lib/character-library-section-visibility';
 import { withAbilitiesForResourceMaxima } from '@/lib/character/temp-modifiers';
@@ -41,8 +42,17 @@ export function buildLibrarySectionData(input: {
   allSpecies?: readonly Species[] | undefined;
   /** False for a public, campaign, or Realm Master viewer. Owner and guest sheet stay true. */
   isOwner: boolean;
+  rules?: Partial<CoreRulesMap> | undefined;
 }): LibrarySectionData {
-  const { character, enrichedData, libraryModel: m, handlers, isOwner, allSpecies = [] } = input;
+  const {
+    character,
+    enrichedData,
+    libraryModel: m,
+    handlers,
+    isOwner,
+    allSpecies = [],
+    rules,
+  } = input;
   const {
     setCharacter,
     handleRemovePower,
@@ -244,10 +254,10 @@ export function buildLibrarySectionData(input: {
     maxArchetypeFeats: calculateMaxArchetypeFeats(
       character.level || 1,
       (character.archetype?.type || 'power') as 'power' | 'martial' | 'powered-martial',
-      undefined,
+      rules,
       character.archetypeChoices,
     ),
-    maxCharacterFeats: calculateMaxCharacterFeats(character.level || 1),
+    maxCharacterFeats: calculateMaxCharacterFeats(character.level || 1, rules),
     onFeatUsesChange: whenSheetOwner(isOwner, handleFeatUsesChange),
     onFeatLevelChange: handleFeatLevelChange,
     featRequirementCharacter: characterToFeatRequirementCharacter(character),

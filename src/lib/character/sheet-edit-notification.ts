@@ -3,7 +3,6 @@
  * TASK-896: danger red only for overspend; success green for unspent; level-up is separate.
  */
 
-import type { EditState } from '@/components/patterns';
 import type { Character } from '@/types';
 import { DEFAULT_DEFENSE_SKILLS } from '@/types/skills';
 import {
@@ -117,10 +116,10 @@ export function computeSheetPointPools({
   const archetypeFeatSlots = calculateMaxArchetypeFeats(
     level,
     archetypeType,
-    undefined,
+    rules,
     character.archetypeChoices,
   );
-  const characterFeatSlots = calculateMaxCharacterFeats(level);
+  const characterFeatSlots = calculateMaxCharacterFeats(level, rules);
   const featLevelById = buildFeatLevelById(featsDb);
   const usedArchetypeFeats = sumFeatSlotUsage(character.archetypeFeats || [], featLevelById);
   const usedCharacterFeats = sumFeatSlotUsage(character.feats || [], featLevelById);
@@ -200,18 +199,6 @@ export function buildSheetEditNotification(pools: SheetPointPools): SheetEditNot
     unspent.push(formatCount(pools.profRemaining, 'proficiency point'));
   }
 
-  if (pools.archetypeFeatRemaining < 0) {
-    overspent.push(formatCount(pools.archetypeFeatRemaining, 'archetype feat slot'));
-  } else if (pools.archetypeFeatRemaining > 0) {
-    unspent.push(formatCount(pools.archetypeFeatRemaining, 'archetype feat slot'));
-  }
-
-  if (pools.characterFeatRemaining < 0) {
-    overspent.push(formatCount(pools.characterFeatRemaining, 'character feat slot'));
-  } else if (pools.characterFeatRemaining > 0) {
-    unspent.push(formatCount(pools.characterFeatRemaining, 'character feat slot'));
-  }
-
   if (overspent.length > 0 && unspent.length > 0) {
     return {
       show: true,
@@ -245,16 +232,4 @@ export function buildSheetEditNotification(pools: SheetPointPools): SheetEditNot
   }
 
   return { show: false, severity: 'none', title: '' };
-}
-
-export function resolveFeatLibraryEditState(
-  pools: Pick<SheetPointPools, 'archetypeFeatRemaining' | 'characterFeatRemaining'>,
-): EditState {
-  if (pools.archetypeFeatRemaining < 0 || pools.characterFeatRemaining < 0) {
-    return 'over-budget';
-  }
-  if (pools.archetypeFeatRemaining > 0 || pools.characterFeatRemaining > 0) {
-    return 'has-points';
-  }
-  return 'normal';
 }

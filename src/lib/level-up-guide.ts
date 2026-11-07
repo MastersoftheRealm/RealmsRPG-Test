@@ -74,7 +74,8 @@ export function buildLevelUpGuideContent(
   const featGain =
     calculateMaxArchetypeFeats(newLevel, archType, rules, character.archetypeChoices) -
     calculateMaxArchetypeFeats(previousLevel, archType, rules, character.archetypeChoices) +
-    (calculateMaxCharacterFeats(newLevel) - calculateMaxCharacterFeats(previousLevel));
+    (calculateMaxCharacterFeats(newLevel, rules) -
+      calculateMaxCharacterFeats(previousLevel, rules));
 
   let pick: { id: TutorialMilestoneId; title: string } | null = null;
 

@@ -96,6 +96,8 @@ interface UnifiedSelectionModalPropsFields {
    * Prefer this over greying out the whole list when budget is exhausted (maxSelections === 0).
    */
   selectionLimitMessage?: string | undefined;
+  /** Guided creator: hard-cap adds but still confirm (caller trims) when selection exceeds max. */
+  allowConfirmWhenOverMax?: boolean | undefined;
   /**
    * Add-path only: replace default `prev ∪ {id}` with a caller-built id list (e.g. innate
    * energy last-in swap). Deselect still removes the id. Insertion order of the returned
