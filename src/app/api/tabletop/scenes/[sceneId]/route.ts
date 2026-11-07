@@ -2,7 +2,11 @@ import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 import { createClient } from '@/lib/supabase/server';
 import { getSession } from '@/lib/supabase/session';
-import { validateJson } from '@/lib/api-validation';
+import {
+  tabletopSceneRouteParamsSchema,
+  validateJson,
+  validateRouteParams,
+} from '@/lib/api-validation';
 import { getSceneAccess, getTabletopState } from '@/lib/tabletop/server';
 import { normalizeGridConfig } from '@/lib/tabletop/grid';
 
@@ -50,7 +54,9 @@ export async function GET(_request: Request, { params }: { params: Promise<{ sce
     if (error || !user?.uid) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
-    const { sceneId } = await params;
+    const paramResult = await validateRouteParams(params, tabletopSceneRouteParamsSchema);
+    if (!paramResult.success) return paramResult.error;
+    const { sceneId } = paramResult.data;
     const supabase = await createClient();
     const state = await getTabletopState(supabase, sceneId, user.uid);
     if (!state) return NextResponse.json({ error: 'Scene not found' }, { status: 404 });
@@ -69,10 +75,12 @@ export async function PATCH(
     if (error || !user?.uid) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
+    const paramResult = await validateRouteParams(params, tabletopSceneRouteParamsSchema);
+    if (!paramResult.success) return paramResult.error;
     const validation = await validateJson(request, scenePatchSchema);
     if (!validation.success) return validation.error;
 
-    const { sceneId } = await params;
+    const { sceneId } = paramResult.data;
     const supabase = await createClient();
     const access = await getSceneAccess(supabase, sceneId, user.uid);
     if (!access) return NextResponse.json({ error: 'Scene not found' }, { status: 404 });

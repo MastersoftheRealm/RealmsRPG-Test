@@ -13,7 +13,7 @@
 --   participant helper cannot see it during INSERT ... RETURNING.
 --
 -- Safe to rerun. Keep one permissive SELECT policy for authenticated users; do
--- not restore the legacy campaigns_owner_select policy (TASK-650 / TASK-802).
+-- not restore the legacy campaigns_owner_select policy.
 -- =============================================================================
 
 BEGIN;

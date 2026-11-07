@@ -1,6 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { getSession } from '@/lib/supabase/session';
+import {
+  resourceIdParamSchema,
+  validateRouteParams,
+  verifyMutationRequest,
+} from '@/lib/api-validation';
 import { normalizeGridConfig } from '@/lib/tabletop/grid';
 import { buildMissingTokensFromCombatants } from '@/lib/tabletop/tokens';
 import {
@@ -19,7 +24,12 @@ export async function POST(_request: NextRequest, { params }: { params: Promise<
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const { id: encounterId } = await params;
+    const denied = verifyMutationRequest(_request);
+    if (denied) return denied;
+
+    const paramResult = await validateRouteParams(params, resourceIdParamSchema);
+    if (!paramResult.success) return paramResult.error;
+    const { id: encounterId } = paramResult.data;
     const supabase = await createClient();
     const { data: encounterRow } = await supabase
       .from('encounters')

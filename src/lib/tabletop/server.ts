@@ -87,7 +87,7 @@ function objectFrom<T extends object>(value: unknown, fallback: T): T {
   return typeof value === 'object' && value !== null ? ({ ...fallback, ...value } as T) : fallback;
 }
 
-export function sceneFromRow(row: VttSceneRow, signedUrl?: string): VttScene {
+function sceneFromRow(row: VttSceneRow, signedUrl?: string): VttScene {
   const rawMap =
     typeof row.map === 'object' && row.map !== null
       ? (row.map as Record<string, unknown>)
@@ -231,9 +231,7 @@ export async function updateCampaignTokenImages(
   if (failed?.error) throw failed.error;
 }
 
-export async function createMapSignedUrl(
-  map: VttMapAsset | undefined,
-): Promise<string | undefined> {
+async function createMapSignedUrl(map: VttMapAsset | undefined): Promise<string | undefined> {
   if (!map?.storagePath) return undefined;
   const service = createServiceRoleClient();
   const { data, error } = await service.storage

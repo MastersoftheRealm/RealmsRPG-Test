@@ -48,14 +48,6 @@ vi.mock('@/lib/character-save', () => ({
   prepareCharacterForSave: vi.fn((data: unknown) => data),
 }));
 
-vi.mock('@/lib/character-list-columns', async (importOriginal) => {
-  const actual = await importOriginal<typeof import('@/lib/character-list-columns')>();
-  return {
-    ...actual,
-    getCharacterListColumns: vi.fn(() => ({})),
-  };
-});
-
 vi.mock('@/lib/game/archetype-display', () => ({
   fetchArchetypeNameMap: vi.fn(() => Promise.resolve(new Map())),
 }));

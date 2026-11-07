@@ -2,7 +2,11 @@ import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 import { createClient } from '@/lib/supabase/server';
 import { getSession } from '@/lib/supabase/session';
-import { validateJson } from '@/lib/api-validation';
+import {
+  tabletopActionRouteParamsSchema,
+  validateJson,
+  validateRouteParams,
+} from '@/lib/api-validation';
 import { actionFromRow, getSceneAccess, type VttActionRow } from '@/lib/tabletop/server';
 
 const actionPatchSchema = z
@@ -20,10 +24,12 @@ export async function PATCH(
     if (error || !user?.uid) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
+    const paramResult = await validateRouteParams(params, tabletopActionRouteParamsSchema);
+    if (!paramResult.success) return paramResult.error;
     const validation = await validateJson(request, actionPatchSchema);
     if (!validation.success) return validation.error;
 
-    const { actionId } = await params;
+    const { actionId } = paramResult.data;
     const supabase = await createClient();
     const { data: actionRow } = await supabase
       .from('vtt_actions')

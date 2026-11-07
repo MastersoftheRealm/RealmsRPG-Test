@@ -178,5 +178,3 @@ export function AddMonsterTokenModal({
     />
   );
 }
-
-export default AddMonsterTokenModal;

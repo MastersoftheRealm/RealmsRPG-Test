@@ -261,7 +261,7 @@ function realtimeRowId(row: unknown): string | undefined {
   return isRecord(row) ? optionalStringFrom(row.id) : undefined;
 }
 
-export const tabletopKeys = {
+const tabletopKeys = {
   all: ['tabletop'] as const,
   scene: (sceneId: string | undefined) => [...tabletopKeys.all, 'scene', sceneId ?? ''] as const,
   campaignActive: (campaignId: string | undefined) =>

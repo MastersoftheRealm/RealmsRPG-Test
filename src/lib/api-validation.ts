@@ -672,6 +672,18 @@ export const resourceIdParamSchema = z
   })
   .strict();
 
+const tabletopRouteIdSchema = z.string().trim().min(1, 'Invalid ID');
+
+export const tabletopActionRouteParamsSchema = z
+  .object({ actionId: tabletopRouteIdSchema })
+  .strict();
+
+export const tabletopCampaignRouteParamsSchema = z
+  .object({ campaignId: tabletopRouteIdSchema })
+  .strict();
+
+export const tabletopSceneRouteParamsSchema = z.object({ sceneId: tabletopRouteIdSchema }).strict();
+
 export const campaignsListQuerySchema = z
   .object({
     full: z.literal('true').optional(),

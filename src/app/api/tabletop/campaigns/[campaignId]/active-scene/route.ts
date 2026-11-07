@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { getSession } from '@/lib/supabase/session';
+import { tabletopCampaignRouteParamsSchema, validateRouteParams } from '@/lib/api-validation';
 import { getCampaignForAccess, getTabletopState } from '@/lib/tabletop/server';
 
 export async function GET(
@@ -13,7 +14,9 @@ export async function GET(
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const { campaignId } = await params;
+    const paramResult = await validateRouteParams(params, tabletopCampaignRouteParamsSchema);
+    if (!paramResult.success) return paramResult.error;
+    const { campaignId } = paramResult.data;
     const supabase = await createClient();
     const access = await getCampaignForAccess(supabase, campaignId, user.uid);
     if (!access) {
