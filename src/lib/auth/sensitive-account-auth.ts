@@ -1,5 +1,5 @@
 import type { User } from '@supabase/supabase-js';
-import { assertOAuthDeleteFreshSignIn } from '@/lib/auth/oauth-delete-reauth';
+import { assertOAuthDeleteSessionGrant } from '@/lib/auth/oauth-delete-grant';
 import { createClient } from '@/lib/supabase/server';
 import { requireLiveUser } from '@/lib/supabase/session';
 
@@ -15,9 +15,7 @@ export type SensitiveAccountReauthInput = {
   deleteConfirm?: string | undefined;
 };
 
-/**
- * Server-side re-authentication before delete / email / password changes (PAGES4-001).
- */
+/** Server-side re-authentication before delete / email / password changes. */
 export async function assertSensitiveAccountReauth(
   input: SensitiveAccountReauthInput,
 ): Promise<{ ok: true } | { ok: false; error: string }> {
@@ -29,8 +27,8 @@ export async function assertSensitiveAccountReauth(
   }
 
   if (authUserHasPasswordLogin(data.user)) {
-    const password = input.currentPassword?.trim() ?? '';
-    if (!password) {
+    const password = input.currentPassword ?? '';
+    if (password.length === 0) {
       return { ok: false, error: 'Current password is incorrect' };
     }
     const email = data.user.email?.trim();
@@ -49,7 +47,7 @@ export async function assertSensitiveAccountReauth(
       return { ok: false, error: 'Failed to delete account. Please try again.' };
     }
     if (!authUserHasPasswordLogin(data.user)) {
-      return assertOAuthDeleteFreshSignIn(data.user);
+      return assertOAuthDeleteSessionGrant(data.user.id);
     }
     return { ok: true };
   }

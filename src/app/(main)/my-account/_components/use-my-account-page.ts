@@ -22,7 +22,7 @@ import { useAuthStore } from '@/stores';
 import { useAdmin, useAccountProfile } from '@/hooks';
 import { fileFromCroppedBlob } from '@/lib/crop-image';
 import { areTutorialsEnabled, setTutorialsEnabled } from '@/lib/onboarding-preferences';
-import { OAUTH_DELETE_REAUTH_REQUIRED } from '@/lib/auth/oauth-delete-reauth';
+import { OAUTH_DELETE_REAUTH_REQUIRED } from '@/lib/auth/oauth-delete-grant';
 import { hasPasswordProvider, getAuthProviderLabel, type AccountMessage } from './account-helpers';
 
 const MY_ACCOUNT_DELETE_REAUTH_PATH = '/my-account?deleteReauth=1';

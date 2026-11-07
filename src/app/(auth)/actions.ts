@@ -11,6 +11,7 @@ import { requireAuth, requireLiveUser, getSession } from '@/lib/supabase/session
 import { createClient as createServerClient, createServiceRoleClient } from '@/lib/supabase/server';
 import { isAdmin } from '@/lib/admin';
 import { getRolePolicyForUser } from '@/lib/role-policy';
+import { clearOAuthDeleteGrantCookie } from '@/lib/auth/oauth-delete-grant';
 import { assertSensitiveAccountReauth } from '@/lib/auth/sensitive-account-auth';
 import { profileDisplayNameWriteValue } from '@/lib/profile-display-name';
 import { validateUsername } from '@/lib/username-rules';
@@ -557,6 +558,8 @@ export async function deleteAccountAction(options?: {
 
     const { error: authError } = await supabaseAdmin.auth.admin.deleteUser(user.uid);
     if (authError) return failed('auth user', authError);
+
+    await clearOAuthDeleteGrantCookie();
 
     return { success: true };
   } catch (error) {

@@ -11,6 +11,14 @@ import { cookies } from 'next/headers';
 import { NextResponse } from 'next/server';
 import { createUserProfileAction } from '@/app/(auth)/actions';
 import { buildAuthRedirectUrl } from '@/lib/auth-redirect';
+import { authUserHasPasswordLogin } from '@/lib/auth/sensitive-account-auth';
+import {
+  OAUTH_DELETE_GRANT_COOKIE,
+  mintOAuthDeleteGrant,
+  oauthDeleteGrantCookieOptions,
+  redirectTargetsOAuthDeleteReauth,
+  sessionIdFromAccessToken,
+} from '@/lib/auth/oauth-delete-grant';
 import { sanitizeRedirectPath } from '@/lib/safe-redirect';
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
@@ -59,6 +67,18 @@ export async function GET(request: Request) {
     username: undefined,
     displayName: undefined,
   });
+
+  if (
+    redirectTargetsOAuthDeleteReauth(redirectTo) &&
+    !authUserHasPasswordLogin(u) &&
+    data.session?.access_token
+  ) {
+    const sessionId = sessionIdFromAccessToken(data.session.access_token);
+    const grant = sessionId ? mintOAuthDeleteGrant(u.id, sessionId) : null;
+    if (grant) {
+      response.cookies.set(OAUTH_DELETE_GRANT_COOKIE, grant, oauthDeleteGrantCookieOptions());
+    }
+  }
 
   return response;
 }

@@ -3,7 +3,13 @@ import { defined } from '@/lib/utils';
 
 vi.mock('next/cache', () => ({ revalidatePath: vi.fn() }));
 vi.mock('next/navigation', () => ({ redirect: vi.fn() }));
-vi.mock('next/headers', () => ({ headers: vi.fn(async () => new Headers()) }));
+const mockCookieGet = vi.fn();
+const mockCookieDelete = vi.fn();
+
+vi.mock('next/headers', () => ({
+  cookies: vi.fn(async () => ({ get: mockCookieGet, delete: mockCookieDelete })),
+  headers: vi.fn(async () => new Headers()),
+}));
 
 vi.mock('@/lib/supabase/session', () => ({
   requireAuth: vi.fn(),
@@ -32,9 +38,10 @@ import {
   setProfilePhotoFromLibraryAction,
 } from './actions';
 import {
-  OAUTH_DELETE_FRESH_SIGN_IN_MS,
+  OAUTH_DELETE_GRANT_COOKIE,
   OAUTH_DELETE_REAUTH_REQUIRED,
-} from '@/lib/auth/oauth-delete-reauth';
+  mintOAuthDeleteGrant,
+} from '@/lib/auth/oauth-delete-grant';
 import { assertSensitiveAccountReauth } from '@/lib/auth/sensitive-account-auth';
 import { requireAuth, requireLiveUser, getSession } from '@/lib/supabase/session';
 import { createClient as createServerClient, createServiceRoleClient } from '@/lib/supabase/server';
@@ -47,7 +54,16 @@ const mockCreateServiceRoleClient = vi.mocked(createServiceRoleClient);
 const mockAssertSensitiveAccountReauth = vi.mocked(assertSensitiveAccountReauth);
 
 const mockAuthGetUser = vi.fn();
+const mockAuthGetSession = vi.fn();
 const mockAuthUpdateUser = vi.fn();
+
+function accessToken(sessionId: string): string {
+  const header = Buffer.from(JSON.stringify({ alg: 'none', typ: 'JWT' })).toString('base64url');
+  const payload = Buffer.from(JSON.stringify({ sub: USER.uid, session_id: sessionId })).toString(
+    'base64url',
+  );
+  return `${header}.${payload}.sig`;
+}
 
 function useStub(client: unknown) {
   mockCreateServerClient.mockResolvedValue(client as never);
@@ -59,6 +75,7 @@ function useAuthMutationClient(dbClient: unknown) {
     ...(dbClient as object),
     auth: {
       getUser: mockAuthGetUser,
+      getSession: mockAuthGetSession,
       updateUser: mockAuthUpdateUser,
       admin: { deleteUser: vi.fn(async () => ({ data: null, error: null })) },
     },
@@ -127,14 +144,17 @@ function opLabels(ops: Op[]): string[] {
 
 beforeEach(() => {
   vi.clearAllMocks();
+  process.env.SUPABASE_SERVICE_ROLE_KEY = 'test-service-role-key';
   mockRequireAuth.mockResolvedValue(USER as never);
   mockRequireLiveUser.mockResolvedValue(USER as never);
   mockGetSession.mockResolvedValue({ user: USER, error: null } as never);
   mockAssertSensitiveAccountReauth.mockResolvedValue({ ok: true });
+  mockCookieGet.mockReturnValue(undefined);
   mockAuthGetUser.mockResolvedValue({
     data: { user: { id: USER.uid, email: USER.email } },
     error: null,
   });
+  mockAuthGetSession.mockResolvedValue({ data: { session: null }, error: null });
   mockAuthUpdateUser.mockResolvedValue({ error: null });
 });
 
@@ -557,7 +577,13 @@ describe('deleteAccountAction', () => {
     expect(client.auth.admin.deleteUser).not.toHaveBeenCalled();
   });
 
-  describe('OAuth-only fresh sign-in', () => {
+  describe('OAuth-only delete grant', () => {
+    const googleUser = {
+      id: USER.uid,
+      app_metadata: { provider: 'google' },
+      identities: [{ provider: 'google' }],
+    };
+
     beforeEach(async () => {
       const actual = await vi.importActual<typeof import('@/lib/auth/sensitive-account-auth')>(
         '@/lib/auth/sensitive-account-auth',
@@ -569,17 +595,15 @@ describe('deleteAccountAction', () => {
       mockAssertSensitiveAccountReauth.mockResolvedValue({ ok: true });
     });
 
-    it('does not delete when OAuth sign-in is stale', async () => {
-      const staleAt = new Date(Date.now() - OAUTH_DELETE_FRESH_SIGN_IN_MS - 1).toISOString();
-      mockAuthGetUser.mockResolvedValue({
-        data: {
-          user: {
-            id: USER.uid,
-            last_sign_in_at: staleAt,
-            app_metadata: { provider: 'google' },
-            identities: [{ provider: 'google' }],
-          },
-        },
+    it('does not delete when the grant targets another session for the same user', async () => {
+      const now = Math.floor(Date.now() / 1000);
+      mockAuthGetUser.mockResolvedValue({ data: { user: googleUser }, error: null });
+      mockCookieGet.mockReturnValue({
+        name: OAUTH_DELETE_GRANT_COOKIE,
+        value: mintOAuthDeleteGrant(USER.uid, 'sess-b', now),
+      });
+      mockAuthGetSession.mockResolvedValue({
+        data: { session: { access_token: accessToken('sess-a') } },
         error: null,
       });
       const { client } = createSupabaseStub(() => ok());
@@ -593,16 +617,32 @@ describe('deleteAccountAction', () => {
       expect(client.auth.admin.deleteUser).not.toHaveBeenCalled();
     });
 
-    it('deletes when OAuth sign-in is fresh', async () => {
-      mockAuthGetUser.mockResolvedValue({
-        data: {
-          user: {
-            id: USER.uid,
-            last_sign_in_at: new Date().toISOString(),
-            app_metadata: { provider: 'google' },
-            identities: [{ provider: 'google' }],
-          },
-        },
+    it('does not delete after an ordinary refresh with no delete grant', async () => {
+      mockAuthGetUser.mockResolvedValue({ data: { user: googleUser }, error: null });
+      mockCookieGet.mockReturnValue(undefined);
+      mockAuthGetSession.mockResolvedValue({
+        data: { session: { access_token: accessToken('sess-a') } },
+        error: null,
+      });
+      const { client } = createSupabaseStub(() => ok());
+      useAuthMutationClient(client);
+      mockCreateServiceRoleClient.mockReturnValue(client as never);
+
+      const result = await deleteAccountAction({ deleteConfirm: 'DELETE' });
+
+      expect(result).toEqual({ success: false, error: OAUTH_DELETE_REAUTH_REQUIRED });
+      expect(mockCreateServiceRoleClient).not.toHaveBeenCalled();
+    });
+
+    it('deletes when the session matches a fresh Google delete grant', async () => {
+      const now = Math.floor(Date.now() / 1000);
+      mockAuthGetUser.mockResolvedValue({ data: { user: googleUser }, error: null });
+      mockCookieGet.mockReturnValue({
+        name: OAUTH_DELETE_GRANT_COOKIE,
+        value: mintOAuthDeleteGrant(USER.uid, 'sess-a', now),
+      });
+      mockAuthGetSession.mockResolvedValue({
+        data: { session: { access_token: accessToken('sess-a') } },
         error: null,
       });
       const { client, ops } = createSupabaseStub((op) => {

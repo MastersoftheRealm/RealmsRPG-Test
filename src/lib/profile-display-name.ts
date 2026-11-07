@@ -1,5 +1,5 @@
 /**
- * How display_name is written on user_profiles (PAGES1-001).
+ * How display_name is written on user_profiles.
  * `undefined` means "do not change the stored value" on update.
  */
 
