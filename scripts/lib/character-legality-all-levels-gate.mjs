@@ -103,6 +103,7 @@ export function charactersTableWriteChains(strippedSource) {
 }
 
 /**
+ * Naive `(`/`)`/`{`/`}` scanner — does not skip string contents (conservative).
  * @param {string} source
  * @param {number} openParenIdx index of `(` starting the call argument list
  * @returns {string}
@@ -141,7 +142,7 @@ function extractBalancedBraces(source, openIdx) {
 }
 
 /**
- * `data: value`, shorthand `data`, or fail-closed on spreads we cannot prove omit `data`.
+ * Proven inline object literal touches `characters.data` (or spread we cannot disprove).
  * @param {string} objectLiteral including surrounding `{` `}`
  */
 function objectLiteralTouchesSheetData(objectLiteral) {
@@ -151,28 +152,22 @@ function objectLiteralTouchesSheetData(objectLiteral) {
   return false;
 }
 
-/** @param {string} arg */
-function updateCallArgPersistsSheetData(arg) {
+/**
+ * Fail closed unless the first arg is a proven metadata-only inline `{ ... }` (no `data`, no spread).
+ * Wrappers (`asDbUpdate(...)`), identifiers, and unresolved shapes count as sheet writes.
+ * @param {string} arg
+ */
+function writeArgLooksLikeSheetPersist(arg) {
   const trimmed = arg.trim();
   if (trimmed.startsWith('{')) {
     const literal = extractBalancedBraces(trimmed, 0);
     return objectLiteralTouchesSheetData(literal || trimmed);
   }
-  if (/^asDbUpdate\s*</.test(trimmed)) {
-    const brace = trimmed.indexOf('{');
-    if (brace !== -1) {
-      const literal = extractBalancedBraces(trimmed, brace);
-      if (literal) return objectLiteralTouchesSheetData(literal);
-    }
-    return /\bdata\s*:/.test(trimmed);
-  }
-  if (/^[a-zA-Z_$]/.test(trimmed)) return true;
-  return false;
+  return true;
 }
 
 /**
- * True when a single `from('characters')` chain performs an insert/upsert or an update that
- * persists sheet JSON (`data` / shorthand `{ data }`, `asDbUpdate`, spreads fail closed).
+ * True when a chain-local `from('characters')` write likely persists sheet JSON (conservative).
  * @param {string} chain
  */
 export function chainWritesCharacterSheetData(chain) {
@@ -180,11 +175,7 @@ export function chainWritesCharacterSheetData(chain) {
     const m = chain.match(/\.insert\s*\(/);
     if (m && m.index !== undefined) {
       const arg = balancedCallArgFrom(chain, m.index + m[0].length - 1);
-      if (arg.startsWith('{')) {
-        const literal = extractBalancedBraces(arg, 0);
-        return objectLiteralTouchesSheetData(literal || arg);
-      }
-      if (/^[a-zA-Z_$]/.test(arg)) return true;
+      return writeArgLooksLikeSheetPersist(arg);
     }
     return true;
   }
@@ -195,7 +186,7 @@ export function chainWritesCharacterSheetData(chain) {
 
   const openParenIdx = updateMatch.index + updateMatch[0].length - 1;
   const arg = balancedCallArgFrom(chain, openParenIdx);
-  return updateCallArgPersistsSheetData(arg);
+  return writeArgLooksLikeSheetPersist(arg);
 }
 
 /**

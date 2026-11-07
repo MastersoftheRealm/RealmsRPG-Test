@@ -118,8 +118,8 @@ describe('character-legality all-levels gate', () => {
     ['explicit data property', `supabase.from('characters').update({ data: mergedData });`],
     ['ES shorthand data', `supabase.from('characters').update({ data });`],
     [
-      'wrapped update arg',
-      `supabase.from('characters').update(asDbUpdate<'characters'>({ data: mergedData, updated_at: now }));`,
+      'asDbUpdate variable payload (fail closed)',
+      `supabase.from('characters').update(asDbUpdate<'characters'>(payload));`,
     ],
     ['variable payload (fail closed)', `supabase.from('characters').update(payload);`],
     ['object spread (fail closed)', `supabase.from('characters').update({ ...rowPatch });`],
@@ -130,6 +130,23 @@ describe('character-legality all-levels gate', () => {
     expect(isCharacterPersistenceWriteRoute('src/app/api/characters/[id]/route.ts', snippet)).toBe(
       true,
     );
+  });
+
+  it('end-to-end gate fails on unguarded asDbUpdate variable payload', () => {
+    const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'legality-gate-asdbupdate-var-'));
+    const routeDir = path.join(dir, 'src', 'app', 'api', 'sheet', 'wrapped');
+    fs.mkdirSync(routeDir, { recursive: true });
+    fs.writeFileSync(
+      path.join(routeDir, 'route.ts'),
+      `export async function PATCH() {
+        const payload = { data: sheet };
+        await client.from('characters').update(asDbUpdate<'characters'>(payload));
+        return new Response("ok");
+      }`,
+    );
+    const result = runCharacterLegalityAllLevelsGate(dir);
+    expect(result.ok).toBe(false);
+    expect(result.errors.some((e) => e.includes('PATCH must call'))).toBe(true);
   });
 
   it('end-to-end gate fails on unguarded update with ES shorthand data', () => {
@@ -152,6 +169,12 @@ describe('character-legality all-levels gate', () => {
   it('negative chain fixture: select-only on characters', () => {
     const snippet = `const row = await supabase.from('characters').select('id').maybeSingle();`;
     expect(routePersistsCharacterSheetData(stripComments(snippet))).toBe(false);
+  });
+
+  it('negative chain fixture: proven metadata-only inline update', () => {
+    const snippet = `await supabase.from('characters').update({ updated_at: now });`;
+    const chain = charactersTableWriteChains(stripComments(snippet))[0];
+    expect(chainWritesCharacterSheetData(chain)).toBe(false);
   });
 
   it('fails when a new characters insert route omits evaluateCharacterLegalityForSave', () => {
