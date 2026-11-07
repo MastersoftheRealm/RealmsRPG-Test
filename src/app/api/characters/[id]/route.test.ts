@@ -749,11 +749,13 @@ describe('PATCH /api/characters/[id]', () => {
       mockCreateClient.mockResolvedValue(wrapped as never);
       mockCreatePublicClient.mockReturnValue(wrapped as never);
 
-      await PATCH(makePatchRequest('char-name-only', { name: 'Only Name' }), {
+      const response = await PATCH(makePatchRequest('char-name-only', { name: 'Only Name' }), {
         params: Promise.resolve({ id: 'char-name-only' }),
       });
 
       expect(codexReads).toBe(0);
+      const body = await readJson<{ legalityUncomputable?: string[] | undefined }>(response);
+      expect(body.legalityUncomputable).toContain('feat_requirements_skipped');
     });
 
     it('loads codex catalog when mart_abil changes', async () => {
