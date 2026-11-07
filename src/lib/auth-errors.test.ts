@@ -112,4 +112,10 @@ describe('getAuthErrorMessage', () => {
     );
     expect(getAuthErrorMessage(new Error(''), 'delete-account')).toBe('Failed to delete account');
   });
+
+  it('maps OAuth delete re-auth sentinel to delete-account copy', () => {
+    expect(getAuthErrorMessage(new Error('oauth_delete_reauth_required'), 'delete-account')).toBe(
+      'Sign in with Google again, then retry deleting your account.',
+    );
+  });
 });

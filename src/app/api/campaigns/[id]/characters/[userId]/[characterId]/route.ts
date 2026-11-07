@@ -9,7 +9,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient, createServiceRoleClient } from '@/lib/supabase/server';
 import { getSession } from '@/lib/supabase/session';
-import { isCharacterOnCampaignRoster } from '@/lib/campaign-roster';
+import { isCharacterOnCampaignRoster, isUserCampaignParticipant } from '@/lib/campaign-roster';
 import {
   campaignCharacterRouteParamsSchema,
   campaignCharacterViewQuerySchema,
@@ -64,6 +64,10 @@ export async function GET(
 
     const isInCampaign = isCharacterOnCampaignRoster(campaignRow.characters, userId, characterId);
     if (!isInCampaign) {
+      return NextResponse.json({ error: 'Character not found in campaign' }, { status: 404 });
+    }
+
+    if (!isUserCampaignParticipant(userId, campaignRow.owner_id, memberIds)) {
       return NextResponse.json({ error: 'Character not found in campaign' }, { status: 404 });
     }
 

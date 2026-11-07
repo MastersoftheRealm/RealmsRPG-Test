@@ -17,6 +17,8 @@ type Props = {
   setDeleteConfirmText: (v: string) => void;
   deleting: boolean;
   deleteError: string | null;
+  needsGoogleReauthForDelete?: boolean | undefined;
+  onGoogleReauthForDelete?: (() => void) | undefined;
   onDelete: () => void;
   onCancel: () => void;
 };
@@ -31,6 +33,8 @@ export function AccountDangerZoneCard({
   setDeleteConfirmText,
   deleting,
   deleteError,
+  needsGoogleReauthForDelete = false,
+  onGoogleReauthForDelete,
   onDelete,
   onCancel,
 }: Props) {
@@ -98,6 +102,12 @@ export function AccountDangerZoneCard({
               {deleteError}
             </div>
           )}
+
+          {!canChangeEmailPassword && needsGoogleReauthForDelete && onGoogleReauthForDelete ? (
+            <Button variant="secondary" onClick={onGoogleReauthForDelete} disabled={deleting}>
+              Sign in with Google again
+            </Button>
+          ) : null}
 
           <div className="flex flex-col gap-3 sm:flex-row">
             <Button
