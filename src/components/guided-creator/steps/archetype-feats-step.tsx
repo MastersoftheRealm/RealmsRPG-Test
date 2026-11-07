@@ -11,7 +11,6 @@ import { cn } from '@/lib/utils';
 import { useCodexFeats, useCodexSkills, useGameRules, usePathListFilter, type Feat } from '@/hooks';
 import { calculateMaxArchetypeFeats } from '@/lib/game/formulas';
 import {
-  applyCappedIdSelection,
   guidedDraftToFeatRequirementCharacter,
   selectableCuratedFeatIds,
 } from '@/lib/guided-creator/feat-selection';
@@ -40,19 +39,8 @@ import { filterFeatGuidanceGroups } from '@/lib/game/archetype-path';
 import { EMPTY_GUIDANCE_GROUPS, EMPTY_STRING_ARRAY } from '@/lib/empty';
 import { pathFilterEmptyTitle } from '@/lib/game/path-recommendation-index';
 import type { PathGuidanceGroup } from '@/types/archetype';
-import type { ArchetypeCategory } from '@/types';
-import type { CoreRulesMap } from '@/types/core-rules';
-
 const stepCopy = GUIDED_CREATOR_COPY.steps.archetypeFeats;
 const l2Copy = GUIDED_CREATOR_COPY.steps.featsL2;
-
-/** Level-1 guided archetype feat cap from core_rules (shared with unit tests). */
-export function guidedLevel1ArchetypeFeatCap(
-  archetypeType: ArchetypeCategory | undefined,
-  rules?: Partial<CoreRulesMap>,
-): number {
-  return calculateMaxArchetypeFeats(1, archetypeType, rules);
-}
 
 function resolveFeat(id: string, featById: Map<string, Feat>) {
   const key = String(id);
@@ -85,7 +73,7 @@ export function ArchetypeFeatsStep() {
     onDeepEntry: openBrowse,
   });
 
-  const maxFeats = guidedLevel1ArchetypeFeatCap(draft.archetypeType ?? undefined, rules);
+  const advisoryMaxFeats = calculateMaxArchetypeFeats(1, draft.archetypeType ?? undefined, rules);
   const guidanceGroups = pathData?.level1?.guidance_groups;
   const pathFeats = pathData?.level1?.feats;
   const groups = useMemo(() => {
@@ -107,11 +95,14 @@ export function ArchetypeFeatsStep() {
 
   const selectFeat = useCallback(
     (id: string) => {
+      const key = String(id);
       updateDraft({
-        archetypeFeatIds: applyCappedIdSelection(draft.archetypeFeatIds, id, maxFeats),
+        archetypeFeatIds: draft.archetypeFeatIds.includes(key)
+          ? draft.archetypeFeatIds.filter((x) => x !== key)
+          : [...draft.archetypeFeatIds, key],
       });
     },
-    [draft.archetypeFeatIds, maxFeats, updateDraft],
+    [draft.archetypeFeatIds, updateDraft],
   );
 
   /** Curated cards honour requirements like the catalog does (report 03 P1-10). */
@@ -127,7 +118,7 @@ export function ArchetypeFeatsStep() {
     [feats, draft.archetypeFeatIds, requirementCharacter, codexSkills],
   );
 
-  const canContinue = draft.archetypeFeatIds.length === maxFeats;
+  const canContinue = !isLoading;
 
   // Inline (L3) catalog — same builders as GuidedFeatsL2Modal so filtering/eligibility
   // (requirements, capped selection) stay identical whether shown in-page or in a modal.
@@ -230,11 +221,11 @@ export function ArchetypeFeatsStep() {
     <GuidedStepLayout
       subStep="archetype-feats"
       title={stepCopy.title}
-      description={stepCopy.description(maxFeats, archetype?.name)}
+      description={stepCopy.description(advisoryMaxFeats, archetype?.name)}
       canContinue={canContinue}
       completionHint={
         <span className="font-nunito">
-          {draft.archetypeFeatIds.length} / {maxFeats}
+          {draft.archetypeFeatIds.length} / {advisoryMaxFeats}
         </span>
       }
     >
@@ -272,12 +263,10 @@ export function ArchetypeFeatsStep() {
           }
           showFilters
           optionsActiveCount={inlineActiveFilterCount}
-          maxSelections={maxFeats}
-          selectionLimitMessage={maxFeats <= 0 ? l2Copy.overLimitZero : l2Copy.overLimit(maxFeats)}
           selectedTitle={l2Copy.archetypeSelectedTitle}
           selectedCountLabel={
             <span className="font-nunito text-sm text-text-secondary">
-              {draft.archetypeFeatIds.length} / {maxFeats}
+              {draft.archetypeFeatIds.length} / {advisoryMaxFeats}
             </span>
           }
         />
@@ -291,7 +280,9 @@ export function ArchetypeFeatsStep() {
               </div>
             ) : (
               <div className={GUIDED_CHOICE_COMPACT_GRID_CLASS}>
-                {visibleFallbackIds.slice(0, maxFeats * 3).map((id) => renderFeatCard(id))}
+                {visibleFallbackIds
+                  .slice(0, Math.max(advisoryMaxFeats, 1) * 3)
+                  .map((id) => renderFeatCard(id))}
               </div>
             )
           ) : (
@@ -312,7 +303,7 @@ export function ArchetypeFeatsStep() {
               feats={feats}
               recommendedIds={recommendedIds}
               initialSelectedIds={draft.archetypeFeatIds}
-              maxSelections={maxFeats}
+              selectionCapHint={advisoryMaxFeats}
               requirementCharacter={requirementCharacter}
               autoSelectPathType={draft.archetypeType}
               onClose={() => setBrowseOpen(false)}

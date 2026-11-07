@@ -35,7 +35,10 @@ export interface GuidedFeatsL2ModalProps {
   feats: Feat[];
   recommendedIds: string[];
   initialSelectedIds: string[];
-  maxSelections: number;
+  /** When omitted, selection is advisory (no cap warnings or confirm blocking). */
+  maxSelections?: number | undefined;
+  /** Modal copy when `maxSelections` is omitted (guided archetype advisory cap). */
+  selectionCapHint?: number | undefined;
   requirementCharacter: CharacterForFeatRequirement;
   onClose: () => void;
   onConfirm: (selectedIds: string[]) => void;
@@ -50,6 +53,7 @@ export function GuidedFeatsL2Modal({
   recommendedIds,
   initialSelectedIds,
   maxSelections,
+  selectionCapHint,
   requirementCharacter,
   onClose,
   onConfirm,
@@ -110,13 +114,16 @@ export function GuidedFeatsL2Modal({
   );
 
   const title = featType === 'character' ? l2Copy.characterTitle : l2Copy.archetypeTitle;
-  const description = l2Copy.description(maxSelections);
+  const capForCopy = maxSelections ?? selectionCapHint ?? 1;
+  const description = l2Copy.description(capForCopy);
   const selectionLimitMessage =
-    maxSelections <= 0
-      ? l2Copy.overLimitZero
-      : maxSelections === 1
-        ? undefined
-        : l2Copy.overLimit(maxSelections);
+    maxSelections === undefined
+      ? undefined
+      : maxSelections <= 0
+        ? l2Copy.overLimitZero
+        : maxSelections === 1
+          ? undefined
+          : l2Copy.overLimit(maxSelections);
 
   const filterContent = (
     <GuidedFeatsFilterFields
