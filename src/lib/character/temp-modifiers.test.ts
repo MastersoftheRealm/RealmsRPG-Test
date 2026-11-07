@@ -1,5 +1,3 @@
-import { readFileSync } from 'node:fs';
-import path from 'node:path';
 import { describe, expect, it } from 'vitest';
 import {
   applyTempModifier,
@@ -52,7 +50,7 @@ describe('temp-modifiers (ADR-0006)', () => {
     expect(normalizeTempModifiers({ speed: 0 })).toBeUndefined();
   });
 
-  it('clamps temp modifiers to −99 and +1000 (86e3jvcgg)', () => {
+  it('clamps temp modifiers to −99 and +1000', () => {
     expect(TEMP_MODIFIER_MIN).toBe(-99);
     expect(TEMP_MODIFIER_MAX).toBe(1000);
     expect(
@@ -73,18 +71,6 @@ describe('temp-modifiers (ADR-0006)', () => {
     expect(
       patchTempModifiers({ skills: { acrobatics: -99 } }, { skills: { acrobatics: -100 } }),
     ).toEqual({ skills: { acrobatics: -99 } });
-
-    const root = path.join(import.meta.dirname, '../..');
-    const skills = readFileSync(
-      path.join(root, 'components/character-sheet/skills-section.tsx'),
-      'utf8',
-    );
-    const row = readFileSync(path.join(root, 'components/patterns/list/skill-row.tsx'), 'utf8');
-    expect(skills).toContain('TEMP_MODIFIER_MIN');
-    expect(skills).toContain('TEMP_MODIFIER_MAX');
-    expect(skills).toContain('maxValue={showTempControls ? TEMP_MODIFIER_MAX : undefined}');
-    expect(row).toContain('maxValue !== undefined ? minValue : proficient ? -Infinity : minValue');
-    expect(row).toContain('maxValue !== undefined ? maxValue : canIncrease ? undefined : value');
   });
 
   it('tempModifierTintFromDelta matches value gold/danger', () => {

@@ -1,5 +1,6 @@
 import type { NextConfig } from 'next';
 import createMDX from '@next/mdx';
+import { ACCOUNT_PATH_ALIAS_REWRITE } from './src/lib/security/next-app-flags';
 import { buildContentSecurityPolicy } from './src/lib/security/content-security-policy';
 
 const nextConfig: NextConfig = {
@@ -55,12 +56,7 @@ const nextConfig: NextConfig = {
   // after that gate, so a signed-out visit can come back to `/account`.
   async rewrites() {
     return {
-      beforeFiles: [
-        {
-          source: '/account',
-          destination: '/my-account',
-        },
-      ],
+      beforeFiles: [ACCOUNT_PATH_ALIAS_REWRITE],
     };
   },
   // Security headers for all responses; long cache for static images to cut edge requests (e.g. placeholder-portrait.png)

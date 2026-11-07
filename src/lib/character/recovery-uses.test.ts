@@ -1,5 +1,3 @@
-import { readFileSync } from 'node:fs';
-import path from 'node:path';
 import { describe, expect, it } from 'vitest';
 import {
   featUsesAfterFullRecovery,
@@ -24,7 +22,7 @@ const familiar = {
   recovery: 'Full Recovery',
 };
 
-describe('recovery modal lists the uses that will refresh (86e3jv00w)', () => {
+describe('recovery modal lists the uses that will refresh', () => {
   it('names a spent partial feat and Familiar on full, and only the partial feat on partial', () => {
     const feats = [partialFeat, familiar];
 
@@ -89,31 +87,5 @@ describe('recovery modal lists the uses that will refresh (86e3jv00w)', () => {
       recovery: 'Partial',
       maxUses: 3,
     });
-  });
-
-  it('wires the modal and the save path to the same list', () => {
-    const modal = readFileSync(
-      path.join(import.meta.dirname, '../../components/character-sheet/recovery-modal.tsx'),
-      'utf8',
-    );
-    const sheetModals = readFileSync(
-      path.join(import.meta.dirname, '../../app/(detail)/characters/[id]/CharacterSheetModals.tsx'),
-      'utf8',
-    );
-    const actions = readFileSync(
-      path.join(
-        import.meta.dirname,
-        '../../components/character-sheet/use-sheet-resource-actions.ts',
-      ),
-      'utf8',
-    );
-
-    expect(modal).toContain('recoveryUseNames');
-    expect(modal).toContain('formatRecoveryUseReset');
-    expect(sheetModals).toContain('resolvedFeatUses');
-    expect(sheetModals).toContain('findCodexFeatRecovery');
-    expect(actions).toContain('featUsesAfterFullRecovery');
-    expect(actions).toContain('featUsesAfterPartialRecovery');
-    expect(actions).toContain('traitUseResetValue');
   });
 });

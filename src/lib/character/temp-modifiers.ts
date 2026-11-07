@@ -1,5 +1,5 @@
 /**
- * Temp Modifier helpers (ADR-0006 / TASK-585)
+ * Temp Modifier helpers (ADR-0006).
  * ==========================================
  * UI convenience layered Bonus/Penalty on character values.
  * Not a GAME_RULES term — see ADR-0006 for cascade + tint contract.
