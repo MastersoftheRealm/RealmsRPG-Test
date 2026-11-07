@@ -11,6 +11,7 @@ import { createServerClient } from '@supabase/ssr';
 import { cookies } from 'next/headers';
 import { NextResponse } from 'next/server';
 import { createUserProfileAction } from '@/app/(auth)/actions';
+import { buildAuthRedirectUrl } from '@/lib/auth-redirect';
 import { sanitizeRedirectPath } from '@/lib/safe-redirect';
 
 function getUsernameFromUser(user: User): string | undefined {
@@ -18,17 +19,6 @@ function getUsernameFromUser(user: User): string | undefined {
   const display = meta.username_display ?? meta.username;
   if (typeof display === 'string' && display.trim()) return display.trim();
   return undefined;
-}
-
-function getRedirectUrl(request: Request, path: string): string {
-  const forwardedHost = request.headers.get('x-forwarded-host');
-  const isLocalEnv = process.env.NODE_ENV === 'development';
-  const { origin } = new URL(request.url);
-
-  if (isLocalEnv || !forwardedHost) {
-    return `${origin}${path}`;
-  }
-  return `https://${forwardedHost}${path}`;
 }
 
 async function createProfileFromConfirmedUser(user: User): Promise<void> {
@@ -49,7 +39,9 @@ export async function GET(request: Request) {
   const type = searchParams.get('type') as EmailOtpType | null;
   const code = searchParams.get('code');
   const redirectTo = sanitizeRedirectPath(searchParams.get('next'));
-  const failureRedirect = NextResponse.redirect(getRedirectUrl(request, '/login?error=confirm'));
+  const failureRedirect = NextResponse.redirect(
+    buildAuthRedirectUrl(request, '/login?error=confirm', { sanitizeUserRedirect: false }),
+  );
 
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_DEFAULT_KEY;
@@ -63,7 +55,7 @@ export async function GET(request: Request) {
   }
 
   const cookieStore = await cookies();
-  const successRedirect = NextResponse.redirect(getRedirectUrl(request, redirectTo));
+  const successRedirect = NextResponse.redirect(buildAuthRedirectUrl(request, redirectTo));
   const supabase = createServerClient(supabaseUrl, supabaseKey, {
     cookies: {
       getAll() {

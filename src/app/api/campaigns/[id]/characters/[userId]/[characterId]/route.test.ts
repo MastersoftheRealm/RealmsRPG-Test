@@ -191,7 +191,7 @@ function stubAuthedClient(args: {
   mockGetSession.mockResolvedValue({ user: args.user, error: null });
   const supabase = createMockSupabase({
     campaignRow: makeCampaignRow(),
-    memberUserIds: args.memberUserIds ?? [MEMBER.uid],
+    memberUserIds: args.memberUserIds ?? [MEMBER.uid, PLAYER.uid],
     characterRow: args.characterRow === undefined ? makeCharacterRow() : args.characterRow,
   });
   mockCreateClient.mockResolvedValue(supabase as never);
@@ -267,8 +267,27 @@ describe('GET /api/campaigns/[id]/characters/[userId]/[characterId]', () => {
     expect(mockGetOwnerLibraryAndEnrichmentForView).toHaveBeenCalled();
   });
 
+  it('returns 404 when roster JSON still lists a user who left the campaign (API-003)', async () => {
+    mockGetSession.mockResolvedValue({ user: MEMBER, error: null });
+    const supabase = createMockSupabase({
+      campaignRow: makeCampaignRow(),
+      memberUserIds: [MEMBER.uid],
+      characterRow: makeCharacterRow(),
+    });
+    mockCreateClient.mockResolvedValue(supabase as never);
+    mockCreateServiceRoleClient.mockReturnValue(supabase as never);
+
+    const response = await GET(makeGetRequest(), routeParams());
+
+    expect(response.status).toBe(404);
+    await expect(readJson(response)).resolves.toEqual({
+      error: 'Character not found in campaign',
+    });
+    expect(mockGetOwnerLibraryAndEnrichmentForView).not.toHaveBeenCalled();
+  });
+
   it('returns 403 when a non-member requests the full sheet', async () => {
-    stubAuthedClient({ user: STRANGER, memberUserIds: [MEMBER.uid] });
+    stubAuthedClient({ user: STRANGER, memberUserIds: [MEMBER.uid, PLAYER.uid] });
 
     const response = await GET(makeGetRequest(), routeParams());
 

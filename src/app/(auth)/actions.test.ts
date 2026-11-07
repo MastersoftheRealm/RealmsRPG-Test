@@ -19,6 +19,10 @@ vi.mock('@/lib/supabase/server', () => ({
 vi.mock('@/lib/admin', () => ({ isAdmin: vi.fn(async () => false) }));
 vi.mock('@/lib/role-policy', () => ({ getRolePolicyForUser: vi.fn() }));
 
+vi.mock('@/lib/auth/sensitive-account-auth', () => ({
+  assertSensitiveAccountReauth: vi.fn(async () => ({ ok: true })),
+}));
+
 import {
   changeUsernameAction,
   createUserProfileAction,
@@ -308,6 +312,27 @@ describe('createUserProfileAction', () => {
     const result = await createUserProfileAction({ username: 'TakenName' });
 
     expect(result).toEqual({ success: false, error: 'This username is already taken' });
+  });
+
+  it('does not clear display_name when displayName is omitted on update (PAGES1-001)', async () => {
+    const { client, ops } = createSupabaseStub((op) => {
+      if (op.table === 'user_profiles' && op.action === 'select') {
+        return ok({
+          id: USER.uid,
+          username: 'chosenname',
+          username_display: 'ChosenName',
+          display_name: 'Kept Name',
+        });
+      }
+      return ok();
+    });
+    useStub(client);
+
+    const result = await createUserProfileAction({});
+
+    expect(result).toEqual({ success: true });
+    const profileUpdate = ops.find((op) => op.table === 'user_profiles' && op.action === 'update');
+    expect(profileUpdate?.payload).not.toHaveProperty('display_name');
   });
 
   it('never overwrites an existing username', async () => {

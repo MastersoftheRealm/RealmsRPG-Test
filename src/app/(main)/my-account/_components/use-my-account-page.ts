@@ -12,6 +12,8 @@ import { createClient } from '@/lib/supabase/client';
 import { apiFetch, apiUpload, getErrorMessage } from '@/lib/api-client';
 import { getAuthErrorMessage } from '@/lib/auth-errors';
 import {
+  changeAccountEmailAction,
+  changeAccountPasswordAction,
   changeUsernameAction,
   deleteAccountAction,
   setProfilePhotoFromLibraryAction,
@@ -190,18 +192,8 @@ export function useMyAccountPage() {
     }
 
     try {
-      const supabase = createClient();
-      // Re-authenticate with the current password before changing the email so a
-      // hijacked session cannot silently take over the account (TASK-331).
-      const { error: reauthError } = await supabase.auth.signInWithPassword({
-        email: user.email,
-        password: emailPassword,
-      });
-      if (reauthError) throw new Error('Current password is incorrect');
-      const { data: liveUser, error: liveUserError } = await supabase.auth.getUser();
-      if (liveUserError || !liveUser.user) throw new Error('Authentication required');
-      const { error } = await supabase.auth.updateUser({ email: newEmail });
-      if (error) throw error;
+      const result = await changeAccountEmailAction(newEmail, emailPassword);
+      if (!result.success) throw new Error(result.error);
       patchProfile({ email: newEmail });
       setNewEmail('');
       setEmailPassword('');
@@ -231,15 +223,8 @@ export function useMyAccountPage() {
     setPasswordMessage(null);
 
     try {
-      const supabase = createClient();
-      // Verify the current password before setting a new one (TASK-331).
-      const { error: reauthError } = await supabase.auth.signInWithPassword({
-        email: user.email,
-        password: currentPassword,
-      });
-      if (reauthError) throw new Error('Current password is incorrect');
-      const { error } = await supabase.auth.updateUser({ password: newPassword });
-      if (error) throw error;
+      const result = await changeAccountPasswordAction(currentPassword, newPassword);
+      if (!result.success) throw new Error(result.error);
       setCurrentPassword('');
       setNewPassword('');
       setConfirmPassword('');
@@ -278,19 +263,11 @@ export function useMyAccountPage() {
     setDeleteError(null);
 
     try {
-      const supabase = createClient();
-      // Password accounts re-authenticate; OAuth-only users (no password) confirm
-      // via the typed DELETE, so they aren't locked out of deleting (TASK-331).
-      if (canChangeEmailPassword) {
-        if (!user.email) throw new Error('Missing account email');
-        const { error } = await supabase.auth.signInWithPassword({
-          email: user.email,
-          password: deletePassword,
-        });
-        if (error) throw error;
-      }
-
-      const result = await deleteAccountAction();
+      const result = await deleteAccountAction(
+        canChangeEmailPassword
+          ? { currentPassword: deletePassword }
+          : { deleteConfirm: deleteConfirmText },
+      );
       if (!result.success) {
         throw new Error(result.error ?? 'Failed to delete account');
       }
