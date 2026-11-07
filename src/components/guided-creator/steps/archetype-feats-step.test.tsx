@@ -3,21 +3,12 @@ import { describe, expect, it, vi, beforeEach, afterEach } from 'vitest';
 import type { CoreRulesMap } from '@/types/core-rules';
 import { getGameRulesFallback } from '@/hooks';
 import { GUIDED_CREATOR_COPY } from '@/lib/constants/site-copy';
-import { applyCappedIdSelection } from '@/lib/guided-creator/feat-selection';
+import { calculateMaxArchetypeFeats } from '@/lib/game/formulas';
 import { ArchetypeFeatsStep } from './archetype-feats-step';
 
 const stepCopy = GUIDED_CREATOR_COPY.steps.archetypeFeats;
 
-const archetypeFeatCapOverride = vi.hoisted(() => ({ value: null as number | null }));
-
-vi.mock('@/lib/game/formulas', async (importOriginal) => {
-  const mod = await importOriginal<typeof import('@/lib/game/formulas')>();
-  return {
-    ...mod,
-    calculateMaxArchetypeFeats: (...args: Parameters<typeof mod.calculateMaxArchetypeFeats>) =>
-      archetypeFeatCapOverride.value ?? mod.calculateMaxArchetypeFeats(...args),
-  };
-});
+const updateDraft = vi.fn();
 
 const baseDraft = {
   creatorEntryMode: 'custom' as const,
@@ -38,7 +29,7 @@ let rulesState: { rules: Partial<CoreRulesMap> | undefined; isLoading: boolean }
 vi.mock('@/stores/guided-creator-store', () => ({
   useGuidedCreatorStore: () => ({
     draft: baseDraft,
-    updateDraft: vi.fn(),
+    updateDraft,
     navigationIntent: null,
     entryNonce: 0,
     prevSubStep: vi.fn(),
@@ -47,12 +38,24 @@ vi.mock('@/stores/guided-creator-store', () => ({
 }));
 
 vi.mock('../use-guided-path-data', () => ({
-  useGuidedPathData: () => ({ pathData: null, archetype: { name: 'Test Path' } }),
+  useGuidedPathData: () => ({
+    pathData: { level1: { guidance_groups: [], feats: ['1', '2', '3'] } },
+    archetype: { name: 'Test Path' },
+  }),
 }));
 
 vi.mock('@/lib/guided-creator/use-guided-deep-entry-on-arrival', () => ({
   useGuidedDeepEntryOnArrival: () => {},
 }));
+
+vi.mock('@/lib/utils/stabilize-vertical-scroll', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('@/lib/utils/stabilize-vertical-scroll')>();
+  return {
+    ...actual,
+    stabilizeVerticalScroll: () => {},
+    nearestVerticalScroller: () => null,
+  };
+});
 
 vi.mock('@/hooks', async (importOriginal) => {
   const actual = await importOriginal<typeof import('@/hooks')>();
@@ -77,6 +80,20 @@ vi.mock('@/hooks', async (importOriginal) => {
   };
 });
 
+let syncLayoutEffects = false;
+
+vi.mock('react', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('react')>();
+  return {
+    ...actual,
+    useLayoutEffect: (effect: () => void | (() => void)) => {
+      if (syncLayoutEffects) {
+        effect();
+      }
+    },
+  };
+});
+
 function renderStep() {
   return renderToStaticMarkup(<ArchetypeFeatsStep />);
 }
@@ -87,42 +104,67 @@ function expectContinueUsable(html: string) {
   expect(continueMatch?.[0]).not.toMatch(/\sdisabled(?:=""|=\{true\}|(?=\s|>))/);
 }
 
+function expectContinueBlocked(html: string) {
+  const continueMatch = html.match(/<button[^>]*>Continue<\/button>/i);
+  expect(continueMatch).toBeTruthy();
+  expect(continueMatch?.[0]).toMatch(/\sdisabled(?:=""|=\{true\}|(?=\s|>))/);
+}
+
 describe('ArchetypeFeatsStep guided feat cap', () => {
   beforeEach(() => {
-    archetypeFeatCapOverride.value = 2;
+    syncLayoutEffects = false;
+    updateDraft.mockClear();
     rulesState = { rules: getGameRulesFallback(), isLoading: false };
+    baseDraft.archetypeType = 'powered-martial';
     baseDraft.archetypeFeatIds = ['1'];
   });
 
   afterEach(() => {
-    archetypeFeatCapOverride.value = null;
+    syncLayoutEffects = false;
   });
 
-  it('blocks selecting more than the allowed count via capped selection', () => {
-    expect(applyCappedIdSelection(['1', '2'], '3', 2)).toEqual(['1', '3']);
-    expect(applyCappedIdSelection(['1', '2'], '4', 2)).toHaveLength(2);
-  });
-
-  it('shows an under-limit warning when fewer than max are picked but Continue stays enabled', () => {
+  it('uses the real L1 powered-martial cap from game rules (2 slots)', () => {
+    const cap = calculateMaxArchetypeFeats(1, 'powered-martial', getGameRulesFallback());
+    expect(cap).toBe(2);
     const html = renderStep();
+    expect(html).toContain(`1 / ${cap}`);
     expect(html).toContain(stepCopy.underLimit(1));
     expectContinueUsable(html);
-    expect(html).toContain('1 / 2');
   });
 
-  it('hides the under-limit warning when the cap is filled', () => {
+  it('keeps Continue enabled when under the cap but disabled when over until reconciled', () => {
     baseDraft.archetypeFeatIds = ['1', '2'];
+    expectContinueUsable(renderStep());
+
+    baseDraft.archetypeFeatIds = ['1', '2', '3'];
+    expectContinueBlocked(renderStep());
+  });
+
+  it('trims restored over-cap drafts via layout reconciliation', () => {
+    syncLayoutEffects = true;
+    baseDraft.creatorEntryMode = 'guided';
+    baseDraft.archetypePathId = 'path-1';
+    baseDraft.archetypeFeatIds = ['1', '2', '3'];
+    renderStep();
+    expect(updateDraft).toHaveBeenCalledWith({ archetypeFeatIds: ['1', '2'] });
+  });
+
+  it('raises the displayed cap when DB rules grant more archetype feats (martial)', () => {
+    baseDraft.archetypeType = 'martial';
+    baseDraft.archetypeFeatIds = ['1', '2'];
+    const cap = calculateMaxArchetypeFeats(1, 'martial', getGameRulesFallback());
     const html = renderStep();
-    expect(html).not.toContain(stepCopy.underLimit(1));
+    expect(cap).toBe(3);
+    expect(html).toContain(`2 / ${cap}`);
+    expect(html).toContain(stepCopy.underLimit(1));
     expectContinueUsable(html);
   });
 
-  it('keeps Continue enabled when DB rules raise the cap after fallback picks', () => {
-    archetypeFeatCapOverride.value = 5;
+  it('shrinks the effective cap when archetype type changes (powered-martial → power)', () => {
+    baseDraft.archetypeType = 'power';
     baseDraft.archetypeFeatIds = ['1', '2'];
-    const html = renderStep();
-    expectContinueUsable(html);
-    expect(html).toContain('2 / 5');
-    expect(html).toContain(stepCopy.underLimit(3));
+    const cap = calculateMaxArchetypeFeats(1, 'power', getGameRulesFallback());
+    expect(cap).toBe(1);
+    expectContinueBlocked(renderStep());
   });
 });

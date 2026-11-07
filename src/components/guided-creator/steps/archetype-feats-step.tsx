@@ -4,7 +4,7 @@
 
 'use client';
 
-import { useMemo, useCallback, useState } from 'react';
+import { useMemo, useCallback, useLayoutEffect, useState } from 'react';
 import { Alert, EmptyState, Spinner } from '@/components/ui';
 import { GuidedInlineCatalogList, GuidedLayerNav } from '@/components/patterns';
 import { cn } from '@/lib/utils';
@@ -14,6 +14,7 @@ import {
   applyCappedIdSelection,
   guidedDraftToFeatRequirementCharacter,
   selectableCuratedFeatIds,
+  trimArchetypeFeatIdsToCap,
 } from '@/lib/guided-creator/feat-selection';
 import {
   buildGuidedFeatsL2FilterOptions,
@@ -75,9 +76,18 @@ export function ArchetypeFeatsStep() {
   });
 
   const maxFeats = calculateMaxArchetypeFeats(1, draft.archetypeType ?? undefined, rules);
+  const featCap = Math.max(0, maxFeats);
   const pickedCount = draft.archetypeFeatIds.length;
-  const featsRemaining = Math.max(0, maxFeats - pickedCount);
-  const showUnderLimitWarning = maxFeats > 0 && pickedCount < maxFeats;
+  const featsRemaining = Math.max(0, featCap - pickedCount);
+  const showUnderLimitWarning = featCap > 0 && pickedCount < featCap;
+  const isOverCap = pickedCount > featCap;
+
+  useLayoutEffect(() => {
+    const trimmed = trimArchetypeFeatIdsToCap(draft.archetypeFeatIds, maxFeats);
+    if (trimmed) {
+      updateDraft({ archetypeFeatIds: trimmed });
+    }
+  }, [draft.archetypeFeatIds, maxFeats, updateDraft]);
   const guidanceGroups = pathData?.level1?.guidance_groups;
   const pathFeats = pathData?.level1?.feats;
   const groups = useMemo(() => {
@@ -119,7 +129,7 @@ export function ArchetypeFeatsStep() {
     [feats, draft.archetypeFeatIds, requirementCharacter, codexSkills],
   );
 
-  const canContinue = !isLoading;
+  const canContinue = !isLoading && !isOverCap;
 
   // Inline (L3) catalog — same builders as GuidedFeatsL2Modal so filtering/eligibility
   // (requirements, capped selection) stay identical whether shown in-page or in a modal.
