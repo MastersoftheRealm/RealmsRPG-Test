@@ -123,6 +123,11 @@ describe('character-legality all-levels gate', () => {
     ],
     ['variable payload (fail closed)', `supabase.from('characters').update(payload);`],
     ['object spread (fail closed)', `supabase.from('characters').update({ ...rowPatch });`],
+    ['quoted data key (fail closed)', `supabase.from('characters').update({ 'data': sheet });`],
+    [
+      'brace in string value (fail closed)',
+      `supabase.from('characters').update({ name: '}', data: sheet });`,
+    ],
     ['upsert', `supabase.from('characters').upsert({ data: sheet });`],
   ])('positive chain fixture: %s', (_label, snippet) => {
     const chain = charactersTableWriteChains(stripComments(snippet))[0];
@@ -141,6 +146,38 @@ describe('character-legality all-levels gate', () => {
       `export async function PATCH() {
         const payload = { data: sheet };
         await client.from('characters').update(asDbUpdate<'characters'>(payload));
+        return new Response("ok");
+      }`,
+    );
+    const result = runCharacterLegalityAllLevelsGate(dir);
+    expect(result.ok).toBe(false);
+    expect(result.errors.some((e) => e.includes('PATCH must call'))).toBe(true);
+  });
+
+  it('end-to-end gate fails on unguarded update with quoted data key', () => {
+    const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'legality-gate-quoted-data-'));
+    const routeDir = path.join(dir, 'src', 'app', 'api', 'sheet', 'quoted');
+    fs.mkdirSync(routeDir, { recursive: true });
+    fs.writeFileSync(
+      path.join(routeDir, 'route.ts'),
+      `export async function PATCH() {
+        await client.from('characters').update({ 'data': sheet });
+        return new Response("ok");
+      }`,
+    );
+    const result = runCharacterLegalityAllLevelsGate(dir);
+    expect(result.ok).toBe(false);
+    expect(result.errors.some((e) => e.includes('PATCH must call'))).toBe(true);
+  });
+
+  it('end-to-end gate fails on unguarded update with brace inside string', () => {
+    const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'legality-gate-brace-string-'));
+    const routeDir = path.join(dir, 'src', 'app', 'api', 'sheet', 'trick');
+    fs.mkdirSync(routeDir, { recursive: true });
+    fs.writeFileSync(
+      path.join(routeDir, 'route.ts'),
+      `export async function PATCH() {
+        await client.from('characters').update({ name: '}', data: sheet });
         return new Response("ok");
       }`,
     );

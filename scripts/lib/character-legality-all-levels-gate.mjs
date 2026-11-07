@@ -103,7 +103,7 @@ export function charactersTableWriteChains(strippedSource) {
 }
 
 /**
- * Naive `(`/`)`/`{`/`}` scanner — does not skip string contents (conservative).
+ * First argument of `.insert(` / `.update(` only — naive `(` / `)` balance (not string-aware).
  * @param {string} source
  * @param {number} openParenIdx index of `(` starting the call argument list
  * @returns {string}
@@ -123,47 +123,55 @@ function balancedCallArgFrom(source, openParenIdx) {
   return '';
 }
 
+/** List/index columns on `characters` — not the JSONB `data` blob (strict metadata exemption). */
+const METADATA_ONLY_KEYS = new Set([
+  'updated_at',
+  'created_at',
+  'name',
+  'level',
+  'archetype_name',
+  'ancestry_name',
+  'status',
+  'visibility',
+  'client_request_id',
+  'user_id',
+  'id',
+]);
+
+/** Identifier or member access only — no calls, literals, quotes, or braces. */
+const SIMPLE_VALUE = /^[a-zA-Z_$][\w$]*(?:\.[a-zA-Z_$][\w$]*)*$/;
+
 /**
- * @param {string} source
- * @param {number} openIdx index of `{`
+ * Metadata-only inline object exemption (strict allowlist). Anything else is a sheet write.
+ * @param {string} arg
  */
-function extractBalancedBraces(source, openIdx) {
-  if (source[openIdx] !== '{') return '';
-  let depth = 0;
-  for (let i = openIdx; i < source.length; i++) {
-    const ch = source[i];
-    if (ch === '{') depth++;
-    else if (ch === '}') {
-      depth--;
-      if (depth === 0) return source.slice(openIdx, i + 1);
-    }
+function isStrictMetadataOnlyInlineObject(arg) {
+  const trimmed = arg.trim();
+  if (!trimmed.startsWith('{') || !trimmed.endsWith('}')) return false;
+  if (/['"`]/.test(trimmed)) return false;
+  const inner = trimmed.slice(1, -1).trim();
+  if (!inner || inner.includes('{') || inner.includes('}')) return false;
+  if (/\.\.\./.test(inner) || /\bdata\b/.test(inner)) return false;
+  const parts = inner
+    .split(',')
+    .map((p) => p.trim())
+    .filter(Boolean);
+  if (parts.length === 0) return false;
+  for (const part of parts) {
+    const m = part.match(/^([a-zA-Z_][\w]*)\s*:\s*(.+)$/);
+    if (!m) return false;
+    if (!METADATA_ONLY_KEYS.has(m[1])) return false;
+    if (!SIMPLE_VALUE.test(m[2].trim())) return false;
   }
-  return '';
+  return true;
 }
 
 /**
- * Proven inline object literal touches `characters.data` (or spread we cannot disprove).
- * @param {string} objectLiteral including surrounding `{` `}`
- */
-function objectLiteralTouchesSheetData(objectLiteral) {
-  if (/\bdata\s*:/.test(objectLiteral)) return true;
-  if (/(?:^\{|[,{])\s*data\s*(?=[,}])/m.test(objectLiteral)) return true;
-  if (/\.\.\./.test(objectLiteral)) return true;
-  return false;
-}
-
-/**
- * Fail closed unless the first arg is a proven metadata-only inline `{ ... }` (no `data`, no spread).
- * Wrappers (`asDbUpdate(...)`), identifiers, and unresolved shapes count as sheet writes.
+ * False only for a strict metadata-only inline `{ ... }`; all other write args fail closed.
  * @param {string} arg
  */
 function writeArgLooksLikeSheetPersist(arg) {
-  const trimmed = arg.trim();
-  if (trimmed.startsWith('{')) {
-    const literal = extractBalancedBraces(trimmed, 0);
-    return objectLiteralTouchesSheetData(literal || trimmed);
-  }
-  return true;
+  return !isStrictMetadataOnlyInlineObject(arg);
 }
 
 /**
@@ -190,8 +198,8 @@ export function chainWritesCharacterSheetData(chain) {
 }
 
 /**
- * True when any chain-local `from('characters')` write persists `characters.data`.
- * New persistence routes must call `evaluateCharacterLegalityForSave` (enforced in the gate).
+ * True when a chain-local `from('characters')` write is not a strict metadata-only exemption.
+ * Those routes must call `evaluateCharacterLegalityForSave` (enforced in the gate).
  * @param {string} strippedSource
  */
 export function routePersistsCharacterSheetData(strippedSource) {
