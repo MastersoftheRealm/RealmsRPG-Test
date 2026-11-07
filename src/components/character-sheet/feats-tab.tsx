@@ -197,6 +197,9 @@ export function FeatsTab({
     () => characterFeats.reduce((sum, feat) => sum + getFeatLevelForCharacter(feat), 0),
     [characterFeats, getFeatLevelForCharacter],
   );
+  const archetypeOver = maxArchetypeFeats !== undefined && usedArchetypeSlots > maxArchetypeFeats;
+  const characterOver = maxCharacterFeats !== undefined && usedCharacterSlots > maxCharacterFeats;
+
   const featLevelsByFamily = useMemo(() => {
     const map = new Map<string, CodexFeat[]>();
     featsDb.forEach((feat) => {
@@ -533,10 +536,17 @@ export function FeatsTab({
         addLabel="Add archetype feat"
         headerRightContent={
           showEditControls && maxArchetypeFeats !== undefined ? (
-            <span className="text-sm font-medium tabular-nums">
+            <span
+              className={cn('text-sm font-medium tabular-nums', archetypeOver && 'text-danger-fg')}
+            >
               {usedArchetypeSlots}/{maxArchetypeFeats}
             </span>
           ) : undefined
+        }
+        addButtonClassName={
+          archetypeOver
+            ? 'text-danger-fg hover:opacity-80 hover:bg-danger-50 dark:hover:bg-danger-900/30'
+            : undefined
         }
         sortState={archetypeFeatSort}
         onSort={(col) => setArchetypeFeatSort(toggleSort(archetypeFeatSort, col))}
@@ -552,10 +562,17 @@ export function FeatsTab({
         addLabel="Add character feat"
         headerRightContent={
           showEditControls && maxCharacterFeats !== undefined ? (
-            <span className="text-sm font-medium tabular-nums">
+            <span
+              className={cn('text-sm font-medium tabular-nums', characterOver && 'text-danger-fg')}
+            >
               {usedCharacterSlots}/{maxCharacterFeats}
             </span>
           ) : undefined
+        }
+        addButtonClassName={
+          characterOver
+            ? 'text-danger-fg hover:opacity-80 hover:bg-danger-50 dark:hover:bg-danger-900/30'
+            : undefined
         }
         sortState={characterFeatSort}
         onSort={(col) => setCharacterFeatSort(toggleSort(characterFeatSort, col))}

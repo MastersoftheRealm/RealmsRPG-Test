@@ -16,8 +16,10 @@ describe('traitIdPendingCatalogName', () => {
   });
 });
 
-describe('FeatsTab feat slot display (advisory only)', () => {
-  it('shows over-limit counts without danger styling on archetype and character counters', () => {
+describe('FeatsTab feat slot display (advisory overspend)', () => {
+  it('shows x/x counts, danger styling when over max, and still renders Add actions', () => {
+    const onAddArchetypeFeat = vi.fn();
+    const onAddCharacterFeat = vi.fn();
     const html = renderToStaticMarkup(
       <FeatsTab
         showEditControls
@@ -25,11 +27,19 @@ describe('FeatsTab feat slot display (advisory only)', () => {
         maxCharacterFeats={1}
         archetypeFeats={[{ name: 'A' }, { name: 'B' }, { name: 'C' }]}
         characterFeats={[{ name: 'X' }, { name: 'Y' }]}
+        onAddArchetypeFeat={onAddArchetypeFeat}
+        onAddCharacterFeat={onAddCharacterFeat}
       />,
     );
     expect(html).toContain('3/2');
     expect(html).toContain('2/1');
-    expect(html).not.toContain('text-danger-fg');
+    expect(html).toContain('text-danger-fg');
+    expect(html).toContain('Add archetype feat');
+    expect(html).toContain('Add character feat');
+    const archetypeAdd = html.match(/Add archetype feat[\s\S]*?<\/button>/i)?.[0] ?? '';
+    const characterAdd = html.match(/Add character feat[\s\S]*?<\/button>/i)?.[0] ?? '';
+    expect(archetypeAdd).not.toMatch(/\sdisabled(?:=""|(?=\s|>))/);
+    expect(characterAdd).not.toMatch(/\sdisabled(?:=""|(?=\s|>))/);
   });
 });
 
