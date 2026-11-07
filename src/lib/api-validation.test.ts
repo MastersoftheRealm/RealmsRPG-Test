@@ -210,13 +210,30 @@ describe('validateJson', () => {
 });
 
 describe('validateQuery', () => {
-  it('rejects unknown query keys with strict schemas', () => {
+  it('rejects unknown query keys with strict schemas (1dfe8wf2k6b)', async () => {
+    const parsed = campaignsListQuerySchema.safeParse({ full: 'true', extra: '1' });
+    expect(parsed.success).toBe(false);
+    if (parsed.success) return;
+    expect(parsed.error.issues).toEqual([
+      expect.objectContaining({
+        code: 'unrecognized_keys',
+        path: [],
+        keys: ['extra'],
+      }),
+    ]);
+
     const request = new NextRequest('http://localhost/api/campaigns?full=true&extra=1', {
       headers: { host: 'localhost' },
     });
     const result = validateQuery(request, campaignsListQuerySchema);
     expect(result.success).toBe(false);
-    if (!result.success) expect(result.error.status).toBe(400);
+    if (!result.success) {
+      expect(result.error.status).toBe(400);
+      const body = (await result.error.json()) as { details?: string[] };
+      expect(body.details).toHaveLength(1);
+      expect(body.details?.[0]).toBe('Unrecognized key: "extra"');
+      expect(body.details?.[0]?.startsWith(':')).toBe(false);
+    }
   });
 
   it('accepts allowed query keys', () => {

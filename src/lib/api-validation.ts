@@ -195,10 +195,19 @@ export async function validateJson<T>(
   return { success: true, data: result.data };
 }
 
+/** Player-facing detail line for one Zod issue (shared by all API validators). */
+function formatZodValidationIssue(issue: {
+  path: ReadonlyArray<PropertyKey>;
+  message: string;
+}): string {
+  const path = issue.path.map(String).join('.');
+  return path ? `${path}: ${issue.message}` : issue.message;
+}
+
 function validationFailedResponse(
   error: ZodError,
 ): NextResponse<{ error: string; details: string[] }> {
-  const issues = error.issues.map((i) => `${i.path.join('.')}: ${i.message}`);
+  const issues = error.issues.map((i) => formatZodValidationIssue(i));
   return NextResponse.json({ error: 'Validation failed', details: issues }, { status: 400 });
 }
 
