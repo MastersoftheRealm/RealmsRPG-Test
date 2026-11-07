@@ -400,6 +400,11 @@ export async function changeAccountEmailAction(
       return { success: false, error: 'Authentication required' };
     }
 
+    const { user: sessionUser } = await getSession();
+    if (!sessionUser?.uid || liveUser.user.id !== sessionUser.uid) {
+      return { success: false, error: 'Authentication required' };
+    }
+
     const { error } = await supabase.auth.updateUser({ email: normalized });
     if (error) {
       return { success: false, error: error.message ?? 'Failed to update email' };
@@ -426,6 +431,16 @@ export async function changeAccountPasswordAction(
     }
 
     const supabase = await createServerClient();
+    const { data: liveUser, error: liveUserError } = await supabase.auth.getUser();
+    if (liveUserError || !liveUser.user) {
+      return { success: false, error: 'Authentication required' };
+    }
+
+    const { user: sessionUser } = await getSession();
+    if (!sessionUser?.uid || liveUser.user.id !== sessionUser.uid) {
+      return { success: false, error: 'Authentication required' };
+    }
+
     const { error } = await supabase.auth.updateUser({ password: newPassword });
     if (error) {
       return { success: false, error: error.message ?? 'Failed to update password' };

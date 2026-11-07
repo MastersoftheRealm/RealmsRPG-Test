@@ -24,11 +24,14 @@ vi.mock('@/lib/auth/sensitive-account-auth', () => ({
 }));
 
 import {
+  changeAccountEmailAction,
+  changeAccountPasswordAction,
   changeUsernameAction,
   createUserProfileAction,
   deleteAccountAction,
   setProfilePhotoFromLibraryAction,
 } from './actions';
+import { assertSensitiveAccountReauth } from '@/lib/auth/sensitive-account-auth';
 import { requireAuth, requireLiveUser, getSession } from '@/lib/supabase/session';
 import { createClient as createServerClient, createServiceRoleClient } from '@/lib/supabase/server';
 
@@ -37,10 +40,26 @@ const mockRequireLiveUser = vi.mocked(requireLiveUser);
 const mockGetSession = vi.mocked(getSession);
 const mockCreateServerClient = vi.mocked(createServerClient);
 const mockCreateServiceRoleClient = vi.mocked(createServiceRoleClient);
+const mockAssertSensitiveAccountReauth = vi.mocked(assertSensitiveAccountReauth);
+
+const mockAuthGetUser = vi.fn();
+const mockAuthUpdateUser = vi.fn();
 
 function useStub(client: unknown) {
   mockCreateServerClient.mockResolvedValue(client as never);
   mockCreateServiceRoleClient.mockReturnValue(client as never);
+}
+
+function useAuthMutationClient(dbClient: unknown) {
+  const client = {
+    ...(dbClient as object),
+    auth: {
+      getUser: mockAuthGetUser,
+      updateUser: mockAuthUpdateUser,
+      admin: { deleteUser: vi.fn(async () => ({ data: null, error: null })) },
+    },
+  };
+  useStub(client);
 }
 
 const USER = { uid: 'user-1', email: 'hero@example.com' };
@@ -107,6 +126,12 @@ beforeEach(() => {
   mockRequireAuth.mockResolvedValue(USER as never);
   mockRequireLiveUser.mockResolvedValue(USER as never);
   mockGetSession.mockResolvedValue({ user: USER, error: null } as never);
+  mockAssertSensitiveAccountReauth.mockResolvedValue({ ok: true });
+  mockAuthGetUser.mockResolvedValue({
+    data: { user: { id: USER.uid, email: USER.email } },
+    error: null,
+  });
+  mockAuthUpdateUser.mockResolvedValue({ error: null });
 });
 
 describe('changeUsernameAction', () => {
@@ -352,6 +377,128 @@ describe('createUserProfileAction', () => {
     // The usernames mapping stays in step with the profile, not the request.
     const claim = ops.find((op) => op.table === 'usernames');
     expect(claim?.payload).toEqual({ username: 'chosenname', user_id: USER.uid });
+  });
+});
+
+describe('sensitive account action boundaries', () => {
+  it('does not delete when re-auth rejects', async () => {
+    mockAssertSensitiveAccountReauth.mockResolvedValueOnce({
+      ok: false,
+      error: 'Current password is incorrect',
+    });
+    const { client } = createSupabaseStub(() => ok());
+    useStub(client);
+
+    const result = await deleteAccountAction({ currentPassword: 'wrong' });
+
+    expect(result).toEqual({ success: false, error: 'Current password is incorrect' });
+    expect(mockRequireLiveUser).not.toHaveBeenCalled();
+    expect(mockCreateServiceRoleClient).not.toHaveBeenCalled();
+    expect(client.auth.admin.deleteUser).not.toHaveBeenCalled();
+  });
+
+  it('does not change email when re-auth rejects', async () => {
+    mockAssertSensitiveAccountReauth.mockResolvedValueOnce({
+      ok: false,
+      error: 'Current password is incorrect',
+    });
+    useAuthMutationClient({ from: vi.fn() });
+
+    const result = await changeAccountEmailAction('new@example.com', 'wrong');
+
+    expect(result).toEqual({ success: false, error: 'Current password is incorrect' });
+    expect(mockAuthGetUser).not.toHaveBeenCalled();
+    expect(mockAuthUpdateUser).not.toHaveBeenCalled();
+  });
+
+  it('does not change password when re-auth rejects', async () => {
+    mockAssertSensitiveAccountReauth.mockResolvedValueOnce({
+      ok: false,
+      error: 'Current password is incorrect',
+    });
+    useAuthMutationClient({ from: vi.fn() });
+
+    const result = await changeAccountPasswordAction('wrong', 'new-secret');
+
+    expect(result).toEqual({ success: false, error: 'Current password is incorrect' });
+    expect(mockAuthGetUser).not.toHaveBeenCalled();
+    expect(mockAuthUpdateUser).not.toHaveBeenCalled();
+  });
+});
+
+describe('changeAccountEmailAction', () => {
+  it('updates email only after live user matches the session', async () => {
+    useAuthMutationClient({ from: vi.fn() });
+
+    const result = await changeAccountEmailAction('New@Example.com', 'current');
+
+    expect(result).toEqual({ success: true });
+    expect(mockAuthGetUser).toHaveBeenCalled();
+    expect(mockAuthUpdateUser).toHaveBeenCalledWith({ email: 'new@example.com' });
+  });
+
+  it('does not update email when getUser fails', async () => {
+    mockAuthGetUser.mockResolvedValueOnce({
+      data: { user: null },
+      error: { message: 'JWT expired' },
+    });
+    useAuthMutationClient({ from: vi.fn() });
+
+    const result = await changeAccountEmailAction('new@example.com', 'current');
+
+    expect(result).toEqual({ success: false, error: 'Authentication required' });
+    expect(mockAuthUpdateUser).not.toHaveBeenCalled();
+  });
+
+  it('does not update email when the live user id does not match the session', async () => {
+    mockAuthGetUser.mockResolvedValueOnce({
+      data: { user: { id: 'other-user', email: 'other@example.com' } },
+      error: null,
+    });
+    useAuthMutationClient({ from: vi.fn() });
+
+    const result = await changeAccountEmailAction('new@example.com', 'current');
+
+    expect(result).toEqual({ success: false, error: 'Authentication required' });
+    expect(mockAuthUpdateUser).not.toHaveBeenCalled();
+  });
+});
+
+describe('changeAccountPasswordAction', () => {
+  it('updates password only after live user matches the session', async () => {
+    useAuthMutationClient({ from: vi.fn() });
+
+    const result = await changeAccountPasswordAction('current', 'new-secret');
+
+    expect(result).toEqual({ success: true });
+    expect(mockAuthGetUser).toHaveBeenCalled();
+    expect(mockAuthUpdateUser).toHaveBeenCalledWith({ password: 'new-secret' });
+  });
+
+  it('does not update password when getUser fails', async () => {
+    mockAuthGetUser.mockResolvedValueOnce({
+      data: { user: null },
+      error: { message: 'JWT expired' },
+    });
+    useAuthMutationClient({ from: vi.fn() });
+
+    const result = await changeAccountPasswordAction('current', 'new-secret');
+
+    expect(result).toEqual({ success: false, error: 'Authentication required' });
+    expect(mockAuthUpdateUser).not.toHaveBeenCalled();
+  });
+
+  it('does not update password when the live user id does not match the session', async () => {
+    mockAuthGetUser.mockResolvedValueOnce({
+      data: { user: { id: 'other-user', email: 'other@example.com' } },
+      error: null,
+    });
+    useAuthMutationClient({ from: vi.fn() });
+
+    const result = await changeAccountPasswordAction('current', 'new-secret');
+
+    expect(result).toEqual({ success: false, error: 'Authentication required' });
+    expect(mockAuthUpdateUser).not.toHaveBeenCalled();
   });
 });
 
