@@ -1,7 +1,8 @@
 import type { CodexCollection } from '@/lib/codex/collections';
 import type { CodexPayloadKey } from '@/types/codex';
 
-const COLLECTION_TO_PAYLOAD_KEY: Partial<Record<CodexCollection, CodexPayloadKey>> = {
+/** Authoritative table-name → API payload key map for columnar codex tables and core_rules. */
+export const CODEX_COLLECTION_TO_PAYLOAD_KEY: Record<CodexCollection, CodexPayloadKey> = {
   codex_feats: 'feats',
   codex_skills: 'skills',
   codex_species: 'species',
@@ -14,8 +15,6 @@ const COLLECTION_TO_PAYLOAD_KEY: Partial<Record<CodexCollection, CodexPayloadKey
   core_rules: 'coreRules',
 };
 
-export function codexCollectionToPayloadKey(
-  collection: CodexCollection,
-): CodexPayloadKey | undefined {
-  return COLLECTION_TO_PAYLOAD_KEY[collection];
+export function codexCollectionToPayloadKey(collection: CodexCollection): CodexPayloadKey {
+  return CODEX_COLLECTION_TO_PAYLOAD_KEY[collection];
 }

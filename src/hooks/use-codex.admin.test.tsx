@@ -1,10 +1,13 @@
+import React from 'react';
+import { renderToStaticMarkup } from 'react-dom/server';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { describe, expect, it, vi, beforeEach } from 'vitest';
-import { QueryClient } from '@tanstack/react-query';
 import {
   ADMIN_CODEX_QUERY_OPTIONS,
   adminCodexCollectionQueryKey,
   codexKeys,
   patchAdminCodexCollectionRow,
+  useCodexCreatureFeats,
 } from './use-codex';
 
 vi.mock('@/lib/api-client', () => ({
@@ -31,8 +34,28 @@ describe('admin codex reads (CDN bypass)', () => {
     expect(codexKeys.collection('feats')).toEqual(['codex', 'feats']);
   });
 
-  it('requests includeUnlisted=1 for admin collection fetches', async () => {
-    await fetchCodexCollection('creatureFeats', ADMIN_CODEX_QUERY_OPTIONS);
+  it('renders useCodexCreatureFeats and fetches with includeUnlisted via the hook query', async () => {
+    const queryClient = new QueryClient({
+      defaultOptions: { queries: { retry: false } },
+    });
+
+    function AdminCreatureFeatsProbe() {
+      useCodexCreatureFeats(ADMIN_CODEX_QUERY_OPTIONS);
+      return null;
+    }
+
+    renderToStaticMarkup(
+      <QueryClientProvider client={queryClient}>
+        <AdminCreatureFeatsProbe />
+      </QueryClientProvider>,
+    );
+
+    const cached = queryClient
+      .getQueryCache()
+      .find({ queryKey: adminCodexCollectionQueryKey('creatureFeats') });
+    expect(cached, 'hook must register the admin collection query when rendered').toBeDefined();
+    await cached?.fetch();
+
     expect(mockFetchCodexCollection).toHaveBeenCalledWith('creatureFeats', {
       includeUnlisted: true,
     });
