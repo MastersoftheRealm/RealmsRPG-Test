@@ -53,7 +53,10 @@ describe('character-legality all-levels gate', () => {
     fs.mkdirSync(path.join(dir, 'src', 'app', 'api', 'characters'), { recursive: true });
     fs.writeFileSync(
       path.join(dir, 'src', 'app', 'api', 'characters', 'route.ts'),
-      'export async function POST() { return new Response("ok"); }',
+      `export async function POST() {
+        await supabase.from('characters').insert({ data: cleanedData });
+        return new Response("ok");
+      }`,
     );
     const result = runCharacterLegalityAllLevelsGate(dir);
     expect(result.ok).toBe(false);
@@ -74,9 +77,46 @@ describe('character-legality all-levels gate', () => {
   });
 
   it('targets only character persistence write routes', () => {
-    expect(isCharacterPersistenceWriteRoute('src/app/api/characters/route.ts')).toBe(true);
-    expect(isCharacterPersistenceWriteRoute('src/app/api/characters/[id]/route.ts')).toBe(true);
-    expect(isCharacterPersistenceWriteRoute('src/app/api/upload/portrait/route.ts')).toBe(false);
+    const postCharacters = `
+      export async function POST() {
+        await supabase.from('characters').insert({ data: cleanedData });
+      }
+    `;
+    const patchCharacter = `
+      export async function PATCH() {
+        await supabase.from('characters').update({ data: mergedData });
+      }
+    `;
+    const portraitOnly = `
+      export async function POST() {
+        await supabase.from('characters').select('id');
+      }
+    `;
+    expect(
+      isCharacterPersistenceWriteRoute('src/app/api/characters/route.ts', postCharacters),
+    ).toBe(true);
+    expect(
+      isCharacterPersistenceWriteRoute('src/app/api/characters/[id]/route.ts', patchCharacter),
+    ).toBe(true);
+    expect(
+      isCharacterPersistenceWriteRoute('src/app/api/upload/portrait/route.ts', portraitOnly),
+    ).toBe(false);
+  });
+
+  it('fails when a new characters insert route omits evaluateCharacterLegalityForSave', () => {
+    const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'legality-gate-new-char-route-'));
+    const routeDir = path.join(dir, 'src', 'app', 'api', 'player', 'import');
+    fs.mkdirSync(routeDir, { recursive: true });
+    fs.writeFileSync(
+      path.join(routeDir, 'route.ts'),
+      `export async function POST() {
+        await client.from('characters').insert({ data: payload });
+        return new Response("ok");
+      }`,
+    );
+    const result = runCharacterLegalityAllLevelsGate(dir);
+    expect(result.ok).toBe(false);
+    expect(result.errors.some((e) => e.includes('POST must call'))).toBe(true);
   });
 
   it('forbids level-1-only blocking helpers', () => {

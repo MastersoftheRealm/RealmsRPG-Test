@@ -675,6 +675,46 @@ describe('POST /api/characters', () => {
       expect(supabase.insertMock).not.toHaveBeenCalled();
     });
 
+    it('replays with legality fields matching a fresh create for the same payload', async () => {
+      const clientRequestId = '11111111-2222-4333-8444-555555555556';
+      const overBudget = legalLevel1Payload({
+        level: 5,
+        abilities: {
+          strength: 50,
+          vitality: 50,
+          agility: 50,
+          acuity: 50,
+          intelligence: 0,
+          charisma: 0,
+        },
+      });
+
+      mockGetSession.mockResolvedValue({ user: TEST_USER, error: null });
+      const freshSupabase = createMockSupabase({ insertId: 'fresh-create-id' });
+      mockCreateClient.mockResolvedValue(freshSupabase as never);
+
+      const freshResponse = await POST(makePostRequest(overBudget));
+      expect(freshResponse.status).toBe(200);
+      const freshBody = await readJson<{
+        id: string;
+        legalityWarnings?: Array<{ code: string; level: number }> | undefined;
+      }>(freshResponse);
+
+      const replaySupabase = createMockSupabase({ replayCharacterId: 'already-created-id' });
+      mockCreateClient.mockResolvedValue(replaySupabase as never);
+
+      const replayResponse = await POST(makePostRequest({ ...overBudget, clientRequestId }));
+      expect(replayResponse.status).toBe(200);
+      const replayBody = await readJson<{
+        id: string;
+        legalityWarnings?: Array<{ code: string; level: number }> | undefined;
+      }>(replayResponse);
+
+      expect(replayBody.id).toBe('already-created-id');
+      expect(replayBody.legalityWarnings).toEqual(freshBody.legalityWarnings);
+      expect(replaySupabase.insertMock).not.toHaveBeenCalled();
+    });
+
     it('replays ahead of the quota check, so a retry is not refused for the slot it took', async () => {
       const policy = getDefaultRolePolicy('new_player');
       mockGetSession.mockResolvedValue({ user: TEST_USER, error: null });

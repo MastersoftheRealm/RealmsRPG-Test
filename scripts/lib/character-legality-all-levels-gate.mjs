@@ -82,12 +82,28 @@ export function mutationHandlersInRoute(code) {
   return handlers;
 }
 
-/** Routes that persist character JSON and must call evaluateCharacterLegalityForSave in write handlers. */
-export function isCharacterPersistenceWriteRoute(relPath) {
-  return (
-    relPath === 'src/app/api/characters/route.ts' ||
-    relPath === 'src/app/api/characters/[id]/route.ts'
+/**
+ * True when the route module writes character sheet JSON (`characters.data` insert/update).
+ * Used so new persistence routes cannot skip the all-levels legality call.
+ */
+export function routePersistsCharacterSheetData(strippedSource) {
+  if (!/\.from\s*\(\s*['"]characters['"]\s*\)/.test(strippedSource)) {
+    return false;
+  }
+  if (/\.from\s*\(\s*['"]characters['"]\s*\)[\s\S]*?\.insert\s*\(/.test(strippedSource)) {
+    return true;
+  }
+  return /\.from\s*\(\s*['"]characters['"]\s*\)[\s\S]*?\.update\s*\(\s*\{[^}]*\bdata\s*:/.test(
+    strippedSource,
   );
+}
+
+/** @param {string} relPath @param {string} rawSource */
+export function isCharacterPersistenceWriteRoute(relPath, rawSource) {
+  if (!relPath.startsWith('src/app/api/') || !relPath.endsWith('/route.ts')) {
+    return false;
+  }
+  return routePersistsCharacterSheetData(stripComments(rawSource));
 }
 
 /**
@@ -169,8 +185,8 @@ export function runCharacterLegalityAllLevelsGate(root) {
   }
 
   for (const rel of listApiRouteFiles(root)) {
-    if (!isCharacterPersistenceWriteRoute(rel)) continue;
     const raw = fs.readFileSync(path.join(root, rel), 'utf8');
+    if (!isCharacterPersistenceWriteRoute(rel, raw)) continue;
     const handlers = mutationHandlersInRoute(raw).filter((m) =>
       CHARACTER_PERSISTENCE_METHODS.includes(m),
     );

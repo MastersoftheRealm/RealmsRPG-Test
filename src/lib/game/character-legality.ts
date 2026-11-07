@@ -43,7 +43,8 @@ export type CharacterLegalityRulesStatus = 'loaded' | 'missing';
 export type CharacterLegalityUncomputableCode =
   | 'core_rules_unavailable'
   | 'invalid_level'
-  | 'feat_catalog_unavailable';
+  | 'feat_catalog_unavailable'
+  | 'feat_requirements_skipped';
 
 export type CharacterLegalityWarningCode =
   | 'ability_points_over_budget'
@@ -75,7 +76,8 @@ export interface CharacterLegalityResult {
   uncomputable: CharacterLegalityUncomputableCode[];
 }
 
-const FEAT_CATALOG_PATCH_KEYS = new Set([
+/** Dirty PATCH keys that can change feat requirement satisfaction (B5 catalog fetch gate). */
+export const FEAT_CATALOG_PATCH_TRIGGER_KEYS = [
   'feats',
   'archetypeFeats',
   'abilities',
@@ -87,7 +89,9 @@ const FEAT_CATALOG_PATCH_KEYS = new Set([
   'speedBase',
   'archetype',
   'archetypeChoices',
-]);
+] as const;
+
+const FEAT_CATALOG_PATCH_KEYS = new Set<string>(FEAT_CATALOG_PATCH_TRIGGER_KEYS);
 
 const ABILITY_KEYS = [
   'strength',
@@ -514,10 +518,14 @@ export async function evaluateCharacterLegalityForSave(
   let featCatalog: FeatRequirementCatalog | undefined;
   const extraUncomputable: CharacterLegalityUncomputableCode[] = [];
 
-  if (options.loadFeatCatalog !== false) {
+  if (options.loadFeatCatalog === false) {
+    extraUncomputable.push('feat_requirements_skipped');
+  } else {
     try {
       featCatalog = await fetchFeatRequirementCatalogCached();
-    } catch {
+    } catch (err) {
+      const detail = err instanceof Error ? err.message : 'unknown';
+      console.error('[character-legality] feat requirement catalog fetch failed:', detail);
       extraUncomputable.push('feat_catalog_unavailable');
     }
   }

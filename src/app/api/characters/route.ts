@@ -23,6 +23,7 @@ import { fetchArchetypeNameMap } from '@/lib/game/archetype-display';
 import {
   appendCharacterLegalityToResponse,
   evaluateCharacterLegalityForSave,
+  type CharacterLegalityCandidate,
 } from '@/lib/game/character-legality';
 import { apiErrorResponse } from '@/lib/api-error';
 import { GUIDED_CREATOR_COPY } from '@/lib/constants/site-copy';
@@ -85,6 +86,7 @@ async function jsonForInsertResult(
   clientRequestId: string | undefined,
   result: { id: string } | { uniqueViolation: true },
   legality?: Awaited<ReturnType<typeof evaluateCharacterLegalityForSave>>,
+  legalityCandidate?: CharacterLegalityCandidate,
 ): Promise<NextResponse> {
   if ('id' in result) {
     const body = legality
@@ -94,9 +96,28 @@ async function jsonForInsertResult(
   }
   if (clientRequestId) {
     const replayed = await findCharacterByRequestId(supabase, userId, clientRequestId);
-    if (replayed) return NextResponse.json({ id: replayed });
+    if (replayed) {
+      const replayLegality =
+        legality ??
+        (legalityCandidate
+          ? await evaluateCharacterLegalityForSave(supabase, legalityCandidate)
+          : undefined);
+      const body = replayLegality
+        ? appendCharacterLegalityToResponse({ id: replayed }, replayLegality)
+        : { id: replayed };
+      return NextResponse.json(body);
+    }
   }
   throw new Error('Character insert unique violation without a replay row');
+}
+
+async function jsonForIdempotentReplay(
+  supabase: TypedSupabaseClient,
+  replayedId: string,
+  legalityCandidate: CharacterLegalityCandidate,
+): Promise<NextResponse> {
+  const legality = await evaluateCharacterLegalityForSave(supabase, legalityCandidate);
+  return NextResponse.json(appendCharacterLegalityToResponse({ id: replayedId }, legality));
 }
 
 export async function GET() {
@@ -193,7 +214,10 @@ export async function POST(request: NextRequest) {
     // be refused because the first attempt already consumed the caller's last slot.
     if (clientRequestId) {
       const replayed = await findCharacterByRequestId(supabase, user.uid, clientRequestId);
-      if (replayed) return NextResponse.json({ id: replayed });
+      if (replayed) {
+        const cleanedData = prepareCharacterForCreate(data);
+        return jsonForIdempotentReplay(supabase, replayed, cleanedData);
+      }
     }
 
     const rolePolicy = await getRolePolicyForUser(user.uid, supabase);
@@ -244,6 +268,11 @@ export async function POST(request: NextRequest) {
 
       await ensureUserProfile(supabase, user.uid);
 
+      const legality = await evaluateCharacterLegalityForSave(
+        supabase,
+        newData as CharacterLegalityCandidate,
+      );
+
       const inserted = await insertCharacterRow(supabase, {
         id: newId,
         user_id: user.uid,
@@ -251,7 +280,14 @@ export async function POST(request: NextRequest) {
         ...listCols,
         client_request_id: clientRequestId ?? null,
       });
-      return jsonForInsertResult(supabase, user.uid, clientRequestId, inserted);
+      return jsonForInsertResult(
+        supabase,
+        user.uid,
+        clientRequestId,
+        inserted,
+        legality,
+        newData as CharacterLegalityCandidate,
+      );
     }
 
     const cleanedData = prepareCharacterForCreate(data);
@@ -273,7 +309,14 @@ export async function POST(request: NextRequest) {
       ...listCols,
       client_request_id: clientRequestId ?? null,
     });
-    return jsonForInsertResult(supabase, user.uid, clientRequestId, inserted, legality);
+    return jsonForInsertResult(
+      supabase,
+      user.uid,
+      clientRequestId,
+      inserted,
+      legality,
+      cleanedData,
+    );
   } catch (err) {
     return apiErrorResponse(
       GUIDED_CREATOR_COPY.steps.reveal.saveFailed,
