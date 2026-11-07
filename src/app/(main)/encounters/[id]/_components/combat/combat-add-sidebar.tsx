@@ -17,6 +17,7 @@ export interface CombatAddSidebarProps {
   setEncounter: React.Dispatch<React.SetStateAction<Encounter | null>>;
   campaignsFull: Campaign[];
   linkedCampaign: Campaign | undefined;
+  availableCampaignCharacterCount: number;
   addingAllChars: boolean;
   newCombatant: NewCombatantForm;
   setNewCombatant: React.Dispatch<React.SetStateAction<NewCombatantForm>>;
@@ -30,6 +31,7 @@ export function CombatAddSidebar({
   setEncounter,
   campaignsFull,
   linkedCampaign,
+  availableCampaignCharacterCount,
   addingAllChars,
   newCombatant,
   setNewCombatant,
@@ -69,11 +71,15 @@ export function CombatAddSidebar({
               variant="secondary"
               className="w-full"
               onClick={onAddAllCampaignCharacters}
-              disabled={addingAllChars || encounter.isActive}
+              disabled={
+                addingAllChars || encounter.isActive || availableCampaignCharacterCount === 0
+              }
             >
               {addingAllChars
                 ? 'Adding…'
-                : `Add all Characters (${linkedCampaign.characters?.length ?? 0})`}
+                : availableCampaignCharacterCount === 0
+                  ? 'All Characters Added'
+                  : `Add all Characters (${availableCampaignCharacterCount})`}
             </Button>
           )}
         </div>

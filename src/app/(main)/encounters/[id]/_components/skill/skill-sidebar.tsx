@@ -22,6 +22,7 @@ export interface SkillSidebarProps {
   useInitiative: boolean;
   isMixedEncounter: boolean;
   combatTurnOrderLength: number;
+  availableCampaignCharacterCount: number;
   addingAllChars: boolean;
   newParticipantName: string;
   setNewParticipantName: (v: string) => void;
@@ -47,6 +48,7 @@ export function SkillSidebar({
   useInitiative,
   isMixedEncounter,
   combatTurnOrderLength,
+  availableCampaignCharacterCount,
   addingAllChars,
   newParticipantName,
   setNewParticipantName,
@@ -215,11 +217,13 @@ export function SkillSidebar({
               variant="secondary"
               className="w-full"
               onClick={onAddAllCampaignCharacters}
-              disabled={addingAllChars}
+              disabled={addingAllChars || availableCampaignCharacterCount === 0}
             >
               {addingAllChars
                 ? 'Adding…'
-                : `Add all Characters (${linkedCampaign.characters?.length ?? 0})`}
+                : availableCampaignCharacterCount === 0
+                  ? 'All Characters Added'
+                  : `Add all Characters (${availableCampaignCharacterCount})`}
             </Button>
           )}
         </div>

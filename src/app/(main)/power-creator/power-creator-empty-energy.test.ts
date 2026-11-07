@@ -1,9 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import {
-  buildMechanicParts,
-  calculatePowerCosts,
-  formatEnergyStat,
-} from '@/lib/calculators';
+import { buildMechanicParts, calculatePowerCosts, formatEnergyStat } from '@/lib/calculators';
 import { loadRepoCodexParts } from '@/lib/calculators/power-composition.fixture';
 import { emptyPowerCreatorFormState } from './power-creator-bootstrap';
 

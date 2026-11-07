@@ -5,7 +5,7 @@
 'use client';
 
 import Link from 'next/link';
-import { ChevronLeft, Pencil } from 'lucide-react';
+import { ChevronLeft, Pencil, Map as MapIcon } from 'lucide-react';
 import { Button, IconButton, PageHeader } from '@/components/ui';
 import type { Campaign } from '@/types/campaign';
 
@@ -131,13 +131,19 @@ export function CampaignDetailHeader({
               )
             )}
           </div>
-          {isRealmMaster && (
-            <div className="flex flex-shrink-0 items-center gap-2">
+          <div className="flex flex-shrink-0 items-center gap-2">
+            <Button variant="secondary" size="sm" asChild>
+              <Link href={`/campaigns/${campaign.id}/tabletop`}>
+                <MapIcon className="h-4 w-4" />
+                Tabletop
+              </Link>
+            </Button>
+            {isRealmMaster && (
               <Button variant="danger" size="sm" onClick={onDeleteClick}>
                 Delete Campaign
               </Button>
-            </div>
-          )}
+            )}
+          </div>
         </div>
       </div>
     </>

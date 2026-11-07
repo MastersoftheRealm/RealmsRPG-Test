@@ -165,13 +165,15 @@ function createMockSupabase(config: MockSupabaseConfig = {}) {
                   eq: vi.fn().mockResolvedValue({ count: characterCount, error: null }),
                 };
               }
+              const eqCalls: [string, unknown][] = [];
               // `.eq()` returns itself so the idempotency lookup can chain user_id +
               // client_request_id before `.maybeSingle()`.
               const query: Record<string, unknown> = {
                 order: vi.fn().mockResolvedValue({ data: characters, error: charactersError }),
                 maybeSingle: vi.fn(async () => {
-                  if (cols === 'id, data') {
-                    return { data: duplicateSource, error: null };
+                  const filters = Object.fromEntries(eqCalls);
+                  if (duplicateSource && filters.id === duplicateSource.id) {
+                    return { data: { id: duplicateSource.id }, error: null };
                   }
                   if (cols === 'data') {
                     storedSheetSelectCalls++;
@@ -190,7 +192,10 @@ function createMockSupabase(config: MockSupabaseConfig = {}) {
                   return { data: id ? { id } : null, error: null };
                 }),
               };
-              query.eq = vi.fn().mockReturnValue(query);
+              query.eq = vi.fn((column: string, value: unknown) => {
+                eqCalls.push([column, value]);
+                return query;
+              });
               return query;
             },
           ),
@@ -221,6 +226,31 @@ function createMockSupabase(config: MockSupabaseConfig = {}) {
         };
       }
       throw new Error(`Unexpected table: ${table}`);
+    }),
+    rpc: vi.fn(async (name: string, args: Record<string, unknown>) => {
+      if (name === 'get_character_relational_document') {
+        return { data: duplicateSource?.data ?? null, error: null };
+      }
+      if (name === 'create_character_relational') {
+        const document = args.p_document as Record<string, unknown>;
+        insert({
+          id: args.p_character_id,
+          user_id: TEST_USER.uid,
+          data: document,
+          name: document.name,
+          level: document.level,
+          client_request_id: args.p_client_request_id,
+        });
+        if (insertError && insertError.code !== '23505') {
+          return { data: null, error: insertError };
+        }
+        const id =
+          insertError?.code === '23505'
+            ? (replayCharacterIdAfterInsert ?? replayCharacterId ?? insertId)
+            : insertId;
+        return { data: { status: insertError ? 'replayed' : 'created', id }, error: null };
+      }
+      throw new Error(`Unexpected RPC: ${name}`);
     }),
     insertMock: insert,
     insertedRows,
@@ -293,6 +323,7 @@ describe('GET /api/characters', () => {
           {
             id: 'char-1',
             data: { name: 'Aria', level: 3, portrait: 'https://example.com/p.png' },
+            portrait: 'https://example.com/p.png',
             updated_at: '2026-07-01T12:00:00.000Z',
             name: 'Aria',
             level: 3,
