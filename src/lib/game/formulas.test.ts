@@ -8,6 +8,7 @@ import {
   calculateCreatureTrainingPoints,
   calculateHealthEnergyPool,
   calculateMaxArchetypeFeats,
+  calculateMaxCharacterFeats,
   calculateProficiency,
   calculateSkillBonusWithProficiency,
   calculateSkillPointsForEntity,
@@ -187,6 +188,22 @@ describe('parseLevel does not collapse 0 or 0.25 to 1 (T5 / N1)', () => {
     expect(calculateCreatureTrainingPoints(0.25)).not.toBe(calculateCreatureTrainingPoints(1));
     expect(calculateCreatureFeatPoints(0.25)).not.toBe(calculateCreatureFeatPoints(1));
     expect(calculateCreatureCurrency(0.25)).not.toBe(calculateCreatureCurrency(1));
+  });
+});
+
+describe('calculateMaxCharacterFeats (core_rules characterFeatsPerLevel)', () => {
+  it('defaults to one slot per level when rules are omitted', () => {
+    expect(calculateMaxCharacterFeats(1)).toBe(1);
+    expect(calculateMaxCharacterFeats(3)).toBe(3);
+  });
+
+  it('honors DB characterFeatsPerLevel override', () => {
+    const rules = { PROGRESSION_PLAYER: { characterFeatsPerLevel: 2 } } as Partial<
+      import('@/types/core-rules').CoreRulesMap
+    >;
+    expect(calculateMaxCharacterFeats(1, rules)).toBe(2);
+    expect(calculateMaxCharacterFeats(3, rules)).toBe(6);
+    expect(calculateMaxCharacterFeats(3, rules) - calculateMaxCharacterFeats(2, rules)).toBe(2);
   });
 });
 

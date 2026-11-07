@@ -51,7 +51,7 @@ function formatDelta(value: number) {
   return value >= 0 ? `+${value}` : `${value}`;
 }
 
-function calculateLevelGains(
+export function calculateLevelGains(
   currentLevel: number,
   newLevel: number,
   highestAbility: number = 0,
@@ -83,7 +83,8 @@ function calculateLevelGains(
     archetypeFeats:
       calculateMaxArchetypeFeats(newLevel, archetypeType, rules, archetypeChoices) -
       calculateMaxArchetypeFeats(currentLevel, archetypeType, rules, archetypeChoices),
-    characterFeats: calculateMaxCharacterFeats(newLevel) - calculateMaxCharacterFeats(currentLevel),
+    characterFeats:
+      calculateMaxCharacterFeats(newLevel, rules) - calculateMaxCharacterFeats(currentLevel, rules),
   };
 }
 

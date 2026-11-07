@@ -214,6 +214,42 @@ describe('findCharacterLegalityViolations', () => {
       max: 1,
     });
   });
+
+  it('honors powered-martial L1 archetype feat budget', () => {
+    const pm = {
+      ...legalBuild(),
+      archetype: { id: 'a1', type: 'powered-martial' },
+      archetypeFeats: [{ id: 'f1' }, { id: 'f2' }],
+    };
+    expect(evaluate(pm).warnings).toEqual([]);
+
+    const over = evaluate({
+      ...pm,
+      archetypeFeats: [{ id: 'f1' }, { id: 'f2' }, { id: 'f3' }],
+    });
+    expect(over.warnings).toContainEqual({
+      code: 'archetype_feats_over_max',
+      level: 1,
+      count: 3,
+      max: 2,
+    });
+  });
+
+  it('uses DB characterFeatsPerLevel for server feat max (not code default only)', () => {
+    const rules = { PROGRESSION_PLAYER: { characterFeatsPerLevel: 2 } } as never;
+    expect(
+      evaluate({ ...legalBuild(), feats: [{ id: 'c1' }, { id: 'c2' }] }, rules).warnings,
+    ).toEqual([]);
+    expect(
+      evaluate({ ...legalBuild(), feats: [{ id: 'c1' }, { id: 'c2' }, { id: 'c3' }] }, rules)
+        .warnings,
+    ).toContainEqual({
+      code: 'character_feats_over_max',
+      level: 1,
+      count: 3,
+      max: 2,
+    });
+  });
 });
 
 describe('findCharacterLegalityViolations feat requirements', () => {

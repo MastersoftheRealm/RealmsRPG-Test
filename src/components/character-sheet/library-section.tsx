@@ -32,11 +32,6 @@ import { LibraryInventoryPanel } from './library-inventory-panel';
 import { buildLibrarySectionData } from './build-library-section-data';
 import { sheetLibraryAddActions } from './sheet-viewer-edits';
 import type { LibrarySectionProps } from './library-section-props';
-import {
-  computeSheetPointPools,
-  resolveFeatLibraryEditState,
-} from '@/lib/character/sheet-edit-notification';
-
 export type { LibrarySectionProps, SheetLibraryModel } from './library-section-props';
 
 export function LibrarySection({
@@ -52,7 +47,6 @@ export function LibrarySection({
     isOwner,
     libraryModel,
     libraryHandlers,
-    characterSpeciesSkills,
     setAddModalType,
     setFeatModalType,
   } = ctx;
@@ -68,8 +62,9 @@ export function LibrarySection({
       handlers: libraryHandlers,
       allSpecies,
       isOwner,
+      rules,
     });
-  }, [character, enrichedData, libraryModel, libraryHandlers, allSpecies, isOwner]);
+  }, [character, enrichedData, libraryModel, libraryHandlers, allSpecies, isOwner, rules]);
 
   const {
     onAddPower,
@@ -92,17 +87,6 @@ export function LibrarySection({
   }
 
   const showLibraryEditControls = isEditMode && isSectionEditing;
-
-  const libraryEditState = useMemo(() => {
-    if (!data || !character) return 'normal' as const;
-    const pools = computeSheetPointPools({
-      character,
-      characterSpeciesSkills,
-      featsDb: data.featsDb ?? [],
-      rules,
-    });
-    return resolveFeatLibraryEditState(pools);
-  }, [character, characterSpeciesSkills, data, rules]);
 
   const { resolvedActiveTab, setActiveTab, navigationTabs } = useLibraryTabNavigation({
     isEditMode,
@@ -270,17 +254,13 @@ export function LibrarySection({
       {isEditMode && (
         <div className="absolute top-3 right-3 z-10">
           <EditSectionToggle
-            state={libraryEditState}
+            state="normal"
             isActive={isSectionEditing}
             onClick={() => setIsSectionEditing((prev) => !prev)}
             title={
               isSectionEditing
                 ? 'Click to close library editing'
-                : libraryEditState === 'over-budget'
-                  ? 'Click to edit library (feats over limit)'
-                  : libraryEditState === 'has-points'
-                    ? 'Click to edit library — unspent feat slots'
-                    : 'Click to edit library (powers, techniques, inventory, feats)'
+                : 'Click to edit library (powers, techniques, inventory, feats)'
             }
           />
         </div>

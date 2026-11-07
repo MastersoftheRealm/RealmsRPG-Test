@@ -1,10 +1,10 @@
 import { describe, expect, it } from 'vitest';
 import type { Character } from '@/types';
+import type { CoreRulesMap } from '@/types/core-rules';
 import {
   buildLevelDownOverspendWarning,
   buildSheetEditNotification,
   computeSheetPointPools,
-  resolveFeatLibraryEditState,
 } from './sheet-edit-notification';
 
 const baseCharacter: Character = {
@@ -79,7 +79,7 @@ describe('buildSheetEditNotification', () => {
     expect(notification.severity).toBe('unspent');
     expect(notification.title).toContain('Unspent');
     expect(notification.title).toContain('ability point');
-    expect(notification.title).toContain('archetype feat slot');
+    expect(notification.title).not.toContain('feat slot');
   });
 
   it('shows level-up only when no overspend or unspent pools remain', () => {
@@ -95,6 +95,21 @@ describe('buildSheetEditNotification', () => {
 
     expect(notification.severity).toBe('level-up');
     expect(notification.show).toBe(true);
+  });
+
+  it('ignores feat slot overspend and unspent in toolbar copy', () => {
+    const notification = buildSheetEditNotification({
+      abilityRemaining: 0,
+      skillRemaining: 0,
+      heRemaining: 0,
+      profRemaining: 0,
+      archetypeFeatRemaining: -2,
+      characterFeatRemaining: 3,
+      canLevelUp: false,
+    });
+
+    expect(notification.show).toBe(false);
+    expect(notification.title).not.toContain('feat');
   });
 
   it('shows nothing when all pools are balanced and cannot level up', () => {
@@ -113,40 +128,21 @@ describe('buildSheetEditNotification', () => {
   });
 });
 
-describe('resolveFeatLibraryEditState', () => {
-  it('marks has-points when feat slots remain', () => {
-    expect(
-      resolveFeatLibraryEditState({ archetypeFeatRemaining: 2, characterFeatRemaining: 0 }),
-    ).toBe('has-points');
-  });
-
-  it('marks over-budget when feat slots are exceeded', () => {
-    expect(
-      resolveFeatLibraryEditState({ archetypeFeatRemaining: -1, characterFeatRemaining: 0 }),
-    ).toBe('over-budget');
-  });
-});
-
 describe('buildLevelDownOverspendWarning', () => {
   it('warns when a lower level would leave overspent pools', () => {
     const character: Character = {
       ...baseCharacter,
       level: 3,
       abilities: {
-        strength: 0,
-        vitality: 0,
-        agility: 0,
+        strength: 3,
+        vitality: 3,
+        agility: 2,
         acuity: 0,
         intelligence: 0,
-        charisma: 4,
+        charisma: 0,
       },
-      healthPoints: 6,
-      energyPoints: 12,
-      feats: [
-        { id: '1', name: 'Feat A' },
-        { id: '2', name: 'Feat B' },
-        { id: '3', name: 'Feat C' },
-      ],
+      healthPoints: 20,
+      energyPoints: 10,
     };
 
     const warning = buildLevelDownOverspendWarning({
@@ -198,5 +194,18 @@ describe('computeSheetPointPools', () => {
 
     expect(pools.abilityRemaining).toBeGreaterThan(0);
     expect(pools.profRemaining).toBeGreaterThan(0);
+  });
+
+  it('uses core_rules characterFeatsPerLevel for feat slot budgets', () => {
+    const rules = {
+      PROGRESSION_PLAYER: { characterFeatsPerLevel: 2 },
+    } as Partial<CoreRulesMap>;
+    const pools = computeSheetPointPools({
+      character: { ...baseCharacter, level: 1 },
+      characterSpeciesSkills: [],
+      featsDb: [],
+      rules,
+    });
+    expect(pools.characterFeatRemaining).toBe(2);
   });
 });
