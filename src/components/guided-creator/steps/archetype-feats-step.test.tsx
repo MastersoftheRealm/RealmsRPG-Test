@@ -13,10 +13,20 @@ const updateDraft = vi.fn();
 
 let draft: GuidedDraft;
 
-let rulesState: { rules: CoreRulesMap; isLoading: boolean; error: Error | null } = {
+const refetchRules = vi.fn();
+
+let rulesState: {
+  rules: CoreRulesMap;
+  isLoading: boolean;
+  isFetching: boolean;
+  error: Error | null;
+  refetch: () => void;
+} = {
   rules: getGameRulesFallback(),
   isLoading: false,
+  isFetching: false,
   error: null,
+  refetch: refetchRules,
 };
 
 vi.mock('@/stores/guided-creator-store', () => ({
@@ -94,7 +104,14 @@ function resetDraft(overrides: Partial<GuidedDraft> = {}) {
 describe('ArchetypeFeatsStep guided feat cap', () => {
   beforeEach(async () => {
     updateDraft.mockClear();
-    rulesState = { rules: getGameRulesFallback(), isLoading: false, error: null };
+    refetchRules.mockClear();
+    rulesState = {
+      rules: getGameRulesFallback(),
+      isLoading: false,
+      isFetching: false,
+      error: null,
+      refetch: refetchRules,
+    };
     const mod = await vi.importActual<typeof import('@/stores/guided-creator-store')>(
       '@/stores/guided-creator-store',
     );
@@ -136,7 +153,13 @@ describe('ArchetypeFeatsStep guided feat cap', () => {
   });
 
   it('blocks Continue while game rules are still loading', () => {
-    rulesState = { rules: getGameRulesFallback(), isLoading: true, error: null };
+    rulesState = {
+      rules: getGameRulesFallback(),
+      isLoading: true,
+      isFetching: false,
+      error: null,
+      refetch: refetchRules,
+    };
     expectContinueBlocked(renderStep());
   });
 
@@ -144,10 +167,15 @@ describe('ArchetypeFeatsStep guided feat cap', () => {
     rulesState = {
       rules: getGameRulesFallback(),
       isLoading: false,
+      isFetching: false,
       error: new Error('core rules request failed'),
+      refetch: refetchRules,
     };
     draft.archetypeFeatIds = ['1', '2', '3'];
-    expectContinueBlocked(renderStep());
+    const html = renderStep();
+    expectContinueBlocked(html);
+    expect(html).toContain('load game rules for this step');
+    expect(html).toContain('Retry');
     expect(updateDraft).not.toHaveBeenCalled();
   });
 });

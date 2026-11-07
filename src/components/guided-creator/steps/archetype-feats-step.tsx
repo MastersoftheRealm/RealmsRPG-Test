@@ -6,7 +6,7 @@
 
 import { useMemo, useCallback, useLayoutEffect, useState } from 'react';
 import { Alert, EmptyState, Spinner } from '@/components/ui';
-import { GuidedInlineCatalogList, GuidedLayerNav } from '@/components/patterns';
+import { ErrorDisplay, GuidedInlineCatalogList, GuidedLayerNav } from '@/components/patterns';
 import { cn } from '@/lib/utils';
 import { useCodexFeats, useCodexSkills, useGameRules, usePathListFilter, type Feat } from '@/hooks';
 import { calculateMaxArchetypeFeats } from '@/lib/game/formulas';
@@ -58,8 +58,19 @@ function resolveFeat(id: string, featById: Map<string, Feat>) {
 export function ArchetypeFeatsStep() {
   const { draft, updateDraft, navigationIntent, entryNonce } = useGuidedCreatorStore();
   const { pathData, archetype } = useGuidedPathData();
-  const { rules, isLoading: rulesLoading, error: rulesError } = useGameRules();
+  const {
+    rules,
+    isLoading: rulesLoading,
+    isFetching: rulesFetching,
+    error: rulesError,
+    refetch: refetchRules,
+  } = useGameRules();
   const rulesResolved = !rulesLoading && rulesError == null;
+  const showRulesLoadError = rulesError != null && !rulesLoading;
+
+  const retryRulesLoad = useCallback(() => {
+    void refetchRules();
+  }, [refetchRules]);
   const { data: feats = [], isLoading } = useCodexFeats();
   const { data: codexSkills = [] } = useCodexSkills();
   const [browseOpen, setBrowseOpen] = useState(false);
@@ -243,6 +254,16 @@ export function ArchetypeFeatsStep() {
         </span>
       }
     >
+      {showRulesLoadError ? (
+        <div className="mb-4">
+          <ErrorDisplay
+            message={stepCopy.rulesLoadError}
+            subMessage={rulesFetching ? stepCopy.rulesLoadRetrying : stepCopy.rulesLoadErrorHint}
+            onRetry={rulesFetching ? undefined : retryRulesLoad}
+            retryLabel="Retry"
+          />
+        </div>
+      ) : null}
       {showUnderLimitWarning ? (
         <Alert variant="warning" className="mb-4 font-nunito text-sm">
           {stepCopy.underLimit(featsRemaining)}

@@ -1,9 +1,9 @@
 // @vitest-environment happy-dom
 
 import type { ReactNode } from 'react';
-import { render, screen, waitFor } from '@testing-library/react';
+import { cleanup, render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { describe, expect, it, vi, beforeEach } from 'vitest';
+import { describe, expect, it, vi, beforeEach, afterEach } from 'vitest';
 import type { CoreRulesMap } from '@/types/core-rules';
 import { getGameRulesFallback } from '@/hooks';
 import { GUIDED_CREATOR_COPY } from '@/lib/constants/site-copy';
@@ -14,6 +14,7 @@ import { ArchetypeFeatsStep } from './archetype-feats-step';
 const stepCopy = GUIDED_CREATOR_COPY.steps.archetypeFeats;
 
 const updateDraft = vi.fn();
+const refetchRules = vi.fn();
 
 function withPoweredMartialFeatLimit(rules: CoreRulesMap, featLimit: number): CoreRulesMap {
   const cfg = rules.ARCHETYPES.configs['powered-martial']!;
@@ -45,14 +46,27 @@ function resetDraft(overrides: Partial<GuidedDraft> = {}) {
 type RulesHookState = {
   rules: CoreRulesMap;
   isLoading: boolean;
+  isFetching: boolean;
   error: Error | null;
+  refetch: () => void;
 };
 
-let rulesState: RulesHookState = {
+function rulesHook(
+  partial: Pick<RulesHookState, 'rules' | 'isLoading' | 'error'> &
+    Partial<Pick<RulesHookState, 'isFetching'>>,
+): RulesHookState {
+  return {
+    isFetching: false,
+    refetch: refetchRules,
+    ...partial,
+  };
+}
+
+let rulesState: RulesHookState = rulesHook({
   rules: getGameRulesFallback(),
   isLoading: false,
   error: null,
-};
+});
 
 vi.mock('@/stores/guided-creator-store', () => ({
   useGuidedCreatorStore: () => ({
@@ -127,10 +141,24 @@ vi.mock('@/hooks', async (importOriginal) => {
   };
 });
 
+afterEach(() => {
+  cleanup();
+});
+
+function footerContinueButton() {
+  const footers = screen.getAllByTestId('guided-step-footer');
+  return within(footers[footers.length - 1]!).getByRole('button', { name: 'Continue' });
+}
+
 describe('ArchetypeFeatsStep rules loading reconciliation', () => {
   beforeEach(async () => {
     updateDraft.mockClear();
-    rulesState = { rules: getGameRulesFallback(), isLoading: false, error: null };
+    refetchRules.mockClear();
+    rulesState = rulesHook({
+      rules: getGameRulesFallback(),
+      isLoading: false,
+      error: null,
+    });
     const mod = await vi.importActual<typeof import('@/stores/guided-creator-store')>(
       '@/stores/guided-creator-store',
     );
@@ -142,7 +170,7 @@ describe('ArchetypeFeatsStep rules loading reconciliation', () => {
     const fallbackCap = calculateMaxArchetypeFeats(1, 'powered-martial', getGameRulesFallback());
     expect(fallbackCap).toBe(2);
 
-    rulesState = { rules: getGameRulesFallback(), isLoading: true, error: null };
+    rulesState = rulesHook({ rules: getGameRulesFallback(), isLoading: true, error: null });
     const { rerender } = render(<ArchetypeFeatsStep />);
     await waitFor(() => {
       expect(updateDraft).not.toHaveBeenCalled();
@@ -152,7 +180,7 @@ describe('ArchetypeFeatsStep rules loading reconciliation', () => {
     const liveCap = calculateMaxArchetypeFeats(1, 'powered-martial', liveRules);
     expect(liveCap).toBe(3);
 
-    rulesState = { rules: liveRules, isLoading: false, error: null };
+    rulesState = rulesHook({ rules: liveRules, isLoading: false, error: null });
     rerender(<ArchetypeFeatsStep />);
     await waitFor(() => {
       expect(updateDraft).not.toHaveBeenCalledWith({ archetypeFeatIds: ['1', '2'] });
@@ -163,18 +191,18 @@ describe('ArchetypeFeatsStep rules loading reconciliation', () => {
     draft.archetypeFeatIds = ['1', '2', '3'];
     const fetchError = new Error('core rules request failed');
 
-    rulesState = { rules: getGameRulesFallback(), isLoading: true, error: null };
+    rulesState = rulesHook({ rules: getGameRulesFallback(), isLoading: true, error: null });
     const { rerender } = render(<ArchetypeFeatsStep />);
     expect(updateDraft).not.toHaveBeenCalled();
 
-    rulesState = { rules: getGameRulesFallback(), isLoading: false, error: fetchError };
+    rulesState = rulesHook({ rules: getGameRulesFallback(), isLoading: false, error: fetchError });
     rerender(<ArchetypeFeatsStep />);
     await waitFor(() => {
       expect(updateDraft).not.toHaveBeenCalled();
     });
 
     const liveRules = withPoweredMartialFeatLimit(getGameRulesFallback(), 2);
-    rulesState = { rules: liveRules, isLoading: false, error: null };
+    rulesState = rulesHook({ rules: liveRules, isLoading: false, error: null });
     rerender(<ArchetypeFeatsStep />);
     await waitFor(() => {
       expect(updateDraft).not.toHaveBeenCalledWith({ archetypeFeatIds: ['1', '2'] });
@@ -185,7 +213,7 @@ describe('ArchetypeFeatsStep rules loading reconciliation', () => {
   it('trims when resolved rules enforce a lower cap', async () => {
     draft.archetypeType = 'power';
     draft.archetypeFeatIds = ['1', '2'];
-    rulesState = { rules: getGameRulesFallback(), isLoading: false, error: null };
+    rulesState = rulesHook({ rules: getGameRulesFallback(), isLoading: false, error: null });
 
     render(<ArchetypeFeatsStep />);
     await waitFor(() => {
@@ -195,28 +223,62 @@ describe('ArchetypeFeatsStep rules loading reconciliation', () => {
 
   it('reconciles after a DB override tightens the cap post-load', async () => {
     draft.archetypeFeatIds = ['1', '2'];
-    rulesState = { rules: getGameRulesFallback(), isLoading: true, error: null };
+    rulesState = rulesHook({ rules: getGameRulesFallback(), isLoading: true, error: null });
     const { rerender } = render(<ArchetypeFeatsStep />);
     expect(updateDraft).not.toHaveBeenCalled();
 
     const tighter = withPoweredMartialFeatLimit(getGameRulesFallback(), 0);
-    rulesState = { rules: tighter, isLoading: false, error: null };
+    rulesState = rulesHook({ rules: tighter, isLoading: false, error: null });
     rerender(<ArchetypeFeatsStep />);
     await waitFor(() => {
       expect(updateDraft).toHaveBeenCalledWith({ archetypeFeatIds: ['1'] });
     });
   });
 
+  it('recovers via Retry after rules error without losing draft picks', async () => {
+    const user = userEvent.setup();
+    draft.archetypeFeatIds = ['1', '2', '3'];
+    const fetchError = new Error('core rules request failed');
+
+    rulesState = rulesHook({
+      rules: getGameRulesFallback(),
+      isLoading: false,
+      error: fetchError,
+    });
+    const { rerender } = render(<ArchetypeFeatsStep />);
+    expect(screen.getByText(stepCopy.rulesLoadError)).toBeTruthy();
+    expect(footerContinueButton().hasAttribute('disabled')).toBe(true);
+    expect(updateDraft).not.toHaveBeenCalled();
+
+    await user.click(screen.getByRole('button', { name: 'Retry' }));
+    expect(refetchRules).toHaveBeenCalledOnce();
+
+    const liveRules = withPoweredMartialFeatLimit(getGameRulesFallback(), 2);
+    rulesState = rulesHook({
+      rules: liveRules,
+      isLoading: false,
+      error: null,
+      isFetching: false,
+    });
+    rerender(<ArchetypeFeatsStep />);
+
+    await waitFor(() => {
+      expect(footerContinueButton().hasAttribute('disabled')).toBe(false);
+    });
+    expect(updateDraft).not.toHaveBeenCalledWith({ archetypeFeatIds: ['1', '2'] });
+    expect(draft.archetypeFeatIds).toEqual(['1', '2', '3']);
+  });
+
   it('trims all picks when resolved cap transitions to zero', async () => {
     draft.archetypeFeatIds = ['1'];
-    rulesState = { rules: getGameRulesFallback(), isLoading: true, error: null };
+    rulesState = rulesHook({ rules: getGameRulesFallback(), isLoading: true, error: null });
     const { rerender } = render(<ArchetypeFeatsStep />);
     expect(updateDraft).not.toHaveBeenCalled();
 
     const zeroCapRules = withPoweredMartialFeatLimit(getGameRulesFallback(), -1);
     expect(calculateMaxArchetypeFeats(1, 'powered-martial', zeroCapRules)).toBe(0);
 
-    rulesState = { rules: zeroCapRules, isLoading: false, error: null };
+    rulesState = rulesHook({ rules: zeroCapRules, isLoading: false, error: null });
     rerender(<ArchetypeFeatsStep />);
     await waitFor(() => {
       expect(updateDraft).toHaveBeenCalledWith({ archetypeFeatIds: [] });
@@ -227,7 +289,8 @@ describe('ArchetypeFeatsStep rules loading reconciliation', () => {
 describe('ArchetypeFeatsStep L2 modal confirm capping', () => {
   beforeEach(async () => {
     updateDraft.mockClear();
-    rulesState = { rules: getGameRulesFallback(), isLoading: true, error: null };
+    refetchRules.mockClear();
+    rulesState = rulesHook({ rules: getGameRulesFallback(), isLoading: true, error: null });
     const mod = await vi.importActual<typeof import('@/stores/guided-creator-store')>(
       '@/stores/guided-creator-store',
     );
@@ -247,17 +310,22 @@ describe('ArchetypeFeatsStep L2 modal confirm capping', () => {
     await user.click(seeMore[seeMore.length - 1]!);
     expect(screen.getByTestId('feats-l2-modal')).toBeTruthy();
 
-    rulesState = { rules: getGameRulesFallback(), isLoading: false, error: null };
+    rulesState = rulesHook({ rules: getGameRulesFallback(), isLoading: false, error: null });
     rerender(<ArchetypeFeatsStep />);
+
+    await waitFor(() => {
+      expect(updateDraft).toHaveBeenCalledWith({ archetypeFeatIds: ['1', '2'] });
+    });
+    updateDraft.mockClear();
 
     await user.click(screen.getByRole('button', { name: /Add Selected \(3\)/i }));
 
     await waitFor(() => {
-      const confirmCap = updateDraft.mock.calls.find((call) => {
-        const ids = call[0]?.archetypeFeatIds;
-        return Array.isArray(ids) && ids.length === cap;
+      expect(updateDraft).toHaveBeenCalledTimes(1);
+      expect(updateDraft).toHaveBeenCalledWith({
+        archetypeFeatIds: expect.arrayContaining(['1']),
       });
-      expect(confirmCap?.[0]?.archetypeFeatIds).toHaveLength(cap);
+      expect(updateDraft.mock.calls[0]?.[0]?.archetypeFeatIds).toHaveLength(cap);
     });
   });
 });
