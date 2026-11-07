@@ -70,6 +70,17 @@ describe('library-persisted-contract', () => {
     expect(persistedLibraryBodyShapeError('powers', { parts: {} })).toBe('parts must be an array');
   });
 
+  it('allows technique legacy reaction and actionTypeSelection keys', () => {
+    expect(
+      unknownPersistedLibraryKeys('techniques', {
+        name: 'Riposte',
+        reaction: true,
+        actionTypeSelection: 'quick',
+        parts: [],
+      }),
+    ).toEqual([]);
+  });
+
   it('preserves composition through columnar mapping', () => {
     const composition = { enabled: true };
     const { payload } = bodyToColumnar('powers', {

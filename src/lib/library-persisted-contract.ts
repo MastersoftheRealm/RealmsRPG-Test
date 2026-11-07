@@ -4,6 +4,10 @@
  */
 
 import {
+  CREATOR_DESCRIPTION_MAX_LENGTH,
+  CREATOR_NAME_MAX_LENGTH,
+} from '@/lib/creator/creator-text-limits';
+import {
   COLUMNAR_LIBRARY_TYPES,
   LIBRARY_BODY_TO_CAMEL,
   LIBRARY_SCALAR_KEYS,
@@ -32,6 +36,8 @@ const POWER_PERSISTED_KEYS = [
   'name',
   'description',
   'parts',
+  /** Legacy alias still read by `power-creator-bootstrap.ts`. */
+  'powerParts',
   'damage',
   'actionType',
   'action_type',
@@ -54,6 +60,9 @@ const TECHNIQUE_PERSISTED_KEYS = [
   'weaponName',
   'weapon_name',
   'techniqueParts',
+  /** Legacy fields read by `technique-creator-bootstrap.ts`. */
+  'actionTypeSelection',
+  'reaction',
   'empoweredTechnique',
   'empowered_technique',
   'power',
@@ -208,20 +217,110 @@ function isPlainObject(value: unknown): value is Record<string, unknown> {
   return value != null && typeof value === 'object' && !Array.isArray(value);
 }
 
+function isStringArray(value: unknown): boolean {
+  return Array.isArray(value) && value.every((entry) => typeof entry === 'string');
+}
+
+function textBoundsError(key: string, value: unknown, max: number): string | null {
+  if (value === undefined || value === null) return null;
+  if (typeof value !== 'string') return `${key} must be a string`;
+  if (value.length > max) return `${key} exceeds maximum length`;
+  return null;
+}
+
+function savedPartRecordError(value: unknown, path: string): string | null {
+  if (!isPlainObject(value)) return `${path} must be an object`;
+  const record = value;
+  if (
+    'id' in record &&
+    record.id !== undefined &&
+    typeof record.id !== 'string' &&
+    typeof record.id !== 'number'
+  ) {
+    return `${path}.id must be a string or number`;
+  }
+  if ('name' in record && record.name !== undefined && typeof record.name !== 'string') {
+    return `${path}.name must be a string`;
+  }
+  for (const key of ['op_1_lvl', 'op_2_lvl', 'op_3_lvl', 'op_1Lvl', 'op_2Lvl', 'op_3Lvl']) {
+    if (key in record && record[key] !== undefined && typeof record[key] !== 'number') {
+      return `${path}.${key} must be a number`;
+    }
+  }
+  return null;
+}
+
+function validatePartsArray(parts: unknown, label: string): string | null {
+  if (parts === undefined) return null;
+  if (!Array.isArray(parts)) return `${label} must be an array`;
+  for (let i = 0; i < parts.length; i++) {
+    const err = savedPartRecordError(parts[i], `${label}[${i}]`);
+    if (err) return err;
+  }
+  return null;
+}
+
+const SPECIES_STRING_ARRAY_KEYS = [
+  'sizes',
+  'skills',
+  'species_traits',
+  'ancestry_traits',
+  'flaws',
+  'characteristics',
+  'languages',
+] as const;
+
+/** Validate species mutation shapes (not rules math). */
+export function persistedSpeciesBodyShapeError(body: Record<string, unknown>): string | null {
+  const nameErr = textBoundsError('name', body.name, CREATOR_NAME_MAX_LENGTH);
+  if (nameErr) return nameErr;
+  const descErr = textBoundsError('description', body.description, CREATOR_DESCRIPTION_MAX_LENGTH);
+  if (descErr) return descErr;
+  for (const key of SPECIES_STRING_ARRAY_KEYS) {
+    if (key in body && body[key] !== undefined && !isStringArray(body[key])) {
+      return `${key} must be an array of strings`;
+    }
+  }
+  return null;
+}
+
 /** Validate shapes for keys present in this mutation body (not rules math). */
 export function persistedLibraryBodyShapeError(
   type: ColumnarLibraryType,
   body: Record<string, unknown>,
 ): string | null {
-  if ('parts' in body && body.parts !== undefined && !Array.isArray(body.parts)) {
-    return 'parts must be an array';
+  const nameErr = textBoundsError('name', body.name, CREATOR_NAME_MAX_LENGTH);
+  if (nameErr) return nameErr;
+  const descErr = textBoundsError('description', body.description, CREATOR_DESCRIPTION_MAX_LENGTH);
+  if (descErr) return descErr;
+  if ('reaction' in body && body.reaction !== undefined && typeof body.reaction !== 'boolean') {
+    return 'reaction must be a boolean';
   }
+  if (
+    'actionTypeSelection' in body &&
+    body.actionTypeSelection !== undefined &&
+    typeof body.actionTypeSelection !== 'string'
+  ) {
+    return 'actionTypeSelection must be a string';
+  }
+  if (
+    'isReaction' in body &&
+    body.isReaction !== undefined &&
+    typeof body.isReaction !== 'boolean'
+  ) {
+    return 'isReaction must be a boolean';
+  }
+  const partsErr = validatePartsArray(body.parts, 'parts');
+  if (partsErr) return partsErr;
+  const techniquePartsErr = validatePartsArray(body.techniqueParts, 'techniqueParts');
+  if (techniquePartsErr) return techniquePartsErr;
+  const powerPartsErr = validatePartsArray(body.powerParts, 'powerParts');
+  if (powerPartsErr) return powerPartsErr;
   if ('damage' in body && body.damage !== undefined && !Array.isArray(body.damage)) {
     return 'damage must be an array';
   }
-  if ('properties' in body && body.properties !== undefined && !Array.isArray(body.properties)) {
-    return 'properties must be an array';
-  }
+  const propsErr = validatePartsArray(body.properties, 'properties');
+  if (propsErr) return propsErr;
   if ('composition' in body && body.composition !== undefined && !isPlainObject(body.composition)) {
     return 'composition must be an object';
   }
@@ -234,13 +333,28 @@ export function persistedLibraryBodyShapeError(
   if ('defenses' in body && body.defenses !== undefined && !isPlainObject(body.defenses)) {
     return 'defenses must be an object';
   }
-  if (
-    type === 'creatures' &&
-    'skills' in body &&
-    body.skills !== undefined &&
-    !Array.isArray(body.skills)
-  ) {
-    return 'skills must be an array';
+  if (type === 'creatures') {
+    for (const key of [
+      'skills',
+      'powers',
+      'techniques',
+      'weapons',
+      'armor',
+      'shields',
+      'equipment',
+    ] as const) {
+      if (key in body && body[key] !== undefined && !Array.isArray(body[key])) {
+        return `${key} must be an array`;
+      }
+    }
+    if (
+      'skills' in body &&
+      body.skills !== undefined &&
+      !isStringArray(body.skills) &&
+      Array.isArray(body.skills)
+    ) {
+      return 'skills must be an array of strings when string-valued';
+    }
   }
   if (
     (type === 'techniques' || type === 'empowered-techniques') &&
@@ -250,6 +364,10 @@ export function persistedLibraryBodyShapeError(
   ) {
     return 'power must be an object';
   }
+  if (isPlainObject(body.power)) {
+    const nested = validatePartsArray(body.power.parts, 'power.parts');
+    if (nested) return nested;
+  }
   if (
     type === 'empowered-techniques' &&
     'technique' in body &&
@@ -257,6 +375,10 @@ export function persistedLibraryBodyShapeError(
     !isPlainObject(body.technique)
   ) {
     return 'technique must be an object';
+  }
+  if (isPlainObject(body.technique)) {
+    const nested = validatePartsArray(body.technique.parts, 'technique.parts');
+    if (nested) return nested;
   }
   if ('syncMeta' in body && body.syncMeta !== undefined) {
     if (!isPlainObject(body.syncMeta)) {

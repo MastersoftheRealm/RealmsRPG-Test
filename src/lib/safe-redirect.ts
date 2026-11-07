@@ -12,7 +12,13 @@ export function sanitizeRedirectPath(path: string | null | undefined, fallback =
   const trimmed = path.trim();
   if (!trimmed.startsWith('/')) return fallback;
   if (trimmed.startsWith('//')) return fallback;
-  if (trimmed.includes('\\')) return fallback;
+  let decoded = trimmed;
+  try {
+    decoded = decodeURIComponent(trimmed);
+  } catch {
+    return fallback;
+  }
+  if (decoded.includes('\\') || /%5[cC]/.test(trimmed)) return fallback;
   if (CONTROL_CHAR_RE.test(trimmed)) return fallback;
   if (/^\/[^/]*:/i.test(trimmed)) return fallback;
   if (trimmed.includes('://')) return fallback;

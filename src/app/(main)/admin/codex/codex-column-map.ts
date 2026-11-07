@@ -251,6 +251,57 @@ const COLUMNAR_FIELDS: Record<CodexCollection, string[]> = {
   core_rules: [],
 };
 
+const CODEX_NAME_MAX = 200;
+const CODEX_DESC_MAX = 10_000;
+
+const CODEX_NUMERIC_FIELDS = new Set([
+  'abilReqVal',
+  'skillReqVal',
+  'featLvl',
+  'lvlReq',
+  'usesPerRec',
+  'featPoints',
+  'energy',
+  'tp',
+  'ip',
+  'c',
+  'baseLvl',
+  'aveHeight',
+  'aveWeight',
+  'speedReq',
+  'powAbilReq',
+  'martAbilReq',
+  'powProfReq',
+  'martProfReq',
+]);
+
+function assertCodexFieldValue(camel: string, value: unknown): void {
+  if (value == null || value === '') return;
+  if (camel === 'name' && typeof value === 'string' && value.length > CODEX_NAME_MAX) {
+    throw new Error(`Codex name exceeds ${CODEX_NAME_MAX} characters`);
+  }
+  if (camel === 'description' && typeof value === 'string' && value.length > CODEX_DESC_MAX) {
+    throw new Error(`Codex description exceeds ${CODEX_DESC_MAX} characters`);
+  }
+  if (CODEX_NUMERIC_FIELDS.has(camel)) {
+    if (typeof value === 'number') {
+      if (!Number.isFinite(value)) throw new Error(`Codex field ${camel} must be a finite number`);
+      return;
+    }
+    if (typeof value === 'string' && value.trim() !== '' && Number.isNaN(Number(value))) {
+      throw new Error(`Codex field ${camel} must be numeric`);
+    }
+  }
+  if (camel === 'sources') {
+    if (Array.isArray(value) && !value.every((entry) => typeof entry === 'string')) {
+      throw new Error('Codex sources must be an array of strings');
+    }
+    if (typeof value === 'string' && value.includes('\0')) {
+      throw new Error('Codex sources must not contain control characters');
+    }
+  }
+}
+
 /** Reject admin spreadsheet keys outside the collection write allowlist. */
 export function assertCodexAdminPayloadKeys(
   collection: CodexCollection,
@@ -265,6 +316,7 @@ export function assertCodexAdminPayloadKeys(
     if (!allowed.has(camel)) {
       throw new Error(`Unsupported codex field: ${key}`);
     }
+    assertCodexFieldValue(camel, data[key]);
   }
 }
 

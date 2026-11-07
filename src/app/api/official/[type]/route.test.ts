@@ -320,7 +320,7 @@ describe('POST /api/official/[type]', () => {
       }),
       maybeSingle: vi.fn(async () => {
         selectCall += 1;
-        if (selectCall === 1) {
+        if (selectCall === 1 || selectCall === 2) {
           return { data: options.currentRow, error: null };
         }
         return { data: options.nameCollision, error: null };
@@ -415,9 +415,9 @@ describe('POST /api/official/[type]', () => {
 
     const existingId = '33333333-3333-3333-3333-333333333333';
     const { supabase, update, selectChain } = mockOfficialPostSupabase({
-      currentRow: { name: 'Vampiric' },
+      currentRow: { id: existingId, name: 'Vampiric', description: 'prior text' },
       nameCollision: { id: 'duplicate-row' },
-      updateRows: [{ id: existingId }],
+      updateRows: [{ id: existingId, name: 'Vampiric', description: 'updated text' }],
     });
     mockCreateServiceRoleClient.mockReturnValue(supabase as never);
 
@@ -438,6 +438,8 @@ describe('POST /api/official/[type]', () => {
         entityType: 'official_powers',
         operation: 'update',
         changedByUserId: USER.uid,
+        beforeData: expect.objectContaining({ name: 'Vampiric' }),
+        afterData: expect.objectContaining({ description: 'updated text' }),
       }),
     );
   });
@@ -537,6 +539,14 @@ describe('DELETE /api/official/[type]', () => {
     const response = await DELETE(makeDeleteRequest('species', '7'), params('species'));
 
     expect(response.status).toBe(200);
+    expect(recordCodexChange).toHaveBeenCalledWith(
+      expect.objectContaining({
+        entityType: 'codex_species',
+        operation: 'delete',
+        beforeData: expect.objectContaining({ name: 'Elf' }),
+        afterData: null,
+      }),
+    );
     expect(supabase.from).toHaveBeenCalledWith('codex_species');
     expect(deleteChain.eq).toHaveBeenCalledWith('id', '7');
   });

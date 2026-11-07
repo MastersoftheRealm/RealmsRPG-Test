@@ -3,6 +3,7 @@ import type { ColumnarLibraryType } from '@/lib/library-persisted-contract';
 import {
   isColumnarLibraryTypeName,
   persistedLibraryBodyShapeError,
+  persistedSpeciesBodyShapeError,
   unknownPersistedLibraryKeys,
   unknownPersistedSpeciesKeys,
 } from '@/lib/library-persisted-contract';
@@ -32,6 +33,8 @@ export function validateUserLibraryWriteBody(
     if (unknown.length > 0) {
       return reject('Payload contains unsupported fields');
     }
+    const shapeError = persistedSpeciesBodyShapeError(body);
+    if (shapeError) return reject(shapeError);
   }
 
   if (!options?.allowImageUrl) {

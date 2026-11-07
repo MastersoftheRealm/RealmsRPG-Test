@@ -250,6 +250,44 @@ describe('PATCH /api/encounters/[id]', () => {
     expect(supabase.lastUpdate()).toBeNull();
   });
 
+  it('rejects unknown PATCH fields without writing', async () => {
+    const row = makeEncounterRow('enc-owned', OWNER.uid);
+    mockGetSession.mockResolvedValue({ user: OWNER, error: null });
+    const supabase = createMockSupabase(row);
+    mockCreateClient.mockResolvedValue(supabase as never);
+
+    const response = await PATCH(
+      makePatchRequest('enc-owned', { name: 'Updated fight', injected: true }),
+      { params: Promise.resolve({ id: 'enc-owned' }) },
+    );
+
+    expect(response.status).toBe(400);
+    expect(supabase.lastUpdate()).toBeNull();
+  });
+
+  it('returns 413 for an oversized JSON body without writing', async () => {
+    const row = makeEncounterRow('enc-owned', OWNER.uid);
+    mockGetSession.mockResolvedValue({ user: OWNER, error: null });
+    const supabase = createMockSupabase(row);
+    mockCreateClient.mockResolvedValue(supabase as never);
+
+    const response = await PATCH(
+      new NextRequest('http://localhost/api/encounters/enc-owned', {
+        method: 'PATCH',
+        headers: {
+          'content-type': 'application/json',
+          'content-length': String(5 * 1024 * 1024),
+          origin: 'http://localhost',
+        },
+        body: JSON.stringify({ name: 'Updated fight' }),
+      }),
+      { params: Promise.resolve({ id: 'enc-owned' }) },
+    );
+
+    expect(response.status).toBe(413);
+    expect(supabase.lastUpdate()).toBeNull();
+  });
+
   it('returns 400 for malformed JSON without writing', async () => {
     const row = makeEncounterRow('enc-owned', OWNER.uid);
     mockGetSession.mockResolvedValue({ user: OWNER, error: null });

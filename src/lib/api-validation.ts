@@ -346,20 +346,23 @@ export const encounterCreateSchema = z
   })
   .strict();
 
-export const encounterUpdateSchema = withSafeJsonBlob({
-  name: z.string().min(1).max(200).optional(),
-  type: z.enum(['combat', 'skill', 'mixed']).optional(),
-  description: z.string().max(5000).optional(),
-  combatants: z.array(combatantSchema).optional(),
-  round: z.number().int().min(0).optional(),
-  currentTurnIndex: z.number().int().optional(),
-  status: z.enum(['preparing', 'active', 'paused', 'completed']).optional(),
-  isActive: z.boolean().optional(),
-  campaignId: z.string().uuid().optional().nullable(),
-  applySurprise: z.boolean().optional(),
-  skillEncounter: z.record(z.string(), z.unknown()).optional().nullable(),
-  updatedAt: z.string().optional(),
-});
+export const encounterUpdateSchema = z
+  .object({
+    name: z.string().min(1).max(200).optional(),
+    type: z.enum(['combat', 'skill', 'mixed']).optional(),
+    description: z.string().max(5000).optional(),
+    combatants: z.array(combatantSchema).optional(),
+    round: z.number().int().min(0).optional(),
+    currentTurnIndex: z.number().int().optional(),
+    status: z.enum(['preparing', 'active', 'paused', 'completed']).optional(),
+    isActive: z.boolean().optional(),
+    campaignId: z.string().uuid().optional().nullable(),
+    applySurprise: z.boolean().optional(),
+    skillEncounter: z.record(z.string(), z.unknown()).optional().nullable(),
+    updatedAt: z.string().optional(),
+  })
+  .strict()
+  .refine(isSafeMutationPayload, { message: 'Payload has too many fields or invalid keys' });
 
 // =============================================================================
 // Crafting Session Schemas (SoT: lib/crafting/crafting-session-persist.ts)
@@ -429,30 +432,23 @@ const creatorDescriptionSchema = z
   .nullish();
 
 /** A new row needs a name. Duplicate sends only `duplicateOf`; the route copies the source name. */
-export const libraryItemCreateSchema = z
-  .object({
-    name: z
-      .string()
-      .min(1, 'Name is required')
-      .max(CREATOR_NAME_MAX_LENGTH, CREATOR_NAME_TOO_LONG_MESSAGE)
-      .optional(),
-    description: creatorDescriptionSchema,
-    duplicateOf: z.string().uuid().optional(),
-  })
-  .passthrough()
-  .refine(isSafeMutationPayload, { message: 'Payload has too many fields or invalid keys' })
-  .refine((body) => body.duplicateOf != null || (body.name != null && body.name.length > 0), {
-    message: 'Name is required',
-    path: ['name'],
-  });
+export const libraryItemCreateSchema = withSafeJsonBlob({
+  name: z
+    .string()
+    .min(1, 'Name is required')
+    .max(CREATOR_NAME_MAX_LENGTH, CREATOR_NAME_TOO_LONG_MESSAGE)
+    .optional(),
+  description: creatorDescriptionSchema,
+  duplicateOf: z.string().uuid().optional(),
+}).refine((body) => body.duplicateOf != null || (body.name != null && body.name.length > 0), {
+  message: 'Name is required',
+  path: ['name'],
+});
 
-export const libraryItemUpdateSchema = z
-  .object({
-    name: z.string().min(1).max(CREATOR_NAME_MAX_LENGTH, CREATOR_NAME_TOO_LONG_MESSAGE).optional(),
-    description: creatorDescriptionSchema,
-  })
-  .passthrough()
-  .refine(isSafeMutationPayload, { message: 'Payload has too many fields or invalid keys' });
+export const libraryItemUpdateSchema = withSafeJsonBlob({
+  name: z.string().min(1).max(CREATOR_NAME_MAX_LENGTH, CREATOR_NAME_TOO_LONG_MESSAGE).optional(),
+  description: creatorDescriptionSchema,
+});
 
 // =============================================================================
 // Campaign Roll Schemas

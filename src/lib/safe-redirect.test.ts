@@ -16,6 +16,8 @@ describe('sanitizeRedirectPath', () => {
 
   it('rejects backslashes and control characters', () => {
     expect(sanitizeRedirectPath('/foo\\bar')).toBe('/');
+    expect(sanitizeRedirectPath('/foo%5Cbar')).toBe('/');
+    expect(sanitizeRedirectPath('/foo%5cbar')).toBe('/');
     expect(sanitizeRedirectPath('/foo\n/bar')).toBe('/');
     expect(sanitizeRedirectPath('/foo\r/bar')).toBe('/');
     expect(sanitizeRedirectPath('/foo\u0000/bar')).toBe('/');
