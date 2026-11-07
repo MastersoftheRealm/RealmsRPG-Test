@@ -3,7 +3,10 @@ import { NextRequest } from 'next/server';
 import { z } from 'zod';
 
 import {
+  formatZodValidationIssue,
+  parseValidatedJsonBody,
   readBodyWithLimit,
+  realmsImagePatchSchema,
   validateJson,
   validateQuery,
   verifyMutationRequest,
@@ -206,6 +209,22 @@ describe('validateJson', () => {
 
     expect(result.success).toBe(false);
     if (!result.success) expect(result.error.status).toBe(400);
+  });
+});
+
+describe('formatZodValidationIssue (1dfe8wf2k6b)', () => {
+  it('does not prefix object-level refine messages with a lone colon', async () => {
+    expect(formatZodValidationIssue({ path: [], message: 'name and/or categories required' })).toBe(
+      'name and/or categories required',
+    );
+
+    const result = parseValidatedJsonBody({}, realmsImagePatchSchema);
+    expect(result.success).toBe(false);
+    if (result.success) return;
+
+    const body = (await result.error.json()) as { details?: string[] };
+    expect(body.details).toEqual(['name and/or categories required']);
+    expect(body.details?.[0]?.startsWith(':')).toBe(false);
   });
 });
 
