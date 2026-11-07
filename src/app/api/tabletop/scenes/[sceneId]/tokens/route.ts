@@ -2,7 +2,11 @@ import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 import { createClient } from '@/lib/supabase/server';
 import { getSession } from '@/lib/supabase/session';
-import { validateJson } from '@/lib/api-validation';
+import {
+  tabletopSceneRouteParamsSchema,
+  validateJson,
+  validateRouteParams,
+} from '@/lib/api-validation';
 import { rowToItem } from '@/lib/library-columnar';
 import { buildMissingTokensFromCombatants, buildTokenFromCreature } from '@/lib/tabletop/tokens';
 import {
@@ -85,10 +89,12 @@ export async function POST(
     if (error || !user?.uid) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
+    const paramResult = await validateRouteParams(params, tabletopSceneRouteParamsSchema);
+    if (!paramResult.success) return paramResult.error;
     const validation = await validateJson(request, tokenPostSchema);
     if (!validation.success) return validation.error;
 
-    const { sceneId } = await params;
+    const { sceneId } = paramResult.data;
     const supabase = await createClient();
     const access = await getSceneAccess(supabase, sceneId, user.uid);
     if (!access) return NextResponse.json({ error: 'Scene not found' }, { status: 404 });
@@ -206,10 +212,12 @@ export async function PATCH(
     if (error || !user?.uid) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
+    const paramResult = await validateRouteParams(params, tabletopSceneRouteParamsSchema);
+    if (!paramResult.success) return paramResult.error;
     const validation = await validateJson(request, tokenPatchSchema);
     if (!validation.success) return validation.error;
 
-    const { sceneId } = await params;
+    const { sceneId } = paramResult.data;
     const supabase = await createClient();
     const access = await getSceneAccess(supabase, sceneId, user.uid);
     if (!access) return NextResponse.json({ error: 'Scene not found' }, { status: 404 });
@@ -255,10 +263,12 @@ export async function DELETE(
     if (error || !user?.uid) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
+    const paramResult = await validateRouteParams(params, tabletopSceneRouteParamsSchema);
+    if (!paramResult.success) return paramResult.error;
     const validation = await validateJson(request, tokenDeleteSchema);
     if (!validation.success) return validation.error;
 
-    const { sceneId } = await params;
+    const { sceneId } = paramResult.data;
     const supabase = await createClient();
     const access = await getSceneAccess(supabase, sceneId, user.uid);
     if (!access) return NextResponse.json({ error: 'Scene not found' }, { status: 404 });

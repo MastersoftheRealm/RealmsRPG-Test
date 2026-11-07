@@ -48,7 +48,6 @@ export { useCampaignRolls } from './use-campaign-rolls';
 
 // Tabletop
 export {
-  tabletopKeys,
   useActiveCampaignTabletop,
   useTabletopMutations,
   useTabletopRealtime,

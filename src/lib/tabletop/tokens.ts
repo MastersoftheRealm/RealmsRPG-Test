@@ -90,7 +90,7 @@ function readRosterPortrait(
   });
 }
 
-export function readCampaignCharacterTokenImageUrl(
+function readCampaignCharacterTokenImageUrl(
   campaign: Campaign | undefined,
   ref: Pick<VttToken, 'sourceType' | 'sourceId' | 'sourceUserId'>,
 ): string | undefined {
@@ -156,7 +156,7 @@ function tokenPointForIndex(index: number, grid: VttGridConfig): { x: number; y:
   );
 }
 
-export function metadataFromCombatant(combatant: TrackedCombatant): VttTokenMetadata {
+function metadataFromCombatant(combatant: TrackedCombatant): VttTokenMetadata {
   return {
     currentHealth: combatant.currentHealth,
     maxHealth: combatant.maxHealth,
@@ -169,7 +169,7 @@ export function metadataFromCombatant(combatant: TrackedCombatant): VttTokenMeta
   };
 }
 
-export function buildTokenFromCombatant(params: {
+function buildTokenFromCombatant(params: {
   sceneId: string;
   combatant: TrackedCombatant;
   index: number;

@@ -126,15 +126,3 @@ export async function patchRelationalCharacter(
   }
   return { status: 'updated', updatedAt };
 }
-
-export async function provisionRelationalCharacter(
-  client: TypedSupabaseClient,
-  input: { characterId: string; ownerId: string; document: CharacterDocument },
-): Promise<void> {
-  const { error } = await rpc(client)('provision_character_relational', {
-    p_character_id: input.characterId,
-    p_owner_id: input.ownerId,
-    p_document: asDbJson(input.document),
-  });
-  if (error) throw error;
-}

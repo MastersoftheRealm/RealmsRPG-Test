@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient, createServiceRoleClient } from '@/lib/supabase/server';
 import { getSession } from '@/lib/supabase/session';
+import { verifyMutationRequest } from '@/lib/api-validation';
 import { validateImageMagicBytes } from '@/lib/validate-image';
 import { buildRateLimitKey, resolveClientIp, uploadLimiter } from '@/lib/rate-limit';
 import { getSceneAccess, getTabletopState, VTT_MAPS_BUCKET } from '@/lib/tabletop/server';
@@ -19,6 +20,9 @@ export async function POST(request: NextRequest) {
     if (sessionError || !user?.uid) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
+
+    const denied = verifyMutationRequest(request);
+    if (denied) return denied;
 
     const key = buildRateLimitKey('upload-vtt-map', {
       userId: user.uid,
