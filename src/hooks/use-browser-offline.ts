@@ -2,7 +2,7 @@
 
 import { useSyncExternalStore } from 'react';
 
-function subscribe(onStoreChange: () => void) {
+export function subscribeBrowserOffline(onStoreChange: () => void): () => void {
   window.addEventListener('online', onStoreChange);
   window.addEventListener('offline', onStoreChange);
   return () => {
@@ -11,15 +11,19 @@ function subscribe(onStoreChange: () => void) {
   };
 }
 
-function getSnapshot(): boolean {
+export function getBrowserOfflineSnapshot(): boolean {
   return typeof navigator !== 'undefined' && navigator.onLine === false;
 }
 
-function getServerSnapshot(): boolean {
+function getBrowserOfflineServerSnapshot(): boolean {
   return false;
 }
 
 /** True when the browser reports no network (after hydration). */
 export function useBrowserOffline(): boolean {
-  return useSyncExternalStore(subscribe, getSnapshot, getServerSnapshot);
+  return useSyncExternalStore(
+    subscribeBrowserOffline,
+    getBrowserOfflineSnapshot,
+    getBrowserOfflineServerSnapshot,
+  );
 }

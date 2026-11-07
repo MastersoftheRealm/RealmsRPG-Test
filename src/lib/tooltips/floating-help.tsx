@@ -96,6 +96,12 @@ export function useFloatingHelpPopover({
   };
 }
 
+export function floatingHelpPanelPointerClass(
+  interactive: boolean,
+): 'pointer-events-auto' | 'pointer-events-none' {
+  return interactive ? 'pointer-events-auto' : 'pointer-events-none';
+}
+
 export interface FloatingHelpPanelProps {
   id?: string | undefined;
   refs: ReturnType<typeof useFloatingHelpPopover>['refs'];
@@ -131,7 +137,7 @@ export function FloatingHelpPanel({
     className: cn(
       'z-popover rounded-lg border border-border-light bg-surface text-text-primary shadow-xl text-left',
       'outline-none will-change-opacity p-3',
-      interactive ? 'pointer-events-auto' : 'pointer-events-none',
+      floatingHelpPanelPointerClass(interactive),
       className,
     ),
     style: { ...floatingStyles, ...transitionStyles } as CSSProperties,

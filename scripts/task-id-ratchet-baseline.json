@@ -932,9 +932,6 @@
     "src/lib/character/realtime-merge.ts": {
       "taskNumeric": 2
     },
-    "src/lib/character/recovery-over-max.ts": {
-      "clickupLegacy": 1
-    },
     "src/lib/character/save-lock.ts": {
       "taskNumeric": 1
     },
@@ -949,9 +946,6 @@
       "clickupLegacy": 1
     },
     "src/lib/character/sheet-skills-display.ts": {
-      "taskNumeric": 1
-    },
-    "src/lib/character/temp-modifiers.ts": {
       "taskNumeric": 1
     },
     "src/lib/chip/list-row-metadata.ts": {
