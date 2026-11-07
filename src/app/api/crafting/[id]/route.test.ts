@@ -230,6 +230,29 @@ describe('PATCH /api/crafting/[id]', () => {
     ]);
   });
 
+  it('autosaves bootstrap usesType and usesCount from the client session', async () => {
+    const row = makeCraftingRow('craft-owned', OWNER.uid);
+    row.data = { ...row.data, status: 'planned', isConsumable: false, isBulk: false, sessions: [] };
+    mockGetSession.mockResolvedValue({ user: OWNER, error: null });
+    const supabase = createMockSupabase(row);
+    mockCreateClient.mockResolvedValue(supabase as never);
+
+    const response = await PATCH(
+      makePatchRequest('craft-owned', {
+        usesType: 'full',
+        usesCount: 2,
+        isEditingCustomBaseItem: true,
+      }),
+      { params: Promise.resolve({ id: 'craft-owned' }) },
+    );
+
+    expect(response.status).toBe(204);
+    const merged = (supabase.lastUpdate()?.data as Record<string, unknown>) ?? {};
+    expect(merged.usesType).toBe('full');
+    expect(merged.usesCount).toBe(2);
+    expect(merged.isEditingCustomBaseItem).toBeUndefined();
+  });
+
   it('returns 400 for unknown crafting update fields without writing', async () => {
     const row = makeCraftingRow('craft-owned', OWNER.uid);
     mockGetSession.mockResolvedValue({ user: OWNER, error: null });
@@ -292,6 +315,20 @@ describe('DELETE /api/crafting/[id]', () => {
 
     expect(response.status).toBe(404);
     await expect(readJson(response)).resolves.toEqual({ error: 'Crafting session not found' });
+  });
+
+  it('returns 403 for a cross-origin delete', async () => {
+    const row = makeCraftingRow('craft-owned', OWNER.uid);
+    mockGetSession.mockResolvedValue({ user: OWNER, error: null });
+    const supabase = createMockSupabase(row);
+    mockCreateClient.mockResolvedValue(supabase as never);
+
+    const response = await DELETE(
+      makeDeleteRequest('craft-owned', { origin: 'https://evil.example' }),
+      { params: Promise.resolve({ id: 'craft-owned' }) },
+    );
+
+    expect(response.status).toBe(403);
   });
 
   it('deletes the crafting session for the owner', async () => {

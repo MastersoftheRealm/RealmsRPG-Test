@@ -4,6 +4,7 @@ import {
   assertCampaignDetailHttpAccess,
   assertCharacterSheetHttpAccess,
 } from '@/lib/server/assert-resource-http-access';
+import { ResourceAccessUnavailableError } from '@/lib/server/resource-access-unavailable';
 
 vi.mock('next/headers', () => ({
   headers: vi.fn(async () => ({
@@ -136,7 +137,7 @@ describe('assert-resource-http-access', () => {
     await expect(assertCampaignDetailHttpAccess('camp')).resolves.toBeUndefined();
   });
 
-  it('denies campaign access when the internal API fetch fails', async () => {
+  it('throws a recoverable unavailable error when the internal API fetch fails', async () => {
     vi.stubGlobal(
       'fetch',
       vi.fn(async () => {
@@ -144,11 +145,19 @@ describe('assert-resource-http-access', () => {
       }),
     );
 
-    try {
-      await assertCampaignDetailHttpAccess('camp');
-      throw new Error('expected notFound');
-    } catch (error) {
-      expect(httpStatus(error)).toBe(404);
-    }
+    await expect(assertCampaignDetailHttpAccess('camp')).rejects.toBeInstanceOf(
+      ResourceAccessUnavailableError,
+    );
+  });
+
+  it('throws unavailable on campaign API 503', async () => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async () => new Response('error', { status: 503 })),
+    );
+
+    await expect(assertCampaignDetailHttpAccess('camp')).rejects.toBeInstanceOf(
+      ResourceAccessUnavailableError,
+    );
   });
 });

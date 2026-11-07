@@ -52,6 +52,9 @@ function makeEncounterRow(id: string, userId: string): EncounterRow {
 }
 
 function createMockSupabase(row: EncounterRow | null) {
+  let lastUpdate: Record<string, unknown> | null = null;
+  const updateEqCalls: Array<[string, string]> = [];
+
   const buildSelectChain = () => {
     const eqCalls: [string, string][] = [];
     const chain = {
@@ -70,15 +73,30 @@ function createMockSupabase(row: EncounterRow | null) {
     return chain;
   };
 
-  return {
+  const buildUpdateChain = () => {
+    const chain = {
+      eq: vi.fn((col: string, val: string) => {
+        updateEqCalls.push([col, val]);
+        return chain;
+      }),
+      then(
+        onFulfilled?: (value: { error: null }) => unknown,
+        onRejected?: (reason: unknown) => unknown,
+      ) {
+        return Promise.resolve({ error: null }).then(onFulfilled, onRejected);
+      },
+    };
+    return chain;
+  };
+
+  const client = {
     from: vi.fn((table: string) => {
       if (table !== 'encounters') throw new Error(`Unexpected table: ${table}`);
       return {
         select: vi.fn(() => buildSelectChain()),
-        update: vi.fn().mockReturnValue({
-          eq: vi.fn().mockReturnValue({
-            eq: vi.fn().mockResolvedValue({ error: null }),
-          }),
+        update: vi.fn((payload: Record<string, unknown>) => {
+          lastUpdate = payload;
+          return buildUpdateChain();
         }),
         delete: vi.fn().mockReturnValue({
           eq: vi.fn().mockReturnValue({
@@ -87,7 +105,10 @@ function createMockSupabase(row: EncounterRow | null) {
         }),
       };
     }),
+    lastUpdate: () => lastUpdate,
+    updateEqCalls: () => updateEqCalls,
   };
+  return client;
 }
 
 function makeGetRequest(id: string) {
@@ -195,13 +216,57 @@ describe('PATCH /api/encounters/[id]', () => {
   it('updates the encounter for the owner', async () => {
     const row = makeEncounterRow('enc-owned', OWNER.uid);
     mockGetSession.mockResolvedValue({ user: OWNER, error: null });
-    mockCreateClient.mockResolvedValue(createMockSupabase(row) as never);
+    const supabase = createMockSupabase(row);
+    mockCreateClient.mockResolvedValue(supabase as never);
 
     const response = await PATCH(makePatchRequest('enc-owned', { name: 'Updated fight' }), {
       params: Promise.resolve({ id: 'enc-owned' }),
     });
 
     expect(response.status).toBe(204);
+    expect(supabase.lastUpdate()?.name).toBe('Updated fight');
+    expect(supabase.updateEqCalls()).toEqual([
+      ['id', 'enc-owned'],
+      ['user_id', OWNER.uid],
+    ]);
+  });
+
+  it('returns 403 for a cross-origin patch', async () => {
+    const row = makeEncounterRow('enc-owned', OWNER.uid);
+    mockGetSession.mockResolvedValue({ user: OWNER, error: null });
+    const supabase = createMockSupabase(row);
+    mockCreateClient.mockResolvedValue(supabase as never);
+
+    const response = await PATCH(
+      new NextRequest('http://localhost/api/encounters/enc-owned', {
+        method: 'PATCH',
+        headers: { 'content-type': 'application/json', origin: 'https://evil.example' },
+        body: JSON.stringify({ name: 'Stolen' }),
+      }),
+      { params: Promise.resolve({ id: 'enc-owned' }) },
+    );
+
+    expect(response.status).toBe(403);
+    expect(supabase.lastUpdate()).toBeNull();
+  });
+
+  it('returns 400 for malformed JSON without writing', async () => {
+    const row = makeEncounterRow('enc-owned', OWNER.uid);
+    mockGetSession.mockResolvedValue({ user: OWNER, error: null });
+    const supabase = createMockSupabase(row);
+    mockCreateClient.mockResolvedValue(supabase as never);
+
+    const response = await PATCH(
+      new NextRequest('http://localhost/api/encounters/enc-owned', {
+        method: 'PATCH',
+        headers: { 'content-type': 'application/json', origin: 'http://localhost' },
+        body: '{not json',
+      }),
+      { params: Promise.resolve({ id: 'enc-owned' }) },
+    );
+
+    expect(response.status).toBe(400);
+    expect(supabase.lastUpdate()).toBeNull();
   });
 });
 

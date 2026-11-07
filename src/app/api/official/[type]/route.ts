@@ -53,9 +53,9 @@ import { recordCodexChange, type RecordCodexChangeInput } from '@/lib/codex-chan
 import { validateUserLibraryWriteBody } from '@/lib/library-mutation-validation';
 import {
   isColumnarLibraryTypeName,
-  unknownLibraryBodyKeys,
-  unknownSpeciesBodyKeys,
-} from '@/lib/library-write-keys';
+  unknownPersistedLibraryKeys,
+  unknownPersistedSpeciesKeys,
+} from '@/lib/library-persisted-contract';
 
 const SPECIES_TABLE = 'codex_species';
 
@@ -70,14 +70,14 @@ function officialWriteValidation(
   body: Record<string, unknown>,
 ): NextResponse | null {
   if (type === 'species') {
-    const unknown = unknownSpeciesBodyKeys(body);
+    const unknown = unknownPersistedSpeciesKeys(body);
     if (unknown.length > 0) {
       return NextResponse.json({ error: 'Payload contains unsupported fields' }, { status: 400 });
     }
     return null;
   }
   if (isColumnarLibraryTypeName(type)) {
-    const unknown = unknownLibraryBodyKeys(type, body);
+    const unknown = unknownPersistedLibraryKeys(type, body);
     if (unknown.length > 0) {
       return NextResponse.json({ error: 'Payload contains unsupported fields' }, { status: 400 });
     }

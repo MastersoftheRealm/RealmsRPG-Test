@@ -243,6 +243,28 @@ describe('PATCH /api/user/library/[type]/[id]', () => {
     ]);
   });
 
+  it('keeps stored composition when only the name changes', async () => {
+    const row = {
+      ...makeLibraryRow('pow-owned', OWNER.uid),
+      name: 'Stored power',
+      payload: { composition: { choice: true }, parts: [] },
+      action_type: 'basic',
+    };
+    mockGetSession.mockResolvedValue({ user: OWNER, error: null });
+    const supabase = createMockSupabase(row as LibraryRow);
+    mockCreateClient.mockResolvedValue(supabase as never);
+
+    const response = await PATCH(
+      makePatchRequest('powers', 'pow-owned', { name: 'Renamed power' }),
+      params('powers', 'pow-owned'),
+    );
+
+    expect(response.status).toBe(200);
+    const update = supabase.lastUpdate();
+    expect(update?.name).toBe('Renamed power');
+    expect((update?.payload as { composition?: unknown }).composition).toEqual({ choice: true });
+  });
+
   it('rejects unknown PATCH fields without writing', async () => {
     const row = makeLibraryRow('pow-owned', OWNER.uid);
     mockGetSession.mockResolvedValue({ user: OWNER, error: null });

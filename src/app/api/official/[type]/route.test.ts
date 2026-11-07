@@ -433,7 +433,13 @@ describe('POST /api/official/[type]', () => {
     await expect(readJson(response)).resolves.toEqual({ id: existingId });
     expect(selectChain.ilike).not.toHaveBeenCalled();
     expect(update).toHaveBeenCalled();
-    expect(recordCodexChange).toHaveBeenCalled();
+    expect(recordCodexChange).toHaveBeenCalledWith(
+      expect.objectContaining({
+        entityType: 'official_powers',
+        operation: 'update',
+        changedByUserId: USER.uid,
+      }),
+    );
   });
 });
 

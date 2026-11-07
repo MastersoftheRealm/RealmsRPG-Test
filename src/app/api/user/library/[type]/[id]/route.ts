@@ -131,7 +131,7 @@ export async function PATCH(
       const validation = await validateJson(request, libraryItemUpdateSchema);
       if (!validation.success) return validation.error;
       const data = validation.data as Record<string, unknown>;
-      const writeValidation = validateUserLibraryWriteBody(type, data);
+      const writeValidation = validateUserLibraryWriteBody(type, data, { mode: 'patch' });
       if (writeValidation) return writeValidation;
       const currentItem = rowToItem(type, existing as Record<string, unknown>, 'user');
       const merged = { ...currentItem, ...data };
@@ -163,7 +163,7 @@ export async function PATCH(
     const validation = await validateJson(request, libraryItemUpdateSchema);
     if (!validation.success) return validation.error;
     const data = validation.data as Record<string, unknown>;
-    const writeValidation = validateUserLibraryWriteBody('species', data);
+    const writeValidation = validateUserLibraryWriteBody('species', data, { mode: 'patch' });
     if (writeValidation) return writeValidation;
     const existingRow = existing as Record<string, unknown>;
     const merged: Record<string, unknown> = { ...rowToItemSpecies(existingRow), ...data };
