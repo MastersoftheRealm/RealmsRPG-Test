@@ -48,13 +48,13 @@ vi.mock('@/app/(auth)/actions', () => ({
 
 import { GET } from './route';
 
-function dualOAuthUser(googleLastSignInIso: string): User {
+function dualOAuthUser(googleIdentity: { last_sign_in_at?: string; updated_at?: string }): User {
   return {
     id: 'user-1',
     email: 'hero@example.com',
     app_metadata: { provider: 'google' },
     identities: [
-      { provider: 'google', last_sign_in_at: googleLastSignInIso },
+      { provider: 'google', ...googleIdentity },
       { provider: 'github', last_sign_in_at: '2020-01-01T00:00:00.000Z' },
     ],
   } as User;
@@ -103,7 +103,7 @@ function installIntentWithVerifier(uid: string, verifier: string, now: number) {
 
 describe('GET /auth/callback', () => {
   const now = 1_700_000_000;
-  const freshGoogleSignIn = new Date(now * 1000).toISOString();
+  const freshGoogleUpdatedAt = new Date(now * 1000).toISOString();
 
   beforeEach(() => {
     vi.clearAllMocks();
@@ -122,7 +122,7 @@ describe('GET /auth/callback', () => {
 
     exchangeCodeForSession.mockResolvedValue({
       data: {
-        user: dualOAuthUser(freshGoogleSignIn),
+        user: dualOAuthUser({ updated_at: freshGoogleUpdatedAt }),
         session: { access_token: accessToken('sess-delete', undefined, now) },
       },
       error: null,
@@ -140,12 +140,38 @@ describe('GET /auth/callback', () => {
     expect(grant?.httpOnly).toBe(true);
   });
 
-  it('does not mint when GitHub exchange reuses the verifier but Google identity last_sign_in_at is stale', async () => {
+  it('mints when Google identity updated_at is fresh but last_sign_in_at is stale (Auth v2.197.0 behavior)', async () => {
     installIntentWithVerifier('user-1', GOOGLE_VERIFIER, now);
 
     exchangeCodeForSession.mockResolvedValue({
       data: {
-        user: dualOAuthUser('2018-01-01T00:00:00.000Z'),
+        user: dualOAuthUser({
+          last_sign_in_at: '2015-03-01T00:00:00.000Z',
+          updated_at: freshGoogleUpdatedAt,
+        }),
+        session: { access_token: accessToken('sess-delete', undefined, now) },
+      },
+      error: null,
+    });
+
+    const response = await GET(
+      new Request(
+        'http://localhost/auth/callback?code=pkce-code&next=%2Fmy-account%3FdeleteReauth%3D1',
+      ),
+    );
+
+    expect(response.cookies.get(OAUTH_DELETE_GRANT_COOKIE)?.value).toBeTruthy();
+  });
+
+  it('does not mint when GitHub exchange reuses the verifier and Google identity timestamps are both stale', async () => {
+    installIntentWithVerifier('user-1', GOOGLE_VERIFIER, now);
+
+    exchangeCodeForSession.mockResolvedValue({
+      data: {
+        user: dualOAuthUser({
+          last_sign_in_at: '2018-01-01T00:00:00.000Z',
+          updated_at: '2018-01-01T00:00:00.000Z',
+        }),
         session: {
           access_token: accessToken('sess-delete', [{ method: 'oauth', timestamp: now }]),
         },
@@ -170,7 +196,7 @@ describe('GET /auth/callback', () => {
 
     exchangeCodeForSession.mockResolvedValue({
       data: {
-        user: dualOAuthUser(freshGoogleSignIn),
+        user: dualOAuthUser({ updated_at: freshGoogleUpdatedAt }),
         session: {
           access_token: accessToken('sess-delete', [{ method: 'oauth', timestamp: now + 5 }]),
         },
@@ -193,7 +219,7 @@ describe('GET /auth/callback', () => {
     ]);
     exchangeCodeForSession.mockResolvedValue({
       data: {
-        user: dualOAuthUser(freshGoogleSignIn),
+        user: dualOAuthUser({ updated_at: freshGoogleUpdatedAt }),
         session: { access_token: accessToken('sess-delete', undefined, now) },
       },
       error: null,
@@ -212,7 +238,7 @@ describe('GET /auth/callback', () => {
     installIntentWithVerifier('other-user', GOOGLE_VERIFIER, now);
     exchangeCodeForSession.mockResolvedValue({
       data: {
-        user: dualOAuthUser(freshGoogleSignIn),
+        user: dualOAuthUser({ updated_at: freshGoogleUpdatedAt }),
         session: { access_token: accessToken('sess-delete', undefined, now) },
       },
       error: null,
@@ -250,7 +276,7 @@ describe('GET /auth/callback', () => {
     installIntentWithVerifier('user-1', GOOGLE_VERIFIER, now);
     exchangeCodeForSession.mockResolvedValue({
       data: {
-        user: dualOAuthUser(freshGoogleSignIn),
+        user: dualOAuthUser({ updated_at: freshGoogleUpdatedAt }),
         session: {
           access_token: accessToken('sess-delete', [{ method: 'password', timestamp: now + 5 }]),
         },
@@ -299,7 +325,7 @@ describe('GET /auth/callback', () => {
     installIntentWithVerifier('user-1', GOOGLE_VERIFIER, now);
     exchangeCodeForSession.mockResolvedValue({
       data: {
-        user: dualOAuthUser(freshGoogleSignIn),
+        user: dualOAuthUser({ updated_at: freshGoogleUpdatedAt }),
         session: { access_token: accessToken('sess-login') },
       },
       error: null,
