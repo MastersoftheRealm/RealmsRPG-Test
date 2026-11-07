@@ -196,7 +196,7 @@ export async function validateJson<T>(
 }
 
 /** Player-facing detail line for one Zod issue (shared by all API validators). */
-export function formatZodValidationIssue(issue: {
+function formatZodValidationIssue(issue: {
   path: ReadonlyArray<PropertyKey>;
   message: string;
 }): string {

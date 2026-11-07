@@ -3,10 +3,7 @@ import { NextRequest } from 'next/server';
 import { z } from 'zod';
 
 import {
-  formatZodValidationIssue,
-  parseValidatedJsonBody,
   readBodyWithLimit,
-  realmsImagePatchSchema,
   validateJson,
   validateQuery,
   verifyMutationRequest,
@@ -212,30 +209,31 @@ describe('validateJson', () => {
   });
 });
 
-describe('formatZodValidationIssue (1dfe8wf2k6b)', () => {
-  it('does not prefix object-level refine messages with a lone colon', async () => {
-    expect(formatZodValidationIssue({ path: [], message: 'name and/or categories required' })).toBe(
-      'name and/or categories required',
-    );
-
-    const result = parseValidatedJsonBody({}, realmsImagePatchSchema);
-    expect(result.success).toBe(false);
-    if (result.success) return;
-
-    const body = (await result.error.json()) as { details?: string[] };
-    expect(body.details).toEqual(['name and/or categories required']);
-    expect(body.details?.[0]?.startsWith(':')).toBe(false);
-  });
-});
-
 describe('validateQuery', () => {
-  it('rejects unknown query keys with strict schemas', () => {
+  it('rejects unknown query keys with strict schemas (1dfe8wf2k6b)', async () => {
+    const parsed = campaignsListQuerySchema.safeParse({ full: 'true', extra: '1' });
+    expect(parsed.success).toBe(false);
+    if (parsed.success) return;
+    expect(parsed.error.issues).toEqual([
+      expect.objectContaining({
+        code: 'unrecognized_keys',
+        path: [],
+        keys: ['extra'],
+      }),
+    ]);
+
     const request = new NextRequest('http://localhost/api/campaigns?full=true&extra=1', {
       headers: { host: 'localhost' },
     });
     const result = validateQuery(request, campaignsListQuerySchema);
     expect(result.success).toBe(false);
-    if (!result.success) expect(result.error.status).toBe(400);
+    if (!result.success) {
+      expect(result.error.status).toBe(400);
+      const body = (await result.error.json()) as { details?: string[] };
+      expect(body.details).toHaveLength(1);
+      expect(body.details?.[0]).toBe('Unrecognized key: "extra"');
+      expect(body.details?.[0]?.startsWith(':')).toBe(false);
+    }
   });
 
   it('accepts allowed query keys', () => {
