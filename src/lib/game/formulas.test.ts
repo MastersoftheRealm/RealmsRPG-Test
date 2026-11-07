@@ -205,6 +205,15 @@ describe('calculateMaxCharacterFeats (core_rules characterFeatsPerLevel)', () =>
     expect(calculateMaxCharacterFeats(3, rules)).toBe(6);
     expect(calculateMaxCharacterFeats(3, rules) - calculateMaxCharacterFeats(2, rules)).toBe(2);
   });
+
+  it('preserves explicit characterFeatsPerLevel 0 without falling back to default 1', () => {
+    const rules = { PROGRESSION_PLAYER: { characterFeatsPerLevel: 0 } } as Partial<
+      import('@/types/core-rules').CoreRulesMap
+    >;
+    expect(calculateMaxCharacterFeats(1, rules)).toBe(0);
+    expect(calculateMaxCharacterFeats(5, rules)).toBe(0);
+    expect(rules.PROGRESSION_PLAYER?.characterFeatsPerLevel).toBe(0);
+  });
 });
 
 describe('calculateMaxArchetypeFeats (M9)', () => {

@@ -8,7 +8,7 @@ import { useMemo, useCallback, useState } from 'react';
 import { EmptyState, Spinner } from '@/components/ui';
 import { GuidedInlineCatalogList, GuidedLayerNav } from '@/components/patterns';
 import { cn } from '@/lib/utils';
-import { useCodexFeats, useCodexSkills, usePathListFilter, type Feat } from '@/hooks';
+import { useCodexFeats, useCodexSkills, useGameRules, usePathListFilter, type Feat } from '@/hooks';
 import { calculateMaxArchetypeFeats } from '@/lib/game/formulas';
 import {
   applyCappedIdSelection,
@@ -40,9 +40,19 @@ import { filterFeatGuidanceGroups } from '@/lib/game/archetype-path';
 import { EMPTY_GUIDANCE_GROUPS, EMPTY_STRING_ARRAY } from '@/lib/empty';
 import { pathFilterEmptyTitle } from '@/lib/game/path-recommendation-index';
 import type { PathGuidanceGroup } from '@/types/archetype';
+import type { ArchetypeCategory } from '@/types';
+import type { CoreRulesMap } from '@/types/core-rules';
 
 const stepCopy = GUIDED_CREATOR_COPY.steps.archetypeFeats;
 const l2Copy = GUIDED_CREATOR_COPY.steps.featsL2;
+
+/** Level-1 guided archetype feat cap from core_rules (shared with unit tests). */
+export function guidedLevel1ArchetypeFeatCap(
+  archetypeType: ArchetypeCategory | undefined,
+  rules?: Partial<CoreRulesMap>,
+): number {
+  return calculateMaxArchetypeFeats(1, archetypeType, rules);
+}
 
 function resolveFeat(id: string, featById: Map<string, Feat>) {
   const key = String(id);
@@ -58,6 +68,7 @@ function resolveFeat(id: string, featById: Map<string, Feat>) {
 export function ArchetypeFeatsStep() {
   const { draft, updateDraft, navigationIntent, entryNonce } = useGuidedCreatorStore();
   const { pathData, archetype } = useGuidedPathData();
+  const { rules } = useGameRules();
   const { data: feats = [], isLoading } = useCodexFeats();
   const { data: codexSkills = [] } = useCodexSkills();
   const [browseOpen, setBrowseOpen] = useState(false);
@@ -74,7 +85,7 @@ export function ArchetypeFeatsStep() {
     onDeepEntry: openBrowse,
   });
 
-  const maxFeats = calculateMaxArchetypeFeats(1, draft.archetypeType ?? undefined);
+  const maxFeats = guidedLevel1ArchetypeFeatCap(draft.archetypeType ?? undefined, rules);
   const guidanceGroups = pathData?.level1?.guidance_groups;
   const pathFeats = pathData?.level1?.feats;
   const groups = useMemo(() => {

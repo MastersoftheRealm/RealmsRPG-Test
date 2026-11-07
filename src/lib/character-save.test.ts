@@ -113,13 +113,10 @@ describe('formatCharacterCreateFailureMessage (TASK-754)', () => {
     saveRetryHint: 'Check My Characters before trying again so you do not create a duplicate.',
   };
 
-  it('keeps the level-1 legality 400 message without the duplicate hint', () => {
-    const err = new ApiError(
-      'Character is not a legal level 1 build: Ability points spent (9) exceed the level 1 budget (7).',
-      400,
-    );
+  it('surfaces a 400 error body to the player without the duplicate-save hint', () => {
+    const err = new ApiError('Character save failed validation: name is required.', 400);
     const message = formatCharacterCreateFailureMessage(err, copy);
-    expect(message).toContain('Ability points spent');
+    expect(message).toContain('name is required');
     expect(message).not.toMatch(/My Characters|duplicate/i);
   });
 
