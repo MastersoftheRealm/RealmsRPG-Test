@@ -25,6 +25,7 @@ import {
   sessionIdFromAccessToken,
   verifyOAuthDeleteIntentBinding,
 } from '@/lib/auth/oauth-delete-grant.server';
+import { googleIdentityFreshSignInInWindow } from '@/lib/auth/oauth-google-delete-proof';
 import { readSupabasePkceCodeVerifier } from '@/lib/auth/supabase-pkce-cookies';
 import { sanitizeRedirectPath } from '@/lib/safe-redirect';
 
@@ -99,7 +100,8 @@ export async function GET(request: Request) {
     !authUserHasPasswordLogin(u) &&
     userHasLinkedGoogleIdentity(u) &&
     accessToken &&
-    accessTokenProvesOAuthSignInInWindow(accessToken, boundIntent.iat, nowSec)
+    accessTokenProvesOAuthSignInInWindow(accessToken, boundIntent.iat, nowSec) &&
+    googleIdentityFreshSignInInWindow(u, boundIntent.iat, nowSec)
   ) {
     const sessionId = sessionIdFromAccessToken(accessToken);
     const grant = sessionId ? mintOAuthDeleteGrant(u.id, sessionId) : null;

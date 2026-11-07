@@ -59,6 +59,35 @@ export function resolveTrustedRedirectOrigin(request: Request): string {
   return origin;
 }
 
+/** Canonical post-auth origin from `NEXT_PUBLIC_SITE_URL` (not forwarded Host/proto). */
+export function resolveCanonicalRedirectOrigin(fallbackRequest?: Request): string {
+  const site = process.env.NEXT_PUBLIC_SITE_URL?.trim();
+  if (site) {
+    try {
+      return new URL(site).origin;
+    } catch {
+      // fall through
+    }
+  }
+  if (fallbackRequest) {
+    return resolveTrustedRedirectOrigin(fallbackRequest);
+  }
+  return 'http://localhost:3000';
+}
+
+export function buildCanonicalAuthRedirectUrl(
+  path: string,
+  options?: { sanitizeUserRedirect?: boolean | undefined },
+): string {
+  const safePath =
+    options?.sanitizeUserRedirect === false
+      ? path.trim().startsWith('/') && !path.includes('://')
+        ? path.trim()
+        : '/'
+      : sanitizeRedirectPath(path);
+  return `${resolveCanonicalRedirectOrigin()}${safePath}`;
+}
+
 export function buildAuthRedirectUrl(
   request: Request,
   path: string,

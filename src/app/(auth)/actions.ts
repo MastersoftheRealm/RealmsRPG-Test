@@ -7,12 +7,12 @@
 'use server';
 
 import { revalidatePath } from 'next/cache';
-import { cookies, headers } from 'next/headers';
+import { cookies } from 'next/headers';
 import { requireAuth, requireLiveUser, getSession } from '@/lib/supabase/session';
 import { createClient as createServerClient, createServiceRoleClient } from '@/lib/supabase/server';
 import { isAdmin } from '@/lib/admin';
 import { getRolePolicyForUser } from '@/lib/role-policy';
-import { buildAuthRedirectUrl } from '@/lib/auth-redirect';
+import { buildCanonicalAuthRedirectUrl } from '@/lib/auth-redirect';
 import { MY_ACCOUNT_DELETE_REAUTH_PATH } from '@/lib/auth/oauth-delete-messages';
 import {
   clearOAuthDeleteGrantCookie,
@@ -487,10 +487,6 @@ export async function beginGoogleDeleteReauthAction(): Promise<
   try {
     const user = await requireLiveUser();
     const cookieStore = await cookies();
-    const hdrs = await headers();
-    const host = hdrs.get('x-forwarded-host') ?? hdrs.get('host') ?? 'localhost:3000';
-    const proto = hdrs.get('x-forwarded-proto')?.split(',')[0]?.trim() ?? 'http';
-    const request = new Request(`${proto}://${host}/my-account`);
 
     const supabase = await createServerClient();
     const { data, error } = await supabase.auth.getUser();
@@ -502,7 +498,7 @@ export async function beginGoogleDeleteReauthAction(): Promise<
     }
 
     const callbackPath = `/auth/callback?next=${encodeURIComponent(MY_ACCOUNT_DELETE_REAUTH_PATH)}`;
-    const redirectTo = buildAuthRedirectUrl(request, callbackPath);
+    const redirectTo = buildCanonicalAuthRedirectUrl(callbackPath);
     const { data: oauthData, error: oauthError } = await supabase.auth.signInWithOAuth({
       provider: 'google',
       options: {

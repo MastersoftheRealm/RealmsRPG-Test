@@ -6,6 +6,9 @@ import {
   hashPkceCodeVerifier,
   mintOAuthDeleteIntent,
 } from '@/lib/auth/oauth-delete-grant-core';
+function encodeSupabaseSsrCookieValue(value: string): string {
+  return `base64-${Buffer.from(value, 'utf8').toString('base64url')}`;
+}
 
 const GOOGLE_VERIFIER = 'pkce-verifier-for-google-delete';
 const OTHER_VERIFIER = 'pkce-verifier-from-other-provider';
@@ -45,12 +48,15 @@ vi.mock('@/app/(auth)/actions', () => ({
 
 import { GET } from './route';
 
-function googleUser(): User {
+function dualOAuthUser(googleLastSignInIso: string): User {
   return {
     id: 'user-1',
     email: 'hero@example.com',
     app_metadata: { provider: 'google' },
-    identities: [{ provider: 'google' }, { provider: 'github' }],
+    identities: [
+      { provider: 'google', last_sign_in_at: googleLastSignInIso },
+      { provider: 'github', last_sign_in_at: '2020-01-01T00:00:00.000Z' },
+    ],
   } as User;
 }
 
@@ -90,11 +96,14 @@ function installIntentWithVerifier(uid: string, verifier: string, now: number) {
   cookieGet.mockImplementation((name: string) =>
     name === OAUTH_DELETE_INTENT_COOKIE ? { name, value: intent } : undefined,
   );
-  cookieGetAll.mockReturnValue([{ name: PKCE_COOKIE_NAME, value: verifier }]);
+  cookieGetAll.mockReturnValue([
+    { name: PKCE_COOKIE_NAME, value: encodeSupabaseSsrCookieValue(verifier) },
+  ]);
 }
 
 describe('GET /auth/callback', () => {
   const now = 1_700_000_000;
+  const freshGoogleSignIn = new Date(now * 1000).toISOString();
 
   beforeEach(() => {
     vi.clearAllMocks();
@@ -108,12 +117,12 @@ describe('GET /auth/callback', () => {
     stubSupabaseClient();
   });
 
-  it('mints an OAuth delete grant when intent, pkce verifier, and oauth amr align', async () => {
+  it('mints an OAuth delete grant when intent, pkce verifier, oauth amr, and Google identity timestamp align', async () => {
     installIntentWithVerifier('user-1', GOOGLE_VERIFIER, now);
 
     exchangeCodeForSession.mockResolvedValue({
       data: {
-        user: googleUser(),
+        user: dualOAuthUser(freshGoogleSignIn),
         session: { access_token: accessToken('sess-delete', undefined, now) },
       },
       error: null,
@@ -131,13 +140,37 @@ describe('GET /auth/callback', () => {
     expect(grant?.httpOnly).toBe(true);
   });
 
-  it('does not mint when the pkce verifier does not match the intent (e.g. other provider overwrote it)', async () => {
+  it('does not mint when GitHub exchange reuses the verifier but Google identity last_sign_in_at is stale', async () => {
     installIntentWithVerifier('user-1', GOOGLE_VERIFIER, now);
-    cookieGetAll.mockReturnValue([{ name: PKCE_COOKIE_NAME, value: OTHER_VERIFIER }]);
 
     exchangeCodeForSession.mockResolvedValue({
       data: {
-        user: googleUser(),
+        user: dualOAuthUser('2018-01-01T00:00:00.000Z'),
+        session: {
+          access_token: accessToken('sess-delete', [{ method: 'oauth', timestamp: now }]),
+        },
+      },
+      error: null,
+    });
+
+    const response = await GET(
+      new Request(
+        'http://localhost/auth/callback?code=pkce-code&next=%2Fmy-account%3FdeleteReauth%3D1',
+      ),
+    );
+
+    expect(response.cookies.get(OAUTH_DELETE_GRANT_COOKIE)).toBeUndefined();
+  });
+
+  it('does not mint when the pkce verifier does not match the intent (e.g. other provider overwrote it)', async () => {
+    installIntentWithVerifier('user-1', GOOGLE_VERIFIER, now);
+    cookieGetAll.mockReturnValue([
+      { name: PKCE_COOKIE_NAME, value: encodeSupabaseSsrCookieValue(OTHER_VERIFIER) },
+    ]);
+
+    exchangeCodeForSession.mockResolvedValue({
+      data: {
+        user: dualOAuthUser(freshGoogleSignIn),
         session: {
           access_token: accessToken('sess-delete', [{ method: 'oauth', timestamp: now + 5 }]),
         },
@@ -155,10 +188,12 @@ describe('GET /auth/callback', () => {
   });
 
   it('does not mint a grant when the reauth intent cookie is missing', async () => {
-    cookieGetAll.mockReturnValue([{ name: PKCE_COOKIE_NAME, value: GOOGLE_VERIFIER }]);
+    cookieGetAll.mockReturnValue([
+      { name: PKCE_COOKIE_NAME, value: encodeSupabaseSsrCookieValue(GOOGLE_VERIFIER) },
+    ]);
     exchangeCodeForSession.mockResolvedValue({
       data: {
-        user: googleUser(),
+        user: dualOAuthUser(freshGoogleSignIn),
         session: { access_token: accessToken('sess-delete', undefined, now) },
       },
       error: null,
@@ -177,7 +212,7 @@ describe('GET /auth/callback', () => {
     installIntentWithVerifier('other-user', GOOGLE_VERIFIER, now);
     exchangeCodeForSession.mockResolvedValue({
       data: {
-        user: googleUser(),
+        user: dualOAuthUser(freshGoogleSignIn),
         session: { access_token: accessToken('sess-delete', undefined, now) },
       },
       error: null,
@@ -215,7 +250,7 @@ describe('GET /auth/callback', () => {
     installIntentWithVerifier('user-1', GOOGLE_VERIFIER, now);
     exchangeCodeForSession.mockResolvedValue({
       data: {
-        user: googleUser(),
+        user: dualOAuthUser(freshGoogleSignIn),
         session: {
           access_token: accessToken('sess-delete', [{ method: 'password', timestamp: now + 5 }]),
         },
@@ -246,7 +281,17 @@ describe('GET /auth/callback', () => {
     );
 
     expect(response.status).toBe(307);
-    expect(response.cookies.get(OAUTH_DELETE_INTENT_COOKIE)?.value ?? '').toBe('');
+    const clearedIntent = response.cookies.get(OAUTH_DELETE_INTENT_COOKIE);
+    expect(clearedIntent).toBeDefined();
+    expect(clearedIntent?.value).toBe('');
+    const expiresAt = clearedIntent?.expires;
+    const expiresMs =
+      expiresAt instanceof Date
+        ? expiresAt.getTime()
+        : typeof expiresAt === 'number'
+          ? expiresAt
+          : 0;
+    expect(expiresMs).toBeLessThanOrEqual(Date.now());
     expect(response.cookies.get(OAUTH_DELETE_GRANT_COOKIE)).toBeUndefined();
   });
 
@@ -254,7 +299,7 @@ describe('GET /auth/callback', () => {
     installIntentWithVerifier('user-1', GOOGLE_VERIFIER, now);
     exchangeCodeForSession.mockResolvedValue({
       data: {
-        user: googleUser(),
+        user: dualOAuthUser(freshGoogleSignIn),
         session: { access_token: accessToken('sess-login') },
       },
       error: null,

@@ -46,36 +46,51 @@ function signPayload(payload: object, deriveInfo: string): string | null {
   return `${body}.${sig}`;
 }
 
-function verifySignedPayload<T extends { v: number; exp: number }>(
+function decodeVerifiedSignedPayload<T extends { v: number; exp: number }>(
   token: string | undefined | null,
   deriveInfo: string,
-  validate: (payload: T) => boolean,
-  nowSec = Math.floor(Date.now() / 1000),
-): boolean {
+  allowedVersions: ReadonlySet<number>,
+  nowSec: number,
+): T | null {
   const key = derivedSigningKey(deriveInfo);
-  if (!key || !token) return false;
+  if (!key || !token) return null;
   const dot = token.lastIndexOf('.');
-  if (dot <= 0) return false;
+  if (dot <= 0) return null;
   const body = token.slice(0, dot);
   const sig = token.slice(dot + 1);
   const expected = createHmac('sha256', key).update(body).digest('base64url');
   try {
     const a = Buffer.from(sig);
     const b = Buffer.from(expected);
-    if (a.length !== b.length || !timingSafeEqual(a, b)) return false;
+    if (a.length !== b.length || !timingSafeEqual(a, b)) return null;
   } catch {
-    return false;
+    return null;
   }
   let payload: T;
   try {
     payload = JSON.parse(Buffer.from(body, 'base64url').toString('utf8')) as T;
   } catch {
-    return false;
+    return null;
   }
-  if (payload.v !== 1) return false;
-  if (typeof payload.exp !== 'number' || payload.exp <= nowSec) return false;
+  if (!allowedVersions.has(payload.v)) return null;
+  if (typeof payload.exp !== 'number' || payload.exp <= nowSec) return null;
+  return payload;
+}
+
+function verifySignedPayload<T extends { v: number; exp: number }>(
+  token: string | undefined | null,
+  deriveInfo: string,
+  validate: (payload: T) => boolean,
+  allowedVersions: ReadonlySet<number>,
+  nowSec = Math.floor(Date.now() / 1000),
+): boolean {
+  const payload = decodeVerifiedSignedPayload<T>(token, deriveInfo, allowedVersions, nowSec);
+  if (!payload) return false;
   return validate(payload);
 }
+
+const GRANT_VERSIONS = new Set([1]);
+const INTENT_VERSIONS = new Set([2]);
 
 export function hashPkceCodeVerifier(verifier: string): string {
   return createHash('sha256').update(verifier).digest('base64url');
@@ -161,6 +176,7 @@ export function verifyOAuthDeleteGrant(
     token,
     GRANT_DERIVE_INFO,
     (payload) => payload.uid === uid && payload.sid === sessionId,
+    GRANT_VERSIONS,
     nowSec,
   );
 }
@@ -194,31 +210,14 @@ export function verifyOAuthDeleteIntentBinding(
 ): SignedOAuthDeleteIntentPayload | null {
   if (!codeVerifier) return null;
   const expectedCvh = hashPkceCodeVerifier(codeVerifier);
-  const key = derivedSigningKey(INTENT_DERIVE_INFO);
-  if (!key || !token) return null;
-  const dot = token.lastIndexOf('.');
-  if (dot <= 0) return null;
-  const body = token.slice(0, dot);
-  const sig = token.slice(dot + 1);
-  const expectedSig = createHmac('sha256', key).update(body).digest('base64url');
-  try {
-    const a = Buffer.from(sig);
-    const b = Buffer.from(expectedSig);
-    if (a.length !== b.length || !timingSafeEqual(a, b)) return null;
-  } catch {
-    return null;
-  }
-  let payload: SignedOAuthDeleteIntentPayload;
-  try {
-    payload = JSON.parse(
-      Buffer.from(body, 'base64url').toString('utf8'),
-    ) as SignedOAuthDeleteIntentPayload;
-  } catch {
-    return null;
-  }
-  if (payload.v !== 2) return null;
+  const payload = decodeVerifiedSignedPayload<SignedOAuthDeleteIntentPayload>(
+    token,
+    INTENT_DERIVE_INFO,
+    INTENT_VERSIONS,
+    nowSec,
+  );
+  if (!payload) return null;
   if (payload.provider !== 'google') return null;
-  if (typeof payload.exp !== 'number' || payload.exp <= nowSec) return null;
   if (!payload.nonce || payload.cvh !== expectedCvh) return null;
   return payload;
 }

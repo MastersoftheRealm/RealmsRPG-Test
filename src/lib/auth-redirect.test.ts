@@ -1,7 +1,9 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import {
   buildAuthRedirectUrl,
+  buildCanonicalAuthRedirectUrl,
   collectAllowedRedirectHosts,
+  resolveCanonicalRedirectOrigin,
   resolveTrustedRedirectOrigin,
 } from '@/lib/auth-redirect';
 
@@ -62,6 +64,53 @@ describe('resolveTrustedRedirectOrigin', () => {
     );
 
     expect(origin).toBe('https://realmsrpg.com');
+  });
+});
+
+describe('resolveCanonicalRedirectOrigin', () => {
+  const originalSite = process.env.NEXT_PUBLIC_SITE_URL;
+
+  afterEach(() => {
+    if (originalSite === undefined) delete process.env.NEXT_PUBLIC_SITE_URL;
+    else process.env.NEXT_PUBLIC_SITE_URL = originalSite;
+    vi.unstubAllEnvs();
+  });
+
+  it('uses NEXT_PUBLIC_SITE_URL even when forwarded headers are hostile', () => {
+    process.env.NEXT_PUBLIC_SITE_URL = 'https://realmsrpg.com';
+    vi.stubEnv('NODE_ENV', 'production');
+
+    const origin = resolveCanonicalRedirectOrigin(
+      request('/my-account', {
+        'x-forwarded-host': 'evil.example',
+        'x-forwarded-proto': 'https',
+      }),
+    );
+
+    expect(origin).toBe('https://realmsrpg.com');
+  });
+});
+
+describe('buildCanonicalAuthRedirectUrl', () => {
+  const originalSite = process.env.NEXT_PUBLIC_SITE_URL;
+
+  afterEach(() => {
+    if (originalSite === undefined) delete process.env.NEXT_PUBLIC_SITE_URL;
+    else process.env.NEXT_PUBLIC_SITE_URL = originalSite;
+    vi.unstubAllEnvs();
+  });
+
+  it('builds callbacks on the approved HTTPS origin in production', () => {
+    process.env.NEXT_PUBLIC_SITE_URL = 'https://realmsrpg.com';
+    vi.stubEnv('NODE_ENV', 'production');
+
+    const url = buildCanonicalAuthRedirectUrl(
+      '/auth/callback?next=%2Fmy-account%3FdeleteReauth%3D1',
+      { sanitizeUserRedirect: false },
+    );
+
+    expect(url).toBe('https://realmsrpg.com/auth/callback?next=%2Fmy-account%3FdeleteReauth%3D1');
+    expect(url).not.toContain('evil.example');
   });
 });
 
