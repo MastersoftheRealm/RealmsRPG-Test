@@ -1,9 +1,14 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
+import * as coreRulesServer from '@/lib/core-rules-server';
+import * as featCatalogServer from '@/lib/codex/feat-requirement-catalog-server';
 import {
   catalogFromCodexRows,
+  evaluateCharacterLegalityForSave,
+  FEAT_CATALOG_PATCH_TRIGGER_KEYS,
   findCharacterLegalityViolations,
   legalityLevelForSave,
   mapCodexBaseSkillToId,
+  patchDirtyKeysNeedFeatCatalog,
   type CharacterLegalityRulesStatus,
 } from './character-legality';
 import { calculateHealthEnergyPool } from './formulas';
@@ -306,5 +311,104 @@ describe('mapCodexBaseSkillToId / catalogFromCodexRows (TASK-754)', () => {
 describe('legalityLevelForSave', () => {
   it('defaults missing level to 1', () => {
     expect(legalityLevelForSave({})).toBe(1);
+  });
+});
+
+describe('patchDirtyKeysNeedFeatCatalog (feat catalog PATCH gate)', () => {
+  it.each(FEAT_CATALOG_PATCH_TRIGGER_KEYS)(
+    'returns true when dirty includes trigger key %s',
+    (key) => {
+      expect(patchDirtyKeysNeedFeatCatalog({ [key]: key === 'level' ? 2 : true })).toBe(true);
+    },
+  );
+
+  it('returns false for cosmetic-only dirty keys', () => {
+    expect(patchDirtyKeysNeedFeatCatalog({ name: 'Hero', portrait: '/x.png' })).toBe(false);
+  });
+
+  it('returns true when skills change (pinned regression)', () => {
+    expect(patchDirtyKeysNeedFeatCatalog({ skills: [{ id: '1', skill_val: 1 }] })).toBe(true);
+  });
+
+  it('returns true when defenseVals change (pinned regression)', () => {
+    expect(patchDirtyKeysNeedFeatCatalog({ defenseVals: { might: 1 } })).toBe(true);
+  });
+
+  it('returns true when archetypeChoices change (pinned regression)', () => {
+    expect(patchDirtyKeysNeedFeatCatalog({ archetypeChoices: { 1: 'feat' } })).toBe(true);
+  });
+});
+
+describe('evaluateCharacterLegalityForSave', () => {
+  it('records feat_requirements_skipped when feat catalog load is skipped', async () => {
+    const rulesSpy = vi.spyOn(coreRulesServer, 'fetchCoreRules').mockResolvedValue({});
+    try {
+      const result = await evaluateCharacterLegalityForSave(
+        { from: vi.fn() } as never,
+        legalBuild(),
+        { loadFeatCatalog: false },
+      );
+      expect(result.uncomputable).toContain('feat_requirements_skipped');
+    } finally {
+      rulesSpy.mockRestore();
+    }
+  });
+
+  it('logs catalog fetch failures without character payload', async () => {
+    const rulesSpy = vi.spyOn(coreRulesServer, 'fetchCoreRules').mockResolvedValue({});
+    const catalogSpy = vi
+      .spyOn(featCatalogServer, 'fetchFeatRequirementCatalogCached')
+      .mockRejectedValue(new Error('codex_feats timeout'));
+
+    const spy = vi.spyOn(console, 'error').mockImplementation(() => {});
+
+    try {
+      const result = await evaluateCharacterLegalityForSave(
+        { from: vi.fn() } as never,
+        legalBuild(),
+      );
+
+      expect(result.uncomputable).toContain('feat_catalog_unavailable');
+      expect(spy).toHaveBeenCalledWith(
+        '[API Error] [character-legality] feat requirement catalog fetch:',
+        expect.any(Error),
+      );
+      expect(spy.mock.calls[0]?.join(' ')).not.toMatch(/Hero|featId/);
+    } finally {
+      spy.mockRestore();
+      rulesSpy.mockRestore();
+      catalogSpy.mockRestore();
+    }
+  });
+
+  it('still saves advisory when the catalog throws a Postgres-shaped error object', async () => {
+    const rulesSpy = vi.spyOn(coreRulesServer, 'fetchCoreRules').mockResolvedValue({});
+    const catalogSpy = vi
+      .spyOn(featCatalogServer, 'fetchFeatRequirementCatalogCached')
+      .mockRejectedValue({
+        code: '42703',
+        message: 'column codex_skills.base_skill_id does not exist',
+        hint: 'Perhaps you meant to reference the column "codex_skills.base_skill".',
+      });
+
+    const spy = vi.spyOn(console, 'error').mockImplementation(() => {});
+
+    try {
+      const result = await evaluateCharacterLegalityForSave(
+        { from: vi.fn() } as never,
+        legalBuild(),
+      );
+
+      expect(result.uncomputable).toContain('feat_catalog_unavailable');
+      expect(spy).toHaveBeenCalledWith(
+        '[API Error] [character-legality] feat requirement catalog fetch:',
+        expect.objectContaining({ code: '42703' }),
+      );
+      expect(JSON.stringify(result)).not.toContain('base_skill_id');
+    } finally {
+      spy.mockRestore();
+      rulesSpy.mockRestore();
+      catalogSpy.mockRestore();
+    }
   });
 });

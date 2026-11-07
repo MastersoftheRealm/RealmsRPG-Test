@@ -8,6 +8,7 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
+import { asDbUpdate } from '@/lib/supabase/database';
 import { getSession } from '@/lib/supabase/session';
 import {
   validateJson,
@@ -210,9 +211,14 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
     const archetypeNameById = await fetchArchetypeNameMap(supabase);
     const listCols = getCharacterListColumns(mergedData, { archetypeNameById });
 
+    const characterRowPatch = asDbUpdate<'characters'>({
+      data: mergedData,
+      updated_at: now,
+      ...listCols,
+    });
     let updateQuery = supabase
       .from('characters')
-      .update({ data: mergedData, updated_at: now, ...listCols })
+      .update(characterRowPatch)
       .eq('id', id)
       .eq('user_id', user.uid);
     if (expectedUpdatedAt && currentUpdatedAt) {

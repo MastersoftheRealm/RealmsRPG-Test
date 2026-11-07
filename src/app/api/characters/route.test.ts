@@ -109,6 +109,8 @@ type MockSupabaseConfig = {
   } | null;
   /** Row returned for `select('id, data')` — the duplicate source lookup. */
   duplicateSource?: { id: string; data: Record<string, unknown> } | null | undefined;
+  /** Sheet blob for `.select('data')` on idempotent replay (else last insert). */
+  replayCharacterSheet?: Record<string, unknown> | null | undefined;
 };
 
 function createMockSupabase(config: MockSupabaseConfig = {}) {
@@ -125,10 +127,12 @@ function createMockSupabase(config: MockSupabaseConfig = {}) {
     codexSkills = [],
     codexSkillsError = null,
     duplicateSource = null,
+    replayCharacterSheet = null,
   } = config;
 
   let insertAttempted = false;
   let skillSelectColumns: string | undefined;
+  let storedSheetSelectCalls = 0;
   const insertedRows: Array<Record<string, unknown>> = [];
   const insert = vi.fn((row: Record<string, unknown>) => {
     insertAttempted = true;
@@ -168,6 +172,19 @@ function createMockSupabase(config: MockSupabaseConfig = {}) {
                 maybeSingle: vi.fn(async () => {
                   if (cols === 'id, data') {
                     return { data: duplicateSource, error: null };
+                  }
+                  if (cols === 'data') {
+                    storedSheetSelectCalls++;
+                    const sheet =
+                      replayCharacterSheet ??
+                      (insertedRows.length > 0
+                        ? (insertedRows[insertedRows.length - 1]?.data as
+                            | Record<string, unknown>
+                            | undefined)
+                        : undefined);
+                    return sheet
+                      ? { data: { data: sheet }, error: null }
+                      : { data: null, error: null };
                   }
                   const id = cols === 'id' ? replayedId() : null;
                   return { data: id ? { id } : null, error: null };
@@ -209,6 +226,9 @@ function createMockSupabase(config: MockSupabaseConfig = {}) {
     insertedRows,
     get skillSelectColumns() {
       return skillSelectColumns;
+    },
+    get storedSheetSelectCalls() {
+      return storedSheetSelectCalls;
     },
   };
 
@@ -665,7 +685,10 @@ describe('POST /api/characters', () => {
 
     it('replays the first character instead of inserting a second one', async () => {
       mockGetSession.mockResolvedValue({ user: TEST_USER, error: null });
-      const supabase = createMockSupabase({ replayCharacterId: 'already-created-id' });
+      const supabase = createMockSupabase({
+        replayCharacterId: 'already-created-id',
+        replayCharacterSheet: legalLevel1Payload(),
+      });
       mockCreateClient.mockResolvedValue(supabase as never);
 
       const response = await POST(makePostRequest(legalLevel1Payload({ clientRequestId })));
@@ -673,6 +696,170 @@ describe('POST /api/characters', () => {
       expect(response.status).toBe(200);
       await expect(readJson(response)).resolves.toEqual({ id: 'already-created-id' });
       expect(supabase.insertMock).not.toHaveBeenCalled();
+    });
+
+    it('duplicate replay evaluates stored copy data, not empty duplicateOf body', async () => {
+      const clientRequestId = '11111111-2222-4333-8444-555555555557';
+      const sourceId = '11111111-1111-4111-8111-111111111112';
+      const overSource = {
+        name: 'Aria',
+        level: 5,
+        abilities: {
+          strength: 50,
+          vitality: 50,
+          agility: 50,
+          acuity: 50,
+          intelligence: 0,
+          charisma: 0,
+        },
+        skills: [{ id: '1', skill_val: 1 }],
+        archetype: { id: 'a1', type: 'power' },
+        archetypeFeats: [{ id: 'f1' }],
+        feats: [{ id: 'c1' }],
+      };
+
+      mockGetSession.mockResolvedValue({ user: TEST_USER, error: null });
+      const firstSupabase = createMockSupabase({
+        insertId: 'duplicate-copy-id',
+        duplicateSource: { id: sourceId, data: overSource },
+      });
+      mockCreateClient.mockResolvedValue(firstSupabase as never);
+
+      const firstResponse = await POST(makePostRequest({ duplicateOf: sourceId, clientRequestId }));
+      expect(firstResponse.status).toBe(200);
+      const firstBody = await readJson<{
+        id: string;
+        legalityWarnings?: Array<{ code: string; level: number }> | undefined;
+      }>(firstResponse);
+      const savedSheet = defined(firstSupabase.insertedRows[0]).data as Record<string, unknown>;
+
+      const replaySupabase = createMockSupabase({
+        replayCharacterId: 'duplicate-copy-id',
+        replayCharacterSheet: savedSheet,
+        duplicateSource: { id: sourceId, data: overSource },
+      });
+      mockCreateClient.mockResolvedValue(replaySupabase as never);
+
+      const replayResponse = await POST(
+        makePostRequest({ duplicateOf: sourceId, clientRequestId }),
+      );
+      expect(replayResponse.status).toBe(200);
+      const replayBody = await readJson<{
+        id: string;
+        legalityWarnings?: Array<{ code: string; level: number }> | undefined;
+      }>(replayResponse);
+
+      expect(replayBody.id).toBe('duplicate-copy-id');
+      expect(replayBody.legalityWarnings).toEqual(firstBody.legalityWarnings);
+      expect(replaySupabase.insertMock).not.toHaveBeenCalled();
+    });
+
+    it('23505 duplicate race uses winner stored sheet, not loser pre-insert legality', async () => {
+      const clientRequestId = '11111111-2222-4333-8444-555555555558';
+      const sourceId = '11111111-1111-4111-8111-111111111113';
+      const winnerStoredSheet = {
+        name: 'Aria (Copy)',
+        level: 5,
+        abilities: {
+          strength: 50,
+          vitality: 50,
+          agility: 50,
+          acuity: 50,
+          intelligence: 0,
+          charisma: 0,
+        },
+        skills: [{ id: '1', skill_val: 1 }],
+        archetype: { id: 'a1', type: 'power' },
+        archetypeFeats: [{ id: 'f1' }],
+        feats: [{ id: 'c1' }],
+      };
+      const legalSource = {
+        name: 'Aria',
+        level: 1,
+        abilities: {
+          strength: 2,
+          vitality: 2,
+          agility: 1,
+          acuity: 1,
+          intelligence: 1,
+          charisma: 0,
+        },
+        skills: [{ id: '1', skill_val: 1 }],
+        archetype: { id: 'a1', type: 'power' },
+        archetypeFeats: [{ id: 'f1' }],
+        feats: [{ id: 'c1' }],
+      };
+
+      mockGetSession.mockResolvedValue({ user: TEST_USER, error: null });
+      const raceSupabase = createMockSupabase({
+        insertError: { code: '23505' },
+        replayCharacterIdAfterInsert: 'race-dupe-id',
+        replayCharacterSheet: winnerStoredSheet,
+        duplicateSource: { id: sourceId, data: legalSource },
+        codexFeats: [{ id: 'c1', name: 'Needs L4', lvl_req: 4 }],
+      });
+      mockCreateClient.mockResolvedValue(raceSupabase as never);
+
+      const raceResponse = await POST(makePostRequest({ duplicateOf: sourceId, clientRequestId }));
+      expect(raceResponse.status).toBe(200);
+      const raceBody = await readJson<{
+        id: string;
+        legalityWarnings?: Array<{ code: string; level: number }> | undefined;
+        legalityUncomputable?: string[] | undefined;
+      }>(raceResponse);
+
+      expect(raceBody.id).toBe('race-dupe-id');
+      expect(
+        raceBody.legalityWarnings?.some(
+          (w) => w.code === 'ability_points_over_budget' && w.level === 5,
+        ),
+      ).toBe(true);
+      expect(raceBody.legalityWarnings?.some((w) => w.level === 1)).toBe(false);
+      expect(raceSupabase.storedSheetSelectCalls).toBeGreaterThan(0);
+      expect(raceSupabase.insertMock).toHaveBeenCalledTimes(1);
+    });
+
+    it('replays with legality fields matching a fresh create for the same payload', async () => {
+      const clientRequestId = '11111111-2222-4333-8444-555555555556';
+      const overBudget = legalLevel1Payload({
+        level: 5,
+        abilities: {
+          strength: 50,
+          vitality: 50,
+          agility: 50,
+          acuity: 50,
+          intelligence: 0,
+          charisma: 0,
+        },
+      });
+
+      mockGetSession.mockResolvedValue({ user: TEST_USER, error: null });
+      const freshSupabase = createMockSupabase({ insertId: 'fresh-create-id' });
+      mockCreateClient.mockResolvedValue(freshSupabase as never);
+
+      const freshResponse = await POST(makePostRequest(overBudget));
+      expect(freshResponse.status).toBe(200);
+      const freshBody = await readJson<{
+        id: string;
+        legalityWarnings?: Array<{ code: string; level: number }> | undefined;
+      }>(freshResponse);
+
+      const replaySupabase = createMockSupabase({
+        replayCharacterId: 'already-created-id',
+        replayCharacterSheet: freshSupabase.insertedRows[0]?.data as Record<string, unknown>,
+      });
+      mockCreateClient.mockResolvedValue(replaySupabase as never);
+
+      const replayResponse = await POST(makePostRequest({ ...overBudget, clientRequestId }));
+      expect(replayResponse.status).toBe(200);
+      const replayBody = await readJson<{
+        id: string;
+        legalityWarnings?: Array<{ code: string; level: number }> | undefined;
+      }>(replayResponse);
+
+      expect(replayBody.id).toBe('already-created-id');
+      expect(replayBody.legalityWarnings).toEqual(freshBody.legalityWarnings);
+      expect(replaySupabase.insertMock).not.toHaveBeenCalled();
     });
 
     it('replays ahead of the quota check, so a retry is not refused for the slot it took', async () => {
@@ -683,6 +870,7 @@ describe('POST /api/characters', () => {
         createMockSupabase({
           characterCount: policy.maxCharacters,
           replayCharacterId: 'already-created-id',
+          replayCharacterSheet: legalLevel1Payload(),
         }) as never,
       );
 
@@ -708,20 +896,44 @@ describe('POST /api/characters', () => {
       expect(savedData.clientRequestId).toBeUndefined();
     });
 
-    it('returns the winning row when a concurrent retry loses the unique index', async () => {
-      mockGetSession.mockResolvedValue({ user: TEST_USER, error: null });
-      // Both requests miss the lookup, then this one's insert hits 23505.
-      mockCreateClient.mockResolvedValue(
-        createMockSupabase({
-          insertError: { code: '23505' },
-          replayCharacterIdAfterInsert: 'race-winner-id',
-        }) as never,
-      );
+    it('23505 create race uses winner stored sheet, not loser pre-insert legality', async () => {
+      const winnerStoredSheet = legalLevel1Payload({
+        level: 5,
+        abilities: {
+          strength: 50,
+          vitality: 50,
+          agility: 50,
+          acuity: 50,
+          intelligence: 0,
+          charisma: 0,
+        },
+      });
 
-      const response = await POST(makePostRequest(legalLevel1Payload({ clientRequestId })));
+      mockGetSession.mockResolvedValue({ user: TEST_USER, error: null });
+      const raceSupabase = createMockSupabase({
+        insertError: { code: '23505' },
+        replayCharacterIdAfterInsert: 'race-winner-id',
+        replayCharacterSheet: winnerStoredSheet,
+      });
+      mockCreateClient.mockResolvedValue(raceSupabase as never);
+
+      const loserPayload = legalLevel1Payload({ clientRequestId });
+      const response = await POST(makePostRequest(loserPayload));
 
       expect(response.status).toBe(200);
-      await expect(readJson(response)).resolves.toEqual({ id: 'race-winner-id' });
+      const body = await readJson<{
+        id: string;
+        legalityWarnings?: Array<{ code: string; level: number }> | undefined;
+        legalityUncomputable?: string[] | undefined;
+      }>(response);
+      expect(body.id).toBe('race-winner-id');
+      expect(
+        body.legalityWarnings?.some(
+          (w) => w.code === 'ability_points_over_budget' && w.level === 5,
+        ),
+      ).toBe(true);
+      expect(body.legalityWarnings?.some((w) => w.level === 1)).toBe(false);
+      expect(raceSupabase.storedSheetSelectCalls).toBeGreaterThan(0);
     });
 
     it('still surfaces a non-idempotency insert failure as a 500 without Postgres fields', async () => {
