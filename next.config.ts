@@ -1,9 +1,13 @@
 import type { NextConfig } from 'next';
 import createMDX from '@next/mdx';
+import {
+  ACCOUNT_PATH_ALIAS_REWRITE,
+  NEXT_APP_POWERED_BY_HEADER,
+} from './src/lib/security/next-app-flags';
 import { buildContentSecurityPolicy } from './src/lib/security/content-security-policy';
 
 const nextConfig: NextConfig = {
-  poweredByHeader: false,
+  poweredByHeader: NEXT_APP_POWERED_BY_HEADER,
   pageExtensions: ['ts', 'tsx', 'js', 'jsx', 'mdx'],
   // Allow character portraits (and profile pictures) from Supabase Storage public URLs
   images: {
@@ -55,12 +59,7 @@ const nextConfig: NextConfig = {
   // after that gate, so a signed-out visit can come back to `/account`.
   async rewrites() {
     return {
-      beforeFiles: [
-        {
-          source: '/account',
-          destination: '/my-account',
-        },
-      ],
+      beforeFiles: [ACCOUNT_PATH_ALIAS_REWRITE],
     };
   },
   // Security headers for all responses; long cache for static images to cut edge requests (e.g. placeholder-portrait.png)

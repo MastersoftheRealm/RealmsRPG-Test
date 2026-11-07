@@ -258,27 +258,49 @@ describe('GET /api/codex', () => {
     expect(mockGetSession).toHaveBeenCalled();
   });
 
-  it('does not CDN-cache creatureFeats when an admin passes includeUnlisted=1', async () => {
+  it('routes admin creatureFeats includeUnlisted=1 through the session client (not the CDN path)', async () => {
+    mockCreatePublicClient.mockReturnValue(mockSupabase() as never);
     mockGetSession.mockResolvedValue({
       user: { uid: 'admin-1', email: 'admin@example.com' },
       error: null,
     });
     mockIsAdmin.mockResolvedValue(true);
+
     const response = await GET(
       new Request('http://localhost/api/codex?collection=creatureFeats&includeUnlisted=1'),
     );
+
     expect(response.status).toBe(200);
     expect(response.headers.get('Cache-Control')).toBe(PRIVATE_NO_STORE_CACHE_CONTROL);
     expect(mockGetSession).toHaveBeenCalled();
-    expect(mockCreateClient).toHaveBeenCalled();
+    expect(mockCreateClient).toHaveBeenCalledTimes(1);
+    const body = (await response.json()) as Partial<CodexPayload>;
+    expect(body.creatureFeats).toHaveLength(1);
   });
 
-  it('CDN-caches a cookie-less creatureFeats collection read', async () => {
+  it('sends private no-store for creatureFeats when includeUnlisted=1 is requested without admin', async () => {
+    mockCreatePublicClient.mockReturnValue(mockSupabase() as never);
+    mockGetSession.mockResolvedValue({ user: null, error: 'No session' });
+
+    const response = await GET(
+      new Request('http://localhost/api/codex?collection=creatureFeats&includeUnlisted=1'),
+    );
+
+    expect(response.status).toBe(200);
+    expect(response.headers.get('Cache-Control')).toBe(PRIVATE_NO_STORE_CACHE_CONTROL);
+    expect(mockCreateClient).toHaveBeenCalledTimes(1);
+    expect(mockGetSession).toHaveBeenCalled();
+  });
+
+  it('CDN-caches a cookie-less creatureFeats collection read via the public client', async () => {
     mockCreatePublicClient.mockReturnValue(mockSupabase() as never);
     const response = await GET(new Request('http://localhost/api/codex?collection=creatureFeats'));
+
     expect(response.status).toBe(200);
     expect(response.headers.get('Cache-Control')).toBe(PUBLIC_CDN_CACHE_CONTROL);
     expect(mockGetSession).not.toHaveBeenCalled();
+    expect(mockCreateClient).not.toHaveBeenCalled();
+    expect(mockCreatePublicClient).toHaveBeenCalled();
   });
 
   it('includes unlisted species for an admin with includeUnlisted=1', async () => {

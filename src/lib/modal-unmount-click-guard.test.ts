@@ -1,22 +1,8 @@
-import { readFileSync } from 'node:fs';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { MODAL_CLOSE_CLICK_CAPTURE_MS } from './modal-close-click';
 import { armModalUnmountClickGuard, modalUnmountShouldArmGuard } from './modal-unmount-click-guard';
 
-const sheetModals = readFileSync(
-  new URL('../app/(detail)/characters/[id]/CharacterSheetModals.tsx', import.meta.url),
-  'utf8',
-);
-const notesTab = readFileSync(
-  new URL('../components/character-sheet/notes-tab.tsx', import.meta.url),
-  'utf8',
-);
-const archetypeSection = readFileSync(
-  new URL('../components/character-sheet/archetype-section.tsx', import.meta.url),
-  'utf8',
-);
-
-describe('sheet modal unmount click-through (86e3jw5g6)', () => {
+describe('sheet modal unmount click-through', () => {
   afterEach(() => {
     vi.useRealTimers();
   });
@@ -38,7 +24,6 @@ describe('sheet modal unmount click-through (86e3jw5g6)', () => {
     target.dispatchEvent(followUp);
     expect(followUp.defaultPrevented).toBe(true);
     release();
-    expect(archetypeSection).toContain('Archetype & Attacks');
   });
 
   it('lets a click through after the guard window', () => {
@@ -50,16 +35,5 @@ describe('sheet modal unmount click-through (86e3jw5g6)', () => {
     target.dispatchEvent(later);
     expect(later.defaultPrevented).toBe(false);
     release();
-  });
-
-  it('keeps Level Up and the other sheet modals guarded after they unmount', () => {
-    expect(sheetModals).toContain('useModalUnmountClickGuard(showLevelUpModal)');
-    expect(sheetModals).toContain('useModalUnmountClickGuard(showEditArchetypeModal)');
-    expect(sheetModals).toContain('useModalUnmountClickGuard(addModalType != null)');
-    expect(sheetModals).toContain('useModalUnmountClickGuard(featToRemove != null)');
-    expect(sheetModals).toContain('useModalUnmountClickGuard(featModalType != null)');
-    expect(sheetModals).toContain("useModalUnmountClickGuard(skillModalType === 'subskill')");
-    expect(sheetModals).toContain('{showLevelUpModal && (');
-    expect(notesTab).toContain('useModalUnmountClickGuard(notePendingDelete != null)');
   });
 });

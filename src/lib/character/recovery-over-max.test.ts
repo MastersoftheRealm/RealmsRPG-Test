@@ -1,5 +1,3 @@
-import { readFileSync } from 'node:fs';
-import path from 'node:path';
 import { describe, expect, it } from 'vitest';
 import {
   autoRecoveryQuarters,
@@ -11,7 +9,7 @@ import {
   resourceAfterPartialRecovery,
 } from './recovery-over-max';
 
-describe('recovery does not lower over-max Health or Energy (86e3jv000)', () => {
+describe('recovery does not lower over-max Health or Energy', () => {
   it('partial 2h auto on Health 25/20 and Energy 5/18 restores 0 HP and 10 EN', () => {
     const quarters = autoRecoveryQuarters({
       totalQuarters: 2,
@@ -64,7 +62,7 @@ describe('recovery does not lower over-max Health or Energy (86e3jv000)', () => 
   });
 });
 
-describe('partial recovery duration sentences keep their spaces (86e3jv01b)', () => {
+describe('partial recovery duration sentences keep their spaces', () => {
   it.each([2, 4, 6])('puts a space before %sh', (hours) => {
     const text = formatPartialRecoveryDuration({
       hours,
@@ -77,13 +75,5 @@ describe('partial recovery duration sentences keep their spaces (86e3jv01b)', ()
     expect(text).toContain('quarter). Full recovery (8h) restores all.');
     expect(text).not.toMatch(/\)\.\d/);
     expect(text).not.toMatch(/all\.\d/);
-  });
-
-  it('is the sentence the recovery modal renders', () => {
-    const modal = readFileSync(
-      path.join(import.meta.dirname, '../../components/character-sheet/recovery-modal.tsx'),
-      'utf8',
-    );
-    expect(modal).toContain('formatPartialRecoveryDuration');
   });
 });

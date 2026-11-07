@@ -1,6 +1,6 @@
 /**
  * Recovery does not lower Health or Energy that is already above max
- * (DECISIONS.md sheet/combat; ClickUp 86e3jv000).
+ * (DECISIONS.md sheet/combat).
  * Partial recovery adds toward max and stops at max.
  * A recovered amount is never negative.
  */

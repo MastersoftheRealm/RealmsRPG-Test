@@ -1,11 +1,8 @@
-import { readFileSync } from 'node:fs';
-import path from 'node:path';
 import { describe, expect, it } from 'vitest';
+import { NEXT_APP_POWERED_BY_HEADER } from './next-app-flags';
 
-describe('next.config poweredByHeader (86e3ka84y)', () => {
+describe('next.config poweredByHeader', () => {
   it('disables the x-powered-by framework fingerprint', () => {
-    const configPath = path.resolve(__dirname, '../../../next.config.ts');
-    const source = readFileSync(configPath, 'utf8');
-    expect(source).toMatch(/poweredByHeader:\s*false/);
+    expect(NEXT_APP_POWERED_BY_HEADER).toBe(false);
   });
 });

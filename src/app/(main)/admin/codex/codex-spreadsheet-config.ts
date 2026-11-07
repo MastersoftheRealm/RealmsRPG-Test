@@ -3,6 +3,7 @@
  */
 
 import type { CodexCollection } from '@/lib/codex/collections';
+import { codexCollectionToPayloadKey } from '@/lib/codex/collection-to-payload-key';
 import { parseArchetypePathData, serializeLevel1LoadoutsField } from '@/lib/game/archetype-path';
 
 export type CodexSpreadsheetTabId =
@@ -15,6 +16,18 @@ export type CodexSpreadsheetTabId =
   | 'equipment'
   | 'archetypes'
   | 'creature_feats';
+
+const TAB_COLLECTIONS: Record<CodexSpreadsheetTabId, CodexCollection> = {
+  feats: 'codex_feats',
+  skills: 'codex_skills',
+  species: 'codex_species',
+  traits: 'codex_traits',
+  parts: 'codex_parts',
+  properties: 'codex_properties',
+  equipment: 'codex_equipment',
+  archetypes: 'codex_archetypes',
+  creature_feats: 'codex_creature_feats',
+};
 
 export const TAB_CONFIG: Record<
   CodexSpreadsheetTabId,
@@ -31,17 +44,30 @@ export const TAB_CONFIG: Record<
       | 'creatureFeats';
     collection: CodexCollection;
   }
-> = {
-  feats: { apiKey: 'feats', collection: 'codex_feats' },
-  skills: { apiKey: 'skills', collection: 'codex_skills' },
-  species: { apiKey: 'species', collection: 'codex_species' },
-  traits: { apiKey: 'traits', collection: 'codex_traits' },
-  parts: { apiKey: 'parts', collection: 'codex_parts' },
-  properties: { apiKey: 'itemProperties', collection: 'codex_properties' },
-  equipment: { apiKey: 'equipment', collection: 'codex_equipment' },
-  archetypes: { apiKey: 'archetypes', collection: 'codex_archetypes' },
-  creature_feats: { apiKey: 'creatureFeats', collection: 'codex_creature_feats' },
-};
+> = Object.fromEntries(
+  Object.entries(TAB_COLLECTIONS).map(([tabId, collection]) => [
+    tabId,
+    {
+      collection,
+      apiKey: codexCollectionToPayloadKey(collection),
+    },
+  ]),
+) as Record<
+  CodexSpreadsheetTabId,
+  {
+    apiKey:
+      | 'feats'
+      | 'skills'
+      | 'species'
+      | 'traits'
+      | 'parts'
+      | 'itemProperties'
+      | 'equipment'
+      | 'archetypes'
+      | 'creatureFeats';
+    collection: CodexCollection;
+  }
+>;
 
 /** Preferred column order: id, name, description first, then known short/narrow columns, then rest alphabetically. */
 const PREFERRED_ORDER_AFTER_DESC = [

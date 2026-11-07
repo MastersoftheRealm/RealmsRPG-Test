@@ -1,19 +1,16 @@
-import { readFileSync } from 'node:fs';
-import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
 import { mdxToSearchChunks, searchRulebook, stripMdx } from './rulebook-search';
 
-describe('rulebook search (TASK-905)', () => {
+describe('rulebook search', () => {
   it('strips markdown and HTML to plaintext', () => {
     expect(stripMdx('<h2 id="dice">Dice</h2>\n\nRoll **1d20**.')).toContain('Dice');
     expect(stripMdx('<h2 id="dice">Dice</h2>\n\nRoll **1d20**.')).toContain('1d20');
   });
 
   it('finds combat initiative across chapter MDX', () => {
-    const source = readFileSync(
-      join(process.cwd(), 'src/content/rules/combat-encounters.mdx'),
-      'utf8',
-    );
+    const source = `<h2 id="initiative">Initiative</h2>
+
+When combat begins, each participant rolls for initiative order.`;
     const chunks = mdxToSearchChunks('combat-encounters', 'Combat Encounters', source);
     const hits = searchRulebook(chunks, 'initiative');
     expect(hits.length).toBeGreaterThan(0);

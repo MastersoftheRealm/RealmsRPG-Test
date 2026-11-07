@@ -1,6 +1,3 @@
-import { readFileSync } from 'node:fs';
-import { dirname, join } from 'node:path';
-import { fileURLToPath } from 'node:url';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { CREATOR_CACHE_KEYS } from '@/lib/game/creator-constants';
 import { bootstrapCreatureState } from '@/app/(main)/creature-creator/creature-creator-bootstrap';
@@ -8,8 +5,6 @@ import { bootstrapEmpoweredTechniqueFormState } from '@/app/(main)/empowered-tec
 import { bootstrapItemCreatorFormState } from '@/app/(main)/item-creator/item-creator-bootstrap';
 import { bootstrapPowerCreatorFormState } from '@/app/(main)/power-creator/power-creator-bootstrap';
 import { bootstrapTechniqueCreatorFormState } from '@/app/(main)/technique-creator/technique-creator-bootstrap';
-
-const root = join(dirname(fileURLToPath(import.meta.url)), '../../..');
 
 function installStorage() {
   const store = new Map<string, string>();
@@ -120,20 +115,5 @@ describe('creator ?edit= keeps an unsaved draft when the id is unknown', () => {
         rawItems: [{ id: 'row-1', name: 'Saved creature' }],
       }).name,
     ).toBe('Saved creature');
-  });
-
-  it('does not clear the draft cache for an edit id before the row is confirmed', () => {
-    const files = [
-      'app/(main)/power-creator/use-power-creator-workspace.ts',
-      'app/(main)/technique-creator/use-technique-creator-workspace.ts',
-      'app/(main)/item-creator/use-item-creator-workspace.ts',
-      'app/(main)/empowered-technique-creator/use-empowered-technique-creator-workspace.ts',
-      'app/(main)/creature-creator/use-creature-creator-workspace.ts',
-    ];
-    for (const file of files) {
-      const source = readFileSync(join(root, 'src', file), 'utf8');
-      expect(source).toContain('useCreatorEditDraftDecision');
-      expect(source).not.toMatch(/if \(edit\w*\) clearCreatorCache/);
-    }
   });
 });

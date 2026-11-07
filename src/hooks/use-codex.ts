@@ -60,7 +60,6 @@ export function patchAdminCodexCollectionRow(
   patch: Partial<CodexRowWithId>,
 ): void {
   const payloadKey = codexCollectionToPayloadKey(collection);
-  if (!payloadKey) return;
   const queryKey = adminCodexCollectionQueryKey(payloadKey);
   queryClient.setQueryData<readonly CodexRowWithId[] | undefined>(queryKey, (rows) => {
     if (!Array.isArray(rows)) return rows;
