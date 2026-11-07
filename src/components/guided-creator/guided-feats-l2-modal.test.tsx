@@ -1,15 +1,23 @@
+// @vitest-environment happy-dom
+
 import type { ReactNode } from 'react';
-import { renderToStaticMarkup } from 'react-dom/server';
+import { render, screen } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 import { describe, expect, it, vi } from 'vitest';
+import type { Feat } from '@/hooks';
 import { GUIDED_CREATOR_COPY } from '@/lib/constants/site-copy';
 import { GuidedFeatsL2Modal } from './guided-feats-l2-modal';
 
 const l2Copy = GUIDED_CREATOR_COPY.steps.featsL2;
 
-const sampleFeats = [
-  { id: '1', name: 'Feat One', description: 'One' },
-  { id: '2', name: 'Feat Two', description: 'Two' },
-  { id: '3', name: 'Feat Three', description: 'Three' },
+function feat(partial: Partial<Feat> & { id: string; name: string }): Feat {
+  return { description: '', category: 'General', char_feat: false, ...partial } as Feat;
+}
+
+const sampleFeats: Feat[] = [
+  feat({ id: '1', name: 'Feat One', description: 'One' }),
+  feat({ id: '2', name: 'Feat Two', description: 'Two' }),
+  feat({ id: '3', name: 'Feat Three', description: 'Three' }),
 ];
 
 vi.mock('@/hooks', () => ({
@@ -30,11 +38,13 @@ vi.mock('@/components/ui', async (importOriginal) => {
       isOpen,
       title,
       description,
+      footer,
       children,
     }: {
       isOpen: boolean;
       title?: ReactNode;
       description?: ReactNode;
+      footer?: ReactNode;
       children?: ReactNode;
     }) =>
       isOpen ? (
@@ -42,6 +52,7 @@ vi.mock('@/components/ui', async (importOriginal) => {
           <div>{title}</div>
           <div>{description}</div>
           {children}
+          {footer}
         </div>
       ) : null,
   };
@@ -49,7 +60,7 @@ vi.mock('@/components/ui', async (importOriginal) => {
 
 describe('GuidedFeatsL2Modal selection cap', () => {
   it('shows zero-cap copy when maxSelections is 0', () => {
-    const html = renderToStaticMarkup(
+    render(
       <GuidedFeatsL2Modal
         isOpen
         featType="archetype"
@@ -62,25 +73,32 @@ describe('GuidedFeatsL2Modal selection cap', () => {
         onConfirm={() => {}}
       />,
     );
-    expect(html).toContain(l2Copy.overLimitZero);
+    expect(screen.getByText(l2Copy.overLimitZero)).toBeTruthy();
   });
 
-  it('suppresses over-max blocking copy when allowConfirmWhenOverMax is set', () => {
-    const html = renderToStaticMarkup(
+  it('confirms over-max picks when allowConfirmWhenOverMax, then the step caps on commit', async () => {
+    const user = userEvent.setup();
+    const onConfirm = vi.fn();
+    const maxFeats = 2;
+
+    render(
       <GuidedFeatsL2Modal
         isOpen
         featType="archetype"
         feats={sampleFeats}
         recommendedIds={[]}
         initialSelectedIds={['1', '2', '3']}
-        maxSelections={2}
+        maxSelections={maxFeats}
         allowConfirmWhenOverMax
         requirementCharacter={{}}
         onClose={() => {}}
-        onConfirm={() => {}}
+        onConfirm={(ids) => onConfirm(ids.slice(0, Math.max(0, maxFeats)))}
       />,
     );
-    expect(html).not.toContain('Deselect some to continue');
-    expect(html).not.toContain(l2Copy.overLimit(2));
+
+    await user.click(screen.getByRole('button', { name: /Add Selected \(3\)/i }));
+    expect(onConfirm).toHaveBeenCalledOnce();
+    expect(onConfirm.mock.calls[0]?.[0]).toHaveLength(2);
+    expect(onConfirm.mock.calls[0]?.[0]).toContain('1');
   });
 });

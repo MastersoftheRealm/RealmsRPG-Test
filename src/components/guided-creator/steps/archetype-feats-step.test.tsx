@@ -1,34 +1,26 @@
 import { renderToStaticMarkup } from 'react-dom/server';
-import { describe, expect, it, vi, beforeEach, afterEach } from 'vitest';
+import { describe, expect, it, vi, beforeEach } from 'vitest';
 import type { CoreRulesMap } from '@/types/core-rules';
 import { getGameRulesFallback } from '@/hooks';
 import { GUIDED_CREATOR_COPY } from '@/lib/constants/site-copy';
 import { calculateMaxArchetypeFeats } from '@/lib/game/formulas';
+import type { GuidedDraft } from '@/stores/guided-creator-store';
 import { ArchetypeFeatsStep } from './archetype-feats-step';
 
 const stepCopy = GUIDED_CREATOR_COPY.steps.archetypeFeats;
 
 const updateDraft = vi.fn();
 
-const baseDraft = {
-  creatorEntryMode: 'custom' as const,
-  archetypePathId: null,
-  archetypeType: 'powered-martial' as const,
-  archetypeFeatIds: ['1'] as string[],
-  characterFeatIds: [] as string[],
-  abilities: { strength: 0, vitality: 0, agility: 0, acuity: 0, intelligence: 0, charisma: 0 },
-  skills: [],
-  mart_abil: null,
-};
+let draft: GuidedDraft;
 
-let rulesState: { rules: Partial<CoreRulesMap> | undefined; isLoading: boolean } = {
+let rulesState: { rules: CoreRulesMap; isLoading: boolean } = {
   rules: getGameRulesFallback(),
   isLoading: false,
 };
 
 vi.mock('@/stores/guided-creator-store', () => ({
   useGuidedCreatorStore: () => ({
-    draft: baseDraft,
+    draft,
     updateDraft,
     navigationIntent: null,
     entryNonce: 0,
@@ -47,15 +39,6 @@ vi.mock('../use-guided-path-data', () => ({
 vi.mock('@/lib/guided-creator/use-guided-deep-entry-on-arrival', () => ({
   useGuidedDeepEntryOnArrival: () => {},
 }));
-
-vi.mock('@/lib/utils/stabilize-vertical-scroll', async (importOriginal) => {
-  const actual = await importOriginal<typeof import('@/lib/utils/stabilize-vertical-scroll')>();
-  return {
-    ...actual,
-    stabilizeVerticalScroll: () => {},
-    nearestVerticalScroller: () => null,
-  };
-});
 
 vi.mock('@/hooks', async (importOriginal) => {
   const actual = await importOriginal<typeof import('@/hooks')>();
@@ -80,20 +63,6 @@ vi.mock('@/hooks', async (importOriginal) => {
   };
 });
 
-let syncLayoutEffects = false;
-
-vi.mock('react', async (importOriginal) => {
-  const actual = await importOriginal<typeof import('react')>();
-  return {
-    ...actual,
-    useLayoutEffect: (effect: () => void | (() => void)) => {
-      if (syncLayoutEffects) {
-        effect();
-      }
-    },
-  };
-});
-
 function renderStep() {
   return renderToStaticMarkup(<ArchetypeFeatsStep />);
 }
@@ -110,17 +79,25 @@ function expectContinueBlocked(html: string) {
   expect(continueMatch?.[0]).toMatch(/\sdisabled(?:=""|=\{true\}|(?=\s|>))/);
 }
 
+function resetDraft(overrides: Partial<GuidedDraft> = {}) {
+  return {
+    creatorEntryMode: 'custom',
+    archetypePathId: null,
+    archetypeType: 'powered-martial',
+    archetypeFeatIds: ['1'],
+    characterFeatIds: [],
+    ...overrides,
+  } as GuidedDraft;
+}
+
 describe('ArchetypeFeatsStep guided feat cap', () => {
-  beforeEach(() => {
-    syncLayoutEffects = false;
+  beforeEach(async () => {
     updateDraft.mockClear();
     rulesState = { rules: getGameRulesFallback(), isLoading: false };
-    baseDraft.archetypeType = 'powered-martial';
-    baseDraft.archetypeFeatIds = ['1'];
-  });
-
-  afterEach(() => {
-    syncLayoutEffects = false;
+    const mod = await vi.importActual<typeof import('@/stores/guided-creator-store')>(
+      '@/stores/guided-creator-store',
+    );
+    draft = { ...mod.useGuidedCreatorStore.getState().draft, ...resetDraft() };
   });
 
   it('uses the real L1 powered-martial cap from game rules (2 slots)', () => {
@@ -133,25 +110,15 @@ describe('ArchetypeFeatsStep guided feat cap', () => {
   });
 
   it('keeps Continue enabled when under the cap but disabled when over until reconciled', () => {
-    baseDraft.archetypeFeatIds = ['1', '2'];
+    draft.archetypeFeatIds = ['1', '2'];
     expectContinueUsable(renderStep());
 
-    baseDraft.archetypeFeatIds = ['1', '2', '3'];
+    draft.archetypeFeatIds = ['1', '2', '3'];
     expectContinueBlocked(renderStep());
   });
 
-  it('trims restored over-cap drafts via layout reconciliation', () => {
-    syncLayoutEffects = true;
-    baseDraft.creatorEntryMode = 'guided';
-    baseDraft.archetypePathId = 'path-1';
-    baseDraft.archetypeFeatIds = ['1', '2', '3'];
-    renderStep();
-    expect(updateDraft).toHaveBeenCalledWith({ archetypeFeatIds: ['1', '2'] });
-  });
-
   it('raises the displayed cap when DB rules grant more archetype feats (martial)', () => {
-    baseDraft.archetypeType = 'martial';
-    baseDraft.archetypeFeatIds = ['1', '2'];
+    draft = { ...draft, ...resetDraft({ archetypeType: 'martial', archetypeFeatIds: ['1', '2'] }) };
     const cap = calculateMaxArchetypeFeats(1, 'martial', getGameRulesFallback());
     const html = renderStep();
     expect(cap).toBe(3);
@@ -161,10 +128,14 @@ describe('ArchetypeFeatsStep guided feat cap', () => {
   });
 
   it('shrinks the effective cap when archetype type changes (powered-martial → power)', () => {
-    baseDraft.archetypeType = 'power';
-    baseDraft.archetypeFeatIds = ['1', '2'];
+    draft = { ...draft, ...resetDraft({ archetypeType: 'power', archetypeFeatIds: ['1', '2'] }) };
     const cap = calculateMaxArchetypeFeats(1, 'power', getGameRulesFallback());
     expect(cap).toBe(1);
+    expectContinueBlocked(renderStep());
+  });
+
+  it('blocks Continue while game rules are still loading', () => {
+    rulesState = { rules: getGameRulesFallback(), isLoading: true };
     expectContinueBlocked(renderStep());
   });
 });

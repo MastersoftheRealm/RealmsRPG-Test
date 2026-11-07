@@ -58,7 +58,8 @@ function resolveFeat(id: string, featById: Map<string, Feat>) {
 export function ArchetypeFeatsStep() {
   const { draft, updateDraft, navigationIntent, entryNonce } = useGuidedCreatorStore();
   const { pathData, archetype } = useGuidedPathData();
-  const { rules } = useGameRules();
+  const { rules, isLoading: rulesLoading } = useGameRules();
+  const rulesResolved = !rulesLoading;
   const { data: feats = [], isLoading } = useCodexFeats();
   const { data: codexSkills = [] } = useCodexSkills();
   const [browseOpen, setBrowseOpen] = useState(false);
@@ -80,14 +81,15 @@ export function ArchetypeFeatsStep() {
   const pickedCount = draft.archetypeFeatIds.length;
   const featsRemaining = Math.max(0, featCap - pickedCount);
   const showUnderLimitWarning = featCap > 0 && pickedCount < featCap;
-  const isOverCap = pickedCount > featCap;
+  const isOverCap = rulesResolved && pickedCount > featCap;
 
   useLayoutEffect(() => {
+    if (!rulesResolved) return;
     const trimmed = trimArchetypeFeatIdsToCap(draft.archetypeFeatIds, maxFeats);
     if (trimmed) {
       updateDraft({ archetypeFeatIds: trimmed });
     }
-  }, [draft.archetypeFeatIds, maxFeats, updateDraft]);
+  }, [draft.archetypeFeatIds, maxFeats, rulesResolved, updateDraft]);
   const guidanceGroups = pathData?.level1?.guidance_groups;
   const pathFeats = pathData?.level1?.feats;
   const groups = useMemo(() => {
@@ -109,11 +111,12 @@ export function ArchetypeFeatsStep() {
 
   const selectFeat = useCallback(
     (id: string) => {
+      const cap = rulesResolved ? maxFeats : Number.POSITIVE_INFINITY;
       updateDraft({
-        archetypeFeatIds: applyCappedIdSelection(draft.archetypeFeatIds, id, maxFeats),
+        archetypeFeatIds: applyCappedIdSelection(draft.archetypeFeatIds, id, cap),
       });
     },
-    [draft.archetypeFeatIds, maxFeats, updateDraft],
+    [draft.archetypeFeatIds, maxFeats, rulesResolved, updateDraft],
   );
 
   /** Curated cards honour requirements like the catalog does (report 03 P1-10). */
@@ -129,7 +132,7 @@ export function ArchetypeFeatsStep() {
     [feats, draft.archetypeFeatIds, requirementCharacter, codexSkills],
   );
 
-  const canContinue = !isLoading && !isOverCap;
+  const canContinue = !isLoading && rulesResolved && !isOverCap;
 
   // Inline (L3) catalog — same builders as GuidedFeatsL2Modal so filtering/eligibility
   // (requirements, capped selection) stay identical whether shown in-page or in a modal.
@@ -319,13 +322,15 @@ export function ArchetypeFeatsStep() {
               feats={feats}
               recommendedIds={recommendedIds}
               initialSelectedIds={draft.archetypeFeatIds}
-              maxSelections={maxFeats}
+              maxSelections={rulesResolved ? maxFeats : undefined}
               allowConfirmWhenOverMax
               requirementCharacter={requirementCharacter}
               autoSelectPathType={draft.archetypeType}
               onClose={() => setBrowseOpen(false)}
               onConfirm={(ids) =>
-                updateDraft({ archetypeFeatIds: ids.slice(0, Math.max(0, maxFeats)) })
+                updateDraft({
+                  archetypeFeatIds: rulesResolved ? ids.slice(0, Math.max(0, maxFeats)) : ids,
+                })
               }
             />
           ) : null}
