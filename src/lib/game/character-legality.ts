@@ -51,7 +51,6 @@ export type CharacterLegalityWarningCode =
   | 'skill_points_over_budget'
   | 'archetype_feats_over_max'
   | 'character_feats_over_max'
-  | 'currency_negative'
   | 'health_energy_negative'
   | 'health_energy_over_pool'
   | 'feat_requirements_unmet';
@@ -155,12 +154,12 @@ function asRecord(value: unknown): Record<string, unknown> | null {
     : null;
 }
 
-function permissiveMax(withRules: number, withDefaults: number): number {
-  return Math.max(withRules, withDefaults);
-}
-
-function permissiveMin(withRules: number, withDefaults: number): number {
-  return Math.min(withRules, withDefaults);
+/** Legality budgets and spend use `core_rules` when loaded; code defaults only when rules are missing. */
+function legalityRulesForBudget(
+  rulesStatus: CharacterLegalityRulesStatus,
+  rules?: Rules,
+): Rules | undefined {
+  return rulesStatus === 'loaded' ? rules : undefined;
 }
 
 function resolveLegalityLevel(candidate: CharacterLegalityCandidate): number | null {
@@ -222,10 +221,7 @@ function skillPointsSpentFloor(candidate: CharacterLegalityCandidate, rules?: Ru
       (sum, key) => sum + Math.max(0, toFiniteNumber(defenses[key]) ?? 0),
       0,
     );
-    const cost = permissiveMin(
-      resolveSkillAllocationRules(rules).defenseIncreaseCost,
-      resolveSkillAllocationRules().defenseIncreaseCost,
-    );
+    const cost = resolveSkillAllocationRules(rules).defenseIncreaseCost;
     spent += defenseTotal * cost;
   }
 
@@ -413,23 +409,15 @@ export function findCharacterLegalityViolations(
 
   const warnings: CharacterLegalityStructuredWarning[] = [];
   const archetypeChoices = archetypeChoicesFromCandidate(candidate);
+  const budgetRules = legalityRulesForBudget(rulesStatus, effectiveRules);
 
   const abilities = asRecord(candidate.abilities);
   if (abilities) {
-    const budget = permissiveMax(
-      calculateAbilityPoints(level, false, effectiveRules),
-      calculateAbilityPoints(level),
-    );
-    const spent = permissiveMin(
-      abilityPointsSpent(abilities, effectiveRules),
-      abilityPointsSpent(abilities),
-    );
+    const budget = calculateAbilityPoints(level, false, budgetRules);
+    const spent = abilityPointsSpent(abilities, budgetRules);
     addAbilityOverBudget(level, warnings, spent, budget);
 
-    const floor = Math.min(
-      effectiveRules?.ABILITY_RULES?.min ?? ABILITY_LIMITS.MIN,
-      ABILITY_LIMITS.MIN,
-    );
+    const floor = budgetRules?.ABILITY_RULES?.min ?? ABILITY_LIMITS.MIN;
     const belowFloor = ABILITY_KEYS.filter((key) => (toFiniteNumber(abilities[key]) ?? 0) < floor);
     if (belowFloor.length > 0) {
       warnings.push({
@@ -441,27 +429,16 @@ export function findCharacterLegalityViolations(
     }
   }
 
-  const skillBudget = permissiveMax(
-    getTotalSkillPoints(level, 'character', effectiveRules),
-    getTotalSkillPoints(level, 'character'),
-  );
-  const skillSpent = skillPointsSpentFloor(candidate, effectiveRules);
+  const skillBudget = getTotalSkillPoints(level, 'character', budgetRules);
+  const skillSpent = skillPointsSpentFloor(candidate, budgetRules);
   addSkillOverBudget(level, warnings, skillSpent, skillBudget);
 
   const archetypeType = asRecord(candidate.archetype)?.type;
-  const maxArchetypeFeats = permissiveMax(
-    calculateMaxArchetypeFeats(
-      level,
-      archetypeType as ArchetypeCategory | undefined,
-      effectiveRules,
-      archetypeChoices,
-    ),
-    calculateMaxArchetypeFeats(
-      level,
-      archetypeType as ArchetypeCategory | undefined,
-      undefined,
-      archetypeChoices,
-    ),
+  const maxArchetypeFeats = calculateMaxArchetypeFeats(
+    level,
+    archetypeType as ArchetypeCategory | undefined,
+    budgetRules,
+    archetypeChoices,
   );
   const archetypeFeatCount = countRefs(candidate.archetypeFeats);
   if (archetypeFeatCount !== null && archetypeFeatCount > maxArchetypeFeats) {
@@ -473,7 +450,7 @@ export function findCharacterLegalityViolations(
     });
   }
 
-  const maxCharacterFeats = calculateMaxCharacterFeats(level);
+  const maxCharacterFeats = calculateMaxCharacterFeats(level, budgetRules);
   const characterFeatCount = countRefs(candidate.feats);
   if (characterFeatCount !== null && characterFeatCount > maxCharacterFeats) {
     warnings.push({
@@ -484,15 +461,9 @@ export function findCharacterLegalityViolations(
     });
   }
 
-  const currency = toFiniteNumber(candidate.currency);
-  if (currency !== null && currency < 0) {
-    warnings.push({ code: 'currency_negative', level });
-  }
-
-  const pool = permissiveMax(
-    calculateHealthEnergyPool(level, 'PLAYER', false, effectiveRules),
-    calculateHealthEnergyPool(level, 'PLAYER'),
-  );
+  // Allocatable HP/EN only (`baseHitEnergyPool` + per-level points). Base health is separate
+  // on the sheet; creature L1 `baseHitEnergyPool` (30) equals player baseHealth + this pool.
+  const pool = calculateHealthEnergyPool(level, 'PLAYER', false, budgetRules);
   const healthPoints = toFiniteNumber(candidate.healthPoints);
   const energyPoints = toFiniteNumber(candidate.energyPoints);
   if ((healthPoints ?? 0) < 0 || (energyPoints ?? 0) < 0) {

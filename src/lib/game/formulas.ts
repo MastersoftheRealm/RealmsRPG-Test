@@ -292,9 +292,12 @@ export function calculateMaxArchetypeFeats(
 
 /**
  * Calculate maximum character feats allowed based on level.
+ * `characterFeatsPerLevel` from `core_rules` when present (defaults to 1 per level).
  */
-export function calculateMaxCharacterFeats(level: number): number {
-  return Math.max(1, Math.floor(level));
+export function calculateMaxCharacterFeats(level: number, rules?: Rules): number {
+  const perLevel = rules?.PROGRESSION_PLAYER?.characterFeatsPerLevel ?? 1;
+  const parsedLevel = Math.max(1, Math.floor(parseLevel(level)));
+  return parsedLevel * perLevel;
 }
 
 /** Experience needed to reach the next level: level × 4 (GAME_RULES "Experience"). */
