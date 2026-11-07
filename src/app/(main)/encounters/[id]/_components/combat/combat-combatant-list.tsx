@@ -87,6 +87,7 @@ export function CombatCombatantList({
               onUpdate={(updates) => onUpdate(combatant.id, updates)}
               onRemove={() => onRemove(combatant.id)}
               onDuplicate={() => onDuplicate(combatant)}
+              canDuplicate={(combatant as TrackedCombatant).sourceType !== 'campaign-character'}
               onAddCondition={(condition) => onAddCondition(combatant.id, condition)}
               onRemoveCondition={(condition) => onRemoveCondition(combatant.id, condition)}
               onUpdateConditionLevel={(condition, delta) =>

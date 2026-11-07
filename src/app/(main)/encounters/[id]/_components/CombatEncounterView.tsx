@@ -42,6 +42,8 @@ function CombatEncounterViewInner(props: CombatEncounterViewProps & { encounter:
     dragOverId,
     sortedCombatants,
     linkedCampaign,
+    existingCampaignCharacterIds,
+    availableCampaignCharacters,
   } = model;
 
   return (
@@ -91,6 +93,7 @@ function CombatEncounterViewInner(props: CombatEncounterViewProps & { encounter:
           setEncounter={setEncounter}
           campaignsFull={campaignsFull}
           linkedCampaign={linkedCampaign}
+          availableCampaignCharacterCount={availableCampaignCharacters.length}
           addingAllChars={addingAllChars}
           newCombatant={newCombatant}
           setNewCombatant={setNewCombatant}
@@ -105,6 +108,7 @@ function CombatEncounterViewInner(props: CombatEncounterViewProps & { encounter:
           onClose={() => setShowAddModal(false)}
           onAdd={model.addCombatantsFromModal}
           mode="combat"
+          existingCampaignCharacterIds={existingCampaignCharacterIds}
         />
       )}
 

@@ -11,7 +11,10 @@ import { createClient, createServiceRoleClient } from '@/lib/supabase/server';
 import { requireAuth } from '@/lib/supabase/session';
 import { ensureUserProfile } from '@/lib/ensure-user-profile';
 import { reportError } from '@/lib/observability';
-import { getCharacterListColumns } from '@/lib/character-list-columns';
+import {
+  getRelationalCharacterDocument,
+  patchRelationalCharacter,
+} from '@/lib/character-persistence-server';
 import {
   normalizeInviteCodeInput,
   isValidInviteCodeFormat,
@@ -188,7 +191,7 @@ export async function joinCampaignAction(data: {
 
     const { data: charRow } = await supabase
       .from('characters')
-      .select('id, data')
+      .select('id')
       .eq('id', data.characterId)
       .eq('user_id', user.uid)
       .maybeSingle();
@@ -199,7 +202,10 @@ export async function joinCampaignAction(data: {
       };
     }
     // SEC-06: trust the stored character row for roster fields, not the client args.
-    const charData = (charRow.data as Record<string, unknown>) ?? {};
+    const charData = await getRelationalCharacterDocument(supabase, data.characterId);
+    if (!charData) {
+      return { success: false, error: 'Character not found' };
+    }
     const rosterFields = buildRosterFieldsFromCharacterData(charData);
 
     const { data: campaignRow, error: campErr } = await dbService
@@ -295,14 +301,14 @@ export async function joinCampaignAction(data: {
     }
 
     const { visibility, visibilityUpdated } = visibilityForCampaignMembership(charData.visibility);
-    const now = new Date().toISOString();
-    const merged = { ...charData, visibility, updatedAt: now };
-    const listCols = getCharacterListColumns(merged);
-    await supabase
-      .from('characters')
-      .update({ data: merged, updated_at: now, ...listCols })
-      .eq('id', data.characterId)
-      .eq('user_id', user.uid);
+    const visibilityResult = await patchRelationalCharacter(supabase, {
+      characterId: data.characterId,
+      patch: { visibility },
+      expectedUpdatedAt: typeof charData.updatedAt === 'string' ? charData.updatedAt : undefined,
+    });
+    if (visibilityResult.status !== 'updated') {
+      return { success: false, error: 'Character changed while joining campaign' };
+    }
 
     return { success: true, campaignId, visibilityUpdated };
   } catch (error) {
@@ -341,7 +347,7 @@ export async function addCharacterToCampaignAction(data: {
 
     const { data: charRow } = await supabase
       .from('characters')
-      .select('id, data')
+      .select('id')
       .eq('id', data.characterId)
       .eq('user_id', user.uid)
       .maybeSingle();
@@ -349,7 +355,10 @@ export async function addCharacterToCampaignAction(data: {
       return { success: false, error: 'Character not found' };
     }
     // SEC-06: roster fields come from the stored character, not client args.
-    const charData = (charRow.data as Record<string, unknown>) ?? {};
+    const charData = await getRelationalCharacterDocument(supabase, data.characterId);
+    if (!charData) {
+      return { success: false, error: 'Character not found' };
+    }
     const rosterFields = buildRosterFieldsFromCharacterData(charData);
 
     const campaignData = (campaignRow.characters as CampaignCharacter[]) ?? [];
@@ -393,14 +402,14 @@ export async function addCharacterToCampaignAction(data: {
     await supabase.from('campaigns').update({ characters }).eq('id', data.campaignId);
 
     const { visibility, visibilityUpdated } = visibilityForCampaignMembership(charData.visibility);
-    const now = new Date().toISOString();
-    const merged = { ...charData, visibility, updatedAt: now };
-    const listCols = getCharacterListColumns(merged);
-    await supabase
-      .from('characters')
-      .update({ data: merged, updated_at: now, ...listCols })
-      .eq('id', data.characterId)
-      .eq('user_id', user.uid);
+    const visibilityResult = await patchRelationalCharacter(supabase, {
+      characterId: data.characterId,
+      patch: { visibility },
+      expectedUpdatedAt: typeof charData.updatedAt === 'string' ? charData.updatedAt : undefined,
+    });
+    if (visibilityResult.status !== 'updated') {
+      return { success: false, error: 'Character changed while joining campaign' };
+    }
 
     return { success: true, visibilityUpdated };
   } catch (error) {

@@ -51,9 +51,7 @@ describe('creator batch 10 (86e3jyweu / 86e3jywdp / 86e3jywe4 / 86e3jyh5h)', () 
   it('uses single-column armor configuration below lg (86e3jywe4)', () => {
     // 20rem auto-fit stays one column until the row can hold two tracks.
     // That is wider than the creator form below lg. Do not use lg:grid-cols-3.
-    expect(armor).toContain(
-      'grid grid-cols-[repeat(auto-fit,minmax(min(100%,20rem),1fr))] gap-6',
-    );
+    expect(armor).toContain('grid grid-cols-[repeat(auto-fit,minmax(min(100%,20rem),1fr))] gap-6');
     expect(armor).not.toContain('lg:grid-cols-3');
     expect(armor).not.toContain('md:grid-cols-3');
     expect(armor).not.toMatch(/\b(?:sm|md):grid-cols-/);

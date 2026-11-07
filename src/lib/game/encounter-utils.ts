@@ -42,7 +42,7 @@ const PRIMARY_ABILITIES = [
 type PrimaryAbility = (typeof PRIMARY_ABILITIES)[number];
 
 /** Read one ability from saved creature JSON (canonical + legacy + common shorthands). */
-function getCreatureAbilityScore(
+export function getCreatureAbilityScore(
   abilities: Record<string, number | undefined>,
   key: PrimaryAbility,
 ): number {

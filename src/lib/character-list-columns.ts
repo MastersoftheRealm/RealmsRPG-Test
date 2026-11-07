@@ -14,21 +14,11 @@ function asVisibility(value: unknown): CharacterVisibility | null {
     : null;
 }
 
-/**
- * Wave 1 made `characters.visibility` the SELECT/list authority.
- * GET must read the column first; blob is only a fallback if the column is missing.
- */
+/** `characters.visibility` is the sole list/read authority after ADR-0030. */
 export function resolveCharacterVisibility(row: {
   visibility?: string | null | undefined;
-  data?: unknown | undefined;
 }): CharacterVisibility {
-  const fromColumn = asVisibility(row.visibility);
-  if (fromColumn) return fromColumn;
-  const blob =
-    row.data && typeof row.data === 'object'
-      ? (row.data as Record<string, unknown>).visibility
-      : undefined;
-  return asVisibility(blob) ?? 'private';
+  return asVisibility(row.visibility) ?? 'private';
 }
 
 export function getCharacterListColumns(

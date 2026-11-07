@@ -4,10 +4,7 @@
 
 import type { Feat } from '@/hooks';
 import { normalizeFeatAbilities } from '@/lib/codex/feat-ability';
-import {
-  codexSourcesOrCore,
-  DEFAULT_CODEX_SOURCES,
-} from '@/lib/codex/sources';
+import { codexSourcesOrCore, DEFAULT_CODEX_SOURCES } from '@/lib/codex/sources';
 
 export type FeatFormState = {
   name: string;

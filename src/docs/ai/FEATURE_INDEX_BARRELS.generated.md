@@ -3,7 +3,7 @@
 > **Do not edit by hand.** Run `npm run tasks:generate-index` after changing barrel exports.
 > Curated narrative map: [`FEATURE_INDEX.md`](FEATURE_INDEX.md).
 
-Generated: 2026-10-31
+Generated: 2026-11-07
 
 ## `src/components/patterns/index.ts`
 
@@ -167,6 +167,7 @@ Generated: 2026-10-31
 - officialLibraryKeys
 - patchCharacterDetailQuery
 - resolveTraitIds
+- tabletopKeys
 - type AccountProfile
 - type CreateOfficialEnhancedItemInput
 - type CreatureFeat
@@ -191,6 +192,7 @@ Generated: 2026-10-31
 - type UserSpecies
 - type UserTechnique
 - useAccountProfile
+- useActiveCampaignTabletop
 - useAddOfficialToLibrary
 - useAdmin
 - useAuth
@@ -255,6 +257,9 @@ Generated: 2026-10-31
 - useSaveCraftingSession
 - useSaveEncounter
 - useSpecies
+- useTabletopMutations
+- useTabletopRealtime
+- useTabletopScene
 - useTechniqueParts
 - useTraits
 - useUpdateEnhancedItem

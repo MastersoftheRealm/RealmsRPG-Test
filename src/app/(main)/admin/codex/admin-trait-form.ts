@@ -3,10 +3,7 @@
  */
 
 import type { Trait } from '@/hooks';
-import {
-  codexSourcesOrCore,
-  DEFAULT_CODEX_SOURCES,
-} from '@/lib/codex/sources';
+import { codexSourcesOrCore, DEFAULT_CODEX_SOURCES } from '@/lib/codex/sources';
 
 export type TraitFormState = {
   name: string;

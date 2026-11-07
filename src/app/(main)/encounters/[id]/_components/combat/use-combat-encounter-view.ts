@@ -52,6 +52,8 @@ export function useCombatEncounterView({
     dragOverId: roster.dragOverId,
     sortedCombatants,
     linkedCampaign: roster.linkedCampaign,
+    existingCampaignCharacterIds: roster.existingCampaignCharacterIds,
+    availableCampaignCharacters: roster.availableCampaignCharacters,
     handleDragStart: roster.handleDragStart,
     handleDragEnd: roster.handleDragEnd,
     handleDragOver: roster.handleDragOver,

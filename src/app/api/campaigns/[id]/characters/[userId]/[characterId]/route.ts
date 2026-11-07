@@ -19,6 +19,7 @@ import {
 import { computeMaxHealthEnergy } from '@/lib/game/calculations';
 import { fetchCoreRules } from '@/lib/core-rules-server';
 import { getOwnerLibraryAndEnrichmentForView } from '@/lib/character-view-enrichment-server';
+import { getRelationalCharacterDocument } from '@/lib/character-persistence-server';
 import { resolveCharacterVisibility } from '@/lib/character-list-columns';
 
 export async function GET(
@@ -75,7 +76,7 @@ export async function GET(
 
     const { data: charRowUser, error: charErr } = await supabase
       .from('characters')
-      .select('id, user_id, data, created_at, updated_at, visibility')
+      .select('id, user_id, created_at, updated_at, visibility')
       .eq('id', characterId)
       .eq('user_id', userId)
       .maybeSingle();
@@ -87,24 +88,29 @@ export async function GET(
     }
 
     let charRow = charRowUser;
+    let characterReader = supabase;
     // RLS often blocks non-owners from reading other players' rows; roster + membership were verified above.
     if (!charRow) {
       const admin = createServiceRoleClient();
       const { data: charRowAdmin, error: adminErr } = await admin
         .from('characters')
-        .select('id, user_id, data, created_at, updated_at, visibility')
+        .select('id, user_id, created_at, updated_at, visibility')
         .eq('id', characterId)
         .eq('user_id', userId)
         .maybeSingle();
       if (adminErr) throw adminErr;
       charRow = charRowAdmin ?? null;
+      characterReader = admin;
     }
 
     if (!charRow) {
       return NextResponse.json({ error: 'Character not found' }, { status: 404 });
     }
 
-    const charData = (charRow.data as Record<string, unknown>) ?? {};
+    const charData = await getRelationalCharacterDocument(characterReader, characterId);
+    if (!charData) {
+      return NextResponse.json({ error: 'Character not found' }, { status: 404 });
+    }
 
     const visibility = resolveCharacterVisibility(charRow);
     const canViewPrivate = isOwner || isRM;
