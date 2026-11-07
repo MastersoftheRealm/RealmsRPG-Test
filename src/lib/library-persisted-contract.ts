@@ -21,6 +21,8 @@ const META_KEYS = [
   'createdAt',
   'catalogListing',
   'catalog_listing',
+  /** Set by `withSyncMeta` / Library Sync and creature creator saves (`library-sync.ts`). */
+  'syncMeta',
 ] as const;
 
 const IMAGE_KEYS = ['imageId', 'imageUrl', 'image_id', 'image_url'] as const;
@@ -255,6 +257,27 @@ export function persistedLibraryBodyShapeError(
     !isPlainObject(body.technique)
   ) {
     return 'technique must be an object';
+  }
+  if ('syncMeta' in body && body.syncMeta !== undefined) {
+    if (!isPlainObject(body.syncMeta)) {
+      return 'syncMeta must be an object';
+    }
+    const meta = body.syncMeta as Record<string, unknown>;
+    const keys = Object.keys(meta);
+    const allowed = new Set(['dependencyFingerprint', 'syncedAt']);
+    if (keys.some((k) => !allowed.has(k))) {
+      return 'syncMeta contains unsupported fields';
+    }
+    if (
+      'dependencyFingerprint' in meta &&
+      meta.dependencyFingerprint !== undefined &&
+      typeof meta.dependencyFingerprint !== 'string'
+    ) {
+      return 'syncMeta.dependencyFingerprint must be a string';
+    }
+    if ('syncedAt' in meta && meta.syncedAt !== undefined && typeof meta.syncedAt !== 'string') {
+      return 'syncMeta.syncedAt must be a string';
+    }
   }
   return null;
 }

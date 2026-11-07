@@ -4,7 +4,7 @@ import {
   assertCampaignDetailHttpAccess,
   assertCharacterSheetHttpAccess,
 } from '@/lib/server/assert-resource-http-access';
-import { ResourceAccessUnavailableError } from '@/lib/server/resource-access-unavailable';
+import { RESOURCE_ACCESS_UNAVAILABLE_DIGEST } from '@/lib/server/resource-access-unavailable';
 
 vi.mock('next/headers', () => ({
   headers: vi.fn(async () => ({
@@ -145,9 +145,9 @@ describe('assert-resource-http-access', () => {
       }),
     );
 
-    await expect(assertCampaignDetailHttpAccess('camp')).rejects.toBeInstanceOf(
-      ResourceAccessUnavailableError,
-    );
+    await expect(assertCampaignDetailHttpAccess('camp')).rejects.toMatchObject({
+      digest: RESOURCE_ACCESS_UNAVAILABLE_DIGEST,
+    });
   });
 
   it('throws unavailable on campaign API 503', async () => {
@@ -156,8 +156,8 @@ describe('assert-resource-http-access', () => {
       vi.fn(async () => new Response('error', { status: 503 })),
     );
 
-    await expect(assertCampaignDetailHttpAccess('camp')).rejects.toBeInstanceOf(
-      ResourceAccessUnavailableError,
-    );
+    await expect(assertCampaignDetailHttpAccess('camp')).rejects.toMatchObject({
+      digest: RESOURCE_ACCESS_UNAVAILABLE_DIGEST,
+    });
   });
 });

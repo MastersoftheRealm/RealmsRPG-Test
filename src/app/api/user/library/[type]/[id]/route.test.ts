@@ -243,11 +243,18 @@ describe('PATCH /api/user/library/[type]/[id]', () => {
     ]);
   });
 
-  it('keeps stored composition when only the name changes', async () => {
+  it('keeps stored composition and syncMeta when only the name changes', async () => {
     const row = {
       ...makeLibraryRow('pow-owned', OWNER.uid),
       name: 'Stored power',
-      payload: { composition: { choice: true }, parts: [] },
+      payload: {
+        composition: { choice: true },
+        parts: [],
+        syncMeta: {
+          dependencyFingerprint: 'fp-test',
+          syncedAt: '2026-01-01T00:00:00.000Z',
+        },
+      },
       action_type: 'basic',
     };
     mockGetSession.mockResolvedValue({ user: OWNER, error: null });
@@ -263,6 +270,10 @@ describe('PATCH /api/user/library/[type]/[id]', () => {
     const update = supabase.lastUpdate();
     expect(update?.name).toBe('Renamed power');
     expect((update?.payload as { composition?: unknown }).composition).toEqual({ choice: true });
+    expect((update?.payload as { syncMeta?: { dependencyFingerprint: string } }).syncMeta).toEqual({
+      dependencyFingerprint: 'fp-test',
+      syncedAt: '2026-01-01T00:00:00.000Z',
+    });
   });
 
   it('rejects unknown PATCH fields without writing', async () => {
