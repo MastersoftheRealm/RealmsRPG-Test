@@ -1,4 +1,4 @@
-import { createHmac, hkdfSync, randomBytes, timingSafeEqual } from 'node:crypto';
+import { createHash, createHmac, hkdfSync, randomBytes, timingSafeEqual } from 'node:crypto';
 
 export const OAUTH_DELETE_GRANT_COOKIE = 'realms_oauth_delete_grant';
 export const OAUTH_DELETE_INTENT_COOKIE = 'realms_oauth_delete_intent';
@@ -15,13 +15,17 @@ type SignedGrantPayload = {
   exp: number;
 };
 
-type SignedIntentPayload = {
-  v: 1;
+export type SignedOAuthDeleteIntentPayload = {
+  v: 2;
   uid: string;
   provider: 'google';
   nonce: string;
+  iat: number;
   exp: number;
+  cvh: string;
 };
+
+type AmrClaim = { method?: string; timestamp?: number };
 
 function serviceRoleMaterial(): string | null {
   const key = process.env.SUPABASE_SERVICE_ROLE_KEY?.trim();
@@ -73,6 +77,10 @@ function verifySignedPayload<T extends { v: number; exp: number }>(
   return validate(payload);
 }
 
+export function hashPkceCodeVerifier(verifier: string): string {
+  return createHash('sha256').update(verifier).digest('base64url');
+}
+
 export function sessionIdFromAccessToken(accessToken: string): string | null {
   const segment = accessToken.split('.')[1];
   if (!segment) return null;
@@ -86,6 +94,38 @@ export function sessionIdFromAccessToken(accessToken: string): string | null {
   } catch {
     return null;
   }
+}
+
+function parseAccessTokenPayload(accessToken: string): {
+  amr?: AmrClaim[];
+  session_id?: string;
+} | null {
+  const segment = accessToken.split('.')[1];
+  if (!segment) return null;
+  try {
+    return JSON.parse(Buffer.from(segment, 'base64url').toString('utf8')) as {
+      amr?: AmrClaim[];
+      session_id?: string;
+    };
+  } catch {
+    return null;
+  }
+}
+
+/** True when the access token amr lists an OAuth sign-in within [windowStart, windowEnd] (seconds). */
+export function accessTokenProvesOAuthSignInInWindow(
+  accessToken: string,
+  windowStartSec: number,
+  windowEndSec: number,
+): boolean {
+  const claims = parseAccessTokenPayload(accessToken);
+  const amr = claims?.amr ?? [];
+  return amr.some((entry) => {
+    if (entry.method?.toLowerCase() !== 'oauth') return false;
+    const ts = entry.timestamp;
+    if (typeof ts !== 'number') return false;
+    return ts >= windowStartSec && ts <= windowEndSec;
+  });
 }
 
 export function isMyAccountDeleteReauthDestination(path: string): boolean {
@@ -132,27 +172,63 @@ export function createOAuthDeleteIntentNonce(): string {
 export function mintOAuthDeleteIntent(
   uid: string,
   nonce: string,
+  codeVerifierHash: string,
   nowSec = Math.floor(Date.now() / 1000),
 ): string | null {
-  const payload: SignedIntentPayload = {
-    v: 1,
+  const payload: SignedOAuthDeleteIntentPayload = {
+    v: 2,
     uid,
     provider: 'google',
     nonce,
+    iat: nowSec,
     exp: nowSec + OAUTH_DELETE_INTENT_MAX_AGE_S,
+    cvh: codeVerifierHash,
   };
   return signPayload(payload, INTENT_DERIVE_INFO);
+}
+
+export function verifyOAuthDeleteIntentBinding(
+  token: string | undefined | null,
+  codeVerifier: string | null | undefined,
+  nowSec = Math.floor(Date.now() / 1000),
+): SignedOAuthDeleteIntentPayload | null {
+  if (!codeVerifier) return null;
+  const expectedCvh = hashPkceCodeVerifier(codeVerifier);
+  const key = derivedSigningKey(INTENT_DERIVE_INFO);
+  if (!key || !token) return null;
+  const dot = token.lastIndexOf('.');
+  if (dot <= 0) return null;
+  const body = token.slice(0, dot);
+  const sig = token.slice(dot + 1);
+  const expectedSig = createHmac('sha256', key).update(body).digest('base64url');
+  try {
+    const a = Buffer.from(sig);
+    const b = Buffer.from(expectedSig);
+    if (a.length !== b.length || !timingSafeEqual(a, b)) return null;
+  } catch {
+    return null;
+  }
+  let payload: SignedOAuthDeleteIntentPayload;
+  try {
+    payload = JSON.parse(
+      Buffer.from(body, 'base64url').toString('utf8'),
+    ) as SignedOAuthDeleteIntentPayload;
+  } catch {
+    return null;
+  }
+  if (payload.v !== 2) return null;
+  if (payload.provider !== 'google') return null;
+  if (typeof payload.exp !== 'number' || payload.exp <= nowSec) return null;
+  if (!payload.nonce || payload.cvh !== expectedCvh) return null;
+  return payload;
 }
 
 export function verifyOAuthDeleteIntent(
   token: string | undefined | null,
   uid: string,
+  codeVerifier: string | null | undefined,
   nowSec = Math.floor(Date.now() / 1000),
 ): boolean {
-  return verifySignedPayload<SignedIntentPayload>(
-    token,
-    INTENT_DERIVE_INFO,
-    (payload) => payload.uid === uid && payload.provider === 'google' && !!payload.nonce,
-    nowSec,
-  );
+  const payload = verifyOAuthDeleteIntentBinding(token, codeVerifier, nowSec);
+  return payload !== null && payload.uid === uid;
 }

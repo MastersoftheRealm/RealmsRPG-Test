@@ -14,12 +14,14 @@ import {
 export {
   OAUTH_DELETE_GRANT_COOKIE,
   OAUTH_DELETE_INTENT_COOKIE,
+  accessTokenProvesOAuthSignInInWindow,
   createOAuthDeleteIntentNonce,
+  hashPkceCodeVerifier,
   isMyAccountDeleteReauthDestination,
   mintOAuthDeleteGrant,
   mintOAuthDeleteIntent,
   sessionIdFromAccessToken,
-  verifyOAuthDeleteIntent,
+  verifyOAuthDeleteIntentBinding,
 } from '@/lib/auth/oauth-delete-grant-core';
 
 export function oauthDeleteGrantCookieOptions(): {

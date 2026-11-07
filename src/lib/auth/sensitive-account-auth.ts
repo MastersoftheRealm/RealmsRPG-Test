@@ -10,7 +10,8 @@ export function authUserHasPasswordLogin(user: User): boolean {
   return provider === 'email' || provider === 'password';
 }
 
-export function userSignedInWithGoogle(user: User): boolean {
+/** Linked identity only — does not prove the current sign-in was Google. */
+export function userHasLinkedGoogleIdentity(user: User): boolean {
   return (user.identities ?? []).some((entry) => entry.provider === 'google');
 }
 

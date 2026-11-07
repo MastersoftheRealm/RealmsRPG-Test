@@ -7,19 +7,23 @@
 'use server';
 
 import { revalidatePath } from 'next/cache';
-import { cookies } from 'next/headers';
+import { cookies, headers } from 'next/headers';
 import { requireAuth, requireLiveUser, getSession } from '@/lib/supabase/session';
 import { createClient as createServerClient, createServiceRoleClient } from '@/lib/supabase/server';
 import { isAdmin } from '@/lib/admin';
 import { getRolePolicyForUser } from '@/lib/role-policy';
+import { buildAuthRedirectUrl } from '@/lib/auth-redirect';
+import { MY_ACCOUNT_DELETE_REAUTH_PATH } from '@/lib/auth/oauth-delete-messages';
 import {
   clearOAuthDeleteGrantCookie,
   createOAuthDeleteIntentNonce,
+  hashPkceCodeVerifier,
   mintOAuthDeleteIntent,
   OAUTH_DELETE_INTENT_COOKIE,
   oauthDeleteIntentCookieOptions,
   readOAuthDeleteGrantCookie,
 } from '@/lib/auth/oauth-delete-grant.server';
+import { readSupabasePkceCodeVerifier } from '@/lib/auth/supabase-pkce-cookies';
 import { authUserHasPasswordLogin } from '@/lib/auth/sensitive-account-auth';
 import { assertSensitiveAccountReauth } from '@/lib/auth/sensitive-account-auth';
 import { profileDisplayNameWriteValue } from '@/lib/profile-display-name';
@@ -478,10 +482,16 @@ export async function changeAccountPasswordAction(
  * cascade with no matching auth user is unrecoverable, so a failure must abort.
  */
 export async function beginGoogleDeleteReauthAction(): Promise<
-  { success: true } | { success: false; error: string }
+  { success: true; url: string } | { success: false; error: string }
 > {
   try {
     const user = await requireLiveUser();
+    const cookieStore = await cookies();
+    const hdrs = await headers();
+    const host = hdrs.get('x-forwarded-host') ?? hdrs.get('host') ?? 'localhost:3000';
+    const proto = hdrs.get('x-forwarded-proto')?.split(',')[0]?.trim() ?? 'http';
+    const request = new Request(`${proto}://${host}/my-account`);
+
     const supabase = await createServerClient();
     const { data, error } = await supabase.auth.getUser();
     if (error || !data.user) {
@@ -490,14 +500,32 @@ export async function beginGoogleDeleteReauthAction(): Promise<
     if (authUserHasPasswordLogin(data.user)) {
       return { success: false, error: 'Authentication required' };
     }
+
+    const callbackPath = `/auth/callback?next=${encodeURIComponent(MY_ACCOUNT_DELETE_REAUTH_PATH)}`;
+    const redirectTo = buildAuthRedirectUrl(request, callbackPath);
+    const { data: oauthData, error: oauthError } = await supabase.auth.signInWithOAuth({
+      provider: 'google',
+      options: {
+        redirectTo,
+        skipBrowserRedirect: true,
+      },
+    });
+    if (oauthError || !oauthData?.url) {
+      return { success: false, error: 'Authentication required' };
+    }
+
+    const verifier = readSupabasePkceCodeVerifier(cookieStore.getAll());
+    if (!verifier) {
+      return { success: false, error: 'Authentication required' };
+    }
+
     const nonce = createOAuthDeleteIntentNonce();
-    const intent = mintOAuthDeleteIntent(user.uid, nonce);
+    const intent = mintOAuthDeleteIntent(user.uid, nonce, hashPkceCodeVerifier(verifier));
     if (!intent) {
       return { success: false, error: 'Authentication required' };
     }
-    const cookieStore = await cookies();
     cookieStore.set(OAUTH_DELETE_INTENT_COOKIE, intent, oauthDeleteIntentCookieOptions());
-    return { success: true };
+    return { success: true, url: oauthData.url };
   } catch (error) {
     console.error('Error beginning Google delete re-auth:', error);
     return { success: false, error: 'Authentication required' };

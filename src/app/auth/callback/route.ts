@@ -13,21 +13,29 @@ import { createUserProfileAction } from '@/app/(auth)/actions';
 import { buildAuthRedirectUrl } from '@/lib/auth-redirect';
 import {
   authUserHasPasswordLogin,
-  userSignedInWithGoogle,
+  userHasLinkedGoogleIdentity,
 } from '@/lib/auth/sensitive-account-auth';
 import {
   OAUTH_DELETE_GRANT_COOKIE,
   OAUTH_DELETE_INTENT_COOKIE,
+  accessTokenProvesOAuthSignInInWindow,
   isMyAccountDeleteReauthDestination,
   mintOAuthDeleteGrant,
   oauthDeleteGrantCookieOptions,
   sessionIdFromAccessToken,
-  verifyOAuthDeleteIntent,
+  verifyOAuthDeleteIntentBinding,
 } from '@/lib/auth/oauth-delete-grant.server';
+import { readSupabasePkceCodeVerifier } from '@/lib/auth/supabase-pkce-cookies';
 import { sanitizeRedirectPath } from '@/lib/safe-redirect';
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_DEFAULT_KEY!;
+
+function redirectWithIntentCleared(url: string): NextResponse {
+  const response = NextResponse.redirect(url);
+  response.cookies.delete(OAUTH_DELETE_INTENT_COOKIE);
+  return response;
+}
 
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
@@ -38,11 +46,18 @@ export async function GET(request: Request) {
   });
 
   if (!code) {
-    return NextResponse.redirect(failureRedirect);
+    return redirectWithIntentCleared(failureRedirect);
   }
 
   const cookieStore = await cookies();
   const intentToken = cookieStore.get(OAUTH_DELETE_INTENT_COOKIE)?.value;
+  const deleteReauthFlow = isMyAccountDeleteReauthDestination(redirectTo);
+  const pkceVerifier = readSupabasePkceCodeVerifier(cookieStore.getAll());
+  const boundIntent =
+    deleteReauthFlow && intentToken
+      ? verifyOAuthDeleteIntentBinding(intentToken, pkceVerifier)
+      : null;
+
   const response = NextResponse.redirect(buildAuthRedirectUrl(request, redirectTo));
 
   const supabase = createServerClient(supabaseUrl, supabaseKey, {
@@ -63,7 +78,7 @@ export async function GET(request: Request) {
   response.cookies.delete(OAUTH_DELETE_INTENT_COOKIE);
   if (error || !data.user) {
     console.error('Auth callback error:', error);
-    return NextResponse.redirect(failureRedirect);
+    return redirectWithIntentCleared(failureRedirect);
   }
 
   const u = data.user;
@@ -75,14 +90,18 @@ export async function GET(request: Request) {
     displayName: undefined,
   });
 
+  const nowSec = Math.floor(Date.now() / 1000);
+  const accessToken = data.session?.access_token;
   if (
-    isMyAccountDeleteReauthDestination(redirectTo) &&
+    deleteReauthFlow &&
+    boundIntent &&
+    boundIntent.uid === u.id &&
     !authUserHasPasswordLogin(u) &&
-    userSignedInWithGoogle(u) &&
-    verifyOAuthDeleteIntent(intentToken, u.id) &&
-    data.session?.access_token
+    userHasLinkedGoogleIdentity(u) &&
+    accessToken &&
+    accessTokenProvesOAuthSignInInWindow(accessToken, boundIntent.iat, nowSec)
   ) {
-    const sessionId = sessionIdFromAccessToken(data.session.access_token);
+    const sessionId = sessionIdFromAccessToken(accessToken);
     const grant = sessionId ? mintOAuthDeleteGrant(u.id, sessionId) : null;
     if (grant) {
       response.cookies.set(OAUTH_DELETE_GRANT_COOKIE, grant, oauthDeleteGrantCookieOptions());

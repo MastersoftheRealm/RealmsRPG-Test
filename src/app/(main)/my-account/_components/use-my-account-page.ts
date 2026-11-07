@@ -23,10 +23,7 @@ import { useAuthStore } from '@/stores';
 import { useAdmin, useAccountProfile } from '@/hooks';
 import { fileFromCroppedBlob } from '@/lib/crop-image';
 import { areTutorialsEnabled, setTutorialsEnabled } from '@/lib/onboarding-preferences';
-import {
-  MY_ACCOUNT_DELETE_REAUTH_PATH,
-  OAUTH_DELETE_REAUTH_REQUIRED,
-} from '@/lib/auth/oauth-delete-messages';
+import { OAUTH_DELETE_REAUTH_REQUIRED } from '@/lib/auth/oauth-delete-messages';
 import { hasPasswordProvider, getAuthProviderLabel, type AccountMessage } from './account-helpers';
 
 export function useMyAccountPage() {
@@ -298,19 +295,7 @@ export function useMyAccountPage() {
       if (!began.success) {
         throw new Error(began.error ?? 'Authentication required');
       }
-      const supabase = createClient();
-      const { data, error } = await supabase.auth.signInWithOAuth({
-        provider: 'google',
-        options: {
-          redirectTo: `${window.location.origin}/auth/callback?next=${encodeURIComponent(MY_ACCOUNT_DELETE_REAUTH_PATH)}`,
-        },
-      });
-      if (error) throw error;
-      if (data?.url) {
-        window.location.href = data.url;
-        return;
-      }
-      throw new Error('Failed to start Google sign-in');
+      window.location.href = began.url;
     } catch (err: unknown) {
       setDeleteError(getAuthErrorMessage(err, 'delete-account'));
       setDeleting(false);
