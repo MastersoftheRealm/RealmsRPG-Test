@@ -67,16 +67,12 @@ async function evaluateLegalityForReplayedCharacter(
   supabase: TypedSupabaseClient,
   userId: string,
   characterId: string,
-  fallbackCandidate?: CharacterLegalityCandidate,
 ): Promise<Awaited<ReturnType<typeof evaluateCharacterLegalityForSave>>> {
   const stored = await loadStoredSheetForLegality(supabase, userId, characterId);
-  if (stored) {
-    return evaluateCharacterLegalityForSave(supabase, stored);
+  if (!stored || Object.keys(stored).length === 0) {
+    throw new Error('Idempotent replay row missing stored sheet data');
   }
-  if (fallbackCandidate) {
-    return evaluateCharacterLegalityForSave(supabase, fallbackCandidate);
-  }
-  throw new Error('Idempotent replay row missing stored sheet data');
+  return evaluateCharacterLegalityForSave(supabase, stored);
 }
 
 type CharacterInsertRow = {
@@ -118,7 +114,6 @@ async function jsonForInsertResult(
   clientRequestId: string | undefined,
   result: { id: string } | { uniqueViolation: true },
   legality?: Awaited<ReturnType<typeof evaluateCharacterLegalityForSave>>,
-  legalityCandidate?: CharacterLegalityCandidate,
 ): Promise<NextResponse> {
   if ('id' in result) {
     const body = legality
@@ -129,9 +124,7 @@ async function jsonForInsertResult(
   if (clientRequestId) {
     const replayed = await findCharacterByRequestId(supabase, userId, clientRequestId);
     if (replayed) {
-      const replayLegality =
-        legality ??
-        (await evaluateLegalityForReplayedCharacter(supabase, userId, replayed, legalityCandidate));
+      const replayLegality = await evaluateLegalityForReplayedCharacter(supabase, userId, replayed);
       return NextResponse.json(appendCharacterLegalityToResponse({ id: replayed }, replayLegality));
     }
   }
@@ -306,14 +299,7 @@ export async function POST(request: NextRequest) {
         ...listCols,
         client_request_id: clientRequestId ?? null,
       });
-      return jsonForInsertResult(
-        supabase,
-        user.uid,
-        clientRequestId,
-        inserted,
-        legality,
-        newData as CharacterLegalityCandidate,
-      );
+      return jsonForInsertResult(supabase, user.uid, clientRequestId, inserted, legality);
     }
 
     const cleanedData = prepareCharacterForCreate(data);
@@ -335,14 +321,7 @@ export async function POST(request: NextRequest) {
       ...listCols,
       client_request_id: clientRequestId ?? null,
     });
-    return jsonForInsertResult(
-      supabase,
-      user.uid,
-      clientRequestId,
-      inserted,
-      legality,
-      cleanedData,
-    );
+    return jsonForInsertResult(supabase, user.uid, clientRequestId, inserted, legality);
   } catch (err) {
     return apiErrorResponse(
       GUIDED_CREATOR_COPY.steps.reveal.saveFailed,

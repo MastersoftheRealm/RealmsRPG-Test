@@ -115,12 +115,14 @@ describe('character-legality all-levels gate', () => {
   });
 
   it.each([
-    ['update shorthand', `supabase.from('characters').update({ data: mergedData });`],
+    ['explicit data property', `supabase.from('characters').update({ data: mergedData });`],
+    ['ES shorthand data', `supabase.from('characters').update({ data });`],
     [
       'wrapped update arg',
       `supabase.from('characters').update(asDbUpdate<'characters'>({ data: mergedData, updated_at: now }));`,
     ],
     ['variable payload (fail closed)', `supabase.from('characters').update(payload);`],
+    ['object spread (fail closed)', `supabase.from('characters').update({ ...rowPatch });`],
     ['upsert', `supabase.from('characters').upsert({ data: sheet });`],
   ])('positive chain fixture: %s', (_label, snippet) => {
     const chain = charactersTableWriteChains(stripComments(snippet))[0];
@@ -128,6 +130,23 @@ describe('character-legality all-levels gate', () => {
     expect(isCharacterPersistenceWriteRoute('src/app/api/characters/[id]/route.ts', snippet)).toBe(
       true,
     );
+  });
+
+  it('end-to-end gate fails on unguarded update with ES shorthand data', () => {
+    const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'legality-gate-shorthand-'));
+    const routeDir = path.join(dir, 'src', 'app', 'api', 'sheet', 'sync');
+    fs.mkdirSync(routeDir, { recursive: true });
+    fs.writeFileSync(
+      path.join(routeDir, 'route.ts'),
+      `export async function PATCH() {
+        const data = sheet;
+        await client.from('characters').update({ data });
+        return new Response("ok");
+      }`,
+    );
+    const result = runCharacterLegalityAllLevelsGate(dir);
+    expect(result.ok).toBe(false);
+    expect(result.errors.some((e) => e.includes('PATCH must call'))).toBe(true);
   });
 
   it('negative chain fixture: select-only on characters', () => {

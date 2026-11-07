@@ -103,23 +103,99 @@ export function charactersTableWriteChains(strippedSource) {
 }
 
 /**
+ * @param {string} source
+ * @param {number} openParenIdx index of `(` starting the call argument list
+ * @returns {string}
+ */
+function balancedCallArgFrom(source, openParenIdx) {
+  let depth = 0;
+  for (let i = openParenIdx; i < source.length; i++) {
+    const ch = source[i];
+    if (ch === '(') depth++;
+    else if (ch === ')') {
+      depth--;
+      if (depth === 0) {
+        return source.slice(openParenIdx + 1, i).trim();
+      }
+    }
+  }
+  return '';
+}
+
+/**
+ * @param {string} source
+ * @param {number} openIdx index of `{`
+ */
+function extractBalancedBraces(source, openIdx) {
+  if (source[openIdx] !== '{') return '';
+  let depth = 0;
+  for (let i = openIdx; i < source.length; i++) {
+    const ch = source[i];
+    if (ch === '{') depth++;
+    else if (ch === '}') {
+      depth--;
+      if (depth === 0) return source.slice(openIdx, i + 1);
+    }
+  }
+  return '';
+}
+
+/**
+ * `data: value`, shorthand `data`, or fail-closed on spreads we cannot prove omit `data`.
+ * @param {string} objectLiteral including surrounding `{` `}`
+ */
+function objectLiteralTouchesSheetData(objectLiteral) {
+  if (/\bdata\s*:/.test(objectLiteral)) return true;
+  if (/(?:^\{|[,{])\s*data\s*(?=[,}])/m.test(objectLiteral)) return true;
+  if (/\.\.\./.test(objectLiteral)) return true;
+  return false;
+}
+
+/** @param {string} arg */
+function updateCallArgPersistsSheetData(arg) {
+  const trimmed = arg.trim();
+  if (trimmed.startsWith('{')) {
+    const literal = extractBalancedBraces(trimmed, 0);
+    return objectLiteralTouchesSheetData(literal || trimmed);
+  }
+  if (/^asDbUpdate\s*</.test(trimmed)) {
+    const brace = trimmed.indexOf('{');
+    if (brace !== -1) {
+      const literal = extractBalancedBraces(trimmed, brace);
+      if (literal) return objectLiteralTouchesSheetData(literal);
+    }
+    return /\bdata\s*:/.test(trimmed);
+  }
+  if (/^[a-zA-Z_$]/.test(trimmed)) return true;
+  return false;
+}
+
+/**
  * True when a single `from('characters')` chain performs an insert/upsert or an update that
- * persists sheet JSON (`data` in the call, a wrapped db helper, or a variable — fail closed).
+ * persists sheet JSON (`data` / shorthand `{ data }`, `asDbUpdate`, spreads fail closed).
  * @param {string} chain
  */
 export function chainWritesCharacterSheetData(chain) {
-  if (/\.insert\s*\(/.test(chain)) return true;
+  if (/\.insert\s*\(/.test(chain)) {
+    const m = chain.match(/\.insert\s*\(/);
+    if (m && m.index !== undefined) {
+      const arg = balancedCallArgFrom(chain, m.index + m[0].length - 1);
+      if (arg.startsWith('{')) {
+        const literal = extractBalancedBraces(arg, 0);
+        return objectLiteralTouchesSheetData(literal || arg);
+      }
+      if (/^[a-zA-Z_$]/.test(arg)) return true;
+    }
+    return true;
+  }
   if (/\.upsert\s*\(/.test(chain)) return true;
 
   const updateMatch = chain.match(/\.update\s*\(/);
   if (!updateMatch || updateMatch.index === undefined) return false;
 
-  const afterUpdate = chain.slice(updateMatch.index);
-  if (/\bdata\s*:/.test(afterUpdate)) return true;
-  if (/\.update\s*\(\s*asDbUpdate/.test(chain) && /\bdata\s*:/.test(afterUpdate)) return true;
-  if (/\.update\s*\(\s*[a-zA-Z_$]/.test(chain)) return true;
-
-  return false;
+  const openParenIdx = updateMatch.index + updateMatch[0].length - 1;
+  const arg = balancedCallArgFrom(chain, openParenIdx);
+  return updateCallArgPersistsSheetData(arg);
 }
 
 /**
