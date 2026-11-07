@@ -1,4 +1,5 @@
 import type { User } from '@supabase/supabase-js';
+import { assertOAuthDeleteFreshSignIn } from '@/lib/auth/oauth-delete-reauth';
 import { createClient } from '@/lib/supabase/server';
 import { requireLiveUser } from '@/lib/supabase/session';
 
@@ -46,6 +47,9 @@ export async function assertSensitiveAccountReauth(
   if (input.deleteConfirm !== undefined) {
     if (input.deleteConfirm !== 'DELETE') {
       return { ok: false, error: 'Failed to delete account. Please try again.' };
+    }
+    if (!authUserHasPasswordLogin(data.user)) {
+      return assertOAuthDeleteFreshSignIn(data.user);
     }
     return { ok: true };
   }

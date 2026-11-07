@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { defined } from '@/lib/utils';
 
 vi.mock('next/cache', () => ({ revalidatePath: vi.fn() }));
@@ -31,6 +31,10 @@ import {
   deleteAccountAction,
   setProfilePhotoFromLibraryAction,
 } from './actions';
+import {
+  OAUTH_DELETE_FRESH_SIGN_IN_MS,
+  OAUTH_DELETE_REAUTH_REQUIRED,
+} from '@/lib/auth/oauth-delete-reauth';
 import { assertSensitiveAccountReauth } from '@/lib/auth/sensitive-account-auth';
 import { requireAuth, requireLiveUser, getSession } from '@/lib/supabase/session';
 import { createClient as createServerClient, createServiceRoleClient } from '@/lib/supabase/server';
@@ -551,6 +555,69 @@ describe('deleteAccountAction', () => {
     expect(result.success).toBe(false);
     expect(opLabels(ops)).not.toContain('delete:user_profiles');
     expect(client.auth.admin.deleteUser).not.toHaveBeenCalled();
+  });
+
+  describe('OAuth-only fresh sign-in', () => {
+    beforeEach(async () => {
+      const actual = await vi.importActual<typeof import('@/lib/auth/sensitive-account-auth')>(
+        '@/lib/auth/sensitive-account-auth',
+      );
+      mockAssertSensitiveAccountReauth.mockImplementation(actual.assertSensitiveAccountReauth);
+    });
+
+    afterEach(() => {
+      mockAssertSensitiveAccountReauth.mockResolvedValue({ ok: true });
+    });
+
+    it('does not delete when OAuth sign-in is stale', async () => {
+      const staleAt = new Date(Date.now() - OAUTH_DELETE_FRESH_SIGN_IN_MS - 1).toISOString();
+      mockAuthGetUser.mockResolvedValue({
+        data: {
+          user: {
+            id: USER.uid,
+            last_sign_in_at: staleAt,
+            app_metadata: { provider: 'google' },
+            identities: [{ provider: 'google' }],
+          },
+        },
+        error: null,
+      });
+      const { client } = createSupabaseStub(() => ok());
+      useAuthMutationClient(client);
+      mockCreateServiceRoleClient.mockReturnValue(client as never);
+
+      const result = await deleteAccountAction({ deleteConfirm: 'DELETE' });
+
+      expect(result).toEqual({ success: false, error: OAUTH_DELETE_REAUTH_REQUIRED });
+      expect(mockCreateServiceRoleClient).not.toHaveBeenCalled();
+      expect(client.auth.admin.deleteUser).not.toHaveBeenCalled();
+    });
+
+    it('deletes when OAuth sign-in is fresh', async () => {
+      mockAuthGetUser.mockResolvedValue({
+        data: {
+          user: {
+            id: USER.uid,
+            last_sign_in_at: new Date().toISOString(),
+            app_metadata: { provider: 'google' },
+            identities: [{ provider: 'google' }],
+          },
+        },
+        error: null,
+      });
+      const { client, ops } = createSupabaseStub((op) => {
+        if (op.table === 'campaign_members' && op.action === 'select') return ok([]);
+        return ok();
+      });
+      useAuthMutationClient(client);
+      mockCreateServiceRoleClient.mockReturnValue(client as never);
+
+      const result = await deleteAccountAction({ deleteConfirm: 'DELETE' });
+
+      expect(result).toEqual({ success: true });
+      expect(mockCreateServiceRoleClient).toHaveBeenCalled();
+      expect(opLabels(ops)).toContain('delete:user_profiles');
+    });
   });
 
   it('strips the user from campaign rosters it does not own', async () => {

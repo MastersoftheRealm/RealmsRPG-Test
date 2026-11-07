@@ -6,8 +6,8 @@
 
 'use client';
 
-import { useState, useMemo } from 'react';
-import { useRouter } from 'next/navigation';
+import { useMemo, useState } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
 import { apiFetch, apiUpload, getErrorMessage } from '@/lib/api-client';
 import { getAuthErrorMessage } from '@/lib/auth-errors';
@@ -22,10 +22,14 @@ import { useAuthStore } from '@/stores';
 import { useAdmin, useAccountProfile } from '@/hooks';
 import { fileFromCroppedBlob } from '@/lib/crop-image';
 import { areTutorialsEnabled, setTutorialsEnabled } from '@/lib/onboarding-preferences';
+import { OAUTH_DELETE_REAUTH_REQUIRED } from '@/lib/auth/oauth-delete-reauth';
 import { hasPasswordProvider, getAuthProviderLabel, type AccountMessage } from './account-helpers';
+
+const MY_ACCOUNT_DELETE_REAUTH_PATH = '/my-account?deleteReauth=1';
 
 export function useMyAccountPage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const { user } = useAuthStore();
   const { isAdmin } = useAdmin();
 
@@ -67,6 +71,9 @@ export function useMyAccountPage() {
   const [tutorialsEnabled, setTutorialsEnabledState] = useState(() => areTutorialsEnabled());
   const [deleting, setDeleting] = useState(false);
   const [deleteError, setDeleteError] = useState<string | null>(null);
+  const [needsGoogleReauthForDelete, setNeedsGoogleReauthForDelete] = useState(false);
+  const deleteReauthReturn = searchParams.get('deleteReauth') === '1';
+  const effectiveShowDeleteConfirm = showDeleteConfirm || deleteReauthReturn;
 
   const handleProfilePictureUpload = async (blob: Blob) => {
     if (!user) return;
@@ -269,9 +276,35 @@ export function useMyAccountPage() {
           : { deleteConfirm: deleteConfirmText },
       );
       if (!result.success) {
+        if (result.error === OAUTH_DELETE_REAUTH_REQUIRED) {
+          setNeedsGoogleReauthForDelete(true);
+        }
         throw new Error(result.error ?? 'Failed to delete account');
       }
       router.push('/');
+    } catch (err: unknown) {
+      setDeleteError(getAuthErrorMessage(err, 'delete-account'));
+      setDeleting(false);
+    }
+  };
+
+  const handleGoogleReauthForDelete = async () => {
+    setDeleting(true);
+    setDeleteError(null);
+    try {
+      const supabase = createClient();
+      const { data, error } = await supabase.auth.signInWithOAuth({
+        provider: 'google',
+        options: {
+          redirectTo: `${window.location.origin}/auth/callback?next=${encodeURIComponent(MY_ACCOUNT_DELETE_REAUTH_PATH)}`,
+        },
+      });
+      if (error) throw error;
+      if (data?.url) {
+        window.location.href = data.url;
+        return;
+      }
+      throw new Error('Failed to start Google sign-in');
     } catch (err: unknown) {
       setDeleteError(getAuthErrorMessage(err, 'delete-account'));
       setDeleting(false);
@@ -283,6 +316,10 @@ export function useMyAccountPage() {
     setDeletePassword('');
     setDeleteConfirmText('');
     setDeleteError(null);
+    setNeedsGoogleReauthForDelete(false);
+    if (deleteReauthReturn) {
+      router.replace('/my-account', { scroll: false });
+    }
   };
 
   const handleTutorialsChange = (next: boolean) => {
@@ -335,7 +372,7 @@ export function useMyAccountPage() {
     usernameMessage,
     handleUsernameChange,
 
-    showDeleteConfirm,
+    showDeleteConfirm: effectiveShowDeleteConfirm,
     setShowDeleteConfirm,
     deletePassword,
     setDeletePassword,
@@ -343,6 +380,8 @@ export function useMyAccountPage() {
     setDeleteConfirmText,
     deleting,
     deleteError,
+    needsGoogleReauthForDelete,
+    handleGoogleReauthForDelete,
     handleDeleteAccount,
     cancelDeleteConfirm,
 

@@ -18,6 +18,10 @@ vi.mock('@/lib/supabase/server', () => ({
 }));
 
 import {
+  OAUTH_DELETE_FRESH_SIGN_IN_MS,
+  OAUTH_DELETE_REAUTH_REQUIRED,
+} from '@/lib/auth/oauth-delete-reauth';
+import {
   assertSensitiveAccountReauth,
   authUserHasPasswordLogin,
 } from '@/lib/auth/sensitive-account-auth';
@@ -32,10 +36,11 @@ function passwordUser(): User {
   } as User;
 }
 
-function oauthUser(): User {
+function oauthUser(lastSignInAt: string): User {
   return {
     id: 'user-1',
     email: 'hero@example.com',
+    last_sign_in_at: lastSignInAt,
     app_metadata: { provider: 'google' },
     identities: [{ provider: 'google' }],
   } as User;
@@ -49,7 +54,7 @@ beforeEach(() => {
 describe('authUserHasPasswordLogin', () => {
   it('detects email/password accounts', () => {
     expect(authUserHasPasswordLogin(passwordUser())).toBe(true);
-    expect(authUserHasPasswordLogin(oauthUser())).toBe(false);
+    expect(authUserHasPasswordLogin(oauthUser(new Date().toISOString()))).toBe(false);
   });
 });
 
@@ -85,8 +90,11 @@ describe('assertSensitiveAccountReauth', () => {
     });
   });
 
-  it('accepts typed DELETE for OAuth-only accounts', async () => {
-    mockGetUser.mockResolvedValue({ data: { user: oauthUser() }, error: null });
+  it('accepts typed DELETE for OAuth-only accounts with a fresh sign-in', async () => {
+    mockGetUser.mockResolvedValue({
+      data: { user: oauthUser(new Date().toISOString()) },
+      error: null,
+    });
 
     const result = await assertSensitiveAccountReauth({ deleteConfirm: 'DELETE' });
 
@@ -94,8 +102,20 @@ describe('assertSensitiveAccountReauth', () => {
     expect(mockSignInWithPassword).not.toHaveBeenCalled();
   });
 
+  it('rejects OAuth-only delete when last sign-in is stale', async () => {
+    const staleAt = new Date(Date.now() - OAUTH_DELETE_FRESH_SIGN_IN_MS - 1).toISOString();
+    mockGetUser.mockResolvedValue({ data: { user: oauthUser(staleAt) }, error: null });
+
+    const result = await assertSensitiveAccountReauth({ deleteConfirm: 'DELETE' });
+
+    expect(result).toEqual({ ok: false, error: OAUTH_DELETE_REAUTH_REQUIRED });
+  });
+
   it('rejects email or password changes for OAuth-only accounts', async () => {
-    mockGetUser.mockResolvedValue({ data: { user: oauthUser() }, error: null });
+    mockGetUser.mockResolvedValue({
+      data: { user: oauthUser(new Date().toISOString()) },
+      error: null,
+    });
 
     const result = await assertSensitiveAccountReauth({ currentPassword: 'n/a' });
 
