@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { COLUMNAR_LIBRARY_TYPES } from '@/lib/library-columnar-keys';
 import { validateUserLibraryWriteBody } from '@/lib/library-mutation-validation';
+import { stampCreatureSyncMeta } from '@/lib/library-sync';
 
 const powerFixture = {
   name: 'Mind Lance',
@@ -75,6 +76,21 @@ describe('validateUserLibraryWriteBody', () => {
       expect(validateUserLibraryWriteBody(type, { name: 'Renamed' }, { mode: 'patch' })).toBeNull();
     },
   );
+
+  it('accepts stamped creatures with nonempty skill objects', () => {
+    const body = stampCreatureSyncMeta(
+      {
+        name: 'Ranger',
+        level: 1,
+        archetypeType: 'power',
+        skills: [{ name: 'Stealth', value: 4, proficient: false }],
+      },
+      [],
+      [],
+      [],
+    );
+    expect(validateUserLibraryWriteBody('creatures', body)).toBeNull();
+  });
 
   it('strips direct image URL writes for user library saves', () => {
     const body = {

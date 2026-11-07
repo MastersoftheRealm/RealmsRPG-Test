@@ -298,10 +298,73 @@ describe('POST /api/official/[type]', () => {
     expect(mockCreateServiceRoleClient).not.toHaveBeenCalled();
   });
 
+  it('creates an official creature with nonempty skill objects', async () => {
+    mockRequireLiveUser.mockResolvedValue(USER);
+    mockIsAdmin.mockResolvedValue(true);
+    const insertSingle = vi.fn(async () => ({ data: { id: 'creature-new' }, error: null }));
+    const supabase = {
+      from: vi.fn(() => ({
+        select: vi.fn(() => ({
+          ilike: vi.fn().mockReturnThis(),
+          neq: vi.fn().mockReturnThis(),
+          limit: vi.fn().mockReturnThis(),
+          maybeSingle: vi.fn(async () => ({ data: null, error: null })),
+        })),
+        insert: vi.fn(() => ({
+          select: vi.fn(() => ({ single: insertSingle })),
+        })),
+      })),
+    };
+    mockCreateServiceRoleClient.mockReturnValue(supabase as never);
+
+    const request = new NextRequest('http://localhost/api/official/creatures', {
+      method: 'POST',
+      headers: { 'content-type': 'application/json', origin: 'http://localhost' },
+      body: JSON.stringify({
+        name: 'Official wolf',
+        level: 1,
+        archetypeType: 'power',
+        skills: [{ name: 'Athletics', value: 2, proficient: true }],
+      }),
+    });
+
+    const response = await POST(request, params('creatures'));
+
+    expect(response.status).toBe(200);
+    await expect(readJson(response)).resolves.toEqual({ id: expect.any(String) });
+  });
+
+  it('returns 400 for malformed official creature skills without writing', async () => {
+    mockRequireLiveUser.mockResolvedValue(USER);
+    mockIsAdmin.mockResolvedValue(true);
+    const insertSingle = vi.fn();
+    mockCreateServiceRoleClient.mockReturnValue({
+      from: vi.fn(() => ({
+        insert: vi.fn(() => ({
+          select: vi.fn(() => ({ single: insertSingle })),
+        })),
+      })),
+    } as never);
+
+    const request = new NextRequest('http://localhost/api/official/creatures', {
+      method: 'POST',
+      headers: { 'content-type': 'application/json', origin: 'http://localhost' },
+      body: JSON.stringify({
+        name: 'Bad official wolf',
+        skills: [{ name: 'Athletics', value: 1, proficient: 'yes' }],
+      }),
+    });
+
+    const response = await POST(request, params('creatures'));
+
+    expect(response.status).toBe(400);
+    expect(insertSingle).not.toHaveBeenCalled();
+  });
+
   function mockOfficialPostSupabase(options: {
-    currentRow: { name: string } | null;
-    nameCollision: { id: string } | null;
-    updateRows: { id: string }[];
+    currentRow: Record<string, unknown> | null;
+    nameCollision: Record<string, unknown> | null;
+    updateRows: Record<string, unknown>[];
   }) {
     const insertSingle = vi.fn(async () => ({ data: { id: 'new' }, error: null }));
     let selectCall = 0;

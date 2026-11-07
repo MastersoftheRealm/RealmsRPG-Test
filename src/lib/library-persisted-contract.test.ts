@@ -37,6 +37,38 @@ describe('library-persisted-contract', () => {
     ).toEqual([]);
   });
 
+  it('accepts nonempty CreatureSkill object arrays', () => {
+    expect(
+      persistedLibraryBodyShapeError('creatures', {
+        name: 'Wolf',
+        skills: [{ name: 'Athletics', value: 3, proficient: true, baseSkillId: 'athletics' }],
+      }),
+    ).toBeNull();
+    expect(
+      persistedLibraryBodyShapeError('creatures', {
+        name: 'Wolf',
+        skills: ['Athletics'],
+      }),
+    ).toBeNull();
+  });
+
+  it('rejects malformed creature skills without accepting bad proficient types', () => {
+    expect(
+      persistedLibraryBodyShapeError('creatures', {
+        skills: [{ name: 'Athletics', value: 3, proficient: 'yes' }],
+      }),
+    ).toBe('skills[0].proficient must be a boolean');
+  });
+
+  it('allows item properties with boolean ids seen in live data', () => {
+    expect(
+      persistedLibraryBodyShapeError('items', {
+        name: 'Blade',
+        properties: [{ id: true, name: 'Weapon Damage', op_1_lvl: 1 }],
+      }),
+    ).toBeNull();
+  });
+
   it('allows full creature creator state keys', () => {
     expect(
       unknownPersistedLibraryKeys('creatures', {

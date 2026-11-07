@@ -31,6 +31,15 @@ function creatureWithWeapon() {
     name: 'Stamped wolf',
     level: 1,
     archetypeType: 'power' as const,
+    skills: [
+      {
+        name: 'Athletics',
+        value: 2,
+        proficient: true,
+        id: 'skill-athletics',
+        baseSkillId: 'athletics',
+      },
+    ],
     weapons: [
       {
         name: 'Sword',
@@ -53,6 +62,17 @@ describe('library syncMeta persistence contract', () => {
     expect(validateUserLibraryWriteBody('creatures', stamped)).toBeNull();
     expect(stamped.syncMeta?.dependencyFingerprint).toBeTruthy();
     expect(stamped.syncMeta?.syncedAt).toMatch(/^\d{4}-/);
+    expect(stamped.skills).toHaveLength(1);
+    expect(stamped.skills?.[0]).toMatchObject({ name: 'Athletics', proficient: true });
+  });
+
+  it('rejects malformed creature skills at validation time', () => {
+    const stamped = stampCreatureSyncMeta(creatureWithWeapon(), [], [], []);
+    const bad = {
+      ...stamped,
+      skills: [{ name: 'Athletics', value: 1, proficient: 'nope' }],
+    };
+    expect(validateUserLibraryWriteBody('creatures', bad)?.status).toBe(400);
   });
 
   it('accepts library-sync sanitized power, technique, and item payloads', () => {

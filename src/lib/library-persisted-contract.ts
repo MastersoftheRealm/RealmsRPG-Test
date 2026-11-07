@@ -228,16 +228,16 @@ function textBoundsError(key: string, value: unknown, max: number): string | nul
   return null;
 }
 
+function isAllowedPartId(value: unknown): boolean {
+  const t = typeof value;
+  return t === 'string' || t === 'number' || t === 'boolean';
+}
+
 function savedPartRecordError(value: unknown, path: string): string | null {
   if (!isPlainObject(value)) return `${path} must be an object`;
   const record = value;
-  if (
-    'id' in record &&
-    record.id !== undefined &&
-    typeof record.id !== 'string' &&
-    typeof record.id !== 'number'
-  ) {
-    return `${path}.id must be a string or number`;
+  if ('id' in record && record.id !== undefined && !isAllowedPartId(record.id)) {
+    return `${path}.id has an unsupported type`;
   }
   if ('name' in record && record.name !== undefined && typeof record.name !== 'string') {
     return `${path}.name must be a string`;
@@ -255,6 +255,46 @@ function validatePartsArray(parts: unknown, label: string): string | null {
   if (!Array.isArray(parts)) return `${label} must be an array`;
   for (let i = 0; i < parts.length; i++) {
     const err = savedPartRecordError(parts[i], `${label}[${i}]`);
+    if (err) return err;
+  }
+  return null;
+}
+
+/** `CreatureSkill` records from creature-creator-types.ts; legacy rows may store skill names as strings. */
+function creatureSkillEntryError(value: unknown, path: string): string | null {
+  if (typeof value === 'string') return null;
+  if (!isPlainObject(value)) return `${path} must be an object or string`;
+  const record = value;
+  if (typeof record.name !== 'string') return `${path}.name must be a string`;
+  if (typeof record.value !== 'number' || !Number.isFinite(record.value)) {
+    return `${path}.value must be a number`;
+  }
+  if (typeof record.proficient !== 'boolean') return `${path}.proficient must be a boolean`;
+  if ('id' in record && record.id !== undefined && typeof record.id !== 'string') {
+    return `${path}.id must be a string`;
+  }
+  if (
+    'baseSkillId' in record &&
+    record.baseSkillId !== undefined &&
+    typeof record.baseSkillId !== 'string'
+  ) {
+    return `${path}.baseSkillId must be a string`;
+  }
+  if (
+    'isSubSkill' in record &&
+    record.isSubSkill !== undefined &&
+    typeof record.isSubSkill !== 'boolean'
+  ) {
+    return `${path}.isSubSkill must be a boolean`;
+  }
+  return null;
+}
+
+function validateCreatureSkillsArray(skills: unknown): string | null {
+  if (skills === undefined) return null;
+  if (!Array.isArray(skills)) return 'skills must be an array';
+  for (let i = 0; i < skills.length; i++) {
+    const err = creatureSkillEntryError(skills[i], `skills[${i}]`);
     if (err) return err;
   }
   return null;
@@ -347,14 +387,8 @@ export function persistedLibraryBodyShapeError(
         return `${key} must be an array`;
       }
     }
-    if (
-      'skills' in body &&
-      body.skills !== undefined &&
-      !isStringArray(body.skills) &&
-      Array.isArray(body.skills)
-    ) {
-      return 'skills must be an array of strings when string-valued';
-    }
+    const skillsErr = validateCreatureSkillsArray(body.skills);
+    if (skillsErr) return skillsErr;
   }
   if (
     (type === 'techniques' || type === 'empowered-techniques') &&
