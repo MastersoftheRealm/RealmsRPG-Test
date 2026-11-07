@@ -39,6 +39,7 @@ export interface GuidedFeatsL2ModalProps {
   maxSelections?: number | undefined;
   /** Modal copy when `maxSelections` is omitted (guided archetype advisory cap). */
   selectionCapHint?: number | undefined;
+  allowConfirmWhenOverMax?: boolean | undefined;
   requirementCharacter: CharacterForFeatRequirement;
   onClose: () => void;
   onConfirm: (selectedIds: string[]) => void;
@@ -54,6 +55,7 @@ export function GuidedFeatsL2Modal({
   initialSelectedIds,
   maxSelections,
   selectionCapHint,
+  allowConfirmWhenOverMax,
   requirementCharacter,
   onClose,
   onConfirm,
@@ -154,6 +156,7 @@ export function GuidedFeatsL2Modal({
       initialSelectedIds={initialSet}
       maxSelections={maxSelections}
       selectionLimitMessage={selectionLimitMessage}
+      allowConfirmWhenOverMax={allowConfirmWhenOverMax}
       columns={FEATS_L2_HEADER_COLUMNS}
       gridColumns={FEATS_L2_GRID}
       itemLabel="feat"

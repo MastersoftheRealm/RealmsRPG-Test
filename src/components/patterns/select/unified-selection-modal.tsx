@@ -59,6 +59,7 @@ export function UnifiedSelectionModal({
   onConfirm,
   maxSelections,
   selectionLimitMessage,
+  allowConfirmWhenOverMax,
   nextSelectedIds,
   initialSelectedIds = new Set(),
   hideDisabled = false,
@@ -205,7 +206,9 @@ export function UnifiedSelectionModal({
 
   const overSelectionLimit = maxSelections !== undefined && selectedIds.size > maxSelections;
   const showSelectionLimitWarning =
-    maxSelections !== undefined && (maxSelections === 0 || overSelectionLimit);
+    !allowConfirmWhenOverMax &&
+    maxSelections !== undefined &&
+    (maxSelections === 0 || overSelectionLimit);
   const limitWarningText = showSelectionLimitWarning
     ? (selectionLimitMessage ??
       (maxSelections === 0
@@ -214,16 +217,23 @@ export function UnifiedSelectionModal({
     : undefined;
 
   const handleConfirm = useCallback(() => {
-    if (overSelectionLimit) return;
+    if (overSelectionLimit && !allowConfirmWhenOverMax) return;
     if (confirmDisabled?.(selectedForActions)) return;
     setLeaveConfirmOpen(false);
     onConfirm(selectedForActions);
     onClose();
-  }, [overSelectionLimit, confirmDisabled, selectedForActions, onConfirm, onClose]);
+  }, [
+    overSelectionLimit,
+    allowConfirmWhenOverMax,
+    confirmDisabled,
+    selectedForActions,
+    onConfirm,
+    onClose,
+  ]);
 
   const isConfirmDisabled =
     selectedIds.size === 0 ||
-    overSelectionLimit ||
+    (overSelectionLimit && !allowConfirmWhenOverMax) ||
     (confirmDisabled?.(selectedForActions) ?? false);
 
   const handleRequestClose = useCallback(() => {

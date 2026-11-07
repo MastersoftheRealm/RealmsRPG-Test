@@ -2,10 +2,11 @@ import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, it, vi, beforeEach, afterEach } from 'vitest';
 import type { CoreRulesMap } from '@/types/core-rules';
 import { getGameRulesFallback } from '@/hooks';
-import { ArchetypeFeatsStep } from './archetype-feats-step';
 import { GUIDED_CREATOR_COPY } from '@/lib/constants/site-copy';
+import { applyCappedIdSelection } from '@/lib/guided-creator/feat-selection';
+import { ArchetypeFeatsStep } from './archetype-feats-step';
 
-const l2Copy = GUIDED_CREATOR_COPY.steps.featsL2;
+const stepCopy = GUIDED_CREATOR_COPY.steps.archetypeFeats;
 
 const archetypeFeatCapOverride = vi.hoisted(() => ({ value: null as number | null }));
 
@@ -22,7 +23,7 @@ const baseDraft = {
   creatorEntryMode: 'custom' as const,
   archetypePathId: null,
   archetypeType: 'powered-martial' as const,
-  archetypeFeatIds: ['1', '2'],
+  archetypeFeatIds: ['1'] as string[],
   characterFeatIds: [] as string[],
   abilities: { strength: 0, vitality: 0, agility: 0, acuity: 0, intelligence: 0, charisma: 0 },
   skills: [],
@@ -81,89 +82,47 @@ function renderStep() {
 }
 
 function expectContinueUsable(html: string) {
-  expect(html).toContain('Continue');
   const continueMatch = html.match(/<button[^>]*>Continue<\/button>/i);
   expect(continueMatch).toBeTruthy();
   expect(continueMatch?.[0]).not.toMatch(/\sdisabled(?:=""|=\{true\}|(?=\s|>))/);
 }
 
-function expectNoFeatLimitWarnings(html: string) {
-  expect(html).not.toContain('Deselect some');
-  expect(html).not.toContain(l2Copy.overLimitZero);
-  expect(html).not.toMatch(/more than the limit/i);
-}
-
-describe('ArchetypeFeatsStep advisory feat caps', () => {
+describe('ArchetypeFeatsStep guided feat cap', () => {
   beforeEach(() => {
-    archetypeFeatCapOverride.value = null;
+    archetypeFeatCapOverride.value = 2;
     rulesState = { rules: getGameRulesFallback(), isLoading: false };
-    baseDraft.archetypeFeatIds = ['1', '2'];
+    baseDraft.archetypeFeatIds = ['1'];
   });
 
   afterEach(() => {
     archetypeFeatCapOverride.value = null;
   });
 
-  it('keeps Continue enabled after rules load with a higher DB cap than the fallback', () => {
-    rulesState = {
-      isLoading: false,
-      rules: {
-        ...getGameRulesFallback(),
-        ARCHETYPES: {
-          ...getGameRulesFallback().ARCHETYPES,
-          configs: {
-            ...getGameRulesFallback().ARCHETYPES.configs,
-            'powered-martial': {
-              ...getGameRulesFallback().ARCHETYPES.configs['powered-martial'],
-              featLimit: 4,
-            },
-          },
-        },
-      } as CoreRulesMap,
-    };
+  it('blocks selecting more than the allowed count via capped selection', () => {
+    expect(applyCappedIdSelection(['1', '2'], '3', 2)).toEqual(['1', '3']);
+    expect(applyCappedIdSelection(['1', '2'], '4', 2)).toHaveLength(2);
+  });
+
+  it('shows an under-limit warning when fewer than max are picked but Continue stays enabled', () => {
+    const html = renderStep();
+    expect(html).toContain(stepCopy.underLimit(1));
+    expectContinueUsable(html);
+    expect(html).toContain('1 / 2');
+  });
+
+  it('hides the under-limit warning when the cap is filled', () => {
+    baseDraft.archetypeFeatIds = ['1', '2'];
+    const html = renderStep();
+    expect(html).not.toContain(stepCopy.underLimit(1));
+    expectContinueUsable(html);
+  });
+
+  it('keeps Continue enabled when DB rules raise the cap after fallback picks', () => {
+    archetypeFeatCapOverride.value = 5;
+    baseDraft.archetypeFeatIds = ['1', '2'];
     const html = renderStep();
     expectContinueUsable(html);
-    expectNoFeatLimitWarnings(html);
     expect(html).toContain('2 / 5');
-  });
-
-  it('keeps Continue enabled when the advisory cap drops below the selected count', () => {
-    baseDraft.archetypeFeatIds = ['1', '2', '3'];
-    rulesState = {
-      isLoading: false,
-      rules: {
-        ...getGameRulesFallback(),
-        ARCHETYPES: {
-          ...getGameRulesFallback().ARCHETYPES,
-          configs: {
-            ...getGameRulesFallback().ARCHETYPES.configs,
-            'powered-martial': {
-              ...getGameRulesFallback().ARCHETYPES.configs['powered-martial'],
-              featLimit: 0,
-            },
-          },
-        },
-      } as CoreRulesMap,
-    };
-    const html = renderStep();
-    expectContinueUsable(html);
-    expectNoFeatLimitWarnings(html);
-    expect(html).toContain('3 / 1');
-  });
-
-  it('keeps Continue enabled while core_rules are still loading (codex already loaded)', () => {
-    rulesState = { rules: getGameRulesFallback(), isLoading: true };
-    const html = renderStep();
-    expectContinueUsable(html);
-    expectNoFeatLimitWarnings(html);
-  });
-
-  it('keeps Continue enabled with a zero advisory cap and existing selections', () => {
-    archetypeFeatCapOverride.value = 0;
-    baseDraft.archetypeFeatIds = ['1'];
-    const html = renderStep();
-    expectContinueUsable(html);
-    expectNoFeatLimitWarnings(html);
-    expect(html).toContain('1 / 0');
+    expect(html).toContain(stepCopy.underLimit(3));
   });
 });

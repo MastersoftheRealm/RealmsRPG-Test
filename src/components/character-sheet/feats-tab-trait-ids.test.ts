@@ -7,6 +7,14 @@ const pageData = readFileSync(
   'utf8',
 );
 
+describe('feat slot count display (sheet is advisory only)', () => {
+  it('does not use over-limit danger styling on feat counters', () => {
+    expect(featsTab).not.toContain('archetypeOver');
+    expect(featsTab).not.toContain('characterOver');
+    expect(featsTab).not.toMatch(/addButtonClassName=\{[^}]*danger/);
+  });
+});
+
 describe('trait catalog loading (86e3jvjh8)', () => {
   it('drops unresolved numeric ids and shows a loading state', () => {
     expect(featsTab).toContain('traitIdPendingCatalogName');

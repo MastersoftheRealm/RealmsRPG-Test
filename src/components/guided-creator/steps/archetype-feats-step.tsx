@@ -5,12 +5,13 @@
 'use client';
 
 import { useMemo, useCallback, useState } from 'react';
-import { EmptyState, Spinner } from '@/components/ui';
+import { Alert, EmptyState, Spinner } from '@/components/ui';
 import { GuidedInlineCatalogList, GuidedLayerNav } from '@/components/patterns';
 import { cn } from '@/lib/utils';
 import { useCodexFeats, useCodexSkills, useGameRules, usePathListFilter, type Feat } from '@/hooks';
 import { calculateMaxArchetypeFeats } from '@/lib/game/formulas';
 import {
+  applyCappedIdSelection,
   guidedDraftToFeatRequirementCharacter,
   selectableCuratedFeatIds,
 } from '@/lib/guided-creator/feat-selection';
@@ -73,7 +74,10 @@ export function ArchetypeFeatsStep() {
     onDeepEntry: openBrowse,
   });
 
-  const advisoryMaxFeats = calculateMaxArchetypeFeats(1, draft.archetypeType ?? undefined, rules);
+  const maxFeats = calculateMaxArchetypeFeats(1, draft.archetypeType ?? undefined, rules);
+  const pickedCount = draft.archetypeFeatIds.length;
+  const featsRemaining = Math.max(0, maxFeats - pickedCount);
+  const showUnderLimitWarning = maxFeats > 0 && pickedCount < maxFeats;
   const guidanceGroups = pathData?.level1?.guidance_groups;
   const pathFeats = pathData?.level1?.feats;
   const groups = useMemo(() => {
@@ -95,14 +99,11 @@ export function ArchetypeFeatsStep() {
 
   const selectFeat = useCallback(
     (id: string) => {
-      const key = String(id);
       updateDraft({
-        archetypeFeatIds: draft.archetypeFeatIds.includes(key)
-          ? draft.archetypeFeatIds.filter((x) => x !== key)
-          : [...draft.archetypeFeatIds, key],
+        archetypeFeatIds: applyCappedIdSelection(draft.archetypeFeatIds, id, maxFeats),
       });
     },
-    [draft.archetypeFeatIds, updateDraft],
+    [draft.archetypeFeatIds, maxFeats, updateDraft],
   );
 
   /** Curated cards honour requirements like the catalog does (report 03 P1-10). */
@@ -221,14 +222,19 @@ export function ArchetypeFeatsStep() {
     <GuidedStepLayout
       subStep="archetype-feats"
       title={stepCopy.title}
-      description={stepCopy.description(advisoryMaxFeats, archetype?.name)}
+      description={stepCopy.description(maxFeats, archetype?.name)}
       canContinue={canContinue}
       completionHint={
         <span className="font-nunito">
-          {draft.archetypeFeatIds.length} / {advisoryMaxFeats}
+          {pickedCount} / {maxFeats}
         </span>
       }
     >
+      {showUnderLimitWarning ? (
+        <Alert variant="warning" className="mb-4 font-nunito text-sm">
+          {stepCopy.underLimit(featsRemaining)}
+        </Alert>
+      ) : null}
       {isLoading ? (
         <div className="flex justify-center py-12">
           <Spinner />
@@ -266,7 +272,7 @@ export function ArchetypeFeatsStep() {
           selectedTitle={l2Copy.archetypeSelectedTitle}
           selectedCountLabel={
             <span className="font-nunito text-sm text-text-secondary">
-              {draft.archetypeFeatIds.length} / {advisoryMaxFeats}
+              {pickedCount} / {maxFeats}
             </span>
           }
         />
@@ -281,7 +287,7 @@ export function ArchetypeFeatsStep() {
             ) : (
               <div className={GUIDED_CHOICE_COMPACT_GRID_CLASS}>
                 {visibleFallbackIds
-                  .slice(0, Math.max(advisoryMaxFeats, 1) * 3)
+                  .slice(0, Math.max(maxFeats, 1) * 3)
                   .map((id) => renderFeatCard(id))}
               </div>
             )
@@ -303,11 +309,14 @@ export function ArchetypeFeatsStep() {
               feats={feats}
               recommendedIds={recommendedIds}
               initialSelectedIds={draft.archetypeFeatIds}
-              selectionCapHint={advisoryMaxFeats}
+              maxSelections={maxFeats}
+              allowConfirmWhenOverMax
               requirementCharacter={requirementCharacter}
               autoSelectPathType={draft.archetypeType}
               onClose={() => setBrowseOpen(false)}
-              onConfirm={(ids) => updateDraft({ archetypeFeatIds: ids })}
+              onConfirm={(ids) =>
+                updateDraft({ archetypeFeatIds: ids.slice(0, Math.max(0, maxFeats)) })
+              }
             />
           ) : null}
         </>
