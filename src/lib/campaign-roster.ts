@@ -82,6 +82,16 @@ export function buildRosterFieldsFromCharacterData(charData: Record<string, unkn
   };
 }
 
+/** Whether `userId` is the campaign owner or has a `campaign_members` row. */
+export function isUserCampaignParticipant(
+  userId: string,
+  campaignOwnerId: string,
+  memberUserIds: string[],
+): boolean {
+  const uid = userId.trim();
+  return uid === campaignOwnerId.trim() || memberUserIds.includes(uid);
+}
+
 export function isCharacterOnCampaignRoster(
   rosterRaw: unknown,
   userId: string,

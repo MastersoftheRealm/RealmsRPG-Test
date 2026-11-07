@@ -6,12 +6,15 @@
 
 'use client';
 
-import { useState, useMemo } from 'react';
-import { useRouter } from 'next/navigation';
+import { useMemo, useState } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
 import { apiFetch, apiUpload, getErrorMessage } from '@/lib/api-client';
 import { getAuthErrorMessage } from '@/lib/auth-errors';
 import {
+  beginGoogleDeleteReauthAction,
+  changeAccountEmailAction,
+  changeAccountPasswordAction,
   changeUsernameAction,
   deleteAccountAction,
   setProfilePhotoFromLibraryAction,
@@ -20,10 +23,12 @@ import { useAuthStore } from '@/stores';
 import { useAdmin, useAccountProfile } from '@/hooks';
 import { fileFromCroppedBlob } from '@/lib/crop-image';
 import { areTutorialsEnabled, setTutorialsEnabled } from '@/lib/onboarding-preferences';
+import { OAUTH_DELETE_REAUTH_REQUIRED } from '@/lib/auth/oauth-delete-messages';
 import { hasPasswordProvider, getAuthProviderLabel, type AccountMessage } from './account-helpers';
 
 export function useMyAccountPage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const { user } = useAuthStore();
   const { isAdmin } = useAdmin();
 
@@ -65,6 +70,9 @@ export function useMyAccountPage() {
   const [tutorialsEnabled, setTutorialsEnabledState] = useState(() => areTutorialsEnabled());
   const [deleting, setDeleting] = useState(false);
   const [deleteError, setDeleteError] = useState<string | null>(null);
+  const [needsGoogleReauthForDelete, setNeedsGoogleReauthForDelete] = useState(false);
+  const deleteReauthReturn = searchParams.get('deleteReauth') === '1';
+  const effectiveShowDeleteConfirm = showDeleteConfirm || deleteReauthReturn;
 
   const handleProfilePictureUpload = async (blob: Blob) => {
     if (!user) return;
@@ -190,18 +198,8 @@ export function useMyAccountPage() {
     }
 
     try {
-      const supabase = createClient();
-      // Re-authenticate with the current password before changing the email so a
-      // hijacked session cannot silently take over the account (TASK-331).
-      const { error: reauthError } = await supabase.auth.signInWithPassword({
-        email: user.email,
-        password: emailPassword,
-      });
-      if (reauthError) throw new Error('Current password is incorrect');
-      const { data: liveUser, error: liveUserError } = await supabase.auth.getUser();
-      if (liveUserError || !liveUser.user) throw new Error('Authentication required');
-      const { error } = await supabase.auth.updateUser({ email: newEmail });
-      if (error) throw error;
+      const result = await changeAccountEmailAction(newEmail, emailPassword);
+      if (!result.success) throw new Error(result.error);
       patchProfile({ email: newEmail });
       setNewEmail('');
       setEmailPassword('');
@@ -231,15 +229,8 @@ export function useMyAccountPage() {
     setPasswordMessage(null);
 
     try {
-      const supabase = createClient();
-      // Verify the current password before setting a new one (TASK-331).
-      const { error: reauthError } = await supabase.auth.signInWithPassword({
-        email: user.email,
-        password: currentPassword,
-      });
-      if (reauthError) throw new Error('Current password is incorrect');
-      const { error } = await supabase.auth.updateUser({ password: newPassword });
-      if (error) throw error;
+      const result = await changeAccountPasswordAction(currentPassword, newPassword);
+      if (!result.success) throw new Error(result.error);
       setCurrentPassword('');
       setNewPassword('');
       setConfirmPassword('');
@@ -278,23 +269,33 @@ export function useMyAccountPage() {
     setDeleteError(null);
 
     try {
-      const supabase = createClient();
-      // Password accounts re-authenticate; OAuth-only users (no password) confirm
-      // via the typed DELETE, so they aren't locked out of deleting (TASK-331).
-      if (canChangeEmailPassword) {
-        if (!user.email) throw new Error('Missing account email');
-        const { error } = await supabase.auth.signInWithPassword({
-          email: user.email,
-          password: deletePassword,
-        });
-        if (error) throw error;
-      }
-
-      const result = await deleteAccountAction();
+      const result = await deleteAccountAction(
+        canChangeEmailPassword
+          ? { currentPassword: deletePassword }
+          : { deleteConfirm: deleteConfirmText },
+      );
       if (!result.success) {
+        if (result.error === OAUTH_DELETE_REAUTH_REQUIRED) {
+          setNeedsGoogleReauthForDelete(true);
+        }
         throw new Error(result.error ?? 'Failed to delete account');
       }
       router.push('/');
+    } catch (err: unknown) {
+      setDeleteError(getAuthErrorMessage(err, 'delete-account'));
+      setDeleting(false);
+    }
+  };
+
+  const handleGoogleReauthForDelete = async () => {
+    setDeleting(true);
+    setDeleteError(null);
+    try {
+      const began = await beginGoogleDeleteReauthAction();
+      if (!began.success) {
+        throw new Error(began.error ?? 'Authentication required');
+      }
+      window.location.href = began.url;
     } catch (err: unknown) {
       setDeleteError(getAuthErrorMessage(err, 'delete-account'));
       setDeleting(false);
@@ -306,6 +307,10 @@ export function useMyAccountPage() {
     setDeletePassword('');
     setDeleteConfirmText('');
     setDeleteError(null);
+    setNeedsGoogleReauthForDelete(false);
+    if (deleteReauthReturn) {
+      router.replace('/my-account', { scroll: false });
+    }
   };
 
   const handleTutorialsChange = (next: boolean) => {
@@ -358,7 +363,7 @@ export function useMyAccountPage() {
     usernameMessage,
     handleUsernameChange,
 
-    showDeleteConfirm,
+    showDeleteConfirm: effectiveShowDeleteConfirm,
     setShowDeleteConfirm,
     deletePassword,
     setDeletePassword,
@@ -366,6 +371,8 @@ export function useMyAccountPage() {
     setDeleteConfirmText,
     deleting,
     deleteError,
+    needsGoogleReauthForDelete,
+    handleGoogleReauthForDelete,
     handleDeleteAccount,
     cancelDeleteConfirm,
 

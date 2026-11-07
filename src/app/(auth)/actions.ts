@@ -7,10 +7,26 @@
 'use server';
 
 import { revalidatePath } from 'next/cache';
+import { cookies } from 'next/headers';
 import { requireAuth, requireLiveUser, getSession } from '@/lib/supabase/session';
 import { createClient as createServerClient, createServiceRoleClient } from '@/lib/supabase/server';
 import { isAdmin } from '@/lib/admin';
 import { getRolePolicyForUser } from '@/lib/role-policy';
+import { buildCanonicalAuthRedirectUrl } from '@/lib/auth-redirect';
+import { MY_ACCOUNT_DELETE_REAUTH_PATH } from '@/lib/auth/oauth-delete-messages';
+import {
+  clearOAuthDeleteGrantCookie,
+  createOAuthDeleteIntentNonce,
+  hashPkceCodeVerifier,
+  mintOAuthDeleteIntent,
+  OAUTH_DELETE_INTENT_COOKIE,
+  oauthDeleteIntentCookieOptions,
+  readOAuthDeleteGrantCookie,
+} from '@/lib/auth/oauth-delete-grant.server';
+import { readSupabasePkceCodeVerifier } from '@/lib/auth/supabase-pkce-cookies';
+import { authUserHasPasswordLogin } from '@/lib/auth/sensitive-account-auth';
+import { assertSensitiveAccountReauth } from '@/lib/auth/sensitive-account-auth';
+import { profileDisplayNameWriteValue } from '@/lib/profile-display-name';
 import { validateUsername } from '@/lib/username-rules';
 
 /** Postgres unique-violation; RLS/permission denial. */
@@ -105,13 +121,14 @@ export async function createUserProfileAction(data: {
       // Username, email, and the cooldown timestamp are not writable by the
       // session client (86e3jt562). The checks above already ran.
       const writer = createServiceRoleClient();
+      const displayNameWrite = profileDisplayNameWriteValue(data.displayName);
       const profileWrite = existing
         ? await writer
             .from('user_profiles')
             .update({
               email,
-              display_name: data.displayName ?? null,
               updated_at: now,
+              ...(displayNameWrite !== undefined ? { display_name: displayNameWrite } : {}),
               ...(needsUsername
                 ? {
                     username: normalized,
@@ -124,7 +141,7 @@ export async function createUserProfileAction(data: {
         : await writer.from('user_profiles').insert({
             id: uid,
             email,
-            display_name: data.displayName ?? null,
+            display_name: displayNameWrite ?? null,
             username: normalized,
             username_display: usernameDisplay,
             created_at: now,
@@ -376,6 +393,81 @@ export async function setProfilePhotoFromLibraryAction(
 
 type DeleteAccountResult = { success: true } | { success: false; error: string };
 
+type AccountMutationResult = { success: true } | { success: false; error: string };
+
+export async function changeAccountEmailAction(
+  newEmail: string,
+  currentPassword: string,
+): Promise<AccountMutationResult> {
+  try {
+    const reauth = await assertSensitiveAccountReauth({ currentPassword });
+    if (!reauth.ok) return { success: false, error: reauth.error };
+
+    const normalized = newEmail.trim().toLowerCase();
+    if (!normalized || !normalized.includes('@')) {
+      return { success: false, error: 'Valid email is required' };
+    }
+
+    const supabase = await createServerClient();
+    const { data: liveUser, error: liveUserError } = await supabase.auth.getUser();
+    if (liveUserError || !liveUser.user) {
+      return { success: false, error: 'Authentication required' };
+    }
+
+    const { user: sessionUser } = await getSession();
+    if (!sessionUser?.uid || liveUser.user.id !== sessionUser.uid) {
+      return { success: false, error: 'Authentication required' };
+    }
+
+    const { error } = await supabase.auth.updateUser({ email: normalized });
+    if (error) {
+      return { success: false, error: error.message ?? 'Failed to update email' };
+    }
+
+    revalidatePath('/my-account');
+    return { success: true };
+  } catch (error) {
+    console.error('Error changing account email:', error);
+    return { success: false, error: 'Failed to update email' };
+  }
+}
+
+export async function changeAccountPasswordAction(
+  currentPassword: string,
+  newPassword: string,
+): Promise<AccountMutationResult> {
+  try {
+    const reauth = await assertSensitiveAccountReauth({ currentPassword });
+    if (!reauth.ok) return { success: false, error: reauth.error };
+
+    if (!newPassword || newPassword.length < 6) {
+      return { success: false, error: 'Password must be at least 6 characters' };
+    }
+
+    const supabase = await createServerClient();
+    const { data: liveUser, error: liveUserError } = await supabase.auth.getUser();
+    if (liveUserError || !liveUser.user) {
+      return { success: false, error: 'Authentication required' };
+    }
+
+    const { user: sessionUser } = await getSession();
+    if (!sessionUser?.uid || liveUser.user.id !== sessionUser.uid) {
+      return { success: false, error: 'Authentication required' };
+    }
+
+    const { error } = await supabase.auth.updateUser({ password: newPassword });
+    if (error) {
+      return { success: false, error: error.message ?? 'Failed to update password' };
+    }
+
+    revalidatePath('/my-account');
+    return { success: true };
+  } catch (error) {
+    console.error('Error changing account password:', error);
+    return { success: false, error: 'Failed to update password' };
+  }
+}
+
 /**
  * Delete the caller's account and all of their content.
  *
@@ -389,8 +481,70 @@ type DeleteAccountResult = { success: true } | { success: false; error: string }
  * Every step is checked and the auth identity is destroyed last: a half-finished
  * cascade with no matching auth user is unrecoverable, so a failure must abort.
  */
-export async function deleteAccountAction(): Promise<DeleteAccountResult> {
+export async function beginGoogleDeleteReauthAction(): Promise<
+  { success: true; url: string } | { success: false; error: string }
+> {
   try {
+    const user = await requireLiveUser();
+    const cookieStore = await cookies();
+
+    const supabase = await createServerClient();
+    const { data, error } = await supabase.auth.getUser();
+    if (error || !data.user) {
+      return { success: false, error: 'Authentication required' };
+    }
+    if (authUserHasPasswordLogin(data.user)) {
+      return { success: false, error: 'Authentication required' };
+    }
+
+    const callbackPath = `/auth/callback?next=${encodeURIComponent(MY_ACCOUNT_DELETE_REAUTH_PATH)}`;
+    const redirectTo = buildCanonicalAuthRedirectUrl(callbackPath);
+    const { data: oauthData, error: oauthError } = await supabase.auth.signInWithOAuth({
+      provider: 'google',
+      options: {
+        redirectTo,
+        skipBrowserRedirect: true,
+      },
+    });
+    if (oauthError || !oauthData?.url) {
+      return { success: false, error: 'Authentication required' };
+    }
+
+    const verifier = readSupabasePkceCodeVerifier(cookieStore.getAll());
+    if (!verifier) {
+      return { success: false, error: 'Authentication required' };
+    }
+
+    const nonce = createOAuthDeleteIntentNonce();
+    const intent = mintOAuthDeleteIntent(user.uid, nonce, hashPkceCodeVerifier(verifier));
+    if (!intent) {
+      return { success: false, error: 'Authentication required' };
+    }
+    cookieStore.set(OAUTH_DELETE_INTENT_COOKIE, intent, oauthDeleteIntentCookieOptions());
+    return { success: true, url: oauthData.url };
+  } catch (error) {
+    console.error('Error beginning Google delete re-auth:', error);
+    return { success: false, error: 'Authentication required' };
+  }
+}
+
+export async function deleteAccountAction(options?: {
+  currentPassword?: string | undefined;
+  deleteConfirm?: string | undefined;
+}): Promise<DeleteAccountResult> {
+  try {
+    const oauthDeleteGrantToken = await readOAuthDeleteGrantCookie();
+    await clearOAuthDeleteGrantCookie();
+
+    const reauth = await assertSensitiveAccountReauth({
+      currentPassword: options?.currentPassword,
+      deleteConfirm: options?.deleteConfirm,
+      oauthDeleteGrantToken,
+    });
+    if (!reauth.ok) {
+      return { success: false, error: reauth.error };
+    }
+
     const user = await requireLiveUser();
     const supabaseAdmin = createServiceRoleClient();
 

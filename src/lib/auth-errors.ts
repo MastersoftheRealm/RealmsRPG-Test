@@ -1,3 +1,5 @@
+import { OAUTH_DELETE_REAUTH_REQUIRED } from '@/lib/auth/oauth-delete-messages';
+
 /**
  * Auth error message mapping
  * ==========================
@@ -137,6 +139,10 @@ export function getAuthErrorMessage(error: unknown, context: AuthErrorContext = 
   const { message: rawMessage, code: rawCode } = readAuthError(error);
   const message = rawMessage.toLowerCase();
   const code = rawCode.toLowerCase();
+
+  if (rawMessage === OAUTH_DELETE_REAUTH_REQUIRED) {
+    return 'Sign in with Google again, then retry deleting your account.';
+  }
 
   if (
     message.includes('email not confirmed') ||

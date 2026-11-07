@@ -1,9 +1,15 @@
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { defined } from '@/lib/utils';
 
 vi.mock('next/cache', () => ({ revalidatePath: vi.fn() }));
 vi.mock('next/navigation', () => ({ redirect: vi.fn() }));
-vi.mock('next/headers', () => ({ headers: vi.fn(async () => new Headers()) }));
+const mockCookieGet = vi.fn();
+const mockCookieDelete = vi.fn();
+
+vi.mock('next/headers', () => ({
+  cookies: vi.fn(async () => ({ get: mockCookieGet, delete: mockCookieDelete })),
+  headers: vi.fn(async () => new Headers()),
+}));
 
 vi.mock('@/lib/supabase/session', () => ({
   requireAuth: vi.fn(),
@@ -19,12 +25,22 @@ vi.mock('@/lib/supabase/server', () => ({
 vi.mock('@/lib/admin', () => ({ isAdmin: vi.fn(async () => false) }));
 vi.mock('@/lib/role-policy', () => ({ getRolePolicyForUser: vi.fn() }));
 
+vi.mock('@/lib/auth/sensitive-account-auth', () => ({
+  assertSensitiveAccountReauth: vi.fn(async () => ({ ok: true })),
+}));
+
 import {
+  changeAccountEmailAction,
+  changeAccountPasswordAction,
   changeUsernameAction,
   createUserProfileAction,
   deleteAccountAction,
   setProfilePhotoFromLibraryAction,
 } from './actions';
+import { OAUTH_DELETE_GRANT_COOKIE } from '@/lib/auth/oauth-delete-grant-core';
+import { OAUTH_DELETE_REAUTH_REQUIRED } from '@/lib/auth/oauth-delete-messages';
+import { mintOAuthDeleteGrant } from '@/lib/auth/oauth-delete-grant-core';
+import { assertSensitiveAccountReauth } from '@/lib/auth/sensitive-account-auth';
 import { requireAuth, requireLiveUser, getSession } from '@/lib/supabase/session';
 import { createClient as createServerClient, createServiceRoleClient } from '@/lib/supabase/server';
 
@@ -33,10 +49,36 @@ const mockRequireLiveUser = vi.mocked(requireLiveUser);
 const mockGetSession = vi.mocked(getSession);
 const mockCreateServerClient = vi.mocked(createServerClient);
 const mockCreateServiceRoleClient = vi.mocked(createServiceRoleClient);
+const mockAssertSensitiveAccountReauth = vi.mocked(assertSensitiveAccountReauth);
+
+const mockAuthGetUser = vi.fn();
+const mockAuthGetSession = vi.fn();
+const mockAuthUpdateUser = vi.fn();
+
+function accessToken(sessionId: string): string {
+  const header = Buffer.from(JSON.stringify({ alg: 'none', typ: 'JWT' })).toString('base64url');
+  const payload = Buffer.from(JSON.stringify({ sub: USER.uid, session_id: sessionId })).toString(
+    'base64url',
+  );
+  return `${header}.${payload}.sig`;
+}
 
 function useStub(client: unknown) {
   mockCreateServerClient.mockResolvedValue(client as never);
   mockCreateServiceRoleClient.mockReturnValue(client as never);
+}
+
+function useAuthMutationClient(dbClient: unknown) {
+  const client = {
+    ...(dbClient as object),
+    auth: {
+      getUser: mockAuthGetUser,
+      getSession: mockAuthGetSession,
+      updateUser: mockAuthUpdateUser,
+      admin: { deleteUser: vi.fn(async () => ({ data: null, error: null })) },
+    },
+  };
+  useStub(client);
 }
 
 const USER = { uid: 'user-1', email: 'hero@example.com' };
@@ -100,9 +142,18 @@ function opLabels(ops: Op[]): string[] {
 
 beforeEach(() => {
   vi.clearAllMocks();
+  process.env.SUPABASE_SERVICE_ROLE_KEY = 'test-service-role-key';
   mockRequireAuth.mockResolvedValue(USER as never);
   mockRequireLiveUser.mockResolvedValue(USER as never);
   mockGetSession.mockResolvedValue({ user: USER, error: null } as never);
+  mockAssertSensitiveAccountReauth.mockResolvedValue({ ok: true });
+  mockCookieGet.mockReturnValue(undefined);
+  mockAuthGetUser.mockResolvedValue({
+    data: { user: { id: USER.uid, email: USER.email } },
+    error: null,
+  });
+  mockAuthGetSession.mockResolvedValue({ data: { session: null }, error: null });
+  mockAuthUpdateUser.mockResolvedValue({ error: null });
 });
 
 describe('changeUsernameAction', () => {
@@ -310,6 +361,27 @@ describe('createUserProfileAction', () => {
     expect(result).toEqual({ success: false, error: 'This username is already taken' });
   });
 
+  it('does not clear display_name when displayName is omitted on update (PAGES1-001)', async () => {
+    const { client, ops } = createSupabaseStub((op) => {
+      if (op.table === 'user_profiles' && op.action === 'select') {
+        return ok({
+          id: USER.uid,
+          username: 'chosenname',
+          username_display: 'ChosenName',
+          display_name: 'Kept Name',
+        });
+      }
+      return ok();
+    });
+    useStub(client);
+
+    const result = await createUserProfileAction({});
+
+    expect(result).toEqual({ success: true });
+    const profileUpdate = ops.find((op) => op.table === 'user_profiles' && op.action === 'update');
+    expect(profileUpdate?.payload).not.toHaveProperty('display_name');
+  });
+
   it('never overwrites an existing username', async () => {
     const { client, ops } = createSupabaseStub((op) => {
       if (op.table === 'user_profiles' && op.action === 'select') {
@@ -327,6 +399,128 @@ describe('createUserProfileAction', () => {
     // The usernames mapping stays in step with the profile, not the request.
     const claim = ops.find((op) => op.table === 'usernames');
     expect(claim?.payload).toEqual({ username: 'chosenname', user_id: USER.uid });
+  });
+});
+
+describe('sensitive account action boundaries', () => {
+  it('does not delete when re-auth rejects', async () => {
+    mockAssertSensitiveAccountReauth.mockResolvedValueOnce({
+      ok: false,
+      error: 'Current password is incorrect',
+    });
+    const { client } = createSupabaseStub(() => ok());
+    useStub(client);
+
+    const result = await deleteAccountAction({ currentPassword: 'wrong' });
+
+    expect(result).toEqual({ success: false, error: 'Current password is incorrect' });
+    expect(mockRequireLiveUser).not.toHaveBeenCalled();
+    expect(mockCreateServiceRoleClient).not.toHaveBeenCalled();
+    expect(client.auth.admin.deleteUser).not.toHaveBeenCalled();
+  });
+
+  it('does not change email when re-auth rejects', async () => {
+    mockAssertSensitiveAccountReauth.mockResolvedValueOnce({
+      ok: false,
+      error: 'Current password is incorrect',
+    });
+    useAuthMutationClient({ from: vi.fn() });
+
+    const result = await changeAccountEmailAction('new@example.com', 'wrong');
+
+    expect(result).toEqual({ success: false, error: 'Current password is incorrect' });
+    expect(mockAuthGetUser).not.toHaveBeenCalled();
+    expect(mockAuthUpdateUser).not.toHaveBeenCalled();
+  });
+
+  it('does not change password when re-auth rejects', async () => {
+    mockAssertSensitiveAccountReauth.mockResolvedValueOnce({
+      ok: false,
+      error: 'Current password is incorrect',
+    });
+    useAuthMutationClient({ from: vi.fn() });
+
+    const result = await changeAccountPasswordAction('wrong', 'new-secret');
+
+    expect(result).toEqual({ success: false, error: 'Current password is incorrect' });
+    expect(mockAuthGetUser).not.toHaveBeenCalled();
+    expect(mockAuthUpdateUser).not.toHaveBeenCalled();
+  });
+});
+
+describe('changeAccountEmailAction', () => {
+  it('updates email only after live user matches the session', async () => {
+    useAuthMutationClient({ from: vi.fn() });
+
+    const result = await changeAccountEmailAction('New@Example.com', 'current');
+
+    expect(result).toEqual({ success: true });
+    expect(mockAuthGetUser).toHaveBeenCalled();
+    expect(mockAuthUpdateUser).toHaveBeenCalledWith({ email: 'new@example.com' });
+  });
+
+  it('does not update email when getUser fails', async () => {
+    mockAuthGetUser.mockResolvedValueOnce({
+      data: { user: null },
+      error: { message: 'JWT expired' },
+    });
+    useAuthMutationClient({ from: vi.fn() });
+
+    const result = await changeAccountEmailAction('new@example.com', 'current');
+
+    expect(result).toEqual({ success: false, error: 'Authentication required' });
+    expect(mockAuthUpdateUser).not.toHaveBeenCalled();
+  });
+
+  it('does not update email when the live user id does not match the session', async () => {
+    mockAuthGetUser.mockResolvedValueOnce({
+      data: { user: { id: 'other-user', email: 'other@example.com' } },
+      error: null,
+    });
+    useAuthMutationClient({ from: vi.fn() });
+
+    const result = await changeAccountEmailAction('new@example.com', 'current');
+
+    expect(result).toEqual({ success: false, error: 'Authentication required' });
+    expect(mockAuthUpdateUser).not.toHaveBeenCalled();
+  });
+});
+
+describe('changeAccountPasswordAction', () => {
+  it('updates password only after live user matches the session', async () => {
+    useAuthMutationClient({ from: vi.fn() });
+
+    const result = await changeAccountPasswordAction('current', 'new-secret');
+
+    expect(result).toEqual({ success: true });
+    expect(mockAuthGetUser).toHaveBeenCalled();
+    expect(mockAuthUpdateUser).toHaveBeenCalledWith({ password: 'new-secret' });
+  });
+
+  it('does not update password when getUser fails', async () => {
+    mockAuthGetUser.mockResolvedValueOnce({
+      data: { user: null },
+      error: { message: 'JWT expired' },
+    });
+    useAuthMutationClient({ from: vi.fn() });
+
+    const result = await changeAccountPasswordAction('current', 'new-secret');
+
+    expect(result).toEqual({ success: false, error: 'Authentication required' });
+    expect(mockAuthUpdateUser).not.toHaveBeenCalled();
+  });
+
+  it('does not update password when the live user id does not match the session', async () => {
+    mockAuthGetUser.mockResolvedValueOnce({
+      data: { user: { id: 'other-user', email: 'other@example.com' } },
+      error: null,
+    });
+    useAuthMutationClient({ from: vi.fn() });
+
+    const result = await changeAccountPasswordAction('current', 'new-secret');
+
+    expect(result).toEqual({ success: false, error: 'Authentication required' });
+    expect(mockAuthUpdateUser).not.toHaveBeenCalled();
   });
 });
 
@@ -379,6 +573,104 @@ describe('deleteAccountAction', () => {
     expect(result.success).toBe(false);
     expect(opLabels(ops)).not.toContain('delete:user_profiles');
     expect(client.auth.admin.deleteUser).not.toHaveBeenCalled();
+  });
+
+  describe('OAuth-only delete grant', () => {
+    const googleUser = {
+      id: USER.uid,
+      app_metadata: { provider: 'google' },
+      identities: [{ provider: 'google' }],
+    };
+
+    beforeEach(async () => {
+      const actual = await vi.importActual<typeof import('@/lib/auth/sensitive-account-auth')>(
+        '@/lib/auth/sensitive-account-auth',
+      );
+      mockAssertSensitiveAccountReauth.mockImplementation(actual.assertSensitiveAccountReauth);
+    });
+
+    afterEach(() => {
+      mockAssertSensitiveAccountReauth.mockResolvedValue({ ok: true });
+    });
+
+    it('clears the delete grant cookie before re-auth checks', async () => {
+      mockCookieGet.mockReturnValue({
+        name: OAUTH_DELETE_GRANT_COOKIE,
+        value: 'stale-grant',
+      });
+      mockAssertSensitiveAccountReauth.mockResolvedValue({ ok: false, error: 'fail' });
+
+      await deleteAccountAction({ deleteConfirm: 'DELETE' });
+
+      expect(mockCookieDelete).toHaveBeenCalledWith(OAUTH_DELETE_GRANT_COOKIE);
+      expect(mockAssertSensitiveAccountReauth).toHaveBeenCalledWith(
+        expect.objectContaining({ oauthDeleteGrantToken: 'stale-grant' }),
+      );
+    });
+
+    it('does not delete when the grant targets another session for the same user', async () => {
+      const now = Math.floor(Date.now() / 1000);
+      mockAuthGetUser.mockResolvedValue({ data: { user: googleUser }, error: null });
+      mockCookieGet.mockReturnValue({
+        name: OAUTH_DELETE_GRANT_COOKIE,
+        value: mintOAuthDeleteGrant(USER.uid, 'sess-b', now),
+      });
+      mockAuthGetSession.mockResolvedValue({
+        data: { session: { access_token: accessToken('sess-a') } },
+        error: null,
+      });
+      const { client } = createSupabaseStub(() => ok());
+      useAuthMutationClient(client);
+      mockCreateServiceRoleClient.mockReturnValue(client as never);
+
+      const result = await deleteAccountAction({ deleteConfirm: 'DELETE' });
+
+      expect(result).toEqual({ success: false, error: OAUTH_DELETE_REAUTH_REQUIRED });
+      expect(mockCreateServiceRoleClient).not.toHaveBeenCalled();
+      expect(client.auth.admin.deleteUser).not.toHaveBeenCalled();
+    });
+
+    it('does not delete after an ordinary refresh with no delete grant', async () => {
+      mockAuthGetUser.mockResolvedValue({ data: { user: googleUser }, error: null });
+      mockCookieGet.mockReturnValue(undefined);
+      mockAuthGetSession.mockResolvedValue({
+        data: { session: { access_token: accessToken('sess-a') } },
+        error: null,
+      });
+      const { client } = createSupabaseStub(() => ok());
+      useAuthMutationClient(client);
+      mockCreateServiceRoleClient.mockReturnValue(client as never);
+
+      const result = await deleteAccountAction({ deleteConfirm: 'DELETE' });
+
+      expect(result).toEqual({ success: false, error: OAUTH_DELETE_REAUTH_REQUIRED });
+      expect(mockCreateServiceRoleClient).not.toHaveBeenCalled();
+    });
+
+    it('deletes when the session matches a fresh Google delete grant', async () => {
+      const now = Math.floor(Date.now() / 1000);
+      mockAuthGetUser.mockResolvedValue({ data: { user: googleUser }, error: null });
+      mockCookieGet.mockReturnValue({
+        name: OAUTH_DELETE_GRANT_COOKIE,
+        value: mintOAuthDeleteGrant(USER.uid, 'sess-a', now),
+      });
+      mockAuthGetSession.mockResolvedValue({
+        data: { session: { access_token: accessToken('sess-a') } },
+        error: null,
+      });
+      const { client, ops } = createSupabaseStub((op) => {
+        if (op.table === 'campaign_members' && op.action === 'select') return ok([]);
+        return ok();
+      });
+      useAuthMutationClient(client);
+      mockCreateServiceRoleClient.mockReturnValue(client as never);
+
+      const result = await deleteAccountAction({ deleteConfirm: 'DELETE' });
+
+      expect(result).toEqual({ success: true });
+      expect(mockCreateServiceRoleClient).toHaveBeenCalled();
+      expect(opLabels(ops)).toContain('delete:user_profiles');
+    });
   });
 
   it('strips the user from campaign rosters it does not own', async () => {

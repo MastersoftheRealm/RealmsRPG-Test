@@ -1,5 +1,7 @@
 import { beforeEach, vi } from 'vitest';
 
+vi.mock('server-only', () => ({}));
+
 const unstableCacheStore = new Map<string, Promise<unknown>>();
 
 vi.mock('next/cache', () => ({

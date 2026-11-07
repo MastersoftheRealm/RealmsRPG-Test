@@ -49,6 +49,8 @@ In Vercel → Project → Settings → Environment Variables, add:
 
 **Canonical site URL:** Production `NEXT_PUBLIC_SITE_URL=https://realmsrpg.com` (auth redirects + CSRF origin allowlist). Preview uses the request host.
 
+**Post-auth redirect origins (`lib/auth-redirect.ts`):** `/auth/callback` and `/auth/confirm` build absolute redirect URLs from an allowlist: `NEXT_PUBLIC_SITE_URL`, `VERCEL_URL`, the incoming request URL host, and the raw `Host` header. `x-forwarded-host` is honored only when it matches that set. **Deployment assumption:** only configured domains (production custom domain, Vercel project hostnames, local dev) route traffic to this app; an arbitrary attacker-controlled request origin is not treated as a trusted redirect target unless it already matches one of those hosts. Email/OAuth links should continue to use `NEXT_PUBLIC_SITE_URL` in redirect targets where applicable.
+
 **Never** use `NEXT_PUBLIC_` prefix for `SUPABASE_SERVICE_ROLE_KEY`. `DATABASE_URL` / `DIRECT_URL` are optional for the Next.js app; they are **required for local full-database backups** (`npm run db:backup`).
 
 ### Local database backup
@@ -226,7 +228,7 @@ Speed Insights is **not** installed unless separately prioritized (different pac
 ### Step 4: Custom domain (e.g. realmsrpg.com)
 
 1. **Vercel:** Project → Settings → Domains → Add `realmsrpg.com` (and `www.realmsrpg.com` if desired). Follow Vercel’s DNS instructions (A/CNAME records).
-2. After the domain is verified, traffic to realmsrpg.com will serve the same app. No code changes required; auth redirects use the request host (including x-forwarded-host).
+2. After the domain is verified, traffic to realmsrpg.com will serve the same app. Auth callback/confirm redirects use `buildAuthRedirectUrl` (allowlisted hosts; see **Post-auth redirect origins** above). Ensure `NEXT_PUBLIC_SITE_URL` matches the canonical production hostname so apex and www both validate when the request or `x-forwarded-host` presents either name.
 
 ### Step 5: Auth redirect URLs
 

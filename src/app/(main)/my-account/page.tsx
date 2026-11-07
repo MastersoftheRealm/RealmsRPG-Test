@@ -131,6 +131,8 @@ function AccountContent() {
         setDeleteConfirmText={model.setDeleteConfirmText}
         deleting={model.deleting}
         deleteError={model.deleteError}
+        needsGoogleReauthForDelete={model.needsGoogleReauthForDelete}
+        onGoogleReauthForDelete={() => void model.handleGoogleReauthForDelete()}
         onDelete={() => void model.handleDeleteAccount()}
         onCancel={model.cancelDeleteConfirm}
       />

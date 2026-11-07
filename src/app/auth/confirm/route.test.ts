@@ -169,18 +169,35 @@ describe('GET /auth/confirm', () => {
     errorSpy.mockRestore();
   });
 
-  it('uses the forwarded host outside local development', async () => {
+  it('uses the forwarded host outside local development when it is allowlisted', async () => {
     exchangeCodeForSession.mockResolvedValue({
       data: { user: confirmedUser({ username_display: 'ChosenName' }) },
       error: null,
     });
     vi.stubEnv('NODE_ENV', 'production');
+    vi.stubEnv('NEXT_PUBLIC_SITE_URL', 'https://realmsrpg.com');
 
     const response = await GET(
       confirmRequest('?code=pkce-code&next=%2F', { 'x-forwarded-host': 'realmsrpg.com' }),
     );
 
     expect(response.headers.get('location')).toBe('https://realmsrpg.com/');
+    vi.unstubAllEnvs();
+  });
+
+  it('does not redirect to a forged x-forwarded-host (CROSS-011)', async () => {
+    exchangeCodeForSession.mockResolvedValue({
+      data: { user: confirmedUser({ username_display: 'ChosenName' }) },
+      error: null,
+    });
+    vi.stubEnv('NODE_ENV', 'production');
+    vi.stubEnv('NEXT_PUBLIC_SITE_URL', 'https://realmsrpg.com');
+
+    const response = await GET(
+      confirmRequest('?code=pkce-code&next=%2F', { 'x-forwarded-host': 'evil.example' }),
+    );
+
+    expect(response.headers.get('location')).toBe('http://localhost/');
     vi.unstubAllEnvs();
   });
 });
