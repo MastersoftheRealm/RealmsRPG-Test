@@ -3,9 +3,12 @@ import os from 'node:os';
 import path from 'node:path';
 import { describe, expect, it } from 'vitest';
 import {
+  chainWritesCharacterSheetData,
+  charactersTableWriteChains,
   handlerBody,
   isCharacterPersistenceWriteRoute,
   mutationHandlersInRoute,
+  routePersistsCharacterSheetData,
   runCharacterLegalityAllLevelsGate,
   stripComments,
 } from './lib/character-legality-all-levels-gate.mjs';
@@ -101,6 +104,35 @@ describe('character-legality all-levels gate', () => {
     expect(
       isCharacterPersistenceWriteRoute('src/app/api/upload/portrait/route.ts', portraitOnly),
     ).toBe(false);
+  });
+
+  it('detects chain-local character writes and ignores other tables', () => {
+    const splitStatements = `
+      await supabase.from('characters').select('id');
+      await supabase.from('items').insert({ data: payload });
+    `;
+    expect(routePersistsCharacterSheetData(stripComments(splitStatements))).toBe(false);
+  });
+
+  it.each([
+    ['update shorthand', `supabase.from('characters').update({ data: mergedData });`],
+    [
+      'wrapped update arg',
+      `supabase.from('characters').update(asDbUpdate<'characters'>({ data: mergedData, updated_at: now }));`,
+    ],
+    ['variable payload (fail closed)', `supabase.from('characters').update(payload);`],
+    ['upsert', `supabase.from('characters').upsert({ data: sheet });`],
+  ])('positive chain fixture: %s', (_label, snippet) => {
+    const chain = charactersTableWriteChains(stripComments(snippet))[0];
+    expect(chainWritesCharacterSheetData(chain)).toBe(true);
+    expect(isCharacterPersistenceWriteRoute('src/app/api/characters/[id]/route.ts', snippet)).toBe(
+      true,
+    );
+  });
+
+  it('negative chain fixture: select-only on characters', () => {
+    const snippet = `const row = await supabase.from('characters').select('id').maybeSingle();`;
+    expect(routePersistsCharacterSheetData(stripComments(snippet))).toBe(false);
   });
 
   it('fails when a new characters insert route omits evaluateCharacterLegalityForSave', () => {

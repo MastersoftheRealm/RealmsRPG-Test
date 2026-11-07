@@ -82,20 +82,53 @@ export function mutationHandlersInRoute(code) {
   return handlers;
 }
 
+const CHAR_FROM = /\.from\s*\(\s*['"]characters['"]\s*\)/g;
+
 /**
- * True when the route module writes character sheet JSON (`characters.data` insert/update).
- * Used so new persistence routes cannot skip the all-levels legality call.
+ * One statement chain per `from('characters')` occurrence (stops at `;`).
+ * @param {string} strippedSource
+ * @returns {string[]}
+ */
+export function charactersTableWriteChains(strippedSource) {
+  /** @type {string[]} */
+  const chains = [];
+  let match;
+  while ((match = CHAR_FROM.exec(strippedSource)) !== null) {
+    const fromIdx = match.index;
+    const semi = strippedSource.indexOf(';', fromIdx);
+    const end = semi === -1 ? strippedSource.length : semi + 1;
+    chains.push(strippedSource.slice(fromIdx, end));
+  }
+  return chains;
+}
+
+/**
+ * True when a single `from('characters')` chain performs an insert/upsert or an update that
+ * persists sheet JSON (`data` in the call, a wrapped db helper, or a variable — fail closed).
+ * @param {string} chain
+ */
+export function chainWritesCharacterSheetData(chain) {
+  if (/\.insert\s*\(/.test(chain)) return true;
+  if (/\.upsert\s*\(/.test(chain)) return true;
+
+  const updateMatch = chain.match(/\.update\s*\(/);
+  if (!updateMatch || updateMatch.index === undefined) return false;
+
+  const afterUpdate = chain.slice(updateMatch.index);
+  if (/\bdata\s*:/.test(afterUpdate)) return true;
+  if (/\.update\s*\(\s*asDbUpdate/.test(chain) && /\bdata\s*:/.test(afterUpdate)) return true;
+  if (/\.update\s*\(\s*[a-zA-Z_$]/.test(chain)) return true;
+
+  return false;
+}
+
+/**
+ * True when any chain-local `from('characters')` write persists `characters.data`.
+ * New persistence routes must call `evaluateCharacterLegalityForSave` (enforced in the gate).
+ * @param {string} strippedSource
  */
 export function routePersistsCharacterSheetData(strippedSource) {
-  if (!/\.from\s*\(\s*['"]characters['"]\s*\)/.test(strippedSource)) {
-    return false;
-  }
-  if (/\.from\s*\(\s*['"]characters['"]\s*\)[\s\S]*?\.insert\s*\(/.test(strippedSource)) {
-    return true;
-  }
-  return /\.from\s*\(\s*['"]characters['"]\s*\)[\s\S]*?\.update\s*\(\s*\{[^}]*\bdata\s*:/.test(
-    strippedSource,
-  );
+  return charactersTableWriteChains(strippedSource).some(chainWritesCharacterSheetData);
 }
 
 /** @param {string} relPath @param {string} rawSource */

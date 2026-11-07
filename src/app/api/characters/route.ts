@@ -47,6 +47,38 @@ async function findCharacterByRequestId(
   return (data?.id as string | undefined) ?? null;
 }
 
+async function loadStoredSheetForLegality(
+  supabase: TypedSupabaseClient,
+  userId: string,
+  characterId: string,
+): Promise<CharacterLegalityCandidate | null> {
+  const { data, error } = await supabase
+    .from('characters')
+    .select('data')
+    .eq('id', characterId)
+    .eq('user_id', userId)
+    .maybeSingle();
+  if (error) throw error;
+  if (!data) return null;
+  return ((data as { data?: unknown }).data as Record<string, unknown>) ?? {};
+}
+
+async function evaluateLegalityForReplayedCharacter(
+  supabase: TypedSupabaseClient,
+  userId: string,
+  characterId: string,
+  fallbackCandidate?: CharacterLegalityCandidate,
+): Promise<Awaited<ReturnType<typeof evaluateCharacterLegalityForSave>>> {
+  const stored = await loadStoredSheetForLegality(supabase, userId, characterId);
+  if (stored) {
+    return evaluateCharacterLegalityForSave(supabase, stored);
+  }
+  if (fallbackCandidate) {
+    return evaluateCharacterLegalityForSave(supabase, fallbackCandidate);
+  }
+  throw new Error('Idempotent replay row missing stored sheet data');
+}
+
 type CharacterInsertRow = {
   id: string;
   user_id: string;
@@ -99,13 +131,8 @@ async function jsonForInsertResult(
     if (replayed) {
       const replayLegality =
         legality ??
-        (legalityCandidate
-          ? await evaluateCharacterLegalityForSave(supabase, legalityCandidate)
-          : undefined);
-      const body = replayLegality
-        ? appendCharacterLegalityToResponse({ id: replayed }, replayLegality)
-        : { id: replayed };
-      return NextResponse.json(body);
+        (await evaluateLegalityForReplayedCharacter(supabase, userId, replayed, legalityCandidate));
+      return NextResponse.json(appendCharacterLegalityToResponse({ id: replayed }, replayLegality));
     }
   }
   throw new Error('Character insert unique violation without a replay row');
@@ -113,10 +140,10 @@ async function jsonForInsertResult(
 
 async function jsonForIdempotentReplay(
   supabase: TypedSupabaseClient,
+  userId: string,
   replayedId: string,
-  legalityCandidate: CharacterLegalityCandidate,
 ): Promise<NextResponse> {
-  const legality = await evaluateCharacterLegalityForSave(supabase, legalityCandidate);
+  const legality = await evaluateLegalityForReplayedCharacter(supabase, userId, replayedId);
   return NextResponse.json(appendCharacterLegalityToResponse({ id: replayedId }, legality));
 }
 
@@ -215,8 +242,7 @@ export async function POST(request: NextRequest) {
     if (clientRequestId) {
       const replayed = await findCharacterByRequestId(supabase, user.uid, clientRequestId);
       if (replayed) {
-        const cleanedData = prepareCharacterForCreate(data);
-        return jsonForIdempotentReplay(supabase, replayed, cleanedData);
+        return jsonForIdempotentReplay(supabase, user.uid, replayed);
       }
     }
 

@@ -325,6 +325,18 @@ describe('patchDirtyKeysNeedFeatCatalog (feat catalog PATCH gate)', () => {
   it('returns false for cosmetic-only dirty keys', () => {
     expect(patchDirtyKeysNeedFeatCatalog({ name: 'Hero', portrait: '/x.png' })).toBe(false);
   });
+
+  it('returns true when skills change (pinned regression)', () => {
+    expect(patchDirtyKeysNeedFeatCatalog({ skills: [{ id: '1', skill_val: 1 }] })).toBe(true);
+  });
+
+  it('returns true when defenseVals change (pinned regression)', () => {
+    expect(patchDirtyKeysNeedFeatCatalog({ defenseVals: { might: 1 } })).toBe(true);
+  });
+
+  it('returns true when archetypeChoices change (pinned regression)', () => {
+    expect(patchDirtyKeysNeedFeatCatalog({ archetypeChoices: { 1: 'feat' } })).toBe(true);
+  });
 });
 
 describe('evaluateCharacterLegalityForSave', () => {
@@ -358,10 +370,41 @@ describe('evaluateCharacterLegalityForSave', () => {
 
       expect(result.uncomputable).toContain('feat_catalog_unavailable');
       expect(spy).toHaveBeenCalledWith(
-        '[character-legality] feat requirement catalog fetch failed:',
-        'codex_feats timeout',
+        '[API Error] [character-legality] feat requirement catalog fetch:',
+        expect.any(Error),
       );
       expect(spy.mock.calls[0]?.join(' ')).not.toMatch(/Hero|featId/);
+    } finally {
+      spy.mockRestore();
+      rulesSpy.mockRestore();
+      catalogSpy.mockRestore();
+    }
+  });
+
+  it('still saves advisory when the catalog throws a Postgres-shaped error object', async () => {
+    const rulesSpy = vi.spyOn(coreRulesServer, 'fetchCoreRules').mockResolvedValue({});
+    const catalogSpy = vi
+      .spyOn(featCatalogServer, 'fetchFeatRequirementCatalogCached')
+      .mockRejectedValue({
+        code: '42703',
+        message: 'column codex_skills.base_skill_id does not exist',
+        hint: 'Perhaps you meant to reference the column "codex_skills.base_skill".',
+      });
+
+    const spy = vi.spyOn(console, 'error').mockImplementation(() => {});
+
+    try {
+      const result = await evaluateCharacterLegalityForSave(
+        { from: vi.fn() } as never,
+        legalBuild(),
+      );
+
+      expect(result.uncomputable).toContain('feat_catalog_unavailable');
+      expect(spy).toHaveBeenCalledWith(
+        '[API Error] [character-legality] feat requirement catalog fetch:',
+        expect.objectContaining({ code: '42703' }),
+      );
+      expect(JSON.stringify(result)).not.toContain('base_skill_id');
     } finally {
       spy.mockRestore();
       rulesSpy.mockRestore();

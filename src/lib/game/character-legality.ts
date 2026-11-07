@@ -18,6 +18,7 @@ import type { ArchetypeCategory } from '@/types/archetype';
 import { normalizeArchetypeChoices } from '@/lib/character/schema-normalize';
 import { fetchFeatRequirementCatalogCached } from '@/lib/codex/feat-requirement-catalog-server';
 import { fetchCoreRules } from '@/lib/core-rules-server';
+import { logApiError } from '@/lib/api-error';
 import type { TypedSupabaseClient } from '@/lib/supabase/database';
 import { ABILITY_LIMITS } from './constants';
 import {
@@ -524,8 +525,7 @@ export async function evaluateCharacterLegalityForSave(
     try {
       featCatalog = await fetchFeatRequirementCatalogCached();
     } catch (err) {
-      const detail = err instanceof Error ? err.message : 'unknown';
-      console.error('[character-legality] feat requirement catalog fetch failed:', detail);
+      logApiError('[character-legality] feat requirement catalog fetch', err);
       extraUncomputable.push('feat_catalog_unavailable');
     }
   }
