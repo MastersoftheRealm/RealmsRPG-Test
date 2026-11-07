@@ -251,6 +251,23 @@ const COLUMNAR_FIELDS: Record<CodexCollection, string[]> = {
   core_rules: [],
 };
 
+/** Reject admin spreadsheet keys outside the collection write allowlist. */
+export function assertCodexAdminPayloadKeys(
+  collection: CodexCollection,
+  data: Record<string, unknown>,
+): void {
+  const allowed = new Set(COLUMNAR_FIELDS[collection] ?? []);
+  if (allowed.size === 0) return;
+  const skip = new Set(['id', 'data', 'expectedUpdatedAt', 'updated_at', 'updatedAt']);
+  for (const key of Object.keys(data)) {
+    if (skip.has(key)) continue;
+    const camel = columnarSourceKeyToCamel(collection, key);
+    if (!allowed.has(camel)) {
+      throw new Error(`Unsupported codex field: ${key}`);
+    }
+  }
+}
+
 /** Build create/update payload from admin payload (snake_case, arrays). Output camelCase for toDbPayload. */
 export function toColumnarPayload(
   collection: CodexCollection,

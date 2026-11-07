@@ -28,6 +28,10 @@ vi.mock('@/lib/codex/id-allocation', () => ({
   retireCodexId: vi.fn(() => Promise.resolve()),
 }));
 
+vi.mock('@/lib/codex-changelog', () => ({
+  recordCodexChange: vi.fn(async () => undefined),
+}));
+
 import {
   PRIVATE_MUST_REVALIDATE_CACHE_CONTROL,
   PRIVATE_NO_STORE_CACHE_CONTROL,
@@ -38,6 +42,7 @@ import { getSession, requireLiveUser } from '@/lib/supabase/session';
 import { isAdmin } from '@/lib/admin';
 import { createPublicClient } from '@/lib/supabase/public-client';
 import { createClient, createServiceRoleClient } from '@/lib/supabase/server';
+import { recordCodexChange } from '@/lib/codex-changelog';
 
 const mockGetSession = vi.mocked(getSession);
 const mockRequireLiveUser = vi.mocked(requireLiveUser);
@@ -428,6 +433,7 @@ describe('POST /api/official/[type]', () => {
     await expect(readJson(response)).resolves.toEqual({ id: existingId });
     expect(selectChain.ilike).not.toHaveBeenCalled();
     expect(update).toHaveBeenCalled();
+    expect(recordCodexChange).toHaveBeenCalled();
   });
 });
 
@@ -499,6 +505,15 @@ describe('DELETE /api/official/[type]', () => {
     mockRequireLiveUser.mockResolvedValue(USER);
     mockIsAdmin.mockResolvedValue(true);
 
+    const selectChain = {
+      eq: vi.fn(function eq() {
+        return selectChain;
+      }),
+      maybeSingle: vi.fn(async () => ({
+        data: { id: '7', name: 'Elf' },
+        error: null,
+      })),
+    };
     const deleteChain = {
       eq: vi.fn(function eq() {
         return deleteChain;
@@ -507,6 +522,7 @@ describe('DELETE /api/official/[type]', () => {
     };
     const supabase = {
       from: vi.fn(() => ({
+        select: vi.fn(() => selectChain),
         delete: vi.fn(() => deleteChain),
       })),
     };

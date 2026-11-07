@@ -12,7 +12,7 @@ import {
   isColumnarCollection,
   type CodexCollection,
 } from '@/lib/codex/collections';
-import { toColumnarPayload, toDbPayload } from './codex-column-map';
+import { assertCodexAdminPayloadKeys, toColumnarPayload, toDbPayload } from './codex-column-map';
 import { allocateCodexNumericId, fetchRetiredIds, retireCodexId } from '@/lib/codex/id-allocation';
 import { findReferencesInRows, REFERENCE_PROBES } from '@/lib/codex/references';
 import {
@@ -184,6 +184,7 @@ export async function createCodexDoc(
     }
 
     if (shouldAllocateNumeric) {
+      assertCodexAdminPayloadKeys(safeCollection, data);
       const normalizedData = await applyFeatTagNormalization(safeCollection, data);
       const payload = toColumnarPayload(safeCollection, normalizedData);
       const dbPayload = toDbPayload(safeCollection, { id: docId, ...payload });
@@ -261,6 +262,7 @@ export async function updateCodexDoc(
 
     let afterRow: Record<string, unknown> | null = null;
     if (isColumnarCollection(safeCollection)) {
+      assertCodexAdminPayloadKeys(safeCollection, data);
       const normalizedData = await applyFeatTagNormalization(safeCollection, data);
       const payload = toColumnarPayload(safeCollection, normalizedData);
       const dbPayload = toDbPayload(safeCollection, payload);

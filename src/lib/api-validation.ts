@@ -373,7 +373,7 @@ const craftingItemRefSchema = z
     marketPrice: z.number().min(0),
     subSkillId: z.string().nullable().optional(),
   })
-  .passthrough();
+  .strict();
 
 const craftingRollSessionSchema = z
   .object({
@@ -382,10 +382,8 @@ const craftingRollSessionSchema = z
     successes: z.number().int().min(0),
     failures: z.number().int().min(0),
   })
-  .passthrough();
+  .strict();
 
-// Crafting sessions persist the full workspace JSON blob; UI-only keys (e.g. isEditingCustomBaseItem)
-// are allowed via passthrough until a dedicated DTO split exists.
 export const craftingSessionCreateSchema = z
   .object({
     name: z.string().max(200).optional(),
@@ -446,7 +444,7 @@ export const craftingSessionCreateSchema = z
     createdAt: z.string().optional(),
     updatedAt: z.string().optional(),
   })
-  .passthrough();
+  .strict();
 
 export const craftingSessionUpdateSchema = z
   .object({
@@ -505,7 +503,7 @@ export const craftingSessionUpdateSchema = z
     quantity: z.number().int().min(1).optional(),
     updatedAt: z.string().optional(),
   })
-  .passthrough();
+  .strict();
 
 // =============================================================================
 // Enhanced Item (Library) Schemas
@@ -523,7 +521,7 @@ const enhancedPowerRefSchema = z
     name: z.string().min(1),
     energyCost: z.number().int().min(0),
   })
-  .passthrough();
+  .strict();
 
 export const enhancedItemCreateSchema = z
   .object({
@@ -537,14 +535,14 @@ export const enhancedItemCreateSchema = z
     usesCount: z.number().int().min(0).optional(),
     potency: z.number().min(0).optional(),
   })
-  .passthrough();
+  .strict();
 
 export const enhancedItemPatchSchema = z
   .object({
     potency: z.number().min(0).optional(),
     name: z.string().min(1).max(200).optional(),
   })
-  .passthrough();
+  .strict();
 
 // =============================================================================
 // Library Item Schemas
@@ -556,23 +554,30 @@ const creatorDescriptionSchema = z
   .nullish();
 
 /** A new row needs a name. Duplicate sends only `duplicateOf`; the route copies the source name. */
-export const libraryItemCreateSchema = withSafeJsonBlob({
-  name: z
-    .string()
-    .min(1, 'Name is required')
-    .max(CREATOR_NAME_MAX_LENGTH, CREATOR_NAME_TOO_LONG_MESSAGE)
-    .optional(),
-  description: creatorDescriptionSchema,
-  duplicateOf: z.string().uuid().optional(),
-}).refine((body) => body.duplicateOf != null || (body.name != null && body.name.length > 0), {
-  message: 'Name is required',
-  path: ['name'],
-});
+export const libraryItemCreateSchema = z
+  .object({
+    name: z
+      .string()
+      .min(1, 'Name is required')
+      .max(CREATOR_NAME_MAX_LENGTH, CREATOR_NAME_TOO_LONG_MESSAGE)
+      .optional(),
+    description: creatorDescriptionSchema,
+    duplicateOf: z.string().uuid().optional(),
+  })
+  .passthrough()
+  .refine(isSafeMutationPayload, { message: 'Payload has too many fields or invalid keys' })
+  .refine((body) => body.duplicateOf != null || (body.name != null && body.name.length > 0), {
+    message: 'Name is required',
+    path: ['name'],
+  });
 
-export const libraryItemUpdateSchema = withSafeJsonBlob({
-  name: z.string().min(1).max(CREATOR_NAME_MAX_LENGTH, CREATOR_NAME_TOO_LONG_MESSAGE).optional(),
-  description: creatorDescriptionSchema,
-});
+export const libraryItemUpdateSchema = z
+  .object({
+    name: z.string().min(1).max(CREATOR_NAME_MAX_LENGTH, CREATOR_NAME_TOO_LONG_MESSAGE).optional(),
+    description: creatorDescriptionSchema,
+  })
+  .passthrough()
+  .refine(isSafeMutationPayload, { message: 'Payload has too many fields or invalid keys' });
 
 // =============================================================================
 // Campaign Roll Schemas

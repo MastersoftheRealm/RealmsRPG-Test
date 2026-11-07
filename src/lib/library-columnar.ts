@@ -13,6 +13,7 @@ import {
 } from '@/lib/attack-mode';
 import { dedupeSavedParts } from '@/lib/game/dedupe-saved-parts';
 import { parseCatalogListing } from '@/lib/library/catalog-listing';
+import { isAllowedLibraryBodyKey, isAllowedSpeciesBodyKey } from '@/lib/library-write-keys';
 
 export const COLUMNAR_LIBRARY_TYPES = [
   'powers',
@@ -49,7 +50,7 @@ function collectPayloadParts(payload: Record<string, unknown>): PartLike[] {
   return dedupeSavedParts(parts);
 }
 
-const SCALAR_KEYS: Record<ColumnarLibraryType, string[]> = {
+const LIBRARY_SCALAR_KEYS: Record<ColumnarLibraryType, string[]> = {
   powers: [
     'name',
     'description',
@@ -121,7 +122,7 @@ const SCALAR_KEYS: Record<ColumnarLibraryType, string[]> = {
   ],
 };
 
-const BODY_TO_CAMEL: Record<string, string> = {
+const LIBRARY_BODY_TO_CAMEL: Record<string, string> = {
   action_type: 'actionType',
   is_reaction: 'isReaction',
   armor_value: 'armorValue',
@@ -173,7 +174,9 @@ const CAMEL_TO_SNAKE: Record<string, string> = {
  * and the columnar scalars `rowToItem` reads. `user_id` is omitted on purpose.
  */
 export function columnarViewSelect(type: ColumnarLibraryType): string {
-  const scalarColumns = SCALAR_KEYS[type].map((key) => Object.keys(toDbRow({ [key]: null }))[0]);
+  const scalarColumns = LIBRARY_SCALAR_KEYS[type].map(
+    (key) => Object.keys(toDbRow({ [key]: null }))[0],
+  );
   return ['id', 'created_at', 'updated_at', 'payload', ...scalarColumns].join(', ');
 }
 
@@ -384,7 +387,7 @@ export function bodyToColumnar(
   type: ColumnarLibraryType,
   body: Record<string, unknown>,
 ): { scalars: Record<string, unknown>; payload: Record<string, unknown> } {
-  const scalarKeys = new Set(SCALAR_KEYS[type]);
+  const scalarKeys = new Set(LIBRARY_SCALAR_KEYS[type]);
   const scalars: Record<string, unknown> = {};
   const payload: Record<string, unknown> = {};
 
@@ -501,7 +504,7 @@ export function bodyToColumnar(
   for (const [k, v] of Object.entries(body)) {
     if (k === 'id' || k === 'docId' || k === '_source') continue;
     if (skipKeys.has(k)) continue;
-    const camel = BODY_TO_CAMEL[k] ?? k.replace(/_([a-z])/g, (_, c) => c.toUpperCase());
+    const camel = LIBRARY_BODY_TO_CAMEL[k] ?? k.replace(/_([a-z])/g, (_, c) => c.toUpperCase());
     if (scalarKeys.has(camel) || scalarKeys.has(k)) {
       // user_creatures.level is an INTEGER column in DB, but creature creator allows
       // sub-level values (0.25/0.5/0.75). Keep fractional levels in payload and
@@ -516,7 +519,7 @@ export function bodyToColumnar(
         continue;
       }
       scalars[camel] = v;
-    } else {
+    } else if (isAllowedLibraryBodyKey(type, k)) {
       payload[k] = v;
     }
   }
@@ -690,7 +693,7 @@ export function bodyToColumnarSpecies(body: Record<string, unknown>): {
       } else {
         scalars[k] = v;
       }
-    } else {
+    } else if (isAllowedSpeciesBodyKey(k)) {
       payload[k] = v;
     }
   }

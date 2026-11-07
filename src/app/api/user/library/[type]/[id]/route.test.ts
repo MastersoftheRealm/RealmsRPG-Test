@@ -25,20 +25,6 @@ vi.mock('@/lib/entity-image-enrich-server', () => ({
   enrichRowsWithBankImageUrls: vi.fn(() => Promise.resolve()),
 }));
 
-vi.mock('@/lib/library-columnar', () => ({
-  COLUMNAR_LIBRARY_TYPES: ['powers', 'techniques', 'empowered-techniques', 'items', 'creatures'],
-  rowToItem: vi.fn((_type: string, record: Record<string, unknown>) => ({
-    id: record.id,
-    name: record.name ?? 'Item',
-    _source: 'user',
-  })),
-  bodyToColumnar: vi.fn(() => ({ scalars: { name: 'Updated' }, payload: {} })),
-  toDbRow: vi.fn((input: unknown) => input),
-  rowToItemSpecies: vi.fn(),
-  bodyToColumnarSpecies: vi.fn(),
-  toDbRowSpecies: vi.fn(),
-}));
-
 import { GET, PATCH, DELETE } from './route';
 import { getSession } from '@/lib/supabase/session';
 import { createClient } from '@/lib/supabase/server';
@@ -55,13 +41,26 @@ type LibraryRow = {
   id: string;
   user_id: string;
   name: string;
+  payload: Record<string, unknown>;
+  created_at: string;
+  updated_at: string;
 };
 
 function makeLibraryRow(id: string, userId: string): LibraryRow {
-  return { id, user_id: userId, name: 'Firebolt' };
+  return {
+    id,
+    user_id: userId,
+    name: 'Firebolt',
+    payload: { parts: [], damage: [] },
+    created_at: '2026-01-01T00:00:00Z',
+    updated_at: '2026-01-01T00:00:00Z',
+  };
 }
 
 function createMockSupabase(row: LibraryRow | null) {
+  let lastUpdate: Record<string, unknown> | null = null;
+  const updateEqCalls: Array<[string, string]> = [];
+
   const buildSelectChain = () => {
     const eqCalls: [string, string][] = [];
     const chain = {
@@ -80,15 +79,30 @@ function createMockSupabase(row: LibraryRow | null) {
     return chain;
   };
 
-  return {
+  const buildUpdateChain = () => {
+    const chain = {
+      eq: vi.fn((col: string, val: string) => {
+        updateEqCalls.push([col, val]);
+        return chain;
+      }),
+      then(
+        onFulfilled?: (value: { error: null }) => unknown,
+        onRejected?: (reason: unknown) => unknown,
+      ) {
+        return Promise.resolve({ error: null }).then(onFulfilled, onRejected);
+      },
+    };
+    return chain;
+  };
+
+  const client = {
     from: vi.fn((table: string) => {
       if (table !== 'user_powers') throw new Error(`Unexpected table: ${table}`);
       return {
         select: vi.fn(() => buildSelectChain()),
-        update: vi.fn().mockReturnValue({
-          eq: vi.fn().mockReturnValue({
-            eq: vi.fn().mockResolvedValue({ error: null }),
-          }),
+        update: vi.fn((payload: Record<string, unknown>) => {
+          lastUpdate = payload;
+          return buildUpdateChain();
         }),
         delete: vi.fn().mockReturnValue({
           eq: vi.fn().mockReturnValue({
@@ -97,7 +111,10 @@ function createMockSupabase(row: LibraryRow | null) {
         }),
       };
     }),
+    lastUpdate: () => lastUpdate,
+    updateEqCalls: () => updateEqCalls,
   };
+  return client;
 }
 
 function makeGetRequest(type: string, id: string) {
@@ -209,7 +226,8 @@ describe('PATCH /api/user/library/[type]/[id]', () => {
   it('updates the library item for the owner', async () => {
     const row = makeLibraryRow('pow-owned', OWNER.uid);
     mockGetSession.mockResolvedValue({ user: OWNER, error: null });
-    mockCreateClient.mockResolvedValue(createMockSupabase(row) as never);
+    const supabase = createMockSupabase(row);
+    mockCreateClient.mockResolvedValue(supabase as never);
 
     const response = await PATCH(
       makePatchRequest('powers', 'pow-owned', { name: 'Updated bolt' }),
@@ -218,6 +236,26 @@ describe('PATCH /api/user/library/[type]/[id]', () => {
 
     expect(response.status).toBe(200);
     await expect(readJson(response)).resolves.toEqual({ ok: true });
+    expect(supabase.lastUpdate()?.name).toBe('Updated bolt');
+    expect(supabase.updateEqCalls()).toEqual([
+      ['id', 'pow-owned'],
+      ['user_id', OWNER.uid],
+    ]);
+  });
+
+  it('rejects unknown PATCH fields without writing', async () => {
+    const row = makeLibraryRow('pow-owned', OWNER.uid);
+    mockGetSession.mockResolvedValue({ user: OWNER, error: null });
+    const supabase = createMockSupabase(row);
+    mockCreateClient.mockResolvedValue(supabase as never);
+
+    const response = await PATCH(
+      makePatchRequest('powers', 'pow-owned', { name: 'Updated bolt', injected: true }),
+      params('powers', 'pow-owned'),
+    );
+
+    expect(response.status).toBe(400);
+    expect(supabase.lastUpdate()).toBeNull();
   });
 });
 

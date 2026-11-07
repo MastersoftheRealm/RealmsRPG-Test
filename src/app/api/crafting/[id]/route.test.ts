@@ -52,6 +52,9 @@ function makeCraftingRow(id: string, userId: string): CraftingRow {
 }
 
 function createMockSupabase(row: CraftingRow | null) {
+  let lastUpdate: Record<string, unknown> | null = null;
+  const updateEqCalls: Array<[string, string]> = [];
+
   const buildSelectChain = () => {
     const eqCalls: [string, string][] = [];
     const chain = {
@@ -70,15 +73,30 @@ function createMockSupabase(row: CraftingRow | null) {
     return chain;
   };
 
-  return {
+  const buildUpdateChain = () => {
+    const chain = {
+      eq: vi.fn((col: string, val: string) => {
+        updateEqCalls.push([col, val]);
+        return chain;
+      }),
+      then(
+        onFulfilled?: (value: { error: null }) => unknown,
+        onRejected?: (reason: unknown) => unknown,
+      ) {
+        return Promise.resolve({ error: null }).then(onFulfilled, onRejected);
+      },
+    };
+    return chain;
+  };
+
+  const client = {
     from: vi.fn((table: string) => {
       if (table !== 'crafting_sessions') throw new Error(`Unexpected table: ${table}`);
       return {
         select: vi.fn(() => buildSelectChain()),
-        update: vi.fn().mockReturnValue({
-          eq: vi.fn().mockReturnValue({
-            eq: vi.fn().mockResolvedValue({ error: null }),
-          }),
+        update: vi.fn((payload: Record<string, unknown>) => {
+          lastUpdate = payload;
+          return buildUpdateChain();
         }),
         delete: vi.fn().mockReturnValue({
           eq: vi.fn().mockReturnValue({
@@ -87,7 +105,10 @@ function createMockSupabase(row: CraftingRow | null) {
         }),
       };
     }),
+    lastUpdate: () => lastUpdate,
+    updateEqCalls: () => updateEqCalls,
   };
+  return client;
 }
 
 function makeGetRequest(id: string) {
@@ -194,13 +215,36 @@ describe('PATCH /api/crafting/[id]', () => {
   it('updates the crafting session for the owner', async () => {
     const row = makeCraftingRow('craft-owned', OWNER.uid);
     mockGetSession.mockResolvedValue({ user: OWNER, error: null });
-    mockCreateClient.mockResolvedValue(createMockSupabase(row) as never);
+    const supabase = createMockSupabase(row);
+    mockCreateClient.mockResolvedValue(supabase as never);
 
     const response = await PATCH(makePatchRequest('craft-owned', { status: 'in_progress' }), {
       params: Promise.resolve({ id: 'craft-owned' }),
     });
 
     expect(response.status).toBe(204);
+    expect(supabase.lastUpdate()?.status).toBe('in_progress');
+    expect(supabase.updateEqCalls()).toEqual([
+      ['id', 'craft-owned'],
+      ['user_id', OWNER.uid],
+    ]);
+  });
+
+  it('returns 400 for unknown crafting update fields without writing', async () => {
+    const row = makeCraftingRow('craft-owned', OWNER.uid);
+    mockGetSession.mockResolvedValue({ user: OWNER, error: null });
+    const supabase = createMockSupabase(row);
+    mockCreateClient.mockResolvedValue(supabase as never);
+
+    const response = await PATCH(
+      makePatchRequest('craft-owned', { status: 'in_progress', injected: true }),
+      {
+        params: Promise.resolve({ id: 'craft-owned' }),
+      },
+    );
+
+    expect(response.status).toBe(400);
+    expect(supabase.lastUpdate()).toBeNull();
   });
 
   it('returns 400 when the JSON body fails schema validation', async () => {
