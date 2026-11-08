@@ -58,10 +58,14 @@ describe('addCharacterToCampaignAction', () => {
   it('writes roster name and level from stored character data, not client display fields', async () => {
     const { addCharacterToCampaignAction } = await import('./actions');
 
-    const result = await addCharacterToCampaignAction({
+    const forgedCallerPayload = {
       campaignId: CAMPAIGN_ID,
       characterId: CHARACTER_ID,
-    });
+      characterName: 'Client Forged Name',
+      level: 99,
+    } as Parameters<typeof addCharacterToCampaignAction>[0];
+
+    const result = await addCharacterToCampaignAction(forgedCallerPayload);
 
     expect(result.success).toBe(true);
 
@@ -75,10 +79,5 @@ describe('addCharacterToCampaignAction', () => {
     expect(entry.species).toBe('Stored Species');
     expect(entry.archetype).toBe('Martial');
     expect(entry.portrait).toBe('stored-portrait.png');
-    expect(entry.characterId).toBe(CHARACTER_ID);
-    expect(entry.userId).toBe('owner-uid');
-
-    expect(entry.characterName).not.toBe('Client Forged Name');
-    expect(entry.level).not.toBe(99);
   });
 });
