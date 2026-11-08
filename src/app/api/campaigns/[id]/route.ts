@@ -10,28 +10,10 @@ import { getSession } from '@/lib/supabase/session';
 import { apiErrorResponse } from '@/lib/api-error';
 import { buildRateLimitKey, resolveClientIp, standardLimiter } from '@/lib/rate-limit';
 import { resourceIdParamSchema, validateRouteParams } from '@/lib/api-validation';
-import type { Campaign } from '@/types/campaign';
-import { normalizeCampaignRosterCharacters } from '@/lib/campaign-roster';
+import { rowToCampaign } from '@/lib/campaign-roster';
 import type { Tables } from '@/lib/supabase/database';
 
 type CampaignRow = Tables<'campaigns'>;
-
-function rowToCampaign(row: CampaignRow, memberIds: string[], isOwner: boolean): Campaign {
-  const characters = normalizeCampaignRosterCharacters(row.characters);
-  return {
-    id: row.id,
-    name: row.name,
-    description: row.description ?? undefined,
-    ownerId: row.owner_id,
-    ownerUsername: row.owner_username ?? undefined,
-    // Only the Realm Master (owner) should see/share the invite code (TASK-329).
-    inviteCode: isOwner ? row.invite_code : '',
-    characters,
-    memberIds,
-    createdAt: row.created_at ?? undefined,
-    updatedAt: row.updated_at ?? undefined,
-  };
-}
 
 export async function GET(request: Request, { params }: { params: Promise<{ id: string }> }) {
   try {
