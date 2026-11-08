@@ -172,7 +172,7 @@ API conventions in this repo:
 
 - Codex endpoint: `GET /api/codex` (`src/app/api/codex/route.ts`).
 - Codex hooks (`src/hooks/use-codex.ts`) use `codexKeys.collection(key)` → `['codex', <collection>]` and fetch `GET /api/codex?collection=<key>` (TASK-775).
-- `useCodexFull` keeps `['codex']` for the admin spreadsheet only; browse/creator tabs use per-collection hooks (`useCodexFeats`, `usePowerParts`, etc.).
+- `useCodexFull` keeps `['codex']` for the admin spreadsheet only; browse/creator tabs use per-collection hooks (`useCodexFeats`, `useCodexPowerParts`, etc.).
 - Shared parts share `['codex', 'parts']` and split with `selectPowerParts` / `selectTechniqueParts`. Admin invalidation on `['codex']` refreshes every slice by prefix.
 
 ## 4.4 User library and columnar conversion layer
@@ -220,16 +220,16 @@ graph LR
   - Initialized in `AuthProvider` on app mount.
   - Holds `user`, `loading`, `initialized`, `error`.
 - **Guided/Custom creator state** (`guided-creator-store`)
-  - Persisted via Zustand persist (see store for storage key).
-  - Stores current step, completed steps, and draft.
+  - Persisted via Zustand persist under `guided-creator-storage` (localStorage).
+  - `partialize` saves `currentSubStep` and `draft` only (not completed-step arrays).
 - **Server state cache** (React Query)
   - Query cache lifetime and stale times vary by hook.
   - Codex collection keys cache independently under the `['codex']` prefix.
 
 ### Additional local persistence helpers
 
-- `useCreatorCache` / `useCreatorCacheValue` keep creator drafts in localStorage (30-day validity pattern).
-- `useAutoSave` provides debounced persistence behavior and unload warning for dirty state.
+- **Item/power/technique/creature/species creators:** `src/lib/game/creator-cache.ts` (`readCreatorCache`, `readNewCreatorDraftCache`, `persistCreatorDraft`, `persistCreatorSessionDraft`, `createCreatorDraftDiscard`) with keys from `src/lib/game/creator-constants.ts` (`CREATOR_CACHE_KEYS`; entries expire after `CACHE_EXPIRY_MS`).
+- **`useAutoSave`:** debounced persistence and unload warning for dirty state on applicable surfaces.
 
 ---
 
