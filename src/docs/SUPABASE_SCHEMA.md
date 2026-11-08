@@ -11,7 +11,7 @@
 | Item | Value |
 |------|--------|
 | **Schema** | Single schema: **`public`** only. There is **no `codex` schema** — all tables (including `codex_feats`, `codex_skills`, etc.) live in `public`. |
-| **Data access** | Typed Supabase clients: `createClient()` from `@/lib/supabase/server` (browser + middleware factories too), parameterized with generated `Database` (`src/types/database.types.ts`; ADR-0020). All reads/writes use `.from('table_name')` and hit `public`. Regenerate types: `npm run db:types`. Schema-type drift shows up as a git diff of `database.types.ts` after regen (SQL baseline drift is still `npm run db:diff`). JSONB writes go through `asDbJson` / `asDbInsert` / `asDbUpdate`; variable table names through `fromPublicTable` (`lib/supabase/database.ts`). |
+| **Data access** | Cookie/session `createClient()` factories in `lib/supabase/server.ts` and `lib/supabase/client.ts` are **not** generic-typed. Generated `Database` (`src/types/database.types.ts`; ADR-0020) is used via `lib/supabase/database.ts` (`TypedSupabaseClient`, `asDbInsert` / `asDbUpdate`) and the cookie-less `createPublicClient()` in `lib/supabase/public-client.ts`. All reads/writes use `.from('table_name')` on `public`. Regenerate types: `npm run db:types`. Schema-type drift shows up as a git diff of `database.types.ts` after regen (SQL baseline drift is still `npm run db:diff`). JSONB writes go through `asDbJson` / `asDbInsert` / `asDbUpdate`; variable table names through `fromPublicTable`. |
 | **Migrations** | SQL only (run in Supabase Dashboard or CI). No Prisma. |
 
 **Shape convention:** Prefer **columnar** (scalar columns ± one JSONB for variable payload) where possible. Some tables remain **id + data (JSONB)** or hybrid (list columns + data); see table list below.

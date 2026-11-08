@@ -21,7 +21,7 @@
 - **Endpoint:** `GET /api/codex` — returns all codex collections (feats, skills, species, traits, powerParts, techniqueParts, parts, itemProperties, equipment, archetypes, creatureFeats, coreRules).
 - **One collection:** `GET /api/codex?collection=<payload key>` returns the same payload shape with only that key, and only queries that collection's tables (`archetypes` also reads `codex_archetype_levels`). An unknown value is a `400 { error }`. Adding a collection means adding it to `CODEX_PAYLOAD_KEYS` + `COLLECTION_TABLES` — there is no second response shape and no `/api/codex/[collection]` route (ADR-0015).
 - **Row mapping:** `lib/codex/row-map.ts` is the one DB-row → entity mapper for GET `/api/codex` and `getCharacterViewEnrichment` (TASK-777). Route-only `updated_at` stays on the route. Archetype path join stays in the route.
-- **Cache:** `Cache-Control: private, max-age=0, must-revalidate` — codex is admin-editable, so a long public cache served stale feats/archetypes after saves.
+- **Cache (conditional):** Listed-only reads built with the cookie-less `createPublicClient()` may return `PUBLIC_CDN_CACHE_CONTROL` from `lib/api/public-cdn-cache.ts` (`public, max-age=0, s-maxage=300, stale-while-revalidate=3600`). `?debug=1`, `includeUnlisted=1`, non–public-client paths, empty payloads, or any unlisted row use `private, no-store` or `private, max-age=0, must-revalidate` (see `codexCacheControlHeader` in `src/app/api/codex/route.ts`).
 
 ### Client: one collection per consumer
 
@@ -50,7 +50,7 @@
 ### Official library (Realms Library)
 
 - **Endpoint:** `GET /api/official/{type}` — type = powers, techniques, empowered-techniques, items, creatures, species. No auth. Tab badges: `GET /api/official/counts` (`enhanced` is always 0).
-- **Cache:** list + counts use `Cache-Control: private, max-age=0, must-revalidate` so create/delete invalidation can refresh badges.
+- **Cache (conditional):** Listed catalog GETs via `createPublicClient()` may use `PUBLIC_CDN_CACHE_CONTROL` when rows are non-empty and listed-only (`officialListMayUsePublicCdn` in `public-cdn-cache.ts`; handler in `src/app/api/official/[type]/route.ts`). `includeUnlisted=1`, empty lists, and counts (`/api/official/counts`) stay `private, max-age=0, must-revalidate` or `private, no-store`.
 - **Query keys:** `['official-library', type]`. Counts: `['official-library-counts']`.
 - **Hooks:** `useOfficialLibrary(type)`, `useOfficialLibraryCounts`, `useAddOfficialToLibrary(type)` in `hooks/use-official-library.ts`.
 

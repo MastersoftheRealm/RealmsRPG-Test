@@ -5,9 +5,9 @@
 ## Pages / Routes
 
 - `(main)/characters`, `(detail)/characters/[id]`
-- `(main)/characters/new` — Guided / Custom / Legacy chooser
-- `(main)/characters/new/guided` — Guided ("Simple") creator
-- `(main)/characters/new/advanced` — Classic 9-step creator
+- `(main)/characters/new` — Guided / Custom entry chooser (no live Legacy route)
+- `(main)/characters/new/guided` — Guided + Custom cohesive creator (`guided-creator-store.ts`; see `guide/06-creators-and-loadouts.md`)
+- `/characters/new/advanced` — **retired**; permanent redirect to `/characters/new` (`next.config.ts`)
 - `(main)/library` — user items (powers, techniques, armaments, creatures)
 - `(main)/codex` — browse all content
 - `(main)/power-creator`, `(main)/technique-creator`, `(main)/item-creator`, `(main)/creature-creator`

@@ -232,7 +232,7 @@ process.stdout.write(diff.stdout ?? '');
 console.error(
   `\nFAILURE: live schema has drifted from ${path.relative(repoRoot, baselinePath)}.\n` +
     'Every difference is a change applied to the database that is not in the committed baseline.\n' +
-    'Add the missing migration to sql/, then run: npm run db:baseline:update\n' +
+    'Update SUPABASE_SCHEMA.md and types if needed, then run: npm run db:baseline:update (do not add applied one-offs to sql/ as a replay library — see sql/README.md)\n' +
     `Normalised files: ${path.relative(repoRoot, baselineNormalized)} vs ${path.relative(repoRoot, liveNormalized)}`,
 );
 process.exit(1);
