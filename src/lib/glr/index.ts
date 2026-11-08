@@ -20,8 +20,3 @@ export {
 export { glrListChrome, type GlrExtraColumn, type GlrHeaderColumn } from './glr-list-chrome';
 
 export { chipLabelsFromDetailSections, type GlrRowFactSnapshot } from './validate-glr-facts';
-
-export {
-  type GlrChromeSpacingScanResult,
-  type RowChromeFlags,
-} from './validate-glr-chrome-spacing';
