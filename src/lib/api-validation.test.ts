@@ -68,6 +68,11 @@ describe('verifyRequestOrigin', () => {
     expect(verifyRequestOrigin(makeRequest({ origin: 'http://localhost' }))).toBeNull();
   });
 
+  it('allows localhost and 127.0.0.1 with non-default ports outside production', () => {
+    expect(verifyRequestOrigin(makeRequest({ origin: 'http://localhost:3000' }))).toBeNull();
+    expect(verifyRequestOrigin(makeRequest({ origin: 'http://127.0.0.1:3000' }))).toBeNull();
+  });
+
   it('rejects a cross-site Origin', () => {
     const denied = verifyRequestOrigin(makeRequest({ origin: 'https://evil.example' }));
     expect(denied?.status).toBe(403);

@@ -61,11 +61,6 @@ function allowedRequestHosts(): Set<string> {
     if (vercelHost) hosts.add(vercelHost);
   }
 
-  if (process.env.NODE_ENV !== 'production') {
-    hosts.add('localhost');
-    hosts.add('127.0.0.1');
-  }
-
   return hosts;
 }
 
@@ -91,9 +86,22 @@ export function verifyRequestOrigin(request: NextRequest): NextResponse<{ error:
     return forbiddenCrossOrigin();
   }
 
-  const originHost = hostOf(request.headers.get('origin'));
-  if (originHost) {
-    return allowedRequestHosts().has(originHost) ? null : forbiddenCrossOrigin();
+  const originHeader = request.headers.get('origin');
+  if (originHeader?.trim()) {
+    try {
+      const originUrl = new URL(originHeader.trim());
+      const originHost = originUrl.host.toLowerCase();
+      if (allowedRequestHosts().has(originHost)) return null;
+      if (
+        process.env.NODE_ENV !== 'production' &&
+        (originUrl.hostname === 'localhost' || originUrl.hostname === '127.0.0.1')
+      ) {
+        return null;
+      }
+    } catch {
+      return forbiddenCrossOrigin();
+    }
+    return forbiddenCrossOrigin();
   }
 
   // No Origin at all: accept only when fetch metadata already vouched for it.
