@@ -1,3 +1,5 @@
+import 'server-only';
+
 import { buildCodexChangelogPersistPayload } from '@/lib/codex-changelog-display';
 import { createServiceRoleClient } from '@/lib/supabase/server';
 
