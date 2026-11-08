@@ -11,7 +11,7 @@ import {
   CODEX_JSON_FIELD_KEYS,
   CODEX_POSTGRES_TEXT_ARRAY_FIELD_KEYS,
 } from '@/lib/codex-columnar-keys';
-import { codexPersistedFieldShapeError } from '@/lib/codex-persisted-contract';
+import { assertCodexAdminBodyShapes } from '@/lib/codex-mutation-validation';
 import { codexSourcesForWrite } from '@/lib/codex/sources';
 
 function snakeToCamel(s: string): string {
@@ -26,8 +26,7 @@ function snakeToCamel(s: string): string {
  * camel segment). Plain snakeToCamel leaves `op_1Desc`, which fails the allowlist and drops
  * option fields on insert/update.
  */
-/** Map admin/spreadsheet payload keys to camelCase allowlist keys. */
-export function columnarSourceKeyToCamel(collection: CodexCollection, key: string): string {
+function columnarSourceKeyToCamel(collection: CodexCollection, key: string): string {
   if ((collection === 'codex_properties' || collection === 'codex_parts') && /^op_\d+_/.test(key)) {
     const m = key.match(/^op_(\d+)_(.+)$/);
     if (m) {
@@ -101,15 +100,16 @@ export function assertCodexAdminPayloadKeys(
   const allowed = new Set(COLUMNAR_FIELDS[collection] ?? []);
   if (allowed.size === 0) return;
   const skip = new Set(['id', 'data', 'expectedUpdatedAt', 'updated_at', 'updatedAt']);
+  const camelBody: Record<string, unknown> = {};
   for (const key of Object.keys(data)) {
     if (skip.has(key)) continue;
     const camel = columnarSourceKeyToCamel(collection, key);
     if (!allowed.has(camel)) {
       throw new Error(`Unsupported codex field: ${key}`);
     }
-    const shapeError = codexPersistedFieldShapeError(camel, data[key]);
-    if (shapeError) throw new Error(shapeError);
+    camelBody[camel] = data[key];
   }
+  assertCodexAdminBodyShapes(collection, camelBody);
 }
 
 /** Build create/update payload from admin payload (snake_case, arrays). Output camelCase for toDbPayload. */

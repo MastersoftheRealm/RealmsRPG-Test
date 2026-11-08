@@ -251,10 +251,6 @@ export const CODEX_COMMA_LIST_FIELD_KEYS = new Set([
 
 export const CODEX_IMAGE_FIELD_KEYS = new Set(['imageId', 'imageUrl']);
 
-export function isCodexColumnarCollection(collection: CodexCollection): boolean {
-  return (CODEX_COLUMNAR_FIELDS[collection]?.length ?? 0) > 0;
-}
-
 export function unknownCodexPersistedKeys(
   collection: CodexCollection,
   camelBody: Record<string, unknown>,
