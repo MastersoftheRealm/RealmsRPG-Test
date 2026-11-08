@@ -54,7 +54,6 @@ type ChangeLogEntry = {
     username: string | null;
     usernameDisplay: string | null;
     displayName: string | null;
-    email: string | null;
   } | null;
 };
 

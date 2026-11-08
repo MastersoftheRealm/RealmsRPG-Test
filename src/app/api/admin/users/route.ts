@@ -1,7 +1,7 @@
 /**
  * Admin Users API
  * ===============
- * List users (id, username, username_display, email, display_name, role).
+ * List users (id, username, username_display, display_name, role).
  * Only users with role=admin can access.
  */
 
@@ -48,10 +48,10 @@ export async function GET(request: NextRequest) {
 
     const supabase = getSupabaseAdmin();
     // Cap the result set; the admin table filters client-side. A bounded query
-    // avoids unbounded email/PII exposure and runaway payloads (TASK-330).
+    // avoids unbounded PII exposure and runaway payloads (TASK-330).
     const { data: profiles, error: profilesError } = await supabase
       .from('user_profiles')
-      .select('id, username, username_display, email, display_name, role')
+      .select('id, username, username_display, display_name, role')
       .order('username')
       .limit(1000);
 
@@ -64,7 +64,6 @@ export async function GET(request: NextRequest) {
       id: string;
       username: string | null;
       username_display: string | null;
-      email: string | null;
       display_name: string | null;
       role: string;
     }[];
@@ -73,7 +72,6 @@ export async function GET(request: NextRequest) {
         id: p.id,
         username: p.username ?? '',
         usernameDisplay: p.username_display ?? p.username ?? '',
-        email: p.email ?? '',
         displayName: p.display_name ?? '',
         role: p.role,
       })),

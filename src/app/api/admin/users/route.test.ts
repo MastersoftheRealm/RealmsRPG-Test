@@ -119,18 +119,42 @@ describe('GET /api/admin/users', () => {
     );
 
     const response = await GET(makeGetRequest());
+    const body = await readJson<Record<string, unknown>[]>(response);
 
     expect(response.status).toBe(200);
-    await expect(readJson(response)).resolves.toEqual([
+    expect(body).toEqual([
       {
         id: 'user-1',
         username: 'hero',
         usernameDisplay: 'Hero',
-        email: 'hero@example.com',
         displayName: 'Hero Player',
         role: 'new_player',
       },
     ]);
+    expect(body[0]).not.toHaveProperty('email');
+  });
+
+  it('does not include email addresses in the JSON response', async () => {
+    mockRequireAdminSession.mockResolvedValue({ ok: true, userId: ADMIN_ID });
+    mockCreateSupabaseAdminClient.mockReturnValue(
+      createMockSupabaseAdmin([
+        {
+          id: 'user-1',
+          username: 'hero',
+          username_display: 'Hero',
+          email: 'secret@example.com',
+          display_name: 'Hero Player',
+          role: 'new_player',
+        },
+      ]) as never,
+    );
+
+    const response = await GET(makeGetRequest());
+    const body = await readJson<Record<string, unknown>[]>(response);
+
+    expect(response.status).toBe(200);
+    expect(JSON.stringify(body)).not.toMatch(/@/);
+    expect(body[0]).not.toHaveProperty('email');
   });
 
   it('returns 429 when rate limited', async () => {
