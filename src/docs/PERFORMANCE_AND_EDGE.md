@@ -39,7 +39,7 @@ Excluded from proxy (no session refresh):
 
 - `_next/static`, `_next/image`, `favicon.ico`
 - `auth/callback`, `auth/confirm`
-- **`api/codex`**, **`api/public`**, **`api/official`** and subpaths
+- **`api/codex`**, **`api/official`** and subpaths
 - Static extensions: svg, png, jpg, jpeg, gif, webp, ico, woff, woff2, ttf, eot
 - **`robots.txt`**, **`sitemap.xml`**
 - **`/images/`** — placeholder portraits, dice icons (high volume)
@@ -48,8 +48,7 @@ Excluded from proxy (no session refresh):
 
 ### Cache headers
 
-- **`GET /api/codex`** and **`GET /api/official/[type]`** (and legacy `/api/public/[type]`):  
-  `Cache-Control: public, max-age=300, s-maxage=600, stale-while-revalidate=300`
+- **`GET /api/codex`** and **`GET /api/official/[type]`** (listed-only, cookie-less reads): may use `PUBLIC_CDN_CACHE_CONTROL` — `public, max-age=0, s-maxage=300, stale-while-revalidate=3600` (`lib/api/public-cdn-cache.ts`). Debug, `includeUnlisted=1`, empty/unlisted payloads, and non–public-client paths use private headers. Selection logic: `src/app/api/codex/route.ts`, `src/app/api/official/[type]/route.ts`.
 
 ### React Query
 
@@ -87,7 +86,7 @@ When adding or changing:
 
 - **New public GET API** (no auth, read-only):
   - Exclude from proxy in `src/proxy.ts` if session refresh isn't needed.
-  - Set `Cache-Control` (e.g. `public, max-age=300, s-maxage=600, stale-while-revalidate=300`).
+  - Reuse `PUBLIC_CDN_CACHE_CONTROL` / private helpers from `lib/api/public-cdn-cache.ts` when eligibility matches codex/official (do not hard-code stale TTL strings).
   - Document in `DATA_HANDLING.md`.
 
 - **New React Query hooks** (reference data, rarely changes):

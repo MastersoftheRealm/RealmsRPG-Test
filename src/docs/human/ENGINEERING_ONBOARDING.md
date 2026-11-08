@@ -19,7 +19,7 @@ This document is intentionally focused on architecture, runtime behavior, data f
 - Styling: Tailwind CSS with design tokens in `src/app/globals.css`.
 - State:
   - Server state and caching: TanStack Query.
-  - Client app state: Zustand (`auth`, `character creator`).
+  - Client app state: Zustand (`auth-store`, `guided-creator-store`).
   - Local persistence: browser storage (Zustand persist and creator cache utilities).
 - Backend: Supabase (Postgres + Auth + Storage), accessed through Next API routes and Supabase SSR clients.
 - Deployment target: Vercel.
@@ -74,10 +74,10 @@ Key idea: most UI reads/writes go through hooks -> API routes -> Supabase. Codex
 ### `src/components`
 
 - `ui/`: primitive reusable UI building blocks (`Modal`, `Button`, `Input`, etc.).
-- `shared/`: cross-feature patterns (`GridListRow`, list headers/filters, steppers, modals, helpers).
+- `patterns/`: cross-feature patterns (`GridListRow`, list headers/filters, steppers, modals — import `@/components/patterns`).
 - Feature-specific component folders:
   - `character-sheet/`
-  - `character-creator/`
+  - `guided-creator/` (cohesive character creator steps and shell)
   - `creator/` (power/technique/item/creature creator shared sections)
   - `codex/`
   - `layout/`
@@ -91,7 +91,7 @@ Key idea: most UI reads/writes go through hooks -> API routes -> Supabase. Codex
   - user library (`use-user-library`)
   - characters (`use-characters`)
   - auxiliary features (campaigns, encounters, tooltips, crafting, etc.)
-- Also contains compatibility/legacy naming (`use-rtdb.ts`) that now reads Supabase-backed codex data.
+- Codex reads use `use-codex.ts`: one collection per hook (`codexKeys.collection(key)` → `GET /api/codex?collection=`); `useCodexFull` on `['codex']` is admin/spreadsheet only (`DATA_HANDLING.md`).
 
 ### `src/services`
 
@@ -102,7 +102,7 @@ Key idea: most UI reads/writes go through hooks -> API routes -> Supabase. Codex
 
 - Zustand stores:
   - `auth-store.ts`: auth user/loading/error/initialized.
-  - `character-creator-store.ts`: multi-step character creation state and local persistence.
+  - `guided-creator-store.ts`: Guided/Custom character creation draft and local persistence (legacy `character-creator-store.ts` removed TASK-912).
 
 ### `src/lib`
 
@@ -138,7 +138,7 @@ Key idea: most UI reads/writes go through hooks -> API routes -> Supabase. Codex
 - Session helper for server routes/actions: `src/lib/supabase/session.ts`.
 - Request-time session refresh is handled via Next proxy (`src/proxy.ts` -> `updateSession` in `src/lib/supabase/middleware.ts`).
 
-Important: `src/proxy.ts` matcher intentionally excludes high-volume public/static paths (`/api/codex`, `/api/public`, image/static assets) to reduce edge request load.
+Important: `src/proxy.ts` matcher intentionally excludes high-volume public/static paths (`/api/codex`, `/api/official`, image/static assets) to reduce edge request load.
 
 ## 4.2 API route pattern
 
@@ -171,9 +171,9 @@ API conventions in this repo:
 ## 4.3 Codex data model and fetch strategy
 
 - Codex endpoint: `GET /api/codex` (`src/app/api/codex/route.ts`).
-- Codex hooks (`src/hooks/use-codex.ts`) all share query key `['codex']`.
-- Consumers use `select` in hooks to slice the shared payload (feats, skills, parts, species, archetypes, etc.).
-- This prevents duplicate full-codex fetches when multiple components subscribe.
+- Codex hooks (`src/hooks/use-codex.ts`) use `codexKeys.collection(key)` → `['codex', <collection>]` and fetch `GET /api/codex?collection=<key>` (TASK-775).
+- `useCodexFull` keeps `['codex']` for the admin spreadsheet only; browse/creator tabs use per-collection hooks (`useCodexFeats`, `usePowerParts`, etc.).
+- Shared parts share `['codex', 'parts']` and split with `selectPowerParts` / `selectTechniqueParts`. Admin invalidation on `['codex']` refreshes every slice by prefix.
 
 ## 4.4 User library and columnar conversion layer
 
@@ -199,7 +199,7 @@ API conventions in this repo:
 graph LR
   UI[React components]
   ZAuth[Zustand auth-store]
-  ZCreator[Zustand character-creator-store persisted]
+  ZCreator[Zustand guided-creator-store persisted]
   RQ[React Query cache]
   LS[localStorage]
   API[Next API routes]
@@ -219,12 +219,12 @@ graph LR
 - **Auth UI/session state** (`auth-store` + `useAuth`)
   - Initialized in `AuthProvider` on app mount.
   - Holds `user`, `loading`, `initialized`, `error`.
-- **Character creator wizard state** (`character-creator-store`)
-  - Persisted in localStorage under `character-creator-storage`.
+- **Guided/Custom creator state** (`guided-creator-store`)
+  - Persisted via Zustand persist (see store for storage key).
   - Stores current step, completed steps, and draft.
 - **Server state cache** (React Query)
   - Query cache lifetime and stale times vary by hook.
-  - Codex data is cached aggressively via shared key.
+  - Codex collection keys cache independently under the `['codex']` prefix.
 
 ### Additional local persistence helpers
 
@@ -250,8 +250,7 @@ graph LR
 
 ## 7) Gotchas You Should Know Early
 
-- **Legacy names exist:** files like `use-rtdb.ts` are compatibility holdovers, but now use Supabase-backed data.
-- **Do not create duplicate codex queries:** use existing `['codex']` hooks with `select`.
+- **Do not create duplicate codex queries:** use existing `useCodex*` collection hooks and `codexKeys`; do not fetch the full payload outside admin unless you extend `CODEX_PAYLOAD_KEYS`.
 - **Species has compatibility handling:** both columnar and legacy `data`-style branches exist in user species flows.
 - **Mixed scalar + payload fields:** some entities duplicate fields between dedicated columns and `payload`; precedence logic already exists in `library-columnar.ts`.
 - **Proxy matcher exclusions are intentional:** avoid broadening middleware/proxy matching without considering edge request costs.
@@ -286,7 +285,7 @@ graph LR
 7. `src/app/api/user/library/[type]/route.ts`
 8. `src/app/api/characters/route.ts`
 9. `src/lib/library-columnar.ts`
-10. `src/stores/auth-store.ts`, `src/stores/character-creator-store.ts`
+10. `src/stores/auth-store.ts`, `src/stores/guided-creator-store.ts`
 
 After this sequence, you should be able to safely implement most UI, hook, and API changes without introducing data-layer regressions.
 
