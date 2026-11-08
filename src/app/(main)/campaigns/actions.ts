@@ -314,11 +314,6 @@ export async function joinCampaignAction(data: {
 export async function addCharacterToCampaignAction(data: {
   campaignId: string;
   characterId: string;
-  characterName: string;
-  portrait?: string | undefined;
-  level: number;
-  species?: string | undefined;
-  archetypeType?: string | undefined;
 }) {
   try {
     const user = await requireAuth();
