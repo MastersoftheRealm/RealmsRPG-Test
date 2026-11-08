@@ -1,7 +1,12 @@
 import { describe, expect, it } from 'vitest';
 import { NextRequest } from 'next/server';
 
-import { isApiMutationMethod, rejectCrossOriginApiMutation } from './api-mutation-guard';
+import {
+  chunkInvokesMutationGuard,
+  isApiMutationMethod,
+  rejectCrossOriginApiMutation,
+  stripCommentsAndStringLiterals,
+} from './api-mutation-guard';
 import { verifyRequestOrigin } from './api-validation';
 
 function apiRequest(path: string, method: string, headers: Record<string, string>): NextRequest {
@@ -12,6 +17,46 @@ function apiRequest(path: string, method: string, headers: Record<string, string
 }
 
 describe('api-mutation-guard', () => {
+  it('detects live mutation guard call sites in handler source', () => {
+    const guarded = `
+export async function POST(request: NextRequest) {
+  const denied = verifyMutationRequest(request);
+  if (denied) return denied;
+  return NextResponse.json({});
+}
+`;
+    expect(chunkInvokesMutationGuard(guarded)).toBe(true);
+    expect(
+      chunkInvokesMutationGuard(
+        guarded.replace('verifyMutationRequest', '// verifyMutationRequest'),
+      ),
+    ).toBe(false);
+    expect(
+      chunkInvokesMutationGuard(`
+export async function POST() {
+  const note = "verifyMutationRequest(request)";
+  return NextResponse.json({});
+}
+`),
+    ).toBe(false);
+    expect(
+      chunkInvokesMutationGuard(`
+export async function POST(request: NextRequest) {
+  const validation = await validateJson(request, schema);
+  return validation.success ? NextResponse.json({}) : validation.error;
+}
+`),
+    ).toBe(true);
+  });
+
+  it('preserves executable code when stripping comments and strings', () => {
+    const stripped = stripCommentsAndStringLiterals(
+      `const x = verifyMutationRequest(req); // verifyMutationRequest(fake)`,
+    );
+    expect(stripped).toContain('verifyMutationRequest(req)');
+    expect(stripped).not.toContain('fake');
+  });
+
   it('detects mutation HTTP methods', () => {
     expect(isApiMutationMethod('POST')).toBe(true);
     expect(isApiMutationMethod('PUT')).toBe(true);
