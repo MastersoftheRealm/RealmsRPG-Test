@@ -1,7 +1,12 @@
 import { describe, expect, it } from 'vitest';
 import { NextRequest } from 'next/server';
 
-import { isApiMutationMethod, rejectCrossOriginApiMutation } from './api-mutation-guard';
+import {
+  chunkInvokesMutationGuard,
+  isApiMutationMethod,
+  rejectCrossOriginApiMutation,
+  stripCommentsAndStringLiterals,
+} from './api-mutation-guard';
 import { verifyRequestOrigin } from './api-validation';
 
 function apiRequest(path: string, method: string, headers: Record<string, string>): NextRequest {
@@ -12,6 +17,119 @@ function apiRequest(path: string, method: string, headers: Record<string, string
 }
 
 describe('api-mutation-guard', () => {
+  it('detects live mutation guard call sites in handler source', () => {
+    const guarded = `
+export async function POST(request: NextRequest) {
+  const denied = verifyMutationRequest(request);
+  if (denied) return denied;
+  return NextResponse.json({});
+}
+`;
+    expect(chunkInvokesMutationGuard(guarded)).toBe(true);
+    expect(
+      chunkInvokesMutationGuard(
+        guarded.replace('verifyMutationRequest', '// verifyMutationRequest'),
+      ),
+    ).toBe(false);
+    expect(
+      chunkInvokesMutationGuard(`
+export async function POST() {
+  const note = "verifyMutationRequest(request)";
+  return NextResponse.json({});
+}
+`),
+    ).toBe(false);
+    expect(
+      chunkInvokesMutationGuard(`
+export async function POST(request: NextRequest) {
+  const validation = await validateJson(request, schema);
+  return validation.success ? NextResponse.json({}) : validation.error;
+}
+`),
+    ).toBe(true);
+  });
+
+  it('preserves executable code when stripping comments and strings', () => {
+    const stripped = stripCommentsAndStringLiterals(
+      `const x = verifyMutationRequest(req); // verifyMutationRequest(fake)`,
+    );
+    expect(stripped).toContain('verifyMutationRequest(req)');
+    expect(stripped).not.toContain('fake');
+  });
+
+  it('strips template interpolations as code and ignores guard mentions in nested literals', () => {
+    expect(
+      chunkInvokesMutationGuard(
+        `export async function POST() { const x = \`a \${"verifyMutationRequest(request)"}\`; }`,
+      ),
+    ).toBe(false);
+    expect(
+      chunkInvokesMutationGuard(
+        `export async function POST() { const x = \`a \${'verifyMutationRequest(request)'}\`; }`,
+      ),
+    ).toBe(false);
+    expect(
+      chunkInvokesMutationGuard(
+        `export async function POST() { const x = \`a \${\`nested \${"verifyMutationRequest(request)"}\`}\`; }`,
+      ),
+    ).toBe(false);
+    expect(
+      chunkInvokesMutationGuard(
+        `export async function POST() { const x = \`a \${// verifyMutationRequest(request)
+1}\`; }`,
+      ),
+    ).toBe(false);
+    expect(
+      chunkInvokesMutationGuard(
+        `export async function POST() { const x = \`a \${/* verifyMutationRequest(request) */ 1}\`; }`,
+      ),
+    ).toBe(false);
+    expect(
+      chunkInvokesMutationGuard(
+        `export async function POST(req) { const x = \`hello \${"}" + verifyMutationRequest(req)}\`; return x; }`,
+      ),
+    ).toBe(true);
+  });
+
+  it('does not treat regex literal text as a mutation guard call', () => {
+    expect(
+      chunkInvokesMutationGuard(
+        `export async function POST() { const re = /verifyMutationRequest(?:)/; return NextResponse.json({}); }`,
+      ),
+    ).toBe(false);
+    expect(
+      chunkInvokesMutationGuard(
+        `export async function POST() { return /verifyMutationRequest(?:)/; }`,
+      ),
+    ).toBe(false);
+    expect(
+      chunkInvokesMutationGuard(
+        `export async function POST() { typeof /verifyMutationRequest(?:)/; }`,
+      ),
+    ).toBe(false);
+    expect(
+      chunkInvokesMutationGuard(
+        `export async function POST() { const x = /[/verifyMutationRequest(?:)]/; }`,
+      ),
+    ).toBe(false);
+    expect(stripCommentsAndStringLiterals(`/verifyMutationRequest/g`)).not.toContain(
+      'verifyMutationRequest(',
+    );
+  });
+
+  it('preserves guard calls beside regex literals with character classes', () => {
+    expect(
+      chunkInvokesMutationGuard(
+        `export async function POST(req) { const x = \`\${/[/}]/ + verifyMutationRequest(req)}\`; return x; }`,
+      ),
+    ).toBe(true);
+    expect(
+      chunkInvokesMutationGuard(
+        `export async function POST(req) { const x = \`\${typeof /}/ + verifyMutationRequest(req)}\`; return x; }`,
+      ),
+    ).toBe(true);
+  });
+
   it('detects mutation HTTP methods', () => {
     expect(isApiMutationMethod('POST')).toBe(true);
     expect(isApiMutationMethod('PUT')).toBe(true);

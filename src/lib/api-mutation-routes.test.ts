@@ -2,7 +2,7 @@ import { readFileSync, readdirSync, statSync } from 'node:fs';
 import path from 'node:path';
 import { describe, expect, it } from 'vitest';
 
-import { API_MUTATION_GUARD_MARKERS } from './api-mutation-guard';
+import { chunkInvokesMutationGuard } from './api-mutation-guard';
 
 const API_ROOT = path.join(import.meta.dirname, '../app/api');
 const MUTATION_HANDLER_HEAD = /^export\s+async\s+function\s+(POST|PUT|PATCH|DELETE)\s*\(/;
@@ -39,8 +39,7 @@ describe('API mutation routes CSRF coverage', () => {
         const method = chunk.match(MUTATION_HANDLER_HEAD)?.[1];
         if (!method) continue;
 
-        const hasGuard = API_MUTATION_GUARD_MARKERS.some((marker) => chunk.includes(marker));
-        if (!hasGuard) {
+        if (!chunkInvokesMutationGuard(chunk)) {
           unprotected.push(`${relativeApiPath(file)} (${method})`);
         }
       }
