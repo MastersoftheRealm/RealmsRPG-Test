@@ -316,6 +316,23 @@ describe('PATCH /api/user/library/[type]/[id]', () => {
     expect(response.status).toBe(200);
     expect(supabase.lastUpdate()?.image_id).toBeUndefined();
   });
+
+  it('PAGES4-018: admin PATCH may persist image_id', async () => {
+    const row = makeLibraryRow('pow-owned', OWNER.uid);
+    mockGetSession.mockResolvedValue({ user: OWNER, error: null });
+    mockIsAdmin.mockResolvedValue(true);
+    const supabase = createMockSupabase(row);
+    mockCreateClient.mockResolvedValue(supabase as never);
+    const imageId = '33333333-3333-4333-8333-333333333333';
+
+    const response = await PATCH(
+      makePatchRequest('powers', 'pow-owned', { imageId, imageUrl: 'https://cdn.test/art.jpg' }),
+      params('powers', 'pow-owned'),
+    );
+
+    expect(response.status).toBe(200);
+    expect(supabase.lastUpdate()?.image_id).toBe(imageId);
+  });
 });
 
 describe('DELETE /api/user/library/[type]/[id]', () => {

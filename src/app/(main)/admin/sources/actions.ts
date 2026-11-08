@@ -225,7 +225,14 @@ export async function renameAdminCodexSource(
     if (toError) return { success: false, updatedCount: 0, error: toError };
 
     const supabase = createServiceRoleClient();
-    const { data, error } = await supabase.rpc('rename_codex_source', {
+    const { data, error } = await (
+      supabase as unknown as {
+        rpc: (
+          fn: string,
+          args: Record<string, unknown>,
+        ) => Promise<{ data: unknown; error: { message: string } | null }>;
+      }
+    ).rpc('rename_codex_source', {
       from_name: collapseCodexSourceName(fromName),
       to_name: collapseCodexSourceName(toName),
       actor,

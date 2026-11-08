@@ -11,9 +11,10 @@ import 'server-only';
 import { createClient as createSupabaseClient } from '@supabase/supabase-js';
 import { createServerClient } from '@supabase/ssr';
 import { cookies } from 'next/headers';
+import type { Database } from '@/types/database.types';
 import type { TypedSupabaseClient } from '@/lib/supabase/database';
 
-export type { TypedSupabaseClient as ServiceRoleSupabaseClient };
+export type ServiceRoleSupabaseClient = TypedSupabaseClient;
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_DEFAULT_KEY!;
@@ -42,12 +43,9 @@ export async function createClient() {
  * after the request has been authorized (e.g. isAdmin() check).
  * Requires SUPABASE_SERVICE_ROLE_KEY in env.
  *
- * Returns an untyped client today; the service-role shape is `ServiceRoleSupabaseClient`
- * (`TypedSupabaseClient`). Full factory generics are deferred while #497 migrates
- * dynamic `.from(variable)` call sites to `fromPublicTable`.
  */
-export function createServiceRoleClient() {
+export function createServiceRoleClient(): ServiceRoleSupabaseClient {
   const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
   if (!supabaseUrl || !key) throw new Error('Supabase service role not configured');
-  return createSupabaseClient(supabaseUrl, key);
+  return createSupabaseClient<Database>(supabaseUrl, key);
 }

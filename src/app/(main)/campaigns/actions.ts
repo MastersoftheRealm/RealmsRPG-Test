@@ -7,6 +7,7 @@
 
 'use server';
 
+import { asDbJson, asDbUpdate } from '@/lib/supabase/database';
 import { createClient, createServiceRoleClient } from '@/lib/supabase/server';
 import { requireAuth } from '@/lib/supabase/session';
 import { ensureUserProfile } from '@/lib/ensure-user-profile';
@@ -202,7 +203,7 @@ export async function joinCampaignAction(data: { inviteCode: string; characterId
       .select('user_id')
       .eq('campaign_id', campaignRow.id);
     const memberIdsFromTable = (memberRows ?? []).map((m: { user_id: string }) => m.user_id);
-    const campaignData = (campaignRow.characters as CampaignCharacter[]) ?? [];
+    const campaignData = (campaignRow.characters as unknown as CampaignCharacter[]) ?? [];
     const memberIdsFromRoster = [...new Set(campaignData.map((c) => c.userId).filter(Boolean))];
     const memberIds = [...new Set([...memberIdsFromTable, ...memberIdsFromRoster])];
     const ownerPolicy = await getRolePolicyForUser(campaignRow.owner_id, dbService);
@@ -269,7 +270,7 @@ export async function joinCampaignAction(data: { inviteCode: string; characterId
 
     const { error: updErr } = await dbService
       .from('campaigns')
-      .update({ characters })
+      .update(asDbUpdate<'campaigns'>({ characters: asDbJson(characters) }))
       .eq('id', campaignId);
     if (updErr) {
       console.error('joinCampaignAction campaigns update:', updErr);
@@ -329,7 +330,7 @@ export async function addCharacterToCampaignAction(data: {
     const charData = (charRow.data as Record<string, unknown>) ?? {};
     const rosterFields = buildRosterFieldsFromCharacterData(charData);
 
-    const campaignData = (campaignRow.characters as CampaignCharacter[]) ?? [];
+    const campaignData = (campaignRow.characters as unknown as CampaignCharacter[]) ?? [];
     if (campaignData.length >= MAX_CAMPAIGN_CHARACTERS) {
       return {
         success: false,
@@ -367,7 +368,10 @@ export async function addCharacterToCampaignAction(data: {
         { campaign_id: data.campaignId, user_id: user.uid },
         { onConflict: 'campaign_id,user_id', ignoreDuplicates: true },
       );
-    await supabase.from('campaigns').update({ characters }).eq('id', data.campaignId);
+    await supabase
+      .from('campaigns')
+      .update(asDbUpdate<'campaigns'>({ characters: asDbJson(characters) }))
+      .eq('id', data.campaignId);
 
     const { visibility, visibilityUpdated } = visibilityForCampaignMembership(charData.visibility);
     const now = new Date().toISOString();
@@ -404,7 +408,7 @@ export async function removeCharacterFromCampaignAction(data: {
       return { success: false, error: 'Campaign not found' };
     }
 
-    const campaignData = (campaignRow.characters as CampaignCharacter[]) ?? [];
+    const campaignData = (campaignRow.characters as unknown as CampaignCharacter[]) ?? [];
     const isOwner = campaignRow.owner_id === user.uid;
     const isRemovingOwn = data.userId === user.uid;
 
@@ -438,7 +442,10 @@ export async function removeCharacterFromCampaignAction(data: {
       };
     }
 
-    await dbWrite.from('campaigns').update({ characters }).eq('id', data.campaignId);
+    await dbWrite
+      .from('campaigns')
+      .update(asDbUpdate<'campaigns'>({ characters: asDbJson(characters) }))
+      .eq('id', data.campaignId);
 
     if (!remainingUserIds.has(data.userId)) {
       await dbWrite

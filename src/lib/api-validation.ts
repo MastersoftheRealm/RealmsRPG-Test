@@ -634,6 +634,7 @@ export const adminUsersQuerySchema = z
   .object({
     limit: z.string().regex(/^\d+$/, 'limit must be a positive integer').optional(),
     offset: z.string().regex(/^\d+$/, 'offset must be a non-negative integer').optional(),
+    q: z.string().max(200).optional(),
   })
   .strict();
 

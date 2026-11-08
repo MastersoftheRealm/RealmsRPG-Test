@@ -8,7 +8,7 @@
 
 'use client';
 
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
 import { useQuery } from '@tanstack/react-query';
 import {
@@ -37,6 +37,13 @@ interface UserRow {
   role: UserRole;
 }
 
+type AdminUsersPage = {
+  users: UserRow[];
+  offset: number;
+  limit: number;
+  hasMore: boolean;
+};
+
 interface RolePolicyRow {
   role: UserRole;
   max_campaigns: number;
@@ -56,17 +63,27 @@ const ROLE_OPTIONS = (Object.keys(ROLE_LABELS) as UserRole[]).map((role) => ({
 
 export default function AdminUsersPage() {
   const [users, setUsers] = useState<UserRow[]>([]);
+  const [hasMore, setHasMore] = useState(false);
+  const [listLimit, setListLimit] = useState(100);
+  const [loadingMore, setLoadingMore] = useState(false);
   const [rolePolicies, setRolePolicies] = useState<Record<UserRole, RolePolicyRow> | null>(null);
   const [syncedAt, setSyncedAt] = useState(0);
   const [updating, setUpdating] = useState<string | null>(null);
   const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
+  const [searchApplied, setSearchApplied] = useState('');
   const [pendingChange, setPendingChange] = useState<{
     userId: string;
     label: string;
     oldRole: UserRole;
     newRole: UserRole;
   } | null>(null);
+
+  async function fetchUsersPage(offset: number, q: string) {
+    const params = new URLSearchParams({ limit: '100', offset: String(offset) });
+    if (q.trim()) params.set('q', q.trim());
+    return apiFetch<AdminUsersPage>(`/api/admin/users?${params.toString()}`);
+  }
 
   const {
     data: adminData,
@@ -75,10 +92,10 @@ export default function AdminUsersPage() {
     refetch,
     dataUpdatedAt,
   } = useQuery({
-    queryKey: ['admin', 'users-page'],
+    queryKey: ['admin', 'users-page', searchApplied],
     queryFn: async () => {
       const [userData, policyData] = await Promise.all([
-        apiFetch<UserRow[]>('/api/admin/users'),
+        fetchUsersPage(0, searchApplied),
         apiFetch<RolePolicyRow[]>('/api/admin/role-policies'),
       ]);
       const map = (Array.isArray(policyData) ? policyData : []).reduce(
@@ -89,11 +106,19 @@ export default function AdminUsersPage() {
         {} as Record<UserRole, RolePolicyRow>,
       );
       return {
-        users: Array.isArray(userData) ? userData : [],
+        users: userData.users ?? [],
+        hasMore: Boolean(userData.hasMore),
+        offset: userData.offset ?? 0,
+        limit: userData.limit ?? 100,
         rolePolicies: map,
       };
     },
   });
+
+  useEffect(() => {
+    const handle = window.setTimeout(() => setSearchApplied(searchQuery), 300);
+    return () => window.clearTimeout(handle);
+  }, [searchQuery]);
   const error = queryError
     ? queryError instanceof Error
       ? queryError.message
@@ -102,24 +127,32 @@ export default function AdminUsersPage() {
 
   if (adminData && dataUpdatedAt !== syncedAt) {
     setUsers(adminData.users);
+    setListLimit(adminData.limit);
+    setHasMore(adminData.hasMore);
     setRolePolicies(adminData.rolePolicies);
     setSyncedAt(dataUpdatedAt);
   }
 
-  const filteredUsers = useMemo(() => {
-    const q = searchQuery.trim().toLowerCase();
-    if (!q) return users;
-    return users.filter((u) => {
-      const roleLabel = ROLE_LABELS[u.role].toLowerCase();
-      return (
-        u.usernameDisplay.toLowerCase().includes(q) ||
-        u.username.toLowerCase().includes(q) ||
-        u.displayName.toLowerCase().includes(q) ||
-        u.email.toLowerCase().includes(q) ||
-        roleLabel.includes(q)
-      );
-    });
-  }, [users, searchQuery]);
+  const displayedUsers = useMemo(() => users, [users]);
+
+  const loadMoreUsers = async () => {
+    const nextOffset = users.length;
+    setLoadingMore(true);
+    setMessage(null);
+    try {
+      const page = await fetchUsersPage(nextOffset, searchApplied);
+      setUsers((prev) => [...prev, ...(page.users ?? [])]);
+      setListLimit(page.limit ?? listLimit);
+      setHasMore(Boolean(page.hasMore));
+    } catch (err) {
+      setMessage({
+        type: 'error',
+        text: err instanceof Error ? err.message : 'Failed to load more users',
+      });
+    } finally {
+      setLoadingMore(false);
+    }
+  };
 
   const handleRoleChange = async (userId: string, newRole: UserRole) => {
     setUpdating(userId);
@@ -171,68 +204,89 @@ export default function AdminUsersPage() {
         <LoadingState size="lg" padding="md" />
       ) : error ? (
         <ErrorDisplay message={error} onRetry={() => void refetch()} />
-      ) : filteredUsers.length === 0 ? (
+      ) : displayedUsers.length === 0 ? (
         <EmptyState title="No users found." size="sm" />
       ) : (
-        <ul className="min-w-0 space-y-3">
-          {filteredUsers.map((u) => {
-            const name = u.usernameDisplay || u.username;
-            const label = name || 'user';
-            return (
-              <li
-                key={u.id}
-                className="grid min-w-0 gap-4 rounded-lg border border-border bg-surface p-4 lg:grid-cols-[minmax(0,1fr)_minmax(0,12.5rem)] lg:items-start"
+        <>
+          <p className="mb-3 text-sm text-text-secondary">
+            Showing {displayedUsers.length} user{displayedUsers.length === 1 ? '' : 's'}
+            {searchApplied.trim() ? ` matching “${searchApplied.trim()}”` : ''}
+            {hasMore ? ' — more results available.' : '.'}
+          </p>
+          <ul className="min-w-0 space-y-3">
+            {displayedUsers.map((u) => {
+              const name = u.usernameDisplay || u.username;
+              const label = name || 'user';
+              return (
+                <li
+                  key={u.id}
+                  className="grid min-w-0 gap-4 rounded-lg border border-border bg-surface p-4 lg:grid-cols-[minmax(0,1fr)_minmax(0,12.5rem)] lg:items-start"
+                >
+                  <div className="min-w-0 space-y-3">
+                    <div className="min-w-0">
+                      <p
+                        className="truncate font-medium text-text-primary"
+                        title={name || undefined}
+                      >
+                        {name || '(none)'}
+                      </p>
+                      <p
+                        className="truncate text-sm text-text-secondary"
+                        title={u.displayName || undefined}
+                      >
+                        {u.displayName || '(none)'}
+                      </p>
+                      <p
+                        className="truncate text-sm text-text-secondary"
+                        title={u.email || undefined}
+                      >
+                        {u.email || '(none)'}
+                      </p>
+                      <p className="text-sm text-text-secondary">
+                        Role:{' '}
+                        <span className="text-text-primary">
+                          {ROLE_LABELS[u.role].replace(/ /g, '\u00a0')}
+                        </span>
+                      </p>
+                    </div>
+                    <div className="min-w-0">
+                      <p className="mb-1 text-sm font-medium text-text-primary">Effective limits</p>
+                      <RoleLimits role={u.role} rolePolicies={rolePolicies} />
+                    </div>
+                  </div>
+                  <Select
+                    label="Change role"
+                    aria-label={`Change role for ${label}`}
+                    value={u.role}
+                    options={ROLE_OPTIONS}
+                    disabled={updating === u.id}
+                    onChange={(e) => {
+                      const newRole = e.target.value as UserRole;
+                      if (newRole === u.role) return;
+                      setPendingChange({
+                        userId: u.id,
+                        label,
+                        oldRole: u.role,
+                        newRole,
+                      });
+                    }}
+                  />
+                </li>
+              );
+            })}
+          </ul>
+          {hasMore ? (
+            <div className="mt-4">
+              <Button
+                variant="secondary"
+                disabled={loadingMore}
+                onClick={() => void loadMoreUsers()}
               >
-                <div className="min-w-0 space-y-3">
-                  <div className="min-w-0">
-                    <p className="truncate font-medium text-text-primary" title={name || undefined}>
-                      {name || '(none)'}
-                    </p>
-                    <p
-                      className="truncate text-sm text-text-secondary"
-                      title={u.displayName || undefined}
-                    >
-                      {u.displayName || '(none)'}
-                    </p>
-                    <p
-                      className="truncate text-sm text-text-secondary"
-                      title={u.email || undefined}
-                    >
-                      {u.email || '(none)'}
-                    </p>
-                    <p className="text-sm text-text-secondary">
-                      Role:{' '}
-                      <span className="text-text-primary">
-                        {ROLE_LABELS[u.role].replace(/ /g, '\u00a0')}
-                      </span>
-                    </p>
-                  </div>
-                  <div className="min-w-0">
-                    <p className="mb-1 text-sm font-medium text-text-primary">Effective limits</p>
-                    <RoleLimits role={u.role} rolePolicies={rolePolicies} />
-                  </div>
-                </div>
-                <Select
-                  label="Change role"
-                  aria-label={`Change role for ${label}`}
-                  value={u.role}
-                  options={ROLE_OPTIONS}
-                  disabled={updating === u.id}
-                  onChange={(e) => {
-                    const newRole = e.target.value as UserRole;
-                    if (newRole === u.role) return;
-                    setPendingChange({
-                      userId: u.id,
-                      label,
-                      oldRole: u.role,
-                      newRole,
-                    });
-                  }}
-                />
-              </li>
-            );
-          })}
-        </ul>
+                {loadingMore ? 'Loading…' : 'Load more users'}
+              </Button>
+            </div>
+          ) : null}
+        </>
       )}
 
       <ConfirmActionModal

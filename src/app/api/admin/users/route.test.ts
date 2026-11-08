@@ -34,17 +34,38 @@ const ADMIN_ID = 'admin-user-123';
 function createMockSupabaseAdmin(
   profiles: unknown[] = [],
   error: { message: string } | null = null,
-  onRange?: (from: number, to: number) => void,
+  options?: { onRange?: (from: number, to: number) => void; onOr?: (filter: string) => void },
 ) {
+  const buildQuery = () => {
+    let rows = profiles;
+    const chain = {
+      or: vi.fn((filter: string) => {
+        options?.onOr?.(filter);
+        const firstClause = filter.split(',')[0] ?? '';
+        const needle = firstClause.match(/\.ilike\.(%.*)$/)?.[1]?.slice(1, -1) ?? '';
+        if (needle) {
+          rows = profiles.filter((row) => {
+            const p = row as Record<string, string | null>;
+            const values = [p.username, p.username_display, p.display_name, p.email].filter(
+              Boolean,
+            );
+            return values.some((v) => String(v).toLowerCase().includes(needle.toLowerCase()));
+          });
+        }
+        return chain;
+      }),
+      range: vi.fn((from: number, to: number) => {
+        options?.onRange?.(from, to);
+        const page = rows.slice(from, to + 1);
+        return Promise.resolve({ data: page, error });
+      }),
+    };
+    return chain;
+  };
   return {
     from: vi.fn(() => ({
       select: vi.fn().mockReturnValue({
-        order: vi.fn().mockReturnValue({
-          range: vi.fn((from: number, to: number) => {
-            onRange?.(from, to);
-            return Promise.resolve({ data: profiles, error });
-          }),
-        }),
+        order: vi.fn().mockReturnValue(buildQuery()),
       }),
     })),
   };
@@ -125,7 +146,13 @@ describe('GET /api/admin/users', () => {
     const response = await GET(makeGetRequest());
 
     expect(response.status).toBe(200);
-    await expect(readJson(response)).resolves.toEqual([
+    const body = await readJson<{
+      users: Array<{ id: string; username: string }>;
+      offset: number;
+      limit: number;
+      hasMore: boolean;
+    }>(response);
+    expect(body.users).toEqual([
       {
         id: 'user-1',
         username: 'hero',
@@ -135,6 +162,9 @@ describe('GET /api/admin/users', () => {
         role: 'new_player',
       },
     ]);
+    expect(body.offset).toBe(0);
+    expect(body.limit).toBe(100);
+    expect(body.hasMore).toBe(false);
   });
 
   it('returns 429 when rate limited', async () => {
@@ -155,8 +185,10 @@ describe('GET /api/admin/users', () => {
     mockRequireAdminSession.mockResolvedValue({ ok: true, userId: ADMIN_ID });
     let ranged: [number, number] | null = null;
     mockCreateSupabaseAdminClient.mockReturnValue(
-      createMockSupabaseAdmin([], null, (from, to) => {
-        ranged = [from, to];
+      createMockSupabaseAdmin([], null, {
+        onRange: (from, to) => {
+          ranged = [from, to];
+        },
       }) as never,
     );
 
@@ -167,5 +199,57 @@ describe('GET /api/admin/users', () => {
 
     expect(response.status).toBe(200);
     expect(ranged).toEqual([10, 109]);
+  });
+
+  it('API-025: offset 100 returns user 101+ and server search can find a later user', async () => {
+    mockRequireAdminSession.mockResolvedValue({ ok: true, userId: ADMIN_ID });
+    const directory = Array.from({ length: 201 }, (_, i) => ({
+      id: `uid-${i + 1}`,
+      username: `user${String(i + 1).padStart(3, '0')}`,
+      username_display: `User ${i + 1}`,
+      email: `user${i + 1}@example.com`,
+      display_name: `Player ${i + 1}`,
+      role: 'new_player',
+    }));
+    let ranged: [number, number] | null = null;
+    mockCreateSupabaseAdminClient.mockReturnValue(
+      createMockSupabaseAdmin(directory, null, {
+        onRange: (from, to) => {
+          ranged = [from, to];
+        },
+      }) as never,
+    );
+
+    const page2 = await GET(
+      new NextRequest('http://localhost/api/admin/users?offset=100&limit=100', {
+        headers: { 'x-forwarded-for': '203.0.113.1' },
+      }),
+    );
+    const page2Body = await readJson<{
+      users: Array<{ id: string; username: string }>;
+      hasMore: boolean;
+    }>(page2);
+    expect(page2.status).toBe(200);
+    expect(ranged).toEqual([100, 199]);
+    expect(page2Body.users[0]?.id).toBe('uid-101');
+    expect(page2Body.hasMore).toBe(true);
+
+    let orFilter: string | null = null;
+    mockCreateSupabaseAdminClient.mockReturnValue(
+      createMockSupabaseAdmin(directory, null, {
+        onOr: (filter) => {
+          orFilter = filter;
+        },
+      }) as never,
+    );
+    const search = await GET(
+      new NextRequest('http://localhost/api/admin/users?q=user150', {
+        headers: { 'x-forwarded-for': '203.0.113.1' },
+      }),
+    );
+    const searchBody = await readJson<{ users: Array<{ username: string }> }>(search);
+    expect(search.status).toBe(200);
+    expect(orFilter).toContain('user150');
+    expect(searchBody.users.some((u) => u.username === 'user150')).toBe(true);
   });
 });

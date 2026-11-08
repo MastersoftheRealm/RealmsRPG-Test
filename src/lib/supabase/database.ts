@@ -44,6 +44,7 @@ type DynamicResult<T> = PromiseLike<{
 
 export type DynamicTableFilter<T = Record<string, unknown>[] | null> = DynamicResult<T> & {
   eq: (column: string, value: unknown) => DynamicTableFilter<T>;
+  neq: (column: string, value: unknown) => DynamicTableFilter<T>;
   in: (column: string, values: readonly unknown[]) => DynamicTableFilter<T>;
   ilike: (column: string, pattern: string) => DynamicTableFilter<T>;
   is: (column: string, value: unknown) => DynamicTableFilter<T>;
