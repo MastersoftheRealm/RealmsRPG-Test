@@ -298,6 +298,90 @@ describe('POST /api/official/[type]', () => {
     expect(mockCreateServiceRoleClient).not.toHaveBeenCalled();
   });
 
+  it('records create changelog with afterData and null beforeData', async () => {
+    mockRequireLiveUser.mockResolvedValue(USER);
+    mockIsAdmin.mockResolvedValue(true);
+    const insertSingle = vi.fn(async () => ({
+      data: {
+        id: 'power-new-id',
+        name: 'Firebolt',
+        payload: {},
+        catalog_listing: 'listed',
+      },
+      error: null,
+    }));
+    const insert = vi.fn(() => ({
+      select: vi.fn(() => ({ single: insertSingle })),
+    }));
+    mockCreateServiceRoleClient.mockReturnValue({
+      from: vi.fn(() => ({
+        select: vi.fn(() => ({
+          ilike: vi.fn().mockReturnThis(),
+          neq: vi.fn().mockReturnThis(),
+          limit: vi.fn().mockReturnThis(),
+          maybeSingle: vi.fn(async () => ({ data: null, error: null })),
+        })),
+        insert,
+      })),
+    } as never);
+
+    const response = await POST(makePostRequest('powers'), params('powers'));
+
+    expect(response.status).toBe(200);
+    expect(insert).toHaveBeenCalled();
+    expect(recordCodexChange).toHaveBeenCalledWith(
+      expect.objectContaining({
+        entityType: 'official_powers',
+        operation: 'create',
+        changedByUserId: USER.uid,
+        beforeData: null,
+        afterData: expect.objectContaining({ name: 'Firebolt' }),
+      }),
+    );
+  });
+
+  it('returns success when the primary write succeeds but changelog throws', async () => {
+    mockRequireLiveUser.mockResolvedValue(USER);
+    mockIsAdmin.mockResolvedValue(true);
+    vi.mocked(recordCodexChange).mockRejectedValueOnce(new Error('changelog transport down'));
+    const insertSingle = vi.fn(async () => ({
+      data: { id: 'power-changelog-fail', name: 'Firebolt', payload: {} },
+      error: null,
+    }));
+    const insert = vi.fn(() => ({
+      select: vi.fn(() => ({ single: insertSingle })),
+    }));
+    mockCreateServiceRoleClient.mockReturnValue({
+      from: vi.fn(() => ({
+        select: vi.fn(() => ({
+          ilike: vi.fn().mockReturnThis(),
+          neq: vi.fn().mockReturnThis(),
+          limit: vi.fn().mockReturnThis(),
+          maybeSingle: vi.fn(async () => ({ data: null, error: null })),
+        })),
+        insert,
+      })),
+    } as never);
+
+    const errorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+
+    const response = await POST(makePostRequest('powers'), params('powers'));
+
+    expect(response.status).toBe(200);
+    await expect(readJson(response)).resolves.toEqual({ id: expect.any(String) });
+    expect(insertSingle).toHaveBeenCalled();
+    expect(errorSpy).toHaveBeenCalledWith(
+      '[Official API] changelog write failed (mutation kept):',
+      expect.objectContaining({
+        entityType: 'official_powers',
+        operation: 'create',
+        message: 'changelog transport down',
+      }),
+    );
+
+    errorSpy.mockRestore();
+  });
+
   it('creates an official creature with nonempty skill objects', async () => {
     mockRequireLiveUser.mockResolvedValue(USER);
     mockIsAdmin.mockResolvedValue(true);
