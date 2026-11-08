@@ -22,9 +22,45 @@ $ExpectedOutputs = @(
 
 $script:LogPath = $null
 
+function Get-DumpConnectionSecrets {
+  param([string[]]$DumpArgs)
+
+  $secrets = New-Object System.Collections.Generic.List[string]
+  for ($i = 0; $i -lt $DumpArgs.Count; $i++) {
+    $arg = $DumpArgs[$i]
+    if ($arg -eq '--db-url' -or $arg -eq '--dbname') {
+      if ($i + 1 -lt $DumpArgs.Count) { $secrets.Add($DumpArgs[$i + 1]) | Out-Null }
+      continue
+    }
+    if ($arg -match '^postgres(ql)?://') {
+      $secrets.Add($arg) | Out-Null
+    }
+  }
+  return $secrets
+}
+
+function Redact-SensitiveLogText {
+  param(
+    [string]$Text,
+    [string[]]$ExactSecrets = @()
+  )
+
+  if ([string]::IsNullOrEmpty($Text)) { return $Text }
+  $out = $Text
+  foreach ($secret in $ExactSecrets) {
+    if ($secret) { $out = $out.Replace($secret, '<redacted-connection>') }
+  }
+  $out = ($out -replace '(postgres(ql)?://)([^:/\s]+):([^@\s]+)@', '$1$3:<redacted>@')
+  $out = ($out -replace '([?&;])(password|pwd)=([^&\s''"]+)', '${1}$2=<redacted>')
+  $out = ($out -replace '\b(password|pwd)\s*=\s*''[^'']*''', '$1=<redacted>')
+  $out = ($out -replace '\b(password|pwd)\s*=\s*[^\s]+', '$1=<redacted>')
+  return $out
+}
+
 function Write-Log {
   param([string]$Text)
-  if ($script:LogPath) { Add-Content -LiteralPath $script:LogPath -Value $Text }
+  $safe = Redact-SensitiveLogText -Text $Text
+  if ($script:LogPath) { Add-Content -LiteralPath $script:LogPath -Value $safe }
 }
 
 function Stop-WithFailure {
@@ -108,23 +144,53 @@ function Resolve-PgDumpTools {
   return $null
 }
 
+# Redact connection strings before writing dump command lines to backup.log.
+function Redact-DumpArgsForLog {
+  param([string[]]$DumpArgs)
+
+  $redacted = New-Object System.Collections.Generic.List[string]
+  $skipNextValue = $false
+  for ($i = 0; $i -lt $DumpArgs.Count; $i++) {
+    if ($skipNextValue) {
+      $skipNextValue = $false
+      continue
+    }
+    $arg = $DumpArgs[$i]
+    if ($arg -eq '--db-url' -or $arg -eq '--dbname') {
+      $redacted.Add($arg) | Out-Null
+      if ($i + 1 -lt $DumpArgs.Count) {
+        $redacted.Add('<redacted>') | Out-Null
+        $skipNextValue = $true
+      }
+      continue
+    }
+    if ($arg -match '^postgres(ql)?://') {
+      $redacted.Add(($arg -replace '://([^:/@]+):([^@]+)@', '://$1:<redacted>@')) | Out-Null
+      continue
+    }
+    $redacted.Add($arg) | Out-Null
+  }
+  return $redacted -join ' '
+}
+
 # Runs a native tool without letting its stderr surface as a PowerShell NativeCommandError.
 # Output goes to backup.log; the caller decides what (if anything) the user sees.
 function Invoke-DumpTool {
   param([string]$Exe, [string[]]$DumpArgs, [string]$Label)
 
+  $connectionSecrets = Get-DumpConnectionSecrets -DumpArgs $DumpArgs
   $prevEap = $ErrorActionPreference
   $ErrorActionPreference = 'Continue'
   try {
     Write-Log "--- $Label"
-    Write-Log "$Exe $($DumpArgs -join ' ')"
-    $output = (& $Exe @DumpArgs 2>&1 | Out-String)
+    Write-Log "$Exe $(Redact-DumpArgsForLog -DumpArgs $DumpArgs)"
+    $output = Redact-SensitiveLogText -Text ((& $Exe @DumpArgs 2>&1 | Out-String)) -ExactSecrets $connectionSecrets
     $code = $LASTEXITCODE
     if ($output) { Write-Log $output.TrimEnd() }
     Write-Log "exit code: $code"
     return $code
   } catch {
-    Write-Log "exception: $($_.Exception.Message)"
+    Write-Log "exception: $(Redact-SensitiveLogText -Text $_.Exception.Message -ExactSecrets $connectionSecrets)"
     return 1
   } finally {
     $ErrorActionPreference = $prevEap

@@ -584,7 +584,8 @@ export const includeUnlistedQuerySchema = z
 export const imagesListQuerySchema = z
   .object({
     category: z.string().optional(),
-    q: z.string().optional(),
+    q: z.string().max(100, 'Search query is too long').optional(),
+    cursor: z.string().max(64).optional(),
   })
   .strict();
 

@@ -15,6 +15,40 @@ export const AUTH_LOGIN_RATE_LIMIT_MESSAGE = 'Too many failed attempts. Please t
 /** App-layer auth rate limit — signup, password reset, resend, etc. */
 export const AUTH_RATE_LIMIT_MESSAGE = 'Too many requests. Please try again later.';
 
+export const AUTH_EMAIL_NOT_CONFIRMED_MESSAGE = 'Please confirm your email before signing in.';
+
+export const AUTH_INVALID_CREDENTIALS_LOGIN_MESSAGE = 'Invalid email or password';
+
+export type AuthActionFailureReason =
+  | 'email_not_confirmed'
+  | 'invalid_credentials'
+  | 'rate_limited'
+  | 'generic';
+
+/** Sign-up only: match Supabase duplicate-email codes, not broad message text. */
+export function isAuthSignUpDuplicateEmailError(error: unknown): boolean {
+  const { code: rawCode } = readAuthError(error);
+  const code = rawCode.toLowerCase();
+  return code === 'user_already_exists' || code === 'email_exists';
+}
+
+/** Stable reason for action results after {@link getAuthErrorMessage} has run. */
+export function authActionFailureReason(
+  userMessage: string,
+  context: AuthErrorContext,
+): AuthActionFailureReason {
+  if (userMessage === AUTH_LOGIN_RATE_LIMIT_MESSAGE || userMessage === AUTH_RATE_LIMIT_MESSAGE) {
+    return 'rate_limited';
+  }
+  if (context === 'login' && userMessage === AUTH_EMAIL_NOT_CONFIRMED_MESSAGE) {
+    return 'email_not_confirmed';
+  }
+  if (context === 'login' && userMessage === AUTH_INVALID_CREDENTIALS_LOGIN_MESSAGE) {
+    return 'invalid_credentials';
+  }
+  return 'generic';
+}
+
 export type AuthErrorContext =
   | 'login'
   | 'register'
@@ -149,7 +183,7 @@ export function getAuthErrorMessage(error: unknown, context: AuthErrorContext = 
     message.includes('not confirmed') ||
     code === 'email_not_confirmed'
   ) {
-    return 'Please confirm your email before signing in.';
+    return AUTH_EMAIL_NOT_CONFIRMED_MESSAGE;
   }
 
   if (
@@ -160,13 +194,17 @@ export function getAuthErrorMessage(error: unknown, context: AuthErrorContext = 
   }
 
   if (isAlreadyExistsError(message, code)) {
-    return context === 'update-email'
-      ? 'Email already in use'
-      : 'An account with this email already exists.';
+    if (context === 'update-email') return 'Email already in use';
+    if (context === 'register') return fallbackMessage('register');
+    return 'An account with this email already exists.';
   }
 
   if (isWeakPasswordError(message, code)) {
     return 'Password is too weak. Please choose a stronger password.';
+  }
+
+  if (context === 'login' && isInvalidCredentialsError(message, code)) {
+    return AUTH_INVALID_CREDENTIALS_LOGIN_MESSAGE;
   }
 
   if (isInvalidEmailError(message, code)) {
@@ -185,10 +223,6 @@ export function getAuthErrorMessage(error: unknown, context: AuthErrorContext = 
     return 'We could not send the email right now. Please try again in a few minutes.';
   }
 
-  if (context === 'login' && isInvalidCredentialsError(message, code)) {
-    return 'Invalid email or password';
-  }
-
   if (
     context === 'reset-password' &&
     (message.includes('session') || message.includes('expired') || code.includes('session'))
@@ -196,7 +230,9 @@ export function getAuthErrorMessage(error: unknown, context: AuthErrorContext = 
     return 'Your reset session expired. Please request a new reset link.';
   }
 
-  if (rawMessage.trim()) return rawMessage;
+  if (rawMessage.trim()) {
+    console.error(`[auth] Unmapped auth error (${context}):`, rawMessage);
+  }
 
   return fallbackMessage(context);
 }

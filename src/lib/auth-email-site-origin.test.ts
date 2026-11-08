@@ -1,0 +1,36 @@
+import { afterEach, describe, expect, it, vi } from 'vitest';
+import { SITE_URL } from '@/lib/constants/copy/shared-copy';
+import { resolveAuthEmailSiteOrigin } from './auth-email-site-origin';
+
+describe('resolveAuthEmailSiteOrigin', () => {
+  const originalSite = process.env.NEXT_PUBLIC_SITE_URL;
+  const originalNodeEnv = process.env.NODE_ENV;
+
+  afterEach(() => {
+    if (originalSite === undefined) delete process.env.NEXT_PUBLIC_SITE_URL;
+    else process.env.NEXT_PUBLIC_SITE_URL = originalSite;
+    vi.stubEnv('NODE_ENV', originalNodeEnv ?? 'test');
+    vi.restoreAllMocks();
+  });
+
+  it('prefers NEXT_PUBLIC_SITE_URL without a trailing slash', () => {
+    process.env.NEXT_PUBLIC_SITE_URL = 'https://realmsrpg.com/';
+    expect(resolveAuthEmailSiteOrigin(new Headers())).toBe('https://realmsrpg.com');
+  });
+
+  it('falls back to localhost in non-production when env is unset', () => {
+    delete process.env.NEXT_PUBLIC_SITE_URL;
+    vi.stubEnv('NODE_ENV', 'development');
+    expect(resolveAuthEmailSiteOrigin(new Headers())).toBe('http://localhost:3000');
+  });
+
+  it('uses canonical SITE_URL in production when env is unset (ignores hostile forwarded headers)', () => {
+    delete process.env.NEXT_PUBLIC_SITE_URL;
+    vi.stubEnv('NODE_ENV', 'production');
+    const headers = new Headers({
+      'x-forwarded-host': 'evil.example',
+      'x-forwarded-proto': 'https',
+    });
+    expect(resolveAuthEmailSiteOrigin(headers)).toBe(SITE_URL);
+  });
+});

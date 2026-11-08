@@ -11,6 +11,7 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
 import { apiFetch, apiUpload, getErrorMessage } from '@/lib/api-client';
 import { getAuthErrorMessage } from '@/lib/auth-errors';
+import { validateNewAccountPassword } from './account-password-validation';
 import {
   beginGoogleDeleteReauthAction,
   changeAccountEmailAction,
@@ -220,8 +221,9 @@ export function useMyAccountPage() {
       return;
     }
 
-    if (newPassword.length < 6) {
-      setPasswordMessage({ type: 'error', text: 'Password must be at least 6 characters' });
+    const passwordValidationError = validateNewAccountPassword(newPassword);
+    if (passwordValidationError) {
+      setPasswordMessage({ type: 'error', text: passwordValidationError });
       return;
     }
 

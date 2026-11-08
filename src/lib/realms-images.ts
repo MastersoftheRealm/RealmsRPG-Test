@@ -15,6 +15,15 @@ import { fileFromCroppedBlob } from '@/lib/crop-image';
 /** Same bucket as interim entity-tied art; bank paths use `library/` prefix. */
 export const REALMS_IMAGES_BUCKET = 'codex-art';
 
+/** Page size for GET /api/images (clients load more via `cursor`). */
+export const REALMS_IMAGES_LIST_LIMIT = 200;
+
+export type RealmsImagesListPage = {
+  images: RealmsImage[];
+  hasMore: boolean;
+  nextCursor: string | null;
+};
+
 export const REALMS_IMAGE_CATEGORIES = [
   'species',
   'creature',
@@ -134,19 +143,20 @@ export function withCacheBust(publicUrl: string, version = Date.now()): string {
   return `${base}?v=${version}`;
 }
 
-export async function listRealmsImages(opts?: {
+export async function listRealmsImagesPage(opts?: {
   category?: RealmsImageCategory | RealmsImageCategory[] | undefined;
   q?: string | undefined;
-}): Promise<RealmsImage[]> {
+  cursor?: string | undefined;
+}): Promise<RealmsImagesListPage> {
   const params = new URLSearchParams();
   if (opts?.category) {
     const cats = Array.isArray(opts.category) ? opts.category : [opts.category];
     params.set('category', cats.join(','));
   }
   if (opts?.q?.trim()) params.set('q', opts.q.trim());
+  if (opts?.cursor) params.set('cursor', opts.cursor);
   const qs = params.toString();
-  const data = await apiFetch<{ images: RealmsImage[] }>(`/api/images${qs ? `?${qs}` : ''}`);
-  return data.images;
+  return apiFetch<RealmsImagesListPage>(`/api/images${qs ? `?${qs}` : ''}`);
 }
 
 export async function getRealmsImageUsage(id: string): Promise<RealmsImageUsageReport> {

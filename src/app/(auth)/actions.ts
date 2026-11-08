@@ -26,7 +26,10 @@ import {
 import { readSupabasePkceCodeVerifier } from '@/lib/auth/supabase-pkce-cookies';
 import { authUserHasPasswordLogin } from '@/lib/auth/sensitive-account-auth';
 import { assertSensitiveAccountReauth } from '@/lib/auth/sensitive-account-auth';
-import { profileDisplayNameWriteValue } from '@/lib/profile-display-name';
+import {
+  profileDisplayNameWriteValue,
+  validateProfileDisplayName,
+} from '@/lib/profile-display-name';
 import { validateUsername } from '@/lib/username-rules';
 
 /** Postgres unique-violation; RLS/permission denial. */
@@ -102,6 +105,13 @@ export async function createUserProfileAction(data: {
       const usernameCheck = validateUsername(requestedUsername);
       if (!usernameCheck.ok) {
         return { success: false, error: usernameCheck.error };
+      }
+    }
+
+    if (data.displayName !== undefined) {
+      const displayNameCheck = validateProfileDisplayName(data.displayName);
+      if (!displayNameCheck.ok) {
+        return { success: false, error: displayNameCheck.error };
       }
     }
 

@@ -24,6 +24,7 @@ import {
 
 import { loginSchema, type LoginFormData } from '@/lib/validation';
 import { getAuthErrorMessage } from '@/lib/auth-errors';
+import { presentLoginActionFailure } from './login-action-result';
 import { sanitizeRedirectPath } from '@/lib/safe-redirect';
 import { resendConfirmationAction } from '@/app/(auth)/auth-actions';
 import {
@@ -44,6 +45,7 @@ function LoginContent() {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [resendStatus, setResendStatus] = useState<'idle' | 'sending' | 'sent'>('idle');
+  const [showResendConfirmation, setShowResendConfirmation] = useState(false);
   const [lastAttemptEmail, setLastAttemptEmail] = useState<string>('');
   /** When true, ignore ?error= from the URL (user started a new sign-in attempt). */
   const [ignoreAuthParam, setIgnoreAuthParam] = useState(false);
@@ -94,6 +96,7 @@ function LoginContent() {
     setIsLoading(true);
     clearDisplayedError();
     setResendStatus('idle');
+    setShowResendConfirmation(false);
     setLastAttemptEmail(data.email);
 
     if (captchaBlockMessage) {
@@ -109,7 +112,11 @@ function LoginContent() {
         captchaOptions.captchaToken ?? null,
       );
       if (!result.success) {
-        throw new Error(result.error);
+        resetCaptcha();
+        const presented = presentLoginActionFailure(result);
+        setError(presented.error);
+        setShowResendConfirmation(presented.showResendConfirmation);
+        return;
       }
       if (hasGuestEncountersToMigrate()) {
         await migrateGuestEncountersOnSignIn();
@@ -121,6 +128,7 @@ function LoginContent() {
       router.push(getRedirectPath());
     } catch (err) {
       resetCaptcha();
+      setShowResendConfirmation(false);
       setError(getAuthErrorMessage(err, 'login'));
     } finally {
       setIsLoading(false);
@@ -138,7 +146,11 @@ function LoginContent() {
     try {
       const redirectPath = getRedirectPath();
       const result = await resendConfirmationAction(email, redirectPath);
-      if (!result.success) throw new Error(result.error);
+      if (!result.success) {
+        setResendStatus('idle');
+        setError(result.error);
+        return;
+      }
       setResendStatus('sent');
     } catch (e) {
       setResendStatus('idle');
@@ -225,7 +237,7 @@ function LoginContent() {
         </Button>
       </form>
 
-      {error && error.toLowerCase().includes('confirm your email') ? (
+      {showResendConfirmation ? (
         <div className="mt-4">
           <Button
             type="button"

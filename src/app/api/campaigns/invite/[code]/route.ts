@@ -22,7 +22,7 @@ export async function GET(_request: Request, { params }: { params: Promise<{ cod
     }
 
     const ip = resolveClientIp((_request as unknown as NextRequest).headers);
-    const key = buildRateLimitKey('invite', { ip });
+    const key = buildRateLimitKey('invite', { ip, userId: user.uid });
     const { success } = await inviteCodeLimiter.check(key);
     if (!success) {
       return NextResponse.json(

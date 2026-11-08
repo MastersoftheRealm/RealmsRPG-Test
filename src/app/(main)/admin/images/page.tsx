@@ -7,7 +7,7 @@
  */
 
 import { useMemo, useState } from 'react';
-import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { useInfiniteQuery, useQueryClient } from '@tanstack/react-query';
 import { ChipSelect, CodexBrowseListShell, GridListRow, ErrorDisplay } from '@/components/patterns';
 import { PageContainer, PageHeader } from '@/components/ui';
 import { useSort } from '@/hooks/use-sort';
@@ -15,7 +15,7 @@ import {
   REALMS_IMAGE_CATEGORY_OPTIONS,
   formatRealmsImageCategoryLabels,
   deleteRealmsImage,
-  listRealmsImages,
+  listRealmsImagesPage,
   type RealmsImage,
   type RealmsImageCategory,
   type RealmsImageUsageRef,
@@ -57,19 +57,20 @@ export default function AdminImagesPage() {
   } | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
 
-  const {
-    data: images = [],
-    isLoading,
-    error,
-    refetch,
-  } = useQuery({
-    queryKey: [...QUERY_KEY, categoryFilters, search],
-    queryFn: () =>
-      listRealmsImages({
-        category: categoryFilters.length > 0 ? categoryFilters : undefined,
-        q: search.trim() || undefined,
-      }),
-  });
+  const { data, isLoading, error, refetch, fetchNextPage, hasNextPage, isFetchingNextPage } =
+    useInfiniteQuery({
+      queryKey: [...QUERY_KEY, categoryFilters, search],
+      queryFn: ({ pageParam }) =>
+        listRealmsImagesPage({
+          category: categoryFilters.length > 0 ? categoryFilters : undefined,
+          q: search.trim() || undefined,
+          cursor: pageParam,
+        }),
+      initialPageParam: undefined as string | undefined,
+      getNextPageParam: (lastPage) => lastPage.nextCursor ?? undefined,
+    });
+
+  const images = useMemo(() => data?.pages.flatMap((page) => page.images) ?? [], [data?.pages]);
 
   const sortedImages = useMemo(() => {
     const items = [...images];
@@ -221,6 +222,21 @@ export default function AdminImagesPage() {
           />
         ))}
       </CodexBrowseListShell>
+
+      {hasNextPage ? (
+        <div className="mt-4 flex justify-center">
+          <button
+            type="button"
+            className="min-h-11 rounded-card border border-border-light bg-surface-alt px-4 text-sm font-medium text-text-primary hover:bg-surface"
+            onClick={() => {
+              void fetchNextPage();
+            }}
+            disabled={isFetchingNextPage}
+          >
+            {isFetchingNextPage ? 'Loading more…' : 'Load more images'}
+          </button>
+        </div>
+      ) : null}
 
       {editImage !== undefined && (
         <AdminImageEditModal

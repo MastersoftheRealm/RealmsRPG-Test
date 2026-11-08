@@ -382,6 +382,19 @@ describe('createUserProfileAction', () => {
     expect(profileUpdate?.payload).not.toHaveProperty('display_name');
   });
 
+  it('rejects an over-long display name', async () => {
+    const { client } = createSupabaseStub((op) => {
+      if (op.table === 'user_profiles' && op.action === 'select') return ok(null);
+      return ok();
+    });
+    useStub(client);
+
+    const result = await createUserProfileAction({ displayName: 'a'.repeat(51) });
+
+    expect(result.success).toBe(false);
+    expect(result).toMatchObject({ error: expect.stringContaining('at most') });
+  });
+
   it('never overwrites an existing username', async () => {
     const { client, ops } = createSupabaseStub((op) => {
       if (op.table === 'user_profiles' && op.action === 'select') {

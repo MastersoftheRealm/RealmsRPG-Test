@@ -86,7 +86,9 @@ function RegisterContent() {
         captchaToken: captchaOptions.captchaToken ?? null,
       });
       if (!signUpResult.success) {
-        throw new Error(signUpResult.error);
+        resetCaptcha();
+        setError(signUpResult.error);
+        return;
       }
 
       if (signUpResult.needsEmailConfirmation) {
@@ -121,7 +123,11 @@ function RegisterContent() {
     try {
       const redirectPath = getRedirectPath();
       const result = await resendConfirmationAction(email, redirectPath);
-      if (!result.success) throw new Error(result.error);
+      if (!result.success) {
+        setResendStatus('idle');
+        setError(result.error);
+        return;
+      }
       setResendStatus('sent');
     } catch (e) {
       setResendStatus('idle');
