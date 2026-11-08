@@ -11,7 +11,7 @@ import { FakeSupabase } from '@/lib/codex/fake-supabase';
 
 vi.mock('next/cache', () => ({ revalidatePath: vi.fn(), updateTag: vi.fn() }));
 vi.mock('@/lib/official-library-get-payload', () => ({
-  fetchCachedOfficialColumnarItems: vi.fn(async () => []),
+  fetchCachedOfficialColumnarItems: vi.fn(),
 }));
 vi.mock('@/lib/supabase/session', () => ({
   requireLiveUser: vi.fn(async () => ({ uid: 'admin-1' })),
@@ -32,6 +32,41 @@ import {
   parseLevel1LoadoutsField,
   parseRecommendedAbilities,
 } from '@/lib/game/archetype-path';
+import { fetchCachedOfficialColumnarItems } from '@/lib/official-library-get-payload';
+
+const LISTED_INNATE_POWER = {
+  id: 'inn',
+  docId: 'inn',
+  name: 'Listed Spark',
+  type: 'power',
+  actionType: 'basic',
+  parts: [],
+  catalogListing: 'listed',
+  duration: { type: 'instant', value: 0 },
+};
+
+const UNLISTED_INNATE_POWER = {
+  id: 'unlisted-inn',
+  docId: 'unlisted-inn',
+  name: 'Unlisted Spark',
+  type: 'power',
+  actionType: 'basic',
+  parts: [],
+  catalogListing: 'unlisted',
+  duration: { type: 'instant', value: 0 },
+};
+
+function officialLibraryRowsForMock(
+  type: 'items' | 'powers' | 'techniques' | 'empowered-techniques' | 'creatures',
+  includeUnlisted: boolean,
+): Record<string, unknown>[] {
+  if (type === 'powers') {
+    const rows = [LISTED_INNATE_POWER, UNLISTED_INNATE_POWER];
+    return includeUnlisted ? rows : rows.filter((row) => row.catalogListing === 'listed');
+  }
+  if (type === 'items') return [];
+  return [];
+}
 
 let currentDb: FakeSupabase;
 
@@ -81,6 +116,10 @@ function seed(options: { failInsertOnce?: Set<string> | undefined } = {}): FakeS
 beforeEach(() => {
   vi.mocked(recordCodexChange).mockReset();
   vi.mocked(recordCodexChange).mockResolvedValue(undefined);
+  vi.mocked(fetchCachedOfficialColumnarItems).mockImplementation(
+    async (_supabase, type, includeUnlisted) =>
+      officialLibraryRowsForMock(type, includeUnlisted === true),
+  );
   seed();
 });
 
@@ -399,6 +438,38 @@ describe('archetype progression replace', () => {
     expect(result.error).toMatch(/Innate Energy > 0/i);
     expect(currentDb.tables.codex_archetypes).toEqual(beforeArchetype);
   });
+
+  it('rejects unlisted innate ids the same as unknown ids (listed-only catalog)', async () => {
+    const beforeArchetype = structuredClone(currentDb.tables.codex_archetypes);
+
+    const unlisted = await saveArchetypeWithPath({
+      ...baseArchetype,
+      type: 'powered-martial',
+      power_prof_start: 2,
+      martial_prof_start: 1,
+      level1_innate_powers: 'unlisted-inn',
+      levels: [{ level: 2, feats: '1' }],
+    });
+    const missing = await saveArchetypeWithPath({
+      ...baseArchetype,
+      type: 'powered-martial',
+      power_prof_start: 2,
+      martial_prof_start: 1,
+      level1_innate_powers: 'does-not-exist',
+      levels: [{ level: 2, feats: '1' }],
+    });
+
+    expect(unlisted.success).toBe(false);
+    expect(missing.success).toBe(false);
+    expect(unlisted.error).toMatch(/not found in official library/i);
+    expect(missing.error).toMatch(/not found in official library/i);
+    expect(currentDb.tables.codex_archetypes).toEqual(beforeArchetype);
+    expect(fetchCachedOfficialColumnarItems).toHaveBeenCalledWith(
+      expect.anything(),
+      'powers',
+      false,
+    );
+  });
 });
 
 describe('saveArchetypeWithPath TEXT list persistence', () => {
@@ -552,6 +623,7 @@ describe('saveArchetypeWithPath JSON column persistence', () => {
       level1_feats: '1,2',
       level1_skills: '10',
       level1_powers: 'pwr',
+      level1_innate_powers: 'inn',
       level1_techniques: 'tec',
       level1_armaments: '3:1',
       level1_equipment: '4',

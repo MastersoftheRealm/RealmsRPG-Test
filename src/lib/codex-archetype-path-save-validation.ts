@@ -9,6 +9,7 @@ import type {
 } from '@/app/(main)/admin/codex/codex-archetype-write';
 import type { ItemPropertyTpRow } from '@/lib/calculators/item-calc';
 import { CODEX_DESC_MAX_LENGTH } from '@/lib/codex-columnar-keys';
+import { selectPowerParts } from '@/lib/codex/part-type';
 import {
   mapCodexEquipment,
   mapCodexPart,
@@ -406,8 +407,8 @@ export async function buildSaveArchetypePathValidationContext(
     partsResult,
     propertiesResult,
   ] = await Promise.all([
-    fetchCachedOfficialColumnarItems(supabase, 'items', true),
-    fetchCachedOfficialColumnarItems(supabase, 'powers', true),
+    fetchCachedOfficialColumnarItems(supabase, 'items', false),
+    fetchCachedOfficialColumnarItems(supabase, 'powers', false),
     supabase.from('codex_equipment').select('*'),
     supabase.from('codex_skills').select('*'),
     supabase.from('codex_parts').select('*'),
@@ -426,8 +427,8 @@ export async function buildSaveArchetypePathValidationContext(
   const itemProperties = (propertiesResult.data ?? []).map((row) =>
     mapCodexProperty(row as Record<string, unknown>),
   ) as ItemPropertyTpRow[];
-  const powerPartsDb = (partsResult.data ?? []).map((row) =>
-    mapCodexPart(row as Record<string, unknown>),
+  const powerPartsDb = selectPowerParts(
+    (partsResult.data ?? []).map((row) => mapCodexPart(row as Record<string, unknown>)),
   ) as PowerPart[];
   const skillById = new Map(
     (skillsResult.data ?? []).map((row) => {
