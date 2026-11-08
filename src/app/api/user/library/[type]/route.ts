@@ -26,7 +26,6 @@ import {
   bodyToColumnar,
   toDbRow,
   rowToItemSpecies,
-  mergeLegacySpeciesRowWithImageColumns,
   bodyToColumnarSpecies,
   toDbRowSpecies,
   type ColumnarLibraryType,
@@ -116,12 +115,7 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
     if (dbError) throw dbError;
     const list = (rows ?? []) as Record<string, unknown>[];
     await enrichRowsWithBankImageUrls(supabase, list);
-    const items = list.map((r) => {
-      if (r.data !== undefined && r.data !== null) {
-        return mergeLegacySpeciesRowWithImageColumns(r);
-      }
-      return rowToItemSpecies(r);
-    });
+    const items = list.map((r) => rowToItemSpecies(r));
     items.sort((a, b) => {
       const na = String((a as Record<string, unknown>).name ?? '');
       const nb = String((b as Record<string, unknown>).name ?? '');
@@ -320,14 +314,7 @@ export async function POST(
         return NextResponse.json({ error: 'Item not found' }, { status: 404 });
       }
       const existingRow = existing as Record<string, unknown>;
-      const copyItem =
-        existingRow.data !== undefined && existingRow.data !== null
-          ? {
-              id: existingRow.id,
-              docId: existingRow.id,
-              ...(existingRow.data as Record<string, unknown>),
-            }
-          : rowToItemSpecies(existingRow);
+      const copyItem = rowToItemSpecies(existingRow);
       const baseName = String((copyItem.name as string) || 'Item').trim();
       const copyData = { ...copyItem, name: `${baseName} (Copy)` };
       delete (copyData as Record<string, unknown>).id;

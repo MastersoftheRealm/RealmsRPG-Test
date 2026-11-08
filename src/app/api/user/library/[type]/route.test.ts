@@ -97,6 +97,44 @@ describe('GET /api/user/library/[type]', () => {
     expect(response.status).toBe(200);
     await expect(readJson(response)).resolves.toEqual([{ id: 'sp-2', name: 'Riverfolk' }]);
   });
+
+  it('species list maps with rowToItemSpecies and prefers the name column over legacy data.name', async () => {
+    mockGetSession.mockResolvedValue({
+      user: { uid: 'user-1', email: 'user@example.com' },
+      error: null,
+    });
+
+    const speciesRow = {
+      id: 'sp-col',
+      user_id: 'user-1',
+      name: 'Column Name',
+      description: '',
+      type: '',
+      payload: {},
+      // Legacy shape that must not drive GET mapping (no `data` column in DB).
+      data: { name: 'Stale JSON Name' },
+    };
+
+    mockCreateClient.mockResolvedValue({
+      from: vi.fn((table: string) => {
+        if (table !== 'user_species') throw new Error(`Unexpected table: ${table}`);
+        return {
+          select: vi.fn(() => ({
+            eq: vi.fn(async () => ({ data: [speciesRow], error: null })),
+          })),
+        };
+      }),
+    } as never);
+
+    const response = await GET(new NextRequest('http://localhost/api/user/library/species'), {
+      params: Promise.resolve({ type: 'species' }),
+    });
+
+    expect(response.status).toBe(200);
+    const body = await readJson<Array<{ id: string; name: string }>>(response);
+    expect(body).toHaveLength(1);
+    expect(body[0]?.name).toBe('Column Name');
+  });
 });
 
 const PROFILE_DENIED = {

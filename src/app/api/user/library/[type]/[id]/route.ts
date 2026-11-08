@@ -2,7 +2,7 @@
  * User Library Item API
  * =====================
  * Get, update, delete a single library item. Columnar for powers/techniques/items/creatures;
- * species uses legacy data.
+ * species uses columnar user_species.
  */
 
 import { NextRequest, NextResponse } from 'next/server';
@@ -22,7 +22,6 @@ import {
   bodyToColumnar,
   toDbRow,
   rowToItemSpecies,
-  mergeLegacySpeciesRowWithImageColumns,
   bodyToColumnarSpecies,
   toDbRowSpecies,
   type ColumnarLibraryType,
@@ -81,9 +80,6 @@ export async function GET(
     if (!row) return NextResponse.json(null, { status: 404 });
     const r = row as Record<string, unknown>;
     await enrichRowsWithBankImageUrls(supabase, [r]);
-    if (r.data !== undefined && r.data !== null) {
-      return NextResponse.json(mergeLegacySpeciesRowWithImageColumns(r));
-    }
     return NextResponse.json(rowToItemSpecies(r));
   } catch (err) {
     console.error('[API Error] GET /api/user/library/[type]/[id]:', err);
