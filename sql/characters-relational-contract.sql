@@ -1,4 +1,4 @@
--- ADR-0030 final contract migration.
+-- ADR-0031 final contract migration.
 -- Apply only after the compatibility cutover, its smoke test, application QA,
 -- a fresh production backup, and deployment of the relational-only app code.
 -- This transaction refuses to drop the legacy column unless every row is at

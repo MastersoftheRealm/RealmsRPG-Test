@@ -244,6 +244,20 @@ BEGIN
     RAISE EXCEPTION 'Atomic campaign character removal failed, got %', v_result;
   END IF;
 
+  UPDATE public.campaigns
+  SET characters = jsonb_build_array(jsonb_build_object(
+    'userId','00000000-0000-4000-8000-000000000098',
+    'characterId',v_character_id
+  ))
+  WHERE id = v_campaign_id;
+  v_result := public.get_campaign_character_relational_document(
+    v_campaign_id, '00000000-0000-4000-8000-000000000098', v_character_id
+  );
+  IF v_result->>'status' <> 'character_not_rostered' THEN
+    RAISE EXCEPTION 'Stale roster owner remained readable, got %', v_result;
+  END IF;
+  UPDATE public.campaigns SET characters = '[]'::jsonb WHERE id = v_campaign_id;
+
   v_document := public.get_character_relational_document(v_character_id);
   v_result := public.add_campaign_character_relational(
     v_owner_id,

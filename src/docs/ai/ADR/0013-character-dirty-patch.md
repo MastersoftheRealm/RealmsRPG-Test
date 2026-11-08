@@ -1,6 +1,6 @@
 # ADR-0013: Character dirty-key PATCH + updatedAt 409
 
-- **Status:** Accepted; persistence amended by ADR-0030
+- **Status:** Accepted; persistence amended by ADR-0031
 - **Date:** 2026-08-14
 - **Deciders:** owner (audit program: Wave 2 P0 after TASK-740) / agent (Architect role)
 - **Task:** TASK-741
@@ -18,7 +18,7 @@ separate `version int` column.
 ## Decision
 
 1. **Dirty-key body.** Clients send only keys that changed (plus optional `updatedAt`). The route
-   merges those keys into the relational document assembled by ADR-0030. Omitted keys stay as
+   merges those keys into the relational document assembled by ADR-0031. Omitted keys stay as
    stored. A JSON `null`
    removes that key. Sheet autosave sends `null` when a saved key was cleared (the last temp
    modifier, an emptied trait customization) so the old value does not return on reload

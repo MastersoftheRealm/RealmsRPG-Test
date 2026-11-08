@@ -81,6 +81,12 @@ function createEnrichmentAwareSupabase({
   });
 
   const sessionClient = {
+    rpc: vi.fn(async (name: string) => {
+      if (name === 'get_character_relational_document') {
+        return { data: characterRow.data, error: null };
+      }
+      throw new Error(`Unexpected RPC: ${name}`);
+    }),
     from: vi.fn((table: string) => {
       if (table === 'characters') {
         const eqCalls: [string, string][] = [];

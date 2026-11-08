@@ -84,6 +84,7 @@ export function buildRosterFieldsFromCharacterData(charData: Record<string, unkn
     archetype: archetypeDisplayNameFromType(archetype?.type),
   };
 }
+
 /** Whether `userId` is the campaign owner or has a `campaign_members` row. */
 export function isUserCampaignParticipant(
   userId: string,

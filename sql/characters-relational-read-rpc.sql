@@ -326,6 +326,19 @@ BEGIN
     END IF;
   END IF;
 
+  -- A stale roster entry must not expose a character after its owner leaves.
+  -- The campaign owner is always a participant; every other owner needs a
+  -- current membership row from the same locked campaign snapshot.
+  IF v_campaign.owner_id IS DISTINCT FROM p_character_owner_id THEN
+    PERFORM 1
+    FROM public.campaign_members
+    WHERE campaign_id = p_campaign_id AND user_id = p_character_owner_id
+    FOR SHARE;
+    IF NOT FOUND THEN
+      RETURN jsonb_build_object('status','character_not_rostered');
+    END IF;
+  END IF;
+
   IF NOT EXISTS (
     SELECT 1
     FROM jsonb_array_elements(

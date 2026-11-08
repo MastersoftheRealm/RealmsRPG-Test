@@ -104,6 +104,13 @@ function createMockSupabase({
         if (viewerId !== campaignRow.owner_id && !memberUserIds.includes(viewerId)) {
           return { data: { status: 'not_member' }, error: null };
         }
+        const characterOwnerId = String(args.p_character_owner_id ?? '');
+        if (
+          characterOwnerId !== campaignRow.owner_id &&
+          !memberUserIds.includes(characterOwnerId)
+        ) {
+          return { data: { status: 'character_not_rostered' }, error: null };
+        }
         const roster = campaignRow.characters as Array<{
           userId: string;
           characterId: string;
@@ -322,12 +329,12 @@ describe('GET /api/campaigns/[id]/characters/[userId]/[characterId]', () => {
   it('returns 404 when roster JSON still lists a user who left the campaign (API-003)', async () => {
     mockGetSession.mockResolvedValue({ user: MEMBER, error: null });
     const supabase = createMockSupabase({
+      viewerId: MEMBER.uid,
       campaignRow: makeCampaignRow(),
       memberUserIds: [MEMBER.uid],
       characterRow: makeCharacterRow(),
     });
     mockCreateClient.mockResolvedValue(supabase as never);
-    mockCreateServiceRoleClient.mockReturnValue(supabase as never);
 
     const response = await GET(makeGetRequest(), routeParams());
 

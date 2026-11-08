@@ -1,4 +1,4 @@
--- Transactional smoke test for the ADR-0030 final contract migration.
+-- Transactional smoke test for the ADR-0031 final contract migration.
 -- Run only after characters-relational-contract.sql. Fixtures are rolled back.
 BEGIN;
 

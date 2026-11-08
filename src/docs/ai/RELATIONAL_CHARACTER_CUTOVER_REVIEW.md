@@ -2,7 +2,7 @@
 
 **Review date:** November 8, 2026
 
-**Scope:** staged ADR-0030 compatibility and final contract cutover
+**Scope:** staged ADR-0031 compatibility and final contract cutover
 
 **Status:** **The compatibility stage is applied and verified in production. `characters.data` remains present; application QA/deployment and the separately backed-up contract/drop stage remain pending.**
 

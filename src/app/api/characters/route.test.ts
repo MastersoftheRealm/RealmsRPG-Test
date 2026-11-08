@@ -107,9 +107,9 @@ type MockSupabaseConfig = {
     hint?: string | undefined;
     code?: string | undefined;
   } | null;
-  /** Row returned for `select('id, data')` — the duplicate source lookup. */
+  /** Relational document returned for the duplicate source lookup. */
   duplicateSource?: { id: string; data: Record<string, unknown> } | null | undefined;
-  /** Sheet blob for `.select('data')` on idempotent replay (else last insert). */
+  /** Relational document returned for idempotent replay (else last RPC insert). */
   replayCharacterSheet?: Record<string, unknown> | null | undefined;
 };
 
@@ -175,19 +175,6 @@ function createMockSupabase(config: MockSupabaseConfig = {}) {
                   if (duplicateSource && filters.id === duplicateSource.id) {
                     return { data: { id: duplicateSource.id }, error: null };
                   }
-                  if (cols === 'data') {
-                    storedSheetSelectCalls++;
-                    const sheet =
-                      replayCharacterSheet ??
-                      (insertedRows.length > 0
-                        ? (insertedRows[insertedRows.length - 1]?.data as
-                            | Record<string, unknown>
-                            | undefined)
-                        : undefined);
-                    return sheet
-                      ? { data: { data: sheet }, error: null }
-                      : { data: null, error: null };
-                  }
                   const id = cols === 'id' ? replayedId() : null;
                   return { data: id ? { id } : null, error: null };
                 }),
@@ -229,7 +216,15 @@ function createMockSupabase(config: MockSupabaseConfig = {}) {
     }),
     rpc: vi.fn(async (name: string, args: Record<string, unknown>) => {
       if (name === 'get_character_relational_document') {
-        return { data: duplicateSource?.data ?? null, error: null };
+        const characterId = args.p_character_id as string;
+        if (duplicateSource?.id === characterId) {
+          return { data: duplicateSource.data, error: null };
+        }
+        storedSheetSelectCalls++;
+        const inserted = insertedRows.find((row) => row.id === characterId);
+        const sheet =
+          replayCharacterSheet ?? (inserted?.data as Record<string, unknown> | undefined) ?? null;
+        return { data: sheet, error: null };
       }
       if (name === 'create_character_relational') {
         const document = args.p_document as Record<string, unknown>;
