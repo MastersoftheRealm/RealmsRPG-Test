@@ -17,6 +17,7 @@ import {
 import { buildRateLimitKey, resolveClientIp, uploadLimiter } from '@/lib/rate-limit';
 import {
   REALMS_IMAGES_BUCKET,
+  REALMS_IMAGES_LIST_LIMIT,
   isRealmsImageCategory,
   parseRealmsImageCategories,
   realmsImageStoragePath,
@@ -100,6 +101,8 @@ export async function GET(request: NextRequest) {
       const pattern = `%${escapeIlikePattern(q)}%`;
       query = query.ilike('name', pattern);
     }
+
+    query = query.limit(REALMS_IMAGES_LIST_LIMIT);
 
     const { data, error } = await query;
     if (error) {

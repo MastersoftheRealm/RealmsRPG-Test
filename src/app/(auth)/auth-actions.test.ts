@@ -1,4 +1,9 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
+import {
+  AUTH_EMAIL_NOT_CONFIRMED_MESSAGE,
+  AUTH_INVALID_CREDENTIALS_LOGIN_MESSAGE,
+} from '@/lib/auth-errors';
+import { presentLoginActionFailure } from './login/login-action-result';
 
 const mockSignInWithPassword = vi.fn();
 const mockSignUp = vi.fn();
@@ -52,6 +57,7 @@ describe('auth-actions rate limits', () => {
     expect(result).toEqual({
       success: false,
       error: 'Too many failed attempts. Please try again later.',
+      reason: 'rate_limited',
       rateLimited: true,
     });
     expect(mockSignInWithPassword).not.toHaveBeenCalled();
@@ -76,19 +82,59 @@ describe('auth-actions rate limits', () => {
     expect(mockSignUp).not.toHaveBeenCalled();
   });
 
-  it('signUpAction maps Supabase messages to generic copy', async () => {
+  it('signUpAction returns the same success shape when the email already exists', async () => {
     mockSignUp.mockResolvedValue({
       data: { session: null },
-      error: { message: 'User already registered' },
+      error: { message: 'User already registered', code: 'user_already_exists' },
     });
 
     const { signUpAction } = await import('./auth-actions');
     const result = await signUpAction('user@example.com', 'secret');
 
     expect(result).toEqual({
-      success: false,
-      error: 'An account with this email already exists.',
+      success: true,
+      needsEmailConfirmation: true,
     });
+  });
+
+  it('loginWithPasswordAction exposes unconfirmed-email reason for the login page', async () => {
+    mockSignInWithPassword.mockResolvedValue({
+      error: { message: 'Email not confirmed', code: 'email_not_confirmed' },
+    });
+
+    const { loginWithPasswordAction } = await import('./auth-actions');
+    const result = await loginWithPasswordAction('user@example.com', 'secret');
+    expect(result).toEqual({
+      success: false,
+      error: AUTH_EMAIL_NOT_CONFIRMED_MESSAGE,
+      reason: 'email_not_confirmed',
+    });
+    if (!result.success) {
+      expect(presentLoginActionFailure(result)).toEqual({
+        error: AUTH_EMAIL_NOT_CONFIRMED_MESSAGE,
+        showResendConfirmation: true,
+      });
+    }
+  });
+
+  it('loginWithPasswordAction maps bad credentials without invalid-email false positive', async () => {
+    mockSignInWithPassword.mockResolvedValue({
+      error: { message: 'Invalid login credentials', code: 'invalid_credentials' },
+    });
+
+    const { loginWithPasswordAction } = await import('./auth-actions');
+    const result = await loginWithPasswordAction('user@example.com', 'wrong');
+    expect(result).toEqual({
+      success: false,
+      error: AUTH_INVALID_CREDENTIALS_LOGIN_MESSAGE,
+      reason: 'invalid_credentials',
+    });
+    if (!result.success) {
+      expect(presentLoginActionFailure(result)).toEqual({
+        error: AUTH_INVALID_CREDENTIALS_LOGIN_MESSAGE,
+        showResendConfirmation: false,
+      });
+    }
   });
 
   it('loginWithPasswordAction hides unknown Supabase errors', async () => {
@@ -102,6 +148,7 @@ describe('auth-actions rate limits', () => {
     expect(result).toEqual({
       success: false,
       error: 'An error occurred during sign in. Please try again.',
+      reason: 'generic',
     });
   });
 

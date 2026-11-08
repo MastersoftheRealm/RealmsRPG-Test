@@ -41,6 +41,18 @@ describe('getAuthErrorMessage', () => {
     );
   });
 
+  it('maps invalid credentials before invalid-email heuristics on login', () => {
+    expect(
+      getAuthErrorMessage(
+        { message: 'Invalid email or password', code: 'invalid_credentials' },
+        'login',
+      ),
+    ).toBe('Invalid email or password');
+    expect(getAuthErrorMessage(new Error('Invalid login credentials'), 'login')).toBe(
+      'Invalid email or password',
+    );
+  });
+
   it('maps already-exists and weak-password without over-matching "password"', () => {
     expect(
       getAuthErrorMessage(

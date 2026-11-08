@@ -5,8 +5,11 @@ import { createClient } from '@/lib/supabase/server';
 import {
   AUTH_LOGIN_RATE_LIMIT_MESSAGE,
   AUTH_RATE_LIMIT_MESSAGE,
+  authActionFailureReason,
   getAuthErrorMessage,
+  isAuthAlreadyExistsError,
 } from '@/lib/auth-errors';
+import type { AuthActionFailureReason } from '@/lib/auth-errors';
 import { resolveAuthEmailSiteOrigin } from '@/lib/auth-email-site-origin';
 import { buildAuthCaptchaOptions } from '@/lib/auth/captcha';
 import {
@@ -57,7 +60,13 @@ export async function loginWithPasswordAction(
   password: string,
   captchaToken?: string | null,
 ): Promise<
-  { success: true } | { success: false; error: string; rateLimited?: boolean | undefined }
+  | { success: true }
+  | {
+      success: false;
+      error: string;
+      reason?: AuthActionFailureReason | undefined;
+      rateLimited?: boolean | undefined;
+    }
 > {
   const normalizedEmail = email.trim().toLowerCase();
   if (!normalizedEmail || !normalizedEmail.includes('@')) {
@@ -69,7 +78,12 @@ export async function loginWithPasswordAction(
 
   const limit = await enforceAuthCredentialRateLimit('auth-login', normalizedEmail);
   if (!limit.allowed) {
-    return { success: false, error: AUTH_LOGIN_RATE_LIMIT_MESSAGE, rateLimited: true };
+    return {
+      success: false,
+      error: AUTH_LOGIN_RATE_LIMIT_MESSAGE,
+      reason: 'rate_limited',
+      rateLimited: true,
+    };
   }
 
   const supabase = await createClient();
@@ -81,9 +95,19 @@ export async function loginWithPasswordAction(
 
   if (error) {
     if (mapSupabaseRateLimit(error.message ?? '')) {
-      return { success: false, error: AUTH_LOGIN_RATE_LIMIT_MESSAGE, rateLimited: true };
+      return {
+        success: false,
+        error: AUTH_LOGIN_RATE_LIMIT_MESSAGE,
+        reason: 'rate_limited',
+        rateLimited: true,
+      };
     }
-    return { success: false, error: getAuthErrorMessage(error, 'login') };
+    const userMessage = getAuthErrorMessage(error, 'login');
+    return {
+      success: false,
+      error: userMessage,
+      reason: authActionFailureReason(userMessage, 'login'),
+    };
   }
 
   return { success: true };
@@ -136,6 +160,9 @@ export async function signUpAction(
   if (error) {
     if (mapSupabaseRateLimit(error.message ?? '')) {
       return { success: false, error: AUTH_RATE_LIMIT_MESSAGE, rateLimited: true };
+    }
+    if (isAuthAlreadyExistsError(error)) {
+      return { success: true, needsEmailConfirmation: true };
     }
     return { success: false, error: getAuthErrorMessage(error, 'register') };
   }

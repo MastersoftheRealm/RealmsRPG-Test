@@ -22,9 +22,17 @@ $ExpectedOutputs = @(
 
 $script:LogPath = $null
 
+function Redact-SensitiveLogText {
+  param([string]$Text)
+
+  if ([string]::IsNullOrEmpty($Text)) { return $Text }
+  return ($Text -replace '(postgres(ql)?://)([^:/\s]+):([^@\s]+)@', '$1$3:<redacted>@')
+}
+
 function Write-Log {
   param([string]$Text)
-  if ($script:LogPath) { Add-Content -LiteralPath $script:LogPath -Value $Text }
+  $safe = Redact-SensitiveLogText -Text $Text
+  if ($script:LogPath) { Add-Content -LiteralPath $script:LogPath -Value $safe }
 }
 
 function Stop-WithFailure {
@@ -147,13 +155,13 @@ function Invoke-DumpTool {
   try {
     Write-Log "--- $Label"
     Write-Log "$Exe $(Redact-DumpArgsForLog -DumpArgs $DumpArgs)"
-    $output = (& $Exe @DumpArgs 2>&1 | Out-String)
+    $output = Redact-SensitiveLogText -Text ((& $Exe @DumpArgs 2>&1 | Out-String))
     $code = $LASTEXITCODE
     if ($output) { Write-Log $output.TrimEnd() }
     Write-Log "exit code: $code"
     return $code
   } catch {
-    Write-Log "exception: $($_.Exception.Message)"
+    Write-Log "exception: $(Redact-SensitiveLogText -Text $_.Exception.Message)"
     return 1
   } finally {
     $ErrorActionPreference = $prevEap

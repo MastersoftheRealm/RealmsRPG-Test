@@ -14,6 +14,7 @@ vi.mock('@/lib/supabase/server', () => ({
   createServiceRoleClient: vi.fn(),
 }));
 
+import { REALMS_IMAGES_LIST_LIMIT } from '@/lib/realms-images';
 import { GET, POST } from './route';
 import { requireLiveUser } from '@/lib/supabase/session';
 import { isAdmin } from '@/lib/admin';
@@ -28,9 +29,18 @@ const USER = { uid: 'user-123', email: 'hero@example.com' };
 
 function createListSupabase(options?: { ilike?: ReturnType<typeof vi.fn> }) {
   const payload = { data: [] as unknown[], error: null };
-  const ilike = options?.ilike ?? vi.fn().mockResolvedValue(payload);
+  const limit = vi.fn().mockResolvedValue(payload);
+  const afterIlike = {
+    limit,
+    then: (
+      onFulfilled: (value: typeof payload) => unknown,
+      onRejected?: (reason: unknown) => unknown,
+    ) => Promise.resolve(payload).then(onFulfilled, onRejected),
+  };
+  const ilike = options?.ilike ?? vi.fn().mockReturnValue(afterIlike);
   const terminal = {
     ilike,
+    limit,
     then: (
       onFulfilled: (value: typeof payload) => unknown,
       onRejected?: (reason: unknown) => unknown,
@@ -47,6 +57,7 @@ function createListSupabase(options?: { ilike?: ReturnType<typeof vi.fn> }) {
       };
     }),
     ilike,
+    limit,
     order,
   };
 }
@@ -72,17 +83,29 @@ describe('GET /api/images', () => {
   });
 
   it('lists images without a session (public read)', async () => {
-    mockCreateClient.mockResolvedValue(createListSupabase() as never);
+    const chain = createListSupabase();
+    mockCreateClient.mockResolvedValue(chain as never);
 
     const response = await GET(makeGetRequest());
 
     expect(response.status).toBe(200);
     await expect(readJson(response)).resolves.toEqual({ images: [] });
+    expect(chain.limit).toHaveBeenCalledWith(REALMS_IMAGES_LIST_LIMIT);
     expect(mockRequireLiveUser).not.toHaveBeenCalled();
   });
 
   it('escapes LIKE metacharacters in q before ilike', async () => {
-    const ilike = vi.fn().mockResolvedValue({ data: [], error: null });
+    const ilike = vi.fn().mockImplementation(() => {
+      const payload = { data: [] as unknown[], error: null };
+      const limit = vi.fn().mockResolvedValue(payload);
+      return {
+        limit,
+        then: (
+          onFulfilled: (value: typeof payload) => unknown,
+          onRejected?: (reason: unknown) => unknown,
+        ) => Promise.resolve(payload).then(onFulfilled, onRejected),
+      };
+    });
     const chain = createListSupabase({ ilike });
     mockCreateClient.mockResolvedValue(chain as never);
 

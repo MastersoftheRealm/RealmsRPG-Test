@@ -15,6 +15,9 @@ import { fileFromCroppedBlob } from '@/lib/crop-image';
 /** Same bucket as interim entity-tied art; bank paths use `library/` prefix. */
 export const REALMS_IMAGES_BUCKET = 'codex-art';
 
+/** Upper bound for GET /api/images list responses. */
+export const REALMS_IMAGES_LIST_LIMIT = 200;
+
 export const REALMS_IMAGE_CATEGORIES = [
   'species',
   'creature',

@@ -15,6 +15,38 @@ export const AUTH_LOGIN_RATE_LIMIT_MESSAGE = 'Too many failed attempts. Please t
 /** App-layer auth rate limit — signup, password reset, resend, etc. */
 export const AUTH_RATE_LIMIT_MESSAGE = 'Too many requests. Please try again later.';
 
+export const AUTH_EMAIL_NOT_CONFIRMED_MESSAGE = 'Please confirm your email before signing in.';
+
+export const AUTH_INVALID_CREDENTIALS_LOGIN_MESSAGE = 'Invalid email or password';
+
+export type AuthActionFailureReason =
+  | 'email_not_confirmed'
+  | 'invalid_credentials'
+  | 'rate_limited'
+  | 'generic';
+
+export function isAuthAlreadyExistsError(error: unknown): boolean {
+  const { message: rawMessage, code: rawCode } = readAuthError(error);
+  return isAlreadyExistsError(rawMessage.toLowerCase(), rawCode.toLowerCase());
+}
+
+/** Stable reason for action results after {@link getAuthErrorMessage} has run. */
+export function authActionFailureReason(
+  userMessage: string,
+  context: AuthErrorContext,
+): AuthActionFailureReason {
+  if (userMessage === AUTH_LOGIN_RATE_LIMIT_MESSAGE || userMessage === AUTH_RATE_LIMIT_MESSAGE) {
+    return 'rate_limited';
+  }
+  if (context === 'login' && userMessage === AUTH_EMAIL_NOT_CONFIRMED_MESSAGE) {
+    return 'email_not_confirmed';
+  }
+  if (context === 'login' && userMessage === AUTH_INVALID_CREDENTIALS_LOGIN_MESSAGE) {
+    return 'invalid_credentials';
+  }
+  return 'generic';
+}
+
 export type AuthErrorContext =
   | 'login'
   | 'register'
@@ -149,7 +181,7 @@ export function getAuthErrorMessage(error: unknown, context: AuthErrorContext = 
     message.includes('not confirmed') ||
     code === 'email_not_confirmed'
   ) {
-    return 'Please confirm your email before signing in.';
+    return AUTH_EMAIL_NOT_CONFIRMED_MESSAGE;
   }
 
   if (
@@ -169,6 +201,10 @@ export function getAuthErrorMessage(error: unknown, context: AuthErrorContext = 
     return 'Password is too weak. Please choose a stronger password.';
   }
 
+  if (context === 'login' && isInvalidCredentialsError(message, code)) {
+    return AUTH_INVALID_CREDENTIALS_LOGIN_MESSAGE;
+  }
+
   if (isInvalidEmailError(message, code)) {
     return 'Invalid email address.';
   }
@@ -183,10 +219,6 @@ export function getAuthErrorMessage(error: unknown, context: AuthErrorContext = 
 
   if (isEmailSendFailure(message, code)) {
     return 'We could not send the email right now. Please try again in a few minutes.';
-  }
-
-  if (context === 'login' && isInvalidCredentialsError(message, code)) {
-    return 'Invalid email or password';
   }
 
   if (
