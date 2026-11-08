@@ -62,6 +62,32 @@ export function d20CritAdjustment(dice: ReadonlyArray<{ type: DieType; value: nu
   return { isCrit: false, isCritFail: false, adjustment: 0 };
 }
 
+/** Stored roll total and crit flags from dice results already rolled on the client. */
+export function computeRollOutcome(
+  dice: ReadonlyArray<{ type: DieType; value: number }>,
+  modifier: number,
+): {
+  total: number;
+  isCrit: boolean;
+  isCritFail: boolean;
+  critMessage: string | null;
+} {
+  const diceSum = dice.reduce((sum, die) => sum + die.value, 0);
+  const crit = d20CritAdjustment(dice);
+  const total = diceSum + modifier + crit.adjustment;
+  const critMessage = crit.isCrit
+    ? 'Natural 20! +2 to the total!'
+    : crit.isCritFail
+      ? 'Natural 1! -2 from the total!'
+      : null;
+  return {
+    total,
+    isCrit: crit.isCrit,
+    isCritFail: crit.isCritFail,
+    critMessage,
+  };
+}
+
 export function generateRollId(prefix = 'roll'): string {
   return `${prefix}-${Date.now()}-${Math.random().toString(36).slice(2, 11)}`;
 }

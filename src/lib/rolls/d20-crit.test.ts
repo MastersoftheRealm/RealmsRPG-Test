@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { d20CritAdjustment } from './die';
+import { computeRollOutcome, d20CritAdjustment } from './die';
 
 describe('d20 crit adjustment (86e3jz6py)', () => {
   it('adds 2 on a lone natural 20 and subtracts 2 on a lone natural 1', () => {
@@ -36,5 +36,36 @@ describe('d20 crit adjustment (86e3jz6py)', () => {
       ]).adjustment,
     ).toBe(0);
     expect(d20CritAdjustment([{ type: 'd6', value: 6 }]).adjustment).toBe(0);
+  });
+});
+
+describe('computeRollOutcome (API-012 / LIB1-007)', () => {
+  it('sums dice, modifier, and single-d20 crit adjustment', () => {
+    expect(computeRollOutcome([{ type: 'd20', value: 15 }], 3)).toEqual({
+      total: 18,
+      isCrit: false,
+      isCritFail: false,
+      critMessage: null,
+    });
+    expect(computeRollOutcome([{ type: 'd20', value: 20 }], 5)).toEqual({
+      total: 27,
+      isCrit: true,
+      isCritFail: false,
+      critMessage: 'Natural 20! +2 to the total!',
+    });
+    expect(
+      computeRollOutcome(
+        [
+          { type: 'd6', value: 4 },
+          { type: 'd6', value: 6 },
+        ],
+        2,
+      ),
+    ).toEqual({
+      total: 12,
+      isCrit: false,
+      isCritFail: false,
+      critMessage: null,
+    });
   });
 });

@@ -286,6 +286,41 @@ describe('POST /api/campaigns/[id]/rolls', () => {
     expect(saved.data.rolledByRealmMaster).toBe(true);
   });
 
+  it('recomputes total and crit flags from dice, ignoring client-supplied values (API-012)', async () => {
+    mockGetSession.mockResolvedValue({ user: MEMBER, error: null });
+    const supabase = createRollsSupabase({
+      campaign: { id: 'camp-1', owner_id: OWNER.uid, characters: MEMBER_ROSTER },
+      memberUserIds: [MEMBER.uid],
+    });
+    mockCreateClient.mockResolvedValue(supabase as never);
+
+    const response = await POST(
+      makePostRequest('camp-1', {
+        characterId: 'char-member',
+        characterName: 'Member Hero',
+        roll: {
+          type: 'skill',
+          title: 'Athletics',
+          dice: [{ type: 'd20', value: 20, isMax: true, isMin: false }],
+          modifier: 5,
+          total: 999,
+          isCrit: false,
+          isCritFail: true,
+        },
+      }),
+      params('camp-1'),
+    );
+
+    expect(response.status).toBe(200);
+    const saved = supabase.insert.mock.calls[0]?.[0] as {
+      data: { total: number; isCrit: boolean; isCritFail: boolean; critMessage: string | null };
+    };
+    expect(saved.data.total).toBe(27);
+    expect(saved.data.isCrit).toBe(true);
+    expect(saved.data.isCritFail).toBe(false);
+    expect(saved.data.critMessage).toBe('Natural 20! +2 to the total!');
+  });
+
   it('does not mark the Realm Master rolling their own character', async () => {
     mockGetSession.mockResolvedValue({ user: OWNER, error: null });
     const supabase = createRollsSupabase({
