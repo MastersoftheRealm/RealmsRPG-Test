@@ -10,6 +10,7 @@ import type { NextRequest } from 'next/server';
 import { createClient as createSupabaseAdminClient } from '@supabase/supabase-js';
 import { requireAdminSession } from '@/lib/admin';
 import { adminUsersQuerySchema, parseAdminUsersPaging, validateQuery } from '@/lib/api-validation';
+import { buildAdminUsersOrFilter } from '@/lib/admin-users-search';
 import {
   buildRateLimitKey,
   resolveClientIp,
@@ -56,13 +57,10 @@ export async function GET(request: NextRequest) {
     let query = supabase
       .from('user_profiles')
       .select('id, username, username_display, email, display_name, role')
-      .order('username');
+      .order('username', { nullsFirst: false })
+      .order('id');
     if (search) {
-      const escaped = search.replace(/[%_\\]/g, (c) => `\\${c}`);
-      const pattern = `%${escaped}%`;
-      query = query.or(
-        `username.ilike.${pattern},username_display.ilike.${pattern},display_name.ilike.${pattern},email.ilike.${pattern}`,
-      );
+      query = query.or(buildAdminUsersOrFilter(search));
     }
     const { data: profiles, error: profilesError } = await query.range(offset, offset + limit - 1);
 

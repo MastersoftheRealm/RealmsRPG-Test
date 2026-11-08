@@ -8,7 +8,7 @@
 
 'use client';
 
-import { useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
 import { useQuery } from '@tanstack/react-query';
 import {
@@ -25,6 +25,7 @@ import { ConfirmActionModal, ErrorDisplay } from '@/components/patterns';
 import { apiFetch } from '@/lib/api-client';
 import { formatRolePolicyLimit } from '@/lib/role-limits';
 import { ROLE_LABELS } from '@/lib/role-quota-messages';
+import { useAdminUsersLoadMore } from './use-admin-users-load-more';
 
 type UserRole = 'new_player' | 'playtester' | 'developer' | 'admin';
 
@@ -64,8 +65,6 @@ const ROLE_OPTIONS = (Object.keys(ROLE_LABELS) as UserRole[]).map((role) => ({
 export default function AdminUsersPage() {
   const [users, setUsers] = useState<UserRow[]>([]);
   const [hasMore, setHasMore] = useState(false);
-  const [listLimit, setListLimit] = useState(100);
-  const [loadingMore, setLoadingMore] = useState(false);
   const [rolePolicies, setRolePolicies] = useState<Record<UserRole, RolePolicyRow> | null>(null);
   const [syncedAt, setSyncedAt] = useState(0);
   const [updating, setUpdating] = useState<string | null>(null);
@@ -79,11 +78,11 @@ export default function AdminUsersPage() {
     newRole: UserRole;
   } | null>(null);
 
-  async function fetchUsersPage(offset: number, q: string) {
+  const fetchUsersPage = useCallback(async (offset: number, q: string) => {
     const params = new URLSearchParams({ limit: '100', offset: String(offset) });
     if (q.trim()) params.set('q', q.trim());
     return apiFetch<AdminUsersPage>(`/api/admin/users?${params.toString()}`);
-  }
+  }, []);
 
   const {
     data: adminData,
@@ -127,32 +126,21 @@ export default function AdminUsersPage() {
 
   if (adminData && dataUpdatedAt !== syncedAt) {
     setUsers(adminData.users);
-    setListLimit(adminData.limit);
     setHasMore(adminData.hasMore);
     setRolePolicies(adminData.rolePolicies);
     setSyncedAt(dataUpdatedAt);
   }
 
-  const displayedUsers = useMemo(() => users, [users]);
+  const { loadingMore, loadMoreUsers } = useAdminUsersLoadMore({
+    searchApplied,
+    users,
+    setUsers,
+    setHasMore,
+    setMessage,
+    fetchPage: fetchUsersPage,
+  });
 
-  const loadMoreUsers = async () => {
-    const nextOffset = users.length;
-    setLoadingMore(true);
-    setMessage(null);
-    try {
-      const page = await fetchUsersPage(nextOffset, searchApplied);
-      setUsers((prev) => [...prev, ...(page.users ?? [])]);
-      setListLimit(page.limit ?? listLimit);
-      setHasMore(Boolean(page.hasMore));
-    } catch (err) {
-      setMessage({
-        type: 'error',
-        text: err instanceof Error ? err.message : 'Failed to load more users',
-      });
-    } finally {
-      setLoadingMore(false);
-    }
-  };
+  const displayedUsers = useMemo(() => users, [users]);
 
   const handleRoleChange = async (userId: string, newRole: UserRole) => {
     setUpdating(userId);

@@ -1,5 +1,9 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { NextRequest } from 'next/server';
+import {
+  compareAdminUserProfilesForListing,
+  profileMatchesAdminUserSearch,
+} from '@/lib/admin-users-search';
 
 vi.mock('@/lib/admin', () => ({
   requireAdminSession: vi.fn(),
@@ -31,42 +35,55 @@ const mockStandardLimiterCheck = vi.mocked(standardLimiter.check);
 
 const ADMIN_ID = 'admin-user-123';
 
+type ProfileRow = {
+  id: string;
+  username: string | null;
+  username_display: string | null;
+  email: string | null;
+  display_name: string | null;
+  role: string;
+};
+
 function createMockSupabaseAdmin(
-  profiles: unknown[] = [],
+  profiles: ProfileRow[] = [],
   error: { message: string } | null = null,
-  options?: { onRange?: (from: number, to: number) => void; onOr?: (filter: string) => void },
+  options?: {
+    onRange?: (from: number, to: number) => void;
+    onOr?: (filter: string) => void;
+    onOrder?: (field: string) => void;
+    searchNeedle?: string | null;
+  },
 ) {
-  const buildQuery = () => {
-    let rows = profiles;
+  const buildQuery = (searchNeedle: string | null) => {
+    const sorted = [...profiles].sort(compareAdminUserProfilesForListing);
+    let rows = searchNeedle
+      ? sorted.filter((row) => profileMatchesAdminUserSearch(row, searchNeedle))
+      : sorted;
     const chain = {
       or: vi.fn((filter: string) => {
         options?.onOr?.(filter);
-        const firstClause = filter.split(',')[0] ?? '';
-        const needle = firstClause.match(/\.ilike\.(%.*)$/)?.[1]?.slice(1, -1) ?? '';
-        if (needle) {
-          rows = profiles.filter((row) => {
-            const p = row as Record<string, string | null>;
-            const values = [p.username, p.username_display, p.display_name, p.email].filter(
-              Boolean,
-            );
-            return values.some((v) => String(v).toLowerCase().includes(needle.toLowerCase()));
-          });
+        if (options?.searchNeedle !== undefined) {
+          rows = options.searchNeedle
+            ? sorted.filter((row) => profileMatchesAdminUserSearch(row, options.searchNeedle!))
+            : sorted;
         }
-        return chain;
+        return buildQuery(options?.searchNeedle ?? null);
       }),
       range: vi.fn((from: number, to: number) => {
         options?.onRange?.(from, to);
         const page = rows.slice(from, to + 1);
         return Promise.resolve({ data: page, error });
       }),
+      order: vi.fn((field: string) => {
+        options?.onOrder?.(field);
+        return chain;
+      }),
     };
     return chain;
   };
   return {
     from: vi.fn(() => ({
-      select: vi.fn().mockReturnValue({
-        order: vi.fn().mockReturnValue(buildQuery()),
-      }),
+      select: vi.fn().mockReturnValue(buildQuery(null)),
     })),
   };
 }
@@ -204,7 +221,7 @@ describe('GET /api/admin/users', () => {
   it('API-025: offset 100 returns user 101+ and server search can find a later user', async () => {
     mockRequireAdminSession.mockResolvedValue({ ok: true, userId: ADMIN_ID });
     const directory = Array.from({ length: 201 }, (_, i) => ({
-      id: `uid-${i + 1}`,
+      id: `uid-${String(i + 1).padStart(4, '0')}`,
       username: `user${String(i + 1).padStart(3, '0')}`,
       username_display: `User ${i + 1}`,
       email: `user${i + 1}@example.com`,
@@ -231,12 +248,13 @@ describe('GET /api/admin/users', () => {
     }>(page2);
     expect(page2.status).toBe(200);
     expect(ranged).toEqual([100, 199]);
-    expect(page2Body.users[0]?.id).toBe('uid-101');
+    expect(page2Body.users[0]?.id).toBe('uid-0101');
     expect(page2Body.hasMore).toBe(true);
 
     let orFilter: string | null = null;
     mockCreateSupabaseAdminClient.mockReturnValue(
       createMockSupabaseAdmin(directory, null, {
+        searchNeedle: 'user150',
         onOr: (filter) => {
           orFilter = filter;
         },
@@ -251,5 +269,121 @@ describe('GET /api/admin/users', () => {
     expect(search.status).toBe(200);
     expect(orFilter).toContain('user150');
     expect(searchBody.users.some((u) => u.username === 'user150')).toBe(true);
+  });
+
+  it('orders by username then id and pages tied null usernames without duplicates', async () => {
+    mockRequireAdminSession.mockResolvedValue({ ok: true, userId: ADMIN_ID });
+    const orderFields: string[] = [];
+    const directory: ProfileRow[] = [
+      {
+        id: 'uid-002',
+        username: null,
+        username_display: 'B',
+        email: 'b@example.com',
+        display_name: null,
+        role: 'new_player',
+      },
+      {
+        id: 'uid-001',
+        username: null,
+        username_display: 'A',
+        email: 'a@example.com',
+        display_name: null,
+        role: 'new_player',
+      },
+      {
+        id: 'uid-003',
+        username: 'zulu',
+        username_display: 'Z',
+        email: 'z@example.com',
+        display_name: null,
+        role: 'new_player',
+      },
+    ];
+    mockCreateSupabaseAdminClient.mockReturnValue(
+      createMockSupabaseAdmin(directory, null, {
+        onOrder: (field) => orderFields.push(field),
+      }) as never,
+    );
+
+    const page1 = await readJson<{ users: Array<{ id: string }> }>(
+      await GET(
+        new NextRequest('http://localhost/api/admin/users?limit=2&offset=0', {
+          headers: { 'x-forwarded-for': '203.0.113.1' },
+        }),
+      ),
+    );
+    const page2 = await readJson<{ users: Array<{ id: string }> }>(
+      await GET(
+        new NextRequest('http://localhost/api/admin/users?limit=2&offset=2', {
+          headers: { 'x-forwarded-for': '203.0.113.1' },
+        }),
+      ),
+    );
+
+    expect(orderFields[0]).toBe('username');
+    expect(orderFields[1]).toBe('id');
+    expect(page1.users.map((u) => u.id)).toEqual(['uid-001', 'uid-002']);
+    expect(page2.users.map((u) => u.id)).toEqual(['uid-003']);
+    const allIds = [...page1.users, ...page2.users].map((u) => u.id);
+    expect(new Set(allIds).size).toBe(3);
+  });
+
+  it('quotes search literals and matches role labels in the PostgREST filter', async () => {
+    mockRequireAdminSession.mockResolvedValue({ ok: true, userId: ADMIN_ID });
+    const cases: Array<{ q: string; check: (filter: string) => void }> = [
+      {
+        q: 'Doe, Jane',
+        check: (filter) => {
+          expect(filter).toContain('display_name.ilike."%Doe, Jane%"');
+        },
+      },
+      {
+        q: 'O"Brien',
+        check: (filter) => {
+          expect(filter).toContain('email.ilike."%O\\"Brien%"');
+        },
+      },
+      {
+        q: '(parens)',
+        check: (filter) => expect(filter).toContain('ilike."%(parens)%"'),
+      },
+      {
+        q: 'playtest',
+        check: (filter) => expect(filter).toContain('role.in.(playtester)'),
+      },
+    ];
+
+    for (const { q, check } of cases) {
+      let orFilter = '';
+      mockCreateSupabaseAdminClient.mockReturnValue(
+        createMockSupabaseAdmin(
+          [
+            {
+              id: 'pt-1',
+              username: 'pt',
+              username_display: 'pt',
+              email: 'pt@example.com',
+              display_name: 'pt',
+              role: 'playtester',
+            },
+          ],
+          null,
+          {
+            searchNeedle: q,
+            onOr: (filter) => {
+              orFilter = filter;
+            },
+          },
+        ) as never,
+      );
+      const response = await GET(
+        new NextRequest(`http://localhost/api/admin/users?q=${encodeURIComponent(q)}`, {
+          headers: { 'x-forwarded-for': '203.0.113.1' },
+        }),
+      );
+      expect(response.status).toBe(200);
+      check(orFilter);
+    }
   });
 });
