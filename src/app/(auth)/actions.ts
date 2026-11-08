@@ -167,11 +167,21 @@ export async function createUserProfileAction(data: {
       }
 
       // Keep the `usernames` mapping in step with what the profile now holds.
+      // Insert only: an upsert on `username` would overwrite another user's `user_id`.
       const { error: usernameError } = await writer
         .from('usernames')
-        .upsert({ username: normalized, user_id: uid }, { onConflict: 'username' });
+        .insert({ username: normalized, user_id: uid });
       if (usernameError) {
         if (isUsernameConflict(usernameError)) {
+          const { data: existingRow, error: lookupError } = await writer
+            .from('usernames')
+            .select('user_id')
+            .eq('username', normalized)
+            .maybeSingle();
+          if (lookupError) throw lookupError;
+          if ((existingRow as { user_id?: string | undefined } | null)?.user_id === uid) {
+            return { success: true };
+          }
           return { success: false, error: USERNAME_TAKEN_ERROR };
         }
         throw usernameError;

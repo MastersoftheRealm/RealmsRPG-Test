@@ -342,7 +342,7 @@ describe('createUserProfileAction', () => {
       'select:user_profiles',
       'insert:user_profiles',
       'insert:user_profiles',
-      'upsert:usernames',
+      'insert:usernames',
     ]);
   });
 
@@ -393,6 +393,49 @@ describe('createUserProfileAction', () => {
 
     expect(result.success).toBe(false);
     expect(result).toMatchObject({ error: expect.stringContaining('at most') });
+  });
+
+  it('does not reassign a username row another user already owns (PAGES1-002)', async () => {
+    const OTHER_USER = 'other-user';
+    const { client, ops } = createSupabaseStub((op) => {
+      if (op.table === 'user_profiles' && op.action === 'select') return ok(null);
+      if (op.table === 'user_profiles' && op.action === 'insert') return ok();
+      if (op.table === 'usernames' && op.action === 'insert') {
+        return { data: null, error: UNIQUE_VIOLATION };
+      }
+      if (op.table === 'usernames' && op.action === 'select') {
+        return ok({ user_id: OTHER_USER });
+      }
+      return ok();
+    });
+    useStub(client);
+
+    const result = await createUserProfileAction({ username: 'TakenName' });
+
+    expect(result).toEqual({ success: false, error: 'This username is already taken' });
+    expect(opLabels(ops)).not.toContain('upsert:usernames');
+    expect(opLabels(ops)).toEqual([
+      'select:user_profiles',
+      'insert:user_profiles',
+      'insert:usernames',
+      'select:usernames',
+    ]);
+    expect(ops.filter((op) => op.action === 'upsert' && op.table === 'usernames')).toHaveLength(0);
+  });
+
+  it('records the username mapping on a successful first claim (PAGES1-002)', async () => {
+    const { client, ops } = createSupabaseStub((op) => {
+      if (op.table === 'user_profiles' && op.action === 'select') return ok(null);
+      return ok();
+    });
+    useStub(client);
+
+    const result = await createUserProfileAction({ username: 'NewPlayer' });
+
+    expect(result).toEqual({ success: true });
+    const claim = ops.find((op) => op.table === 'usernames' && op.action === 'insert');
+    expect(claim?.payload).toEqual({ username: 'newplayer', user_id: USER.uid });
+    expect(opLabels(ops)).not.toContain('upsert:usernames');
   });
 
   it('never overwrites an existing username', async () => {
