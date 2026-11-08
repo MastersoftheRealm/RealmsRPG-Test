@@ -6,6 +6,12 @@
  */
 
 import type { CodexCollection } from '@/lib/codex/collections';
+import {
+  CODEX_COLUMNAR_FIELDS,
+  CODEX_JSON_FIELD_KEYS,
+  CODEX_POSTGRES_TEXT_ARRAY_FIELD_KEYS,
+} from '@/lib/codex-columnar-keys';
+import { assertCodexAdminBodyShapes } from '@/lib/codex-mutation-validation';
 import { codexSourcesForWrite } from '@/lib/codex/sources';
 
 function snakeToCamel(s: string): string {
@@ -58,12 +64,6 @@ function dbColumnName(collection: CodexCollection, key: string): string {
  * A string that will not parse must not be stored as a JSON string scalar:
  * the creator treats that as missing, and a later list-mode save writes null.
  */
-const JSON_CAMEL_FIELDS = new Set([
-  'level1GuidanceGroups',
-  'level1RecommendedAbilities',
-  'level1Loadouts',
-]);
-
 /** Parse a JSONB cell. Throws so the save returns an error before any update. */
 function parseJsonColumn(camel: string, raw: string): unknown {
   try {
@@ -76,14 +76,11 @@ function parseJsonColumn(camel: string, raw: string): unknown {
   }
 }
 
-/** Postgres text[] columns. Other arrays are still comma-separated TEXT. */
-const POSTGRES_TEXT_ARRAY_FIELDS = new Set(['sources']);
-
 /** Serialize value for columnar TEXT columns: arrays become comma-separated */
 function toColumnValue(camel: string, val: unknown): unknown {
-  if (POSTGRES_TEXT_ARRAY_FIELDS.has(camel)) return codexSourcesForWrite(val);
+  if (CODEX_POSTGRES_TEXT_ARRAY_FIELD_KEYS.has(camel)) return codexSourcesForWrite(val);
   if (val == null) return null;
-  if (JSON_CAMEL_FIELDS.has(camel)) {
+  if (CODEX_JSON_FIELD_KEYS.has(camel)) {
     if (val === '') return null;
     if (typeof val === 'string') return parseJsonColumn(camel, val);
     return val;
@@ -93,214 +90,7 @@ function toColumnValue(camel: string, val: unknown): unknown {
   return val;
 }
 
-const COLUMNAR_FIELDS: Record<CodexCollection, string[]> = {
-  codex_feats: [
-    'name',
-    'description',
-    'reqDesc',
-    'abilityReq',
-    'abilReqVal',
-    'skillReq',
-    'skillReqVal',
-    'featCatReq',
-    'powAbilReq',
-    'martAbilReq',
-    'powProfReq',
-    'martProfReq',
-    'speedReq',
-    'featLvl',
-    'lvlReq',
-    'usesPerRec',
-    'recPeriod',
-    'category',
-    'ability',
-    'tags',
-    'charFeat',
-    'stateFeat',
-    'baseFeatId',
-    'sources',
-  ],
-  codex_skills: [
-    'name',
-    'description',
-    'ability',
-    'baseSkill',
-    'baseSkillId',
-    'successDesc',
-    'failureDesc',
-    'dsCalc',
-    'craftFailureDesc',
-    'craftSuccessDesc',
-    'sources',
-  ],
-  codex_species: [
-    'name',
-    'description',
-    'type',
-    'sizes',
-    'skills',
-    'speciesTraits',
-    'ancestryTraits',
-    'flaws',
-    'characteristics',
-    'aveHgtCm',
-    'aveWgtKg',
-    'aveHeight',
-    'aveWeight',
-    'adulthoodLifespan',
-    'languages',
-    'isStarter',
-    'catalogListing',
-    'imageId',
-    'imageUrl',
-    'sources',
-  ],
-  codex_traits: [
-    'name',
-    'description',
-    'usesPerRec',
-    'recPeriod',
-    'flaw',
-    'characteristic',
-    'optionTraitIds',
-    'sources',
-  ],
-  codex_parts: [
-    'name',
-    'description',
-    'category',
-    'baseEn',
-    'baseTp',
-    'op1Desc',
-    'op1En',
-    'op1Tp',
-    'op2Desc',
-    'op2En',
-    'op2Tp',
-    'op3Desc',
-    'op3En',
-    'op3Tp',
-    'type',
-    'mechanic',
-    'percentage',
-    'duration',
-    'defense',
-    'sources',
-  ],
-  codex_properties: [
-    'name',
-    'description',
-    'baseIp',
-    'baseTp',
-    'baseC',
-    'op1Desc',
-    'op1Ip',
-    'op1Tp',
-    'op1C',
-    'type',
-    'mechanic',
-    'sources',
-  ],
-  codex_equipment: [
-    'name',
-    'description',
-    'category',
-    'currency',
-    'rarity',
-    'imageId',
-    'imageUrl',
-    'sources',
-  ],
-  codex_archetypes: [
-    'name',
-    'type',
-    'description',
-    'archetypeAbility',
-    'secondaryAbility',
-    'powerProfStart',
-    'martialProfStart',
-    'powerProfLevel5',
-    'martialProfLevel5',
-    'level1Feats',
-    'level1Skills',
-    'level1Powers',
-    'level1Techniques',
-    'level1Armaments',
-    'level1Equipment',
-    'level1RemoveFeats',
-    'level1RemovePowers',
-    'level1RemoveTechniques',
-    'level1RemoveArmaments',
-    'level1Notes',
-    'level1InnatePowers',
-    'level1RecommendUnarmedProwess',
-    'level1GuidanceGroups',
-    'level1RecommendedAbilities',
-    'level1Loadouts',
-    'sources',
-  ],
-  codex_creature_feats: [
-    'name',
-    'description',
-    'featPoints',
-    'featLvl',
-    'lvlReq',
-    'mechanic',
-    'sources',
-  ],
-  core_rules: [],
-};
-
-const CODEX_NAME_MAX = 200;
-const CODEX_DESC_MAX = 10_000;
-
-const CODEX_NUMERIC_FIELDS = new Set([
-  'abilReqVal',
-  'skillReqVal',
-  'featLvl',
-  'lvlReq',
-  'usesPerRec',
-  'featPoints',
-  'energy',
-  'tp',
-  'ip',
-  'c',
-  'baseLvl',
-  'aveHeight',
-  'aveWeight',
-  'speedReq',
-  'powAbilReq',
-  'martAbilReq',
-  'powProfReq',
-  'martProfReq',
-]);
-
-function assertCodexFieldValue(camel: string, value: unknown): void {
-  if (value == null || value === '') return;
-  if (camel === 'name' && typeof value === 'string' && value.length > CODEX_NAME_MAX) {
-    throw new Error(`Codex name exceeds ${CODEX_NAME_MAX} characters`);
-  }
-  if (camel === 'description' && typeof value === 'string' && value.length > CODEX_DESC_MAX) {
-    throw new Error(`Codex description exceeds ${CODEX_DESC_MAX} characters`);
-  }
-  if (CODEX_NUMERIC_FIELDS.has(camel)) {
-    if (typeof value === 'number') {
-      if (!Number.isFinite(value)) throw new Error(`Codex field ${camel} must be a finite number`);
-      return;
-    }
-    if (typeof value === 'string' && value.trim() !== '' && Number.isNaN(Number(value))) {
-      throw new Error(`Codex field ${camel} must be numeric`);
-    }
-  }
-  if (camel === 'sources') {
-    if (Array.isArray(value) && !value.every((entry) => typeof entry === 'string')) {
-      throw new Error('Codex sources must be an array of strings');
-    }
-    if (typeof value === 'string' && value.includes('\0')) {
-      throw new Error('Codex sources must not contain control characters');
-    }
-  }
-}
+const COLUMNAR_FIELDS = CODEX_COLUMNAR_FIELDS;
 
 /** Reject admin spreadsheet keys outside the collection write allowlist. */
 export function assertCodexAdminPayloadKeys(
@@ -310,14 +100,16 @@ export function assertCodexAdminPayloadKeys(
   const allowed = new Set(COLUMNAR_FIELDS[collection] ?? []);
   if (allowed.size === 0) return;
   const skip = new Set(['id', 'data', 'expectedUpdatedAt', 'updated_at', 'updatedAt']);
+  const camelBody: Record<string, unknown> = {};
   for (const key of Object.keys(data)) {
     if (skip.has(key)) continue;
     const camel = columnarSourceKeyToCamel(collection, key);
     if (!allowed.has(camel)) {
       throw new Error(`Unsupported codex field: ${key}`);
     }
-    assertCodexFieldValue(camel, data[key]);
+    camelBody[camel] = data[key];
   }
+  assertCodexAdminBodyShapes(collection, camelBody);
 }
 
 /** Build create/update payload from admin payload (snake_case, arrays). Output camelCase for toDbPayload. */

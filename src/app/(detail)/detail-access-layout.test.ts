@@ -62,7 +62,7 @@ describe('detail layouts HTTP status', () => {
     expect(result.props.children).toBe('sheet');
   });
 
-  it('recovers after a transient outage when access preflight is retried', async () => {
+  it('succeeds on a later layout render after a transient outage error (manual retry)', async () => {
     let calls = 0;
     const fetchMock = vi.fn(async (url: string) => {
       calls += 1;
@@ -125,6 +125,29 @@ describe('detail layouts HTTP status', () => {
       throw new Error('expected notFound');
     } catch (error) {
       expect(httpStatus(error)).toBe(404);
+    }
+  });
+
+  it('throws unavailable when campaign preflight returns 503', async () => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async (url: string) => {
+        expect(String(url)).toContain('/api/campaigns/mine');
+        return new Response('error', { status: 503 });
+      }),
+    );
+
+    try {
+      await CampaignDetailLayout({
+        children: 'campaign',
+        params: Promise.resolve({ id: 'mine' }),
+      });
+      throw new Error('expected unavailable');
+    } catch (error) {
+      expect(error).toBeInstanceOf(ResourceAccessUnavailableError);
+      expect((error as ResourceAccessUnavailableError).digest).toBe(
+        RESOURCE_ACCESS_UNAVAILABLE_DIGEST,
+      );
     }
   });
 

@@ -231,6 +231,26 @@ describe('archetype JSON columns', () => {
     expect(rejected.error).toMatch(/nothing was written/);
     expect(currentDb.tables.codex_archetypes).toEqual(before);
   });
+
+  it('rejects coercible nested JSON and quoted empty scalars without mutating the row', async () => {
+    const before = structuredClone(currentDb.tables.codex_archetypes);
+
+    const nestedAbility = await updateCodexDoc('codex_archetypes', '5', {
+      name: 'Blade',
+      level1_recommended_abilities: { strength: [] },
+    });
+    expect(nestedAbility.success).toBe(false);
+    expect(nestedAbility.error).toMatch(/finite number/i);
+    expect(currentDb.tables.codex_archetypes).toEqual(before);
+
+    const quotedEmpty = await updateCodexDoc('codex_archetypes', '5', {
+      name: 'Blade',
+      level1_loadouts: '""',
+    });
+    expect(quotedEmpty.success).toBe(false);
+    expect(quotedEmpty.error).toMatch(/JSON object or array/i);
+    expect(currentDb.tables.codex_archetypes).toEqual(before);
+  });
 });
 
 describe('archetype progression replace', () => {
