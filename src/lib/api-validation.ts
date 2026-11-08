@@ -26,7 +26,14 @@ import {
   CREATOR_NAME_MAX_LENGTH,
   CREATOR_NAME_TOO_LONG_MESSAGE,
 } from '@/lib/creator/creator-text-limits';
-import { DIE_MAX, type DieType } from '@/lib/rolls/die';
+import {
+  CAMPAIGN_ROLL_MODIFIER_LABEL_MAX_LENGTH,
+  CAMPAIGN_ROLL_MODIFIER_LABEL_TOO_LONG_MESSAGE,
+  CAMPAIGN_ROLL_TITLE_MAX_LENGTH,
+  CAMPAIGN_ROLL_TITLE_TOO_LONG_MESSAGE,
+} from '@/lib/rolls/campaign-roll-limits';
+import { DIE_MAX, ROLL_LOG_BUILDER_DICE_POOL_MAX, type DieType } from '@/lib/rolls/die';
+import { getCanonicalSiteUrl } from '@/lib/site-url';
 
 const CAMPAIGN_ROLL_DIE_TYPES = [
   'd2',
@@ -39,10 +46,7 @@ const CAMPAIGN_ROLL_DIE_TYPES = [
   'd100',
 ] as const satisfies readonly DieType[];
 
-const CAMPAIGN_ROLL_MAX_DICE = 64;
-
 const CAMPAIGN_ROLL_TYPES = ['attack', 'damage', 'skill', 'ability', 'defense', 'custom'] as const;
-import { getCanonicalSiteUrl } from '@/lib/site-url';
 
 // =============================================================================
 // Helpers
@@ -509,12 +513,15 @@ const campaignRollPayloadSchema = z
     /** Client RollEntry may include id; the route assigns a new row id server-side. */
     id: z.string().optional(),
     type: z.enum(CAMPAIGN_ROLL_TYPES),
-    title: z.string().min(1).max(CHARACTER_NAME_MAX_LENGTH, CHARACTER_NAME_TOO_LONG_MESSAGE),
-    dice: z.array(campaignRollDieSchema).max(CAMPAIGN_ROLL_MAX_DICE).optional().default([]),
+    title: z
+      .string()
+      .min(1)
+      .max(CAMPAIGN_ROLL_TITLE_MAX_LENGTH, CAMPAIGN_ROLL_TITLE_TOO_LONG_MESSAGE),
+    dice: z.array(campaignRollDieSchema).max(ROLL_LOG_BUILDER_DICE_POOL_MAX).optional().default([]),
     modifier: z.number().finite().optional().default(0),
     modifierLabel: z
       .string()
-      .max(CHARACTER_NAME_MAX_LENGTH, CHARACTER_NAME_TOO_LONG_MESSAGE)
+      .max(CAMPAIGN_ROLL_MODIFIER_LABEL_MAX_LENGTH, CAMPAIGN_ROLL_MODIFIER_LABEL_TOO_LONG_MESSAGE)
       .optional(),
     critMessage: z
       .string()

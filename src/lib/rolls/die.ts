@@ -45,6 +45,12 @@ export const ROLL_LOG_BUILDER_DICE = [
 
 export type RollLogBuilderDieType = (typeof ROLL_LOG_BUILDER_DICE)[number];
 
+/** Per die type in the roll-log manual pool (`roll-log.tsx` addDie). */
+export const ROLL_LOG_BUILDER_DICE_PER_TYPE_MAX = 20;
+
+export const ROLL_LOG_BUILDER_DICE_POOL_MAX =
+  ROLL_LOG_BUILDER_DICE.length * ROLL_LOG_BUILDER_DICE_PER_TYPE_MAX;
+
 export function rollDie(type: DieType): number {
   const max = DIE_MAX[type];
   return Math.floor(Math.random() * max) + 1;
