@@ -1,6 +1,5 @@
 /**
- * Measure comparable mobile density metrics on an external reference site and
- * on our own pages, so "ours feels bulkier" becomes a number instead of a vibe.
+ * Measure comparable mobile density metrics on our own pages.
  *
  * Metrics per page:
  *   - chromeBeforeContent: y of the first list/content row (how far you scroll
@@ -13,16 +12,6 @@ import { mkdir, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 
 const targets = [
-  {
-    id: 'ddb-spells',
-    url: 'https://www.dndbeyond.com/spells',
-    rowSel: '.listing-body .info, .list-row, .row',
-  },
-  {
-    id: 'ddb-monsters',
-    url: 'https://www.dndbeyond.com/monsters',
-    rowSel: '.listing-body .info, .list-row, .row',
-  },
   { id: 'realms-codex', url: 'http://localhost:3100/codex', rowSel: '[data-glr-row]' },
   { id: 'realms-library', url: 'http://localhost:3100/library', rowSel: '[data-glr-row]' },
 ];

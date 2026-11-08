@@ -34,12 +34,16 @@ const ADMIN_ID = 'admin-user-123';
 function createMockSupabaseAdmin(
   profiles: unknown[] = [],
   error: { message: string } | null = null,
+  onRange?: (from: number, to: number) => void,
 ) {
   return {
     from: vi.fn(() => ({
       select: vi.fn().mockReturnValue({
         order: vi.fn().mockReturnValue({
-          limit: vi.fn().mockResolvedValue({ data: profiles, error }),
+          range: vi.fn((from: number, to: number) => {
+            onRange?.(from, to);
+            return Promise.resolve({ data: profiles, error });
+          }),
         }),
       }),
     })),
@@ -145,5 +149,23 @@ describe('GET /api/admin/users', () => {
 
     expect(response.status).toBe(429);
     await expect(readJson(response)).resolves.toEqual({ error: 'Too many requests' });
+  });
+
+  it('API-025: caps limit at 100 and applies offset', async () => {
+    mockRequireAdminSession.mockResolvedValue({ ok: true, userId: ADMIN_ID });
+    let ranged: [number, number] | null = null;
+    mockCreateSupabaseAdminClient.mockReturnValue(
+      createMockSupabaseAdmin([], null, (from, to) => {
+        ranged = [from, to];
+      }) as never,
+    );
+
+    const request = new NextRequest('http://localhost/api/admin/users?limit=500&offset=10', {
+      headers: { 'x-forwarded-for': '203.0.113.1' },
+    });
+    const response = await GET(request);
+
+    expect(response.status).toBe(200);
+    expect(ranged).toEqual([10, 109]);
   });
 });

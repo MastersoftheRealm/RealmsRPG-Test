@@ -1,3 +1,5 @@
+import 'server-only';
+
 /**
  * Server-side `core_rules` reader.
  * ================================

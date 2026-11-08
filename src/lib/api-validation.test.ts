@@ -69,6 +69,28 @@ describe('verifyRequestOrigin', () => {
     expect(denied?.status).toBe(403);
   });
 
+  it('LIB1-003: rejects Origin that matches a spoofed Host header but not nextUrl', () => {
+    const request = new NextRequest('http://realmsrpg.com/api/characters', {
+      method: 'POST',
+      headers: {
+        host: 'evil.example',
+        origin: 'https://evil.example',
+      },
+    });
+    expect(verifyRequestOrigin(request)?.status).toBe(403);
+  });
+
+  it('LIB1-003: allows Origin matching nextUrl.host', () => {
+    const request = new NextRequest('http://localhost:3000/api/characters', {
+      method: 'POST',
+      headers: {
+        host: 'evil.example',
+        origin: 'http://localhost:3000',
+      },
+    });
+    expect(verifyRequestOrigin(request)).toBeNull();
+  });
+
   it('rejects a cross-site Sec-Fetch-Site even when Origin is absent', () => {
     const denied = verifyRequestOrigin(makeRequest({ 'sec-fetch-site': 'cross-site' }));
     expect(denied?.status).toBe(403);

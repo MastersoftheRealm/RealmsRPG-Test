@@ -22,18 +22,8 @@ import { getRolePolicyForUser } from '@/lib/role-policy';
 import { buildRateLimitKey, inviteCodeLimiter } from '@/lib/rate-limit';
 import { formatRoleQuotaExceededMessage } from '@/lib/role-quota-messages';
 import type { CampaignCharacter } from '@/types/campaign';
+import { generateInviteCode } from '@/lib/campaign-invite-code';
 import { MAX_CAMPAIGN_CHARACTERS, OWNER_MAX_CHARACTERS } from './constants';
-
-const INVITE_CODE_LENGTH = 8;
-const ALPHANUMERIC = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
-
-function generateInviteCode(): string {
-  let code = '';
-  for (let i = 0; i < INVITE_CODE_LENGTH; i++) {
-    code += ALPHANUMERIC.charAt(Math.floor(Math.random() * ALPHANUMERIC.length));
-  }
-  return code;
-}
 
 async function getUsernameByUid(uid: string): Promise<string | undefined> {
   const supabase = await createClient();
@@ -133,15 +123,7 @@ export async function createCampaignAction(data: {
   }
 }
 
-export async function joinCampaignAction(data: {
-  inviteCode: string;
-  characterId: string;
-  characterName: string;
-  portrait?: string | undefined;
-  level: number;
-  species?: string | undefined;
-  archetypeType?: string | undefined;
-}) {
+export async function joinCampaignAction(data: { inviteCode: string; characterId: string }) {
   try {
     const user = await requireAuth();
 
@@ -314,11 +296,6 @@ export async function joinCampaignAction(data: {
 export async function addCharacterToCampaignAction(data: {
   campaignId: string;
   characterId: string;
-  characterName: string;
-  portrait?: string | undefined;
-  level: number;
-  species?: string | undefined;
-  archetypeType?: string | undefined;
 }) {
   try {
     const user = await requireAuth();

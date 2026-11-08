@@ -18,6 +18,14 @@ vi.mock('@/lib/role-policy', async (importOriginal) => {
   };
 });
 
+vi.mock('@/lib/validate-image', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('@/lib/validate-image')>();
+  return {
+    ...actual,
+    detectImageMime: vi.fn(async () => 'image/png' as const),
+  };
+});
+
 vi.mock('@/lib/rate-limit', async (importOriginal) => {
   const actual = await importOriginal<typeof import('@/lib/rate-limit')>();
   return {
@@ -35,20 +43,26 @@ import { getSession } from '@/lib/supabase/session';
 import { createClient, createServiceRoleClient } from '@/lib/supabase/server';
 import { getDefaultRolePolicy, getRolePolicyForUser } from '@/lib/role-policy';
 import { uploadLimiter } from '@/lib/rate-limit';
+import { detectImageMime } from '@/lib/validate-image';
 
 const mockGetSession = vi.mocked(getSession);
 const mockCreateClient = vi.mocked(createClient);
 const mockCreateServiceRoleClient = vi.mocked(createServiceRoleClient);
 const mockGetRolePolicyForUser = vi.mocked(getRolePolicyForUser);
 const mockUploadLimiterCheck = vi.mocked(uploadLimiter.check);
+const mockDetectImageMime = vi.mocked(detectImageMime);
 
 const USER = { uid: 'user-123', email: 'hero@example.com' };
 
-function makePostRequest() {
-  return new NextRequest('http://localhost/api/upload/profile-picture', {
+function makePostRequest(file?: File | null) {
+  const request = new NextRequest('http://localhost/api/upload/profile-picture', {
     method: 'POST',
     headers: { origin: 'http://localhost' },
   });
+  const form = new FormData();
+  if (file) form.set('file', file);
+  vi.spyOn(request, 'formData').mockResolvedValue(form);
+  return request;
 }
 
 function makeDeleteRequest() {
@@ -93,6 +107,55 @@ describe('POST /api/upload/profile-picture', () => {
     await expect(readJson(response)).resolves.toEqual({
       error: 'Your role cannot upload profile pictures.',
     });
+  });
+
+  it('returns 400 when the file is missing', async () => {
+    mockGetSession.mockResolvedValue({ user: USER, error: null });
+    mockGetRolePolicyForUser.mockResolvedValue({
+      ...getDefaultRolePolicy('member'),
+      canUploadProfilePicture: true,
+    });
+    const response = await POST(makePostRequest(null));
+    expect(response.status).toBe(400);
+  });
+
+  it('returns 400 for non-image MIME', async () => {
+    mockGetSession.mockResolvedValue({ user: USER, error: null });
+    mockGetRolePolicyForUser.mockResolvedValue({
+      ...getDefaultRolePolicy('member'),
+      canUploadProfilePicture: true,
+    });
+    const response = await POST(
+      makePostRequest(new File([new Uint8Array([1])], 'x.txt', { type: 'text/plain' })),
+    );
+    expect(response.status).toBe(400);
+  });
+
+  it('returns 400 when magic bytes fail a spoofed png extension', async () => {
+    mockGetSession.mockResolvedValue({ user: USER, error: null });
+    mockGetRolePolicyForUser.mockResolvedValue({
+      ...getDefaultRolePolicy('member'),
+      canUploadProfilePicture: true,
+    });
+    mockDetectImageMime.mockResolvedValueOnce(null);
+    const response = await POST(
+      makePostRequest(new File([new Uint8Array([1])], 'fake.png', { type: 'image/png' })),
+    );
+    expect(response.status).toBe(400);
+  });
+
+  it('returns 400 when the file exceeds 5MB', async () => {
+    mockGetSession.mockResolvedValue({ user: USER, error: null });
+    mockGetRolePolicyForUser.mockResolvedValue({
+      ...getDefaultRolePolicy('member'),
+      canUploadProfilePicture: true,
+    });
+    const response = await POST(
+      makePostRequest(
+        new File([new Uint8Array(5 * 1024 * 1024 + 1)], 'big.png', { type: 'image/png' }),
+      ),
+    );
+    expect(response.status).toBe(400);
   });
 });
 

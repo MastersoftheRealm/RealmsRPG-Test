@@ -33,6 +33,7 @@ import {
 } from '@/lib/library-columnar';
 import { enrichRowsWithBankImageUrls } from '@/lib/entity-image-enrich-server';
 import { validateUserLibraryWriteBody } from '@/lib/library-mutation-validation';
+import { isAdmin } from '@/lib/admin';
 
 const isColumnar = (t: string): t is ColumnarLibraryType =>
   COLUMNAR_LIBRARY_TYPES.includes(t as ColumnarLibraryType);
@@ -161,7 +162,8 @@ export async function POST(
     const validation = await validateJson(request, libraryItemCreateSchema);
     if (!validation.success) return validation.error;
     const body = validation.data as Record<string, unknown>;
-    const writeValidation = validateUserLibraryWriteBody(type, body);
+    const allowImageUrl = await isAdmin(user.uid);
+    const writeValidation = validateUserLibraryWriteBody(type, body, { allowImageUrl });
     if (writeValidation) return writeValidation;
     const duplicateOf = body.duplicateOf as string | undefined;
 

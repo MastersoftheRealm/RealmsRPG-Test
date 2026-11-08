@@ -9,6 +9,7 @@ import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 import { createClient as createSupabaseAdminClient } from '@supabase/supabase-js';
 import { requireAdminSession } from '@/lib/admin';
+import { adminUsersQuerySchema, parseAdminUsersPaging, validateQuery } from '@/lib/api-validation';
 import {
   buildRateLimitKey,
   resolveClientIp,
@@ -46,6 +47,10 @@ export async function GET(request: NextRequest) {
       );
     }
 
+    const queryResult = validateQuery(request, adminUsersQuerySchema);
+    if (!queryResult.success) return queryResult.error;
+    const { limit, offset } = parseAdminUsersPaging(queryResult.data);
+
     const supabase = getSupabaseAdmin();
     // Cap the result set; the admin table filters client-side. A bounded query
     // avoids unbounded email/PII exposure and runaway payloads (TASK-330).
@@ -53,7 +58,7 @@ export async function GET(request: NextRequest) {
       .from('user_profiles')
       .select('id, username, username_display, email, display_name, role')
       .order('username')
-      .limit(1000);
+      .range(offset, offset + limit - 1);
 
     if (profilesError) {
       console.error('[API Error] GET /api/admin/users query:', profilesError);

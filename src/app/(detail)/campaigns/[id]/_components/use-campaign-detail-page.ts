@@ -76,15 +76,9 @@ export function useCampaignDetailPage() {
     setActionError(null);
     setActionLoading(true);
     try {
-      const archetypeType = char.archetypeName?.toLowerCase().replace(/\s+/g, '-');
       const result = await addCharacterToCampaignAction({
         campaignId,
         characterId: char.id,
-        characterName: char.name,
-        portrait: char.portrait,
-        level: char.level,
-        species: char.ancestryName,
-        archetypeType: archetypeType || undefined,
       });
       if (result.success) {
         invalidateCampaigns();

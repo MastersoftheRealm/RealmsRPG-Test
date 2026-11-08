@@ -13,6 +13,7 @@ function handlers(): CharacterSheetDerivedHandlers {
     setCharacter: vi.fn(),
     handleRemovePower: noop,
     handleTogglePowerInnate: noop,
+    handleSelectPowerVariant: noop,
     handleUsePower: noop,
     handleRemoveTechnique: noop,
     handleUseTechnique: noop,
@@ -96,5 +97,44 @@ describe('buildLibrarySectionData feat caps align with core_rules', () => {
       rules,
     });
     expect(pools.characterFeatRemaining).toBe(data.maxCharacterFeats);
+  });
+});
+
+describe('buildLibrarySectionData owner-only mutating handlers', () => {
+  const rules = {} as Partial<CoreRulesMap>;
+  const mutatingKeys = [
+    'onRemovePower',
+    'onTogglePowerInnate',
+    'onSelectPowerVariant',
+    'onRemoveTechnique',
+    'onRemoveWeapon',
+    'onRemoveShield',
+    'onRemoveArmor',
+    'onRemoveEquipment',
+    'onCurrencyChange',
+    'onRemoveFeat',
+  ] as const;
+
+  it('exposes mutating handlers only when isOwner is true', () => {
+    const owned = buildLibrarySectionData({
+      character,
+      enrichedData: null,
+      libraryModel,
+      handlers: handlers(),
+      isOwner: true,
+      rules,
+    });
+    const readOnly = buildLibrarySectionData({
+      character,
+      enrichedData: null,
+      libraryModel,
+      handlers: handlers(),
+      isOwner: false,
+      rules,
+    });
+    for (const key of mutatingKeys) {
+      expect(owned[key]).toEqual(expect.any(Function));
+      expect(readOnly[key]).toBeUndefined();
+    }
   });
 });

@@ -45,17 +45,18 @@ function hostOf(value: string | undefined | null): string | null {
 }
 
 /**
- * Hosts a state-changing request may claim as its Origin: the host this request
- * was actually served on, plus the configured canonical site URL.
+ * Hosts a state-changing request may claim as its Origin: the host the app saw on
+ * `request.nextUrl` (not the raw `Host` header, which an attacker can spoof), plus
+ * `NEXT_PUBLIC_SITE_URL` and `VERCEL_URL` for preview deploys.
  */
 function allowedRequestHosts(request: NextRequest): Set<string> {
   const hosts = new Set<string>();
   const nextUrlHost = request.nextUrl.host.toLowerCase();
   if (nextUrlHost) hosts.add(nextUrlHost);
-  const hostHeader = request.headers.get('host')?.trim().toLowerCase();
-  if (hostHeader) hosts.add(hostHeader);
   const configured = hostOf(process.env.NEXT_PUBLIC_SITE_URL);
   if (configured) hosts.add(configured);
+  const vercelPreview = hostOf(process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : null);
+  if (vercelPreview) hosts.add(vercelPreview);
   return hosts;
 }
 
@@ -626,6 +627,26 @@ export const adminChangelogsQuerySchema = z
     limit: z.string().regex(/^\d+$/, 'limit must be a positive integer').optional(),
   })
   .strict();
+
+const ADMIN_USERS_MAX_LIMIT = 100;
+
+export const adminUsersQuerySchema = z
+  .object({
+    limit: z.string().regex(/^\d+$/, 'limit must be a positive integer').optional(),
+    offset: z.string().regex(/^\d+$/, 'offset must be a non-negative integer').optional(),
+  })
+  .strict();
+
+export function parseAdminUsersPaging(query: z.infer<typeof adminUsersQuerySchema>): {
+  limit: number;
+  offset: number;
+} {
+  const parsedLimit = Number(query.limit ?? String(ADMIN_USERS_MAX_LIMIT));
+  const limit = Math.max(1, Math.min(ADMIN_USERS_MAX_LIMIT, Math.floor(parsedLimit)));
+  const parsedOffset = Number(query.offset ?? '0');
+  const offset = Math.max(0, Math.floor(parsedOffset));
+  return { limit, offset };
+}
 
 export const realmsImagePatchSchema = z
   .object({

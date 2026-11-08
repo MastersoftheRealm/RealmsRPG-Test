@@ -1,3 +1,5 @@
+import 'server-only';
+
 /**
  * Server-only: resolve bank public_url for entity rows with image_id but no cache.
  * Mutates rows in place (sets image_url when cache absent). Safe no-op when column missing.
