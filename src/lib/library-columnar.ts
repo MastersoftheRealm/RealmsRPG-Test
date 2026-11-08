@@ -13,15 +13,18 @@ import {
 } from '@/lib/attack-mode';
 import { dedupeSavedParts } from '@/lib/game/dedupe-saved-parts';
 import { parseCatalogListing } from '@/lib/library/catalog-listing';
+import {
+  isPersistedLibraryBodyKey,
+  isPersistedSpeciesBodyKey,
+} from '@/lib/library-persisted-contract';
+import {
+  COLUMNAR_LIBRARY_TYPES,
+  LIBRARY_BODY_TO_CAMEL,
+  LIBRARY_SCALAR_KEYS,
+  type ColumnarLibraryType,
+} from '@/lib/library-columnar-keys';
 
-export const COLUMNAR_LIBRARY_TYPES = [
-  'powers',
-  'techniques',
-  'empowered-techniques',
-  'items',
-  'creatures',
-] as const;
-export type ColumnarLibraryType = (typeof COLUMNAR_LIBRARY_TYPES)[number];
+export { COLUMNAR_LIBRARY_TYPES, type ColumnarLibraryType };
 
 type PartLike = { id?: string | number | undefined; name?: string | undefined };
 
@@ -48,100 +51,6 @@ function collectPayloadParts(payload: Record<string, unknown>): PartLike[] {
   }
   return dedupeSavedParts(parts);
 }
-
-const SCALAR_KEYS: Record<ColumnarLibraryType, string[]> = {
-  powers: [
-    'name',
-    'description',
-    'actionType',
-    'isReaction',
-    'innate',
-    'rangeSteps',
-    'durationType',
-    'durationValue',
-    'areaType',
-    'areaLevel',
-    'damage',
-    'imageId',
-    'imageUrl',
-  ],
-  techniques: [
-    'name',
-    'description',
-    'actionType',
-    'rangeSteps',
-    'durationType',
-    'durationValue',
-    'damage',
-    'imageId',
-    'imageUrl',
-  ],
-  'empowered-techniques': [
-    'name',
-    'description',
-    'actionType',
-    'rangeSteps',
-    'durationType',
-    'durationValue',
-    'damage',
-    'imageId',
-    'imageUrl',
-  ],
-  items: [
-    'name',
-    'description',
-    'type',
-    'rarity',
-    'armorValue',
-    'damageReduction',
-    // Armament mechanics (now columnar in Supabase)
-    'rangeSteps',
-    'isTwoHanded',
-    'abilityRequirement',
-    'costs',
-    'damage',
-    'properties',
-    'agilityReduction',
-    'criticalRangeIncrease',
-    'shieldDR',
-    'shieldDamage',
-    'imageId',
-    'imageUrl',
-  ],
-  creatures: [
-    'name',
-    'description',
-    'level',
-    'type',
-    'size',
-    'hitPoints',
-    'energyPoints',
-    'imageId',
-    'imageUrl',
-  ],
-};
-
-const BODY_TO_CAMEL: Record<string, string> = {
-  action_type: 'actionType',
-  is_reaction: 'isReaction',
-  armor_value: 'armorValue',
-  damage_reduction: 'damageReduction',
-  hit_points: 'hitPoints',
-  energy_points: 'energyPoints',
-  range_steps: 'rangeSteps',
-  duration_type: 'durationType',
-  duration_value: 'durationValue',
-  area_type: 'areaType',
-  area_level: 'areaLevel',
-  is_two_handed: 'isTwoHanded',
-  ability_requirement: 'abilityRequirement',
-  agility_reduction: 'agilityReduction',
-  critical_range_increase: 'criticalRangeIncrease',
-  shield_dr: 'shieldDR',
-  shield_damage: 'shieldDamage',
-  image_id: 'imageId',
-  image_url: 'imageUrl',
-};
 
 const CAMEL_TO_SNAKE: Record<string, string> = {
   actionType: 'action_type',
@@ -173,7 +82,9 @@ const CAMEL_TO_SNAKE: Record<string, string> = {
  * and the columnar scalars `rowToItem` reads. `user_id` is omitted on purpose.
  */
 export function columnarViewSelect(type: ColumnarLibraryType): string {
-  const scalarColumns = SCALAR_KEYS[type].map((key) => Object.keys(toDbRow({ [key]: null }))[0]);
+  const scalarColumns = LIBRARY_SCALAR_KEYS[type].map(
+    (key) => Object.keys(toDbRow({ [key]: null }))[0],
+  );
   return ['id', 'created_at', 'updated_at', 'payload', ...scalarColumns].join(', ');
 }
 
@@ -384,7 +295,7 @@ export function bodyToColumnar(
   type: ColumnarLibraryType,
   body: Record<string, unknown>,
 ): { scalars: Record<string, unknown>; payload: Record<string, unknown> } {
-  const scalarKeys = new Set(SCALAR_KEYS[type]);
+  const scalarKeys = new Set(LIBRARY_SCALAR_KEYS[type]);
   const scalars: Record<string, unknown> = {};
   const payload: Record<string, unknown> = {};
 
@@ -501,7 +412,7 @@ export function bodyToColumnar(
   for (const [k, v] of Object.entries(body)) {
     if (k === 'id' || k === 'docId' || k === '_source') continue;
     if (skipKeys.has(k)) continue;
-    const camel = BODY_TO_CAMEL[k] ?? k.replace(/_([a-z])/g, (_, c) => c.toUpperCase());
+    const camel = LIBRARY_BODY_TO_CAMEL[k] ?? k.replace(/_([a-z])/g, (_, c) => c.toUpperCase());
     if (scalarKeys.has(camel) || scalarKeys.has(k)) {
       // user_creatures.level is an INTEGER column in DB, but creature creator allows
       // sub-level values (0.25/0.5/0.75). Keep fractional levels in payload and
@@ -516,7 +427,7 @@ export function bodyToColumnar(
         continue;
       }
       scalars[camel] = v;
-    } else {
+    } else if (isPersistedLibraryBodyKey(type, k)) {
       payload[k] = v;
     }
   }
@@ -690,7 +601,7 @@ export function bodyToColumnarSpecies(body: Record<string, unknown>): {
       } else {
         scalars[k] = v;
       }
-    } else {
+    } else if (isPersistedSpeciesBodyKey(k)) {
       payload[k] = v;
     }
   }

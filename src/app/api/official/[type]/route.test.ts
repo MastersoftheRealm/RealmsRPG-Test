@@ -28,6 +28,10 @@ vi.mock('@/lib/codex/id-allocation', () => ({
   retireCodexId: vi.fn(() => Promise.resolve()),
 }));
 
+vi.mock('@/lib/codex-changelog', () => ({
+  recordCodexChange: vi.fn(async () => undefined),
+}));
+
 import {
   PRIVATE_MUST_REVALIDATE_CACHE_CONTROL,
   PRIVATE_NO_STORE_CACHE_CONTROL,
@@ -38,6 +42,7 @@ import { getSession, requireLiveUser } from '@/lib/supabase/session';
 import { isAdmin } from '@/lib/admin';
 import { createPublicClient } from '@/lib/supabase/public-client';
 import { createClient, createServiceRoleClient } from '@/lib/supabase/server';
+import { recordCodexChange } from '@/lib/codex-changelog';
 
 const mockGetSession = vi.mocked(getSession);
 const mockRequireLiveUser = vi.mocked(requireLiveUser);
@@ -293,10 +298,73 @@ describe('POST /api/official/[type]', () => {
     expect(mockCreateServiceRoleClient).not.toHaveBeenCalled();
   });
 
+  it('creates an official creature with nonempty skill objects', async () => {
+    mockRequireLiveUser.mockResolvedValue(USER);
+    mockIsAdmin.mockResolvedValue(true);
+    const insertSingle = vi.fn(async () => ({ data: { id: 'creature-new' }, error: null }));
+    const supabase = {
+      from: vi.fn(() => ({
+        select: vi.fn(() => ({
+          ilike: vi.fn().mockReturnThis(),
+          neq: vi.fn().mockReturnThis(),
+          limit: vi.fn().mockReturnThis(),
+          maybeSingle: vi.fn(async () => ({ data: null, error: null })),
+        })),
+        insert: vi.fn(() => ({
+          select: vi.fn(() => ({ single: insertSingle })),
+        })),
+      })),
+    };
+    mockCreateServiceRoleClient.mockReturnValue(supabase as never);
+
+    const request = new NextRequest('http://localhost/api/official/creatures', {
+      method: 'POST',
+      headers: { 'content-type': 'application/json', origin: 'http://localhost' },
+      body: JSON.stringify({
+        name: 'Official wolf',
+        level: 1,
+        archetypeType: 'power',
+        skills: [{ name: 'Athletics', value: 2, proficient: true }],
+      }),
+    });
+
+    const response = await POST(request, params('creatures'));
+
+    expect(response.status).toBe(200);
+    await expect(readJson(response)).resolves.toEqual({ id: expect.any(String) });
+  });
+
+  it('returns 400 for malformed official creature skills without writing', async () => {
+    mockRequireLiveUser.mockResolvedValue(USER);
+    mockIsAdmin.mockResolvedValue(true);
+    const insertSingle = vi.fn();
+    mockCreateServiceRoleClient.mockReturnValue({
+      from: vi.fn(() => ({
+        insert: vi.fn(() => ({
+          select: vi.fn(() => ({ single: insertSingle })),
+        })),
+      })),
+    } as never);
+
+    const request = new NextRequest('http://localhost/api/official/creatures', {
+      method: 'POST',
+      headers: { 'content-type': 'application/json', origin: 'http://localhost' },
+      body: JSON.stringify({
+        name: 'Bad official wolf',
+        skills: [{ name: 'Athletics', value: 1, proficient: 'yes' }],
+      }),
+    });
+
+    const response = await POST(request, params('creatures'));
+
+    expect(response.status).toBe(400);
+    expect(insertSingle).not.toHaveBeenCalled();
+  });
+
   function mockOfficialPostSupabase(options: {
-    currentRow: { name: string } | null;
-    nameCollision: { id: string } | null;
-    updateRows: { id: string }[];
+    currentRow: Record<string, unknown> | null;
+    nameCollision: Record<string, unknown> | null;
+    updateRows: Record<string, unknown>[];
   }) {
     const insertSingle = vi.fn(async () => ({ data: { id: 'new' }, error: null }));
     let selectCall = 0;
@@ -315,7 +383,7 @@ describe('POST /api/official/[type]', () => {
       }),
       maybeSingle: vi.fn(async () => {
         selectCall += 1;
-        if (selectCall === 1) {
+        if (selectCall === 1 || selectCall === 2) {
           return { data: options.currentRow, error: null };
         }
         return { data: options.nameCollision, error: null };
@@ -410,9 +478,9 @@ describe('POST /api/official/[type]', () => {
 
     const existingId = '33333333-3333-3333-3333-333333333333';
     const { supabase, update, selectChain } = mockOfficialPostSupabase({
-      currentRow: { name: 'Vampiric' },
+      currentRow: { id: existingId, name: 'Vampiric', description: 'prior text' },
       nameCollision: { id: 'duplicate-row' },
-      updateRows: [{ id: existingId }],
+      updateRows: [{ id: existingId, name: 'Vampiric', description: 'updated text' }],
     });
     mockCreateServiceRoleClient.mockReturnValue(supabase as never);
 
@@ -428,6 +496,15 @@ describe('POST /api/official/[type]', () => {
     await expect(readJson(response)).resolves.toEqual({ id: existingId });
     expect(selectChain.ilike).not.toHaveBeenCalled();
     expect(update).toHaveBeenCalled();
+    expect(recordCodexChange).toHaveBeenCalledWith(
+      expect.objectContaining({
+        entityType: 'official_powers',
+        operation: 'update',
+        changedByUserId: USER.uid,
+        beforeData: expect.objectContaining({ name: 'Vampiric' }),
+        afterData: expect.objectContaining({ description: 'updated text' }),
+      }),
+    );
   });
 });
 
@@ -499,6 +576,15 @@ describe('DELETE /api/official/[type]', () => {
     mockRequireLiveUser.mockResolvedValue(USER);
     mockIsAdmin.mockResolvedValue(true);
 
+    const selectChain = {
+      eq: vi.fn(function eq() {
+        return selectChain;
+      }),
+      maybeSingle: vi.fn(async () => ({
+        data: { id: '7', name: 'Elf' },
+        error: null,
+      })),
+    };
     const deleteChain = {
       eq: vi.fn(function eq() {
         return deleteChain;
@@ -507,6 +593,7 @@ describe('DELETE /api/official/[type]', () => {
     };
     const supabase = {
       from: vi.fn(() => ({
+        select: vi.fn(() => selectChain),
         delete: vi.fn(() => deleteChain),
       })),
     };
@@ -515,6 +602,14 @@ describe('DELETE /api/official/[type]', () => {
     const response = await DELETE(makeDeleteRequest('species', '7'), params('species'));
 
     expect(response.status).toBe(200);
+    expect(recordCodexChange).toHaveBeenCalledWith(
+      expect.objectContaining({
+        entityType: 'codex_species',
+        operation: 'delete',
+        beforeData: expect.objectContaining({ name: 'Elf' }),
+        afterData: null,
+      }),
+    );
     expect(supabase.from).toHaveBeenCalledWith('codex_species');
     expect(deleteChain.eq).toHaveBeenCalledWith('id', '7');
   });

@@ -183,14 +183,14 @@ function createCreateClient(options: { profileExists: boolean }) {
   return { from, profileWrites, libraryInserts };
 }
 
-function makeCreateRequest(type: string) {
+function makeCreateRequest(type: string, body: Record<string, unknown> = { name: 'New entry' }) {
   return new NextRequest(`http://localhost/api/user/library/${type}`, {
     method: 'POST',
     headers: {
       'content-type': 'application/json',
       origin: 'http://localhost',
     },
-    body: JSON.stringify({ name: 'New entry' }),
+    body: JSON.stringify(body),
   });
 }
 
@@ -220,6 +220,41 @@ describe('POST /api/user/library/[type]', () => {
       expect(client.libraryInserts).toEqual([type === 'powers' ? 'user_powers' : 'user_items']);
     },
   );
+
+  it('creates a creature when the payload includes stamped skill objects', async () => {
+    const client = createCreateClient({ profileExists: true });
+    mockCreateClient.mockResolvedValue(client as never);
+    const body = {
+      name: 'Stamped ranger',
+      level: 1,
+      archetypeType: 'power',
+      skills: [{ name: 'Athletics', value: 3, proficient: true }],
+      syncMeta: { dependencyFingerprint: 'fp1', syncedAt: '2026-01-01T00:00:00.000Z' },
+    };
+
+    const response = await POST(makeCreateRequest('creatures', body), {
+      params: Promise.resolve({ type: 'creatures' }),
+    });
+
+    expect(response.status).toBe(200);
+    expect(client.libraryInserts).toEqual(['user_creatures']);
+  });
+
+  it('returns 400 for malformed creature skills without inserting', async () => {
+    const client = createCreateClient({ profileExists: true });
+    mockCreateClient.mockResolvedValue(client as never);
+
+    const response = await POST(
+      makeCreateRequest('creatures', {
+        name: 'Bad skills',
+        skills: [{ name: 'Athletics', value: 2, proficient: 'yes' }],
+      }),
+      { params: Promise.resolve({ type: 'creatures' }) },
+    );
+
+    expect(response.status).toBe(400);
+    expect(client.libraryInserts).toEqual([]);
+  });
 
   it('inserts only granted profile columns when the profile row is missing', async () => {
     const client = createCreateClient({ profileExists: false });

@@ -1,6 +1,10 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import CharacterSheetLayout from '@/app/(detail)/characters/[id]/layout';
 import CampaignDetailLayout from '@/app/(detail)/campaigns/[id]/layout';
+import {
+  RESOURCE_ACCESS_UNAVAILABLE_DIGEST,
+  ResourceAccessUnavailableError,
+} from '@/lib/server/resource-access-unavailable';
 
 vi.mock('next/headers', () => ({
   headers: vi.fn(async () => ({
@@ -56,6 +60,39 @@ describe('detail layouts HTTP status', () => {
     });
 
     expect(result.props.children).toBe('sheet');
+  });
+
+  it('recovers after a transient outage when access preflight is retried', async () => {
+    let calls = 0;
+    const fetchMock = vi.fn(async (url: string) => {
+      calls += 1;
+      expect(url).toContain('/api/characters/mine');
+      if (calls === 1) {
+        throw new Error('network down');
+      }
+      return new Response('{"character":{"id":"mine"}}', { status: 200 });
+    });
+    vi.stubGlobal('fetch', fetchMock);
+
+    try {
+      await CharacterSheetLayout({
+        children: 'sheet',
+        params: Promise.resolve({ id: 'mine' }),
+      });
+      throw new Error('expected unavailable');
+    } catch (error) {
+      expect(error).toBeInstanceOf(ResourceAccessUnavailableError);
+      expect((error as ResourceAccessUnavailableError).digest).toBe(
+        RESOURCE_ACCESS_UNAVAILABLE_DIGEST,
+      );
+    }
+
+    const recovered = await CharacterSheetLayout({
+      children: 'sheet',
+      params: Promise.resolve({ id: 'mine' }),
+    });
+    expect(recovered.props.children).toBe('sheet');
+    expect(fetchMock).toHaveBeenCalledTimes(2);
   });
 
   it('returns 200 for a guest character without calling the API', async () => {

@@ -49,10 +49,42 @@ import {
   wantsIncludeUnlisted,
   type CatalogListing,
 } from '@/lib/library/catalog-listing';
+import { recordCodexChange, type RecordCodexChangeInput } from '@/lib/codex-changelog';
+import { validateUserLibraryWriteBody } from '@/lib/library-mutation-validation';
+import {
+  isColumnarLibraryTypeName,
+  unknownPersistedLibraryKeys,
+  unknownPersistedSpeciesKeys,
+} from '@/lib/library-persisted-contract';
 
 const SPECIES_TABLE = 'codex_species';
 
 type OfficialType = z.infer<typeof officialLibraryTypeParamSchema>['type'];
+
+async function recordOfficialChangeBestEffort(input: RecordCodexChangeInput): Promise<void> {
+  await recordCodexChange(input);
+}
+
+function officialWriteValidation(
+  type: OfficialType,
+  body: Record<string, unknown>,
+): NextResponse | null {
+  if (type === 'species') {
+    const unknown = unknownPersistedSpeciesKeys(body);
+    if (unknown.length > 0) {
+      return NextResponse.json({ error: 'Payload contains unsupported fields' }, { status: 400 });
+    }
+    return null;
+  }
+  if (isColumnarLibraryTypeName(type)) {
+    const unknown = unknownPersistedLibraryKeys(type, body);
+    if (unknown.length > 0) {
+      return NextResponse.json({ error: 'Payload contains unsupported fields' }, { status: 400 });
+    }
+    return validateUserLibraryWriteBody(type, body, { allowImageUrl: true });
+  }
+  return null;
+}
 
 const TABLE_MAP: Record<Exclude<OfficialType, 'species'>, string> = {
   powers: 'official_powers',
@@ -300,6 +332,8 @@ export async function POST(
     const validation = await validateJson(request, publicItemSchema);
     if (!validation.success) return validation.error;
     const body = validation.data as Record<string, unknown>;
+    const writeValidation = officialWriteValidation(type, body);
+    if (writeValidation) return writeValidation;
 
     const supabase = createServiceRoleClient();
 
@@ -323,11 +357,16 @@ export async function POST(
           normalized.name,
         );
         if (nameConflict) return nameConflict;
+        const { data: beforeRow } = await supabase
+          .from(SPECIES_TABLE)
+          .select('*')
+          .eq('id', existingId)
+          .maybeSingle();
         const { data: updatedRows, error: updateError } = await supabase
           .from(SPECIES_TABLE)
           .update(dbRow)
           .eq('id', existingId)
-          .select('id');
+          .select('*');
         if (updateError) {
           return apiErrorResponse(
             'Failed to update item',
@@ -337,6 +376,15 @@ export async function POST(
           );
         }
         if (updatedRows && updatedRows.length > 0) {
+          const afterRow = updatedRows[0] as Record<string, unknown>;
+          await recordOfficialChangeBestEffort({
+            entityType: 'codex_species',
+            entityId: existingId,
+            operation: 'update',
+            changedByUserId: user.uid,
+            beforeData: (beforeRow as Record<string, unknown> | null) ?? null,
+            afterData: afterRow,
+          });
           revalidateOfficialLibraryAfterWrite(SPECIES_TABLE);
           return NextResponse.json({ id: existingId });
         }
@@ -345,12 +393,20 @@ export async function POST(
 
       for (let attempt = 0; attempt < 3; attempt++) {
         const id = await allocateCodexNumericId(supabase, SPECIES_TABLE);
-        const { error: insertError } = await supabase
+        const { data: inserted, error: insertError } = await supabase
           .from(SPECIES_TABLE)
           .insert({ id, catalog_listing: listing ?? 'listed', ...dbRow })
-          .select('id')
+          .select('*')
           .single();
         if (!insertError) {
+          await recordOfficialChangeBestEffort({
+            entityType: 'codex_species',
+            entityId: id,
+            operation: 'create',
+            changedByUserId: user.uid,
+            beforeData: null,
+            afterData: (inserted as Record<string, unknown> | null) ?? null,
+          });
           revalidateOfficialLibraryAfterWrite(SPECIES_TABLE);
           return NextResponse.json({ id });
         }
@@ -382,11 +438,16 @@ export async function POST(
         body.name,
       );
       if (nameConflict) return nameConflict;
+      const { data: beforeRow } = await supabase
+        .from(table)
+        .select('*')
+        .eq('id', existingId)
+        .maybeSingle();
       const { data: updatedRows, error: updateError } = await supabase
         .from(table)
         .update(dbRow)
         .eq('id', existingId)
-        .select('id');
+        .select('*');
       if (updateError) {
         return apiErrorResponse(
           'Failed to update item',
@@ -396,6 +457,14 @@ export async function POST(
         );
       }
       if (updatedRows && updatedRows.length > 0) {
+        await recordOfficialChangeBestEffort({
+          entityType: table,
+          entityId: existingId,
+          operation: 'update',
+          changedByUserId: user.uid,
+          beforeData: (beforeRow as Record<string, unknown> | null) ?? null,
+          afterData: updatedRows[0] as Record<string, unknown>,
+        });
         revalidateOfficialLibraryAfterWrite(table);
         return NextResponse.json({ id: existingId });
       }
@@ -403,7 +472,7 @@ export async function POST(
     }
 
     const id = crypto.randomUUID();
-    const { error: insertError } = await supabase
+    const { data: inserted, error: insertError } = await supabase
       .from(table)
       .insert({
         id,
@@ -412,7 +481,7 @@ export async function POST(
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString(),
       })
-      .select('id')
+      .select('*')
       .single();
     if (insertError) {
       return apiErrorResponse(
@@ -422,6 +491,14 @@ export async function POST(
         insertError,
       );
     }
+    await recordOfficialChangeBestEffort({
+      entityType: table,
+      entityId: id,
+      operation: 'create',
+      changedByUserId: user.uid,
+      beforeData: null,
+      afterData: (inserted as Record<string, unknown> | null) ?? null,
+    });
     revalidateOfficialLibraryAfterWrite(table);
     return NextResponse.json({ id });
   } catch (err) {
@@ -457,6 +534,11 @@ export async function PATCH(
 
     const supabase = createServiceRoleClient();
     const table = type === 'species' ? SPECIES_TABLE : TABLE_MAP[type];
+    const { data: beforeRow } = await supabase
+      .from(table)
+      .select('*')
+      .eq('id', validation.data.id)
+      .maybeSingle();
     const { data: updatedRows, error: updateError } = await supabase
       .from(table)
       .update({
@@ -464,7 +546,7 @@ export async function PATCH(
         updated_at: new Date().toISOString(),
       })
       .eq('id', validation.data.id)
-      .select('id');
+      .select('*');
     if (updateError) {
       return apiErrorResponse(
         'Failed to update listing',
@@ -476,6 +558,15 @@ export async function PATCH(
     if (!updatedRows || updatedRows.length === 0) {
       return NextResponse.json({ error: 'Item not found' }, { status: 404 });
     }
+    const entityType = type === 'species' ? 'codex_species' : table;
+    await recordOfficialChangeBestEffort({
+      entityType,
+      entityId: validation.data.id,
+      operation: 'update',
+      changedByUserId: user.uid,
+      beforeData: (beforeRow as Record<string, unknown> | null) ?? null,
+      afterData: updatedRows[0] as Record<string, unknown>,
+    });
     revalidateOfficialLibraryAfterWrite(table);
     return NextResponse.json({
       id: validation.data.id,
@@ -515,6 +606,7 @@ export async function DELETE(
 
     const supabase = createServiceRoleClient();
     const table = type === 'species' ? SPECIES_TABLE : TABLE_MAP[type];
+    const { data: beforeRow } = await supabase.from(table).select('*').eq('id', id).maybeSingle();
     const { data: deleted, error: deleteError } = await supabase
       .from(table)
       .delete()
@@ -531,6 +623,15 @@ export async function DELETE(
     if (!deleted || deleted.length === 0) {
       return NextResponse.json({ error: 'Item not found or already deleted' }, { status: 404 });
     }
+    const entityType = type === 'species' ? 'codex_species' : table;
+    await recordOfficialChangeBestEffort({
+      entityType,
+      entityId: id,
+      operation: 'delete',
+      changedByUserId: user.uid,
+      beforeData: (beforeRow as Record<string, unknown> | null) ?? null,
+      afterData: null,
+    });
     // Tombstone so the id is never handed to a different entity, which would silently
     // repoint every saved character that referenced the deleted one.
     await retireCodexId(supabase, table, id);

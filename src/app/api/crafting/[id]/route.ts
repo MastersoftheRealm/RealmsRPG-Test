@@ -17,6 +17,7 @@ import {
 } from '@/lib/api-validation';
 import { apiErrorResponse, logApiError } from '@/lib/api-error';
 import { buildRateLimitKey, resolveClientIp, standardLimiter } from '@/lib/rate-limit';
+import { projectCraftingSessionPatch } from '@/lib/crafting/crafting-session-persist';
 import type { CraftingSession, CraftingSessionData } from '@/types/crafting';
 
 function toSession(row: {
@@ -116,7 +117,9 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
 
     const validation = await validateJson(request, craftingSessionUpdateSchema);
     if (!validation.success) return validation.error;
-    const updates = validation.data as Partial<CraftingSessionData>;
+    const updates = projectCraftingSessionPatch(
+      validation.data as Record<string, unknown>,
+    ) as Partial<CraftingSessionData>;
     const cleaned = removeUndefined(updates as Record<string, unknown>);
     cleaned.updatedAt = new Date().toISOString();
 

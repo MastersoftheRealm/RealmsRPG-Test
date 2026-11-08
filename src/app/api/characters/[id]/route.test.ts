@@ -432,6 +432,52 @@ describe('PATCH /api/characters/[id]', () => {
     await expect(readJson(response)).resolves.toEqual({ error: 'Character not found' });
   });
 
+  it('returns 403 for a cross-origin patch', async () => {
+    const row = makeCharacterRow('char-owned', OWNER.uid);
+    mockGetSession.mockResolvedValue({ user: OWNER, error: null });
+    const supabase = createMockSupabase(row);
+    mockCreateClient.mockResolvedValue(supabase as never);
+
+    const response = await PATCH(
+      new NextRequest('http://localhost/api/characters/char-owned', {
+        method: 'PATCH',
+        headers: {
+          'content-type': 'application/json',
+          'x-forwarded-for': '203.0.113.1',
+          origin: 'https://evil.example',
+        },
+        body: JSON.stringify({ name: 'Stolen' }),
+      }),
+      { params: Promise.resolve({ id: 'char-owned' }) },
+    );
+
+    expect(response.status).toBe(403);
+    expect(supabase.update).not.toHaveBeenCalled();
+  });
+
+  it('returns 400 for malformed JSON without writing', async () => {
+    const row = makeCharacterRow('char-owned', OWNER.uid);
+    mockGetSession.mockResolvedValue({ user: OWNER, error: null });
+    const supabase = createMockSupabase(row);
+    mockCreateClient.mockResolvedValue(supabase as never);
+
+    const response = await PATCH(
+      new NextRequest('http://localhost/api/characters/char-owned', {
+        method: 'PATCH',
+        headers: {
+          'content-type': 'application/json',
+          'x-forwarded-for': '203.0.113.1',
+          origin: 'http://localhost',
+        },
+        body: '{not json',
+      }),
+      { params: Promise.resolve({ id: 'char-owned' }) },
+    );
+
+    expect(response.status).toBe(400);
+    expect(supabase.update).not.toHaveBeenCalled();
+  });
+
   it('updates the character for the owner', async () => {
     const row = makeCharacterRow('char-owned', OWNER.uid);
     mockGetSession.mockResolvedValue({ user: OWNER, error: null });

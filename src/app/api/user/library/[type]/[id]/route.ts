@@ -28,6 +28,7 @@ import {
   type ColumnarLibraryType,
 } from '@/lib/library-columnar';
 import { enrichRowsWithBankImageUrls } from '@/lib/entity-image-enrich-server';
+import { validateUserLibraryWriteBody } from '@/lib/library-mutation-validation';
 
 const isColumnar = (t: string): t is ColumnarLibraryType =>
   COLUMNAR_LIBRARY_TYPES.includes(t as ColumnarLibraryType);
@@ -130,6 +131,8 @@ export async function PATCH(
       const validation = await validateJson(request, libraryItemUpdateSchema);
       if (!validation.success) return validation.error;
       const data = validation.data as Record<string, unknown>;
+      const writeValidation = validateUserLibraryWriteBody(type, data, { mode: 'patch' });
+      if (writeValidation) return writeValidation;
       const currentItem = rowToItem(type, existing as Record<string, unknown>, 'user');
       const merged = { ...currentItem, ...data };
       delete (merged as Record<string, unknown>).id;
@@ -160,6 +163,8 @@ export async function PATCH(
     const validation = await validateJson(request, libraryItemUpdateSchema);
     if (!validation.success) return validation.error;
     const data = validation.data as Record<string, unknown>;
+    const writeValidation = validateUserLibraryWriteBody('species', data, { mode: 'patch' });
+    if (writeValidation) return writeValidation;
     const existingRow = existing as Record<string, unknown>;
     const merged: Record<string, unknown> = { ...rowToItemSpecies(existingRow), ...data };
     delete (merged as Record<string, unknown>).id;

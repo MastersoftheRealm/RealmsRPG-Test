@@ -1,18 +1,16 @@
 import { headers } from 'next/headers';
+import { getCanonicalSiteUrl } from '@/lib/site-url';
 
 /**
- * Same-origin API fetch from a Server Component, forwarding session cookies.
+ * Same-origin API fetch from a Server Component, forwarding session cookies only to the
+ * configured canonical origin (never header-derived host/proto).
  */
 export async function fetchInternalApi(path: string): Promise<Response> {
   const headerList = await headers();
-  const host = headerList.get('x-forwarded-host') ?? headerList.get('host');
-  if (!host) {
-    throw new Error('Missing host header for internal API fetch');
-  }
-  const proto = headerList.get('x-forwarded-proto') ?? 'http';
-  const cookie = headerList.get('cookie') ?? '';
+  const canonicalOrigin = getCanonicalSiteUrl();
   const normalizedPath = path.startsWith('/') ? path : `/${path}`;
-  const url = `${proto}://${host}${normalizedPath}`;
+  const url = `${canonicalOrigin}${normalizedPath}`;
+  const cookie = headerList.get('cookie') ?? '';
   return fetch(url, {
     headers: {
       cookie,
