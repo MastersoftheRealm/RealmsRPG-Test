@@ -121,6 +121,7 @@ export async function createUserProfileAction(data: {
     const chosenUsername = needsUsername
       ? (requestedUsername ?? existingUsernameDisplay)
       : existingUsername;
+    let profileRowEnsured = Boolean(existing);
 
     for (let attempt = 1; attempt <= MAX_GENERATED_USERNAME_ATTEMPTS; attempt++) {
       const usernameDisplay = chosenUsername ?? generateDefaultUsername();
@@ -132,6 +133,18 @@ export async function createUserProfileAction(data: {
       // session client (86e3jt562). The checks above already ran.
       const writer = createServiceRoleClient();
       const displayNameWrite = profileDisplayNameWriteValue(data.displayName);
+
+      if (!profileRowEnsured) {
+        const shellWrite = await writer.from('user_profiles').insert({
+          id: uid,
+          email,
+          display_name: displayNameWrite ?? null,
+          created_at: now,
+          updated_at: now,
+        });
+        if (shellWrite.error) throw shellWrite.error;
+        profileRowEnsured = true;
+      }
 
       // Claim (or confirm) the `usernames` mapping before writing profile username
       // columns — same order as changeUsernameAction so a taken mapping never leaves
@@ -157,31 +170,21 @@ export async function createUserProfileAction(data: {
         }
       }
 
-      const profileWrite = existing
-        ? await writer
-            .from('user_profiles')
-            .update({
-              email,
-              updated_at: now,
-              ...(displayNameWrite !== undefined ? { display_name: displayNameWrite } : {}),
-              ...(needsUsername
-                ? {
-                    username: normalized,
-                    username_display: usernameDisplay,
-                    last_username_change: null,
-                  }
-                : {}),
-            })
-            .eq('id', uid)
-        : await writer.from('user_profiles').insert({
-            id: uid,
-            email,
-            display_name: displayNameWrite ?? null,
-            username: normalized,
-            username_display: usernameDisplay,
-            created_at: now,
-            updated_at: now,
-          });
+      const profileWrite = await writer
+        .from('user_profiles')
+        .update({
+          email,
+          updated_at: now,
+          ...(displayNameWrite !== undefined ? { display_name: displayNameWrite } : {}),
+          ...(needsUsername
+            ? {
+                username: normalized,
+                username_display: usernameDisplay,
+                last_username_change: null,
+              }
+            : {}),
+        })
+        .eq('id', uid);
 
       if (profileWrite.error) {
         if (claimedNewRow) {
