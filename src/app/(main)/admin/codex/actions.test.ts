@@ -338,6 +338,31 @@ describe('archetype progression replace', () => {
     expect(currentDb.tables.codex_archetype_levels).toEqual(beforeLevels);
   });
 
+  it('rejects int4 overflow levels without mutating the parent or child rows', async () => {
+    const beforeArchetype = structuredClone(currentDb.tables.codex_archetypes);
+    const beforeLevels = structuredClone(currentDb.tables.codex_archetype_levels);
+
+    const result = await saveArchetypeWithPath({
+      ...baseArchetype,
+      levels: [{ level: 2_147_483_648, feats: '1' }],
+    });
+
+    expect(result.success).toBe(false);
+    expect(result.error).toMatch(/database storage/i);
+    expect(currentDb.tables.codex_archetypes).toEqual(beforeArchetype);
+    expect(currentDb.tables.codex_archetype_levels).toEqual(beforeLevels);
+  });
+
+  it('accepts a progression level of 201', async () => {
+    const result = await saveArchetypeWithPath({
+      ...baseArchetype,
+      levels: [{ level: 201, feats: '1' }],
+    });
+
+    expect(result.success).toBe(true);
+    expect(defined(currentDb.tables.codex_archetype_levels).map((row) => row.level)).toContain(201);
+  });
+
   it('rejects level-1 progression rows instead of filtering them out', async () => {
     const beforeLevels = structuredClone(currentDb.tables.codex_archetype_levels);
 
@@ -349,6 +374,45 @@ describe('archetype progression replace', () => {
     expect(result.success).toBe(false);
     expect(result.error).toMatch(/level 1 is stored on the archetype row/i);
     expect(currentDb.tables.codex_archetype_levels).toEqual(beforeLevels);
+  });
+});
+
+describe('saveArchetypeWithPath TEXT list persistence', () => {
+  const baseArchetype = {
+    id: '5',
+    name: 'Blade',
+    type: 'martial' as const,
+    levels: [{ level: 2, feats: '1' }],
+  };
+
+  it.each([
+    ['native arrays', { level1_feats: ['1', '2'], level1_skills: ['10', '11'] }],
+    ['comma strings', { level1_feats: '1,2', level1_skills: '10, 11' }],
+  ] as const)('stores level 1 %s as canonical comma-separated TEXT', async (_label, fields) => {
+    const result = await saveArchetypeWithPath({
+      ...baseArchetype,
+      ...fields,
+      levels: [{ level: 2, feats: ['9', '10'], skills: '11,12' }],
+    });
+
+    expect(result.success).toBe(true);
+    const row = defined(defined(currentDb.tables.codex_archetypes).find((r) => r.id === '5'));
+    expect(row.level1_feats).toBe('1, 2');
+    expect(row.level1_skills).toBe('10, 11');
+    const levelRow = defined(
+      defined(currentDb.tables.codex_archetype_levels).find((r) => r.level === 2),
+    );
+    expect(levelRow.feats).toBe('9, 10');
+    expect(levelRow.skills).toBe('11, 12');
+
+    const pathData = parseArchetypePathData({
+      level1: { feats: row.level1_feats, skills: row.level1_skills },
+      levels: [{ level: 2, feats: levelRow.feats, skills: levelRow.skills }],
+    });
+    expect(pathData?.level1?.feats).toEqual(['1', '2']);
+    expect(pathData?.level1?.skills).toEqual(['10', '11']);
+    expect(pathData?.levels?.[0]?.feats).toEqual(['9', '10']);
+    expect(pathData?.levels?.[0]?.skills).toEqual(['11', '12']);
   });
 });
 

@@ -6,18 +6,20 @@
 
 import { codexSourcesForWrite } from '@/lib/codex/sources';
 
+type ArchetypeTextList = string | readonly string[];
+
 export type ArchetypeLevelPayload = {
   level: number;
-  feats?: string | undefined;
-  skills?: string | undefined;
-  powers?: string | undefined;
-  techniques?: string | undefined;
-  armaments?: string | undefined;
-  equipment?: string | undefined;
-  remove_feats?: string | undefined;
-  remove_powers?: string | undefined;
-  remove_techniques?: string | undefined;
-  remove_armaments?: string | undefined;
+  feats?: ArchetypeTextList | undefined;
+  skills?: ArchetypeTextList | undefined;
+  powers?: ArchetypeTextList | undefined;
+  techniques?: ArchetypeTextList | undefined;
+  armaments?: ArchetypeTextList | undefined;
+  equipment?: ArchetypeTextList | undefined;
+  remove_feats?: ArchetypeTextList | undefined;
+  remove_powers?: ArchetypeTextList | undefined;
+  remove_techniques?: ArchetypeTextList | undefined;
+  remove_armaments?: ArchetypeTextList | undefined;
   notes?: string | undefined;
 };
 
@@ -33,18 +35,18 @@ export type SaveArchetypeWithPathInput = {
   martial_prof_start?: number | undefined;
   power_prof_level5?: number | undefined;
   martial_prof_level5?: number | undefined;
-  level1_feats?: string | undefined;
-  level1_skills?: string | undefined;
-  level1_powers?: string | undefined;
-  level1_innate_powers?: string | undefined;
-  level1_techniques?: string | undefined;
-  level1_armaments?: string | undefined;
-  level1_equipment?: string | undefined;
+  level1_feats?: ArchetypeTextList | undefined;
+  level1_skills?: ArchetypeTextList | undefined;
+  level1_powers?: ArchetypeTextList | undefined;
+  level1_innate_powers?: ArchetypeTextList | undefined;
+  level1_techniques?: ArchetypeTextList | undefined;
+  level1_armaments?: ArchetypeTextList | undefined;
+  level1_equipment?: ArchetypeTextList | undefined;
   level1_recommend_unarmed_prowess?: boolean | undefined;
-  level1_remove_feats?: string | undefined;
-  level1_remove_powers?: string | undefined;
-  level1_remove_techniques?: string | undefined;
-  level1_remove_armaments?: string | undefined;
+  level1_remove_feats?: ArchetypeTextList | undefined;
+  level1_remove_powers?: ArchetypeTextList | undefined;
+  level1_remove_techniques?: ArchetypeTextList | undefined;
+  level1_remove_armaments?: ArchetypeTextList | undefined;
   level1_notes?: string | undefined;
   level1_guidance_groups?: unknown | undefined;
   level1_recommended_abilities?: unknown | undefined;

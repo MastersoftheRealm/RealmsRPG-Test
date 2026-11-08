@@ -23,6 +23,22 @@ const ARCHETYPE_TYPES = new Set<SaveArchetypeWithPathInput['type']>([
 /** Lowest level stored in `codex_archetype_levels` (level 1 is columnar on the archetype row). */
 const MIN_PROGRESSION_LEVEL = 2;
 const MAX_PROGRESSION_ROWS = 200;
+/** `codex_archetype_levels.level` is Postgres `int4`. */
+const POSTGRES_INT4_MAX = 2_147_483_647;
+
+const LEVEL1_COMMA_FIELDS = [
+  'level1_feats',
+  'level1_skills',
+  'level1_powers',
+  'level1_innate_powers',
+  'level1_techniques',
+  'level1_armaments',
+  'level1_equipment',
+  'level1_remove_feats',
+  'level1_remove_powers',
+  'level1_remove_techniques',
+  'level1_remove_armaments',
+] as const satisfies readonly (keyof SaveArchetypeWithPathInput)[];
 
 const SAVE_INPUT_KEYS = new Set([
   'id',
@@ -87,6 +103,43 @@ function isPlainObject(value: unknown): value is Record<string, unknown> {
   return value != null && typeof value === 'object' && !Array.isArray(value);
 }
 
+function commaListParts(value: unknown): string[] {
+  if (value === undefined || value === null) return [];
+  if (Array.isArray(value)) {
+    return value.map((entry) => String(entry).trim()).filter((part) => part.length > 0);
+  }
+  if (typeof value === 'string') {
+    if (value.trim() === '') return [];
+    return value
+      .split(',')
+      .map((part) => part.trim())
+      .filter((part) => part.length > 0);
+  }
+  return [];
+}
+
+/** Canonical TEXT list storage (matches `toColumnarPayload` comma-join). */
+export function normalizeCodexCommaListColumn(value: unknown): string | null | undefined {
+  if (value === undefined) return undefined;
+  if (value === null) return null;
+  const parts = commaListParts(value);
+  if (parts.length === 0) return null;
+  return parts.join(', ');
+}
+
+function progressionLevelInt4Error(rawLevel: number, prefix: string): string | null {
+  if (typeof rawLevel !== 'number' || !Number.isInteger(rawLevel) || !Number.isFinite(rawLevel)) {
+    return `${prefix}.level must be an integer`;
+  }
+  if (rawLevel < MIN_PROGRESSION_LEVEL) {
+    return `${prefix}.level must be ${MIN_PROGRESSION_LEVEL} or higher (level 1 is stored on the archetype row)`;
+  }
+  if (rawLevel > POSTGRES_INT4_MAX) {
+    return `${prefix}.level exceeds the maximum value allowed for database storage`;
+  }
+  return null;
+}
+
 function archetypePathPayloadToCamelBody(
   payload: SaveArchetypeWithPathInput,
 ): Record<string, unknown> {
@@ -138,12 +191,11 @@ function progressionLevelRowsError(levels: unknown): string | null {
 
     if (!('level' in entry)) return `${prefix}.level is required`;
     const rawLevel = entry.level;
-    if (typeof rawLevel !== 'number' || !Number.isInteger(rawLevel) || !Number.isFinite(rawLevel)) {
-      return `${prefix}.level must be an integer`;
-    }
-    if (rawLevel < MIN_PROGRESSION_LEVEL) {
-      return `${prefix}.level must be ${MIN_PROGRESSION_LEVEL} or higher (level 1 is stored on the archetype row)`;
-    }
+    const levelErr =
+      typeof rawLevel === 'number'
+        ? progressionLevelInt4Error(rawLevel, prefix)
+        : `${prefix}.level must be an integer`;
+    if (levelErr) return levelErr;
 
     for (const { key, contractKey } of LEVEL_COMMA_FIELDS) {
       if (!(key in entry)) continue;
@@ -211,12 +263,37 @@ function normalizeArchetypeJsonColumn(value: unknown): unknown | undefined {
   return value;
 }
 
+function normalizeLevelRowCommaFields(entry: ArchetypeLevelPayload): ArchetypeLevelPayload {
+  const out: ArchetypeLevelPayload = { ...entry, level: entry.level };
+  for (const { key } of LEVEL_COMMA_FIELDS) {
+    if (!(key in entry)) continue;
+    const normalized = normalizeCodexCommaListColumn(entry[key]);
+    if (normalized === undefined) continue;
+    (
+      out as Record<keyof ArchetypeLevelPayload, ArchetypeLevelPayload[keyof ArchetypeLevelPayload]>
+    )[key] = normalized ?? undefined;
+  }
+  return out;
+}
+
 /** Apply persisted-contract normalization for values that pass `saveArchetypeWithPathInputError`. */
 export function normalizeSaveArchetypeWithPathInput(
   payload: SaveArchetypeWithPathInput,
 ): SaveArchetypeWithPathInput {
+  const level1CommaNormalized: Partial<
+    Pick<SaveArchetypeWithPathInput, (typeof LEVEL1_COMMA_FIELDS)[number]>
+  > = {};
+  for (const key of LEVEL1_COMMA_FIELDS) {
+    if (!(key in payload)) continue;
+    const normalized = normalizeCodexCommaListColumn(payload[key]);
+    if (normalized === undefined) continue;
+    level1CommaNormalized[key] = normalized ?? undefined;
+  }
+
   return {
     ...payload,
+    ...level1CommaNormalized,
+    levels: payload.levels.map(normalizeLevelRowCommaFields),
     level1_guidance_groups: normalizeArchetypeJsonColumn(payload.level1_guidance_groups),
     level1_recommended_abilities: normalizeArchetypeJsonColumn(
       payload.level1_recommended_abilities,

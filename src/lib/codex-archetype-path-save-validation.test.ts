@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import type { SaveArchetypeWithPathInput } from '@/app/(main)/admin/codex/codex-archetype-write';
 import {
+  normalizeCodexCommaListColumn,
   normalizeSaveArchetypeWithPathInput,
   saveArchetypeWithPathInputError,
 } from '@/lib/codex-archetype-path-save-validation';
@@ -50,6 +51,21 @@ describe('saveArchetypeWithPathInputError', () => {
     ).toMatch(/JSON object or array/i);
   });
 
+  it('rejects int4 overflow progression levels', () => {
+    expect(
+      saveArchetypeWithPathInputError({
+        ...validBase,
+        levels: [{ level: 2_147_483_648 }],
+      }),
+    ).toMatch(/database storage/i);
+    expect(
+      saveArchetypeWithPathInputError({
+        ...validBase,
+        levels: [{ level: 201 }],
+      }),
+    ).toBeNull();
+  });
+
   it('rejects progression rows that would be silently dropped', () => {
     expect(
       saveArchetypeWithPathInputError({
@@ -83,6 +99,16 @@ describe('saveArchetypeWithPathInputError', () => {
         levels,
       }),
     ).toMatch(/maximum of 200/i);
+  });
+});
+
+describe('normalizeCodexCommaListColumn', () => {
+  it.each([
+    ['native array', ['1', '2'], '1, 2'],
+    ['comma string', '1,2', '1, 2'],
+    ['empty', '', null],
+  ] as const)('normalizes %s to canonical TEXT storage', (_label, input, expected) => {
+    expect(normalizeCodexCommaListColumn(input)).toBe(expected);
   });
 });
 
