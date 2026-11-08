@@ -123,6 +123,7 @@ describe('sheet viewers cannot use edit controls (86e3jryyp)', () => {
     const viewer = section(false);
     const owner = section(true);
 
+    expect(viewer.onRemovePower).toBeUndefined();
     expect(viewer.onUsePower).toBeUndefined();
     expect(viewer.onUseTechnique).toBeUndefined();
     expect(viewer.onToggleEquipWeapon).toBeUndefined();
@@ -140,6 +141,7 @@ describe('sheet viewers cannot use edit controls (86e3jryyp)', () => {
     expect(viewer.onNotesChange).toBeUndefined();
     expect(viewer.onProficienciesChange).toBeUndefined();
 
+    expect(owner.onRemovePower).toEqual(expect.any(Function));
     expect(owner.onUsePower).toEqual(expect.any(Function));
     expect(owner.onToggleEquipWeapon).toEqual(expect.any(Function));
     expect(owner.onToggleEquipShield).toEqual(expect.any(Function));
