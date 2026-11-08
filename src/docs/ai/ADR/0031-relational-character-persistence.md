@@ -1,13 +1,13 @@
 # ADR-0031: Relational character persistence
 
-- **Status:** Accepted; local expansion applied, compatibility cutover prepared
+- **Status:** Accepted; compatibility and final contract migrations prepared
 - **Deciders:** owner, engineering
 
 ## Context
 
-`public.characters.data` is the authoritative document for character creation, sheets,
-autosave, campaign access, and encounter resources. List columns already duplicate some
-keys. A direct column drop would destroy character state and break deployed clients.
+The legacy character document column was authoritative for character creation, sheets,
+autosave, campaign access, and encounter resources. List columns duplicated some keys, so
+a direct column drop would have destroyed character state and broken deployed clients.
 Character references also span Codex, official, and owner library tables; some saved
 references contain only a name, and private library rows can be deleted independently.
 
@@ -23,10 +23,12 @@ references contain only a name, and private library rows can be deleted independ
 3. Codex and official FKs restrict deletion. User library FKs set null on deletion;
    the character row keeps its source ID and name snapshot for unresolved display.
    A private library FK must belong to the same user as the parent character.
-4. Expand creates tables and backfills while `data` remains. The app switches to a
-   transactional persistence API and shadow-compares assembled rows to legacy JSON.
-   A separate, owner-approved contract migration removes `data` only after a backup,
-   zero unknown keys/conflicts, parity, and manual QA.
+4. Expand creates tables and backfills while the legacy column remains. The app switches
+   to a transactional persistence API. Compatibility verification compares assembled rows
+   to the rollback mirror; runtime shadow reads are removed before contract. A separate,
+   owner-approved contract migration locks the table, enforces exact parity, removes the
+   compatibility trigger, replaces mirror-writing RPCs, and drops the column atomically
+   only after a backup and manual QA.
 5. `characters.updated_at` remains the optimistic lock and realtime notification
    source. Every child write touches its parent in the same transaction. Dirty PATCH
    replaces only collections explicitly present in the request; an empty array clears.
@@ -72,7 +74,8 @@ The audit must be rerun on the target database immediately before each phase.
 The expansion was subsequently applied to the owner's local database. All 57
 rows projected; the count/scalar verifier returned zero mismatches and zero
 orphans. The compatibility cutover adds the two remaining approved scalars,
-transactional write RPCs, slot reconstruction, and an exact `data` mirror. Its
-DDL and smoke tests passed locally inside a forced rollback on 2026-10-14; it
-has not been persistently applied and still requires explicit high-risk
-approval. This is not final-drop approval.
+transactional write RPCs, slot reconstruction, and an exact rollback mirror.
+A same-snapshot disposable clone passed the full compatibility sequence on
+2026-11-07 without changing the source local database. The final contract SQL
+and relational-only application code are prepared; production still requires
+the target audit, application QA, Kadin's explicit approval, and a fresh backup.

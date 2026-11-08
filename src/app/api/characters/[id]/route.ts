@@ -185,7 +185,7 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
     }
 
     const mergedData = applyCharacterDirtyPatch(currentDocument, cleanedData, {
-      blobUpdatedAt: new Date().toISOString(),
+      documentUpdatedAt: new Date().toISOString(),
     });
     normalizeCharacterForSave(mergedData);
     const legality = await evaluateCharacterLegalityForSave(supabase, mergedData, {

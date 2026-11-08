@@ -13,7 +13,7 @@ const buildData = readFileSync(
 );
 
 describe('notes reorder and hide (86e3jvcgp)', () => {
-  it('persists section order and visibility on the character blob', () => {
+  it('persists section order and visibility in the character document', () => {
     expect(buildData).toContain('notesSectionOrder: character.notesSectionOrder');
     expect(buildData).toContain('notesSectionVisibility: character.notesSectionVisibility');
     expect(buildData).toContain('onNotesSectionOrderChange');

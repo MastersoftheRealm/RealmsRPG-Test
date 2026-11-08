@@ -7,6 +7,8 @@ DECLARE
   v_owner_id text;
   v_character_id text := 'relational-cutover-test-character';
   v_create_id text := 'relational-cutover-test-create';
+  v_campaign_id text := '20000000-0000-4000-8000-000000000001';
+  v_conflict_campaign_id text := '20000000-0000-4000-8000-000000000002';
   v_request_id uuid := '10000000-0000-4000-8000-000000000001';
   v_document jsonb;
   v_result jsonb;
@@ -101,6 +103,20 @@ BEGIN
     RAISE EXCEPTION 'Expected chained PATCH to accept the prior response token, got %', v_result;
   END IF;
 
+  UPDATE public.characters
+  SET last_played_at = '2026-01-02 03:04:05'::timestamp
+  WHERE id = v_character_id;
+  v_result := public.patch_character_relational(
+    v_character_id,
+    jsonb_build_object('lastPlayedAt','2030-01-02T03:04:05Z'),
+    v_result->>'updatedAt'
+  );
+  IF v_result->>'status' <> 'updated'
+     OR (SELECT last_played_at FROM public.characters WHERE id = v_character_id)
+       IS DISTINCT FROM '2026-01-02 03:04:05'::timestamp THEN
+    RAISE EXCEPTION 'PATCH allowed client-owned lastPlayedAt mutation';
+  END IF;
+
   v_document := public.get_character_relational_document(v_character_id);
   IF v_document->>'name' <> 'Patched Smoke Test'
      OR v_document->>'level' <> '3'
@@ -167,6 +183,99 @@ BEGIN
     RAISE EXCEPTION 'Idempotent replay failed, got %', v_result;
   END IF;
 
+  INSERT INTO public.campaigns (
+    id, owner_id, name, description, invite_code, characters,
+    owner_username, created_at, updated_at
+  ) VALUES (
+    v_campaign_id, v_owner_id, 'Relational Campaign Test', '', 'RLTST234', '[]'::jsonb,
+    'Relational Test RM', now(), now()
+  );
+  v_document := public.get_character_relational_document(v_character_id);
+  v_result := public.join_campaign_character_relational(
+    v_owner_id,
+    'RLTST234',
+    v_character_id,
+    jsonb_build_object('characterName','Relational Smoke Test','level',4),
+    v_document->>'updatedAt',
+    20,
+    10
+  );
+  IF v_result->>'status' <> 'updated'
+     OR NOT EXISTS (
+       SELECT 1 FROM public.campaign_members
+       WHERE campaign_id = v_campaign_id AND user_id = v_owner_id
+     )
+     OR NOT EXISTS (
+       SELECT 1
+       FROM public.campaigns c,
+         jsonb_array_elements(c.characters) roster(entry)
+       WHERE c.id = v_campaign_id
+         AND entry->>'userId' = v_owner_id
+         AND entry->>'characterId' = v_character_id
+     )
+     OR (SELECT visibility FROM public.characters WHERE id = v_character_id) <> 'campaign' THEN
+    RAISE EXCEPTION 'Atomic campaign join failed, got %', v_result;
+  END IF;
+
+  v_result := public.get_campaign_character_relational_document(
+    v_campaign_id, v_owner_id, v_character_id
+  );
+  IF v_result->>'status' <> 'ok'
+     OR v_result#>>'{character,id}' <> v_character_id THEN
+    RAISE EXCEPTION 'Atomic campaign character read failed, got %', v_result;
+  END IF;
+
+  v_result := public.remove_campaign_character_relational(
+    v_owner_id, v_campaign_id, v_owner_id, v_character_id
+  );
+  IF v_result->>'status' <> 'updated'
+     OR (SELECT characters FROM public.campaigns WHERE id = v_campaign_id) <> '[]'::jsonb THEN
+    RAISE EXCEPTION 'Atomic campaign character removal failed, got %', v_result;
+  END IF;
+
+  v_document := public.get_character_relational_document(v_character_id);
+  v_result := public.add_campaign_character_relational(
+    v_owner_id,
+    v_campaign_id,
+    v_character_id,
+    jsonb_build_object('characterName','Relational Smoke Test','level',4),
+    v_document->>'updatedAt',
+    20,
+    5
+  );
+  IF v_result->>'status' <> 'updated' THEN
+    RAISE EXCEPTION 'Atomic RM campaign add failed, got %', v_result;
+  END IF;
+  PERFORM public.remove_campaign_character_relational(
+    v_owner_id, v_campaign_id, v_owner_id, v_character_id
+  );
+
+  INSERT INTO public.campaigns (
+    id, owner_id, name, description, invite_code, characters,
+    owner_username, created_at, updated_at
+  ) VALUES (
+    v_conflict_campaign_id, v_owner_id, 'Relational Conflict Test', '',
+    'RLTST235', '[]'::jsonb, 'Relational Test RM', now(), now()
+  );
+  v_result := public.join_campaign_character_relational(
+    v_owner_id,
+    'RLTST235',
+    v_character_id,
+    jsonb_build_object('characterName','Stale Join','level',4),
+    v_stale_token,
+    20,
+    10
+  );
+  IF v_result->>'status' <> 'conflict'
+     OR EXISTS (
+       SELECT 1 FROM public.campaign_members
+       WHERE campaign_id = v_conflict_campaign_id AND user_id = v_owner_id
+     )
+     OR (SELECT characters FROM public.campaigns WHERE id = v_conflict_campaign_id)
+       <> '[]'::jsonb THEN
+    RAISE EXCEPTION 'Conflicted campaign join was not rolled back atomically, got %', v_result;
+  END IF;
+
   PERFORM set_config(
     'request.jwt.claims',
     jsonb_build_object('sub','00000000-0000-4000-8000-000000000099',
@@ -183,14 +292,59 @@ BEGIN
   IF has_function_privilege('anon',
        'public.patch_character_relational(text,jsonb,text)','EXECUTE')
      OR has_function_privilege('authenticated',
-       'public.provision_character_relational(text,text,jsonb)','EXECUTE') THEN
-    RAISE EXCEPTION 'Cutover RPC grants are broader than intended (anon patch %, authenticated provision %)',
-      has_function_privilege('anon',
-        'public.patch_character_relational(text,jsonb,text)','EXECUTE'),
-      has_function_privilege('authenticated',
-        'public.provision_character_relational(text,text,jsonb)','EXECUTE');
+       'public.provision_character_relational(text,text,jsonb)','EXECUTE')
+     OR has_function_privilege('authenticated',
+       'public.join_campaign_character_relational(text,text,text,jsonb,text,integer,integer)',
+       'EXECUTE') THEN
+    RAISE EXCEPTION 'Cutover RPC grants are broader than intended';
   END IF;
 END;
 $tests$;
+
+DO $mirror_parity$
+BEGIN
+  IF EXISTS (
+    SELECT 1
+    FROM public.characters c
+    WHERE public.get_character_relational_document(c.id) IS DISTINCT FROM c.data
+  ) THEN
+    RAISE EXCEPTION 'Compatibility mirror parity failed after cutover';
+  END IF;
+END;
+$mirror_parity$;
+
+-- Authenticated callers retain explicit table grants, but RLS has no child
+-- write policy. Prove a direct PostgREST-equivalent child insert is rejected.
+SELECT set_config(
+  'request.jwt.claims',
+  jsonb_build_object(
+    'sub',(SELECT user_id FROM public.characters ORDER BY id LIMIT 1),
+    'role','authenticated'
+  )::text,
+  true
+);
+SET LOCAL ROLE authenticated;
+DO $direct_child_write$
+DECLARE v_character_id text;
+BEGIN
+  SELECT id INTO v_character_id
+  FROM public.characters
+  WHERE user_id = auth.uid()::text
+  ORDER BY id
+  LIMIT 1;
+  IF v_character_id IS NULL THEN
+    RAISE EXCEPTION 'Direct child write test could not find the owner character';
+  END IF;
+  BEGIN
+    INSERT INTO public.character_affiliations (
+      character_id, affiliation_kind, position, name
+    ) VALUES (v_character_id, 'ally', 2147483647, 'Direct write must fail');
+    RAISE EXCEPTION 'Authenticated direct child write unexpectedly succeeded';
+  EXCEPTION WHEN insufficient_privilege THEN
+    NULL;
+  END;
+END;
+$direct_child_write$;
+RESET ROLE;
 
 ROLLBACK;

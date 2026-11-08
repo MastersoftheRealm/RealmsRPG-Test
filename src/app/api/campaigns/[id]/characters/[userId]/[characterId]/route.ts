@@ -7,9 +7,8 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { createClient, createServiceRoleClient } from '@/lib/supabase/server';
+import { createClient } from '@/lib/supabase/server';
 import { getSession } from '@/lib/supabase/session';
-import { isCharacterOnCampaignRoster, isUserCampaignParticipant } from '@/lib/campaign-roster';
 import {
   campaignCharacterRouteParamsSchema,
   campaignCharacterViewQuerySchema,
@@ -19,8 +18,7 @@ import {
 import { computeMaxHealthEnergy } from '@/lib/game/calculations';
 import { fetchCoreRules } from '@/lib/core-rules-server';
 import { getOwnerLibraryAndEnrichmentForView } from '@/lib/character-view-enrichment-server';
-import { getRelationalCharacterDocument } from '@/lib/character-persistence-server';
-import { resolveCharacterVisibility } from '@/lib/character-list-columns';
+import { getCampaignRelationalCharacterDocument } from '@/lib/character-persistence-server';
 
 export async function GET(
   request: NextRequest,
@@ -42,96 +40,40 @@ export async function GET(
     const forEncounter = queryResult.data.scope === 'encounter';
 
     const supabase = await createClient();
-
-    const { data: campaignRow, error: campaignErr } = await supabase
-      .from('campaigns')
-      .select('id, owner_id, characters')
-      .eq('id', campaignId)
-      .maybeSingle();
-    if (campaignErr) throw campaignErr;
-
-    if (!campaignRow) {
+    const readResult = await getCampaignRelationalCharacterDocument(supabase, {
+      campaignId,
+      characterOwnerId: userId,
+      characterId,
+    });
+    if (readResult.status === 'unauthorized') {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+    if (readResult.status === 'campaign_not_found') {
       return NextResponse.json({ error: 'Campaign not found' }, { status: 404 });
     }
-
-    const { data: memberRows, error: memberErr } = await supabase
-      .from('campaign_members')
-      .select('user_id')
-      .eq('campaign_id', campaignId);
-    if (memberErr) throw memberErr;
-    const memberIds = (memberRows ?? []).map((m: { user_id: string }) => m.user_id);
-    const isRM = campaignRow.owner_id === user.uid;
-    const isMember = isRM || memberIds.includes(user.uid);
-
-    const isInCampaign = isCharacterOnCampaignRoster(campaignRow.characters, userId, characterId);
-    if (!isInCampaign) {
-      return NextResponse.json({ error: 'Character not found in campaign' }, { status: 404 });
-    }
-
-    if (!isUserCampaignParticipant(userId, campaignRow.owner_id, memberIds)) {
-      return NextResponse.json({ error: 'Character not found in campaign' }, { status: 404 });
-    }
-
-    if (!isMember) {
+    if (readResult.status === 'not_member') {
       return NextResponse.json({ error: 'You are not in this campaign' }, { status: 403 });
     }
-
-    const isOwner = user.uid === userId;
-
-    const { data: charRowUser, error: charErr } = await supabase
-      .from('characters')
-      .select('id, user_id, created_at, updated_at, visibility')
-      .eq('id', characterId)
-      .eq('user_id', userId)
-      .maybeSingle();
-    if (charErr) {
-      console.warn(
-        '[campaign character GET] session-scoped fetch failed, trying service role:',
-        charErr,
-      );
+    if (readResult.status === 'character_not_rostered') {
+      return NextResponse.json({ error: 'Character not found in campaign' }, { status: 404 });
     }
-
-    let charRow = charRowUser;
-    let characterReader = supabase;
-    // RLS often blocks non-owners from reading other players' rows; roster + membership were verified above.
-    if (!charRow) {
-      const admin = createServiceRoleClient();
-      const { data: charRowAdmin, error: adminErr } = await admin
-        .from('characters')
-        .select('id, user_id, created_at, updated_at, visibility')
-        .eq('id', characterId)
-        .eq('user_id', userId)
-        .maybeSingle();
-      if (adminErr) throw adminErr;
-      charRow = charRowAdmin ?? null;
-      characterReader = admin;
-    }
-
-    if (!charRow) {
+    if (readResult.status === 'character_not_found') {
       return NextResponse.json({ error: 'Character not found' }, { status: 404 });
     }
-
-    const charData = await getRelationalCharacterDocument(characterReader, characterId);
-    if (!charData) {
-      return NextResponse.json({ error: 'Character not found' }, { status: 404 });
-    }
-
-    const visibility = resolveCharacterVisibility(charRow);
-    const canViewPrivate = isOwner || isRM;
-    const canViewAsCampaignMember =
-      isMember && (visibility === 'campaign' || visibility === 'public');
-    if (visibility === 'private' && !canViewPrivate) {
+    if (readResult.status === 'private') {
       return NextResponse.json(
         { error: 'This character is set to private and cannot be viewed' },
         { status: 403 },
       );
     }
-    if (!forEncounter && !canViewPrivate && !canViewAsCampaignMember) {
-      return NextResponse.json(
-        { error: 'You do not have permission to view this character sheet' },
-        { status: 403 },
-      );
+    if (readResult.status !== 'ok') {
+      throw new Error(`Unexpected campaign character read status: ${readResult.status}`);
     }
+    const charData = readResult.character;
+    const visibility =
+      charData.visibility === 'campaign' || charData.visibility === 'public'
+        ? charData.visibility
+        : 'private';
 
     if (forEncounter) {
       const rawAbilities = (charData?.abilities || {}) as Record<string, number>;
@@ -175,13 +117,7 @@ export async function GET(
       return NextResponse.json(character);
     }
 
-    const character = {
-      id: charRow.id,
-      ...charData,
-      visibility,
-      createdAt: charData?.createdAt ?? charRow.created_at,
-      updatedAt: charData?.updatedAt ?? charRow.updated_at,
-    };
+    const character = { ...charData, id: characterId, visibility };
 
     const { libraryForView, enrichment } = await getOwnerLibraryAndEnrichmentForView(
       supabase,

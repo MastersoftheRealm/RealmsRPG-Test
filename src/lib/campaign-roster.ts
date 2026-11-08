@@ -60,7 +60,7 @@ function archetypeDisplayNameFromType(archetypeType?: string): CampaignCharacter
 
 /**
  * SEC-06: derive the campaign roster fields (name/level/species/archetype/portrait)
- * from the authoritative character `data` JSONB rather than trusting client input,
+ * from the authoritative relational character document rather than trusting client input,
  * so a player cannot misrepresent their character to other campaign members.
  */
 export function buildRosterFieldsFromCharacterData(charData: Record<string, unknown>): {
@@ -84,7 +84,6 @@ export function buildRosterFieldsFromCharacterData(charData: Record<string, unkn
     archetype: archetypeDisplayNameFromType(archetype?.type),
   };
 }
-
 /** Whether `userId` is the campaign owner or has a `campaign_members` row. */
 export function isUserCampaignParticipant(
   userId: string,

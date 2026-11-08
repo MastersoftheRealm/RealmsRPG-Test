@@ -7,6 +7,59 @@ ALTER TABLE public.characters
   ADD COLUMN IF NOT EXISTS innate_energy integer,
   ADD COLUMN IF NOT EXISTS training_points_spent numeric;
 
+-- The expansion may already be present when this compatibility phase runs.
+-- Reapply the child boundary here so an existing local expansion also loses
+-- its former owner-write policies without replaying the full table migration.
+DO $child_boundary$
+DECLARE child text;
+BEGIN
+  FOREACH child IN ARRAY ARRAY[
+    'character_species','character_feats','character_skills','character_traits',
+    'character_powers','character_techniques','character_inventory',
+    'character_conditions','character_named_notes','character_archetype_choices',
+    'character_proficiencies','character_temp_modifiers',
+    'character_affiliations','character_ability_components'
+  ] LOOP
+    EXECUTE format('ALTER TABLE public.%I ENABLE ROW LEVEL SECURITY', child);
+    EXECUTE format('DROP POLICY IF EXISTS character_child_write ON public.%I', child);
+  END LOOP;
+END;
+$child_boundary$;
+
+GRANT SELECT ON TABLE
+  public.character_species,
+  public.character_feats,
+  public.character_skills,
+  public.character_traits,
+  public.character_powers,
+  public.character_techniques,
+  public.character_inventory,
+  public.character_conditions,
+  public.character_named_notes,
+  public.character_archetype_choices,
+  public.character_proficiencies,
+  public.character_temp_modifiers,
+  public.character_affiliations,
+  public.character_ability_components
+TO anon;
+
+GRANT SELECT, INSERT, UPDATE, DELETE ON TABLE
+  public.character_species,
+  public.character_feats,
+  public.character_skills,
+  public.character_traits,
+  public.character_powers,
+  public.character_techniques,
+  public.character_inventory,
+  public.character_conditions,
+  public.character_named_notes,
+  public.character_archetype_choices,
+  public.character_proficiencies,
+  public.character_temp_modifiers,
+  public.character_affiliations,
+  public.character_ability_components
+TO authenticated, service_role;
+
 -- Kept separate from the original expansion projector so databases that
 -- already ran the reviewed expansion can adopt the two newly-approved fields
 -- without replaying the complete expansion migration.

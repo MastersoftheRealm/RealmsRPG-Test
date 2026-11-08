@@ -166,7 +166,6 @@ Generated: 2026-11-09
 - officialLibraryKeys
 - patchCharacterDetailQuery
 - resolveTraitIds
-- tabletopKeys
 - type AccountProfile
 - type CreateOfficialEnhancedItemInput
 - type CreatureFeat

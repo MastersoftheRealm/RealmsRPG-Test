@@ -1,11 +1,11 @@
 import { clampTextToLength } from '@/lib/character/character-name-limit';
 
-/** Free-text character age (JSONB `data.age`, TASK-886 / 86e3jw2mg). */
+/** Free-text character age (relational `characters.age`, TASK-886 / 86e3jw2mg). */
 export const CHARACTER_AGE_MAX_LENGTH = 150;
 
 const AGE_IN_APPEARANCE = /^Age:\s*(\d+)\s*(?:\n|$)/;
 
-/** Coerce persisted JSON age (string or legacy number) for display and save. */
+/** Coerce persisted age (string or legacy number) for display and save. */
 export function coerceCharacterAgeValue(age: unknown): string {
   if (age === null || age === undefined) return '';
   if (typeof age === 'number' && Number.isFinite(age)) return String(age).trim();
@@ -52,7 +52,7 @@ export function appearanceDraftFromEdit(value: string): string | undefined {
   return next.length > 0 ? next : undefined;
 }
 
-/** Creator `description` predates dedicated `backstory` on the character JSON. */
+/** Creator `description` predates the dedicated relational `backstory` field. */
 export function resolveCharacterBackstory(backstory?: string, description?: string): string {
   if (typeof backstory === 'string' && backstory.length > 0) return backstory;
   return description?.trim() ?? '';
@@ -65,7 +65,7 @@ export function backstoryDraftFromEdit(value: string): string | undefined {
 
 /**
  * Save-time migration (TASK-886): promote legacy `Age: N` prefix into `age` and strip it from
- * `appearance` so persisted JSON stops duplicating age in both fields.
+ * `appearance` so persisted state stops duplicating age in both fields.
  */
 export function normalizeAgeAppearanceForSave(data: Record<string, unknown>): void {
   const appearance = typeof data.appearance === 'string' ? data.appearance : undefined;
