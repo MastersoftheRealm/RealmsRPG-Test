@@ -69,6 +69,19 @@ describe('verifyRequestOrigin', () => {
     expect(denied?.status).toBe(403);
   });
 
+  it('does not treat a spoofed Host header as an allowed Origin (LIB1-003)', () => {
+    const denied = verifyRequestOrigin(
+      new NextRequest(APP_URL, {
+        method: 'POST',
+        headers: {
+          host: 'evil.example',
+          origin: 'https://evil.example',
+        },
+      }),
+    );
+    expect(denied?.status).toBe(403);
+  });
+
   it('rejects a cross-site Sec-Fetch-Site even when Origin is absent', () => {
     const denied = verifyRequestOrigin(makeRequest({ 'sec-fetch-site': 'cross-site' }));
     expect(denied?.status).toBe(403);

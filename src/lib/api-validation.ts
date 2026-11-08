@@ -45,15 +45,14 @@ function hostOf(value: string | undefined | null): string | null {
 }
 
 /**
- * Hosts a state-changing request may claim as its Origin: the host this request
- * was actually served on, plus the configured canonical site URL.
+ * Hosts a state-changing request may claim as its Origin: the request URL host
+ * (preview/local deployments), plus the configured canonical site URL. The raw
+ * `Host` header is not trusted — it must not expand this set.
  */
 function allowedRequestHosts(request: NextRequest): Set<string> {
   const hosts = new Set<string>();
   const nextUrlHost = request.nextUrl.host.toLowerCase();
   if (nextUrlHost) hosts.add(nextUrlHost);
-  const hostHeader = request.headers.get('host')?.trim().toLowerCase();
-  if (hostHeader) hosts.add(hostHeader);
   const configured = hostOf(process.env.NEXT_PUBLIC_SITE_URL);
   if (configured) hosts.add(configured);
   return hosts;
