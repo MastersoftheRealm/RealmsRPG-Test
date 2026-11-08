@@ -27,6 +27,8 @@ import {
 } from '@/lib/character/character-name-limit';
 import { sheetHeaderNameClamped } from './sheet-header-name';
 import { sheetFieldDismissReturnsFocus } from './sheet-field-focus';
+import { useCharacterSheetOptional } from './character-sheet-context';
+import { whenSheetOwner } from './sheet-viewer-edits';
 
 export function SheetHeaderIdentity({
   character,
@@ -79,11 +81,20 @@ export function SheetHeaderIdentity({
   const level = character.level || 1;
   const canLevelUp = xp >= calculateXpToLevelUp(level);
 
+  const sheet = useCharacterSheetOptional();
+  const isOwner = sheet?.isOwner ?? true;
+  const ownerNameChange = whenSheetOwner(isOwner, onNameChange);
+  const ownerExperienceChange = whenSheetOwner(isOwner, onExperienceChange);
+  const ownerPortraitChange = whenSheetOwner(isOwner, onPortraitChange);
+  const ownerPortraitUrlChange = whenSheetOwner(isOwner, onPortraitUrlChange);
+  const ownerEditArchetype = whenSheetOwner(isOwner, onEditArchetype);
+  const ownerEditSpecies = whenSheetOwner(isOwner, onEditSpecies);
+
   // Handle XP submission
   const handleXPSubmit = () => {
     const value = parseInt(xpInput, 10);
-    if (!isNaN(value) && value >= 0 && onExperienceChange) {
-      onExperienceChange(value);
+    if (!isNaN(value) && value >= 0 && ownerExperienceChange) {
+      ownerExperienceChange(value);
     }
     setIsEditingXP(false);
   };
@@ -94,18 +105,18 @@ export function SheetHeaderIdentity({
 
   // Handle portrait click - open the upload modal
   const handlePortraitClick = () => {
-    if (!isEditMode || !onPortraitChange) return;
+    if (!isEditMode || !ownerPortraitChange) return;
     setShowUploadModal(true);
   };
 
   // Handle cropped image from the modal - await upload so modal stays open until done
   const handleCroppedImage = async (blob: Blob) => {
-    if (!onPortraitChange) return;
+    if (!ownerPortraitChange) return;
     const file = fileFromCroppedBlob(blob, 'portrait');
-    await onPortraitChange(file);
+    await ownerPortraitChange(file);
   };
 
-  const canChangePortrait = Boolean(isEditMode && onPortraitChange);
+  const canChangePortrait = Boolean(isEditMode && ownerPortraitChange);
   const effectivePortrait = useEffectivePortrait(character.portrait);
   const portraitFallbackUrl = usePortraitFallbackUrl();
   const isFallbackPortrait = isPortraitFallbackSrc(effectivePortrait);
@@ -179,8 +190,8 @@ export function SheetHeaderIdentity({
 
   const handleNameSubmit = () => {
     const trimmed = nameInput.trim();
-    if (trimmed && trimmed !== character.name && onNameChange) {
-      onNameChange(trimmed);
+    if (trimmed && trimmed !== character.name && ownerNameChange) {
+      ownerNameChange(trimmed);
     }
     setIsEditingName(false);
     setNameTruncated(false);
@@ -254,7 +265,7 @@ export function SheetHeaderIdentity({
         {/* Character Identity - Clean unified format */}
         <div className="flex min-w-0 flex-1 flex-col justify-center">
           {/* Editable Name - Always available with pencil icon */}
-          {isEditingName && onNameChange ? (
+          {isEditingName && ownerNameChange ? (
             <div className="min-w-0">
               <input
                 type="text"
@@ -325,7 +336,7 @@ export function SheetHeaderIdentity({
                   {character.name}
                 </span>
               )}
-              {onNameChange && isEditMode && (
+              {ownerNameChange && isEditMode && (
                 <button
                   ref={nameEditButtonRef}
                   type="button"
@@ -352,9 +363,9 @@ export function SheetHeaderIdentity({
                 <span className={cn('min-w-0 break-normal', isMixedSpecies && 'whitespace-nowrap')}>
                   {speciesLabel}
                 </span>
-                {onEditSpecies && (
+                {ownerEditSpecies && (
                   <button
-                    onClick={onEditSpecies}
+                    onClick={ownerEditSpecies}
                     className="shrink-0 text-primary-fg transition-colors hover:scale-110 hover:text-primary-fg-hover"
                     title="Edit species and ancestry"
                     aria-label="Edit species and ancestry"
@@ -386,9 +397,9 @@ export function SheetHeaderIdentity({
                   <span className="text-martial-fg capitalize">{character.mart_abil}</span>
                 )}
               </span>
-              {onEditArchetype && (
+              {ownerEditArchetype && (
                 <button
-                  onClick={onEditArchetype}
+                  onClick={ownerEditArchetype}
                   className="shrink-0 text-primary-fg transition-colors hover:scale-110 hover:text-primary-fg-hover"
                   title="Edit archetype and ability"
                   aria-label="Edit archetype and ability"
@@ -402,7 +413,7 @@ export function SheetHeaderIdentity({
 
           {/* XP Display - Always editable with pencil icon */}
           <div className="flex items-center gap-2 text-base text-text-primary">
-            {isEditingXP && onExperienceChange ? (
+            {isEditingXP && ownerExperienceChange ? (
               <div className="flex items-center gap-1">
                 <span>XP:</span>
                 <input
@@ -429,7 +440,7 @@ export function SheetHeaderIdentity({
             ) : (
               <>
                 <span>XP: {character.experience ?? 0}</span>
-                {onExperienceChange && (
+                {ownerExperienceChange && (
                   <button
                     ref={xpEditButtonRef}
                     type="button"
@@ -462,17 +473,17 @@ export function SheetHeaderIdentity({
         isOpen={showUploadModal}
         onClose={() => setShowUploadModal(false)}
         onConfirm={handleCroppedImage}
-        onChooseFromLibrary={onPortraitUrlChange ? () => setShowBankPicker(true) : undefined}
+        onChooseFromLibrary={ownerPortraitUrlChange ? () => setShowBankPicker(true) : undefined}
         cropShape="rect"
         aspect={1}
         title="Upload Character Portrait"
       />
-      {onPortraitUrlChange && (
+      {ownerPortraitUrlChange && (
         <RealmsImagePicker
           isOpen={showBankPicker}
           onClose={() => setShowBankPicker(false)}
           onSelect={({ image }) => {
-            void onPortraitUrlChange(image.publicUrl);
+            void ownerPortraitUrlChange(image.publicUrl);
           }}
           categories="portrait"
           allowAdminUpload={false}
