@@ -1,10 +1,13 @@
 'use client';
 
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useState } from 'react';
 import {
-  shouldCommitAdminUsersFetch,
-  type AdminUsersListFetchContext,
-} from './admin-users-list-paging';
+  adminUsersOwnerKey,
+  nextContinuationBusyMap,
+  tryApplyContinuationResult,
+  type AdminUsersDirectorySlice,
+} from './admin-users-directory-state';
+import type { AdminUsersListFetchContext } from './admin-users-directory-state';
 
 export type AdminUsersLoadMoreRow = { id: string };
 
@@ -14,115 +17,60 @@ export type AdminUsersLoadMorePage<T extends AdminUsersLoadMoreRow> = {
 };
 
 type UseAdminUsersLoadMoreParams<T extends AdminUsersLoadMoreRow> = {
-  searchApplied: string;
-  /** Bumps when debounced search is applied so continuation busy state is per query. */
-  listEpoch: number;
-  users: T[];
-  setUsers: React.Dispatch<React.SetStateAction<T[]>>;
-  setHasMore: React.Dispatch<React.SetStateAction<boolean>>;
-  setMessage: React.Dispatch<
-    React.SetStateAction<{ type: 'success' | 'error'; text: string } | null>
-  >;
+  directory: AdminUsersDirectorySlice<T>;
+  setDirectory: React.Dispatch<React.SetStateAction<AdminUsersDirectorySlice<T>>>;
   fetchPage: (offset: number, q: string) => Promise<AdminUsersLoadMorePage<T>>;
 };
 
-function continuationKey(epoch: number, q: string): string {
-  return `${epoch}\u0000${q}`;
-}
-
 export function useAdminUsersLoadMore<T extends AdminUsersLoadMoreRow>({
-  searchApplied,
-  listEpoch,
-  users,
-  setUsers,
-  setHasMore,
-  setMessage,
+  directory,
+  setDirectory,
   fetchPage,
 }: UseAdminUsersLoadMoreParams<T>) {
-  const listGenerationRef = useRef(listEpoch);
-  const searchAppliedRef = useRef(searchApplied);
-  const usersLengthRef = useRef(users.length);
   const [continuationBusyByKey, setContinuationBusyByKey] = useState<Record<string, boolean>>({});
 
-  useEffect(() => {
-    usersLengthRef.current = users.length;
-  }, [users.length]);
-
-  useEffect(() => {
-    searchAppliedRef.current = searchApplied;
-  }, [searchApplied]);
-
-  useEffect(() => {
-    listGenerationRef.current = listEpoch;
-  }, [listEpoch]);
-
-  const activeBusyKey = continuationKey(listEpoch, searchApplied);
+  const activeBusyKey = adminUsersOwnerKey(directory.owner);
   const loadingMore = Boolean(continuationBusyByKey[activeBusyKey]);
 
   const setBusyForRequest = useCallback((key: string, busy: boolean) => {
-    setContinuationBusyByKey((prev) => {
-      if (busy) {
-        if (prev[key]) return prev;
-        return { ...prev, [key]: true };
-      }
-      if (!prev[key]) return prev;
-      const next = { ...prev };
-      delete next[key];
-      return next;
-    });
+    setContinuationBusyByKey((prev) => nextContinuationBusyMap(prev, key, busy));
   }, []);
 
   const loadMoreUsers = useCallback(async () => {
-    const generation = listEpoch;
-    const q = searchApplied;
-    const offset = users.length;
-    const request: AdminUsersListFetchContext = { generation, q, offset };
-    const key = continuationKey(listEpoch, q);
+    let request: AdminUsersListFetchContext | undefined;
+    let busyKey: string | undefined;
 
-    setBusyForRequest(key, true);
-    setMessage(null);
-    try {
-      const page = await fetchPage(offset, q);
-      const active = {
-        generation: listGenerationRef.current,
-        q: searchAppliedRef.current,
-        usersLength: usersLengthRef.current,
+    setDirectory((prev) => {
+      busyKey = adminUsersOwnerKey(prev.owner);
+      request = {
+        generation: prev.owner.generation,
+        q: prev.owner.q,
+        offset: prev.users.length,
       };
-      if (!shouldCommitAdminUsersFetch(request, active)) return;
-      if (usersLengthRef.current !== offset) return;
+      return { ...prev, continuationError: null };
+    });
 
-      setUsers((prev) => {
-        if (prev.length !== offset) return prev;
-        return [...prev, ...(page.users ?? [])];
-      });
-      setHasMore(Boolean(page.hasMore));
+    if (!request || !busyKey) return;
+
+    setBusyForRequest(busyKey, true);
+    try {
+      const page = await fetchPage(request.offset, request.q);
+      setDirectory((prev) =>
+        tryApplyContinuationResult(prev, request!, {
+          ok: true,
+          users: page.users ?? [],
+          hasMore: Boolean(page.hasMore),
+        }),
+      );
     } catch (err) {
-      if (
-        !shouldCommitAdminUsersFetch(request, {
-          generation: listGenerationRef.current,
-          q: searchAppliedRef.current,
-          usersLength: usersLengthRef.current,
-        })
-      ) {
-        return;
-      }
-      setMessage({
-        type: 'error',
-        text: err instanceof Error ? err.message : 'Failed to load more users',
-      });
+      const message = err instanceof Error ? err.message : 'Failed to load more users';
+      setDirectory((prev) =>
+        tryApplyContinuationResult(prev, request!, { ok: false, error: message }),
+      );
     } finally {
-      setBusyForRequest(key, false);
+      setBusyForRequest(busyKey, false);
     }
-  }, [
-    fetchPage,
-    listEpoch,
-    searchApplied,
-    setBusyForRequest,
-    setHasMore,
-    setMessage,
-    setUsers,
-    users.length,
-  ]);
+  }, [fetchPage, setBusyForRequest, setDirectory]);
 
   return { loadingMore, loadMoreUsers };
 }

@@ -77,16 +77,18 @@ async function recordOfficialChangeBestEffort(input: RecordCodexChangeInput): Pr
 function officialWriteValidation(
   type: OfficialType,
   body: Record<string, unknown>,
+  isAdminUser: boolean,
 ): NextResponse | null {
+  const imageOptions = { isAdmin: isAdminUser };
   if (type === 'species') {
-    return validateUserLibraryWriteBody('species', body, { allowImageUrl: true });
+    return validateUserLibraryWriteBody('species', body, imageOptions);
   }
   if (isColumnarLibraryTypeName(type)) {
     const unknown = unknownPersistedLibraryKeys(type, body);
     if (unknown.length > 0) {
       return NextResponse.json({ error: 'Payload contains unsupported fields' }, { status: 400 });
     }
-    return validateUserLibraryWriteBody(type, body, { allowImageUrl: true });
+    return validateUserLibraryWriteBody(type, body, imageOptions);
   }
   return null;
 }
@@ -328,10 +330,6 @@ export async function POST(
     } catch {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
-    if (!(await isAdmin(user.uid))) {
-      return NextResponse.json({ error: 'Admin only' }, { status: 403 });
-    }
-
     const paramResult = await validateRouteParams(params, officialLibraryTypeParamSchema);
     if (!paramResult.success) return paramResult.error;
     const { type } = paramResult.data;
@@ -339,8 +337,12 @@ export async function POST(
     const validation = await validateJson(request, publicItemSchema);
     if (!validation.success) return validation.error;
     const body = validation.data as Record<string, unknown>;
-    const writeValidation = officialWriteValidation(type, body);
+    const isAdminUser = await isAdmin(user.uid);
+    const writeValidation = officialWriteValidation(type, body, isAdminUser);
     if (writeValidation) return writeValidation;
+    if (!isAdminUser) {
+      return NextResponse.json({ error: 'Admin only' }, { status: 403 });
+    }
 
     const supabase = createServiceRoleClient();
 

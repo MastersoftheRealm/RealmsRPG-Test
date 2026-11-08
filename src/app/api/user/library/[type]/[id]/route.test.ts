@@ -314,7 +314,8 @@ describe('PATCH /api/user/library/[type]/[id]', () => {
     );
 
     expect(response.status).toBe(200);
-    expect(supabase.lastUpdate()?.image_id).toBeUndefined();
+    expect(supabase.lastUpdate()?.image_id).toBe('11111111-1111-4111-8111-111111111111');
+    expect(supabase.lastUpdate()?.image_url).toBeUndefined();
   });
 
   it('PAGES4-018: admin PATCH may persist image_id', async () => {

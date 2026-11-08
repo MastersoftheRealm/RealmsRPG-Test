@@ -307,7 +307,8 @@ describe('POST /api/user/library/[type]', () => {
 
     expect(response.status).toBe(200);
     expect(client.libraryInsertRows[0]).toBeDefined();
-    expect(client.libraryInsertRows[0]?.image_id).toBeUndefined();
+    expect(client.libraryInsertRows[0]?.image_id).toBe('11111111-1111-4111-8111-111111111111');
+    expect(client.libraryInsertRows[0]?.image_url).toBeUndefined();
   });
 
   it('PAGES4-018: admin POST may persist image_id', async () => {

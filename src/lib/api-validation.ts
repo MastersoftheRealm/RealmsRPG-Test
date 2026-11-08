@@ -26,6 +26,7 @@ import {
   CREATOR_NAME_MAX_LENGTH,
   CREATOR_NAME_TOO_LONG_MESSAGE,
 } from '@/lib/creator/creator-text-limits';
+import { getCanonicalSiteUrl } from '@/lib/site-url';
 
 // =============================================================================
 // Helpers
@@ -45,18 +46,21 @@ function hostOf(value: string | undefined | null): string | null {
 }
 
 /**
- * Hosts a state-changing request may claim as its Origin: the host the app saw on
- * `request.nextUrl` (not the raw `Host` header, which an attacker can spoof), plus
- * `NEXT_PUBLIC_SITE_URL` and `VERCEL_URL` for preview deploys.
+ * Hosts a state-changing request may claim in its Origin header. Never derived
+ * from the request URL or `Host` header (both are attacker-controlled on edge).
  */
-function allowedRequestHosts(request: NextRequest): Set<string> {
+function allowedRequestHosts(): Set<string> {
   const hosts = new Set<string>();
-  const nextUrlHost = request.nextUrl.host.toLowerCase();
-  if (nextUrlHost) hosts.add(nextUrlHost);
-  const configured = hostOf(process.env.NEXT_PUBLIC_SITE_URL);
+
+  const configured = hostOf(getCanonicalSiteUrl());
   if (configured) hosts.add(configured);
-  const vercelPreview = hostOf(process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : null);
-  if (vercelPreview) hosts.add(vercelPreview);
+
+  const vercelRaw = process.env.VERCEL_URL?.trim();
+  if (vercelRaw) {
+    const vercelHost = hostOf(vercelRaw.includes('://') ? vercelRaw : `https://${vercelRaw}`);
+    if (vercelHost) hosts.add(vercelHost);
+  }
+
   return hosts;
 }
 
@@ -82,9 +86,22 @@ export function verifyRequestOrigin(request: NextRequest): NextResponse<{ error:
     return forbiddenCrossOrigin();
   }
 
-  const originHost = hostOf(request.headers.get('origin'));
-  if (originHost) {
-    return allowedRequestHosts(request).has(originHost) ? null : forbiddenCrossOrigin();
+  const originHeader = request.headers.get('origin');
+  if (originHeader?.trim()) {
+    try {
+      const originUrl = new URL(originHeader.trim());
+      const originHost = originUrl.host.toLowerCase();
+      if (allowedRequestHosts().has(originHost)) return null;
+      if (
+        process.env.NODE_ENV !== 'production' &&
+        (originUrl.hostname === 'localhost' || originUrl.hostname === '127.0.0.1')
+      ) {
+        return null;
+      }
+    } catch {
+      return forbiddenCrossOrigin();
+    }
+    return forbiddenCrossOrigin();
   }
 
   // No Origin at all: accept only when fetch metadata already vouched for it.

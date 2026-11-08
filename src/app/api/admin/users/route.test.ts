@@ -188,7 +188,8 @@ describe('GET /api/admin/users', () => {
           username_display: 'Hero',
           display_name: 'Hero Player',
           role: 'new_player',
-        },
+          email: 'secret@example.com',
+        } as ProfileRow & { email: string },
       ]) as never,
     );
 

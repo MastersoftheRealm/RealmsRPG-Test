@@ -92,7 +92,7 @@ describe('validateUserLibraryWriteBody', () => {
     expect(validateUserLibraryWriteBody('creatures', body)).toBeNull();
   });
 
-  it('silently strips image fields for non-admin user library saves', () => {
+  it('strips imageUrl and keeps a valid bank imageId for non-admin user library saves', () => {
     const body = {
       name: 'Bolt',
       imageId: '11111111-1111-4111-8111-111111111111',
@@ -100,7 +100,7 @@ describe('validateUserLibraryWriteBody', () => {
     };
     expect(validateUserLibraryWriteBody('powers', body)).toBeNull();
     expect(body.imageUrl).toBeUndefined();
-    expect(body.imageId).toBeUndefined();
+    expect(body.imageId).toBe('11111111-1111-4111-8111-111111111111');
   });
 
   it('allows image fields when allowImageUrl is set (admin)', () => {
@@ -111,6 +111,26 @@ describe('validateUserLibraryWriteBody', () => {
     };
     expect(validateUserLibraryWriteBody('powers', body, { allowImageUrl: true })).toBeNull();
     expect(body.imageUrl).toBe('https://cdn.test/art.jpg');
+    expect(body.imageId).toBe('11111111-1111-4111-8111-111111111111');
+  });
+
+  it('rejects official catalog image fields when the caller is not admin', () => {
+    const response = validateUserLibraryWriteBody(
+      'powers',
+      { name: 'Bolt', imageId: '11111111-1111-4111-8111-111111111111' },
+      { isAdmin: false },
+    );
+    expect(response?.status).toBe(403);
+  });
+
+  it('clears injected image URL to null on admin official catalog writes', () => {
+    const body = {
+      name: 'Bolt',
+      imageId: '11111111-1111-4111-8111-111111111111',
+      imageUrl: 'https://evil.example/art.jpg',
+    };
+    expect(validateUserLibraryWriteBody('powers', body, { isAdmin: true })).toBeNull();
+    expect(body.imageUrl).toBeNull();
     expect(body.imageId).toBe('11111111-1111-4111-8111-111111111111');
   });
 });

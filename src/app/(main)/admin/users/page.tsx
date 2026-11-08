@@ -25,6 +25,7 @@ import { ConfirmActionModal, ErrorDisplay } from '@/components/patterns';
 import { apiFetch } from '@/lib/api-client';
 import { formatRolePolicyLimit } from '@/lib/role-limits';
 import { ROLE_LABELS } from '@/lib/role-quota-messages';
+import { type AdminUsersDirectorySlice } from './admin-users-directory-state';
 import { useAdminUsersLoadMore } from './use-admin-users-load-more';
 
 type UserRole = 'new_player' | 'playtester' | 'developer' | 'admin';
@@ -62,8 +63,12 @@ const ROLE_OPTIONS = (Object.keys(ROLE_LABELS) as UserRole[]).map((role) => ({
 }));
 
 export default function AdminUsersPage() {
-  const [users, setUsers] = useState<UserRow[]>([]);
-  const [hasMore, setHasMore] = useState(false);
+  const [directory, setDirectory] = useState<AdminUsersDirectorySlice<UserRow>>({
+    owner: { generation: 0, q: '' },
+    users: [],
+    hasMore: false,
+    continuationError: null,
+  });
   const [rolePolicies, setRolePolicies] = useState<Record<UserRole, RolePolicyRow> | null>(null);
   const [syncedAt, setSyncedAt] = useState(0);
   const [updating, setUpdating] = useState<string | null>(null);
@@ -127,24 +132,30 @@ export default function AdminUsersPage() {
       : 'Failed to load admin data'
     : null;
 
+  const listOwner = useMemo(
+    () => ({ generation: listEpoch, q: searchApplied }),
+    [listEpoch, searchApplied],
+  );
+
   if (adminData && dataUpdatedAt !== syncedAt) {
-    setUsers(adminData.users);
-    setHasMore(adminData.hasMore);
+    setDirectory({
+      owner: listOwner,
+      users: adminData.users,
+      hasMore: adminData.hasMore,
+      continuationError: null,
+    });
     setRolePolicies(adminData.rolePolicies);
     setSyncedAt(dataUpdatedAt);
   }
 
   const { loadingMore, loadMoreUsers } = useAdminUsersLoadMore({
-    searchApplied,
-    listEpoch,
-    users,
-    setUsers,
-    setHasMore,
-    setMessage,
+    directory,
+    setDirectory,
     fetchPage: fetchUsersPage,
   });
 
-  const displayedUsers = useMemo(() => users, [users]);
+  const displayedUsers = useMemo(() => directory.users, [directory.users]);
+  const hasMore = directory.hasMore;
 
   const handleRoleChange = async (userId: string, newRole: UserRole) => {
     setUpdating(userId);
@@ -154,8 +165,11 @@ export default function AdminUsersPage() {
         method: 'PATCH',
         body: JSON.stringify({ userId, role: newRole }),
       });
-      setUsers((prev) => prev.map((u) => (u.id === userId ? { ...u, role: newRole } : u)));
-      const changed = users.find((u) => u.id === userId);
+      setDirectory((prev) => ({
+        ...prev,
+        users: prev.users.map((u) => (u.id === userId ? { ...u, role: newRole } : u)),
+      }));
+      const changed = directory.users.find((u) => u.id === userId);
       const label = changed?.usernameDisplay || changed?.username || 'user';
       setMessage({ type: 'success', text: `Updated ${label} to ${ROLE_LABELS[newRole]}` });
     } catch (err) {
@@ -186,9 +200,9 @@ export default function AdminUsersPage() {
         />
       </div>
 
-      {message && (
-        <Alert variant={message.type === 'success' ? 'success' : 'danger'} className="mb-4">
-          {message.text}
+      {(message || directory.continuationError) && (
+        <Alert variant={message?.type === 'success' ? 'success' : 'danger'} className="mb-4">
+          {message?.text ?? directory.continuationError}
         </Alert>
       )}
 
