@@ -50,23 +50,52 @@ function makeStreamedRequest(byteLength: number) {
 
 describe('verifyRequestOrigin', () => {
   const originalSiteUrl = process.env.NEXT_PUBLIC_SITE_URL;
+  const originalVercelUrl = process.env.VERCEL_URL;
 
   beforeEach(() => {
     delete process.env.NEXT_PUBLIC_SITE_URL;
+    delete process.env.VERCEL_URL;
   });
 
   afterEach(() => {
     if (originalSiteUrl === undefined) delete process.env.NEXT_PUBLIC_SITE_URL;
     else process.env.NEXT_PUBLIC_SITE_URL = originalSiteUrl;
+    if (originalVercelUrl === undefined) delete process.env.VERCEL_URL;
+    else process.env.VERCEL_URL = originalVercelUrl;
   });
 
   it('allows same-origin state-changing requests', () => {
     expect(verifyRequestOrigin(makeRequest({ origin: 'http://localhost' }))).toBeNull();
   });
 
+  it('allows localhost and 127.0.0.1 with non-default ports outside production', () => {
+    expect(verifyRequestOrigin(makeRequest({ origin: 'http://localhost:3000' }))).toBeNull();
+    expect(verifyRequestOrigin(makeRequest({ origin: 'http://127.0.0.1:3000' }))).toBeNull();
+  });
+
   it('rejects a cross-site Origin', () => {
     const denied = verifyRequestOrigin(makeRequest({ origin: 'https://evil.example' }));
     expect(denied?.status).toBe(403);
+  });
+
+  it('rejects Origin matching a hostile request URL host (LIB1-003)', () => {
+    const denied = verifyRequestOrigin(
+      new NextRequest('https://evil.example/api/characters', {
+        method: 'POST',
+        headers: {
+          host: 'evil.example',
+          origin: 'https://evil.example',
+        },
+      }),
+    );
+    expect(denied?.status).toBe(403);
+  });
+
+  it('allows the VERCEL_URL preview deployment origin', () => {
+    process.env.VERCEL_URL = 'realms-rpg-preview.vercel.app';
+    expect(
+      verifyRequestOrigin(makeRequest({ origin: 'https://realms-rpg-preview.vercel.app' })),
+    ).toBeNull();
   });
 
   it('rejects a cross-site Sec-Fetch-Site even when Origin is absent', () => {
