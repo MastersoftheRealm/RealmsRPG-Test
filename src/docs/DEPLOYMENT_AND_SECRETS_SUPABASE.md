@@ -47,7 +47,7 @@ In Vercel → Project → Settings → Environment Variables, add:
 
 **Error monitoring (TASK-745):** Live on Vercel as of 2026-08-13 via marketplace Sentry (`sentry-copper-canvas`, Developer $0). `NEXT_PUBLIC_SENTRY_DSN` is injected on production + preview. The app no-ops when unset. `getSentryEnvironment()` already uses `VERCEL_ENV`.
 
-**Canonical site URL:** Production `NEXT_PUBLIC_SITE_URL=https://realmsrpg.com` (auth redirects + CSRF origin allowlist). Preview uses the request host.
+**Canonical site URL:** Production `NEXT_PUBLIC_SITE_URL=https://realmsrpg.com` (auth redirects + CSRF origin allowlist). Preview deployments also allow origins whose host matches `VERCEL_URL`. Local/non-production allows `localhost` and `127.0.0.1`; CSRF checks do not trust the request URL or `Host` header.
 
 **Post-auth redirect origins (`lib/auth-redirect.ts`):** `/auth/callback` and `/auth/confirm` build absolute redirect URLs from an allowlist: `NEXT_PUBLIC_SITE_URL`, `VERCEL_URL`, the incoming request URL host, and the raw `Host` header. `x-forwarded-host` is honored only when it matches that set. **Deployment assumption:** only configured domains (production custom domain, Vercel project hostnames, local dev) route traffic to this app; an arbitrary attacker-controlled request origin is not treated as a trusted redirect target unless it already matches one of those hosts. Email/OAuth links should continue to use `NEXT_PUBLIC_SITE_URL` in redirect targets where applicable.
 

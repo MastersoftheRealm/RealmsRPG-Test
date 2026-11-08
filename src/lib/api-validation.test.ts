@@ -50,14 +50,18 @@ function makeStreamedRequest(byteLength: number) {
 
 describe('verifyRequestOrigin', () => {
   const originalSiteUrl = process.env.NEXT_PUBLIC_SITE_URL;
+  const originalVercelUrl = process.env.VERCEL_URL;
 
   beforeEach(() => {
     delete process.env.NEXT_PUBLIC_SITE_URL;
+    delete process.env.VERCEL_URL;
   });
 
   afterEach(() => {
     if (originalSiteUrl === undefined) delete process.env.NEXT_PUBLIC_SITE_URL;
     else process.env.NEXT_PUBLIC_SITE_URL = originalSiteUrl;
+    if (originalVercelUrl === undefined) delete process.env.VERCEL_URL;
+    else process.env.VERCEL_URL = originalVercelUrl;
   });
 
   it('allows same-origin state-changing requests', () => {
@@ -69,9 +73,9 @@ describe('verifyRequestOrigin', () => {
     expect(denied?.status).toBe(403);
   });
 
-  it('does not treat a spoofed Host header as an allowed Origin (LIB1-003)', () => {
+  it('rejects Origin matching a hostile request URL host (LIB1-003)', () => {
     const denied = verifyRequestOrigin(
-      new NextRequest(APP_URL, {
+      new NextRequest('https://evil.example/api/characters', {
         method: 'POST',
         headers: {
           host: 'evil.example',
@@ -80,6 +84,13 @@ describe('verifyRequestOrigin', () => {
       }),
     );
     expect(denied?.status).toBe(403);
+  });
+
+  it('allows the VERCEL_URL preview deployment origin', () => {
+    process.env.VERCEL_URL = 'realms-rpg-preview.vercel.app';
+    expect(
+      verifyRequestOrigin(makeRequest({ origin: 'https://realms-rpg-preview.vercel.app' })),
+    ).toBeNull();
   });
 
   it('rejects a cross-site Sec-Fetch-Site even when Origin is absent', () => {
