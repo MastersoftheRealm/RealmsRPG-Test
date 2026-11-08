@@ -1,7 +1,7 @@
 /**
  * Admin Users API
  * ===============
- * List users (id, username, username_display, email, display_name, role).
+ * List users (id, username, username_display, display_name, role).
  * Only users with role=admin can access.
  */
 
@@ -56,7 +56,7 @@ export async function GET(request: NextRequest) {
     const supabase = getSupabaseAdmin();
     let query = supabase
       .from('user_profiles')
-      .select('id, username, username_display, email, display_name, role')
+      .select('id, username, username_display, display_name, role')
       .order('username', { nullsFirst: false })
       .order('id');
     if (search) {
@@ -73,7 +73,6 @@ export async function GET(request: NextRequest) {
       id: string;
       username: string | null;
       username_display: string | null;
-      email: string | null;
       display_name: string | null;
       role: string;
     }[];
@@ -81,7 +80,6 @@ export async function GET(request: NextRequest) {
       id: p.id,
       username: p.username ?? '',
       usernameDisplay: p.username_display ?? p.username ?? '',
-      email: p.email ?? '',
       displayName: p.display_name ?? '',
       role: p.role,
     }));

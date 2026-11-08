@@ -43,6 +43,7 @@ import { isAdmin } from '@/lib/admin';
 import { createPublicClient } from '@/lib/supabase/public-client';
 import { createClient, createServiceRoleClient } from '@/lib/supabase/server';
 import { recordCodexChange } from '@/lib/codex-changelog';
+import * as nextCache from 'next/cache';
 
 const mockGetSession = vi.mocked(getSession);
 const mockRequireLiveUser = vi.mocked(requireLiveUser);
@@ -52,6 +53,43 @@ const mockCreatePublicClient = vi.mocked(createPublicClient);
 const mockCreateServiceRoleClient = vi.mocked(createServiceRoleClient);
 
 const USER = { uid: 'user-123', email: 'hero@example.com' };
+
+function assertLogArgumentsExcludeCanary(
+  errorSpy: ReturnType<typeof vi.spyOn>,
+  canary: string,
+): void {
+  for (const call of errorSpy.mock.calls) {
+    for (const arg of call) {
+      if (typeof arg === 'string') {
+        expect(arg).not.toContain(canary);
+        continue;
+      }
+      expect(JSON.stringify(arg)).not.toContain(canary);
+    }
+  }
+}
+
+function mockOfficialPowerCreateSupabase() {
+  const insertSingle = vi.fn(async () => ({
+    data: { id: 'power-changelog-fail', name: 'Firebolt', payload: {} },
+    error: null,
+  }));
+  const insert = vi.fn(() => ({
+    select: vi.fn(() => ({ single: insertSingle })),
+  }));
+  mockCreateServiceRoleClient.mockReturnValue({
+    from: vi.fn(() => ({
+      select: vi.fn(() => ({
+        ilike: vi.fn().mockReturnThis(),
+        neq: vi.fn().mockReturnThis(),
+        limit: vi.fn().mockReturnThis(),
+        maybeSingle: vi.fn(async () => ({ data: null, error: null })),
+      })),
+      insert,
+    })),
+  } as never);
+  return { insertSingle };
+}
 
 function createListSupabase() {
   const query = {
@@ -296,6 +334,106 @@ describe('POST /api/official/[type]', () => {
     expect(response.status).toBe(403);
     await expect(readJson(response)).resolves.toEqual({ error: 'Admin only' });
     expect(mockCreateServiceRoleClient).not.toHaveBeenCalled();
+  });
+
+  it('records create changelog with afterData and null beforeData', async () => {
+    mockRequireLiveUser.mockResolvedValue(USER);
+    mockIsAdmin.mockResolvedValue(true);
+    const insertSingle = vi.fn(async () => ({
+      data: {
+        id: 'power-new-id',
+        name: 'Firebolt',
+        payload: {},
+        catalog_listing: 'listed',
+      },
+      error: null,
+    }));
+    const insert = vi.fn(() => ({
+      select: vi.fn(() => ({ single: insertSingle })),
+    }));
+    mockCreateServiceRoleClient.mockReturnValue({
+      from: vi.fn(() => ({
+        select: vi.fn(() => ({
+          ilike: vi.fn().mockReturnThis(),
+          neq: vi.fn().mockReturnThis(),
+          limit: vi.fn().mockReturnThis(),
+          maybeSingle: vi.fn(async () => ({ data: null, error: null })),
+        })),
+        insert,
+      })),
+    } as never);
+
+    const response = await POST(makePostRequest('powers'), params('powers'));
+
+    expect(response.status).toBe(200);
+    expect(insert).toHaveBeenCalled();
+    expect(recordCodexChange).toHaveBeenCalledWith(
+      expect.objectContaining({
+        entityType: 'official_powers',
+        operation: 'create',
+        changedByUserId: USER.uid,
+        beforeData: null,
+        afterData: expect.objectContaining({ name: 'Firebolt' }),
+      }),
+    );
+  });
+
+  it('returns success when changelog rejects with an Error (no raw message in logs)', async () => {
+    mockRequireLiveUser.mockResolvedValue(USER);
+    mockIsAdmin.mockResolvedValue(true);
+    const canary = 'PRIVATE_CANARY_ERROR_7f3a';
+    vi.mocked(recordCodexChange).mockRejectedValueOnce(new Error(`changelog failure ${canary}`));
+    const { insertSingle } = mockOfficialPowerCreateSupabase();
+    const errorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+    const revalidateSpy = vi.spyOn(nextCache, 'revalidateTag').mockImplementation(() => {});
+
+    const response = await POST(makePostRequest('powers'), params('powers'));
+
+    expect(response.status).toBe(200);
+    await expect(readJson(response)).resolves.toEqual({ id: expect.any(String) });
+    expect(insertSingle).toHaveBeenCalled();
+    expect(errorSpy).toHaveBeenCalledWith(
+      '[Official API] changelog write failed (mutation kept):',
+      expect.objectContaining({
+        entityType: 'official_powers',
+        operation: 'create',
+        failure: 'changelog_record_threw',
+      }),
+    );
+    assertLogArgumentsExcludeCanary(errorSpy, canary);
+    expect(revalidateSpy).toHaveBeenCalled();
+
+    errorSpy.mockRestore();
+    revalidateSpy.mockRestore();
+  });
+
+  it('returns success when changelog rejects with a non-Error throw (no raw value in logs)', async () => {
+    mockRequireLiveUser.mockResolvedValue(USER);
+    mockIsAdmin.mockResolvedValue(true);
+    const canary = 'PRIVATE_CANARY_STRING_9b2e';
+    vi.mocked(recordCodexChange).mockRejectedValueOnce(`changelog string throw ${canary}`);
+    const { insertSingle } = mockOfficialPowerCreateSupabase();
+    const errorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+    const revalidateSpy = vi.spyOn(nextCache, 'revalidateTag').mockImplementation(() => {});
+
+    const response = await POST(makePostRequest('powers'), params('powers'));
+
+    expect(response.status).toBe(200);
+    await expect(readJson(response)).resolves.toEqual({ id: expect.any(String) });
+    expect(insertSingle).toHaveBeenCalled();
+    expect(errorSpy).toHaveBeenCalledWith(
+      '[Official API] changelog write failed (mutation kept):',
+      expect.objectContaining({
+        entityType: 'official_powers',
+        operation: 'create',
+        failure: 'changelog_record_threw',
+      }),
+    );
+    assertLogArgumentsExcludeCanary(errorSpy, canary);
+    expect(revalidateSpy).toHaveBeenCalled();
+
+    errorSpy.mockRestore();
+    revalidateSpy.mockRestore();
   });
 
   it('creates an official creature with nonempty skill objects', async () => {

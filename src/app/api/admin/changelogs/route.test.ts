@@ -93,6 +93,7 @@ function changelogFixture(overrides: Partial<ChangelogFixture> = {}): ChangelogF
 function createRoutingClient(options: {
   rows: ChangelogFixture[];
   entities?: Array<{ id: string; name: string | null }>;
+  profiles?: Array<Record<string, unknown>>;
   nameError?: { message: string } | null;
   onNameLookup?: (ids: string[]) => void;
   onFrom?: (table: string) => void;
@@ -114,7 +115,7 @@ function createRoutingClient(options: {
       if (table === 'user_profiles') {
         return {
           select: () => ({
-            in: () => Promise.resolve({ data: [], error: null }),
+            in: () => Promise.resolve({ data: options.profiles ?? [], error: null }),
           }),
         };
       }
@@ -253,6 +254,37 @@ describe('GET /api/admin/changelogs', () => {
     expect(response.status).toBe(200);
     expect(body[0]?.after_data).toEqual({});
     errorSpy.mockRestore();
+  });
+
+  it('does not include actor email in the JSON response', async () => {
+    mockRequireAdminSession.mockResolvedValue({ ok: true, userId: ADMIN_ID });
+    mockCreateServiceRoleClient.mockReturnValue(
+      createRoutingClient({
+        rows: [changelogFixture({ changed_by_user_id: ADMIN_ID })],
+        profiles: [
+          {
+            id: ADMIN_ID,
+            username: 'admin',
+            username_display: 'Admin',
+            display_name: 'Admin User',
+            email: 'admin-secret@example.com',
+          },
+        ],
+      }) as never,
+    );
+
+    const response = await GET(makeGetRequest());
+    const body = await readJson<Array<{ actor: Record<string, unknown> | null }>>(response);
+
+    expect(response.status).toBe(200);
+    expect(body[0]?.actor).toEqual({
+      id: ADMIN_ID,
+      username: 'admin',
+      usernameDisplay: 'Admin',
+      displayName: 'Admin User',
+    });
+    expect(body[0]?.actor).not.toHaveProperty('email');
+    expect(JSON.stringify(body)).not.toMatch(/@/);
   });
 
   it('does not query core_rules for a name column', async () => {

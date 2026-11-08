@@ -33,7 +33,6 @@ interface UserRow {
   id: string;
   username: string;
   usernameDisplay: string;
-  email: string;
   displayName: string;
   role: UserRole;
 }
@@ -71,6 +70,7 @@ export default function AdminUsersPage() {
   const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [searchApplied, setSearchApplied] = useState('');
+  const [listEpoch, setListEpoch] = useState(0);
   const [pendingChange, setPendingChange] = useState<{
     userId: string;
     label: string;
@@ -115,7 +115,10 @@ export default function AdminUsersPage() {
   });
 
   useEffect(() => {
-    const handle = window.setTimeout(() => setSearchApplied(searchQuery), 300);
+    const handle = window.setTimeout(() => {
+      setSearchApplied(searchQuery);
+      setListEpoch((epoch) => epoch + 1);
+    }, 300);
     return () => window.clearTimeout(handle);
   }, [searchQuery]);
   const error = queryError
@@ -133,6 +136,7 @@ export default function AdminUsersPage() {
 
   const { loadingMore, loadMoreUsers } = useAdminUsersLoadMore({
     searchApplied,
+    listEpoch,
     users,
     setUsers,
     setHasMore,
@@ -177,7 +181,7 @@ export default function AdminUsersPage() {
         <SearchInput
           value={searchQuery}
           onChange={setSearchQuery}
-          placeholder="Search username, display name, email, or role"
+          placeholder="Search username, display name, user id, or role"
           aria-label="Search users"
         />
       </div>
@@ -223,12 +227,6 @@ export default function AdminUsersPage() {
                         title={u.displayName || undefined}
                       >
                         {u.displayName || '(none)'}
-                      </p>
-                      <p
-                        className="truncate text-sm text-text-secondary"
-                        title={u.email || undefined}
-                      >
-                        {u.email || '(none)'}
                       </p>
                       <p className="text-sm text-text-secondary">
                         Role:{' '}

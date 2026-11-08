@@ -39,7 +39,6 @@ type ProfileRow = {
   id: string;
   username: string | null;
   username_display: string | null;
-  email: string | null;
   display_name: string | null;
   role: string;
 };
@@ -50,32 +49,28 @@ function createMockSupabaseAdmin(
   options?: {
     onRange?: (from: number, to: number) => void;
     onOr?: (filter: string) => void;
-    onOrder?: (field: string) => void;
+    onOrder?: (field: string, orderOptions?: { nullsFirst?: boolean }) => void;
     searchNeedle?: string | null;
   },
 ) {
   const buildQuery = (searchNeedle: string | null) => {
     const sorted = [...profiles].sort(compareAdminUserProfilesForListing);
-    let rows = searchNeedle
+    const rows = searchNeedle
       ? sorted.filter((row) => profileMatchesAdminUserSearch(row, searchNeedle))
       : sorted;
     const chain = {
       or: vi.fn((filter: string) => {
         options?.onOr?.(filter);
-        if (options?.searchNeedle !== undefined) {
-          rows = options.searchNeedle
-            ? sorted.filter((row) => profileMatchesAdminUserSearch(row, options.searchNeedle!))
-            : sorted;
-        }
-        return buildQuery(options?.searchNeedle ?? null);
+        const needle = options?.searchNeedle !== undefined ? options.searchNeedle : searchNeedle;
+        return buildQuery(needle);
       }),
       range: vi.fn((from: number, to: number) => {
         options?.onRange?.(from, to);
         const page = rows.slice(from, to + 1);
         return Promise.resolve({ data: page, error });
       }),
-      order: vi.fn((field: string) => {
-        options?.onOrder?.(field);
+      order: vi.fn((field: string, orderOptions?: { nullsFirst?: boolean }) => {
+        options?.onOrder?.(field, orderOptions);
         return chain;
       }),
     };
@@ -153,7 +148,6 @@ describe('GET /api/admin/users', () => {
           id: 'user-1',
           username: 'hero',
           username_display: 'Hero',
-          email: 'hero@example.com',
           display_name: 'Hero Player',
           role: 'new_player',
         },
@@ -161,27 +155,49 @@ describe('GET /api/admin/users', () => {
     );
 
     const response = await GET(makeGetRequest());
-
-    expect(response.status).toBe(200);
     const body = await readJson<{
-      users: Array<{ id: string; username: string }>;
+      users: Array<Record<string, unknown>>;
       offset: number;
       limit: number;
       hasMore: boolean;
     }>(response);
+
+    expect(response.status).toBe(200);
     expect(body.users).toEqual([
       {
         id: 'user-1',
         username: 'hero',
         usernameDisplay: 'Hero',
-        email: 'hero@example.com',
         displayName: 'Hero Player',
         role: 'new_player',
       },
     ]);
+    expect(body.users[0]).not.toHaveProperty('email');
     expect(body.offset).toBe(0);
     expect(body.limit).toBe(100);
     expect(body.hasMore).toBe(false);
+  });
+
+  it('does not include email addresses in the JSON response', async () => {
+    mockRequireAdminSession.mockResolvedValue({ ok: true, userId: ADMIN_ID });
+    mockCreateSupabaseAdminClient.mockReturnValue(
+      createMockSupabaseAdmin([
+        {
+          id: 'user-1',
+          username: 'hero',
+          username_display: 'Hero',
+          display_name: 'Hero Player',
+          role: 'new_player',
+        },
+      ]) as never,
+    );
+
+    const response = await GET(makeGetRequest());
+    const body = await readJson<{ users: Array<Record<string, unknown>> }>(response);
+
+    expect(response.status).toBe(200);
+    expect(JSON.stringify(body)).not.toMatch(/@/);
+    expect(body.users[0]).not.toHaveProperty('email');
   });
 
   it('returns 429 when rate limited', async () => {
@@ -224,7 +240,6 @@ describe('GET /api/admin/users', () => {
       id: `uid-${String(i + 1).padStart(4, '0')}`,
       username: `user${String(i + 1).padStart(3, '0')}`,
       username_display: `User ${i + 1}`,
-      email: `user${i + 1}@example.com`,
       display_name: `Player ${i + 1}`,
       role: 'new_player',
     }));
@@ -271,15 +286,14 @@ describe('GET /api/admin/users', () => {
     expect(searchBody.users.some((u) => u.username === 'user150')).toBe(true);
   });
 
-  it('orders by username then id and pages tied null usernames without duplicates', async () => {
+  it('orders by username NULLS LAST then id and pages without duplicates', async () => {
     mockRequireAdminSession.mockResolvedValue({ ok: true, userId: ADMIN_ID });
-    const orderFields: string[] = [];
+    const orderCalls: Array<{ field: string; nullsFirst?: boolean | undefined }> = [];
     const directory: ProfileRow[] = [
       {
         id: 'uid-002',
         username: null,
         username_display: 'B',
-        email: 'b@example.com',
         display_name: null,
         role: 'new_player',
       },
@@ -287,7 +301,6 @@ describe('GET /api/admin/users', () => {
         id: 'uid-001',
         username: null,
         username_display: 'A',
-        email: 'a@example.com',
         display_name: null,
         role: 'new_player',
       },
@@ -295,14 +308,15 @@ describe('GET /api/admin/users', () => {
         id: 'uid-003',
         username: 'zulu',
         username_display: 'Z',
-        email: 'z@example.com',
         display_name: null,
         role: 'new_player',
       },
     ];
     mockCreateSupabaseAdminClient.mockReturnValue(
       createMockSupabaseAdmin(directory, null, {
-        onOrder: (field) => orderFields.push(field),
+        onOrder: (field, orderOptions) => {
+          orderCalls.push({ field, nullsFirst: orderOptions?.nullsFirst });
+        },
       }) as never,
     );
 
@@ -321,15 +335,16 @@ describe('GET /api/admin/users', () => {
       ),
     );
 
-    expect(orderFields[0]).toBe('username');
-    expect(orderFields[1]).toBe('id');
-    expect(page1.users.map((u) => u.id)).toEqual(['uid-001', 'uid-002']);
-    expect(page2.users.map((u) => u.id)).toEqual(['uid-003']);
+    expect(orderCalls[0]).toEqual({ field: 'username', nullsFirst: false });
+    expect(orderCalls[1]).toEqual({ field: 'id', nullsFirst: undefined });
+    expect(page1.users.map((u) => u.id)).toEqual(['uid-003', 'uid-001']);
+    expect(page2.users.map((u) => u.id)).toEqual(['uid-002']);
     const allIds = [...page1.users, ...page2.users].map((u) => u.id);
+    expect(allIds).toEqual(['uid-003', 'uid-001', 'uid-002']);
     expect(new Set(allIds).size).toBe(3);
   });
 
-  it('quotes search literals and matches role labels in the PostgREST filter', async () => {
+  it('quotes search literals, matches user id, and role labels in the PostgREST filter', async () => {
     mockRequireAdminSession.mockResolvedValue({ ok: true, userId: ADMIN_ID });
     const cases: Array<{ q: string; check: (filter: string) => void }> = [
       {
@@ -341,7 +356,7 @@ describe('GET /api/admin/users', () => {
       {
         q: 'O"Brien',
         check: (filter) => {
-          expect(filter).toContain('email.ilike."%O\\"Brien%"');
+          expect(filter).toContain('display_name.ilike."%O\\"Brien%"');
         },
       },
       {
@@ -351,6 +366,10 @@ describe('GET /api/admin/users', () => {
       {
         q: 'playtest',
         check: (filter) => expect(filter).toContain('role.in.(playtester)'),
+      },
+      {
+        q: 'uid-abc',
+        check: (filter) => expect(filter).toContain('id.ilike."%uid-abc%"'),
       },
     ];
 
@@ -363,7 +382,6 @@ describe('GET /api/admin/users', () => {
               id: 'pt-1',
               username: 'pt',
               username_display: 'pt',
-              email: 'pt@example.com',
               display_name: 'pt',
               role: 'playtester',
             },

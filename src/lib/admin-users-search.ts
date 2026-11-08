@@ -6,10 +6,10 @@ import type { UserRole } from '@/lib/role-limits';
 import { ROLE_LABELS, formatRoleLabel } from '@/lib/role-quota-messages';
 
 export type AdminUserProfileSearchRow = {
+  id: string;
   username: string | null;
   username_display: string | null;
   display_name: string | null;
-  email: string | null;
   role: string;
 };
 
@@ -44,21 +44,21 @@ export function profileMatchesAdminUserSearch(
     profile.username,
     profile.username_display,
     profile.display_name,
-    profile.email,
+    profile.id,
   ].filter((v): v is string => Boolean(v));
   if (values.some((v) => v.toLowerCase().includes(q))) return true;
   const roleMatches = rolesMatchingAdminUserSearchQuery(search);
   return roleMatches.length > 0 && roleMatches.includes(profile.role as UserRole);
 }
 
-/** PostgREST `.or(...)` filter for admin user search across text fields and role labels. */
+/** PostgREST `.or(...)` filter for admin user search across text fields, user id, and role labels. */
 export function buildAdminUsersOrFilter(search: string): string {
   const pattern = buildAdminUsersIlikePattern(search);
   const clauses = [
     `username.ilike.${pattern}`,
     `username_display.ilike.${pattern}`,
     `display_name.ilike.${pattern}`,
-    `email.ilike.${pattern}`,
+    `id.ilike.${pattern}`,
   ];
   const roles = rolesMatchingAdminUserSearchQuery(search);
   if (roles.length > 0) {
@@ -67,13 +67,16 @@ export function buildAdminUsersOrFilter(search: string): string {
   return clauses.join(',');
 }
 
+/** Mirrors `order username NULLS LAST`, then `id` as used by the admin users route. */
 export function compareAdminUserProfilesForListing(
   a: { id: string; username: string | null },
   b: { id: string; username: string | null },
 ): number {
-  const ua = a.username ?? '';
-  const ub = b.username ?? '';
-  const byName = ua.localeCompare(ub);
+  const aNull = a.username === null;
+  const bNull = b.username === null;
+  if (aNull !== bNull) return aNull ? 1 : -1;
+  if (aNull && bNull) return a.id.localeCompare(b.id);
+  const byName = (a.username ?? '').localeCompare(b.username ?? '');
   if (byName !== 0) return byName;
   return a.id.localeCompare(b.id);
 }

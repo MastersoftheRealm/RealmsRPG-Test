@@ -55,7 +55,6 @@ import { validateUserLibraryWriteBody } from '@/lib/library-mutation-validation'
 import {
   isColumnarLibraryTypeName,
   unknownPersistedLibraryKeys,
-  unknownPersistedSpeciesKeys,
 } from '@/lib/library-persisted-contract';
 
 const SPECIES_TABLE = 'codex_species';
@@ -63,7 +62,16 @@ const SPECIES_TABLE = 'codex_species';
 type OfficialType = z.infer<typeof officialLibraryTypeParamSchema>['type'];
 
 async function recordOfficialChangeBestEffort(input: RecordCodexChangeInput): Promise<void> {
-  await recordCodexChange(input);
+  try {
+    await recordCodexChange(input);
+  } catch {
+    console.error('[Official API] changelog write failed (mutation kept):', {
+      entityType: input.entityType,
+      entityId: input.entityId,
+      operation: input.operation,
+      failure: 'changelog_record_threw',
+    });
+  }
 }
 
 function officialWriteValidation(
@@ -71,11 +79,7 @@ function officialWriteValidation(
   body: Record<string, unknown>,
 ): NextResponse | null {
   if (type === 'species') {
-    const unknown = unknownPersistedSpeciesKeys(body);
-    if (unknown.length > 0) {
-      return NextResponse.json({ error: 'Payload contains unsupported fields' }, { status: 400 });
-    }
-    return null;
+    return validateUserLibraryWriteBody('species', body, { allowImageUrl: true });
   }
   if (isColumnarLibraryTypeName(type)) {
     const unknown = unknownPersistedLibraryKeys(type, body);

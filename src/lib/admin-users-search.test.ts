@@ -13,19 +13,31 @@ describe('admin-users-search', () => {
     expect(buildAdminUsersIlikePattern('(test)')).toBe('"%(test)%"');
   });
 
-  it('matches role labels via the shared formatRoleLabel helper', () => {
+  it('matches role labels and user id via shared helpers', () => {
     expect(rolesMatchingAdminUserSearchQuery('play')).toEqual(['new_player', 'playtester']);
     expect(rolesMatchingAdminUserSearchQuery('new player')).toEqual(['new_player']);
     expect(
       profileMatchesAdminUserSearch(
         {
+          id: 'uid-abc-123',
           username: 'x',
           username_display: 'x',
           display_name: null,
-          email: null,
           role: 'developer',
         },
         'Developer',
+      ),
+    ).toBe(true);
+    expect(
+      profileMatchesAdminUserSearch(
+        {
+          id: 'uid-abc-123',
+          username: 'x',
+          username_display: 'x',
+          display_name: null,
+          role: 'new_player',
+        },
+        'uid-abc',
       ),
     ).toBe(true);
   });
@@ -34,9 +46,10 @@ describe('admin-users-search', () => {
     const filter = buildAdminUsersOrFilter('Doe, Jane');
     expect(filter).toContain('display_name.ilike."%Doe, Jane%"');
     expect(filter).not.toMatch(/display_name\.ilike\.%Doe, Jane%/);
+    expect(filter).not.toContain('email.ilike');
 
     const roleFilter = buildAdminUsersOrFilter('admin');
     expect(roleFilter).toContain('role.in.(admin)');
-    expect(roleFilter).toContain('username.ilike.');
+    expect(roleFilter).toContain('id.ilike.');
   });
 });

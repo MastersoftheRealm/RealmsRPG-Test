@@ -81,6 +81,9 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
+    const denied = verifyMutationRequest(request);
+    if (denied) return denied;
+
     const { success } = await standardLimiter.check(
       buildRateLimitKey('craft-patch', { userId: user.uid, ip: resolveClientIp(request.headers) }),
     );
