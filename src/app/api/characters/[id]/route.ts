@@ -32,6 +32,7 @@ import {
   evaluateCharacterLegalityForSave,
   patchDirtyKeysNeedFeatCatalog,
 } from '@/lib/game/character-legality';
+import { isCharacterOnCampaignRoster } from '@/lib/campaign-roster';
 import {
   characterPortraitStoragePaths,
   portraitUrlUsesCharacterStorage,
@@ -118,20 +119,9 @@ export async function GET(_request: NextRequest, { params }: { params: Promise<{
           .in('id', allCampaignIds);
         if (campaignsErr) throw campaignsErr;
         const list = (campaigns ?? []) as { id: string; characters: unknown }[];
-        const inCampaign = list.some((c) => {
-          const arr =
-            (c.characters as Array<{
-              user_id?: string | undefined;
-              character_id?: string | undefined;
-              userId?: string | undefined;
-              characterId?: string | undefined;
-            }>) ?? [];
-          return arr.some(
-            (cc) =>
-              (cc.user_id ?? cc.userId) === charRow.user_id &&
-              (cc.character_id ?? cc.characterId) === charRow.id,
-          );
-        });
+        const inCampaign = list.some((c) =>
+          isCharacterOnCampaignRoster(c.characters, charRow.user_id, charRow.id),
+        );
         if (inCampaign) {
           const { libraryForView, enrichment } = await getOwnerLibraryAndEnrichmentForView(
             supabase,
