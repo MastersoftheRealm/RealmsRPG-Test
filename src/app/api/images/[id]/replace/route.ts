@@ -104,15 +104,6 @@ export async function POST(request: NextRequest, context: RouteContext) {
       );
     }
 
-    if (previousPath && previousPath !== nextPath) {
-      const { error: removeError } = await supabase.storage
-        .from(REALMS_IMAGES_BUCKET)
-        .remove([previousPath]);
-      if (removeError) {
-        console.warn('[realms-images] old path cleanup failed:', removeError.message);
-      }
-    }
-
     const {
       data: { publicUrl: baseUrl },
     } = supabase.storage.from(REALMS_IMAGES_BUCKET).getPublicUrl(nextPath);
@@ -128,12 +119,29 @@ export async function POST(request: NextRequest, context: RouteContext) {
       .eq('id', id);
 
     if (updateError) {
+      if (previousPath !== nextPath) {
+        const { error: removeNewError } = await supabase.storage
+          .from(REALMS_IMAGES_BUCKET)
+          .remove([nextPath]);
+        if (removeNewError) {
+          console.warn('[realms-images] new path cleanup failed:', removeNewError.message);
+        }
+      }
       return apiErrorResponse(
         'Replace failed',
         500,
         'POST /api/images/[id]/replace (update)',
         updateError,
       );
+    }
+
+    if (previousPath && previousPath !== nextPath) {
+      const { error: removeError } = await supabase.storage
+        .from(REALMS_IMAGES_BUCKET)
+        .remove([previousPath]);
+      if (removeError) {
+        console.warn('[realms-images] old path cleanup failed:', removeError.message);
+      }
     }
 
     const synced = await syncRealmsImageCacheUrls(supabase, id, publicUrl);
