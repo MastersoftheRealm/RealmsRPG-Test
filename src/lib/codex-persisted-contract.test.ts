@@ -81,6 +81,19 @@ describe('codexPersistedFieldShapeError', () => {
     ).toBeNull();
   });
 
+  it('rejects JSON string scalars including quoted empty strings for archetype cells', () => {
+    for (const camel of [
+      'level1GuidanceGroups',
+      'level1RecommendedAbilities',
+      'level1Loadouts',
+    ] as const) {
+      expect(codexPersistedFieldShapeError('codex_archetypes', camel, '""')).toMatch(
+        /JSON object or array/i,
+      );
+      expect(codexPersistedFieldShapeError('codex_archetypes', camel, '')).toBeNull();
+    }
+  });
+
   it('rejects nested archetype JSON that read parsers would drop', () => {
     expect(
       codexPersistedFieldShapeError('codex_archetypes', 'level1GuidanceGroups', [false]),
@@ -88,6 +101,11 @@ describe('codexPersistedFieldShapeError', () => {
     expect(
       codexPersistedFieldShapeError('codex_archetypes', 'level1RecommendedAbilities', {
         strength: {},
+      }),
+    ).toMatch(/finite number/i);
+    expect(
+      codexPersistedFieldShapeError('codex_archetypes', 'level1RecommendedAbilities', {
+        strength: [],
       }),
     ).toMatch(/finite number/i);
     expect(

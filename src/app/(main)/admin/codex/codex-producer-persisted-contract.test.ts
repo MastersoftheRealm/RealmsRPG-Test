@@ -197,6 +197,54 @@ describe('codex producer payloads through assertCodexAdminPayloadKeys', () => {
     ).toThrow(/numeric range/i);
   });
 
+  it('maps blank archetype JSON cells to null but rejects quoted empty JSON strings', () => {
+    expect(() =>
+      assertCodexAdminPayloadKeys('codex_archetypes', {
+        name: 'Fighter',
+        level1_loadouts: '',
+      }),
+    ).not.toThrow();
+    const columnar = toColumnarPayload('codex_archetypes', {
+      name: 'Fighter',
+      level1_loadouts: '',
+    });
+    expect(columnar.level1Loadouts).toBeNull();
+
+    expect(() =>
+      assertCodexAdminPayloadKeys('codex_archetypes', {
+        name: 'Fighter',
+        level1_loadouts: '""',
+      }),
+    ).toThrow(/JSON object or array/i);
+  });
+
+  it('rejects coercible nested archetype values in native and JSON-string forms', () => {
+    expect(() =>
+      assertCodexAdminPayloadKeys('codex_archetypes', {
+        name: 'Fighter',
+        level1_recommended_abilities: { strength: [] },
+      }),
+    ).toThrow(/finite number/i);
+    expect(() =>
+      assertCodexAdminPayloadKeys('codex_archetypes', {
+        name: 'Fighter',
+        level1_recommended_abilities: '{"strength":[]}',
+      }),
+    ).toThrow(/finite number/i);
+    expect(() =>
+      assertCodexAdminPayloadKeys('codex_archetypes', {
+        name: 'Fighter',
+        level1_loadouts: { sharedEquipment: [{ id: {}, quantity: 1 }] },
+      }),
+    ).toThrow(/string or number/i);
+    expect(() =>
+      assertCodexAdminPayloadKeys('codex_archetypes', {
+        name: 'Fighter',
+        level1_loadouts: '{"sharedEquipment":[{"id":{},"quantity":1}]}',
+      }),
+    ).toThrow(/string or number/i);
+  });
+
   it('rejects nested archetype JSON from parsed spreadsheet strings', () => {
     const guidance = stringToCellValue('[false]', []);
     expect(() =>

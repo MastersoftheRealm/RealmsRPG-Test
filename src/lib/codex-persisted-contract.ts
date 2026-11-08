@@ -104,7 +104,10 @@ function codexJsonFieldShapeError(camel: string, value: unknown): string | null 
   if (error) {
     return `${jsonFieldDbLabel(camel)} ${error}, so this save was rejected and nothing was written.`;
   }
-  if (parsed == null || parsed === '') return null;
+  if (parsed == null) return null;
+  if (typeof parsed === 'string' || typeof parsed === 'number' || typeof parsed === 'boolean') {
+    return `${jsonFieldDbLabel(camel)} must be a JSON object or array`;
+  }
 
   if (camel === 'level1Loadouts') {
     if (!Array.isArray(parsed) && !isPlainObject(parsed)) {

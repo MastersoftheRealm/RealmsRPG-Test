@@ -257,13 +257,38 @@ export function serializeLevel1LoadoutsField(field: Level1LoadoutsField): unknow
   };
 }
 
+function validateLegacyWriteFiniteNumber(value: unknown, path: string): string | null {
+  if (value == null) return null;
+  if (typeof value === 'number') {
+    return Number.isFinite(value) ? null : `${path} must be a finite number`;
+  }
+  if (typeof value === 'string') {
+    const trimmed = value.trim();
+    if (!trimmed) return `${path} must be a finite number`;
+    return Number.isFinite(Number(trimmed)) ? null : `${path} must be a finite number`;
+  }
+  return `${path} must be a finite number`;
+}
+
+function validateLegacyWriteEquipmentId(value: unknown, path: string): string | null {
+  if (value == null) return `${path} must include a non-empty id`;
+  if (typeof value === 'string') {
+    return value.trim() ? null : `${path} must include a non-empty id`;
+  }
+  if (typeof value === 'number' && Number.isFinite(value)) return null;
+  return `${path}.id must be a string or number`;
+}
+
 function validateSharedEquipmentEntry(value: unknown, path: string): string | null {
   if (!isRecord(value)) return `${path} must be an object`;
-  const id = value.id != null ? String(value.id).trim() : '';
-  if (!id) return `${path} must include a non-empty id`;
+  const idErr = validateLegacyWriteEquipmentId(value.id, path);
+  if (idErr) return idErr;
   if ('quantity' in value && value.quantity !== undefined) {
-    const q = Number(value.quantity);
-    if (!Number.isFinite(q) || q < 1) return `${path}.quantity must be a finite number >= 1`;
+    const qErr = validateLegacyWriteFiniteNumber(value.quantity, `${path}.quantity`);
+    if (qErr) return qErr;
+    const q =
+      typeof value.quantity === 'number' ? value.quantity : Number(String(value.quantity).trim());
+    if (q < 1) return `${path}.quantity must be a finite number >= 1`;
   }
   return null;
 }
@@ -316,10 +341,8 @@ export function codexWriteRecommendedAbilitiesError(value: unknown): string | nu
       return `level1_recommended_abilities contains unsupported key: ${key}`;
     }
     if (raw == null) continue;
-    const n = Number(raw);
-    if (!Number.isFinite(n)) {
-      return `level1_recommended_abilities.${key} must be a finite number`;
-    }
+    const numErr = validateLegacyWriteFiniteNumber(raw, `level1_recommended_abilities.${key}`);
+    if (numErr) return numErr;
   }
   return null;
 }
