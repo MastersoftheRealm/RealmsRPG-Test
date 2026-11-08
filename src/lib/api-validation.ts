@@ -40,6 +40,8 @@ const CAMPAIGN_ROLL_DIE_TYPES = [
 ] as const satisfies readonly DieType[];
 
 const CAMPAIGN_ROLL_MAX_DICE = 64;
+
+const CAMPAIGN_ROLL_TYPES = ['attack', 'damage', 'skill', 'ability', 'defense', 'custom'] as const;
 import { getCanonicalSiteUrl } from '@/lib/site-url';
 
 // =============================================================================
@@ -490,8 +492,6 @@ const campaignRollDieSchema = z
   .object({
     type: z.enum(CAMPAIGN_ROLL_DIE_TYPES),
     value: z.number().int().finite(),
-    isMax: z.boolean().optional(),
-    isMin: z.boolean().optional(),
   })
   .superRefine((die, ctx) => {
     const max = DIE_MAX[die.type];
@@ -508,7 +508,7 @@ const campaignRollPayloadSchema = z
   .object({
     /** Client RollEntry may include id; the route assigns a new row id server-side. */
     id: z.string().optional(),
-    type: z.string().min(1).max(CHARACTER_NAME_MAX_LENGTH, CHARACTER_NAME_TOO_LONG_MESSAGE),
+    type: z.enum(CAMPAIGN_ROLL_TYPES),
     title: z.string().min(1).max(CHARACTER_NAME_MAX_LENGTH, CHARACTER_NAME_TOO_LONG_MESSAGE),
     dice: z.array(campaignRollDieSchema).max(CAMPAIGN_ROLL_MAX_DICE).optional().default([]),
     modifier: z.number().finite().optional().default(0),

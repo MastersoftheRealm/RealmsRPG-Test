@@ -16,7 +16,7 @@ import {
 import { standardLimiter, buildRateLimitKey, resolveClientIp } from '@/lib/rate-limit';
 import { MAX_CAMPAIGN_ROLLS } from '@/app/(main)/campaigns/constants';
 import { realmMasterRolledForCharacter } from '@/lib/rolls/campaign-roll-attribution';
-import { computeRollOutcome } from '@/lib/rolls/die';
+import { computeRollOutcome, normalizeCampaignRollDice } from '@/lib/rolls/die';
 import type { CampaignRollEntry } from '@/types/campaign-roll';
 
 type RollRow = {
@@ -247,14 +247,12 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
       campaign.owner_id,
     );
 
-    const dice = (roll.dice ?? []).map((die) => ({
-      type: die.type,
-      value: die.value,
-      ...(die.isMax === undefined ? {} : { isMax: die.isMax }),
-      ...(die.isMin === undefined ? {} : { isMin: die.isMin }),
-    }));
+    const dice = normalizeCampaignRollDice(roll.dice ?? []);
     const modifier = roll.modifier ?? 0;
-    const outcome = computeRollOutcome(dice, modifier);
+    const outcome = computeRollOutcome(dice, modifier, {
+      type: roll.type,
+      title: roll.title,
+    });
 
     const rollData = {
       characterId,

@@ -321,6 +321,84 @@ describe('POST /api/campaigns/[id]/rolls', () => {
     expect(saved.data.critMessage).toBe('Natural 20! +2 to the total!');
   });
 
+  it('stores Randomize d20 faces without crit adjustment (API-012)', async () => {
+    mockGetSession.mockResolvedValue({ user: MEMBER, error: null });
+    const supabase = createRollsSupabase({
+      campaign: { id: 'camp-1', owner_id: OWNER.uid, characters: MEMBER_ROSTER },
+      memberUserIds: [MEMBER.uid],
+    });
+    mockCreateClient.mockResolvedValue(supabase as never);
+
+    for (const [face, isCrit, isCritFail] of [
+      [20, true, false],
+      [1, false, true],
+    ] as const) {
+      supabase.insert.mockClear();
+      const response = await POST(
+        makePostRequest('camp-1', {
+          characterId: 'char-member',
+          characterName: 'Member Hero',
+          roll: {
+            type: 'custom',
+            title: `Fireball: 1d20 → Face ${face}`,
+            dice: [{ type: 'd20', value: face, isMax: !isCritFail, isMin: isCritFail }],
+            modifier: 0,
+            total: 999,
+            isCrit: !isCrit,
+          },
+        }),
+        params('camp-1'),
+      );
+      expect(response.status).toBe(200);
+      const saved = supabase.insert.mock.calls[0]?.[0] as {
+        data: {
+          total: number;
+          isCrit: boolean;
+          isCritFail: boolean;
+          dice: Array<{ isMax: boolean; isMin: boolean }>;
+        };
+      };
+      expect(saved.data.total).toBe(face);
+      expect(saved.data.isCrit).toBe(false);
+      expect(saved.data.isCritFail).toBe(false);
+      expect(saved.data.dice[0]).toEqual({
+        type: 'd20',
+        value: face,
+        isMax: face === 20,
+        isMin: face === 1,
+      });
+    }
+  });
+
+  it('applies crit adjustment for roll-log Custom Roll only among custom types', async () => {
+    mockGetSession.mockResolvedValue({ user: MEMBER, error: null });
+    const supabase = createRollsSupabase({
+      campaign: { id: 'camp-1', owner_id: OWNER.uid, characters: MEMBER_ROSTER },
+      memberUserIds: [MEMBER.uid],
+    });
+    mockCreateClient.mockResolvedValue(supabase as never);
+
+    const response = await POST(
+      makePostRequest('camp-1', {
+        characterId: 'char-member',
+        characterName: 'Member Hero',
+        roll: {
+          type: 'custom',
+          title: 'Custom Roll',
+          dice: [{ type: 'd20', value: 20 }],
+          modifier: 0,
+        },
+      }),
+      params('camp-1'),
+    );
+    expect(response.status).toBe(200);
+    const saved = supabase.insert.mock.calls[0]?.[0] as {
+      data: { total: number; isCrit: boolean };
+    };
+    expect(saved.data.total).toBe(22);
+    expect(saved.data.isCrit).toBe(true);
+  });
+
   it('does not mark the Realm Master rolling their own character', async () => {
     mockGetSession.mockResolvedValue({ user: OWNER, error: null });
     const supabase = createRollsSupabase({

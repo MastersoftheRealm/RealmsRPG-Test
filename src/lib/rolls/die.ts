@@ -4,6 +4,11 @@
 
 export type DieType = 'd2' | 'd4' | 'd6' | 'd8' | 'd10' | 'd12' | 'd20' | 'd100';
 
+export type StoredRollKind = 'attack' | 'damage' | 'skill' | 'ability' | 'defense' | 'custom';
+
+/** Title used by the roll-log manual dice pool (`roll-log.tsx` executeRoll). */
+export const ROLL_LOG_CUSTOM_POOL_TITLE = 'Custom Roll';
+
 export const DIE_MAX: Record<DieType, number> = {
   d2: 2,
   d4: 4,
@@ -62,10 +67,32 @@ export function d20CritAdjustment(dice: ReadonlyArray<{ type: DieType; value: nu
   return { isCrit: false, isCritFail: false, adjustment: 0 };
 }
 
+export function storedRollUsesD20CritAdjustment(type: StoredRollKind, title: string): boolean {
+  if (type === 'attack' || type === 'skill' || type === 'ability' || type === 'defense') {
+    return true;
+  }
+  if (type === 'custom' && title === ROLL_LOG_CUSTOM_POOL_TITLE) {
+    return true;
+  }
+  return false;
+}
+
+export function normalizeCampaignRollDice(
+  dice: ReadonlyArray<{ type: DieType; value: number }>,
+): Array<{ type: DieType; value: number; isMax: boolean; isMin: boolean }> {
+  return dice.map((die) => ({
+    type: die.type,
+    value: die.value,
+    isMax: die.value === DIE_MAX[die.type],
+    isMin: die.value === 1,
+  }));
+}
+
 /** Stored roll total and crit flags from dice results already rolled on the client. */
 export function computeRollOutcome(
   dice: ReadonlyArray<{ type: DieType; value: number }>,
   modifier: number,
+  roll: { type: StoredRollKind; title: string },
 ): {
   total: number;
   isCrit: boolean;
@@ -73,7 +100,9 @@ export function computeRollOutcome(
   critMessage: string | null;
 } {
   const diceSum = dice.reduce((sum, die) => sum + die.value, 0);
-  const crit = d20CritAdjustment(dice);
+  const crit = storedRollUsesD20CritAdjustment(roll.type, roll.title)
+    ? d20CritAdjustment(dice)
+    : { isCrit: false, isCritFail: false, adjustment: 0 };
   const total = diceSum + modifier + crit.adjustment;
   const critMessage = crit.isCrit
     ? 'Natural 20! +2 to the total!'
