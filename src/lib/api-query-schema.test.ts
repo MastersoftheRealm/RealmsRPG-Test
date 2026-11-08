@@ -41,6 +41,7 @@ describe('strict API query schemas', () => {
     expect(imagesListQuerySchema.safeParse({ category: 'weapon,power', q: 'dagger' }).success).toBe(
       true,
     );
+    expect(imagesListQuerySchema.safeParse({ q: 'a'.repeat(101) }).success).toBe(false);
     expectStrictRejectsUnknown(imagesListQuerySchema);
   });
 

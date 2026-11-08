@@ -26,21 +26,33 @@ const mockCreateServiceRoleClient = vi.mocked(createServiceRoleClient);
 
 const USER = { uid: 'user-123', email: 'hero@example.com' };
 
-function createListSupabase() {
+function createListSupabase(options?: { ilike?: ReturnType<typeof vi.fn> }) {
+  const payload = { data: [] as unknown[], error: null };
+  const ilike = options?.ilike ?? vi.fn().mockResolvedValue(payload);
+  const terminal = {
+    ilike,
+    then: (
+      onFulfilled: (value: typeof payload) => unknown,
+      onRejected?: (reason: unknown) => unknown,
+    ) => Promise.resolve(payload).then(onFulfilled, onRejected),
+  };
+  const order = vi.fn().mockReturnValue(terminal);
   return {
     from: vi.fn((table: string) => {
       if (table !== 'realms_images') throw new Error(`Unexpected table: ${table}`);
       return {
         select: vi.fn().mockReturnValue({
-          order: vi.fn().mockResolvedValue({ data: [], error: null }),
+          order,
         }),
       };
     }),
+    ilike,
+    order,
   };
 }
 
-function makeGetRequest() {
-  return new NextRequest('http://localhost/api/images');
+function makeGetRequest(search = '') {
+  return new NextRequest(`http://localhost/api/images${search}`);
 }
 
 function makePostRequest() {
@@ -67,6 +79,23 @@ describe('GET /api/images', () => {
     expect(response.status).toBe(200);
     await expect(readJson(response)).resolves.toEqual({ images: [] });
     expect(mockRequireLiveUser).not.toHaveBeenCalled();
+  });
+
+  it('escapes LIKE metacharacters in q before ilike', async () => {
+    const ilike = vi.fn().mockResolvedValue({ data: [], error: null });
+    const chain = createListSupabase({ ilike });
+    mockCreateClient.mockResolvedValue(chain as never);
+
+    const response = await GET(makeGetRequest('?q=%25'));
+
+    expect(response.status).toBe(200);
+    expect(ilike).toHaveBeenCalledWith('name', '%\\%%');
+  });
+
+  it('returns 400 when q exceeds the max length', async () => {
+    const response = await GET(makeGetRequest(`?q=${'a'.repeat(101)}`));
+    expect(response.status).toBe(400);
+    expect(mockCreateClient).not.toHaveBeenCalled();
   });
 });
 

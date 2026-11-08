@@ -196,7 +196,9 @@ export function getAuthErrorMessage(error: unknown, context: AuthErrorContext = 
     return 'Your reset session expired. Please request a new reset link.';
   }
 
-  if (rawMessage.trim()) return rawMessage;
+  if (rawMessage.trim()) {
+    console.error(`[auth] Unmapped auth error (${context}):`, rawMessage);
+  }
 
   return fallbackMessage(context);
 }

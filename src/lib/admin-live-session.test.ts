@@ -44,6 +44,17 @@ describe('requireLiveAdminSession', () => {
     expect(mockCreateClient).not.toHaveBeenCalled();
   });
 
+  it('returns 401 when the session is expired or revoked', async () => {
+    mockRequireLiveUser.mockRejectedValue(new Error('Session expired'));
+
+    await expect(requireLiveAdminSession()).resolves.toEqual({
+      ok: false,
+      status: 401,
+      body: { error: 'Unauthorized' },
+    });
+    expect(mockCreateClient).not.toHaveBeenCalled();
+  });
+
   it('returns 403 when the live user is not an admin', async () => {
     mockRequireLiveUser.mockResolvedValue({ uid: 'user-1' });
     mockCreateClient.mockResolvedValue(profileClient('player') as never);

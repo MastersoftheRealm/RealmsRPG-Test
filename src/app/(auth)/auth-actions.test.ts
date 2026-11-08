@@ -76,6 +76,35 @@ describe('auth-actions rate limits', () => {
     expect(mockSignUp).not.toHaveBeenCalled();
   });
 
+  it('signUpAction maps Supabase messages to generic copy', async () => {
+    mockSignUp.mockResolvedValue({
+      data: { session: null },
+      error: { message: 'User already registered' },
+    });
+
+    const { signUpAction } = await import('./auth-actions');
+    const result = await signUpAction('user@example.com', 'secret');
+
+    expect(result).toEqual({
+      success: false,
+      error: 'An account with this email already exists.',
+    });
+  });
+
+  it('loginWithPasswordAction hides unknown Supabase errors', async () => {
+    mockSignInWithPassword.mockResolvedValue({
+      error: { message: 'Database constraint leaked to client' },
+    });
+
+    const { loginWithPasswordAction } = await import('./auth-actions');
+    const result = await loginWithPasswordAction('user@example.com', 'secret');
+
+    expect(result).toEqual({
+      success: false,
+      error: 'An error occurred during sign in. Please try again.',
+    });
+  });
+
   it('requestPasswordResetAction returns friendly copy when rate limited', async () => {
     mockLimiterCheck.mockResolvedValue({
       success: false,

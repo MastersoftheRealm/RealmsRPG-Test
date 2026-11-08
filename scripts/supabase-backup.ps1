@@ -108,6 +108,35 @@ function Resolve-PgDumpTools {
   return $null
 }
 
+# Redact connection strings before writing dump command lines to backup.log.
+function Redact-DumpArgsForLog {
+  param([string[]]$DumpArgs)
+
+  $redacted = New-Object System.Collections.Generic.List[string]
+  $skipNextValue = $false
+  for ($i = 0; $i -lt $DumpArgs.Count; $i++) {
+    if ($skipNextValue) {
+      $skipNextValue = $false
+      continue
+    }
+    $arg = $DumpArgs[$i]
+    if ($arg -eq '--db-url' -or $arg -eq '--dbname') {
+      $redacted.Add($arg) | Out-Null
+      if ($i + 1 -lt $DumpArgs.Count) {
+        $redacted.Add('<redacted>') | Out-Null
+        $skipNextValue = $true
+      }
+      continue
+    }
+    if ($arg -match '^postgres(ql)?://') {
+      $redacted.Add(($arg -replace '://([^:/@]+):([^@]+)@', '://$1:<redacted>@')) | Out-Null
+      continue
+    }
+    $redacted.Add($arg) | Out-Null
+  }
+  return $redacted -join ' '
+}
+
 # Runs a native tool without letting its stderr surface as a PowerShell NativeCommandError.
 # Output goes to backup.log; the caller decides what (if anything) the user sees.
 function Invoke-DumpTool {
@@ -117,7 +146,7 @@ function Invoke-DumpTool {
   $ErrorActionPreference = 'Continue'
   try {
     Write-Log "--- $Label"
-    Write-Log "$Exe $($DumpArgs -join ' ')"
+    Write-Log "$Exe $(Redact-DumpArgsForLog -DumpArgs $DumpArgs)"
     $output = (& $Exe @DumpArgs 2>&1 | Out-String)
     $code = $LASTEXITCODE
     if ($output) { Write-Log $output.TrimEnd() }

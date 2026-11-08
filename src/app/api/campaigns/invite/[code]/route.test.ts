@@ -104,6 +104,50 @@ describe('GET /api/campaigns/invite/[code]', () => {
     await expect(readJson(response)).resolves.toBeNull();
   });
 
+  it('rate-limits by user id so two users on the same IP get separate buckets', async () => {
+    mockGetSession.mockResolvedValue({ user: { ...USER, uid: 'user-a' }, error: null });
+    mockCreateServiceRoleClient.mockReturnValue(
+      createInviteLookup({ id: 'camp-1', name: 'Secret Realm' }) as never,
+    );
+    await GET(makeGetRequest(VALID_CODE), { params: Promise.resolve({ code: VALID_CODE }) });
+    expect(mockInviteCheck).toHaveBeenCalledWith('invite:uid:user-a');
+
+    vi.clearAllMocks();
+    mockInviteCheck.mockResolvedValue({
+      success: true,
+      remaining: 9,
+      reset: Date.now() + 60_000,
+    });
+    mockGetSession.mockResolvedValue({ user: { ...USER, uid: 'user-b' }, error: null });
+    mockCreateServiceRoleClient.mockReturnValue(
+      createInviteLookup({ id: 'camp-1', name: 'Secret Realm' }) as never,
+    );
+    await GET(makeGetRequest(VALID_CODE), { params: Promise.resolve({ code: VALID_CODE }) });
+    expect(mockInviteCheck).toHaveBeenCalledWith('invite:uid:user-b');
+  });
+
+  it('shares one rate-limit bucket for the same user across IPs', async () => {
+    mockGetSession.mockResolvedValue({ user: USER, error: null });
+    mockCreateServiceRoleClient.mockReturnValue(
+      createInviteLookup({ id: 'camp-1', name: 'Secret Realm' }) as never,
+    );
+
+    await GET(
+      new NextRequest(`http://localhost/api/campaigns/invite/${VALID_CODE}`, {
+        headers: { 'x-forwarded-for': '198.51.100.1' },
+      }),
+      { params: Promise.resolve({ code: VALID_CODE }) },
+    );
+    await GET(
+      new NextRequest(`http://localhost/api/campaigns/invite/${VALID_CODE}`, {
+        headers: { 'x-forwarded-for': '198.51.100.99' },
+      }),
+      { params: Promise.resolve({ code: VALID_CODE }) },
+    );
+
+    expect(mockInviteCheck.mock.calls).toEqual([['invite:uid:user-123'], ['invite:uid:user-123']]);
+  });
+
   it('returns id and name only for a signed-in caller with a valid code', async () => {
     mockGetSession.mockResolvedValue({ user: USER, error: null });
     mockCreateServiceRoleClient.mockReturnValue(

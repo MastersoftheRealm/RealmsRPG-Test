@@ -31,7 +31,13 @@ describe('getAuthErrorMessage', () => {
 
   it('does not treat arbitrary messages containing "email" as invalid', () => {
     expect(getAuthErrorMessage(new Error('Please check your email inbox'), 'register')).toBe(
-      'Please check your email inbox',
+      'An error occurred during registration. Please try again.',
+    );
+  });
+
+  it('returns generic fallback for unmapped auth errors', () => {
+    expect(getAuthErrorMessage(new Error('secret_internal_detail'), 'login')).toBe(
+      'An error occurred during sign in. Please try again.',
     );
   });
 

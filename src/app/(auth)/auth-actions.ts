@@ -2,7 +2,12 @@
 
 import { headers } from 'next/headers';
 import { createClient } from '@/lib/supabase/server';
-import { AUTH_LOGIN_RATE_LIMIT_MESSAGE, AUTH_RATE_LIMIT_MESSAGE } from '@/lib/auth-errors';
+import {
+  AUTH_LOGIN_RATE_LIMIT_MESSAGE,
+  AUTH_RATE_LIMIT_MESSAGE,
+  getAuthErrorMessage,
+} from '@/lib/auth-errors';
+import { resolveAuthEmailSiteOrigin } from '@/lib/auth-email-site-origin';
 import { buildAuthCaptchaOptions } from '@/lib/auth/captcha';
 import {
   authActionLimiter,
@@ -11,8 +16,18 @@ import {
 } from '@/lib/rate-limit';
 import { sanitizeRedirectPath } from '@/lib/safe-redirect';
 
-function siteOrigin(): string {
-  return process.env.NEXT_PUBLIC_SITE_URL?.replace(/\/$/, '') || 'http://localhost:3000';
+async function authEmailSiteOrigin(): Promise<
+  { ok: true; origin: string } | { ok: false; error: string }
+> {
+  const headerList = await headers();
+  const origin = resolveAuthEmailSiteOrigin(headerList);
+  if (!origin) {
+    return {
+      ok: false,
+      error: 'Email actions are temporarily unavailable. Please try again later.',
+    };
+  }
+  return { ok: true, origin };
 }
 
 async function enforceAuthCredentialRateLimit(
@@ -65,11 +80,10 @@ export async function loginWithPasswordAction(
   });
 
   if (error) {
-    const msg = error.message ?? 'An error occurred during sign in. Please try again.';
-    if (mapSupabaseRateLimit(msg)) {
+    if (mapSupabaseRateLimit(error.message ?? '')) {
       return { success: false, error: AUTH_LOGIN_RATE_LIMIT_MESSAGE, rateLimited: true };
     }
-    return { success: false, error: msg };
+    return { success: false, error: getAuthErrorMessage(error, 'login') };
   }
 
   return { success: true };
@@ -101,6 +115,11 @@ export async function signUpAction(
     return { success: false, error: AUTH_RATE_LIMIT_MESSAGE, rateLimited: true };
   }
 
+  const site = await authEmailSiteOrigin();
+  if (!site.ok) {
+    return { success: false, error: site.error };
+  }
+
   const next = sanitizeRedirectPath(options?.redirectPath || '/');
   const chosenUsername = options?.usernameDisplay?.trim();
   const supabase = await createClient();
@@ -109,17 +128,16 @@ export async function signUpAction(
     password,
     options: {
       ...buildAuthCaptchaOptions(options?.captchaToken ?? null),
-      emailRedirectTo: `${siteOrigin()}/auth/confirm?next=${encodeURIComponent(next)}`,
+      emailRedirectTo: `${site.origin}/auth/confirm?next=${encodeURIComponent(next)}`,
       ...(chosenUsername ? { data: { username_display: chosenUsername } } : {}),
     },
   });
 
   if (error) {
-    const msg = error.message ?? 'An error occurred during registration. Please try again.';
-    if (mapSupabaseRateLimit(msg)) {
+    if (mapSupabaseRateLimit(error.message ?? '')) {
       return { success: false, error: AUTH_RATE_LIMIT_MESSAGE, rateLimited: true };
     }
-    return { success: false, error: msg };
+    return { success: false, error: getAuthErrorMessage(error, 'register') };
   }
 
   return { success: true, needsEmailConfirmation: !data.session };
@@ -142,19 +160,23 @@ export async function requestPasswordResetAction(
     return { success: false, error: AUTH_RATE_LIMIT_MESSAGE, rateLimited: true };
   }
 
+  const site = await authEmailSiteOrigin();
+  if (!site.ok) {
+    return { success: false, error: site.error };
+  }
+
   const supabase = await createClient();
-  const redirectTo = `${siteOrigin()}/auth/confirm?next=${encodeURIComponent('/reset-password')}`;
+  const redirectTo = `${site.origin}/auth/confirm?next=${encodeURIComponent('/reset-password')}`;
   const { error } = await supabase.auth.resetPasswordForEmail(normalizedEmail, {
     redirectTo,
     ...buildAuthCaptchaOptions(captchaToken ?? null),
   });
 
   if (error) {
-    const msg = error.message ?? 'An error occurred. Please try again.';
-    if (mapSupabaseRateLimit(msg)) {
+    if (mapSupabaseRateLimit(error.message ?? '')) {
       return { success: false, error: AUTH_RATE_LIMIT_MESSAGE, rateLimited: true };
     }
-    return { success: false, error: msg };
+    return { success: false, error: getAuthErrorMessage(error, 'forgot-password') };
   }
 
   return { success: true };
@@ -177,22 +199,26 @@ export async function resendConfirmationAction(
     return { success: false, error: AUTH_RATE_LIMIT_MESSAGE, rateLimited: true };
   }
 
+  const site = await authEmailSiteOrigin();
+  if (!site.ok) {
+    return { success: false, error: site.error };
+  }
+
   const next = sanitizeRedirectPath(redirectPath || '/');
   const supabase = await createClient();
   const { error } = await supabase.auth.resend({
     type: 'signup',
     email: normalizedEmail,
     options: {
-      emailRedirectTo: `${siteOrigin()}/auth/confirm?next=${encodeURIComponent(next)}`,
+      emailRedirectTo: `${site.origin}/auth/confirm?next=${encodeURIComponent(next)}`,
     },
   });
 
   if (error) {
-    const msg = error.message ?? 'Failed to resend confirmation email';
-    if (mapSupabaseRateLimit(msg)) {
+    if (mapSupabaseRateLimit(error.message ?? '')) {
       return { success: false, error: AUTH_RATE_LIMIT_MESSAGE, rateLimited: true };
     }
-    return { success: false, error: msg };
+    return { success: false, error: getAuthErrorMessage(error, 'resend') };
   }
 
   return { success: true };

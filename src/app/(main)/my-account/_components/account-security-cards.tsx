@@ -6,6 +6,7 @@
 
 import { Mail, Lock } from 'lucide-react';
 import { Alert, Button, Card, Input } from '@/components/ui';
+import { PASSWORD_MIN_LENGTH } from '@/lib/password-policy';
 import type { AccountMessage } from './account-helpers';
 
 type EmailProps = {
@@ -148,7 +149,7 @@ export function AccountPasswordCard({
             value={newPassword}
             onChange={(e) => setNewPassword(e.target.value)}
             required
-            minLength={6}
+            minLength={PASSWORD_MIN_LENGTH}
             placeholder="Enter new password"
           />
         </div>
@@ -165,7 +166,7 @@ export function AccountPasswordCard({
             value={confirmPassword}
             onChange={(e) => setConfirmPassword(e.target.value)}
             required
-            minLength={6}
+            minLength={PASSWORD_MIN_LENGTH}
             placeholder="Confirm new password"
           />
         </div>

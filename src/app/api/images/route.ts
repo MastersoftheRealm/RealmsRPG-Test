@@ -24,6 +24,7 @@ import {
 } from '@/lib/realms-images';
 import { apiErrorResponse, logApiError } from '@/lib/api-error';
 import { imagesListQuerySchema, validateQuery, verifyMutationRequest } from '@/lib/api-validation';
+import { escapeIlikePattern } from '@/lib/ilike-pattern';
 import {
   REALMS_IMAGE_SELECT,
   fetchRealmsImageById,
@@ -96,7 +97,8 @@ export async function GET(request: NextRequest) {
       query = query.in('id', filteredIds);
     }
     if (q) {
-      query = query.ilike('name', `%${q}%`);
+      const pattern = `%${escapeIlikePattern(q)}%`;
+      query = query.ilike('name', pattern);
     }
 
     const { data, error } = await query;
