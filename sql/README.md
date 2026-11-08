@@ -2,7 +2,7 @@
 
 **Schema reference:** [src/docs/SUPABASE_SCHEMA.md](../src/docs/SUPABASE_SCHEMA.md). **Generated types:** `src/types/database.types.ts` (ADR-0020).
 
-**Source of truth:** The live Supabase database on RealmsRPG-Test. This folder no longer stores one-off migrations or replay scripts after they were applied. Historical SQL was removed **2026-10-29** (owner-approved cleanup) and wave-1 audit files `0001` / `0002` **2026-11-01** after a line-by-line match against live (backup taken); use **git history** if you need the old file text.
+**Source of truth:** The live Supabase database on RealmsRPG-Test, including which migrations have been applied (`supabase_migrations.schema_migrations`). Table/column documentation lives in `src/docs/SUPABASE_SCHEMA.md`. This folder no longer stores one-off migrations or replay scripts after they were applied. Historical SQL was removed **2026-10-29** (owner-approved cleanup) and wave-1 audit files `0001` / `0002` **2026-11-01** after a line-by-line match against live (backup taken); use **git history** if you need the old file text. The committed `schema/0000_baseline_*` snapshot stays until a deliberate `npm run db:baseline:update` refresh (`db:diff` compares live against it).
 
 **What remains here:**
 

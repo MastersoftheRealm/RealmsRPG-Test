@@ -35,7 +35,7 @@ Typecheck is not a local pre-push hook. `typecheck-staged.mjs` was already remov
 because a staged-only config could not see consumers of a changed type. CI runs
 `npm run typecheck` and `npm test` on the pull request.
 
-**Database schema:** See [src/docs/SUPABASE_SCHEMA.md](../src/docs/SUPABASE_SCHEMA.md). SQL run order: [sql/README.md](../sql/README.md). Live writes: [src/docs/ai/guide/07-database-operations.md](../src/docs/ai/guide/07-database-operations.md).
+**Database schema:** See [src/docs/SUPABASE_SCHEMA.md](../src/docs/SUPABASE_SCHEMA.md). SQL policy and drift tooling: [sql/README.md](../sql/README.md). Live writes: [src/docs/ai/guide/07-database-operations.md](../src/docs/ai/guide/07-database-operations.md).
 
 **Linting:** These Node scripts use CommonJS `require()`. Root `eslint.config.mjs` turns off `@typescript-eslint/no-require-imports` for `scripts/**` so `npm run lint` stays clean without converting seeds to ESM.
 
