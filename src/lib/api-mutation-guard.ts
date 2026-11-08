@@ -39,6 +39,19 @@ function skipBlockComment(source: string, i: number): number {
   return j + 2;
 }
 
+/** Keywords that may be followed by a regex literal (not division). */
+const REGEX_LITERAL_PREFIX_KEYWORDS = new Set([
+  'return',
+  'typeof',
+  'void',
+  'await',
+  'yield',
+  'case',
+  'else',
+  'of',
+  'in',
+]);
+
 function isRegexLiteralStart(source: string, i: number): boolean {
   if (source[i] !== '/') return false;
   const next = source[i + 1];
@@ -47,15 +60,34 @@ function isRegexLiteralStart(source: string, i: number): boolean {
   while (j >= 0 && /\s/.test(source[j]!)) j -= 1;
   if (j < 0) return true;
   const prev = source[j]!;
-  return !/[\w$)\]'"`]/.test(prev);
+  if (prev === '+' || prev === '/') return false;
+  if (/[\w$]/.test(prev)) {
+    let k = j;
+    while (k >= 0 && /[\w$]/.test(source[k]!)) k -= 1;
+    const word = source.slice(k + 1, j + 1);
+    return REGEX_LITERAL_PREFIX_KEYWORDS.has(word);
+  }
+  if (/[\])'"`]/.test(prev)) return false;
+  return true;
 }
 
 function skipRegexLiteral(source: string, i: number): number {
   let j = i + 1;
+  let inCharClass = false;
   while (j < source.length) {
     const ch = source[j]!;
     if (ch === '\\') {
       j += 2;
+      continue;
+    }
+    if (inCharClass) {
+      if (ch === ']') inCharClass = false;
+      j += 1;
+      continue;
+    }
+    if (ch === '[') {
+      inCharClass = true;
+      j += 1;
       continue;
     }
     if (ch === '/') {

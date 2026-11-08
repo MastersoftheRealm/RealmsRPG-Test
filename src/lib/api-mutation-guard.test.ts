@@ -97,9 +97,37 @@ export async function POST(request: NextRequest) {
         `export async function POST() { const re = /verifyMutationRequest(?:)/; return NextResponse.json({}); }`,
       ),
     ).toBe(false);
+    expect(
+      chunkInvokesMutationGuard(
+        `export async function POST() { return /verifyMutationRequest(?:)/; }`,
+      ),
+    ).toBe(false);
+    expect(
+      chunkInvokesMutationGuard(
+        `export async function POST() { typeof /verifyMutationRequest(?:)/; }`,
+      ),
+    ).toBe(false);
+    expect(
+      chunkInvokesMutationGuard(
+        `export async function POST() { const x = /[/verifyMutationRequest(?:)]/; }`,
+      ),
+    ).toBe(false);
     expect(stripCommentsAndStringLiterals(`/verifyMutationRequest/g`)).not.toContain(
       'verifyMutationRequest(',
     );
+  });
+
+  it('preserves guard calls beside regex literals with character classes', () => {
+    expect(
+      chunkInvokesMutationGuard(
+        `export async function POST(req) { const x = \`\${/[/}]/ + verifyMutationRequest(req)}\`; return x; }`,
+      ),
+    ).toBe(true);
+    expect(
+      chunkInvokesMutationGuard(
+        `export async function POST(req) { const x = \`\${typeof /}/ + verifyMutationRequest(req)}\`; return x; }`,
+      ),
+    ).toBe(true);
   });
 
   it('detects mutation HTTP methods', () => {
