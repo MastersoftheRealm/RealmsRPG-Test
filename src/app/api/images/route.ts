@@ -101,7 +101,8 @@ export async function GET(request: NextRequest) {
     let query = supabase
       .from('realms_images')
       .select(REALMS_IMAGE_SELECT)
-      .order('name', { ascending: true });
+      .order('name', { ascending: true })
+      .order('id', { ascending: true });
 
     if (filteredIds) {
       query = query.in('id', filteredIds);
