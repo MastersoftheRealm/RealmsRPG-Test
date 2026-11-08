@@ -27,71 +27,188 @@ const MUTATION_GUARD_CALL_PATTERNS = API_MUTATION_GUARD_MARKERS.map(
   (name) => new RegExp(`\\b${name.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\s*\\(`),
 );
 
+function skipLineComment(source: string, i: number): number {
+  let j = i + 2;
+  while (j < source.length && source[j] !== '\n') j += 1;
+  return j;
+}
+
+function skipBlockComment(source: string, i: number): number {
+  let j = i + 2;
+  while (j < source.length && !(source[j] === '*' && source[j + 1] === '/')) j += 1;
+  return j + 2;
+}
+
+function isRegexLiteralStart(source: string, i: number): boolean {
+  if (source[i] !== '/') return false;
+  const next = source[i + 1];
+  if (next === '/' || next === '*') return false;
+  let j = i - 1;
+  while (j >= 0 && /\s/.test(source[j]!)) j -= 1;
+  if (j < 0) return true;
+  const prev = source[j]!;
+  return !/[\w$)\]'"`]/.test(prev);
+}
+
+function skipRegexLiteral(source: string, i: number): number {
+  let j = i + 1;
+  while (j < source.length) {
+    const ch = source[j]!;
+    if (ch === '\\') {
+      j += 2;
+      continue;
+    }
+    if (ch === '/') {
+      j += 1;
+      while (j < source.length && /[gimsuy]/i.test(source[j]!)) j += 1;
+      return j;
+    }
+    j += 1;
+  }
+  return j;
+}
+
+type DelimDepths = { paren: number; brace: number; bracket: number };
+
+function blankSlice(source: string, start: number, end: number): string {
+  let s = '';
+  for (let k = start; k < end; k += 1) {
+    s += source[k] === '\n' ? '\n' : ' ';
+  }
+  return s;
+}
+
+function skipQuotedString(source: string, i: number): { out: string; end: number } {
+  const quote = source[i]!;
+  let out = quote;
+  let j = i + 1;
+  while (j < source.length) {
+    const ch = source[j]!;
+    if (ch === '\\') {
+      out += '  ';
+      j += 2;
+      continue;
+    }
+    if (ch === quote) {
+      out += quote;
+      return { out, end: j + 1 };
+    }
+    out += ch === '\n' ? '\n' : ' ';
+    j += 1;
+  }
+  return { out, end: j };
+}
+
+function skipTemplateLiteral(source: string, i: number): { out: string; end: number } {
+  let out = '`';
+  let j = i + 1;
+  while (j < source.length) {
+    const ch = source[j]!;
+    if (ch === '\\') {
+      out += '  ';
+      j += 2;
+      continue;
+    }
+    if (ch === '`') {
+      out += '`';
+      return { out, end: j + 1 };
+    }
+    if (ch === '$' && source[j + 1] === '{') {
+      out += '${';
+      j += 2;
+      const sub = scanSubstitutedExpression(source, j);
+      out += sub.out;
+      out += '}';
+      j = sub.end + 1;
+      continue;
+    }
+    out += ch === '\n' ? '\n' : ' ';
+    j += 1;
+  }
+  return { out, end: j };
+}
+
+function scanSubstitutedExpression(source: string, start: number): { out: string; end: number } {
+  return scanExecutableSegment(source, start, true);
+}
+
+/**
+ * Scan executable TypeScript-ish source, blanking comments, strings, regex literals,
+ * and template literal text while preserving (and recursively scanning) `${...}` code.
+ */
+function scanExecutableSegment(
+  source: string,
+  start: number,
+  untilSubstitutionEnd: boolean,
+): { out: string; end: number } {
+  let out = '';
+  let i = start;
+  const depths: DelimDepths = { paren: 0, brace: 0, bracket: 0 };
+
+  while (i < source.length) {
+    const ch = source[i]!;
+
+    if (
+      untilSubstitutionEnd &&
+      ch === '}' &&
+      depths.paren === 0 &&
+      depths.brace === 0 &&
+      depths.bracket === 0
+    ) {
+      return { out, end: i };
+    }
+
+    if (ch === '/' && source[i + 1] === '/') {
+      const end = skipLineComment(source, i);
+      out += blankSlice(source, i, end);
+      i = end;
+      continue;
+    }
+    if (ch === '/' && source[i + 1] === '*') {
+      const end = skipBlockComment(source, i);
+      out += blankSlice(source, i, end);
+      i = end;
+      continue;
+    }
+    if (ch === '"' || ch === "'") {
+      const quoted = skipQuotedString(source, i);
+      out += quoted.out;
+      i = quoted.end;
+      continue;
+    }
+    if (ch === '`') {
+      const templ = skipTemplateLiteral(source, i);
+      out += templ.out;
+      i = templ.end;
+      continue;
+    }
+    if (ch === '/' && isRegexLiteralStart(source, i)) {
+      const end = skipRegexLiteral(source, i);
+      out += blankSlice(source, i, end);
+      i = end;
+      continue;
+    }
+
+    if (ch === '(') depths.paren += 1;
+    else if (ch === ')') depths.paren -= 1;
+    else if (ch === '{') depths.brace += 1;
+    else if (ch === '}') depths.brace -= 1;
+    else if (ch === '[') depths.bracket += 1;
+    else if (ch === ']') depths.bracket -= 1;
+
+    out += ch;
+    i += 1;
+  }
+
+  return { out, end: i };
+}
+
 /**
  * Drop comments and string/template literal bodies so static scans match real call sites,
  * not mentions inside comments or string data.
  */
 export function stripCommentsAndStringLiterals(source: string): string {
-  let out = '';
-  let i = 0;
-  while (i < source.length) {
-    const c = source[i] ?? '';
-    const next = source[i + 1] ?? '';
-    if (c === '/' && next === '/') {
-      i += 2;
-      while (i < source.length && source[i] !== '\n') {
-        out += ' ';
-        i += 1;
-      }
-      continue;
-    }
-    if (c === '/' && next === '*') {
-      i += 2;
-      while (i < source.length && !(source[i] === '*' && source[i + 1] === '/')) {
-        out += ' ';
-        i += 1;
-      }
-      i += 2;
-      continue;
-    }
-    if (c === '"' || c === "'" || c === '`') {
-      const quote = c;
-      out += quote;
-      i += 1;
-      while (i < source.length) {
-        const ch = source[i] ?? '';
-        if (ch === '\\') {
-          out += '  ';
-          i += 2;
-          continue;
-        }
-        if (ch === quote) {
-          out += quote;
-          i += 1;
-          break;
-        }
-        if (quote === '`' && ch === '$' && source[i + 1] === '{') {
-          out += '${';
-          i += 2;
-          let depth = 1;
-          while (i < source.length && depth > 0) {
-            const exprCh = source[i] ?? '';
-            if (exprCh === '{') depth += 1;
-            else if (exprCh === '}') depth -= 1;
-            out += exprCh === '\n' ? '\n' : exprCh;
-            i += 1;
-          }
-          continue;
-        }
-        out += ch === '\n' ? '\n' : ' ';
-        i += 1;
-      }
-      continue;
-    }
-    out += c;
-    i += 1;
-  }
-  return out;
+  return scanExecutableSegment(source, 0, false).out;
 }
 
 /** True when the handler chunk contains a live call to a known mutation guard. */

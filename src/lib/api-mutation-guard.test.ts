@@ -57,6 +57,51 @@ export async function POST(request: NextRequest) {
     expect(stripped).not.toContain('fake');
   });
 
+  it('strips template interpolations as code and ignores guard mentions in nested literals', () => {
+    expect(
+      chunkInvokesMutationGuard(
+        `export async function POST() { const x = \`a \${"verifyMutationRequest(request)"}\`; }`,
+      ),
+    ).toBe(false);
+    expect(
+      chunkInvokesMutationGuard(
+        `export async function POST() { const x = \`a \${'verifyMutationRequest(request)'}\`; }`,
+      ),
+    ).toBe(false);
+    expect(
+      chunkInvokesMutationGuard(
+        `export async function POST() { const x = \`a \${\`nested \${"verifyMutationRequest(request)"}\`}\`; }`,
+      ),
+    ).toBe(false);
+    expect(
+      chunkInvokesMutationGuard(
+        `export async function POST() { const x = \`a \${// verifyMutationRequest(request)
+1}\`; }`,
+      ),
+    ).toBe(false);
+    expect(
+      chunkInvokesMutationGuard(
+        `export async function POST() { const x = \`a \${/* verifyMutationRequest(request) */ 1}\`; }`,
+      ),
+    ).toBe(false);
+    expect(
+      chunkInvokesMutationGuard(
+        `export async function POST(req) { const x = \`hello \${"}" + verifyMutationRequest(req)}\`; return x; }`,
+      ),
+    ).toBe(true);
+  });
+
+  it('does not treat regex literal text as a mutation guard call', () => {
+    expect(
+      chunkInvokesMutationGuard(
+        `export async function POST() { const re = /verifyMutationRequest(?:)/; return NextResponse.json({}); }`,
+      ),
+    ).toBe(false);
+    expect(stripCommentsAndStringLiterals(`/verifyMutationRequest/g`)).not.toContain(
+      'verifyMutationRequest(',
+    );
+  });
+
   it('detects mutation HTTP methods', () => {
     expect(isApiMutationMethod('POST')).toBe(true);
     expect(isApiMutationMethod('PUT')).toBe(true);
