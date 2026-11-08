@@ -5,6 +5,8 @@ BEGIN;
 DO $tests$
 DECLARE
   v_owner_id text;
+  v_stale_owner_id text;
+  v_stale_character_id text;
   v_character_id text := 'relational-cutover-test-character';
   v_create_id text := 'relational-cutover-test-create';
   v_campaign_id text := '20000000-0000-4000-8000-000000000001';
@@ -20,6 +22,10 @@ BEGIN
   IF v_owner_id IS NULL THEN
     RAISE EXCEPTION 'Cutover smoke test requires one existing character owner';
   END IF;
+  SELECT user_id, id INTO v_stale_owner_id, v_stale_character_id
+  FROM public.characters
+  WHERE user_id IS NOT NULL AND user_id IS DISTINCT FROM v_owner_id
+  ORDER BY id LIMIT 1;
 
   v_document := jsonb_build_object(
     'name','Relational Smoke Test',
@@ -244,19 +250,37 @@ BEGIN
     RAISE EXCEPTION 'Atomic campaign character removal failed, got %', v_result;
   END IF;
 
-  UPDATE public.campaigns
-  SET characters = jsonb_build_array(jsonb_build_object(
-    'userId','00000000-0000-4000-8000-000000000098',
-    'characterId',v_character_id
-  ))
-  WHERE id = v_campaign_id;
-  v_result := public.get_campaign_character_relational_document(
-    v_campaign_id, '00000000-0000-4000-8000-000000000098', v_character_id
-  );
-  IF v_result->>'status' <> 'character_not_rostered' THEN
-    RAISE EXCEPTION 'Stale roster owner remained readable, got %', v_result;
+  -- Reproduce a legacy stale roster by adding a valid second member/character,
+  -- then deleting only the membership row before the read assertion.
+  IF v_stale_owner_id IS NOT NULL THEN
+    INSERT INTO public.campaign_members (campaign_id, user_id)
+    VALUES (v_campaign_id, v_stale_owner_id);
+    PERFORM set_config(
+      'request.jwt.claims',
+      jsonb_build_object('sub',v_stale_owner_id,'role','authenticated')::text,
+      true
+    );
+    UPDATE public.campaigns
+    SET characters = jsonb_build_array(jsonb_build_object(
+      'userId',v_stale_owner_id,
+      'characterId',v_stale_character_id
+    ))
+    WHERE id = v_campaign_id;
+    DELETE FROM public.campaign_members
+    WHERE campaign_id = v_campaign_id AND user_id = v_stale_owner_id;
+    PERFORM set_config(
+      'request.jwt.claims',
+      jsonb_build_object('sub',v_owner_id,'role','authenticated')::text,
+      true
+    );
+    v_result := public.get_campaign_character_relational_document(
+      v_campaign_id, v_stale_owner_id, v_stale_character_id
+    );
+    IF v_result->>'status' <> 'character_not_rostered' THEN
+      RAISE EXCEPTION 'Stale roster owner remained readable, got %', v_result;
+    END IF;
+    UPDATE public.campaigns SET characters = '[]'::jsonb WHERE id = v_campaign_id;
   END IF;
-  UPDATE public.campaigns SET characters = '[]'::jsonb WHERE id = v_campaign_id;
 
   v_document := public.get_character_relational_document(v_character_id);
   v_result := public.add_campaign_character_relational(
