@@ -117,6 +117,44 @@ describe('library syncMeta persistence contract', () => {
     ).toBeNull();
   });
 
+  it('accepts sanitizeItemForSync output when a property id is null but named', () => {
+    const item = {
+      id: 'item-null-prop',
+      docId: 'item-null-prop',
+      name: 'Named blade',
+      type: 'weapon' as const,
+      properties: [{ id: null, name: 'Weapon Damage', op_1_lvl: 1 }],
+    };
+    const synced = sanitizeItemForSync(
+      item as unknown as Parameters<typeof sanitizeItemForSync>[0],
+      [weaponProperty],
+    );
+    const body = synced.value as unknown as Record<string, unknown>;
+    expect(validateUserLibraryWriteBody('items', body)).toBeNull();
+    const props = body.properties as Array<{ id: null; name: string }>;
+    expect(props[0]?.name).toBe('Weapon Damage');
+    expect(props[0]?.id).toBeNull();
+
+    const stored = bodyToColumnar('items', body);
+    expect((stored.scalars.properties as Array<{ id: null; name: string }>)[0]?.id).toBeNull();
+
+    const existingItem = {
+      id: 'item-null-prop',
+      docId: 'item-null-prop',
+      name: 'Named blade',
+      type: 'weapon',
+      properties: [{ id: null, name: 'Weapon Damage', op_1_lvl: 1 }],
+      _source: 'user',
+    };
+    const merged = { ...existingItem, name: 'Renamed blade' };
+    const rebuilt = bodyToColumnar('items', merged);
+    expect(rebuilt.scalars.name).toBe('Renamed blade');
+    expect((rebuilt.scalars.properties as Array<{ id: null; name: string }>)[0]).toMatchObject({
+      id: null,
+      name: 'Weapon Damage',
+    });
+  });
+
   it('preserves syncMeta through columnar mapping and name-only merge rebuild', () => {
     const stamped = stampCreatureSyncMeta(
       creatureWithWeapon(),

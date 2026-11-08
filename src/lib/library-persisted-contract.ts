@@ -236,7 +236,12 @@ function isAllowedPartId(value: unknown): boolean {
 function savedPartRecordError(value: unknown, path: string): string | null {
   if (!isPlainObject(value)) return `${path} must be an object`;
   const record = value;
-  if ('id' in record && record.id !== undefined && !isAllowedPartId(record.id)) {
+  if (
+    'id' in record &&
+    record.id !== undefined &&
+    record.id !== null &&
+    !isAllowedPartId(record.id)
+  ) {
     return `${path}.id has an unsupported type`;
   }
   if ('name' in record && record.name !== undefined && typeof record.name !== 'string') {

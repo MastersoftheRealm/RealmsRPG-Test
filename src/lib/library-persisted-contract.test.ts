@@ -69,6 +69,15 @@ describe('library-persisted-contract', () => {
     ).toBeNull();
   });
 
+  it('allows item properties with null ids resolved by name in sync/load', () => {
+    expect(
+      persistedLibraryBodyShapeError('items', {
+        name: 'Blade',
+        properties: [{ id: null, name: 'Weapon Damage', op_1_lvl: 1 }],
+      }),
+    ).toBeNull();
+  });
+
   it('allows full creature creator state keys', () => {
     expect(
       unknownPersistedLibraryKeys('creatures', {
