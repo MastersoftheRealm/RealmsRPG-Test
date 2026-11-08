@@ -6,6 +6,8 @@
  * `getOwnerLibraryForView` (audit P0-1).
  */
 
+import 'server-only';
+
 import {
   collectCharacterLibraryRefIds,
   collectCharacterViewRefIds,

@@ -6,6 +6,8 @@
  * All app tables live in the public schema (Path C); no custom schemas.
  */
 
+import 'server-only';
+
 import { createClient as createSupabaseClient } from '@supabase/supabase-js';
 import { createServerClient } from '@supabase/ssr';
 import { cookies } from 'next/headers';
