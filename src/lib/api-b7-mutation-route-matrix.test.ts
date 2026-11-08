@@ -6,21 +6,6 @@
 import { describe, expect, it, vi, beforeEach } from 'vitest';
 import { NextRequest } from 'next/server';
 
-const B7_MATRIX_ROUTES = [
-  'PATCH /api/crafting/[id]',
-  'PATCH /api/encounters/[id]',
-  'PATCH /api/user/library/[type]/[id]',
-  'PATCH /api/user/enhanced-items/[id]',
-  'POST /api/official/[type]',
-  'POST /api/user/library/[type]',
-] as const;
-
-describe('B7 mutation route matrix (declared scope)', () => {
-  it('lists audited user/official mutation routes', () => {
-    expect(B7_MATRIX_ROUTES.length).toBeGreaterThanOrEqual(6);
-  });
-});
-
 vi.mock('@/lib/supabase/session', () => ({
   getSession: vi.fn(),
   requireLiveUser: vi.fn(),
@@ -94,8 +79,11 @@ describe('B7 matrix — crafting PATCH', () => {
 });
 
 describe('B7 matrix — enhanced-items PATCH', () => {
+  const update = vi.fn();
+
   beforeEach(() => {
     vi.clearAllMocks();
+    update.mockReset();
     mockGetSession.mockResolvedValue({ user: OWNER, error: null });
     mockStandardLimiterCheck.mockResolvedValue({
       success: true,
@@ -114,7 +102,7 @@ describe('B7 matrix — enhanced-items PATCH', () => {
     mockCreateClient.mockResolvedValue({
       from: vi.fn(() => ({
         select: vi.fn(() => selectChain),
-        update: vi.fn(),
+        update,
       })),
     } as never);
   });
@@ -129,6 +117,8 @@ describe('B7 matrix — enhanced-items PATCH', () => {
       { params: Promise.resolve({ id: 'enh-owned' }) },
     );
     expect(response.status).toBe(403);
+    expect(update).not.toHaveBeenCalled();
+    expect(mockCreateClient).not.toHaveBeenCalled();
   });
 });
 

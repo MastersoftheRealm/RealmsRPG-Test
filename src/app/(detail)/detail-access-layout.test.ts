@@ -62,7 +62,7 @@ describe('detail layouts HTTP status', () => {
     expect(result.props.children).toBe('sheet');
   });
 
-  it('recovers after a transient outage when access preflight is retried', async () => {
+  it('succeeds on a later layout render after a transient outage error (manual retry)', async () => {
     let calls = 0;
     const fetchMock = vi.fn(async (url: string) => {
       calls += 1;

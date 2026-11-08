@@ -7,29 +7,53 @@ import {
 
 describe('codexPersistedFieldShapeError', () => {
   it('accepts legacy numeric strings on feat level fields', () => {
-    expect(codexPersistedFieldShapeError('featLvl', '2')).toBeNull();
+    expect(codexPersistedFieldShapeError('codex_feats', 'featLvl', '2')).toBeNull();
   });
 
-  it('rejects non-boolean char_feat flags', () => {
-    expect(codexPersistedFieldShapeError('charFeat', 'yes')).toMatch(/boolean/i);
+  it('rejects non-finite numeric strings on feat level fields', () => {
+    expect(codexPersistedFieldShapeError('codex_feats', 'featLvl', 'Infinity')).toMatch(/numeric/i);
   });
 
-  it('accepts comma-list species skills as a string', () => {
-    expect(codexPersistedFieldShapeError('skills', 'Athletics, Stealth')).toBeNull();
+  it('accepts feat ability string arrays', () => {
+    expect(codexPersistedFieldShapeError('codex_feats', 'ability', ['strength'])).toBeNull();
   });
 
-  it('rejects object-valued species skills', () => {
-    expect(codexPersistedFieldShapeError('skills', { bad: true })).toMatch(/string or array/i);
+  it('keeps skill ability scalar for codex_skills', () => {
+    expect(codexPersistedFieldShapeError('codex_skills', 'ability', 'strength')).toBeNull();
+    expect(codexPersistedFieldShapeError('codex_skills', 'ability', ['strength'])).toMatch(
+      /scalar/i,
+    );
+  });
+
+  it('accepts part defense lists including empty arrays', () => {
+    expect(codexPersistedFieldShapeError('codex_parts', 'defense', [])).toBeNull();
+    expect(codexPersistedFieldShapeError('codex_parts', 'defense', ['reflex'])).toBeNull();
+  });
+
+  it('accepts species adulthood lifespan tuples', () => {
+    expect(
+      codexPersistedFieldShapeError('codex_species', 'adulthoodLifespan', [20, 750]),
+    ).toBeNull();
   });
 
   it('rejects invalid catalogListing values', () => {
-    expect(codexPersistedFieldShapeError('catalogListing', 'public')).toMatch(
+    expect(codexPersistedFieldShapeError('codex_species', 'catalogListing', 'public')).toMatch(
       /listed or unlisted/i,
     );
   });
 
-  it('accepts archetype JSON columns as objects', () => {
-    expect(codexPersistedFieldShapeError('level1Loadouts', [{ id: '1' }])).toBeNull();
+  it('rejects JSON-string scalar loadouts', () => {
+    expect(codexPersistedFieldShapeError('codex_archetypes', 'level1Loadouts', 'false')).toMatch(
+      /JSON object or array/i,
+    );
+  });
+
+  it('accepts archetype metadata objects for loadouts', () => {
+    expect(
+      codexPersistedFieldShapeError('codex_archetypes', 'level1Loadouts', {
+        armorStep: 'optional',
+      }),
+    ).toBeNull();
   });
 });
 
@@ -45,21 +69,14 @@ describe('codexAdminCamelBodyShapeError', () => {
     },
   );
 
-  it('accepts a minimal valid feat payload', () => {
+  it('accepts a feat payload with ability lists', () => {
     expect(
       codexAdminCamelBodyShapeError('codex_feats', {
         name: 'Quick Reflexes',
         featLvl: 1,
         charFeat: false,
-      }),
-    ).toBeNull();
-  });
-
-  it('accepts legacy string sources lists', () => {
-    expect(
-      codexAdminCamelBodyShapeError('codex_parts', {
-        name: 'Spark',
-        sources: 'Core, Playtest',
+        ability: ['agility'],
+        abilReqVal: [2],
       }),
     ).toBeNull();
   });

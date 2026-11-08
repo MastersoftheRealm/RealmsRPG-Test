@@ -168,8 +168,6 @@ export const CODEX_COLUMNAR_FIELDS: Record<CodexCollection, readonly string[]> =
 };
 
 export const CODEX_NUMERIC_FIELD_KEYS = new Set([
-  'abilReqVal',
-  'skillReqVal',
   'featLvl',
   'lvlReq',
   'usesPerRec',

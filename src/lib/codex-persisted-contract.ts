@@ -21,8 +21,19 @@ function isAbsent(value: unknown): boolean {
   return value === undefined || value === null || value === '';
 }
 
+function isPlainObject(value: unknown): value is Record<string, unknown> {
+  return value != null && typeof value === 'object' && !Array.isArray(value);
+}
+
 function isStringArray(value: unknown): boolean {
   return Array.isArray(value) && value.every((entry) => typeof entry === 'string');
+}
+
+function isFiniteNumberArray(value: unknown): boolean {
+  return (
+    Array.isArray(value) &&
+    value.every((entry) => typeof entry === 'number' && Number.isFinite(entry))
+  );
 }
 
 function isCommaListValue(value: unknown): boolean {
@@ -31,10 +42,24 @@ function isCommaListValue(value: unknown): boolean {
   return isStringArray(value);
 }
 
-function isJsonFieldValue(value: unknown): boolean {
-  if (isAbsent(value)) return true;
-  if (typeof value === 'string') return true;
-  return typeof value === 'object';
+const JSON_FIELD_DB_LABELS: Record<string, string> = {
+  level1GuidanceGroups: 'level1_guidance_groups',
+  level1RecommendedAbilities: 'level1_recommended_abilities',
+  level1Loadouts: 'level1_loadouts',
+};
+
+function jsonFieldDbLabel(camel: string): string {
+  return JSON_FIELD_DB_LABELS[camel] ?? camel;
+}
+
+function parseJsonCell(value: unknown): { parsed: unknown; error: string | null } {
+  if (typeof value !== 'string') return { parsed: value, error: null };
+  if (value.trim() === '') return { parsed: null, error: null };
+  try {
+    return { parsed: JSON.parse(value) as unknown, error: null };
+  } catch {
+    return { parsed: null, error: 'is not valid JSON' };
+  }
 }
 
 function catalogListingError(value: unknown): string | null {
@@ -53,31 +78,134 @@ function imageFieldError(camel: string, value: unknown): string | null {
   return `${camel} must be a string`;
 }
 
+function numericScalarError(camel: string, value: unknown): string | null {
+  if (typeof value === 'number') {
+    if (!Number.isFinite(value)) return `${camel} must be a finite number`;
+    return null;
+  }
+  if (typeof value === 'string') {
+    if (value.trim() === '') return null;
+    const n = Number(value);
+    if (!Number.isFinite(n)) return `${camel} must be numeric`;
+    return null;
+  }
+  if (typeof value === 'boolean') return `${camel} must be numeric`;
+  if (value != null && typeof value === 'object') return `${camel} must be numeric`;
+  return null;
+}
+
+function codexJsonFieldShapeError(camel: string, value: unknown): string | null {
+  const { parsed, error } = parseJsonCell(value);
+  if (error) {
+    return `${jsonFieldDbLabel(camel)} ${error}, so this save was rejected and nothing was written.`;
+  }
+  if (parsed == null || parsed === '') return null;
+
+  if (camel === 'level1Loadouts') {
+    if (Array.isArray(parsed) || isPlainObject(parsed)) return null;
+    return `${camel} must be a JSON object or array`;
+  }
+  if (camel === 'level1RecommendedAbilities') {
+    if (isPlainObject(parsed) && !Array.isArray(parsed)) return null;
+    return `${camel} must be a JSON object`;
+  }
+  if (camel === 'level1GuidanceGroups') {
+    if (Array.isArray(parsed)) return null;
+    return `${camel} must be a JSON array`;
+  }
+  return `${camel} must be a JSON object or array`;
+}
+
+function collectionFieldShapeError(
+  collection: CodexCollection,
+  camel: string,
+  value: unknown,
+): string | null {
+  if (collection === 'codex_feats') {
+    if (camel === 'ability' || camel === 'abilityReq' || camel === 'skillReq') {
+      if (isAbsent(value)) return null;
+      if (isStringArray(value)) return null;
+      return `${camel} must be an array of strings`;
+    }
+    if (camel === 'abilReqVal' || camel === 'skillReqVal') {
+      if (isAbsent(value)) return null;
+      if (isFiniteNumberArray(value)) return null;
+      return `${camel} must be an array of numbers`;
+    }
+  }
+
+  if (collection === 'codex_skills' && camel === 'ability') {
+    if (isAbsent(value)) return null;
+    if (typeof value === 'string' || typeof value === 'number' || typeof value === 'boolean') {
+      return null;
+    }
+    return 'ability must be a scalar value';
+  }
+
+  if (collection === 'codex_parts' && camel === 'defense') {
+    if (value === undefined || value === null) return null;
+    if (isStringArray(value)) return null;
+    if (typeof value === 'string') return null;
+    return 'defense must be a string or array of strings';
+  }
+
+  if (collection === 'codex_species' && camel === 'adulthoodLifespan') {
+    if (isAbsent(value)) return null;
+    if (isFiniteNumberArray(value)) return null;
+    if (typeof value === 'string') {
+      const parts = value
+        .split(',')
+        .map((s) => Number(s.trim()))
+        .filter((n) => Number.isFinite(n));
+      if (parts.length > 0) return null;
+    }
+    return 'adulthoodLifespan must be a numeric range';
+  }
+
+  return null;
+}
+
+const FEAT_TYPED_LIST_FIELDS = new Set([
+  'ability',
+  'abilityReq',
+  'skillReq',
+  'abilReqVal',
+  'skillReqVal',
+]);
+
+function collectionFieldBypassesGenericChecks(collection: CodexCollection, camel: string): boolean {
+  if (collection === 'codex_feats' && FEAT_TYPED_LIST_FIELDS.has(camel)) return true;
+  if (collection === 'codex_parts' && camel === 'defense') return true;
+  if (collection === 'codex_species' && camel === 'adulthoodLifespan') return true;
+  if (collection === 'codex_skills' && camel === 'ability') return true;
+  return false;
+}
+
 /** Validate one camelCase codex field value (lenient on legacy null/empty shapes). */
-export function codexPersistedFieldShapeError(camel: string, value: unknown): string | null {
+export function codexPersistedFieldShapeError(
+  collection: CodexCollection,
+  camel: string,
+  value: unknown,
+): string | null {
   if (isAbsent(value)) return null;
 
-  if (camel === 'name' && typeof value === 'string' && value.length > CODEX_NAME_MAX_LENGTH) {
-    return `name exceeds maximum length`;
+  const collectionErr = collectionFieldShapeError(collection, camel, value);
+  if (collectionErr) return collectionErr;
+  if (collectionFieldBypassesGenericChecks(collection, camel)) return null;
+
+  if (camel === 'name') {
+    if (typeof value !== 'string') return 'name must be a string';
+    if (value.length > CODEX_NAME_MAX_LENGTH) return 'name exceeds maximum length';
   }
-  if (
-    camel === 'description' &&
-    typeof value === 'string' &&
-    value.length > CODEX_DESC_MAX_LENGTH
-  ) {
-    return `description exceeds maximum length`;
+  if (camel === 'description') {
+    if (typeof value !== 'string') return 'description must be a string';
+    if (value.length > CODEX_DESC_MAX_LENGTH) return 'description exceeds maximum length';
   }
 
   if (CODEX_NUMERIC_FIELD_KEYS.has(camel)) {
-    if (typeof value === 'number') {
-      if (!Number.isFinite(value)) return `${camel} must be a finite number`;
-      return null;
-    }
-    if (typeof value === 'string' && value.trim() !== '') {
-      if (Number.isNaN(Number(value))) return `${camel} must be numeric`;
-      return null;
-    }
-    if (typeof value === 'boolean') return `${camel} must be numeric`;
+    const numericErr = numericScalarError(camel, value);
+    if (numericErr) return numericErr;
+    return null;
   }
 
   if (CODEX_BOOLEAN_FIELD_KEYS.has(camel)) {
@@ -99,8 +227,7 @@ export function codexPersistedFieldShapeError(camel: string, value: unknown): st
   }
 
   if (CODEX_JSON_FIELD_KEYS.has(camel)) {
-    if (!isJsonFieldValue(value)) return `${camel} must be JSON (object, array, or JSON string)`;
-    return null;
+    return codexJsonFieldShapeError(camel, value);
   }
 
   if (CODEX_COMMA_LIST_FIELD_KEYS.has(camel)) {
@@ -112,19 +239,16 @@ export function codexPersistedFieldShapeError(camel: string, value: unknown): st
     camel.endsWith('Desc') ||
     camel === 'type' ||
     camel === 'category' ||
-    camel === 'ability' ||
     camel === 'mechanic' ||
     camel === 'recPeriod' ||
     camel === 'tags' ||
     camel === 'baseFeatId' ||
     camel === 'baseSkill' ||
     camel === 'baseSkillId' ||
-    camel === 'adulthoodLifespan' ||
     camel === 'currency' ||
     camel === 'rarity' ||
     camel === 'percentage' ||
     camel === 'duration' ||
-    camel === 'defense' ||
     camel === 'archetypeAbility' ||
     camel === 'secondaryAbility' ||
     camel === 'level1Notes'
@@ -147,7 +271,7 @@ export function codexAdminCamelBodyShapeError(
     return `Payload contains unsupported fields: ${unknown.join(', ')}`;
   }
   for (const [key, value] of Object.entries(camelBody)) {
-    const err = codexPersistedFieldShapeError(key, value);
+    const err = codexPersistedFieldShapeError(collection, key, value);
     if (err) return err;
   }
   return null;
