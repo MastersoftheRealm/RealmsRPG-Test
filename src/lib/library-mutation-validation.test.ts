@@ -112,14 +112,14 @@ describe('validateUserLibraryWriteBody', () => {
     expect(response?.status).toBe(403);
   });
 
-  it('strips direct image URL on admin official catalog writes', () => {
+  it('clears injected image URL to null on admin official catalog writes', () => {
     const body = {
       name: 'Bolt',
       imageId: '11111111-1111-4111-8111-111111111111',
       imageUrl: 'https://evil.example/art.jpg',
     };
     expect(validateUserLibraryWriteBody('powers', body, { isAdmin: true })).toBeNull();
-    expect(body.imageUrl).toBeUndefined();
+    expect(body.imageUrl).toBeNull();
     expect(body.imageId).toBe('11111111-1111-4111-8111-111111111111');
   });
 });

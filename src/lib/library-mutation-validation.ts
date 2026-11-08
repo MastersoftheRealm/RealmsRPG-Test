@@ -8,6 +8,7 @@ import {
   unknownPersistedSpeciesKeys,
 } from '@/lib/library-persisted-contract';
 import {
+  applyOfficialAdminImageWritePolicy,
   applyUserLibraryImageWritePolicy,
   officialImageFieldAuthzError,
 } from '@/lib/library-image-write';
@@ -50,7 +51,10 @@ export function validateUserLibraryWriteBody(
   }
 
   if (!options?.allowImageUrl) {
-    const imageError = applyUserLibraryImageWritePolicy(body);
+    const imageError =
+      options?.isAdmin === true
+        ? applyOfficialAdminImageWritePolicy(body)
+        : applyUserLibraryImageWritePolicy(body);
     if (imageError) return reject(imageError);
   }
   return null;

@@ -631,6 +631,46 @@ describe('POST /api/official/[type]', () => {
     expect(update).not.toHaveBeenCalled();
   });
 
+  it('persists new image_id and null image_url when admin changes bank art on update', async () => {
+    mockRequireLiveUser.mockResolvedValue(USER);
+    mockIsAdmin.mockResolvedValue(true);
+
+    const existingId = '44444444-4444-4444-4444-444444444444';
+    const newImageId = '55555555-5555-4555-8555-555555555555';
+    const { supabase, update } = mockOfficialPostSupabase({
+      currentRow: {
+        id: existingId,
+        name: 'Bolt',
+        image_id: '66666666-6666-4666-8666-666666666666',
+        image_url: 'https://old.example/art.jpg',
+      },
+      nameCollision: null,
+      updateRows: [{ id: existingId, image_id: newImageId, image_url: null }],
+    });
+    mockCreateServiceRoleClient.mockReturnValue(supabase as never);
+
+    const request = new NextRequest('http://localhost/api/official/powers', {
+      method: 'POST',
+      headers: { 'content-type': 'application/json', origin: 'http://localhost' },
+      body: JSON.stringify({
+        id: existingId,
+        name: 'Bolt',
+        imageId: newImageId,
+        imageUrl: 'https://evil.example/art.jpg',
+      }),
+    });
+
+    const response = await POST(request, params('powers'));
+
+    expect(response.status).toBe(200);
+    expect(update).toHaveBeenCalledWith(
+      expect.objectContaining({
+        image_id: newImageId,
+        image_url: null,
+      }),
+    );
+  });
+
   it('allows update when the name is unchanged even if another row shares that name', async () => {
     mockRequireLiveUser.mockResolvedValue(USER);
     mockIsAdmin.mockResolvedValue(true);

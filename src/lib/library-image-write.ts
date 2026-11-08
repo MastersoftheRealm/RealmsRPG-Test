@@ -16,6 +16,21 @@ export function officialImageFieldAuthzError(
   return 'Admin only';
 }
 
+/**
+ * Official admin catalog writes: same bank image_id rules as user library, but
+ * null imageUrl after strip so updates clear the denormalized cache (GET re-fills from bank).
+ */
+export function applyOfficialAdminImageWritePolicy(body: Record<string, unknown>): string | null {
+  const hadImageFields = bodyHasImageWriteFields(body);
+  const imageError = applyUserLibraryImageWritePolicy(body);
+  if (imageError) return imageError;
+  if (hadImageFields) {
+    body.imageUrl = null;
+    delete body.image_url;
+  }
+  return null;
+}
+
 /** Non-admin library writes may set bank image_id only; direct URL injection is stripped. */
 export function applyUserLibraryImageWritePolicy(body: Record<string, unknown>): string | null {
   delete body.imageUrl;
