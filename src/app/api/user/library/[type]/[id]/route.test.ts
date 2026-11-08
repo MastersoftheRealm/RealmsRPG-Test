@@ -185,6 +185,37 @@ describe('GET /api/user/library/[type]/[id]', () => {
     expect(body.id).toBe('pow-owned');
     expect(body.name).toBe('Firebolt');
   });
+
+  it('species by id maps with rowToItemSpecies and prefers the name column over legacy data.name', async () => {
+    const speciesRow = {
+      id: 'sp-col',
+      user_id: OWNER.uid,
+      name: 'Column Name',
+      description: '',
+      type: '',
+      payload: {},
+      data: { name: 'Stale JSON Name' },
+    };
+
+    mockGetSession.mockResolvedValue({ user: OWNER, error: null });
+    const speciesSelectChain = {
+      eq: vi.fn((): typeof speciesSelectChain => speciesSelectChain),
+      maybeSingle: vi.fn(async () => ({ data: speciesRow, error: null })),
+    };
+    mockCreateClient.mockResolvedValue({
+      from: vi.fn((table: string) => {
+        if (table !== 'user_species') throw new Error(`Unexpected table: ${table}`);
+        return { select: vi.fn(() => speciesSelectChain) };
+      }),
+    } as never);
+
+    const response = await GET(makeGetRequest('species', 'sp-col'), params('species', 'sp-col'));
+
+    expect(response.status).toBe(200);
+    const body = await readJson<{ id: string; name: string }>(response);
+    expect(body.id).toBe('sp-col');
+    expect(body.name).toBe('Column Name');
+  });
 });
 
 describe('PATCH /api/user/library/[type]/[id]', () => {
