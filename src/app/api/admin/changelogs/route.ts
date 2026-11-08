@@ -33,7 +33,6 @@ type UserProfileRow = {
   username: string | null;
   username_display: string | null;
   display_name: string | null;
-  email: string | null;
 };
 
 function toValidLimit(raw: string | null): number {
@@ -127,7 +126,7 @@ export async function GET(request: NextRequest) {
     if (userIds.length > 0) {
       const { data: profiles, error: profileError } = await supabase
         .from('user_profiles')
-        .select('id, username, username_display, display_name, email')
+        .select('id, username, username_display, display_name')
         .in('id', userIds);
       if (profileError) throw profileError;
 
@@ -157,7 +156,6 @@ export async function GET(request: NextRequest) {
               username: actor.username,
               usernameDisplay: actor.username_display ?? actor.username,
               displayName: actor.display_name,
-              email: actor.email,
             }
           : null,
       };
