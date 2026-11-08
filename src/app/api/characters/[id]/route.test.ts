@@ -103,7 +103,16 @@ function makeCharacterRow(
   };
 }
 
-function createMockSupabase(characterRow: CharacterRow | null) {
+type CampaignVisibilityMock = {
+  memberCampaignIds: string[];
+  ownedCampaignIds?: string[] | undefined;
+  campaigns: Array<{ id: string; characters: unknown }>;
+};
+
+function createMockSupabase(
+  characterRow: CharacterRow | null,
+  campaignVisibility?: CampaignVisibilityMock,
+) {
   const buildSelectChain = () => {
     const eqCalls: [string, string][] = [];
     const chain = {
@@ -180,11 +189,40 @@ function createMockSupabase(characterRow: CharacterRow | null) {
           }),
         };
       }
-      if (table === 'campaign_members' || table === 'campaigns') {
+      if (table === 'campaign_members') {
         return {
           select: vi.fn().mockReturnValue({
-            eq: vi.fn().mockResolvedValue({ data: [], error: null }),
-            in: vi.fn().mockResolvedValue({ data: [], error: null }),
+            eq: vi.fn().mockImplementation(async (col: string) => {
+              if (!campaignVisibility || col !== 'user_id') {
+                return { data: [], error: null };
+              }
+              return {
+                data: campaignVisibility.memberCampaignIds.map((campaign_id) => ({ campaign_id })),
+                error: null,
+              };
+            }),
+          }),
+        };
+      }
+      if (table === 'campaigns') {
+        return {
+          select: vi.fn().mockReturnValue({
+            eq: vi.fn().mockImplementation(async (col: string) => {
+              if (!campaignVisibility || col !== 'owner_id') {
+                return { data: [], error: null };
+              }
+              const owned = campaignVisibility.ownedCampaignIds ?? [];
+              return {
+                data: owned.map((id) => ({ id })),
+                error: null,
+              };
+            }),
+            in: vi.fn().mockImplementation(async () => {
+              if (!campaignVisibility) {
+                return { data: [], error: null };
+              }
+              return { data: campaignVisibility.campaigns, error: null };
+            }),
           }),
         };
       }
@@ -352,6 +390,44 @@ describe('GET /api/characters/[id]', () => {
 
     await GET(makeGetRequest('char-public'), { params: Promise.resolve({ id: 'char-public' }) });
 
+    expect(mockGetOwnerLibraryAndEnrichmentForView).toHaveBeenCalledWith(
+      expect.anything(),
+      OWNER.uid,
+      row.data,
+    );
+  });
+
+  it('returns 200 for campaign visibility when roster characters is a JSON string with snake_case keys (API-013)', async () => {
+    const charId = 'char-campaign-shared';
+    const campaignId = 'campaign-shared-1';
+    const row = makeCharacterRow(
+      charId,
+      OWNER.uid,
+      { visibility: 'campaign' },
+      { visibility: 'campaign' },
+    );
+    const rosterJson = JSON.stringify([
+      { user_id: OWNER.uid, character_id: charId, character_name: 'Test Hero' },
+    ]);
+    mockGetSession.mockResolvedValue({ user: OTHER, error: null });
+    mockCreateClient.mockResolvedValue(
+      createMockSupabase(row, {
+        memberCampaignIds: [campaignId],
+        campaigns: [{ id: campaignId, characters: rosterJson }],
+      }) as never,
+    );
+
+    const response = await GET(makeGetRequest(charId), {
+      params: Promise.resolve({ id: charId }),
+    });
+
+    expect(response.status).toBe(200);
+    const body = await readJson<{
+      character: { id: string };
+      libraryForView: unknown;
+      enrichment: unknown;
+    }>(response);
+    expect(body.character.id).toBe(charId);
     expect(mockGetOwnerLibraryAndEnrichmentForView).toHaveBeenCalledWith(
       expect.anything(),
       OWNER.uid,
