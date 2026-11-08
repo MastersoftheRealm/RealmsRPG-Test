@@ -23,6 +23,7 @@ import {
 } from './codex-archetype-write';
 import { coreRulesDocumentNumberError } from '../core-rules/core-rules-number';
 import {
+  normalizeSaveArchetypeWithPathInput,
   parseSaveArchetypeNumericId,
   saveArchetypeWithPathInputError,
 } from '@/lib/codex-archetype-path-save-validation';
@@ -370,14 +371,15 @@ export async function saveArchetypeWithPath(
     const changedByUserId = await requireAdmin();
     const validationError = saveArchetypeWithPathInputError(payload);
     if (validationError) return { success: false, error: validationError };
+    const normalizedPayload = normalizeSaveArchetypeWithPathInput(payload);
 
     const supabase = createServiceRoleClient();
-    const parsedId = parseSaveArchetypeNumericId(payload.id);
+    const parsedId = parseSaveArchetypeNumericId(normalizedPayload.id);
     const id = parsedId ?? (await allocateCodexNumericId(supabase, 'codex_archetypes'));
     const beforeSnapshot = await getArchetypeSnapshot(id);
     const existingLevels = beforeSnapshot?.levels ?? [];
 
-    const cleanLevels = buildArchetypeLevelRows(id, payload.levels);
+    const cleanLevels = buildArchetypeLevelRows(id, normalizedPayload.levels);
 
     const levelNumbers = cleanLevels.map((row) => Number(row.level));
     if (new Set(levelNumbers).size !== levelNumbers.length) {
@@ -398,7 +400,7 @@ export async function saveArchetypeWithPath(
 
     const { error: upsertError } = await supabase
       .from('codex_archetypes')
-      .upsert(buildArchetypeRow(id, payload));
+      .upsert(buildArchetypeRow(id, normalizedPayload));
     if (upsertError) throw new Error(upsertError.message);
 
     await replaceArchetypeLevels(id, cleanLevels, existingLevels);

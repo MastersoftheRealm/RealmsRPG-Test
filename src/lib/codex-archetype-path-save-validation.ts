@@ -22,7 +22,6 @@ const ARCHETYPE_TYPES = new Set<SaveArchetypeWithPathInput['type']>([
 
 /** Lowest level stored in `codex_archetype_levels` (level 1 is columnar on the archetype row). */
 const MIN_PROGRESSION_LEVEL = 2;
-const MAX_PROGRESSION_LEVEL = 200;
 const MAX_PROGRESSION_ROWS = 200;
 
 const SAVE_INPUT_KEYS = new Set([
@@ -145,9 +144,6 @@ function progressionLevelRowsError(levels: unknown): string | null {
     if (rawLevel < MIN_PROGRESSION_LEVEL) {
       return `${prefix}.level must be ${MIN_PROGRESSION_LEVEL} or higher (level 1 is stored on the archetype row)`;
     }
-    if (rawLevel > MAX_PROGRESSION_LEVEL) {
-      return `${prefix}.level exceeds maximum supported level`;
-    }
 
     for (const { key, contractKey } of LEVEL_COMMA_FIELDS) {
       if (!(key in entry)) continue;
@@ -200,6 +196,33 @@ export function saveArchetypeWithPathInputError(
     'codex_archetypes',
     archetypePathPayloadToCamelBody(payload),
   );
+}
+
+/** After validation, coerce JSONB cells to parsed values (never store JSON text in JSONB). */
+function normalizeArchetypeJsonColumn(value: unknown): unknown | undefined {
+  if (value === undefined) return undefined;
+  if (value === null) return null;
+  if (value === '') return null;
+  if (typeof value === 'string') {
+    const trimmed = value.trim();
+    if (trimmed === '') return null;
+    return JSON.parse(trimmed) as unknown;
+  }
+  return value;
+}
+
+/** Apply persisted-contract normalization for values that pass `saveArchetypeWithPathInputError`. */
+export function normalizeSaveArchetypeWithPathInput(
+  payload: SaveArchetypeWithPathInput,
+): SaveArchetypeWithPathInput {
+  return {
+    ...payload,
+    level1_guidance_groups: normalizeArchetypeJsonColumn(payload.level1_guidance_groups),
+    level1_recommended_abilities: normalizeArchetypeJsonColumn(
+      payload.level1_recommended_abilities,
+    ),
+    level1_loadouts: normalizeArchetypeJsonColumn(payload.level1_loadouts),
+  };
 }
 
 /** Resolve a trusted archetype id for writes (new rows allocate separately). */

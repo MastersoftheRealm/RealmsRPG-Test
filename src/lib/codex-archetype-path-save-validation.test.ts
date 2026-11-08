@@ -1,6 +1,9 @@
 import { describe, expect, it } from 'vitest';
 import type { SaveArchetypeWithPathInput } from '@/app/(main)/admin/codex/codex-archetype-write';
-import { saveArchetypeWithPathInputError } from '@/lib/codex-archetype-path-save-validation';
+import {
+  normalizeSaveArchetypeWithPathInput,
+  saveArchetypeWithPathInputError,
+} from '@/lib/codex-archetype-path-save-validation';
 
 const validBase: SaveArchetypeWithPathInput = {
   id: '5',
@@ -80,5 +83,35 @@ describe('saveArchetypeWithPathInputError', () => {
         levels,
       }),
     ).toMatch(/maximum of 200/i);
+  });
+});
+
+describe('normalizeSaveArchetypeWithPathInput', () => {
+  const guidance = [{ id: 'g1', title: 'Starter', feats: ['1'] }];
+  const abilities = { strength: 3 };
+  const loadouts = { armorStep: 'optional', sharedEquipment: [{ id: '3', quantity: 2 }] };
+
+  it('parses validated JSON strings into objects for persistence', () => {
+    const normalized = normalizeSaveArchetypeWithPathInput({
+      ...validBase,
+      level1_guidance_groups: JSON.stringify(guidance),
+      level1_recommended_abilities: JSON.stringify(abilities),
+      level1_loadouts: JSON.stringify(loadouts),
+    });
+    expect(normalized.level1_guidance_groups).toEqual(guidance);
+    expect(normalized.level1_recommended_abilities).toEqual(abilities);
+    expect(normalized.level1_loadouts).toEqual(loadouts);
+  });
+
+  it('maps empty JSON inputs to null', () => {
+    const normalized = normalizeSaveArchetypeWithPathInput({
+      ...validBase,
+      level1_guidance_groups: '',
+      level1_recommended_abilities: '   ',
+      level1_loadouts: null,
+    });
+    expect(normalized.level1_guidance_groups).toBeNull();
+    expect(normalized.level1_recommended_abilities).toBeNull();
+    expect(normalized.level1_loadouts).toBeNull();
   });
 });

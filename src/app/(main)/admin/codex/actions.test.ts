@@ -24,6 +24,11 @@ import {
 } from '../core-rules/core-rules-number';
 import { recordCodexChange } from '@/lib/codex-changelog';
 import { defined } from '@/lib/utils';
+import {
+  parseArchetypePathData,
+  parseLevel1LoadoutsField,
+  parseRecommendedAbilities,
+} from '@/lib/game/archetype-path';
 
 let currentDb: FakeSupabase;
 
@@ -344,6 +349,147 @@ describe('archetype progression replace', () => {
     expect(result.success).toBe(false);
     expect(result.error).toMatch(/level 1 is stored on the archetype row/i);
     expect(currentDb.tables.codex_archetype_levels).toEqual(beforeLevels);
+  });
+});
+
+describe('saveArchetypeWithPath JSON column persistence', () => {
+  const baseArchetype = {
+    id: '5',
+    name: 'Blade',
+    type: 'martial' as const,
+    levels: [{ level: 2, feats: '1' }],
+  };
+
+  const guidance = [{ id: 'g1', title: 'Starter', feats: ['1'] }];
+  const abilities = { strength: 3, agility: 1 };
+  const loadouts = { armorStep: 'optional', sharedEquipment: [{ id: '3', quantity: 2 }] };
+
+  function assertDomainReadersMatchStored(row: Record<string, unknown>) {
+    expect(typeof row.level1_guidance_groups).not.toBe('string');
+    expect(typeof row.level1_recommended_abilities).not.toBe('string');
+    expect(typeof row.level1_loadouts).not.toBe('string');
+
+    const pathData = parseArchetypePathData({
+      level1: {
+        guidance_groups: row.level1_guidance_groups,
+        recommended_abilities: row.level1_recommended_abilities,
+        loadouts: row.level1_loadouts,
+      },
+    });
+    expect(pathData?.level1?.guidance_groups?.[0]?.id).toBe('g1');
+    expect(parseRecommendedAbilities(row.level1_recommended_abilities)).toEqual({
+      strength: 3,
+      agility: 1,
+    });
+    expect(parseLevel1LoadoutsField(row.level1_loadouts)).toEqual({
+      armorStep: 'optional',
+      sharedEquipment: [{ id: '3', quantity: 2 }],
+    });
+  }
+
+  it.each([
+    [
+      'native objects',
+      {
+        level1_guidance_groups: guidance,
+        level1_recommended_abilities: abilities,
+        level1_loadouts: loadouts,
+      },
+    ],
+    [
+      'JSON strings',
+      {
+        level1_guidance_groups: JSON.stringify(guidance),
+        level1_recommended_abilities: JSON.stringify(abilities),
+        level1_loadouts: JSON.stringify(loadouts),
+      },
+    ],
+  ] as const)('stores %s as parsed JSONB for domain readers', async (_label, jsonFields) => {
+    const result = await saveArchetypeWithPath({ ...baseArchetype, ...jsonFields });
+    expect(result.success).toBe(true);
+    const row = defined(defined(currentDb.tables.codex_archetypes).find((r) => r.id === '5'));
+    expect(row.level1_guidance_groups).toEqual(guidance);
+    expect(row.level1_recommended_abilities).toEqual(abilities);
+    expect(row.level1_loadouts).toEqual(loadouts);
+    assertDomainReadersMatchStored(row);
+  });
+
+  it.each([
+    [
+      'empty strings',
+      { level1_guidance_groups: '', level1_recommended_abilities: '  ', level1_loadouts: '' },
+    ],
+    [
+      'null',
+      { level1_guidance_groups: null, level1_recommended_abilities: null, level1_loadouts: null },
+    ],
+  ] as const)('clears %s JSONB cells to null', async (_label, jsonFields) => {
+    const seeded = defined(defined(currentDb.tables.codex_archetypes)[0]);
+    currentDb.tables.codex_archetypes = [
+      {
+        ...seeded,
+        level1_guidance_groups: guidance,
+        level1_recommended_abilities: abilities,
+        level1_loadouts: loadouts,
+      },
+    ];
+
+    const result = await saveArchetypeWithPath({ ...baseArchetype, ...jsonFields });
+    expect(result.success).toBe(true);
+    const row = defined(defined(currentDb.tables.codex_archetypes).find((r) => r.id === '5'));
+    expect(row.level1_guidance_groups).toBeNull();
+    expect(row.level1_recommended_abilities).toBeNull();
+    expect(row.level1_loadouts).toBeNull();
+    expect(parseRecommendedAbilities(row.level1_recommended_abilities)).toBeUndefined();
+    expect(parseLevel1LoadoutsField(row.level1_loadouts)).toEqual({});
+    expect(
+      parseArchetypePathData({ level1: { guidance_groups: row.level1_guidance_groups } })?.level1
+        ?.guidance_groups,
+    ).toBeUndefined();
+  });
+
+  it('round-trips a fully populated path save through the action', async () => {
+    const result = await saveArchetypeWithPath({
+      id: '5',
+      name: 'Blade Path',
+      type: 'powered-martial',
+      description: 'A test path',
+      sources: ['Core', 'Playtest'],
+      archetype_ability: 'strength',
+      secondary_ability: 'agility',
+      power_prof_start: 2,
+      martial_prof_start: 1,
+      power_prof_level5: 3,
+      martial_prof_level5: 4,
+      level1_feats: '1,2',
+      level1_skills: '10',
+      level1_powers: 'pwr',
+      level1_innate_powers: 'inn',
+      level1_techniques: 'tec',
+      level1_armaments: '3:1',
+      level1_equipment: '4',
+      level1_recommend_unarmed_prowess: true,
+      level1_remove_feats: '9',
+      level1_remove_powers: '8',
+      level1_remove_techniques: '7',
+      level1_remove_armaments: '6',
+      level1_notes: 'Level one notes',
+      level1_guidance_groups: guidance,
+      level1_recommended_abilities: abilities,
+      level1_loadouts: loadouts,
+      levels: [
+        { level: 2, feats: '1', skills: '10', notes: 'L2' },
+        { level: 4, powers: 'p1', techniques: 't1' },
+      ],
+    });
+
+    expect(result.success).toBe(true);
+    const row = defined(defined(currentDb.tables.codex_archetypes).find((r) => r.id === '5'));
+    expect(row.name).toBe('Blade Path');
+    expect(row.type).toBe('powered-martial');
+    expect(row.level1_notes).toBe('Level one notes');
+    assertDomainReadersMatchStored(row);
+    expect(defined(currentDb.tables.codex_archetype_levels).map((l) => l.level)).toEqual([2, 4]);
   });
 });
 
