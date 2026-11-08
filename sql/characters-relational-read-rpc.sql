@@ -277,4 +277,85 @@ REVOKE ALL ON FUNCTION public.get_character_relational_document(text) FROM PUBLI
 GRANT EXECUTE ON FUNCTION public.get_character_relational_document(text)
   TO anon, authenticated, service_role;
 
+-- Authorize a campaign character read and assemble its relational document in
+-- one database statement. The campaign, membership, roster, character owner,
+-- and scalar visibility checks therefore describe the same locked snapshot;
+-- the application never needs a service-role fallback between those checks.
+CREATE OR REPLACE FUNCTION public.get_campaign_character_relational_document(
+  p_campaign_id text,
+  p_character_owner_id text,
+  p_character_id text
+)
+RETURNS jsonb LANGUAGE plpgsql SECURITY DEFINER
+SET search_path = pg_catalog, public, auth AS $fn$
+DECLARE
+  v_viewer_id text := auth.uid()::text;
+  v_campaign public.campaigns%ROWTYPE;
+  v_character public.characters%ROWTYPE;
+  v_document jsonb;
+  v_visibility text;
+BEGIN
+  IF v_viewer_id IS NULL THEN
+    RETURN jsonb_build_object('status','unauthorized');
+  END IF;
+
+  SELECT * INTO v_campaign
+  FROM public.campaigns
+  WHERE id = p_campaign_id
+  FOR SHARE;
+  IF NOT FOUND THEN
+    RETURN jsonb_build_object('status','campaign_not_found');
+  END IF;
+
+  IF v_campaign.owner_id IS DISTINCT FROM v_viewer_id THEN
+    PERFORM 1
+    FROM public.campaign_members
+    WHERE campaign_id = p_campaign_id AND user_id = v_viewer_id
+    FOR SHARE;
+    IF NOT FOUND THEN
+      RETURN jsonb_build_object('status','not_member');
+    END IF;
+  END IF;
+
+  IF NOT EXISTS (
+    SELECT 1
+    FROM jsonb_array_elements(
+      CASE WHEN jsonb_typeof(v_campaign.characters) = 'array'
+        THEN v_campaign.characters ELSE '[]'::jsonb END
+    ) AS roster(entry)
+    WHERE coalesce(entry->>'userId', entry->>'user_id') = p_character_owner_id
+      AND coalesce(entry->>'characterId', entry->>'character_id') = p_character_id
+  ) THEN
+    RETURN jsonb_build_object('status','character_not_rostered');
+  END IF;
+
+  SELECT * INTO v_character
+  FROM public.characters
+  WHERE id = p_character_id AND user_id = p_character_owner_id
+  FOR SHARE;
+  IF NOT FOUND THEN
+    RETURN jsonb_build_object('status','character_not_found');
+  END IF;
+
+  v_visibility := coalesce(v_character.visibility, 'private');
+  IF v_visibility = 'private'
+     AND v_viewer_id IS DISTINCT FROM p_character_owner_id
+     AND v_viewer_id IS DISTINCT FROM v_campaign.owner_id THEN
+    RETURN jsonb_build_object('status','private');
+  END IF;
+
+  v_document := public.get_character_relational_document(p_character_id);
+  IF v_document IS NULL THEN
+    RETURN jsonb_build_object('status','character_not_found');
+  END IF;
+
+  RETURN jsonb_build_object('status','ok','character',v_document);
+END;
+$fn$;
+
+REVOKE ALL ON FUNCTION public.get_campaign_character_relational_document(text,text,text)
+  FROM PUBLIC, anon, authenticated, service_role;
+GRANT EXECUTE ON FUNCTION public.get_campaign_character_relational_document(text,text,text)
+  TO authenticated;
+
 COMMIT;

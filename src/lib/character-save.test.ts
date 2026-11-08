@@ -96,7 +96,7 @@ describe('create idempotency key (TASK-738)', () => {
     );
   });
 
-  it('strips clientRequestId from the saved JSON blob on create', () => {
+  it('strips clientRequestId from the saved character document on create', () => {
     const cleaned = prepareCharacterForCreate({
       name: 'Test',
       level: 1,

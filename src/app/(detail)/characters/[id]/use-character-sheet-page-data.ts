@@ -91,6 +91,7 @@ export function useCharacterSheetPageData(id: string) {
 
   const savedCleanRef = useRef<Record<string, unknown> | null>(null);
   const savedSnapshotIdRef = useRef<string | null>(null);
+  const realtimeRefetchGenerationRef = useRef(0);
 
   const setCharacter = useCallback(
     (update: SetStateAction<Character | null>) => {
@@ -290,8 +291,10 @@ export function useCharacterSheetPageData(id: string) {
 
           // Child-table writes surface as a parent timestamp update. Fetch the
           // assembled relational document, then preserve any locally dirty keys.
+          const refetchGeneration = ++realtimeRefetchGenerationRef.current;
           void getCharacter(charId)
             .then((result) => {
+              if (refetchGeneration !== realtimeRefetchGenerationRef.current) return;
               const remote = result.character;
               if (!remote) return;
               setCharacter((prev) => {
@@ -313,6 +316,7 @@ export function useCharacterSheetPageData(id: string) {
       )
       .subscribe();
     return () => {
+      realtimeRefetchGenerationRef.current += 1;
       supabase.removeChannel(channel);
     };
   }, [character?.id, setCharacter]);

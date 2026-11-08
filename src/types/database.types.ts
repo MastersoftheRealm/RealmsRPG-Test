@@ -957,7 +957,6 @@ export type Database = {
           currency: number | null;
           current_energy: number | null;
           current_health: number | null;
-          data: NonNullable<Json>;
           defense_discernment: number | null;
           defense_fortitude: number | null;
           defense_mental_fortitude: number | null;
@@ -1033,7 +1032,6 @@ export type Database = {
           currency?: number | null;
           current_energy?: number | null;
           current_health?: number | null;
-          data: NonNullable<Json>;
           defense_discernment?: number | null;
           defense_fortitude?: number | null;
           defense_mental_fortitude?: number | null;
@@ -1109,7 +1107,6 @@ export type Database = {
           currency?: number | null;
           current_energy?: number | null;
           current_health?: number | null;
-          data?: NonNullable<Json>;
           defense_discernment?: number | null;
           defense_fortitude?: number | null;
           defense_mental_fortitude?: number | null;
@@ -3210,6 +3207,18 @@ export type Database = {
       [_ in never]: never;
     };
     Functions: {
+      add_campaign_character_relational: {
+        Args: {
+          p_actor_id: string;
+          p_campaign_id: string;
+          p_character_id: string;
+          p_expected_updated_at: string | null;
+          p_max_campaign_characters: number;
+          p_owner_max_characters: number;
+          p_roster_entry: Json;
+        };
+        Returns: Json;
+      };
       _official_power_rebuilt_mechanic_part_names: {
         Args: {
           p_action_type: string;
@@ -3227,13 +3236,42 @@ export type Database = {
         Args: { p_character_id: string; p_client_request_id?: string; p_document: Json };
         Returns: Json;
       };
+      get_campaign_character_relational_document: {
+        Args: {
+          p_campaign_id: string;
+          p_character_id: string;
+          p_character_owner_id: string;
+        };
+        Returns: Json;
+      };
       get_character_relational_document: { Args: { p_character_id: string }; Returns: Json };
+      join_campaign_character_relational: {
+        Args: {
+          p_actor_id: string;
+          p_character_id: string;
+          p_expected_updated_at: string | null;
+          p_invite_code: string;
+          p_max_campaign_characters: number;
+          p_max_players_per_campaign: number;
+          p_roster_entry: Json;
+        };
+        Returns: Json;
+      };
       patch_character_relational: {
         Args: { p_character_id: string; p_expected_updated_at?: string; p_patch: Json };
         Returns: Json;
       };
       provision_character_relational: {
         Args: { p_character_id: string; p_document: Json; p_owner_id: string };
+        Returns: Json;
+      };
+      remove_campaign_character_relational: {
+        Args: {
+          p_actor_id: string;
+          p_campaign_id: string;
+          p_character_id: string;
+          p_character_owner_id: string;
+        };
         Returns: Json;
       };
       insert_character_inventory_item: {

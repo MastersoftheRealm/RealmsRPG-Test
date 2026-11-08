@@ -9,6 +9,7 @@ import {
   verifyMutationRequest,
   verifyRequestOrigin,
   campaignsListQuerySchema,
+  characterUpdateSchema,
 } from './api-validation';
 
 const schema = z.object({ name: z.string().min(1) });
@@ -227,4 +228,20 @@ describe('validateQuery', () => {
     expect(result.success).toBe(true);
     if (result.success) expect(result.data.full).toBe('true');
   });
+});
+
+describe('characterUpdateSchema lock token', () => {
+  it.each(['2026-11-07T20:50:00.123', '2026-11-07T20:50:00.123Z', '2026-11-07T20:50:00.123-07:00'])(
+    'accepts an ISO timestamp emitted by the database (%s)',
+    (updatedAt) => {
+      expect(characterUpdateSchema.safeParse({ updatedAt }).success).toBe(true);
+    },
+  );
+
+  it.each(['not-a-timestamp', '2026-99-99T20:50:00Z', '2026-11-07'])(
+    'rejects a lock token PostgreSQL cannot safely cast (%s)',
+    (updatedAt) => {
+      expect(characterUpdateSchema.safeParse({ updatedAt }).success).toBe(false);
+    },
+  );
 });

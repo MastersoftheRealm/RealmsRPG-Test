@@ -11,6 +11,18 @@ export type CharacterPatchResult =
   | { status: 'conflict'; updatedAt?: string | undefined }
   | { status: 'not_found' };
 
+type CampaignCharacterReadResult =
+  | { status: 'ok'; character: CharacterDocument }
+  | {
+      status:
+        | 'unauthorized'
+        | 'campaign_not_found'
+        | 'not_member'
+        | 'character_not_rostered'
+        | 'character_not_found'
+        | 'private';
+    };
+
 function rpc(client: TypedSupabaseClient): RpcCall {
   return client.rpc.bind(client) as unknown as RpcCall;
 }
@@ -22,52 +34,6 @@ function objectResult(value: unknown, label: string): CharacterDocument {
   return value as CharacterDocument;
 }
 
-function stableJson(value: unknown): string {
-  if (Array.isArray(value)) return `[${value.map(stableJson).join(',')}]`;
-  if (value && typeof value === 'object') {
-    const record = value as Record<string, unknown>;
-    return `{${Object.keys(record)
-      .sort()
-      .map((key) => `${JSON.stringify(key)}:${stableJson(record[key])}`)
-      .join(',')}}`;
-  }
-  return JSON.stringify(value) ?? 'undefined';
-}
-
-function differingTopLevelKeys(left: CharacterDocument, right: CharacterDocument): string[] {
-  const keys = new Set([...Object.keys(left), ...Object.keys(right)]);
-  return [...keys].filter((key) => stableJson(left[key]) !== stableJson(right[key])).sort();
-}
-
-async function shadowCompare(
-  client: TypedSupabaseClient,
-  characterId: string,
-  relational: CharacterDocument,
-): Promise<void> {
-  if (process.env.CHARACTER_RELATIONAL_SHADOW_COMPARE !== 'true') return;
-  const { data, error } = await client
-    .from('characters')
-    .select('data')
-    .eq('id', characterId)
-    .maybeSingle();
-  if (error) {
-    console.warn('[character relational shadow] mirror read failed', {
-      characterId,
-      code: error.code,
-    });
-    return;
-  }
-  const mirror = data?.data;
-  if (!mirror || typeof mirror !== 'object' || Array.isArray(mirror)) return;
-  const differingKeys = differingTopLevelKeys(relational, mirror as CharacterDocument);
-  if (differingKeys.length > 0) {
-    console.warn('[character relational shadow] document mismatch', {
-      characterId,
-      differingKeys,
-    });
-  }
-}
-
 export async function getRelationalCharacterDocument(
   client: TypedSupabaseClient,
   characterId: string,
@@ -77,9 +43,37 @@ export async function getRelationalCharacterDocument(
   });
   if (error) throw error;
   if (data === null) return null;
-  const document = objectResult(data, 'get_character_relational_document');
-  await shadowCompare(client, characterId, document);
-  return document;
+  return objectResult(data, 'get_character_relational_document');
+}
+
+export async function getCampaignRelationalCharacterDocument(
+  client: TypedSupabaseClient,
+  input: { campaignId: string; characterOwnerId: string; characterId: string },
+): Promise<CampaignCharacterReadResult> {
+  const { data, error } = await rpc(client)('get_campaign_character_relational_document', {
+    p_campaign_id: input.campaignId,
+    p_character_owner_id: input.characterOwnerId,
+    p_character_id: input.characterId,
+  });
+  if (error) throw error;
+  const result = objectResult(data, 'get_campaign_character_relational_document');
+  if (result.status === 'ok') {
+    return {
+      status: 'ok',
+      character: objectResult(result.character, 'get_campaign_character_relational_document'),
+    };
+  }
+  if (
+    result.status === 'unauthorized' ||
+    result.status === 'campaign_not_found' ||
+    result.status === 'not_member' ||
+    result.status === 'character_not_rostered' ||
+    result.status === 'character_not_found' ||
+    result.status === 'private'
+  ) {
+    return { status: result.status };
+  }
+  throw new Error('get_campaign_character_relational_document returned an invalid status');
 }
 
 export async function createRelationalCharacter(

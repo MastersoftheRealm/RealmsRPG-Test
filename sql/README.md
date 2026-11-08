@@ -9,25 +9,45 @@
 | Path | Purpose |
 |------|---------|
 | [`_TEMPLATE_new_table.sql`](_TEMPLATE_new_table.sql) | Required pattern for any **new** `public` table: RLS, policies, and explicit `GRANT` in the same file. CI scans changed `sql/**/*.sql` (except this template and `schema/` baselines). |
-| [`characters-relational-*.sql`](characters-relational-audit.sql) | ADR-0030 local-only relational character expansion, compatibility cutover, RPCs, verification, and rollback-safe smoke test. Not approved for the live project. |
+| [`characters-relational-*.sql`](characters-relational-audit.sql) | ADR-0030 relational character expansion, compatibility and contract migrations, RPCs, verification, and rollback-safe smoke tests. Production application still requires Kadin's explicit approval and a fresh backup. |
 | [`vtt-v1-tabletop.sql`](vtt-v1-tabletop.sql) | Virtual tabletop schema for branch-local development. Verify target state and obtain approval before applying outside the branch's local database. |
 | [`codex-rename-source.sql`](codex-rename-source.sql) | Admin utility: replaces `public.rename_codex_source` only. Safe to re-run on non-prod when Kadin approves; first real rename is a live data change and needs a backup. |
 | [`schema/0000_baseline_2026-08-13.sql`](schema/0000_baseline_2026-08-13.sql) | Committed `pg_dump --schema-only` snapshot (**stale** vs live — regenerate before relying on it). |
 
-**Relational characters (ADR-0030 compatibility cutover):** Run
+**Relational characters (ADR-0030):** Run
 [`characters-relational-audit.sql`](characters-relational-audit.sql) read-only
-against the target database first. The additive expansion is applied to the
-owner's local database only. After explicit high-risk approval, apply the
-remaining compatibility phase in this order:
+against the target database first. After explicit high-risk approval, apply the
+expansion and compatibility phase in this order:
 
-1. [`characters-relational-cutover.sql`](characters-relational-cutover.sql)
-2. [`characters-relational-read-rpc.sql`](characters-relational-read-rpc.sql)
-3. [`characters-relational-write-rpc.sql`](characters-relational-write-rpc.sql)
-4. [`characters-relational-cutover-test.sql`](characters-relational-cutover-test.sql)
+1. [`characters-relational-expand.sql`](characters-relational-expand.sql)
+2. [`characters-relational-expand-verify.sql`](characters-relational-expand-verify.sql)
+3. [`characters-relational-cutover.sql`](characters-relational-cutover.sql)
+4. [`characters-relational-read-rpc.sql`](characters-relational-read-rpc.sql)
+5. [`characters-relational-write-rpc.sql`](characters-relational-write-rpc.sql)
+6. [`characters-relational-cutover-test.sql`](characters-relational-cutover-test.sql)
 
-The smoke test rolls back its fixtures. The compatibility phase intentionally
-keeps and mirrors `characters.data`; no contract drop is approved. Use the
-expand verifier plus the cutover smoke test before application testing.
+The compatibility smoke test rolls back its fixtures and covers mirror/lock parity, direct
+child-write denial, and atomic campaign character join/add/remove/read paths.
+The write phase first rebuilds every existing compatibility mirror from the
+relational reader without changing its authoritative `updated_at` lock value.
+The compatibility phase intentionally retains the legacy column for rollback.
+Use the expansion verifier plus the cutover smoke test before application QA.
+
+After parity QA, deploy the relational-only application code in this branch.
+That code never reads or writes the legacy character column. With another
+read-only audit, Kadin's explicit approval, and a fresh backup, apply:
+
+1. [`characters-relational-contract.sql`](characters-relational-contract.sql)
+2. [`characters-relational-contract-test.sql`](characters-relational-contract-test.sql)
+
+The contract migration takes an exclusive character-table lock, refuses to
+continue unless every stored document exactly matches the relational reader,
+removes the compatibility trigger, replaces the create/apply/provision RPCs,
+and drops the legacy column in one transaction. The contract smoke test proves
+create, idempotent replay, patch, provision, and relational reads without that
+column. No application code deployment is required between contract and drop;
+the drop is part of the contract transaction. Recovery after it requires the
+fresh pre-contract backup.
 
 **`supabase_migrations.schema_migrations`:** After a reset around **2026-09-26**, the live table has **7 rows** only (`remote_schema`, three `86e3*` migrations, `codex_entry_sources`, `codex_entry_sources_open`). Do not treat this README or old docs as a full migration catalog.
 

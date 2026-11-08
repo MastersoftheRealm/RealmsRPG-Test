@@ -162,16 +162,22 @@ If Supabase logs show **`permission denied for table user_species`**, the `authe
 
 | Table | Shape | Key columns |
 |-------|--------|-------------|
-| `characters` | Relational + compatibility mirror | id (PK), user_id (FK → user_profiles), scalar identity/resources/abilities/defenses/preferences, created_at, updated_at, client_request_id; `data` retained temporarily |
+| `characters` | Relational | id (PK), user_id (FK → user_profiles), scalar identity/resources/abilities/defenses/preferences, created_at, updated_at, client_request_id |
 | `character_*` (14 tables) | Relational children | ordered species, feats, skills, traits, powers, techniques, inventory, conditions, named notes, archetype choices, proficiencies, temp modifiers, affiliations, ability components |
 
-**ADR-0030:** The relational expansion is applied to the owner's local database,
-not live. The compatibility cutover SQL is prepared but awaits explicit
-high-risk approval. It adds `innate_energy`, `training_points_spent`, relational
-read/create/patch/provision RPCs, and maintains `data` as an exact rollback
-mirror. Application reads and writes use the relational boundary. The final
-`data` drop remains a separate contract phase after parity QA. Realtime remains
-on `public.characters`; child writes touch the parent lock timestamp.
+**ADR-0030:** The target schema is fully relational. The staged rollout first adds
+`innate_energy`, `training_points_spent`, relational read/create/patch/provision
+RPCs, and a temporary exact rollback mirror. After parity QA and deployment of
+the relational-only application, `characters-relational-contract.sql` verifies
+exact parity, replaces the remaining compatibility RPC bodies, and drops the
+legacy column atomically. The live project remains unchanged until the owner-approved
+migrations run. Realtime remains on `public.characters`; child writes touch the
+parent lock timestamp. Direct
+authenticated child-table writes have no RLS policy and are denied; the
+security-definer persistence RPCs are the only write boundary.
+The compatibility write phase canonicalizes every existing mirror from the
+relational reader while preserving the authoritative `updated_at` value,
+including null; the contract parity guard then prevents a drifted drop.
 
 **Dirty-key PATCH + `updated_at` lock (TASK-741 / ADR-0013 / TASK-786):** `PATCH /api/characters/[id]` merges only keys present in the body (not a full-document smash). A present `null` removes that key, which is how a cleared sheet value is saved (86e3juw04). When the client sends `updatedAt` matching `characters.updated_at`, the UPDATE also `.eq('updated_at', <just read>)`; mismatch or a lost race → **409** `{ error: string }`. Success returns `{ ok: true, updatedAt }`. The route stamps `updated_at` on every PATCH; create/duplicate stamp it on insert so the first sheet save can lock. The client keeps the newest token in memory and queues same-id PATCHes so sheet autosave and encounter resource sync do not 409 each other.
 
@@ -179,7 +185,7 @@ on `public.characters`; child writes touch the parent lock timestamp.
 
 **Character save legality advisory (TASK-738, B5):** Level **1** create/save still returns **400** `{ error, details }` when blocking violations are found. Level **2+** compares document totals to level budgets (B5 scope; level-up spend **history** is B6). Over-budget at 2+ returns **200** with structured `legalityWarnings` (codes + numbers). Missing `core_rules` → `legalityUncomputable: ['core_rules_unavailable']`. Feat catalog failure → save succeeds with `feat_catalog_unavailable`. Duplicate POST and idempotent replay omit legality fields. Prevention gate: `scripts/check-character-legality-all-levels.mjs`.
 
-**Character `data` JSON (app-owned, no DB migration for new keys):** Feats are lean entries `{ id, currentUses?, customName?, note? }` on `feats` / `archetypeFeats`; trait player labels live in `traitCustomizations` (map of trait id → `{ customName?, note? }`). Codex names/descriptions are enriched on load, not stored on save.
+**Character document contract:** The HTTP shape remains JSON, but persistence is scalar `characters` columns plus typed `character_*` children. Feats are lean entries `{ id, currentUses?, customName?, note? }` on `feats` / `archetypeFeats`; trait player labels live in `traitCustomizations` (map of trait id → `{ customName?, note? }`). Codex names/descriptions are enriched on load, not stored on save.
 
 **Temp Modifier (`tempModifiers`, ADR-0006 / TASK-585 / TASK-782):** Optional sparse object of integer Bonus/Penalty deltas layered on display/computed values (not allocation bases). Keys include `speed`, `evasion`, `damageReduction`, `criticalRange`, `terminal`, `abilities` (partial ability map), `defenses` (partial defense-name map), `skills` (skill id → delta), and optional `applyAbilityToResourceMaxima` (boolean; default omit/false — ability temps do not change max Health/Energy/TP maxima unless true). Persist via `cleanForSave` / `SAVEABLE_FIELDS`; normalize zeros out with `normalizeTempModifiers`. UI chrome: sheet-level Edit vs Temp toolbar (TASK-782). Surface wiring: TASK-586.
 
@@ -208,6 +214,8 @@ Membership source of truth: `campaign_members`. Realtime: `public.campaign_rolls
 **Roster JSON (86e3jryyt) — applied 2026-10-09 on RealmsRPG-Test:** Trigger `campaigns_roster_members_only` runs before insert or before update of `characters`. A signed-in owner can add a roster entry only for their own character. The service role can add another user’s character only when that user already has a `campaign_members` row and owns the character. Entries already stored stay, including a slot whose character row is gone. `campaign_members` policies are unchanged. Migration `campaign_roster_members_only` (`20261009202856`). Historical replay script (was `sql/86e3jryyt-campaign-roster-members-only.sql`, deleted 2026-10-29) in git history (already applied on RealmsRPG-Test; verify policies in the live database rather than re-pasting).
 
 **Join-by-invite (app behavior):** RLS on `campaigns` allows SELECT only for the owner or existing members, so a new player cannot load a campaign row with the normal user-scoped Supabase client. The app uses **`SUPABASE_SERVICE_ROLE_KEY`** (server-only) in `joinCampaignAction` and in `GET /api/campaigns/invite/[code]` to look up by `invite_code` and update roster/members after the user is authenticated and character ownership is verified.
+
+**Relational character campaign boundary (ADR-0030, staged locally):** Character join/add mutations use service-only RPCs so membership, roster, and any required visibility promotion commit or roll back together. Character removal changes roster and membership in one RPC. The campaign character view route uses an authenticated RPC that locks and verifies campaign membership, roster placement, character ownership, and scalar visibility before assembling the relational document; it does not use a service-role read fallback.
 
 **RLS (`campaign_members`) — applied 2026-10-09 on RealmsRPG-Test (86e3jryyr):** Authenticated INSERT is `campaign_members_insert_owner_self`: `private.auth_is_campaign_owner(campaign_id)` AND `user_id = auth.uid()`. A signed-in user cannot insert their own row on a campaign they do not own, and cannot insert another user's row. There is no UPDATE policy (`campaign_members_update_self` is dropped), so a membership row cannot be moved onto another campaign. SELECT remains `campaign_members_select_participants` (self or owner). DELETE remains `campaign_members_delete_owner_or_self` (self or owner). A valid invite code is the only way to join a campaign you do not own; that write uses the service role in `joinCampaignAction`. The owner still inserts their own membership with the user client in `createCampaignAction`. Historical replay script (was `sql/86e3jryyr-campaign-members-insert-owner-self.sql`, deleted 2026-10-29) in git history (already applied on RealmsRPG-Test; verify policies in the live database rather than re-pasting).
 

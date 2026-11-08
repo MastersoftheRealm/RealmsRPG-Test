@@ -1,5 +1,5 @@
 /**
- * Notes tab section order and visibility (character JSON — no schema migration).
+ * Notes tab section order and visibility in relational character state.
  * Mirrors library tab visibility: hidden sections stay visible in edit mode.
  */
 

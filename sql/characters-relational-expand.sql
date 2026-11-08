@@ -317,8 +317,11 @@ CREATE TABLE IF NOT EXISTS public.character_ability_components (
   PRIMARY KEY (character_id, component_kind)
 );
 
--- Parent visibility is the read authority. Writes are owner-only. RLS on
--- children prevents direct cross-user access even if a grant is broadened later.
+-- Parent visibility is the read authority. Child writes are intentionally
+-- unavailable through PostgREST: all mutations must cross the transactional
+-- character RPC boundary so the parent lock and compatibility mirror advance
+-- with the child rows. The table grants remain explicit as required for public
+-- tables; RLS denies authenticated writes because no write policy exists.
 DO $policy$
 DECLARE child text;
 BEGIN
@@ -333,12 +336,43 @@ BEGIN
     EXECUTE format('DROP POLICY IF EXISTS character_child_select ON public.%I', child);
     EXECUTE format('CREATE POLICY character_child_select ON public.%I FOR SELECT TO anon, authenticated USING (EXISTS (SELECT 1 FROM public.characters c WHERE c.id = character_id))', child);
     EXECUTE format('DROP POLICY IF EXISTS character_child_write ON public.%I', child);
-    EXECUTE format('CREATE POLICY character_child_write ON public.%I FOR ALL TO authenticated USING (EXISTS (SELECT 1 FROM public.characters c WHERE c.id = character_id AND c.user_id = (SELECT auth.uid())::text)) WITH CHECK (EXISTS (SELECT 1 FROM public.characters c WHERE c.id = character_id AND c.user_id = (SELECT auth.uid())::text))', child);
-    EXECUTE format('GRANT SELECT ON public.%I TO anon', child);
-    EXECUTE format('GRANT SELECT, INSERT, UPDATE, DELETE ON public.%I TO authenticated', child);
   END LOOP;
 END;
 $policy$;
+
+GRANT SELECT ON TABLE
+  public.character_species,
+  public.character_feats,
+  public.character_skills,
+  public.character_traits,
+  public.character_powers,
+  public.character_techniques,
+  public.character_inventory,
+  public.character_conditions,
+  public.character_named_notes,
+  public.character_archetype_choices,
+  public.character_proficiencies,
+  public.character_temp_modifiers,
+  public.character_affiliations,
+  public.character_ability_components
+TO anon;
+
+GRANT SELECT, INSERT, UPDATE, DELETE ON TABLE
+  public.character_species,
+  public.character_feats,
+  public.character_skills,
+  public.character_traits,
+  public.character_powers,
+  public.character_techniques,
+  public.character_inventory,
+  public.character_conditions,
+  public.character_named_notes,
+  public.character_archetype_choices,
+  public.character_proficiencies,
+  public.character_temp_modifiers,
+  public.character_affiliations,
+  public.character_ability_components
+TO authenticated, service_role;
 
 -- These identity-backed child tables use bigserial nowhere, so no sequence grant.
 -- Foreign ownership is checked when a private-library FK is assigned.
