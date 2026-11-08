@@ -154,7 +154,33 @@ const OVERSIZE_HEADERS = {
   origin: 'http://localhost',
 } as const;
 
-function userLibraryCreateClient() {
+type MockCountSelectResult = { data: null; error: null; count: number };
+type MockListSelectResult = { data: unknown[]; error: null };
+
+type UserLibraryMockClient = {
+  from: ReturnType<typeof vi.fn>;
+  inserts: string[];
+};
+
+const USER_LIBRARY_TABLES = new Set([
+  'user_powers',
+  'user_techniques',
+  'user_empowered_techniques',
+  'user_items',
+  'user_creatures',
+  'user_species',
+]);
+
+function makeEqThenChain<T extends MockCountSelectResult | MockListSelectResult>(result: T) {
+  const filters = {
+    eq: vi.fn(() => filters),
+    then: (resolve: (value: T) => unknown, reject?: (reason: unknown) => unknown) =>
+      Promise.resolve(result).then(resolve, reject),
+  };
+  return filters;
+}
+
+function userLibraryCreateClient(): UserLibraryMockClient {
   const inserts: string[] = [];
   const from = vi.fn((table: string) => {
     if (table === 'user_profiles') {
@@ -181,17 +207,12 @@ function userLibraryCreateClient() {
     }
     return {
       select: vi.fn((_columns: string, query?: { head?: boolean }) => {
-        const result = query?.head
-          ? { data: null, error: null, count: 0 }
-          : { data: [], error: null };
-        const filters = {
-          eq: vi.fn(() => filters),
-          then: (
-            resolve: (value: typeof result) => unknown,
-            reject?: (reason: unknown) => unknown,
-          ) => Promise.resolve(result).then(resolve, reject),
-        };
-        return filters;
+        if (query?.head) {
+          const headResult: MockCountSelectResult = { data: null, error: null, count: 0 };
+          return makeEqThenChain(headResult);
+        }
+        const listResult: MockListSelectResult = { data: [], error: null };
+        return makeEqThenChain(listResult);
       }),
       insert: vi.fn(async () => {
         inserts.push(table);
@@ -200,6 +221,63 @@ function userLibraryCreateClient() {
     };
   });
   return { from, inserts };
+}
+
+function createUserLibraryRoundTripClient(): {
+  client: UserLibraryMockClient;
+  getListedRow: () => Record<string, unknown> | null;
+} {
+  let listedRow: Record<string, unknown> | null = null;
+  const inserts: string[] = [];
+
+  const from = vi.fn((table: string) => {
+    if (table === 'user_profiles') {
+      return {
+        select: vi.fn(() => ({
+          eq: vi.fn(() => ({
+            maybeSingle: vi.fn(async () => ({
+              data: { id: OWNER.uid, role: 'new_player' },
+              error: null,
+            })),
+          })),
+        })),
+        insert: vi.fn(async () => ({ data: null, error: null })),
+      };
+    }
+    if (table === 'role_policies') {
+      return {
+        select: vi.fn(() => ({
+          eq: vi.fn(() => ({
+            maybeSingle: vi.fn(async () => ({ data: null, error: null })),
+          })),
+        })),
+      };
+    }
+    if (!USER_LIBRARY_TABLES.has(table)) {
+      throw new Error(`Unexpected table: ${table}`);
+    }
+    return {
+      select: vi.fn((_columns: string, query?: { head?: boolean }) => {
+        if (query?.head) {
+          const headResult: MockCountSelectResult = { data: null, error: null, count: 0 };
+          return makeEqThenChain(headResult);
+        }
+        const listData: unknown[] = listedRow ? [listedRow] : [];
+        const listResult: MockListSelectResult = { data: listData, error: null };
+        return makeEqThenChain(listResult);
+      }),
+      insert: vi.fn((row: Record<string, unknown>) => {
+        listedRow = { ...row };
+        inserts.push(table);
+        return Promise.resolve({ data: null, error: null });
+      }),
+    };
+  });
+
+  return {
+    client: { from, inserts },
+    getListedRow: () => listedRow,
+  };
 }
 
 describe('B7 matrix — crafting PATCH', () => {
@@ -737,76 +815,7 @@ describe('B7 matrix — user library item PATCH/DELETE', () => {
   });
 
   it('user library POST then GET returns the normalized persisted shape (powers)', async () => {
-    const client = userLibraryCreateClient();
-    let listedRow: Record<string, unknown> | null = null;
-    const libraryTables = new Set([
-      'user_powers',
-      'user_techniques',
-      'user_empowered_techniques',
-      'user_items',
-      'user_creatures',
-      'user_species',
-    ]);
-
-    client.from = vi.fn((table: string) => {
-      if (table === 'user_profiles') {
-        return {
-          select: vi.fn(() => ({
-            eq: vi.fn(() => ({
-              maybeSingle: vi.fn(async () => ({
-                data: { id: OWNER.uid, role: 'new_player' },
-                error: null,
-              })),
-            })),
-          })),
-          insert: vi.fn(async () => ({ data: null, error: null })),
-        };
-      }
-      if (table === 'role_policies') {
-        return {
-          select: vi.fn(() => ({
-            eq: vi.fn(() => ({
-              maybeSingle: vi.fn(async () => ({ data: null, error: null })),
-            })),
-          })),
-        };
-      }
-      if (!libraryTables.has(table)) {
-        throw new Error(`Unexpected table: ${table}`);
-      }
-      return {
-        select: vi.fn((_columns: string, query?: { head?: boolean }) => {
-          if (query?.head) {
-            const headFilters = {
-              eq: vi.fn(() => headFilters),
-              then: (
-                resolve: (value: { data: null; error: null; count: number }) => unknown,
-                reject?: (reason: unknown) => unknown,
-              ) => Promise.resolve({ data: null, error: null, count: 0 }).then(resolve, reject),
-            };
-            return headFilters;
-          }
-          const listFilters = {
-            eq: vi.fn(() => listFilters),
-            then: (
-              resolve: (value: { data: unknown[]; error: null }) => unknown,
-              reject?: (reason: unknown) => unknown,
-            ) =>
-              Promise.resolve({
-                data: listedRow ? [listedRow] : [],
-                error: null,
-              }).then(resolve, reject),
-          };
-          return listFilters;
-        }),
-        insert: vi.fn((row: Record<string, unknown>) => {
-          listedRow = { ...row };
-          client.inserts.push(table);
-          return Promise.resolve({ data: null, error: null });
-        }),
-      };
-    });
-
+    const { client, getListedRow } = createUserLibraryRoundTripClient();
     mockCreateClient.mockResolvedValue(client as never);
 
     const validBody = VALID_OFFICIAL_BODY.powers;
@@ -820,6 +829,7 @@ describe('B7 matrix — user library item PATCH/DELETE', () => {
     );
     expect(postResponse.status).toBe(200);
     const postBody = (await postResponse.json()) as { id: string };
+    const listedRow = getListedRow();
     expect(listedRow).not.toBeNull();
     expect(postBody.id).toBe(listedRow!.id);
 
@@ -831,7 +841,7 @@ describe('B7 matrix — user library item PATCH/DELETE', () => {
     const items = (await getResponse.json()) as Record<string, unknown>[];
     expect(items).toHaveLength(1);
     expect(items[0]?.id).toBe(postBody.id);
-    expect(items[0]?.id).toBe(listedRow!.id);
+    expect(items[0]?.id).toBe(getListedRow()!.id);
     expect(items[0]).toMatchObject({
       name: validBody.name,
       parts: [],
