@@ -41,12 +41,28 @@ WITH character_references AS (
       THEN c.data->'conditions' ELSE '[]'::jsonb END) AS conditions,
     jsonb_array_length(CASE WHEN jsonb_typeof(c.data->'namedNotes') = 'array'
       THEN c.data->'namedNotes' ELSE '[]'::jsonb END) AS named_notes,
+    (SELECT count(*) FROM jsonb_object_keys(
+      CASE WHEN jsonb_typeof(c.data->'librarySectionVisibility') = 'object'
+        THEN c.data->'librarySectionVisibility' ELSE '{}'::jsonb END
+    )) AS library_section_preferences,
+    (SELECT count(DISTINCT section_id) FROM (
+      SELECT value AS section_id FROM jsonb_array_elements_text(
+        CASE WHEN jsonb_typeof(c.data->'notesSectionOrder') = 'array'
+          THEN c.data->'notesSectionOrder' ELSE '[]'::jsonb END
+      )
+      UNION ALL
+      SELECT key FROM jsonb_object_keys(
+        CASE WHEN jsonb_typeof(c.data->'notesSectionVisibility') = 'object'
+          THEN c.data->'notesSectionVisibility' ELSE '{}'::jsonb END
+      ) key
+    ) note_sections) AS note_section_preferences,
     coalesce((SELECT entries FROM ref_counts r WHERE r.id=c.id AND key='proficiencies'),0)
       AS proficiencies
   FROM public.characters c
 ), actual AS (
   SELECT e.id, e.feats, e.archetype_feats, e.powers, e.techniques,
-         e.skills, e.conditions, e.named_notes, e.proficiencies,
+         e.skills, e.conditions, e.named_notes, e.library_section_preferences,
+         e.note_section_preferences, e.proficiencies,
     (SELECT count(*) FROM public.character_feats f
       WHERE f.character_id = e.id AND f.feat_kind = 'character') AS stored_feats,
     (SELECT count(*) FROM public.character_feats f
@@ -61,6 +77,10 @@ WITH character_references AS (
       WHERE x.character_id = e.id) AS stored_conditions,
     (SELECT count(*) FROM public.character_named_notes n
       WHERE n.character_id = e.id) AS stored_named_notes,
+    (SELECT count(*) FROM public.character_library_section_preferences p
+      WHERE p.character_id = e.id) AS stored_library_section_preferences,
+    (SELECT count(*) FROM public.character_note_section_preferences p
+      WHERE p.character_id = e.id) AS stored_note_section_preferences,
     (SELECT count(*) FROM public.character_proficiencies p
       WHERE p.character_id = e.id) AS stored_proficiencies
   FROM expected e
@@ -74,13 +94,20 @@ SELECT id,
     CASE WHEN skills <> stored_skills THEN 'skills' END,
     CASE WHEN conditions <> stored_conditions THEN 'conditions' END,
     CASE WHEN named_notes <> stored_named_notes THEN 'namedNotes' END,
+    CASE WHEN library_section_preferences <> stored_library_section_preferences
+      THEN 'librarySectionVisibility' END,
+    CASE WHEN note_section_preferences <> stored_note_section_preferences
+      THEN 'notesSectionPreferences' END,
     CASE WHEN proficiencies <> stored_proficiencies THEN 'proficiencies' END
   ], NULL) AS mismatched_collections
 FROM actual
 WHERE feats <> stored_feats OR archetype_feats <> stored_archetype_feats
    OR powers <> stored_powers OR techniques <> stored_techniques
    OR skills <> stored_skills OR conditions <> stored_conditions
-   OR named_notes <> stored_named_notes OR proficiencies <> stored_proficiencies
+   OR named_notes <> stored_named_notes
+   OR library_section_preferences <> stored_library_section_preferences
+   OR note_section_preferences <> stored_note_section_preferences
+   OR proficiencies <> stored_proficiencies
 ORDER BY id;
 
 -- Canonical scalar values. `experience` wins over the legacy `xp` alias;
@@ -119,4 +146,12 @@ SELECT 'character_feats', count(*) FROM public.character_feats f
   WHERE NOT EXISTS (SELECT 1 FROM public.characters c WHERE c.id = f.character_id)
 UNION ALL
 SELECT 'character_inventory', count(*) FROM public.character_inventory i
-  WHERE NOT EXISTS (SELECT 1 FROM public.characters c WHERE c.id = i.character_id);
+  WHERE NOT EXISTS (SELECT 1 FROM public.characters c WHERE c.id = i.character_id)
+UNION ALL
+SELECT 'character_library_section_preferences', count(*)
+  FROM public.character_library_section_preferences p
+  WHERE NOT EXISTS (SELECT 1 FROM public.characters c WHERE c.id = p.character_id)
+UNION ALL
+SELECT 'character_note_section_preferences', count(*)
+  FROM public.character_note_section_preferences p
+  WHERE NOT EXISTS (SELECT 1 FROM public.characters c WHERE c.id = p.character_id);

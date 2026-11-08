@@ -162,8 +162,8 @@ If Supabase logs show **`permission denied for table user_species`**, the `authe
 
 | Table | Shape | Key columns |
 |-------|--------|-------------|
-| `characters` | Relational | id (PK), user_id (FK → user_profiles), scalar identity/resources/abilities/defenses/preferences, created_at, updated_at, client_request_id |
-| `character_*` (14 tables) | Relational children | ordered species, feats, skills, traits, powers, techniques, inventory, conditions, named notes, archetype choices, proficiencies, temp modifiers, affiliations, ability components |
+| `characters` | Relational | id (PK), user_id (FK → user_profiles), scalar identity/resources/abilities/defenses/preferences, nullable archetype path FK + lossless unresolved snapshot, created_at, updated_at, client_request_id |
+| `character_*` (16 tables) | Relational children | ordered species, feats, skills, traits, powers, techniques, inventory, conditions, named notes, library/notes section preferences, archetype choices, proficiencies, temp modifiers, affiliations, ability components |
 
 **ADR-0030:** The target schema is fully relational. The staged rollout first adds
 `innate_energy`, `training_points_spent`, relational read/create/patch/provision

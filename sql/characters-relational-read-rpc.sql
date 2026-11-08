@@ -42,7 +42,7 @@ SELECT jsonb_strip_nulls(jsonb_build_object(
   'mart_prof', c.mart_prof,
   'pow_abil', c.pow_abil,
   'mart_abil', c.mart_abil,
-  'archetypePathId', c.archetype_path_id,
+  'archetypePathId', coalesce(c.archetype_path_id_snapshot,c.archetype_path_id),
   'archetype', CASE WHEN c.archetype_source_id IS NOT NULL
                          OR c.archetype_category IS NOT NULL
     THEN jsonb_strip_nulls(jsonb_build_object(
@@ -138,7 +138,8 @@ SELECT jsonb_strip_nulls(jsonb_build_object(
       'description',x.description)) ORDER BY x.position),'[]'::jsonb)
     FROM public.character_conditions x WHERE x.character_id=c.id),
   'namedNotes', (SELECT coalesce(jsonb_agg(jsonb_strip_nulls(jsonb_build_object(
-      'id',n.note_id,'name',n.name,'content',n.content)) ORDER BY n.position),'[]'::jsonb)
+      'id',n.note_id,'name',n.name,'content',n.content,
+      'hidden',n.hidden)) ORDER BY n.position),'[]'::jsonb)
     FROM public.character_named_notes n WHERE n.character_id=c.id),
   'archetypeChoices', (SELECT jsonb_object_agg(a.milestone_level::text,a.choice)
     FROM public.character_archetype_choices a WHERE a.character_id=c.id),
@@ -247,6 +248,14 @@ SELECT jsonb_strip_nulls(jsonb_build_object(
       'feats',c.library_feats_visible,
       'proficiencies',c.library_proficiencies_visible,
       'notes',c.library_notes_visible)) END,
+  'librarySectionVisibility', (SELECT jsonb_object_agg(p.section_id,p.visible)
+    FROM public.character_library_section_preferences p WHERE p.character_id=c.id),
+  'notesSectionOrder', (SELECT jsonb_agg(p.section_id ORDER BY p.position)
+    FROM public.character_note_section_preferences p
+    WHERE p.character_id=c.id AND p.position IS NOT NULL),
+  'notesSectionVisibility', (SELECT jsonb_object_agg(p.section_id,p.visible)
+    FROM public.character_note_section_preferences p
+    WHERE p.character_id=c.id AND p.visible IS NOT NULL),
   'tempModifiers', (SELECT jsonb_strip_nulls(jsonb_build_object(
       'speed',t.speed,'evasion',t.evasion,
       'damageReduction',t.damage_reduction,

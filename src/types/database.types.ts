@@ -406,10 +406,37 @@ export type Database = {
           },
         ];
       };
+      character_library_section_preferences: {
+        Row: {
+          character_id: string;
+          section_id: string;
+          visible: boolean;
+        };
+        Insert: {
+          character_id: string;
+          section_id: string;
+          visible: boolean;
+        };
+        Update: {
+          character_id?: string;
+          section_id?: string;
+          visible?: boolean;
+        };
+        Relationships: [
+          {
+            foreignKeyName: 'character_library_section_preferences_character_id_fkey';
+            columns: ['character_id'];
+            isOneToOne: false;
+            referencedRelation: 'characters';
+            referencedColumns: ['id'];
+          },
+        ];
+      };
       character_named_notes: {
         Row: {
           character_id: string;
           content: string;
+          hidden: boolean | null;
           name: string;
           note_id: string | null;
           position: number;
@@ -417,6 +444,7 @@ export type Database = {
         Insert: {
           character_id: string;
           content?: string;
+          hidden?: boolean | null;
           name: string;
           note_id?: string | null;
           position: number;
@@ -424,6 +452,7 @@ export type Database = {
         Update: {
           character_id?: string;
           content?: string;
+          hidden?: boolean | null;
           name?: string;
           note_id?: string | null;
           position?: number;
@@ -431,6 +460,35 @@ export type Database = {
         Relationships: [
           {
             foreignKeyName: 'character_named_notes_character_id_fkey';
+            columns: ['character_id'];
+            isOneToOne: false;
+            referencedRelation: 'characters';
+            referencedColumns: ['id'];
+          },
+        ];
+      };
+      character_note_section_preferences: {
+        Row: {
+          character_id: string;
+          position: number | null;
+          section_id: string;
+          visible: boolean | null;
+        };
+        Insert: {
+          character_id: string;
+          position?: number | null;
+          section_id: string;
+          visible?: boolean | null;
+        };
+        Update: {
+          character_id?: string;
+          position?: number | null;
+          section_id?: string;
+          visible?: boolean | null;
+        };
+        Relationships: [
+          {
+            foreignKeyName: 'character_note_section_preferences_character_id_fkey';
             columns: ['character_id'];
             isOneToOne: false;
             referencedRelation: 'characters';
@@ -949,6 +1007,7 @@ export type Database = {
           archetype_desc: string | null;
           archetype_id: string | null;
           archetype_name: string | null;
+          archetype_path_id_snapshot: string | null;
           archetype_path_id: string | null;
           archetype_source_id: string | null;
           backstory: string | null;
@@ -1024,6 +1083,7 @@ export type Database = {
           archetype_desc?: string | null;
           archetype_id?: string | null;
           archetype_name?: string | null;
+          archetype_path_id_snapshot?: string | null;
           archetype_path_id?: string | null;
           archetype_source_id?: string | null;
           backstory?: string | null;
@@ -1099,6 +1159,7 @@ export type Database = {
           archetype_desc?: string | null;
           archetype_id?: string | null;
           archetype_name?: string | null;
+          archetype_path_id_snapshot?: string | null;
           archetype_path_id?: string | null;
           archetype_source_id?: string | null;
           backstory?: string | null;

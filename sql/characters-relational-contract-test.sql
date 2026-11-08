@@ -42,7 +42,14 @@ BEGIN
     'powers','[]'::jsonb,
     'techniques','[]'::jsonb,
     'conditions','[]'::jsonb,
-    'namedNotes','[]'::jsonb,
+    'namedNotes',jsonb_build_array(jsonb_build_object(
+      'id','hidden-note','name','Hidden Note','content','Secret','hidden',false
+    )),
+    'librarySectionVisibility',jsonb_build_object('armor',false),
+    'notesSectionOrder',jsonb_build_array(
+      'customNotes','physical','appearance','backstory','archetypeDesc','generalNotes'
+    ),
+    'notesSectionVisibility',jsonb_build_object('generalNotes',false),
     'proficiencies','[]'::jsonb
   );
 
@@ -56,7 +63,11 @@ BEGIN
   v_document := public.get_character_relational_document(v_provision_id);
   IF v_document->>'name' <> 'Contract Provision Test'
      OR v_document->>'innateEnergy' <> '7'
-     OR v_document->>'trainingPointsSpent' <> '2.5' THEN
+     OR v_document->>'trainingPointsSpent' <> '2.5'
+     OR v_document#>>'{namedNotes,0,hidden}' <> 'false'
+     OR v_document#>>'{librarySectionVisibility,armor}' <> 'false'
+     OR v_document#>>'{notesSectionOrder,0}' <> 'customNotes'
+     OR v_document#>>'{notesSectionVisibility,generalNotes}' <> 'false' THEN
     RAISE EXCEPTION 'Provisioned character failed relational round trip';
   END IF;
 
