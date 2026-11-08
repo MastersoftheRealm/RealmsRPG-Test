@@ -8,7 +8,8 @@
 
 'use client';
 
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { flushSync } from 'react-dom';
 import Link from 'next/link';
 import { useQuery } from '@tanstack/react-query';
 import {
@@ -25,7 +26,11 @@ import { ConfirmActionModal, ErrorDisplay } from '@/components/patterns';
 import { apiFetch } from '@/lib/api-client';
 import { formatRolePolicyLimit } from '@/lib/role-limits';
 import { ROLE_LABELS } from '@/lib/role-quota-messages';
-import { type AdminUsersDirectorySlice } from './admin-users-directory-state';
+import {
+  adminUsersDirectoryReducer,
+  createEmptyAdminUsersDirectorySlice,
+  type AdminUsersDirectorySlice,
+} from './admin-users-directory-state';
 import { useAdminUsersLoadMore } from './use-admin-users-load-more';
 
 type UserRole = 'new_player' | 'playtester' | 'developer' | 'admin';
@@ -63,12 +68,9 @@ const ROLE_OPTIONS = (Object.keys(ROLE_LABELS) as UserRole[]).map((role) => ({
 }));
 
 export default function AdminUsersPage() {
-  const [directory, setDirectory] = useState<AdminUsersDirectorySlice<UserRow>>({
-    owner: { generation: 0, q: '' },
-    users: [],
-    hasMore: false,
-    continuationError: null,
-  });
+  const [directory, setDirectory] = useState<AdminUsersDirectorySlice<UserRow>>(() =>
+    createEmptyAdminUsersDirectorySlice(),
+  );
   const [rolePolicies, setRolePolicies] = useState<Record<UserRole, RolePolicyRow> | null>(null);
   const [syncedAt, setSyncedAt] = useState(0);
   const [updating, setUpdating] = useState<string | null>(null);
@@ -76,6 +78,7 @@ export default function AdminUsersPage() {
   const [searchQuery, setSearchQuery] = useState('');
   const [searchApplied, setSearchApplied] = useState('');
   const [listEpoch, setListEpoch] = useState(0);
+  const listEpochRef = useRef(0);
   const [pendingChange, setPendingChange] = useState<{
     userId: string;
     label: string;
@@ -121,8 +124,13 @@ export default function AdminUsersPage() {
 
   useEffect(() => {
     const handle = window.setTimeout(() => {
-      setSearchApplied(searchQuery);
-      setListEpoch((epoch) => epoch + 1);
+      listEpochRef.current += 1;
+      const owner = { generation: listEpochRef.current, q: searchQuery };
+      flushSync(() => {
+        setSearchApplied(searchQuery);
+        setListEpoch(listEpochRef.current);
+        setDirectory((prev) => adminUsersDirectoryReducer(prev, { type: 'query_switch', owner }));
+      });
     }, 300);
     return () => window.clearTimeout(handle);
   }, [searchQuery]);
@@ -138,12 +146,14 @@ export default function AdminUsersPage() {
   );
 
   if (adminData && dataUpdatedAt !== syncedAt) {
-    setDirectory({
-      owner: listOwner,
-      users: adminData.users,
-      hasMore: adminData.hasMore,
-      continuationError: null,
-    });
+    setDirectory((prev) =>
+      adminUsersDirectoryReducer(prev, {
+        type: 'initial_page',
+        owner: listOwner,
+        users: adminData.users,
+        hasMore: adminData.hasMore,
+      }),
+    );
     setRolePolicies(adminData.rolePolicies);
     setSyncedAt(dataUpdatedAt);
   }

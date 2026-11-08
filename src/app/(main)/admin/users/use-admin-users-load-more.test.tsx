@@ -32,6 +32,26 @@ function useHarness(
 }
 
 describe('useAdminUsersLoadMore', () => {
+  it('issues fetch from a synchronous directory snapshot (not from a state updater side effect)', async () => {
+    const fetchPage = vi.fn(async () => ({ users: [{ id: 'p2', label: 'two' }], hasMore: false }));
+    const { result } = renderHook(() =>
+      useHarness(fetchPage, {
+        owner: { generation: 0, q: '' },
+        users: [{ id: 'seed', label: 'seed' }],
+        hasMore: true,
+        continuationError: null,
+        continuationBusy: false,
+      }),
+    );
+
+    await act(async () => {
+      await result.current.loadMoreUsers();
+    });
+
+    expect(fetchPage).toHaveBeenCalledWith(1, '');
+    expect(result.current.directory.users.map((u) => u.id)).toEqual(['seed', 'p2']);
+  });
+
   it('drops a stale load-more success after search changes while the request is in flight', async () => {
     const pending = deferred<{ users: Row[]; hasMore: boolean }>();
     const fetchPage = vi.fn(async (offset: number, q: string) => {
@@ -46,6 +66,7 @@ describe('useAdminUsersLoadMore', () => {
           users: [{ id: 'seed', label: 'seed' }],
           hasMore: true,
           continuationError: null,
+          continuationBusy: false,
         },
       },
     });
@@ -60,6 +81,7 @@ describe('useAdminUsersLoadMore', () => {
       users: [{ id: 'new-search', label: 'found' }],
       hasMore: false,
       continuationError: null,
+      continuationBusy: false,
     };
     await act(async () => {
       rerender({ initial: afterSearch });
@@ -80,6 +102,51 @@ describe('useAdminUsersLoadMore', () => {
     expect(result.current.directory.continuationError).toBeNull();
   });
 
+  it('drops a stale load-more failure after search changes while the request is in flight', async () => {
+    const pending = deferred<{ users: Row[]; hasMore: boolean }>();
+    const fetchPage = vi.fn(async (offset: number, q: string) => {
+      if (offset === 1 && q === '') return pending.promise;
+      return { users: [], hasMore: false };
+    });
+
+    const { result, rerender } = renderHook(({ initial }) => useHarness(fetchPage, initial), {
+      initialProps: {
+        initial: {
+          owner: { generation: 0, q: '' },
+          users: [{ id: 'seed', label: 'seed' }],
+          hasMore: true,
+          continuationError: null,
+          continuationBusy: false,
+        },
+      },
+    });
+
+    let loadPromise: Promise<void> | undefined;
+    await act(async () => {
+      loadPromise = result.current.loadMoreUsers();
+    });
+
+    const afterSearch = {
+      owner: { generation: 1, q: 'alice' },
+      users: [{ id: 'alice-1', label: 'found' }],
+      hasMore: true,
+      continuationError: null,
+      continuationBusy: false,
+    };
+    await act(async () => {
+      rerender({ initial: afterSearch });
+      result.current.setDirectory(afterSearch);
+    });
+
+    await act(async () => {
+      pending.reject(new Error('stale load-more failure'));
+      await loadPromise?.catch(() => {});
+    });
+
+    expect(result.current.directory.users.map((u) => u.id)).toEqual(['alice-1']);
+    expect(result.current.directory.continuationError).toBeNull();
+  });
+
   it('rejects stale continuation when generation changes but list length stays equal', async () => {
     const pending = deferred<{ users: Row[]; hasMore: boolean }>();
     const fetchPage = vi.fn(async () => pending.promise);
@@ -91,6 +158,7 @@ describe('useAdminUsersLoadMore', () => {
           users: [{ id: 'only', label: 'one' }],
           hasMore: true,
           continuationError: null,
+          continuationBusy: false,
         },
       },
     });
@@ -105,6 +173,7 @@ describe('useAdminUsersLoadMore', () => {
       users: [{ id: 'cached', label: 'cached' }],
       hasMore: false,
       continuationError: null,
+      continuationBusy: false,
     };
     await act(async () => {
       rerender({ initial: cached });
@@ -120,10 +189,13 @@ describe('useAdminUsersLoadMore', () => {
     expect(result.current.directory.hasMore).toBe(false);
   });
 
-  it('does not show busy for the new owner when only the previous owner had a pending continuation', async () => {
+  it('allows a new continuation while an older load-more is still pending', async () => {
     const pendingOld = deferred<{ users: Row[]; hasMore: boolean }>();
     const fetchPage = vi.fn(async (offset: number, q: string) => {
       if (offset === 1 && q === '') return pendingOld.promise;
+      if (offset === 1 && q === 'alice') {
+        return { users: [{ id: 'alice-2', label: 'page2' }], hasMore: false };
+      }
       return { users: [], hasMore: false };
     });
 
@@ -133,6 +205,7 @@ describe('useAdminUsersLoadMore', () => {
         users: [{ id: 'a', label: 'a' }],
         hasMore: true,
         continuationError: null,
+        continuationBusy: false,
       }),
     );
 
@@ -148,6 +221,52 @@ describe('useAdminUsersLoadMore', () => {
           users: [{ id: 'alice-1', label: 'found' }],
           hasMore: true,
           continuationError: null,
+          continuationBusy: false,
+        });
+      });
+      await result.current.loadMoreUsers();
+    });
+
+    await waitFor(() => expect(result.current.loadingMore).toBe(false));
+    expect(fetchPage).toHaveBeenCalledWith(1, 'alice');
+    expect(result.current.directory.users.map((u) => u.id)).toEqual(['alice-1', 'alice-2']);
+
+    await act(async () => {
+      pendingOld.resolve({ users: [{ id: 'stale', label: 'stale' }], hasMore: true });
+    });
+    expect(result.current.directory.users.map((u) => u.id)).toEqual(['alice-1', 'alice-2']);
+  });
+
+  it('does not show busy for the new owner when only the previous owner had a pending continuation', async () => {
+    const pendingOld = deferred<{ users: Row[]; hasMore: boolean }>();
+    const fetchPage = vi.fn(async (offset: number, q: string) => {
+      if (offset === 1 && q === '') return pendingOld.promise;
+      return { users: [], hasMore: false };
+    });
+
+    const { result } = renderHook(() =>
+      useHarness(fetchPage, {
+        owner: { generation: 0, q: '' },
+        users: [{ id: 'a', label: 'a' }],
+        hasMore: true,
+        continuationError: null,
+        continuationBusy: false,
+      }),
+    );
+
+    await act(async () => {
+      void result.current.loadMoreUsers();
+    });
+    expect(result.current.loadingMore).toBe(true);
+
+    await act(async () => {
+      flushSync(() => {
+        result.current.setDirectory({
+          owner: { generation: 1, q: 'alice' },
+          users: [{ id: 'alice-1', label: 'found' }],
+          hasMore: true,
+          continuationError: null,
+          continuationBusy: false,
         });
       });
     });

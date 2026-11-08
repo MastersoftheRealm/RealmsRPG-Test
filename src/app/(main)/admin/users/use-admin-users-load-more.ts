@@ -1,13 +1,12 @@
 'use client';
 
-import { useCallback, useState } from 'react';
+import { useCallback, useEffect, useRef } from 'react';
 import {
+  adminUsersDirectoryReducer,
   adminUsersOwnerKey,
-  nextContinuationBusyMap,
-  tryApplyContinuationResult,
   type AdminUsersDirectorySlice,
+  type AdminUsersListFetchContext,
 } from './admin-users-directory-state';
-import type { AdminUsersListFetchContext } from './admin-users-directory-state';
 
 export type AdminUsersLoadMoreRow = { id: string };
 
@@ -27,50 +26,70 @@ export function useAdminUsersLoadMore<T extends AdminUsersLoadMoreRow>({
   setDirectory,
   fetchPage,
 }: UseAdminUsersLoadMoreParams<T>) {
-  const [continuationBusyByKey, setContinuationBusyByKey] = useState<Record<string, boolean>>({});
+  const directoryRef = useRef(directory);
+  const continuationAbortRef = useRef<AbortController | null>(null);
+  const ownerKey = adminUsersOwnerKey(directory.owner);
 
-  const activeBusyKey = adminUsersOwnerKey(directory.owner);
-  const loadingMore = Boolean(continuationBusyByKey[activeBusyKey]);
+  useEffect(() => {
+    directoryRef.current = directory;
+  });
 
-  const setBusyForRequest = useCallback((key: string, busy: boolean) => {
-    setContinuationBusyByKey((prev) => nextContinuationBusyMap(prev, key, busy));
+  useEffect(() => {
+    continuationAbortRef.current?.abort();
+    continuationAbortRef.current = null;
+  }, [ownerKey]);
+
+  useEffect(() => {
+    return () => continuationAbortRef.current?.abort();
   }, []);
 
+  const loadingMore = directory.continuationBusy;
+
   const loadMoreUsers = useCallback(async () => {
-    let request: AdminUsersListFetchContext | undefined;
-    let busyKey: string | undefined;
+    const slice = directoryRef.current;
+    if (!slice.hasMore || slice.continuationBusy) return;
 
-    setDirectory((prev) => {
-      busyKey = adminUsersOwnerKey(prev.owner);
-      request = {
-        generation: prev.owner.generation,
-        q: prev.owner.q,
-        offset: prev.users.length,
-      };
-      return { ...prev, continuationError: null };
-    });
+    const request: AdminUsersListFetchContext = {
+      generation: slice.owner.generation,
+      q: slice.owner.q,
+      offset: slice.users.length,
+    };
 
-    if (!request || !busyKey) return;
+    continuationAbortRef.current?.abort();
+    const controller = new AbortController();
+    continuationAbortRef.current = controller;
 
-    setBusyForRequest(busyKey, true);
+    setDirectory((prev) => adminUsersDirectoryReducer(prev, { type: 'continuation_begin' }));
+
     try {
       const page = await fetchPage(request.offset, request.q);
+      if (controller.signal.aborted) return;
+
       setDirectory((prev) =>
-        tryApplyContinuationResult(prev, request!, {
-          ok: true,
+        adminUsersDirectoryReducer(prev, {
+          type: 'continuation_success',
+          request,
           users: page.users ?? [],
           hasMore: Boolean(page.hasMore),
         }),
       );
     } catch (err) {
+      if (controller.signal.aborted) return;
       const message = err instanceof Error ? err.message : 'Failed to load more users';
       setDirectory((prev) =>
-        tryApplyContinuationResult(prev, request!, { ok: false, error: message }),
+        adminUsersDirectoryReducer(prev, {
+          type: 'continuation_failure',
+          request,
+          error: message,
+        }),
       );
     } finally {
-      setBusyForRequest(busyKey, false);
+      if (controller.signal.aborted) return;
+      setDirectory((prev) =>
+        adminUsersDirectoryReducer(prev, { type: 'continuation_settle', request }),
+      );
     }
-  }, [fetchPage, setBusyForRequest, setDirectory]);
+  }, [fetchPage, setDirectory]);
 
   return { loadingMore, loadMoreUsers };
 }
