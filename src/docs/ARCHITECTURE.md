@@ -2,7 +2,7 @@
 
 > **Purpose:** Single reference for data flow, Supabase structure, and service/hook usage. For AI agents and engineers.
 
-**Last verified:** Jun 2026
+**Last verified:** Nov 2026
 
 ---
 
@@ -21,15 +21,14 @@ RealmsRPG uses Next.js (App Router), React, Tailwind, and Supabase (PostgreSQL, 
 
 Codex reference data comes from Supabase via `/api/codex`. Hooks like `useCodexPowerParts`, `useCodexTechniqueParts`, `useCodexFeats`, `useCodexSkills` fetch from the Codex API.
 
-| Data | Purpose |
+| Table (public) | Purpose |
 |------|---------|
-| `power_parts` | Power mechanic parts (base_en, base_tp, op_1/2/3 costs) |
-| `technique_parts` | Technique mechanic parts |
-| `item_properties` | Weapon/armor/shield properties |
-| `skills` | Skill definitions (ability links, sub-skills) |
-| `feats` | Feat definitions |
-| `species` | Species definitions |
-| `archetypes` | Archetype definitions |
+| `codex_parts` | Power and technique mechanic parts (split in app via `lib/codex/part-type.ts`) |
+| `codex_properties` | Weapon/armor/shield properties |
+| `codex_skills` | Skill definitions (ability links, sub-skills) |
+| `codex_feats` | Feat definitions |
+| `codex_species` | Species definitions |
+| `codex_archetypes` / `codex_archetype_levels` | Archetype definitions and progression rows |
 
 **Key point:** Saved powers/techniques store **part IDs** and **option levels**. The display cost (EN/TP) is computed at render time by resolving IDs against Codex parts via `derivePowerDisplay` / `deriveTechniqueDisplay`.
 
@@ -106,7 +105,7 @@ Codex reference data comes from Supabase via `/api/codex`. Hooks like `useCodexP
 | `src/types/items.ts` | UserItem, SavedDamage |
 | `src/types/abilities.ts` | Abilities, Defenses |
 | `src/types/skills.ts` | Skill, SubSkill |
-| `src/hooks/use-rtdb.ts` | PowerPart, TechniquePart, ItemProperty, CreatureFeat (fetches from Codex API; filename is legacy) |
+| `src/hooks/use-codex.ts` | Codex collection hooks (`useCodexPowerParts`, `useCodexFeats`, … → `GET /api/codex?collection=`) |
 
 ---
 
