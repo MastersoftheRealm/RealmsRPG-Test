@@ -101,7 +101,7 @@ export function buildLibrarySectionData(input: {
     currentEnergy: character.currentEnergy ?? character.energy?.current ?? m.calculatedMaxEnergy,
     martialProficiency: character.mart_prof,
     powerAttackBonus: calculatePowerAttackBonus(character),
-    onRemovePower: handleRemovePower,
+    onRemovePower: whenSheetOwner(isOwner, handleRemovePower),
     onTogglePowerInnate: handleTogglePowerInnate,
     onSelectPowerVariant: handleSelectPowerVariant,
     onUsePower: whenSheetOwner(isOwner, handleUsePower),
