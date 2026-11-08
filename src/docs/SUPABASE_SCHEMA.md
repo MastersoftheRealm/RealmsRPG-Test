@@ -170,8 +170,10 @@ If Supabase logs show **`permission denied for table user_species`**, the `authe
 RPCs, and a temporary exact rollback mirror. After parity QA and deployment of
 the relational-only application, `characters-relational-contract.sql` verifies
 exact parity, replaces the remaining compatibility RPC bodies, and drops the
-legacy column atomically. The live project remains unchanged until the owner-approved
-migrations run. Realtime remains on `public.characters`; child writes touch the
+legacy column atomically. The compatibility stage was applied to RealmsRPG-Test
+on 2026-11-08 after a fresh backup: all 71 characters reached exact parity, while
+`characters.data` and the rollback mirror trigger remain present. The contract/drop
+stage has not run. Realtime remains on `public.characters`; child writes touch the
 parent lock timestamp. Direct
 authenticated child-table writes have no RLS policy and are denied; the
 security-definer persistence RPCs are the only write boundary.

@@ -9,7 +9,7 @@
 | Path | Purpose |
 |------|---------|
 | [`_TEMPLATE_new_table.sql`](_TEMPLATE_new_table.sql) | Required pattern for any **new** `public` table: RLS, policies, and explicit `GRANT` in the same file. CI scans changed `sql/**/*.sql` (except this template and `schema/` baselines). |
-| [`characters-relational-*.sql`](characters-relational-audit.sql) | ADR-0031 relational character expansion, compatibility and contract migrations, RPCs, verification, and rollback-safe smoke tests. Production application still requires Kadin's explicit approval and a fresh backup. |
+| [`characters-relational-*.sql`](characters-relational-audit.sql) | ADR-0031 relational character expansion, compatibility and contract migrations, RPCs, verification, and rollback-safe smoke tests. The compatibility stage was applied to production on 2026-11-08; the contract/drop stage remains pending and requires a fresh backup. |
 | [`vtt-v1-tabletop.sql`](vtt-v1-tabletop.sql) | Virtual tabletop schema for branch-local development. Verify target state and obtain approval before applying outside the branch's local database. |
 | [`codex-rename-source.sql`](codex-rename-source.sql) | Admin utility: replaces `public.rename_codex_source` only. Safe to re-run on non-prod when Kadin approves; first real rename is a live data change and needs a backup. |
 | [`schema/0000_baseline_2026-08-13.sql`](schema/0000_baseline_2026-08-13.sql) | Committed `pg_dump --schema-only` snapshot (**stale** vs live — regenerate before relying on it). |
@@ -32,6 +32,9 @@ The write phase first rebuilds every existing compatibility mirror from the
 relational reader without changing its authoritative `updated_at` lock value.
 The compatibility phase intentionally retains the legacy column for rollback.
 Use the expansion verifier plus the cutover smoke test before application QA.
+This six-file compatibility stage was applied successfully to RealmsRPG-Test on
+2026-11-08. Do not replay it as part of the contract deployment; verify the live
+state and continue with application QA/deployment.
 
 After parity QA, deploy the relational-only application code in this branch.
 That code never reads or writes the legacy character column. With another

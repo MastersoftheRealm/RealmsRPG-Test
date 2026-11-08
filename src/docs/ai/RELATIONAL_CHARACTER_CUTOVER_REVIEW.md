@@ -4,7 +4,7 @@
 
 **Scope:** staged ADR-0030 compatibility and final contract cutover
 
-**Status:** **Implementation and current-production disposable-clone verification passed. Kadin approved the work on November 8, 2026; take a fresh production backup immediately before each production schema change.**
+**Status:** **The compatibility stage is applied and verified in production. `characters.data` remains present; application QA/deployment and the separately backed-up contract/drop stage remain pending.**
 
 ## Review result
 
@@ -46,5 +46,6 @@ only because it must migrate and verify the old production state.
 - The final contract migration and its rollback-only smoke test passed on that clean production clone: all 71 characters remained readable, the legacy column and compatibility trigger were absent, the two new preference tables contained the expected 8 and 12 rows, and active public functions had no legacy-column reference.
 - The old child-write policy was absent, service-only RPC grants were enforced, and no smoke fixture leaked after rollback.
 - Before the approved local write, a validated custom-format backup was taken. The local database then received the nine production migrations missing from its checkout, the production Codex rename function, and the updated relational compatibility sequence. Its 57 character rows retained the same aggregate `updated_at` hash, reached exact mirror/relational parity with zero mismatches or orphans, and passed the rollback smoke test without leaking fixtures; the compatibility `data` column remains intentionally present locally until the contract phase.
+- With Kadin's approval, the six compatibility-stage files were applied to RealmsRPG-Test on November 8 after fresh schema, public-data, and role backups. Production retained all 71 characters and the same aggregate `updated_at` hash (`32ea5d2b145bebeb9c1b66e0abad0ea1`), reached zero relational/mirror mismatches, retained exactly one `characters.data` column and one compatibility trigger, installed all 16 child tables, and leaked no rollback-smoke fixtures. The contract/drop files were not run.
 
 The authoritative schema and rollout state remain in [SUPABASE_SCHEMA.md](../SUPABASE_SCHEMA.md) and [sql/README.md](../../../sql/README.md).
