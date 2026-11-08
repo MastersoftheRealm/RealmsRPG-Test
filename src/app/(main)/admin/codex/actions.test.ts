@@ -10,6 +10,9 @@ import { describe, expect, it, beforeEach, vi } from 'vitest';
 import { FakeSupabase } from '@/lib/codex/fake-supabase';
 
 vi.mock('next/cache', () => ({ revalidatePath: vi.fn(), updateTag: vi.fn() }));
+vi.mock('@/lib/official-library-get-payload', () => ({
+  fetchCachedOfficialColumnarItems: vi.fn(async () => []),
+}));
 vi.mock('@/lib/supabase/session', () => ({
   requireLiveUser: vi.fn(async () => ({ uid: 'admin-1' })),
 }));
@@ -50,6 +53,11 @@ function seed(options: { failInsertOnce?: Set<string> | undefined } = {}): FakeS
         { id: 100, archetype_id: '5', level: 2, feats: '1' },
         { id: 101, archetype_id: '5', level: 3, feats: '2' },
       ],
+      codex_equipment: [],
+      codex_parts: [],
+      codex_properties: [],
+      official_items: [],
+      official_powers: [],
       codex_retired_ids: [],
       user_profiles: [{ id: 'victim', role: 'admin' }],
       core_rules: [
@@ -375,6 +383,22 @@ describe('archetype progression replace', () => {
     expect(result.error).toMatch(/level 1 is stored on the archetype row/i);
     expect(currentDb.tables.codex_archetype_levels).toEqual(beforeLevels);
   });
+
+  it('rejects path publish violations on the server (bypassing client-only checks)', async () => {
+    const beforeArchetype = structuredClone(currentDb.tables.codex_archetypes);
+
+    const result = await saveArchetypeWithPath({
+      ...baseArchetype,
+      type: 'martial',
+      martial_prof_start: 1,
+      level1_innate_powers: '99',
+      levels: [{ level: 2, feats: '1' }],
+    });
+
+    expect(result.success).toBe(false);
+    expect(result.error).toMatch(/Innate Energy > 0/i);
+    expect(currentDb.tables.codex_archetypes).toEqual(beforeArchetype);
+  });
 });
 
 describe('saveArchetypeWithPath TEXT list persistence', () => {
@@ -528,7 +552,6 @@ describe('saveArchetypeWithPath JSON column persistence', () => {
       level1_feats: '1,2',
       level1_skills: '10',
       level1_powers: 'pwr',
-      level1_innate_powers: 'inn',
       level1_techniques: 'tec',
       level1_armaments: '3:1',
       level1_equipment: '4',

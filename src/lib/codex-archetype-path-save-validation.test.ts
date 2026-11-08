@@ -1,9 +1,11 @@
 import { describe, expect, it } from 'vitest';
 import type { SaveArchetypeWithPathInput } from '@/app/(main)/admin/codex/codex-archetype-write';
 import {
+  archetypePathDataFromSaveInput,
   normalizeCodexCommaListColumn,
   normalizeSaveArchetypeWithPathInput,
   saveArchetypeWithPathInputError,
+  saveArchetypeWithPathPublishError,
 } from '@/lib/codex-archetype-path-save-validation';
 
 const validBase: SaveArchetypeWithPathInput = {
@@ -109,6 +111,65 @@ describe('normalizeCodexCommaListColumn', () => {
     ['empty', '', null],
   ] as const)('normalizes %s to canonical TEXT storage', (_label, input, expected) => {
     expect(normalizeCodexCommaListColumn(input)).toBe(expected);
+  });
+});
+
+describe('saveArchetypeWithPathPublishError', () => {
+  it('rejects innate recommendations on a pure martial path', () => {
+    const error = saveArchetypeWithPathPublishError(
+      {
+        ...validBase,
+        type: 'martial',
+        level1_innate_powers: '99',
+        martial_prof_start: 1,
+      },
+      {
+        archetypeType: 'martial',
+        martialProfStart: 1,
+        resolveInnatePower: () => ({
+          id: '99',
+          name: 'Test',
+          energy: 1,
+          partIds: [],
+          partNames: [],
+        }),
+      },
+    );
+    expect(error).toMatch(/Innate Energy > 0/i);
+  });
+
+  it('blocks loadout TP over budget like the admin workspace validator', () => {
+    const error = saveArchetypeWithPathPublishError(
+      {
+        ...validBase,
+        level1_loadouts: {
+          loadouts: [
+            {
+              id: 'heavy',
+              title: 'Heavy kit',
+              armaments: [{ id: 'a', quantity: 1 }],
+            },
+          ],
+        },
+      },
+      {
+        resolveItemTrainingPoints: () => 10,
+        trainingPointLimit: 5,
+      },
+    );
+    expect(error).toMatch(/Heavy kit/i);
+  });
+});
+
+describe('archetypePathDataFromSaveInput', () => {
+  it('parses advanced JSON override fields from the save payload shape', () => {
+    const pathData = archetypePathDataFromSaveInput({
+      ...validBase,
+      level1_innate_powers: '42',
+      level1_guidance_groups: [{ id: 'g1', title: 'Starter', feats: ['1'] }],
+    });
+    expect(pathData?.level1?.innatePowers).toEqual(['42']);
+    expect(pathData?.level1?.guidance_groups?.[0]?.id).toBe('g1');
   });
 });
 

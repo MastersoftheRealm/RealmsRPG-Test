@@ -23,9 +23,11 @@ import {
 } from './codex-archetype-write';
 import { coreRulesDocumentNumberError } from '../core-rules/core-rules-number';
 import {
+  buildSaveArchetypePathValidationContext,
   normalizeSaveArchetypeWithPathInput,
   parseSaveArchetypeNumericId,
   saveArchetypeWithPathInputError,
+  saveArchetypeWithPathPublishError,
 } from '@/lib/codex-archetype-path-save-validation';
 
 const MAX_REPORTED_REFERENCES = 20;
@@ -374,6 +376,12 @@ export async function saveArchetypeWithPath(
     const normalizedPayload = normalizeSaveArchetypeWithPathInput(payload);
 
     const supabase = createServiceRoleClient();
+    const publishContext = await buildSaveArchetypePathValidationContext(
+      supabase,
+      normalizedPayload,
+    );
+    const publishError = saveArchetypeWithPathPublishError(normalizedPayload, publishContext);
+    if (publishError) return { success: false, error: publishError };
     const parsedId = parseSaveArchetypeNumericId(normalizedPayload.id);
     const id = parsedId ?? (await allocateCodexNumericId(supabase, 'codex_archetypes'));
     const beforeSnapshot = await getArchetypeSnapshot(id);

@@ -7,12 +7,35 @@ import type {
   ArchetypeLevelPayload,
   SaveArchetypeWithPathInput,
 } from '@/app/(main)/admin/codex/codex-archetype-write';
+import type { ItemPropertyTpRow } from '@/lib/calculators/item-calc';
 import { CODEX_DESC_MAX_LENGTH } from '@/lib/codex-columnar-keys';
+import {
+  mapCodexEquipment,
+  mapCodexPart,
+  mapCodexProperty,
+  mapCodexSkill,
+} from '@/lib/codex/row-map';
 import {
   codexAdminCamelBodyShapeError,
   codexPersistedFieldShapeError,
 } from '@/lib/codex-persisted-contract';
 import { parseNumericId } from '@/lib/codex/id-allocation';
+import {
+  parseArchetypePathData,
+  parseLevel1LoadoutsField,
+  parseRecommendedAbilities,
+} from '@/lib/game/archetype-path';
+import { snapshotOfficialPowerForInnate } from '@/lib/game/innate-eligibility';
+import { validatePathDataForPublish, type PathValidationContext } from '@/lib/game/path-validation';
+import {
+  createItemTpResolver,
+  trainingPointLimitFromRecommendedAbilities,
+} from '@/lib/guided-creator/loadout-tp';
+import { fetchCachedOfficialColumnarItems } from '@/lib/official-library-get-payload';
+import type { TypedSupabaseClient } from '@/lib/supabase/database';
+import type { ArchetypePathData } from '@/types/archetype';
+import type { LibraryItem, LibraryPower } from '@/types/library';
+import type { PowerPart } from '@/hooks/codex-types';
 
 const ARCHETYPE_TYPES = new Set<SaveArchetypeWithPathInput['type']>([
   'power',
@@ -308,4 +331,128 @@ export function parseSaveArchetypeNumericId(id: string | undefined): string | nu
   const parsed = parseNumericId(id);
   if (parsed === null || String(id).trim() !== String(parsed)) return null;
   return String(parsed);
+}
+
+/** Build `path_data` the same way persisted columns are read after `normalizeSaveArchetypeWithPathInput`. */
+export function archetypePathDataFromSaveInput(
+  payload: SaveArchetypeWithPathInput,
+): ArchetypePathData | undefined {
+  const loadoutsField = parseLevel1LoadoutsField(payload.level1_loadouts);
+  const level1Raw: Record<string, unknown> = {
+    feats: payload.level1_feats,
+    skills: payload.level1_skills,
+    powers: payload.level1_powers,
+    innatePowers: payload.level1_innate_powers,
+    techniques: payload.level1_techniques,
+    armaments: payload.level1_armaments,
+    equipment: payload.level1_equipment,
+    recommendUnarmedProwess: payload.level1_recommend_unarmed_prowess === true,
+    removeFeats: payload.level1_remove_feats,
+    removePowers: payload.level1_remove_powers,
+    removeTechniques: payload.level1_remove_techniques,
+    removeArmaments: payload.level1_remove_armaments,
+    notes: payload.level1_notes,
+    guidance_groups: payload.level1_guidance_groups,
+    recommended_abilities: payload.level1_recommended_abilities,
+    ...(loadoutsField.loadouts != null ? { loadouts: loadoutsField.loadouts } : {}),
+    ...(loadoutsField.armorStep != null ? { armorStep: loadoutsField.armorStep } : {}),
+    ...(loadoutsField.sharedEquipment != null
+      ? { sharedEquipment: loadoutsField.sharedEquipment }
+      : {}),
+  };
+
+  const levelsRaw = payload.levels.map((entry) => ({
+    level: entry.level,
+    feats: entry.feats,
+    skills: entry.skills,
+    powers: entry.powers,
+    techniques: entry.techniques,
+    armaments: entry.armaments,
+    equipment: entry.equipment,
+    removeFeats: entry.remove_feats,
+    removePowers: entry.remove_powers,
+    removeTechniques: entry.remove_techniques,
+    removeArmaments: entry.remove_armaments,
+    notes: entry.notes,
+  }));
+
+  return parseArchetypePathData({ level1: level1Raw, levels: levelsRaw });
+}
+
+/** Layer-1 publish rules from `validatePathDataForPublish`; blocks on severity `error` only. */
+export function saveArchetypeWithPathPublishError(
+  payload: SaveArchetypeWithPathInput,
+  context: PathValidationContext,
+): string | null {
+  const pathData = archetypePathDataFromSaveInput(payload);
+  if (!pathData?.level1) return null;
+  const errors = validatePathDataForPublish(pathData, context).filter(
+    (i) => i.severity === 'error',
+  );
+  if (errors.length === 0) return null;
+  return errors.map((i) => i.message).join(' ');
+}
+
+/** Same reference data the admin archetype workspace uses for `validatePathDataForPublish`. */
+export async function buildSaveArchetypePathValidationContext(
+  supabase: TypedSupabaseClient,
+  payload: SaveArchetypeWithPathInput,
+): Promise<PathValidationContext> {
+  const [
+    officialItemsRows,
+    officialPowersRows,
+    equipmentResult,
+    skillsResult,
+    partsResult,
+    propertiesResult,
+  ] = await Promise.all([
+    fetchCachedOfficialColumnarItems(supabase, 'items', true),
+    fetchCachedOfficialColumnarItems(supabase, 'powers', true),
+    supabase.from('codex_equipment').select('*'),
+    supabase.from('codex_skills').select('*'),
+    supabase.from('codex_parts').select('*'),
+    supabase.from('codex_properties').select('*'),
+  ]);
+
+  for (const { error } of [equipmentResult, skillsResult, partsResult, propertiesResult] as const) {
+    if (error) throw new Error(error.message);
+  }
+
+  const officialItems = officialItemsRows as unknown as LibraryItem[];
+  const officialPowers = officialPowersRows as unknown as LibraryPower[];
+  const codexEquipment = (equipmentResult.data ?? []).map((row) =>
+    mapCodexEquipment(row as Record<string, unknown>),
+  );
+  const itemProperties = (propertiesResult.data ?? []).map((row) =>
+    mapCodexProperty(row as Record<string, unknown>),
+  ) as ItemPropertyTpRow[];
+  const powerPartsDb = (partsResult.data ?? []).map((row) =>
+    mapCodexPart(row as Record<string, unknown>),
+  ) as PowerPart[];
+  const skillById = new Map(
+    (skillsResult.data ?? []).map((row) => {
+      const skill = mapCodexSkill(row as Record<string, unknown>);
+      return [String(skill.id), skill] as const;
+    }),
+  );
+  const officialById = new Map(officialPowers.map((p) => [String(p.id ?? ''), p]));
+  const recommended = parseRecommendedAbilities(payload.level1_recommended_abilities);
+
+  return {
+    resolveItemTrainingPoints: createItemTpResolver(officialItems, codexEquipment, itemProperties),
+    trainingPointLimit: trainingPointLimitFromRecommendedAbilities(recommended),
+    archetypeType: payload.type,
+    powerProfStart: payload.power_prof_start ?? null,
+    martialProfStart: payload.martial_prof_start ?? null,
+    isSubSkill: (skillId) => {
+      const skill = skillById.get(String(skillId));
+      if (!skill) return null;
+      return skill.base_skill_id != null;
+    },
+    resolveInnatePower: (powerId) => {
+      const power = officialById.get(powerId);
+      if (!power) return null;
+      return snapshotOfficialPowerForInnate(power, powerPartsDb);
+    },
+  };
 }
