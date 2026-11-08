@@ -307,6 +307,44 @@ describe('archetype progression replace', () => {
       2, 5,
     ]);
   });
+
+  it('rejects malformed JSON and invalid ids without mutating the row or levels', async () => {
+    const beforeArchetype = structuredClone(currentDb.tables.codex_archetypes);
+    const beforeLevels = structuredClone(currentDb.tables.codex_archetype_levels);
+
+    const jsonRejected = await saveArchetypeWithPath({
+      ...baseArchetype,
+      level1_recommended_abilities: { strength: [] },
+      levels: [{ level: 2, feats: '1' }],
+    });
+    expect(jsonRejected.success).toBe(false);
+    expect(jsonRejected.error).toMatch(/finite number/i);
+    expect(currentDb.tables.codex_archetypes).toEqual(beforeArchetype);
+    expect(currentDb.tables.codex_archetype_levels).toEqual(beforeLevels);
+
+    const idRejected = await saveArchetypeWithPath({
+      ...baseArchetype,
+      id: '5-evil',
+      levels: [{ level: 2, feats: '1' }],
+    });
+    expect(idRejected.success).toBe(false);
+    expect(idRejected.error).toMatch(/numeric codex id/i);
+    expect(currentDb.tables.codex_archetypes).toEqual(beforeArchetype);
+    expect(currentDb.tables.codex_archetype_levels).toEqual(beforeLevels);
+  });
+
+  it('rejects level-1 progression rows instead of filtering them out', async () => {
+    const beforeLevels = structuredClone(currentDb.tables.codex_archetype_levels);
+
+    const result = await saveArchetypeWithPath({
+      ...baseArchetype,
+      levels: [{ level: 1, feats: '1' }],
+    });
+
+    expect(result.success).toBe(false);
+    expect(result.error).toMatch(/level 1 is stored on the archetype row/i);
+    expect(currentDb.tables.codex_archetype_levels).toEqual(beforeLevels);
+  });
 });
 
 describe('core rules numbers (86e3jtuge)', () => {

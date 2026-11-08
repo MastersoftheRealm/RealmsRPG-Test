@@ -22,6 +22,10 @@ import {
   type SaveArchetypeWithPathInput,
 } from './codex-archetype-write';
 import { coreRulesDocumentNumberError } from '../core-rules/core-rules-number';
+import {
+  parseSaveArchetypeNumericId,
+  saveArchetypeWithPathInputError,
+} from '@/lib/codex-archetype-path-save-validation';
 
 const MAX_REPORTED_REFERENCES = 20;
 
@@ -364,10 +368,12 @@ export async function saveArchetypeWithPath(
 ): Promise<{ success: boolean; error?: string | undefined; id?: string | undefined }> {
   try {
     const changedByUserId = await requireAdmin();
+    const validationError = saveArchetypeWithPathInputError(payload);
+    if (validationError) return { success: false, error: validationError };
+
     const supabase = createServiceRoleClient();
-    const id = payload.id
-      ? sanitizeId(payload.id)
-      : await allocateCodexNumericId(supabase, 'codex_archetypes');
+    const parsedId = parseSaveArchetypeNumericId(payload.id);
+    const id = parsedId ?? (await allocateCodexNumericId(supabase, 'codex_archetypes'));
     const beforeSnapshot = await getArchetypeSnapshot(id);
     const existingLevels = beforeSnapshot?.levels ?? [];
 

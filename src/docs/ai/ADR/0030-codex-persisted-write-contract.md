@@ -13,7 +13,8 @@ Admin Codex saves (`createCodexDoc` / `updateCodexDoc`) and official library adm
 1. **`lib/codex-columnar-keys.ts`** — authoritative allowlists and field metadata for admin Codex collections (feats, skills, species, traits, parts, properties, equipment, archetypes, creature feats).
 2. **`lib/codex-persisted-contract.ts`** — collection-aware value validation (lists, numeric scalars, archetype JSONB cells) before mapping. Validation is lenient on null/empty legacy shapes; it does not invent game-rule numbers.
 3. **`lib/codex-mutation-validation.ts`** — throws with editor-safe messages; wired from `assertCodexAdminPayloadKeys` in `codex-column-map.ts` (single path into `toColumnarPayload` / `toDbPayload`).
-4. **Official/user library writes** stay on `library-persisted-contract.ts` + `validateUserLibraryWriteBody` — no duplicate Codex contract on those routes.
+4. **`lib/codex-archetype-path-save-validation.ts`** — same persisted contract for admin **`saveArchetypeWithPath`** (path workspace save), including progression level rows and trusted numeric ids.
+5. **Official/user library writes** stay on `library-persisted-contract.ts` + `validateUserLibraryWriteBody` — no duplicate Codex contract on those routes.
 
 Archetype JSON columns call strict write validators in `lib/game/archetype-path.ts` (`codexWriteLevel1LoadoutsError`, `codexWriteRecommendedAbilitiesError`, `codexWriteGuidanceGroupsError`). They enforce the same structural rules as the lenient read parsers (`parseLevel1LoadoutsField`, `parseRecommendedAbilities`, `parseGuidanceGroups`) but reject invalid nested elements instead of dropping them.
 
