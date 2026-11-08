@@ -1,10 +1,10 @@
 # Relational Character Cutover Review
 
-**Review date:** November 7, 2026
+**Review date:** November 8, 2026
 
 **Scope:** staged ADR-0030 compatibility and final contract cutover
 
-**Status:** **Implementation and disposable-clone verification passed; production application still requires Kadin's explicit approval and a fresh backup.**
+**Status:** **Implementation and current-production disposable-clone verification passed. Kadin approved the work on November 8, 2026; take a fresh production backup immediately before each production schema change.**
 
 ## Review result
 
@@ -27,7 +27,7 @@ The code is ready for the production rollout sequence documented in
 
 - Rerun the read-only audit and compatibility smoke test against the approved target.
 - Complete relational/mirror application QA, including realtime and campaign flows.
-- Obtain Kadin's explicit high-risk approval and take a fresh backup before each approved production schema change.
+- Confirm the recorded Kadin approval still covers the scheduled production window and take a fresh backup immediately before each production schema change.
 - Deploy the relational-only application before applying the final contract migration.
 
 No later application change is required for the drop. Runtime TypeScript no longer
@@ -40,10 +40,11 @@ only because it must migrate and verify the old production state.
 
 - TypeScript typecheck, lint/ratchets, production build, and the full Vitest suite passed.
 - SQL grant validation and agent-document/index validation passed.
-- A same-snapshot disposable clone of the 57-character local database passed the read-only audit and expansion verifier, all three compatibility scripts, and the rollback smoke test.
-- All 57 existing compatibility mirrors reached exact relational parity; the aggregate `updated_at` hash matched the untouched same-dump baseline, including null tokens.
-- The final contract migration and its rollback-only smoke test then passed on a fresh exact-baseline clone: all 57 characters remained readable, the aggregate `updated_at` hash still matched the source (`e4cb5ac8fa2cbb282d3a5df50c6a4ec3`), the legacy column and compatibility trigger were absent, and the active character RPC definitions had no legacy-column reference.
+- A disposable clone of the November 8 production snapshot passed the read-only audit, expansion verifier, all three compatibility scripts, and the rollback smoke test.
+- Production-only document shapes discovered by that audit are now mapped relationally: library-section visibility, note-section order and visibility, and the named-note `hidden` flag. An unresolved legacy archetype path is retained as a snapshot value instead of violating the Codex foreign key.
+- All 71 production-snapshot characters reached relational parity. The one explicitly stored `hidden: false` value round-tripped, and the aggregate `updated_at` hash remained identical to the untouched clone baseline (`32ea5d2b145bebeb9c1b66e0abad0ea1`).
+- The final contract migration and its rollback-only smoke test passed on that clean production clone: all 71 characters remained readable, the legacy column and compatibility trigger were absent, the two new preference tables contained the expected 8 and 12 rows, and active public functions had no legacy-column reference.
 - The old child-write policy was absent, service-only RPC grants were enforced, and no smoke fixture leaked after rollback.
-- The source local database remained unchanged throughout clone verification.
+- Before the approved local write, a validated custom-format backup was taken. The local database then received the nine production migrations missing from its checkout, the production Codex rename function, and the updated relational compatibility sequence. Its 57 character rows retained the same aggregate `updated_at` hash, reached exact mirror/relational parity with zero mismatches or orphans, and passed the rollback smoke test without leaking fixtures; the compatibility `data` column remains intentionally present locally until the contract phase.
 
 The authoritative schema and rollout state remain in [SUPABASE_SCHEMA.md](../SUPABASE_SCHEMA.md) and [sql/README.md](../../../sql/README.md).

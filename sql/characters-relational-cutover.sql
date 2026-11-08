@@ -16,7 +16,9 @@ BEGIN
   FOREACH child IN ARRAY ARRAY[
     'character_species','character_feats','character_skills','character_traits',
     'character_powers','character_techniques','character_inventory',
-    'character_conditions','character_named_notes','character_archetype_choices',
+    'character_conditions','character_named_notes',
+    'character_library_section_preferences','character_note_section_preferences',
+    'character_archetype_choices',
     'character_proficiencies','character_temp_modifiers',
     'character_affiliations','character_ability_components'
   ] LOOP
@@ -36,6 +38,8 @@ GRANT SELECT ON TABLE
   public.character_inventory,
   public.character_conditions,
   public.character_named_notes,
+  public.character_library_section_preferences,
+  public.character_note_section_preferences,
   public.character_archetype_choices,
   public.character_proficiencies,
   public.character_temp_modifiers,
@@ -53,6 +57,8 @@ GRANT SELECT, INSERT, UPDATE, DELETE ON TABLE
   public.character_inventory,
   public.character_conditions,
   public.character_named_notes,
+  public.character_library_section_preferences,
+  public.character_note_section_preferences,
   public.character_archetype_choices,
   public.character_proficiencies,
   public.character_temp_modifiers,

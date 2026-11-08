@@ -49,7 +49,7 @@ column. No application code deployment is required between contract and drop;
 the drop is part of the contract transaction. Recovery after it requires the
 fresh pre-contract backup.
 
-**`supabase_migrations.schema_migrations`:** After a reset around **2026-09-26**, the live table has **7 rows** only (`remote_schema`, three `86e3*` migrations, `codex_entry_sources`, `codex_entry_sources_open`). Do not treat this README or old docs as a full migration catalog.
+**`supabase_migrations.schema_migrations`:** After a reset around **2026-09-26**, the live table has **11 rows** through `20261029140801_drop_empty_content_schema`. The checkout intentionally retains only the two baseline migration files, so use the live migration table—not this folder or older docs—as the applied-history catalog.
 
 ---
 

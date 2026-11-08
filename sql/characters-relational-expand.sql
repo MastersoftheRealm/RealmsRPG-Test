@@ -35,6 +35,7 @@ ALTER TABLE public.characters
   ADD COLUMN IF NOT EXISTS archetype_category text,
   ADD COLUMN IF NOT EXISTS archetype_source_id text,
   ADD COLUMN IF NOT EXISTS archetype_id text REFERENCES public.codex_archetypes(id) ON DELETE RESTRICT,
+  ADD COLUMN IF NOT EXISTS archetype_path_id_snapshot text,
   ADD COLUMN IF NOT EXISTS archetype_path_id text REFERENCES public.codex_archetypes(id) ON DELETE RESTRICT,
   ADD COLUMN IF NOT EXISTS ancestry_mixed boolean,
   ADD COLUMN IF NOT EXISTS ancestry_id_snapshot text,
@@ -236,8 +237,31 @@ CREATE TABLE IF NOT EXISTS public.character_named_notes (
   note_id text,
   name text NOT NULL,
   content text NOT NULL DEFAULT '',
+  hidden boolean,
   PRIMARY KEY (character_id, position)
 );
+ALTER TABLE public.character_named_notes
+  ADD COLUMN IF NOT EXISTS hidden boolean;
+
+CREATE TABLE IF NOT EXISTS public.character_library_section_preferences (
+  character_id text NOT NULL REFERENCES public.characters(id) ON DELETE CASCADE,
+  section_id text NOT NULL CHECK (section_id IN ('stateFeats','weapons','shields','armor')),
+  visible boolean NOT NULL,
+  PRIMARY KEY (character_id, section_id)
+);
+
+CREATE TABLE IF NOT EXISTS public.character_note_section_preferences (
+  character_id text NOT NULL REFERENCES public.characters(id) ON DELETE CASCADE,
+  section_id text NOT NULL CHECK (section_id IN (
+    'physical','appearance','backstory','archetypeDesc','generalNotes','customNotes'
+  )),
+  position integer CHECK (position > 0),
+  visible boolean,
+  PRIMARY KEY (character_id, section_id)
+);
+CREATE UNIQUE INDEX IF NOT EXISTS character_note_section_position_unique_idx
+  ON public.character_note_section_preferences(character_id, position)
+  WHERE position IS NOT NULL;
 
 CREATE TABLE IF NOT EXISTS public.character_archetype_choices (
   character_id text NOT NULL REFERENCES public.characters(id) ON DELETE CASCADE,
@@ -328,7 +352,9 @@ BEGIN
   FOREACH child IN ARRAY ARRAY[
     'character_species','character_feats','character_skills','character_traits',
     'character_powers','character_techniques','character_inventory',
-    'character_conditions','character_named_notes','character_archetype_choices',
+    'character_conditions','character_named_notes',
+    'character_library_section_preferences','character_note_section_preferences',
+    'character_archetype_choices',
     'character_proficiencies','character_temp_modifiers',
     'character_affiliations','character_ability_components'
   ] LOOP
@@ -350,6 +376,8 @@ GRANT SELECT ON TABLE
   public.character_inventory,
   public.character_conditions,
   public.character_named_notes,
+  public.character_library_section_preferences,
+  public.character_note_section_preferences,
   public.character_archetype_choices,
   public.character_proficiencies,
   public.character_temp_modifiers,
@@ -367,6 +395,8 @@ GRANT SELECT, INSERT, UPDATE, DELETE ON TABLE
   public.character_inventory,
   public.character_conditions,
   public.character_named_notes,
+  public.character_library_section_preferences,
+  public.character_note_section_preferences,
   public.character_archetype_choices,
   public.character_proficiencies,
   public.character_temp_modifiers,
@@ -552,7 +582,9 @@ BEGIN
     archetype_source_id = archetype_ref,
     archetype_id = (SELECT a.id FROM public.codex_archetypes a
                     WHERE a.id = archetype_ref),
-    archetype_path_id = nullif(p_document->>'archetypePathId',''),
+    archetype_path_id_snapshot = nullif(p_document->>'archetypePathId',''),
+    archetype_path_id = (SELECT a.id FROM public.codex_archetypes a
+                         WHERE a.id = nullif(p_document->>'archetypePathId','')),
     ancestry_id_snapshot = p_document#>>'{ancestry,id}',
     ancestry_name_snapshot = coalesce(p_document#>>'{ancestry,name}',
                                       p_document->>'species'),
@@ -719,7 +751,9 @@ BEGIN
     'archetypeFeats','techniques','powers','traits','traitUses',
     'traitCustomizations','stateUsesCurrent','unarmedProwess','equipment',
     'currency','trainingPointsSpent','proficiencies','allies',
-    'organizations','speedDisplayUnit','libraryTabVisibility','tempModifiers',
+    'organizations','speedDisplayUnit','libraryTabVisibility',
+    'librarySectionVisibility','notesSectionOrder','notesSectionVisibility',
+    'tempModifiers',
     'ancestry','species','conditions','health_energy_points','creationMode',
     'allTraits','_displayFeats','speciesTraits','defenses','defenseBonuses',
     'speed','evasion','armor'
@@ -739,6 +773,9 @@ BEGIN
     ('defenseSkills', ARRAY['might','fortitude','reflex','discernment','mentalFortitude','resolve']::text[]),
     ('libraryTabVisibility', ARRAY['powers','techniques','inventory','feats',
       'proficiencies','notes']::text[]),
+    ('librarySectionVisibility', ARRAY['stateFeats','weapons','shields','armor']::text[]),
+    ('notesSectionVisibility', ARRAY['physical','appearance','backstory',
+      'archetypeDesc','generalNotes','customNotes']::text[]),
     ('tempModifiers', ARRAY['speed','evasion','damageReduction','criticalRange',
       'terminal','abilities','defenses','skills','applyAbilityToResourceMaxima']::text[]),
     ('equipment', ARRAY['mainHand','offHand','armor','weapons','shields','items',
@@ -773,7 +810,7 @@ BEGIN
       'ability','baseSkill','category']::text[]),
     ('traits', ARRAY['id','name']::text[]),
     ('conditions', ARRAY['name','level','decaying','description']::text[]),
-    ('namedNotes', ARRAY['id','name','content']::text[]),
+    ('namedNotes', ARRAY['id','name','content','hidden']::text[]),
     ('proficiencies', ARRAY['kind','id','refId','name','damageType',
       'op1Level','op2Level','op3Level','baseTP','op1TP','op2TP','op3TP','custom']::text[])
   ) s(collection, allowed_keys) LOOP
@@ -811,6 +848,25 @@ BEGIN
   ) e WHERE e.key <> ALL (ARRAY['might','fortitude','reflex','discernment',
       'mentalFortitude','resolve']) LIMIT 1;
   IF FOUND THEN RAISE EXCEPTION 'Unmapped temp defense %', v_bad
+    USING ERRCODE = '22023'; END IF;
+
+  IF p_document ? 'notesSectionOrder'
+     AND p_document->'notesSectionOrder' <> 'null'::jsonb
+     AND jsonb_typeof(p_document->'notesSectionOrder') <> 'array' THEN
+    RAISE EXCEPTION 'Character notesSectionOrder must be an array'
+      USING ERRCODE = '22023';
+  END IF;
+  SELECT value #>> '{}' INTO v_bad
+  FROM jsonb_array_elements(
+    CASE WHEN jsonb_typeof(p_document->'notesSectionOrder') = 'array'
+      THEN p_document->'notesSectionOrder' ELSE '[]'::jsonb END
+  ) entry(value)
+  WHERE jsonb_typeof(value) <> 'string'
+     OR value #>> '{}' <> ALL (ARRAY[
+       'physical','appearance','backstory','archetypeDesc','generalNotes','customNotes'
+     ])
+  LIMIT 1;
+  IF FOUND THEN RAISE EXCEPTION 'Unmapped notes section order entry %', v_bad
     USING ERRCODE = '22023'; END IF;
 END;
 $fn$;
@@ -887,6 +943,8 @@ BEGIN
   DELETE FROM public.character_inventory WHERE character_id = p_character_id;
   DELETE FROM public.character_conditions WHERE character_id = p_character_id;
   DELETE FROM public.character_named_notes WHERE character_id = p_character_id;
+  DELETE FROM public.character_library_section_preferences WHERE character_id = p_character_id;
+  DELETE FROM public.character_note_section_preferences WHERE character_id = p_character_id;
   DELETE FROM public.character_archetype_choices WHERE character_id = p_character_id;
   DELETE FROM public.character_proficiencies WHERE character_id = p_character_id;
   DELETE FROM public.character_temp_modifiers WHERE character_id = p_character_id;
@@ -1262,11 +1320,46 @@ BEGIN
       THEN p_document->'namedNotes' ELSE '[]'::jsonb END
   ) WITH ORDINALITY LOOP
     INSERT INTO public.character_named_notes (
-      character_id, position, note_id, name, content
+      character_id, position, note_id, name, content, hidden
     ) VALUES (
       p_character_id, v_entry.ordinality, v_entry.value->>'id',
-      v_entry.value->>'name', coalesce(v_entry.value->>'content','')
+      v_entry.value->>'name', coalesce(v_entry.value->>'content',''),
+      nullif(v_entry.value->>'hidden','')::boolean
     );
+  END LOOP;
+
+  FOR v_entry IN SELECT key, value FROM jsonb_each(
+    CASE WHEN jsonb_typeof(p_document->'librarySectionVisibility') = 'object'
+      THEN p_document->'librarySectionVisibility' ELSE '{}'::jsonb END
+  ) LOOP
+    INSERT INTO public.character_library_section_preferences (
+      character_id, section_id, visible
+    ) VALUES (
+      p_character_id, v_entry.key, (v_entry.value #>> '{}')::boolean
+    );
+  END LOOP;
+
+  FOR v_entry IN SELECT value, ordinality FROM jsonb_array_elements(
+    CASE WHEN jsonb_typeof(p_document->'notesSectionOrder') = 'array'
+      THEN p_document->'notesSectionOrder' ELSE '[]'::jsonb END
+  ) WITH ORDINALITY LOOP
+    INSERT INTO public.character_note_section_preferences (
+      character_id, section_id, position
+    ) VALUES (
+      p_character_id, v_entry.value #>> '{}', v_entry.ordinality
+    );
+  END LOOP;
+
+  FOR v_entry IN SELECT key, value FROM jsonb_each(
+    CASE WHEN jsonb_typeof(p_document->'notesSectionVisibility') = 'object'
+      THEN p_document->'notesSectionVisibility' ELSE '{}'::jsonb END
+  ) LOOP
+    INSERT INTO public.character_note_section_preferences (
+      character_id, section_id, visible
+    ) VALUES (
+      p_character_id, v_entry.key, (v_entry.value #>> '{}')::boolean
+    ) ON CONFLICT (character_id, section_id) DO UPDATE
+      SET visible = EXCLUDED.visible;
   END LOOP;
 
   FOR v_entry IN SELECT key, value FROM jsonb_each_text(
@@ -1469,7 +1562,9 @@ BEGIN
   FOREACH child IN ARRAY ARRAY[
     'character_species','character_feats','character_skills','character_traits',
     'character_powers','character_techniques','character_inventory',
-    'character_conditions','character_named_notes','character_archetype_choices',
+    'character_conditions','character_named_notes',
+    'character_library_section_preferences','character_note_section_preferences',
+    'character_archetype_choices',
     'character_proficiencies','character_temp_modifiers',
     'character_affiliations','character_ability_components'
   ] LOOP

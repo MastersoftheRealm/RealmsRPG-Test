@@ -23,7 +23,8 @@ WITH keys AS (
     'archetypeFeats','techniques','powers','traits','traitUses',
     'traitCustomizations','stateUsesCurrent','unarmedProwess','equipment',
     'currency','trainingPointsSpent','proficiencies','allies',
-    'organizations','conditions','speedDisplayUnit','libraryTabVisibility','tempModifiers',
+    'organizations','conditions','speedDisplayUnit','libraryTabVisibility',
+    'librarySectionVisibility','notesSectionOrder','notesSectionVisibility','tempModifiers',
     'ancestry','species','ancestryTraits','flawTrait','characteristicTrait',
     'speciesTraits','health_energy_points','creationMode','allTraits',
     '_displayFeats','defenses','defenseBonuses','speed','evasion','armor'
@@ -64,7 +65,9 @@ WITH expected(key, value_type) AS (VALUES
   ('abilities','object'),('defenseVals','object'),('ancestry','object'),
   ('archetype','object'),('equipment','object'),('tempModifiers','object'),
   ('archetypeChoices','object'),('traitUses','object'),
-  ('traitCustomizations','object'),('libraryTabVisibility','object')
+  ('traitCustomizations','object'),('libraryTabVisibility','object'),
+  ('librarySectionVisibility','object'),('notesSectionOrder','array'),
+  ('notesSectionVisibility','object')
 )
 SELECT c.id, e.key, e.value_type AS expected_type,
        jsonb_typeof(c.data->e.key) AS actual_type
@@ -185,6 +188,9 @@ WITH shapes(collection, allowed_keys) AS (VALUES
   ('defenseVals', ARRAY['might','fortitude','reflex','discernment','mentalFortitude','resolve']::text[]),
   ('libraryTabVisibility', ARRAY['powers','techniques','inventory','feats',
     'proficiencies','notes']::text[]),
+  ('librarySectionVisibility', ARRAY['stateFeats','weapons','shields','armor']::text[]),
+  ('notesSectionVisibility', ARRAY['physical','appearance','backstory',
+    'archetypeDesc','generalNotes','customNotes']::text[]),
   ('tempModifiers', ARRAY['speed','evasion','damageReduction','criticalRange',
     'terminal','abilities','defenses','skills','applyAbilityToResourceMaxima']::text[]),
   ('equipment', ARRAY['mainHand','offHand','armor','weapons','shields','items',
@@ -213,7 +219,7 @@ WITH shapes(collection, allowed_keys) AS (VALUES
   ('proficiencies', ARRAY['kind','id','refId','name','damageType','op1Level',
     'op2Level','op3Level','baseTP','op1TP','op2TP','op3TP','custom']::text[]),
   ('conditions', ARRAY['name','level','decaying','description']::text[]),
-  ('namedNotes', ARRAY['id','name','content']::text[])
+  ('namedNotes', ARRAY['id','name','content','hidden']::text[])
 ), fields AS (
   SELECT c.id, s.collection, x.ordinality AS position, e.key, s.allowed_keys
   FROM public.characters c CROSS JOIN shapes s

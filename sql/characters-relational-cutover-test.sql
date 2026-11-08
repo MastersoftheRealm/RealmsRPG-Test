@@ -43,7 +43,14 @@ BEGIN
     'powers','[]'::jsonb,
     'techniques','[]'::jsonb,
     'conditions','[]'::jsonb,
-    'namedNotes','[]'::jsonb,
+    'namedNotes',jsonb_build_array(jsonb_build_object(
+      'id','hidden-note','name','Hidden Note','content','Secret','hidden',false
+    )),
+    'librarySectionVisibility',jsonb_build_object('shields',false),
+    'notesSectionOrder',jsonb_build_array(
+      'customNotes','physical','appearance','backstory','archetypeDesc','generalNotes'
+    ),
+    'notesSectionVisibility',jsonb_build_object('backstory',false),
     'proficiencies','[]'::jsonb
   );
 
@@ -62,8 +69,12 @@ BEGIN
      OR v_document->>'trainingPointsSpent' <> '2.5'
      OR v_document#>>'{equipment,mainHand,id}' <> 'custom-main'
      OR v_document#>>'{equipment,offHand,id}' <> 'custom-off'
-     OR v_document#>>'{equipment,armor,id}' <> 'custom-armor' THEN
-    RAISE EXCEPTION 'New scalar or equipment slot failed relational round trip';
+     OR v_document#>>'{equipment,armor,id}' <> 'custom-armor'
+     OR v_document#>>'{namedNotes,0,hidden}' <> 'false'
+     OR v_document#>>'{librarySectionVisibility,shields}' <> 'false'
+     OR v_document#>>'{notesSectionOrder,0}' <> 'customNotes'
+     OR v_document#>>'{notesSectionVisibility,backstory}' <> 'false' THEN
+    RAISE EXCEPTION 'New scalar, equipment, or preference failed relational round trip';
   END IF;
 
   PERFORM set_config(

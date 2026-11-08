@@ -20,6 +20,9 @@ references contain only a name, and private library rows can be deleted independ
    `characters`. One-to-many selections and state live in named `character_*` tables.
    Child rows carry position where order is visible. A source-specific nullable FK
    points to exactly one definition table when a reference resolves uniquely.
+   Sheet subsection visibility, notes-section order/visibility, and named-note hidden
+   state use typed preference/note fields so the contract does not retain a generic
+   character JSON payload.
 3. Codex and official FKs restrict deletion. User library FKs set null on deletion;
    the character row keeps its source ID and name snapshot for unresolved display.
    A private library FK must belong to the same user as the parent character.
