@@ -15,6 +15,7 @@ vi.mock('@/lib/supabase/server', () => ({
 }));
 
 import { REALMS_IMAGES_LIST_LIMIT } from '@/lib/realms-images';
+import { encodeRealmsImagesListCursor } from '@/lib/realms-images-list-cursor';
 import { GET, POST } from './route';
 import { requireLiveUser } from '@/lib/supabase/session';
 import { isAdmin } from '@/lib/admin';
@@ -27,11 +28,14 @@ const mockCreateServiceRoleClient = vi.mocked(createServiceRoleClient);
 
 const USER = { uid: 'user-123', email: 'hero@example.com' };
 
-function createListSupabase(options?: { ilike?: ReturnType<typeof vi.fn> }) {
+function createListSupabase(options?: {
+  ilike?: ReturnType<typeof vi.fn>;
+  range?: ReturnType<typeof vi.fn>;
+}) {
   const payload = { data: [] as unknown[], error: null };
-  const limit = vi.fn().mockResolvedValue(payload);
+  const range = options?.range ?? vi.fn().mockResolvedValue(payload);
   const afterIlike = {
-    limit,
+    range,
     then: (
       onFulfilled: (value: typeof payload) => unknown,
       onRejected?: (reason: unknown) => unknown,
@@ -40,7 +44,7 @@ function createListSupabase(options?: { ilike?: ReturnType<typeof vi.fn> }) {
   const ilike = options?.ilike ?? vi.fn().mockReturnValue(afterIlike);
   const terminal = {
     ilike,
-    limit,
+    range,
     then: (
       onFulfilled: (value: typeof payload) => unknown,
       onRejected?: (reason: unknown) => unknown,
@@ -57,7 +61,7 @@ function createListSupabase(options?: { ilike?: ReturnType<typeof vi.fn> }) {
       };
     }),
     ilike,
-    limit,
+    range,
     order,
   };
 }
@@ -89,17 +93,45 @@ describe('GET /api/images', () => {
     const response = await GET(makeGetRequest());
 
     expect(response.status).toBe(200);
-    await expect(readJson(response)).resolves.toEqual({ images: [] });
-    expect(chain.limit).toHaveBeenCalledWith(REALMS_IMAGES_LIST_LIMIT);
+    await expect(readJson(response)).resolves.toEqual({
+      images: [],
+      hasMore: false,
+      nextCursor: null,
+    });
+    expect(chain.range).toHaveBeenCalledWith(0, REALMS_IMAGES_LIST_LIMIT);
     expect(mockRequireLiveUser).not.toHaveBeenCalled();
+  });
+
+  it('returns hasMore and nextCursor when another page exists', async () => {
+    const range = vi.fn().mockResolvedValue({
+      data: Array.from({ length: REALMS_IMAGES_LIST_LIMIT + 1 }, (_, i) => ({
+        id: `img-${i}`,
+        name: `Name ${i}`,
+      })),
+      error: null,
+    });
+    const chain = createListSupabase({ range });
+    mockCreateClient.mockResolvedValue(chain as never);
+
+    const response = await GET(makeGetRequest());
+    const body = await readJson<{
+      images: unknown[];
+      hasMore: boolean;
+      nextCursor: string | null;
+    }>(response);
+
+    expect(response.status).toBe(200);
+    expect(body.images).toHaveLength(REALMS_IMAGES_LIST_LIMIT);
+    expect(body.hasMore).toBe(true);
+    expect(body.nextCursor).toBe(encodeRealmsImagesListCursor(REALMS_IMAGES_LIST_LIMIT));
   });
 
   it('escapes LIKE metacharacters in q before ilike', async () => {
     const ilike = vi.fn().mockImplementation(() => {
       const payload = { data: [] as unknown[], error: null };
-      const limit = vi.fn().mockResolvedValue(payload);
+      const range = vi.fn().mockResolvedValue(payload);
       return {
-        limit,
+        range,
         then: (
           onFulfilled: (value: typeof payload) => unknown,
           onRejected?: (reason: unknown) => unknown,

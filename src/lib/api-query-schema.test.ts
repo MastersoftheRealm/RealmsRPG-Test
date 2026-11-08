@@ -42,6 +42,7 @@ describe('strict API query schemas', () => {
       true,
     );
     expect(imagesListQuerySchema.safeParse({ q: 'a'.repeat(101) }).success).toBe(false);
+    expect(imagesListQuerySchema.safeParse({ cursor: 'MjAw' }).success).toBe(true);
     expectStrictRejectsUnknown(imagesListQuerySchema);
   });
 

@@ -13,6 +13,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { requestPasswordResetAction } from '@/app/(auth)/auth-actions';
 import { forgotPasswordSchema, type ForgotPasswordFormData } from '@/lib/validation';
 import { getAuthErrorMessage } from '@/lib/auth-errors';
+import { presentPasswordResetActionFailure } from './forgot-password-action-result';
 import { AuthCard, AuthTurnstile, FormInput } from '@/components/auth';
 import { Button, Alert } from '@/components/ui';
 import { useAuthCaptcha } from '@/hooks/use-auth-captcha';
@@ -54,7 +55,9 @@ export default function ForgotPasswordPage() {
         captchaOptions.captchaToken ?? null,
       );
       if (!result.success) {
-        throw new Error(result.error);
+        resetCaptcha();
+        setError(presentPasswordResetActionFailure(result));
+        return;
       }
       setIsSuccess(true);
     } catch (err) {

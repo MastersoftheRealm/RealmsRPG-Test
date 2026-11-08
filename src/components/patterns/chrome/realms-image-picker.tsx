@@ -7,7 +7,7 @@
  */
 
 import { useCallback, useMemo, useState } from 'react';
-import { useQuery } from '@tanstack/react-query';
+import { useInfiniteQuery } from '@tanstack/react-query';
 import { Check, ImageIcon, Upload } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { ChipSelect } from '../filters';
@@ -18,7 +18,7 @@ import {
   REALMS_IMAGE_CATEGORY_OPTIONS,
   createRealmsImage,
   formatRealmsImageCategoryLabels,
-  listRealmsImages,
+  listRealmsImagesPage,
   parseRealmsImageCategories,
   resolveRealmsImagePickerCategories,
   type RealmsImage,
@@ -201,19 +201,27 @@ export function RealmsImagePicker({
   }
 
   const {
-    data: images = [],
+    data,
     isLoading,
     error: loadError,
     refetch,
-  } = useQuery({
+    fetchNextPage,
+    hasNextPage,
+    isFetchingNextPage,
+  } = useInfiniteQuery({
     queryKey: ['realms-images', 'picker', filterCategories, search],
-    queryFn: () =>
-      listRealmsImages({
+    queryFn: ({ pageParam }) =>
+      listRealmsImagesPage({
         category: filterCategories,
         q: search.trim() || undefined,
+        cursor: pageParam,
       }),
+    initialPageParam: undefined as string | undefined,
+    getNextPageParam: (lastPage) => lastPage.nextCursor ?? undefined,
     enabled: isOpen,
   });
+
+  const images = useMemo(() => data?.pages.flatMap((page) => page.images) ?? [], [data?.pages]);
 
   const filterLabel = formatRealmsImageCategoryLabels(filterCategories);
 
@@ -498,6 +506,22 @@ export function RealmsImagePicker({
                 })}
               </ul>
             )}
+            {hasNextPage ? (
+              <div className="flex justify-center pt-4 pb-2">
+                <Button
+                  type="button"
+                  variant="secondary"
+                  className="min-h-11"
+                  onClick={() => {
+                    void fetchNextPage();
+                  }}
+                  disabled={isFetchingNextPage}
+                  isLoading={isFetchingNextPage}
+                >
+                  Load more
+                </Button>
+              </div>
+            ) : null}
           </div>
         </div>
       </Modal>

@@ -27,6 +27,10 @@ import { apiErrorResponse, logApiError } from '@/lib/api-error';
 import { imagesListQuerySchema, validateQuery, verifyMutationRequest } from '@/lib/api-validation';
 import { escapeIlikePattern } from '@/lib/ilike-pattern';
 import {
+  decodeRealmsImagesListCursor,
+  encodeRealmsImagesListCursor,
+} from '@/lib/realms-images-list-cursor';
+import {
   REALMS_IMAGE_SELECT,
   fetchRealmsImageById,
   mapRealmsImageRow,
@@ -61,6 +65,11 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'Invalid category filter' }, { status: 400 });
     }
     const q = queryResult.data.q?.trim() ?? '';
+    const rawCursor = queryResult.data.cursor?.trim();
+    const offset = !rawCursor ? 0 : (decodeRealmsImagesListCursor(rawCursor) ?? -1);
+    if (rawCursor && offset < 0) {
+      return NextResponse.json({ error: 'Invalid cursor' }, { status: 400 });
+    }
 
     // Public reads: cookie-aware anon/authenticated client so RLS governs visibility (SEC audit M3).
     const supabase = await createClient();
@@ -85,7 +94,7 @@ export async function GET(request: NextRequest) {
         new Set((catRows ?? []).map((r) => String((r as { image_id: string }).image_id))),
       );
       if (filteredIds.length === 0) {
-        return NextResponse.json({ images: [] });
+        return NextResponse.json({ images: [], hasMore: false, nextCursor: null });
       }
     }
 
@@ -102,15 +111,19 @@ export async function GET(request: NextRequest) {
       query = query.ilike('name', pattern);
     }
 
-    query = query.limit(REALMS_IMAGES_LIST_LIMIT);
-
-    const { data, error } = await query;
+    const pageSize = REALMS_IMAGES_LIST_LIMIT;
+    const rangeEnd = offset + pageSize;
+    const { data, error } = await query.range(offset, rangeEnd);
     if (error) {
       return apiErrorResponse('Failed to list images', 500, 'GET /api/images', error);
     }
 
-    const images = ((data ?? []) as RealmsImageRow[]).map(mapRealmsImageRow);
-    return NextResponse.json({ images });
+    const rows = (data ?? []) as RealmsImageRow[];
+    const hasMore = rows.length > pageSize;
+    const pageRows = hasMore ? rows.slice(0, pageSize) : rows;
+    const images = pageRows.map(mapRealmsImageRow);
+    const nextCursor = hasMore ? encodeRealmsImagesListCursor(offset + pageSize) : null;
+    return NextResponse.json({ images, hasMore, nextCursor });
   } catch (err) {
     logApiError('GET /api/images', err);
     return apiErrorResponse('Failed to list images', 500);

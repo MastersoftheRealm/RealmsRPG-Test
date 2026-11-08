@@ -82,18 +82,67 @@ describe('auth-actions rate limits', () => {
     expect(mockSignUp).not.toHaveBeenCalled();
   });
 
-  it('signUpAction returns the same success shape when the email already exists', async () => {
-    mockSignUp.mockResolvedValue({
+  it('signUpAction matches fresh-email confirmation for a new address without a session', async () => {
+    mockSignUp.mockResolvedValue({ data: { session: null }, error: null });
+
+    const { signUpAction } = await import('./auth-actions');
+    const result = await signUpAction('new-user@example.com', 'secret');
+
+    expect(result).toEqual({ success: true, needsEmailConfirmation: true });
+  });
+
+  it('signUpAction signs in immediately when Supabase returns a session for a fresh email', async () => {
+    mockSignUp.mockResolvedValue({ data: { session: { access_token: 'tok' } }, error: null });
+
+    const { signUpAction } = await import('./auth-actions');
+    const result = await signUpAction('new-user@example.com', 'secret');
+
+    expect(result).toEqual({ success: true, needsEmailConfirmation: false });
+  });
+
+  it('signUpAction returns the same success shape for duplicate-email codes as a fresh confirmation', async () => {
+    const { signUpAction } = await import('./auth-actions');
+
+    mockSignUp.mockResolvedValueOnce({ data: { session: null }, error: null });
+    const fresh = await signUpAction('new-user@example.com', 'secret');
+
+    mockSignUp.mockResolvedValueOnce({
       data: { session: null },
       error: { message: 'User already registered', code: 'user_already_exists' },
+    });
+    const duplicate = await signUpAction('existing@example.com', 'secret');
+
+    expect(duplicate).toEqual({ success: true, needsEmailConfirmation: true });
+    expect(duplicate).toEqual(fresh);
+  });
+
+  it('signUpAction does not treat duplicate-looking text without a code as success', async () => {
+    mockSignUp.mockResolvedValue({
+      data: { session: null },
+      error: { message: 'User already registered' },
+    });
+
+    const { signUpAction } = await import('./auth-actions');
+    const result = await signUpAction('user@example.com', 'secret');
+
+    expect(result.success).toBe(false);
+    if (!result.success) {
+      expect(result.error).toBe('An error occurred during registration. Please try again.');
+    }
+  });
+
+  it('signUpAction surfaces unrelated Supabase failures', async () => {
+    mockSignUp.mockResolvedValue({
+      data: { session: null },
+      error: { message: 'Password is known to be weak', code: 'weak_password' },
     });
 
     const { signUpAction } = await import('./auth-actions');
     const result = await signUpAction('user@example.com', 'secret');
 
     expect(result).toEqual({
-      success: true,
-      needsEmailConfirmation: true,
+      success: false,
+      error: 'Password is too weak. Please choose a stronger password.',
     });
   });
 

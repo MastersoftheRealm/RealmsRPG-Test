@@ -25,9 +25,11 @@ export type AuthActionFailureReason =
   | 'rate_limited'
   | 'generic';
 
-export function isAuthAlreadyExistsError(error: unknown): boolean {
-  const { message: rawMessage, code: rawCode } = readAuthError(error);
-  return isAlreadyExistsError(rawMessage.toLowerCase(), rawCode.toLowerCase());
+/** Sign-up only: match Supabase duplicate-email codes, not broad message text. */
+export function isAuthSignUpDuplicateEmailError(error: unknown): boolean {
+  const { code: rawCode } = readAuthError(error);
+  const code = rawCode.toLowerCase();
+  return code === 'user_already_exists' || code === 'email_exists';
 }
 
 /** Stable reason for action results after {@link getAuthErrorMessage} has run. */
@@ -192,9 +194,9 @@ export function getAuthErrorMessage(error: unknown, context: AuthErrorContext = 
   }
 
   if (isAlreadyExistsError(message, code)) {
-    return context === 'update-email'
-      ? 'Email already in use'
-      : 'An account with this email already exists.';
+    if (context === 'update-email') return 'Email already in use';
+    if (context === 'register') return fallbackMessage('register');
+    return 'An account with this email already exists.';
   }
 
   if (isWeakPasswordError(message, code)) {

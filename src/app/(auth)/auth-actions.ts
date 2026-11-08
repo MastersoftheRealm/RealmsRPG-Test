@@ -7,7 +7,7 @@ import {
   AUTH_RATE_LIMIT_MESSAGE,
   authActionFailureReason,
   getAuthErrorMessage,
-  isAuthAlreadyExistsError,
+  isAuthSignUpDuplicateEmailError,
 } from '@/lib/auth-errors';
 import type { AuthActionFailureReason } from '@/lib/auth-errors';
 import { resolveAuthEmailSiteOrigin } from '@/lib/auth-email-site-origin';
@@ -161,7 +161,7 @@ export async function signUpAction(
     if (mapSupabaseRateLimit(error.message ?? '')) {
       return { success: false, error: AUTH_RATE_LIMIT_MESSAGE, rateLimited: true };
     }
-    if (isAuthAlreadyExistsError(error)) {
+    if (isAuthSignUpDuplicateEmailError(error)) {
       return { success: true, needsEmailConfirmation: true };
     }
     return { success: false, error: getAuthErrorMessage(error, 'register') };

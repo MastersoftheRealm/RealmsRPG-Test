@@ -1,5 +1,14 @@
 import { describe, expect, it } from 'vitest';
-import { getAuthErrorMessage } from './auth-errors';
+import { getAuthErrorMessage, isAuthSignUpDuplicateEmailError } from './auth-errors';
+
+describe('isAuthSignUpDuplicateEmailError', () => {
+  it('matches Supabase duplicate-email codes only', () => {
+    expect(
+      isAuthSignUpDuplicateEmailError({ code: 'user_already_exists', message: 'anything' }),
+    ).toBe(true);
+    expect(isAuthSignUpDuplicateEmailError({ message: 'User already registered' })).toBe(false);
+  });
+});
 
 describe('getAuthErrorMessage', () => {
   it('does not label SMTP / confirmation-send failures as invalid email', () => {
@@ -59,7 +68,7 @@ describe('getAuthErrorMessage', () => {
         { message: 'User already registered', code: 'user_already_exists' },
         'register',
       ),
-    ).toBe('An account with this email already exists.');
+    ).toBe('An error occurred during registration. Please try again.');
     expect(
       getAuthErrorMessage(
         { message: 'Password should be at least 6 characters', code: 'weak_password' },
