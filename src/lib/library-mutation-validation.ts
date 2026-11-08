@@ -7,7 +7,10 @@ import {
   unknownPersistedLibraryKeys,
   unknownPersistedSpeciesKeys,
 } from '@/lib/library-persisted-contract';
-import { applyUserLibraryImageWritePolicy } from '@/lib/library-image-write';
+import {
+  applyUserLibraryImageWritePolicy,
+  officialImageFieldAuthzError,
+} from '@/lib/library-image-write';
 
 export type LibraryWriteValidationMode = 'create' | 'patch';
 
@@ -17,9 +20,18 @@ export function validateUserLibraryWriteBody(
   options?: {
     allowImageUrl?: boolean | undefined;
     mode?: LibraryWriteValidationMode | undefined;
+    /** When set, reject image column writes unless `isAdmin` is true (official catalog POST). */
+    isAdmin?: boolean | undefined;
   },
 ): NextResponse | null {
   const reject = (message: string) => NextResponse.json({ error: message }, { status: 400 });
+  const rejectForbidden = (message: string) =>
+    NextResponse.json({ error: message }, { status: 403 });
+
+  if (options?.isAdmin !== undefined) {
+    const imageAuthzError = officialImageFieldAuthzError(body, options.isAdmin);
+    if (imageAuthzError) return rejectForbidden(imageAuthzError);
+  }
 
   if (isColumnarLibraryTypeName(type)) {
     const unknown = unknownPersistedLibraryKeys(type as ColumnarLibraryType, body);

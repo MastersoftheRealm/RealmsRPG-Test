@@ -1,5 +1,21 @@
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 
+const IMAGE_WRITE_KEYS = ['imageId', 'image_id', 'imageUrl', 'image_url'] as const;
+
+function bodyHasImageWriteFields(body: Record<string, unknown>): boolean {
+  return IMAGE_WRITE_KEYS.some((key) => body[key] !== undefined);
+}
+
+/** Official catalog writes require admin when the payload touches image columns. */
+export function officialImageFieldAuthzError(
+  body: Record<string, unknown>,
+  isAdmin: boolean,
+): string | null {
+  if (isAdmin) return null;
+  if (!bodyHasImageWriteFields(body)) return null;
+  return 'Admin only';
+}
+
 /** Non-admin library writes may set bank image_id only; direct URL injection is stripped. */
 export function applyUserLibraryImageWritePolicy(body: Record<string, unknown>): string | null {
   delete body.imageUrl;

@@ -336,6 +336,27 @@ describe('POST /api/official/[type]', () => {
     expect(mockCreateServiceRoleClient).not.toHaveBeenCalled();
   });
 
+  it('returns 403 when a non-admin posts official image fields', async () => {
+    mockRequireLiveUser.mockResolvedValue(USER);
+    mockIsAdmin.mockResolvedValue(false);
+
+    const request = new NextRequest('http://localhost/api/official/powers', {
+      method: 'POST',
+      headers: { 'content-type': 'application/json', origin: 'http://localhost' },
+      body: JSON.stringify({
+        name: 'Firebolt',
+        imageId: '11111111-1111-4111-8111-111111111111',
+        imageUrl: 'https://evil.example/art.jpg',
+      }),
+    });
+
+    const response = await POST(request, params('powers'));
+
+    expect(response.status).toBe(403);
+    await expect(readJson(response)).resolves.toEqual({ error: 'Admin only' });
+    expect(mockCreateServiceRoleClient).not.toHaveBeenCalled();
+  });
+
   it('records create changelog with afterData and null beforeData', async () => {
     mockRequireLiveUser.mockResolvedValue(USER);
     mockIsAdmin.mockResolvedValue(true);
