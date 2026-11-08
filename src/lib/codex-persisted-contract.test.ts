@@ -18,6 +18,19 @@ describe('codexPersistedFieldShapeError', () => {
     expect(codexPersistedFieldShapeError('codex_feats', 'ability', ['strength'])).toBeNull();
   });
 
+  it('accepts comma-separated feat ability text from spreadsheet cells', () => {
+    expect(codexPersistedFieldShapeError('codex_feats', 'ability', 'strength, agility')).toBeNull();
+    expect(codexPersistedFieldShapeError('codex_feats', 'abilReqVal', '2')).toBeNull();
+    expect(codexPersistedFieldShapeError('codex_feats', 'abilReqVal', 2)).toBeNull();
+    expect(codexPersistedFieldShapeError('codex_feats', 'abilReqVal', '2, 4')).toBeNull();
+  });
+
+  it('rejects feat number lists with invalid tokens', () => {
+    expect(codexPersistedFieldShapeError('codex_feats', 'abilReqVal', '2, Infinity')).toMatch(
+      /numbers/i,
+    );
+  });
+
   it('keeps skill ability scalar for codex_skills', () => {
     expect(codexPersistedFieldShapeError('codex_skills', 'ability', 'strength')).toBeNull();
     expect(codexPersistedFieldShapeError('codex_skills', 'ability', ['strength'])).toMatch(
@@ -34,6 +47,18 @@ describe('codexPersistedFieldShapeError', () => {
     expect(
       codexPersistedFieldShapeError('codex_species', 'adulthoodLifespan', [20, 750]),
     ).toBeNull();
+    expect(
+      codexPersistedFieldShapeError('codex_species', 'adulthoodLifespan', '20, 750'),
+    ).toBeNull();
+  });
+
+  it('rejects species lifespan strings that include non-finite tokens', () => {
+    expect(
+      codexPersistedFieldShapeError('codex_species', 'adulthoodLifespan', '20, Infinity'),
+    ).toMatch(/numeric range/i);
+    expect(
+      codexPersistedFieldShapeError('codex_species', 'adulthoodLifespan', [20, Infinity]),
+    ).toMatch(/numeric range/i);
   });
 
   it('rejects invalid catalogListing values', () => {
@@ -54,6 +79,22 @@ describe('codexPersistedFieldShapeError', () => {
         armorStep: 'optional',
       }),
     ).toBeNull();
+  });
+
+  it('rejects nested archetype JSON that read parsers would drop', () => {
+    expect(
+      codexPersistedFieldShapeError('codex_archetypes', 'level1GuidanceGroups', [false]),
+    ).toMatch(/must be an object/i);
+    expect(
+      codexPersistedFieldShapeError('codex_archetypes', 'level1RecommendedAbilities', {
+        strength: {},
+      }),
+    ).toMatch(/finite number/i);
+    expect(
+      codexPersistedFieldShapeError('codex_archetypes', 'level1Loadouts', {
+        sharedEquipment: [false],
+      }),
+    ).toMatch(/must be an object/i);
   });
 });
 

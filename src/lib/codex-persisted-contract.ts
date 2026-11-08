@@ -4,6 +4,11 @@
  */
 
 import type { CodexCollection } from '@/lib/codex/collections';
+import {
+  codexWriteGuidanceGroupsError,
+  codexWriteLevel1LoadoutsError,
+  codexWriteRecommendedAbilitiesError,
+} from '@/lib/game/archetype-path';
 import { CATALOG_LISTINGS } from '@/lib/library/catalog-listing';
 import {
   CODEX_BOOLEAN_FIELD_KEYS,
@@ -102,18 +107,83 @@ function codexJsonFieldShapeError(camel: string, value: unknown): string | null 
   if (parsed == null || parsed === '') return null;
 
   if (camel === 'level1Loadouts') {
-    if (Array.isArray(parsed) || isPlainObject(parsed)) return null;
-    return `${camel} must be a JSON object or array`;
+    if (!Array.isArray(parsed) && !isPlainObject(parsed)) {
+      return `${jsonFieldDbLabel(camel)} must be a JSON object or array`;
+    }
+    return codexWriteLevel1LoadoutsError(parsed);
   }
   if (camel === 'level1RecommendedAbilities') {
-    if (isPlainObject(parsed) && !Array.isArray(parsed)) return null;
-    return `${camel} must be a JSON object`;
+    if (!isPlainObject(parsed) || Array.isArray(parsed)) {
+      return `${jsonFieldDbLabel(camel)} must be a JSON object`;
+    }
+    return codexWriteRecommendedAbilitiesError(parsed);
   }
   if (camel === 'level1GuidanceGroups') {
-    if (Array.isArray(parsed)) return null;
-    return `${camel} must be a JSON array`;
+    if (!Array.isArray(parsed)) {
+      return `${jsonFieldDbLabel(camel)} must be a JSON array`;
+    }
+    return codexWriteGuidanceGroupsError(parsed);
   }
   return `${camel} must be a JSON object or array`;
+}
+
+function commaSeparatedNonEmptyParts(value: string): string[] {
+  return value.split(',').map((part) => part.trim());
+}
+
+function featStringListShapeError(camel: string, value: unknown): string | null {
+  if (isAbsent(value)) return null;
+  if (isStringArray(value)) return null;
+  if (typeof value === 'string') {
+    const trimmed = value.trim();
+    if (!trimmed) return null;
+    const parts = commaSeparatedNonEmptyParts(trimmed);
+    if (parts.length === 0 || parts.some((part) => part.length === 0)) {
+      return `${camel} must be an array of strings`;
+    }
+    return null;
+  }
+  return `${camel} must be an array of strings`;
+}
+
+function featNumberListShapeError(camel: string, value: unknown): string | null {
+  if (isAbsent(value)) return null;
+  if (isFiniteNumberArray(value)) return null;
+  if (typeof value === 'number') {
+    return Number.isFinite(value) ? null : `${camel} must be an array of numbers`;
+  }
+  if (typeof value === 'string') {
+    const trimmed = value.trim();
+    if (!trimmed) return null;
+    const parts = commaSeparatedNonEmptyParts(trimmed);
+    if (parts.length === 0 || parts.some((part) => part.length === 0)) {
+      return `${camel} must be an array of numbers`;
+    }
+    if (!parts.every((part) => Number.isFinite(Number(part)))) {
+      return `${camel} must be an array of numbers`;
+    }
+    return null;
+  }
+  return `${camel} must be an array of numbers`;
+}
+
+function adulthoodLifespanShapeError(value: unknown): string | null {
+  if (isAbsent(value)) return null;
+  if (isFiniteNumberArray(value)) return null;
+  if (typeof value === 'number') {
+    return Number.isFinite(value) ? null : 'adulthoodLifespan must be a numeric range';
+  }
+  if (typeof value === 'string') {
+    const trimmed = value.trim();
+    if (!trimmed) return null;
+    const parts = commaSeparatedNonEmptyParts(trimmed).filter((part) => part.length > 0);
+    if (parts.length === 0) return 'adulthoodLifespan must be a numeric range';
+    if (!parts.every((part) => Number.isFinite(Number(part)))) {
+      return 'adulthoodLifespan must be a numeric range';
+    }
+    return null;
+  }
+  return 'adulthoodLifespan must be a numeric range';
 }
 
 function collectionFieldShapeError(
@@ -123,14 +193,10 @@ function collectionFieldShapeError(
 ): string | null {
   if (collection === 'codex_feats') {
     if (camel === 'ability' || camel === 'abilityReq' || camel === 'skillReq') {
-      if (isAbsent(value)) return null;
-      if (isStringArray(value)) return null;
-      return `${camel} must be an array of strings`;
+      return featStringListShapeError(camel, value);
     }
     if (camel === 'abilReqVal' || camel === 'skillReqVal') {
-      if (isAbsent(value)) return null;
-      if (isFiniteNumberArray(value)) return null;
-      return `${camel} must be an array of numbers`;
+      return featNumberListShapeError(camel, value);
     }
   }
 
@@ -150,16 +216,7 @@ function collectionFieldShapeError(
   }
 
   if (collection === 'codex_species' && camel === 'adulthoodLifespan') {
-    if (isAbsent(value)) return null;
-    if (isFiniteNumberArray(value)) return null;
-    if (typeof value === 'string') {
-      const parts = value
-        .split(',')
-        .map((s) => Number(s.trim()))
-        .filter((n) => Number.isFinite(n));
-      if (parts.length > 0) return null;
-    }
-    return 'adulthoodLifespan must be a numeric range';
+    return adulthoodLifespanShapeError(value);
   }
 
   return null;

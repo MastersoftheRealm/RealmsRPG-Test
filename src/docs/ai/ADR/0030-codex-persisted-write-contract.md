@@ -15,7 +15,7 @@ Admin Codex saves (`createCodexDoc` / `updateCodexDoc`) and official library adm
 3. **`lib/codex-mutation-validation.ts`** — throws with editor-safe messages; wired from `assertCodexAdminPayloadKeys` in `codex-column-map.ts` (single path into `toColumnarPayload` / `toDbPayload`).
 4. **Official/user library writes** stay on `library-persisted-contract.ts` + `validateUserLibraryWriteBody` — no duplicate Codex contract on those routes.
 
-Archetype JSON columns reuse domain parsers in `lib/game/archetype-path.ts` for structural rules (object/array kits, recommended-ability maps, guidance arrays).
+Archetype JSON columns call strict write validators in `lib/game/archetype-path.ts` (`codexWriteLevel1LoadoutsError`, `codexWriteRecommendedAbilitiesError`, `codexWriteGuidanceGroupsError`). They enforce the same structural rules as the lenient read parsers (`parseLevel1LoadoutsField`, `parseRecommendedAbilities`, `parseGuidanceGroups`) but reject invalid nested elements instead of dropping them.
 
 ## Consequences
 

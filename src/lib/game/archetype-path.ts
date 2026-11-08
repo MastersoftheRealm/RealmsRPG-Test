@@ -257,6 +257,114 @@ export function serializeLevel1LoadoutsField(field: Level1LoadoutsField): unknow
   };
 }
 
+function validateSharedEquipmentEntry(value: unknown, path: string): string | null {
+  if (!isRecord(value)) return `${path} must be an object`;
+  const id = value.id != null ? String(value.id).trim() : '';
+  if (!id) return `${path} must include a non-empty id`;
+  if ('quantity' in value && value.quantity !== undefined) {
+    const q = Number(value.quantity);
+    if (!Number.isFinite(q) || q < 1) return `${path}.quantity must be a finite number >= 1`;
+  }
+  return null;
+}
+
+/** Strict write-time validation for `level1_loadouts` (admin Codex). */
+export function codexWriteLevel1LoadoutsError(value: unknown): string | null {
+  if (Array.isArray(value)) {
+    for (let i = 0; i < value.length; i++) {
+      const entry = value[i];
+      if (!isRecord(entry)) return `level1_loadouts[${i}] must be an object`;
+      const label =
+        typeof entry.id === 'string'
+          ? entry.id
+          : typeof entry.title === 'string'
+            ? entry.title
+            : '';
+      if (!label.trim()) return `level1_loadouts[${i}] must have id or title`;
+    }
+    return null;
+  }
+  if (!isRecord(value)) return 'level1_loadouts must be a JSON object or array';
+  if ('armorStep' in value && value.armorStep !== undefined && !parseArmorStep(value.armorStep)) {
+    return 'level1_loadouts.armorStep is invalid';
+  }
+  if ('sharedEquipment' in value && value.sharedEquipment !== undefined) {
+    const shared = value.sharedEquipment;
+    if (!Array.isArray(shared)) return 'level1_loadouts.sharedEquipment must be an array';
+    for (let i = 0; i < shared.length; i++) {
+      const err = validateSharedEquipmentEntry(shared[i], `level1_loadouts.sharedEquipment[${i}]`);
+      if (err) return err;
+    }
+  }
+  const kitsRaw = value.kits ?? value.loadouts;
+  if (kitsRaw !== undefined) {
+    if (!Array.isArray(kitsRaw)) return 'level1_loadouts.loadouts must be an array';
+    for (let i = 0; i < kitsRaw.length; i++) {
+      if (!isRecord(kitsRaw[i])) return `level1_loadouts.loadouts[${i}] must be an object`;
+    }
+  }
+  return null;
+}
+
+/** Strict write-time validation for `level1_recommended_abilities`. */
+export function codexWriteRecommendedAbilitiesError(value: unknown): string | null {
+  if (!isRecord(value) || Array.isArray(value)) {
+    return 'level1_recommended_abilities must be a JSON object';
+  }
+  for (const [key, raw] of Object.entries(value)) {
+    if (!ABILITY_NAMES.includes(key as AbilityName)) {
+      return `level1_recommended_abilities contains unsupported key: ${key}`;
+    }
+    if (raw == null) continue;
+    const n = Number(raw);
+    if (!Number.isFinite(n)) {
+      return `level1_recommended_abilities.${key} must be a finite number`;
+    }
+  }
+  return null;
+}
+
+function validateGuidanceStringList(field: unknown, path: string): string | null {
+  if (field === undefined) return null;
+  if (!Array.isArray(field)) return `${path} must be an array of strings`;
+  if (!field.every((entry) => typeof entry === 'string')) {
+    return `${path} must be an array of strings`;
+  }
+  return null;
+}
+
+/** Strict write-time validation for `level1_guidance_groups`. */
+export function codexWriteGuidanceGroupsError(value: unknown): string | null {
+  if (!Array.isArray(value)) return 'level1_guidance_groups must be a JSON array';
+  for (let i = 0; i < value.length; i++) {
+    const entry = value[i];
+    if (!isRecord(entry)) return `level1_guidance_groups[${i}] must be an object`;
+    const label =
+      typeof entry.id === 'string' ? entry.id : typeof entry.title === 'string' ? entry.title : '';
+    if (!label.trim()) return `level1_guidance_groups[${i}] must have id or title`;
+    for (const key of [
+      'feats',
+      'powers',
+      'innatePowers',
+      'innate_powers',
+      'techniques',
+      'armaments',
+      'equipment',
+    ] as const) {
+      const err = validateGuidanceStringList(entry[key], `level1_guidance_groups[${i}].${key}`);
+      if (err) return err;
+    }
+    if (
+      'audience' in entry &&
+      entry.audience !== undefined &&
+      !isPathGuidanceAudience(entry.audience)
+    ) {
+      return `level1_guidance_groups[${i}].audience is invalid`;
+    }
+  }
+  return null;
+}
+
 function parseGuidanceGroups(value: unknown): PathGuidanceGroup[] | undefined {
   if (!Array.isArray(value)) return undefined;
   const groups = value

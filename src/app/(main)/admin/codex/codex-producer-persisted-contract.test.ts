@@ -4,7 +4,7 @@ import { partFormToSavePayload, type PartFormState } from './admin-part-form';
 import { speciesFormToSavePayload, type SpeciesFormState } from './admin-species-form';
 import { assertCodexAdminPayloadKeys, toColumnarPayload, toDbPayload } from './codex-column-map';
 import { mapCodexFeat, mapCodexPart, mapCodexSpecies } from '@/lib/codex/row-map';
-import { rowDataWithoutId } from './codex-spreadsheet-helpers';
+import { rowDataWithoutId, stringToCellValue } from './codex-spreadsheet-helpers';
 
 const populatedFeatForm: FeatFormState = {
   name: 'Athletic',
@@ -163,6 +163,56 @@ describe('codex producer payloads through assertCodexAdminPayloadKeys', () => {
         level1_recommended_abilities: '42',
       }),
     ).toThrow(/JSON object/i);
+  });
+
+  it('accepts spreadsheet cell edits for feat lists through guard and mapper', () => {
+    const abilityOriginal = ['strength', 'agility'];
+    const abilReqValOriginal = [2, 4];
+    const ability = stringToCellValue('strength, vitality', abilityOriginal);
+    const abilReqVal = stringToCellValue('2', abilReqValOriginal);
+    const skillReqVal = stringToCellValue('3', [1]);
+
+    const payload = rowDataWithoutId({
+      name: 'Cell edit feat',
+      feat_lvl: 1,
+      ability,
+      abil_req_val: abilReqVal,
+      skill_req_val: skillReqVal,
+    });
+
+    expect(() => assertCodexAdminPayloadKeys('codex_feats', payload)).not.toThrow();
+    const columnar = toColumnarPayload('codex_feats', payload);
+    expect(columnar.ability).toBe('strength, vitality');
+    expect(columnar.abilReqVal).toBe(2);
+    expect(columnar.skillReqVal).toBe(3);
+  });
+
+  it('rejects spreadsheet species lifespan cells with invalid tokens', () => {
+    const lifespan = stringToCellValue('20, Infinity', [20, 750]);
+    expect(() =>
+      assertCodexAdminPayloadKeys('codex_species', {
+        name: 'Elf',
+        adulthood_lifespan: lifespan,
+      }),
+    ).toThrow(/numeric range/i);
+  });
+
+  it('rejects nested archetype JSON from parsed spreadsheet strings', () => {
+    const guidance = stringToCellValue('[false]', []);
+    expect(() =>
+      assertCodexAdminPayloadKeys('codex_archetypes', {
+        name: 'Fighter',
+        level1_guidance_groups: guidance,
+      }),
+    ).toThrow(/must be an object/i);
+
+    const abilities = stringToCellValue('{"strength":{}}', { strength: 3 });
+    expect(() =>
+      assertCodexAdminPayloadKeys('codex_archetypes', {
+        name: 'Fighter',
+        level1_recommended_abilities: abilities,
+      }),
+    ).toThrow(/finite number/i);
   });
 
   it('rejects object values on scalar numeric feat fields', () => {
