@@ -65,6 +65,7 @@ import { isAdmin } from '@/lib/admin';
 import { createClient, createServiceRoleClient } from '@/lib/supabase/server';
 import { createPublicClient } from '@/lib/supabase/public-client';
 import { standardLimiter } from '@/lib/rate-limit';
+import { allocateCodexNumericId } from '@/lib/codex/id-allocation';
 
 const mockGetSession = vi.mocked(getSession);
 const mockRequireLiveUser = vi.mocked(requireLiveUser);
@@ -73,6 +74,7 @@ const mockCreateClient = vi.mocked(createClient);
 const mockCreateServiceRoleClient = vi.mocked(createServiceRoleClient);
 const mockCreatePublicClient = vi.mocked(createPublicClient);
 const mockStandardLimiterCheck = vi.mocked(standardLimiter.check);
+const mockAllocateCodexNumericId = vi.mocked(allocateCodexNumericId);
 
 const OWNER = { uid: 'owner-user', email: 'owner@example.com' };
 
@@ -112,6 +114,23 @@ const VALID_OFFICIAL_BODY: Record<LibraryType, Record<string, unknown>> = {
     },
   },
   species: { name: 'Riverfolk' },
+};
+
+/** Creator-shaped species payload (string ID arrays, numeric anthropometrics). */
+const POPULATED_SPECIES_BODY = {
+  name: 'Riverfolk',
+  description: 'Aquatic ancestry',
+  type: 'humanoid',
+  sizes: ['Medium', 'Small'],
+  skills: ['athletics', 'stealth'],
+  species_traits: ['amphibious'],
+  ancestry_traits: ['keen_senses'],
+  flaws: [],
+  characteristics: ['resilient'],
+  languages: ['Common', 'Aquan'],
+  ave_hgt_cm: 170,
+  ave_wgt_kg: 70,
+  adulthood_lifespan: [18, 80],
 };
 
 const BAD_SHAPE_BODY: Record<LibraryType, Record<string, unknown>> = {
@@ -303,15 +322,16 @@ describe('B7 matrix — official mutations', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     officialInsert.mockReset();
+    officialInsert.mockImplementation(() => ({
+      select: vi.fn(() => ({
+        single: vi.fn(async () => ({ data: { id: 'new' }, error: null })),
+      })),
+    }));
     mockRequireLiveUser.mockResolvedValue(OWNER);
     mockIsAdmin.mockResolvedValue(true);
     mockCreateServiceRoleClient.mockReturnValue({
       from: vi.fn(() => ({
-        insert: officialInsert.mockReturnValue({
-          select: vi.fn(() => ({
-            single: vi.fn(async () => ({ data: { id: 'new' }, error: null })),
-          })),
-        }),
+        insert: officialInsert,
         select: vi.fn(() => ({
           ilike: vi.fn().mockReturnThis(),
           neq: vi.fn().mockReturnThis(),
@@ -415,19 +435,14 @@ describe('B7 matrix — official mutations', () => {
   );
 
   it('official power POST then GET returns the normalized persisted shape', async () => {
-    const persistedId = 'aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee';
-    const dbRow = {
-      id: persistedId,
-      name: 'Normalized Bolt',
-      catalog_listing: 'listed',
-      payload: { parts: [] },
-      created_at: '2026-01-01T00:00:00Z',
-      updated_at: '2026-01-01T00:00:00Z',
-    };
-    officialInsert.mockReturnValue({
-      select: vi.fn(() => ({
-        single: vi.fn(async () => ({ data: dbRow, error: null })),
-      })),
+    let insertedRow: Record<string, unknown> | null = null;
+    officialInsert.mockImplementation((row: Record<string, unknown>) => {
+      insertedRow = { ...row };
+      return {
+        select: vi.fn(() => ({
+          single: vi.fn(async () => ({ data: insertedRow, error: null })),
+        })),
+      };
     });
 
     const postResponse = await postOfficial(
@@ -439,6 +454,9 @@ describe('B7 matrix — official mutations', () => {
       { params: Promise.resolve({ type: 'powers' }) },
     );
     expect(postResponse.status).toBe(200);
+    const postBody = (await postResponse.json()) as { id: string };
+    expect(insertedRow).not.toBeNull();
+    expect(postBody.id).toBe(insertedRow!.id);
 
     const listQuery = {
       eq: vi.fn(function eq() {
@@ -448,7 +466,10 @@ describe('B7 matrix — official mutations', () => {
         onFulfilled?: (value: { data: unknown[]; error: null }) => unknown,
         onRejected?: (reason: unknown) => unknown,
       ) {
-        return Promise.resolve({ data: [dbRow], error: null }).then(onFulfilled, onRejected);
+        return Promise.resolve({ data: insertedRow ? [insertedRow] : [], error: null }).then(
+          onFulfilled,
+          onRejected,
+        );
       },
     };
     mockCreatePublicClient.mockReturnValue({
@@ -463,12 +484,53 @@ describe('B7 matrix — official mutations', () => {
     expect(getResponse.status).toBe(200);
     const items = (await getResponse.json()) as Record<string, unknown>[];
     expect(items).toHaveLength(1);
+    expect(items[0]?.id).toBe(postBody.id);
+    expect(items[0]?.id).toBe(insertedRow!.id);
     expect(items[0]).toMatchObject({
-      id: persistedId,
       name: 'Normalized Bolt',
       parts: [],
     });
     expect(items[0]).not.toHaveProperty('b7UnknownField');
+  });
+
+  it('POST official species accepts a populated creator-shaped payload and persists list fields', async () => {
+    mockAllocateCodexNumericId.mockResolvedValueOnce('901');
+    let insertedRow: Record<string, unknown> | null = null;
+    const speciesInsert = vi.fn((row: Record<string, unknown>) => {
+      insertedRow = row;
+      const persisted = { ...row, id: '901' };
+      return {
+        select: vi.fn(() => ({
+          single: vi.fn(async () => ({ data: persisted, error: null })),
+        })),
+      };
+    });
+    mockCreateServiceRoleClient.mockReturnValue({
+      from: vi.fn((table: string) => {
+        if (table !== 'codex_species') throw new Error(`Unexpected table: ${table}`);
+        return {
+          insert: speciesInsert,
+        };
+      }),
+    } as never);
+
+    const response = await postOfficial(
+      new NextRequest('http://localhost/api/official/species', {
+        method: 'POST',
+        headers: { 'content-type': 'application/json', origin: 'http://localhost' },
+        body: JSON.stringify(POPULATED_SPECIES_BODY),
+      }),
+      { params: Promise.resolve({ type: 'species' }) },
+    );
+
+    expect(response.status).toBe(200);
+    await expect(response.json()).resolves.toEqual({ id: '901' });
+    expect(speciesInsert).toHaveBeenCalled();
+    expect(insertedRow).toMatchObject({
+      name: 'Riverfolk',
+      languages: 'Common,Aquan',
+      sizes: 'Medium,Small',
+    });
   });
 });
 
@@ -601,12 +663,16 @@ describe('B7 matrix — user library POST', () => {
 
 describe('B7 matrix — user library item PATCH/DELETE', () => {
   const update = vi.fn();
-  const deleteFn = vi.fn();
+  const deleteFn = vi.fn(() => ({
+    eq: vi.fn(() => ({
+      eq: vi.fn(async () => ({ error: null })),
+    })),
+  }));
 
   beforeEach(() => {
     vi.clearAllMocks();
     update.mockReset();
-    deleteFn.mockReset();
+    deleteFn.mockClear();
     mockGetSession.mockResolvedValue({ user: OWNER, error: null });
     mockStandardLimiterCheck.mockResolvedValue({
       success: true,
@@ -622,17 +688,11 @@ describe('B7 matrix — user library item PATCH/DELETE', () => {
         error: null,
       })),
     };
-    const deleteChain = {
-      eq: vi.fn(function eq() {
-        return deleteChain;
-      }),
-      select: vi.fn(async () => ({ data: [{ id: 'lib-owned' }], error: null })),
-    };
     mockCreateClient.mockResolvedValue({
       from: vi.fn(() => ({
         select: vi.fn(() => selectChain),
         update,
-        delete: vi.fn(() => deleteChain),
+        delete: deleteFn,
       })),
     } as never);
   });
@@ -663,9 +723,21 @@ describe('B7 matrix — user library item PATCH/DELETE', () => {
     expect(deleteFn).not.toHaveBeenCalled();
   });
 
+  it('DELETE removes an owned library item when Origin is present', async () => {
+    const response = await deleteUserLibraryItem(
+      new NextRequest('http://localhost/api/user/library/powers/lib-owned', {
+        method: 'DELETE',
+        headers: { origin: 'http://localhost' },
+      }),
+      { params: Promise.resolve({ type: 'powers', id: 'lib-owned' }) },
+    );
+
+    expect(response.status).toBe(200);
+    expect(deleteFn).toHaveBeenCalledTimes(1);
+  });
+
   it('user library POST then GET returns the normalized persisted shape (powers)', async () => {
     const client = userLibraryCreateClient();
-    const createdId = 'roundtrip-id';
     let listedRow: Record<string, unknown> | null = null;
     const libraryTables = new Set([
       'user_powers',
@@ -728,7 +800,7 @@ describe('B7 matrix — user library item PATCH/DELETE', () => {
           return listFilters;
         }),
         insert: vi.fn((row: Record<string, unknown>) => {
-          listedRow = { ...row, id: createdId };
+          listedRow = { ...row };
           client.inserts.push(table);
           return Promise.resolve({ data: null, error: null });
         }),
@@ -747,6 +819,9 @@ describe('B7 matrix — user library item PATCH/DELETE', () => {
       { params: Promise.resolve({ type: 'powers' }) },
     );
     expect(postResponse.status).toBe(200);
+    const postBody = (await postResponse.json()) as { id: string };
+    expect(listedRow).not.toBeNull();
+    expect(postBody.id).toBe(listedRow!.id);
 
     const getResponse = await getUserLibrary(
       new NextRequest('http://localhost/api/user/library/powers'),
@@ -755,7 +830,12 @@ describe('B7 matrix — user library item PATCH/DELETE', () => {
     expect(getResponse.status).toBe(200);
     const items = (await getResponse.json()) as Record<string, unknown>[];
     expect(items).toHaveLength(1);
-    expect(items[0]?.name).toBe(validBody.name);
+    expect(items[0]?.id).toBe(postBody.id);
+    expect(items[0]?.id).toBe(listedRow!.id);
+    expect(items[0]).toMatchObject({
+      name: validBody.name,
+      parts: [],
+    });
     expect(items[0]).not.toHaveProperty('b7UnknownField');
   });
 });

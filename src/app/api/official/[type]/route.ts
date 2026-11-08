@@ -63,12 +63,12 @@ type OfficialType = z.infer<typeof officialLibraryTypeParamSchema>['type'];
 async function recordOfficialChangeBestEffort(input: RecordCodexChangeInput): Promise<void> {
   try {
     await recordCodexChange(input);
-  } catch (err) {
+  } catch {
     console.error('[Official API] changelog write failed (mutation kept):', {
       entityType: input.entityType,
       entityId: input.entityId,
       operation: input.operation,
-      message: err instanceof Error ? err.message : String(err),
+      failure: 'changelog_record_threw',
     });
   }
 }
