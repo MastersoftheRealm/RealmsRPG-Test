@@ -1,7 +1,7 @@
 // @vitest-environment happy-dom
 
-import { describe, expect, it, vi } from 'vitest';
-import { fireEvent, render, screen } from '@testing-library/react';
+import { afterEach, describe, expect, it, vi } from 'vitest';
+import { cleanup, fireEvent, render, screen } from '@testing-library/react';
 import DetailSegmentError from './error';
 import {
   RESOURCE_ACCESS_UNAVAILABLE_DIGEST,
@@ -9,6 +9,10 @@ import {
 } from '@/lib/server/resource-access-unavailable';
 
 describe('DetailSegmentError recovery', () => {
+  afterEach(() => {
+    cleanup();
+  });
+
   it('invokes retry (router refresh + boundary reset), not reset alone', () => {
     const retry = vi.fn();
     const reset = vi.fn();
@@ -16,6 +20,11 @@ describe('DetailSegmentError recovery', () => {
     fireEvent.click(screen.getByRole('button', { name: /try again/i }));
     expect(retry).toHaveBeenCalledOnce();
     expect(reset).not.toHaveBeenCalled();
+  });
+
+  it('shows generic error copy for non-outage failures', () => {
+    render(<DetailSegmentError error={new Error('generic')} reset={() => {}} retry={() => {}} />);
+    expect(screen.getByRole('heading', { name: /something went wrong/i })).toBeTruthy();
   });
 
   it('shows outage copy when the serialized digest matches', () => {

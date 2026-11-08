@@ -18,4 +18,31 @@ describe('assertCodexAdminPayloadKeys value checks', () => {
       }),
     ).toThrow(/exceeds/i);
   });
+
+  it('rejects non-boolean char_feat spreadsheet cells', () => {
+    expect(() =>
+      assertCodexAdminPayloadKeys('codex_feats', {
+        name: 'Sample',
+        char_feat: 'yes',
+      }),
+    ).toThrow(/boolean/i);
+  });
+
+  it('rejects invalid species catalog listing values', () => {
+    expect(() =>
+      assertCodexAdminPayloadKeys('codex_species', {
+        name: 'Elf',
+        catalog_listing: 'public',
+      }),
+    ).toThrow(/listed or unlisted/i);
+  });
+
+  it('rejects object-valued species skill lists', () => {
+    expect(() =>
+      assertCodexAdminPayloadKeys('codex_species', {
+        name: 'Elf',
+        skills: [{ name: 'Athletics' }],
+      }),
+    ).toThrow(/string or array/i);
+  });
 });

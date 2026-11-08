@@ -128,6 +128,29 @@ describe('detail layouts HTTP status', () => {
     }
   });
 
+  it('throws unavailable when campaign preflight returns 503', async () => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async (url: string) => {
+        expect(String(url)).toContain('/api/campaigns/mine');
+        return new Response('error', { status: 503 });
+      }),
+    );
+
+    try {
+      await CampaignDetailLayout({
+        children: 'campaign',
+        params: Promise.resolve({ id: 'mine' }),
+      });
+      throw new Error('expected unavailable');
+    } catch (error) {
+      expect(error).toBeInstanceOf(ResourceAccessUnavailableError);
+      expect((error as ResourceAccessUnavailableError).digest).toBe(
+        RESOURCE_ACCESS_UNAVAILABLE_DIGEST,
+      );
+    }
+  });
+
   it('returns the campaign when the viewer is a member', async () => {
     vi.stubGlobal(
       'fetch',

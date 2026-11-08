@@ -160,4 +160,37 @@ describe('assert-resource-http-access', () => {
       digest: RESOURCE_ACCESS_UNAVAILABLE_DIGEST,
     });
   });
+
+  it('throws unavailable on character API 429 (never fail-open)', async () => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async () => new Response('rate limited', { status: 429 })),
+    );
+
+    await expect(assertCharacterSheetHttpAccess('char-1')).rejects.toMatchObject({
+      digest: RESOURCE_ACCESS_UNAVAILABLE_DIGEST,
+    });
+  });
+
+  it('throws unavailable on character API 503', async () => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async () => new Response('error', { status: 503 })),
+    );
+
+    await expect(assertCharacterSheetHttpAccess('char-1')).rejects.toMatchObject({
+      digest: RESOURCE_ACCESS_UNAVAILABLE_DIGEST,
+    });
+  });
+
+  it('throws unavailable on campaign API 429', async () => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async () => new Response('rate limited', { status: 429 })),
+    );
+
+    await expect(assertCampaignDetailHttpAccess('camp')).rejects.toMatchObject({
+      digest: RESOURCE_ACCESS_UNAVAILABLE_DIGEST,
+    });
+  });
 });

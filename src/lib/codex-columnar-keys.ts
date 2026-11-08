@@ -1,0 +1,265 @@
+/**
+ * Admin Codex column allowlists and field metadata (no mapper / Supabase imports).
+ * Aligned with `codex-column-map.ts` write paths and `/api/codex` projections.
+ */
+
+import type { CodexCollection } from '@/lib/codex/collections';
+
+export const CODEX_NAME_MAX_LENGTH = 200;
+export const CODEX_DESC_MAX_LENGTH = 10_000;
+
+/** camelCase keys each columnar codex collection may persist on create/update. */
+export const CODEX_COLUMNAR_FIELDS: Record<CodexCollection, readonly string[]> = {
+  codex_feats: [
+    'name',
+    'description',
+    'reqDesc',
+    'abilityReq',
+    'abilReqVal',
+    'skillReq',
+    'skillReqVal',
+    'featCatReq',
+    'powAbilReq',
+    'martAbilReq',
+    'powProfReq',
+    'martProfReq',
+    'speedReq',
+    'featLvl',
+    'lvlReq',
+    'usesPerRec',
+    'recPeriod',
+    'category',
+    'ability',
+    'tags',
+    'charFeat',
+    'stateFeat',
+    'baseFeatId',
+    'sources',
+  ],
+  codex_skills: [
+    'name',
+    'description',
+    'ability',
+    'baseSkill',
+    'baseSkillId',
+    'successDesc',
+    'failureDesc',
+    'dsCalc',
+    'craftFailureDesc',
+    'craftSuccessDesc',
+    'sources',
+  ],
+  codex_species: [
+    'name',
+    'description',
+    'type',
+    'sizes',
+    'skills',
+    'speciesTraits',
+    'ancestryTraits',
+    'flaws',
+    'characteristics',
+    'aveHgtCm',
+    'aveWgtKg',
+    'aveHeight',
+    'aveWeight',
+    'adulthoodLifespan',
+    'languages',
+    'isStarter',
+    'catalogListing',
+    'imageId',
+    'imageUrl',
+    'sources',
+  ],
+  codex_traits: [
+    'name',
+    'description',
+    'usesPerRec',
+    'recPeriod',
+    'flaw',
+    'characteristic',
+    'optionTraitIds',
+    'sources',
+  ],
+  codex_parts: [
+    'name',
+    'description',
+    'category',
+    'baseEn',
+    'baseTp',
+    'op1Desc',
+    'op1En',
+    'op1Tp',
+    'op2Desc',
+    'op2En',
+    'op2Tp',
+    'op3Desc',
+    'op3En',
+    'op3Tp',
+    'type',
+    'mechanic',
+    'percentage',
+    'duration',
+    'defense',
+    'sources',
+  ],
+  codex_properties: [
+    'name',
+    'description',
+    'baseIp',
+    'baseTp',
+    'baseC',
+    'op1Desc',
+    'op1Ip',
+    'op1Tp',
+    'op1C',
+    'type',
+    'mechanic',
+    'sources',
+  ],
+  codex_equipment: [
+    'name',
+    'description',
+    'category',
+    'currency',
+    'rarity',
+    'imageId',
+    'imageUrl',
+    'sources',
+  ],
+  codex_archetypes: [
+    'name',
+    'type',
+    'description',
+    'archetypeAbility',
+    'secondaryAbility',
+    'powerProfStart',
+    'martialProfStart',
+    'powerProfLevel5',
+    'martialProfLevel5',
+    'level1Feats',
+    'level1Skills',
+    'level1Powers',
+    'level1Techniques',
+    'level1Armaments',
+    'level1Equipment',
+    'level1RemoveFeats',
+    'level1RemovePowers',
+    'level1RemoveTechniques',
+    'level1RemoveArmaments',
+    'level1Notes',
+    'level1InnatePowers',
+    'level1RecommendUnarmedProwess',
+    'level1GuidanceGroups',
+    'level1RecommendedAbilities',
+    'level1Loadouts',
+    'sources',
+  ],
+  codex_creature_feats: [
+    'name',
+    'description',
+    'featPoints',
+    'featLvl',
+    'lvlReq',
+    'mechanic',
+    'sources',
+  ],
+  core_rules: [],
+};
+
+export const CODEX_NUMERIC_FIELD_KEYS = new Set([
+  'abilReqVal',
+  'skillReqVal',
+  'featLvl',
+  'lvlReq',
+  'usesPerRec',
+  'featPoints',
+  'energy',
+  'tp',
+  'ip',
+  'c',
+  'baseLvl',
+  'aveHeight',
+  'aveWeight',
+  'aveHgtCm',
+  'aveWgtKg',
+  'baseEn',
+  'baseTp',
+  'baseIp',
+  'baseC',
+  'op1En',
+  'op1Tp',
+  'op1Ip',
+  'op1C',
+  'op2En',
+  'op2Tp',
+  'op3En',
+  'op3Tp',
+  'powerProfStart',
+  'martialProfStart',
+  'powerProfLevel5',
+  'martialProfLevel5',
+  'speedReq',
+  'powAbilReq',
+  'martAbilReq',
+  'powProfReq',
+  'martProfReq',
+]);
+
+export const CODEX_BOOLEAN_FIELD_KEYS = new Set([
+  'charFeat',
+  'stateFeat',
+  'flaw',
+  'characteristic',
+  'isStarter',
+  'level1RecommendUnarmedProwess',
+]);
+
+/** Stored as Postgres `text[]` (not comma-joined TEXT). */
+export const CODEX_POSTGRES_TEXT_ARRAY_FIELD_KEYS = new Set(['sources']);
+
+/** JSONB columns on archetypes — object/array or JSON string, never arbitrary scalars. */
+export const CODEX_JSON_FIELD_KEYS = new Set([
+  'level1GuidanceGroups',
+  'level1RecommendedAbilities',
+  'level1Loadouts',
+]);
+
+/** Legacy spreadsheet / columnar TEXT list columns (comma-separated or string[]). */
+export const CODEX_COMMA_LIST_FIELD_KEYS = new Set([
+  'sizes',
+  'skills',
+  'speciesTraits',
+  'ancestryTraits',
+  'flaws',
+  'characteristics',
+  'languages',
+  'optionTraitIds',
+  'tags',
+  'level1Feats',
+  'level1Skills',
+  'level1Powers',
+  'level1Techniques',
+  'level1Armaments',
+  'level1Equipment',
+  'level1RemoveFeats',
+  'level1RemovePowers',
+  'level1RemoveTechniques',
+  'level1RemoveArmaments',
+  'level1InnatePowers',
+]);
+
+export const CODEX_IMAGE_FIELD_KEYS = new Set(['imageId', 'imageUrl']);
+
+export function isCodexColumnarCollection(collection: CodexCollection): boolean {
+  return (CODEX_COLUMNAR_FIELDS[collection]?.length ?? 0) > 0;
+}
+
+export function unknownCodexPersistedKeys(
+  collection: CodexCollection,
+  camelBody: Record<string, unknown>,
+): string[] {
+  const allowed = new Set(CODEX_COLUMNAR_FIELDS[collection] ?? []);
+  if (allowed.size === 0) return [];
+  return Object.keys(camelBody).filter((key) => !allowed.has(key));
+}
