@@ -3,7 +3,6 @@ import { describe, expect, it } from 'vitest';
 import adminUsersRouteSource from './route.ts?raw';
 import adminUpdateRoleRouteSource from './update-role/route.ts?raw';
 
-/** API-015 — admin user routes must use the shared createServiceRoleClient helper. */
 describe('API-015 admin users service-role client factory', () => {
   it('GET /api/admin/users does not define a private service-role factory', () => {
     expect(adminUsersRouteSource).not.toMatch(/function getSupabaseAdmin/);
