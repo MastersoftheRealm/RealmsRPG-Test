@@ -13,10 +13,9 @@ vi.mock('next/cache', () => ({ revalidatePath: vi.fn(), updateTag: vi.fn() }));
 vi.mock('@/lib/official-library-get-payload', () => ({
   fetchCachedOfficialColumnarItems: vi.fn(),
 }));
-vi.mock('@/lib/supabase/session', () => ({
-  requireLiveUser: vi.fn(async () => ({ uid: 'admin-1' })),
+vi.mock('@/lib/admin', () => ({
+  requireLiveAdminSession: vi.fn(async () => ({ ok: true, userId: 'admin-1' })),
 }));
-vi.mock('@/lib/admin', () => ({ isAdmin: vi.fn(async () => true) }));
 vi.mock('@/lib/codex-changelog', () => ({ recordCodexChange: vi.fn(async () => undefined) }));
 vi.mock('@/lib/supabase/server', () => ({ createServiceRoleClient: vi.fn(() => currentDb) }));
 

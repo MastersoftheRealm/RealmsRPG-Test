@@ -1,12 +1,8 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { NextRequest } from 'next/server';
 
-vi.mock('@/lib/supabase/session', () => ({
-  requireLiveUser: vi.fn(),
-}));
-
 vi.mock('@/lib/admin', () => ({
-  isAdmin: vi.fn(),
+  requireLiveAdminSession: vi.fn(),
 }));
 
 vi.mock('@/lib/supabase/server', () => ({
@@ -46,12 +42,10 @@ import { POST } from './route';
 import { realmsImageStoragePath } from '@/lib/realms-images';
 import { fetchRealmsImageById } from '@/lib/realms-images-server';
 import { syncRealmsImageCacheUrls } from '@/lib/realms-image-consumers';
-import { requireLiveUser } from '@/lib/supabase/session';
-import { isAdmin } from '@/lib/admin';
+import { requireLiveAdminSession } from '@/lib/admin';
 import { createServiceRoleClient } from '@/lib/supabase/server';
 
-const mockRequireLiveUser = vi.mocked(requireLiveUser);
-const mockIsAdmin = vi.mocked(isAdmin);
+const mockRequireLiveAdminSession = vi.mocked(requireLiveAdminSession);
 const mockCreateServiceRoleClient = vi.mocked(createServiceRoleClient);
 const mockFetchRealmsImageById = vi.mocked(fetchRealmsImageById);
 const mockSyncRealmsImageCacheUrls = vi.mocked(syncRealmsImageCacheUrls);
@@ -133,7 +127,11 @@ describe('POST /api/images/[id]/replace', () => {
   });
 
   it('returns 401 when session is missing', async () => {
-    mockRequireLiveUser.mockRejectedValue(new Error('Authentication required'));
+    mockRequireLiveAdminSession.mockResolvedValue({
+      ok: false,
+      status: 401,
+      body: { error: 'Unauthorized' },
+    });
 
     const response = await POST(makePostRequest('img-1'), {
       params: Promise.resolve({ id: 'img-1' }),
@@ -145,21 +143,23 @@ describe('POST /api/images/[id]/replace', () => {
   });
 
   it('returns 403 when the user is authenticated but not admin', async () => {
-    mockRequireLiveUser.mockResolvedValue(USER);
-    mockIsAdmin.mockResolvedValue(false);
+    mockRequireLiveAdminSession.mockResolvedValue({
+      ok: false,
+      status: 403,
+      body: { error: 'Forbidden' },
+    });
 
     const response = await POST(makePostRequest('img-1'), {
       params: Promise.resolve({ id: 'img-1' }),
     });
 
     expect(response.status).toBe(403);
-    await expect(readJson(response)).resolves.toEqual({ error: 'Admin access required' });
+    await expect(readJson(response)).resolves.toEqual({ error: 'Forbidden' });
     expect(mockCreateServiceRoleClient).not.toHaveBeenCalled();
   });
 
   it('on failed realms_images update, keeps the previous object and removes only the new path', async () => {
-    mockRequireLiveUser.mockResolvedValue(USER);
-    mockIsAdmin.mockResolvedValue(true);
+    mockRequireLiveAdminSession.mockResolvedValue({ ok: true, userId: USER.uid });
     const supabase = createReplaceSupabase({
       updateError: { message: 'update failed' },
     });
@@ -178,8 +178,7 @@ describe('POST /api/images/[id]/replace', () => {
   });
 
   it('on successful realms_images update, removes only the previous storage path', async () => {
-    mockRequireLiveUser.mockResolvedValue(USER);
-    mockIsAdmin.mockResolvedValue(true);
+    mockRequireLiveAdminSession.mockResolvedValue({ ok: true, userId: USER.uid });
     const supabase = createReplaceSupabase({ updateError: null });
     mockCreateServiceRoleClient.mockReturnValue(supabase.client as never);
     mockFetchRealmsImageById.mockResolvedValueOnce(EXISTING_IMAGE as never).mockResolvedValueOnce({

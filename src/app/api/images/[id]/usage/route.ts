@@ -5,8 +5,7 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { getSession } from '@/lib/supabase/session';
-import { isAdmin } from '@/lib/admin';
+import { requireAdminSession } from '@/lib/admin';
 import { createServiceRoleClient } from '@/lib/supabase/server';
 import { resourceIdParamSchema, validateRouteParams } from '@/lib/api-validation';
 import { listRealmsImageUsages } from '@/lib/realms-image-consumers';
@@ -17,12 +16,9 @@ export const dynamic = 'force-dynamic';
 type RouteContext = { params: Promise<{ id: string }> };
 
 export async function GET(_request: NextRequest, context: RouteContext) {
-  const { user, error: sessionError } = await getSession();
-  if (sessionError || !user?.uid) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-  }
-  if (!(await isAdmin(user.uid))) {
-    return NextResponse.json({ error: 'Admin access required' }, { status: 403 });
+  const auth = await requireAdminSession();
+  if (!auth.ok) {
+    return NextResponse.json(auth.body, { status: auth.status });
   }
 
   try {

@@ -17,6 +17,7 @@ vi.mock('@/lib/supabase/server', () => ({
 
 vi.mock('@/lib/admin', () => ({
   isAdmin: vi.fn(),
+  requireLiveAdminSession: vi.fn(),
 }));
 
 vi.mock('@/lib/rate-limit', async (importOriginal) => {
@@ -60,16 +61,15 @@ import {
   PATCH as patchUserLibraryItem,
   DELETE as deleteUserLibraryItem,
 } from '@/app/api/user/library/[type]/[id]/route';
-import { getSession, requireLiveUser } from '@/lib/supabase/session';
-import { isAdmin } from '@/lib/admin';
+import { getSession } from '@/lib/supabase/session';
+import { requireLiveAdminSession } from '@/lib/admin';
 import { createClient, createServiceRoleClient } from '@/lib/supabase/server';
 import { createPublicClient } from '@/lib/supabase/public-client';
 import { standardLimiter } from '@/lib/rate-limit';
 import { allocateCodexNumericId } from '@/lib/codex/id-allocation';
 
 const mockGetSession = vi.mocked(getSession);
-const mockRequireLiveUser = vi.mocked(requireLiveUser);
-const mockIsAdmin = vi.mocked(isAdmin);
+const mockRequireLiveAdminSession = vi.mocked(requireLiveAdminSession);
 const mockCreateClient = vi.mocked(createClient);
 const mockCreateServiceRoleClient = vi.mocked(createServiceRoleClient);
 const mockCreatePublicClient = vi.mocked(createPublicClient);
@@ -446,8 +446,7 @@ describe('B7 matrix — official mutations', () => {
         single: vi.fn(async () => ({ data: { id: 'new' }, error: null })),
       })),
     }));
-    mockRequireLiveUser.mockResolvedValue(OWNER);
-    mockIsAdmin.mockResolvedValue(true);
+    mockRequireLiveAdminSession.mockResolvedValue({ ok: true, userId: OWNER.uid });
     mockCreateServiceRoleClient.mockReturnValue({
       from: vi.fn(() => ({
         insert: officialInsert,
@@ -656,8 +655,7 @@ describe('B7 matrix — official mutations', () => {
 describe('B7 matrix — official POST (legacy case)', () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    mockRequireLiveUser.mockResolvedValue(OWNER);
-    mockIsAdmin.mockResolvedValue(true);
+    mockRequireLiveAdminSession.mockResolvedValue({ ok: true, userId: OWNER.uid });
     mockCreateServiceRoleClient.mockReturnValue({
       from: vi.fn(() => ({
         insert: vi.fn(),

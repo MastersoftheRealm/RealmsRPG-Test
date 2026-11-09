@@ -6,8 +6,7 @@
 
 import type { Metadata } from 'next';
 import { redirect } from 'next/navigation';
-import { getSession } from '@/lib/supabase/session';
-import { isAdmin } from '@/lib/admin';
+import { requireAdminSession } from '@/lib/admin';
 
 export const metadata: Metadata = {
   robots: { index: false, follow: false },
@@ -16,15 +15,9 @@ export const metadata: Metadata = {
 export const dynamic = 'force-dynamic';
 
 export default async function AdminLayout({ children }: { children: React.ReactNode }) {
-  const { user } = await getSession();
-
-  if (!user) {
-    redirect('/login?returnTo=/admin');
-  }
-
-  const admin = await isAdmin(user.uid);
-  if (!admin) {
-    redirect('/');
+  const auth = await requireAdminSession();
+  if (!auth.ok) {
+    redirect(auth.status === 401 ? '/login?returnTo=/admin' : '/');
   }
 
   return <>{children}</>;

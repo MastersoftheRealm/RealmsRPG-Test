@@ -18,8 +18,8 @@ import {
 } from '@/lib/api/public-cdn-cache';
 import { createPublicClient } from '@/lib/supabase/public-client';
 import { createClient, createServiceRoleClient } from '@/lib/supabase/server';
-import { getSession, requireLiveUser } from '@/lib/supabase/session';
-import { isAdmin } from '@/lib/admin';
+import { getSession } from '@/lib/supabase/session';
+import { isAdmin, requireLiveAdminSession } from '@/lib/admin';
 import {
   validateJson,
   verifyMutationRequest,
@@ -321,12 +321,12 @@ export async function POST(
   { params }: { params: Promise<{ type: string }> },
 ) {
   try {
-    let user;
-    try {
-      user = await requireLiveUser();
-    } catch {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    const auth = await requireLiveAdminSession();
+    if (!auth.ok) {
+      return NextResponse.json(auth.body, { status: auth.status });
     }
+    const user = { uid: auth.userId };
+
     const paramResult = await validateRouteParams(params, officialLibraryTypeParamSchema);
     if (!paramResult.success) return paramResult.error;
     const { type } = paramResult.data;
@@ -334,12 +334,8 @@ export async function POST(
     const validation = await validateJson(request, publicItemSchema);
     if (!validation.success) return validation.error;
     const body = validation.data as Record<string, unknown>;
-    const isAdminUser = await isAdmin(user.uid);
-    const writeValidation = officialWriteValidation(type, body, isAdminUser);
+    const writeValidation = officialWriteValidation(type, body, true);
     if (writeValidation) return writeValidation;
-    if (!isAdminUser) {
-      return NextResponse.json({ error: 'Admin only' }, { status: 403 });
-    }
 
     const supabase = createServiceRoleClient();
 
@@ -518,15 +514,11 @@ export async function PATCH(
   { params }: { params: Promise<{ type: string }> },
 ) {
   try {
-    let user;
-    try {
-      user = await requireLiveUser();
-    } catch {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    const auth = await requireLiveAdminSession();
+    if (!auth.ok) {
+      return NextResponse.json(auth.body, { status: auth.status });
     }
-    if (!(await isAdmin(user.uid))) {
-      return NextResponse.json({ error: 'Admin only' }, { status: 403 });
-    }
+    const user = { uid: auth.userId };
 
     const denied = verifyMutationRequest(request);
     if (denied) return denied;
@@ -589,15 +581,11 @@ export async function DELETE(
   { params }: { params: Promise<{ type: string }> },
 ) {
   try {
-    let user;
-    try {
-      user = await requireLiveUser();
-    } catch {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    const auth = await requireLiveAdminSession();
+    if (!auth.ok) {
+      return NextResponse.json(auth.body, { status: auth.status });
     }
-    if (!(await isAdmin(user.uid))) {
-      return NextResponse.json({ error: 'Admin only' }, { status: 403 });
-    }
+    const user = { uid: auth.userId };
 
     const denied = verifyMutationRequest(_request);
     if (denied) return denied;

@@ -5,8 +5,7 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { requireLiveUser } from '@/lib/supabase/session';
-import { isAdmin } from '@/lib/admin';
+import { requireLiveAdminSession } from '@/lib/admin';
 import { createServiceRoleClient } from '@/lib/supabase/server';
 import {
   detectImageMime,
@@ -31,15 +30,11 @@ const MAX_SIZE = 5 * 1024 * 1024;
 type RouteContext = { params: Promise<{ id: string }> };
 
 export async function POST(request: NextRequest, context: RouteContext) {
-  let user;
-  try {
-    user = await requireLiveUser();
-  } catch {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  const auth = await requireLiveAdminSession();
+  if (!auth.ok) {
+    return NextResponse.json(auth.body, { status: auth.status });
   }
-  if (!(await isAdmin(user.uid))) {
-    return NextResponse.json({ error: 'Admin access required' }, { status: 403 });
-  }
+  const user = { uid: auth.userId };
 
   const denied = verifyMutationRequest(request);
   if (denied) return denied;

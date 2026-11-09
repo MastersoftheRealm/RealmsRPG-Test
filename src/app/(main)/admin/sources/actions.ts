@@ -1,7 +1,7 @@
 'use server';
 
 import { updateCodexDoc } from '@/app/(main)/admin/codex/actions';
-import { isAdmin } from '@/lib/admin';
+import { requireAdminSession, requireLiveAdminSession } from '@/lib/admin';
 import { logApiError } from '@/lib/api-error';
 import {
   loadAdminCodexSourceRows,
@@ -21,7 +21,6 @@ import {
   codexSourceNameError,
   collapseCodexSourceName,
 } from '@/lib/codex/sources';
-import { getSession, requireLiveUser } from '@/lib/supabase/session';
 import { createServiceRoleClient } from '@/lib/supabase/server';
 import { revalidatePath, updateTag } from 'next/cache';
 import {
@@ -51,17 +50,20 @@ export type AdminCodexSourceMembershipResult = {
 };
 
 async function requireAdmin(): Promise<string> {
-  const { user } = await getSession();
-  if (!user?.uid) throw new Error(AUTH_ERROR);
-  if (!(await isAdmin(user.uid))) throw new Error(ADMIN_ERROR);
-  return user.uid;
+  const auth = await requireAdminSession();
+  if (!auth.ok) {
+    throw new Error(auth.status === 401 ? AUTH_ERROR : ADMIN_ERROR);
+  }
+  return auth.userId;
 }
 
 /** Live Auth check for source mutations. Catalog and row reads stay on `requireAdmin`. */
 async function requireLiveAdmin(): Promise<string> {
-  const user = await requireLiveUser();
-  if (!(await isAdmin(user.uid))) throw new Error(ADMIN_ERROR);
-  return user.uid;
+  const auth = await requireLiveAdminSession();
+  if (!auth.ok) {
+    throw new Error(auth.status === 401 ? AUTH_ERROR : ADMIN_ERROR);
+  }
+  return auth.userId;
 }
 
 function validateSourceName(sourceName: string): string | null {
