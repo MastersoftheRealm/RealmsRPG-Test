@@ -59,14 +59,14 @@ describe('auth-actions rate limits', () => {
     expect(mockCookieSet).toHaveBeenCalledWith(
       'realms-auth-remember',
       '0',
-      expect.objectContaining({ httpOnly: true }),
+      expect.objectContaining({ httpOnly: false }),
     );
 
     await loginWithPasswordAction('user@example.com', 'secret', null, true);
     expect(mockCookieSet).toHaveBeenCalledWith(
       'realms-auth-remember',
       '1',
-      expect.objectContaining({ httpOnly: true }),
+      expect.objectContaining({ httpOnly: false }),
     );
   });
 

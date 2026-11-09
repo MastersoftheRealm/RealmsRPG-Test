@@ -23,7 +23,7 @@ export function authRememberPreferenceCookieOptions(): CookieOptions {
   return {
     path: '/',
     sameSite: 'lax',
-    httpOnly: true,
+    httpOnly: false,
     secure: process.env.NODE_ENV === 'production',
     maxAge: PERSISTENT_AUTH_SESSION_MAX_AGE_S,
   };
@@ -31,12 +31,25 @@ export function authRememberPreferenceCookieOptions(): CookieOptions {
 
 type AuthCookieToSet = { name: string; value: string; options?: CookieOptions | undefined };
 
+function isWritableAuthSessionCookie(cookie: AuthCookieToSet): boolean {
+  if (!isSupabaseAuthSessionCookieName(cookie.name)) {
+    return false;
+  }
+  if (!cookie.value) {
+    return false;
+  }
+  if (cookie.options?.maxAge === 0) {
+    return false;
+  }
+  return true;
+}
+
 export function applySessionPersistenceToAuthCookies(
   cookiesToSet: AuthCookieToSet[],
   rememberSession: boolean,
 ): AuthCookieToSet[] {
   return cookiesToSet.map((cookie) => {
-    if (!isSupabaseAuthSessionCookieName(cookie.name)) {
+    if (!isWritableAuthSessionCookie(cookie)) {
       return cookie;
     }
     if (!rememberSession) {

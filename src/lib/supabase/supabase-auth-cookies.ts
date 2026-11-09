@@ -2,6 +2,7 @@
  * Shared Supabase SSR cookie adapter — applies Remember-me persistence on auth-token cookies.
  */
 
+import { NextResponse } from 'next/server';
 import type { CookieOptions } from '@supabase/ssr';
 import {
   AUTH_REMEMBER_PREFERENCE_COOKIE,
@@ -53,4 +54,42 @@ export function setAuthRememberSessionPreference(
     remember ? '1' : '0',
     authRememberPreferenceCookieOptions(),
   );
+}
+
+export type PendingSupabaseCookieWrite = {
+  name: string;
+  value: string;
+  options?: CookieOptions | undefined;
+};
+
+export function createAccumulatingSupabaseCookieStore(
+  getAll: SupabaseCookieStore['getAll'],
+  onRequestCookie: (name: string, value: string) => void,
+): {
+  methods: ReturnType<typeof createSupabaseAuthCookieMethods>;
+  pending: PendingSupabaseCookieWrite[];
+} {
+  const pending: PendingSupabaseCookieWrite[] = [];
+  const methods = createSupabaseAuthCookieMethods({
+    getAll,
+    set: (name, value, options) => {
+      onRequestCookie(name, value);
+      pending.push(options === undefined ? { name, value } : { name, value, options });
+    },
+  });
+  return { methods, pending };
+}
+
+export function applyPendingCookiesToResponse(
+  response: NextResponse,
+  pending: ReadonlyArray<PendingSupabaseCookieWrite>,
+): NextResponse {
+  for (const { name, value, options } of pending) {
+    if (options === undefined) {
+      response.cookies.set(name, value);
+    } else {
+      response.cookies.set(name, value, options);
+    }
+  }
+  return response;
 }

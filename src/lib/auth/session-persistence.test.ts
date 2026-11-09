@@ -51,4 +51,19 @@ describe('session persistence', () => {
     };
     expect(applySessionPersistenceToAuthCookies([cookie], false)).toEqual([cookie]);
   });
+
+  it('preserves auth-token deletions (empty value or maxAge 0)', () => {
+    const cleared = {
+      name: 'sb-demo-auth-token',
+      value: '',
+      options: { maxAge: 0, path: '/' },
+    };
+    const clearedChunk = {
+      name: 'sb-demo-auth-token.0',
+      value: '',
+      options: { maxAge: 0, path: '/' },
+    };
+    expect(applySessionPersistenceToAuthCookies([cleared], false)).toEqual([cleared]);
+    expect(applySessionPersistenceToAuthCookies([clearedChunk], true)).toEqual([clearedChunk]);
+  });
 });

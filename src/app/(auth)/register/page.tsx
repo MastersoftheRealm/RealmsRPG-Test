@@ -16,11 +16,7 @@ import { createClient } from '@/lib/supabase/client';
 import { registerSchema, type RegisterFormData } from '@/lib/validation';
 import { getAuthErrorMessage } from '@/lib/auth-errors';
 import { createUserProfileAction } from '@/app/(auth)/actions';
-import {
-  resendConfirmationAction,
-  setAuthRememberMeAction,
-  signUpAction,
-} from '@/app/(auth)/auth-actions';
+import { resendConfirmationAction, signUpAction } from '@/app/(auth)/auth-actions';
 import {
   clearLoginRedirectSession,
   resendAuthSignupConfirmation,
@@ -151,7 +147,6 @@ function RegisterContent() {
     setError(null);
 
     try {
-      await setAuthRememberMeAction(true);
       const redirectPath = getRedirectPath();
       const supabase = createClient();
       const url = await signInWithGoogleOAuth(supabase, window.location.origin, redirectPath);

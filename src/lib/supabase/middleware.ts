@@ -11,7 +11,10 @@ import {
   hasSupabaseAuthSessionCookie,
   isNextLinkPrefetchRequest,
 } from '@/lib/supabase/auth-cookies';
-import { createSupabaseAuthCookieMethods } from '@/lib/supabase/supabase-auth-cookies';
+import {
+  applyPendingCookiesToResponse,
+  createAccumulatingSupabaseCookieStore,
+} from '@/lib/supabase/supabase-auth-cookies';
 import { getVerifiedClaims } from '@/lib/supabase/verified-claims';
 import { buildLoginRedirectUrl, sanitizeRedirectPath } from '@/lib/safe-redirect';
 
@@ -81,21 +84,13 @@ export async function updateSession(request: NextRequest) {
     return NextResponse.next({ request });
   }
 
-  let supabaseResponse = NextResponse.next({ request });
+  const { methods: cookieMethods, pending: pendingCookies } = createAccumulatingSupabaseCookieStore(
+    () => request.cookies.getAll(),
+    (name, value) => request.cookies.set(name, value),
+  );
 
   const supabase = createServerClient(supabaseUrl, supabaseKey, {
-    cookies: createSupabaseAuthCookieMethods({
-      getAll: () => request.cookies.getAll(),
-      set: (name, value, options) => {
-        request.cookies.set(name, value);
-        supabaseResponse = NextResponse.next({ request });
-        if (options === undefined) {
-          supabaseResponse.cookies.set(name, value);
-        } else {
-          supabaseResponse.cookies.set(name, value, options);
-        }
-      },
-    }),
+    cookies: cookieMethods,
   });
 
   let userId: string | null = null;
@@ -127,5 +122,5 @@ export async function updateSession(request: NextRequest) {
     return redirectSignedOutFromProtectedPage(request);
   }
 
-  return supabaseResponse;
+  return applyPendingCookiesToResponse(NextResponse.next({ request }), pendingCookies);
 }
