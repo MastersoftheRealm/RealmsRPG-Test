@@ -7,8 +7,8 @@
 
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
-import { createClient as createSupabaseAdminClient } from '@supabase/supabase-js';
 import { requireAdminSession } from '@/lib/admin';
+import { createServiceRoleClient } from '@/lib/supabase/server';
 import {
   buildRateLimitKey,
   resolveClientIp,
@@ -17,15 +17,6 @@ import {
 } from '@/lib/rate-limit';
 
 export const dynamic = 'force-dynamic';
-
-function getSupabaseAdmin() {
-  const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
-  const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
-  if (!url || !key) {
-    throw new Error('Supabase admin env not configured');
-  }
-  return createSupabaseAdminClient(url, key);
-}
 
 export async function GET(request: NextRequest) {
   try {
@@ -46,7 +37,7 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    const supabase = getSupabaseAdmin();
+    const supabase = createServiceRoleClient();
     // Cap the result set; the admin table filters client-side. A bounded query
     // avoids unbounded PII exposure and runaway payloads (TASK-330).
     const { data: profiles, error: profilesError } = await supabase

@@ -5,16 +5,16 @@ vi.mock('@/lib/admin', () => ({
   requireLiveAdminSession: vi.fn(),
 }));
 
-vi.mock('@supabase/supabase-js', () => ({
-  createClient: vi.fn(),
+vi.mock('@/lib/supabase/server', () => ({
+  createServiceRoleClient: vi.fn(),
 }));
 
 import { PATCH } from './route';
 import { requireLiveAdminSession } from '@/lib/admin';
-import { createClient as createSupabaseAdminClient } from '@supabase/supabase-js';
+import { createServiceRoleClient } from '@/lib/supabase/server';
 
 const mockRequireLiveAdminSession = vi.mocked(requireLiveAdminSession);
-const mockCreateSupabaseAdminClient = vi.mocked(createSupabaseAdminClient);
+const mockCreateServiceRoleClient = vi.mocked(createServiceRoleClient);
 
 function makePatchRequest() {
   return new NextRequest('http://localhost/api/admin/users/update-role', {
@@ -59,7 +59,7 @@ describe('PATCH /api/admin/users/update-role', () => {
 
     expect(response.status).toBe(401);
     await expect(readJson(response)).resolves.toEqual({ error: 'Unauthorized' });
-    expect(mockCreateSupabaseAdminClient).not.toHaveBeenCalled();
+    expect(mockCreateServiceRoleClient).not.toHaveBeenCalled();
   });
 
   it('returns 403 when the user is authenticated but not admin', async () => {
@@ -73,6 +73,6 @@ describe('PATCH /api/admin/users/update-role', () => {
 
     expect(response.status).toBe(403);
     await expect(readJson(response)).resolves.toEqual({ error: 'Forbidden' });
-    expect(mockCreateSupabaseAdminClient).not.toHaveBeenCalled();
+    expect(mockCreateServiceRoleClient).not.toHaveBeenCalled();
   });
 });
