@@ -276,9 +276,6 @@ export type { PoweredMartialSliderProps } from './select/powered-martial-slider'
 export { InnateToggle } from './select/innate-toggle';
 export type { InnateToggleProps } from './select/innate-toggle';
 
-// ImageUploadModal - Upload and crop images for portraits/profile pictures
-export { ImageUploadModal } from './chrome/image-upload-modal';
-export type { ImageUploadModalProps, CropShape } from './chrome/image-upload-modal';
 export { RealmsImageField, RealmsImagePicker } from './chrome/realms-image-picker';
 export type {
   RealmsImageFieldProps,
