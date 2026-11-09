@@ -22,6 +22,7 @@ describe('admin-users-search', () => {
           id: 'uid-abc-123',
           username: 'x',
           username_display: 'x',
+          email: null,
           display_name: null,
           role: 'developer',
         },
@@ -34,6 +35,7 @@ describe('admin-users-search', () => {
           id: 'uid-abc-123',
           username: 'x',
           username_display: 'x',
+          email: null,
           display_name: null,
           role: 'new_player',
         },
@@ -46,7 +48,7 @@ describe('admin-users-search', () => {
     const filter = buildAdminUsersOrFilter('Doe, Jane');
     expect(filter).toContain('display_name.ilike."%Doe, Jane%"');
     expect(filter).not.toMatch(/display_name\.ilike\.%Doe, Jane%/);
-    expect(filter).not.toContain('email.ilike');
+    expect(filter).toContain('email.ilike."%Doe, Jane%"');
 
     const roleFilter = buildAdminUsersOrFilter('admin');
     expect(roleFilter).toContain('role.in.(admin)');

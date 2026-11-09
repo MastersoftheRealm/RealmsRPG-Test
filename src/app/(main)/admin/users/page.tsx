@@ -40,6 +40,7 @@ interface UserRow {
   id: string;
   username: string;
   usernameDisplay: string;
+  email: string;
   displayName: string;
   role: UserRole;
 }
@@ -212,7 +213,7 @@ export default function AdminUsersPage() {
         <SearchInput
           value={searchQuery}
           onChange={setSearchQuery}
-          placeholder="Search username, display name, user id, or role"
+          placeholder="Search username, display name, email, user id, or role"
           aria-label="Search users"
         />
       </div>
@@ -258,6 +259,12 @@ export default function AdminUsersPage() {
                         title={u.displayName || undefined}
                       >
                         {u.displayName || '(none)'}
+                      </p>
+                      <p
+                        className="truncate text-sm text-text-secondary"
+                        title={u.email || undefined}
+                      >
+                        {u.email || '(none)'}
                       </p>
                       <p className="text-sm text-text-secondary">
                         Role:{' '}

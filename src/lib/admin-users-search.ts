@@ -9,6 +9,7 @@ export type AdminUserProfileSearchRow = {
   id: string;
   username: string | null;
   username_display: string | null;
+  email: string | null;
   display_name: string | null;
   role: string;
 };
@@ -43,6 +44,7 @@ export function profileMatchesAdminUserSearch(
   const values = [
     profile.username,
     profile.username_display,
+    profile.email,
     profile.display_name,
     profile.id,
   ].filter((v): v is string => Boolean(v));
@@ -57,6 +59,7 @@ export function buildAdminUsersOrFilter(search: string): string {
   const clauses = [
     `username.ilike.${pattern}`,
     `username_display.ilike.${pattern}`,
+    `email.ilike.${pattern}`,
     `display_name.ilike.${pattern}`,
     `id.ilike.${pattern}`,
   ];

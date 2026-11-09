@@ -39,6 +39,7 @@ type ProfileRow = {
   id: string;
   username: string | null;
   username_display: string | null;
+  email: string | null;
   display_name: string | null;
   role: string;
 };
@@ -122,9 +123,12 @@ describe('GET /api/admin/users', () => {
     });
 
     const response = await GET(makeGetRequest());
+    const raw = await response.text();
 
     expect(response.status).toBe(401);
-    await expect(readJson(response)).resolves.toEqual({ error: 'Unauthorized' });
+    expect(JSON.parse(raw)).toEqual({ error: 'Unauthorized' });
+    expect(raw).not.toMatch(/@/);
+    expect(raw).not.toContain('"email"');
     expect(mockCreateServiceRoleClient).not.toHaveBeenCalled();
   });
 
@@ -136,9 +140,12 @@ describe('GET /api/admin/users', () => {
     });
 
     const response = await GET(makeGetRequest());
+    const raw = await response.text();
 
     expect(response.status).toBe(403);
-    await expect(readJson(response)).resolves.toEqual({ error: 'Forbidden' });
+    expect(JSON.parse(raw)).toEqual({ error: 'Forbidden' });
+    expect(raw).not.toMatch(/@/);
+    expect(raw).not.toContain('"email"');
     expect(mockCreateServiceRoleClient).not.toHaveBeenCalled();
   });
 
@@ -150,6 +157,7 @@ describe('GET /api/admin/users', () => {
           id: 'user-1',
           username: 'hero',
           username_display: 'Hero',
+          email: 'hero@example.com',
           display_name: 'Hero Player',
           role: 'new_player',
         },
@@ -170,17 +178,17 @@ describe('GET /api/admin/users', () => {
         id: 'user-1',
         username: 'hero',
         usernameDisplay: 'Hero',
+        email: 'hero@example.com',
         displayName: 'Hero Player',
         role: 'new_player',
       },
     ]);
-    expect(body.users[0]).not.toHaveProperty('email');
     expect(body.offset).toBe(0);
     expect(body.limit).toBe(100);
     expect(body.hasMore).toBe(false);
   });
 
-  it('does not include email addresses in the JSON response', async () => {
+  it('includes email addresses in the JSON response for an admin', async () => {
     mockRequireAdminSession.mockResolvedValue({ ok: true, userId: ADMIN_ID });
     mockCreateServiceRoleClient.mockReturnValue(
       createMockSupabaseAdmin([
@@ -188,10 +196,10 @@ describe('GET /api/admin/users', () => {
           id: 'user-1',
           username: 'hero',
           username_display: 'Hero',
+          email: 'secret@example.com',
           display_name: 'Hero Player',
           role: 'new_player',
-          email: 'secret@example.com',
-        } as ProfileRow & { email: string },
+        },
       ]) as never,
     );
 
@@ -199,8 +207,7 @@ describe('GET /api/admin/users', () => {
     const body = await readJson<{ users: Array<Record<string, unknown>> }>(response);
 
     expect(response.status).toBe(200);
-    expect(JSON.stringify(body)).not.toMatch(/@/);
-    expect(body.users[0]).not.toHaveProperty('email');
+    expect(body.users[0]).toMatchObject({ email: 'secret@example.com' });
   });
 
   it('returns 429 when rate limited', async () => {
@@ -243,6 +250,7 @@ describe('GET /api/admin/users', () => {
       id: `uid-${String(i + 1).padStart(4, '0')}`,
       username: `user${String(i + 1).padStart(3, '0')}`,
       username_display: `User ${i + 1}`,
+      email: null,
       display_name: `Player ${i + 1}`,
       role: 'new_player',
     }));
@@ -297,6 +305,7 @@ describe('GET /api/admin/users', () => {
         id: 'uid-002',
         username: null,
         username_display: 'B',
+        email: null,
         display_name: null,
         role: 'new_player',
       },
@@ -304,6 +313,7 @@ describe('GET /api/admin/users', () => {
         id: 'uid-001',
         username: null,
         username_display: 'A',
+        email: null,
         display_name: null,
         role: 'new_player',
       },
@@ -311,6 +321,7 @@ describe('GET /api/admin/users', () => {
         id: 'uid-003',
         username: 'zulu',
         username_display: 'Z',
+        email: null,
         display_name: null,
         role: 'new_player',
       },
@@ -385,6 +396,7 @@ describe('GET /api/admin/users', () => {
               id: 'pt-1',
               username: 'pt',
               username_display: 'pt',
+              email: null,
               display_name: 'pt',
               role: 'playtester',
             },
