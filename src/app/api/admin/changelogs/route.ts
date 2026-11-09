@@ -5,6 +5,7 @@ import {
   pickCodexChangelogIdentity,
   readStoredCodexChangelogEntityName,
 } from '@/lib/codex-changelog-display';
+import { fromPublicTable, type PublicTableName } from '@/lib/supabase/database';
 import { createServiceRoleClient } from '@/lib/supabase/server';
 import { adminChangelogsQuerySchema, validateQuery } from '@/lib/api-validation';
 import {
@@ -62,7 +63,9 @@ async function loadLiveEntityNames(
   ];
   if (ids.length === 0) return names;
 
-  const { data, error } = await supabase.from(entityType).select('id, name').in('id', ids);
+  const { data, error } = await fromPublicTable(supabase, entityType as PublicTableName)
+    .select('id, name')
+    .in('id', ids);
   if (error) {
     console.error('[API Error] GET /api/admin/changelogs entity names:', error);
     return names;

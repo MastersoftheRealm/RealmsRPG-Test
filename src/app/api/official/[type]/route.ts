@@ -17,6 +17,7 @@ import {
   PUBLIC_CDN_CACHE_CONTROL,
 } from '@/lib/api/public-cdn-cache';
 import { createPublicClient } from '@/lib/supabase/public-client';
+import { fromPublicTable, type PublicTableName } from '@/lib/supabase/database';
 import { createClient, createServiceRoleClient } from '@/lib/supabase/server';
 import { getSession, requireLiveUser } from '@/lib/supabase/session';
 import { isAdmin } from '@/lib/admin';
@@ -144,6 +145,10 @@ function filterSpeciesCodexRow(row: Record<string, unknown>): Record<string, unk
   return out;
 }
 
+function officialTable(supabase: ReturnType<typeof createServiceRoleClient>, table: string) {
+  return fromPublicTable(supabase, table as PublicTableName);
+}
+
 function catalogListingFromBody(body: Record<string, unknown>): CatalogListing | undefined {
   const raw = body.catalogListing ?? body.catalog_listing;
   if (raw === undefined) return undefined;
@@ -160,8 +165,7 @@ async function officialNameConflictForUpdate(
   const name = typeof rawName === 'string' ? rawName.trim() : '';
   if (!name) return null;
 
-  const { data: current, error: currentError } = await supabase
-    .from(table)
+  const { data: current, error: currentError } = await officialTable(supabase, table)
     .select('name')
     .eq('id', existingId)
     .maybeSingle();
@@ -178,8 +182,7 @@ async function officialNameConflictForUpdate(
     return null;
   }
 
-  const { data: other, error } = await supabase
-    .from(table)
+  const { data: other, error } = await officialTable(supabase, table)
     .select('id')
     .ilike('name', name)
     .neq('id', existingId)
@@ -363,13 +366,14 @@ export async function POST(
           normalized.name,
         );
         if (nameConflict) return nameConflict;
-        const { data: beforeRow } = await supabase
-          .from(SPECIES_TABLE)
+        const { data: beforeRow } = await officialTable(supabase, SPECIES_TABLE)
           .select('*')
           .eq('id', existingId)
           .maybeSingle();
-        const { data: updatedRows, error: updateError } = await supabase
-          .from(SPECIES_TABLE)
+        const { data: updatedRows, error: updateError } = await officialTable(
+          supabase,
+          SPECIES_TABLE,
+        )
           .update(dbRow)
           .eq('id', existingId)
           .select('*');
@@ -399,8 +403,7 @@ export async function POST(
 
       for (let attempt = 0; attempt < 3; attempt++) {
         const id = await allocateCodexNumericId(supabase, SPECIES_TABLE);
-        const { data: inserted, error: insertError } = await supabase
-          .from(SPECIES_TABLE)
+        const { data: inserted, error: insertError } = await officialTable(supabase, SPECIES_TABLE)
           .insert({ id, catalog_listing: listing ?? 'listed', ...dbRow })
           .select('*')
           .single();
@@ -444,13 +447,11 @@ export async function POST(
         body.name,
       );
       if (nameConflict) return nameConflict;
-      const { data: beforeRow } = await supabase
-        .from(table)
+      const { data: beforeRow } = await officialTable(supabase, table)
         .select('*')
         .eq('id', existingId)
         .maybeSingle();
-      const { data: updatedRows, error: updateError } = await supabase
-        .from(table)
+      const { data: updatedRows, error: updateError } = await officialTable(supabase, table)
         .update(dbRow)
         .eq('id', existingId)
         .select('*');
@@ -478,8 +479,7 @@ export async function POST(
     }
 
     const id = crypto.randomUUID();
-    const { data: inserted, error: insertError } = await supabase
-      .from(table)
+    const { data: inserted, error: insertError } = await officialTable(supabase, table)
       .insert({
         id,
         catalog_listing: listing ?? 'listed',
@@ -540,13 +540,11 @@ export async function PATCH(
 
     const supabase = createServiceRoleClient();
     const table = type === 'species' ? SPECIES_TABLE : TABLE_MAP[type];
-    const { data: beforeRow } = await supabase
-      .from(table)
+    const { data: beforeRow } = await officialTable(supabase, table)
       .select('*')
       .eq('id', validation.data.id)
       .maybeSingle();
-    const { data: updatedRows, error: updateError } = await supabase
-      .from(table)
+    const { data: updatedRows, error: updateError } = await officialTable(supabase, table)
       .update({
         catalog_listing: validation.data.catalogListing,
         updated_at: new Date().toISOString(),
@@ -612,9 +610,11 @@ export async function DELETE(
 
     const supabase = createServiceRoleClient();
     const table = type === 'species' ? SPECIES_TABLE : TABLE_MAP[type];
-    const { data: beforeRow } = await supabase.from(table).select('*').eq('id', id).maybeSingle();
-    const { data: deleted, error: deleteError } = await supabase
-      .from(table)
+    const { data: beforeRow } = await officialTable(supabase, table)
+      .select('*')
+      .eq('id', id)
+      .maybeSingle();
+    const { data: deleted, error: deleteError } = await officialTable(supabase, table)
       .delete()
       .eq('id', id)
       .select('id');

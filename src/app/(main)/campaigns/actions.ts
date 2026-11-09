@@ -233,7 +233,7 @@ export async function joinCampaignAction(data: {
       .select('user_id')
       .eq('campaign_id', campaignRow.id);
     const memberIdsFromTable = (memberRows ?? []).map((m: { user_id: string }) => m.user_id);
-    const campaignData = (campaignRow.characters as CampaignCharacter[]) ?? [];
+    const campaignData = (campaignRow.characters as unknown as CampaignCharacter[]) ?? [];
     const memberIdsFromRoster = [...new Set(campaignData.map((c) => c.userId).filter(Boolean))];
     const memberIds = [...new Set([...memberIdsFromTable, ...memberIdsFromRoster])];
     const ownerPolicy = await getRolePolicyForUser(campaignRow.owner_id, dbService);
@@ -380,7 +380,7 @@ export async function addCharacterToCampaignAction(data: {
     }
     const rosterFields = buildRosterFieldsFromCharacterData(charData);
 
-    const campaignData = (campaignRow.characters as CampaignCharacter[]) ?? [];
+    const campaignData = (campaignRow.characters as unknown as CampaignCharacter[]) ?? [];
     if (campaignData.length >= MAX_CAMPAIGN_CHARACTERS) {
       return {
         success: false,
