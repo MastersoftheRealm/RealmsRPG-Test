@@ -2,7 +2,16 @@ import { readFileSync, readdirSync, statSync } from 'node:fs';
 import path from 'node:path';
 import { describe, expect, it } from 'vitest';
 
-import { chunkInvokesMutationGuard } from './api-mutation-guard';
+import { chunkInvokesMutationGuard } from './api-mutation-guard-route-scan';
+
+/** Scanner implementation markers that must not ship in the production guard module. */
+const ROUTE_SCAN_SYMBOLS = [
+  'stripCommentsAndStringLiterals',
+  'chunkInvokesMutationGuard',
+  'scanExecutableSegment',
+  'skipRegexLiteral',
+  'MUTATION_GUARD_CALL_PATTERNS',
+] as const;
 
 const API_ROOT = path.join(import.meta.dirname, '../app/api');
 const MUTATION_HANDLER_HEAD = /^export\s+async\s+function\s+(POST|PUT|PATCH|DELETE)\s*\(/;
@@ -29,6 +38,13 @@ function relativeApiPath(file: string): string {
 }
 
 describe('API mutation routes CSRF coverage', () => {
+  it('keeps route-scan helpers out of the production guard module', () => {
+    const guard = readFileSync(path.join(import.meta.dirname, 'api-mutation-guard.ts'), 'utf8');
+    for (const symbol of ROUTE_SCAN_SYMBOLS) {
+      expect(guard).not.toContain(symbol);
+    }
+  });
+
   it('every mutating route handler declares a mutation guard', () => {
     const unprotected: string[] = [];
 

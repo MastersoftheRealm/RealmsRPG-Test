@@ -110,7 +110,7 @@
     "src/components/ui/table-scroll.test.ts": 2,
     "src/docs/game-rules-map-86e3pmgnw.test.ts": 2,
     "src/hooks/use-load-modal-library-species-copy.test.ts": 1,
-    "src/lib/api-mutation-routes.test.ts": 4,
+    "src/lib/api-mutation-routes.test.ts": 5,
     "src/lib/calculators/power-energy-breakdown.test.ts": 2,
     "src/lib/codex/admin-source-list.test.ts": 4,
     "src/lib/codex/sources.test.ts": 1,
