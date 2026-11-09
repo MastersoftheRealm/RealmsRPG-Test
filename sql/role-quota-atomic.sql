@@ -107,7 +107,7 @@ BEGIN
   END IF;
 
   FOR v_col IN
-    SELECT a.attname AS column_name, format_type(a.atttypid, a.atttypmod) AS data_type
+    SELECT a.attname AS column_name
     FROM pg_attribute a
     WHERE a.attrelid = p_target
       AND a.attnum > 0
@@ -117,7 +117,7 @@ BEGIN
       v_cols := array_append(v_cols, quote_ident(v_col.column_name));
       v_selects := array_append(
         v_selects,
-        format('($1->%L)::%s', v_col.column_name, v_col.data_type)
+        format('(_src.v_populated).%I', v_col.column_name)
       );
     END IF;
   END LOOP;
@@ -127,10 +127,11 @@ BEGIN
   END IF;
 
   v_sql := format(
-    'INSERT INTO %s (%s) SELECT %s',
+    'INSERT INTO %s (%s) SELECT %s FROM (SELECT jsonb_populate_record(null::%s, $1) AS v_populated) AS _src',
     p_target,
     array_to_string(v_cols, ', '),
-    array_to_string(v_selects, ', ')
+    array_to_string(v_selects, ', '),
+    p_target
   );
   EXECUTE v_sql USING p_row;
 END;
