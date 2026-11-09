@@ -178,7 +178,7 @@ See `ADMIN_SETUP.md` for current implementation.
 On the free tier, watch **Edge Requests**, **Fast Data Transfer** (CDN → users), and **Edge Request CPU Duration** (charged when >10ms per request). See **`src/docs/PERFORMANCE_AND_EDGE.md`**.
 
 - **Proxy (Edge):** `src/proxy.ts` runs on every *matching* request. We exclude high-volume public APIs (`/api/codex`, `/api/official`) from the matcher so those routes don’t count as Edge Requests or Edge CPU.
-- **Caching:** Listed-only `GET /api/codex` and `GET /api/official/[type]` responses may use `PUBLIC_CDN_CACHE_CONTROL` from `lib/api/public-cdn-cache.ts` (`public, max-age=0, s-maxage=300, stale-while-revalidate=3600`) when the handler built the body with `createPublicClient()` and the payload passes the listed-only checks. Debug, `includeUnlisted=1`, errors, and other paths use private headers (`private, no-store` or `private, max-age=0, must-revalidate`). Authority: `src/app/api/codex/route.ts` (`codexCacheControlHeader`), `src/app/api/official/[type]/route.ts`.
+- **Caching:** Listed-only `GET /api/official/[type]` responses may use `PUBLIC_CDN_CACHE_CONTROL` from `lib/api/public-cdn-cache.ts` (`public, max-age=0, s-maxage=300, stale-while-revalidate=3600`) when the handler built the body with `createPublicClient()` and the payload passes the listed-only checks. Debug, `includeUnlisted=1`, errors, and other paths use private headers (`private, no-store` or `private, max-age=0, must-revalidate`). Authority: `src/app/api/official/[type]/route.ts`. Codex CDN headers: `DATA_HANDLING.md`.
 - **Adding new public APIs:** Exclude them from the proxy matcher in `proxy.ts` if they don’t need session refresh, and set cache headers on GET if the response is cacheable.
 
 ---

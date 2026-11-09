@@ -9,9 +9,9 @@ import { isAdmin } from '@/lib/admin';
 import { fromPublicTable, type TypedSupabaseClient } from '@/lib/supabase/database';
 import {
   codexResponseMayUsePublicCdn,
+  CODEX_PUBLIC_CDN_CACHE_CONTROL,
   PRIVATE_MUST_REVALIDATE_CACHE_CONTROL,
   PRIVATE_NO_STORE_CACHE_CONTROL,
-  PUBLIC_CDN_CACHE_CONTROL,
 } from '@/lib/api/public-cdn-cache';
 import { createPublicClient } from '@/lib/supabase/public-client';
 import { createClient } from '@/lib/supabase/server';
@@ -128,32 +128,23 @@ function throwUnlessCodexTableMissing(error: TableError): void {
 }
 
 /** Skipped tables resolve empty so the mapping below stays one code path. */
-function selectTable(
+async function selectTable(
   supabase: TypedSupabaseClient,
   table: CodexTable,
   needed: ReadonlySet<CodexTable>,
-): PromiseLike<TableResult> {
-  if (!needed.has(table)) return Promise.resolve({ data: [], error: null });
+): Promise<TableResult> {
+  if (!needed.has(table)) return { data: [], error: null };
   const columns = CODEX_API_TABLE_SELECT[table];
-  const tableTag = codexApiTableCacheTag(table);
-  return readCachedPublicDataWhenValid(
-    ['codex-api', table, columns],
-    [CODEX_API_CACHE_TAG, tableTag],
-    CODEX_PUBLIC_ISR_SECONDS,
-    async () => {
-      let result = (await fromPublicTable(supabase, table).select(columns)) as TableResult;
-      // Skills and properties name `sources`. If that column is missing, retry once
-      // without it so mapCodexSources can still read the singular `source` label.
-      // A missing column must not cache as an empty catalog.
-      if (isMissingSourcesColumn(result.error) && columns.includes('sources')) {
-        const fallbackColumns = omitCodexSourcesColumn(columns);
-        result = (await fromPublicTable(supabase, table).select(fallbackColumns)) as TableResult;
-      }
-      throwUnlessCodexTableMissing(result.error);
-      return result;
-    },
-    (result) => !result.error && (result.data?.length ?? 0) > 0,
-  );
+  let result = (await fromPublicTable(supabase, table).select(columns)) as TableResult;
+  // Skills and properties name `sources`. If that column is missing, retry once
+  // without it so mapCodexSources can still read the singular `source` label.
+  // A missing column must not cache as an empty catalog.
+  if (isMissingSourcesColumn(result.error) && columns.includes('sources')) {
+    const fallbackColumns = omitCodexSourcesColumn(columns);
+    result = (await fromPublicTable(supabase, table).select(fallbackColumns)) as TableResult;
+  }
+  throwUnlessCodexTableMissing(result.error);
+  return result;
 }
 
 function codexPayloadCacheTags(keys: ReadonlySet<CodexPayloadKey>): string[] {
@@ -474,7 +465,7 @@ function codexCacheControlHeader(
     return PRIVATE_NO_STORE_CACHE_CONTROL;
   }
   if (codexResponseMayUsePublicCdn(keys, body)) {
-    return PUBLIC_CDN_CACHE_CONTROL;
+    return CODEX_PUBLIC_CDN_CACHE_CONTROL;
   }
   return PRIVATE_MUST_REVALIDATE_CACHE_CONTROL;
 }
