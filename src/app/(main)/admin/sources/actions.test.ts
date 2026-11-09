@@ -8,11 +8,10 @@ import { CODEX_API_CACHE_TAG, codexApiTableCacheTag } from '@/lib/codex/cache-ta
 import { FakeSupabase } from '@/lib/codex/fake-supabase';
 
 vi.mock('next/cache', () => ({ revalidatePath: vi.fn(), updateTag: vi.fn() }));
-vi.mock('@/lib/supabase/session', () => ({
-  getSession: vi.fn(async () => ({ user: { uid: 'admin-1' } })),
-  requireLiveUser: vi.fn(async () => ({ uid: 'admin-1' })),
+vi.mock('@/lib/admin', () => ({
+  requireAdminSession: vi.fn(async () => ({ ok: true, userId: 'admin-1' })),
+  requireLiveAdminSession: vi.fn(async () => ({ ok: true, userId: 'admin-1' })),
 }));
-vi.mock('@/lib/admin', () => ({ isAdmin: vi.fn(async () => true) }));
 vi.mock('@/lib/codex-changelog', () => ({ recordCodexChange: vi.fn(async () => undefined) }));
 vi.mock('@/lib/supabase/server', () => ({ createServiceRoleClient: vi.fn(() => currentDb) }));
 
@@ -64,8 +63,12 @@ beforeEach(() => {
 
 describe('admin sources membership actions', () => {
   it('rejects non-admin callers', async () => {
-    const { isAdmin } = await import('@/lib/admin');
-    vi.mocked(isAdmin).mockResolvedValueOnce(false);
+    const { requireLiveAdminSession } = await import('@/lib/admin');
+    vi.mocked(requireLiveAdminSession).mockResolvedValueOnce({
+      ok: false,
+      status: 403,
+      body: { error: 'Forbidden' },
+    });
 
     const result = await addAdminCodexSourceMembership(
       {
@@ -343,8 +346,12 @@ describe('renameAdminCodexSource', () => {
   });
 
   it('rejects a non-admin before calling the rename function', async () => {
-    const { isAdmin } = await import('@/lib/admin');
-    vi.mocked(isAdmin).mockResolvedValueOnce(false);
+    const { requireLiveAdminSession } = await import('@/lib/admin');
+    vi.mocked(requireLiveAdminSession).mockResolvedValueOnce({
+      ok: false,
+      status: 403,
+      body: { error: 'Forbidden' },
+    });
 
     const result = await renameAdminCodexSource('Homebrew', 'Official');
 
