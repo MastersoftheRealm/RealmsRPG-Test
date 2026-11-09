@@ -39,10 +39,7 @@ import {
   type TraitCategory,
 } from './species-creator-bootstrap';
 import { applySpeciesCreatorReset } from './species-creator-reset';
-import {
-  commitCreatorEditClearAfterSave,
-  scheduleCreatorEditClear,
-} from '@/lib/creator/creator-edit-query';
+import { scheduleCreatorEditClear } from '@/lib/creator/creator-edit-query';
 
 type UseSpeciesCreatorWorkspaceArgs = {
   traits: Trait[];
@@ -164,9 +161,7 @@ export function useSpeciesCreatorWorkspace({
         : `Are you sure you wish to publish this species "${n}" to the Realms Codex? All users will be able to see and use it.`,
     successMessage: 'Species saved to My Codex!',
     publicSuccessMessage: 'Species saved to Realms Codex!',
-    onSaveCommitted: () => {
-      commitCreatorEditClearAfterSave(editSession, clearEditQuery, acceptDraft);
-    },
+    onSaveCommitted: acceptDraft,
     onSaveSuccess: () => {
       try {
         localStorage.removeItem(SPECIES_CREATOR_CACHE_KEY);
@@ -175,6 +170,7 @@ export function useSpeciesCreatorWorkspace({
       }
       setForm(initialSpeciesFormState);
       acceptDraft();
+      scheduleCreatorEditClear(editSession, clearEditQuery);
     },
   });
 
