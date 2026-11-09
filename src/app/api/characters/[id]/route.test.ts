@@ -48,14 +48,6 @@ vi.mock('@/lib/character-save', () => ({
   prepareCharacterForSave: vi.fn((data: unknown) => data),
 }));
 
-vi.mock('@/lib/character-list-columns', async (importOriginal) => {
-  const actual = await importOriginal<typeof import('@/lib/character-list-columns')>();
-  return {
-    ...actual,
-    getCharacterListColumns: vi.fn(() => ({})),
-  };
-});
-
 vi.mock('@/lib/game/archetype-display', () => ({
   fetchArchetypeNameMap: vi.fn(() => Promise.resolve(new Map())),
 }));
@@ -80,7 +72,7 @@ const OTHER = { uid: 'other-user', email: 'other@example.com' };
 type CharacterRow = {
   id: string;
   user_id: string;
-  data: Record<string, unknown>;
+  document: Record<string, unknown>;
   created_at: string;
   updated_at: string;
   visibility?: string | null | undefined;
@@ -89,17 +81,18 @@ type CharacterRow = {
 function makeCharacterRow(
   id: string,
   userId: string,
-  overrides: Partial<CharacterRow['data']> = {},
+  overrides: Partial<CharacterRow['document']> = {},
   column?: { visibility?: string | null | undefined },
 ): CharacterRow {
-  const data = { name: 'Test Hero', level: 1, visibility: 'private', ...overrides };
+  const document = { name: 'Test Hero', level: 1, visibility: 'private', ...overrides };
   return {
     id,
     user_id: userId,
-    data,
+    document,
     created_at: '2026-07-01T12:00:00.000Z',
     updated_at: '2026-07-01T12:00:00.000Z',
-    visibility: column && 'visibility' in column ? column.visibility : (data.visibility as string),
+    visibility:
+      column && 'visibility' in column ? column.visibility : (document.visibility as string),
   };
 }
 
@@ -171,11 +164,37 @@ function createMockSupabase(
   };
 
   const update = vi.fn((payload: Record<string, unknown>) => buildUpdateChain(payload));
+  const rpcMock = vi.fn(async (name: string, args: Record<string, unknown>) => {
+    if (name === 'get_character_relational_document') {
+      return { data: characterRow?.document ?? null, error: null };
+    }
+    if (name === 'patch_character_relational') {
+      if (!characterRow || args.p_character_id !== characterRow.id) {
+        return { data: { status: 'not_found' }, error: null };
+      }
+      if (
+        typeof args.p_expected_updated_at === 'string' &&
+        args.p_expected_updated_at !== characterRow.updated_at
+      ) {
+        return {
+          data: { status: 'conflict', updatedAt: characterRow.updated_at },
+          error: null,
+        };
+      }
+      return {
+        data: { status: 'updated', updatedAt: '2026-08-14T00:00:00.000Z' },
+        error: null,
+      };
+    }
+    throw new Error(`Unexpected RPC: ${name}`);
+  });
   const removePortrait = vi.fn().mockResolvedValue({ error: null });
 
   const client = {
     lastUpdate,
     update,
+    rpc: rpcMock,
+    rpcMock,
     removePortrait,
     from: vi.fn((table: string) => {
       if (table === 'characters') {
@@ -393,7 +412,7 @@ describe('GET /api/characters/[id]', () => {
     expect(mockGetOwnerLibraryAndEnrichmentForView).toHaveBeenCalledWith(
       expect.anything(),
       OWNER.uid,
-      row.data,
+      row.document,
     );
   });
 
@@ -431,7 +450,7 @@ describe('GET /api/characters/[id]', () => {
     expect(mockGetOwnerLibraryAndEnrichmentForView).toHaveBeenCalledWith(
       expect.anything(),
       OWNER.uid,
-      row.data,
+      row.document,
     );
   });
 
@@ -496,9 +515,8 @@ describe('PATCH /api/characters/[id]', () => {
   });
 
   it('returns 404 when another user tries to update a character (IDOR)', async () => {
-    const row = makeCharacterRow('char-private', OWNER.uid);
     mockGetSession.mockResolvedValue({ user: OTHER, error: null });
-    mockCreateClient.mockResolvedValue(createMockSupabase(row) as never);
+    mockCreateClient.mockResolvedValue(createMockSupabase(null) as never);
 
     const response = await PATCH(makePatchRequest('char-private', { name: 'Stolen' }), {
       params: Promise.resolve({ id: 'char-private' }),
@@ -580,14 +598,18 @@ describe('PATCH /api/characters/[id]', () => {
     });
 
     expect(response.status).toBe(200);
-    expect(supabase.update).toHaveBeenCalled();
-    const payload = supabase.lastUpdate.payload;
-    expect(payload).toBeTruthy();
-    const data = payload!.data as Record<string, unknown>;
-    expect(data.name).toBe('Updated Hero');
-    expect(data.notes).toBe('keep me');
-    expect(data.level).toBe(3);
-    expect(typeof data.updatedAt).toBe('string');
+    expect(supabase.rpcMock).toHaveBeenCalledWith(
+      'patch_character_relational',
+      expect.objectContaining({
+        p_character_id: 'char-owned',
+        p_patch: { name: 'Updated Hero' },
+      }),
+    );
+    const patchArgs = supabase.rpcMock.mock.calls.find(
+      ([name]) => name === 'patch_character_relational',
+    )?.[1] as { p_patch?: Record<string, unknown> } | undefined;
+    expect(patchArgs?.p_patch).not.toHaveProperty('notes');
+    expect(patchArgs?.p_patch).not.toHaveProperty('level');
   });
 
   it('returns 409 and does not write when updatedAt is stale', async () => {
@@ -605,7 +627,10 @@ describe('PATCH /api/characters/[id]', () => {
 
     expect(response.status).toBe(409);
     await expect(readJson(response)).resolves.toEqual({ error: 'Character was updated elsewhere' });
-    expect(supabase.update).not.toHaveBeenCalled();
+    expect(supabase.rpcMock).toHaveBeenCalledWith(
+      'patch_character_relational',
+      expect.objectContaining({ p_expected_updated_at: '2026-01-01T00:00:00.000Z' }),
+    );
   });
 
   it('applies a matching updatedAt lock and stamps a new token', async () => {
@@ -622,7 +647,10 @@ describe('PATCH /api/characters/[id]', () => {
     const body = await readJson<{ ok: boolean; updatedAt: string }>(response);
     expect(body.ok).toBe(true);
     expect(body.updatedAt).not.toBe(row.updated_at);
-    expect(supabase.lastUpdate.payload?.updated_at).toBeTruthy();
+    expect(supabase.rpcMock).toHaveBeenCalledWith(
+      'patch_character_relational',
+      expect.objectContaining({ p_expected_updated_at: row.updated_at }),
+    );
   });
 
   it('deletes the stored portrait when the sheet stops referencing it', async () => {

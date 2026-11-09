@@ -11,6 +11,10 @@ import { removeUndefined } from '@/lib/utils/object';
 import { validateJson, encounterCreateSchema } from '@/lib/api-validation';
 import { apiErrorResponse, logApiError } from '@/lib/api-error';
 import { buildRateLimitKey, resolveClientIp, standardLimiter } from '@/lib/rate-limit';
+import {
+  formatDuplicateCampaignCharacterMessage,
+  getDuplicateCampaignCharactersByScope,
+} from '@/lib/encounter/unique-campaign-characters';
 import type { EncounterSummary } from '@/types/encounter';
 
 type Row = {
@@ -92,6 +96,11 @@ export async function POST(request: NextRequest) {
     const validation = await validateJson(request, encounterCreateSchema);
     if (!validation.success) return validation.error;
     const data = validation.data;
+    const duplicateReport = getDuplicateCampaignCharactersByScope(data);
+    const duplicateMessage = formatDuplicateCampaignCharacterMessage(duplicateReport);
+    if (duplicateMessage) {
+      return NextResponse.json({ error: duplicateMessage }, { status: 400 });
+    }
 
     const now = new Date().toISOString();
     const cleaned = removeUndefined({

@@ -143,12 +143,7 @@ describe('rapid HP and AP stepper clicks keep every step (86e3juy89)', () => {
     expect(stepped.value).toBe(-1);
     const settled = adoptStepperMemory(stepped.memory, 0, true);
     expect(settled).toEqual({ local: 0, pending: false, burstFrom: 0 });
-    const plus = stepStepperValue(
-      settled,
-      1,
-      Number.NEGATIVE_INFINITY,
-      Number.POSITIVE_INFINITY,
-    );
+    const plus = stepStepperValue(settled, 1, Number.NEGATIVE_INFINITY, Number.POSITIVE_INFINITY);
     expect(plus.value).toBe(1);
   });
 

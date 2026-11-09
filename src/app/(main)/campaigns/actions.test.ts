@@ -34,6 +34,16 @@ function seedCampaignOwnerScenario(): FakeSupabase {
       {
         id: CHARACTER_ID,
         user_id: 'owner-uid',
+      },
+    ],
+    user_profiles: [{ id: 'owner-uid', username: 'rm-user' }],
+    campaign_members: [],
+  });
+  vi.spyOn(currentDb, 'rpc').mockImplementation(async (name, args) => {
+    const rpcName = String(name);
+    currentDb.rpcCalls.push({ name: rpcName, args });
+    if (rpcName === 'get_character_relational_document') {
+      return {
         data: {
           name: 'Stored Authority Name',
           level: 7,
@@ -41,11 +51,17 @@ function seedCampaignOwnerScenario(): FakeSupabase {
           ancestry: { name: 'Stored Species' },
           archetype: { type: 'martial' },
           visibility: 'private',
+          updatedAt: '2026-11-08T00:00:00.000Z',
         },
-      },
-    ],
-    user_profiles: [{ id: 'owner-uid', username: 'rm-user' }],
-    campaign_members: [],
+        error: null,
+      };
+    }
+    if (rpcName === 'add_campaign_character_relational') {
+      const rosterEntry = (args as { p_roster_entry: CampaignCharacter }).p_roster_entry;
+      currentDb.tables.campaigns![0]!.characters = [rosterEntry];
+      return { data: { status: 'updated', visibilityUpdated: true }, error: null };
+    }
+    return { data: null, error: { message: `Unexpected RPC: ${rpcName}` } };
   });
   return currentDb;
 }

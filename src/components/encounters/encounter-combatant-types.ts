@@ -19,6 +19,7 @@ export interface CombatantCardProps {
   onUpdate: (updates: Partial<Combatant>) => void;
   onRemove: () => void;
   onDuplicate: () => void;
+  canDuplicate?: boolean;
   onAddCondition: (condition: string) => void;
   onRemoveCondition: (condition: string) => void;
   onUpdateConditionLevel: (condition: string, delta: number) => void;

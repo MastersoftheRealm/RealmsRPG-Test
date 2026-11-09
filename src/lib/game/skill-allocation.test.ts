@@ -40,10 +40,7 @@ const meta = new Map<string, { isSubSkill: boolean }>([
   ['21', { isSubSkill: true }],
 ]);
 
-function spent(
-  allocations: Record<string, number>,
-  rules?: SkillAllocationRules,
-): number {
+function spent(allocations: Record<string, number>, rules?: SkillAllocationRules): number {
   return calculateSimpleSkillPointsSpent(allocations, new Set(), meta, undefined, rules);
 }
 

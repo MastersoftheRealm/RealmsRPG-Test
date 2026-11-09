@@ -367,7 +367,7 @@ export const characterCreateSchema = withSafeJsonBlob({
   duplicateOf: z.string().uuid().optional(),
   /**
    * Idempotency key (TASK-738): the route replays the first result for a repeated key
-   * instead of inserting a second character. Stored in its own column, not the JSON blob.
+   * instead of inserting a second character. Stored in its own relational column.
    */
   clientRequestId: z.string().uuid().optional(),
 }).refine((body) => body.duplicateOf != null || (body.name != null && body.name.length > 0), {
@@ -387,7 +387,7 @@ export const characterUpdateSchema = withSafeJsonBlob({
   /** Storage public URL or external URL after upload */
   portrait: z.string().min(1).max(4000).optional(),
   /** `characters.updated_at` the client loaded; mismatch → 409. Omitted = no lock. */
-  updatedAt: z.string().min(1).max(40).optional(),
+  updatedAt: z.iso.datetime({ offset: true, local: true }).optional(),
 });
 
 // =============================================================================
@@ -633,6 +633,18 @@ export const resourceIdParamSchema = z
     id: z.string().trim().min(1, 'Invalid ID'),
   })
   .strict();
+
+const tabletopRouteIdSchema = z.string().trim().min(1, 'Invalid ID');
+
+export const tabletopActionRouteParamsSchema = z
+  .object({ actionId: tabletopRouteIdSchema })
+  .strict();
+
+export const tabletopCampaignRouteParamsSchema = z
+  .object({ campaignId: tabletopRouteIdSchema })
+  .strict();
+
+export const tabletopSceneRouteParamsSchema = z.object({ sceneId: tabletopRouteIdSchema }).strict();
 
 export const campaignsListQuerySchema = z
   .object({

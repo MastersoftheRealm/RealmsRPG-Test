@@ -9,7 +9,7 @@ import type { Tables } from '@/lib/supabase/database';
 
 type CampaignRow = Tables<'campaigns'>;
 
-function normalizeCampaignRosterCharacters(raw: unknown): CampaignCharacter[] {
+export function normalizeCampaignRosterCharacters(raw: unknown): CampaignCharacter[] {
   let arr: unknown[] = [];
   if (Array.isArray(raw)) {
     arr = raw;
@@ -60,7 +60,7 @@ function archetypeDisplayNameFromType(archetypeType?: string): CampaignCharacter
 
 /**
  * SEC-06: derive the campaign roster fields (name/level/species/archetype/portrait)
- * from the authoritative character `data` JSONB rather than trusting client input,
+ * from the authoritative relational character document rather than trusting client input,
  * so a player cannot misrepresent their character to other campaign members.
  */
 export function buildRosterFieldsFromCharacterData(charData: Record<string, unknown>): {

@@ -942,7 +942,7 @@ Only changes that the UX requires. Do not expand the data model beyond reducing 
 | Admin Training Points / currency validation | Validate that path loadouts stay within budget before publish | Missing in admin |
 | Ability effect blurbs | A frontend constants map | New (no database change) |
 | Equipment sub-steps | UI only; `armaments` and `equipment` are already separate fields | Ready |
-| Tutorial milestone flags | `tutorial_milestones` on user profile or character JSON | New (Section 11) |
+| Tutorial milestone flags | `tutorial_milestones` on user profile or relational character preferences | New (Section 11) |
 | Play-together prompt dismissed | User or character preference flag | New (Section 11) |
 
 **Defer:** auto-applying level 2 and higher during creation; locking species by path; removing Forge mode.

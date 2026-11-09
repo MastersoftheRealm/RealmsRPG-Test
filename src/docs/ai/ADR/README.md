@@ -52,3 +52,4 @@ Lightweight process for **Architect**-role changes. Keep each ADR short.
 | 0027 | Official catalog listing (Public vs Admin library) | Accepted (TASK-927) |
 | 0029 | Power composition (built-in variants) | Accepted (TASK-929) |
 | 0030 | Codex admin persisted write contract | Accepted (B7 / #493) |
+| 0031 | Relational character persistence | Accepted (production compatibility stage applied; contract pending) |

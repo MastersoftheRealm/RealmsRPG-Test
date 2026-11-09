@@ -6,10 +6,7 @@
 
 import { ValueStepper, SectionCostBadge } from '@/components/patterns';
 import { CollapsibleSection } from '@/components/creator';
-import {
-  combineItemSectionCosts,
-  type ItemSectionCosts,
-} from './item-creator-cost-derivation';
+import { combineItemSectionCosts, type ItemSectionCosts } from './item-creator-cost-derivation';
 
 /** One track per field once the column can hold the label and its cost badge. */
 export const ARMOR_FIELD_GRID_CLASS =

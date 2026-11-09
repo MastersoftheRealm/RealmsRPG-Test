@@ -9,6 +9,7 @@ import Link from 'next/link';
 import { ChevronLeft, Cloud, CloudOff, HardDrive } from 'lucide-react';
 import { PageHeader } from '@/components/ui';
 import { useAuth } from '@/hooks';
+import type { ReactNode } from 'react';
 
 export type EncounterTypeLabel = 'Combat' | 'Skill' | 'Mixed';
 
@@ -24,6 +25,7 @@ export interface EncounterPageHeaderProps {
   onCancelEdit: () => void;
   isSaving: boolean;
   hasUnsavedChanges: boolean;
+  actions?: ReactNode | undefined;
 }
 
 const TITLE_INPUT_CLASS =
@@ -41,6 +43,7 @@ export function EncounterPageHeader({
   onCancelEdit,
   isSaving,
   hasUnsavedChanges,
+  actions,
 }: EncounterPageHeaderProps) {
   const { user, initialized } = useAuth();
   const usesLocalPersistence = !user;
@@ -77,6 +80,7 @@ export function EncounterPageHeader({
             className="mb-0"
             onTitleClick={onStartEditingName}
             titleAriaLabel="Encounter name. Click to edit."
+            actions={actions}
           />
         )}
         {!isEditingName && (

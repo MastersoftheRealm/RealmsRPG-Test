@@ -50,20 +50,20 @@ function stripCharacterPatchMeta(patch: Record<string, unknown>): Record<string,
 }
 
 /**
- * Merge a dirty subset onto stored JSONB. Omitted keys stay as stored.
+ * Merge a dirty subset onto the stored character document. Omitted keys stay as stored.
  * A `null` value removes that key. Client meta is stripped.
  */
 export function applyCharacterDirtyPatch(
   currentData: Record<string, unknown>,
   patch: Record<string, unknown>,
-  options?: { blobUpdatedAt?: string | undefined },
+  options?: { documentUpdatedAt?: string | undefined },
 ): Record<string, unknown> {
   const merged: Record<string, unknown> = { ...currentData };
   for (const [key, value] of Object.entries(stripCharacterPatchMeta(patch))) {
     if (value === null) delete merged[key];
     else merged[key] = value;
   }
-  if (options?.blobUpdatedAt) merged.updatedAt = options.blobUpdatedAt;
+  if (options?.documentUpdatedAt) merged.updatedAt = options.documentUpdatedAt;
   return merged;
 }
 

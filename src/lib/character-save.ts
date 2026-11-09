@@ -112,7 +112,7 @@ export function prepareCharacterForSave(data: Partial<Character>): Record<string
 export function prepareCharacterForCreate(data: Partial<Character>): Record<string, unknown> {
   const cleaned = prepareCharacterForSave(data);
   cleaned.createdAt = new Date().toISOString();
-  // Routing metadata — lives on `characters.client_request_id`, never in the JSON blob.
+  // Routing metadata lives on `characters.client_request_id`, not in the character document.
   delete cleaned.clientRequestId;
   return cleaned;
 }

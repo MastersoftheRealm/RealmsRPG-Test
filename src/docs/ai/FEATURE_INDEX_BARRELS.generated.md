@@ -190,6 +190,7 @@ Generated: 2026-11-09
 - type UserSpecies
 - type UserTechnique
 - useAccountProfile
+- useActiveCampaignTabletop
 - useAddOfficialToLibrary
 - useAdmin
 - useAuth
@@ -254,6 +255,9 @@ Generated: 2026-11-09
 - useSaveCraftingSession
 - useSaveEncounter
 - useSpecies
+- useTabletopMutations
+- useTabletopRealtime
+- useTabletopScene
 - useTechniqueParts
 - useTraits
 - useUpdateEnhancedItem

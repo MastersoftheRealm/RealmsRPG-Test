@@ -5,7 +5,7 @@
 
 'use client';
 
-import { useCallback, useState, type DragEvent } from 'react';
+import { useCallback, useMemo, useState, type DragEvent } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import type { Combatant, CombatantCondition, Encounter, TrackedCombatant } from '@/types/encounter';
 import { CONDITION_OPTIONS } from '@/components/encounters/encounter-constants';
@@ -14,6 +14,10 @@ import {
   isOwnedLinkedCombatant,
   scheduleCharacterResourceSyncFromCombatant,
 } from '@/lib/encounter/character-resource-sync';
+import {
+  filterDuplicateCampaignCharacterEntries,
+  getCampaignCharacterIds,
+} from '@/lib/encounter/unique-campaign-characters';
 import type { Campaign } from '@/types/campaign';
 import {
   sortCombatantsForTurnOrder,
@@ -52,6 +56,17 @@ export function useCombatRosterActions({
   const linkedCampaign = encounter?.campaignId
     ? campaignsFull.find((c: Campaign) => c.id === encounter.campaignId)
     : undefined;
+  const existingCampaignCharacterIds = useMemo(
+    () => getCampaignCharacterIds(encounter.combatants),
+    [encounter.combatants],
+  );
+  const availableCampaignCharacters = useMemo(
+    () =>
+      (linkedCampaign?.characters ?? []).filter(
+        (c) => !existingCampaignCharacterIds.has(c.characterId),
+      ),
+    [existingCampaignCharacterIds, linkedCampaign?.characters],
+  );
 
   const handleDragStart = useCallback((e: DragEvent<HTMLDivElement>, id: string) => {
     setDraggedId(id);
@@ -122,16 +137,20 @@ export function useCombatRosterActions({
   };
 
   const addCombatantsFromModal = (combatants: TrackedCombatant[]) => {
-    setEncounter((prev) => (prev ? encounterAfterAddingCombatants(prev, combatants) : prev));
+    setEncounter((prev) => {
+      if (!prev) return prev;
+      const newCombatants = filterDuplicateCampaignCharacterEntries(combatants, prev.combatants);
+      return encounterAfterAddingCombatants(prev, newCombatants);
+    });
     setShowAddModal(false);
   };
 
   const addAllCampaignCharacters = useCallback(async () => {
-    if (!encounter?.campaignId || !linkedCampaign?.characters?.length) return;
+    if (!encounter?.campaignId || availableCampaignCharacters.length === 0) return;
     setAddingAllChars(true);
     try {
       const results = await Promise.all(
-        linkedCampaign.characters.map(async (c) => {
+        availableCampaignCharacters.map(async (c) => {
           try {
             const data = await fetchCampaignCharacterForEncounter(
               queryClient,
@@ -150,15 +169,20 @@ export function useCombatRosterActions({
       const combatants = results
         .filter((r): r is NonNullable<typeof r> => r !== null)
         .map((r) => buildCampaignCharacterCombatant(r.charMeta, r.data));
-      setEncounter((prev) => (prev ? encounterAfterAddingCombatants(prev, combatants) : prev));
+      setEncounter((prev) => {
+        if (!prev) return prev;
+        const newCombatants = filterDuplicateCampaignCharacterEntries(combatants, prev.combatants);
+        return encounterAfterAddingCombatants(prev, newCombatants);
+      });
     } catch {
       // Pre-split parity: silent outer catch (TASK-666 cleanup).
     } finally {
       setAddingAllChars(false);
     }
-  }, [encounter, linkedCampaign, queryClient, setEncounter, user]);
+  }, [availableCampaignCharacters, encounter, queryClient, setEncounter, user]);
 
   const duplicateCombatant = (combatant: Combatant) => {
+    if ((combatant as TrackedCombatant).sourceType === 'campaign-character') return;
     const existing = encounter?.combatants || [];
     const duplicate = buildDuplicateCombatant(
       combatant,
@@ -307,6 +331,8 @@ export function useCombatRosterActions({
     draggedId,
     dragOverId,
     linkedCampaign,
+    existingCampaignCharacterIds,
+    availableCampaignCharacters,
     handleDragStart,
     handleDragEnd,
     handleDragOver,
