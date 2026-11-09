@@ -16,6 +16,39 @@
 
 **Shape convention:** Prefer **columnar** (scalar columns ± one JSONB for variable payload) where possible. Some tables remain **id + data (JSONB)** or hybrid (list columns + data); see table list below.
 
+### 1.1 JSONB column inventory
+
+The `public` schema has 41 application tables. Of those, 24 tables use 50 `JSONB` columns. There are no plain `JSON` columns in `public`. Supabase-managed tables in the `auth`, `realtime`, and `storage` schemas are outside this inventory.
+
+This list reflects the live-generated `src/types/database.types.ts` checked against `sql/schema/0000_baseline_2026-08-13.sql`.
+
+| Table | JSONB columns |
+|-------|---------------|
+| `campaign_rolls` | `data` |
+| `campaigns` | `characters` |
+| `characters` | `data` |
+| `codex_archetypes` | `level1_guidance_groups`, `level1_loadouts`, `level1_recommended_abilities`, `path_data` |
+| `codex_change_logs` | `after_data`, `before_data`, `changed_fields` |
+| `core_rules` | `data` |
+| `crafting_sessions` | `data` |
+| `encounters` | `data` |
+| `official_creatures` | `payload` |
+| `official_empowered_techniques` | `damage`, `payload` |
+| `official_enhanced_items` | `payload` |
+| `official_items` | `ability_requirement`, `costs`, `damage`, `payload`, `properties`, `shield_damage`, `shield_dr` |
+| `official_powers` | `damage`, `payload` |
+| `official_techniques` | `damage`, `payload` |
+| `role_policies` | `permissions` |
+| `user_creatures` | `payload` |
+| `user_empowered_techniques` | `damage`, `payload` |
+| `user_enhanced_items` | `data` |
+| `user_items` | `ability_requirement`, `costs`, `damage`, `payload`, `properties`, `shield_damage`, `shield_dr` |
+| `user_powers` | `damage`, `payload` |
+| `user_species` | `payload` |
+| `user_techniques` | `damage`, `payload` |
+| `vtt_scenes` | `fog`, `grid`, `map`, `settings` |
+| `vtt_tokens` | `metadata` |
+
 ---
 
 ## 2. Tables (current state)
@@ -188,7 +221,7 @@ Single document in `data`; list columns for list/filter. Realtime: `public.chara
 
 | Table | Shape | Key columns |
 |-------|--------|-------------|
-| `campaigns` | Scalar + JSONB | id (PK), owner_id, name, description, invite_code, characters (JSONB), memberIds (JSONB), owner_username, created_at, updated_at |
+| `campaigns` | Scalar + JSONB | id (PK), owner_id, name, description, invite_code, characters (JSONB), owner_username, created_at, updated_at |
 | `campaign_members` | Columnar | campaign_id (PK), user_id (PK); FK campaign_id → campaigns(id) |
 | `campaign_rolls` | Hybrid | id (PK, required on insert unless DB default), campaign_id (FK), data (JSONB), **created_at** (app POST sets ISO `now`; optional DB `DEFAULT now()`); list columns: character_id, user_id, type, title |
 

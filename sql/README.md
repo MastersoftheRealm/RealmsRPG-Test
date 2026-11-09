@@ -9,6 +9,7 @@
 | Path | Purpose |
 |------|---------|
 | [`_TEMPLATE_new_table.sql`](_TEMPLATE_new_table.sql) | Required pattern for any **new** `public` table: RLS, policies, and explicit `GRANT` in the same file. CI scans changed `sql/**/*.sql` (except this template and `schema/` baselines). |
+| [`campaign-rolls-relational-expand.sql`](campaign-rolls-relational-expand.sql) | Pending additive campaign-roll expansion: validates and copies `data` into scalar columns plus ordered dice rows, while compatibility triggers retain the JSON write contract. Not applied; the later app cutover/drop is separate. |
 | [`codex-rename-source.sql`](codex-rename-source.sql) | Admin utility: replaces `public.rename_codex_source` only. Safe to re-run on non-prod when Kadin approves; first real rename is a live data change and needs a backup. |
 | [`schema/0000_baseline_2026-08-13.sql`](schema/0000_baseline_2026-08-13.sql) | Committed `pg_dump --schema-only` snapshot (**stale** vs live — regenerate before relying on it). |
 
