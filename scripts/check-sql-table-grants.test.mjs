@@ -22,6 +22,14 @@ GRANT SELECT, INSERT, UPDATE, DELETE ON ${table} TO authenticated;
 GRANT SELECT, INSERT, UPDATE, DELETE ON ${table} TO service_role;`;
 }
 
+function compliantQuotedHyphenTable(quotedName) {
+  return `CREATE TABLE ${quotedName} (id int);
+ALTER TABLE ${quotedName} ENABLE ROW LEVEL SECURITY;
+CREATE POLICY p ON ${quotedName} FOR SELECT TO authenticated USING (true);
+GRANT SELECT, INSERT, UPDATE, DELETE ON ${quotedName} TO authenticated;
+GRANT SELECT, INSERT, UPDATE, DELETE ON ${quotedName} TO service_role;`;
+}
+
 describe('word-only GRANT gap', () => {
   const partialGrantOnly = `CREATE TABLE public.foo (id int);
 GRANT SELECT ON public.foo TO authenticated;`;
@@ -237,6 +245,46 @@ GRANT ALL PRIVILEGES ON public.foo TO service_role;`;
         compliantPublicTableSql('public.foo').replace('CREATE TABLE', 'CREATE UNLOGGED TABLE'),
       ),
     ).toBe(false);
+  });
+
+  it('flags each distinct quoted hyphenated table even when another is fully set up', () => {
+    const sql = `${compliantQuotedHyphenTable('"foo-bar"')}\nCREATE TABLE "baz-qux" (id int);`;
+    expect(sqlDefinesCreateTableWithoutGrant(sql)).toBe(true);
+    expect(findCreateTableSetupViolations(sql)).toEqual(
+      expect.arrayContaining([
+        'public.baz-qux: missing ENABLE ROW LEVEL SECURITY in the same file',
+        'public.baz-qux: missing CREATE POLICY in the same file',
+        expect.stringMatching(/public\.baz-qux: GRANT missing .+ TO authenticated/),
+      ]),
+    );
+  });
+
+  it('does not match a CREATE POLICY on a differently quoted spaced table name', () => {
+    const sql = `CREATE TABLE "Foo Bar" (id int);
+ALTER TABLE "Foo Bar" ENABLE ROW LEVEL SECURITY;
+CREATE POLICY p ON "Other Table" FOR SELECT TO authenticated USING (true);
+GRANT SELECT, INSERT, UPDATE, DELETE ON "Foo Bar" TO authenticated;
+GRANT SELECT, INSERT, UPDATE, DELETE ON "Foo Bar" TO service_role;`;
+    expect(findCreateTableSetupViolations(sql)).toEqual(
+      expect.arrayContaining(['public.foo bar: missing CREATE POLICY in the same file']),
+    );
+  });
+
+  it('does not treat a quoted SQL keyword as a real statement', () => {
+    const sql = `CREATE TABLE public.foo (id int);
+"alter" TABLE public.foo ENABLE ROW LEVEL SECURITY;
+"create" POLICY p ON public.foo FOR SELECT TO authenticated USING (true);
+"grant" SELECT, INSERT, UPDATE, DELETE ON public.foo TO authenticated;
+"grant" SELECT, INSERT, UPDATE, DELETE ON public.foo TO service_role;`;
+    expect(sqlDefinesCreateTableWithoutGrant(sql)).toBe(true);
+    expect(findCreateTableSetupViolations(sql)).toEqual(
+      expect.arrayContaining([
+        'public.foo: missing ENABLE ROW LEVEL SECURITY in the same file',
+        'public.foo: missing CREATE POLICY in the same file',
+        expect.stringMatching(/GRANT missing SELECT, INSERT, UPDATE, DELETE TO authenticated/),
+        expect.stringMatching(/GRANT missing SELECT, INSERT, UPDATE, DELETE TO service_role/),
+      ]),
+    );
   });
 });
 

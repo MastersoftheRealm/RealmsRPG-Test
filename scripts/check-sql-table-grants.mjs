@@ -149,16 +149,65 @@ export function sqlCodeWithoutCommentsAndLiterals(sql) {
 }
 
 /**
- * Double-quoted identifiers become one unquoted token (decoded name) so bodies
- * cannot spoof RLS, POLICY, or GRANT statements.
+ * @param {string} name
+ */
+function quotedIdTokenForName(name) {
+  const normalized = name.replace(/""/g, '"').toLowerCase();
+  return `«Q${Buffer.from(normalized, 'utf8').toString('hex')}»`;
+}
+
+/**
+ * @param {string} token
+ * @returns {string | null} lowercase decoded name
+ */
+function decodeQuotedIdToken(token) {
+  const match = /^«Q([0-9a-f]+)»$/i.exec(token.trim());
+  if (!match) return null;
+  return Buffer.from(match[1], 'hex').toString('utf8');
+}
+
+/**
+ * Double-quoted identifiers become distinct opaque tokens so bodies cannot
+ * spoof SQL keywords or collide across different quoted names.
  * @param {string} decoded
  */
 function decodedToIdentifierToken(decoded) {
   const name = decoded.replace(/""/g, '"');
-  if (/^[a-z_][a-z0-9_]*$/i.test(name)) {
-    return name.toLowerCase();
+  return quotedIdTokenForName(name);
+}
+
+/**
+ * @param {string} token sanitized schema or table fragment
+ * @returns {string | null}
+ */
+function resolveNameToken(token) {
+  const trimmed = token.trim();
+  const decoded = decodeQuotedIdToken(trimmed);
+  if (decoded !== null) return decoded;
+  if (/^[a-z_][a-z0-9_]*$/i.test(trimmed)) return trimmed.toLowerCase();
+  return null;
+}
+
+/**
+ * @param {string} ref sanitized qualified or bare table reference
+ * @returns {{ schema: string, name: string } | null}
+ */
+function parseQualifiedTableRef(ref) {
+  const parts = ref
+    .trim()
+    .split(/\s*\.\s*/)
+    .filter(Boolean);
+  if (parts.length === 2) {
+    const schema = resolveNameToken(parts[0]);
+    const name = resolveNameToken(parts[1]);
+    if (schema && name) return { schema, name };
+    return null;
   }
-  return '__quoted_identifier__';
+  if (parts.length === 1) {
+    const name = resolveNameToken(parts[0]);
+    if (name) return { schema: 'public', name };
+  }
+  return null;
 }
 
 /** @param {string} name */
@@ -171,12 +220,17 @@ function escapeRegExp(name) {
  * @param {string} tableName lowercased unquoted name
  */
 function tableReferencePattern(schema, tableName) {
-  const esc = escapeRegExp(tableName);
+  const schemaLower = schema.toLowerCase();
+  const nameLower = tableName.toLowerCase();
+  const nameAlternates = [
+    escapeRegExp(quotedIdTokenForName(nameLower)),
+    escapeRegExp(nameLower),
+  ].join('|');
   const schemaPart =
-    schema === 'public'
-      ? `(?:(?:public|"public")\\s*\\.\\s*)?`
-      : `(?:"${escapeRegExp(schema)}"|${escapeRegExp(schema)})\\s*\\.\\s*`;
-  return `${schemaPart}(?:"${esc}"|${esc})`;
+    schemaLower === 'public'
+      ? `(?:(?:public|${escapeRegExp(quotedIdTokenForName('public'))})\\s*\\.\\s*)?`
+      : `(?:${escapeRegExp(quotedIdTokenForName(schemaLower))}|${escapeRegExp(schemaLower)})\\s*\\.\\s*`;
+  return `${schemaPart}(?:${nameAlternates})`;
 }
 
 /**
@@ -185,53 +239,23 @@ function tableReferencePattern(schema, tableName) {
  */
 export function extractCreateTableTargets(code) {
   const re =
-    /\bcreate\s+(?:unlogged\s+)?table(?!\s+as\b)(?:\s+if\s+not\s+exists)?\s+(?:"([^"]+)"\s*\.\s*"([^"]+)"|(?:(public)|([a-z_][a-z0-9_]*))\s*\.\s*(?:"([^"]+)"|([a-z_][a-z0-9_]*))|(?:"([^"]+)"|([a-z_][a-z0-9_]*)))/gi;
+    /\bcreate\s+(?:unlogged\s+)?table(?!\s+as\b)(?:\s+if\s+not\s+exists)?\s+((?:«Q[0-9a-f]+»|[a-z_][a-z0-9_]*)(?:\s*\.\s*(?:«Q[0-9a-f]+»|[a-z_][a-z0-9_]*))?)/gi;
   /** @type {{ schema: string, name: string }[]} */
   const targets = [];
   let match;
   while ((match = re.exec(code))) {
-    let schema;
-    let name;
-    if (match[1] && match[2]) {
-      schema = match[1].toLowerCase();
-      name = match[2].toLowerCase();
-    } else if (match[3] || match[4] || match[5] || match[6]) {
-      schema = (match[3] ?? match[4]).toLowerCase();
-      name = (match[5] ?? match[6]).toLowerCase();
-    } else {
-      schema = 'public';
-      name = (match[7] ?? match[8]).toLowerCase();
-    }
-    targets.push({ schema, name });
+    const parsed = parseQualifiedTableRef(match[1]);
+    if (parsed) targets.push(parsed);
   }
   return targets;
 }
 
 /** @param {string} grantOn */
 function parseGrantOnTable(grantOn) {
-  let normalized = grantOn.replace(/\s+/g, ' ').trim().toLowerCase();
-  normalized = normalized.replace(/^table\s+/, '');
-  const quotedPair = normalized.match(/^"([^"]+)"\s*\.\s*"([^"]+)"$/);
-  if (quotedPair) {
-    return { schema: quotedPair[1].toLowerCase(), name: quotedPair[2].toLowerCase() };
-  }
-  const quotedTable = normalized.match(/^(?:(public)|([a-z_][a-z0-9_]*))\s*\.\s*"([^"]+)"$/);
-  if (quotedTable) {
-    const schema = (quotedTable[1] ?? quotedTable[2]).toLowerCase();
-    return { schema, name: quotedTable[3].toLowerCase() };
-  }
-  const bare = normalized.match(
-    /^(?:(public)|([a-z_][a-z0-9_]*))\s*\.\s*([a-z_][a-z0-9_]*|all\s+tables\s+in\s+schema\s+[a-z_][a-z0-9_]*)$/,
-  );
-  if (bare && !bare[3].startsWith('all tables')) {
-    const schema = (bare[1] ?? bare[2]).toLowerCase();
-    return { schema, name: bare[3].toLowerCase() };
-  }
-  const defaultSchema = normalized.match(/^(?:"([^"]+)"|([a-z_][a-z0-9_]*))$/);
-  if (defaultSchema) {
-    return { schema: 'public', name: (defaultSchema[1] ?? defaultSchema[2]).toLowerCase() };
-  }
-  return null;
+  let normalized = grantOn.replace(/\s+/g, ' ').trim();
+  normalized = normalized.replace(/^table\s+/i, '');
+  if (/^all\s+tables\s+in\s+schema\b/i.test(normalized)) return null;
+  return parseQualifiedTableRef(normalized);
 }
 
 /**
@@ -316,7 +340,7 @@ function hasEnableRls(code, schema, tableName) {
  */
 function hasCreatePolicy(code, schema, tableName) {
   const ref = tableReferencePattern(schema, tableName);
-  const policyName = `(?:"[^"]+"|[a-z_][a-z0-9_]*)`;
+  const policyName = `(?:«Q[0-9a-f]+»|[a-z_][a-z0-9_]*)`;
   return new RegExp(`\\bcreate\\s+policy\\s+${policyName}\\s+on\\s+${ref}(?=\\s|;|$)`, 'i').test(
     code,
   );
