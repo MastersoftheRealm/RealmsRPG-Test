@@ -172,6 +172,16 @@ describe('mapCodexTrait / mapCodexPart / mapCodexProperty / mapCodexEquipment', 
     expect(item.category).toBe('adventuring');
     expect(item.type).toBe('equipment');
   });
+
+  it('does not expose armament properties on official equipment', () => {
+    const item = mapCodexEquipment({
+      id: 'eq-rope',
+      name: 'Rope',
+      currency: 12,
+      description: 'Hemp rope.',
+    });
+    expect(item).not.toHaveProperty('properties');
+  });
 });
 
 describe('mapCodexCreatureFeat', () => {
