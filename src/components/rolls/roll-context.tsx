@@ -12,7 +12,15 @@ import { useQueryClient } from '@tanstack/react-query';
 import { useToast } from '@/components/ui';
 import { getErrorMessage, isApiError } from '@/lib/api-client';
 import { AUTH_RATE_LIMIT_MESSAGE } from '@/lib/auth-errors';
-import { rollDie, generateRollId, DIE_MAX, type DieType } from '@/lib/rolls/die';
+import {
+  rollDie,
+  generateRollId,
+  DIE_MAX,
+  computeRollOutcome,
+  normalizeCampaignRollDice,
+  type DieType,
+  type RollOutcomeKind,
+} from '@/lib/rolls/die';
 import { resolveRollModifierLabel } from '@/lib/rolls/modifier-label';
 import { parseDamageRollGroups } from '@/lib/rolls/parse-damage-string';
 import { rollParsedDamage } from '@/lib/rolls/roll-parsed-damage';
@@ -39,6 +47,8 @@ export interface RollEntry {
   id: string;
   type: RollType;
   title: string;
+  /** Drives nat 20/1 rules for custom rolls (server ignores title). */
+  outcomeKind?: RollOutcomeKind | undefined;
   dice: DieResult[];
   modifier: number;
   /** Player-facing source for the numeric bonus (Strength, Power bonus, …). */
@@ -203,20 +213,8 @@ export function RollProvider({
     (type: RollType, title: string, bonus: number, explicitLabel?: string) => {
       if (!canRoll) return;
       const roll = rollDie('d20');
-      const isCrit = roll === 20;
-      const isCritFail = roll === 1;
-
-      // Apply natural 20/1 bonuses like vanilla
-      let total = roll + bonus;
-      let critMessage: string | undefined;
-
-      if (isCrit) {
-        total += 2; // Natural 20 adds +2
-        critMessage = 'Natural 20! +2 to the total!';
-      } else if (isCritFail) {
-        total -= 2; // Natural 1 subtracts 2
-        critMessage = 'Natural 1! -2 from the total!';
-      }
+      const diceInput = [{ type: 'd20' as const, value: roll }];
+      const outcome = computeRollOutcome(diceInput, bonus, 'd20-check');
 
       const modifierLabel = resolveRollModifierLabel({
         type,
@@ -229,13 +227,13 @@ export function RollProvider({
         id: generateRollId(),
         type,
         title,
-        dice: [{ type: 'd20', value: roll, isMax: isCrit, isMin: isCritFail }],
+        dice: normalizeCampaignRollDice(diceInput),
         modifier: bonus,
         modifierLabel,
-        total,
-        isCrit,
-        isCritFail,
-        critMessage,
+        total: outcome.total,
+        isCrit: outcome.isCrit,
+        isCritFail: outcome.isCritFail,
+        critMessage: outcome.critMessage ?? undefined,
         timestamp: new Date(),
       };
 
@@ -324,7 +322,6 @@ export function RollProvider({
     (title: string, dieType: DieType, count: number, modifier: number, modifierLabel?: string) => {
       if (!canRoll) return;
       const diceResults: DieResult[] = [];
-      let total = modifier;
       const max = DIE_MAX[dieType];
 
       for (let i = 0; i < count; i++) {
@@ -335,16 +332,16 @@ export function RollProvider({
           isMax: value === max,
           isMin: value === 1,
         });
-        total += value;
       }
 
-      const isCrit = dieType === 'd20' && count === 1 && diceResults[0]?.value === 20;
-      const isCritFail = dieType === 'd20' && count === 1 && diceResults[0]?.value === 1;
+      const diceInput = diceResults.map(({ type, value }) => ({ type, value }));
+      const outcome = computeRollOutcome(diceInput, modifier, 'labeled-dice');
 
       const newRoll: RollEntry = {
         id: generateRollId(),
         type: 'custom',
         title,
+        outcomeKind: 'labeled-dice',
         dice: diceResults,
         modifier,
         modifierLabel: resolveRollModifierLabel({
@@ -353,9 +350,9 @@ export function RollProvider({
           modifier,
           explicit: modifierLabel,
         }),
-        total,
-        isCrit,
-        isCritFail,
+        total: outcome.total,
+        isCrit: outcome.isCrit,
+        isCritFail: outcome.isCritFail,
         timestamp: new Date(),
       };
 

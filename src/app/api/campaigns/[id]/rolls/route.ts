@@ -16,7 +16,11 @@ import {
 import { standardLimiter, buildRateLimitKey, resolveClientIp } from '@/lib/rate-limit';
 import { MAX_CAMPAIGN_ROLLS } from '@/app/(main)/campaigns/constants';
 import { realmMasterRolledForCharacter } from '@/lib/rolls/campaign-roll-attribution';
-import { computeRollOutcome, normalizeCampaignRollDice } from '@/lib/rolls/die';
+import {
+  computeRollOutcome,
+  normalizeCampaignRollDice,
+  resolveRollOutcomeKind,
+} from '@/lib/rolls/die';
 import type { CampaignRollEntry } from '@/types/campaign-roll';
 
 type RollRow = {
@@ -249,10 +253,8 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
 
     const dice = normalizeCampaignRollDice(roll.dice ?? []);
     const modifier = roll.modifier ?? 0;
-    const outcome = computeRollOutcome(dice, modifier, {
-      type: roll.type,
-      title: roll.title,
-    });
+    const outcomeKind = resolveRollOutcomeKind(roll.type, roll.outcomeKind);
+    const outcome = computeRollOutcome(dice, modifier, outcomeKind);
 
     const rollData = {
       characterId,
