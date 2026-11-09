@@ -118,21 +118,156 @@ export function withDirtyClears<T extends Record<string, unknown>>(
   return (next ?? document) as T;
 }
 
+const EQUIPMENT_ITEM_BUCKETS = [
+  'weapons',
+  'armor',
+  'shields',
+  'items',
+  'accessories',
+  'inventory',
+] as const;
+
+function sheetEquipmentRowsMatch(
+  row: Record<string, unknown>,
+  itemId: string | number,
+  rowIndex: number,
+): boolean {
+  const idStr = String(itemId);
+  const rowId = row.id;
+  return (
+    rowId === itemId ||
+    String(rowId) === idStr ||
+    row.name === idStr ||
+    (typeof row.name === 'string' && row.name.toLowerCase() === idStr.toLowerCase()) ||
+    (typeof itemId === 'number' && rowIndex === itemId)
+  );
+}
+
+function sheetEquipmentRowAnchorId(row: Record<string, unknown>, index: number): string | number {
+  const { id, name } = row;
+  if (typeof id === 'string' || typeof id === 'number') return id;
+  if (typeof name === 'string' && name.length > 0) return name;
+  return index;
+}
+
+function findSheetEquipmentRow(
+  rows: Record<string, unknown>[] | undefined,
+  anchor: Record<string, unknown>,
+  anchorIndex: number,
+): Record<string, unknown> | undefined {
+  if (!rows?.length) return undefined;
+  const itemId = sheetEquipmentRowAnchorId(anchor, anchorIndex);
+  for (let idx = 0; idx < rows.length; idx++) {
+    const row = rows[idx];
+    if (row && sheetEquipmentRowsMatch(row, itemId, idx)) return row;
+  }
+  return undefined;
+}
+
+function mergeEquipmentItemBucket(
+  remoteList: unknown,
+  localList: unknown,
+  baselineList: unknown,
+): unknown {
+  const remote = Array.isArray(remoteList) ? (remoteList as Record<string, unknown>[]) : [];
+  const local = Array.isArray(localList) ? (localList as Record<string, unknown>[]) : [];
+  const baseline = Array.isArray(baselineList) ? (baselineList as Record<string, unknown>[]) : [];
+  const merged: Record<string, unknown>[] = [];
+  const usedLocal = new Set<number>();
+
+  for (let rIdx = 0; rIdx < remote.length; rIdx++) {
+    const remoteRow = remote[rIdx]!;
+    const baselineRow = findSheetEquipmentRow(baseline, remoteRow, rIdx);
+    const localIdx = local.findIndex(
+      (row, idx) =>
+        !usedLocal.has(idx) &&
+        sheetEquipmentRowsMatch(row, sheetEquipmentRowAnchorId(remoteRow, rIdx), rIdx),
+    );
+    const localRow = localIdx >= 0 ? local[localIdx] : undefined;
+    if (localIdx >= 0) usedLocal.add(localIdx);
+
+    const localDirty =
+      localRow !== undefined &&
+      (baselineRow === undefined
+        ? !stableEqual(localRow, remoteRow)
+        : !stableEqual(localRow, baselineRow));
+
+    merged.push(localDirty ? localRow : remoteRow);
+  }
+
+  for (let lIdx = 0; lIdx < local.length; lIdx++) {
+    if (usedLocal.has(lIdx)) continue;
+    const localRow = local[lIdx]!;
+    const onRemote = remote.some((row, rIdx) =>
+      sheetEquipmentRowsMatch(row, sheetEquipmentRowAnchorId(localRow, lIdx), rIdx),
+    );
+    if (onRemote) continue;
+    const baselineRow = findSheetEquipmentRow(baseline, localRow, lIdx);
+    if (!baselineRow || !stableEqual(localRow, baselineRow)) merged.push(localRow);
+  }
+
+  return merged;
+}
+
+/**
+ * Merge concurrent sheet inventory edits: keep each tab's item rows that differ
+ * from the shared autosave baseline instead of last-writer-wins on the whole blob.
+ */
+function mergeCharacterEquipmentConflict(
+  remoteEquipment: unknown,
+  localEquipment: unknown,
+  baselineEquipment: unknown,
+): unknown {
+  const remote =
+    remoteEquipment && typeof remoteEquipment === 'object'
+      ? (remoteEquipment as Record<string, unknown>)
+      : {};
+  const local =
+    localEquipment && typeof localEquipment === 'object'
+      ? (localEquipment as Record<string, unknown>)
+      : {};
+  const baseline =
+    baselineEquipment && typeof baselineEquipment === 'object'
+      ? (baselineEquipment as Record<string, unknown>)
+      : {};
+  const keys = new Set([...Object.keys(remote), ...Object.keys(local), ...Object.keys(baseline)]);
+  const merged: Record<string, unknown> = { ...remote };
+  for (const key of keys) {
+    if ((EQUIPMENT_ITEM_BUCKETS as readonly string[]).includes(key)) {
+      merged[key] = mergeEquipmentItemBucket(remote[key], local[key], baseline[key]);
+      continue;
+    }
+    const localRow = local[key];
+    if (localRow === undefined) continue;
+    const baselineRow = baseline[key];
+    const localDirty =
+      baselineRow === undefined
+        ? !stableEqual(localRow, remote[key])
+        : !stableEqual(localRow, baselineRow);
+    if (localDirty) merged[key] = localRow;
+  }
+  return merged;
+}
+
 /**
  * Remote document wins for keys we did not edit; local dirty keys kept.
  * A local `null` removes that key (a cleared sheet value).
+ * When `baseline` is set and `equipment` is dirty, inventory buckets merge per row.
  */
 export function mergeRemotePreservingDirty<T extends Record<string, unknown>>(
   remote: T,
   local: T,
   dirtyKeys: readonly string[],
+  baseline?: T | null,
 ): T {
   const next: Record<string, unknown> = { ...remote };
   for (const key of dirtyKeys) {
     if (isCharacterPatchMetaKey(key)) continue;
     if (!(key in local)) continue;
     if (local[key] === null) delete next[key];
-    else next[key] = local[key];
+    else if (key === 'equipment' && baseline) {
+      next[key] = mergeCharacterEquipmentConflict(remote[key], local[key], baseline[key]);
+    } else next[key] = local[key];
   }
   return next as T;
 }

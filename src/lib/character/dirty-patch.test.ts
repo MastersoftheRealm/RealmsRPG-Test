@@ -131,6 +131,41 @@ describe('applyCharacterDirtyPatch / mergeRemotePreservingDirty', () => {
     });
   });
 
+  it('merges concurrent inventory quantity edits instead of dropping a row', () => {
+    const baseline = {
+      equipment: {
+        items: [
+          { id: 'bed-roll', name: 'Bed Roll', quantity: 1 },
+          { id: 'grapple-rope', name: 'Grapple Rope', quantity: 1 },
+        ],
+      },
+    };
+    const remote = {
+      equipment: {
+        items: [
+          { id: 'bed-roll', name: 'Bed Roll', quantity: 2 },
+          { id: 'grapple-rope', name: 'Grapple Rope', quantity: 1 },
+        ],
+      },
+    };
+    const local = {
+      equipment: {
+        items: [
+          { id: 'bed-roll', name: 'Bed Roll', quantity: 1 },
+          { id: 'grapple-rope', name: 'Grapple Rope', quantity: 2 },
+        ],
+      },
+    };
+    expect(mergeRemotePreservingDirty(remote, local, ['equipment'], baseline)).toEqual({
+      equipment: {
+        items: [
+          { id: 'bed-roll', name: 'Bed Roll', quantity: 2 },
+          { id: 'grapple-rope', name: 'Grapple Rope', quantity: 2 },
+        ],
+      },
+    });
+  });
+
   it('deletes a stored key when the patch value is null', () => {
     const merged = applyCharacterDirtyPatch(
       { name: 'Hero', tempModifiers: { speed: 1 }, notes: 'keep' },

@@ -386,6 +386,7 @@ export function useCharacterSheetPageData(id: string) {
             remoteClean,
             localClean,
             Object.keys(dirty),
+            savedCleanRef.current,
           );
           mergedCleanRef.current = mergedClean;
           savedCleanRef.current = remoteClean;

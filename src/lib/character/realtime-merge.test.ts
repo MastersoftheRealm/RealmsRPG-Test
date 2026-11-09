@@ -143,6 +143,52 @@ describe('mergeSheetRealtimePayload (TASK-747)', () => {
     expect(stillDirty.tempModifiers).toBeNull();
   });
 
+  it('keeps a local gear qty edit while adopting a concurrent remote qty change', () => {
+    const saved = sheetCharacter({
+      equipment: {
+        weapons: [],
+        armor: [],
+        shields: [],
+        items: [
+          { id: 'bed-roll', name: 'Bed Roll', quantity: 1 },
+          { id: 'grapple-rope', name: 'Grapple Rope', quantity: 1 },
+        ],
+      },
+    });
+    const baseline = cleanForSave(saved) as Record<string, unknown>;
+    const local = sheetCharacter({
+      equipment: {
+        weapons: [],
+        armor: [],
+        shields: [],
+        items: [
+          { id: 'bed-roll', name: 'Bed Roll', quantity: 1 },
+          { id: 'grapple-rope', name: 'Grapple Rope', quantity: 2 },
+        ],
+      },
+    });
+    const remote = {
+      ...(cleanForSave(saved) as Record<string, unknown>),
+      equipment: {
+        weapons: [],
+        armor: [],
+        shields: [],
+        items: [
+          { id: 'bed-roll', name: 'Bed Roll', quantity: 2 },
+          { id: 'grapple-rope', name: 'Grapple Rope', quantity: 1 },
+        ],
+      },
+    };
+
+    const { character: next } = mergeSheetRealtimePayload(local, remote, baseline, {
+      updatedAt: 'T1',
+    });
+    const items = (next.equipment?.items ?? []) as Array<{ id: string; quantity?: number }>;
+    const qty = Object.fromEntries(items.map((row) => [row.id, row.quantity]));
+    expect(qty['bed-roll']).toBe(2);
+    expect(qty['grapple-rope']).toBe(2);
+  });
+
   it('returns the same character object when nothing non-resource changed', () => {
     const saved = sheetCharacter();
     const baseline = cleanForSave(saved) as Record<string, unknown>;
