@@ -25,6 +25,7 @@ import {
   randomizeFacesNotOnDieWarning,
   type PowerCompositionStructure,
 } from '@/lib/calculators';
+import { clampCreatorText, CREATOR_NAME_MAX_LENGTH } from '@/lib/creator/creator-text-limits';
 import { PowerCreatorHelp } from './power-creator-help';
 import { REVERSE_TAB_ID, SHARED_TAB_ID } from './power-creator-composition';
 import type { PowerCreatorCompositionState } from './use-power-creator-composition';
@@ -183,7 +184,11 @@ export function PowerCreatorCompositionBand({
           <Input
             label="Variant name"
             value={activeVariant.label}
-            onChange={(e) => state.updateVariantMeta(activeVariant.id, { label: e.target.value })}
+            maxLength={CREATOR_NAME_MAX_LENGTH}
+            onChange={(e) => {
+              const next = clampCreatorText(e.target.value, CREATOR_NAME_MAX_LENGTH);
+              state.updateVariantMeta(activeVariant.id, { label: next.value });
+            }}
             placeholder="e.g. Fire, Freeze"
           />
           {structure === 'randomize' ? (
