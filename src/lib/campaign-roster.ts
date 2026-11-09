@@ -9,7 +9,7 @@ import type { Tables } from '@/lib/supabase/database';
 
 type CampaignRow = Tables<'campaigns'>;
 
-function normalizeCampaignRosterCharacters(raw: unknown): CampaignCharacter[] {
+export function normalizeCampaignRosterCharacters(raw: unknown): CampaignCharacter[] {
   let arr: unknown[] = [];
   if (Array.isArray(raw)) {
     arr = raw;
