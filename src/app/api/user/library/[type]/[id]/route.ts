@@ -28,17 +28,10 @@ import {
 } from '@/lib/library-columnar';
 import { enrichRowsWithBankImageUrls } from '@/lib/entity-image-enrich-server';
 import { validateUserLibraryWriteBody } from '@/lib/library-mutation-validation';
+import { USER_LIBRARY_COLUMNAR_TABLES } from '@/lib/library-columnar-keys';
 
 const isColumnar = (t: string): t is ColumnarLibraryType =>
   COLUMNAR_LIBRARY_TYPES.includes(t as ColumnarLibraryType);
-
-const TABLE: Record<ColumnarLibraryType, string> = {
-  powers: 'user_powers',
-  techniques: 'user_techniques',
-  'empowered-techniques': 'user_empowered_techniques',
-  items: 'user_items',
-  creatures: 'user_creatures',
-};
 
 export async function GET(
   _request: NextRequest,
@@ -58,7 +51,7 @@ export async function GET(
 
     if (isColumnar(type)) {
       const { data: row, error: dbError } = await supabase
-        .from(TABLE[type])
+        .from(USER_LIBRARY_COLUMNAR_TABLES[type])
         .select('*')
         .eq('id', id)
         .eq('user_id', user.uid)
@@ -115,7 +108,7 @@ export async function PATCH(
 
     if (isColumnar(type)) {
       const { data: existing, error: existingErr } = await supabase
-        .from(TABLE[type])
+        .from(USER_LIBRARY_COLUMNAR_TABLES[type])
         .select('*')
         .eq('id', id)
         .eq('user_id', user.uid)
@@ -138,7 +131,7 @@ export async function PATCH(
       const { scalars, payload } = bodyToColumnar(type, merged);
       const updateRow = toDbRow({ ...scalars, payload, updatedAt: new Date() });
       const { error: updateErr } = await supabase
-        .from(TABLE[type])
+        .from(USER_LIBRARY_COLUMNAR_TABLES[type])
         .update(updateRow)
         .eq('id', id)
         .eq('user_id', user.uid);
@@ -213,7 +206,7 @@ export async function DELETE(
 
     if (isColumnar(type)) {
       const { data: existing, error: existingErr } = await supabase
-        .from(TABLE[type])
+        .from(USER_LIBRARY_COLUMNAR_TABLES[type])
         .select('id')
         .eq('id', id)
         .eq('user_id', user.uid)
@@ -223,7 +216,7 @@ export async function DELETE(
         return NextResponse.json({ error: 'Item not found' }, { status: 404 });
       }
       const { error: delErr } = await supabase
-        .from(TABLE[type])
+        .from(USER_LIBRARY_COLUMNAR_TABLES[type])
         .delete()
         .eq('id', id)
         .eq('user_id', user.uid);

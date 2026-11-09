@@ -10,6 +10,15 @@ export const COLUMNAR_LIBRARY_TYPES = [
 
 export type ColumnarLibraryType = (typeof COLUMNAR_LIBRARY_TYPES)[number];
 
+/** Supabase table per columnar user library type (`user_powers`, etc.). */
+export const USER_LIBRARY_COLUMNAR_TABLES: Record<ColumnarLibraryType, string> = {
+  powers: 'user_powers',
+  techniques: 'user_techniques',
+  'empowered-techniques': 'user_empowered_techniques',
+  items: 'user_items',
+  creatures: 'user_creatures',
+};
+
 export const LIBRARY_SCALAR_KEYS: Record<ColumnarLibraryType, readonly string[]> = {
   powers: [
     'name',

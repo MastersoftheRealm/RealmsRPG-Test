@@ -28,6 +28,7 @@ vi.mock('@/lib/rate-limit', async (importOriginal) => {
 import { GET, POST } from './route';
 import { getSession } from '@/lib/supabase/session';
 import { createClient } from '@/lib/supabase/server';
+import { USER_LIBRARY_COLUMNAR_TABLES } from '@/lib/library-columnar-keys';
 
 const mockGetSession = vi.mocked(getSession);
 const mockCreateClient = vi.mocked(createClient);
@@ -134,6 +135,50 @@ describe('GET /api/user/library/[type]', () => {
     const body = await readJson<Array<{ id: string; name: string }>>(response);
     expect(body).toHaveLength(1);
     expect(body[0]?.name).toBe('Column Name');
+  });
+
+  it('lists columnar powers through USER_LIBRARY_COLUMNAR_TABLES', async () => {
+    mockGetSession.mockResolvedValue({
+      user: { uid: 'user-1', email: 'user@example.com' },
+      error: null,
+    });
+
+    const fromTables: string[] = [];
+    const probeTable = 'user_powers_shared_map_probe_api_021';
+    const previousPowersTable = USER_LIBRARY_COLUMNAR_TABLES.powers;
+    USER_LIBRARY_COLUMNAR_TABLES.powers = probeTable;
+
+    try {
+      mockCreateClient.mockResolvedValue({
+        from: vi.fn((table: string) => {
+          fromTables.push(table);
+          return {
+            select: vi.fn(() => ({
+              eq: vi.fn(async () => ({
+                data: [
+                  {
+                    id: 'pow-1',
+                    user_id: 'user-1',
+                    name: 'Probe power',
+                    payload: {},
+                  },
+                ],
+                error: null,
+              })),
+            })),
+          };
+        }),
+      } as never);
+
+      const response = await GET(new NextRequest('http://localhost/api/user/library/powers'), {
+        params: Promise.resolve({ type: 'powers' }),
+      });
+
+      expect(response.status).toBe(200);
+      expect(fromTables).toEqual([probeTable]);
+    } finally {
+      USER_LIBRARY_COLUMNAR_TABLES.powers = previousPowersTable;
+    }
   });
 });
 
