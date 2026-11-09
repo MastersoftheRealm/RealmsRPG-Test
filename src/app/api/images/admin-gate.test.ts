@@ -1,7 +1,3 @@
-/**
- * API-016 — admin mutations on /api/images must use requireLiveAdminSession.
- */
-
 import { describe, expect, it, vi, beforeEach } from 'vitest';
 import { NextRequest } from 'next/server';
 
@@ -40,7 +36,7 @@ function makePostRequest() {
   });
 }
 
-describe('POST /api/images admin gate (API-016)', () => {
+describe('POST /api/images admin gate', () => {
   beforeEach(() => {
     vi.clearAllMocks();
   });
