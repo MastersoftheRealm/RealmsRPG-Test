@@ -15,6 +15,9 @@ import { getTrainingPointLimit } from '@/lib/proficiencies';
 import type { CoreRulesMap } from '@/types/core-rules';
 import { isItemSelectedInDraft } from '@/lib/guided-creator/loadout-pool';
 import { findByNormalizedId } from '@/lib/utils';
+import { GUIDED_CREATOR_COPY } from '@/lib/constants/site-copy';
+
+const loadoutStepCopy = GUIDED_CREATOR_COPY.steps.loadout;
 
 function coercePropertyId(raw: unknown): number | undefined {
   if (typeof raw === 'number' && !Number.isNaN(raw)) return raw;
@@ -181,4 +184,20 @@ export function wouldExceedSharedTp(
   if (opts?.alreadySelected) return false;
   const add = Math.max(0, Math.floor(Number(addTp) || 0));
   return spent + add > limit;
+}
+
+/** Training Points spent above the level-1 pool (warn-only in guided Loadout). */
+export function guidedTrainingPointsOverspendAmount(spent: number, limit: number): number {
+  const spentN = Math.max(0, Math.floor(Number(spent)) || 0);
+  const limitN = Math.max(0, Math.floor(Number(limit)) || 0);
+  return Math.max(0, spentN - limitN);
+}
+
+export function guidedLoadoutTrainingPointsOverspendMessage(
+  spent: number,
+  limit: number,
+): string | null {
+  const over = guidedTrainingPointsOverspendAmount(spent, limit);
+  if (over === 0) return null;
+  return loadoutStepCopy.trainingPointsOverspent(over);
 }

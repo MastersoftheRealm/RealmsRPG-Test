@@ -367,6 +367,9 @@ export const GUIDED_CREATOR_COPY = {
       seeWeapons: 'See weapons',
       overspent: (over: number) =>
         `You are ${over} Currency over budget. Remove an item to continue.`,
+      // Human-written final wording — Kadin approves placeholder copy.
+      trainingPointsOverspent: (over: number) =>
+        `You are ${over} Training Points over budget. You can still continue.`,
       unarmed: {
         title: 'Unarmed combat',
         description:
