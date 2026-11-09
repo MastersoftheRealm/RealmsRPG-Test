@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import {
   codexResponseMayUsePublicCdn,
+  CODEX_PUBLIC_CDN_CACHE_CONTROL,
   officialListMayUsePublicCdn,
   PUBLIC_CDN_CACHE_CONTROL,
 } from './public-cdn-cache';
@@ -41,8 +42,14 @@ describe('public CDN cache eligibility (86e3rb7ca)', () => {
   });
 
   it('documents the shared public Cache-Control value', () => {
-    expect(PUBLIC_CDN_CACHE_CONTROL).toBe('public, max-age=0, s-maxage=300');
-    expect(PUBLIC_CDN_CACHE_CONTROL).not.toMatch(/stale-while-revalidate/i);
+    expect(PUBLIC_CDN_CACHE_CONTROL).toContain('s-maxage=300');
+    expect(PUBLIC_CDN_CACHE_CONTROL).toContain('max-age=0');
+    expect(PUBLIC_CDN_CACHE_CONTROL).toContain('stale-while-revalidate=3600');
     expect(PUBLIC_CDN_CACHE_CONTROL).not.toMatch(/vary/i);
+  });
+
+  it('documents the codex-only CDN Cache-Control value (API-019)', () => {
+    expect(CODEX_PUBLIC_CDN_CACHE_CONTROL).toBe('public, max-age=0, s-maxage=300');
+    expect(CODEX_PUBLIC_CDN_CACHE_CONTROL).not.toMatch(/stale-while-revalidate/i);
   });
 });

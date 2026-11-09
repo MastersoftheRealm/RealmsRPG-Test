@@ -9,9 +9,9 @@ import { isAdmin } from '@/lib/admin';
 import { fromPublicTable, type TypedSupabaseClient } from '@/lib/supabase/database';
 import {
   codexResponseMayUsePublicCdn,
+  CODEX_PUBLIC_CDN_CACHE_CONTROL,
   PRIVATE_MUST_REVALIDATE_CACHE_CONTROL,
   PRIVATE_NO_STORE_CACHE_CONTROL,
-  PUBLIC_CDN_CACHE_CONTROL,
 } from '@/lib/api/public-cdn-cache';
 import { createPublicClient } from '@/lib/supabase/public-client';
 import { createClient } from '@/lib/supabase/server';
@@ -465,7 +465,7 @@ function codexCacheControlHeader(
     return PRIVATE_NO_STORE_CACHE_CONTROL;
   }
   if (codexResponseMayUsePublicCdn(keys, body)) {
-    return PUBLIC_CDN_CACHE_CONTROL;
+    return CODEX_PUBLIC_CDN_CACHE_CONTROL;
   }
   return PRIVATE_MUST_REVALIDATE_CACHE_CONTROL;
 }

@@ -44,9 +44,9 @@ import { fetchCoreRules } from '@/lib/core-rules-server';
 import { enrichRowsWithBankImageUrls } from '@/lib/entity-image-enrich-server';
 import { CODEX_SKILLS_PUBLIC_SELECT } from '@/lib/codex/public-table-select';
 import {
+  CODEX_PUBLIC_CDN_CACHE_CONTROL,
   PRIVATE_MUST_REVALIDATE_CACHE_CONTROL,
   PRIVATE_NO_STORE_CACHE_CONTROL,
-  PUBLIC_CDN_CACHE_CONTROL,
 } from '@/lib/api/public-cdn-cache';
 import { createPublicClient } from '@/lib/supabase/public-client';
 import { CODEX_PAYLOAD_KEYS, type CodexPayload } from '@/types/codex';
@@ -133,7 +133,7 @@ describe('GET /api/codex', () => {
     const response = await GET(new Request('http://localhost/api/codex'));
     const body = (await response.json()) as Partial<CodexPayload>;
 
-    expect(response.headers.get('Cache-Control')).toBe(PUBLIC_CDN_CACHE_CONTROL);
+    expect(response.headers.get('Cache-Control')).toBe(CODEX_PUBLIC_CDN_CACHE_CONTROL);
     expect(Object.keys(body).sort()).toEqual([...CODEX_PAYLOAD_KEYS].sort());
     expect(body.feats).toHaveLength(1);
     expect(body.species?.map((species) => species.id)).toEqual(['species-1']);
@@ -325,7 +325,7 @@ describe('GET /api/codex', () => {
     const response = await GET(new Request('http://localhost/api/codex?collection=creatureFeats'));
 
     expect(response.status).toBe(200);
-    expect(response.headers.get('Cache-Control')).toBe(PUBLIC_CDN_CACHE_CONTROL);
+    expect(response.headers.get('Cache-Control')).toBe(CODEX_PUBLIC_CDN_CACHE_CONTROL);
     expect(mockGetSession).not.toHaveBeenCalled();
     expect(mockCreateClient).not.toHaveBeenCalled();
     expect(mockCreatePublicClient).toHaveBeenCalled();

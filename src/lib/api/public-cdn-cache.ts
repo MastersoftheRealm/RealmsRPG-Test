@@ -9,8 +9,15 @@
 
 import type { CodexPayload, CodexPayloadKey } from '@/types/codex';
 
-/** Browsers revalidate (`max-age=0`). Shared caches may keep a fresh copy for 5 minutes. */
-export const PUBLIC_CDN_CACHE_CONTROL = 'public, max-age=0, s-maxage=300';
+/**
+ * Browsers revalidate (`max-age=0`). Shared caches keep a fresh copy for 5 minutes, then may
+ * serve one stale response while refreshing (`stale-while-revalidate`). Used by `/api/official`.
+ */
+export const PUBLIC_CDN_CACHE_CONTROL =
+  'public, max-age=0, s-maxage=300, stale-while-revalidate=3600';
+
+/** Listed-only `GET /api/codex` CDN header — no stale-while-revalidate. */
+export const CODEX_PUBLIC_CDN_CACHE_CONTROL = 'public, max-age=0, s-maxage=300';
 
 export const PRIVATE_MUST_REVALIDATE_CACHE_CONTROL = 'private, max-age=0, must-revalidate';
 
