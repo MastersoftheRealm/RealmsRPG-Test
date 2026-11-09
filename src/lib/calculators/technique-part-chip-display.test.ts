@@ -4,7 +4,7 @@ import { snapshotParts } from './power-composition.fixture';
 import { calculateTechniqueCosts, deriveTechniqueDisplay } from './technique-calc';
 
 describe('deriveTechniqueDisplay part chips', () => {
-  it('matches TP breakdown option levels for Additional Damage +1d6', () => {
+  it('matches stored option level between creator TP breakdown and library chip for +1d6', () => {
     const additional = snapshotParts([PART_IDS.ADDITIONAL_DAMAGE])[0]!;
     const usedLevel = 1;
     const doc = {
@@ -15,9 +15,11 @@ describe('deriveTechniqueDisplay part chips', () => {
     const display = deriveTechniqueDisplay(doc, [additional]);
     const chip = display.partChips.find((c) => c.text.startsWith('Additional Damage'));
     expect(chip).toBeDefined();
-    expect(costs.tpSources.join(' ')).toContain('(Opt1 2)');
-    expect(chip!.text).toContain('(Opt1 2)');
-    expect(chip!.text).not.toContain('(Opt1 1)');
-    expect(chip!.optionLevel).toBe(2);
+    expect(costs.totalTP).toBe(2);
+    expect(costs.tpSources.join(' ')).toContain('(Opt1 1)');
+    expect(costs.tpSources.join(' ')).not.toContain('(Opt1 2)');
+    expect(chip!.text).toContain('(Opt1 1)');
+    expect(chip!.text).not.toContain('(Opt1 2)');
+    expect(chip!.optionLevel).toBe(usedLevel);
   });
 });

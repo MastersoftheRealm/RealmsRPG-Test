@@ -6,10 +6,7 @@
  */
 
 import { PART_IDS, findByIdOrName } from '@/lib/id-constants';
-import {
-  computePartTrainingPoints,
-  publishedTrainingPointLevels,
-} from '@/lib/calculators/part-training-points';
+import { computePartTrainingPoints } from '@/lib/calculators/part-training-points';
 import { appendCanTargetToDescription, defensesFromPart } from '@/lib/game/targeted-defenses';
 import type { TechniquePart } from '@/hooks/codex-types';
 import { formatActionTypeForDisplay } from '@/lib/utils/action-type';
@@ -209,11 +206,10 @@ export function calculateTechniqueCosts(
     const tpLevels = { op_1_lvl: l1, op_2_lvl: l2, op_3_lvl: l3 };
     const partTP = computePartTrainingPoints(def, tpLevels, 'technique');
     if (partTP > 0) {
-      const shown = publishedTrainingPointLevels(def, tpLevels);
       let src = `${partTP} TP: ${def.name}`;
-      if (shown.op1 > 0) src += ` (Opt1 ${shown.op1})`;
-      if (shown.op2 > 0) src += ` (Opt2 ${shown.op2})`;
-      if (shown.op3 > 0) src += ` (Opt3 ${shown.op3})`;
+      if (l1 > 0) src += ` (Opt1 ${l1})`;
+      if (l2 > 0) src += ` (Opt2 ${l2})`;
+      if (l3 > 0) src += ` (Opt3 ${l3})`;
       tpSources.push(src);
     }
     totalTP += partTP;
@@ -236,15 +232,13 @@ function formatTechniquePartChip(def: TechniquePart, pl: TechniquePartPayload): 
   const l1 = pl.op_1_lvl || 0;
   const l2 = pl.op_2_lvl || 0;
   const l3 = pl.op_3_lvl || 0;
-  const tpLevels = { op_1_lvl: l1, op_2_lvl: l2, op_3_lvl: l3 };
-  const shown = publishedTrainingPointLevels(def, tpLevels);
 
-  const finalTP = computePartTrainingPoints(def, tpLevels, 'technique');
-  const optionLevel = Math.max(shown.op1, shown.op2, shown.op3);
+  const finalTP = computePartTrainingPoints(def, pl, 'technique');
+  const optionLevel = Math.max(l1, l2, l3);
   let text = def.name || '';
-  if (shown.op1 > 0) text += ` (Opt1 ${shown.op1})`;
-  if (shown.op2 > 0) text += ` (Opt2 ${shown.op2})`;
-  if (shown.op3 > 0) text += ` (Opt3 ${shown.op3})`;
+  if (l1 > 0) text += ` (Opt1 ${l1})`;
+  if (l2 > 0) text += ` (Opt2 ${l2})`;
+  if (l3 > 0) text += ` (Opt3 ${l3})`;
   if (finalTP > 0) text += ` | TP: ${finalTP}`;
 
   return {
