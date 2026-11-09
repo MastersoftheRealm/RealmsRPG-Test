@@ -26,6 +26,7 @@ import {
   analyzeTechniqueEnergy,
   buildTechniqueAdvancedCalculationGroups,
   combineTechniqueCostSlices,
+  noAttackCreatorWarning,
   techniqueDamageSectionCostFromAnalysis,
   techniqueManualPartsSectionCost,
   techniqueNamedBadgeCost,
@@ -456,6 +457,18 @@ export function useTechniqueCreatorWorkspace({
     [selectedParts],
   );
 
+  const noAttackWarning = useMemo(
+    () =>
+      noAttackCreatorWarning('technique', {
+        attackMode,
+        additionalDamage: { amount: damage.amount, size: damage.size },
+        manualParts: selectedParts
+          .filter((sp) => isManualTechniquePart(sp.part))
+          .map((sp) => ({ id: sp.part.id, name: sp.part.name })),
+      }),
+    [attackMode, damage.amount, damage.size, selectedParts],
+  );
+
   const handleLoadTechnique = useCallback(
     (technique: TechniqueLibraryRecord) => {
       applyFormState(techniqueLibraryRecordToFormState(technique, techniqueParts));
@@ -502,6 +515,7 @@ export function useTechniqueCreatorWorkspace({
     weaponCost,
     actionTypeCost,
     reactionCost,
+    noAttackWarning,
     addPart,
     removePart,
     updatePart,

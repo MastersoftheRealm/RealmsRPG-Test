@@ -24,6 +24,7 @@ import {
 import {
   isPowerCompositionMechanicPart,
   isRandomizeDieComplete,
+  noAttackCreatorWarning,
   powerSpecHasContent,
   resolvePowerComposition,
   type AreaConfig,
@@ -393,6 +394,19 @@ export function usePowerCreatorWorkspace({
     [powerParts, applyFormState, save, acceptDraft],
   );
 
+  const noAttackWarning = useMemo(
+    () =>
+      noAttackCreatorWarning('power', {
+        attackMode,
+        areaType: area.type,
+        selectedParts: selectedParts.map((sp) => ({ name: sp.part.name })),
+        advancedParts: selectedAdvancedParts.map((sp) => ({
+          part: { name: sp.part.name },
+        })),
+      }),
+    [attackMode, area.type, selectedAdvancedParts, selectedParts],
+  );
+
   return {
     name,
     setName,
@@ -449,6 +463,7 @@ export function usePowerCreatorWorkspace({
     composedSummary,
     dieIncomplete,
     reverseIncomplete,
+    noAttackWarning,
     save,
     unsavedDirty,
     discardLocalDraft,

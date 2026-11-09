@@ -6,7 +6,7 @@
 
 import { SectionCostBadge } from '@/components/patterns';
 import { CollapsibleSection } from '@/components/creator';
-import { Checkbox } from '@/components/ui';
+import { Alert, Checkbox } from '@/components/ui';
 import { ACTION_OPTIONS } from '@/lib/game/creator-constants';
 import {
   ATTACK_MODE_SELECT_OPTIONS,
@@ -29,6 +29,7 @@ type PowerCreatorEditorActionProfileProps = {
   sectionsUnpriced?: boolean | undefined;
   actionInheritance?: InheritedField | null;
   attackInheritance?: InheritedField | null;
+  noAttackWarning?: string | null;
 };
 
 export function PowerCreatorEditorActionProfile({
@@ -43,6 +44,7 @@ export function PowerCreatorEditorActionProfile({
   sectionsUnpriced = false,
   actionInheritance = null,
   attackInheritance = null,
+  noAttackWarning = null,
 }: PowerCreatorEditorActionProfileProps) {
   const actionLocked = !!actionInheritance?.locked;
   const actionFromShared = actionLocked || (!!actionInheritance && !actionInheritance.overridden);
@@ -129,6 +131,11 @@ export function PowerCreatorEditorActionProfile({
               Weapon Attack adds the Add Weapon to Power mechanic (flat cost). No Weapon/Attack and
               Unarmed Attack add nothing.
             </p>
+            {noAttackWarning ? (
+              <Alert variant="warning" className="mt-3" role="status">
+                {noAttackWarning}
+              </Alert>
+            ) : null}
           </>
         )}
       </CollapsibleSection>

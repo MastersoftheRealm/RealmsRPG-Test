@@ -52,6 +52,7 @@ export function PowerCreatorEditor(props: PowerCreatorEditorProps) {
         sectionsUnpriced={props.sectionsUnpriced}
         actionInheritance={props.inheritance?.action ?? null}
         attackInheritance={props.inheritance?.attack ?? null}
+        noAttackWarning={props.noAttackWarning ?? null}
       />
 
       <PowerCreatorEditorPowerConfig

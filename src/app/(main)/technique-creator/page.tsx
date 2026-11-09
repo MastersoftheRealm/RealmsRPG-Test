@@ -288,6 +288,7 @@ function TechniqueCreatorWorkspace({
         targetedDefenses={ws.targetedDefenses}
         onTargetedDefensesChange={ws.setTargetedDefenses}
         suggestionSelectedParts={ws.suggestionSelectedParts}
+        noAttackWarning={ws.noAttackWarning}
       />
     </CreatorPageShell>
   );
