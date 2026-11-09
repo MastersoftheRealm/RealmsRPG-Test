@@ -35,7 +35,7 @@
 ### Invalidation
 
 - When admin edits codex (any tab), invalidate `['codex']`. Prefix matching covers the full payload and every `['codex', collection]` slice.
-- Server writes also call `lib/api/public-catalog-cache-invalidation.ts` — `revalidateTag(tag, 'max')` plus `revalidatePath('/api/codex…')` and `/api/official/…` so listed public GETs do not stay CDN-stale after publish or save. Admin editors pass `includeUnlisted: 1` (private `no-store`) — see `ADMIN_CODEX_QUERY_OPTIONS` and `useGameRules({ admin: true })` on Core Rules.
+- Server writes call `lib/api/public-catalog-cache-invalidation.ts`: **server actions** use `updateTag`; **route handlers** use `revalidateTag(tag, { expire: 0 })`. Listed public GETs set `Vercel-Cache-Tag` from `lib/codex/cache-tags.ts` so those tags purge the CDN copy. Admin editors pass `includeUnlisted: 1` (private `no-store`) and skip `unstable_cache` — see `ADMIN_CODEX_QUERY_OPTIONS`, `useGameRules({ admin: true })`, and official library admin tabs with `includeUnlisted: true`.
 
 ---
 

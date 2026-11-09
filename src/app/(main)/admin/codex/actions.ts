@@ -7,8 +7,8 @@ import { fromPublicTable, type PublicTableName, type TablesInsert } from '@/lib/
 import { createServiceRoleClient } from '@/lib/supabase/server';
 import { revalidatePath } from 'next/cache';
 import {
-  invalidateCodexArchetypePathPublicCaches,
-  invalidateCodexCollectionPublicCaches,
+  invalidateCodexArchetypePathPublicCachesFromServerAction,
+  invalidateCodexCollectionPublicCachesFromServerAction,
 } from '@/lib/api/public-catalog-cache-invalidation';
 import {
   assertCodexCollection,
@@ -39,7 +39,7 @@ function revalidatePublicCodexCaches(collection: CodexCollection, table: string)
   revalidatePath('/admin/codex');
   revalidatePath('/admin/sources');
   revalidatePath('/codex');
-  invalidateCodexCollectionPublicCaches(collection, table);
+  invalidateCodexCollectionPublicCachesFromServerAction(collection, table);
 }
 
 const CONFLICT_MESSAGE =
@@ -428,7 +428,7 @@ export async function saveArchetypeWithPath(
     });
 
     revalidatePublicCodexCaches('codex_archetypes', 'codex_archetypes');
-    invalidateCodexArchetypePathPublicCaches();
+    invalidateCodexArchetypePathPublicCachesFromServerAction();
     return { success: true, id };
   } catch (e) {
     return {

@@ -36,7 +36,9 @@ import {
   PRIVATE_MUST_REVALIDATE_CACHE_CONTROL,
   PRIVATE_NO_STORE_CACHE_CONTROL,
   PUBLIC_CDN_CACHE_CONTROL,
+  VERCEL_CACHE_TAG_HEADER,
 } from '@/lib/api/public-cdn-cache';
+import { officialPublicRouteCdnCacheTag } from '@/lib/codex/cache-tags';
 import { GET, POST, PATCH, DELETE } from './route';
 import { getSession } from '@/lib/supabase/session';
 import { isAdmin, requireLiveAdminSession } from '@/lib/admin';
@@ -221,6 +223,9 @@ describe('GET /api/official/[type]', () => {
     const response = await GET(makeGetRequest('powers'), params('powers'));
     expect(response.status).toBe(200);
     expect(response.headers.get('Cache-Control')).toBe(PUBLIC_CDN_CACHE_CONTROL);
+    expect(response.headers.get(VERCEL_CACHE_TAG_HEADER)).toContain(
+      officialPublicRouteCdnCacheTag('powers'),
+    );
     expect(mockCreateClient).not.toHaveBeenCalled();
   });
 

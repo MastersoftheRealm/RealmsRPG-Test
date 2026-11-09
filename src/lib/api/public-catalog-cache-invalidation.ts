@@ -1,15 +1,21 @@
 /**
- * Purge Next.js Data Cache and Vercel CDN entries for public catalog GETs after admin writes.
- * Use `revalidateTag(tag, 'max')` (not `updateTag`) on Next.js 16 so CDN entries invalidate.
+ * Expire listed public catalog caches after admin writes.
+ *
+ * Server Actions: `updateTag` (immediate data-cache miss; propagates to tagged CDN responses).
+ * Route Handlers: `revalidateTag(tag, { expire: 0 })` (same, no stale body on the next GET).
  */
 
-import { revalidatePath, revalidateTag } from 'next/cache';
+import { revalidateTag, updateTag } from 'next/cache';
 import {
   codexApiTableCacheTag,
+  codexPublicCollectionCdnCacheTag,
+  codexPublicFullCdnCacheTag,
   codexTableWriteCacheTags,
   CODEX_API_CACHE_TAG,
   CORE_RULES_CACHE_TAG,
+  OFFICIAL_ENHANCED_ITEMS_CDN_CACHE_TAG,
   officialLibraryWriteCacheTags,
+  officialPublicRouteCdnCacheTag,
 } from '@/lib/codex/cache-tags';
 import type { CodexCollection } from '@/lib/codex/collections';
 import { codexCollectionToPayloadKey } from '@/lib/codex/collection-to-payload-key';
@@ -25,71 +31,105 @@ const OFFICIAL_TABLE_TO_ROUTE_TYPE: Record<string, string> = {
   codex_species: 'species',
 };
 
-function purgeCacheTags(tags: Iterable<string>): void {
-  const seen = new Set<string>();
-  for (const tag of tags) {
-    if (seen.has(tag)) continue;
-    seen.add(tag);
-    revalidateTag(tag, 'max');
+function uniqueTags(tags: Iterable<string>): string[] {
+  return [...new Set(tags)];
+}
+
+function expireTagsFromServerAction(tags: Iterable<string>): void {
+  for (const tag of uniqueTags(tags)) {
+    updateTag(tag);
   }
 }
 
-function revalidateListedCodexApiPaths(keys: readonly CodexPayloadKey[]): void {
-  revalidatePath('/api/codex');
-  for (const key of keys) {
-    revalidatePath(`/api/codex?collection=${key}`);
+function expireTagsFromRouteHandler(tags: Iterable<string>): void {
+  for (const tag of uniqueTags(tags)) {
+    revalidateTag(tag, { expire: 0 });
   }
+}
+
+function codexListedCdnTags(collectionKeys: readonly CodexPayloadKey[]): string[] {
+  const tags = [codexPublicFullCdnCacheTag()];
+  for (const key of collectionKeys) {
+    tags.push(codexPublicCollectionCdnCacheTag(key));
+  }
+  return tags;
 }
 
 /** After an admin codex table or core_rules write — listed public GETs must refresh on next request. */
-export function invalidateCodexCollectionPublicCaches(
+export function invalidateCodexCollectionPublicCachesFromServerAction(
   collection: CodexCollection,
   table: string,
 ): void {
-  const tags = [...codexTableWriteCacheTags(table)];
-  if (collection === 'core_rules') {
-    tags.push(CORE_RULES_CACHE_TAG);
-  }
-  purgeCacheTags(tags);
   const payloadKey = codexCollectionToPayloadKey(collection);
-  revalidateListedCodexApiPaths([payloadKey]);
+  const tags = [
+    ...codexTableWriteCacheTags(table),
+    ...(collection === 'core_rules' ? [CORE_RULES_CACHE_TAG] : []),
+    ...codexListedCdnTags([payloadKey]),
+  ];
+  if (collection === 'codex_species') {
+    tags.push(...officialLibraryWriteCacheTags('codex_species'));
+    tags.push(officialPublicRouteCdnCacheTag('species'));
+    tags.push(codexPublicCollectionCdnCacheTag('species'));
+  }
+  expireTagsFromServerAction(tags);
+}
+
+export function invalidateCodexCollectionPublicCachesFromRouteHandler(
+  collection: CodexCollection,
+  table: string,
+): void {
+  const payloadKey = codexCollectionToPayloadKey(collection);
+  const tags = [
+    ...codexTableWriteCacheTags(table),
+    ...(collection === 'core_rules' ? [CORE_RULES_CACHE_TAG] : []),
+    ...codexListedCdnTags([payloadKey]),
+  ];
+  if (collection === 'codex_species') {
+    tags.push(...officialLibraryWriteCacheTags('codex_species'));
+    tags.push(officialPublicRouteCdnCacheTag('species'));
+  }
+  expireTagsFromRouteHandler(tags);
 }
 
 /** Archetype path saves touch archetypes and progression levels. */
-export function invalidateCodexArchetypePathPublicCaches(): void {
-  purgeCacheTags([
+export function invalidateCodexArchetypePathPublicCachesFromServerAction(): void {
+  expireTagsFromServerAction([
     ...codexTableWriteCacheTags('codex_archetypes'),
     ...codexTableWriteCacheTags('codex_archetype_levels'),
+    ...codexListedCdnTags(['archetypes']),
   ]);
-  revalidateListedCodexApiPaths(['archetypes']);
 }
 
 /** Source rename updates every codex table that carries `sources`. */
-export function invalidateCodexApiAfterSourceRename(tables: readonly string[]): void {
-  const tags = new Set<string>([CODEX_API_CACHE_TAG]);
+export function invalidateCodexApiAfterSourceRenameFromServerAction(
+  tables: readonly string[],
+): void {
+  const tags: string[] = [CODEX_API_CACHE_TAG, codexPublicFullCdnCacheTag()];
   for (const table of tables) {
-    tags.add(codexApiTableCacheTag(table));
+    tags.push(codexApiTableCacheTag(table));
   }
-  purgeCacheTags(tags);
-  revalidateListedCodexApiPaths(CODEX_PAYLOAD_KEYS);
+  tags.push(...codexListedCdnTags(CODEX_PAYLOAD_KEYS));
+  expireTagsFromServerAction(tags);
 }
 
-/** After official library columnar create/update/delete/listing patch. */
-export function invalidateOfficialLibraryPublicCaches(table: string): void {
+function officialWriteTags(table: string): string[] {
   const tags = [...officialLibraryWriteCacheTags(table)];
   if (table === 'codex_species') {
     tags.push(...codexTableWriteCacheTags(table));
+    tags.push(codexPublicCollectionCdnCacheTag('species'));
   }
-  purgeCacheTags(tags);
   const routeType = OFFICIAL_TABLE_TO_ROUTE_TYPE[table];
   if (routeType) {
-    revalidatePath(`/api/official/${routeType}`);
+    tags.push(officialPublicRouteCdnCacheTag(routeType));
   }
-  if (table === 'codex_species') {
-    revalidatePath('/api/codex?collection=species');
-  }
+  return tags;
 }
 
-export function invalidateOfficialEnhancedItemsPublicCaches(): void {
-  revalidatePath('/api/official/enhanced-items');
+/** After official library write inside a route handler. */
+export function invalidateOfficialLibraryPublicCachesFromRouteHandler(table: string): void {
+  expireTagsFromRouteHandler(officialWriteTags(table));
+}
+
+export function invalidateOfficialEnhancedItemsPublicCachesFromRouteHandler(): void {
+  expireTagsFromRouteHandler([OFFICIAL_ENHANCED_ITEMS_CDN_CACHE_TAG]);
 }

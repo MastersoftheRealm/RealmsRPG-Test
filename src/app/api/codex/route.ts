@@ -12,6 +12,7 @@ import {
   CODEX_PUBLIC_CDN_CACHE_CONTROL,
   PRIVATE_MUST_REVALIDATE_CACHE_CONTROL,
   PRIVATE_NO_STORE_CACHE_CONTROL,
+  withVercelCacheTags,
 } from '@/lib/api/public-cdn-cache';
 import { createPublicClient } from '@/lib/supabase/public-client';
 import { createClient } from '@/lib/supabase/server';
@@ -41,6 +42,8 @@ import { CODEX_DATA_TABLES, type CodexDataTable } from '@/lib/codex/codex-tables
 import { CODEX_API_TABLE_SELECT, omitCodexSourcesColumn } from '@/lib/codex/public-table-select';
 import {
   codexApiTableCacheTag,
+  codexPublicCollectionCdnCacheTag,
+  codexPublicFullCdnCacheTag,
   CODEX_API_CACHE_TAG,
   CORE_RULES_CACHE_TAG,
 } from '@/lib/codex/cache-tags';
@@ -446,6 +449,30 @@ async function createCodexReadClient(cookieLess: boolean): Promise<{
   return { supabase: await createClient(), usedPublicClient: false };
 }
 
+function codexListedPublicCdnTags(keys: ReadonlySet<CodexPayloadKey>): string[] {
+  const tags = [...codexPayloadCacheTags(keys)];
+  if (keys.size === CODEX_PAYLOAD_KEYS.length) {
+    tags.push(codexPublicFullCdnCacheTag());
+  } else {
+    for (const key of keys) {
+      tags.push(codexPublicCollectionCdnCacheTag(key));
+    }
+  }
+  return tags;
+}
+
+function jsonCodexPayloadResponse(
+  body: Partial<CodexPayload>,
+  cacheControl: string,
+  keys: ReadonlySet<CodexPayloadKey>,
+): NextResponse {
+  const response = NextResponse.json(body, { headers: { 'Cache-Control': cacheControl } });
+  if (cacheControl === CODEX_PUBLIC_CDN_CACHE_CONTROL) {
+    return withVercelCacheTags(response, codexListedPublicCdnTags(keys));
+  }
+  return response;
+}
+
 function codexCacheControlHeader(
   keys: ReadonlySet<CodexPayloadKey>,
   body: Partial<CodexPayload>,
@@ -499,14 +526,16 @@ export async function GET(request: NextRequest | Request) {
     }
     const cookieLessRead = !debug && !includeUnlistedRequested;
     const { supabase, usedPublicClient } = await createCodexReadClient(cookieLessRead);
-    const body = await fetchCodexFromClient(supabase, keys, includeUnlisted);
+    const body = includeUnlisted
+      ? await buildCodexPayloadUncached(supabase, keys, includeUnlisted)
+      : await fetchCodexFromClient(supabase, keys, includeUnlisted);
     const cacheControl = codexCacheControlHeader(keys, body, {
       debug,
       includeUnlisted,
       includeUnlistedRequested,
       usedPublicClient,
     });
-    return NextResponse.json(body, { headers: { 'Cache-Control': cacheControl } });
+    return jsonCodexPayloadResponse(body, cacheControl, keys);
   } catch (err) {
     const message = err instanceof Error ? err.message : 'Unknown database error';
     const code =

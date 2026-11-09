@@ -7,7 +7,7 @@ import {
   loadAdminCodexSourceRows,
   type AdminCodexSourceRowsPayload,
 } from '@/lib/codex/admin-source-rows';
-import { invalidateCodexApiAfterSourceRename } from '@/lib/api/public-catalog-cache-invalidation';
+import { invalidateCodexApiAfterSourceRenameFromServerAction } from '@/lib/api/public-catalog-cache-invalidation';
 import { assertCodexCollection } from '@/lib/codex/collections';
 import {
   CODEX_SOURCE_TABLES,
@@ -206,7 +206,7 @@ function renameTotal(data: unknown): number {
 
 /** One cache bust per tag. This does not write a table. */
 function revalidateAfterSourceRename(): void {
-  invalidateCodexApiAfterSourceRename(CODEX_SOURCE_TABLES);
+  invalidateCodexApiAfterSourceRenameFromServerAction(CODEX_SOURCE_TABLES);
   revalidatePath('/codex');
   revalidatePath('/admin/codex');
   revalidatePath('/admin/sources');

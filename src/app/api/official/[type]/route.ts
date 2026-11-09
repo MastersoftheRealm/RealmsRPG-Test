@@ -8,13 +8,19 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import type { z } from 'zod';
-import { invalidateOfficialLibraryPublicCaches } from '@/lib/api/public-catalog-cache-invalidation';
+import { invalidateOfficialLibraryPublicCachesFromRouteHandler } from '@/lib/api/public-catalog-cache-invalidation';
 import {
   officialListMayUsePublicCdn,
   PRIVATE_MUST_REVALIDATE_CACHE_CONTROL,
   PRIVATE_NO_STORE_CACHE_CONTROL,
   PUBLIC_CDN_CACHE_CONTROL,
+  withVercelCacheTags,
 } from '@/lib/api/public-cdn-cache';
+import {
+  OFFICIAL_LIBRARY_CACHE_TAG,
+  officialLibraryCacheTag,
+  officialPublicRouteCdnCacheTag,
+} from '@/lib/codex/cache-tags';
 import { createPublicClient } from '@/lib/supabase/public-client';
 import { fromPublicTable, type PublicTableName } from '@/lib/supabase/database';
 import { createClient, createServiceRoleClient } from '@/lib/supabase/server';
@@ -42,6 +48,8 @@ import {
 import {
   fetchCachedOfficialColumnarItems,
   fetchCachedOfficialSpeciesItems,
+  fetchUncachedOfficialColumnarItems,
+  fetchUncachedOfficialSpeciesItems,
 } from '@/lib/official-library-get-payload';
 import { allocateCodexNumericId, retireCodexId } from '@/lib/codex/id-allocation';
 import {
@@ -222,6 +230,27 @@ async function createOfficialReadClient(cookieLess: boolean): Promise<{
   return { supabase: await createClient(), usedPublicClient: false };
 }
 
+function officialListedPublicCdnTags(table: string, routeType: string): string[] {
+  return [
+    OFFICIAL_LIBRARY_CACHE_TAG,
+    officialLibraryCacheTag(table, true),
+    officialPublicRouteCdnCacheTag(routeType),
+  ];
+}
+
+function jsonOfficialListResponse(
+  items: unknown[],
+  cacheControl: string,
+  table: string,
+  routeType: string,
+): NextResponse {
+  const response = NextResponse.json(items, { headers: { 'Cache-Control': cacheControl } });
+  if (cacheControl === PUBLIC_CDN_CACHE_CONTROL) {
+    return withVercelCacheTags(response, officialListedPublicCdnTags(table, routeType));
+  }
+  return response;
+}
+
 function officialCacheControlHeader(
   items: unknown[],
   options: {
@@ -256,13 +285,15 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
 
     if (type === 'species') {
       try {
-        const items = await fetchCachedOfficialSpeciesItems(supabase, includeUnlisted);
+        const items = includeUnlisted
+          ? await fetchUncachedOfficialSpeciesItems(supabase, includeUnlisted)
+          : await fetchCachedOfficialSpeciesItems(supabase, includeUnlisted);
         const cacheControl = officialCacheControlHeader(items, {
           includeUnlisted,
           includeUnlistedRequested,
           usedPublicClient,
         });
-        return NextResponse.json(items, { headers: { 'Cache-Control': cacheControl } });
+        return jsonOfficialListResponse(items, cacheControl, SPECIES_TABLE, 'species');
       } catch (error) {
         const err = error as { code?: string; message?: string };
         if (err.code === '42P01' || err.message?.includes('does not exist')) {
@@ -276,12 +307,12 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
     }
 
     let items: Record<string, unknown>[];
+    const columnarType = type as ColumnarLibraryType;
+    const table = TABLE_MAP[columnarType];
     try {
-      items = await fetchCachedOfficialColumnarItems(
-        supabase,
-        type as ColumnarLibraryType,
-        includeUnlisted,
-      );
+      items = includeUnlisted
+        ? await fetchUncachedOfficialColumnarItems(supabase, columnarType, includeUnlisted)
+        : await fetchCachedOfficialColumnarItems(supabase, columnarType, includeUnlisted);
     } catch (error) {
       const err = error as { code?: string; message?: string };
       if (err.code === '42P01' || err.message?.includes('does not exist')) {
@@ -298,7 +329,7 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
       includeUnlistedRequested,
       usedPublicClient,
     });
-    return NextResponse.json(items, { headers: { 'Cache-Control': cacheControl } });
+    return jsonOfficialListResponse(items, cacheControl, table, type);
   } catch (err) {
     logApiError('GET /api/official/[type]', err);
     const response = apiErrorResponse('Failed to load items', 500);
@@ -379,7 +410,7 @@ export async function POST(
             beforeData: (beforeRow as Record<string, unknown> | null) ?? null,
             afterData: afterRow,
           });
-          invalidateOfficialLibraryPublicCaches(SPECIES_TABLE);
+          invalidateOfficialLibraryPublicCachesFromRouteHandler(SPECIES_TABLE);
           return NextResponse.json({ id: existingId });
         }
         return NextResponse.json({ error: 'Official item not found' }, { status: 404 });
@@ -400,7 +431,7 @@ export async function POST(
             beforeData: null,
             afterData: (inserted as Record<string, unknown> | null) ?? null,
           });
-          invalidateOfficialLibraryPublicCaches(SPECIES_TABLE);
+          invalidateOfficialLibraryPublicCachesFromRouteHandler(SPECIES_TABLE);
           return NextResponse.json({ id });
         }
         if (insertError.code !== '23505') {
@@ -456,7 +487,7 @@ export async function POST(
           beforeData: (beforeRow as Record<string, unknown> | null) ?? null,
           afterData: updatedRows[0] as Record<string, unknown>,
         });
-        invalidateOfficialLibraryPublicCaches(table);
+        invalidateOfficialLibraryPublicCachesFromRouteHandler(table);
         return NextResponse.json({ id: existingId });
       }
       return NextResponse.json({ error: 'Official item not found' }, { status: 404 });
@@ -489,7 +520,7 @@ export async function POST(
       beforeData: null,
       afterData: (inserted as Record<string, unknown> | null) ?? null,
     });
-    invalidateOfficialLibraryPublicCaches(table);
+    invalidateOfficialLibraryPublicCachesFromRouteHandler(table);
     return NextResponse.json({ id });
   } catch (err) {
     logApiError('POST /api/official/[type]', err);
@@ -551,7 +582,7 @@ export async function PATCH(
       beforeData: (beforeRow as Record<string, unknown> | null) ?? null,
       afterData: updatedRows[0] as Record<string, unknown>,
     });
-    invalidateOfficialLibraryPublicCaches(table);
+    invalidateOfficialLibraryPublicCachesFromRouteHandler(table);
     return NextResponse.json({
       id: validation.data.id,
       catalogListing: validation.data.catalogListing,
@@ -617,7 +648,7 @@ export async function DELETE(
     // Tombstone so the id is never handed to a different entity, which would silently
     // repoint every saved character that referenced the deleted one.
     await retireCodexId(supabase, table, id);
-    invalidateOfficialLibraryPublicCaches(table);
+    invalidateOfficialLibraryPublicCachesFromRouteHandler(table);
     return NextResponse.json({ ok: true });
   } catch (err) {
     logApiError('DELETE /api/official/[type]', err);

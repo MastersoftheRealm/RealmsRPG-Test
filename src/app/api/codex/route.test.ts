@@ -47,7 +47,9 @@ import {
   CODEX_PUBLIC_CDN_CACHE_CONTROL,
   PRIVATE_MUST_REVALIDATE_CACHE_CONTROL,
   PRIVATE_NO_STORE_CACHE_CONTROL,
+  VERCEL_CACHE_TAG_HEADER,
 } from '@/lib/api/public-cdn-cache';
+import { codexPublicCollectionCdnCacheTag } from '@/lib/codex/cache-tags';
 import { createPublicClient } from '@/lib/supabase/public-client';
 import { CODEX_PAYLOAD_KEYS, type CodexPayload } from '@/types/codex';
 
@@ -326,6 +328,9 @@ describe('GET /api/codex', () => {
 
     expect(response.status).toBe(200);
     expect(response.headers.get('Cache-Control')).toBe(CODEX_PUBLIC_CDN_CACHE_CONTROL);
+    expect(response.headers.get(VERCEL_CACHE_TAG_HEADER)).toContain(
+      codexPublicCollectionCdnCacheTag('coreRules'),
+    );
     expect(mockGetSession).not.toHaveBeenCalled();
     expect(mockCreateClient).not.toHaveBeenCalled();
     expect(mockCreatePublicClient).toHaveBeenCalled();
@@ -347,6 +352,7 @@ describe('GET /api/codex', () => {
     expect(response.headers.get('Cache-Control')).toBe(PRIVATE_NO_STORE_CACHE_CONTROL);
     expect(mockGetSession).toHaveBeenCalled();
     expect(mockCreateClient).toHaveBeenCalledTimes(1);
+    expect(mockReadCachedPublicDataWhenValid).not.toHaveBeenCalled();
   });
 
   it('CDN-caches a cookie-less creatureFeats collection read via the public client', async () => {

@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { invalidateOfficialEnhancedItemsPublicCaches } from '@/lib/api/public-catalog-cache-invalidation';
+import { invalidateOfficialEnhancedItemsPublicCachesFromRouteHandler } from '@/lib/api/public-catalog-cache-invalidation';
 import { createClient } from '@/lib/supabase/server';
 import { requireAdminSession, requireLiveAdminSession } from '@/lib/admin';
 import { getGameRulesFallback } from '@/hooks/use-game-rules';
@@ -145,7 +145,7 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    invalidateOfficialEnhancedItemsPublicCaches();
+    invalidateOfficialEnhancedItemsPublicCachesFromRouteHandler();
     return NextResponse.json({ ok: true });
   } catch (err) {
     return apiErrorResponse(
@@ -242,7 +242,7 @@ export async function PATCH(req: NextRequest) {
       );
     }
 
-    invalidateOfficialEnhancedItemsPublicCaches();
+    invalidateOfficialEnhancedItemsPublicCachesFromRouteHandler();
     return NextResponse.json({ ok: true });
   } catch (err) {
     return apiErrorResponse(
@@ -280,7 +280,7 @@ export async function DELETE(req: NextRequest) {
       );
     }
 
-    invalidateOfficialEnhancedItemsPublicCaches();
+    invalidateOfficialEnhancedItemsPublicCachesFromRouteHandler();
     return NextResponse.json({ ok: true });
   } catch (err) {
     return apiErrorResponse(

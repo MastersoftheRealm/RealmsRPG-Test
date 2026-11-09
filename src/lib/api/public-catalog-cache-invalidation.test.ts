@@ -1,55 +1,66 @@
 import { describe, expect, it, vi, beforeEach } from 'vitest';
 
-const { revalidatePath, revalidateTag } = vi.hoisted(() => ({
-  revalidatePath: vi.fn(),
+const { revalidateTag, updateTag } = vi.hoisted(() => ({
   revalidateTag: vi.fn(),
+  updateTag: vi.fn(),
 }));
 
-vi.mock('next/cache', () => ({ revalidatePath, revalidateTag }));
+vi.mock('next/cache', () => ({ revalidateTag, updateTag }));
 
-import { CORE_RULES_CACHE_TAG, codexApiTableCacheTag } from '@/lib/codex/cache-tags';
 import {
-  invalidateCodexApiAfterSourceRename,
-  invalidateCodexCollectionPublicCaches,
-  invalidateOfficialLibraryPublicCaches,
+  CORE_RULES_CACHE_TAG,
+  codexApiTableCacheTag,
+  codexPublicCollectionCdnCacheTag,
+  officialPublicRouteCdnCacheTag,
+} from '@/lib/codex/cache-tags';
+import {
+  invalidateCodexApiAfterSourceRenameFromServerAction,
+  invalidateCodexCollectionPublicCachesFromRouteHandler,
+  invalidateCodexCollectionPublicCachesFromServerAction,
+  invalidateOfficialLibraryPublicCachesFromRouteHandler,
 } from './public-catalog-cache-invalidation';
 
 describe('public-catalog-cache-invalidation', () => {
   beforeEach(() => {
-    revalidatePath.mockClear();
     revalidateTag.mockClear();
+    updateTag.mockClear();
   });
 
-  it('purges core rules with revalidateTag max and the public codex paths', () => {
-    invalidateCodexCollectionPublicCaches('core_rules', 'core_rules');
+  it('server actions expire data cache and CDN tags with updateTag (not stale-while-revalidate max)', () => {
+    invalidateCodexCollectionPublicCachesFromServerAction('core_rules', 'core_rules');
 
-    expect(revalidateTag).toHaveBeenCalledWith(CORE_RULES_CACHE_TAG, 'max');
-    expect(revalidatePath).toHaveBeenCalledWith('/api/codex');
-    expect(revalidatePath).toHaveBeenCalledWith('/api/codex?collection=coreRules');
-    expect(revalidateTag).not.toHaveBeenCalledWith(expect.anything(), undefined);
+    expect(updateTag).toHaveBeenCalledWith(CORE_RULES_CACHE_TAG);
+    expect(updateTag).toHaveBeenCalledWith(codexPublicCollectionCdnCacheTag('coreRules'));
+    const maxCalls = revalidateTag.mock.calls.filter((call) => call[1] === 'max');
+    expect(maxCalls).toHaveLength(0);
+    expect(revalidateTag).not.toHaveBeenCalled();
   });
 
-  it('purges official techniques CDN path and library tags on write', () => {
-    invalidateOfficialLibraryPublicCaches('official_techniques');
+  it('route handlers expire tags with revalidateTag expire 0 so the next GET is not a stale body', () => {
+    invalidateOfficialLibraryPublicCachesFromRouteHandler('official_techniques');
 
-    expect(revalidatePath).toHaveBeenCalledWith('/api/official/techniques');
-    expect(revalidateTag).toHaveBeenCalledWith('official-library', 'max');
-    expect(revalidateTag).toHaveBeenCalledWith(
-      'official-library:official_techniques:listedOnly=true',
-      'max',
-    );
-    expect(revalidateTag).toHaveBeenCalledWith(
-      'official-library:official_techniques:listedOnly=false',
-      'max',
-    );
+    expect(updateTag).not.toHaveBeenCalled();
+    expect(revalidateTag).toHaveBeenCalledWith(officialPublicRouteCdnCacheTag('techniques'), {
+      expire: 0,
+    });
+    expect(
+      revalidateTag.mock.calls.some((call) => call[1] === 'max' || call[1] === undefined),
+    ).toBe(false);
   });
 
-  it('revalidates every listed codex collection path after a source rename', () => {
-    invalidateCodexApiAfterSourceRename(['codex_feats', 'codex_skills']);
+  it('codex collection route invalidation uses expire 0 on CDN and data tags', () => {
+    invalidateCodexCollectionPublicCachesFromRouteHandler('core_rules', 'core_rules');
 
-    expect(revalidateTag).toHaveBeenCalledWith('codex-api', 'max');
-    expect(revalidateTag).toHaveBeenCalledWith(codexApiTableCacheTag('codex_feats'), 'max');
-    expect(revalidatePath).toHaveBeenCalledWith('/api/codex?collection=feats');
-    expect(revalidatePath).toHaveBeenCalledWith('/api/codex?collection=coreRules');
+    expect(revalidateTag).toHaveBeenCalledWith(CORE_RULES_CACHE_TAG, { expire: 0 });
+    expect(revalidateTag).toHaveBeenCalledWith(codexPublicCollectionCdnCacheTag('coreRules'), {
+      expire: 0,
+    });
+  });
+
+  it('source rename expires every listed collection CDN tag from server actions', () => {
+    invalidateCodexApiAfterSourceRenameFromServerAction(['codex_feats']);
+
+    expect(updateTag).toHaveBeenCalledWith(codexPublicCollectionCdnCacheTag('coreRules'));
+    expect(updateTag).toHaveBeenCalledWith(codexApiTableCacheTag('codex_feats'));
   });
 });

@@ -10,6 +10,7 @@ import { useRouter } from 'next/navigation';
 import { DeleteConfirmModal, OfficialTechniqueList } from '@/components/patterns';
 import { useToast } from '@/components/ui';
 import {
+  ADMIN_CODEX_QUERY_OPTIONS,
   officialLibraryKeys,
   useOfficialLibrary,
   usePatchOfficialCatalogListing,
@@ -38,8 +39,11 @@ export function AdminPublicTechniquesTab({
   } = useOfficialLibrary(libraryType, {
     includeUnlisted: true,
   });
-  const { data: partsDb = [] } = useTechniqueParts();
-  const { data: powerPartsDb = [] } = usePowerParts({ enabled: mode === 'empowered' });
+  const { data: partsDb = [] } = useTechniqueParts(ADMIN_CODEX_QUERY_OPTIONS);
+  const { data: powerPartsDb = [] } = usePowerParts({
+    ...ADMIN_CODEX_QUERY_OPTIONS,
+    enabled: mode === 'empowered',
+  });
   const patchListing = usePatchOfficialCatalogListing(libraryType);
   const [deleteConfirm, setDeleteConfirm] = useState<{ id: string; name: string } | null>(null);
   const empowered = mode === 'empowered';
