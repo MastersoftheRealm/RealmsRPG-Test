@@ -12,6 +12,7 @@
 | [`characters-relational-*.sql`](characters-relational-audit.sql) | ADR-0031 relational character expansion, compatibility and contract migrations, RPCs, verification, and rollback-safe smoke tests. The compatibility stage was applied to production on 2026-11-08; the contract/drop stage remains pending and requires a fresh backup. |
 | [`vtt-v1-tabletop.sql`](vtt-v1-tabletop.sql) | Virtual tabletop schema for branch-local development. Verify target state and obtain approval before applying outside the branch's local database. |
 | [`codex-rename-source.sql`](codex-rename-source.sql) | Admin utility: replaces `public.rename_codex_source` only. Safe to re-run on non-prod when Kadin approves; first real rename is a live data change and needs a backup. |
+| [`role-quota-atomic.sql`](role-quota-atomic.sql) | `user_profiles` row lock + `assert_account_create_quota`, quota-aware `create_character_relational` and `insert_user_library_row_with_quota`. Apply after explicit OK and backup. |
 | [`schema/0000_baseline_2026-08-13.sql`](schema/0000_baseline_2026-08-13.sql) | Committed `pg_dump --schema-only` snapshot (**stale** vs live — regenerate before relying on it). |
 
 **Relational characters (ADR-0031):** Run

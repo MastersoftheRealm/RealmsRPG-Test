@@ -9,8 +9,8 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { getSession } from '@/lib/supabase/session';
 import { ensureUserProfile } from '@/lib/ensure-user-profile';
-import { getRolePolicyForUser } from '@/lib/role-policy';
-import { buildRoleQuotaExceededResponse } from '@/lib/role-quota-messages';
+import { parseRoleQuotaExceededDbError } from '@/lib/role-quota-messages';
+import { asDbJson } from '@/lib/supabase/database';
 import {
   validateJson,
   libraryItemCreateSchema,
@@ -154,100 +154,12 @@ export async function POST(
 
     const supabase = await createClient();
     await ensureUserProfile(supabase, user.uid);
-    const rolePolicy = await getRolePolicyForUser(user.uid, supabase);
 
     if (isColumnar(type)) {
-      const table = USER_LIBRARY_COLUMNAR_TABLES[type];
       const now = new Date();
 
-      if (type === 'powers') {
-        const { count, error: countErr } = await supabase
-          .from('user_powers')
-          .select('id', { count: 'exact', head: true })
-          .eq('user_id', user.uid);
-        if (countErr) throw countErr;
-        if ((count ?? 0) >= rolePolicy.maxPowers) {
-          return NextResponse.json(
-            buildRoleQuotaExceededResponse({
-              role: rolePolicy.role,
-              resource: 'custom_powers',
-              currentCount: count ?? 0,
-              maxAllowed: rolePolicy.maxPowers,
-            }),
-            { status: 403 },
-          );
-        }
-      }
-
-      if (type === 'techniques' || type === 'empowered-techniques') {
-        const [
-          { count: techniquesCount, error: techniquesErr },
-          { count: empoweredCount, error: empoweredErr },
-        ] = await Promise.all([
-          supabase
-            .from('user_techniques')
-            .select('id', { count: 'exact', head: true })
-            .eq('user_id', user.uid),
-          supabase
-            .from('user_empowered_techniques')
-            .select('id', { count: 'exact', head: true })
-            .eq('user_id', user.uid),
-        ]);
-        if (techniquesErr) throw techniquesErr;
-        if (empoweredErr) throw empoweredErr;
-        const techniqueTotal = (techniquesCount ?? 0) + (empoweredCount ?? 0);
-        if (techniqueTotal >= rolePolicy.maxTechniques) {
-          return NextResponse.json(
-            buildRoleQuotaExceededResponse({
-              role: rolePolicy.role,
-              resource: 'custom_techniques',
-              currentCount: techniqueTotal,
-              maxAllowed: rolePolicy.maxTechniques,
-            }),
-            { status: 403 },
-          );
-        }
-      }
-
-      if (type === 'items') {
-        const { count, error: countErr } = await supabase
-          .from('user_items')
-          .select('id', { count: 'exact', head: true })
-          .eq('user_id', user.uid);
-        if (countErr) throw countErr;
-        if ((count ?? 0) >= rolePolicy.maxArmaments) {
-          return NextResponse.json(
-            buildRoleQuotaExceededResponse({
-              role: rolePolicy.role,
-              resource: 'custom_armaments',
-              currentCount: count ?? 0,
-              maxAllowed: rolePolicy.maxArmaments,
-            }),
-            { status: 403 },
-          );
-        }
-      }
-
-      if (type === 'creatures') {
-        const { count, error: countErr } = await supabase
-          .from('user_creatures')
-          .select('id', { count: 'exact', head: true })
-          .eq('user_id', user.uid);
-        if (countErr) throw countErr;
-        if ((count ?? 0) >= rolePolicy.maxCreatures) {
-          return NextResponse.json(
-            buildRoleQuotaExceededResponse({
-              role: rolePolicy.role,
-              resource: 'custom_creatures',
-              currentCount: count ?? 0,
-              maxAllowed: rolePolicy.maxCreatures,
-            }),
-            { status: 403 },
-          );
-        }
-      }
-
       if (duplicateOf) {
+        const table = USER_LIBRARY_COLUMNAR_TABLES[type];
         const { data: existing, error: existingErr } = await supabase
           .from(table)
           .select('*')
@@ -274,9 +186,26 @@ export async function POST(
           createdAt: now,
           updatedAt: now,
         });
-        const { error: insertErr } = await supabase.from(table).insert(row);
-        if (insertErr) throw insertErr;
-        return NextResponse.json({ id: newId });
+        const { data: inserted, error: insertErr } = await supabase.rpc(
+          'insert_user_library_row_with_quota',
+          {
+            p_library_kind: type,
+            p_row: asDbJson(row),
+          },
+        );
+        if (insertErr) {
+          const quota = parseRoleQuotaExceededDbError(insertErr);
+          if (quota) return NextResponse.json(quota, { status: 403 });
+          throw insertErr;
+        }
+        const insertedId =
+          inserted &&
+          typeof inserted === 'object' &&
+          !Array.isArray(inserted) &&
+          typeof (inserted as { id?: unknown }).id === 'string'
+            ? (inserted as { id: string }).id
+            : newId;
+        return NextResponse.json({ id: insertedId });
       }
 
       const { scalars, payload } = bodyToColumnar(type, { ...body, updatedAt: now });
@@ -289,9 +218,26 @@ export async function POST(
         createdAt: now,
         updatedAt: now,
       });
-      const { error: insertErr } = await supabase.from(table).insert(row);
-      if (insertErr) throw insertErr;
-      return NextResponse.json({ id: newId });
+      const { data: inserted, error: insertErr } = await supabase.rpc(
+        'insert_user_library_row_with_quota',
+        {
+          p_library_kind: type,
+          p_row: asDbJson(row),
+        },
+      );
+      if (insertErr) {
+        const quota = parseRoleQuotaExceededDbError(insertErr);
+        if (quota) return NextResponse.json(quota, { status: 403 });
+        throw insertErr;
+      }
+      const insertedId =
+        inserted &&
+        typeof inserted === 'object' &&
+        !Array.isArray(inserted) &&
+        typeof (inserted as { id?: unknown }).id === 'string'
+          ? (inserted as { id: string }).id
+          : newId;
+      return NextResponse.json({ id: insertedId });
     }
 
     const now = new Date().toISOString();
@@ -323,9 +269,22 @@ export async function POST(
         created_at: now,
         updated_at: now,
       });
-      const { error: insertErr } = await supabase.from('user_species').insert(row);
+      const { data: inserted, error: insertErr } = await supabase.rpc(
+        'insert_user_library_row_with_quota',
+        {
+          p_library_kind: 'species',
+          p_row: asDbJson(row),
+        },
+      );
       if (insertErr) throw insertErr;
-      return NextResponse.json({ id: newId });
+      const insertedId =
+        inserted &&
+        typeof inserted === 'object' &&
+        !Array.isArray(inserted) &&
+        typeof (inserted as { id?: unknown }).id === 'string'
+          ? (inserted as { id: string }).id
+          : newId;
+      return NextResponse.json({ id: insertedId });
     }
 
     const { scalars, payload } = bodyToColumnarSpecies({ ...body, updatedAt: now });
@@ -338,9 +297,22 @@ export async function POST(
       created_at: now,
       updated_at: now,
     });
-    const { error: insertErr } = await supabase.from('user_species').insert(row);
+    const { data: inserted, error: insertErr } = await supabase.rpc(
+      'insert_user_library_row_with_quota',
+      {
+        p_library_kind: 'species',
+        p_row: asDbJson(row),
+      },
+    );
     if (insertErr) throw insertErr;
-    return NextResponse.json({ id: newId });
+    const insertedId =
+      inserted &&
+      typeof inserted === 'object' &&
+      !Array.isArray(inserted) &&
+      typeof (inserted as { id?: unknown }).id === 'string'
+        ? (inserted as { id: string }).id
+        : newId;
+    return NextResponse.json({ id: insertedId });
   } catch (err) {
     console.error('[API Error] POST /api/user/library/[type]:', err);
     return NextResponse.json({ error: 'Failed to create library item' }, { status: 500 });
