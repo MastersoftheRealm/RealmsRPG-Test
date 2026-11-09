@@ -60,6 +60,7 @@ const mockReplaceImageCategories = vi.mocked(replaceImageCategories);
 const mockFetchRealmsImageById = vi.mocked(fetchRealmsImageById);
 
 const USER = { uid: 'user-123', email: 'hero@example.com' };
+const MAX_IMAGE_BYTES = 5 * 1024 * 1024;
 
 type Row = { id: string; name: string };
 
@@ -118,11 +119,42 @@ function makePostRequest() {
   });
 }
 
-function makePostRequestWithImageForm() {
-  const request = new NextRequest('http://localhost/api/images', {
-    method: 'POST',
-    headers: { origin: 'http://localhost' },
+function makeStreamedMultipartPost(totalBytes: number) {
+  const chunkSize = 64 * 1024;
+  const chunk = new Uint8Array(chunkSize).fill(0x41);
+  let sent = 0;
+  let bytesConsumed = 0;
+
+  const stream = new ReadableStream<Uint8Array>({
+    pull(controller) {
+      if (sent >= totalBytes) {
+        controller.close();
+        return;
+      }
+      const remaining = totalBytes - sent;
+      const size = Math.min(chunk.byteLength, remaining);
+      bytesConsumed += size;
+      controller.enqueue(chunk.subarray(0, size));
+      sent += size;
+    },
   });
+
+  type NextRequestInit = NonNullable<ConstructorParameters<typeof NextRequest>[1]>;
+  const init: NextRequestInit & { duplex: 'half' } = {
+    method: 'POST',
+    headers: {
+      origin: 'http://localhost',
+      'content-type': 'multipart/form-data; boundary=----vitest',
+    },
+    body: stream,
+    duplex: 'half',
+  };
+
+  const request = new NextRequest('http://localhost/api/images', init);
+  return { request, getBytesConsumed: () => bytesConsumed };
+}
+
+function makePostRequestWithImageForm() {
   const form = new FormData();
   form.set(
     'file',
@@ -130,8 +162,11 @@ function makePostRequestWithImageForm() {
   );
   form.set('name', 'Regression asset');
   form.set('categories', JSON.stringify(['weapon']));
-  vi.spyOn(request, 'formData').mockResolvedValue(form);
-  return request;
+  return new NextRequest('http://localhost/api/images', {
+    method: 'POST',
+    headers: { origin: 'http://localhost' },
+    body: form,
+  });
 }
 
 function createAdminUploadSupabase() {
@@ -296,6 +331,23 @@ describe('POST /api/images', () => {
 
     expect(response.status).toBe(403);
     await expect(readJson(response)).resolves.toEqual({ error: 'Admin access required' });
+    expect(mockCreateServiceRoleClient).not.toHaveBeenCalled();
+  });
+
+  it('rejects an oversized upload before buffering the full body (API-024)', async () => {
+    mockRequireLiveUser.mockResolvedValue(USER);
+    mockIsAdmin.mockResolvedValue(true);
+
+    const totalBytes = MAX_IMAGE_BYTES + 2 * 1024 * 1024;
+    const { request, getBytesConsumed } = makeStreamedMultipartPost(totalBytes);
+    const formDataSpy = vi.spyOn(request, 'formData');
+
+    const response = await POST(request);
+
+    expect(response.status).toBe(400);
+    await expect(readJson(response)).resolves.toEqual({ error: 'Image must be less than 5MB' });
+    expect(formDataSpy).not.toHaveBeenCalled();
+    expect(getBytesConsumed()).toBeLessThan(totalBytes);
     expect(mockCreateServiceRoleClient).not.toHaveBeenCalled();
   });
 

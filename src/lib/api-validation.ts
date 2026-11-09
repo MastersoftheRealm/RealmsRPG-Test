@@ -34,6 +34,16 @@ import { getCanonicalSiteUrl } from '@/lib/site-url';
 
 const MAX_PAYLOAD_BYTES = 2 * 1024 * 1024; // 2 MB
 
+type ReadBodyWithLimitOptions = {
+  maxBytes?: number | undefined;
+  tooLargeResponse?: (() => NextResponse) | undefined;
+};
+
+function payloadTooLargeResponse(options?: ReadBodyWithLimitOptions): NextResponse {
+  if (options?.tooLargeResponse) return options.tooLargeResponse();
+  return NextResponse.json({ error: 'Payload too large (max 2 MB)' }, { status: 413 });
+}
+
 const STATE_CHANGING_METHODS = new Set(['POST', 'PUT', 'PATCH', 'DELETE']);
 
 function hostOf(value: string | undefined | null): string | null {
@@ -129,24 +139,27 @@ export function verifyMutationRequest(
  * Read the body with a hard byte cap. `Content-Length` is only a fast path —
  * chunked requests omit it, so the stream is counted as it arrives.
  */
-export async function readBodyWithLimit(
+async function readBodyBytesWithLimit(
   request: NextRequest,
-): Promise<{ success: true; text: string } | { success: false; error: NextResponse }> {
+  options?: ReadBodyWithLimitOptions,
+): Promise<{ success: true; bytes: Uint8Array } | { success: false; error: NextResponse }> {
+  const maxBytes = options?.maxBytes ?? MAX_PAYLOAD_BYTES;
   const tooLarge = {
     success: false as const,
-    error: NextResponse.json({ error: 'Payload too large (max 2 MB)' }, { status: 413 }),
+    error: payloadTooLargeResponse(options),
   };
 
   const declaredLength = Number.parseInt(request.headers.get('content-length') ?? '', 10);
-  if (Number.isFinite(declaredLength) && declaredLength > MAX_PAYLOAD_BYTES) {
+  if (Number.isFinite(declaredLength) && declaredLength > maxBytes) {
     return tooLarge;
   }
 
   const stream = request.body;
   if (!stream) {
     const text = await request.text();
-    if (new TextEncoder().encode(text).byteLength > MAX_PAYLOAD_BYTES) return tooLarge;
-    return { success: true, text };
+    const bytes = new TextEncoder().encode(text);
+    if (bytes.byteLength > maxBytes) return tooLarge;
+    return { success: true, bytes };
   }
 
   const reader = stream.getReader();
@@ -157,7 +170,7 @@ export async function readBodyWithLimit(
     if (done) break;
     if (!value) continue;
     total += value.byteLength;
-    if (total > MAX_PAYLOAD_BYTES) {
+    if (total > maxBytes) {
       await reader.cancel().catch(() => {});
       return tooLarge;
     }
@@ -170,7 +183,53 @@ export async function readBodyWithLimit(
     buffer.set(chunk, offset);
     offset += chunk.byteLength;
   }
-  return { success: true, text: new TextDecoder().decode(buffer) };
+  return { success: true, bytes: buffer };
+}
+
+export async function readBodyWithLimit(
+  request: NextRequest,
+  options?: ReadBodyWithLimitOptions,
+): Promise<{ success: true; text: string } | { success: false; error: NextResponse }> {
+  const read = await readBodyBytesWithLimit(request, options);
+  if (!read.success) return read;
+  return { success: true, text: new TextDecoder().decode(read.bytes) };
+}
+
+/**
+ * Parse multipart form data only after the raw body stays within a byte cap
+ * (multipart handlers must not call `request.formData()` on the live stream).
+ */
+export async function readFormDataWithLimit(
+  request: NextRequest,
+  options: ReadBodyWithLimitOptions & { maxBytes: number },
+): Promise<{ success: true; formData: FormData } | { success: false; error: NextResponse }> {
+  const read = await readBodyBytesWithLimit(request, options);
+  if (!read.success) return read;
+
+  const contentType = request.headers.get('content-type');
+  if (!contentType?.includes('multipart/form-data')) {
+    return {
+      success: false,
+      error: NextResponse.json(
+        { error: 'Content-Type must be multipart/form-data' },
+        { status: 415 },
+      ),
+    };
+  }
+
+  try {
+    const formData = await new Request(request.url, {
+      method: request.method,
+      headers: { 'content-type': contentType },
+      body: Buffer.from(read.bytes),
+    }).formData();
+    return { success: true, formData };
+  } catch {
+    return {
+      success: false,
+      error: NextResponse.json({ error: 'Invalid multipart body' }, { status: 400 }),
+    };
+  }
 }
 
 /** Read + parse a JSON body under the size cap. */
