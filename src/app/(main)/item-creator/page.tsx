@@ -211,6 +211,13 @@ function ItemCreatorWorkspace({
           }) ?? '',
         ...creatorPublishSaveAsCopyActions(ws.save),
       }}
+      emptyOverwrite={{
+        isOpen: ws.save.showEmptyOverwriteConfirm,
+        onClose: () => ws.save.setShowEmptyOverwriteConfirm(false),
+        onConfirm: () => void ws.save.confirmEmptyOverwrite(),
+        title: ws.save.emptyOverwriteTitle,
+        description: ws.save.emptyOverwriteDescription,
+      }}
       loadModal={{
         isOpen: load.showLoadModal,
         onClose: load.closeLoadModal,

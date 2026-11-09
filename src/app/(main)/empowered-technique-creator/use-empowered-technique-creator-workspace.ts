@@ -37,6 +37,11 @@ import {
   persistCreatorSessionDraft,
   clearCreatorSessionDraft,
 } from '@/lib/game/creator-cache';
+import { useRouter } from 'next/navigation';
+import {
+  commitCreatorEditClearAfterSave,
+  scheduleCreatorEditClear,
+} from '@/lib/creator/creator-edit-query';
 import { useEmpoweredTechniqueCostDerivation } from './empowered-technique-cost-derivation';
 import { useEmpoweredTechniquePartActions } from './empowered-technique-part-actions';
 
@@ -62,6 +67,11 @@ export function useEmpoweredTechniqueCreatorWorkspace({
   techniquePartsError = null,
   initialSaveTarget,
 }: UseEmpoweredTechniqueCreatorWorkspaceArgs) {
+  const router = useRouter();
+  const clearEditQuery = useCallback(
+    (href: string) => router.replace(href, { scroll: false }),
+    [router],
+  );
   const [name, setName] = useState(initialFormState.name);
   const [description, setDescription] = useState(initialFormState.description);
   const [actionType, setActionType] = useState(initialFormState.actionType);
@@ -319,7 +329,9 @@ export function useEmpoweredTechniqueCreatorWorkspace({
     publicSuccessMessage: 'Empowered technique saved to Realms Library!',
     initialSaveTarget,
     editingId: editId,
-    onSaveCommitted: acceptDraft,
+    onSaveCommitted: () => {
+      commitCreatorEditClearAfterSave(editId, clearEditQuery, acceptDraft);
+    },
     onSaveSuccess: () => {
       resetState();
       acceptDraft();
@@ -429,8 +441,9 @@ export function useEmpoweredTechniqueCreatorWorkspace({
   const handleReset = useCallback(() => {
     resetState();
     save.forgetLoadedLibraryItem();
+    scheduleCreatorEditClear(editId, clearEditQuery);
     acceptDraft();
-  }, [acceptDraft, resetState, save]);
+  }, [acceptDraft, clearEditQuery, editId, resetState, save]);
 
   return {
     name,
