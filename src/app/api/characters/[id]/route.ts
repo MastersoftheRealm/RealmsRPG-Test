@@ -294,31 +294,24 @@ export async function DELETE(
       return NextResponse.json({ error: 'Character not found' }, { status: 404 });
     }
 
-    // Portrait cleanup is best-effort; a storage failure must not block the delete.
-    try {
-      const { data: files, error: listErr } = await supabase.storage
-        .from('portraits')
-        .list(user.uid);
-      if (listErr) throw listErr;
-      if (files?.length) {
-        const toRemove = files
-          .filter((f) => f.name?.startsWith(`${id.trim()}.`))
-          .map((f) => `${user.uid}/${f.name}`);
-        if (toRemove.length) {
-          const { error: removeErr } = await supabase.storage.from('portraits').remove(toRemove);
-          if (removeErr) throw removeErr;
-        }
-      }
-    } catch (storageErr) {
-      console.warn('[API] Could not delete portrait from storage:', storageErr);
-    }
-
     const { error: delErr } = await supabase
       .from('characters')
       .delete()
       .eq('id', id)
       .eq('user_id', user.uid);
     if (delErr) throw delErr;
+
+    // Portrait cleanup is best-effort; a storage failure must not fail the delete response.
+    try {
+      const { error: removeErr } = await supabase.storage
+        .from('portraits')
+        .remove(characterPortraitStoragePaths(user.uid, id));
+      if (removeErr) {
+        console.warn('[API] Could not delete portrait from storage:', removeErr);
+      }
+    } catch (storageErr) {
+      console.warn('[API] Could not delete portrait from storage:', storageErr);
+    }
 
     return NextResponse.json({ ok: true });
   } catch (err) {

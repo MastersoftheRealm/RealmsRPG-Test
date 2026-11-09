@@ -9,6 +9,13 @@ describe('character portrait storage paths (86e3jvzt6)', () => {
     expect(characterPortraitStoragePaths(USER, CHAR)).toContain(`${USER}/${CHAR}.png`);
   });
 
+  it('trims the character id and enumerates every accepted extension (API-011)', () => {
+    const paths = characterPortraitStoragePaths(USER, `  ${CHAR}  `);
+    expect(paths).toEqual(
+      ['png', 'jpg', 'jpeg', 'gif', 'webp', 'bmp'].map((ext) => `${USER}/${CHAR}.${ext}`),
+    );
+  });
+
   it('treats only this character’s storage URL as still referenced', () => {
     const stored = `https://cdn.test/storage/v1/object/public/portraits/${USER}/${CHAR}.png`;
     expect(portraitUrlUsesCharacterStorage(stored, USER, CHAR)).toBe(true);
