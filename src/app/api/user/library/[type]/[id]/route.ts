@@ -28,6 +28,7 @@ import {
 } from '@/lib/library-columnar';
 import { enrichRowsWithBankImageUrls } from '@/lib/entity-image-enrich-server';
 import { validateUserLibraryWriteBody } from '@/lib/library-mutation-validation';
+import { isAdmin } from '@/lib/admin';
 import { USER_LIBRARY_COLUMNAR_TABLES } from '@/lib/library-columnar-keys';
 
 const isColumnar = (t: string): t is ColumnarLibraryType =>
@@ -120,7 +121,11 @@ export async function PATCH(
       const validation = await validateJson(request, libraryItemUpdateSchema);
       if (!validation.success) return validation.error;
       const data = validation.data as Record<string, unknown>;
-      const writeValidation = validateUserLibraryWriteBody(type, data, { mode: 'patch' });
+      const allowImageUrl = await isAdmin(user.uid);
+      const writeValidation = validateUserLibraryWriteBody(type, data, {
+        mode: 'patch',
+        allowImageUrl,
+      });
       if (writeValidation) return writeValidation;
       const currentItem = rowToItem(type, existing as Record<string, unknown>, 'user');
       const merged = { ...currentItem, ...data };
@@ -152,7 +157,11 @@ export async function PATCH(
     const validation = await validateJson(request, libraryItemUpdateSchema);
     if (!validation.success) return validation.error;
     const data = validation.data as Record<string, unknown>;
-    const writeValidation = validateUserLibraryWriteBody('species', data, { mode: 'patch' });
+    const allowImageUrl = await isAdmin(user.uid);
+    const writeValidation = validateUserLibraryWriteBody('species', data, {
+      mode: 'patch',
+      allowImageUrl,
+    });
     if (writeValidation) return writeValidation;
     const existingRow = existing as Record<string, unknown>;
     const merged: Record<string, unknown> = { ...rowToItemSpecies(existingRow), ...data };

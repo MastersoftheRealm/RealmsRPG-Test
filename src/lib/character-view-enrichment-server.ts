@@ -1,3 +1,5 @@
+import 'server-only';
+
 /**
  * Server fetch for TASK-773 read-only view enrichment.
  *

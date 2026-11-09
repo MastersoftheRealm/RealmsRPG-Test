@@ -406,17 +406,9 @@ function JoinCampaignTab({
     setSubmitting(true);
     setError(null);
     try {
-      const archetypeType = String(selectedCharacter.archetypeName ?? '')
-        .toLowerCase()
-        .replace(/\s+/g, '-');
       const result = await joinCampaignAction({
         inviteCode: inviteCode.trim(),
         characterId: selectedCharacter.id,
-        characterName: selectedCharacter.name,
-        portrait: selectedCharacter.portrait,
-        level: selectedCharacter.level,
-        species: selectedCharacter.ancestryName,
-        archetypeType: archetypeType || undefined,
       });
       if (result.success) {
         if (result.visibilityUpdated) {

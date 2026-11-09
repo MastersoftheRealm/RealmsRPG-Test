@@ -8,6 +8,8 @@
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 import { requireAdminSession } from '@/lib/admin';
+import { adminUsersQuerySchema, parseAdminUsersPaging, validateQuery } from '@/lib/api-validation';
+import { buildAdminUsersOrFilter } from '@/lib/admin-users-search';
 import { createServiceRoleClient } from '@/lib/supabase/server';
 import {
   buildRateLimitKey,
@@ -37,14 +39,21 @@ export async function GET(request: NextRequest) {
       );
     }
 
+    const queryResult = validateQuery(request, adminUsersQuerySchema);
+    if (!queryResult.success) return queryResult.error;
+    const { limit, offset } = parseAdminUsersPaging(queryResult.data);
+    const search = queryResult.data.q?.trim();
+
     const supabase = createServiceRoleClient();
-    // Cap the result set; the admin table filters client-side. A bounded query
-    // avoids unbounded PII exposure and runaway payloads (TASK-330).
-    const { data: profiles, error: profilesError } = await supabase
+    let query = supabase
       .from('user_profiles')
       .select('id, username, username_display, display_name, role')
-      .order('username')
-      .limit(1000);
+      .order('username', { nullsFirst: false })
+      .order('id');
+    if (search) {
+      query = query.or(buildAdminUsersOrFilter(search));
+    }
+    const { data: profiles, error: profilesError } = await query.range(offset, offset + limit - 1);
 
     if (profilesError) {
       console.error('[API Error] GET /api/admin/users query:', profilesError);
@@ -58,15 +67,19 @@ export async function GET(request: NextRequest) {
       display_name: string | null;
       role: string;
     }[];
-    return NextResponse.json(
-      list.map((p) => ({
-        id: p.id,
-        username: p.username ?? '',
-        usernameDisplay: p.username_display ?? p.username ?? '',
-        displayName: p.display_name ?? '',
-        role: p.role,
-      })),
-    );
+    const users = list.map((p) => ({
+      id: p.id,
+      username: p.username ?? '',
+      usernameDisplay: p.username_display ?? p.username ?? '',
+      displayName: p.display_name ?? '',
+      role: p.role,
+    }));
+    return NextResponse.json({
+      users,
+      offset,
+      limit,
+      hasMore: users.length === limit,
+    });
   } catch (err) {
     console.error('[API Error] GET /api/admin/users:', err);
     return NextResponse.json({ error: 'Failed to list users' }, { status: 500 });

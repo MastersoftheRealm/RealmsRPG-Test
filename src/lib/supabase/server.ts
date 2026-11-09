@@ -45,6 +45,7 @@ export async function createClient() {
  * Service-role client — bypasses RLS. Use only for admin-only operations
  * after the request has been authorized (e.g. isAdmin() check).
  * Requires SUPABASE_SERVICE_ROLE_KEY in env.
+ *
  */
 export function createServiceRoleClient(): ServiceRoleSupabaseClient {
   const key = process.env.SUPABASE_SERVICE_ROLE_KEY;

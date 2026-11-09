@@ -1,3 +1,5 @@
+import 'server-only';
+
 /**
  * Realms Image Library — server-only row mapping + category writes.
  */

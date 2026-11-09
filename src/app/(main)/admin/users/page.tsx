@@ -8,7 +8,8 @@
 
 'use client';
 
-import { useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { flushSync } from 'react-dom';
 import Link from 'next/link';
 import { useQuery } from '@tanstack/react-query';
 import {
@@ -25,6 +26,13 @@ import { ConfirmActionModal, ErrorDisplay } from '@/components/patterns';
 import { apiFetch } from '@/lib/api-client';
 import { formatRolePolicyLimit } from '@/lib/role-limits';
 import { ROLE_LABELS } from '@/lib/role-quota-messages';
+import {
+  adminUsersDirectoryReducer,
+  createEmptyAdminUsersDirectorySlice,
+  type AdminUsersDirectorySlice,
+} from './admin-users-directory-state';
+import { shouldApplyAdminUsersSearchChange } from './admin-users-search-applied';
+import { useAdminUsersLoadMore } from './use-admin-users-load-more';
 
 type UserRole = 'new_player' | 'playtester' | 'developer' | 'admin';
 
@@ -35,6 +43,13 @@ interface UserRow {
   displayName: string;
   role: UserRole;
 }
+
+type AdminUsersPage = {
+  users: UserRow[];
+  offset: number;
+  limit: number;
+  hasMore: boolean;
+};
 
 interface RolePolicyRow {
   role: UserRole;
@@ -54,18 +69,33 @@ const ROLE_OPTIONS = (Object.keys(ROLE_LABELS) as UserRole[]).map((role) => ({
 }));
 
 export default function AdminUsersPage() {
-  const [users, setUsers] = useState<UserRow[]>([]);
+  const [directory, setDirectory] = useState<AdminUsersDirectorySlice<UserRow>>(() =>
+    createEmptyAdminUsersDirectorySlice(),
+  );
   const [rolePolicies, setRolePolicies] = useState<Record<UserRole, RolePolicyRow> | null>(null);
   const [syncedAt, setSyncedAt] = useState(0);
   const [updating, setUpdating] = useState<string | null>(null);
   const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
+  const [searchApplied, setSearchApplied] = useState('');
+  const [listEpoch, setListEpoch] = useState(0);
+  const listEpochRef = useRef(0);
+  const searchAppliedRef = useRef(searchApplied);
+  useEffect(() => {
+    searchAppliedRef.current = searchApplied;
+  });
   const [pendingChange, setPendingChange] = useState<{
     userId: string;
     label: string;
     oldRole: UserRole;
     newRole: UserRole;
   } | null>(null);
+
+  const fetchUsersPage = useCallback(async (offset: number, q: string) => {
+    const params = new URLSearchParams({ limit: '100', offset: String(offset) });
+    if (q.trim()) params.set('q', q.trim());
+    return apiFetch<AdminUsersPage>(`/api/admin/users?${params.toString()}`);
+  }, []);
 
   const {
     data: adminData,
@@ -74,10 +104,10 @@ export default function AdminUsersPage() {
     refetch,
     dataUpdatedAt,
   } = useQuery({
-    queryKey: ['admin', 'users-page'],
+    queryKey: ['admin', 'users-page', searchApplied],
     queryFn: async () => {
       const [userData, policyData] = await Promise.all([
-        apiFetch<UserRow[]>('/api/admin/users'),
+        fetchUsersPage(0, searchApplied),
         apiFetch<RolePolicyRow[]>('/api/admin/role-policies'),
       ]);
       const map = (Array.isArray(policyData) ? policyData : []).reduce(
@@ -88,37 +118,61 @@ export default function AdminUsersPage() {
         {} as Record<UserRole, RolePolicyRow>,
       );
       return {
-        users: Array.isArray(userData) ? userData : [],
+        users: userData.users ?? [],
+        hasMore: Boolean(userData.hasMore),
+        offset: userData.offset ?? 0,
+        limit: userData.limit ?? 100,
         rolePolicies: map,
       };
     },
   });
+
+  useEffect(() => {
+    const handle = window.setTimeout(() => {
+      if (!shouldApplyAdminUsersSearchChange(searchAppliedRef.current, searchQuery)) return;
+      listEpochRef.current += 1;
+      const owner = { generation: listEpochRef.current, q: searchQuery };
+      flushSync(() => {
+        setSearchApplied(searchQuery);
+        setListEpoch(listEpochRef.current);
+        setSyncedAt(0);
+        setDirectory((prev) => adminUsersDirectoryReducer(prev, { type: 'query_switch', owner }));
+      });
+    }, 300);
+    return () => window.clearTimeout(handle);
+  }, [searchQuery]);
   const error = queryError
     ? queryError instanceof Error
       ? queryError.message
       : 'Failed to load admin data'
     : null;
 
+  const listOwner = useMemo(
+    () => ({ generation: listEpoch, q: searchApplied }),
+    [listEpoch, searchApplied],
+  );
+
   if (adminData && dataUpdatedAt !== syncedAt) {
-    setUsers(adminData.users);
+    setDirectory((prev) =>
+      adminUsersDirectoryReducer(prev, {
+        type: 'initial_page',
+        owner: listOwner,
+        users: adminData.users,
+        hasMore: adminData.hasMore,
+      }),
+    );
     setRolePolicies(adminData.rolePolicies);
     setSyncedAt(dataUpdatedAt);
   }
 
-  const filteredUsers = useMemo(() => {
-    const q = searchQuery.trim().toLowerCase();
-    if (!q) return users;
-    return users.filter((u) => {
-      const roleLabel = ROLE_LABELS[u.role].toLowerCase();
-      return (
-        u.usernameDisplay.toLowerCase().includes(q) ||
-        u.username.toLowerCase().includes(q) ||
-        u.displayName.toLowerCase().includes(q) ||
-        u.id.toLowerCase().includes(q) ||
-        roleLabel.includes(q)
-      );
-    });
-  }, [users, searchQuery]);
+  const { loadingMore, loadMoreUsers } = useAdminUsersLoadMore({
+    directory,
+    setDirectory,
+    fetchPage: fetchUsersPage,
+  });
+
+  const displayedUsers = useMemo(() => directory.users, [directory.users]);
+  const hasMore = directory.hasMore;
 
   const handleRoleChange = async (userId: string, newRole: UserRole) => {
     setUpdating(userId);
@@ -128,8 +182,11 @@ export default function AdminUsersPage() {
         method: 'PATCH',
         body: JSON.stringify({ userId, role: newRole }),
       });
-      setUsers((prev) => prev.map((u) => (u.id === userId ? { ...u, role: newRole } : u)));
-      const changed = users.find((u) => u.id === userId);
+      setDirectory((prev) => ({
+        ...prev,
+        users: prev.users.map((u) => (u.id === userId ? { ...u, role: newRole } : u)),
+      }));
+      const changed = directory.users.find((u) => u.id === userId);
       const label = changed?.usernameDisplay || changed?.username || 'user';
       setMessage({ type: 'success', text: `Updated ${label} to ${ROLE_LABELS[newRole]}` });
     } catch (err) {
@@ -160,9 +217,9 @@ export default function AdminUsersPage() {
         />
       </div>
 
-      {message && (
-        <Alert variant={message.type === 'success' ? 'success' : 'danger'} className="mb-4">
-          {message.text}
+      {(message || directory.continuationError) && (
+        <Alert variant={message?.type === 'success' ? 'success' : 'danger'} className="mb-4">
+          {message?.text ?? directory.continuationError}
         </Alert>
       )}
 
@@ -170,62 +227,83 @@ export default function AdminUsersPage() {
         <LoadingState size="lg" padding="md" />
       ) : error ? (
         <ErrorDisplay message={error} onRetry={() => void refetch()} />
-      ) : filteredUsers.length === 0 ? (
+      ) : displayedUsers.length === 0 ? (
         <EmptyState title="No users found." size="sm" />
       ) : (
-        <ul className="min-w-0 space-y-3">
-          {filteredUsers.map((u) => {
-            const name = u.usernameDisplay || u.username;
-            const label = name || 'user';
-            return (
-              <li
-                key={u.id}
-                className="grid min-w-0 gap-4 rounded-lg border border-border bg-surface p-4 lg:grid-cols-[minmax(0,1fr)_minmax(0,12.5rem)] lg:items-start"
+        <>
+          <p className="mb-3 text-sm text-text-secondary">
+            Showing {displayedUsers.length} user{displayedUsers.length === 1 ? '' : 's'}
+            {searchApplied.trim() ? ` matching “${searchApplied.trim()}”` : ''}
+            {hasMore ? ' — more results available.' : '.'}
+          </p>
+          <ul className="min-w-0 space-y-3">
+            {displayedUsers.map((u) => {
+              const name = u.usernameDisplay || u.username;
+              const label = name || 'user';
+              return (
+                <li
+                  key={u.id}
+                  className="grid min-w-0 gap-4 rounded-lg border border-border bg-surface p-4 lg:grid-cols-[minmax(0,1fr)_minmax(0,12.5rem)] lg:items-start"
+                >
+                  <div className="min-w-0 space-y-3">
+                    <div className="min-w-0">
+                      <p
+                        className="truncate font-medium text-text-primary"
+                        title={name || undefined}
+                      >
+                        {name || '(none)'}
+                      </p>
+                      <p
+                        className="truncate text-sm text-text-secondary"
+                        title={u.displayName || undefined}
+                      >
+                        {u.displayName || '(none)'}
+                      </p>
+                      <p className="text-sm text-text-secondary">
+                        Role:{' '}
+                        <span className="text-text-primary">
+                          {ROLE_LABELS[u.role].replace(/ /g, '\u00a0')}
+                        </span>
+                      </p>
+                    </div>
+                    <div className="min-w-0">
+                      <p className="mb-1 text-sm font-medium text-text-primary">Effective limits</p>
+                      <RoleLimits role={u.role} rolePolicies={rolePolicies} />
+                    </div>
+                  </div>
+                  <Select
+                    label="Change role"
+                    aria-label={`Change role for ${label}`}
+                    value={u.role}
+                    options={ROLE_OPTIONS}
+                    disabled={updating === u.id}
+                    onChange={(e) => {
+                      const newRole = e.target.value as UserRole;
+                      if (newRole === u.role) return;
+                      setPendingChange({
+                        userId: u.id,
+                        label,
+                        oldRole: u.role,
+                        newRole,
+                      });
+                    }}
+                  />
+                </li>
+              );
+            })}
+          </ul>
+          {hasMore ? (
+            <div className="mt-4">
+              <Button
+                variant="secondary"
+                disabled={loadingMore}
+                onClick={() => void loadMoreUsers()}
               >
-                <div className="min-w-0 space-y-3">
-                  <div className="min-w-0">
-                    <p className="truncate font-medium text-text-primary" title={name || undefined}>
-                      {name || '(none)'}
-                    </p>
-                    <p
-                      className="truncate text-sm text-text-secondary"
-                      title={u.displayName || undefined}
-                    >
-                      {u.displayName || '(none)'}
-                    </p>
-                    <p className="text-sm text-text-secondary">
-                      Role:{' '}
-                      <span className="text-text-primary">
-                        {ROLE_LABELS[u.role].replace(/ /g, '\u00a0')}
-                      </span>
-                    </p>
-                  </div>
-                  <div className="min-w-0">
-                    <p className="mb-1 text-sm font-medium text-text-primary">Effective limits</p>
-                    <RoleLimits role={u.role} rolePolicies={rolePolicies} />
-                  </div>
-                </div>
-                <Select
-                  label="Change role"
-                  aria-label={`Change role for ${label}`}
-                  value={u.role}
-                  options={ROLE_OPTIONS}
-                  disabled={updating === u.id}
-                  onChange={(e) => {
-                    const newRole = e.target.value as UserRole;
-                    if (newRole === u.role) return;
-                    setPendingChange({
-                      userId: u.id,
-                      label,
-                      oldRole: u.role,
-                      newRole,
-                    });
-                  }}
-                />
-              </li>
-            );
-          })}
-        </ul>
+                {loadingMore ? 'Loading…' : 'Load more users'}
+              </Button>
+            </div>
+          ) : null}
+        </>
       )}
 
       <ConfirmActionModal

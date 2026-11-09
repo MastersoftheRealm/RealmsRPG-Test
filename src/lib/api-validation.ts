@@ -768,6 +768,27 @@ export const adminChangelogsQuerySchema = z
   })
   .strict();
 
+const ADMIN_USERS_MAX_LIMIT = 100;
+
+export const adminUsersQuerySchema = z
+  .object({
+    limit: z.string().regex(/^\d+$/, 'limit must be a positive integer').optional(),
+    offset: z.string().regex(/^\d+$/, 'offset must be a non-negative integer').optional(),
+    q: z.string().max(200).optional(),
+  })
+  .strict();
+
+export function parseAdminUsersPaging(query: z.infer<typeof adminUsersQuerySchema>): {
+  limit: number;
+  offset: number;
+} {
+  const parsedLimit = Number(query.limit ?? String(ADMIN_USERS_MAX_LIMIT));
+  const limit = Math.max(1, Math.min(ADMIN_USERS_MAX_LIMIT, Math.floor(parsedLimit)));
+  const parsedOffset = Number(query.offset ?? '0');
+  const offset = Math.max(0, Math.floor(parsedOffset));
+  return { limit, offset };
+}
+
 export const realmsImagePatchSchema = z
   .object({
     name: z.string().min(1).max(200).optional(),
