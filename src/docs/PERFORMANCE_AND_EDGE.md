@@ -48,7 +48,7 @@ Excluded from proxy (no session refresh):
 
 ### Cache headers
 
-- **`GET /api/codex`** and **`GET /api/official/[type]`** (listed-only, cookie-less reads): may use `PUBLIC_CDN_CACHE_CONTROL` — `public, max-age=0, s-maxage=300, stale-while-revalidate=3600` (`lib/api/public-cdn-cache.ts`). Debug, `includeUnlisted=1`, empty/unlisted payloads, and non–public-client paths use private headers. Selection logic: `src/app/api/codex/route.ts`, `src/app/api/official/[type]/route.ts`.
+- **`GET /api/codex`** and **`GET /api/official/[type]`** (listed-only, cookie-less reads): may use `PUBLIC_CDN_CACHE_CONTROL` — `public, max-age=0, s-maxage=300` (`lib/api/public-cdn-cache.ts`). Debug, `includeUnlisted=1`, empty/unlisted payloads, and non–public-client paths use private headers. Selection logic: `src/app/api/codex/route.ts`, `src/app/api/official/[type]/route.ts`.
 
 ### React Query
 

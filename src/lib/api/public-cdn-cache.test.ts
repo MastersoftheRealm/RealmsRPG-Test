@@ -41,9 +41,8 @@ describe('public CDN cache eligibility (86e3rb7ca)', () => {
   });
 
   it('documents the shared public Cache-Control value', () => {
-    expect(PUBLIC_CDN_CACHE_CONTROL).toContain('s-maxage=300');
-    expect(PUBLIC_CDN_CACHE_CONTROL).toContain('max-age=0');
-    expect(PUBLIC_CDN_CACHE_CONTROL).toContain('stale-while-revalidate=3600');
+    expect(PUBLIC_CDN_CACHE_CONTROL).toBe('public, max-age=0, s-maxage=300');
+    expect(PUBLIC_CDN_CACHE_CONTROL).not.toMatch(/stale-while-revalidate/i);
     expect(PUBLIC_CDN_CACHE_CONTROL).not.toMatch(/vary/i);
   });
 });

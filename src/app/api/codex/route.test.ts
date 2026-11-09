@@ -1,5 +1,16 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 
+vi.mock('@/lib/supabase/cached-public-read', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('@/lib/supabase/cached-public-read')>();
+  return {
+    ...actual,
+    readCachedPublicDataWhenValid: vi.fn(
+      (...args: Parameters<typeof actual.readCachedPublicDataWhenValid>) =>
+        actual.readCachedPublicDataWhenValid(...args),
+    ),
+  };
+});
+
 vi.mock('@/lib/supabase/server', () => ({
   createClient: vi.fn(),
 }));
@@ -24,6 +35,7 @@ vi.mock('@/lib/entity-image-enrich-server', () => ({
   enrichRowsWithBankImageUrls: vi.fn(async () => undefined),
 }));
 
+import { readCachedPublicDataWhenValid } from '@/lib/supabase/cached-public-read';
 import { GET } from './route';
 import { createClient } from '@/lib/supabase/server';
 import { getSession } from '@/lib/supabase/session';
@@ -87,7 +99,23 @@ async function getJson(url: string): Promise<Partial<CodexPayload>> {
   return (await response.json()) as Partial<CodexPayload>;
 }
 
+const mockReadCachedPublicDataWhenValid = vi.mocked(readCachedPublicDataWhenValid);
+
 describe('GET /api/codex', () => {
+  it('keeps one hour-long Data Cache on the mapped payload only (API-019)', async () => {
+    mockReadCachedPublicDataWhenValid.mockClear();
+    mockCreatePublicClient.mockReturnValue(mockSupabase() as never);
+    await GET(new Request('http://localhost/api/codex'));
+    expect(mockReadCachedPublicDataWhenValid).toHaveBeenCalledTimes(1);
+    const keyParts = mockReadCachedPublicDataWhenValid.mock.calls[0]?.[0] ?? [];
+    expect(keyParts[0]).toBe('codex-api-payload');
+    expect(
+      mockReadCachedPublicDataWhenValid.mock.calls.every((call) => call[0]?.[0] !== 'codex-api'),
+    ).toBe(true);
+    const tags = mockReadCachedPublicDataWhenValid.mock.calls[0]?.[1] ?? [];
+    expect(tags).toEqual(expect.arrayContaining(['codex-api']));
+  });
+
   beforeEach(() => {
     vi.clearAllMocks();
     queriedTables = [];
