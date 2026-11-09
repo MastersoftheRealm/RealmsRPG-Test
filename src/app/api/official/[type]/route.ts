@@ -402,16 +402,23 @@ export async function POST(
         }
         if (updatedRows && updatedRows.length > 0) {
           const afterRow = updatedRows[0] as Record<string, unknown>;
-          await recordOfficialChangeBestEffort({
-            entityType: 'codex_species',
-            entityId: existingId,
-            operation: 'update',
-            changedByUserId: user.uid,
-            beforeData: (beforeRow as Record<string, unknown> | null) ?? null,
-            afterData: afterRow,
-          });
-          invalidateOfficialLibraryPublicCachesFromRouteHandler(SPECIES_TABLE);
-          return NextResponse.json({ id: existingId });
+          let committed = false;
+          try {
+            committed = true;
+            await recordOfficialChangeBestEffort({
+              entityType: 'codex_species',
+              entityId: existingId,
+              operation: 'update',
+              changedByUserId: user.uid,
+              beforeData: (beforeRow as Record<string, unknown> | null) ?? null,
+              afterData: afterRow,
+            });
+            return NextResponse.json({ id: existingId });
+          } finally {
+            if (committed) {
+              invalidateOfficialLibraryPublicCachesFromRouteHandler(SPECIES_TABLE);
+            }
+          }
         }
         return NextResponse.json({ error: 'Official item not found' }, { status: 404 });
       }
@@ -423,16 +430,23 @@ export async function POST(
           .select('*')
           .single();
         if (!insertError) {
-          await recordOfficialChangeBestEffort({
-            entityType: 'codex_species',
-            entityId: id,
-            operation: 'create',
-            changedByUserId: user.uid,
-            beforeData: null,
-            afterData: (inserted as Record<string, unknown> | null) ?? null,
-          });
-          invalidateOfficialLibraryPublicCachesFromRouteHandler(SPECIES_TABLE);
-          return NextResponse.json({ id });
+          let committed = false;
+          try {
+            committed = true;
+            await recordOfficialChangeBestEffort({
+              entityType: 'codex_species',
+              entityId: id,
+              operation: 'create',
+              changedByUserId: user.uid,
+              beforeData: null,
+              afterData: (inserted as Record<string, unknown> | null) ?? null,
+            });
+            return NextResponse.json({ id });
+          } finally {
+            if (committed) {
+              invalidateOfficialLibraryPublicCachesFromRouteHandler(SPECIES_TABLE);
+            }
+          }
         }
         if (insertError.code !== '23505') {
           return apiErrorResponse(
@@ -479,16 +493,23 @@ export async function POST(
         );
       }
       if (updatedRows && updatedRows.length > 0) {
-        await recordOfficialChangeBestEffort({
-          entityType: table,
-          entityId: existingId,
-          operation: 'update',
-          changedByUserId: user.uid,
-          beforeData: (beforeRow as Record<string, unknown> | null) ?? null,
-          afterData: updatedRows[0] as Record<string, unknown>,
-        });
-        invalidateOfficialLibraryPublicCachesFromRouteHandler(table);
-        return NextResponse.json({ id: existingId });
+        let committed = false;
+        try {
+          committed = true;
+          await recordOfficialChangeBestEffort({
+            entityType: table,
+            entityId: existingId,
+            operation: 'update',
+            changedByUserId: user.uid,
+            beforeData: (beforeRow as Record<string, unknown> | null) ?? null,
+            afterData: updatedRows[0] as Record<string, unknown>,
+          });
+          return NextResponse.json({ id: existingId });
+        } finally {
+          if (committed) {
+            invalidateOfficialLibraryPublicCachesFromRouteHandler(table);
+          }
+        }
       }
       return NextResponse.json({ error: 'Official item not found' }, { status: 404 });
     }
@@ -512,16 +533,23 @@ export async function POST(
         insertError,
       );
     }
-    await recordOfficialChangeBestEffort({
-      entityType: table,
-      entityId: id,
-      operation: 'create',
-      changedByUserId: user.uid,
-      beforeData: null,
-      afterData: (inserted as Record<string, unknown> | null) ?? null,
-    });
-    invalidateOfficialLibraryPublicCachesFromRouteHandler(table);
-    return NextResponse.json({ id });
+    let committed = false;
+    try {
+      committed = true;
+      await recordOfficialChangeBestEffort({
+        entityType: table,
+        entityId: id,
+        operation: 'create',
+        changedByUserId: user.uid,
+        beforeData: null,
+        afterData: (inserted as Record<string, unknown> | null) ?? null,
+      });
+      return NextResponse.json({ id });
+    } finally {
+      if (committed) {
+        invalidateOfficialLibraryPublicCachesFromRouteHandler(table);
+      }
+    }
   } catch (err) {
     logApiError('POST /api/official/[type]', err);
     return apiErrorResponse('Failed to save item', 500);
@@ -574,19 +602,26 @@ export async function PATCH(
       return NextResponse.json({ error: 'Item not found' }, { status: 404 });
     }
     const entityType = type === 'species' ? 'codex_species' : table;
-    await recordOfficialChangeBestEffort({
-      entityType,
-      entityId: validation.data.id,
-      operation: 'update',
-      changedByUserId: user.uid,
-      beforeData: (beforeRow as Record<string, unknown> | null) ?? null,
-      afterData: updatedRows[0] as Record<string, unknown>,
-    });
-    invalidateOfficialLibraryPublicCachesFromRouteHandler(table);
-    return NextResponse.json({
-      id: validation.data.id,
-      catalogListing: validation.data.catalogListing,
-    });
+    let committed = false;
+    try {
+      committed = true;
+      await recordOfficialChangeBestEffort({
+        entityType,
+        entityId: validation.data.id,
+        operation: 'update',
+        changedByUserId: user.uid,
+        beforeData: (beforeRow as Record<string, unknown> | null) ?? null,
+        afterData: updatedRows[0] as Record<string, unknown>,
+      });
+      return NextResponse.json({
+        id: validation.data.id,
+        catalogListing: validation.data.catalogListing,
+      });
+    } finally {
+      if (committed) {
+        invalidateOfficialLibraryPublicCachesFromRouteHandler(table);
+      }
+    }
   } catch (err) {
     logApiError('PATCH /api/official/[type]', err);
     return apiErrorResponse('Failed to update listing', 500);
@@ -621,35 +656,42 @@ export async function DELETE(
       .select('*')
       .eq('id', id)
       .maybeSingle();
-    const { data: deleted, error: deleteError } = await officialTable(supabase, table)
-      .delete()
-      .eq('id', id)
-      .select('id');
-    if (deleteError) {
-      return apiErrorResponse(
-        'Failed to delete item',
-        500,
-        'DELETE /api/official/[type]',
-        deleteError,
-      );
+    let committed = false;
+    try {
+      const { data: deleted, error: deleteError } = await officialTable(supabase, table)
+        .delete()
+        .eq('id', id)
+        .select('id');
+      if (deleteError) {
+        return apiErrorResponse(
+          'Failed to delete item',
+          500,
+          'DELETE /api/official/[type]',
+          deleteError,
+        );
+      }
+      if (!deleted || deleted.length === 0) {
+        return NextResponse.json({ error: 'Item not found or already deleted' }, { status: 404 });
+      }
+      committed = true;
+      const entityType = type === 'species' ? 'codex_species' : table;
+      await recordOfficialChangeBestEffort({
+        entityType,
+        entityId: id,
+        operation: 'delete',
+        changedByUserId: user.uid,
+        beforeData: (beforeRow as Record<string, unknown> | null) ?? null,
+        afterData: null,
+      });
+      // Tombstone so the id is never handed to a different entity, which would silently
+      // repoint every saved character that referenced the deleted one.
+      await retireCodexId(supabase, table, id);
+      return NextResponse.json({ ok: true });
+    } finally {
+      if (committed) {
+        invalidateOfficialLibraryPublicCachesFromRouteHandler(table);
+      }
     }
-    if (!deleted || deleted.length === 0) {
-      return NextResponse.json({ error: 'Item not found or already deleted' }, { status: 404 });
-    }
-    const entityType = type === 'species' ? 'codex_species' : table;
-    await recordOfficialChangeBestEffort({
-      entityType,
-      entityId: id,
-      operation: 'delete',
-      changedByUserId: user.uid,
-      beforeData: (beforeRow as Record<string, unknown> | null) ?? null,
-      afterData: null,
-    });
-    // Tombstone so the id is never handed to a different entity, which would silently
-    // repoint every saved character that referenced the deleted one.
-    await retireCodexId(supabase, table, id);
-    invalidateOfficialLibraryPublicCachesFromRouteHandler(table);
-    return NextResponse.json({ ok: true });
   } catch (err) {
     logApiError('DELETE /api/official/[type]', err);
     return apiErrorResponse('Failed to delete item', 500);

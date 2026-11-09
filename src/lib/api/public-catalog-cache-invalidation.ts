@@ -3,6 +3,9 @@
  *
  * Server Actions: `updateTag` (immediate data-cache miss; propagates to tagged CDN responses).
  * Route Handlers: `revalidateTag(tag, { expire: 0 })` (same, no stale body on the next GET).
+ *
+ * Purge only tags tied to the written slice (not the full codex CDN key) to stay under Vercel
+ * per-request purge limits — full + all collections run only on source rename.
  */
 
 import { revalidateTag, updateTag } from 'next/cache';
@@ -13,7 +16,6 @@ import {
   codexTableWriteCacheTags,
   CODEX_API_CACHE_TAG,
   CORE_RULES_CACHE_TAG,
-  OFFICIAL_ENHANCED_ITEMS_CDN_CACHE_TAG,
   officialLibraryWriteCacheTags,
   officialPublicRouteCdnCacheTag,
 } from '@/lib/codex/cache-tags';
@@ -47,10 +49,24 @@ function expireTagsFromRouteHandler(tags: Iterable<string>): void {
   }
 }
 
-function codexListedCdnTags(collectionKeys: readonly CodexPayloadKey[]): string[] {
-  const tags = [codexPublicFullCdnCacheTag()];
-  for (const key of collectionKeys) {
-    tags.push(codexPublicCollectionCdnCacheTag(key));
+function codexCollectionCdnTags(keys: readonly CodexPayloadKey[]): string[] {
+  return keys.map((key) => codexPublicCollectionCdnCacheTag(key));
+}
+
+function codexSliceExpireTags(collection: CodexCollection, table: string): string[] {
+  const payloadKey = codexCollectionToPayloadKey(collection);
+  const tags = [
+    ...codexTableWriteCacheTags(table),
+    ...(collection === 'core_rules' ? [CORE_RULES_CACHE_TAG] : []),
+    ...codexCollectionCdnTags([payloadKey]),
+  ];
+  if (collection === 'codex_archetypes') {
+    tags.push(...codexTableWriteCacheTags('codex_archetype_levels'));
+  }
+  if (collection === 'codex_species') {
+    tags.push(...officialLibraryWriteCacheTags('codex_species'));
+    tags.push(officialPublicRouteCdnCacheTag('species'));
+    tags.push(codexPublicCollectionCdnCacheTag('species'));
   }
   return tags;
 }
@@ -60,44 +76,7 @@ export function invalidateCodexCollectionPublicCachesFromServerAction(
   collection: CodexCollection,
   table: string,
 ): void {
-  const payloadKey = codexCollectionToPayloadKey(collection);
-  const tags = [
-    ...codexTableWriteCacheTags(table),
-    ...(collection === 'core_rules' ? [CORE_RULES_CACHE_TAG] : []),
-    ...codexListedCdnTags([payloadKey]),
-  ];
-  if (collection === 'codex_species') {
-    tags.push(...officialLibraryWriteCacheTags('codex_species'));
-    tags.push(officialPublicRouteCdnCacheTag('species'));
-    tags.push(codexPublicCollectionCdnCacheTag('species'));
-  }
-  expireTagsFromServerAction(tags);
-}
-
-export function invalidateCodexCollectionPublicCachesFromRouteHandler(
-  collection: CodexCollection,
-  table: string,
-): void {
-  const payloadKey = codexCollectionToPayloadKey(collection);
-  const tags = [
-    ...codexTableWriteCacheTags(table),
-    ...(collection === 'core_rules' ? [CORE_RULES_CACHE_TAG] : []),
-    ...codexListedCdnTags([payloadKey]),
-  ];
-  if (collection === 'codex_species') {
-    tags.push(...officialLibraryWriteCacheTags('codex_species'));
-    tags.push(officialPublicRouteCdnCacheTag('species'));
-  }
-  expireTagsFromRouteHandler(tags);
-}
-
-/** Archetype path saves touch archetypes and progression levels. */
-export function invalidateCodexArchetypePathPublicCachesFromServerAction(): void {
-  expireTagsFromServerAction([
-    ...codexTableWriteCacheTags('codex_archetypes'),
-    ...codexTableWriteCacheTags('codex_archetype_levels'),
-    ...codexListedCdnTags(['archetypes']),
-  ]);
+  expireTagsFromServerAction(codexSliceExpireTags(collection, table));
 }
 
 /** Source rename updates every codex table that carries `sources`. */
@@ -108,7 +87,7 @@ export function invalidateCodexApiAfterSourceRenameFromServerAction(
   for (const table of tables) {
     tags.push(codexApiTableCacheTag(table));
   }
-  tags.push(...codexListedCdnTags(CODEX_PAYLOAD_KEYS));
+  tags.push(...codexCollectionCdnTags(CODEX_PAYLOAD_KEYS));
   expireTagsFromServerAction(tags);
 }
 
@@ -130,6 +109,12 @@ export function invalidateOfficialLibraryPublicCachesFromRouteHandler(table: str
   expireTagsFromRouteHandler(officialWriteTags(table));
 }
 
-export function invalidateOfficialEnhancedItemsPublicCachesFromRouteHandler(): void {
-  expireTagsFromRouteHandler([OFFICIAL_ENHANCED_ITEMS_CDN_CACHE_TAG]);
+/** Tags attached to listed GET responses for this official table (for route-level freshness tests). */
+export function officialListedGetCacheTags(table: string): string[] {
+  return uniqueTags(officialWriteTags(table));
+}
+
+/** Tags attached to listed GET responses for a codex collection (for route-level freshness tests). */
+export function codexListedGetCacheTags(collection: CodexCollection): string[] {
+  return uniqueTags(codexSliceExpireTags(collection, collection));
 }

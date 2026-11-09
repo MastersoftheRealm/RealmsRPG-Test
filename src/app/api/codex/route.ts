@@ -20,7 +20,7 @@ import { logApiError } from '@/lib/api-error';
 import { codexGetQuerySchema, validateQuery } from '@/lib/api-validation';
 import { getSession } from '@/lib/supabase/session';
 import { coerceJsonRecord, parseArchetypePathData } from '@/lib/game/archetype-path';
-import { fetchCoreRules } from '@/lib/core-rules-server';
+import { fetchCoreRules, fetchCoreRulesUncached } from '@/lib/core-rules-server';
 import { enrichRowsWithBankImageUrls } from '@/lib/entity-image-enrich-server';
 import { selectPowerParts, selectTechniqueParts } from '@/lib/codex/part-type';
 import {
@@ -229,7 +229,9 @@ async function buildCodexPayloadUncached(
     selectTable(supabase, 'codex_archetype_levels', needed),
     selectTable(supabase, 'codex_creature_feats', needed),
     keys.has('coreRules')
-      ? fetchCoreRules(supabase)
+      ? includeUnlisted
+        ? fetchCoreRulesUncached(supabase)
+        : fetchCoreRules(supabase)
       : Promise.resolve({} as Awaited<ReturnType<typeof fetchCoreRules>>),
   ]);
 

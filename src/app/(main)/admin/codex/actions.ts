@@ -6,10 +6,7 @@ import { featTagsToNormalizeInput, parseFeatTagsFromDb } from '@/lib/codex/feat-
 import { fromPublicTable, type PublicTableName, type TablesInsert } from '@/lib/supabase/database';
 import { createServiceRoleClient } from '@/lib/supabase/server';
 import { revalidatePath } from 'next/cache';
-import {
-  invalidateCodexArchetypePathPublicCachesFromServerAction,
-  invalidateCodexCollectionPublicCachesFromServerAction,
-} from '@/lib/api/public-catalog-cache-invalidation';
+import { invalidateCodexCollectionPublicCachesFromServerAction } from '@/lib/api/public-catalog-cache-invalidation';
 import {
   assertCodexCollection,
   isColumnarCollection,
@@ -195,42 +192,49 @@ export async function createCodexDoc(
       docId = await allocateCodexNumericId(supabase, table);
     }
 
-    if (shouldAllocateNumeric) {
-      assertCodexAdminPayloadKeys(safeCollection, data);
-      const normalizedData = await applyFeatTagNormalization(safeCollection, data);
-      const payload = toColumnarPayload(safeCollection, normalizedData);
-      const dbPayload = toDbPayload(safeCollection, { id: docId, ...payload });
-      const { data: inserted, error } = await serviceTable(supabase, table)
-        .insert(dbPayload)
-        .select('*')
-        .single();
-      if (error) throw new Error(error.message);
-      await recordCodexChangeBestEffort({
-        entityType: safeCollection,
-        entityId: docId,
-        operation: 'create',
-        changedByUserId,
-        beforeData: null,
-        afterData: (inserted as Record<string, unknown> | null) ?? null,
-      });
-    } else {
-      const { data: inserted, error } = await serviceTable(supabase, table)
-        .insert({ id: docId, data })
-        .select('*')
-        .single();
-      if (error) throw new Error(error.message);
-      await recordCodexChangeBestEffort({
-        entityType: safeCollection,
-        entityId: docId,
-        operation: 'create',
-        changedByUserId,
-        beforeData: null,
-        afterData: (inserted as Record<string, unknown> | null) ?? null,
-      });
+    let committed = false;
+    try {
+      if (shouldAllocateNumeric) {
+        assertCodexAdminPayloadKeys(safeCollection, data);
+        const normalizedData = await applyFeatTagNormalization(safeCollection, data);
+        const payload = toColumnarPayload(safeCollection, normalizedData);
+        const dbPayload = toDbPayload(safeCollection, { id: docId, ...payload });
+        const { data: inserted, error } = await serviceTable(supabase, table)
+          .insert(dbPayload)
+          .select('*')
+          .single();
+        if (error) throw new Error(error.message);
+        committed = true;
+        await recordCodexChangeBestEffort({
+          entityType: safeCollection,
+          entityId: docId,
+          operation: 'create',
+          changedByUserId,
+          beforeData: null,
+          afterData: (inserted as Record<string, unknown> | null) ?? null,
+        });
+      } else {
+        const { data: inserted, error } = await serviceTable(supabase, table)
+          .insert({ id: docId, data })
+          .select('*')
+          .single();
+        if (error) throw new Error(error.message);
+        committed = true;
+        await recordCodexChangeBestEffort({
+          entityType: safeCollection,
+          entityId: docId,
+          operation: 'create',
+          changedByUserId,
+          beforeData: null,
+          afterData: (inserted as Record<string, unknown> | null) ?? null,
+        });
+      }
+      return { success: true, id: docId };
+    } finally {
+      if (committed) {
+        revalidatePublicCodexCaches(safeCollection, table);
+      }
     }
-
-    revalidatePublicCodexCaches(safeCollection, table);
-    return { success: true, id: docId };
   } catch (e) {
     return { success: false, error: e instanceof Error ? e.message : 'Failed to create' };
   }
@@ -271,49 +275,57 @@ export async function updateCodexDoc(
     }
 
     let afterRow: Record<string, unknown> | null = null;
-    if (isColumnarCollection(safeCollection)) {
-      assertCodexAdminPayloadKeys(safeCollection, data);
-      const normalizedData = await applyFeatTagNormalization(safeCollection, data);
-      const payload = toColumnarPayload(safeCollection, normalizedData);
-      const dbPayload = toDbPayload(safeCollection, payload);
-      if (currentUpdatedAt) dbPayload.updated_at = new Date().toISOString();
-      let query = serviceTable(supabase, table).update(dbPayload).eq('id', id);
-      if (lockOn) query = query.eq('updated_at', lockOn);
-      const { data: after, error } = await query.select('*').maybeSingle();
-      if (error) throw new Error(error.message);
-      if (!after) return { success: false, conflict: true, error: CONFLICT_MESSAGE };
-      afterRow = after as Record<string, unknown>;
-      await recordCodexChangeBestEffort({
-        entityType: safeCollection,
-        entityId: id,
-        operation: 'update',
-        changedByUserId,
-        beforeData: before,
-        afterData: afterRow,
-      });
-    } else {
-      let query = serviceTable(supabase, table)
-        .update({ data, updated_at: new Date().toISOString() })
-        .eq('id', id);
-      if (lockOn) query = query.eq('updated_at', lockOn);
-      const { data: after, error } = await query.select('*').maybeSingle();
-      if (error) throw new Error(error.message);
-      if (!after) return { success: false, conflict: true, error: CONFLICT_MESSAGE };
-      afterRow = after as Record<string, unknown>;
-      await recordCodexChangeBestEffort({
-        entityType: safeCollection,
-        entityId: id,
-        operation: 'update',
-        changedByUserId,
-        beforeData: before,
-        afterData: afterRow,
-      });
-    }
+    let committed = false;
+    try {
+      if (isColumnarCollection(safeCollection)) {
+        assertCodexAdminPayloadKeys(safeCollection, data);
+        const normalizedData = await applyFeatTagNormalization(safeCollection, data);
+        const payload = toColumnarPayload(safeCollection, normalizedData);
+        const dbPayload = toDbPayload(safeCollection, payload);
+        if (currentUpdatedAt) dbPayload.updated_at = new Date().toISOString();
+        let query = serviceTable(supabase, table).update(dbPayload).eq('id', id);
+        if (lockOn) query = query.eq('updated_at', lockOn);
+        const { data: after, error } = await query.select('*').maybeSingle();
+        if (error) throw new Error(error.message);
+        if (!after) return { success: false, conflict: true, error: CONFLICT_MESSAGE };
+        afterRow = after as Record<string, unknown>;
+        committed = true;
+        await recordCodexChangeBestEffort({
+          entityType: safeCollection,
+          entityId: id,
+          operation: 'update',
+          changedByUserId,
+          beforeData: before,
+          afterData: afterRow,
+        });
+      } else {
+        let query = serviceTable(supabase, table)
+          .update({ data, updated_at: new Date().toISOString() })
+          .eq('id', id);
+        if (lockOn) query = query.eq('updated_at', lockOn);
+        const { data: after, error } = await query.select('*').maybeSingle();
+        if (error) throw new Error(error.message);
+        if (!after) return { success: false, conflict: true, error: CONFLICT_MESSAGE };
+        afterRow = after as Record<string, unknown>;
+        committed = true;
+        await recordCodexChangeBestEffort({
+          entityType: safeCollection,
+          entityId: id,
+          operation: 'update',
+          changedByUserId,
+          beforeData: before,
+          afterData: afterRow,
+        });
+      }
 
-    revalidatePublicCodexCaches(safeCollection, table);
-    const afterUpdatedAt =
-      typeof afterRow?.updated_at === 'string' ? afterRow.updated_at : undefined;
-    return { success: true, updatedAt: afterUpdatedAt };
+      const afterUpdatedAt =
+        typeof afterRow?.updated_at === 'string' ? afterRow.updated_at : undefined;
+      return { success: true, updatedAt: afterUpdatedAt };
+    } finally {
+      if (committed) {
+        revalidatePublicCodexCaches(safeCollection, table);
+      }
+    }
   } catch (e) {
     return { success: false, error: e instanceof Error ? e.message : 'Failed to update' };
   }
@@ -342,27 +354,34 @@ export async function deleteCodexDoc(
       }
     }
 
-    const { error } = await serviceTable(supabase, table).delete().eq('id', id);
-    if (error) throw new Error(error.message);
+    let committed = false;
+    try {
+      const { error } = await serviceTable(supabase, table).delete().eq('id', id);
+      if (error) throw new Error(error.message);
+      committed = true;
 
-    // Tombstone before anything else can fail: a reused id silently repoints saved characters.
-    if (isColumnarCollection(safeCollection)) {
-      await retireCodexId(supabase, table, id);
+      // Tombstone before anything else can fail: a reused id silently repoints saved characters.
+      if (isColumnarCollection(safeCollection)) {
+        await retireCodexId(supabase, table, id);
+      }
+
+      if (before) {
+        await recordCodexChangeBestEffort({
+          entityType: safeCollection,
+          entityId: id,
+          operation: 'delete',
+          changedByUserId,
+          beforeData: before,
+          afterData: null,
+        });
+      }
+
+      return { success: true };
+    } finally {
+      if (committed) {
+        revalidatePublicCodexCaches(safeCollection, table);
+      }
     }
-
-    if (before) {
-      await recordCodexChangeBestEffort({
-        entityType: safeCollection,
-        entityId: id,
-        operation: 'delete',
-        changedByUserId,
-        beforeData: before,
-        afterData: null,
-      });
-    }
-
-    revalidatePublicCodexCaches(safeCollection, table);
-    return { success: true };
   } catch (e) {
     return { success: false, error: e instanceof Error ? e.message : 'Failed to delete' };
   }
@@ -408,28 +427,34 @@ export async function saveArchetypeWithPath(
       };
     }
 
-    const { error: upsertError } = await supabase
-      .from('codex_archetypes')
-      .upsert(buildArchetypeRow(id, normalizedPayload) as TablesInsert<'codex_archetypes'>);
-    if (upsertError) throw new Error(upsertError.message);
+    let committed = false;
+    try {
+      const { error: upsertError } = await supabase
+        .from('codex_archetypes')
+        .upsert(buildArchetypeRow(id, normalizedPayload) as TablesInsert<'codex_archetypes'>);
+      if (upsertError) throw new Error(upsertError.message);
+      committed = true;
 
-    await replaceArchetypeLevels(id, cleanLevels, existingLevels);
+      await replaceArchetypeLevels(id, cleanLevels, existingLevels);
 
-    const afterSnapshot = await getArchetypeSnapshot(id);
-    if (!afterSnapshot) throw new Error('Failed to load saved archetype snapshot');
+      const afterSnapshot = await getArchetypeSnapshot(id);
+      if (!afterSnapshot) throw new Error('Failed to load saved archetype snapshot');
 
-    await recordCodexChangeBestEffort({
-      entityType: 'codex_archetypes',
-      entityId: id,
-      operation: beforeSnapshot ? 'update' : 'create',
-      changedByUserId,
-      beforeData: beforeSnapshot as Record<string, unknown> | null,
-      afterData: afterSnapshot as Record<string, unknown> | null,
-    });
+      await recordCodexChangeBestEffort({
+        entityType: 'codex_archetypes',
+        entityId: id,
+        operation: beforeSnapshot ? 'update' : 'create',
+        changedByUserId,
+        beforeData: beforeSnapshot as Record<string, unknown> | null,
+        afterData: afterSnapshot as Record<string, unknown> | null,
+      });
 
-    revalidatePublicCodexCaches('codex_archetypes', 'codex_archetypes');
-    invalidateCodexArchetypePathPublicCachesFromServerAction();
-    return { success: true, id };
+      return { success: true, id };
+    } finally {
+      if (committed) {
+        revalidatePublicCodexCaches('codex_archetypes', 'codex_archetypes');
+      }
+    }
   } catch (e) {
     return {
       success: false,

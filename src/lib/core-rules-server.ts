@@ -52,3 +52,10 @@ export async function fetchCoreRules(
     (rules) => Object.keys(rules).length > 0,
   );
 }
+
+/** Admin reads — never memoized (`CODEX_PUBLIC_ISR_SECONDS` is 3600 for listed public GETs). */
+export async function fetchCoreRulesUncached(
+  supabase: Pick<TypedSupabaseClient, 'from'>,
+): Promise<Partial<CoreRulesMap>> {
+  return loadCoreRulesFromSupabase(supabase);
+}

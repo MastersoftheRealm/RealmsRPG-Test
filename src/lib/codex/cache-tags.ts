@@ -29,8 +29,6 @@ export function officialPublicRouteCdnCacheTag(routeType: string): string {
   return `${OFFICIAL_LIBRARY_CACHE_TAG}:cdn:route=${routeType}`;
 }
 
-export const OFFICIAL_ENHANCED_ITEMS_CDN_CACHE_TAG = `${OFFICIAL_LIBRARY_CACHE_TAG}:cdn:enhanced-items`;
-
 /** Invalidate memoized official-library reads after admin writes (listed + unlisted). */
 export function officialLibraryWriteCacheTags(table: string): string[] {
   return [

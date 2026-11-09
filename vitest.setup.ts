@@ -30,15 +30,15 @@ vi.mock('next/cache', () => ({
     };
   },
   revalidatePath: vi.fn(),
-  revalidateTag: (tag: string, profile?: string | { expire?: number }) => {
+  revalidateTag: vi.fn((tag: string, profile?: string | { expire?: number }) => {
     if (profile === 'max') return;
     if (profile === undefined || (typeof profile === 'object' && profile.expire === 0)) {
       purgeUnstableCacheByTag(tag);
     }
-  },
-  updateTag: (tag: string) => {
+  }),
+  updateTag: vi.fn((tag: string) => {
     purgeUnstableCacheByTag(tag);
-  },
+  }),
 }));
 
 beforeEach(() => {

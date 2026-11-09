@@ -29,6 +29,7 @@ vi.mock('@/lib/admin', () => ({
 
 vi.mock('@/lib/core-rules-server', () => ({
   fetchCoreRules: vi.fn(async () => ({ PROGRESSION_PLAYER: { baseHealth: 8 } })),
+  fetchCoreRulesUncached: vi.fn(async () => ({ PROGRESSION_PLAYER: { baseHealth: 8 } })),
 }));
 
 vi.mock('@/lib/entity-image-enrich-server', () => ({

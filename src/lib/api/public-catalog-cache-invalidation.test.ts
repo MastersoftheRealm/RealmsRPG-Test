@@ -14,10 +14,11 @@ import {
   officialPublicRouteCdnCacheTag,
 } from '@/lib/codex/cache-tags';
 import {
+  codexListedGetCacheTags,
   invalidateCodexApiAfterSourceRenameFromServerAction,
-  invalidateCodexCollectionPublicCachesFromRouteHandler,
   invalidateCodexCollectionPublicCachesFromServerAction,
   invalidateOfficialLibraryPublicCachesFromRouteHandler,
+  officialListedGetCacheTags,
 } from './public-catalog-cache-invalidation';
 
 describe('public-catalog-cache-invalidation', () => {
@@ -48,13 +49,22 @@ describe('public-catalog-cache-invalidation', () => {
     ).toBe(false);
   });
 
-  it('codex collection route invalidation uses expire 0 on CDN and data tags', () => {
-    invalidateCodexCollectionPublicCachesFromRouteHandler('core_rules', 'core_rules');
+  it('listed GET cache tags are a subset of official route handler purge tags', () => {
+    const listedTags = officialListedGetCacheTags('official_powers');
+    invalidateOfficialLibraryPublicCachesFromRouteHandler('official_powers');
+    for (const tag of listedTags) {
+      expect(revalidateTag).toHaveBeenCalledWith(tag, { expire: 0 });
+    }
+  });
 
-    expect(revalidateTag).toHaveBeenCalledWith(CORE_RULES_CACHE_TAG, { expire: 0 });
-    expect(revalidateTag).toHaveBeenCalledWith(codexPublicCollectionCdnCacheTag('coreRules'), {
-      expire: 0,
-    });
+  it('listed codex GET cache tags match server-action purge tags for a collection', () => {
+    const listedTags = codexListedGetCacheTags('core_rules');
+    invalidateCodexCollectionPublicCachesFromServerAction('core_rules', 'core_rules');
+    for (const tag of listedTags) {
+      expect(updateTag).toHaveBeenCalledWith(tag);
+    }
+    expect(listedTags).toContain(CORE_RULES_CACHE_TAG);
+    expect(listedTags).toContain(codexPublicCollectionCdnCacheTag('coreRules'));
   });
 
   it('source rename expires every listed collection CDN tag from server actions', () => {
