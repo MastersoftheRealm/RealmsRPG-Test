@@ -12,7 +12,7 @@ import type { VariantProps } from 'class-variance-authority';
 import { cn } from '@/lib/utils/cn';
 import { formatCostDisplay } from '@/lib/game/creator-constants';
 import { DescriptorChip, type chipVariants } from '@/components/ui/chip';
-import { ChipOptionsPanel } from '@/lib/chip/chip-options-panel';
+import { ChipOptionsPanel } from '@/components/ui/chip-options-panel';
 import { partChipVariant } from '@/lib/chip/part-chip-variant';
 import { expandableChipShellClass } from '@/lib/chip/expandable-chip-shell';
 import {
