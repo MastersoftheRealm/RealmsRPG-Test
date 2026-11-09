@@ -1,8 +1,3 @@
-/**
- * CONFIG-015 — block service-role tooling from the live Supabase project.
- * Project ref matches scripts/generate-db-types.mjs default (RealmsRPG-Test).
- */
-
 /** @type {readonly string} */
 export const PRODUCTION_SUPABASE_PROJECT_REF = 'lbqhiwudvifmkjtkccdg';
 
