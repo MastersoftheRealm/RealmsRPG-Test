@@ -1,7 +1,8 @@
 'use client';
 
 import { useEffect, useMemo, useState } from 'react';
-import { ChipSelect, ImageUploadModal, ListRowThumbnail } from '@/components/patterns';
+import { ChipSelect, ListRowThumbnail } from '@/components/patterns';
+import { ImageUploadModal } from '@/components/patterns/chrome/image-upload-modal';
 import { Modal, Button, Input, Alert, useToast } from '@/components/ui';
 import {
   REALMS_IMAGE_CATEGORY_OPTIONS,
