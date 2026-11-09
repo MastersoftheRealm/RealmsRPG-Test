@@ -12,7 +12,7 @@ import Link from 'next/link';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { createClient } from '@/lib/supabase/client';
-import { loginWithPasswordAction } from '@/app/(auth)/auth-actions';
+import { loginWithPasswordAction, setAuthRememberMeAction } from '@/app/(auth)/auth-actions';
 import {
   hasGuestEncountersToMigrate,
   migrateGuestEncountersOnSignIn,
@@ -25,8 +25,13 @@ import {
 import { loginSchema, type LoginFormData } from '@/lib/validation';
 import { getAuthErrorMessage } from '@/lib/auth-errors';
 import { presentLoginActionFailure } from './login-action-result';
-import { sanitizeRedirectPath } from '@/lib/safe-redirect';
 import { resendConfirmationAction } from '@/app/(auth)/auth-actions';
+import {
+  clearLoginRedirectSession,
+  resendAuthSignupConfirmation,
+  resolvePostAuthRedirectPath,
+  signInWithGoogleOAuth,
+} from '@/lib/auth/auth-page-client';
 import {
   AuthCard,
   AuthGoogleTermsNotice,
@@ -64,12 +69,11 @@ function LoginContent() {
     setIgnoreAuthParam(false);
   }
 
-  const getRedirectPath = () => {
-    const urlRedirect = searchParams.get('redirect') ?? searchParams.get('returnTo');
-    const sessionRedirect =
-      typeof window !== 'undefined' ? sessionStorage.getItem('loginRedirect') : null;
-    return sanitizeRedirectPath(urlRedirect || sessionRedirect || '/');
-  };
+  const getRedirectPath = () =>
+    resolvePostAuthRedirectPath(
+      searchParams,
+      typeof window !== 'undefined' ? sessionStorage : null,
+    );
 
   const authParamError =
     !ignoreAuthParam && errorParam === 'confirm'
@@ -87,6 +91,7 @@ function LoginContent() {
   const {
     register,
     handleSubmit,
+    getValues,
     formState: { errors },
   } = useForm<LoginFormData>({
     resolver: zodResolver(loginSchema),
@@ -110,6 +115,7 @@ function LoginContent() {
         data.email,
         data.password,
         captchaOptions.captchaToken ?? null,
+        data.rememberMe === true,
       );
       if (!result.success) {
         resetCaptcha();
@@ -124,7 +130,7 @@ function LoginContent() {
       if (hasGuestCharactersToMigrate()) {
         await migrateGuestCharactersOnSignIn();
       }
-      sessionStorage.removeItem('loginRedirect');
+      clearLoginRedirectSession(typeof window !== 'undefined' ? sessionStorage : null);
       router.push(getRedirectPath());
     } catch (err) {
       resetCaptcha();
@@ -144,8 +150,11 @@ function LoginContent() {
     setResendStatus('sending');
     clearDisplayedError();
     try {
-      const redirectPath = getRedirectPath();
-      const result = await resendConfirmationAction(email, redirectPath);
+      const result = await resendAuthSignupConfirmation(
+        resendConfirmationAction,
+        email,
+        getRedirectPath(),
+      );
       if (!result.success) {
         setResendStatus('idle');
         setError(result.error);
@@ -163,18 +172,11 @@ function LoginContent() {
     clearDisplayedError();
 
     try {
+      await setAuthRememberMeAction(getValues('rememberMe') === true);
       const supabase = createClient();
       const redirectPath = getRedirectPath();
-      const { data, error: err } = await supabase.auth.signInWithOAuth({
-        provider: 'google',
-        options: {
-          redirectTo: `${window.location.origin}/auth/callback?next=${encodeURIComponent(redirectPath)}`,
-        },
-      });
-      if (err) throw err;
-      if (data?.url) {
-        window.location.href = data.url;
-      }
+      const url = await signInWithGoogleOAuth(supabase, window.location.origin, redirectPath);
+      window.location.href = url;
     } catch (err: unknown) {
       console.error('Google sign-in error:', err);
       setError(getAuthErrorMessage(err, 'login'));

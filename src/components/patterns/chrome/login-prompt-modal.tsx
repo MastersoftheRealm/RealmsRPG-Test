@@ -15,6 +15,8 @@ import { LogIn, UserPlus } from 'lucide-react';
 import { Modal } from '@/components/ui/modal';
 import { Button } from '@/components/ui/button';
 import { Alert } from '@/components/ui/alert';
+import { LOGIN_REDIRECT_SESSION_KEY } from '@/lib/auth/auth-page-client';
+import { buildLoginRedirectUrl, sanitizeRedirectPath } from '@/lib/safe-redirect';
 
 export type LoginPromptReason = 'save' | 'load';
 
@@ -49,14 +51,16 @@ export function LoginPromptModal({
   const [localBusy, setLocalBusy] = useState(false);
   const allowLocalSheet = reason === 'save' && typeof onContinueWithoutSigningIn === 'function';
 
+  const safeReturnPath = sanitizeRedirectPath(returnPath);
+
   const handleLogin = () => {
-    sessionStorage.setItem('loginRedirect', returnPath);
-    router.push(`/login?redirect=${encodeURIComponent(returnPath)}`);
+    sessionStorage.setItem(LOGIN_REDIRECT_SESSION_KEY, safeReturnPath);
+    router.push(buildLoginRedirectUrl(safeReturnPath));
   };
 
   const handleRegister = () => {
-    sessionStorage.setItem('loginRedirect', returnPath);
-    router.push(`/register?redirect=${encodeURIComponent(returnPath)}`);
+    sessionStorage.setItem(LOGIN_REDIRECT_SESSION_KEY, safeReturnPath);
+    router.push(`/register?returnTo=${encodeURIComponent(safeReturnPath)}`);
   };
 
   const handleTertiary = async () => {

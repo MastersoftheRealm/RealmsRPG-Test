@@ -11,8 +11,15 @@ const mockResetPasswordForEmail = vi.fn();
 const mockResend = vi.fn();
 const mockLimiterCheck = vi.fn();
 
+const mockCookieSet = vi.fn();
+const mockCookieGetAll = vi.fn(() => [] as { name: string; value: string }[]);
+
 vi.mock('next/headers', () => ({
   headers: vi.fn(async () => new Headers({ 'x-real-ip': '198.51.100.2' })),
+  cookies: vi.fn(async () => ({
+    getAll: mockCookieGetAll,
+    set: mockCookieSet,
+  })),
 }));
 
 vi.mock('@/lib/supabase/server', () => ({
@@ -42,6 +49,25 @@ describe('auth-actions rate limits', () => {
     mockSignUp.mockResolvedValue({ data: { session: {} }, error: null });
     mockResetPasswordForEmail.mockResolvedValue({ error: null });
     mockResend.mockResolvedValue({ error: null });
+  });
+
+  it('loginWithPasswordAction stores Remember-me preference before sign-in', async () => {
+    const { loginWithPasswordAction } = await import('./auth-actions');
+    mockCookieSet.mockClear();
+
+    await loginWithPasswordAction('user@example.com', 'secret', null, false);
+    expect(mockCookieSet).toHaveBeenCalledWith(
+      'realms-auth-remember',
+      '0',
+      expect.objectContaining({ httpOnly: true }),
+    );
+
+    await loginWithPasswordAction('user@example.com', 'secret', null, true);
+    expect(mockCookieSet).toHaveBeenCalledWith(
+      'realms-auth-remember',
+      '1',
+      expect.objectContaining({ httpOnly: true }),
+    );
   });
 
   it('loginWithPasswordAction returns friendly copy when rate limited', async () => {
