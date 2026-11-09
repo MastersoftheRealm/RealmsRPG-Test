@@ -17,7 +17,7 @@ import {
   type CreatureFeat as CodexCreatureFeatRow,
 } from '@/hooks';
 import { checkFeatRequirements } from '@/lib/game/feat-requirements';
-import { buildFeatDetailSections, normalizeFeatCategory } from '@/lib/codex/feat-list';
+import { buildFeatDetailSections, storedFeatCategoryLabel } from '@/lib/codex/feat-list';
 import { buildSkillIdToName } from '@/lib/codex/skill-list';
 import { normalizeFeatAbilities } from '@/lib/codex/feat-ability';
 import { descriptorChipData } from '@/lib/chip/chip-data-helpers';
@@ -85,7 +85,7 @@ function featToSelectableItem(
   const detailSections = glrSurfaceDetailSections(
     'creature-feat-picker',
     {
-      category: normalizeFeatCategory(feat.category),
+      category: storedFeatCategoryLabel(feat.category),
       ability: formatAbilityList(feat.ability),
       uses: usesVal != null && usesVal > 0 ? usesVal : undefined,
       recovery: formatListCellLabel(feat.rec_period),
@@ -190,7 +190,7 @@ export function AddCreatureFeatModal({
     const abils = new Set<string>();
     feats.forEach((f) => {
       if (f.state_feat) return;
-      const category = normalizeFeatCategory(f.category);
+      const category = storedFeatCategoryLabel(f.category);
       if (category && category.toLowerCase() !== 'all') cats.add(category);
       normalizeFeatAbilities(f.ability).forEach((ability) => {
         if (ability.trim().toLowerCase() !== 'all') abils.add(ability);
@@ -241,7 +241,7 @@ export function AddCreatureFeatModal({
       if (!showStateFeats && feat.state_feat) return false;
       const { meets } = checkPlayerFeatRequirements(feat);
       if (!meets && !showBlocked) return false;
-      if (selectedCategory && normalizeFeatCategory(feat.category) !== selectedCategory)
+      if (selectedCategory && storedFeatCategoryLabel(feat.category) !== selectedCategory)
         return false;
       if (selectedAbility && !normalizeFeatAbilities(feat.ability).includes(selectedAbility))
         return false;

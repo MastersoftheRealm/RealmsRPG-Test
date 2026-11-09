@@ -12,6 +12,7 @@
 | [`characters-relational-*.sql`](characters-relational-audit.sql) | ADR-0031 relational character expansion, compatibility and contract migrations, RPCs, verification, and rollback-safe smoke tests. The compatibility stage was applied to production on 2026-11-08; the contract/drop stage remains pending and requires a fresh backup. |
 | [`vtt-v1-tabletop.sql`](vtt-v1-tabletop.sql) | Virtual tabletop schema for branch-local development. Verify target state and obtain approval before applying outside the branch's local database. |
 | [`codex-rename-source.sql`](codex-rename-source.sql) | Admin utility: replaces `public.rename_codex_source` only. Safe to re-run on non-prod when Kadin approves; first real rename is a live data change and needs a backup. |
+| [`codex-category-offense-to-offensive.sql`](codex-category-offense-to-offensive.sql) | One-time data fix: `codex_feats` / `codex_parts` category `Offense` → `Offensive`. **Apply before** deploying app code that drops the feat category rewrite. Not applied from CI. |
 | [`schema/0000_baseline_2026-08-13.sql`](schema/0000_baseline_2026-08-13.sql) | Committed `pg_dump --schema-only` snapshot (**stale** vs live — regenerate before relying on it). |
 
 **Relational characters (ADR-0031):** Run
@@ -77,7 +78,7 @@ Requires `DIRECT_URL` (or `DATABASE_URL`) and matching `pg_dump` major version. 
 3. Apply via Supabase MCP `apply_migration` or Dashboard on the approved project.
 4. Update `SUPABASE_SCHEMA.md`, regenerate types, and refresh the baseline when credentials are available.
 
-Codex **data** edits follow the same owner gate; the app normalizes some legacy values (for example feat category `Offense` → `Offensive`) without requiring a live UPDATE until a separate task applies one.
+Codex **data** edits follow the same owner gate. `codex-category-offense-to-offensive.sql` ships with the code that stops normalizing feat categories in the app; run the SQL before that deploy.
 
 ---
 

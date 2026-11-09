@@ -9,10 +9,10 @@ import {
 } from './power-technique-categories';
 
 const partsDb = [
-  { id: '1', name: 'Fire', category: 'Offense', mechanic: false },
+  { id: '1', name: 'Fire', category: 'Offensive', mechanic: false },
   { id: '2', name: 'Ward', category: 'Defense', mechanic: false },
   { id: '3', name: 'Basic Action', category: 'Mechanic', mechanic: true },
-  { id: '4', name: 'Blast', category: 'Offense', mechanic: false },
+  { id: '4', name: 'Blast', category: 'Offensive', mechanic: false },
   { id: '5', name: 'Fog', category: 'Control', mechanic: false },
 ];
 
@@ -23,7 +23,7 @@ describe('derivePartCategories (TASK-673)', () => {
         [{ id: '1' }, { id: '3' }, { id: '4' }, { id: '2' }, { id: '5' }],
         partsDb,
       ),
-    ).toEqual(['Offense', 'Defense', 'Control']);
+    ).toEqual(['Offensive', 'Defense', 'Control']);
   });
 
   it('skips mechanic parts and empty categories', () => {
@@ -45,7 +45,7 @@ describe('derivePartCategories (TASK-673)', () => {
 
   it('formats column display', () => {
     expect(formatPartCategoriesColumn([])).toBe('—');
-    expect(formatPartCategoriesColumn(['Offense', 'Utility'])).toBe('Offense, Utility');
+    expect(formatPartCategoriesColumn(['Offensive', 'Utility'])).toBe('Offensive, Utility');
   });
 
   it('adds Damage category when power has damage rows', () => {
