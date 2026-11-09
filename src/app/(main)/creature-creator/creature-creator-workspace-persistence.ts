@@ -1,6 +1,7 @@
 'use client';
 
 import { useCallback, useState, type Dispatch, type SetStateAction } from 'react';
+import { useRouter } from 'next/navigation';
 import type { SelectableItem } from '@/components/patterns';
 import { useCreatorSave } from '@/hooks';
 import { stampCreatureSyncMeta } from '@/lib/library-sync';
@@ -20,6 +21,10 @@ import {
 import type { CreatureState } from './creature-creator-types';
 import { rawRecordToCreatureState } from './creature-skill-utils';
 import type { CreatureArmament } from './transformers';
+import {
+  commitCreatorEditClearAfterSave,
+  scheduleCreatorEditClear,
+} from '@/lib/creator/creator-edit-query';
 
 type CreatureSaveStats = {
   isOverBudget: boolean;
@@ -54,6 +59,11 @@ export function useCreatureCreatorWorkspacePersistence({
   techniquePartsDb,
   itemPropertiesDb,
 }: UseCreatureCreatorWorkspacePersistenceArgs) {
+  const router = useRouter();
+  const clearEditQuery = useCallback(
+    (href: string) => router.replace(href, { scroll: false }),
+    [router],
+  );
   const draftSnapshot = JSON.stringify({
     name: creature.name.trim(),
     data: creature,
@@ -87,7 +97,9 @@ export function useCreatureCreatorWorkspacePersistence({
       { canSaveToOfficial: isAdmin },
     ),
     editingId: editCreatureId,
-    onSaveCommitted: acceptDraft,
+    onSaveCommitted: () => {
+      commitCreatorEditClearAfterSave(editCreatureId, clearEditQuery, acceptDraft);
+    },
   });
 
   const [showResetConfirm, setShowResetConfirm] = useState(false);
@@ -119,6 +131,18 @@ export function useCreatureCreatorWorkspacePersistence({
   const handleReset = useCallback(() => {
     setShowResetConfirm(true);
   }, []);
+
+  const confirmReset = useCallback(
+    (initialState: CreatureState, clearSessionDraftCache: () => void) => {
+      setCreature(initialState);
+      save.forgetLoadedLibraryItem();
+      scheduleCreatorEditClear(editCreatureId, clearEditQuery);
+      acceptDraft();
+      clearSessionDraftCache();
+      setShowResetConfirm(false);
+    },
+    [acceptDraft, clearEditQuery, editCreatureId, save, setCreature],
+  );
 
   const onRemoveFeat = useCallback(
     (featId: string) => {
@@ -186,6 +210,7 @@ export function useCreatureCreatorWorkspacePersistence({
     acceptDraft,
     handleSave,
     handleReset,
+    confirmReset,
     handleLoadCreature,
     showResetConfirm,
     setShowResetConfirm,

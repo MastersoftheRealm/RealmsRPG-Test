@@ -16,7 +16,7 @@
 'use client';
 
 import { useState, Suspense } from 'react';
-import { useSearchParams } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { Swords, Zap, Target } from 'lucide-react';
 import {
   useTechniqueParts,
@@ -134,6 +134,7 @@ function TechniqueCreatorWorkspace({
   error,
   refetch,
 }: TechniqueCreatorWorkspaceProps) {
+  const router = useRouter();
   const ws = useTechniqueCreatorWorkspace({
     initialFormState,
     editTechniqueId,
@@ -143,6 +144,8 @@ function TechniqueCreatorWorkspace({
       findLoadedLibraryItem(load.rawItems, editTechniqueId),
       { canSaveToOfficial: isAdmin },
     ),
+    onEditSaveCommitted: (href) => router.replace(href, { scroll: false }),
+    onEditResetCommitted: (href) => router.replace(href, { scroll: false }),
   });
 
   return (
@@ -184,6 +187,13 @@ function TechniqueCreatorWorkspace({
             existingInPublic: ws.save.publishExistingInPublic,
           }) ?? '',
         ...creatorPublishSaveAsCopyActions(ws.save),
+      }}
+      emptyOverwrite={{
+        isOpen: ws.save.showEmptyOverwriteConfirm,
+        onClose: () => ws.save.setShowEmptyOverwriteConfirm(false),
+        onConfirm: () => void ws.save.confirmEmptyOverwrite(),
+        title: ws.save.emptyOverwriteTitle,
+        description: ws.save.emptyOverwriteDescription,
       }}
       resetConfirm={{
         isOpen: ws.showResetConfirm,

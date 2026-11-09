@@ -15,7 +15,10 @@ import {
   useCreatorDraftDirty,
   useDiscardableCreatorDraft,
 } from '@/hooks/use-creator-unsaved-guard';
-import { bindCreatorEditClear, creatorEditClearPlan } from '@/lib/creator/creator-edit-query';
+import {
+  commitCreatorEditClearAfterSave,
+  scheduleCreatorEditClear,
+} from '@/lib/creator/creator-edit-query';
 import type { CreatorSaveTarget } from '@/lib/library/catalog-listing';
 import {
   useCreatorEditDraftDecision,
@@ -71,6 +74,8 @@ type UsePowerCreatorWorkspaceArgs = {
   initialSaveTarget?: CreatorSaveTarget | undefined;
   /** Clears `?edit=` after a successful save (86e3jwurq). */
   onEditSaveCommitted?: ((href: string) => void) | undefined;
+  /** Clears `?edit=` after reset. */
+  onEditResetCommitted?: ((href: string) => void) | undefined;
 };
 
 export function usePowerCreatorWorkspace({
@@ -80,6 +85,7 @@ export function usePowerCreatorWorkspace({
   powerParts,
   initialSaveTarget,
   onEditSaveCommitted,
+  onEditResetCommitted,
 }: UsePowerCreatorWorkspaceArgs) {
   const [name, setName] = useState(initialFormState.name);
   const [description, setDescription] = useState(initialFormState.description);
@@ -346,16 +352,7 @@ export function usePowerCreatorWorkspace({
     editingId: editPowerId,
     onSaveSuccess: resetFields,
     onSaveCommitted: () => {
-      const plan =
-        editPowerId && onEditSaveCommitted && typeof window !== 'undefined'
-          ? creatorEditClearPlan(window.location.href, window.history.state)
-          : null;
-      acceptDraft();
-      if (!plan || !onEditSaveCommitted) return;
-      bindCreatorEditClear(plan, onEditSaveCommitted, (listener) => {
-        window.addEventListener('popstate', listener);
-        return () => window.removeEventListener('popstate', listener);
-      });
+      commitCreatorEditClearAfterSave(editPowerId, onEditSaveCommitted, acceptDraft);
     },
   });
 
@@ -366,7 +363,8 @@ export function usePowerCreatorWorkspace({
     save.forgetLoadedLibraryItem();
     save.setSaveMessage(null);
     clearCreatorSessionDraft(POWER_CREATOR_CACHE_KEY, editPowerId, editReplacesDraft);
-  }, [editPowerId, editReplacesDraft, resetFields, save]);
+    scheduleCreatorEditClear(editPowerId, onEditResetCommitted);
+  }, [editPowerId, editReplacesDraft, onEditResetCommitted, resetFields, save]);
 
   const applyFormState = useCallback(
     (next: PowerCreatorFormState) => {

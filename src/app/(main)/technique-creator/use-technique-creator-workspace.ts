@@ -51,6 +51,10 @@ import {
   persistCreatorSessionDraft,
   clearCreatorSessionDraft,
 } from '@/lib/game/creator-cache';
+import {
+  commitCreatorEditClearAfterSave,
+  scheduleCreatorEditClear,
+} from '@/lib/creator/creator-edit-query';
 
 function toTechniquePartPayload(part: {
   id: string | number;
@@ -75,6 +79,8 @@ type UseTechniqueCreatorWorkspaceArgs = {
   editReplacesDraft: boolean;
   techniqueParts: TechniquePart[];
   initialSaveTarget?: CreatorSaveTarget | undefined;
+  onEditSaveCommitted?: ((href: string) => void) | undefined;
+  onEditResetCommitted?: ((href: string) => void) | undefined;
 };
 
 export function useTechniqueCreatorWorkspace({
@@ -83,6 +89,8 @@ export function useTechniqueCreatorWorkspace({
   editReplacesDraft,
   techniqueParts,
   initialSaveTarget,
+  onEditSaveCommitted,
+  onEditResetCommitted,
 }: UseTechniqueCreatorWorkspaceArgs) {
   const [name, setName] = useState(initialFormState.name);
   const [description, setDescription] = useState(initialFormState.description);
@@ -373,43 +381,6 @@ export function useTechniqueCreatorWorkspace({
   const draftSnapshot = JSON.stringify(getPayload());
   const { isDirty: unsavedDirty, acceptDraft } = useCreatorDraftDirty(draftSnapshot);
 
-  const save = useCreatorSave({
-    type: 'techniques',
-    getPayload,
-    requirePublishConfirm: true,
-    publishConfirmTitle: 'Publish to Realms Library',
-    publishConfirmDescription: (n, { existingInPublic }) =>
-      existingInPublic
-        ? `Are you sure you want to override "${n}" (technique)? The existing public technique with this name will be replaced.`
-        : `Are you sure you wish to publish this technique "${n}" to the Realms Library? All users will be able to see and use it.`,
-    successMessage: 'Technique saved successfully!',
-    publicSuccessMessage: 'Technique saved to Realms Library!',
-    initialSaveTarget,
-    editingId: editTechniqueId,
-    onSaveCommitted: acceptDraft,
-    onSaveSuccess: () => {
-      setName('');
-      setDescription('');
-      setSelectedParts([]);
-      setActionType('basic');
-      setIsReaction(false);
-      setDamage({ amount: 0, size: 6, type: 'none' });
-      setAttackMode('unarmed');
-      setImageId(null);
-      setImageUrl(null);
-      setTargetedDefenses([]);
-      acceptDraft();
-    },
-  });
-
-  useCreatorEditMissNotice(
-    Boolean(editTechniqueId) && !discardDraft,
-    'technique',
-    save.setSaveMessage,
-  );
-
-  const [showResetConfirm, setShowResetConfirm] = useState(false);
-
   const resetFormFields = useCallback(() => {
     setName('');
     setDescription('');
@@ -423,6 +394,36 @@ export function useTechniqueCreatorWorkspace({
     setTargetedDefenses([]);
   }, []);
 
+  const save = useCreatorSave({
+    type: 'techniques',
+    getPayload,
+    requirePublishConfirm: true,
+    publishConfirmTitle: 'Publish to Realms Library',
+    publishConfirmDescription: (n, { existingInPublic }) =>
+      existingInPublic
+        ? `Are you sure you want to override "${n}" (technique)? The existing public technique with this name will be replaced.`
+        : `Are you sure you wish to publish this technique "${n}" to the Realms Library? All users will be able to see and use it.`,
+    successMessage: 'Technique saved successfully!',
+    publicSuccessMessage: 'Technique saved to Realms Library!',
+    initialSaveTarget,
+    editingId: editTechniqueId,
+    onSaveCommitted: () => {
+      commitCreatorEditClearAfterSave(editTechniqueId, onEditSaveCommitted, acceptDraft);
+    },
+    onSaveSuccess: () => {
+      resetFormFields();
+      acceptDraft();
+    },
+  });
+
+  useCreatorEditMissNotice(
+    Boolean(editTechniqueId) && !discardDraft,
+    'technique',
+    save.setSaveMessage,
+  );
+
+  const [showResetConfirm, setShowResetConfirm] = useState(false);
+
   const handleReset = useCallback(() => {
     setShowResetConfirm(true);
   }, []);
@@ -434,10 +435,18 @@ export function useTechniqueCreatorWorkspace({
       clearSaveMessage: () => save.setSaveMessage(null),
       clearDraftCache: () =>
         clearCreatorSessionDraft(TECHNIQUE_CREATOR_CACHE_KEY, editTechniqueId, editReplacesDraft),
+      clearEditQuery: () => scheduleCreatorEditClear(editTechniqueId, onEditResetCommitted),
       acceptDraft,
     });
     setShowResetConfirm(false);
-  }, [acceptDraft, editReplacesDraft, editTechniqueId, resetFormFields, save]);
+  }, [
+    acceptDraft,
+    editReplacesDraft,
+    editTechniqueId,
+    onEditResetCommitted,
+    resetFormFields,
+    save,
+  ]);
 
   const applyFormState = useCallback((next: TechniqueCreatorFormState) => {
     setName(next.name);

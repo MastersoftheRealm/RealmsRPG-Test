@@ -9,10 +9,13 @@ export function applyTechniqueCreatorReset(actions: {
   forgetLoadedLibraryItem: () => void;
   clearSaveMessage: () => void;
   acceptDraft: () => void;
+  /** Drops `?edit=` after confirmed reset. */
+  clearEditQuery?: (() => void) | undefined;
 }): void {
   actions.resetForm();
   actions.forgetLoadedLibraryItem();
   actions.clearSaveMessage();
   actions.clearDraftCache();
+  actions.clearEditQuery?.();
   actions.acceptDraft();
 }

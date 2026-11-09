@@ -46,6 +46,11 @@ import {
   saveTargetToCatalogListing,
   type CreatorSaveTarget,
 } from '@/lib/library/catalog-listing';
+import {
+  CREATOR_EMPTY_OVERWRITE_TITLE,
+  creatorEmptyOverwriteDescription,
+  creatorPayloadWouldHollowExistingRow,
+} from '@/lib/creator/creator-empty-overwrite';
 
 export type { CreatorSaveTarget };
 
@@ -119,6 +124,11 @@ export interface UseCreatorSaveReturn {
     | undefined;
   /** True when publishing would replace an existing official item with the same name. */
   publishExistingInPublic: boolean;
+  showEmptyOverwriteConfirm: boolean;
+  setShowEmptyOverwriteConfirm: (show: boolean) => void;
+  confirmEmptyOverwrite: () => Promise<void>;
+  emptyOverwriteTitle: string;
+  emptyOverwriteDescription: string;
 }
 
 const DEFAULT_SUCCESS = 'Saved successfully!';
@@ -129,6 +139,33 @@ function adminPublishDescription(name: string, existing: boolean): string {
   return existing
     ? `Replace “${name}” in the Admin library? It stays hidden from player catalogs.`
     : `Save “${name}” to the Admin library? Players will not see it in Libraries or pickers; it can still appear on published creatures that use it.`;
+}
+
+const EMPTY_OVERWRITE_CONTENT_LABEL: Record<CreatorLibraryType, string> = {
+  powers: 'power',
+  techniques: 'technique',
+  'empowered-techniques': 'empowered technique',
+  items: 'item',
+  creatures: 'creature',
+  species: 'species',
+};
+
+type PendingSave = {
+  target: CreatorSaveTarget;
+  existingId?: string | undefined;
+  asCopy?: boolean | undefined;
+};
+
+function saveUpdatesExistingRow(
+  target: CreatorSaveTarget,
+  existingId: string | undefined,
+  loadedLibraryId: string | null,
+  loadedOfficialId: string | null,
+): boolean {
+  if (existingId?.trim()) return true;
+  if (isOfficialSaveTarget(target) && loadedOfficialId?.trim()) return true;
+  if (!isOfficialSaveTarget(target) && loadedLibraryId?.trim()) return true;
+  return false;
 }
 
 export function useCreatorSave(options: UseCreatorSaveOptions): UseCreatorSaveReturn {
@@ -169,6 +206,8 @@ export function useCreatorSave(options: UseCreatorSaveOptions): UseCreatorSaveRe
   const [showPublishConfirm, setShowPublishConfirmState] = useState(false);
   const [publishExistingId, setPublishExistingId] = useState<string | null>(null);
   const [replaceMatchCount, setReplaceMatchCount] = useState(1);
+  const [pendingSave, setPendingSave] = useState<PendingSave | null>(null);
+  const [showEmptyOverwriteConfirm, setShowEmptyOverwriteConfirmState] = useState(false);
   const [loadedLibraryId, setLoadedLibraryId] = useState<string | null>(
     isOfficialSaveTarget(initialSaveTarget) ? null : editingId?.trim() || null,
   );
@@ -196,6 +235,11 @@ export function useCreatorSave(options: UseCreatorSaveOptions): UseCreatorSaveRe
   const forgetLoadedLibraryItem = useCallback(() => {
     setLoadedLibraryId(null);
     setLoadedOfficialId(null);
+  }, []);
+
+  const setShowEmptyOverwriteConfirm = useCallback((show: boolean) => {
+    setShowEmptyOverwriteConfirmState(show);
+    if (!show) setPendingSave(null);
   }, []);
 
   const executeSave = useCallback(
@@ -254,8 +298,10 @@ export function useCreatorSave(options: UseCreatorSaveOptions): UseCreatorSaveRe
         setTimeout(() => {
           setSaveMessage(null);
           if (!asCopy) {
-            if (onSaveSuccess) setLoadedLibraryId(null);
-            onSaveSuccess?.();
+            if (onSaveSuccess) {
+              forgetLoadedLibraryItem();
+              onSaveSuccess();
+            }
           }
         }, 2000);
         onSaveCommitted?.();
@@ -287,8 +333,35 @@ export function useCreatorSave(options: UseCreatorSaveOptions): UseCreatorSaveRe
       onSaveCommitted,
       queryClient,
       user,
+      forgetLoadedLibraryItem,
     ],
   );
+
+  const runSaveWithHollowGuard = useCallback(
+    async (target: CreatorSaveTarget, existingId?: string, options?: { asCopy?: boolean }) => {
+      const { data } = getPayload();
+      const updatesExisting = saveUpdatesExistingRow(
+        target,
+        existingId,
+        loadedLibraryId,
+        loadedOfficialId,
+      );
+      if (updatesExisting && creatorPayloadWouldHollowExistingRow(type, data)) {
+        setPendingSave({ target, existingId, asCopy: options?.asCopy });
+        setShowEmptyOverwriteConfirmState(true);
+        return;
+      }
+      await executeSave(target, existingId, options);
+    },
+    [executeSave, getPayload, loadedLibraryId, loadedOfficialId, type],
+  );
+
+  const confirmEmptyOverwrite = useCallback(async () => {
+    const next = pendingSave;
+    setShowEmptyOverwriteConfirm(false);
+    if (!next) return;
+    await executeSave(next.target, next.existingId, next.asCopy ? { asCopy: true } : undefined);
+  }, [executeSave, pendingSave, setShowEmptyOverwriteConfirm]);
 
   const handleSave = useCallback(async () => {
     const { name } = getPayload();
@@ -335,16 +408,19 @@ export function useCreatorSave(options: UseCreatorSaveOptions): UseCreatorSaveRe
         setShowPublishConfirmState(true);
         return;
       }
-      await executeSave(saveTarget, decision.kind === 'update' ? decision.id : undefined);
+      await runSaveWithHollowGuard(
+        saveTarget,
+        decision.kind === 'update' ? decision.id : undefined,
+      );
       return;
     }
-    await executeSave(saveTarget, loadedOfficialId ?? undefined);
+    await runSaveWithHollowGuard(saveTarget, loadedOfficialId ?? undefined);
   }, [
     getPayload,
     type,
     saveTarget,
     requirePublishConfirm,
-    executeSave,
+    runSaveWithHollowGuard,
     loadedLibraryId,
     loadedOfficialId,
   ]);
@@ -353,8 +429,8 @@ export function useCreatorSave(options: UseCreatorSaveOptions): UseCreatorSaveRe
     const existingId = publishExistingId;
     const target = saveTarget;
     setShowPublishConfirm(false);
-    await executeSave(target, existingId ?? undefined);
-  }, [executeSave, publishExistingId, saveTarget, setShowPublishConfirm]);
+    await runSaveWithHollowGuard(target, existingId ?? undefined);
+  }, [runSaveWithHollowGuard, publishExistingId, saveTarget, setShowPublishConfirm]);
 
   const confirmSaveAsCopy = useCallback(async () => {
     const target = saveTarget;
@@ -425,5 +501,12 @@ export function useCreatorSave(options: UseCreatorSaveOptions): UseCreatorSaveRe
     publishConfirmLabel: saveTarget === 'private' ? 'Replace' : 'Publish',
     publishConfirmDescription: wrappedPublishDescription,
     publishExistingInPublic: !!publishExistingId,
+    showEmptyOverwriteConfirm,
+    setShowEmptyOverwriteConfirm,
+    confirmEmptyOverwrite,
+    emptyOverwriteTitle: CREATOR_EMPTY_OVERWRITE_TITLE,
+    emptyOverwriteDescription: creatorEmptyOverwriteDescription(
+      EMPTY_OVERWRITE_CONTENT_LABEL[type],
+    ),
   };
 }

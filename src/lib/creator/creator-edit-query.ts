@@ -54,3 +54,32 @@ export function bindCreatorEditClear(
     queueMicrotask(() => clear(plan.href));
   });
 }
+
+export function scheduleCreatorEditClear(
+  editId: string | null | undefined,
+  onEditSaveCommitted: ((href: string) => void) | undefined,
+  listen?: (onPop: () => void) => () => void,
+): void {
+  const plan =
+    editId && onEditSaveCommitted && typeof window !== 'undefined'
+      ? creatorEditClearPlan(window.location.href, window.history.state)
+      : null;
+  if (!plan || !onEditSaveCommitted) return;
+  const attach =
+    listen ??
+    ((listener) => {
+      window.addEventListener('popstate', listener);
+      return () => window.removeEventListener('popstate', listener);
+    });
+  bindCreatorEditClear(plan, onEditSaveCommitted, attach);
+}
+
+export function commitCreatorEditClearAfterSave(
+  editId: string | null | undefined,
+  onEditSaveCommitted: ((href: string) => void) | undefined,
+  acceptDraft: () => void,
+  listen?: (onPop: () => void) => () => void,
+): void {
+  acceptDraft();
+  scheduleCreatorEditClear(editId, onEditSaveCommitted, listen);
+}
