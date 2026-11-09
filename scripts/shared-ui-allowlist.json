@@ -112,6 +112,7 @@
     "src/components/ui/card.tsx",
     "src/components/ui/checkbox.tsx",
     "src/components/ui/chip.tsx",
+    "src/components/ui/chip-options-panel.tsx",
     "src/components/ui/empty-state.tsx",
     "src/components/ui/expandable-chip.tsx",
     "src/components/ui/icon-button.tsx",
