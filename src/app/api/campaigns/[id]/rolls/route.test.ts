@@ -438,7 +438,7 @@ describe('POST /api/campaigns/[id]/rolls', () => {
     }
   });
 
-  it('applies crit adjustment for roll-log Custom Roll only among custom types', async () => {
+  it('applies crit adjustment for roll-log dice-pool custom rolls only among custom types', async () => {
     mockGetSession.mockResolvedValue({ user: MEMBER, error: null });
     const supabase = createRollsSupabase({
       campaign: { id: 'camp-1', owner_id: OWNER.uid, characters: MEMBER_ROSTER },
@@ -453,6 +453,7 @@ describe('POST /api/campaigns/[id]/rolls', () => {
         roll: {
           type: 'custom',
           title: 'Custom Roll',
+          outcomeKind: 'dice-pool',
           dice: [{ type: 'd20', value: 20 }],
           modifier: 0,
         },

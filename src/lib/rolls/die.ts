@@ -6,8 +6,32 @@ export type DieType = 'd2' | 'd4' | 'd6' | 'd8' | 'd10' | 'd12' | 'd20' | 'd100'
 
 export type StoredRollKind = 'attack' | 'damage' | 'skill' | 'ability' | 'defense' | 'custom';
 
+/**
+ * How nat 20 / nat 1 affect total and crit flags. Passed explicitly for custom rolls
+ * (never inferred from display title).
+ */
+export type RollOutcomeKind =
+  /** Sheet d20 checks: ±2 and crit message. */
+  | 'd20-check'
+  /** Roll-log manual dice pool: same ±2 rules as d20-check. */
+  | 'dice-pool'
+  /** Damage and multi-die pools: sum only. */
+  | 'damage-sum'
+  /** Programmatic custom dice (e.g. Randomize on sheet): crit highlight, no ±2. */
+  | 'labeled-dice';
+
+export const ROLL_OUTCOME_KINDS = [
+  'd20-check',
+  'dice-pool',
+  'damage-sum',
+  'labeled-dice',
+] as const satisfies readonly RollOutcomeKind[];
+
 /** Title used by the roll-log manual dice pool (`roll-log.tsx` executeRoll). */
 export const ROLL_LOG_CUSTOM_POOL_TITLE = 'Custom Roll';
+
+/** `RollEntry.outcomeKind` for roll-log manual pool rolls. */
+export const ROLL_LOG_CUSTOM_POOL_OUTCOME_KIND: RollOutcomeKind = 'dice-pool';
 
 export const DIE_MAX: Record<DieType, number> = {
   d2: 2,
@@ -73,14 +97,27 @@ export function d20CritAdjustment(dice: ReadonlyArray<{ type: DieType; value: nu
   return { isCrit: false, isCritFail: false, adjustment: 0 };
 }
 
-export function storedRollUsesD20CritAdjustment(type: StoredRollKind, title: string): boolean {
-  if (type === 'attack' || type === 'skill' || type === 'ability' || type === 'defense') {
-    return true;
+export function defaultRollOutcomeKind(type: StoredRollKind): RollOutcomeKind | undefined {
+  switch (type) {
+    case 'attack':
+    case 'skill':
+    case 'ability':
+    case 'defense':
+      return 'd20-check';
+    case 'damage':
+      return 'damage-sum';
+    case 'custom':
+      return 'damage-sum';
+    default:
+      return undefined;
   }
-  if (type === 'custom' && title === ROLL_LOG_CUSTOM_POOL_TITLE) {
-    return true;
-  }
-  return false;
+}
+
+export function resolveRollOutcomeKind(
+  type: StoredRollKind,
+  explicit?: RollOutcomeKind | undefined,
+): RollOutcomeKind {
+  return explicit ?? defaultRollOutcomeKind(type) ?? 'damage-sum';
 }
 
 export function normalizeCampaignRollDice(
@@ -98,7 +135,7 @@ export function normalizeCampaignRollDice(
 export function computeRollOutcome(
   dice: ReadonlyArray<{ type: DieType; value: number }>,
   modifier: number,
-  roll: { type: StoredRollKind; title: string },
+  kind: RollOutcomeKind,
 ): {
   total: number;
   isCrit: boolean;
@@ -106,20 +143,37 @@ export function computeRollOutcome(
   critMessage: string | null;
 } {
   const diceSum = dice.reduce((sum, die) => sum + die.value, 0);
-  const crit = storedRollUsesD20CritAdjustment(roll.type, roll.title)
-    ? d20CritAdjustment(dice)
-    : { isCrit: false, isCritFail: false, adjustment: 0 };
-  const total = diceSum + modifier + crit.adjustment;
-  const critMessage = crit.isCrit
-    ? 'Natural 20! +2 to the total!'
-    : crit.isCritFail
-      ? 'Natural 1! -2 from the total!'
-      : null;
+
+  if (kind === 'd20-check' || kind === 'dice-pool') {
+    const crit = d20CritAdjustment(dice);
+    const critMessage = crit.isCrit
+      ? 'Natural 20! +2 to the total!'
+      : crit.isCritFail
+        ? 'Natural 1! -2 from the total!'
+        : null;
+    return {
+      total: diceSum + modifier + crit.adjustment,
+      isCrit: crit.isCrit,
+      isCritFail: crit.isCritFail,
+      critMessage,
+    };
+  }
+
+  if (kind === 'labeled-dice') {
+    const crit = d20CritAdjustment(dice);
+    return {
+      total: diceSum + modifier,
+      isCrit: crit.isCrit,
+      isCritFail: crit.isCritFail,
+      critMessage: null,
+    };
+  }
+
   return {
-    total,
-    isCrit: crit.isCrit,
-    isCritFail: crit.isCritFail,
-    critMessage,
+    total: diceSum + modifier,
+    isCrit: false,
+    isCritFail: false,
+    critMessage: null,
   };
 }
 
