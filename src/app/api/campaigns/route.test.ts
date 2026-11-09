@@ -19,14 +19,25 @@ vi.mock('@/lib/rate-limit', () => ({
   },
 }));
 
+vi.mock('@/lib/api-error', async () => {
+  const mod = await vi.importActual<typeof import('@/lib/api-error')>('@/lib/api-error');
+  return {
+    ...mod,
+    apiErrorResponse: vi.fn(mod.apiErrorResponse),
+  };
+});
+
 import { GET } from './route';
 import { getSession } from '@/lib/supabase/session';
 import { createClient } from '@/lib/supabase/server';
+import { apiErrorResponse } from '@/lib/api-error';
 
 const mockGetSession = vi.mocked(getSession);
 const mockCreateClient = vi.mocked(createClient);
+const mockApiErrorResponse = vi.mocked(apiErrorResponse);
 
 const OWNER = { uid: 'owner-user', email: 'owner@example.com' };
+const MEMBER = { uid: 'member-user', email: 'member@example.com' };
 
 type CampaignRow = {
   id: string;
@@ -183,5 +194,77 @@ describe('GET /api/campaigns', () => {
     );
 
     expect(response.status).toBe(400);
+  });
+
+  it('returns 429 when rate limited', async () => {
+    const { standardLimiter } = await import('@/lib/rate-limit');
+    vi.mocked(standardLimiter.check).mockResolvedValueOnce({
+      success: false,
+      remaining: 0,
+      reset: Date.now() + 60_000,
+    });
+    mockGetSession.mockResolvedValue({ user: OWNER, error: null });
+
+    const response = await GET(makeGetRequest());
+
+    expect(response.status).toBe(429);
+    await expect(readJson(response)).resolves.toEqual({ error: 'Too many requests' });
+  });
+
+  it('uses apiErrorResponse for unexpected failures (matches GET /api/campaigns/[id])', async () => {
+    mockGetSession.mockResolvedValue({ user: OWNER, error: null });
+    mockCreateClient.mockRejectedValue(new Error('database unavailable'));
+
+    const response = await GET(makeGetRequest());
+
+    expect(mockApiErrorResponse).toHaveBeenCalledWith(
+      'Failed to load campaigns',
+      500,
+      'GET /api/campaigns',
+      expect.any(Error),
+    );
+    expect(response.status).toBe(500);
+    await expect(readJson(response)).resolves.toEqual({ error: 'Failed to load campaigns' });
+  });
+
+  it('returns full Campaign payloads with invite code for the owner', async () => {
+    const row = makeCampaignRow('camp-1', OWNER.uid);
+    mockGetSession.mockResolvedValue({ user: OWNER, error: null });
+    mockCreateClient.mockResolvedValue(
+      createMockSupabase({
+        memberCampaignIds: [],
+        ownedCampaignIds: ['camp-1'],
+        campaigns: [row],
+        membersByCampaign: { 'camp-1': [OWNER.uid] },
+      }) as never,
+    );
+
+    const response = await GET(makeGetRequest('?full=true'));
+
+    expect(response.status).toBe(200);
+    const body =
+      await readJson<Array<{ id: string; inviteCode: string; memberIds: string[] }>>(response);
+    expect(body).toHaveLength(1);
+    expect(body[0]?.inviteCode).toBe('SECRET-CODE');
+    expect(body[0]?.memberIds).toEqual([OWNER.uid]);
+  });
+
+  it('returns full Campaign payloads with an empty invite code for a member', async () => {
+    const row = makeCampaignRow('camp-shared', OWNER.uid);
+    mockGetSession.mockResolvedValue({ user: MEMBER, error: null });
+    mockCreateClient.mockResolvedValue(
+      createMockSupabase({
+        memberCampaignIds: ['camp-shared'],
+        ownedCampaignIds: [],
+        campaigns: [row],
+        membersByCampaign: { 'camp-shared': [OWNER.uid, MEMBER.uid] },
+      }) as never,
+    );
+
+    const response = await GET(makeGetRequest('?full=true'));
+
+    expect(response.status).toBe(200);
+    const body = await readJson<Array<{ id: string; inviteCode: string }>>(response);
+    expect(body[0]?.inviteCode).toBe('');
   });
 });

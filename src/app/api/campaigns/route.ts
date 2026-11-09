@@ -6,6 +6,7 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
+import { apiErrorResponse } from '@/lib/api-error';
 import { createClient } from '@/lib/supabase/server';
 import { getSession } from '@/lib/supabase/session';
 import { buildRateLimitKey, resolveClientIp, standardLimiter } from '@/lib/rate-limit';
@@ -106,7 +107,6 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json(summaries);
   } catch (err) {
-    console.error('[API Error] GET /api/campaigns:', err);
-    return NextResponse.json({ error: 'Failed to load campaigns' }, { status: 500 });
+    return apiErrorResponse('Failed to load campaigns', 500, 'GET /api/campaigns', err);
   }
 }
