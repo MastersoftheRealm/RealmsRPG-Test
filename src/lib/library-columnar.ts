@@ -103,6 +103,19 @@ function v(row: Record<string, unknown>, camel: string, snake?: string): unknown
   return row[camel] ?? (snake ? row[snake] : undefined);
 }
 
+/** Promoted `damage` column wins when non-empty; empty column does not wipe payload damage. */
+function assignPromotedDamageColumn(
+  base: Record<string, unknown>,
+  damageCol: unknown,
+  payloadDamage: unknown,
+): void {
+  const damageIsNonEmptyArray = Array.isArray(damageCol) && damageCol.length > 0;
+  const payloadDamageIsArray = Array.isArray(payloadDamage) && payloadDamage.length > 0;
+  if (damageIsNonEmptyArray || (!payloadDamageIsArray && Array.isArray(damageCol))) {
+    base.damage = damageCol;
+  }
+}
+
 function assignImageScalars(base: Record<string, unknown>, row: Record<string, unknown>): void {
   const imageId = v(row, 'imageId', 'image_id');
   if (imageId !== undefined && imageId !== null) base.imageId = imageId;
@@ -179,7 +192,7 @@ export function rowToItem(
         type: areaType ?? payArea?.type,
         level: areaLevel ?? payArea?.level,
       };
-    if (damageCol != null && Array.isArray(damageCol)) base.damage = damageCol;
+    assignPromotedDamageColumn(base, damageCol, payload.damage);
     assignImageScalars(base, row);
   }
   if (type === 'techniques' || type === 'empowered-techniques') {
@@ -218,7 +231,7 @@ export function rowToItem(
         value: durationValue ?? payDuration?.value,
       };
     }
-    if (damageCol != null && Array.isArray(damageCol)) base.damage = damageCol;
+    assignPromotedDamageColumn(base, damageCol, payload.damage);
     assignImageScalars(base, row);
   }
   if (type === 'items') {
@@ -263,12 +276,7 @@ export function rowToItem(
     }
 
     // damage/properties: only override payload when the column array is non-empty.
-    const damageIsNonEmptyArray = Array.isArray(damageCol) && damageCol.length > 0;
-    const payloadDamageIsArray = Array.isArray(payloadDamage) && payloadDamage.length > 0;
-    if (damageIsNonEmptyArray || (!payloadDamageIsArray && Array.isArray(damageCol))) {
-      // If payload has no damage, allow empty column to be authoritative.
-      base.damage = damageCol;
-    }
+    assignPromotedDamageColumn(base, damageCol, payloadDamage);
 
     const propsIsNonEmptyArray = Array.isArray(propertiesCol) && propertiesCol.length > 0;
     const payloadPropsIsArray = Array.isArray(payloadProps) && payloadProps.length > 0;
