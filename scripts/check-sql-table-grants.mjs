@@ -106,19 +106,23 @@ export function sqlCodeWithoutCommentsAndLiterals(sql) {
     }
 
     if (c === '"') {
-      out += '"';
+      let decoded = '';
       i += 1;
       while (i < n) {
         if (sql[i] === '"' && sql[i + 1] === '"') {
-          out += '""';
+          decoded += '"';
           i += 2;
           continue;
         }
         const ch = sql[i];
-        out += ch;
+        if (ch === '"') {
+          i += 1;
+          break;
+        }
+        decoded += ch;
         i += 1;
-        if (ch === '"') break;
       }
+      out += decodedToIdentifierToken(decoded);
       continue;
     }
 
@@ -142,6 +146,19 @@ export function sqlCodeWithoutCommentsAndLiterals(sql) {
   }
 
   return out;
+}
+
+/**
+ * Double-quoted identifiers become one unquoted token (decoded name) so bodies
+ * cannot spoof RLS, POLICY, or GRANT statements.
+ * @param {string} decoded
+ */
+function decodedToIdentifierToken(decoded) {
+  const name = decoded.replace(/""/g, '"');
+  if (/^[a-z_][a-z0-9_]*$/i.test(name)) {
+    return name.toLowerCase();
+  }
+  return '__quoted_identifier__';
 }
 
 /** @param {string} name */
@@ -168,7 +185,7 @@ function tableReferencePattern(schema, tableName) {
  */
 export function extractCreateTableTargets(code) {
   const re =
-    /\bcreate\s+table(?!\s+as\b)(?:\s+if\s+not\s+exists)?\s+(?:"([^"]+)"\s*\.\s*"([^"]+)"|(?:(public)|([a-z_][a-z0-9_]*))\s*\.\s*(?:"([^"]+)"|([a-z_][a-z0-9_]*))|(?:"([^"]+)"|([a-z_][a-z0-9_]*)))/gi;
+    /\bcreate\s+(?:unlogged\s+)?table(?!\s+as\b)(?:\s+if\s+not\s+exists)?\s+(?:"([^"]+)"\s*\.\s*"([^"]+)"|(?:(public)|([a-z_][a-z0-9_]*))\s*\.\s*(?:"([^"]+)"|([a-z_][a-z0-9_]*))|(?:"([^"]+)"|([a-z_][a-z0-9_]*)))/gi;
   /** @type {{ schema: string, name: string }[]} */
   const targets = [];
   let match;
@@ -192,7 +209,8 @@ export function extractCreateTableTargets(code) {
 
 /** @param {string} grantOn */
 function parseGrantOnTable(grantOn) {
-  const normalized = grantOn.replace(/\s+/g, ' ').trim().toLowerCase();
+  let normalized = grantOn.replace(/\s+/g, ' ').trim().toLowerCase();
+  normalized = normalized.replace(/^table\s+/, '');
   const quotedPair = normalized.match(/^"([^"]+)"\s*\.\s*"([^"]+)"$/);
   if (quotedPair) {
     return { schema: quotedPair[1].toLowerCase(), name: quotedPair[2].toLowerCase() };
@@ -223,16 +241,19 @@ function parseGrantOnTable(grantOn) {
 function parseGrantPrivileges(privilegeList) {
   const privs = new Set();
   const lower = privilegeList.replace(/\s+/g, ' ').trim().toLowerCase();
-  if (
-    /\ball\s+privileges\b/.test(lower) ||
-    /\bgrant\s+all\b/.test(lower) ||
-    /\ball\b/.test(lower)
-  ) {
+  if (/^(all privileges|all)$/.test(lower)) {
     for (const p of REQUIRED_PRIVILEGES) privs.add(p);
     return privs;
   }
-  for (const p of REQUIRED_PRIVILEGES) {
-    if (new RegExp(`\\b${p}\\b`).test(lower)) privs.add(p);
+  for (const piece of lower.split(',')) {
+    let part = piece.trim();
+    if (!part) continue;
+    const paren = part.indexOf('(');
+    if (paren !== -1) part = part.slice(0, paren).trim();
+    if (!part) continue;
+    for (const p of REQUIRED_PRIVILEGES) {
+      if (new RegExp(`\\b${p}\\b`).test(part)) privs.add(p);
+    }
   }
   return privs;
 }
@@ -295,7 +316,10 @@ function hasEnableRls(code, schema, tableName) {
  */
 function hasCreatePolicy(code, schema, tableName) {
   const ref = tableReferencePattern(schema, tableName);
-  return new RegExp(`\\bcreate\\s+policy\\b[\\s\\S]*?\\bon\\s+${ref}(?=\\s|;|$)`, 'i').test(code);
+  const policyName = `(?:"[^"]+"|[a-z_][a-z0-9_]*)`;
+  return new RegExp(`\\bcreate\\s+policy\\s+${policyName}\\s+on\\s+${ref}(?=\\s|;|$)`, 'i').test(
+    code,
+  );
 }
 
 /**
