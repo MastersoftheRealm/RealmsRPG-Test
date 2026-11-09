@@ -94,4 +94,12 @@ describe('creator empty overwrite guard', () => {
   it('uses approved confirm copy', () => {
     expect(creatorEmptyOverwriteDescription('technique')).toContain('overwrite');
   });
+
+  it('does not flag species saves for hollow content', () => {
+    expect(
+      creatorPayloadWouldHollowExistingRow('species', {
+        description: '',
+      }),
+    ).toBe(false);
+  });
 });

@@ -480,6 +480,7 @@ export function useCreatureCreatorWorkspace() {
     stats: { isOverBudget },
     load,
     editCreatureId,
+    clearSessionDraftCache,
     isAdmin,
     powerPartsDb,
     techniquePartsDb,

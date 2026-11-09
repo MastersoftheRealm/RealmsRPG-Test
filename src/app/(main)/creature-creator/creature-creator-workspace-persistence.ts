@@ -19,6 +19,7 @@ import {
   toggleCreaturePowerInnateByRowKey,
 } from '@/lib/game/creature-power-instances';
 import type { CreatureState } from './creature-creator-types';
+import { initialState as creatureCreatorInitialState } from './creature-creator-constants';
 import { rawRecordToCreatureState } from './creature-skill-utils';
 import type { CreatureArmament } from './transformers';
 import {
@@ -42,6 +43,7 @@ type UseCreatureCreatorWorkspacePersistenceArgs = {
     rawItems: unknown[];
   };
   editCreatureId: string | null;
+  clearSessionDraftCache: () => void;
   isAdmin: boolean;
   powerPartsDb: SyncPartDb;
   techniquePartsDb: SyncPartDb;
@@ -54,6 +56,7 @@ export function useCreatureCreatorWorkspacePersistence({
   stats,
   load,
   editCreatureId,
+  clearSessionDraftCache,
   isAdmin,
   powerPartsDb,
   techniquePartsDb,
@@ -97,6 +100,11 @@ export function useCreatureCreatorWorkspacePersistence({
       { canSaveToOfficial: isAdmin },
     ),
     editingId: editCreatureId,
+    onSaveSuccess: () => {
+      setCreature(creatureCreatorInitialState);
+      clearSessionDraftCache();
+      acceptDraft();
+    },
     onSaveCommitted: () => {
       commitCreatorEditClearAfterSave(editCreatureId, clearEditQuery, acceptDraft);
     },

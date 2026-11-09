@@ -295,14 +295,12 @@ export function useCreatorSave(options: UseCreatorSaveOptions): UseCreatorSaveRe
           }
           setSaveMessage({ type: 'success', text: successMessage });
         }
+        if (!asCopy && onSaveSuccess) {
+          forgetLoadedLibraryItem();
+          onSaveSuccess();
+        }
         setTimeout(() => {
           setSaveMessage(null);
-          if (!asCopy) {
-            if (onSaveSuccess) {
-              forgetLoadedLibraryItem();
-              onSaveSuccess();
-            }
-          }
         }, 2000);
         onSaveCommitted?.();
         setSaveSyncBlocked(false);
