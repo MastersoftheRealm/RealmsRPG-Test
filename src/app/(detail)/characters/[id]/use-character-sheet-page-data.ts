@@ -43,6 +43,7 @@ import {
   characterSaveWithoutOverlongName,
 } from '@/lib/character/character-name-limit';
 import {
+  applySheetAutosaveConflictFields,
   characterLockToken,
   mergeRemotePreservingDirty,
   pickDirtyCharacterFields,
@@ -392,16 +393,12 @@ export function useCharacterSheetPageData(id: string) {
           savedCleanRef.current = remoteClean;
           setCharacter((prev) => {
             if (!prev || prev.id !== remote.id) return prev;
-            const next: Record<string, unknown> = {
-              ...prev,
-              ...remote,
-              updatedAt: remote.updatedAt,
-            };
-            for (const key of Object.keys(dirty)) {
-              if (dirty[key] === null) delete next[key];
-              else if (key in mergedClean) next[key] = mergedClean[key];
-            }
-            return next as Character;
+            return applySheetAutosaveConflictFields(
+              prev as unknown as Record<string, unknown>,
+              remote as unknown as Record<string, unknown>,
+              mergedClean,
+              dirty,
+            ) as Character;
           });
           return {
             dirty: pickDirtyCharacterFields(mergedClean, remoteClean) as Partial<Character>,

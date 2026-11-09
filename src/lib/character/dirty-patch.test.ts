@@ -4,6 +4,7 @@ import { prepareCharacterForSave } from '@/lib/character-save';
 import { cleanForSave } from '@/lib/data-enrichment/clean-for-save';
 import {
   applyCharacterDirtyPatch,
+  applySheetAutosaveConflictFields,
   characterLockToken,
   characterTimestampsMatch,
   isStaleCharacterWrite,
@@ -197,7 +198,7 @@ describe('applyCharacterDirtyPatch / mergeRemotePreservingDirty', () => {
   });
 
   it('does not queue a follow-up save that drops the other tab quantity after 409 merge', () => {
-    const baseline = {
+    const savedBaseline = {
       equipment: {
         items: [
           { id: 'bed-roll', name: 'Bed Roll', quantity: 1 },
@@ -221,16 +222,28 @@ describe('applyCharacterDirtyPatch / mergeRemotePreservingDirty', () => {
         ],
       },
     };
+    const dirty = pickDirtyCharacterFields(localClean, savedBaseline);
+    const dirtyKeys = Object.keys(dirty);
     const mergedClean = mergeRemotePreservingDirty(
       remoteClean,
       localClean,
-      ['equipment'],
-      baseline,
+      dirtyKeys,
+      savedBaseline,
     );
-    const sheetWithLocalBlob = { ...remoteClean, equipment: localClean.equipment };
+    const sheetWithLocalBlob = applySheetAutosaveConflictFields(
+      remoteClean,
+      remoteClean,
+      localClean,
+      dirty,
+    );
     expect(pickDirtyCharacterFields(sheetWithLocalBlob, mergedClean).equipment).toBeDefined();
-    const sheetWithMerge = { ...remoteClean, equipment: mergedClean.equipment };
-    expect(pickDirtyCharacterFields(sheetWithMerge, mergedClean)).not.toHaveProperty('equipment');
+    const sheetAfter409 = applySheetAutosaveConflictFields(
+      remoteClean,
+      remoteClean,
+      mergedClean,
+      dirty,
+    );
+    expect(pickDirtyCharacterFields(sheetAfter409, mergedClean)).not.toHaveProperty('equipment');
   });
 
   it('deletes a stored key when the patch value is null', () => {

@@ -3,6 +3,8 @@
  * Leaf module: no UI, store, or API imports.
  */
 
+import { matchesSheetEquipmentItem } from '@/lib/character/sheet-equipment-match';
+
 export function characterLockToken(value: string | Date | null | undefined): string | undefined {
   if (value == null) return undefined;
   if (typeof value === 'string' && value.trim()) return value;
@@ -127,21 +129,7 @@ const EQUIPMENT_ITEM_BUCKETS = [
   'inventory',
 ] as const;
 
-function sheetEquipmentRowsMatch(
-  row: Record<string, unknown>,
-  itemId: string | number,
-  rowIndex: number,
-): boolean {
-  const idStr = String(itemId);
-  const rowId = row.id;
-  return (
-    rowId === itemId ||
-    String(rowId) === idStr ||
-    row.name === idStr ||
-    (typeof row.name === 'string' && row.name.toLowerCase() === idStr.toLowerCase()) ||
-    (typeof itemId === 'number' && rowIndex === itemId)
-  );
-}
+type SheetEquipmentRow = { id?: string | number | undefined; name?: string | undefined };
 
 function sheetEquipmentRowAnchorId(row: Record<string, unknown>, index: number): string | number {
   const { id, name } = row;
@@ -159,7 +147,7 @@ function findSheetEquipmentRow(
   const itemId = sheetEquipmentRowAnchorId(anchor, anchorIndex);
   for (let idx = 0; idx < rows.length; idx++) {
     const row = rows[idx];
-    if (row && sheetEquipmentRowsMatch(row, itemId, idx)) return row;
+    if (row && matchesSheetEquipmentItem(row as SheetEquipmentRow, itemId, idx)) return row;
   }
   return undefined;
 }
@@ -181,25 +169,37 @@ function mergeEquipmentItemBucket(
     const localIdx = local.findIndex(
       (row, idx) =>
         !usedLocal.has(idx) &&
-        sheetEquipmentRowsMatch(row, sheetEquipmentRowAnchorId(remoteRow, rIdx), rIdx),
+        matchesSheetEquipmentItem(
+          row as SheetEquipmentRow,
+          sheetEquipmentRowAnchorId(remoteRow, rIdx),
+          rIdx,
+        ),
     );
     const localRow = localIdx >= 0 ? local[localIdx] : undefined;
     if (localIdx >= 0) usedLocal.add(localIdx);
 
-    const localDirty =
-      localRow !== undefined &&
-      (baselineRow === undefined
-        ? !stableEqual(localRow, remoteRow)
-        : !stableEqual(localRow, baselineRow));
+    if (localIdx < 0) {
+      if (!baselineRow) merged.push(remoteRow);
+      continue;
+    }
 
-    merged.push(localDirty ? localRow : remoteRow);
+    const localDirty =
+      baselineRow === undefined
+        ? !stableEqual(localRow, remoteRow)
+        : !stableEqual(localRow!, baselineRow);
+
+    merged.push(localDirty ? localRow! : remoteRow);
   }
 
   for (let lIdx = 0; lIdx < local.length; lIdx++) {
     if (usedLocal.has(lIdx)) continue;
     const localRow = local[lIdx]!;
     const onRemote = remote.some((row, rIdx) =>
-      sheetEquipmentRowsMatch(row, sheetEquipmentRowAnchorId(localRow, lIdx), rIdx),
+      matchesSheetEquipmentItem(
+        row as SheetEquipmentRow,
+        sheetEquipmentRowAnchorId(localRow, lIdx),
+        rIdx,
+      ),
     );
     if (onRemote) continue;
     const baselineRow = findSheetEquipmentRow(baseline, localRow, lIdx);
@@ -247,6 +247,158 @@ function mergeCharacterEquipmentConflict(
     if (localDirty) merged[key] = localRow;
   }
   return merged;
+}
+
+function equipmentBucketLocallyTouched(
+  savedRow: Record<string, unknown> | undefined,
+  localRow: Record<string, unknown> | undefined,
+): boolean {
+  if (savedRow && !localRow) return true;
+  if (!localRow) return false;
+  if (!savedRow) return true;
+  return !stableEqual(localRow, savedRow);
+}
+
+function mergeEquipmentBucketAutosaveBaseline(
+  nextList: unknown,
+  savedList: unknown,
+  localList: unknown,
+): unknown {
+  const next = Array.isArray(nextList) ? (nextList as Record<string, unknown>[]) : [];
+  const saved = Array.isArray(savedList) ? (savedList as Record<string, unknown>[]) : [];
+  const local = Array.isArray(localList) ? (localList as Record<string, unknown>[]) : [];
+  const merged: Record<string, unknown>[] = [];
+
+  const emitAnchor = (
+    savedRow: Record<string, unknown> | undefined,
+    localRow: Record<string, unknown> | undefined,
+    nextRow: Record<string, unknown> | undefined,
+  ) => {
+    if (equipmentBucketLocallyTouched(savedRow, localRow)) {
+      if (savedRow && !localRow) return;
+      if (savedRow) merged.push(savedRow);
+      else if (localRow) merged.push(localRow);
+      return;
+    }
+    if (nextRow) merged.push(nextRow);
+    else if (savedRow) merged.push(savedRow);
+  };
+
+  for (let nIdx = 0; nIdx < next.length; nIdx++) {
+    const nextRow = next[nIdx]!;
+    const savedRow = findSheetEquipmentRow(saved, nextRow, nIdx);
+    const localRow = findSheetEquipmentRow(local, nextRow, nIdx);
+    emitAnchor(savedRow, localRow, nextRow);
+  }
+
+  for (let sIdx = 0; sIdx < saved.length; sIdx++) {
+    const savedRow = saved[sIdx]!;
+    const inNext = next.some((row, nIdx) =>
+      matchesSheetEquipmentItem(
+        row as SheetEquipmentRow,
+        sheetEquipmentRowAnchorId(savedRow, sIdx),
+        nIdx,
+      ),
+    );
+    if (inNext) continue;
+    const localRow = findSheetEquipmentRow(local, savedRow, sIdx);
+    if (equipmentBucketLocallyTouched(savedRow, localRow)) continue;
+    merged.push(savedRow);
+  }
+
+  for (let lIdx = 0; lIdx < local.length; lIdx++) {
+    const localRow = local[lIdx]!;
+    const inNext = next.some((row, nIdx) =>
+      matchesSheetEquipmentItem(
+        row as SheetEquipmentRow,
+        sheetEquipmentRowAnchorId(localRow, lIdx),
+        nIdx,
+      ),
+    );
+    if (inNext) continue;
+    if (!findSheetEquipmentRow(saved, localRow, lIdx)) merged.push(localRow);
+  }
+
+  return merged;
+}
+
+function mergeEquipmentAutosaveBaseline(
+  nextEquipment: unknown,
+  savedEquipment: unknown,
+  localEquipmentBeforeRemote: unknown,
+): unknown {
+  const next =
+    nextEquipment && typeof nextEquipment === 'object'
+      ? (nextEquipment as Record<string, unknown>)
+      : {};
+  const saved =
+    savedEquipment && typeof savedEquipment === 'object'
+      ? (savedEquipment as Record<string, unknown>)
+      : {};
+  const local =
+    localEquipmentBeforeRemote && typeof localEquipmentBeforeRemote === 'object'
+      ? (localEquipmentBeforeRemote as Record<string, unknown>)
+      : {};
+  const keys = new Set([...Object.keys(next), ...Object.keys(saved), ...Object.keys(local)]);
+  const merged: Record<string, unknown> = { ...saved, ...next };
+  for (const key of keys) {
+    if ((EQUIPMENT_ITEM_BUCKETS as readonly string[]).includes(key)) {
+      merged[key] = mergeEquipmentBucketAutosaveBaseline(next[key], saved[key], local[key]);
+      continue;
+    }
+    const savedRow = saved[key];
+    const localRow = local[key];
+    const localDirty =
+      savedRow === undefined
+        ? localRow !== undefined && !stableEqual(localRow, next[key])
+        : !stableEqual(localRow, savedRow);
+    if (localDirty && savedRow !== undefined) merged[key] = savedRow;
+    else if (next[key] !== undefined) merged[key] = next[key];
+  }
+  return merged;
+}
+
+/** After a 409 retry, write merged dirty keys onto the open sheet (not the pre-merge blob). */
+export function applySheetAutosaveConflictFields<T extends Record<string, unknown>>(
+  prev: T,
+  remote: T,
+  mergedClean: T,
+  dirty: Record<string, unknown>,
+): T {
+  const next: Record<string, unknown> = { ...prev, ...remote };
+  for (const key of Object.keys(dirty)) {
+    if (dirty[key] === null) delete next[key];
+    else if (key in mergedClean) next[key] = mergedClean[key];
+  }
+  return next as T;
+}
+
+/**
+ * Autosave baseline after realtime overlay: dirty non-equipment keys revert to
+ * the saved snapshot; equipment rows stay dirty until PATCHed (per row).
+ */
+export function mergeSheetAutosaveBaseline<T extends Record<string, unknown>>(
+  nextClean: T,
+  savedBaseline: T,
+  dirtyKeys: readonly string[],
+  localCleanBeforeRemote: T,
+): T {
+  const next: Record<string, unknown> = { ...nextClean };
+  for (const key of dirtyKeys) {
+    if (isCharacterPatchMetaKey(key)) continue;
+    if (key === 'equipment') {
+      next[key] = mergeEquipmentAutosaveBaseline(
+        nextClean[key],
+        savedBaseline[key],
+        localCleanBeforeRemote[key],
+      );
+      continue;
+    }
+    if (!(key in savedBaseline)) continue;
+    if (savedBaseline[key] === null) delete next[key];
+    else next[key] = savedBaseline[key];
+  }
+  return next as T;
 }
 
 /**
