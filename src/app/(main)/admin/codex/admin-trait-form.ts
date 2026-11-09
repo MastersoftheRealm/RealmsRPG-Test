@@ -54,3 +54,24 @@ export function traitFormToSavePayload(form: TraitFormState): Record<string, unk
     sources: codexSourcesOrCore(form.sources),
   };
 }
+
+/** Merge the just-saved trait form back into the admin traits list cache slice. */
+export function traitFormToAdminListPatch(
+  id: string,
+  form: TraitFormState,
+  updatedAt?: string | undefined,
+): Record<string, unknown> {
+  const payload = traitFormToSavePayload(form);
+  return {
+    id,
+    name: payload.name,
+    description: payload.description,
+    uses_per_rec: payload.uses_per_rec,
+    rec_period: payload.rec_period,
+    flaw: payload.flaw,
+    characteristic: payload.characteristic,
+    option_trait_ids: payload.option_trait_ids ?? [],
+    sources: payload.sources,
+    ...(updatedAt ? { updated_at: updatedAt } : {}),
+  };
+}
