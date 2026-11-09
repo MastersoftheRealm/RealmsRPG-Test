@@ -26,6 +26,11 @@ import { GET, POST } from './route';
 import { getSession } from '@/lib/supabase/session';
 import { createClient, createServiceRoleClient } from '@/lib/supabase/server';
 import { standardLimiter } from '@/lib/rate-limit';
+import { CREATOR_NAME_MAX_LENGTH } from '@/lib/creator/creator-text-limits';
+import {
+  CAMPAIGN_ROLL_TITLE_MAX_LENGTH,
+  formatRandomizeRollTitle,
+} from '@/lib/rolls/campaign-roll-limits';
 
 const mockGetSession = vi.mocked(getSession);
 const mockCreateClient = vi.mocked(createClient);
@@ -242,6 +247,69 @@ describe('POST /api/campaigns/[id]/rolls', () => {
       error: 'You can only roll for your own character in this campaign.',
     });
     expect(supabase.insert).not.toHaveBeenCalled();
+  });
+
+  it('returns 400 when Randomize roll title exceeds the API limit', async () => {
+    mockGetSession.mockResolvedValue({ user: MEMBER, error: null });
+    const supabase = createRollsSupabase({
+      campaign: { id: 'camp-1', owner_id: OWNER.uid, characters: MEMBER_ROSTER },
+      memberUserIds: [MEMBER.uid],
+    });
+    mockCreateClient.mockResolvedValue(supabase as never);
+
+    const overlong = `${'x'.repeat(CREATOR_NAME_MAX_LENGTH)}: 1d100 → ${'y'.repeat(CREATOR_NAME_MAX_LENGTH)}z`;
+    expect(overlong.length).toBeGreaterThan(CAMPAIGN_ROLL_TITLE_MAX_LENGTH);
+
+    const response = await POST(
+      makePostRequest('camp-1', {
+        characterId: 'char-member',
+        characterName: 'Member Hero',
+        roll: {
+          type: 'custom',
+          title: overlong,
+          dice: [{ type: 'd100', value: 42 }],
+        },
+      }),
+      params('camp-1'),
+    );
+
+    expect(response.status).toBe(400);
+    expect(supabase.insert).not.toHaveBeenCalled();
+  });
+
+  it('saves a Randomize roll whose title was clamped for an oversize variant label', async () => {
+    mockGetSession.mockResolvedValue({ user: MEMBER, error: null });
+    const supabase = createRollsSupabase({
+      campaign: { id: 'camp-1', owner_id: OWNER.uid, characters: MEMBER_ROSTER },
+      memberUserIds: [MEMBER.uid],
+    });
+    mockCreateClient.mockResolvedValue(supabase as never);
+
+    const title = formatRandomizeRollTitle(
+      'x'.repeat(CREATOR_NAME_MAX_LENGTH),
+      100,
+      'y'.repeat(CREATOR_NAME_MAX_LENGTH + 40),
+    );
+    expect(title.length).toBeLessThanOrEqual(CAMPAIGN_ROLL_TITLE_MAX_LENGTH);
+
+    const response = await POST(
+      makePostRequest('camp-1', {
+        characterId: 'char-member',
+        characterName: 'Member Hero',
+        roll: {
+          type: 'custom',
+          title,
+          dice: [{ type: 'd100', value: 12 }],
+        },
+      }),
+      params('camp-1'),
+    );
+
+    expect(response.status).toBe(200);
+    expect(supabase.insert).toHaveBeenCalled();
+    const saved = supabase.insert.mock.calls[0]?.[0] as { data: { title: string } };
+    expect(saved.data.title).toBe(title);
+    expect(saved.data.title.length).toBeLessThanOrEqual(CAMPAIGN_ROLL_TITLE_MAX_LENGTH);
   });
 
   it('saves a roll attributed to the member own roster character', async () => {

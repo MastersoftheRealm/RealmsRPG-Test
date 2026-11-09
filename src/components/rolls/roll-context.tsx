@@ -10,7 +10,7 @@
 import React, { createContext, useContext, useCallback, useState, useEffect } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import { useToast } from '@/components/ui';
-import { isApiError } from '@/lib/api-client';
+import { getErrorMessage, isApiError } from '@/lib/api-client';
 import { AUTH_RATE_LIMIT_MESSAGE } from '@/lib/auth-errors';
 import { rollDie, generateRollId, DIE_MAX, type DieType } from '@/lib/rolls/die';
 import { resolveRollModifierLabel } from '@/lib/rolls/modifier-label';
@@ -173,7 +173,12 @@ export function RollProvider({
             .catch((err) => {
               if (isApiError(err) && err.status === 429) {
                 showToast(AUTH_RATE_LIMIT_MESSAGE, 'warning');
+                return;
               }
+              showToast(
+                getErrorMessage(err, 'Could not save this roll to the campaign log.'),
+                'error',
+              );
             });
         });
       }
