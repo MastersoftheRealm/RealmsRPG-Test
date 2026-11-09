@@ -500,25 +500,15 @@ describe('POST /api/characters', () => {
     expect(response.status).toBe(200);
     await expect(readJson(response)).resolves.toEqual({ id: 'created-char-id' });
     expect(mockEnsureUserProfile).toHaveBeenCalled();
-    expect(supabase.headQuotaSelectCalls).toBe(0);
+    expect(supabase.headQuotaSelectCalls).toBe(1);
   });
 
   it('returns 403 when the user is at the character quota', async () => {
     const policy = getDefaultRolePolicy('new_player');
     mockGetSession.mockResolvedValue({ user: TEST_USER, error: null });
+    mockGetRolePolicyForUser.mockResolvedValue(policy);
     mockCreateClient.mockResolvedValue(
-      createMockSupabase({
-        insertError: {
-          code: 'P0001',
-          message: 'ROLE_QUOTA_EXCEEDED',
-          details: JSON.stringify({
-            resource: 'characters',
-            role: policy.role,
-            currentCount: policy.maxCharacters,
-            maxAllowed: policy.maxCharacters,
-          }),
-        },
-      }) as never,
+      createMockSupabase({ characterCount: policy.maxCharacters }) as never,
     );
 
     const response = await POST(makePostRequest({ name: 'One Too Many' }));

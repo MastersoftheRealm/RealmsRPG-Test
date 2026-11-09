@@ -66,6 +66,79 @@ $fn$;
 REVOKE ALL ON FUNCTION public.role_policy_limits_for_role(public."UserRole")
   FROM PUBLIC, anon, authenticated, service_role;
 
+CREATE OR REPLACE FUNCTION public.lock_user_profile_for_writes(p_user_id text)
+RETURNS void
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = pg_catalog, public AS $fn$
+BEGIN
+  IF nullif(p_user_id, '') IS NULL THEN
+    RAISE EXCEPTION 'User id is required' USING ERRCODE = '22023';
+  END IF;
+  PERFORM id
+  FROM public.user_profiles
+  WHERE id = p_user_id
+  FOR UPDATE;
+  IF NOT FOUND THEN
+    RAISE EXCEPTION 'User profile not found' USING ERRCODE = 'P0002';
+  END IF;
+END;
+$fn$;
+
+REVOKE ALL ON FUNCTION public.lock_user_profile_for_writes(text)
+  FROM PUBLIC, anon, authenticated, service_role;
+
+CREATE OR REPLACE FUNCTION public.insert_table_row_from_jsonb_keys(
+  p_target regclass,
+  p_row jsonb
+)
+RETURNS void
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = pg_catalog, public AS $fn$
+DECLARE
+  v_cols text[] := '{}';
+  v_selects text[] := '{}';
+  v_col record;
+  v_sql text;
+BEGIN
+  IF jsonb_typeof(p_row) IS DISTINCT FROM 'object' THEN
+    RAISE EXCEPTION 'Row payload must be a JSON object' USING ERRCODE = '22023';
+  END IF;
+
+  FOR v_col IN
+    SELECT a.attname AS column_name, format_type(a.atttypid, a.atttypmod) AS data_type
+    FROM pg_attribute a
+    WHERE a.attrelid = p_target
+      AND a.attnum > 0
+      AND NOT a.attisdropped
+  LOOP
+    IF p_row ? v_col.column_name THEN
+      v_cols := array_append(v_cols, quote_ident(v_col.column_name));
+      v_selects := array_append(
+        v_selects,
+        format('($1->%L)::%s', v_col.column_name, v_col.data_type)
+      );
+    END IF;
+  END LOOP;
+
+  IF coalesce(array_length(v_cols, 1), 0) < 1 THEN
+    RAISE EXCEPTION 'Row payload has no insertable columns' USING ERRCODE = '22023';
+  END IF;
+
+  v_sql := format(
+    'INSERT INTO %s (%s) SELECT %s',
+    p_target,
+    array_to_string(v_cols, ', '),
+    array_to_string(v_selects, ', ')
+  );
+  EXECUTE v_sql USING p_row;
+END;
+$fn$;
+
+REVOKE ALL ON FUNCTION public.insert_table_row_from_jsonb_keys(regclass, jsonb)
+  FROM PUBLIC, anon, authenticated, service_role;
+
 CREATE OR REPLACE FUNCTION public.assert_account_create_quota(
   p_user_id text,
   p_resource text
@@ -75,7 +148,7 @@ LANGUAGE plpgsql
 SECURITY DEFINER
 SET search_path = pg_catalog, public AS $fn$
 DECLARE
-  v_profile public.user_profiles%ROWTYPE;
+  v_role public."UserRole";
   v_limits record;
   v_count integer;
   v_max integer;
@@ -84,15 +157,14 @@ BEGIN
     RAISE EXCEPTION 'User id is required' USING ERRCODE = '22023';
   END IF;
 
-  SELECT * INTO v_profile
+  SELECT role INTO v_role
   FROM public.user_profiles
-  WHERE id = p_user_id
-  FOR UPDATE;
+  WHERE id = p_user_id;
   IF NOT FOUND THEN
     RAISE EXCEPTION 'User profile not found' USING ERRCODE = 'P0002';
   END IF;
 
-  SELECT * INTO v_limits FROM public.role_policy_limits_for_role(v_profile.role) LIMIT 1;
+  SELECT * INTO v_limits FROM public.role_policy_limits_for_role(v_role) LIMIT 1;
 
   CASE p_resource
     WHEN 'characters' THEN
@@ -133,7 +205,7 @@ BEGIN
       MESSAGE = 'ROLE_QUOTA_EXCEEDED',
       DETAIL = json_build_object(
         'resource', p_resource,
-        'role', v_profile.role::text,
+        'role', v_role::text,
         'currentCount', v_count,
         'maxAllowed', v_max
       )::text;
@@ -161,6 +233,8 @@ BEGIN
     RAISE EXCEPTION 'Authentication required' USING ERRCODE = '42501';
   END IF;
   PERFORM public.assert_character_document_mapped(p_document);
+
+  PERFORM public.lock_user_profile_for_writes(v_owner_id);
 
   IF p_client_request_id IS NOT NULL THEN
     SELECT id INTO v_existing_id FROM public.characters
@@ -226,30 +300,28 @@ BEGIN
     RAISE EXCEPTION 'Row id is required' USING ERRCODE = '22023';
   END IF;
 
+  PERFORM public.lock_user_profile_for_writes(v_owner_id);
+
   CASE p_library_kind
     WHEN 'powers' THEN
       PERFORM public.assert_account_create_quota(v_owner_id, 'custom_powers');
-      INSERT INTO public.user_powers
-      SELECT * FROM jsonb_populate_record(null::public.user_powers, p_row);
+      PERFORM public.insert_table_row_from_jsonb_keys('public.user_powers'::regclass, p_row);
     WHEN 'techniques' THEN
       PERFORM public.assert_account_create_quota(v_owner_id, 'custom_techniques');
-      INSERT INTO public.user_techniques
-      SELECT * FROM jsonb_populate_record(null::public.user_techniques, p_row);
+      PERFORM public.insert_table_row_from_jsonb_keys('public.user_techniques'::regclass, p_row);
     WHEN 'empowered-techniques' THEN
       PERFORM public.assert_account_create_quota(v_owner_id, 'custom_techniques');
-      INSERT INTO public.user_empowered_techniques
-      SELECT * FROM jsonb_populate_record(null::public.user_empowered_techniques, p_row);
+      PERFORM public.insert_table_row_from_jsonb_keys(
+        'public.user_empowered_techniques'::regclass, p_row
+      );
     WHEN 'items' THEN
       PERFORM public.assert_account_create_quota(v_owner_id, 'custom_armaments');
-      INSERT INTO public.user_items
-      SELECT * FROM jsonb_populate_record(null::public.user_items, p_row);
+      PERFORM public.insert_table_row_from_jsonb_keys('public.user_items'::regclass, p_row);
     WHEN 'creatures' THEN
       PERFORM public.assert_account_create_quota(v_owner_id, 'custom_creatures');
-      INSERT INTO public.user_creatures
-      SELECT * FROM jsonb_populate_record(null::public.user_creatures, p_row);
+      PERFORM public.insert_table_row_from_jsonb_keys('public.user_creatures'::regclass, p_row);
     WHEN 'species' THEN
-      INSERT INTO public.user_species
-      SELECT * FROM jsonb_populate_record(null::public.user_species, p_row);
+      PERFORM public.insert_table_row_from_jsonb_keys('public.user_species'::regclass, p_row);
     ELSE
       RAISE EXCEPTION 'Unknown library kind %', p_library_kind USING ERRCODE = '22023';
   END CASE;

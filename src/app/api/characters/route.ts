@@ -9,7 +9,11 @@ import { createClient } from '@/lib/supabase/server';
 import type { TypedSupabaseClient } from '@/lib/supabase/database';
 import { getSession } from '@/lib/supabase/session';
 import { ensureUserProfile } from '@/lib/ensure-user-profile';
-import { parseRoleQuotaExceededDbError } from '@/lib/role-quota-messages';
+import { getRolePolicyForUser } from '@/lib/role-policy';
+import {
+  buildRoleQuotaExceededResponse,
+  parseRoleQuotaExceededDbError,
+} from '@/lib/role-quota-messages';
 import { validateJson, characterCreateSchema } from '@/lib/api-validation';
 import { prepareCharacterForCreate } from '@/lib/character-save';
 import {
@@ -32,6 +36,30 @@ import { GUIDED_CREATOR_COPY } from '@/lib/constants/site-copy';
 import type { Character, CharacterSummary } from '@/types';
 
 /** The character this user already created with this idempotency key, if any. */
+async function characterQuotaBlockedResponse(
+  supabase: TypedSupabaseClient,
+  userId: string,
+): Promise<NextResponse | null> {
+  const rolePolicy = await getRolePolicyForUser(userId, supabase);
+  const { count: characterCount, error: countError } = await supabase
+    .from('characters')
+    .select('id', { count: 'exact', head: true })
+    .eq('user_id', userId);
+  if (countError) throw countError;
+  if ((characterCount ?? 0) >= rolePolicy.maxCharacters) {
+    return NextResponse.json(
+      buildRoleQuotaExceededResponse({
+        role: rolePolicy.role,
+        resource: 'characters',
+        currentCount: characterCount ?? 0,
+        maxAllowed: rolePolicy.maxCharacters,
+      }),
+      { status: 403 },
+    );
+  }
+  return null;
+}
+
 async function findCharacterByRequestId(
   supabase: TypedSupabaseClient,
   userId: string,
@@ -199,6 +227,9 @@ export async function POST(request: NextRequest) {
 
       await ensureUserProfile(supabase, user.uid);
 
+      const quotaBlocked = await characterQuotaBlockedResponse(supabase, user.uid);
+      if (quotaBlocked) return quotaBlocked;
+
       const legality = await evaluateCharacterLegalityForSave(
         supabase,
         newData as CharacterLegalityCandidate,
@@ -230,6 +261,9 @@ export async function POST(request: NextRequest) {
     const newId = crypto.randomUUID();
 
     await ensureUserProfile(supabase, user.uid);
+
+    const quotaBlocked = await characterQuotaBlockedResponse(supabase, user.uid);
+    if (quotaBlocked) return quotaBlocked;
 
     let inserted;
     try {
