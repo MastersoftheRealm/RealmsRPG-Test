@@ -14,7 +14,23 @@ import {
 import { useCreatorSave } from './use-creator-save';
 import { useAddOfficialToLibrary } from './use-official-library';
 
-const uid = 'user-1';
+const libraryMocks = vi.hoisted(() => {
+  const uid = 'user-1';
+  const saveToLibrary = vi.fn(
+    async (_type: string, _data: unknown, options?: { existingId?: string }) =>
+      options?.existingId ?? 'pow-1',
+  );
+  const findLibraryItemsByName = vi.fn(async () => [] as Array<{ id: string }>);
+  const addOfficialItemToLibrary = vi.fn(async () => undefined);
+  const apiFetch = vi.fn(async (_url: string, init?: { method?: string }) => {
+    if (init?.method === 'DELETE') return;
+    if (init?.method === 'POST') return { id: 'pow-copy' };
+    return [];
+  });
+  return { uid, saveToLibrary, findLibraryItemsByName, addOfficialItemToLibrary, apiFetch };
+});
+const { uid, saveToLibrary, findLibraryItemsByName, addOfficialItemToLibrary, apiFetch } =
+  libraryMocks;
 
 vi.mock('@/components/ui', () => ({
   useToast: () => ({ showToast: vi.fn() }),
@@ -25,35 +41,22 @@ vi.mock('@/hooks/use-admin', () => ({
 }));
 
 vi.mock('@/stores/auth-store', () => ({
-  useAuthStore: () => ({ user: { uid } }),
+  useAuthStore: () => ({ user: { uid: libraryMocks.uid } }),
 }));
-
-const saveToLibrary = vi.fn(
-  async (_type: string, _data: unknown, options?: { existingId?: string }) =>
-    options?.existingId ?? 'pow-1',
-);
-const findLibraryItemsByName = vi.fn(async () => [] as Array<{ id: string }>);
-const addOfficialItemToLibrary = vi.fn(async () => undefined);
 
 vi.mock('@/services/library-service', () => ({
-  saveToLibrary,
+  saveToLibrary: libraryMocks.saveToLibrary,
   saveToOfficialLibrary: vi.fn(),
-  findLibraryItemsByName,
+  findLibraryItemsByName: libraryMocks.findLibraryItemsByName,
   findOfficialLibraryItemByName: vi.fn(),
-  addOfficialItemToLibrary,
+  addOfficialItemToLibrary: libraryMocks.addOfficialItemToLibrary,
 }));
-
-const apiFetch = vi.fn(async (url: string, init?: { method?: string }) => {
-  if (init?.method === 'DELETE') return;
-  if (init?.method === 'POST') return { id: 'pow-copy' };
-  return [];
-});
 
 vi.mock('@/lib/api-client', async (importOriginal) => {
   const actual = await importOriginal<typeof import('@/lib/api-client')>();
   return {
     ...actual,
-    apiFetch: (...args: Parameters<typeof apiFetch>) => apiFetch(...args),
+    apiFetch: libraryMocks.apiFetch,
   };
 });
 
