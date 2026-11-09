@@ -1,12 +1,8 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { NextRequest } from 'next/server';
 
-vi.mock('@/lib/supabase/session', () => ({
-  getSession: vi.fn(),
-}));
-
 vi.mock('@/lib/admin', () => ({
-  isAdmin: vi.fn(),
+  requireAdminSession: vi.fn(),
 }));
 
 vi.mock('@/lib/supabase/server', () => ({
@@ -14,15 +10,11 @@ vi.mock('@/lib/supabase/server', () => ({
 }));
 
 import { GET } from './route';
-import { getSession } from '@/lib/supabase/session';
-import { isAdmin } from '@/lib/admin';
+import { requireAdminSession } from '@/lib/admin';
 import { createServiceRoleClient } from '@/lib/supabase/server';
 
-const mockGetSession = vi.mocked(getSession);
-const mockIsAdmin = vi.mocked(isAdmin);
+const mockRequireAdminSession = vi.mocked(requireAdminSession);
 const mockCreateServiceRoleClient = vi.mocked(createServiceRoleClient);
-
-const USER = { uid: 'user-123', email: 'hero@example.com' };
 
 function makeGetRequest(id: string) {
   return new NextRequest(`http://localhost/api/images/${id}/usage`);
@@ -38,7 +30,11 @@ describe('GET /api/images/[id]/usage', () => {
   });
 
   it('returns 401 when session is missing', async () => {
-    mockGetSession.mockResolvedValue({ user: null, error: 'No session' });
+    mockRequireAdminSession.mockResolvedValue({
+      ok: false,
+      status: 401,
+      body: { error: 'Unauthorized' },
+    });
 
     const response = await GET(makeGetRequest('img-1'), {
       params: Promise.resolve({ id: 'img-1' }),
@@ -50,15 +46,18 @@ describe('GET /api/images/[id]/usage', () => {
   });
 
   it('returns 403 when the user is authenticated but not admin', async () => {
-    mockGetSession.mockResolvedValue({ user: USER, error: null });
-    mockIsAdmin.mockResolvedValue(false);
+    mockRequireAdminSession.mockResolvedValue({
+      ok: false,
+      status: 403,
+      body: { error: 'Forbidden' },
+    });
 
     const response = await GET(makeGetRequest('img-1'), {
       params: Promise.resolve({ id: 'img-1' }),
     });
 
     expect(response.status).toBe(403);
-    await expect(readJson(response)).resolves.toEqual({ error: 'Admin access required' });
+    await expect(readJson(response)).resolves.toEqual({ error: 'Forbidden' });
     expect(mockCreateServiceRoleClient).not.toHaveBeenCalled();
   });
 });

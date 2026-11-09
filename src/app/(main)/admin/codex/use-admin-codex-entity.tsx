@@ -40,6 +40,7 @@ export function useAdminCodexEntity<TEntity extends AdminCodexNamedEntity>(optio
     expectedUpdatedAt?: string | undefined;
     editId?: string | null | undefined;
     closeOnSuccess?: boolean | undefined;
+    savedListPatch?: Record<string, unknown> | undefined;
     onSuccess?:
       | ((result: { success: true; id?: string | undefined }) => void | Promise<void>)
       | undefined;
@@ -106,6 +107,7 @@ export function useAdminCodexEntity<TEntity extends AdminCodexNamedEntity>(optio
       expectedUpdatedAt?: string | undefined;
       editId?: string | null | undefined;
       closeOnSuccess?: boolean | undefined;
+      savedListPatch?: Record<string, unknown> | undefined;
       onSuccess?:
         | ((result: { success: true; id?: string | undefined }) => void | Promise<void>)
         | undefined;
@@ -131,6 +133,13 @@ export function useAdminCodexEntity<TEntity extends AdminCodexNamedEntity>(optio
       }
       await args.onSuccess?.({ success: true, id: savedId ?? undefined });
       await refreshCodex();
+      if (savedId && args.savedListPatch) {
+        const savedUpdatedAt = 'updatedAt' in result ? result.updatedAt : undefined;
+        patchAdminCodexCollectionRow(queryClient, collection, savedId, {
+          ...args.savedListPatch,
+          ...(savedUpdatedAt ? { updated_at: savedUpdatedAt } : {}),
+        });
+      }
       if (args.closeOnSuccess !== false) closeModal();
       return true;
     },

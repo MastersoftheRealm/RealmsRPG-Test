@@ -17,6 +17,7 @@ vi.mock('@/lib/supabase/server', () => ({
 
 vi.mock('@/lib/admin', () => ({
   isAdmin: vi.fn(),
+  requireLiveAdminSession: vi.fn(),
 }));
 
 vi.mock('@/lib/rate-limit', async (importOriginal) => {
@@ -60,16 +61,15 @@ import {
   PATCH as patchUserLibraryItem,
   DELETE as deleteUserLibraryItem,
 } from '@/app/api/user/library/[type]/[id]/route';
-import { getSession, requireLiveUser } from '@/lib/supabase/session';
-import { isAdmin } from '@/lib/admin';
+import { getSession } from '@/lib/supabase/session';
+import { requireLiveAdminSession } from '@/lib/admin';
 import { createClient, createServiceRoleClient } from '@/lib/supabase/server';
 import { createPublicClient } from '@/lib/supabase/public-client';
 import { standardLimiter } from '@/lib/rate-limit';
 import { allocateCodexNumericId } from '@/lib/codex/id-allocation';
 
 const mockGetSession = vi.mocked(getSession);
-const mockRequireLiveUser = vi.mocked(requireLiveUser);
-const mockIsAdmin = vi.mocked(isAdmin);
+const mockRequireLiveAdminSession = vi.mocked(requireLiveAdminSession);
 const mockCreateClient = vi.mocked(createClient);
 const mockCreateServiceRoleClient = vi.mocked(createServiceRoleClient);
 const mockCreatePublicClient = vi.mocked(createPublicClient);
@@ -159,6 +159,7 @@ type MockListSelectResult = { data: unknown[]; error: null };
 
 type UserLibraryMockClient = {
   from: ReturnType<typeof vi.fn>;
+  rpc: ReturnType<typeof vi.fn>;
   inserts: string[];
 };
 
@@ -170,6 +171,34 @@ const USER_LIBRARY_TABLES = new Set([
   'user_creatures',
   'user_species',
 ]);
+
+const USER_LIBRARY_KIND_TO_TABLE: Record<string, string> = {
+  powers: 'user_powers',
+  techniques: 'user_techniques',
+  'empowered-techniques': 'user_empowered_techniques',
+  items: 'user_items',
+  creatures: 'user_creatures',
+  species: 'user_species',
+};
+
+function makeLibraryQuotaInsertRpc(handlers: {
+  onInsert: (table: string, row: Record<string, unknown>) => void;
+}) {
+  return vi.fn(async (name: string, args: Record<string, unknown>) => {
+    if (name !== 'insert_user_library_row_with_quota') {
+      return { data: null, error: { message: `Unexpected RPC: ${name}` } };
+    }
+    const kind = String(args.p_library_kind);
+    const table = USER_LIBRARY_KIND_TO_TABLE[kind];
+    if (!table) {
+      return { data: null, error: { message: `Unexpected library kind: ${kind}` } };
+    }
+    const row = args.p_row as Record<string, unknown>;
+    handlers.onInsert(table, row);
+    const id = typeof row.id === 'string' ? row.id : String(row.id ?? 'generated-id');
+    return { data: { id }, error: null };
+  });
+}
 
 function makeEqThenChain<T extends MockCountSelectResult | MockListSelectResult>(result: T) {
   const filters = {
@@ -220,7 +249,12 @@ function userLibraryCreateClient(): UserLibraryMockClient {
       }),
     };
   });
-  return { from, inserts };
+  const rpc = makeLibraryQuotaInsertRpc({
+    onInsert: (table) => {
+      inserts.push(table);
+    },
+  });
+  return { from, rpc, inserts };
 }
 
 function createUserLibraryRoundTripClient(): {
@@ -274,8 +308,15 @@ function createUserLibraryRoundTripClient(): {
     };
   });
 
+  const rpc = makeLibraryQuotaInsertRpc({
+    onInsert: (table, row) => {
+      listedRow = { ...row };
+      inserts.push(table);
+    },
+  });
+
   return {
-    client: { from, inserts },
+    client: { from, rpc, inserts },
     getListedRow: () => listedRow,
   };
 }
@@ -405,8 +446,7 @@ describe('B7 matrix — official mutations', () => {
         single: vi.fn(async () => ({ data: { id: 'new' }, error: null })),
       })),
     }));
-    mockRequireLiveUser.mockResolvedValue(OWNER);
-    mockIsAdmin.mockResolvedValue(true);
+    mockRequireLiveAdminSession.mockResolvedValue({ ok: true, userId: OWNER.uid });
     mockCreateServiceRoleClient.mockReturnValue({
       from: vi.fn(() => ({
         insert: officialInsert,
@@ -615,8 +655,7 @@ describe('B7 matrix — official mutations', () => {
 describe('B7 matrix — official POST (legacy case)', () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    mockRequireLiveUser.mockResolvedValue(OWNER);
-    mockIsAdmin.mockResolvedValue(true);
+    mockRequireLiveAdminSession.mockResolvedValue({ ok: true, userId: OWNER.uid });
     mockCreateServiceRoleClient.mockReturnValue({
       from: vi.fn(() => ({
         insert: vi.fn(),

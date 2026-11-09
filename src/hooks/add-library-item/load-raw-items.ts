@@ -24,7 +24,6 @@ export interface RawItemsInput {
     description?: string | undefined;
     damage?: unknown | undefined;
     armor_value?: number | undefined;
-    properties?: string[] | undefined;
     type?: string | undefined;
   }>;
   publicPowers: LibraryPower[];
@@ -137,7 +136,6 @@ export function loadRawItemsForType(input: RawItemsInput): {
             description: String(e.description ?? ''),
             damage: e.damage,
             armorValue: e.armor_value,
-            properties: e.properties ?? [],
             _source: 'public',
           }),
         ),

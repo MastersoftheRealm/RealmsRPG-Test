@@ -17,7 +17,7 @@ import {
   useRole,
 } from '@floating-ui/react';
 import { cloneElement, isValidElement, useCallback, useId, useRef, useState } from 'react';
-import type { PointerEvent, ReactElement, ReactNode } from 'react';
+import type { MouseEvent, PointerEvent, ReactElement, ReactNode } from 'react';
 import { Info } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { FloatingHelpPanel, useFloatingHelpPopover } from '@/lib/tooltips/floating-help';
@@ -124,6 +124,10 @@ export function InfoTippy({
 
   const { getReferenceProps, getFloatingProps } = useInteractions([hover, focus, dismiss, role]);
 
+  const childOnClick = isValidElement(children)
+    ? (children.props as { onClick?: (event: MouseEvent<Element>) => void }).onClick
+    : undefined;
+
   const touchHoldProps = {
     'aria-describedby': open ? tooltipId : undefined,
     onPointerDown(event: PointerEvent) {
@@ -141,7 +145,12 @@ export function InfoTippy({
       setBlockHover(false);
       clearTouchHold();
     },
-    onClick() {
+    onClick(event: MouseEvent<Element>) {
+      if (childOnClick) {
+        childOnClick(event);
+        if (event.defaultPrevented) return;
+        return;
+      }
       if (suppressClickToggleRef.current) {
         suppressClickToggleRef.current = false;
         return;

@@ -15,9 +15,14 @@ import { createClient } from '@/lib/supabase/client';
 
 import { registerSchema, type RegisterFormData } from '@/lib/validation';
 import { getAuthErrorMessage } from '@/lib/auth-errors';
-import { sanitizeRedirectPath } from '@/lib/safe-redirect';
 import { createUserProfileAction } from '@/app/(auth)/actions';
 import { resendConfirmationAction, signUpAction } from '@/app/(auth)/auth-actions';
+import {
+  clearLoginRedirectSession,
+  resendAuthSignupConfirmation,
+  resolvePostAuthRedirectPath,
+  signInWithGoogleOAuth,
+} from '@/lib/auth/auth-page-client';
 import {
   AuthCard,
   AuthGoogleTermsNotice,
@@ -49,12 +54,11 @@ function RegisterContent() {
     resetCaptcha,
   } = useAuthCaptcha();
 
-  const getRedirectPath = () => {
-    const urlRedirect = searchParams.get('redirect') ?? searchParams.get('returnTo');
-    const sessionRedirect =
-      typeof window !== 'undefined' ? sessionStorage.getItem('loginRedirect') : null;
-    return sanitizeRedirectPath(urlRedirect || sessionRedirect || '/');
-  };
+  const getRedirectPath = () =>
+    resolvePostAuthRedirectPath(
+      searchParams,
+      typeof window !== 'undefined' ? sessionStorage : null,
+    );
 
   const {
     register,
@@ -102,7 +106,7 @@ function RegisterContent() {
         displayName: undefined,
       });
 
-      sessionStorage.removeItem('loginRedirect');
+      clearLoginRedirectSession(typeof window !== 'undefined' ? sessionStorage : null);
       router.push(redirectPath);
     } catch (err) {
       resetCaptcha();
@@ -121,8 +125,11 @@ function RegisterContent() {
     setResendStatus('sending');
     setError(null);
     try {
-      const redirectPath = getRedirectPath();
-      const result = await resendConfirmationAction(email, redirectPath);
+      const result = await resendAuthSignupConfirmation(
+        resendConfirmationAction,
+        email,
+        getRedirectPath(),
+      );
       if (!result.success) {
         setResendStatus('idle');
         setError(result.error);
@@ -142,16 +149,8 @@ function RegisterContent() {
     try {
       const redirectPath = getRedirectPath();
       const supabase = createClient();
-      const { data, error: err } = await supabase.auth.signInWithOAuth({
-        provider: 'google',
-        options: {
-          redirectTo: `${window.location.origin}/auth/callback?next=${encodeURIComponent(redirectPath)}`,
-        },
-      });
-      if (err) throw err;
-      if (data?.url) {
-        window.location.href = data.url;
-      }
+      const url = await signInWithGoogleOAuth(supabase, window.location.origin, redirectPath);
+      window.location.href = url;
     } catch (err: unknown) {
       console.error('Google sign-in error:', err);
       setError(getAuthErrorMessage(err, 'register'));
@@ -198,7 +197,7 @@ function RegisterContent() {
             </Button>
 
             <Link
-              href={`/login?redirect=${encodeURIComponent(getRedirectPath())}`}
+              href={`/login?returnTo=${encodeURIComponent(getRedirectPath())}`}
               className="inline-block font-medium text-primary-link-fg transition-colors hover:text-primary-fg-hover"
             >
               Back to Sign In

@@ -22,6 +22,7 @@ import { AdminCodexRowActions, ADMIN_CODEX_ROW_ACTIONS_WIDTH } from './admin-cod
 import { COPY_NAME_SUFFIX } from './admin-codex-copy-suffix';
 import {
   EMPTY_TRAIT_FORM,
+  traitFormToAdminListPatch,
   traitFormToSavePayload,
   traitToFormState,
   type TraitFormState,
@@ -132,9 +133,11 @@ export function AdminTraitsTab() {
 
   const handleSave = async () => {
     if (!form.name.trim()) return;
+    const editId = editing?.id;
     await save({
       payload: traitFormToSavePayload(form),
       expectedUpdatedAt: editing?.updated_at,
+      savedListPatch: editId ? traitFormToAdminListPatch(editId, form) : undefined,
     });
   };
 

@@ -34,9 +34,15 @@ if (!email || !password) {
   process.exit(1);
 }
 
-const admin = createClient(supabaseUrl, serviceKey, {
-  auth: { autoRefreshToken: false, persistSession: false },
-});
+/** @type {import('@supabase/supabase-js').SupabaseClient | null} */
+let admin = null;
+
+function getAdmin() {
+  if (!admin) {
+    throw new Error('Supabase admin client not initialized');
+  }
+  return admin;
+}
 
 const DEFAULT_ABILITIES = {
   strength: 0,
@@ -50,7 +56,7 @@ const DEFAULT_ABILITIES = {
 async function findUserIdByEmail(targetEmail) {
   let page = 1;
   while (page <= 20) {
-    const { data, error } = await admin.auth.admin.listUsers({ page, perPage: 200 });
+    const { data, error } = await getAdmin().auth.admin.listUsers({ page, perPage: 200 });
     if (error) throw error;
     const hit = data.users.find((u) => u.email?.toLowerCase() === targetEmail.toLowerCase());
     if (hit) return hit.id;
@@ -63,7 +69,7 @@ async function findUserIdByEmail(targetEmail) {
 async function ensureUserId() {
   let userId = await findUserIdByEmail(email);
   if (userId) {
-    const { error } = await admin.auth.admin.updateUserById(userId, {
+    const { error } = await getAdmin().auth.admin.updateUserById(userId, {
       password,
       email_confirm: true,
     });
@@ -72,7 +78,7 @@ async function ensureUserId() {
     return userId;
   }
 
-  const { data, error } = await admin.auth.admin.createUser({
+  const { data, error } = await getAdmin().auth.admin.createUser({
     email,
     password,
     email_confirm: true,
@@ -96,10 +102,12 @@ async function ensureProfile(userId) {
     updated_at: now,
   };
 
-  const { error: upsertErr } = await admin.from('user_profiles').upsert(row, { onConflict: 'id' });
+  const { error: upsertErr } = await getAdmin()
+    .from('user_profiles')
+    .upsert(row, { onConflict: 'id' });
   if (upsertErr) throw upsertErr;
 
-  const { error: usernameErr } = await admin
+  const { error: usernameErr } = await getAdmin()
     .from('usernames')
     .upsert({ username: manifest.profileUsername, user_id: userId }, { onConflict: 'username' });
   if (usernameErr) throw usernameErr;
@@ -124,7 +132,7 @@ async function ensureCharacter(userId) {
     updatedAt: createdAt,
   };
 
-  const { error } = await admin.rpc('provision_character_relational', {
+  const { error } = await getAdmin().rpc('provision_character_relational', {
     p_character_id: manifest.characterId,
     p_owner_id: userId,
     p_document: data,
@@ -154,10 +162,10 @@ async function ensureCampaign(userId) {
     updated_at: createdAt,
   };
 
-  const { error } = await admin.from('campaigns').upsert(row, { onConflict: 'id' });
+  const { error } = await getAdmin().from('campaigns').upsert(row, { onConflict: 'id' });
   if (error) throw error;
 
-  const { error: memberErr } = await admin
+  const { error: memberErr } = await getAdmin()
     .from('campaign_members')
     .upsert(
       { campaign_id: manifest.campaignId, user_id: userId },
@@ -170,6 +178,17 @@ async function ensureCampaign(userId) {
 }
 
 async function main() {
+  const { getE2eProvisionSupabaseUrlRejection } = await import('./lib/supabase-production-url.mjs');
+  const rejection = getE2eProvisionSupabaseUrlRejection(supabaseUrl);
+  if (rejection) {
+    console.error(rejection.message);
+    process.exit(rejection.exitCode);
+  }
+
+  admin = createClient(supabaseUrl, serviceKey, {
+    auth: { autoRefreshToken: false, persistSession: false },
+  });
+
   const userId = await ensureUserId();
   await ensureProfile(userId);
   await ensureCharacter(userId);

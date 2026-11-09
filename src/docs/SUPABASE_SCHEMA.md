@@ -372,6 +372,8 @@ CREATE POLICY "Admin can delete official enhanced items" ON public.official_enha
 
 Stores role-level quotas and permission flags used by campaign, character, library, and profile feature gating. This is the source for admin-editable role limits in the app.
 
+**Atomic quota enforcement (live migration `sql/role-quota-atomic.sql`):** `lock_user_profile_for_writes` takes `FOR UPDATE` on the caller's `user_profiles` row. `assert_account_create_quota` (requires that lock) reads caps from `role_policies` (static fallbacks when a row is missing), counts the target table, and raises `P0001` / `ROLE_QUOTA_EXCEEDED` with JSON `DETAIL` when the cap is reached. `create_character_relational` locks first, re-reads idempotent `client_request_id`, asserts quota, then inserts; `insert_user_library_row_with_quota` uses `insert_table_row_from_jsonb_keys`, which inserts only JSON-present columns but reads values from `jsonb_populate_record` so timestamps, UUIDs, and text coerce correctly while omitted columns keep table defaults. Until the migration is applied, `POST /api/characters` still performs the legacy head count in the route. Library kinds map to quota resources: powers → `custom_powers`; techniques and empowered-techniques → combined `custom_techniques`; items → `custom_armaments`; creatures → `custom_creatures`; species is unchecked (unchanged).
+
 **Migration:** (was `sql/supabase-role-policies.sql`, deleted 2026-10-29)
 
 ---

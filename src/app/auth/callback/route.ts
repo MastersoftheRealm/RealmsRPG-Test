@@ -7,6 +7,7 @@
  */
 
 import { createServerClient } from '@supabase/ssr';
+import { createSupabaseAuthCookieMethods } from '@/lib/supabase/supabase-auth-cookies';
 import { cookies } from 'next/headers';
 import { NextResponse } from 'next/server';
 import { createUserProfileAction } from '@/app/(auth)/actions';
@@ -62,17 +63,18 @@ export async function GET(request: Request) {
   const response = NextResponse.redirect(buildAuthRedirectUrl(request, redirectTo));
 
   const supabase = createServerClient(supabaseUrl, supabaseKey, {
-    cookies: {
-      getAll() {
-        return cookieStore.getAll();
-      },
-      setAll(cookiesToSet) {
-        cookiesToSet.forEach(({ name, value, options }) => {
+    cookies: createSupabaseAuthCookieMethods({
+      getAll: () => cookieStore.getAll(),
+      set: (name, value, options) => {
+        if (options === undefined) {
+          cookieStore.set(name, value);
+          response.cookies.set(name, value);
+        } else {
           cookieStore.set(name, value, options);
           response.cookies.set(name, value, options);
-        });
+        }
       },
-    },
+    }),
   });
 
   const { data, error } = await supabase.auth.exchangeCodeForSession(code);

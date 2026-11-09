@@ -6,8 +6,7 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { requireLiveUser } from '@/lib/supabase/session';
-import { isAdmin } from '@/lib/admin';
+import { requireLiveAdminSession } from '@/lib/admin';
 import { createClient, createServiceRoleClient } from '@/lib/supabase/server';
 import { REALMS_IMAGES_BUCKET, parseRealmsImageCategories } from '@/lib/realms-images';
 import { apiErrorResponse, logApiError } from '@/lib/api-error';
@@ -49,14 +48,9 @@ export async function GET(_request: NextRequest, context: RouteContext) {
 }
 
 export async function PATCH(request: NextRequest, context: RouteContext) {
-  let user;
-  try {
-    user = await requireLiveUser();
-  } catch {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-  }
-  if (!(await isAdmin(user.uid))) {
-    return NextResponse.json({ error: 'Admin access required' }, { status: 403 });
+  const auth = await requireLiveAdminSession();
+  if (!auth.ok) {
+    return NextResponse.json(auth.body, { status: auth.status });
   }
 
   const denied = verifyMutationRequest(request, { requireJsonBody: true });
@@ -123,14 +117,9 @@ export async function PATCH(request: NextRequest, context: RouteContext) {
 }
 
 export async function DELETE(_request: NextRequest, context: RouteContext) {
-  let user;
-  try {
-    user = await requireLiveUser();
-  } catch {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-  }
-  if (!(await isAdmin(user.uid))) {
-    return NextResponse.json({ error: 'Admin access required' }, { status: 403 });
+  const auth = await requireLiveAdminSession();
+  if (!auth.ok) {
+    return NextResponse.json(auth.body, { status: auth.status });
   }
 
   const denied = verifyMutationRequest(_request);

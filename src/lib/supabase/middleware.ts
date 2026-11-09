@@ -11,7 +11,12 @@ import {
   hasSupabaseAuthSessionCookie,
   isNextLinkPrefetchRequest,
 } from '@/lib/supabase/auth-cookies';
+import {
+  applyPendingCookiesToResponse,
+  createAccumulatingSupabaseCookieStore,
+} from '@/lib/supabase/supabase-auth-cookies';
 import { getVerifiedClaims } from '@/lib/supabase/verified-claims';
+import { buildLoginRedirectUrl, sanitizeRedirectPath } from '@/lib/safe-redirect';
 
 function isOAuthCallbackInProgress(request: NextRequest): boolean {
   return request.nextUrl.searchParams.has('code');
@@ -40,10 +45,9 @@ export function isHardProtectedPath(pathname: string): boolean {
 }
 
 function redirectSignedOutFromProtectedPage(request: NextRequest): NextResponse {
-  const loginUrl = request.nextUrl.clone();
-  loginUrl.pathname = '/login';
-  loginUrl.search = '';
-  loginUrl.searchParams.set('returnTo', request.nextUrl.pathname + request.nextUrl.search);
+  const returnPath = sanitizeRedirectPath(request.nextUrl.pathname + request.nextUrl.search);
+  const loginPath = buildLoginRedirectUrl(returnPath);
+  const loginUrl = new URL(loginPath, request.url);
   return NextResponse.redirect(loginUrl);
 }
 
@@ -80,21 +84,13 @@ export async function updateSession(request: NextRequest) {
     return NextResponse.next({ request });
   }
 
-  let supabaseResponse = NextResponse.next({ request });
+  const { methods: cookieMethods, pending: pendingCookies } = createAccumulatingSupabaseCookieStore(
+    () => request.cookies.getAll(),
+    (name, value) => request.cookies.set(name, value),
+  );
 
   const supabase = createServerClient(supabaseUrl, supabaseKey, {
-    cookies: {
-      getAll() {
-        return request.cookies.getAll();
-      },
-      setAll(cookiesToSet) {
-        cookiesToSet.forEach(({ name, value }) => request.cookies.set(name, value));
-        supabaseResponse = NextResponse.next({ request });
-        cookiesToSet.forEach(({ name, value, options }) =>
-          supabaseResponse.cookies.set(name, value, options),
-        );
-      },
-    },
+    cookies: cookieMethods,
   });
 
   let userId: string | null = null;
@@ -126,5 +122,5 @@ export async function updateSession(request: NextRequest) {
     return redirectSignedOutFromProtectedPage(request);
   }
 
-  return supabaseResponse;
+  return applyPendingCookiesToResponse(NextResponse.next({ request }), pendingCookies);
 }

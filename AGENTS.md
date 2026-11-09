@@ -1,6 +1,6 @@
 # RealmsRPG — Agent Instructions
 
-Next.js, React, Tailwind, Supabase, Vercel. No Prisma. Game runner = **RM** (Realm Master), never "GM". Repo `MastersoftheRealm/RealmsRPG-Test`, branch **`master`**. Never push `master`. Never merge.
+Next.js, React, Tailwind, Supabase, Vercel. No Prisma. Game runner = **RM** (Realm Master), never "GM". Repo `MastersoftheRealm/RealmsRPG-Test`, branch **`master`**. Never push `master`. Coding agents do not merge; humans merge-commit only; the **Bug and Audit Fixes** project bot may squash-merge when reviewed and CI is green — not under holds (Kadin explicit OK items, high-risk, auth/session/cookie/CAPTCHA, unapplied SQL/schema; see `.cursor/rules/realms-tasks.mdc`).
 
 This file is already in the prompt. Do not re-read it. Kickoffs point at the workflow. Do not paste the playbook.
 

@@ -3,10 +3,9 @@ import { NextRequest } from 'next/server';
 
 import {
   chunkInvokesMutationGuard,
-  isApiMutationMethod,
-  rejectCrossOriginApiMutation,
   stripCommentsAndStringLiterals,
-} from './api-mutation-guard';
+} from './api-mutation-guard-route-scan';
+import { isApiMutationMethod, rejectCrossOriginApiMutation } from './api-mutation-guard';
 import { verifyRequestOrigin } from './api-validation';
 
 function apiRequest(path: string, method: string, headers: Record<string, string>): NextRequest {

@@ -9,6 +9,11 @@ import { buildContentSecurityPolicy } from './src/lib/security/content-security-
 const nextConfig: NextConfig = {
   poweredByHeader: NEXT_APP_POWERED_BY_HEADER,
   pageExtensions: ['ts', 'tsx', 'js', 'jsx', 'mdx'],
+  // Rulebook search reads chapter MDX with fs at runtime (`rulebook-search-load.ts`).
+  outputFileTracingIncludes: {
+    '/rules': ['./src/content/rules/**/*.mdx'],
+    '/rules/[slug]': ['./src/content/rules/**/*.mdx'],
+  },
   // Allow character portraits (and profile pictures) from Supabase Storage public URLs
   images: {
     remotePatterns: [

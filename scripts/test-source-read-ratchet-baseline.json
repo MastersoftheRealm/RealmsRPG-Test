@@ -36,7 +36,6 @@
     "src/app/(main)/item-creator/item-creator-save-reset.test.ts": 1,
     "src/app/(main)/item-creator/item-creator-type-param.test.ts": 4,
     "src/app/(main)/list-tab-mobile-labels.test.ts": 2,
-    "src/app/(main)/my-account/_components/email-change-live-user.test.ts": 1,
     "src/app/(main)/my-account/_components/profile-picture-upload.test.tsx": 1,
     "src/app/(main)/power-creator/power-creator-part-actions.test.ts": 2,
     "src/app/(main)/species-creator/species-creator-batch-11.test.ts": 3,
@@ -64,7 +63,6 @@
     "src/components/character-sheet/attack-bonus-header.test.ts": 1,
     "src/components/character-sheet/currency-field-commit.test.ts": 2,
     "src/components/character-sheet/edit-species-species-filter.test.ts": 1,
-    "src/components/character-sheet/feats-tab-trait-ids.test.ts": 2,
     "src/components/character-sheet/level-up-modal.test.ts": 1,
     "src/components/character-sheet/library-section-tabs.test.tsx": 1,
     "src/components/character-sheet/library-section-visibility.test.ts": 2,
@@ -112,13 +110,13 @@
     "src/components/ui/table-scroll.test.ts": 2,
     "src/docs/game-rules-map-86e3pmgnw.test.ts": 2,
     "src/hooks/use-load-modal-library-species-copy.test.ts": 1,
-    "src/lib/api-mutation-routes.test.ts": 4,
+    "src/lib/api-mutation-routes.test.ts": 5,
     "src/lib/calculators/power-energy-breakdown.test.ts": 2,
     "src/lib/codex/admin-source-list.test.ts": 4,
     "src/lib/codex/sources.test.ts": 1,
     "src/lib/creator/creator-unsaved-guard.test.ts": 8,
     "src/lib/glr/validate-glr-chrome-spacing.test.ts": 1,
     "src/lib/no-visible-placeholder-prefix.test.ts": 1,
-    "src/lib/server/assert-resource-http-access.test.ts": 4
+    "src/lib/rolls/roll-crit-single-source.test.ts": 1
   }
 }

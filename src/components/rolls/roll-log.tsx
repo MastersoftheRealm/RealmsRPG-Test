@@ -23,11 +23,13 @@ import { formatRollTimestamp } from '@/lib/roll-timestamp';
 import {
   DIE_IMAGES,
   DIE_MAX,
-  d20CritAdjustment,
+  computeRollOutcome,
   ROLL_LOG_BUILDER_DICE_PER_TYPE_MAX,
   generateRollId,
   rollDie,
   ROLL_LOG_BUILDER_DICE,
+  ROLL_LOG_CUSTOM_POOL_OUTCOME_KIND,
+  ROLL_LOG_CUSTOM_POOL_TITLE,
   type DieType,
   type RollLogBuilderDieType,
 } from '@/lib/rolls/die';
@@ -192,7 +194,6 @@ export function RollLog({ className, viewOnlyCampaignId }: RollLogProps) {
   // Execute roll
   const executeRoll = () => {
     const diceResults: DieResult[] = [];
-    let total = 0;
 
     // Roll each die in pool
     Object.entries(dicePool).forEach(([type, count]) => {
@@ -206,39 +207,30 @@ export function RollLog({ className, viewOnlyCampaignId }: RollLogProps) {
           isMax: value === max,
           isMin: value === 1,
         });
-        total += value;
       }
     });
 
     if (diceResults.length === 0) return;
 
-    total += modifier;
-
-    // Nat 20 / nat 1 ±2 only for a single d20, not a mixed or multi-die pool.
-    const crit = d20CritAdjustment(diceResults);
-    total += crit.adjustment;
-    const { isCrit, isCritFail } = crit;
-    const critMessage = isCrit
-      ? 'Natural 20! +2 to the total!'
-      : isCritFail
-        ? 'Natural 1! -2 from the total!'
-        : undefined;
+    const diceInput = diceResults.map(({ type, value }) => ({ type, value }));
+    const outcome = computeRollOutcome(diceInput, modifier, ROLL_LOG_CUSTOM_POOL_OUTCOME_KIND);
 
     const newRoll: RollEntry = {
       id: generateRollId(),
       type: 'custom',
-      title: 'Custom Roll',
+      title: ROLL_LOG_CUSTOM_POOL_TITLE,
+      outcomeKind: ROLL_LOG_CUSTOM_POOL_OUTCOME_KIND,
       dice: diceResults,
       modifier,
       modifierLabel: resolveRollModifierLabel({
         type: 'custom',
-        title: 'Custom Roll',
+        title: ROLL_LOG_CUSTOM_POOL_TITLE,
         modifier,
       }),
-      total,
-      isCrit,
-      isCritFail,
-      critMessage,
+      total: outcome.total,
+      isCrit: outcome.isCrit,
+      isCritFail: outcome.isCritFail,
+      critMessage: outcome.critMessage ?? undefined,
       timestamp: new Date(),
     };
 

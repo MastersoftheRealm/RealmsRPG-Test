@@ -2,8 +2,10 @@ import { describe, expect, it } from 'vitest';
 import {
   computeRollOutcome,
   d20CritAdjustment,
+  defaultRollOutcomeKind,
   normalizeCampaignRollDice,
-  storedRollUsesD20CritAdjustment,
+  resolveRollOutcomeKind,
+  ROLL_LOG_CUSTOM_POOL_OUTCOME_KIND,
 } from './die';
 
 describe('d20 crit adjustment (86e3jz6py)', () => {
@@ -44,12 +46,12 @@ describe('d20 crit adjustment (86e3jz6py)', () => {
   });
 });
 
-describe('storedRollUsesD20CritAdjustment', () => {
-  it('matches sheet checks vs damage, Randomize, and roll-log custom pool', () => {
-    expect(storedRollUsesD20CritAdjustment('skill', 'Athletics (STR)')).toBe(true);
-    expect(storedRollUsesD20CritAdjustment('damage', 'Slashing Damage')).toBe(false);
-    expect(storedRollUsesD20CritAdjustment('custom', 'Fireball: 1d20 → Burn')).toBe(false);
-    expect(storedRollUsesD20CritAdjustment('custom', 'Custom Roll')).toBe(true);
+describe('resolveRollOutcomeKind', () => {
+  it('defaults sheet check types to d20-check and damage to sum-only', () => {
+    expect(defaultRollOutcomeKind('skill')).toBe('d20-check');
+    expect(defaultRollOutcomeKind('damage')).toBe('damage-sum');
+    expect(defaultRollOutcomeKind('custom')).toBe('damage-sum');
+    expect(resolveRollOutcomeKind('custom', ROLL_LOG_CUSTOM_POOL_OUTCOME_KIND)).toBe('dice-pool');
   });
 });
 
@@ -65,16 +67,14 @@ describe('normalizeCampaignRollDice', () => {
 });
 
 describe('computeRollOutcome (API-012 / LIB1-007)', () => {
-  const skillRoll = { type: 'skill' as const, title: 'Athletics (STR)' };
-
   it('sums dice, modifier, and single-d20 crit adjustment for sheet checks', () => {
-    expect(computeRollOutcome([{ type: 'd20', value: 15 }], 3, skillRoll)).toEqual({
+    expect(computeRollOutcome([{ type: 'd20', value: 15 }], 3, 'd20-check')).toEqual({
       total: 18,
       isCrit: false,
       isCritFail: false,
       critMessage: null,
     });
-    expect(computeRollOutcome([{ type: 'd20', value: 20 }], 5, skillRoll)).toEqual({
+    expect(computeRollOutcome([{ type: 'd20', value: 20 }], 5, 'd20-check')).toEqual({
       total: 27,
       isCrit: true,
       isCritFail: false,
@@ -87,7 +87,7 @@ describe('computeRollOutcome (API-012 / LIB1-007)', () => {
           { type: 'd6', value: 6 },
         ],
         2,
-        { type: 'damage', title: 'Slashing Damage' },
+        'damage-sum',
       ),
     ).toEqual({
       total: 12,
@@ -97,19 +97,30 @@ describe('computeRollOutcome (API-012 / LIB1-007)', () => {
     });
   });
 
-  it('does not adjust lone d20 for damage or Randomize-style custom rolls', () => {
-    expect(
-      computeRollOutcome([{ type: 'd20', value: 20 }], 0, { type: 'damage', title: 'Damage' }),
-    ).toMatchObject({
+  it('does not adjust lone d20 for damage-sum or labeled-dice custom rolls', () => {
+    expect(computeRollOutcome([{ type: 'd20', value: 20 }], 0, 'damage-sum')).toMatchObject({
       total: 20,
       isCrit: false,
       isCritFail: false,
     });
-    expect(
-      computeRollOutcome([{ type: 'd20', value: 1 }], 0, {
-        type: 'custom',
-        title: 'Power: 1d20 → Outcome',
-      }),
-    ).toMatchObject({ total: 1, isCrit: false, isCritFail: false });
+    expect(computeRollOutcome([{ type: 'd20', value: 1 }], 0, 'labeled-dice')).toMatchObject({
+      total: 1,
+      isCrit: false,
+      isCritFail: true,
+    });
+    expect(computeRollOutcome([{ type: 'd20', value: 20 }], 0, 'labeled-dice')).toMatchObject({
+      total: 20,
+      isCrit: true,
+      isCritFail: false,
+    });
+  });
+
+  it('applies dice-pool rules for roll-log custom pool rolls', () => {
+    expect(computeRollOutcome([{ type: 'd20', value: 20 }], 0, 'dice-pool')).toEqual({
+      total: 22,
+      isCrit: true,
+      isCritFail: false,
+      critMessage: 'Natural 20! +2 to the total!',
+    });
   });
 });

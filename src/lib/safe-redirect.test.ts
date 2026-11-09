@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { sanitizeRedirectPath } from '@/lib/safe-redirect';
+import { buildLoginRedirectUrl, sanitizeRedirectPath } from '@/lib/safe-redirect';
 
 describe('sanitizeRedirectPath', () => {
   it('allows same-origin relative paths', () => {
@@ -26,5 +26,20 @@ describe('sanitizeRedirectPath', () => {
   it('rejects auth-only paths', () => {
     expect(sanitizeRedirectPath('/login')).toBe('/');
     expect(sanitizeRedirectPath('/register')).toBe('/');
+  });
+});
+
+describe('buildLoginRedirectUrl', () => {
+  it('builds bare login when destination is empty, home, or unsafe', () => {
+    expect(buildLoginRedirectUrl(null)).toBe('/login');
+    expect(buildLoginRedirectUrl('/')).toBe('/login');
+    expect(buildLoginRedirectUrl('//evil.example')).toBe('/login');
+  });
+
+  it('encodes an allowlisted returnTo path', () => {
+    expect(buildLoginRedirectUrl('/my-account')).toBe('/login?returnTo=%2Fmy-account');
+    expect(buildLoginRedirectUrl('/campaigns/abc?tab=rolls')).toBe(
+      '/login?returnTo=%2Fcampaigns%2Fabc%3Ftab%3Drolls',
+    );
   });
 });

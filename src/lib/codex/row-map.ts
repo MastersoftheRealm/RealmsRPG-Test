@@ -244,7 +244,6 @@ export function mapCodexEquipment(r: CodexDbRow): CodexEquipmentItem {
     description: asString(r.description),
     gold_cost: cost,
     currency: cost,
-    properties: [],
     rarity: optionalString(r.rarity),
     image_url: optionalImage(r.image_url),
     image_id: optionalImage(r.image_id),
