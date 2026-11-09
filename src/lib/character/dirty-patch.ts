@@ -275,7 +275,10 @@ function mergeEquipmentBucketAutosaveBaseline(
     nextRow: Record<string, unknown> | undefined,
   ) => {
     if (equipmentBucketLocallyTouched(savedRow, localRow)) {
-      if (savedRow && !localRow) return;
+      if (savedRow && !localRow) {
+        merged.push(savedRow);
+        return;
+      }
       if (savedRow) merged.push(savedRow);
       else if (localRow) merged.push(localRow);
       return;
@@ -302,7 +305,10 @@ function mergeEquipmentBucketAutosaveBaseline(
     );
     if (inNext) continue;
     const localRow = findSheetEquipmentRow(local, savedRow, sIdx);
-    if (equipmentBucketLocallyTouched(savedRow, localRow)) continue;
+    if (equipmentBucketLocallyTouched(savedRow, localRow)) {
+      if (savedRow && !localRow) merged.push(savedRow);
+      continue;
+    }
     merged.push(savedRow);
   }
 
@@ -375,7 +381,8 @@ export function applySheetAutosaveConflictFields<T extends Record<string, unknow
 
 /**
  * Autosave baseline after realtime overlay: dirty non-equipment keys revert to
- * the saved snapshot; equipment rows stay dirty until PATCHed (per row).
+ * the saved snapshot; touched equipment rows (including a pending delete) stay
+ * on the baseline until PATCHed.
  */
 export function mergeSheetAutosaveBaseline<T extends Record<string, unknown>>(
   nextClean: T,
