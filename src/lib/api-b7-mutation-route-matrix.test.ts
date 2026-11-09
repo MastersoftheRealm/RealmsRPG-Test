@@ -159,6 +159,7 @@ type MockListSelectResult = { data: unknown[]; error: null };
 
 type UserLibraryMockClient = {
   from: ReturnType<typeof vi.fn>;
+  rpc: ReturnType<typeof vi.fn>;
   inserts: string[];
 };
 
@@ -170,6 +171,34 @@ const USER_LIBRARY_TABLES = new Set([
   'user_creatures',
   'user_species',
 ]);
+
+const USER_LIBRARY_KIND_TO_TABLE: Record<string, string> = {
+  powers: 'user_powers',
+  techniques: 'user_techniques',
+  'empowered-techniques': 'user_empowered_techniques',
+  items: 'user_items',
+  creatures: 'user_creatures',
+  species: 'user_species',
+};
+
+function makeLibraryQuotaInsertRpc(handlers: {
+  onInsert: (table: string, row: Record<string, unknown>) => void;
+}) {
+  return vi.fn(async (name: string, args: Record<string, unknown>) => {
+    if (name !== 'insert_user_library_row_with_quota') {
+      return { data: null, error: { message: `Unexpected RPC: ${name}` } };
+    }
+    const kind = String(args.p_library_kind);
+    const table = USER_LIBRARY_KIND_TO_TABLE[kind];
+    if (!table) {
+      return { data: null, error: { message: `Unexpected library kind: ${kind}` } };
+    }
+    const row = args.p_row as Record<string, unknown>;
+    handlers.onInsert(table, row);
+    const id = typeof row.id === 'string' ? row.id : String(row.id ?? 'generated-id');
+    return { data: { id }, error: null };
+  });
+}
 
 function makeEqThenChain<T extends MockCountSelectResult | MockListSelectResult>(result: T) {
   const filters = {
@@ -220,7 +249,12 @@ function userLibraryCreateClient(): UserLibraryMockClient {
       }),
     };
   });
-  return { from, inserts };
+  const rpc = makeLibraryQuotaInsertRpc({
+    onInsert: (table) => {
+      inserts.push(table);
+    },
+  });
+  return { from, rpc, inserts };
 }
 
 function createUserLibraryRoundTripClient(): {
@@ -274,8 +308,15 @@ function createUserLibraryRoundTripClient(): {
     };
   });
 
+  const rpc = makeLibraryQuotaInsertRpc({
+    onInsert: (table, row) => {
+      listedRow = { ...row };
+      inserts.push(table);
+    },
+  });
+
   return {
-    client: { from, inserts },
+    client: { from, rpc, inserts },
     getListedRow: () => listedRow,
   };
 }
