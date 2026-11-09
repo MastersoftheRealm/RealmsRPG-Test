@@ -108,7 +108,7 @@ type MockSupabaseConfig = {
     code?: string | undefined;
   } | null;
   /** Relational document returned for the duplicate source lookup. */
-  duplicateSource?: { id: string; data: Record<string, unknown> } | null | undefined;
+  duplicateSource?: { id: string; document: Record<string, unknown> } | null | undefined;
   /** Relational document returned for idempotent replay (else last RPC insert). */
   replayCharacterSheet?: Record<string, unknown> | null | undefined;
 };
@@ -218,12 +218,14 @@ function createMockSupabase(config: MockSupabaseConfig = {}) {
       if (name === 'get_character_relational_document') {
         const characterId = args.p_character_id as string;
         if (duplicateSource?.id === characterId) {
-          return { data: duplicateSource.data, error: null };
+          return { data: duplicateSource.document, error: null };
         }
         storedSheetSelectCalls++;
         const inserted = insertedRows.find((row) => row.id === characterId);
         const sheet =
-          replayCharacterSheet ?? (inserted?.data as Record<string, unknown> | undefined) ?? null;
+          replayCharacterSheet ??
+          (inserted?.document as Record<string, unknown> | undefined) ??
+          null;
         return { data: sheet, error: null };
       }
       if (name === 'create_character_relational') {
@@ -231,7 +233,7 @@ function createMockSupabase(config: MockSupabaseConfig = {}) {
         insert({
           id: args.p_character_id,
           user_id: TEST_USER.uid,
-          data: document,
+          document,
           name: document.name,
           level: document.level,
           client_request_id: args.p_client_request_id,
@@ -317,7 +319,6 @@ describe('GET /api/characters', () => {
         characters: [
           {
             id: 'char-1',
-            data: { name: 'Aria', level: 3, portrait: 'https://example.com/p.png' },
             portrait: 'https://example.com/p.png',
             updated_at: '2026-07-01T12:00:00.000Z',
             name: 'Aria',
@@ -443,7 +444,7 @@ describe('POST /api/characters', () => {
       insertId: 'copied-char-id',
       duplicateSource: {
         id: sourceId,
-        data: {
+        document: {
           name: 'Aria',
           level: 4,
           notes: 'kept',
@@ -462,7 +463,7 @@ describe('POST /api/characters', () => {
     expect(saved.user_id).toBe(TEST_USER.uid);
     expect(saved.name).toBe('Aria (Copy)');
     expect(saved.level).toBe(4);
-    const savedData = saved.data as Record<string, unknown>;
+    const savedData = saved.document as Record<string, unknown>;
     expect(savedData.name).toBe('Aria (Copy)');
     expect(savedData.level).toBe(4);
     expect(savedData.notes).toBe('kept');
@@ -550,7 +551,7 @@ describe('POST /api/characters', () => {
 
       expect(response.status).toBe(200);
       await expect(readJson(response)).resolves.toEqual({ id: 'clamped-currency-id' });
-      const inserted = supabase.insertedRows[0]?.data as
+      const inserted = supabase.insertedRows[0]?.document as
         | { currency?: number | undefined }
         | undefined;
       expect(inserted?.currency).toBe(0);
@@ -747,7 +748,7 @@ describe('POST /api/characters', () => {
       mockGetSession.mockResolvedValue({ user: TEST_USER, error: null });
       const firstSupabase = createMockSupabase({
         insertId: 'duplicate-copy-id',
-        duplicateSource: { id: sourceId, data: overSource },
+        duplicateSource: { id: sourceId, document: overSource },
       });
       mockCreateClient.mockResolvedValue(firstSupabase as never);
 
@@ -757,12 +758,12 @@ describe('POST /api/characters', () => {
         id: string;
         legalityWarnings?: Array<{ code: string; level: number }> | undefined;
       }>(firstResponse);
-      const savedSheet = defined(firstSupabase.insertedRows[0]).data as Record<string, unknown>;
+      const savedSheet = defined(firstSupabase.insertedRows[0]).document as Record<string, unknown>;
 
       const replaySupabase = createMockSupabase({
         replayCharacterId: 'duplicate-copy-id',
         replayCharacterSheet: savedSheet,
-        duplicateSource: { id: sourceId, data: overSource },
+        duplicateSource: { id: sourceId, document: overSource },
       });
       mockCreateClient.mockResolvedValue(replaySupabase as never);
 
@@ -821,7 +822,7 @@ describe('POST /api/characters', () => {
         insertError: { code: '23505' },
         replayCharacterIdAfterInsert: 'race-dupe-id',
         replayCharacterSheet: winnerStoredSheet,
-        duplicateSource: { id: sourceId, data: legalSource },
+        duplicateSource: { id: sourceId, document: legalSource },
         codexFeats: [{ id: 'c1', name: 'Needs L4', lvl_req: 4 }],
       });
       mockCreateClient.mockResolvedValue(raceSupabase as never);
@@ -872,7 +873,7 @@ describe('POST /api/characters', () => {
 
       const replaySupabase = createMockSupabase({
         replayCharacterId: 'already-created-id',
-        replayCharacterSheet: freshSupabase.insertedRows[0]?.data as Record<string, unknown>,
+        replayCharacterSheet: freshSupabase.insertedRows[0]?.document as Record<string, unknown>,
       });
       mockCreateClient.mockResolvedValue(replaySupabase as never);
 
@@ -918,7 +919,7 @@ describe('POST /api/characters', () => {
         expect.objectContaining({ client_request_id: clientRequestId }),
       );
       // The key is routing metadata, not character data.
-      const savedData = defined(supabase.insertedRows[0]).data as Record<string, unknown>;
+      const savedData = defined(supabase.insertedRows[0]).document as Record<string, unknown>;
       expect(savedData.clientRequestId).toBeUndefined();
     });
 

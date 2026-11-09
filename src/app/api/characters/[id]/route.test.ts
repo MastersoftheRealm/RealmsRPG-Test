@@ -72,7 +72,7 @@ const OTHER = { uid: 'other-user', email: 'other@example.com' };
 type CharacterRow = {
   id: string;
   user_id: string;
-  data: Record<string, unknown>;
+  document: Record<string, unknown>;
   created_at: string;
   updated_at: string;
   visibility?: string | null | undefined;
@@ -81,17 +81,18 @@ type CharacterRow = {
 function makeCharacterRow(
   id: string,
   userId: string,
-  overrides: Partial<CharacterRow['data']> = {},
+  overrides: Partial<CharacterRow['document']> = {},
   column?: { visibility?: string | null | undefined },
 ): CharacterRow {
-  const data = { name: 'Test Hero', level: 1, visibility: 'private', ...overrides };
+  const document = { name: 'Test Hero', level: 1, visibility: 'private', ...overrides };
   return {
     id,
     user_id: userId,
-    data,
+    document,
     created_at: '2026-07-01T12:00:00.000Z',
     updated_at: '2026-07-01T12:00:00.000Z',
-    visibility: column && 'visibility' in column ? column.visibility : (data.visibility as string),
+    visibility:
+      column && 'visibility' in column ? column.visibility : (document.visibility as string),
   };
 }
 
@@ -165,7 +166,7 @@ function createMockSupabase(
   const update = vi.fn((payload: Record<string, unknown>) => buildUpdateChain(payload));
   const rpcMock = vi.fn(async (name: string, args: Record<string, unknown>) => {
     if (name === 'get_character_relational_document') {
-      return { data: characterRow?.data ?? null, error: null };
+      return { data: characterRow?.document ?? null, error: null };
     }
     if (name === 'patch_character_relational') {
       if (!characterRow || args.p_character_id !== characterRow.id) {
@@ -411,7 +412,7 @@ describe('GET /api/characters/[id]', () => {
     expect(mockGetOwnerLibraryAndEnrichmentForView).toHaveBeenCalledWith(
       expect.anything(),
       OWNER.uid,
-      row.data,
+      row.document,
     );
   });
 
@@ -449,7 +450,7 @@ describe('GET /api/characters/[id]', () => {
     expect(mockGetOwnerLibraryAndEnrichmentForView).toHaveBeenCalledWith(
       expect.anything(),
       OWNER.uid,
-      row.data,
+      row.document,
     );
   });
 

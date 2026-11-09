@@ -47,7 +47,7 @@ function createEnrichmentAwareSupabase({
   characterRow: {
     id: string;
     user_id: string;
-    data: Record<string, unknown>;
+    document: Record<string, unknown>;
     created_at: string;
     updated_at: string;
     visibility?: string | null;
@@ -83,7 +83,7 @@ function createEnrichmentAwareSupabase({
   const sessionClient = {
     rpc: vi.fn(async (name: string) => {
       if (name === 'get_character_relational_document') {
-        return { data: characterRow.data, error: null };
+        return { data: characterRow.document, error: null };
       }
       throw new Error(`Unexpected RPC: ${name}`);
     }),
@@ -145,7 +145,7 @@ describe('GET /api/characters/[id] enrichment gate (LIB1-011)', () => {
       visibility: 'private' as const,
       created_at: '2026-07-01T12:00:00.000Z',
       updated_at: '2026-07-01T12:00:00.000Z',
-      data: {
+      document: {
         name: 'Private Hero',
         level: 1,
         visibility: 'private',

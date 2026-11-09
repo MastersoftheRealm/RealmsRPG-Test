@@ -41,7 +41,7 @@ const EMPTY_LIBRARY_FOR_VIEW = {
 type CharacterRow = {
   id: string;
   user_id: string;
-  data: Record<string, unknown>;
+  document: Record<string, unknown>;
   created_at: string;
   updated_at: string;
   visibility?: string | null | undefined;
@@ -54,7 +54,7 @@ type CampaignRow = {
 };
 
 function makeCharacterRow(
-  overrides: Partial<CharacterRow['data']> = {},
+  overrides: Partial<CharacterRow['document']> = {},
   columnVisibility: CharacterRow['visibility'] = 'campaign',
 ): CharacterRow {
   const dataVisibility =
@@ -62,7 +62,7 @@ function makeCharacterRow(
   return {
     id: CHARACTER_ID,
     user_id: PLAYER.uid,
-    data: {
+    document: {
       name: 'Roster Hero',
       level: 2,
       visibility: dataVisibility,
@@ -137,7 +137,7 @@ function createMockSupabase({
           data: {
             status: 'ok',
             character: {
-              ...characterRow.data,
+              ...characterRow.document,
               id: characterRow.id,
               userId: characterRow.user_id,
               createdAt: characterRow.created_at,
@@ -377,7 +377,7 @@ describe('GET /api/campaigns/[id]/characters/[userId]/[characterId]', () => {
     expect(mockGetOwnerLibraryAndEnrichmentForView).toHaveBeenCalledWith(
       expect.anything(),
       PLAYER.uid,
-      expect.objectContaining(row.data),
+      expect.objectContaining(row.document),
     );
   });
 

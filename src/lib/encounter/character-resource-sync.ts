@@ -31,7 +31,7 @@ export function shouldSuppressRemoteResourceMerge(characterId: string): boolean 
   return true;
 }
 
-/** Read HP/EN/AP from character `data` JSON. Top-level fields win over nested health/energy.current. */
+/** Read HP/EN/AP from a character document. Top-level fields win over nested health/energy.current. */
 export function readResourcesFromCharacterData(data: Record<string, unknown>): {
   currentHealth?: number | undefined;
   currentEnergy?: number | undefined;
