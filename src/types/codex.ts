@@ -200,7 +200,7 @@ interface CodexEquipmentItemFields extends CodexRowVersion {
   armor_value?: number | undefined;
   gold_cost: number;
   currency: number;
-  properties: string[];
+  properties?: string[] | undefined;
   rarity?: string | undefined;
   weight?: number | undefined;
   image_id?: string | null | undefined;
