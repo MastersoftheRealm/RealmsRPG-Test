@@ -86,9 +86,27 @@ describe('creator empty overwrite guard', () => {
         powers: [],
         techniques: [],
         feats: [],
-        armaments: [],
+        weapons: [],
+        armor: [],
+        shields: [],
+        equipment: [],
       }),
     ).toBe(true);
+  });
+
+  it('does not flag a weapons-only creature with an empty description', () => {
+    expect(
+      creatorPayloadWouldHollowExistingRow('creatures', {
+        description: '',
+        powers: [],
+        techniques: [],
+        feats: [],
+        weapons: [{ id: 'w1' }],
+        armor: [],
+        shields: [],
+        equipment: [],
+      }),
+    ).toBe(false);
   });
 
   it('uses approved confirm copy', () => {

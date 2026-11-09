@@ -8,6 +8,7 @@
 'use client';
 
 import { useState, useCallback, useMemo, useEffect, useRef } from 'react';
+import { useRouter } from 'next/navigation';
 import { useCreatorSave, type Species, type Trait, type Skill } from '@/hooks';
 import {
   useCreatorDraftDirty,
@@ -38,6 +39,10 @@ import {
   type TraitCategory,
 } from './species-creator-bootstrap';
 import { applySpeciesCreatorReset } from './species-creator-reset';
+import {
+  commitCreatorEditClearAfterSave,
+  scheduleCreatorEditClear,
+} from '@/lib/creator/creator-edit-query';
 
 type UseSpeciesCreatorWorkspaceArgs = {
   traits: Trait[];
@@ -66,6 +71,11 @@ export function useSpeciesCreatorWorkspace({
   rawItems = [],
   libraryLoading = false,
 }: UseSpeciesCreatorWorkspaceArgs) {
+  const router = useRouter();
+  const clearEditQuery = useCallback(
+    (href: string) => router.replace(href, { scroll: false }),
+    [router],
+  );
   const [showAddSpeciesAncestryModal, setShowAddSpeciesAncestryModal] = useState(false);
   const [showAddFlawModal, setShowAddFlawModal] = useState(false);
   const [showAddCharacteristicModal, setShowAddCharacteristicModal] = useState(false);
@@ -154,7 +164,9 @@ export function useSpeciesCreatorWorkspace({
         : `Are you sure you wish to publish this species "${n}" to the Realms Codex? All users will be able to see and use it.`,
     successMessage: 'Species saved to My Codex!',
     publicSuccessMessage: 'Species saved to Realms Codex!',
-    onSaveCommitted: acceptDraft,
+    onSaveCommitted: () => {
+      commitCreatorEditClearAfterSave(editSession, clearEditQuery, acceptDraft);
+    },
     onSaveSuccess: () => {
       try {
         localStorage.removeItem(SPECIES_CREATOR_CACHE_KEY);
@@ -240,9 +252,10 @@ export function useSpeciesCreatorWorkspace({
       resetForm: () => setForm(initialSpeciesFormState),
       forgetLoadedLibraryItem: () => save.forgetLoadedLibraryItem(),
       clearSaveMessage: () => save.setSaveMessage(null),
+      clearEditQuery: () => scheduleCreatorEditClear(editSession, clearEditQuery),
     });
     acceptDraft();
-  }, [acceptDraft, save]);
+  }, [acceptDraft, clearEditQuery, editSession, save]);
 
   const loadSpeciesIntoForm = useCallback(
     (s: Species | Record<string, unknown>) => {

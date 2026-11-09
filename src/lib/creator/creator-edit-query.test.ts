@@ -62,7 +62,6 @@ describe('creator edit query clear (86e3jwurq)', () => {
   it('commitCreatorEditClearAfterSave accepts draft then schedules clear', () => {
     const clears: string[] = [];
     let draftAccepted = false;
-    const originalWindow = globalThis.window;
     vi.stubGlobal('window', {
       location: { href: EDIT_HREF },
       history: { state: null },
@@ -78,7 +77,7 @@ describe('creator edit query clear (86e3jwurq)', () => {
         },
       );
     } finally {
-      vi.stubGlobal('window', originalWindow);
+      vi.unstubAllGlobals();
     }
     expect(draftAccepted).toBe(true);
     expect(clears).toEqual(['/power-creator']);

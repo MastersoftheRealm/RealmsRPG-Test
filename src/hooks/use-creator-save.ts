@@ -218,6 +218,20 @@ export function useCreatorSave(options: UseCreatorSaveOptions): UseCreatorSaveRe
     return null;
   });
 
+  // Creature/species stay mounted when ?edit= is cleared; sync row ids without a save.
+  useEffect(() => {
+    const trimmed = editingId?.trim() || null;
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- mirror URL edit param into save targets
+    setSaveTarget(initialSaveTarget);
+    if (isOfficialSaveTarget(initialSaveTarget)) {
+      setLoadedOfficialId(trimmed);
+      setLoadedLibraryId(null);
+      return;
+    }
+    setLoadedLibraryId(trimmed);
+    setLoadedOfficialId(null);
+  }, [editingId, initialSaveTarget]);
+
   const setShowPublishConfirm = useCallback((show: boolean) => {
     setShowPublishConfirmState(show);
     if (!show) setPublishExistingId(null);

@@ -37,8 +37,16 @@ function empoweredPartsEmpty(data: Record<string, unknown>): boolean {
   return arrayIsEmpty(powerParts) && arrayIsEmpty(powerAdvanced) && arrayIsEmpty(techniqueParts);
 }
 
-function creatureContentEmpty(data: Record<string, unknown>): boolean {
-  const keys = ['powers', 'techniques', 'feats', 'armaments'] as const;
+function creatureLoadoutEmpty(data: Record<string, unknown>): boolean {
+  const keys = [
+    'powers',
+    'techniques',
+    'feats',
+    'weapons',
+    'armor',
+    'shields',
+    'equipment',
+  ] as const;
   const present = keys.filter((key) => key in data);
   if (present.length === 0) return false;
   return present.every((key) => savedArrayFieldEmpty(data, key));
@@ -54,7 +62,7 @@ function partsOrPropertiesEmpty(type: CreatorLibraryType, data: Record<string, u
     case 'items':
       return savedArrayFieldEmpty(data, 'properties');
     case 'creatures':
-      return creatureContentEmpty(data);
+      return creatureLoadoutEmpty(data);
     default:
       return false;
   }
@@ -65,6 +73,9 @@ export function creatorPayloadWouldHollowExistingRow(
   type: CreatorLibraryType,
   data: Record<string, unknown>,
 ): boolean {
+  if (type === 'creatures') {
+    return descriptionIsEmpty(data) && creatureLoadoutEmpty(data);
+  }
   return descriptionIsEmpty(data) || partsOrPropertiesEmpty(type, data);
 }
 
