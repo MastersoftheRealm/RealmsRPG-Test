@@ -20,6 +20,12 @@ import {
   calculateCharacterSkillPointsSpent,
 } from '@/lib/game/skill-allocation';
 import type { CoreRulesMap } from '@/types/core-rules';
+import {
+  normalizeArchetypeCategoryValue,
+  resolveDefenseVals,
+  resolveMartProf,
+  resolvePowProf,
+} from '@/lib/character/schema-normalize';
 
 export type SheetEditNotificationSeverity = 'none' | 'overspent' | 'unspent' | 'mixed' | 'level-up';
 
@@ -98,7 +104,8 @@ export function computeSheetPointPools({
     characterSpeciesSkills.filter((id) => id !== '0'),
     skillsList,
   );
-  const defVals = character.defenseVals || character.defenseSkills || DEFAULT_DEFENSE_SKILLS;
+  const characterRecord = character as Record<string, unknown>;
+  const defVals = resolveDefenseVals(characterRecord) ?? DEFAULT_DEFENSE_SKILLS;
   const spentSkillPoints = calculateCharacterSkillPointsSpent(
     skillsList,
     speciesSkillIdSet,
@@ -107,12 +114,12 @@ export function computeSheetPointPools({
   );
   const skillRemaining = totalSkillPoints - spentSkillPoints;
 
-  const martialProf = character.mart_prof ?? character.martialProficiency ?? 0;
-  const powerProf = character.pow_prof ?? character.powerProficiency ?? 0;
+  const martialProf = resolveMartProf(characterRecord) ?? 0;
+  const powerProf = resolvePowProf(characterRecord) ?? 0;
   const totalProfPoints = calculateProficiency(level, false, rules);
   const profRemaining = totalProfPoints - (martialProf + powerProf);
 
-  const archetypeType = character.archetype?.type || 'power';
+  const archetypeType = normalizeArchetypeCategoryValue(character.archetype?.type) ?? 'power';
   const archetypeFeatSlots = calculateMaxArchetypeFeats(
     level,
     archetypeType,

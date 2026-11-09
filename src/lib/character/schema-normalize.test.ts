@@ -69,6 +69,48 @@ describe('schema-normalize (TASK-663)', () => {
     expect(loaded.archetypeChoices).toEqual({ 4: 'innate', 7: 'feat' });
   });
 
+  it('normalizeCharacterOnLoad and normalizeCharacterForSave agree on legacy aliases (LIB1-033)', () => {
+    const legacy = {
+      defenseSkills: { might: 2, reflex: 1 },
+      martialProficiency: 4,
+      powerProficiency: 2,
+      archetype: { id: 'path-a', type: 'mixed' },
+    };
+
+    const loaded = normalizeCharacterOnLoad({ ...legacy }) as Record<string, unknown>;
+    const saveTarget: Record<string, unknown> = { ...legacy };
+    normalizeCharacterForSave(saveTarget);
+
+    expect(saveTarget.defenseVals).toEqual(loaded.defenseVals);
+    expect(saveTarget.mart_prof).toBe(loaded.mart_prof);
+    expect(saveTarget.pow_prof).toBe(loaded.pow_prof);
+    expect(saveTarget.archetype).toEqual(loaded.archetype);
+    expect(saveTarget.defenseSkills).toBeUndefined();
+    expect(saveTarget.martialProficiency).toBeUndefined();
+    expect(saveTarget.powerProficiency).toBeUndefined();
+  });
+
+  it('normalizeCharacterForSave merges legacySource the same way as load (LIB1-033)', () => {
+    const legacySource = {
+      defenseSkills: { might: 3 },
+      martialProficiency: 1,
+      powerProficiency: 2,
+      archetype: { id: 'path-b', type: 'mixed' },
+    };
+    const patch: Record<string, unknown> = { name: 'Patched' };
+
+    const loaded = normalizeCharacterOnLoad({ ...legacySource, ...patch }) as Record<
+      string,
+      unknown
+    >;
+    normalizeCharacterForSave(patch, legacySource);
+
+    expect(patch.defenseVals).toEqual(loaded.defenseVals);
+    expect(patch.mart_prof).toBe(loaded.mart_prof);
+    expect(patch.pow_prof).toBe(loaded.pow_prof);
+    expect(patch.archetype).toEqual(loaded.archetype);
+  });
+
   it('normalizeCharacterForSave writes canonical fields and strips legacy aliases', () => {
     const payload: Record<string, unknown> = {
       defenseSkills: { fortitude: 1 },

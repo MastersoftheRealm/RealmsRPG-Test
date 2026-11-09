@@ -62,26 +62,54 @@ export function normalizeArchetypeChoices(
   return out;
 }
 
+const LEGACY_CHARACTER_FIELD_KEYS = [
+  'defenseSkills',
+  'martialProficiency',
+  'powerProficiency',
+] as const;
+
+/**
+ * Promote legacy character field aliases to canonical keys (single path for load and save).
+ */
+function applyLegacyCharacterFieldAliases(
+  target: Record<string, unknown>,
+  source: Record<string, unknown>,
+): void {
+  const defenseVals = resolveDefenseVals(source);
+  if (defenseVals !== undefined) {
+    target.defenseVals = defenseVals;
+  }
+
+  const martProf = resolveMartProf(source);
+  if (martProf !== undefined) {
+    target.mart_prof = martProf;
+  }
+
+  const powProf = resolvePowProf(source);
+  if (powProf !== undefined) {
+    target.pow_prof = powProf;
+  }
+
+  const archetype = source.archetype;
+  if (archetype && typeof archetype === 'object') {
+    const arch = { ...(archetype as Record<string, unknown>) };
+    const normalizedType = normalizeArchetypeCategoryValue(arch.type as string | undefined);
+    if (normalizedType) arch.type = normalizedType;
+    target.archetype = arch;
+  }
+
+  for (const key of LEGACY_CHARACTER_FIELD_KEYS) {
+    delete target[key];
+  }
+}
+
 /**
  * Merge legacy aliases into canonical fields on load and strip legacy keys.
  */
 export function normalizeCharacterOnLoad<T extends Record<string, unknown>>(data: T): T {
   const next: Record<string, unknown> = { ...data };
 
-  const defenseVals = resolveDefenseVals(next);
-  if (defenseVals !== undefined) {
-    next.defenseVals = defenseVals;
-  }
-
-  const martProf = resolveMartProf(next);
-  if (martProf !== undefined) {
-    next.mart_prof = martProf;
-  }
-
-  const powProf = resolvePowProf(next);
-  if (powProf !== undefined) {
-    next.pow_prof = powProf;
-  }
+  applyLegacyCharacterFieldAliases(next, next);
 
   if (next.archetypeChoices !== undefined) {
     next.archetypeChoices = normalizeArchetypeChoices(
@@ -95,26 +123,8 @@ export function normalizeCharacterOnLoad<T extends Record<string, unknown>>(data
     else delete next.age;
   }
 
-  const archetype = next.archetype;
-  if (archetype && typeof archetype === 'object') {
-    const arch = { ...(archetype as Record<string, unknown>) };
-    const normalizedType = normalizeArchetypeCategoryValue(arch.type as string | undefined);
-    if (normalizedType) arch.type = normalizedType;
-    next.archetype = arch;
-  }
-
-  for (const key of LEGACY_CHARACTER_FIELD_KEYS) {
-    delete next[key];
-  }
-
   return next as T;
 }
-
-const LEGACY_CHARACTER_FIELD_KEYS = [
-  'defenseSkills',
-  'martialProficiency',
-  'powerProficiency',
-] as const;
 
 /** Strip legacy aliases and normalize canonical fields before persistence. */
 export function normalizeCharacterForSave(
@@ -124,30 +134,5 @@ export function normalizeCharacterForSave(
   const legacyRecord = legacySource as Record<string, unknown> | undefined;
   const merged = legacyRecord ? { ...legacyRecord, ...data } : data;
 
-  const defenseVals = resolveDefenseVals(merged);
-  if (defenseVals !== undefined) {
-    data.defenseVals = defenseVals;
-  }
-
-  const martProf = resolveMartProf(merged);
-  if (martProf !== undefined) {
-    data.mart_prof = martProf;
-  }
-
-  const powProf = resolvePowProf(merged);
-  if (powProf !== undefined) {
-    data.pow_prof = powProf;
-  }
-
-  const archetype = merged.archetype ?? data.archetype;
-  if (archetype && typeof archetype === 'object') {
-    const arch = { ...(archetype as Record<string, unknown>) };
-    const normalizedType = normalizeArchetypeCategoryValue(arch.type as string | undefined);
-    if (normalizedType) arch.type = normalizedType;
-    data.archetype = arch;
-  }
-
-  for (const key of LEGACY_CHARACTER_FIELD_KEYS) {
-    delete data[key];
-  }
+  applyLegacyCharacterFieldAliases(data, merged);
 }
