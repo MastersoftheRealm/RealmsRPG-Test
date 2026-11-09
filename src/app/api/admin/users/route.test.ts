@@ -26,6 +26,7 @@ vi.mock('@/lib/supabase/server', () => ({
 
 import { GET } from './route';
 import { requireAdminSession } from '@/lib/admin';
+import { PRIVATE_NO_STORE_CACHE_CONTROL } from '@/lib/api/public-cdn-cache';
 import { createServiceRoleClient } from '@/lib/supabase/server';
 import { standardLimiter } from '@/lib/rate-limit';
 
@@ -39,13 +40,14 @@ type ProfileRow = {
   id: string;
   username: string | null;
   username_display: string | null;
+  email: string | null;
   display_name: string | null;
   role: string;
 };
 
 function createMockSupabaseAdmin(
   profiles: ProfileRow[] = [],
-  error: { message: string } | null = null,
+  error: { message: string; code?: string } | null = null,
   options?: {
     onRange?: (from: number, to: number) => void;
     onOr?: (filter: string) => void;
@@ -122,9 +124,16 @@ describe('GET /api/admin/users', () => {
     });
 
     const response = await GET(makeGetRequest());
+    const raw = await response.text();
+
+    const body = JSON.parse(raw) as Record<string, unknown>;
 
     expect(response.status).toBe(401);
-    await expect(readJson(response)).resolves.toEqual({ error: 'Unauthorized' });
+    expect(body).toEqual({ error: 'Unauthorized' });
+    expect(body).not.toHaveProperty('email');
+    expect(body).not.toHaveProperty('users');
+    expect(raw).not.toMatch(/@/);
+    expect(response.headers.get('Cache-Control')).toBe(PRIVATE_NO_STORE_CACHE_CONTROL);
     expect(mockCreateServiceRoleClient).not.toHaveBeenCalled();
   });
 
@@ -136,9 +145,16 @@ describe('GET /api/admin/users', () => {
     });
 
     const response = await GET(makeGetRequest());
+    const raw = await response.text();
+
+    const body = JSON.parse(raw) as Record<string, unknown>;
 
     expect(response.status).toBe(403);
-    await expect(readJson(response)).resolves.toEqual({ error: 'Forbidden' });
+    expect(body).toEqual({ error: 'Forbidden' });
+    expect(body).not.toHaveProperty('email');
+    expect(body).not.toHaveProperty('users');
+    expect(raw).not.toMatch(/@/);
+    expect(response.headers.get('Cache-Control')).toBe(PRIVATE_NO_STORE_CACHE_CONTROL);
     expect(mockCreateServiceRoleClient).not.toHaveBeenCalled();
   });
 
@@ -150,6 +166,7 @@ describe('GET /api/admin/users', () => {
           id: 'user-1',
           username: 'hero',
           username_display: 'Hero',
+          email: 'hero@example.com',
           display_name: 'Hero Player',
           role: 'new_player',
         },
@@ -170,17 +187,18 @@ describe('GET /api/admin/users', () => {
         id: 'user-1',
         username: 'hero',
         usernameDisplay: 'Hero',
+        email: 'hero@example.com',
         displayName: 'Hero Player',
         role: 'new_player',
       },
     ]);
-    expect(body.users[0]).not.toHaveProperty('email');
     expect(body.offset).toBe(0);
     expect(body.limit).toBe(100);
     expect(body.hasMore).toBe(false);
+    expect(response.headers.get('Cache-Control')).toBe(PRIVATE_NO_STORE_CACHE_CONTROL);
   });
 
-  it('does not include email addresses in the JSON response', async () => {
+  it('includes email addresses in the JSON response for an admin', async () => {
     mockRequireAdminSession.mockResolvedValue({ ok: true, userId: ADMIN_ID });
     mockCreateServiceRoleClient.mockReturnValue(
       createMockSupabaseAdmin([
@@ -188,10 +206,10 @@ describe('GET /api/admin/users', () => {
           id: 'user-1',
           username: 'hero',
           username_display: 'Hero',
+          email: 'secret@example.com',
           display_name: 'Hero Player',
           role: 'new_player',
-          email: 'secret@example.com',
-        } as ProfileRow & { email: string },
+        },
       ]) as never,
     );
 
@@ -199,8 +217,7 @@ describe('GET /api/admin/users', () => {
     const body = await readJson<{ users: Array<Record<string, unknown>> }>(response);
 
     expect(response.status).toBe(200);
-    expect(JSON.stringify(body)).not.toMatch(/@/);
-    expect(body.users[0]).not.toHaveProperty('email');
+    expect(body.users[0]).toMatchObject({ email: 'secret@example.com' });
   });
 
   it('returns 429 when rate limited', async () => {
@@ -243,6 +260,7 @@ describe('GET /api/admin/users', () => {
       id: `uid-${String(i + 1).padStart(4, '0')}`,
       username: `user${String(i + 1).padStart(3, '0')}`,
       username_display: `User ${i + 1}`,
+      email: null,
       display_name: `Player ${i + 1}`,
       role: 'new_player',
     }));
@@ -297,6 +315,7 @@ describe('GET /api/admin/users', () => {
         id: 'uid-002',
         username: null,
         username_display: 'B',
+        email: null,
         display_name: null,
         role: 'new_player',
       },
@@ -304,6 +323,7 @@ describe('GET /api/admin/users', () => {
         id: 'uid-001',
         username: null,
         username_display: 'A',
+        email: null,
         display_name: null,
         role: 'new_player',
       },
@@ -311,6 +331,7 @@ describe('GET /api/admin/users', () => {
         id: 'uid-003',
         username: 'zulu',
         username_display: 'Z',
+        email: null,
         display_name: null,
         role: 'new_player',
       },
@@ -385,6 +406,7 @@ describe('GET /api/admin/users', () => {
               id: 'pt-1',
               username: 'pt',
               username_display: 'pt',
+              email: null,
               display_name: 'pt',
               role: 'playtester',
             },
@@ -406,5 +428,77 @@ describe('GET /api/admin/users', () => {
       expect(response.status).toBe(200);
       check(orFilter);
     }
+  });
+
+  it('finds users by email via server search', async () => {
+    mockRequireAdminSession.mockResolvedValue({ ok: true, userId: ADMIN_ID });
+    const directory: ProfileRow[] = [
+      {
+        id: 'user-a',
+        username: 'alpha',
+        username_display: 'Alpha',
+        email: 'findme@example.com',
+        display_name: 'A',
+        role: 'new_player',
+      },
+      {
+        id: 'user-b',
+        username: 'beta',
+        username_display: 'Beta',
+        email: 'other@example.com',
+        display_name: 'B',
+        role: 'new_player',
+      },
+    ];
+    let orFilter = '';
+    mockCreateServiceRoleClient.mockReturnValue(
+      createMockSupabaseAdmin(directory, null, {
+        searchNeedle: 'findme@example.com',
+        onOr: (filter) => {
+          orFilter = filter;
+        },
+      }) as never,
+    );
+
+    const response = await GET(
+      new NextRequest('http://localhost/api/admin/users?q=findme%40example.com', {
+        headers: { 'x-forwarded-for': '203.0.113.1' },
+      }),
+    );
+    const body = await readJson<{ users: Array<{ email: string }> }>(response);
+
+    expect(response.status).toBe(200);
+    expect(orFilter).toContain('email.ilike."%findme@example.com%"');
+    expect(body.users).toHaveLength(1);
+    expect(body.users[0]?.email).toBe('findme@example.com');
+  });
+
+  it('logs only the database error code when the profile query fails', async () => {
+    mockRequireAdminSession.mockResolvedValue({ ok: true, userId: ADMIN_ID });
+    const secretSearch = 'secret-search-term@example.com';
+    const consoleError = vi.spyOn(console, 'error').mockImplementation(() => {});
+    mockCreateServiceRoleClient.mockReturnValue(
+      createMockSupabaseAdmin(
+        [],
+        { message: `syntax error near ${secretSearch}`, code: 'PGRST301' },
+        {
+          searchNeedle: secretSearch,
+        },
+      ) as never,
+    );
+
+    const response = await GET(
+      new NextRequest(`http://localhost/api/admin/users?q=${encodeURIComponent(secretSearch)}`, {
+        headers: { 'x-forwarded-for': '203.0.113.1' },
+      }),
+    );
+
+    expect(response.status).toBe(500);
+    expect(consoleError).toHaveBeenCalledWith(
+      '[API Error] GET /api/admin/users query failed:',
+      'PGRST301',
+    );
+    expect(consoleError.mock.calls[0]?.join(' ')).not.toContain(secretSearch);
+    consoleError.mockRestore();
   });
 });

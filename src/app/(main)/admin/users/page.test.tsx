@@ -8,6 +8,7 @@ const users = [
     id: '1',
     username: 'alice',
     usernameDisplay: 'alice',
+    email: 'alice@example.com',
     displayName: 'Alice',
     role: 'admin' as const,
   },

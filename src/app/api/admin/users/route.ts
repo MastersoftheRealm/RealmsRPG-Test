@@ -1,7 +1,7 @@
 /**
  * Admin Users API
  * ===============
- * List users (id, username, username_display, display_name, role).
+ * List users (id, username, username_display, email, display_name, role).
  * Only users with role=admin can access.
  */
 
@@ -10,6 +10,7 @@ import type { NextRequest } from 'next/server';
 import { requireAdminSession } from '@/lib/admin';
 import { adminUsersQuerySchema, parseAdminUsersPaging, validateQuery } from '@/lib/api-validation';
 import { buildAdminUsersOrFilter } from '@/lib/admin-users-search';
+import { PRIVATE_NO_STORE_CACHE_CONTROL } from '@/lib/api/public-cdn-cache';
 import { createServiceRoleClient } from '@/lib/supabase/server';
 import {
   buildRateLimitKey,
@@ -20,11 +21,16 @@ import {
 
 export const dynamic = 'force-dynamic';
 
+const ADMIN_USERS_RESPONSE_HEADERS = { 'Cache-Control': PRIVATE_NO_STORE_CACHE_CONTROL };
+
 export async function GET(request: NextRequest) {
   try {
     const auth = await requireAdminSession();
     if (!auth.ok) {
-      return NextResponse.json(auth.body, { status: auth.status });
+      return NextResponse.json(auth.body, {
+        status: auth.status,
+        headers: ADMIN_USERS_RESPONSE_HEADERS,
+      });
     }
 
     const rateKey = buildRateLimitKey('admin-users-get', {
@@ -35,7 +41,13 @@ export async function GET(request: NextRequest) {
     if (!rateResult.success) {
       return NextResponse.json(
         { error: 'Too many requests' },
-        { status: 429, headers: { 'Retry-After': retryAfterSecondsFromReset(rateResult.reset) } },
+        {
+          status: 429,
+          headers: {
+            ...ADMIN_USERS_RESPONSE_HEADERS,
+            'Retry-After': retryAfterSecondsFromReset(rateResult.reset),
+          },
+        },
       );
     }
 
@@ -47,7 +59,7 @@ export async function GET(request: NextRequest) {
     const supabase = createServiceRoleClient();
     let query = supabase
       .from('user_profiles')
-      .select('id, username, username_display, display_name, role')
+      .select('id, username, username_display, email, display_name, role')
       .order('username', { nullsFirst: false })
       .order('id');
     if (search) {
@@ -56,14 +68,25 @@ export async function GET(request: NextRequest) {
     const { data: profiles, error: profilesError } = await query.range(offset, offset + limit - 1);
 
     if (profilesError) {
-      console.error('[API Error] GET /api/admin/users query:', profilesError);
-      return NextResponse.json({ error: 'Failed to list users' }, { status: 500 });
+      const code =
+        typeof profilesError === 'object' &&
+        profilesError !== null &&
+        'code' in profilesError &&
+        typeof profilesError.code === 'string'
+          ? profilesError.code
+          : 'unknown';
+      console.error('[API Error] GET /api/admin/users query failed:', code);
+      return NextResponse.json(
+        { error: 'Failed to list users' },
+        { status: 500, headers: ADMIN_USERS_RESPONSE_HEADERS },
+      );
     }
 
     const list = (profiles ?? []) as {
       id: string;
       username: string | null;
       username_display: string | null;
+      email: string | null;
       display_name: string | null;
       role: string;
     }[];
@@ -71,17 +94,24 @@ export async function GET(request: NextRequest) {
       id: p.id,
       username: p.username ?? '',
       usernameDisplay: p.username_display ?? p.username ?? '',
+      email: p.email ?? '',
       displayName: p.display_name ?? '',
       role: p.role,
     }));
-    return NextResponse.json({
-      users,
-      offset,
-      limit,
-      hasMore: users.length === limit,
-    });
-  } catch (err) {
-    console.error('[API Error] GET /api/admin/users:', err);
-    return NextResponse.json({ error: 'Failed to list users' }, { status: 500 });
+    return NextResponse.json(
+      {
+        users,
+        offset,
+        limit,
+        hasMore: users.length === limit,
+      },
+      { headers: ADMIN_USERS_RESPONSE_HEADERS },
+    );
+  } catch {
+    console.error('[API Error] GET /api/admin/users failed');
+    return NextResponse.json(
+      { error: 'Failed to list users' },
+      { status: 500, headers: ADMIN_USERS_RESPONSE_HEADERS },
+    );
   }
 }

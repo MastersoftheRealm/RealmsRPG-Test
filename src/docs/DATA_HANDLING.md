@@ -92,7 +92,7 @@ Admin pages read/write the same tables as the app; schema reference: `src/docs/S
 | **Codex Editor** (list + spreadsheet) | GET /api/codex, server actions | public.codex_feats, codex_skills, codex_species, codex_traits, codex_parts, codex_properties, codex_equipment, codex_archetypes, codex_creature_feats, core_rules |
 | **Official Library Editor** | GET/POST/DELETE /api/official/[type] | public.official_powers, official_techniques, official_items, official_creatures (if tables are empty, confirm `official_powers`, `official_techniques`, `official_items`, and `official_creatures` exist on the live database — historical create script (was `sql/supabase-official-library-public-schema.sql`, deleted 2026-10-29) in git history; see SUPABASE_SCHEMA.md) |
 | **Core Rules Editor** | useGameRules + codex actions | public.core_rules (id, data, updated_at) |
-| **User Management** | GET /api/admin/users, PATCH /api/admin/users/update-role | public.user_profiles (id, username, role) |
+| **User Management** | GET /api/admin/users, PATCH /api/admin/users/update-role | public.user_profiles (id, username, username_display, display_name, email [admin-visible], role) |
 
 Spreadsheet and list edit modes in the Codex Editor persist via `createCodexDoc` / `updateCodexDoc` / `deleteCodexDoc` (service role); columnar fields match DB columns (snake_case); API response keys (e.g. base_skill_id, ave_height) are mapped in actions so edits round-trip correctly.
 
