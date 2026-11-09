@@ -11,7 +11,7 @@ import { Plus, Info } from 'lucide-react';
 import type { TechniquePart } from '@/hooks';
 import { ValueStepper, SectionCostBadge, RealmsImageField } from '@/components/patterns';
 import { CollapsibleSection, PowerPartCard, TargetedDefensesSection } from '@/components/creator';
-import { Checkbox, Button, Card } from '@/components/ui';
+import { Alert, Checkbox, Button, Card } from '@/components/ui';
 import {
   CreatorDescriptionField,
   CreatorNameField,
@@ -68,6 +68,7 @@ type TechniqueCreatorEditorProps = {
   targetedDefenses: string[];
   onTargetedDefensesChange: (next: string[]) => void;
   suggestionSelectedParts: TechniquePart[];
+  noAttackWarning?: string | null;
 };
 
 function manualTechniqueParts(parts: TechniquePart[]): TechniquePart[] {
@@ -108,6 +109,7 @@ export function TechniqueCreatorEditor({
   targetedDefenses,
   onTargetedDefensesChange,
   suggestionSelectedParts,
+  noAttackWarning = null,
 }: TechniqueCreatorEditorProps) {
   const extraDamageTargetHint = formatAttackModeCanTargetHint(attackMode);
 
@@ -203,6 +205,11 @@ export function TechniqueCreatorEditor({
                 </option>
               ))}
             </select>
+            {noAttackWarning ? (
+              <Alert variant="warning" className="mt-3" role="status">
+                {noAttackWarning}
+              </Alert>
+            ) : null}
           </div>
           <div>
             <div className="mb-1 flex items-center justify-between gap-2">

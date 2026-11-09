@@ -119,6 +119,8 @@ export {
   techniqueNamedBadgeCost,
 } from './technique-creator-section-costs';
 
+export { noAttackCreatorWarning } from './no-attack-creator-warning';
+
 // Empowered Technique Calculator
 export {
   calculateEmpoweredTechniqueCosts,

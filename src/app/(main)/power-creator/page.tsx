@@ -386,6 +386,7 @@ function PowerCreatorWorkspace({
       actionTypeDisplay={ws.actionTypeDisplay}
       attackMode={ws.attackMode}
       onAttackModeChange={ws.setAttackMode}
+      noAttackWarning={ws.noAttackWarning}
       targetedDefenses={ws.targetedDefenses}
       onTargetedDefensesChange={ws.setTargetedDefenses}
       suggestionPartsDb={ws.powerParts}
