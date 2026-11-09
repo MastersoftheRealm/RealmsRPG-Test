@@ -48,7 +48,7 @@ Do not read `ACTIVE_TASKS.md`, `AI_TASK_QUEUE.md`, `WAITING_TASKS.md`, `AI_CHANG
 - **UI gates** — keep `realms/no-raw-color`, contrast, visual/a11y Playwright. Prefer `text-success-fg` / `text-danger-fg` / `text-warning-fg` / `text-power-fg` / `text-martial-fg` over numbered ramp + ad-hoc `dark:`.
 - **Mobile** — `fullScreenOnMobile` on large modals; ≥44px touch targets.
 - **Accessibility** — **WCAG 2.2 AA** everywhere. Labels, contrast, modals, touch tiers per `MOBILE_UX.md`.
-- **Git** — Status order, PR Reviewer, Human OK, merge, and testing: `.cursor/rules/realms-tasks.mdc`. Never push `master`. Never squash. Agents do not merge.
+- **Git** — Status order, PR Reviewer, Human OK, merge, and testing: `.cursor/rules/realms-tasks.mdc`. Never push `master`. Coding agents do not merge.
 
 ## Definition of Done
 
