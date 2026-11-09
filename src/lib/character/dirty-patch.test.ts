@@ -166,6 +166,73 @@ describe('applyCharacterDirtyPatch / mergeRemotePreservingDirty', () => {
     });
   });
 
+  it('does not restore a gear row the local sheet deleted during conflict merge', () => {
+    const baseline = {
+      equipment: {
+        items: [
+          { id: 'bed-roll', name: 'Bed Roll', quantity: 1 },
+          { id: 'grapple-rope', name: 'Grapple Rope', quantity: 1 },
+        ],
+      },
+    };
+    const remote = {
+      equipment: {
+        items: [
+          { id: 'bed-roll', name: 'Bed Roll', quantity: 2 },
+          { id: 'grapple-rope', name: 'Grapple Rope', quantity: 1 },
+        ],
+      },
+    };
+    const local = {
+      equipment: {
+        items: [{ id: 'bed-roll', name: 'Bed Roll', quantity: 1 }],
+      },
+    };
+    const merged = mergeRemotePreservingDirty(remote, local, ['equipment'], baseline);
+    const ids = (merged.equipment as { items: Array<{ id: string }> }).items.map((row) => row.id);
+    expect(ids).toEqual(['bed-roll']);
+    expect((merged.equipment as { items: Array<{ quantity?: number }> }).items[0]?.quantity).toBe(
+      2,
+    );
+  });
+
+  it('does not queue a follow-up save that drops the other tab quantity after 409 merge', () => {
+    const baseline = {
+      equipment: {
+        items: [
+          { id: 'bed-roll', name: 'Bed Roll', quantity: 1 },
+          { id: 'grapple-rope', name: 'Grapple Rope', quantity: 1 },
+        ],
+      },
+    };
+    const remoteClean = {
+      equipment: {
+        items: [
+          { id: 'bed-roll', name: 'Bed Roll', quantity: 2 },
+          { id: 'grapple-rope', name: 'Grapple Rope', quantity: 1 },
+        ],
+      },
+    };
+    const localClean = {
+      equipment: {
+        items: [
+          { id: 'bed-roll', name: 'Bed Roll', quantity: 1 },
+          { id: 'grapple-rope', name: 'Grapple Rope', quantity: 2 },
+        ],
+      },
+    };
+    const mergedClean = mergeRemotePreservingDirty(
+      remoteClean,
+      localClean,
+      ['equipment'],
+      baseline,
+    );
+    const sheetWithLocalBlob = { ...remoteClean, equipment: localClean.equipment };
+    expect(pickDirtyCharacterFields(sheetWithLocalBlob, mergedClean).equipment).toBeDefined();
+    const sheetWithMerge = { ...remoteClean, equipment: mergedClean.equipment };
+    expect(pickDirtyCharacterFields(sheetWithMerge, mergedClean)).not.toHaveProperty('equipment');
+  });
+
   it('deletes a stored key when the patch value is null', () => {
     const merged = applyCharacterDirtyPatch(
       { name: 'Hero', tempModifiers: { speed: 1 }, notes: 'keep' },

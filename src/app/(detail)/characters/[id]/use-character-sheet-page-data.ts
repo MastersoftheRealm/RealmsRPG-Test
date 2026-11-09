@@ -399,7 +399,7 @@ export function useCharacterSheetPageData(id: string) {
             };
             for (const key of Object.keys(dirty)) {
               if (dirty[key] === null) delete next[key];
-              else if (key in cleaned) next[key] = cleaned[key];
+              else if (key in mergedClean) next[key] = mergedClean[key];
             }
             return next as Character;
           });

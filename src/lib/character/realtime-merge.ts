@@ -9,6 +9,7 @@ import { cleanForSave } from '@/lib/data-enrichment/clean-for-save';
 import {
   characterLockToken,
   mergeRemotePreservingDirty,
+  mergeSheetAutosaveBaseline,
   pickDirtyCharacterFields,
   withDirtyClears,
 } from '@/lib/character/dirty-patch';
@@ -113,6 +114,6 @@ export function mergeSheetRealtimePayload(
   const base = baseline ?? nextClean;
   return {
     character: next,
-    nextBaseline: mergeRemotePreservingDirty(nextClean, base, dirtyKeys, baseline),
+    nextBaseline: mergeSheetAutosaveBaseline(nextClean, base, dirtyKeys, cleaned),
   };
 }

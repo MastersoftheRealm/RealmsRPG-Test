@@ -180,13 +180,22 @@ describe('mergeSheetRealtimePayload (TASK-747)', () => {
       },
     };
 
-    const { character: next } = mergeSheetRealtimePayload(local, remote, baseline, {
+    const { character: next, nextBaseline } = mergeSheetRealtimePayload(local, remote, baseline, {
       updatedAt: 'T1',
     });
     const items = (next.equipment?.items ?? []) as Array<{ id: string; quantity?: number }>;
     const qty = Object.fromEntries(items.map((row) => [row.id, row.quantity]));
     expect(qty['bed-roll']).toBe(2);
     expect(qty['grapple-rope']).toBe(2);
+    const stillDirty = pickDirtyCharacterFields(
+      cleanForSave(next) as Record<string, unknown>,
+      nextBaseline,
+    );
+    expect(stillDirty.equipment).toBeDefined();
+    const baselineGrapple = (
+      nextBaseline?.equipment as { items: Array<{ id: string; quantity?: number }> } | undefined
+    )?.items?.find((row) => row.id === 'grapple-rope');
+    expect(baselineGrapple?.quantity).not.toBe(2);
   });
 
   it('returns the same character object when nothing non-resource changed', () => {
