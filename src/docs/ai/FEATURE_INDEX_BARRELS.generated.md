@@ -3,7 +3,7 @@
 > **Do not edit by hand.** Run `npm run tasks:generate-index` after changing barrel exports.
 > Curated narrative map: [`FEATURE_INDEX.md`](FEATURE_INDEX.md).
 
-Generated: 2026-10-31
+Generated: 2026-11-09
 
 ## `src/components/patterns/index.ts`
 
@@ -43,7 +43,6 @@ Generated: 2026-10-31
 - GuidedInlineCatalogList
 - GuidedLayerNav
 - HubListRow
-- ImageUploadModal
 - IncrementButton
 - InfoTippy
 - InnateToggle
